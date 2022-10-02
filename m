@@ -2,44 +2,44 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95891C433FE
-	for <linux-xfs@archiver.kernel.org>; Sun,  2 Oct 2022 18:33:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16A5AC433F5
+	for <linux-xfs@archiver.kernel.org>; Sun,  2 Oct 2022 18:33:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230089AbiJBSdG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 2 Oct 2022 14:33:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34656 "EHLO
+        id S230090AbiJBSdT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 2 Oct 2022 14:33:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34700 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230084AbiJBSdG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Oct 2022 14:33:06 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB5C73C164
-        for <linux-xfs@vger.kernel.org>; Sun,  2 Oct 2022 11:33:04 -0700 (PDT)
+        with ESMTP id S230084AbiJBSdS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Oct 2022 14:33:18 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28F5B3C164
+        for <linux-xfs@vger.kernel.org>; Sun,  2 Oct 2022 11:33:17 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 74AA760F06
-        for <linux-xfs@vger.kernel.org>; Sun,  2 Oct 2022 18:33:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1EF0C433C1;
-        Sun,  2 Oct 2022 18:33:03 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id AB7F5B80D6F
+        for <linux-xfs@vger.kernel.org>; Sun,  2 Oct 2022 18:33:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E68EC433C1;
+        Sun,  2 Oct 2022 18:33:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664735583;
-        bh=9LC0Q+6q/Ui9YuTSEdv7h1fks63FG3O5KK4KLnD+bzM=;
+        s=k20201202; t=1664735594;
+        bh=3cd5W5KGCLep9vweM/Q76iCXdW+N13/MKNdn5DHFdP4=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=bMJ0xUGbjOUHIh/6cSWh4q+rnMXweDuXoAqONSFKeG2foiDrxidcgQU9p0bPxOR8U
-         OEl8ne53Tuvi2sXs6xIiS07gWE7aSoEH21nTUODsyoa9V8P2NmxxttZMmFXtZvkoRD
-         18M7TAaB97d+STMusqqszCLFIJnacjayw2X3lKpXNuay3NqnqKQc0P2rZnWHzRvAyf
-         bBaZnopGZye1Hc2kBkSjCZtTqENFW/SbYerC2bRrrPnh5CwdKRCKQ1q0eH8Hf6jT4i
-         llR1F1W/zGgEJNdahQvUgXE2ur0rslJoCkqpAFfdPWpYZuVRD77yQ+qlF3Drk2Uar/
-         P5xDbZLBrn1Mg==
-Subject: [PATCH 5/5] xfs: ensure that all metadata and data blocks are not cow
- staging extents
+        b=r85DrXDixw7BkxdLZucgC8/T2cbXxV6ZJPM8Yc1i0Ag8OIQAAwo3I+70ojsYuIK/i
+         NCmEZut2t2LpxaKAUIK4BrYa5WbreHk2BJEFP6ZuqNJASbykHtEksx3rbAs52LfvZ4
+         xA/zddKfU0V6m+idt+Ewz1jAwXRdPRp4w0CTsFD6uWc6W/VOYFTSaVACCdvIJFIyoL
+         Di3VNolgZuJfdbjibj2GLWA4VImDfURA/JfyZ0ZNtu7EDaLMQ2Q7B0wv03UYIPtocw
+         EboPC5FYucG++oEvkRGDn4hLyBxjFygADBhzo+/LWdw1npyQB3vMvFlj8t27ZKUSIF
+         3FGqihsXkXrsg==
+Subject: [PATCH 1/3] xfs: clean up broken eearly-exit code in the inode btree
+ scrubber
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Sun, 02 Oct 2022 11:20:16 -0700
-Message-ID: <166473481655.1084209.12908049694500649697.stgit@magnolia>
-In-Reply-To: <166473481572.1084209.5434516873607335909.stgit@magnolia>
-References: <166473481572.1084209.5434516873607335909.stgit@magnolia>
+Date:   Sun, 02 Oct 2022 11:20:19 -0700
+Message-ID: <166473481968.1084372.18253504968225202018.stgit@magnolia>
+In-Reply-To: <166473481949.1084372.14443532201653453226.stgit@magnolia>
+References: <166473481949.1084372.14443532201653453226.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -50,169 +50,100 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make sure that all filesystem metadata blocks and file data blocks are
-not also marked as CoW staging extents.  The extra checking added here
-was inspired by an actual VM host filesystem corruption incident due to
-bugs in the CoW handling of 4.x kernels.
+Corrupt inode chunks should cause us to exit early after setting the
+CORRUPT flag on the scrub state.  While we're at it, collapse trivial
+helpers.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/agheader.c |    5 +++++
- fs/xfs/scrub/alloc.c    |    1 +
- fs/xfs/scrub/bmap.c     |   11 ++++++++---
- fs/xfs/scrub/ialloc.c   |    2 +-
- fs/xfs/scrub/inode.c    |    1 +
- fs/xfs/scrub/refcount.c |   21 +++++++++++++++++++++
- fs/xfs/scrub/scrub.h    |    2 ++
- 7 files changed, 39 insertions(+), 4 deletions(-)
+ fs/xfs/scrub/ialloc.c |   52 +++++++++++++++++++++----------------------------
+ 1 file changed, 22 insertions(+), 30 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index 3dd9151a20ad..520ec054e4a6 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -53,6 +53,7 @@ xchk_superblock_xref(
- 	xchk_xref_is_not_inode_chunk(sc, agbno, 1);
- 	xchk_xref_is_owned_by(sc, agbno, 1, &XFS_RMAP_OINFO_FS);
- 	xchk_xref_is_not_shared(sc, agbno, 1);
-+	xchk_xref_is_not_cow_staging(sc, agbno, 1);
- 
- 	/* scrub teardown will take care of sc->sa for us */
- }
-@@ -517,6 +518,7 @@ xchk_agf_xref(
- 	xchk_xref_is_owned_by(sc, agbno, 1, &XFS_RMAP_OINFO_FS);
- 	xchk_agf_xref_btreeblks(sc);
- 	xchk_xref_is_not_shared(sc, agbno, 1);
-+	xchk_xref_is_not_cow_staging(sc, agbno, 1);
- 	xchk_agf_xref_refcblks(sc);
- 
- 	/* scrub teardown will take care of sc->sa for us */
-@@ -644,6 +646,7 @@ xchk_agfl_block_xref(
- 	xchk_xref_is_not_inode_chunk(sc, agbno, 1);
- 	xchk_xref_is_owned_by(sc, agbno, 1, &XFS_RMAP_OINFO_AG);
- 	xchk_xref_is_not_shared(sc, agbno, 1);
-+	xchk_xref_is_not_cow_staging(sc, agbno, 1);
- }
- 
- /* Scrub an AGFL block. */
-@@ -700,6 +703,7 @@ xchk_agfl_xref(
- 	xchk_xref_is_not_inode_chunk(sc, agbno, 1);
- 	xchk_xref_is_owned_by(sc, agbno, 1, &XFS_RMAP_OINFO_FS);
- 	xchk_xref_is_not_shared(sc, agbno, 1);
-+	xchk_xref_is_not_cow_staging(sc, agbno, 1);
- 
- 	/*
- 	 * Scrub teardown will take care of sc->sa for us.  Leave sc->sa
-@@ -855,6 +859,7 @@ xchk_agi_xref(
- 	xchk_agi_xref_icounts(sc);
- 	xchk_xref_is_owned_by(sc, agbno, 1, &XFS_RMAP_OINFO_FS);
- 	xchk_xref_is_not_shared(sc, agbno, 1);
-+	xchk_xref_is_not_cow_staging(sc, agbno, 1);
- 	xchk_agi_xref_fiblocks(sc);
- 
- 	/* scrub teardown will take care of sc->sa for us */
-diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
-index d8f2ba7efa22..0cd20d998368 100644
---- a/fs/xfs/scrub/alloc.c
-+++ b/fs/xfs/scrub/alloc.c
-@@ -88,6 +88,7 @@ xchk_allocbt_xref(
- 	xchk_xref_is_not_inode_chunk(sc, agbno, len);
- 	xchk_xref_has_no_owner(sc, agbno, len);
- 	xchk_xref_is_not_shared(sc, agbno, len);
-+	xchk_xref_is_not_cow_staging(sc, agbno, len);
- }
- 
- /* Scrub a bnobt/cntbt record. */
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 5c4b25585b8c..1e4813c82cc5 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -328,12 +328,17 @@ xchk_bmap_iextent_xref(
- 	xchk_bmap_xref_rmap(info, irec, agbno);
- 	switch (info->whichfork) {
- 	case XFS_DATA_FORK:
--		if (xfs_is_reflink_inode(info->sc->ip))
--			break;
--		fallthrough;
-+		if (!xfs_is_reflink_inode(info->sc->ip))
-+			xchk_xref_is_not_shared(info->sc, agbno,
-+					irec->br_blockcount);
-+		xchk_xref_is_not_cow_staging(info->sc, agbno,
-+				irec->br_blockcount);
-+		break;
- 	case XFS_ATTR_FORK:
- 		xchk_xref_is_not_shared(info->sc, agbno,
- 				irec->br_blockcount);
-+		xchk_xref_is_not_cow_staging(info->sc, agbno,
-+				irec->br_blockcount);
- 		break;
- 	case XFS_COW_FORK:
- 		xchk_xref_is_cow_staging(info->sc, agbno,
 diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index 0b27c3520b74..efe346ddd1b7 100644
+index efe346ddd1b7..89eaaa12b6ae 100644
 --- a/fs/xfs/scrub/ialloc.c
 +++ b/fs/xfs/scrub/ialloc.c
-@@ -116,7 +116,7 @@ xchk_iallocbt_chunk(
- 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+@@ -79,44 +79,33 @@ xchk_iallocbt_chunk_xref_other(
+ 		xchk_btree_xref_set_corrupt(sc, *pcur, 0);
+ }
  
- 	xchk_iallocbt_chunk_xref(bs->sc, irec, agino, bno, len);
+-/* Cross-reference with the other btrees. */
+-STATIC void
+-xchk_iallocbt_chunk_xref(
+-	struct xfs_scrub		*sc,
++/* Is this chunk worth checking and cross-referencing? */
++STATIC bool
++xchk_iallocbt_chunk(
++	struct xchk_btree		*bs,
+ 	struct xfs_inobt_rec_incore	*irec,
+ 	xfs_agino_t			agino,
+-	xfs_agblock_t			agbno,
+ 	xfs_extlen_t			len)
+ {
+-	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+-		return;
++	struct xfs_scrub		*sc = bs->sc;
++	struct xfs_mount		*mp = bs->cur->bc_mp;
++	struct xfs_perag		*pag = bs->cur->bc_ag.pag;
++	xfs_agblock_t			agbno;
++
++	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
++	if (agbno + len <= agbno ||
++	    !xfs_verify_agbno(pag, agbno) ||
++	    !xfs_verify_agbno(pag, agbno + len - 1))
++		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
++
++	if (bs->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++		return false;
+ 
+ 	xchk_xref_is_used_space(sc, agbno, len);
+ 	xchk_iallocbt_chunk_xref_other(sc, irec, agino);
+ 	xchk_xref_is_owned_by(sc, agbno, len, &XFS_RMAP_OINFO_INODES);
+ 	xchk_xref_is_not_shared(sc, agbno, len);
+-}
 -
-+	xchk_xref_is_not_cow_staging(bs->sc, bno, len);
+-/* Is this chunk worth checking? */
+-STATIC bool
+-xchk_iallocbt_chunk(
+-	struct xchk_btree		*bs,
+-	struct xfs_inobt_rec_incore	*irec,
+-	xfs_agino_t			agino,
+-	xfs_extlen_t			len)
+-{
+-	struct xfs_mount		*mp = bs->cur->bc_mp;
+-	struct xfs_perag		*pag = bs->cur->bc_ag.pag;
+-	xfs_agblock_t			bno;
+-
+-	bno = XFS_AGINO_TO_AGBNO(mp, agino);
+-	if (bno + len <= bno ||
+-	    !xfs_verify_agbno(pag, bno) ||
+-	    !xfs_verify_agbno(pag, bno + len - 1))
+-		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+-
+-	xchk_iallocbt_chunk_xref(bs->sc, irec, agino, bno, len);
+-	xchk_xref_is_not_cow_staging(bs->sc, bno, len);
++	xchk_xref_is_not_cow_staging(sc, agbno, len);
  	return true;
  }
  
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index 998bf06d2347..a68ba8684465 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -558,6 +558,7 @@ xchk_inode_xref(
- 	xchk_inode_xref_finobt(sc, ino);
- 	xchk_xref_is_owned_by(sc, agbno, 1, &XFS_RMAP_OINFO_INODES);
- 	xchk_xref_is_not_shared(sc, agbno, 1);
-+	xchk_xref_is_not_cow_staging(sc, agbno, 1);
- 	xchk_inode_xref_bmap(sc, dip);
+@@ -486,7 +475,7 @@ xchk_iallocbt_rec(
+ 		if (holemask & 1)
+ 			holecount += XFS_INODES_PER_HOLEMASK_BIT;
+ 		else if (!xchk_iallocbt_chunk(bs, &irec, agino, len))
+-			break;
++			goto out;
+ 		holemask >>= 1;
+ 		agino += XFS_INODES_PER_HOLEMASK_BIT;
+ 	}
+@@ -496,6 +485,9 @@ xchk_iallocbt_rec(
+ 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
  
- out_free:
-diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-index d97e7e372b9c..2009efea923c 100644
---- a/fs/xfs/scrub/refcount.c
-+++ b/fs/xfs/scrub/refcount.c
-@@ -562,3 +562,24 @@ xchk_xref_is_not_shared(
- 	if (keyfill != XFS_BTREE_KEYFILL_EMPTY)
- 		xchk_btree_xref_set_corrupt(sc, sc->sa.refc_cur, 0);
- }
+ check_clusters:
++	if (bs->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
++		goto out;
 +
-+/* xref check that the extent is not being used for CoW staging. */
-+void
-+xchk_xref_is_not_cow_staging(
-+	struct xfs_scrub	*sc,
-+	xfs_agblock_t		agbno,
-+	xfs_extlen_t		len)
-+{
-+	enum xfs_btree_keyfill	keyfill;
-+	int			error;
-+
-+	if (!sc->sa.refc_cur || xchk_skip_xref(sc->sm))
-+		return;
-+
-+	error = xfs_refcount_scan_keyfill(sc->sa.refc_cur, agbno +
-+			XFS_REFC_COW_START, len, &keyfill);
-+	if (!xchk_should_check_xref(sc, &error, &sc->sa.refc_cur))
-+		return;
-+	if (keyfill != XFS_BTREE_KEYFILL_EMPTY)
-+		xchk_btree_xref_set_corrupt(sc, sc->sa.refc_cur, 0);
-+}
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 85c055c2ddc5..a331838e22ff 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -166,6 +166,8 @@ void xchk_xref_is_cow_staging(struct xfs_scrub *sc, xfs_agblock_t bno,
- 		xfs_extlen_t len);
- void xchk_xref_is_not_shared(struct xfs_scrub *sc, xfs_agblock_t bno,
- 		xfs_extlen_t len);
-+void xchk_xref_is_not_cow_staging(struct xfs_scrub *sc, xfs_agblock_t bno,
-+		xfs_extlen_t len);
- #ifdef CONFIG_XFS_RT
- void xchk_xref_is_used_rt_space(struct xfs_scrub *sc, xfs_rtblock_t rtbno,
- 		xfs_extlen_t len);
+ 	error = xchk_iallocbt_check_clusters(bs, &irec);
+ 	if (error)
+ 		goto out;
 
