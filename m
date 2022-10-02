@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8747FC433FE
-	for <linux-xfs@archiver.kernel.org>; Sun,  2 Oct 2022 18:27:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0322C433FE
+	for <linux-xfs@archiver.kernel.org>; Sun,  2 Oct 2022 18:28:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230073AbiJBS16 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 2 Oct 2022 14:27:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55212 "EHLO
+        id S230072AbiJBS2N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 2 Oct 2022 14:28:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230059AbiJBS1y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Oct 2022 14:27:54 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D39483B977
-        for <linux-xfs@vger.kernel.org>; Sun,  2 Oct 2022 11:27:49 -0700 (PDT)
+        with ESMTP id S230075AbiJBS2L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Oct 2022 14:28:11 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCF193BC6E
+        for <linux-xfs@vger.kernel.org>; Sun,  2 Oct 2022 11:27:58 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 8067CB80D88
-        for <linux-xfs@vger.kernel.org>; Sun,  2 Oct 2022 18:27:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37D32C433D6;
-        Sun,  2 Oct 2022 18:27:47 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6178260EB1
+        for <linux-xfs@vger.kernel.org>; Sun,  2 Oct 2022 18:27:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BACCEC433D6;
+        Sun,  2 Oct 2022 18:27:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664735267;
-        bh=NrEQe4wZgwIZHUWCBg9fcTEbHj3VFeC8gyfg3kh80g4=;
+        s=k20201202; t=1664735277;
+        bh=DyzdOfouwa7SeK5IIbfPmx9DfajXfjkQiJ4fznxkgf8=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=S6+9jSsgOgSri0GOBaVuvqI36OprrE2JR2Z7to2J0EUARvv1lT2s9xB+A6dmm14Vl
-         NfASk47TAcqIbCSyNUWee1/Ac6dzBzZOglywiHM5ICEZB8A5uwnPRHheESfkQyEcQS
-         +Ai9aFNKXg/TieUoG+kgL2bRXbKspukuz8a5O1y/zcyaEBQ99L9MBZDRCIIJw9v3O5
-         hoWWIWqHnfsXUQsAuPnHq/bM9bAJ9QAszcbbS/k+CI+s6TZaQ9S6B2PlousoT7SFec
-         lSmINTtR576o3Jjk/y3NKpI8bUBt/ULuGwBs1KzqUB2yopu9BlMtVnfiqtVKiwE/kM
-         0keS9ghuKzVOQ==
-Subject: [PATCH 2/4] xfs: don't track the AGFL buffer in the scrub AG context
+        b=oYk1X+zkPVld7igj2Q/CAGlTa8BerADtR6wVSdI8ANCJxH+R33xLWWaiY2qJ5KfCp
+         6+KMiZ03/+WpIvamp02KSdWaclXdjSuKFvHhRpUnPgP1yygW0IO/BU7tB8VI15OT4x
+         AHWlSkAFWmUHTIB4J0Wny1GKqJCZzcD+CeImBWEa4qoiN8iTnl1gZHdLxm8A0U3gyG
+         M9QeYGP5qX63UrY4JH+EwZg8WfS7U/sNhx95qj8BLpF+Sgbu+6qOq8Um9nSEoi7JJQ
+         Cwx83WWknrUHlEstGksvK2YgikM9nkRKHRkGgmRdGhpsPSyxbM5pEFB2K5YNCXYRcp
+         5TAcq3shRIZVg==
+Subject: [PATCH 3/4] xfs: set the buffer type after holding the AG[IF] across
+ trans_roll
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Sun, 02 Oct 2022 11:19:48 -0700
-Message-ID: <166473478879.1083155.7048621417340358108.stgit@magnolia>
+Message-ID: <166473478893.1083155.2555785331844801316.stgit@magnolia>
 In-Reply-To: <166473478844.1083155.9238102682926048449.stgit@magnolia>
 References: <166473478844.1083155.9238102682926048449.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,228 +50,53 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-While scrubbing an allocation group, we don't need to hold the AGFL
-buffer as part of the scrub context.  All that is necessary to lock an
-AG is to hold the AGI and AGF buffers, so fix all the existing users of
-the AGFL buffer to grab them only when necessary.
+Currently, the only way to lock an allocation group is to hold the AGI
+and AGF buffers.  If repair needs to roll the transaction while
+repairing some AG metadata, it maintains that lock by holding the two
+buffers across the transaction roll and joins them afterwards.
+
+However, repair is not the same as the other parts of XFS that employ
+this bhold/bjoin sequence, because it's possible that the AGI or AGF
+buffers are not actually dirty before the roll.  In this case, the
+buffer log item can detach from the buffer, which means that we have to
+re-set the buffer type in the bli after joining the buffer to the new
+transaction so that log recovery will know what to do if the fs fails.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/agheader.c        |   47 +++++++++++++++++++++++++---------------
- fs/xfs/scrub/agheader_repair.c |    1 -
- fs/xfs/scrub/common.c          |    8 -------
- fs/xfs/scrub/repair.c          |   11 +++++----
- fs/xfs/scrub/scrub.h           |    1 -
- 5 files changed, 35 insertions(+), 33 deletions(-)
+ fs/xfs/scrub/repair.c |   18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index b7b838bd4ba4..af284baa6f4c 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -609,9 +609,16 @@ xchk_agf(
- /* AGFL */
- 
- struct xchk_agfl_info {
--	unsigned int		sz_entries;
-+	/* Number of AGFL entries that the AGF claims are in use. */
-+	unsigned int		agflcount;
-+
-+	/* Number of AGFL entries that we found. */
- 	unsigned int		nr_entries;
-+
-+	/* Buffer to hold AGFL entries for extent checking. */
- 	xfs_agblock_t		*entries;
-+
-+	struct xfs_buf		*agfl_bp;
- 	struct xfs_scrub	*sc;
- };
- 
-@@ -641,10 +648,10 @@ xchk_agfl_block(
- 	struct xfs_scrub	*sc = sai->sc;
- 
- 	if (xfs_verify_agbno(sc->sa.pag, agbno) &&
--	    sai->nr_entries < sai->sz_entries)
-+	    sai->nr_entries < sai->agflcount)
- 		sai->entries[sai->nr_entries++] = agbno;
- 	else
--		xchk_block_set_corrupt(sc, sc->sa.agfl_bp);
-+		xchk_block_set_corrupt(sc, sai->agfl_bp);
- 
- 	xchk_agfl_block_xref(sc, agbno);
- 
-@@ -696,19 +703,26 @@ int
- xchk_agfl(
- 	struct xfs_scrub	*sc)
- {
--	struct xchk_agfl_info	sai;
-+	struct xchk_agfl_info	sai = {
-+		.sc		= sc,
-+	};
- 	struct xfs_agf		*agf;
- 	xfs_agnumber_t		agno = sc->sm->sm_agno;
--	unsigned int		agflcount;
- 	unsigned int		i;
- 	int			error;
- 
-+	/* Lock the AGF and AGI so that nobody can touch this AG. */
- 	error = xchk_ag_read_headers(sc, agno, &sc->sa);
- 	if (!xchk_process_error(sc, agno, XFS_AGFL_BLOCK(sc->mp), &error))
--		goto out;
-+		return error;
- 	if (!sc->sa.agf_bp)
- 		return -EFSCORRUPTED;
--	xchk_buffer_recheck(sc, sc->sa.agfl_bp);
-+
-+	/* Try to read the AGFL, and verify its structure if we get it. */
-+	error = xfs_alloc_read_agfl(sc->sa.pag, sc->tp, &sai.agfl_bp);
-+	if (!xchk_process_error(sc, agno, XFS_AGFL_BLOCK(sc->mp), &error))
-+		return error;
-+	xchk_buffer_recheck(sc, sai.agfl_bp);
- 
- 	xchk_agfl_xref(sc);
- 
-@@ -717,24 +731,21 @@ xchk_agfl(
- 
- 	/* Allocate buffer to ensure uniqueness of AGFL entries. */
- 	agf = sc->sa.agf_bp->b_addr;
--	agflcount = be32_to_cpu(agf->agf_flcount);
--	if (agflcount > xfs_agfl_size(sc->mp)) {
-+	sai.agflcount = be32_to_cpu(agf->agf_flcount);
-+	if (sai.agflcount > xfs_agfl_size(sc->mp)) {
- 		xchk_block_set_corrupt(sc, sc->sa.agf_bp);
- 		goto out;
- 	}
--	memset(&sai, 0, sizeof(sai));
--	sai.sc = sc;
--	sai.sz_entries = agflcount;
--	sai.entries = kmem_zalloc(sizeof(xfs_agblock_t) * agflcount,
--			KM_MAYFAIL);
-+	sai.entries = kvcalloc(sai.agflcount, sizeof(xfs_agblock_t),
-+			GFP_KERNEL | __GFP_RETRY_MAYFAIL);
- 	if (!sai.entries) {
- 		error = -ENOMEM;
- 		goto out;
- 	}
- 
- 	/* Check the blocks in the AGFL. */
--	error = xfs_agfl_walk(sc->mp, sc->sa.agf_bp->b_addr,
--			sc->sa.agfl_bp, xchk_agfl_block, &sai);
-+	error = xfs_agfl_walk(sc->mp, sc->sa.agf_bp->b_addr, sai.agfl_bp,
-+			xchk_agfl_block, &sai);
- 	if (error == -ECANCELED) {
- 		error = 0;
- 		goto out_free;
-@@ -742,7 +753,7 @@ xchk_agfl(
- 	if (error)
- 		goto out_free;
- 
--	if (agflcount != sai.nr_entries) {
-+	if (sai.agflcount != sai.nr_entries) {
- 		xchk_block_set_corrupt(sc, sc->sa.agf_bp);
- 		goto out_free;
- 	}
-@@ -758,7 +769,7 @@ xchk_agfl(
- 	}
- 
- out_free:
--	kmem_free(sai.entries);
-+	kvfree(sai.entries);
- out:
- 	return error;
- }
-diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-index 1b0b4e243f77..2e75ff9b5b2e 100644
---- a/fs/xfs/scrub/agheader_repair.c
-+++ b/fs/xfs/scrub/agheader_repair.c
-@@ -697,7 +697,6 @@ xrep_agfl(
- 	 * freespace overflow to the freespace btrees.
- 	 */
- 	sc->sa.agf_bp = agf_bp;
--	sc->sa.agfl_bp = agfl_bp;
- 	error = xrep_roll_ag_trans(sc);
- 	if (error)
- 		goto err;
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 9bbbf20f401b..ad70f29233c3 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -424,10 +424,6 @@ xchk_ag_read_headers(
- 	if (error && want_ag_read_header_failure(sc, XFS_SCRUB_TYPE_AGF))
- 		return error;
- 
--	error = xfs_alloc_read_agfl(sa->pag, sc->tp, &sa->agfl_bp);
--	if (error && want_ag_read_header_failure(sc, XFS_SCRUB_TYPE_AGFL))
--		return error;
--
- 	return 0;
- }
- 
-@@ -515,10 +511,6 @@ xchk_ag_free(
- 	struct xchk_ag		*sa)
- {
- 	xchk_ag_btcur_free(sa);
--	if (sa->agfl_bp) {
--		xfs_trans_brelse(sc->tp, sa->agfl_bp);
--		sa->agfl_bp = NULL;
--	}
- 	if (sa->agf_bp) {
- 		xfs_trans_brelse(sc->tp, sa->agf_bp);
- 		sa->agf_bp = NULL;
 diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index c18bd039fce9..2ada7fc1c398 100644
+index 2ada7fc1c398..92c661b98892 100644
 --- a/fs/xfs/scrub/repair.c
 +++ b/fs/xfs/scrub/repair.c
-@@ -126,8 +126,6 @@ xrep_roll_ag_trans(
- 		xfs_trans_bhold(sc->tp, sc->sa.agi_bp);
- 	if (sc->sa.agf_bp)
- 		xfs_trans_bhold(sc->tp, sc->sa.agf_bp);
--	if (sc->sa.agfl_bp)
--		xfs_trans_bhold(sc->tp, sc->sa.agfl_bp);
+@@ -138,11 +138,23 @@ xrep_roll_ag_trans(
+ 	if (error)
+ 		return error;
  
- 	/*
- 	 * Roll the transaction.  We still own the buffer and the buffer lock
-@@ -145,8 +143,6 @@ xrep_roll_ag_trans(
+-	/* Join AG headers to the new transaction. */
+-	if (sc->sa.agi_bp)
++	/*
++	 * Join AG headers to the new transaction.  The buffer log item can
++	 * detach from the buffer across the transaction roll if the bli is
++	 * clean, so ensure the buffer type is still set on the AG header
++	 * buffers' blis before we return.
++	 *
++	 * Normal code would never hold a clean buffer across a roll, but scrub
++	 * needs both buffers to maintain a total lock on the AG.
++	 */
++	if (sc->sa.agi_bp) {
  		xfs_trans_bjoin(sc->tp, sc->sa.agi_bp);
- 	if (sc->sa.agf_bp)
+-	if (sc->sa.agf_bp)
++		xfs_trans_buf_set_type(sc->tp, sc->sa.agi_bp, XFS_BLFT_AGI_BUF);
++	}
++	if (sc->sa.agf_bp) {
  		xfs_trans_bjoin(sc->tp, sc->sa.agf_bp);
--	if (sc->sa.agfl_bp)
--		xfs_trans_bjoin(sc->tp, sc->sa.agfl_bp);
++		xfs_trans_buf_set_type(sc->tp, sc->sa.agf_bp, XFS_BLFT_AGF_BUF);
++	}
  
  	return 0;
  }
-@@ -498,6 +494,7 @@ xrep_put_freelist(
- 	struct xfs_scrub	*sc,
- 	xfs_agblock_t		agbno)
- {
-+	struct xfs_buf		*agfl_bp;
- 	int			error;
- 
- 	/* Make sure there's space on the freelist. */
-@@ -516,8 +513,12 @@ xrep_put_freelist(
- 		return error;
- 
- 	/* Put the block on the AGFL. */
-+	error = xfs_alloc_read_agfl(sc->sa.pag, sc->tp, &agfl_bp);
-+	if (error)
-+		return error;
-+
- 	error = xfs_alloc_put_freelist(sc->sa.pag, sc->tp, sc->sa.agf_bp,
--			sc->sa.agfl_bp, agbno, 0);
-+			agfl_bp, agbno, 0);
- 	if (error)
- 		return error;
- 	xfs_extent_busy_insert(sc->tp, sc->sa.pag, agbno, 1,
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 3de5287e98d8..151567f88366 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -39,7 +39,6 @@ struct xchk_ag {
- 
- 	/* AG btree roots */
- 	struct xfs_buf		*agf_bp;
--	struct xfs_buf		*agfl_bp;
- 	struct xfs_buf		*agi_bp;
- 
- 	/* AG btrees */
 
