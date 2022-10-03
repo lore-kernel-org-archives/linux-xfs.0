@@ -2,119 +2,181 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70C84C4332F
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Oct 2022 08:22:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 501F9C4321E
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 Oct 2022 13:01:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230272AbiJCIWJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 3 Oct 2022 04:22:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51720 "EHLO
+        id S229912AbiJCNBp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 3 Oct 2022 09:01:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229751AbiJCIVu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Oct 2022 04:21:50 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6972A7AC15;
-        Mon,  3 Oct 2022 00:56:11 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        with ESMTP id S229921AbiJCNBh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Oct 2022 09:01:37 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66D0341999;
+        Mon,  3 Oct 2022 06:01:34 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 03A3B2199D;
-        Mon,  3 Oct 2022 07:55:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1664783704; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Dwt0M+3sS5jciWoEfZ361h/7J8CUArjkqTvOekaboQM=;
-        b=zkThJ2TFJKFUEK3VylwDrcuP3qR0r+8zOoVjqqSHzXOI6usNom6OffXeZGMpe/GynYzi73
-        sQWnjyKxPucXtNlJ0gwCXCDOSp3Mxit3ZmYug0ZB8d6NdYAHk5apFRG/smhDgljnOMnWl0
-        oXPm/fEAi0u86y4+Bd97IzG2zIrXUoc=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1664783704;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Dwt0M+3sS5jciWoEfZ361h/7J8CUArjkqTvOekaboQM=;
-        b=Ka3lq+tWamkJuoOp3to1B+06t8Js1FGSUPVxo2WCOJ4jJRaSTRqb4l+c0nHC3luZKW2MOy
-        L7hngvV2S5HeraCg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E61881332F;
-        Mon,  3 Oct 2022 07:55:03 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 3yUiOFeVOmODUgAAMHmgww
-        (envelope-from <jack@suse.cz>); Mon, 03 Oct 2022 07:55:03 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 7768DA06E6; Mon,  3 Oct 2022 09:55:03 +0200 (CEST)
-Date:   Mon, 3 Oct 2022 09:55:03 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Jason Gunthorpe <jgg@nvidia.com>
-Cc:     Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>,
-        Dave Chinner <david@fromorbit.com>, akpm@linux-foundation.org,
-        Matthew Wilcox <willy@infradead.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        John Hubbard <jhubbard@nvidia.com>,
-        linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v2 05/18] xfs: Add xfs_break_layouts() to the inode
- eviction path
-Message-ID: <20221003075503.k7h6aqvlnoi5bo52@quack3>
-References: <20220923001846.GX3600936@dread.disaster.area>
- <632d00a491d0d_4a67429488@dwillia2-xfh.jf.intel.com.notmuch>
- <20220923021012.GZ3600936@dread.disaster.area>
- <20220923093803.nroajmvn7twuptez@quack3>
- <20220925235407.GA3600936@dread.disaster.area>
- <20220926141055.sdlm3hkfepa7azf2@quack3>
- <63362b4781294_795a6294f0@dwillia2-xfh.jf.intel.com.notmuch>
- <20220930134144.pd67rbgahzcb62mf@quack3>
- <63372dcbc7f13_739029490@dwillia2-mobl3.amr.corp.intel.com.notmuch>
- <YzcwN67+QOqXpvfg@nvidia.com>
+        by sin.source.kernel.org (Postfix) with ESMTPS id A7038CE0B9D;
+        Mon,  3 Oct 2022 13:01:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F6D4C433D6;
+        Mon,  3 Oct 2022 13:01:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1664802090;
+        bh=mmTZgqg6FTmCB5EIX3Cw3VFcZPiIeeisIwOu8wf7Flg=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=Gy2gEyLjXxxCj+YRLcI/UBObyUaFOtu6rsGoTbJkbxYcLSmQbmAsi6DCHZa3QTnal
+         y9TV368Td0n+5rDoB8SO9t2CUsupMJhvZRc/Lbeq6y1AmUlKV5SwhGA/WlJ1Wirilo
+         12eWfppfGDhxKxOHlXgFlYbdbP0VZaL/288GR6FEMLc4RKpZsu8HTn/iLsZ4HoDLTy
+         ZBRptOFbaCgH4Piq9dH59gg9oybcy1H1h9cwsjOqcfmSDUfQRdprZOhw2/2FYni2Gc
+         0yJqcSw03Kh8hnclHe6AAxUqRVOXJsBwgqq6A1BrGKZKZmyBHL+/JJXp9rGtqsKlWk
+         +wTXnwnmq7Emw==
+Message-ID: <df91b9ec61bc49aa5330714e3319dcea2531953b.camel@kernel.org>
+Subject: Re: [PATCH v6 8/9] vfs: update times after copying data in
+ __generic_file_write_iter
+From:   Jeff Layton <jlayton@kernel.org>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
+        david@fromorbit.com, trondmy@hammerspace.com, neilb@suse.de,
+        viro@zeniv.linux.org.uk, zohar@linux.ibm.com, xiubli@redhat.com,
+        chuck.lever@oracle.com, lczerner@redhat.com, jack@suse.cz,
+        bfields@fieldses.org, brauner@kernel.org, fweimer@redhat.com,
+        linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Date:   Mon, 03 Oct 2022 09:01:26 -0400
+In-Reply-To: <CAOQ4uxgofERYwN7AfYFWqQMpQH5y3LV+6UuGfjU29gZXNf7-vQ@mail.gmail.com>
+References: <20220930111840.10695-1-jlayton@kernel.org>
+         <20220930111840.10695-9-jlayton@kernel.org>
+         <CAOQ4uxgofERYwN7AfYFWqQMpQH5y3LV+6UuGfjU29gZXNf7-vQ@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4 (3.44.4-2.fc36) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YzcwN67+QOqXpvfg@nvidia.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri 30-09-22 15:06:47, Jason Gunthorpe wrote:
-> On Fri, Sep 30, 2022 at 10:56:27AM -0700, Dan Williams wrote:
-> > Jan Kara wrote:
-> > [..]
-> > > I agree this is doable but there's the nasty sideeffect that inode reclaim
-> > > may block for abitrary time waiting for page pinning. If the application
-> > > that has pinned the page requires __GFP_FS memory allocation to get to a
-> > > point where it releases the page, we even have a deadlock possibility.
-> > > So it's better than the UAF issue but still not ideal.
-> > 
-> > I expect VMA pinning would have similar deadlock exposure if pinning a
-> > VMA keeps the inode allocated. Anything that puts a page-pin release
-> > dependency in the inode freeing path can potentially deadlock a reclaim
-> > event that depends on that inode being freed.
-> 
-> I think the desire would be to go from the VMA to an inode_get and
-> hold the inode reference for the from the pin_user_pages() to the
-> unpin_user_page(), ie prevent it from being freed in the first place.
+On Sun, 2022-10-02 at 10:08 +0300, Amir Goldstein wrote:
+> On Fri, Sep 30, 2022 at 2:30 PM Jeff Layton <jlayton@kernel.org> wrote:
+> >=20
+> > The c/mtime and i_version currently get updated before the data is
+> > copied (or a DIO write is issued), which is problematic for NFS.
+> >=20
+> > READ+GETATTR can race with a write (even a local one) in such a way as
+> > to make the client associate the state of the file with the wrong chang=
+e
+> > attribute. That association can persist indefinitely if the file sees n=
+o
+> > further changes.
+> >=20
+> > Move the setting of times to the bottom of the function in
+> > __generic_file_write_iter and only update it if something was
+> > successfully written.
+> >=20
+>=20
+> This solution is wrong for several reasons:
+>=20
+> 1. There is still file_update_time() in ->page_mkwrite() so you haven't
+>     solved the problem completely
 
-Yes, that was the idea how to avoid UAF problems.
+Right. I don't think there is a way to solve the problem vs. mmap.
+Userland can write to a writeable mmap'ed page at any time and we'd
+never know. We have to specifically carve out mmap as an exception here.
+I'll plan to add something to the manpage patch for this.
 
-> It is a fine idea, the trouble is just the high complexity to get
-> there.
-> 
-> However, I wonder if the trucate/hole punch paths have the same
-> deadlock problem?
+> 2. The other side of the coin is that post crash state is more likely to =
+end
+>     up data changes without mtime/ctime change
+>=20
 
-Do you mean someone requiring say truncate(2) to complete on file F in
-order to unpin pages of F? That is certainly a deadlock but it has always
-worked this way for DAX so at least applications knowingly targetted at DAX
-will quickly notice and avoid such unwise dependency ;).
+Is this really something filesystems rely on? I suppose the danger is
+that some cached data gets written to disk before the write returns and
+the inode on disk never gets updated.
 
-								Honza
+But...isn't that a danger now? Some of the cached data could get written
+out and the updated inode just never makes it to disk before a crash
+(AFAIU). I'm not sure that this increases our exposure to that problem.
 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+
+> If I read the problem description correctly, then a solution that invalid=
+ates
+> the NFS cache before AND after the write would be acceptable. Right?
+> Would an extra i_version bump after the write solve the race?
+>=20
+
+I based this patch on Neil's assertion that updating the time before an
+operation was pointless if we were going to do it afterward. The NFS
+client only really cares about seeing it change after a write.
+
+Doing both would be fine from a correctness standpoint, and in most
+cases, the second would be a no-op anyway since a query would have to
+race in between the two for that to happen.
+
+FWIW, I think we should update the m/ctime and version at the same time.
+If the version changes, then there is always the potential that a timer
+tick has occurred. So, that would translate to a second call to
+file_update_time in here.
+
+The downside of bumping the times/version both before and after is that
+these are hot codepaths, and we'd be adding extra operations there. Even
+in the case where nothing has changed, we'd have to call
+inode_needs_update_time a second time for every write. Is that worth the
+cost?
+
+> > If the time update fails, log a warning once, but don't fail the write.
+> > All of the existing callers use update_time functions that don't fail,
+> > so we should never trip this.
+> >=20
+> > Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> > ---
+> >  mm/filemap.c | 17 +++++++++++++----
+> >  1 file changed, 13 insertions(+), 4 deletions(-)
+> >=20
+> > diff --git a/mm/filemap.c b/mm/filemap.c
+> > index 15800334147b..72c0ceb75176 100644
+> > --- a/mm/filemap.c
+> > +++ b/mm/filemap.c
+> > @@ -3812,10 +3812,6 @@ ssize_t __generic_file_write_iter(struct kiocb *=
+iocb, struct iov_iter *from)
+> >         if (err)
+> >                 goto out;
+> >=20
+> > -       err =3D file_update_time(file);
+> > -       if (err)
+> > -               goto out;
+> > -
+> >         if (iocb->ki_flags & IOCB_DIRECT) {
+> >                 loff_t pos, endbyte;
+> >=20
+> > @@ -3868,6 +3864,19 @@ ssize_t __generic_file_write_iter(struct kiocb *=
+iocb, struct iov_iter *from)
+> >                         iocb->ki_pos +=3D written;
+> >         }
+> >  out:
+> > +       if (written > 0) {
+> > +               err =3D file_update_time(file);
+> > +               /*
+> > +                * There isn't much we can do at this point if updating=
+ the
+> > +                * times fails after a successful write. The times and =
+i_version
+> > +                * should still be updated in the inode, and it should =
+still be
+> > +                * marked dirty, so hopefully the next inode update wil=
+l catch it.
+> > +                * Log a warning once so we have a record that somethin=
+g untoward
+> > +                * has occurred.
+> > +                */
+> > +               WARN_ONCE(err, "Failed to update m/ctime after write: %=
+ld\n", err);
+>=20
+> pr_warn_once() please - this is not a programming assertion.
+>=20
+
+ACK. I'll change that.
+
+--=20
+Jeff Layton <jlayton@kernel.org>
