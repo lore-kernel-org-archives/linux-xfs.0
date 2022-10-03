@@ -2,107 +2,85 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 524BDC4332F
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Oct 2022 15:08:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81466C433FE
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 Oct 2022 20:23:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229570AbiJCPIl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 3 Oct 2022 11:08:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57616 "EHLO
+        id S229755AbiJCUXI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 3 Oct 2022 16:23:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33190 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229864AbiJCPIk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Oct 2022 11:08:40 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 325481BEBE;
-        Mon,  3 Oct 2022 08:08:39 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        with ESMTP id S229797AbiJCUXG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Oct 2022 16:23:06 -0400
+Received: from gandalf.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F17044A818;
+        Mon,  3 Oct 2022 13:23:05 -0700 (PDT)
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id D54AA21982;
-        Mon,  3 Oct 2022 15:08:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1664809717; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=aytUdXlGSVAVAW293DkhDivkGR0N7fkvULdwZOjcsOA=;
-        b=n/FrNF6zgz6jZFmZnlJOWIbrGzQYXL6yM0mJ/jc+QIH1ww+yX9V1b8JfTsKpXG0QyYRZmf
-        gIWbP1pq/MTUlu8K1wfZh8MsW1LfrK7LvQVeKNgMVX51MimhtIJL5YlF+de/kXp+5BF+0J
-        Pnl3KLp1HBlbjwAkHetW094SQIHonQM=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id A974C13522;
-        Mon,  3 Oct 2022 15:08:37 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id O/oGKPX6OmN5dgAAMHmgww
-        (envelope-from <mkoutny@suse.com>); Mon, 03 Oct 2022 15:08:37 +0000
-Date:   Mon, 3 Oct 2022 17:08:36 +0200
-From:   Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     cgroups@vger.kernel.org, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] memcg: calling reclaim_high(GFP_KERNEL) in GFP_NOFS
- context deadlocks
-Message-ID: <Yzr69M9MtNYIKPBx@blackbook>
-References: <20220929215440.1967887-1-david@fromorbit.com>
- <20220929222006.GI3600936@dread.disaster.area>
- <YzbesGeUkX3qwqj8@blackbook>
- <20220930220834.GK3600936@dread.disaster.area>
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 4MhC2H2fz6z4x1D;
+        Tue,  4 Oct 2022 07:23:03 +1100 (AEDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
+        s=201702; t=1664828584;
+        bh=0P9IdNNlZvd3U+QfZ7RUHL4K2h6J5v6pvXJXrgfhq2E=;
+        h=Date:From:To:Cc:Subject:From;
+        b=E2cZRwF8N+nfJsKO+T8fCxwW18bWkJKpl5tCnW6wSHK9HP3J6uvpVVCHaeqnNFwID
+         x9z8nunecMf+dDrSLJB7f5xmU0QSOs0rhyf4F3q7H/n1LMFj14633NbmBqkSnofJtf
+         ibF2t0uIYe9WjxW9n0aKK6NFOSK7LLrZ79ql79BGd8IqmWPR3tD2T7wflpkP8WW0zo
+         vTwODo8W7u1O65nla+IuOWUe+c2ZWrZWuwDKFBd2X1THepQ6IC9b4FSlwjN+3taMGO
+         p9Hmmb3B1JihORLCdK8iNh9y7XSz0ItN5XFm31uuc84Ej/KgdGrg8JvonmBtEAHjX5
+         XQU75uBVd/jUQ==
+Date:   Tue, 4 Oct 2022 07:23:02 +1100
+From:   Stephen Rothwell <sfr@canb.auug.org.au>
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        David Chinner <david@fromorbit.com>,
+        <linux-xfs@vger.kernel.org>
+Cc:     Stephen Zhang <starzhangzsd@gmail.com>,
+        Shida Zhang <zhangshida@kylinos.cn>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>
+Subject: linux-next: Signed-off-by missing for commit in the xfs tree
+Message-ID: <20221004072302.345bfd4a@canb.auug.org.au>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="OOHJpowuF7rqPJPU"
-Content-Disposition: inline
-In-Reply-To: <20220930220834.GK3600936@dread.disaster.area>
+Content-Type: multipart/signed; boundary="Sig_/nY0U.JnHr_q0BTuMvfLwuGs";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+--Sig_/nY0U.JnHr_q0BTuMvfLwuGs
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
---OOHJpowuF7rqPJPU
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Hi all,
 
-On Sat, Oct 01, 2022 at 08:08:34AM +1000, Dave Chinner <david@fromorbit.com> wrote:
-> You might be right in that c9afe31ec443 exposed the issue, but it's
-> not the root cause. I think c9afe31ec443 just a case of a
-> new caller of mem_cgroup_handle_over_high() stepping on the landmine
-> left by b3ff92916af3 adding an unconditional GFP_KERNEL direct
-> reclaim deep in the guts of the memcg code.
+Commits
 
-It's specific of the memory.high induced reclaim that it happens out of
-sensitive paths (as was with exit to usermode or workqueue), so there'd
-be no explicit flags to pass through, hence the unconditional
-GFP_KERNEL.
+  ece9d1c54c23 ("xfs: rearrange the logic and remove the broken comment for=
+ xfs_dir2_isxx")
+  7ee7a280ea9d ("xfs: trim the mapp array accordingly in xfs_da_grow_inode_=
+int")
 
-> So what's the real root cause of the issue - the commit that stepped
-> on the landmine, or the commit that placed the landmine?
+are missing a Signed-off-by from their author.
 
-My preference here is slighty on the newer commit but feel free to
-reference both.
+--=20
+Cheers,
+Stephen Rothwell
 
-> Either way, if anyone backports b3ff92916af3 or has a kernel with
-> b3ff92916af3 and not c9afe31ec443, they still need to know
-> about the landmine in b3ff92916af3....
-
-To be on the same page -- having just b3ff92916af3 won't lead to the
-described cycle when FS code reclaims without GFP_NOFS? (IOW, how would
-the fix look like fix without c9afe31ec443?)
-
-Thanks,
-Michal
-
---OOHJpowuF7rqPJPU
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+--Sig_/nY0U.JnHr_q0BTuMvfLwuGs
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 
-iHUEARYKAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCYzr68gAKCRAkDQmsBEOq
-uShAAP4nCUb/8BBe0G5NPxDTfRtDkhqnQSLtUqP1SheQihbQ8AEA08BzlyOuRTWH
-DwghMoqgqag9V2P98YpcCDpA2R/KvwA=
-=/1mZ
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmM7RKYACgkQAVBC80lX
+0GzVVAgAkW87nbgxRviUKZnfSp/pCwCSsQ7BkpAFNQoLahVh5kPMqMnlkmeyT3Ni
+insIvsES4OmxWGSYGxEMBnL4Ho6K5j9k7CblAkFiSvLtGDf42GkiwCS1X9ZNBT0y
+6wp0zFN9IUPXOtfeGKL7qlAQumUzPWGoIFg+R7hYINlvNVO3p+pmKUVrwoCQneTA
+F7nW8rP98TzAIQE+O2DuuC63jQxZC/rRtqZJwPbeOd/J5oivSgCgKrqZEQkgR9EZ
+IVZS6VI9ypJ2wy0nj3VsnJLm3C4lu3q+NAtjQEF/b58VYZFxrQmIfFRCuL/C7NTH
+VgFnFRAxmokr6eafV0vj/N/Dva4Vjg==
+=fya/
 -----END PGP SIGNATURE-----
 
---OOHJpowuF7rqPJPU--
+--Sig_/nY0U.JnHr_q0BTuMvfLwuGs--
