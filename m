@@ -2,114 +2,199 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2521DC43217
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Oct 2022 21:04:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E786C43217
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Oct 2022 22:27:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229574AbiJDVEF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Oct 2022 17:04:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54398 "EHLO
+        id S231277AbiJDW1c (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Oct 2022 18:27:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34706 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229569AbiJDVEE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2022 17:04:04 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B6F2965270;
-        Tue,  4 Oct 2022 14:04:03 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au [49.181.106.210])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 6EB2C8AC3BA;
-        Wed,  5 Oct 2022 08:04:01 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1ofp56-00FfvW-2h; Wed, 05 Oct 2022 08:04:00 +1100
-Date:   Wed, 5 Oct 2022 08:04:00 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Stephen Rothwell <sfr@canb.auug.org.au>, linux-xfs@vger.kernel.org,
-        Stephen Zhang <starzhangzsd@gmail.com>,
-        Shida Zhang <zhangshida@kylinos.cn>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>
-Subject: Re: linux-next: Signed-off-by missing for commit in the xfs tree
-Message-ID: <20221004210400.GO3600936@dread.disaster.area>
-References: <20221004072302.345bfd4a@canb.auug.org.au>
- <20221003222103.GM3600936@dread.disaster.area>
- <20221004225012.501e11ed@canb.auug.org.au>
- <YzxX7ks+YD7U1dcl@magnolia>
+        with ESMTP id S229643AbiJDW1a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2022 18:27:30 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6193C24F16;
+        Tue,  4 Oct 2022 15:27:29 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 0845321905;
+        Tue,  4 Oct 2022 22:27:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1664922448; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=7vzITPki9DergJeVn+XOP8XeqEJQp0G0OTrwXmCSGUY=;
+        b=GBmgeralmG280qmuwML4DqNserODcQNyzIAWsmjbLUFRPA2y9Rj6dP3hxFYsttwcjhDljL
+        GUyKwcox5P78LOMWWFfpeM1qj+Ew1gAkmcnn4S9dVbeX8+itMrHtWqSYbXMVvN0APxf8Ju
+        YqSC2wNUrd6iOOQYHu8S33WPfd4N1Dk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1664922448;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=7vzITPki9DergJeVn+XOP8XeqEJQp0G0OTrwXmCSGUY=;
+        b=vkUAcjh89hN6EXp3oxhoNf7BpGR04jBmI0o8jkLw5yNE9jcJ20XekNbJPiLQHNh6iwi2/H
+        RbAwfnqrkCjYZgAA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 68B9D139D2;
+        Tue,  4 Oct 2022 22:27:21 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id jQedCEmzPGNgKwAAMHmgww
+        (envelope-from <neilb@suse.de>); Tue, 04 Oct 2022 22:27:21 +0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YzxX7ks+YD7U1dcl@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=633c9fc2
-        a=j6JUzzrSC7wlfFge/rmVbg==:117 a=j6JUzzrSC7wlfFge/rmVbg==:17
-        a=kj9zAlcOel0A:10 a=Qawa6l4ZSaYA:10 a=7-415B0cAAAA:8
-        a=dO8VshlyLlrOEYzubo8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+From:   "NeilBrown" <neilb@suse.de>
+To:     "Jeff Layton" <jlayton@kernel.org>
+Cc:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
+        david@fromorbit.com, trondmy@hammerspace.com,
+        viro@zeniv.linux.org.uk, zohar@linux.ibm.com, xiubli@redhat.com,
+        chuck.lever@oracle.com, lczerner@redhat.com, jack@suse.cz,
+        bfields@fieldses.org, brauner@kernel.org, fweimer@redhat.com,
+        linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v6 4/9] nfs: report the inode version in getattr if requested
+In-reply-to: <822ce678d47be0767464fc580d04981c24ccd28e.camel@kernel.org>
+References: <20220930111840.10695-1-jlayton@kernel.org>,
+ <20220930111840.10695-5-jlayton@kernel.org>,
+ <166483977325.14457.7085950126736913468@noble.neil.brown.name>,
+ <822ce678d47be0767464fc580d04981c24ccd28e.camel@kernel.org>
+Date:   Wed, 05 Oct 2022 09:27:15 +1100
+Message-id: <166492243554.14457.1530520033894290024@noble.neil.brown.name>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 04, 2022 at 08:57:34AM -0700, Darrick J. Wong wrote:
-> On Tue, Oct 04, 2022 at 10:50:12PM +1100, Stephen Rothwell wrote:
-> > Hi Dave,
-> > 
-> > On Tue, 4 Oct 2022 09:21:03 +1100 Dave Chinner <david@fromorbit.com> wrote:
-> > >
-> > > The commit matches exactly what was sent to the list. It's just
-> > > that the patch was sent from a personal email address with a
-> > > corporate signoff.
-> > > 
-> > > Since when has that been an issue?  I -personally- have been doing
-> > > this for well over a decade and I'm pretty sure there are lots of
-> > > other people who also do this.
-> > 
-> > If you are happy (as the maintainer), then fine.
+On Tue, 04 Oct 2022, Jeff Layton wrote:
+> On Tue, 2022-10-04 at 10:29 +1100, NeilBrown wrote:
+> > On Fri, 30 Sep 2022, Jeff Layton wrote:
+> > > Allow NFS to report the i_version in getattr requests. Since the cost to
+> > > fetch it is relatively cheap, do it unconditionally and just set the
+> > > flag if it looks like it's valid. Also, conditionally enable the
+> > > MONOTONIC flag when the server reports its change attr type as such.
+> > >=20
+> > > Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> > > ---
+> > >  fs/nfs/inode.c | 10 ++++++++--
+> > >  1 file changed, 8 insertions(+), 2 deletions(-)
+> > >=20
+> > > diff --git a/fs/nfs/inode.c b/fs/nfs/inode.c
+> > > index bea7c005119c..5cb7017e5089 100644
+> > > --- a/fs/nfs/inode.c
+> > > +++ b/fs/nfs/inode.c
+> > > @@ -830,6 +830,8 @@ static u32 nfs_get_valid_attrmask(struct inode *ino=
+de)
+> > >  		reply_mask |=3D STATX_UID | STATX_GID;
+> > >  	if (!(cache_validity & NFS_INO_INVALID_BLOCKS))
+> > >  		reply_mask |=3D STATX_BLOCKS;
+> > > +	if (!(cache_validity & NFS_INO_INVALID_CHANGE))
+> > > +		reply_mask |=3D STATX_VERSION;
+> > >  	return reply_mask;
+> > >  }
+> > > =20
+> > > @@ -848,7 +850,7 @@ int nfs_getattr(struct user_namespace *mnt_userns, =
+const struct path *path,
+> > > =20
+> > >  	request_mask &=3D STATX_TYPE | STATX_MODE | STATX_NLINK | STATX_UID |
+> > >  			STATX_GID | STATX_ATIME | STATX_MTIME | STATX_CTIME |
+> > > -			STATX_INO | STATX_SIZE | STATX_BLOCKS;
+> > > +			STATX_INO | STATX_SIZE | STATX_BLOCKS | STATX_VERSION;
+> > > =20
+> > >  	if ((query_flags & AT_STATX_DONT_SYNC) && !force_sync) {
+> > >  		if (readdirplus_enabled)
+> > > @@ -877,7 +879,7 @@ int nfs_getattr(struct user_namespace *mnt_userns, =
+const struct path *path,
+> > >  	/* Is the user requesting attributes that might need revalidation? */
+> > >  	if (!(request_mask & (STATX_MODE|STATX_NLINK|STATX_ATIME|STATX_CTIME|
+> > >  					STATX_MTIME|STATX_UID|STATX_GID|
+> > > -					STATX_SIZE|STATX_BLOCKS)))
+> > > +					STATX_SIZE|STATX_BLOCKS|STATX_VERSION)))
+> > >  		goto out_no_revalidate;
+> > > =20
+> > >  	/* Check whether the cached attributes are stale */
+> > > @@ -915,6 +917,10 @@ int nfs_getattr(struct user_namespace *mnt_userns,=
+ const struct path *path,
+> > > =20
+> > >  	generic_fillattr(&init_user_ns, inode, stat);
+> > >  	stat->ino =3D nfs_compat_user_ino64(NFS_FILEID(inode));
+> > > +	stat->version =3D inode_peek_iversion_raw(inode);
+> >=20
+> > This looks wrong.
+> > 1/ it includes the I_VERSION_QUERIED bit, which should be hidden.
+> > 2/ it doesn't set that bit.
+> >=20
+> > I understand that the bit was already set when the generic code called
+> > inode_query_iversion(), but it might have changed if we needed to
+> > refresh the attrs.
+> >=20
+> > I'm beginning to think I shouldn't have approved the 3/9 patch.  The
+> > stat->version shouldn't be set in vfs_getattr_nosec() - maybe in
+> > generic_fillattr(), but not a lot of point.
+> >=20
+>=20
+> NFS (and Ceph),=C2=A0do not set the SB_I_VERSION flag and they don't use the
+> QUERIED bit. These are "server managed" implementations of i_version.
+> The server is responsible for incrementing the value, and we just store
+> the result in the i_version field and present it when needed. That's why
+> the patch for NFS is using the "raw" API.
 
-Not really, I don't like it when our tools don't do the right thing,
-are entirely silent about it and then I get surprised by custom
-checks other people run.
+Ahh - of course.  I got confused because the "raw" api is used by code
+(in iversion.h) that wants to access the QUERIED bit.  Maybe having
+different names would help.  Or maybe me re-familiarising myself with
+the interfaces would help...
 
-> > My script just could
-> > not connect those 2 email addresses.  I check for matches between the
-> > address itself (the part between the <>) or a match between the "name"
-> > part (before the <>).  If either matches (or it is obvious) then I
-> > don't report it.
+Reviewed-by: NeilBrown <neilb@suse.de>
 
-Yup, during development of the patches the names started out
-matching. The SOB stayed the same but the name on the personal email
-address got anglicised, hence nothing matched by the time I pulled
-it with b4.
 
-> > I have reported very few of these.
-> 
-> My checkpatch is happier if the whole "name <email>" string matches, but
-> it'll accept name matches.  This ofc rests upon the assumption that
-> I can spot the deepcake'd Dave Chinners hawking phones in Russia or
-> whatever. ;)
+>=20
+> > > +	stat->attributes_mask |=3D STATX_ATTR_VERSION_MONOTONIC;
+> > > +	if (server->change_attr_type !=3D NFS4_CHANGE_TYPE_IS_UNDEFINED)
+> > > +		stat->attributes |=3D STATX_ATTR_VERSION_MONOTONIC;
+> >=20
+> > So if the server tells us that the change attrs is based on time
+> > metadata, we accept that it will be monotonic (and RFC7862 encourages
+> > this), even though we seem to worry about timestamps going backwards
+> > (which we know that can)...  Interesting.
+> >=20
+> >=20
+>=20
+> I followed suit from nfs_inode_attrs_cmp(). It seems to treat any value
+> that isn't UNDEFINED as MONOTONIC, though it does use a less strict
+> comparator for NFS4_CHANGE_TYPE_IS_TIME_METADATA. It may make sense to
+> carve that out as an exception.
+>=20
+> This is probably an indicator that we need a more strict definition for
+> STATX_ATTR_VERSION_MONOTONIC.
 
-If someone wants to fake me and do my work for me so I don't have to
-do anything, I'm all for it. :)
+Maybe.  Or maybe we decide that if the system time goes backwards and
+things break, then you get to keep both halves.
+The pedant in me want to handle that properly.  The pragmatist doesn't
+think it is worth it.
 
-As it is, I use the convention of putting an explicit From: tag in
-the commit message that matches the SOB so tools pulling stuff from
-mailing lists do the right thing with them (same as any third-party
-provided patch in a series). 
+Thanks,
+NeilBrown
 
-> That said... I think we should get in the habit of asking patch authors
-> to make sure that at least one of the email or name strings match
-> between the From and SOB tags.  I can see how people who grok even less
-> about how Chinese names work than I do (read: lawyers) might get fussy
-> about this kind of thing.
 
-As per above, the normal solution is an explicit "From: <foo>" line
-that matches the SOB.  It's just annoying that our new-fangled tools
-haven't encoded this long-standing convention to warn us when we
-pull a patch with a from-tag that doesn't match a sob-tag.
-
-And, yes, I know about git hooks - forcing every maintainer to
-implement their own custom git hooks to catch errors the tool they
-are all using can easily catch is not a reliable or scalable
-solution. We use common tools for a reason.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>=20
+>=20
+> >=20
+> > >  	if (S_ISDIR(inode->i_mode))
+> > >  		stat->blksize =3D NFS_SERVER(inode)->dtsize;
+> > >  out:
+> > > --=20
+> > > 2.37.3
+> > >=20
+> > >=20
+>=20
+> --=20
+> Jeff Layton <jlayton@kernel.org>
+>=20
