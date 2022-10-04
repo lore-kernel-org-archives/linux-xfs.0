@@ -2,189 +2,75 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB904C4332F
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Oct 2022 17:44:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FCABC433FE
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Oct 2022 18:11:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229801AbiJDRoU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Oct 2022 13:44:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52332 "EHLO
+        id S229549AbiJDSLM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Oct 2022 14:11:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229803AbiJDRoQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2022 13:44:16 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 878D657887;
-        Tue,  4 Oct 2022 10:44:15 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 24F6E614ED;
-        Tue,  4 Oct 2022 17:44:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39833C433C1;
-        Tue,  4 Oct 2022 17:44:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664905454;
-        bh=Rte1HvtfgvFRVjI9vmQSmn8KC1YqoQCVVzKzmhIF2f8=;
-        h=From:To:Cc:Subject:Date:From;
-        b=TXoomx0Fwgy3RlDGeKpNyJvQKJXILM0zhFXPxPg0RxBKHgGPZLtzxY9O8ROE7lIo1
-         S6oXgY/E1bP+73sU9RMOO0BCkm+WUGpaXZgeoozXSkMqPJVBG2G+cfL1lXx4rP1MWx
-         iDklhkM0ofevngD3ygTIu3fQDaNt1wk95jKbntv8AoBAE3T78h0Ye0GbXizhIFwM/c
-         l4NZ6B/vRH++0uutSiyEWPZLYnLcvPOziMdVgQ5RNsqV4NsP8XGw0Qxv+Zdl/2m8ht
-         TJ/m1byfhSfKmoWqIj1g6HydyWV31REWXwDD8zCXYmZh48HljZ7H7C9IRiw1kZGixU
-         h+1fTlkD57ACA==
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     linux-man@vger.kernel.org
-Cc:     linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-block@vger.kernel.org,
-        "Darrick J. Wong" <djwong@kernel.org>
-Subject: [man-pages PATCH v3] statx.2, open.2: document STATX_DIOALIGN
-Date:   Tue,  4 Oct 2022 10:43:07 -0700
-Message-Id: <20221004174307.6022-1-ebiggers@kernel.org>
-X-Mailer: git-send-email 2.37.3
+        with ESMTP id S229777AbiJDSLL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2022 14:11:11 -0400
+Received: from mail.itouring.de (mail.itouring.de [IPv6:2a01:4f8:a0:4463::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADFF613DE6
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Oct 2022 11:11:09 -0700 (PDT)
+Received: from tux.applied-asynchrony.com (p5ddd7cb4.dip0.t-ipconnect.de [93.221.124.180])
+        by mail.itouring.de (Postfix) with ESMTPSA id BAADA103762
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Oct 2022 20:11:05 +0200 (CEST)
+Received: from [192.168.100.221] (hho.applied-asynchrony.com [192.168.100.221])
+        by tux.applied-asynchrony.com (Postfix) with ESMTP id 577B3F01606
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Oct 2022 20:11:05 +0200 (CEST)
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+From:   =?UTF-8?Q?Holger_Hoffst=c3=a4tte?= <holger@applied-asynchrony.com>
+Subject: [PATCH] xfsprogs: fix warnings/errors due to missing include
+Organization: Applied Asynchrony, Inc.
+Message-ID: <865733c7-8314-cd13-f363-5ba2c6842372@applied-asynchrony.com>
+Date:   Tue, 4 Oct 2022 20:11:05 +0200
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Eric Biggers <ebiggers@google.com>
 
-Document the STATX_DIOALIGN support for statx()
-(https://git.kernel.org/linus/725737e7c21d2d25).
+Gentoo is currently trying to rebuild the world with clang-16, uncovering exciting
+new errors in many packages since several warnings have been turned into errors,
+among them missing prototypes, as documented at:
+https://discourse.llvm.org/t/clang-16-notice-of-potentially-breaking-changes/65562
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
+xfsprogs came up, with details at https://bugs.gentoo.org/875050.
 
-I'm resending this now that support for STATX_DIOALIGN has been merged
-upstream.
+The problem was easy to find: a missing include for the u_init/u_cleanup
+prototypes. The error:
 
-v3: updated mentions of Linux version, fixed some punctuation, and added
-    a Reviewed-by
+Building scrub
+     [CC]     unicrash.o
+unicrash.c:746:2: error: call to undeclared function 'u_init'; ISO C99 and later do not support implicit function declarations [-Werror,-Wimplicit-function-declaration]
+         u_init(&uerr);
+         ^
+unicrash.c:746:2: note: did you mean 'u_digit'?
+/usr/include/unicode/uchar.h:4073:1: note: 'u_digit' declared here
+u_digit(UChar32 ch, int8_t radix);
+^
+unicrash.c:754:2: error: call to undeclared function 'u_cleanup'; ISO C99 and later do not support implicit function declarations [-Werror,-Wimplicit-function-declaration]
+         u_cleanup();
+         ^
+2 errors generated.
 
-v2: rebased onto man-pages master branch, mentioned xfs, and updated
-    link to patchset
+The complaint is valid and the fix is easy enough: just add the missing include.
 
- man2/open.2  | 43 ++++++++++++++++++++++++++++++++-----------
- man2/statx.2 | 29 +++++++++++++++++++++++++++++
- 2 files changed, 61 insertions(+), 11 deletions(-)
+Signed-off-by: Holger Hoffstätte <holger@applied-asynchrony.com>
 
-diff --git a/man2/open.2 b/man2/open.2
-index deba7e4ea..b8617e0d2 100644
---- a/man2/open.2
-+++ b/man2/open.2
-@@ -1732,21 +1732,42 @@ of user-space buffers and the file offset of I/Os.
- In Linux alignment
- restrictions vary by filesystem and kernel version and might be
- absent entirely.
--However there is currently no filesystem\-independent
--interface for an application to discover these restrictions for a given
--file or filesystem.
--Some filesystems provide their own interfaces
--for doing so, for example the
-+The handling of misaligned
-+.B O_DIRECT
-+I/Os also varies; they can either fail with
-+.B EINVAL
-+or fall back to buffered I/O.
-+.PP
-+Since Linux 6.1,
-+.B O_DIRECT
-+support and alignment restrictions for a file can be queried using
-+.BR statx (2),
-+using the
-+.B STATX_DIOALIGN
-+flag.
-+Support for
-+.B STATX_DIOALIGN
-+varies by filesystem; see
-+.BR statx (2).
-+.PP
-+Some filesystems provide their own interfaces for querying
-+.B O_DIRECT
-+alignment restrictions, for example the
- .B XFS_IOC_DIOINFO
- operation in
- .BR xfsctl (3).
-+.B STATX_DIOALIGN
-+should be used instead when it is available.
- .PP
--Under Linux 2.4, transfer sizes, the alignment of the user buffer,
--and the file offset must all be multiples of the logical block size
--of the filesystem.
--Since Linux 2.6.0, alignment to the logical block size of the
--underlying storage (typically 512 bytes) suffices.
--The logical block size can be determined using the
-+If none of the above is available, then direct I/O support and alignment
-+restrictions can only be assumed from known characteristics of the filesystem,
-+the individual file, the underlying storage device(s), and the kernel version.
-+In Linux 2.4, most block device based filesystems require that the file offset
-+and the length and memory address of all I/O segments be multiples of the
-+filesystem block size (typically 4096 bytes).
-+In Linux 2.6.0, this was relaxed to the logical block size of the block device
-+(typically 512 bytes).
-+A block device's logical block size can be determined using the
- .BR ioctl (2)
- .B BLKSSZGET
- operation or from the shell using the command:
-diff --git a/man2/statx.2 b/man2/statx.2
-index 0d1b4591f..50397057d 100644
---- a/man2/statx.2
-+++ b/man2/statx.2
-@@ -61,7 +61,12 @@ struct statx {
-        containing the filesystem where the file resides */
-     __u32 stx_dev_major;   /* Major ID */
-     __u32 stx_dev_minor;   /* Minor ID */
-+
-     __u64 stx_mnt_id;      /* Mount ID */
-+
-+    /* Direct I/O alignment restrictions */
-+    __u32 stx_dio_mem_align;
-+    __u32 stx_dio_offset_align;
- };
- .EE
- .in
-@@ -247,6 +252,8 @@ STATX_BTIME	Want stx_btime
- STATX_ALL	The same as STATX_BASIC_STATS | STATX_BTIME.
- 	It is deprecated and should not be used.
- STATX_MNT_ID	Want stx_mnt_id (since Linux 5.8)
-+STATX_DIOALIGN	Want stx_dio_mem_align and stx_dio_offset_align
-+	(since Linux 6.1; support varies by filesystem)
- .TE
- .in
- .PP
-@@ -407,6 +414,28 @@ This is the same number reported by
- .BR name_to_handle_at (2)
- and corresponds to the number in the first field in one of the records in
- .IR /proc/self/mountinfo .
-+.TP
-+.I stx_dio_mem_align
-+The alignment (in bytes) required for user memory buffers for direct I/O
-+.BR "" ( O_DIRECT )
-+on this file, or 0 if direct I/O is not supported on this file.
-+.IP
-+.B STATX_DIOALIGN
-+.IR "" ( stx_dio_mem_align
-+and
-+.IR stx_dio_offset_align )
-+is supported on block devices since Linux 6.1.
-+The support on regular files varies by filesystem; it is supported by ext4,
-+f2fs, and xfs since Linux 6.1.
-+.TP
-+.I stx_dio_offset_align
-+The alignment (in bytes) required for file offsets and I/O segment lengths for
-+direct I/O
-+.BR "" ( O_DIRECT )
-+on this file, or 0 if direct I/O is not supported on this file.
-+This will only be nonzero if
-+.I stx_dio_mem_align
-+is nonzero, and vice versa.
- .PP
- For further information on the above fields, see
- .BR inode (7).
-
-base-commit: bc28d289e5066fc626df260bafc249846a0f6ae6
--- 
-2.37.3
+-- xfsprogs-5.18.0/scrub/unicrash.c	2021-12-13 21:02:19.000000000 +0100
++++ xfsprogs-5.18.0-nowarn/scrub/unicrash.c	2022-10-04 19:46:28.869402900 +0200
+@@ -10,6 +10,7 @@
+  #include <sys/types.h>
+  #include <sys/statvfs.h>
+  #include <strings.h>
++#include <unicode/uclean.h>
+  #include <unicode/ustring.h>
+  #include <unicode/unorm2.h>
+  #include <unicode/uspoof.h>
 
