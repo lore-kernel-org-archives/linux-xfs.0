@@ -2,98 +2,79 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4270C07E9D
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Oct 2022 18:30:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89DF4C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Oct 2022 18:34:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229771AbiJDS2Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Oct 2022 14:28:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57578 "EHLO
+        id S229468AbiJDSe2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Oct 2022 14:34:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229445AbiJDS2Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2022 14:28:24 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D22335467F
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Oct 2022 11:28:23 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6ED516141C
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Oct 2022 18:28:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CEFE6C433C1;
-        Tue,  4 Oct 2022 18:28:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664908102;
-        bh=OWjwiCmezqshfIfQeqCn0jP0fV3cQDlMZb/Xj1158QA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=FFTg1Gz6v93kfJE8FP/sPpaiU3+X8o9rFp8svmQMfZn/McyOWXckopZPKBXp9QZ5s
-         QY8rBVA4wCb07I3MZneN1W2qkibYmWJtRbEHQMRkKacRgVTbHaG/igYaRS80muQdOT
-         PIE31RTidvVjT95IByWU2nl5Yt54Lh5r6Ld97cYPA2gV5srGvPKQWZ34Ly5+XhWYwm
-         H7pFI1zVLB2D0fNzJ1FgT9mNr67qZp0Yq6tga9cdjersdHN8s4L9V6O/xxuRIYKmUd
-         QcxVScvnmC/yjyyt9l9/qHe11NvhS1YpbDch3S2KIjBEOEZIerESKSyFeM/Jd4wtWB
-         Jpvx6rdKV9ULA==
-Date:   Tue, 4 Oct 2022 11:28:22 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Holger =?iso-8859-1?Q?Hoffst=E4tte?= 
-        <holger@applied-asynchrony.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+        with ESMTP id S229609AbiJDSe0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2022 14:34:26 -0400
+Received: from mail.itouring.de (mail.itouring.de [IPv6:2a01:4f8:a0:4463::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4790C66119
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Oct 2022 11:34:25 -0700 (PDT)
+Received: from tux.applied-asynchrony.com (p5ddd7cb4.dip0.t-ipconnect.de [93.221.124.180])
+        by mail.itouring.de (Postfix) with ESMTPSA id D0139103762;
+        Tue,  4 Oct 2022 20:34:23 +0200 (CEST)
+Received: from [192.168.100.221] (hho.applied-asynchrony.com [192.168.100.221])
+        by tux.applied-asynchrony.com (Postfix) with ESMTP id 8B192F01606;
+        Tue,  4 Oct 2022 20:34:23 +0200 (CEST)
 Subject: Re: [PATCH] xfsprogs: fix warnings/errors due to missing include
-Message-ID: <Yzx7RrC1v2LQ6wSf@magnolia>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
 References: <865733c7-8314-cd13-f363-5ba2c6842372@applied-asynchrony.com>
+ <Yzx7RrC1v2LQ6wSf@magnolia>
+From:   =?UTF-8?Q?Holger_Hoffst=c3=a4tte?= <holger@applied-asynchrony.com>
+Organization: Applied Asynchrony, Inc.
+Message-ID: <e1df04bf-866d-1dc8-9653-7612cce96fe0@applied-asynchrony.com>
+Date:   Tue, 4 Oct 2022 20:34:23 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+In-Reply-To: <Yzx7RrC1v2LQ6wSf@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <865733c7-8314-cd13-f363-5ba2c6842372@applied-asynchrony.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 04, 2022 at 08:11:05PM +0200, Holger Hoffst‰tte wrote:
+On 2022-10-04 20:28, Darrick J. Wong wrote:
+> On Tue, Oct 04, 2022 at 08:11:05PM +0200, Holger Hoffst√§tte wrote:
+>>
+>> Gentoo is currently trying to rebuild the world with clang-16, uncovering exciting
+>> new errors in many packages since several warnings have been turned into errors,
+>> among them missing prototypes, as documented at:
+>> https://discourse.llvm.org/t/clang-16-notice-of-potentially-breaking-changes/65562
+>>
+>> xfsprogs came up, with details at https://bugs.gentoo.org/875050.
+>>
+>> The problem was easy to find: a missing include for the u_init/u_cleanup
+>> prototypes. The error:
+>>
+>> Building scrub
+>>      [CC]     unicrash.o
+>> unicrash.c:746:2: error: call to undeclared function 'u_init'; ISO C99 and later do not support implicit function declarations [-Werror,-Wimplicit-function-declaration]
+>>          u_init(&uerr);
+>>          ^
+>> unicrash.c:746:2: note: did you mean 'u_digit'?
+>> /usr/include/unicode/uchar.h:4073:1: note: 'u_digit' declared here
+>> u_digit(UChar32 ch, int8_t radix);
+>> ^
+>> unicrash.c:754:2: error: call to undeclared function 'u_cleanup'; ISO C99 and later do not support implicit function declarations [-Werror,-Wimplicit-function-declaration]
+>>          u_cleanup();
+>>          ^
+>> 2 errors generated.
+>>
+>> The complaint is valid and the fix is easy enough: just add the missing include.
+>>
+>> Signed-off-by: Holger Hoffst√§tte <holger@applied-asynchrony.com>
 > 
-> Gentoo is currently trying to rebuild the world with clang-16, uncovering exciting
-> new errors in many packages since several warnings have been turned into errors,
-> among them missing prototypes, as documented at:
-> https://discourse.llvm.org/t/clang-16-notice-of-potentially-breaking-changes/65562
-> 
-> xfsprogs came up, with details at https://bugs.gentoo.org/875050.
-> 
-> The problem was easy to find: a missing include for the u_init/u_cleanup
-> prototypes. The error:
-> 
-> Building scrub
->     [CC]     unicrash.o
-> unicrash.c:746:2: error: call to undeclared function 'u_init'; ISO C99 and later do not support implicit function declarations [-Werror,-Wimplicit-function-declaration]
->         u_init(&uerr);
->         ^
-> unicrash.c:746:2: note: did you mean 'u_digit'?
-> /usr/include/unicode/uchar.h:4073:1: note: 'u_digit' declared here
-> u_digit(UChar32 ch, int8_t radix);
-> ^
-> unicrash.c:754:2: error: call to undeclared function 'u_cleanup'; ISO C99 and later do not support implicit function declarations [-Werror,-Wimplicit-function-declaration]
->         u_cleanup();
->         ^
-> 2 errors generated.
-> 
-> The complaint is valid and the fix is easy enough: just add the missing include.
-> 
-> Signed-off-by: Holger Hoffst‰tte <holger@applied-asynchrony.com>
+> Aha, that explains why I kept hearing reports about this but could never
+> get gcc to spit out this error.  Thanks for fixing this.
 
-Aha, that explains why I kept hearing reports about this but could never
-get gcc to spit out this error.  Thanks for fixing this.
+You're welcome. This reproduces with gcc when explicitly enabled:
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+$CFLAGS="-Werror=implicit-function-declaration -Werror=implicit-int" ./configure
 
---D
-
-> 
-> -- xfsprogs-5.18.0/scrub/unicrash.c	2021-12-13 21:02:19.000000000 +0100
-> +++ xfsprogs-5.18.0-nowarn/scrub/unicrash.c	2022-10-04 19:46:28.869402900 +0200
-> @@ -10,6 +10,7 @@
->  #include <sys/types.h>
->  #include <sys/statvfs.h>
->  #include <strings.h>
-> +#include <unicode/uclean.h>
->  #include <unicode/ustring.h>
->  #include <unicode/unorm2.h>
->  #include <unicode/uspoof.h>
-> 
+cheers,
+Holger
