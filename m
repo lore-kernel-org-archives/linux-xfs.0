@@ -2,193 +2,189 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1561FC433F5
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Oct 2022 16:13:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB904C4332F
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Oct 2022 17:44:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229974AbiJDQNO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Oct 2022 12:13:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41236 "EHLO
+        id S229801AbiJDRoU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Oct 2022 13:44:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52332 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229780AbiJDQNN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2022 12:13:13 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 096532C124
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Oct 2022 09:13:11 -0700 (PDT)
+        with ESMTP id S229803AbiJDRoQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2022 13:44:16 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 878D657887;
+        Tue,  4 Oct 2022 10:44:15 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 582B9CE10EC
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Oct 2022 16:13:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CB38C433C1;
-        Tue,  4 Oct 2022 16:13:08 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 24F6E614ED;
+        Tue,  4 Oct 2022 17:44:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39833C433C1;
+        Tue,  4 Oct 2022 17:44:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664899988;
-        bh=hWmdNenGYwkJ5nm6qAEqQIe8T2NHeSqGqdRiN3MoH04=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=qbf2sPJI11nLeoOtTQEhq8Hw9uvLIyR+sarLsLMKK4ci5LrnUhadfTPeifsNo3QyH
-         1fx2nb7ZRYYHit7gBKEXxKmNJyiLH5u+xjgNDVZUSsHKchKDfaLgVgYwaPEOQSRNnG
-         ddA5aHlysgV8w1u8W86rPurXrfT34JVWEL0rZxwOiCpAgeKoH+0FJwLJrUvPED8K0n
-         bekHBwkPsF/DunBbNxdMPFtntriNr2DFjW81fPRvx/jF8QRMFVsMMGNu0Cdmp3AgAE
-         kaoxFwGlUGCOAN2ceam/V7cMB/hKFm0X6HCl32biozktA6kSuUEC3A44WodqzvDRIU
-         hX0leBL4NcSFA==
-Date:   Tue, 4 Oct 2022 09:13:07 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Petr Vorel <pvorel@suse.cz>
-Cc:     ltp@lists.linux.it, Tim.Bird@sony.com, linux-xfs@vger.kernel.org,
-        Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH 1/1] df01.sh: Use own fsfreeze implementation for XFS
-Message-ID: <YzxbkyJlcxKgs/Fd@magnolia>
-References: <20221004090810.9023-1-pvorel@suse.cz>
+        s=k20201202; t=1664905454;
+        bh=Rte1HvtfgvFRVjI9vmQSmn8KC1YqoQCVVzKzmhIF2f8=;
+        h=From:To:Cc:Subject:Date:From;
+        b=TXoomx0Fwgy3RlDGeKpNyJvQKJXILM0zhFXPxPg0RxBKHgGPZLtzxY9O8ROE7lIo1
+         S6oXgY/E1bP+73sU9RMOO0BCkm+WUGpaXZgeoozXSkMqPJVBG2G+cfL1lXx4rP1MWx
+         iDklhkM0ofevngD3ygTIu3fQDaNt1wk95jKbntv8AoBAE3T78h0Ye0GbXizhIFwM/c
+         l4NZ6B/vRH++0uutSiyEWPZLYnLcvPOziMdVgQ5RNsqV4NsP8XGw0Qxv+Zdl/2m8ht
+         TJ/m1byfhSfKmoWqIj1g6HydyWV31REWXwDD8zCXYmZh48HljZ7H7C9IRiw1kZGixU
+         h+1fTlkD57ACA==
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     linux-man@vger.kernel.org
+Cc:     linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org, linux-block@vger.kernel.org,
+        "Darrick J. Wong" <djwong@kernel.org>
+Subject: [man-pages PATCH v3] statx.2, open.2: document STATX_DIOALIGN
+Date:   Tue,  4 Oct 2022 10:43:07 -0700
+Message-Id: <20221004174307.6022-1-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.37.3
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221004090810.9023-1-pvorel@suse.cz>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 04, 2022 at 11:08:10AM +0200, Petr Vorel wrote:
-> df01.sh started to fail on XFS on certain configuration since mkfs.xfs
-> and kernel 5.19. Implement fsfreeze instead of introducing external
+From: Eric Biggers <ebiggers@google.com>
 
-...since the introduction of background garbage collection on XFS in
-kernel 5.19. ;)
+Document the STATX_DIOALIGN support for statx()
+(https://git.kernel.org/linus/725737e7c21d2d25).
 
-> dependency. NOTE: implementation could fail on other filesystems
-> (EOPNOTSUPP on exfat, ntfs, vfat).
-> 
-> Suggested-by: Darrick J. Wong <djwong@kernel.org>
-> Suggested-by: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Petr Vorel <pvorel@suse.cz>
-> ---
-> Hi,
-> 
-> FYI the background of this issue:
-> https://lore.kernel.org/ltp/Yv5oaxsX6z2qxxF3@magnolia/
-> https://lore.kernel.org/ltp/974cc110-d47e-5fae-af5f-e2e610720e2d@redhat.com/
-> 
-> @LTP developers: not sure if the consensus is to avoid LTP API
-> completely (even use it just with TST_NO_DEFAULT_MAIN), if required I
-> can rewrite to use it just to get SAFE_*() macros (like
-> testcases/lib/tst_checkpoint.c) or even with tst_test workarounds
-> (testcases/lib/tst_get_free_pids.c).
-> 
-> Kind regards,
-> Petr
-> 
->  testcases/commands/df/Makefile        |  4 +-
->  testcases/commands/df/df01.sh         |  3 ++
->  testcases/commands/df/df01_fsfreeze.c | 55 +++++++++++++++++++++++++++
->  3 files changed, 61 insertions(+), 1 deletion(-)
->  create mode 100644 testcases/commands/df/df01_fsfreeze.c
-> 
-> diff --git a/testcases/commands/df/Makefile b/testcases/commands/df/Makefile
-> index 2787bb43a..1e0b4283a 100644
-> --- a/testcases/commands/df/Makefile
-> +++ b/testcases/commands/df/Makefile
-> @@ -1,11 +1,13 @@
->  # SPDX-License-Identifier: GPL-2.0-or-later
-> +# Copyright (c) Linux Test Project, 2021-2022
->  # Copyright (c) 2015 Fujitsu Ltd.
-> -# Author:Zhang Jin <jy_zhangjin@cn.fujitsu.com>
-> +# Author: Zhang Jin <jy_zhangjin@cn.fujitsu.com>
->  
->  top_srcdir		?= ../../..
->  
->  include $(top_srcdir)/include/mk/env_pre.mk
->  
->  INSTALL_TARGETS		:= df01.sh
-> +MAKE_TARGETS			:= df01_fsfreeze
->  
->  include $(top_srcdir)/include/mk/generic_leaf_target.mk
-> diff --git a/testcases/commands/df/df01.sh b/testcases/commands/df/df01.sh
-> index ae0449c3c..c59d2a01d 100755
-> --- a/testcases/commands/df/df01.sh
-> +++ b/testcases/commands/df/df01.sh
-> @@ -46,6 +46,9 @@ df_test()
->  
->  	ROD_SILENT rm -rf $TST_MNTPOINT/testimg
->  
-> +	# ensure free space change can be seen by statfs
-> +	[ "$fs" = "xfs" ] && ROD_SILENT df01_fsfreeze $TST_MNTPOINT
-> +
->  	# flush file system buffers, then we can get the actual sizes.
->  	sync
->  }
-> diff --git a/testcases/commands/df/df01_fsfreeze.c b/testcases/commands/df/df01_fsfreeze.c
-> new file mode 100644
-> index 000000000..d47e1b01a
-> --- /dev/null
-> +++ b/testcases/commands/df/df01_fsfreeze.c
-> @@ -0,0 +1,55 @@
-> +// SPDX-License-Identifier: GPL-2.0-or-later
-> +/*
-> + * Copyright (c) 2010 Hajime Taira <htaira@redhat.com>
-> + * Copyright (c) 2010 Masatake Yamato <yamato@redhat.com>
-> + * Copyright (c) 2022 Petr Vorel <pvorel@suse.cz>
-> + */
-> +
-> +#include <errno.h>
-> +#include <fcntl.h>
-> +#include <linux/fs.h>
-> +#include <stdio.h>
-> +#include <stdlib.h>
-> +#include <string.h>
-> +#include <sys/ioctl.h>
-> +#include <sys/stat.h>
-> +#include <unistd.h>
-> +
-> +#define err_exit(...) ({ \
-> +	fprintf(stderr, __VA_ARGS__); \
-> +	if (errno) \
-> +		fprintf(stderr, ": %s (%d)", strerror(errno), errno); \
-> +	fprintf(stderr, "\n"); \
-> +	exit(EXIT_FAILURE); \
-> +})
-> +
-> +int main(int argc, char *argv[])
-> +{
-> +	int fd;
-> +	struct stat sb;
-> +
-> +	if (argc < 2)
-> +		err_exit("USAGE: df01_fsfreeze <mountpoint>");
-> +
-> +	fd = open(argv[1], O_RDONLY);
-> +	if (fd < 0)
-> +		err_exit("open '%s' failed", argv[1]);
-> +
-> +	if (fstat(fd, &sb) == -1)
-> +		err_exit("stat of '%s' failed", argv[1]);
-> +
-> +	if (!S_ISDIR(sb.st_mode))
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
 
-Note that XFS is perfectly happy to let you call FIFREEZE on a
-nondirectory.
+I'm resending this now that support for STATX_DIOALIGN has been merged
+upstream.
 
-> +		err_exit("%s: is not a directory", argv[1]);
-> +
-> +	if (ioctl(fd, FIFREEZE, 0) < 0)
-> +		err_exit("ioctl FIFREEZE on '%s' failed", argv[1]);
-> +
-> +	usleep(100);
+v3: updated mentions of Linux version, fixed some punctuation, and added
+    a Reviewed-by
 
-The usleep shouldn't be necessary here.  All the work necessary
-(background gc flushing, log quiescing, etc.) to stabilize the free
-space counters are performed synchronously before the FIFREEZE ioctl
-returns.
+v2: rebased onto man-pages master branch, mentioned xfs, and updated
+    link to patchset
 
-If that's not been your experience, please let us know.
+ man2/open.2  | 43 ++++++++++++++++++++++++++++++++-----------
+ man2/statx.2 | 29 +++++++++++++++++++++++++++++
+ 2 files changed, 61 insertions(+), 11 deletions(-)
 
---D
+diff --git a/man2/open.2 b/man2/open.2
+index deba7e4ea..b8617e0d2 100644
+--- a/man2/open.2
++++ b/man2/open.2
+@@ -1732,21 +1732,42 @@ of user-space buffers and the file offset of I/Os.
+ In Linux alignment
+ restrictions vary by filesystem and kernel version and might be
+ absent entirely.
+-However there is currently no filesystem\-independent
+-interface for an application to discover these restrictions for a given
+-file or filesystem.
+-Some filesystems provide their own interfaces
+-for doing so, for example the
++The handling of misaligned
++.B O_DIRECT
++I/Os also varies; they can either fail with
++.B EINVAL
++or fall back to buffered I/O.
++.PP
++Since Linux 6.1,
++.B O_DIRECT
++support and alignment restrictions for a file can be queried using
++.BR statx (2),
++using the
++.B STATX_DIOALIGN
++flag.
++Support for
++.B STATX_DIOALIGN
++varies by filesystem; see
++.BR statx (2).
++.PP
++Some filesystems provide their own interfaces for querying
++.B O_DIRECT
++alignment restrictions, for example the
+ .B XFS_IOC_DIOINFO
+ operation in
+ .BR xfsctl (3).
++.B STATX_DIOALIGN
++should be used instead when it is available.
+ .PP
+-Under Linux 2.4, transfer sizes, the alignment of the user buffer,
+-and the file offset must all be multiples of the logical block size
+-of the filesystem.
+-Since Linux 2.6.0, alignment to the logical block size of the
+-underlying storage (typically 512 bytes) suffices.
+-The logical block size can be determined using the
++If none of the above is available, then direct I/O support and alignment
++restrictions can only be assumed from known characteristics of the filesystem,
++the individual file, the underlying storage device(s), and the kernel version.
++In Linux 2.4, most block device based filesystems require that the file offset
++and the length and memory address of all I/O segments be multiples of the
++filesystem block size (typically 4096 bytes).
++In Linux 2.6.0, this was relaxed to the logical block size of the block device
++(typically 512 bytes).
++A block device's logical block size can be determined using the
+ .BR ioctl (2)
+ .B BLKSSZGET
+ operation or from the shell using the command:
+diff --git a/man2/statx.2 b/man2/statx.2
+index 0d1b4591f..50397057d 100644
+--- a/man2/statx.2
++++ b/man2/statx.2
+@@ -61,7 +61,12 @@ struct statx {
+        containing the filesystem where the file resides */
+     __u32 stx_dev_major;   /* Major ID */
+     __u32 stx_dev_minor;   /* Minor ID */
++
+     __u64 stx_mnt_id;      /* Mount ID */
++
++    /* Direct I/O alignment restrictions */
++    __u32 stx_dio_mem_align;
++    __u32 stx_dio_offset_align;
+ };
+ .EE
+ .in
+@@ -247,6 +252,8 @@ STATX_BTIME	Want stx_btime
+ STATX_ALL	The same as STATX_BASIC_STATS | STATX_BTIME.
+ 	It is deprecated and should not be used.
+ STATX_MNT_ID	Want stx_mnt_id (since Linux 5.8)
++STATX_DIOALIGN	Want stx_dio_mem_align and stx_dio_offset_align
++	(since Linux 6.1; support varies by filesystem)
+ .TE
+ .in
+ .PP
+@@ -407,6 +414,28 @@ This is the same number reported by
+ .BR name_to_handle_at (2)
+ and corresponds to the number in the first field in one of the records in
+ .IR /proc/self/mountinfo .
++.TP
++.I stx_dio_mem_align
++The alignment (in bytes) required for user memory buffers for direct I/O
++.BR "" ( O_DIRECT )
++on this file, or 0 if direct I/O is not supported on this file.
++.IP
++.B STATX_DIOALIGN
++.IR "" ( stx_dio_mem_align
++and
++.IR stx_dio_offset_align )
++is supported on block devices since Linux 6.1.
++The support on regular files varies by filesystem; it is supported by ext4,
++f2fs, and xfs since Linux 6.1.
++.TP
++.I stx_dio_offset_align
++The alignment (in bytes) required for file offsets and I/O segment lengths for
++direct I/O
++.BR "" ( O_DIRECT )
++on this file, or 0 if direct I/O is not supported on this file.
++This will only be nonzero if
++.I stx_dio_mem_align
++is nonzero, and vice versa.
+ .PP
+ For further information on the above fields, see
+ .BR inode (7).
 
-> +	if (ioctl(fd, FITHAW, 0) < 0)
-> +		err_exit("ioctl FITHAW on '%s' failed", argv[1]);
-> +
-> +	close(fd);
-> +
-> +	return EXIT_SUCCESS;
-> +}
-> -- 
-> 2.37.3
-> 
+base-commit: bc28d289e5066fc626df260bafc249846a0f6ae6
+-- 
+2.37.3
+
