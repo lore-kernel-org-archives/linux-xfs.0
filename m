@@ -2,142 +2,114 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0974C433FE
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Oct 2022 18:54:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2521DC43217
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Oct 2022 21:04:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229495AbiJDSyN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Oct 2022 14:54:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60846 "EHLO
+        id S229574AbiJDVEF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Oct 2022 17:04:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229529AbiJDSyL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2022 14:54:11 -0400
-X-Greylist: delayed 2582 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 04 Oct 2022 11:54:10 PDT
-Received: from mail.itouring.de (mail.itouring.de [85.10.202.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 751335FAFC
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Oct 2022 11:54:09 -0700 (PDT)
-Received: from tux.applied-asynchrony.com (p5ddd7cb4.dip0.t-ipconnect.de [93.221.124.180])
-        by mail.itouring.de (Postfix) with ESMTPSA id 6E72B103762;
-        Tue,  4 Oct 2022 20:54:08 +0200 (CEST)
-Received: from [192.168.100.221] (hho.applied-asynchrony.com [192.168.100.221])
-        by tux.applied-asynchrony.com (Postfix) with ESMTP id 2DF9AF01606;
-        Tue,  4 Oct 2022 20:54:08 +0200 (CEST)
-Subject: Re: [PATCH] xfsprogs: fix warnings/errors due to missing include
+        with ESMTP id S229569AbiJDVEE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2022 17:04:04 -0400
+Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B6F2965270;
+        Tue,  4 Oct 2022 14:04:03 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au [49.181.106.210])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 6EB2C8AC3BA;
+        Wed,  5 Oct 2022 08:04:01 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1ofp56-00FfvW-2h; Wed, 05 Oct 2022 08:04:00 +1100
+Date:   Wed, 5 Oct 2022 08:04:00 +1100
+From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>
-References: <865733c7-8314-cd13-f363-5ba2c6842372@applied-asynchrony.com>
- <Yzx7RrC1v2LQ6wSf@magnolia>
- <e1df04bf-866d-1dc8-9653-7612cce96fe0@applied-asynchrony.com>
- <Yzx+Omrqs3Q16O57@magnolia>
-From:   =?UTF-8?Q?Holger_Hoffst=c3=a4tte?= <holger@applied-asynchrony.com>
-Organization: Applied Asynchrony, Inc.
-Message-ID: <1665bde4-d582-3fcf-8cf2-62cbf877a08d@applied-asynchrony.com>
-Date:   Tue, 4 Oct 2022 20:54:08 +0200
+Cc:     Stephen Rothwell <sfr@canb.auug.org.au>, linux-xfs@vger.kernel.org,
+        Stephen Zhang <starzhangzsd@gmail.com>,
+        Shida Zhang <zhangshida@kylinos.cn>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>
+Subject: Re: linux-next: Signed-off-by missing for commit in the xfs tree
+Message-ID: <20221004210400.GO3600936@dread.disaster.area>
+References: <20221004072302.345bfd4a@canb.auug.org.au>
+ <20221003222103.GM3600936@dread.disaster.area>
+ <20221004225012.501e11ed@canb.auug.org.au>
+ <YzxX7ks+YD7U1dcl@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <Yzx+Omrqs3Q16O57@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YzxX7ks+YD7U1dcl@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.4 cv=OJNEYQWB c=1 sm=1 tr=0 ts=633c9fc2
+        a=j6JUzzrSC7wlfFge/rmVbg==:117 a=j6JUzzrSC7wlfFge/rmVbg==:17
+        a=kj9zAlcOel0A:10 a=Qawa6l4ZSaYA:10 a=7-415B0cAAAA:8
+        a=dO8VshlyLlrOEYzubo8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2022-10-04 20:40, Darrick J. Wong wrote:
-> On Tue, Oct 04, 2022 at 08:34:23PM +0200, Holger Hoffstätte wrote:
->> On 2022-10-04 20:28, Darrick J. Wong wrote:
->>> On Tue, Oct 04, 2022 at 08:11:05PM +0200, Holger Hoffstätte wrote:
->>>>
->>>> Gentoo is currently trying to rebuild the world with clang-16, uncovering exciting
->>>> new errors in many packages since several warnings have been turned into errors,
->>>> among them missing prototypes, as documented at:
->>>> https://discourse.llvm.org/t/clang-16-notice-of-potentially-breaking-changes/65562
->>>>
->>>> xfsprogs came up, with details at https://bugs.gentoo.org/875050.
->>>>
->>>> The problem was easy to find: a missing include for the u_init/u_cleanup
->>>> prototypes. The error:
->>>>
->>>> Building scrub
->>>>       [CC]     unicrash.o
->>>> unicrash.c:746:2: error: call to undeclared function 'u_init'; ISO C99 and later do not support implicit function declarations [-Werror,-Wimplicit-function-declaration]
->>>>           u_init(&uerr);
->>>>           ^
->>>> unicrash.c:746:2: note: did you mean 'u_digit'?
->>>> /usr/include/unicode/uchar.h:4073:1: note: 'u_digit' declared here
->>>> u_digit(UChar32 ch, int8_t radix);
->>>> ^
->>>> unicrash.c:754:2: error: call to undeclared function 'u_cleanup'; ISO C99 and later do not support implicit function declarations [-Werror,-Wimplicit-function-declaration]
->>>>           u_cleanup();
->>>>           ^
->>>> 2 errors generated.
->>>>
->>>> The complaint is valid and the fix is easy enough: just add the missing include.
->>>>
->>>> Signed-off-by: Holger Hoffstätte <holger@applied-asynchrony.com>
->>>
->>> Aha, that explains why I kept hearing reports about this but could never
->>> get gcc to spit out this error.  Thanks for fixing this.
->>
->> You're welcome. This reproduces with gcc when explicitly enabled:
->>
->> $CFLAGS="-Werror=implicit-function-declaration -Werror=implicit-int" ./configure
-> 
-> Huh.  I don't know why my system won't complain.
-> 
-> $ gcc --version
-> gcc (Ubuntu 11.2.0-19ubuntu1) 11.2.0
-> Copyright (C) 2021 Free Software Foundation, Inc.
-> This is free software; see the source for copying conditions.  There is
-> NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
-> PURPOSE.
-> 
-> $ gcc -Wall -g -O3 -fstack-protector --param=ssp-buffer-size=4
-> -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -D_FILE_OFFSET_BITS=64
-> -Wno-address-of-packed-member -femit-struct-debug-detailed=any
-> -Wno-error=unused-but-set-variable -Wuninitialized -Wno-pointer-sign
-> -Wall -Wextra -Wno-unused-parameter -fstack-usage -Werror
-> -Wno-sign-compare -Wno-missing-field-initializers -Wmaybe-uninitialized
-> -Wno-error=unused-function -Wno-error=unused-variable
-> -Wno-error=maybe-uninitialized -Werror=implicit-function-declaration
-> -Werror=implicit-int   -g -O2 -DDEBUG
-> -DVERSION=\"6.1.0-rc0~WIP-2022-10-03\" -DLOCALEDIR=\"/usr/share/locale\"
-> -DPACKAGE=\"xfsprogs\" -I../include -I../libxfs -I.. -D_LGPL_SOURCE
-> -D_GNU_SOURCE -funsigned-char -fno-strict-aliasing -Wall -Werror -Wextra
-> -Wno-unused-parameter -DHAVE_MNTENT -DHAVE_FSETXATTR -DENABLE_BLKID
-> -DHAVE_GETFSMAP -DHAVE_GETFSREFCOUNTS -DHAVE_FALLOCATE
-> -DHAVE_LIBURCU_ATOMIC64 -DHAVE_MALLINFO -DHAVE_MALLINFO2 -DHAVE_SYNCFS
-> -DHAVE_LIBATTR -DHAVE_LIBICU  -DHAVE_SG_IO -DHAVE_HDIO_GETGEO -c
-> unicrash.c
-> $
+On Tue, Oct 04, 2022 at 08:57:34AM -0700, Darrick J. Wong wrote:
+> On Tue, Oct 04, 2022 at 10:50:12PM +1100, Stephen Rothwell wrote:
+> > Hi Dave,
+> > 
+> > On Tue, 4 Oct 2022 09:21:03 +1100 Dave Chinner <david@fromorbit.com> wrote:
+> > >
+> > > The commit matches exactly what was sent to the list. It's just
+> > > that the patch was sent from a personal email address with a
+> > > corporate signoff.
+> > > 
+> > > Since when has that been an issue?  I -personally- have been doing
+> > > this for well over a decade and I'm pretty sure there are lots of
+> > > other people who also do this.
+> > 
+> > If you are happy (as the maintainer), then fine.
 
-holger>gcc --version
-gcc (Gentoo 12.2.0 p1) 12.2.0
-..
-holger>cd /tmp
-holger>tar xf /var/cache/distfiles/xfsprogs-5.18.0.tar.xz
-holger>cd xfsprogs-5.18.0
-holger>CFLAGS="-pipe -O2 -Werror=implicit-function-declaration -Werror=implicit-int" ./configure && make -j8
-...
-     [CC]     unicrash.o
-unicrash.c: In function 'unicrash_load':
-unicrash.c:746:9: error: implicit declaration of function 'u_init'; did you mean 'u_digit'? [-Werror=implicit-function-declaration]
-   746 |         u_init(&uerr);
-       |         ^~~~~~
-       |         u_digit
-unicrash.c: In function 'unicrash_unload':
-unicrash.c:754:9: error: implicit declaration of function 'u_cleanup'; did you mean 'scrub_cleanup'? [-Werror=implicit-function-declaration]
-   754 |         u_cleanup();
-       |         ^~~~~~~~~
-       |         scrub_cleanup
-     [CC]     link.o
-     [CC]     mmap.o
-     [SED]    xfs_scrub_all
-     [CC]     open.o
-     [SED]    xfs_scrub_all.cron
-     [CC]     parent.o
-cc1: some warnings being treated as errors
+Not really, I don't like it when our tools don't do the right thing,
+are entirely silent about it and then I get surprised by custom
+checks other people run.
 
-Alternatively add CC=clang to the configure line and check out the other
-nice warnings as well. :)
+> > My script just could
+> > not connect those 2 email addresses.  I check for matches between the
+> > address itself (the part between the <>) or a match between the "name"
+> > part (before the <>).  If either matches (or it is obvious) then I
+> > don't report it.
 
-cheers
-Holger
+Yup, during development of the patches the names started out
+matching. The SOB stayed the same but the name on the personal email
+address got anglicised, hence nothing matched by the time I pulled
+it with b4.
+
+> > I have reported very few of these.
+> 
+> My checkpatch is happier if the whole "name <email>" string matches, but
+> it'll accept name matches.  This ofc rests upon the assumption that
+> I can spot the deepcake'd Dave Chinners hawking phones in Russia or
+> whatever. ;)
+
+If someone wants to fake me and do my work for me so I don't have to
+do anything, I'm all for it. :)
+
+As it is, I use the convention of putting an explicit From: tag in
+the commit message that matches the SOB so tools pulling stuff from
+mailing lists do the right thing with them (same as any third-party
+provided patch in a series). 
+
+> That said... I think we should get in the habit of asking patch authors
+> to make sure that at least one of the email or name strings match
+> between the From and SOB tags.  I can see how people who grok even less
+> about how Chinese names work than I do (read: lawyers) might get fussy
+> about this kind of thing.
+
+As per above, the normal solution is an explicit "From: <foo>" line
+that matches the SOB.  It's just annoying that our new-fangled tools
+haven't encoded this long-standing convention to warn us when we
+pull a patch with a from-tag that doesn't match a sob-tag.
+
+And, yes, I know about git hooks - forcing every maintainer to
+implement their own custom git hooks to catch errors the tool they
+are all using can easily catch is not a reliable or scalable
+solution. We use common tools for a reason.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
