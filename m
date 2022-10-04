@@ -2,187 +2,163 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 167AEC433F5
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Oct 2022 09:08:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F0E4C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Oct 2022 09:47:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230426AbiJDJIR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Oct 2022 05:08:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51976 "EHLO
+        id S229640AbiJDJrQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Oct 2022 05:47:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45456 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229749AbiJDJIQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2022 05:08:16 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1F5B32069
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Oct 2022 02:08:15 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        with ESMTP id S229548AbiJDJqv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2022 05:46:51 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 179C158DFD;
+        Tue,  4 Oct 2022 02:44:29 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 721661F924;
-        Tue,  4 Oct 2022 09:08:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1664874494; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=2wpyR+0qEXxMn7qQo8QR1ddjXDdjrlL7Xnz9La7C3nM=;
-        b=PDfC+VI8ZxWnKPk0WbGClPxWtvhS5EPcm0YwLBlEajhJYVqMlLMvy+xMmVuUgRz7BnGXjQ
-        6YpLG1SQDEyNfPT1NLI+JvB2zJlG/7W8yhw1s3J0awRBK282nK8nGLWms7ZXUwmjaqpylq
-        +wcq4hlavpz+Qfcc/PEC5XEeGDeLMuc=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1664874494;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=2wpyR+0qEXxMn7qQo8QR1ddjXDdjrlL7Xnz9La7C3nM=;
-        b=mQj1wvdfdFBtbPjMqa+OkC3xT2aqbuqyduQyp1Olgumjp9zeQi+barK6qA6DcRXquSObnE
-        X1LxrsVvmu4+MLCw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 30290139D2;
-        Tue,  4 Oct 2022 09:08:14 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id Xe3xCf73O2MUYwAAMHmgww
-        (envelope-from <pvorel@suse.cz>); Tue, 04 Oct 2022 09:08:14 +0000
-From:   Petr Vorel <pvorel@suse.cz>
-To:     ltp@lists.linux.it
-Cc:     Petr Vorel <pvorel@suse.cz>, Tim.Bird@sony.com,
-        linux-xfs@vger.kernel.org, "Darrick J . Wong" <djwong@kernel.org>,
-        Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 1/1] df01.sh: Use own fsfreeze implementation for XFS
-Date:   Tue,  4 Oct 2022 11:08:10 +0200
-Message-Id: <20221004090810.9023-1-pvorel@suse.cz>
-X-Mailer: git-send-email 2.37.3
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2181B61325;
+        Tue,  4 Oct 2022 09:43:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D5A5C433D6;
+        Tue,  4 Oct 2022 09:43:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1664876633;
+        bh=NuOhLmNQi+0z+8SuTgzQVWI6qOlUQYzFgFPJVDcOA2U=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=P9t1CJU1IOoqBpf2Gub0na4j68dGinNno0bhdmAwo6QX9zaQkEnDQs9hZe2mWGdUy
+         JPmF2TwSfK25amHB4SMk+YpCHr9rn7YRhbEPM/J7crfVkRCTGz90CLLCu/xpKJryM0
+         SMvDZd24Djwxl7qEVAX51ZW6DOYNnqY/oefQW169aOk56FTVTsfoH/47ilaTkmS8Oc
+         9N002yQFgD5A9k59O3X/qtjw8Ya0hDF56PMQ8x3Q//nKdcn0bPRxkPXR7HqSDhoXXr
+         YhKAWrhlYrrFNoNewBhzYxlYN/tNiwm6+7SC4IgEty9wvC3vPAkD961Lb2ofh/qluA
+         DbZ8TM2bxYVEA==
+Message-ID: <822ce678d47be0767464fc580d04981c24ccd28e.camel@kernel.org>
+Subject: Re: [PATCH v6 4/9] nfs: report the inode version in getattr if
+ requested
+From:   Jeff Layton <jlayton@kernel.org>
+To:     NeilBrown <neilb@suse.de>
+Cc:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
+        david@fromorbit.com, trondmy@hammerspace.com,
+        viro@zeniv.linux.org.uk, zohar@linux.ibm.com, xiubli@redhat.com,
+        chuck.lever@oracle.com, lczerner@redhat.com, jack@suse.cz,
+        bfields@fieldses.org, brauner@kernel.org, fweimer@redhat.com,
+        linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Date:   Tue, 04 Oct 2022 05:43:50 -0400
+In-Reply-To: <166483977325.14457.7085950126736913468@noble.neil.brown.name>
+References: <20220930111840.10695-1-jlayton@kernel.org>
+        , <20220930111840.10695-5-jlayton@kernel.org>
+         <166483977325.14457.7085950126736913468@noble.neil.brown.name>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4 (3.44.4-2.fc36) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-df01.sh started to fail on XFS on certain configuration since mkfs.xfs
-and kernel 5.19. Implement fsfreeze instead of introducing external
-dependency. NOTE: implementation could fail on other filesystems
-(EOPNOTSUPP on exfat, ntfs, vfat).
+On Tue, 2022-10-04 at 10:29 +1100, NeilBrown wrote:
+> On Fri, 30 Sep 2022, Jeff Layton wrote:
+> > Allow NFS to report the i_version in getattr requests. Since the cost t=
+o
+> > fetch it is relatively cheap, do it unconditionally and just set the
+> > flag if it looks like it's valid. Also, conditionally enable the
+> > MONOTONIC flag when the server reports its change attr type as such.
+> >=20
+> > Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> > ---
+> >  fs/nfs/inode.c | 10 ++++++++--
+> >  1 file changed, 8 insertions(+), 2 deletions(-)
+> >=20
+> > diff --git a/fs/nfs/inode.c b/fs/nfs/inode.c
+> > index bea7c005119c..5cb7017e5089 100644
+> > --- a/fs/nfs/inode.c
+> > +++ b/fs/nfs/inode.c
+> > @@ -830,6 +830,8 @@ static u32 nfs_get_valid_attrmask(struct inode *ino=
+de)
+> >  		reply_mask |=3D STATX_UID | STATX_GID;
+> >  	if (!(cache_validity & NFS_INO_INVALID_BLOCKS))
+> >  		reply_mask |=3D STATX_BLOCKS;
+> > +	if (!(cache_validity & NFS_INO_INVALID_CHANGE))
+> > +		reply_mask |=3D STATX_VERSION;
+> >  	return reply_mask;
+> >  }
+> > =20
+> > @@ -848,7 +850,7 @@ int nfs_getattr(struct user_namespace *mnt_userns, =
+const struct path *path,
+> > =20
+> >  	request_mask &=3D STATX_TYPE | STATX_MODE | STATX_NLINK | STATX_UID |
+> >  			STATX_GID | STATX_ATIME | STATX_MTIME | STATX_CTIME |
+> > -			STATX_INO | STATX_SIZE | STATX_BLOCKS;
+> > +			STATX_INO | STATX_SIZE | STATX_BLOCKS | STATX_VERSION;
+> > =20
+> >  	if ((query_flags & AT_STATX_DONT_SYNC) && !force_sync) {
+> >  		if (readdirplus_enabled)
+> > @@ -877,7 +879,7 @@ int nfs_getattr(struct user_namespace *mnt_userns, =
+const struct path *path,
+> >  	/* Is the user requesting attributes that might need revalidation? */
+> >  	if (!(request_mask & (STATX_MODE|STATX_NLINK|STATX_ATIME|STATX_CTIME|
+> >  					STATX_MTIME|STATX_UID|STATX_GID|
+> > -					STATX_SIZE|STATX_BLOCKS)))
+> > +					STATX_SIZE|STATX_BLOCKS|STATX_VERSION)))
+> >  		goto out_no_revalidate;
+> > =20
+> >  	/* Check whether the cached attributes are stale */
+> > @@ -915,6 +917,10 @@ int nfs_getattr(struct user_namespace *mnt_userns,=
+ const struct path *path,
+> > =20
+> >  	generic_fillattr(&init_user_ns, inode, stat);
+> >  	stat->ino =3D nfs_compat_user_ino64(NFS_FILEID(inode));
+> > +	stat->version =3D inode_peek_iversion_raw(inode);
+>=20
+> This looks wrong.
+> 1/ it includes the I_VERSION_QUERIED bit, which should be hidden.
+> 2/ it doesn't set that bit.
+>=20
+> I understand that the bit was already set when the generic code called
+> inode_query_iversion(), but it might have changed if we needed to
+> refresh the attrs.
+>=20
+> I'm beginning to think I shouldn't have approved the 3/9 patch.  The
+> stat->version shouldn't be set in vfs_getattr_nosec() - maybe in
+> generic_fillattr(), but not a lot of point.
+>=20
 
-Suggested-by: Darrick J. Wong <djwong@kernel.org>
-Suggested-by: Eric Sandeen <sandeen@redhat.com>
-Signed-off-by: Petr Vorel <pvorel@suse.cz>
----
-Hi,
+NFS (and Ceph),=A0do not set the SB_I_VERSION flag and they don't use the
+QUERIED bit. These are "server managed" implementations of i_version.
+The server is responsible for incrementing the value, and we just store
+the result in the i_version field and present it when needed. That's why
+the patch for NFS is using the "raw" API.
 
-FYI the background of this issue:
-https://lore.kernel.org/ltp/Yv5oaxsX6z2qxxF3@magnolia/
-https://lore.kernel.org/ltp/974cc110-d47e-5fae-af5f-e2e610720e2d@redhat.com/
+> > +	stat->attributes_mask |=3D STATX_ATTR_VERSION_MONOTONIC;
+> > +	if (server->change_attr_type !=3D NFS4_CHANGE_TYPE_IS_UNDEFINED)
+> > +		stat->attributes |=3D STATX_ATTR_VERSION_MONOTONIC;
+>=20
+> So if the server tells us that the change attrs is based on time
+> metadata, we accept that it will be monotonic (and RFC7862 encourages
+> this), even though we seem to worry about timestamps going backwards
+> (which we know that can)...  Interesting.
+>=20
+>=20
 
-@LTP developers: not sure if the consensus is to avoid LTP API
-completely (even use it just with TST_NO_DEFAULT_MAIN), if required I
-can rewrite to use it just to get SAFE_*() macros (like
-testcases/lib/tst_checkpoint.c) or even with tst_test workarounds
-(testcases/lib/tst_get_free_pids.c).
+I followed suit from nfs_inode_attrs_cmp(). It seems to treat any value
+that isn't UNDEFINED as MONOTONIC, though it does use a less strict
+comparator for NFS4_CHANGE_TYPE_IS_TIME_METADATA. It may make sense to
+carve that out as an exception.
 
-Kind regards,
-Petr
+This is probably an indicator that we need a more strict definition for
+STATX_ATTR_VERSION_MONOTONIC.
 
- testcases/commands/df/Makefile        |  4 +-
- testcases/commands/df/df01.sh         |  3 ++
- testcases/commands/df/df01_fsfreeze.c | 55 +++++++++++++++++++++++++++
- 3 files changed, 61 insertions(+), 1 deletion(-)
- create mode 100644 testcases/commands/df/df01_fsfreeze.c
 
-diff --git a/testcases/commands/df/Makefile b/testcases/commands/df/Makefile
-index 2787bb43a..1e0b4283a 100644
---- a/testcases/commands/df/Makefile
-+++ b/testcases/commands/df/Makefile
-@@ -1,11 +1,13 @@
- # SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) Linux Test Project, 2021-2022
- # Copyright (c) 2015 Fujitsu Ltd.
--# Author:Zhang Jin <jy_zhangjin@cn.fujitsu.com>
-+# Author: Zhang Jin <jy_zhangjin@cn.fujitsu.com>
- 
- top_srcdir		?= ../../..
- 
- include $(top_srcdir)/include/mk/env_pre.mk
- 
- INSTALL_TARGETS		:= df01.sh
-+MAKE_TARGETS			:= df01_fsfreeze
- 
- include $(top_srcdir)/include/mk/generic_leaf_target.mk
-diff --git a/testcases/commands/df/df01.sh b/testcases/commands/df/df01.sh
-index ae0449c3c..c59d2a01d 100755
---- a/testcases/commands/df/df01.sh
-+++ b/testcases/commands/df/df01.sh
-@@ -46,6 +46,9 @@ df_test()
- 
- 	ROD_SILENT rm -rf $TST_MNTPOINT/testimg
- 
-+	# ensure free space change can be seen by statfs
-+	[ "$fs" = "xfs" ] && ROD_SILENT df01_fsfreeze $TST_MNTPOINT
-+
- 	# flush file system buffers, then we can get the actual sizes.
- 	sync
- }
-diff --git a/testcases/commands/df/df01_fsfreeze.c b/testcases/commands/df/df01_fsfreeze.c
-new file mode 100644
-index 000000000..d47e1b01a
---- /dev/null
-+++ b/testcases/commands/df/df01_fsfreeze.c
-@@ -0,0 +1,55 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (c) 2010 Hajime Taira <htaira@redhat.com>
-+ * Copyright (c) 2010 Masatake Yamato <yamato@redhat.com>
-+ * Copyright (c) 2022 Petr Vorel <pvorel@suse.cz>
-+ */
-+
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <linux/fs.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <string.h>
-+#include <sys/ioctl.h>
-+#include <sys/stat.h>
-+#include <unistd.h>
-+
-+#define err_exit(...) ({ \
-+	fprintf(stderr, __VA_ARGS__); \
-+	if (errno) \
-+		fprintf(stderr, ": %s (%d)", strerror(errno), errno); \
-+	fprintf(stderr, "\n"); \
-+	exit(EXIT_FAILURE); \
-+})
-+
-+int main(int argc, char *argv[])
-+{
-+	int fd;
-+	struct stat sb;
-+
-+	if (argc < 2)
-+		err_exit("USAGE: df01_fsfreeze <mountpoint>");
-+
-+	fd = open(argv[1], O_RDONLY);
-+	if (fd < 0)
-+		err_exit("open '%s' failed", argv[1]);
-+
-+	if (fstat(fd, &sb) == -1)
-+		err_exit("stat of '%s' failed", argv[1]);
-+
-+	if (!S_ISDIR(sb.st_mode))
-+		err_exit("%s: is not a directory", argv[1]);
-+
-+	if (ioctl(fd, FIFREEZE, 0) < 0)
-+		err_exit("ioctl FIFREEZE on '%s' failed", argv[1]);
-+
-+	usleep(100);
-+
-+	if (ioctl(fd, FITHAW, 0) < 0)
-+		err_exit("ioctl FITHAW on '%s' failed", argv[1]);
-+
-+	close(fd);
-+
-+	return EXIT_SUCCESS;
-+}
--- 
-2.37.3
+>=20
+> >  	if (S_ISDIR(inode->i_mode))
+> >  		stat->blksize =3D NFS_SERVER(inode)->dtsize;
+> >  out:
+> > --=20
+> > 2.37.3
+> >=20
+> >=20
 
+--=20
+Jeff Layton <jlayton@kernel.org>
