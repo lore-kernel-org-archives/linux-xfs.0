@@ -2,104 +2,125 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9346EC4332F
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Oct 2022 11:51:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95A64C433F5
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Oct 2022 15:49:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230025AbiJDLvH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Oct 2022 07:51:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60280 "EHLO
+        id S229642AbiJDPtE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Oct 2022 11:49:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229992AbiJDLum (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2022 07:50:42 -0400
-Received: from gandalf.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1184A51A30;
-        Tue,  4 Oct 2022 04:50:20 -0700 (PDT)
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        with ESMTP id S229518AbiJDPtD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2022 11:49:03 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B6675F7CC
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Oct 2022 08:49:02 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4Mhbc92RC8z4xFv;
-        Tue,  4 Oct 2022 22:50:17 +1100 (AEDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
-        s=201702; t=1664884217;
-        bh=+DRDaNohrM/Soqm2UqZOWqj7AxZRXAGOMY1YpMVLa6Y=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=Hom4NfAiqslgvEJH4epr2G6KAISgSeRvIInEwWhMgTrQeWEK0yzshD1hSeiQi48KC
-         0r7jbsP9/Zszsn7IuhSZ45MDOl9ui37UPHPJa12PS892RTgLkdxjPQPLfmbvdoGAup
-         QLHUr6P3SpjcpbdfLCKHCmEomV/7l7Djqxzh2VQdkTq1sXX8wSH/67arObla6ziJ1b
-         TouiXGUiz2JFbN6uxY/djJoH5XrPFe3XLgkXTCIt1N2JarzIRQ+xz5UOhN0vfvgA9z
-         tv72FJPJFvOverWWOYOf2ytoSuI/QFL4lsspXVpsWz0msjRWauPYe2ICoKeyaY+An7
-         fh8tR/T6yQQqw==
-Date:   Tue, 4 Oct 2022 22:50:12 +1100
-From:   Stephen Rothwell <sfr@canb.auug.org.au>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        Stephen Zhang <starzhangzsd@gmail.com>,
-        Shida Zhang <zhangshida@kylinos.cn>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>
-Subject: Re: linux-next: Signed-off-by missing for commit in the xfs tree
-Message-ID: <20221004225012.501e11ed@canb.auug.org.au>
-In-Reply-To: <20221003222103.GM3600936@dread.disaster.area>
-References: <20221004072302.345bfd4a@canb.auug.org.au>
-        <20221003222103.GM3600936@dread.disaster.area>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0860D614C9
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Oct 2022 15:49:02 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EAA6C433D6;
+        Tue,  4 Oct 2022 15:49:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1664898541;
+        bh=gCP+au+DbR0ydwvSffx+UM9PBaXn9TZGC5t/RSN86JI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=bNUChAQhD6Udr5ie776GyjOb9uy3b22unScTQYNmQ9xyrD63kDspArgAdCoxXa3Ai
+         +RrXRiiTfAArZVLEXSgZ3eifY9wzeo1C0AFLDbWn8+KDaQzqjbZ1OhMVCXtmPngYLZ
+         CPnX/ooCt2JsdJRyc4aOQ8W0xznzHI3BVYvzETMLQ6SlALsjM1mXqAvn/+n5gAlA5z
+         icTYPv/V7jrMMVwf5MkwbZkUCKWBTLlYbI327ONj6ngfKBYm4hqKVQfU2Tm+DlkWHf
+         D0whWAoJIK9eloa1ZsbycUXPl/jKgAvImd7VuQ4+8OsdYB2OTWvkkJBzQCmZQTSazR
+         CenfZFtbvzy7w==
+Date:   Tue, 4 Oct 2022 08:49:00 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Chandan Babu R <chandan.babu@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, amir73il@gmail.com,
+        leah.rumancik@gmail.com
+Subject: Re: [PATCH 5.4 CANDIDATE 00/11] xfs stable candidate patches for
+ 5.4.y (from v5.6)
+Message-ID: <YzxV7CK4Q30ZRJdv@magnolia>
+References: <20221004102823.1486946-1-chandan.babu@oracle.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/Ib3YZiwGdgXiXVkvXyv/JJR";
- protocol="application/pgp-signature"; micalg=pgp-sha256
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221004102823.1486946-1-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---Sig_/Ib3YZiwGdgXiXVkvXyv/JJR
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Tue, Oct 04, 2022 at 03:58:12PM +0530, Chandan Babu R wrote:
+> Hi Darrick,
+> 
+> This 5.4.y backport series contains fixes from v5.6 release.
+> 
+> This patchset has been tested by executing fstests (via kdevops) using
+> the following XFS configurations,
+> 
+> 1. No CRC (with 512 and 4k block size).
+> 2. Reflink/Rmapbt (1k and 4k block size).
+> 3. Reflink without Rmapbt.
+> 4. External log device.
+> 
+> The following lists patches which required other dependency patches to
+> be included,
+> 1. 4bbb04abb4ee2e1f7d65e52557ba1c4038ea43ed
+>    xfs: truncate should remove all blocks, not just to the end of the page cache
+>    - a5084865524dee1fe8ea1fee17c60b4369ad4f5e
+>      xfs: introduce XFS_MAX_FILEOFF
+> 2. e8db2aafcedb7d88320ab83f1000f1606b26d4d7
+>    xfs: fix memory corruption during remote attr value buffer invalidation
+>    - 8edbb26b06023de31ad7d4c9b984d99f66577929
+>      xfs: refactor remote attr value buffer invalidation
+> 3. 54027a49938bbee1af62fad191139b14d4ee5cd2
+>    xfs: fix uninitialized variable in xfs_attr3_leaf_inactive
+>    - a39f089a25e75c3d17b955d8eb8bc781f23364f3
+>      xfs: move incore structures out of xfs_da_format.h
+>    - 0bb9d159bd018b271e783d3b2d3bc82fa0727321
+>      xfs: streamline xfs_attr3_leaf_inactive
 
-Hi Dave,
+This batch looks good to go,
+Acked-by: Darrick J. Wong <djwong@kernel.org>
 
-On Tue, 4 Oct 2022 09:21:03 +1100 Dave Chinner <david@fromorbit.com> wrote:
->
-> The commit matches exactly what was sent to the list. It's just
-> that the patch was sent from a personal email address with a
-> corporate signoff.
->=20
-> Since when has that been an issue?  I -personally- have been doing
-> this for well over a decade and I'm pretty sure there are lots of
-> other people who also do this.
+--D
 
-If you are happy (as the maintainer), then fine.  My script just could
-not connect those 2 email addresses.  I check for matches between the
-address itself (the part between the <>) or a match between the "name"
-part (before the <>).  If either matches (or it is obvious) then I
-don't report it.
-
-I have reported very few of these.
-
-> Hence if this is wrong, then we've got a tooling problem with b4.
-> Why does b4 allow this rather than warn/fail if it's not actually
-> allowed in the linux-next tree?
-
-These reports are more of "is this right/was this a slipup?" rather
-than "this is not allowed" i.e.. there are circumstances under which
-the actual author does not (or cannot) provide a Signed-off-by and that
-is OK.
---=20
-Cheers,
-Stephen Rothwell
-
---Sig_/Ib3YZiwGdgXiXVkvXyv/JJR
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmM8HfQACgkQAVBC80lX
-0Gy3pwf/cMAIaArvSzuxPZW7Ukbfi+Q94kZevrN8DrTCdF4ZPVOnlK3FftiQUjVg
-TOtH3lRHFpRHxMIT/YLis5fgDlnhjXxk5rRM5iD8v9v/O+VhbmhfYxXKCUmJsI6v
-EPTGP6Ogyqz29P8G223zI46+rOzY2u117ICnKpRa7v3bqHJGDlUWQFEgDMJqZjbW
-UJGupQyFmuV6tN2wd4apZegM4wIBeGP0cLwCdL8Lv69afYy/EzTl09fLuevtF0rK
-bbib1IXbkjADfoSGKUI4lRbHobxyqVfx9mSycY6kmw/Fe/mp0Ykdq3b5LLWvsvcs
-737eINxrchZpQ++GsXZ3kFR/Y+W48Q==
-=K9Ou
------END PGP SIGNATURE-----
-
---Sig_/Ib3YZiwGdgXiXVkvXyv/JJR--
+> 
+> Christoph Hellwig (3):
+>   xfs: fix misuse of the XFS_ATTR_INCOMPLETE flag
+>   xfs: fix IOCB_NOWAIT handling in xfs_file_dio_aio_read
+>   xfs: move incore structures out of xfs_da_format.h
+> 
+> Darrick J. Wong (7):
+>   xfs: introduce XFS_MAX_FILEOFF
+>   xfs: truncate should remove all blocks, not just to the end of the
+>     page cache
+>   xfs: fix s_maxbytes computation on 32-bit kernels
+>   xfs: refactor remote attr value buffer invalidation
+>   xfs: fix memory corruption during remote attr value buffer
+>     invalidation
+>   xfs: streamline xfs_attr3_leaf_inactive
+>   xfs: fix uninitialized variable in xfs_attr3_leaf_inactive
+> 
+> YueHaibing (1):
+>   xfs: remove unused variable 'done'
+> 
+>  fs/xfs/libxfs/xfs_attr.c        |   2 +-
+>  fs/xfs/libxfs/xfs_attr_leaf.c   |   4 +-
+>  fs/xfs/libxfs/xfs_attr_leaf.h   |  26 ++++--
+>  fs/xfs/libxfs/xfs_attr_remote.c |  85 +++++++++++++------
+>  fs/xfs/libxfs/xfs_attr_remote.h |   2 +
+>  fs/xfs/libxfs/xfs_da_btree.h    |  17 +++-
+>  fs/xfs/libxfs/xfs_da_format.c   |   1 +
+>  fs/xfs/libxfs/xfs_da_format.h   |  59 -------------
+>  fs/xfs/libxfs/xfs_dir2.h        |   2 +
+>  fs/xfs/libxfs/xfs_dir2_priv.h   |  19 +++++
+>  fs/xfs/libxfs/xfs_format.h      |   7 ++
+>  fs/xfs/xfs_attr_inactive.c      | 146 +++++++++-----------------------
+>  fs/xfs/xfs_file.c               |   7 +-
+>  fs/xfs/xfs_inode.c              |  25 +++---
+>  fs/xfs/xfs_reflink.c            |   3 +-
+>  fs/xfs/xfs_super.c              |  48 +++++------
+>  16 files changed, 212 insertions(+), 241 deletions(-)
+> 
+> -- 
+> 2.35.1
+> 
