@@ -2,328 +2,364 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F604C4332F
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Oct 2022 10:29:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 880ADC433FE
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Oct 2022 10:29:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229701AbiJDK33 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Oct 2022 06:29:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56012 "EHLO
+        id S229716AbiJDK3d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Oct 2022 06:29:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229780AbiJDK3X (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2022 06:29:23 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34EDE2CE10
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Oct 2022 03:29:22 -0700 (PDT)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2949SHQv029354;
-        Tue, 4 Oct 2022 10:29:18 GMT
+        with ESMTP id S229548AbiJDK3a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2022 06:29:30 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0995F2CC9A
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Oct 2022 03:29:28 -0700 (PDT)
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2947UoHv001108;
+        Tue, 4 Oct 2022 10:29:25 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version; s=corp-2022-7-12;
- bh=5xgtfSnUDwmoSmEmpDf5RUcIFF+w0a17TOLPQsr9bqU=;
- b=BnUX+iftoDzibv2oyNbY4M0wP7V922QXOlH6qdPagEV2133Fk9PDtpce8c6iYVxxApZc
- 6vtJZPsPJVTSvSD34wmRutnoGhQ7vR42eT+2f9NOMSs2R59OQNHPIHkbTO+W1ffIcXs0
- J6WGXh0UtlxAb2C4c1fW9wzs87KlgFltTlVIk3C1XlOhJ1ssjv1N+0SXMnPzTmJaSNaF
- ko6zHPgyFbpn6N9R3inhAIMNZ+mKcVilBnEpd9V+mSBrh4iY9MCLIxXgzljWd+YXHdpS
- RKFViCai1A9YuMB5stwo7OgZWN9FqNyS6EksR4HTO+b1xP1lcK+QxcP1VUfBdORxiNN3 7Q== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3jxc51xb4e-1
+ bh=2mokfh3arWwydhT4w/g/V01JPln7Yp5DBEwFLu4f3UY=;
+ b=TG1n6RduetoFjmAjyQq+nUsBU9QbBlXI2B0rrt8hKQkQ8Zou5yPTv15+KPtGM3x8SKct
+ FjGc7LWr0wBg/Ictn2g4kXvPiEaluOO7xp9lz6PjadFnwA+C8fek2jMTS55F1IPYBNSR
+ vbnwEwdPSCJV3l4z6smgzOR3942Dj0xdLWtV54uq0gyGIRamq9HQacZLXwvUP29wa+ap
+ 6/DdLbqBQBWiTuiDu5NF9Vd/h7LCn2T5NWQvYTC6Fm77LdSyhwhcjPpy+vOdI0OiXxdk
+ i8pDNMwbhFLzo986KCoAH6WBsk0ui3EVNdE8P4v4GgBDZTwe6xojL5wcZfXPJXOilIo6 cA== 
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3jxd5tdxfa-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 04 Oct 2022 10:29:18 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2948Aks1005348;
-        Tue, 4 Oct 2022 10:29:18 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2169.outbound.protection.outlook.com [104.47.59.169])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3jxc03tq3s-1
+        Tue, 04 Oct 2022 10:29:25 +0000
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2948B3Y0001132;
+        Tue, 4 Oct 2022 10:29:24 GMT
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2170.outbound.protection.outlook.com [104.47.59.170])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3jxc049npv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 04 Oct 2022 10:29:18 +0000
+        Tue, 04 Oct 2022 10:29:24 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=k/EMQ319KQ3dTH7OGDMsVPYlorY5oDydJbXzO2/6BiR+0VARoQ+A+Puvr4nog9v6dAqOI1YYvu4yO4v3Evwry7CpSUrW5dyQZtKs+STbWSaFCsTxZE1G6a+Vbd7HBjfjQxYDTibeEPk1SqmYagBayzIh3RD+Kzka5NLdiV3tWHuECynltdDtHGgOsGYxhrGvCDYePwtZHmEN3v1ANQYeaXeqObcZfyO2AY6ei6GitX3K84ubsiqY6B7Mpf4g22Lz0y453AlRHbotmdzSyGO29J//XQajGZKabHT3MYGZZwpH1TWzIKch+ju5PMBghOxfEkeCL72qBzh9Zt9ngNKpyQ==
+ b=iP/1zzMjrJt/9amE99BAiBj/Tt4jsGHP1XYtxcPpX/lT0dhOlsaG4WsQeyv0Nk7ZQFwDA4iw/c6IBqq9IHLX/8oIvRg2spzh5KpyaiPZR+wbiooeptECyfF7ZU3WciIA1CRuMT1c4+zyVt2CWIAd5SrYpdIakH4SHH7IbzovwWSx0vp72JfOo/51C7TXJ8x4fCLH9Zx1yCsvTF1pYH7JSdqdVQ08Nsi3BtStaHyu0+9DLAdy2+YeZW86bWZpk/H7Mp9v5d3G3AsGTG21hyFyceQ1vpegq2KnQvNjQdkMWdZ2oHfchX05oIxcOTlMcT3rygOM9JcgqH/RX3n7BSMUug==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=5xgtfSnUDwmoSmEmpDf5RUcIFF+w0a17TOLPQsr9bqU=;
- b=Dts+mYr4JoVZ1ohU0FZSbXKz4rcsPcd5KPmtXlxjFIufyK+NKuozwRCY09hiLA+4FZf0NUuTXlNoVuWUzkOoX6qzpNgHGVq5l2NYCSVUbgCau2BciYvVqV+BfwsnW4Z8MSn2x+z79K4zHql5rocqCWN69+4afnl+Ocqqe3IxRYeSNzM8P5BcW4EUI6Zl9tOl8GOWkqyXIPN+PxeodJTCOhAesH3/XbGNLIaLUbZ+aQ3gvs1LlNSoUo8kjilo6Fm7NLTf680DSLuBb1aLnVybQE/BBo3x9LcKeFA+gf7WnBH+GkIvPaMocdebr0Ia0tZ9zIej4l+nKMBFGG3UgocDFA==
+ bh=2mokfh3arWwydhT4w/g/V01JPln7Yp5DBEwFLu4f3UY=;
+ b=dTDX2fWcknNq4pxmFvUjS69toH7HuvAmGy761yMdJXfM3avj8sOYCjiLzU3FwP3/Y0/7eFLcgv6Oz0Q8b1awDGKBSSYint1QJEBD6Cd4pI3DjQ2i1/QJVGKJKBaz5kyHJxLtz1yFt0hTBIBGNrC4H08e9vEKd1MLk0U511dI1Rz2ALdUvxphVESOLpx847UEzpf5MfGLsOrY/SsLTbTxfbIgJPzEuPhhfaHmT0vqRqvV4KawwCLV7DZiRorZ30Dk+k04REeeKOfG3iA1Fc+P9PAsvNpr/TGhbDr1/c43npt8KG4e26ZBReApkSFW0ehqvHWt3AFd9oJb8Thxk2LqIQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5xgtfSnUDwmoSmEmpDf5RUcIFF+w0a17TOLPQsr9bqU=;
- b=zz7r2Cl0OAIJdJsqeZ8FUL6hpqfKpJ2/x7WM4sRmcsQ7fmhlll1IvgYbruAlLeNy1/gcCAlEYTz9T2GDIH5AqsD/OWrOQgZeEDL6icrOiRI8rDY5dnyHO5DY0g6LPEXj6Zldn38syQy17f7fpFya1p6GPy5Mpnh7U95tTHGAvnA=
+ bh=2mokfh3arWwydhT4w/g/V01JPln7Yp5DBEwFLu4f3UY=;
+ b=J2zUw9RknmTBcabsSxUxQA85r3Lcm2mScC0kjNYvli4k1jMSF7VaH74stPBWyv6ZxVY5loqAojfHGl13vpizZc+eH41+LhKU9jvnat+YN0brXIdsFtNFmlFGWEioIMkN/BePRpppk9F0HdVkm21yxSwP7g1lhwljmlJ6zSrXrCQ=
 Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:22b::9)
  by DS7PR10MB5184.namprd10.prod.outlook.com (2603:10b6:5:38e::20) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5676.23; Tue, 4 Oct
- 2022 10:29:16 +0000
+ 2022 10:29:22 +0000
 Received: from SA1PR10MB5867.namprd10.prod.outlook.com
  ([fe80::822f:1816:1c2c:43d1]) by SA1PR10MB5867.namprd10.prod.outlook.com
  ([fe80::822f:1816:1c2c:43d1%8]) with mapi id 15.20.5676.031; Tue, 4 Oct 2022
- 10:29:16 +0000
+ 10:29:22 +0000
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     djwong@kernel.org
 Cc:     chandan.babu@oracle.com, linux-xfs@vger.kernel.org,
         amir73il@gmail.com, leah.rumancik@gmail.com
-Subject: [PATCH 5.4 CANDIDATE 07/11] xfs: fix memory corruption during remote attr value buffer invalidation
-Date:   Tue,  4 Oct 2022 15:58:19 +0530
-Message-Id: <20221004102823.1486946-8-chandan.babu@oracle.com>
+Subject: [PATCH 5.4 CANDIDATE 08/11] xfs: move incore structures out of xfs_da_format.h
+Date:   Tue,  4 Oct 2022 15:58:20 +0530
+Message-Id: <20221004102823.1486946-9-chandan.babu@oracle.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20221004102823.1486946-1-chandan.babu@oracle.com>
 References: <20221004102823.1486946-1-chandan.babu@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: TYCP286CA0129.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:2b6::17) To SA1PR10MB5867.namprd10.prod.outlook.com
+X-ClientProxiedBy: TYCP286CA0127.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:2b6::9) To SA1PR10MB5867.namprd10.prod.outlook.com
  (2603:10b6:806:22b::9)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|DS7PR10MB5184:EE_
-X-MS-Office365-Filtering-Correlation-Id: ebdce871-de49-41cb-8e83-08daa5f349e2
+X-MS-Office365-Filtering-Correlation-Id: 914d8622-054b-40fe-9dd2-08daa5f34da3
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: h/dOinKlKkFwB4ABPDWXK3EkHgfkHPZlfw3XpAuBSGUKgHZyrP4cD9+bOm5nBxIC3ercwpx8454HvvYQnUJ/KawlfzNFDquo7DBeA9KIz1u3d/C87RXtvvSAg9BYLIqNeya2G32gndw8sWLg7uEpZv81ksn8HTPpLDSObmJ83T+6nAiMWFqVwu65a474d5h8T1t582Jpr3FlvJfJjeDTJ4xeFMpLYvEycljrzfjND7Jk5GQPvU4ybQ5UPm/h1Dz6I4C389ulfmDF+fgpHOUjuUiPv31WHWhXUFmG9l0dn4XITTHv2dfeJ/oMahWxj1ZCwKDJg6qkGbdEcWB9Ed/W7Cd5a067y6ArtHXrDFFISzQ2/hKRWjynoGhYkEOn7xVKOA9SOrTVdirsteQ1jXQ/zl16vH/p+Q2GY7VLaDsdOk5OwaLiwwW4/AemNOj8p1LT60ik6NG87U9GbO3XpHpXz4P5427SLavcePeOpD81swuxf8PXX+xm9RGwgQcnL7+PV6JSVT85AuJ+Gn1n3GCaW70GOwZ7puORxGpw57pUlplpWjjrE5RPjdnHoELWkYPl8Tr8Gt/rD5mSv7NHm8lIKIrbO74fpXqjPKy040yT53upjcO6MEIuG74TQ4b7XtBDdQxalaIz4BeN80iF+bPfraNx/Q17iu33GVQqLm52fZFJL8i9agvW9Zy5IosSggZaOI6kHg5F0ZoUn8rxx4kP3g==
+X-Microsoft-Antispam-Message-Info: 85GSCzOVxoeXVL94zWVr0tUJqrOsEjugzNQ3ILQ/tBFnUN8cPQ4uSiQpVbfaDdmKLN4X3vPdzM3wAfXKEWmkCnedXmoVp1cVvi/raCHGDGLiy5qfONl7LuTjdBZ38en4eGr8kMVGrI0zCJNi/P9txkCBZppQBN/CS927P30aGHlExXd3yEa82VaQ7DgB1MCDWGUyad6S+rXz61A8verMMiD51UxZMh3QjLM8I4Ge5/G/a0fM2iDYBJj9Hg/SheDNAjY+duzy+IKQUWkRB1ThvSUU1RT5VbL9jqrLl2YuA+m/RsNWk8aq76bRSPGkV7M+8rUNGoPvNNZOs73aX3HR430Sv0+bRihTT9KWcx/HMIvWTfCtrE+d64da1ZHT+3yYKV3yMipi8wujvlKQcnxNnXjwni6ph8PYe2OWu52IbGYpRy3UPYa9ndQ6BCVOrcnuzOG+kd8q+qNBca7XYrKBJxPdan1JsQtfuNOphcWcs3FNMe8ir5sKjbx0wuzfCaKLWf9Viz1pZBKmqIiqtaAhy4HvD5/BQh0dwpr2flibYAJmH34eClEOXvo7ISw7vKVi8a+Be8Zsq7RnM2WUwSvS0/2meQk1FF9FT2jJTqMr6imhlnMkumC50M4cpTJev8kWYm8hhi6MlhSkIVyb5qMIsUABtWJk3HIktSoFVA6j99sYsGwpz9Q9F4XINITTgztl23U/HiUuVclNtK4p3S6jgQ==
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(396003)(366004)(376002)(39860400002)(346002)(136003)(451199015)(83380400001)(38100700002)(86362001)(186003)(41300700001)(8936002)(5660300002)(316002)(6916009)(8676002)(66946007)(66556008)(66476007)(4326008)(26005)(6512007)(6506007)(2616005)(1076003)(2906002)(6486002)(478600001)(36756003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?uf85NnmKtBWEKWDWGAkyXTTAcMhmSlmovd3X/92HgmpDOz18MWWpSOJjXDOb?=
- =?us-ascii?Q?CMtgLTc9V4vhSLv1nMh8Eq6oriq2TiJbwvKrmwb9EouQlrkzUMVGzve3OJ/n?=
- =?us-ascii?Q?VjEujSIIGM+NyaXZfbR+pn6wXl2VXP4QdM127SToEJtjUBT9qTrmADoYCp6m?=
- =?us-ascii?Q?y74kXilXEQ/QuvByjSC4qxL0ojEgUl3lnEkQVjuON/p2UEXUMqPNxdjlJjps?=
- =?us-ascii?Q?wp6+AXal8tXKrlAECOhuOpo2RxOBG1sAGyIcdNBXwXbDUCO0z8uUkPwwm7rC?=
- =?us-ascii?Q?rvDVzXl1YSnTL6ZHwS28fVayGOZ/lJc4eiEyinbivlEqUyHQ2jKKHV4gTnuJ?=
- =?us-ascii?Q?fF+rPNziFisQArEWGXMfXv52PW9iPximbDuEk3+MPDDhreEGbHnCMsFS9gwz?=
- =?us-ascii?Q?Uge9yTx32lfjfAofauIoGsRaeQnnDjM6XYgD2WHFcGqA8cx4xdk3t30rOpA/?=
- =?us-ascii?Q?J62biEbZrcGvTnEDt7EBo1Oy1EL/JW1UzGxmogZDg75+4qt9fGTfMNN7TAii?=
- =?us-ascii?Q?qaLrPVYdxwZecU6/fkI/l4HRoBiljfTYUVx+GK1K+aQh+AqGnK3NIWaheGsJ?=
- =?us-ascii?Q?nq6ivricgcOkvKPUKDoytOa7Ia2ytkFQ3TcUHiNsPeZrrIDy1CIxfSEF/ibE?=
- =?us-ascii?Q?FW52XYkbyNO/sQQYe/jV4lxX/ka6V26lbmnMuyQ+fsYlpHSSB4gVnLAlikuW?=
- =?us-ascii?Q?3ploSWbucxxT63t03pV1lTa3gnWqW8YVghEh1JVnzMqS1YApctnuVwieROli?=
- =?us-ascii?Q?lXiMRWT7OWBGablEHkskg2+GfVrIlvbHl3keb1u7y4wG+gBakOOzScVU+Q2D?=
- =?us-ascii?Q?X287pxItsErQHBcIqtAjEyjtghNArg/MA7xkqFaYboRZnz2gXU2hlUOTQeGg?=
- =?us-ascii?Q?okVGsI/60wf5uTLMZSkcbjXuYfxiRxDle/Xp5sP6OG10iUbcPW4P77nCQoIt?=
- =?us-ascii?Q?GJOGqDCu7LjX7VOeMdiDHyebopZoLpFrsrZG3bpNzFb4suSH+HXXfwDSCm8o?=
- =?us-ascii?Q?s7Et8nM6LoKYr5cY9/vya60sol3D1+iKnsusTdADdAwkraG1hGwEOmnBrYrw?=
- =?us-ascii?Q?m7O4KRP+G7GvqT6ynELhyAqM0XYZetWd0fJjIx+ysOoZ5JU8xv5I7qtLEizr?=
- =?us-ascii?Q?bj3mh6HDJ3EmxtBR0e0ytU2MG1JMW9ailILjzmkO0GtqUim9zqgTfllHekJg?=
- =?us-ascii?Q?STngWueFnUMg/QA/6H/lz0ShlATH/Qy8M26sn0O1D3IVgQr/HLzROWEF+oIa?=
- =?us-ascii?Q?mpuSYh1q2I2vhPYQ86cN3eafRLnJo56pDp/Jo7Eq6tv7RWfzI/OGogOxv8TG?=
- =?us-ascii?Q?Z4KlbftFPRSxWDVUsoVIugH7uCiQMBTC7t6vNsZNl0gUU4589W7I5lnowal/?=
- =?us-ascii?Q?5nSeNKLaqi+76ZMj8nk8JuKj8oG5jtrNkAOlmRL8B7bEuh/DZ8tkN8Q/YB6V?=
- =?us-ascii?Q?UI9XR70kzAGtOn+F4oVpKeIXDrE5lynodz6ZdVOxmltAE+dYcSOVfaJlwgBn?=
- =?us-ascii?Q?mwj1OI62JAxKEfzUu/Yx4lgUj827xcXXWANCko6tSxfBVzD1jAHBm97nYkEr?=
- =?us-ascii?Q?8stW2E/mibeZHEiQydGC8YPweOolV3AEeaQ6mPistiZ7Q5j+ZPB7FBXOB00A?=
- =?us-ascii?Q?jA=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?xv2xEK0EPiRjls8meJ8Eknyk5O4DgG0tA0lGjuUvkXpCZ6WlaSQ2uBv7KW5p?=
+ =?us-ascii?Q?tvQQDb6T36riaqFTc8jPuATqsutX2yMxVJ8zIGkMqEXJWFy4XdPlt6KV6tI7?=
+ =?us-ascii?Q?f1Ag1LTL+/kUuvoKpUxlJCvy53ncSII8HKQoyyoDo09yUI7eqjYFk/04MvHN?=
+ =?us-ascii?Q?LYyh7DyTOzcNOJYQ4ERAQU9bD0xR9lao/UUPcfhVq0M4O+gWFBquMUdHiSSI?=
+ =?us-ascii?Q?20uouAcjGz0eCSHzKZzToQZCbau+KKgZF8lrBQ3wXmHxFlQxo+Mm6UN3kZa2?=
+ =?us-ascii?Q?nUre2XaLkzS4mlib36umzaphgO+Dad0VLS1o4ndOZCa5RufCLTF68F7dEXpC?=
+ =?us-ascii?Q?sWehdbHMo+Ji2juZLyr3PnMkjrSthrnhnwaPx57UMyczR/Ur/l0SmxfhX6zj?=
+ =?us-ascii?Q?Fc7P6os/jWENcN0Z4nlWuoQ5dbb221J02Iw+rgtBoyeohRDE8otaujr35O2l?=
+ =?us-ascii?Q?4bw3sgO57zv//avQYPOCWxEby453gwH2ShogWM7UERMn3m9V59u+Mmh++mCV?=
+ =?us-ascii?Q?l1KnB3/VvGvJnyWbcwrwf6dwKygn6Ng6HuRRLS7BCRYTEFyNB9lwFIEYX9RE?=
+ =?us-ascii?Q?I2d7OlpOywk/WVJfwFFXLz6LUs5BT7QiVAaa2jUCKAOe/ffaDXOEUs8OcZOV?=
+ =?us-ascii?Q?3i2lNrf9Hcr1KSGaF+buto+kmj2J59xsvmrh/P8uWRx6okRGulg8ly17C5Cy?=
+ =?us-ascii?Q?rEiXbj9vWU8ED3Jp2USDzS6sJv0BHss7F0XfJWWCqX3D1KuPkcqv1GQgfhpO?=
+ =?us-ascii?Q?heoN8bYeHAiBoqdu6UTpG8os/JiCqOTvAunCx4zHI/oyOckgDixyv/4/wvMQ?=
+ =?us-ascii?Q?PaOq7OpOTVYN2LKagNJYFoBez34SXd85riMy9Y1pWf6+Mh1Uhgs6skoJYI24?=
+ =?us-ascii?Q?XruGgfKzIcSXYXXGXDXnS8bm28u9nadXYMAHsJ+S7aCGIeDssuM28cbzB/qR?=
+ =?us-ascii?Q?PwGQRTE7ZC9WdQ8O6ipbddV4syA69KrX9fwvsAv5My4g18SkbJVTYFWf3UDV?=
+ =?us-ascii?Q?JpjkFWmfMxsd7Iw6mr2KP3BUsorkRQQq02cqfMn/Y3BUollkGtOhp8Dgcn4E?=
+ =?us-ascii?Q?OaHJkD9j7BpCHiJ+X6ICZDEh56qcEq0y8ckpSCYYxHcv5M5+fPgKytxrbdS7?=
+ =?us-ascii?Q?hWgItxjfqDuv4W2/BUR7oZArGJa8wMwLpjpOQzWYjZLEvjPtyFDCcbtILNdf?=
+ =?us-ascii?Q?sjteStzLkZfNIPsINDdDPQm2oJfkzulOgLnDzD7+Iu0ML8apC6s12fSlayvd?=
+ =?us-ascii?Q?sNXZ379EdqeENem7XUvfvYfhVzba/Mc3+bf7M/aYZiuktQoCOwOzYkHmQtx2?=
+ =?us-ascii?Q?Q9WvJ8ffQKeJIQNhDc+lhicrA6VuE9HDGQfi6MxapINCNvzSNsAsE9esy05A?=
+ =?us-ascii?Q?Fqo6jkz5JU3amiKkm8A8PZMnH7AGLKUWTa+fB+t0F4+aWp+M2SGepDdWEanR?=
+ =?us-ascii?Q?Zu5PAoFj+v/veeDzYY++/33FNQBezRxxsBJLOovGB5fXHnGN9SHdGO3CpS8c?=
+ =?us-ascii?Q?M6JQEs4Tj4p7AJP+fsLyndGTprt2lyxg5uvgIM8OJoyGCZa1y1NfbtzCtjBM?=
+ =?us-ascii?Q?87uypP/OO50T/4fUeGX48pNC4w+gKMCDJMsl61u7l6Yg03vXRs/fBO7BEVZD?=
+ =?us-ascii?Q?tA=3D=3D?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ebdce871-de49-41cb-8e83-08daa5f349e2
+X-MS-Exchange-CrossTenant-Network-Message-Id: 914d8622-054b-40fe-9dd2-08daa5f34da3
 X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Oct 2022 10:29:16.3285
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Oct 2022 10:29:22.6269
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: HNSb1k4frg0olWG+EOVGAajqx+esMihgJ8jj5fcZgGCubT9qrBSJoDkj0zoOTu8DukFc2S/Rgz9Q7gse/v+ybQ==
+X-MS-Exchange-CrossTenant-UserPrincipalName: kViSjZGABxqajqqllhEvwQ6JZjlLLCPSjoEtnUFT8kV2zHi4Js2+HdcIUPWh1mX2p1B05gcPSNekG+qX1XbN1g==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB5184
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
  definitions=2022-10-04_03,2022-09-29_03,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0 spamscore=0
- suspectscore=0 bulkscore=0 mlxscore=0 mlxlogscore=999 phishscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ bulkscore=0 malwarescore=0 adultscore=0 phishscore=0 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2209130000
  definitions=main-2210040068
-X-Proofpoint-GUID: 9fY-utiAEBjPhqaKyVK8WL6J2e9chYAN
-X-Proofpoint-ORIG-GUID: 9fY-utiAEBjPhqaKyVK8WL6J2e9chYAN
+X-Proofpoint-ORIG-GUID: gTEDTAC_mlN5dy2FRh-Sf9WO7c0SZ0q5
+X-Proofpoint-GUID: gTEDTAC_mlN5dy2FRh-Sf9WO7c0SZ0q5
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+From: Christoph Hellwig <hch@lst.de>
 
-commit e8db2aafcedb7d88320ab83f1000f1606b26d4d7 upstream.
+commit a39f089a25e75c3d17b955d8eb8bc781f23364f3 upstream.
 
-[Replaced XFS_IS_CORRUPT() calls with ASSERT() for 5.4.y backport]
+Move the abstract in-memory version of various btree block headers
+out of xfs_da_format.h as they aren't on-disk formats.
 
-While running generic/103, I observed what looks like memory corruption
-and (with slub debugging turned on) a slub redzone warning on i386 when
-inactivating an inode with a 64k remote attr value.
-
-On a v5 filesystem, maximally sized remote attr values require one block
-more than 64k worth of space to hold both the remote attribute value
-header (64 bytes).  On a 4k block filesystem this results in a 68k
-buffer; on a 64k block filesystem, this would be a 128k buffer.  Note
-that even though we'll never use more than 65,600 bytes of this buffer,
-XFS_MAX_BLOCKSIZE is 64k.
-
-This is a problem because the definition of struct xfs_buf_log_format
-allows for XFS_MAX_BLOCKSIZE worth of dirty bitmap (64k).  On i386 when we
-invalidate a remote attribute, xfs_trans_binval zeroes all 68k worth of
-the dirty map, writing right off the end of the log item and corrupting
-memory.  We've gotten away with this on x86_64 for years because the
-compiler inserts a u32 padding on the end of struct xfs_buf_log_format.
-
-Fortunately for us, remote attribute values are written to disk with
-xfs_bwrite(), which is to say that they are not logged.  Fix the problem
-by removing all places where we could end up creating a buffer log item
-for a remote attribute value and leave a note explaining why.  Next,
-replace the open-coded buffer invalidation with a call to the helper we
-created in the previous patch that does better checking for bad metadata
-before marking the buffer stale.
-
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr_remote.c | 37 +++++++++++++++++++++-----
- fs/xfs/xfs_attr_inactive.c      | 47 +++++++++------------------------
- 2 files changed, 44 insertions(+), 40 deletions(-)
+ fs/xfs/libxfs/xfs_attr_leaf.h | 23 ++++++++++++++
+ fs/xfs/libxfs/xfs_da_btree.h  | 13 ++++++++
+ fs/xfs/libxfs/xfs_da_format.c |  1 +
+ fs/xfs/libxfs/xfs_da_format.h | 57 -----------------------------------
+ fs/xfs/libxfs/xfs_dir2.h      |  2 ++
+ fs/xfs/libxfs/xfs_dir2_priv.h | 19 ++++++++++++
+ 6 files changed, 58 insertions(+), 57 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-index 4e5579edcf8c..de9096b8a47c 100644
---- a/fs/xfs/libxfs/xfs_attr_remote.c
-+++ b/fs/xfs/libxfs/xfs_attr_remote.c
-@@ -24,6 +24,23 @@
- 
- #define ATTR_RMTVALUE_MAPSIZE	1	/* # of map entries at once */
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+index 7b74e18becff..23dd84200e09 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.h
++++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+@@ -16,6 +16,29 @@ struct xfs_da_state_blk;
+ struct xfs_inode;
+ struct xfs_trans;
  
 +/*
-+ * Remote Attribute Values
-+ * =======================
-+ *
-+ * Remote extended attribute values are conceptually simple -- they're written
-+ * to data blocks mapped by an inode's attribute fork, and they have an upper
-+ * size limit of 64k.  Setting a value does not involve the XFS log.
-+ *
-+ * However, on a v5 filesystem, maximally sized remote attr values require one
-+ * block more than 64k worth of space to hold both the remote attribute value
-+ * header (64 bytes).  On a 4k block filesystem this results in a 68k buffer;
-+ * on a 64k block filesystem, this would be a 128k buffer.  Note that the log
-+ * format can only handle a dirty buffer of XFS_MAX_BLOCKSIZE length (64k).
-+ * Therefore, we /must/ ensure that remote attribute value buffers never touch
-+ * the logging system and therefore never have a log item.
++ * Incore version of the attribute leaf header.
 + */
++struct xfs_attr3_icleaf_hdr {
++	uint32_t	forw;
++	uint32_t	back;
++	uint16_t	magic;
++	uint16_t	count;
++	uint16_t	usedbytes;
++	/*
++	 * Firstused is 32-bit here instead of 16-bit like the on-disk variant
++	 * to support maximum fsb size of 64k without overflow issues throughout
++	 * the attr code. Instead, the overflow condition is handled on
++	 * conversion to/from disk.
++	 */
++	uint32_t	firstused;
++	__u8		holes;
++	struct {
++		uint16_t	base;
++		uint16_t	size;
++	} freemap[XFS_ATTR_LEAF_MAPSIZE];
++};
 +
  /*
-  * Each contiguous block has a header, so it is not just a simple attribute
-  * length to FSB conversion.
-@@ -400,17 +417,25 @@ xfs_attr_rmtval_get(
- 			       (map[i].br_startblock != HOLESTARTBLOCK));
- 			dblkno = XFS_FSB_TO_DADDR(mp, map[i].br_startblock);
- 			dblkcnt = XFS_FSB_TO_BB(mp, map[i].br_blockcount);
--			error = xfs_trans_read_buf(mp, args->trans,
--						   mp->m_ddev_targp,
--						   dblkno, dblkcnt, 0, &bp,
--						   &xfs_attr3_rmt_buf_ops);
--			if (error)
-+			bp = xfs_buf_read(mp->m_ddev_targp, dblkno, dblkcnt, 0,
-+					&xfs_attr3_rmt_buf_ops);
-+			if (!bp)
-+				return -ENOMEM;
-+			error = bp->b_error;
-+			if (error) {
-+				xfs_buf_ioerror_alert(bp, __func__);
-+				xfs_buf_relse(bp);
-+
-+				/* bad CRC means corrupted metadata */
-+				if (error == -EFSBADCRC)
-+					error = -EFSCORRUPTED;
- 				return error;
-+			}
- 
- 			error = xfs_attr_rmtval_copyout(mp, bp, args->dp->i_ino,
- 							&offset, &valuelen,
- 							&dst);
--			xfs_trans_brelse(args->trans, bp);
-+			xfs_buf_relse(bp);
- 			if (error)
- 				return error;
- 
-diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-index 766b1386402a..9d5c27db1239 100644
---- a/fs/xfs/xfs_attr_inactive.c
-+++ b/fs/xfs/xfs_attr_inactive.c
-@@ -25,22 +25,20 @@
- #include "xfs_error.h"
- 
- /*
-- * Look at all the extents for this logical region,
-- * invalidate any buffers that are incore/in transactions.
-+ * Invalidate any incore buffers associated with this remote attribute value
-+ * extent.   We never log remote attribute value buffers, which means that they
-+ * won't be attached to a transaction and are therefore safe to mark stale.
-+ * The actual bunmapi will be taken care of later.
+  * Used to keep a list of "remote value" extents when unlinking an inode.
   */
- STATIC int
--xfs_attr3_leaf_freextent(
--	struct xfs_trans	**trans,
-+xfs_attr3_rmt_stale(
- 	struct xfs_inode	*dp,
- 	xfs_dablk_t		blkno,
- 	int			blkcnt)
- {
- 	struct xfs_bmbt_irec	map;
--	struct xfs_buf		*bp;
- 	xfs_dablk_t		tblkno;
--	xfs_daddr_t		dblkno;
- 	int			tblkcnt;
--	int			dblkcnt;
- 	int			nmap;
- 	int			error;
+diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+index eebbc66f4c05..588e4674e931 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.h
++++ b/fs/xfs/libxfs/xfs_da_btree.h
+@@ -126,6 +126,19 @@ typedef struct xfs_da_state {
+ 						/* for dirv2 extrablk is data */
+ } xfs_da_state_t;
  
-@@ -57,35 +55,18 @@ xfs_attr3_leaf_freextent(
- 		nmap = 1;
- 		error = xfs_bmapi_read(dp, (xfs_fileoff_t)tblkno, tblkcnt,
- 				       &map, &nmap, XFS_BMAPI_ATTRFORK);
--		if (error) {
-+		if (error)
- 			return error;
--		}
- 		ASSERT(nmap == 1);
--		ASSERT(map.br_startblock != DELAYSTARTBLOCK);
++/*
++ * In-core version of the node header to abstract the differences in the v2 and
++ * v3 disk format of the headers. Callers need to convert to/from disk format as
++ * appropriate.
++ */
++struct xfs_da3_icnode_hdr {
++	uint32_t		forw;
++	uint32_t		back;
++	uint16_t		magic;
++	uint16_t		count;
++	uint16_t		level;
++};
++
+ /*
+  * Utility macros to aid in logging changed structure fields.
+  */
+diff --git a/fs/xfs/libxfs/xfs_da_format.c b/fs/xfs/libxfs/xfs_da_format.c
+index b1ae572496b6..31bb250c1899 100644
+--- a/fs/xfs/libxfs/xfs_da_format.c
++++ b/fs/xfs/libxfs/xfs_da_format.c
+@@ -13,6 +13,7 @@
+ #include "xfs_mount.h"
+ #include "xfs_inode.h"
+ #include "xfs_dir2.h"
++#include "xfs_dir2_priv.h"
  
- 		/*
--		 * If it's a hole, these are already unmapped
--		 * so there's nothing to invalidate.
-+		 * Mark any incore buffers for the remote value as stale.  We
-+		 * never log remote attr value buffers, so the buffer should be
-+		 * easy to kill.
- 		 */
--		if (map.br_startblock != HOLESTARTBLOCK) {
+ /*
+  * Shortform directory ops
+diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+index cda10902df1e..222ee48da5e8 100644
+--- a/fs/xfs/libxfs/xfs_da_format.h
++++ b/fs/xfs/libxfs/xfs_da_format.h
+@@ -93,19 +93,6 @@ struct xfs_da3_intnode {
+ 	struct xfs_da_node_entry __btree[];
+ };
+ 
+-/*
+- * In-core version of the node header to abstract the differences in the v2 and
+- * v3 disk format of the headers. Callers need to convert to/from disk format as
+- * appropriate.
+- */
+-struct xfs_da3_icnode_hdr {
+-	uint32_t	forw;
+-	uint32_t	back;
+-	uint16_t	magic;
+-	uint16_t	count;
+-	uint16_t	level;
+-};
 -
--			dblkno = XFS_FSB_TO_DADDR(dp->i_mount,
--						  map.br_startblock);
--			dblkcnt = XFS_FSB_TO_BB(dp->i_mount,
--						map.br_blockcount);
--			bp = xfs_trans_get_buf(*trans,
--					dp->i_mount->m_ddev_targp,
--					dblkno, dblkcnt, 0);
--			if (!bp)
--				return -ENOMEM;
--			xfs_trans_binval(*trans, bp);
--			/*
--			 * Roll to next transaction.
--			 */
--			error = xfs_trans_roll_inode(trans, dp);
--			if (error)
--				return error;
--		}
-+		error = xfs_attr_rmtval_stale(dp, &map, 0);
-+		if (error)
-+			return error;
+ /*
+  * Directory version 2.
+  *
+@@ -434,14 +421,6 @@ struct xfs_dir3_leaf_hdr {
+ 	__be32			pad;		/* 64 bit alignment */
+ };
  
- 		tblkno += map.br_blockcount;
- 		tblkcnt -= map.br_blockcount;
-@@ -174,9 +155,7 @@ xfs_attr3_leaf_inactive(
+-struct xfs_dir3_icleaf_hdr {
+-	uint32_t		forw;
+-	uint32_t		back;
+-	uint16_t		magic;
+-	uint16_t		count;
+-	uint16_t		stale;
+-};
+-
+ /*
+  * Leaf block entry.
+  */
+@@ -520,19 +499,6 @@ struct xfs_dir3_free {
+ 
+ #define XFS_DIR3_FREE_CRC_OFF  offsetof(struct xfs_dir3_free, hdr.hdr.crc)
+ 
+-/*
+- * In core version of the free block header, abstracted away from on-disk format
+- * differences. Use this in the code, and convert to/from the disk version using
+- * xfs_dir3_free_hdr_from_disk/xfs_dir3_free_hdr_to_disk.
+- */
+-struct xfs_dir3_icfree_hdr {
+-	uint32_t	magic;
+-	uint32_t	firstdb;
+-	uint32_t	nvalid;
+-	uint32_t	nused;
+-
+-};
+-
+ /*
+  * Single block format.
+  *
+@@ -709,29 +675,6 @@ struct xfs_attr3_leafblock {
  	 */
- 	error = 0;
- 	for (lp = list, i = 0; i < count; i++, lp++) {
--		tmp = xfs_attr3_leaf_freextent(trans, dp,
--				lp->valueblk, lp->valuelen);
+ };
+ 
+-/*
+- * incore, neutral version of the attribute leaf header
+- */
+-struct xfs_attr3_icleaf_hdr {
+-	uint32_t	forw;
+-	uint32_t	back;
+-	uint16_t	magic;
+-	uint16_t	count;
+-	uint16_t	usedbytes;
+-	/*
+-	 * firstused is 32-bit here instead of 16-bit like the on-disk variant
+-	 * to support maximum fsb size of 64k without overflow issues throughout
+-	 * the attr code. Instead, the overflow condition is handled on
+-	 * conversion to/from disk.
+-	 */
+-	uint32_t	firstused;
+-	__u8		holes;
+-	struct {
+-		uint16_t	base;
+-		uint16_t	size;
+-	} freemap[XFS_ATTR_LEAF_MAPSIZE];
+-};
 -
-+		tmp = xfs_attr3_rmt_stale(dp, lp->valueblk, lp->valuelen);
- 		if (error == 0)
- 			error = tmp;	/* save only the 1st errno */
- 	}
+ /*
+  * Special value to represent fs block size in the leaf header firstused field.
+  * Only used when block size overflows the 2-bytes available on disk.
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index f54244779492..e170792c0acc 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -18,6 +18,8 @@ struct xfs_dir2_sf_entry;
+ struct xfs_dir2_data_hdr;
+ struct xfs_dir2_data_entry;
+ struct xfs_dir2_data_unused;
++struct xfs_dir3_icfree_hdr;
++struct xfs_dir3_icleaf_hdr;
+ 
+ extern struct xfs_name	xfs_name_dotdot;
+ 
+diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+index 59f9fb2241a5..d2eaea663e7f 100644
+--- a/fs/xfs/libxfs/xfs_dir2_priv.h
++++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+@@ -8,6 +8,25 @@
+ 
+ struct dir_context;
+ 
++/*
++ * In-core version of the leaf and free block headers to abstract the
++ * differences in the v2 and v3 disk format of the headers.
++ */
++struct xfs_dir3_icleaf_hdr {
++	uint32_t		forw;
++	uint32_t		back;
++	uint16_t		magic;
++	uint16_t		count;
++	uint16_t		stale;
++};
++
++struct xfs_dir3_icfree_hdr {
++	uint32_t		magic;
++	uint32_t		firstdb;
++	uint32_t		nvalid;
++	uint32_t		nused;
++};
++
+ /* xfs_dir2.c */
+ extern int xfs_dir2_grow_inode(struct xfs_da_args *args, int space,
+ 				xfs_dir2_db_t *dbp);
 -- 
 2.35.1
 
