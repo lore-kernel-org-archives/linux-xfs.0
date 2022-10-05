@@ -2,228 +2,96 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D8FFC43219
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Oct 2022 16:40:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A461DC4332F
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Oct 2022 16:46:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230042AbiJEQk2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Oct 2022 12:40:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35320 "EHLO
+        id S230151AbiJEQqt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Oct 2022 12:46:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229774AbiJEQk0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Oct 2022 12:40:26 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AE7F20356;
-        Wed,  5 Oct 2022 09:40:25 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B0FA0B81DE0;
-        Wed,  5 Oct 2022 16:40:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43E3EC433D6;
-        Wed,  5 Oct 2022 16:40:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664988022;
-        bh=PFLhkFtwkoFOvEH1cLHwmK2JKBgWdlPw1bvH2RLTQS8=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=M+QxPavX/Wlovs2EPzg2SZ1esj4fmGj0ZmvQ3FhBVmGprs3Jxml3XOq95uMdt+Mqz
-         VWLkvXn5NHEO2utNC6f31e7iZv9vn8sXdQFmPEjUxmVQyxqHCMLShMv+sjAvulnfE3
-         K2aA2/0urEAUWbh/6LGrZFgU3DoMSGPQ6YdsuV15/i8VRuze/1vsTmnKcF45y8DEq+
-         QF3/ZwvNUf+LegLBGXsDappNcIHH0BZM5OmwhAPGLEwbdmk/Jyb1xE1MzmyTYJCU+D
-         zWi5UEj+zAM5SsH9dZBHc/4GMGziiZwGiiHKAwDEg7lqo2HzbbWQm5Wfd3XEtWE6zK
-         RbxSVjsJW0/aw==
-Message-ID: <66714195b93e05a97c2cd09e5d21ca47203366cf.camel@kernel.org>
-Subject: Re: [PATCH v6 8/9] vfs: update times after copying data in
- __generic_file_write_iter
-From:   Jeff Layton <jlayton@kernel.org>
-To:     NeilBrown <neilb@suse.de>, Amir Goldstein <amir73il@gmail.com>
-Cc:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
-        david@fromorbit.com, trondmy@hammerspace.com,
-        viro@zeniv.linux.org.uk, zohar@linux.ibm.com, xiubli@redhat.com,
-        chuck.lever@oracle.com, lczerner@redhat.com, jack@suse.cz,
-        bfields@fieldses.org, brauner@kernel.org, fweimer@redhat.com,
-        linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Date:   Wed, 05 Oct 2022 12:40:18 -0400
-In-Reply-To: <166483780286.14457.1388505585556274283@noble.neil.brown.name>
-References: <20220930111840.10695-1-jlayton@kernel.org>
-        , <20220930111840.10695-9-jlayton@kernel.org>
-        , <CAOQ4uxgofERYwN7AfYFWqQMpQH5y3LV+6UuGfjU29gZXNf7-vQ@mail.gmail.com>
-        , <df91b9ec61bc49aa5330714e3319dcea2531953b.camel@kernel.org>
-        , <CAOQ4uxi6pPDexF7Z1wshnpV0kbSKsHUeawaUkhjq4FNGbqWU+A@mail.gmail.com>
-         <166483780286.14457.1388505585556274283@noble.neil.brown.name>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4 (3.44.4-2.fc36) 
+        with ESMTP id S229696AbiJEQqs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Oct 2022 12:46:48 -0400
+Received: from mail-qk1-x729.google.com (mail-qk1-x729.google.com [IPv6:2607:f8b0:4864:20::729])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D03C05280A
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Oct 2022 09:46:45 -0700 (PDT)
+Received: by mail-qk1-x729.google.com with SMTP id h6so1160299qkl.11
+        for <linux-xfs@vger.kernel.org>; Wed, 05 Oct 2022 09:46:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linuxfoundation.org; s=google;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date;
+        bh=Hu+OVpd0/huXrOJ+GKu2yG9DB9Gzph8axQcwOQY12bs=;
+        b=VYnLidyPMfS5NTqFeZ6ttWJQ4mP10seDu1P6JqHrG/pDjjGbtGApkPFkqS2HIDTzpo
+         zkS3RxYis9jbUCTohc6EUokXz269fxSFi4MvcR/0f0Y4IsxYc2TlEO6smw8dCtFbaZlj
+         FVQmXvug6EqnGLfjsLP6UoZK80kacX8yt/oBg=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date;
+        bh=Hu+OVpd0/huXrOJ+GKu2yG9DB9Gzph8axQcwOQY12bs=;
+        b=ZKElc5VYIkWfLqw8D+dqmpWjJ5085EOOf9GFQckFJO+I0qz7fcqv0ibQIy/qaP5Ksp
+         sYJqfsgawk9WKmP8Y7+xw7fDI/1Shzg9yOEN+91D+OHSI6C6r1ZJgjFbcHPnVUEwPO0e
+         uG2mR+zsOQF71ZKAig1hkrQmJNpixJqZBF/ZobKtP9RdbekGs7XMqK0jStRoVqj9oaQq
+         FM4UB0eeoRk82gG/OiV2yio1odMOyuZWXtzE4/3KXEvH/ZcnJHhQdEEQl/gPjFVtkLUH
+         KEnYkotnh2jO1cLbCJMbDYSasD/GKmbBmnUr15Bv/Ftc3ZsZpIgqpHq9D12i303kAy5C
+         88TQ==
+X-Gm-Message-State: ACrzQf3SU0F8Rd1lcddH8JiG86u79NSU909L8Lsr5pdcebjRF/pSZ15L
+        YKgPwAEsC0uZwo3b/NObftOzYw==
+X-Google-Smtp-Source: AMsMyM7xsfKwCg7c8POu4KN/cW/upOGM1YgB6+8M2Up1acHTJ/cyVsXwqyg6sPsa9yBin5GqXt5WpA==
+X-Received: by 2002:a05:620a:b51:b0:6cf:68b2:d86e with SMTP id x17-20020a05620a0b5100b006cf68b2d86emr390536qkg.176.1664988404901;
+        Wed, 05 Oct 2022 09:46:44 -0700 (PDT)
+Received: from meerkat.local (bras-base-mtrlpq5031w-grc-33-142-113-79-147.dsl.bell.ca. [142.113.79.147])
+        by smtp.gmail.com with ESMTPSA id x22-20020a05620a0b5600b006b5c061844fsm16459715qkg.49.2022.10.05.09.46.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 05 Oct 2022 09:46:44 -0700 (PDT)
+Date:   Wed, 5 Oct 2022 12:46:42 -0400
+From:   Konstantin Ryabitsev <konstantin@linuxfoundation.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        linux-xfs@vger.kernel.org, Stephen Zhang <starzhangzsd@gmail.com>,
+        Shida Zhang <zhangshida@kylinos.cn>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>
+Subject: Re: linux-next: Signed-off-by missing for commit in the xfs tree
+Message-ID: <20221005164642.qhzyfmsekgqrerhd@meerkat.local>
+References: <20221004072302.345bfd4a@canb.auug.org.au>
+ <20221003222103.GM3600936@dread.disaster.area>
+ <20221004225012.501e11ed@canb.auug.org.au>
+ <YzxX7ks+YD7U1dcl@magnolia>
+ <20221004210400.GO3600936@dread.disaster.area>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20221004210400.GO3600936@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 2022-10-04 at 09:56 +1100, NeilBrown wrote:
-> On Tue, 04 Oct 2022, Amir Goldstein wrote:
-> > On Mon, Oct 3, 2022 at 4:01 PM Jeff Layton <jlayton@kernel.org> wrote:
-> > >=20
-> > > On Sun, 2022-10-02 at 10:08 +0300, Amir Goldstein wrote:
-> > > > On Fri, Sep 30, 2022 at 2:30 PM Jeff Layton <jlayton@kernel.org> wr=
-ote:
-> > > > >=20
-> > > > > The c/mtime and i_version currently get updated before the data i=
-s
-> > > > > copied (or a DIO write is issued), which is problematic for NFS.
-> > > > >=20
-> > > > > READ+GETATTR can race with a write (even a local one) in such a w=
-ay as
-> > > > > to make the client associate the state of the file with the wrong=
- change
-> > > > > attribute. That association can persist indefinitely if the file =
-sees no
-> > > > > further changes.
-> > > > >=20
-> > > > > Move the setting of times to the bottom of the function in
-> > > > > __generic_file_write_iter and only update it if something was
-> > > > > successfully written.
-> > > > >=20
-> > > >=20
-> > > > This solution is wrong for several reasons:
-> > > >=20
-> > > > 1. There is still file_update_time() in ->page_mkwrite() so you hav=
-en't
-> > > >     solved the problem completely
-> > >=20
-> > > Right. I don't think there is a way to solve the problem vs. mmap.
-> > > Userland can write to a writeable mmap'ed page at any time and we'd
-> > > never know. We have to specifically carve out mmap as an exception he=
-re.
-> > > I'll plan to add something to the manpage patch for this.
-> > >=20
-> > > > 2. The other side of the coin is that post crash state is more like=
-ly to end
-> > > >     up data changes without mtime/ctime change
-> > > >=20
-> > >=20
-> > > Is this really something filesystems rely on? I suppose the danger is
-> > > that some cached data gets written to disk before the write returns a=
-nd
-> > > the inode on disk never gets updated.
-> > >=20
-> > > But...isn't that a danger now? Some of the cached data could get writ=
-ten
-> > > out and the updated inode just never makes it to disk before a crash
-> > > (AFAIU). I'm not sure that this increases our exposure to that proble=
-m.
-> > >=20
-> > >=20
-> >=20
-> > You are correct that that danger exists, but it only exists for overwri=
-ting
-> > to allocated blocks.
-> >=20
-> > For writing to new blocks, mtime change is recorded in transaction
-> > before the block mapping is recorded in transaction so there is no
-> > danger in this case (before your patch).
-> >=20
-> > Also, observing size change without observing mtime change
-> > after crash seems like a very bad outcome that may be possible
-> > after your change.
-> >=20
-> > These are just a few cases that I could think of, they may be filesyste=
-m
-> > dependent, but my gut feeling is that if you remove the time update bef=
-ore
-> > the operation, that has been like that forever, a lot of s#!t is going =
-to float
-> > for various filesystems and applications.
-> >=20
-> > And it is not one of those things that are discovered  during rc or eve=
-n
-> > stable kernel testing - they are discovered much later when users start=
- to
-> > realize their applications got bogged up after crash, so it feels like =
-to me
-> > like playing with fire.
-> >=20
-> > > > If I read the problem description correctly, then a solution that i=
-nvalidates
-> > > > the NFS cache before AND after the write would be acceptable. Right=
-?
-> > > > Would an extra i_version bump after the write solve the race?
-> > > >=20
-> > >=20
-> > > I based this patch on Neil's assertion that updating the time before =
-an
-> > > operation was pointless if we were going to do it afterward. The NFS
-> > > client only really cares about seeing it change after a write.
-> > >=20
-> >=20
-> > Pointless to NFS client maybe.
-> > Whether or not this is not changing user behavior for other application=
-s
-> > is up to you to prove and I doubt that you can prove it because I doubt
-> > that it is true.
-> >=20
-> > > Doing both would be fine from a correctness standpoint, and in most
-> > > cases, the second would be a no-op anyway since a query would have to
-> > > race in between the two for that to happen.
-> > >=20
-> > > FWIW, I think we should update the m/ctime and version at the same ti=
-me.
-> > > If the version changes, then there is always the potential that a tim=
-er
-> > > tick has occurred. So, that would translate to a second call to
-> > > file_update_time in here.
-> > >=20
-> > > The downside of bumping the times/version both before and after is th=
-at
-> > > these are hot codepaths, and we'd be adding extra operations there. E=
-ven
-> > > in the case where nothing has changed, we'd have to call
-> > > inode_needs_update_time a second time for every write. Is that worth =
-the
-> > > cost?
-> >=20
-> > Is there a practical cost for iversion bump AFTER write as I suggested?
-> > If you NEED m/ctime update AFTER write and iversion update is not enoug=
-h
-> > then I did not understand from your commit message why that is.
-> >=20
-> > Thanks,
-> > Amir.
-> >=20
->=20
-> Maybe we should split i_version updates from ctime updates.
->=20
-> While it isn't true that ctime updates have happened before the write
-> "forever" it has been true since 2.3.43[1] which is close to forever.
->=20
-> For ctime there doesn't appear to be a strong specification of when the
-> change happens, so history provides a good case for leaving it before.
-> For i_version we want to provide clear and unambiguous semantics.
-> Performing 2 updates makes the specification muddy.
->=20
-> So I would prefer a single update for i_version, performed after the
-> change becomes visible.  If that means it has to be separate from ctime,
-> then so be it.
->=20
-> NeilBrown
->=20
->=20
-> [1]:  https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git=
-/commit/?id=3D636b38438001a00b25f23e38747a91cb8428af29
+On Wed, Oct 05, 2022 at 08:04:00AM +1100, Dave Chinner wrote:
+> > That said... I think we should get in the habit of asking patch authors
+> > to make sure that at least one of the email or name strings match
+> > between the From and SOB tags.  I can see how people who grok even less
+> > about how Chinese names work than I do (read: lawyers) might get fussy
+> > about this kind of thing.
+> 
+> As per above, the normal solution is an explicit "From: <foo>" line
+> that matches the SOB.  It's just annoying that our new-fangled tools
+> haven't encoded this long-standing convention to warn us when we
+> pull a patch with a from-tag that doesn't match a sob-tag.
 
+This is the case of "there's multiple opinions of what's right" here. The
+logic for matching "person tags" is as follows:
 
-Not necessarily. We can document it in such a way that bumping it twice
-is allowed, but not required.
+- check that entire email matches (a.smith@intel.com == a.smith@intel.com)
+- failing that, check that the name is a full match 
+  ("Alex Smith" == "Alex Smith")
+- failing that, check if there's a comma in the From and swap it around
+  ("Smith, Alex" == "Alex Smith")
 
-My main concern with splitting them up is that we'd have to dirty the
-inode twice if both the times and the i_version need updating. If the
-inode gets written out in between, then we end up doing twice the I/O.
-The interim on-disk metadata would be in sort of a weird state too --
-the ctime would have changed but the version would still be old.
+The last two checks were added based on a request, I'm pretty sure. Before
+that we only did full email check and complained about trailer mismatches if
+it was failing. If the previous behaviour was "more right" then I'm happy to
+roll back or put this up for a "what is more correct" vote.
 
-It might be worthwhile to just go ahead and continue bumping it in
-file_update_time, and then we'd just attempt to bump the i_version again
-afterward. The second bump will almost always be a no-op anyway.
---=20
-Jeff Layton <jlayton@kernel.org>
+-K
