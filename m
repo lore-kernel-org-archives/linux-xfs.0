@@ -2,197 +2,338 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24A5EC4332F
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Oct 2022 07:02:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB284C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Oct 2022 10:06:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229905AbiJEHCr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Oct 2022 03:02:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35902 "EHLO
+        id S229450AbiJEKG6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Oct 2022 06:06:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35040 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229462AbiJEHCq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Oct 2022 03:02:46 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACE3874E0B;
-        Wed,  5 Oct 2022 00:02:35 -0700 (PDT)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2956he6d021627;
-        Wed, 5 Oct 2022 07:02:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references :
- content-transfer-encoding : content-type : mime-version; s=corp-2022-7-12;
- bh=We0LomCLoAqWgV8osaheCp2GcnRfLFTB9rWqIpkPigA=;
- b=ZS5T8upjMls1AcJFqDtFXfjnhEGNl1VKnNlRBiFU04pziQc5xUvO+ht5BwEg9PMwDDpo
- Ea4vR4HRt6xOmrqg1CNOSy6KiqldJ+F4SBDKxbbiq9qFgJesrgodcvKBgBPAMlPEJeHH
- YMQ7H2XpaoKqZR6REFVZWbdZu25REXaPOg7Lq//dyfwxggP6KE5+RMPYnHLxeV29VAcT
- ohPiAwPOn8uIe2Tb6VMIZ7ch4fNV0r+gtrixZz11ysLtKtLUJoqwQItv3+kc/7+4YZ7H
- OFSmKBLtXQkNkVvoSLdhLhwl3xAQX1luCuhWXyaAFsUxGrwqW1aFCrp7HmjEmaRjQtMw sg== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3jxcb2re08-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 05 Oct 2022 07:02:30 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2952Lwlx005363;
-        Wed, 5 Oct 2022 07:02:29 GMT
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2100.outbound.protection.outlook.com [104.47.55.100])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3jxc04mst5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 05 Oct 2022 07:02:29 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=O65+c2zwKqZGFLG5//r2y5ez8Vl6Ho574wychndLykL0ukesmvhvXeA8NhrrmT3EUsEu5nypAF4Jx53kj7q/GrFktsWu+FmCKcB/yfoIPTQLSYpHbFGfY0WoNc9AMJIcDxeO0R6FDhigJytqQQIFjccKfpUD0YJRrLvm4dNNJE0nwlF6QAYz66JEUZEpGP/hiYR2zq+7z7wet225zSMf2hh746GLzF+Ado66p5d1Agv+IxHi4ew6QA+jfvm6+CJUZXC2USmwukw2l50+qZZJIfgay/RJ6ucT2Sr0YtT4eb9hVGhsrX16w65Xywv8zDEkIsqNXSuq75Tk+LHxEYLzTQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=We0LomCLoAqWgV8osaheCp2GcnRfLFTB9rWqIpkPigA=;
- b=DpoXhClzF2SqIVFu7htagV8vcKsIN93PsYwF+aTAjnRs9UTTxWjQ/QBxZOD+nzq9fbBJiBetRryqTiMIMcEaQpTia3wf5Dmr1COawGhAIzLpo2Y3wiMXelDI1AF458ffq54MlxZ/pgXtA82cQXaL6Kz6Ik/x2uXbTDnrtbHmcLluxkNVc+gunYpml7H1XudzUPx2oEF8w8oILrLX5uwnnCrD9aWEC6LdAYAdIT/DAWwxcN8Z+xYZxcTX7noHvCYMmCmxZwbRQLT+CbSrpyYjXhiKNzZ7ojDxXwUlKFwKxCDPDERp6jJ8ovtLdt/QvLrG1gn2lSHZA4/RIr14+AK5Mg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=We0LomCLoAqWgV8osaheCp2GcnRfLFTB9rWqIpkPigA=;
- b=cNE4A7jc8rDRzklTrrpGVryHbT+JF6GmpnQvvgLaM/Z7QS75Y28JJwobY76XNc13g5MuSYqexn5x6fOjw7VnNCXGXAdXk/P+Jg8GFYGtCEV7E1jrcBx93W+lrLfxuAHf7QpV1NLObdKduw496GyMbe2FoEssEkoUOvRd7d0qQqc=
-Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:22b::9)
- by DS7PR10MB4863.namprd10.prod.outlook.com (2603:10b6:5:297::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5676.24; Wed, 5 Oct
- 2022 07:02:27 +0000
-Received: from SA1PR10MB5867.namprd10.prod.outlook.com
- ([fe80::822f:1816:1c2c:43d1]) by SA1PR10MB5867.namprd10.prod.outlook.com
- ([fe80::822f:1816:1c2c:43d1%8]) with mapi id 15.20.5676.031; Wed, 5 Oct 2022
- 07:02:27 +0000
-From:   Chandan Babu R <chandan.babu@oracle.com>
-To:     gregkh@linuxfoundation.org
-Cc:     sashal@kernel.org, mcgrof@kernel.org, linux-xfs@vger.kernel.org,
-        stable@vger.kernel.org, djwong@kernel.org, chandan.babu@oracle.com,
-        amir73il@gmail.com, leah.rumancik@gmail.com
-Subject: [PATCH 5.4 11/11] xfs: remove unused variable 'done'
-Date:   Wed,  5 Oct 2022 12:31:05 +0530
-Message-Id: <20221005070105.41929-12-chandan.babu@oracle.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20221005070105.41929-1-chandan.babu@oracle.com>
-References: <20221005070105.41929-1-chandan.babu@oracle.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: TYCPR01CA0132.jpnprd01.prod.outlook.com
- (2603:1096:400:26d::17) To SA1PR10MB5867.namprd10.prod.outlook.com
- (2603:10b6:806:22b::9)
+        with ESMTP id S229811AbiJEKG4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Oct 2022 06:06:56 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D6495C94C;
+        Wed,  5 Oct 2022 03:06:54 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C8E29B81D26;
+        Wed,  5 Oct 2022 10:06:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81DB8C433C1;
+        Wed,  5 Oct 2022 10:06:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1664964411;
+        bh=fNo5dsnOQdxgDNOIlvUZf4zaRP16kQfZ7E5TnUPsNqc=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=dOI/YiHeiekjpEAtH2wfyif8VtSz7tIXHDLuYIihbP3KXBIZGFk2f3XbJC6YNAqqE
+         PCjSG0jbSRgRJWFClizTxynAXME8AJjc5oQOL0CMYKZ58ms/YtgeOE3mapw1Gggict
+         T43hyyUp/2AvENR0N75y02/iuBoE9Rr4tSWOcKNYJge7KTPhUSF3m8e18yqGpFs6eP
+         POeYA87wbyBhVJffSJAkPGiXxtI1xH03zDAZEec6QcSfjLTwiw/GyG56qM5T0mugtI
+         NDcQ1AxTXMiE72U98ouqvK4rXylPXbeC6pZ8aYCzSdoeKJ/S2uMghGPdqsgRF2VMJO
+         BFCweFU4dnRjQ==
+Message-ID: <13714490816df1ff36ab06bbf32df5440cad7913.camel@kernel.org>
+Subject: Re: [PATCH v6 6/9] nfsd: use the getattr operation to fetch
+ i_version
+From:   Jeff Layton <jlayton@kernel.org>
+To:     NeilBrown <neilb@suse.de>
+Cc:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
+        david@fromorbit.com, trondmy@hammerspace.com,
+        viro@zeniv.linux.org.uk, zohar@linux.ibm.com, xiubli@redhat.com,
+        chuck.lever@oracle.com, lczerner@redhat.com, jack@suse.cz,
+        bfields@fieldses.org, brauner@kernel.org, fweimer@redhat.com,
+        linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Date:   Wed, 05 Oct 2022 06:06:48 -0400
+In-Reply-To: <166484034920.14457.15225090674729127890@noble.neil.brown.name>
+References: <20220930111840.10695-1-jlayton@kernel.org>
+        , <20220930111840.10695-7-jlayton@kernel.org>
+         <166484034920.14457.15225090674729127890@noble.neil.brown.name>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4 (3.44.4-2.fc36) 
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|DS7PR10MB4863:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0027688c-66f4-4529-214c-08daa69f9014
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 3Ta5AkoPcmHHh2j2zjQigeo59b1KzGqura8CAqPCso2XAihW3kJ1bjJsIKKI7fA+LVjmTEraQs21ps9ueR3+zCo7Z775pQyixXJZFn3YouLWOm0v+lfkEokjUOpMIABcDg8jUw/x3N23MiUH1H1bVc9s8YM1zjJo+mdn+K8fKvmArm0TtS6c2Y3Oh9JdL7sDMduXbi5fEFNPLpKLZZVDdDjDmuz8QiTb+Mpu9mv1Ddcmo02c5u7cw/paNqTct+cKd60//lugAocjlNQ8pgojUWOUPK5m5ap3DkTrmQLpqjtAXrzi/tAtoglg4KM6280bdxRU58xbJ8nSciElXlqNUmqtnteWIGN6UTPXsMG05PsW3idNHOiJDGi4T+DEdyHtYL2SXOJCmbuq1v+lPC9L7zLn7pYsBBimcVBYfhJvA6GesFhLpADRUM1RVBPbfpnY0NFNjnJdK2yLXGtTY/yDdE9dhxuJdh32sFzJg9Ktoo8NbPTF4QFHr+fzZHHUnysse7jupB2ZawNDXQY/qA5EtrrcWiZPJxco5XGuXsZBOu4eclbJc694RhrxEnx558n0036Nl2XzVXhT9r0PGlA/AVQTarczo/oZxV03aEMxLp/g+GPNwXpSNJLH4nEji4OUWZqgDHftd31HcMS3CBmxXMeYEdcNcn0gO5giNhJOUFi9kjx7lkB2WhRMUS6PRbRaH8uXvNESUtTmF8ep2CjvwQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(346002)(39860400002)(136003)(366004)(396003)(376002)(451199015)(478600001)(6486002)(66556008)(6512007)(2906002)(66946007)(5660300002)(8936002)(2616005)(6666004)(4326008)(26005)(8676002)(6916009)(316002)(36756003)(6506007)(83380400001)(86362001)(66476007)(186003)(1076003)(38100700002)(41300700001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?S5HHyOr+3ofmhIGFKCvB6HqNFlwWKcmAxYvfuiBUEA3nDK/4FUe+iHOmIvf7?=
- =?us-ascii?Q?2rA7IgUVuIkuIrfnmaCXM41hSqp2qxunS4wagtZJ8qbm5XLjQoKD6v34PDaT?=
- =?us-ascii?Q?kbiczcNu/0xFZaUkWcYGvSyuCCF0Ep/iyXnXbBREyIAKq7zALoRsWXqrdrLU?=
- =?us-ascii?Q?TJ41lj5yvpapTZXYQL9NI/wvAjzoKUbUszDN94AeIymXazKm2TMnp36YmYqk?=
- =?us-ascii?Q?ywVcR9dk69Ft5c6zWcpl/dOxqPkhqSGGHqRTwMFGyfODiGH5GaHAmtWObUPE?=
- =?us-ascii?Q?liINJh7/TQpEwEkLAdt0Ov4CCByjsdpa1pTf3l69iWSSZmKgC7AtlKjIDeHB?=
- =?us-ascii?Q?JjAKxTO7ClLDT0T41v5Jxrv9054Si2tcQi+FJ/Fb8dQZS8TFmLnOdVv3cbur?=
- =?us-ascii?Q?PaZiX+XGxx+pQvADuNrxvaRg+jZnFSreDrZPUshKwpk3zuH+/kFnbJh+0vTg?=
- =?us-ascii?Q?m8w8Ce0TeRM6bUA318/COy6Rwrm9CrxizAhsyYVuhKpN3CQGo2EXI/kH53fC?=
- =?us-ascii?Q?NmGtjWKfg57Hbk3L5XNnBR5eitgCSLNDpxhpLmuoGIi5IleTfqLSbhwUlbXq?=
- =?us-ascii?Q?NlnWi9n/FrCETTMqK/ryweMN53hH2MLy3NhgQRVzOVevMoueJPtrAyyR7fM/?=
- =?us-ascii?Q?U2Bm6HONXvyyBwMDDOfbKYQePinxGOHSfY50NX00wLABxDhkiC2oPFakQPtX?=
- =?us-ascii?Q?X6XPBjGc9CqJJSg/owrlq06N22bKwsSscYwpTyOL4jrJBCH0+crIVBEFTsfN?=
- =?us-ascii?Q?EzBAzf7nu4M3ZviaCQQ5CpKsk9xC4u1p84cJ5cI3z7yp299AtUY35VQSN8Uc?=
- =?us-ascii?Q?wZzAiJbBZWPEY9DGsW6WucUNdduW7TWTowFSaJFsx4USRrkU2DkpV1RcSL+y?=
- =?us-ascii?Q?xBKDIxMSDYXQrGrOyE46hMSA8itMPYega+zBtF/sOaXevzGWVPMoH78Ih6Ly?=
- =?us-ascii?Q?5ihp8Rm5h69O84UOVksR26Rb26vGMGdUsiyBhVGLcjsd12u1/uvQWGqyWKhQ?=
- =?us-ascii?Q?8AAPtddT4ipGqxVBJxlqH4tpvClBldCA8wpxiLJ4Vpj25QtEMbub+Gz3bPTr?=
- =?us-ascii?Q?SDDsDy5t/FLVx5u4CWLse0oXQdlqd70bWAW3zB3O9ytcV5EEoikczQQoDTe2?=
- =?us-ascii?Q?DujnNAaGjNHAEY/IH5rz+LM7ktVQN/zZvxLvqX6EfnXDjD9+5wDpu5fywclZ?=
- =?us-ascii?Q?DLggzQblPA9JMa254Rwbqa6q/Xiz8ymD8qG0+5/trgBTiC7jwANqrmV4N2TI?=
- =?us-ascii?Q?UZwuEmTklIdU9esQbUT1mVQuCZqBue7jf1yn5Iy9qv3tnNaHKTNsJhJLVB9P?=
- =?us-ascii?Q?+pzWt+RGhJj0Z1qU3pyKKfYC0x4l/PdWpyUHbi82SdYEr8iIu5+HhS+B72Mh?=
- =?us-ascii?Q?yzxNqDUbd2J4INh3MW2p47Vsndq8+hZyeRzDmVrzGE0b1Uv+pfiXC5s6aZMy?=
- =?us-ascii?Q?ssJhnGyBzkVndIVUtjsN2B6uh8YnpV01htpftVEiEY58XYPzJNeFF/WV3akO?=
- =?us-ascii?Q?McKB4cJTxde1mvVHzsKLYqHGs40zuSP8mTpt802mig8SyJ2xcogVy4B81+As?=
- =?us-ascii?Q?Dyo04S/XdSuceOv/He5JO3O5fjYP1iVcz2QPvsQygY+JVG7RzLYvdMbBEZ8R?=
- =?us-ascii?Q?wg=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?dfatUilwiP3FQl0b6+mB9kEWDkOM8tIHUH82aqwTEG0sv7P9Cik6UfBtWld6?=
- =?us-ascii?Q?8U1qtzktSSNXaPnbbGq1K0VadbItOQhQ3okDRZp8QioryDawu/ND47VhhGLS?=
- =?us-ascii?Q?pinKCfHNrbLT6BTGCqVx5ABuY4+G41zVG9tBzp3ayEs12KHUAFnuxO9x+pmG?=
- =?us-ascii?Q?oc8e3d7xjGvx4YEn6PxdcN+31u8lrEUSnOHQkcPkhBo125Iw1NCrS6TxG9+R?=
- =?us-ascii?Q?/mtizjkdRbW+3VQq56epBXJjtpY300dmYMZbsiNXtgmRid2P0xM72ghOKf3E?=
- =?us-ascii?Q?G53/xCrHAbknHdtmyZGfFWD5b9wCddtbKlaTzgx5mblhW92WCzo2w1ev6xPT?=
- =?us-ascii?Q?feON+s/ZUPYVMOhTkrqj+w5qJQN+Oe8oZEyqjfjzX6LGOJEzYkLIMAS7gRUX?=
- =?us-ascii?Q?dQmc6S3Vgg/H5dAtzKLQkOW9ksJMONTmhcYeR8krwgPJXkZCgVFWyO6Qd0NM?=
- =?us-ascii?Q?IkDqxbUzgo5/2W5PBUKQIc7UcgRwv/7WQu/f0J0e8P9CvpLc26zIVaKzDLm3?=
- =?us-ascii?Q?S2qrFyVV2kO76WL3fV87VcZiDHyTO0lPU5wZifFzMTrbjD/pbAtCqGOeQQyG?=
- =?us-ascii?Q?kN2msVa5WleQkFK2+nm2VP/ndZGhJldpWXREWrZHHIqsIRfjV4pVREYUnmzY?=
- =?us-ascii?Q?u0DuU+pptWu2J8bfvwhQ+KMZibDoq1REJiW7PU0JvaUL2u22W6b+/Uq6sFZF?=
- =?us-ascii?Q?G9gwCcXbv+5gDJFL4BWykA5ALes3wFxHvWHzx3Pi7ex3bsmejaNX9StXDgBw?=
- =?us-ascii?Q?f+80Pga1nyPnFp1Vd5g5BeVPcTqYwt2DxGMfFOacC4u4u8mQw/MYyX4LWUK5?=
- =?us-ascii?Q?gzEqjQc8RQvy0lgvLQ5Z+nV/V5F4ajm/t6dMENGhnEHiayA2f28vJPw3rQ6S?=
- =?us-ascii?Q?udMD4uZRFn4FVu8tRXwM2iiE0gvJG7KojhmXujkdT215N5pHoIqfiG9jjkD3?=
- =?us-ascii?Q?42dSYGP1FVlpCiukf/pU1wHt0PuFgkJKYDkbwPGwILyqioqFlODV/1zL+u4W?=
- =?us-ascii?Q?WSXW?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0027688c-66f4-4529-214c-08daa69f9014
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Oct 2022 07:02:27.5782
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: qcUee11JEWVT7mLsVbrMQq74cn9MERz5oNyTA5Wf4H1uDJHKeggjZ3HYbIve3qSSwL2gQiLdKeYhZB4agU4smQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB4863
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
- definitions=2022-10-04_09,2022-09-29_03,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0 spamscore=0
- suspectscore=0 bulkscore=0 mlxscore=0 mlxlogscore=961 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2209130000
- definitions=main-2210050043
-X-Proofpoint-GUID: EcmQW8FVhXnYBoe_KC-ZnzRrWX6kVdRt
-X-Proofpoint-ORIG-GUID: EcmQW8FVhXnYBoe_KC-ZnzRrWX6kVdRt
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: YueHaibing <yuehaibing@huawei.com>
+On Tue, 2022-10-04 at 10:39 +1100, NeilBrown wrote:
+> On Fri, 30 Sep 2022, Jeff Layton wrote:
+> > Now that we can call into vfs_getattr to get the i_version field, use
+> > that facility to fetch it instead of doing it in nfsd4_change_attribute=
+.
+> >=20
+> > Neil also pointed out recently that IS_I_VERSION directory operations
+> > are always logged, and so we only need to mitigate the rollback problem
+> > on regular files. Also, we don't need to factor in the ctime when
+> > reexporting NFS or Ceph.
+> >=20
+> > Set the STATX_VERSION (and BTIME) bits in the request when we're dealin=
+g
+> > with a v4 request. Then, instead of looking at IS_I_VERSION when
+> > generating the change attr, look at the result mask and only use it if
+> > STATX_VERSION is set. With this change, we can drop the fetch_iversion
+> > export operation as well.
+> >=20
+> > Move nfsd4_change_attribute into nfsfh.c, and change it to only factor
+> > in the ctime if it's a regular file and the fs doesn't advertise
+> > STATX_ATTR_VERSION_MONOTONIC.
+> >=20
+> > Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> > ---
+> >  fs/nfs/export.c          |  7 -------
+> >  fs/nfsd/nfs4xdr.c        |  4 +++-
+> >  fs/nfsd/nfsfh.c          | 40 ++++++++++++++++++++++++++++++++++++++++
+> >  fs/nfsd/nfsfh.h          | 29 +----------------------------
+> >  fs/nfsd/vfs.h            |  7 ++++++-
+> >  include/linux/exportfs.h |  1 -
+> >  6 files changed, 50 insertions(+), 38 deletions(-)
+> >=20
+> > diff --git a/fs/nfs/export.c b/fs/nfs/export.c
+> > index 01596f2d0a1e..1a9d5aa51dfb 100644
+> > --- a/fs/nfs/export.c
+> > +++ b/fs/nfs/export.c
+> > @@ -145,17 +145,10 @@ nfs_get_parent(struct dentry *dentry)
+> >  	return parent;
+> >  }
+> > =20
+> > -static u64 nfs_fetch_iversion(struct inode *inode)
+> > -{
+> > -	nfs_revalidate_inode(inode, NFS_INO_INVALID_CHANGE);
+> > -	return inode_peek_iversion_raw(inode);
+> > -}
+> > -
+> >  const struct export_operations nfs_export_ops =3D {
+> >  	.encode_fh =3D nfs_encode_fh,
+> >  	.fh_to_dentry =3D nfs_fh_to_dentry,
+> >  	.get_parent =3D nfs_get_parent,
+> > -	.fetch_iversion =3D nfs_fetch_iversion,
+> >  	.flags =3D EXPORT_OP_NOWCC|EXPORT_OP_NOSUBTREECHK|
+> >  		EXPORT_OP_CLOSE_BEFORE_UNLINK|EXPORT_OP_REMOTE_FS|
+> >  		EXPORT_OP_NOATOMIC_ATTR,
+> > diff --git a/fs/nfsd/nfs4xdr.c b/fs/nfsd/nfs4xdr.c
+> > index 1e9690a061ec..779c009314c6 100644
+> > --- a/fs/nfsd/nfs4xdr.c
+> > +++ b/fs/nfsd/nfs4xdr.c
+> > @@ -2869,7 +2869,9 @@ nfsd4_encode_fattr(struct xdr_stream *xdr, struct=
+ svc_fh *fhp,
+> >  			goto out;
+> >  	}
+> > =20
+> > -	err =3D vfs_getattr(&path, &stat, STATX_BASIC_STATS, AT_STATX_SYNC_AS=
+_STAT);
+> > +	err =3D vfs_getattr(&path, &stat,
+> > +			  STATX_BASIC_STATS | STATX_BTIME | STATX_VERSION,
+> > +			  AT_STATX_SYNC_AS_STAT);
+> >  	if (err)
+> >  		goto out_nfserr;
+> >  	if (!(stat.result_mask & STATX_BTIME))
+> > diff --git a/fs/nfsd/nfsfh.c b/fs/nfsd/nfsfh.c
+> > index a5b71526cee0..9168bc657378 100644
+> > --- a/fs/nfsd/nfsfh.c
+> > +++ b/fs/nfsd/nfsfh.c
+> > @@ -634,6 +634,10 @@ void fh_fill_pre_attrs(struct svc_fh *fhp)
+> >  		stat.mtime =3D inode->i_mtime;
+> >  		stat.ctime =3D inode->i_ctime;
+> >  		stat.size  =3D inode->i_size;
+> > +		if (v4 && IS_I_VERSION(inode)) {
+> > +			stat.version =3D inode_query_iversion(inode);
+> > +			stat.result_mask |=3D STATX_VERSION;
+> > +		}
+>=20
+> This is increasingly ugly.  I wonder if it is justified at all...
+>=20
 
-commit b3531f5fc16d4df2b12567bce48cd9f3ab5f9131 upstream.
+I'm fine with dropping that. So if the getattrs fail, we should just not
+offer up pre/post attrs?
 
-fs/xfs/xfs_inode.c: In function 'xfs_itruncate_extents_flags':
-fs/xfs/xfs_inode.c:1523:8: warning: unused variable 'done' [-Wunused-variable]
+> >  	}
+> >  	if (v4)
+> >  		fhp->fh_pre_change =3D nfsd4_change_attribute(&stat, inode);
+> > @@ -665,6 +669,8 @@ void fh_fill_post_attrs(struct svc_fh *fhp)
+> >  	if (err) {
+> >  		fhp->fh_post_saved =3D false;
+> >  		fhp->fh_post_attr.ctime =3D inode->i_ctime;
+> > +		if (v4 && IS_I_VERSION(inode))
+> > +			fhp->fh_post_attr.version =3D inode_query_iversion(inode);
+>=20
+> ... ditto ...
+>=20
+> >  	} else
+> >  		fhp->fh_post_saved =3D true;
+> >  	if (v4)
+> > @@ -754,3 +760,37 @@ enum fsid_source fsid_source(const struct svc_fh *=
+fhp)
+> >  		return FSIDSOURCE_UUID;
+> >  	return FSIDSOURCE_DEV;
+> >  }
+> > +
+> > +/*
+> > + * We could use i_version alone as the change attribute.  However, i_v=
+ersion
+> > + * can go backwards on a regular file after an unclean shutdown.  On i=
+ts own
+> > + * that doesn't necessarily cause a problem, but if i_version goes bac=
+kwards
+> > + * and then is incremented again it could reuse a value that was previ=
+ously
+> > + * used before boot, and a client who queried the two values might inc=
+orrectly
+> > + * assume nothing changed.
+> > + *
+> > + * By using both ctime and the i_version counter we guarantee that as =
+long as
+> > + * time doesn't go backwards we never reuse an old value. If the files=
+ystem
+> > + * advertises STATX_ATTR_VERSION_MONOTONIC, then this mitigation is no=
+t needed.
+> > + *
+> > + * We only need to do this for regular files as well. For directories,=
+ we
+> > + * assume that the new change attr is always logged to stable storage =
+in some
+> > + * fashion before the results can be seen.
+> > + */
+> > +u64 nfsd4_change_attribute(struct kstat *stat, struct inode *inode)
+> > +{
+> > +	u64 chattr;
+> > +
+> > +	if (stat->result_mask & STATX_VERSION) {
+> > +		chattr =3D stat->version;
+> > +
+> > +		if (S_ISREG(inode->i_mode) &&
+> > +		    !(stat->attributes & STATX_ATTR_VERSION_MONOTONIC)) {
+>=20
+> I would really rather that the fs got to make this decision.
+> If it can guarantee that the i_version is monotonic even over a crash
+> (which is probably can for directory, and might need changes to do for
+> files) then it sets STATX_ATTR_VERSION_MONOTONIC and nfsd trusts it
+> completely.
+> If it cannot, then it doesn't set the flag.
+> i.e. the S_ISREG() test should be in the filesystem, not in nfsd.
+>=20
 
-commit 4bbb04abb4ee ("xfs: truncate should remove
-all blocks, not just to the end of the page cache")
-left behind this, so remove it.
+This sounds reasonable, but for one thing.
 
-Fixes: 4bbb04abb4ee ("xfs: truncate should remove all blocks, not just to the end of the page cache")
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Acked-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
----
- fs/xfs/xfs_inode.c | 1 -
- 1 file changed, 1 deletion(-)
+From RFC 7862:
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index d4af6e44dd6f..30202d8c25e4 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1515,7 +1515,6 @@ xfs_itruncate_extents_flags(
- 	xfs_fileoff_t		first_unmap_block;
- 	xfs_filblks_t		unmap_len;
- 	int			error = 0;
--	int			done = 0;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 	ASSERT(!atomic_read(&VFS_I(ip)->i_count) ||
--- 
-2.35.1
+   While Section 5.4 of [RFC5661] discusses
+   per-file system attributes, it is expected that the value of
+   change_attr_type will not depend on the value of "homogeneous" and
+   will only change in the event of a migration.
 
+The change_attr_type4 must be the same for all filehandles under a
+particular filesystem.
+
+If we do what you suggest though, then it's easily possible for the fs
+to set STATX_ATTR_VERSION_MONOTONIC on=A0directories but not files. If we
+later want to allow nfsd to advertise a change_attr_type4, we won't be
+able to rely on the STATX_ATTR_VERSION_MONOTONIC to tell us how to fill
+that out.
+
+Maybe that's ok. I suppose we could add a new field to the export
+options that filesystems can set to advertise what sort of change attr
+they offer?
+
+>=20
+> > +			chattr +=3D (u64)stat->ctime.tv_sec << 30;
+> > +			chattr +=3D stat->ctime.tv_nsec;
+> > +		}
+> > +	} else {
+> > +		chattr =3D time_to_chattr(&stat->ctime);
+> > +	}
+> > +	return chattr;
+> > +}
+> > diff --git a/fs/nfsd/nfsfh.h b/fs/nfsd/nfsfh.h
+> > index c3ae6414fc5c..4c223a7a91d4 100644
+> > --- a/fs/nfsd/nfsfh.h
+> > +++ b/fs/nfsd/nfsfh.h
+> > @@ -291,34 +291,7 @@ static inline void fh_clear_pre_post_attrs(struct =
+svc_fh *fhp)
+> >  	fhp->fh_pre_saved =3D false;
+> >  }
+> > =20
+> > -/*
+> > - * We could use i_version alone as the change attribute.  However,
+> > - * i_version can go backwards after a reboot.  On its own that doesn't
+> > - * necessarily cause a problem, but if i_version goes backwards and th=
+en
+> > - * is incremented again it could reuse a value that was previously use=
+d
+> > - * before boot, and a client who queried the two values might
+> > - * incorrectly assume nothing changed.
+> > - *
+> > - * By using both ctime and the i_version counter we guarantee that as
+> > - * long as time doesn't go backwards we never reuse an old value.
+> > - */
+> > -static inline u64 nfsd4_change_attribute(struct kstat *stat,
+> > -					 struct inode *inode)
+> > -{
+> > -	if (inode->i_sb->s_export_op->fetch_iversion)
+> > -		return inode->i_sb->s_export_op->fetch_iversion(inode);
+> > -	else if (IS_I_VERSION(inode)) {
+> > -		u64 chattr;
+> > -
+> > -		chattr =3D  stat->ctime.tv_sec;
+> > -		chattr <<=3D 30;
+> > -		chattr +=3D stat->ctime.tv_nsec;
+> > -		chattr +=3D inode_query_iversion(inode);
+> > -		return chattr;
+> > -	} else
+> > -		return time_to_chattr(&stat->ctime);
+> > -}
+> > -
+> > +u64 nfsd4_change_attribute(struct kstat *stat, struct inode *inode);
+> >  extern void fh_fill_pre_attrs(struct svc_fh *fhp);
+> >  extern void fh_fill_post_attrs(struct svc_fh *fhp);
+> >  extern void fh_fill_both_attrs(struct svc_fh *fhp);
+> > diff --git a/fs/nfsd/vfs.h b/fs/nfsd/vfs.h
+> > index c95cd414b4bb..a905f59481ee 100644
+> > --- a/fs/nfsd/vfs.h
+> > +++ b/fs/nfsd/vfs.h
+> > @@ -168,9 +168,14 @@ static inline void fh_drop_write(struct svc_fh *fh=
+)
+> > =20
+> >  static inline __be32 fh_getattr(const struct svc_fh *fh, struct kstat =
+*stat)
+> >  {
+> > +	u32 request_mask =3D STATX_BASIC_STATS;
+> >  	struct path p =3D {.mnt =3D fh->fh_export->ex_path.mnt,
+> >  			 .dentry =3D fh->fh_dentry};
+> > -	return nfserrno(vfs_getattr(&p, stat, STATX_BASIC_STATS,
+> > +
+> > +	if (fh->fh_maxsize =3D=3D NFS4_FHSIZE)
+> > +		request_mask |=3D (STATX_BTIME | STATX_VERSION);
+> > +
+> > +	return nfserrno(vfs_getattr(&p, stat, request_mask,
+> >  				    AT_STATX_SYNC_AS_STAT));
+> >  }
+> > =20
+> > diff --git a/include/linux/exportfs.h b/include/linux/exportfs.h
+> > index fe848901fcc3..9f4d4bcbf251 100644
+> > --- a/include/linux/exportfs.h
+> > +++ b/include/linux/exportfs.h
+> > @@ -213,7 +213,6 @@ struct export_operations {
+> >  			  bool write, u32 *device_generation);
+> >  	int (*commit_blocks)(struct inode *inode, struct iomap *iomaps,
+> >  			     int nr_iomaps, struct iattr *iattr);
+> > -	u64 (*fetch_iversion)(struct inode *);
+> >  #define	EXPORT_OP_NOWCC			(0x1) /* don't collect v3 wcc data */
+> >  #define	EXPORT_OP_NOSUBTREECHK		(0x2) /* no subtree checking */
+> >  #define	EXPORT_OP_CLOSE_BEFORE_UNLINK	(0x4) /* close files before unli=
+nk */
+> > --=20
+> > 2.37.3
+> >=20
+> >=20
+>=20
+> Definitely more to like than to dislike here, so
+>=20
+> Reviewed-by: NeilBrown <neilb@suse.de>
+>=20
+> Thanks,
+> NeilBrown
+
+--=20
+Jeff Layton <jlayton@kernel.org>
