@@ -2,174 +2,105 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16621C433FE
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Oct 2022 01:34:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18150C433F5
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Oct 2022 02:52:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229661AbiJEBeU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Oct 2022 21:34:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35982 "EHLO
+        id S229627AbiJECwo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Oct 2022 22:52:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46000 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229502AbiJEBeT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2022 21:34:19 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52AC352FD2;
-        Tue,  4 Oct 2022 18:34:18 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 11485B81BEF;
-        Wed,  5 Oct 2022 01:34:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A14E1C433D6;
-        Wed,  5 Oct 2022 01:34:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664933655;
-        bh=TP+ALQ1hUofg0uUja0tZQU5t+Py+T4UqsG3Yoj4f9Xg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pKesNXnnWv9HJQCLUWtF1bcjGskK5ndBBd7BNxAd2aQhOayUPKoo/iQWl+afjqnJq
-         Dnp6u+fJiRwW8g7dTkcvdvxzQifVP+L/NvYiDiWj+KMlvkgRoRP0gLik93liEDWYkx
-         g2Mbcrx7ciwC2PcvCFWJ3pF8m2vkuoGNWDdbl0r+jLZkcb8zvfaHKM9p37SS6W2wwX
-         kF32g31HTmNlw8VV2CS81IuvPbCS700fAd2ymYwY11R7a2cXS8K5koqhryIAY4AyVJ
-         R8SsrKRKOHmB2FihHYVBsDSL+X6AkeOBNgAOUO0LxmD+FKNsfi9kHEwOJ+vix4xap+
-         2QVAEo4N/kMdw==
-Date:   Tue, 4 Oct 2022 18:34:15 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Frank Sorenson <frank@tuxrocks.com>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: use iomap_valid method to detect stale cached
- iomaps
-Message-ID: <YzzfF/o695eRpOhY@magnolia>
-References: <20220921082959.1411675-1-david@fromorbit.com>
- <20220921082959.1411675-3-david@fromorbit.com>
- <YyvaAY6UT1gKRF9U@magnolia>
- <20220923000403.GW3600936@dread.disaster.area>
- <YzPTg8jrDiNBU1N/@magnolia>
- <20220929014534.GE3600936@dread.disaster.area>
- <d00aff43-2bdc-0724-1996-4e58e061ecfd@redhat.com>
+        with ESMTP id S229446AbiJECwo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Oct 2022 22:52:44 -0400
+Received: from mail-ej1-x633.google.com (mail-ej1-x633.google.com [IPv6:2a00:1450:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB9BC399D4;
+        Tue,  4 Oct 2022 19:52:42 -0700 (PDT)
+Received: by mail-ej1-x633.google.com with SMTP id lt21so7413078ejb.0;
+        Tue, 04 Oct 2022 19:52:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=JJwG3frOWn9EMl53OrFRq9F3gFMhYSxA/Qh0S8QYeGk=;
+        b=R1Jv5DleiacEd81pWFLhrNGh6FeGASjMYG4OMAPZ+NMJMqyZr0Th9+B+ILT7IJ/REK
+         xUiE1eqRHThBIKTvmfPIgDQIQSeLxdOJW5gvtGWmYt+E18UdfH/kjEQMFIMFefMRkKtv
+         Tb560rYyRSu9lUT85LbJm8nSNWBIPm2JB8MUTf8KQSQb3jvihkLLBwCciONH5wz5knKr
+         rvsXp1NEbObl3IzjJT1Vujya8b4ep5UZfL+IVRp2ffg4WzGl6UZpHWkj4OX9tOpJuGUj
+         mmjAz7rihELLx8FvCvr8Z4Jya6MTLTAQT26F8UwK27TChA1fx6nHmvpJxZgkADITl/3o
+         OEhw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=JJwG3frOWn9EMl53OrFRq9F3gFMhYSxA/Qh0S8QYeGk=;
+        b=3f0tdjGY8pwq4bVukYTfcBktUzhHY7m/ftRvdV6Sm+fEvptycE1JIKmMq2kPZDy8D+
+         H+2nGNayos3LgbUlfcyCpwJd7sBEcEXCiKA+doQtDPUSiJbtROd4mol33dXHji/3avzr
+         0W870jrmfx2zHSblU8CiM8w7tII1yzNJ77a5WVUgBoa/Yx2yL02icnf2jKY1lnIONIEc
+         1M+63WwSty13HNI142CYukSYbzRA/HE2RcNn5w4W0Bc2Qk4IoJSiQPCajaWOYIntMZ95
+         nMoU6eekfaOUYVTRifEjLYpQB0Hii9z8gqQAvRxGUWVRtg2MLxbDZsvgGn0PMoOUKFXH
+         lNlQ==
+X-Gm-Message-State: ACrzQf27VRoz0cFXdQcqEez7xROZ4sCxLgcYYAc9UDeQyu70ceW/A6dR
+        6aKt6/mvumUl34uTuwqPNrreNE0tP8YUzhVgqrA=
+X-Google-Smtp-Source: AMsMyM6ofTEPyaplhV3tgR63D05cCHG4Sto86JoJxRELTJI7Hpqan/bej3wemN8eW4Y3hSOqKdrr/ApkAo81Hz3CMwA=
+X-Received: by 2002:a17:907:97d2:b0:787:a9ee:8ced with SMTP id
+ js18-20020a17090797d200b00787a9ee8cedmr22006722ejc.335.1664938361318; Tue, 04
+ Oct 2022 19:52:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d00aff43-2bdc-0724-1996-4e58e061ecfd@redhat.com>
+References: <20221004072302.345bfd4a@canb.auug.org.au> <20221003222103.GM3600936@dread.disaster.area>
+ <20221004225012.501e11ed@canb.auug.org.au> <YzxX7ks+YD7U1dcl@magnolia> <20221004210400.GO3600936@dread.disaster.area>
+In-Reply-To: <20221004210400.GO3600936@dread.disaster.area>
+From:   Stephen Zhang <starzhangzsd@gmail.com>
+Date:   Wed, 5 Oct 2022 10:52:05 +0800
+Message-ID: <CANubcdV462CTQQsmkaPG-dP1Cgy6BqHKj-gXZzh=U=pH+i7dfg@mail.gmail.com>
+Subject: Re: linux-next: Signed-off-by missing for commit in the xfs tree
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        linux-xfs@vger.kernel.org, Shida Zhang <zhangshida@kylinos.cn>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 04, 2022 at 06:34:03PM -0500, Frank Sorenson wrote:
-> 
-> 
-> On 9/28/22 20:45, Dave Chinner wrote:
-> > On Tue, Sep 27, 2022 at 09:54:27PM -0700, Darrick J. Wong wrote:
-> 
-> > > Btw, can you share the reproducer?
-> 
-> > Not sure. The current reproducer I have is 2500 lines of complex C
-> > code that was originally based on a reproducer the original reporter
-> > provided. It does lots of stuff that isn't directly related to
-> > reproducing the issue, and will be impossible to review and maintain
-> > as it stands in fstests.
-> 
-> Too true.  Fortunately, now that I understand the necessary conditions
-> and IO patterns, I managed to prune it all down to ~75 lines of bash
-> calling xfs_io.  See below.
-> 
-> Frank
-> --
-> Frank Sorenson
-> sorenson@redhat.com
-> Principal Software Maintenance Engineer
-> Global Support Services - filesystems
-> Red Hat
-> 
-> ###########################################
-> #!/bin/bash
-> #	Frank Sorenson <sorenson@redhat.com>, 2022
-> 
-> num_files=8
-> num_writers=3
-> 
-> KiB=1024
-> MiB=$(( $KiB * $KiB ))
-> GiB=$(( $KiB * $KiB * $KiB ))
-> 
-> file_size=$(( 500 * $MiB ))
-> #file_size=$(( 1 * $GiB ))
-> write_size=$(( 1 * $MiB ))
-> start_offset=512
-> 
-> num_loops=$(( ($file_size - $start_offset + (($num_writers * $write_size) - 1)) / ($num_writers * $write_size) ))
-> total_size=$(( ($num_loops * $num_writers * $write_size) + $start_offset ))
-> 
-> cgroup_path=/sys/fs/cgroup/test_write_bug
-> mkdir -p $cgroup_path || { echo "unable to create cgroup" ; exit ; }
-> 
-> max_mem=$(( 40 * $MiB ))
-> high_mem=$(( ($max_mem * 9) / 10 ))
-> echo $high_mem >$cgroup_path/memory.high
-> echo $max_mem >$cgroup_path/memory.max
+Dave Chinner <david@fromorbit.com> =E4=BA=8E2022=E5=B9=B410=E6=9C=885=E6=97=
+=A5=E5=91=A8=E4=B8=89 05:06=E5=86=99=E9=81=93=EF=BC=9A
+> As it is, I use the convention of putting an explicit From: tag in
+> the commit message that matches the SOB so tools pulling stuff from
+> mailing lists do the right thing with them (same as any third-party
+> provided patch in a series).
+>
+> > That said... I think we should get in the habit of asking patch authors
+> > to make sure that at least one of the email or name strings match
+> > between the From and SOB tags.  I can see how people who grok even less
+> > about how Chinese names work than I do (read: lawyers) might get fussy
+> > about this kind of thing.
+>
+> As per above, the normal solution is an explicit "From: <foo>" line
+> that matches the SOB.  It's just annoying that our new-fangled tools
+> haven't encoded this long-standing convention to warn us when we
+> pull a patch with a from-tag that doesn't match a sob-tag.
+>
 
-Hmm, so we setup a cgroup a very low memory limit, and then kick off a
-lot of threads doing IO... which I guess is how you ended up with a long
-write to an unwritten extent that races with memory reclaim targetting a
-dirty page at the end of that unwritten extent for writeback and
-eviction.
+Sorry, but I'm not sure whether what you mean is adding another "From: " li=
+ne
+right above the SOB tag like:
+=3D=3D=3D=3D
+From: name2 <email address2>
+Date: Mon, 12 Sep 2022 xx:xx:xx +0800
+Subject: [PATCH ] xfs: fix xxx and xxx
 
-I wonder, if we had a way to slow down iomap_write_iter, could we
-simulate the writeback and eviction with sync_file_range and
-madvise(MADV_FREE)?
+...
+the commit  message
+...
 
-(I've been playing with a debug knob to slow down writeback for a
-different corruption problem I've been working on, and it's taken the
-repro time down from days to a 5 second fstest.)
+From: name <email address>             //added line
+signed-off-by:  name <email address>
+...
+=3D=3D=3D=3D
 
-Anyhow, thanks for the simplified repo, I'll keep thinking about this. :)
-
---D
-
-> mkdir -p testfiles
-> rm -f testfiles/expected
-> xfs_io -f -c "pwrite -b $((1 * $MiB)) -S 0x40 0 $total_size" testfiles/expected >/dev/null 2>&1
-> expected_sum=$(md5sum testfiles/expected | awk '{print $1}')
-> 
-> echo $$ > $cgroup_path/cgroup.procs || exit # put ourselves in the cgroup
-> 
-> do_one_testfile() {
-> 	filenum=$1
-> 	cpids=""
-> 	offset=$start_offset
-> 
-> 	rm -f testfiles/test$filenum
-> 	xfs_io -f -c "pwrite -b $start_offset -S 0x40 0 $start_offset" testfiles/test$filenum >/dev/null 2>&1
-> 
-> 	while [[ $offset -lt $file_size ]] ; do
-> 		cpids=""
-> 		for i in $(seq 1 $num_writers) ; do
-> 			xfs_io -f -c "pwrite -b $write_size -S 0x40 $(( ($offset + (($num_writers - $i) * $write_size)  ) )) $write_size" testfiles/test$filenum >/dev/null 2>&1 &
-> 			cpids="$cpids $!"
-> 		done
-> 		wait $cpids
-> 		offset=$(( $offset + ($num_writers * $write_size) ))
-> 	done
-> }
-> 
-> round=1
-> while [[ 42 ]] ; do
-> 	echo "test round: $round"
-> 	cpids=""
-> 	for i in $(seq 1 $num_files) ; do
-> 		do_one_testfile $i &
-> 		cpids="$cpids $!"
-> 	done
-> 	wait $cpids
-> 
-> 	replicated="" # now check the files
-> 	for i in $(seq 1 $num_files) ; do
-> 		sum=$(md5sum testfiles/test$i | awk '{print $1}')
-> 		[[ $sum == $expected_sum ]] || replicated="$replicated testfiles/test$i"
-> 	done
-> 
-> 	[[ -n $replicated ]] && break
-> 	round=$(($round + 1))
-> done
-> echo "replicated bug with: $replicated"
-> echo $$ > /sys/fs/cgroup/cgroup.procs
-> rmdir $cgroup_path
+Thanks,
+Stephen.
