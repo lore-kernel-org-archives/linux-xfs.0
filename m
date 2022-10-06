@@ -2,394 +2,627 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C857C04A95
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Oct 2022 02:53:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71DC5C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Oct 2022 04:43:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230097AbiJFCxO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Oct 2022 22:53:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37870 "EHLO
+        id S229947AbiJFEn1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Oct 2022 00:43:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230079AbiJFCvy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Oct 2022 22:51:54 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FA6888DC9;
-        Wed,  5 Oct 2022 19:51:14 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 738A761821;
-        Thu,  6 Oct 2022 02:51:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4BF4DC433D6;
-        Thu,  6 Oct 2022 02:51:11 +0000 (UTC)
-Authentication-Results: smtp.kernel.org;
-        dkim=pass (1024-bit key) header.d=zx2c4.com header.i=@zx2c4.com header.b="MvVgqacO"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zx2c4.com; s=20210105;
-        t=1665024670;
+        with ESMTP id S229555AbiJFEn0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Oct 2022 00:43:26 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5546B2E9D0
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Oct 2022 21:43:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1665031403;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=2Uw2fujBlzDNZqwuoh34rFItEGOZGCdqRJ97sSVe7tk=;
-        b=MvVgqacOYkTmO51qoZCpcG+sRVpybZTUGayPSI3j1xLOr+gmTdIfg7gbW1I1XYe2m3qnpW
-        LIa6QIp+za57F/mEiHdvH1No/9IiICltKGJ0bvFGPoxEWBsY+tBqZkkT1QQDnVhT6CGs6q
-        K35btKruKLeX6t27f6Wj8nVy11qbEok=
-Received: by mail.zx2c4.com (ZX2C4 Mail Server) with ESMTPSA id 9e72d835 (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO);
-        Thu, 6 Oct 2022 02:51:10 +0000 (UTC)
-From:   "Jason A. Donenfeld" <Jason@zx2c4.com>
-To:     linux-kernel@vger.kernel.org
-Cc:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        brcm80211-dev-list.pdl@broadcom.com, cake@lists.bufferbloat.net,
-        ceph-devel@vger.kernel.org, coreteam@netfilter.org,
-        dccp@vger.kernel.org, dev@openvswitch.org,
-        dmaengine@vger.kernel.org, drbd-dev@lists.linbit.com,
-        dri-devel@lists.freedesktop.org, kasan-dev@googlegroups.com,
-        linux-actions@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org,
-        linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-hams@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-mm@kvack.org, linux-mmc@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-raid@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-sctp@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        lvs-devel@vger.kernel.org, netdev@vger.kernel.org,
-        netfilter-devel@vger.kernel.org, rds-devel@oss.oracle.com,
-        SHA-cyfmac-dev-list@infineon.com, target-devel@vger.kernel.org,
-        tipc-discussion@lists.sourceforge.net
-Subject: [PATCH v1 4/5] treewide: use get_random_bytes when possible
-Date:   Wed,  5 Oct 2022 23:48:43 +0200
-Message-Id: <20221005214844.2699-5-Jason@zx2c4.com>
-In-Reply-To: <20221005214844.2699-1-Jason@zx2c4.com>
-References: <20221005214844.2699-1-Jason@zx2c4.com>
+        bh=AZLXc322bf9aK6Rx5rqwPOQc37cw/muewiCTfh77wBA=;
+        b=CgfLDhba1GWZdZcouSQIwZqF3sIqMt75GDBmuVIZSLYW9TSLbRj6Jh6wLVR1cP3dq0j6hP
+        VIqSBDoFqg72X7oBbSgka7tZSzRVsmeIxsWl1rAJpDbY3FbzFqgRdQI6VB22b5FJjfzAW+
+        mEmZ3iri7X0UizgPmUD6AT3+CT6YFKo=
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com
+ [209.85.215.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-387-py0kaPAhNRO-qr6Cwfi5PA-1; Thu, 06 Oct 2022 00:43:22 -0400
+X-MC-Unique: py0kaPAhNRO-qr6Cwfi5PA-1
+Received: by mail-pg1-f200.google.com with SMTP id 7-20020a630007000000b0045bb8a49ae6so299645pga.9
+        for <linux-xfs@vger.kernel.org>; Wed, 05 Oct 2022 21:43:22 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=AZLXc322bf9aK6Rx5rqwPOQc37cw/muewiCTfh77wBA=;
+        b=1Z/UIPWDJ04TNU08Q2h4Xghc1d1wPk99wZNFwwz4Mmb8Kgpemf/9fL4UnqFkAmDm6W
+         A6vYiCKJX5VLZiE+DYoOmE/mQWHmjya2Kz+iiml59DtxCVdvFXzy/fvLl3My8Hh40pOo
+         YXIUJWnU2lNsHiUhCTdL00Uru31Qldj52SwYV7YdZSUjp946L6kJ+f3l5xoKKleHJW8x
+         yu3RxZLdAR7dFYRYiN6uCO9YNC7y6iz1PfF5yx9MVA4Ptx88tpYbORyTNrwmk37m8VNf
+         Hl/bES2fFfdpXqKpCTuRFghacoCYs8v850czqqumUuaf8FIxQ20+g9YYk9IBGsd5V255
+         a4MQ==
+X-Gm-Message-State: ACrzQf0x8c2hkGmVs1G4rcKcYCGoi+EBQq8SqXCbIWTTgszaofJ3dDs3
+        +EL6wGRg2QbKD4lKaOZvK/odcHj1bzIbu4JHdwClpweuXUAMsIKrhcTkPQJuZMRU879mz7+LiOV
+        biSOI8mjd0Jt7TkdKEb5n
+X-Received: by 2002:a17:903:1109:b0:179:d220:1f55 with SMTP id n9-20020a170903110900b00179d2201f55mr2777276plh.42.1665031400178;
+        Wed, 05 Oct 2022 21:43:20 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM62Jp+Vywn4Ex6py9aGwFUzs2rsgLxpdoBZDOvBFbJYNwwvw8XVXZDoJBGt6ziqAekKMNqSBQ==
+X-Received: by 2002:a17:903:1109:b0:179:d220:1f55 with SMTP id n9-20020a170903110900b00179d2201f55mr2777253plh.42.1665031399737;
+        Wed, 05 Oct 2022 21:43:19 -0700 (PDT)
+Received: from ?IPV6:2001:8003:4800:1b00:4c4a:1757:c744:923? ([2001:8003:4800:1b00:4c4a:1757:c744:923])
+        by smtp.gmail.com with ESMTPSA id x184-20020a6231c1000000b0053e4baecc14sm11805537pfx.108.2022.10.05.21.43.17
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 05 Oct 2022 21:43:19 -0700 (PDT)
+Message-ID: <c5789360-35d2-e63c-e885-700b8bb278e8@redhat.com>
+Date:   Thu, 6 Oct 2022 15:43:15 +1100
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.12.0
+Subject: Re: [PATCH 2/3] xfsrestore: stobj_unpack_sessinfo cleanup
+Content-Language: en-AU
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+References: <20220928055307.79341-1-ddouwsma@redhat.com>
+ <20220928055307.79341-3-ddouwsma@redhat.com> <YzRm86tcCc2m+YeX@magnolia>
+ <244f6cfb-41f1-ceea-2cc5-c44dcaa14515@redhat.com>
+ <b3197f6d-a762-26d5-ca67-3a220fe21b9a@redhat.com> <YzXdfA9wqVopEVMV@magnolia>
+From:   Donald Douwsma <ddouwsma@redhat.com>
+In-Reply-To: <YzXdfA9wqVopEVMV@magnolia>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The prandom_bytes() function has been a deprecated inline wrapper around
-get_random_bytes() for several releases now, and compiles down to the
-exact same code. Replace the deprecated wrapper with a direct call to
-the real function.
 
-Signed-off-by: Jason A. Donenfeld <Jason@zx2c4.com>
----
- arch/powerpc/crypto/crc-vpmsum_test.c       |  2 +-
- block/blk-crypto-fallback.c                 |  2 +-
- crypto/async_tx/raid6test.c                 |  2 +-
- drivers/dma/dmatest.c                       |  2 +-
- drivers/mtd/nand/raw/nandsim.c              |  2 +-
- drivers/mtd/tests/mtd_nandecctest.c         |  2 +-
- drivers/mtd/tests/speedtest.c               |  2 +-
- drivers/mtd/tests/stresstest.c              |  2 +-
- drivers/net/ethernet/broadcom/bnxt/bnxt.c   |  2 +-
- drivers/net/ethernet/rocker/rocker_main.c   |  2 +-
- drivers/net/wireguard/selftest/allowedips.c | 12 ++++++------
- fs/ubifs/debug.c                            |  2 +-
- kernel/kcsan/selftest.c                     |  2 +-
- lib/random32.c                              |  2 +-
- lib/test_objagg.c                           |  2 +-
- lib/uuid.c                                  |  2 +-
- net/ipv4/route.c                            |  2 +-
- net/mac80211/rc80211_minstrel_ht.c          |  2 +-
- net/sched/sch_pie.c                         |  2 +-
- 19 files changed, 24 insertions(+), 24 deletions(-)
 
-diff --git a/arch/powerpc/crypto/crc-vpmsum_test.c b/arch/powerpc/crypto/crc-vpmsum_test.c
-index c1c1ef9457fb..273c527868db 100644
---- a/arch/powerpc/crypto/crc-vpmsum_test.c
-+++ b/arch/powerpc/crypto/crc-vpmsum_test.c
-@@ -82,7 +82,7 @@ static int __init crc_test_init(void)
- 
- 			if (len <= offset)
- 				continue;
--			prandom_bytes(data, len);
-+			get_random_bytes(data, len);
- 			len -= offset;
- 
- 			crypto_shash_update(crct10dif_shash, data+offset, len);
-diff --git a/block/blk-crypto-fallback.c b/block/blk-crypto-fallback.c
-index 621abd1b0e4d..ad9844c5b40c 100644
---- a/block/blk-crypto-fallback.c
-+++ b/block/blk-crypto-fallback.c
-@@ -539,7 +539,7 @@ static int blk_crypto_fallback_init(void)
- 	if (blk_crypto_fallback_inited)
- 		return 0;
- 
--	prandom_bytes(blank_key, BLK_CRYPTO_MAX_KEY_SIZE);
-+	get_random_bytes(blank_key, BLK_CRYPTO_MAX_KEY_SIZE);
- 
- 	err = bioset_init(&crypto_bio_split, 64, 0, 0);
- 	if (err)
-diff --git a/crypto/async_tx/raid6test.c b/crypto/async_tx/raid6test.c
-index c9d218e53bcb..f74505f2baf0 100644
---- a/crypto/async_tx/raid6test.c
-+++ b/crypto/async_tx/raid6test.c
-@@ -37,7 +37,7 @@ static void makedata(int disks)
- 	int i;
- 
- 	for (i = 0; i < disks; i++) {
--		prandom_bytes(page_address(data[i]), PAGE_SIZE);
-+		get_random_bytes(page_address(data[i]), PAGE_SIZE);
- 		dataptrs[i] = data[i];
- 		dataoffs[i] = 0;
- 	}
-diff --git a/drivers/dma/dmatest.c b/drivers/dma/dmatest.c
-index 9fe2ae794316..ffe621695e47 100644
---- a/drivers/dma/dmatest.c
-+++ b/drivers/dma/dmatest.c
-@@ -312,7 +312,7 @@ static unsigned long dmatest_random(void)
- {
- 	unsigned long buf;
- 
--	prandom_bytes(&buf, sizeof(buf));
-+	get_random_bytes(&buf, sizeof(buf));
- 	return buf;
- }
- 
-diff --git a/drivers/mtd/nand/raw/nandsim.c b/drivers/mtd/nand/raw/nandsim.c
-index 4bdaf4aa7007..c941a5a41ea6 100644
---- a/drivers/mtd/nand/raw/nandsim.c
-+++ b/drivers/mtd/nand/raw/nandsim.c
-@@ -1393,7 +1393,7 @@ static int ns_do_read_error(struct nandsim *ns, int num)
- 	unsigned int page_no = ns->regs.row;
- 
- 	if (ns_read_error(page_no)) {
--		prandom_bytes(ns->buf.byte, num);
-+		get_random_bytes(ns->buf.byte, num);
- 		NS_WARN("simulating read error in page %u\n", page_no);
- 		return 1;
- 	}
-diff --git a/drivers/mtd/tests/mtd_nandecctest.c b/drivers/mtd/tests/mtd_nandecctest.c
-index 1c7201b0f372..440988562cfd 100644
---- a/drivers/mtd/tests/mtd_nandecctest.c
-+++ b/drivers/mtd/tests/mtd_nandecctest.c
-@@ -266,7 +266,7 @@ static int nand_ecc_test_run(const size_t size)
- 		goto error;
- 	}
- 
--	prandom_bytes(correct_data, size);
-+	get_random_bytes(correct_data, size);
- 	ecc_sw_hamming_calculate(correct_data, size, correct_ecc, sm_order);
- 	for (i = 0; i < ARRAY_SIZE(nand_ecc_test); i++) {
- 		nand_ecc_test[i].prepare(error_data, error_ecc,
-diff --git a/drivers/mtd/tests/speedtest.c b/drivers/mtd/tests/speedtest.c
-index c9ec7086bfa1..075bce32caa5 100644
---- a/drivers/mtd/tests/speedtest.c
-+++ b/drivers/mtd/tests/speedtest.c
-@@ -223,7 +223,7 @@ static int __init mtd_speedtest_init(void)
- 	if (!iobuf)
- 		goto out;
- 
--	prandom_bytes(iobuf, mtd->erasesize);
-+	get_random_bytes(iobuf, mtd->erasesize);
- 
- 	bbt = kzalloc(ebcnt, GFP_KERNEL);
- 	if (!bbt)
-diff --git a/drivers/mtd/tests/stresstest.c b/drivers/mtd/tests/stresstest.c
-index d2faaca7f19d..75b6ddc5dc4d 100644
---- a/drivers/mtd/tests/stresstest.c
-+++ b/drivers/mtd/tests/stresstest.c
-@@ -183,7 +183,7 @@ static int __init mtd_stresstest_init(void)
- 		goto out;
- 	for (i = 0; i < ebcnt; i++)
- 		offsets[i] = mtd->erasesize;
--	prandom_bytes(writebuf, bufsize);
-+	get_random_bytes(writebuf, bufsize);
- 
- 	bbt = kzalloc(ebcnt, GFP_KERNEL);
- 	if (!bbt)
-diff --git a/drivers/net/ethernet/broadcom/bnxt/bnxt.c b/drivers/net/ethernet/broadcom/bnxt/bnxt.c
-index 96da0ba3d507..354953df46a1 100644
---- a/drivers/net/ethernet/broadcom/bnxt/bnxt.c
-+++ b/drivers/net/ethernet/broadcom/bnxt/bnxt.c
-@@ -3874,7 +3874,7 @@ static void bnxt_init_vnics(struct bnxt *bp)
- 
- 		if (bp->vnic_info[i].rss_hash_key) {
- 			if (i == 0)
--				prandom_bytes(vnic->rss_hash_key,
-+				get_random_bytes(vnic->rss_hash_key,
- 					      HW_HASH_KEY_SIZE);
- 			else
- 				memcpy(vnic->rss_hash_key,
-diff --git a/drivers/net/ethernet/rocker/rocker_main.c b/drivers/net/ethernet/rocker/rocker_main.c
-index 8c3bbafabb07..cd4488efe0a4 100644
---- a/drivers/net/ethernet/rocker/rocker_main.c
-+++ b/drivers/net/ethernet/rocker/rocker_main.c
-@@ -224,7 +224,7 @@ static int rocker_dma_test_offset(const struct rocker *rocker,
- 	if (err)
- 		goto unmap;
- 
--	prandom_bytes(buf, ROCKER_TEST_DMA_BUF_SIZE);
-+	get_random_bytes(buf, ROCKER_TEST_DMA_BUF_SIZE);
- 	for (i = 0; i < ROCKER_TEST_DMA_BUF_SIZE; i++)
- 		expect[i] = ~buf[i];
- 	err = rocker_dma_test_one(rocker, wait, ROCKER_TEST_DMA_CTRL_INVERT,
-diff --git a/drivers/net/wireguard/selftest/allowedips.c b/drivers/net/wireguard/selftest/allowedips.c
-index dd897c0740a2..19eac00b2381 100644
---- a/drivers/net/wireguard/selftest/allowedips.c
-+++ b/drivers/net/wireguard/selftest/allowedips.c
-@@ -284,7 +284,7 @@ static __init bool randomized_test(void)
- 	mutex_lock(&mutex);
- 
- 	for (i = 0; i < NUM_RAND_ROUTES; ++i) {
--		prandom_bytes(ip, 4);
-+		get_random_bytes(ip, 4);
- 		cidr = prandom_u32_max(32) + 1;
- 		peer = peers[prandom_u32_max(NUM_PEERS)];
- 		if (wg_allowedips_insert_v4(&t, (struct in_addr *)ip, cidr,
-@@ -299,7 +299,7 @@ static __init bool randomized_test(void)
- 		}
- 		for (j = 0; j < NUM_MUTATED_ROUTES; ++j) {
- 			memcpy(mutated, ip, 4);
--			prandom_bytes(mutate_mask, 4);
-+			get_random_bytes(mutate_mask, 4);
- 			mutate_amount = prandom_u32_max(32);
- 			for (k = 0; k < mutate_amount / 8; ++k)
- 				mutate_mask[k] = 0xff;
-@@ -328,7 +328,7 @@ static __init bool randomized_test(void)
- 	}
- 
- 	for (i = 0; i < NUM_RAND_ROUTES; ++i) {
--		prandom_bytes(ip, 16);
-+		get_random_bytes(ip, 16);
- 		cidr = prandom_u32_max(128) + 1;
- 		peer = peers[prandom_u32_max(NUM_PEERS)];
- 		if (wg_allowedips_insert_v6(&t, (struct in6_addr *)ip, cidr,
-@@ -343,7 +343,7 @@ static __init bool randomized_test(void)
- 		}
- 		for (j = 0; j < NUM_MUTATED_ROUTES; ++j) {
- 			memcpy(mutated, ip, 16);
--			prandom_bytes(mutate_mask, 16);
-+			get_random_bytes(mutate_mask, 16);
- 			mutate_amount = prandom_u32_max(128);
- 			for (k = 0; k < mutate_amount / 8; ++k)
- 				mutate_mask[k] = 0xff;
-@@ -381,13 +381,13 @@ static __init bool randomized_test(void)
- 
- 	for (j = 0;; ++j) {
- 		for (i = 0; i < NUM_QUERIES; ++i) {
--			prandom_bytes(ip, 4);
-+			get_random_bytes(ip, 4);
- 			if (lookup(t.root4, 32, ip) != horrible_allowedips_lookup_v4(&h, (struct in_addr *)ip)) {
- 				horrible_allowedips_lookup_v4(&h, (struct in_addr *)ip);
- 				pr_err("allowedips random v4 self-test: FAIL\n");
- 				goto free;
- 			}
--			prandom_bytes(ip, 16);
-+			get_random_bytes(ip, 16);
- 			if (lookup(t.root6, 128, ip) != horrible_allowedips_lookup_v6(&h, (struct in6_addr *)ip)) {
- 				pr_err("allowedips random v6 self-test: FAIL\n");
- 				goto free;
-diff --git a/fs/ubifs/debug.c b/fs/ubifs/debug.c
-index f4d3b568aa64..3f128b9fdfbb 100644
---- a/fs/ubifs/debug.c
-+++ b/fs/ubifs/debug.c
-@@ -2581,7 +2581,7 @@ static int corrupt_data(const struct ubifs_info *c, const void *buf,
- 	if (ffs)
- 		memset(p + from, 0xFF, to - from);
- 	else
--		prandom_bytes(p + from, to - from);
-+		get_random_bytes(p + from, to - from);
- 
- 	return to;
- }
-diff --git a/kernel/kcsan/selftest.c b/kernel/kcsan/selftest.c
-index 58b94deae5c0..00cdf8fa5693 100644
---- a/kernel/kcsan/selftest.c
-+++ b/kernel/kcsan/selftest.c
-@@ -46,7 +46,7 @@ static bool __init test_encode_decode(void)
- 		unsigned long addr;
- 		size_t verif_size;
- 
--		prandom_bytes(&addr, sizeof(addr));
-+		get_random_bytes(&addr, sizeof(addr));
- 		if (addr < PAGE_SIZE)
- 			addr = PAGE_SIZE;
- 
-diff --git a/lib/random32.c b/lib/random32.c
-index d4f19e1a69d4..32060b852668 100644
---- a/lib/random32.c
-+++ b/lib/random32.c
-@@ -69,7 +69,7 @@ EXPORT_SYMBOL(prandom_u32_state);
-  *	@bytes: the requested number of bytes
-  *
-  *	This is used for pseudo-randomness with no outside seeding.
-- *	For more random results, use prandom_bytes().
-+ *	For more random results, use get_random_bytes().
-  */
- void prandom_bytes_state(struct rnd_state *state, void *buf, size_t bytes)
- {
-diff --git a/lib/test_objagg.c b/lib/test_objagg.c
-index da137939a410..c0c957c50635 100644
---- a/lib/test_objagg.c
-+++ b/lib/test_objagg.c
-@@ -157,7 +157,7 @@ static int test_nodelta_obj_get(struct world *world, struct objagg *objagg,
- 	int err;
- 
- 	if (should_create_root)
--		prandom_bytes(world->next_root_buf,
-+		get_random_bytes(world->next_root_buf,
- 			      sizeof(world->next_root_buf));
- 
- 	objagg_obj = world_obj_get(world, objagg, key_id);
-diff --git a/lib/uuid.c b/lib/uuid.c
-index 562d53977cab..e309b4c5be3d 100644
---- a/lib/uuid.c
-+++ b/lib/uuid.c
-@@ -52,7 +52,7 @@ EXPORT_SYMBOL(generate_random_guid);
- 
- static void __uuid_gen_common(__u8 b[16])
- {
--	prandom_bytes(b, 16);
-+	get_random_bytes(b, 16);
- 	/* reversion 0b10 */
- 	b[8] = (b[8] & 0x3F) | 0x80;
- }
-diff --git a/net/ipv4/route.c b/net/ipv4/route.c
-index 795cbe1de912..c3fd6c62897d 100644
---- a/net/ipv4/route.c
-+++ b/net/ipv4/route.c
-@@ -3719,7 +3719,7 @@ int __init ip_rt_init(void)
- 
- 	ip_idents = idents_hash;
- 
--	prandom_bytes(ip_idents, (ip_idents_mask + 1) * sizeof(*ip_idents));
-+	get_random_bytes(ip_idents, (ip_idents_mask + 1) * sizeof(*ip_idents));
- 
- 	ip_tstamps = idents_hash + (ip_idents_mask + 1) * sizeof(*ip_idents);
- 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 5f27e6746762..39fb4e2d141a 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -2033,7 +2033,7 @@ static void __init init_sample_table(void)
- 
- 	memset(sample_table, 0xff, sizeof(sample_table));
- 	for (col = 0; col < SAMPLE_COLUMNS; col++) {
--		prandom_bytes(rnd, sizeof(rnd));
-+		get_random_bytes(rnd, sizeof(rnd));
- 		for (i = 0; i < MCS_GROUP_RATES; i++) {
- 			new_idx = (i + rnd[i]) % MCS_GROUP_RATES;
- 			while (sample_table[col][new_idx] != 0xff)
-diff --git a/net/sched/sch_pie.c b/net/sched/sch_pie.c
-index 5a457ff61acd..66b2b23e8cd1 100644
---- a/net/sched/sch_pie.c
-+++ b/net/sched/sch_pie.c
-@@ -72,7 +72,7 @@ bool pie_drop_early(struct Qdisc *sch, struct pie_params *params,
- 	if (vars->accu_prob >= (MAX_PROB / 2) * 17)
- 		return true;
- 
--	prandom_bytes(&rnd, 8);
-+	get_random_bytes(&rnd, 8);
- 	if ((rnd >> BITS_PER_BYTE) < local_prob) {
- 		vars->accu_prob = 0;
- 		return true;
--- 
-2.37.3
+On 30/09/2022 04:01, Darrick J. Wong wrote:
+> On Thu, Sep 29, 2022 at 09:28:24AM +1000, Donald Douwsma wrote:
+>>
+>>
+>> On 29/09/2022 09:12, Donald Douwsma wrote:
+>>>
+>>>
+>>> On 29/09/2022 01:23, Darrick J. Wong wrote:
+>>>> On Wed, Sep 28, 2022 at 03:53:06PM +1000, Donald Douwsma wrote:
+>>>>> stobj_unpack_sessinfo should be the reverse of stobj_pack_sessinfo, make
+>>>>> this clearer with respect to the session header and streams processing.
+>>>>>
+>>>>> signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
+>>>>> ---
+>>>>>    inventory/inv_stobj.c | 13 +++++++------
+>>>>>    1 file changed, 7 insertions(+), 6 deletions(-)
+>>>>>
+>>>>> diff --git a/inventory/inv_stobj.c b/inventory/inv_stobj.c
+>>>>> index 5075ee4..521acff 100644
+>>>>> --- a/inventory/inv_stobj.c
+>>>>> +++ b/inventory/inv_stobj.c
+>>>>> @@ -1065,25 +1065,26 @@ stobj_unpack_sessinfo(
+>>>>>            return BOOL_FALSE;
+>>>>>        }
+>>>>> +    /* get the seshdr and then, the remainder of the session */
+>>>>>        xlate_invt_seshdr((invt_seshdr_t *)p, (invt_seshdr_t *)tmpbuf, 1);
+>>>>>        bcopy(tmpbuf, p, sizeof(invt_seshdr_t));
+>>>>> -
+>>>>> -    /* get the seshdr and then, the remainder of the session */
+>>>>>        s->seshdr = (invt_seshdr_t *)p;
+>>>>>        s->seshdr->sh_sess_off = -1;
+>>>>>        p += sizeof(invt_seshdr_t);
+>>>>> -
+>>>>>        xlate_invt_session((invt_session_t *)p, (invt_session_t
+>>>>> *)tmpbuf, 1);
+>>>>>        bcopy (tmpbuf, p, sizeof(invt_session_t));
+>>>>>        s->ses = (invt_session_t *)p;
+>>>>>        p += sizeof(invt_session_t);
+>>>>>        /* the array of all the streams belonging to this session */
+>>>>> -    xlate_invt_stream((invt_stream_t *)p, (invt_stream_t *)tmpbuf, 1);
+>>>>> -    bcopy(tmpbuf, p, sizeof(invt_stream_t));
+>>>>>        s->strms = (invt_stream_t *)p;
+>>>>> -    p += s->ses->s_cur_nstreams * sizeof(invt_stream_t);
+>>>>> +    for (i = 0; i < s->ses->s_cur_nstreams; i++) {
+>>>>> +        xlate_invt_stream((invt_stream_t *)p,
+>>>>
+>>>> Nit: trailing whitespace                        here ^
+>>>
+>>> nod
+>>>
+>>>>
+>>>>> +                  (invt_stream_t *)tmpbuf, 1);
+>>>>> +        bcopy(tmpbuf, p, sizeof(invt_stream_t));
+>>>>> +        p += sizeof(invt_stream_t);
+>>>>
+>>>> Ok, so we translate p into tmpbuf, then bcopy tmpbuf back to p.  That
+>>>> part makes sense, but I am puzzled by what stobj_pack_sessinfo does:
+>>>>
+>>>>      for (i = 0; i < ses->s_cur_nstreams; i++) {
+>>>>          xlate_invt_stream(strms, (invt_stream_t *)sesbuf, 1);
+>>>>          sesbuf += sizeof(invt_stream_t);
+>>>>      }
+>>>>
+>>>> Why isn't that callsite xlate_invt_stream(&strms[i], ...); ?
+>>>
+>>> Thanks! Yes, that's wrong, like the existing code it only worked/works
+>>> because there's only ever one stream. From the manpage "The third level
+>>> is media stream (currently only one  stream is supported)". Will fix.
+>>
+>> Or should I just drop this clean-up? I think what I'm saying is right,
+>> but its a clean-up for a feature that cant be used. I doubt anyone is
+>> going to add multiple stream support now, whatever that was intended
+>> for.
+> 
+> I don't know.  On the one hand I could see an argument for at least
+> being able to restore multiple streams, but then the dump program has
+> been screwing that up for years and nobody noticed.  I can't tell from
+> the source code what shape the multistream support is in, so I guess you
+> have some research to do? <shrug>  I suppose you could see what happens
+> if you try to set up multiple streams, but I have no idea ... what that
+> means.
+> 
+> Sorry that's a nonanswer. :(
+
+Actually this helped a lot, I realised that xfsdump takes multiple -f
+arguments on the command line to setup the streams. This allowed me to
+do some testing.
+
+TLDR Using the current xfsprogs with multiple streams dumps ok (though
+the second stream seems to end up with a higher end ino in its
+inventory). But restore asserts when restoring the online inventory as
+it fails to consume the media records [1].
+
+With this series it restores ok and restores the inventory without
+asserting [2].
+
+If I drop this stobj_unpack_sessinfo cleanup patch we crash when
+iterating over the media files for the streams[3].
+
+I'll get a v3 series out including the change to stobj_pack_sessinfo()
+
+Don
+
+
+[1] Testing dump and restore with current xfsdump.
+
+[root@rhel8 ~]# rpm -q xfsdump
+xfsdump-3.1.8-2.el8.x86_64
+[root@rhel8 ~]# xfsdump -L "Test1" -f /dev/nst0 -M tape1 -f /dev/nst1 -M 
+tape2 /boot
+xfsdump: using scsi tape (drive_scsitape) strategy
+xfsdump: using scsi tape (drive_scsitape) strategy
+xfsdump: version 3.1.8 (dump format 3.0) - type ^C for status and control
+xfsdump: level 0 dump of rhel8:/boot
+xfsdump: dump date: Thu Oct  6 13:50:45 2022
+xfsdump: session id: aa25fa48-4493-45c7-9027-61e53e486445
+xfsdump: session label: "Test1"
+xfsdump: ino map phase 1: constructing initial dump list
+xfsdump: ino map phase 2: skipping (no pruning necessary)
+xfsdump: ino map phase 3: identifying stream starting points
+xfsdump: stream 0: ino 133 offset 0 to ino 28839 offset 0
+xfsdump: stream 1: ino 28839 offset 0 to end
+xfsdump: ino map construction complete
+xfsdump: estimated dump size: 328720704 bytes
+xfsdump: estimated dump size per stream: 164375728 bytes
+xfsdump: /var/lib/xfsdump/inventory created
+xfsdump: drive 0: preparing drive
+xfsdump: drive 1: preparing drive
+xfsdump: drive 1: creating dump session media file 0 (media 0, file 0)
+xfsdump: drive 1: dumping ino map
+xfsdump: drive 1: dumping non-directory files
+xfsdump: drive 0: creating dump session media file 0 (media 0, file 0)
+xfsdump: drive 0: dumping ino map
+xfsdump: drive 0: dumping directories
+xfsdump: drive 0: dumping non-directory files
+xfsdump: drive 1: ending media file
+xfsdump: drive 1: media file size 166723584 bytes
+xfsdump: drive 1: waiting for synchronized session inventory dump
+xfsdump: drive 0: ending media file
+xfsdump: drive 0: media file size 165675008 bytes
+xfsdump: drive 0: waiting for synchronized session inventory dump
+xfsdump: drive 0: dumping session inventory
+xfsdump: drive 0: beginning inventory media file
+xfsdump: drive 0: media file 1 (media 0, file 1)
+xfsdump: drive 0: ending inventory media file
+xfsdump: drive 0: inventory media file size 2097152 bytes
+xfsdump: drive 0: writing stream terminator
+xfsdump: drive 0: beginning media stream terminator
+xfsdump: drive 0: media file 2 (media 0, file 2)
+xfsdump: drive 0: ending media stream terminator
+xfsdump: drive 0: media stream terminator size 1048576 bytes
+xfsdump: drive 1: dumping session inventory
+xfsdump: drive 1: beginning inventory media file
+xfsdump: drive 1: media file 1 (media 0, file 1)
+xfsdump: drive 1: ending inventory media file
+xfsdump: drive 1: inventory media file size 2097152 bytes
+xfsdump: drive 1: writing stream terminator
+xfsdump: drive 1: beginning media stream terminator
+xfsdump: drive 1: media file 2 (media 0, file 2)
+xfsdump: drive 1: ending media stream terminator
+xfsdump: drive 1: media stream terminator size 1048576 bytes
+xfsdump: dump size (non-dir files) : 328189016 bytes
+xfsdump: dump complete: 4 seconds elapsed
+xfsdump: Dump Summary:
+xfsdump:   stream 0 /dev/nst0 OK (success)
+xfsdump:   stream 1 /dev/nst1 OK (success)
+xfsdump: Dump Status: SUCCESS
+[root@rhel8 ~]# xfsdump -I
+file system 0:
+	fs id:		26dd5aa0-b901-4cf5-9b68-0c5753cb3ab8
+	session 0:
+		mount point:	rhel8:/boot
+		device:		rhel8:/dev/sda1
+		time:		Thu Oct  6 13:50:45 2022
+		session label:	"Test1"
+		session id:	aa25fa48-4493-45c7-9027-61e53e486445
+		level:		0
+		resumed:	NO
+		subtree:	NO
+		streams:	2
+		stream 0:
+			pathname:	/dev/nst0
+			start:		ino 133 offset 0
+			end:		ino 28839 offset 0
+			interrupted:	NO
+			media files:	2
+			media file 0:
+				mfile index:	0
+				mfile type:	data
+				mfile size:	165675008
+				mfile start:	ino 133 offset 0
+				mfile end:	ino 28839 offset 0
+				media label:	"tape1"
+				media id:	adb31f2a-f026-4597-a20a-326f28ecbaf1
+			media file 1:
+				mfile index:	1
+				mfile type:	inventory
+				mfile size:	2097152
+				media label:	"tape1"
+				media id:	adb31f2a-f026-4597-a20a-326f28ecbaf1
+		stream 1:
+			pathname:	/dev/nst1
+			start:		ino 28839 offset 0
+			end:		ino 1572997 offset 0
+			interrupted:	NO
+			media files:	2
+			media file 0:
+				mfile index:	0
+				mfile type:	data
+				mfile size:	166723584
+				mfile start:	ino 28839 offset 0
+				mfile end:	ino 1572997 offset 0
+				media label:	"tape2"
+				media id:	22224f02-b6c7-47d5-ad61-a61ba071c8a8
+			media file 1:
+				mfile index:	1
+				mfile type:	inventory
+				mfile size:	2097152
+				media label:	"tape2"
+				media id:	22224f02-b6c7-47d5-ad61-a61ba071c8a8
+xfsdump: Dump Status: SUCCESS
+[root@rhel8 ~]# mv /var/lib/xfsdump/inventory 
+/var/lib/xfsdump/inventory_two_sessions
+[root@rhel8 ~]# xfsdump -I
+xfsdump: Dump Status: SUCCESS
+
+[root@rhel8 ~]# xfsrestore -L Test1 -f /dev/nst0 /tmp/test1/
+xfsrestore: using scsi tape (drive_scsitape) strategy
+xfsrestore: version 3.1.8 (dump format 3.0) - type ^C for status and control
+xfsrestore: searching media for dump
+xfsrestore: preparing drive
+xfsrestore: examining media file 2
+xfsrestore: found dump matching specified label:
+xfsrestore: hostname: rhel8
+xfsrestore: mount point: /boot
+xfsrestore: volume: /dev/sda1
+xfsrestore: session time: Thu Oct  6 13:50:45 2022
+xfsrestore: level: 0
+xfsrestore: session label: "Test1"
+xfsrestore: media label: "tape1"
+xfsrestore: file system id: 26dd5aa0-b901-4cf5-9b68-0c5753cb3ab8
+xfsrestore: session id: aa25fa48-4493-45c7-9027-61e53e486445
+xfsrestore: media id: adb31f2a-f026-4597-a20a-326f28ecbaf1
+xfsrestore: searching media for directory dump
+xfsrestore: rewinding
+xfsrestore: examining media file 0
+xfsrestore: reading directories
+xfsrestore: 9 directories and 320 entries processed
+xfsrestore: directory post-processing
+xfsrestore: restoring non-directory files
+xfsrestore: examining media file 1
+xfsrestore: inv_stobj.c:1119: stobj_unpack_sessinfo: Assertion `(size_t) 
+( p - (char *) bufp ) == bufsz' failed.
+Aborted (core dumped)
+
+1006 stobj_unpack_sessinfo(
+...
+1112         /* sanity check the size of the buffer given to us vs. the 
+size it
+1113            should be */
+1114         if ((size_t) (p - (char *) bufp) != bufsz) {
+1115                 mlog(MLOG_DEBUG | MLOG_INV, "p-bufp %d != bufsz %d 
+entsz %d\n",
+1116                       (int)(p - (char *) bufp), (int) bufsz,
+1117               (int) (sizeof(invt_entry_t)));
+1118         }
+1119         assert((size_t) (p - (char *) bufp) == bufsz);
+
+
+[2] Testing with this series
+
+# remove the houskeeping dir
+[root@rhel8 xfsdump-dev]# rm -rf /tmp/test1/*
+
+[root@rhel8 xfsdump-dev]# restore/xfsrestore -L Test1 -f /dev/nst0 
+/tmp/test1/
+restore/xfsrestore: using scsi tape (drive_scsitape) strategy
+restore/xfsrestore: version 3.1.10 (dump format 3.0) - type ^C for 
+status and control
+restore/xfsrestore: searching media for dump
+restore/xfsrestore: preparing drive
+restore/xfsrestore: examining media file 2
+restore/xfsrestore: found dump matching specified label:
+restore/xfsrestore: hostname: rhel8
+restore/xfsrestore: mount point: /boot
+restore/xfsrestore: volume: /dev/sda1
+restore/xfsrestore: session time: Thu Oct  6 13:50:45 2022
+restore/xfsrestore: level: 0
+restore/xfsrestore: session label: "Test1"
+restore/xfsrestore: media label: "tape1"
+restore/xfsrestore: file system id: 26dd5aa0-b901-4cf5-9b68-0c5753cb3ab8
+restore/xfsrestore: session id: aa25fa48-4493-45c7-9027-61e53e486445
+restore/xfsrestore: media id: adb31f2a-f026-4597-a20a-326f28ecbaf1
+restore/xfsrestore: searching media for directory dump
+restore/xfsrestore: rewinding
+restore/xfsrestore: examining media file 0
+restore/xfsrestore: reading directories
+restore/xfsrestore: 9 directories and 320 entries processed
+restore/xfsrestore: directory post-processing
+restore/xfsrestore: restoring non-directory files
+restore/xfsrestore: examining media file 1
+restore/xfsrestore: incorporating on-media session inventory into online 
+inventory
+restore/xfsrestore: /var/lib/xfsdump/inventory created
+restore/xfsrestore: using on-media session inventory
+
+  ============================ change media dialog 
+=============================
+
+please change media in drive
+1: media change declined (timeout in 3600 sec)
+2: display media inventory status
+3: list needed media objects
+4: media changed (default)
+  -> 1
+media change aborted
+
+  --------------------------------- end dialog 
+---------------------------------
+
+restore/xfsrestore: NOTE: restore interrupted: 21 seconds elapsed: may 
+resume later using -R option
+restore/xfsrestore: Restore Summary:
+restore/xfsrestore:   stream 0 /dev/nst0 QUIT (media is no longer usable)
+restore/xfsrestore: Restore Status: QUIT
+[root@rhel8 xfsdump-dev]#
+
+[root@rhel8 xfsdump-dev]# xfsdump -I
+file system 0:
+	fs id:		26dd5aa0-b901-4cf5-9b68-0c5753cb3ab8
+	session 0:
+		mount point:	rhel8:/boot
+		device:		rhel8:/dev/sda1
+		time:		Thu Oct  6 13:50:45 2022
+		session label:	"Test1"
+		session id:	aa25fa48-4493-45c7-9027-61e53e486445
+		level:		0
+		resumed:	NO
+		subtree:	NO
+		streams:	2
+		stream 0:
+			pathname:	/dev/nst0
+			start:		ino 133 offset 0
+			end:		ino 28839 offset 0
+			interrupted:	YES
+			media files:	1
+			media file 0:
+				mfile index:	0
+				mfile type:	data
+				mfile size:	165675008
+				mfile start:	ino 133 offset 0
+				mfile end:	ino 28839 offset 0
+				media label:	"tape1"
+				media id:	adb31f2a-f026-4597-a20a-326f28ecbaf1
+		stream 1:
+			pathname:	/dev/nst0
+			start:		ino 133 offset 0
+			end:		ino 28839 offset 0
+			interrupted:	YES
+			media files:	1
+			media file 0:
+				mfile index:	0
+				mfile type:	data
+				mfile size:	166723584
+				mfile start:	ino 28839 offset 0
+				mfile end:	ino 1572997 offset 0
+				media label:	"tape2"
+				media id:	22224f02-b6c7-47d5-ad61-a61ba071c8a8
+xfsdump: Dump Status: SUCCESS
+[root@rhel8 xfsdump-dev]#
+
+[root@rhel8 xfsdump-dev]# mkdir /tmp/test1_
+[root@rhel8 xfsdump-dev]# restore/xfsrestore -L Test1 -f /dev/nst0 -f 
+/dev/nst1 /tmp/test1_
+restore/xfsrestore: using scsi tape (drive_scsitape) strategy
+restore/xfsrestore: using scsi tape (drive_scsitape) strategy
+restore/xfsrestore: version 3.1.10 (dump format 3.0) - type ^C for 
+status and control
+restore/xfsrestore: drive 0: using online session inventory
+restore/xfsrestore: drive 0: searching media for directory dump
+restore/xfsrestore: drive 0: preparing drive
+restore/xfsrestore: drive 0: examining media file 2
+restore/xfsrestore: drive 0: rewinding
+restore/xfsrestore: drive 0: examining media file 0
+restore/xfsrestore: drive 0: reading directories
+restore/xfsrestore: drive 0: 9 directories and 320 entries processed
+restore/xfsrestore: drive 0: directory post-processing
+restore/xfsrestore: drive 0: restoring non-directory files
+restore/xfsrestore: drive 0: examining media file 1
+restore/xfsrestore: drive 0: NOTE: please change media: type ^C to 
+confirm media change
+restore/xfsrestore: drive 1: preparing drive
+restore/xfsrestore: drive 1: examining media file 2
+restore/xfsrestore: drive 1: rewinding
+restore/xfsrestore: drive 1: examining media file 0
+restore/xfsrestore: drive 1: seeking past media file directory dump
+restore/xfsrestore: drive 1: restoring non-directory files
+restore/xfsrestore: drive 1: examining media file 1
+restore/xfsrestore: restore complete: 3 seconds elapsed
+restore/xfsrestore: Restore Summary:
+restore/xfsrestore:   stream 0 /dev/nst0 ALREADY_DONE (another stream 
+completed the operation)
+restore/xfsrestore:   stream 1 /dev/nst1 OK (success)
+restore/xfsrestore: Restore Status: SUCCESS
+[root@rhel8 xfsdump-dev]# xfsdump -I
+
+
+[3] Removing this stobj_unpack_sessinfo cleanup Segfaults.
+
+
+[root@rhel8 xfsdump-dev]# gdb restore/xfsrestore
+Reading symbols from restore/xfsrestore...done.
+(gdb) run -L Test1 -f /dev/nst0 -f /dev/nst1 /tmp/test1
+Starting program: 
+/root/Devel/upstream/xfs/xfsdump-dev/restore/xfsrestore -L Test1 -f 
+/dev/nst0 -f /dev/nst1 /tmp/test1
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+/root/Devel/upstream/xfs/xfsdump-dev/restore/xfsrestore: using scsi tape 
+(drive_scsitape) strategy
+/root/Devel/upstream/xfs/xfsdump-dev/restore/xfsrestore: using scsi tape 
+(drive_scsitape) strategy
+/root/Devel/upstream/xfs/xfsdump-dev/restore/xfsrestore: version 3.1.10 
+(dump format 3.0) - type ^C for status and control
+[New Thread 0x7ffff6b5b700 (LWP 2251)]
+/root/Devel/upstream/xfs/xfsdump-dev/restore/xfsrestore: drive 0: 
+searching media for dump
+/root/Devel/upstream/xfs/xfsdump-dev/restore/xfsrestore: drive 0: 
+preparing drive
+[New Thread 0x7ffff635a700 (LWP 2252)]
+/root/Devel/upstream/xfs/xfsdump-dev/restore/xfsrestore: drive 1: 
+searching media for dump
+/root/Devel/upstream/xfs/xfsdump-dev/restore/xfsrestore: drive 1: 
+preparing drive
+/root/Devel/upstream/xfs/xfsdump-dev/restore/xfsrestore: drive 0: 
+examining media file 1
+/root/Devel/upstream/xfs/xfsdump-dev/restore/xfsrestore: drive 0: found 
+dump matching specified label:
+/root/Devel/upstream/xfs/xfsdump-dev/restore/xfsrestore: drive 0: 
+hostname: rhel8
+/root/Devel/upstream/xfs/xfsdump-dev/restore/xfsrestore: drive 0: mount 
+point: /boot
+/root/Devel/upstream/xfs/xfsdump-dev/restore/xfsrestore: drive 0: 
+volume: /dev/sda1
+/root/Devel/upstream/xfs/xfsdump-dev/restore/xfsrestore: drive 0: 
+session time: Thu Oct  6 13:50:45 2022
+/root/Devel/upstream/xfs/xfsdump-dev/restore/xfsrestore: drive 0: level: 0
+/root/Devel/upstream/xfs/xfsdump-dev/restore/xfsrestore: drive 0: 
+session label: "Test1"
+/root/Devel/upstream/xfs/xfsdump-dev/restore/xfsrestore: drive 0: media 
+label: "tape1"
+/root/Devel/upstream/xfs/xfsdump-dev/restore/xfsrestore: drive 0: file 
+system id: 26dd5aa0-b901-4cf5-9b68-0c5753cb3ab8
+/root/Devel/upstream/xfs/xfsdump-dev/restore/xfsrestore: drive 0: 
+session id: aa25fa48-4493-45c7-9027-61e53e486445
+/root/Devel/upstream/xfs/xfsdump-dev/restore/xfsrestore: drive 0: media 
+id: adb31f2a-f026-4597-a20a-326f28ecbaf1
+
+Thread 2 "xfsrestore" received signal SIGSEGV, Segmentation fault.
+[Switching to Thread 0x7ffff6b5b700 (LWP 2251)]
+0x000000000041fce3 in stobj_unpack_sessinfo (bufp=<optimized out>, 
+bufp@entry=0x7ffff7f42010, bufsz=<optimized out>, s=s@entry=0x7ffff6b59880)
+     at inv_stobj.c:1094
+1094				bcopy(tmpbuf, p, sizeof(invt_mediafile_t));
+Missing separate debuginfos, use: yum debuginfo-install 
+libuuid-2.32.1-27.el8.x86_64 xfsprogs-5.0.0-8.el8.x86_64
+(gdb) bt
+#0  0x000000000041fce3 in stobj_unpack_sessinfo (bufp=<optimized out>, 
+bufp@entry=0x7ffff7f42010, bufsz=<optimized out>,
+     s=s@entry=0x7ffff6b59880) at inv_stobj.c:1094
+#1  0x000000000042525b in pi_addfile (mrhdrp=<optimized out>, 
+scrhdrp=<optimized out>, drivep=0x65a700, drhdrp=<optimized out>,
+     drhdrp=<optimized out>, grhdrp=<optimized out>, Mediap=<optimized 
+out>) at content.c:5468
+#2  0x000000000042c2ce in content_stream_restore (thrdix=thrdix@entry=0) 
+at content.c:2198
+#3  0x000000000041614e in childmain (arg1=0x0) at main.c:1465
+#4  0x0000000000406daa in cldmgr_entry (arg1=0x652200 <cld>) at cldmgr.c:237
+#5  0x00007ffff75a514a in start_thread (arg=<optimized out>) at 
+pthread_create.c:479
+#6  0x00007ffff72d4dc3 in clone () at 
+../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+(gdb) list
+1089		s->mfiles = (invt_mediafile_t *)p;
+1090		for (i=0; i< s->ses->s_cur_nstreams; i++) {
+1091			for (j=0; j < s->strms[i].st_nmediafiles; j++) {
+1092				xlate_invt_mediafile((invt_mediafile_t *)p,
+1093						     (invt_mediafile_t *)tmpbuf, 1);
+1094				bcopy(tmpbuf, p, sizeof(invt_mediafile_t));
+1095				p +=  sizeof(invt_mediafile_t);
+1096			}
+1097		}
+1098	
+(gdb) info locals
+i = <optimized out>
+j = 832
+tmpbuf = 0x7ffff0006f60 ""
+p = 0x7ffff7f89f78 ""
+__PRETTY_FUNCTION__ = "stobj_unpack_sessinfo"
+__x = <optimized out>
+__x = <optimized out>
+(gdb)
+
+We dont have 832 media files, i think this was setup to fail when didnt
+decode the session's st_mediafiles. I steped over this in gdb and
+confirmed that it was processing the second session when it did this.
+
+(gdb) p *(s->strms+0)
+$6 = {st_startino = {ino = 133, offset = 0}, st_endino = {ino = 28839, 
+offset = 0}, st_firstmfile = 5408, st_lastmfile = 5760,
+   st_cmdarg = "/dev/nst0", '\000' <repeats 246 times>, st_nmediafiles = 
+2, st_interrupted = 1, st_padding = '\000' <repeats 15 times>}
+
+(gdb) p *(s->strms+1)
+$7 = {st_startino = {ino = 9583660007044415488, offset = 0}, st_endino = 
+{ino = 12065143401725558784, offset = 0},
+   st_firstmfile = 2311753983724617728, st_lastmfile = 
+-9217179587367141376, st_cmdarg = "/dev/nst0", '\000' <repeats 246 times>,
+   st_nmediafiles = 33554432, st_interrupted = 16777216, st_padding = 
+'\000' <repeats 15 times>}
+(gdb)
+
+$ printf "0x%x\n" 33554432
+0x2000000
+
+As Darrick pointed out the second stream is a duplicate of the first
+stream since stobj_pack_sessinfo just used the first stream for both
+calls in the loop as confirmed by the duplicate st_cmdarg = "/dev/nst0.
+
+
+> 
+> --D
+> 
+>>
+>>>
+>>>>
+>>>> --D
+>>>>
+>>>>> +    }
+>>>>>        /* all the media files */
+>>>>>        s->mfiles = (invt_mediafile_t *)p;
+>>>>> -- 
+>>>>> 2.31.1
+>>>>>
+>>>>
+>>
+> 
 
