@@ -2,196 +2,166 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4CEEC4167B
-	for <linux-xfs@archiver.kernel.org>; Fri,  7 Oct 2022 02:35:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBD9CC433F5
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Oct 2022 05:19:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232084AbiJGCfs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Oct 2022 22:35:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44376 "EHLO
+        id S229513AbiJGFTF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 7 Oct 2022 01:19:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229919AbiJGCfq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Oct 2022 22:35:46 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4F00B48A1;
-        Thu,  6 Oct 2022 19:35:43 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7D27461B27;
-        Fri,  7 Oct 2022 02:35:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C611AC433C1;
-        Fri,  7 Oct 2022 02:35:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665110142;
-        bh=cQuKCiWfU/2J+LYO5sPPzD/nSjKkEzACVE1++kaEJxg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=SxpaYvLSh3p1Dakz0anXXycu0YeCICXXKUP0me6Payo0t3NVqdHG/0PBQ9eATaADq
-         pN5iZKhCIzmlM+q+0Epi9k2bS3Q7g5qa4kbfd4JynzFPAfJ3rWzhTHvlFBx/cinBzp
-         N4wwdemWu6S1I2k/+iFfxxexKPvLLXkKVioucyQyx3Y4hMFZtJv/+XRjVlTzT/niRX
-         fiPXwLjoflavHYOBZQPvHLe1hYCZ8IM1Qve4tQRP38NcqxuEX3LB1uj51Qs53QIAE4
-         BjKa2PvEG6p+7BnVCUC/4OZFXQwpEsLsvRiBtjNReUiibdx8jsYJH8GSmJ7/elcQH9
-         wvYBTmWSkfb0w==
-Date:   Thu, 6 Oct 2022 19:35:42 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     linux-man@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-xfs@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-block@vger.kernel.org
-Subject: Re: [man-pages PATCH v3] statx.2, open.2: document STATX_DIOALIGN
-Message-ID: <Yz+QflrzmdpF7g70@magnolia>
-References: <20221004174307.6022-1-ebiggers@kernel.org>
+        with ESMTP id S229482AbiJGFTE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Oct 2022 01:19:04 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11ACA112ABD
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Oct 2022 22:19:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1665119943;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ys7GnxnPNQtVFgtmfLQ0GfTqsrJhiBOFggXQ/Tpt86A=;
+        b=CiqufhU3Z1sSVb5bjgZCEn5BCOa20y4XS6LkqwsRPGpnjxOfchWn5Ph3dUSOSpd2k0trCa
+        cGqkqvKlkeWxCCQWKSmrq8T8FQPrcCRSQDC26IMeJ5XoGkAQCbnqfh1LXISHay6/Y99b7r
+        GtUvLwRIJEcgoDTPd1tvDXFVpHAhP5w=
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
+ [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-349-mSUIMsCPNjCnSKJhjfPP5w-1; Fri, 07 Oct 2022 01:19:00 -0400
+X-MC-Unique: mSUIMsCPNjCnSKJhjfPP5w-1
+Received: by mail-pj1-f71.google.com with SMTP id pq17-20020a17090b3d9100b0020a4c65c3a9so2129492pjb.0
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Oct 2022 22:19:00 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date;
+        bh=ys7GnxnPNQtVFgtmfLQ0GfTqsrJhiBOFggXQ/Tpt86A=;
+        b=DJBE/TNTtm6Oq3sbQXD6hptap8bwW2aYuD3WCwjGcdTs1V7jOlJlZ7cquZX2u6uyok
+         PeaQYGDa2sZ9qMuS+ToECZUM11sifa/4AC9R2rpfeQF4kXbkL0yCOjUmNnFApnDhwuT5
+         06+jL0QaO+2JXrAQnz2ozTMlJeGW4XMUjLR1WE3ZUEQhIKAwVyqYEQsRmdVW9htD9fxG
+         tG5lQif5bCYzLhotMae1mEbONUWtm8vrodu2mHKfWIKZw7WTFareN1PaqlRGHiZJsdBe
+         6Qokhog6aLvF48l2BtGKb7GBsZZZykeQu6xjNhk3YTaAOqCIGBD3Dxm3H67SqcZiDgH/
+         5YSg==
+X-Gm-Message-State: ACrzQf2WsZu2YxJSDO/clXvLFFFsCBpFGI/xYXoLjCRHNwiV0wYMN4Yp
+        y/3+VT8Jmt1iK7DhSwvTLMwpYl+g9RrGJC4vlmfbAt1GW5LD5nZhQWzokQyDQ5fP8sWYw4SRZ5p
+        fhnGkI6vdP3oxn1aZ91by
+X-Received: by 2002:a63:fb09:0:b0:43c:b1c6:b335 with SMTP id o9-20020a63fb09000000b0043cb1c6b335mr3074405pgh.276.1665119939629;
+        Thu, 06 Oct 2022 22:18:59 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM44DePExSUfOgMCJVRpXOiIOwL0LLo8k6CuV3CPTYRF2ooACV1jIUBwPIJhRJ34k9svuCCwIQ==
+X-Received: by 2002:a63:fb09:0:b0:43c:b1c6:b335 with SMTP id o9-20020a63fb09000000b0043cb1c6b335mr3074390pgh.276.1665119939313;
+        Thu, 06 Oct 2022 22:18:59 -0700 (PDT)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id n15-20020a65488f000000b0042bf6034b3fsm693889pgs.55.2022.10.06.22.18.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 06 Oct 2022 22:18:58 -0700 (PDT)
+Date:   Fri, 7 Oct 2022 13:18:55 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 1/2] check: detect and preserve all coredumps made by a
+ test
+Message-ID: <20221007051855.z3om7f5feqtqqkgb@zlang-mailbox>
+References: <166500906990.887104.14293889638885406232.stgit@magnolia>
+ <166500907546.887104.248083399669088204.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221004174307.6022-1-ebiggers@kernel.org>
+In-Reply-To: <166500907546.887104.248083399669088204.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 04, 2022 at 10:43:07AM -0700, Eric Biggers wrote:
-> From: Eric Biggers <ebiggers@google.com>
+On Wed, Oct 05, 2022 at 03:31:15PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Document the STATX_DIOALIGN support for statx()
-> (https://git.kernel.org/linus/725737e7c21d2d25).
+> If someone sets kernel.core_uses_pid (or kernel.core_pattern), any
+> coredumps generated by fstests might have names that are longer than
+> just "core".  Since the pid isn't all that useful by itself, let's
+> record the coredumps by hash when we save them, so that we don't waste
+> space storing identical crash dumps.
 > 
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Eric Biggers <ebiggers@google.com>
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
+>  check     |   26 ++++++++++++++++++++++----
+>  common/rc |   16 ++++++++++++++++
+>  2 files changed, 38 insertions(+), 4 deletions(-)
 > 
-> I'm resending this now that support for STATX_DIOALIGN has been merged
-> upstream.
+> 
+> diff --git a/check b/check
+> index af23572ccc..654d986b27 100755
+> --- a/check
+> +++ b/check
+> @@ -913,11 +913,19 @@ function run_section()
+>  			sts=$?
+>  		fi
+>  
+> -		if [ -f core ]; then
+> -			_dump_err_cont "[dumped core]"
+> -			mv core $RESULT_BASE/$seqnum.core
+> +		# If someone sets kernel.core_pattern or kernel.core_uses_pid,
+> +		# coredumps generated by fstests might have a longer name than
+> +		# just "core".  Use globbing to find the most common patterns,
+> +		# assuming there are no other coredump capture packages set up.
+> +		local cores=0
+> +		for i in core core.*; do
 
-Woo!  Thank you for getting this over the line! :)
+I'm wondering if it should be "for i in core*" ? The coredump file only can be
+"core" with dot ".", can it with "-" or "_" or others?
 
---D
 
-> v3: updated mentions of Linux version, fixed some punctuation, and added
->     a Reviewed-by
-> 
-> v2: rebased onto man-pages master branch, mentioned xfs, and updated
->     link to patchset
-> 
->  man2/open.2  | 43 ++++++++++++++++++++++++++++++++-----------
->  man2/statx.2 | 29 +++++++++++++++++++++++++++++
->  2 files changed, 61 insertions(+), 11 deletions(-)
-> 
-> diff --git a/man2/open.2 b/man2/open.2
-> index deba7e4ea..b8617e0d2 100644
-> --- a/man2/open.2
-> +++ b/man2/open.2
-> @@ -1732,21 +1732,42 @@ of user-space buffers and the file offset of I/Os.
->  In Linux alignment
->  restrictions vary by filesystem and kernel version and might be
->  absent entirely.
-> -However there is currently no filesystem\-independent
-> -interface for an application to discover these restrictions for a given
-> -file or filesystem.
-> -Some filesystems provide their own interfaces
-> -for doing so, for example the
-> +The handling of misaligned
-> +.B O_DIRECT
-> +I/Os also varies; they can either fail with
-> +.B EINVAL
-> +or fall back to buffered I/O.
-> +.PP
-> +Since Linux 6.1,
-> +.B O_DIRECT
-> +support and alignment restrictions for a file can be queried using
-> +.BR statx (2),
-> +using the
-> +.B STATX_DIOALIGN
-> +flag.
-> +Support for
-> +.B STATX_DIOALIGN
-> +varies by filesystem; see
-> +.BR statx (2).
-> +.PP
-> +Some filesystems provide their own interfaces for querying
-> +.B O_DIRECT
-> +alignment restrictions, for example the
->  .B XFS_IOC_DIOINFO
->  operation in
->  .BR xfsctl (3).
-> +.B STATX_DIOALIGN
-> +should be used instead when it is available.
->  .PP
-> -Under Linux 2.4, transfer sizes, the alignment of the user buffer,
-> -and the file offset must all be multiples of the logical block size
-> -of the filesystem.
-> -Since Linux 2.6.0, alignment to the logical block size of the
-> -underlying storage (typically 512 bytes) suffices.
-> -The logical block size can be determined using the
-> +If none of the above is available, then direct I/O support and alignment
-> +restrictions can only be assumed from known characteristics of the filesystem,
-> +the individual file, the underlying storage device(s), and the kernel version.
-> +In Linux 2.4, most block device based filesystems require that the file offset
-> +and the length and memory address of all I/O segments be multiples of the
-> +filesystem block size (typically 4096 bytes).
-> +In Linux 2.6.0, this was relaxed to the logical block size of the block device
-> +(typically 512 bytes).
-> +A block device's logical block size can be determined using the
->  .BR ioctl (2)
->  .B BLKSSZGET
->  operation or from the shell using the command:
-> diff --git a/man2/statx.2 b/man2/statx.2
-> index 0d1b4591f..50397057d 100644
-> --- a/man2/statx.2
-> +++ b/man2/statx.2
-> @@ -61,7 +61,12 @@ struct statx {
->         containing the filesystem where the file resides */
->      __u32 stx_dev_major;   /* Major ID */
->      __u32 stx_dev_minor;   /* Minor ID */
+> +			test -f "$i" || continue
+> +			if ((cores++ == 0)); then
+> +				_dump_err_cont "[dumped core]"
+> +			fi
+> +			_save_coredump "$i"
+>  			tc_status="fail"
+> -		fi
+> +		done
+>  
+>  		if [ -f $seqres.notrun ]; then
+>  			$timestamp && _timestamp
+> @@ -950,6 +958,16 @@ function run_section()
+>  			# of the check script itself.
+>  			(_adjust_oom_score 250; _check_filesystems) || tc_status="fail"
+>  			_check_dmesg || tc_status="fail"
 > +
->      __u64 stx_mnt_id;      /* Mount ID */
+> +			# Save any coredumps from the post-test fs checks
+> +			for i in core core.*; do
+> +				test -f "$i" || continue
+> +				if ((cores++ == 0)); then
+> +					_dump_err_cont "[dumped core]"
+> +				fi
+> +				_save_coredump "$i"
+> +				tc_status="fail"
+> +			done
+>  		fi
+>  
+>  		# Reload the module after each test to check for leaks or
+> diff --git a/common/rc b/common/rc
+> index d1f3d56bf8..9750d06a9a 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -4948,6 +4948,22 @@ _create_file_sized()
+>  	return $ret
+>  }
+>  
+> +_save_coredump()
+> +{
+> +	local path="$1"
 > +
-> +    /* Direct I/O alignment restrictions */
-> +    __u32 stx_dio_mem_align;
-> +    __u32 stx_dio_offset_align;
->  };
->  .EE
->  .in
-> @@ -247,6 +252,8 @@ STATX_BTIME	Want stx_btime
->  STATX_ALL	The same as STATX_BASIC_STATS | STATX_BTIME.
->  	It is deprecated and should not be used.
->  STATX_MNT_ID	Want stx_mnt_id (since Linux 5.8)
-> +STATX_DIOALIGN	Want stx_dio_mem_align and stx_dio_offset_align
-> +	(since Linux 6.1; support varies by filesystem)
->  .TE
->  .in
->  .PP
-> @@ -407,6 +414,28 @@ This is the same number reported by
->  .BR name_to_handle_at (2)
->  and corresponds to the number in the first field in one of the records in
->  .IR /proc/self/mountinfo .
-> +.TP
-> +.I stx_dio_mem_align
-> +The alignment (in bytes) required for user memory buffers for direct I/O
-> +.BR "" ( O_DIRECT )
-> +on this file, or 0 if direct I/O is not supported on this file.
-> +.IP
-> +.B STATX_DIOALIGN
-> +.IR "" ( stx_dio_mem_align
-> +and
-> +.IR stx_dio_offset_align )
-> +is supported on block devices since Linux 6.1.
-> +The support on regular files varies by filesystem; it is supported by ext4,
-> +f2fs, and xfs since Linux 6.1.
-> +.TP
-> +.I stx_dio_offset_align
-> +The alignment (in bytes) required for file offsets and I/O segment lengths for
-> +direct I/O
-> +.BR "" ( O_DIRECT )
-> +on this file, or 0 if direct I/O is not supported on this file.
-> +This will only be nonzero if
-> +.I stx_dio_mem_align
-> +is nonzero, and vice versa.
->  .PP
->  For further information on the above fields, see
->  .BR inode (7).
+> +	local core_hash="$(_md5_checksum "$path")"
+> +	local out_file="$RESULT_BASE/$seqnum.core.$core_hash"
+> +
+> +	if [ -s "$out_file" ]; then
+> +		rm -f "$path"
+> +		return
+> +	fi
+> +	rm -f "$out_file"
+> +
+> +	mv "$path" "$out_file"
+> +}
+> +
+>  init_rc
+>  
+>  ################################################################################
 > 
-> base-commit: bc28d289e5066fc626df260bafc249846a0f6ae6
-> -- 
-> 2.37.3
-> 
+
