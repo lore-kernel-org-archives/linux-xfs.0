@@ -2,80 +2,80 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92FAFC4332F
-	for <linux-xfs@archiver.kernel.org>; Sat,  8 Oct 2022 11:12:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94ADEC433FE
+	for <linux-xfs@archiver.kernel.org>; Sat,  8 Oct 2022 11:12:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229696AbiJHLMV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 8 Oct 2022 07:12:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51990 "EHLO
+        id S229699AbiJHLM6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 8 Oct 2022 07:12:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52100 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229711AbiJHLMU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Oct 2022 07:12:20 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3F1050F91
-        for <linux-xfs@vger.kernel.org>; Sat,  8 Oct 2022 04:12:19 -0700 (PDT)
+        with ESMTP id S229729AbiJHLM5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 8 Oct 2022 07:12:57 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5513F50F94
+        for <linux-xfs@vger.kernel.org>; Sat,  8 Oct 2022 04:12:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1665227539;
+        s=mimecast20190719; t=1665227575;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=ImDEzEAV/tlquMgKF4ihNd+T83vdO0QO8PCm85Any8w=;
-        b=PQZx0P2sAfCcRXPIN58au+sd9prXQqo4Hl9OcT5wsWO3/rtpik+YEcuDcmrpgIAf6WbBpT
-        XE7yiW+XSGoWBnTur49uYYHhIWvJHsZ5x4PFNXrQganwiqPJkWblmdMqKGs8dlux+oltFq
-        9Z/rmG068p1Pt8xdHJ5BcPsbYyzm/gY=
-Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
- [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=ijebN9vtzabsCUMkAWB1z0Voz2AmoSGlgDeLte6kJbI=;
+        b=Wd7Nxc8m9EOgm033I+Gc48nXWtFLKlJjhLh/QwbgB8uC0sKCfaOqDtN8ZHe88XPdoOStyL
+        vqKtncoNNNEL86EWdntXUbAcVBFw5EAqTgBwqt12SJB01JGDAY4q8G3i/7qCs604K6277X
+        zFq4oIrx6mn7p8infFCgVKymdke1U+k=
+Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com
+ [209.85.219.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-358-3NMqw52uMTCdM8uXKJBOxg-1; Sat, 08 Oct 2022 07:12:17 -0400
-X-MC-Unique: 3NMqw52uMTCdM8uXKJBOxg-1
-Received: by mail-qt1-f197.google.com with SMTP id cg13-20020a05622a408d00b0035bb2f77e7eso4679661qtb.10
-        for <linux-xfs@vger.kernel.org>; Sat, 08 Oct 2022 04:12:17 -0700 (PDT)
+ us-mta-359-4ZSEZ547Mx-x3uVjTvX7vg-1; Sat, 08 Oct 2022 07:12:53 -0400
+X-MC-Unique: 4ZSEZ547Mx-x3uVjTvX7vg-1
+Received: by mail-qv1-f70.google.com with SMTP id dn14-20020a056214094e00b004b1a231394eso4231006qvb.13
+        for <linux-xfs@vger.kernel.org>; Sat, 08 Oct 2022 04:12:53 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ImDEzEAV/tlquMgKF4ihNd+T83vdO0QO8PCm85Any8w=;
-        b=vRKLNNnuhYSwxtY5sOobOWdMqsfv5uKXGaJYanicdDZFgotQ3RhAZVqf+I8WpyZMp8
-         raRtlBq0GHCndnwnWF+K4NjXtVAMXz+wepraXeJMHXjL6LLv7pvDy5UkF2b8+rFF9Ajl
-         7G1RQbbBPgDEMUhR6rn4KEDU8rXhAnj81jvyCSwqTv5dbTJV6dkNE4hV09vjIxVuTZ4T
-         15GHqPQ4muX/JWzbTLuNuIK1De6oeQzVhwTc6InW1PIEhX0e0VEtkMOK734feKQR5BSF
-         cJoySZ5j0IMWlzWh2JQdFuxOd/iMIt2WSGXmPmiqccfJqjhEPNL3UOG52RR0I3lptJYt
-         5E4A==
-X-Gm-Message-State: ACrzQf28c9gWVDy7KiTyE5M5DsTq9YEuO+SxN+nnHsMFsbhq1c3WfO/8
-        R50SHphW2dpTUADpZSRfTP6N5HK02Zr6qR1QjmmmkeYSPk52xl3zHAv2V9akpMqcjylrEdv7mqc
-        +nptLlrLAGhnQdAs0fzhS
-X-Received: by 2002:a0c:810f:0:b0:47b:299a:56d7 with SMTP id 15-20020a0c810f000000b0047b299a56d7mr7504016qvc.12.1665227536766;
-        Sat, 08 Oct 2022 04:12:16 -0700 (PDT)
-X-Google-Smtp-Source: AMsMyM5tIbTYVKsXPjhnE8zAG9aZKvd32DcrCZTMOj6ObjfB8PAdF0jJRlZCjaODeHut4QTsg+VzTw==
-X-Received: by 2002:a0c:810f:0:b0:47b:299a:56d7 with SMTP id 15-20020a0c810f000000b0047b299a56d7mr7504003qvc.12.1665227536527;
-        Sat, 08 Oct 2022 04:12:16 -0700 (PDT)
+        bh=ijebN9vtzabsCUMkAWB1z0Voz2AmoSGlgDeLte6kJbI=;
+        b=vlVyl+cj7PuwU+JTKBACG2SQ1UTfaboLP5I5WA/2/iYv5rYST7FtWZKQTIZqscCTIA
+         gJD7N4SWKve87EbJUaP7GzgsvKIkJlY/Qu8jFnTfi2hQu/ofZnNxdOpsim0FvTSbd9Oe
+         ZXaqd/2Yj9sADlhSmYvsMkc3g8bB3j9FwAV2V9ZVmQzQOEDSQgdWoLaiSBKrJKvjlrK+
+         FF1EhFB89T7XZJodevq5eSmp4RToQ450+Pu7Ngv5iVLI5OI6K46DGKVYWAiQhzw4+9nE
+         YcKmD5nYYzTYE3k4SG1sNjbYgNrLSF4egPr+URX4bCfq4fMMqOuxtVlqtjqevAlRGAAo
+         /A0w==
+X-Gm-Message-State: ACrzQf2m1EsjDIn87GDjSWu3jbbli1nV2ob0puTr6xLlEBDwYyhN2qbW
+        0oIQWDk1ixXjC5aK/WkOEPObqkEs/2lijlF3TVuuEERMbpRdQaj9IgSy2hyDuoyVmSv0QaSPmJi
+        6syP/Jj1vnfjCE55expu4
+X-Received: by 2002:ac8:7d49:0:b0:395:968c:d113 with SMTP id h9-20020ac87d49000000b00395968cd113mr6352085qtb.639.1665227572942;
+        Sat, 08 Oct 2022 04:12:52 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM6KV0HIn9bBUFKokU3maD0LrxXCh8emB3qBDdxdhMwBVtYAmIlMWSr2Fp29q9Spk9Xf23bliQ==
+X-Received: by 2002:ac8:7d49:0:b0:395:968c:d113 with SMTP id h9-20020ac87d49000000b00395968cd113mr6352073qtb.639.1665227572727;
+        Sat, 08 Oct 2022 04:12:52 -0700 (PDT)
 Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id w19-20020ac843d3000000b003928b4a22afsm4083078qtn.12.2022.10.08.04.12.14
+        by smtp.gmail.com with ESMTPSA id s13-20020a05620a0bcd00b006b95b0a714esm4691388qki.17.2022.10.08.04.12.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 08 Oct 2022 04:12:16 -0700 (PDT)
-Date:   Sat, 8 Oct 2022 19:12:11 +0800
+        Sat, 08 Oct 2022 04:12:52 -0700 (PDT)
+Date:   Sat, 8 Oct 2022 19:12:48 +0800
 From:   Zorro Lang <zlang@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 5/6] common/populate: don't metadump xfs filesystems twice
-Message-ID: <20221008111211.ofzim67axoybq4oi@zlang-mailbox>
+Subject: Re: [PATCH 6/6] common/populate: fix _xfs_metadump usage in
+ _scratch_populate_cached
+Message-ID: <20221008111248.zn43k64bnfr6dkoy@zlang-mailbox>
 References: <166500903290.886939.12532028548655386973.stgit@magnolia>
- <166500906102.886939.861772249521756043.stgit@magnolia>
+ <166500906664.886939.1596674456976768238.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <166500906102.886939.861772249521756043.stgit@magnolia>
+In-Reply-To: <166500906664.886939.1596674456976768238.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 05, 2022 at 03:31:01PM -0700, Darrick J. Wong wrote:
+On Wed, Oct 05, 2022 at 03:31:06PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Due to some braino on my part, _scratch_populate_cached will metadump
-> the filesystem twice -- once with compression disabled, and again with
-> it enabled, maybe.  Get rid of the first metadump.
+> _xfs_metadump requires that the caller pass in "none" for the log device
+> if it doesn't have a log device, so fix this call site.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
@@ -83,21 +83,22 @@ On Wed, Oct 05, 2022 at 03:31:01PM -0700, Darrick J. Wong wrote:
 Good to me,
 Reviewed-by: Zorro Lang <zlang@redhat.com>
 
->  common/populate |    1 -
->  1 file changed, 1 deletion(-)
+>  common/populate |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
 > 
 > diff --git a/common/populate b/common/populate
-> index 9739ac99e0..4eee7e8c66 100644
+> index 4eee7e8c66..cfdaf766f0 100644
 > --- a/common/populate
 > +++ b/common/populate
-> @@ -890,7 +890,6 @@ _scratch_populate_cached() {
->  	"xfs")
+> @@ -891,7 +891,7 @@ _scratch_populate_cached() {
 >  		_scratch_xfs_populate $@
 >  		_scratch_xfs_populate_check
-> -		_scratch_xfs_metadump "${POPULATE_METADUMP}"
 >  
->  		local logdev=
+> -		local logdev=
+> +		local logdev=none
 >  		[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+>  			logdev=$SCRATCH_LOGDEV
+>  
 > 
 
