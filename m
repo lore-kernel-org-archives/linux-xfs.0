@@ -2,324 +2,247 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2A2BC433FE
-	for <linux-xfs@archiver.kernel.org>; Sat,  8 Oct 2022 01:59:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FAB8C43219
+	for <linux-xfs@archiver.kernel.org>; Sat,  8 Oct 2022 02:03:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229751AbiJHB7r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 7 Oct 2022 21:59:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44610 "EHLO
+        id S229671AbiJHCDI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 7 Oct 2022 22:03:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51454 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229800AbiJHB7m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Oct 2022 21:59:42 -0400
-Received: from mail-qv1-xf2e.google.com (mail-qv1-xf2e.google.com [IPv6:2607:f8b0:4864:20::f2e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AAB695BE;
-        Fri,  7 Oct 2022 18:59:38 -0700 (PDT)
-Received: by mail-qv1-xf2e.google.com with SMTP id mg6so4125299qvb.10;
-        Fri, 07 Oct 2022 18:59:38 -0700 (PDT)
+        with ESMTP id S229459AbiJHCDG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Oct 2022 22:03:06 -0400
+Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1D5B100BD0;
+        Fri,  7 Oct 2022 19:03:04 -0700 (PDT)
+Received: by mail-wr1-x429.google.com with SMTP id bv10so5985828wrb.4;
+        Fri, 07 Oct 2022 19:03:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=LCWqk8XNjUEog+dpKmkrThcl3iV6GkMHD85IOWg1CLI=;
-        b=lG29NiYAk2ZwwkOirO1RUHbQw1SNzK3+7J2Gny3ZFiwlvS3AqCI209/V3/aPNROS4B
-         hvKmtqEiNFeafAeJ8HP05g+D4AVWcMU4rXbVTEU+idNLg8HHJKe/LaFeNn4Jxa7O82QF
-         L7FyYir5Hu/cWwMTL+yV4FvkZHcCDjXc/QCx0RG6pAsW/GGpnhb2a8IX9//nX2+VdUMP
-         aaPQInrY/B4Y7DwJANHZF5oodxJ+ktgBynxeL7EvzqOzF1l067LF0JU00/z0lZDjafu5
-         sZu3M2knn+4Ofos7WOLAh8S7eK0m01r83xrHq7AV/5NjVJ8iRRfH57yxBOMmlYzW4nRT
-         oElQ==
+        h=in-reply-to:from:references:cc:to:content-language:subject
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=dVrtfBiEok2By1YIncR+5ppG0aBiojutuj10uIdb4M8=;
+        b=DtUlgsVTI94TVF+azXhBuIzMpBoVGf87QqLogKz+XIk0Xc0LKoFnflrS0tqsZhoSgw
+         CGv0bQXoJVlA01cjWnatu1JdI52M/pTctEwqYcropsFH69fSZr47681j4LpeS22G0eeO
+         R7jMWRu7qBEulLr7BCoMfkng6DVtHlYX/1NdLXivfqjTxLbuI3q3MlpVvM5AHfYLyWig
+         A584PGP1teSF6O57A/kP2Q62gQndZW1eZWG8MojONMY3GPeDJSBcRcr5t0mKvgTuK7xo
+         K7zum5jKZ468WmSgfdkIN6amLjeLfmUruSNdK6qnqd1NONlhwIGok/0GJX7b7wWEqZDN
+         8sDA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=LCWqk8XNjUEog+dpKmkrThcl3iV6GkMHD85IOWg1CLI=;
-        b=q4PWaK2+QkanU0rhLi35NoZ08zZZCkyBJUXUsavTAuUUwOMy5TLYuIoTXWZoG9zJAA
-         aBjqVq7tLsUTH5/Yfm2bB/69Nv9jeMwwvuj54ptaLRtoG/fVHC0/O4RPKAdxSGWsg3G6
-         vegN8TD9GzeU2pNOV/gy0KhpNOUJW5gWd0Rnk/gHQV/U1SlhckdcZf73B1MKv+tmlsaC
-         E73QxcqSiTwIWCOI2GiqoTu1q2WVVL3IzVFJaFbZz70Rw1/KA6ZIzXJBUySf0aGG6XdO
-         JAMRttqlZYrth/4y2HWV4q12bzYUGMDlvX/iwZ4beK5o5uF+2z/cItRTHs6LwUyrrHHy
-         drmA==
-X-Gm-Message-State: ACrzQf0aDf5YQz5AySXiDdHEzZNTYLujORNvrzafGKiqL2sfQ00mex1F
-        I3iwQEl00Bvj0tMxi3gPKWFUQXePDt+WvwQo
-X-Google-Smtp-Source: AMsMyM6BjVeoi5nZRaTKer0XL0QijW1CKJvG89t1vQxjJCU6jIkZXTFnuSAgvEAWKMY0d3zVs+kkpA==
-X-Received: by 2002:ad4:5765:0:b0:4b1:bf78:83cd with SMTP id r5-20020ad45765000000b004b1bf7883cdmr6375725qvx.81.1665194377691;
-        Fri, 07 Oct 2022 18:59:37 -0700 (PDT)
-Received: from ?IPV6:2601:18f:801:e210:abfc:537a:d62c:c353? ([2601:18f:801:e210:abfc:537a:d62c:c353])
-        by smtp.gmail.com with ESMTPSA id w3-20020ac84d03000000b0039014fd4b9bsm3236347qtv.47.2022.10.07.18.59.36
+        h=in-reply-to:from:references:cc:to:content-language:subject
+         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=dVrtfBiEok2By1YIncR+5ppG0aBiojutuj10uIdb4M8=;
+        b=FvdbD8odFsn3mjDx7PVaYw59J5K77lhjr/bh/Cko9u3hNC/Gxe/ApE7peH3RZ/xHV4
+         SepMoFzrdPxyq8uiw2XMg++HCzjONsTBwdZ8y5LZel57G7+BLO6eR1xPDv8jR7qmgz3n
+         4kbuEpEuuDJMp1cFhKjr9EjFw6a66dMfBjas5alzUn+6tjU21vanDrX4LwwFYZb0urn1
+         kaQhH70qCW9d77Zrk9J1y3jQ2ZWmM9HA7Q2BcrKS8Oqa7VQddgV+oWLhXrtIwqJl7rio
+         0vCF7nmJNg1QdeqGATKH7vK6NkKh5M2GnDz+swgF5VEEreaIy3OqTQQ7H0a23AboVWv+
+         d6sA==
+X-Gm-Message-State: ACrzQf2S3+eu/greD4tfXhklfU3ai1DtglVo8LmcV7JhJtlDTtiy1SeE
+        Yw8N7AvfGXjR6vb4P3qFaVA=
+X-Google-Smtp-Source: AMsMyM6yTeWS5OLFiRyKOPBpK4qCxPMvKUXSNWN4CAUIrTxHzLZovPp/3sLYVDqR5fcypEYrhPqOog==
+X-Received: by 2002:a05:6000:1cf:b0:22e:3ef1:a268 with SMTP id t15-20020a05600001cf00b0022e3ef1a268mr4879464wrx.43.1665194583163;
+        Fri, 07 Oct 2022 19:03:03 -0700 (PDT)
+Received: from [192.168.0.160] ([170.253.36.171])
+        by smtp.gmail.com with ESMTPSA id bp15-20020a5d5a8f000000b0022cbf4cda62sm4326101wrb.27.2022.10.07.19.03.00
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 07 Oct 2022 18:59:37 -0700 (PDT)
-Message-ID: <fe8aa034-ec20-f316-ae03-33f52ecc3001@gmail.com>
-Date:   Fri, 7 Oct 2022 21:59:35 -0400
+        Fri, 07 Oct 2022 19:03:02 -0700 (PDT)
+Message-ID: <1099b005-4268-95cb-452c-57156f1cf7b7@gmail.com>
+Date:   Sat, 8 Oct 2022 04:03:00 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.3.0
-Subject: Re: [RFC PATCH] xfs: test for fixing wrong root inode number
+ Thunderbird/102.2.2
+Subject: Re: [man-pages RFC PATCH v6] statx, inode: document the new
+ STATX_VERSION field
 Content-Language: en-US
-To:     "Darrick J. Wong" <djwong@kernel.org>,
-        Zorro Lang <zlang@redhat.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Hironori Shiina <shiina.hironori@fujitsu.com>
-References: <20220928210337.417054-1-shiina.hironori@fujitsu.com>
- <20220929014955.pxou2qymdumvijtt@zlang-mailbox>
- <eae39d48-1fc1-09dc-7f5e-b1112c880584@gmail.com>
- <20221002042708.fshgqyqyhidgsx7z@zlang-mailbox> <Yztcg/8nbS0BDedf@magnolia>
-From:   Hironori Shiina <shiina.hironori@gmail.com>
-In-Reply-To: <Yztcg/8nbS0BDedf@magnolia>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+To:     Jeff Layton <jlayton@kernel.org>, tytso@mit.edu,
+        adilger.kernel@dilger.ca, djwong@kernel.org, david@fromorbit.com,
+        trondmy@hammerspace.com, neilb@suse.de, viro@zeniv.linux.org.uk,
+        zohar@linux.ibm.com, xiubli@redhat.com, chuck.lever@oracle.com,
+        lczerner@redhat.com, jack@suse.cz, bfields@fieldses.org,
+        brauner@kernel.org, fweimer@redhat.com, linux-man@vger.kernel.org
+Cc:     linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+References: <20220928134200.28741-1-jlayton@kernel.org>
+From:   Alejandro Colomar <alx.manpages@gmail.com>
+In-Reply-To: <20220928134200.28741-1-jlayton@kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------IfMxZBOO7OlMGKOKWQtFmv0v"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------IfMxZBOO7OlMGKOKWQtFmv0v
+Content-Type: multipart/mixed; boundary="------------qHqb3fVMZ8DmKM0eA1TeMiZj";
+ protected-headers="v1"
+From: Alejandro Colomar <alx.manpages@gmail.com>
+To: Jeff Layton <jlayton@kernel.org>, tytso@mit.edu,
+ adilger.kernel@dilger.ca, djwong@kernel.org, david@fromorbit.com,
+ trondmy@hammerspace.com, neilb@suse.de, viro@zeniv.linux.org.uk,
+ zohar@linux.ibm.com, xiubli@redhat.com, chuck.lever@oracle.com,
+ lczerner@redhat.com, jack@suse.cz, bfields@fieldses.org, brauner@kernel.org,
+ fweimer@redhat.com, linux-man@vger.kernel.org
+Cc: linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
+ linux-xfs@vger.kernel.org
+Message-ID: <1099b005-4268-95cb-452c-57156f1cf7b7@gmail.com>
+Subject: Re: [man-pages RFC PATCH v6] statx, inode: document the new
+ STATX_VERSION field
+References: <20220928134200.28741-1-jlayton@kernel.org>
+In-Reply-To: <20220928134200.28741-1-jlayton@kernel.org>
 
+--------------qHqb3fVMZ8DmKM0eA1TeMiZj
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: base64
 
-On 10/3/22 18:04, Darrick J. Wong wrote:
-> On Sun, Oct 02, 2022 at 12:27:08PM +0800, Zorro Lang wrote:
->> On Fri, Sep 30, 2022 at 11:01:51AM -0400, Hironori Shiina wrote:
->>>
->>>
->>> On 9/28/22 21:49, Zorro Lang wrote:
->>>> On Wed, Sep 28, 2022 at 05:03:37PM -0400, Hironori Shiina wrote:
->>>>> Test '-x' option of xfsrestore. With this option, a wrong root inode
->>>>> number is corrected. A root inode number can be wrong in a dump created
->>>>> by problematic xfsdump (v3.1.7 - v3.1.9) with blukstat misuse. This
->>>>> patch adds a dump with a wrong inode number created by xfsdump 3.1.8.
->>>>>
->>>>> Link: https://lore.kernel.org/linux-xfs/20201113125127.966243-1-hsiangkao@redhat.com/
->>>>> Signed-off-by: Hironori Shiina <shiina.hironori@fujitsu.com>
->>>>> ---
->>>>>  common/dump                    |   2 +-
->>>>>  src/root-inode-broken-dumpfile | Bin 0 -> 21648 bytes
->>>>>  tests/xfs/554                  |  37 +++++++++++++++++++++
->>>>>  tests/xfs/554.out              |  57 +++++++++++++++++++++++++++++++++
->>>>>  4 files changed, 95 insertions(+), 1 deletion(-)
->>>>>  create mode 100644 src/root-inode-broken-dumpfile
->>>>>  create mode 100644 tests/xfs/554
->>>>>  create mode 100644 tests/xfs/554.out
->>>>>
->>>>> diff --git a/common/dump b/common/dump
->>>>> index 8e0446d9..50b2ba03 100644
->>>>> --- a/common/dump
->>>>> +++ b/common/dump
->>>>> @@ -1003,7 +1003,7 @@ _parse_restore_args()
->>>>>          --no-check-quota)
->>>>>              do_quota_check=false
->>>>>              ;;
->>>>> -	-K|-R)
->>>>> +	-K|-R|-x)
->>>>>  	    restore_args="$restore_args $1"
->>>>>              ;;
->>>>>  	*)
->>>>> diff --git a/src/root-inode-broken-dumpfile b/src/root-inode-broken-dumpfile
->>>>> new file mode 100644
->>>>> index 0000000000000000000000000000000000000000..9a42e65d8047497be31f3abbaf4223ae384fd14d
->>>>> GIT binary patch
->>>>> literal 21648
->>>>> zcmeI)K}ge49KiAC_J<CEBr!0AwBf~zbCHB}5DyxL6eU8Jnqylvayj;2VuG+d)TN6;
->>>>> z5J8vlAaw9hXi(UousT$Sin@BRJfwHM)O+*2*njz_zc+h*ckuV#@BMuKe;;JbgTL{<
->>>>> z!SwZ9zC#ERe%reLe5&cz2e}qM<!i2dXQHt^{^`d1Qx{)MMzW#$%dR@J={0`IRsGx4
->>>>> z(yn@Oi-nBqCOVIG?&{kpwnv~&w_>6_ozY1^fph=w8(=^oTg&wOe=(WQByyQ_Hfd|4
->>>>> z^o76<0!zn#v>k3blbU)nzx=KF^}-G%R;OaQYsHwGDkO`kD^@q^(_Ac_8H<gKj^>a0
->>>>> z6p*%BK>q#b>2EE%^!@f?Z`-p+tI@M}qmMm@zMJk>K1U^=d~G^NUG?X4vkvKtOf-3Y
->>>>> zpVM9YgM9Y7{*P0ApJNUh^uk1wCnA6V0tg_000IagfB*srAb<b@2q1s}0tg_000Iag
->>>>> zfB*srAb<b@2q1s}0tg_000IagfB*srAb<b@2q1s}0tg_000IagfB*srAb`MM1p>_h
->>>>> z2-R=Q9ooK1{l9<Dy8IIMUVXr9BW9uI1x7};j+kij|5kLI^32no;n|PvqD74ZOlJ#n
->>>>> z0-~CKSlx#liMS>jt232#==00xPqwp;gsZrjc?`PPxaCE~>3(^o5-%+Nj=HegJFK2b
->>>>> z=l5zT4IDgO=sJ1zp=jyrALvcQJK|j;sN2_jUmobjN<!S6m1{G<LZ^+JP;T!|3{9)w
->>>>> eGf&ioo}iw|li2&4IyG;z<}vrl)Mic2`t2{52##q0
->>>>>
->>>>> literal 0
->>>>> HcmV?d00001
->>>>
->>>> Please don't try to add a binary file to fstests directly.
->>>>
->>>>>
->>>>> diff --git a/tests/xfs/554 b/tests/xfs/554
->>>>> new file mode 100644
->>>>> index 00000000..13bc62c7
->>>>> --- /dev/null
->>>>> +++ b/tests/xfs/554
->>>>> @@ -0,0 +1,37 @@
->>>>> +#! /bin/bash
->>>>> +# SPDX-License-Identifier: GPL-2.0
->>>>> +# Copyright (c) 2022 Fujitsu Limited. All Rights Reserved.
->>>>> +#
->>>>> +# FS QA Test No. 554
->>>>> +#
->>>>> +# Test restoring a dumpfile with a wrong root inode number created by
->>>>> +# xfsdump 3.1.8.
->>>>> +# This test restores the checked-in broken dump with '-x' flag.
->>>>> +#
->>>>> +
->>>>> +. ./common/preamble
->>>>> +_begin_fstest auto quick dump
->>>>> +
->>>>> +# Import common functions.
->>>>> +. ./common/dump
->>>>> +
->>>>> +# real QA test starts here
->>>>> +_supported_fs xfs
->>>>> +_require_scratch
->>>>
->>>> The -x option is a new feature for xfsdump, not all system support that. So
->>>> we need to _notrun if test on a system doesn't support it. A separated
->>>> _require_* helper would be better if there'll be more testing about this
->>>> new feature. Or a local detection in this case is fine too (can be moved as
->>>> a common helper later).
->>>>
->>>>> +_scratch_mkfs_xfs >>$seqres.full || _fail "mkfs failed"
->>>>> +_scratch_mount
->>>>> +
->>>>> +# Create dumpdir for comparing with restoredir
->>>>> +rm -rf $dump_dir
->>>>> +mkdir $dump_dir || _fail "failed to mkdir $restore_dir"
->>>>           ^^                                  ^^
->>>>
->>>> Are you trying to create a dump dir or restore dir?
->>>>
->>>>> +touch $dump_dir/FILE_1019
->>>>> +
->>>>> +_do_restore_toc -x -f $here/src/root-inode-broken-dumpfile
->>>>
->>>> Why I didn't see how you generate this broken dumpfile in this case?
->>>>
->>>> Oh... I see, you want to store a dumpfile in fstests source code directly.
->>>> I thought you submited that file accidentally...
->>>>
->>>> No, we don't do things like this way, please try to generate the dumpfile
->>>> in this test case at first, then restore it. For example using xfs_db to
->>>> break a xfs, or using some tricky method (likes xfs/545).
->>>>
->>>
->>> Thank you for the comments. I will try another approach. I'm having
->>> trouble creating a dumpfile for this test. Because xfsdump was already
->>> fixed, xfsdump no longer generates a corrupted dumpfile even if there is
->>> a lower inode number than a root inode.
->>
->> Oh, I see. You can try, but I think it's hard. It maybe not suitable to be a
->> fstests case, if it has to depend on a binary fs dump file. If so, We can cover
->> it on other place, with this existed "bad" dump file.
-> 
-> How difficult is it to create a dumpfile with a broken root inode?
-> Is it a simple matter of creating a good dump and patching a few bytes,
-> or do we end up having to patch the whole file?
-> 
-> (The reason I ask is that I've heard about this problem for ages but
-> I don't actually know how to create a bad dump...)
-> 
+SGkgSmVmZiwNCg0KT24gOS8yOC8yMiAxNTo0MiwgSmVmZiBMYXl0b24gd3JvdGU6DQo+IEkn
+bSBwcm9wb3NpbmcgdG8gZXhwb3NlIHRoZSBpbm9kZSBjaGFuZ2UgYXR0cmlidXRlIHZpYSBz
+dGF0eCBbMV0uIERvY3VtZW50DQo+IHdoYXQgdGhpcyB2YWx1ZSBtZWFucyBhbmQgd2hhdCBh
+biBvYnNlcnZlciBjYW4gaW5mZXIgZnJvbSBpdCBjaGFuZ2luZy4NCj4gDQo+IE5COiB0aGlz
+IHdpbGwgcHJvYmFibHkgaGF2ZSBjb25mbGljdHMgd2l0aCB0aGUgU1RBVFhfRElPQUxJR04g
+ZG9jDQo+IHBhdGNoZXMsIGJ1dCB3ZSBzaG91bGQgYmUgYWJsZSB0byByZXNvbHZlIHRob3Nl
+IGJlZm9yZSBtZXJnaW5nIGFueXRoaW5nLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogSmVmZiBM
+YXl0b24gPGpsYXl0b25Aa2VybmVsLm9yZz4NCj4gDQo+IFsxXTogaHR0cHM6Ly9sb3JlLmtl
+cm5lbC5vcmcvbGludXgtbmZzLzIwMjIwODI2MjE0NzAzLjEzNDg3MC0xLWpsYXl0b25Aa2Vy
+bmVsLm9yZy9ULyN0DQoNClRoYW5rcyEgUGxlYXNlIHNlZSBzb21lIGZvcm1hdHRpbmcgY29t
+bWVudHMgYmVsb3cuDQoNCkNoZWVycywNCg0KQWxleA0KDQo+IC0tLQ0KPiAgIG1hbjIvc3Rh
+dHguMiB8IDEzICsrKysrKysrKysrKysNCj4gICBtYW43L2lub2RlLjcgfCAzNiArKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysNCj4gICAyIGZpbGVzIGNoYW5nZWQsIDQ5
+IGluc2VydGlvbnMoKykNCj4gDQo+IHY2OiBpbmNvcnBvcmF0ZSBOZWlsJ3Mgc3VnZ2VzdGlv
+bnMNCj4gICAgICBjbGFyaWZ5IGhvdyB3ZWxsLWJlaGF2ZWQgZmlsZXN5c3RlbXMgc2hvdWxk
+IG9yZGVyIHRoaW5ncw0KPiANCj4gZGlmZiAtLWdpdCBhL21hbjIvc3RhdHguMiBiL21hbjIv
+c3RhdHguMg0KPiBpbmRleCAwZDFiNDU5MWY3NGMuLmVlNzAwNTMzNGEyZiAxMDA2NDQNCj4g
+LS0tIGEvbWFuMi9zdGF0eC4yDQo+ICsrKyBiL21hbjIvc3RhdHguMg0KPiBAQCAtNjIsNiAr
+NjIsNyBAQCBzdHJ1Y3Qgc3RhdHggew0KPiAgICAgICBfX3UzMiBzdHhfZGV2X21ham9yOyAg
+IC8qIE1ham9yIElEICovDQo+ICAgICAgIF9fdTMyIHN0eF9kZXZfbWlub3I7ICAgLyogTWlu
+b3IgSUQgKi8NCj4gICAgICAgX191NjQgc3R4X21udF9pZDsgICAgICAvKiBNb3VudCBJRCAq
+Lw0KPiArICAgIF9fdTY0IHN0eF92ZXJzaW9uOyAgICAgLyogSW5vZGUgY2hhbmdlIGF0dHJp
+YnV0ZSAqLw0KPiAgIH07DQo+ICAgLkVFDQo+ICAgLmluDQo+IEBAIC0yNDcsNiArMjQ4LDcg
+QEAgU1RBVFhfQlRJTUUJV2FudCBzdHhfYnRpbWUNCj4gICBTVEFUWF9BTEwJVGhlIHNhbWUg
+YXMgU1RBVFhfQkFTSUNfU1RBVFMgfCBTVEFUWF9CVElNRS4NCj4gICAJSXQgaXMgZGVwcmVj
+YXRlZCBhbmQgc2hvdWxkIG5vdCBiZSB1c2VkLg0KPiAgIFNUQVRYX01OVF9JRAlXYW50IHN0
+eF9tbnRfaWQgKHNpbmNlIExpbnV4IDUuOCkNCj4gK1NUQVRYX1ZFUlNJT04JV2FudCBzdHhf
+dmVyc2lvbiAoRFJBRlQpDQo+ICAgLlRFDQo+ICAgLmluDQo+ICAgLlBQDQo+IEBAIC00MDcs
+MTAgKzQwOSwxNiBAQCBUaGlzIGlzIHRoZSBzYW1lIG51bWJlciByZXBvcnRlZCBieQ0KPiAg
+IC5CUiBuYW1lX3RvX2hhbmRsZV9hdCAoMikNCj4gICBhbmQgY29ycmVzcG9uZHMgdG8gdGhl
+IG51bWJlciBpbiB0aGUgZmlyc3QgZmllbGQgaW4gb25lIG9mIHRoZSByZWNvcmRzIGluDQo+
+ICAgLklSIC9wcm9jL3NlbGYvbW91bnRpbmZvIC4NCj4gKy5UUA0KPiArLkkgc3R4X3ZlcnNp
+b24NCj4gK1RoZSBpbm9kZSB2ZXJzaW9uLCBhbHNvIGtub3duIGFzIHRoZSBpbm9kZSBjaGFu
+Z2UgYXR0cmlidXRlLiBTZWUNCg0KUGxlYXNlIHVzZSBzZW1hbnRpYyBuZXdsaW5lcy4NCg0K
+U2VlIG1hbi1wYWdlcyg3KToNCiAgICBVc2Ugc2VtYW50aWMgbmV3bGluZXMNCiAgICAgICAg
+SW4gdGhlIHNvdXJjZSBvZiBhIG1hbnVhbCBwYWdlLCBuZXcgc2VudGVuY2VzICBzaG91bGQg
+IGJlDQogICAgICAgIHN0YXJ0ZWQgb24gbmV3IGxpbmVzLCBsb25nIHNlbnRlbmNlcyBzaG91
+bGQgYmUgc3BsaXQgaW50bw0KICAgICAgICBsaW5lcyAgYXQgIGNsYXVzZSBicmVha3MgKGNv
+bW1hcywgc2VtaWNvbG9ucywgY29sb25zLCBhbmQNCiAgICAgICAgc28gb24pLCBhbmQgbG9u
+ZyBjbGF1c2VzIHNob3VsZCBiZSBzcGxpdCBhdCBwaHJhc2UgYm91bmTigJANCiAgICAgICAg
+YXJpZXMuICBUaGlzIGNvbnZlbnRpb24sICBzb21ldGltZXMgIGtub3duICBhcyAgInNlbWFu
+dGljDQogICAgICAgIG5ld2xpbmVzIiwgIG1ha2VzIGl0IGVhc2llciB0byBzZWUgdGhlIGVm
+ZmVjdCBvZiBwYXRjaGVzLA0KICAgICAgICB3aGljaCBvZnRlbiBvcGVyYXRlIGF0IHRoZSBs
+ZXZlbCBvZiBpbmRpdmlkdWFsIHNlbnRlbmNlcywNCiAgICAgICAgY2xhdXNlcywgb3IgcGhy
+YXNlcy4NCg0KDQo+ICsuQlIgaW5vZGUgKDcpDQo+ICtmb3IgZGV0YWlscy4NCj4gICAuUFAN
+Cj4gICBGb3IgZnVydGhlciBpbmZvcm1hdGlvbiBvbiB0aGUgYWJvdmUgZmllbGRzLCBzZWUN
+Cj4gICAuQlIgaW5vZGUgKDcpLg0KPiAgIC5cIg0KPiArLlRQDQoNCldoeT8gIC5UUCBpcyB1
+c2VkIHRvIHN0YXJ0IHRhZ2dlZCBwYXJhZ3JhcGhzLiAgQnV0IC5TUyBpcyB1c2VkIHRvIHN0
+YXJ0IA0Kc3Vic2VjdGlvbnMuDQoNCj4gICAuU1MgRmlsZSBhdHRyaWJ1dGVzDQo+ICAgVGhl
+DQo+ICAgLkkgc3R4X2F0dHJpYnV0ZXMNCj4gQEAgLTQ4OSw2ICs0OTcsMTEgQEAgd2l0aG91
+dCBhbiBleHBsaWNpdA0KPiAgIFNlZQ0KPiAgIC5CUiBtbWFwICgyKQ0KPiAgIGZvciBtb3Jl
+IGluZm9ybWF0aW9uLg0KPiArLlRQDQo+ICsuQlIgU1RBVFhfQVRUUl9WRVJTSU9OX01PTk9U
+T05JQyAiIChzaW5jZSBMaW51eCA2Lj8pIg0KPiArVGhlIHN0eF92ZXJzaW9uIHZhbHVlIG1v
+bm90b25pY2FsbHkgaW5jcmVhc2VzIG92ZXIgdGltZSBhbmQgd2lsbCBuZXZlciBhcHBlYXIN
+Cj4gK3RvIGdvIGJhY2t3YXJkLCBldmVuIGluIHRoZSBldmVudCBvZiBhIGNyYXNoLiBUaGlz
+IGNhbiBhbGxvdyBhbiBhcHBsaWNhdGlvbiB0bw0KPiArbWFrZSBhIGJldHRlciBkZXRlcm1p
+bmF0aW9uIGFib3V0IG9yZGVyaW5nIHdoZW4gdmlld2luZyBkaWZmZXJlbnQgdmVyc2lvbnMu
+DQo+ICAgLlNIIFJFVFVSTiBWQUxVRQ0KPiAgIE9uIHN1Y2Nlc3MsIHplcm8gaXMgcmV0dXJu
+ZWQuDQo+ICAgT24gZXJyb3IsIFwtMSBpcyByZXR1cm5lZCwgYW5kDQo+IGRpZmYgLS1naXQg
+YS9tYW43L2lub2RlLjcgYi9tYW43L2lub2RlLjcNCj4gaW5kZXggOWIyNTVhODkwNzIwLi5l
+OGFkYjYzYjFmNmEgMTAwNjQ0DQo+IC0tLSBhL21hbjcvaW5vZGUuNw0KPiArKysgYi9tYW43
+L2lub2RlLjcNCj4gQEAgLTE4NCw2ICsxODQsMTIgQEAgTGFzdCBzdGF0dXMgY2hhbmdlIHRp
+bWVzdGFtcCAoY3RpbWUpDQo+ICAgVGhpcyBpcyB0aGUgZmlsZSdzIGxhc3Qgc3RhdHVzIGNo
+YW5nZSB0aW1lc3RhbXAuDQo+ICAgSXQgaXMgY2hhbmdlZCBieSB3cml0aW5nIG9yIGJ5IHNl
+dHRpbmcgaW5vZGUgaW5mb3JtYXRpb24NCj4gICAoaS5lLiwgb3duZXIsIGdyb3VwLCBsaW5r
+IGNvdW50LCBtb2RlLCBldGMuKS4NCj4gKy5UUA0KPiArSW5vZGUgdmVyc2lvbiAodmVyc2lv
+bikNCj4gKyhub3QgcmV0dXJuZWQgaW4gdGhlIFxmSXN0YXRcZlAgc3RydWN0dXJlKTsgXGZJ
+c3RhdHguc3R4X3ZlcnNpb25cZlANCg0KUGxlYXNlIHVzZSAuSSBhbmQgLkIgbWFjcm9zIGlu
+c3RlYWQgb2YgaW5saW5lIGZvcm1hdHRpbmcuICBUaGUgYWJvdmUgDQpsaW5lIGNvdWxkIGJl
+IHJld3JpdHRlbiBhczoNCg0KKG5vdCByZXR1cm5lZCBpbiB0aGUNCi5JIHN0YXQNCnN0cnVj
+dHVyZSk7DQouSSBzdGF0eC5zdHhfdmVyc2lvbg0KDQoNCj4gKy5JUA0KPiArVGhpcyBpcyB0
+aGUgaW5vZGUgY2hhbmdlIGNvdW50ZXIuIFNlZSB0aGUgZGlzY3Vzc2lvbiBvZg0KPiArXGZC
+dGhlIGlub2RlIHZlcnNpb24gY291bnRlclxmUCwgYmVsb3cuDQo+ICAgLlBQDQo+ICAgVGhl
+IHRpbWVzdGFtcCBmaWVsZHMgcmVwb3J0IHRpbWUgbWVhc3VyZWQgd2l0aCBhIHplcm8gcG9p
+bnQgYXQgdGhlDQo+ICAgLklSIEVwb2NoICwNCj4gQEAgLTQyNCw2ICs0MzAsMzYgQEAgb24g
+YSBkaXJlY3RvcnkgbWVhbnMgdGhhdCBhIGZpbGUNCj4gICBpbiB0aGF0IGRpcmVjdG9yeSBj
+YW4gYmUgcmVuYW1lZCBvciBkZWxldGVkIG9ubHkgYnkgdGhlIG93bmVyDQo+ICAgb2YgdGhl
+IGZpbGUsIGJ5IHRoZSBvd25lciBvZiB0aGUgZGlyZWN0b3J5LCBhbmQgYnkgYSBwcml2aWxl
+Z2VkDQo+ICAgcHJvY2Vzcy4NCj4gKy5TUyBUaGUgaW5vZGUgdmVyc2lvbiBjb3VudGVyDQo+
+ICsuUFANCg0KLlBQIHNob3VsZCBub3QgYmUgdXNlZCBhZnRlciAuU1MuICBXZSB1c2UgaXQg
+dG8gc2VwYXJhdGUgcGFyYWdyYXBocyANCmJldHdlZW4gdGhlbXNlbHZlcywgYnV0IFtzdWJd
+c2VjdGlvbiB0aXRsZXMgYXJlIHB1dCBuZXh0IHRvIHRoZSBmaXJzdCANCnBhcmFncmFwaC4N
+Cg0KPiArVGhlIFxmSXN0YXR4LnN0eF92ZXJzaW9uXGZQIGZpZWxkIGlzIHRoZSBpbm9kZSBj
+aGFuZ2UgY291bnRlci4gQW55IG9wZXJhdGlvbg0KPiArdGhhdCBjb3VsZCByZXN1bHQgaW4g
+YSBjaGFuZ2UgdG8gXGZJc3RhdHguc3R4X2N0aW1lXGZQIG11c3QgcmVzdWx0IGluIGFuDQo+
+ICtpbmNyZWFzZSB0byB0aGlzIHZhbHVlLiBTb29uIGFmdGVyIGEgY2hhbmdlIGhhcyBiZWVu
+IG1hZGUsIGFuIHN0eF92ZXJzaW9uIHZhbHVlDQo+ICtzaG91bGQgYXBwZWFyIHRvIGJlIGxh
+cmdlciB0aGFuIHByZXZpb3VzIHJlYWRpbmdzLiBUaGlzIGlzIHRoZSBjYXNlIGV2ZW4NCj4g
+K3doZW4gYSBjdGltZSBjaGFuZ2UgaXMgbm90IGV2aWRlbnQgZHVlIHRvIGNvYXJzZSB0aW1l
+c3RhbXAgZ3JhbnVsYXJpdHkuDQo+ICsuUFANCj4gK0FuIG9ic2VydmVyIGNhbm5vdCBpbmZl
+ciBhbnl0aGluZyBmcm9tIGFtb3VudCBvZiBpbmNyZWFzZSBhYm91dCB0aGUNCj4gK25hdHVy
+ZSBvciBtYWduaXR1ZGUgb2YgdGhlIGNoYW5nZS4gSW4gZmFjdCwgYSBzaW5nbGUgaW5jcmVt
+ZW50IGNhbiByZWZsZWN0DQo+ICttdWx0aXBsZSBkaXNjcmV0ZSBjaGFuZ2VzIGlmIHRoZSB2
+YWx1ZSB3YXMgbm90IGNoZWNrZWQgd2hpbGUgdGhvc2UgY2hhbmdlcw0KPiArd2VyZSBiZWlu
+ZyBwcm9jZXNzZWQuDQo+ICsuUFANCj4gK0NoYW5nZXMgdG8gc3R4X3ZlcnNpb24gYXJlIG5v
+dCBuZWNlc3NhcmlseSBhdG9taWMgd2l0aCB0aGUgY2hhbmdlIGl0c2VsZiwgYnV0DQo+ICt3
+ZWxsLWJlaGF2ZWQgZmlsZXN5c3RlbXMgc2hvdWxkIGluY3JlbWVudCBzdHhfdmVyc2lvbiBh
+ZnRlciBhIGNoYW5nZSBoYXMgYmVlbg0KPiArbWFkZSB2aXNpYmxlIHRvIG9ic2VydmVycyBy
+YXRoZXIgdGhhbiBiZWZvcmUuIFRoaXMgaXMgZXNwZWNpYWxseSBpbXBvcnRhbnQgZm9yDQo+
+ICtyZWFkLWNhY2hpbmcgYWxnb3JpdGhtcyB3aGljaCBjb3VsZCBiZSBmb29sZWQgaW50byBh
+c3NvY2lhdGluZyBhIG5ld2VyDQo+ICtzdHhfdmVyc2lvbiB3aXRoIGFuIG9sZGVyIHZlcnNp
+b24gb2YgZGF0YS4gTm90ZSB0aGF0IHRoaXMgZG9lcyBsZWF2ZSBhIHdpbmRvdw0KPiArb2Yg
+dGltZSB3aGVyZSBhIGNoYW5nZSBtYXkgYmUgdmlzaWJsZSwgYnV0IHRoZSBvbGQgc3R4X3Zl
+cnNpb24gaXMgc3RpbGwgYmVpbmcNCj4gK3JlcG9ydGVkLg0KPiArLlBQDQo+ICtJbiB0aGUg
+ZXZlbnQgb2YgYSBzeXN0ZW0gY3Jhc2gsIHRoaXMgdmFsdWUgY2FuIGFwcGVhciB0byBnbyBi
+YWNrd2FyZCBpZiBpdCB3YXMNCj4gK3F1ZXJpZWQgYmVmb3JlIGV2ZXIgYmVpbmcgd3JpdHRl
+biB0byB0aGUgYmFja2luZyBzdG9yZS4gQXBwbGljYXRpb25zIHRoYXQNCj4gK3BlcnNpc3Qg
+c3R4X3ZlcnNpb24gdmFsdWVzIGFjcm9zcyBhIHJlYm9vdCBzaG91bGQgdGFrZSBjYXJlIHRv
+IG1pdGlnYXRlIHRoaXMuDQo+ICtJZiB0aGUgZmlsZXN5c3RlbSByZXBvcnRzIFxmSVNUQVRY
+X0FUVFJfVkVSU0lPTl9NT05PVE9OSUNcZlAgaW4NCj4gK1xmSXN0YXR4LnN0eF9hdHRyaWJ1
+dGVzXGZQLCB0aGVuIGl0IGlzIG5vdCBzdWJqZWN0IHRvIHRoaXMgcHJvYmxlbS4NCj4gKy5Q
+UA0KPiArVGhlIHN0eF92ZXJzaW9uIGlzIGEgTGludXggZXh0ZW5zaW9uIGFuZCBpcyBub3Qg
+c3VwcG9ydGVkIGJ5IGFsbCBmaWxlc3lzdGVtcy4NCj4gK1RoZSBhcHBsaWNhdGlvbiBtdXN0
+IHZlcmlmeSB0aGF0IHRoZSBcZklTVEFUWF9WRVJTSU9OXGZQIGJpdCBpcyBzZXQgaW4gdGhl
+DQo+ICtyZXR1cm5lZCBcZklzdGF0eC5zdHhfbWFza1xmUCBiZWZvcmUgcmVseWluZyBvbiB0
+aGlzIGZpZWxkLg0KPiAgIC5TSCBTVEFOREFSRFMNCj4gICBJZiB5b3UgbmVlZCB0byBvYnRh
+aW4gdGhlIGRlZmluaXRpb24gb2YgdGhlDQo+ICAgLkkgYmxrY250X3QNCg0KLS0gDQo8aHR0
+cDovL3d3dy5hbGVqYW5kcm8tY29sb21hci5lcy8+DQo=
 
-As I dug into the data structure, I succeeded in creating a dumpfile with a wrong
-root inode by modifying `content_inode_hdr_t.cih_rootino` and
-`global_hdr_t.gh_checksum`.
+--------------qHqb3fVMZ8DmKM0eA1TeMiZj--
 
-After creating a inode with a lower number than the root inode with the method in
-generic/545, I modified a dumpfile as follows:
----
-_do_dump_file
+--------------IfMxZBOO7OlMGKOKWQtFmv0v
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature"
 
-# Break dumpfile
-old_checksum=$(od -A n -j 12 -N 4 -i --endian=big $dump_file)
-gap=$(($root_inum - $inum))
-new_checksum=$(($old_checksum + ($gap >> 32) + ($gap & 0x00000000ffffffff)))
-v=($(printf "%016x" $inum |  awk -v FS='' '{for (i=1; i<=NF; i+=2) print $i$(i+1)}'))
-echo -en "\x${v[0]}\x${v[1]}\x${v[2]}\x${v[3]}\x${v[4]}\x${v[5]}\x${v[6]}\x${v[7]}" | dd of=$dump_file bs=1 seek=3928 conv=notrunc
-v=($(printf "%016x" $new_checksum |  awk -v FS='' '{for (i=9; i<=NF; i+=2) print $i$(i+1)}'))
-echo -en "\x${v[0]}\x${v[1]}\x${v[2]}\x${v[3]}" | dd of=$dump_file bs=1 seek=12 conv=notrunc
+-----BEGIN PGP SIGNATURE-----
 
-_do_restore_file -x
----
-(I'm afraid I'm not so familiar with editing a binary file.)
+iQIzBAEBCgAdFiEE6jqH8KTroDDkXfJAnowa+77/2zIFAmNA2lQACgkQnowa+77/
+2zLH3Q//QRl0WDTzRO7oTBxlEU3vHvGgyE+fux97KBJBdZ7srm1XRdeY8ZCLiR7V
+c2ezn2PtAAO9eqqWEh2JuvcYCk9dUPidEuoAEi1+0MFceJ+8U4eF7doFJAxwqR8I
+3hdLqhc1fXY32nkXNWU91ch3mdESAM+ZI1xKhcM/yfK0gXU65iARWwaZfR8fhS4k
+N8C+YsLRz5iudNOlrv58lg90kRGOvCx/6yC7v/IguVPsguESQ83cKor27g1ZWLbt
+kjgPCxKXpot80lH4veYhuRxmrqDDjOvo7gDU69uXo1ShsRK6lNWgRCtMUzHOuQe5
+FWAqs0f0qDxwmuJLrkEUZZ/gPkJDiTqHCnzcMtO7GiqsdpuAiagWSzEFhnAyocRo
+6HrmAd5aZNb8gaP+Nzp1IUIm0Kx96GtSE8H8FPdxA6vD1qtvkvDDYsg3/zKt4A0N
+SZ5z6dCVcsy+0d15xdbaH1b5COU9ZidviEuIYGMpFkLor4LDwpA4yS+9LHsMyI/B
+aU6c5wpCbJcnt4RySQuEIwEit8VxtEjzCiiyqEBeQHcrZmKc4L4cKBEPJO/VPRXc
+yteeNl6n1iZ86OcL7dbOA66lt/NOMznGX4LyWjTbOsGdnlPSwhN2Sh/VugpJyxFO
+gKcZz0x7anMAuArYxrZ9FG2x28+bCAhCcEiH+7ksREd4Lu61YuQ=
+=0c3d
+-----END PGP SIGNATURE-----
 
-The offset of `global_hdr_t.gh_checksum` is 12.
-The offset of `content_inode_hdr_t.cih_rootino` is:
-  global_hdr_t.gh_upper (0x400) + drive_hdr_t.dh_upper (0x400) + 
-  media_hdr_t.mh_upper (0x400) + content_hdr_t.ch_specific (0x340) +
-  content_inode_hdr_t.cih_rootino (0x18) = 0xf58 (3928)
-
-Thanks,
-Hiro
-
-> --D
-> 
->> Thanks,
->> Zorro
->>
->>>
->>>>> +
->>>>> +_do_restore_file -x -f $here/src/root-inode-broken-dumpfile -L stress_545
->>>>> +_diff_compare_sub
->>>>> +_ls_nodate_compare_sub
->>>>> +
->>>>> +# success, all done
->>>>> +status=0
->>>>> +exit
->>>>> diff --git a/tests/xfs/554.out b/tests/xfs/554.out
->>>>> new file mode 100644
->>>>> index 00000000..40a3f3a4
->>>>> --- /dev/null
->>>>> +++ b/tests/xfs/554.out
->>>>> @@ -0,0 +1,57 @@
->>>>> +QA output created by 554
->>>>> +Contents of dump ...
->>>>> +xfsrestore  -x -f DUMP_FILE -t
->>>>> +xfsrestore: using file dump (drive_simple) strategy
->>>>> +xfsrestore: searching media for dump
->>>>> +xfsrestore: examining media file 0
->>>>> +xfsrestore: dump description: 
->>>>> +xfsrestore: hostname: xfsdump
->>>>> +xfsrestore: mount point: SCRATCH_MNT
->>>>> +xfsrestore: volume: SCRATCH_DEV
->>>>> +xfsrestore: session time: TIME
->>>>> +xfsrestore: level: 0
->>>>> +xfsrestore: session label: "stress_545"
->>>>> +xfsrestore: media label: "stress_tape_media"
->>>>> +xfsrestore: file system ID: ID
->>>>> +xfsrestore: session id: ID
->>>>> +xfsrestore: media ID: ID
->>>>> +xfsrestore: searching media for directory dump
->>>>> +xfsrestore: reading directories
->>>>> +xfsrestore: found fake rootino #128, will fix.
->>>>> +xfsrestore: fix root # to 1024 (bind mount?)
->>>>> +xfsrestore: 2 directories and 2 entries processed
->>>>> +xfsrestore: directory post-processing
->>>>> +xfsrestore: reading non-directory files
->>>>> +xfsrestore: table of contents display complete: SECS seconds elapsed
->>>>> +xfsrestore: Restore Status: SUCCESS
->>>>> +
->>>>> +dumpdir/FILE_1019
->>>>> +Restoring from file...
->>>>> +xfsrestore  -x -f DUMP_FILE  -L stress_545 RESTORE_DIR
->>>>> +xfsrestore: using file dump (drive_simple) strategy
->>>>> +xfsrestore: searching media for dump
->>>>> +xfsrestore: examining media file 0
->>>>> +xfsrestore: found dump matching specified label:
->>>>> +xfsrestore: hostname: xfsdump
->>>>> +xfsrestore: mount point: SCRATCH_MNT
->>>>> +xfsrestore: volume: SCRATCH_DEV
->>>>> +xfsrestore: session time: TIME
->>>>> +xfsrestore: level: 0
->>>>> +xfsrestore: session label: "stress_545"
->>>>> +xfsrestore: media label: "stress_tape_media"
->>>>> +xfsrestore: file system ID: ID
->>>>> +xfsrestore: session id: ID
->>>>> +xfsrestore: media ID: ID
->>>>> +xfsrestore: searching media for directory dump
->>>>> +xfsrestore: reading directories
->>>>> +xfsrestore: found fake rootino #128, will fix.
->>>>> +xfsrestore: fix root # to 1024 (bind mount?)
->>>>> +xfsrestore: 2 directories and 2 entries processed
->>>>> +xfsrestore: directory post-processing
->>>>> +xfsrestore: restoring non-directory files
->>>>> +xfsrestore: restore complete: SECS seconds elapsed
->>>>> +xfsrestore: Restore Status: SUCCESS
->>>>> +Comparing dump directory with restore directory
->>>>> +Files DUMP_DIR/FILE_1019 and RESTORE_DIR/DUMP_SUBDIR/FILE_1019 are identical
->>>>> +Comparing listing of dump directory with restore directory
->>>>> +Files TMP.dump_dir and TMP.restore_dir are identical
->>>>> -- 
->>>>> 2.37.3
->>>>>
->>>>
->>>
->>
+--------------IfMxZBOO7OlMGKOKWQtFmv0v--
