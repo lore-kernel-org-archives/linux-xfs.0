@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48902C433F5
-	for <linux-xfs@archiver.kernel.org>; Sun,  9 Oct 2022 17:47:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4BDBC433FE
+	for <linux-xfs@archiver.kernel.org>; Sun,  9 Oct 2022 17:57:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230115AbiJIRry (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 9 Oct 2022 13:47:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59388 "EHLO
+        id S229595AbiJIR5O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 9 Oct 2022 13:57:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229973AbiJIRrw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 9 Oct 2022 13:47:52 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD47325590
-        for <linux-xfs@vger.kernel.org>; Sun,  9 Oct 2022 10:47:50 -0700 (PDT)
+        with ESMTP id S229983AbiJIR5N (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 9 Oct 2022 13:57:13 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEF3913EA3
+        for <linux-xfs@vger.kernel.org>; Sun,  9 Oct 2022 10:57:11 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6BECC60B85
-        for <linux-xfs@vger.kernel.org>; Sun,  9 Oct 2022 17:47:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id CC510C433B5
-        for <linux-xfs@vger.kernel.org>; Sun,  9 Oct 2022 17:47:49 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2E93B60187
+        for <linux-xfs@vger.kernel.org>; Sun,  9 Oct 2022 17:57:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 8CEA3C43470
+        for <linux-xfs@vger.kernel.org>; Sun,  9 Oct 2022 17:57:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665337669;
-        bh=uW/e5vuph4YFHRhlIhH1yfI+VanQ/UP5mnIuVZaIUMM=;
+        s=k20201202; t=1665338230;
+        bh=NOKZP9zeDcv5NxaxF8f7vod+fNmYp6QWqJB7BVsjK/8=;
         h=From:To:Subject:Date:From;
-        b=pMrdwkvF3YOoTxZdlvBWfWIR12N74qf0SyJBjyBIyY04xvCgXT6QZEx7RirWQkbJb
-         5rnpeFGnYPMZiS5+ZrtTuS9zfCKXsEhxKmqpLcuqFMuWi6esIwSEDumWLtA8BhdMI6
-         ov0xcX/2J9ZYdouqnnbYb9AREhFA963HKXOrmcYqfzUz4wLGuPEmkKWszngpNWKLJ8
-         +d7Fu7hSSJEWwZUg4S4UWyGX8H2MK4EFYlQWjJSx40xZKut3hr4OTGzrOsaZzirU9Y
-         QRoH87Ksm0zS6pj+1NHM/Ue1JVlOgbbFWPyCQt4zIXETSL25EZDng0eyjO2En2c2+/
-         UcnaxXBJ/vTOg==
+        b=b8aPRCWoNHLeXVaKrBhflss/kyS+XHgeQigb1siHiCWWU2RLpsUs+fpU159CEKdHo
+         XgqMg3zASvvyl0hjd8AP8zBspTp1Q4nPnSfzARtw/EjWcotaWRFMTvUgepCVCQA592
+         vNh07pRqV/6pA6u3UIWBo25KODnFmM3dADl28BM5KS6iSry84amKHW9jEzsMjDH6NU
+         uZe8nacUdDjAvLyukRhrjm0W7gV4iy5ILAg/B/A/RxkJKbM6sZQBv9MxugW/S8JkOs
+         ElDWGk8PCmXETQt2kyY8X1Sr0HK1l3TYhFKzx/iwO9P0SnrEWBZ/ShSQIBw4ogstBw
+         0Yl5ogRW0fT2Q==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id B9688C433E6; Sun,  9 Oct 2022 17:47:49 +0000 (UTC)
+        id 796FEC05F8A; Sun,  9 Oct 2022 17:57:10 +0000 (UTC)
 From:   bugzilla-daemon@kernel.org
 To:     linux-xfs@vger.kernel.org
-Subject: [Bug 216566] New: [xfstests generic/648] BUG: unable to handle page
- fault, RIP: 0010:__xfs_dir3_data_check+0x171/0x700 [xfs]
-Date:   Sun, 09 Oct 2022 17:47:49 +0000
+Subject: [Bug 216567] New: [xfstests generic/451] kernel BUG at
+ mm/truncate.c:669!
+Date:   Sun, 09 Oct 2022 17:57:10 +0000
 X-Bugzilla-Reason: None
 X-Bugzilla-Type: new
 X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
@@ -55,7 +55,7 @@ X-Bugzilla-Flags:
 X-Bugzilla-Changed-Fields: bug_id short_desc product version
  cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
  priority component assigned_to reporter cf_regression
-Message-ID: <bug-216566-201763@https.bugzilla.kernel.org/>
+Message-ID: <bug-216567-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 X-Bugzilla-URL: https://bugzilla.kernel.org/
@@ -65,12 +65,11 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D216566
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216567
 
-            Bug ID: 216566
-           Summary: [xfstests generic/648] BUG: unable to handle page
-                    fault, RIP: 0010:__xfs_dir3_data_check+0x171/0x700
-                    [xfs]
+            Bug ID: 216567
+           Summary: [xfstests generic/451] kernel BUG at
+                    mm/truncate.c:669!
            Product: File System
            Version: 2.5
     Kernel Version: v6.1-rc0
@@ -85,16 +84,13 @@ https://bugzilla.kernel.org/show_bug.cgi?id=3D216566
           Reporter: zlang@redhat.com
         Regression: No
 
-xfstests generic/648 hit kernel panic[1] on xfs with 64k directory block si=
-ze
-(-n size=3D65536), before panic, there's a kernel assertion (not sure if it=
-'s
-related).
+xfstests generic/451 hit panic[1] on xfs with 64k directory block size (-n
+size=3D65536). I hit this panic once, then reproduce it once by loop running
+generic/450 + generic/451 (panic on g/451) on xfs(-n size=3D65536) hundreds=
+ of
+times.
 
-It's reproducable, but not easy. Generally I reproduced it by loop running
-generic/648 on xfs (-n size=3D65536) hundreds of time.
-
-The last time I hit this panic on linux with HEAD=3D
+The last time I hit this panic on linux which HEAD=3D
 
 commit a6afa4199d3d038fbfdff5511f7523b0e30cb774
 Author: Linus Torvalds <torvalds@linux-foundation.org>
@@ -104,330 +100,118 @@ Date:   Sat Oct 8 10:30:44 2022 -0700
 git://git.linaro.org/landing-teams/working/fujitsu/integration
 
 [1]
-[  397.108795] loop: Write error at byte offset 3952001024, length 4096.=20
-[  397.130710] loop0: writeback error on inode 1494978, offset 1630208, sec=
-tor
-7718752=20
-[  397.130778] XFS (loop0): log I/O error -5=20
-[  397.131327] loop: Write error at byte offset 2651811840, length 4096.=20
-[  397.138435] XFS (loop0): Filesystem has been shut down due to log error
-(0x2).=20
-[  397.142446] XFS (loop0): log I/O error -5=20
-[  397.148884] XFS (loop0): Please unmount the filesystem and rectify the
-problem(s).=20
-[  397.173024] XFS (loop0): Unmounting Filesystem=20
-[  395.005786] restraintd[7627]: *** Current Time: Sun Oct 09 10:29:31 2022=
-=20
-Localwatchdog at: Tue Oct 11 10:24:31 2022=20
-[  398.203242] XFS (dm-0): Unmounting Filesystem=20
-[  398.223779] XFS (dm-0): Mounting V5 Filesystem=20
-[  398.364785] XFS (dm-0): Starting recovery (logdev: internal)=20
-[  398.987258] XFS (dm-0): Ending recovery (logdev: internal)=20
-[  399.000633] loop0: detected capacity change from 0 to 10346136=20
-[  399.735192] XFS (loop0): Mounting V5 Filesystem=20
-[  399.763005] XFS (loop0): Starting recovery (logdev: internal)=20
-[  399.816308] XFS (loop0): Bad dir block magic!=20
-[  399.820681] XFS: Assertion failed: 0, file: fs/xfs/xfs_buf_item_recover.=
-c,
-line: 414=20
-[  399.828459] ------------[ cut here ]------------=20
-[  399.833080] WARNING: CPU: 97 PID: 114754 at fs/xfs/xfs_message.c:104
-assfail+0x2f/0x36 [xfs]=20
-[  399.841633] Modules linked in: loop dm_mod rfkill intel_rapl_msr
-intel_rapl_common intel_uncore_frequency intel_uncore_frequency_common
-ipmi_ssif i10nm_edac nfit x86_pkg_temp_thermal intel_powerclamp coretemp
-kvm_intel kvm mlx5_ib mgag200 i2c_algo_bit drm_shmem_helper irqbypass sunrpc
-ib_uverbs drm_kms_helper rapl dcdbas acpi_ipmi intel_cstate syscopyarea ipm=
-i_si
-ib_core mei_me dell_smbios sysfillrect i2c_i801 isst_if_mbox_pci isst_if_mm=
-io
-ipmi_devintf intel_uncore sysimgblt pcspkr wmi_bmof dell_wmi_descriptor
-isst_if_common mei fb_sys_fops i2c_smbus intel_pch_thermal intel_vsec
-ipmi_msghandler acpi_power_meter drm fuse xfs libcrc32c sd_mod t10_pi sg
-mlx5_core ahci mlxfw libahci crct10dif_pclmul crc32_pclmul tls crc32c_intel
-ghash_clmulni_intel libata psample megaraid_sas tg3 pci_hyperv_intf wmi=20
-[  399.911998] CPU: 97 PID: 114754 Comm: mount Kdump: loaded Not tainted 6.=
-0.0+
-#1=20
-[  399.919311] Hardware name: Dell Inc. PowerEdge R750/0PJ80M, BIOS 1.5.4
+[ 1235.090869] run fstests generic/451 at 2022-10-09 11:14:23=20
+[ 1263.860224] page:000000002e63229f refcount:4 mapcount:0
+mapping:0000000002dcf476 index:0x43 pfn:0x4006a5=20
+[ 1263.869953] memcg:ff110010ca620000=20
+[ 1263.873384] aops:xfs_address_space_operations [xfs] ino:83 dentry
+name:"tst-aio-dio-cycle-write.451"=20
+[ 1263.882714] flags:
+0x17ffffc0000027(locked|referenced|uptodate|active|node=3D0|zone=3D2|lastcp=
+upid=3D0x1fffff)=20
+[ 1263.892329] raw: 0017ffffc0000027 0000000000000000 dead000000000122
+ff110002040cfc48=20
+[ 1263.900095] raw: 0000000000000043 0000000000000000 00000011ffffffff
+ff110010ca620000=20
+[ 1263.907858] page dumped because: VM_BUG_ON_FOLIO(!folio_contains(folio,
+index))=20
+[ 1263.915205] ------------[ cut here ]------------=20
+[ 1263.919838] kernel BUG at mm/truncate.c:669!=20
+[ 1263.924136] invalid opcode: 0000 [#1] PREEMPT SMP KASAN NOPTI=20
+[ 1263.929887] CPU: 110 PID: 739 Comm: kworker/110:1 Kdump: loaded Not tain=
+ted
+6.0.0+ #1=20
+[ 1263.937711] Hardware name: Dell Inc. PowerEdge R750/0PJ80M, BIOS 1.5.4
 12/17/2021=20
-[  399.926794] RIP: 0010:assfail+0x2f/0x36 [xfs]=20
-[  399.931239] Code: 49 89 d0 41 89 c9 48 c7 c2 60 3e cf c0 48 89 f1 48 89 =
-fe
-48 c7 c7 6c 5e ce c0 e8 3a fe ff ff 80 3d 4a 57 0b 00 00 74 02 0f 0b <0f> 0=
-b c3
-cc cc cc cc 48 8d 45 10 48 89 e2 4c 89 e6 48 89 1c 24 48=20
-[  399.949991] RSP: 0018:ff7b3d2f8751b910 EFLAGS: 00010246=20
-[  399.955219] RAX: 0000000000000000 RBX: ff44dbd80e68de00 RCX:
-000000007fffffff=20
-[  399.962359] RDX: 0000000000000000 RSI: 0000000000000000 RDI:
-ffffffffc0ce5e6c=20
-[  399.969490] RBP: ff44dbd856214000 R08: 0000000000000000 R09:
-000000000000000a=20
-[  399.976625] R10: 000000000000000a R11: f000000000000000 R12:
-000000050001ddb2=20
-[  399.983758] R13: ff44dbd84122be00 R14: ff44dbd856214000 R15:
-ff44dbd804bf5c00=20
-[  399.990890] FS:  00007fcd7164b800(0000) GS:ff44dbe7bfa00000(0000)
+[ 1263.945192] Workqueue: dio/sda3 iomap_dio_complete_work=20
+[ 1263.950426] RIP: 0010:invalidate_inode_pages2_range+0x2e2/0x9a0=20
+[ 1263.956352] Code: c0 03 38 d0 7c 08 84 d2 0f 85 c9 05 00 00 41 8b 47 5c =
+4c
+39 f0 0f 87 80 fe ff ff 48 c7 c6 60 98 75 8b 4c 89 ff e8 4e af 07 00 <0f> 0=
+b e8
+c7 1f fe ff 4c 89 ff e8 bf bf 03 00 84 c0 0f 85 24 02 00=20
+[ 1263.975099] RSP: 0018:ffa000000a6efaa8 EFLAGS: 00010286=20
+[ 1263.980325] RAX: 0000000000000043 RBX: dffffc0000000000 RCX:
+0000000000000000=20
+[ 1263.987458] RDX: 0000000000000001 RSI: ffffffff8b8ce8e0 RDI:
+fff3fc00014ddf45=20
+[ 1263.994592] RBP: 0000000000000000 R08: 0000000000000043 R09:
+ff11000c32bfd487=20
+[ 1264.001723] R10: ffe21c018657fa90 R11: 0000000000000001 R12:
+ff110002040cfc48=20
+[ 1264.008855] R13: 0000000000000041 R14: fffffffffffffffe R15:
+ffd400001001a940=20
+[ 1264.015989] FS:  0000000000000000(0000) GS:ff11000c32a00000(0000)
 knlGS:0000000000000000=20
-[  399.998977] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033=20
-[  400.004721] CR2: 000055f074d8a3f8 CR3: 00000010c699a005 CR4:
+[ 1264.024073] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033=20
+[ 1264.029822] CR2: 0000000001f3c018 CR3: 00000011525a8002 CR4:
 0000000000771ee0=20
-[  400.011855] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
+[ 1264.036953] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
 0000000000000000=20
-[  400.018991] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7:
+[ 1264.044085] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7:
 0000000000000400=20
-[  400.026127] PKRU: 55555554=20
-[  400.028841] Call Trace:=20
-[  400.031297]  <TASK>=20
-[  400.033409]  xlog_recover_validate_buf_type+0x17c/0x670 [xfs]=20
-[  400.039235]  xlog_recover_buf_commit_pass2+0x349/0x430 [xfs]=20
-[  400.044979]  xlog_recover_items_pass2+0x51/0xd0 [xfs]=20
-[  400.050101]  xlog_recover_commit_trans+0x30f/0x360 [xfs]=20
-[  400.055483]  xlog_recovery_process_trans+0xf1/0x110 [xfs]=20
-[  400.060951]  xlog_recover_process_data+0x84/0x140 [xfs]=20
-[  400.066248]  xlog_do_recovery_pass+0x24f/0x6a0 [xfs]=20
-[  400.071282]  xlog_do_log_recovery+0x6b/0xc0 [xfs]=20
-[  400.076056]  xlog_do_recover+0x33/0x1f0 [xfs]=20
-[  400.080485]  xlog_recover+0xde/0x190 [xfs]=20
-[  400.084646]  xfs_log_mount+0x19f/0x340 [xfs]=20
-[  400.088988]  xfs_mountfs+0x44b/0x980 [xfs]=20
-[  400.093159]  ? xfs_filestream_get_parent+0x90/0x90 [xfs]=20
-[  400.098538]  xfs_fs_fill_super+0x4bc/0x900 [xfs]=20
-[  400.103230]  ? xfs_open_devices+0x1f0/0x1f0 [xfs]=20
-[  400.108011]  get_tree_bdev+0x16d/0x270=20
-[  400.111772]  vfs_get_tree+0x22/0xc0=20
-[  400.115265]  do_new_mount+0x17a/0x310=20
-[  400.118941]  __x64_sys_mount+0x107/0x140=20
-[  400.122875]  do_syscall_64+0x59/0x90=20
-[  400.126461]  ? syscall_exit_work+0x103/0x130=20
-[  400.130745]  ? syscall_exit_to_user_mode+0x12/0x30=20
-[  400.135543]  ? do_syscall_64+0x69/0x90=20
-[  400.139297]  ? do_syscall_64+0x69/0x90=20
-[  400.143051]  ? syscall_exit_work+0x103/0x130=20
-[  400.147331]  ? syscall_exit_to_user_mode+0x12/0x30=20
-[  400.152123]  ? do_syscall_64+0x69/0x90=20
-[  400.155878]  ? syscall_exit_work+0x103/0x130=20
-[  400.160159]  ? syscall_exit_to_user_mode+0x12/0x30=20
-[  400.164960]  ? do_syscall_64+0x69/0x90=20
-[  400.168715]  ? syscall_exit_to_user_mode+0x12/0x30=20
-[  400.173512]  ? do_syscall_64+0x69/0x90=20
-[  400.177268]  ? syscall_exit_to_user_mode+0x12/0x30=20
-[  400.182066]  ? do_syscall_64+0x69/0x90=20
-[  400.185822]  entry_SYSCALL_64_after_hwframe+0x63/0xcd=20
-[  400.190882] RIP: 0033:0x7fcd7143f7be=20
-[  400.194463] Code: 48 8b 0d 65 a6 1b 00 f7 d8 64 89 01 48 83 c8 ff c3 66 =
-2e
-0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 49 89 ca b8 a5 00 00 00 0f 05 <48> 3=
-d 01
-f0 ff ff 73 01 c3 48 8b 0d 32 a6 1b 00 f7 d8 64 89 01 48=20
-[  400.213216] RSP: 002b:00007ffdf9207bd8 EFLAGS: 00000246 ORIG_RAX:
-00000000000000a5=20
-[  400.220791] RAX: ffffffffffffffda RBX: 0000000000000000 RCX:
-00007fcd7143f7be=20
-[  400.227924] RDX: 000055687c0def90 RSI: 000055687c0d9630 RDI:
-000055687c0ddfe0=20
-[  400.235065] RBP: 000055687c0d9400 R08: 0000000000000000 R09:
-0000000000000001=20
-[  400.242198] R10: 0000000000000000 R11: 0000000000000246 R12:
+[ 1264.051219] PKRU: 55555554=20
+[ 1264.053932] Call Trace:=20
+[ 1264.056384]  <TASK>=20
+[ 1264.058492]  ? mapping_evict_folio.part.0+0x1e0/0x1e0=20
+[ 1264.063551]  ? xfs_dio_write_end_io+0x13f/0x810 [xfs]=20
+[ 1264.068745]  iomap_dio_complete+0x413/0x870=20
+[ 1264.072930]  ? aio_fsync_work+0x2a0/0x2a0=20
+[ 1264.076942]  iomap_dio_complete_work+0x52/0x80=20
+[ 1264.081388]  process_one_work+0x8b7/0x1540=20
+[ 1264.085490]  ? __lock_acquired+0x209/0x890=20
+[ 1264.089596]  ? pwq_dec_nr_in_flight+0x230/0x230=20
+[ 1264.094127]  ? __lock_contended+0x980/0x980=20
+[ 1264.098317]  ? worker_thread+0x160/0xed0=20
+[ 1264.102249]  worker_thread+0x5ac/0xed0=20
+[ 1264.106005]  ? process_one_work+0x1540/0x1540=20
+[ 1264.110370]  kthread+0x29f/0x340=20
+[ 1264.113600]  ? kthread_complete_and_exit+0x20/0x20=20
+[ 1264.118396]  ret_from_fork+0x1f/0x30=20
+[ 1264.121986]  </TASK>=20
+[ 1264.124175] Modules linked in: ipmi_ssif intel_rapl_msr intel_rapl_common
+intel_uncore_frequency intel_uncore_frequency_common mgag200 mlx5_ib
+i2c_algo_bit drm_shmem_helper drm_kms_helper dell_smbios syscopyarea i10nm_=
+edac
+nfit x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel dcdbas kvm rf=
+kill
+irqbypass rapl ib_uverbs intel_cstate intel_uncore dell_wmi_descriptor wmi_=
+bmof
+ib_core pcspkr isst_if_mbox_pci isst_if_mmio acpi_ipmi sysfillrect mei_me
+isst_if_common i2c_i801 sysimgblt ipmi_si fb_sys_fops i2c_smbus mei
+intel_pch_thermal intel_vsec ipmi_devintf ipmi_msghandler acpi_power_meter
+sunrpc drm fuse xfs libcrc32c sd_mod t10_pi sg mlx5_core crct10dif_pclmul
+crc32_pclmul crc32c_intel mlxfw ghash_clmulni_intel tls ahci libahci psample
+megaraid_sas pci_hyperv_intf tg3 libata wmi=20
+[ 1264.193575] ---[ end trace 0000000000000000 ]---=20
+[ 1264.226461] RIP: 0010:invalidate_inode_pages2_range+0x2e2/0x9a0=20
+[ 1264.232402] Code: c0 03 38 d0 7c 08 84 d2 0f 85 c9 05 00 00 41 8b 47 5c =
+4c
+39 f0 0f 87 80 fe ff ff 48 c7 c6 60 98 75 8b 4c 89 ff e8 4e af 07 00 <0f> 0=
+b e8
+c7 1f fe ff 4c 89 ff e8 bf bf 03 00 84 c0 0f 85 24 02 00=20
+[ 1264.251156] RSP: 0018:ffa000000a6efaa8 EFLAGS: 00010286=20
+[ 1264.256388] RAX: 0000000000000043 RBX: dffffc0000000000 RCX:
 0000000000000000=20
-[  400.249330] R13: 000055687c0def90 R14: 000055687c0ddfe0 R15:
-000055687c0d9400=20
-[  400.256462]  </TASK>=20
-[  400.258654] ---[ end trace 0000000000000000 ]---=20
-[  400.263417] XFS (loop0): _xfs_buf_ioapply: no buf ops on daddr 0x319a88 =
-len
-16=20
-[  400.270640] 00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00=20
-................=20
-[  400.278639] 00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00=20
-................=20
-[  400.286640] 00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00=20
-................=20
-[  400.294638] 00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00=20
-................=20
-[  400.302639] 00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00=20
-................=20
-[  400.310639] 00000050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00=20
-................=20
-[  400.318636] 00000060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00=20
-................=20
-[  400.326636] 00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00=20
-................=20
-[  400.334639] CPU: 97 PID: 114754 Comm: mount Kdump: loaded Tainted: G=20=
-=20=20=20=20=20=20
-W          6.0.0+ #1=20
-[  400.343419] Hardware name: Dell Inc. PowerEdge R750/0PJ80M, BIOS 1.5.4
-12/17/2021=20
-[  400.350897] Call Trace:=20
-[  400.353350]  <TASK>=20
-[  400.355457]  dump_stack_lvl+0x34/0x48=20
-[  400.359122]  _xfs_buf_ioapply+0x167/0x1b0 [xfs]=20
-[  400.363727]  ? wake_up_q+0x90/0x90=20
-[  400.367131]  __xfs_buf_submit+0x69/0x220 [xfs]=20
-[  400.371637]  xfs_buf_delwri_submit_buffers+0xe3/0x230 [xfs]=20
-[  400.377273]  xfs_buf_delwri_submit+0x36/0xc0 [xfs]=20
-[  400.382124]  xlog_recover_process_ophdr+0xb7/0x150 [xfs]=20
-[  400.387507]  xlog_recover_process_data+0x84/0x140 [xfs]=20
-[  400.392801]  xlog_do_recovery_pass+0x24f/0x6a0 [xfs]=20
-[  400.397840]  xlog_do_log_recovery+0x6b/0xc0 [xfs]=20
-[  400.402614]  xlog_do_recover+0x33/0x1f0 [xfs]=20
-[  400.407042]  xlog_recover+0xde/0x190 [xfs]=20
-[  400.411211]  xfs_log_mount+0x19f/0x340 [xfs]=20
-[  400.415553]  xfs_mountfs+0x44b/0x980 [xfs]=20
-[  400.419720]  ? xfs_filestream_get_parent+0x90/0x90 [xfs]=20
-[  400.425104]  xfs_fs_fill_super+0x4bc/0x900 [xfs]=20
-[  400.429790]  ? xfs_open_devices+0x1f0/0x1f0 [xfs]=20
-[  400.434556]  get_tree_bdev+0x16d/0x270=20
-[  400.438310]  vfs_get_tree+0x22/0xc0=20
-[  400.441804]  do_new_mount+0x17a/0x310=20
-[  400.445470]  __x64_sys_mount+0x107/0x140=20
-[  400.449395]  do_syscall_64+0x59/0x90=20
-[  400.452973]  ? syscall_exit_work+0x103/0x130=20
-[  400.457248]  ? syscall_exit_to_user_mode+0x12/0x30=20
-[  400.462038]  ? do_syscall_64+0x69/0x90=20
-[  400.465792]  ? do_syscall_64+0x69/0x90=20
-[  400.469546]  ? syscall_exit_work+0x103/0x130=20
-[  400.473817]  ? syscall_exit_to_user_mode+0x12/0x30=20
-[  400.478610]  ? do_syscall_64+0x69/0x90=20
-[  400.482363]  ? syscall_exit_work+0x103/0x130=20
-[  400.486634]  ? syscall_exit_to_user_mode+0x12/0x30=20
-[  400.491427]  ? do_syscall_64+0x69/0x90=20
-[  400.495182]  ? syscall_exit_to_user_mode+0x12/0x30=20
-[  400.499974]  ? do_syscall_64+0x69/0x90=20
-[  400.503727]  ? syscall_exit_to_user_mode+0x12/0x30=20
-[  400.508518]  ? do_syscall_64+0x69/0x90=20
-[  400.512272]  entry_SYSCALL_64_after_hwframe+0x63/0xcd=20
-[  400.517323] RIP: 0033:0x7fcd7143f7be=20
-[  400.520904] Code: 48 8b 0d 65 a6 1b 00 f7 d8 64 89 01 48 83 c8 ff c3 66 =
-2e
-0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 49 89 ca b8 a5 00 00 00 0f 05 <48> 3=
-d 01
-f0 ff ff 73 01 c3 48 8b 0d 32 a6 1b 00 f7 d8 64 89 01 48=20
-[  400.539648] RSP: 002b:00007ffdf9207bd8 EFLAGS: 00000246 ORIG_RAX:
-00000000000000a5=20
-[  400.547215] RAX: ffffffffffffffda RBX: 0000000000000000 RCX:
-00007fcd7143f7be=20
-[  400.554349] RDX: 000055687c0def90 RSI: 000055687c0d9630 RDI:
-000055687c0ddfe0=20
-[  400.561482] RBP: 000055687c0d9400 R08: 0000000000000000 R09:
-0000000000000001=20
-[  400.568612] R10: 0000000000000000 R11: 0000000000000246 R12:
-0000000000000000=20
-[  400.575747] R13: 000055687c0def90 R14: 000055687c0ddfe0 R15:
-000055687c0d9400=20
-[  400.582881]  </TASK>=20
-[  400.585095] BUG: unable to handle page fault for address: ff7b3d2f8f3eff=
-f8=20
-[  400.591971] #PF: supervisor read access in kernel mode=20
-[  400.597109] #PF: error_code(0x0000) - not-present page=20
-[  400.602248] PGD 100000067 P4D 1001b9067 PUD 1001ba067 PMD 139973067 PTE =
-0=20
-[  400.609034] Oops: 0000 [#1] PREEMPT SMP NOPTI=20
-[  400.613395] CPU: 97 PID: 114754 Comm: mount Kdump: loaded Tainted: G=20=
-=20=20=20=20=20=20
-W          6.0.0+ #1=20
-[  400.622174] Hardware name: Dell Inc. PowerEdge R750/0PJ80M, BIOS 1.5.4
-12/17/2021=20
-[  400.629652] RIP: 0010:__xfs_dir3_data_check+0x171/0x700 [xfs]=20
-[  400.635458] Code: c3 c0 e9 04 ff ff ff 3d 58 44 32 44 0f 84 55 ff ff ff =
-48
-c7 c0 c9 71 c3 c0 e9 ed fe ff ff 41 8b 45 00 4c 8d 54 05 f8 4c 29 f0 <41> 8=
-b 12
-48 83 e8 08 48 c1 e8 03 0f ca 39 c2 73 3f 89 d2 4c 89 d0=20
-[  400.654206] RSP: 0018:ff7b3d2f8751b860 EFLAGS: 00010206=20
-[  400.659430] RAX: 000000000000ffc0 RBX: ff44dbd80f84d980 RCX:
-d14cad4d1bf69f29=20
-[  400.666563] RDX: 0000000000000006 RSI: ff44dbd80f84d980 RDI:
-0000000000000000=20
-[  400.673697] RBP: ff7b3d2f8f3e0000 R08: ff7b3d2f8751b9f0 R09:
-ff7b3d2f8751b9f0=20
-[  400.680831] R10: ff7b3d2f8f3efff8 R11: 0000000000001000 R12:
-ff44dbd856214000=20
-[  400.687961] R13: ff44dbd807616c00 R14: 0000000000000040 R15:
-ff44dbd80e68de70=20
-[  400.695093] FS:  00007fcd7164b800(0000) GS:ff44dbe7bfa00000(0000)
+[ 1264.263536] RDX: 0000000000000001 RSI: ffffffff8b8ce8e0 RDI:
+fff3fc00014ddf45=20
+[ 1264.270673] RBP: 0000000000000000 R08: 0000000000000043 R09:
+ff11000c32bfd487=20
+[ 1264.277814] R10: ffe21c018657fa90 R11: 0000000000000001 R12:
+ff110002040cfc48=20
+[ 1264.284955] R13: 0000000000000041 R14: fffffffffffffffe R15:
+ffd400001001a940=20
+[ 1264.292095] FS:  0000000000000000(0000) GS:ff11000c32a00000(0000)
 knlGS:0000000000000000=20
-[  400.703182] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033=20
-[  400.708928] CR2: ff7b3d2f8f3efff8 CR3: 00000010c699a005 CR4:
+[ 1264.300190] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033=20
+[ 1264.305946] CR2: 0000000001f3c018 CR3: 00000011525a8002 CR4:
 0000000000771ee0=20
-[  400.716060] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
+[ 1264.313086] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
 0000000000000000=20
-[  400.723191] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7:
+[ 1264.320229] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7:
 0000000000000400=20
-[  400.730324] PKRU: 55555554=20
-[  400.733037] Call Trace:=20
-[  400.735492]  <TASK>=20
-[  400.737596]  xfs_dir3_block_write_verify+0x28/0x90 [xfs]=20
-[  400.742971]  _xfs_buf_ioapply+0x4a/0x1b0 [xfs]=20
-[  400.747485]  ? wake_up_q+0x90/0x90=20
-[  400.750892]  __xfs_buf_submit+0x69/0x220 [xfs]=20
-[  400.755397]  xfs_buf_delwri_submit_buffers+0xe3/0x230 [xfs]=20
-[  400.761022]  xfs_buf_delwri_submit+0x36/0xc0 [xfs]=20
-[  400.765876]  xlog_recover_process_ophdr+0xb7/0x150 [xfs]=20
-[  400.771259]  xlog_recover_process_data+0x84/0x140 [xfs]=20
-[  400.776554]  xlog_do_recovery_pass+0x24f/0x6a0 [xfs]=20
-[  400.781589]  xlog_do_log_recovery+0x6b/0xc0 [xfs]=20
-[  400.786356]  xlog_do_recover+0x33/0x1f0 [xfs]=20
-[  400.790775]  xlog_recover+0xde/0x190 [xfs]=20
-[  400.794936]  xfs_log_mount+0x19f/0x340 [xfs]=20
-[  400.799278]  xfs_mountfs+0x44b/0x980 [xfs]=20
-[  400.803445]  ? xfs_filestream_get_parent+0x90/0x90 [xfs]=20
-[  400.808827]  xfs_fs_fill_super+0x4bc/0x900 [xfs]=20
-[  400.813508]  ? xfs_open_devices+0x1f0/0x1f0 [xfs]=20
-[  400.818274]  get_tree_bdev+0x16d/0x270=20
-[  400.822028]  vfs_get_tree+0x22/0xc0=20
-[  400.825519]  do_new_mount+0x17a/0x310=20
-[  400.829186]  __x64_sys_mount+0x107/0x140=20
-[  400.833112]  do_syscall_64+0x59/0x90=20
-[  400.836690]  ? syscall_exit_work+0x103/0x130=20
-[  400.840962]  ? syscall_exit_to_user_mode+0x12/0x30=20
-[  400.845755]  ? do_syscall_64+0x69/0x90=20
-[  400.849508]  ? do_syscall_64+0x69/0x90=20
-[  400.853262]  ? syscall_exit_work+0x103/0x130=20
-[  400.857533]  ? syscall_exit_to_user_mode+0x12/0x30=20
-[  400.862327]  ? do_syscall_64+0x69/0x90=20
-[  400.866078]  ? syscall_exit_work+0x103/0x130=20
-[  400.870352]  ? syscall_exit_to_user_mode+0x12/0x30=20
-[  400.875144]  ? do_syscall_64+0x69/0x90=20
-[  400.878897]  ? syscall_exit_to_user_mode+0x12/0x30=20
-[  400.883691]  ? do_syscall_64+0x69/0x90=20
-[  400.887441]  ? syscall_exit_to_user_mode+0x12/0x30=20
-[  400.892237]  ? do_syscall_64+0x69/0x90=20
-[  400.895987]  entry_SYSCALL_64_after_hwframe+0x63/0xcd=20
-[  400.901039] RIP: 0033:0x7fcd7143f7be=20
-[  400.904619] Code: 48 8b 0d 65 a6 1b 00 f7 d8 64 89 01 48 83 c8 ff c3 66 =
-2e
-0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 49 89 ca b8 a5 00 00 00 0f 05 <48> 3=
-d 01
-f0 ff ff 73 01 c3 48 8b 0d 32 a6 1b 00 f7 d8 64 89 01 48=20
-[  400.923367] RSP: 002b:00007ffdf9207bd8 EFLAGS: 00000246 ORIG_RAX:
-00000000000000a5=20
-[  400.930931] RAX: ffffffffffffffda RBX: 0000000000000000 RCX:
-00007fcd7143f7be=20
-[  400.938063] RDX: 000055687c0def90 RSI: 000055687c0d9630 RDI:
-000055687c0ddfe0=20
-[  400.945196] RBP: 000055687c0d9400 R08: 0000000000000000 R09:
-0000000000000001=20
-[  400.952329] R10: 0000000000000000 R11: 0000000000000246 R12:
-0000000000000000=20
-[  400.959464] R13: 000055687c0def90 R14: 000055687c0ddfe0 R15:
-000055687c0d9400=20
-[  400.966594]  </TASK>=20
-[  400.968789] Modules linked in: loop dm_mod rfkill intel_rapl_msr
-intel_rapl_common intel_uncore_frequency intel_uncore_frequency_common
-ipmi_ssif i10nm_edac nfit x86_pkg_temp_thermal intel_powerclamp coretemp
-kvm_intel kvm mlx5_ib mgag200 i2c_algo_bit drm_shmem_helper irqbypass sunrpc
-ib_uverbs drm_kms_helper rapl dcdbas acpi_ipmi intel_cstate syscopyarea ipm=
-i_si
-ib_core mei_me dell_smbios sysfillrect i2c_i801 isst_if_mbox_pci isst_if_mm=
-io
-ipmi_devintf intel_uncore sysimgblt pcspkr wmi_bmof dell_wmi_descriptor
-isst_if_common mei fb_sys_fops i2c_smbus intel_pch_thermal intel_vsec
-ipmi_msghandler acpi_power_meter drm fuse xfs libcrc32c sd_mod t10_pi sg
-mlx5_core ahci mlxfw libahci crct10dif_pclmul crc32_pclmul tls crc32c_intel
-ghash_clmulni_intel libata psample megaraid_sas tg3 pci_hyperv_intf wmi=20
-[  401.039126] CR2: ff7b3d2f8f3efff8
+[ 1264.327372] PKRU: 55555554=20
+[-- MARK -- Sun Oct  9 15:15:00 2022]
 
 --=20
 You may reply to this email to add a comment.
