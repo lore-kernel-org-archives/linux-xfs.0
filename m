@@ -2,55 +2,76 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC863C433F5
-	for <linux-xfs@archiver.kernel.org>; Sun,  9 Oct 2022 17:08:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCCC5C433F5
+	for <linux-xfs@archiver.kernel.org>; Sun,  9 Oct 2022 17:08:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229590AbiJIRIu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 9 Oct 2022 13:08:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60702 "EHLO
+        id S229675AbiJIRIz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 9 Oct 2022 13:08:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229719AbiJIRIt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 9 Oct 2022 13:08:49 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F40D28701
-        for <linux-xfs@vger.kernel.org>; Sun,  9 Oct 2022 10:08:48 -0700 (PDT)
+        with ESMTP id S229719AbiJIRIy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 9 Oct 2022 13:08:54 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4FB3286FF
+        for <linux-xfs@vger.kernel.org>; Sun,  9 Oct 2022 10:08:51 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C04B160C35
-        for <linux-xfs@vger.kernel.org>; Sun,  9 Oct 2022 17:08:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15A06C433C1;
-        Sun,  9 Oct 2022 17:08:47 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3EA13B80D87
+        for <linux-xfs@vger.kernel.org>; Sun,  9 Oct 2022 17:08:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id EBD60C43142
+        for <linux-xfs@vger.kernel.org>; Sun,  9 Oct 2022 17:08:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665335327;
-        bh=qlwAB/4NQtaAXM0KoMyjEXs4ghfy8m6ANTloY64OFSI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=NRKiz15acIHXfM0Ta9Y1BowhQGQHr12rzs7dR1hf5pksXESX29pimC7JxbG1j/3gW
-         cACBXRVO3PTpod+RUD5nzRe/9IDA1dw4qetoyVF28CtnbopFMCaF06WcOeBsXzOqYg
-         lClDEezqPEcDvFBHVFUDrDeQaAyfI+et0WM7+cns/t0PUNuViQ26m8lvrPZumX1KkT
-         5aWwihwNB8POL57JFkcDVWY3RMtoYFSk1KNXP4TkBJiicNnpjR8JJ20IbKJH0LNS/Q
-         dSv3PULRm/gAOGmA3/7dyRAxT8TteUHCWa/BvSLGF57IUJjJv5JVTfyTGBF7QtkKxk
-         PLvna5kLOok2w==
-Date:   Sun, 9 Oct 2022 10:08:46 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     bugzilla-daemon@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [Bug 216563] New: [xfstests generic/113] memcpy: detected
- field-spanning write (size 32) of single field
- "efdp->efd_format.efd_extents" at fs/xfs/xfs_extfree_item.c:693 (size 16)
-Message-ID: <Y0MAHhIW4qqpbaLj@magnolia>
-References: <bug-216563-201763@https.bugzilla.kernel.org/>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+        s=k20201202; t=1665335329;
+        bh=3hm9KlkfvavJ1sowatAclPQ9aPGBPKgpigwC309HZcI=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=WCJKxZE2sNZghgS2si1SIObs8r/cdYmQMrRkUZ6SfBkm14FTmtV3Z4afmAdaoOr8+
+         l/OtUUvTbt/WB9VnDCxEEvsurolReP60N2NxIg4zUWb6Av0rrBX7Fxv8va1bK+4jaN
+         qGMuUyXj+Swflfk0g5QGCiqN2aRzJmJYNRBHnTQT9GEf5MmFIWN0pTreUXQc90fcD2
+         Coe+egEUGabPBfS0RR0gmw6dmHCrzXwikogAezMiW08oiAxwEc24LaqykGxxrNFp75
+         jDpsS8WM6MetxfO5lJNK1gX7rHHkBMII/Y/AMkqPQvz1POFCObfSjpwQSKKCB1tZFr
+         vSnd4MR0v/auw==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id DBC2DC433EA; Sun,  9 Oct 2022 17:08:48 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 216563] [xfstests generic/113] memcpy: detected field-spanning
+ write (size 32) of single field "efdp->efd_format.efd_extents" at
+ fs/xfs/xfs_extfree_item.c:693 (size 16)
+Date:   Sun, 09 Oct 2022 17:08:48 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: djwong@kernel.org
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-216563-201763-AONrTk2gaP@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-216563-201763@https.bugzilla.kernel.org/>
+References: <bug-216563-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216563
+
+--- Comment #2 from Darrick J. Wong (djwong@kernel.org) ---
 On Sun, Oct 09, 2022 at 11:59:13AM +0000, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=216563
-> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D216563
+>=20
 >             Bug ID: 216563
 >            Summary: [xfstests generic/113] memcpy: detected field-spanning
 >                     write (size 32) of single field
@@ -69,64 +90,75 @@ On Sun, Oct 09, 2022 at 11:59:13AM +0000, bugzilla-daemon@kernel.org wrote:
 >           Assignee: filesystem_xfs@kernel-bugs.kernel.org
 >           Reporter: zlang@redhat.com
 >         Regression: No
-> 
-> I xfstests generic/113 hit below kernel warning [1] on xfs with 64k directory
-> block size (-n size=65536). It's reproducible for me, and the last time I
-> reproduce this bug on linux v6.0+ which HEAD= ...
-> 
+>=20
+> I xfstests generic/113 hit below kernel warning [1] on xfs with 64k direc=
+tory
+> block size (-n size=3D65536). It's reproducible for me, and the last time=
+ I
+> reproduce this bug on linux v6.0+ which HEAD=3D ...
+>=20
 > commit e8bc52cb8df80c31c73c726ab58ea9746e9ff734
 > Author: Linus Torvalds <torvalds@linux-foundation.org>
 > Date:   Fri Oct 7 17:04:10 2022 -0700
-> 
+>=20
 >     Merge tag 'driver-core-6.1-rc1' of
 > git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/driver-core
-> 
-> I hit this issue on xfs with 64k directory block size 3 times(aarch64, x86_64
+>=20
+> I hit this issue on xfs with 64k directory block size 3 times(aarch64, x8=
+6_64
 > and ppc64le), and once on xfs with 1k blocksize (aarch64).
-> 
-> 
+>=20
+>=20
 > [1]
 > [ 4328.023770] run fstests generic/113 at 2022-10-08 11:57:42
-> [ 4330.104632] XFS (sda3): EXPERIMENTAL online scrub feature in use. Use at
+> [ 4330.104632] XFS (sda3): EXPERIMENTAL online scrub feature in use. Use =
+at
 > your own risk!
 > [ 4333.094807] XFS (sda3): Unmounting Filesystem
 > [ 4333.934996] XFS (sda3): Mounting V5 Filesystem
 > [ 4333.973061] XFS (sda3): Ending clean mount
-> [ 4335.457595] XFS (sda3): EXPERIMENTAL online scrub feature in use. Use at
+> [ 4335.457595] XFS (sda3): EXPERIMENTAL online scrub feature in use. Use =
+at
 > your own risk!
 > [ 4338.564849] XFS (sda3): Unmounting Filesystem
 > [ 4339.391848] XFS (sda3): Mounting V5 Filesystem
 > [ 4339.430908] XFS (sda3): Ending clean mount
-> [ 4340.100364] XFS (sda3): EXPERIMENTAL online scrub feature in use. Use at
+> [ 4340.100364] XFS (sda3): EXPERIMENTAL online scrub feature in use. Use =
+at
 > your own risk!
 > [ 4343.379506] XFS (sda3): Unmounting Filesystem
 > [ 4344.195036] XFS (sda3): Mounting V5 Filesystem
 > [ 4344.232984] XFS (sda3): Ending clean mount
-> [ 4345.190073] XFS (sda3): EXPERIMENTAL online scrub feature in use. Use at
+> [ 4345.190073] XFS (sda3): EXPERIMENTAL online scrub feature in use. Use =
+at
 > your own risk!
 > [ 4348.198562] XFS (sda3): Unmounting Filesystem
 > [ 4349.065061] XFS (sda3): Mounting V5 Filesystem
 > [ 4349.104995] XFS (sda3): Ending clean mount
-> [ 4350.118883] XFS (sda3): EXPERIMENTAL online scrub feature in use. Use at
+> [ 4350.118883] XFS (sda3): EXPERIMENTAL online scrub feature in use. Use =
+at
 > your own risk!
 > [ 4353.233555] XFS (sda3): Unmounting Filesystem
 > [ 4354.093530] XFS (sda3): Mounting V5 Filesystem
 > [ 4354.135975] XFS (sda3): Ending clean mount
 > [ 4354.337550] ------------[ cut here ]------------
-> [ 4354.342354] memcpy: detected field-spanning write (size 32) of single field
+> [ 4354.342354] memcpy: detected field-spanning write (size 32) of single
+> field
 > "efdp->efd_format.efd_extents" at fs/xfs/xfs_extfree_item.c:693 (size 16)
-> [ 4354.355820] WARNING: CPU: 7 PID: 899243 at fs/xfs/xfs_extfree_item.c:693
+> [ 4354.355820] WARNING: CPU: 7 PID: 899243 at fs/xfs/xfs_extfree_item.c:6=
+93
 > xfs_efi_item_relog+0x1fc/0x270 [xfs]
 
 I think this is caused by an EF[ID] with ef[id]_nextents > 1, since the
 structure definition is:
 
 typedef struct xfs_efd_log_format {
-	uint16_t		efd_type;	/* efd log item type */
-	uint16_t		efd_size;	/* size of this item */
-	uint32_t		efd_nextents;	/* # of extents freed */
-	uint64_t		efd_efi_id;	/* id of corresponding efi */
-	xfs_extent_t		efd_extents[1];	/* array of extents freed */
+        uint16_t                efd_type;       /* efd log item type */
+        uint16_t                efd_size;       /* size of this item */
+        uint32_t                efd_nextents;   /* # of extents freed */
+        uint64_t                efd_efi_id;     /* id of corresponding efi =
+*/
+        xfs_extent_t            efd_extents[1]; /* array of extents freed */
 } xfs_efd_log_format_t;
 
 Yuck, an array[1] that is actually a VLA!
@@ -138,29 +170,39 @@ What memory sanitizer kconfig option enables this, anyway?
 
 --D
 
-> [ 4354.365918] Modules linked in: dm_snapshot dm_bufio ext4 mbcache jbd2 loop
+> [ 4354.365918] Modules linked in: dm_snapshot dm_bufio ext4 mbcache jbd2 =
+loop
 > dm_flakey dm_mod intel_rapl_msr mgag200 intel_rapl_common
 > intel_uncore_frequency i2c_algo_bit intel_uncore_frequency_common
 > drm_shmem_helper ipmi_ssif drm_kms_helper mlx5_ib syscopyarea sysfillrect
 > mei_me dell_smbios i10nm_edac nfit x86_pkg_temp_thermal intel_powerclamp
 > coretemp kvm_intel rfkill dcdbas kvm irqbypass rapl intel_cstate ib_uverbs
 > intel_uncore dell_wmi_descriptor wmi_bmof pcspkr ib_core isst_if_mmio
-> isst_if_mbox_pci sysimgblt acpi_ipmi isst_if_common i2c_i801 mei fb_sys_fops
-> ipmi_si i2c_smbus intel_pch_thermal intel_vsec ipmi_devintf ipmi_msghandler
+> isst_if_mbox_pci sysimgblt acpi_ipmi isst_if_common i2c_i801 mei fb_sys_f=
+ops
+> ipmi_si i2c_smbus intel_pch_thermal intel_vsec ipmi_devintf ipmi_msghandl=
+er
 > acpi_power_meter sunrpc drm fuse xfs libcrc32c sd_mod t10_pi sg mlx5_core
-> crct10dif_pclmul crc32_pclmul mlxfw crc32c_intel ghash_clmulni_intel tls ahci
-> libahci psample megaraid_sas pci_hyperv_intf tg3 libata wmi [last unloaded:
+> crct10dif_pclmul crc32_pclmul mlxfw crc32c_intel ghash_clmulni_intel tls =
+ahci
+> libahci psample megaraid_sas pci_hyperv_intf tg3 libata wmi [last unloade=
+d:
 > scsi_debug]
-> [ 4354.443217] CPU: 7 PID: 899243 Comm: kworker/7:0 Kdump: loaded Not tainted
+> [ 4354.443217] CPU: 7 PID: 899243 Comm: kworker/7:0 Kdump: loaded Not tai=
+nted
 > 6.0.0+ #1
 > [ 4354.450990] Hardware name: Dell Inc. PowerEdge R750/0PJ80M, BIOS 1.5.4
 > 12/17/2021
 > [ 4354.458497] Workqueue: xfs-inodegc/sda3 xfs_inodegc_worker [xfs]
 > [ 4354.464648] RIP: 0010:xfs_efi_item_relog+0x1fc/0x270 [xfs]
-> [ 4354.470279] Code: 00 00 0f 85 09 ff ff ff b9 10 00 00 00 48 c7 c2 20 a8 22
-> c1 4c 89 f6 48 c7 c7 a0 a8 22 c1 c6 05 50 56 28 00 01 e8 b1 2c 28 c5 <0f> 0b e9
+> [ 4354.470279] Code: 00 00 0f 85 09 ff ff ff b9 10 00 00 00 48 c7 c2 20 a=
+8 22
+> c1 4c 89 f6 48 c7 c7 a0 a8 22 c1 c6 05 50 56 28 00 01 e8 b1 2c 28 c5 <0f>=
+ 0b
+> e9
 > e0 fe ff ff 80 3d 3c 56 28 00 00 0f 85 35 ff ff ff b9 10
-> [ 4354.472133] XFS (sda3): xlog_verify_grant_tail: space > BBTOB(tail_blocks)
+> [ 4354.472133] XFS (sda3): xlog_verify_grant_tail: space > BBTOB(tail_blo=
+cks)
 > [ 4354.489042] RSP: 0018:ffa0000037dc7950 EFLAGS: 00010286
 > [ 4354.489088] RAX: 0000000000000000 RBX: 0000000000000002 RCX:
 > 0000000000000000
@@ -221,31 +263,42 @@ What memory sanitizer kconfig option enables this, anyway?
 > __irq_exit_rcu+0x1fc/0x2a0
 > [ 4354.735030] ---[ end trace 0000000000000000 ]---
 > [ 4354.739682] ------------[ cut here ]------------
-> [ 4354.744333] memcpy: detected field-spanning write (size 32) of single field
+> [ 4354.744333] memcpy: detected field-spanning write (size 32) of single
+> field
 > "efip->efi_format.efi_extents" at fs/xfs/xfs_extfree_item.c:697 (size 16)
-> [ 4354.757790] WARNING: CPU: 7 PID: 899243 at fs/xfs/xfs_extfree_item.c:697
+> [ 4354.757790] WARNING: CPU: 7 PID: 899243 at fs/xfs/xfs_extfree_item.c:6=
+97
 > xfs_efi_item_relog+0x232/0x270 [xfs]
-> [ 4354.767843] Modules linked in: dm_snapshot dm_bufio ext4 mbcache jbd2 loop
+> [ 4354.767843] Modules linked in: dm_snapshot dm_bufio ext4 mbcache jbd2 =
+loop
 > dm_flakey dm_mod intel_rapl_msr mgag200 intel_rapl_common
 > intel_uncore_frequency i2c_algo_bit intel_uncore_frequency_common
 > drm_shmem_helper ipmi_ssif drm_kms_helper mlx5_ib syscopyarea sysfillrect
 > mei_me dell_smbios i10nm_edac nfit x86_pkg_temp_thermal intel_powerclamp
 > coretemp kvm_intel rfkill dcdbas kvm irqbypass rapl intel_cstate ib_uverbs
 > intel_uncore dell_wmi_descriptor wmi_bmof pcspkr ib_core isst_if_mmio
-> isst_if_mbox_pci sysimgblt acpi_ipmi isst_if_common i2c_i801 mei fb_sys_fops
-> ipmi_si i2c_smbus intel_pch_thermal intel_vsec ipmi_devintf ipmi_msghandler
+> isst_if_mbox_pci sysimgblt acpi_ipmi isst_if_common i2c_i801 mei fb_sys_f=
+ops
+> ipmi_si i2c_smbus intel_pch_thermal intel_vsec ipmi_devintf ipmi_msghandl=
+er
 > acpi_power_meter sunrpc drm fuse xfs libcrc32c sd_mod t10_pi sg mlx5_core
-> crct10dif_pclmul crc32_pclmul mlxfw crc32c_intel ghash_clmulni_intel tls ahci
-> libahci psample megaraid_sas pci_hyperv_intf tg3 libata wmi [last unloaded:
+> crct10dif_pclmul crc32_pclmul mlxfw crc32c_intel ghash_clmulni_intel tls =
+ahci
+> libahci psample megaraid_sas pci_hyperv_intf tg3 libata wmi [last unloade=
+d:
 > scsi_debug]
-> [ 4354.845125] CPU: 7 PID: 899243 Comm: kworker/7:0 Kdump: loaded Tainted: G   
+> [ 4354.845125] CPU: 7 PID: 899243 Comm: kworker/7:0 Kdump: loaded Tainted=
+: G=20=20
 >     W          6.0.0+ #1
 > [ 4354.854370] Hardware name: Dell Inc. PowerEdge R750/0PJ80M, BIOS 1.5.4
 > 12/17/2021
 > [ 4354.861875] Workqueue: xfs-inodegc/sda3 xfs_inodegc_worker [xfs]
 > [ 4354.868016] RIP: 0010:xfs_efi_item_relog+0x232/0x270 [xfs]
-> [ 4354.873643] Code: 00 00 0f 85 35 ff ff ff b9 10 00 00 00 48 c7 c2 20 a9 22
-> c1 4c 89 f6 48 c7 c7 a0 a8 22 c1 c6 05 19 56 28 00 01 e8 7b 2c 28 c5 <0f> 0b e9
+> [ 4354.873643] Code: 00 00 0f 85 35 ff ff ff b9 10 00 00 00 48 c7 c2 20 a=
+9 22
+> c1 4c 89 f6 48 c7 c7 a0 a8 22 c1 c6 05 19 56 28 00 01 e8 7b 2c 28 c5 <0f>=
+ 0b
+> e9
 > 0c ff ff ff 4c 89 ef e8 bf e2 8e c3 e9 4c ff ff ff e8 b5
 > [ 4354.892409] RSP: 0018:ffa0000037dc7950 EFLAGS: 00010286
 > [ 4354.897660] RAX: 0000000000000000 RBX: 0000000000000002 RCX:
@@ -306,19 +359,27 @@ What memory sanitizer kconfig option enables this, anyway?
 > [ 4355.122762] softirqs last disabled at (226351): [<ffffffff8422640c>]
 > __irq_exit_rcu+0x1fc/0x2a0
 > [ 4355.131484] ---[ end trace 0000000000000000 ]---
-> [ 4355.263177] XFS (sda3): EXPERIMENTAL online scrub feature in use. Use at
+> [ 4355.263177] XFS (sda3): EXPERIMENTAL online scrub feature in use. Use =
+at
 > your own risk!
 > [ 4358.321839] XFS (sda3): Unmounting Filesystem
 > [ 4359.155439] XFS (sda3): Mounting V5 Filesystem
 > [ 4359.193937] XFS (sda3): Ending clean mount
-> [ 4359.367326] XFS (sda3): EXPERIMENTAL online scrub feature in use. Use at
+> [ 4359.367326] XFS (sda3): EXPERIMENTAL online scrub feature in use. Use =
+at
 > your own risk!
 > [ 4362.438659] XFS (sda3): Unmounting Filesystem
 > [ 4363.230018] XFS (sda3): Mounting V5 Filesystem
 > [ 4363.269186] XFS (sda3): Ending clean mount
-> 
-> -- 
+>=20
+> --=20
 > You may reply to this email to add a comment.
-> 
+>=20
 > You are receiving this mail because:
 > You are watching the assignee of the bug.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
