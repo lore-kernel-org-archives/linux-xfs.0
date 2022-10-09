@@ -2,75 +2,54 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FC75C433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3B7DC433FE
 	for <linux-xfs@archiver.kernel.org>; Sun,  9 Oct 2022 17:05:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229691AbiJIRFP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S229605AbiJIRFP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Sun, 9 Oct 2022 13:05:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56916 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229605AbiJIRFO (ORCPT
+        with ESMTP id S229675AbiJIRFO (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Sun, 9 Oct 2022 13:05:14 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BA2A2529B
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 083DC24F35
         for <linux-xfs@vger.kernel.org>; Sun,  9 Oct 2022 10:05:12 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AC40260C3A
-        for <linux-xfs@vger.kernel.org>; Sun,  9 Oct 2022 17:05:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 17BA4C43144
-        for <linux-xfs@vger.kernel.org>; Sun,  9 Oct 2022 17:05:11 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id BFF88B80B91
+        for <linux-xfs@vger.kernel.org>; Sun,  9 Oct 2022 17:05:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67149C433D6;
+        Sun,  9 Oct 2022 17:05:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665335111;
-        bh=+Tn65H1jGAHbQ9f2tm9lPPvgEndMX/u4OHfEH28W9vY=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=MmYu2L57Ad18bvqM6mblh3yJXXjSrWQsQW+EJSodcQ6PbU+kYE6brpExjz1GlQB54
-         v9JmHgFwjexOIajpXyrl8wShfkwgMNR+gndRywLmlUafT6r0HnzgGG2XNOtUISY8ZR
-         Lykbx3pd+mHC6t7418K5yD60xkTrD1Pq7mZbQE3FUMAJD28P8pvYe1N8U2rKmc4M9t
-         H5iMcl5+YWc2JRSzGe3OaedEWiWPRQifiktu5opdhgDFJv1NTVES+wg9Gz+fnE9dVT
-         ptVCWs4jDkICCUFf4kBIL2z3+IesWQqwX4sHZZfcNQjx/jdaD7Wtjf/t9iUoNqoULj
-         Gmyl2CpQU9zBA==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 030AEC433E6; Sun,  9 Oct 2022 17:05:11 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 216564] [xfstests xfs/013] WARNING: CPU: 4 PID: 3240987 at
- fs/dax.c:380 dax_insert_entry+0x6b8/0xa70
-Date:   Sun, 09 Oct 2022 17:05:10 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: djwong@kernel.org
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-216564-201763-myO1bBSxoX@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-216564-201763@https.bugzilla.kernel.org/>
+        s=k20201202; t=1665335109;
+        bh=QPBN7uSHWShjVqRoaC/s6pQ74V0WX1dLDJ53AJLRLGo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=TpZd2VpPtJKK7bbsLpFqweEMEVkhAtzpqKHS/pJYIXU0kOyZDYtzYAAumTRYJ/c6C
+         uCU7fWmbRARr+ctiCe1SOGKtRsGE9V8xK4oiWgadXKvILIcyX4tWnWXtHR3CUPgFtK
+         jOpgX9sVxjJZMqIFV2fy/18hp017AFrRlfj/30J8speMS10W3pVUlOHhV+5dXo7ggu
+         HU/ou4aCRPT+lFi+UhP02TUqWHDyZpG01NzUxLXOxL0JUZpRyU8EbASy6cG0homzen
+         T8/GJrLrZJbF4vB8eT6PUYgSBloi566ynQaOhW68p5DMXqGzxmWxK7AVI730Bhjqvy
+         9lwrjGm3M9rtA==
+Date:   Sun, 9 Oct 2022 10:05:08 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     bugzilla-daemon@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [Bug 216564] New: [xfstests xfs/013] WARNING: CPU: 4 PID:
+ 3240987 at fs/dax.c:380 dax_insert_entry+0x6b8/0xa70
+Message-ID: <Y0L/RHAhK3dF/wRW@magnolia>
 References: <bug-216564-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bug-216564-201763@https.bugzilla.kernel.org/>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D216564
-
---- Comment #1 from Darrick J. Wong (djwong@kernel.org) ---
 On Sun, Oct 09, 2022 at 12:19:56PM +0000, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=3D216564
->=20
+> https://bugzilla.kernel.org/show_bug.cgi?id=216564
+> 
 >             Bug ID: 216564
 >            Summary: [xfstests xfs/013] WARNING: CPU: 4 PID: 3240987 at
 >                     fs/dax.c:380 dax_insert_entry+0x6b8/0xa70
@@ -87,27 +66,22 @@ On Sun, Oct 09, 2022 at 12:19:56PM +0000, bugzilla-daemon@kernel.org wrote:
 >           Assignee: filesystem_xfs@kernel-bugs.kernel.org
 >           Reporter: zlang@redhat.com
 >         Regression: No
->=20
+> 
 > I hit below kernel warning on xfs (on pmem) with:
-> MOUNT_OPTIONS=3D"-o dax=3Dalways".
-> MKFS_OPTIONS=3D"-b size=3D4096 -d su=3D2m,sw=3D1 -m
-> crc=3D1,finobt=3D1,rmapbt=3D0,reflink=3D0,inobtcount=3D1,bigtime=3D1"
->=20
-> And besides xfs/013, others cases likes xfs/104, xfs/168 and xfs/538
-> triggered
+> MOUNT_OPTIONS="-o dax=always".
+> MKFS_OPTIONS="-b size=4096 -d su=2m,sw=1 -m
+> crc=1,finobt=1,rmapbt=0,reflink=0,inobtcount=1,bigtime=1"
+> 
+> And besides xfs/013, others cases likes xfs/104, xfs/168 and xfs/538 triggered
 > this warning too.
->=20
+> 
 > [16212.233693] run fstests xfs/013 at 2022-10-08 15:17:59
-> [16220.298671] XFS (pmem0): DAX enabled. Warning: EXPERIMENTAL, use at yo=
-ur
-> own
+> [16220.298671] XFS (pmem0): DAX enabled. Warning: EXPERIMENTAL, use at your own
 > risk
 > [16220.307421] XFS (pmem0): Mounting V5 Filesystem
 > [16220.328753] XFS (pmem0): Ending clean mount
 > [16220.353113] XFS (pmem0): Unmounting Filesystem
-> [16220.979982] XFS (pmem0): DAX enabled. Warning: EXPERIMENTAL, use at yo=
-ur
-> own
+> [16220.979982] XFS (pmem0): DAX enabled. Warning: EXPERIMENTAL, use at your own
 > risk
 > [16220.988705] XFS (pmem0): Mounting V5 Filesystem
 > [16221.010026] XFS (pmem0): Ending clean mount
@@ -119,44 +93,29 @@ Looks like the same thing as Dave[1] and I[2] reported earlier:
 
 --D
 
-[1]
-https://lore.kernel.org/linux-xfs/20220919045003.GJ3600936@dread.disaster.a=
-rea/
+[1] https://lore.kernel.org/linux-xfs/20220919045003.GJ3600936@dread.disaster.area/
 [2] https://lore.kernel.org/linux-xfs/YzMeqNg56v0%2Ft%2F8x@magnolia/
 
-> [17212.940623] Modules linked in: overlay dm_log_writes ext4 mbcache jbd2
-> loop
-> rfkill sunrpc intel_rapl_msr intel_rapl_common intel_uncore_frequency mga=
-g200
-> intel_uncore_frequency_common ipmi_ssif i2c_algo_bit mlx5_ib drm_shmem_he=
-lper
+> [17212.940623] Modules linked in: overlay dm_log_writes ext4 mbcache jbd2 loop
+> rfkill sunrpc intel_rapl_msr intel_rapl_common intel_uncore_frequency mgag200
+> intel_uncore_frequency_common ipmi_ssif i2c_algo_bit mlx5_ib drm_shmem_helper
 > i10nm_edac drm_kms_helper nfit syscopyarea x86_pkg_temp_thermal
 > intel_powerclamp coretemp kvm_intel dcdbas kvm irqbypass dell_smbios rapl
-> intel_cstate ib_uverbs intel_uncore nd_pmem dax_pmem pcspkr
-> dell_wmi_descriptor
-> wmi_bmof mei_me isst_if_mmio ib_core isst_if_mbox_pci sysfillrect acpi_ip=
-mi
+> intel_cstate ib_uverbs intel_uncore nd_pmem dax_pmem pcspkr dell_wmi_descriptor
+> wmi_bmof mei_me isst_if_mmio ib_core isst_if_mbox_pci sysfillrect acpi_ipmi
 > isst_if_common i2c_i801 sysimgblt fb_sys_fops i2c_smbus mei ipmi_si
-> intel_pch_thermal intel_vsec ipmi_devintf ipmi_msghandler acpi_power_meter
-> drm
-> fuse xfs libcrc32c sd_mod t10_pi sg mlx5_core crct10dif_pclmul crc32_pclm=
-ul
-> crc32c_intel mlxfw ghash_clmulni_intel ahci tls libahci psample megaraid_=
-sas
-> pci_hyperv_intf tg3 libata wmi dm_mirror dm_region_hash dm_log dm_mod [la=
-st
+> intel_pch_thermal intel_vsec ipmi_devintf ipmi_msghandler acpi_power_meter drm
+> fuse xfs libcrc32c sd_mod t10_pi sg mlx5_core crct10dif_pclmul crc32_pclmul
+> crc32c_intel mlxfw ghash_clmulni_intel ahci tls libahci psample megaraid_sas
+> pci_hyperv_intf tg3 libata wmi dm_mirror dm_region_hash dm_log dm_mod [last
 > unloaded: scsi_debug]
-> [17213.021327] CPU: 4 PID: 3240987 Comm: fsstress Kdump: loaded Tainted: =
-G=20=20=20=20
+> [17213.021327] CPU: 4 PID: 3240987 Comm: fsstress Kdump: loaded Tainted: G     
 >   W          6.0.0+ #1
 > [17213.030374] Hardware name: Dell Inc. PowerEdge R750/0PJ80M, BIOS 1.5.4
 > 12/17/2021
 > [17213.037852] RIP: 0010:dax_insert_entry+0x6b8/0xa70
-> [17213.042655] Code: 5d 41 5c 41 5d 41 5e 41 5f c3 cc cc cc cc 48 c1 ee 0=
-3 42
-> 80 3c 26 00 0f 85 18 03 00 00 48 8b 7b 20 48 8d 6f 01 e9 9b fe ff ff <0f>=
- 0b
-> e9
+> [17213.042655] Code: 5d 41 5c 41 5d 41 5e 41 5f c3 cc cc cc cc 48 c1 ee 03 42
+> 80 3c 26 00 0f 85 18 03 00 00 48 8b 7b 20 48 8d 6f 01 e9 9b fe ff ff <0f> 0b e9
 > e3 fe ff ff 31 f6 4c 89 ef 44 89 04 24 e8 c3 a2 62 00 44
 > [17213.061409] RSP: 0000:ffa000002a4f7818 EFLAGS: 00010086
 > [17213.066644] RAX: ffd4000004060d40 RBX: ffd4000004060d00 RCX:
@@ -207,11 +166,8 @@ G=20=20=20=20
 > [17213.241241]  exc_page_fault+0x5a/0xe0
 > [17213.244920]  asm_exc_page_fault+0x22/0x30
 > [17213.248939] RIP: 0033:0x7fb39b6cb17a
-> [17213.252527] Code: 00 00 b9 ff ff ff ff c4 e2 68 f5 c9 c5 fb 92 c9 62 e=
-1 7f
-> 29 7f 00 c3 66 0f 1f 84 00 00 00 00 00 40 0f b6 c6 48 89 d1 48 89 fa <f3>=
- aa
-> 48
+> [17213.252527] Code: 00 00 b9 ff ff ff ff c4 e2 68 f5 c9 c5 fb 92 c9 62 e1 7f
+> 29 7f 00 c3 66 0f 1f 84 00 00 00 00 00 40 0f b6 c6 48 89 d1 48 89 fa <f3> aa 48
 > 89 d0 c3 48 3b 15 51 f2 12 00 77 e7 62 e1 fe 28 7f 07 62
 > [17213.271279] RSP: 002b:00007fff0a1fbee8 EFLAGS: 00010206
 > [17213.276516] RAX: 0000000000000056 RBX: 0000000000289000 RCX:
@@ -238,39 +194,26 @@ G=20=20=20=20
 > [17636.123091] ------------[ cut here ]------------
 > [17636.128588] WARNING: CPU: 14 PID: 3240987 at fs/dax.c:404
 > dax_disassociate_entry+0x82/0x2c0
-> [17636.136952] Modules linked in: overlay dm_log_writes ext4 mbcache jbd2
-> loop
-> rfkill sunrpc intel_rapl_msr intel_rapl_common intel_uncore_frequency mga=
-g200
-> intel_uncore_frequency_common ipmi_ssif i2c_algo_bit mlx5_ib drm_shmem_he=
-lper
+> [17636.136952] Modules linked in: overlay dm_log_writes ext4 mbcache jbd2 loop
+> rfkill sunrpc intel_rapl_msr intel_rapl_common intel_uncore_frequency mgag200
+> intel_uncore_frequency_common ipmi_ssif i2c_algo_bit mlx5_ib drm_shmem_helper
 > i10nm_edac drm_kms_helper nfit syscopyarea x86_pkg_temp_thermal
 > intel_powerclamp coretemp kvm_intel dcdbas kvm irqbypass dell_smbios rapl
-> intel_cstate ib_uverbs intel_uncore nd_pmem dax_pmem pcspkr
-> dell_wmi_descriptor
-> wmi_bmof mei_me isst_if_mmio ib_core isst_if_mbox_pci sysfillrect acpi_ip=
-mi
+> intel_cstate ib_uverbs intel_uncore nd_pmem dax_pmem pcspkr dell_wmi_descriptor
+> wmi_bmof mei_me isst_if_mmio ib_core isst_if_mbox_pci sysfillrect acpi_ipmi
 > isst_if_common i2c_i801 sysimgblt fb_sys_fops i2c_smbus mei ipmi_si
-> intel_pch_thermal intel_vsec ipmi_devintf ipmi_msghandler acpi_power_meter
-> drm
-> fuse xfs libcrc32c sd_mod t10_pi sg mlx5_core crct10dif_pclmul crc32_pclm=
-ul
-> crc32c_intel mlxfw ghash_clmulni_intel ahci tls libahci psample megaraid_=
-sas
-> pci_hyperv_intf tg3 libata wmi dm_mirror dm_region_hash dm_log dm_mod [la=
-st
+> intel_pch_thermal intel_vsec ipmi_devintf ipmi_msghandler acpi_power_meter drm
+> fuse xfs libcrc32c sd_mod t10_pi sg mlx5_core crct10dif_pclmul crc32_pclmul
+> crc32c_intel mlxfw ghash_clmulni_intel ahci tls libahci psample megaraid_sas
+> pci_hyperv_intf tg3 libata wmi dm_mirror dm_region_hash dm_log dm_mod [last
 > unloaded: scsi_debug]
-> [17636.217656] CPU: 14 PID: 3240987 Comm: fsstress Kdump: loaded Tainted:=
- G=20=20=20
+> [17636.217656] CPU: 14 PID: 3240987 Comm: fsstress Kdump: loaded Tainted: G    
 >    W          6.0.0+ #1
 > [17636.226791] Hardware name: Dell Inc. PowerEdge R750/0PJ80M, BIOS 1.5.4
 > 12/17/2021
 > [17636.234277] RIP: 0010:dax_disassociate_entry+0x82/0x2c0
-> [17636.239513] Code: c1 e8 03 42 80 3c 20 00 0f 85 c3 01 00 00 48 8b 43 1=
-8 4c
-> 8d 53 20 48 83 f8 01 0f 84 ec 00 00 00 48 39 c8 74 07 48 85 c0 74 02 <0f>=
- 0b
-> 4c
+> [17636.239513] Code: c1 e8 03 42 80 3c 20 00 0f 85 c3 01 00 00 48 8b 43 18 4c
+> 8d 53 20 48 83 f8 01 0f 84 ec 00 00 00 48 39 c8 74 07 48 85 c0 74 02 <0f> 0b 4c
 > 89 c8 48 c1 e8 03 42 80 3c 20 00 0f 85 61 01 00 00 4c 89
 > [17636.258268] RSP: 0018:ffa000002a4f7780 EFLAGS: 00010086
 > [17636.263500] RAX: ff1100060b511448 RBX: ffd40000091176c0 RCX:
@@ -326,11 +269,8 @@ st
 > [17636.468027]  ? lockdep_hardirqs_on+0x79/0x100
 > [17636.472398]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
 > [17636.477455] RIP: 0033:0x7fb39b7432ca
-> [17636.481043] Code: d8 64 89 02 b8 ff ff ff ff eb bd 0f 1f 44 00 00 f3 0=
-f 1e
-> fa 49 89 ca 64 8b 04 25 18 00 00 00 85 c0 75 15 b8 1d 01 00 00 0f 05 <48>=
- 3d
-> 00
+> [17636.481043] Code: d8 64 89 02 b8 ff ff ff ff eb bd 0f 1f 44 00 00 f3 0f 1e
+> fa 49 89 ca 64 8b 04 25 18 00 00 00 85 c0 75 15 b8 1d 01 00 00 0f 05 <48> 3d 00
 > f0 ff ff 77 5e c3 0f 1f 44 00 00 48 83 ec 28 48 89 54 24
 > [17636.499790] RSP: 002b:00007fff0a1fbfb8 EFLAGS: 00000246 ORIG_RAX:
 > 000000000000011d
@@ -357,15 +297,9 @@ f 1e
 > [17636.584756] ---[ end trace 0000000000000000 ]---
 > [18289.471495] XFS (pmem0): Unmounting Filesystem
 > [18291.618034] XFS (pmem1): Unmounting Filesystem
->=20
-> --=20
+> 
+> -- 
 > You may reply to this email to add a comment.
->=20
+> 
 > You are receiving this mail because:
 > You are watching the assignee of the bug.
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
