@@ -2,134 +2,141 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C599C433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Oct 2022 21:38:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C381C433F5
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Oct 2022 23:29:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229471AbiJJVie (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Oct 2022 17:38:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37068 "EHLO
+        id S229953AbiJJX3j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Oct 2022 19:29:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38940 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229461AbiJJVid (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Oct 2022 17:38:33 -0400
-Received: from mail104.syd.optusnet.com.au (mail104.syd.optusnet.com.au [211.29.132.246])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D848F7D792
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Oct 2022 14:38:30 -0700 (PDT)
+        with ESMTP id S229436AbiJJX3i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Oct 2022 19:29:38 -0400
+Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 74B3C3B2
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Oct 2022 16:29:35 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au [49.181.106.210])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id E754D8ADC13;
-        Tue, 11 Oct 2022 08:38:28 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 719191101D09;
+        Tue, 11 Oct 2022 10:29:33 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1oi0Tj-000SBs-JX; Tue, 11 Oct 2022 08:38:27 +1100
-Date:   Tue, 11 Oct 2022 08:38:27 +1100
+        id 1oi2DE-000U82-8P; Tue, 11 Oct 2022 10:29:32 +1100
+Date:   Tue, 11 Oct 2022 10:29:32 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     djwong@kernel.org, linux-xfs@vger.kernel.org
-Subject: [GIT PULL] xfs: updates for 6.1
-Message-ID: <20221010213827.GD2703033@dread.disaster.area>
+To:     Darrick Wong <darrick.wong@oracle.com>
+Cc:     Srikanth C S <srikanth.c.s@oracle.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        Rajesh Sivaramasubramaniom 
+        <rajesh.sivaramasubramaniom@oracle.com>,
+        Junxiao Bi <junxiao.bi@oracle.com>
+Subject: Re: [PATCH] fsck.xfs: mount/umount xfs fs to replay log before
+ running xfs_repair
+Message-ID: <20221010232932.GW3600936@dread.disaster.area>
+References: <MWHPR10MB1486754F03696347F4E7FEE5A3209@MWHPR10MB1486.namprd10.prod.outlook.com>
+ <CO1PR10MB44992848A2000EFE3A930871F8209@CO1PR10MB4499.namprd10.prod.outlook.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <CO1PR10MB44992848A2000EFE3A930871F8209@CO1PR10MB4499.namprd10.prod.outlook.com>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=634490d5
+X-Optus-CM-Analysis: v=2.4 cv=e9dl9Yl/ c=1 sm=1 tr=0 ts=6344aadd
         a=j6JUzzrSC7wlfFge/rmVbg==:117 a=j6JUzzrSC7wlfFge/rmVbg==:17
-        a=kj9zAlcOel0A:10 a=Qawa6l4ZSaYA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=G3V0bMtvOhZ3vtI0_UgA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=Qawa6l4ZSaYA:10 a=yPCof4ZbAAAA:8 a=VwQbUJbxAAAA:8
+        a=7-415B0cAAAA:8 a=7mz5x0ZcfSVhkIDmIPAA:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+On Mon, Oct 10, 2022 at 03:40:51PM +0000, Darrick Wong wrote:
+> LGTM, want to send this to the upstream list to start that discussion?
+> 
+> --D
+> 
+> ________________________________________
+> From: Srikanth C S <srikanth.c.s@oracle.com>
+> Sent: Monday, October 10, 2022 08:24
+> To: linux-xfs@vger.kernel.org; Darrick Wong
+> Cc: Rajesh Sivaramasubramaniom; Junxiao Bi
+> Subject: [PATCH] fsck.xfs: mount/umount xfs fs to replay log before running xfs_repair
+> 
+> fsck.xfs does xfs_repair -e if fsck.mode=force is set. It is
+> possible that when the machine crashes, the fs is in inconsistent
+> state with the journal log not yet replayed. This can put the
+> machine into rescue shell. To address this problem, mount and
+> umount the fs before running xfs_repair.
 
-Can you please pull the latest XFS updates from the tag below? There
-are relatively few updates this cycle; half the cycle was eaten by a
-grue, the other half was eaten by a tricky data corruption issue
-that I still haven't entirely solved. Hence there's no major changes
-in this cycle and it's largely just minor cleanups and small bug
-fixes.
+What's the purpose of forcing xfs_repair to be run on every boot?
+The whole point of having a journalling filesystem is to avoid
+needing to run fsck on every boot.
 
-The branch merges cleanly with your tree as of a few minutes ago.
-Please let me know if you see something different!
+I get why one might want to occasionally force a repair check on
+boot (e.g. to repair a problem with the root filesystem), but this
+is a -rescue operation- and really shouldn't be occurring
+automatically on every boot or after a kernel crash.
 
--Dave.
+If it is only occurring during rescue operations, then why is it a problem
+dumping out to a shell for the admin performing rescue
+operations to deal with this directly? e.g. if the fs has a
+corrupted journal, then a mount cycle will not fix the problem and
+the admin will still get dumped into a rescue shell to fix the
+problem manually.
 
-The following changes since commit 521a547ced6477c54b4b0cc206000406c221b4d6:
+Hence I don't really know why anyone would be configuring their
+systems like this:
 
-  Linux 6.0-rc6 (2022-09-18 13:44:14 -0700)
+> Run xfs_repair -e when fsck.mode=force and repair=auto or yes.
 
-are available in the Git repository at:
+as it makes no sense at all for a journalling filesystem.
 
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.1-for-linus
+> If fsck.mode=force and fsck.repair=no, run xfs_repair -n without
+> replaying the logs.
 
-for you to fetch changes up to e033f40be262c4d227f8fbde52856e1d8646872b:
+Nor is it clear why anyone would want force a boot time fsck and
+then not repair the damage that might be found....
 
-  xfs: on memory failure, only shut down fs after scanning all mappings (2022-10-04 16:40:01 +1100)
+More explanation, please!
 
-----------------------------------------------------------------
-xfs: changes for 6.1-rc1
+> Signed-off-by: Srikanth C S <srikanth.c.s@oracle.com>
+> ---
+>  fsck/xfs_fsck.sh | 20 ++++++++++++++++++--
+>  1 file changed, 18 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fsck/xfs_fsck.sh b/fsck/xfs_fsck.sh
+> index 6af0f22..21a8c19 100755
+> --- a/fsck/xfs_fsck.sh
+> +++ b/fsck/xfs_fsck.sh
+> @@ -63,8 +63,24 @@ if [ -n "$PS1" -o -t 0 ]; then
+>  fi
+> 
+>  if $FORCE; then
+> -       xfs_repair -e $DEV
+> -       repair2fsck_code $?
+> +       if $AUTO; then
+> +               xfs_repair -e $DEV
+> +                error=$?
+> +                if [ $error -eq 2 ]; then
+> +                        echo "Replaying log for $DEV"
+> +                        mkdir -p /tmp/tmp_mnt
+> +                        mount $DEV /tmp/tmp_mnt
+> +                        umount /tmp/tmp_mnt
+> +                        xfs_repair -e $DEV
+> +                        error=$?
+> +                        rmdir /tmp/tmp_mnt
+> +                fi
+> +        else
+> +                #fsck.mode=force is set but fsck.repair=no
+> +                xfs_repair -n $DEV
+> +                error=$?
+> +        fi
+> +       repair2fsck_code $error
+>          exit $?
+>  fi
 
-This update contains:
-- fixes for filesystem shutdown procedure during a DAX memory
-  failure notification
-- bug fixes
-- logic cleanups
-- log message cleanups
-- updates to use vfs{g,u}id_t helpers where appropriate
+As a side note, the patch has damaged whitespace....
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
+Cheers,
 
-----------------------------------------------------------------
-Christian Brauner (1):
-      xfs: port to vfs{g,u}id_t and associated helpers
-
-Darrick J. Wong (1):
-      xfs: on memory failure, only shut down fs after scanning all mappings
-
-Gaosheng Cui (1):
-      xfs: remove xfs_setattr_time() declaration
-
-Shida Zhang (2):
-      xfs: trim the mapp array accordingly in xfs_da_grow_inode_int
-      xfs: rearrange the logic and remove the broken comment for xfs_dir2_isxx
-
-Zeng Heng (7):
-      xfs: remove the redundant word in comment
-      xfs: remove redundant else for clean code
-      xfs: clean up "%Ld/%Lu" which doesn't meet C standard
-      xfs: replace unnecessary seq_printf with seq_puts
-      xfs: simplify if-else condition in xfs_validate_new_dalign
-      xfs: simplify if-else condition in xfs_reflink_trim_around_shared
-      xfs: missing space in xfs trace log
-
-Zhiqiang Liu (1):
-      xfs: do not need to check return value of xlog_kvmalloc()
-
-ye xingchen (1):
-      xfs: Remove the unneeded result variable
-
- fs/xfs/libxfs/xfs_bmap.c        |  2 +-
- fs/xfs/libxfs/xfs_da_btree.c    |  2 +-
- fs/xfs/libxfs/xfs_dir2.c        | 50 ++++++++++++++++++++++++++++++--------------------
- fs/xfs/libxfs/xfs_dir2.h        |  4 ++--
- fs/xfs/libxfs/xfs_dir2_sf.c     |  4 +---
- fs/xfs/libxfs/xfs_inode_fork.c  |  4 ++--
- fs/xfs/scrub/dir.c              |  2 +-
- fs/xfs/xfs_attr_item.c          |  6 ------
- fs/xfs/xfs_dir2_readdir.c       |  2 +-
- fs/xfs/xfs_inode.c              | 13 ++++++-------
- fs/xfs/xfs_inode_item.c         |  2 +-
- fs/xfs/xfs_inode_item_recover.c |  4 ++--
- fs/xfs/xfs_iops.c               |  6 ++++--
- fs/xfs/xfs_iops.h               |  1 -
- fs/xfs/xfs_itable.c             |  8 ++++++--
- fs/xfs/xfs_log.c                | 10 +++++-----
- fs/xfs/xfs_mount.c              | 38 ++++++++++++++++++++------------------
- fs/xfs/xfs_notify_failure.c     | 26 +++++++++++++++++---------
- fs/xfs/xfs_reflink.c            | 22 ++++++++++++----------
- fs/xfs/xfs_stats.c              |  4 ++--
- fs/xfs/xfs_trace.h              |  4 ++--
- 21 files changed, 116 insertions(+), 98 deletions(-)
-
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
