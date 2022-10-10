@@ -2,121 +2,96 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9560DC433F5
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Oct 2022 01:31:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63BDCC433FE
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Oct 2022 14:31:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230142AbiJJBbr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 9 Oct 2022 21:31:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33336 "EHLO
+        id S229626AbiJJObZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Oct 2022 10:31:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50786 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230290AbiJJBbo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 9 Oct 2022 21:31:44 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EBEF46627
-        for <linux-xfs@vger.kernel.org>; Sun,  9 Oct 2022 18:31:43 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D4937B80DFE
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Oct 2022 01:31:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 943C6C4347C
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Oct 2022 01:31:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665365500;
-        bh=3Gnt1i5gtLS0EljPqhJpGbWuk9c7tIPX78qIB7JX1/Y=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=bf2CjdNDFBpWJyeAbJrZ3rFJCxc4aqJ3j3NRSlDdVltGVbUlgxx/iIcASWIrhkv7X
-         hXZ5ERrlQIPwQiuxYkpoa9HnEawF4EsO6wjdCV20abOzzduERIrBfOHL2e461Gfm9C
-         qBwmZkHJVrePuJCOEuktHcnE1KWeyvm5if2ECBJcfel94x8y+n8qBHggh+mFX59Xyt
-         8Lx/70KCduPlkJKwH9mnP6ObaCnFEl1F9qQKJWXHPHwOdpEpk+toqwzfZlkfClJuhY
-         OgiAwzmTWMx0RJ5yVJzhC4eXsVeyUp7TY8mLS/4klkdg7GiqmmGR0qlEvp665Oj5Ma
-         gq51UfS5+6mZw==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 7C4FDC072A6; Mon, 10 Oct 2022 01:31:40 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 216566] [xfstests generic/648] BUG: unable to handle page
- fault, RIP: 0010:__xfs_dir3_data_check+0x171/0x700 [xfs]
-Date:   Mon, 10 Oct 2022 01:31:40 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: zlang@redhat.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-216566-201763-CsVSUutBIa@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-216566-201763@https.bugzilla.kernel.org/>
-References: <bug-216566-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S229469AbiJJObZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Oct 2022 10:31:25 -0400
+Received: from mail-wr1-x42c.google.com (mail-wr1-x42c.google.com [IPv6:2a00:1450:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18FBFB5C;
+        Mon, 10 Oct 2022 07:31:24 -0700 (PDT)
+Received: by mail-wr1-x42c.google.com with SMTP id bp11so4574123wrb.9;
+        Mon, 10 Oct 2022 07:31:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=9W6fJqaiY306Xcvj7NQVcBf2jidCS9KF6ZaE4FOoSAw=;
+        b=lFSLJNtZg7aySb11HILc8GRwsoQ8ITFGL56TkFHYScjObqvzH1OyVWcQ+IZhvj5VWn
+         g1cxvXRUOgYSbtZY5b9pEIlSBgLMZzDkqURWgjE1wmL9Cpq2u8aU0CKvmAtHoDNch0W1
+         DSloWwm4GKw/9uFpwtv4BsLLgHw98F1JMZG8yuvre9NSr6gFyjNPOfJAPfnK3EqKEjFD
+         vcXyIoww74oC3EqI7sNxNudq9xKtpVgjrpKS+eGKI9gSMtmMimrYhtcnDoenxQLLEGdm
+         Ut6NJZhcoJ/GO1cXlnVsMcF30aSVLxlqHfcAq7P8DrB700hXraCP10BUOqlr8J6lFipm
+         ZpKw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=9W6fJqaiY306Xcvj7NQVcBf2jidCS9KF6ZaE4FOoSAw=;
+        b=WjHA3X1XQATosKWlkiRBhRKY3FoVpbwEaGGGjliSx8Iib3wbyTqx0Pj/4euwFQLBXu
+         /pP//O5C9e+KaF1ryTPC1hvNK4BAmeQx5EHbJuzRlndfomSi2cQV/TFdJUheeskQpKkM
+         efr+EMDns3yNON074nDrji0v9jh//GtEQGbc639Q2nPO2rPlzOgWTIoCCt0kbLgq95wP
+         Y37pZZ92wGTU4VU1yiW4Geg7IUIiEfgYZ7LTDeqf2cu8IZdxu7o37yCBfmL1qoQKytPi
+         aKW3Nj3uW3N86C7QxzsASYvR776InSTti18BPgwnHkL4YlAassvQeQp8wPDu3oLXZ8Nb
+         nsSQ==
+X-Gm-Message-State: ACrzQf0mliUke/qNTaFvoYXgZX8JRDmn7iH9HjhYRXh9+85WsPx8RKmc
+        GbGR7bN0acohBm7XqtSXxRQ=
+X-Google-Smtp-Source: AMsMyM6ijEZJGwyQ7LKHbfjb62oWOOcJT2eu6knCIqMhkC/VbFM16rdd36p7YjBlYyjFpjpnzJW8PA==
+X-Received: by 2002:a05:6000:1887:b0:22e:5026:42c3 with SMTP id a7-20020a056000188700b0022e502642c3mr11667116wri.687.1665412282579;
+        Mon, 10 Oct 2022 07:31:22 -0700 (PDT)
+Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
+        by smtp.gmail.com with ESMTPSA id r17-20020a05600c459100b003b4a68645e9sm16223768wmo.34.2022.10.10.07.31.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 10 Oct 2022 07:31:20 -0700 (PDT)
+From:   Colin Ian King <colin.i.king@gmail.com>
+To:     "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, bllvm@lists.linux.dev
+Subject: [PATCH] xfs: remove redundant pointer lip
+Date:   Mon, 10 Oct 2022 15:31:19 +0100
+Message-Id: <20221010143119.3191249-1-colin.i.king@gmail.com>
+X-Mailer: git-send-email 2.37.3
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D216566
+The assignment to pointer lip is not really required, the pointer lip
+is redundant and can be removed.
 
---- Comment #2 from Zorro Lang (zlang@redhat.com) ---
-(In reply to Dave Chinner from comment #1)
-> On Sun, Oct 09, 2022 at 05:47:49PM +0000, bugzilla-daemon@kernel.org wrot=
-e:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=3D216566
-> >=20
-> >             Bug ID: 216566
-> >            Summary: [xfstests generic/648] BUG: unable to handle page
-> >                     fault, RIP: 0010:__xfs_dir3_data_check+0x171/0x700
-> >                     [xfs]
-> >            Product: File System
-> >            Version: 2.5
-> >     Kernel Version: v6.1-rc0
-> >           Hardware: All
-> >                 OS: Linux
-> >               Tree: Mainline
-> >             Status: NEW
-> >           Severity: normal
-> >           Priority: P1
-> >          Component: XFS
-> >           Assignee: filesystem_xfs@kernel-bugs.kernel.org
-> >           Reporter: zlang@redhat.com
-> >         Regression: No
-> >=20
-> > xfstests generic/648 hit kernel panic[1] on xfs with 64k directory block
-> size
-> > (-n size=3D65536), before panic, there's a kernel assertion (not sure i=
-f it's
-> > related).
-> >=20
-> > It's reproducable, but not easy. Generally I reproduced it by loop runn=
-ing
-> > generic/648 on xfs (-n size=3D65536) hundreds of time.
-> >=20
-> > The last time I hit this panic on linux with HEAD=3D
->=20
-> Given that there have been no changes to XFS committed in v6.1-rc0
-> at this point in time, this won't be an XFS regression unless you
-> can reproduce it on 6.0 or 5.19 kernels, too. Regardless, I'd suggest
-> bisection is in order to find where the problem was introduced.
+Cleans up clang-scan warning:
+warning: Although the value stored to 'lip' is used in the enclosing
+expression, the value is never actually read from 'lip'
+[deadcode.DeadStores]
 
-It's not a regression recently, I even can reproduce it on RHEL-9 (which ba=
-se
-on 5.14 kernel).
+Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
+---
+ fs/xfs/xfs_trans_ail.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
->=20
-> -Dave.
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 16fbf2a1144c..87db72758d1f 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -730,11 +730,10 @@ void
+ xfs_ail_push_all_sync(
+ 	struct xfs_ail  *ailp)
+ {
+-	struct xfs_log_item	*lip;
+ 	DEFINE_WAIT(wait);
+ 
+ 	spin_lock(&ailp->ail_lock);
+-	while ((lip = xfs_ail_max(ailp)) != NULL) {
++	while (xfs_ail_max(ailp)) {
+ 		prepare_to_wait(&ailp->ail_empty, &wait, TASK_UNINTERRUPTIBLE);
+ 		wake_up_process(ailp->ail_task);
+ 		spin_unlock(&ailp->ail_lock);
+-- 
+2.37.3
 
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
