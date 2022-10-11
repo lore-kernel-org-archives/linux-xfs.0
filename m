@@ -2,229 +2,316 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50AE3C433FE
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Oct 2022 16:08:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BECC5C4332F
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Oct 2022 17:49:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229683AbiJKQIG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Oct 2022 12:08:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38800 "EHLO
+        id S229452AbiJKRtJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Oct 2022 13:49:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229471AbiJKQIF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Oct 2022 12:08:05 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4444152DF6
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Oct 2022 09:08:04 -0700 (PDT)
+        with ESMTP id S229812AbiJKRtI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Oct 2022 13:49:08 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 172E54B98D;
+        Tue, 11 Oct 2022 10:49:06 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id A445BCE1888
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Oct 2022 16:08:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBD63C433C1;
-        Tue, 11 Oct 2022 16:08:00 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 88ABD61230;
+        Tue, 11 Oct 2022 17:49:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0423C433C1;
+        Tue, 11 Oct 2022 17:49:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665504480;
-        bh=/QQHqUzWHIlKYJLQ3wV1C0FXkotVeTNnJVM0kG91dnI=;
+        s=k20201202; t=1665510545;
+        bh=Tx6VSe0aEm9DsbJigOKGBjfcl9+tMwSv+OZa38VrEDM=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=tUPSexOoh55iDm05dsI/YgqJ8RQkzgvk4hssZWzJ5cGdjeWfn88k0nVZZAsORWwh6
-         zVxLhUZiBerzNMuT6Sflik2rnk2iHDic+M0pYHyO17zrlS+6NYUdxiIpjI8BQEIwNM
-         2Rtk9x//rCVQnjeX9uLvm+evQrWiLxxbkAzkvvuaJPnXhU9L2VS3QAKy1oFLrlOeAH
-         TlgA/cqgQcDzcwTCbCOuVljQV98TwZR/eXspKY1JWOHGI/IIMEVusv3OLnvy+K9+6v
-         aM2b8yUenkO9NFx3iJSlmvPY9oCf07yEcH9NtbVzNw40Nv4nHFp5jmn+YWJiqdOozl
-         /yq63SP3MswRA==
-Date:   Tue, 11 Oct 2022 09:08:00 -0700
+        b=eug4FctvkItews45WiLguZ1aefFLx/UVV3hHHIur6iGxN4XmReRw91mYv7TwJHpuP
+         4PfEQzZXEBH/CsRKgxooiFZD0gFINFWx6/N2Gn3Jzx+nK9ZnItYRxtFofznPGm0CZ3
+         Rfb3idmhyu3SPVsKIKsEAnRQPzUIjZXMtL5RNWzm9eOUEThRGR1ps5oj/Amgev9MSk
+         GD3YmptmPlRhEV7IVAUr7O4c4jCbx93Pu+R5e8/gzexTeWe0MNp+NPtJ98bzSxnjnk
+         tJaEomySIpFF4xIGQq/u620357Pjecr6jpP0oaM47oSxAnFOMsf1UKjQfpfs4XR0nU
+         h5/WMdpYM84Fg==
+Date:   Tue, 11 Oct 2022 10:49:05 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Darrick Wong <darrick.wong@oracle.com>,
-        Srikanth C S <srikanth.c.s@oracle.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        Rajesh Sivaramasubramaniom 
-        <rajesh.sivaramasubramaniom@oracle.com>,
-        Junxiao Bi <junxiao.bi@oracle.com>
-Subject: Re: [PATCH] fsck.xfs: mount/umount xfs fs to replay log before
- running xfs_repair
-Message-ID: <Y0WU4FANNYTKNXzL@magnolia>
-References: <MWHPR10MB1486754F03696347F4E7FEE5A3209@MWHPR10MB1486.namprd10.prod.outlook.com>
- <CO1PR10MB44992848A2000EFE3A930871F8209@CO1PR10MB4499.namprd10.prod.outlook.com>
- <20221010232932.GW3600936@dread.disaster.area>
- <Y0S5OIoHkP4YMgBP@magnolia>
- <20221011042602.GX3600936@dread.disaster.area>
+To:     Hironori Shiina <shiina.hironori@gmail.com>
+Cc:     Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        Hironori Shiina <shiina.hironori@fujitsu.com>
+Subject: Re: [RFC PATCH] xfs: test for fixing wrong root inode number
+Message-ID: <Y0WskT/O3J0pm48N@magnolia>
+References: <20220928210337.417054-1-shiina.hironori@fujitsu.com>
+ <20220929014955.pxou2qymdumvijtt@zlang-mailbox>
+ <eae39d48-1fc1-09dc-7f5e-b1112c880584@gmail.com>
+ <20221002042708.fshgqyqyhidgsx7z@zlang-mailbox>
+ <Yztcg/8nbS0BDedf@magnolia>
+ <fe8aa034-ec20-f316-ae03-33f52ecc3001@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221011042602.GX3600936@dread.disaster.area>
+In-Reply-To: <fe8aa034-ec20-f316-ae03-33f52ecc3001@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 11, 2022 at 03:26:02PM +1100, Dave Chinner wrote:
-> On Mon, Oct 10, 2022 at 05:30:48PM -0700, Darrick J. Wong wrote:
-> > On Tue, Oct 11, 2022 at 10:29:32AM +1100, Dave Chinner wrote:
-> > > On Mon, Oct 10, 2022 at 03:40:51PM +0000, Darrick Wong wrote:
-> > > > LGTM, want to send this to the upstream list to start that discussion?
+On Fri, Oct 07, 2022 at 09:59:35PM -0400, Hironori Shiina wrote:
+> 
+> 
+> On 10/3/22 18:04, Darrick J. Wong wrote:
+> > On Sun, Oct 02, 2022 at 12:27:08PM +0800, Zorro Lang wrote:
+> >> On Fri, Sep 30, 2022 at 11:01:51AM -0400, Hironori Shiina wrote:
+> >>>
+> >>>
+> >>> On 9/28/22 21:49, Zorro Lang wrote:
+> >>>> On Wed, Sep 28, 2022 at 05:03:37PM -0400, Hironori Shiina wrote:
+> >>>>> Test '-x' option of xfsrestore. With this option, a wrong root inode
+> >>>>> number is corrected. A root inode number can be wrong in a dump created
+> >>>>> by problematic xfsdump (v3.1.7 - v3.1.9) with blukstat misuse. This
+> >>>>> patch adds a dump with a wrong inode number created by xfsdump 3.1.8.
+> >>>>>
+> >>>>> Link: https://lore.kernel.org/linux-xfs/20201113125127.966243-1-hsiangkao@redhat.com/
+> >>>>> Signed-off-by: Hironori Shiina <shiina.hironori@fujitsu.com>
+> >>>>> ---
+> >>>>>  common/dump                    |   2 +-
+> >>>>>  src/root-inode-broken-dumpfile | Bin 0 -> 21648 bytes
+> >>>>>  tests/xfs/554                  |  37 +++++++++++++++++++++
+> >>>>>  tests/xfs/554.out              |  57 +++++++++++++++++++++++++++++++++
+> >>>>>  4 files changed, 95 insertions(+), 1 deletion(-)
+> >>>>>  create mode 100644 src/root-inode-broken-dumpfile
+> >>>>>  create mode 100644 tests/xfs/554
+> >>>>>  create mode 100644 tests/xfs/554.out
+> >>>>>
+> >>>>> diff --git a/common/dump b/common/dump
+> >>>>> index 8e0446d9..50b2ba03 100644
+> >>>>> --- a/common/dump
+> >>>>> +++ b/common/dump
+> >>>>> @@ -1003,7 +1003,7 @@ _parse_restore_args()
+> >>>>>          --no-check-quota)
+> >>>>>              do_quota_check=false
+> >>>>>              ;;
+> >>>>> -	-K|-R)
+> >>>>> +	-K|-R|-x)
+> >>>>>  	    restore_args="$restore_args $1"
+> >>>>>              ;;
+> >>>>>  	*)
+> >>>>> diff --git a/src/root-inode-broken-dumpfile b/src/root-inode-broken-dumpfile
+> >>>>> new file mode 100644
+> >>>>> index 0000000000000000000000000000000000000000..9a42e65d8047497be31f3abbaf4223ae384fd14d
+> >>>>> GIT binary patch
+> >>>>> literal 21648
+> >>>>> zcmeI)K}ge49KiAC_J<CEBr!0AwBf~zbCHB}5DyxL6eU8Jnqylvayj;2VuG+d)TN6;
+> >>>>> z5J8vlAaw9hXi(UousT$Sin@BRJfwHM)O+*2*njz_zc+h*ckuV#@BMuKe;;JbgTL{<
+> >>>>> z!SwZ9zC#ERe%reLe5&cz2e}qM<!i2dXQHt^{^`d1Qx{)MMzW#$%dR@J={0`IRsGx4
+> >>>>> z(yn@Oi-nBqCOVIG?&{kpwnv~&w_>6_ozY1^fph=w8(=^oTg&wOe=(WQByyQ_Hfd|4
+> >>>>> z^o76<0!zn#v>k3blbU)nzx=KF^}-G%R;OaQYsHwGDkO`kD^@q^(_Ac_8H<gKj^>a0
+> >>>>> z6p*%BK>q#b>2EE%^!@f?Z`-p+tI@M}qmMm@zMJk>K1U^=d~G^NUG?X4vkvKtOf-3Y
+> >>>>> zpVM9YgM9Y7{*P0ApJNUh^uk1wCnA6V0tg_000IagfB*srAb<b@2q1s}0tg_000Iag
+> >>>>> zfB*srAb<b@2q1s}0tg_000IagfB*srAb<b@2q1s}0tg_000IagfB*srAb`MM1p>_h
+> >>>>> z2-R=Q9ooK1{l9<Dy8IIMUVXr9BW9uI1x7};j+kij|5kLI^32no;n|PvqD74ZOlJ#n
+> >>>>> z0-~CKSlx#liMS>jt232#==00xPqwp;gsZrjc?`PPxaCE~>3(^o5-%+Nj=HegJFK2b
+> >>>>> z=l5zT4IDgO=sJ1zp=jyrALvcQJK|j;sN2_jUmobjN<!S6m1{G<LZ^+JP;T!|3{9)w
+> >>>>> eGf&ioo}iw|li2&4IyG;z<}vrl)Mic2`t2{52##q0
+> >>>>>
+> >>>>> literal 0
+> >>>>> HcmV?d00001
+> >>>>
+> >>>> Please don't try to add a binary file to fstests directly.
+> >>>>
+> >>>>>
+> >>>>> diff --git a/tests/xfs/554 b/tests/xfs/554
+> >>>>> new file mode 100644
+> >>>>> index 00000000..13bc62c7
+> >>>>> --- /dev/null
+> >>>>> +++ b/tests/xfs/554
+> >>>>> @@ -0,0 +1,37 @@
+> >>>>> +#! /bin/bash
+> >>>>> +# SPDX-License-Identifier: GPL-2.0
+> >>>>> +# Copyright (c) 2022 Fujitsu Limited. All Rights Reserved.
+> >>>>> +#
+> >>>>> +# FS QA Test No. 554
+> >>>>> +#
+> >>>>> +# Test restoring a dumpfile with a wrong root inode number created by
+> >>>>> +# xfsdump 3.1.8.
+> >>>>> +# This test restores the checked-in broken dump with '-x' flag.
+> >>>>> +#
+> >>>>> +
+> >>>>> +. ./common/preamble
+> >>>>> +_begin_fstest auto quick dump
+> >>>>> +
+> >>>>> +# Import common functions.
+> >>>>> +. ./common/dump
+> >>>>> +
+> >>>>> +# real QA test starts here
+> >>>>> +_supported_fs xfs
+> >>>>> +_require_scratch
+> >>>>
+> >>>> The -x option is a new feature for xfsdump, not all system support that. So
+> >>>> we need to _notrun if test on a system doesn't support it. A separated
+> >>>> _require_* helper would be better if there'll be more testing about this
+> >>>> new feature. Or a local detection in this case is fine too (can be moved as
+> >>>> a common helper later).
+> >>>>
+> >>>>> +_scratch_mkfs_xfs >>$seqres.full || _fail "mkfs failed"
+> >>>>> +_scratch_mount
+> >>>>> +
+> >>>>> +# Create dumpdir for comparing with restoredir
+> >>>>> +rm -rf $dump_dir
+> >>>>> +mkdir $dump_dir || _fail "failed to mkdir $restore_dir"
+> >>>>           ^^                                  ^^
+> >>>>
+> >>>> Are you trying to create a dump dir or restore dir?
+> >>>>
+> >>>>> +touch $dump_dir/FILE_1019
+> >>>>> +
+> >>>>> +_do_restore_toc -x -f $here/src/root-inode-broken-dumpfile
+> >>>>
+> >>>> Why I didn't see how you generate this broken dumpfile in this case?
+> >>>>
+> >>>> Oh... I see, you want to store a dumpfile in fstests source code directly.
+> >>>> I thought you submited that file accidentally...
+> >>>>
+> >>>> No, we don't do things like this way, please try to generate the dumpfile
+> >>>> in this test case at first, then restore it. For example using xfs_db to
+> >>>> break a xfs, or using some tricky method (likes xfs/545).
+> >>>>
+> >>>
+> >>> Thank you for the comments. I will try another approach. I'm having
+> >>> trouble creating a dumpfile for this test. Because xfsdump was already
+> >>> fixed, xfsdump no longer generates a corrupted dumpfile even if there is
+> >>> a lower inode number than a root inode.
+> >>
+> >> Oh, I see. You can try, but I think it's hard. It maybe not suitable to be a
+> >> fstests case, if it has to depend on a binary fs dump file. If so, We can cover
+> >> it on other place, with this existed "bad" dump file.
 > > 
-> > UGH, so I thought this was an internal thread, but it turns out that
-> > linux-xfs has been cc'd for a while but none of the messages made it to
-> > lore.
+> > How difficult is it to create a dumpfile with a broken root inode?
+> > Is it a simple matter of creating a good dump and patching a few bytes,
+> > or do we end up having to patch the whole file?
 > > 
-> > I'll fill in some missing context below.
+> > (The reason I ask is that I've heard about this problem for ages but
+> > I don't actually know how to create a bad dump...)
 > > 
-> > > > --D
-> > > > 
-> > > > ________________________________________
-> > > > From: Srikanth C S <srikanth.c.s@oracle.com>
-> > > > Sent: Monday, October 10, 2022 08:24
-> > > > To: linux-xfs@vger.kernel.org; Darrick Wong
-> > > > Cc: Rajesh Sivaramasubramaniom; Junxiao Bi
-> > > > Subject: [PATCH] fsck.xfs: mount/umount xfs fs to replay log before running xfs_repair
-> > > > 
-> > > > fsck.xfs does xfs_repair -e if fsck.mode=force is set. It is
-> > > > possible that when the machine crashes, the fs is in inconsistent
-> > > > state with the journal log not yet replayed. This can put the
-> > > > machine into rescue shell. To address this problem, mount and
-> > > > umount the fs before running xfs_repair.
-> > > 
-> > > What's the purpose of forcing xfs_repair to be run on every boot?
-> > > The whole point of having a journalling filesystem is to avoid
-> > > needing to run fsck on every boot.
-> > 
-> > I don't think repair-at-every-boot here is the overall goal for our
-> > customer base.
-> > 
-> > We've had some <cough> major support events over the last few months.
-> > There are two things going on here: some of the problems are due to are
-> > datacenters abending, and the rest of it are the pile of data corruption
 > 
-> /me has to look up what "abending" means in this context, because I
-> don't think you mean that the data denter was "Absent By Enforced
-> Net Deprivation"...
+> As I dug into the data structure, I succeeded in creating a dumpfile with a wrong
+> root inode by modifying `content_inode_hdr_t.cih_rootino` and
+> `global_hdr_t.gh_checksum`.
 > 
-> Ah, it's an ancient abbreviation from the early days of IBM
-> mainframes meaning "abnormal end of task". i.e. something crashed.
-
-Yes.
-
-> > problems that you and I and Chandan have been working through for months
-> > now.
-> > 
-> > This means that customer support has 30,000 VMs to reboot.  90% of the
-> > systems involved seem to have survived more or less intact, but that
-> > leaves 10% of them with latent errors, unmountable root filesystems,
-> > etc.  They probably have even more than that, but I don't recommend
-> > inviting the G-men for a visit to find out the real sum.
-> > 
-> > Since these machines are remotely manageable, support /can/ inject the
-> > kernel command line with 'fsck.mode=force' to kick off xfs_repair if the
-> > machine won't come up or if they suspect there might be deeper issues
-> > with latent errors in the fs metadata, which is what they did to try to
-> > get everyone running ASAP while anticipating any future problems...
+> After creating a inode with a lower number than the root inode with the method in
+> generic/545, I modified a dumpfile as follows:
+> ---
+> _do_dump_file
 > 
-> This context is kinda important :)
+> # Break dumpfile
+> old_checksum=$(od -A n -j 12 -N 4 -i --endian=big $dump_file)
+> gap=$(($root_inum - $inum))
+> new_checksum=$(($old_checksum + ($gap >> 32) + ($gap & 0x00000000ffffffff)))
+> v=($(printf "%016x" $inum |  awk -v FS='' '{for (i=1; i<=NF; i+=2) print $i$(i+1)}'))
+> echo -en "\x${v[0]}\x${v[1]}\x${v[2]}\x${v[3]}\x${v[4]}\x${v[5]}\x${v[6]}\x${v[7]}" | dd of=$dump_file bs=1 seek=3928 conv=notrunc
+> v=($(printf "%016x" $new_checksum |  awk -v FS='' '{for (i=9; i<=NF; i+=2) print $i$(i+1)}'))
+> echo -en "\x${v[0]}\x${v[1]}\x${v[2]}\x${v[3]}" | dd of=$dump_file bs=1 seek=12 conv=notrunc
 > 
-> [....]
-> 
-> > > More explanation, please!
-> > 
-> > Frankly, I /don't/ want to expend a lot of time wringing our hands over
-> > how exactly do we hammer 2022 XFS tools into 1994 ext2 behavioral
-> > semantics.
-> 
-> Neither do I - I just want to understand the problem that the
-> change is trying to solve. The commit message gave no indication of
-> why the change was being proposed; commit messages need to tell the
-> whole story, not describe the code change being made.  If it started
-> like:
-> 
-> "After a recent data center crash, we recently had to recover root
-> filesystems on several thousand VMs via a boot time fsck. Many of
-> them failed unnecessarily because.... "
-> 
-> then it becomes self evident that replaying the log in these
-> situations is necessary.
+> _do_restore_file -x
+> ---
+> (I'm afraid I'm not so familiar with editing a binary file.)
 
-<nod> Srikanth, would you reword the patch message to include some of
-the details about why we want this patch?
+That's the only way I know of to do this via shell script. :/
 
-> > What they really want is online fsck to detect and fix problems in real
-> > time, but I can't seem to engage the community on how exactly do we land
-> > this thing now that I've finished writing it.
-> 
-> I only want to look at the interfacing with the runtime structures
-> and locking to ensure we don't back ourselves into a nasty corner.
-> This is really only a small part of the bigger online repair
-> patchset.  Once we've got that sorted, I think we should just commit
-> the rest of it as it stands (i.e. tested but unreviewed) and fix as
-> needed, just like we do with the userspace xfs_repair code...
+Perhaps it would be cleaner to submit a small C program to do the
+editing instead of relying on bash?
 
-Ok.
+> The offset of `global_hdr_t.gh_checksum` is 12.
+> The offset of `content_inode_hdr_t.cih_rootino` is:
+>   global_hdr_t.gh_upper (0x400) + drive_hdr_t.dh_upper (0x400) + 
+>   media_hdr_t.mh_upper (0x400) + content_hdr_t.ch_specific (0x340) +
+>   content_inode_hdr_t.cih_rootino (0x18) = 0xf58 (3928)
 
-> > --D
-> > 
-> > > > Signed-off-by: Srikanth C S <srikanth.c.s@oracle.com>
-> > > > ---
-> > > >  fsck/xfs_fsck.sh | 20 ++++++++++++++++++--
-> > > >  1 file changed, 18 insertions(+), 2 deletions(-)
-> > > > 
-> > > > diff --git a/fsck/xfs_fsck.sh b/fsck/xfs_fsck.sh
-> > > > index 6af0f22..21a8c19 100755
-> > > > --- a/fsck/xfs_fsck.sh
-> > > > +++ b/fsck/xfs_fsck.sh
-> > > > @@ -63,8 +63,24 @@ if [ -n "$PS1" -o -t 0 ]; then
-> > > >  fi
-> > > > 
-> > > >  if $FORCE; then
-> > > > -       xfs_repair -e $DEV
-> > > > -       repair2fsck_code $?
-> > > > +       if $AUTO; then
-> > > > +               xfs_repair -e $DEV
-> > > > +                error=$?
-> > > > +                if [ $error -eq 2 ]; then
-
-To reiterate something earlier in the thread: I would only do the
-mount/umount if the caller passes -fy.  I would drop to the emergency
-shell for -fa or -f.
-
-(Also: whitespace damage)
-
-> > > > +                        echo "Replaying log for $DEV"
-> > > > +                        mkdir -p /tmp/tmp_mnt
-> > > > +                        mount $DEV /tmp/tmp_mnt
-> 
-> Need to handle mount failure here - this will need to drop to
-> a rescue shell for manual recovery, I think.
-
-Yep.
-
-> Also, what happens if there are mount options set like quota?
-> Doesn't this make more work for the recovery process if we elide
-> things like that here?
-
-Agreed, I think we need to extract rootflags= from /proc/cmdline.
-
-> > > > +                        umount /tmp/tmp_mnt
-> > > > +                        xfs_repair -e $DEV
-> > > > +                        error=$?
-> > > > +                        rmdir /tmp/tmp_mnt
-> > > > +                fi
-> > > > +        else
-> > > > +                #fsck.mode=force is set but fsck.repair=no
-> > > > +                xfs_repair -n $DEV
-> > > > +                error=$?
-> > > > +        fi
-> 
-> I think that adding a "check only" mode should be a separate patch.
-> We have to consider different things here, such as it will run on an
-> unrecovered filesystem and potentially report it damaged when, in
-> fact, all that is needed is log recovery to run....
-
-<nod> I'm not sure what we should return in that case.  Maybe 8 for
-operational error?
+Whatever you come up with, please include this comment with the program
+code so that it's more obvious what the byte editing is doing.
 
 --D
 
+> Thanks,
+> Hiro
 > 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> > --D
+> > 
+> >> Thanks,
+> >> Zorro
+> >>
+> >>>
+> >>>>> +
+> >>>>> +_do_restore_file -x -f $here/src/root-inode-broken-dumpfile -L stress_545
+> >>>>> +_diff_compare_sub
+> >>>>> +_ls_nodate_compare_sub
+> >>>>> +
+> >>>>> +# success, all done
+> >>>>> +status=0
+> >>>>> +exit
+> >>>>> diff --git a/tests/xfs/554.out b/tests/xfs/554.out
+> >>>>> new file mode 100644
+> >>>>> index 00000000..40a3f3a4
+> >>>>> --- /dev/null
+> >>>>> +++ b/tests/xfs/554.out
+> >>>>> @@ -0,0 +1,57 @@
+> >>>>> +QA output created by 554
+> >>>>> +Contents of dump ...
+> >>>>> +xfsrestore  -x -f DUMP_FILE -t
+> >>>>> +xfsrestore: using file dump (drive_simple) strategy
+> >>>>> +xfsrestore: searching media for dump
+> >>>>> +xfsrestore: examining media file 0
+> >>>>> +xfsrestore: dump description: 
+> >>>>> +xfsrestore: hostname: xfsdump
+> >>>>> +xfsrestore: mount point: SCRATCH_MNT
+> >>>>> +xfsrestore: volume: SCRATCH_DEV
+> >>>>> +xfsrestore: session time: TIME
+> >>>>> +xfsrestore: level: 0
+> >>>>> +xfsrestore: session label: "stress_545"
+> >>>>> +xfsrestore: media label: "stress_tape_media"
+> >>>>> +xfsrestore: file system ID: ID
+> >>>>> +xfsrestore: session id: ID
+> >>>>> +xfsrestore: media ID: ID
+> >>>>> +xfsrestore: searching media for directory dump
+> >>>>> +xfsrestore: reading directories
+> >>>>> +xfsrestore: found fake rootino #128, will fix.
+> >>>>> +xfsrestore: fix root # to 1024 (bind mount?)
+> >>>>> +xfsrestore: 2 directories and 2 entries processed
+> >>>>> +xfsrestore: directory post-processing
+> >>>>> +xfsrestore: reading non-directory files
+> >>>>> +xfsrestore: table of contents display complete: SECS seconds elapsed
+> >>>>> +xfsrestore: Restore Status: SUCCESS
+> >>>>> +
+> >>>>> +dumpdir/FILE_1019
+> >>>>> +Restoring from file...
+> >>>>> +xfsrestore  -x -f DUMP_FILE  -L stress_545 RESTORE_DIR
+> >>>>> +xfsrestore: using file dump (drive_simple) strategy
+> >>>>> +xfsrestore: searching media for dump
+> >>>>> +xfsrestore: examining media file 0
+> >>>>> +xfsrestore: found dump matching specified label:
+> >>>>> +xfsrestore: hostname: xfsdump
+> >>>>> +xfsrestore: mount point: SCRATCH_MNT
+> >>>>> +xfsrestore: volume: SCRATCH_DEV
+> >>>>> +xfsrestore: session time: TIME
+> >>>>> +xfsrestore: level: 0
+> >>>>> +xfsrestore: session label: "stress_545"
+> >>>>> +xfsrestore: media label: "stress_tape_media"
+> >>>>> +xfsrestore: file system ID: ID
+> >>>>> +xfsrestore: session id: ID
+> >>>>> +xfsrestore: media ID: ID
+> >>>>> +xfsrestore: searching media for directory dump
+> >>>>> +xfsrestore: reading directories
+> >>>>> +xfsrestore: found fake rootino #128, will fix.
+> >>>>> +xfsrestore: fix root # to 1024 (bind mount?)
+> >>>>> +xfsrestore: 2 directories and 2 entries processed
+> >>>>> +xfsrestore: directory post-processing
+> >>>>> +xfsrestore: restoring non-directory files
+> >>>>> +xfsrestore: restore complete: SECS seconds elapsed
+> >>>>> +xfsrestore: Restore Status: SUCCESS
+> >>>>> +Comparing dump directory with restore directory
+> >>>>> +Files DUMP_DIR/FILE_1019 and RESTORE_DIR/DUMP_SUBDIR/FILE_1019 are identical
+> >>>>> +Comparing listing of dump directory with restore directory
+> >>>>> +Files TMP.dump_dir and TMP.restore_dir are identical
+> >>>>> -- 
+> >>>>> 2.37.3
+> >>>>>
+> >>>>
+> >>>
+> >>
