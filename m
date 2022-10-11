@@ -2,75 +2,67 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2774BC433F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Oct 2022 03:40:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 683F7C4332F
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Oct 2022 03:43:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229651AbiJKDkw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Oct 2022 23:40:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46390 "EHLO
+        id S229791AbiJKDn1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Oct 2022 23:43:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49296 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229798AbiJKDkm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Oct 2022 23:40:42 -0400
-Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7ED497F26F
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Oct 2022 20:40:29 -0700 (PDT)
-Received: by mail-ej1-x632.google.com with SMTP id 13so28672146ejn.3
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Oct 2022 20:40:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=avYh2O9+fTzuaqehc7qCsubb1pxJLJq7WXmH7+DR4Pg=;
-        b=DF04ZHZ2QIgJ45Yc9ZvfQyP3MWH2I9u4exEwdWpS3JvgqYR7eRcRl0CvUFQJjOzE9C
-         GfYL+CUtZ+BJi+f5NTnlw60ACAyOJuVi1AafdNvEcIz2FAQWdpoq0zB2oQ/wbwFEaNJG
-         MRcxEVfABtroTjEKPmQsi8ZPSqPOVf5IzHZoQ=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=avYh2O9+fTzuaqehc7qCsubb1pxJLJq7WXmH7+DR4Pg=;
-        b=zoqLMUFybkd0UVFekgHBkRKrEIyKo17KvBxfKNbu5ozauH0I4BuNCLZ2hmq2EYHBZN
-         sOdZVZhUN08tpvEGeeKc2mXRRJRihkHiSt3IlJo18vy9d56MnzgOWHQ26iUE5sk0V+R2
-         h4XvIv1Bas6ORiv6BDa+CSvOx0lwG35Xdb0drhMqRCZH2sYlMdvkklcpoYmMqLTRWHrg
-         UfG/qYwvHkTqLAR7gHwuKcKUQj2IxW+dc0S+USyTJEZPswwM1L3jalPbvqaSreUeVi9O
-         2ldIJtEbmNIQ27qfcMyBKVINA4vQp2kmnmUyX/xKAstYWnlv+yoAKWfxX6xHOJ+Ya6CZ
-         pEfg==
-X-Gm-Message-State: ACrzQf1QgPSx2FV4C+1GH6/QdAwP+XVlAhX0PeYqAEtC3Vf5oRRmbupp
-        G1T78VFyYhMLaOzxWV4Mb8jPvPRtrwfCXhiAQ8r0OA==
-X-Google-Smtp-Source: AMsMyM4mwkam5ifSSNpdyDLUCUktmjmYksmT3y4BiSIxeDjqGYocDQgNp+z5D8ZSKMdKE/Gs+Nl0yaxqThbT3qIk2T8=
-X-Received: by 2002:a17:906:36d1:b0:76c:a723:9445 with SMTP id
- b17-20020a17090636d100b0076ca7239445mr16660315ejc.548.1665459627952; Mon, 10
- Oct 2022 20:40:27 -0700 (PDT)
-MIME-Version: 1.0
-References: <20221010213827.GD2703033@dread.disaster.area>
-In-Reply-To: <20221010213827.GD2703033@dread.disaster.area>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Mon, 10 Oct 2022 20:40:16 -0700
-Message-ID: <CAADWXX8tVK6PZNsPhz874Y0kx5w6kKBcB+1QdqY59HiBqV=8ew@mail.gmail.com>
+        with ESMTP id S229800AbiJKDnT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Oct 2022 23:43:19 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52A757F25D
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Oct 2022 20:43:18 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 04559B811DA
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Oct 2022 03:43:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id B8D3BC433D6;
+        Tue, 11 Oct 2022 03:43:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1665459795;
+        bh=F20sfqIuhjs5mDYfEWDXqkKIIWH8jT+hn3mP6/JkS7k=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=dvCjyyHLwMaEJXnxlmKDmKCw/tWCOWcPKZnd3+d/PXazO2HRt8IpmK6sPuHHcLXgH
+         XYB/oRTHKAco9tJUy/Lbbycm79bQGPHYuEutal+uNyDioZSZ6dSa6zRkQRTttROmHJ
+         E+1x02dRaAATYk8tN0kDKAK+o9KVSkqFhm/tGW6bxLywqiL3rVOMx1Hl38eolIq5qj
+         WAdC2mvb/RRty1ZJtzDSDpvr8D7wl9JYgGYxpIfAikMzGwZ6FBoSZaq11YmiOU8LLx
+         xmxg/TsKh4g5bugCe7DhweVXRpo6QzjGPM+Lu/Qp/IXNtpbVB51kCtmb1x5be/BA8d
+         Ha/4m5tmzqKhA==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id A84BCE29F33;
+        Tue, 11 Oct 2022 03:43:15 +0000 (UTC)
 Subject: Re: [GIT PULL] xfs: updates for 6.1
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20221010213827.GD2703033@dread.disaster.area>
+References: <20221010213827.GD2703033@dread.disaster.area>
+X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20221010213827.GD2703033@dread.disaster.area>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.1-for-linus
+X-PR-Tracked-Commit-Id: e033f40be262c4d227f8fbde52856e1d8646872b
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 60bb8154d1d77042a5d43d335a68fdb202302cbe
+Message-Id: <166545979568.4678.13835752517871607728.pr-tracker-bot@kernel.org>
+Date:   Tue, 11 Oct 2022 03:43:15 +0000
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     djwong@kernel.org, linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>, djwong@kernel.org,
+        linux-xfs@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 10, 2022 at 2:38 PM Dave Chinner <david@fromorbit.com> wrote:
->
-> Can you please pull the latest XFS updates from the tag below?
+The pull request you sent on Tue, 11 Oct 2022 08:38:27 +1100:
 
-Pulled.
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.1-for-linus
 
-However, I wanted to just note that this was in my spam folder.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/60bb8154d1d77042a5d43d335a68fdb202302cbe
 
-Not usually a problem, since I tend to check it daily, but the
-checking is admittedly fairly cursory. Generally a big "GIT PULL"
-subject I will see, though.
+Thank you!
 
-I don't see anything actively suspicious in the email, but I do note
-that you seem to have neither SPF nor DKIM set up on the mail server,
-which is almost certainly one of the things that ends up pushing it
-towards spam.
-
-                Linus
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
