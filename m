@@ -2,158 +2,110 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08339C4332F
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Oct 2022 15:51:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF36AC4321E
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Oct 2022 19:26:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229928AbiJLPvG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Oct 2022 11:51:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52244 "EHLO
+        id S229922AbiJLT0h convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Oct 2022 15:26:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39388 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229560AbiJLPvF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Oct 2022 11:51:05 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BA41DD884;
-        Wed, 12 Oct 2022 08:51:05 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BF26361554;
-        Wed, 12 Oct 2022 15:51:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24C3DC433C1;
-        Wed, 12 Oct 2022 15:51:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665589864;
-        bh=5oiJbk4Wc20uQL+BdtRPcfb6d2I8zHfn7X7Q6GlBoSY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Riz9yXenwGbo9sra5ieB5NMpTOy+nJMTJ4Inbc+xZgPKvR8T/x9PtF5OOaAlWzgBG
-         8uXujJUlrfnPB6b3HMaxMeVqzB5RyDjHi3gHl8gsTcT74Qi73tlWjqLnYkgDEnK975
-         z73HQfuw7b4YP59riB2OZOmgUO10rmXPJ6xzc94Zzrtv3qJXj2f+ITo9BWwAdY3LlF
-         SKMu+5L4K6w5prOl+GABIpO8LgcoDdO1rP1YjggGGp3IrFHyX6Fo7U8F6IkYXsUmHe
-         pvf+oMfKw0wL+zeAxbde4HdbWQHx5qTlH3jUgudWQjecUFBbuNSWrRGBLcbRrO2guD
-         /uFOvrBHRGQKg==
-Date:   Wed, 12 Oct 2022 08:51:03 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH 1/2] check: detect and preserve all coredumps made by a
- test
-Message-ID: <Y0biZ5rxZLQ/eHuZ@magnolia>
-References: <166553910766.422356.8069826206437666467.stgit@magnolia>
- <166553911331.422356.4424521847397525024.stgit@magnolia>
- <20221012154721.gmuzp7inbtqbk73i@zlang-mailbox>
+        with ESMTP id S229748AbiJLT0b (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Oct 2022 15:26:31 -0400
+Received: from relay.hostedemail.com (smtprelay0011.hostedemail.com [216.40.44.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45A9910251A;
+        Wed, 12 Oct 2022 12:26:30 -0700 (PDT)
+Received: from omf12.hostedemail.com (a10.router.float.18 [10.200.18.1])
+        by unirelay01.hostedemail.com (Postfix) with ESMTP id 2096E1C6C41;
+        Wed, 12 Oct 2022 19:17:09 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf12.hostedemail.com (Postfix) with ESMTPA id AB9FC17;
+        Wed, 12 Oct 2022 19:16:43 +0000 (UTC)
+Message-ID: <f8ad3ba44d28dec1a5f7626b82c5e9c2aeefa729.camel@perches.com>
+Subject: Re: [PATCH v1 3/5] treewide: use get_random_u32() when possible
+From:   Joe Perches <joe@perches.com>
+To:     "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        linux-kernel@vger.kernel.org
+Cc:     brcm80211-dev-list.pdl@broadcom.com, cake@lists.bufferbloat.net,
+        ceph-devel@vger.kernel.org, coreteam@netfilter.org,
+        dccp@vger.kernel.org, dev@openvswitch.org,
+        dmaengine@vger.kernel.org, drbd-dev@lists.linbit.com,
+        dri-devel@lists.freedesktop.org, kasan-dev@googlegroups.com,
+        linux-actions@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org,
+        linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-hams@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-mm@kvack.org, linux-mmc@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-raid@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-sctp@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        lvs-devel@vger.kernel.org, netdev@vger.kernel.org,
+        netfilter-devel@vger.kernel.org, rds-devel@oss.oracle.com,
+        SHA-cyfmac-dev-list@infineon.com, target-devel@vger.kernel.org,
+        tipc-discussion@lists.sourceforge.net
+Date:   Wed, 12 Oct 2022 12:16:53 -0700
+In-Reply-To: <20221005214844.2699-4-Jason@zx2c4.com>
+References: <20221005214844.2699-1-Jason@zx2c4.com>
+         <20221005214844.2699-4-Jason@zx2c4.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 8BIT
+User-Agent: Evolution 3.44.4 (3.44.4-2.fc36) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221012154721.gmuzp7inbtqbk73i@zlang-mailbox>
+X-Stat-Signature: c3d78nppyrywoyngway5d943fw3wwtdu
+X-Rspamd-Server: rspamout03
+X-Rspamd-Queue-Id: AB9FC17
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-Session-ID: U2FsdGVkX1/Qw27OeRP8/mQW0Su38d7rwhSo1NO9QCw=
+X-HE-Tag: 1665602203-428634
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 12, 2022 at 11:47:21PM +0800, Zorro Lang wrote:
-> On Tue, Oct 11, 2022 at 06:45:13PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > If someone sets kernel.core_uses_pid (or kernel.core_pattern), any
-> > coredumps generated by fstests might have names that are longer than
-> > just "core".  Since the pid isn't all that useful by itself, let's
-> > record the coredumps by hash when we save them, so that we don't waste
-> > space storing identical crash dumps.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  check     |   26 ++++++++++++++++++++++----
-> >  common/rc |   16 ++++++++++++++++
-> >  2 files changed, 38 insertions(+), 4 deletions(-)
-> > 
-> > 
-> > diff --git a/check b/check
-> > index af23572ccc..654d986b27 100755
-> > --- a/check
-> > +++ b/check
-> > @@ -913,11 +913,19 @@ function run_section()
-> >  			sts=$?
-> >  		fi
-> >  
-> > -		if [ -f core ]; then
-> > -			_dump_err_cont "[dumped core]"
-> > -			mv core $RESULT_BASE/$seqnum.core
-> > +		# If someone sets kernel.core_pattern or kernel.core_uses_pid,
-> > +		# coredumps generated by fstests might have a longer name than
-> > +		# just "core".  Use globbing to find the most common patterns,
-> > +		# assuming there are no other coredump capture packages set up.
-> > +		local cores=0
-> > +		for i in core core.*; do
-> > +			test -f "$i" || continue
-> > +			if ((cores++ == 0)); then
-> > +				_dump_err_cont "[dumped core]"
-> > +			fi
-> > +			_save_coredump "$i"
-> >  			tc_status="fail"
-> > -		fi
-> > +		done
-> >  
-> >  		if [ -f $seqres.notrun ]; then
-> >  			$timestamp && _timestamp
-> > @@ -950,6 +958,16 @@ function run_section()
-> >  			# of the check script itself.
-> >  			(_adjust_oom_score 250; _check_filesystems) || tc_status="fail"
-> >  			_check_dmesg || tc_status="fail"
-> > +
-> > +			# Save any coredumps from the post-test fs checks
-> > +			for i in core core.*; do
-> > +				test -f "$i" || continue
-> > +				if ((cores++ == 0)); then
-> > +					_dump_err_cont "[dumped core]"
-> > +				fi
-> > +				_save_coredump "$i"
-> > +				tc_status="fail"
-> > +			done
-> >  		fi
-> >  
-> >  		# Reload the module after each test to check for leaks or
-> > diff --git a/common/rc b/common/rc
-> > index d877ac77a0..152b8bb414 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -4949,6 +4949,22 @@ _create_file_sized()
-> >  	return $ret
-> >  }
-> >  
-> > +_save_coredump()
-> > +{
-> > +	local path="$1"
-> > +
-> > +	local core_hash="$(_md5_checksum "$path")"
-> > +	local out_file="$RESULT_BASE/$seqnum.core.$core_hash"
-> 
-> I doubt this can work with fstests section, if we use section, the out_file
-> should be "$RESULT_BASE/$section/....", so I think if we can write this line
-> as:
-> 
->   local out_file="$seqres.core.$core_hash"
-> 
-> Or use $REPORT_DIR?
+On Wed, 2022-10-05 at 23:48 +0200, Jason A. Donenfeld wrote:
+> The prandom_u32() function has been a deprecated inline wrapper around
+> get_random_u32() for several releases now, and compiles down to the
+> exact same code. Replace the deprecated wrapper with a direct call to
+> the real function.
+[]
+> diff --git a/drivers/infiniband/hw/cxgb4/cm.c b/drivers/infiniband/hw/cxgb4/cm.c
+[]
+> @@ -734,7 +734,7 @@ static int send_connect(struct c4iw_ep *ep)
+>  				   &ep->com.remote_addr;
+>  	int ret;
+>  	enum chip_type adapter_type = ep->com.dev->rdev.lldi.adapter_type;
+> -	u32 isn = (prandom_u32() & ~7UL) - 1;
+> +	u32 isn = (get_random_u32() & ~7UL) - 1;
 
-I'll change it to REPORT_DIR.
+trivia:
 
---D
+There are somewhat odd size mismatches here.
 
-> Thanks,
-> Zorro
-> 
-> > +
-> > +	if [ -s "$out_file" ]; then
-> > +		rm -f "$path"
-> > +		return
-> > +	fi
-> > +	rm -f "$out_file"
-> > +
-> > +	mv "$path" "$out_file"
-> > +}
-> > +
-> >  init_rc
-> >  
-> >  ################################################################################
-> > 
-> 
+I had to think a tiny bit if random() returned a value from 0 to 7
+and was promoted to a 64 bit value then truncated to 32 bit.
+
+Perhaps these would be clearer as ~7U and not ~7UL
+
+>  	struct net_device *netdev;
+>  	u64 params;
+>  
+> @@ -2469,7 +2469,7 @@ static int accept_cr(struct c4iw_ep *ep, struct sk_buff *skb,
+>  	}
+>  
+>  	if (!is_t4(adapter_type)) {
+> -		u32 isn = (prandom_u32() & ~7UL) - 1;
+> +		u32 isn = (get_random_u32() & ~7UL) - 1;
+
+etc...
+
+drivers/infiniband/hw/cxgb4/cm.c:	u32 isn = (prandom_u32() & ~7UL) - 1;
+drivers/infiniband/hw/cxgb4/cm.c:		u32 isn = (prandom_u32() & ~7UL) - 1;
+drivers/net/ethernet/chelsio/inline_crypto/chtls/chtls_cm.c:	rpl5->iss = cpu_to_be32((prandom_u32() & ~7UL) - 1);
+drivers/scsi/cxgbi/cxgb4i/cxgb4i.c:		u32 isn = (prandom_u32() & ~7UL) - 1;
+drivers/scsi/cxgbi/cxgb4i/cxgb4i.c:		u32 isn = (prandom_u32() & ~7UL) - 1;
+drivers/target/iscsi/cxgbit/cxgbit_cm.c:	rpl5->iss = cpu_to_be32((prandom_u32() & ~7UL) - 1);
+
