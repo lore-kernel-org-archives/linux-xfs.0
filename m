@@ -2,41 +2,43 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91E51C433FE
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Oct 2022 01:45:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 776ECC43217
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Oct 2022 01:45:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229591AbiJLBpM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Oct 2022 21:45:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38582 "EHLO
+        id S229594AbiJLBpS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Oct 2022 21:45:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229594AbiJLBpL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Oct 2022 21:45:11 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7295740BFC;
-        Tue, 11 Oct 2022 18:45:09 -0700 (PDT)
+        with ESMTP id S229436AbiJLBpR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Oct 2022 21:45:17 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5CA8578AB;
+        Tue, 11 Oct 2022 18:45:16 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D368261345;
-        Wed, 12 Oct 2022 01:45:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B40DC433C1;
-        Wed, 12 Oct 2022 01:45:08 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 17FA5B818B9;
+        Wed, 12 Oct 2022 01:45:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3C04C433D7;
+        Wed, 12 Oct 2022 01:45:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665539108;
-        bh=YuVEu9wrvZi7LQYdQ788lsyub+PAi9ho5j4PI9SXSJU=;
-        h=Subject:From:To:Cc:Date:From;
-        b=HB0m/ydoxF5G4lpdInPU2QzbrAtBCdRa+Rhmhrr48GcHbshaIF84Z5dK/gviPzKJl
-         GRZvHZl5qk/QDhpCHOqXcncA00A34YJxkryLIx2vaJl6XOgF5yuond6P6a7OxAU/eZ
-         TkGLT3CbGfASOCRg+oudy4gb7Q3MQMHdUx0n/CUSmxU/Q0qwYN4bSupsIMMvwxmYCN
-         3Mc/79Apso8HZDIcB33vAzvFsGAyzKaFdLmhh4sz2UB1CBMP0GEkbT+aBIr65B2NR9
-         DzgsnzsTF9TCyTuNuM2UuRtKQ6rusRmfRkxFZBFl+tsuTgndnPhOaXDxoi8csMdugw
-         01F4V+7C20wcA==
-Subject: [PATCHSET v2 0/2] fstests: improve coredump capture and storage
+        s=k20201202; t=1665539113;
+        bh=RdGdunkUFdwUAz2mNjHvrtXjXVn4+1xkIFCyP7/o7kw=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=Drs6wsaJdNwNNNA2obyoyyGtsXMN8YN9v7HJkPTypsnKv8H/mDJeXCHnOj8+3P4ZU
+         0l0BAdHWh2adA2hwuD7oQTD4Xmh1CUcM9bOgRTOSFcwv+j4ATqJRA1j6kikalrg+xB
+         MFl2g4z5UGKEqSc70AMmrYfc3HWksNRzsUpIhv78EC4ilWl82bRGtaRsmJyd2mr+Is
+         +CrFbhvJ/o4ExKDu0MTixh/tuXBrB4vlB94AQvfKv+dEtKHPy2OOy20fiFL7Xb9iHx
+         EB7vGAN3Y4m0+J8KxLqenHET67eV9ykXYvGhg1mvHyQ+adN/V8hqrm2GqbJp8bz+ON
+         IrHlHAlHl/00Q==
+Subject: [PATCH 1/2] check: detect and preserve all coredumps made by a test
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com, zlang@redhat.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 11 Oct 2022 18:45:07 -0700
-Message-ID: <166553910766.422356.8069826206437666467.stgit@magnolia>
+Date:   Tue, 11 Oct 2022 18:45:13 -0700
+Message-ID: <166553911331.422356.4424521847397525024.stgit@magnolia>
+In-Reply-To: <166553910766.422356.8069826206437666467.stgit@magnolia>
+References: <166553910766.422356.8069826206437666467.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -45,35 +47,91 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-While I was debugging some core dumps resulting from xfs_repair fuzz
-testing, I noticed that fstests was no longer putting core dumps into
-the test results directory.  The root cause of this turned out to be
-that systemd enables kernel.core_uses_pid, which changes the core
-pattern from "core" to "core.$pid".  This is a good change since we can
-now capture *all* the coredumps produced by a test, but bad in that the
-check script doesn't know about this.
+If someone sets kernel.core_uses_pid (or kernel.core_pattern), any
+coredumps generated by fstests might have names that are longer than
+just "core".  Since the pid isn't all that useful by itself, let's
+record the coredumps by hash when we save them, so that we don't waste
+space storing identical crash dumps.
 
-Therefore, fix check to detect multiple corefiles and preserve them, and
-compress coredumps if desired.
-
-v2: let the user specify which program they want to use to compress the
-    coredumps
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=compress-core-dumps
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- README    |    4 ++++
  check     |   26 ++++++++++++++++++++++----
- common/rc |   20 ++++++++++++++++++++
- 3 files changed, 46 insertions(+), 4 deletions(-)
+ common/rc |   16 ++++++++++++++++
+ 2 files changed, 38 insertions(+), 4 deletions(-)
+
+
+diff --git a/check b/check
+index af23572ccc..654d986b27 100755
+--- a/check
++++ b/check
+@@ -913,11 +913,19 @@ function run_section()
+ 			sts=$?
+ 		fi
+ 
+-		if [ -f core ]; then
+-			_dump_err_cont "[dumped core]"
+-			mv core $RESULT_BASE/$seqnum.core
++		# If someone sets kernel.core_pattern or kernel.core_uses_pid,
++		# coredumps generated by fstests might have a longer name than
++		# just "core".  Use globbing to find the most common patterns,
++		# assuming there are no other coredump capture packages set up.
++		local cores=0
++		for i in core core.*; do
++			test -f "$i" || continue
++			if ((cores++ == 0)); then
++				_dump_err_cont "[dumped core]"
++			fi
++			_save_coredump "$i"
+ 			tc_status="fail"
+-		fi
++		done
+ 
+ 		if [ -f $seqres.notrun ]; then
+ 			$timestamp && _timestamp
+@@ -950,6 +958,16 @@ function run_section()
+ 			# of the check script itself.
+ 			(_adjust_oom_score 250; _check_filesystems) || tc_status="fail"
+ 			_check_dmesg || tc_status="fail"
++
++			# Save any coredumps from the post-test fs checks
++			for i in core core.*; do
++				test -f "$i" || continue
++				if ((cores++ == 0)); then
++					_dump_err_cont "[dumped core]"
++				fi
++				_save_coredump "$i"
++				tc_status="fail"
++			done
+ 		fi
+ 
+ 		# Reload the module after each test to check for leaks or
+diff --git a/common/rc b/common/rc
+index d877ac77a0..152b8bb414 100644
+--- a/common/rc
++++ b/common/rc
+@@ -4949,6 +4949,22 @@ _create_file_sized()
+ 	return $ret
+ }
+ 
++_save_coredump()
++{
++	local path="$1"
++
++	local core_hash="$(_md5_checksum "$path")"
++	local out_file="$RESULT_BASE/$seqnum.core.$core_hash"
++
++	if [ -s "$out_file" ]; then
++		rm -f "$path"
++		return
++	fi
++	rm -f "$out_file"
++
++	mv "$path" "$out_file"
++}
++
+ init_rc
+ 
+ ################################################################################
 
