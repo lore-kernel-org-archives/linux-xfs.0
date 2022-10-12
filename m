@@ -2,331 +2,175 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E156C433FE
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Oct 2022 03:11:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA61DC433FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Oct 2022 15:47:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229469AbiJLDLG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Oct 2022 23:11:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50550 "EHLO
+        id S229491AbiJLPrb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Oct 2022 11:47:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229496AbiJLDLD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Oct 2022 23:11:03 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9C613FEDA
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Oct 2022 20:11:01 -0700 (PDT)
+        with ESMTP id S229511AbiJLPrb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Oct 2022 11:47:31 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B03A8C46F
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Oct 2022 08:47:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1665544261;
+        s=mimecast20190719; t=1665589649;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=ft5ybHEXjDNUczSsyMupXtbyKnhaOU7h6c3dCBq36+g=;
-        b=fBhjGT7uQY5Wvc9oz1+LkGxjqUuR5kYIkK75SGquyIvukVtrtAyrQ940wYD4zDHOdymdeV
-        w3bkIW7IiyLV1zJQPORBsCneFhVpT+cuhcKfMBu1Sn2WIVDMQwvz9/Pn3DZmmLNySFNQD1
-        D6A5cdrvdYxaXdeud0IMWe8hZdt8Oho=
-Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
- [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=9FZiZGxd4rlI8MLVkVbMv62qRD/MTnJaaQ1Nwc9bfWc=;
+        b=F/+YDD34LZSmmNsn9DndBpY+eSy4fCdaqHb1KQMBREpkTk4FkvSrp5/1tTVXGE7Jy+3yJx
+        FvyvkFTWeRpionpDXznY/DZ2+5WxMGoAiBJyaMW9ZFWNWdYeIwnPQrMUV/i1xB2mDCCFqf
+        Bcsf5zk1eZNvSYYs5Eqa4Z+zBtHQew0=
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com
+ [209.85.215.197]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-388-DiZVZJ1fNZWz_m9UFIoqhw-1; Tue, 11 Oct 2022 23:10:59 -0400
-X-MC-Unique: DiZVZJ1fNZWz_m9UFIoqhw-1
-Received: by mail-qk1-f199.google.com with SMTP id u6-20020a05620a430600b006e47fa02576so13347401qko.22
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Oct 2022 20:10:59 -0700 (PDT)
+ us-mta-197-LVse00beMMy6psqcR--AOQ-1; Wed, 12 Oct 2022 11:47:28 -0400
+X-MC-Unique: LVse00beMMy6psqcR--AOQ-1
+Received: by mail-pg1-f197.google.com with SMTP id l185-20020a6388c2000000b004610d11faddso5261869pgd.1
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Oct 2022 08:47:27 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ft5ybHEXjDNUczSsyMupXtbyKnhaOU7h6c3dCBq36+g=;
-        b=REaLmImbWPvrkBA5co2U12+HXD1lQeZ3ndIpI0PY1b3WxshYFVDEM3QLfzimT/Bi9W
-         mAML5hopegUrayglU32VZ/vNQa2IdZ+8z6nA9QAQdtkNFibQU3mirVkSVVKR24XTa9mz
-         KTgniRQ82TSLShx2Z1N5LuLbx6qJEap7U358Kfjx7N3OSQzaw79N4UYI1KoaxtTwvg4o
-         qQOCfDOBLAd9aGUW/L+iyfwl+hTcAtpSDf2oaItdwj1Q0rmqgmIJhIg3KSJqubPxLk0h
-         k863G0nH3qL0J4F33Rs2kJ7188mUPuJJNKKI8IXAZ1GaYbQeJtHRGNFXVvw8+UvFmGW1
-         wNqA==
-X-Gm-Message-State: ACrzQf0mGRcx8XozTuPppj3VEqlrBgikJYKPAPvXnbuN2q8yoe3tTPGr
-        wUcBZSDM8xmGk2M1aYKVtOkBNZ04zm0Il96/nBJFbnkZlfFG/RGoupXDkIDdvLrEaCPMjXQJ8up
-        9fBPANVgFzW7fcKoG3CwI
-X-Received: by 2002:ac8:7d0f:0:b0:398:3029:3328 with SMTP id g15-20020ac87d0f000000b0039830293328mr15554883qtb.99.1665544258886;
-        Tue, 11 Oct 2022 20:10:58 -0700 (PDT)
-X-Google-Smtp-Source: AMsMyM7V13cqDuwk1BP/HzRJF3DbLqXlZuvXZGBf2gUJ3oISpP4CpUxas04xYwImm8UyYupi9wW6hg==
-X-Received: by 2002:ac8:7d0f:0:b0:398:3029:3328 with SMTP id g15-20020ac87d0f000000b0039830293328mr15554874qtb.99.1665544258612;
-        Tue, 11 Oct 2022 20:10:58 -0700 (PDT)
+        bh=9FZiZGxd4rlI8MLVkVbMv62qRD/MTnJaaQ1Nwc9bfWc=;
+        b=mtWC/7T6PyVED9x6Me39Oa0UF48lTC5mcqhJcfOt+1R39mKWAo0UGqFGGhNkfYR2wJ
+         GjWz/c+iSY+JLCgdlyBjTl1Bt0+LVdAWe6z3xNwAZ8vZ1gIdRGIRntH7/6keMkPzdA9z
+         LaZWgfUTMbF9O72zyLJ1MO1V6alt7SBLodCBV5mL08qb3Z2DuUCHXkcbqSf0M/CuRJzu
+         k2HzP/8knojjsnuSoUWrOsRlJO9ttb+wpRH6vN+8HzEyAmLvjNpUJmTsNf5mrNNOPw0W
+         4c/UZHa2yTIQApHcFnYzYCVqS0zSsbziwVcxwe0YtdGLNDtOGBIPdjSYAShtkv+3153z
+         TpBg==
+X-Gm-Message-State: ACrzQf0i0McfgstDmh9mHiCEdvQcO2YpxGBcTMyqjFHVDuh0io9vU90C
+        PjG0r3JR8rFPm59X2lmiQN8RaS4Lf1jHYcfaJg+zRUGdD6RCexHBBmJJUqH8dnOcpcbTJ5dI8ir
+        Rwys8a7tYqsMiOZ/oOA7v
+X-Received: by 2002:a17:902:ce87:b0:181:e55d:2d4 with SMTP id f7-20020a170902ce8700b00181e55d02d4mr19287187plg.13.1665589646844;
+        Wed, 12 Oct 2022 08:47:26 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM6qR8LG9D4KXmDnJxHUkTMfSR4nwXWiIwkNgh1Yn2bsizReudN/ELa04VZsDdvz3JAgUk7FKQ==
+X-Received: by 2002:a17:902:ce87:b0:181:e55d:2d4 with SMTP id f7-20020a170902ce8700b00181e55d02d4mr19287151plg.13.1665589646404;
+        Wed, 12 Oct 2022 08:47:26 -0700 (PDT)
 Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id ff13-20020a05622a4d8d00b0035d420c4ba7sm11985676qtb.54.2022.10.11.20.10.56
+        by smtp.gmail.com with ESMTPSA id w9-20020a656949000000b00469e09532e0sm1549823pgq.18.2022.10.12.08.47.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Oct 2022 20:10:58 -0700 (PDT)
-Date:   Wed, 12 Oct 2022 11:10:53 +0800
+        Wed, 12 Oct 2022 08:47:26 -0700 (PDT)
+Date:   Wed, 12 Oct 2022 23:47:21 +0800
 From:   Zorro Lang <zlang@redhat.com>
-To:     Catherine Hoang <catherine.hoang@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH v2 2/4] xfs: add parent pointer test
-Message-ID: <20221012031053.ied3kipypzdlwv4w@zlang-mailbox>
-References: <20221012013812.82161-1-catherine.hoang@oracle.com>
- <20221012013812.82161-3-catherine.hoang@oracle.com>
- <20221012030220.ng5xra7deoeutb77@zlang-mailbox>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me
+Subject: Re: [PATCH 1/2] check: detect and preserve all coredumps made by a
+ test
+Message-ID: <20221012154721.gmuzp7inbtqbk73i@zlang-mailbox>
+References: <166553910766.422356.8069826206437666467.stgit@magnolia>
+ <166553911331.422356.4424521847397525024.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221012030220.ng5xra7deoeutb77@zlang-mailbox>
+In-Reply-To: <166553911331.422356.4424521847397525024.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 12, 2022 at 11:02:20AM +0800, Zorro Lang wrote:
-> On Tue, Oct 11, 2022 at 06:38:10PM -0700, Catherine Hoang wrote:
-> > From: Allison Henderson <allison.henderson@oracle.com>
-> > 
-> > Add a test to verify basic parent pointers operations (create, move, link,
-> > unlink, rename, overwrite).
-> > 
-> > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> > Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-> > ---
-> >  doc/group-names.txt |   1 +
-> >  tests/xfs/554       | 125 ++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/554.out   |  59 +++++++++++++++++++++
-> >  3 files changed, 185 insertions(+)
-> >  create mode 100755 tests/xfs/554
-> >  create mode 100644 tests/xfs/554.out
-> > 
-> > diff --git a/doc/group-names.txt b/doc/group-names.txt
-> > index ef411b5e..8e35c699 100644
-> > --- a/doc/group-names.txt
-> > +++ b/doc/group-names.txt
-> > @@ -77,6 +77,7 @@ nfs4_acl		NFSv4 access control lists
-> >  nonsamefs		overlayfs layers on different filesystems
-> >  online_repair		online repair functionality tests
-> >  other			dumping ground, do not add more tests to this group
-> > +parent			Parent pointer tests
-> >  pattern			specific IO pattern tests
-> >  perms			access control and permission checking
-> >  pipe			pipe functionality
-> > diff --git a/tests/xfs/554 b/tests/xfs/554
-> > new file mode 100755
-> > index 00000000..26914e4c
-> > --- /dev/null
-> > +++ b/tests/xfs/554
-> > @@ -0,0 +1,125 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2022, Oracle and/or its affiliates.  All Rights Reserved.
-> > +#
-> > +# FS QA Test 554
-> > +#
-> > +# simple parent pointer test
-> > +#
-> > +
-> > +. ./common/preamble
-> > +_begin_fstest auto quick parent
-> > +
-> > +cleanup()
-> > +{
-> > +	cd /
-> > +	rm -f $tmp.*
-> > +}
+On Tue, Oct 11, 2022 at 06:45:13PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> This's same with common cleanup function, you can remove this function.
-
-Same for patch 3 and 4.
-
+> If someone sets kernel.core_uses_pid (or kernel.core_pattern), any
+> coredumps generated by fstests might have names that are longer than
+> just "core".  Since the pid isn't all that useful by itself, let's
+> record the coredumps by hash when we save them, so that we don't waste
+> space storing identical crash dumps.
 > 
-> > +
-> > +full()
-> > +{
-> > +    echo ""            >>$seqres.full
-> > +    echo "*** $* ***"  >>$seqres.full
-> > +    echo ""            >>$seqres.full
-> > +}
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  check     |   26 ++++++++++++++++++++++----
+>  common/rc |   16 ++++++++++++++++
+>  2 files changed, 38 insertions(+), 4 deletions(-)
 > 
-> What's this function for? I didn't see this function is called in this case.
-> Am I missing something?
-
-Same question for patch 3 and 4.
-
 > 
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/filter
-> > +. ./common/reflink
-> > +. ./common/inject
-> > +. ./common/parent
-> > +
-> > +# Modify as appropriate
-> > +_supported_fs xfs
-> > +_require_scratch
-> > +_require_xfs_sysfs debug/larp
-> > +_require_xfs_io_error_injection "larp"
+> diff --git a/check b/check
+> index af23572ccc..654d986b27 100755
+> --- a/check
+> +++ b/check
+> @@ -913,11 +913,19 @@ function run_section()
+>  			sts=$?
+>  		fi
+>  
+> -		if [ -f core ]; then
+> -			_dump_err_cont "[dumped core]"
+> -			mv core $RESULT_BASE/$seqnum.core
+> +		# If someone sets kernel.core_pattern or kernel.core_uses_pid,
+> +		# coredumps generated by fstests might have a longer name than
+> +		# just "core".  Use globbing to find the most common patterns,
+> +		# assuming there are no other coredump capture packages set up.
+> +		local cores=0
+> +		for i in core core.*; do
+> +			test -f "$i" || continue
+> +			if ((cores++ == 0)); then
+> +				_dump_err_cont "[dumped core]"
+> +			fi
+> +			_save_coredump "$i"
+>  			tc_status="fail"
+> -		fi
+> +		done
+>  
+>  		if [ -f $seqres.notrun ]; then
+>  			$timestamp && _timestamp
+> @@ -950,6 +958,16 @@ function run_section()
+>  			# of the check script itself.
+>  			(_adjust_oom_score 250; _check_filesystems) || tc_status="fail"
+>  			_check_dmesg || tc_status="fail"
+> +
+> +			# Save any coredumps from the post-test fs checks
+> +			for i in core core.*; do
+> +				test -f "$i" || continue
+> +				if ((cores++ == 0)); then
+> +					_dump_err_cont "[dumped core]"
+> +				fi
+> +				_save_coredump "$i"
+> +				tc_status="fail"
+> +			done
+>  		fi
+>  
+>  		# Reload the module after each test to check for leaks or
+> diff --git a/common/rc b/common/rc
+> index d877ac77a0..152b8bb414 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -4949,6 +4949,22 @@ _create_file_sized()
+>  	return $ret
+>  }
+>  
+> +_save_coredump()
+> +{
+> +	local path="$1"
+> +
+> +	local core_hash="$(_md5_checksum "$path")"
+> +	local out_file="$RESULT_BASE/$seqnum.core.$core_hash"
 
-And does this case really do error injection? I didn't find that. If not, please
-remove this requirement and above common/inject. Same question for patch 4.
+I doubt this can work with fstests section, if we use section, the out_file
+should be "$RESULT_BASE/$section/....", so I think if we can write this line
+as:
+
+  local out_file="$seqres.core.$core_hash"
+
+Or use $REPORT_DIR?
 
 Thanks,
 Zorro
 
-> > +_require_xfs_parent
-> > +_require_xfs_io_command "parent"
-> > +
-> > +# real QA test starts here
-> > +
-> > +# Create a directory tree using a protofile and
-> > +# make sure all inodes created have parent pointers
-> > +
-> > +protofile=$tmp.proto
-> > +
-> > +cat >$protofile <<EOF
-> > +DUMMY1
-> > +0 0
-> > +: root directory
-> > +d--777 3 1
-> > +: a directory
-> > +testfolder1 d--755 3 1
-> > +file1 ---755 3 1 /dev/null
-> > +$
-> > +: back in the root
-> > +testfolder2 d--755 3 1
-> > +file2 ---755 3 1 /dev/null
-> > +: done
-> > +$
-> > +EOF
-> > +
-> > +if [ $? -ne 0 ]
-> > +then
-> > +    _fail "failed to create test protofile"
-> > +fi
+> +
+> +	if [ -s "$out_file" ]; then
+> +		rm -f "$path"
+> +		return
+> +	fi
+> +	rm -f "$out_file"
+> +
+> +	mv "$path" "$out_file"
+> +}
+> +
+>  init_rc
+>  
+>  ################################################################################
 > 
-> It just writes a general file, right? Is there any special reason might cause
-> write fail?
-> 
-> I think we don't need to check each step's return value. And if we fail to write
-> a file, bash helps to output error message to break golden image too.
-> 
-> Thanks,
-> Zorro
-> 
-> > +
-> > +_scratch_mkfs -f -n parent=1 -p $protofile >>$seqres.full 2>&1 \
-> > +	|| _fail "mkfs failed"
-> > +_check_scratch_fs
-> > +
-> > +_scratch_mount >>$seqres.full 2>&1 \
-> > +	|| _fail "mount failed"
-> > +
-> > +testfolder1="testfolder1"
-> > +testfolder2="testfolder2"
-> > +file1="file1"
-> > +file2="file2"
-> > +file3="file3"
-> > +file4="file4"
-> > +file5="file5"
-> > +file1_ln="file1_link"
-> > +
-> > +echo ""
-> > +# Create parent pointer test
-> > +_verify_parent "$testfolder1" "$file1" "$testfolder1/$file1"
-> > +
-> > +echo ""
-> > +# Move parent pointer test
-> > +mv $SCRATCH_MNT/$testfolder1/$file1 $SCRATCH_MNT/$testfolder2/$file1
-> > +_verify_parent "$testfolder2" "$file1" "$testfolder2/$file1"
-> > +
-> > +echo ""
-> > +# Hard link parent pointer test
-> > +ln $SCRATCH_MNT/$testfolder2/$file1 $SCRATCH_MNT/$testfolder1/$file1_ln
-> > +_verify_parent "$testfolder1" "$file1_ln" "$testfolder1/$file1_ln"
-> > +_verify_parent "$testfolder1" "$file1_ln" "$testfolder2/$file1"
-> > +_verify_parent "$testfolder2" "$file1"    "$testfolder1/$file1_ln"
-> > +_verify_parent "$testfolder2" "$file1"    "$testfolder2/$file1"
-> > +
-> > +echo ""
-> > +# Remove hard link parent pointer test
-> > +ino="$(stat -c '%i' $SCRATCH_MNT/$testfolder2/$file1)"
-> > +rm $SCRATCH_MNT/$testfolder2/$file1
-> > +_verify_parent "$testfolder1" "$file1_ln" "$testfolder1/$file1_ln"
-> > +_verify_no_parent "$file1" "$ino" "$testfolder1/$file1_ln"
-> > +
-> > +echo ""
-> > +# Rename parent pointer test
-> > +ino="$(stat -c '%i' $SCRATCH_MNT/$testfolder1/$file1_ln)"
-> > +mv $SCRATCH_MNT/$testfolder1/$file1_ln $SCRATCH_MNT/$testfolder1/$file2
-> > +_verify_parent "$testfolder1" "$file2" "$testfolder1/$file2"
-> > +_verify_no_parent "$file1_ln" "$ino" "$testfolder1/$file2"
-> > +
-> > +echo ""
-> > +# Over write parent pointer test
-> > +touch $SCRATCH_MNT/$testfolder2/$file3
-> > +_verify_parent "$testfolder2" "$file3" "$testfolder2/$file3"
-> > +ino="$(stat -c '%i' $SCRATCH_MNT/$testfolder2/$file3)"
-> > +mv -f $SCRATCH_MNT/$testfolder2/$file3 $SCRATCH_MNT/$testfolder1/$file2
-> > +_verify_parent "$testfolder1" "$file2" "$testfolder1/$file2"
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/xfs/554.out b/tests/xfs/554.out
-> > new file mode 100644
-> > index 00000000..67ea9f2b
-> > --- /dev/null
-> > +++ b/tests/xfs/554.out
-> > @@ -0,0 +1,59 @@
-> > +QA output created by 554
-> > +
-> > +*** testfolder1 OK
-> > +*** testfolder1/file1 OK
-> > +*** testfolder1/file1 OK
-> > +*** Verified parent pointer: name:file1, namelen:5
-> > +*** Parent pointer OK for child testfolder1/file1
-> > +
-> > +*** testfolder2 OK
-> > +*** testfolder2/file1 OK
-> > +*** testfolder2/file1 OK
-> > +*** Verified parent pointer: name:file1, namelen:5
-> > +*** Parent pointer OK for child testfolder2/file1
-> > +
-> > +*** testfolder1 OK
-> > +*** testfolder1/file1_link OK
-> > +*** testfolder1/file1_link OK
-> > +*** Verified parent pointer: name:file1_link, namelen:10
-> > +*** Parent pointer OK for child testfolder1/file1_link
-> > +*** testfolder1 OK
-> > +*** testfolder2/file1 OK
-> > +*** testfolder1/file1_link OK
-> > +*** Verified parent pointer: name:file1_link, namelen:10
-> > +*** Parent pointer OK for child testfolder2/file1
-> > +*** testfolder2 OK
-> > +*** testfolder1/file1_link OK
-> > +*** testfolder2/file1 OK
-> > +*** Verified parent pointer: name:file1, namelen:5
-> > +*** Parent pointer OK for child testfolder1/file1_link
-> > +*** testfolder2 OK
-> > +*** testfolder2/file1 OK
-> > +*** testfolder2/file1 OK
-> > +*** Verified parent pointer: name:file1, namelen:5
-> > +*** Parent pointer OK for child testfolder2/file1
-> > +
-> > +*** testfolder1 OK
-> > +*** testfolder1/file1_link OK
-> > +*** testfolder1/file1_link OK
-> > +*** Verified parent pointer: name:file1_link, namelen:10
-> > +*** Parent pointer OK for child testfolder1/file1_link
-> > +*** testfolder1/file1_link OK
-> > +
-> > +*** testfolder1 OK
-> > +*** testfolder1/file2 OK
-> > +*** testfolder1/file2 OK
-> > +*** Verified parent pointer: name:file2, namelen:5
-> > +*** Parent pointer OK for child testfolder1/file2
-> > +*** testfolder1/file2 OK
-> > +
-> > +*** testfolder2 OK
-> > +*** testfolder2/file3 OK
-> > +*** testfolder2/file3 OK
-> > +*** Verified parent pointer: name:file3, namelen:5
-> > +*** Parent pointer OK for child testfolder2/file3
-> > +*** testfolder1 OK
-> > +*** testfolder1/file2 OK
-> > +*** testfolder1/file2 OK
-> > +*** Verified parent pointer: name:file2, namelen:5
-> > +*** Parent pointer OK for child testfolder1/file2
-> > -- 
-> > 2.25.1
-> > 
 
