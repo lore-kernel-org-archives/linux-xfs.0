@@ -2,139 +2,109 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80C34C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Oct 2022 11:51:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F69AC4332F
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Oct 2022 14:55:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229619AbiJMLvY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Oct 2022 07:51:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52776 "EHLO
+        id S229550AbiJMOzZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Oct 2022 10:55:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35238 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229581AbiJMLvW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Oct 2022 07:51:22 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D30B147B99
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Oct 2022 04:51:20 -0700 (PDT)
+        with ESMTP id S229462AbiJMOzY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Oct 2022 10:55:24 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 462B3AA353
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Oct 2022 07:55:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1665661879;
+        s=mimecast20190719; t=1665672922;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=lalvGD/cZNFlrSrybOU5XC3b1fmNe6t6Ggl/pq9x4Tw=;
-        b=iTRaAZ9cQqNIlqxf9oDi+zE1GSwR1Z4lw4hTYx4iU5tN310oZDHe/QUJMRKP1GwCysLI2Y
-        aS12v2pEwF8Hv0mdO7QQebtHx2QP9GKTQtHCf7uHfXJQGRhEGk8RYMIUrKaD5hRUL41ciQ
-        pe1usZhfE0+tR4YfKowP0zVrqD7aj2s=
-Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
- [209.85.222.198]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=qWUmYZh4xYf2XMKoXQm+CFqb+G2yigbGg+qhtVxZcdI=;
+        b=RNrilNukz093VxknR8a5vO3wjkTS66+cASpH7OejpCI9kH5MoQT1hF3E6wS3Vm5shA14ZF
+        oEm5LY8sLLKmHubCY7w99N5z187vpv5/KRQySUKT2N9v53YcNdcotC7Ps2zuC0wJBp5CQo
+        DazDjjttMyw3Hmmpt+tqUyDTImEVMbs=
+Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com
+ [209.85.219.71]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-631-t1s1LnoQN9WJW-8kbPxx_w-1; Thu, 13 Oct 2022 07:51:18 -0400
-X-MC-Unique: t1s1LnoQN9WJW-8kbPxx_w-1
-Received: by mail-qk1-f198.google.com with SMTP id i11-20020a05620a404b00b006eeb0791c1aso1328992qko.10
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Oct 2022 04:51:18 -0700 (PDT)
+ us-mta-246-FUeCqZk2NlyOA-LgsU5Qig-1; Thu, 13 Oct 2022 10:55:21 -0400
+X-MC-Unique: FUeCqZk2NlyOA-LgsU5Qig-1
+Received: by mail-qv1-f71.google.com with SMTP id q17-20020a056214019100b004b1d3c9f3acso1536801qvr.0
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Oct 2022 07:55:21 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=lalvGD/cZNFlrSrybOU5XC3b1fmNe6t6Ggl/pq9x4Tw=;
-        b=Dox20dG+INVB9YR69RpWkfpSSsaZkPH+akDCvt7AIB3iPewF2TWX8aOh/PgfV3ClYE
-         ekbSdlxDplzl7a2fvTesyq1WrRFxFwMoEvni7Ri7k5nJFAWZMDqREDHxn6Sdo/wdxge9
-         PWHKm0nM5ZWSnxWLKAVJy0CRaSldxYzXh65fUUkM1xUDywoxQ+SWl95TMSCdBegZDAHt
-         bJjS8RoNVO6VAkerT0jRU3WIIAjeF1+H+R90RrsHcg10x0dElQqZTv6QQVrgaOTQhgH1
-         jfNuU1u1Uykmiz6C9D1BTUyTtVZ3tzxXSC1gHk8l5sNb3rgEt9jbTGGYLmQF67XTBR93
-         QDjA==
-X-Gm-Message-State: ACrzQf0Ha22heOXRpCetU3GfPOcwgeW1aEf0h01/mXEg50CmPSXPka90
-        YKzDBt3A6pLwZ9JXH1kzmuZgdrV7ELHm5Mf0Tn6iqj+4SgkFPqR+/e4BK+PZE42qIrjtCzzZmGY
-        3X2wt3leR3acgfPHtO3V/
-X-Received: by 2002:a0c:b294:0:b0:4b1:a396:d1cc with SMTP id r20-20020a0cb294000000b004b1a396d1ccmr26896278qve.107.1665661877765;
-        Thu, 13 Oct 2022 04:51:17 -0700 (PDT)
-X-Google-Smtp-Source: AMsMyM4GZOap/R4r9rcqUgR4clAoxEKQRfA4NGb7zvStk+6PHB3zWgW2Kg2yRsM5Z0C2vE086orPyg==
-X-Received: by 2002:a05:6a00:a8c:b0:558:991a:6691 with SMTP id b12-20020a056a000a8c00b00558991a6691mr35855939pfl.53.1665661866921;
-        Thu, 13 Oct 2022 04:51:06 -0700 (PDT)
+        bh=qWUmYZh4xYf2XMKoXQm+CFqb+G2yigbGg+qhtVxZcdI=;
+        b=Kg4DNNdNxviLoq6kJQsvvhlwfLJDOq2LZ0CSG6fYoOjdq85XxtMYwhSGsALu1hfYL2
+         6AOO9tFnYTXxow2bzZTQwibiriDG9SyffkdM/fplH98MV0rdQ/hq5N9e7pVT1KzUCFfF
+         C6InPrycE/28vOaumuohJTXnRIDJrFoApWOuKXrp2MfkgCvDUnekIm5G1AZ+9HKP2ZKg
+         LsEjhef+p79EImPVBqvL0E5/rIM2neU4Q7Uq747hhPxYr34TNvOqfmf0Viw22hC2y1ke
+         p7GRE/NKaMEphXeyNOwfrsyGAsCio9q6lP+tLKRxMdQVrD3NBPF+PhWgPpw16RbEUlIA
+         klDw==
+X-Gm-Message-State: ACrzQf1QD7b7zZFH7TYtd6L4ERmOkK+Jl6Od9HrYihVSrihBKrf6yExt
+        hTO26Qg+aF7WY1K2tzNSFf4BZmb3JowUBGDlw7JtEMCvSinIEng1J3nVAs+DBQ9M12+cuKybvXt
+        dqAN/4DsbsSAwDz5yedPf
+X-Received: by 2002:a05:620a:244d:b0:6ee:7a23:dfa6 with SMTP id h13-20020a05620a244d00b006ee7a23dfa6mr201939qkn.463.1665672920755;
+        Thu, 13 Oct 2022 07:55:20 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM5ir6m2yoz+N0yyWHfzNwH0C4fGM0YB8nV7wQImXPL0mtWxZxrvVMr4r7y03MQSm9Vz+m0F2A==
+X-Received: by 2002:a05:620a:244d:b0:6ee:7a23:dfa6 with SMTP id h13-20020a05620a244d00b006ee7a23dfa6mr201932qkn.463.1665672920534;
+        Thu, 13 Oct 2022 07:55:20 -0700 (PDT)
 Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id o1-20020a170902bcc100b00177f32b1a32sm12284751pls.271.2022.10.13.04.51.05
+        by smtp.gmail.com with ESMTPSA id t12-20020a37aa0c000000b006eeb25369e9sm2648279qke.25.2022.10.13.07.55.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 13 Oct 2022 04:51:06 -0700 (PDT)
-Date:   Thu, 13 Oct 2022 19:51:02 +0800
+        Thu, 13 Oct 2022 07:55:20 -0700 (PDT)
+Date:   Thu, 13 Oct 2022 22:55:15 +0800
 From:   Zorro Lang <zlang@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 2/2] check: optionally compress core dumps
-Message-ID: <20221013115102.qb7r37ywdy2qbwkn@zlang-mailbox>
-References: <166553910766.422356.8069826206437666467.stgit@magnolia>
- <166553911893.422356.7143540040827489080.stgit@magnolia>
+Subject: Re: [PATCH 1/5] populate: export the metadump description name
+Message-ID: <20221013145515.2vx3xy6hnf37777o@zlang-mailbox>
+References: <166553912229.422450.15473762183660906876.stgit@magnolia>
+ <166553912788.422450.6797363004980943410.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <166553911893.422356.7143540040827489080.stgit@magnolia>
+In-Reply-To: <166553912788.422450.6797363004980943410.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 11, 2022 at 06:45:18PM -0700, Darrick J. Wong wrote:
+On Tue, Oct 11, 2022 at 06:45:27PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Add a new option, COREDUMP_COMPRESSOR, that will be used to compress
-> core dumps collected during a fstests run.  The program specified must
-> accept the -f -9 arguments that gzip has.
+> Not sure why this hasn't been broken all along, but we should be
+> exporting this variable so that it shows up in subshells....
+
+May I ask where's the subshell which uses $POPULATE_METADUMP?
+
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  README    |    4 ++++
->  common/rc |   14 +++++++++-----
->  2 files changed, 13 insertions(+), 5 deletions(-)
+>  common/populate |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 > 
 > 
-> diff --git a/README b/README
-> index 80d148be82..4c4f22f853 100644
-> --- a/README
-> +++ b/README
-> @@ -212,6 +212,10 @@ Tools specification:
->      - Set FSSTRESS_AVOID and/or FSX_AVOID, which contain options added to
->        the end of fsstresss and fsx invocations, respectively, in case you wish
->        to exclude certain operational modes from these tests.
-> + - core dumps:
-> +    - Set COREDUMP_COMPRESSOR to a compression program to compress crash dumps.
-> +      This program must accept '-f' and the name of a file to compress.  In
-> +      other words, it must emulate gzip.
+> diff --git a/common/populate b/common/populate
+> index cfdaf766f0..b501c2fe45 100644
+> --- a/common/populate
+> +++ b/common/populate
+> @@ -868,9 +868,9 @@ _scratch_populate_cached() {
+>  	local meta_tag="$(echo "${meta_descr}" | md5sum - | cut -d ' ' -f 1)"
+>  	local metadump_stem="${TEST_DIR}/__populate.${FSTYP}.${meta_tag}"
 >  
->  Kernel/Modules related configuration:
->   - Set TEST_FS_MODULE_RELOAD=1 to unload the module and reload it between
-> diff --git a/common/rc b/common/rc
-> index 152b8bb414..c68869b7dc 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -4956,13 +4956,17 @@ _save_coredump()
->  	local core_hash="$(_md5_checksum "$path")"
->  	local out_file="$RESULT_BASE/$seqnum.core.$core_hash"
+> -	# These variables are shared outside this function
+> -	POPULATE_METADUMP="${metadump_stem}.metadump"
+> -	POPULATE_METADUMP_DESCR="${metadump_stem}.txt"
+> +	# This variable is shared outside this function
+> +	export POPULATE_METADUMP="${metadump_stem}.metadump"
+> +	local POPULATE_METADUMP_DESCR="${metadump_stem}.txt"
+
+If the POPULATE_METADUMP_DESCR is not shared outside anymore, how about change
+it to lower-case?
+
 >  
-> -	if [ -s "$out_file" ]; then
-> -		rm -f "$path"
-> -		return
-> -	fi
-> -	rm -f "$out_file"
-> +	for dump in "$out_file"*; do
-> +		if [ -s "$dump" ]; then
-> +			rm -f "$path"
-> +			return 0
-> +		fi
-> +	done
->  
->  	mv "$path" "$out_file"
-> +	test -z "$COREDUMP_COMPRESSOR" && return 0
-> +
-> +	$COREDUMP_COMPRESSOR -f "$out_file"
-
-This patch looks good to me,
-Reviewed-by: Zorro Lang <zlang@redhat.com>
-
-I'm just not sure if all/most compressor supports "-f" option, I use bzip2
-and gzip mostly, they both support that.
-
-Thanks,
-Zorro
-
->  }
->  
->  init_rc
+>  	# Don't keep metadata images cached for more 48 hours...
+>  	rm -rf "$(find "${POPULATE_METADUMP}" -mtime +2 2>/dev/null)"
 > 
 
