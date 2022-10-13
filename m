@@ -2,111 +2,123 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E5BBC43217
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Oct 2022 03:15:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A134C4332F
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Oct 2022 10:08:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229598AbiJMDP4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Oct 2022 23:15:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59042 "EHLO
+        id S229688AbiJMKIM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Oct 2022 06:08:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50422 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229614AbiJMDPy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Oct 2022 23:15:54 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CC86D2CF0
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Oct 2022 20:15:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1665630951;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=UaKxwXZs5j3I47+jfA+D9uXp42ETQG8kiqYPq0Jybsk=;
-        b=PsRQGAMdQBC9M7jU3l93FRHi7jvy3f0g+PgBahTjfDfd48YjbZPFwCEoIZbyVfzzumfm7G
-        EgfFtl9gCmHDCS6nlsB194HdVyWq3DkpZkM9pwlaUEuUIriREVnnNPL7084oAK+pwSvfnU
-        UdSFHdGaunmBV6MM5HD7xzev109or/4=
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
- [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-127-U7NVBiy-NVS9Zgn_xYMvAA-1; Wed, 12 Oct 2022 23:15:50 -0400
-X-MC-Unique: U7NVBiy-NVS9Zgn_xYMvAA-1
-Received: by mail-pj1-f69.google.com with SMTP id mq15-20020a17090b380f00b0020ad26fa5edso2498702pjb.7
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Oct 2022 20:15:50 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=UaKxwXZs5j3I47+jfA+D9uXp42ETQG8kiqYPq0Jybsk=;
-        b=upXsS8dPE40wa0GH+KriCRw/Ex+HEhN12tF1+yxr0Fb32C/wnw0ulwXRz5tmqHMnh5
-         0OlQ5bE000rivMXVSGhelzbJRQPoPSZJp1N7TR1bZQyFuo3XNU9vZh/deqYQ8jouDKOS
-         5LCWxe6o7CT4yY3gNpoFY81f5A5oQoJ5qKvXqnSyc1QF+Q7S6pEl8TnEKN7uoaOUBmYn
-         PMktIush6q8rXlSuorZQ3V/mGeA0kYSwGg5Z2opB7tqrYzpbdgZKijkCj6wVjIdgFMkY
-         raPiQzH9hOBCZEOuQv/6xCNKnk/D9j715Ct7Hlr8rghR7ZdpYp09Ea9ZAxBw61Oy9V/b
-         Zy+A==
-X-Gm-Message-State: ACrzQf1jTGjanBmhPiWy46J1E1qrvn7+jTJAbqFrXqFlbSi15FGaaB7m
-        eHj/S1ZvGlkVktWLFHC+whxwtmhl9x9Picr/lXvrMIAp3Wk+sFd2oRswexmAXu/8H4g2cyIq4D7
-        mUi56s7jM2XF4NI6CfclFT67aqWsQGze4RCSwuynMdij/SKBRmwvmkfmyfsddDjopmOxi9aTE
-X-Received: by 2002:a17:90a:1b65:b0:1f7:4725:aa6e with SMTP id q92-20020a17090a1b6500b001f74725aa6emr8466523pjq.179.1665630949099;
-        Wed, 12 Oct 2022 20:15:49 -0700 (PDT)
-X-Google-Smtp-Source: AMsMyM4cSgParvKTnjfX2j2MSF/yq3Qsu09qXVanrZribhb3aJUMV1kJM8fuigvYjSEwFIfiYO5vBw==
-X-Received: by 2002:a17:90a:1b65:b0:1f7:4725:aa6e with SMTP id q92-20020a17090a1b6500b001f74725aa6emr8466497pjq.179.1665630948703;
-        Wed, 12 Oct 2022 20:15:48 -0700 (PDT)
-Received: from snowcrash.redhat.com ([2001:8003:4800:1b00:4c4a:1757:c744:923])
-        by smtp.gmail.com with ESMTPSA id b7-20020a170902650700b00176b84eb29asm11273085plk.301.2022.10.12.20.15.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Oct 2022 20:15:48 -0700 (PDT)
-From:   Donald Douwsma <ddouwsma@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Donald Douwsma <ddouwsma@redhat.com>,
-        "Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH 4/4] xfsrestore: untangle inventory unpacking logic
-Date:   Thu, 13 Oct 2022 14:15:18 +1100
-Message-Id: <20221013031518.1815861-5-ddouwsma@redhat.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20221013031518.1815861-1-ddouwsma@redhat.com>
-References: <20221013031518.1815861-1-ddouwsma@redhat.com>
+        with ESMTP id S229682AbiJMKIL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Oct 2022 06:08:11 -0400
+Received: from mail1.bemta34.messagelabs.com (mail1.bemta34.messagelabs.com [195.245.231.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 303D7F987C;
+        Thu, 13 Oct 2022 03:08:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
+        s=170520fj; t=1665655687; i=@fujitsu.com;
+        bh=dJcZNOD1TZqSJEBMvqyns3m1HsI0veOvDdlgGPnJ1P8=;
+        h=Message-ID:Date:MIME-Version:Subject:From:To:CC:References:
+         In-Reply-To:Content-Type:Content-Transfer-Encoding;
+        b=AdF5RmjYGd20CIIcNO+6W5vjlKnfsU+g/YEp6pkL3S/Y/BSv3wonQPSF8PLC9AdwZ
+         kPoaDLqwi/rrR4Qe9tKduMqU/2BdFyliIT0y3r2VNPz1hGJuV66ljDHULp69cNNg4B
+         Xrpx7MybT6ZOWG2rcSOL93n9RzIDv50m377Ccsu7pp2QW0yuf4/dk6SoqV0/MQQY2l
+         cEP/Iw+3wxFbB/hG0ccBAsf9W1iY4C26SJ3QX9kl6o4GtcWwHAGPcpKLSutds/HdTI
+         hVSbBD7ocO8Gkxww6ZF6P5hQ4nCgPjC2MUIeqFSzZH3e7KQfI6pQdm81/imElcPhrW
+         W2Uac+37TTOhg==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrIKsWRWlGSWpSXmKPExsViZ8ORpNv22D3
+  Z4PBzJYvpUy8wWmw5do/R4vITPovTExYxWezZe5LF4vKuOWwW99b8Z7XY9WcHu8XKH39YHTg9
+  Ti2S8Ni8Qstj8Z6XTB6bVnWyeWz6NInd48XmmYwenzfJBbBHsWbmJeVXJLBmfPzRxVawmLvi1
+  ImCBsZ3nF2MXBxCAhsZJY5s/sIC4SxhkjhzbzcThLOdUeJM2122LkZODl4BO4kDZz8zgdgsAq
+  oSq87NZoSIC0qcnPmEBcQWFUiW+Dr1IliNsICvxIa9m8DibAI6EhcW/GUFGSoiMIlR4tiNm8w
+  gCWaBBIn2L9fAGoQEKiR2PfkCFucUsJfY0HcDqsZCYvGbg+wQtrxE89bZQHEODgkBJYmZ3fEg
+  YQmg1lmz2pggbDWJq+c2MU9gFJqF5LxZSCbNQjJpASPzKkbrpKLM9IyS3MTMHF1DAwNdQ0NTX
+  WNzXUMzI73EKt1EvdRS3fLU4hJdILe8WC+1uFivuDI3OSdFLy+1ZBMjMPZSilUX7WDcv+qn3i
+  FGSQ4mJVHed7fck4X4kvJTKjMSizPii0pzUosPMcpwcChJ8IY+BMoJFqWmp1akZeYA0wBMWoK
+  DR0mEl+0RUJq3uCAxtzgzHSJ1ilGXY23Dgb3MQix5+XmpUuK8nx8AFQmAFGWU5sGNgKWkS4yy
+  UsK8jAwMDEI8BalFuZklqPKvGMU5GJWEebtBVvFk5pXAbXoFdAQT0BFLT7mBHFGSiJCSamByz
+  LG0cvRdMP3lldKL6wsCVecuOmi5s2q+bGvVuQNtOap5qU2bmsweyoXqTHnn6WOltEb+m+I/9r
+  3tJ/5p3c99uvdwFMuB3g1bLpSplsaw+59zCf+6y7f1oGZ0nwyD6gz9db8qzTtL+XNEu/NeFa/
+  bKKJstvA7Y8AiafbGt1zP9CTVmS6YPlgWyVRR9KtRxPTK5RvGC0QmRMdYbwp5ylmwz+3e/Z+F
+  xdIHBWLenw7e81/4mEvypBNL9lxuMrSvD8wIjF/iKPFkajyztsmku0e//P1u37TgIuuCvH/Rb
+  bVrTzp6vQ+rNOsIONkbcu2pwNM/Uo/OyAt9e+76WpyH7Vp/o2CG3Ca1wj0xDjWmE5VYijMSDb
+  WYi4oTAWrVox7EAwAA
+X-Env-Sender: ruansy.fnst@fujitsu.com
+X-Msg-Ref: server-9.tower-548.messagelabs.com!1665655686!107385!1
+X-Originating-IP: [62.60.8.98]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.87.3; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 22353 invoked from network); 13 Oct 2022 10:08:06 -0000
+Received: from unknown (HELO n03ukasimr03.n03.fujitsu.local) (62.60.8.98)
+  by server-9.tower-548.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 13 Oct 2022 10:08:06 -0000
+Received: from n03ukasimr03.n03.fujitsu.local (localhost [127.0.0.1])
+        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTP id 33D5F1B4;
+        Thu, 13 Oct 2022 11:08:06 +0100 (BST)
+Received: from R01UKEXCASM126.r01.fujitsu.local (R01UKEXCASM126 [10.183.43.178])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTPS id 280971B3;
+        Thu, 13 Oct 2022 11:08:06 +0100 (BST)
+Received: from [192.168.22.78] (10.167.225.141) by
+ R01UKEXCASM126.r01.fujitsu.local (10.183.43.178) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.32; Thu, 13 Oct 2022 11:08:02 +0100
+Message-ID: <7431bafb-97e2-f755-45ca-e7cce339fd88@fujitsu.com>
+Date:   Thu, 13 Oct 2022 18:07:56 +0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.3.0
+Subject: Re: [PATCH v9 0/3] mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>
+CC:     <djwong@kernel.org>, <david@fromorbit.com>,
+        <dan.j.williams@intel.com>, <hch@infradead.org>
+References: <1664112803-57-1-git-send-email-ruansy.fnst@fujitsu.com>
+ <ba642a21-8876-0cd0-2627-6fb7e534c950@fujitsu.com>
+In-Reply-To: <ba642a21-8876-0cd0-2627-6fb7e534c950@fujitsu.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.167.225.141]
+X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
+ R01UKEXCASM126.r01.fujitsu.local (10.183.43.178)
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-stobj_unpack_sessinfo returns bool_t, fix logic in pi_addfile so errors
-can be properly reported.
+Ping again~
 
-Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- restore/content.c | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
-
-diff --git a/restore/content.c b/restore/content.c
-index b3999f9..04b6f81 100644
---- a/restore/content.c
-+++ b/restore/content.c
-@@ -5463,17 +5463,14 @@ pi_addfile(Media_t *Mediap,
- 			 * desc.
- 			 */
- 			sessp = 0;
--			if (!buflen) {
--				ok = BOOL_FALSE;
--			} else {
--			    /* extract the session information from the buffer */
--			    if (stobj_unpack_sessinfo(bufp, buflen, &sessinfo)<0) {
--				ok = BOOL_FALSE;
--			    } else {
-+			ok = BOOL_FALSE;
-+			/* extract the session information from the buffer */
-+			if (buflen &&
-+			    stobj_unpack_sessinfo(bufp, buflen, &sessinfo)) {
- 				stobj_convert_sessinfo(&sessp, &sessinfo);
- 				ok = BOOL_TRUE;
--			    }
- 			}
-+
- 			if (!ok || !sessp) {
- 				mlog(MLOG_DEBUG | MLOG_WARNING | MLOG_MEDIA, _(
- 				      "on-media session "
--- 
-2.31.1
-
+在 2022/9/30 11:28, Shiyang Ruan 写道:
+> Hi,
+> 
+> Ping
+> 
+> 在 2022/9/25 21:33, Shiyang Ruan 写道:
+>> Changes since v8:
+>>    1. P2: rename drop_pagecache_sb() to super_drop_pagecache().
+>>    2. P2: let super_drop_pagecache() accept invalidate method.
+>>    3. P3: invalidate all dax mappings by invalidate_inode_pages2().
+>>    4. P3: shutdown the filesystem when it is to be removed.
+>>    5. Rebase on 6.0-rc6 + Darrick's patch[1] + Dan's patch[2].
+>>
+>> [1]: https://lore.kernel.org/linux-xfs/Yv5wIa2crHioYeRr@magnolia/
+>> [2]: 
+>> https://lore.kernel.org/linux-xfs/166153426798.2758201.15108211981034512993.stgit@dwillia2-xfh.jf.intel.com/
+>>
+>> Shiyang Ruan (3):
+>>    xfs: fix the calculation of length and end
+>>    fs: move drop_pagecache_sb() for others to use
+>>    mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
+>>
+>>   drivers/dax/super.c         |  3 ++-
+>>   fs/drop_caches.c            | 35 ++----------------------------
+>>   fs/super.c                  | 43 +++++++++++++++++++++++++++++++++++++
+>>   fs/xfs/xfs_notify_failure.c | 36 ++++++++++++++++++++++++++-----
+>>   include/linux/fs.h          |  1 +
+>>   include/linux/mm.h          |  1 +
+>>   include/linux/pagemap.h     |  1 +
+>>   mm/truncate.c               | 20 +++++++++++++++--
+>>   8 files changed, 99 insertions(+), 41 deletions(-)
+>>
