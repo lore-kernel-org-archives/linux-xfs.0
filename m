@@ -2,350 +2,253 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2AC8C43219
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Oct 2022 18:41:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CB48C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Oct 2022 19:06:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231580AbiJMSlM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Oct 2022 14:41:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43070 "EHLO
+        id S229498AbiJMTGA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Oct 2022 15:06:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48660 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232037AbiJMSky (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Oct 2022 14:40:54 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 029564001F;
-        Thu, 13 Oct 2022 11:38:19 -0700 (PDT)
+        with ESMTP id S229749AbiJMTF6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Oct 2022 15:05:58 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 024FE152022
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Oct 2022 12:05:55 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B4C95618B8;
-        Thu, 13 Oct 2022 18:37:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12758C433D6;
-        Thu, 13 Oct 2022 18:37:05 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id B1F66B81FAE
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Oct 2022 19:05:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7645EC433D6;
+        Thu, 13 Oct 2022 19:05:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665686225;
-        bh=rWEWYqFeApPh5evcKGWYboSURGEGXz3vDTUbnY9BKRM=;
+        s=k20201202; t=1665687952;
+        bh=iqnnuxLV7b9ohYmaUk7ycf23KrUj9T0YGFssqoIXQpI=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=qDkDcpUaJk5hM2p/VQQtlWDgIk1naEJ4xtYeuhnZZnQ/Cro8v4rGoGXrzbMqmaXFk
-         GaQNgkREqxaMsbEdm1LHJ/TfxHXnFNHXb8Fpxe6klWBotagi457FlI6p/2oN3VY/fU
-         yNhfgR5KBhnjoAvI+vNVymp0oFJWMXKB4x30hhPfOJrmLrqBqpIUBqtO0ERid5eZ6J
-         jR+FWp4m2bqfHB4+uCyZNG5s6C9AUfkQ1ZwW/ebLSn68q2eNbR8j3cAvBQp/OufG27
-         UlZjW4BAVkryi2pWNPzHU2vkVLOaah4EIdiUelaE23IbbrAUJn82YrCBYPtv9FYjGr
-         8ie5zpMDnkJFw==
-Date:   Thu, 13 Oct 2022 11:37:04 -0700
+        b=tpw7FCOdH8f4T+pJDmylR8cYDIIzlMkIj6T10UsUbhbbiDQ3Ob7+uBBxVCTQxNHIl
+         FtNcs+oJWAttreQBcDOD7HANaJHBM0Zu0TFV6dAT46eotWmhxl/bG8TzV4EW8Z+psl
+         St8x1ZmEiBlpDStdTJFeWuuwcUejJxDH+p8M0l7qG0dSVglYkpvZTOtPn2J0QX0NQ1
+         wRs7hhLTZWNoXgYi+eukdaR2HizUwYDFEBk1MLGgGaRytON1NoQ92k5xuIF28TzSlP
+         a+CalV+/M4K2Fw0OvEMKUGhcI/pI4TR+OYMV9gcsZt6QItazKTKNBrxAGTbitwLMd+
+         s/38WTsSVUAEw==
+Date:   Thu, 13 Oct 2022 12:05:51 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Hironori Shiina <shiina.hironori@gmail.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Hironori Shiina <shiina.hironori@fujitsu.com>
-Subject: Re: [PATCH V2] xfs: test for fixing wrong root inode number in dump
-Message-ID: <Y0ha0LTKCKpkag8y@magnolia>
-References: <20220928210337.417054-1-shiina.hironori@fujitsu.com>
- <20221013160434.130152-1-shiina.hironori@fujitsu.com>
+To:     Donald Douwsma <ddouwsma@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/4] xfsrestore: fix on-media inventory stream unpacking
+Message-ID: <Y0hhj+FFF4TYA6N6@magnolia>
+References: <20221013031518.1815861-1-ddouwsma@redhat.com>
+ <20221013031518.1815861-3-ddouwsma@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221013160434.130152-1-shiina.hironori@fujitsu.com>
+In-Reply-To: <20221013031518.1815861-3-ddouwsma@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 13, 2022 at 12:04:34PM -0400, Hironori Shiina wrote:
-> Test '-x' option of xfsrestore. With this option, a wrong root inode
-> number in a dump file is corrected. A root inode number can be wrong
-> in a dump created by problematic xfsdump (v3.1.7 - v3.1.9) with
-> bulkstat misuse. In this test, a corrupted dump file is created by
-> overwriting a root inode number in a header.
+On Thu, Oct 13, 2022 at 02:15:16PM +1100, Donald Douwsma wrote:
+> xfsdump can create multiple streams, when restoring the online inventory
+> with multiple streams we fail to process these and assert when the
+> inventory buffer is not fully decoded.
 > 
-> Signed-off-by: Hironori Shiina <shiina.hironori@fujitsu.com>
-> ---
-> changes since RFC v1:
->   - Skip the test if xfsrestore does not support '-x' flag.
->   - Create a corrupted dump by overwriting a root inode number in a dump
->     file with a new tool instead of checking in a binary dump file.
+> [root@rhel8 ~]# xfsdump -L "Test1" -f /dev/nst0 -M tape1 -f /dev/nst1 -M tape2 /boot
+> xfsdump: using scsi tape (drive_scsitape) strategy
+> xfsdump: using scsi tape (drive_scsitape) strategy
+> xfsdump: version 3.1.8 (dump format 3.0) - type ^C for status and control
+> xfsdump: level 0 dump of rhel8:/boot
+> xfsdump: dump date: Thu Oct  6 13:50:45 2022
+> xfsdump: session id: aa25fa48-4493-45c7-9027-61e53e486445
+> xfsdump: session label: "Test1"
+> xfsdump: ino map phase 1: constructing initial dump list
+> xfsdump: ino map phase 2: skipping (no pruning necessary)
+> xfsdump: ino map phase 3: identifying stream starting points
+> xfsdump: stream 0: ino 133 offset 0 to ino 28839 offset 0
+> xfsdump: stream 1: ino 28839 offset 0 to end
+> xfsdump: ino map construction complete
+> xfsdump: estimated dump size: 328720704 bytes
+> xfsdump: estimated dump size per stream: 164375728 bytes
+> xfsdump: /var/lib/xfsdump/inventory created
+> xfsdump: drive 0: preparing drive
+> xfsdump: drive 1: preparing drive
+> xfsdump: drive 1: creating dump session media file 0 (media 0, file 0)
+> xfsdump: drive 1: dumping ino map
+> xfsdump: drive 1: dumping non-directory files
+> xfsdump: drive 0: creating dump session media file 0 (media 0, file 0)
+> xfsdump: drive 0: dumping ino map
+> xfsdump: drive 0: dumping directories
+> xfsdump: drive 0: dumping non-directory files
+> xfsdump: drive 1: ending media file
+> xfsdump: drive 1: media file size 166723584 bytes
+> xfsdump: drive 1: waiting for synchronized session inventory dump
+> xfsdump: drive 0: ending media file
+> xfsdump: drive 0: media file size 165675008 bytes
+> xfsdump: drive 0: waiting for synchronized session inventory dump
+> xfsdump: drive 0: dumping session inventory
+> xfsdump: drive 0: beginning inventory media file
+> xfsdump: drive 0: media file 1 (media 0, file 1)
+> xfsdump: drive 0: ending inventory media file
+> xfsdump: drive 0: inventory media file size 2097152 bytes
+> xfsdump: drive 0: writing stream terminator
+> xfsdump: drive 0: beginning media stream terminator
+> xfsdump: drive 0: media file 2 (media 0, file 2)
+> xfsdump: drive 0: ending media stream terminator
+> xfsdump: drive 0: media stream terminator size 1048576 bytes
+> xfsdump: drive 1: dumping session inventory
+> xfsdump: drive 1: beginning inventory media file
+> xfsdump: drive 1: media file 1 (media 0, file 1)
+> xfsdump: drive 1: ending inventory media file
+> xfsdump: drive 1: inventory media file size 2097152 bytes
+> xfsdump: drive 1: writing stream terminator
+> xfsdump: drive 1: beginning media stream terminator
+> xfsdump: drive 1: media file 2 (media 0, file 2)
+> xfsdump: drive 1: ending media stream terminator
+> xfsdump: drive 1: media stream terminator size 1048576 bytes
+> xfsdump: dump size (non-dir files) : 328189016 bytes
+> xfsdump: dump complete: 4 seconds elapsed
+> xfsdump: Dump Summary:
+> xfsdump:   stream 0 /dev/nst0 OK (success)
+> xfsdump:   stream 1 /dev/nst1 OK (success)
+> xfsdump: Dump Status: SUCCESS
+> [root@rhel8 ~]# xfsdump -I
+> file system 0:
+> 	fs id:		26dd5aa0-b901-4cf5-9b68-0c5753cb3ab8
+> 	session 0:
+> 		mount point:	rhel8:/boot
+> 		device:		rhel8:/dev/sda1
+> 		time:		Thu Oct  6 13:50:45 2022
+> 		session label:	"Test1"
+> 		session id:	aa25fa48-4493-45c7-9027-61e53e486445
+> 		level:		0
+> 		resumed:	NO
+> 		subtree:	NO
+> 		streams:	2
+> 		stream 0:
+> 			pathname:	/dev/nst0
+> 			start:		ino 133 offset 0
+> 			end:		ino 28839 offset 0
+> 			interrupted:	NO
+> 			media files:	2
+> 			media file 0:
+> 				mfile index:	0
+> 				mfile type:	data
+> 				mfile size:	165675008
+> 				mfile start:	ino 133 offset 0
+> 				mfile end:	ino 28839 offset 0
+> 				media label:	"tape1"
+> 				media id:	adb31f2a-f026-4597-a20a-326f28ecbaf1
+> 			media file 1:
+> 				mfile index:	1
+> 				mfile type:	inventory
+> 				mfile size:	2097152
+> 				media label:	"tape1"
+> 				media id:	adb31f2a-f026-4597-a20a-326f28ecbaf1
+> 		stream 1:
+> 			pathname:	/dev/nst1
+> 			start:		ino 28839 offset 0
+> 			end:		ino 1572997 offset 0
+> 			interrupted:	NO
+> 			media files:	2
+> 			media file 0:
+> 				mfile index:	0
+> 				mfile type:	data
+> 				mfile size:	166723584
+> 				mfile start:	ino 28839 offset 0
+> 				mfile end:	ino 1572997 offset 0
+> 				media label:	"tape2"
+> 				media id:	22224f02-b6c7-47d5-ad61-a61ba071c8a8
+> 			media file 1:
+> 				mfile index:	1
+> 				mfile type:	inventory
+> 				mfile size:	2097152
+> 				media label:	"tape2"
+> 				media id:	22224f02-b6c7-47d5-ad61-a61ba071c8a8
+> xfsdump: Dump Status: SUCCESS
+> [root@rhel8 ~]# mv /var/lib/xfsdump/inventory /var/lib/xfsdump/inventory_two_sessions
+> [root@rhel8 ~]# xfsdump -I
+> xfsdump: Dump Status: SUCCESS
 > 
->  common/dump             |  2 +-
->  common/xfs              |  6 +++
->  src/Makefile            |  2 +-
->  src/fake-dump-rootino.c | 85 +++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/554           | 73 +++++++++++++++++++++++++++++++++++
->  tests/xfs/554.out       | 40 +++++++++++++++++++
->  6 files changed, 206 insertions(+), 2 deletions(-)
->  create mode 100644 src/fake-dump-rootino.c
->  create mode 100755 tests/xfs/554
->  create mode 100644 tests/xfs/554.out
+> [root@rhel8 ~]# xfsrestore -L Test1 -f /dev/nst0 /tmp/test1/
+> xfsrestore: using scsi tape (drive_scsitape) strategy
+> xfsrestore: version 3.1.8 (dump format 3.0) - type ^C for status and control
+> xfsrestore: searching media for dump
+> xfsrestore: preparing drive
+> xfsrestore: examining media file 2
+> xfsrestore: found dump matching specified label:
+> xfsrestore: hostname: rhel8
+> xfsrestore: mount point: /boot
+> xfsrestore: volume: /dev/sda1
+> xfsrestore: session time: Thu Oct  6 13:50:45 2022
+> xfsrestore: level: 0
+> xfsrestore: session label: "Test1"
+> xfsrestore: media label: "tape1"
+> xfsrestore: file system id: 26dd5aa0-b901-4cf5-9b68-0c5753cb3ab8
+> xfsrestore: session id: aa25fa48-4493-45c7-9027-61e53e486445
+> xfsrestore: media id: adb31f2a-f026-4597-a20a-326f28ecbaf1
+> xfsrestore: searching media for directory dump
+> xfsrestore: rewinding
+> xfsrestore: examining media file 0
+> xfsrestore: reading directories
+> xfsrestore: 9 directories and 320 entries processed
+> xfsrestore: directory post-processing
+> xfsrestore: restoring non-directory files
+> xfsrestore: examining media file 1
+> xfsrestore: inv_stobj.c:1119: stobj_unpack_sessinfo: Assertion `(size_t) ( p - (char *) bufp ) == bufsz' failed.
+> Aborted (core dumped)
 > 
-> diff --git a/common/dump b/common/dump
-> index 8e0446d9..50b2ba03 100644
-> --- a/common/dump
-> +++ b/common/dump
-> @@ -1003,7 +1003,7 @@ _parse_restore_args()
->          --no-check-quota)
->              do_quota_check=false
->              ;;
-> -	-K|-R)
-> +	-K|-R|-x)
->  	    restore_args="$restore_args $1"
->              ;;
->  	*)
-> diff --git a/common/xfs b/common/xfs
-> index e1c15d3d..8334880e 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -1402,3 +1402,9 @@ _xfs_filter_mkfs()
->  		print STDOUT "realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX\n";
->  	}'
->  }
-> +
-> +_require_xfsrestore_xflag()
-> +{
-> +	$XFSRESTORE_PROG -h 2>&1 | grep -q -e '-x' || \
-> +			_notrun 'xfsrestore does not support -x flag.'
-> +}
-> diff --git a/src/Makefile b/src/Makefile
-> index 5f565e73..afdf6b30 100644
-> --- a/src/Makefile
-> +++ b/src/Makefile
-> @@ -19,7 +19,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
->  	t_ofd_locks t_mmap_collision mmap-write-concurrent \
->  	t_get_file_time t_create_short_dirs t_create_long_dirs t_enospc \
->  	t_mmap_writev_overlap checkpoint_journal mmap-rw-fault allocstale \
-> -	t_mmap_cow_memory_failure
-> +	t_mmap_cow_memory_failure fake-dump-rootino
->  
->  LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
->  	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-> diff --git a/src/fake-dump-rootino.c b/src/fake-dump-rootino.c
-> new file mode 100644
-> index 00000000..b89351b8
-> --- /dev/null
-> +++ b/src/fake-dump-rootino.c
-> @@ -0,0 +1,85 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/* Copyright (c) 2022 Fujitsu Limited.  All Rights Reserved. */
-> +#include <fcntl.h>
-> +#include <stdint.h>
-> +#include <stdio.h>
-> +#include <stdlib.h>
-> +#include <sys/mman.h>
-> +#include <unistd.h>
-> +
-> +// Values for size of dump file header from xfsdump
-> +#define PGSZLOG2	12
-> +#define PGSZ		(1 << PGSZLOG2)
-> +#define GLOBAL_HDR_SZ		PGSZ
-> +
-> +static inline uint32_t convert_endian_32(uint32_t val) {
-> +#if __BYTE_ORDER == __BIG_ENDIAN
-> +	return val;
-> +#else
-> +	return ((val & 0xff000000u) >> 24 |
-> +			(val & 0x00ff0000u) >> 8  |
-> +			(val & 0x0000ff00u) << 8  |
-> +			(val & 0x000000ffu) << 24);
-> +#endif
-> +}
+> Make sure we unpack multiple streams when restoring the online
+> inventory from media.
+> 
+> Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
 
-be32_to_cpu?
+Much better now, though I hope there's an fstest coming to make sure
+that multistream restore/dump work properly.
 
-> +
-> +static inline uint64_t convert_endian_64(uint64_t val) {
-> +#if __BYTE_ORDER == __BIG_ENDIAN
-> +	return val;
-> +#else
-> +	return (uint64_t) convert_endian_32(val >> 32) |
-> +	       (uint64_t) convert_endian_32(val & 0x00000000ffffffff) << 32;
-> +#endif
-> +}
-
-be64_to_cpu?
-
-> +
-> +/*
-> + * Offset to checksum in dump file header
-> + *   global_hdr_t.gh_checksum (0xc)
-> + */
-> +#define OFFSET_CHECKSUM	0xc
-> +
-> +/*
-> + * Offset to root inode number in dump file header
-> + *   global_hdr_t.gh_upper (0x400) + drive_hdr_t.dh_upper (0x400) +
-> + *   media_hdr_t.mh_upper (0x400) + content_hdr_t.ch_specific (0x340) +
-> + *   content_inode_hdr_t.cih_rootino (0x18)
-> + */
-> +#define OFFSET_ROOTINO	0xf58
-
-Since you're now using a C program, I think it makes more sense to copy
-the structure definitions directly into the C file.
-
-> +
-> +int main(int argc, char *argv[]) {
-> +
-> +	if (argc < 3) {
-> +		fprintf(stderr, "Usage: %s <path/to/dumpfile> <fake rootino>\n", argv[0]);
-> +		exit(1);
-> +	}
-> +
-> +	const char *filepath = argv[1];
-> +	const uint64_t fake_root_ino = (uint64_t) strtol(argv[2], NULL, 10);
-> +
-> +	int fd = open(filepath, O_RDWR);
-> +	if (fd < 0) {
-> +		perror("open");
-> +		exit(1);
-> +	}
-> +	char *header = mmap(NULL, GLOBAL_HDR_SZ, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
-> +	if (header == MAP_FAILED) {
-> +		perror("mmap");
-> +		exit(1);
-> +	}
-> +
-> +	uint32_t *checksum_ptr = (uint32_t *) (header + OFFSET_CHECKSUM);
-> +	uint64_t *rootino_ptr = (uint64_t *) (header + OFFSET_ROOTINO);
-> +	int32_t checksum = (int32_t) convert_endian_32(*checksum_ptr);
-> +	uint64_t orig_rootino = convert_endian_64(*rootino_ptr);
-> +
-> +	// Fake root inode number
-> +	*rootino_ptr = convert_endian_64(fake_root_ino);
-> +
-> +	// Update checksum along with overwriting rootino.
-> +	uint64_t gap = orig_rootino - fake_root_ino;
-> +	checksum += (gap >> 32) + (gap & 0x00000000ffffffff);
-> +	*checksum_ptr = convert_endian_32(checksum);
-> +
-> +	munmap(header, GLOBAL_HDR_SZ);
-> +	close(fd);
-> +}
-> diff --git a/tests/xfs/554 b/tests/xfs/554
-> new file mode 100755
-> index 00000000..fcfaa699
-> --- /dev/null
-> +++ b/tests/xfs/554
-> @@ -0,0 +1,73 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2022 Fujitsu Limited. All Rights Reserved.
-> +#
-> +# FS QA Test No. 554
-> +#
-> +# Create a filesystem which contains an inode with a lower number
-> +# than the root inode. Set the lower number to a dump file as the root inode
-> +# and ensure that 'xfsrestore -x' handles this wrong inode.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick dump
-> +
-> +# Import common functions.
-> +. ./common/dump
-> +
-> +_supported_fs xfs
-> +_require_xfs_io_command "falloc"
-> +_require_scratch
-> +_require_xfsrestore_xflag
-
-_require_test_program fake-dump-rootino
-
-> +
-> +# A large stripe unit will put the root inode out quite far
-> +# due to alignment, leaving free blocks ahead of it.
-> +_scratch_mkfs_xfs -d sunit=1024,swidth=1024 > $seqres.full 2>&1
-> +
-> +# Mounting /without/ a stripe should allow inodes to be allocated
-> +# in lower free blocks, without the stripe alignment.
-> +_scratch_mount -o sunit=0,swidth=0
-> +
-> +root_inum=$(stat -c %i $SCRATCH_MNT)
-> +
-> +# Consume space after the root inode so that the blocks before
-> +# root look "close" for the next inode chunk allocation
-> +$XFS_IO_PROG -f -c "falloc 0 16m" $SCRATCH_MNT/fillfile
-> +
-> +# And make a bunch of inodes until we (hopefully) get one lower
-> +# than root, in a new inode chunk.
-> +echo "root_inum: $root_inum" >> $seqres.full
-> +for i in $(seq 0 4096) ; do
-> +	fname=$SCRATCH_MNT/$(printf "FILE_%03d" $i)
-> +	touch $fname
-> +	inum=$(stat -c "%i" $fname)
-> +	[[ $inum -lt $root_inum ]] && break
-> +done
-> +
-> +echo "created: $inum" >> $seqres.full
-> +
-> +[[ $inum -lt $root_inum ]] || _notrun "Could not set up test"
-> +
-> +# Now try a dump and restore. Cribbed from xfs/068
-> +_create_dumpdir_stress
-> +
-> +echo -n "Before: " >> $seqres.full
-> +_count_dumpdir_files | tee $tmp.before >> $seqres.full
-> +
-> +_do_dump_file
-> +
-> +# Set the wrong root inode number to the dump file
-> +# as problematic xfsdump used to do.
-> +$here/src/fake-dump-rootino $dump_file $inum
-> +
-> +_do_restore_file -x | \
-> +sed -e "s/rootino #${inum}/rootino #FAKENO/g" \
-> +	-e "s/# to ${root_inum}/# to ROOTNO/g" \
-> +	-e "/entries processed$/s/[0-9][0-9]*/NUM/g"
-> +
-> +echo -n "After: " >> $seqres.full
-> +_count_restoredir_files | tee $tmp.after >> $seqres.full
-> +diff -u $tmp.before $tmp.after
-
-The rest of this logic looks reasonable to me though. :)
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/554.out b/tests/xfs/554.out
-> new file mode 100644
-> index 00000000..c5e8c4c5
-> --- /dev/null
-> +++ b/tests/xfs/554.out
-> @@ -0,0 +1,40 @@
-> +QA output created by 554
-> +Creating directory system to dump using fsstress.
-> +
-> +-----------------------------------------------
-> +fsstress : -f link=10 -f creat=10 -f mkdir=10 -f truncate=5 -f symlink=10
-> +-----------------------------------------------
-> +Dumping to file...
-> +xfsdump  -f DUMP_FILE -M stress_tape_media -L stress_554 SCRATCH_MNT
-> +xfsdump: using file dump (drive_simple) strategy
-> +xfsdump: level 0 dump of HOSTNAME:SCRATCH_MNT
-> +xfsdump: dump date: DATE
-> +xfsdump: session id: ID
-> +xfsdump: session label: "stress_554"
-> +xfsdump: ino map <PHASES>
-> +xfsdump: ino map construction complete
-> +xfsdump: estimated dump size: NUM bytes
-> +xfsdump: /var/xfsdump/inventory created
-> +xfsdump: creating dump session media file 0 (media 0, file 0)
-> +xfsdump: dumping ino map
-> +xfsdump: dumping directories
-> +xfsdump: dumping non-directory files
-> +xfsdump: ending media file
-> +xfsdump: media file size NUM bytes
-> +xfsdump: dump size (non-dir files) : NUM bytes
-> +xfsdump: dump complete: SECS seconds elapsed
-> +xfsdump: Dump Status: SUCCESS
-> +Restoring from file...
-> +xfsrestore  -x -f DUMP_FILE  -L stress_554 RESTORE_DIR
-> +xfsrestore: using file dump (drive_simple) strategy
-> +xfsrestore: using online session inventory
-> +xfsrestore: searching media for directory dump
-> +xfsrestore: examining media file 0
-> +xfsrestore: reading directories
-> +xfsrestore: found fake rootino #FAKENO, will fix.
-> +xfsrestore: fix root # to ROOTNO (bind mount?)
-> +xfsrestore: NUM directories and NUM entries processed
-> +xfsrestore: directory post-processing
-> +xfsrestore: restoring non-directory files
-> +xfsrestore: restore complete: SECS seconds elapsed
-> +xfsrestore: Restore Status: SUCCESS
+> ---
+>  inventory/inv_stobj.c | 13 +++++++------
+>  1 file changed, 7 insertions(+), 6 deletions(-)
+> 
+> diff --git a/inventory/inv_stobj.c b/inventory/inv_stobj.c
+> index b461666..025d431 100644
+> --- a/inventory/inv_stobj.c
+> +++ b/inventory/inv_stobj.c
+> @@ -1065,25 +1065,26 @@ stobj_unpack_sessinfo(
+>  		return BOOL_FALSE;
+>  	}
+>  
+> +	/* get the seshdr and then, the remainder of the session */
+>  	xlate_invt_seshdr((invt_seshdr_t *)p, (invt_seshdr_t *)tmpbuf, 1);
+>  	bcopy(tmpbuf, p, sizeof(invt_seshdr_t));
+> -
+> -	/* get the seshdr and then, the remainder of the session */
+>  	s->seshdr = (invt_seshdr_t *)p;
+>  	s->seshdr->sh_sess_off = -1;
+>  	p += sizeof(invt_seshdr_t);
+>  
+> -
+>  	xlate_invt_session((invt_session_t *)p, (invt_session_t *)tmpbuf, 1);
+>  	bcopy (tmpbuf, p, sizeof(invt_session_t));
+>  	s->ses = (invt_session_t *)p;
+>  	p += sizeof(invt_session_t);
+>  
+>  	/* the array of all the streams belonging to this session */
+> -	xlate_invt_stream((invt_stream_t *)p, (invt_stream_t *)tmpbuf, 1);
+> -	bcopy(tmpbuf, p, sizeof(invt_stream_t));
+>  	s->strms = (invt_stream_t *)p;
+> -	p += s->ses->s_cur_nstreams * sizeof(invt_stream_t);
+> +	for (i = 0; i < s->ses->s_cur_nstreams; i++) {
+> +		xlate_invt_stream((invt_stream_t *)p,
+> +				  (invt_stream_t *)tmpbuf, 1);
+> +		bcopy(tmpbuf, p, sizeof(invt_stream_t));
+> +		p += sizeof(invt_stream_t);
+> +	}
+>  
+>  	/* all the media files */
+>  	s->mfiles = (invt_mediafile_t *)p;
 > -- 
-> 2.37.3
+> 2.31.1
 > 
