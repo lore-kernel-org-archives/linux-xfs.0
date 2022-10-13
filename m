@@ -2,157 +2,110 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B15C1C43217
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Oct 2022 15:48:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E99FC43219
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Oct 2022 15:48:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229582AbiJMPsp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Oct 2022 11:48:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39012 "EHLO
+        id S229797AbiJMPsr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Oct 2022 11:48:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229573AbiJMPso (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Oct 2022 11:48:44 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E283EA69E;
-        Thu, 13 Oct 2022 08:48:43 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E6873604EF;
-        Thu, 13 Oct 2022 15:48:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5051CC433D7;
-        Thu, 13 Oct 2022 15:48:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665676122;
-        bh=rAZmVAL6ExNw6OlHX6L00sEulTBKcFrkL7bUWwx4WXI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RGwn78bMQiSqfX5eqk2h1cxjDeqTBRC6OooilbpwhJtMdVrlIDsdk3wIpdv6EFF43
-         v/I+dPGdPtmoWsvf7/FAJZYbZzy1cDChphOeE3RQ3zw/pKOzfroQ44nXcgRtQ52iRc
-         QGYxU/1hIitg1Y10TFxpi6xBGQ4ABPMumw+Ta2wdqJRdF16EbpmslmxJCZejd/fsKy
-         QUp4GhFbVXyQUGCK2avxB6QkdI9LpYzWprwyQ430ewie9MBvfHMTjGAiaT9KqLbl/9
-         s2tLgIcG8pJQiEADJ/nc//Egw6Yww5zqUHIiCm3Btvk3xKK1/+rdukM/Qe8LjWnDww
-         5YhBsA75SEcFg==
-Date:   Thu, 13 Oct 2022 08:48:41 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@redhat.com>
+        with ESMTP id S229822AbiJMPsp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Oct 2022 11:48:45 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E704FEA68A
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Oct 2022 08:48:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1665676120;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=6z8rf6ZYpSjKMzpItfXQF69axd1BsXH4wsuzdLosv+Y=;
+        b=WBvF4D+tcIX7n6QeQ/9FZrPc6zeN6JWh/Xf6ype2fv+dP5klkHmloUzOq2cyLLcZ8cbQLZ
+        iRwRf+S9moUaBNJiP8D66F9ibx/uMRhtNq/Sr8LghYMyOANF6fWNQCDQiW7WKrzSaaTz3w
+        TdZf/asLdrR4BrjesTkLx+W7zZjrJDE=
+Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com
+ [209.85.160.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-548-pxNINOd8Pqqb9rdvOTNPQA-1; Thu, 13 Oct 2022 11:48:38 -0400
+X-MC-Unique: pxNINOd8Pqqb9rdvOTNPQA-1
+Received: by mail-qt1-f198.google.com with SMTP id a19-20020a05622a02d300b0039a3711179dso1605179qtx.12
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Oct 2022 08:48:38 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=6z8rf6ZYpSjKMzpItfXQF69axd1BsXH4wsuzdLosv+Y=;
+        b=VmssA+9eXxXC6/gLCIvyGsuiPx2lKtlr9jTGEpvDlfZROdYm3JjL8JXxpsroGr5dpu
+         6Du0R4gRZh8dtXmoN6XFTVIJXLyGXwu8nkFWfqq0m712ROLsv9/Pz8JnzA7Dk6y1Ytje
+         woO5xfdLJqEmQuuinOd8enmlmigEsobkBi8Fg0Jraicc7rM+cYlDdF/dA3OAc7d8aWZK
+         8BzU71AtmdPDB2q67lBO41KY6Q8PYML118XCXwpkO9IHB+NzXg+ZNgrj0+WPI1r64Vc2
+         Z+wMDZEfyefQZpluYzw9EQAX/W/l37Zr58Fle9f+wp3OK1p1LQhtmmRPX7CTqfGbmnBD
+         TVtg==
+X-Gm-Message-State: ACrzQf2z65yWDn5slulMXN8saXrxJjAvY7/ch3lxv7pFS4KTG28OObCT
+        nkXDvghx0hommqsUTLUZwzxS8MpsuKgG1EpmPyl+wmTZB6cOJ4IUN5aAyq8W69ZxeiV5CM3Btcq
+        wf+xSmMj6YMCd3xy9u7F2
+X-Received: by 2002:a37:6504:0:b0:6ee:6fb:4ae2 with SMTP id z4-20020a376504000000b006ee06fb4ae2mr409934qkb.49.1665676118392;
+        Thu, 13 Oct 2022 08:48:38 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM6Z1SpCyTqhN8ysHmAkbQaVD7byH61MKGW3R6faEM/yLQYTSaoHeB0GABAOKn/OkIKMvVrang==
+X-Received: by 2002:a37:6504:0:b0:6ee:6fb:4ae2 with SMTP id z4-20020a376504000000b006ee06fb4ae2mr409922qkb.49.1665676118129;
+        Thu, 13 Oct 2022 08:48:38 -0700 (PDT)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id c5-20020ac80545000000b0039913d588fbsm161524qth.48.2022.10.13.08.48.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 13 Oct 2022 08:48:37 -0700 (PDT)
+Date:   Thu, 13 Oct 2022 23:48:33 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH v2.1 1/2] check: detect and preserve all coredumps made
- by a test
-Message-ID: <Y0gzWbBd5PdlQWP6@magnolia>
-References: <166553910766.422356.8069826206437666467.stgit@magnolia>
- <166553911331.422356.4424521847397525024.stgit@magnolia>
- <Y0dZpkOwJpyQ9SA9@magnolia>
- <20221013114446.346ii4nd5i3l77ar@zlang-mailbox>
+Subject: Re: [PATCH 4/5] populate: require e2image before populating
+Message-ID: <20221013154833.kqwygzftf7thscx7@zlang-mailbox>
+References: <166553912229.422450.15473762183660906876.stgit@magnolia>
+ <166553914474.422450.8871747567060992809.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221013114446.346ii4nd5i3l77ar@zlang-mailbox>
+In-Reply-To: <166553914474.422450.8871747567060992809.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 13, 2022 at 07:44:46PM +0800, Zorro Lang wrote:
-> On Wed, Oct 12, 2022 at 05:19:50PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > If someone sets kernel.core_uses_pid (or kernel.core_pattern), any
-> > coredumps generated by fstests might have names that are longer than
-> > just "core".  Since the pid isn't all that useful by itself, let's
-> > record the coredumps by hash when we save them, so that we don't waste
-> > space storing identical crash dumps.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> > v2.1: use REPORT_DIR per maintainer suggestion
-> > ---
+On Tue, Oct 11, 2022 at 06:45:44PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> This version looks good to me,
-> Reviewed-by: Zorro Lang <zlang@redhat.com>
-
-It occurred to me overnight that ./check doesn't export REPORT_DIR, so
-I'll push out a v2.2 that adds that.  Currently the lack of an export
-doesn't affect anyone, but as soon as any tests want to call
-_save_coredump they're going to run into that issue.
-
-(...and yes, I do have future fuzz tests that will call it from a test
-in between fuzz field cycles.)
-
---D
-
-> >  check     |   26 ++++++++++++++++++++++----
-> >  common/rc |   16 ++++++++++++++++
-> >  2 files changed, 38 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/check b/check
-> > index d587a70546..29303db1c8 100755
-> > --- a/check
-> > +++ b/check
-> > @@ -923,11 +923,19 @@ function run_section()
-> >  			sts=$?
-> >  		fi
-> >  
-> > -		if [ -f core ]; then
-> > -			_dump_err_cont "[dumped core]"
-> > -			mv core $RESULT_BASE/$seqnum.core
-> > +		# If someone sets kernel.core_pattern or kernel.core_uses_pid,
-> > +		# coredumps generated by fstests might have a longer name than
-> > +		# just "core".  Use globbing to find the most common patterns,
-> > +		# assuming there are no other coredump capture packages set up.
-> > +		local cores=0
-> > +		for i in core core.*; do
-> > +			test -f "$i" || continue
-> > +			if ((cores++ == 0)); then
-> > +				_dump_err_cont "[dumped core]"
-> > +			fi
-> > +			_save_coredump "$i"
-> >  			tc_status="fail"
-> > -		fi
-> > +		done
-> >  
-> >  		if [ -f $seqres.notrun ]; then
-> >  			$timestamp && _timestamp
-> > @@ -960,6 +968,16 @@ function run_section()
-> >  			# of the check script itself.
-> >  			(_adjust_oom_score 250; _check_filesystems) || tc_status="fail"
-> >  			_check_dmesg || tc_status="fail"
-> > +
-> > +			# Save any coredumps from the post-test fs checks
-> > +			for i in core core.*; do
-> > +				test -f "$i" || continue
-> > +				if ((cores++ == 0)); then
-> > +					_dump_err_cont "[dumped core]"
-> > +				fi
-> > +				_save_coredump "$i"
-> > +				tc_status="fail"
-> > +			done
-> >  		fi
-> >  
-> >  		# Reload the module after each test to check for leaks or
-> > diff --git a/common/rc b/common/rc
-> > index d877ac77a0..2e1891180a 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -4949,6 +4949,22 @@ _create_file_sized()
-> >  	return $ret
-> >  }
-> >  
-> > +_save_coredump()
-> > +{
-> > +	local path="$1"
-> > +
-> > +	local core_hash="$(_md5_checksum "$path")"
-> > +	local out_file="$REPORT_DIR/$seqnum.core.$core_hash"
-> > +
-> > +	if [ -s "$out_file" ]; then
-> > +		rm -f "$path"
-> > +		return
-> > +	fi
-> > +	rm -f "$out_file"
-> > +
-> > +	mv "$path" "$out_file"
-> > +}
-> > +
-> >  init_rc
-> >  
-> >  ################################################################################
-> > 
+> Use $E2IMAGE_PROG, not e2image, and check that it exists before
+> proceeding.
 > 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+
+Make sense,
+Reviewed-by: Zorro Lang <zlang@redhat.com>
+
+>  common/populate |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/common/populate b/common/populate
+> index 66c55b682f..05bdfe33c5 100644
+> --- a/common/populate
+> +++ b/common/populate
+> @@ -18,6 +18,7 @@ _require_populate_commands() {
+>  		;;
+>  	ext*)
+>  		_require_command "$DUMPE2FS_PROG" "dumpe2fs"
+> +		_require_command "$E2IMAGE_PROG" "e2image"
+>  		;;
+>  	esac
+>  }
+> @@ -874,7 +875,7 @@ _scratch_populate_restore_cached() {
+>  		return $res
+>  		;;
+>  	"ext2"|"ext3"|"ext4")
+> -		e2image -r "${metadump}" "${SCRATCH_DEV}"
+> +		$E2IMAGE_PROG -r "${metadump}" "${SCRATCH_DEV}"
+>  		ret=$?
+>  		test $ret -ne 0 && return $ret
+>  
+> 
+
