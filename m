@@ -2,179 +2,152 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0557AC4332F
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Oct 2022 16:27:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70815C4332F
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Oct 2022 16:28:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229676AbiJMQ1N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Oct 2022 12:27:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41232 "EHLO
+        id S229579AbiJMQ2r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Oct 2022 12:28:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229598AbiJMQ1L (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Oct 2022 12:27:11 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A21A10F884;
-        Thu, 13 Oct 2022 09:27:10 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9BCAF6188A;
-        Thu, 13 Oct 2022 16:27:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03535C433D6;
-        Thu, 13 Oct 2022 16:27:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665678429;
-        bh=rJz5E3vF4NRzJtYND2fqbG++092gb1GNnuQKAPaynyg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=AaXT/lKJXTDAEmBaxJe3iElslRuRHNPEC1z1C/+AdAaJOlh8jpq/Q7DXBE+ur4fOb
-         2R5K2EgWvzC1shpNZLpU1onGES3aq2M6/dObIc8bJet8tww57eaRl2goyVgrCJywUQ
-         bPv6vBTHkWSZMkortzCoN8QIZ7dFAt/lVB9US63F+6hgUo2UCIgzUlI7dZ+PyXPkdT
-         D9wNVQJQDiDAKN/W9u/5gnd8Vw6Wsg+9W/zKXaSSr2mtqh6LnFYnIJJ1WMVfNHIsLv
-         IVKVHiI5yA4pwiI/0wvFCRLoRUYsftS3DYCMnzpJicSt6Qh8cpogxjQf24IC3QUTrM
-         SJpzTK6/R3zFg==
-Date:   Thu, 13 Oct 2022 09:27:08 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@redhat.com>
+        with ESMTP id S229511AbiJMQ2q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Oct 2022 12:28:46 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A8D6E09F2
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Oct 2022 09:28:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1665678523;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=6wwpBq6SHFYDdcz7t5eB9kJ+xjI/zbGfcUPrGluEm80=;
+        b=C97lWnJsX5TaZyAV0FOP4orPU5dwjDGO2Kubo6N+ze6ReV5LY5G8zhv9PKnyUZW542xguf
+        E0KBD/rHbU4BubhNcEggPlYecC1Xie2DDrjeFcn1XhPX2znFYPnffSMqXo10Dg4JeJp48s
+        aZrwk8lFsTn5rnYLbEHNhVLfvOTdv84=
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
+ [209.85.215.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-490-8geaYJZlODywTBd2RB1U2w-1; Thu, 13 Oct 2022 12:28:42 -0400
+X-MC-Unique: 8geaYJZlODywTBd2RB1U2w-1
+Received: by mail-pg1-f199.google.com with SMTP id x23-20020a634857000000b0043c700f6441so1246879pgk.21
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Oct 2022 09:28:42 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=6wwpBq6SHFYDdcz7t5eB9kJ+xjI/zbGfcUPrGluEm80=;
+        b=v2+D7dqNJxBUMj5PJz7x/VltkrhFrVJM0Cjqy8AjTxHqJMV6o/Og4Qj6K1+0TT6MwU
+         MdfAOKSHhSMUHZsBq6+tCHBh3XdXDD5lRFeKL06waufx06AiWb+/kOkYJ3ZdGmGeCEAV
+         RCAKZ4fndumLERmGCl4C+JU6qWjEeBh3IT3HGDF8JswhPkfviAAfslkGn2n4YnS1RA+O
+         Cde+pXib5qjAvClGYxUi01ryuKYNZjrTMsXBPbbiv0SO4tjmYuI/tHVW/RIa1Y+IzixQ
+         Ixl9xrq1LVV25Z14kdbAx9IzrVfUrm8HKZKk+Fz9/jDFI7VhjcBCXJDmldlhzT0GT0yC
+         04uw==
+X-Gm-Message-State: ACrzQf2hF1U2ijdMOvZfgw0KHShPn/SIEmrCxeJqOpNmUnsn+lwDmXD9
+        3EJLIcUAMrehnM+ygJBWy0Gpfz4tEYjqsM261Yr0poCpRXFWQposEEnyhqnDCN2QO5EGmM883RN
+        J8puGCEVnxHJFNloQworJ
+X-Received: by 2002:a17:90b:4c4f:b0:20d:4f5d:6b7c with SMTP id np15-20020a17090b4c4f00b0020d4f5d6b7cmr12268447pjb.77.1665678521353;
+        Thu, 13 Oct 2022 09:28:41 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM6lo5XEoJ7ijPYunxIx8X5OviVMD0xL6rDoNVdhPiB392mL9bLHPt7mYtyKtzK7FTMgsEyLqQ==
+X-Received: by 2002:a17:90b:4c4f:b0:20d:4f5d:6b7c with SMTP id np15-20020a17090b4c4f00b0020d4f5d6b7cmr12268423pjb.77.1665678520984;
+        Thu, 13 Oct 2022 09:28:40 -0700 (PDT)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id b16-20020a170902e95000b0017b264a2d4asm90101pll.44.2022.10.13.09.28.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 13 Oct 2022 09:28:40 -0700 (PDT)
+Date:   Fri, 14 Oct 2022 00:28:26 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH v2.1 1/2] check: detect and preserve all coredumps made
- by a test
-Message-ID: <Y0g8XPzJHw6eICoK@magnolia>
-References: <166553910766.422356.8069826206437666467.stgit@magnolia>
- <166553911331.422356.4424521847397525024.stgit@magnolia>
- <Y0dZpkOwJpyQ9SA9@magnolia>
- <20221013114446.346ii4nd5i3l77ar@zlang-mailbox>
- <Y0gzWbBd5PdlQWP6@magnolia>
- <20221013160326.l4s6sz4yxeul64d5@zlang-mailbox>
+Subject: Re: [PATCH 1/5] populate: export the metadump description name
+Message-ID: <20221013162826.hfs75s33giqmfu4t@zlang-mailbox>
+References: <166553912229.422450.15473762183660906876.stgit@magnolia>
+ <166553912788.422450.6797363004980943410.stgit@magnolia>
+ <20221013145515.2vx3xy6hnf37777o@zlang-mailbox>
+ <Y0g0u5byHQK/aOEz@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221013160326.l4s6sz4yxeul64d5@zlang-mailbox>
+In-Reply-To: <Y0g0u5byHQK/aOEz@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 14, 2022 at 12:03:26AM +0800, Zorro Lang wrote:
-> On Thu, Oct 13, 2022 at 08:48:41AM -0700, Darrick J. Wong wrote:
-> > On Thu, Oct 13, 2022 at 07:44:46PM +0800, Zorro Lang wrote:
-> > > On Wed, Oct 12, 2022 at 05:19:50PM -0700, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > 
-> > > > If someone sets kernel.core_uses_pid (or kernel.core_pattern), any
-> > > > coredumps generated by fstests might have names that are longer than
-> > > > just "core".  Since the pid isn't all that useful by itself, let's
-> > > > record the coredumps by hash when we save them, so that we don't waste
-> > > > space storing identical crash dumps.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > ---
-> > > > v2.1: use REPORT_DIR per maintainer suggestion
-> > > > ---
+On Thu, Oct 13, 2022 at 08:54:35AM -0700, Darrick J. Wong wrote:
+> On Thu, Oct 13, 2022 at 10:55:15PM +0800, Zorro Lang wrote:
+> > On Tue, Oct 11, 2022 at 06:45:27PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
 > > > 
-> > > This version looks good to me,
-> > > Reviewed-by: Zorro Lang <zlang@redhat.com>
+> > > Not sure why this hasn't been broken all along, but we should be
+> > > exporting this variable so that it shows up in subshells....
 > > 
-> > It occurred to me overnight that ./check doesn't export REPORT_DIR, so
-> > I'll push out a v2.2 that adds that.  Currently the lack of an export
-> > doesn't affect anyone, but as soon as any tests want to call
-> > _save_coredump they're going to run into that issue.
+> > May I ask where's the subshell which uses $POPULATE_METADUMP?
 > 
-> Hmm... the RESULT_DIR is exported, you can use it, or use $seqres directly due
-> to it's defined in common/preamble (although is not exported).
+> _scratch_xfs_fuzz_metadata does this:
 > 
-> ./common/preamble:42:   seqres=$RESULT_DIR/$seq
+> 	echo "${fields}" | while read field; do
+> 		echo "${verbs}" | while read fuzzverb; do
+> 			__scratch_xfs_fuzz_mdrestore
+> 				_xfs_mdrestore "${POPULATE_METADUMP}"
 > 
-> What do you think?
+> The (nested) echo piped to while starts subshells.
 
-seqres is defined differently in check than in common/preamble, but I
-guess RESULT_DIR will work.
+I'm not so familar with this part, so I didn't a simple test[1], and looks like
+the PARAM can be seen, even it's not exported. Do I misunderstand something?
 
---D
+Thanks,
+Zorro
 
-> Thanks,
-> Zorro
+[1]
+$ echo "$list"
+a
+b
+cc
+$ PARAM="This's a test"
+$ echo "$list"|while read c1;do echo "$list"|while read c2;do echo $PARAM;done; done
+This's a test
+This's a test
+This's a test
+This's a test
+This's a test
+This's a test
+This's a test
+This's a test
+This's a test
+
 > 
+> > > 
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > >  common/populate |    6 +++---
+> > >  1 file changed, 3 insertions(+), 3 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/common/populate b/common/populate
+> > > index cfdaf766f0..b501c2fe45 100644
+> > > --- a/common/populate
+> > > +++ b/common/populate
+> > > @@ -868,9 +868,9 @@ _scratch_populate_cached() {
+> > >  	local meta_tag="$(echo "${meta_descr}" | md5sum - | cut -d ' ' -f 1)"
+> > >  	local metadump_stem="${TEST_DIR}/__populate.${FSTYP}.${meta_tag}"
+> > >  
+> > > -	# These variables are shared outside this function
+> > > -	POPULATE_METADUMP="${metadump_stem}.metadump"
+> > > -	POPULATE_METADUMP_DESCR="${metadump_stem}.txt"
+> > > +	# This variable is shared outside this function
+> > > +	export POPULATE_METADUMP="${metadump_stem}.metadump"
+> > > +	local POPULATE_METADUMP_DESCR="${metadump_stem}.txt"
 > > 
-> > (...and yes, I do have future fuzz tests that will call it from a test
-> > in between fuzz field cycles.)
-> > 
-> > --D
-> > 
-> > > >  check     |   26 ++++++++++++++++++++++----
-> > > >  common/rc |   16 ++++++++++++++++
-> > > >  2 files changed, 38 insertions(+), 4 deletions(-)
-> > > > 
-> > > > diff --git a/check b/check
-> > > > index d587a70546..29303db1c8 100755
-> > > > --- a/check
-> > > > +++ b/check
-> > > > @@ -923,11 +923,19 @@ function run_section()
-> > > >  			sts=$?
-> > > >  		fi
-> > > >  
-> > > > -		if [ -f core ]; then
-> > > > -			_dump_err_cont "[dumped core]"
-> > > > -			mv core $RESULT_BASE/$seqnum.core
-> > > > +		# If someone sets kernel.core_pattern or kernel.core_uses_pid,
-> > > > +		# coredumps generated by fstests might have a longer name than
-> > > > +		# just "core".  Use globbing to find the most common patterns,
-> > > > +		# assuming there are no other coredump capture packages set up.
-> > > > +		local cores=0
-> > > > +		for i in core core.*; do
-> > > > +			test -f "$i" || continue
-> > > > +			if ((cores++ == 0)); then
-> > > > +				_dump_err_cont "[dumped core]"
-> > > > +			fi
-> > > > +			_save_coredump "$i"
-> > > >  			tc_status="fail"
-> > > > -		fi
-> > > > +		done
-> > > >  
-> > > >  		if [ -f $seqres.notrun ]; then
-> > > >  			$timestamp && _timestamp
-> > > > @@ -960,6 +968,16 @@ function run_section()
-> > > >  			# of the check script itself.
-> > > >  			(_adjust_oom_score 250; _check_filesystems) || tc_status="fail"
-> > > >  			_check_dmesg || tc_status="fail"
-> > > > +
-> > > > +			# Save any coredumps from the post-test fs checks
-> > > > +			for i in core core.*; do
-> > > > +				test -f "$i" || continue
-> > > > +				if ((cores++ == 0)); then
-> > > > +					_dump_err_cont "[dumped core]"
-> > > > +				fi
-> > > > +				_save_coredump "$i"
-> > > > +				tc_status="fail"
-> > > > +			done
-> > > >  		fi
-> > > >  
-> > > >  		# Reload the module after each test to check for leaks or
-> > > > diff --git a/common/rc b/common/rc
-> > > > index d877ac77a0..2e1891180a 100644
-> > > > --- a/common/rc
-> > > > +++ b/common/rc
-> > > > @@ -4949,6 +4949,22 @@ _create_file_sized()
-> > > >  	return $ret
-> > > >  }
-> > > >  
-> > > > +_save_coredump()
-> > > > +{
-> > > > +	local path="$1"
-> > > > +
-> > > > +	local core_hash="$(_md5_checksum "$path")"
-> > > > +	local out_file="$REPORT_DIR/$seqnum.core.$core_hash"
-> > > > +
-> > > > +	if [ -s "$out_file" ]; then
-> > > > +		rm -f "$path"
-> > > > +		return
-> > > > +	fi
-> > > > +	rm -f "$out_file"
-> > > > +
-> > > > +	mv "$path" "$out_file"
-> > > > +}
-> > > > +
-> > > >  init_rc
-> > > >  
-> > > >  ################################################################################
-> > > > 
+> > If the POPULATE_METADUMP_DESCR is not shared outside anymore, how about change
+> > it to lower-case?
+> 
+> Ok.
+> 
+> --D
+> 
+> > >  
+> > >  	# Don't keep metadata images cached for more 48 hours...
+> > >  	rm -rf "$(find "${POPULATE_METADUMP}" -mtime +2 2>/dev/null)"
 > > > 
 > > 
 > 
+
