@@ -2,168 +2,139 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2977FC4332F
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Oct 2022 11:44:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80C34C4332F
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Oct 2022 11:51:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229498AbiJMLo5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Oct 2022 07:44:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39746 "EHLO
+        id S229619AbiJMLvY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Oct 2022 07:51:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229620AbiJMLoz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Oct 2022 07:44:55 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DD4430544
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Oct 2022 04:44:54 -0700 (PDT)
+        with ESMTP id S229581AbiJMLvW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Oct 2022 07:51:22 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D30B147B99
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Oct 2022 04:51:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1665661493;
+        s=mimecast20190719; t=1665661879;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=b0ZNhilvDRvgVeauP08BCJkLyQTtjJGJSg9i7E8MSZ8=;
-        b=hVX74UQlnlkm5Qa1YdH8BSjtIXSmu6wXyzkGKFrGrF3UMmhlufmnaEwjttboSbzQGDBFnA
-        yHNDAnHtJYqwZiQrB9I8EaPmeDB7mpP2ADYZjA5RXSGCHgs9m4EtbPWhPqkfi2VesuznTj
-        js3FR716XosSL8HwXQhTNSYMM9Q5Jd8=
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
- [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=lalvGD/cZNFlrSrybOU5XC3b1fmNe6t6Ggl/pq9x4Tw=;
+        b=iTRaAZ9cQqNIlqxf9oDi+zE1GSwR1Z4lw4hTYx4iU5tN310oZDHe/QUJMRKP1GwCysLI2Y
+        aS12v2pEwF8Hv0mdO7QQebtHx2QP9GKTQtHCf7uHfXJQGRhEGk8RYMIUrKaD5hRUL41ciQ
+        pe1usZhfE0+tR4YfKowP0zVrqD7aj2s=
+Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
+ [209.85.222.198]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-672-Tvb-XDR3PTmfHVuVxVIAjg-1; Thu, 13 Oct 2022 07:44:52 -0400
-X-MC-Unique: Tvb-XDR3PTmfHVuVxVIAjg-1
-Received: by mail-pj1-f71.google.com with SMTP id 88-20020a17090a09e100b00208c35d9452so967714pjo.6
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Oct 2022 04:44:52 -0700 (PDT)
+ us-mta-631-t1s1LnoQN9WJW-8kbPxx_w-1; Thu, 13 Oct 2022 07:51:18 -0400
+X-MC-Unique: t1s1LnoQN9WJW-8kbPxx_w-1
+Received: by mail-qk1-f198.google.com with SMTP id i11-20020a05620a404b00b006eeb0791c1aso1328992qko.10
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Oct 2022 04:51:18 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=b0ZNhilvDRvgVeauP08BCJkLyQTtjJGJSg9i7E8MSZ8=;
-        b=TbT++ATRdSZKBtRGgn4dbLhYivYV6Nb2uiSgjEvkHBaeYPtWGXh54nTLM/d0+Whl1y
-         90xmd22MxCg8oMQKDp9em3RK3hWnVkSsxk6SlWr6FoBMwTwc4EDjETArr2rz2QNXCFJZ
-         w70lKlSumBoSjKuZgThNV5hDlhWVRL/gTBN3Y69QaFWMdcj2iK0ZKverK1lOCRnjp36M
-         DLou24iM5/r9RgNyxgE8k1KJYLTnLiU5K3kIbj3Rwr/6gITq+70OLhxNZpPEOZGTlC48
-         /uMbqxyuHJQgOoWnYjKEA8AKdcUzAQtn7+h6zlXBVUHYUbPDPkVgqoyl6g/O37kL84Zk
-         RaRQ==
-X-Gm-Message-State: ACrzQf0SmSeZfqKq2NnrrPtn4ccwMjuiYVhhEDLNLv/UCrTg1GwvMkEA
-        /rRoC0h183bjkhAoTeCwexdc9ZbxfpPieI+7vUPDpdCB+P4X8/3SE+LdelxRbbl2AOeaxMTVNF8
-        tyuljz21plRHrMWqcsBi3
-X-Received: by 2002:a17:902:7589:b0:178:4ded:a90a with SMTP id j9-20020a170902758900b001784deda90amr35114706pll.74.1665661491328;
-        Thu, 13 Oct 2022 04:44:51 -0700 (PDT)
-X-Google-Smtp-Source: AMsMyM70zSlU3LKBG2b8dp3Tzl4DoXrBHYTSGNsZfUg5Q1XnWW0HvVYyTJU9u4o0kMCHH0CyVWmVHg==
-X-Received: by 2002:a17:902:7589:b0:178:4ded:a90a with SMTP id j9-20020a170902758900b001784deda90amr35114676pll.74.1665661490938;
-        Thu, 13 Oct 2022 04:44:50 -0700 (PDT)
+        bh=lalvGD/cZNFlrSrybOU5XC3b1fmNe6t6Ggl/pq9x4Tw=;
+        b=Dox20dG+INVB9YR69RpWkfpSSsaZkPH+akDCvt7AIB3iPewF2TWX8aOh/PgfV3ClYE
+         ekbSdlxDplzl7a2fvTesyq1WrRFxFwMoEvni7Ri7k5nJFAWZMDqREDHxn6Sdo/wdxge9
+         PWHKm0nM5ZWSnxWLKAVJy0CRaSldxYzXh65fUUkM1xUDywoxQ+SWl95TMSCdBegZDAHt
+         bJjS8RoNVO6VAkerT0jRU3WIIAjeF1+H+R90RrsHcg10x0dElQqZTv6QQVrgaOTQhgH1
+         jfNuU1u1Uykmiz6C9D1BTUyTtVZ3tzxXSC1gHk8l5sNb3rgEt9jbTGGYLmQF67XTBR93
+         QDjA==
+X-Gm-Message-State: ACrzQf0Ha22heOXRpCetU3GfPOcwgeW1aEf0h01/mXEg50CmPSXPka90
+        YKzDBt3A6pLwZ9JXH1kzmuZgdrV7ELHm5Mf0Tn6iqj+4SgkFPqR+/e4BK+PZE42qIrjtCzzZmGY
+        3X2wt3leR3acgfPHtO3V/
+X-Received: by 2002:a0c:b294:0:b0:4b1:a396:d1cc with SMTP id r20-20020a0cb294000000b004b1a396d1ccmr26896278qve.107.1665661877765;
+        Thu, 13 Oct 2022 04:51:17 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM4GZOap/R4r9rcqUgR4clAoxEKQRfA4NGb7zvStk+6PHB3zWgW2Kg2yRsM5Z0C2vE086orPyg==
+X-Received: by 2002:a05:6a00:a8c:b0:558:991a:6691 with SMTP id b12-20020a056a000a8c00b00558991a6691mr35855939pfl.53.1665661866921;
+        Thu, 13 Oct 2022 04:51:06 -0700 (PDT)
 Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id y14-20020a17090a784e00b001ef81574355sm3015765pjl.12.2022.10.13.04.44.49
+        by smtp.gmail.com with ESMTPSA id o1-20020a170902bcc100b00177f32b1a32sm12284751pls.271.2022.10.13.04.51.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 13 Oct 2022 04:44:50 -0700 (PDT)
-Date:   Thu, 13 Oct 2022 19:44:46 +0800
+        Thu, 13 Oct 2022 04:51:06 -0700 (PDT)
+Date:   Thu, 13 Oct 2022 19:51:02 +0800
 From:   Zorro Lang <zlang@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH v2.1 1/2] check: detect and preserve all coredumps made
- by a test
-Message-ID: <20221013114446.346ii4nd5i3l77ar@zlang-mailbox>
+Subject: Re: [PATCH 2/2] check: optionally compress core dumps
+Message-ID: <20221013115102.qb7r37ywdy2qbwkn@zlang-mailbox>
 References: <166553910766.422356.8069826206437666467.stgit@magnolia>
- <166553911331.422356.4424521847397525024.stgit@magnolia>
- <Y0dZpkOwJpyQ9SA9@magnolia>
+ <166553911893.422356.7143540040827489080.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y0dZpkOwJpyQ9SA9@magnolia>
+In-Reply-To: <166553911893.422356.7143540040827489080.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 12, 2022 at 05:19:50PM -0700, Darrick J. Wong wrote:
+On Tue, Oct 11, 2022 at 06:45:18PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> If someone sets kernel.core_uses_pid (or kernel.core_pattern), any
-> coredumps generated by fstests might have names that are longer than
-> just "core".  Since the pid isn't all that useful by itself, let's
-> record the coredumps by hash when we save them, so that we don't waste
-> space storing identical crash dumps.
+> Add a new option, COREDUMP_COMPRESSOR, that will be used to compress
+> core dumps collected during a fstests run.  The program specified must
+> accept the -f -9 arguments that gzip has.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
-> v2.1: use REPORT_DIR per maintainer suggestion
-> ---
-
-This version looks good to me,
-Reviewed-by: Zorro Lang <zlang@redhat.com>
-
->  check     |   26 ++++++++++++++++++++++----
->  common/rc |   16 ++++++++++++++++
->  2 files changed, 38 insertions(+), 4 deletions(-)
+>  README    |    4 ++++
+>  common/rc |   14 +++++++++-----
+>  2 files changed, 13 insertions(+), 5 deletions(-)
 > 
-> diff --git a/check b/check
-> index d587a70546..29303db1c8 100755
-> --- a/check
-> +++ b/check
-> @@ -923,11 +923,19 @@ function run_section()
->  			sts=$?
->  		fi
+> 
+> diff --git a/README b/README
+> index 80d148be82..4c4f22f853 100644
+> --- a/README
+> +++ b/README
+> @@ -212,6 +212,10 @@ Tools specification:
+>      - Set FSSTRESS_AVOID and/or FSX_AVOID, which contain options added to
+>        the end of fsstresss and fsx invocations, respectively, in case you wish
+>        to exclude certain operational modes from these tests.
+> + - core dumps:
+> +    - Set COREDUMP_COMPRESSOR to a compression program to compress crash dumps.
+> +      This program must accept '-f' and the name of a file to compress.  In
+> +      other words, it must emulate gzip.
 >  
-> -		if [ -f core ]; then
-> -			_dump_err_cont "[dumped core]"
-> -			mv core $RESULT_BASE/$seqnum.core
-> +		# If someone sets kernel.core_pattern or kernel.core_uses_pid,
-> +		# coredumps generated by fstests might have a longer name than
-> +		# just "core".  Use globbing to find the most common patterns,
-> +		# assuming there are no other coredump capture packages set up.
-> +		local cores=0
-> +		for i in core core.*; do
-> +			test -f "$i" || continue
-> +			if ((cores++ == 0)); then
-> +				_dump_err_cont "[dumped core]"
-> +			fi
-> +			_save_coredump "$i"
->  			tc_status="fail"
-> -		fi
-> +		done
->  
->  		if [ -f $seqres.notrun ]; then
->  			$timestamp && _timestamp
-> @@ -960,6 +968,16 @@ function run_section()
->  			# of the check script itself.
->  			(_adjust_oom_score 250; _check_filesystems) || tc_status="fail"
->  			_check_dmesg || tc_status="fail"
-> +
-> +			# Save any coredumps from the post-test fs checks
-> +			for i in core core.*; do
-> +				test -f "$i" || continue
-> +				if ((cores++ == 0)); then
-> +					_dump_err_cont "[dumped core]"
-> +				fi
-> +				_save_coredump "$i"
-> +				tc_status="fail"
-> +			done
->  		fi
->  
->  		# Reload the module after each test to check for leaks or
+>  Kernel/Modules related configuration:
+>   - Set TEST_FS_MODULE_RELOAD=1 to unload the module and reload it between
 > diff --git a/common/rc b/common/rc
-> index d877ac77a0..2e1891180a 100644
+> index 152b8bb414..c68869b7dc 100644
 > --- a/common/rc
 > +++ b/common/rc
-> @@ -4949,6 +4949,22 @@ _create_file_sized()
->  	return $ret
+> @@ -4956,13 +4956,17 @@ _save_coredump()
+>  	local core_hash="$(_md5_checksum "$path")"
+>  	local out_file="$RESULT_BASE/$seqnum.core.$core_hash"
+>  
+> -	if [ -s "$out_file" ]; then
+> -		rm -f "$path"
+> -		return
+> -	fi
+> -	rm -f "$out_file"
+> +	for dump in "$out_file"*; do
+> +		if [ -s "$dump" ]; then
+> +			rm -f "$path"
+> +			return 0
+> +		fi
+> +	done
+>  
+>  	mv "$path" "$out_file"
+> +	test -z "$COREDUMP_COMPRESSOR" && return 0
+> +
+> +	$COREDUMP_COMPRESSOR -f "$out_file"
+
+This patch looks good to me,
+Reviewed-by: Zorro Lang <zlang@redhat.com>
+
+I'm just not sure if all/most compressor supports "-f" option, I use bzip2
+and gzip mostly, they both support that.
+
+Thanks,
+Zorro
+
 >  }
 >  
-> +_save_coredump()
-> +{
-> +	local path="$1"
-> +
-> +	local core_hash="$(_md5_checksum "$path")"
-> +	local out_file="$REPORT_DIR/$seqnum.core.$core_hash"
-> +
-> +	if [ -s "$out_file" ]; then
-> +		rm -f "$path"
-> +		return
-> +	fi
-> +	rm -f "$out_file"
-> +
-> +	mv "$path" "$out_file"
-> +}
-> +
 >  init_rc
->  
->  ################################################################################
 > 
 
