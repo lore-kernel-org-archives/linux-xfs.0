@@ -2,143 +2,141 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 067B9C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Oct 2022 19:11:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6CE6C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Oct 2022 19:13:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229504AbiJMTLE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Oct 2022 15:11:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32920 "EHLO
+        id S229613AbiJMTMk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Oct 2022 15:12:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229586AbiJMTKg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Oct 2022 15:10:36 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAF5C43E76
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Oct 2022 12:10:34 -0700 (PDT)
+        with ESMTP id S229944AbiJMTMV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Oct 2022 15:12:21 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E388BDCADA;
+        Thu, 13 Oct 2022 12:12:20 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1F76EB81FCA
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Oct 2022 19:10:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B56B7C433D6;
-        Thu, 13 Oct 2022 19:10:31 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 812F56192A;
+        Thu, 13 Oct 2022 19:12:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE9B8C433D6;
+        Thu, 13 Oct 2022 19:12:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665688231;
-        bh=beZGuM7OPeffWINQiNWZEqVhf7DAAGXJeLoomrXg8ZM=;
+        s=k20201202; t=1665688339;
+        bh=567LbA9shaX1tXs+e4bvh1/IPrSjFDnNzR588EPfruY=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=SD3L0jG2/j9yk+l8MPWKz1qW4YFTOVdiS7NY7SaYRWK+5xl9p/wksBhOc6s/xDCbk
-         EXWWvG9XQNd1ZRM0gCYtCcYu2O1LPC+lqxBuYlnXKxq5z7dfYGJRyTZdGZsjKx6Ipt
-         B+o6eWDcltFzGs98cnFslcShWqvejW87oiGrPAMiOtf0C4jw7SfRinVyFoXA0ziJZQ
-         FH+RIpvznf+jf9RDJwfRQ2Z0M0UOe3ghKyVmDFXtylewA1K+EdYnc0UztCg1o/g/a7
-         piDfFgYu57nAGU/VBKKealHqC41nS20NfEz1wi5bn/lU8zXdO6XYjU8J39GtAyzaN6
-         +WZrx6y/W51yw==
-Date:   Thu, 13 Oct 2022 12:10:31 -0700
+        b=pANyC/LMW+hBEd4YSKpwHLRup4ZZyn25YReKA4IxT4DyOwtQ+M9RKetU3WqrDhasV
+         wIOgxh0+gLy7uWKt73ci0BX2vY8YCJ6fsU4rK6jaDKbezAhmhoqM6x0l+cjWOYKHF9
+         jfDdtAkmeyw6EkH/0sOFlPDSHOtmY0uwPmny7o5DfkxwjujekWS3qbnSuCccqb6kPc
+         U/MKOR9M52sg/IAx18C1qlspf/T4/WNlqkxXWZaKwpeYtJcQc+wyQAG5XGAMkGFS+5
+         Wqgu6mgZ78lXdjgbD9eKmNCsYiPh8hkEu6mHoDKzCsK1IiNUjYSdtAOvP9UEmntBDj
+         8CewTPKM6f+gg==
+Date:   Thu, 13 Oct 2022 12:12:19 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Donald Douwsma <ddouwsma@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfsdump: fix on-media inventory stream packing
-Message-ID: <Y0hip0cjfi1oWn1B@magnolia>
-References: <20221013031518.1815861-1-ddouwsma@redhat.com>
- <20221013031518.1815861-4-ddouwsma@redhat.com>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 1/5] populate: export the metadump description name
+Message-ID: <Y0hjE3neN2rDhkxw@magnolia>
+References: <166553912229.422450.15473762183660906876.stgit@magnolia>
+ <166553912788.422450.6797363004980943410.stgit@magnolia>
+ <20221013145515.2vx3xy6hnf37777o@zlang-mailbox>
+ <Y0g0u5byHQK/aOEz@magnolia>
+ <20221013162826.hfs75s33giqmfu4t@zlang-mailbox>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221013031518.1815861-4-ddouwsma@redhat.com>
+In-Reply-To: <20221013162826.hfs75s33giqmfu4t@zlang-mailbox>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 13, 2022 at 02:15:17PM +1100, Donald Douwsma wrote:
-> With the on-media inventory now being restored for multiple streams we
-> can see that the restored streams both claim to be for /dev/nst0.
+On Fri, Oct 14, 2022 at 12:28:26AM +0800, Zorro Lang wrote:
+> On Thu, Oct 13, 2022 at 08:54:35AM -0700, Darrick J. Wong wrote:
+> > On Thu, Oct 13, 2022 at 10:55:15PM +0800, Zorro Lang wrote:
+> > > On Tue, Oct 11, 2022 at 06:45:27PM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > 
+> > > > Not sure why this hasn't been broken all along, but we should be
+> > > > exporting this variable so that it shows up in subshells....
+> > > 
+> > > May I ask where's the subshell which uses $POPULATE_METADUMP?
+> > 
+> > _scratch_xfs_fuzz_metadata does this:
+> > 
+> > 	echo "${fields}" | while read field; do
+> > 		echo "${verbs}" | while read fuzzverb; do
+> > 			__scratch_xfs_fuzz_mdrestore
+> > 				_xfs_mdrestore "${POPULATE_METADUMP}"
+> > 
+> > The (nested) echo piped to while starts subshells.
 > 
-> [root@rhel8 xfsdump-dev]# xfsdump -L "Test2" -f /dev/nst0 -M "tape1" -f /dev/nst1 -M "tape2" /boot
-> ...
-> [root@rhel8 xfsdump-dev]# rm -rf /var/lib/xfsdump/inventory /tmp/test1/*
-> [root@rhel8 xfsdump-dev]# restore/xfsrestore -L Test2 -f /dev/nst0 -f /dev/nst1 /tmp/test2
-> restore/xfsrestore: using scsi tape (drive_scsitape) strategy
-> restore/xfsrestore: using scsi tape (drive_scsitape) strategy
-> restore/xfsrestore: version 3.1.10 (dump format 3.0) - type ^C for status and control
-> ...
-> restore/xfsrestore: Restore Summary:
-> restore/xfsrestore:   stream 0 /dev/nst0 OK (success)
-> restore/xfsrestore:   stream 1 /dev/nst1 ALREADY_DONE (another stream completed the operation)
-> restore/xfsrestore: Restore Status: SUCCESS
-> [root@rhel8 xfsdump-dev]# xfsdump -I
-> file system 0:
->         fs id:          26dd5aa0-b901-4cf5-9b68-0c5753cb3ab8
->         session 0:
->                 mount point:    rhel8:/boot
->                 device:         rhel8:/dev/sda1
->                 time:           Wed Oct 12 15:36:55 2022
->                 session label:  "Test2"
->                 session id:     50be3b17-d9f9-414d-885b-ababf660e189
->                 level:          0
->                 resumed:        NO
->                 subtree:        NO
->                 streams:        2
->                 stream 0:
->                         pathname:       /dev/nst0
->                         start:          ino 133 offset 0
->                         end:            ino 28839 offset 0
->                         interrupted:    YES
->                         media files:    1
->                         media file 0:
->                                 mfile index:    2
->                                 mfile type:     data
->                                 mfile size:     165675008
->                                 mfile start:    ino 133 offset 0
->                                 mfile end:      ino 28839 offset 0
->                                 media label:    "test"
+> I'm not so familar with this part, so I didn't a simple test[1], and looks like
+> the PARAM can be seen, even it's not exported. Do I misunderstand something?
+> 
+> Thanks,
+> Zorro
+> 
+> [1]
+> $ echo "$list"
+> a
+> b
+> cc
+> $ PARAM="This's a test"
+> $ echo "$list"|while read c1;do echo "$list"|while read c2;do echo $PARAM;done; done
+> This's a test
+> This's a test
+> This's a test
+> This's a test
+> This's a test
+> This's a test
+> This's a test
+> This's a test
+> This's a test
 
-It's odd that you have -M tape1 above but this ends up labelled "test"?
-If that isn't just a munged patch message, then that might need fixing
-(separate patch) as well.
+Hmm.  I can't figure out why I needed the export here.  It was late one
+night, something was broken, and exporting the variable made it work.
+Now I can't recall exactly what that was and it seems fine without
+it...?
 
-The code change looks correct though.  Thanks for fixing dump.
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+I guess I'll put it back and rerun the entire fuzz suite to see what
+pops out...
 
 --D
 
->                                 media id:       e2e6978d-5546-4f1f-8c9e-307168071889
->                 stream 1:
->                         pathname:       /dev/nst0
->                         start:          ino 133 offset 0
->                         end:            ino 28839 offset 0
->                         interrupted:    YES
->                         media files:    1
->                         media file 0:
->                                 mfile index:    0
->                                 mfile type:     data
->                                 mfile size:     166723584
->                                 mfile start:    ino 28839 offset 0
->                                 mfile end:      ino 1572997 offset 0
->                                 media label:    "tape2"
->                                 media id:       1ad6d919-7159-42fb-a20f-5a2c4e3e24b1
-> xfsdump: Dump Status: SUCCESS
-> [root@rhel8 xfsdump-dev]#
-> 
-> Fix this by indexing the stream being packed for the on-media inventory.
-> 
-> Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
-> Suggested-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  inventory/inv_stobj.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/inventory/inv_stobj.c b/inventory/inv_stobj.c
-> index 025d431..fb4d93a 100644
-> --- a/inventory/inv_stobj.c
-> +++ b/inventory/inv_stobj.c
-> @@ -798,7 +798,7 @@ stobj_pack_sessinfo(int fd, invt_session_t *ses, invt_seshdr_t *hdr,
->  	sesbuf += sizeof(invt_session_t);
->  
->  	for (i = 0; i < ses->s_cur_nstreams; i++) {
-> -		xlate_invt_stream(strms, (invt_stream_t *)sesbuf, 1);
-> +		xlate_invt_stream(&strms[i], (invt_stream_t *)sesbuf, 1);
->  		sesbuf += sizeof(invt_stream_t);
->  	}
->  
-> -- 
-> 2.31.1
+> > 
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > ---
+> > > >  common/populate |    6 +++---
+> > > >  1 file changed, 3 insertions(+), 3 deletions(-)
+> > > > 
+> > > > 
+> > > > diff --git a/common/populate b/common/populate
+> > > > index cfdaf766f0..b501c2fe45 100644
+> > > > --- a/common/populate
+> > > > +++ b/common/populate
+> > > > @@ -868,9 +868,9 @@ _scratch_populate_cached() {
+> > > >  	local meta_tag="$(echo "${meta_descr}" | md5sum - | cut -d ' ' -f 1)"
+> > > >  	local metadump_stem="${TEST_DIR}/__populate.${FSTYP}.${meta_tag}"
+> > > >  
+> > > > -	# These variables are shared outside this function
+> > > > -	POPULATE_METADUMP="${metadump_stem}.metadump"
+> > > > -	POPULATE_METADUMP_DESCR="${metadump_stem}.txt"
+> > > > +	# This variable is shared outside this function
+> > > > +	export POPULATE_METADUMP="${metadump_stem}.metadump"
+> > > > +	local POPULATE_METADUMP_DESCR="${metadump_stem}.txt"
+> > > 
+> > > If the POPULATE_METADUMP_DESCR is not shared outside anymore, how about change
+> > > it to lower-case?
+> > 
+> > Ok.
+> > 
+> > --D
+> > 
+> > > >  
+> > > >  	# Don't keep metadata images cached for more 48 hours...
+> > > >  	rm -rf "$(find "${POPULATE_METADUMP}" -mtime +2 2>/dev/null)"
+> > > > 
+> > > 
+> > 
 > 
