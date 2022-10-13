@@ -2,125 +2,101 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 065F9C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Oct 2022 15:50:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06D96C43217
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Oct 2022 15:54:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229744AbiJMPuM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Oct 2022 11:50:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41914 "EHLO
+        id S229874AbiJMPyl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Oct 2022 11:54:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229484AbiJMPuJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Oct 2022 11:50:09 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEC48422CF;
-        Thu, 13 Oct 2022 08:50:04 -0700 (PDT)
+        with ESMTP id S229879AbiJMPyl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Oct 2022 11:54:41 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 824BFC63;
+        Thu, 13 Oct 2022 08:54:37 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2F6DE6186B;
-        Thu, 13 Oct 2022 15:50:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87E4FC433D7;
-        Thu, 13 Oct 2022 15:50:03 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1EF7661871;
+        Thu, 13 Oct 2022 15:54:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78467C433D6;
+        Thu, 13 Oct 2022 15:54:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665676203;
-        bh=+uqZDl54/XnooiyOhlrOeJdNMvQ3hqg6Ja4OTn+rCnQ=;
+        s=k20201202; t=1665676476;
+        bh=qCPhp9pGRQ/Qa1Mv0P86SvoG4h9oyaxO9+MR7N0g35o=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=LFiLaUNzB1AdOSGAhVmk6hZ7q7NAuEibWgZj+878xpkhthOm2K7wAvTqQxxCZ5JCj
-         v/RPbu0L2wvStIl8JVD2gC8Oc5n6vB3h3W2puf4kmgHvNZzvoqJ9bg3zGGlYumwsuG
-         gDlOAyeTh4sP9BcmsCNWGDjJXo+pa6KMWDdUAwIf7JHe9OicPteQQq2NQT+6kep49/
-         dnvo/8QcMUKbJ+ck8WRRXSpMaMfZyBXLWGuNMtged7nJ2rFN5pyzKz84R7lRHHVhJr
-         NYjh0aBEL2OZFwp5hFLZMQPCwYEJM6UmWKhOXvtCpEjBWSLMxkU3pigF1ErrhuuDi+
-         BSeP1h+ve6GDA==
-Date:   Thu, 13 Oct 2022 08:50:03 -0700
+        b=G+KWz4Lg781nJFvGIvjZiSO3ggLCgOaE7oUIV0m4dkzsu5I8k/dClWKuqAOuMLUz0
+         CnrN5LSjWfSg+lj+1K44r1beGnyD6gH/viPugZZcbfeid/ZK76rAUKEvReARevwdIm
+         0zzIcv5ecCTBuDTvSsaOc3tj03t5JHBDQ5yNVprOPS+AQYVlSNdJXjSYCM/u3aQoRf
+         zfJLTLXYZTafUwfQvL0ea2yNSNrwU10VQw/hTSZc7WaaKfXFzEtnhSdhlMVaevQE44
+         S3I87l4vweDFELnx+74itz5PR84izxmYFpmezTfCZeUp75C1VEUdCCxshk5NRWg3Oq
+         va+lY1LfnN//A==
+Date:   Thu, 13 Oct 2022 08:54:35 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Zorro Lang <zlang@redhat.com>
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 2/2] check: optionally compress core dumps
-Message-ID: <Y0gzqyyaU171aagR@magnolia>
-References: <166553910766.422356.8069826206437666467.stgit@magnolia>
- <166553911893.422356.7143540040827489080.stgit@magnolia>
- <20221013115102.qb7r37ywdy2qbwkn@zlang-mailbox>
+Subject: Re: [PATCH 1/5] populate: export the metadump description name
+Message-ID: <Y0g0u5byHQK/aOEz@magnolia>
+References: <166553912229.422450.15473762183660906876.stgit@magnolia>
+ <166553912788.422450.6797363004980943410.stgit@magnolia>
+ <20221013145515.2vx3xy6hnf37777o@zlang-mailbox>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221013115102.qb7r37ywdy2qbwkn@zlang-mailbox>
+In-Reply-To: <20221013145515.2vx3xy6hnf37777o@zlang-mailbox>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 13, 2022 at 07:51:02PM +0800, Zorro Lang wrote:
-> On Tue, Oct 11, 2022 at 06:45:18PM -0700, Darrick J. Wong wrote:
+On Thu, Oct 13, 2022 at 10:55:15PM +0800, Zorro Lang wrote:
+> On Tue, Oct 11, 2022 at 06:45:27PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Add a new option, COREDUMP_COMPRESSOR, that will be used to compress
-> > core dumps collected during a fstests run.  The program specified must
-> > accept the -f -9 arguments that gzip has.
+> > Not sure why this hasn't been broken all along, but we should be
+> > exporting this variable so that it shows up in subshells....
+> 
+> May I ask where's the subshell which uses $POPULATE_METADUMP?
+
+_scratch_xfs_fuzz_metadata does this:
+
+	echo "${fields}" | while read field; do
+		echo "${verbs}" | while read fuzzverb; do
+			__scratch_xfs_fuzz_mdrestore
+				_xfs_mdrestore "${POPULATE_METADUMP}"
+
+The (nested) echo piped to while starts subshells.
+
 > > 
 > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > ---
-> >  README    |    4 ++++
-> >  common/rc |   14 +++++++++-----
-> >  2 files changed, 13 insertions(+), 5 deletions(-)
+> >  common/populate |    6 +++---
+> >  1 file changed, 3 insertions(+), 3 deletions(-)
 > > 
 > > 
-> > diff --git a/README b/README
-> > index 80d148be82..4c4f22f853 100644
-> > --- a/README
-> > +++ b/README
-> > @@ -212,6 +212,10 @@ Tools specification:
-> >      - Set FSSTRESS_AVOID and/or FSX_AVOID, which contain options added to
-> >        the end of fsstresss and fsx invocations, respectively, in case you wish
-> >        to exclude certain operational modes from these tests.
-> > + - core dumps:
-> > +    - Set COREDUMP_COMPRESSOR to a compression program to compress crash dumps.
-> > +      This program must accept '-f' and the name of a file to compress.  In
-> > +      other words, it must emulate gzip.
+> > diff --git a/common/populate b/common/populate
+> > index cfdaf766f0..b501c2fe45 100644
+> > --- a/common/populate
+> > +++ b/common/populate
+> > @@ -868,9 +868,9 @@ _scratch_populate_cached() {
+> >  	local meta_tag="$(echo "${meta_descr}" | md5sum - | cut -d ' ' -f 1)"
+> >  	local metadump_stem="${TEST_DIR}/__populate.${FSTYP}.${meta_tag}"
 > >  
-> >  Kernel/Modules related configuration:
-> >   - Set TEST_FS_MODULE_RELOAD=1 to unload the module and reload it between
-> > diff --git a/common/rc b/common/rc
-> > index 152b8bb414..c68869b7dc 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -4956,13 +4956,17 @@ _save_coredump()
-> >  	local core_hash="$(_md5_checksum "$path")"
-> >  	local out_file="$RESULT_BASE/$seqnum.core.$core_hash"
-> >  
-> > -	if [ -s "$out_file" ]; then
-> > -		rm -f "$path"
-> > -		return
-> > -	fi
-> > -	rm -f "$out_file"
-> > +	for dump in "$out_file"*; do
-> > +		if [ -s "$dump" ]; then
-> > +			rm -f "$path"
-> > +			return 0
-> > +		fi
-> > +	done
-> >  
-> >  	mv "$path" "$out_file"
-> > +	test -z "$COREDUMP_COMPRESSOR" && return 0
-> > +
-> > +	$COREDUMP_COMPRESSOR -f "$out_file"
+> > -	# These variables are shared outside this function
+> > -	POPULATE_METADUMP="${metadump_stem}.metadump"
+> > -	POPULATE_METADUMP_DESCR="${metadump_stem}.txt"
+> > +	# This variable is shared outside this function
+> > +	export POPULATE_METADUMP="${metadump_stem}.metadump"
+> > +	local POPULATE_METADUMP_DESCR="${metadump_stem}.txt"
 > 
-> This patch looks good to me,
-> Reviewed-by: Zorro Lang <zlang@redhat.com>
-> 
-> I'm just not sure if all/most compressor supports "-f" option, I use bzip2
-> and gzip mostly, they both support that.
+> If the POPULATE_METADUMP_DESCR is not shared outside anymore, how about change
+> it to lower-case?
 
-As do xz, lz4, and zstd, so I think that's sufficient coverage.
-
-The only one I know of that won't be compatible is zip, since it uses -f
-for "freshen archive".
+Ok.
 
 --D
 
-> Thanks,
-> Zorro
-> 
-> >  }
 > >  
-> >  init_rc
+> >  	# Don't keep metadata images cached for more 48 hours...
+> >  	rm -rf "$(find "${POPULATE_METADUMP}" -mtime +2 2>/dev/null)"
 > > 
 > 
