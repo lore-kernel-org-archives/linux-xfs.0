@@ -2,183 +2,179 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83060C4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 Oct 2022 01:16:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FACCC4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 Oct 2022 01:17:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229526AbiJNBQI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Oct 2022 21:16:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37498 "EHLO
+        id S229783AbiJNBRw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Oct 2022 21:17:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229712AbiJNBQF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Oct 2022 21:16:05 -0400
+        with ESMTP id S229712AbiJNBRu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Oct 2022 21:17:50 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8753415B329
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Oct 2022 18:15:51 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D79F164BD5
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Oct 2022 18:17:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1665710150;
+        s=mimecast20190719; t=1665710269;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=FYcChuJXR4ztwz3WD5Q5dh5SWut1GfnQJeoaSqsTcRA=;
-        b=LR9jpCeI2kb54r9JpYcOK7WYRa9VLASx7VQUrka5B8mai1cC0WSYqJnk0af6hpTff/gJAU
-        OeGRyYDDuPphfwy6fNTJMI22sQlFVBFnfbsT4eExSPVWk+2PVvJ//z39ptlRuLAF+SnA5y
-        VDtnqzLmZTdDWL+wL29bnpA91/LVFHI=
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com
- [209.85.216.70]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=AZ9y8tKOu8PvZM+Ki1up7Wbldjs7xwlDEH15zyduYdg=;
+        b=Ch6U9dVnzBtcFwsE9wX/ylEh//kcX8H4l8d1giW5hAuWgFPP8/vHLgICXRKA7ZTwMjcOgj
+        N2yzGSwHcuWU9bpbNlyDcsAtGuXcDLQReIzHZzZgxIfzh2HzNM3dMc1D9hjeRKdkv+0o0n
+        4yZW5kIEI/7m73ByJ17TWCGFOlecUGU=
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com
+ [209.85.215.198]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-443-cHD_azgUPB-D06556o4CYg-1; Thu, 13 Oct 2022 21:15:49 -0400
-X-MC-Unique: cHD_azgUPB-D06556o4CYg-1
-Received: by mail-pj1-f70.google.com with SMTP id pq17-20020a17090b3d9100b0020a4c65c3a9so1840443pjb.0
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Oct 2022 18:15:49 -0700 (PDT)
+ us-mta-661-0AFscxZmPJKImMu82y-0mQ-1; Thu, 13 Oct 2022 21:17:47 -0400
+X-MC-Unique: 0AFscxZmPJKImMu82y-0mQ-1
+Received: by mail-pg1-f198.google.com with SMTP id y71-20020a638a4a000000b0046014b2258dso1823718pgd.19
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Oct 2022 18:17:47 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=FYcChuJXR4ztwz3WD5Q5dh5SWut1GfnQJeoaSqsTcRA=;
-        b=wr7pz/1qUtoCwndLClZhl04pf9kkeHOJZyR2PGz0GfmYkgthqD5z2Jd5haz4ok8lTv
-         MTFTcJDkMjGO29F2qPDx/+jEc8n185pnFEFyfWdu/l/vEQPcNt9E0z3EPOPep5ahm7Wd
-         QeXeQ391ccVaiSiOUViRo3njIrx7EW5chVw9Nui4AEt4nzJG25cUC1iYWRXuL3sqNwRf
-         Kkf1IJQqhKfUjHkcy3orIG8GhdkF2oLy2cWzs142DLSGai2rND7fxrJ/ooD1KAV1v6DS
-         Hn5SLWyfaHn40f5BiAbE2QrshgEzhUM/uXRdLwrw63vj94op9MKDdub2naZSBI+ROPwP
-         RR5Q==
-X-Gm-Message-State: ACrzQf1Y2e2Ab3jSVswoR71vXpnL18JBVehAYhxzk+5pq2Cb4p5w0vAO
-        nWKKXWX0GU4Diu5/NwdgCeHkVrxrRSwJqUbGXx47Omv1tAeMWc65YkO3IwYWnU2j3Xa7WKl85vw
-        bXoDlkQscuOrOim8BeIX9
-X-Received: by 2002:a65:56ca:0:b0:439:169f:f027 with SMTP id w10-20020a6556ca000000b00439169ff027mr2292468pgs.580.1665710148275;
-        Thu, 13 Oct 2022 18:15:48 -0700 (PDT)
-X-Google-Smtp-Source: AMsMyM6yoOOAmgNhZE4pUE3eS5/a+f4TqKi9XXVJRYaatpHDtRsxHtWtrU2suYRrkArTItF6VcM4RA==
-X-Received: by 2002:a65:56ca:0:b0:439:169f:f027 with SMTP id w10-20020a6556ca000000b00439169ff027mr2292454pgs.580.1665710147967;
-        Thu, 13 Oct 2022 18:15:47 -0700 (PDT)
-Received: from ?IPV6:2001:8003:4800:1b00:4c4a:1757:c744:923? ([2001:8003:4800:1b00:4c4a:1757:c744:923])
-        by smtp.gmail.com with ESMTPSA id h22-20020aa796d6000000b00561b455267fsm337033pfq.27.2022.10.13.18.15.46
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 13 Oct 2022 18:15:47 -0700 (PDT)
-Message-ID: <5eb42447-42ba-928c-cf7b-0d50708673be@redhat.com>
-Date:   Fri, 14 Oct 2022 12:15:43 +1100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.12.0
-Subject: Re: [PATCH 3/4] xfsdump: fix on-media inventory stream packing
-Content-Language: en-AU
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=AZ9y8tKOu8PvZM+Ki1up7Wbldjs7xwlDEH15zyduYdg=;
+        b=45I6utlVljYIm/RKnUnxZzPuZbdohaZeU0+QSU9qliD1xX2k025gijvwm5/v8bQWfA
+         JVjNA8v+mVyBcv8Vhztc930Dxf/fF/WxPcJekoo04fJCxeoBxzqJsR/qHB74nZOzjmyA
+         hXbtsHg0iRpPxF5zZdPb+uUT6roU9IKQORZpGogKYytSkOBpQUAyeXZ/GTY6UTYm/w8J
+         lq42rBDl91thS3oS+uRaZCpVzW+1IbjP21BREafP9wvZN1lE8z8Juxh6RrXb0vCdUSFv
+         6zAV61ZTwrWGkfTP4JXs0lxBCHVfykfRYRSATh2/ZvG6ee73caz/jOJqbchvPbqfp1gx
+         uD4Q==
+X-Gm-Message-State: ACrzQf1SYXJBo1donZx88ktPGobzeGNra0iw7ug1kFagOvxPmDNee6WU
+        4uy1UyOtVwzbp+7SF/zuqnNcCYZH2n29BoD7md0lGrD84045/03dTGIZbpsR2pJyQU3r71t6CQ6
+        x3nltA96vtxADCqo4tQFL
+X-Received: by 2002:a05:6a00:1304:b0:555:6d3f:1223 with SMTP id j4-20020a056a00130400b005556d3f1223mr2484453pfu.60.1665710266150;
+        Thu, 13 Oct 2022 18:17:46 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM6HVxyk89iaHVTPmNuPIp3Jp0psLtEaR/btiGN+HEm78fRAOyLuT2j53cInOTKP21XZQhz1sA==
+X-Received: by 2002:a05:6a00:1304:b0:555:6d3f:1223 with SMTP id j4-20020a056a00130400b005556d3f1223mr2484442pfu.60.1665710265850;
+        Thu, 13 Oct 2022 18:17:45 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id v14-20020a1709028d8e00b00176e2fa216csm469386plo.52.2022.10.13.18.17.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 13 Oct 2022 18:17:45 -0700 (PDT)
+Date:   Fri, 14 Oct 2022 09:17:41 +0800
+From:   Zorro Lang <zlang@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-References: <20221013031518.1815861-1-ddouwsma@redhat.com>
- <20221013031518.1815861-4-ddouwsma@redhat.com> <Y0hip0cjfi1oWn1B@magnolia>
-From:   Donald Douwsma <ddouwsma@redhat.com>
-In-Reply-To: <Y0hip0cjfi1oWn1B@magnolia>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 1/5] populate: export the metadump description name
+Message-ID: <20221014011741.ky4bml5ythuv3svb@zlang-mailbox>
+References: <166553912229.422450.15473762183660906876.stgit@magnolia>
+ <166553912788.422450.6797363004980943410.stgit@magnolia>
+ <20221013145515.2vx3xy6hnf37777o@zlang-mailbox>
+ <Y0g0u5byHQK/aOEz@magnolia>
+ <20221013162826.hfs75s33giqmfu4t@zlang-mailbox>
+ <Y0hjE3neN2rDhkxw@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Y0hjE3neN2rDhkxw@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 14/10/2022 06:10, Darrick J. Wong wrote:
-> On Thu, Oct 13, 2022 at 02:15:17PM +1100, Donald Douwsma wrote:
->> With the on-media inventory now being restored for multiple streams we
->> can see that the restored streams both claim to be for /dev/nst0.
->>
->> [root@rhel8 xfsdump-dev]# xfsdump -L "Test2" -f /dev/nst0 -M "tape1" -f /dev/nst1 -M "tape2" /boot
->> ...
->> [root@rhel8 xfsdump-dev]# rm -rf /var/lib/xfsdump/inventory /tmp/test1/*
->> [root@rhel8 xfsdump-dev]# restore/xfsrestore -L Test2 -f /dev/nst0 -f /dev/nst1 /tmp/test2
->> restore/xfsrestore: using scsi tape (drive_scsitape) strategy
->> restore/xfsrestore: using scsi tape (drive_scsitape) strategy
->> restore/xfsrestore: version 3.1.10 (dump format 3.0) - type ^C for status and control
->> ...
->> restore/xfsrestore: Restore Summary:
->> restore/xfsrestore:   stream 0 /dev/nst0 OK (success)
->> restore/xfsrestore:   stream 1 /dev/nst1 ALREADY_DONE (another stream completed the operation)
->> restore/xfsrestore: Restore Status: SUCCESS
->> [root@rhel8 xfsdump-dev]# xfsdump -I
->> file system 0:
->>          fs id:          26dd5aa0-b901-4cf5-9b68-0c5753cb3ab8
->>          session 0:
->>                  mount point:    rhel8:/boot
->>                  device:         rhel8:/dev/sda1
->>                  time:           Wed Oct 12 15:36:55 2022
->>                  session label:  "Test2"
->>                  session id:     50be3b17-d9f9-414d-885b-ababf660e189
->>                  level:          0
->>                  resumed:        NO
->>                  subtree:        NO
->>                  streams:        2
->>                  stream 0:
->>                          pathname:       /dev/nst0
->>                          start:          ino 133 offset 0
->>                          end:            ino 28839 offset 0
->>                          interrupted:    YES
->>                          media files:    1
->>                          media file 0:
->>                                  mfile index:    2
->>                                  mfile type:     data
->>                                  mfile size:     165675008
->>                                  mfile start:    ino 133 offset 0
->>                                  mfile end:      ino 28839 offset 0
->>                                  media label:    "test"
+On Thu, Oct 13, 2022 at 12:12:19PM -0700, Darrick J. Wong wrote:
+> On Fri, Oct 14, 2022 at 12:28:26AM +0800, Zorro Lang wrote:
+> > On Thu, Oct 13, 2022 at 08:54:35AM -0700, Darrick J. Wong wrote:
+> > > On Thu, Oct 13, 2022 at 10:55:15PM +0800, Zorro Lang wrote:
+> > > > On Tue, Oct 11, 2022 at 06:45:27PM -0700, Darrick J. Wong wrote:
+> > > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > > 
+> > > > > Not sure why this hasn't been broken all along, but we should be
+> > > > > exporting this variable so that it shows up in subshells....
+> > > > 
+> > > > May I ask where's the subshell which uses $POPULATE_METADUMP?
+> > > 
+> > > _scratch_xfs_fuzz_metadata does this:
+> > > 
+> > > 	echo "${fields}" | while read field; do
+> > > 		echo "${verbs}" | while read fuzzverb; do
+> > > 			__scratch_xfs_fuzz_mdrestore
+> > > 				_xfs_mdrestore "${POPULATE_METADUMP}"
+> > > 
+> > > The (nested) echo piped to while starts subshells.
+> > 
+> > I'm not so familar with this part, so I didn't a simple test[1], and looks like
+> > the PARAM can be seen, even it's not exported. Do I misunderstand something?
+> > 
+> > Thanks,
+> > Zorro
+> > 
+> > [1]
+> > $ echo "$list"
+> > a
+> > b
+> > cc
+> > $ PARAM="This's a test"
+> > $ echo "$list"|while read c1;do echo "$list"|while read c2;do echo $PARAM;done; done
+> > This's a test
+> > This's a test
+> > This's a test
+> > This's a test
+> > This's a test
+> > This's a test
+> > This's a test
+> > This's a test
+> > This's a test
 > 
-> It's odd that you have -M tape1 above but this ends up labelled "test"?
-> If that isn't just a munged patch message, then that might need fixing
-> (separate patch) as well.
-
-I looked back over the terminals where I tested this and they're all
-tape1, I think this was an earlier cut n pasta mistake when I prepared
-the commit message. Its probably worth fixing the message because not
-everyone will want to setup a virtual tape library to look at this.
-
-Thanks for the reviews,
-Don
-
-> The code change looks correct though.  Thanks for fixing dump.
+> Hmm.  I can't figure out why I needed the export here.  It was late one
+> night, something was broken, and exporting the variable made it work.
+> Now I can't recall exactly what that was and it seems fine without
+> it...?
 > 
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> I guess I'll put it back and rerun the entire fuzz suite to see what
+> pops out...
+
+Sure, I don't have objection on this patch, so you can have the RVB when
+you change "local POPULATE_METADUMP_DESCR" to lower-case, and show at least
+one example about why POPULATE_METADUMP need to be exported in next version.
+No push:)
+
+Reviewed-by: Zorro Lang <zlang@redhat.com>
+
+Thanks,
+Zorro
+
 > 
 > --D
 > 
->>                                  media id:       e2e6978d-5546-4f1f-8c9e-307168071889
->>                  stream 1:
->>                          pathname:       /dev/nst0
->>                          start:          ino 133 offset 0
->>                          end:            ino 28839 offset 0
->>                          interrupted:    YES
->>                          media files:    1
->>                          media file 0:
->>                                  mfile index:    0
->>                                  mfile type:     data
->>                                  mfile size:     166723584
->>                                  mfile start:    ino 28839 offset 0
->>                                  mfile end:      ino 1572997 offset 0
->>                                  media label:    "tape2"
->>                                  media id:       1ad6d919-7159-42fb-a20f-5a2c4e3e24b1
->> xfsdump: Dump Status: SUCCESS
->> [root@rhel8 xfsdump-dev]#
->>
->> Fix this by indexing the stream being packed for the on-media inventory.
->>
->> Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
->> Suggested-by: Darrick J. Wong <djwong@kernel.org>
->> ---
->>   inventory/inv_stobj.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/inventory/inv_stobj.c b/inventory/inv_stobj.c
->> index 025d431..fb4d93a 100644
->> --- a/inventory/inv_stobj.c
->> +++ b/inventory/inv_stobj.c
->> @@ -798,7 +798,7 @@ stobj_pack_sessinfo(int fd, invt_session_t *ses, invt_seshdr_t *hdr,
->>   	sesbuf += sizeof(invt_session_t);
->>   
->>   	for (i = 0; i < ses->s_cur_nstreams; i++) {
->> -		xlate_invt_stream(strms, (invt_stream_t *)sesbuf, 1);
->> +		xlate_invt_stream(&strms[i], (invt_stream_t *)sesbuf, 1);
->>   		sesbuf += sizeof(invt_stream_t);
->>   	}
->>   
->> -- 
->> 2.31.1
->>
+> > > 
+> > > > > 
+> > > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > > ---
+> > > > >  common/populate |    6 +++---
+> > > > >  1 file changed, 3 insertions(+), 3 deletions(-)
+> > > > > 
+> > > > > 
+> > > > > diff --git a/common/populate b/common/populate
+> > > > > index cfdaf766f0..b501c2fe45 100644
+> > > > > --- a/common/populate
+> > > > > +++ b/common/populate
+> > > > > @@ -868,9 +868,9 @@ _scratch_populate_cached() {
+> > > > >  	local meta_tag="$(echo "${meta_descr}" | md5sum - | cut -d ' ' -f 1)"
+> > > > >  	local metadump_stem="${TEST_DIR}/__populate.${FSTYP}.${meta_tag}"
+> > > > >  
+> > > > > -	# These variables are shared outside this function
+> > > > > -	POPULATE_METADUMP="${metadump_stem}.metadump"
+> > > > > -	POPULATE_METADUMP_DESCR="${metadump_stem}.txt"
+> > > > > +	# This variable is shared outside this function
+> > > > > +	export POPULATE_METADUMP="${metadump_stem}.metadump"
+> > > > > +	local POPULATE_METADUMP_DESCR="${metadump_stem}.txt"
+> > > > 
+> > > > If the POPULATE_METADUMP_DESCR is not shared outside anymore, how about change
+> > > > it to lower-case?
+> > > 
+> > > Ok.
+> > > 
+> > > --D
+> > > 
+> > > > >  
+> > > > >  	# Don't keep metadata images cached for more 48 hours...
+> > > > >  	rm -rf "$(find "${POPULATE_METADUMP}" -mtime +2 2>/dev/null)"
+> > > > > 
+> > > > 
+> > > 
+> > 
 > 
 
