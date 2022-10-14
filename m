@@ -2,53 +2,53 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 320F3C433FE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 625D0C43217
 	for <linux-xfs@archiver.kernel.org>; Fri, 14 Oct 2022 08:50:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229885AbiJNIuG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 14 Oct 2022 04:50:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34016 "EHLO
+        id S229990AbiJNIuJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 14 Oct 2022 04:50:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34150 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229872AbiJNItv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Oct 2022 04:49:51 -0400
-Received: from mail-wm1-x32f.google.com (mail-wm1-x32f.google.com [IPv6:2a00:1450:4864:20::32f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5BBB1F2C0;
-        Fri, 14 Oct 2022 01:49:48 -0700 (PDT)
-Received: by mail-wm1-x32f.google.com with SMTP id iv17so2671139wmb.4;
-        Fri, 14 Oct 2022 01:49:48 -0700 (PDT)
+        with ESMTP id S229922AbiJNIty (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Oct 2022 04:49:54 -0400
+Received: from mail-wm1-x335.google.com (mail-wm1-x335.google.com [IPv6:2a00:1450:4864:20::335])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 510372793A;
+        Fri, 14 Oct 2022 01:49:52 -0700 (PDT)
+Received: by mail-wm1-x335.google.com with SMTP id n9so2681111wms.1;
+        Fri, 14 Oct 2022 01:49:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=s+9yJ7ltRwZDViylHimzxt5trfp3/YyMYP1DALt6daQ=;
-        b=p63rFDk+7fHDtSHqdHbh5UTErR2KUpqMpgr3HkVCyL03aJpfelAlYk+zA1kvLcUK4x
-         oCy0NMYDZh+H50rQcR49ml2HNBTBYxQHuyUYk2CSX54YfuXf3DWjLKdUiCPT4+EiIFSi
-         nHSQMC7c9mLxjAkq4yLJ0/P9F8eN2RlUOEqc8NA2In2jz47ELklEdKHjSYs0ZELx4ixz
-         5/vUWh5rIIInW9un9b84c/P8CPLnarDABeMuwBY6OaHUr8e6bA2Wo85vskn9BuK/Ho1v
-         LOW3LE2S8qlC9e+TcP7T6auaCAsi9PDl3bTPIkBQTVkixT16squswDJ53Vty9EoVnl7l
-         vcFg==
+        bh=Gi1PiA14Xvf0/+DfXuVtXD45G5BgebCQf9p57BfhR6s=;
+        b=UxT7gVP8q9ze5Ggh2xvvktN6Ml02oBmfbyNFVTxcbcy6qgnZqVwI+fd54u0LJL+LjK
+         y9EfYIAWCha0O2HVLdo55pAxb/IFOyVB4eHwuuXfLb3Q+WnwPgMtjSKPzu2oQKEhgIW1
+         8w0WFdRg+RSJnOotAcs1Y+eSeMLVjAcWDFJda2lYZblubtGGGkakV9MIfwsDN7apZ3yC
+         Rg00X0lJRAafbj8ZJHp9DjnqhMJlcm3+NYiLzY/y+FmG8gOcaLVVoEvJhhCVshISMbUn
+         79bKI/g91GDk/8Ucsg8DPhwD6is+bLLgsNqiPgi18MPBUAdCAjxbT3q7n7tlSgWXhmL1
+         RzAw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=s+9yJ7ltRwZDViylHimzxt5trfp3/YyMYP1DALt6daQ=;
-        b=dXlIpapOdYfjq/cBfLsuHJNo0YtoojAqAHaM8sZaFbBBpGE6fC/i1u6otIjy7pOMp6
-         12DmG0CFo9sNnf3Z5DgKsIxJULptICGxF+znGgLgJ5RRbjjUAKPnr5lKhQ2i9NUAKrX/
-         vG74OJzbBR90I+8gulLItCgA0rNqgyg1h9y0EUyUCwEjSG2UgZEmXOMyhP/u+Znxk9jq
-         MLnawy9GSpFSgGpAyEVzyRpKQ/Gk1ti3snkvIfcz27N9BscF2JV7ruFNLKZFehK91/4o
-         jMPcfDjcLv3bygeaso5GZ4eMJjSK9A8rtfGq5fm9i9n+UuLewccgKYHVSIb7u8S607OA
-         56Fg==
-X-Gm-Message-State: ACrzQf2KGSiKC5tL4dixY4AWg1RATtkrFmQPvpJqycM0ZJi1nGk7MTCl
-        i38f2oa1MZay2MJcjJFNu38=
-X-Google-Smtp-Source: AMsMyM45L6TdWLoWTz5aCkSDhsUhnAFVyDkdp0Ci0aBfwoR6x63gBHft59KTvo8CdK8QfpU4449Q7g==
-X-Received: by 2002:a05:600c:19ce:b0:3b9:c36f:f9e2 with SMTP id u14-20020a05600c19ce00b003b9c36ff9e2mr2761365wmq.110.1665737387337;
-        Fri, 14 Oct 2022 01:49:47 -0700 (PDT)
+        bh=Gi1PiA14Xvf0/+DfXuVtXD45G5BgebCQf9p57BfhR6s=;
+        b=Ndm+9e02EkIh90achuXSbJ5Oz39gvrY2P+g9PWS0pkPEAZUSDRXxaZvfu68vFJWtvD
+         k4Cqs7CVRog3bv3EkdFXhLdDTyrqzNKbugAC2rVjujcRHo6l1jn7yx3UTuWfpV2WsDyq
+         VmWuW8YMZ57QSM5DYYLqCnjg5EtWPjMAeIDIZLrWdiIayKRAkuxsgz/amZJdREd04Uw7
+         f4aTyhdWNQVrY74PnXttlnKRfOj7PLareYj0vnpeoNRdUJ6xWhc0MPHQ6H3MOCfsDGGm
+         Cz4AMRPrLGDOfST/JYIqoW3bE5iXXKdefy/vtpJ4h+zQ11uQKjAEadQ90q/94LX4SEBo
+         z23A==
+X-Gm-Message-State: ACrzQf0fiECU0BIEkYhgWm8MpfiHLZZwOT1HFtoIj+8Mf93VAjBH+N4k
+        WnmgNldrEaELq/nDtoslTr4=
+X-Google-Smtp-Source: AMsMyM4fbdkajcL2g53Tyvy1JDbblSDeQm14FaYqXK6zLbEPkMD7/YmebYTcS//ZYjYNy+t3nI8G6Q==
+X-Received: by 2002:a05:600c:3044:b0:3c4:8af4:ecc5 with SMTP id n4-20020a05600c304400b003c48af4ecc5mr2758757wmh.52.1665737391668;
+        Fri, 14 Oct 2022 01:49:51 -0700 (PDT)
 Received: from hrutvik.c.googlers.com.com (120.142.205.35.bc.googleusercontent.com. [35.205.142.120])
-        by smtp.gmail.com with ESMTPSA id 123-20020a1c1981000000b003c6c4639ac6sm1547372wmz.34.2022.10.14.01.49.46
+        by smtp.gmail.com with ESMTPSA id 123-20020a1c1981000000b003c6c4639ac6sm1547372wmz.34.2022.10.14.01.49.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Oct 2022 01:49:47 -0700 (PDT)
+        Fri, 14 Oct 2022 01:49:51 -0700 (PDT)
 From:   Hrutvik Kanabar <hrkanabar@gmail.com>
 To:     Hrutvik Kanabar <hrutvik@google.com>
 Cc:     Marco Elver <elver@google.com>,
@@ -68,9 +68,9 @@ Cc:     Marco Elver <elver@google.com>,
         Sungjong Seo <sj1557.seo@samsung.com>,
         Anton Altaparmakov <anton@tuxera.com>,
         linux-ntfs-dev@lists.sourceforge.net
-Subject: [PATCH RFC 2/7] fs/ext4: support `DISABLE_FS_CSUM_VERIFICATION` config option
-Date:   Fri, 14 Oct 2022 08:48:32 +0000
-Message-Id: <20221014084837.1787196-3-hrkanabar@gmail.com>
+Subject: [PATCH RFC 5/7] fs/xfs: support `DISABLE_FS_CSUM_VERIFICATION` config option
+Date:   Fri, 14 Oct 2022 08:48:35 +0000
+Message-Id: <20221014084837.1787196-6-hrkanabar@gmail.com>
 X-Mailer: git-send-email 2.38.0.413.g74048e4d9e-goog
 In-Reply-To: <20221014084837.1787196-1-hrkanabar@gmail.com>
 References: <20221014084837.1787196-1-hrkanabar@gmail.com>
@@ -82,178 +82,31 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Hrutvik Kanabar <hrutvik@google.com>
 
-When `DISABLE_FS_CSUM_VERIFICATION` is enabled, bypass checks in key
-checksum verification functions.
+When `DISABLE_FS_CSUM_VERIFICATION` is enabled, return truthy value for
+`xfs_verify_cksum`, which is the key function implementing checksum
+verification for XFS.
 
 Signed-off-by: Hrutvik Kanabar <hrutvik@google.com>
 ---
- fs/ext4/bitmap.c  | 6 ++++--
- fs/ext4/extents.c | 3 ++-
- fs/ext4/inode.c   | 3 ++-
- fs/ext4/ioctl.c   | 3 ++-
- fs/ext4/mmp.c     | 3 ++-
- fs/ext4/namei.c   | 6 ++++--
- fs/ext4/orphan.c  | 3 ++-
- fs/ext4/super.c   | 6 ++++--
- fs/ext4/xattr.c   | 3 ++-
- 9 files changed, 24 insertions(+), 12 deletions(-)
+ fs/xfs/libxfs/xfs_cksum.h | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/fs/ext4/bitmap.c b/fs/ext4/bitmap.c
-index f63e028c638c..04ce8e4149ee 100644
---- a/fs/ext4/bitmap.c
-+++ b/fs/ext4/bitmap.c
-@@ -24,7 +24,8 @@ int ext4_inode_bitmap_csum_verify(struct super_block *sb, ext4_group_t group,
- 	__u32 provided, calculated;
- 	struct ext4_sb_info *sbi = EXT4_SB(sb);
- 
--	if (!ext4_has_metadata_csum(sb))
-+	if (IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION) ||
-+	    !ext4_has_metadata_csum(sb))
- 		return 1;
- 
- 	provided = le16_to_cpu(gdp->bg_inode_bitmap_csum_lo);
-@@ -63,7 +64,8 @@ int ext4_block_bitmap_csum_verify(struct super_block *sb, ext4_group_t group,
- 	struct ext4_sb_info *sbi = EXT4_SB(sb);
- 	int sz = EXT4_CLUSTERS_PER_GROUP(sb) / 8;
- 
--	if (!ext4_has_metadata_csum(sb))
-+	if (IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION) ||
-+	    !ext4_has_metadata_csum(sb))
- 		return 1;
- 
- 	provided = le16_to_cpu(gdp->bg_block_bitmap_csum_lo);
-diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
-index f1956288307f..c1b7c8f4862c 100644
---- a/fs/ext4/extents.c
-+++ b/fs/ext4/extents.c
-@@ -63,7 +63,8 @@ static int ext4_extent_block_csum_verify(struct inode *inode,
+diff --git a/fs/xfs/libxfs/xfs_cksum.h b/fs/xfs/libxfs/xfs_cksum.h
+index 999a290cfd72..ba55b1afa382 100644
+--- a/fs/xfs/libxfs/xfs_cksum.h
++++ b/fs/xfs/libxfs/xfs_cksum.h
+@@ -76,7 +76,10 @@ xfs_verify_cksum(char *buffer, size_t length, unsigned long cksum_offset)
  {
- 	struct ext4_extent_tail *et;
+ 	uint32_t crc = xfs_start_cksum_safe(buffer, length, cksum_offset);
  
--	if (!ext4_has_metadata_csum(inode->i_sb))
-+	if (IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION) ||
-+	    !ext4_has_metadata_csum(inode->i_sb))
- 		return 1;
+-	return *(__le32 *)(buffer + cksum_offset) == xfs_end_cksum(crc);
++	if (IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION))
++		return 1;
++	else
++		return *(__le32 *)(buffer + cksum_offset) == xfs_end_cksum(crc);
+ }
  
- 	et = find_ext4_extent_tail(eh);
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 2b5ef1b64249..8ec8214f1423 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -86,7 +86,8 @@ static int ext4_inode_csum_verify(struct inode *inode, struct ext4_inode *raw,
- {
- 	__u32 provided, calculated;
- 
--	if (EXT4_SB(inode->i_sb)->s_es->s_creator_os !=
-+	if (IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION) ||
-+	    EXT4_SB(inode->i_sb)->s_es->s_creator_os !=
- 	    cpu_to_le32(EXT4_OS_LINUX) ||
- 	    !ext4_has_metadata_csum(inode->i_sb))
- 		return 1;
-diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
-index 4d49c5cfb690..bae33cd83d05 100644
---- a/fs/ext4/ioctl.c
-+++ b/fs/ext4/ioctl.c
-@@ -142,7 +142,8 @@ static int ext4_update_backup_sb(struct super_block *sb,
- 
- 	es = (struct ext4_super_block *) (bh->b_data + offset);
- 	lock_buffer(bh);
--	if (ext4_has_metadata_csum(sb) &&
-+	if (!IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION) &&
-+	    ext4_has_metadata_csum(sb) &&
- 	    es->s_checksum != ext4_superblock_csum(sb, es)) {
- 		ext4_msg(sb, KERN_ERR, "Invalid checksum for backup "
- 		"superblock %llu\n", sb_block);
-diff --git a/fs/ext4/mmp.c b/fs/ext4/mmp.c
-index 9af68a7ecdcf..605f1867958d 100644
---- a/fs/ext4/mmp.c
-+++ b/fs/ext4/mmp.c
-@@ -21,7 +21,8 @@ static __le32 ext4_mmp_csum(struct super_block *sb, struct mmp_struct *mmp)
- 
- static int ext4_mmp_csum_verify(struct super_block *sb, struct mmp_struct *mmp)
- {
--	if (!ext4_has_metadata_csum(sb))
-+	if (IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION) ||
-+	    !ext4_has_metadata_csum(sb))
- 		return 1;
- 
- 	return mmp->mmp_checksum == ext4_mmp_csum(sb, mmp);
-diff --git a/fs/ext4/namei.c b/fs/ext4/namei.c
-index d5daaf41e1fc..84a59052c51d 100644
---- a/fs/ext4/namei.c
-+++ b/fs/ext4/namei.c
-@@ -396,7 +396,8 @@ int ext4_dirblock_csum_verify(struct inode *inode, struct buffer_head *bh)
- {
- 	struct ext4_dir_entry_tail *t;
- 
--	if (!ext4_has_metadata_csum(inode->i_sb))
-+	if (IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION) ||
-+	    !ext4_has_metadata_csum(inode->i_sb))
- 		return 1;
- 
- 	t = get_dirent_tail(inode, bh);
-@@ -491,7 +492,8 @@ static int ext4_dx_csum_verify(struct inode *inode,
- 	struct dx_tail *t;
- 	int count_offset, limit, count;
- 
--	if (!ext4_has_metadata_csum(inode->i_sb))
-+	if (IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION) ||
-+	    !ext4_has_metadata_csum(inode->i_sb))
- 		return 1;
- 
- 	c = get_dx_countlimit(inode, dirent, &count_offset);
-diff --git a/fs/ext4/orphan.c b/fs/ext4/orphan.c
-index 69a9cf9137a6..8a488d5521cb 100644
---- a/fs/ext4/orphan.c
-+++ b/fs/ext4/orphan.c
-@@ -537,7 +537,8 @@ static int ext4_orphan_file_block_csum_verify(struct super_block *sb,
- 	struct ext4_orphan_block_tail *ot;
- 	__le64 dsk_block_nr = cpu_to_le64(bh->b_blocknr);
- 
--	if (!ext4_has_metadata_csum(sb))
-+	if (IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION) ||
-+	    !ext4_has_metadata_csum(sb))
- 		return 1;
- 
- 	ot = ext4_orphan_block_tail(sb, bh);
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index d733db8a0b02..cb6e53163441 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -287,7 +287,8 @@ __le32 ext4_superblock_csum(struct super_block *sb,
- static int ext4_superblock_csum_verify(struct super_block *sb,
- 				       struct ext4_super_block *es)
- {
--	if (!ext4_has_metadata_csum(sb))
-+	if (IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION) ||
-+	    !ext4_has_metadata_csum(sb))
- 		return 1;
- 
- 	return es->s_checksum == ext4_superblock_csum(sb, es);
-@@ -3198,7 +3199,8 @@ static __le16 ext4_group_desc_csum(struct super_block *sb, __u32 block_group,
- int ext4_group_desc_csum_verify(struct super_block *sb, __u32 block_group,
- 				struct ext4_group_desc *gdp)
- {
--	if (ext4_has_group_desc_csum(sb) &&
-+	if (!IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION) &&
-+	    ext4_has_group_desc_csum(sb) &&
- 	    (gdp->bg_checksum != ext4_group_desc_csum(sb, block_group, gdp)))
- 		return 0;
- 
-diff --git a/fs/ext4/xattr.c b/fs/ext4/xattr.c
-index 36d6ba7190b6..b22a0f282474 100644
---- a/fs/ext4/xattr.c
-+++ b/fs/ext4/xattr.c
-@@ -154,7 +154,8 @@ static int ext4_xattr_block_csum_verify(struct inode *inode,
- 	struct ext4_xattr_header *hdr = BHDR(bh);
- 	int ret = 1;
- 
--	if (ext4_has_metadata_csum(inode->i_sb)) {
-+	if (!IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION) &&
-+	    ext4_has_metadata_csum(inode->i_sb)) {
- 		lock_buffer(bh);
- 		ret = (hdr->h_checksum == ext4_xattr_block_csum(inode,
- 							bh->b_blocknr, hdr));
+ #endif /* _XFS_CKSUM_H */
 -- 
 2.38.0.413.g74048e4d9e-goog
 
