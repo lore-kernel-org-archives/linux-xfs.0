@@ -2,115 +2,169 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 177BAC433FE
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 Oct 2022 08:41:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77391C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 Oct 2022 08:49:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229791AbiJNIlk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 14 Oct 2022 04:41:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47150 "EHLO
+        id S229648AbiJNItq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 14 Oct 2022 04:49:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229507AbiJNIlj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Oct 2022 04:41:39 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C70C1C39CB
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Oct 2022 01:41:37 -0700 (PDT)
-Received: from dggpemm500022.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Mpfrf1ZNZzVj5J;
-        Fri, 14 Oct 2022 16:37:06 +0800 (CST)
-Received: from dggpemm500014.china.huawei.com (7.185.36.153) by
- dggpemm500022.china.huawei.com (7.185.36.162) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 14 Oct 2022 16:41:35 +0800
-Received: from [10.174.177.211] (10.174.177.211) by
- dggpemm500014.china.huawei.com (7.185.36.153) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 14 Oct 2022 16:41:35 +0800
-Message-ID: <b359751c-2397-bcd1-9065-583afb2f93ef@huawei.com>
-Date:   Fri, 14 Oct 2022 16:41:35 +0800
+        with ESMTP id S229504AbiJNItq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Oct 2022 04:49:46 -0400
+Received: from mail-wm1-x335.google.com (mail-wm1-x335.google.com [IPv6:2a00:1450:4864:20::335])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD2151030;
+        Fri, 14 Oct 2022 01:49:42 -0700 (PDT)
+Received: by mail-wm1-x335.google.com with SMTP id n9so2680888wms.1;
+        Fri, 14 Oct 2022 01:49:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=wHqdtxQx6Lod0jir/zBNpgI20jHW/S0hFQeJ5vK6PO4=;
+        b=N9gYQbXaDNOz60O1rGTwGAjGRkq26mCTJsSZ3Jl4CQJYVz6LnL3CEIbjWZXe/YyMjs
+         gtwg7xQGLuu25bH8Bj/nCImI1XEQqMT17gdEQdSE8inJ9hRursDVOO4SFDpS+j7vXzDp
+         l9Eyv8vq99kfP/PU6beqm5XC047H5YCmiZX7f2rYy+M+dj9XByokyFDl0TfAweEpLaMt
+         jsdjn9arPU57YQ4xvGsoTMVznDmE3IQJMkoVxedNqoNcxAJztCc76He+bvHxvG0KegSr
+         EpetSFUehs8I/SNoIWsmR5gk3XJ8CZ590VLkdE2nJzu7l5EBmxruFF9o54RIGIJrl3Di
+         iLZw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=wHqdtxQx6Lod0jir/zBNpgI20jHW/S0hFQeJ5vK6PO4=;
+        b=W3fpSPGEFQ8ry3+Tfxj4LVoNRrTQEYV0GZkJicS/EeTpxWl6AQqdAgdA+PeUIkCliy
+         NrzeIN0F2sxIeaoeC0HSsrn5xuuHLYXBk9gc72qB+2puevrMo09ljWAd4vXsb78YCWTH
+         MWdjztoPIHn0OUL7EDW+tBbAoFtm0DGDErfVP2M68N8PbhUpNaCto6BDC0S/0pZOrQQV
+         qFSOA1KfCLX146xsVC2IxeDrgAqY2qLS5m7PpWo/ignHJXJU8DkRuBltkMcDHQZ4pHZX
+         LCuRwSpSnzX7JN18TtD5/5hWkWU2svYzoPueu1+JGgqqwCsssH4kKZtRZoy+ZPeCOMUf
+         AKcQ==
+X-Gm-Message-State: ACrzQf3CVxwf0iM0sZhNDBWoTOIY8d1Ejv/J8nn9w4MgfIsfbVeLaqc/
+        OWYqjMKxo/wKwcEH6XZQJ8EnjEbopwXEA+b2Kr8=
+X-Google-Smtp-Source: AMsMyM6mWW8W5+zs3haCkV7ucZ6ZM2NWaZWE4PI1Pq5xhk7qS5b4ull48XoOSMyebfkTABFFU7lq3A==
+X-Received: by 2002:a05:600c:19c9:b0:3c2:7fff:a689 with SMTP id u9-20020a05600c19c900b003c27fffa689mr9647430wmq.85.1665737380822;
+        Fri, 14 Oct 2022 01:49:40 -0700 (PDT)
+Received: from hrutvik.c.googlers.com.com (120.142.205.35.bc.googleusercontent.com. [35.205.142.120])
+        by smtp.gmail.com with ESMTPSA id 123-20020a1c1981000000b003c6c4639ac6sm1547372wmz.34.2022.10.14.01.49.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 14 Oct 2022 01:49:40 -0700 (PDT)
+From:   Hrutvik Kanabar <hrkanabar@gmail.com>
+To:     Hrutvik Kanabar <hrutvik@google.com>
+Cc:     Marco Elver <elver@google.com>,
+        Aleksandr Nogikh <nogikh@google.com>,
+        kasan-dev@googlegroups.com,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        linux-ext4@vger.kernel.org, Chris Mason <clm@fb.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        linux-f2fs-devel@lists.sourceforge.net,
+        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        Namjae Jeon <linkinjeon@kernel.org>,
+        Sungjong Seo <sj1557.seo@samsung.com>,
+        Anton Altaparmakov <anton@tuxera.com>,
+        linux-ntfs-dev@lists.sourceforge.net
+Subject: [PATCH RFC 0/7] fs: Debug config option to disable filesystem checksum verification for fuzzing
+Date:   Fri, 14 Oct 2022 08:48:30 +0000
+Message-Id: <20221014084837.1787196-1-hrkanabar@gmail.com>
+X-Mailer: git-send-email 2.38.0.413.g74048e4d9e-goog
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.0.3
-To:     <cem@kernel.org>
-CC:     <linux-xfs@vger.kernel.org>,
-        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>
-From:   Wu Guanghao <wuguanghao3@huawei.com>
-Subject: [PATCH] mkfs: acquire flock before modifying the device superblock
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.177.211]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggpemm500014.china.huawei.com (7.185.36.153)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-We noticed that systemd has an issue about symlink unreliable caused by
-formatting filesystem and systemd operating on same device.
-Issue Link: https://github.com/systemd/systemd/issues/23746
+From: Hrutvik Kanabar <hrutvik@google.com>
 
-According to systemd doc, a BSD flock needs to be acquired before
-formatting the device.
-Related Link: https://systemd.io/BLOCK_DEVICE_LOCKING/
+Fuzzing is a proven technique to discover exploitable bugs in the Linux
+kernel. But fuzzing filesystems is tricky: highly structured disk images
+use redundant checksums to verify data integrity. Therefore,
+randomly-mutated images are quickly rejected as corrupt, testing only
+error-handling code effectively.
 
-So we acquire flock after opening the device but before
-writing superblock.
+The Janus [1] and Hydra [2] projects probe filesystem code deeply by
+correcting checksums after mutation. But their ad-hoc
+checksum-correcting code supports only a few filesystems, and it is
+difficult to support new ones - requiring significant duplication of
+filesystem logic which must also be kept in sync with upstream changes.
+Corrected checksums cannot be guaranteed to be valid, and reusing this
+code across different fuzzing frameworks is non-trivial.
 
-Signed-off-by: wuguanghao <wuguanghao3@huawei.com>
----
- mkfs/xfs_mkfs.c | 26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
+Instead, this RFC suggests a config option:
+`DISABLE_FS_CSUM_VERIFICATION`. When it is enabled, all filesystems
+should bypass redundant checksum verification, proceeding as if
+checksums are valid. Setting of checksums should be unaffected. Mutated
+images will no longer be rejected due to invalid checksums, allowing
+testing of deeper code paths. Though some filesystems implement their
+own flags to disable some checksums, this option should instead disable
+all checksums for all filesystems uniformly. Critically, any bugs found
+remain reproducible on production systems: redundant checksums in
+mutated images can be fixed up to satisfy verification.
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 9dd0e79c..b83cb043 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -13,6 +13,7 @@
- #include "libfrog/crc32cselftest.h"
- #include "proto.h"
- #include <ini.h>
-+#include <sys/file.h>
+The patches below suggest a potential implementation for a few
+filesystems, though we may have missed some checksums. The option
+requires `DEBUG_KERNEL` and is not intended for production systems.
 
- #define TERABYTES(count, blog) ((uint64_t)(count) << (40 - (blog)))
- #define GIGABYTES(count, blog) ((uint64_t)(count) << (30 - (blog)))
-@@ -2758,6 +2759,30 @@ _("log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"
+The first user of the option would be syzbot. We ran preliminary local
+syzkaller tests to compare behaviour with and without these patches.
+With the patches, we found a 19% increase in coverage, as well as many
+new crash types and increases in the total number of crashes:
 
- }
+Filesystem | % new crash types | % increase in crashes
+—----------|-------------------|----------------------
+  ext4     |        60%        |         1400%
+  btrfs    |        25%        |         185%
+  f2fs     |        63%        |         16%
 
-+static void
-+lock_device(dev_t dev, int flag, char *name)
-+{
-+       int fd = libxfs_device_to_fd(dev);
-+       int readonly = flag & LIBXFS_ISREADONLY;
-+
-+       if (!readonly && fd > 0)
-+               if (flock(fd, LOCK_EX) != 0) {
-+                       fprintf(stderr, "%s: failed to get lock.\n", name);
-+                       exit(1);
-+               }
-+}
-+
-+static void
-+lock_devices(struct libxfs_xinit *xi)
-+{
-+       if (!xi->disfile)
-+               lock_device(xi->ddev, xi->dcreat, xi->dname);
-+       if (xi->logdev && !xi->lisfile)
-+               lock_device(xi->logdev, xi->lcreat, xi->logname);
-+       if (xi->rtdev && !xi->risfile)
-+               lock_device(xi->rtdev, xi->rcreat, xi->rtname);
-+}
-+
- static void
- open_devices(
-        struct mkfs_params      *cfg,
-@@ -4208,6 +4233,7 @@ main(
-         * Open and validate the device configurations
-         */
-        open_devices(&cfg, &xi);
-+       lock_devices(&xi);
-        validate_overwrite(dfile, force_overwrite);
-        validate_datadev(&cfg, &cli);
-        validate_logdev(&cfg, &cli, &logfile);
---
-2.27.0
+
+[1] Fuzzing file systems via two-dimensional input space exploration,
+    Xu et al., 2019, IEEE Symposium on Security and Privacy,
+    doi: 10.1109/SP.2019.00035
+[2] Finding semantic bugs in file systems with an extensible fuzzing
+    framework, Kim et al., 2019, ACM Symposium on Operating Systems
+    Principles, doi: 10.1145/3341301.3359662
+
+
+Hrutvik Kanabar (7):
+  fs: create `DISABLE_FS_CSUM_VERIFICATION` config option
+  fs/ext4: support `DISABLE_FS_CSUM_VERIFICATION` config option
+  fs/btrfs: support `DISABLE_FS_CSUM_VERIFICATION` config option
+  fs/exfat: support `DISABLE_FS_CSUM_VERIFICATION` config option
+  fs/xfs: support `DISABLE_FS_CSUM_VERIFICATION` config option
+  fs/ntfs: support `DISABLE_FS_CSUM_VERIFICATION` config option
+  fs/f2fs: support `DISABLE_FS_CSUM_VERIFICATION` config option
+
+ fs/Kconfig.debug            | 20 ++++++++++++++++++++
+ fs/btrfs/check-integrity.c  |  3 ++-
+ fs/btrfs/disk-io.c          |  6 ++++--
+ fs/btrfs/free-space-cache.c |  3 ++-
+ fs/btrfs/inode.c            |  3 ++-
+ fs/btrfs/scrub.c            |  9 ++++++---
+ fs/exfat/nls.c              |  3 ++-
+ fs/exfat/super.c            |  3 +++
+ fs/ext4/bitmap.c            |  6 ++++--
+ fs/ext4/extents.c           |  3 ++-
+ fs/ext4/inode.c             |  3 ++-
+ fs/ext4/ioctl.c             |  3 ++-
+ fs/ext4/mmp.c               |  3 ++-
+ fs/ext4/namei.c             |  6 ++++--
+ fs/ext4/orphan.c            |  3 ++-
+ fs/ext4/super.c             |  6 ++++--
+ fs/ext4/xattr.c             |  3 ++-
+ fs/f2fs/checkpoint.c        |  3 ++-
+ fs/f2fs/compress.c          |  3 ++-
+ fs/f2fs/f2fs.h              |  2 ++
+ fs/f2fs/inode.c             |  3 +++
+ fs/ntfs/super.c             |  3 ++-
+ fs/xfs/libxfs/xfs_cksum.h   |  5 ++++-
+ lib/Kconfig.debug           |  6 ++++++
+ 24 files changed, 86 insertions(+), 25 deletions(-)
+ create mode 100644 fs/Kconfig.debug
+
+-- 
+2.38.0.413.g74048e4d9e-goog
+
