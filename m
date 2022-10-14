@@ -2,53 +2,53 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 625D0C43217
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 720F9C43219
 	for <linux-xfs@archiver.kernel.org>; Fri, 14 Oct 2022 08:50:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229990AbiJNIuJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 14 Oct 2022 04:50:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34150 "EHLO
+        id S229872AbiJNIuH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 14 Oct 2022 04:50:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34070 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229922AbiJNIty (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Oct 2022 04:49:54 -0400
-Received: from mail-wm1-x335.google.com (mail-wm1-x335.google.com [IPv6:2a00:1450:4864:20::335])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 510372793A;
-        Fri, 14 Oct 2022 01:49:52 -0700 (PDT)
-Received: by mail-wm1-x335.google.com with SMTP id n9so2681111wms.1;
-        Fri, 14 Oct 2022 01:49:52 -0700 (PDT)
+        with ESMTP id S229887AbiJNItw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Oct 2022 04:49:52 -0400
+Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C8F521E36;
+        Fri, 14 Oct 2022 01:49:50 -0700 (PDT)
+Received: by mail-wm1-x32e.google.com with SMTP id r3-20020a05600c35c300b003b4b5f6c6bdso3069601wmq.2;
+        Fri, 14 Oct 2022 01:49:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Gi1PiA14Xvf0/+DfXuVtXD45G5BgebCQf9p57BfhR6s=;
-        b=UxT7gVP8q9ze5Ggh2xvvktN6Ml02oBmfbyNFVTxcbcy6qgnZqVwI+fd54u0LJL+LjK
-         y9EfYIAWCha0O2HVLdo55pAxb/IFOyVB4eHwuuXfLb3Q+WnwPgMtjSKPzu2oQKEhgIW1
-         8w0WFdRg+RSJnOotAcs1Y+eSeMLVjAcWDFJda2lYZblubtGGGkakV9MIfwsDN7apZ3yC
-         Rg00X0lJRAafbj8ZJHp9DjnqhMJlcm3+NYiLzY/y+FmG8gOcaLVVoEvJhhCVshISMbUn
-         79bKI/g91GDk/8Ucsg8DPhwD6is+bLLgsNqiPgi18MPBUAdCAjxbT3q7n7tlSgWXhmL1
-         RzAw==
+        bh=noZwzVYPpBsDl5CECnOrP5rsHRqU5K36GF5tioVqhvo=;
+        b=FQxuL83NlA1dTcPa+tFZaBKev/381N92shWjcokB6Cq01pDQV8v3dKmLzskweZmrg7
+         Jz6tAKO28qyNZhcKa1omEDpp9WjDAaZzKcErysdgfT7V0um+TyLLNk2Cij8EO/EsRY7j
+         mM4PW1pXSuwF/LnXS5kzwEDyOA+AX2w5cE1DhAa9FuWqFFyXvj/NZ+KCCIthXLghAk0u
+         a86+6OK4+3IB+C4bjSyDRdPIS9Ojxhjig1vaZtK+KEGWoBJunSCvCvMdY3KFEsTnmGGH
+         vhkRbzjwDO4lnOX6LHYeQne4mhhiyroqBB3oVZA+u+phCefTTmPtrCeo3CV7uh6afgQ3
+         Zvrw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=Gi1PiA14Xvf0/+DfXuVtXD45G5BgebCQf9p57BfhR6s=;
-        b=Ndm+9e02EkIh90achuXSbJ5Oz39gvrY2P+g9PWS0pkPEAZUSDRXxaZvfu68vFJWtvD
-         k4Cqs7CVRog3bv3EkdFXhLdDTyrqzNKbugAC2rVjujcRHo6l1jn7yx3UTuWfpV2WsDyq
-         VmWuW8YMZ57QSM5DYYLqCnjg5EtWPjMAeIDIZLrWdiIayKRAkuxsgz/amZJdREd04Uw7
-         f4aTyhdWNQVrY74PnXttlnKRfOj7PLareYj0vnpeoNRdUJ6xWhc0MPHQ6H3MOCfsDGGm
-         Cz4AMRPrLGDOfST/JYIqoW3bE5iXXKdefy/vtpJ4h+zQ11uQKjAEadQ90q/94LX4SEBo
-         z23A==
-X-Gm-Message-State: ACrzQf0fiECU0BIEkYhgWm8MpfiHLZZwOT1HFtoIj+8Mf93VAjBH+N4k
-        WnmgNldrEaELq/nDtoslTr4=
-X-Google-Smtp-Source: AMsMyM4fbdkajcL2g53Tyvy1JDbblSDeQm14FaYqXK6zLbEPkMD7/YmebYTcS//ZYjYNy+t3nI8G6Q==
-X-Received: by 2002:a05:600c:3044:b0:3c4:8af4:ecc5 with SMTP id n4-20020a05600c304400b003c48af4ecc5mr2758757wmh.52.1665737391668;
-        Fri, 14 Oct 2022 01:49:51 -0700 (PDT)
+        bh=noZwzVYPpBsDl5CECnOrP5rsHRqU5K36GF5tioVqhvo=;
+        b=NrYTcHyfyF2rCxRI0gZ9j8/v593JThtMk8Wb75cFABf3iEp2qMMRgHa6xnQhYpgBok
+         9B81ZfW1GsL4olM2FIbse3pKdtDJytbjmXrWQWSkpXxCUdV/5oXYRux4t4tFIFaJWfQU
+         ek68m1cWTYDNEjPi+3HYab98s5UFxWdBU9vLrtcMRlpWc8MZOEaB+GX1G+U3x4in6w//
+         vSPQuIR/eQ//NSgJ/BwuLspKmolFxYPEpt0nkIHlfx6XVbxKN7o6Mcm4abqZop4IoycZ
+         NNS1lgWyUJG+MkNIzfSDAuuNtn6OFaoQaJ33fNSq1E28mkX1CU7EE2d4P3+N/TduJ8tj
+         YkdA==
+X-Gm-Message-State: ACrzQf296Zl8SR5ElvHDEUevggqMsiFhOun/La7+sksb3MNAVR/y99oA
+        K/0vyj5pbr6ta5Yo+f1kmwo=
+X-Google-Smtp-Source: AMsMyM6LLqWRPo+UV+uMhtdyCnYVRTjSPNIcPtvijlT4VjYFItZbopCVgihpcI5ZnJzpKiPc+FN/Aw==
+X-Received: by 2002:a05:600c:288:b0:3c6:c44a:1d30 with SMTP id 8-20020a05600c028800b003c6c44a1d30mr9545255wmk.46.1665737388927;
+        Fri, 14 Oct 2022 01:49:48 -0700 (PDT)
 Received: from hrutvik.c.googlers.com.com (120.142.205.35.bc.googleusercontent.com. [35.205.142.120])
-        by smtp.gmail.com with ESMTPSA id 123-20020a1c1981000000b003c6c4639ac6sm1547372wmz.34.2022.10.14.01.49.51
+        by smtp.gmail.com with ESMTPSA id 123-20020a1c1981000000b003c6c4639ac6sm1547372wmz.34.2022.10.14.01.49.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Oct 2022 01:49:51 -0700 (PDT)
+        Fri, 14 Oct 2022 01:49:48 -0700 (PDT)
 From:   Hrutvik Kanabar <hrkanabar@gmail.com>
 To:     Hrutvik Kanabar <hrutvik@google.com>
 Cc:     Marco Elver <elver@google.com>,
@@ -68,9 +68,9 @@ Cc:     Marco Elver <elver@google.com>,
         Sungjong Seo <sj1557.seo@samsung.com>,
         Anton Altaparmakov <anton@tuxera.com>,
         linux-ntfs-dev@lists.sourceforge.net
-Subject: [PATCH RFC 5/7] fs/xfs: support `DISABLE_FS_CSUM_VERIFICATION` config option
-Date:   Fri, 14 Oct 2022 08:48:35 +0000
-Message-Id: <20221014084837.1787196-6-hrkanabar@gmail.com>
+Subject: [PATCH RFC 3/7] fs/btrfs: support `DISABLE_FS_CSUM_VERIFICATION` config option
+Date:   Fri, 14 Oct 2022 08:48:33 +0000
+Message-Id: <20221014084837.1787196-4-hrkanabar@gmail.com>
 X-Mailer: git-send-email 2.38.0.413.g74048e4d9e-goog
 In-Reply-To: <20221014084837.1787196-1-hrkanabar@gmail.com>
 References: <20221014084837.1787196-1-hrkanabar@gmail.com>
@@ -82,31 +82,118 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Hrutvik Kanabar <hrutvik@google.com>
 
-When `DISABLE_FS_CSUM_VERIFICATION` is enabled, return truthy value for
-`xfs_verify_cksum`, which is the key function implementing checksum
-verification for XFS.
+When `DISABLE_FS_CSUM_VERIFICATION` is enabled, bypass checksum
+verification.
 
 Signed-off-by: Hrutvik Kanabar <hrutvik@google.com>
 ---
- fs/xfs/libxfs/xfs_cksum.h | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ fs/btrfs/check-integrity.c  | 3 ++-
+ fs/btrfs/disk-io.c          | 6 ++++--
+ fs/btrfs/free-space-cache.c | 3 ++-
+ fs/btrfs/inode.c            | 3 ++-
+ fs/btrfs/scrub.c            | 9 ++++++---
+ 5 files changed, 16 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_cksum.h b/fs/xfs/libxfs/xfs_cksum.h
-index 999a290cfd72..ba55b1afa382 100644
---- a/fs/xfs/libxfs/xfs_cksum.h
-+++ b/fs/xfs/libxfs/xfs_cksum.h
-@@ -76,7 +76,10 @@ xfs_verify_cksum(char *buffer, size_t length, unsigned long cksum_offset)
- {
- 	uint32_t crc = xfs_start_cksum_safe(buffer, length, cksum_offset);
+diff --git a/fs/btrfs/check-integrity.c b/fs/btrfs/check-integrity.c
+index 98c6e5feab19..eab82593a325 100644
+--- a/fs/btrfs/check-integrity.c
++++ b/fs/btrfs/check-integrity.c
+@@ -1671,7 +1671,8 @@ static noinline_for_stack int btrfsic_test_for_metadata(
+ 		crypto_shash_update(shash, data, sublen);
+ 	}
+ 	crypto_shash_final(shash, csum);
+-	if (memcmp(csum, h->csum, fs_info->csum_size))
++	if (!IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION) &&
++	    memcmp(csum, h->csum, fs_info->csum_size))
+ 		return 1;
  
--	return *(__le32 *)(buffer + cksum_offset) == xfs_end_cksum(crc);
-+	if (IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION))
-+		return 1;
-+	else
-+		return *(__le32 *)(buffer + cksum_offset) == xfs_end_cksum(crc);
+ 	return 0; /* is metadata */
+diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
+index a2da9313c694..7cd909d44b24 100644
+--- a/fs/btrfs/disk-io.c
++++ b/fs/btrfs/disk-io.c
+@@ -184,7 +184,8 @@ static int btrfs_check_super_csum(struct btrfs_fs_info *fs_info,
+ 	crypto_shash_digest(shash, raw_disk_sb + BTRFS_CSUM_SIZE,
+ 			    BTRFS_SUPER_INFO_SIZE - BTRFS_CSUM_SIZE, result);
+ 
+-	if (memcmp(disk_sb->csum, result, fs_info->csum_size))
++	if (!IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION) &&
++	    memcmp(disk_sb->csum, result, fs_info->csum_size))
+ 		return 1;
+ 
+ 	return 0;
+@@ -494,7 +495,8 @@ static int validate_extent_buffer(struct extent_buffer *eb)
+ 	header_csum = page_address(eb->pages[0]) +
+ 		get_eb_offset_in_page(eb, offsetof(struct btrfs_header, csum));
+ 
+-	if (memcmp(result, header_csum, csum_size) != 0) {
++	if (!IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION) &&
++	    memcmp(result, header_csum, csum_size) != 0) {
+ 		btrfs_warn_rl(fs_info,
+ "checksum verify failed on logical %llu mirror %u wanted " CSUM_FMT " found " CSUM_FMT " level %d",
+ 			      eb->start, eb->read_mirror,
+diff --git a/fs/btrfs/free-space-cache.c b/fs/btrfs/free-space-cache.c
+index f4023651dd68..203c8a9076a6 100644
+--- a/fs/btrfs/free-space-cache.c
++++ b/fs/btrfs/free-space-cache.c
+@@ -574,7 +574,8 @@ static int io_ctl_check_crc(struct btrfs_io_ctl *io_ctl, int index)
+ 	io_ctl_map_page(io_ctl, 0);
+ 	crc = btrfs_crc32c(crc, io_ctl->orig + offset, PAGE_SIZE - offset);
+ 	btrfs_crc32c_final(crc, (u8 *)&crc);
+-	if (val != crc) {
++	if (!IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION) &&
++	    val != crc) {
+ 		btrfs_err_rl(io_ctl->fs_info,
+ 			"csum mismatch on free space cache");
+ 		io_ctl_unmap_page(io_ctl);
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index b0807c59e321..1a49d897b5c1 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -3434,7 +3434,8 @@ int btrfs_check_sector_csum(struct btrfs_fs_info *fs_info, struct page *page,
+ 	crypto_shash_digest(shash, kaddr, fs_info->sectorsize, csum);
+ 	kunmap_local(kaddr);
+ 
+-	if (memcmp(csum, csum_expected, fs_info->csum_size))
++	if (!IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION) &&
++	    memcmp(csum, csum_expected, fs_info->csum_size))
+ 		return -EIO;
+ 	return 0;
  }
+diff --git a/fs/btrfs/scrub.c b/fs/btrfs/scrub.c
+index f260c53829e5..a7607b492f47 100644
+--- a/fs/btrfs/scrub.c
++++ b/fs/btrfs/scrub.c
+@@ -1997,7 +1997,8 @@ static int scrub_checksum_data(struct scrub_block *sblock)
  
- #endif /* _XFS_CKSUM_H */
+ 	crypto_shash_digest(shash, kaddr, fs_info->sectorsize, csum);
+ 
+-	if (memcmp(csum, sector->csum, fs_info->csum_size))
++	if (!IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION) &&
++	    memcmp(csum, sector->csum, fs_info->csum_size))
+ 		sblock->checksum_error = 1;
+ 	return sblock->checksum_error;
+ }
+@@ -2062,7 +2063,8 @@ static int scrub_checksum_tree_block(struct scrub_block *sblock)
+ 	}
+ 
+ 	crypto_shash_final(shash, calculated_csum);
+-	if (memcmp(calculated_csum, on_disk_csum, sctx->fs_info->csum_size))
++	if (!IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION) &&
++	    memcmp(calculated_csum, on_disk_csum, sctx->fs_info->csum_size))
+ 		sblock->checksum_error = 1;
+ 
+ 	return sblock->header_error || sblock->checksum_error;
+@@ -2099,7 +2101,8 @@ static int scrub_checksum_super(struct scrub_block *sblock)
+ 	crypto_shash_digest(shash, kaddr + BTRFS_CSUM_SIZE,
+ 			BTRFS_SUPER_INFO_SIZE - BTRFS_CSUM_SIZE, calculated_csum);
+ 
+-	if (memcmp(calculated_csum, s->csum, sctx->fs_info->csum_size))
++	if (!IS_ENABLED(CONFIG_DISABLE_FS_CSUM_VERIFICATION) &&
++	    memcmp(calculated_csum, s->csum, sctx->fs_info->csum_size))
+ 		++fail_cor;
+ 
+ 	return fail_cor + fail_gen;
 -- 
 2.38.0.413.g74048e4d9e-goog
 
