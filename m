@@ -2,340 +2,496 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E14C6C4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 Oct 2022 15:51:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED05AC4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 Oct 2022 16:09:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229748AbiJNPvD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 14 Oct 2022 11:51:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33708 "EHLO
+        id S229512AbiJNQJw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 14 Oct 2022 12:09:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229588AbiJNPvB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Oct 2022 11:51:01 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 718FE169133;
-        Fri, 14 Oct 2022 08:50:58 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 65BDAB82349;
-        Fri, 14 Oct 2022 15:50:57 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2D0AC433C1;
-        Fri, 14 Oct 2022 15:50:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665762655;
-        bh=7KH/1zYJ/FxBn2QF4KXgl1t1gCiv3pjrRN/irOTy8DI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=J0VjMajX0NnZg9cNd/xn/mbiaZ0/Qsv5qDN7X08a0tCuSp2124xYEBkMqfjGwyPpa
-         FFgbh+9w9q1QDLasYNTcRY9dC9iYYEeOmITr6ygAM2tpER24FBChqpp0tE3wlgFCx5
-         Q8kByzleINBxgGmxf5wQvan3CtXKiebbUCZVw05DZqfPcV7IdA7SM1EfdL/KWAkD/5
-         mDlXE/6D32OxXX5NhrcLA/tO7nEd6l0ZEqWJmFZToy4RJ8I2bwg80JKDkekQs2rj+j
-         2CHa3hNZIjD7g2bFXZfPYk34PY41I9m8Fg2t9dGopEMAh/8LX2fAW6ywlKTuto41V7
-         /QuGidEoFWR8Q==
-Date:   Fri, 14 Oct 2022 08:50:55 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
-        dan.j.williams@intel.com
-Subject: Re: [RFC PATCH] xfs: drop experimental warning for fsdax
-Message-ID: <Y0mFX1pAYhyPgv37@magnolia>
-References: <1663234002-17-1-git-send-email-ruansy.fnst@fujitsu.com>
- <20220919045003.GJ3600936@dread.disaster.area>
- <20220919211533.GK3600936@dread.disaster.area>
- <f10de555-370b-f236-1107-e3089258ebbc@fujitsu.com>
- <YzMeqNg56v0/t/8x@magnolia>
- <20220927235129.GC3600936@dread.disaster.area>
- <2428b01d-afc7-7b33-1088-e34d68029e19@fujitsu.com>
- <YzXsavOWMSuwTBEC@magnolia>
- <Y0hZYCL3+no9qSSW@magnolia>
- <49f0cef6-d27e-2dee-dba6-4af17ca76d41@fujitsu.com>
+        with ESMTP id S229651AbiJNQJv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Oct 2022 12:09:51 -0400
+Received: from mail-qk1-x72d.google.com (mail-qk1-x72d.google.com [IPv6:2607:f8b0:4864:20::72d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3094B1F2D3;
+        Fri, 14 Oct 2022 09:09:48 -0700 (PDT)
+Received: by mail-qk1-x72d.google.com with SMTP id b25so2748434qkk.7;
+        Fri, 14 Oct 2022 09:09:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=G5IWJAwOu3O745cLTf9GJJJh5xflNnHQt7CEHGOOyEg=;
+        b=XrBfBgQ1O/yup8FHBmdHfJA7eUyvubO+RqvOhHDCHy9ooafm+Xntrni54JjeuWii/7
+         C6kuQt5gf1Ethd/GIpXN9WXkMoTZhGGOh4tiZIwnnxP/JB3qJsrHqVQwrMkhV/9dFzeb
+         DFCyM6MDaEA4leCdxmjlp8S/MCc4v2QLqJqbtzMbILGp1tpvi8gasPnQSLkbMeZ2W4UY
+         zb/osy2R+yfGM8UNdbbBaEmm9tUNxz/NLBCXPg6ufoM+TNKukQFZOgqQavi8dyV/1kWz
+         JQTAjmNGH5XjsaMl/cil4dasTtMf9yjJl2rJoLTrgvepv+V3fEuQomhE7oee1xDvi4SP
+         WLkw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=G5IWJAwOu3O745cLTf9GJJJh5xflNnHQt7CEHGOOyEg=;
+        b=7GpU591lwGwi75Tt627HIwlqf8lA6Gt22zvujQBBq3dq5SAVcJ7Jr+xdtCvfn76DFa
+         Witlmdw24Khf+AyRIto35ZBjuO3x0ZokVMf28MOA4FJ6ZlvibWIHHhsGd0vfCn7CEFUy
+         re5iGwmbnBIvN1jVdOrndTxciGmiUn3NQ9sKxZ4yxlyt+xf7iV9qOaoFTNIdNA3m3ut1
+         VmWsbtp6BcKZHuW+K/XrwcOau6HUnZMw+yQp1F3fnMn0bd7BjPmNEczus6PuvDvaFhEW
+         vUHjc/OIT34XaE5rik82yP7jZIg5VMgLjnhFUPd6kePFlsShrtrzNx9l+eYodht6LH9S
+         JbvA==
+X-Gm-Message-State: ACrzQf2L/dey7UxZauSlVoOrddGYsfsWmU0En4lzuOJSr/I8DiHGhAE4
+        TyDTPFjgkuDmIQXtClKJHxxKfOgNkjl2xcMK
+X-Google-Smtp-Source: AMsMyM7PqeAgOlRcZvyKPYNATCVcIK/ip+VhsblkEd8/NoQ+e8HrLIuwgFTPrlDLXmzhw3gS65RHsA==
+X-Received: by 2002:a05:620a:271f:b0:6d4:56aa:4385 with SMTP id b31-20020a05620a271f00b006d456aa4385mr4349120qkp.175.1665763787244;
+        Fri, 14 Oct 2022 09:09:47 -0700 (PDT)
+Received: from shiina-laptop.hsd1.ma.comcast.net ([2601:18f:801:e210:abfc:537a:d62c:c353])
+        by smtp.gmail.com with ESMTPSA id i14-20020ac871ce000000b00398d83256ddsm2329683qtp.31.2022.10.14.09.09.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 14 Oct 2022 09:09:46 -0700 (PDT)
+From:   Hironori Shiina <shiina.hironori@gmail.com>
+X-Google-Original-From: Hironori Shiina <shiina.hironori@fujitsu.com>
+To:     fstests@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org,
+        Hironori Shiina <shiina.hironori@fujitsu.com>
+Subject: [PATCH V3] xfs: test for fixing wrong root inode number in dump
+Date:   Fri, 14 Oct 2022 12:09:07 -0400
+Message-Id: <20221014160907.128619-1-shiina.hironori@fujitsu.com>
+X-Mailer: git-send-email 2.37.3
+In-Reply-To: <20221013160434.130152-1-shiina.hironori@fujitsu.com>
+References: <20221013160434.130152-1-shiina.hironori@fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <49f0cef6-d27e-2dee-dba6-4af17ca76d41@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 14, 2022 at 10:24:29AM +0800, Shiyang Ruan wrote:
-> 
-> 
-> 在 2022/10/14 2:30, Darrick J. Wong 写道:
-> > On Thu, Sep 29, 2022 at 12:05:14PM -0700, Darrick J. Wong wrote:
-> > > On Wed, Sep 28, 2022 at 10:46:17PM +0800, Shiyang Ruan wrote:
-> > > > 
-> ...
-> > > > > 
-> > > > > > FWIW I saw dmesg failures in xfs/517 and xfs/013 starting with 6.0-rc5,
-> > > > > > and I haven't even turned on reflink yet:
-> > > > > > 
-> > > > > > run fstests xfs/517 at 2022-09-26 19:53:34
-> > > > > > XFS (pmem1): EXPERIMENTAL Large extent counts feature in use. Use at your own risk!
-> > > > > > XFS (pmem1): Mounting V5 Filesystem
-> > > > > > XFS (pmem1): Ending clean mount
-> > > > > > XFS (pmem1): Quotacheck needed: Please wait.
-> > > > > > XFS (pmem1): Quotacheck: Done.
-> > > > > > XFS (pmem1): Unmounting Filesystem
-> > > > > > XFS (pmem0): EXPERIMENTAL online scrub feature in use. Use at your own risk!
-> > > > > > XFS (pmem1): EXPERIMENTAL Large extent counts feature in use. Use at your own risk!
-> > > > > > XFS (pmem1): Mounting V5 Filesystem
-> > > > > > XFS (pmem1): Ending clean mount
-> > > > > > XFS (pmem1): Quotacheck needed: Please wait.
-> > > > > > XFS (pmem1): Quotacheck: Done.
-> > > > > > ------------[ cut here ]------------
-> > > > > > WARNING: CPU: 1 PID: 415317 at fs/dax.c:380 dax_insert_entry+0x22d/0x320
-> > 
-> > Ping?
-> > 
-> > This time around I replaced the WARN_ON with this:
-> > 
-> > 	if (page->mapping)
-> > 		printk(KERN_ERR "%s:%d ino 0x%lx index 0x%lx page 0x%llx mapping 0x%llx <- 0x%llx\n", __func__, __LINE__, mapping->host->i_ino, index + i, (unsigned long long)page, (unsigned long long)page->mapping, (unsigned long long)mapping);
-> > 
-> > and promptly started seeing scary things like this:
-> > 
-> > [   37.576598] dax_associate_entry:381 ino 0x1807870 index 0x370 page 0xffffea00133f1480 mapping 0x1 <- 0xffff888042fbb528
-> > [   37.577570] dax_associate_entry:381 ino 0x1807870 index 0x371 page 0xffffea00133f1500 mapping 0x1 <- 0xffff888042fbb528
-> > [   37.698657] dax_associate_entry:381 ino 0x180044a index 0x5f8 page 0xffffea0013244900 mapping 0xffff888042eaf128 <- 0xffff888042dda128
-> > [   37.699349] dax_associate_entry:381 ino 0x800808 index 0x136 page 0xffffea0013245640 mapping 0xffff888042eaf128 <- 0xffff888042d3ce28
-> > [   37.699680] dax_associate_entry:381 ino 0x180044a index 0x5f9 page 0xffffea0013245680 mapping 0xffff888042eaf128 <- 0xffff888042dda128
-> > [   37.700684] dax_associate_entry:381 ino 0x800808 index 0x137 page 0xffffea00132456c0 mapping 0xffff888042eaf128 <- 0xffff888042d3ce28
-> > [   37.701611] dax_associate_entry:381 ino 0x180044a index 0x5fa page 0xffffea0013245700 mapping 0xffff888042eaf128 <- 0xffff888042dda128
-> > [   37.764126] dax_associate_entry:381 ino 0x103c52c index 0x28a page 0xffffea001345afc0 mapping 0x1 <- 0xffff888019c14928
-> > [   37.765078] dax_associate_entry:381 ino 0x103c52c index 0x28b page 0xffffea001345b000 mapping 0x1 <- 0xffff888019c14928
-> > [   39.193523] dax_associate_entry:381 ino 0x184657f index 0x124 page 0xffffea000e2a4440 mapping 0xffff8880120d7628 <- 0xffff888019ca3528
-> > [   39.194692] dax_associate_entry:381 ino 0x184657f index 0x125 page 0xffffea000e2a4480 mapping 0xffff8880120d7628 <- 0xffff888019ca3528
-> > [   39.195716] dax_associate_entry:381 ino 0x184657f index 0x126 page 0xffffea000e2a44c0 mapping 0xffff8880120d7628 <- 0xffff888019ca3528
-> > [   39.196736] dax_associate_entry:381 ino 0x184657f index 0x127 page 0xffffea000e2a4500 mapping 0xffff8880120d7628 <- 0xffff888019ca3528
-> > [   39.197906] dax_associate_entry:381 ino 0x184657f index 0x128 page 0xffffea000e2a5040 mapping 0xffff8880120d7628 <- 0xffff888019ca3528
-> > [   39.198924] dax_associate_entry:381 ino 0x184657f index 0x129 page 0xffffea000e2a5080 mapping 0xffff8880120d7628 <- 0xffff888019ca3528
-> > [   39.247053] dax_associate_entry:381 ino 0x5dd1e index 0x2d page 0xffffea0015a0e640 mapping 0x1 <- 0xffff88804af88828
-> > [   39.248006] dax_associate_entry:381 ino 0x5dd1e index 0x2e page 0xffffea0015a0e680 mapping 0x1 <- 0xffff88804af88828
-> > [   39.490880] dax_associate_entry:381 ino 0x1a9dc index 0x7d page 0xffffea000e7012c0 mapping 0xffff888042fd1728 <- 0xffff88804afaec28
-> > [   39.492038] dax_associate_entry:381 ino 0x1a9dc index 0x7e page 0xffffea000e701300 mapping 0xffff888042fd1728 <- 0xffff88804afaec28
-> > [   39.493099] dax_associate_entry:381 ino 0x1a9dc index 0x7f page 0xffffea000e701340 mapping 0xffff888042fd1728 <- 0xffff88804afaec28
-> > [   40.926247] dax_associate_entry:381 ino 0x182e265 index 0x54c page 0xffffea0015da0840 mapping 0x1 <- 0xffff888019c0dd28
-> > [   41.675459] dax_associate_entry:381 ino 0x15e5d index 0x29 page 0xffffea000e4350c0 mapping 0x1 <- 0xffff888019c05828
-> > [   41.676418] dax_associate_entry:381 ino 0x15e5d index 0x2a page 0xffffea000e435100 mapping 0x1 <- 0xffff888019c05828
-> > [   41.677352] dax_associate_entry:381 ino 0x15e5d index 0x2b page 0xffffea000e435180 mapping 0x1 <- 0xffff888019c05828
-> > [   41.678372] dax_associate_entry:381 ino 0x15e5d index 0x2c page 0xffffea000e4351c0 mapping 0x1 <- 0xffff888019c05828
-> > [   41.965026] dax_associate_entry:381 ino 0x185adb4 index 0x87 page 0xffffea000e616d00 mapping 0x1 <- 0xffff88801a83b528
-> > [   41.966065] dax_associate_entry:381 ino 0x185adb4 index 0x88 page 0xffffea000e616d40 mapping 0x1 <- 0xffff88801a83b528
-> > [   43.565384] dax_associate_entry:381 ino 0x804d9d index 0x229 page 0xffffea0013653fc0 mapping 0x1 <- 0xffff88804bd97128
-> > [   43.566399] dax_associate_entry:381 ino 0x804d9d index 0x22a page 0xffffea0013654000 mapping 0x1 <- 0xffff88804bd97128
-> > [   43.567343] dax_associate_entry:381 ino 0x804d9d index 0x22b page 0xffffea0013654040 mapping 0x1 <- 0xffff88804bd97128
-> > [   45.512017] dax_associate_entry:381 ino 0x18192bb index 0x1f page 0xffffea00133f1300 mapping 0x1 <- 0xffff88804bcdb528
-> > [   45.512974] dax_associate_entry:381 ino 0x18192bb index 0x20 page 0xffffea00133f1340 mapping 0x1 <- 0xffff88804bcdb528
-> > [   45.513942] dax_associate_entry:381 ino 0x18192bb index 0x21 page 0xffffea00133f1380 mapping 0x1 <- 0xffff88804bcdb528
-> > [   45.514857] dax_associate_entry:381 ino 0x18192bb index 0x22 page 0xffffea00133f13c0 mapping 0x1 <- 0xffff88804bcdb528
-> > [   45.515760] dax_associate_entry:381 ino 0x18192bb index 0x23 page 0xffffea00133f1400 mapping 0x1 <- 0xffff88804bcdb528
-> > [   45.516673] dax_associate_entry:381 ino 0x18192bb index 0x24 page 0xffffea00133f1440 mapping 0x1 <- 0xffff88804bcdb528
-> > 
-> > I'm not sure what's going on here, but we're clearly turning COW daxpages
-> > back into single-mapping daxpages.  I'm not sure what's going on for the
-> > cases where we're replacing one mapping with another.  My dimwitted
-> > guess is that dax_fault_is_cow() is incorrectly returning false in some
-> > cases.
-> > 
-> > Replacing the contents of that function with:
-> > 
-> > 	if (iter->srcmap.type != IOMAP_HOLE)
-> > 		return true;
-> > 	if (iter->iomap.flags & IOMAP_F_SHARED)
-> > 		return true;
-> > 	return false;
-> > 
-> > Doesn't make the errors go away.  Curiously, replacing the entire
-> > function body with "return true;" fixes /that/ problem though...
-> 
-> I am looking into this error by adding debug message too.  I found that
-> testcases which execute fsstress will randomly occur this error.  I'm
-> guessing some concurrent operations caused the cow flag (returned by
-> dax_fault_is_cow()) to be incorrectly judged.  But still haven't catch the
-> exactly operation yet.
+Test '-x' option of xfsrestore. With this option, a wrong root inode
+number in a dump file is corrected. A root inode number can be wrong
+in a dump created by problematic xfsdump (v3.1.7 - v3.1.9) with
+bulkstat misuse. In this test, a corrupted dump file is created by
+overwriting a root inode number in a header.
 
-I have an offhand guess that the following sequence might reproduce it:
+Signed-off-by: Hironori Shiina <shiina.hironori@fujitsu.com>
+---
+changes since v2:
+  - Use glibc functions to convert endian.
+  - Copy the structure definitions from xfsdump source files.
+changes since RFC v1:
+  - Skip the test if xfsrestore does not support '-x' flag.
+  - Create a corrupted dump by overwriting a root inode number in a dump
+    file with a new tool instead of checking in a binary dump file.
 
-<write data to a fsdax file1>
+ common/dump             |   2 +-
+ common/xfs              |   6 ++
+ src/Makefile            |   2 +-
+ src/fake-dump-rootino.c | 228 ++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/554           |  73 +++++++++++++
+ tests/xfs/554.out       |  40 +++++++
+ 6 files changed, 349 insertions(+), 2 deletions(-)
+ create mode 100644 src/fake-dump-rootino.c
+ create mode 100755 tests/xfs/554
+ create mode 100644 tests/xfs/554.out
 
-<process 1 maps file1, which sets up the pagecache mapping to pmem, and
-goes to sleep>
+diff --git a/common/dump b/common/dump
+index 8e0446d9..50b2ba03 100644
+--- a/common/dump
++++ b/common/dump
+@@ -1003,7 +1003,7 @@ _parse_restore_args()
+         --no-check-quota)
+             do_quota_check=false
+             ;;
+-	-K|-R)
++	-K|-R|-x)
+ 	    restore_args="$restore_args $1"
+             ;;
+ 	*)
+diff --git a/common/xfs b/common/xfs
+index e1c15d3d..8334880e 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -1402,3 +1402,9 @@ _xfs_filter_mkfs()
+ 		print STDOUT "realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX\n";
+ 	}'
+ }
++
++_require_xfsrestore_xflag()
++{
++	$XFSRESTORE_PROG -h 2>&1 | grep -q -e '-x' || \
++			_notrun 'xfsrestore does not support -x flag.'
++}
+diff --git a/src/Makefile b/src/Makefile
+index 5f565e73..afdf6b30 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -19,7 +19,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
+ 	t_ofd_locks t_mmap_collision mmap-write-concurrent \
+ 	t_get_file_time t_create_short_dirs t_create_long_dirs t_enospc \
+ 	t_mmap_writev_overlap checkpoint_journal mmap-rw-fault allocstale \
+-	t_mmap_cow_memory_failure
++	t_mmap_cow_memory_failure fake-dump-rootino
+ 
+ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+ 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
+diff --git a/src/fake-dump-rootino.c b/src/fake-dump-rootino.c
+new file mode 100644
+index 00000000..80797f15
+--- /dev/null
++++ b/src/fake-dump-rootino.c
+@@ -0,0 +1,228 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright (c) 2022 Fujitsu Limited.  All Rights Reserved. */
++#define _LARGEFILE64_SOURCE
++#include <endian.h>
++#include <fcntl.h>
++#include <stdint.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <sys/mman.h>
++#include <unistd.h>
++#include <uuid/uuid.h>
++
++// Definitions from xfsdump
++#define PGSZLOG2	12
++#define PGSZ		(1 << PGSZLOG2)
++#define GLOBAL_HDR_SZ		PGSZ
++#define GLOBAL_HDR_MAGIC_SZ	8
++#define GLOBAL_HDR_STRING_SZ	0x100
++#define GLOBAL_HDR_TIME_SZ	4
++#define GLOBAL_HDR_UUID_SZ	0x10
++typedef int32_t time32_t;
++struct global_hdr {
++	char gh_magic[GLOBAL_HDR_MAGIC_SZ];		/*   8    8 */
++		/* unique signature of xfsdump */
++	uint32_t gh_version;				/*   4    c */
++		/* header version */
++	uint32_t gh_checksum;				/*   4   10 */
++		/* 32-bit unsigned additive inverse of entire header */
++	time32_t gh_timestamp;				/*   4   14 */
++		/* time32_t of dump */
++	char gh_pad1[4];				/*   4   18 */
++		/* alignment */
++	uint64_t gh_ipaddr;				/*   8   20 */
++		/* from gethostid(2), room for expansion */
++	uuid_t gh_dumpid;				/*  10   30 */
++		/* ID of dump session	 */
++	char gh_pad2[0xd0];				/*  d0  100 */
++		/* alignment */
++	char gh_hostname[GLOBAL_HDR_STRING_SZ];	/* 100  200 */
++		/* from gethostname(2) */
++	char gh_dumplabel[GLOBAL_HDR_STRING_SZ];	/* 100  300 */
++		/* label of dump session */
++	char gh_pad3[0x100];				/* 100  400 */
++		/* padding */
++	char gh_upper[GLOBAL_HDR_SZ - 0x400];		/* c00 1000 */
++		/* header info private to upper software layers */
++};
++typedef struct global_hdr global_hdr_t;
++
++#define sizeofmember( t, m )	sizeof( ( ( t * )0 )->m )
++
++#define DRIVE_HDR_SZ		sizeofmember(global_hdr_t, gh_upper)
++struct drive_hdr {
++	uint32_t dh_drivecnt;				/*   4    4 */
++		/* number of drives used to dump the fs */
++	uint32_t dh_driveix;				/*   4    8 */
++		/* 0-based index of the drive used to dump this stream */
++	int32_t dh_strategyid;				/*   4    c */
++		/* ID of the drive strategy used to produce this dump */
++	char dh_pad1[0x1f4];				/* 1f4  200 */
++		/* padding */
++	char dh_specific[0x200];			/* 200  400 */
++		/* drive strategy-specific info */
++	char dh_upper[DRIVE_HDR_SZ - 0x400];		/* 800  c00 */
++		/* header info private to upper software layers */
++};
++typedef struct drive_hdr drive_hdr_t;
++
++#define MEDIA_HDR_SZ		sizeofmember(drive_hdr_t, dh_upper)
++struct media_hdr {
++	char mh_medialabel[GLOBAL_HDR_STRING_SZ];	/* 100  100 */
++		/* label of media object containing file */
++	char mh_prevmedialabel[GLOBAL_HDR_STRING_SZ];	/* 100  200 */
++		/* label of upstream media object */
++	char mh_pad1[GLOBAL_HDR_STRING_SZ];		/* 100  300 */
++		/* in case more labels needed */
++	uuid_t mh_mediaid;				/*  10  310 */
++		/* ID of media object 	*/
++	uuid_t mh_prevmediaid;				/*  10  320 */
++		/* ID of upstream media object */
++	char mh_pad2[GLOBAL_HDR_UUID_SZ];		/*  10  330 */
++		/* in case more IDs needed */
++	uint32_t mh_mediaix;				/*   4  334 */
++		/* 0-based index of this media object within the dump stream */
++	uint32_t mh_mediafileix;			/*   4  338 */
++		/* 0-based index of this file within this media object */
++	uint32_t mh_dumpfileix;			/*   4  33c */
++		/* 0-based index of this file within this dump stream */
++	uint32_t mh_dumpmediafileix;			/*   4  340 */
++		/* 0-based index of file within dump stream and media object */
++	uint32_t mh_dumpmediaix;			/*   4  344 */
++		/* 0-based index of this dump within the media object */
++	int32_t mh_strategyid;				/*   4  348 */
++		/* ID of the media strategy used to produce this dump */
++	char mh_pad3[0x38];				/*  38  380 */
++		/* padding */
++	char mh_specific[0x80];			/*  80  400 */
++		/* media strategy-specific info */
++	char mh_upper[MEDIA_HDR_SZ - 0x400];		/* 400  800 */
++		/* header info private to upper software layers */
++};
++typedef struct media_hdr media_hdr_t;
++
++#define CONTENT_HDR_SZ		sizeofmember(media_hdr_t, mh_upper)
++#define CONTENT_HDR_FSTYPE_SZ	16
++#define CONTENT_STATSZ		160 /* must match dlog.h DLOG_MULTI_STATSZ */
++struct content_hdr {
++	char ch_mntpnt[GLOBAL_HDR_STRING_SZ];		/* 100  100 */
++		/* full pathname of fs mount point */
++	char ch_fsdevice[GLOBAL_HDR_STRING_SZ];	/* 100  200 */
++		/* full pathname of char device containing fs */
++	char  ch_pad1[GLOBAL_HDR_STRING_SZ];		/* 100  300 */
++		/* in case another label is needed */
++	char ch_fstype[CONTENT_HDR_FSTYPE_SZ];	/*  10  310 */
++		/* from fsid.h */
++	uuid_t ch_fsid;					/*  10  320 */
++		/* file system uuid */
++	char  ch_pad2[GLOBAL_HDR_UUID_SZ];		/*  10  330 */
++		/* in case another id is needed */
++	char ch_pad3[8];				/*   8  338 */
++		/* padding */
++	int32_t ch_strategyid;				/*   4  33c */
++		/* ID of the content strategy used to produce this dump */
++	char ch_pad4[4];				/*   4  340 */
++		/* alignment */
++	char ch_specific[0xc0];			/*  c0  400 */
++		/* content strategy-specific info */
++};
++typedef struct content_hdr content_hdr_t;
++
++typedef uint64_t xfs_ino_t;
++struct startpt {
++	xfs_ino_t sp_ino;		/* first inode to dump */
++	off64_t sp_offset;	/* bytes to skip in file data fork */
++	int32_t sp_flags;
++	int32_t sp_pad1;
++};
++typedef struct startpt startpt_t;
++
++#define CONTENT_INODE_HDR_SZ  sizeofmember(content_hdr_t, ch_specific)
++struct content_inode_hdr {
++	int32_t cih_mediafiletype;			/*   4   4 */
++		/* dump media file type: see #defines below */
++	int32_t cih_dumpattr;				/*   4   8 */
++		/* dump attributes: see #defines below */
++	int32_t cih_level;				/*   4   c */
++		/* dump level */
++	char pad1[4];					/*   4  10 */
++		/* alignment */
++	time32_t cih_last_time;				/*   4  14 */
++		/* if an incremental, time of previous dump at a lesser level */
++	time32_t cih_resume_time;			/*   4  18 */
++		/* if a resumed dump, time of interrupted dump */
++	xfs_ino_t cih_rootino;				/*   8  20 */
++		/* root inode number */
++	uuid_t cih_last_id;				/*  10  30 */
++		/* if an incremental, uuid of prev dump */
++	uuid_t cih_resume_id;				/*  10  40 */
++		/* if a resumed dump, uuid of interrupted dump */
++	startpt_t cih_startpt;				/*  18  58 */
++		/* starting point of media file contents */
++	startpt_t cih_endpt;				/*  18  70 */
++		/* starting point of next stream */
++	uint64_t cih_inomap_hnkcnt;			/*   8  78 */
++
++	uint64_t cih_inomap_segcnt;			/*   8  80 */
++
++	uint64_t cih_inomap_dircnt;			/*   8  88 */
++
++	uint64_t cih_inomap_nondircnt;			/*   8  90 */
++
++	xfs_ino_t cih_inomap_firstino;			/*   8  98 */
++
++	xfs_ino_t cih_inomap_lastino;			/*   8  a0 */
++
++	uint64_t cih_inomap_datasz;			/*   8  a8 */
++		/* bytes of non-metadata dumped */
++	char cih_pad2[CONTENT_INODE_HDR_SZ - 0xa8];	/*  18  c0 */
++		/* padding */
++};
++typedef struct content_inode_hdr content_inode_hdr_t;
++// End of definitions from xfsdump
++
++int main(int argc, char *argv[]) {
++
++	if (argc < 3) {
++		fprintf(stderr, "Usage: %s <path/to/dumpfile> <fake rootino>\n", argv[0]);
++		exit(1);
++	}
++
++	const char *filepath = argv[1];
++	const uint64_t fake_root_ino = (uint64_t) strtol(argv[2], NULL, 10);
++
++	int fd = open(filepath, O_RDWR);
++	if (fd < 0) {
++		perror("open");
++		exit(1);
++	}
++	global_hdr_t *header = mmap(NULL, GLOBAL_HDR_SZ, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
++	if (header == MAP_FAILED) {
++		perror("mmap");
++		exit(1);
++	}
++
++	uint64_t *rootino_ptr =
++		&((content_inode_hdr_t *)
++			((content_hdr_t *)
++				((media_hdr_t *)
++					((drive_hdr_t *)
++						header->gh_upper
++					)->dh_upper
++				)->mh_upper
++			)->ch_specific
++		)->cih_rootino;
++	int32_t checksum = (int32_t) be32toh(header->gh_checksum);
++	uint64_t orig_rootino = be64toh(*rootino_ptr);
++
++	// Fake root inode number
++	*rootino_ptr = htobe64(fake_root_ino);
++
++	// Update checksum along with overwriting rootino.
++	uint64_t gap = orig_rootino - fake_root_ino;
++	checksum += (gap >> 32) + (gap & 0x00000000ffffffff);
++	header->gh_checksum = htobe32(checksum);
++
++	munmap(header, GLOBAL_HDR_SZ);
++	close(fd);
++}
+diff --git a/tests/xfs/554 b/tests/xfs/554
+new file mode 100755
+index 00000000..fcfaa699
+--- /dev/null
++++ b/tests/xfs/554
+@@ -0,0 +1,73 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022 Fujitsu Limited. All Rights Reserved.
++#
++# FS QA Test No. 554
++#
++# Create a filesystem which contains an inode with a lower number
++# than the root inode. Set the lower number to a dump file as the root inode
++# and ensure that 'xfsrestore -x' handles this wrong inode.
++#
++. ./common/preamble
++_begin_fstest auto quick dump
++
++# Import common functions.
++. ./common/dump
++
++_supported_fs xfs
++_require_xfs_io_command "falloc"
++_require_scratch
++_require_xfsrestore_xflag
++
++# A large stripe unit will put the root inode out quite far
++# due to alignment, leaving free blocks ahead of it.
++_scratch_mkfs_xfs -d sunit=1024,swidth=1024 > $seqres.full 2>&1
++
++# Mounting /without/ a stripe should allow inodes to be allocated
++# in lower free blocks, without the stripe alignment.
++_scratch_mount -o sunit=0,swidth=0
++
++root_inum=$(stat -c %i $SCRATCH_MNT)
++
++# Consume space after the root inode so that the blocks before
++# root look "close" for the next inode chunk allocation
++$XFS_IO_PROG -f -c "falloc 0 16m" $SCRATCH_MNT/fillfile
++
++# And make a bunch of inodes until we (hopefully) get one lower
++# than root, in a new inode chunk.
++echo "root_inum: $root_inum" >> $seqres.full
++for i in $(seq 0 4096) ; do
++	fname=$SCRATCH_MNT/$(printf "FILE_%03d" $i)
++	touch $fname
++	inum=$(stat -c "%i" $fname)
++	[[ $inum -lt $root_inum ]] && break
++done
++
++echo "created: $inum" >> $seqres.full
++
++[[ $inum -lt $root_inum ]] || _notrun "Could not set up test"
++
++# Now try a dump and restore. Cribbed from xfs/068
++_create_dumpdir_stress
++
++echo -n "Before: " >> $seqres.full
++_count_dumpdir_files | tee $tmp.before >> $seqres.full
++
++_do_dump_file
++
++# Set the wrong root inode number to the dump file
++# as problematic xfsdump used to do.
++$here/src/fake-dump-rootino $dump_file $inum
++
++_do_restore_file -x | \
++sed -e "s/rootino #${inum}/rootino #FAKENO/g" \
++	-e "s/# to ${root_inum}/# to ROOTNO/g" \
++	-e "/entries processed$/s/[0-9][0-9]*/NUM/g"
++
++echo -n "After: " >> $seqres.full
++_count_restoredir_files | tee $tmp.after >> $seqres.full
++diff -u $tmp.before $tmp.after
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/554.out b/tests/xfs/554.out
+new file mode 100644
+index 00000000..c5e8c4c5
+--- /dev/null
++++ b/tests/xfs/554.out
+@@ -0,0 +1,40 @@
++QA output created by 554
++Creating directory system to dump using fsstress.
++
++-----------------------------------------------
++fsstress : -f link=10 -f creat=10 -f mkdir=10 -f truncate=5 -f symlink=10
++-----------------------------------------------
++Dumping to file...
++xfsdump  -f DUMP_FILE -M stress_tape_media -L stress_554 SCRATCH_MNT
++xfsdump: using file dump (drive_simple) strategy
++xfsdump: level 0 dump of HOSTNAME:SCRATCH_MNT
++xfsdump: dump date: DATE
++xfsdump: session id: ID
++xfsdump: session label: "stress_554"
++xfsdump: ino map <PHASES>
++xfsdump: ino map construction complete
++xfsdump: estimated dump size: NUM bytes
++xfsdump: /var/xfsdump/inventory created
++xfsdump: creating dump session media file 0 (media 0, file 0)
++xfsdump: dumping ino map
++xfsdump: dumping directories
++xfsdump: dumping non-directory files
++xfsdump: ending media file
++xfsdump: media file size NUM bytes
++xfsdump: dump size (non-dir files) : NUM bytes
++xfsdump: dump complete: SECS seconds elapsed
++xfsdump: Dump Status: SUCCESS
++Restoring from file...
++xfsrestore  -x -f DUMP_FILE  -L stress_554 RESTORE_DIR
++xfsrestore: using file dump (drive_simple) strategy
++xfsrestore: using online session inventory
++xfsrestore: searching media for directory dump
++xfsrestore: examining media file 0
++xfsrestore: reading directories
++xfsrestore: found fake rootino #FAKENO, will fix.
++xfsrestore: fix root # to ROOTNO (bind mount?)
++xfsrestore: NUM directories and NUM entries processed
++xfsrestore: directory post-processing
++xfsrestore: restoring non-directory files
++xfsrestore: restore complete: SECS seconds elapsed
++xfsrestore: Restore Status: SUCCESS
+-- 
+2.37.3
 
-cp --reflink=always file1 file2
-
-<process 2 maps file2, which tries to map the same pmem "page" into
-file2's pagecache and trips over page->mapping already being set to
-file1's pagecache>
-
-But I dunno, I haven't had much time for digging into this one.
-
-> > ...but generic/649 still fails with things like:
-> > 
-> > [  571.224285] run fstests generic/649 at 2022-10-13 11:26:59
-> > [  571.796353] XFS (pmem0): Mounting V5 Filesystem
-> > [  571.799059] XFS (pmem0): Ending clean mount
-> > [  572.378624] ------------[ cut here ]------------
-> > [  572.379598] WARNING: CPU: 1 PID: 48538 at fs/dax.c:930 dax_writeback_mapping_range+0x2f1/0x600
-> > 
-> > Which comes from this warning in dax_writeback_one:
-> > 
-> > 	/*
-> > 	 * A page got tagged dirty in DAX mapping? Something is seriously
-> > 	 * wrong.
-> > 	 */
-> > 	if (WARN_ON(!xa_is_value(entry)))
-> > 		return -EIO;
-> > 
-> > Help?
-> 
-> Sorry, no time for this yet...
-> 
-> BTW, are these errors still occur when reflink is turned off? (dax on,
-> reflink off)
-
-Hmm I'll try that later today.
-
---D
-
-> 
-> --
-> Thanks,
-> Ruan.
-> 
-> > 
-> > --D
-> > 
-> > > > > > Modules linked in: xfs nft_chain_nat xt_REDIRECT nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_tcpudp ip_set_hash_ip ip_set_hash_net xt_set nft_compat ip_set_hash_mac ip_set nf_tables libcrc32c bfq nfnetlink pvpanic_mmio pvpanic nd_pmem dax_pmem nd_btt sch_fq_codel fuse configfs ip_tables x_tables overlay nfsv4 af_packet [last unloaded: scsi_d
-> > > > > > 
-> > > > > > CPU: 1 PID: 415317 Comm: fsstress Tainted: G        W          6.0.0-rc7-xfsx #rc7 727341edbd0773a36b78b09dab448fa1896eb3a5
-> > > > > > Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.15.0-1 04/01/2014
-> > > > > > RIP: 0010:dax_insert_entry+0x22d/0x320
-> > > > > > Code: e0 48 83 c4 20 5b 5d 41 5c 41 5d 41 5e 41 5f c3 48 8b 58 20 48 8d 53 01 e9 62 ff ff ff 48 8b 58 20 48 8d 53 01 e9 4d ff ff ff <0f> 0b e9 6d ff ff ff 31 f6 48 89 ef e8 72 74 12 00 eb a1 83 e0 02
-> > > > > > RSP: 0000:ffffc90004693b28 EFLAGS: 00010002
-> > > > > > RAX: ffffea0010a20480 RBX: 0000000000000001 RCX: 0000000000000001
-> > > > > > RDX: ffffea0000000000 RSI: 0000000000000033 RDI: ffffea0010a204c0
-> > > > > > RBP: ffffc90004693c08 R08: 0000000000000000 R09: 0000000000000000
-> > > > > > R10: ffff88800c226228 R11: 0000000000000001 R12: 0000000000000011
-> > > > > > R13: ffff88800c226228 R14: ffffc90004693e08 R15: 0000000000000000
-> > > > > > FS:  00007f3aad8db740(0000) GS:ffff88803ed00000(0000) knlGS:0000000000000000
-> > > > > > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > > > > > CR2: 00007f3aad8d1000 CR3: 0000000043104003 CR4: 00000000001706e0
-> > > > > > Call Trace:
-> > > > > >    <TASK>
-> > > > > >    dax_fault_iter+0x26e/0x670
-> > > > > >    dax_iomap_pte_fault+0x1ab/0x3e0
-> > > > > >    __xfs_filemap_fault+0x32f/0x5a0 [xfs c617487f99e14abfa5deb24e923415b927df3d4b]
-> > > > > >    __do_fault+0x30/0x1e0
-> > > > > >    do_fault+0x316/0x6d0
-> > > > > >    ? mmap_region+0x2a5/0x620
-> > > > > >    __handle_mm_fault+0x649/0x1250
-> > > > > >    handle_mm_fault+0xc1/0x220
-> > > > > >    do_user_addr_fault+0x1ac/0x610
-> > > > > >    ? _copy_to_user+0x63/0x80
-> > > > > >    exc_page_fault+0x63/0x130
-> > > > > >    asm_exc_page_fault+0x22/0x30
-> > > > > > RIP: 0033:0x7f3aada7f1ca
-> > > > > > Code: c5 fe 7f 07 c5 fe 7f 47 20 c5 fe 7f 47 40 c5 fe 7f 47 60 c5 f8 77 c3 66 0f 1f 84 00 00 00 00 00 40 0f b6 c6 48 89 d1 48 89 fa <f3> aa 48 89 d0 c5 f8 77 c3 66 66 2e 0f 1f 84 00 00 00 00 00 66 90
-> > > > > > RSP: 002b:00007ffe47afa688 EFLAGS: 00010206
-> > > > > > RAX: 000000000000002e RBX: 0000000000033000 RCX: 000000000000999c
-> > > > > > RDX: 00007f3aad8d1000 RSI: 000000000000002e RDI: 00007f3aad8d1000
-> > > > > > RBP: 0000558851e13240 R08: 0000000000000000 R09: 0000000000033000
-> > > > > > R10: 0000000000000008 R11: 0000000000000246 R12: 028f5c28f5c28f5c
-> > > > > > R13: 8f5c28f5c28f5c29 R14: 000000000000999c R15: 0000000000001c81
-> > > > > >    </TASK>
-> > > > > > ---[ end trace 0000000000000000 ]---
-> > > > > > XFS (pmem0): Unmounting Filesystem
-> > > > > > XFS (pmem1): EXPERIMENTAL online scrub feature in use. Use at your own risk!
-> > > > > > XFS (pmem1): *** REPAIR SUCCESS ino 0x80 type probe agno 0x0 inum 0x0 gen 0x0 flags 0x80000001 error 0
-> > > > > > XFS (pmem1): Unmounting Filesystem
-> > > > > > XFS (pmem1): EXPERIMENTAL Large extent counts feature in use. Use at your own risk!
-> > > > > > XFS (pmem1): Mounting V5 Filesystem
-> > > > > > XFS (pmem1): Ending clean mount
-> > > > > > XFS (pmem1): Unmounting Filesystem
-> > > > > 
-> > > > > Yup, that's the same as what I'm seeing.
-> > > > 
-> > > > Could you send me your kernel config (or other configs needed for the test)?
-> > > > I still cannot reproduce this warning when reflink is off, even without this
-> > > > drop patch.  Maybe something different in config file?
-> > > > 
-> > > > 
-> > > > PS: I specifically tried the two cases Darrick mentioned (on v6.0-rc6):
-> > > > 
-> > > > [root@f33 xfstests-dev]# mkfs.xfs -m reflink=0,rmapbt=1 /dev/pmem0.1 -f
-> > > > meta-data=/dev/pmem0.1           isize=512    agcount=4, agsize=257920 blks
-> > > >           =                       sectsz=4096  attr=2, projid32bit=1
-> > > >           =                       crc=1        finobt=1, sparse=1, rmapbt=1
-> > > >           =                       reflink=0    bigtime=1 inobtcount=1
-> > > > nrext64=0
-> > > > data     =                       bsize=4096   blocks=1031680, imaxpct=25
-> > > >           =                       sunit=0      swidth=0 blks
-> > > > naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> > > > log      =internal log           bsize=4096   blocks=16384, version=2
-> > > >           =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> > > > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> > > > [root@f33 xfstests-dev]# mkfs.xfs -m reflink=0,rmapbt=1 /dev/pmem0 -f
-> > > > meta-data=/dev/pmem0             isize=512    agcount=4, agsize=257920 blks
-> > > >           =                       sectsz=4096  attr=2, projid32bit=1
-> > > >           =                       crc=1        finobt=1, sparse=1, rmapbt=1
-> > > >           =                       reflink=0    bigtime=1 inobtcount=1
-> > > > nrext64=0
-> > > > data     =                       bsize=4096   blocks=1031680, imaxpct=25
-> > > >           =                       sunit=0      swidth=0 blks
-> > > > naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> > > > log      =internal log           bsize=4096   blocks=16384, version=2
-> > > >           =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> > > > realtime =none                   extsz=4096   blocks=0, rtextents=0
-> > > > [root@f33 xfstests-dev]# ./check xfs/013 xfs/517
-> > > > FSTYP         -- xfs (debug)
-> > > > PLATFORM      -- Linux/x86_64 f33 6.0.0-rc6 #84 SMP PREEMPT_DYNAMIC Wed Sep
-> > > > 28 18:27:33 CST 2022
-> > > > MKFS_OPTIONS  -- -f -m reflink=0,rmapbt=1 /dev/pmem0.1
-> > > > MOUNT_OPTIONS -- -o dax -o context=system_u:object_r:root_t:s0 /dev/pmem0.1
-> > > > /mnt/scratch
-> > > > 
-> > > > xfs/013 127s ...  166s
-> > > > xfs/517 66s ...  66s
-> > > > Ran: xfs/013 xfs/517
-> > > > Passed all 2 tests
-> > > 
-> > > I'm not sure what exactly is going weird here -- I tried it on my dev
-> > > machine just now and it passed, but the similarly configured testcloud
-> > > failed it last night.
-> > > 
-> > > FSTYP         -- xfs (debug)
-> > > PLATFORM      -- Linux/x86_64 ca-nfsdev6-mtr03 6.0.0-rc7-xfsx #rc7 SMP
-> > > PREEMPT_DYNAMIC Wed Sep 28 15:35:58 PDT 2022
-> > > MKFS_OPTIONS  -- -f -m reflink=0, -d daxinherit=1, /dev/pmem1
-> > > MOUNT_OPTIONS -- -o usrquota,grpquota,prjquota, /dev/pmem1 /opt
-> > > 
-> > > Note that I use libvirt to configure pmem in the VMs.  This is an
-> > > excerpt of the end of domain xml file:
-> > > 
-> > >      <memory model='nvdimm' access='shared'>
-> > >        <source>
-> > >          <path>/run/mtrdisk/g.mem</path>
-> > >        </source>
-> > >        <target>
-> > >          <size unit='KiB'>21104640</size>
-> > >          <node>0</node>
-> > >        </target>
-> > >        <address type='dimm' slot='0'/>
-> > >      </memory>
-> > >      <memory model='nvdimm' access='shared'>
-> > >        <source>
-> > >          <path>/run/mtrdisk/h.mem</path>
-> > >        </source>
-> > >        <target>
-> > >          <size unit='KiB'>21104640</size>
-> > >          <node>1</node>
-> > >        </target>
-> > >        <address type='dimm' slot='1'/>
-> > >      </memory>
-> > >    </devices>
-> > > </domain>
-> > > 
-> > > --D
-> > > 
