@@ -2,35 +2,35 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42D4FC4167D
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Oct 2022 10:57:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43D2DC4332F
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Oct 2022 10:58:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230391AbiJQK5Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 Oct 2022 06:57:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44282 "EHLO
+        id S229817AbiJQK6E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 Oct 2022 06:58:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44534 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230294AbiJQK5T (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2022 06:57:19 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63F115C9D7;
-        Mon, 17 Oct 2022 03:57:18 -0700 (PDT)
+        with ESMTP id S230434AbiJQK51 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2022 06:57:27 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52FBD6173B;
+        Mon, 17 Oct 2022 03:57:23 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id EBE35B81334;
-        Mon, 17 Oct 2022 10:57:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7D88C433D7;
-        Mon, 17 Oct 2022 10:57:13 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 72ABFB81334;
+        Mon, 17 Oct 2022 10:57:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3047BC43470;
+        Mon, 17 Oct 2022 10:57:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666004235;
-        bh=tc1RUm4guOoZTsO0VdPQH+XnxC1sMtsO6DtotD5Lcrw=;
+        s=k20201202; t=1666004240;
+        bh=8TWv5cnyxlkJnO3rzKxS18paTx4A0ODreD10US43z/E=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gj66TCQZlj4T/7xQvycsgXgldB2+C5GmsetaE08O+PZ5gAUkzWUHVOK98ouxsHzjZ
-         Xwn3L4ObaHc+uyEh38PjZ1hsqAQkfRWUm38K+ZVzH/fGc1crQtwwEsJ/LUHHWWuCfC
-         Xox25k4xYLMRSkUoLX817xk9RTmzLpGtojcr5CVTtzXPIS2neyPt/XBZk2Lo39TJbf
-         FXRhQ+XgeIlDn8J4I1zYcs2Z1D5vab4se0VXFyc0G5J3QvbJIl+hyGJxsgoGLw60sh
-         AGwSr4YdxFpiJLh44isPsZXOwH6Jz24lHMLAREbQxaoqFo0M0tri4NVdNnl4Rfu0QX
-         GacQr/afZRz7A==
+        b=g0AtauxQEC+zWtDfBEeehuzIvC524NwIGl56NtZcSFJFyz2LPfoRugKIVLTkjOpCA
+         mq1oZfuJyUL/JeybhMvf/pw0e8CyhwTVH+NaaQqewYqXgCfvcLmb6lARRimSqUOTh+
+         UIoFhvM/OenF85DGhvDWmzUhBTnW7/pgIxwGsuyM45IjgDxNExc9rBgPnQ2uW8qLnY
+         4+ISOJurDZtAT0aWPOQzLpiFzQz9ALQUNQnM+Kq1lFvD8pDDUHDa+DFgncHFxkWvt8
+         6OlNzeFnlT4mSS76FWZA8rvr+br72M+3mNQUUyHxGIPshQZwkGjRaXFuMrjxllWSFM
+         hTAME/ekB05Uw==
 From:   Jeff Layton <jlayton@kernel.org>
 To:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
         david@fromorbit.com, trondmy@hammerspace.com, neilb@suse.de,
@@ -40,10 +40,10 @@ To:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
 Cc:     linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: [PATCH v7 1/9] fs: uninline inode_query_iversion
-Date:   Mon, 17 Oct 2022 06:57:01 -0400
-Message-Id: <20221017105709.10830-2-jlayton@kernel.org>
+        linux-xfs@vger.kernel.org, Jeff Layton <jlayton@redhat.com>
+Subject: [PATCH v7 3/9] vfs: plumb i_version handling into struct kstat
+Date:   Mon, 17 Oct 2022 06:57:03 -0400
+Message-Id: <20221017105709.10830-4-jlayton@kernel.org>
 X-Mailer: git-send-email 2.37.3
 In-Reply-To: <20221017105709.10830-1-jlayton@kernel.org>
 References: <20221017105709.10830-1-jlayton@kernel.org>
@@ -53,113 +53,104 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+From: Jeff Layton <jlayton@redhat.com>
+
+The NFS server has a lot of special handling for different types of
+change attribute access, depending on the underlying filesystem. In
+most cases, it's doing a getattr anyway and then fetching that value
+after the fact.
+
+Rather that do that, add a new STATX_VERSION flag that is a kernel-only
+symbol (for now). If requested and getattr can implement it, it can fill
+out this field. For IS_I_VERSION inodes, add a generic implementation in
+vfs_getattr_nosec. Take care to mask STATX_VERSION off in requests from
+userland and in the result mask.
+
+Since not all filesystems can give the same guarantees of monotonicity,
+claim a STATX_ATTR_VERSION_MONOTONIC flag that filesystems can set to
+indicate that they offer an i_version value that can never go backward.
+
+Eventually if we decide to make the i_version available to userland, we
+can just designate a field for it in struct statx, and move the
+STATX_VERSION definition to the uapi header.
+
 Reviewed-by: NeilBrown <neilb@suse.de>
 Signed-off-by: Jeff Layton <jlayton@kernel.org>
 ---
- fs/libfs.c               | 36 ++++++++++++++++++++++++++++++++++++
- include/linux/iversion.h | 38 ++------------------------------------
- 2 files changed, 38 insertions(+), 36 deletions(-)
+ fs/stat.c            | 17 +++++++++++++++--
+ include/linux/stat.h |  9 +++++++++
+ 2 files changed, 24 insertions(+), 2 deletions(-)
 
-diff --git a/fs/libfs.c b/fs/libfs.c
-index 682d56345a1c..5ae81466a422 100644
---- a/fs/libfs.c
-+++ b/fs/libfs.c
-@@ -1566,3 +1566,39 @@ bool inode_maybe_inc_iversion(struct inode *inode, bool force)
- 	return true;
- }
- EXPORT_SYMBOL(inode_maybe_inc_iversion);
-+
-+/**
-+ * inode_query_iversion - read i_version for later use
-+ * @inode: inode from which i_version should be read
-+ *
-+ * Read the inode i_version counter. This should be used by callers that wish
-+ * to store the returned i_version for later comparison. This will guarantee
-+ * that a later query of the i_version will result in a different value if
-+ * anything has changed.
-+ *
-+ * In this implementation, we fetch the current value, set the QUERIED flag and
-+ * then try to swap it into place with a cmpxchg, if it wasn't already set. If
-+ * that fails, we try again with the newly fetched value from the cmpxchg.
-+ */
-+u64 inode_query_iversion(struct inode *inode)
-+{
-+	u64 cur, new;
-+
-+	cur = inode_peek_iversion_raw(inode);
-+	do {
-+		/* If flag is already set, then no need to swap */
-+		if (cur & I_VERSION_QUERIED) {
-+			/*
-+			 * This barrier (and the implicit barrier in the
-+			 * cmpxchg below) pairs with the barrier in
-+			 * inode_maybe_inc_iversion().
-+			 */
-+			smp_mb();
-+			break;
-+		}
-+
-+		new = cur | I_VERSION_QUERIED;
-+	} while (!atomic64_try_cmpxchg(&inode->i_version, &cur, new));
-+	return cur >> I_VERSION_QUERIED_SHIFT;
-+}
-+EXPORT_SYMBOL(inode_query_iversion);
-diff --git a/include/linux/iversion.h b/include/linux/iversion.h
-index e27bd4f55d84..6755d8b4f20b 100644
---- a/include/linux/iversion.h
-+++ b/include/linux/iversion.h
-@@ -234,42 +234,6 @@ inode_peek_iversion(const struct inode *inode)
- 	return inode_peek_iversion_raw(inode) >> I_VERSION_QUERIED_SHIFT;
- }
+diff --git a/fs/stat.c b/fs/stat.c
+index a7930d744483..e7f8cd4b24e1 100644
+--- a/fs/stat.c
++++ b/fs/stat.c
+@@ -17,6 +17,7 @@
+ #include <linux/syscalls.h>
+ #include <linux/pagemap.h>
+ #include <linux/compat.h>
++#include <linux/iversion.h>
  
--/**
-- * inode_query_iversion - read i_version for later use
-- * @inode: inode from which i_version should be read
-- *
-- * Read the inode i_version counter. This should be used by callers that wish
-- * to store the returned i_version for later comparison. This will guarantee
-- * that a later query of the i_version will result in a different value if
-- * anything has changed.
-- *
-- * In this implementation, we fetch the current value, set the QUERIED flag and
-- * then try to swap it into place with a cmpxchg, if it wasn't already set. If
-- * that fails, we try again with the newly fetched value from the cmpxchg.
-- */
--static inline u64
--inode_query_iversion(struct inode *inode)
--{
--	u64 cur, new;
--
--	cur = inode_peek_iversion_raw(inode);
--	do {
--		/* If flag is already set, then no need to swap */
--		if (cur & I_VERSION_QUERIED) {
--			/*
--			 * This barrier (and the implicit barrier in the
--			 * cmpxchg below) pairs with the barrier in
--			 * inode_maybe_inc_iversion().
--			 */
--			smp_mb();
--			break;
--		}
--
--		new = cur | I_VERSION_QUERIED;
--	} while (!atomic64_try_cmpxchg(&inode->i_version, &cur, new));
--	return cur >> I_VERSION_QUERIED_SHIFT;
--}
--
- /*
-  * For filesystems without any sort of change attribute, the best we can
-  * do is fake one up from the ctime:
-@@ -283,6 +247,8 @@ static inline u64 time_to_chattr(struct timespec64 *t)
- 	return chattr;
- }
+ #include <linux/uaccess.h>
+ #include <asm/unistd.h>
+@@ -118,6 +119,11 @@ int vfs_getattr_nosec(const struct path *path, struct kstat *stat,
+ 	stat->attributes_mask |= (STATX_ATTR_AUTOMOUNT |
+ 				  STATX_ATTR_DAX);
  
-+u64 inode_query_iversion(struct inode *inode);
++	if ((request_mask & STATX_VERSION) && IS_I_VERSION(inode)) {
++		stat->result_mask |= STATX_VERSION;
++		stat->version = inode_query_iversion(inode);
++	}
 +
- /**
-  * inode_eq_iversion_raw - check whether the raw i_version counter has changed
-  * @inode: inode to check
+ 	mnt_userns = mnt_user_ns(path->mnt);
+ 	if (inode->i_op->getattr)
+ 		return inode->i_op->getattr(mnt_userns, path, stat,
+@@ -587,9 +593,11 @@ cp_statx(const struct kstat *stat, struct statx __user *buffer)
+ 
+ 	memset(&tmp, 0, sizeof(tmp));
+ 
+-	tmp.stx_mask = stat->result_mask;
++	/* STATX_VERSION is kernel-only for now */
++	tmp.stx_mask = stat->result_mask & ~STATX_VERSION;
+ 	tmp.stx_blksize = stat->blksize;
+-	tmp.stx_attributes = stat->attributes;
++	/* STATX_ATTR_VERSION_MONOTONIC is kernel-only for now */
++	tmp.stx_attributes = stat->attributes & ~STATX_ATTR_VERSION_MONOTONIC;
+ 	tmp.stx_nlink = stat->nlink;
+ 	tmp.stx_uid = from_kuid_munged(current_user_ns(), stat->uid);
+ 	tmp.stx_gid = from_kgid_munged(current_user_ns(), stat->gid);
+@@ -628,6 +636,11 @@ int do_statx(int dfd, struct filename *filename, unsigned int flags,
+ 	if ((flags & AT_STATX_SYNC_TYPE) == AT_STATX_SYNC_TYPE)
+ 		return -EINVAL;
+ 
++	/* STATX_VERSION is kernel-only for now. Ignore requests
++	 * from userland.
++	 */
++	mask &= ~STATX_VERSION;
++
+ 	error = vfs_statx(dfd, filename, flags, &stat, mask);
+ 	if (error)
+ 		return error;
+diff --git a/include/linux/stat.h b/include/linux/stat.h
+index ff277ced50e9..4e9428d86a3a 100644
+--- a/include/linux/stat.h
++++ b/include/linux/stat.h
+@@ -52,6 +52,15 @@ struct kstat {
+ 	u64		mnt_id;
+ 	u32		dio_mem_align;
+ 	u32		dio_offset_align;
++	u64		version;
+ };
+ 
++/* These definitions are internal to the kernel for now. Mainly used by nfsd. */
++
++/* mask values */
++#define STATX_VERSION		0x40000000U	/* Want/got stx_change_attr */
++
++/* file attribute values */
++#define STATX_ATTR_VERSION_MONOTONIC	0x8000000000000000ULL /* version monotonically increases */
++
+ #endif
 -- 
 2.37.3
 
