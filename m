@@ -2,163 +2,200 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9E95C433FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Oct 2022 22:14:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 190E7C4332F
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Oct 2022 22:15:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230210AbiJQWOv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 Oct 2022 18:14:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46908 "EHLO
+        id S230212AbiJQWPL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 Oct 2022 18:15:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48332 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230179AbiJQWOp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2022 18:14:45 -0400
-Received: from mail105.syd.optusnet.com.au (mail105.syd.optusnet.com.au [211.29.132.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6F5D11A223;
-        Mon, 17 Oct 2022 15:14:42 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au [49.181.106.210])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id E29F0110211B;
-        Tue, 18 Oct 2022 09:14:35 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1okYNV-003Do8-W5; Tue, 18 Oct 2022 09:14:34 +1100
-Date:   Tue, 18 Oct 2022 09:14:33 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
-        trondmy@hammerspace.com, neilb@suse.de, viro@zeniv.linux.org.uk,
-        zohar@linux.ibm.com, xiubli@redhat.com, chuck.lever@oracle.com,
-        lczerner@redhat.com, jack@suse.cz, bfields@fieldses.org,
-        brauner@kernel.org, fweimer@redhat.com,
-        linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-xfs@vger.kernel.org, Jeff Layton <jlayton@redhat.com>
-Subject: Re: [RFC PATCH v7 9/9] vfs: expose STATX_VERSION to userland
-Message-ID: <20221017221433.GT3600936@dread.disaster.area>
-References: <20221017105709.10830-1-jlayton@kernel.org>
- <20221017105709.10830-10-jlayton@kernel.org>
+        with ESMTP id S229989AbiJQWO4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2022 18:14:56 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1579A22B25
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Oct 2022 15:14:50 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 807736120F
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Oct 2022 22:14:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3DB1C4347C;
+        Mon, 17 Oct 2022 22:14:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1666044888;
+        bh=+778O6x1Le1bEmlRrsDA1bcwH1WyBB1q6fxHI14GgRA=;
+        h=Date:From:To:Cc:Subject:From;
+        b=rD+74nJ6Ycanpa2uQdzo5d95msFFXS/ctMKbEagXYEy1EndE1juBEljpK5aUCrufK
+         f/Y84zv1RU28xtGSz/XnHbfXiGucIWSOJj+qiq0w93YUo9zX4WhZParZYiegOFPHGv
+         0VBcSEeTWwEl/BnFKIJcIuoVBPkPZKHakbydjsyrvRe+WWHl8aC3mAv8TlecbxcUsU
+         Jci+3SrAp2sjLEgrT1b3t6nIXdL/aPK9V0BxLP9LAMaa/GJX9i03e/3DoF4h1Mc3y4
+         6RhLdiNAqa8tqJrpEVxQEu+XZjKy52gr4Ijo4s/JCqWnR0O/JJnwM+TIFJqdqsGGOn
+         g3yVv6Vavc/Bg==
+Date:   Mon, 17 Oct 2022 15:14:48 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs: avoid a UAF when log intent item recovery fails
+Message-ID: <Y03T2BMdS4membDl@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221017105709.10830-10-jlayton@kernel.org>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.4 cv=VuxAv86n c=1 sm=1 tr=0 ts=634dd3d0
-        a=j6JUzzrSC7wlfFge/rmVbg==:117 a=j6JUzzrSC7wlfFge/rmVbg==:17
-        a=kj9zAlcOel0A:10 a=Qawa6l4ZSaYA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
-        a=7-415B0cAAAA:8 a=-cKyABg0kL-CqEoa6E0A:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 17, 2022 at 06:57:09AM -0400, Jeff Layton wrote:
-> From: Jeff Layton <jlayton@redhat.com>
-> 
-> Claim one of the spare fields in struct statx to hold a 64-bit inode
-> version attribute. When userland requests STATX_VERSION, copy the
-> value from the kstat struct there, and stop masking off
-> STATX_ATTR_VERSION_MONOTONIC.
+From: Darrick J. Wong <djwong@kernel.org>
 
-Can we please make the name more sepcific than "version"? It's way
-too generic and - we already have userspace facing "version" fields
-for inodes that refer to the on-disk format version exposed in
-various UAPIs. It's common for UAPI structures used for file
-operations to have a "version" field that refers to the *UAPI
-structure version* rather than file metadata or data being retrieved
-from the file in question.
+KASAN reported a UAF bug when I was running xfs/235:
 
-The need for an explanatory comment like this:
+ BUG: KASAN: use-after-free in xlog_recover_process_intents+0xa77/0xae0 [xfs]
+ Read of size 8 at addr ffff88804391b360 by task mount/5680
 
-> +	__u64	stx_version; /* Inode change attribute */
+ CPU: 2 PID: 5680 Comm: mount Not tainted 6.0.0-xfsx #6.0.0 77e7b52a4943a975441e5ac90a5ad7748b7867f6
+ Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.15.0-1 04/01/2014
+ Call Trace:
+  <TASK>
+  dump_stack_lvl+0x34/0x44
+  print_report.cold+0x2cc/0x682
+  kasan_report+0xa3/0x120
+  xlog_recover_process_intents+0xa77/0xae0 [xfs fb841c7180aad3f8359438576e27867f5795667e]
+  xlog_recover_finish+0x7d/0x970 [xfs fb841c7180aad3f8359438576e27867f5795667e]
+  xfs_log_mount_finish+0x2d7/0x5d0 [xfs fb841c7180aad3f8359438576e27867f5795667e]
+  xfs_mountfs+0x11d4/0x1d10 [xfs fb841c7180aad3f8359438576e27867f5795667e]
+  xfs_fs_fill_super+0x13d5/0x1a80 [xfs fb841c7180aad3f8359438576e27867f5795667e]
+  get_tree_bdev+0x3da/0x6e0
+  vfs_get_tree+0x7d/0x240
+  path_mount+0xdd3/0x17d0
+  __x64_sys_mount+0x1fa/0x270
+  do_syscall_64+0x2b/0x80
+  entry_SYSCALL_64_after_hwframe+0x46/0xb0
+ RIP: 0033:0x7ff5bc069eae
+ Code: 48 8b 0d 85 1f 0f 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 52 1f 0f 00 f7 d8 64 89 01 48
+ RSP: 002b:00007ffe433fd448 EFLAGS: 00000246 ORIG_RAX: 00000000000000a5
+ RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007ff5bc069eae
+ RDX: 00005575d7213290 RSI: 00005575d72132d0 RDI: 00005575d72132b0
+ RBP: 00005575d7212fd0 R08: 00005575d7213230 R09: 00005575d7213fe0
+ R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+ R13: 00005575d7213290 R14: 00005575d72132b0 R15: 00005575d7212fd0
+  </TASK>
 
-demonstrates it is badly named. If you want it known as an inode
-change attribute, then don't name the variable "version". In
-reality, it really needs to be an opaque cookie, not something
-applications need to decode directly to make sense of.
+ Allocated by task 5680:
+  kasan_save_stack+0x1e/0x40
+  __kasan_slab_alloc+0x66/0x80
+  kmem_cache_alloc+0x152/0x320
+  xfs_rui_init+0x17a/0x1b0 [xfs]
+  xlog_recover_rui_commit_pass2+0xb9/0x2e0 [xfs]
+  xlog_recover_items_pass2+0xe9/0x220 [xfs]
+  xlog_recover_commit_trans+0x673/0x900 [xfs]
+  xlog_recovery_process_trans+0xbe/0x130 [xfs]
+  xlog_recover_process_data+0x103/0x2a0 [xfs]
+  xlog_do_recovery_pass+0x548/0xc60 [xfs]
+  xlog_do_log_recovery+0x62/0xc0 [xfs]
+  xlog_do_recover+0x73/0x480 [xfs]
+  xlog_recover+0x229/0x460 [xfs]
+  xfs_log_mount+0x284/0x640 [xfs]
+  xfs_mountfs+0xf8b/0x1d10 [xfs]
+  xfs_fs_fill_super+0x13d5/0x1a80 [xfs]
+  get_tree_bdev+0x3da/0x6e0
+  vfs_get_tree+0x7d/0x240
+  path_mount+0xdd3/0x17d0
+  __x64_sys_mount+0x1fa/0x270
+  do_syscall_64+0x2b/0x80
+  entry_SYSCALL_64_after_hwframe+0x46/0xb0
 
-> Update the test-statx sample program to output the change attr and
-> MountId.
-> 
-> Reviewed-by: NeilBrown <neilb@suse.de>
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> ---
->  fs/stat.c                 | 12 +++---------
->  include/linux/stat.h      |  9 ---------
->  include/uapi/linux/stat.h |  6 ++++--
->  samples/vfs/test-statx.c  |  8 ++++++--
->  4 files changed, 13 insertions(+), 22 deletions(-)
-> 
-> Posting this as an RFC as we're still trying to sort out what semantics
-> we want to present to userland. In particular, this patch leaves the
-> problem of crash resilience in to userland applications on filesystems
-> that don't report as MONOTONIC.
+ Freed by task 5680:
+  kasan_save_stack+0x1e/0x40
+  kasan_set_track+0x21/0x30
+  kasan_set_free_info+0x20/0x30
+  ____kasan_slab_free+0x144/0x1b0
+  slab_free_freelist_hook+0xab/0x180
+  kmem_cache_free+0x1f1/0x410
+  xfs_rud_item_release+0x33/0x80 [xfs]
+  xfs_trans_free_items+0xc3/0x220 [xfs]
+  xfs_trans_cancel+0x1fa/0x590 [xfs]
+  xfs_rui_item_recover+0x913/0xd60 [xfs]
+  xlog_recover_process_intents+0x24e/0xae0 [xfs]
+  xlog_recover_finish+0x7d/0x970 [xfs]
+  xfs_log_mount_finish+0x2d7/0x5d0 [xfs]
+  xfs_mountfs+0x11d4/0x1d10 [xfs]
+  xfs_fs_fill_super+0x13d5/0x1a80 [xfs]
+  get_tree_bdev+0x3da/0x6e0
+  vfs_get_tree+0x7d/0x240
+  path_mount+0xdd3/0x17d0
+  __x64_sys_mount+0x1fa/0x270
+  do_syscall_64+0x2b/0x80
+  entry_SYSCALL_64_after_hwframe+0x46/0xb0
 
-Firstly, if userspace wants to use the change attribute, they are
-going to have to detect crashes themselves anyway because no fs in
-the kernel can set the MONOTONIC flag right now and it may be years
-before kernels/filesystems actually support it in production
-systems.
+ The buggy address belongs to the object at ffff88804391b300
+  which belongs to the cache xfs_rui_item of size 688
+ The buggy address is located 96 bytes inside of
+  688-byte region [ffff88804391b300, ffff88804391b5b0)
 
-But more fundamentally, I think this monotonic increase guarantee is
-completely broken by the presence of snapshots and snapshot
-rollbacks. If you change something, then a while later decide it
-broke (e.g. a production system upgrade went awry) and you roll back
-the filesystem to the pre-upgrade snapshot, then all the change
-counters and m/ctimes are guaranteed to go backwards because they
-will revert to the snapshot values. Maybe the filesystem can bump
-some internal counter for the snapshot when the revert happens, but
-until that is implemented, filesystems that support snapshots and
-rollback can't assert MONOTONIC.
+ The buggy address belongs to the physical page:
+ page:ffffea00010e4600 refcount:1 mapcount:0 mapping:0000000000000000 index:0xffff888043919320 pfn:0x43918
+ head:ffffea00010e4600 order:2 compound_mapcount:0 compound_pincount:0
+ flags: 0x4fff80000010200(slab|head|node=1|zone=1|lastcpupid=0xfff)
+ raw: 04fff80000010200 0000000000000000 dead000000000122 ffff88807f0eadc0
+ raw: ffff888043919320 0000000080140010 00000001ffffffff 0000000000000000
+ page dumped because: kasan: bad access detected
 
-And that's worse for other filesystems, because if you put them on
-dm-thinp and roll them back, they are completely unaware of the fact
-that a rollback happened and there's *nothing* the filesystem can do
-about this. Indeed, snapshots are suppose to be done on clean
-filesystems so snapshot images don't require journal recovery, so
-any crash detection put in the filesystem recovery code to guarantee
-MONOTONIC behaviour will be soundly defeated by such block device
-snapshot rollbacks.
+ Memory state around the buggy address:
+  ffff88804391b200: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+  ffff88804391b280: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ >ffff88804391b300: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                                                        ^
+  ffff88804391b380: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+  ffff88804391b400: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ==================================================================
 
-Hence I think MONOTONIC is completely unworkable for most existing
-filesystems because snapshots and rollbacks completely break the
-underlying assumption MONOTONIC relies on: that filesystem
-modifications always move forwards in both the time and modification
-order dimensions....
+The test fuzzes an rmap btree block and starts writer threads to induce
+a filesystem shutdown on the corrupt block.  When the filesystem is
+remounted, recovery will try to replay the committed rmap intent item,
+but the corruption problem causes the recovery transaction to fail.
+Cancelling the transaction frees the RUD, which frees the RUI that we
+recovered.
 
-This means that monotonicity is probably not acheivable by any
-existing filesystem and so should not ever be mentioned in the UAPI.
-I think userspace semantics can be simplified down to "if the change
-cookie does not match exactly, caches are invalid" combined with
-"applications are responsible for detecting temporal discontiguities
-in filesystem presentation at start up (e.g. after a crash, unclean
-shutdown, restoration from backup, snapshot rollback, etc) for
-persistent cache invalidation purposes"....
+When we return to xlog_recover_process_intents, @lip is now a dangling
+pointer, and we cannot use it to find the iop_recover method for the
+tracepoint.  Hence we must store the item ops before calling
+->iop_recover if we want to give it to the tracepoint so that the trace
+data will tell us exactly which intent item failed.
 
-> Trond is of the opinion that monotonicity is a hard requirement, and
-> that we should not allow filesystems that can't provide that quality to
-> report STATX_VERSION at all.  His rationale is that one of the main uses
-> for this is for backup applications, and for those a counter that could
-> go backward is worse than useless.
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/xfs_log_recover.c |   10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-From the perspective of a backup program doing incremental backups,
-an inode with a change counter that has a different value to the
-current backup inventory means the file contains different
-information than what the current backup inventory holds. Again,
-snapshots, rollbacks, etc.
-
-Therefore, regardless of whether the change counter has gone
-forwards or backwards, the backup program needs to back up this
-current version of the file in this backup because it is different
-to the inventory copy.  Hence if the backup program fails to back it
-up, it will not be creating an exact backup of the user's data at
-the point in time the backup is run...
-
-Hence I don't see that MONOTONIC is a requirement for backup
-programs - they really do have to be able to handle filesystems that
-have modifications that move backwards in time as well as forwards...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 17e923b9c5fa..322eb2ee6c55 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2552,6 +2552,8 @@ xlog_recover_process_intents(
+ 	for (lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
+ 	     lip != NULL;
+ 	     lip = xfs_trans_ail_cursor_next(ailp, &cur)) {
++		const struct xfs_item_ops	*ops;
++
+ 		if (!xlog_item_is_intent(lip))
+ 			break;
+ 
+@@ -2567,13 +2569,17 @@ xlog_recover_process_intents(
+ 		 * deferred ops, you /must/ attach them to the capture list in
+ 		 * the recover routine or else those subsequent intents will be
+ 		 * replayed in the wrong order!
++		 *
++		 * The recovery function can free the log item, so we must not
++		 * access lip after it returns.
+ 		 */
+ 		spin_unlock(&ailp->ail_lock);
+-		error = lip->li_ops->iop_recover(lip, &capture_list);
++		ops = lip->li_ops;
++		error = ops->iop_recover(lip, &capture_list);
+ 		spin_lock(&ailp->ail_lock);
+ 		if (error) {
+ 			trace_xlog_intent_recovery_failed(log->l_mp, error,
+-					lip->li_ops->iop_recover);
++					ops->iop_recover);
+ 			break;
+ 		}
+ 	}
