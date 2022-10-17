@@ -2,97 +2,134 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66D80C433FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Oct 2022 02:53:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7F1BC43219
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Oct 2022 08:31:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231224AbiJQCx0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 16 Oct 2022 22:53:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52476 "EHLO
+        id S230219AbiJQIbW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 Oct 2022 04:31:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231480AbiJQCxZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 16 Oct 2022 22:53:25 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CBC647B80;
-        Sun, 16 Oct 2022 19:53:23 -0700 (PDT)
-Received: from kwepemi500024.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4MrLzM5gq7zVjDc;
-        Mon, 17 Oct 2022 10:48:47 +0800 (CST)
-Received: from huawei.com (10.175.103.91) by kwepemi500024.china.huawei.com
- (7.221.188.100) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Mon, 17 Oct
- 2022 10:53:20 +0800
-From:   Zeng Heng <zengheng4@huawei.com>
-To:     <bfoster@redhat.com>, <cmaiolino@redhat.com>, <djwong@kernel.org>
-CC:     <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <liwei391@huawei.com>
-Subject: [PATCH] xfs: fix memory leak in xfs_errortag_init
-Date:   Mon, 17 Oct 2022 10:51:55 +0800
-Message-ID: <20221017025155.1810277-1-zengheng4@huawei.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S230213AbiJQIbU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2022 04:31:20 -0400
+Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78B9F209AB
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Oct 2022 01:31:17 -0700 (PDT)
+Received: by mail-lf1-x132.google.com with SMTP id g7so11532798lfv.5
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Oct 2022 01:31:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=8KsRspEgB/gOfpXeMit48jsmBa9u2K7sMr+wCGZ90pU=;
+        b=iXrGdd8Ce/D/Ym1P/AKmDjhkCRodIz0sVHqhCXCbzz/70S2w/xiwhFMs2ZE6LzAOaY
+         kerpA8DKLp8h2EYJv/OamQ96cNwCdVwhlMsEt2I/Fx1TXldfIxx8y8EdnjfTih1j5QQY
+         mcontV8hQeGs5ML1x0iwjYx4oVH0ravWrBbKL8nhqpsejuYizWkrN/Z0xocIgE9V/nqA
+         /ibMQ5BBiN6XVdPz/bWMDfcoSg3yAyVOTjHlVwPDjsYICQVyEKqxZha6l63hzWMq89fQ
+         ikDz03AXZbI54WZYRpIVuo0JGyUqwrFqZ1lSI9F+0vgKA6aqXG/1CN3roD6DwyasNLJq
+         0f1A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=8KsRspEgB/gOfpXeMit48jsmBa9u2K7sMr+wCGZ90pU=;
+        b=CcePrsaCAaOnOEslfNEA8zN8ohNH+151SoOInkiS9sZSWWjSgb2y8J7mydAPONX9TL
+         6+QBTUBGGDnVkx/8J5xymK4DtRitqg9xbirk5h4bWyKS9HRVUO+hxDuYHv0J2hAKmsRR
+         uRaRrUwssKOY7/WeDTwSFrSqToRTHwQHE9Aq5ViJ8sN13+mm0xroYVzwymoJd2Bk2xrc
+         SKuJt8a6Dr/w78VN36HTqgYtepPvJkCKWmcUEJ7o/sh64KK63I1AyFFiHk2/0rLc5HS3
+         JkCjeUlUhw8OFkEjAUoaWD0RRCEYUk85QhDtRKfmrtaBf/Wzk7Av60+DaKCaZAB8MKLM
+         bBYw==
+X-Gm-Message-State: ACrzQf2HMDVhZiGgQ7ggGUqyper1vmusMjD35+lqveKv3oiAgOxL1239
+        ctyAb3Es8z5iH55GOjfdna/cn0owgJbzXeaYB8mg8A==
+X-Google-Smtp-Source: AMsMyM4vtxZKfG1BBKlWVvUdtQPv/C1LzAh0hWbLTBbJjcAgFk5XHPxnZIEqc8SnpuZmZ0z0x8oPZB51ly6T8M4BxPI=
+X-Received: by 2002:a05:6512:358c:b0:4a2:9c55:c63c with SMTP id
+ m12-20020a056512358c00b004a29c55c63cmr3765865lfr.598.1665995475449; Mon, 17
+ Oct 2022 01:31:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.103.91]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- kwepemi500024.china.huawei.com (7.221.188.100)
-X-CFilter-Loop: Reflected
+References: <20221014084837.1787196-1-hrkanabar@gmail.com> <20221014091503.GA13389@twin.jikos.cz>
+In-Reply-To: <20221014091503.GA13389@twin.jikos.cz>
+From:   Dmitry Vyukov <dvyukov@google.com>
+Date:   Mon, 17 Oct 2022 10:31:03 +0200
+Message-ID: <CACT4Y+as3SA6C_QFLSeb5JYY30O1oGAh-FVMLCS2NrNahycSoQ@mail.gmail.com>
+Subject: Re: [PATCH RFC 0/7] fs: Debug config option to disable filesystem
+ checksum verification for fuzzing
+To:     dsterba@suse.cz
+Cc:     Hrutvik Kanabar <hrkanabar@gmail.com>,
+        Hrutvik Kanabar <hrutvik@google.com>,
+        Marco Elver <elver@google.com>,
+        Aleksandr Nogikh <nogikh@google.com>,
+        kasan-dev@googlegroups.com,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Theodore Ts'o" <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        linux-ext4@vger.kernel.org, Chris Mason <clm@fb.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>, linux-btrfs@vger.kernel.org,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        linux-f2fs-devel@lists.sourceforge.net,
+        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        Namjae Jeon <linkinjeon@kernel.org>,
+        Sungjong Seo <sj1557.seo@samsung.com>,
+        Anton Altaparmakov <anton@tuxera.com>,
+        linux-ntfs-dev@lists.sourceforge.net
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-When `xfs_sysfs_init` returns failed, `mp->m_errortag` needs to free.
-Otherwise kmemleak would report memory leak after mounting xfs image:
+On Fri, 14 Oct 2022 at 11:15, David Sterba <dsterba@suse.cz> wrote:
+>
+> On Fri, Oct 14, 2022 at 08:48:30AM +0000, Hrutvik Kanabar wrote:
+> > From: Hrutvik Kanabar <hrutvik@google.com>
+> >
+> > Fuzzing is a proven technique to discover exploitable bugs in the Linux
+> > kernel. But fuzzing filesystems is tricky: highly structured disk images
+> > use redundant checksums to verify data integrity. Therefore,
+> > randomly-mutated images are quickly rejected as corrupt, testing only
+> > error-handling code effectively.
+> >
+> > The Janus [1] and Hydra [2] projects probe filesystem code deeply by
+> > correcting checksums after mutation. But their ad-hoc
+> > checksum-correcting code supports only a few filesystems, and it is
+> > difficult to support new ones - requiring significant duplication of
+> > filesystem logic which must also be kept in sync with upstream changes.
+> > Corrected checksums cannot be guaranteed to be valid, and reusing this
+> > code across different fuzzing frameworks is non-trivial.
+> >
+> > Instead, this RFC suggests a config option:
+> > `DISABLE_FS_CSUM_VERIFICATION`. When it is enabled, all filesystems
+> > should bypass redundant checksum verification, proceeding as if
+> > checksums are valid. Setting of checksums should be unaffected. Mutated
+> > images will no longer be rejected due to invalid checksums, allowing
+> > testing of deeper code paths. Though some filesystems implement their
+> > own flags to disable some checksums, this option should instead disable
+> > all checksums for all filesystems uniformly. Critically, any bugs found
+> > remain reproducible on production systems: redundant checksums in
+> > mutated images can be fixed up to satisfy verification.
+> >
+> > The patches below suggest a potential implementation for a few
+> > filesystems, though we may have missed some checksums. The option
+> > requires `DEBUG_KERNEL` and is not intended for production systems.
+> >
+> > The first user of the option would be syzbot. We ran preliminary local
+> > syzkaller tests to compare behaviour with and without these patches.
+> > With the patches, we found a 19% increase in coverage, as well as many
+> > new crash types and increases in the total number of crashes:
+>
+> I think the build-time option inflexible, but I see the point when
+> you're testing several filesystems that it's one place to set up the
+> environment. Alternatively I suggest to add sysfs knob available in
+> debuging builds to enable/disable checksum verification per filesystem.
 
-unreferenced object 0xffff888101364900 (size 192):
-  comm "mount", pid 13099, jiffies 4294915218 (age 335.207s)
-  hex dump (first 32 bytes):
-    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-  backtrace:
-    [<00000000f08ad25c>] __kmalloc+0x41/0x1b0
-    [<00000000dca9aeb6>] kmem_alloc+0xfd/0x430
-    [<0000000040361882>] xfs_errortag_init+0x20/0x110
-    [<00000000b384a0f6>] xfs_mountfs+0x6ea/0x1a30
-    [<000000003774395d>] xfs_fs_fill_super+0xe10/0x1a80
-    [<000000009cf07b6c>] get_tree_bdev+0x3e7/0x700
-    [<00000000046b5426>] vfs_get_tree+0x8e/0x2e0
-    [<00000000952ec082>] path_mount+0xf8c/0x1990
-    [<00000000beb1f838>] do_mount+0xee/0x110
-    [<000000000e9c41bb>] __x64_sys_mount+0x14b/0x1f0
-    [<00000000f7bb938e>] do_syscall_64+0x3b/0x90
-    [<000000003fcd67a9>] entry_SYSCALL_64_after_hwframe+0x63/0xcd
+Hi David,
 
-Fixes: c68401011522 ("xfs: expose errortag knobs via sysfs")
-Signed-off-by: Zeng Heng <zengheng4@huawei.com>
----
- fs/xfs/xfs_error.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+What usage scenarios do you have in mind for runtime changing of this option?
+I see this option intended only for very narrow use cases which
+require a specially built kernel in a number of other ways (lots of
+which are not tunable at runtime, e.g. debugging configs).
 
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index 296faa41d81d..f417320ef9c0 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -234,13 +234,18 @@ int
- xfs_errortag_init(
- 	struct xfs_mount	*mp)
- {
-+	int ret;
-+
- 	mp->m_errortag = kmem_zalloc(sizeof(unsigned int) * XFS_ERRTAG_MAX,
- 			KM_MAYFAIL);
- 	if (!mp->m_errortag)
- 		return -ENOMEM;
- 
--	return xfs_sysfs_init(&mp->m_errortag_kobj, &xfs_errortag_ktype,
--			       &mp->m_kobj, "errortag");
-+	ret = xfs_sysfs_init(&mp->m_errortag_kobj, &xfs_errortag_ktype,
-+				&mp->m_kobj, "errortag");
-+	if (ret)
-+		kmem_free(mp->m_errortag);
-+	return ret;
- }
- 
- void
--- 
-2.25.1
-
+> As this may not fit to other filesystems I don't suggest to do that for
+> all but I am willing to do that for btrfs, with eventual extension to
+> the config option you propose. The increased fuzzing coverage would be
+> good to have.
