@@ -2,35 +2,35 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE9E9C4167B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 601A0C38A2B
 	for <linux-xfs@archiver.kernel.org>; Mon, 17 Oct 2022 10:58:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231340AbiJQK66 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 Oct 2022 06:58:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44638 "EHLO
+        id S231334AbiJQK65 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 Oct 2022 06:58:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230464AbiJQK5a (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2022 06:57:30 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A770D61708;
-        Mon, 17 Oct 2022 03:57:28 -0700 (PDT)
+        with ESMTP id S230349AbiJQK52 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2022 06:57:28 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CB0061B0E;
+        Mon, 17 Oct 2022 03:57:24 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6E0D86105A;
-        Mon, 17 Oct 2022 10:57:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB448C433D6;
-        Mon, 17 Oct 2022 10:57:24 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A3FCEB812AC;
+        Mon, 17 Oct 2022 10:57:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7664FC433C1;
+        Mon, 17 Oct 2022 10:57:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666004246;
-        bh=LBaEFSh5DOeyzDGsOyxhMwQpssm5JK6u2HESg5ybNII=;
+        s=k20201202; t=1666004242;
+        bh=pekK2QX2KgEQVYMZRaffG2V7y/r770DCCIDCn7vh39M=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GcdT6b7mb+oJp742oGeuVIMOfw8oEZ0enQ18wg8Ay/lNdbFfxNrtDJeG5LwPho5dD
-         mjrEEtQNE5tTDsZ3XJBuv/1zzQ2QeaSuOG/cCyWcsUY7eJIEeSErX+E+vAIFJQsC55
-         N0s4+1Hq8cIO6nsNFLSxEB+742ItXHY3Kedw1srG/T4sW8IkT4hPE77/++e78jtlwu
-         /K5Vs5K3g2tUySh+SylFTQGTzwZWsWsW8g3y1rdekQXDShurEUkxEr/O+y+NwuXVZ7
-         V0SmxQbcJ+ulid2bOfa6XXx920Zn48b/9WwRFyMGnJFHPxLoEn+tBpw6zmF+eqKvTC
-         tpSNnThfThorQ==
+        b=T3Ky4C9q3L69subjakIcY7GefggWpp4am8aahclTk9o5/rR2lV9HA6L8t1/sxry5+
+         ZJ0se7Xs9NyKsNFZdGHo+8LrlfexywLrAEeOiRCTHHngmUUmRF/C4MR3ldr/WslKGc
+         vO72WVCpmN1rI4m6TTd8nCdu6UF7R+/nmoDnhSBMcNwGGOTwgZVwa2Xx45WJoHuP08
+         j0aCxtYUFeg4TIFVHmzBxwwCzwe8q5M6sIbD4+2lWzYdKXwESDj/UsxKMxrd2AZrcS
+         F9KuS57VqwxPG0acFwpX4R9uC1YwgBlkg5Eu0+Qdzjm5s18tz2x0+AsK3SJ5PtGkpA
+         mXF0mCfXaMaAQ==
 From:   Jeff Layton <jlayton@kernel.org>
 To:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
         david@fromorbit.com, trondmy@hammerspace.com, neilb@suse.de,
@@ -41,9 +41,9 @@ Cc:     linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
         linux-xfs@vger.kernel.org
-Subject: [PATCH v7 6/9] nfsd: move nfsd4_change_attribute to nfsfh.c
-Date:   Mon, 17 Oct 2022 06:57:06 -0400
-Message-Id: <20221017105709.10830-7-jlayton@kernel.org>
+Subject: [PATCH v7 4/9] nfs: report the inode version in getattr if requested
+Date:   Mon, 17 Oct 2022 06:57:04 -0400
+Message-Id: <20221017105709.10830-5-jlayton@kernel.org>
 X-Mailer: git-send-email 2.37.3
 In-Reply-To: <20221017105709.10830-1-jlayton@kernel.org>
 References: <20221017105709.10830-1-jlayton@kernel.org>
@@ -53,91 +53,71 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is a pretty big function for inlining. Move it to being
-non-inlined.
+Allow NFS to report the i_version in getattr requests. Since the cost to
+fetch it is relatively cheap, do it unconditionally and just set the
+flag if it looks like it's valid. Also, conditionally enable the
+MONOTONIC flag when the server reports its change attr type as such.
 
 Reviewed-by: NeilBrown <neilb@suse.de>
 Signed-off-by: Jeff Layton <jlayton@kernel.org>
 ---
- fs/nfsd/nfsfh.c | 27 +++++++++++++++++++++++++++
- fs/nfsd/nfsfh.h | 29 +----------------------------
- 2 files changed, 28 insertions(+), 28 deletions(-)
+ fs/nfs/inode.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/fs/nfsd/nfsfh.c b/fs/nfsd/nfsfh.c
-index d73434200df9..7030d9209903 100644
---- a/fs/nfsd/nfsfh.c
-+++ b/fs/nfsd/nfsfh.c
-@@ -748,3 +748,30 @@ enum fsid_source fsid_source(const struct svc_fh *fhp)
- 		return FSIDSOURCE_UUID;
- 	return FSIDSOURCE_DEV;
- }
-+
-+/*
-+ * We could use i_version alone as the change attribute.  However,
-+ * i_version can go backwards after a reboot.  On its own that doesn't
-+ * necessarily cause a problem, but if i_version goes backwards and then
-+ * is incremented again it could reuse a value that was previously used
-+ * before boot, and a client who queried the two values might
-+ * incorrectly assume nothing changed.
-+ *
-+ * By using both ctime and the i_version counter we guarantee that as
-+ * long as time doesn't go backwards we never reuse an old value.
-+ */
-+u64 nfsd4_change_attribute(struct kstat *stat, struct inode *inode)
-+{
-+	if (inode->i_sb->s_export_op->fetch_iversion)
-+		return inode->i_sb->s_export_op->fetch_iversion(inode);
-+	else if (IS_I_VERSION(inode)) {
-+		u64 chattr;
-+
-+		chattr =  stat->ctime.tv_sec;
-+		chattr <<= 30;
-+		chattr += stat->ctime.tv_nsec;
-+		chattr += inode_query_iversion(inode);
-+		return chattr;
-+	} else
-+		return time_to_chattr(&stat->ctime);
-+}
-diff --git a/fs/nfsd/nfsfh.h b/fs/nfsd/nfsfh.h
-index c3ae6414fc5c..4c223a7a91d4 100644
---- a/fs/nfsd/nfsfh.h
-+++ b/fs/nfsd/nfsfh.h
-@@ -291,34 +291,7 @@ static inline void fh_clear_pre_post_attrs(struct svc_fh *fhp)
- 	fhp->fh_pre_saved = false;
+diff --git a/fs/nfs/inode.c b/fs/nfs/inode.c
+index bea7c005119c..7ed1b4c9260a 100644
+--- a/fs/nfs/inode.c
++++ b/fs/nfs/inode.c
+@@ -830,6 +830,8 @@ static u32 nfs_get_valid_attrmask(struct inode *inode)
+ 		reply_mask |= STATX_UID | STATX_GID;
+ 	if (!(cache_validity & NFS_INO_INVALID_BLOCKS))
+ 		reply_mask |= STATX_BLOCKS;
++	if (!(cache_validity & NFS_INO_INVALID_CHANGE))
++		reply_mask |= STATX_VERSION;
+ 	return reply_mask;
  }
  
--/*
-- * We could use i_version alone as the change attribute.  However,
-- * i_version can go backwards after a reboot.  On its own that doesn't
-- * necessarily cause a problem, but if i_version goes backwards and then
-- * is incremented again it could reuse a value that was previously used
-- * before boot, and a client who queried the two values might
-- * incorrectly assume nothing changed.
-- *
-- * By using both ctime and the i_version counter we guarantee that as
-- * long as time doesn't go backwards we never reuse an old value.
-- */
--static inline u64 nfsd4_change_attribute(struct kstat *stat,
--					 struct inode *inode)
--{
--	if (inode->i_sb->s_export_op->fetch_iversion)
--		return inode->i_sb->s_export_op->fetch_iversion(inode);
--	else if (IS_I_VERSION(inode)) {
--		u64 chattr;
--
--		chattr =  stat->ctime.tv_sec;
--		chattr <<= 30;
--		chattr += stat->ctime.tv_nsec;
--		chattr += inode_query_iversion(inode);
--		return chattr;
--	} else
--		return time_to_chattr(&stat->ctime);
--}
--
-+u64 nfsd4_change_attribute(struct kstat *stat, struct inode *inode);
- extern void fh_fill_pre_attrs(struct svc_fh *fhp);
- extern void fh_fill_post_attrs(struct svc_fh *fhp);
- extern void fh_fill_both_attrs(struct svc_fh *fhp);
+@@ -848,7 +850,8 @@ int nfs_getattr(struct user_namespace *mnt_userns, const struct path *path,
+ 
+ 	request_mask &= STATX_TYPE | STATX_MODE | STATX_NLINK | STATX_UID |
+ 			STATX_GID | STATX_ATIME | STATX_MTIME | STATX_CTIME |
+-			STATX_INO | STATX_SIZE | STATX_BLOCKS;
++			STATX_INO | STATX_SIZE | STATX_BLOCKS | STATX_BTIME |
++			STATX_VERSION;
+ 
+ 	if ((query_flags & AT_STATX_DONT_SYNC) && !force_sync) {
+ 		if (readdirplus_enabled)
+@@ -856,8 +859,8 @@ int nfs_getattr(struct user_namespace *mnt_userns, const struct path *path,
+ 		goto out_no_revalidate;
+ 	}
+ 
+-	/* Flush out writes to the server in order to update c/mtime.  */
+-	if ((request_mask & (STATX_CTIME | STATX_MTIME)) &&
++	/* Flush out writes to the server in order to update c/mtime/version.  */
++	if ((request_mask & (STATX_CTIME | STATX_MTIME | STATX_VERSION)) &&
+ 	    S_ISREG(inode->i_mode))
+ 		filemap_write_and_wait(inode->i_mapping);
+ 
+@@ -877,7 +880,7 @@ int nfs_getattr(struct user_namespace *mnt_userns, const struct path *path,
+ 	/* Is the user requesting attributes that might need revalidation? */
+ 	if (!(request_mask & (STATX_MODE|STATX_NLINK|STATX_ATIME|STATX_CTIME|
+ 					STATX_MTIME|STATX_UID|STATX_GID|
+-					STATX_SIZE|STATX_BLOCKS)))
++					STATX_SIZE|STATX_BLOCKS|STATX_VERSION)))
+ 		goto out_no_revalidate;
+ 
+ 	/* Check whether the cached attributes are stale */
+@@ -915,6 +918,10 @@ int nfs_getattr(struct user_namespace *mnt_userns, const struct path *path,
+ 
+ 	generic_fillattr(&init_user_ns, inode, stat);
+ 	stat->ino = nfs_compat_user_ino64(NFS_FILEID(inode));
++	stat->version = inode_peek_iversion_raw(inode);
++	stat->attributes_mask |= STATX_ATTR_VERSION_MONOTONIC;
++	if (server->change_attr_type != NFS4_CHANGE_TYPE_IS_UNDEFINED)
++		stat->attributes |= STATX_ATTR_VERSION_MONOTONIC;
+ 	if (S_ISDIR(inode->i_mode))
+ 		stat->blksize = NFS_SERVER(inode)->dtsize;
+ out:
 -- 
 2.37.3
 
