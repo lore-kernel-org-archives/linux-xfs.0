@@ -2,97 +2,97 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F6BFC4332F
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Oct 2022 01:57:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66D80C433FE
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Oct 2022 02:53:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229968AbiJQB5O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 16 Oct 2022 21:57:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50740 "EHLO
+        id S231224AbiJQCx0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 16 Oct 2022 22:53:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229648AbiJQB5N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 16 Oct 2022 21:57:13 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C00CB4151F;
-        Sun, 16 Oct 2022 18:57:11 -0700 (PDT)
-Received: from kwepemi500012.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4MrKkN4fmjzmV9f;
-        Mon, 17 Oct 2022 09:52:28 +0800 (CST)
-Received: from huawei.com (10.175.101.6) by kwepemi500012.china.huawei.com
- (7.221.188.12) with Microsoft SMTP Server (version=TLS1_2,
+        with ESMTP id S231480AbiJQCxZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 16 Oct 2022 22:53:25 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CBC647B80;
+        Sun, 16 Oct 2022 19:53:23 -0700 (PDT)
+Received: from kwepemi500024.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4MrLzM5gq7zVjDc;
+        Mon, 17 Oct 2022 10:48:47 +0800 (CST)
+Received: from huawei.com (10.175.103.91) by kwepemi500024.china.huawei.com
+ (7.221.188.100) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Mon, 17 Oct
- 2022 09:57:08 +0800
-From:   Li Zetao <lizetao1@huawei.com>
-To:     <djwong@kernel.org>, <dchinner@redhat.com>, <bfoster@redhat.com>
-CC:     <lizetao1@huawei.com>, <linux-xfs@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH] xfs: Fix unreferenced object reported by kmemleak in xfs_sysfs_init()
-Date:   Mon, 17 Oct 2022 11:00:29 +0800
-Message-ID: <20221017030029.3876512-1-lizetao1@huawei.com>
-X-Mailer: git-send-email 2.31.1
+ 2022 10:53:20 +0800
+From:   Zeng Heng <zengheng4@huawei.com>
+To:     <bfoster@redhat.com>, <cmaiolino@redhat.com>, <djwong@kernel.org>
+CC:     <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <liwei391@huawei.com>
+Subject: [PATCH] xfs: fix memory leak in xfs_errortag_init
+Date:   Mon, 17 Oct 2022 10:51:55 +0800
+Message-ID: <20221017025155.1810277-1-zengheng4@huawei.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.101.6]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- kwepemi500012.china.huawei.com (7.221.188.12)
+X-Originating-IP: [10.175.103.91]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ kwepemi500024.china.huawei.com (7.221.188.100)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-kmemleak reported a sequence of memory leaks, and one of them indicated we
-failed to free a pointer:
-  comm "mount", pid 19610, jiffies 4297086464 (age 60.635s)
-    hex dump (first 8 bytes):
-      73 64 61 00 81 88 ff ff                          sda.....
-    backtrace:
-      [<00000000d77f3e04>] kstrdup_const+0x46/0x70
-      [<00000000e51fa804>] kobject_set_name_vargs+0x2f/0xb0
-      [<00000000247cd595>] kobject_init_and_add+0xb0/0x120
-      [<00000000f9139aaf>] xfs_mountfs+0x367/0xfc0
-      [<00000000250d3caf>] xfs_fs_fill_super+0xa16/0xdc0
-      [<000000008d873d38>] get_tree_bdev+0x256/0x390
-      [<000000004881f3fa>] vfs_get_tree+0x41/0xf0
-      [<000000008291ab52>] path_mount+0x9b3/0xdd0
-      [<0000000022ba8f2d>] __x64_sys_mount+0x190/0x1d0
+When `xfs_sysfs_init` returns failed, `mp->m_errortag` needs to free.
+Otherwise kmemleak would report memory leak after mounting xfs image:
 
-As mentioned in kobject_init_and_add() comment, if this function
-returns an error, kobject_put() must be called to properly clean up
-the memory associated with the object. Apparently, xfs_sysfs_init()
-does not follow such a requirement. When kobject_init_and_add()
-returns an error, the space of kobj->kobject.name alloced by
-kstrdup_const() is unfree, which will cause the above stack.
+unreferenced object 0xffff888101364900 (size 192):
+  comm "mount", pid 13099, jiffies 4294915218 (age 335.207s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<00000000f08ad25c>] __kmalloc+0x41/0x1b0
+    [<00000000dca9aeb6>] kmem_alloc+0xfd/0x430
+    [<0000000040361882>] xfs_errortag_init+0x20/0x110
+    [<00000000b384a0f6>] xfs_mountfs+0x6ea/0x1a30
+    [<000000003774395d>] xfs_fs_fill_super+0xe10/0x1a80
+    [<000000009cf07b6c>] get_tree_bdev+0x3e7/0x700
+    [<00000000046b5426>] vfs_get_tree+0x8e/0x2e0
+    [<00000000952ec082>] path_mount+0xf8c/0x1990
+    [<00000000beb1f838>] do_mount+0xee/0x110
+    [<000000000e9c41bb>] __x64_sys_mount+0x14b/0x1f0
+    [<00000000f7bb938e>] do_syscall_64+0x3b/0x90
+    [<000000003fcd67a9>] entry_SYSCALL_64_after_hwframe+0x63/0xcd
 
-Fix it by adding kobject_put() when kobject_init_and_add returns an
-error.
-
-Fixes: a31b1d3d89e4 ("xfs: add xfs_mount sysfs kobject")
-Signed-off-by: Li Zetao <lizetao1@huawei.com>
+Fixes: c68401011522 ("xfs: expose errortag knobs via sysfs")
+Signed-off-by: Zeng Heng <zengheng4@huawei.com>
 ---
- fs/xfs/xfs_sysfs.h | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_error.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_sysfs.h b/fs/xfs/xfs_sysfs.h
-index 43585850f154..513095e353a5 100644
---- a/fs/xfs/xfs_sysfs.h
-+++ b/fs/xfs/xfs_sysfs.h
-@@ -33,10 +33,15 @@ xfs_sysfs_init(
- 	const char		*name)
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index 296faa41d81d..f417320ef9c0 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -234,13 +234,18 @@ int
+ xfs_errortag_init(
+ 	struct xfs_mount	*mp)
  {
- 	struct kobject		*parent;
-+	int err;
- 
- 	parent = parent_kobj ? &parent_kobj->kobject : NULL;
- 	init_completion(&kobj->complete);
--	return kobject_init_and_add(&kobj->kobject, ktype, parent, "%s", name);
-+	err = kobject_init_and_add(&kobj->kobject, ktype, parent, "%s", name);
-+	if (err)
-+		kobject_put(&kobj->kobject);
++	int ret;
 +
-+	return err;
+ 	mp->m_errortag = kmem_zalloc(sizeof(unsigned int) * XFS_ERRTAG_MAX,
+ 			KM_MAYFAIL);
+ 	if (!mp->m_errortag)
+ 		return -ENOMEM;
+ 
+-	return xfs_sysfs_init(&mp->m_errortag_kobj, &xfs_errortag_ktype,
+-			       &mp->m_kobj, "errortag");
++	ret = xfs_sysfs_init(&mp->m_errortag_kobj, &xfs_errortag_ktype,
++				&mp->m_kobj, "errortag");
++	if (ret)
++		kmem_free(mp->m_errortag);
++	return ret;
  }
  
- static inline void
+ void
 -- 
-2.31.1
+2.25.1
 
