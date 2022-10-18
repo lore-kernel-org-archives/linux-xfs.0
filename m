@@ -2,47 +2,81 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23A79C433FE
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Oct 2022 06:12:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5A0CC4167E
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Oct 2022 07:08:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230084AbiJRGMl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Oct 2022 02:12:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44972 "EHLO
+        id S230044AbiJRHIB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Oct 2022 03:08:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54566 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229801AbiJRGMl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Oct 2022 02:12:41 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB11B4D15D
-        for <linux-xfs@vger.kernel.org>; Mon, 17 Oct 2022 23:12:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=XfzImadJHLLNlDPv0xzrXp+PhV
-        P7/dBO6SK6v3TbzTe6hY0/vVSgjg3XhLDk7J/kkgGxDnH/dM5i515yDZUNzxF8OaF5iICy9agy5jr
-        o5PbXIP4vBRGEqkBKkQPH4OltLdI22rKJ0xVasNWNO3odTJvXPhEYJfRstyNH/NBeCpRh5qpHIuYL
-        la6qchV9uL4Q39vnmC8qTa0ENTOfzsyILKAGTxZHByOc1ZeZ+OWdtMVnaT8CpvsHXwSsw5DD80aii
-        7c7v91WbAVVkxCfBk4Z1ZOrln5RC/mOgQciYZaLtwDKCU/+EKymLn2iJFR9FNfYJF/vZTQotic/2x
-        CHhC0DFg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1okfqB-003Dif-1T; Tue, 18 Oct 2022 06:12:39 +0000
-Date:   Mon, 17 Oct 2022 23:12:39 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: avoid a UAF when log intent item recovery fails
-Message-ID: <Y05D16QnaKbTY9/s@infradead.org>
-References: <Y03T2BMdS4membDl@magnolia>
+        with ESMTP id S229554AbiJRHIA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Oct 2022 03:08:00 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E3866BD5F;
+        Tue, 18 Oct 2022 00:08:00 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A10B46147B;
+        Tue, 18 Oct 2022 07:07:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA899C433C1;
+        Tue, 18 Oct 2022 07:07:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1666076879;
+        bh=Fj9VdPapWV4U5Y1IbjLNZkEft7nk+xSTK0xPlMf5QSE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=uqiiypT/X4Mi6+oIg09YWnzQ1pcaPbHl6AtT7QUP0efAmdx4C87r8NdT83fk3rk24
+         7bhbddb7xXglJZbhIRye0aeEQA1B3zTiEXb8shIkDsb9dgPF9QfJagb4uKzlbn2X/1
+         jmLH4Kl4MQp3+ThgwiSTe+NkLViqj5d0DlvKmnEEeSHxJjcDMAG5HyZRVoOFRXhTdG
+         GC54LvENZti2NWaPoQ+rQJB9o7ZIBVD6mtNZwm6Xe/7D644PscfKsxdBBwLhf+ovk7
+         dNDVuNxvRRFFEn51EOVnjJRh4uu+6SmuV+fUKqILHpF1eJKH6sfMfWpqIDijKPZncb
+         e6FkMYGLds4hw==
+Date:   Tue, 18 Oct 2022 00:07:57 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Stephen Rothwell <sfr@canb.auug.org.au>
+Cc:     linux-next@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-api@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        Keith Busch <kbusch@kernel.org>, linux-fscrypt@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>
+Subject: Re: [PATCH v5 0/8] make statx() return DIO alignment information
+Message-ID: <Y05QzQM2ed8sOJxC@sol.localdomain>
+References: <20220827065851.135710-1-ebiggers@kernel.org>
+ <YxfE8zjqkT6Zn+Vn@quark>
+ <Yx6DNIorJ86IWk5q@quark>
+ <20220913063025.4815466c@canb.auug.org.au>
+ <20221018155524.5fc4e421@canb.auug.org.au>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y03T2BMdS4membDl@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20221018155524.5fc4e421@canb.auug.org.au>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Looks good:
+On Tue, Oct 18, 2022 at 03:55:24PM +1100, Stephen Rothwell wrote:
+> Hi Eric,
+> 
+> On Tue, 13 Sep 2022 06:30:25 +1000 Stephen Rothwell <sfr@canb.auug.org.au> wrote:
+> > 
+> > On Sun, 11 Sep 2022 19:54:12 -0500 Eric Biggers <ebiggers@kernel.org> wrote:
+> > >
+> > > Stephen, can you add my git branch for this patchset to linux-next?
+> > > 
+> > > URL: https://git.kernel.org/pub/scm/linux/kernel/git/ebiggers/linux.git
+> > > Branch: statx-dioalign
+> > > 
+> > > This is targeting the 6.1 merge window with a pull request to Linus.  
+> > 
+> > Added from today.
+> 
+> I notice that this branch has been removed.  Are you finished with it
+> (i.e. should I remove it from linux-next)?
+> 
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Yes, I think so.  This patchset has been merged upstream.  Any more patches
+related to STATX_DIOALIGN should go in through the VFS or filesystem-specific
+trees.
 
+- Eric
