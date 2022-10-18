@@ -2,99 +2,47 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6387C4167D
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Oct 2022 04:55:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23A79C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Oct 2022 06:12:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229845AbiJREzs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Oct 2022 00:55:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58418 "EHLO
+        id S230084AbiJRGMl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Oct 2022 02:12:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44972 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229926AbiJREzh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Oct 2022 00:55:37 -0400
-Received: from gandalf.ozlabs.org (mail.ozlabs.org [IPv6:2404:9400:2221:ea00::3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E35986525F;
-        Mon, 17 Oct 2022 21:55:31 -0700 (PDT)
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4Ms1l168BWz4xFy;
-        Tue, 18 Oct 2022 15:55:25 +1100 (AEDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
-        s=201702; t=1666068926;
-        bh=CRrHBDsNdrBb28hzgQhlrZd26ZKphtFKLFjDwU/ABaM=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=KoC6hrmzAs9HidJRRxkubIdSZ+CjOXbnqlKmiHN7K59O4vyWF8oo7vyiGEjyg7cjM
-         j9OfGRfnR4pdnCe9OvqaTMWdp3Nh9N4O6NDTIi7tQDrRHuJpfWswZRBizWuWkpLraD
-         T8/8zHB9obIaN+1OkMvUam8/bJvmm4Vp0YGFRSIS2chyfJObRcOgUXMm7IWZW+JV31
-         d6yXY9OxqMxwPepR6E2dTpRBFoM3s+6EXJS9ypIHF0f+/gUr1Qihyah9UO9arldiSe
-         bBQ8e3h6lXBihlsh6XhoNxGpldR6cG2UsZSpxg4Yv2h1xearu5CHhfU0i9qSeV47x7
-         sfeLbfH8NQ8eg==
-Date:   Tue, 18 Oct 2022 15:55:24 +1100
-From:   Stephen Rothwell <sfr@canb.auug.org.au>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     linux-next@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        Keith Busch <kbusch@kernel.org>, linux-fscrypt@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>
-Subject: Re: [PATCH v5 0/8] make statx() return DIO alignment information
-Message-ID: <20221018155524.5fc4e421@canb.auug.org.au>
-In-Reply-To: <20220913063025.4815466c@canb.auug.org.au>
-References: <20220827065851.135710-1-ebiggers@kernel.org>
-        <YxfE8zjqkT6Zn+Vn@quark>
-        <Yx6DNIorJ86IWk5q@quark>
-        <20220913063025.4815466c@canb.auug.org.au>
+        with ESMTP id S229801AbiJRGMl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Oct 2022 02:12:41 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB11B4D15D
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Oct 2022 23:12:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=XfzImadJHLLNlDPv0xzrXp+PhV
+        P7/dBO6SK6v3TbzTe6hY0/vVSgjg3XhLDk7J/kkgGxDnH/dM5i515yDZUNzxF8OaF5iICy9agy5jr
+        o5PbXIP4vBRGEqkBKkQPH4OltLdI22rKJ0xVasNWNO3odTJvXPhEYJfRstyNH/NBeCpRh5qpHIuYL
+        la6qchV9uL4Q39vnmC8qTa0ENTOfzsyILKAGTxZHByOc1ZeZ+OWdtMVnaT8CpvsHXwSsw5DD80aii
+        7c7v91WbAVVkxCfBk4Z1ZOrln5RC/mOgQciYZaLtwDKCU/+EKymLn2iJFR9FNfYJF/vZTQotic/2x
+        CHhC0DFg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1okfqB-003Dif-1T; Tue, 18 Oct 2022 06:12:39 +0000
+Date:   Mon, 17 Oct 2022 23:12:39 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: avoid a UAF when log intent item recovery fails
+Message-ID: <Y05D16QnaKbTY9/s@infradead.org>
+References: <Y03T2BMdS4membDl@magnolia>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/Ta.nZamROACWUZnFj4i7MWy";
- protocol="application/pgp-signature"; micalg=pgp-sha256
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Y03T2BMdS4membDl@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---Sig_/Ta.nZamROACWUZnFj4i7MWy
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Looks good:
 
-Hi Eric,
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-On Tue, 13 Sep 2022 06:30:25 +1000 Stephen Rothwell <sfr@canb.auug.org.au> =
-wrote:
->=20
-> On Sun, 11 Sep 2022 19:54:12 -0500 Eric Biggers <ebiggers@kernel.org> wro=
-te:
-> >
-> > Stephen, can you add my git branch for this patchset to linux-next?
-> >=20
-> > URL: https://git.kernel.org/pub/scm/linux/kernel/git/ebiggers/linux.git
-> > Branch: statx-dioalign
-> >=20
-> > This is targeting the 6.1 merge window with a pull request to Linus. =20
->=20
-> Added from today.
-
-I notice that this branch has been removed.  Are you finished with it
-(i.e. should I remove it from linux-next)?
-
---=20
-Cheers,
-Stephen Rothwell
-
---Sig_/Ta.nZamROACWUZnFj4i7MWy
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmNOMbwACgkQAVBC80lX
-0GxBPwf+NK66Affcx+uOwICiv+ovQ21QIlPm9IJ5LvIoFwf8a6p0CBBV0D87Lz3O
-gTyOmmIln6foey0EDLUonmx0R/g/NmDIqlmlTokCTOS3W06Rg+Q/ura6Xy2e16yX
-jkvcXxu3VueNdLN/MgKin6PjnB77DyhjPo1xuyXxHE39/XO0h8vTMY9OL44Zg8E9
-ZEnV4lTb/mUKb1DU0SiFrM2hcFfCG09gEnUGsA7P/dQnwrHHkD+vWPDsX5yWHX3P
-bKtAFYG/Z17S8nIzUbQG+A19u19ajcQasGjV8jDLEERPDX3bOg91nR33ahR4rfQb
-T/Xadfe0rtdAKEqBLhNafzUpmGIqxg==
-=DyWQ
------END PGP SIGNATURE-----
-
---Sig_/Ta.nZamROACWUZnFj4i7MWy--
