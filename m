@@ -2,165 +2,99 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86773C4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Oct 2022 02:46:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6387C4167D
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Oct 2022 04:55:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229818AbiJRCqO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 Oct 2022 22:46:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46814 "EHLO
+        id S229845AbiJREzs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Oct 2022 00:55:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229787AbiJRCqN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Oct 2022 22:46:13 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C29FB874
-        for <linux-xfs@vger.kernel.org>; Mon, 17 Oct 2022 19:46:09 -0700 (PDT)
-Received: from dggpemm500024.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Mrysk2S9QzHv43;
-        Tue, 18 Oct 2022 10:46:02 +0800 (CST)
-Received: from dggpemm500014.china.huawei.com (7.185.36.153) by
- dggpemm500024.china.huawei.com (7.185.36.203) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 18 Oct 2022 10:45:55 +0800
-Received: from [10.174.177.211] (10.174.177.211) by
- dggpemm500014.china.huawei.com (7.185.36.153) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 18 Oct 2022 10:45:55 +0800
-Message-ID: <663ca1f7-01f4-14f4-242c-2e4b9038f7e2@huawei.com>
-Date:   Tue, 18 Oct 2022 10:45:54 +0800
+        with ESMTP id S229926AbiJREzh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Oct 2022 00:55:37 -0400
+Received: from gandalf.ozlabs.org (mail.ozlabs.org [IPv6:2404:9400:2221:ea00::3])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E35986525F;
+        Mon, 17 Oct 2022 21:55:31 -0700 (PDT)
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 4Ms1l168BWz4xFy;
+        Tue, 18 Oct 2022 15:55:25 +1100 (AEDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
+        s=201702; t=1666068926;
+        bh=CRrHBDsNdrBb28hzgQhlrZd26ZKphtFKLFjDwU/ABaM=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=KoC6hrmzAs9HidJRRxkubIdSZ+CjOXbnqlKmiHN7K59O4vyWF8oo7vyiGEjyg7cjM
+         j9OfGRfnR4pdnCe9OvqaTMWdp3Nh9N4O6NDTIi7tQDrRHuJpfWswZRBizWuWkpLraD
+         T8/8zHB9obIaN+1OkMvUam8/bJvmm4Vp0YGFRSIS2chyfJObRcOgUXMm7IWZW+JV31
+         d6yXY9OxqMxwPepR6E2dTpRBFoM3s+6EXJS9ypIHF0f+/gUr1Qihyah9UO9arldiSe
+         bBQ8e3h6lXBihlsh6XhoNxGpldR6cG2UsZSpxg4Yv2h1xearu5CHhfU0i9qSeV47x7
+         sfeLbfH8NQ8eg==
+Date:   Tue, 18 Oct 2022 15:55:24 +1100
+From:   Stephen Rothwell <sfr@canb.auug.org.au>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-next@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-api@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        Keith Busch <kbusch@kernel.org>, linux-fscrypt@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>
+Subject: Re: [PATCH v5 0/8] make statx() return DIO alignment information
+Message-ID: <20221018155524.5fc4e421@canb.auug.org.au>
+In-Reply-To: <20220913063025.4815466c@canb.auug.org.au>
+References: <20220827065851.135710-1-ebiggers@kernel.org>
+        <YxfE8zjqkT6Zn+Vn@quark>
+        <Yx6DNIorJ86IWk5q@quark>
+        <20220913063025.4815466c@canb.auug.org.au>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.0.3
-Subject: Re: [PATCH] mkfs: acquire flock before modifying the device
- superblock
-To:     "Darrick J. Wong" <djwong@kernel.org>
-CC:     <cem@kernel.org>, <linux-xfs@vger.kernel.org>,
-        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>
-References: <b359751c-2397-bcd1-9065-583afb2f93ef@huawei.com>
- <Y0mCauklwsDwImi8@magnolia>
-From:   Wu Guanghao <wuguanghao3@huawei.com>
-In-Reply-To: <Y0mCauklwsDwImi8@magnolia>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.177.211]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- dggpemm500014.china.huawei.com (7.185.36.153)
-X-CFilter-Loop: Reflected
+Content-Type: multipart/signed; boundary="Sig_/Ta.nZamROACWUZnFj4i7MWy";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+--Sig_/Ta.nZamROACWUZnFj4i7MWy
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+Hi Eric,
 
-在 2022/10/14 23:38, Darrick J. Wong 写道:
-> On Fri, Oct 14, 2022 at 04:41:35PM +0800, Wu Guanghao wrote:
->> We noticed that systemd has an issue about symlink unreliable caused by
->> formatting filesystem and systemd operating on same device.
->> Issue Link: https://github.com/systemd/systemd/issues/23746
->>
->> According to systemd doc, a BSD flock needs to be acquired before
->> formatting the device.
->> Related Link: https://systemd.io/BLOCK_DEVICE_LOCKING/
-> 
-> TLDR: udevd wants fs utilities to use advisory file locking to
-> coordinate (re)writes to block devices to avoid collisions between mkfs
-> and all the udev magic.
-> 
-> Critically, udev calls flock(LOCK_SH | LOCK_NB) to trylock the device in
-> shared mode to avoid blocking on fs utilities; if the trylock fails,
-> they'll move on and try again later.  The old O_EXCL-on-blockdevs trick
-> will not work for that usecase (I guess) because it's not a shared
-> reader lock.  It's also not the file locking API.
-> 
->> So we acquire flock after opening the device but before
->> writing superblock.
-> 
-> xfs_db and xfs_repair can write to the filesystem too; shouldn't this
-> locking apply to them as well?
-> 
-xfs_db is an interactive operation.If a lock is added, the lock may be held
-for too long. xfs_repair only repairs the data inside the file system ,so it's
-unlikely to conflict with systemd. So these two commands aren't locked.
+On Tue, 13 Sep 2022 06:30:25 +1000 Stephen Rothwell <sfr@canb.auug.org.au> =
+wrote:
+>=20
+> On Sun, 11 Sep 2022 19:54:12 -0500 Eric Biggers <ebiggers@kernel.org> wro=
+te:
+> >
+> > Stephen, can you add my git branch for this patchset to linux-next?
+> >=20
+> > URL: https://git.kernel.org/pub/scm/linux/kernel/git/ebiggers/linux.git
+> > Branch: statx-dioalign
+> >=20
+> > This is targeting the 6.1 merge window with a pull request to Linus. =20
+>=20
+> Added from today.
 
->> Signed-off-by: wuguanghao <wuguanghao3@huawei.com>
->> ---
->>  mkfs/xfs_mkfs.c | 26 ++++++++++++++++++++++++++
->>  1 file changed, 26 insertions(+)
->>
->> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
->> index 9dd0e79c..b83cb043 100644
->> --- a/mkfs/xfs_mkfs.c
->> +++ b/mkfs/xfs_mkfs.c
->> @@ -13,6 +13,7 @@
->>  #include "libfrog/crc32cselftest.h"
->>  #include "proto.h"
->>  #include <ini.h>
->> +#include <sys/file.h>
->>
->>  #define TERABYTES(count, blog) ((uint64_t)(count) << (40 - (blog)))
->>  #define GIGABYTES(count, blog) ((uint64_t)(count) << (30 - (blog)))
->> @@ -2758,6 +2759,30 @@ _("log stripe unit (%d bytes) is too large (maximum is 256KiB)\n"
->>
->>  }
->>
->> +static void
->> +lock_device(dev_t dev, int flag, char *name)
->> +{
->> +       int fd = libxfs_device_to_fd(dev);
->> +       int readonly = flag & LIBXFS_ISREADONLY;
->> +
->> +       if (!readonly && fd > 0)
->> +               if (flock(fd, LOCK_EX) != 0) {
->> +                       fprintf(stderr, "%s: failed to get lock.\n", name);
->> +                       exit(1);
->> +               }
-> 
-> So yes, this belongs in libxfs_device_open.
-> 
-> If we're opening the bdevs in readonly mode, shouldn't we take LOCK_SH
-> to prevent mkfs from colliding with (say) xfs_metadump?
-> 
-> Bonus question: Shouldn't the /kernel/ also effectively be taking
-> LOCK_SH when it opens the bdevs to mount the filesystem?
+I notice that this branch has been removed.  Are you finished with it
+(i.e. should I remove it from linux-next)?
 
-Systemd normally uses "watch" to monitor disks, only in special cases
-will the monitoring be released. During the time from the release of
-monitoring to the re-opening of monitoring, the flock is used to
-ensure that the disk won't be written to by others.
-So if the disk isn't modified or the modified content won't trigger
-the udev rule, then it should be OK not to lock.
+--=20
+Cheers,
+Stephen Rothwell
 
-There is still a problem with this solution, systemd only lock the main
-block device, not the partition device. So if we're operating on a
-partitioned device, the lock won't work. Currently we are still
-communicating with systemd.
+--Sig_/Ta.nZamROACWUZnFj4i7MWy
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
-> --D
-> 
->> +}
->> +
->> +static void
->> +lock_devices(struct libxfs_xinit *xi)
->> +{
->> +       if (!xi->disfile)
->> +               lock_device(xi->ddev, xi->dcreat, xi->dname);
->> +       if (xi->logdev && !xi->lisfile)
->> +               lock_device(xi->logdev, xi->lcreat, xi->logname);
->> +       if (xi->rtdev && !xi->risfile)
->> +               lock_device(xi->rtdev, xi->rcreat, xi->rtname);
->> +}
->> +
->>  static void
->>  open_devices(
->>         struct mkfs_params      *cfg,
->> @@ -4208,6 +4233,7 @@ main(
->>          * Open and validate the device configurations
->>          */
->>         open_devices(&cfg, &xi);
->> +       lock_devices(&xi);
->>         validate_overwrite(dfile, force_overwrite);
->>         validate_datadev(&cfg, &cli);
->>         validate_logdev(&cfg, &cli, &logfile);
->> --
->> 2.27.0
-> .
-> 
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmNOMbwACgkQAVBC80lX
+0GxBPwf+NK66Affcx+uOwICiv+ovQ21QIlPm9IJ5LvIoFwf8a6p0CBBV0D87Lz3O
+gTyOmmIln6foey0EDLUonmx0R/g/NmDIqlmlTokCTOS3W06Rg+Q/ura6Xy2e16yX
+jkvcXxu3VueNdLN/MgKin6PjnB77DyhjPo1xuyXxHE39/XO0h8vTMY9OL44Zg8E9
+ZEnV4lTb/mUKb1DU0SiFrM2hcFfCG09gEnUGsA7P/dQnwrHHkD+vWPDsX5yWHX3P
+bKtAFYG/Z17S8nIzUbQG+A19u19ajcQasGjV8jDLEERPDX3bOg91nR33ahR4rfQb
+T/Xadfe0rtdAKEqBLhNafzUpmGIqxg==
+=DyWQ
+-----END PGP SIGNATURE-----
+
+--Sig_/Ta.nZamROACWUZnFj4i7MWy--
