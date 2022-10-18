@@ -2,43 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 733F0C4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Oct 2022 22:45:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E557BC4332F
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Oct 2022 22:45:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230063AbiJRWpQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Oct 2022 18:45:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57896 "EHLO
+        id S230073AbiJRWpS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Oct 2022 18:45:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229958AbiJRWpM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Oct 2022 18:45:12 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B36D50065;
-        Tue, 18 Oct 2022 15:45:11 -0700 (PDT)
+        with ESMTP id S229958AbiJRWpR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Oct 2022 18:45:17 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34B7B50B89;
+        Tue, 18 Oct 2022 15:45:16 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0771561716;
-        Tue, 18 Oct 2022 22:45:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 681EAC433D6;
-        Tue, 18 Oct 2022 22:45:10 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id DF328B82113;
+        Tue, 18 Oct 2022 22:45:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BA0EC433D6;
+        Tue, 18 Oct 2022 22:45:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666133110;
-        bh=jiqLYYwwH2fjuIdNmz0yDNJrsu7sMSd3cbP80PlJR5Q=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=uw97E31fIpmkZ6sHThA18v8XFhDbuZCyswJQ383ZQOPaE3lTjbLxiexFQ27CO4VM2
-         HLsx9oILdYjFYybVVnuX/AD2Dno8jOidOb8+kpo6KzBhPAC4wXOijw+wVga8Th+Xan
-         b80SvbA13Vt9ZjxqY4/ezSoUkTAXl7rSfgxQYYc3K75FuQEVhv/l4dfrWPDAz2YMOF
-         rfJCv6M4I6kPn5VmeQ+F5o+eKwq9UCqNTMS/2daT8d4ul12a8kbFOBlrPq+0Bcujpi
-         FWr5rp8szRbGUr+3P9ffVYDR30FdPNMlVUC6SQANifcR78GFWApJsflKIlvZivJJVQ
-         jC8fwFJg7dsfg==
-Subject: [PATCH 1/1] populate: unexport the metadump description text
+        s=k20201202; t=1666133113;
+        bh=aLJyufDdp1S4HHnJpk7uK5MMSEmiOWI36ztQJNh1EFI=;
+        h=Subject:From:To:Cc:Date:From;
+        b=HH5xgWTB/+EC2Jh3saLynvfpjVyYWo3IuW7yT5fpoxRlbWt+djePKrLOde5np1IfG
+         EtDiljqu6HiO0P8+1Yll50zmbMW9y6/Xy3jXNcz4AyKPK7gJ7F4W40uzt1cxep8Wr+
+         uKCVmH0e9JCjzb4nbkKncYZTb5O6uAu7pRzkC+4MOUzG0h5PvOeTOxKEHoZC5mqGwr
+         qQZkw1OgdGDFbkyrarYUTjjC+5bR1m8TOSHI7XLZkgyrOAt2EPGo9UN17h5+x1nF/o
+         VZkxP2fIDnduOE+wAc8DScSP5zaM/RE+HoQB5jUg0ndZslHkXQ2eVel7qoPGH6l2uC
+         mpwrDVHjn/NsA==
+Subject: [PATCHSET v23.1 0/1] fstests: test xfs_scrub media scan
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, guaneryu@gmail.com, zlang@redhat.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 18 Oct 2022 15:45:10 -0700
-Message-ID: <166613311003.868003.9672066347833155217.stgit@magnolia>
-In-Reply-To: <166613310432.868003.6099082434184908563.stgit@magnolia>
-References: <166613310432.868003.6099082434184908563.stgit@magnolia>
+Date:   Tue, 18 Oct 2022 15:45:13 -0700
+Message-ID: <166613311327.868072.4009665862280713748.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -47,48 +45,30 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi all,
 
-Make the variable that holds the contents of the metadump description
-file a local variable since we don't need it outside of that function.
+Use dm-error to simulate disk errors for written file extents and ensure
+that the media scanner in xfs_scrub actually detects them.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Zorro Lang <zlang@redhat.com>
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-media-error-reporting
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=scrub-media-error-reporting
 ---
- common/populate |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-
-diff --git a/common/populate b/common/populate
-index b2d37b47d8..58b07e33be 100644
---- a/common/populate
-+++ b/common/populate
-@@ -901,15 +901,15 @@ _scratch_populate_cached() {
- 	local meta_tag="$(echo "${meta_descr}" | md5sum - | cut -d ' ' -f 1)"
- 	local metadump_stem="${TEST_DIR}/__populate.${FSTYP}.${meta_tag}"
- 
--	# These variables are shared outside this function
-+	# This variable is shared outside this function
- 	POPULATE_METADUMP="${metadump_stem}.metadump"
--	POPULATE_METADUMP_DESCR="${metadump_stem}.txt"
-+	local populate_metadump_descr="${metadump_stem}.txt"
- 
- 	# Don't keep metadata images cached for more 48 hours...
- 	rm -rf "$(find "${POPULATE_METADUMP}" -mtime +2 2>/dev/null)"
- 
- 	# Throw away cached image if it doesn't match our spec.
--	cmp -s "${POPULATE_METADUMP_DESCR}" <(echo "${meta_descr}") || \
-+	cmp -s "${populate_metadump_descr}" <(echo "${meta_descr}") || \
- 		rm -rf "${POPULATE_METADUMP}"
- 
- 	# Try to restore from the metadump
-@@ -918,7 +918,7 @@ _scratch_populate_cached() {
- 
- 	# Oh well, just create one from scratch
- 	_scratch_mkfs
--	echo "${meta_descr}" > "${POPULATE_METADUMP_DESCR}"
-+	echo "${meta_descr}" > "${populate_metadump_descr}"
- 	case "${FSTYP}" in
- 	"xfs")
- 		_scratch_xfs_populate $@
+ common/dmerror    |  136 +++++++++++++++++++++++++++++++++++++++++++++--
+ common/xfs        |    9 +++
+ tests/xfs/747     |  155 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/747.out |   12 ++++
+ 4 files changed, 309 insertions(+), 3 deletions(-)
+ create mode 100755 tests/xfs/747
+ create mode 100644 tests/xfs/747.out
 
