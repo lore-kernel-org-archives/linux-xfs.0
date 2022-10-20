@@ -2,147 +2,121 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94A72C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Oct 2022 03:05:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94CFBC43217
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Oct 2022 04:36:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230262AbiJTDFv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Oct 2022 23:05:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37324 "EHLO
+        id S229897AbiJTEgF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Oct 2022 00:36:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229933AbiJTDFo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Oct 2022 23:05:44 -0400
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE8582E692
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Oct 2022 20:05:41 -0700 (PDT)
-Received: by mail-pf1-x430.google.com with SMTP id m6so19084978pfb.0
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Oct 2022 20:05:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=wEl73zYiyCZRYeY8GRbvNLUlF2BoygoZ6siYepxupO4=;
-        b=KyPf4YSo2fdSCuwLXXoELT8f8hoq/6mHp/coYbuC98NMxNmwuU9b15osetPysrUspu
-         sktHt+jFnzxGv3Xgd5NQgO3spfYDiFNFhHR9qAM0AQV2LW+uS38wzheH/mBRNqEJFy6C
-         1//1803iUOgFMx34XOUfk8WHzV95V4D4CU3h0=
+        with ESMTP id S229895AbiJTEf6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Oct 2022 00:35:58 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26FBF15B13A
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Oct 2022 21:35:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1666240555;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=PoSU4QfrDZLHjSl79CPIVHBB/t37XEv37IiEVOzSgdU=;
+        b=OZpf2wvcejud290vLHRjbF7tflsg0U7pgXlxunbLySHgkdeSO4+G+cHB72kBa8p+/cJ6gL
+        azVgZz2yhn++XeM30Y/fuAYYkB7/9gZQe1q7Y96uT9ZKkaeWkxk7u9h1wwu+FueVAJ0G3A
+        CQglWyVeczx6282Pxr2Poy3jlLLgNG0=
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
+ [209.85.214.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-653-Ca4AG-MGPmuiWqLad1nyfQ-1; Thu, 20 Oct 2022 00:35:53 -0400
+X-MC-Unique: Ca4AG-MGPmuiWqLad1nyfQ-1
+Received: by mail-pl1-f199.google.com with SMTP id q12-20020a170902dacc00b00184ba4faf1cso13296671plx.23
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Oct 2022 21:35:53 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=wEl73zYiyCZRYeY8GRbvNLUlF2BoygoZ6siYepxupO4=;
-        b=gWJhdEQPSuQamXvOpoilrW6j6Rm6KM4/Tb3JQgJJPn2llA4jd/pucPGo3uxfO5o32y
-         lkn9Y3l5WaadsyIWnctBEStorZVVrhD9zAIlpBFC68VTc0XoKsyd/8r9LYIGgFfkLOFr
-         Fkr+rjSe7gjTecnqFYi8lNgrjzU+5BCcAf/44qiHwZMxjsWyO3KeT8Sl5y6AhvOKI1I9
-         8GwRV24hYPuVJN6oF8OSnOwUe5Xvc2QgkJ5TY4AgR2emsQslqVel6/G9JRNW853zlCc6
-         YGkL+NElmU4qAGopQbJE8v2QaxBaDUxc/3Ztl16utPCjQRJ5EemSvmFEpX5NFvoTFayL
-         MVqw==
-X-Gm-Message-State: ACrzQf2gHM+vTiuafR3/AACCgTG0flMJhSXgbDUzFZVGxECf1e4boKwg
-        Kw+ZebtDwePJ68iO9M0a9Pa2Red2lfy7AQ==
-X-Google-Smtp-Source: AMsMyM6uy8Kmc6qC8QV/oF1BPpkrAO9MeeKAf0ZcO9TExbpShBsd4Rzn8zwt5IS5jogmvOcpAp6iJw==
-X-Received: by 2002:a05:6a00:1707:b0:566:15a1:8b07 with SMTP id h7-20020a056a00170700b0056615a18b07mr11661937pfc.34.1666235140900;
-        Wed, 19 Oct 2022 20:05:40 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id z20-20020a17090a8b9400b001fdcb792181sm611435pjn.43.2022.10.19.20.05.39
+        bh=PoSU4QfrDZLHjSl79CPIVHBB/t37XEv37IiEVOzSgdU=;
+        b=FyZr1Hl4y2YR0vkBxNj5mR+g5shKEj+eGR1fQ10ayY4pg3YjXStEbcwHbCPuaI70GV
+         5e2mAQUU6/hrbjONgS/oBqs5++eXHez080w/E05B7PEU/1vLUTAOslZDhYWsP0k0qF/S
+         9+HABoOj3lAU6UvPItfLuAX8n8kUDnt5TAa1XXyU3L2uztPAHg+LBbxisBg4k1iUpuBg
+         HnHudEb9dwlYv5DGj8L5tfdi2y75IToePLvrQ1FUrbikIJr2rgFdopiJBkFmnb3gj/nx
+         ajpXVAoN66i65pYgWqYJt1Qo03e0N8L7TQTjK8EuQue1BQMfyBq1EftBxF1dQxAP7P/p
+         dWCQ==
+X-Gm-Message-State: ACrzQf3Jt/LhE+nQ7N8pfkjkWzyTHpQ8iqiikMZMgLnWC7+LhWzNMqlY
+        j8vdfS7dl/O78PD6oQ7Vt+z1lg4rEpFDxtjEU1aZ/PeUXBHMNRipXaKGxJnlw83Rgm+U0AAPpOa
+        aIxLO/IeVRdkMKt9dIMrb
+X-Received: by 2002:a63:dc42:0:b0:46a:de10:384f with SMTP id f2-20020a63dc42000000b0046ade10384fmr9921035pgj.585.1666240552680;
+        Wed, 19 Oct 2022 21:35:52 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM7SZIXI2IfM8Jahyb1if2TBJNYRPfnBY4ij0sT6GfQJowe71UoXNa2atu/ErBoF9bEPPcjcIA==
+X-Received: by 2002:a63:dc42:0:b0:46a:de10:384f with SMTP id f2-20020a63dc42000000b0046ade10384fmr9921021pgj.585.1666240552408;
+        Wed, 19 Oct 2022 21:35:52 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id y12-20020a63fa0c000000b0045dc85c4a5fsm10850414pgh.44.2022.10.19.21.35.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Oct 2022 20:05:40 -0700 (PDT)
-Date:   Wed, 19 Oct 2022 20:05:38 -0700
-From:   Kees Cook <keescook@chromium.org>
+        Wed, 19 Oct 2022 21:35:51 -0700 (PDT)
+Date:   Thu, 20 Oct 2022 12:35:47 +0800
+From:   Zorro Lang <zlang@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>, Zorro Lang <zlang@redhat.com>,
-        linux-hardening@vger.kernel.org
-Subject: Re: [RFC PATCH] xfs: fix FORTIFY_SOURCE complaints about log item
- memcpy
-Message-ID: <202210191948.FF93D98E0B@keescook>
-References: <Y1CQe9FWctRg3OZI@magnolia>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 1/1] populate: unexport the metadump description text
+Message-ID: <20221020043547.rcojqbhxihkcaszi@zlang-mailbox>
+References: <166613310432.868003.6099082434184908563.stgit@magnolia>
+ <166613311003.868003.9672066347833155217.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y1CQe9FWctRg3OZI@magnolia>
+In-Reply-To: <166613311003.868003.9672066347833155217.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 19, 2022 at 05:04:11PM -0700, Darrick J. Wong wrote:
+On Tue, Oct 18, 2022 at 03:45:10PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Starting in 6.1, CONFIG_FORTIFY_SOURCE checks the length parameter of
-> memcpy.  Unfortunately, it doesn't handle VLAs correctly:
-
-Nit-pick on terminology: these are "flexible array structures" (structures
-that end with a "flexible array member"); VLAs are a different (removed
-from the kernel) beast.
-
-> memcpy: detected field-spanning write (size 48) of single field "dst_bui_fmt" at fs/xfs/xfs_bmap_item.c:628 (size 16)
-
-Step right up; XFS is next to trip[1] this check. Let's get this fixed...
-
-> We know the memcpy going
-> on here is correct because I've run all the log recovery tests with
-> KASAN turned on, and it does not detect actual memory misuse.
-
-Yup, this is a false positive.
-
-> My first attempt to work around this problem was to cast the arguments
-> [...]
-> My second attempt changed the cast to a (void *), with the same results
-> [...]
-> My third attempt was to pass the void pointers directly into
-> [...]
-> My fourth attempt collapsed the _copy_format function into the callers
-> [...]
-
-The point here is to use a better API, which is fallible and has the
-ability to perform the bounds checking itself. I had proposed an initial
-version of this idea here[2].
-
-[1] https://lore.kernel.org/all/?q=%22field-spanning+write%22
-[2] https://lore.kernel.org/llvm/20220504014440.3697851-3-keescook@chromium.org/
-
-> "These cases end up appearing to the compiler to be sized as if the
-> flexible array had 0 elements. :( For more details see:
-> https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101832
-> https://godbolt.org/z/vW6x8vh4P ".
+> Make the variable that holds the contents of the metadump description
+> file a local variable since we don't need it outside of that function.
 > 
-> I don't /quite/ think that turning off CONFIG_FORTIFY_SOURCE is the
-> right solution here, but in the meantime this is causing a lot of fstest
-> failures, and I really need to get back to fixing user reported data
-> corruption problems instead of dealing with gcc stupidity. :(
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Zorro Lang <zlang@redhat.com>
+> ---
 
-I think XFS could be a great first candidate for using something close
-to the proposed flex_cpy() API. What do you think of replacing the
-memcpy() calls with something like this instead:
+OK, will merge this one in next release.
 
--	if (buf->i_len == len) {
--		memcpy(dst_bui_fmt, src_bui_fmt, len);
--		return 0;
--	}
-+	if (buf->i_len == len &&
-+	    flex_cpy(dst_bui_fmt, src_bui_fmt,
-+		     bui_nextents, bui_extents) == 0)
-		return 0;
-	XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, NULL);
-	return -EFSCORRUPTED;
+>  common/populate |    8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> 
+> diff --git a/common/populate b/common/populate
+> index b2d37b47d8..58b07e33be 100644
+> --- a/common/populate
+> +++ b/common/populate
+> @@ -901,15 +901,15 @@ _scratch_populate_cached() {
+>  	local meta_tag="$(echo "${meta_descr}" | md5sum - | cut -d ' ' -f 1)"
+>  	local metadump_stem="${TEST_DIR}/__populate.${FSTYP}.${meta_tag}"
+>  
+> -	# These variables are shared outside this function
+> +	# This variable is shared outside this function
+>  	POPULATE_METADUMP="${metadump_stem}.metadump"
+> -	POPULATE_METADUMP_DESCR="${metadump_stem}.txt"
+> +	local populate_metadump_descr="${metadump_stem}.txt"
+>  
+>  	# Don't keep metadata images cached for more 48 hours...
+>  	rm -rf "$(find "${POPULATE_METADUMP}" -mtime +2 2>/dev/null)"
+>  
+>  	# Throw away cached image if it doesn't match our spec.
+> -	cmp -s "${POPULATE_METADUMP_DESCR}" <(echo "${meta_descr}") || \
+> +	cmp -s "${populate_metadump_descr}" <(echo "${meta_descr}") || \
+>  		rm -rf "${POPULATE_METADUMP}"
+>  
+>  	# Try to restore from the metadump
+> @@ -918,7 +918,7 @@ _scratch_populate_cached() {
+>  
+>  	# Oh well, just create one from scratch
+>  	_scratch_mkfs
+> -	echo "${meta_descr}" > "${POPULATE_METADUMP_DESCR}"
+> +	echo "${meta_descr}" > "${populate_metadump_descr}"
+>  	case "${FSTYP}" in
+>  	"xfs")
+>  		_scratch_xfs_populate $@
+> 
 
-To avoid passing in the element count and element array fields, the
-alias macros could be used:
-
-struct xfs_bui_log_format {
-	uint16_t		bui_type;	/* bui log item type */
-	uint16_t		bui_size;	/* size of this item */
-	/* # extents to free */
-	DECLARE_FLEX_ARRAY_ELEMENTS_COUNT(uint32_t, bui_nextents);
-	uint64_t		bui_id;		/* bui identifier */
-	/* array of extents to bmap */
-	DECLARE_FLEX_ARRAY_ELEMENTS(struct xfs_map_extent, bui_extents);
-};
-
-What do you think about these options? In the meantime, unsafe_memcpy()
-should be fine for v6.1.
-
-BTW, this FORTIFY_SOURCE change was present in linux-next for the entire
-prior development cycle. Are the xfstests not run on -next kernels?
-
--Kees
-
--- 
-Kees Cook
