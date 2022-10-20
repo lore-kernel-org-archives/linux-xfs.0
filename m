@@ -2,341 +2,267 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40950C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Oct 2022 12:26:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93E6DC4332F
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Oct 2022 14:18:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229633AbiJTM0c (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Oct 2022 08:26:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35038 "EHLO
+        id S230150AbiJTOSO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Oct 2022 10:18:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229657AbiJTM0c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Oct 2022 08:26:32 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB5721CCCD0;
-        Thu, 20 Oct 2022 05:26:30 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S229613AbiJTOSL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Oct 2022 10:18:11 -0400
+Received: from mail1.bemta32.messagelabs.com (mail1.bemta32.messagelabs.com [195.245.230.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32F025BC94;
+        Thu, 20 Oct 2022 07:18:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
+        s=170520fj; t=1666275488; i=@fujitsu.com;
+        bh=7Z3NyZzRxTM9sBX5+xswc3Xs3tppS70dX2Zc0GGAMyc=;
+        h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+         In-Reply-To:Content-Type:Content-Transfer-Encoding;
+        b=PHvo22DziAdor/sCE0+XnDlzutpwnzDuMZBiQe+S+r/h4JLv/50gwEbYxzgqMIKAr
+         +bkIcs7uJ27GlpbMaxOuAv33m3LD0N37cGrEmZzEfaAvTnO/IENh6thCY8jWWvEnpW
+         oxon3ApXqFKUVXFo6iNiishxnGYU5psTM/uLGJUJw/+xUfpLOUrk2reKHMBoOxJsfH
+         qqKNRnc3an35f9tVZLSZ7ae+C2LAedDkQYl+a67jqqNXb3d8Rn/htqOFuLooY9ogMy
+         8rJW4wq6uV3EqLUIAYbfbbHKo4QGMuwV8hsF6gqL+w9xr1JJtj2O27L3/jRO43BLi/
+         pbMws/2fCu28w==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrOKsWRWlGSWpSXmKPExsViZ8ORpDstIjD
+  Z4PVZLYt3n6ssthy7x2hx+Qmfxd53s1ktTk9YxGRx9tdVFos9e0+yWFzeNYfNYtefHewWK3/8
+  YbV4uGAzu8Xa/nQHHo9TiyQ8du1qZPfYvELLY9OqTjaPF5tnMnq833eVzePzJrkA9ijWzLyk/
+  IoE1oztXy+xF7TbVvw7c4epgfGnfhcjF4eQwEZGif4T/WwQzhImiW+zprJDONsYJdZuu8raxc
+  jJwStgJzG7+y8biM0ioCrRu+IZG0RcUOLkzCcsILaoQJLE1Q13weqFBXwl1m7qYwaxRQRKJWZ
+  +bWcGGcosMItFYv25OewgCSGBF8wSb69ogdhsAo4S82ZtBBvKKaAhcWbaXbAaZgELicVvDkLZ
+  8hLb384BGyohoCjRtuQfO4RdITFrVhsThK0mcfXcJuYJjEKzkNw3C8moWUhGLWBkXsVoVpxaV
+  JZapGtoopdUlJmeUZKbmJmjl1ilm6iXWqpbnlpcomuol1herJdaXKxXXJmbnJOil5dasokRGI
+  8pxWyrdjD+WvZH7xCjJAeTkiivsGpgshBfUn5KZUZicUZ8UWlOavEhRhkODiUJ3sAwoJxgUWp
+  6akVaZg4wNcCkJTh4lER4xUKB0rzFBYm5xZnpEKlTjJYc53fu38vMsbbhAJD8+OfiXmYhlrz8
+  vFQpcd5ikHkCIA0ZpXlw42Dp6xKjrJQwLyMDA4MQT0FqUW5mCar8K0ZxDkYlYd6zIGt5MvNK4
+  La+AjqICegg0y1+IAeVJCKkpBqYeiUnuc77Ki0quEfi8ZQHJ/4VTOPgrtnw/+f9hpXql/+f4U
+  s9bb2pf8NNLs09R0WXpSRNfZv+M/Ol/tTXlkGC3Te6N15+mVyXyCcw9+Wn3Qnbel05fKrPvV5
+  X5s3k9b291rfqlDl/VNmC5+v3Li5Q+5ay4PXNo3qb9NM1ijKvN601yLgW4NFvw+ypVX7o3c20
+  i9mHn/z3iyzbNHfyC5tnUvxKU3wfmrsEVNg8i7ukHLmvcueZ2ZyxV9oyr59SVmCu/OnJ2mS+J
+  cODwfTthv2vs9RzbWN7ky6ekJqwqntWzfcd4TnJzbPMla4vmTB3lXRHB8urta/l7KYpc9z/OW
+  F106r/L63nnItdu9yXyT6MWYmlOCPRUIu5qDgRACDUWMDaAwAA
+X-Env-Sender: yangx.jy@fujitsu.com
+X-Msg-Ref: server-9.tower-587.messagelabs.com!1666275478!137699!1
+X-Originating-IP: [62.60.8.98]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.100.1; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 18512 invoked from network); 20 Oct 2022 14:17:58 -0000
+Received: from unknown (HELO n03ukasimr03.n03.fujitsu.local) (62.60.8.98)
+  by server-9.tower-587.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 20 Oct 2022 14:17:58 -0000
+Received: from n03ukasimr03.n03.fujitsu.local (localhost [127.0.0.1])
+        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTP id 2A4EF1B1;
+        Thu, 20 Oct 2022 15:17:58 +0100 (BST)
+Received: from R01UKEXCASM126.r01.fujitsu.local (R01UKEXCASM126 [10.183.43.178])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 23D72CE2592;
-        Thu, 20 Oct 2022 12:26:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A5CDC433B5;
-        Thu, 20 Oct 2022 12:26:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666268787;
-        bh=+I3N9W6BeSKcgddGevyJyHyVlwGxo4UqEJ4gPUKQYOU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=E/C//qdgGb4/+/tWCIYm+4l//nFiQhKv4je9rrExJP7QXbyKl71Am0/FsXJ6fJCx9
-         YXHDQbOBim1DMpvnu0khsFrSjDxtBLRfhi4BIIIE1EPn6LAOH5IQcCWs7Nz07GQ9Jw
-         FzWGOtuw0vYoVRy9DJ8VslEcWgxwF6KtfDJKi/AMqUgBMgMHmNFKVKIHdxB3ev4xDA
-         wZRmclIT9KVJaZiItzw4CKYEyZdOD7JtCtbCPYXPxclk2s91MCKZBb04QB36P59l95
-         jxJ7sCpp2pDnQK2do9jnu7ozUy2z9Iff/jj+P4qQqiNsbAD/KzN96oEDE2j4KFsibT
-         SVo2G1Twh9c1Q==
-Date:   Thu, 20 Oct 2022 20:26:22 +0800
-From:   Zorro Lang <zlang@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     zlang@redhat.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: refactor filesystem feature detection logic
-Message-ID: <20221020122622.ldtlvxhdn2ncnuln@zlang-mailbox>
-References: <166613312194.868141.5162859918517610030.stgit@magnolia>
- <166613312749.868141.7487830883814756598.stgit@magnolia>
+        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTPS id 1E2271AB;
+        Thu, 20 Oct 2022 15:17:58 +0100 (BST)
+Received: from [10.167.215.54] (10.167.215.54) by
+ R01UKEXCASM126.r01.fujitsu.local (10.183.43.178) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.32; Thu, 20 Oct 2022 15:17:53 +0100
+Message-ID: <6a83a56e-addc-f3c4-2357-9589a49bf582@fujitsu.com>
+Date:   Thu, 20 Oct 2022 22:17:45 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <166613312749.868141.7487830883814756598.stgit@magnolia>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH] xfs: fail dax mount if reflink is enabled on a partition
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        =?UTF-8?B?R290b3UsIFlhc3Vub3JpL+S6lOWztiDlurfmloc=?= 
+        <y-goto@fujitsu.com>
+CC:     Brian Foster <bfoster@redhat.com>,
+        "hch@infradead.org" <hch@infradead.org>,
+        =?UTF-8?B?UnVhbiwgU2hpeWFuZy/pmK4g5LiW6Ziz?= 
+        <ruansy.fnst@fujitsu.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "david@fromorbit.com" <david@fromorbit.com>, <zwisler@kernel.org>,
+        Jeff Moyer <jmoyer@redhat.com>, <dm-devel@redhat.com>,
+        <toshi.kani@hpe.com>
+References: <7fdc9e88-f255-6edb-7964-a5a82e9b1292@fujitsu.com>
+ <76ea04b4-bad7-8cb3-d2c6-4ad49def4e05@fujitsu.com> <YyHKUhOgHdTKPQXL@bfoster>
+ <YyIBMJzmbZsUBHpy@magnolia>
+ <a6e7f4eb-0664-bbe8-98d2-f8386b226113@fujitsu.com>
+ <e3d51a6b-12e9-2a19-1280-5fd9dd64117c@fujitsu.com>
+ <deb54a77-90d3-df44-1880-61cce6e3f670@fujitsu.com>
+ <1444b9b5-363a-163c-0513-55d1ea951799@fujitsu.com>
+ <Yzt6eWLuX/RTjmjj@magnolia>
+ <f196bcab-6aa2-6313-8a7c-f8ab409621b7@fujitsu.com>
+ <Yzx64zGt2kTiDYaP@magnolia>
+From:   =?UTF-8?B?WWFuZywgWGlhby/mnagg5pmT?= <yangx.jy@fujitsu.com>
+In-Reply-To: <Yzx64zGt2kTiDYaP@magnolia>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.167.215.54]
+X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
+ R01UKEXCASM126.r01.fujitsu.local (10.183.43.178)
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 18, 2022 at 03:45:27PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On 2022/10/5 2:26, Darrick J. Wong wrote:
+> Notice this line in generic/470:
 > 
-> There are a lot of places where we open-code detecting features of a
-> specific filesystem.  Refactor this into a couple of helpers in
-> preparation for adding stress tests for online repair and fuzzing.
+> $XFS_IO_PROG -t -c "truncate $LEN" -c "mmap -S 0 $LEN" -c "mwrite 0 $LEN" \
+> 	-c "log_writes -d $LOGWRITES_NAME -m preunmap" \
+> 	-f $SCRATCH_MNT/test
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  common/populate |   14 ++++++-----
->  common/rc       |    9 +++++++
->  common/xfs      |   67 ++++++++++++++++++++++++++++++++++++++++++++++---------
->  tests/xfs/097   |    2 +-
->  tests/xfs/151   |    3 +-
->  tests/xfs/271   |    2 +-
->  tests/xfs/307   |    2 +-
->  tests/xfs/308   |    2 +-
->  tests/xfs/348   |    2 +-
->  9 files changed, 77 insertions(+), 26 deletions(-)
+> The second xfs_io command creates a MAP_SYNC mmap of the
+> SCRATCH_MNT/test file, and the third command memcpy's bytes to the
+> mapping to invoke the write page fault handler.
 > 
+> The fourth command tells the dm-logwrites driver for $LOGWRITES_NAME
+> (aka the block device containing the mounted XFS filesystem) to create a
+> mark called "preunmap".  This mark captures the exact state of the block
+> device immediately after the write faults complete, so that we can come
+> back to it later.  There are a few things to note here:
 > 
-> diff --git a/common/populate b/common/populate
-> index 58b07e33be..9fa1a06798 100644
-> --- a/common/populate
-> +++ b/common/populate
-> @@ -131,7 +131,7 @@ _populate_xfs_qmount_option()
->  	fi
->  
->  	# Turn on all the quotas
-> -	if $XFS_INFO_PROG "${TEST_DIR}" | grep -q 'crc=1'; then
-> +	if _xfs_has_feature "$TEST_DIR" crc; then
->  		# v5 filesystems can have group & project quotas
->  		quota="usrquota,grpquota,prjquota"
->  	else
-> @@ -176,7 +176,7 @@ _scratch_xfs_populate() {
->  
->  	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
->  	dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> -	crc="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep crc= | sed -e 's/^.*crc=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> +	crc="$(_xfs_has_feature "$SCRATCH_MNT" crc -v)"
->  	if [ $crc -eq 1 ]; then
->  		leaf_hdr_size=64
->  	else
-> @@ -315,7 +315,7 @@ _scratch_xfs_populate() {
->  	done
->  
->  	# Reverse-mapping btree
-> -	is_rmapbt="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep -c 'rmapbt=1')"
-> +	is_rmapbt="$(_xfs_has_feature "$SCRATCH_MNT" rmapbt -v)"
->  	if [ $is_rmapbt -gt 0 ]; then
->  		echo "+ rmapbt btree"
->  		nr="$((blksz * 2 / 24))"
-> @@ -332,7 +332,7 @@ _scratch_xfs_populate() {
->  	fi
->  
->  	# Reference-count btree
-> -	is_reflink="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep -c 'reflink=1')"
-> +	is_reflink="$(_xfs_has_feature "$SCRATCH_MNT" reflink -v)"
->  	if [ $is_reflink -gt 0 ]; then
->  		echo "+ reflink btree"
->  		nr="$((blksz * 2 / 12))"
-> @@ -597,9 +597,9 @@ _scratch_xfs_populate_check() {
->  	leaf_attr="$(__populate_find_inode "${SCRATCH_MNT}/ATTR.FMT_LEAF")"
->  	node_attr="$(__populate_find_inode "${SCRATCH_MNT}/ATTR.FMT_NODE")"
->  	btree_attr="$(__populate_find_inode "${SCRATCH_MNT}/ATTR.FMT_BTREE")"
-> -	is_finobt=$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep -c 'finobt=1')
-> -	is_rmapbt=$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep -c 'rmapbt=1')
-> -	is_reflink=$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep -c 'reflink=1')
-> +	is_finobt=$(_xfs_has_feature "$SCRATCH_MNT" finobt -v)
-> +	is_rmapbt=$(_xfs_has_feature "$SCRATCH_MNT" rmapbt -v)
-> +	is_reflink=$(_xfs_has_feature "$SCRATCH_MNT" reflink -v)
->  
->  	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
->  	dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> diff --git a/common/rc b/common/rc
-> index f4785c17ca..7944ef550e 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -247,7 +247,14 @@ _supports_filetype()
->  	local fstyp=`$DF_PROG $dir | tail -1 | $AWK_PROG '{print $2}'`
->  	case "$fstyp" in
->  	xfs)
-> -		$XFS_INFO_PROG $dir | grep -q "ftype=1"
-> +		# If _xfs_has_feature is not present, grep xfs_info directly.
-> +		# This can happen if we're testing overlayfs atop XFS and have
-> +		# not sourced ./common/xfs.
-
-Hmm... I thought I've fixed this kind of problem in:
-  61775fb9 common: source base fs specific common file
-
-didn't I?
-
-Others looks good to me,
-
-Thanks,
-Zorro
-
-
-> +		if command -v "_xfs_has_feature" &>/dev/null; then
-> +			_xfs_has_feature $dir ftype
-> +		else
-> +			$XFS_INFO_PROG $dir | grep -q "ftype=1"
-> +		fi
->  		;;
->  	ext2|ext3|ext4)
->  		local dev=`$DF_PROG $dir | tail -1 | $AWK_PROG '{print $1}'`
-> diff --git a/common/xfs b/common/xfs
-> index 2cd8254937..c7496bce3f 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -422,6 +422,56 @@ _require_xfs_crc()
->  	_scratch_unmount
->  }
->  
-> +# If the xfs_info output for the given XFS filesystem mount mentions the given
-> +# feature.  If so, return 0 for success.  If not, return 1 for failure.  If the
-> +# third option is -v, echo 1 for success and 0 for not.
-> +#
-> +# Starting with xfsprogs 4.17, this also works for unmounted filesystems.
-> +_xfs_has_feature()
-> +{
-> +	local fs="$1"
-> +	local feat="$2"
-> +	local verbose="$3"
-> +
-> +	local answer="$($XFS_INFO_PROG "$fs" 2>&1 | grep -w -c "$feat=1")"
-> +	if [ "$answer" -ne 0 ]; then
-> +		test "$verbose" = "-v" && echo 1
-> +		return 0
-> +	fi
-> +
-> +	test "$verbose" = "-v" && echo 0
-> +	return 1
-> +}
-> +
-> +# Require that the xfs_info output for the given XFS filesystem mount mentions
-> +# the given feature flag.  If the third argument is -u (or is empty and the
-> +# second argument is $SCRATCH_MNT), unmount the fs on failure.  If a fourth
-> +# argument is supplied, it will be used as the _notrun message.
-> +_require_xfs_has_feature()
-> +{
-> +	local fs="$1"
-> +	local feat="$2"
-> +	local umount="$3"
-> +	local message="$4"
-> +
-> +	if [ -z "$umount" ] && [ "$fs" = "$SCRATCH_MNT" ]; then
-> +		umount="-u"
-> +	fi
-> +
-> +	_xfs_has_feature "$1" "$2" && return 0
-> +
-> +	test "$umount" = "-u" && umount "$fs" &>/dev/null
-> +
-> +	test -n "$message" && _notrun "$message"
-> +
-> +	case "$fs" in
-> +	"$TEST_DIR"|"$TEST_DEV")	fsname="test";;
-> +	"$SCRATCH_MNT"|"$SCRATCH_DEV")	fsname="scratch";;
-> +	*)				fsname="$fs";;
-> +	esac
-> +	_notrun "$2 not supported by $fsname filesystem type: $FSTYP"
-> +}
-> +
->  # this test requires the xfs kernel support crc feature on scratch device
->  #
->  _require_scratch_xfs_crc()
-> @@ -429,7 +479,8 @@ _require_scratch_xfs_crc()
->  	_scratch_mkfs_xfs >/dev/null 2>&1
->  	_try_scratch_mount >/dev/null 2>&1 \
->  	   || _notrun "Kernel doesn't support crc feature"
-> -	$XFS_INFO_PROG $SCRATCH_MNT | grep -q 'crc=1' || _notrun "crc feature not supported by this filesystem"
-> +	_require_xfs_has_feature $SCRATCH_MNT crc -u \
-> +		"crc feature not supported by this filesystem"
->  	_scratch_unmount
->  }
->  
-> @@ -748,10 +799,7 @@ _check_xfs_test_fs()
->  _require_xfs_test_rmapbt()
->  {
->  	_require_test
-> -
-> -	if [ "$($XFS_INFO_PROG "$TEST_DIR" | grep -c "rmapbt=1")" -ne 1 ]; then
-> -		_notrun "rmapbt not supported by test filesystem type: $FSTYP"
-> -	fi
-> +	_require_xfs_has_feature "$TEST_DIR" rmapbt
->  }
->  
->  _require_xfs_scratch_rmapbt()
-> @@ -760,10 +808,7 @@ _require_xfs_scratch_rmapbt()
->  
->  	_scratch_mkfs > /dev/null
->  	_scratch_mount
-> -	if [ "$($XFS_INFO_PROG "$SCRATCH_MNT" | grep -c "rmapbt=1")" -ne 1 ]; then
-> -		_scratch_unmount
-> -		_notrun "rmapbt not supported by scratch filesystem type: $FSTYP"
-> -	fi
-> +	_require_xfs_has_feature "$SCRATCH_MNT" rmapbt
->  	_scratch_unmount
->  }
->  
-> @@ -1366,8 +1411,8 @@ _require_scratch_xfs_bigtime()
->  		_notrun "mkfs.xfs doesn't support bigtime feature"
->  	_try_scratch_mount || \
->  		_notrun "kernel doesn't support xfs bigtime feature"
-> -	$XFS_INFO_PROG "$SCRATCH_MNT" | grep -q -w "bigtime=1" || \
-> -		_notrun "bigtime feature not advertised on mount?"
-> +	_require_xfs_has_feature $SCRATCH_MNT bigtime -u \
-> +		"crc feature not supported by this filesystem"
->  	_scratch_unmount
->  }
->  
-> diff --git a/tests/xfs/097 b/tests/xfs/097
-> index 4cad7216cd..1df34eeddc 100755
-> --- a/tests/xfs/097
-> +++ b/tests/xfs/097
-> @@ -42,7 +42,7 @@ _scratch_mkfs_xfs -m crc=1,finobt=1 > /dev/null
->  
->  echo "+ mount fs image"
->  _scratch_mount
-> -$XFS_INFO_PROG "${SCRATCH_MNT}" | grep -q "finobt=1" || _notrun "finobt not enabled"
-> +_require_xfs_has_feature "$SCRATCH_MNT" finobt
->  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
->  
->  echo "+ make some files"
-> diff --git a/tests/xfs/151 b/tests/xfs/151
-> index 66425f6710..b2fe16aefb 100755
-> --- a/tests/xfs/151
-> +++ b/tests/xfs/151
-> @@ -24,8 +24,7 @@ echo "Format filesystem and populate"
->  _scratch_mkfs > $seqres.full
->  _scratch_mount >> $seqres.full
->  
-> -$XFS_INFO_PROG $SCRATCH_MNT | grep -q ftype=1 || \
-> -	_notrun "filesystem does not support ftype"
-> +_require_xfs_has_feature "$SCRATCH_MNT" ftype
->  
->  filter_ls() {
->  	awk '
-> diff --git a/tests/xfs/271 b/tests/xfs/271
-> index 14d64cd0e5..d67ac4d6c1 100755
-> --- a/tests/xfs/271
-> +++ b/tests/xfs/271
-> @@ -37,7 +37,7 @@ agcount=$(_xfs_mount_agcount $SCRATCH_MNT)
->  # same owner (per-AG metadata) for rmap btree blocks and blocks on the AGFL and
->  # the reverse mapping index merges records, the number of per-AG extents
->  # reported will vary depending on whether the refcount btree is enabled.
-> -$XFS_INFO_PROG $SCRATCH_MNT | grep -q reflink=1
-> +_require_xfs_has_feature "$SCRATCH_MNT" reflink
->  has_reflink=$(( 1 - $? ))
->  perag_metadata_exts=2
->  test $has_reflink -gt 0 && perag_metadata_exts=$((perag_metadata_exts + 1))
-> diff --git a/tests/xfs/307 b/tests/xfs/307
-> index ba7204dd00..f3c970fadf 100755
-> --- a/tests/xfs/307
-> +++ b/tests/xfs/307
-> @@ -22,7 +22,7 @@ _require_scratch_reflink
->  echo "Format"
->  _scratch_mkfs > $seqres.full 2>&1
->  _scratch_mount >> $seqres.full
-> -is_rmap=$($XFS_INFO_PROG $SCRATCH_MNT | grep -c "rmapbt=1")
-> +is_rmap=$(_xfs_has_feature $SCRATCH_MNT rmapbt -v)
->  _scratch_unmount
->  
->  _get_agf_data() {
-> diff --git a/tests/xfs/308 b/tests/xfs/308
-> index d0f47f5038..6da6622e14 100755
-> --- a/tests/xfs/308
-> +++ b/tests/xfs/308
-> @@ -22,7 +22,7 @@ _require_scratch_reflink
->  echo "Format"
->  _scratch_mkfs > $seqres.full 2>&1
->  _scratch_mount >> $seqres.full
-> -is_rmap=$($XFS_INFO_PROG $SCRATCH_MNT | grep -c "rmapbt=1")
-> +is_rmap=$(_xfs_has_feature $SCRATCH_MNT rmapbt -v)
->  _scratch_xfs_unmount_dirty
->  
->  _get_agf_data() {
-> diff --git a/tests/xfs/348 b/tests/xfs/348
-> index faf2dca50b..d1645d9462 100755
-> --- a/tests/xfs/348
-> +++ b/tests/xfs/348
-> @@ -39,7 +39,7 @@ mknod $testdir/CHRDEV c 1 1
->  mknod $testdir/BLKDEV b 1 1
->  mknod $testdir/FIFO p
->  
-> -$XFS_INFO_PROG $SCRATCH_MNT | grep -q "ftype=1" && FTYPE_FEATURE=1
-> +_xfs_has_feature $SCRATCH_MNT ftype && FTYPE_FEATURE=1
->  
->  # Record test dir inode for xfs_repair filter
->  inode_filter=$tmp.sed
+>    (1) We did not tell the fs to persist anything;
+>    (2) We can't use dm-snapshot here, because dm-snapshot will flush the
+>        fs (I think?); and
+>    (3) The fs is still mounted, so the state of the block device at the
+>        mark reflects a dirty XFS with a log that must be replayed.
 > 
+> The next thing the test does is unmount the fs, remove the dm-logwrites
+> driver to stop recording, and check the fs:
+> 
+> _log_writes_unmount
+> _log_writes_remove
+> _dmthin_check_fs
+> 
+> This ensures that the post-umount fs is consistent.  Now we want to roll
+> back to the place we marked to see if the mwrite data made it to pmem.
+> It*should*  have, since we asked for a MAP_SYNC mapping on a fsdax
+> filesystem recorded on a pmem device:
+> 
+> # check pre-unmap state
+> _log_writes_replay_log preunmap $DMTHIN_VOL_DEV
+> _dmthin_mount
+> 
+> dm-logwrites can't actually roll backwards in time to a mark, since it
+> only records new disk contents.  It/can/  however roll forward from
+> whatever point it began recording writes to the mark, so that's what it
+> does.
+> 
+> However -- remember note (3) from earlier.  When we _dmthin_mount after
+> replaying the log to the "preunmap" mark, XFS will see the dirty XFS log
+> and try to recover the XFS log.  This is where the replay problems crop
+> up.  The XFS log records a monotonically increasing sequence number
+> (LSN) with every log update, and when updates are written into the
+> filesystem, that LSN is also written into the filesystem block.  Log
+> recovery also replays updates into the filesystem, but with the added
+> behavior that it skips a block replay if the block's LSN is higher than
+> the transaction being replayed.  IOWs, we never replay older block
+> contents over newer block contents.
+> 
+> For dm-logwrites this is a major problem, because there could be more
+> filesystem updates written to the XFS log after the mark is made.  LSNs
+> will then be handed out like this:
+> 
+> mkfs_lsn                 preunmap_lsn             umount_lsn
+>    |                           |                      |
+>    |--------------------------||----------|-----------|
+>                               |           |
+>                           xxx_lsn     yyy_lsn
+> 
+> Let's say that a new metadata block "BBB" was created in update "xxx"
+> immediately before the preunmap mark was made.  Per (1), we didn't flush
+> the filesystem before taking the mark, which means that the new block's
+> contents exist only in the log at this point.
+> 
+> Let us further say that the new block was again changed in update "yyy",
+> where preunmap_lsn < yyy_lsn <= umount_lsn.  Clearly, yyy_lsn > xxx_lsn.
+> yyy_lsn is written to the block at unmount, because unmounting flushes
+> the log clean before it completes.  This is the first time that BBB ever
+> gets written.
+> 
+> _log_writes_replay_log begins replaying the block device from mkfs_lsn
+> towards preunmap_lsn.  When it's done, it will have a log that reflects
+> all the changes up to preunmap_lsn.  Recall however that BBB isn't
+> written until after the preunmap mark, which means that dm-logwrites has
+> no record of BBB before preunmap_lsn, so dm-logwrites replay won't touch
+> BBB.  At this point, the block header for BBB has a UUID that matches
+> the filesystem, but a LSN (yyy_lsn) that is beyond preunmap_lsn.
+> 
+> XFS log recovery starts up, and finds transaction xxx.  It will read BBB
+> from disk, but then it will see that it has an LSN of yyy_lsn.  This is
+> larger than xxx_lsn, so it concludes that BBB is newer than the log and
+> moves on to the next log item.  No other log items touch BBB, so
+> recovery finishes, and now we have a filesystem containing one metadata
+> block (BBB) from the future.  This is an inconsistent filesystem, and
+> has caused failures in the tests that use logwrites.
+> 
+> To work around this problem, all we really need to do is reinitialize
+> the entire block device to known contents at mkfs time.  This can be
+> done expensively by writing zeroes to the entire block device, or it can
+> be done cheaply by (a) issuing DISCARD to the whole the block device at
+> the start of the test and (b) ensuring that reads after a discard always
+> produce zeroes.  mkfs.xfs already does (a), so the test merely has to
+> ensure (b).
+> 
+> dm-thinp is the only software solution that provides (b), so that's why
+> this test layers dm-logwrites on top of dm-thinp on top of $SCRATCH_DEV.
+> This combination used to work, but with the pending pmem/blockdev
+> divorce, this strategy is no longer feasible.
+
+Hi Darrick,
+
+Thanks a lot for your detailed explanation.
+
+Could you tell me if my understanding is correct. I think the issue is 
+that log-writes log and XFS log may save the different state of block 
+device. It is possible for XFS log to save the more updates than 
+log-writes log does. In this case, we can recovery the block device by 
+log-writes log's replay but we will get the inconsistent filesystem when 
+mounting the block device because the mount operation will try to 
+recovery more updates for XFS on the block deivce by XFS log. We need to 
+fix the issue by discarding XFS log on the block device.  mkfs.xfs will 
+try to discard the blocks including XFS log by calling ioctl(BLKDISCARD) 
+  but it will ignore error silently when the block device doesn't 
+support ioctl(BLKDISCARD).  Discarding XFS log is what you said 
+"reinitialize the entire block device", right?
+
+> 
+> I think the only way to fix this test is (a) revert all of Christoph's
+> changes so far and scuttle the divorce; or (b) change this test like so:
+
+Sorry, I didn't know which Christoph's patches need to be reverted?
+Could you tell me the URL about Christoph's patches?
+
+> 
+>   1. Create a large sparse file on $TEST_DIR and losetup that sparse
+>      file.  The resulting loop device will not have dax capability.
+> 
+>   2. Set up the dmthin/dmlogwrites stack on top of this loop device.
+> 
+>   3. Call mkfs.xfs with the SCRATCH_DEV (which hopefully is a pmem
+>      device) as the realtime device, and set the daxinherit and rtinherit
+>      flags on the root directory.  The result is a filesystem with a data
+>      section that the kernel will treat as a regular block device, a
+>      realtime section backed by pmem, and the necessary flags to make
+>      sure that the test file will actually get fsdax mode.
+> 
+>   4. Acknowledge that we no longer have any way to test MAP_SYNC
+>      functionality on ext4, which means that generic/470 has to move to
+>      tests/xfs/.
+
+Sorry, I didn't understand why the above test change can fix the issue.
+Could you tell me which step can discard XFS log?
+
+In addition, I don't like your idea about the test change because it 
+will make generic/470 become the special test for XFS. Do you know if we 
+can fix the issue by changing the test in another way? blkdiscard -z can 
+fix the issue because it does zero-fill rather than discard on the block 
+device.  However, blkdiscard -z will take a lot of time when the block 
+device is large.
+
+Best Regards,
+Xiao Yang
+
+> 
+> --D
