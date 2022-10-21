@@ -2,35 +2,35 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C135C433FE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC4ADC4332F
 	for <linux-xfs@archiver.kernel.org>; Fri, 21 Oct 2022 13:06:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230175AbiJUNG3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Oct 2022 09:06:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44920 "EHLO
+        id S230094AbiJUNGa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Oct 2022 09:06:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230091AbiJUNGO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Oct 2022 09:06:14 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 809A926B4AE;
-        Fri, 21 Oct 2022 06:06:11 -0700 (PDT)
+        with ESMTP id S229854AbiJUNGP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Oct 2022 09:06:15 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F22E44E854;
+        Fri, 21 Oct 2022 06:06:12 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id C7024CE2AB5;
-        Fri, 21 Oct 2022 13:06:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8DCBC433C1;
-        Fri, 21 Oct 2022 13:06:03 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 991ACB82BFD;
+        Fri, 21 Oct 2022 13:06:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4ECF9C433B5;
+        Fri, 21 Oct 2022 13:06:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666357565;
-        bh=WAuTFW3O+DY8MVhZwhFFkTH4TiFW9rYutffTWkjHS1o=;
-        h=From:To:Cc:Subject:Date:From;
-        b=iufBETIxL2UBu1twVnFCO0KsIKfIO8XexyQpAyERQJ2FVgGV6YUxADauBUZpucT1V
-         V1Pp5MGo0KE9itLR+J4QHsdEzaduvnc38rL0dE4eS2EaOVJB5MyHwLNGuMitP7ihC4
-         VZMkhKv9hRGVB5GFNdVW2fjPzEpigGMZMgyv1XGQXIhfDs+sOswdKR3nQvlwXg9zGV
-         gHxhx32GOxYuBz7UDuetQt2Agbs+dLEs7qIrQmiJKzxLP62nVZwMd32ANMFecLDCjL
-         Mp+PF0MthMctfI2Tve2DGDiX9OTdwZ50fSkj3cVUI4rX8aubR0mdDLTOfNY9JOJJNe
-         BHhmtzv/ojRUw==
+        s=k20201202; t=1666357570;
+        bh=3UkiypkQG9xLfg+hS+eOV/U1/Tn/AJ7lMyTpKN5KYY4=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Nb7Yh47R45XqPtLKFsPoNljbrgHogii3eyJeQw8kYHjoaipnHpNizFXrsizMdjF+r
+         PHs6urb8gnEaX6lrsQW9gE0F2HD99LWIL8nSL1J4uJAXnFtycQJ/32stK0OrJpeRq0
+         B3mEuntmnKKVKzBO7dC2b6RvaN2SHnSq4CGRVkcuMRHj0nL6p/NSeOTo35Lfog2xra
+         DCIaG2PVYQsS177hQeS57Z/8fw+VgslZwMLCR+MrcbqfRFZ6QzoXM6WJk2x1ulJG1W
+         0Xl/0GfnwBEsjS/fhLgjWLg4EtHypRr2ix40fu2N5gbUexGEr+A0LI0o/nF3U+UBgB
+         nGToooWNgVthg==
 From:   Jeff Layton <jlayton@kernel.org>
 To:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
         david@fromorbit.com, trondmy@hammerspace.com, neilb@suse.de,
@@ -40,64 +40,63 @@ To:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
 Cc:     linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: [PATCH v8 0/8] fs: clean up internal i_version handling
-Date:   Fri, 21 Oct 2022 09:05:54 -0400
-Message-Id: <20221021130602.99099-1-jlayton@kernel.org>
+        linux-xfs@vger.kernel.org, Colin Walters <walters@verbum.org>
+Subject: [PATCH v8 2/8] fs: clarify when the i_version counter must be updated
+Date:   Fri, 21 Oct 2022 09:05:56 -0400
+Message-Id: <20221021130602.99099-3-jlayton@kernel.org>
 X-Mailer: git-send-email 2.37.3
+In-Reply-To: <20221021130602.99099-1-jlayton@kernel.org>
+References: <20221021130602.99099-1-jlayton@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The main consumer of i_version field (knfsd) has to jump through a
-number of hoops to fetch it, depending on what sort of inode it is.
-Rather than do this, we want to offload the responsibility for
-presenting this field to the filesystem's ->getattr operation, which is
-a more natural way to deal with a field that may be implemented
-differently.
+The i_version field in the kernel has had different semantics over
+the decades, but NFSv4 has certain expectations. Update the comments
+in iversion.h to describe when the i_version must change.
 
-The focus of this patchset is to clean up these internal interfaces.
-This should also make it simple to present this attribute to userland in
-the future, which should be possible once the semantics are a bit more
-consistent across different backing filesystems.
+Cc: Colin Walters <walters@verbum.org>
+Cc: NeilBrown <neilb@suse.de>
+Cc: Trond Myklebust <trondmy@hammerspace.com>
+Cc: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Jeff Layton <jlayton@kernel.org>
+---
+ include/linux/iversion.h | 20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
 
-The change are fairly small, but they cross several subsystems. I'd
-appreciate R-b's and A-b's from maintainers whose subsystems I'm
-touching (Chuck, Al, Trond, and Xiubo in particular).
-
-For now, I'm leaving out more siginificant behavioral changes to
-i_version handling so that we can keep the focus on this set rather
-narrow. The next stap is to get this into linux-next with an aim toward
-merge in v6.2.
-
-Thanks!
-
-Jeff Layton (8):
-  fs: uninline inode_query_iversion
-  fs: clarify when the i_version counter must be updated
-  vfs: plumb i_version handling into struct kstat
-  nfs: report the inode version in getattr if requested
-  ceph: report the inode version in getattr if requested
-  nfsd: move nfsd4_change_attribute to nfsfh.c
-  nfsd: use the getattr operation to fetch i_version
-  nfsd: remove fetch_iversion export operation
-
- fs/ceph/inode.c          | 16 +++++++----
- fs/libfs.c               | 36 +++++++++++++++++++++++++
- fs/nfs/export.c          |  7 -----
- fs/nfs/inode.c           | 16 ++++++++---
- fs/nfsd/nfs4xdr.c        |  4 ++-
- fs/nfsd/nfsfh.c          | 42 +++++++++++++++++++++++++++++
- fs/nfsd/nfsfh.h          | 29 +-------------------
- fs/nfsd/vfs.h            |  7 ++++-
- fs/stat.c                | 17 ++++++++++--
- include/linux/exportfs.h |  1 -
- include/linux/iversion.h | 58 ++++++++++++++--------------------------
- include/linux/stat.h     |  9 +++++++
- 12 files changed, 155 insertions(+), 87 deletions(-)
-
+diff --git a/include/linux/iversion.h b/include/linux/iversion.h
+index 6755d8b4f20b..94f4dc620d01 100644
+--- a/include/linux/iversion.h
++++ b/include/linux/iversion.h
+@@ -9,8 +9,24 @@
+  * ---------------------------
+  * The change attribute (i_version) is mandated by NFSv4 and is mostly for
+  * knfsd, but is also used for other purposes (e.g. IMA). The i_version must
+- * appear different to observers if there was a change to the inode's data or
+- * metadata since it was last queried.
++ * appear larger to observers if there was an explicit change to the inode's
++ * data or metadata since it was last queried.
++ *
++ * An explicit change is one that would ordinarily result in a change to the
++ * inode status change time (aka ctime). i_version must appear to change, even
++ * if the ctime does not (since the whole point is to avoid missing updates due
++ * to timestamp granularity). If POSIX mandates that the ctime must change due
++ * to an operation, then the i_version counter must be incremented as well.
++ *
++ * Making the i_version update completely atomic with the operation itself would
++ * be prohibitively expensive. Traditionally the kernel has updated the times on
++ * directories after an operation that changes its contents. For regular files,
++ * the ctime is usually updated before the data is copied into the cache for a
++ * write. This means that there is a window of time when an observer can
++ * associate a new timestamp with old file contents. Since the purpose of the
++ * i_version is to allow for better cache coherency, the i_version must always
++ * be updated after the results of the operation are visible. Updating it before
++ * and after a change is also permitted.
+  *
+  * Observers see the i_version as a 64-bit number that never decreases. If it
+  * remains the same since it was last checked, then nothing has changed in the
 -- 
 2.37.3
 
