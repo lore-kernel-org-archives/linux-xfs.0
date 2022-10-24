@@ -2,129 +2,129 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AA5BC3A59D
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Oct 2022 04:55:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7488DC3A59D
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Oct 2022 04:55:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230108AbiJXEzi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Oct 2022 00:55:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37214 "EHLO
+        id S230104AbiJXEzq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Oct 2022 00:55:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38008 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230046AbiJXEzg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Oct 2022 00:55:36 -0400
+        with ESMTP id S230113AbiJXEzm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Oct 2022 00:55:42 -0400
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E78F4E85A
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Oct 2022 21:55:34 -0700 (PDT)
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29O2e6bb001390;
-        Mon, 24 Oct 2022 04:55:31 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C157A57DD0
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Oct 2022 21:55:41 -0700 (PDT)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29NMxxcl018071;
+        Mon, 24 Oct 2022 04:55:38 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version; s=corp-2022-7-12;
- bh=nEi7RvyG+BXjqFk8hYyKtkoi96XhEe0oO29QRLTudZg=;
- b=JESV6Vh/0cGBX1mHo926R8B/vfzID4DjziidSDluuKlnbonpQaKShThBTa3SZwa+oxw2
- LZkf9ZHqarcjpLuCD8J8RntGMwHkbw4sveqUtOEUng4PX7BU+0PYafZx9MqGRzlo06nu
- /K8AuRIWNBl4Uv2uzO6X1Uwg8pA2M9Akn4BS+xUQ4o9qIVuBf+9XZVW874UpDKxBPf6M
- M/LAsxXsWZzyj+Ob2LdvQ69A7veiul0iLngM+loLXDTTkwqGaESE52qLklBlnoIvH4F0
- eCxipJ/qmO6/bjRFYrsfZ+8pttzYQwfTY2qAYk1ZBKo6jM2OZbnNkIF0qFbxXuevPn5a Rw== 
+ bh=CgXVi2k0Vdd+sQLhnUay8afZ14RDjpbm/8UvAWBy404=;
+ b=A0kX6pIGaURgVTpArVWiiJhPEhbMHBFF/m/BoolVyObNN4Vezs6leiyyczDiojh31Mup
+ donEkjMHI3dwJrxKNLq8+t0HhA8qgInMfPn9YKt/AODl6iu/k/odr6lxfoBGI5l2oJO+
+ M2YuDANBNSSnTeJ7VrvQ76LuydQnKUejJyvFq7ZLEe1/OaGMZSsZj4up4eqx1ngICxoU
+ u4QlMslU74jK6CUkeBFawgfH/764ZMRjy19QhosXVSoKlLALrKwkmuwB9jG6pQWAgxgF
+ uw/KUi32U68/QDZlbMjUGU0AbjE/YpVIKceKCOkgZO2bM2vh196cbJFqOe01Dz6etk4w kg== 
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kc8dbasb0-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kc741jw72-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 24 Oct 2022 04:55:30 +0000
+        Mon, 24 Oct 2022 04:55:38 +0000
 Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 29NNv9on032270;
-        Mon, 24 Oct 2022 04:55:30 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2168.outbound.protection.outlook.com [104.47.55.168])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3kc6y3k8sx-1
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 29NM2V2r032034;
+        Mon, 24 Oct 2022 04:55:37 GMT
+Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2171.outbound.protection.outlook.com [104.47.55.171])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3kc6y3k8u0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 24 Oct 2022 04:55:30 +0000
+        Mon, 24 Oct 2022 04:55:37 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=S5vXDHWCUxJ/LmMgqfdqTiJidC9Pegy+rF+6rfbsFGIghWJdahybOsajLDgbkqQstqa2n6q08kQeIqnCWWNRitoJ09utJDbOd1VdQ4WRA4n3zE+tV7Xr6ZSJQ7BA6PvKhD1merN3WtscfjB6Tw3rQO5QDzp42bURmrnHpygAlhQzYBLPUipc4k8jQK37jGlTNDAgeKj9khF2XThsiBF6XfO3/Tfm949tsPljgV+0XtUFTBcmQrHBJ+lan7uY3Z5LwHdVQkzEIhFrp39WeoBhV+W6uqkEZ1hdZWfXoJnmMY6B/DnKcc+RPQB3ZEiY1QBKYb9EcMCVjfKxLvYDJCAe5g==
+ b=RbvpUZPRzwxEVwMEAic6T9CL3FndDSduS7Bpy5kGnxhSAfn8uA1RGjBdLyD9Yf7crfwoMFKJxeJ9PWEshXyvfNPW7uUnpVX9qDzjcib85Scyo54fJHbHj8GzD5YubQKwAZARFhTg6hnPimQ8W2jxSzmSSsj60cfLNI8RNUbyvwigNM/yoCz6ymKq4nfcvzfzB1eSDK7LGiNwuwHLTg0dM4zEOY5lpVUc5quQzMHooH2toL5j4etgHe52VniGCqpKguCicYVG7OYXpyksx7Wrr8YBlrQfi5sYElGeXvSBcgmlFAP/ZI23WNlyT4hj0runWVHcugF5+eMGKz8RNY8oTQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=nEi7RvyG+BXjqFk8hYyKtkoi96XhEe0oO29QRLTudZg=;
- b=M88XRl8VQGVNxMHXNcHNdHI+v9BImnuGhF4bzwQl0CyQh7s302H/azfLYVYfa1hVOUnDNG6Q1z4yuXyiBPwjSBrhSi0KKR1KHpes7RCAa7+qn/Orrut4riBvJac+FPFpp5gfS7aWBAVt2JsOh6dwNK3rlmwa3bK5FuEEqol0FQJxpyJE1HKnQghzugmPCOPr5DJB8t/jTYP2njL/4MkVbUVOMrp2IQHg6NXtrTNNyNCSsFpS1k7S6e/64U8PuLXYQwKpdToP33Slg7TUgJhhSR0NqPO9WPrIPoqafcKBWwPa7fc4cbUmn3SE/zpOZP118IaWoFnH1qY9yZjYIiE/FQ==
+ bh=CgXVi2k0Vdd+sQLhnUay8afZ14RDjpbm/8UvAWBy404=;
+ b=f8pqR891cd1RAeoNUyQoUYka8Z6Vi7TKbbQBm9ot6csHH1OqiR74agl2z3vTyR+9oQ00ElrFPdCM8IRtIax7tKcJOdeKxK4KoqA5xem8c/G+LXTwX7etMWec+ea+cBrPSLjAWKbjOBd1q52ylNsy4Hr0B4Wo+/FEHJDpKARmF/FA8nZf/i7j2+CCcjrKJs1vei5hyN2v9BSVRDgg6tiR398ssTDHnpQE8BBF8QFIrZ/oIi6bsjIpa+a+TkC4Ms4tephoK75p3FupYziFaE3vUcgSUrPGWjw0HJKQwdlNZ3eqEBz0U4QjsWn4+3eN0BRgUhNVnfvJmjs44tbnO+CP2A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nEi7RvyG+BXjqFk8hYyKtkoi96XhEe0oO29QRLTudZg=;
- b=cMVWIuCQFkfd49DBycJyUbEK4f4xDMk2XYx7O7ANiGzDgGjUrqoQEq6IxQIpMc6VXm6JwG0KOs/r4ZPSF3eQCaj3rjKAchq7p2Lnp2KYlp+eDksjSzMm4kmygFwI/0p7GhYOaBU7/sDF8xJv0jPxAAKiu+iHc038nhFt8vLLj8E=
+ bh=CgXVi2k0Vdd+sQLhnUay8afZ14RDjpbm/8UvAWBy404=;
+ b=g3ZFab0ldea2oqDg7F5bWtTdskxybNErNcpD0DKWIozxl/eiB9Wi8sdPZoiKSaajM6tNw6I6jw61qFhk+ykD83/BMdPhpfELZAVlNsPPBvfwh5fXMu9/cemEYgTDAhRuliRjDQHwjAxOZF4BCPhjE/5RoYvE7YYiC3aUew33ovo=
 Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:22b::9)
- by DS7PR10MB5374.namprd10.prod.outlook.com (2603:10b6:5:3aa::7) with
+ by CH0PR10MB4906.namprd10.prod.outlook.com (2603:10b6:610:c6::8) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5746.23; Mon, 24 Oct
- 2022 04:55:28 +0000
+ 2022 04:55:35 +0000
 Received: from SA1PR10MB5867.namprd10.prod.outlook.com
  ([fe80::81a2:47b1:9cbf:e9c]) by SA1PR10MB5867.namprd10.prod.outlook.com
  ([fe80::81a2:47b1:9cbf:e9c%6]) with mapi id 15.20.5723.033; Mon, 24 Oct 2022
- 04:55:28 +0000
+ 04:55:35 +0000
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     djwong@kernel.org
 Cc:     chandan.babu@oracle.com, linux-xfs@vger.kernel.org,
         amir73il@gmail.com, leah.rumancik@gmail.com
-Subject: [PATCH 5.4 CANDIDATE 17/26] xfs: Lower CIL flush limit for large logs
-Date:   Mon, 24 Oct 2022 10:23:05 +0530
-Message-Id: <20221024045314.110453-18-chandan.babu@oracle.com>
+Subject: [PATCH 5.4 CANDIDATE 18/26] xfs: Throttle commits on delayed background CIL push
+Date:   Mon, 24 Oct 2022 10:23:06 +0530
+Message-Id: <20221024045314.110453-19-chandan.babu@oracle.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20221024045314.110453-1-chandan.babu@oracle.com>
 References: <20221024045314.110453-1-chandan.babu@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: SI1PR02CA0041.apcprd02.prod.outlook.com
- (2603:1096:4:1f6::18) To SA1PR10MB5867.namprd10.prod.outlook.com
+X-ClientProxiedBy: SI2PR01CA0044.apcprd01.prod.exchangelabs.com
+ (2603:1096:4:193::8) To SA1PR10MB5867.namprd10.prod.outlook.com
  (2603:10b6:806:22b::9)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|DS7PR10MB5374:EE_
-X-MS-Office365-Filtering-Correlation-Id: f1217101-2c82-4cdb-4d43-08dab57bf866
+X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|CH0PR10MB4906:EE_
+X-MS-Office365-Filtering-Correlation-Id: bfd5a936-d34b-48aa-fb0d-08dab57bfc94
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: JKkcycauxO/uFIc653XIKi2/T3GFoW6Cq31Eim3Po3VZR6vVMbro8tWx9T6rNdBpLlnq0vDrieUluXXxA6MHaQr4R7jhRE6S0lb8cGIltApLw/ZSla4MJpgpzJqdKJ9nxzLxh74sBQ5kWTPBuCSmZRZW0t6VdYee3Fc8rzrBLuTs9owEVH5qhugCG3ovvynl2/kboVPLAISYqy/w33DpxhKDZbnwMMENP8IHoL0tiFFoTo+EKIFq23VC7mtTObFVEiD7D56uyVQ0EaZ8u3gmp39wBTAHPWhb0dYmPehH9YTh6qOMdoD2lcRlZXO5gw/xWnZZLnKm0MIHPvlw5ju4azP7QLPUy5kk3PhK/UjXQlaqwgGJRMBaMruwpvQP9gOt/g40Gnglq4vnGoD0eUsTFc0VR02Eu8MTnMWtShLsuWY5D5BGIogLRy1iebq27L3kNy/Jfg6Nz50yCMWAT8mMe+lg9mTicIrnWCt1HUmEHMbcHRcNC2lQXaeN+s+V33LF9qUzDQyvTqiupI6knjWV0VVQC376ZMOjk6RZiPnFMWQ0ofOA6SgqA/ZysDd/PsbTPGpwirNL3bOPtyar17oUJ+C6UqdaRfUSh0x2u6JqS8y3oicV1PdhZnaq8p8iv9kIZ+AT6N+OJGNZJXzBQuk7IOVIkid0xM4qvRY4wPk9jEyQFXpEtdHPDCkBJcb93MhMtx2czwwk1E2VgHt7+uhI6g==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(396003)(366004)(376002)(346002)(39860400002)(136003)(451199015)(6916009)(83380400001)(2906002)(5660300002)(6512007)(26005)(6486002)(4326008)(8676002)(8936002)(86362001)(66556008)(66946007)(36756003)(66476007)(2616005)(316002)(1076003)(186003)(478600001)(38100700002)(6506007)(41300700001)(6666004);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: lzorpDJntf1kUScInop2Tt0TEjmNMCUM3880TnGtban1sul4ZB6t1uy24HHpwd6VdKjStFM/+feL5ZrdE/cq6TDeRkXiO7UenlXDatBQgpDccTYUI6W1QNQ86+dJa5DZ/ISsJJYPyYk/0CxDPOFRoLlUZu/jV+iScS1hIU896uMv+8/EEMxz8nrDdhKO+wZf/mHuMNGLhbNnoynwDH+SJkEbLfZVvmmJbdnE9Vzqkp/73YLtBf+ud6u4atKPwOViQNgECtm3hNBiFAnBMi+bBvuWDpj4EMOMqc5g2x8RQRYr3RCgyROtIqG/0wlliGQjXHq31yg6MfQRFg3rcq2uzQGUSYhKFu9zN8qTWaqIfkQwwc6DJPXjtmCQgkun8tb6nSw9LOikrnkIIh73o8Js749IR+YH83WKQFteh0k81Yhw3maMjQ+o7SXFwFC7Bvau8TgVft//uvRmi6aAmlMCItMr3cKE5B0w/9teZhxfc4FavCA+TEQrkkaXKFMNzrT4KJJGuy6s8Vd+8cVsNVaEO6f3DgkgyRexVSymVTlUrd41lBrHfSq9FfLOdKgZXmZvk4QOlxvEtU/cwOFHURJO4t4t0DnOAm41yd51RVEzKwuswfB/1lCJfHGaeuE5hv0yUgIGy1ntvc14abp2DMRuSbQcByN4XNA41nkXpCMvGBbXYSY6GXrXjDZF9Hza4NXcBm//5JrKm7gdmDEpiq0frQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(396003)(39860400002)(136003)(346002)(376002)(366004)(451199015)(2616005)(1076003)(66556008)(66946007)(66476007)(5660300002)(6506007)(186003)(6666004)(83380400001)(36756003)(6486002)(4326008)(478600001)(8676002)(38100700002)(86362001)(41300700001)(8936002)(6916009)(2906002)(26005)(6512007)(316002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?xjyt3Ky57JWb3D76MvxECgBYxnJqqGV8w6h/8cuZGnVmdgOfgZaLnvyX1G3z?=
- =?us-ascii?Q?r3KUZZ3bxoFJFzTp+71oFDScAvfl3eJpT598h2DF4I9Q17sSGj9IZ/OMU046?=
- =?us-ascii?Q?zyMR/LswPPGu3s0tr1j1vVWi7PzVOFaJrcva34/SZAtoWSPoOiNLX/FMhi0F?=
- =?us-ascii?Q?spOhnAEjSvI8FYaYJAMQPpYB4A9WzC0OebUjD8Wv3I0nsQV/dFiIOy/LJwr/?=
- =?us-ascii?Q?Q4v3DRtiHxxEd2FPazOqnUYl51E87FgWdMfCdZ25NndddNfIRCsROy6i/ocl?=
- =?us-ascii?Q?M3rUgExTVfrveJBxh1B9uRrGLwxNhcUI9nkOTlYCRlWqcbZyYe3Gn2FdjujH?=
- =?us-ascii?Q?NpjzkQ8zqjfIZ+zhYQQHCw7kbwkIpfBE9wTJQGk+JOxXntUhiDlop/sHG2hj?=
- =?us-ascii?Q?DnpAkedtdJS5RRCqp367moLnbm4pbKJPn94IkQ8sQvSHT3wV5H8BhhkosmiF?=
- =?us-ascii?Q?TBSRL8U2fZw4AUeatRF4v4zVS1BNDQ6LWnqui0oz4x19jTq2aiUF743UfBgG?=
- =?us-ascii?Q?oa4oB7otm8C34CqkekKbDz0k605NN2gO6GUXssZ9eehYBuoMYn0Ed2p+vv4/?=
- =?us-ascii?Q?MQy7Pjb60xydY9nxFrMnnhlaUADD+R6l0p0HJ4GOFOUHjH3tJEfX6Oa1CKXM?=
- =?us-ascii?Q?j/QcmDxoPEUsXmtobrytpYg1lx6A2+1EEUGWdu3FX7ysfyvplK446mp2AgED?=
- =?us-ascii?Q?X/qAlDdmM4H9GUTBxYUpo/nL7IEq8gXLa72vE1RC9zBK2JYM32Z0QFq+ZPxQ?=
- =?us-ascii?Q?0SrdTItKw5oGelVVD/Mx9ypPs7kwPInuHPuJ0qNsgmkQxnvzcgjvW5yySu7V?=
- =?us-ascii?Q?Kc9m7d85Cd5An2Gcs2yStTWv5/Iay8aNdyX4j6tQpJVOwe7QFKmxIGZtu6YE?=
- =?us-ascii?Q?LGzwzT3Qxeik8U1i/fzgl8qvYQaqkOIeb61wywXc4ZL9LZq21/WJpyD726vj?=
- =?us-ascii?Q?aFCBqHev6slCuBEDtnXxz3d5wSX7URN9wWR658moVq6iH+kILJcoaGWi0ZqA?=
- =?us-ascii?Q?1KJ+7Zn6ZIRLyvqmi1++agzSBEAxJTAhHJVWGALLEKBZPNmCVk2ojWcy3zxB?=
- =?us-ascii?Q?UqHs5Sl3Vcpe5vURNKWe02CZUHW0ufa1jP1JVwSfURndO3c0w8H24ojnYVV9?=
- =?us-ascii?Q?F/BaZRng/aspHQmDzwP/McAHpbDRyqeq+kQxIx6/KPcbg8Sn5ezPoS67Rq2h?=
- =?us-ascii?Q?mS20BEjTgczAmIzccq7u3HAyqhdQdLASpTbmL5lbxvlXHEFeJTp6WwkOAqH8?=
- =?us-ascii?Q?M1jZrwnCEkgqDMUzltZdTAd+8YcqtPiV/30nOSde/fq8AgGjBtEtIFfei7n4?=
- =?us-ascii?Q?vJN12khliNn6KGQTSODlY9JFTPCv8niLSt71UNNGiA0rDW0DkOIhUbw5P1Qu?=
- =?us-ascii?Q?511btk2eMOgsX04yfjpZXPxb4hRJTu1DGKgyjWqCaPxwy2g/e6rWQcyj5ppO?=
- =?us-ascii?Q?7lEq/2JARybY8ThrTCeHH7HT+Ng+vop2kIceXifb0N9bZD1RlsCtjp6wTzuQ?=
- =?us-ascii?Q?1Widn5JDAQjvh8wdmx7mRUVC/MzBWotP5BqFun3leNRExnf7loA2IiJWwYIf?=
- =?us-ascii?Q?Iz0UI+YyC3LLa/uQZntkn9nyOYOzgyJ0SLVbOagcuxCE3iyxVeT+dE9DFLsP?=
- =?us-ascii?Q?7A=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?YNcqK9tMHBh0GVr/m/efCqgvBc4o60C6ico4gZ2cY1WpYWu4EglH5SbdQ5p1?=
+ =?us-ascii?Q?sze3BBWhX2DRWd0nQu+dmYvMkDLy8neaeeQC9/qwlfUCCse9q/PcHQ00IFp8?=
+ =?us-ascii?Q?EIT3Z+3BVjTPnf8dIe+esTHpvi2YP/QEpc1SSVcG6qjuRTTqk6fll5KcfjrM?=
+ =?us-ascii?Q?VZPGI+3zXc/fLz/J1ZuxU33iAGSO2FQJBk21gbNORfnTi/8b+TvCY+aaptJM?=
+ =?us-ascii?Q?fqqEyuZFGkT9m9/bzx3y2CWIGs5iPfK8+etcGOmkw1DrW3Mvz6uZODd6tUdb?=
+ =?us-ascii?Q?dCvKCiCv+8Lg8ruwH/EzYPlBVpTU7RSDEKzpPg+FfQSDpBbqOgLFvrllNa97?=
+ =?us-ascii?Q?2TV+qX4Zy0eu7L+BQZg9ToiCX3V0nIiaEwbnSsj8wSicSyu2i/1mKCG0ynYe?=
+ =?us-ascii?Q?YV1JM3WTVNDLWkG0nRL7MOjQ8lx+/Rr4lQevtielGq0gf4oMluEaiV88qnXr?=
+ =?us-ascii?Q?AYozVE5V6J3w6eddZGNfMN8G8LEphvN2awirUFPlHuSHk/hcOR/PlBjeoWUf?=
+ =?us-ascii?Q?uHFXOcUKHe+Y2nlDn4KOXa0bOMsidE0a8iXX/hizn1FVAb6kkPeNrwXqpMj1?=
+ =?us-ascii?Q?Agq11HFSS/CcACi7JQe0LSZNilISQTJSoMoyI/rpRGYaq6GoLXNc1dZhVI7c?=
+ =?us-ascii?Q?FIeipExsRmseFvd5fbgSmjZ+mzzaEvr1smAAWjJls3O3/Rr4kAXl17E0kPXx?=
+ =?us-ascii?Q?sY4X/8D0zsJYdRUDMwBi6o6xb+jqtIhixzhbHcPzZF9ssvmrcR+lgGoGZu5r?=
+ =?us-ascii?Q?LhQYqj1x3nCXTFGQTjTRxpFb061RdvCPE0R5oZhkO9MRGbmgqhWnJdrgiJCh?=
+ =?us-ascii?Q?AkDOD1KSkJAAGJ/T43Xd9+4Vy7RdefiZ46F8Ty15t/kWUcY+h9wk5a9Wri/z?=
+ =?us-ascii?Q?PKiqH9/Ec+IWCANgxfH1qhNlo/7gBq47gN2eoEcCTWKDNsv8ZAMtprOtsbSW?=
+ =?us-ascii?Q?Tgigwjs5hqA41qb5C4PhmIMwE3VLNmDY2aFe0KijyWy1XOtZWrcHBwjPEWXX?=
+ =?us-ascii?Q?SEg4/Z0BaLuutIEREM8jDpkaCV7F4V0rb3DFE7Lp7j0XoUGOTTjjrMJ4uIbn?=
+ =?us-ascii?Q?hgjhLzuRcneAt1OaVfO9DbeKA1Ea63DE0GqUHelzzlM0IuMeCr9gisqVve0j?=
+ =?us-ascii?Q?Dt4h5liozIQiVGq2d+U1g/oryPnL4VmD/79VB51/wTNZXWV0T6ot1cqh+TNP?=
+ =?us-ascii?Q?kLrTxSGTZV0v6+siDTn+2Z/eRYIwoeaZ3qzVcOSkr3OysQE8BoxI28Pt+C0A?=
+ =?us-ascii?Q?MlfrsSa6ZtAMNJx0oIjdGC1qI4SaAOIR1i/+MzahnlapobxpKBrXPMDoy3G1?=
+ =?us-ascii?Q?tfy6KaH4+Kt46QMUoldfDaena6VKiW0TOWH7Uj+HxrrZXLKoNqOIBdg2eamH?=
+ =?us-ascii?Q?5cXo2rBrKeJcffL6Gs4GFFBohLbKmxd9Zy6gTgbGQDF6IMLR0iH8cRdd5nKI?=
+ =?us-ascii?Q?Jw5QpMahOIfTLASKrGCOZO/FZQa7LlZdRcxKY8Wy6OlW+4Mb3vxQHvqa6O40?=
+ =?us-ascii?Q?SI7BV3Ad7TxehIJ6k+xRpy3ZXcvN8A6BUXTSjUt41tyWGIakpnojcpL70mUA?=
+ =?us-ascii?Q?fNduPKOC5yGaB7JuFXu54np9V6nWMl9PjqSZK2PQQsP7X0ouiXmvjUbS90NA?=
+ =?us-ascii?Q?+A=3D=3D?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f1217101-2c82-4cdb-4d43-08dab57bf866
+X-MS-Exchange-CrossTenant-Network-Message-Id: bfd5a936-d34b-48aa-fb0d-08dab57bfc94
 X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Oct 2022 04:55:28.0342
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Oct 2022 04:55:35.0510
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 5xnlXIBekv1j5b/HHNyBquqKjvxqQUGwVhXdSOcvhtr70pYWotGXb8ELuJpWL3PwrkYhRa48HDKDHd6OqqYycw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB5374
+X-MS-Exchange-CrossTenant-UserPrincipalName: yp/4zZdQM20U26zImJ2AMsl+nqPG13yHK5MCZOUaqtabboFf+fgx5aVCU2b5wiFbP0q3FwyrV/yEyfaoV0aqLA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR10MB4906
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
  definitions=2022-10-23_02,2022-10-21_01,2022-06-22_01
@@ -132,104 +132,197 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxsc
  mlxlogscore=999 adultscore=0 malwarescore=0 spamscore=0 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2209130000
  definitions=main-2210240031
-X-Proofpoint-ORIG-GUID: DkjsZGlVOV9zAsCCgjYN7wgrq58Rw8X_
-X-Proofpoint-GUID: DkjsZGlVOV9zAsCCgjYN7wgrq58Rw8X_
+X-Proofpoint-GUID: aETKqUVedSDW4pZPM5F7IoKgHRBWoMLz
+X-Proofpoint-ORIG-GUID: aETKqUVedSDW4pZPM5F7IoKgHRBWoMLz
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-commit 108a42358a05312b2128533c6462a3fdeb410bdf upstream.
+commit 0e7ab7efe77451cba4cbecb6c9f5ef83cf32b36b upstream.
 
-The current CIL size aggregation limit is 1/8th the log size. This
-means for large logs we might be aggregating at least 250MB of dirty objects
-in memory before the CIL is flushed to the journal. With CIL shadow
-buffers sitting around, this means the CIL is often consuming >500MB
-of temporary memory that is all allocated under GFP_NOFS conditions.
+In certain situations the background CIL push can be indefinitely
+delayed. While we have workarounds from the obvious cases now, it
+doesn't solve the underlying issue. This issue is that there is no
+upper limit on the CIL where we will either force or wait for
+a background push to start, hence allowing the CIL to grow without
+bound until it consumes all log space.
 
-Flushing the CIL can take some time to do if there is other IO
-ongoing, and can introduce substantial log force latency by itself.
-It also pins the memory until the objects are in the AIL and can be
-written back and reclaimed by shrinkers. Hence this threshold also
-tends to determine the minimum amount of memory XFS can operate in
-under heavy modification without triggering the OOM killer.
+To fix this, add a new wait queue to the CIL which allows background
+pushes to wait for the CIL context to be switched out. This happens
+when the push starts, so it will allow us to block incoming
+transaction commit completion until the push has started. This will
+only affect processes that are running modifications, and only when
+the CIL threshold has been significantly overrun.
 
-Modify the CIL space limit to prevent such huge amounts of pinned
-metadata from aggregating. We can have 2MB of log IO in flight at
-once, so limit aggregation to 16x this size. This threshold was
-chosen as it little impact on performance (on 16-way fsmark) or log
-traffic but pins a lot less memory on large logs especially under
-heavy memory pressure.  An aggregation limit of 8x had 5-10%
-performance degradation and a 50% increase in log throughput for
-the same workload, so clearly that was too small for highly
-concurrent workloads on large logs.
-
-This was found via trace analysis of AIL behaviour. e.g. insertion
-from a single CIL flush:
-
-xfs_ail_insert: old lsn 0/0 new lsn 1/3033090 type XFS_LI_INODE flags IN_AIL
-
-$ grep xfs_ail_insert /mnt/scratch/s.t |grep "new lsn 1/3033090" |wc -l
-1721823
-$
-
-So there were 1.7 million objects inserted into the AIL from this
-CIL checkpoint, the first at 2323.392108, the last at 2325.667566 which
-was the end of the trace (i.e. it hadn't finished). Clearly a major
-problem.
+This has no apparent impact on performance, and doesn't even trigger
+until over 45 million inodes had been created in a 16-way fsmark
+test on a 2GB log. That was limiting at 64MB of log space used, so
+the active CIL size is only about 3% of the total log in that case.
+The concurrent removal of those files did not trigger the background
+sleep at all.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 ---
- fs/xfs/xfs_log_priv.h | 29 +++++++++++++++++++++++------
- 1 file changed, 23 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_log_cil.c  | 37 +++++++++++++++++++++++++++++++++----
+ fs/xfs/xfs_log_priv.h | 24 ++++++++++++++++++++++++
+ fs/xfs/xfs_trace.h    |  1 +
+ 3 files changed, 58 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index b880c23cb6e4..a3cc8a9a16d9 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -323,13 +323,30 @@ struct xfs_cil {
-  * tries to keep 25% of the log free, so we need to keep below that limit or we
-  * risk running out of free log space to start any new transactions.
-  *
-- * In order to keep background CIL push efficient, we will set a lower
-- * threshold at which background pushing is attempted without blocking current
-- * transaction commits.  A separate, higher bound defines when CIL pushes are
-- * enforced to ensure we stay within our maximum checkpoint size bounds.
-- * threshold, yet give us plenty of space for aggregation on large logs.
-+ * In order to keep background CIL push efficient, we only need to ensure the
-+ * CIL is large enough to maintain sufficient in-memory relogging to avoid
-+ * repeated physical writes of frequently modified metadata. If we allow the CIL
-+ * to grow to a substantial fraction of the log, then we may be pinning hundreds
-+ * of megabytes of metadata in memory until the CIL flushes. This can cause
-+ * issues when we are running low on memory - pinned memory cannot be reclaimed,
-+ * and the CIL consumes a lot of memory. Hence we need to set an upper physical
-+ * size limit for the CIL that limits the maximum amount of memory pinned by the
-+ * CIL but does not limit performance by reducing relogging efficiency
-+ * significantly.
-+ *
-+ * As such, the CIL push threshold ends up being the smaller of two thresholds:
-+ * - a threshold large enough that it allows CIL to be pushed and progress to be
-+ *   made without excessive blocking of incoming transaction commits. This is
-+ *   defined to be 12.5% of the log space - half the 25% push threshold of the
-+ *   AIL.
-+ * - small enough that it doesn't pin excessive amounts of memory but maintains
-+ *   close to peak relogging efficiency. This is defined to be 16x the iclog
-+ *   buffer window (32MB) as measurements have shown this to be roughly the
-+ *   point of diminishing performance increases under highly concurrent
-+ *   modification workloads.
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index ef652abd112c..4a09d50e1368 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -670,6 +670,11 @@ xlog_cil_push(
+ 	push_seq = cil->xc_push_seq;
+ 	ASSERT(push_seq <= ctx->sequence);
+ 
++	/*
++	 * Wake up any background push waiters now this context is being pushed.
++	 */
++	wake_up_all(&ctx->push_wait);
++
+ 	/*
+ 	 * Check if we've anything to push. If there is nothing, then we don't
+ 	 * move on to a new sequence number and so we have to be able to push
+@@ -746,6 +751,7 @@ xlog_cil_push(
+ 	 */
+ 	INIT_LIST_HEAD(&new_ctx->committing);
+ 	INIT_LIST_HEAD(&new_ctx->busy_extents);
++	init_waitqueue_head(&new_ctx->push_wait);
+ 	new_ctx->sequence = ctx->sequence + 1;
+ 	new_ctx->cil = cil;
+ 	cil->xc_ctx = new_ctx;
+@@ -900,7 +906,7 @@ xlog_cil_push_work(
   */
--#define XLOG_CIL_SPACE_LIMIT(log)	(log->l_logsize >> 3)
-+#define XLOG_CIL_SPACE_LIMIT(log)	\
-+	min_t(int, (log)->l_logsize >> 3, BBTOB(XLOG_TOTAL_REC_SHIFT(log)) << 4)
+ static void
+ xlog_cil_push_background(
+-	struct xlog	*log)
++	struct xlog	*log) __releases(cil->xc_ctx_lock)
+ {
+ 	struct xfs_cil	*cil = log->l_cilp;
+ 
+@@ -914,14 +920,36 @@ xlog_cil_push_background(
+ 	 * don't do a background push if we haven't used up all the
+ 	 * space available yet.
+ 	 */
+-	if (cil->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log))
++	if (cil->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log)) {
++		up_read(&cil->xc_ctx_lock);
+ 		return;
++	}
+ 
+ 	spin_lock(&cil->xc_push_lock);
+ 	if (cil->xc_push_seq < cil->xc_current_sequence) {
+ 		cil->xc_push_seq = cil->xc_current_sequence;
+ 		queue_work(log->l_mp->m_cil_workqueue, &cil->xc_push_work);
+ 	}
++
++	/*
++	 * Drop the context lock now, we can't hold that if we need to sleep
++	 * because we are over the blocking threshold. The push_lock is still
++	 * held, so blocking threshold sleep/wakeup is still correctly
++	 * serialised here.
++	 */
++	up_read(&cil->xc_ctx_lock);
++
++	/*
++	 * If we are well over the space limit, throttle the work that is being
++	 * done until the push work on this context has begun.
++	 */
++	if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log)) {
++		trace_xfs_log_cil_wait(log, cil->xc_ctx->ticket);
++		ASSERT(cil->xc_ctx->space_used < log->l_logsize);
++		xlog_wait(&cil->xc_ctx->push_wait, &cil->xc_push_lock);
++		return;
++	}
++
+ 	spin_unlock(&cil->xc_push_lock);
+ 
+ }
+@@ -1038,9 +1066,9 @@ xfs_log_commit_cil(
+ 		if (lip->li_ops->iop_committing)
+ 			lip->li_ops->iop_committing(lip, xc_commit_lsn);
+ 	}
+-	xlog_cil_push_background(log);
+ 
+-	up_read(&cil->xc_ctx_lock);
++	/* xlog_cil_push_background() releases cil->xc_ctx_lock */
++	xlog_cil_push_background(log);
+ }
  
  /*
+@@ -1199,6 +1227,7 @@ xlog_cil_init(
+ 
+ 	INIT_LIST_HEAD(&ctx->committing);
+ 	INIT_LIST_HEAD(&ctx->busy_extents);
++	init_waitqueue_head(&ctx->push_wait);
+ 	ctx->sequence = 1;
+ 	ctx->cil = cil;
+ 	cil->xc_ctx = ctx;
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index a3cc8a9a16d9..f231b7dfaeab 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -247,6 +247,7 @@ struct xfs_cil_ctx {
+ 	struct xfs_log_vec	*lv_chain;	/* logvecs being pushed */
+ 	struct list_head	iclog_entry;
+ 	struct list_head	committing;	/* ctx committing list */
++	wait_queue_head_t	push_wait;	/* background push throttle */
+ 	struct work_struct	discard_endio_work;
+ };
+ 
+@@ -344,10 +345,33 @@ struct xfs_cil {
+  *   buffer window (32MB) as measurements have shown this to be roughly the
+  *   point of diminishing performance increases under highly concurrent
+  *   modification workloads.
++ *
++ * To prevent the CIL from overflowing upper commit size bounds, we introduce a
++ * new threshold at which we block committing transactions until the background
++ * CIL commit commences and switches to a new context. While this is not a hard
++ * limit, it forces the process committing a transaction to the CIL to block and
++ * yeild the CPU, giving the CIL push work a chance to be scheduled and start
++ * work. This prevents a process running lots of transactions from overfilling
++ * the CIL because it is not yielding the CPU. We set the blocking limit at
++ * twice the background push space threshold so we keep in line with the AIL
++ * push thresholds.
++ *
++ * Note: this is not a -hard- limit as blocking is applied after the transaction
++ * is inserted into the CIL and the push has been triggered. It is largely a
++ * throttling mechanism that allows the CIL push to be scheduled and run. A hard
++ * limit will be difficult to implement without introducing global serialisation
++ * in the CIL commit fast path, and it's not at all clear that we actually need
++ * such hard limits given the ~7 years we've run without a hard limit before
++ * finding the first situation where a checkpoint size overflow actually
++ * occurred. Hence the simple throttle, and an ASSERT check to tell us that
++ * we've overrun the max size.
+  */
+ #define XLOG_CIL_SPACE_LIMIT(log)	\
+ 	min_t(int, (log)->l_logsize >> 3, BBTOB(XLOG_TOTAL_REC_SHIFT(log)) << 4)
+ 
++#define XLOG_CIL_BLOCKING_SPACE_LIMIT(log)	\
++	(XLOG_CIL_SPACE_LIMIT(log) * 2)
++
+ /*
   * ticket grant locks, queues and accounting have their own cachlines
+  * as these are quite hot and can be operated on concurrently.
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index ffb398c1de69..b5d4ca60145a 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -1011,6 +1011,7 @@ DEFINE_LOGGRANT_EVENT(xfs_log_regrant_reserve_sub);
+ DEFINE_LOGGRANT_EVENT(xfs_log_ungrant_enter);
+ DEFINE_LOGGRANT_EVENT(xfs_log_ungrant_exit);
+ DEFINE_LOGGRANT_EVENT(xfs_log_ungrant_sub);
++DEFINE_LOGGRANT_EVENT(xfs_log_cil_wait);
+ 
+ DECLARE_EVENT_CLASS(xfs_log_item_class,
+ 	TP_PROTO(struct xfs_log_item *lip),
 -- 
 2.35.1
 
