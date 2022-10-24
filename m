@@ -2,195 +2,158 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3002AC3A59D
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Oct 2022 05:31:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0508C38A2D
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Oct 2022 05:44:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229928AbiJXFbP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Oct 2022 01:31:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56214 "EHLO
+        id S230077AbiJXFoB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Oct 2022 01:44:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229823AbiJXFbP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Oct 2022 01:31:15 -0400
-Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9624E606B9
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Oct 2022 22:31:13 -0700 (PDT)
-Received: by mail-pg1-x534.google.com with SMTP id f193so7885343pgc.0
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Oct 2022 22:31:13 -0700 (PDT)
+        with ESMTP id S229520AbiJXFoA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Oct 2022 01:44:00 -0400
+Received: from mail-oa1-x36.google.com (mail-oa1-x36.google.com [IPv6:2001:4860:4864:20::36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5B0D7B291
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Oct 2022 22:43:59 -0700 (PDT)
+Received: by mail-oa1-x36.google.com with SMTP id 586e51a60fabf-12c8312131fso10780242fac.4
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Oct 2022 22:43:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=FwxG912r7qQdhMvwHpOUVaZKCV3QA/HupUI/48WJuP8=;
-        b=P5LkBGTHK3qZ3uv1Ax1dDOjSV1pjKe8ivXnvEjbopX3MBMbD4JcTmrIkWo+7TSmrie
-         dPdsPjz5vm6pEtKx055YZ/sS2KE5jtGEodmKIOgEPDz/P6BMLLWURm7UIveY9mp6faQS
-         7NCWZQsjZkthgASTjLHSZNS4Up5sb4kGa+nkF3aqhuBLfiPzG/9V92egJOllfUqQ8100
-         bkB2aoGVIXrnwpA7hLCk/I7sYOU/sdzjW2DF8kCXDRdMayTkNSlOp1xz5szQyC4ryABS
-         HiCjc84hp3yUagfkN2O1eOzs9wmZ89N2b2JXg/zfw98K8ls0ngoVHN48vyxx0UTcM0vv
-         /tWA==
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=NzWkQ3S5PjX5kJ4wIGZV4OjNz+s3GvMcwAnH0+V8NPc=;
+        b=I1HAogI9WcOg/l1b+YH+WynE0Ksf+bGK2azho48qHyLMB6PBUKRUT9Q9PkwmYbjy92
+         NTX32/r/3q84J9AeHiuQKkE68goNGLas+E7kPeu3CgDHQxO0pmNQ0RU9VF6RIeYyfweo
+         1pLR/cq7RvaUzbzup2RWXi5bVChMBdD5rMdJh5Zee40JIFur1brArG/Odi9FsW3UHcMY
+         wd1vvP+TWEQN6PJY40bf/PgAO8BEO/BTshqYL76HBPQH90qe8gvQJOfiZ+kuiY112Dn/
+         LAAoZlHdZMxPyP3pp2KCZlGWRdc6OZ7rmV1sGzc/hJjAedJOOrHqJI6EJgHg9D1+cZ6Z
+         WYAw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=FwxG912r7qQdhMvwHpOUVaZKCV3QA/HupUI/48WJuP8=;
-        b=bNo/WkzF/aMA2pdCrjx5ubiGWlAu5ryAAUdmlb104Xjqx0NhT+0wwZzgxZ8auPaokq
-         fM8hOigkQY6hpLFSk7BgmD7CJnhhDDCSTmAdhKGwMSc+KmfZPSrRZBmFucfB2T1dMFB/
-         nYIA9sDxcjBFM11YZ/q+jjB7mVAszE5KEw3fYR0RBlSe4bbuWG/FCt4ECEP3KDURuigi
-         rFbM4Fp0WLhuXUdyXCrOBXMjII2IG7fnmt9josjMqv7psJQSkrwg9pHkLFRAAeh8YQ53
-         1GXQAqvCm5o8TDWIC9Z2WK9dlKvKTYrUw+3phkauu/sIzqa2GL36rvFr6LN9HQbWsrgF
-         ik2Q==
-X-Gm-Message-State: ACrzQf0/iywzsk6xK1/bhlVqFcb7OwSHrr3gZv0uOEJH9FecUWWEQE/K
-        t7RjC2LnItE3X2DWUEpSnN07PA==
-X-Google-Smtp-Source: AMsMyM4qhjcVIs2TqmkRHCehYHsec5mzcEa4l4kRVjUQnd/NKoMzbiyGEQhn2aw2YDuvdTnCFJPVvA==
-X-Received: by 2002:a63:1317:0:b0:42a:e7a5:ef5a with SMTP id i23-20020a631317000000b0042ae7a5ef5amr27152779pgl.392.1666589473004;
-        Sun, 23 Oct 2022 22:31:13 -0700 (PDT)
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=NzWkQ3S5PjX5kJ4wIGZV4OjNz+s3GvMcwAnH0+V8NPc=;
+        b=OQHzeFdY7EUY1/yBKgrkAyuO3nGeP/WcZeI6zPrnGeBpR/LdS20YyLxpPwIALx8SEY
+         UZMTVbM0i6ARQ5oEdVSWTsBirSRwwC39dHwWTpDDeb5KztPANks4dGc0cOekJgIRUKh2
+         Hg1TYjO7rslCFWNwU/FVDJ4RCmXjdo9eExosHSEpcnmyk0Omv9JL36SjdGW1uXuL4qeY
+         MwYEtSobVSNUHwVwoH6k4YBw8Yw0tnH6P6bsVkPEoJxcpTJgNUQMPV02mJTm5i1EUCPl
+         gHPR0CnhrnTJWbZOUjS2x+gCNXrgNjM1FaBOIf/BrY881kIMepn/p0bOheTi4GEpzTqY
+         WC0w==
+X-Gm-Message-State: ACrzQf1ZLnVRGoH2NPR8GVsoKN+taFB+YIZjYFQhw3j041+j2Yf1KoQh
+        Lquqql+ycUUeS1WrZSLMwXhEFqB/7YOEPQ==
+X-Google-Smtp-Source: AMsMyM7OIevFFE6SJtmxm0ujzBBZsVDUcoWIPyoJleFTTpLeGjV2abt6bwCBDwOiqsiNoZvrXB8p6w==
+X-Received: by 2002:a17:90a:5915:b0:20a:d6d5:31bd with SMTP id k21-20020a17090a591500b0020ad6d531bdmr36232275pji.15.1666590228680;
+        Sun, 23 Oct 2022 22:43:48 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au. [49.181.106.210])
-        by smtp.gmail.com with ESMTPSA id q10-20020a170902f78a00b0017a018221e2sm18680427pln.70.2022.10.23.22.31.12
+        by smtp.gmail.com with ESMTPSA id d9-20020aa797a9000000b0056ba7ce4d5asm2224020pfq.52.2022.10.23.22.43.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 23 Oct 2022 22:31:12 -0700 (PDT)
+        Sun, 23 Oct 2022 22:43:48 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1omq3J-005iEA-4a; Mon, 24 Oct 2022 16:31:09 +1100
-Date:   Mon, 24 Oct 2022 16:31:09 +1100
+        id 1omqFV-005iLa-8u; Mon, 24 Oct 2022 16:43:45 +1100
+Date:   Mon, 24 Oct 2022 16:43:45 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        "yangx.jy@fujitsu.com" <yangx.jy@fujitsu.com>,
-        "Yasunori Gotou (Fujitsu)" <y-goto@fujitsu.com>,
-        Brian Foster <bfoster@redhat.com>,
-        "hch@infradead.org" <hch@infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "zwisler@kernel.org" <zwisler@kernel.org>,
-        Jeff Moyer <jmoyer@redhat.com>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "toshi.kani@hpe.com" <toshi.kani@hpe.com>
-Subject: Re: [PATCH] xfs: fail dax mount if reflink is enabled on a partition
-Message-ID: <20221024053109.GY3600936@dread.disaster.area>
-References: <e3d51a6b-12e9-2a19-1280-5fd9dd64117c@fujitsu.com>
- <deb54a77-90d3-df44-1880-61cce6e3f670@fujitsu.com>
- <1444b9b5-363a-163c-0513-55d1ea951799@fujitsu.com>
- <Yzt6eWLuX/RTjmjj@magnolia>
- <f196bcab-6aa2-6313-8a7c-f8ab409621b7@fujitsu.com>
- <Yzx64zGt2kTiDYaP@magnolia>
- <6a83a56e-addc-f3c4-2357-9589a49bf582@fujitsu.com>
- <Y1NRNtToQTjs0Dbd@magnolia>
- <20221023220018.GX3600936@dread.disaster.area>
- <OSBPR01MB2920CA997DDE891C06776279F42E9@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Long Li <leo.lilong@huawei.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org,
+        yi.zhang@huawei.com, houtao1@huawei.com, guoxuenan@huawei.com
+Subject: Re: [PATCH v1] xfs: fix sb write verify for lazysbcount
+Message-ID: <20221024054345.GZ3600936@dread.disaster.area>
+References: <20221022020345.GA2699923@ceph-admin>
+ <Y1NSBMwgUYxhW4PE@magnolia>
+ <20221022120125.GA2052581@ceph-admin>
+ <20221022211613.GW3600936@dread.disaster.area>
+ <Y1YPjkiiN3FyMBfG@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <OSBPR01MB2920CA997DDE891C06776279F42E9@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+In-Reply-To: <Y1YPjkiiN3FyMBfG@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 24, 2022 at 03:17:52AM +0000, ruansy.fnst@fujitsu.com wrote:
-> 在 2022/10/24 6:00, Dave Chinner 写道:
-> > On Fri, Oct 21, 2022 at 07:11:02PM -0700, Darrick J. Wong wrote:
-> >> On Thu, Oct 20, 2022 at 10:17:45PM +0800, Yang, Xiao/杨 晓 wrote:
-> >>> In addition, I don't like your idea about the test change because it will
-> >>> make generic/470 become the special test for XFS. Do you know if we can fix
-> >>> the issue by changing the test in another way? blkdiscard -z can fix the
-> >>> issue because it does zero-fill rather than discard on the block device.
-> >>> However, blkdiscard -z will take a lot of time when the block device is
-> >>> large.
-> >>
-> >> Well we /could/ just do that too, but that will suck if you have 2TB of
-> >> pmem. ;)
-> >>
-> >> Maybe as an alternative path we could just create a very small
-> >> filesystem on the pmem and then blkdiscard -z it?
-> >>
-> >> That said -- does persistent memory actually have a future?  Intel
-> >> scuttled the entire Optane product, cxl.mem sounds like expansion
-> >> chassis full of DRAM, and fsdax is horribly broken in 6.0 (weird kernel
-> >> asserts everywhere) and 6.1 (every time I run fstests now I see massive
-> >> data corruption).
-> >
-> > Yup, I see the same thing. fsdax was a train wreck in 6.0 - broken
-> > on both ext4 and XFS. Now that I run a quick check on 6.1-rc1, I
-> > don't think that has changed at all - I still see lots of kernel
-> > warnings, data corruption and "XFS_IOC_CLONE_RANGE: Invalid
-> > argument" errors.
+On Sun, Oct 23, 2022 at 09:07:42PM -0700, Darrick J. Wong wrote:
+> On Sun, Oct 23, 2022 at 08:16:13AM +1100, Dave Chinner wrote:
+> > On Sat, Oct 22, 2022 at 08:01:25PM +0800, Long Li wrote:
+> > > On Fri, Oct 21, 2022 at 07:14:28PM -0700, Darrick J. Wong wrote:
+> > > > On Sat, Oct 22, 2022 at 10:03:45AM +0800, Long Li wrote:
+> > > > > When lazysbcount is enabled, multiple threads stress test the xfs report
+> > > > > the following problems:
+> > 
+> > We've had lazy sb counters for 15 years and just about every XFS
+> > filesystem in production uses them, so providing us with some idea
+> > of the scope of the problem and how to reproduce it would be greatly
+> > appreciated.
+> > 
+> > What stress test are you running? What filesystem config does it
+> > manifest on (other than lazysbcount=1)?  How long does the stress
+> > test run for, and where/why does log recovery get run in this stress
+> > test?
+> > 
+> > > > > XFS (loop0): SB summary counter sanity check failed
+> > > > > XFS (loop0): Metadata corruption detected at xfs_sb_write_verify
+> > > > > 	     +0x13b/0x460, xfs_sb block 0x0
+> > > > > XFS (loop0): Unmount and run xfs_repair
+> > > > > XFS (loop0): First 128 bytes of corrupted metadata buffer:
+> > > > > 00000000: 58 46 53 42 00 00 10 00 00 00 00 00 00 28 00 00  XFSB.........(..
+> > > > > 00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > > > > 00000020: 69 fb 7c cd 5f dc 44 af 85 74 e0 cc d4 e3 34 5a  i.|._.D..t....4Z
+> > > > > 00000030: 00 00 00 00 00 20 00 06 00 00 00 00 00 00 00 80  ..... ..........
+> > > > > 00000040: 00 00 00 00 00 00 00 81 00 00 00 00 00 00 00 82  ................
+> > > > > 00000050: 00 00 00 01 00 0a 00 00 00 00 00 04 00 00 00 00  ................
+> > > > > 00000060: 00 00 0a 00 b4 b5 02 00 02 00 00 08 00 00 00 00  ................
+> > > > > 00000070: 00 00 00 00 00 00 00 00 0c 09 09 03 14 00 00 19  ................
+> > > > > XFS (loop0): Corruption of in-memory data (0x8) detected at _xfs_buf_ioapply
+> > > > > 	+0xe1e/0x10e0 (fs/xfs/xfs_buf.c:1580).  Shutting down filesystem.
+> > > > > XFS (loop0): Please unmount the filesystem and rectify the problem(s)
+> > > > > XFS (loop0): log mount/recovery failed: error -117
+> > > > > XFS (loop0): log mount failed
+> > > > > 
+> > > > > The cause of the problem is that during the log recovery process, incorrect
+> > > > > icount and ifree are recovered from the log and fail to pass the size check
+> > > > 
+> > > > Are you saying that the log contained a transaction in which ifree >
+> > > > icount?
+> > > 
+> > > Yes, this situation is possible. For example consider the following sequence:
+> > > 
+> > >  CPU0				    CPU1
+> > >  xfs_log_sb			    xfs_trans_unreserve_and_mod_sb
+> > >  ----------			    ------------------------------
+> > >  percpu_counter_sum(&mp->m_icount)
+> > > 				    percpu_counter_add(&mp->m_icount, idelta)
+> > > 				    percpu_counter_add_batch(&mp->m_icount,
+> > > 						  idelta, XFS_ICOUNT_BATCH)
+> > >  percpu_counter_sum(&mp->m_ifree)
+> > 
+> > What caused the xfs_log_sb() to be called? Very few things
+> > actually log the superblock this way at runtime - it's generally
+> > only logged directly like this when a feature bit changes during a
+> > transaction (rare) or at a synchronisation point when everything
+> > else is idle and there's no chance of a race like this occurring...
+> > 
+> > I can see a couple of routes to this occurring via feature bit
+> > modification, but I don't see them being easy to hit or something
+> > that would exist for very long in the journal. Hence I'm wondering
+> > if there should be runtime protection for xfs_log_sb() to avoid
+> > these problems....
 > 
-> Firstly, I think the "XFS_IOC_CLONE_RANGE: Invalid argument" error is
-> caused by the restrictions which prevent reflink work together with DAX:
-> 
-> a. fs/xfs/xfs_ioctl.c:1141
-> /* Don't allow us to set DAX mode for a reflinked file for now. */
-> if ((fa->fsx_xflags & FS_XFLAG_DAX) && xfs_is_reflink_inode(ip))
->         return -EINVAL;
-> 
-> b. fs/xfs/xfs_iops.c:1174
-> /* Only supported on non-reflinked files. */
-> if (xfs_is_reflink_inode(ip))
->         return false;
-> 
-> These restrictions were removed in "drop experimental warning" patch[1].
->   I think they should be separated from that patch.
-> 
-> [1]
-> https://lore.kernel.org/linux-xfs/1663234002-17-1-git-send-email-ruansy.fnst@fujitsu.com/
-> 
-> 
-> Secondly, how the data corruption happened?
+> Maybe.  Or perhaps we sample m_i{count,free} until they come up with a
+> value that will pass the verifier, and only then log the new values to
+> the primary super xfs_buf?
 
-No idea - i"m just reporting that lots of fsx tests failed with data
-corruptions. I haven't had time to look at why, I'm still trying to
-sort out the fix for a different data corruption...
+I suspect the simplest thing to do is this:
 
-> Or which case failed?
+	mp->m_sb.sb_ifree = min_t(uint64_t, percpu_counter_sum(&mp->m_ifree),
+				mp->m_sb.sb.icount);
 
-*lots* of them failed with kernel warnings with reflink turned off:
-
-SECTION       -- xfs_dax_noreflink
-=========================
-Failures: generic/051 generic/068 generic/075 generic/083
-generic/112 generic/127 generic/198 generic/231 generic/247
-generic/269 generic/270 generic/340 generic/344 generic/388
-generic/461 generic/471 generic/476 generic/519 generic/561 xfs/011
-xfs/013 xfs/073 xfs/297 xfs/305 xfs/517 xfs/538
-Failed 26 of 1079 tests
-
-All of those except xfs/073 and generic/471 are failures due to
-warnings found in dmesg.
-
-With reflink enabled, I terminated the run after g/075, g/091, g/112
-and generic/127 reported fsx data corruptions and g/051, g/068,
-g/075 and g/083 had reported kernel warnings in dmesg.
-
-> Could
-> you give me more info (such as mkfs options, xfstests configs)?
-
-They are exactly the same as last time I reported these problems.
-
-For the "no reflink" test issues:
-
-mkfs options are "-m reflink=0,rmapbt=1", mount options "-o
-dax=always" for both filesytems.  Config output at start of test
-run:
-
-SECTION       -- xfs_dax_noreflink
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 test3 6.1.0-rc1-dgc+ #1615 SMP PREEMPT_DYNAMIC Wed Oct 19 12:24:16 AEDT 2022
-MKFS_OPTIONS  -- -f -m reflink=0,rmapbt=1 /dev/pmem1
-MOUNT_OPTIONS -- -o dax=always -o context=system_u:object_r:root_t:s0 /dev/pmem1 /mnt/scratch
-
-pmem devices are a pair of fake 8GB pmem regions set up by kernel
-CLI via "memmap=8G!15G,8G!24G". I don't have anything special set up
-- the kernel config is kept minimal for these VMs - and the only
-kernel debug option I have turned on for these specific test runs is
-CONFIG_XFS_DEBUG=y.
-
-THe only difference between the noreflink and reflink runs is that I
-drop the "-m reflink=0" mkfs parameter. Otherwise they are identical
-and the errors I reported are from back-to-back fstests runs without
-rebooting the VM....
+That way ifree will never be logged as being greater than icount.
+Neither icount or ifree will be accurate if we are racing with other
+updates, but it will guarantee that what we write to the journal
+won't trigger corruption warnings.
 
 -Dave.
 -- 
