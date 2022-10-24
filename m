@@ -2,77 +2,116 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7022FA373F
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Oct 2022 19:53:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 682B2C67871
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Oct 2022 21:35:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233670AbiJXTxS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Oct 2022 15:53:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47984 "EHLO
+        id S229838AbiJXVfO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Oct 2022 17:35:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43770 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233672AbiJXTwP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Oct 2022 15:52:15 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2FCF161FED
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Oct 2022 11:17:26 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 69447B8120C
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Oct 2022 13:02:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85E3FC433C1
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Oct 2022 13:02:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666616565;
-        bh=uKAsEs+OA5DcqoV+l8LS9d/fkAQkkhfAeQF78Es3ZAs=;
-        h=Date:From:To:Subject:From;
-        b=iJVGIZvXWvI469+v4qfRkHcEf7LeBhdRix/U/jbgQAfFcbLFfLFz8pV4jhGsbp2zY
-         3B9TKnDdAps75hvJWuaiB1hoAH6+TFnPQswR7ecNXc0evQd1i7N1yLLj13uDB07z1M
-         HeZFMmyXzsbbGgKCnGxJpNQfRqOrUMjg0y0qfXLugrD0zuA6KGfQXhtsqnn4eMiWNu
-         VvIatNv4K8rkd4aCvEOEKWxACEEu/8b5K9j7Xz2cOD3p6wi8bx9Vk5AtJ/zRekPymG
-         YciE/MmnvU53U75KPwUdbPaPKS8+S+1uq3M8VgEscXAWJtmzrzxGJHe3GDKsZ9Yfvz
-         +e3JX+gkIpLNA==
-Date:   Mon, 24 Oct 2022 15:02:41 +0200
-From:   Carlos Maiolino <cem@kernel.org>
-To:     linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfsdump: for-next (created and) updated to aaaa57f32a605
-Message-ID: <20221024130241.55nbzxn5egzyn5fw@andromeda>
+        with ESMTP id S230439AbiJXVe4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Oct 2022 17:34:56 -0400
+Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28ECE2DCF31;
+        Mon, 24 Oct 2022 12:41:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1666640508; x=1698176508;
+  h=message-id:subject:from:to:cc:date:in-reply-to:
+   references:content-transfer-encoding:mime-version;
+  bh=Hy92JwTra/z8JWqWMJC7+K5x6uq/6h9D0Gg0b3wf/6c=;
+  b=nBMq4kfN/MNcijXePUW+pQaehHpsgIaljoEgvhElwCH7DABUfTISeSdU
+   GpMkTALvLJRwO+o46S05EF8CxaWUA1me0FfJOY1jSq2uMrIvQPdq7LHWz
+   o8W/ecETJ4Ll3LZQ4AUICM2gvUfH9XPSWuh9Yptycfii9S8mOxU88nJaG
+   NkoIo4dBZd8isX9wcO2nz7Z4PgeEBF5s4z8mXZ5K/bVSOMJEY7lT8ihGU
+   43DE6PJN7FwJJp0tBkVWm9dt2jHbYWcklmLEcLgveZaDXrqsr3kpoc4AF
+   Ul0+fb4osUlvQP9tb30pd3t4VD+f5DHig4Bs9wZCGQAVSYJBqHNSEClPK
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10510"; a="287226292"
+X-IronPort-AV: E=Sophos;i="5.95,210,1661842800"; 
+   d="scan'208";a="287226292"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2022 12:39:41 -0700
+X-IronPort-AV: E=McAfee;i="6500,9779,10510"; a="694672754"
+X-IronPort-AV: E=Sophos;i="5.95,210,1661842800"; 
+   d="scan'208";a="694672754"
+Received: from relbaz1-mobl.amr.corp.intel.com (HELO [10.209.26.196]) ([10.209.26.196])
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2022 12:39:41 -0700
+Message-ID: <feb89e52675ed630e52dc8aacfa66feb6f19fd3a.camel@linux.intel.com>
+Subject: Re: writeback completion soft lockup BUG in folio_wake_bit()
+From:   Tim Chen <tim.c.chen@linux.intel.com>
+To:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Dan Williams <dan.j.williams@intel.com>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        Brian Foster <bfoster@redhat.com>,
+        Linux-MM <linux-mm@kvack.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Hugh Dickins <hughd@google.com>
+Date:   Mon, 24 Oct 2022 12:39:33 -0700
+In-Reply-To: <CAHk-=wizsHtGa=7dESxXd6VNU2mdHqhvCv88FB3xcWb3o3iJMw@mail.gmail.com>
+References: <YjDj3lvlNJK/IPiU@bfoster>
+         <YjJPu/3tYnuKK888@casper.infradead.org> <YjM88OwoccZOKp86@bfoster>
+         <YjSTq4roN/LJ7Xsy@bfoster> <YjSbHp6B9a1G3tuQ@casper.infradead.org>
+         <CAHk-=wh6V6TZjjnqBvktbaho_wqfjZYQ9zcKJTV8EP2Kygn0uQ@mail.gmail.com>
+         <6350a5f07bae2_6be12944c@dwillia2-xfh.jf.intel.com.notmuch>
+         <CAHk-=wizsHtGa=7dESxXd6VNU2mdHqhvCv88FB3xcWb3o3iJMw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4 (3.44.4-2.fc36) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Sun, 2022-10-23 at 15:38 -0700, Linus Torvalds wrote:
+> On Wed, Oct 19, 2022 at 6:35 PM Dan Williams
+> <dan.j.williams@intel.com> wrote:
+> >=20
+> > A report from a tester with this call trace:
+> >=20
+> > =C2=A0watchdog: BUG: soft lockup - CPU#127 stuck for 134s!
+> > [ksoftirqd/127:782]
+> > =C2=A0RIP: 0010:_raw_spin_unlock_irqrestore+0x19/0x40 [..]
+>=20
+> Whee.
+>=20
+> > ...lead me to this thread. This was after I had them force all
+> > softirqs
+> > to run in ksoftirqd context, and run with rq_affinity =3D=3D 2 to force
+> > I/O completion work to throttle new submissions.
+> >=20
+> > Willy, are these headed upstream:
+> >=20
+> > https://lore.kernel.org/all/YjSbHp6B9a1G3tuQ@casper.infradead.org
+> >=20
+> > ...or I am missing an alternate solution posted elsewhere?
+>=20
+> Can your reporter test that patch? I think it should still apply
+> pretty much as-is.. And if we actually had somebody who had a
+> test-case that was literally fixed by getting rid of the old bookmark
+> code, that would make applying that patch a no-brainer.
+>=20
+> The problem is that the original load that caused us to do that thing
+> in the first place isn't repeatable because it was special production
+> code - so removing that bookmark code because we _think_ it now hurts
+> more than it helps is kind of a big hurdle.
+>=20
+> But if we had some hard confirmation from somebody that "yes, the
+> bookmark code is now hurting", that would make it a lot more
+> palatable
+> to just remove the code that we just _think_ that probably isn't
+> needed any more..
+>=20
+>=20
+I do think that the original locked page on migration problem was fixed
+by commit 9a1ea439b16b. Unfortunately the customer did not respond to
+us when we asked them to test their workload when that patch went=C2=A0
+into the mainline.=C2=A0
 
-Today I created a for-next branch on xfsdump repository, to keep it consistent
-with xfsprogs and the kernel repository. It has a smaller patch flow than the
-other tools, but yet, I'd rather have a staging area before releasing a new
-version than pushing directly to the master branch doing a new release.
+I don't have objection to Matthew's fix to remove the bookmark code,
+now that it is causing problems with this scenario that I didn't
+anticipate in my original code.
 
-As usual, patches often get missed so please check if your outstanding patches
-were in this update. If not please give me a heads up so I'll process them.
+Tim
 
-The new head of the for-next branch is commit:
-
-aaaa57f32a605e4ebd2e4230fe036afc009ae0a0
-
-
-New Commits:
-
-Donald Douwsma (4):
-      [06dd184] xfsrestore: fix on-media inventory media unpacking
-      [6503407] xfsrestore: fix on-media inventory stream unpacking
-      [7b843fd] xfsdump: fix on-media inventory stream packing
-      [aaaa57f] xfsrestore: untangle inventory unpacking logic
-
-Code Diffstat:
-
- inventory/inv_stobj.c | 42 +++++++++++++++---------------------------
- restore/content.c     | 13 +++++--------
- 2 files changed, 20 insertions(+), 35 deletions(-)
-
-Cheers.
-
--- 
-Carlos Maiolino
