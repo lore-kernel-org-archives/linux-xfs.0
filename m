@@ -2,247 +2,358 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7132AFA373E
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Oct 2022 21:15:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1F07C38A2D
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Oct 2022 21:17:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229898AbiJYVPD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Oct 2022 17:15:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34186 "EHLO
+        id S231926AbiJYVRe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Oct 2022 17:17:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42434 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231926AbiJYVPC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2022 17:15:02 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E574476E6
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2022 14:15:00 -0700 (PDT)
+        with ESMTP id S231357AbiJYVRd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2022 17:17:33 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6693F10A7FD
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2022 14:17:32 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BF60E61B44
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2022 21:14:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F1E8C433D6;
-        Tue, 25 Oct 2022 21:14:59 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C4F0E61B7A
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2022 21:17:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33200C433C1;
+        Tue, 25 Oct 2022 21:17:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666732499;
-        bh=UX5FCORQcIhvTZgj4G3kk1/dF6qPsAP0OfiNp4tRF8o=;
+        s=k20201202; t=1666732651;
+        bh=AFIs7L1y+F+2DYVX2rjdkswGco3NZRGwbk93W/fCNT0=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=suoFO6po78V6tgLpYsphN12mm3NOL1smpe9UeXLomm5cuHjXf0XSWz6Ih35pi53Iy
-         CJNGqXZMNg0vXBlMciA9y7DlJqy8T1/jywOALy55wTmkvHGscmwRWym8I1EL2N61+a
-         nj+a4bx8rXTiQeovy3vuxGN9XdWQ8DvxfB0EgXknumlhPO7gIEugslc4EhkKXNQKQY
-         WUhmBpjAPXs4TXC76HQtza4I4oRBnlJ0OV6UWN9JNNd67hTAk1LQ08Eb3I8PtksjFE
-         fkq/FADlJk34zmLbB+x9cE5VF5rUde9N9ZqmJIdeoPD9ZSwpYpqcJdgct+1OaW0EMm
-         QoaWpTB0udM4w==
-Date:   Tue, 25 Oct 2022 14:14:58 -0700
+        b=te4AVtsBdDEBPAHdyGjXUwDwnE8BJUJoU4YDHOcRTiypQf0gd/jRhjoC36J30eUfS
+         kSKcCnhoYiPYtqIjE16PN+jhB1/b+rcCYWGKGf/av5/xwi0CHFcF1Vr4NITbbSBU9b
+         hOZ3mfBcOLykkUJOQlN0eXpU9O4+zkR5Cn1razDyOILvZcUkUkPjaDiayWBJF43pmT
+         q73e0Csjwz6LxwwoDOJzcup8+v2AwsFmuTgON/NBZsaMaBJ3gwoxksPtqNfDUj4f84
+         k0/BHxkaisiTQcTZSZ1RI37xUwONzZ7xlt3egzMeN1FLkOKeuDgVoAjz9VthREGFZp
+         5ZFLQEiOLSdCg==
+Date:   Tue, 25 Oct 2022 14:17:30 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     allison.henderson@oracle.com
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 18/27] xfs: remove parent pointers in unlink
-Message-ID: <Y1hR0kBgpscTNzLK@magnolia>
-References: <20221021222936.934426-1-allison.henderson@oracle.com>
- <20221021222936.934426-19-allison.henderson@oracle.com>
+To:     Allison Henderson <allison.henderson@oracle.com>
+Cc:     "david@fromorbit.com" <david@fromorbit.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 5/6] xfs: fix memcpy fortify errors in EFI log format
+ copying
+Message-ID: <Y1hSagZ2SnEyGLsS@magnolia>
+References: <166664715160.2688790.16712973829093762327.stgit@magnolia>
+ <166664717980.2688790.14877643421674738495.stgit@magnolia>
+ <fca71fe8808ba11e6e96cc5cc4c2da3acb243a7d.camel@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20221021222936.934426-19-allison.henderson@oracle.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <fca71fe8808ba11e6e96cc5cc4c2da3acb243a7d.camel@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 21, 2022 at 03:29:27PM -0700, allison.henderson@oracle.com wrote:
-> From: Allison Henderson <allison.henderson@oracle.com>
-> 
-> This patch removes the parent pointer attribute during unlink
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_attr.c   |  2 +-
->  fs/xfs/libxfs/xfs_attr.h   |  1 +
->  fs/xfs/libxfs/xfs_parent.c | 17 +++++++++++++++
->  fs/xfs/libxfs/xfs_parent.h |  4 ++++
->  fs/xfs/xfs_inode.c         | 44 ++++++++++++++++++++++++++++++++------
->  5 files changed, 60 insertions(+), 8 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 805aaa5639d2..e967728d1ee7 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -946,7 +946,7 @@ xfs_attr_defer_replace(
->  }
->  
->  /* Removes an attribute for an inode as a deferred operation */
-> -static int
-> +int
->  xfs_attr_defer_remove(
->  	struct xfs_da_args	*args)
->  {
-> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> index 0cf23f5117ad..033005542b9e 100644
-> --- a/fs/xfs/libxfs/xfs_attr.h
-> +++ b/fs/xfs/libxfs/xfs_attr.h
-> @@ -545,6 +545,7 @@ bool xfs_attr_is_leaf(struct xfs_inode *ip);
->  int xfs_attr_get_ilocked(struct xfs_da_args *args);
->  int xfs_attr_get(struct xfs_da_args *args);
->  int xfs_attr_defer_add(struct xfs_da_args *args);
-> +int xfs_attr_defer_remove(struct xfs_da_args *args);
->  int xfs_attr_set(struct xfs_da_args *args);
->  int xfs_attr_set_iter(struct xfs_attr_intent *attr);
->  int xfs_attr_remove_iter(struct xfs_attr_intent *attr);
-> diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
-> index cf5ea8ce8bd3..c09f49b7c241 100644
-> --- a/fs/xfs/libxfs/xfs_parent.c
-> +++ b/fs/xfs/libxfs/xfs_parent.c
-> @@ -125,6 +125,23 @@ xfs_parent_defer_add(
->  	return xfs_attr_defer_add(args);
->  }
->  
-> +int
-> +xfs_parent_defer_remove(
-> +	struct xfs_trans	*tp,
-> +	struct xfs_inode	*dp,
-> +	struct xfs_parent_defer	*parent,
-> +	xfs_dir2_dataptr_t	diroffset,
-> +	struct xfs_inode	*child)
-> +{
-> +	struct xfs_da_args	*args = &parent->args;
-> +
-> +	xfs_init_parent_name_rec(&parent->rec, dp, diroffset);
-> +	args->trans = tp;
-> +	args->dp = child;
-> +	args->hashval = xfs_da_hashname(args->name, args->namelen);
-> +	return xfs_attr_defer_remove(args);
-> +}
-> +
->  void
->  xfs_parent_cancel(
->  	xfs_mount_t		*mp,
-> diff --git a/fs/xfs/libxfs/xfs_parent.h b/fs/xfs/libxfs/xfs_parent.h
-> index 9b8d0764aad6..1c506532c624 100644
-> --- a/fs/xfs/libxfs/xfs_parent.h
-> +++ b/fs/xfs/libxfs/xfs_parent.h
-> @@ -27,6 +27,10 @@ int xfs_parent_init(xfs_mount_t *mp, struct xfs_parent_defer **parentp);
->  int xfs_parent_defer_add(struct xfs_trans *tp, struct xfs_parent_defer *parent,
->  			 struct xfs_inode *dp, struct xfs_name *parent_name,
->  			 xfs_dir2_dataptr_t diroffset, struct xfs_inode *child);
-> +int xfs_parent_defer_remove(struct xfs_trans *tp, struct xfs_inode *dp,
-> +			    struct xfs_parent_defer *parent,
-> +			    xfs_dir2_dataptr_t diroffset,
-> +			    struct xfs_inode *child);
->  void xfs_parent_cancel(xfs_mount_t *mp, struct xfs_parent_defer *parent);
->  unsigned int xfs_pptr_calc_space_res(struct xfs_mount *mp,
->  				     unsigned int namelen);
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index f2e7da1befa4..83cc52c2bcf1 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -2472,6 +2472,19 @@ xfs_iunpin_wait(
->  		__xfs_iunpin_wait(ip);
->  }
->  
-> +unsigned int
-> +xfs_remove_space_res(
+On Tue, Oct 25, 2022 at 08:54:25PM +0000, Allison Henderson wrote:
+> On Mon, 2022-10-24 at 14:32 -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Starting in 6.1, CONFIG_FORTIFY_SOURCE checks the length parameter of
+> > memcpy.  Since we're already fixing problems with BUI item copying,
+> > we
+> > should fix it everything else.
+> > 
+> > An extra difficulty here is that the ef[id]_extents arrays are
+> > declared
+> > as single-element arrays.  This is not the convention for flex arrays
+> > in
+> > the modern kernel, and it causes all manner of problems with static
+> > checking tools, since they often cannot tell the difference between a
+> > single element array and a flex array.
+> > 
+> > So for starters, change those array[1] declarations to array[]
+> > declarations to signal that they are proper flex arrays and adjust
+> > all
+> > the "size-1" expressions to fit the new declaration style.
+> > 
+> > Next, refactor the xfs_efi_copy_format function to handle the copying
+> > of
+> > the head and the flex array members separately.  While we're at it,
+> > fix
+> > a minor validation deficiency in the recovery function.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  fs/xfs/libxfs/xfs_log_format.h |   12 ++++++------
+> >  fs/xfs/xfs_extfree_item.c      |   31 +++++++++++++++++++++---------
+> > -
+> >  fs/xfs/xfs_ondisk.h            |   11 +++++++----
+> >  fs/xfs/xfs_super.c             |    4 ++--
+> >  4 files changed, 36 insertions(+), 22 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_log_format.h
+> > b/fs/xfs/libxfs/xfs_log_format.h
+> > index b351b9dc6561..2f41fa8477c9 100644
+> > --- a/fs/xfs/libxfs/xfs_log_format.h
+> > +++ b/fs/xfs/libxfs/xfs_log_format.h
+> > @@ -613,7 +613,7 @@ typedef struct xfs_efi_log_format {
+> >         uint16_t                efi_size;       /* size of this item
+> > */
+> >         uint32_t                efi_nextents;   /* # extents to free
+> > */
+> >         uint64_t                efi_id;         /* efi identifier */
+> > -       xfs_extent_t            efi_extents[1]; /* array of extents
+> > to free */
+> > +       xfs_extent_t            efi_extents[];  /* array of extents
+> > to free */
+> >  } xfs_efi_log_format_t;
+> >  
+> >  typedef struct xfs_efi_log_format_32 {
+> > @@ -621,7 +621,7 @@ typedef struct xfs_efi_log_format_32 {
+> >         uint16_t                efi_size;       /* size of this item
+> > */
+> >         uint32_t                efi_nextents;   /* # extents to free
+> > */
+> >         uint64_t                efi_id;         /* efi identifier */
+> > -       xfs_extent_32_t         efi_extents[1]; /* array of extents
+> > to free */
+> > +       xfs_extent_32_t         efi_extents[];  /* array of extents
+> > to free */
+> >  } __attribute__((packed)) xfs_efi_log_format_32_t;
+> >  
+> >  typedef struct xfs_efi_log_format_64 {
+> > @@ -629,7 +629,7 @@ typedef struct xfs_efi_log_format_64 {
+> >         uint16_t                efi_size;       /* size of this item
+> > */
+> >         uint32_t                efi_nextents;   /* # extents to free
+> > */
+> >         uint64_t                efi_id;         /* efi identifier */
+> > -       xfs_extent_64_t         efi_extents[1]; /* array of extents
+> > to free */
+> > +       xfs_extent_64_t         efi_extents[];  /* array of extents
+> > to free */
+> >  } xfs_efi_log_format_64_t;
+> >  
+> >  /*
+> > @@ -642,7 +642,7 @@ typedef struct xfs_efd_log_format {
+> >         uint16_t                efd_size;       /* size of this item
+> > */
+> >         uint32_t                efd_nextents;   /* # of extents freed
+> > */
+> >         uint64_t                efd_efi_id;     /* id of
+> > corresponding efi */
+> > -       xfs_extent_t            efd_extents[1]; /* array of extents
+> > freed */
+> > +       xfs_extent_t            efd_extents[];  /* array of extents
+> > freed */
+> >  } xfs_efd_log_format_t;
+> >  
+> >  typedef struct xfs_efd_log_format_32 {
+> > @@ -650,7 +650,7 @@ typedef struct xfs_efd_log_format_32 {
+> >         uint16_t                efd_size;       /* size of this item
+> > */
+> >         uint32_t                efd_nextents;   /* # of extents freed
+> > */
+> >         uint64_t                efd_efi_id;     /* id of
+> > corresponding efi */
+> > -       xfs_extent_32_t         efd_extents[1]; /* array of extents
+> > freed */
+> > +       xfs_extent_32_t         efd_extents[];  /* array of extents
+> > freed */
+> >  } __attribute__((packed)) xfs_efd_log_format_32_t;
+> >  
+> >  typedef struct xfs_efd_log_format_64 {
+> > @@ -658,7 +658,7 @@ typedef struct xfs_efd_log_format_64 {
+> >         uint16_t                efd_size;       /* size of this item
+> > */
+> >         uint32_t                efd_nextents;   /* # of extents freed
+> > */
+> >         uint64_t                efd_efi_id;     /* id of
+> > corresponding efi */
+> > -       xfs_extent_64_t         efd_extents[1]; /* array of extents
+> > freed */
+> > +       xfs_extent_64_t         efd_extents[];  /* array of extents
+> > freed */
+> >  } xfs_efd_log_format_64_t;
+> >  
+> >  /*
+> > diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+> > index 27ccfcd82f04..466cc5c5cd33 100644
+> > --- a/fs/xfs/xfs_extfree_item.c
+> > +++ b/fs/xfs/xfs_extfree_item.c
+> > @@ -76,7 +76,7 @@ xfs_efi_item_sizeof(
+> >         struct xfs_efi_log_item *efip)
+> >  {
+> >         return sizeof(struct xfs_efi_log_format) +
+> > -              (efip->efi_format.efi_nextents - 1) *
+> > sizeof(xfs_extent_t);
+> > +              efip->efi_format.efi_nextents * sizeof(xfs_extent_t);
+> Did we want to try and avoid using typedefs?  I notice that seems to
+> come up a lot in reviews.  Otherwise the rest looks good.
 
-This probably needs to remove XFS_REMOVE_SPACE_RES (the macro) right?
-
-With that fixed,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Yes, but I kill off these typedef usages in the next patch by creating
+the sizeof helpers.
 
 --D
 
-> +	struct xfs_mount	*mp,
-> +	unsigned int		namelen)
-> +{
-> +	unsigned int		ret = XFS_DIRREMOVE_SPACE_RES(mp);
-> +
-> +	if (xfs_has_parent(mp))
-> +		ret += xfs_pptr_calc_space_res(mp, namelen);
-> +
-> +	return ret;
-> +}
-> +
->  /*
->   * Removing an inode from the namespace involves removing the directory entry
->   * and dropping the link count on the inode. Removing the directory entry can
-> @@ -2501,16 +2514,18 @@ xfs_iunpin_wait(
->   */
->  int
->  xfs_remove(
-> -	xfs_inode_t             *dp,
-> +	struct xfs_inode	*dp,
->  	struct xfs_name		*name,
-> -	xfs_inode_t		*ip)
-> +	struct xfs_inode	*ip)
->  {
-> -	xfs_mount_t		*mp = dp->i_mount;
-> -	xfs_trans_t             *tp = NULL;
-> +	struct xfs_mount	*mp = dp->i_mount;
-> +	struct xfs_trans	*tp = NULL;
->  	int			is_dir = S_ISDIR(VFS_I(ip)->i_mode);
->  	int			dontcare;
->  	int                     error = 0;
->  	uint			resblks;
-> +	xfs_dir2_dataptr_t	dir_offset;
-> +	struct xfs_parent_defer	*parent = NULL;
->  
->  	trace_xfs_remove(dp, name);
->  
-> @@ -2525,6 +2540,12 @@ xfs_remove(
->  	if (error)
->  		goto std_return;
->  
-> +	if (xfs_has_parent(mp)) {
-> +		error = xfs_parent_init(mp, &parent);
-> +		if (error)
-> +			goto std_return;
-> +	}
-> +
->  	/*
->  	 * We try to get the real space reservation first, allowing for
->  	 * directory btree deletion(s) implying possible bmap insert(s).  If we
-> @@ -2536,12 +2557,12 @@ xfs_remove(
->  	 * the directory code can handle a reservationless update and we don't
->  	 * want to prevent a user from trying to free space by deleting things.
->  	 */
-> -	resblks = XFS_REMOVE_SPACE_RES(mp);
-> +	resblks = xfs_remove_space_res(mp, name->len);
->  	error = xfs_trans_alloc_dir(dp, &M_RES(mp)->tr_remove, ip, &resblks,
->  			&tp, &dontcare);
->  	if (error) {
->  		ASSERT(error != -ENOSPC);
-> -		goto std_return;
-> +		goto drop_incompat;
->  	}
->  
->  	/*
-> @@ -2595,12 +2616,18 @@ xfs_remove(
->  	if (error)
->  		goto out_trans_cancel;
->  
-> -	error = xfs_dir_removename(tp, dp, name, ip->i_ino, resblks, NULL);
-> +	error = xfs_dir_removename(tp, dp, name, ip->i_ino, resblks, &dir_offset);
->  	if (error) {
->  		ASSERT(error != -ENOENT);
->  		goto out_trans_cancel;
->  	}
->  
-> +	if (parent) {
-> +		error = xfs_parent_defer_remove(tp, dp, parent, dir_offset, ip);
-> +		if (error)
-> +			goto out_trans_cancel;
-> +	}
-> +
->  	/*
->  	 * If this is a synchronous mount, make sure that the
->  	 * remove transaction goes to disk before returning to
-> @@ -2625,6 +2652,9 @@ xfs_remove(
->   out_unlock:
->  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  	xfs_iunlock(dp, XFS_ILOCK_EXCL);
-> + drop_incompat:
-> +	if (parent)
-> +		xfs_parent_cancel(mp, parent);
->   std_return:
->  	return error;
->  }
-> -- 
-> 2.25.1
+> Allison
+> 
+> >  }
+> >  
+> >  STATIC void
+> > @@ -160,7 +160,7 @@ xfs_efi_init(
+> >         ASSERT(nextents > 0);
+> >         if (nextents > XFS_EFI_MAX_FAST_EXTENTS) {
+> >                 size = (uint)(sizeof(struct xfs_efi_log_item) +
+> > -                       ((nextents - 1) * sizeof(xfs_extent_t)));
+> > +                       (nextents * sizeof(xfs_extent_t)));
+> >                 efip = kmem_zalloc(size, 0);
+> >         } else {
+> >                 efip = kmem_cache_zalloc(xfs_efi_cache,
+> > @@ -189,14 +189,19 @@ xfs_efi_copy_format(xfs_log_iovec_t *buf,
+> > xfs_efi_log_format_t *dst_efi_fmt)
+> >         xfs_efi_log_format_t *src_efi_fmt = buf->i_addr;
+> >         uint i;
+> >         uint len = sizeof(xfs_efi_log_format_t) +
+> > -               (src_efi_fmt->efi_nextents - 1) *
+> > sizeof(xfs_extent_t);
+> > +               src_efi_fmt->efi_nextents * sizeof(xfs_extent_t);
+> >         uint len32 = sizeof(xfs_efi_log_format_32_t) +
+> > -               (src_efi_fmt->efi_nextents - 1) *
+> > sizeof(xfs_extent_32_t);
+> > +               src_efi_fmt->efi_nextents * sizeof(xfs_extent_32_t);
+> >         uint len64 = sizeof(xfs_efi_log_format_64_t) +
+> > -               (src_efi_fmt->efi_nextents - 1) *
+> > sizeof(xfs_extent_64_t);
+> > +               src_efi_fmt->efi_nextents * sizeof(xfs_extent_64_t);
+> >  
+> >         if (buf->i_len == len) {
+> > -               memcpy((char *)dst_efi_fmt, (char*)src_efi_fmt, len);
+> > +               memcpy(dst_efi_fmt, src_efi_fmt,
+> > +                      offsetof(struct xfs_efi_log_format,
+> > efi_extents));
+> > +               for (i = 0; i < src_efi_fmt->efi_nextents; i++)
+> > +                       memcpy(&dst_efi_fmt->efi_extents[i],
+> > +                              &src_efi_fmt->efi_extents[i],
+> > +                              sizeof(struct xfs_extent));
+> >                 return 0;
+> >         } else if (buf->i_len == len32) {
+> >                 xfs_efi_log_format_32_t *src_efi_fmt_32 = buf-
+> > >i_addr;
+> > @@ -256,7 +261,7 @@ xfs_efd_item_sizeof(
+> >         struct xfs_efd_log_item *efdp)
+> >  {
+> >         return sizeof(xfs_efd_log_format_t) +
+> > -              (efdp->efd_format.efd_nextents - 1) *
+> > sizeof(xfs_extent_t);
+> > +              efdp->efd_format.efd_nextents * sizeof(xfs_extent_t);
+> >  }
+> >  
+> >  STATIC void
+> > @@ -341,7 +346,7 @@ xfs_trans_get_efd(
+> >  
+> >         if (nextents > XFS_EFD_MAX_FAST_EXTENTS) {
+> >                 efdp = kmem_zalloc(sizeof(struct xfs_efd_log_item) +
+> > -                               (nextents - 1) * sizeof(struct
+> > xfs_extent),
+> > +                               nextents * sizeof(struct xfs_extent),
+> >                                 0);
+> >         } else {
+> >                 efdp = kmem_cache_zalloc(xfs_efd_cache,
+> > @@ -733,6 +738,12 @@ xlog_recover_efi_commit_pass2(
+> >  
+> >         efi_formatp = item->ri_buf[0].i_addr;
+> >  
+> > +       if (item->ri_buf[0].i_len <
+> > +                       offsetof(struct xfs_efi_log_format,
+> > efi_extents)) {
+> > +               XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log-
+> > >l_mp);
+> > +               return -EFSCORRUPTED;
+> > +       }
+> > +
+> >         efip = xfs_efi_init(mp, efi_formatp->efi_nextents);
+> >         error = xfs_efi_copy_format(&item->ri_buf[0], &efip-
+> > >efi_format);
+> >         if (error) {
+> > @@ -772,9 +783,9 @@ xlog_recover_efd_commit_pass2(
+> >  
+> >         efd_formatp = item->ri_buf[0].i_addr;
+> >         ASSERT((item->ri_buf[0].i_len ==
+> > (sizeof(xfs_efd_log_format_32_t) +
+> > -               ((efd_formatp->efd_nextents - 1) *
+> > sizeof(xfs_extent_32_t)))) ||
+> > +               (efd_formatp->efd_nextents *
+> > sizeof(xfs_extent_32_t)))) ||
+> >                (item->ri_buf[0].i_len ==
+> > (sizeof(xfs_efd_log_format_64_t) +
+> > -               ((efd_formatp->efd_nextents - 1) *
+> > sizeof(xfs_extent_64_t)))));
+> > +               (efd_formatp->efd_nextents *
+> > sizeof(xfs_extent_64_t)))));
+> >  
+> >         xlog_recover_release_intent(log, XFS_LI_EFI, efd_formatp-
+> > >efd_efi_id);
+> >         return 0;
+> > diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+> > index 19c1df00b48e..9737b5a9f405 100644
+> > --- a/fs/xfs/xfs_ondisk.h
+> > +++ b/fs/xfs/xfs_ondisk.h
+> > @@ -118,10 +118,10 @@ xfs_check_ondisk_structs(void)
+> >         /* log structures */
+> >         XFS_CHECK_STRUCT_SIZE(struct xfs_buf_log_format,        88);
+> >         XFS_CHECK_STRUCT_SIZE(struct xfs_dq_logformat,          24);
+> > -       XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_32,     28);
+> > -       XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_64,     32);
+> > -       XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_32,     28);
+> > -       XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_64,     32);
+> > +       XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_32,     16);
+> > +       XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_64,     16);
+> > +       XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_32,     16);
+> > +       XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_64,     16);
+> >         XFS_CHECK_STRUCT_SIZE(struct xfs_extent_32,             12);
+> >         XFS_CHECK_STRUCT_SIZE(struct xfs_extent_64,             16);
+> >         XFS_CHECK_STRUCT_SIZE(struct xfs_log_dinode,            176);
+> > @@ -146,6 +146,9 @@ xfs_check_ondisk_structs(void)
+> >         XFS_CHECK_OFFSET(struct xfs_bui_log_format,
+> > bui_extents,        16);
+> >         XFS_CHECK_OFFSET(struct xfs_cui_log_format,
+> > cui_extents,        16);
+> >         XFS_CHECK_OFFSET(struct xfs_rui_log_format,
+> > rui_extents,        16);
+> > +       XFS_CHECK_OFFSET(struct xfs_efi_log_format,
+> > efi_extents,        16);
+> > +       XFS_CHECK_OFFSET(struct xfs_efi_log_format_32,
+> > efi_extents,     16);
+> > +       XFS_CHECK_OFFSET(struct xfs_efi_log_format_64,
+> > efi_extents,     16);
+> >  
+> >         /*
+> >          * The v5 superblock format extended several v4 header
+> > structures with
+> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > index f029c6702dda..8485e3b37ca0 100644
+> > --- a/fs/xfs/xfs_super.c
+> > +++ b/fs/xfs/xfs_super.c
+> > @@ -2029,7 +2029,7 @@ xfs_init_caches(void)
+> >  
+> >         xfs_efd_cache = kmem_cache_create("xfs_efd_item",
+> >                                         (sizeof(struct
+> > xfs_efd_log_item) +
+> > -                                       (XFS_EFD_MAX_FAST_EXTENTS -
+> > 1) *
+> > +                                       XFS_EFD_MAX_FAST_EXTENTS *
+> >                                         sizeof(struct xfs_extent)),
+> >                                         0, 0, NULL);
+> >         if (!xfs_efd_cache)
+> > @@ -2037,7 +2037,7 @@ xfs_init_caches(void)
+> >  
+> >         xfs_efi_cache = kmem_cache_create("xfs_efi_item",
+> >                                          (sizeof(struct
+> > xfs_efi_log_item) +
+> > -                                        (XFS_EFI_MAX_FAST_EXTENTS -
+> > 1) *
+> > +                                        XFS_EFI_MAX_FAST_EXTENTS *
+> >                                          sizeof(struct xfs_extent)),
+> >                                          0, 0, NULL);
+> >         if (!xfs_efi_cache)
+> > 
 > 
