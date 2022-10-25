@@ -2,224 +2,240 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78231C38A2D
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Oct 2022 15:58:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2922EC04A95
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Oct 2022 16:47:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232768AbiJYP6o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Oct 2022 11:58:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59384 "EHLO
+        id S229744AbiJYQrv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Oct 2022 12:47:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51610 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232730AbiJYP6h (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2022 11:58:37 -0400
-Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D02E17C570;
-        Tue, 25 Oct 2022 08:58:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1666713516; x=1698249516;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=iqqCx7nAFxubOx9h/x991mjuZ5NAW3vt55g+3MRC80Q=;
-  b=Jwy41ZWg2fF+LP+EKcz9ljqXox+SZpyJEmC2TKCPWsEyDPv0kfBXsTMb
-   qufafNlEj510tJpgdW+JaDTlvExeNaR9p28epgiksA0N2d05MYlvfVnyc
-   WCu+URvnsXfiRdILB8wz57/G++pTAr2ZJkrWg8sTJdOy1hWSsUhbdowZc
-   rjptj6FEqbP9xb83BYynTOPlQ/gstxHY/sN3chEEI2OvQDK3qQkBO1U0K
-   WfqMx9rLcypvuuVasVBNFWGlqfyQ5L0S1h0Yy0J1xc/fMDNVm/u7BEVfc
-   hSyrHdcXywC9bv+gjfaM4zrxOoSmNHmPNu1QkKhYliajmQ8MkRmlLKAOw
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10510"; a="307710780"
-X-IronPort-AV: E=Sophos;i="5.95,212,1661842800"; 
-   d="scan'208";a="307710780"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Oct 2022 08:58:36 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10510"; a="960865985"
-X-IronPort-AV: E=Sophos;i="5.95,212,1661842800"; 
-   d="scan'208";a="960865985"
-Received: from fmsmsx602.amr.corp.intel.com ([10.18.126.82])
-  by fmsmga005.fm.intel.com with ESMTP; 25 Oct 2022 08:58:36 -0700
-Received: from fmsmsx612.amr.corp.intel.com (10.18.126.92) by
- fmsmsx602.amr.corp.intel.com (10.18.126.82) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 25 Oct 2022 08:58:35 -0700
-Received: from fmsmsx610.amr.corp.intel.com (10.18.126.90) by
- fmsmsx612.amr.corp.intel.com (10.18.126.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 25 Oct 2022 08:58:35 -0700
-Received: from fmsedg602.ED.cps.intel.com (10.1.192.136) by
- fmsmsx610.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31 via Frontend Transport; Tue, 25 Oct 2022 08:58:35 -0700
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (104.47.55.105)
- by edgegateway.intel.com (192.55.55.71) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2375.31; Tue, 25 Oct 2022 08:58:35 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=NSx2bmJJjNf+1sdmEMZ1g6bnFIF8Wk+UD2MmOsFYdkq/3CHAa2oI+ACfjCq5WTZBIGFTW64ctWijK70bhlp3wtIBFMREJAsst4bbUy8hQ/3QTTAkVhJxE2hSq+W2x8CIbbpSjIqQ80Gdmx2+xKbTivvPqF4suHO1aq24ILJXtc0b7WFlmmUGG/LRdzRodqL3vUoFb3yBck4ZRTcMtA2BFIhNL0aQDLs023JE82qRhysVyzkXwIc7uv/q5Iy72hgazxo3xRro/o+OB/xM+iLaHb1MiQ7bEj4qh1nMGlBMik9POOVmYm1PjwjfZFHfZRKEagQ1OF6jNbxNBfqzgNZxIA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=q2COmoCqTwx0Jv9Fy+5uUUHIkCEnLwqvI2tWtxdZPVY=;
- b=MWr4H5iGy2vwsMppRtk49+n3ak0zN3VXCe4Yml6vSovv5AZNwFi+9lgzJQtoGCZwrHqAaf/PGOQO7TYyA80cf/JCvfAawyMnog0MLxgu6T+GzbZHxUFCeXacRPU+w98foNlzXhhHE+TwHaE8gM335wM1BnDrLGsGmddKpbxjCVTZU8bJu9Q7KkyAZt55r6VIFTNBVxRaOuW2USS4lq72YKj8ZDEL6xt0Yo4oDZNOiGo8hNuFqxywIuiNN46Rdk+2yG45d84wX0aB/44RZqKrsgaHGoifa7yAjMccxzFPcUvD5pWbr13Ryy2ybLT5AuYuJA+ppivEUwdq2vAIqKGrRA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Received: from SA1PR11MB5827.namprd11.prod.outlook.com (2603:10b6:806:236::21)
- by MW4PR11MB7152.namprd11.prod.outlook.com (2603:10b6:303:222::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5746.28; Tue, 25 Oct
- 2022 15:58:33 +0000
-Received: from SA1PR11MB5827.namprd11.prod.outlook.com
- ([fe80::6311:18b8:2bff:87ea]) by SA1PR11MB5827.namprd11.prod.outlook.com
- ([fe80::6311:18b8:2bff:87ea%4]) with mapi id 15.20.5746.026; Tue, 25 Oct 2022
- 15:58:32 +0000
-From:   "Arechiga Lopez, Jesus A" <jesus.a.arechiga.lopez@intel.com>
-To:     "Williams, Dan J" <dan.j.williams@intel.com>,
-        "Torvalds, Linus" <torvalds@linux-foundation.org>
-CC:     Matthew Wilcox <willy@infradead.org>,
-        Brian Foster <bfoster@redhat.com>,
-        Linux-MM <linux-mm@kvack.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Hugh Dickins <hughd@google.com>,
-        "tim.c.chen@linux.intel.com" <tim.c.chen@linux.intel.com>,
-        "Gross, Mark" <mark.gross@intel.com>
-Subject: RE: writeback completion soft lockup BUG in folio_wake_bit()
-Thread-Topic: writeback completion soft lockup BUG in folio_wake_bit()
-Thread-Index: AQHY5+Ugu8Y19CaE9k+bMwH99A1zlK4d/pKAgAACEwCAABMdYA==
-Date:   Tue, 25 Oct 2022 15:58:32 +0000
-Message-ID: <SA1PR11MB582719B82C984A4AEEB36BAE84319@SA1PR11MB5827.namprd11.prod.outlook.com>
-References: <YjDj3lvlNJK/IPiU@bfoster> <YjJPu/3tYnuKK888@casper.infradead.org>
- <YjM88OwoccZOKp86@bfoster> <YjSTq4roN/LJ7Xsy@bfoster>
- <YjSbHp6B9a1G3tuQ@casper.infradead.org>
- <CAHk-=wh6V6TZjjnqBvktbaho_wqfjZYQ9zcKJTV8EP2Kygn0uQ@mail.gmail.com>
- <6350a5f07bae2_6be12944c@dwillia2-xfh.jf.intel.com.notmuch>
- <CAHk-=wizsHtGa=7dESxXd6VNU2mdHqhvCv88FB3xcWb3o3iJMw@mail.gmail.com>
- <6356f1f74678c_141929415@dwillia2-mobl3.amr.corp.intel.com.notmuch>
- <CAHk-=wj7mRYuictrQjT+sacgj9_GrmRetE1KLTiz-nOk-H4DPQ@mail.gmail.com>
- <6356f72ca12e0_4da32941c@dwillia2-xfh.jf.intel.com.notmuch>
-In-Reply-To: <6356f72ca12e0_4da32941c@dwillia2-xfh.jf.intel.com.notmuch>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-dlp-product: dlpe-windows
-dlp-version: 11.6.500.17
-dlp-reaction: request-justification,no-action
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SA1PR11MB5827:EE_|MW4PR11MB7152:EE_
-x-ms-office365-filtering-correlation-id: f4a0c4e8-5f5e-4fe8-04a8-08dab6a1c484
-x-ld-processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 6IRS7+peeZ0TjMz3PgQof2sdrGR+0k4Pob5IpiJStEMyRsKw3YLCZ06XZx7DPl/xtQpPqkKj/2ydQlM4sdkLo1Z38p5GopLulFZ35OLTgCT5utHdViTrj1ZtX+ZTP3JLZ2CllUdhAga3+2JVapOjfri24ovXeUJCB3YN5ZY38sRWidXnXeTlQR1nqdeYCcM3F2tZ3eVdGuQXYmp2CgSZAoA66ofvypa9XOMU7F7OJR9oFxhKLR3rBMqrm1sgD5Zme1KfULK6bxIGBYDARlhZUpO0Pd/5Yr1FbnLLA3b200ILU12R50wm4SZHP8YT6JMP9wauwhf+wPWrL8jWYUISsTiNNrucucwoQBB61CDZinyCNRV78cb3fsjVyVra6oExgCrQBgjeJ5jXU5NogWiQ2Za8XEfL1CKX0xJlQy9B2tjGskynwM2RZKab0M3Pi1A+dgglibpmOe09aNK6KiA8hd39je47J8zTivC+YqjTLjOllSFUVrcSptGrLQYlNXUAHcAQ3CJgWuu2NVpCDYQaxFj5qnJqBQbM9Q6N2vWgptVHQSVsnShb7BXyyuzTGmblH3dquoxMdmhT9gAl7VXB5mExYsfqsmNQm2knDVioeswaqOKzTYKAnUooXhTQ8LjAq42IHvClhUvLABSsX1cqM0Bo02ZXjPnuZrlovAIQlQkQEE+fvW3ZHKyg0Bw3ECf/LMW97KKV7fyUznHeu5RI4Gl/tdMoVK6x7aDv4t7JHsjj/XBIydkPqEEkOR6Jln2+KF/ur9dP/5Gsiy+pY1DU5Q==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR11MB5827.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(39860400002)(376002)(136003)(396003)(346002)(366004)(451199015)(82960400001)(86362001)(122000001)(33656002)(38100700002)(38070700005)(55016003)(54906003)(110136005)(316002)(71200400001)(478600001)(2906002)(8936002)(5660300002)(41300700001)(8676002)(64756008)(52536014)(66476007)(66556008)(4326008)(76116006)(66946007)(83380400001)(66446008)(186003)(7696005)(53546011)(6506007)(26005)(9686003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?mz+JQS1FtXthRRkwiIc9yFN/YdksGZmscEiFwkk/Z6J4NdbSV5LE2KN35Kuj?=
- =?us-ascii?Q?YIS42AEmhu7ZYSLO1uIuDuVF/dBRZ6qsZ4yYold8ekv3/urm8TJjirI5r7AO?=
- =?us-ascii?Q?UkhAfQpGqYvTacbqfhs+p8m2bf8wQvWdwhCgVfhqVvNU5fsPtlq6SIByiqIy?=
- =?us-ascii?Q?JFBNaTgVXGG4MG1QhlYx6r75oA9GYsUBFqlwxIAurVMXyGqMr9PJTIXcs/Gk?=
- =?us-ascii?Q?Rmxw7mEO1eRTNCJjHAk133/NE7vgV+EKIy7CL8VqIERZswTSIB0KaFPjqBzs?=
- =?us-ascii?Q?GO8RhT/fgl9I3qk5NtNyTewKWuTMkmUMMMndJcRKxlbJYff78R/iKolQ4T/X?=
- =?us-ascii?Q?BcHwmbMvfoFLgQe0gSBpqTz9Km2vtizaI9fubApPeLhDThAgL836HhalKA+J?=
- =?us-ascii?Q?igJDazWKgj+OvWBDcQzSRcW7qkGS273sdUgtz91RCOMs8hrl8NNslIz0j8ka?=
- =?us-ascii?Q?xeEwLaG3LnZlTHksDEv8oX7NZzohVYb8bTJ1y/CAhmAwHh98UkFuHZGOtToD?=
- =?us-ascii?Q?GxQN1vZN2I/SG5u1YfPd61Y0SlQwRIGPX+H+fnWgclbxUU9+YQE2B3tU67bX?=
- =?us-ascii?Q?9xkEhBfp8813m/Cf21PyUZqwf4QZqD8WjLLpMql3dy7mf+oF3ht8EpbIjk7q?=
- =?us-ascii?Q?hgpjTXalmJzBguvXAgE2lzuaKACKXNUahnMu0td275+juSXXMs8T/26ctg4R?=
- =?us-ascii?Q?pMAgPtr0e0SlXxuA1LvP8aOuJg3x3lZYIps5tef8xW5CZpZtUy7thGpbFVUd?=
- =?us-ascii?Q?8h2EvCU9EAw9lgOCCtlHj0+elfXle6ohakv2XM69pULBATrdlfoqtHkkGW4H?=
- =?us-ascii?Q?smS0+bP+b1T7KU/q5g3vp6dHhcYNzHnXjibXgCRRCN69mavDY93cI3aCfbrc?=
- =?us-ascii?Q?2hCdUHP5Js3gn7HMs+zfrOGN8SCDGr4Zpk/NML2+QtCQcpneatPV+GMSdDB/?=
- =?us-ascii?Q?NkXlMiUtJIl+IQGqAXPgDRFo3DR41AC6sTlqStXDLnM2SA5hUkqvD4aKebMj?=
- =?us-ascii?Q?9QjNLkmVkRSNZQMVPpQt/cBn3yXwcBR8nDGcmkAY/E8v/nZOODHM93QjzsP+?=
- =?us-ascii?Q?9Hs/2DKzvCAJtE6VDj989LxApKUcqxMA/tEhpIsqsOhYax6qXsH4CuEQ6mzp?=
- =?us-ascii?Q?YzBwAz73+aSySzytEU0vvFdEItyIUBnEWvULy5JpnW+u/TfGa7yP82J7ii1e?=
- =?us-ascii?Q?NF2oMNaN+19Ry3TyCvFkpAJngFlfUGTWXQKc1pnmkfopraKLYw50ADUE7j+p?=
- =?us-ascii?Q?Z0RiP65hlku+ppGslV19gTLWQmXiOCSDk9iPvwrhx1TvOQ4pXVD5ie/QLY7J?=
- =?us-ascii?Q?b7nPQA984rWHftE0XzZpy5cdKI1OlqYH0NOelnyJXjj66E9ucYGDuIghjk4y?=
- =?us-ascii?Q?xjqwljByCNezwbrFlkiLWmcjID/5feFIiqnRaqPDjoCyeX0bVHzwtmhPSnpF?=
- =?us-ascii?Q?UbCAfIk7OmnWZf8QYHKL1JcV+TpBDa9iPOO8pJ3e7xYSaEbdVDKXvKuFdfMi?=
- =?us-ascii?Q?DK2pJNrcKTf34JToLuyIZHqx41nNvurnx2iw5E7XVLsalYyLkBXBHOO/aZ6s?=
- =?us-ascii?Q?mY/HjLQHzsEz56n/Gcy3Bvgw/lN3PXzln7yxDV9Z0xZmNdDYvVpdlyre71oT?=
- =?us-ascii?Q?bQ=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S231375AbiJYQrt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2022 12:47:49 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAE6045F69
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2022 09:47:48 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5AAE061A05
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2022 16:47:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB517C433C1;
+        Tue, 25 Oct 2022 16:47:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1666716467;
+        bh=sRTaYCtrRHpu/COHl8Zsnw+MUnU2PxEF5ibArVXDcRg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=JUiNRPCzsBVtSmur2LOVMGV/w/oXOfJKs+280pHJGakRHrbGmYGfophU94rf/W7Gd
+         mYbRj0cuYV3Hby4CxjiYZVLL/WVtbNeVEEmWicZng2lGurqBfyfg3M9unRuqqU6RnE
+         EYMj9xdZr0F1MsYrEeNNxrZYr9PrvyVZjKPRyQlr08XBuTXRtYMZHMzsGq6yuTHWFm
+         bBdzNgA8N1JLuO7HeJ1SW0i6lSTWk/D/ql4+MF6LAxhDjRvEiikDW27US3uodtilmJ
+         FpwK8gHJSO89C7htdS990I/uCCWa7oSiHwUepgZFzvdplwhZmVJMA+SE2tr+03TsCX
+         79jCDSItliwJg==
+Date:   Tue, 25 Oct 2022 09:47:47 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Chandan Babu R <chandan.babu@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, amir73il@gmail.com,
+        leah.rumancik@gmail.com
+Subject: Re: [PATCH 5.4 CANDIDATE 00/26] xfs stable candidate patches for
+ 5.4.y (from v5.7)
+Message-ID: <Y1gTM2KOJhDwroCK@magnolia>
+References: <20221024045314.110453-1-chandan.babu@oracle.com>
+ <Y1cHC/khE7GDesH2@magnolia>
+ <87v8o8l740.fsf@debian-BULLSEYE-live-builder-AMD64>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR11MB5827.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f4a0c4e8-5f5e-4fe8-04a8-08dab6a1c484
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Oct 2022 15:58:32.9010
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: PvLTdHcOWa9xa8CcWUVugx4tSxhpKYmnPk4GszQ9rpZSHBZ5V1aWRgm/kPKpL2abHL4Jw5P0f880Zn3CwbyD4CuMk8AJV4euZSQyxL9l3fjoLbx5CPTjuzrUpkopnZQ8
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR11MB7152
-X-OriginatorOrg: intel.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87v8o8l740.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> -----Original Message-----
-> From: Williams, Dan J <dan.j.williams@intel.com>
-> Sent: Monday, October 24, 2022 3:36 PM
-> To: Torvalds, Linus <torvalds@linux-foundation.org>; Williams, Dan J
-> <dan.j.williams@intel.com>
-> Cc: Matthew Wilcox <willy@infradead.org>; Brian Foster
-> <bfoster@redhat.com>; Linux-MM <linux-mm@kvack.org>; linux-fsdevel
-> <linux-fsdevel@vger.kernel.org>; linux-xfs <linux-xfs@vger.kernel.org>;
-> Hugh Dickins <hughd@google.com>; Arechiga Lopez, Jesus A
-> <jesus.a.arechiga.lopez@intel.com>; tim.c.chen@linux.intel.com
-> Subject: Re: writeback completion soft lockup BUG in folio_wake_bit()
->=20
-> Linus Torvalds wrote:
-> > On Mon, Oct 24, 2022 at 1:13 PM Dan Williams <dan.j.williams@intel.com>
-> wrote:
-> > >
-> > > Arechiga reports that his test case that failed "fast" before now
-> > > ran for 28 hours without a soft lockup report with the proposed
-> > > patches applied. So, I would consider those:
-> > >
-> > > Tested-by: Jesus Arechiga Lopez <jesus.a.arechiga.lopez@intel.com>
+On Tue, Oct 25, 2022 at 11:14:53AM +0530, Chandan Babu R wrote:
+> On Mon, Oct 24, 2022 at 02:43:39 PM -0700, Darrick J. Wong wrote:
+> > On Mon, Oct 24, 2022 at 10:22:48AM +0530, Chandan Babu R wrote:
+> >> Hi Darrick,
+> >> 
+> >> This 5.4.y backport series contains fixes from v5.7 release.
+> >> 
+> >> This patchset has been tested by executing fstests (via kdevops) using
+> >> the following XFS configurations,
+> >> 
+> >> 1. No CRC (with 512 and 4k block size).
+> >> 2. Reflink/Rmapbt (1k and 4k block size).
+> >> 3. Reflink without Rmapbt.
+> >> 4. External log device.
+> >> 
+> >> The following lists patches which required other dependency patches to
+> >> be included,
+> >> 1. dd87f87d87fa
+> >>    xfs: rework insert range into an atomic operation
+> >>    - b73df17e4c5b
+> >>      xfs: open code insert range extent split helper
+> >> 2. ce99494c9699
+> >>    xfs: fix buffer corruption reporting when xfs_dir3_free_header_check fails
+> >>    - 8d57c21600a5
+> >>      xfs: add a function to deal with corrupt buffers post-verifiers
+> >>    - e83cf875d67a
+> >>      xfs: xfs_buf_corruption_error should take __this_address
+> >> 3. 8a6271431339
+> >>    xfs: fix unmount hang and memory leak on shutdown during quotaoff
+> >>    - 854f82b1f603
+> >>      xfs: factor out quotaoff intent AIL removal and memory free
+> >>    - aefe69a45d84
+> >>      xfs: remove the xfs_disk_dquot_t and xfs_dquot_t
+> >>    - fd8b81dbbb23
+> >>      xfs: remove the xfs_dq_logitem_t typedef
+> >>    - d0bdfb106907
+> >>      xfs: remove the xfs_qoff_logitem_t typedef
+> >>    - 1cc95e6f0d7c
+> >>      xfs: Replace function declaration by actual definition
 > >
-> > Ok, great.
+> > For the patches necessary to fix these first three problems,
+> > Acked-by: Darrick J. Wong <djwong@kernel.org>
 > >
-> > I really like that patch myself (and obviously liked it back when it
-> > was originally proposed), but I think it was always held back by the
-> > fact that we didn't really have any hard data for it.
+> >> 4. 0e7ab7efe774
+> >>    xfs: Throttle commits on delayed background CIL push
+> >>    - 108a42358a05
+> >>      xfs: Lower CIL flush limit for large logs
+> >> 5. 8eb807bd8399
+> >>    xfs: tail updates only need to occur when LSN changes
+> >>    (This commit improves performance rather than fix a bug. Please let
+> >>    me know if I should drop this patch).
 > >
-> > It does sound like we now very much have hard data for "the page
-> > waitlist complexity is now a bigger problem than the historical
-> > problem it tried to solve".
+> > Are there customer/user complaints behind items #4 and #5?  If not, I
+> > think we ought to leave those out since this is already a very large
+> > batch of patches.
 > >
-> > So I'll happily apply it. The only question is whether it's a "let's
-> > do this for 6.2", or if it's something that we'd want to back-port
-> > anyway, and might as well apply sooner rather than later as a fix.
+> 
+> Ok. I will drop them from the patchset.
+> 
+> >>    - 4165994ac9672
+> >>      xfs: factor common AIL item deletion code
+> >> 6. 5833112df7e9
+> >>    xfs: reflink should force the log out if mounted with wsync
+> >>    - 54fbdd1035e3
+> >>      xfs: factor out a new xfs_log_force_inode helper
 > >
-> > I think that in turn then depends on just how artificial the test case
-> > was. If the test case was triggered by somebody seeing problems in
-> > real life loads, that would make the urgency a lot higher. But if it
-> > was purely a synthetic test case with no accompanying "this is what
-> > made us look at this" problem, it might be a 6.2 thing.
+> > That said, item #6 looks good to me since they strengthen xfs'
+> > persistence guarantees, so for these two patches,
+> > Acked-by: Darrick J. Wong <djwong@kernel.org>
 > >
-> > Arechiga?
->=20
-> I will let Arechiga reply as well, but my sense is that this is more in t=
-he latter
-> camp of not urgent because the test case is trying to generate platform
-> stress (success!), not necessarily trying to get real work done.
+> 
+> Hi Darrick,
+> 
+> Please let me know what you think about the following patches which didn't
+> have any dependencies and hence wasn't part of the above list,
+> 
+> xfs: trylock underlying buffer on dquot flush
+> xfs: check owner of dir3 data blocks
+> xfs: check owner of dir3 blocks
+> xfs: preserve default grace interval during quotacheck
+> xfs: don't write a corrupt unmount record to force summary counter recalc
+> xfs: move inode flush to the sync workqueue
+> xfs: Use scnprintf() for avoiding potential buffer overflow
 
-Yes, as Dan mentioned it is trying to generate platform stress, We've been =
-seeing the soft lockup events on test targets (2 sockets with high core cou=
-nt CPU's, and a lot of RAM).=20
+Ahh.  I meant to include those in the acked list, and now realize I
+should've stated which patch #s I was acking.
 
-The workload stresses every core/CPU thread in various ways and logs result=
-s to a shared log file (every core writing to the same log file).  We found=
- that this shared log file was related to the soft lockups.
+That said, it's been a quiet morning so I've had the time to
+refamiliarize myself with the four log changes and they seem reasonable
+to add to 5.4.
 
-With this change applied to 5.19 it seems that the soft lockups are no long=
-er happening with this workload + configuration.
+For the entire series,
+Acked-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
+
+
+> >> 
+> >> Brian Foster (6):
+> >>   xfs: open code insert range extent split helper
+> >>   xfs: rework insert range into an atomic operation
+> >>   xfs: rework collapse range into an atomic operation
+> >>   xfs: factor out quotaoff intent AIL removal and memory free
+> >>   xfs: fix unmount hang and memory leak on shutdown during quotaoff
+> >>   xfs: trylock underlying buffer on dquot flush
+> >> 
+> >> Christoph Hellwig (2):
+> >>   xfs: factor out a new xfs_log_force_inode helper
+> >>   xfs: reflink should force the log out if mounted with wsync
+> >> 
+> >> Darrick J. Wong (8):
+> >>   xfs: add a function to deal with corrupt buffers post-verifiers
+> >>   xfs: xfs_buf_corruption_error should take __this_address
+> >>   xfs: fix buffer corruption reporting when xfs_dir3_free_header_check
+> >>     fails
+> >>   xfs: check owner of dir3 data blocks
+> >>   xfs: check owner of dir3 blocks
+> >>   xfs: preserve default grace interval during quotacheck
+> >>   xfs: don't write a corrupt unmount record to force summary counter
+> >>     recalc
+> >>   xfs: move inode flush to the sync workqueue
+> >> 
+> >> Dave Chinner (5):
+> >>   xfs: Lower CIL flush limit for large logs
+> >>   xfs: Throttle commits on delayed background CIL push
+> >>   xfs: factor common AIL item deletion code
+> >>   xfs: tail updates only need to occur when LSN changes
+> >>   xfs: fix use-after-free on CIL context on shutdown
+> >> 
+> >> Pavel Reichl (4):
+> >>   xfs: remove the xfs_disk_dquot_t and xfs_dquot_t
+> >>   xfs: remove the xfs_dq_logitem_t typedef
+> >>   xfs: remove the xfs_qoff_logitem_t typedef
+> >>   xfs: Replace function declaration by actual definition
+> >> 
+> >> Takashi Iwai (1):
+> >>   xfs: Use scnprintf() for avoiding potential buffer overflow
+> >> 
+> >>  fs/xfs/libxfs/xfs_alloc.c      |   2 +-
+> >>  fs/xfs/libxfs/xfs_attr_leaf.c  |   6 +-
+> >>  fs/xfs/libxfs/xfs_bmap.c       |  32 +-------
+> >>  fs/xfs/libxfs/xfs_bmap.h       |   3 +-
+> >>  fs/xfs/libxfs/xfs_btree.c      |   2 +-
+> >>  fs/xfs/libxfs/xfs_da_btree.c   |  10 +--
+> >>  fs/xfs/libxfs/xfs_dir2_block.c |  33 +++++++-
+> >>  fs/xfs/libxfs/xfs_dir2_data.c  |  32 +++++++-
+> >>  fs/xfs/libxfs/xfs_dir2_leaf.c  |   2 +-
+> >>  fs/xfs/libxfs/xfs_dir2_node.c  |   8 +-
+> >>  fs/xfs/libxfs/xfs_dquot_buf.c  |   8 +-
+> >>  fs/xfs/libxfs/xfs_format.h     |  10 +--
+> >>  fs/xfs/libxfs/xfs_trans_resv.c |   6 +-
+> >>  fs/xfs/xfs_attr_inactive.c     |   6 +-
+> >>  fs/xfs/xfs_attr_list.c         |   2 +-
+> >>  fs/xfs/xfs_bmap_util.c         |  57 +++++++------
+> >>  fs/xfs/xfs_buf.c               |  22 +++++
+> >>  fs/xfs/xfs_buf.h               |   2 +
+> >>  fs/xfs/xfs_dquot.c             |  26 +++---
+> >>  fs/xfs/xfs_dquot.h             |  98 ++++++++++++-----------
+> >>  fs/xfs/xfs_dquot_item.c        |  47 ++++++++---
+> >>  fs/xfs/xfs_dquot_item.h        |  35 ++++----
+> >>  fs/xfs/xfs_error.c             |   7 +-
+> >>  fs/xfs/xfs_error.h             |   2 +-
+> >>  fs/xfs/xfs_export.c            |  14 +---
+> >>  fs/xfs/xfs_file.c              |  16 ++--
+> >>  fs/xfs/xfs_inode.c             |  23 +++++-
+> >>  fs/xfs/xfs_inode.h             |   1 +
+> >>  fs/xfs/xfs_inode_item.c        |  28 +++----
+> >>  fs/xfs/xfs_log.c               |  26 +++---
+> >>  fs/xfs/xfs_log_cil.c           |  39 +++++++--
+> >>  fs/xfs/xfs_log_priv.h          |  53 ++++++++++--
+> >>  fs/xfs/xfs_log_recover.c       |   5 +-
+> >>  fs/xfs/xfs_mount.h             |   5 ++
+> >>  fs/xfs/xfs_qm.c                |  64 +++++++++------
+> >>  fs/xfs/xfs_qm_bhv.c            |   6 +-
+> >>  fs/xfs/xfs_qm_syscalls.c       | 142 ++++++++++++++++-----------------
+> >>  fs/xfs/xfs_stats.c             |  10 +--
+> >>  fs/xfs/xfs_super.c             |  28 +++++--
+> >>  fs/xfs/xfs_trace.h             |   1 +
+> >>  fs/xfs/xfs_trans_ail.c         |  88 ++++++++++++--------
+> >>  fs/xfs/xfs_trans_dquot.c       |  54 ++++++-------
+> >>  fs/xfs/xfs_trans_priv.h        |   6 +-
+> >>  43 files changed, 646 insertions(+), 421 deletions(-)
+> >> 
+> >> -- 
+> >> 2.35.1
+> >> 
+> 
+> -- 
+> chandan
