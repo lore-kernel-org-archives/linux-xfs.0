@@ -2,78 +2,98 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCBE6C38A2D
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Oct 2022 20:58:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D4A5FA373E
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Oct 2022 21:06:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231436AbiJYU6u (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Oct 2022 16:58:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45832 "EHLO
+        id S230075AbiJYVGW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Oct 2022 17:06:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41128 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229904AbiJYU6t (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2022 16:58:49 -0400
+        with ESMTP id S231597AbiJYVGU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2022 17:06:20 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 909C6B56DE
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2022 13:58:48 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9297295E53
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2022 14:06:19 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 22F85B81BE1
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2022 20:58:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE3FFC433C1;
-        Tue, 25 Oct 2022 20:58:45 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3D92FB81F13
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2022 21:06:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCD89C433C1;
+        Tue, 25 Oct 2022 21:06:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666731525;
-        bh=juAh/oFIqPQCW1jPqyTiY8irzcXPUiIFwyeJa4DVww8=;
+        s=k20201202; t=1666731976;
+        bh=G8+BuqkG0fpuH1HFCs8lQbu9TxWyNuCbHrWZjPlkmIE=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=AXwi1GegbdM2RLpfAd8z/NGWUS4BYhDphUncCpsKxFJQVSwn3iXzoo8CItpo3jQcK
-         nXZ6O/prCnO9lt8/X7DDk9/jIu6KX9OtYR0SAVfscg3ihMb954oWcvQju1IabuNq3z
-         qaKx1p89ljottRlaiE8g/8Lb4Ft8Q9AAujowyMnZLlu0tJ7w//4UX9W6VkK9V9FCfX
-         IxyE2sN7ca7m3SvgA40joYQD0hu2ZkOQnWe2qrAtHNQ92C6aQh7CgO9iKnHmJfnaYl
-         FjV79yeoP6lvsKkcDMIxCgC5EEARPrWwZsG9b3Kpohm5ZPSsWY3v1AtbuBPRi5YX1b
-         sESb/Mtsppb1Q==
-Date:   Tue, 25 Oct 2022 13:58:45 -0700
+        b=KcEWyrFMkRqYAq7csDIL8g/NClcu9XaV/64H1G5w6ttRV0LZDuFHUWaGE5QswVzzp
+         lZgCFJpMtz5K/lJrcaVRPN3ZOn/FpxgJkVVBzB+NkJhan+VFaJLDEUEcMqPvMpapje
+         J/7F2ke1gRe4VpCa2vc0IwEP4CJZmkqx7/J1ttmwtgNr/4qDDCqJmTU01zjEV7GA8e
+         2B4b//5MN2da3UKGfZeRHGLoVt+qt8Tge4PnjkRzWMp1tIjnFOSYf4H1VpGSD05GwQ
+         9C9B2vk08DPWwpVpe7SMbdlEQcO/I1d9RZax8sXkany6Z/lWDt9AKaDx0srbsYp5j+
+         K4MZ5a5A9NnXA==
+Date:   Tue, 25 Oct 2022 14:06:16 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     allison.henderson@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 16/27] xfs: add parent attributes to link
-Message-ID: <Y1hOBZqdVeMLT6Xc@magnolia>
+Subject: Re: [PATCH v4 17/27] xfs: add parent attributes to symlink
+Message-ID: <Y1hPyDRNZ4k/ahL/@magnolia>
 References: <20221021222936.934426-1-allison.henderson@oracle.com>
- <20221021222936.934426-17-allison.henderson@oracle.com>
+ <20221021222936.934426-18-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221021222936.934426-17-allison.henderson@oracle.com>
+In-Reply-To: <20221021222936.934426-18-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 21, 2022 at 03:29:25PM -0700, allison.henderson@oracle.com wrote:
+On Fri, Oct 21, 2022 at 03:29:26PM -0700, allison.henderson@oracle.com wrote:
 > From: Allison Henderson <allison.henderson@oracle.com>
 > 
-> This patch modifies xfs_link to add a parent pointer to the inode.
+> This patch modifies xfs_symlink to add a parent pointer to the inode.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 > ---
->  fs/xfs/xfs_inode.c | 60 ++++++++++++++++++++++++++++++++++++++--------
->  1 file changed, 50 insertions(+), 10 deletions(-)
+>  fs/xfs/xfs_symlink.c | 50 +++++++++++++++++++++++++++++++++++++++-----
+>  1 file changed, 45 insertions(+), 5 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index ae6604f51ce8..f2e7da1befa4 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1248,16 +1248,32 @@ xfs_create_tmpfile(
+> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+> index 27a7d7c57015..968ca257cd82 100644
+> --- a/fs/xfs/xfs_symlink.c
+> +++ b/fs/xfs/xfs_symlink.c
+> @@ -23,6 +23,8 @@
+>  #include "xfs_trans.h"
+>  #include "xfs_ialloc.h"
+>  #include "xfs_error.h"
+> +#include "xfs_parent.h"
+> +#include "xfs_defer.h"
+>  
+>  /* ----- Kernel only functions below ----- */
+>  int
+> @@ -142,6 +144,23 @@ xfs_readlink(
 >  	return error;
 >  }
 >  
 > +unsigned int
-> +xfs_link_space_res(
+> +xfs_symlink_space_res(
+
+Should the XFS_SYMLINK_SPACE_RES macro be removed from
+xfs_trans_space.h?
+
+Come to think of it, the same question applies to the previous patch.
+
 > +	struct xfs_mount	*mp,
-> +	unsigned int		namelen)
+> +	unsigned int		namelen,
+> +	unsigned int		fsblocks)
 > +{
 > +	unsigned int		ret;
 > +
-> +	ret = XFS_DIRENTER_SPACE_RES(mp, namelen);
+> +	ret = XFS_IALLOC_SPACE_RES(mp) + XFS_DIRENTER_SPACE_RES(mp, namelen) +
+> +	      fsblocks;
+
+Nit: This should probably be indented two tabs.
+
+> +
 > +	if (xfs_has_parent(mp))
 > +		ret += xfs_pptr_calc_space_res(mp, namelen);
 > +
@@ -81,103 +101,120 @@ On Fri, Oct 21, 2022 at 03:29:25PM -0700, allison.henderson@oracle.com wrote:
 > +}
 > +
 >  int
->  xfs_link(
-> -	xfs_inode_t		*tdp,
-> -	xfs_inode_t		*sip,
-> +	struct xfs_inode	*tdp,
-> +	struct xfs_inode	*sip,
->  	struct xfs_name		*target_name)
->  {
-> -	xfs_mount_t		*mp = tdp->i_mount;
-> -	xfs_trans_t		*tp;
-> +	struct xfs_mount	*mp = tdp->i_mount;
-> +	struct xfs_trans	*tp;
->  	int			error, nospace_error = 0;
->  	int			resblks;
-> +	xfs_dir2_dataptr_t	diroffset;
-> +	struct xfs_parent_defer	*parent = NULL;
+>  xfs_symlink(
+>  	struct user_namespace	*mnt_userns,
+> @@ -172,6 +191,8 @@ xfs_symlink(
+>  	struct xfs_dquot	*pdqp = NULL;
+>  	uint			resblks;
+>  	xfs_ino_t		ino;
+> +	xfs_dir2_dataptr_t      diroffset;
+> +	struct xfs_parent_defer *parent = NULL;
 >  
->  	trace_xfs_link(tdp, target_name);
+>  	*ipp = NULL;
 >  
-> @@ -1274,11 +1290,17 @@ xfs_link(
->  	if (error)
->  		goto std_return;
+> @@ -179,10 +200,10 @@ xfs_symlink(
 >  
-> -	resblks = XFS_LINK_SPACE_RES(mp, target_name->len);
+>  	if (xfs_is_shutdown(mp))
+>  		return -EIO;
+> -
+>  	/*
+>  	 * Check component lengths of the target path name.
+>  	 */
+> +
+
+Unnecessary whitespace changes (while we're on nits...)
+
+>  	pathlen = strlen(target_path);
+>  	if (pathlen >= XFS_SYMLINK_MAXLEN)      /* total string too long */
+>  		return -ENAMETOOLONG;
+> @@ -204,11 +225,17 @@ xfs_symlink(
+>  	 * The symlink will fit into the inode data fork?
+>  	 * There can't be any attributes so we get the whole variable part.
+>  	 */
+> -	if (pathlen <= XFS_LITINO(mp))
+> +	if (pathlen <= XFS_LITINO(mp) && !xfs_has_parent(mp))
+
+Why do we require !xfs_has_parent here?  fs_blocks are the blocks needed
+to reserve space for the remote symlink target blocks.  Link targets are
+not recorded in pptrs, so I am surprised to see this here.
+
+>  		fs_blocks = 0;
+>  	else
+>  		fs_blocks = xfs_symlink_blocks(mp, pathlen);
+> -	resblks = XFS_SYMLINK_SPACE_RES(mp, link_name->len, fs_blocks);
+> +	resblks = xfs_symlink_space_res(mp, link_name->len, fs_blocks);
+> +
 > +	if (xfs_has_parent(mp)) {
 > +		error = xfs_parent_init(mp, &parent);
 > +		if (error)
-> +			goto std_return;
+> +			return error;
+> +	}
+>  
+>  	error = xfs_trans_alloc_icreate(mp, &M_RES(mp)->tr_symlink, udqp, gdqp,
+>  			pdqp, resblks, &tp);
+> @@ -233,7 +260,7 @@ xfs_symlink(
+>  	if (!error)
+>  		error = xfs_init_new_inode(mnt_userns, tp, dp, ino,
+>  				S_IFLNK | (mode & ~S_IFMT), 1, 0, prid,
+> -				false, &ip);
+> +				xfs_has_parent(mp), &ip);
+
+Ahaaaaa, some of these init_xattrs = false occurrences from earlier
+patches get replaced by xfs_has_parent calls later.  I'll go back and
+revise my earlier comments then.
+
+>  	if (error)
+>  		goto out_trans_cancel;
+>  
+> @@ -315,12 +342,20 @@ xfs_symlink(
+>  	 * Create the directory entry for the symlink.
+>  	 */
+>  	error = xfs_dir_createname(tp, dp, link_name,
+> -			ip->i_ino, resblks, NULL);
+> +			ip->i_ino, resblks, &diroffset);
+>  	if (error)
+>  		goto out_trans_cancel;
+>  	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+>  	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
+>  
+> +	if (parent) {
+> +		error = xfs_parent_defer_add(tp, parent, dp, link_name,
+> +					     diroffset, ip);
+> +		if (error)
+> +			goto out_trans_cancel;
 > +	}
 > +
-> +	resblks = xfs_link_space_res(mp, target_name->len);
->  	error = xfs_trans_alloc_dir(tdp, &M_RES(mp)->tr_link, sip, &resblks,
->  			&tp, &nospace_error);
->  	if (error)
-> -		goto std_return;
-> +		goto drop_incompat;
->  
->  	/*
->  	 * If we are using project inheritance, we only allow hard link
-> @@ -1311,14 +1333,27 @@ xfs_link(
->  	}
->  
->  	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
-> -				   resblks, NULL);
-> +				   resblks, &diroffset);
->  	if (error)
-> -		goto error_return;
-> +		goto out_defer_cancel;
->  	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
->  	xfs_trans_log_inode(tp, tdp, XFS_ILOG_CORE);
->  
->  	xfs_bumplink(tp, sip);
->  
-> +	/*
-> +	 * If we have parent pointers, we now need to add the parent record to
-> +	 * the attribute fork of the inode. If this is the initial parent
-> +	 * attribute, we need to create it correctly, otherwise we can just add
-> +	 * the parent to the inode.
-> +	 */
-> +	if (parent) {
-> +		error = xfs_parent_defer_add(tp, parent, tdp, target_name,
-> +					     diroffset, sip);
-> +		if (error)
-> +			goto out_defer_cancel;
-> +	}
 > +
 >  	/*
 >  	 * If this is a synchronous mount, make sure that the
->  	 * link transaction goes to disk before returning to
-> @@ -1332,11 +1367,16 @@ xfs_link(
->  	xfs_iunlock(sip, XFS_ILOCK_EXCL);
->  	return error;
->  
-> - error_return:
-> +out_defer_cancel:
-> +	xfs_defer_cancel(tp);
-> +error_return:
+>  	 * symlink transaction goes to disk before returning to
+> @@ -344,6 +379,8 @@ xfs_symlink(
+>  out_trans_cancel:
 >  	xfs_trans_cancel(tp);
+>  out_release_inode:
+> +	xfs_defer_cancel(tp);
 
-It's no longer necessary to call xfs_defer_cancel before
-xfs_trans_cancel, so you can eliminate this cleanup code.
+Two complaints: xfs_trans_cancel frees @tp so the xfs_defer_cancel call
+is a UAF error.
 
-With that fixed,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Second, xfs_trans_cancel calls xfs_defer_cancel so it's not necessary.
 
 --D
 
-
->  	xfs_iunlock(tdp, XFS_ILOCK_EXCL);
->  	xfs_iunlock(sip, XFS_ILOCK_EXCL);
-> - std_return:
-> +drop_incompat:
+> +
+>  	/*
+>  	 * Wait until after the current transaction is aborted to finish the
+>  	 * setup of the inode and release the inode.  This prevents recursive
+> @@ -362,6 +399,9 @@ xfs_symlink(
+>  		xfs_iunlock(dp, XFS_ILOCK_EXCL);
+>  	if (ip)
+>  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
 > +	if (parent)
 > +		xfs_parent_cancel(mp, parent);
-> +std_return:
->  	if (error == -ENOSPC && nospace_error)
->  		error = nospace_error;
+> +
 >  	return error;
+>  }
+>  
 > -- 
 > 2.25.1
 > 
