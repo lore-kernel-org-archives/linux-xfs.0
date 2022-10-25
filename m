@@ -2,240 +2,230 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2922EC04A95
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Oct 2022 16:47:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C422EC38A2D
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Oct 2022 17:56:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229744AbiJYQrv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Oct 2022 12:47:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51610 "EHLO
+        id S232177AbiJYR4X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Oct 2022 13:56:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231375AbiJYQrt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2022 12:47:49 -0400
+        with ESMTP id S230345AbiJYR4W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2022 13:56:22 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAE6045F69
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2022 09:47:48 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF92FDDA0D;
+        Tue, 25 Oct 2022 10:56:21 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5AAE061A05
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2022 16:47:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB517C433C1;
-        Tue, 25 Oct 2022 16:47:47 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8714861A5C;
+        Tue, 25 Oct 2022 17:56:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D31C0C433C1;
+        Tue, 25 Oct 2022 17:56:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666716467;
-        bh=sRTaYCtrRHpu/COHl8Zsnw+MUnU2PxEF5ibArVXDcRg=;
+        s=k20201202; t=1666720579;
+        bh=yoY7iLCYU7bzt4GaDkXzEUixBCzZ8DqXBG0ytNBixsU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JUiNRPCzsBVtSmur2LOVMGV/w/oXOfJKs+280pHJGakRHrbGmYGfophU94rf/W7Gd
-         mYbRj0cuYV3Hby4CxjiYZVLL/WVtbNeVEEmWicZng2lGurqBfyfg3M9unRuqqU6RnE
-         EYMj9xdZr0F1MsYrEeNNxrZYr9PrvyVZjKPRyQlr08XBuTXRtYMZHMzsGq6yuTHWFm
-         bBdzNgA8N1JLuO7HeJ1SW0i6lSTWk/D/ql4+MF6LAxhDjRvEiikDW27US3uodtilmJ
-         FpwK8gHJSO89C7htdS990I/uCCWa7oSiHwUepgZFzvdplwhZmVJMA+SE2tr+03TsCX
-         79jCDSItliwJg==
-Date:   Tue, 25 Oct 2022 09:47:47 -0700
+        b=sGOxpfrqH3n+hxbHscT2hCJAweA45hU3XDOfbyng2Rw1RSuZVYXmDxaa61Zj3IGAA
+         u+6lDQdpV+pqSJNTrTP2zasaT1c6kcJzv7idqf6tlIFZ4VFDBO8gzJ4OrGjGhTWXXQ
+         PdtJt6i0GDl0EHg9PufvzxNIQpBVY7pbNKBemqw+x0Lmff5PKKKNNMSDd1q5cKocr8
+         YvcMXrE+jVIrWppzspmVO3mD4uMbVlB496Wg36qDLu4dSRqaaBOHiEOwbS0H6GG8ro
+         /OwTkx/eMJt/MvPVJ1rZIY8i5UOn+kWGfCtJkslDIsQsvqIeVOZZHfjfnCFZn3WikR
+         c/wiJAuXKNzVA==
+Date:   Tue, 25 Oct 2022 10:56:19 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, amir73il@gmail.com,
-        leah.rumancik@gmail.com
-Subject: Re: [PATCH 5.4 CANDIDATE 00/26] xfs stable candidate patches for
- 5.4.y (from v5.7)
-Message-ID: <Y1gTM2KOJhDwroCK@magnolia>
-References: <20221024045314.110453-1-chandan.babu@oracle.com>
- <Y1cHC/khE7GDesH2@magnolia>
- <87v8o8l740.fsf@debian-BULLSEYE-live-builder-AMD64>
+To:     "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "yangx.jy@fujitsu.com" <yangx.jy@fujitsu.com>,
+        "Yasunori Gotou (Fujitsu)" <y-goto@fujitsu.com>,
+        Brian Foster <bfoster@redhat.com>,
+        "hch@infradead.org" <hch@infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "zwisler@kernel.org" <zwisler@kernel.org>,
+        Jeff Moyer <jmoyer@redhat.com>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "toshi.kani@hpe.com" <toshi.kani@hpe.com>
+Subject: Re: [PATCH] xfs: fail dax mount if reflink is enabled on a partition
+Message-ID: <Y1gjQ4wNZr3ve2+K@magnolia>
+References: <1444b9b5-363a-163c-0513-55d1ea951799@fujitsu.com>
+ <Yzt6eWLuX/RTjmjj@magnolia>
+ <f196bcab-6aa2-6313-8a7c-f8ab409621b7@fujitsu.com>
+ <Yzx64zGt2kTiDYaP@magnolia>
+ <6a83a56e-addc-f3c4-2357-9589a49bf582@fujitsu.com>
+ <Y1NRNtToQTjs0Dbd@magnolia>
+ <20221023220018.GX3600936@dread.disaster.area>
+ <OSBPR01MB2920CA997DDE891C06776279F42E9@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+ <20221024053109.GY3600936@dread.disaster.area>
+ <dd00529c-d3ef-40e3-9dea-834c5203e3df@fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <87v8o8l740.fsf@debian-BULLSEYE-live-builder-AMD64>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <dd00529c-d3ef-40e3-9dea-834c5203e3df@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 25, 2022 at 11:14:53AM +0530, Chandan Babu R wrote:
-> On Mon, Oct 24, 2022 at 02:43:39 PM -0700, Darrick J. Wong wrote:
-> > On Mon, Oct 24, 2022 at 10:22:48AM +0530, Chandan Babu R wrote:
-> >> Hi Darrick,
-> >> 
-> >> This 5.4.y backport series contains fixes from v5.7 release.
-> >> 
-> >> This patchset has been tested by executing fstests (via kdevops) using
-> >> the following XFS configurations,
-> >> 
-> >> 1. No CRC (with 512 and 4k block size).
-> >> 2. Reflink/Rmapbt (1k and 4k block size).
-> >> 3. Reflink without Rmapbt.
-> >> 4. External log device.
-> >> 
-> >> The following lists patches which required other dependency patches to
-> >> be included,
-> >> 1. dd87f87d87fa
-> >>    xfs: rework insert range into an atomic operation
-> >>    - b73df17e4c5b
-> >>      xfs: open code insert range extent split helper
-> >> 2. ce99494c9699
-> >>    xfs: fix buffer corruption reporting when xfs_dir3_free_header_check fails
-> >>    - 8d57c21600a5
-> >>      xfs: add a function to deal with corrupt buffers post-verifiers
-> >>    - e83cf875d67a
-> >>      xfs: xfs_buf_corruption_error should take __this_address
-> >> 3. 8a6271431339
-> >>    xfs: fix unmount hang and memory leak on shutdown during quotaoff
-> >>    - 854f82b1f603
-> >>      xfs: factor out quotaoff intent AIL removal and memory free
-> >>    - aefe69a45d84
-> >>      xfs: remove the xfs_disk_dquot_t and xfs_dquot_t
-> >>    - fd8b81dbbb23
-> >>      xfs: remove the xfs_dq_logitem_t typedef
-> >>    - d0bdfb106907
-> >>      xfs: remove the xfs_qoff_logitem_t typedef
-> >>    - 1cc95e6f0d7c
-> >>      xfs: Replace function declaration by actual definition
-> >
-> > For the patches necessary to fix these first three problems,
-> > Acked-by: Darrick J. Wong <djwong@kernel.org>
-> >
-> >> 4. 0e7ab7efe774
-> >>    xfs: Throttle commits on delayed background CIL push
-> >>    - 108a42358a05
-> >>      xfs: Lower CIL flush limit for large logs
-> >> 5. 8eb807bd8399
-> >>    xfs: tail updates only need to occur when LSN changes
-> >>    (This commit improves performance rather than fix a bug. Please let
-> >>    me know if I should drop this patch).
-> >
-> > Are there customer/user complaints behind items #4 and #5?  If not, I
-> > think we ought to leave those out since this is already a very large
-> > batch of patches.
-> >
+On Tue, Oct 25, 2022 at 02:26:50PM +0000, ruansy.fnst@fujitsu.com wrote:
 > 
-> Ok. I will drop them from the patchset.
 > 
-> >>    - 4165994ac9672
-> >>      xfs: factor common AIL item deletion code
-> >> 6. 5833112df7e9
-> >>    xfs: reflink should force the log out if mounted with wsync
-> >>    - 54fbdd1035e3
-> >>      xfs: factor out a new xfs_log_force_inode helper
-> >
-> > That said, item #6 looks good to me since they strengthen xfs'
-> > persistence guarantees, so for these two patches,
-> > Acked-by: Darrick J. Wong <djwong@kernel.org>
-> >
+> 在 2022/10/24 13:31, Dave Chinner 写道:
+> > On Mon, Oct 24, 2022 at 03:17:52AM +0000, ruansy.fnst@fujitsu.com wrote:
+> >> 在 2022/10/24 6:00, Dave Chinner 写道:
+> >>> On Fri, Oct 21, 2022 at 07:11:02PM -0700, Darrick J. Wong wrote:
+> >>>> On Thu, Oct 20, 2022 at 10:17:45PM +0800, Yang, Xiao/杨 晓 wrote:
+> >>>>> In addition, I don't like your idea about the test change because it will
+> >>>>> make generic/470 become the special test for XFS. Do you know if we can fix
+> >>>>> the issue by changing the test in another way? blkdiscard -z can fix the
+> >>>>> issue because it does zero-fill rather than discard on the block device.
+> >>>>> However, blkdiscard -z will take a lot of time when the block device is
+> >>>>> large.
+> >>>>
+> >>>> Well we /could/ just do that too, but that will suck if you have 2TB of
+> >>>> pmem. ;)
+> >>>>
+> >>>> Maybe as an alternative path we could just create a very small
+> >>>> filesystem on the pmem and then blkdiscard -z it?
+> >>>>
+> >>>> That said -- does persistent memory actually have a future?  Intel
+> >>>> scuttled the entire Optane product, cxl.mem sounds like expansion
+> >>>> chassis full of DRAM, and fsdax is horribly broken in 6.0 (weird kernel
+> >>>> asserts everywhere) and 6.1 (every time I run fstests now I see massive
+> >>>> data corruption).
+> >>>
+> >>> Yup, I see the same thing. fsdax was a train wreck in 6.0 - broken
+> >>> on both ext4 and XFS. Now that I run a quick check on 6.1-rc1, I
+> >>> don't think that has changed at all - I still see lots of kernel
+> >>> warnings, data corruption and "XFS_IOC_CLONE_RANGE: Invalid
+> >>> argument" errors.
+> >>
+> >> Firstly, I think the "XFS_IOC_CLONE_RANGE: Invalid argument" error is
+> >> caused by the restrictions which prevent reflink work together with DAX:
+> >>
+> >> a. fs/xfs/xfs_ioctl.c:1141
+> >> /* Don't allow us to set DAX mode for a reflinked file for now. */
+> >> if ((fa->fsx_xflags & FS_XFLAG_DAX) && xfs_is_reflink_inode(ip))
+> >>          return -EINVAL;
+> >>
+> >> b. fs/xfs/xfs_iops.c:1174
+> >> /* Only supported on non-reflinked files. */
+> >> if (xfs_is_reflink_inode(ip))
+> >>          return false;
+> >>
+> >> These restrictions were removed in "drop experimental warning" patch[1].
+> >>    I think they should be separated from that patch.
+> >>
+> >> [1]
+> >> https://lore.kernel.org/linux-xfs/1663234002-17-1-git-send-email-ruansy.fnst@fujitsu.com/
+> >>
+> >>
+> >> Secondly, how the data corruption happened?
+> > 
+> > No idea - i"m just reporting that lots of fsx tests failed with data
+> > corruptions. I haven't had time to look at why, I'm still trying to
+> > sort out the fix for a different data corruption...
+> > 
+> >> Or which case failed?
+> > 
+> > *lots* of them failed with kernel warnings with reflink turned off:
+> > 
+> > SECTION       -- xfs_dax_noreflink
+> > =========================
+> > Failures: generic/051 generic/068 generic/075 generic/083
+> > generic/112 generic/127 generic/198 generic/231 generic/247
+> > generic/269 generic/270 generic/340 generic/344 generic/388
+> > generic/461 generic/471 generic/476 generic/519 generic/561 xfs/011
+> > xfs/013 xfs/073 xfs/297 xfs/305 xfs/517 xfs/538
+> > Failed 26 of 1079 tests
+> > 
+> > All of those except xfs/073 and generic/471 are failures due to
+> > warnings found in dmesg.
+> > 
+> > With reflink enabled, I terminated the run after g/075, g/091, g/112
+> > and generic/127 reported fsx data corruptions and g/051, g/068,
+> > g/075 and g/083 had reported kernel warnings in dmesg.
+> > 
+> >> Could
+> >> you give me more info (such as mkfs options, xfstests configs)?
+> > 
+> > They are exactly the same as last time I reported these problems.
+> > 
+> > For the "no reflink" test issues:
+> > 
+> > mkfs options are "-m reflink=0,rmapbt=1", mount options "-o
+> > dax=always" for both filesytems.  Config output at start of test
+> > run:
+> > 
+> > SECTION       -- xfs_dax_noreflink
+> > FSTYP         -- xfs (debug)
+> > PLATFORM      -- Linux/x86_64 test3 6.1.0-rc1-dgc+ #1615 SMP PREEMPT_DYNAMIC Wed Oct 19 12:24:16 AEDT 2022
+> > MKFS_OPTIONS  -- -f -m reflink=0,rmapbt=1 /dev/pmem1
+> > MOUNT_OPTIONS -- -o dax=always -o context=system_u:object_r:root_t:s0 /dev/pmem1 /mnt/scratch
+> > 
+> > pmem devices are a pair of fake 8GB pmem regions set up by kernel
+> > CLI via "memmap=8G!15G,8G!24G". I don't have anything special set up
+> > - the kernel config is kept minimal for these VMs - and the only
+> > kernel debug option I have turned on for these specific test runs is
+> > CONFIG_XFS_DEBUG=y.
 > 
-> Hi Darrick,
+> Thanks for the detailed info.  But, in my environment (and my 
+> colleagues', and our real server with DCPMM) these failure cases (you 
+> mentioned above, in dax+non_reflink mode, with same test options) cannot 
+> reproduce.
 > 
-> Please let me know what you think about the following patches which didn't
-> have any dependencies and hence wasn't part of the above list,
+> Here's our test environment info:
+>   - Ruan's env: fedora 36(v6.0-rc1) on kvm,pmem 2x4G:file backended
+>   - Yang's env: fedora 35(v6.1-rc1) on kvm,pmem 2x1G:memmap=1G!1G,1G!2G
+>   - Server's  : Ubuntu 20.04(v6.0-rc1) real machine,pmem 2x4G:real DCPMM
 > 
-> xfs: trylock underlying buffer on dquot flush
-> xfs: check owner of dir3 data blocks
-> xfs: check owner of dir3 blocks
-> xfs: preserve default grace interval during quotacheck
-> xfs: don't write a corrupt unmount record to force summary counter recalc
-> xfs: move inode flush to the sync workqueue
-> xfs: Use scnprintf() for avoiding potential buffer overflow
+> (To quickly confirm the difference, I just ran the failed 26 cases you 
+> mentioned above.)  Except for generic/471 and generic/519, which failed 
+> even when dax is off, the rest passed.
+> 
+> 
+> We don't want fsdax to be truned off.  Right now, I think the most 
+> important thing is solving the failed cases in dax+non_reflink mode. 
+> So, firstly, I have to reproduce those failures.  Is there any thing 
+> wrong with my test environments?  I konw you are using 'memmap=XXG!YYG' to 
+> simulate pmem.  So, (to Darrick) could you show me your config of dev 
+> environment and the 'testcloud'(I am guessing it's a server with real 
+> nvdimm just like ours)?
 
-Ahh.  I meant to include those in the acked list, and now realize I
-should've stated which patch #s I was acking.
+Nope.  Since the announcement of pmem as a product, I have had 15
+minutes of acces to one preproduction prototype server with actual
+optane DIMMs in them.
 
-That said, it's been a quiet morning so I've had the time to
-refamiliarize myself with the four log changes and they seem reasonable
-to add to 5.4.
+I have /never/ had access to real hardware to test any of this, so it's
+all configured via libvirt to simulate pmem in qemu:
+https://lore.kernel.org/linux-xfs/YzXsavOWMSuwTBEC@magnolia/
 
-For the entire series,
-Acked-by: Darrick J. Wong <djwong@kernel.org>
+/run/mtrdisk/[gh].mem are both regular files on a tmpfs filesystem:
+
+$ grep mtrdisk /proc/mounts
+none /run/mtrdisk tmpfs rw,relatime,size=82894848k,inode64 0 0
+
+$ ls -la /run/mtrdisk/[gh].mem
+-rw-r--r-- 1 libvirt-qemu kvm 10739515392 Oct 24 18:09 /run/mtrdisk/g.mem
+-rw-r--r-- 1 libvirt-qemu kvm 10739515392 Oct 24 19:28 /run/mtrdisk/h.mem
 
 --D
 
-
-> >> 
-> >> Brian Foster (6):
-> >>   xfs: open code insert range extent split helper
-> >>   xfs: rework insert range into an atomic operation
-> >>   xfs: rework collapse range into an atomic operation
-> >>   xfs: factor out quotaoff intent AIL removal and memory free
-> >>   xfs: fix unmount hang and memory leak on shutdown during quotaoff
-> >>   xfs: trylock underlying buffer on dquot flush
-> >> 
-> >> Christoph Hellwig (2):
-> >>   xfs: factor out a new xfs_log_force_inode helper
-> >>   xfs: reflink should force the log out if mounted with wsync
-> >> 
-> >> Darrick J. Wong (8):
-> >>   xfs: add a function to deal with corrupt buffers post-verifiers
-> >>   xfs: xfs_buf_corruption_error should take __this_address
-> >>   xfs: fix buffer corruption reporting when xfs_dir3_free_header_check
-> >>     fails
-> >>   xfs: check owner of dir3 data blocks
-> >>   xfs: check owner of dir3 blocks
-> >>   xfs: preserve default grace interval during quotacheck
-> >>   xfs: don't write a corrupt unmount record to force summary counter
-> >>     recalc
-> >>   xfs: move inode flush to the sync workqueue
-> >> 
-> >> Dave Chinner (5):
-> >>   xfs: Lower CIL flush limit for large logs
-> >>   xfs: Throttle commits on delayed background CIL push
-> >>   xfs: factor common AIL item deletion code
-> >>   xfs: tail updates only need to occur when LSN changes
-> >>   xfs: fix use-after-free on CIL context on shutdown
-> >> 
-> >> Pavel Reichl (4):
-> >>   xfs: remove the xfs_disk_dquot_t and xfs_dquot_t
-> >>   xfs: remove the xfs_dq_logitem_t typedef
-> >>   xfs: remove the xfs_qoff_logitem_t typedef
-> >>   xfs: Replace function declaration by actual definition
-> >> 
-> >> Takashi Iwai (1):
-> >>   xfs: Use scnprintf() for avoiding potential buffer overflow
-> >> 
-> >>  fs/xfs/libxfs/xfs_alloc.c      |   2 +-
-> >>  fs/xfs/libxfs/xfs_attr_leaf.c  |   6 +-
-> >>  fs/xfs/libxfs/xfs_bmap.c       |  32 +-------
-> >>  fs/xfs/libxfs/xfs_bmap.h       |   3 +-
-> >>  fs/xfs/libxfs/xfs_btree.c      |   2 +-
-> >>  fs/xfs/libxfs/xfs_da_btree.c   |  10 +--
-> >>  fs/xfs/libxfs/xfs_dir2_block.c |  33 +++++++-
-> >>  fs/xfs/libxfs/xfs_dir2_data.c  |  32 +++++++-
-> >>  fs/xfs/libxfs/xfs_dir2_leaf.c  |   2 +-
-> >>  fs/xfs/libxfs/xfs_dir2_node.c  |   8 +-
-> >>  fs/xfs/libxfs/xfs_dquot_buf.c  |   8 +-
-> >>  fs/xfs/libxfs/xfs_format.h     |  10 +--
-> >>  fs/xfs/libxfs/xfs_trans_resv.c |   6 +-
-> >>  fs/xfs/xfs_attr_inactive.c     |   6 +-
-> >>  fs/xfs/xfs_attr_list.c         |   2 +-
-> >>  fs/xfs/xfs_bmap_util.c         |  57 +++++++------
-> >>  fs/xfs/xfs_buf.c               |  22 +++++
-> >>  fs/xfs/xfs_buf.h               |   2 +
-> >>  fs/xfs/xfs_dquot.c             |  26 +++---
-> >>  fs/xfs/xfs_dquot.h             |  98 ++++++++++++-----------
-> >>  fs/xfs/xfs_dquot_item.c        |  47 ++++++++---
-> >>  fs/xfs/xfs_dquot_item.h        |  35 ++++----
-> >>  fs/xfs/xfs_error.c             |   7 +-
-> >>  fs/xfs/xfs_error.h             |   2 +-
-> >>  fs/xfs/xfs_export.c            |  14 +---
-> >>  fs/xfs/xfs_file.c              |  16 ++--
-> >>  fs/xfs/xfs_inode.c             |  23 +++++-
-> >>  fs/xfs/xfs_inode.h             |   1 +
-> >>  fs/xfs/xfs_inode_item.c        |  28 +++----
-> >>  fs/xfs/xfs_log.c               |  26 +++---
-> >>  fs/xfs/xfs_log_cil.c           |  39 +++++++--
-> >>  fs/xfs/xfs_log_priv.h          |  53 ++++++++++--
-> >>  fs/xfs/xfs_log_recover.c       |   5 +-
-> >>  fs/xfs/xfs_mount.h             |   5 ++
-> >>  fs/xfs/xfs_qm.c                |  64 +++++++++------
-> >>  fs/xfs/xfs_qm_bhv.c            |   6 +-
-> >>  fs/xfs/xfs_qm_syscalls.c       | 142 ++++++++++++++++-----------------
-> >>  fs/xfs/xfs_stats.c             |  10 +--
-> >>  fs/xfs/xfs_super.c             |  28 +++++--
-> >>  fs/xfs/xfs_trace.h             |   1 +
-> >>  fs/xfs/xfs_trans_ail.c         |  88 ++++++++++++--------
-> >>  fs/xfs/xfs_trans_dquot.c       |  54 ++++++-------
-> >>  fs/xfs/xfs_trans_priv.h        |   6 +-
-> >>  43 files changed, 646 insertions(+), 421 deletions(-)
-> >> 
-> >> -- 
-> >> 2.35.1
-> >> 
 > 
-> -- 
-> chandan
+> 
+> (I just found I only tested on 4G and smaller pmem device.  I'll try the 
+> test on 8G pmem)
+> 
+> > 
+> > THe only difference between the noreflink and reflink runs is that I
+> > drop the "-m reflink=0" mkfs parameter. Otherwise they are identical
+> > and the errors I reported are from back-to-back fstests runs without
+> > rebooting the VM....
+> > 
+> > -Dave.
+> 
+> 
+> --
+> Thanks,
+> Ruan.
