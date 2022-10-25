@@ -2,83 +2,90 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 955C4FA3741
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Oct 2022 21:34:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5E2CFA373E
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Oct 2022 21:35:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232392AbiJYVeX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Oct 2022 17:34:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33004 "EHLO
+        id S230366AbiJYVfB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Oct 2022 17:35:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35998 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232411AbiJYVeW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2022 17:34:22 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F205D10AC12
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2022 14:34:21 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 91B6F61B89
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2022 21:34:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC33CC433C1;
-        Tue, 25 Oct 2022 21:34:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666733661;
-        bh=UXsw2QiQn75GKqlEKr4q1FYK9HZ8ld6PktGutK0irxw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=XoPlH802rg7F4IEZQJrGoNGWTXyZt4AC+IvXcex1gEGSNW9FFHG5pL1Do/i1w2Nac
-         wup25KNDMPTP27NwPn2twUZUgTUu/c00MH3JK8YC7iyfja79OphrHHtuzL2pRwtNgD
-         Dzxdp8p1ai/2gVE2VN0710msevWe8X4WNgrfo07DRQAeHUoPi6ySeXIb4jipJDmbzN
-         b9Lu8TW+OcerU/pT1pYX6nKEcELGy9pbAnNC35sU2SUxxn1eIimQ3+Je9UhPQP3g6W
-         kFWD02XpYmaXX+Nnnq41OwZkn9/6LsvMrNeyOpyblThM807ZFX4KrQ6P9uLzBUcah0
-         03LB2cOVMceiA==
-Date:   Tue, 25 Oct 2022 14:34:20 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     allison.henderson@oracle.com
+        with ESMTP id S230134AbiJYVfA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2022 17:35:00 -0400
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2A072ED7A
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2022 14:34:58 -0700 (PDT)
+Received: by mail-pj1-x102f.google.com with SMTP id t10-20020a17090a4e4a00b0020af4bcae10so234097pjl.3
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2022 14:34:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=/swDOW+CWUQXFyjk0kbLXa3Gq1basy+l12EwH795mFk=;
+        b=se7ZOdBMemhmkAk5vClyBzPp61J1HyRqosm2AXmSHErDWieouxB1FbVHzLbVR9Z2LJ
+         fCBLSqOy+MSF7crD5/fj5rirBe40wwGM6RVeLNRvqU0HKIY2xoCKd0C+nTD/5Bb6tXxm
+         UzoWPH+FfNoMHCUck7uxmd8wU4s35pD7n+mlLP1WXQNe9gdT1UKTxUkLIrlZq1xY+Fe0
+         FarKouXO+JUOyXdrjLt8YtOq7tE9mt4VCbEaJK6X18xQpDEnu3APHbjsBfuCh0/Qqpfz
+         +rKJcUMZhqi2DezuH0sG6Qnuz89ZNvNHS1ptKzHHB9vhaj8VSQDF8uQO4qLADOk42mF1
+         PzqA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=/swDOW+CWUQXFyjk0kbLXa3Gq1basy+l12EwH795mFk=;
+        b=XbnOcx/ZtsXeMxUnw4kN257B6qkn9g57XFiMlOnKm3wgQZyezmobA4nO8zKmLpxrPi
+         RE7QFPfiW1oX+4V8WF6LrxoPJluEeumezrcBkJTDF0S8fur9TlX0PDO0IyYi0Z/tOtCk
+         /yULImu5T6z6s9Wp/w+uY4v00G0CuxidOY69/YJCE6wNnnosvqEwxRcUuL/r+O0Yuu/R
+         Ree2BE9Q+XpJ2dM+c2IQeDozJNwMux8Z7FAKJvF1UUmB81XaLV2WFh9b54Nm1fp0qZqj
+         fG8BN8qGoalAQTjws9BJO0oTaMF1ySMlGFm1+yfSl/euUftxYVvTBd/dPXBwpRWK4tn/
+         qXPw==
+X-Gm-Message-State: ACrzQf2nyrsl86/5jDJKxJZVqQlJkJN8A/FqSoN6YDQXzrBnXPjvPrCx
+        cVkUP/syXrG6TnDc4UKJYwoeFg==
+X-Google-Smtp-Source: AMsMyM4i/Hhsb/D7v8jmaFHzqm+RJU6+fF4kPLclvBBNpjCFBskytpqqU3eXVgtwWSdVlkkXm+8HGg==
+X-Received: by 2002:a17:90b:2684:b0:213:8a8:b5df with SMTP id pl4-20020a17090b268400b0021308a8b5dfmr347249pjb.77.1666733698340;
+        Tue, 25 Oct 2022 14:34:58 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au. [49.181.106.210])
+        by smtp.gmail.com with ESMTPSA id x19-20020aa79ad3000000b00545f5046372sm1793792pfp.208.2022.10.25.14.34.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 25 Oct 2022 14:34:57 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1onRZX-006N7j-41; Wed, 26 Oct 2022 08:34:55 +1100
+Date:   Wed, 26 Oct 2022 08:34:55 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 24/27] xfs: Filter XFS_ATTR_PARENT for getfattr
-Message-ID: <Y1hWXBsi/BPii7qW@magnolia>
-References: <20221021222936.934426-1-allison.henderson@oracle.com>
- <20221021222936.934426-25-allison.henderson@oracle.com>
+Subject: Re: [PATCH 2/6] xfs: fix memcpy fortify errors in BUI log format
+ copying
+Message-ID: <20221025213455.GC3600936@dread.disaster.area>
+References: <166664715160.2688790.16712973829093762327.stgit@magnolia>
+ <166664716290.2688790.11246233896801948595.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221021222936.934426-25-allison.henderson@oracle.com>
+In-Reply-To: <166664716290.2688790.11246233896801948595.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 21, 2022 at 03:29:33PM -0700, allison.henderson@oracle.com wrote:
-> From: Allison Henderson <allison.henderson@oracle.com>
+On Mon, Oct 24, 2022 at 02:32:42PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Parent pointers returned to the get_fattr tool cause errors since
-> the tool cannot parse parent pointers.  Fix this by filtering parent
-> parent pointers from xfs_xattr_put_listent.
+> Starting in 6.1, CONFIG_FORTIFY_SOURCE checks the length parameter of
+> memcpy.  Unfortunately, it doesn't handle flex arrays correctly:
 > 
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ------------[ cut here ]------------
+> memcpy: detected field-spanning write (size 48) of single field "dst_bui_fmt" at fs/xfs/xfs_bmap_item.c:628 (size 16)
+> 
+> Fix this by refactoring the xfs_bui_copy_format function to handle the
+> copying of the head and the flex array members separately.  While we're
+> at it, fix a minor validation deficiency in the recovery function.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-Looks good,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Looks fine.
 
---D
-
-> ---
->  fs/xfs/xfs_xattr.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-> index d9067c5f6bd6..5b57f6348d63 100644
-> --- a/fs/xfs/xfs_xattr.c
-> +++ b/fs/xfs/xfs_xattr.c
-> @@ -234,6 +234,9 @@ xfs_xattr_put_listent(
->  
->  	ASSERT(context->count >= 0);
->  
-> +	if (flags & XFS_ATTR_PARENT)
-> +		return;
-> +
->  	if (flags & XFS_ATTR_ROOT) {
->  #ifdef CONFIG_XFS_POSIX_ACL
->  		if (namelen == SGI_ACL_FILE_SIZE &&
-> -- 
-> 2.25.1
-> 
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+-- 
+Dave Chinner
+david@fromorbit.com
