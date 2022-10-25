@@ -2,412 +2,648 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6F87C38A2D
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Oct 2022 20:54:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83077FA373E
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Oct 2022 20:55:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230245AbiJYUyo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Oct 2022 16:54:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34562 "EHLO
+        id S229952AbiJYUzW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Oct 2022 16:55:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37974 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231664AbiJYUym (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2022 16:54:42 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6276B63C4
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2022 13:54:33 -0700 (PDT)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29PKhcCC019464;
-        Tue, 25 Oct 2022 20:54:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-id : content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=0cfg6CkH8tdhCKdr5CtYAgaajGBUhEUv22qkZgmvMts=;
- b=FE/lK9hmFb2dRrbd31rqsbsuowSx4OX25n6H+otvD2tnOksUTIrzFn/hxGuE9wgFkkWC
- aNFAJuNsgg02d/U0VQHGIc8PCEawUwfjiBOeHqOqQReMNMYWFhJZI6PKHTwnRJkwfGZT
- +k048mT8Ub6yJ+PGyWPKai0X6fL027i2d6QJhPeQV74bGon30btvi6lf/xaVMsB7KDWA
- obInjkWUpeNqLXMrjWjSEtqcKPbI9OPTAqMt5RkFKxNsutIDUInd6dAH+vrPLPwhjAMh
- XzsynV0/D40DYgozqsYla+YStegc3U0J5GFTtbh/Bj5YTm7dEHeMdiM2qUWhqTMWCHij MA== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kc84t4sa7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Oct 2022 20:54:29 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 29PIkwYV012845;
-        Tue, 25 Oct 2022 20:54:28 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2044.outbound.protection.outlook.com [104.47.66.44])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3kc6y511nw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Oct 2022 20:54:28 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=iyOKcG7cMLufeg37pOg2KZ7+9ZNUiEzENI3NdF09kSV5nsHpc1r+2e5Zvjs3Y6fbkIfDhkqUI+TOML2M0RND2nPqoYdlLv6P0Dx+dMDokJNt2Uvvj7JJAmOViuF4XaAVy92jSkxbOxa8mzOo/aMY0PJRCJN8wbDbO2kIp5NYlf6AQoaeoo49B2wDMcH5TuRAdw3cCnncu7gv8t2nYvNMZYljJzaGN328sMXgsdtrXVz2C8i9Yn0RhOg9aEeRU4D2GzaVSfeIdiUOZqfIHqLbZxo9Ow3G6MJfsMAMibwfI6e1tLKjJlMZgKGrdTU0fkBWe1vYfaFT4i+7AV8h3N9kEQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=0cfg6CkH8tdhCKdr5CtYAgaajGBUhEUv22qkZgmvMts=;
- b=I/FF6mIlpTuYJhgaXlCYlKU9Ibwd2waCcqeiu5MUinrFHA26n3V7fri7aUlLVM9fxP9m6J9+CiL5XaFKSTmYy2LbVXqiv/YZtUy+1oeXwFrEKMXFouIz45PYhGCwnHifwzbfHPorc0QJXr+KGXVSKZBaNZ5Q74M1d6O9rrnP+7zTl/EgDFyK0ccPqwnWEDg5I6KtXPbI7RZtp3SHp5dJQ+UplfrGRl3MIHCzO6n/OJN0ZSSvp1b63pbrsEMsGKIKVPBJ4UCVEhpGaGSA0XqmzRW4Ok0yJiwrKkhmr7tMlIHBAm1ZTPUScdelVe/Z8ZBiJ5IirmAWQIs5v0KY8Am43w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0cfg6CkH8tdhCKdr5CtYAgaajGBUhEUv22qkZgmvMts=;
- b=eiog14BgnAr7MBKUNg5tmFw1AXqc/VKkRt1NTLHKdvNBtRpqIU45mgfJUZsRhIAzCCMQd5gY1ZlzKsOLEPUCBuat/+5lLio0UX3WfohVS/cP4wVXeoNsppYHdqn1aSMRI4S0emi70Bm9jNCj8wn8chMlvqCIPm3aYHfUrP++xSM=
-Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
- by BLAPR10MB4915.namprd10.prod.outlook.com (2603:10b6:208:330::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5723.32; Tue, 25 Oct
- 2022 20:54:25 +0000
-Received: from BY5PR10MB4306.namprd10.prod.outlook.com
- ([fe80::c3f2:bf22:a83d:beb3]) by BY5PR10MB4306.namprd10.prod.outlook.com
- ([fe80::c3f2:bf22:a83d:beb3%3]) with mapi id 15.20.5746.023; Tue, 25 Oct 2022
- 20:54:25 +0000
-From:   Allison Henderson <allison.henderson@oracle.com>
-To:     "djwong@kernel.org" <djwong@kernel.org>
-CC:     "david@fromorbit.com" <david@fromorbit.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 5/6] xfs: fix memcpy fortify errors in EFI log format
- copying
-Thread-Topic: [PATCH 5/6] xfs: fix memcpy fortify errors in EFI log format
- copying
-Thread-Index: AQHY5/5djYOyFIS6M0urAlBET3rjD64fl/AA
-Date:   Tue, 25 Oct 2022 20:54:25 +0000
-Message-ID: <fca71fe8808ba11e6e96cc5cc4c2da3acb243a7d.camel@oracle.com>
-References: <166664715160.2688790.16712973829093762327.stgit@magnolia>
-         <166664717980.2688790.14877643421674738495.stgit@magnolia>
-In-Reply-To: <166664717980.2688790.14877643421674738495.stgit@magnolia>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Evolution 3.44.1-0ubuntu1 
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: BY5PR10MB4306:EE_|BLAPR10MB4915:EE_
-x-ms-office365-filtering-correlation-id: 84cd5336-08b2-44f6-43ce-08dab6cb19cf
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: xzSAwuluslXft1qYgF/cDJIlDk9+zLHv+hGDL9oW3+BGdeDzLy5a/X9u4TTmkbYafQbTPddYlanCF631ZmqkMRNm9F52cOk9VOnUPzbkxqqX0qQpUvZCg6v6Zm3ZfhXDI/UctIY/XF4wQNKRu/wtoGkLlppnPzQI2m14bYHuR8P4c6/p9vSQSzkfTQhLZgCHvfro/gLNngFWOUuET3HBi6NaIg2OLoCnTFQGzTVe+AQnfvmvCwr/zeMBIHekLPtDT6WtszJeaGuGLDd3/nJe4GhHT8MGaAcptO/5PIXKttKRuDQ5ZMBMZ9vCiaZqQ5xiz0rSHr0Xx0Gacik3UwNyxiGxm/xgRdaII+vyBAcQS44VRE9XxlUsRJlL0HFbjzxXoEI2Zl/SO4c3tm3LEQJ3nmSGthydjmmLjBIpSZkQJZ7+HPmtOiAuD1onHnwHgU8Memzl5Zu/t3Qa9HDdT0FNsVoMkpaetd7VoTDgEj7EF3ao+3d7eooHwp6+6JLDant5/nsU2H7/c+tddz7Le0bLxXVwL2zfsjrdHc+D/cFs32jSb4hGUZC2Au4sQleZO/2wqXXP2DlDZxKiO2PmGJzml1/NxPOUareiwNxw2M0p5SUXpizP0HWU4ij1lJioXMDKi56idUlN4sftFJdvZRHKyma1gErkt0A9dMUUF/6nEUwaHjKgzuj3urnFzjhX7ddspm1jhDZkR+0YT4ItuvJ07vee6fTdNaI9wEBiE0pNptK5WJ4zvfyDRcZ6pF3gM3go2X+M5gji1aBkJZ7aVs2FfA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(136003)(39860400002)(346002)(396003)(366004)(376002)(451199015)(478600001)(66446008)(316002)(26005)(6512007)(2616005)(8936002)(41300700001)(186003)(5660300002)(44832011)(83380400001)(66476007)(6486002)(76116006)(64756008)(54906003)(4326008)(122000001)(4001150100001)(6916009)(66946007)(66556008)(6506007)(8676002)(71200400001)(36756003)(86362001)(38100700002)(2906002)(38070700005);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?RWQyazlQZ2VwUUNSY0tMU0k2YW03T2Y5WVdzVExqZHluR1lGd0xXdlIrcEZi?=
- =?utf-8?B?V1F2bVB6RGpVLzltbXhMVlpMUnRIZkx2OEo0NXhVSFQ2YXJxWlkyU1NMVW44?=
- =?utf-8?B?UzhxRElOcUk3VHEvcTNXVXNTZDVrdFFsNmM4L0FDVEk2VWJuYlNKNmtuYzNr?=
- =?utf-8?B?Zk40TjIwditmalUyZmtZMDhjMGtGb2U1Ykl6Wi9HcVVzMy8yRDJzczJOcFFx?=
- =?utf-8?B?U3lLdHp1SXV1WHBIRlN2c0RmblpxOFpaL0hrckphN2VqMGR2eG9vT1JiSUlp?=
- =?utf-8?B?TFQyamNIcVEwZ3NTNXlKZFl5Q2pFazBFTnJLUDVPTlowR0pJd2lxYW5OYWVx?=
- =?utf-8?B?anFJaFJFMCsyeDVSRDY1VTZEWTFmZDJyU24vUlNCR2k1SXdvazMxY3FvanJn?=
- =?utf-8?B?cEJuK3pIRXpEQWlLV2hOZDhjR1Vka3g1WnpwRGo1Z0luN1RaTVFCTVBxQ1J2?=
- =?utf-8?B?b0JPZ1BQMGk0TkwzK0ZFMW5WL0ZhY3l2UnVsVUJ4OGNMZ1ZVaUNxbjlMNmRa?=
- =?utf-8?B?OFcrdGk2aDU4dVVlRGJsWjRRMkQ3cVZNOUFJMVZwSE9PWVdja2ZjQmp5RHZC?=
- =?utf-8?B?djV5OGFzNVZncVpOajBQeEswd2I5VGs3bXNDdFFoUEM0dmgwK1BkNFdLaDMz?=
- =?utf-8?B?YUtZTzhtZmVvS1MyR2trVjIxNThvbENDbndLM211S0VqM0RGV3M5endJaFEv?=
- =?utf-8?B?WGY2aS9PTHZSbEZMSitzeXN2MUdwVWtXM3o1K3c5Ym5aRUc5bHFCelJNRUpJ?=
- =?utf-8?B?UjNxOHB2MW5IWlhuUC92d29vSlVUaG10dFluZytFQ0s3bzBKTXVlS3FqUi9N?=
- =?utf-8?B?Q0JKd3FrRGh1ZW9UU1NjRmxUL205QThmQXRybU1MYzRNT0k4c3VQQjgyMHVr?=
- =?utf-8?B?WDdqZmNmOUd0YnFZNDlyUWpKUjdjRWJtWmNzLzVJTDZ6M29NcnFqYnhnWDRK?=
- =?utf-8?B?V2ZIT2xUaGFaK3VSNUQ0WE1FdmtvTXJpb2FCcE84RWkySjNvRzA0K2tNUFN1?=
- =?utf-8?B?RE1PaUk5WHpoS2FMdUc3OStaN3FnemJrQ1N5TVVFUWVwVWJxc0s2SVQvZm00?=
- =?utf-8?B?MllveEhKQlNCNXVsdjlnblRqaTJrMlZtVFlpNVNRZmlPbjhNcVVxc3p3QUV4?=
- =?utf-8?B?ZzdTZXlyNjFqMEpzUTBxa1hSRkFBTmlueEFhS0Z5VERYbVRSSFlOV2g4YXd3?=
- =?utf-8?B?cVFLOEFhS0VNQUhRNmdYLzJpN1dyMDI5WnVLZ05GcEpHSWh6OEhUUWZONDZv?=
- =?utf-8?B?Z2FxMzJPdStqWFRsK3MrNFUyQW9sRDl4bERNUEdyZXVnZ0dBVllWeUVYYm9p?=
- =?utf-8?B?eDRObGpBZHBqeVV0ZTJ6cW5kMmtSNjR3MTJxbEMyRVAyU2w2di9lL3oxTDlH?=
- =?utf-8?B?QU9CUURMNWZLdkhsVnhhRlhBL3NwNEVWaGozaXFYV254NlA1QURCWDAxTUw2?=
- =?utf-8?B?ZmljUlhzUGVtVFdXOUZLaG5YRi8wRVg5ZFIrcDZPMk9jZGczQU1rMjk1UjFq?=
- =?utf-8?B?bTV1aC9VdGpTQ2tTRTlSdmlqY1E2cGd0UGhHdE5tYkNkZnlDM3pYZ09HV3lJ?=
- =?utf-8?B?K0hYbTRZZUhWQ1g1Y1ZWQWhRR2JpMmpLZmhDbVRPTUxKTnlUdGhOeFZVUGN5?=
- =?utf-8?B?alVVcWQrU1d1S2g5QnpodkErbGFLV1dtaGx5YkxncjBzUkhrTm41NzRmeG0x?=
- =?utf-8?B?T0U3QW1iWHpHYlRqNjNBS04xNXRRcnc3Qjk2WitsL2tZemNucnQ4WkVUenFq?=
- =?utf-8?B?ZjF1MkV3MldOSHIrMXVGMDh0V0Jtb3Y4MENSMngvT044aDF0SnM0WlVuYTJC?=
- =?utf-8?B?UWQyWDZ6a2pqRzhDSEM4b1VYK1MyVWRCZ1FYUE41R0pSVGcyeGc1QXRXdXNh?=
- =?utf-8?B?cjk3WFE1UjNBMmZhYUtuQjFvY1B5RVMycUFabFpsTUlneGZxdnZ4ajIrYURj?=
- =?utf-8?B?Q1dCT29NVmh5SW9lNWVEcGxsNjZpa2JlbXFaeU5KQTU2aVVVRW5hVWk5bS9j?=
- =?utf-8?B?a0Y2VzVOVWVUMkVLVTNrVUVuQUF5djBVM1VpZUIyRjdsRnNCemRnaEdFcjZt?=
- =?utf-8?B?NDI1ZFFjM0pSM0ZTZGtvOSt3QU5ZemxvbnBHTDUvQ1QwdmhyRjMzckFoenhi?=
- =?utf-8?B?RG1ORGVUTUxPS3J0WlNhRXFiSHJTNXNRQU10TFpyK3VVRVdRaUtpTU9ueHZP?=
- =?utf-8?B?K2c9PQ==?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <923C5A0EF7B03445A86FDF6841FE6E9A@namprd10.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        with ESMTP id S230090AbiJYUzR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Oct 2022 16:55:17 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B4075FADC
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2022 13:55:15 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 42B63B81BE1
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Oct 2022 20:55:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA47EC433C1;
+        Tue, 25 Oct 2022 20:55:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1666731307;
+        bh=9KWN8V9FNcAkGW8FCBErDay+ySZ5pGNeierHIOhnYQ0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=QacdNWQxlforxazOSfy+F4Ho+BnS6CAxHBXxnuk4FLFuCyoq/e6ptaYzFpkwUinAB
+         dhnDpPHkpgv95TgbnBa4cf4aYH/rLARZGRoxKuvVKtsWJ4hGZochVfrkCg9ZUq7bIB
+         0Ku9ukAjojSfoNxL6qpOzDj8N92N+3aSOVBdiVMKYTzPJN/cMwOYJGVUpCHg37T+Z4
+         qlTovqSdDDtsWsu9cQUgB/kwBBF2RlIrVLBpjmNtN0CPJZ/E61+tfWqHMJIm9bsM7P
+         wM/Q9smDDybpP/JtI3bzthTBXzqSIYy0Rz9b0E9shirzmo2XnJ1doG2TQA+C5+CBeW
+         3wpi94v5qixvQ==
+Date:   Tue, 25 Oct 2022 13:55:07 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     allison.henderson@oracle.com
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v4 14/27] xfs: extend transaction reservations for parent
+ attributes
+Message-ID: <Y1hNK0aHNZYo5M/d@magnolia>
+References: <20221021222936.934426-1-allison.henderson@oracle.com>
+ <20221021222936.934426-15-allison.henderson@oracle.com>
 MIME-Version: 1.0
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 84cd5336-08b2-44f6-43ce-08dab6cb19cf
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Oct 2022 20:54:25.3351
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: fMgCWXfePNqRV6t2sKt3DMEs9o77Wzt9PMKB+Ja0OVkDrz2vAz+sBeNP0Zrihw508rpeXfwFmP7/qrSvH5tT1/wbOHFPhk7I3fkjTubzkDw=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BLAPR10MB4915
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-10-25_13,2022-10-25_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0
- suspectscore=0 malwarescore=0 phishscore=0 mlxscore=0 spamscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2209130000 definitions=main-2210250117
-X-Proofpoint-ORIG-GUID: bYIME-XJj4ZSvStFiElcudSXoaIWZuby
-X-Proofpoint-GUID: bYIME-XJj4ZSvStFiElcudSXoaIWZuby
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221021222936.934426-15-allison.henderson@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-T24gTW9uLCAyMDIyLTEwLTI0IGF0IDE0OjMyIC0wNzAwLCBEYXJyaWNrIEouIFdvbmcgd3JvdGU6
-Cj4gRnJvbTogRGFycmljayBKLiBXb25nIDxkandvbmdAa2VybmVsLm9yZz4KPiAKPiBTdGFydGlu
-ZyBpbiA2LjEsIENPTkZJR19GT1JUSUZZX1NPVVJDRSBjaGVja3MgdGhlIGxlbmd0aCBwYXJhbWV0
-ZXIgb2YKPiBtZW1jcHkuwqAgU2luY2Ugd2UncmUgYWxyZWFkeSBmaXhpbmcgcHJvYmxlbXMgd2l0
-aCBCVUkgaXRlbSBjb3B5aW5nLAo+IHdlCj4gc2hvdWxkIGZpeCBpdCBldmVyeXRoaW5nIGVsc2Uu
-Cj4gCj4gQW4gZXh0cmEgZGlmZmljdWx0eSBoZXJlIGlzIHRoYXQgdGhlIGVmW2lkXV9leHRlbnRz
-IGFycmF5cyBhcmUKPiBkZWNsYXJlZAo+IGFzIHNpbmdsZS1lbGVtZW50IGFycmF5cy7CoCBUaGlz
-IGlzIG5vdCB0aGUgY29udmVudGlvbiBmb3IgZmxleCBhcnJheXMKPiBpbgo+IHRoZSBtb2Rlcm4g
-a2VybmVsLCBhbmQgaXQgY2F1c2VzIGFsbCBtYW5uZXIgb2YgcHJvYmxlbXMgd2l0aCBzdGF0aWMK
-PiBjaGVja2luZyB0b29scywgc2luY2UgdGhleSBvZnRlbiBjYW5ub3QgdGVsbCB0aGUgZGlmZmVy
-ZW5jZSBiZXR3ZWVuIGEKPiBzaW5nbGUgZWxlbWVudCBhcnJheSBhbmQgYSBmbGV4IGFycmF5Lgo+
-IAo+IFNvIGZvciBzdGFydGVycywgY2hhbmdlIHRob3NlIGFycmF5WzFdIGRlY2xhcmF0aW9ucyB0
-byBhcnJheVtdCj4gZGVjbGFyYXRpb25zIHRvIHNpZ25hbCB0aGF0IHRoZXkgYXJlIHByb3BlciBm
-bGV4IGFycmF5cyBhbmQgYWRqdXN0Cj4gYWxsCj4gdGhlICJzaXplLTEiIGV4cHJlc3Npb25zIHRv
-IGZpdCB0aGUgbmV3IGRlY2xhcmF0aW9uIHN0eWxlLgo+IAo+IE5leHQsIHJlZmFjdG9yIHRoZSB4
-ZnNfZWZpX2NvcHlfZm9ybWF0IGZ1bmN0aW9uIHRvIGhhbmRsZSB0aGUgY29weWluZwo+IG9mCj4g
-dGhlIGhlYWQgYW5kIHRoZSBmbGV4IGFycmF5IG1lbWJlcnMgc2VwYXJhdGVseS7CoCBXaGlsZSB3
-ZSdyZSBhdCBpdCwKPiBmaXgKPiBhIG1pbm9yIHZhbGlkYXRpb24gZGVmaWNpZW5jeSBpbiB0aGUg
-cmVjb3ZlcnkgZnVuY3Rpb24uCj4gCj4gU2lnbmVkLW9mZi1ieTogRGFycmljayBKLiBXb25nIDxk
-andvbmdAa2VybmVsLm9yZz4KPiAtLS0KPiDCoGZzL3hmcy9saWJ4ZnMveGZzX2xvZ19mb3JtYXQu
-aCB8wqDCoCAxMiArKysrKystLS0tLS0KPiDCoGZzL3hmcy94ZnNfZXh0ZnJlZV9pdGVtLmPCoMKg
-wqDCoMKgIHzCoMKgIDMxICsrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tLQo+IC0KPiDCoGZz
-L3hmcy94ZnNfb25kaXNrLmjCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIHzCoMKgIDExICsrKysrKyst
-LS0tCj4gwqBmcy94ZnMveGZzX3N1cGVyLmPCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgfMKgwqDC
-oCA0ICsrLS0KPiDCoDQgZmlsZXMgY2hhbmdlZCwgMzYgaW5zZXJ0aW9ucygrKSwgMjIgZGVsZXRp
-b25zKC0pCj4gCj4gCj4gZGlmZiAtLWdpdCBhL2ZzL3hmcy9saWJ4ZnMveGZzX2xvZ19mb3JtYXQu
-aAo+IGIvZnMveGZzL2xpYnhmcy94ZnNfbG9nX2Zvcm1hdC5oCj4gaW5kZXggYjM1MWI5ZGM2NTYx
-Li4yZjQxZmE4NDc3YzkgMTAwNjQ0Cj4gLS0tIGEvZnMveGZzL2xpYnhmcy94ZnNfbG9nX2Zvcm1h
-dC5oCj4gKysrIGIvZnMveGZzL2xpYnhmcy94ZnNfbG9nX2Zvcm1hdC5oCj4gQEAgLTYxMyw3ICs2
-MTMsNyBAQCB0eXBlZGVmIHN0cnVjdCB4ZnNfZWZpX2xvZ19mb3JtYXQgewo+IMKgwqDCoMKgwqDC
-oMKgwqB1aW50MTZfdMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgZWZpX3NpemU7wqDC
-oMKgwqDCoMKgwqAvKiBzaXplIG9mIHRoaXMgaXRlbQo+ICovCj4gwqDCoMKgwqDCoMKgwqDCoHVp
-bnQzMl90wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBlZmlfbmV4dGVudHM7wqDCoMKg
-LyogIyBleHRlbnRzIHRvIGZyZWUKPiAqLwo+IMKgwqDCoMKgwqDCoMKgwqB1aW50NjRfdMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgZWZpX2lkO8KgwqDCoMKgwqDCoMKgwqDCoC8qIGVm
-aSBpZGVudGlmaWVyICovCj4gLcKgwqDCoMKgwqDCoMKgeGZzX2V4dGVudF90wqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgZWZpX2V4dGVudHNbMV07wqAvKiBhcnJheSBvZiBleHRlbnRzCj4gdG8gZnJl
-ZSAqLwo+ICvCoMKgwqDCoMKgwqDCoHhmc19leHRlbnRfdMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oGVmaV9leHRlbnRzW107wqDCoC8qIGFycmF5IG9mIGV4dGVudHMKPiB0byBmcmVlICovCj4gwqB9
-IHhmc19lZmlfbG9nX2Zvcm1hdF90Owo+IMKgCj4gwqB0eXBlZGVmIHN0cnVjdCB4ZnNfZWZpX2xv
-Z19mb3JtYXRfMzIgewo+IEBAIC02MjEsNyArNjIxLDcgQEAgdHlwZWRlZiBzdHJ1Y3QgeGZzX2Vm
-aV9sb2dfZm9ybWF0XzMyIHsKPiDCoMKgwqDCoMKgwqDCoMKgdWludDE2X3TCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoGVmaV9zaXplO8KgwqDCoMKgwqDCoMKgLyogc2l6ZSBvZiB0aGlz
-IGl0ZW0KPiAqLwo+IMKgwqDCoMKgwqDCoMKgwqB1aW50MzJfdMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgZWZpX25leHRlbnRzO8KgwqDCoC8qICMgZXh0ZW50cyB0byBmcmVlCj4gKi8K
-PiDCoMKgwqDCoMKgwqDCoMKgdWludDY0X3TCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oGVmaV9pZDvCoMKgwqDCoMKgwqDCoMKgwqAvKiBlZmkgaWRlbnRpZmllciAqLwo+IC3CoMKgwqDC
-oMKgwqDCoHhmc19leHRlbnRfMzJfdMKgwqDCoMKgwqDCoMKgwqDCoGVmaV9leHRlbnRzWzFdO8Kg
-LyogYXJyYXkgb2YgZXh0ZW50cwo+IHRvIGZyZWUgKi8KPiArwqDCoMKgwqDCoMKgwqB4ZnNfZXh0
-ZW50XzMyX3TCoMKgwqDCoMKgwqDCoMKgwqBlZmlfZXh0ZW50c1tdO8KgwqAvKiBhcnJheSBvZiBl
-eHRlbnRzCj4gdG8gZnJlZSAqLwo+IMKgfSBfX2F0dHJpYnV0ZV9fKChwYWNrZWQpKSB4ZnNfZWZp
-X2xvZ19mb3JtYXRfMzJfdDsKPiDCoAo+IMKgdHlwZWRlZiBzdHJ1Y3QgeGZzX2VmaV9sb2dfZm9y
-bWF0XzY0IHsKPiBAQCAtNjI5LDcgKzYyOSw3IEBAIHR5cGVkZWYgc3RydWN0IHhmc19lZmlfbG9n
-X2Zvcm1hdF82NCB7Cj4gwqDCoMKgwqDCoMKgwqDCoHVpbnQxNl90wqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqBlZmlfc2l6ZTvCoMKgwqDCoMKgwqDCoC8qIHNpemUgb2YgdGhpcyBpdGVt
-Cj4gKi8KPiDCoMKgwqDCoMKgwqDCoMKgdWludDMyX3TCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoGVmaV9uZXh0ZW50czvCoMKgwqAvKiAjIGV4dGVudHMgdG8gZnJlZQo+ICovCj4gwqDC
-oMKgwqDCoMKgwqDCoHVpbnQ2NF90wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBlZmlf
-aWQ7wqDCoMKgwqDCoMKgwqDCoMKgLyogZWZpIGlkZW50aWZpZXIgKi8KPiAtwqDCoMKgwqDCoMKg
-wqB4ZnNfZXh0ZW50XzY0X3TCoMKgwqDCoMKgwqDCoMKgwqBlZmlfZXh0ZW50c1sxXTvCoC8qIGFy
-cmF5IG9mIGV4dGVudHMKPiB0byBmcmVlICovCj4gK8KgwqDCoMKgwqDCoMKgeGZzX2V4dGVudF82
-NF90wqDCoMKgwqDCoMKgwqDCoMKgZWZpX2V4dGVudHNbXTvCoMKgLyogYXJyYXkgb2YgZXh0ZW50
-cwo+IHRvIGZyZWUgKi8KPiDCoH0geGZzX2VmaV9sb2dfZm9ybWF0XzY0X3Q7Cj4gwqAKPiDCoC8q
-Cj4gQEAgLTY0Miw3ICs2NDIsNyBAQCB0eXBlZGVmIHN0cnVjdCB4ZnNfZWZkX2xvZ19mb3JtYXQg
-ewo+IMKgwqDCoMKgwqDCoMKgwqB1aW50MTZfdMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgZWZkX3NpemU7wqDCoMKgwqDCoMKgwqAvKiBzaXplIG9mIHRoaXMgaXRlbQo+ICovCj4gwqDC
-oMKgwqDCoMKgwqDCoHVpbnQzMl90wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBlZmRf
-bmV4dGVudHM7wqDCoMKgLyogIyBvZiBleHRlbnRzIGZyZWVkCj4gKi8KPiDCoMKgwqDCoMKgwqDC
-oMKgdWludDY0X3TCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGVmZF9lZmlfaWQ7wqDC
-oMKgwqDCoC8qIGlkIG9mCj4gY29ycmVzcG9uZGluZyBlZmkgKi8KPiAtwqDCoMKgwqDCoMKgwqB4
-ZnNfZXh0ZW50X3TCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBlZmRfZXh0ZW50c1sxXTvCoC8qIGFy
-cmF5IG9mIGV4dGVudHMKPiBmcmVlZCAqLwo+ICvCoMKgwqDCoMKgwqDCoHhmc19leHRlbnRfdMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoGVmZF9leHRlbnRzW107wqDCoC8qIGFycmF5IG9mIGV4dGVu
-dHMKPiBmcmVlZCAqLwo+IMKgfSB4ZnNfZWZkX2xvZ19mb3JtYXRfdDsKPiDCoAo+IMKgdHlwZWRl
-ZiBzdHJ1Y3QgeGZzX2VmZF9sb2dfZm9ybWF0XzMyIHsKPiBAQCAtNjUwLDcgKzY1MCw3IEBAIHR5
-cGVkZWYgc3RydWN0IHhmc19lZmRfbG9nX2Zvcm1hdF8zMiB7Cj4gwqDCoMKgwqDCoMKgwqDCoHVp
-bnQxNl90wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBlZmRfc2l6ZTvCoMKgwqDCoMKg
-wqDCoC8qIHNpemUgb2YgdGhpcyBpdGVtCj4gKi8KPiDCoMKgwqDCoMKgwqDCoMKgdWludDMyX3TC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGVmZF9uZXh0ZW50czvCoMKgwqAvKiAjIG9m
-IGV4dGVudHMgZnJlZWQKPiAqLwo+IMKgwqDCoMKgwqDCoMKgwqB1aW50NjRfdMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgZWZkX2VmaV9pZDvCoMKgwqDCoMKgLyogaWQgb2YKPiBjb3Jy
-ZXNwb25kaW5nIGVmaSAqLwo+IC3CoMKgwqDCoMKgwqDCoHhmc19leHRlbnRfMzJfdMKgwqDCoMKg
-wqDCoMKgwqDCoGVmZF9leHRlbnRzWzFdO8KgLyogYXJyYXkgb2YgZXh0ZW50cwo+IGZyZWVkICov
-Cj4gK8KgwqDCoMKgwqDCoMKgeGZzX2V4dGVudF8zMl90wqDCoMKgwqDCoMKgwqDCoMKgZWZkX2V4
-dGVudHNbXTvCoMKgLyogYXJyYXkgb2YgZXh0ZW50cwo+IGZyZWVkICovCj4gwqB9IF9fYXR0cmli
-dXRlX18oKHBhY2tlZCkpIHhmc19lZmRfbG9nX2Zvcm1hdF8zMl90Owo+IMKgCj4gwqB0eXBlZGVm
-IHN0cnVjdCB4ZnNfZWZkX2xvZ19mb3JtYXRfNjQgewo+IEBAIC02NTgsNyArNjU4LDcgQEAgdHlw
-ZWRlZiBzdHJ1Y3QgeGZzX2VmZF9sb2dfZm9ybWF0XzY0IHsKPiDCoMKgwqDCoMKgwqDCoMKgdWlu
-dDE2X3TCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGVmZF9zaXplO8KgwqDCoMKgwqDC
-oMKgLyogc2l6ZSBvZiB0aGlzIGl0ZW0KPiAqLwo+IMKgwqDCoMKgwqDCoMKgwqB1aW50MzJfdMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgZWZkX25leHRlbnRzO8KgwqDCoC8qICMgb2Yg
-ZXh0ZW50cyBmcmVlZAo+ICovCj4gwqDCoMKgwqDCoMKgwqDCoHVpbnQ2NF90wqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqBlZmRfZWZpX2lkO8KgwqDCoMKgwqAvKiBpZCBvZgo+IGNvcnJl
-c3BvbmRpbmcgZWZpICovCj4gLcKgwqDCoMKgwqDCoMKgeGZzX2V4dGVudF82NF90wqDCoMKgwqDC
-oMKgwqDCoMKgZWZkX2V4dGVudHNbMV07wqAvKiBhcnJheSBvZiBleHRlbnRzCj4gZnJlZWQgKi8K
-PiArwqDCoMKgwqDCoMKgwqB4ZnNfZXh0ZW50XzY0X3TCoMKgwqDCoMKgwqDCoMKgwqBlZmRfZXh0
-ZW50c1tdO8KgwqAvKiBhcnJheSBvZiBleHRlbnRzCj4gZnJlZWQgKi8KPiDCoH0geGZzX2VmZF9s
-b2dfZm9ybWF0XzY0X3Q7Cj4gwqAKPiDCoC8qCj4gZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfZXh0
-ZnJlZV9pdGVtLmMgYi9mcy94ZnMveGZzX2V4dGZyZWVfaXRlbS5jCj4gaW5kZXggMjdjY2ZjZDgy
-ZjA0Li40NjZjYzVjNWNkMzMgMTAwNjQ0Cj4gLS0tIGEvZnMveGZzL3hmc19leHRmcmVlX2l0ZW0u
-Ywo+ICsrKyBiL2ZzL3hmcy94ZnNfZXh0ZnJlZV9pdGVtLmMKPiBAQCAtNzYsNyArNzYsNyBAQCB4
-ZnNfZWZpX2l0ZW1fc2l6ZW9mKAo+IMKgwqDCoMKgwqDCoMKgwqBzdHJ1Y3QgeGZzX2VmaV9sb2df
-aXRlbSAqZWZpcCkKPiDCoHsKPiDCoMKgwqDCoMKgwqDCoMKgcmV0dXJuIHNpemVvZihzdHJ1Y3Qg
-eGZzX2VmaV9sb2dfZm9ybWF0KSArCj4gLcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIChlZmlw
-LT5lZmlfZm9ybWF0LmVmaV9uZXh0ZW50cyAtIDEpICoKPiBzaXplb2YoeGZzX2V4dGVudF90KTsK
-PiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgZWZpcC0+ZWZpX2Zvcm1hdC5lZmlfbmV4dGVu
-dHMgKiBzaXplb2YoeGZzX2V4dGVudF90KTsKRGlkIHdlIHdhbnQgdG8gdHJ5IGFuZCBhdm9pZCB1
-c2luZyB0eXBlZGVmcz8gIEkgbm90aWNlIHRoYXQgc2VlbXMgdG8KY29tZSB1cCBhIGxvdCBpbiBy
-ZXZpZXdzLiAgT3RoZXJ3aXNlIHRoZSByZXN0IGxvb2tzIGdvb2QuCgpBbGxpc29uCgo+IMKgfQo+
-IMKgCj4gwqBTVEFUSUMgdm9pZAo+IEBAIC0xNjAsNyArMTYwLDcgQEAgeGZzX2VmaV9pbml0KAo+
-IMKgwqDCoMKgwqDCoMKgwqBBU1NFUlQobmV4dGVudHMgPiAwKTsKPiDCoMKgwqDCoMKgwqDCoMKg
-aWYgKG5leHRlbnRzID4gWEZTX0VGSV9NQVhfRkFTVF9FWFRFTlRTKSB7Cj4gwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqBzaXplID0gKHVpbnQpKHNpemVvZihzdHJ1Y3QgeGZzX2VmaV9s
-b2dfaXRlbSkgKwo+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgKChuZXh0ZW50cyAtIDEpICogc2l6ZW9mKHhmc19leHRlbnRfdCkpKTsKPiArwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoChuZXh0ZW50cyAqIHNpemVvZih4
-ZnNfZXh0ZW50X3QpKSk7Cj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBlZmlwID0g
-a21lbV96YWxsb2Moc2l6ZSwgMCk7Cj4gwqDCoMKgwqDCoMKgwqDCoH0gZWxzZSB7Cj4gwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBlZmlwID0ga21lbV9jYWNoZV96YWxsb2MoeGZzX2Vm
-aV9jYWNoZSwKPiBAQCAtMTg5LDE0ICsxODksMTkgQEAgeGZzX2VmaV9jb3B5X2Zvcm1hdCh4ZnNf
-bG9nX2lvdmVjX3QgKmJ1ZiwKPiB4ZnNfZWZpX2xvZ19mb3JtYXRfdCAqZHN0X2VmaV9mbXQpCj4g
-wqDCoMKgwqDCoMKgwqDCoHhmc19lZmlfbG9nX2Zvcm1hdF90ICpzcmNfZWZpX2ZtdCA9IGJ1Zi0+
-aV9hZGRyOwo+IMKgwqDCoMKgwqDCoMKgwqB1aW50IGk7Cj4gwqDCoMKgwqDCoMKgwqDCoHVpbnQg
-bGVuID0gc2l6ZW9mKHhmc19lZmlfbG9nX2Zvcm1hdF90KSArCj4gLcKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoChzcmNfZWZpX2ZtdC0+ZWZpX25leHRlbnRzIC0gMSkgKgo+IHNpemVvZih4
-ZnNfZXh0ZW50X3QpOwo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBzcmNfZWZpX2Zt
-dC0+ZWZpX25leHRlbnRzICogc2l6ZW9mKHhmc19leHRlbnRfdCk7Cj4gwqDCoMKgwqDCoMKgwqDC
-oHVpbnQgbGVuMzIgPSBzaXplb2YoeGZzX2VmaV9sb2dfZm9ybWF0XzMyX3QpICsKPiAtwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgKHNyY19lZmlfZm10LT5lZmlfbmV4dGVudHMgLSAxKSAq
-Cj4gc2l6ZW9mKHhmc19leHRlbnRfMzJfdCk7Cj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoHNyY19lZmlfZm10LT5lZmlfbmV4dGVudHMgKiBzaXplb2YoeGZzX2V4dGVudF8zMl90KTsK
-PiDCoMKgwqDCoMKgwqDCoMKgdWludCBsZW42NCA9IHNpemVvZih4ZnNfZWZpX2xvZ19mb3JtYXRf
-NjRfdCkgKwo+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAoc3JjX2VmaV9mbXQtPmVm
-aV9uZXh0ZW50cyAtIDEpICoKPiBzaXplb2YoeGZzX2V4dGVudF82NF90KTsKPiArwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgc3JjX2VmaV9mbXQtPmVmaV9uZXh0ZW50cyAqIHNpemVvZih4
-ZnNfZXh0ZW50XzY0X3QpOwo+IMKgCj4gwqDCoMKgwqDCoMKgwqDCoGlmIChidWYtPmlfbGVuID09
-IGxlbikgewo+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBtZW1jcHkoKGNoYXIgKilk
-c3RfZWZpX2ZtdCwgKGNoYXIqKXNyY19lZmlfZm10LCBsZW4pOwo+ICvCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqBtZW1jcHkoZHN0X2VmaV9mbXQsIHNyY19lZmlfZm10LAo+ICvCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgb2Zmc2V0b2Yoc3RydWN0IHhmc19l
-ZmlfbG9nX2Zvcm1hdCwKPiBlZmlfZXh0ZW50cykpOwo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqBmb3IgKGkgPSAwOyBpIDwgc3JjX2VmaV9mbXQtPmVmaV9uZXh0ZW50czsgaSsrKQo+
-ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgbWVtY3B5KCZk
-c3RfZWZpX2ZtdC0+ZWZpX2V4dGVudHNbaV0sCj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgJnNyY19lZmlfZm10LT5lZmlfZXh0ZW50
-c1tpXSwKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoCBzaXplb2Yoc3RydWN0IHhmc19leHRlbnQpKTsKPiDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoHJldHVybiAwOwo+IMKgwqDCoMKgwqDCoMKgwqB9IGVsc2UgaWYgKGJ1
-Zi0+aV9sZW4gPT0gbGVuMzIpIHsKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHhm
-c19lZmlfbG9nX2Zvcm1hdF8zMl90ICpzcmNfZWZpX2ZtdF8zMiA9IGJ1Zi0KPiA+aV9hZGRyOwo+
-IEBAIC0yNTYsNyArMjYxLDcgQEAgeGZzX2VmZF9pdGVtX3NpemVvZigKPiDCoMKgwqDCoMKgwqDC
-oMKgc3RydWN0IHhmc19lZmRfbG9nX2l0ZW0gKmVmZHApCj4gwqB7Cj4gwqDCoMKgwqDCoMKgwqDC
-oHJldHVybiBzaXplb2YoeGZzX2VmZF9sb2dfZm9ybWF0X3QpICsKPiAtwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqAgKGVmZHAtPmVmZF9mb3JtYXQuZWZkX25leHRlbnRzIC0gMSkgKgo+IHNpemVv
-Zih4ZnNfZXh0ZW50X3QpOwo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBlZmRwLT5lZmRf
-Zm9ybWF0LmVmZF9uZXh0ZW50cyAqIHNpemVvZih4ZnNfZXh0ZW50X3QpOwo+IMKgfQo+IMKgCj4g
-wqBTVEFUSUMgdm9pZAo+IEBAIC0zNDEsNyArMzQ2LDcgQEAgeGZzX3RyYW5zX2dldF9lZmQoCj4g
-wqAKPiDCoMKgwqDCoMKgwqDCoMKgaWYgKG5leHRlbnRzID4gWEZTX0VGRF9NQVhfRkFTVF9FWFRF
-TlRTKSB7Cj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBlZmRwID0ga21lbV96YWxs
-b2Moc2l6ZW9mKHN0cnVjdCB4ZnNfZWZkX2xvZ19pdGVtKSArCj4gLcKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgKG5leHRlbnRzIC0g
-MSkgKiBzaXplb2Yoc3RydWN0Cj4geGZzX2V4dGVudCksCj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgbmV4dGVudHMgKiBzaXpl
-b2Yoc3RydWN0IHhmc19leHRlbnQpLAo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAwKTsKPiDCoMKgwqDCoMKgwqDCoMKgfSBl
-bHNlIHsKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGVmZHAgPSBrbWVtX2NhY2hl
-X3phbGxvYyh4ZnNfZWZkX2NhY2hlLAo+IEBAIC03MzMsNiArNzM4LDEyIEBAIHhsb2dfcmVjb3Zl
-cl9lZmlfY29tbWl0X3Bhc3MyKAo+IMKgCj4gwqDCoMKgwqDCoMKgwqDCoGVmaV9mb3JtYXRwID0g
-aXRlbS0+cmlfYnVmWzBdLmlfYWRkcjsKPiDCoAo+ICvCoMKgwqDCoMKgwqDCoGlmIChpdGVtLT5y
-aV9idWZbMF0uaV9sZW4gPAo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgb2Zmc2V0b2Yoc3RydWN0IHhmc19lZmlfbG9nX2Zvcm1hdCwKPiBlZmlfZXh0ZW50
-cykpIHsKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgWEZTX0VSUk9SX1JFUE9SVChf
-X2Z1bmNfXywgWEZTX0VSUkxFVkVMX0xPVywgbG9nLQo+ID5sX21wKTsKPiArwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgcmV0dXJuIC1FRlNDT1JSVVBURUQ7Cj4gK8KgwqDCoMKgwqDCoMKg
-fQo+ICsKPiDCoMKgwqDCoMKgwqDCoMKgZWZpcCA9IHhmc19lZmlfaW5pdChtcCwgZWZpX2Zvcm1h
-dHAtPmVmaV9uZXh0ZW50cyk7Cj4gwqDCoMKgwqDCoMKgwqDCoGVycm9yID0geGZzX2VmaV9jb3B5
-X2Zvcm1hdCgmaXRlbS0+cmlfYnVmWzBdLCAmZWZpcC0KPiA+ZWZpX2Zvcm1hdCk7Cj4gwqDCoMKg
-wqDCoMKgwqDCoGlmIChlcnJvcikgewo+IEBAIC03NzIsOSArNzgzLDkgQEAgeGxvZ19yZWNvdmVy
-X2VmZF9jb21taXRfcGFzczIoCj4gwqAKPiDCoMKgwqDCoMKgwqDCoMKgZWZkX2Zvcm1hdHAgPSBp
-dGVtLT5yaV9idWZbMF0uaV9hZGRyOwo+IMKgwqDCoMKgwqDCoMKgwqBBU1NFUlQoKGl0ZW0tPnJp
-X2J1ZlswXS5pX2xlbiA9PQo+IChzaXplb2YoeGZzX2VmZF9sb2dfZm9ybWF0XzMyX3QpICsKPiAt
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgKChlZmRfZm9ybWF0cC0+ZWZkX25leHRlbnRz
-IC0gMSkgKgo+IHNpemVvZih4ZnNfZXh0ZW50XzMyX3QpKSkpIHx8Cj4gK8KgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoChlZmRfZm9ybWF0cC0+ZWZkX25leHRlbnRzICoKPiBzaXplb2YoeGZz
-X2V4dGVudF8zMl90KSkpKSB8fAo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgKGl0ZW0t
-PnJpX2J1ZlswXS5pX2xlbiA9PQo+IChzaXplb2YoeGZzX2VmZF9sb2dfZm9ybWF0XzY0X3QpICsK
-PiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgKChlZmRfZm9ybWF0cC0+ZWZkX25leHRl
-bnRzIC0gMSkgKgo+IHNpemVvZih4ZnNfZXh0ZW50XzY0X3QpKSkpKTsKPiArwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgKGVmZF9mb3JtYXRwLT5lZmRfbmV4dGVudHMgKgo+IHNpemVvZih4
-ZnNfZXh0ZW50XzY0X3QpKSkpKTsKPiDCoAo+IMKgwqDCoMKgwqDCoMKgwqB4bG9nX3JlY292ZXJf
-cmVsZWFzZV9pbnRlbnQobG9nLCBYRlNfTElfRUZJLCBlZmRfZm9ybWF0cC0KPiA+ZWZkX2VmaV9p
-ZCk7Cj4gwqDCoMKgwqDCoMKgwqDCoHJldHVybiAwOwo+IGRpZmYgLS1naXQgYS9mcy94ZnMveGZz
-X29uZGlzay5oIGIvZnMveGZzL3hmc19vbmRpc2suaAo+IGluZGV4IDE5YzFkZjAwYjQ4ZS4uOTcz
-N2I1YTlmNDA1IDEwMDY0NAo+IC0tLSBhL2ZzL3hmcy94ZnNfb25kaXNrLmgKPiArKysgYi9mcy94
-ZnMveGZzX29uZGlzay5oCj4gQEAgLTExOCwxMCArMTE4LDEwIEBAIHhmc19jaGVja19vbmRpc2tf
-c3RydWN0cyh2b2lkKQo+IMKgwqDCoMKgwqDCoMKgwqAvKiBsb2cgc3RydWN0dXJlcyAqLwo+IMKg
-wqDCoMKgwqDCoMKgwqBYRlNfQ0hFQ0tfU1RSVUNUX1NJWkUoc3RydWN0IHhmc19idWZfbG9nX2Zv
-cm1hdCzCoMKgwqDCoMKgwqDCoMKgODgpOwo+IMKgwqDCoMKgwqDCoMKgwqBYRlNfQ0hFQ0tfU1RS
-VUNUX1NJWkUoc3RydWN0IHhmc19kcV9sb2dmb3JtYXQswqDCoMKgwqDCoMKgwqDCoMKgwqAyNCk7
-Cj4gLcKgwqDCoMKgwqDCoMKgWEZTX0NIRUNLX1NUUlVDVF9TSVpFKHN0cnVjdCB4ZnNfZWZkX2xv
-Z19mb3JtYXRfMzIswqDCoMKgwqDCoDI4KTsKPiAtwqDCoMKgwqDCoMKgwqBYRlNfQ0hFQ0tfU1RS
-VUNUX1NJWkUoc3RydWN0IHhmc19lZmRfbG9nX2Zvcm1hdF82NCzCoMKgwqDCoMKgMzIpOwo+IC3C
-oMKgwqDCoMKgwqDCoFhGU19DSEVDS19TVFJVQ1RfU0laRShzdHJ1Y3QgeGZzX2VmaV9sb2dfZm9y
-bWF0XzMyLMKgwqDCoMKgwqAyOCk7Cj4gLcKgwqDCoMKgwqDCoMKgWEZTX0NIRUNLX1NUUlVDVF9T
-SVpFKHN0cnVjdCB4ZnNfZWZpX2xvZ19mb3JtYXRfNjQswqDCoMKgwqDCoDMyKTsKPiArwqDCoMKg
-wqDCoMKgwqBYRlNfQ0hFQ0tfU1RSVUNUX1NJWkUoc3RydWN0IHhmc19lZmRfbG9nX2Zvcm1hdF8z
-MizCoMKgwqDCoMKgMTYpOwo+ICvCoMKgwqDCoMKgwqDCoFhGU19DSEVDS19TVFJVQ1RfU0laRShz
-dHJ1Y3QgeGZzX2VmZF9sb2dfZm9ybWF0XzY0LMKgwqDCoMKgwqAxNik7Cj4gK8KgwqDCoMKgwqDC
-oMKgWEZTX0NIRUNLX1NUUlVDVF9TSVpFKHN0cnVjdCB4ZnNfZWZpX2xvZ19mb3JtYXRfMzIswqDC
-oMKgwqDCoDE2KTsKPiArwqDCoMKgwqDCoMKgwqBYRlNfQ0hFQ0tfU1RSVUNUX1NJWkUoc3RydWN0
-IHhmc19lZmlfbG9nX2Zvcm1hdF82NCzCoMKgwqDCoMKgMTYpOwo+IMKgwqDCoMKgwqDCoMKgwqBY
-RlNfQ0hFQ0tfU1RSVUNUX1NJWkUoc3RydWN0IHhmc19leHRlbnRfMzIswqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqAxMik7Cj4gwqDCoMKgwqDCoMKgwqDCoFhGU19DSEVDS19TVFJVQ1RfU0laRShz
-dHJ1Y3QgeGZzX2V4dGVudF82NCzCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoDE2KTsKPiDCoMKg
-wqDCoMKgwqDCoMKgWEZTX0NIRUNLX1NUUlVDVF9TSVpFKHN0cnVjdCB4ZnNfbG9nX2Rpbm9kZSzC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAxNzYpOwo+IEBAIC0xNDYsNiArMTQ2LDkgQEAgeGZzX2No
-ZWNrX29uZGlza19zdHJ1Y3RzKHZvaWQpCj4gwqDCoMKgwqDCoMKgwqDCoFhGU19DSEVDS19PRkZT
-RVQoc3RydWN0IHhmc19idWlfbG9nX2Zvcm1hdCwKPiBidWlfZXh0ZW50cyzCoMKgwqDCoMKgwqDC
-oMKgMTYpOwo+IMKgwqDCoMKgwqDCoMKgwqBYRlNfQ0hFQ0tfT0ZGU0VUKHN0cnVjdCB4ZnNfY3Vp
-X2xvZ19mb3JtYXQsCj4gY3VpX2V4dGVudHMswqDCoMKgwqDCoMKgwqDCoDE2KTsKPiDCoMKgwqDC
-oMKgwqDCoMKgWEZTX0NIRUNLX09GRlNFVChzdHJ1Y3QgeGZzX3J1aV9sb2dfZm9ybWF0LAo+IHJ1
-aV9leHRlbnRzLMKgwqDCoMKgwqDCoMKgwqAxNik7Cj4gK8KgwqDCoMKgwqDCoMKgWEZTX0NIRUNL
-X09GRlNFVChzdHJ1Y3QgeGZzX2VmaV9sb2dfZm9ybWF0LAo+IGVmaV9leHRlbnRzLMKgwqDCoMKg
-wqDCoMKgwqAxNik7Cj4gK8KgwqDCoMKgwqDCoMKgWEZTX0NIRUNLX09GRlNFVChzdHJ1Y3QgeGZz
-X2VmaV9sb2dfZm9ybWF0XzMyLAo+IGVmaV9leHRlbnRzLMKgwqDCoMKgwqAxNik7Cj4gK8KgwqDC
-oMKgwqDCoMKgWEZTX0NIRUNLX09GRlNFVChzdHJ1Y3QgeGZzX2VmaV9sb2dfZm9ybWF0XzY0LAo+
-IGVmaV9leHRlbnRzLMKgwqDCoMKgwqAxNik7Cj4gwqAKPiDCoMKgwqDCoMKgwqDCoMKgLyoKPiDC
-oMKgwqDCoMKgwqDCoMKgICogVGhlIHY1IHN1cGVyYmxvY2sgZm9ybWF0IGV4dGVuZGVkIHNldmVy
-YWwgdjQgaGVhZGVyCj4gc3RydWN0dXJlcyB3aXRoCj4gZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNf
-c3VwZXIuYyBiL2ZzL3hmcy94ZnNfc3VwZXIuYwo+IGluZGV4IGYwMjljNjcwMmRkYS4uODQ4NWUz
-YjM3Y2EwIDEwMDY0NAo+IC0tLSBhL2ZzL3hmcy94ZnNfc3VwZXIuYwo+ICsrKyBiL2ZzL3hmcy94
-ZnNfc3VwZXIuYwo+IEBAIC0yMDI5LDcgKzIwMjksNyBAQCB4ZnNfaW5pdF9jYWNoZXModm9pZCkK
-PiDCoAo+IMKgwqDCoMKgwqDCoMKgwqB4ZnNfZWZkX2NhY2hlID0ga21lbV9jYWNoZV9jcmVhdGUo
-Inhmc19lZmRfaXRlbSIsCj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAoc2l6ZW9mKHN0cnVjdAo+
-IHhmc19lZmRfbG9nX2l0ZW0pICsKPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgKFhGU19FRkRfTUFY
-X0ZBU1RfRVhURU5UUyAtCj4gMSkgKgo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBYRlNfRUZEX01B
-WF9GQVNUX0VYVEVOVFMgKgo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgc2l6ZW9mKHN0cnVjdCB4
-ZnNfZXh0ZW50KSksCj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAwLCAwLCBOVUxMKTsKPiDCoMKg
-wqDCoMKgwqDCoMKgaWYgKCF4ZnNfZWZkX2NhY2hlKQo+IEBAIC0yMDM3LDcgKzIwMzcsNyBAQCB4
-ZnNfaW5pdF9jYWNoZXModm9pZCkKPiDCoAo+IMKgwqDCoMKgwqDCoMKgwqB4ZnNfZWZpX2NhY2hl
-ID0ga21lbV9jYWNoZV9jcmVhdGUoInhmc19lZmlfaXRlbSIsCj4gwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqAgKHNpemVvZihzdHJ1Y3QKPiB4ZnNfZWZpX2xvZ19pdGVtKSArCj4gLcKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoCAoWEZTX0VGSV9NQVhfRkFTVF9FWFRFTlRTIC0KPiAxKSAqCj4gK8KgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoCBYRlNfRUZJX01BWF9GQVNUX0VYVEVOVFMgKgo+IMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgIHNpemVvZihzdHJ1Y3QgeGZzX2V4dGVudCkpLAo+IMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgIDAsIDAsIE5VTEwpOwo+IMKgwqDCoMKgwqDCoMKgwqBpZiAoIXhmc19lZmlfY2FjaGUp
-Cj4gCgo=
+On Fri, Oct 21, 2022 at 03:29:23PM -0700, allison.henderson@oracle.com wrote:
+> From: Allison Henderson <allison.henderson@oracle.com>
+> 
+> We need to add, remove or modify parent pointer attributes during
+> create/link/unlink/rename operations atomically with the dirents in the
+> parent directories being modified. This means they need to be modified
+> in the same transaction as the parent directories, and so we need to add
+> the required space for the attribute modifications to the transaction
+> reservations.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_trans_resv.c | 303 +++++++++++++++++++++++++++------
+>  1 file changed, 249 insertions(+), 54 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+> index 5b2f27cbdb80..756b6f38c385 100644
+> --- a/fs/xfs/libxfs/xfs_trans_resv.c
+> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
+> @@ -19,6 +19,9 @@
+>  #include "xfs_trans.h"
+>  #include "xfs_qm.h"
+>  #include "xfs_trans_space.h"
+> +#include "xfs_attr_item.h"
+> +#include "xfs_log.h"
+> +#include "xfs_da_format.h"
+>  
+>  #define _ALLOC	true
+>  #define _FREE	false
+> @@ -426,23 +429,62 @@ xfs_calc_itruncate_reservation_minlogsize(
+>   *    the two directory btrees: 2 * (max depth + v2) * dir block size
+>   *    the two directory bmap btrees: 2 * max depth * block size
+>   * And the bmap_finish transaction can free dir and bmap blocks (two sets
+> - *	of bmap blocks) giving:
+> + *	of bmap blocks) giving (t2):
+>   *    the agf for the ags in which the blocks live: 3 * sector size
+>   *    the agfl for the ags in which the blocks live: 3 * sector size
+>   *    the superblock for the free block count: sector size
+>   *    the allocation btrees: 3 exts * 2 trees * (2 * max depth - 1) * block size
+> + * If parent pointers are enabled (t3), then each transaction in the chain
+> + *    must be capable of setting or removing the extended attribute
+> + *    containing the parent information.  It must also be able to handle
+> + *    the three xattr intent items that track the progress of the parent
+> + *    pointer update.
+
+To check my assumptions here: For a standard rename, the three xattr
+intent items are (1) replacing the pptr for the source file; (2)
+removing the pptr on the dest file; and (3) adding a pptr for the
+whiteout file in the src dir?
+
+For an RENAME_EXCHANGE, there are two xattr intent items to replace the
+pptr for both src and dest files.  Link counts don't change and there is
+no whiteout, correct?
+
+>   */
+>  STATIC uint
+>  xfs_calc_rename_reservation(
+>  	struct xfs_mount	*mp)
+>  {
+> -	return XFS_DQUOT_LOGRES(mp) +
+> -		max((xfs_calc_inode_res(mp, 5) +
+> -		     xfs_calc_buf_res(2 * XFS_DIROP_LOG_COUNT(mp),
+> -				      XFS_FSB_TO_B(mp, 1))),
+> -		    (xfs_calc_buf_res(7, mp->m_sb.sb_sectsize) +
+> -		     xfs_calc_buf_res(xfs_allocfree_block_count(mp, 3),
+> -				      XFS_FSB_TO_B(mp, 1))));
+> +	unsigned int		overhead = XFS_DQUOT_LOGRES(mp);
+> +	struct xfs_trans_resv	*resp = M_RES(mp);
+> +	unsigned int		t1, t2, t3 = 0;
+> +
+> +	t1 = xfs_calc_inode_res(mp, 5) +
+> +	     xfs_calc_buf_res(2 * XFS_DIROP_LOG_COUNT(mp),
+> +			XFS_FSB_TO_B(mp, 1));
+> +
+> +	t2 = xfs_calc_buf_res(7, mp->m_sb.sb_sectsize) +
+> +	     xfs_calc_buf_res(xfs_allocfree_block_count(mp, 3),
+> +			XFS_FSB_TO_B(mp, 1));
+> +
+> +	if (xfs_has_parent(mp)) {
+> +		t3 = max(resp->tr_attrsetm.tr_logres,
+> +				resp->tr_attrrm.tr_logres);
+> +		overhead += 4 * (sizeof(struct xfs_attri_log_item) +
+
+I'm not sure why this multiplies by four then?
+
+The log reservation is for the ondisk structures, so the sizeof should
+be for xfs_attri_log_format, not xfs_attri_log_item.
+
+> +				 (2 * xlog_calc_iovec_len(XATTR_NAME_MAX)) +
+
+I guess the 2 * XATTR_NAME_MAX is to log replacing the old name with
+the new name?
+
+> +				 xlog_calc_iovec_len(
+> +					sizeof(struct xfs_parent_name_rec)));
+
+And this last one is for the xattr "name", which is just the (parent,
+gen, diroffset) structure?
+
+I'm concerned about the overhead becoming unnecessarily large here,
+since that all comes out to:
+
+	4 * (48 +
+	     (2 * 256) +
+	     16)
+
+	= 2304 bytes?  Or 1728 bytes if we only multiply by 3?
+
+Ok, maybe I'm not so concerned after all; 2.3k isn't that large as
+compared to logging entire fsblock buffers.  These namespace
+transactions are 300-400KB in size.  Could this be reduced further,
+though?
+
+For a regular rename, we're doing a replace, a link, and an unlink.
+
+	(48 + (2 * 256)) +
+	(48 + 256) +
+	(48)
+
+	= 912 bytes
+
+For a RENAME_EXCHANGE, we're doing two replaces:
+
+	(48 + (2 * 256)) +
+	(48 + (2 * 256))
+
+	= 1120 bytes
+
+I'm glad that 1728 is larger than both of those. :)
+
+Looking forward in this patch, I see the same open-coded overhead
+calculations and wonder what you think of the following refactoring:
+
+static inline unsigned int xfs_calc_pptr_link_overhead(void)
+{
+	return sizeof(struct xfs_attri_log_format) +
+			xlog_calc_iovec_len(XATTR_NAME_MAX) +
+			xlog_calc_iovec_len(sizeof(struct xfs_parent_name_rec));
+}
+static inline unsigned int xfs_calc_pptr_unlink_overhead(void)
+{
+	return sizeof(struct xfs_attri_log_format) +
+			xlog_calc_iovec_len(sizeof(struct xfs_parent_name_rec));
+}
+static inline unsigned int xfs_calc_pptr_replace_overhead(void)
+{
+	return sizeof(struct xfs_attri_log_format) +
+			xlog_calc_iovec_len(XATTR_NAME_MAX) +
+			xlog_calc_iovec_len(XATTR_NAME_MAX) +
+			xlog_calc_iovec_len(sizeof(struct xfs_parent_name_rec));
+}
+
+And then the above becomes:
+
+	if (xfs_has_parent(mp)) {
+		unsigned int	rename_overhead, exchange_overhead;
+
+		t3 = max(resp->tr_attrsetm.tr_logres,
+			 resp->tr_attrrm.tr_logres);
+
+		/*
+		 * For a standard rename, the three xattr intent log items
+		 * are (1) replacing the pptr for the source file; (2)
+		 * removing the pptr on the dest file; and (3) adding a
+		 * pptr for the whiteout file in the src dir.
+		 *
+		 * For an RENAME_EXCHANGE, there are two xattr intent
+		 * items to replace the pptr for both src and dest
+		 * files.  Link counts don't change and there is no
+		 * whiteout.
+		 *
+		 * In the worst case we can end up relogging all log
+		 * intent items to allow the log tail to move ahead, so
+		 * they become overhead added to each transaction in a
+		 * processing chain.
+		 */
+		rename_overhead = xfs_calc_pptr_replace_overhead() +
+				  xfs_calc_pptr_unlink_overhead() +
+				  xfs_calc_pptr_link_overhead();
+		exchange_overhead = 2 * xfs_calc_pptr_replace_overhead();
+
+		overhead += max(rename_overhead, exchange_overhead);
+	}
+
+You might want to come up with better names though.
+
+> +	}
+> +
+> +	return overhead + max3(t1, t2, t3);
+> +}
+> +
+> +static inline unsigned int
+> +xfs_rename_log_count(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_trans_resv	*resp)
+> +{
+> +	/* One for the rename, one more for freeing blocks */
+> +	unsigned int		ret = XFS_RENAME_LOG_COUNT;
+> +
+> +	/*
+> +	 * Pre-reserve enough log reservation to handle the transaction
+> +	 * rolling needed to remove or add one parent pointer.
+> +	 */
+> +	if (xfs_has_parent(mp))
+> +		ret += max(resp->tr_attrsetm.tr_logcount,
+> +			   resp->tr_attrrm.tr_logcount);
+> +
+> +	return ret;
+>  }
+>  
+>  /*
+> @@ -459,6 +501,23 @@ xfs_calc_iunlink_remove_reservation(
+>  	       2 * M_IGEO(mp)->inode_cluster_size;
+>  }
+>  
+> +static inline unsigned int
+> +xfs_link_log_count(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_trans_resv	*resp)
+> +{
+> +	unsigned int		ret = XFS_LINK_LOG_COUNT;
+> +
+> +	/*
+> +	 * Pre-reserve enough log reservation to handle the transaction
+> +	 * rolling needed to add one parent pointer.
+> +	 */
+> +	if (xfs_has_parent(mp))
+> +		ret += resp->tr_attrsetm.tr_logcount;
+> +
+> +	return ret;
+> +}
+> +
+>  /*
+>   * For creating a link to an inode:
+>   *    the parent directory inode: inode size
+> @@ -475,14 +534,27 @@ STATIC uint
+>  xfs_calc_link_reservation(
+>  	struct xfs_mount	*mp)
+>  {
+> -	return XFS_DQUOT_LOGRES(mp) +
+> -		xfs_calc_iunlink_remove_reservation(mp) +
+> -		max((xfs_calc_inode_res(mp, 2) +
+> -		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
+> -				      XFS_FSB_TO_B(mp, 1))),
+> -		    (xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+> -		     xfs_calc_buf_res(xfs_allocfree_block_count(mp, 1),
+> -				      XFS_FSB_TO_B(mp, 1))));
+> +	unsigned int            overhead = XFS_DQUOT_LOGRES(mp);
+> +	struct xfs_trans_resv   *resp = M_RES(mp);
+> +	unsigned int            t1, t2, t2_1, t2_2, t3 = 0;
+> +
+> +	t1 = xfs_calc_iunlink_remove_reservation(mp);
+> +	t2_1 = xfs_calc_inode_res(mp, 2) +
+> +	       xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp), XFS_FSB_TO_B(mp, 1));
+> +	t2_2 = xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+> +	       xfs_calc_buf_res(xfs_allocfree_block_count(mp, 1),
+> +				XFS_FSB_TO_B(mp, 1));
+> +	t2 = max(t2_1, t2_2);
+
+Add xfs_calc_iunlink_remove_reservation to overhead, rename t2_1 to t1
+and t2_2 to t2, and the return statement can become:
+
+	return overhead + max3(t1, t2, t3);
+
+> +
+> +	if (xfs_has_parent(mp)) {
+> +		t3 = resp->tr_attrsetm.tr_logres;
+> +		overhead += sizeof(struct xfs_attri_log_item) +
+> +			    xlog_calc_iovec_len(XATTR_NAME_MAX) +
+> +			    xlog_calc_iovec_len(
+> +					sizeof(struct xfs_parent_name_rec));
+
+		overhead += xfs_calc_pptr_link_overhead();
+> +	}
+> +
+> +	return overhead + t1 + t2 + t3;
+>  }
+>  
+>  /*
+> @@ -497,6 +569,23 @@ xfs_calc_iunlink_add_reservation(xfs_mount_t *mp)
+>  			M_IGEO(mp)->inode_cluster_size;
+>  }
+>  
+> +static inline unsigned int
+> +xfs_remove_log_count(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_trans_resv	*resp)
+> +{
+> +	unsigned int		ret = XFS_REMOVE_LOG_COUNT;
+> +
+> +	/*
+> +	 * Pre-reserve enough log reservation to handle the transaction
+> +	 * rolling needed to add one parent pointer.
+> +	 */
+> +	if (xfs_has_parent(mp))
+> +		ret += resp->tr_attrrm.tr_logcount;
+> +
+> +	return ret;
+> +}
+> +
+>  /*
+>   * For removing a directory entry we can modify:
+>   *    the parent directory inode: inode size
+> @@ -513,14 +602,27 @@ STATIC uint
+>  xfs_calc_remove_reservation(
+>  	struct xfs_mount	*mp)
+>  {
+> -	return XFS_DQUOT_LOGRES(mp) +
+> -		xfs_calc_iunlink_add_reservation(mp) +
+> -		max((xfs_calc_inode_res(mp, 2) +
+> -		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
+> -				      XFS_FSB_TO_B(mp, 1))),
+> -		    (xfs_calc_buf_res(4, mp->m_sb.sb_sectsize) +
+> -		     xfs_calc_buf_res(xfs_allocfree_block_count(mp, 2),
+> -				      XFS_FSB_TO_B(mp, 1))));
+> +	unsigned int            overhead = XFS_DQUOT_LOGRES(mp);
+> +	struct xfs_trans_resv   *resp = M_RES(mp);
+> +	unsigned int            t1, t2, t2_1, t2_2, t3 = 0;
+> +
+> +	t1 = xfs_calc_iunlink_add_reservation(mp);
+> +
+> +	t2_1 = xfs_calc_inode_res(mp, 2) +
+> +	       xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp), XFS_FSB_TO_B(mp, 1));
+> +	t2_2 = xfs_calc_buf_res(4, mp->m_sb.sb_sectsize) +
+> +	       xfs_calc_buf_res(xfs_allocfree_block_count(mp, 2),
+> +				XFS_FSB_TO_B(mp, 1));
+> +	t2 = max(t2_1, t2_2);
+
+Similar to the last _reservation function -- add
+xfs_calc_iunlink_add_reservation to overhead, rename t2_1 to t1 and t2_2
+to t2 and the return statement becomes:
+
+	return overhead + max3(t1, t2, t3);
+
+> +	if (xfs_has_parent(mp)) {
+> +		t3 = resp->tr_attrrm.tr_logres;
+> +		overhead += sizeof(struct xfs_attri_log_item) +
+> +			    xlog_calc_iovec_len(
+> +					sizeof(struct xfs_parent_name_rec));
+
+		overhead += xfs_calc_pptr_unlink_overhead();
+
+> +	}
+> +
+> +	return overhead + t1 + t2 + t3;
+>  }
+>  
+>  /*
+> @@ -569,12 +671,39 @@ xfs_calc_icreate_resv_alloc(
+>  		xfs_calc_finobt_res(mp);
+>  }
+>  
+> +static inline unsigned int
+> +xfs_icreate_log_count(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_trans_resv	*resp)
+> +{
+> +	unsigned int		ret = XFS_CREATE_LOG_COUNT;
+> +
+> +	/*
+> +	 * Pre-reserve enough log reservation to handle the transaction
+> +	 * rolling needed to add one parent pointer.
+> +	 */
+> +	if (xfs_has_parent(mp))
+> +		ret += resp->tr_attrsetm.tr_logcount;
+> +
+> +	return ret;
+> +}
+> +
+>  STATIC uint
+> -xfs_calc_icreate_reservation(xfs_mount_t *mp)
+> +xfs_calc_icreate_reservation(
+> +	struct xfs_mount	*mp)
+>  {
+> -	return XFS_DQUOT_LOGRES(mp) +
+> -		max(xfs_calc_icreate_resv_alloc(mp),
+> -		    xfs_calc_create_resv_modify(mp));
+> +	struct xfs_trans_resv   *resp = M_RES(mp);
+> +	unsigned int		ret = XFS_DQUOT_LOGRES(mp) +
+> +				      max(xfs_calc_icreate_resv_alloc(mp),
+> +				      xfs_calc_create_resv_modify(mp));
+
+Stylistic complaint: Please follow the same format as the other _calc
+functions:
+
+	unsigned int		overhead = XFS_DQUOT_LOGRES(mp);
+	unsigned int		t1, t2, t3 = 0;
+
+	t1 = xfs_calc_icreate_resv_alloc(mp);
+	t2 = xfs_calc_create_resv_modify(mp);
+
+	if (xfs_has_parent(mp)) {
+		t3 = resp->tr_attrsetm.tr_logres;
+		overhead += xfs_calc_pptr_link_overhead();
+	}
+
+	return overhead + max3(t1, t2, t3);
+
+> +
+> +	if (xfs_has_parent(mp))
+> +		ret += resp->tr_attrsetm.tr_logres +
+> +		       sizeof(struct xfs_attri_log_item) +
+> +		       xlog_calc_iovec_len(XATTR_NAME_MAX) +
+> +		       xlog_calc_iovec_len(
+> +					sizeof(struct xfs_parent_name_rec));
+> +	return ret;
+>  }
+>  
+>  STATIC uint
+> @@ -587,6 +716,23 @@ xfs_calc_create_tmpfile_reservation(
+>  	return res + xfs_calc_iunlink_add_reservation(mp);
+>  }
+>  
+> +static inline unsigned int
+> +xfs_mkdir_log_count(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_trans_resv	*resp)
+> +{
+> +	unsigned int		ret = XFS_MKDIR_LOG_COUNT;
+> +
+> +	/*
+> +	 * Pre-reserve enough log reservation to handle the transaction
+> +	 * rolling needed to add one parent pointer.
+> +	 */
+> +	if (xfs_has_parent(mp))
+> +		ret += resp->tr_attrsetm.tr_logcount;
+> +
+> +	return ret;
+> +}
+> +
+>  /*
+>   * Making a new directory is the same as creating a new file.
+>   */
+> @@ -597,6 +743,22 @@ xfs_calc_mkdir_reservation(
+>  	return xfs_calc_icreate_reservation(mp);
+>  }
+>  
+> +static inline unsigned int
+> +xfs_symlink_log_count(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_trans_resv	*resp)
+> +{
+> +	unsigned int		ret = XFS_SYMLINK_LOG_COUNT;
+> +
+> +	/*
+> +	 * Pre-reserve enough log reservation to handle the transaction
+> +	 * rolling needed to add one parent pointer.
+> +	 */
+> +	if (xfs_has_parent(mp))
+> +		ret += resp->tr_attrsetm.tr_logcount;
+> +
+> +	return ret;
+> +}
+>  
+>  /*
+>   * Making a new symplink is the same as creating a new file, but
+> @@ -607,8 +769,17 @@ STATIC uint
+>  xfs_calc_symlink_reservation(
+>  	struct xfs_mount	*mp)
+>  {
+> -	return xfs_calc_icreate_reservation(mp) +
+> -	       xfs_calc_buf_res(1, XFS_SYMLINK_MAXLEN);
+> +	struct xfs_trans_resv   *resp = M_RES(mp);
+> +	unsigned int		ret = xfs_calc_icreate_reservation(mp) +
+> +				      xfs_calc_buf_res(1, XFS_SYMLINK_MAXLEN);
+> +
+> +	if (xfs_has_parent(mp))
+> +		ret += resp->tr_attrsetm.tr_logres +
+> +		       sizeof(struct xfs_attri_log_item) +
+> +		       xlog_calc_iovec_len(XATTR_NAME_MAX) +
+> +		       xlog_calc_iovec_len(
+> +					sizeof(struct xfs_parent_name_rec));
+
+Didn't we already account for the pptr log item overhead in
+xfs_calc_icreate_reservation?
+
+> +	return ret;
+>  }
+>  
+>  /*
+> @@ -909,54 +1080,76 @@ xfs_calc_sb_reservation(
+>  	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
+>  }
+>  
+> -void
+> -xfs_trans_resv_calc(
+> +/*
+> + * Namespace reservations.
+> + *
+> + * These get tricky when parent pointers are enabled as we have attribute
+> + * modifications occurring from within these transactions. Rather than confuse
+> + * each of these reservation calculations with the conditional attribute
+> + * reservations, add them here in a clear and concise manner. This assumes that
+
+s/assumes/requires/ since you put in ASSERTs :)
+
+--D
+
+> + * the attribute reservations have already been calculated.
+> + *
+> + * Note that we only include the static attribute reservation here; the runtime
+> + * reservation will have to be modified by the size of the attributes being
+> + * added/removed/modified. See the comments on the attribute reservation
+> + * calculations for more details.
+> + */
+> +STATIC void
+> +xfs_calc_namespace_reservations(
+>  	struct xfs_mount	*mp,
+>  	struct xfs_trans_resv	*resp)
+>  {
+> -	int			logcount_adj = 0;
+> -
+> -	/*
+> -	 * The following transactions are logged in physical format and
+> -	 * require a permanent reservation on space.
+> -	 */
+> -	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp, false);
+> -	resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+> -	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> -
+> -	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp, false);
+> -	resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+> -	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> +	ASSERT(resp->tr_attrsetm.tr_logres > 0);
+>  
+>  	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
+> -	resp->tr_rename.tr_logcount = XFS_RENAME_LOG_COUNT;
+> +	resp->tr_rename.tr_logcount = xfs_rename_log_count(mp, resp);
+>  	resp->tr_rename.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>  
+>  	resp->tr_link.tr_logres = xfs_calc_link_reservation(mp);
+> -	resp->tr_link.tr_logcount = XFS_LINK_LOG_COUNT;
+> +	resp->tr_link.tr_logcount = xfs_link_log_count(mp, resp);
+>  	resp->tr_link.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>  
+>  	resp->tr_remove.tr_logres = xfs_calc_remove_reservation(mp);
+> -	resp->tr_remove.tr_logcount = XFS_REMOVE_LOG_COUNT;
+> +	resp->tr_remove.tr_logcount = xfs_remove_log_count(mp, resp);
+>  	resp->tr_remove.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>  
+>  	resp->tr_symlink.tr_logres = xfs_calc_symlink_reservation(mp);
+> -	resp->tr_symlink.tr_logcount = XFS_SYMLINK_LOG_COUNT;
+> +	resp->tr_symlink.tr_logcount = xfs_symlink_log_count(mp, resp);
+>  	resp->tr_symlink.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>  
+>  	resp->tr_create.tr_logres = xfs_calc_icreate_reservation(mp);
+> -	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
+> +	resp->tr_create.tr_logcount = xfs_icreate_log_count(mp, resp);
+>  	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>  
+> +	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
+> +	resp->tr_mkdir.tr_logcount = xfs_mkdir_log_count(mp, resp);
+> +	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> +}
+> +
+> +void
+> +xfs_trans_resv_calc(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_trans_resv	*resp)
+> +{
+> +	int			logcount_adj = 0;
+> +
+> +	/*
+> +	 * The following transactions are logged in physical format and
+> +	 * require a permanent reservation on space.
+> +	 */
+> +	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp, false);
+> +	resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
+> +	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> +
+> +	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp, false);
+> +	resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
+> +	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> +
+>  	resp->tr_create_tmpfile.tr_logres =
+>  			xfs_calc_create_tmpfile_reservation(mp);
+>  	resp->tr_create_tmpfile.tr_logcount = XFS_CREATE_TMPFILE_LOG_COUNT;
+>  	resp->tr_create_tmpfile.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>  
+> -	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
+> -	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
+> -	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> -
+>  	resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
+>  	resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
+>  	resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> @@ -986,6 +1179,8 @@ xfs_trans_resv_calc(
+>  	resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
+>  	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+>  
+> +	xfs_calc_namespace_reservations(mp, resp);
+> +
+>  	/*
+>  	 * The following transactions are logged in logical format with
+>  	 * a default log count.
+> -- 
+> 2.25.1
+> 
