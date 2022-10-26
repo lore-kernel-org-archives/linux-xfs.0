@@ -2,128 +2,103 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39EDDC38A2D
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Oct 2022 20:33:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 763EAC433FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Oct 2022 20:58:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234370AbiJZUdw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 Oct 2022 16:33:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43644 "EHLO
+        id S233491AbiJZU6o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 Oct 2022 16:58:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233785AbiJZUdv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Oct 2022 16:33:51 -0400
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE5C17E804
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Oct 2022 13:33:49 -0700 (PDT)
-Received: by mail-pf1-x431.google.com with SMTP id g62so12606974pfb.10
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Oct 2022 13:33:49 -0700 (PDT)
+        with ESMTP id S233706AbiJZU6n (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Oct 2022 16:58:43 -0400
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5A3C1217F6
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Oct 2022 13:58:42 -0700 (PDT)
+Received: by mail-pf1-x42a.google.com with SMTP id g62so12678790pfb.10
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Oct 2022 13:58:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=E0kxEl2S2a68MlFLjbJ42CBU2Unm12GzaCEH0lHQWuY=;
-        b=obeJhxI+ENacAUlLPp+v61BhonjTS9sjU5Bul5it9+TdjHX1b4Op8qbkgN5uiAd9Gn
-         Rd++IsKXJUdHvO+QOHUTGWHEmxI4CX4zFjED0OsH9PsV0jOV3C/F27o4oDQHKnHqCHbR
-         ik1V1MssxtQ/uj/MararQ0+xsoC+XV6V9lfSw=
+        bh=tw9DmtFMr03aK4CLShy9uwPUu924zdghLHaBMdz7StA=;
+        b=F67rgSXXWFQXYc+Ck+qnq//4GSSDsZdsEQsZ2rbkQJsJMhXdmh1Mfa3FuBUXL+nesK
+         +67LWzGR8ss8GKUet0uD9o65xyu4iTXdfzJTK49MSsNzoGxm6xsMWzyYAVzGKB4Gsc17
+         Us2lsBOi3Wsgzkmesgsjz21tDPF7JDDTc9GvkYaQObTZtrK7Ml6YGm13He9Pl3vwJVm5
+         n9ka5I20J+MLkSoVl5eV5xrC/wCjHVZHl1CtQfHZU2hkPexRPL2WIWpXeANb9Di0/MRr
+         8O+19HbXNJA4+QJjUDm/tYHRC636lrotagDBXd6WyDJZVPWOAKkOCL8v7MkvZaGk4C+l
+         NdEg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=E0kxEl2S2a68MlFLjbJ42CBU2Unm12GzaCEH0lHQWuY=;
-        b=AmEzQ2wrwRSYGXG0hVL/srQG2w+bdplGL8AFFDKUUgS2lsiLB9FzaAsNdUeS916lQm
-         xjgce/OTP2h8ao1mzk76dEe3O78HsCqTQrXU7QnpNdGhRxA8z4pEYEYBml6jBNtziIwj
-         ilkasJyctyGRiV/YDOktRNc3iJmNe/lKrF3g3No8KHeduBy66g37GkywttSrEPN1uEn3
-         wiC/v7xf/GQuxRIsVtO1Z6XAVsQskkt8aVFyT+vTVKn/ut32vBlYDDi3P5ZL/hGWH+0d
-         tKvsHCaKgOq8u2Ha7f/T+fEqqEExLbX5VAnYb5L2RltbHD26ErXCNl3r8MDAMGXj80Ga
-         j9fw==
-X-Gm-Message-State: ACrzQf2tTHqdlaZvaxqi/V8kfq0cEEVQ5KdkXh1mEGcQiZizPTSuIvYH
-        zThpeglXWLx7AO7Z6nz/+rJbiw==
-X-Google-Smtp-Source: AMsMyM4LL5FU6eakv/Sxfgq+61DepYp6/wpZrXWfv9mn6/p1V/LnMHUZp0tBb0NQskKtGvdKrQEfXA==
-X-Received: by 2002:a05:6a00:2307:b0:565:9079:b165 with SMTP id h7-20020a056a00230700b005659079b165mr46196368pfh.53.1666816429195;
-        Wed, 26 Oct 2022 13:33:49 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id s27-20020aa78bdb000000b0056bc30e618dsm3377335pfd.38.2022.10.26.13.33.47
+        bh=tw9DmtFMr03aK4CLShy9uwPUu924zdghLHaBMdz7StA=;
+        b=mJfVwDtPHvUGDk8fBXk5nx/sB27HqDr7NwojzYED26unyyzELGqL5FXyMzAc2H7mff
+         J/x+Vq9kmTYWkmDdug20NpFf6YJPDj8xrZGNP/r5VWqNgaUY43NQCTlpeSD8mEpc+7kX
+         rxs5Mlx+f+Dj8y+Z+EOiQ2Tt/bMkbCkDjscMAnmWzRabFL2rBdA3MzfLqmYYko1w0R4b
+         20SwoqxWs3CBjVyvySjX72abAutsavBJTWrNmXnquKkur85zvnulU8jfMYJZ0WS3BIiz
+         XGrYXcUMhhJp7cD7dI12rTnYXodE6lBLAI8IKeBtS9xjQ0UaoeAW4IfrwT65oVhft9Y/
+         fB2g==
+X-Gm-Message-State: ACrzQf3wjc0QBdkZS4vuQrYeXQfvx9RK/wB3uuJjvzQCiORSPaYOU6Ey
+        ziQ7+XNG4TZkX3du9cXsNiYJk7XDlFOeqw==
+X-Google-Smtp-Source: AMsMyM6YMKObSc6nqdN2VaE11I9SQytmsXtR251L4mhgDi7rctP5ntBzKymqVF0NzUul6YbHs0+nqQ==
+X-Received: by 2002:a05:6a00:15cc:b0:563:a6be:6633 with SMTP id o12-20020a056a0015cc00b00563a6be6633mr421668pfu.30.1666817922202;
+        Wed, 26 Oct 2022 13:58:42 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au. [49.181.106.210])
+        by smtp.gmail.com with ESMTPSA id x1-20020aa79561000000b005633a06ad67sm3404576pfq.64.2022.10.26.13.58.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Oct 2022 13:33:48 -0700 (PDT)
-Date:   Wed, 26 Oct 2022 13:33:47 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     Keith Packard <keithp@keithp.com>
-Cc:     "Darrick J . Wong" <djwong@kernel.org>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Francis Laniel <laniel_francis@privacyrequired.com>,
-        Daniel Axtens <dja@axtens.net>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vincenzo Frascino <vincenzo.frascino@arm.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Daniel Vetter <daniel.vetter@ffwll.ch>,
-        Tadeusz Struk <tadeusz.struk@linaro.org>,
-        Zorro Lang <zlang@redhat.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Andy Shevchenko <andriy.shevchenko@intel.com>,
-        Paolo Abeni <pabeni@redhat.com>, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] Introduce flexible array struct helpers
-Message-ID: <202210260904.41D0BE00A@keescook>
-References: <20221024171848.never.522-kees@kernel.org>
- <20221024172058.534477-1-keescook@chromium.org>
- <87k04pf4tk.fsf@keithp.com>
+        Wed, 26 Oct 2022 13:58:41 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1onnTy-006l4u-CJ; Thu, 27 Oct 2022 07:58:38 +1100
+Date:   Thu, 27 Oct 2022 07:58:38 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Allison Henderson <allison.henderson@oracle.com>,
+        Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 6/8] xfs: refactor all the EFI/EFD log item sizeof logic
+Message-ID: <20221026205838.GN3600936@dread.disaster.area>
+References: <166681485271.3447519.6520343630713202644.stgit@magnolia>
+ <166681488665.3447519.1169617376665660236.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87k04pf4tk.fsf@keithp.com>
+In-Reply-To: <166681488665.3447519.1169617376665660236.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 24, 2022 at 11:35:03AM -0700, Keith Packard wrote:
-> Kees Cook <keescook@chromium.org> writes:
+On Wed, Oct 26, 2022 at 01:08:06PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> > + * struct flex_array_struct_example {
-> > + *	...			 // arbitrary members
-> > + *	bounded_flex_array(
-> > + *		u16, part_count, // count of elements stored in "parts" below.
-> > + *		u32, parts	 // flexible array with elements of type u32.
-> > + *	);
-> > + * );
+> Refactor all the open-coded sizeof logic for EFI/EFD log item and log
+> format structures into common helper functions whose names reflect the
+> struct names.
 > 
-> > + * struct flex_array_struct_example {
-> > + *	...		// position-sensitive members
-> > + *	// count of elements stored in "parts" below.
-> > + *	DECLARE_FAS_COUNT(u16, part_count);
-> > + *	..		// position-sensitive members
-> > + *	// flexible array with elements of type u32.
-> > + *	DECLARE_FAS_ARRAY(u32, parts);
-> > + * };
-> 
-> I'm sure there's a good reason, but these two macros appear to be doing
-> similar things and yet have very different naming conventions. Maybe:
-> 
->         FAS_DECLARE_COUNT(type, name)
->         FAS_DECLARE_ARRAY(type, name)
->         FAS_DECLARE(size_type, size_name, array_type, array_name)
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> ---
+....
+> @@ -155,13 +144,11 @@ xfs_efi_init(
+>  
+>  {
+>  	struct xfs_efi_log_item	*efip;
+> -	uint			size;
+>  
+>  	ASSERT(nextents > 0);
+>  	if (nextents > XFS_EFI_MAX_FAST_EXTENTS) {
+> -		size = (uint)(sizeof(struct xfs_efi_log_item) +
+> -			(nextents * sizeof(xfs_extent_t)));
+> -		efip = kmem_zalloc(size, 0);
+> +		efip = kzalloc(xfs_efi_log_item_sizeof(nextents),
+> +				GFP_KERNEL | __GFP_NOFAIL);
 
-Well, the custom has been for individual things, call it "DECLARE_*",
-and for groups, we went with lower-case macros (e.g. struct_group()).
+Yup, those allocations look right now :)
 
-> 
-> > +/* For use with flexible array structure helpers, in <linux/flex_array.h> */
-> > +#define __DECLARE_FAS_COUNT(TYPE, NAME)					\
-> > +	union {								\
-> > +		TYPE __flex_array_elements_count;			\
-> > +		TYPE NAME;						\
-> > +	}
-> 
-> How often could that second "public" member be 'const'? That would catch
-> places which accidentally assign to this field.
-> 
-> For code which does want to write to this field, is it mostly trimming
-> data from the end, or does it actually smash in arbitrary values? For
-> the former case, would it be helpful to have a test to make sure the
-> assigned size isn't larger than the real size (yeah, that would probably
-> take an extra field holding the real size), or larger than the current size?
+Cheers,
 
-I don't think this'll work within arbitrary struct declarations, but it
-would be nice. :)
-
+Dave.
 -- 
-Kees Cook
+Dave Chinner
+david@fromorbit.com
