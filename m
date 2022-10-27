@@ -2,304 +2,211 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACB54FA3740
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Oct 2022 16:05:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA5B0FA3740
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Oct 2022 16:06:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235626AbiJ0QF2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Oct 2022 12:05:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52578 "EHLO
+        id S236240AbiJ0QGx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Oct 2022 12:06:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236018AbiJ0QF0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Oct 2022 12:05:26 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F3C338693
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 09:05:23 -0700 (PDT)
+        with ESMTP id S236345AbiJ0QGw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Oct 2022 12:06:52 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DB271413BF;
+        Thu, 27 Oct 2022 09:06:50 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CDE48623A2
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 16:05:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3103AC433C1;
-        Thu, 27 Oct 2022 16:05:22 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 53031B826FB;
+        Thu, 27 Oct 2022 16:06:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05BD6C433D6;
+        Thu, 27 Oct 2022 16:06:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666886722;
-        bh=Ybgot/xWva4uWl1cKYXzjH7Ilb+nbag9qoTO2jDhWls=;
+        s=k20201202; t=1666886808;
+        bh=XteCW3G+x1lrMpHzsbnyd2e5yyrrVAaiTQ3oDee7u50=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Nbde72T0lEYTtmN88Lj5kZ5tn7K/ak93g60rFC1b6FXP23JYyaB0yCJzQcpzVG7Pt
-         Ref96jmebpvjZ7IlZ5uHvAwQ5i5vMtCyBZb9/z34at7291jA6YuDgc1e6zJgWHdnXN
-         7zwNh87rSluOCxykRhyMWe6poyMmIxPe4tmK4wNRwv0oqvqNuLtqrGtLF7TU6UZ7bL
-         j0VBvt3m27guaGmEvLYBITxbb5XlvxcwlZb0/m/D3oHYOc36F7uaZMgFT1Udcqz9T2
-         0yxAVgnQ5yFh9rg2wWrUJ0QxU64+Kb2yvKW6PnKJgVOtzlW73bwyQirysyADmbGJ2p
-         AqcGoYS/lSpmQ==
-Date:   Thu, 27 Oct 2022 09:05:21 -0700
+        b=jbWnN+pWN2UNCopLLC4lOjMw+4iXLIeV32iEpWTQM13kPbJ7kywGvAv+ZrN9FbMYN
+         GZ4K8byDwIlWXVvSyWaF40TLU1lHWxOtcbsjYO6fLCQgzsOPL2LIzvk5WW4f7geBXs
+         SStFEWR2bluxlxdnPDwL2vU/91ekR5eCR+JlQudhZ/M89m3JEWyxMyxLcFB68PEmGz
+         xhTrBVdN92oPsIJxRWk8ggbQdH6DJFpBbjqPkwXUCz/IkMlv0QU/1F1lIvVfjfirr5
+         t4YLZL/GJA6rcMP0bKqCtSdaXOpCCuB7F05nBRFlMvB0JLaC4VChszBcVDU8swtZL2
+         UuvVgz00iAtAg==
+Date:   Thu, 27 Oct 2022 09:06:47 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Long Li <leo.lilong@huawei.com>
-Cc:     billodo@redhat.com, chandan.babu@oracle.com, dchinner@redhat.com,
-        guoxuenan@huawei.com, houtao1@huawei.com,
-        linux-xfs@vger.kernel.org, sandeen@redhat.com, yi.zhang@huawei.com
-Subject: Re: [PATCH v2] xfs: fix sb write verify for lazysbcount
-Message-ID: <Y1qsQaDA3wcCN+K8@magnolia>
-References: <20221022020345.GA2699923@ceph-admin>
- <20221025091527.377976-1-leo.lilong@huawei.com>
- <Y1goB8GfadlYSL9T@magnolia>
- <20221026091344.GA490040@ceph-admin>
- <Y1mB7VfIOms3J2Rj@magnolia>
- <20221027132504.GB490040@ceph-admin>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: new test to ensure xfs can capture IO errors
+ correctly
+Message-ID: <Y1qsl2f09zrwCjBd@magnolia>
+References: <20221026165747.1146281-1-zlang@kernel.org>
+ <Y1l8xRaTpeH3Nu0l@magnolia>
+ <20221027022459.5ewhsm7gjq5iynra@zlang-mailbox>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221027132504.GB490040@ceph-admin>
+In-Reply-To: <20221027022459.5ewhsm7gjq5iynra@zlang-mailbox>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 27, 2022 at 09:25:04PM +0800, Long Li wrote:
-> On Wed, Oct 26, 2022 at 11:52:29AM -0700, Darrick J. Wong wrote:
-> > On Wed, Oct 26, 2022 at 05:13:44PM +0800, Long Li wrote:
-> > > On Tue, Oct 25, 2022 at 11:16:39AM -0700, Darrick J. Wong wrote:
-> > > > On Tue, Oct 25, 2022 at 05:15:27PM +0800, Long Li wrote:
-> > > > > When lazysbcount is enabled, fsstress and loop mount/unmount test report
-> > > > > the following problems:
-> > > > > 
-> > > > > XFS (loop0): SB summary counter sanity check failed
-> > > > > XFS (loop0): Metadata corruption detected at xfs_sb_write_verify+0x13b/0x460,
-> > > > > 	xfs_sb block 0x0
-> > > > > XFS (loop0): Unmount and run xfs_repair
-> > > > > XFS (loop0): First 128 bytes of corrupted metadata buffer:
-> > > > > 00000000: 58 46 53 42 00 00 10 00 00 00 00 00 00 28 00 00  XFSB.........(..
-> > > > > 00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> > > > > 00000020: 69 fb 7c cd 5f dc 44 af 85 74 e0 cc d4 e3 34 5a  i.|._.D..t....4Z
-> > > > > 00000030: 00 00 00 00 00 20 00 06 00 00 00 00 00 00 00 80  ..... ..........
-> > > > > 00000040: 00 00 00 00 00 00 00 81 00 00 00 00 00 00 00 82  ................
-> > > > > 00000050: 00 00 00 01 00 0a 00 00 00 00 00 04 00 00 00 00  ................
-> > > > > 00000060: 00 00 0a 00 b4 b5 02 00 02 00 00 08 00 00 00 00  ................
-> > > > > 00000070: 00 00 00 00 00 00 00 00 0c 09 09 03 14 00 00 19  ................
-> > > > > XFS (loop0): Corruption of in-memory data (0x8) detected at _xfs_buf_ioapply
-> > > > > 	+0xe1e/0x10e0 (fs/xfs/xfs_buf.c:1580).  Shutting down filesystem.
-> > > > > XFS (loop0): Please unmount the filesystem and rectify the problem(s)
-> > > > > XFS (loop0): log mount/recovery failed: error -117
-> > > > > XFS (loop0): log mount failed
-> > > > > 
-> > > > > This will make the file system unmountable, the cause of the problem is
-> > > > > that during the log recovery process, incorrect count (ifree > icount)
-> > > > > are recovered from the log and fail to pass the boundary check in
-> > > > > xfs_validate_sb_write(). The following script can reproduce the problem,
-> > > > > but it may take a long time.
-> > > > > 
-> > > > > device=/dev/sda
-> > > > > testdir=/mnt/test
-> > > > > round=0
-> > > > > 
-> > > > > function fail()
-> > > > > {
-> > > > > 	echo "$*"
-> > > > > 	exit 1
-> > > > > }
-> > > > > 
-> > > > > mkdir -p $testdir
-> > > > > while [ $round -lt 10000 ]
-> > > > > do
-> > > > > 	echo "******* round $round ********"
-> > > > > 	mkfs.xfs -f $device
-> > > > > 	mount $device $testdir || fail "mount failed!"
-> > > > > 	fsstress -d $testdir -l 0 -n 10000 -p 4 >/dev/null &
-> > > > 
-> > > > What is the backtrace of the xfs_log_sb caller?  I speculate that it's
-> > > > something along the lines of adding a superblock feature?  attr2 would
-> > > > be my guess since this is fsstress.
+On Thu, Oct 27, 2022 at 10:24:59AM +0800, Zorro Lang wrote:
+> On Wed, Oct 26, 2022 at 11:30:29AM -0700, Darrick J. Wong wrote:
+> > On Thu, Oct 27, 2022 at 12:57:47AM +0800, Zorro Lang wrote:
+> > > There was a known xfs crash bug fixed by e001873853d8 ("xfs: ensure
+> > > we capture IO errors correctly"), so trys to cover this bug and make
+> > > sure xfs can capture IO errors correctly, won't panic and hang again.
 > > > 
-> > > The call trace that I reproduced:
-> > >  Call Trace:
-> > >   <TASK>
-> > >   dump_stack_lvl+0x4d/0x66
-> > >   xfs_log_sb.cold+0x2f/0x1af
-> > >   xfs_bmap_add_attrfork+0x687/0xb40
-> > >   ? get_reg+0x91/0x190
-> > >   ? xfs_bmap_add_attrfork+0x0/0xb40
-> > >   ? unwind_next_frame+0x115d/0x1b70
-> > >   ? xfs_attr_calc_size+0x13c/0x2e0
-> > >   xfs_attr_set+0xb51/0x1d50
-> > >   ? __kernel_text_address-0xe/0x30
-> > >   ? xfs_attr_set+0x0/0x1d50
-> > >   ? __kernel_text_address+0xe/0x30
-> > >   ? unwind_get_return_address+0x5f/0xa0
-> > >   ? stack_trace_consume_entry+0x0/0x160
-> > >   ? arch_stack_walk+0x98/0xf0
-> > >   xfs_attr_change+0x22d/0x380
-> > >   xfs_xattr_set+0xeb/0x160
-> > >   ? xfs_xattr_set+0x0/0x160
-> > >   ? vmemdup_user+0x27/0xa0
-> > >   ? setxattr_copy+0x103/0x1a0
-> > >   ? setxattr+0xd1/0x160
-> > >   ? path_setxattr+0x168/0x190
-> > >   ? __x64_sys_setxattr+0xc5/0x160
-> > >   ? xattr_resolve_name+0x23d/0x360
-> > >   ? xfs_xattr_set+0x0/0x160
-> > >   __vfs_setxattr+0x100/0x160
-> > >   ? __vfs_setxattr+0x0/0x160
-> > >   __vfs_setxattr_noperm+0x104/0x320
-> > >   __vfs_setxattr_locked+0x1ba/0x260
+> > > Signed-off-by: Zorro Lang <zlang@redhat.com>
+> > > ---
 > > > 
-> > > > 
-> > > > So the other racing thread would be a thread that just freed an inode
-> > > > cluster, committed the transaction, and now it's committing idelta and
-> > > > ifreedelta into the incore percpu counters via:
-> > > > 
-> > > > 	if (idelta)
-> > > > 		percpu_counter_add_batch(&mp->m_icount, idelta,
-> > > > 					 XFS_ICOUNT_BATCH);
-> > > > 
-> > > > 	if (ifreedelta)
-> > > > 		percpu_counter_add(&mp->m_ifree, ifreedelta);
-> > > > 
-> > > > > 	sleep 4
-> > > > > 	killall -w fsstress
-> > > > > 	umount $testdir
-> > > > > 	xfs_repair -e $device > /dev/null
-> > > > > 	if [ $? -eq 2 ];then
-> > > > > 		echo "ERR CODE 2: Dirty log exception during repair."
-> > > > > 		exit 1
-> > > > > 	fi
-> > > > > 	round=$(($round+1))
-> > > > > done
-> > > > > 
-> > > > > With lazysbcount is enabled, There is no additional lock protection for
-> > > > > reading m_ifree and m_icount in xfs_log_sb(), if other cpu modifies the
-> > > > > m_ifree, this will make the m_ifree greater than m_icount and written to
-> > > > > the log. For example consider the following sequence:
-> > > > > 
-> > > > >  CPU0				 CPU1
-> > > > >  xfs_log_sb			 xfs_trans_unreserve_and_mod_sb
-> > > > >  ----------			 ------------------------------
-> > > > >  percpu_counter_sum(&mp->m_icount)
-> > > > > 				 percpu_counter_add(&mp->m_icount, idelta)
-> > > > 
-> > > > This callsite does not exist ^^^^^^^^^^^ in the codebase, AFAICT.
-> > > > 
-> > > > > 				 percpu_counter_add_batch(&mp->m_icount,
-> > > > > 						idelta, XFS_ICOUNT_BATCH)
-> > > > >  percpu_counter_sum(&mp->m_ifree)
+> > > Hi,
 > > > 
-> > > Sorry, the code I copied is wrong, as it should be:
+> > > When I tried to tidy up our internal test cases recently, I found a very
+> > > old case which trys to cover e001873853d8 ("xfs: ensure we capture IO errors
+> > > correctly") which fix by Dave. At that time, we didn't support xfs injection,
+> > > so we tested it by a systemtap script [1] to inject an ioerror.
 > > > 
-> > >  CPU0				 CPU1
-> > >  xfs_log_sb			 xfs_trans_unreserve_and_mod_sb
-> > >  ----------			 ------------------------------
-> > >  percpu_counter_sum(&mp->m_icount)
-> > > 				 percpu_counter_add_batch(&mp->m_icount,
-> > > 						idelta, XFS_ICOUNT_BATCH)
-> > > 				 percpu_counter_add(&mp->m_ifree, ifreedelta);
-> > >  percpu_counter_sum(&mp->m_ifree)
+> > > Now this bug has been fixed long long time ago (9+ years), and that stap script
+> > > is already out of date, can't work with new kernel. But good news is we have xfs
+> > > injection now, so I try to resume this test case in fstests.
 > > > 
-> > > > 
-> > > > I think what's happening here is more like:
-> > > > 
-> > > > 1. CPU1 adds a negative idelta to m_icount.
-> > > > 2. CPU0 sums m_icount.
-> > > > 3. CPU0 sums m_ifree.
-> > > > 4. CPU1 adds a negative ideltafree to m_ifree.
+> > > I didn't verify if this case can reproduce that bug on old rhel (which doesn't
+> > > support error injection). The original case tried to inject errno 11, I'm
+> > > not sure if it's worth trying more other errors. I searched "buf_ioerror" in
+> > > fstests, found nothing. So maybe this bug is old enough, but it's worth covering
+> > > this kind of test. So feel free to tell me if you have any suggestions :)
 > > > 
-> > > I tried to reproduce the situation that you said, but it hasn't been
-> > > reproduced yet. Only the following sequence is reproduced:
+> > > Thanks,
+> > > Zorro
 > > > 
-> > > 1. CPU0 sums m_icount.
-> > > 2. CPU1 adds a positive idelta (e.g. 32) to m_icount.
-> > > 3. CPU1 adds a positive ideltafree (e.g. 32) to m_ifree.
-> > > 4. CPU0 sums m_ifree. 
+> > > [1]
+> > > probe module("xfs").function("xfs_buf_bio_end_io")
+> > > {
+> > >         if ($error == 0) {
+> > >                 if ($bio->bi_rw & (1 << 4)) {
+> > >                         $error = -11;
+> > >                         printf("%s: comm %s, pid %d, setting error 11\n",
+> > >                                 probefunc(), execname(), pid());
+> > >                         print_stack(backtrace());
+> > >                 }
+> > >         }
+> > > }
+> > > 
+> > >  tests/xfs/554     | 53 +++++++++++++++++++++++++++++++++++++++++++++++
+> > >  tests/xfs/554.out |  4 ++++
+> > >  2 files changed, 57 insertions(+)
+> > >  create mode 100755 tests/xfs/554
+> > >  create mode 100644 tests/xfs/554.out
+> > > 
+> > > diff --git a/tests/xfs/554 b/tests/xfs/554
+> > > new file mode 100755
+> > > index 00000000..6935bfc0
+> > > --- /dev/null
+> > > +++ b/tests/xfs/554
+> > > @@ -0,0 +1,53 @@
+> > > +#! /bin/bash
+> > > +# SPDX-License-Identifier: GPL-2.0
+> > > +# Copyright (c) 2022 YOUR NAME HERE.  All Rights Reserved.
 > > 
-> > Aha, that was my second guess as to what was really going on.
+> > Mr. YOUR HERE,
 > > 
-> > Either way, we're racing with updates to two percpu counters.
-> > Now that the source of the bug has been clarified...
+> > Please write your real name in the copyright statement.
 > > 
-> > > > Now CPU0 has an ifree > icount, which it writes into the primary
-> > > > superblock buffer.  Eventually the AIL writes the buffer to disk, only
-> > > > the write verifier trips over icount < ifree and shuts down the fs.
-> > > > 
-> > > > > If we have an unclean shutdown, this will be corrected by
-> > > > > xfs_initialize_perag_data() rebuilding the counters from the AGF block
-> > > > > counts, and the correction is later than log recovery. During log recovery,
-> > > > > incorrect ifree/icount may be restored from the log and written sb, since
-> > > > > ifree and icount have not been corrected at this time, sb write check
-> > > > > will fail due to ifree > icount.
-> > > > > 
-> > > > > Guaranteed that ifree will never be logged as being greater than icount.
-> > > > > Neither icount or ifree will be accurate if we are racing with other
-> > > > > updates, but it will guarantee that what we write to the journal
-> > > > > won't trigger corruption warnings.
-> > > > > 
-> > > > > Fixes: 8756a5af1819 ("libxfs: add more bounds checking to sb sanity checks")
-> > > > > Signed-off-by: Long Li <leo.lilong@huawei.com>
-> > > > > ---
-> > > > > v2:
-> > > > > - Add scripts that could reproduce the problem
-> > > > > - Guaranteed that ifree will never be logged as being greater than icount
-> > > > > 
-> > > > >  fs/xfs/libxfs/xfs_sb.c | 4 +++-
-> > > > >  1 file changed, 3 insertions(+), 1 deletion(-)
-> > > > > 
-> > > > > diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> > > > > index a20cade590e9..1eeecf2eb2a7 100644
-> > > > > --- a/fs/xfs/libxfs/xfs_sb.c
-> > > > > +++ b/fs/xfs/libxfs/xfs_sb.c
-> > > > > @@ -972,7 +972,9 @@ xfs_log_sb(
-> > > > >  	 */
-> > > > >  	if (xfs_has_lazysbcount(mp)) {
-> > > > >  		mp->m_sb.sb_icount = percpu_counter_sum(&mp->m_icount);
-> > > > > -		mp->m_sb.sb_ifree = percpu_counter_sum(&mp->m_ifree);
-> > > > > +		mp->m_sb.sb_ifree = min_t(uint64_t,
-> > > > > +				percpu_counter_sum(&mp->m_ifree),
-> > > > > +				mp->m_sb.sb_icount);
-> > > > 
-> > > > This part looks plausible, but I think xfs_unmountfs really ought to
-> > > > check that m_ifree < m_icount after it's quiesced the rest of the
-> > > > filesystem and freed the reserve block pool.  If ifree is still larger
-> > > > than icount, someone has corrupted the incore counters, so we should not
-> > > > write a clean unmount record.
+> > > +#
+> > > +# FS QA Test 554
+> > > +#
+> > > +# There was a known xfs crash bug fixed by e001873853d8 ("xfs: ensure we
+> > > +# capture IO errors correctly"), so trys to cover this bug and make sure
+> > > +# xfs can capture IO errors correctly, won't panic and hang again.
+> > > +#
+> > > +. ./common/preamble
+> > > +_begin_fstest auto eio
+> > > +
+> > > +_cleanup()
+> > > +{
+> > > +	$KILLALL_PROG -q fsstress 2> /dev/null
+> > > +	# ensures all fsstress processes died
+> > > +	wait
+> > > +	# log replay, due to the buf_ioerror injection might leave dirty log
+> > > +	_scratch_cycle_mount
+> > > +	cd /
+> > > +	rm -r -f $tmp.*
+> > > +}
+> > > +
+> > > +# Import common functions.
+> > > +. ./common/inject
+> > > +
+> > > +# real QA test starts here
+> > > +_supported_fs xfs
+> > > +_require_command "$KILLALL_PROG" "killall"
+> > > +_require_scratch
+> > > +_require_xfs_debug
+> > > +_require_xfs_io_error_injection "buf_ioerror"
+> > > +
+> > > +_scratch_mkfs >> $seqres.full
+> > > +_scratch_mount
+> > > +
+> > > +echo "Inject buf ioerror tag"
+> > > +_scratch_inject_error buf_ioerror 11
+> > > +
+> > > +echo "Random I/Os testing ..."
+> > > +$FSSTRESS_PROG $FSSTRESS_AVOID -d $SCRATCH_MNT -n 50000 -p 100 >> $seqres.full &
+> > > +for ((i=0; i<5; i++));do
+> > > +	# Clear caches, then trys to use 'find' to trigger readahead
 > > 
-> > ...please update the patch to include this sanity check at unmount so
-> > that I can get this bugfix moving towards upstream.
+> > BUF_IOERROR only seems to apply to async writes:
+> > 
+> > static void
+> > xfs_buf_bio_end_io(
+> > 	struct bio		*bio)
+> > {
+> > 	struct xfs_buf		*bp = (struct xfs_buf *)bio->bi_private;
+> > 
+> > 	if (!bio->bi_status &&
+> > 	    (bp->b_flags & XBF_WRITE) && (bp->b_flags & XBF_ASYNC) &&
+> > 	    XFS_TEST_ERROR(false, bp->b_mount, XFS_ERRTAG_BUF_IOERROR))
+> > 		bio->bi_status = BLK_STS_IOERR;
+> > 
+> > So I don't see how this would reproduce the problem of b_error not being
+> > cleared after a failed readahead and re-read?
 > 
-> I have some questions about this. If we can guarantee that
-> m_ifree <= m_icount, why do we need add a check at umount?
+> Oh, "bp->b_flags & XBF_WRITE) && (bp->b_flags & XBF_ASYNC)" ... so I don't
+> have chance to cover this bug? I have to abandon this patch, or we'd like to
+> change it to be a general async ioerror injection test.
 
-The code change above guarantees that sb_ifree <= sb_icount (the ondisk
-superblock inode counters) when the filesystem wants to update the
-primary ondisk superblock.  It does not make any guarantee about the
-relationship between m_ifree and m_icount (the incore counters).  As you
-point out, the percpu counters can temporarily violate that constraint
-when there are other threads allocating or freeing inode chunks.
-
-However, the constraint that m_ifree <= m_icount must be satisfied any
-time that there /cannot/ be other threads allocating or freeing inode
-chunks.  If the constraint is violated under these circumstances, we
-have clear evidence of software bugs or memory corruption.  That is
-grounds for shutting down the filesystem immediately.
-
-> On the other hand, if m_ifree > m_icount, sb write will triger
-> a shutdown in xfs_validate_sb_write() because the check did
-
-It won't, because xfs_validate_sb_write checks sb_ifree and sb_icount,
-not m_ifree and m_icount.  The min_t() in your proposed change protects
-any m_ifree > m_icount from being written into the ondisk superblock.
-
-> not pass, therefore it will not write a clean umount record
-> at umount. I also haven't found a code suitable for adding
-> such checks.
-
-xfs_unmountfs just prior to unmounting the log.
+Well you /could/ add a new knob to make readahead fail, that's probably
+an interesting case that doesn't get tested much.
 
 --D
 
+> Thanks,
+> Zorro
+> 
 > > 
 > > --D
 > > 
-> > > > 
-> > > > --D
-> > > > 
-> > > > >  		mp->m_sb.sb_fdblocks = percpu_counter_sum(&mp->m_fdblocks);
-> > > > >  	}
-> > > > >  
-> > > > > -- 
-> > > > > 2.31.1
-> > > > > 
+> > > +	echo 3 > /proc/sys/vm/drop_caches
+> > > +	find $SCRATCH_MNT >/dev/null 2>&1
+> > > +	sleep 3
+> > > +done
+> > > +
+> > > +echo "No hang or panic"
+> > > +# success, all done
+> > > +status=0
+> > > +exit
+> > > diff --git a/tests/xfs/554.out b/tests/xfs/554.out
+> > > new file mode 100644
+> > > index 00000000..26910daa
+> > > --- /dev/null
+> > > +++ b/tests/xfs/554.out
+> > > @@ -0,0 +1,4 @@
+> > > +QA output created by 554
+> > > +Inject buf ioerror tag
+> > > +Random I/Os testing ...
+> > > +No hang or panic
+> > > -- 
+> > > 2.31.1
+> > > 
+> > 
+> 
