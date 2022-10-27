@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FC74ECAAA1
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Oct 2022 17:14:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 759D8FA3742
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Oct 2022 17:14:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233946AbiJ0ROn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Oct 2022 13:14:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55314 "EHLO
+        id S235176AbiJ0ROs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Oct 2022 13:14:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55874 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234791AbiJ0ROl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Oct 2022 13:14:41 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C22056355
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 10:14:38 -0700 (PDT)
+        with ESMTP id S235659AbiJ0ROr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Oct 2022 13:14:47 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB820B1FC
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 10:14:45 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 12347623ED
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 17:14:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7342CC433C1;
-        Thu, 27 Oct 2022 17:14:37 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 590B0B82722
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 17:14:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04B50C433D6;
+        Thu, 27 Oct 2022 17:14:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666890877;
-        bh=/77lcqCwotCF+bXHjyBZ5YPXK3jC/meEgl8NhelvZmI=;
+        s=k20201202; t=1666890883;
+        bh=qU/uR9aOgvic4uaJ6QmY300yEjsPnwyCbSKwrRD86w0=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=XxFOG8/rYHBr+87jFnPxKKwbO+3cye4Wfx7p+N+hl0ZSsjG8HZ3kLrfpRL5voq0T2
-         ecptdO6mD7+0Y6J9QNQErgO5BIuvmOeWMq5+NgoSxypNlArhF/2eagF/YaLv+4EzIW
-         up0yuRiJ6CpQN3mWBi1peenLUXElXa1WnRRX5CGZRwYdsE58QFWmd0d3VTgPoGSQJR
-         WDkaY6ORSgMV+5BTqx7atwAAdLn0arWChnjnJBpfyUjTm3PAaiITplkXHcl7CkNILS
-         f8KLIsIdM9m5DQk8xj16vfb+FFvvBxVhkKq26VdNkXQIjHyicxgpxO33HByvirQAo2
-         Gxx8PMd3JQZcA==
-Subject: [PATCH 06/12] xfs: report refcount domain in tracepoints
+        b=Tgd9Ld+H3SoTm2DuqnK13w0dzLl8AeMDAdk1JJdCyMupVyx0EzF0s6h/6Y+5k6JYa
+         phsLWFngAMDZKemym2ecQF7ciqWFvk53jPfvNAW3wupGHoWe/4nw/2gKbiL1/9GwAV
+         JSH0S1/LZnm+BExzAb1NlZICTjaRzQuFJiJpARbNsFR9/FIHekoZOJd+XXAhelb+Q1
+         pLljeiGeboXGgnttYUKEkKJkQKOyvfpE//nMskQsilGy+5FP9+i4gi4NOsoDXIx5rk
+         1f7eTRbNlvek1I3g0fLV8SmllDaINCIDIrPH9jZXo0wMCssxUX/hmA+RRsKFBPjsp9
+         YbebL5m550m2Q==
+Subject: [PATCH 07/12] xfs: refactor domain and refcount checking
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 27 Oct 2022 10:14:37 -0700
-Message-ID: <166689087703.3788582.4765638597071821270.stgit@magnolia>
+Date:   Thu, 27 Oct 2022 10:14:42 -0700
+Message-ID: <166689088265.3788582.15184390909746101694.stgit@magnolia>
 In-Reply-To: <166689084304.3788582.15155501738043912776.stgit@magnolia>
 References: <166689084304.3788582.15155501738043912776.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,227 +49,78 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that we've broken out the startblock and shared/cow domain in the
-incore refcount extent record structure, update the tracepoints to
-report the domain.
+Create a helper function to ensure that CoW staging extent records have
+a single refcount and that shared extent records have more than 1
+refcount.  We'll put this to more use in the next patch.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_types.h |    4 ++++
- fs/xfs/xfs_trace.h        |   48 +++++++++++++++++++++++++++++++++++++--------
- 2 files changed, 43 insertions(+), 9 deletions(-)
+ fs/xfs/libxfs/xfs_refcount.c |    5 +----
+ fs/xfs/libxfs/xfs_refcount.h |   12 ++++++++++++
+ fs/xfs/scrub/refcount.c      |   10 ++++------
+ 3 files changed, 17 insertions(+), 10 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
-index eb9a98338bb9..5ebdda7e1078 100644
---- a/fs/xfs/libxfs/xfs_types.h
-+++ b/fs/xfs/libxfs/xfs_types.h
-@@ -171,6 +171,10 @@ enum xfs_refc_domain {
- 	XFS_REFC_DOMAIN_COW,
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 8d0417565b9d..586c58b5a557 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -142,10 +142,7 @@ xfs_refcount_get_rec(
+ 	if (irec->rc_blockcount == 0 || irec->rc_blockcount > MAXREFCEXTLEN)
+ 		goto out_bad_rec;
+ 
+-	/* handle special COW-staging domain */
+-	if (irec->rc_domain == XFS_REFC_DOMAIN_COW && irec->rc_refcount != 1)
+-		goto out_bad_rec;
+-	if (irec->rc_domain == XFS_REFC_DOMAIN_SHARED && irec->rc_refcount < 2)
++	if (!xfs_refcount_check_domain(irec))
+ 		goto out_bad_rec;
+ 
+ 	/* check for valid extent range, including overflow */
+diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
+index ca3ffe11a452..d666a0e32659 100644
+--- a/fs/xfs/libxfs/xfs_refcount.h
++++ b/fs/xfs/libxfs/xfs_refcount.h
+@@ -55,6 +55,18 @@ struct xfs_refcount_intent {
+ 	xfs_fsblock_t				ri_startblock;
  };
  
-+#define XFS_REFC_DOMAIN_STRINGS \
-+	{ XFS_REFC_DOMAIN_SHARED,	"shared" }, \
-+	{ XFS_REFC_DOMAIN_COW,		"cow" }
++/* Check that the refcount is appropriate for the record domain. */
++static inline bool
++xfs_refcount_check_domain(
++	const struct xfs_refcount_irec	*irec)
++{
++	if (irec->rc_domain == XFS_REFC_DOMAIN_COW && irec->rc_refcount != 1)
++		return false;
++	if (irec->rc_domain == XFS_REFC_DOMAIN_SHARED && irec->rc_refcount < 2)
++		return false;
++	return true;
++}
 +
- struct xfs_refcount_irec {
- 	xfs_agblock_t	rc_startblock;	/* starting block number */
- 	xfs_extlen_t	rc_blockcount;	/* count of free blocks */
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index cb7c81ba7fa3..372d871bccc5 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -799,6 +799,9 @@ TRACE_DEFINE_ENUM(PE_SIZE_PTE);
- TRACE_DEFINE_ENUM(PE_SIZE_PMD);
- TRACE_DEFINE_ENUM(PE_SIZE_PUD);
+ void xfs_refcount_increase_extent(struct xfs_trans *tp,
+ 		struct xfs_bmbt_irec *irec);
+ void xfs_refcount_decrease_extent(struct xfs_trans *tp,
+diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
+index 6adc645060e7..98c033072120 100644
+--- a/fs/xfs/scrub/refcount.c
++++ b/fs/xfs/scrub/refcount.c
+@@ -337,14 +337,12 @@ xchk_refcountbt_rec(
  
-+TRACE_DEFINE_ENUM(XFS_REFC_DOMAIN_SHARED);
-+TRACE_DEFINE_ENUM(XFS_REFC_DOMAIN_COW);
+ 	xfs_refcount_btrec_to_irec(rec, &irec);
+ 
+-	/* Only CoW records can have refcount == 1. */
+-	if (irec.rc_domain == XFS_REFC_DOMAIN_SHARED && irec.rc_refcount == 1)
++	/* Check the domain and refcount are not incompatible. */
++	if (!xfs_refcount_check_domain(&irec))
+ 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+-	if (irec.rc_domain == XFS_REFC_DOMAIN_COW) {
+-		if (irec.rc_refcount != 1)
+-			xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
 +
- TRACE_EVENT(xfs_filemap_fault,
- 	TP_PROTO(struct xfs_inode *ip, enum page_entry_size pe_size,
- 		 bool write_fault),
-@@ -2925,6 +2928,7 @@ DECLARE_EVENT_CLASS(xfs_refcount_extent_class,
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
- 		__field(xfs_agnumber_t, agno)
-+		__field(enum xfs_refc_domain, domain)
- 		__field(xfs_agblock_t, startblock)
- 		__field(xfs_extlen_t, blockcount)
- 		__field(xfs_nlink_t, refcount)
-@@ -2932,13 +2936,15 @@ DECLARE_EVENT_CLASS(xfs_refcount_extent_class,
- 	TP_fast_assign(
- 		__entry->dev = mp->m_super->s_dev;
- 		__entry->agno = agno;
-+		__entry->domain = irec->rc_domain;
- 		__entry->startblock = irec->rc_startblock;
- 		__entry->blockcount = irec->rc_blockcount;
- 		__entry->refcount = irec->rc_refcount;
- 	),
--	TP_printk("dev %d:%d agno 0x%x agbno 0x%x fsbcount 0x%x refcount %u",
-+	TP_printk("dev %d:%d agno 0x%x dom %s agbno 0x%x fsbcount 0x%x refcount %u",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->agno,
-+		  __print_symbolic(__entry->domain, XFS_REFC_DOMAIN_STRINGS),
- 		  __entry->startblock,
- 		  __entry->blockcount,
- 		  __entry->refcount)
-@@ -2958,6 +2964,7 @@ DECLARE_EVENT_CLASS(xfs_refcount_extent_at_class,
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
- 		__field(xfs_agnumber_t, agno)
-+		__field(enum xfs_refc_domain, domain)
- 		__field(xfs_agblock_t, startblock)
- 		__field(xfs_extlen_t, blockcount)
- 		__field(xfs_nlink_t, refcount)
-@@ -2966,14 +2973,16 @@ DECLARE_EVENT_CLASS(xfs_refcount_extent_at_class,
- 	TP_fast_assign(
- 		__entry->dev = mp->m_super->s_dev;
- 		__entry->agno = agno;
-+		__entry->domain = irec->rc_domain;
- 		__entry->startblock = irec->rc_startblock;
- 		__entry->blockcount = irec->rc_blockcount;
- 		__entry->refcount = irec->rc_refcount;
- 		__entry->agbno = agbno;
- 	),
--	TP_printk("dev %d:%d agno 0x%x agbno 0x%x fsbcount 0x%x refcount %u @ agbno 0x%x",
-+	TP_printk("dev %d:%d agno 0x%x dom %s agbno 0x%x fsbcount 0x%x refcount %u @ agbno 0x%x",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->agno,
-+		  __print_symbolic(__entry->domain, XFS_REFC_DOMAIN_STRINGS),
- 		  __entry->startblock,
- 		  __entry->blockcount,
- 		  __entry->refcount,
-@@ -2994,9 +3003,11 @@ DECLARE_EVENT_CLASS(xfs_refcount_double_extent_class,
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
- 		__field(xfs_agnumber_t, agno)
-+		__field(enum xfs_refc_domain, i1_domain)
- 		__field(xfs_agblock_t, i1_startblock)
- 		__field(xfs_extlen_t, i1_blockcount)
- 		__field(xfs_nlink_t, i1_refcount)
-+		__field(enum xfs_refc_domain, i2_domain)
- 		__field(xfs_agblock_t, i2_startblock)
- 		__field(xfs_extlen_t, i2_blockcount)
- 		__field(xfs_nlink_t, i2_refcount)
-@@ -3004,20 +3015,24 @@ DECLARE_EVENT_CLASS(xfs_refcount_double_extent_class,
- 	TP_fast_assign(
- 		__entry->dev = mp->m_super->s_dev;
- 		__entry->agno = agno;
-+		__entry->i1_domain = i1->rc_domain;
- 		__entry->i1_startblock = i1->rc_startblock;
- 		__entry->i1_blockcount = i1->rc_blockcount;
- 		__entry->i1_refcount = i1->rc_refcount;
-+		__entry->i2_domain = i2->rc_domain;
- 		__entry->i2_startblock = i2->rc_startblock;
- 		__entry->i2_blockcount = i2->rc_blockcount;
- 		__entry->i2_refcount = i2->rc_refcount;
- 	),
--	TP_printk("dev %d:%d agno 0x%x agbno 0x%x fsbcount 0x%x refcount %u -- "
--		  "agbno 0x%x fsbcount 0x%x refcount %u",
-+	TP_printk("dev %d:%d agno 0x%x dom %s agbno 0x%x fsbcount 0x%x refcount %u -- "
-+		  "dom %s agbno 0x%x fsbcount 0x%x refcount %u",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->agno,
-+		  __print_symbolic(__entry->i1_domain, XFS_REFC_DOMAIN_STRINGS),
- 		  __entry->i1_startblock,
- 		  __entry->i1_blockcount,
- 		  __entry->i1_refcount,
-+		  __print_symbolic(__entry->i2_domain, XFS_REFC_DOMAIN_STRINGS),
- 		  __entry->i2_startblock,
- 		  __entry->i2_blockcount,
- 		  __entry->i2_refcount)
-@@ -3038,9 +3053,11 @@ DECLARE_EVENT_CLASS(xfs_refcount_double_extent_at_class,
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
- 		__field(xfs_agnumber_t, agno)
-+		__field(enum xfs_refc_domain, i1_domain)
- 		__field(xfs_agblock_t, i1_startblock)
- 		__field(xfs_extlen_t, i1_blockcount)
- 		__field(xfs_nlink_t, i1_refcount)
-+		__field(enum xfs_refc_domain, i2_domain)
- 		__field(xfs_agblock_t, i2_startblock)
- 		__field(xfs_extlen_t, i2_blockcount)
- 		__field(xfs_nlink_t, i2_refcount)
-@@ -3049,21 +3066,25 @@ DECLARE_EVENT_CLASS(xfs_refcount_double_extent_at_class,
- 	TP_fast_assign(
- 		__entry->dev = mp->m_super->s_dev;
- 		__entry->agno = agno;
-+		__entry->i1_domain = i1->rc_domain;
- 		__entry->i1_startblock = i1->rc_startblock;
- 		__entry->i1_blockcount = i1->rc_blockcount;
- 		__entry->i1_refcount = i1->rc_refcount;
-+		__entry->i2_domain = i2->rc_domain;
- 		__entry->i2_startblock = i2->rc_startblock;
- 		__entry->i2_blockcount = i2->rc_blockcount;
- 		__entry->i2_refcount = i2->rc_refcount;
- 		__entry->agbno = agbno;
- 	),
--	TP_printk("dev %d:%d agno 0x%x agbno 0x%x fsbcount 0x%x refcount %u -- "
--		  "agbno 0x%x fsbcount 0x%x refcount %u @ agbno 0x%x",
-+	TP_printk("dev %d:%d agno 0x%x dom %s agbno 0x%x fsbcount 0x%x refcount %u -- "
-+		  "dom %s agbno 0x%x fsbcount 0x%x refcount %u @ agbno 0x%x",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->agno,
-+		  __print_symbolic(__entry->i1_domain, XFS_REFC_DOMAIN_STRINGS),
- 		  __entry->i1_startblock,
- 		  __entry->i1_blockcount,
- 		  __entry->i1_refcount,
-+		  __print_symbolic(__entry->i2_domain, XFS_REFC_DOMAIN_STRINGS),
- 		  __entry->i2_startblock,
- 		  __entry->i2_blockcount,
- 		  __entry->i2_refcount,
-@@ -3086,12 +3107,15 @@ DECLARE_EVENT_CLASS(xfs_refcount_triple_extent_class,
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
- 		__field(xfs_agnumber_t, agno)
-+		__field(enum xfs_refc_domain, i1_domain)
- 		__field(xfs_agblock_t, i1_startblock)
- 		__field(xfs_extlen_t, i1_blockcount)
- 		__field(xfs_nlink_t, i1_refcount)
-+		__field(enum xfs_refc_domain, i2_domain)
- 		__field(xfs_agblock_t, i2_startblock)
- 		__field(xfs_extlen_t, i2_blockcount)
- 		__field(xfs_nlink_t, i2_refcount)
-+		__field(enum xfs_refc_domain, i3_domain)
- 		__field(xfs_agblock_t, i3_startblock)
- 		__field(xfs_extlen_t, i3_blockcount)
- 		__field(xfs_nlink_t, i3_refcount)
-@@ -3099,27 +3123,33 @@ DECLARE_EVENT_CLASS(xfs_refcount_triple_extent_class,
- 	TP_fast_assign(
- 		__entry->dev = mp->m_super->s_dev;
- 		__entry->agno = agno;
-+		__entry->i1_domain = i1->rc_domain;
- 		__entry->i1_startblock = i1->rc_startblock;
- 		__entry->i1_blockcount = i1->rc_blockcount;
- 		__entry->i1_refcount = i1->rc_refcount;
-+		__entry->i2_domain = i2->rc_domain;
- 		__entry->i2_startblock = i2->rc_startblock;
- 		__entry->i2_blockcount = i2->rc_blockcount;
- 		__entry->i2_refcount = i2->rc_refcount;
-+		__entry->i3_domain = i3->rc_domain;
- 		__entry->i3_startblock = i3->rc_startblock;
- 		__entry->i3_blockcount = i3->rc_blockcount;
- 		__entry->i3_refcount = i3->rc_refcount;
- 	),
--	TP_printk("dev %d:%d agno 0x%x agbno 0x%x fsbcount 0x%x refcount %u -- "
--		  "agbno 0x%x fsbcount 0x%x refcount %u -- "
--		  "agbno 0x%x fsbcount 0x%x refcount %u",
-+	TP_printk("dev %d:%d agno 0x%x dom %s agbno 0x%x fsbcount 0x%x refcount %u -- "
-+		  "dom %s agbno 0x%x fsbcount 0x%x refcount %u -- "
-+		  "dom %s agbno 0x%x fsbcount 0x%x refcount %u",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->agno,
-+		  __print_symbolic(__entry->i1_domain, XFS_REFC_DOMAIN_STRINGS),
- 		  __entry->i1_startblock,
- 		  __entry->i1_blockcount,
- 		  __entry->i1_refcount,
-+		  __print_symbolic(__entry->i2_domain, XFS_REFC_DOMAIN_STRINGS),
- 		  __entry->i2_startblock,
- 		  __entry->i2_blockcount,
- 		  __entry->i2_refcount,
-+		  __print_symbolic(__entry->i3_domain, XFS_REFC_DOMAIN_STRINGS),
- 		  __entry->i3_startblock,
- 		  __entry->i3_blockcount,
- 		  __entry->i3_refcount)
++	if (irec.rc_domain == XFS_REFC_DOMAIN_COW)
+ 		(*cow_blocks) += irec.rc_blockcount;
+-	}
+ 
+ 	/* Check the extent. */
+ 	if (irec.rc_startblock + irec.rc_blockcount <= irec.rc_startblock ||
 
