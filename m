@@ -2,85 +2,99 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E77DFECAAA1
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Oct 2022 21:25:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA341ECAAA1
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Oct 2022 21:26:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236280AbiJ0VZd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Oct 2022 17:25:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50570 "EHLO
+        id S236317AbiJ0V0e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Oct 2022 17:26:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51984 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236692AbiJ0VZ3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Oct 2022 17:25:29 -0400
-Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACABB5282B
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 14:25:28 -0700 (PDT)
-Received: by mail-pg1-x531.google.com with SMTP id r18so2860514pgr.12
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 14:25:28 -0700 (PDT)
+        with ESMTP id S236807AbiJ0V0d (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Oct 2022 17:26:33 -0400
+Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 917B65E54A
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 14:26:31 -0700 (PDT)
+Received: by mail-pf1-x429.google.com with SMTP id m6so3033228pfb.0
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 14:26:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=lTIQtiuiW0Tt0yyZSXxJVs+tloc8f1xIr08z2cEf2qE=;
-        b=GM9I2ydc7po0a58znO/vsPycgqLTcvrwMmaYp8HuUL10kgN0xNMuqunpPCetxmt9au
-         yUL5N4A9DWHCMOxnhWO4wSnNsbyOWStKTmQgZ219I/ZvF4dOucKEr1KqSAT4R2gwvlRU
-         7HpO10lQBp8+jdiSTtDa5CgIRJAM12GtJoPWaOgxy6syfCcbwulSnXgw2gmyOJsLdFv3
-         7lmK32ZnzzaM/1yJGmiBKEWROjoO1O3Y0AHXmaNLmOWWKq3zg0VI9qvo7G53C+KuTqjx
-         qkaSb6o3BZBsgaFEluDd5b4mQJ6hj/NjiryUWw9/g+iff9WSesTES+b8pwP7bTvG3J1M
-         031Q==
+        bh=j6K520hsmbBX0/Yy2ZJydJRhad3Iab9wdhbqFSbxqLo=;
+        b=PBEfPyZuMX+6ZSZRXh2C0uuw5dhs4j9UiohLtFk6fHvjB2LjGut377jOaaZdbliJsv
+         JLW8Pmf6EcQwQ9dVa35/xXq6n0KtUKpxQ/pYnGmwAzYbstRggIxqniJioaK8ukH0WeZD
+         TLfii75gK7/4ewbVViEgAQ0IH4OW+VHc46KNNOFtzfAWZckbTuk82jpRSmlJu75yHbqC
+         7/Rqz7sUJHndYwzniWkdWsqU4eXB9qaEazXd1S60bTsdpzQYUAQMomm1SM+oYbS4pFqs
+         pG3YnGPuYUpnbTwA3MOy1KVuyibFNPKZ5AM3BDfr5HnKBu7B3xRKW4nVfB4nC+Bzo7Sz
+         LA1A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=lTIQtiuiW0Tt0yyZSXxJVs+tloc8f1xIr08z2cEf2qE=;
-        b=dBgWVjJSd05MGVItEX/XSAihcti2Mg4Y1i/wQUAfynqUSN+JG0yjouio+sErN5JQIq
-         9i+Nv7HMJ7g0j2+Df8ZbrJsAxrFiWozY7CGWexET50dAax2vktfw1pI/Tsp4hBCKDvkA
-         zcuqmAAX2Xbt0+n7XfWenBSiM6utpX/MhPaK2ErTr9xb8bqizFFLvk9uLPcy+UM8n6nO
-         En8ZNg+EUU52iriyMmdt6Oq3a4NvWsLCGGEGd9M9yye0vNOOrjnf8asZBPiyceQNalqN
-         OE6goktB5t1sIdQQwLvr2GTLOLnv+tV23vSoVdTit/kFLTI158rx0j62ujEG0HUOK9K8
-         3/IQ==
-X-Gm-Message-State: ACrzQf1YZOVVy2STER1/nqX/aF8nIKWWdXvS4EHs1FI5Y20ZEMl3WOqi
-        H2KP8Kz8pNEl/ycUxJMyD88TPsw3c49IpA==
-X-Google-Smtp-Source: AMsMyM6+Eih9TPfDgoKwnM0gUg7aGvQeFgR+7jAmkUjsxcNdG2yduRDWAvOIz1C6n/pqF/g3PryHRA==
-X-Received: by 2002:a63:fa17:0:b0:43c:3f26:48e3 with SMTP id y23-20020a63fa17000000b0043c3f2648e3mr43852830pgh.66.1666905928299;
-        Thu, 27 Oct 2022 14:25:28 -0700 (PDT)
+        bh=j6K520hsmbBX0/Yy2ZJydJRhad3Iab9wdhbqFSbxqLo=;
+        b=qPTV3GmTt9hSij9iTlgnOguhDLwrB+1CzhiLthPSFBjzbogTO+mNtbfxGNhLV7C3kx
+         tqxGcnHDmkPFMBGiSNRruI5t4yIEyAUflqws23QW8q0J3/eqkjxtC3tItsTK7GgxdZJT
+         S0JsqO6edI6MU5vasaMH2sOrPqhWRnj3TOMfJPY02gLdfunt3MWCwt7EcQjkkZLS0h8a
+         2iNjXZ622X/7ZFif+2FJmAaqUtMfByLvOlQLKId7etxtMLBultpmnLup48zEBl3QE+Ga
+         XlYPxwc7k/wgwA1/zjqc68fLgdjSM5IcMiCDbONbyd1KmXMCC9WAwZWkjYXhkHQvwgIj
+         EO9g==
+X-Gm-Message-State: ACrzQf0ZaIsAxwoQuXyG1P4z7WL5yuIft8iYMsGdy4fqmvFgUmObC8Oj
+        Van330u5fKYYNF6MzFRDvTwkwQ==
+X-Google-Smtp-Source: AMsMyM7zG/L8K01gEQJFd5IWjFECKsHRCyN5VlWy/vs85YrPr2q6NHoBmfZUyxyv2RhcdXSKuWHzpA==
+X-Received: by 2002:a63:85c6:0:b0:46e:ffdb:2e77 with SMTP id u189-20020a6385c6000000b0046effdb2e77mr20884218pgd.439.1666905991094;
+        Thu, 27 Oct 2022 14:26:31 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au. [49.181.106.210])
-        by smtp.gmail.com with ESMTPSA id g4-20020a63dd44000000b0045913a96837sm1457720pgj.24.2022.10.27.14.25.27
+        by smtp.gmail.com with ESMTPSA id z7-20020a626507000000b00560bb4a57f7sm1639810pfb.179.2022.10.27.14.26.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Oct 2022 14:25:27 -0700 (PDT)
+        Thu, 27 Oct 2022 14:26:30 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1ooANR-0079zH-I3; Fri, 28 Oct 2022 08:25:25 +1100
-Date:   Fri, 28 Oct 2022 08:25:25 +1100
+        id 1ooAOS-0079zy-37; Fri, 28 Oct 2022 08:26:28 +1100
+Date:   Fri, 28 Oct 2022 08:26:28 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 12/12] xfs: rename XFS_REFC_COW_START to _COWFLAG
-Message-ID: <20221027212525.GZ3600936@dread.disaster.area>
-References: <166689084304.3788582.15155501738043912776.stgit@magnolia>
- <166689091062.3788582.5745982343341644557.stgit@magnolia>
+Cc:     xfs <linux-xfs@vger.kernel.org>,
+        Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH v2] xfs: fix incorrect return type for fsdax fault
+ handlers
+Message-ID: <20221027212628.GA3600936@dread.disaster.area>
+References: <Y1rz+qkknFIIQM04@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <166689091062.3788582.5745982343341644557.stgit@magnolia>
+In-Reply-To: <Y1rz+qkknFIIQM04@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 27, 2022 at 10:15:10AM -0700, Darrick J. Wong wrote:
+On Thu, Oct 27, 2022 at 02:11:22PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> We've been (ab)using XFS_REFC_COW_START as both an integer quantity and
-> a bit flag, even though it's *only* a bit flag.  Rename the variable to
-> reflect its nature and update the cast target since we're not supposed
-> to be comparing it to xfs_agblock_t now.
+> The kernel robot complained about this:
 > 
+> >> fs/xfs/xfs_file.c:1266:31: sparse: sparse: incorrect type in return expression (different base types) @@     expected int @@     got restricted vm_fault_t @@
+>    fs/xfs/xfs_file.c:1266:31: sparse:     expected int
+>    fs/xfs/xfs_file.c:1266:31: sparse:     got restricted vm_fault_t
+>    fs/xfs/xfs_file.c:1314:21: sparse: sparse: incorrect type in assignment (different base types) @@     expected restricted vm_fault_t [usertype] ret @@     got int @@
+>    fs/xfs/xfs_file.c:1314:21: sparse:     expected restricted vm_fault_t [usertype] ret
+>    fs/xfs/xfs_file.c:1314:21: sparse:     got int
+> 
+> Fix the incorrect return type for these two functions.
+> 
+> While we're at it, make the !fsdax version return VM_FAULT_SIGBUS
+> because a zero return value will cause some callers to try to lock
+> vmf->page, which we never set here.
+> 
+> Fixes: ea6c49b784f0 ("xfs: support CoW in fsdax mode")
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+> v2: less confusing commit message, add a debug assert to the !fsdax case
+> ---
 
-Yay!
+Looks fine to me.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
 -- 
 Dave Chinner
 david@fromorbit.com
