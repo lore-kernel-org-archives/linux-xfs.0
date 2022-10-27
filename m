@@ -2,108 +2,101 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2887ECAAA1
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Oct 2022 21:12:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96903ECAAA1
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Oct 2022 21:13:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237340AbiJ0VM5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Oct 2022 17:12:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41342 "EHLO
+        id S237319AbiJ0VM7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Oct 2022 17:12:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43534 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237290AbiJ0VM2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Oct 2022 17:12:28 -0400
-Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 072844DF33
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 14:11:15 -0700 (PDT)
-Received: by mail-pl1-x631.google.com with SMTP id c2so2905753plz.11
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 14:11:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=8l7QS+nPfleLkbZej9UcvTrr9gDSswM+W/Cv5sGKSjg=;
-        b=3DSoekdiofOOnHOxwEosfSA1FXqCBCovvy0PsCiXInRnQuTsr2i9fH4G0Dxt0chHnd
-         m2pAwZUw33XC6oe2GQO89QmozER/eXDZJIT2z1lm9WMqQcF0mX3gsSH4KDqoNuHmzzvl
-         XNBig6CWuzY1XWzCSntQmTBQ/5R5RH3Br2pvkdiV+9+obKM0+f0T4cUwIPJRvIECDTam
-         3OdMNvN2yvQQLOHpOlYOfS22nFegBqi+TGxVzDFwbafvsQRI+uyTVUgyt1uya2gzOMEU
-         TL3zExn7kXTHI79Vu/1wIFHanNoUB2drvizlOWlojQvgR5APfHYPb6A0xf3fiCY6OmIo
-         kZbA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=8l7QS+nPfleLkbZej9UcvTrr9gDSswM+W/Cv5sGKSjg=;
-        b=GXbcC/StwbtyoSVMIwYkvi6ycd0h7F2xVZ0260ijScMuQ5zX9eBlHZSCBgs1C7deB1
-         682dzcaEL4pO4VdykcKmYC3rjAG6WWGJdLw2UrOhAFIPOUx5DK/f9wZfDXWM1aetrcZI
-         I69qTzzMmGbjLo4ezlnkC4dTGhVqP3Sgup/pRH7tfKES+TKpc1fAb0G8VvEvyU//QGEq
-         lXey2GMRotDP4vYaAc03mf7D/imw6iAnjAIkH8O8rENijvPYHVB9o3yEKiJumdiBz2i9
-         /JWutaUmF47JLhfLSuLXf3bjzFjwAtb3gW8O+zz1PDCNJ0LqE4r5Gu2sIKLxuZlpLnNU
-         SteQ==
-X-Gm-Message-State: ACrzQf2Fup98tA0oY2M7ahnOwiENNNDoaWkjGr59QIJJVgGCCq3AqyTM
-        yCIL8qQPAlInqZDcfPqmxJZ1P1G0C7F5Qw==
-X-Google-Smtp-Source: AMsMyM7okjzIwaxi1PigHoQx1Agnp2MTBQh4j8VOEiS0R2+rRVtMQbMbhF1vbSXZAbzpfE+l+iuE0w==
-X-Received: by 2002:a17:902:d592:b0:17a:582:4eb with SMTP id k18-20020a170902d59200b0017a058204ebmr291109plh.40.1666905074465;
-        Thu, 27 Oct 2022 14:11:14 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au. [49.181.106.210])
-        by smtp.gmail.com with ESMTPSA id iw17-20020a170903045100b001788ccecbf5sm1632577plb.31.2022.10.27.14.11.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Oct 2022 14:11:14 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1ooA9e-0079gK-Se; Fri, 28 Oct 2022 08:11:10 +1100
-Date:   Fri, 28 Oct 2022 08:11:10 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 08/12] xfs: remove XFS_FIND_RCEXT_SHARED and _COW
-Message-ID: <20221027211110.GV3600936@dread.disaster.area>
-References: <166689084304.3788582.15155501738043912776.stgit@magnolia>
- <166689088821.3788582.17326076878286020666.stgit@magnolia>
+        with ESMTP id S237327AbiJ0VMa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Oct 2022 17:12:30 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3A0B4360A
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 14:11:23 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8D86F621EE
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 21:11:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9A3CC433D6;
+        Thu, 27 Oct 2022 21:11:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1666905083;
+        bh=BhZ6z496BwbpyOyYA4lzzBgpjk0Y3duhYvgNZFYG5H4=;
+        h=Date:From:To:Cc:Subject:From;
+        b=izGCEgEqDRo0hiNr+W3kc+9IUoR0tWMb27UuTCQP/ZrA5/wlDquyvyVocFKNHxwyF
+         WsTyD8Lj9HSBACrcxDzsL7W/ZQ/qt+HB/8CvIFdMUbGox6YaljeGnCJFC+PjoXz0Iw
+         eidwf+f5/rCDD3jmOdQfCsoKtWdWwBeX9/3HcayqDHTW6msLZcOJQXFBzZ3kDPh/gT
+         ZTqNc3ZTNB/oA3VDwzyEyKIhUYjujmhbT8H0bhHjHaKNFEqgIrJqOEdZ+2ttEhesf7
+         1AthNVHCfmeEvqByzZYE8kLfm0odAbGQpbIjZXOYjYELqstK0SdVvqg2OdwzemC2ej
+         WgDkA6gohZg/g==
+Date:   Thu, 27 Oct 2022 14:11:22 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     xfs <linux-xfs@vger.kernel.org>
+Cc:     Matthew Wilcox <willy@infradead.org>
+Subject: [PATCH v2] xfs: fix incorrect return type for fsdax fault handlers
+Message-ID: <Y1rz+qkknFIIQM04@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <166689088821.3788582.17326076878286020666.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 27, 2022 at 10:14:48AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Now that we have an explicit enum for shared and CoW staging extents, we
-> can get rid of the old FIND_RCEXT flags.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/libxfs/xfs_refcount.c |   48 +++++++++++++++---------------------------
->  1 file changed, 17 insertions(+), 31 deletions(-)
+From: Darrick J. Wong <djwong@kernel.org>
 
-Looks ok.
+The kernel robot complained about this:
 
-Minor thing below, otherwise
+>> fs/xfs/xfs_file.c:1266:31: sparse: sparse: incorrect type in return expression (different base types) @@     expected int @@     got restricted vm_fault_t @@
+   fs/xfs/xfs_file.c:1266:31: sparse:     expected int
+   fs/xfs/xfs_file.c:1266:31: sparse:     got restricted vm_fault_t
+   fs/xfs/xfs_file.c:1314:21: sparse: sparse: incorrect type in assignment (different base types) @@     expected restricted vm_fault_t [usertype] ret @@     got int @@
+   fs/xfs/xfs_file.c:1314:21: sparse:     expected restricted vm_fault_t [usertype] ret
+   fs/xfs/xfs_file.c:1314:21: sparse:     got int
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Fix the incorrect return type for these two functions.
 
-> @@ -761,9 +747,9 @@ xfs_refcount_find_right_extents(
->  
->  	if (tmp.rc_startblock != agbno + aglen)
->  		return 0;
-> -	if ((flags & XFS_FIND_RCEXT_SHARED) && tmp.rc_refcount < 2)
-> +	if (domain == XFS_REFC_DOMAIN_SHARED && tmp.rc_refcount < 2)
->  		return 0;
-> -	if ((flags & XFS_FIND_RCEXT_COW) && tmp.rc_refcount > 1)
-> +	if (domain == XFS_REFC_DOMAIN_COW && tmp.rc_refcount > 1)
->  		return 0;
+While we're at it, make the !fsdax version return VM_FAULT_SIGBUS
+because a zero return value will cause some callers to try to lock
+vmf->page, which we never set here.
 
-Wouldn't this:
+Fixes: ea6c49b784f0 ("xfs: support CoW in fsdax mode")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+v2: less confusing commit message, add a debug assert to the !fsdax case
+---
+ fs/xfs/xfs_file.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-	if (!xfs_refcount_check_domain(domain, &tmp))
-		return 0;
-
-Do the same thing?
-
--Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index c6c80265c0b2..e462d39c840e 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1261,7 +1261,7 @@ xfs_file_llseek(
+ }
+ 
+ #ifdef CONFIG_FS_DAX
+-static int
++static inline vm_fault_t
+ xfs_dax_fault(
+ 	struct vm_fault		*vmf,
+ 	enum page_entry_size	pe_size,
+@@ -1274,14 +1274,15 @@ xfs_dax_fault(
+ 				&xfs_read_iomap_ops);
+ }
+ #else
+-static int
++static inline vm_fault_t
+ xfs_dax_fault(
+ 	struct vm_fault		*vmf,
+ 	enum page_entry_size	pe_size,
+ 	bool			write_fault,
+ 	pfn_t			*pfn)
+ {
+-	return 0;
++	ASSERT(0);
++	return VM_FAULT_SIGBUS;
+ }
+ #endif
+ 
