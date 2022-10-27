@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 067D8ECAAA1
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Oct 2022 17:14:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04DD6ECAAA1
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Oct 2022 17:14:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235121AbiJ0ROR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Oct 2022 13:14:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54172 "EHLO
+        id S229473AbiJ0ROY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Oct 2022 13:14:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236039AbiJ0ROR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Oct 2022 13:14:17 -0400
+        with ESMTP id S233946AbiJ0ROW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Oct 2022 13:14:22 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F3CF1A4022
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 10:14:16 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEEEE1A2E1F
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 10:14:21 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B0DEC623F9
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 17:14:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21439C433D6;
-        Thu, 27 Oct 2022 17:14:15 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4BA6A623F9
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 17:14:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA161C433C1;
+        Thu, 27 Oct 2022 17:14:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666890855;
-        bh=2/SFh18dvCiIXqJPOqGgb4rQHQSU8sUhsmo+YTBjBJU=;
+        s=k20201202; t=1666890860;
+        bh=nEto/0E9M6JLPqtnSZpmEQ2iUESkuq1VIamceIKiJIk=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=KIPR8VcevT2eHuJaz9p71sMin6TCHo3guKTQCXQx7si9ibyHCqiFoVsRc1hA29i2F
-         KET03VxZURvVXXuxwo9Dr1txQcQiRJjwr2Si/1k6gmqnR7dj/opEM/8JPap3PWjwQY
-         6E4RB46PrHB5LNfbQcyG9OzftEmPwUVAaTlCFz3GSIcCtgHpsOx8IjO9FIJxp3s61o
-         eTkOIJybGvgvZ4f9arPg6DFndSzJdLFOJ5A8rkofAL4CJg47f0YqaykkDAfd3T6mal
-         xK4zYc77fZ1d2jOinVDuLwu9M6EHaW2xQhGXq+1g4YAgI2i3GmqMi37O9VeEZK4BNe
-         nDwPjETdh6ukw==
-Subject: [PATCH 02/12] xfs: check deferred refcount op continuation parameters
+        b=AWVjbXibiG9QgnqTIXHaE68r5ySMEYChFMx9FUWgejofbvUhtgH3so4xqEHHKG3dr
+         Pn+1VGJhfA/yG6hZutqfD4w1sj2GnHudxJquGSRA8hnL+sCnXCjpKesESNq2hQyj7A
+         fjzf0TNLedwNAGqPlPkejIHTn0TGDtTVFe672xkA/7ckhPVocKKInOBOOp1j3ldwyV
+         ra+cIGEUK015us1nGQE2XevKxzXE7+K7WRRfkKglByJXGzrZ3JzMTn3GKC3ZA2HUxW
+         FuwycLNI8keaFrQVu7aYO9ZQnVGscXwLZZJ90GkSSzpGfR7l3oKsJhXbkaQMnuGffv
+         78U9SUdOYPdLg==
+Subject: [PATCH 03/12] xfs: move _irec structs to xfs_types.h
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 27 Oct 2022 10:14:14 -0700
-Message-ID: <166689085464.3788582.2756559047908250104.stgit@magnolia>
+Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
+Date:   Thu, 27 Oct 2022 10:14:20 -0700
+Message-ID: <166689086029.3788582.7058172003151927106.stgit@magnolia>
 In-Reply-To: <166689084304.3788582.15155501738043912776.stgit@magnolia>
 References: <166689084304.3788582.15155501738043912776.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,96 +49,84 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If we're in the middle of a deferred refcount operation and decide to
-roll the transaction to avoid overflowing the transaction space, we need
-to check the new agbno/aglen parameters that we're about to record in
-the new intent.  Specifically, we need to check that the new extent is
-completely within the filesystem, and that continuation does not put us
-into a different AG.
-
-If the keys of a node block are wrong, the lookup to resume an
-xfs_refcount_adjust_extents operation can put us into the wrong record
-block.  If this happens, we might not find that we run out of aglen at
-an exact record boundary, which will cause the loop control to do the
-wrong thing.
-
-The previous patch should take care of that problem, but let's add this
-extra sanity check to stop corruption problems sooner than later.
+Structure definitions for incore objects do not belong in the ondisk
+format header.  Move them to the incore types header where they belong.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_refcount.c |   48 ++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 46 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_format.h |   20 --------------------
+ fs/xfs/libxfs/xfs_types.h  |   20 ++++++++++++++++++++
+ 2 files changed, 20 insertions(+), 20 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index 831353ba96dc..c6aa832a8713 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -1138,6 +1138,44 @@ xfs_refcount_finish_one_cleanup(
- 		xfs_trans_brelse(tp, agbp);
- }
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index b55bdfa9c8a8..005dd65b71cd 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1564,20 +1564,6 @@ struct xfs_rmap_rec {
+ #define RMAPBT_UNUSED_OFFSET_BITLEN	7
+ #define RMAPBT_OFFSET_BITLEN		54
  
-+/*
-+ * Set up a continuation a deferred refcount operation by updating the intent.
-+ * Checks to make sure we're not going to run off the end of the AG.
-+ */
-+static inline int
-+xfs_refcount_continue_op(
-+	struct xfs_btree_cur		*cur,
-+	xfs_fsblock_t			startblock,
-+	xfs_agblock_t			new_agbno,
-+	xfs_extlen_t			new_len,
-+	xfs_fsblock_t			*fsbp)
-+{
-+	struct xfs_mount		*mp = cur->bc_mp;
-+	struct xfs_perag		*pag = cur->bc_ag.pag;
-+	xfs_fsblock_t			new_fsbno;
-+	xfs_agnumber_t			old_agno;
-+
-+	old_agno = XFS_FSB_TO_AGNO(mp, startblock);
-+	new_fsbno = XFS_AGB_TO_FSB(mp, pag->pag_agno, new_agbno);
-+
-+	/*
-+	 * If we don't have any work left to do, then there's no need
-+	 * to perform the validation of the new parameters.
-+	 */
-+	if (!new_len)
-+		goto done;
-+
-+	if (XFS_IS_CORRUPT(mp, !xfs_verify_fsbext(mp, new_fsbno, new_len)))
-+		return -EFSCORRUPTED;
-+
-+	if (XFS_IS_CORRUPT(mp, old_agno != XFS_FSB_TO_AGNO(mp, new_fsbno)))
-+		return -EFSCORRUPTED;
-+
-+done:
-+	*fsbp = new_fsbno;
-+	return 0;
-+}
-+
+-#define XFS_RMAP_ATTR_FORK		(1 << 0)
+-#define XFS_RMAP_BMBT_BLOCK		(1 << 1)
+-#define XFS_RMAP_UNWRITTEN		(1 << 2)
+-#define XFS_RMAP_KEY_FLAGS		(XFS_RMAP_ATTR_FORK | \
+-					 XFS_RMAP_BMBT_BLOCK)
+-#define XFS_RMAP_REC_FLAGS		(XFS_RMAP_UNWRITTEN)
+-struct xfs_rmap_irec {
+-	xfs_agblock_t	rm_startblock;	/* extent start block */
+-	xfs_extlen_t	rm_blockcount;	/* extent length */
+-	uint64_t	rm_owner;	/* extent owner */
+-	uint64_t	rm_offset;	/* offset within the owner */
+-	unsigned int	rm_flags;	/* state flags */
+-};
+-
  /*
-  * Process one of the deferred refcount operations.  We pass back the
-  * btree cursor to maintain our lock on the btree between calls.
-@@ -1205,12 +1243,18 @@ xfs_refcount_finish_one(
- 	case XFS_REFCOUNT_INCREASE:
- 		error = xfs_refcount_adjust(rcur, bno, blockcount, &new_agbno,
- 				new_len, XFS_REFCOUNT_ADJUST_INCREASE);
--		*new_fsb = XFS_AGB_TO_FSB(mp, pag->pag_agno, new_agbno);
-+		if (error)
-+			goto out_drop;
-+		error = xfs_refcount_continue_op(rcur, startblock, new_agbno,
-+				*new_len, new_fsb);
- 		break;
- 	case XFS_REFCOUNT_DECREASE:
- 		error = xfs_refcount_adjust(rcur, bno, blockcount, &new_agbno,
- 				new_len, XFS_REFCOUNT_ADJUST_DECREASE);
--		*new_fsb = XFS_AGB_TO_FSB(mp, pag->pag_agno, new_agbno);
-+		if (error)
-+			goto out_drop;
-+		error = xfs_refcount_continue_op(rcur, startblock, new_agbno,
-+				*new_len, new_fsb);
- 		break;
- 	case XFS_REFCOUNT_ALLOC_COW:
- 		*new_fsb = startblock + blockcount;
+  * Key structure
+  *
+@@ -1640,12 +1626,6 @@ struct xfs_refcount_key {
+ 	__be32		rc_startblock;	/* starting block number */
+ };
+ 
+-struct xfs_refcount_irec {
+-	xfs_agblock_t	rc_startblock;	/* starting block number */
+-	xfs_extlen_t	rc_blockcount;	/* count of free blocks */
+-	xfs_nlink_t	rc_refcount;	/* number of inodes linked here */
+-};
+-
+ #define MAXREFCOUNT	((xfs_nlink_t)~0U)
+ #define MAXREFCEXTLEN	((xfs_extlen_t)~0U)
+ 
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index a6b7d98cf68f..2d9ebc7338b1 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -166,6 +166,26 @@ typedef struct xfs_bmbt_irec
+ 	xfs_exntst_t	br_state;	/* extent state */
+ } xfs_bmbt_irec_t;
+ 
++struct xfs_refcount_irec {
++	xfs_agblock_t	rc_startblock;	/* starting block number */
++	xfs_extlen_t	rc_blockcount;	/* count of free blocks */
++	xfs_nlink_t	rc_refcount;	/* number of inodes linked here */
++};
++
++#define XFS_RMAP_ATTR_FORK		(1 << 0)
++#define XFS_RMAP_BMBT_BLOCK		(1 << 1)
++#define XFS_RMAP_UNWRITTEN		(1 << 2)
++#define XFS_RMAP_KEY_FLAGS		(XFS_RMAP_ATTR_FORK | \
++					 XFS_RMAP_BMBT_BLOCK)
++#define XFS_RMAP_REC_FLAGS		(XFS_RMAP_UNWRITTEN)
++struct xfs_rmap_irec {
++	xfs_agblock_t	rm_startblock;	/* extent start block */
++	xfs_extlen_t	rm_blockcount;	/* extent length */
++	uint64_t	rm_owner;	/* extent owner */
++	uint64_t	rm_offset;	/* offset within the owner */
++	unsigned int	rm_flags;	/* state flags */
++};
++
+ /* per-AG block reservation types */
+ enum xfs_ag_resv_type {
+ 	XFS_AG_RESV_NONE = 0,
 
