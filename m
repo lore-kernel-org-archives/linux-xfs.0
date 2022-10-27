@@ -2,180 +2,146 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22E73FA3740
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Oct 2022 21:32:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02818FA3740
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Oct 2022 21:33:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234965AbiJ0Vcr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Oct 2022 17:32:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32978 "EHLO
+        id S236322AbiJ0Vdu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Oct 2022 17:33:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235514AbiJ0Vco (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Oct 2022 17:32:44 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9BB76C10C
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 14:32:43 -0700 (PDT)
+        with ESMTP id S235514AbiJ0Vdt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Oct 2022 17:33:49 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC3836C945
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 14:33:48 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 867CD6235C
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 21:32:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD560C433D6;
-        Thu, 27 Oct 2022 21:32:42 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 2ED90CE289B
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 21:33:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75595C433D6;
+        Thu, 27 Oct 2022 21:33:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666906362;
-        bh=hhIOvZGYp2+GL/h5pYaf+Nu7IEKPbv6Djvcr+anHAaU=;
+        s=k20201202; t=1666906425;
+        bh=b5uhZ35JCVFzSBX1AmSbU9Wcrj7Dq4Yl8t4Jm3EJj4I=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=PqieamrgjU7mxtxus3M/Fw6GPNjpdLIyR83lZDZO43MYRf8V/wCDgFnhUkD3k3cmX
-         LGUw7y3mvysAZI/uv8rufjrQDelqhd0SV7V6jXnTao9O208O/erl3tO7RoPEJfwntT
-         p1RY0UnL6XMG5LuHEky6zrKvTAjlubttt7WeRZd4ebz6eXHd+MHVzoG9JxuLvc92SJ
-         Nb8vgaLrZUUrco08N4ex+IR64VS41bBv/n0YAJHoXUxcnncIfO7pIMLGuFO7sTbss1
-         Q0T4A8t6PsxS80K5b6BmI7xL8FLog5FbyF8fyTOfWz4KN9yqEsC/sdDhRUSrHh3zXA
-         GAovQxvdZtMsA==
-Date:   Thu, 27 Oct 2022 14:32:42 -0700
+        b=e9pfNwRTK8Yu2WgtNIq9hoy5FBy2ZMYduPogcNP2QWbiGyAIJVJg8VmDGqcCFAI3/
+         +VVCGGdwZtNofRjqfgJIz/mfSRxFpUF2I9auzr0fdj25V1qUzk6dY7JfEXqETykM0W
+         zHy1J0VUQD9V0ziXlf7cT+fb5ovOFWauJI9u20/BY+ZMHQnaSJyMDLKOioige7mYpO
+         7cC+4JLXP6gNBXndZmWeUpz+2nAuWqK3aw1PzCcZy9esQG2hxGLFLmSGI1pDvbpZWM
+         v6xWW0MBPFmLmYcOBNa1rJKNzj33sTMIoFRP//jrRL2AV0h37q18gYJ+ear4thgs1G
+         N3edBmfqXvrrQ==
+Date:   Thu, 27 Oct 2022 14:33:45 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 02/12] xfs: check deferred refcount op continuation
- parameters
-Message-ID: <Y1r4+k5uKQBySEta@magnolia>
+Subject: Re: [PATCH 09/12] xfs: check record domain when accessing refcount
+ records
+Message-ID: <Y1r5OdnXJQ461gAY@magnolia>
 References: <166689084304.3788582.15155501738043912776.stgit@magnolia>
- <166689085464.3788582.2756559047908250104.stgit@magnolia>
- <20221027204957.GR3600936@dread.disaster.area>
+ <166689089384.3788582.15595498616742667720.stgit@magnolia>
+ <20221027211531.GW3600936@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221027204957.GR3600936@dread.disaster.area>
+In-Reply-To: <20221027211531.GW3600936@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 28, 2022 at 07:49:57AM +1100, Dave Chinner wrote:
-> On Thu, Oct 27, 2022 at 10:14:14AM -0700, Darrick J. Wong wrote:
+On Fri, Oct 28, 2022 at 08:15:31AM +1100, Dave Chinner wrote:
+> On Thu, Oct 27, 2022 at 10:14:53AM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > If we're in the middle of a deferred refcount operation and decide to
-> > roll the transaction to avoid overflowing the transaction space, we need
-> > to check the new agbno/aglen parameters that we're about to record in
-> > the new intent.  Specifically, we need to check that the new extent is
-> > completely within the filesystem, and that continuation does not put us
-> > into a different AG.
+> > Now that we've separated the startblock and CoW/shared extent domain in
+> > the incore refcount record structure, check the domain whenever we
+> > retrieve a record to ensure that it's still in the domain that we want.
+> > Depending on the circumstances, a change in domain either means we're
+> > done processing or that we've found a corruption and need to fail out.
 > > 
-> > If the keys of a node block are wrong, the lookup to resume an
-> > xfs_refcount_adjust_extents operation can put us into the wrong record
-> > block.  If this happens, we might not find that we run out of aglen at
-> > an exact record boundary, which will cause the loop control to do the
-> > wrong thing.
-> > 
-> > The previous patch should take care of that problem, but let's add this
-> > extra sanity check to stop corruption problems sooner than later.
+> > The refcount check in xchk_xref_is_cow_staging is redundant since
+> > _get_rec has done that for a long time now, so we can get rid of it.
 > > 
 > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > ---
-> >  fs/xfs/libxfs/xfs_refcount.c |   48 ++++++++++++++++++++++++++++++++++++++++--
-> >  1 file changed, 46 insertions(+), 2 deletions(-)
+> >  fs/xfs/libxfs/xfs_refcount.c |   53 ++++++++++++++++++++++++++++++++----------
+> >  fs/xfs/scrub/refcount.c      |    4 ++-
+> >  2 files changed, 43 insertions(+), 14 deletions(-)
 > > 
 > > 
 > > diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-> > index 831353ba96dc..c6aa832a8713 100644
+> > index 3b1cb0578770..608a122eef16 100644
 > > --- a/fs/xfs/libxfs/xfs_refcount.c
 > > +++ b/fs/xfs/libxfs/xfs_refcount.c
-> > @@ -1138,6 +1138,44 @@ xfs_refcount_finish_one_cleanup(
-> >  		xfs_trans_brelse(tp, agbp);
-> >  }
+> > @@ -386,6 +386,8 @@ xfs_refcount_split_extent(
+> >  		goto out_error;
+> >  	}
 > >  
-> > +/*
-> > + * Set up a continuation a deferred refcount operation by updating the intent.
-> > + * Checks to make sure we're not going to run off the end of the AG.
-> > + */
-> > +static inline int
-> > +xfs_refcount_continue_op(
-> > +	struct xfs_btree_cur		*cur,
-> > +	xfs_fsblock_t			startblock,
-> > +	xfs_agblock_t			new_agbno,
-> > +	xfs_extlen_t			new_len,
-> > +	xfs_fsblock_t			*fsbp)
-> > +{
-> > +	struct xfs_mount		*mp = cur->bc_mp;
-> > +	struct xfs_perag		*pag = cur->bc_ag.pag;
-> > +	xfs_fsblock_t			new_fsbno;
-> > +	xfs_agnumber_t			old_agno;
+> > +	if (rcext.rc_domain != domain)
+> > +		return 0;
+> >  	if (rcext.rc_startblock == agbno || xfs_refc_next(&rcext) <= agbno)
+> >  		return 0;
+> >  
+> > @@ -434,6 +436,9 @@ xfs_refcount_merge_center_extents(
+> >  	int				error;
+> >  	int				found_rec;
+> >  
+> > +	ASSERT(left->rc_domain == center->rc_domain);
+> > +	ASSERT(right->rc_domain == center->rc_domain);
 > > +
-> > +	old_agno = XFS_FSB_TO_AGNO(mp, startblock);
-> > +	new_fsbno = XFS_AGB_TO_FSB(mp, pag->pag_agno, new_agbno);
+> >  	trace_xfs_refcount_merge_center_extents(cur->bc_mp,
+> >  			cur->bc_ag.pag->pag_agno, left, center, right);
+> 
+> Can you move the asserts to after the trace points? That way we if
+> need to debug the assert, we'll have a tracepoint with the record
+> information that triggered the assert emitted immediately before it
+> fires...
+
+Done.
+
+> >  
+> > @@ -510,6 +515,8 @@ xfs_refcount_merge_left_extent(
+> >  	int				error;
+> >  	int				found_rec;
+> >  
+> > +	ASSERT(left->rc_domain == cleft->rc_domain);
 > > +
-> > +	/*
-> > +	 * If we don't have any work left to do, then there's no need
-> > +	 * to perform the validation of the new parameters.
-> > +	 */
-> > +	if (!new_len)
-> > +		goto done;
-> 
-> Shouldn't we be validating new_fsbno rather than just returning
-> whatever we calculated here?
-
-No.  Imagine that the deferred work is performed against the last 30
-blocks of the last AG in the filesystem.  Let's say that the last AG is
-AG 3 and the AG has 100 blocks.  fsblock 3:99 is the last fsblock in the
-filesystem.
-
-Before we start the deferred work, startblock == 3:70 and
-blockcount == 30.  We adjust the refcount of those 30 blocks, so we're
-done now.  The adjust function passes out new_agbno == 70 + 30 and
-new_len == 30 - 30.
-
-The agbno to fsbno conversion sets new_fsbno to 3:100 and new_len is 0.
-However, fsblock 3/100 is one block past the end of both AG 3 and the
-filesystem, so the check below will fail:
-
-> > +	if (XFS_IS_CORRUPT(mp, !xfs_verify_fsbext(mp, new_fsbno, new_len)))
-> > +		return -EFSCORRUPTED;
+> >  	trace_xfs_refcount_merge_left_extent(cur->bc_mp,
+> >  			cur->bc_ag.pag->pag_agno, left, cleft);
+> >  
+> > @@ -571,6 +578,8 @@ xfs_refcount_merge_right_extent(
+> >  	int				error;
+> >  	int				found_rec;
+> >  
+> > +	ASSERT(right->rc_domain == cright->rc_domain);
 > > +
-> > +	if (XFS_IS_CORRUPT(mp, old_agno != XFS_FSB_TO_AGNO(mp, new_fsbno)))
-> > +		return -EFSCORRUPTED;
+> >  	trace_xfs_refcount_merge_right_extent(cur->bc_mp,
+> >  			cur->bc_ag.pag->pag_agno, cright, right);
+> >  
+> > @@ -654,12 +663,10 @@ xfs_refcount_find_left_extents(
+> >  		goto out_error;
+> >  	}
+> >  
+> > +	if (tmp.rc_domain != domain)
+> > +		return 0;
+> >  	if (xfs_refc_next(&tmp) != agbno)
+> >  		return 0;
+> > -	if (domain == XFS_REFC_DOMAIN_SHARED && tmp.rc_refcount < 2)
+> > -		return 0;
+> > -	if (domain == XFS_REFC_DOMAIN_COW && tmp.rc_refcount > 1)
+> > -		return 0;
 > 
-> We already know what agno new_fsbno sits in - we calculated it
-> directly from pag->pag_agno above, so this can jsut check against
-> pag->pag_agno directly, right?
-
-We don't actually know what agno new_fsbno sits in because of the way
-that the agblock -> fsblock conversion works:
-
-#define XFS_AGB_TO_FSB(mp,agno,agbno)	\
-	(((xfs_fsblock_t)(agno) << (mp)->m_sb.sb_agblklog) | (agbno))
-
-Notice how we don't mask off the bits of agbno above sb_agblklog?  If
-sb_agblklog is (say) 20 but agbno has bit 31 set, that bit 31 will bump
-the AG number by 2^11 AGs.
-
-The genesis of this patch was from the old days when rc_startblock had
-bit 31 set on COW staging extents.  Splitting out the cow/shared domain
-later in the series makes this patch sort of redundant, but I still want
-to catch the cases where agbno has some bit set above agblklog due to
-corruption/bitflips/shenanigans.
-
-> i.e.
+> Ah, as these go away, you can ignore my comment about them in the
+> previous patches... :)
 > 
-> 	if (XFS_IS_CORRUPT(mp,
-> 			XFS_FSB_TO_AGNO(mp, startblock) != pag->pag_agno))
-> 		return -EFSCORRUPTED;
+> Otherwise, looks ok.
 > 
-> and we don't need the local variable for it....
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Not quite -- we need to compare new_fsbno's agnumber against the perag
-structure.  But you're right that @old_agno isn't necessary.
-
-	if (XFS_IS_CORRUPT(mp,
-			XFS_FSB_TO_AGNO(mp, new_fsbno) != pag->pag_agno))
-		/* fail */
-
-I'll change it to the above.
+Cool, thanks!
 
 --D
 
-> Cheers,
-> 
-> Dave.
-> 
 > -- 
 > Dave Chinner
 > david@fromorbit.com
