@@ -2,99 +2,180 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA341ECAAA1
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Oct 2022 21:26:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22E73FA3740
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Oct 2022 21:32:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236317AbiJ0V0e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Oct 2022 17:26:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51984 "EHLO
+        id S234965AbiJ0Vcr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Oct 2022 17:32:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236807AbiJ0V0d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Oct 2022 17:26:33 -0400
-Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 917B65E54A
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 14:26:31 -0700 (PDT)
-Received: by mail-pf1-x429.google.com with SMTP id m6so3033228pfb.0
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 14:26:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=j6K520hsmbBX0/Yy2ZJydJRhad3Iab9wdhbqFSbxqLo=;
-        b=PBEfPyZuMX+6ZSZRXh2C0uuw5dhs4j9UiohLtFk6fHvjB2LjGut377jOaaZdbliJsv
-         JLW8Pmf6EcQwQ9dVa35/xXq6n0KtUKpxQ/pYnGmwAzYbstRggIxqniJioaK8ukH0WeZD
-         TLfii75gK7/4ewbVViEgAQ0IH4OW+VHc46KNNOFtzfAWZckbTuk82jpRSmlJu75yHbqC
-         7/Rqz7sUJHndYwzniWkdWsqU4eXB9qaEazXd1S60bTsdpzQYUAQMomm1SM+oYbS4pFqs
-         pG3YnGPuYUpnbTwA3MOy1KVuyibFNPKZ5AM3BDfr5HnKBu7B3xRKW4nVfB4nC+Bzo7Sz
-         LA1A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=j6K520hsmbBX0/Yy2ZJydJRhad3Iab9wdhbqFSbxqLo=;
-        b=qPTV3GmTt9hSij9iTlgnOguhDLwrB+1CzhiLthPSFBjzbogTO+mNtbfxGNhLV7C3kx
-         tqxGcnHDmkPFMBGiSNRruI5t4yIEyAUflqws23QW8q0J3/eqkjxtC3tItsTK7GgxdZJT
-         S0JsqO6edI6MU5vasaMH2sOrPqhWRnj3TOMfJPY02gLdfunt3MWCwt7EcQjkkZLS0h8a
-         2iNjXZ622X/7ZFif+2FJmAaqUtMfByLvOlQLKId7etxtMLBultpmnLup48zEBl3QE+Ga
-         XlYPxwc7k/wgwA1/zjqc68fLgdjSM5IcMiCDbONbyd1KmXMCC9WAwZWkjYXhkHQvwgIj
-         EO9g==
-X-Gm-Message-State: ACrzQf0ZaIsAxwoQuXyG1P4z7WL5yuIft8iYMsGdy4fqmvFgUmObC8Oj
-        Van330u5fKYYNF6MzFRDvTwkwQ==
-X-Google-Smtp-Source: AMsMyM7zG/L8K01gEQJFd5IWjFECKsHRCyN5VlWy/vs85YrPr2q6NHoBmfZUyxyv2RhcdXSKuWHzpA==
-X-Received: by 2002:a63:85c6:0:b0:46e:ffdb:2e77 with SMTP id u189-20020a6385c6000000b0046effdb2e77mr20884218pgd.439.1666905991094;
-        Thu, 27 Oct 2022 14:26:31 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au. [49.181.106.210])
-        by smtp.gmail.com with ESMTPSA id z7-20020a626507000000b00560bb4a57f7sm1639810pfb.179.2022.10.27.14.26.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Oct 2022 14:26:30 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1ooAOS-0079zy-37; Fri, 28 Oct 2022 08:26:28 +1100
-Date:   Fri, 28 Oct 2022 08:26:28 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH v2] xfs: fix incorrect return type for fsdax fault
- handlers
-Message-ID: <20221027212628.GA3600936@dread.disaster.area>
-References: <Y1rz+qkknFIIQM04@magnolia>
+        with ESMTP id S235514AbiJ0Vco (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Oct 2022 17:32:44 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9BB76C10C
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 14:32:43 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 867CD6235C
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 21:32:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD560C433D6;
+        Thu, 27 Oct 2022 21:32:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1666906362;
+        bh=hhIOvZGYp2+GL/h5pYaf+Nu7IEKPbv6Djvcr+anHAaU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=PqieamrgjU7mxtxus3M/Fw6GPNjpdLIyR83lZDZO43MYRf8V/wCDgFnhUkD3k3cmX
+         LGUw7y3mvysAZI/uv8rufjrQDelqhd0SV7V6jXnTao9O208O/erl3tO7RoPEJfwntT
+         p1RY0UnL6XMG5LuHEky6zrKvTAjlubttt7WeRZd4ebz6eXHd+MHVzoG9JxuLvc92SJ
+         Nb8vgaLrZUUrco08N4ex+IR64VS41bBv/n0YAJHoXUxcnncIfO7pIMLGuFO7sTbss1
+         Q0T4A8t6PsxS80K5b6BmI7xL8FLog5FbyF8fyTOfWz4KN9yqEsC/sdDhRUSrHh3zXA
+         GAovQxvdZtMsA==
+Date:   Thu, 27 Oct 2022 14:32:42 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 02/12] xfs: check deferred refcount op continuation
+ parameters
+Message-ID: <Y1r4+k5uKQBySEta@magnolia>
+References: <166689084304.3788582.15155501738043912776.stgit@magnolia>
+ <166689085464.3788582.2756559047908250104.stgit@magnolia>
+ <20221027204957.GR3600936@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y1rz+qkknFIIQM04@magnolia>
+In-Reply-To: <20221027204957.GR3600936@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 27, 2022 at 02:11:22PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Oct 28, 2022 at 07:49:57AM +1100, Dave Chinner wrote:
+> On Thu, Oct 27, 2022 at 10:14:14AM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > If we're in the middle of a deferred refcount operation and decide to
+> > roll the transaction to avoid overflowing the transaction space, we need
+> > to check the new agbno/aglen parameters that we're about to record in
+> > the new intent.  Specifically, we need to check that the new extent is
+> > completely within the filesystem, and that continuation does not put us
+> > into a different AG.
+> > 
+> > If the keys of a node block are wrong, the lookup to resume an
+> > xfs_refcount_adjust_extents operation can put us into the wrong record
+> > block.  If this happens, we might not find that we run out of aglen at
+> > an exact record boundary, which will cause the loop control to do the
+> > wrong thing.
+> > 
+> > The previous patch should take care of that problem, but let's add this
+> > extra sanity check to stop corruption problems sooner than later.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  fs/xfs/libxfs/xfs_refcount.c |   48 ++++++++++++++++++++++++++++++++++++++++--
+> >  1 file changed, 46 insertions(+), 2 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+> > index 831353ba96dc..c6aa832a8713 100644
+> > --- a/fs/xfs/libxfs/xfs_refcount.c
+> > +++ b/fs/xfs/libxfs/xfs_refcount.c
+> > @@ -1138,6 +1138,44 @@ xfs_refcount_finish_one_cleanup(
+> >  		xfs_trans_brelse(tp, agbp);
+> >  }
+> >  
+> > +/*
+> > + * Set up a continuation a deferred refcount operation by updating the intent.
+> > + * Checks to make sure we're not going to run off the end of the AG.
+> > + */
+> > +static inline int
+> > +xfs_refcount_continue_op(
+> > +	struct xfs_btree_cur		*cur,
+> > +	xfs_fsblock_t			startblock,
+> > +	xfs_agblock_t			new_agbno,
+> > +	xfs_extlen_t			new_len,
+> > +	xfs_fsblock_t			*fsbp)
+> > +{
+> > +	struct xfs_mount		*mp = cur->bc_mp;
+> > +	struct xfs_perag		*pag = cur->bc_ag.pag;
+> > +	xfs_fsblock_t			new_fsbno;
+> > +	xfs_agnumber_t			old_agno;
+> > +
+> > +	old_agno = XFS_FSB_TO_AGNO(mp, startblock);
+> > +	new_fsbno = XFS_AGB_TO_FSB(mp, pag->pag_agno, new_agbno);
+> > +
+> > +	/*
+> > +	 * If we don't have any work left to do, then there's no need
+> > +	 * to perform the validation of the new parameters.
+> > +	 */
+> > +	if (!new_len)
+> > +		goto done;
 > 
-> The kernel robot complained about this:
-> 
-> >> fs/xfs/xfs_file.c:1266:31: sparse: sparse: incorrect type in return expression (different base types) @@     expected int @@     got restricted vm_fault_t @@
->    fs/xfs/xfs_file.c:1266:31: sparse:     expected int
->    fs/xfs/xfs_file.c:1266:31: sparse:     got restricted vm_fault_t
->    fs/xfs/xfs_file.c:1314:21: sparse: sparse: incorrect type in assignment (different base types) @@     expected restricted vm_fault_t [usertype] ret @@     got int @@
->    fs/xfs/xfs_file.c:1314:21: sparse:     expected restricted vm_fault_t [usertype] ret
->    fs/xfs/xfs_file.c:1314:21: sparse:     got int
-> 
-> Fix the incorrect return type for these two functions.
-> 
-> While we're at it, make the !fsdax version return VM_FAULT_SIGBUS
-> because a zero return value will cause some callers to try to lock
-> vmf->page, which we never set here.
-> 
-> Fixes: ea6c49b784f0 ("xfs: support CoW in fsdax mode")
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
-> v2: less confusing commit message, add a debug assert to the !fsdax case
-> ---
+> Shouldn't we be validating new_fsbno rather than just returning
+> whatever we calculated here?
 
-Looks fine to me.
+No.  Imagine that the deferred work is performed against the last 30
+blocks of the last AG in the filesystem.  Let's say that the last AG is
+AG 3 and the AG has 100 blocks.  fsblock 3:99 is the last fsblock in the
+filesystem.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+Before we start the deferred work, startblock == 3:70 and
+blockcount == 30.  We adjust the refcount of those 30 blocks, so we're
+done now.  The adjust function passes out new_agbno == 70 + 30 and
+new_len == 30 - 30.
+
+The agbno to fsbno conversion sets new_fsbno to 3:100 and new_len is 0.
+However, fsblock 3/100 is one block past the end of both AG 3 and the
+filesystem, so the check below will fail:
+
+> > +	if (XFS_IS_CORRUPT(mp, !xfs_verify_fsbext(mp, new_fsbno, new_len)))
+> > +		return -EFSCORRUPTED;
+> > +
+> > +	if (XFS_IS_CORRUPT(mp, old_agno != XFS_FSB_TO_AGNO(mp, new_fsbno)))
+> > +		return -EFSCORRUPTED;
+> 
+> We already know what agno new_fsbno sits in - we calculated it
+> directly from pag->pag_agno above, so this can jsut check against
+> pag->pag_agno directly, right?
+
+We don't actually know what agno new_fsbno sits in because of the way
+that the agblock -> fsblock conversion works:
+
+#define XFS_AGB_TO_FSB(mp,agno,agbno)	\
+	(((xfs_fsblock_t)(agno) << (mp)->m_sb.sb_agblklog) | (agbno))
+
+Notice how we don't mask off the bits of agbno above sb_agblklog?  If
+sb_agblklog is (say) 20 but agbno has bit 31 set, that bit 31 will bump
+the AG number by 2^11 AGs.
+
+The genesis of this patch was from the old days when rc_startblock had
+bit 31 set on COW staging extents.  Splitting out the cow/shared domain
+later in the series makes this patch sort of redundant, but I still want
+to catch the cases where agbno has some bit set above agblklog due to
+corruption/bitflips/shenanigans.
+
+> i.e.
+> 
+> 	if (XFS_IS_CORRUPT(mp,
+> 			XFS_FSB_TO_AGNO(mp, startblock) != pag->pag_agno))
+> 		return -EFSCORRUPTED;
+> 
+> and we don't need the local variable for it....
+
+Not quite -- we need to compare new_fsbno's agnumber against the perag
+structure.  But you're right that @old_agno isn't necessary.
+
+	if (XFS_IS_CORRUPT(mp,
+			XFS_FSB_TO_AGNO(mp, new_fsbno) != pag->pag_agno))
+		/* fail */
+
+I'll change it to the above.
+
+--D
+
+> Cheers,
+> 
+> Dave.
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
