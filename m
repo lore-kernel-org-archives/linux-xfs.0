@@ -2,211 +2,162 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA5B0FA3740
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Oct 2022 16:06:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C28AAFA3741
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Oct 2022 16:23:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236240AbiJ0QGx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Oct 2022 12:06:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56684 "EHLO
+        id S236660AbiJ0QXE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Oct 2022 12:23:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55956 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236345AbiJ0QGw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Oct 2022 12:06:52 -0400
+        with ESMTP id S236666AbiJ0QWv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Oct 2022 12:22:51 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DB271413BF;
-        Thu, 27 Oct 2022 09:06:50 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41E111A8505;
+        Thu, 27 Oct 2022 09:21:22 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 53031B826FB;
-        Thu, 27 Oct 2022 16:06:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05BD6C433D6;
-        Thu, 27 Oct 2022 16:06:48 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 6167CB826FC;
+        Thu, 27 Oct 2022 16:20:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5497C433D6;
+        Thu, 27 Oct 2022 16:20:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666886808;
-        bh=XteCW3G+x1lrMpHzsbnyd2e5yyrrVAaiTQ3oDee7u50=;
+        s=k20201202; t=1666887647;
+        bh=TOUqKmgEkAaTeK7T8K0JzVzaY6XgBGR/nI/YoSk8f8A=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=jbWnN+pWN2UNCopLLC4lOjMw+4iXLIeV32iEpWTQM13kPbJ7kywGvAv+ZrN9FbMYN
-         GZ4K8byDwIlWXVvSyWaF40TLU1lHWxOtcbsjYO6fLCQgzsOPL2LIzvk5WW4f7geBXs
-         SStFEWR2bluxlxdnPDwL2vU/91ekR5eCR+JlQudhZ/M89m3JEWyxMyxLcFB68PEmGz
-         xhTrBVdN92oPsIJxRWk8ggbQdH6DJFpBbjqPkwXUCz/IkMlv0QU/1F1lIvVfjfirr5
-         t4YLZL/GJA6rcMP0bKqCtSdaXOpCCuB7F05nBRFlMvB0JLaC4VChszBcVDU8swtZL2
-         UuvVgz00iAtAg==
-Date:   Thu, 27 Oct 2022 09:06:47 -0700
+        b=JiCaQQHRv2vDjm0fmPDW615OPN0zDbLG7r5aetEdobj4aEP9ci8Bc0pvOREce2oSZ
+         zZHWrVNgzAPTRP7c9z8GCOq+ZbSHQm7ecyoW52jJFWHm1UxZeDIAIxOHQGjf2euFZF
+         aymc3x8q+qGFbOkfjKW+hf8SnOW7J8luy8UwvXUBBlC7LVJ9mvhwr9Xk9LeQe3VCed
+         g/FgQuUZF02td0BPmGB1lv07foEGH4IeW4nb/C75aNFxnebrsn97fBZaFZ/58bAjsU
+         7NVnXrWUH/lCsX3TACuWOo0Ags7/t7Jj0+Yuxkbx/iwBQIYAKt3kRRyDF8zjfkcTkL
+         xEHxoIS/ipaWQ==
+Date:   Thu, 27 Oct 2022 09:20:46 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: new test to ensure xfs can capture IO errors
- correctly
-Message-ID: <Y1qsl2f09zrwCjBd@magnolia>
-References: <20221026165747.1146281-1-zlang@kernel.org>
- <Y1l8xRaTpeH3Nu0l@magnolia>
- <20221027022459.5ewhsm7gjq5iynra@zlang-mailbox>
+To:     Yujie Liu <yujie.liu@intel.com>
+Cc:     Peter Zijlstra <peterz@infradead.org>, oe-lkp@lists.linux.dev,
+        lkp@intel.com, Thomas Gleixner <tglx@linutronix.de>,
+        linux-kernel@vger.kernel.org, x86@kernel.org,
+        fengwei.yin@intel.com, ying.huang@intel.com,
+        fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [tip:x86/core] [kallsyms] f138918162:
+ WARNING:CPU:#PID:#at_fs/xfs/xfs_message.c:#xfs_buf_alert_ratelimited.cold-#[xfs]
+Message-ID: <Y1qv3ku6ULHy8hOF@magnolia>
+References: <202210241614.2ae4c1f5-yujie.liu@intel.com>
+ <Y1kDEmLeRA2UGeF8@hirez.programming.kicks-ass.net>
+ <Y1kiuTIYobR4nexS@hirez.programming.kicks-ass.net>
+ <Y1nobODPLUjcteJ0@yujie-X299>
+ <2543dfb1-d9dc-0888-dbea-e420a19d732c@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221027022459.5ewhsm7gjq5iynra@zlang-mailbox>
+In-Reply-To: <2543dfb1-d9dc-0888-dbea-e420a19d732c@intel.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 27, 2022 at 10:24:59AM +0800, Zorro Lang wrote:
-> On Wed, Oct 26, 2022 at 11:30:29AM -0700, Darrick J. Wong wrote:
-> > On Thu, Oct 27, 2022 at 12:57:47AM +0800, Zorro Lang wrote:
-> > > There was a known xfs crash bug fixed by e001873853d8 ("xfs: ensure
-> > > we capture IO errors correctly"), so trys to cover this bug and make
-> > > sure xfs can capture IO errors correctly, won't panic and hang again.
-> > > 
-> > > Signed-off-by: Zorro Lang <zlang@redhat.com>
-> > > ---
-> > > 
-> > > Hi,
-> > > 
-> > > When I tried to tidy up our internal test cases recently, I found a very
-> > > old case which trys to cover e001873853d8 ("xfs: ensure we capture IO errors
-> > > correctly") which fix by Dave. At that time, we didn't support xfs injection,
-> > > so we tested it by a systemtap script [1] to inject an ioerror.
-> > > 
-> > > Now this bug has been fixed long long time ago (9+ years), and that stap script
-> > > is already out of date, can't work with new kernel. But good news is we have xfs
-> > > injection now, so I try to resume this test case in fstests.
-> > > 
-> > > I didn't verify if this case can reproduce that bug on old rhel (which doesn't
-> > > support error injection). The original case tried to inject errno 11, I'm
-> > > not sure if it's worth trying more other errors. I searched "buf_ioerror" in
-> > > fstests, found nothing. So maybe this bug is old enough, but it's worth covering
-> > > this kind of test. So feel free to tell me if you have any suggestions :)
-> > > 
-> > > Thanks,
-> > > Zorro
-> > > 
-> > > [1]
-> > > probe module("xfs").function("xfs_buf_bio_end_io")
-> > > {
-> > >         if ($error == 0) {
-> > >                 if ($bio->bi_rw & (1 << 4)) {
-> > >                         $error = -11;
-> > >                         printf("%s: comm %s, pid %d, setting error 11\n",
-> > >                                 probefunc(), execname(), pid());
-> > >                         print_stack(backtrace());
-> > >                 }
-> > >         }
-> > > }
-> > > 
-> > >  tests/xfs/554     | 53 +++++++++++++++++++++++++++++++++++++++++++++++
-> > >  tests/xfs/554.out |  4 ++++
-> > >  2 files changed, 57 insertions(+)
-> > >  create mode 100755 tests/xfs/554
-> > >  create mode 100644 tests/xfs/554.out
-> > > 
-> > > diff --git a/tests/xfs/554 b/tests/xfs/554
-> > > new file mode 100755
-> > > index 00000000..6935bfc0
-> > > --- /dev/null
-> > > +++ b/tests/xfs/554
-> > > @@ -0,0 +1,53 @@
-> > > +#! /bin/bash
-> > > +# SPDX-License-Identifier: GPL-2.0
-> > > +# Copyright (c) 2022 YOUR NAME HERE.  All Rights Reserved.
+On Thu, Oct 27, 2022 at 10:24:51AM +0800, Yujie Liu wrote:
+> On 10/27/2022 10:09, Yujie Liu wrote:
+> > On Wed, Oct 26, 2022 at 02:06:17PM +0200, Peter Zijlstra wrote:
+> > > On Wed, Oct 26, 2022 at 11:51:14AM +0200, Peter Zijlstra wrote:
+> > > > On Wed, Oct 26, 2022 at 05:10:28PM +0800, kernel test robot wrote:
+> > > > > Hi Peter,
+> > > > > 
+> > > > > For below patch, we couldn't find any connection between the code
+> > > > > change of kallsyms and xfstests testcase, but we got very stable test
+> > > > > results. We tested commit f1389181622a and its parent commit
+> > > > > 7825451fa4dc for 12 runs each, parent was 100% good while this commit
+> > > > > was 100% bad, so we still send out this report FYI though we don't have
+> > > > > clear clue of the root cause. Please check the details below if
+> > > > > interested in further investigation. Thanks.
+> > > > 
+> > > > *groan* I'll go have a poke.
+> > > > 
+> > > > Also; I've had these patches in my queue.git for over a month now and
+> > > > this is the first report, how comes?
 > > 
-> > Mr. YOUR HERE,
+> > Hi Peter,
 > > 
-> > Please write your real name in the copyright statement.
+> > Sorry about late report. We did catch this problem on
+> > call-depth-tracking branch of queue.git in Semtember, but we used to
+> > think it may be a false alarm since we cannot connect the code change
+> > with xfstests, so didn't report at that time. After merged to x86 tip,
+> > we did more tests and reviewed this problem with more developers, and
+> > sent out the report finally.
 > > 
-> > > +#
-> > > +# FS QA Test 554
-> > > +#
-> > > +# There was a known xfs crash bug fixed by e001873853d8 ("xfs: ensure we
-> > > +# capture IO errors correctly"), so trys to cover this bug and make sure
-> > > +# xfs can capture IO errors correctly, won't panic and hang again.
-> > > +#
-> > > +. ./common/preamble
-> > > +_begin_fstest auto eio
-> > > +
-> > > +_cleanup()
-> > > +{
-> > > +	$KILLALL_PROG -q fsstress 2> /dev/null
-> > > +	# ensures all fsstress processes died
-> > > +	wait
-> > > +	# log replay, due to the buf_ioerror injection might leave dirty log
-> > > +	_scratch_cycle_mount
-> > > +	cd /
-> > > +	rm -r -f $tmp.*
-> > > +}
-> > > +
-> > > +# Import common functions.
-> > > +. ./common/inject
-> > > +
-> > > +# real QA test starts here
-> > > +_supported_fs xfs
-> > > +_require_command "$KILLALL_PROG" "killall"
-> > > +_require_scratch
-> > > +_require_xfs_debug
-> > > +_require_xfs_io_error_injection "buf_ioerror"
-> > > +
-> > > +_scratch_mkfs >> $seqres.full
-> > > +_scratch_mount
-> > > +
-> > > +echo "Inject buf ioerror tag"
-> > > +_scratch_inject_error buf_ioerror 11
-> > > +
-> > > +echo "Random I/Os testing ..."
-> > > +$FSSTRESS_PROG $FSSTRESS_AVOID -d $SCRATCH_MNT -n 50000 -p 100 >> $seqres.full &
-> > > +for ((i=0; i<5; i++));do
-> > > +	# Clear caches, then trys to use 'find' to trigger readahead
+> > > dmesg starts at 42 seconds, you don't happen to have a complete one?
 > > 
-> > BUF_IOERROR only seems to apply to async writes:
+> > Sorry for the incomplete dmesg. Please check if attached kmsg.xz helps?
+> > The time may vary a little since it is captured from another run.
+> > Thanks.
 > > 
-> > static void
-> > xfs_buf_bio_end_io(
-> > 	struct bio		*bio)
-> > {
-> > 	struct xfs_buf		*bp = (struct xfs_buf *)bio->bi_private;
+> > Not sure if this has anything to do with xfs or testcases, so add
+> > xfs folks to consult.
 > > 
-> > 	if (!bio->bi_status &&
-> > 	    (bp->b_flags & XBF_WRITE) && (bp->b_flags & XBF_ASYNC) &&
-> > 	    XFS_TEST_ERROR(false, bp->b_mount, XFS_ERRTAG_BUF_IOERROR))
-> > 		bio->bi_status = BLK_STS_IOERR;
+> > Hi xfs folks,
 > > 
-> > So I don't see how this would reproduce the problem of b_error not being
-> > cleared after a failed readahead and re-read?
+> > Could you please help check the original report at
+> > https://lore.kernel.org/r/202210241508.2e203c3d-yujie.liu@intel.com
+> > to see if can find any clue for the problem? Thanks.
 > 
-> Oh, "bp->b_flags & XBF_WRITE) && (bp->b_flags & XBF_ASYNC)" ... so I don't
-> have chance to cover this bug? I have to abandon this patch, or we'd like to
-> change it to be a general async ioerror injection test.
+> Sorry, wrong link. Should be:
+> 
+> https://lore.kernel.org/all/202210241614.2ae4c1f5-yujie.liu@intel.com/
 
-Well you /could/ add a new knob to make readahead fail, that's probably
-an interesting case that doesn't get tested much.
+xfs/439 corrupts the log and checks that log recovery will notice the
+corruption and abort the mount.
+
+Excerpted dmesg from the link above:
+
+[   75.708690][ T3668] ------------[ cut here ]------------
+[   75.714041][ T3668] WARNING: CPU: 1 PID: 3668 at fs/xfs/xfs_message.c:104 xfs_buf_alert_ratelimited.cold-0x7/0x45 [xfs]
+[   75.779828][ T3668] CPU: 1 PID: 3668 Comm: mount Not tainted 6.1.0-rc1-00053-gf1389181622a #1
+[   75.788389][ T3668] Hardware name: Hewlett-Packard HP Pro 3340 MT/17A1, BIOS 8.07 01/24/2013
+[   75.796864][ T3668] RIP: 0010:xfs_buf_alert_ratelimited.cold-0x7/0x45 [xfs]
+[ 75.898077][ T3668] xlog_find_verify_log_record (fs/xfs/xfs_log_recover.c:431) xfs
+[ 75.910856][ T3668] xlog_find_head (fs/xfs/xfs_log_recover.c:705) xfs
+[ 75.925847][ T3668] xlog_find_tail (fs/xfs/xfs_log_recover.c:1256) xfs
+[ 75.951249][ T3668] xlog_recover (fs/xfs/xfs_log_recover.c:3355) xfs
+[ 75.961324][ T3668] xfs_log_mount (fs/xfs/xfs_log.c:739) xfs
+[ 75.966486][ T3668] xfs_mountfs (fs/xfs/xfs_mount.c:805 (discriminator 4)) xfs
+[ 75.998070][ T3668] xfs_fs_fill_super (fs/xfs/xfs_super.c:1666) xfs
+
+So yes, this is xlog_find_verify_log_record behaving as intended:
+
+		if (i < start_blk) {
+			/* valid log record not found */
+			xfs_warn(log->l_mp,
+		"Log inconsistent (didn't find previous header)");
+			ASSERT(0);  <------------------ here
+			error = -EFSCORRUPTED;
+			goto out;
+		}
+
+However, I noticed that the callsite in the WARNING: message has changed
+from the usual 'asswarn' (which is the caller of WARN_ON) to
+'xfs_buf_alert_ratelimited', which seems totally wrong since XFS log
+recovery doesn't touch xfs_buf objects at all.
+
+The reason this turned into a fstests regression is that xfs/439 uses
+_filter_assert_dmesg to check for warnings in dmesg that are not the
+result of an ASSERT failing (common/rc in fstests):
+
+	# We generate assert related WARNINGs on purpose and make sure
+	# test doesn't fail because of these warnings. This is a helper
+	# for _check_dmesg() to filter out them.
+	_filter_assert_dmesg()
+	{
+		local warn1="WARNING:.*fs/xfs/xfs_message\.c:.*asswarn.*"
+		local warn2="WARNING:.*fs/xfs/xfs_message\.c:.*assfail.*"
+		sed -e "s#$warn1#Intentional warnings in asswarn#" \
+		    -e "s#$warn2#Intentional warnings in assfail#"
+	}
+
+As for why that commit reports the wrong caller ... I don't know.  The
+function name and line number are correct.
 
 --D
 
-> Thanks,
-> Zorro
 > 
-> > 
-> > --D
-> > 
-> > > +	echo 3 > /proc/sys/vm/drop_caches
-> > > +	find $SCRATCH_MNT >/dev/null 2>&1
-> > > +	sleep 3
-> > > +done
-> > > +
-> > > +echo "No hang or panic"
-> > > +# success, all done
-> > > +status=0
-> > > +exit
-> > > diff --git a/tests/xfs/554.out b/tests/xfs/554.out
-> > > new file mode 100644
-> > > index 00000000..26910daa
-> > > --- /dev/null
-> > > +++ b/tests/xfs/554.out
-> > > @@ -0,0 +1,4 @@
-> > > +QA output created by 554
-> > > +Inject buf ioerror tag
-> > > +Random I/Os testing ...
-> > > +No hang or panic
-> > > -- 
-> > > 2.31.1
-> > > 
-> > 
-> 
+> --
+> Best Regards,
+> Yujie
