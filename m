@@ -2,209 +2,153 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75840C38A02
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Oct 2022 04:31:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA2E2C38A02
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Oct 2022 05:44:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229740AbiJ1EbA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 28 Oct 2022 00:31:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34010 "EHLO
+        id S229766AbiJ1FoY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 28 Oct 2022 01:44:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229648AbiJ1Eau (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Oct 2022 00:30:50 -0400
-Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FBD9625F0;
-        Thu, 27 Oct 2022 21:30:48 -0700 (PDT)
-Received: by mail-pf1-x435.google.com with SMTP id g62so3833752pfb.10;
-        Thu, 27 Oct 2022 21:30:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Ps4fRWhKIumemA2cJEvrmieQ3xGKdOyI72P2C1pb+Z8=;
-        b=cWiWSao6rmKSUdRf6IELyQFrHZUt6biTnKeGPCRJ9ogIbFsT1FHMDxnEx/IcMqVdE4
-         XNLC10T8K6pN+V0haA790gUMZgfsJ/Og3u4mIazD0Yg9kbxaKoZqHtMr0H/HyxXR0LRH
-         ACH8r0VDfBaLhA9X5MeYzrjmrMRgIdFPxar+CihcSkdTwbIfJHx6IZzUIohnL9T4wKiJ
-         61V/rJ+AcPrPd+mnhjoRTw7uAj6WtYQoap6RqReN415wGj35ZPPnhb+G/lnzHc5xYNbM
-         49f6rKynj5YFH/vWLwma+7OO08aJKP4CKYWDhvaznEIr/uMTrjfKRhQhYG2x6qlfJmL2
-         Hlnw==
+        with ESMTP id S229450AbiJ1FoX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Oct 2022 01:44:23 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A28B1B2321
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 22:43:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1666935803;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=0j4gnCVL6NM7Nbvyj5JHHnZVMzTo3vHJGnU3eakIC8E=;
+        b=dEuR9mKma1AlfFjlmuQb7+9rsRak5R5a/fPMHz07gQT+N3PX2IaVouawWELhLRUPTbMQI1
+        a77Bw40dtcn1zMcvuR2R5kDEjOzsOzy0Gz3IXcSZWRAEN90WcZ1y0M7aeEAd2vy1vPxOWh
+        TdFjH5p6nAx+gqeDAiK866meGB2JDHk=
+Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
+ [209.85.210.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-381-xIN9JDv_PTubWbEW42YAEw-1; Fri, 28 Oct 2022 01:43:14 -0400
+X-MC-Unique: xIN9JDv_PTubWbEW42YAEw-1
+Received: by mail-pf1-f198.google.com with SMTP id e12-20020a62aa0c000000b0056c12c0aadeso2047994pff.21
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 22:43:13 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Ps4fRWhKIumemA2cJEvrmieQ3xGKdOyI72P2C1pb+Z8=;
-        b=1zr5E761R6IAheZi3qhjj4xvrd8iEz811k+lpTLk1xo4N+J9JdKx3eS15h/1o4Zazg
-         nUU3cmHNOgujCsy+Tx8by8l5xnHKNT+6o4YU4FSmXC2hLUxGNW/WIV78rVuSGciHjP+Y
-         r10JXABaPOHFk9JMk6LaJHvF/JRn7xjp7vDn0c7tlJtLvAoAF9afbghJduRTWibd87xv
-         sGacSYSiDh4dZ7LgMM3YR6TXhDhg4PhkeLgV16xY8bGuy/+LFeUeeWYUurqtws5pgLWA
-         qTrAmTfblPWZiUViYDvhWwqtuz+ubT0F+XTd++JoeCx/8cn+Q0wTzORt5NY+93DuLRF1
-         GgYw==
-X-Gm-Message-State: ACrzQf0zfTvdzo4iiW8YcJAvq5NuZ/cEfTGSuzmCvwGLyu9uWbvHNZl9
-        4I1qWaxjeH4iLeb8oHVBekLdlRg3g8c=
-X-Google-Smtp-Source: AMsMyM7BEagdfYlfOkBRtASCMGsqWIbNJm+R1oEvD7NZAT+p4/Zz/mqZQRDyYgHnCJzvg73Kl4D3qw==
-X-Received: by 2002:a63:e806:0:b0:44b:d45b:b8a2 with SMTP id s6-20020a63e806000000b0044bd45bb8a2mr44631373pgh.14.1666931447844;
-        Thu, 27 Oct 2022 21:30:47 -0700 (PDT)
-Received: from localhost ([58.84.24.234])
-        by smtp.gmail.com with ESMTPSA id qe10-20020a17090b4f8a00b0020c899b11f1sm3396527pjb.23.2022.10.27.21.30.47
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=0j4gnCVL6NM7Nbvyj5JHHnZVMzTo3vHJGnU3eakIC8E=;
+        b=LCMKP7yQrxd4/y8f6DZybZMVUz8Nqnj75pXZmKswHMSWb2rvWD9kU6Q5OxMcSnYnrw
+         iFwxAUZf/itRGzSyd03GEdINsKRewZRRDOqMpXILOLKTAahM23Ly3zHIAmzbMeKOK1hV
+         9w5NhaU6+VfM+5zuDo1glGxwSzM3i2RzdinnI+/QyPVMSbkAGMDibRa7l2B3/ubFwv89
+         IVz2LLTnJ+45jn/96ffh+RpKKykaIUfebYA6or5lSM9IDanZQqBrVYuoPumYXU5KqPze
+         pJPlAVHcWjGiLj7kkiUAIpmBdbakEYiLy+VdFCXp6JyyidYfJl92u4gee1xI1ZCfuGV4
+         Tbgg==
+X-Gm-Message-State: ACrzQf0VpOkmmqZTYrgDollczrmjAyAHEfqPTcK0bUMpG9ch6VBzmcwc
+        jb6qSHA8MC8toGpA/wilX7hhosJgcZeTEr0ZWCjuFUxUB2M2TXMxTweeErttwhcCjI+YKCiOfaz
+        PbGoPwYIQhyQuSKqb/Z/O
+X-Received: by 2002:a05:6a00:13aa:b0:56b:c782:107f with SMTP id t42-20020a056a0013aa00b0056bc782107fmr25278011pfg.43.1666935793084;
+        Thu, 27 Oct 2022 22:43:13 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM6je3tb2EpHtv09/a6ZbC6RjzN9BkUCl1cSFqogSHssUiCBTtqnJ4LPqx4BHHYZuBbU8GtJxg==
+X-Received: by 2002:a05:6a00:13aa:b0:56b:c782:107f with SMTP id t42-20020a056a0013aa00b0056bc782107fmr25277992pfg.43.1666935792752;
+        Thu, 27 Oct 2022 22:43:12 -0700 (PDT)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id t1-20020a62d141000000b0056beae3dee2sm2110249pfl.145.2022.10.27.22.43.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Oct 2022 21:30:47 -0700 (PDT)
-From:   "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     linux-fsdevel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-        Aravinda Herle <araherle@in.ibm.com>
-Subject: [RFC 2/2] iomap: Support subpage size dirty tracking to improve write performance
-Date:   Fri, 28 Oct 2022 10:00:33 +0530
-Message-Id: <886076cfa6f547d22765c522177d33cf621013d2.1666928993.git.ritesh.list@gmail.com>
-X-Mailer: git-send-email 2.37.3
-In-Reply-To: <cover.1666928993.git.ritesh.list@gmail.com>
-References: <cover.1666928993.git.ritesh.list@gmail.com>
+        Thu, 27 Oct 2022 22:43:11 -0700 (PDT)
+Date:   Fri, 28 Oct 2022 13:43:07 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: new test on xfs with corrupted sb_inopblock
+Message-ID: <20221028054307.jnxk3bju4qv76lro@zlang-mailbox>
+References: <20221027164254.1472306-1-zlang@kernel.org>
+ <Y1q5Wkkzq/7PIeyL@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Y1q5Wkkzq/7PIeyL@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On a 64k pagesize platforms (specially Power and/or aarch64) with 4k
-filesystem blocksize, this patch should improve the performance by doing
-only the subpage dirty data write.
+On Thu, Oct 27, 2022 at 10:01:14AM -0700, Darrick J. Wong wrote:
+> On Fri, Oct 28, 2022 at 12:42:54AM +0800, Zorro Lang wrote:
+> > There's a known bug fix 392c6de98af1 ("xfs: sanitize sb_inopblock in
+> > xfs_mount_validate_sb"). So try to corrupt the sb_inopblock of xfs,
+> > to cover this bug.
+> > 
+> > Signed-off-by: Zorro Lang <zlang@redhat.com>
+> > ---
+> >  tests/xfs/555     | 27 +++++++++++++++++++++++++++
+> >  tests/xfs/555.out |  4 ++++
+> >  2 files changed, 31 insertions(+)
+> >  create mode 100755 tests/xfs/555
+> >  create mode 100644 tests/xfs/555.out
+> > 
+> > diff --git a/tests/xfs/555 b/tests/xfs/555
+> > new file mode 100755
+> > index 00000000..7f46a9af
+> > --- /dev/null
+> > +++ b/tests/xfs/555
+> > @@ -0,0 +1,27 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2022 Red Hat, Inc.  All Rights Reserved.
+> > +#
+> > +# FS QA Test 555
+> > +#
+> > +# Corrupt xfs sb_inopblock, make sure no crash. This's a test coverage of
+> > +# 392c6de98af1 ("xfs: sanitize sb_inopblock in xfs_mount_validate_sb")
+> 
+> _fixed_by_kernel_commit?
 
-This should also reduce the write amplification since we can now track
-subpage dirty status within state bitmaps. Earlier we had to
-write the entire 64k page even if only a part of it (e.g. 4k) was
-updated.
+Sure
 
-Performance testing of below fio workload reveals ~16x performance
-improvement on nvme with XFS (4k blocksize) on Power (64K pagesize)
-FIO reported write bw scores improved from around ~28 MBps to ~452 MBps.
+> 
+> > +#
+> > +. ./common/preamble
+> > +_begin_fstest auto quick
+> > +
+> > +# real QA test starts here
+> > +_supported_fs xfs
+> > +_require_scratch_nocheck
+> > +
+> > +_scratch_mkfs >>$seqres.full
+> > +
+> > +echo "corrupt inopblock of sb 0"
+> > +_scratch_xfs_set_metadata_field "inopblock" "500" "sb 0" >> $seqres.full
+> > +echo "try to mount ..."
+> > +_try_scratch_mount 2>> $seqres.full && _fail "mount should not succeed"
+> > +
+> > +echo "no crash or hang"
+> 
+> You might want to check the scratch fs to make sure repair will deal
+> with the problem...?
 
-<test_randwrite.fio>
-[global]
-	ioengine=psync
-	rw=randwrite
-	overwrite=1
-	pre_read=1
-	direct=0
-	bs=4k
-	size=1G
-	dir=./
-	numjobs=8
-	fdatasync=1
-	runtime=60
-	iodepth=64
-	group_reporting=1
+I thought it's not a part of the original reproducer, so tried to save this
+time, especially xfs/350 xfs/351 already covered this part testing :) But if
+you think it's worth, I'll add it in next version.
 
-[fio-run]
+Thanks,
+Zorro
 
-Reported-by: Aravinda Herle <araherle@in.ibm.com>
-Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
----
- fs/iomap/buffered-io.c | 53 ++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 51 insertions(+), 2 deletions(-)
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 255f9f92668c..31ee80a996b2 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -58,7 +58,7 @@ iomap_page_create(struct inode *inode, struct folio *folio, unsigned int flags)
- 	else
- 		gfp = GFP_NOFS | __GFP_NOFAIL;
- 
--	iop = kzalloc(struct_size(iop, state, BITS_TO_LONGS(nr_blocks)),
-+	iop = kzalloc(struct_size(iop, state, BITS_TO_LONGS(2 * nr_blocks)),
- 		      gfp);
- 	if (iop) {
- 		spin_lock_init(&iop->state_lock);
-@@ -168,6 +168,48 @@ static void iomap_set_range_uptodate(struct folio *folio,
- 		folio_mark_uptodate(folio);
- }
- 
-+static void iomap_iop_set_range_dirty(struct folio *folio,
-+		struct iomap_page *iop, size_t off, size_t len)
-+{
-+	struct inode *inode = folio->mapping->host;
-+	unsigned int nr_blocks = i_blocks_per_folio(inode, folio);
-+	unsigned first = (off >> inode->i_blkbits) + nr_blocks;
-+	unsigned last = ((off + len - 1) >> inode->i_blkbits) + nr_blocks;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&iop->state_lock, flags);
-+	bitmap_set(iop->state, first, last - first + 1);
-+	spin_unlock_irqrestore(&iop->state_lock, flags);
-+}
-+
-+static void iomap_set_range_dirty(struct folio *folio,
-+		struct iomap_page *iop, size_t off, size_t len)
-+{
-+	if (iop)
-+		iomap_iop_set_range_dirty(folio, iop, off, len);
-+}
-+
-+static void iomap_iop_clear_range_dirty(struct folio *folio,
-+		struct iomap_page *iop, size_t off, size_t len)
-+{
-+	struct inode *inode = folio->mapping->host;
-+	unsigned int nr_blocks = i_blocks_per_folio(inode, folio);
-+	unsigned first = (off >> inode->i_blkbits) + nr_blocks;
-+	unsigned last = ((off + len - 1) >> inode->i_blkbits) + nr_blocks;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&iop->state_lock, flags);
-+	bitmap_clear(iop->state, first, last - first + 1);
-+	spin_unlock_irqrestore(&iop->state_lock, flags);
-+}
-+
-+static void iomap_clear_range_dirty(struct folio *folio,
-+		struct iomap_page *iop, size_t off, size_t len)
-+{
-+	if (iop)
-+		iomap_iop_clear_range_dirty(folio, iop, off, len);
-+}
-+
- static void iomap_finish_folio_read(struct folio *folio, size_t offset,
- 		size_t len, int error)
- {
-@@ -665,6 +707,7 @@ static size_t __iomap_write_end(struct inode *inode, loff_t pos, size_t len,
- 	if (unlikely(copied < len && !folio_test_uptodate(folio)))
- 		return 0;
- 	iomap_set_range_uptodate(folio, iop, offset_in_folio(folio, pos), len);
-+	iomap_set_range_dirty(folio, iop, offset_in_folio(folio, pos), len);
- 	filemap_dirty_folio(inode->i_mapping, folio);
- 	return copied;
- }
-@@ -979,6 +1022,8 @@ static loff_t iomap_folio_mkwrite_iter(struct iomap_iter *iter,
- 		block_commit_write(&folio->page, 0, length);
- 	} else {
- 		WARN_ON_ONCE(!folio_test_uptodate(folio));
-+		iomap_set_range_dirty(folio, to_iomap_page(folio),
-+				offset_in_folio(folio, iter->pos), length);
- 		folio_mark_dirty(folio);
- 	}
- 
-@@ -1354,7 +1399,8 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 	 * invalid, grab a new one.
- 	 */
- 	for (i = 0; i < nblocks && pos < end_pos; i++, pos += len) {
--		if (iop && !test_bit(i, iop->state))
-+		if (iop && (!test_bit(i, iop->state) ||
-+			    !test_bit(i + nblocks, iop->state)))
- 			continue;
- 
- 		error = wpc->ops->map_blocks(wpc, inode, pos);
-@@ -1397,6 +1443,9 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 		}
- 	}
- 
-+	iomap_clear_range_dirty(folio, iop,
-+				offset_in_folio(folio, folio_pos(folio)),
-+				end_pos - folio_pos(folio));
- 	folio_start_writeback(folio);
- 	folio_unlock(folio);
- 
--- 
-2.37.3
+> 
+> --D
+> 
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/555.out b/tests/xfs/555.out
+> > new file mode 100644
+> > index 00000000..36c3446e
+> > --- /dev/null
+> > +++ b/tests/xfs/555.out
+> > @@ -0,0 +1,4 @@
+> > +QA output created by 555
+> > +corrupt inopblock of sb 0
+> > +try to mount ...
+> > +no crash or hang
+> > -- 
+> > 2.31.1
+> > 
+> 
 
