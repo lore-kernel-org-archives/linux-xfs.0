@@ -2,297 +2,215 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E776DC38A02
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Oct 2022 16:56:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5EF8ECAAA1
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Oct 2022 17:03:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230449AbiJ1Q4v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 28 Oct 2022 12:56:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57026 "EHLO
+        id S230414AbiJ1RDU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 28 Oct 2022 13:03:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229871AbiJ1Q4S (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Oct 2022 12:56:18 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80BC53A4A4
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Oct 2022 09:55:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1666976118;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=LXA7Rc8z1607yJ2O9yRvftFn+WKBicrfPZzQj5e9Os8=;
-        b=esqReI6h6wAXS9fx/08Dnx4sKh3w3aA15Ttmc/3eRwhv6Y4Z/IvZF6UEJR6oZcmWHoeF/G
-        kPCxOD6KNyFEApOu2wtnYAxramGehastEUxWyA+zEnNiMpazpKwpAHITnfFYMNe/+6e3fH
-        1UhVnx6iq8V99AvP0/Zub11GPU3vhsQ=
-Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com
- [209.85.160.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-478-C-MpkwbDPZy61mVYqvKs1Q-1; Fri, 28 Oct 2022 12:55:16 -0400
-X-MC-Unique: C-MpkwbDPZy61mVYqvKs1Q-1
-Received: by mail-qt1-f199.google.com with SMTP id cp8-20020a05622a420800b003a4f4f7b621so3636426qtb.6
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Oct 2022 09:55:16 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=LXA7Rc8z1607yJ2O9yRvftFn+WKBicrfPZzQj5e9Os8=;
-        b=lR2KYi4mmQultCC0pe5oduItllYmH9zjfgISm9Xocb0Ei3m+DC3AXTKRJ5vi8DUByc
-         zX8NuEtvL3NfKOXYkRBZDYxZ6biV8UHM95Y/Sc1+LI17J5SARZP1E+tJMfF22H1eej7n
-         WDCqO6FnyjN6sA3bHF0iOZ5x9YOzgZNOTFeDA0Wz0T0IrHynIgNaJKILmD84kso8aGrF
-         iOk9eHGzIFBfI2UWrkzMQOAr8vvriQisfDzOwzL8iHFEPtsMk8ck7AFszl8ndTRi3K7p
-         Sn3xIQEIdTL2XI8cl1yg/XVcfiZ0FjmtpxyhjRodp2lZOvikfYTzJZWhbLrKjaODN2p9
-         00/w==
-X-Gm-Message-State: ACrzQf0wfZFwV+2Acg2/fkoAjRke5gLD1TgMooZRYo59rNNLECg8s1yy
-        FuBdgzOGBEg6/ChTuJeI755j1uS9GTULwLRNLxOT0qrS1IEQM98vWvgnuTbobqcfnwfIQQbHWIf
-        o3TkDcvpsJkxzSry61Tam
-X-Received: by 2002:a05:6214:2346:b0:496:ae16:f602 with SMTP id hu6-20020a056214234600b00496ae16f602mr340753qvb.37.1666976116365;
-        Fri, 28 Oct 2022 09:55:16 -0700 (PDT)
-X-Google-Smtp-Source: AMsMyM5+Ae9pS6X8lf7a20EWBaCftR0TAE+nW851zR4MIar9jtY6YSSb/WYJUg7ic9zZ1Nc5+9NK4w==
-X-Received: by 2002:a05:6214:2346:b0:496:ae16:f602 with SMTP id hu6-20020a056214234600b00496ae16f602mr340728qvb.37.1666976116048;
-        Fri, 28 Oct 2022 09:55:16 -0700 (PDT)
-Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id o24-20020a05620a229800b006ee7923c187sm3195298qkh.42.2022.10.28.09.55.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Oct 2022 09:55:15 -0700 (PDT)
-Date:   Sat, 29 Oct 2022 00:55:10 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 2/4] xfs: refactor filesystem directory block size
- extraction logic
-Message-ID: <20221028165510.aqf5h6hfsq4ia4kt@zlang-mailbox>
-References: <166681099421.3403789.78493769502226810.stgit@magnolia>
- <166681100562.3403789.14498721397451474651.stgit@magnolia>
- <20221027165916.4ttwfx7g66pznsrt@zlang-mailbox>
- <Y1q5yYiIjWole+lj@magnolia>
- <20221028060814.r3lrrnymeqpf4x7t@zlang-mailbox>
- <Y1wBjytToTqRTXC2@magnolia>
+        with ESMTP id S230428AbiJ1RCr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Oct 2022 13:02:47 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BCA67961E;
+        Fri, 28 Oct 2022 10:01:21 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C5B8F629B0;
+        Fri, 28 Oct 2022 17:01:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28567C4347C;
+        Fri, 28 Oct 2022 17:01:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1666976480;
+        bh=jEZoaqF+Fi7IueTWAFeFlWwwWlAqRrSyOpN7BcmcELQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=GpR+9FQrh+iOgwRNtQLAgeCVOia/kibwu48610ebBZehvOw0NniQk7TnNB+QO2j1Z
+         BMT7WI+miTHZ7jFU7EQfduywJaRO/j687dy7ZnnMA+EqwIuElf9+FY3QMik/FUk7Bh
+         14GA+RxtIqkof8I0uJiWQLAVy6osqgE0dGteIR3p8guA0DjtIXFFkQg/0qaiz3u+hE
+         ecpyP8Vain0rhCU/WFu4aiAgGhL51PtTXMrYzBpYHowa5rlnFTGKQO0jsiuWKwwn+w
+         IRoyxq1J91GtWp266tgiEpLes1/X4rwsk8wkDe6CtJgO0hu8pN2a2p2iHdr0CIOLQ/
+         m9yxOteN32Cyg==
+Date:   Fri, 28 Oct 2022 10:01:19 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Aravinda Herle <araherle@in.ibm.com>
+Subject: Re: [RFC 2/2] iomap: Support subpage size dirty tracking to improve
+ write performance
+Message-ID: <Y1wK3x7IketHl+DQ@magnolia>
+References: <cover.1666928993.git.ritesh.list@gmail.com>
+ <886076cfa6f547d22765c522177d33cf621013d2.1666928993.git.ritesh.list@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y1wBjytToTqRTXC2@magnolia>
+In-Reply-To: <886076cfa6f547d22765c522177d33cf621013d2.1666928993.git.ritesh.list@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 28, 2022 at 09:21:35AM -0700, Darrick J. Wong wrote:
-> On Fri, Oct 28, 2022 at 02:08:14PM +0800, Zorro Lang wrote:
-> > On Thu, Oct 27, 2022 at 10:03:05AM -0700, Darrick J. Wong wrote:
-> > > On Fri, Oct 28, 2022 at 12:59:16AM +0800, Zorro Lang wrote:
-> > > > On Wed, Oct 26, 2022 at 12:03:25PM -0700, Darrick J. Wong wrote:
-> > > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > > 
-> > > > > There are a lot of places where we open-code determining the directory
-> > > > > block size for a specific filesystem.  Refactor this into a single
-> > > > > helper to clean up existing tests.
-> > > > > 
-> > > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > > ---
-> > > > 
-> > > > Hmm... sorry I failed to merge this patchset:
-> > > > 
-> > > > $ git am ./20221026_djwong_fstests_refactor_xfs_geometry_computation.mbx
-> > > > Applying: xfs: refactor filesystem feature detection logic
-> > > > Applying: xfs: refactor filesystem directory block size extraction logic
-> > > > error: sha1 information is lacking or useless (common/xfs).
-> > > > error: could not build fake ancestor
-> > > > Patch failed at 0002 xfs: refactor filesystem directory block size extraction logic
-> > > > hint: Use 'git am --show-current-patch=diff' to see the failed patch
-> > > > When you have resolved this problem, run "git am --continue".
-> > > > If you prefer to skip this patch, run "git am --skip" instead.
-> > > > To restore the original branch and stop patching, run "git am --abort".
-> > > 
-> > > I don't know what exactly failed, but if you're ok with pushing your
-> > > working branch to kernel.org, I can rebase my changes atop that and
-> > > send you a pull request.
-> > 
-> > Hi Darrick,
-> > 
-> > Not my working branch, it failed on offical for-next branch too. By checking the
-> > patch 2/4, I found (see below) ...
-> > 
-> > > 
-> > > --D
-> > > 
-> > > > >  common/populate |    4 ++--
-> > > > >  common/xfs      |    9 +++++++++
-> > > > >  tests/xfs/099   |    2 +-
-> > > > >  tests/xfs/100   |    2 +-
-> > > > >  tests/xfs/101   |    2 +-
-> > > > >  tests/xfs/102   |    2 +-
-> > > > >  tests/xfs/105   |    2 +-
-> > > > >  tests/xfs/112   |    2 +-
-> > > > >  tests/xfs/113   |    2 +-
-> > > > >  9 files changed, 18 insertions(+), 9 deletions(-)
-> > > > > 
-> > > > > 
-> > > > > diff --git a/common/populate b/common/populate
-> > > > > index 9fa1a06798..23b2fecf69 100644
-> > > > > --- a/common/populate
-> > > > > +++ b/common/populate
-> > > > > @@ -175,7 +175,7 @@ _scratch_xfs_populate() {
-> > > > >  	_xfs_force_bdev data $SCRATCH_MNT
-> > > > >  
-> > > > >  	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
-> > > > > -	dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> > > > > +	dblksz="$(_xfs_get_dir_blocksize "$SCRATCH_MNT")"
-> > > > >  	crc="$(_xfs_has_feature "$SCRATCH_MNT" crc -v)"
-> > > > >  	if [ $crc -eq 1 ]; then
-> > > > >  		leaf_hdr_size=64
-> > > > > @@ -602,7 +602,7 @@ _scratch_xfs_populate_check() {
-> > > > >  	is_reflink=$(_xfs_has_feature "$SCRATCH_MNT" reflink -v)
-> > > > >  
-> > > > >  	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
-> > > > > -	dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> > > > > +	dblksz="$(_xfs_get_dir_blocksize "$SCRATCH_MNT")"
-> > > > >  	leaf_lblk="$((32 * 1073741824 / blksz))"
-> > > > >  	node_lblk="$((64 * 1073741824 / blksz))"
-> > > > >  	umount "${SCRATCH_MNT}"
-> > > > > diff --git a/common/xfs b/common/xfs
-> > > > > index c7496bce3f..6445bfd9db 100644
-> > > > > --- a/common/xfs
-> > > > > +++ b/common/xfs
-> > > > > @@ -203,6 +203,15 @@ _xfs_is_realtime_file()
-> > 
-> > ...
-> > I can't find this _xfs_is_realtime_file() in my common/xfs, did I miss someone
-> > prepositive patch?
+On Fri, Oct 28, 2022 at 10:00:33AM +0530, Ritesh Harjani (IBM) wrote:
+> On a 64k pagesize platforms (specially Power and/or aarch64) with 4k
+> filesystem blocksize, this patch should improve the performance by doing
+> only the subpage dirty data write.
 > 
-> It was added in the xfs_scrub phase6 functional test that's out for
-> review:
+> This should also reduce the write amplification since we can now track
+> subpage dirty status within state bitmaps. Earlier we had to
+> write the entire 64k page even if only a part of it (e.g. 4k) was
+> updated.
 > 
-> https://lore.kernel.org/fstests/166613311880.868072.17189668251232287066.stgit@magnolia/
-
-Wow, sorry I forgot this one patch, feel free to ping me if your patch not get
-reviewing for long time :)
-
+> Performance testing of below fio workload reveals ~16x performance
+> improvement on nvme with XFS (4k blocksize) on Power (64K pagesize)
+> FIO reported write bw scores improved from around ~28 MBps to ~452 MBps.
 > 
-> That said, this patch doesn't modify _xfs_is_realtime_file; all it does
-> is inserts _xfs_get_dir_blocksize above _xfs_force_bdev.  That's
-> probably where git am got confused.
-
-Could you rebase this patchset to current for-next branch, if you'd like
-to have this change in fstests release of this weekend? That "xfs_scrub
-phase6 functional test" patch is not a simple change, I need time to
-read and test it more before merging it :-D
-
-Thanks,
-Zorro
-
+> <test_randwrite.fio>
+> [global]
+> 	ioengine=psync
+> 	rw=randwrite
+> 	overwrite=1
+> 	pre_read=1
+> 	direct=0
+> 	bs=4k
+> 	size=1G
+> 	dir=./
+> 	numjobs=8
+> 	fdatasync=1
+> 	runtime=60
+> 	iodepth=64
+> 	group_reporting=1
 > 
-> --D
+> [fio-run]
 > 
-> > Thanks,
-> > Zorro
-> > 
-> > > > >  	$XFS_IO_PROG -c 'stat -v' "$1" | grep -q -w realtime
-> > > > >  }
-> > > > >  
-> > > > > +# Get the directory block size of a mounted filesystem.
-> > > > > +_xfs_get_dir_blocksize()
-> > > > > +{
-> > > > > +	local fs="$1"
-> > > > > +
-> > > > > +	$XFS_INFO_PROG "$fs" | grep 'naming.*bsize' | \
-> > > > > +		sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g'
-> > > > > +}
-> > > > > +
-> > > > >  # Set or clear the realtime status of every supplied path.  The first argument
-> > > > >  # is either 'data' or 'realtime'.  All other arguments should be paths to
-> > > > >  # existing directories or empty regular files.
-> > > > > diff --git a/tests/xfs/099 b/tests/xfs/099
-> > > > > index a7eaff6e0c..82bef8ad26 100755
-> > > > > --- a/tests/xfs/099
-> > > > > +++ b/tests/xfs/099
-> > > > > @@ -37,7 +37,7 @@ _scratch_mkfs_xfs > /dev/null
-> > > > >  
-> > > > >  echo "+ mount fs image"
-> > > > >  _scratch_mount
-> > > > > -dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> > > > > +dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
-> > > > >  nr="$((dblksz / 40))"
-> > > > >  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
-> > > > >  leaf_lblk="$((32 * 1073741824 / blksz))"
-> > > > > diff --git a/tests/xfs/100 b/tests/xfs/100
-> > > > > index 79da8cb02c..e638b4ba17 100755
-> > > > > --- a/tests/xfs/100
-> > > > > +++ b/tests/xfs/100
-> > > > > @@ -37,7 +37,7 @@ _scratch_mkfs_xfs > /dev/null
-> > > > >  
-> > > > >  echo "+ mount fs image"
-> > > > >  _scratch_mount
-> > > > > -dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> > > > > +dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
-> > > > >  nr="$((dblksz / 12))"
-> > > > >  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
-> > > > >  leaf_lblk="$((32 * 1073741824 / blksz))"
-> > > > > diff --git a/tests/xfs/101 b/tests/xfs/101
-> > > > > index 64f4705aca..11ed329110 100755
-> > > > > --- a/tests/xfs/101
-> > > > > +++ b/tests/xfs/101
-> > > > > @@ -37,7 +37,7 @@ _scratch_mkfs_xfs > /dev/null
-> > > > >  
-> > > > >  echo "+ mount fs image"
-> > > > >  _scratch_mount
-> > > > > -dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> > > > > +dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
-> > > > >  nr="$((dblksz / 12))"
-> > > > >  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
-> > > > >  leaf_lblk="$((32 * 1073741824 / blksz))"
-> > > > > diff --git a/tests/xfs/102 b/tests/xfs/102
-> > > > > index 24dce43058..43f4539181 100755
-> > > > > --- a/tests/xfs/102
-> > > > > +++ b/tests/xfs/102
-> > > > > @@ -37,7 +37,7 @@ _scratch_mkfs_xfs > /dev/null
-> > > > >  
-> > > > >  echo "+ mount fs image"
-> > > > >  _scratch_mount
-> > > > > -dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> > > > > +dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
-> > > > >  nr="$((16 * dblksz / 40))"
-> > > > >  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
-> > > > >  leaf_lblk="$((32 * 1073741824 / blksz))"
-> > > > > diff --git a/tests/xfs/105 b/tests/xfs/105
-> > > > > index 22a8bf9fb0..002a712883 100755
-> > > > > --- a/tests/xfs/105
-> > > > > +++ b/tests/xfs/105
-> > > > > @@ -37,7 +37,7 @@ _scratch_mkfs_xfs > /dev/null
-> > > > >  
-> > > > >  echo "+ mount fs image"
-> > > > >  _scratch_mount
-> > > > > -dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> > > > > +dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
-> > > > >  nr="$((16 * dblksz / 40))"
-> > > > >  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
-> > > > >  leaf_lblk="$((32 * 1073741824 / blksz))"
-> > > > > diff --git a/tests/xfs/112 b/tests/xfs/112
-> > > > > index bc1ab62895..e2d5932da6 100755
-> > > > > --- a/tests/xfs/112
-> > > > > +++ b/tests/xfs/112
-> > > > > @@ -37,7 +37,7 @@ _scratch_mkfs_xfs > /dev/null
-> > > > >  
-> > > > >  echo "+ mount fs image"
-> > > > >  _scratch_mount
-> > > > > -dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> > > > > +dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
-> > > > >  nr="$((16 * dblksz / 40))"
-> > > > >  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
-> > > > >  leaf_lblk="$((32 * 1073741824 / blksz))"
-> > > > > diff --git a/tests/xfs/113 b/tests/xfs/113
-> > > > > index e820ed96da..9bb2cd304b 100755
-> > > > > --- a/tests/xfs/113
-> > > > > +++ b/tests/xfs/113
-> > > > > @@ -37,7 +37,7 @@ _scratch_mkfs_xfs > /dev/null
-> > > > >  
-> > > > >  echo "+ mount fs image"
-> > > > >  _scratch_mount
-> > > > > -dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> > > > > +dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
-> > > > >  nr="$((128 * dblksz / 40))"
-> > > > >  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
-> > > > >  leaf_lblk="$((32 * 1073741824 / blksz))"
-> > > > > 
-> > > > 
-> > > 
+> Reported-by: Aravinda Herle <araherle@in.ibm.com>
+> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> ---
+>  fs/iomap/buffered-io.c | 53 ++++++++++++++++++++++++++++++++++++++++--
+>  1 file changed, 51 insertions(+), 2 deletions(-)
 > 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 255f9f92668c..31ee80a996b2 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -58,7 +58,7 @@ iomap_page_create(struct inode *inode, struct folio *folio, unsigned int flags)
+>  	else
+>  		gfp = GFP_NOFS | __GFP_NOFAIL;
+>  
+> -	iop = kzalloc(struct_size(iop, state, BITS_TO_LONGS(nr_blocks)),
+> +	iop = kzalloc(struct_size(iop, state, BITS_TO_LONGS(2 * nr_blocks)),
+>  		      gfp);
+>  	if (iop) {
+>  		spin_lock_init(&iop->state_lock);
+> @@ -168,6 +168,48 @@ static void iomap_set_range_uptodate(struct folio *folio,
+>  		folio_mark_uptodate(folio);
+>  }
+>  
+> +static void iomap_iop_set_range_dirty(struct folio *folio,
+> +		struct iomap_page *iop, size_t off, size_t len)
+> +{
+> +	struct inode *inode = folio->mapping->host;
+> +	unsigned int nr_blocks = i_blocks_per_folio(inode, folio);
+> +	unsigned first = (off >> inode->i_blkbits) + nr_blocks;
+> +	unsigned last = ((off + len - 1) >> inode->i_blkbits) + nr_blocks;
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(&iop->state_lock, flags);
+> +	bitmap_set(iop->state, first, last - first + 1);
+> +	spin_unlock_irqrestore(&iop->state_lock, flags);
+> +}
+> +
+> +static void iomap_set_range_dirty(struct folio *folio,
+> +		struct iomap_page *iop, size_t off, size_t len)
+> +{
+> +	if (iop)
+> +		iomap_iop_set_range_dirty(folio, iop, off, len);
+> +}
+> +
+> +static void iomap_iop_clear_range_dirty(struct folio *folio,
+> +		struct iomap_page *iop, size_t off, size_t len)
+> +{
+> +	struct inode *inode = folio->mapping->host;
+> +	unsigned int nr_blocks = i_blocks_per_folio(inode, folio);
+> +	unsigned first = (off >> inode->i_blkbits) + nr_blocks;
+> +	unsigned last = ((off + len - 1) >> inode->i_blkbits) + nr_blocks;
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(&iop->state_lock, flags);
+> +	bitmap_clear(iop->state, first, last - first + 1);
+> +	spin_unlock_irqrestore(&iop->state_lock, flags);
+> +}
+> +
+> +static void iomap_clear_range_dirty(struct folio *folio,
+> +		struct iomap_page *iop, size_t off, size_t len)
+> +{
+> +	if (iop)
+> +		iomap_iop_clear_range_dirty(folio, iop, off, len);
+> +}
+> +
+>  static void iomap_finish_folio_read(struct folio *folio, size_t offset,
+>  		size_t len, int error)
+>  {
+> @@ -665,6 +707,7 @@ static size_t __iomap_write_end(struct inode *inode, loff_t pos, size_t len,
+>  	if (unlikely(copied < len && !folio_test_uptodate(folio)))
+>  		return 0;
+>  	iomap_set_range_uptodate(folio, iop, offset_in_folio(folio, pos), len);
+> +	iomap_set_range_dirty(folio, iop, offset_in_folio(folio, pos), len);
+>  	filemap_dirty_folio(inode->i_mapping, folio);
+>  	return copied;
+>  }
+> @@ -979,6 +1022,8 @@ static loff_t iomap_folio_mkwrite_iter(struct iomap_iter *iter,
+>  		block_commit_write(&folio->page, 0, length);
+>  	} else {
+>  		WARN_ON_ONCE(!folio_test_uptodate(folio));
+> +		iomap_set_range_dirty(folio, to_iomap_page(folio),
+> +				offset_in_folio(folio, iter->pos), length);
+>  		folio_mark_dirty(folio);
+>  	}
+>  
+> @@ -1354,7 +1399,8 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+>  	 * invalid, grab a new one.
+>  	 */
+>  	for (i = 0; i < nblocks && pos < end_pos; i++, pos += len) {
+> -		if (iop && !test_bit(i, iop->state))
+> +		if (iop && (!test_bit(i, iop->state) ||
+> +			    !test_bit(i + nblocks, iop->state)))
 
+Hmm.  So I /think/ these two test_bit()s mean that we skip any folio
+sub-block if it's either notuptodate or not dirty?
+
+I /think/ we only need to check the dirty status, right?  Like willy
+said? :)
+
+That said... somewhere we probably ought to check the consistency of the
+two bits to ensure that they're not (dirty && !uptodate), given our
+horrible history of getting things wrong with page and bufferhead state
+bits.
+
+Admittedly I'm not thrilled at the reintroduction of page and iop dirty
+state that are updated in separate places, but OTOH the write
+amplification here is demonstrably horrifying as you point out so it's
+clearly necessary.
+
+Maybe we need a debugging function that will check the page and iop
+state, and call it every time we go in and out of critical iomap
+functions (write, writeback, dropping pages, etc)
+
+--D
+
+>  			continue;
+>  
+>  		error = wpc->ops->map_blocks(wpc, inode, pos);
+> @@ -1397,6 +1443,9 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+>  		}
+>  	}
+>  
+> +	iomap_clear_range_dirty(folio, iop,
+> +				offset_in_folio(folio, folio_pos(folio)),
+> +				end_pos - folio_pos(folio));
+>  	folio_start_writeback(folio);
+>  	folio_unlock(folio);
+>  
+> -- 
+> 2.37.3
+> 
