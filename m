@@ -2,146 +2,85 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48509FA3742
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Oct 2022 17:42:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61925ECAAA1
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Oct 2022 18:15:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230295AbiJ1Rmt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 28 Oct 2022 13:42:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46666 "EHLO
+        id S230116AbiJ1SPt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 28 Oct 2022 14:15:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39954 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230196AbiJ1Rm2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Oct 2022 13:42:28 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 476EE239228;
-        Fri, 28 Oct 2022 10:42:12 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D929E629E8;
-        Fri, 28 Oct 2022 17:42:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48AC9C433D6;
-        Fri, 28 Oct 2022 17:42:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666978931;
-        bh=RxTaVkDsCLZzGO/RDFqrWwUqp+ac6c4zJrkEz+Q3fe0=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=pogLffJIkmSe6hHyAxOeigThZpu+JvrdiUH3NTB71/bt6KuirwHpH+jvoazptrDDO
-         oUA8PgfJC2l4Th1ijR2htyv33Ictght5xoj7KnoMmdFnUqe4nZUNU/6ZUgqXNTidu5
-         gL8UJ7zsdKPpnvjZL1I+5D2qdPe5u6Pxb2ddqF2zf+3aL7qd307Q5FVvUYZWe0BSVj
-         OVXejAbtPea3aFuy1Wcoa44DjzkvZUeTjAluYe+qv7b1qGy/9+dW2YVp9RtA3n4GBl
-         NetstZgL8qfgP+jfftdkowRL3n9dJwtNQYO13tZkkrsBf1LkZviL8lJhiD1XfNs49/
-         R0YIRK+0R4maQ==
-Subject: [PATCH 4/4] common: simplify grep pipe sed interactions
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org, guaneryu@gmail.com, zlang@redhat.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Fri, 28 Oct 2022 10:42:10 -0700
-Message-ID: <166697893084.4183768.1057318180034267637.stgit@magnolia>
-In-Reply-To: <166697890818.4183768.10822596619783607332.stgit@magnolia>
-References: <166697890818.4183768.10822596619783607332.stgit@magnolia>
-User-Agent: StGit/0.19
+        with ESMTP id S230029AbiJ1SPs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Oct 2022 14:15:48 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 501121DF433;
+        Fri, 28 Oct 2022 11:15:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=ZlI2chvRYb2y9PurSe5IwUlJzWP/UEWczmRM1gvoFUQ=; b=JGUnpCk9FYA0l0ezvRgHDZ2hy4
+        2tNXDVQ5LJZwSEV0qCn1nBnxmC3h9Z61+miYSFLoSIPLczoznJ1LUg+uJOmzqoLtY6M3cFIbjOZMn
+        La7gL6YJRrzJAaK4ZQkTDbPIE7lozSx/gPnZYnfDuZalpOc3HODFTbx+pj4YyTJuZV7BNg6g/h1/n
+        2ny91/mPyWrcjLh1RotU3CEjNv/XWH+p4s/ebsflwNTDraZybo5JWRXP8ymQnBBiyDDVQySfGF8F6
+        WyG1yvYffLjK7ysxrtS+gcPfzbHqgxvl+oqWcPy/pea+lRg3IyCzQsMfMasytbkQZl+5Tjol2pMWi
+        ht7frLtA==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1ooTtN-001RbN-61; Fri, 28 Oct 2022 18:15:41 +0000
+Date:   Fri, 28 Oct 2022 19:15:41 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        Aravinda Herle <araherle@in.ibm.com>
+Subject: Re: [RFC 2/2] iomap: Support subpage size dirty tracking to improve
+ write performance
+Message-ID: <Y1wcTUxlo5zinsg3@casper.infradead.org>
+References: <cover.1666928993.git.ritesh.list@gmail.com>
+ <886076cfa6f547d22765c522177d33cf621013d2.1666928993.git.ritesh.list@gmail.com>
+ <Y1wK3x7IketHl+DQ@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Y1wK3x7IketHl+DQ@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Oct 28, 2022 at 10:01:19AM -0700, Darrick J. Wong wrote:
+> On Fri, Oct 28, 2022 at 10:00:33AM +0530, Ritesh Harjani (IBM) wrote:
+> > Performance testing of below fio workload reveals ~16x performance
+> > improvement on nvme with XFS (4k blocksize) on Power (64K pagesize)
+> > FIO reported write bw scores improved from around ~28 MBps to ~452 MBps.
+> > 
+> > <test_randwrite.fio>
+> > [global]
+> > 	ioengine=psync
+> > 	rw=randwrite
+> > 	overwrite=1
+> > 	pre_read=1
+> > 	direct=0
+> > 	bs=4k
+> > 	size=1G
+> > 	dir=./
+> > 	numjobs=8
+> > 	fdatasync=1
+> > 	runtime=60
+> > 	iodepth=64
+> > 	group_reporting=1
+>
+> Admittedly I'm not thrilled at the reintroduction of page and iop dirty
+> state that are updated in separate places, but OTOH the write
+> amplification here is demonstrably horrifying as you point out so it's
+> clearly necessary.
 
-Zorro pointed out that the idiom "program | grep | sed" isn't necessary
-for field extraction -- sed is perfectly capable of performing a
-substitution and only printing the lines that match that substitution.
-Do that for the common helpers.
+Well, *something* is necessary.  I worked on a different approach that
+would have similar effects for this exact workload, which was to submit
+the I/O for O_SYNC while we still know which part of the page we
+dirtied.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- common/ext4     |    9 +++++++++
- common/populate |    4 ++--
- common/xfs      |   11 ++++-------
- 3 files changed, 15 insertions(+), 9 deletions(-)
+Previous discussion:
+https://lore.kernel.org/all/YQlgjh2R8OzJkFoB@casper.infradead.org/
 
-
-diff --git a/common/ext4 b/common/ext4
-index f4c3c4139a..4a2eaa157f 100644
---- a/common/ext4
-+++ b/common/ext4
-@@ -191,3 +191,12 @@ _scratch_ext4_options()
- 	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
- 		SCRATCH_OPTIONS="$SCRATCH_OPTIONS ${log_opt}"
- }
-+
-+# Get the inode flags for a particular inode number
-+_ext4_get_inum_iflags() {
-+	local dev="$1"
-+	local inumber="$2"
-+
-+	debugfs -R "stat <${inumber}>" "${dev}" 2> /dev/null | \
-+			sed -n 's/^.*Flags: \([0-9a-fx]*\).*$/\1/p'
-+}
-diff --git a/common/populate b/common/populate
-index d9d4c6c300..6e00499734 100644
---- a/common/populate
-+++ b/common/populate
-@@ -641,7 +641,7 @@ __populate_check_ext4_dformat() {
- 	extents=0
- 	etree=0
- 	debugfs -R "stat <${inode}>" "${dev}" 2> /dev/null | grep 'ETB[0-9]' -q && etree=1
--	iflags="$(debugfs -R "stat <${inode}>" "${dev}" 2> /dev/null | grep 'Flags:' | sed -e 's/^.*Flags: \([0-9a-fx]*\).*$/\1/g')"
-+	iflags="$(_ext4_get_inum_iflags "${dev}" "${inode}")"
- 	test "$(echo "${iflags}" | awk '{print and(strtonum($1), 0x80000);}')" -gt 0 && extents=1
- 
- 	case "${format}" in
-@@ -688,7 +688,7 @@ __populate_check_ext4_dir() {
- 
- 	htree=0
- 	inline=0
--	iflags="$(debugfs -R "stat <${inode}>" "${dev}" 2> /dev/null | grep 'Flags:' | sed -e 's/^.*Flags: \([0-9a-fx]*\).*$/\1/g')"
-+	iflags="$(_ext4_get_inum_iflags "${dev}" "${inode}")"
- 	test "$(echo "${iflags}" | awk '{print and(strtonum($1), 0x1000);}')" -gt 0 && htree=1
- 	test "$(echo "${iflags}" | awk '{print and(strtonum($1), 0x10000000);}')" -gt 0 && inline=1
- 
-diff --git a/common/xfs b/common/xfs
-index a995e0b5da..4f2cd46c91 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -179,8 +179,7 @@ _xfs_get_rtextents()
- {
- 	local path="$1"
- 
--	$XFS_INFO_PROG "$path" | grep 'rtextents' | \
--		sed -e 's/^.*rtextents=\([0-9]*\).*$/\1/g'
-+	$XFS_INFO_PROG "$path" | sed -n "s/^.*rtextents=\([[:digit:]]*\).*/\1/p"
- }
- 
- # Get the realtime extent size of a mounted filesystem.
-@@ -188,8 +187,7 @@ _xfs_get_rtextsize()
- {
- 	local path="$1"
- 
--	$XFS_INFO_PROG "$path" | grep 'realtime.*extsz' | \
--		sed -e 's/^.*extsz=\([0-9]*\).*$/\1/g'
-+	$XFS_INFO_PROG "$path" | sed -n "s/^.*realtime.*extsz=\([[:digit:]]*\).*/\1/p"
- }
- 
- # Get the size of an allocation unit of a file.  Normally this is just the
-@@ -217,8 +215,7 @@ _xfs_get_dir_blocksize()
- {
- 	local fs="$1"
- 
--	$XFS_INFO_PROG "$fs" | grep 'naming.*bsize' | \
--		sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g'
-+	$XFS_INFO_PROG "$fs" | sed -n "s/^naming.*bsize=\([[:digit:]]*\).*/\1/p"
- }
- 
- # Set or clear the realtime status of every supplied path.  The first argument
-@@ -1267,7 +1264,7 @@ _force_xfsv4_mount_options()
- # Find AG count of mounted filesystem
- _xfs_mount_agcount()
- {
--	$XFS_INFO_PROG "$1" | grep agcount= | sed -e 's/^.*agcount=\([0-9]*\),.*$/\1/g'
-+	$XFS_INFO_PROG "$1" | sed -n "s/^.*agcount=\([[:digit:]]*\).*/\1/p"
- }
- 
- # Wipe the superblock of each XFS AGs
-
+Actual patches:
+https://lore.kernel.org/all/20220503064008.3682332-1-willy@infradead.org/
