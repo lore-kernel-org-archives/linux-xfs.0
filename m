@@ -2,175 +2,249 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD2BFC38A02
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Oct 2022 21:04:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8EDAECAAA1
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Oct 2022 21:30:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229721AbiJ1VE3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 28 Oct 2022 17:04:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46854 "EHLO
+        id S229777AbiJ1VaX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 28 Oct 2022 17:30:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229574AbiJ1VE2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Oct 2022 17:04:28 -0400
-Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CABE394
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Oct 2022 14:04:27 -0700 (PDT)
-Received: by mail-pf1-x433.google.com with SMTP id b29so5750652pfp.13
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Oct 2022 14:04:27 -0700 (PDT)
+        with ESMTP id S229828AbiJ1VaW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Oct 2022 17:30:22 -0400
+Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07D2265571
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Oct 2022 14:30:19 -0700 (PDT)
+Received: by mail-pl1-x632.google.com with SMTP id io19so5909529plb.8
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Oct 2022 14:30:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=t8gVBAAQNTa1UUGNyaVi8QdtM1gfYatSxYmPX/eG+f8=;
-        b=fAemIDXylENS9+k3cOPLVDWC2tiF3ewXKO65OSR+O7WeKvgguPh5PuZwDlPP+sjxSg
-         w6D/s1WTWbTiVMCK6FIO/mzNh11PX+LfhGwpGkFYMe8+wu1epWsq5S/jfCY09ZuCOhqC
-         MFgUvd1eRpHlITWZDb4dwO91m7fEhhr/Oj2Fhjg675FWllM1CR236tLrPLY7sPrN+7yt
-         5LPxHnK+0L4piWsUKspPwGJ4eSxgcTWT9HRxSc+c5vAiGD6tLLPHkKjxusy/xE2vt0Aw
-         FjPG8QFoYLgo2wDuVnrRmzselnIrlVfbMZCAeMTm44ylvyNqhH0hK+kOIBrZblgQc8eO
-         HuVg==
+        bh=Fmxg2tyoUuoiHimVuX770qlE81SQR/8pvaE/82H+V+g=;
+        b=ahjoeP9VNIc2UvNEcmFTsso+T72puU0c9bCXGJnd5lskZm2Qlw1ZH/xAgwEBwbN92u
+         bD5MtztBuLirpmtsFRUALLQ9hR8fJyQMDPdPCuL2yVsh1kqcuFEGx04Qr6z04aQZIrsD
+         8QJuVMcQwQqLJRNjKCW8J0eQ7xhZynNHTara8hZRyg3oANxmznCWxYjhMv2vS5u4YW9S
+         qcxBDF4kF7LLVhkeifL7oJLRuR+SGYTVZ1peNaNB6jpWOrgtzFhppuE9hLUC/L9kRERd
+         ZSnHx4efkDMn85qoHYusxcVxvOjkCksCG/Fg3sRZqJA+GwGZa6NDmLk9V0TAUSOpWSjM
+         r7yw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=t8gVBAAQNTa1UUGNyaVi8QdtM1gfYatSxYmPX/eG+f8=;
-        b=G9IC+9heH5Dr/QiI8Ou3n3F/Lw7HPmfJlZamJDWgUL7J1tNW34s8I7Bhewzpi+3DeS
-         coUixPKK9mym00h1woM4zmzgqix9otG9tJdTn5GNPKizGxwFzZVN6dZEk2l4rqMtxLGB
-         CmiynNF/vvDYE20xfcg/VIeb6X0kj/dJx6zAPXWLrK8ipthfJlKXk1tiBb/6nGm6MhfH
-         zguEzKqyCrOnXZqtjFE95XyPoGXVUApdDbRV124x2IB/Yir/3FCuYA+xaL3o8FaVAK9u
-         XYS7gDRWl92WNnT5YmWyMMWCG/bdDkQipnKzMxtdDSiBy4MuX+SWIZqrlgetkTLF9+za
-         DOjw==
-X-Gm-Message-State: ACrzQf1nY/BX1mSCB21izr8nrr7+rsdOntI2WGkhifYsL2/YapOIIxpL
-        6DXtvjlQFNY1OioHUNNDBU7fjw==
-X-Google-Smtp-Source: AMsMyM6EFybQ0U5a5Yy1OMoItgCFEVdH7LEQW2MIAVprbfZ8LPNStKA7hFgNOMoMWZCaJJeDVPyTQA==
-X-Received: by 2002:a05:6a00:13aa:b0:56b:c782:107f with SMTP id t42-20020a056a0013aa00b0056bc782107fmr990982pfg.43.1666991066509;
-        Fri, 28 Oct 2022 14:04:26 -0700 (PDT)
+        bh=Fmxg2tyoUuoiHimVuX770qlE81SQR/8pvaE/82H+V+g=;
+        b=ipaCi+ozZrJNVjq8Ewql7nyuRZ2hfD49caeB3ibjN87a5LtivLBjGEJK6ZV/0JdS5K
+         IaTURqkCIKGtUuVhdI3LrxYbim5/dg2Om1rMophu0XMb4RnYXTEDrrDEKPvcm5B/iKM9
+         Se5nRR6v6ZCt9J9F6XqzjHT59BFb4CNGLjqeagMr03i/F3TKTS3FngnnqS+LQ4MMy0qn
+         osaUwCMcmMBrAXg4XsL1/x5dKMQuJ6T1PaA+UrvxkMuE/1QI2pGYH0CCsKKM8plKCVtN
+         uHYb1nwO5TT3tY3TSKL14QiOiBTXETb1khK2R74YntACcVWe8EGPB5Zd6jlpDpVJarpr
+         NFYA==
+X-Gm-Message-State: ACrzQf23L9+u0uwTnErKzuQXVI4FpFkdo4x+cCG8liBYc3JHbsixyk3Z
+        k7wyd/pS9zZ2plVxDl6NPpeYCsX8Ch5D3w==
+X-Google-Smtp-Source: AMsMyM710piE0MfyVhTC9yyWsn6VRk/+arahwfjqHwtZ8Xmea8PdgkKJ21bX8mo09LzdiaW9inJ/Vg==
+X-Received: by 2002:a17:902:cec8:b0:186:8553:79d4 with SMTP id d8-20020a170902cec800b00186855379d4mr1027373plg.148.1666992618489;
+        Fri, 28 Oct 2022 14:30:18 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au. [49.181.106.210])
-        by smtp.gmail.com with ESMTPSA id bd13-20020a656e0d000000b0043c9da02729sm3097359pgb.6.2022.10.28.14.04.25
+        by smtp.gmail.com with ESMTPSA id f13-20020a63f74d000000b00462612c2699sm3130810pgk.86.2022.10.28.14.30.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Oct 2022 14:04:25 -0700 (PDT)
+        Fri, 28 Oct 2022 14:30:18 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1ooWWc-007Y9a-G7; Sat, 29 Oct 2022 08:04:22 +1100
-Date:   Sat, 29 Oct 2022 08:04:22 +1100
+        id 1ooWve-007Yd5-TP; Sat, 29 Oct 2022 08:30:14 +1100
+Date:   Sat, 29 Oct 2022 08:30:14 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Aravinda Herle <araherle@in.ibm.com>
-Subject: Re: [RFC 2/2] iomap: Support subpage size dirty tracking to improve
- write performance
-Message-ID: <20221028210422.GC3600936@dread.disaster.area>
-References: <cover.1666928993.git.ritesh.list@gmail.com>
- <886076cfa6f547d22765c522177d33cf621013d2.1666928993.git.ritesh.list@gmail.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: redirty eof folio on truncate to avoid filemap flush
+Message-ID: <20221028213014.GD3600936@dread.disaster.area>
+References: <20221028130411.977076-1-bfoster@redhat.com>
+ <20221028131109.977581-1-bfoster@redhat.com>
+ <Y1we59XylviZs+Ry@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <886076cfa6f547d22765c522177d33cf621013d2.1666928993.git.ritesh.list@gmail.com>
+In-Reply-To: <Y1we59XylviZs+Ry@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 28, 2022 at 10:00:33AM +0530, Ritesh Harjani (IBM) wrote:
-> On a 64k pagesize platforms (specially Power and/or aarch64) with 4k
-> filesystem blocksize, this patch should improve the performance by doing
-> only the subpage dirty data write.
+On Fri, Oct 28, 2022 at 02:26:47PM -0400, Brian Foster wrote:
+> On Fri, Oct 28, 2022 at 09:11:09AM -0400, Brian Foster wrote:
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> > 
+> > Here's a quick prototype of "option 3" described in my previous mail.
+> > This has been spot tested and confirmed to prevent the original stale
+> > data exposure problem. More thorough regression testing is still
+> > required. Barring unforeseen issues with that, however, I think this is
+> > tentatively my new preferred option. The primary reason for that is it
+> > avoids looking at extent state and is more in line with what iomap based
+> > zeroing should be doing more generically.
+> > 
+> > Because of that, I think this provides a bit more opportunity for follow
+> > on fixes (there are other truncate/zeroing problems I've come across
+> > during this investigation that still need fixing), cleanup and
+> > consolidation of the zeroing code. For example, I think the trajectory
+> > of this could look something like:
+> > 
+> > - Genericize a bit more to handle all truncates.
+> > - Repurpose iomap_truncate_page() (currently only used by XFS) into a
+> >   unique implementation from zero range that does explicit zeroing
+> >   instead of relying on pagecache truncate.
+> > - Refactor XFS ranged zeroing to an abstraction that uses a combination
+> >   of iomap_zero_range() and the new iomap_truncate_page().
+> > 
 > 
-> This should also reduce the write amplification since we can now track
-> subpage dirty status within state bitmaps. Earlier we had to
-> write the entire 64k page even if only a part of it (e.g. 4k) was
-> updated.
+> After playing with this and thinking a bit more about the above, I think
+> I managed to come up with an iomap_truncate_page() prototype that DTRT
+> based on this. Only spot tested so far, needs to pass iomap_flags to the
+> other bmbt_to_iomap() calls to handle the cow fork, undoubtedly has
+> other bugs/warts, etc. etc. This is just a quick prototype to
+> demonstrate the idea, which is essentially to check dirty state along
+> with extent state while under lock and transfer that state back to iomap
+> so it can decide whether it can shortcut or forcibly perform the zero.
 > 
-> Performance testing of below fio workload reveals ~16x performance
-> improvement on nvme with XFS (4k blocksize) on Power (64K pagesize)
-> FIO reported write bw scores improved from around ~28 MBps to ~452 MBps.
+> In a nutshell, IOMAP_TRUNC_PAGE asks the fs to check dirty state while
+> under lock and implies that the range is sub-block (single page).
+> IOMAP_F_TRUNC_PAGE on the imap informs iomap that the range was in fact
+> dirty, so perform the zero via buffered write regardless of extent
+> state.
+
+I'd much prefer we fix this in the iomap infrastructure - failing to
+zero dirty data in memory over an unwritten extent isn't an XFS bug,
+so we shouldn't be working around it in XFS like we did previously.
+
+I don't think this should be call "IOMAP_TRUNC_PAGE", though,
+because that indicates the caller context, not what we are asking
+the internal iomap code to do. What we are really asking is for
+iomap_zero_iter() to do is zero the page cache if it exists in
+memory, otherwise ignore unwritten/hole pages.  Hence I think a name
+like IOMAP_ZERO_PAGECACHE is more appropriate,
+
 > 
-> <test_randwrite.fio>
-> [global]
-> 	ioengine=psync
-> 	rw=randwrite
-> 	overwrite=1
-> 	pre_read=1
-> 	direct=0
-> 	bs=4k
-> 	size=1G
-> 	dir=./
-> 	numjobs=8
-> 	fdatasync=1
-> 	runtime=60
-> 	iodepth=64
-> 	group_reporting=1
+> Brian
 > 
-> [fio-run]
+> --- 8< ---
 > 
-> Reported-by: Aravinda Herle <araherle@in.ibm.com>
-> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 91ee0b308e13..14a9734b2838 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -899,7 +899,8 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+>  	loff_t written = 0;
+>  
+>  	/* already zeroed?  we're done. */
+> -	if (srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN)
+> +	if ((srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN) &&
+> +	    !(srcmap->flags & IOMAP_F_TRUNC_PAGE))
+>  		return length;
 
-To me, this is a fundamental architecture change in the way iomap
-interfaces with the page cache and filesystems. Folio based dirty
-tracking is top down, whilst filesystem block based dirty tracking
-*needs* to be bottom up.
+Why even involve the filesystem in this? We can do this directly
+in iomap_zero_iter() with:
 
-The bottom up approach is what bufferheads do, and it requires a
-much bigger change that just adding dirty region tracking to the
-iomap write and writeback paths.
+	if ((srcmap->type == IOMAP_HOLE)
+		return;
+	if (srcmap->type == IOMAP_UNWRITTEN) {
+		if (!(iter->flags & IOMAP_ZERO_PAGECACHE))
+			return;
+		if (!filemap_range_needs_writeback(inode->i_mapping,
+			    iomap->offset, iomap->offset + iomap->length))
+			return;
+	}
 
-That is, moving to tracking dirty regions on a filesystem block
-boundary brings back all the coherency problems we had with
-trying to keep bufferhead dirty state coherent with page dirty
-state. This was one of the major simplifications that the iomap
-infrastructure brought to the table - all the dirty tracking is done
-by the page cache, and the filesystem has nothing to do with it at
-all....
+It probably also warrants a coment that a clean folio over EOF on an
+unwritten extent already contains zeros, so we're only interested in
+folios that *have been dirtied* over this extent. If it's under
+writeback, we should still be zeroing because it will shortly
+contain real data on disk and so it needs to be zeroed and
+redirtied....
 
-IF we are going to change this, then there needs to be clear rules
-on how iomap dirty state is kept coherent with the folio dirty
-state, and there need to be checks placed everywhere to ensure that
-the rules are followed and enforced.
+> @@ -916,6 +917,8 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+>  		if (bytes > folio_size(folio) - offset)
+>  			bytes = folio_size(folio) - offset;
+>  
+> +		trace_printk("%d: ino 0x%lx offset 0x%lx bytes 0x%lx\n",
+> +			__LINE__, folio->mapping->host->i_ino, offset, bytes);
+>  		folio_zero_range(folio, offset, bytes);
+>  		folio_mark_accessed(folio);
+>  
+> @@ -933,6 +936,17 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+>  	return written;
+>  }
+>  
+> +static int
+> +__iomap_zero_range(struct iomap_iter *iter, bool *did_zero,
+> +		   const struct iomap_ops *ops)
+> +{
+> +	int ret;
+> +
+> +	while ((ret = iomap_iter(iter, ops)) > 0)
+> +		iter->processed = iomap_zero_iter(iter, did_zero);
+> +	return ret;
+> +}
 
-So what are the rules? If the folio is dirty, it must have at least one
-dirty region? If the folio is clean, can it have dirty regions?
+I'd just leave this simple loop open coded in the two callers.
 
-What happens to the dirty regions when truncate zeros part of a page
-beyond EOF? If the iomap regions are clean, do they need to be
-dirtied? If the regions are dirtied, do they need to be cleaned?
-Does this hold for all trailing filesystem blocks in the (multipage)
-folio, of just the one that spans the new EOF?
+> +
+>  int
+>  iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
+>  		const struct iomap_ops *ops)
+> @@ -943,11 +957,8 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
+>  		.len		= len,
+>  		.flags		= IOMAP_ZERO,
+>  	};
+> -	int ret;
+>  
+> -	while ((ret = iomap_iter(&iter, ops)) > 0)
+> -		iter.processed = iomap_zero_iter(&iter, did_zero);
+> -	return ret;
+> +	return __iomap_zero_range(&iter, did_zero, ops);
+>  }
+>  EXPORT_SYMBOL_GPL(iomap_zero_range);
+>  
+> @@ -957,11 +968,17 @@ iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+>  {
+>  	unsigned int blocksize = i_blocksize(inode);
+>  	unsigned int off = pos & (blocksize - 1);
+> +	struct iomap_iter iter = {
+> +		.inode		= inode,
+> +		.pos		= pos,
+> +		.len		= blocksize - off,
+> +		.flags		= IOMAP_ZERO | IOMAP_TRUNC_PAGE,
+> +	};
+>  
+>  	/* Block boundary? Nothing to do */
+>  	if (!off)
+>  		return 0;
+> -	return iomap_zero_range(inode, pos, blocksize - off, did_zero, ops);
+> +	return __iomap_zero_range(&iter, did_zero, ops);
+>  }
+>  EXPORT_SYMBOL_GPL(iomap_truncate_page);
+>  
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 07da03976ec1..16d9b838e82d 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -915,6 +915,7 @@ xfs_buffered_write_iomap_begin(
+>  	int			allocfork = XFS_DATA_FORK;
+>  	int			error = 0;
+>  	unsigned int		lockmode = XFS_ILOCK_EXCL;
+> +	u16			iomap_flags = 0;
+>  
+>  	if (xfs_is_shutdown(mp))
+>  		return -EIO;
+> @@ -942,6 +943,10 @@ xfs_buffered_write_iomap_begin(
+>  	if (error)
+>  		goto out_unlock;
+>  
+> +	if ((flags & IOMAP_TRUNC_PAGE) &&
+> +	    filemap_range_needs_writeback(VFS_I(ip)->i_mapping, offset, offset))
+> +			iomap_flags |= IOMAP_F_TRUNC_PAGE;
 
-What happens with direct extent manipulation like fallocate()
-operations? These invalidate the parts of the page cache over the
-range we are punching, shifting, etc, without interacting directly
-with iomap, so do we now have to ensure that the sub-folio dirty
-regions are also invalidated correctly? i.e. do functions like
-xfs_flush_unmap_range() need to become iomap infrastructure so that
-they can update sub-folio dirty ranges correctly?
-
-What about the
-folio_mark_dirty()/filemap_dirty_folio()/.folio_dirty()
-infrastructure? iomap currently treats this as top down, so it
-doesn't actually call back into iomap to mark filesystem blocks
-dirty. This would need to be rearchitected to match
-block_dirty_folio() where the bufferheads on the page are marked
-dirty before the folio is marked dirty by external operations....
-
-The easy part of this problem is tracking dirty state on a
-filesystem block boundaries. The *hard part* maintaining coherency
-with the page cache, and none of that has been done yet. I'd prefer
-that we deal with this problem once and for all at the page cache
-level because multi-page folios mean even when the filesystem block
-is the same as PAGE_SIZE, we have this sub-folio block granularity
-tracking issue.
-
-As it is, we already have the capability for the mapping tree to
-have multiple indexes pointing to the same folio - perhaps it's time
-to start thinking about using filesystem blocks as the mapping tree
-index rather than PAGE_SIZE chunks, so that the page cache can then
-track dirty state on filesystem block boundaries natively and
-this whole problem goes away. We have to solve this sub-folio dirty
-tracking problem for multi-page folios anyway, so it seems to me
-that we should solve the sub-page block size dirty tracking problem
-the same way....
+As per above, I don't think we should be putting this check in the
+filesystem. That simplifies this a lot as filesystems don't need to
+know anything about how iomap manages the page cache for the
+filesystem...
 
 Cheers,
 
