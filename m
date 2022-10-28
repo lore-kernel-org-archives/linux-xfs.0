@@ -2,350 +2,260 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE228ECAAA1
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Oct 2022 01:37:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BF03ECAAA1
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Oct 2022 01:52:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233622AbiJ1Bht (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Oct 2022 21:37:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59306 "EHLO
+        id S229531AbiJ1Bwn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Oct 2022 21:52:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60116 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234030AbiJ1Bhs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Oct 2022 21:37:48 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A3239F769;
-        Thu, 27 Oct 2022 18:37:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1666921067; x=1698457067;
-  h=date:from:to:cc:subject:message-id:references:
-   content-transfer-encoding:in-reply-to:mime-version;
-  bh=9ivB8YN/A0hiycVN1sAG0pgWfkwvRcoqpeQraBf95iU=;
-  b=V8fM/uPezkVbPUn0unlTUON64Zl+P8qqZQEE/aqQ68khEpsfvM/Kr3Xn
-   Mjrgv/dVmxu1Kq5/aTTFw0Al+3RsaMBWQ2SW49VJVmvSfMyEYkp+dEsnU
-   6QVF2FQXaJiANrXBL4LwmlZmcMbcZOY3nvxqVJTvUptgfbpghteVNKT9X
-   uN9J7qzQD9Mi2l0LKtHNuqGjCi11K5AJ9Yn7P9NhGBNwhve9KJd7/G8rl
-   Ka88N4ALMa7KCKoxDJi5/OPHEEIQbBQYQxfbULj5hFzaT01z1cfavNu8l
-   cBp9C8idbzuDGTmz0EegY50wYXga6Q+qqdxVz8Nt/63itfB7dBqBFNMoj
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10513"; a="310081654"
-X-IronPort-AV: E=Sophos;i="5.95,219,1661842800"; 
-   d="scan'208";a="310081654"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2022 18:37:45 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10513"; a="807660484"
-X-IronPort-AV: E=Sophos;i="5.95,219,1661842800"; 
-   d="scan'208";a="807660484"
-Received: from fmsmsx602.amr.corp.intel.com ([10.18.126.82])
-  by orsmga005.jf.intel.com with ESMTP; 27 Oct 2022 18:37:44 -0700
-Received: from fmsmsx610.amr.corp.intel.com (10.18.126.90) by
- fmsmsx602.amr.corp.intel.com (10.18.126.82) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 27 Oct 2022 18:37:44 -0700
-Received: from fmsmsx612.amr.corp.intel.com (10.18.126.92) by
- fmsmsx610.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 27 Oct 2022 18:37:43 -0700
-Received: from FMSEDG603.ED.cps.intel.com (10.1.192.133) by
- fmsmsx612.amr.corp.intel.com (10.18.126.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31 via Frontend Transport; Thu, 27 Oct 2022 18:37:43 -0700
-Received: from NAM10-DM6-obe.outbound.protection.outlook.com (104.47.58.106)
- by edgegateway.intel.com (192.55.55.68) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2375.31; Thu, 27 Oct 2022 18:37:43 -0700
+        with ESMTP id S234030AbiJ1Bwm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Oct 2022 21:52:42 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B604AD98B
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Oct 2022 18:52:40 -0700 (PDT)
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 29S1iK37019059
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Oct 2022 01:52:40 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=corp-2022-7-12;
+ bh=strXWCUVJVE/ayHJMTCiYaJiD7xCWn1hnmF1HutWk1A=;
+ b=MISHoNH6Yv1qT603ADVR3GbCu5lzgABB46rephrVuv3s6Albh1Ex6eFkju1a4WkzgkiE
+ mYyTzku+G9RA13OdHYCbdo5oeqCqR8jVB27UOjShyyBL3W7+kIjUBb4Yjjt3k9vuXOZU
+ hW7l7ef5sSIx7u6zk8YLLm+iOyM0UWmMHwCll3sP6VikEZJyNEGbNmur8NYTBX5RxXEV
+ DArmEyo9hDinNXHNAi9HnExJcd1KPkfllYHKMOCopj5h056y8qdh9J75a+I+nz2OW+p2
+ b+B/kUVCt+YBpKxJsOrgyWF+eTGG72GJwyb/UkXDjNrouK0TzGx6DgkFao9/OYHZlu0H Cw== 
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kfahec4ee-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Oct 2022 01:52:39 +0000
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 29RNJKr9026493
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Oct 2022 01:52:38 GMT
+Received: from nam02-bn1-obe.outbound.protection.outlook.com (mail-bn1nam07lp2044.outbound.protection.outlook.com [104.47.51.44])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3kfagqkv61-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Oct 2022 01:52:38 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=F62tZMB2lOvnSCa9F/XHpROHR03G+4AppPu7jSZEhfzhZbPUa270F3h8Pmdeqw0EpXjirIlYz4qysmSeuHsI725C5LQxRg12HIKjlenvRxzeyc5Brlm42CYeMflEY4WEGVXLwTs+4qh6SFpeqkcS8s7OqWEJrqIKtz58ovErECJFmgjSDfxMIPtWLZ+PdipWPQiHOiDeiuHPZuSmgAx0nx6YY1cLq6EAB+Zd/CsdvrOP27+v+o/lHQnZyAIFrOpCo5zuV3650B3LWhVxVdjPAQby4dUtx61nZaES5xAxmhBmgmlhoW2abcVWzlLtFNYihp7Uhyw+6zOC8Xym9K4inw==
+ b=QPC4I66tuX1WC/fyCvXMPBii6W4eBNGUYXB/L1UfvugYvDHy0wMTnCwb1LxEfJbcHkHyiV5TfMYlHKTYhhNhggcuZVvAsAJuimi/72JhNzTrLiGGRgX9MAYxAFZKSI0UtdGJNE5dfRQH/4FvzCfWWxoFz64Zu23cgvegHsaMiKu6XNUBw1xFY3kHxMk13V86eVc1V6ucjHMmgZZiOi+Fq/7sgKO5TynZpSq/qIYOq7fBq9kl2G/38+ZnpmSA5paNcz9XiLqmON/tU0WdjF+HJkcFdQJPNaqWWkmunuuB6aNqJ7fUr+dntXjTWiph2UA0RtB7ptfDCTuzbDrFlCdPWQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Sun02OU3VntsF69xRRs5kXnWQOMDmvz5BV56uijxuJA=;
- b=L84sd9mUq5EacTs58znSlfMrI4R5YeOBegyp6c60EyIp8qiNVMmE5+PTAuIYM8ZASIspEFr4apZnQS4ErhJUP57gFa1XFHthaVPZadcwcrR+8JiP+ep7j4A0N3uZD4O/ZH5Q19E8T7YU8PHSbdJ8g73p+15y3zJ+OTueq6wn42+VV0JzB4PzYhaVTAHKPOrNv6oz8+b//jvZxV7+jX8PXbYCl5hhV/mqs1WsPmdSsREJ1Jn+3gX8JsQKSr5dql0cGkhtSbLtU2IVi55fJZwYpFGzBLcOACz4ZNy/jhFPXHNikV2YfVOblWRQl0Rs/2mV/WIb3z/1vbclTzhmyi31kw==
+ bh=strXWCUVJVE/ayHJMTCiYaJiD7xCWn1hnmF1HutWk1A=;
+ b=KSCHAfmktwE98Gru/vJvOv3ke9wbyxJz9vZuNr6xsFh4SbIRMbVM3ZjyIOs3M/By4pjRWEfFSg1ZV9SAcK5Q0xIrjUnK93VU1atzciJrk1IcxbXXzv6BSYvcvUzth5agV/k6I+Zu9APjqz1wxXv+sj74YLGFre9xlNDzJpGNSUn2yn0SnXCsYoLyQIKK8PNSGeJyVQ7x/Ipgm3Wy3ynLLfQrWCfNzxrWiuHE1gzeeLr1Q8GArm136hIH+Sb9absU4ebnNoo/2Skpo/sZkJCW73jKlyJbykwSl156/OBipmYm3QCDRTWCZjeWFF1iFfn8KwUt1mc5TRN1nRCyy5/WMQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from MWHPR1101MB2126.namprd11.prod.outlook.com
- (2603:10b6:301:50::20) by DM6PR11MB4724.namprd11.prod.outlook.com
- (2603:10b6:5:2ad::9) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5769.15; Fri, 28 Oct
- 2022 01:37:36 +0000
-Received: from MWHPR1101MB2126.namprd11.prod.outlook.com
- ([fe80::7d5a:684d:99f7:4e83]) by MWHPR1101MB2126.namprd11.prod.outlook.com
- ([fe80::7d5a:684d:99f7:4e83%12]) with mapi id 15.20.5746.023; Fri, 28 Oct
- 2022 01:37:36 +0000
-Date:   Thu, 27 Oct 2022 18:37:33 -0700
-From:   Dan Williams <dan.j.williams@intel.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>,
-        "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>
-CC:     Dave Chinner <david@fromorbit.com>,
-        "yangx.jy@fujitsu.com" <yangx.jy@fujitsu.com>,
-        "Yasunori Gotou (Fujitsu)" <y-goto@fujitsu.com>,
-        Brian Foster <bfoster@redhat.com>,
-        "hch@infradead.org" <hch@infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "zwisler@kernel.org" <zwisler@kernel.org>,
-        Jeff Moyer <jmoyer@redhat.com>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "toshi.kani@hpe.com" <toshi.kani@hpe.com>,
-        Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [PATCH] xfs: fail dax mount if reflink is enabled on a partition
-Message-ID: <635b325d25889_6be129446@dwillia2-xfh.jf.intel.com.notmuch>
-References: <f196bcab-6aa2-6313-8a7c-f8ab409621b7@fujitsu.com>
- <Yzx64zGt2kTiDYaP@magnolia>
- <6a83a56e-addc-f3c4-2357-9589a49bf582@fujitsu.com>
- <Y1NRNtToQTjs0Dbd@magnolia>
- <20221023220018.GX3600936@dread.disaster.area>
- <OSBPR01MB2920CA997DDE891C06776279F42E9@OSBPR01MB2920.jpnprd01.prod.outlook.com>
- <20221024053109.GY3600936@dread.disaster.area>
- <dd00529c-d3ef-40e3-9dea-834c5203e3df@fujitsu.com>
- <Y1gjQ4wNZr3ve2+K@magnolia>
- <Y1rzZN0wgLcie47z@magnolia>
-Content-Type: text/plain; charset="utf-8"
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <Y1rzZN0wgLcie47z@magnolia>
-X-ClientProxiedBy: BY3PR10CA0026.namprd10.prod.outlook.com
- (2603:10b6:a03:255::31) To MWHPR1101MB2126.namprd11.prod.outlook.com
- (2603:10b6:301:50::20)
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=strXWCUVJVE/ayHJMTCiYaJiD7xCWn1hnmF1HutWk1A=;
+ b=wsONWcycn2O0zCcx0LcSDDD4Qs2s3o5foHmaGyYXlZo/If6L4Pw0zYoy9UajP8BgYzz5BQW8Kqx6c9zXdmizrAk9kl9gjC77lNLM9uiqfTrXv/TL5Pz79+mLCpsy4GH+deemBttWXUmK2NrOhW/xFkpLnKEYJl6IuL+U4CzvGWo=
+Received: from BLAPR10MB5316.namprd10.prod.outlook.com (2603:10b6:208:326::6)
+ by MW5PR10MB5875.namprd10.prod.outlook.com (2603:10b6:303:191::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5746.28; Fri, 28 Oct
+ 2022 01:52:36 +0000
+Received: from BLAPR10MB5316.namprd10.prod.outlook.com
+ ([fe80::17e5:a392:97fb:39e9]) by BLAPR10MB5316.namprd10.prod.outlook.com
+ ([fe80::17e5:a392:97fb:39e9%6]) with mapi id 15.20.5746.028; Fri, 28 Oct 2022
+ 01:52:36 +0000
+From:   Catherine Hoang <catherine.hoang@oracle.com>
+To:     Allison Henderson <allison.henderson@oracle.com>
+CC:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH v4 02/27] xfs: Increase XFS_DEFER_OPS_NR_INODES to 5
+Thread-Topic: [PATCH v4 02/27] xfs: Increase XFS_DEFER_OPS_NR_INODES to 5
+Thread-Index: AQHY5ZyqQIxrFu/wl0eJrN5zZ3xtWq4jFK2A
+Date:   Fri, 28 Oct 2022 01:52:36 +0000
+Message-ID: <0C64AE87-3272-49CC-859A-3EA2E6764788@oracle.com>
+References: <20221021222936.934426-1-allison.henderson@oracle.com>
+ <20221021222936.934426-3-allison.henderson@oracle.com>
+In-Reply-To: <20221021222936.934426-3-allison.henderson@oracle.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3654.120.0.1.13)
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: BLAPR10MB5316:EE_|MW5PR10MB5875:EE_
+x-ms-office365-filtering-correlation-id: 0aee6a7c-7d03-4d04-1559-08dab8871655
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 9vAcpuftihfPEUr1L0Og2lRvog2xT+tFMXgbMBxNlxwC5QU0t+tL0vdHBo+VHDI+Z/H8dta/k5mBMQeYdGr8dzyOpwY/a8aEGWUbQcDMgXo2lBh4gGsFFTZJpqzbNpbcWCq7bkRB6m/zrAH7ln6+uTpdRwbd70UZQY1d884aFEfMmZBReqNbCcgqIvOfwRLSlTSlQAP+J7F3cqKRof9ju9WMiMz9AwrDSL5SERgHcABYVmOWHx+rvdIqsB1tgEIR8nlc4iqW9Z510u/KS9p3tvFTTaNm5tTCfEisg6YX5zIRhOMnRQloAVSUPujlX7Wz6B/rAApmhdH6d1flBz+v9X0FtY36y0ZJSPJIosYbqu2lgrAK8/pjI0NgIb+rjMxXYz63frdUsDsrhHrpSeowpPHjRRNkTSVUk2gKZx80i2EUQ1KbeG44Nt5MIFQzkTKN7BKr0bAIu58RFCZEuMELb9daGXgAMwJIu3xfK+wji4l60XUzevoS+LgTYahTWKhVlG717aIzis8sdqSEmdxG4YxX2nBAAIETTWLLbwx4Onp2l/E5bRxw73GLcNpyoiezKwgGOVH0iknNxKoK91HaB4cFBZhiURcD2ubaShyz4laZcYZ7Hs6a0rGyRi/FV21tLKrDzhNpNm7F74dMgfg4k/14CTg0XumPVjzVEmDJYj80jER3K6fWXjKoIDOrHDslHuySPD9Ssbb/3wsVwX+f2JgJC5JYH8oAYS+EbZHe8tnN5B5eYOPqpaAtYV6ibJUt1x4oNKEGaz43OyPkiJ6fMqd87hl/35w+qsx145ALB1M=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BLAPR10MB5316.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(136003)(366004)(39860400002)(346002)(376002)(396003)(451199015)(36756003)(2616005)(2906002)(66446008)(44832011)(76116006)(66476007)(66946007)(66556008)(6862004)(91956017)(8676002)(6486002)(41300700001)(71200400001)(33656002)(64756008)(37006003)(8936002)(4326008)(6636002)(122000001)(38100700002)(38070700005)(86362001)(478600001)(53546011)(316002)(186003)(5660300002)(6506007)(6512007)(83380400001)(45980500001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?isz72CgdZSK+7aAi2BUy8e0zqLWnLLJ2w2Om/gV7IkXwtITgVwmeT9/gLwu9?=
+ =?us-ascii?Q?gTdYyfWaJBE0f2+GSdYtWB8P7EKttE3BLU+n/InAT9PpZuz4AdVnnWP8GUi9?=
+ =?us-ascii?Q?QPibR+Hxup1ni12lOkSvp3At690GgTTizpS5zNfgl0GKWKsYqftz0v8Mk2Kj?=
+ =?us-ascii?Q?ScM+YaMnfZj3QYICb7NsVu0WfC9FY5NCsSLDpKIFU64BhIHlnLS6pTpuspum?=
+ =?us-ascii?Q?Az16GLTBB5vZ5q9K/FBvrvbbaGa8eIaOdnbykYW9dVyv6Aeu+LLQerZv172H?=
+ =?us-ascii?Q?SRrIOE26MBkkR4PJYtGRUgLL6lnE5KzBautUK6CWuiHFgG759Z4KccUccwcx?=
+ =?us-ascii?Q?I8Z+MEjLoy+vZFdqsdaE9mO5tdAld1ozZhDUeX07MgH6i7j2fdCoqf+eVXJq?=
+ =?us-ascii?Q?ix6BYPS0J6OmLCP5xI81LW2pZUzK9gVlbW8vt+QMFNTLBjlpq8PA5ecPNPAW?=
+ =?us-ascii?Q?lMlkApBKCJCVMRr9arbbkUmTV0HeNkfbCvz+2l4NFEnFcv+7/ghAjfkrH4D9?=
+ =?us-ascii?Q?AZPAdUIKWbfAAf6BEm342qEvWJcozRfIqxcUd/6ceC59gcyWSiz932M8CGWb?=
+ =?us-ascii?Q?LQqDt7HKIW+y4loY2NDA3NzFSVzHpqndgEfaYkPm97HOd/0REAWeKVL9nKQk?=
+ =?us-ascii?Q?XwA+dZCKYMbt2JaRkYQ1WyOOCzx2P2V01oDBR7nkXoumbLKn190jBRt/q6FD?=
+ =?us-ascii?Q?4+fj6S3dSfST59bijs05sjQIaWm1eeESfHPkxpKj8RnMbDKznZG+mbAccqys?=
+ =?us-ascii?Q?IsiDC87zVTrYoXYh2z1s3563ekvqFW7T5lEwarzSblbiBheTVnwKT7/0TcGX?=
+ =?us-ascii?Q?KfUGSxjJeng4/WzLGUyqIjJXzvy/qOhy4GAytZiQHVdWn0ClT5d5obc/rYh6?=
+ =?us-ascii?Q?HgbVoVLrV2Nn0ZgD/OhQJfTIpeYm84RCETTwwCALigdDJF6UNPFekhm04byP?=
+ =?us-ascii?Q?Gukh/Du+fTzJmG4fcryw0rQO6OSTeNdhzoD+F1sfZ7H2CN2x3I5HtY24mTfP?=
+ =?us-ascii?Q?hvrVEVSnrE4ebrZIAoEDgYg51dw+e0bpiz4bZQX7cJFTTuEtjmRrnmruXIuL?=
+ =?us-ascii?Q?u497M1kx4rESNckb1FvfB+z9BSLhoO3O6iQQoQ1SbVOSSSkiH38XSneW6Q+x?=
+ =?us-ascii?Q?idbVVG0Ie/oTI53i1e4mBj7A4WeZpydtd55y8hnBd4EjqRrC49ugkbx5ga/g?=
+ =?us-ascii?Q?+Ji3Ktwy4oWpfXuexpipmY7F202hKGRoF7xMD26idjLlPGCZaeOwPv26sEhw?=
+ =?us-ascii?Q?qAmlBvTPoKxikXUEWPYrZ1baVD1RTCq3jreLIIyOkoIV4tvH0YeYRqYinS+3?=
+ =?us-ascii?Q?UFC6t+ebLPG3UNQQrg5Z948IxBO15q7KJEwlio/mKvbcnm13VCI8mAaX+QW0?=
+ =?us-ascii?Q?C4swSLKr+WidPlDVTgfO9zu/+xZ8JnxXy5dHHpmnu70cyE00MBNcG+SBcsMy?=
+ =?us-ascii?Q?jHkoqQOk4zR/1ARvt8ztUzMzdaDW6tn09bxMeIp7zKVvoQumOgUswN4QbDHO?=
+ =?us-ascii?Q?DceL1bSmm08a+K62tjI2wBWDQfyG1li6sFnoJoBitleplH+tC7WfPmt57iW8?=
+ =?us-ascii?Q?kNdnflBQwjim6R4pIq4B3WuEmGDckZqHgS3eIunjsWi/VljOcsRFCxhV3ung?=
+ =?us-ascii?Q?5Mi/FqjkW1QldypU5pXB8NyCbjbSucpzqNfFs4BrJFsWX2c1kGCGx6Od5ofm?=
+ =?us-ascii?Q?pbJCdQ=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <489DF3DDFB5E204794926AEDF14EFE2B@namprd10.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MWHPR1101MB2126:EE_|DM6PR11MB4724:EE_
-X-MS-Office365-Filtering-Correlation-Id: ddb00ee4-d898-42cd-2289-08dab884fde9
-X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: tizIrgwnhXDWqhz4bX2FCuDtvSky/MGbUGL8dB/gjC8jUviEVY0nNrH+ZkYocaOWlun/lGYd6QnN4HqOSPhjkr6noc77Q9EVi6TCOPjuG1PjvXE+JLU6Spax2FZeohBSFFD+k4YMl9S9Hu5eau9hXWQTzTB5Exo4VBsjBrr32E5Tm+6px7XMyrDR1XPuP8sspewsuzcFBfo7YDyxcOweVWRQbywPcP10X03S8eN4QCf7gANmOJ4nxPmNM02cOoA1xtmUrtSee3b6V/RcFzxQDykd7pYoQ48CkE/7gp21C8bwhe4TNE8f8ewYKpgYuS2YLYLeFkKpcG1fnNsMqmJ/iTJqPCAI4miMkH5ySQDzaTIT9hz1Kfp/bIV3vqhH3zP9j3EZFwlD8ILbnkv8drKspDuMq7COXU6VcfVmAp3r3Pwr+R+mDPwnFMsKskobEMS9tA5kCq3FPrnFGjyVCsPeitLBOMJu3mDibbpYtJx/cAFySQljGZwBgX/9awsnfw6oBCWr92eVjLeq3q51LgmK/wUpyR+b9gab3/WcENk2q1ucdpbSF/mM89JZEtM8J/UrmFpUMshpyeDDb61eD3R9/34xFMzScDCIWDiQLridAI9C2+v+Jc79Z67ULdwkS7gs95eSRpG6wAumvuPyNiB0kFrIzo+v6OBONl6p4TxtLG6Y2ZPJhFLZfRjakIaPebCPBcXGbz3KRx2qBD2fG897Z/q0Cbu/Agr3dusVWcNKRuMm7i91efw2O4wiT47PK2ftd45kMG8qksNLpRrtstjhYQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR1101MB2126.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(346002)(39860400002)(366004)(376002)(136003)(396003)(451199015)(66556008)(316002)(38100700002)(41300700001)(83380400001)(6666004)(86362001)(54906003)(110136005)(66946007)(5660300002)(26005)(6512007)(2906002)(186003)(4326008)(7416002)(8936002)(6506007)(9686003)(8676002)(66476007)(478600001)(966005)(6486002)(66899015)(82960400001);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?UXlhT0ZabC9XNWNOVGpnYjRSemRIK21XeXpObk9ScHczbWpqeWw4VElRV1da?=
- =?utf-8?B?aktUMWlveklPTFZIUUlQZ1J3SEJTcmZMM2pyNWVJeWcyMVFQYnoweTI2VkRH?=
- =?utf-8?B?V2lvOXVVYnRhWm81UWxkNG8xZUF5WkgvRlo3bWhBT016ZTV3dGhOSFhIcTBL?=
- =?utf-8?B?eG13cGVCdnR2WkJKWVpJMUtna0lYenFYYmtsOHVNOXQwTkphZS9nelFFZ3lw?=
- =?utf-8?B?b2RSbEVkR285UzVKclB1L2Q2RXdPTEVLbkZhM0ZpS01nNGZUdEUyUWNsM0Zo?=
- =?utf-8?B?SXJKdnVVcUZHUFNLMThiYzRLdTV5NzNENFVGdEJTQ1B4ZnJJQ01QOHVPK1By?=
- =?utf-8?B?anY3VEpDSFN2Y3RJQ2VTVTU2RlhnRjBUWGlNV2lSaVFnc1l0YUgvM1ozQ2Fw?=
- =?utf-8?B?S1BLTno3eUZQTGJadExjd2NGb3VtamZjSlZ1WndtZ1hMcksxTDBvcE1XME56?=
- =?utf-8?B?cFVpMjZkWTBkekh5RXRYOUhrUW1UdGx2NG1lSU5SeGk3OG00OENKM1pydTJX?=
- =?utf-8?B?T1BONldOOHdhMmdDeFhMTThYRVFsNTMyUktOSzdpenNyNk5DcnJYSkNrWWs2?=
- =?utf-8?B?OTRtN21PM0VvVW5Ecm1abVFSWkNVdStBWlBPdFY0Y2htblp6UlM4TktqT1VF?=
- =?utf-8?B?citZWXJ6TzI1YVVGNTJsQXJhWURjV05icE45blN0R1YxaXNLSk5XejFWdGVj?=
- =?utf-8?B?UER6cWIwaGpJdWVRSjhMaEZUa3lUZVQ5aXZEMTloNVFLSWh0ZWkxTHF5dWRO?=
- =?utf-8?B?T21veTBVK0xCOS81V3dNWFlySS9qVE0vZTU4cEk2TXpWdVFTQTZaLzBYaCt4?=
- =?utf-8?B?TXFhOW5IK21NbU9PRXBJZDBkN3ZyZHFqeFJOOGEyZm9rVjllZzZKanRvQnNF?=
- =?utf-8?B?MGdxaEZ2VldMOTl2V25SdXk5NDdxT2xJZkxPUXlRa2k0WWRLa2FTUjNqekQ1?=
- =?utf-8?B?cS92SXJENnRlcUpiRFNjWFp4N2VLT3VKVy95b1ozVVM5dWN2ZmpWMlgvSzVp?=
- =?utf-8?B?SjRCcDVvOHFiVlpoNTY1K21GeVl0c1RzRVRuZnpCQWFzeWtyNTZwYi9BZ1Bj?=
- =?utf-8?B?amErZk44TEprSm1vSmkvMEpONm45UFZkcHh2K3hRa2s3YzZIMUozRHNQR1RJ?=
- =?utf-8?B?bmNyMFgrejBMcFpyM2poRE1PMG8wZWFjQ1FFeGtQTUF0eHNybDFxYmdYenNW?=
- =?utf-8?B?akZQZllEMjR1cjJaMXFrQnQ0RlUxYi9XQjdGQjh2SVo5bFlzV3J4cktaVnpJ?=
- =?utf-8?B?WFhJcEZraC8weXROdDQrZ3J6US83VmR2U0g4MFB2K2xneC9vdWEvbFdsMmVQ?=
- =?utf-8?B?Z0k1ZHVUUHhSaDlVTlBHT1d2SURWRzR2ZmQwdzNUS1ZZTDhpUmdWdDllVHpl?=
- =?utf-8?B?bGRuN1JscFNCZzlXakNEOXBBYXNXWG1pSkNTY05ieVNPU210cFRyc0VkeXJ5?=
- =?utf-8?B?S3orNUlGU2VsZWtWd1VoQlRlSllKQ1lZNENYOVpjMTRFclRsQ2Q1MmNNLzI4?=
- =?utf-8?B?UFh2TjhSQmp4WlhpUURPemtoSVYwRThJU01ZWWI3eDJ6Nm95djRUWDdadUZl?=
- =?utf-8?B?aE93UFBqQVZQZ25wZ1ZQK3hrdWFGbSt5ZVNJV1Bwbks4YXZUc2ZQN2J0OGhO?=
- =?utf-8?B?SUQ2RkYrK1U3R1NoVmlUd2lYWUF0VXFmQUpJVnBpMkdTcFV1TjF0Rmh3Y1Ex?=
- =?utf-8?B?OUlWdytlMzZJeTQ2NWIrNHZuV202OWl5UzM4ZlUzdHIyalIzcGNtNlVsQVhJ?=
- =?utf-8?B?U1lJWFY3SC8rend3UFdJNWNaTlRad1pFdFpBRWhkOEsyM2VaMGF1NHpSTmpF?=
- =?utf-8?B?TExSWS9nK3RjL05GTmorbnNnUTJnUzY0MndqQWlDckFuYWN2WEpIdUVSZzRn?=
- =?utf-8?B?K2ppamdMQWxsVi9QclJoZDhRSGNCckwvbjFrRWRTYVBVN2o3SVkyYk9CYjkz?=
- =?utf-8?B?Y0YrcW9kMFczbDRoNlptUmdVSE9wV3l3VmZRclE2TFY0WXYyclB0Q2tXd1NQ?=
- =?utf-8?B?TlVJWXJIbGpKMnBJYTF5V25tYmMwY01BcnZ5Z21IMC95TkZVTWxxS0R5d0FS?=
- =?utf-8?B?TER3dStPRkVTdEdoRUpkbVNpaE9DSEI5YS9IMjRnNjVpdzFDVVdYbnVDQkZB?=
- =?utf-8?B?NmhQdlg5aWt5bndQYjFMYVo2ampWZUg2YUNIeGoxZjhGZVB6U1Z0UkRqMDBV?=
- =?utf-8?B?bXc9PQ==?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: ddb00ee4-d898-42cd-2289-08dab884fde9
-X-MS-Exchange-CrossTenant-AuthSource: MWHPR1101MB2126.namprd11.prod.outlook.com
+X-OriginatorOrg: oracle.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Oct 2022 01:37:36.4579
+X-MS-Exchange-CrossTenant-AuthSource: BLAPR10MB5316.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0aee6a7c-7d03-4d04-1559-08dab8871655
+X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Oct 2022 01:52:36.0492
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 9TNKJ+HZQkeJ0CUxUHeA70N4rSe8+3/AmqzuxsnJj/dtadjNQOf7gSER9BrOaGI59Mu2tx1R24S3HOyLKHrE0zADRitPKKNBkjffXC2OkTc=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR11MB4724
-X-OriginatorOrg: intel.com
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: X0bLQo42Zj4nCFLZ0euro4UrsF6fEmxGPdv2z5XnKxU0PB8//yJfbdCI9OGkjppOIvEyPu7YgZ7+QULfvBose2yuNjmN0ISQpwJPU697YOU=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW5PR10MB5875
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-10-27_07,2022-10-27_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 mlxlogscore=999
+ spamscore=0 phishscore=0 bulkscore=0 malwarescore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
+ definitions=main-2210280009
+X-Proofpoint-GUID: Nh3AQWBnAiXKugXtVHniNkfINwSHX0Tm
+X-Proofpoint-ORIG-GUID: Nh3AQWBnAiXKugXtVHniNkfINwSHX0Tm
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Darrick J. Wong wrote:
-> [add tytso to cc since he asked about "How do you actually /get/ fsdax
-> mode these days?" this morning]
-> 
-> On Tue, Oct 25, 2022 at 10:56:19AM -0700, Darrick J. Wong wrote:
-> > On Tue, Oct 25, 2022 at 02:26:50PM +0000, ruansy.fnst@fujitsu.com wrote:
-> > > 
-> > > 
-> > > 在 2022/10/24 13:31, Dave Chinner 写道:
-> > > > On Mon, Oct 24, 2022 at 03:17:52AM +0000, ruansy.fnst@fujitsu.com wrote:
-> > > >> 在 2022/10/24 6:00, Dave Chinner 写道:
-> > > >>> On Fri, Oct 21, 2022 at 07:11:02PM -0700, Darrick J. Wong wrote:
-> > > >>>> On Thu, Oct 20, 2022 at 10:17:45PM +0800, Yang, Xiao/杨 晓 wrote:
-> > > >>>>> In addition, I don't like your idea about the test change because it will
-> > > >>>>> make generic/470 become the special test for XFS. Do you know if we can fix
-> > > >>>>> the issue by changing the test in another way? blkdiscard -z can fix the
-> > > >>>>> issue because it does zero-fill rather than discard on the block device.
-> > > >>>>> However, blkdiscard -z will take a lot of time when the block device is
-> > > >>>>> large.
-> > > >>>>
-> > > >>>> Well we /could/ just do that too, but that will suck if you have 2TB of
-> > > >>>> pmem. ;)
-> > > >>>>
-> > > >>>> Maybe as an alternative path we could just create a very small
-> > > >>>> filesystem on the pmem and then blkdiscard -z it?
-> > > >>>>
-> > > >>>> That said -- does persistent memory actually have a future?  Intel
-> > > >>>> scuttled the entire Optane product, cxl.mem sounds like expansion
-> > > >>>> chassis full of DRAM, and fsdax is horribly broken in 6.0 (weird kernel
-> > > >>>> asserts everywhere) and 6.1 (every time I run fstests now I see massive
-> > > >>>> data corruption).
-> > > >>>
-> > > >>> Yup, I see the same thing. fsdax was a train wreck in 6.0 - broken
-> > > >>> on both ext4 and XFS. Now that I run a quick check on 6.1-rc1, I
-> > > >>> don't think that has changed at all - I still see lots of kernel
-> > > >>> warnings, data corruption and "XFS_IOC_CLONE_RANGE: Invalid
-> > > >>> argument" errors.
-> > > >>
-> > > >> Firstly, I think the "XFS_IOC_CLONE_RANGE: Invalid argument" error is
-> > > >> caused by the restrictions which prevent reflink work together with DAX:
-> > > >>
-> > > >> a. fs/xfs/xfs_ioctl.c:1141
-> > > >> /* Don't allow us to set DAX mode for a reflinked file for now. */
-> > > >> if ((fa->fsx_xflags & FS_XFLAG_DAX) && xfs_is_reflink_inode(ip))
-> > > >>          return -EINVAL;
-> > > >>
-> > > >> b. fs/xfs/xfs_iops.c:1174
-> > > >> /* Only supported on non-reflinked files. */
-> > > >> if (xfs_is_reflink_inode(ip))
-> > > >>          return false;
-> > > >>
-> > > >> These restrictions were removed in "drop experimental warning" patch[1].
-> > > >>    I think they should be separated from that patch.
-> > > >>
-> > > >> [1]
-> > > >> https://lore.kernel.org/linux-xfs/1663234002-17-1-git-send-email-ruansy.fnst@fujitsu.com/
-> > > >>
-> > > >>
-> > > >> Secondly, how the data corruption happened?
-> > > > 
-> > > > No idea - i"m just reporting that lots of fsx tests failed with data
-> > > > corruptions. I haven't had time to look at why, I'm still trying to
-> > > > sort out the fix for a different data corruption...
-> > > > 
-> > > >> Or which case failed?
-> > > > 
-> > > > *lots* of them failed with kernel warnings with reflink turned off:
-> > > > 
-> > > > SECTION       -- xfs_dax_noreflink
-> > > > =========================
-> > > > Failures: generic/051 generic/068 generic/075 generic/083
-> > > > generic/112 generic/127 generic/198 generic/231 generic/247
-> > > > generic/269 generic/270 generic/340 generic/344 generic/388
-> > > > generic/461 generic/471 generic/476 generic/519 generic/561 xfs/011
-> > > > xfs/013 xfs/073 xfs/297 xfs/305 xfs/517 xfs/538
-> > > > Failed 26 of 1079 tests
-> > > > 
-> > > > All of those except xfs/073 and generic/471 are failures due to
-> > > > warnings found in dmesg.
-> > > > 
-> > > > With reflink enabled, I terminated the run after g/075, g/091, g/112
-> > > > and generic/127 reported fsx data corruptions and g/051, g/068,
-> > > > g/075 and g/083 had reported kernel warnings in dmesg.
-> > > > 
-> > > >> Could
-> > > >> you give me more info (such as mkfs options, xfstests configs)?
-> > > > 
-> > > > They are exactly the same as last time I reported these problems.
-> > > > 
-> > > > For the "no reflink" test issues:
-> > > > 
-> > > > mkfs options are "-m reflink=0,rmapbt=1", mount options "-o
-> > > > dax=always" for both filesytems.  Config output at start of test
-> > > > run:
-> > > > 
-> > > > SECTION       -- xfs_dax_noreflink
-> > > > FSTYP         -- xfs (debug)
-> > > > PLATFORM      -- Linux/x86_64 test3 6.1.0-rc1-dgc+ #1615 SMP PREEMPT_DYNAMIC Wed Oct 19 12:24:16 AEDT 2022
-> > > > MKFS_OPTIONS  -- -f -m reflink=0,rmapbt=1 /dev/pmem1
-> > > > MOUNT_OPTIONS -- -o dax=always -o context=system_u:object_r:root_t:s0 /dev/pmem1 /mnt/scratch
-> > > > 
-> > > > pmem devices are a pair of fake 8GB pmem regions set up by kernel
-> > > > CLI via "memmap=8G!15G,8G!24G". I don't have anything special set up
-> > > > - the kernel config is kept minimal for these VMs - and the only
-> > > > kernel debug option I have turned on for these specific test runs is
-> > > > CONFIG_XFS_DEBUG=y.
-> > > 
-> > > Thanks for the detailed info.  But, in my environment (and my 
-> > > colleagues', and our real server with DCPMM) these failure cases (you 
-> > > mentioned above, in dax+non_reflink mode, with same test options) cannot 
-> > > reproduce.
-> > > 
-> > > Here's our test environment info:
-> > >   - Ruan's env: fedora 36(v6.0-rc1) on kvm,pmem 2x4G:file backended
-> > >   - Yang's env: fedora 35(v6.1-rc1) on kvm,pmem 2x1G:memmap=1G!1G,1G!2G
-> > >   - Server's  : Ubuntu 20.04(v6.0-rc1) real machine,pmem 2x4G:real DCPMM
-> > > 
-> > > (To quickly confirm the difference, I just ran the failed 26 cases you 
-> > > mentioned above.)  Except for generic/471 and generic/519, which failed 
-> > > even when dax is off, the rest passed.
-> > > 
-> > > 
-> > > We don't want fsdax to be truned off.  Right now, I think the most 
-> > > important thing is solving the failed cases in dax+non_reflink mode. 
-> > > So, firstly, I have to reproduce those failures.  Is there any thing 
-> > > wrong with my test environments?  I konw you are using 'memmap=XXG!YYG' to 
-> > > simulate pmem.  So, (to Darrick) could you show me your config of dev 
-> > > environment and the 'testcloud'(I am guessing it's a server with real 
-> > > nvdimm just like ours)?
-> > 
-> > Nope.  Since the announcement of pmem as a product, I have had 15
-> > minutes of acces to one preproduction prototype server with actual
-> > optane DIMMs in them.
-> > 
-> > I have /never/ had access to real hardware to test any of this, so it's
-> > all configured via libvirt to simulate pmem in qemu:
-> > https://lore.kernel.org/linux-xfs/YzXsavOWMSuwTBEC@magnolia/
-> > 
-> > /run/mtrdisk/[gh].mem are both regular files on a tmpfs filesystem:
-> > 
-> > $ grep mtrdisk /proc/mounts
-> > none /run/mtrdisk tmpfs rw,relatime,size=82894848k,inode64 0 0
-> > 
-> > $ ls -la /run/mtrdisk/[gh].mem
-> > -rw-r--r-- 1 libvirt-qemu kvm 10739515392 Oct 24 18:09 /run/mtrdisk/g.mem
-> > -rw-r--r-- 1 libvirt-qemu kvm 10739515392 Oct 24 19:28 /run/mtrdisk/h.mem
-> 
-> Also forgot to mention that the VM with the fake pmem attached has a
-> script to do:
-> 
-> ndctl create-namespace --mode fsdax --map dev -e namespace0.0 -f
-> ndctl create-namespace --mode fsdax --map dev -e namespace1.0 -f
-> 
-> Every time the pmem device gets recreated, because apparently that's the
-> only way to get S_DAX mode nowadays?
+> On Oct 21, 2022, at 3:29 PM, allison.henderson@oracle.com wrote:
+>=20
+> From: Allison Henderson <allison.henderson@oracle.com>
+>=20
+> Renames that generate parent pointer updates can join up to 5
+> inodes locked in sorted order.  So we need to increase the
+> number of defer ops inodes and relock them in the same way.
+>=20
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-If you have noticed a change here it is due to VM configuration not
-anything in the driver.
+Looks good
+Reviewed-by: Catherine Hoang <catherine.hoang@oracle.com>
+> ---
+> fs/xfs/libxfs/xfs_defer.c | 28 ++++++++++++++++++++++++++--
+> fs/xfs/libxfs/xfs_defer.h |  8 +++++++-
+> fs/xfs/xfs_inode.c        |  2 +-
+> fs/xfs/xfs_inode.h        |  1 +
+> 4 files changed, 35 insertions(+), 4 deletions(-)
+>=20
+> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+> index 5a321b783398..c0279b57e51d 100644
+> --- a/fs/xfs/libxfs/xfs_defer.c
+> +++ b/fs/xfs/libxfs/xfs_defer.c
+> @@ -820,13 +820,37 @@ xfs_defer_ops_continue(
+> 	struct xfs_trans		*tp,
+> 	struct xfs_defer_resources	*dres)
+> {
+> -	unsigned int			i;
+> +	unsigned int			i, j;
+> +	struct xfs_inode		*sips[XFS_DEFER_OPS_NR_INODES];
+> +	struct xfs_inode		*temp;
+>=20
+> 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+> 	ASSERT(!(tp->t_flags & XFS_TRANS_DIRTY));
+>=20
+> 	/* Lock the captured resources to the new transaction. */
+> -	if (dfc->dfc_held.dr_inos =3D=3D 2)
+> +	if (dfc->dfc_held.dr_inos > 2) {
+> +		/*
+> +		 * Renames with parent pointer updates can lock up to 5 inodes,
+> +		 * sorted by their inode number.  So we need to make sure they
+> +		 * are relocked in the same way.
+> +		 */
+> +		memset(sips, 0, sizeof(sips));
+> +		for (i =3D 0; i < dfc->dfc_held.dr_inos; i++)
+> +			sips[i] =3D dfc->dfc_held.dr_ip[i];
+> +
+> +		/* Bubble sort of at most 5 inodes */
+> +		for (i =3D 0; i < dfc->dfc_held.dr_inos; i++) {
+> +			for (j =3D 1; j < dfc->dfc_held.dr_inos; j++) {
+> +				if (sips[j]->i_ino < sips[j-1]->i_ino) {
+> +					temp =3D sips[j];
+> +					sips[j] =3D sips[j-1];
+> +					sips[j-1] =3D temp;
+> +				}
+> +			}
+> +		}
+> +
+> +		xfs_lock_inodes(sips, dfc->dfc_held.dr_inos, XFS_ILOCK_EXCL);
+> +	} else if (dfc->dfc_held.dr_inos =3D=3D 2)
+> 		xfs_lock_two_inodes(dfc->dfc_held.dr_ip[0], XFS_ILOCK_EXCL,
+> 				    dfc->dfc_held.dr_ip[1], XFS_ILOCK_EXCL);
+> 	else if (dfc->dfc_held.dr_inos =3D=3D 1)
+> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+> index 114a3a4930a3..fdf6941f8f4d 100644
+> --- a/fs/xfs/libxfs/xfs_defer.h
+> +++ b/fs/xfs/libxfs/xfs_defer.h
+> @@ -70,7 +70,13 @@ extern const struct xfs_defer_op_type xfs_attr_defer_t=
+ype;
+> /*
+>  * Deferred operation item relogging limits.
+>  */
+> -#define XFS_DEFER_OPS_NR_INODES	2	/* join up to two inodes */
+> +
+> +/*
+> + * Rename w/ parent pointers can require up to 5 inodes with deferred op=
+s to
+> + * be joined to the transaction: src_dp, target_dp, src_ip, target_ip, a=
+nd wip.
+> + * These inodes are locked in sorted order by their inode numbers
+> + */
+> +#define XFS_DEFER_OPS_NR_INODES	5
+> #define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
+>=20
+> /* Resources that must be held across a transaction roll. */
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index c000b74dd203..5ebbfceb1ada 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -447,7 +447,7 @@ xfs_lock_inumorder(
+>  * lock more than one at a time, lockdep will report false positives sayi=
+ng we
+>  * have violated locking orders.
+>  */
+> -static void
+> +void
+> xfs_lock_inodes(
+> 	struct xfs_inode	**ips,
+> 	int			inodes,
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index fa780f08dc89..2eaed98af814 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -574,5 +574,6 @@ void xfs_end_io(struct work_struct *work);
+>=20
+> int xfs_ilock2_io_mmap(struct xfs_inode *ip1, struct xfs_inode *ip2);
+> void xfs_iunlock2_io_mmap(struct xfs_inode *ip1, struct xfs_inode *ip2);
+> +void xfs_lock_inodes(struct xfs_inode **ips, int inodes, uint lock_mode)=
+;
+>=20
+> #endif	/* __XFS_INODE_H__ */
+> --=20
+> 2.25.1
+>=20
 
-If you are interested there are two ways to get pmem declared the legacy
-way that predates any of the DAX work, the kernel calls it E820_PRAM,
-and the modern way by platform firmware tables like ACPI NFIT. The
-assumption with E820_PRAM is that it is dealing with battery backed
-NVDIMMs of small capacity. In that case the /dev/pmem device can support
-DAX operation by default because the necessary memory for the 'struct
-page' array for that memory is likely small.
-
-Platform firmware defined PMEM can be terabytes. So the driver does not
-enable DAX by default because the user needs to make policy choice about
-burning gigabytes of DRAM for that metadata, or placing it in PMEM which
-is abundant, but slower. So what I suspect might be happening is your
-configuration changed from something that auto-allocated the 'struct
-page' array, to something that needed those commands you list above to
-explicitly opt-in to reserving some PMEM capacity for the page metadata.
