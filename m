@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 220F5C38A02
-	for <linux-xfs@archiver.kernel.org>; Sun, 30 Oct 2022 23:42:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01749ECAAA1
+	for <linux-xfs@archiver.kernel.org>; Sun, 30 Oct 2022 23:42:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229714AbiJ3Xme (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 30 Oct 2022 19:42:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39866 "EHLO
+        id S229717AbiJ3Xmi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 30 Oct 2022 19:42:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39874 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229457AbiJ3Xmd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Oct 2022 19:42:33 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F133F9FEA
-        for <linux-xfs@vger.kernel.org>; Sun, 30 Oct 2022 16:42:32 -0700 (PDT)
+        with ESMTP id S229457AbiJ3Xmh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Oct 2022 19:42:37 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E65E89FEA
+        for <linux-xfs@vger.kernel.org>; Sun, 30 Oct 2022 16:42:36 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A27B4B810A3
-        for <linux-xfs@vger.kernel.org>; Sun, 30 Oct 2022 23:42:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DB1CC433C1;
-        Sun, 30 Oct 2022 23:42:30 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 83DAE60F84
+        for <linux-xfs@vger.kernel.org>; Sun, 30 Oct 2022 23:42:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E129CC433D7;
+        Sun, 30 Oct 2022 23:42:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1667173350;
-        bh=FIpjGgcAe4oeLqI+VM9BIR3WtmBtsE/jNBV22lLcegk=;
+        s=k20201202; t=1667173355;
+        bh=2wlEmAAcV+w4f/LnlJjmyuEHNlqyPg9WaKZOA3RIyxg=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=SHA1r77Tn/kDygFnxzuhtXo4YVzFG3Zo4m6na23yJvQXIamu+U/Qs0PPPhR0sb0wD
-         gnJRKHIgt4mrBxLijDeaQWqydVJ7dBA+yOaRDI9d8W0mS0aRRyFc2uVXFEPmYtvLmZ
-         IeNMTChj3I/0svQTSDwO48umL54PUx6V7GXbjNP6KAlmTUNqU2f187wV4hvNP5MqlN
-         c4x74puYIGxdGARYt46CT4Yk6WFAVSuWiyaC0n/xEXFu8EC+U9UXd7Jsq1WXxNSFUZ
-         5wF5+0OA1TOV4zwMqth2gCZGqnJQSZdTWtJgQ6icbOkUrI8R7plsce3Hw0aMC00kZR
-         3WhMD15zFcFSw==
-Subject: [PATCH 12/13] xfs: fix uninitialized list head in struct
- xfs_refcount_recovery
+        b=EclSefjlPFqamVeOG0kxagPLfaXKAbTg7li9MgfB5oHf5fGW1IAIWZjpHVaGSqNeI
+         MjhBjpEKbVNnV1hIJ8hYLMmCOixm+1i4HKEHwWgwPAVuDehgCfo6xJYcJ0YHtal6DK
+         by7H5hbSi9uPS9Fb4pFW66Lti7TCApjPDsKMrmsRvlDfiEcCFdXqlv3aywcru/vzk6
+         ASuB0/JOha4qLF+uNCr9q5SNBCItmzcf2Fubx39Ntukz8fX8BDxbfUvr/IwaUSrg9W
+         i8ciwSxKJxfoDmrSeCuchAjowUPj0vWhstCxIBPyR378qObR65s8lUxtJbblrsaxLe
+         c44QCqYp06VTQ==
+Subject: [PATCH 13/13] xfs: rename XFS_REFC_COW_START to _COWFLAG
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Date:   Sun, 30 Oct 2022 16:42:29 -0700
-Message-ID: <166717334983.417886.9035100485709362610.stgit@magnolia>
+Date:   Sun, 30 Oct 2022 16:42:35 -0700
+Message-ID: <166717335551.417886.6742910936640805015.stgit@magnolia>
 In-Reply-To: <166717328145.417886.10627661186183843873.stgit@magnolia>
 References: <166717328145.417886.10627661186183843873.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,55 +49,71 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-We're supposed to initialize the list head of an object before adding it
-to another list.  Fix that, and stop using the kmem_{alloc,free} calls
-from the Irix days.
+We've been (ab)using XFS_REFC_COW_START as both an integer quantity and
+a bit flag, even though it's *only* a bit flag.  Rename the variable to
+reflect its nature and update the cast target since we're not supposed
+to be comparing it to xfs_agblock_t now.
 
-Fixes: 174edb0e46e5 ("xfs: store in-progress CoW allocations in the refcount btree")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_refcount.c |   10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_format.h   |    2 +-
+ fs/xfs/libxfs/xfs_refcount.c |    6 +++---
+ fs/xfs/libxfs/xfs_refcount.h |    4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
 
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 005dd65b71cd..371dc07233e0 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1612,7 +1612,7 @@ unsigned int xfs_refc_block(struct xfs_mount *mp);
+  * on the startblock.  This speeds up mount time deletion of stale
+  * staging extents because they're all at the right side of the tree.
+  */
+-#define XFS_REFC_COW_START		((xfs_agblock_t)(1U << 31))
++#define XFS_REFC_COWFLAG		(1U << 31)
+ #define REFCNTBT_COWFLAG_BITLEN		1
+ #define REFCNTBT_AGBLOCK_BITLEN		31
+ 
 diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index ad0fb6a7177b..44d4667d4301 100644
+index 44d4667d4301..3f34bafe18dd 100644
 --- a/fs/xfs/libxfs/xfs_refcount.c
 +++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -1767,12 +1767,14 @@ xfs_refcount_recover_extent(
- 			   be32_to_cpu(rec->refc.rc_refcount) != 1))
- 		return -EFSCORRUPTED;
+@@ -108,8 +108,8 @@ xfs_refcount_btrec_to_irec(
+ 	uint32_t			start;
  
--	rr = kmem_alloc(sizeof(struct xfs_refcount_recovery), 0);
-+	rr = kmalloc(sizeof(struct xfs_refcount_recovery),
-+			GFP_KERNEL | __GFP_NOFAIL);
-+	INIT_LIST_HEAD(&rr->rr_list);
- 	xfs_refcount_btrec_to_irec(rec, &rr->rr_rrec);
+ 	start = be32_to_cpu(rec->refc.rc_startblock);
+-	if (start & XFS_REFC_COW_START) {
+-		start &= ~XFS_REFC_COW_START;
++	if (start & XFS_REFC_COWFLAG) {
++		start &= ~XFS_REFC_COWFLAG;
+ 		irec->rc_domain = XFS_REFC_DOMAIN_COW;
+ 	} else {
+ 		irec->rc_domain = XFS_REFC_DOMAIN_SHARED;
+@@ -1799,7 +1799,7 @@ xfs_refcount_recover_cow_leftovers(
+ 	int				error;
  
- 	if (XFS_IS_CORRUPT(cur->bc_mp,
- 			   rr->rr_rrec.rc_domain != XFS_REFC_DOMAIN_COW)) {
--		kmem_free(rr);
-+		kfree(rr);
- 		return -EFSCORRUPTED;
- 	}
+ 	/* reflink filesystems mustn't have AGs larger than 2^31-1 blocks */
+-	BUILD_BUG_ON(XFS_MAX_CRC_AG_BLOCKS >= XFS_REFC_COW_START);
++	BUILD_BUG_ON(XFS_MAX_CRC_AG_BLOCKS >= XFS_REFC_COWFLAG);
+ 	if (mp->m_sb.sb_agblocks > XFS_MAX_CRC_AG_BLOCKS)
+ 		return -EOPNOTSUPP;
  
-@@ -1859,7 +1861,7 @@ xfs_refcount_recover_cow_leftovers(
- 			goto out_free;
+diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
+index ee32e8eb5a99..452f30556f5a 100644
+--- a/fs/xfs/libxfs/xfs_refcount.h
++++ b/fs/xfs/libxfs/xfs_refcount.h
+@@ -34,9 +34,9 @@ xfs_refcount_encode_startblock(
+ 	 * query functions (which set rc_domain == -1U), so we check that the
+ 	 * domain is /not/ shared.
+ 	 */
+-	start = startblock & ~XFS_REFC_COW_START;
++	start = startblock & ~XFS_REFC_COWFLAG;
+ 	if (domain != XFS_REFC_DOMAIN_SHARED)
+-		start |= XFS_REFC_COW_START;
++		start |= XFS_REFC_COWFLAG;
  
- 		list_del(&rr->rr_list);
--		kmem_free(rr);
-+		kfree(rr);
- 	}
- 
- 	return error;
-@@ -1869,7 +1871,7 @@ xfs_refcount_recover_cow_leftovers(
- 	/* Free the leftover list */
- 	list_for_each_entry_safe(rr, n, &debris, rr_list) {
- 		list_del(&rr->rr_list);
--		kmem_free(rr);
-+		kfree(rr);
- 	}
- 	return error;
+ 	return start;
  }
 
