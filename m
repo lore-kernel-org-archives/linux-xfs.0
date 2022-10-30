@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F352ECAAA1
-	for <linux-xfs@archiver.kernel.org>; Sun, 30 Oct 2022 23:42:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DDD9ECAAA1
+	for <linux-xfs@archiver.kernel.org>; Sun, 30 Oct 2022 23:42:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229636AbiJ3XmM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 30 Oct 2022 19:42:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39820 "EHLO
+        id S229648AbiJ3XmS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 30 Oct 2022 19:42:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229457AbiJ3XmL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Oct 2022 19:42:11 -0400
+        with ESMTP id S229457AbiJ3XmR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Oct 2022 19:42:17 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B6E79FED
-        for <linux-xfs@vger.kernel.org>; Sun, 30 Oct 2022 16:42:10 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 222D59FEA
+        for <linux-xfs@vger.kernel.org>; Sun, 30 Oct 2022 16:42:16 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id EB8E1B810A5
-        for <linux-xfs@vger.kernel.org>; Sun, 30 Oct 2022 23:42:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4EFBC433C1;
-        Sun, 30 Oct 2022 23:42:07 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id AB282B810A3
+        for <linux-xfs@vger.kernel.org>; Sun, 30 Oct 2022 23:42:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53850C433C1;
+        Sun, 30 Oct 2022 23:42:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1667173327;
-        bh=9qAgpmGf8lrawZLgVYp6yW2RTDfgGGobLBUj0Gupmho=;
+        s=k20201202; t=1667173333;
+        bh=dqFA4JN9nNdOL3BnTObFozk93VjzIBh9CgaBFhPdPyA=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Eb/SVTSpADDtStb7yq9kv/cE94DHHOhuake+WLsHJpvtCqP3GzVun1rmTSlxdu9uN
-         ENbXH6zKaTBuU32t46aQkCthXfgxAW9V1f8Aq/mK2h0PUzge177iwpZbKyk8TcBCy7
-         vOEkInOGSv3cHRoZx1rjGv6Md/L9BOHfQo9QQdubYzwxxnG05DmUEOKVqxTM/fgdr0
-         L5PYH0wqSYvpHegTZR4EVUf/HnbocoTASyf9QOQNzXuxCWdYCdHAWFesLFcoM+JdpG
-         ToQmukcC2gOsgohUGdauxPGNv7ZF8dwh1aoF2BL0r8i8ufc4MEgUjA15azts/ZgzT9
-         6pNvTF8MUtXAg==
-Subject: [PATCH 08/13] xfs: refactor domain and refcount checking
+        b=grAPDpzOUy+r0h230dfctf9N28GS+l/ziVodUyNyK6gqaAbCBLV8k+faTT/l1W8Y0
+         bVwOYfHm+o5U6bpOCjPSXBXZBp9+ur9iZLuJMAPfLv2q4QHkyYBlMGytdJLewCaAip
+         lDfarJmCPJYmm/iP1qC5nfc2uUZnIcqAFufsumAK3EXMjbeN9yb1vCujL3EyQEaiVz
+         amu3P6O2L2zMgCH9MITNOxN0reHrEsg62AP1A0fkr3y22tpXHdaTspTxL5hYJIyRNy
+         d8oKh7/JRRHtMiw+quK4sAUXQ25Mglb1pGTT1r18+hzqUbTx1RwP7aqUOQBs6UukgX
+         N2MHdmUIPhvUA==
+Subject: [PATCH 09/13] xfs: remove XFS_FIND_RCEXT_SHARED and _COW
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Date:   Sun, 30 Oct 2022 16:42:07 -0700
-Message-ID: <166717332713.417886.12749181191367647918.stgit@magnolia>
+Date:   Sun, 30 Oct 2022 16:42:12 -0700
+Message-ID: <166717333285.417886.4285666653639506394.stgit@magnolia>
 In-Reply-To: <166717328145.417886.10627661186183843873.stgit@magnolia>
 References: <166717328145.417886.10627661186183843873.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,79 +49,149 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a helper function to ensure that CoW staging extent records have
-a single refcount and that shared extent records have more than 1
-refcount.  We'll put this to more use in the next patch.
+Now that we have an explicit enum for shared and CoW staging extents, we
+can get rid of the old FIND_RCEXT flags.  Omit a couple of conversions
+that disappear in the next patches.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_refcount.c |    5 +----
- fs/xfs/libxfs/xfs_refcount.h |   12 ++++++++++++
- fs/xfs/scrub/refcount.c      |   10 ++++------
- 3 files changed, 17 insertions(+), 10 deletions(-)
+ fs/xfs/libxfs/xfs_refcount.c |   48 +++++++++++++++---------------------------
+ 1 file changed, 17 insertions(+), 31 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index 0f920eff34c4..8eaa11470f46 100644
+index 8eaa11470f46..ba2ddf177a49 100644
 --- a/fs/xfs/libxfs/xfs_refcount.c
 +++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -142,10 +142,7 @@ xfs_refcount_get_rec(
- 	if (irec->rc_blockcount == 0 || irec->rc_blockcount > MAXREFCEXTLEN)
- 		goto out_bad_rec;
+@@ -617,8 +617,6 @@ xfs_refcount_merge_right_extent(
+ 	return error;
+ }
  
--	/* handle special COW-staging domain */
--	if (irec->rc_domain == XFS_REFC_DOMAIN_COW && irec->rc_refcount != 1)
--		goto out_bad_rec;
--	if (irec->rc_domain == XFS_REFC_DOMAIN_SHARED && irec->rc_refcount < 2)
-+	if (!xfs_refcount_check_domain(irec))
- 		goto out_bad_rec;
+-#define XFS_FIND_RCEXT_SHARED	1
+-#define XFS_FIND_RCEXT_COW	2
+ /*
+  * Find the left extent and the one after it (cleft).  This function assumes
+  * that we've already split any extent crossing agbno.
+@@ -628,20 +626,14 @@ xfs_refcount_find_left_extents(
+ 	struct xfs_btree_cur		*cur,
+ 	struct xfs_refcount_irec	*left,
+ 	struct xfs_refcount_irec	*cleft,
++	enum xfs_refc_domain		domain,
+ 	xfs_agblock_t			agbno,
+-	xfs_extlen_t			aglen,
+-	int				flags)
++	xfs_extlen_t			aglen)
+ {
+ 	struct xfs_refcount_irec	tmp;
+-	enum xfs_refc_domain		domain;
+ 	int				error;
+ 	int				found_rec;
  
- 	/* check for valid extent range, including overflow */
-diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
-index 3beb5a30a9c9..ee32e8eb5a99 100644
---- a/fs/xfs/libxfs/xfs_refcount.h
-+++ b/fs/xfs/libxfs/xfs_refcount.h
-@@ -55,6 +55,18 @@ struct xfs_refcount_intent {
- 	xfs_fsblock_t				ri_startblock;
- };
+-	if (flags & XFS_FIND_RCEXT_SHARED)
+-		domain = XFS_REFC_DOMAIN_SHARED;
+-	else
+-		domain = XFS_REFC_DOMAIN_COW;
+-
+ 	left->rc_startblock = cleft->rc_startblock = NULLAGBLOCK;
+ 	error = xfs_refcount_lookup_le(cur, domain, agbno - 1, &found_rec);
+ 	if (error)
+@@ -659,9 +651,9 @@ xfs_refcount_find_left_extents(
  
-+/* Check that the refcount is appropriate for the record domain. */
-+static inline bool
-+xfs_refcount_check_domain(
-+	const struct xfs_refcount_irec	*irec)
-+{
-+	if (irec->rc_domain == XFS_REFC_DOMAIN_COW && irec->rc_refcount != 1)
-+		return false;
-+	if (irec->rc_domain == XFS_REFC_DOMAIN_SHARED && irec->rc_refcount < 2)
-+		return false;
-+	return true;
-+}
-+
- void xfs_refcount_increase_extent(struct xfs_trans *tp,
- 		struct xfs_bmbt_irec *irec);
- void xfs_refcount_decrease_extent(struct xfs_trans *tp,
-diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-index af5b796ec9ec..fe5ffe4f478d 100644
---- a/fs/xfs/scrub/refcount.c
-+++ b/fs/xfs/scrub/refcount.c
-@@ -337,14 +337,12 @@ xchk_refcountbt_rec(
+ 	if (xfs_refc_next(&tmp) != agbno)
+ 		return 0;
+-	if ((flags & XFS_FIND_RCEXT_SHARED) && tmp.rc_refcount < 2)
++	if (domain == XFS_REFC_DOMAIN_SHARED && tmp.rc_refcount < 2)
+ 		return 0;
+-	if ((flags & XFS_FIND_RCEXT_COW) && tmp.rc_refcount > 1)
++	if (domain == XFS_REFC_DOMAIN_COW && tmp.rc_refcount > 1)
+ 		return 0;
+ 	/* We have a left extent; retrieve (or invent) the next right one */
+ 	*left = tmp;
+@@ -725,20 +717,14 @@ xfs_refcount_find_right_extents(
+ 	struct xfs_btree_cur		*cur,
+ 	struct xfs_refcount_irec	*right,
+ 	struct xfs_refcount_irec	*cright,
++	enum xfs_refc_domain		domain,
+ 	xfs_agblock_t			agbno,
+-	xfs_extlen_t			aglen,
+-	int				flags)
++	xfs_extlen_t			aglen)
+ {
+ 	struct xfs_refcount_irec	tmp;
+-	enum xfs_refc_domain		domain;
+ 	int				error;
+ 	int				found_rec;
  
- 	xfs_refcount_btrec_to_irec(rec, &irec);
+-	if (flags & XFS_FIND_RCEXT_SHARED)
+-		domain = XFS_REFC_DOMAIN_SHARED;
+-	else
+-		domain = XFS_REFC_DOMAIN_COW;
+-
+ 	right->rc_startblock = cright->rc_startblock = NULLAGBLOCK;
+ 	error = xfs_refcount_lookup_ge(cur, domain, agbno + aglen, &found_rec);
+ 	if (error)
+@@ -756,9 +742,9 @@ xfs_refcount_find_right_extents(
  
--	/* Only CoW records can have refcount == 1. */
--	if (irec.rc_domain == XFS_REFC_DOMAIN_SHARED && irec.rc_refcount == 1)
-+	/* Check the domain and refcount are not incompatible. */
-+	if (!xfs_refcount_check_domain(&irec))
- 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
--	if (irec.rc_domain == XFS_REFC_DOMAIN_COW) {
--		if (irec.rc_refcount != 1)
--			xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-+
-+	if (irec.rc_domain == XFS_REFC_DOMAIN_COW)
- 		(*cow_blocks) += irec.rc_blockcount;
--	}
+ 	if (tmp.rc_startblock != agbno + aglen)
+ 		return 0;
+-	if ((flags & XFS_FIND_RCEXT_SHARED) && tmp.rc_refcount < 2)
++	if (domain == XFS_REFC_DOMAIN_SHARED && tmp.rc_refcount < 2)
+ 		return 0;
+-	if ((flags & XFS_FIND_RCEXT_COW) && tmp.rc_refcount > 1)
++	if (domain == XFS_REFC_DOMAIN_COW && tmp.rc_refcount > 1)
+ 		return 0;
+ 	/* We have a right extent; retrieve (or invent) the next left one */
+ 	*right = tmp;
+@@ -827,10 +813,10 @@ xfs_refc_valid(
+ STATIC int
+ xfs_refcount_merge_extents(
+ 	struct xfs_btree_cur	*cur,
++	enum xfs_refc_domain	domain,
+ 	xfs_agblock_t		*agbno,
+ 	xfs_extlen_t		*aglen,
+ 	enum xfs_refc_adjust_op adjust,
+-	int			flags,
+ 	bool			*shape_changed)
+ {
+ 	struct xfs_refcount_irec	left = {0}, cleft = {0};
+@@ -845,12 +831,12 @@ xfs_refcount_merge_extents(
+ 	 * just below (agbno + aglen) [cright], and just above (agbno + aglen)
+ 	 * [right].
+ 	 */
+-	error = xfs_refcount_find_left_extents(cur, &left, &cleft, *agbno,
+-			*aglen, flags);
++	error = xfs_refcount_find_left_extents(cur, &left, &cleft, domain,
++			*agbno, *aglen);
+ 	if (error)
+ 		return error;
+-	error = xfs_refcount_find_right_extents(cur, &right, &cright, *agbno,
+-			*aglen, flags);
++	error = xfs_refcount_find_right_extents(cur, &right, &cright, domain,
++			*agbno, *aglen);
+ 	if (error)
+ 		return error;
  
- 	/* Check the extent. */
- 	if (!xfs_verify_agbext(pag, irec.rc_startblock, irec.rc_blockcount))
+@@ -1139,8 +1125,8 @@ xfs_refcount_adjust(
+ 	/*
+ 	 * Try to merge with the left or right extents of the range.
+ 	 */
+-	error = xfs_refcount_merge_extents(cur, new_agbno, new_aglen, adj,
+-			XFS_FIND_RCEXT_SHARED, &shape_changed);
++	error = xfs_refcount_merge_extents(cur, XFS_REFC_DOMAIN_SHARED,
++			new_agbno, new_aglen, adj, &shape_changed);
+ 	if (error)
+ 		goto out_error;
+ 	if (shape_changed)
+@@ -1650,8 +1636,8 @@ xfs_refcount_adjust_cow(
+ 	/*
+ 	 * Try to merge with the left or right extents of the range.
+ 	 */
+-	error = xfs_refcount_merge_extents(cur, &agbno, &aglen, adj,
+-			XFS_FIND_RCEXT_COW, &shape_changed);
++	error = xfs_refcount_merge_extents(cur, XFS_REFC_DOMAIN_COW, &agbno,
++			&aglen, adj, &shape_changed);
+ 	if (error)
+ 		goto out_error;
+ 
 
