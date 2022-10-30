@@ -2,193 +2,245 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF2E4C433FE
-	for <linux-xfs@archiver.kernel.org>; Sat, 29 Oct 2022 22:02:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D753EC433FE
+	for <linux-xfs@archiver.kernel.org>; Sun, 30 Oct 2022 02:38:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229552AbiJ2WCh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 29 Oct 2022 18:02:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48744 "EHLO
+        id S229515AbiJ3CiV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 29 Oct 2022 22:38:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59402 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229441AbiJ2WCg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 29 Oct 2022 18:02:36 -0400
-Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE16B2CCB5
-        for <linux-xfs@vger.kernel.org>; Sat, 29 Oct 2022 15:02:34 -0700 (PDT)
-Received: by mail-pj1-x1032.google.com with SMTP id b11so7477910pjp.2
-        for <linux-xfs@vger.kernel.org>; Sat, 29 Oct 2022 15:02:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Bt0nmCbRltPLSVL25RgnVxAM7CFIno3Gz30lQjYP84E=;
-        b=mKOoZO6Arc8qmUa5ZzQLGHmXRTJUw72GZNw4Rmm7IZb+ryojNhJMVicn0xk9dH9Fj3
-         VFuXg5vT8vU0oqx8yhht2wUWpM0QWCpSvLFj74G+fLpjjlUrMwwU+0N7teBtlzWli1wv
-         c1gTV99ngBxonNwZh1zKrJTKPxKj3dNeddS1x9pUAfkxdTHCRNT3zVBJszC/g3ctKdEE
-         RHVS1mglr7Aw629peDslj/dddJj3Ur7P/3X3vFsdZ2Vcg41LsbNnyrkEUx/6gZznAEoU
-         GZc3+FNSvKe58tsAlvYi0SsbXe/fuPvAGxFsvgDJ5gdWe9WNS7BI3QCxbO6p1bjFlpXn
-         K8Tg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Bt0nmCbRltPLSVL25RgnVxAM7CFIno3Gz30lQjYP84E=;
-        b=Pu3YO+NT/yinuYK+FSaRe1iF64HJIniSB1gaWW+yvm7C2RWWlo48RYO94YqhvW9bzm
-         udl0NnE4e7M/LhssbfrSPKA17Y46KOJKqACSTy4rsvizUOG+0gxsFuKF9ST6+ch/hpEM
-         ndw5Oq6pUtpo1PY8xItb03PpXD3KMgChx2paBU4B+RTeqooB0NiMUk3tsAXJRLjvv9nx
-         OESW4+1CnckyN+3EvXMxvETdhxZr8G52/2g6yRzrUMgm1i8ITXRp+Ss67KO1M724JotN
-         u2bcUQE7yJRd0gzCex73Ipj83OTY9cJzLMOs4kbyX25XwKG64Xf3CiOF0iY0JQX0VZIx
-         x2uQ==
-X-Gm-Message-State: ACrzQf3hX1GmCNM5vvDS9OszCTdSfkvEq/HlS6rkWefFs5yjhlYGErTh
-        5rlM8OsUJx4scPZJhSRtLq1CjLNKq6n/Ag==
-X-Google-Smtp-Source: AMsMyM76vwI/ts6bsxOiQPwWFzW1Cl+UvoNxucP9sg+dfUzFeqWJ+lS5MO8zpIUenATu6RIul6fJEQ==
-X-Received: by 2002:a17:902:f60a:b0:186:5d06:8da4 with SMTP id n10-20020a170902f60a00b001865d068da4mr6491359plg.106.1667080895359;
-        Sat, 29 Oct 2022 15:01:35 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au. [49.181.106.210])
-        by smtp.gmail.com with ESMTPSA id i6-20020a170902c94600b0018685257c0dsm1752523pla.58.2022.10.29.15.01.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 29 Oct 2022 15:01:34 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1oottT-007xUx-KI; Sun, 30 Oct 2022 09:01:31 +1100
-Date:   Sun, 30 Oct 2022 09:01:31 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: redirty eof folio on truncate to avoid filemap flush
-Message-ID: <20221029220131.GF3600936@dread.disaster.area>
-References: <20221028130411.977076-1-bfoster@redhat.com>
- <20221028131109.977581-1-bfoster@redhat.com>
- <Y1we59XylviZs+Ry@bfoster>
- <20221028213014.GD3600936@dread.disaster.area>
- <Y1xqkT1vZ9OmzDmH@magnolia>
+        with ESMTP id S229441AbiJ3CiV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 29 Oct 2022 22:38:21 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C349B220DC
+        for <linux-xfs@vger.kernel.org>; Sat, 29 Oct 2022 19:38:19 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0E8D460B88
+        for <linux-xfs@vger.kernel.org>; Sun, 30 Oct 2022 02:38:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 6DF4EC43142
+        for <linux-xfs@vger.kernel.org>; Sun, 30 Oct 2022 02:38:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1667097498;
+        bh=TekbotUZY7hL1JVRtsmDmG4swqeDXuOR9AAJ02I5XM8=;
+        h=From:To:Subject:Date:From;
+        b=DCYDC4RaQyTdsyVeElxFLUQeUnk9lbxhr7zKR9r70+w2n3G+xz4YvVFeQ1cbGHWc3
+         6cSoedk26/72VB0HHfUrmCDnzqSWcVKa4OxA0Z758q4jlVu5gEEPGnEk8O9h01TbXC
+         +CRlCmXInOUrJ2wKjydsQbjuy94aQS1FDrI1Wr5knjURS25COY3mXDSzkbPhPB1Vy1
+         Mjiw1oijqBGqcLuidHlm8tgxDIAwqVmwtoXDnYnvYZVj//Z16bH1BcrIJM9mcWCXaI
+         b4jayGIvqVddxjoxmSm/uPqwFcMCG37AqbEWu580mASTrrVeqkKbZGu+ufpdamz1Fx
+         2w80UvB/UlFKQ==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 5BEBCC433E4; Sun, 30 Oct 2022 02:38:18 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 216639] New: [xfstests] WARNING: CPU: 1 PID: 429349 at
+ mm/huge_memory.c:2465 __split_huge_page_tail+0xab0/0xce0
+Date:   Sun, 30 Oct 2022 02:38:17 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: new
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: zlang@redhat.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_id short_desc product version
+ cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
+ priority component assigned_to reporter cf_regression
+Message-ID: <bug-216639-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y1xqkT1vZ9OmzDmH@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 28, 2022 at 04:49:37PM -0700, Darrick J. Wong wrote:
-> On Sat, Oct 29, 2022 at 08:30:14AM +1100, Dave Chinner wrote:
-> > On Fri, Oct 28, 2022 at 02:26:47PM -0400, Brian Foster wrote:
-> > > On Fri, Oct 28, 2022 at 09:11:09AM -0400, Brian Foster wrote:
-> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > ---
-> > > > 
-> > > > Here's a quick prototype of "option 3" described in my previous mail.
-> > > > This has been spot tested and confirmed to prevent the original stale
-> > > > data exposure problem. More thorough regression testing is still
-> > > > required. Barring unforeseen issues with that, however, I think this is
-> > > > tentatively my new preferred option. The primary reason for that is it
-> > > > avoids looking at extent state and is more in line with what iomap based
-> > > > zeroing should be doing more generically.
-> > > > 
-> > > > Because of that, I think this provides a bit more opportunity for follow
-> > > > on fixes (there are other truncate/zeroing problems I've come across
-> > > > during this investigation that still need fixing), cleanup and
-> > > > consolidation of the zeroing code. For example, I think the trajectory
-> > > > of this could look something like:
-> > > > 
-> > > > - Genericize a bit more to handle all truncates.
-> > > > - Repurpose iomap_truncate_page() (currently only used by XFS) into a
-> > > >   unique implementation from zero range that does explicit zeroing
-> > > >   instead of relying on pagecache truncate.
-> > > > - Refactor XFS ranged zeroing to an abstraction that uses a combination
-> > > >   of iomap_zero_range() and the new iomap_truncate_page().
-> > > > 
-> > > 
-> > > After playing with this and thinking a bit more about the above, I think
-> > > I managed to come up with an iomap_truncate_page() prototype that DTRT
-> > > based on this. Only spot tested so far, needs to pass iomap_flags to the
-> > > other bmbt_to_iomap() calls to handle the cow fork, undoubtedly has
-> > > other bugs/warts, etc. etc. This is just a quick prototype to
-> > > demonstrate the idea, which is essentially to check dirty state along
-> > > with extent state while under lock and transfer that state back to iomap
-> > > so it can decide whether it can shortcut or forcibly perform the zero.
-> > > 
-> > > In a nutshell, IOMAP_TRUNC_PAGE asks the fs to check dirty state while
-> > > under lock and implies that the range is sub-block (single page).
-> > > IOMAP_F_TRUNC_PAGE on the imap informs iomap that the range was in fact
-> > > dirty, so perform the zero via buffered write regardless of extent
-> > > state.
-> > 
-> > I'd much prefer we fix this in the iomap infrastructure - failing to
-> > zero dirty data in memory over an unwritten extent isn't an XFS bug,
-> > so we shouldn't be working around it in XFS like we did previously.
-> 
-> Hmm, I think I agree, given that this is really a bug in cache handling.
-> Or so I gather; reading on...
-> 
-> > I don't think this should be call "IOMAP_TRUNC_PAGE", though,
-> > because that indicates the caller context, not what we are asking
-> > the internal iomap code to do. What we are really asking is for
-> > iomap_zero_iter() to do is zero the page cache if it exists in
-> > memory, otherwise ignore unwritten/hole pages.  Hence I think a name
-> > like IOMAP_ZERO_PAGECACHE is more appropriate,
-> 
-> I don't even like ZERO_PAGECACHE -- in my mind that implies that it
-> unconditionally zeroes any page it finds, whereas we really only want it
-> to zero dirty cache contents.  IOMAP_ZERO_DIRTY_CACHE?
+https://bugzilla.kernel.org/show_bug.cgi?id=3D216639
 
-Fine by me, the name just needs to describe the action that needs to
-be performed....
+            Bug ID: 216639
+           Summary: [xfstests] WARNING: CPU: 1 PID: 429349 at
+                    mm/huge_memory.c:2465
+                    __split_huge_page_tail+0xab0/0xce0
+           Product: File System
+           Version: 2.5
+    Kernel Version: v6.1-rc2+
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: XFS
+          Assignee: filesystem_xfs@kernel-bugs.kernel.org
+          Reporter: zlang@redhat.com
+        Regression: No
 
-> > > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > > index 07da03976ec1..16d9b838e82d 100644
-> > > --- a/fs/xfs/xfs_iomap.c
-> > > +++ b/fs/xfs/xfs_iomap.c
-> > > @@ -915,6 +915,7 @@ xfs_buffered_write_iomap_begin(
-> > >  	int			allocfork = XFS_DATA_FORK;
-> > >  	int			error = 0;
-> > >  	unsigned int		lockmode = XFS_ILOCK_EXCL;
-> > > +	u16			iomap_flags = 0;
-> > >  
-> > >  	if (xfs_is_shutdown(mp))
-> > >  		return -EIO;
-> > > @@ -942,6 +943,10 @@ xfs_buffered_write_iomap_begin(
-> > >  	if (error)
-> > >  		goto out_unlock;
-> > >  
-> > > +	if ((flags & IOMAP_TRUNC_PAGE) &&
-> > > +	    filemap_range_needs_writeback(VFS_I(ip)->i_mapping, offset, offset))
-> > > +			iomap_flags |= IOMAP_F_TRUNC_PAGE;
-> > 
-> > As per above, I don't think we should be putting this check in the
-> > filesystem. That simplifies this a lot as filesystems don't need to
-> > know anything about how iomap manages the page cache for the
-> > filesystem...
-> 
-> I gather from the bug description that this appears to me to be a
-> problem with how we manage the page cache during a truncation when the
-> eofpage is backed by unwritten extents.
+Many xfstests cases fail [1] and hit below kernel
+(HEAD=3D05c31d25cc9678cc173cf12e259d638e8a641f66) warning [2] (on x86_64 and
+s390x). No special mkfs or mount options, just simple default xfs testing,
+without any MKFS_OPTIONS or MOUNT_OPTIONS specified.
 
-Right, think of iomap_truncate_page() as having exactly the same
-responsibilites as block_truncate_page() has for filesystems using
-bufferheads. i.e. both functions need to ensure the disk contents
-are correctly zeroed such that the caller can safely call
-truncate_setsize() afterwards resulting in both the on-disk state
-and in-memory state remaining coherent.
+[1]
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 hp-xxxxxx-xx-xxxx 6.1.0-rc2+ #1 SMP
+PREEMPT_DYNAMIC Fri Oct 28 19:52:51 EDT 2022
+MKFS_OPTIONS  -- -f -m crc=3D1,finobt=3D1,rmapbt=3D0,reflink=3D1,bigtime=3D=
+1,inobtcount=3D1
+/dev/vda2
+MOUNT_OPTIONS -- -o context=3Dsystem_u:object_r:root_t:s0 /dev/vda2
+/mnt/xfstests/scratch
 
-Hence iomap_truncate_page() needs to ensure that we handle dirty
-data over unwritten extents correctly. If we look further, it is
-obvious that iomap already has this responsibility:
-SEEK_HOLE/SEEK_DATA does page cache lookups to find data over
-unwritten extents. Hence it makes no sense for one part of iomap to
-take responsibility for managing data over unwritten extents, whilst
-another part ignores it...
+generic/061       _check_dmesg: something found in dmesg (see
+/var/lib/xfstests/results//generic/061.dmesg)
 
-If there was another filesystem using iomap and unwritten extents,
-it would have exactly the same issues with iomap_truncate_page().
-Hence:
+Ran: generic/061
+Failures: generic/061
+Failed 1 of 1 tests
 
-> As such, I think that this
-> should be a fix within iomap.
+[2]
+[14281.743118] run fstests generic/061 at 2022-10-29 01:00:39
+[14295.930483] page:000000001065a86b refcount:0 mapcount:0
+mapping:0000000064faa2f2 index:0x40 pfn:0x143040
+[14295.947825] head:000000001065a86b order:5 compound_mapcount:0
+compound_pincount:0
+[14295.950100] memcg:ffff88817efe2000
+[14295.951215] aops:xfs_address_space_operations [xfs] ino:8e dentry
+name:"061.429109"
+[14295.955474] flags:
+0x17ffffc0010035(locked|uptodate|lru|active|head|node=3D0|zone=3D2|lastcpup=
+id=3D0x1fffff)
+[14295.958302] raw: 0017ffffc0010035 ffffea0004756c08 ffffea00050c1788
+ffff88811e804448
+[14295.960624] raw: 0000000000000040 0000000000000000 00000000ffffffff
+ffff88817efe2000
+[14295.962927] page dumped because: VM_WARN_ON_ONCE_PAGE(page_tail->private=
+ !=3D
+0)
+[14295.965744] ------------[ cut here ]------------
+[14295.967201] WARNING: CPU: 1 PID: 429349 at mm/huge_memory.c:2465
+__split_huge_page_tail+0xab0/0xce0
+[14295.970250] Modules linked in: dm_flakey dm_mod tls rfkill
+snd_hda_codec_generic ledtrig_audio snd_hda_intel snd_intel_dspcfg
+snd_intel_sdw_acpi snd_hda_codec snd_hda_core qxl snd_hwdep snd_seq
+snd_seq_device drm_ttm_helper ttm snd_pcm joydev drm_kms_helper syscopyarea
+snd_timer sysfillrect snd virtio_balloon pcspkr sysimgblt fb_sys_fops i2c_p=
+iix4
+sunrpc soundcore drm fuse xfs libcrc32c crct10dif_pclmul crc32_pclmul
+ata_generic crc32c_intel ata_piix ghash_clmulni_intel libata virtio_net
+net_failover virtio_blk serio_raw failover virtio_console
+[14295.984668] CPU: 1 PID: 429349 Comm: xfs_io Kdump: loaded Tainted: G=20=
+=20=20=20=20=20=20
+W          6.1.0-rc2+ #1
+[14295.987390] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2011
+[14295.989144] RIP: 0010:__split_huge_page_tail+0xab0/0xce0
+[14295.990785] Code: fe ff e9 8e f7 ff ff 80 3d 72 8b 90 03 00 0f 85 66 f7 =
+ff
+ff 48 c7 c6 40 2c 1f ae 4c 89 e7 e8 47 0f eb ff c6 05 56 8b 90 03 01 <0f> 0=
+b e9
+49 f7 ff ff 4c 89 ff e8 91 0c fe ff e9 56 f6 ff ff e8 07
+[14295.996399] RSP: 0018:ffffc9000b46f6f8 EFLAGS: 00010082
+[14295.998036] RAX: 0000000000000042 RBX: ffffea00050c1740 RCX:
+0000000000000000
+[14296.000212] RDX: 0000000000000003 RSI: 0000000000000004 RDI:
+fffff5200168decf
+[14296.002360] RBP: ffffea00050c1008 R08: 0000000000000042 R09:
+ffff8881e49efceb
+[14296.004528] R10: ffffed103c93df9d R11: 0000000000000001 R12:
+ffffea00050c1000
+[14296.006705] R13: 0000000000000000 R14: ffffea00050c1768 R15:
+ffffea00050c1000
+[14296.008872] FS:  00007fa85ff20740(0000) GS:ffff8881e4800000(0000)
+knlGS:0000000000000000
+[14296.011295] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[14296.013067] CR2: 00007fa85fa00658 CR3: 000000017541a000 CR4:
+00000000000406e0
+[14296.015290] Call Trace:
+[14296.016083]  <TASK>
+[14296.016818]  ? lru_add_page_tail+0x67e/0xb00
+[14296.018235]  __split_huge_page+0x2a5/0x11b0
+[14296.019675]  split_huge_page_to_list+0xb13/0xf30
+[14296.021160]  ? kasan_quarantine_put+0x109/0x220
+[14296.022588]  ? can_split_folio+0x280/0x280
+[14296.023981]  ? truncate_inode_partial_folio+0x2d8/0x370
+[14296.025973]  ? __kmem_cache_free+0xb8/0x3a0
+[14296.027369]  truncate_inode_partial_folio+0x1d9/0x370
+[14296.028940]  truncate_inode_pages_range+0x350/0xbc0
+[14296.030519]  ? truncate_inode_partial_folio+0x370/0x370
+[14296.050033]  ? lock_downgrade+0x130/0x130
+[14296.051408]  ? __up_read+0x192/0x730
+[14296.052569]  ? up_write+0x20/0x20
+[14296.053650]  ? unmap_mapping_range+0xe0/0x250
+[14296.055265]  ? free_pgtables+0x2a0/0x3e0
+[14296.056544]  ? unmap_mapping_range+0xe0/0x250
+[14296.057948]  ? __do_fault+0x430/0x430
+[14296.059204]  truncate_pagecache+0x63/0x90
+[14296.060471]  xfs_setattr_size+0x2a2/0xc50 [xfs]
+[14296.062504]  ? xfs_vn_getattr+0x12f0/0x12f0 [xfs]
+[14296.064442]  ? xfs_break_layouts+0xe7/0x130 [xfs]
+[14296.066381]  ? setattr_prepare+0xe6/0x9e0
+[14296.067749]  xfs_vn_setattr+0x1bc/0x200 [xfs]
+[14296.069587]  ? xfs_setattr_size+0xc50/0xc50 [xfs]
+[14296.071588]  notify_change+0x961/0xfb0
+[14296.072769]  ? down_write_killable_nested+0x290/0x290
+[14296.074498]  ? do_truncate+0xf0/0x1a0
+[14296.075678]  do_truncate+0xf0/0x1a0
+[14296.076794]  ? file_open_root+0x210/0x210
+[14296.078042]  ? rcu_read_unlock+0x40/0x40
+[14296.079437]  do_sys_ftruncate+0x30a/0x5c0
+[14296.080755]  do_syscall_64+0x5c/0x90
+[14296.081907]  ? lockdep_hardirqs_on+0x79/0x100
+[14296.083304]  ? do_syscall_64+0x69/0x90
+[14296.084699]  ? asm_exc_page_fault+0x22/0x30
+[14296.086021]  ? lockdep_hardirqs_on+0x79/0x100
+[14296.087422]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+[14296.088989] RIP: 0033:0x7fa85fd464cb
+[14296.090168] Code: 77 05 c3 0f 1f 40 00 48 8b 15 51 39 0b 00 f7 d8 64 89 =
+02
+b8 ff ff ff ff c3 66 0f 1f 44 00 00 f3 0f 1e fa b8 4d 00 00 00 0f 05 <48> 3=
+d 00
+f0 ff ff 77 05 c3 0f 1f 40 00 48 8b 15 21 39 0b 00 f7 d8
+[14296.095662] RSP: 002b:00007fff0e111698 EFLAGS: 00000202 ORIG_RAX:
+000000000000004d
+[14296.097952] RAX: ffffffffffffffda RBX: 0000000000cfbfc0 RCX:
+00007fa85fd464cb
+[14296.100121] RDX: 0000000000000000 RSI: 0000000000050000 RDI:
+0000000000000003
+[14296.102272] RBP: 0000000000cfbfc0 R08: 1999999999999999 R09:
+0000000000000000
+[14296.104451] R10: 00007fa85fc05a48 R11: 0000000000000202 R12:
+0000000000cfbfa0
+[14296.106628] R13: 0000000000cfbfa0 R14: 0000000000cfbd70 R15:
+0000000000000002
+[14296.108934]  </TASK>
+[14296.109705] irq event stamp: 13262
+[14296.110819] hardirqs last  enabled at (13261): [<ffffffffac017f39>]
+kasan_quarantine_put+0x109/0x220
+[14296.113552] hardirqs last disabled at (13262): [<ffffffffac043ad3>]
+split_huge_page_to_list+0xba3/0xf30
+[14296.116556] softirqs last  enabled at (13168): [<ffffffffade00625>]
+__do_softirq+0x625/0x9b0
+[14296.119091] softirqs last disabled at (13161): [<ffffffffab825b7c>]
+__irq_exit_rcu+0x1fc/0x2a0
+[14296.121754] ---[ end trace 0000000000000000 ]---
+[14301.252660] XFS (vda3): EXPERIMENTAL online scrub feature in use. Use at
+your own risk!
+[14302.306970] XFS (vda3): Unmounting Filesystem
+[14304.275761] XFS (vda3): Mounting V5 Filesystem
+[14304.385543] XFS (vda3): Ending clean mount
+[14304.967072] XFS (vda3): Unmounting Filesystem
 
-This.
+--=20
+You may reply to this email to add a comment.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+You are receiving this mail because:
+You are watching the assignee of the bug.=
