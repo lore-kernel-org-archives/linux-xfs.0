@@ -2,81 +2,81 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9DDFC433FE
-	for <linux-xfs@archiver.kernel.org>; Sun, 30 Oct 2022 03:31:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F36CC433FE
+	for <linux-xfs@archiver.kernel.org>; Sun, 30 Oct 2022 03:31:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229489AbiJ3DbC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 29 Oct 2022 23:31:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54292 "EHLO
+        id S229635AbiJ3Dbz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 29 Oct 2022 23:31:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229494AbiJ3DbB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 29 Oct 2022 23:31:01 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C5B8A1BF
-        for <linux-xfs@vger.kernel.org>; Sat, 29 Oct 2022 20:30:03 -0700 (PDT)
+        with ESMTP id S229494AbiJ3Dby (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 29 Oct 2022 23:31:54 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0489E46D81
+        for <linux-xfs@vger.kernel.org>; Sat, 29 Oct 2022 20:30:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1667100602;
+        s=mimecast20190719; t=1667100649;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=oTfHmCM8MegwpVC1IsFznKV1yfOViiEMEjqCfINbhu0=;
-        b=feyie9QyBtWeiEKjddH9E8bZJXpgFIxw5kCdhpxKVJSqnlLWGkffMS3cjQzgQbju4d1/M2
-        D5x1omJD7iw+gEbG50p1C6zc2TypgLcbzI06/rMnxBt1GNSwIzqwE2CM3v5EkzoGz5uqo+
-        0+an+nMXP3tRqQRnwyxvLx6BWTVKwy8=
-Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
- [209.85.222.198]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=K+I7AYE5xAGm+ej8pDmP4KSGlE35GPlIkSJSeNUr2io=;
+        b=TB56Wh/79C9AkjoiL4NOEN7j+KWMuWhNtrCJ41o2NTLFgvmnUgAmKzvMWwgHUcWKVPfazE
+        pUnMiXJZ12toujG6c1hiHYY4y5ULplfPUsWoHWky/plYS71nflJJXiBCa15GEpHkDC8WdD
+        yIF1ddxyY1XvvM3kltC9QnmwUcMX7O0=
+Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com
+ [209.85.160.199]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-133-PAQk3xQjMI2V-m3QFUIsiA-1; Sat, 29 Oct 2022 23:30:01 -0400
-X-MC-Unique: PAQk3xQjMI2V-m3QFUIsiA-1
-Received: by mail-qk1-f198.google.com with SMTP id bi38-20020a05620a31a600b006eeb2862816so6693958qkb.0
-        for <linux-xfs@vger.kernel.org>; Sat, 29 Oct 2022 20:30:01 -0700 (PDT)
+ us-mta-118-2jy-awqfN8O80Lpacy5RJw-1; Sat, 29 Oct 2022 23:30:47 -0400
+X-MC-Unique: 2jy-awqfN8O80Lpacy5RJw-1
+Received: by mail-qt1-f199.google.com with SMTP id 17-20020ac85711000000b0039ccd4c9a37so5744884qtw.20
+        for <linux-xfs@vger.kernel.org>; Sat, 29 Oct 2022 20:30:47 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=oTfHmCM8MegwpVC1IsFznKV1yfOViiEMEjqCfINbhu0=;
-        b=ztsFQGJW/8eHAUhfGjIDtiDM2eJgLB+rGkkBxtxzO1EHw8uTOMZFvSkGXLcfdI0H91
-         wwzZgTA1HdnjqkTjN8qDHCJhPfiJ9iJHm/4wrB7MJEc+ESaS2XHgcip64aRSb+ONJLH/
-         QRQkfWrleguUDxsiLHY83YRweeIkl+YgjP+v4DQgx3bwF8TrwiZozcyUdvuciq9tHlGl
-         nSE2b1kEMb4XWGNa/5s/o4om7VxiW+ukC3K+mn+ziL5ImQ9UNQMcKlbZRh28vrEjhc62
-         cBirhszk1vJrgXMj1AXJZuzxByO+TPTn/Je0LIw9bwnFXGeGpSoqQP/2Qaa1oppTUQEy
-         jZYQ==
-X-Gm-Message-State: ACrzQf3su3ju2InBOUj+Pd5ppxV2xTKEjv+pTatkY6DmMlcb7WZ2w5mf
-        lLrVp9zBFEQffUXmIvv6iFJtqDFcm/GEDW9z3V5N5KRxLKscxG6vkiq15raDQ1LeWsDwMo8hmHt
-        irgWN8lHrSrVlAXUOdYOn
-X-Received: by 2002:ad4:594e:0:b0:4bb:d696:4a80 with SMTP id eo14-20020ad4594e000000b004bbd6964a80mr3087668qvb.2.1667100600056;
-        Sat, 29 Oct 2022 20:30:00 -0700 (PDT)
-X-Google-Smtp-Source: AMsMyM6M7bAYUAcVmlmB6yqgF1pMJP1BrauVPaifhOLsyyMihBzt9dRrseL//1Ytx6NTsADbvdAR5g==
-X-Received: by 2002:ad4:594e:0:b0:4bb:d696:4a80 with SMTP id eo14-20020ad4594e000000b004bbd6964a80mr3087662qvb.2.1667100599790;
-        Sat, 29 Oct 2022 20:29:59 -0700 (PDT)
+        bh=K+I7AYE5xAGm+ej8pDmP4KSGlE35GPlIkSJSeNUr2io=;
+        b=8KHcU33mUwn2oNcIzrKD6/Hnwhf1FWPh1TePOqcdSJU2e2ODEzv2BNYtRMjRvzLHU9
+         tYUQoMHItzZuUPw7YBSA32WcPTRR0DxOEzawAvQMBKo6j0hFIg58x1SIcBPcRkN/BZ+p
+         cS/g2DR2hRv5Dp1w0+maKyPbVg+//FkNcY/1rE45s/tZfrG8Cd0fXXUPrHsjLzvTQyIq
+         P2CMtUUgg1oWNZgtGH5WVZe35Izq4Eht/cYsyV2asq+nv7klS0DZHB55pKalRaP3pElK
+         9J9LB9BduSjhaiKd+aAcyxQ+94RqL5FcHGnpB4uJKK1aA8Tkv6l6Du9/X02uwT1FVn/l
+         SH0g==
+X-Gm-Message-State: ACrzQf0VOPJDp3BcfIwtS08GvqzgCOj+dHibyw07jLSZVNavfdDmgb3X
+        X7VwglyluIdLvMkwc1OOG6hwMlHyNRTeevrVJykh9fo+82uf1dMeGHSiTZoPLUK52HPJyUvNja9
+        wgNCkjydikFGy4R/NPJMo
+X-Received: by 2002:a05:6214:21e5:b0:4b3:f3e0:5432 with SMTP id p5-20020a05621421e500b004b3f3e05432mr5735933qvj.19.1667100646092;
+        Sat, 29 Oct 2022 20:30:46 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM7ljld8T68BMfo7yp1VxLrt41hcEKHITaj02f7tM14dmzeKba/FEbtDcOQeoJSUJYKpPL/wMw==
+X-Received: by 2002:a05:6214:21e5:b0:4b3:f3e0:5432 with SMTP id p5-20020a05621421e500b004b3f3e05432mr5735922qvj.19.1667100645834;
+        Sat, 29 Oct 2022 20:30:45 -0700 (PDT)
 Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id i5-20020ac860c5000000b0035d08c1da35sm1716306qtm.45.2022.10.29.20.29.57
+        by smtp.gmail.com with ESMTPSA id i22-20020ac871d6000000b003431446588fsm1736604qtp.5.2022.10.29.20.30.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 29 Oct 2022 20:29:59 -0700 (PDT)
-Date:   Sun, 30 Oct 2022 11:29:54 +0800
+        Sat, 29 Oct 2022 20:30:45 -0700 (PDT)
+Date:   Sun, 30 Oct 2022 11:30:41 +0800
 From:   Zorro Lang <zlang@redhat.com>
 To:     fstests@vger.kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/4] xfs: refactor filesystem directory block size
- extraction logic
-Message-ID: <20221030032954.iawetdgn4gpqrnwi@zlang-mailbox>
+Subject: Re: [PATCH 3/4] xfs: refactor filesystem realtime geometry detection
+ logic
+Message-ID: <20221030033041.giu6hui56dkipfl4@zlang-mailbox>
 References: <166697890818.4183768.10822596619783607332.stgit@magnolia>
- <166697891959.4183768.4250658285402219552.stgit@magnolia>
+ <166697892518.4183768.8627162682551184087.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <166697891959.4183768.4250658285402219552.stgit@magnolia>
+In-Reply-To: <166697892518.4183768.8627162682551184087.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 28, 2022 at 10:41:59AM -0700, Darrick J. Wong wrote:
+On Fri, Oct 28, 2022 at 10:42:05AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> There are a lot of places where we open-code determining the directory
-> block size for a specific filesystem.  Refactor this into a single
-> helper to clean up existing tests.
+> There are a lot of places where we open-code detecting the realtime
+> extent size and extent count of a specific filesystem.  Refactor this
+> into a couple of helpers to clean up the code.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
@@ -84,150 +84,128 @@ On Fri, Oct 28, 2022 at 10:41:59AM -0700, Darrick J. Wong wrote:
 Good to me,
 Reviewed-by: Zorro Lang <zlang@redhat.com>
 
->  common/populate |    4 ++--
->  common/xfs      |    9 +++++++++
->  tests/xfs/099   |    2 +-
->  tests/xfs/100   |    2 +-
->  tests/xfs/101   |    2 +-
->  tests/xfs/102   |    2 +-
->  tests/xfs/105   |    2 +-
->  tests/xfs/112   |    2 +-
->  tests/xfs/113   |    2 +-
->  9 files changed, 18 insertions(+), 9 deletions(-)
+>  common/populate |    2 +-
+>  common/xfs      |   31 +++++++++++++++++++++++++++++--
+>  tests/xfs/146   |    2 +-
+>  tests/xfs/147   |    2 +-
+>  tests/xfs/530   |    3 +--
+>  5 files changed, 33 insertions(+), 7 deletions(-)
 > 
 > 
 > diff --git a/common/populate b/common/populate
-> index 9fa1a06798..23b2fecf69 100644
+> index 23b2fecf69..d9d4c6c300 100644
 > --- a/common/populate
 > +++ b/common/populate
-> @@ -175,7 +175,7 @@ _scratch_xfs_populate() {
->  	_xfs_force_bdev data $SCRATCH_MNT
+> @@ -323,7 +323,7 @@ _scratch_xfs_populate() {
+>  	fi
 >  
->  	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
-> -	dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> +	dblksz="$(_xfs_get_dir_blocksize "$SCRATCH_MNT")"
->  	crc="$(_xfs_has_feature "$SCRATCH_MNT" crc -v)"
->  	if [ $crc -eq 1 ]; then
->  		leaf_hdr_size=64
-> @@ -602,7 +602,7 @@ _scratch_xfs_populate_check() {
->  	is_reflink=$(_xfs_has_feature "$SCRATCH_MNT" reflink -v)
->  
->  	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
-> -	dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> +	dblksz="$(_xfs_get_dir_blocksize "$SCRATCH_MNT")"
->  	leaf_lblk="$((32 * 1073741824 / blksz))"
->  	node_lblk="$((64 * 1073741824 / blksz))"
->  	umount "${SCRATCH_MNT}"
+>  	# Realtime Reverse-mapping btree
+> -	is_rt="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep -c 'rtextents=[1-9]')"
+> +	is_rt="$(_xfs_get_rtextents "$SCRATCH_MNT")"
+>  	if [ $is_rmapbt -gt 0 ] && [ $is_rt -gt 0 ]; then
+>  		echo "+ rtrmapbt btree"
+>  		nr="$((blksz * 2 / 32))"
 > diff --git a/common/xfs b/common/xfs
-> index b2ac78de0c..9b6575b5f2 100644
+> index 9b6575b5f2..a995e0b5da 100644
 > --- a/common/xfs
 > +++ b/common/xfs
-> @@ -194,6 +194,15 @@ _xfs_get_file_block_size()
->  	$XFS_INFO_PROG "$path" | grep realtime | sed -e 's/^.*extsz=\([0-9]*\).*$/\1/g'
+> @@ -174,6 +174,24 @@ _scratch_mkfs_xfs()
+>  	return $mkfs_status
 >  }
 >  
-> +# Get the directory block size of a mounted filesystem.
-> +_xfs_get_dir_blocksize()
+> +# Get the number of realtime extents of a mounted filesystem.
+> +_xfs_get_rtextents()
 > +{
-> +	local fs="$1"
+> +	local path="$1"
 > +
-> +	$XFS_INFO_PROG "$fs" | grep 'naming.*bsize' | \
-> +		sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g'
+> +	$XFS_INFO_PROG "$path" | grep 'rtextents' | \
+> +		sed -e 's/^.*rtextents=\([0-9]*\).*$/\1/g'
 > +}
 > +
->  # Set or clear the realtime status of every supplied path.  The first argument
->  # is either 'data' or 'realtime'.  All other arguments should be paths to
->  # existing directories or empty regular files.
-> diff --git a/tests/xfs/099 b/tests/xfs/099
-> index a7eaff6e0c..82bef8ad26 100755
-> --- a/tests/xfs/099
-> +++ b/tests/xfs/099
-> @@ -37,7 +37,7 @@ _scratch_mkfs_xfs > /dev/null
+> +# Get the realtime extent size of a mounted filesystem.
+> +_xfs_get_rtextsize()
+> +{
+> +	local path="$1"
+> +
+> +	$XFS_INFO_PROG "$path" | grep 'realtime.*extsz' | \
+> +		sed -e 's/^.*extsz=\([0-9]*\).*$/\1/g'
+> +}
+> +
+>  # Get the size of an allocation unit of a file.  Normally this is just the
+>  # block size of the file, but for realtime files, this is the realtime extent
+>  # size.
+> @@ -191,7 +209,7 @@ _xfs_get_file_block_size()
+>  	while ! $XFS_INFO_PROG "$path" &>/dev/null && [ "$path" != "/" ]; do
+>  		path="$(dirname "$path")"
+>  	done
+> -	$XFS_INFO_PROG "$path" | grep realtime | sed -e 's/^.*extsz=\([0-9]*\).*$/\1/g'
+> +	_xfs_get_rtextsize "$path"
+>  }
 >  
->  echo "+ mount fs image"
->  _scratch_mount
-> -dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> +dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
->  nr="$((dblksz / 40))"
->  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
->  leaf_lblk="$((32 * 1073741824 / blksz))"
-> diff --git a/tests/xfs/100 b/tests/xfs/100
-> index 79da8cb02c..e638b4ba17 100755
-> --- a/tests/xfs/100
-> +++ b/tests/xfs/100
-> @@ -37,7 +37,7 @@ _scratch_mkfs_xfs > /dev/null
+>  # Get the directory block size of a mounted filesystem.
+> @@ -427,13 +445,22 @@ _require_xfs_crc()
+>  # third option is -v, echo 1 for success and 0 for not.
+>  #
+>  # Starting with xfsprogs 4.17, this also works for unmounted filesystems.
+> +# The feature 'realtime' looks for rtextents > 0.
+>  _xfs_has_feature()
+>  {
+>  	local fs="$1"
+>  	local feat="$2"
+>  	local verbose="$3"
+> +	local feat_regex="1"
 >  
->  echo "+ mount fs image"
->  _scratch_mount
-> -dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> +dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
->  nr="$((dblksz / 12))"
->  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
->  leaf_lblk="$((32 * 1073741824 / blksz))"
-> diff --git a/tests/xfs/101 b/tests/xfs/101
-> index 64f4705aca..11ed329110 100755
-> --- a/tests/xfs/101
-> +++ b/tests/xfs/101
-> @@ -37,7 +37,7 @@ _scratch_mkfs_xfs > /dev/null
+> -	local answer="$($XFS_INFO_PROG "$fs" 2>&1 | grep -w -c "$feat=1")"
+> +	case "$feat" in
+> +	"realtime")
+> +		feat="rtextents"
+> +		feat_regex="[1-9][0-9]*"
+> +		;;
+> +	esac
+> +
+> +	local answer="$($XFS_INFO_PROG "$fs" 2>&1 | grep -E -w -c "$feat=$feat_regex")"
+>  	if [ "$answer" -ne 0 ]; then
+>  		test "$verbose" = "-v" && echo 1
+>  		return 0
+> diff --git a/tests/xfs/146 b/tests/xfs/146
+> index 5516d396bf..123bdff59f 100755
+> --- a/tests/xfs/146
+> +++ b/tests/xfs/146
+> @@ -31,7 +31,7 @@ _scratch_mkfs > $seqres.full
+>  _scratch_mount >> $seqres.full
 >  
->  echo "+ mount fs image"
->  _scratch_mount
-> -dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> +dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
->  nr="$((dblksz / 12))"
->  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
->  leaf_lblk="$((32 * 1073741824 / blksz))"
-> diff --git a/tests/xfs/102 b/tests/xfs/102
-> index 24dce43058..43f4539181 100755
-> --- a/tests/xfs/102
-> +++ b/tests/xfs/102
-> @@ -37,7 +37,7 @@ _scratch_mkfs_xfs > /dev/null
+>  blksz=$(_get_block_size $SCRATCH_MNT)
+> -rextsize=$($XFS_INFO_PROG $SCRATCH_MNT | grep realtime.*extsz | sed -e 's/^.*extsz=\([0-9]*\).*$/\1/g')
+> +rextsize=$(_xfs_get_rtextsize "$SCRATCH_MNT")
+>  rextblks=$((rextsize / blksz))
 >  
->  echo "+ mount fs image"
->  _scratch_mount
-> -dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> +dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
->  nr="$((16 * dblksz / 40))"
->  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
->  leaf_lblk="$((32 * 1073741824 / blksz))"
-> diff --git a/tests/xfs/105 b/tests/xfs/105
-> index 22a8bf9fb0..002a712883 100755
-> --- a/tests/xfs/105
-> +++ b/tests/xfs/105
-> @@ -37,7 +37,7 @@ _scratch_mkfs_xfs > /dev/null
+>  echo "blksz $blksz rextsize $rextsize rextblks $rextblks" >> $seqres.full
+> diff --git a/tests/xfs/147 b/tests/xfs/147
+> index e21fdd330c..33b3c99633 100755
+> --- a/tests/xfs/147
+> +++ b/tests/xfs/147
+> @@ -29,7 +29,7 @@ _scratch_mkfs -r extsize=256k > $seqres.full
+>  _scratch_mount >> $seqres.full
 >  
->  echo "+ mount fs image"
->  _scratch_mount
-> -dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> +dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
->  nr="$((16 * dblksz / 40))"
->  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
->  leaf_lblk="$((32 * 1073741824 / blksz))"
-> diff --git a/tests/xfs/112 b/tests/xfs/112
-> index bc1ab62895..e2d5932da6 100755
-> --- a/tests/xfs/112
-> +++ b/tests/xfs/112
-> @@ -37,7 +37,7 @@ _scratch_mkfs_xfs > /dev/null
+>  blksz=$(_get_block_size $SCRATCH_MNT)
+> -rextsize=$($XFS_INFO_PROG $SCRATCH_MNT | grep realtime.*extsz | sed -e 's/^.*extsz=\([0-9]*\).*$/\1/g')
+> +rextsize=$(_xfs_get_rtextsize "$SCRATCH_MNT")
+>  rextblks=$((rextsize / blksz))
 >  
->  echo "+ mount fs image"
->  _scratch_mount
-> -dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> +dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
->  nr="$((16 * dblksz / 40))"
->  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
->  leaf_lblk="$((32 * 1073741824 / blksz))"
-> diff --git a/tests/xfs/113 b/tests/xfs/113
-> index e820ed96da..9bb2cd304b 100755
-> --- a/tests/xfs/113
-> +++ b/tests/xfs/113
-> @@ -37,7 +37,7 @@ _scratch_mkfs_xfs > /dev/null
+>  echo "blksz $blksz rextsize $rextsize rextblks $rextblks" >> $seqres.full
+> diff --git a/tests/xfs/530 b/tests/xfs/530
+> index c960738db7..56f5e7ebdb 100755
+> --- a/tests/xfs/530
+> +++ b/tests/xfs/530
+> @@ -73,8 +73,7 @@ _try_scratch_mount || _notrun "Couldn't mount fs with synthetic rt volume"
+>  formatted_blksz="$(_get_block_size $SCRATCH_MNT)"
+>  test "$formatted_blksz" -ne "$dbsize" && \
+>  	_notrun "Tried to format with $dbsize blocksize, got $formatted_blksz."
+> -$XFS_INFO_PROG $SCRATCH_MNT | grep -E -q 'realtime.*blocks=0' && \
+> -	_notrun "Filesystem should have a realtime volume"
+> +_require_xfs_has_feature "$SCRATCH_MNT" realtime
 >  
->  echo "+ mount fs image"
->  _scratch_mount
-> -dblksz="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep naming.*bsize | sed -e 's/^.*bsize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-> +dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
->  nr="$((128 * dblksz / 40))"
->  blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
->  leaf_lblk="$((32 * 1073741824 / blksz))"
+>  echo "Consume free space"
+>  fillerdir=$SCRATCH_MNT/fillerdir
 > 
 
