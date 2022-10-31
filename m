@@ -2,166 +2,165 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CDA0C38A02
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Oct 2022 01:21:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43D25C38A02
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Oct 2022 03:43:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229544AbiJaBVx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 30 Oct 2022 21:21:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42608 "EHLO
+        id S229619AbiJaDnb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 30 Oct 2022 23:43:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229441AbiJaBVw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Oct 2022 21:21:52 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B181BE6
-        for <linux-xfs@vger.kernel.org>; Sun, 30 Oct 2022 18:21:51 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0C2B8B810D8
-        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2022 01:21:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 8E8D6C43141
-        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2022 01:21:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1667179308;
-        bh=nS+cln8CIohRP96Zy8qLMPnCE/0H0ioBgHbXv666DUg=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=fqC8yTBhinDX5UpVHdwys87XBo2urHj2JtJ/Fmf6hKuiqa8X3cyi2/4aFXHhXddmJ
-         6hu4Saqf1JgMnMsYpbHEDbdPYnoZPavUOAcsFtyi5PJf+UI2hPzLYivBvKCJtdNSss
-         fe8/5a8+4Nbl+9tMGGpM13LLgDHKXJ7Vn89aqx+4njbXAIvmPYA40qmOJPk9sga4AP
-         erlVOB7qqee/lLfk61kOtJFEH9ftTd4+CwLNbyxMTla8FGg+gkUKygXSrW45SE7Jg/
-         20bR3oLFIZ7KuW5ScbuOpblceC/M1sfx0GYPRTJvXqVSm754SBbmq0kqo9f4KSXmWw
-         GQx3HFNscIO4Q==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 7E6E1C433E9; Mon, 31 Oct 2022 01:21:48 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 216639] [xfstests] WARNING: CPU: 1 PID: 429349 at
- mm/huge_memory.c:2465 __split_huge_page_tail+0xab0/0xce0
-Date:   Mon, 31 Oct 2022 01:21:48 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: zlang@redhat.com
-X-Bugzilla-Status: RESOLVED
-X-Bugzilla-Resolution: PATCH_ALREADY_AVAILABLE
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_status resolution
-Message-ID: <bug-216639-201763-E7Sgkj3yB8@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-216639-201763@https.bugzilla.kernel.org/>
-References: <bug-216639-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S229542AbiJaDn2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Oct 2022 23:43:28 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3F36132;
+        Sun, 30 Oct 2022 20:43:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=g0+529g7/BZGwQhfV0sZXm4SOXToszjU7oM5nb63tCQ=; b=N3z995FrLFnpQSTxf1ya8/EM/r
+        +FPn5giW6t/23Y/fX75XcvDdwJSRyBYqN6LCsOKa0z1yOXzir7/YG9XeIMzf/+oDVJ0uu2op1bL7x
+        tzLiAvhiy5PQAxGI4YHJAxm/xGIFfs1Rv12OgeYanWe4enU4XKZd3foBnSACZB1uXDi33bPOk8L2O
+        0rlHhi2RlEVvaKdRQD/XvG/bXsN+OUYLxdC2eXYPDAiDPGEpAADT1y/gfjf+Vh0TBnci/J2vUYox6
+        fkGP7hjDl4hMDELwt5P9NAlXXvaV6kmWrCcyGeAAH+jF1TqrkZJ5R3AN7g7VXDClYhWPG4giSdL2J
+        fEYVvZNw==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1opLhs-003NSB-H6; Mon, 31 Oct 2022 03:43:24 +0000
+Date:   Mon, 31 Oct 2022 03:43:24 +0000
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Aravinda Herle <araherle@in.ibm.com>,
+        David Howells <dhowells@redhat.com>
+Subject: Re: [RFC 2/2] iomap: Support subpage size dirty tracking to improve
+ write performance
+Message-ID: <Y19EXLfn8APg3adO@casper.infradead.org>
+References: <cover.1666928993.git.ritesh.list@gmail.com>
+ <886076cfa6f547d22765c522177d33cf621013d2.1666928993.git.ritesh.list@gmail.com>
+ <20221028210422.GC3600936@dread.disaster.area>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221028210422.GC3600936@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D216639
+On Sat, Oct 29, 2022 at 08:04:22AM +1100, Dave Chinner wrote:
+> To me, this is a fundamental architecture change in the way iomap
+> interfaces with the page cache and filesystems. Folio based dirty
+> tracking is top down, whilst filesystem block based dirty tracking
+> *needs* to be bottom up.
+> 
+> The bottom up approach is what bufferheads do, and it requires a
+> much bigger change that just adding dirty region tracking to the
+> iomap write and writeback paths.
 
-Zorro Lang (zlang@redhat.com) changed:
+I agree that bufferheads do bottom-up dirty tracking, but I don't think
+that what Ritesh is doing here is bottom-up dirty tracking.  Buffer
+heads expose an API to dirty a block, which necessarily goes bottom-up.
+There's no API here to dirty a block.  Instead there's an API to dirty
+a range of a folio, so we're still top-down; we're just keeping track
+of it in a more precise way.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|---                         |PATCH_ALREADY_AVAILABLE
+It's a legitimate complaint that there's now state that needs to be
+kept in sync with the page cache.  More below ...
 
---- Comment #3 from Zorro Lang (zlang@redhat.com) ---
-(In reply to Dave Chinner from comment #2)
-> On Sun, Oct 30, 2022 at 02:38:17AM +0000, bugzilla-daemon@kernel.org wrot=
-e:
-> > Many xfstests cases fail [1] and hit below kernel
-> > (HEAD=3D05c31d25cc9678cc173cf12e259d638e8a641f66) warning [2] (on x86_6=
-4 and
-> > s390x). No special mkfs or mount options, just simple default xfs testi=
-ng,
-> > without any MKFS_OPTIONS or MOUNT_OPTIONS specified.
-> >=20
-> > [1]
-> > FSTYP         -- xfs (debug)
-> > PLATFORM      -- Linux/x86_64 hp-xxxxxx-xx-xxxx 6.1.0-rc2+ #1 SMP
-> > PREEMPT_DYNAMIC Fri Oct 28 19:52:51 EDT 2022
-> > MKFS_OPTIONS  -- -f -m
-> > crc=3D1,finobt=3D1,rmapbt=3D0,reflink=3D1,bigtime=3D1,inobtcount=3D1
-> > /dev/vda2
-> > MOUNT_OPTIONS -- -o context=3Dsystem_u:object_r:root_t:s0 /dev/vda2
-> > /mnt/xfstests/scratch
-> >=20
-> > generic/061       _check_dmesg: something found in dmesg (see
-> > /var/lib/xfstests/results//generic/061.dmesg)
-> >=20
-> > Ran: generic/061
-> > Failures: generic/061
-> > Failed 1 of 1 tests
-> >=20
-> > [2]
-> > [14281.743118] run fstests generic/061 at 2022-10-29 01:00:39
-> > [14295.930483] page:000000001065a86b refcount:0 mapcount:0
-> > mapping:0000000064faa2f2 index:0x40 pfn:0x143040
-> > [14295.947825] head:000000001065a86b order:5 compound_mapcount:0
-> > compound_pincount:0
-> > [14295.950100] memcg:ffff88817efe2000
-> > [14295.951215] aops:xfs_address_space_operations [xfs] ino:8e dentry
-> > name:"061.429109"
-> > [14295.955474] flags:
-> >
-> 0x17ffffc0010035(locked|uptodate|lru|active|head|node=3D0|zone=3D2|lastcp=
-upid=3D0x1fffff)
-> > [14295.958302] raw: 0017ffffc0010035 ffffea0004756c08 ffffea00050c1788
-> > ffff88811e804448
-> > [14295.960624] raw: 0000000000000040 0000000000000000 00000000ffffffff
-> > ffff88817efe2000
-> > [14295.962927] page dumped because: VM_WARN_ON_ONCE_PAGE(page_tail->pri=
-vate
-> > !=3D 0)
-> > [14295.965744] ------------[ cut here ]------------
-> > [14295.967201] WARNING: CPU: 1 PID: 429349 at mm/huge_memory.c:2465
-> > __split_huge_page_tail+0xab0/0xce0
-> ....
-> > [14296.015290] Call Trace:
-> > [14296.016083]  <TASK>
-> > [14296.018235]  __split_huge_page+0x2a5/0x11b0
-> > [14296.019675]  split_huge_page_to_list+0xb13/0xf30
-> > [14296.027369]  truncate_inode_partial_folio+0x1d9/0x370
-> > [14296.028940]  truncate_inode_pages_range+0x350/0xbc0
-> > [14296.059204]  truncate_pagecache+0x63/0x90
-> > [14296.060471]  xfs_setattr_size+0x2a2/0xc50 [xfs]
->=20
-> Yup, splitting a multi-page folio during truncate. Looks like this
-> has already been fixed in the Linus kernel by commit 5aae9265ee1a
-> ("mm: prep_compound_tail() clear page->private") here:
->=20
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/
-> ?id=3D5aae9265ee1a30cf716d6caf6b29fe99b9d55130
->=20
-> It was merged after your currrent head commit...
+> That is, moving to tracking dirty regions on a filesystem block
+> boundary brings back all the coherency problems we had with
+> trying to keep bufferhead dirty state coherent with page dirty
+> state. This was one of the major simplifications that the iomap
+> infrastructure brought to the table - all the dirty tracking is done
+> by the page cache, and the filesystem has nothing to do with it at
+> all....
+> 
+> IF we are going to change this, then there needs to be clear rules
+> on how iomap dirty state is kept coherent with the folio dirty
+> state, and there need to be checks placed everywhere to ensure that
+> the rules are followed and enforced.
+> 
+> So what are the rules? If the folio is dirty, it must have at least one
+> dirty region? If the folio is clean, can it have dirty regions?
 
-Thanks Dave! Hahah, looks like I just missed that fix :) I submitted testing
-jobs on Friday night, then checked results on Sunday morning, just missed t=
-his
-commit merging.
+If there is any dirty region, the folio must be marked dirty (otherwise
+we'll never know that it needs to be written back).  The interesting
+question (as your paragraph below hints) is whether removing the dirty
+part of a folio from a file marks the folio clean.  I believe that's
+optional, but it's probably worth doing.
 
-Thanks,
-Zorro
+> What happens to the dirty regions when truncate zeros part of a page
+> beyond EOF? If the iomap regions are clean, do they need to be
+> dirtied? If the regions are dirtied, do they need to be cleaned?
+> Does this hold for all trailing filesystem blocks in the (multipage)
+> folio, of just the one that spans the new EOF?
+> 
+> What happens with direct extent manipulation like fallocate()
+> operations? These invalidate the parts of the page cache over the
+> range we are punching, shifting, etc, without interacting directly
+> with iomap, so do we now have to ensure that the sub-folio dirty
+> regions are also invalidated correctly? i.e. do functions like
+> xfs_flush_unmap_range() need to become iomap infrastructure so that
+> they can update sub-folio dirty ranges correctly?
 
->=20
-> This won't reproduce on ext4 because it doesn't use multi-page
-> folios in the page cache.
->=20
-> Cheers,
->=20
-> Dave.
+I'm slightly confused by this question.  As I understand the various
+fallocate operations, they start by kicking out all the folios affected
+by the operation (generally from the start of the operation to EOF),
+so we'd writeback the (dirty part of) folios which are dirty, then
+invalidate the folios in cache.  I'm not sure there's going to be
+much difference.
 
---=20
-You may reply to this email to add a comment.
+> What about the
+> folio_mark_dirty()/filemap_dirty_folio()/.folio_dirty()
+> infrastructure? iomap currently treats this as top down, so it
+> doesn't actually call back into iomap to mark filesystem blocks
+> dirty. This would need to be rearchitected to match
+> block_dirty_folio() where the bufferheads on the page are marked
+> dirty before the folio is marked dirty by external operations....
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Yes.  This is also going to be a performance problem.  Marking a folio as
+dirty is no longer just setting the bit in struct folio and the xarray
+but also setting all the bits in iop->state.  Depending on the size
+of the folio, and the fs blocksize, this could be quite a lot of bits.
+eg a 2MB folio with a 1k block size is 2048 bits (256 bytes, 6 cachelines
+(it dirties the spinlock in cacheline 0, then the bitmap occupies 3 full
+cachelines and 2 partial ones)).
+
+I don't see the necessary churn from filemap_dirty_folio() to
+iomap_dirty_folio() as being a huge deal, but it's definitely a missing
+piece from this RFC.
+
+> The easy part of this problem is tracking dirty state on a
+> filesystem block boundaries. The *hard part* maintaining coherency
+> with the page cache, and none of that has been done yet. I'd prefer
+> that we deal with this problem once and for all at the page cache
+> level because multi-page folios mean even when the filesystem block
+> is the same as PAGE_SIZE, we have this sub-folio block granularity
+> tracking issue.
+> 
+> As it is, we already have the capability for the mapping tree to
+> have multiple indexes pointing to the same folio - perhaps it's time
+> to start thinking about using filesystem blocks as the mapping tree
+> index rather than PAGE_SIZE chunks, so that the page cache can then
+> track dirty state on filesystem block boundaries natively and
+> this whole problem goes away. We have to solve this sub-folio dirty
+> tracking problem for multi-page folios anyway, so it seems to me
+> that we should solve the sub-page block size dirty tracking problem
+> the same way....
+
+That's an interesting proposal.  From the page cache's point of
+view right now, there is only one dirty bit per folio, not per page.
+Anything you see contrary to that is old code that needs to be converted.
+So even indexing the page cache by block offset rather than page offset
+wouldn't help.
+
+We have a number of people looking at the analogous problem for network
+filesystems right now.  Dave Howells' netfs infrastructure is trying
+to solve the problem for everyone (and he's been looking at iomap as
+inspiration for what he's doing).  I'm kind of hoping we end up with one
+unified solution that can be used for all filesystems that want sub-folio
+dirty tracking.  His solution is a bit more complex than I really want
+to see, at least partially because he's trying to track dirtiness at
+byte granularity, no matter how much pain that causes to the server.
