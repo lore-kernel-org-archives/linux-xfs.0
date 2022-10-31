@@ -2,40 +2,40 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BA81FA3741
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Oct 2022 16:13:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F1FFFA3741
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Oct 2022 16:31:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229826AbiJaQNN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 31 Oct 2022 12:13:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39368 "EHLO
+        id S231307AbiJaQb0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 31 Oct 2022 12:31:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229719AbiJaQNM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Oct 2022 12:13:12 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62DFEDF61
-        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2022 09:13:11 -0700 (PDT)
+        with ESMTP id S231134AbiJaQb0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Oct 2022 12:31:26 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78C2112639
+        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2022 09:31:25 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 01BA8612DC
-        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2022 16:13:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D1B2C433C1
-        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2022 16:13:10 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 23A1FB81902
+        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2022 16:30:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0FD6C433C1
+        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2022 16:30:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1667232790;
-        bh=vFv1zi3p3fw1d6baiM/Aj/yM0erQHF+DTafx7PAC1Qg=;
+        s=k20201202; t=1667233815;
+        bh=ucaoB1Gj9x1vR/VJp0/JBHtay2kMy3lXx8Vme/50kbU=;
         h=Date:From:To:Subject:From;
-        b=e7za5f7FjaWmHWWD3viyEqIRGFYB+u+O6JmKATvCfYVdh7ZIK0jdQc4lG1kYe5gAj
-         Mj8w7xMXOyYv1LcGNMupphrD6k/47aDQur34jm8TXa6jpUESPdr1EvU7Ap234mhoH9
-         r2pgYHDOObJMKXUVHYw1LSN3ZBSU9GZ2yz2FM0h3u2pQ5jEaNPwjwtDg66natTgEtw
-         qkcIM/bYNGWKZWEAwLEZwIgV7Zk575swDGrLwbkIekiG08uNvxhDylsU22VcLPWXJt
-         lOyQR+CcTUHjNN2SB5bsSS45uAmvHozJIE7t/ueGSbKyC2E5BGM8I8t4Q2N7Wj339k
-         QD5h4vuBq6KsA==
-Date:   Mon, 31 Oct 2022 09:13:09 -0700
+        b=aGnytIU4K8vOeyhBcUZU9WEvTm1zqauDctWNG6vhoHtTvJZRWHdioSvQ3yT8rW0eV
+         D/BfzUBa+DQMeavl1ogNA6tKebdiSlaqAut2JZCr8b6BMtQDLl2FzE2aR5kURHKTPM
+         fC2WDIpsnqLZ7N4yolcBgcI2v/ojRXXIok98edZHZ/ec7jzoxBLHKcmABqlAkuD6OX
+         LlKm4/yRaXlFilqQ5sdPO2DojGDD+VjEKmD5VkKXmCtgIRy4VegLvqT53If8Ozs1eg
+         0uGskQ/Nqer2oDNB9ecT/DnXja2CvyQz1dU6Qnal/SVe0bMxWVRsjGcfsHb4sOU4E1
+         JFrtRVX4aZOuQ==
+Date:   Mon, 31 Oct 2022 09:30:15 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [GIT PULL] xfs: fix various problems with log intent item recovery
-Message-ID: <Y1/0FdFUhgr8fd9B@magnolia>
+To:     linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 9f187ba0d517
+Message-ID: <Y1/4F6d02GjCfYnq@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -43,65 +43,40 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi me,
+Hi folks,
 
-Please pull the final versions of the log item recovery bugfixes into
-for-next.
+The for-next branch of the xfs-linux repository at:
 
---D
-------
-The following changes since commit 47ba8cc7b4f82c927cec3ad7c7392e4c45c81c56:
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-  xfs: fix incorrect return type for fsdax fault handlers (2022-10-31 08:51:45 -0700)
+has just been updated.
 
-are available in the Git repository at:
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  This second update contains bugfixes for log recovery
+so that they can get wider testing in for-next.  There will be a third
+update in a day or two with the fixes for infinite loops in the refcount
+processing code.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/fix-log-recovery-misuse-6.1_2022-10-31
+The new head of the for-next branch is commit:
 
-for you to fetch changes up to 950f0d50ee7138d7e631aefea8528d485426eda6:
+9f187ba0d517 Merge tag 'fix-log-recovery-misuse-6.1_2022-10-31' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.1-fixes
 
-  xfs: dump corrupt recovered log intent items to dmesg consistently (2022-10-31 08:58:20 -0700)
+9 new commits:
 
-----------------------------------------------------------------
-xfs: fix various problems with log intent item recovery
+Darrick J. Wong (9):
+      [59da7ff49d67] xfs: fix validation in attr log item recovery
+      [a38ebce1da27] xfs: fix memcpy fortify errors in BUI log format copying
+      [a38935c03c79] xfs: fix memcpy fortify errors in CUI log format copying
+      [b45ca961e946] xfs: fix memcpy fortify errors in RUI log format copying
+      [03a7485cd701] xfs: fix memcpy fortify errors in EFI log format copying
+      [3c5aaaced999] xfs: refactor all the EFI/EFD log item sizeof logic
+      [921ed96b4f4e] xfs: actually abort log recovery on corrupt intent-done log items
+      [950f0d50ee71] xfs: dump corrupt recovered log intent items to dmesg consistently
+      [9f187ba0d517] Merge tag 'fix-log-recovery-misuse-6.1_2022-10-31' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.1-fixes
 
-Starting with 6.1-rc1, CONFIG_FORTIFY_SOURCE checks became smart enough
-to detect memcpy() callers that copy beyond what seems to be the end of
-a struct.  Unfortunately, gcc has a bug wherein it cannot reliably
-compute the size of a struct containing another struct containing a flex
-array at the end.  This is the case with the xfs log item format
-structures, which means that -rc1 starts complaining all over the place.
-
-Fix these problems by memcpying the struct head and the flex arrays
-separately.  Although it's tempting to use the FLEX_ARRAY macros, the
-structs involved are part of the ondisk log format.  Some day we're
-going to want to make the ondisk log contents endian-safe, which means
-that we will have to stop using memcpy entirely.
-
-While we're at it, fix some deficiencies in the validation of recovered
-log intent items -- if the size of the recovery buffer is not even large
-enough to cover the flex array record count in the head, we should abort
-the recovery of that item immediately.
-
-The last patch of this series changes the EFI/EFD sizeof functions names
-and behaviors to be consistent with the similarly named sizeof helpers
-for other log intent items.
-
-v2: fix more inadequate log intent done recovery validation and dump
-    corrupt recovered items
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-
-----------------------------------------------------------------
-Darrick J. Wong (8):
-      xfs: fix validation in attr log item recovery
-      xfs: fix memcpy fortify errors in BUI log format copying
-      xfs: fix memcpy fortify errors in CUI log format copying
-      xfs: fix memcpy fortify errors in RUI log format copying
-      xfs: fix memcpy fortify errors in EFI log format copying
-      xfs: refactor all the EFI/EFD log item sizeof logic
-      xfs: actually abort log recovery on corrupt intent-done log items
-      xfs: dump corrupt recovered log intent items to dmesg consistently
+Code Diffstat:
 
  fs/xfs/libxfs/xfs_log_format.h | 60 ++++++++++++++++++++++++---
  fs/xfs/xfs_attr_item.c         | 67 +++++++++++++++---------------
