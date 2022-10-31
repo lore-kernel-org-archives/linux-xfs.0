@@ -2,115 +2,108 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 708D1FA3740
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Oct 2022 10:27:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06384ECAAA1
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Oct 2022 13:55:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230465AbiJaK11 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 31 Oct 2022 06:27:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45544 "EHLO
+        id S231140AbiJaNzt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 31 Oct 2022 09:55:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49920 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230466AbiJaK1S (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Oct 2022 06:27:18 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 270DFD11B;
-        Mon, 31 Oct 2022 03:27:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=dF+mjpKrM+ieCUW6dnuDNyobp/Omb5rzjfi/G66lDF4=; b=hfCa9dyOrHctmrHaXlYwvJJBqT
-        t4r0KzZf2pbQnnmDgrfYXlmHnYzmM8tMJgwnZhzj2wZlczGii1ZlSxpPRvsA6hvYln88xrAJqL2lx
-        GhQw3gBPPN7/fQ8LBT8wc4er/tCPo/8YNwwUaK+ABRn/lYMNeAzvKwrTZyQs3E3f7Uwla/UVdO16K
-        vAF7ItqiaEGCDPl1j+qGDLIhmzt/B3nabPp2H5fAX67U6i8BvKKxWz2M1apCJZRTfj5J0qzCeXiCW
-        3UThDiu3AuikF5Bq3HknkNgtRCe6XyXwfsloe8E1qewgiiMozvL/RB6pywCUWtqKerhovA5zOGQZQ
-        DdF7U08g==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1opS0i-003ati-SB; Mon, 31 Oct 2022 10:27:16 +0000
-Date:   Mon, 31 Oct 2022 10:27:16 +0000
-From:   Matthew Wilcox <willy@infradead.org>
+        with ESMTP id S230486AbiJaNzr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Oct 2022 09:55:47 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA091101F3
+        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2022 06:55:46 -0700 (PDT)
+Received: from kwepemi500009.china.huawei.com (unknown [172.30.72.55])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4N1F2P5gDjzpW6K;
+        Mon, 31 Oct 2022 21:52:13 +0800 (CST)
+Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
+ (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Mon, 31 Oct
+ 2022 21:55:44 +0800
+Date:   Mon, 31 Oct 2022 22:17:31 +0800
+From:   Long Li <leo.lilong@huawei.com>
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Aravinda Herle <araherle@in.ibm.com>,
-        David Howells <dhowells@redhat.com>
-Subject: Re: [RFC 2/2] iomap: Support subpage size dirty tracking to improve
- write performance
-Message-ID: <Y1+jBDLHovtsXbyF@casper.infradead.org>
-References: <cover.1666928993.git.ritesh.list@gmail.com>
- <886076cfa6f547d22765c522177d33cf621013d2.1666928993.git.ritesh.list@gmail.com>
- <20221028210422.GC3600936@dread.disaster.area>
- <Y19EXLfn8APg3adO@casper.infradead.org>
- <20221031070853.GL3600936@dread.disaster.area>
+CC:     "Darrick J. Wong" <djwong@kernel.org>, <billodo@redhat.com>,
+        <chandan.babu@oracle.com>, <dchinner@redhat.com>,
+        <guoxuenan@huawei.com>, <houtao1@huawei.com>,
+        <linux-xfs@vger.kernel.org>, <sandeen@redhat.com>,
+        <yi.zhang@huawei.com>
+Subject: Re: [PATCH v2] xfs: fix sb write verify for lazysbcount
+Message-ID: <20221031141731.GB1277642@ceph-admin>
+References: <20221022020345.GA2699923@ceph-admin>
+ <20221025091527.377976-1-leo.lilong@huawei.com>
+ <Y1goB8GfadlYSL9T@magnolia>
+ <20221026091344.GA490040@ceph-admin>
+ <Y1mB7VfIOms3J2Rj@magnolia>
+ <20221027132504.GB490040@ceph-admin>
+ <Y1qsQaDA3wcCN+K8@magnolia>
+ <20221029071601.GA1277642@ceph-admin>
+ <20221030220441.GH3600936@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Content-Disposition: inline
-In-Reply-To: <20221031070853.GL3600936@dread.disaster.area>
+In-Reply-To: <20221030220441.GH3600936@dread.disaster.area>
+X-Originating-IP: [10.175.127.227]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ kwepemi500009.china.huawei.com (7.221.188.199)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 31, 2022 at 06:08:53PM +1100, Dave Chinner wrote:
-> On Mon, Oct 31, 2022 at 03:43:24AM +0000, Matthew Wilcox wrote:
-> > On Sat, Oct 29, 2022 at 08:04:22AM +1100, Dave Chinner wrote:
-> > > As it is, we already have the capability for the mapping tree to
-> > > have multiple indexes pointing to the same folio - perhaps it's time
-> > > to start thinking about using filesystem blocks as the mapping tree
-> > > index rather than PAGE_SIZE chunks, so that the page cache can then
-> > > track dirty state on filesystem block boundaries natively and
-> > > this whole problem goes away. We have to solve this sub-folio dirty
-> > > tracking problem for multi-page folios anyway, so it seems to me
-> > > that we should solve the sub-page block size dirty tracking problem
-> > > the same way....
+On Mon, Oct 31, 2022 at 09:04:41AM +1100, Dave Chinner wrote:
+> On Sat, Oct 29, 2022 at 03:16:01PM +0800, Long Li wrote:
+> > On Thu, Oct 27, 2022 at 09:05:21AM -0700, Darrick J. Wong wrote:
+> > > On Thu, Oct 27, 2022 at 09:25:04PM +0800, Long Li wrote:
+> > > > not pass, therefore it will not write a clean umount record
+> > > > at umount. I also haven't found a code suitable for adding
+> > > > such checks.
+> > > 
+> > > xfs_unmountfs just prior to unmounting the log.
 > > 
-> > That's an interesting proposal.  From the page cache's point of
-> > view right now, there is only one dirty bit per folio, not per page.
+> > 
+> > I tried to add an extra check in xfs_log_unmount_write, when m_icount <
+> > m_ifree, it will not write a umount log record, after which the summary
+> > counters will be recalculated at next mount. If m_ifree greater than
+> > m_icount in memory, sb_i{count,free} (the ondisk superblock inode counters)
+> > maybe incorrect even after unmount filesystem. After adding such checks,
+> > it can be corrected on the next mount, instead of going undetected in
+> > subsequent mounts.
+> > 
+> > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> > index f1f44c006ab3..e4903c15019e 100644
+> > --- a/fs/xfs/xfs_log.c
+> > +++ b/fs/xfs/xfs_log.c
+> > @@ -1038,7 +1038,9 @@ xfs_log_unmount_write(
+> >  	 * more details.
+> >  	 */
+> >  	if (XFS_TEST_ERROR(xfs_fs_has_sickness(mp, XFS_SICK_FS_COUNTERS), mp,
+> > -			XFS_ERRTAG_FORCE_SUMMARY_RECALC)) {
+> > +			XFS_ERRTAG_FORCE_SUMMARY_RECALC) ||
+> > +			(percpu_counter_sum(&mp->m_icount) <
+> > +			 percpu_counter_sum(&mp->m_ifree))) {
+> >  		xfs_alert(mp, "%s: will fix summary counters at next mount",
+> >  				__func__);
+> >  		return;
 > 
-> Per folio, yes, but I thought we also had a dirty bit per index
-> entry in the mapping tree. Writeback code uses the
-> PAGECACHE_TAG_DIRTY mark to find the dirty folios efficiently (i.e.
-> the write_cache_pages() iterator), so it's not like this is
-> something new. i.e. we already have coherent, external dirty bit
-> tracking mechanisms outside the folio itself that filesystems
-> use.
-
-That bit only exists (logically) for the canonical entry.  Physically
-it exists for sibling entries, but it's not used; attempting to set
-it on sibling entries will redirect to set it on the canonical entry.
-That could be changed, but we elide entire layers of the tree once the
-entry has a sufficiently high order.  So an order-6 folio occupies
-a single slot one layer up; an order-7 folio occupies two slots, an
-order-8 folio occupies four slots and so on.
-
-My eventual goal is to ditch the radix tree and use the Maple Tree
-(ie a B-tree), and that will always only have one slot per folio, no
-matter what order it has.  Then there really only will be one bit per
-folio.
-
-> > We have a number of people looking at the analogous problem for network
-> > filesystems right now.  Dave Howells' netfs infrastructure is trying
-> > to solve the problem for everyone (and he's been looking at iomap as
-> > inspiration for what he's doing).  I'm kind of hoping we end up with one
-> > unified solution that can be used for all filesystems that want sub-folio
-> > dirty tracking.  His solution is a bit more complex than I really want
-> > to see, at least partially because he's trying to track dirtiness at
-> > byte granularity, no matter how much pain that causes to the server.
+> The log code is not the layer at which the mount structures
+> should be verified. xfs_unmountfs() is where the mount is cleaned up
+> and all activity is flushed and waited on. THis is where the mount
+> counters should be checked, before we unmount the log.
 > 
-> Byte range granularity is probably overkill for block based
-> filesystems - all we need is a couple of extra bits per block to be
-> stored in the mapping tree alongside the folio....
-
-I think it's overkill for network filesystems too.  By sending a
-sector-misaligned write to the server, you force the server to do a R-M-W
-before it commits the write to storage.  Assuming that the file has fallen
-out of the server's cache, and a sufficiently busy server probably doesn't
-have the memory capacity for the working set of all of its clients.
-
-Anyway, Dave's plan for dirty tracking (as I understand the current
-iteration) is to not store it linked from folio->private at all, but to
-store it in a per-file tree of writes.  Then we wouldn't walk the page
-cache looking for dirty folios, but walk the tree of writes choosing
-which ones to write back and delete from the tree.  I don't know how
-this will perform in practice, but it'll be generic enough to work for
-any filesystem.
+> Indeed, if you check the mount counters prior to calling
+> xfs_log_unmount_write(), you could call this:
+> 
+> 	xfs_alert(mp, "ifree/icount mismatch at unmount");
+> 	xfs_fs_mark_sick(mp, XFS_SICK_FS_COUNTERS);
+> 
+> i.e. check the mount state at the correct level and propagate the
+> sickness into the mount state and the log code will just do the
+> right thing....
+> 
+> Cheers,
+> 
+> Dave.
+ 
+Ok, I'll resend a patch and fix the above issue, thanks a lot.
