@@ -2,105 +2,180 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7400ECAAA1
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Oct 2022 21:18:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96BA0FA3741
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Nov 2022 00:34:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230374AbiJaVSM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 31 Oct 2022 17:18:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56306 "EHLO
+        id S229887AbiKAAeV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 31 Oct 2022 20:34:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57022 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230338AbiJaVSD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Oct 2022 17:18:03 -0400
-Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AAE9140FB
-        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2022 14:17:41 -0700 (PDT)
-Received: by mail-pg1-x529.google.com with SMTP id h193so3068169pgc.10
-        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2022 14:17:41 -0700 (PDT)
+        with ESMTP id S229692AbiKAAeT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Oct 2022 20:34:19 -0400
+Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4C421583B
+        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2022 17:34:18 -0700 (PDT)
+Received: by mail-pg1-x530.google.com with SMTP id f9so12111085pgj.2
+        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2022 17:34:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=V7imYIaQARpLPoHv27Zftg7BYfJ5RyQtkuHEplG82nQ=;
-        b=TUKPrZ2fIsdw0AVNrGKEn06eBv0OllykmzN7zgLr6nNxtO0KlP1ae6kAsvLITJcov6
-         3Qg+PsYMIGehtfZKLiy65xebpRQh0HXqEIZ7cdkJrX1pQmm031ufn0vxjXAHy17f1Dk7
-         4eg5QXCOdNhbCXqa/6Ed/J1kmGe9dpKYzq4MUJprp4UVhcYLdLXKytGP1LIceMTKprZP
-         HN7Pqi8GGBLBNJXpXPdWIX4izcBWC2Ihf+X6CBMAMFjA3z8YDtFNM3RQ5HTqb2tTMfki
-         HMxmZUJRYRRCLTwN9ZTVl3BrFXrMxNmSX/IZh8/A7elHLGppoCMpqF1MwpmemXW+C5b8
-         UZnw==
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=UpYORrtHPEFkdqKAbT3ik18Ay5BZZZbilDStDtNjXS8=;
+        b=61c904ATR7ihnICXDiY7DEoT0knpUcuEM9TKOou3O4466QVWdIbsTUVngQkvubsPDO
+         M3Iv8gwMu6bHf81ZdtPGxzFbq1mFZB2G8tCEZ6iiNMYr6EygMRVKVz2p1lRbJxnbRUsr
+         FsfJhYepQjsQowj5NUJQFn+/tllCIcGYE1koACso5b+lKk9Vs1m89ogeG9Psx1Wp21sq
+         3KmKSoC9hhKCbbBuL5DpCqLGErmY03TJaSEjkhHnAWjzxsAbLPfKhWwAQYU2wrIT5L89
+         tSu8aaVwLcYS+jnHMIP5I7cXZUnM13M43pzceerhkcYunsDzlt6RqZepotmBXMJryMvR
+         wz5A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=V7imYIaQARpLPoHv27Zftg7BYfJ5RyQtkuHEplG82nQ=;
-        b=A+revXVh5fCF1fd0e6iDjGX1DzZnG4PZlmzAYo5cTNKEyAcW7xIhbBuFR11kavQ6PT
-         piXzbcRo47qnKVjBzj54p/jg87AA3mRbEuRjJGa0n9litWklk8CT8B9CUypIDy2fz2m3
-         HdVjHoK+hTY1ynllLSmplYWHXKblf1Pfy+/xyBbCRhQYcrcJv+cH8Tj3WGLSEzPAT5VB
-         mr5cP9ohPbynmJlOSUE4gK22wn96nEFWXO2ThRyFbobbBjM9eQmYMG2y59q5w7j96iH/
-         JoCBE+aMKk2RtjGbkxFkYWQIMCq5NlbAVaNcP1huPWvLg8X6hHPzwHOcHcLL5MPk8jP0
-         +1Dg==
-X-Gm-Message-State: ACrzQf3YxJVwm4ATtJp3WcbVuZf8xJgwMXM2ZHlBdXOLSL1XsJ5dVjq8
-        vc1cp3RGZMQjZ7y2dpm3HQqgzQ==
-X-Google-Smtp-Source: AMsMyM7sK9XBC3IFAg+B6r7N/sSCuH9tVf4YyciYmkV1PG0am8Nj1z9F+8ztsQaO0KzEVZxInmFENw==
-X-Received: by 2002:aa7:8c44:0:b0:56c:f21f:5e0e with SMTP id e4-20020aa78c44000000b0056cf21f5e0emr16357639pfd.35.1667251060858;
-        Mon, 31 Oct 2022 14:17:40 -0700 (PDT)
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=UpYORrtHPEFkdqKAbT3ik18Ay5BZZZbilDStDtNjXS8=;
+        b=rprgWCIeIQQife8hxnVyu347oqwL1RYwoffNkjRTteJApGYwucICvNT+bOHGqU33bp
+         +ufDM2aPyHVRQMFgX3levfiHsJGbaKGLdKY8IG2dfYT1N2fUM1hVdiF4Z04VFlinv4xz
+         K+1JBMATCULZH7xEYmgzdgmr0KZHgmkOJc+oV9Vcn+/e+u9zBeLG9sxqsPpBfq5dnOSN
+         bj2e+CX7TUCzlw2M9VJeQrVyzdLZU67r3iJ31+aES4y8Xu2CnfMTYk2yTSc5dccmwfW4
+         PkP3wsayUVWq3g+FkqdRRZQ/Z/5wUsPGHH1Bv3gTEc+KYWMMIojguu4/yGoMt5DEiJcT
+         nL2w==
+X-Gm-Message-State: ACrzQf1xkZ5l4N5FxtI+L13u8s5lfQ3TKUk57wN5gYGrys2lpjORfoNL
+        I/+QcESrwZCPtE6lmwtiJl2YAJ7wlrsOOA==
+X-Google-Smtp-Source: AMsMyM4aCmFhq+ySHVIkk6+EXgD7HL2pSuSBBmcslufMmYLwVPJdsei/QPpBdPSkaOv1iDMck1TyNw==
+X-Received: by 2002:a05:6a02:186:b0:439:49a3:479b with SMTP id bj6-20020a056a02018600b0043949a3479bmr15024664pgb.171.1667262858203;
+        Mon, 31 Oct 2022 17:34:18 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au. [49.181.106.210])
-        by smtp.gmail.com with ESMTPSA id mz9-20020a17090b378900b0020a0571b354sm4600606pjb.57.2022.10.31.14.17.40
+        by smtp.gmail.com with ESMTPSA id j1-20020a170902c3c100b0017dd8c8009esm5003862plj.4.2022.10.31.17.34.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 31 Oct 2022 14:17:40 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        Mon, 31 Oct 2022 17:34:17 -0700 (PDT)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1opcA4-008jTn-79; Tue, 01 Nov 2022 08:17:36 +1100
-Date:   Tue, 1 Nov 2022 08:17:36 +1100
+        id 1opfEN-008muJ-4m; Tue, 01 Nov 2022 11:34:15 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1opfEN-00G7da-0N;
+        Tue, 01 Nov 2022 11:34:15 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v23.2 3/4] xfs: log the AGI/AGF buffers when rolling
- transactions during an AG repair
-Message-ID: <20221031211736.GM3600936@dread.disaster.area>
-References: <166473478844.1083155.9238102682926048449.stgit@magnolia>
- <166473478893.1083155.2555785331844801316.stgit@magnolia>
- <Y2APIan1VaLglNzY@magnolia>
+To:     linux-xfs@vger.kernel.org
+Cc:     linux-fsdevel@vger.kernel.org
+Subject: [PATCH 2/7] xfs: punching delalloc extents on write failure is racy
+Date:   Tue,  1 Nov 2022 11:34:07 +1100
+Message-Id: <20221101003412.3842572-3-david@fromorbit.com>
+X-Mailer: git-send-email 2.37.2
+In-Reply-To: <20221101003412.3842572-1-david@fromorbit.com>
+References: <20221101003412.3842572-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y2APIan1VaLglNzY@magnolia>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 31, 2022 at 11:08:33AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Currently, the only way to lock an allocation group is to hold the AGI
-> and AGF buffers.  If a repair needs to roll the transaction while
-> repairing some AG metadata, it maintains that lock by holding the two
-> buffers across the transaction roll and joins them afterwards.
-> 
-> However, repair is not like other parts of XFS that employ the bhold -
-> roll - bjoin sequence because it's possible that the AGI or AGF buffers
-> are not actually dirty before the roll.  This presents two problems --
-> First, we need to redirty those buffers to keep them moving along in the
-> log to avoid pinning the log tail.  Second, a clean buffer log item can
-> detach from the buffer.  If this happens, the buffer type state is
-> discarded along with the bli and must be reattached before the next time
-> the buffer is logged.   If it is not, the logging code will complain and
-> log recovery will not work properly.
-> 
-> An earlier version of this patch tried to fix the second problem by
-> re-setting the buffer type in the bli after joining the buffer to the
-> new transaction, but that looked weird and didn't solve the first
-> problem.  Instead, solve both problems by logging the buffer before
-> rolling the transaction.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+From: Dave Chinner <dchinner@redhat.com>
 
-I guess this is fine as long as it is confined to the scrub code;
-if we need to hold clean buffers across transaction rolls in other
-code we really need to sort out the BLI life cycle issues that this
-currently exposes.
+xfs_buffered_write_iomap_end() has a comment about the safety of
+punching delalloc extents based holding the IOLOCK_EXCL. This
+comment is wrong, and punching delalloc extents is not race free.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+When we punch out a delalloc extent after a write failure in
+xfs_buffered_write_iomap_end(), we punch out the page cache with
+truncate_pagecache_range() before we punch out the delalloc extents.
+At this point, we only hold the IOLOCK_EXCL, so there is nothing
+stopping mmap() write faults racing with this cleanup operation,
+reinstantiating a folio over the range we are about to punch and
+hence requiring the delalloc extent to be kept.
+
+If this race condition is hit, we can end up with a dirty page in
+the page cache that has no delalloc extent or space reservation
+backing it. This leads to bad things happening at writeback time.
+
+To avoid this race condition, we need the page cache truncation to
+be atomic w.r.t. the extent manipulation. We can do this by holding
+the mapping->invalidate_lock exclusively across this operation -
+this will prevent new pages from being inserted into the page cache
+whilst we are removing the pages and the backing extent and space
+reservation.
+
+Taking the mapping->invalidate_lock exclusively in the buffered
+write IO path is safe - it naturally nests inside the IOLOCK (see
+truncate and fallocate paths). iomap_zero_range() can be called from
+under the mapping->invalidate_lock (from the truncate path via
+either xfs_zero_eof() or xfs_truncate_page(), but iomap_zero_iter()
+will not instantiate new delalloc pages (because it skips holes) and
+hence will not ever need to punch out delalloc extents on failure.
+
+Fix the locking issue, and clean up the code logic a little to avoid
+unnecessary work if we didn't allocate the delalloc extent or wrote
+the entire region we allocated.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_iomap.c | 41 +++++++++++++++++++++++------------------
+ 1 file changed, 23 insertions(+), 18 deletions(-)
+
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 5cea069a38b4..a2e45ea1b0cb 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1147,6 +1147,10 @@ xfs_buffered_write_iomap_end(
+ 		written = 0;
+ 	}
+ 
++	/* If we didn't reserve the blocks, we're not allowed to punch them. */
++	if (!(iomap->flags & IOMAP_F_NEW))
++		return 0;
++
+ 	/*
+ 	 * start_fsb refers to the first unused block after a short write. If
+ 	 * nothing was written, round offset down to point at the first block in
+@@ -1158,27 +1162,28 @@ xfs_buffered_write_iomap_end(
+ 		start_fsb = XFS_B_TO_FSB(mp, offset + written);
+ 	end_fsb = XFS_B_TO_FSB(mp, offset + length);
+ 
++	/* Nothing to do if we've written the entire delalloc extent */
++	if (start_fsb >= end_fsb)
++		return 0;
++
+ 	/*
+-	 * Trim delalloc blocks if they were allocated by this write and we
+-	 * didn't manage to write the whole range.
+-	 *
+-	 * We don't need to care about racing delalloc as we hold i_mutex
+-	 * across the reserve/allocate/unreserve calls. If there are delalloc
+-	 * blocks in the range, they are ours.
++	 * Lock the mapping to avoid races with page faults re-instantiating
++	 * folios and dirtying them via ->page_mkwrite between the page cache
++	 * truncation and the delalloc extent removal. Failing to do this can
++	 * leave dirty pages with no space reservation in the cache.
+ 	 */
+-	if ((iomap->flags & IOMAP_F_NEW) && start_fsb < end_fsb) {
+-		truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
+-					 XFS_FSB_TO_B(mp, end_fsb) - 1);
+-
+-		error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
+-					       end_fsb - start_fsb);
+-		if (error && !xfs_is_shutdown(mp)) {
+-			xfs_alert(mp, "%s: unable to clean up ino %lld",
+-				__func__, ip->i_ino);
+-			return error;
+-		}
++	filemap_invalidate_lock(inode->i_mapping);
++	truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
++				 XFS_FSB_TO_B(mp, end_fsb) - 1);
++
++	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
++				       end_fsb - start_fsb);
++	filemap_invalidate_unlock(inode->i_mapping);
++	if (error && !xfs_is_shutdown(mp)) {
++		xfs_alert(mp, "%s: unable to clean up ino %lld",
++			__func__, ip->i_ino);
++		return error;
+ 	}
+-
+ 	return 0;
+ }
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.37.2
+
