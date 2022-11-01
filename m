@@ -2,253 +2,341 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFEBBC433FE
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Nov 2022 04:21:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14EF5FA373D
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Nov 2022 06:19:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229565AbiKAEV5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Nov 2022 00:21:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53916 "EHLO
+        id S229744AbiKAGTO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Nov 2022 02:19:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44728 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229516AbiKAEV5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Nov 2022 00:21:57 -0400
-Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0542F1581A
-        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2022 21:21:56 -0700 (PDT)
-Received: by mail-pg1-x533.google.com with SMTP id 128so12463731pga.1
-        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2022 21:21:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=i3dzhZFldd1TUMZPJaVXuhkq1ic7C43k//rOZ7YGJRg=;
-        b=0e3qIfMX4x+3aJtF5FwMunvxYuklPudnZQmB5r48DHF83jskkiDCXTjqKhVUNM5kZo
-         rfN0HEtrnPGR3oe8AH3GWdB67JRNurNIu4GBvjil/cVM/3Gjx7ejsjenBEqhdIQ0WF4J
-         gy45hWPaiRMN4VQJ3h7RP/YzIJFxOjYKZ4WUxBNlqBNeHUugMFWDzy4y8BW3OFCBLw+S
-         05bbQpk3C2zzftRnixTLVGY9wM9V6/ajzifWSGn0Icdb9TumDABfF1HhHyO9mMQU10AB
-         L8/YS62wbksQd21jZbomFpPtMyWnwP1tjofRxkqo7q/BgG8zhpR66BiTuzIWcYKTtSDz
-         0v2A==
+        with ESMTP id S229471AbiKAGTM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Nov 2022 02:19:12 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0708C11A2F
+        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2022 23:18:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1667283499;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ReNAaNCvttNfJJU14NWwmyF9zTKUt1F4dPQJzXRY2bY=;
+        b=R28vhhTpoEtYIuqyYvO9BlCBEBdDP5cWVZJAuDptKwFlYdNmfU+WunRWUtWVou2wM5jN0l
+        Fgc1qQdtSi4hH1e1Iglcr5Q7puR2KiasdFEkaB4CzmIGU6Qthf8eoN21ghxiBPYinBlc+n
+        P91xIQ2ubAoPL8v/rAr+rqU4N89baEQ=
+Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com
+ [209.85.160.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-508-9-F7shhHNkm0hgKJPBLgZw-1; Tue, 01 Nov 2022 02:18:18 -0400
+X-MC-Unique: 9-F7shhHNkm0hgKJPBLgZw-1
+Received: by mail-qt1-f198.google.com with SMTP id fb5-20020a05622a480500b003a525d52abcso3324985qtb.10
+        for <linux-xfs@vger.kernel.org>; Mon, 31 Oct 2022 23:18:18 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=i3dzhZFldd1TUMZPJaVXuhkq1ic7C43k//rOZ7YGJRg=;
-        b=l+c6BeuVERdrBfpNwcF9EEtuLxSMFI1hgxSvvx+NMbLbMUI0WmYmXEwBH9AdQi1Jkg
-         ruJRIa4hXvgX1Elh60G4Ytw3YUhJbyvN0QJ1mAsfS+gylfXTSz78xuB3rrnIFg82iLuI
-         8xczZ8ZEn7yk2XopdsYbeaFps6Fyo/JpEF7anTQzz1joRuCtE/tVR5/68fXNDEwZrfPc
-         sRg28n/JFMxSCpSs8qkWGsUCt0x02IzUV65jvnJmSYcm3hHqA46Rbkq5lClLmiEQS0Do
-         glsq3eZ5lqtbQZT84A4ckF9OPRP7fj6OjmPNJe4sahBt/76zlDt+Sq5dKvIvNZcNTI3m
-         wV4w==
-X-Gm-Message-State: ACrzQf1l/QTzT4ztrhkU+iwzNzqi8PR9wiKThAEoijz8WVCoaaogY/Ah
-        3mVKLsXpeYSaB28WKy8AikBD2mmhsZeYiA==
-X-Google-Smtp-Source: AMsMyM4AcwO3ju9P3A4U0mRQKNlzIdgeX/fWhj4Ia40bD2z06UffRszNUjBoy4x6GM/pU69uvR02mQ==
-X-Received: by 2002:a63:fd58:0:b0:46b:41d:9d33 with SMTP id m24-20020a63fd58000000b0046b041d9d33mr15564038pgj.399.1667276515307;
-        Mon, 31 Oct 2022 21:21:55 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au. [49.181.106.210])
-        by smtp.gmail.com with ESMTPSA id i4-20020a056a00004400b00561b53512b0sm5416160pfk.195.2022.10.31.21.21.54
+        bh=ReNAaNCvttNfJJU14NWwmyF9zTKUt1F4dPQJzXRY2bY=;
+        b=AwNc3/ctt+5Go2pFPSwW+Cp1ErwECgXosHYS2gUqZFOnOtbJGLtByDEf9K3xh1Ty8K
+         zEHzsWhqVu4dbJO6Yxmhb2eEqYIupeIqF+MGx4VtJTJHJ+nwzJUrkKWb9NnKk+SBznAT
+         MgOzhLwgmqQtYZbiJ9X4EqZlsteiKqqf2axxgDoLQ1X2+mnC+FHk/6vjSXlhvEwZ4KYp
+         k1NgQgCGNHsyzlP59gF2l5rfCloYYqLp2e6PnjNACh/F9lOZ81gKGbJhYzLcC/VNTkw+
+         PfjYjnVqeWp7489nWKL3xL4rFjpYj7QIGEwFBQLp4vEZtIdqBa8xlotLbgHC4h46HX6d
+         EBxg==
+X-Gm-Message-State: ACrzQf36jjDJs6wkqXhBkW81YmaNFJVPYx8sKkeRiz2VngtqCkFgHFrN
+        SphMzfJwsiGw0jGktmIdlths1NFH0a2c0c/Ug96Q+ZtdtplR7E8Ekg51lMuZQV1pA+2sn+jriz5
+        Da/IXAQ6mVqxps+f09/WI
+X-Received: by 2002:ac8:5aca:0:b0:3a5:73a:1aa5 with SMTP id d10-20020ac85aca000000b003a5073a1aa5mr13676609qtd.579.1667283496785;
+        Mon, 31 Oct 2022 23:18:16 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM5j14dtqgjcciUgvd29cEyPkRdKRVXzLF4sZpvYZBeJymvVebiCYeAi4oP4pmnMnaGF8gNvvA==
+X-Received: by 2002:ac8:5aca:0:b0:3a5:73a:1aa5 with SMTP id d10-20020ac85aca000000b003a5073a1aa5mr13676597qtd.579.1667283496492;
+        Mon, 31 Oct 2022 23:18:16 -0700 (PDT)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id w29-20020a05620a0e9d00b006fa4cac54a5sm80518qkm.72.2022.10.31.23.18.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 31 Oct 2022 21:21:54 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1opimc-008qbv-Uz; Tue, 01 Nov 2022 15:21:51 +1100
-Date:   Tue, 1 Nov 2022 15:21:50 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: xfs, iomap: fix data corrupton due to stale cached iomaps
-Message-ID: <20221101042150.GN3600936@dread.disaster.area>
-References: <20221101003412.3842572-1-david@fromorbit.com>
- <Y2CU3zm/qxajHRp+@magnolia>
+        Mon, 31 Oct 2022 23:18:15 -0700 (PDT)
+Date:   Tue, 1 Nov 2022 14:18:11 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     Catherine Hoang <catherine.hoang@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH v3 1/4] common: add helpers for parent pointer tests
+Message-ID: <20221101061811.l3v7dko5kg5x4jbk@zlang-mailbox>
+References: <20221028215605.17973-1-catherine.hoang@oracle.com>
+ <20221028215605.17973-2-catherine.hoang@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y2CU3zm/qxajHRp+@magnolia>
+In-Reply-To: <20221028215605.17973-2-catherine.hoang@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 31, 2022 at 08:39:11PM -0700, Darrick J. Wong wrote:
-> On Tue, Nov 01, 2022 at 11:34:05AM +1100, Dave Chinner wrote:
-> > Recently a customer workload encountered a data corruption in a
-> > specific multi-threaded write operation. The workload combined
-> > racing unaligned adjacent buffered writes with low memory conditions
-> > that caused both writeback and memory reclaim to race with the
-> > writes.
-> > 
-> > The result of this was random partial blocks containing zeroes
-> > instead of the correct data.  The underlying problem is that iomap
-> > caches the write iomap for the duration of the write() operation,
-> > but it fails to take into account that the extent underlying the
-> > iomap can change whilst the write is in progress.
+On Fri, Oct 28, 2022 at 02:56:02PM -0700, Catherine Hoang wrote:
+> From: Allison Henderson <allison.henderson@oracle.com>
 > 
-> Wheeeee....
+> Add helper functions in common/parent to parse and verify parent
+> pointers. Also add functions to check that mkfs, kernel, and xfs_io
+> support parent pointers.
 > 
-> > The short story is that an iomap can span mutliple folios, and so
-> > under low memory writeback can be cleaning folios the write()
-> > overlaps. Whilst the overlapping data is cached in memory, this
-> > isn't a problem, but because the folios are now clean they can be
-> > reclaimed. Once reclaimed, the write() does the wrong thing when
-> > re-instantiating partial folios because the iomap no longer reflects
-> > the underlying state of the extent. e.g. it thinks the extent is
-> > unwritten, so it zeroes the partial range, when in fact the
-> > underlying extent is now written and so it should have read the data
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+> ---
+
+Looks good to me, just a few typo problem as below ...
+
+>  common/parent | 198 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  common/rc     |   3 +
+>  common/xfs    |  12 +++
+>  3 files changed, 213 insertions(+)
+>  create mode 100644 common/parent
 > 
-> DOH!!
+> diff --git a/common/parent b/common/parent
+> new file mode 100644
+> index 00000000..a0ba7d92
+> --- /dev/null
+> +++ b/common/parent
+> @@ -0,0 +1,198 @@
+> +#
+> +# Parent pointer common functions
+> +#
+> +
+> +#
+> +# parse_parent_pointer parents parent_inode parent_pointer_name
+> +#
+> +# Given a list of parent pointers, find the record that matches
+> +# the given inode and filename
+> +#
+> +# inputs:
+> +# parents	: A list of parent pointers in the format of:
+> +#		  inode/generation/name_length/name
+> +# parent_inode	: The parent inode to search for
+> +# parent_name	: The parent name to search for
+> +#
+> +# outputs:
+> +# PPINO         : Parent pointer inode
+> +# PPGEN         : Parent pointer generation
+> +# PPNAME        : Parent pointer name
+> +# PPNAME_LEN    : Parent pointer name length
+> +#
+> +_parse_parent_pointer()
+> +{
+> +	local parents=$1
+> +	local pino=$2
+> +	local parent_pointer_name=$3
+> +
+> +	local found=0
+> +
+> +	# Find the entry that has the same inode as the parent
+> +	# and parse out the entry info
+> +	while IFS=\/ read PPINO PPGEN PPNAME_LEN PPNAME; do
+> +		if [ "$PPINO" != "$pino" ]; then
+> +			continue
+> +		fi
+> +
+> +		if [ "$PPNAME" != "$parent_pointer_name" ]; then
+> +			continue
+> +		fi
+> +
+> +		found=1
+> +		break
+> +	done <<< $(echo "$parents")
+> +
+> +	# Check to see if we found anything
+> +	# We do not fail the test because we also use this
+> +	# routine to verify when parent pointers should
+> +	# be removed or updated  (ie a rename or a move
+> +	# operation changes your parent pointer)
+> +	if [ $found -eq "0" ]; then
+> +		return 1
+> +	fi
+> +
+> +	# Verify the parent pointer name length is correct
+> +	if [ "$PPNAME_LEN" -ne "${#parent_pointer_name}" ]
+> +	then
+> +		echo "*** Bad parent pointer:"\
+> +			"name:$PPNAME, namelen:$PPNAME_LEN"
+> +	fi
+> +
+> +	#return sucess
+> +	return 0
+> +}
+> +
+> +#
+> +# _verify_parent parent_path parent_pointer_name child_path
+> +#
+> +# Verify that the given child path lists the given parent as a parent pointer
+> +# and that the parent pointer name matches the given name
+> +#
+> +# Examples:
+> +#
+> +# #simple example
+> +# mkdir testfolder1
+> +# touch testfolder1/file1
+> +# verify_parent testfolder1 file1 testfolder1/file1
+
+_verify_parent
+
+> +#
+> +# # In this above example, we want to verify that "testfolder1"
+> +# # appears as a parent pointer of "testfolder1/file1".  Additionally
+> +# # we verify that the name record of the parent pointer is "file1"
+> +#
+> +#
+> +# #hardlink example
+> +# mkdir testfolder1
+> +# mkdir testfolder2
+> +# touch testfolder1/file1
+> +# ln testfolder1/file1 testfolder2/file1_ln
+> +# verify_parent testfolder2 file1_ln testfolder1/file1
+
+_verify_parent
+
+> +#
+> +# # In this above example, we want to verify that "testfolder2"
+> +# # appears as a parent pointer of "testfolder1/file1".  Additionally
+> +# # we verify that the name record of the parent pointer is "file1_ln"
+> +#
+> +_verify_parent()
+> +{
+> +	local parent_path=$1
+> +	local parent_pointer_name=$2
+> +	local child_path=$3
+> +
+> +	local parent_ppath="$parent_path/$parent_pointer_name"
+> +
+> +	# Verify parent exists
+> +	if [ ! -d $SCRATCH_MNT/$parent_path ]; then
+> +		_fail "$SCRATCH_MNT/$parent_path not found"
+> +	else
+> +		echo "*** $parent_path OK"
+> +	fi
+> +
+> +	# Verify child exists
+> +	if [ ! -f $SCRATCH_MNT/$child_path ]; then
+> +		_fail "$SCRATCH_MNT/$child_path not found"
+> +	else
+> +		echo "*** $child_path OK"
+> +	fi
+> +
+> +	# Verify the parent pointer name exists as a child of the parent
+> +	if [ ! -f $SCRATCH_MNT/$parent_ppath ]; then
+> +		_fail "$SCRATCH_MNT/$parent_ppath not found"
+> +	else
+> +		echo "*** $parent_ppath OK"
+> +	fi
+> +
+> +	# Get the inodes of both parent and child
+> +	pino="$(stat -c '%i' $SCRATCH_MNT/$parent_path)"
+> +	cino="$(stat -c '%i' $SCRATCH_MNT/$child_path)"
+> +
+> +	# Get all the parent pointers of the child
+> +	parents=($($XFS_IO_PROG -x -c \
+> +	 "parent -f -i $pino -n $parent_pointer_name" $SCRATCH_MNT/$child_path))
+> +	if [[ $? != 0 ]]; then
+> +		 _fail "No parent pointers found for $child_path"
+> +	fi
+> +
+> +	# Parse parent pointer output.
+> +	# This sets PPINO PPGEN PPNAME PPNAME_LEN
+> +	_parse_parent_pointer $parents $pino $parent_pointer_name
+> +
+> +	# If we didnt find one, bail out
+> +	if [ $? -ne 0 ]; then
+> +		_fail "No parent pointer record found for $parent_path"\
+> +			"in $child_path"
+> +	fi
+> +
+> +	# Verify the inode generated by the parent pointer name is
+> +	# the same as the child inode
+> +	pppino="$(stat -c '%i' $SCRATCH_MNT/$parent_ppath)"
+> +	if [ $cino -ne $pppino ]
+> +	then
+> +		_fail "Bad parent pointer name value for $child_path."\
+> +			"$SCRATCH_MNT/$parent_ppath belongs to inode $PPPINO,"\
+> +			"but should be $cino"
+> +	fi
+> +
+> +	echo "*** Verified parent pointer:"\
+> +			"name:$PPNAME, namelen:$PPNAME_LEN"
+> +	echo "*** Parent pointer OK for child $child_path"
+> +}
+> +
+> +#
+> +# _verify_parent parent_pointer_name pino child_path
+
+_verify_no_parent
+
+> +#
+> +# Verify that the given child path contains no parent pointer entry
+> +# for the given inode and file name
+> +#
+> +_verify_no_parent()
+> +{
+> +	local parent_pname=$1
+> +	local pino=$2
+> +	local child_path=$3
+> +
+> +	# Verify child exists
+> +	if [ ! -f $SCRATCH_MNT/$child_path ]; then
+> +		_fail "$SCRATCH_MNT/$child_path not found"
+> +	else
+> +		echo "*** $child_path OK"
+> +	fi
+> +
+> +	# Get all the parent pointers of the child
+> +	local parents=($($XFS_IO_PROG -x -c \
+> +	 "parent -f -i $pino -n $parent_pname" $SCRATCH_MNT/$child_path))
+> +	if [[ $? != 0 ]]; then
+> +		return 0
+> +	fi
+> +
+> +	# Parse parent pointer output.
+> +	# This sets PPINO PPGEN PPNAME PPNAME_LEN
+> +	_parse_parent_pointer $parents $pino $parent_pname
+> +
+> +	# If we didnt find one, return sucess
+> +	if [ $? -ne 0 ]; then
+> +		return 0
+> +	fi
+> +
+> +	_fail "Parent pointer entry found where none should:"\
+> +			"inode:$PPINO, gen:$PPGEN,"
+> +			"name:$PPNAME, namelen:$PPNAME_LEN"
+> +}
+> diff --git a/common/rc b/common/rc
+> index d1f3d56b..9fc0a785 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -2539,6 +2539,9 @@ _require_xfs_io_command()
+>  		echo $testio | grep -q "invalid option" && \
+>  			_notrun "xfs_io $command support is missing"
+>  		;;
+> +	"parent")
+> +		testio=`$XFS_IO_PROG -x -c "parent" $TEST_DIR 2>&1`
+> +		;;
+>  	"pwrite")
+>  		# -N (RWF_NOWAIT) only works with direct vectored I/O writes
+>  		local pwrite_opts=" "
+> diff --git a/common/xfs b/common/xfs
+> index 170dd621..7233a2db 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -1399,3 +1399,15 @@ _xfs_filter_mkfs()
+>  		print STDOUT "realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX\n";
+>  	}'
+>  }
+> +
+> +# this test requires the xfs parent pointers feature
+> +#
+> +_require_xfs_parent()
+> +{
+> +	_scratch_mkfs_xfs_supported -n parent > /dev/null 2>&1 \
+> +		|| _notrun "mkfs.xfs does not support parent pointers"
+> +	_scratch_mkfs_xfs -n parent > /dev/null 2>&1
+> +	_try_scratch_mount >/dev/null 2>&1 \
+> +		|| _notrun "kernel does not support parent pointers"
+> +	_scratch_unmount
+> +}
+> -- 
+> 2.25.1
 > 
-> > from disk.  This is how we get random zero ranges in the file
-> > instead of the correct data.
-> > 
-> > The gory details of the race condition can be found here:
-> > 
-> > https://lore.kernel.org/linux-xfs/20220817093627.GZ3600936@dread.disaster.area/
-> > 
-> > Fixing the problem has two aspects. The first aspect of the problem
-> > is ensuring that iomap can detect a stale cached iomap during a
-> > write in a race-free manner. We already do this stale iomap
-> > detection in the writeback path, so we have a mechanism for
-> > detecting that the iomap backing the data range may have changed
-> > and needs to be remapped.
-> > 
-> > In the case of the write() path, we have to ensure that the iomap is
-> > validated at a point in time when the page cache is stable and
-> > cannot be reclaimed from under us. We also need to validate the
-> > extent before we start performing any modifications to the folio
-> > state or contents. Combine these two requirements together, and the
-> > only "safe" place to validate the iomap is after we have looked up
-> > and locked the folio we are going to copy the data into, but before
-> > we've performed any initialisation operations on that folio.
-> > 
-> > If the iomap fails validation, we then mark it stale, unlock the
-> > folio and end the write. This effectively means a stale iomap
-> > results in a short write.
-> 
-> Does this short write echo all the way out to userspace?  Or do we
-> merely go 'round iomap_iter() again?
 
-It triggers another iomap_iter() loop because we haven't consumed
-the data in the iov_iter yet. It essentially advances the iter to
-the end of the short write and runs another begin/write iter/end
-loop to continue the write with a new iomap. The stale flag is
-needed so that a "no bytes written so return to the caller" can be
-distinguished from "no bytes written because the iomap was
-immediately found to be stale so we need to loop again to remap it".
-
-> > write() in progress doesn't necessarily own the data in the page
-> > cache over the range of the delalloc extent it just allocated.
-> > 
-> > As a result, we can't just truncate the page cache over the range
-> > the write() didn't reach and punch all the delalloc extent. We have
-> > to walk the page cache over the untouched range and skip over any
-> > dirty data region in the cache in that range. Which is ....
-> > non-trivial.
-> > 
-> > That is, iterating the page cache has to handle partially populated
-> > folios (i.e. block size < page size) that contain data. The data
-> > might be discontiguous within a folio. Indeed, there might be
-> > *multiple* discontiguous data regions within a single folio. And to
-> > make matters more complex, multi-page folios mean we just don't know
-> > how many sub-folio regions we might have to iterate to find all
-> > these regions. All the corner cases between the conversions and
-> > rounding between filesystem block size, folio size and multi-page
-> > folio size combined with unaligned write offsets kept breaking my
-> > brain.
-> > 
-> > Eventually, I realised that if the XFS code tracked the processed
-> > write regions by byte ranges instead of fileysetm block or page
-> > cache index, we could simply use mapping_seek_hole_data() to find
-> > the start and end of each discrete data region within the range we
-> > needed to scan. SEEK_DATA finds the start of the cached data region,
-> > SEEK_HOLE finds the end of the region. THese are byte based
-> > interfaces that understand partially uptodate folio regions, and so
-> > can iterate discrete sub-folio data regions directly. This largely
-> > solved the problem of discovering the dirty regions we need to keep
-> > the delalloc extent over.
-> 
-> Heh.  Clever!
-
-It'd be clever if I didn't take a couple of weeks banging my head
-against continual off-by-one and rounding bugs before I realised
-there was a better way... :(
-
-> > Of course, now xfs/196 fails. This is a error injection test that is
-> > supposed to exercise the delalloc extent recover code that the above
-> > fixes just completely reworked. the error injection assumes that it
-> > can just truncate the page cache over the write and then punch out
-> > the delalloc extent completely. This is fundamentally broken, and
-> > only has been working by chance - the chance is that writes are page
-> > aligned and page aligned writes don't install large folios in the
-> > page cache.
-> 
-> Side question -- should we introduce a couple of debug knobs to slow
-> down page cache write and writeback so that we can make it easier to
-> (cough) experiment with races?
-
-Perhaps so. There was once the equivalent in Irix (dating back as
-far as 1996, IIRC) for this sort of testing.  Search for
-XFSRACEDEBUG in the historic archive, there are:
-
-#ifdef XFSRACEDEBUG
-	delay_for_intr();
-	delay(100);
-#endif
-
-clauses added and removed regularly in the data and metadata IO
-paths through the early history of the code base....
-
-> Now that we've been bitten hard by the writeback race, I wrote a
-> testcase to exercise it.  The problem was solved long ago so the only
-> way you can tell its working is to inject debugging printks and look for
-> them, but I feel like we ought to have test points for these two serious
-> corruption problems.
-
-Well, I just assume writeback races with everything and mostly
-everything is OK. What I didn't expect was racing writeback enabling
-racing reclaim to free pages dirtied by a write() before the write() has
-completed (i.e. while it is still dirtying pages and copying data
-into the page cache). i.e. it was the racing page reclaim that exposed
-the data corruption bugs, not writeback.
-
-As it is, I suspect that we should actually try to run fstests in
-massively constrained memcgs more often - all sorts of problems have
-fallen out of doing this (e.g. finding GFP_KERNEL allocations
-in explicit, known GFP_NOFS contexts)....
-
-> i IOWs, with sub-folio block size, and not know what size folios are
-> > in the cache, we can't actually guarantee that we can remove the
-> 
-> Is that supposed to read "...and not knowing what size folios..."?
-
-*nod*
-
-> > cached dirty folios from the cache via truncation, and hence the new
-> > code will not remove the delalloc extents under those dirty folios.
-> > As a result the error injection results is writing zeroes to disk
-> > rather that removing the delalloc extents from memory. I can't make
-> 
-> rather *than*?
-
-*nod*
-
-> > this error injection to work the way it was intended, so I removed
-> > it. The code that it is supposed to exercise is now exercised every time we
-> > detect a stale iomap, so we have much better coverage of the failed
-> > write error handling than the error injection provides us with,
-> > anyway....
-> > 
-> > So, this passes fstests on 1kb and 4kb block sizes and the data
-> > corruption reproducer does not detect data corruption, so this set
-> > of fixes is /finally/ something I'd consider ready for merge.
-> > Comments and testing welcome!
-> 
-> Urrrk.  Thank you for your work on this. :)
-> 
-> /me functionally braindead on halloween candy, will read the code
-> tomorrow.  Well ok we'll see how long it takes curiosity to get the
-> better of me...
-
-Thanks!
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
