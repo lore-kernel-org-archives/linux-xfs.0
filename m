@@ -2,131 +2,171 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B920AC433FE
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Nov 2022 21:04:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9E83C433FE
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Nov 2022 21:11:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230489AbiKBVEj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Nov 2022 17:04:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50024 "EHLO
+        id S231445AbiKBVLt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Nov 2022 17:11:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52850 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230196AbiKBVEj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Nov 2022 17:04:39 -0400
-Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB434DF31
-        for <linux-xfs@vger.kernel.org>; Wed,  2 Nov 2022 14:04:37 -0700 (PDT)
-Received: by mail-pj1-x1029.google.com with SMTP id d59-20020a17090a6f4100b00213202d77e1so3302171pjk.2
-        for <linux-xfs@vger.kernel.org>; Wed, 02 Nov 2022 14:04:37 -0700 (PDT)
+        with ESMTP id S231288AbiKBVLr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Nov 2022 17:11:47 -0400
+Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0A90DFFE
+        for <linux-xfs@vger.kernel.org>; Wed,  2 Nov 2022 14:11:46 -0700 (PDT)
+Received: by mail-pj1-x102d.google.com with SMTP id m14-20020a17090a3f8e00b00212dab39bcdso3359580pjc.0
+        for <linux-xfs@vger.kernel.org>; Wed, 02 Nov 2022 14:11:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=9EzKgUySexRc8B4dWjvuyru+IgiYQVy6x5BFH+NfB0U=;
-        b=CUvk02ACFKAjQ5YP7NUk0hpyFYAaIfFOZxI3cOc6HqfCh0IHuyF6A8S8mB9NCJ7+sM
-         MwkgRQA5BToL0cZ2dxn4e/LG+NPp65ar+BKkxu8QFlXlsXh9LLXInKC9fjDx6ssUd5bb
-         PIh0an1ALHUnnhFQfgsoinUIsiK86g4gzFqhAabG5KFjenrjqhcxZj5Q/LmneIkvG+ZV
-         84lr90zW6D9hCgjyGtZpPKvUtidofVFqKZ7psEPj+G8dQIRbHCoeEEeD1QalpE/403JG
-         F4p8tUzuMQlMNNHmn2DC4o+uOy3u2+HUusHgM2Adf1uWxBm2qExpjd+V+lpxzFGKoOre
-         PRYw==
+        bh=SPWKli0K9g7XkFx6xypne4c3+CX6qdwNxS/7IkeGbtU=;
+        b=iIB0p5QgiO8PsfJZ9pQQWVfx3VH3l9pvgluQSfwJJLO9r0FIEUVpRFYz09Rq6k62Pb
+         52ZQSAu2nDbq0WUJP4cU4PfwqT0OQAPel3ORu/MUy26Kx4Cj7jbS7+J2lSMN3EpWxB8J
+         BaKfU3yAtQ5KZe2GZqSljCbzeqPxCncp1T+cvwwcWhXvvuZUgHEy48rpLCuYRwtjm4bX
+         w+giuGil1HKmcdJ5B+0wOeoOVQg15HcN4tDGOeIbvtI3cBq8Sh5FT7HfmAyUZA4v2UzU
+         l8ViJKFPgSUjD+1NIcv/nWra7s6vVlkZG2sl/SKaHpt4vvUwdLyrA805WQFbD1gRradC
+         5XlA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=9EzKgUySexRc8B4dWjvuyru+IgiYQVy6x5BFH+NfB0U=;
-        b=lYSVuxLJxjJgY8tqkQZZGdGrHa/dGkNNUkw9aaYMmryzSjTL6SqXMZ0+nyZULcvd5y
-         GgO9LGpztXj6xyLee/WjOJnjUjZL3KlKnobshSZKJPvxiODN8lIVbgZGslKqW+sdZrgs
-         j2ppey2ZOgx1IypHdcFfYORF0Ji/kmLgAxyWCM48o4kwfSPQeQY42BJRCjf+3FwiXGbN
-         6EHpzd2y7g9SU+zt+4alK1pa8MnrTLFF7snOemlp79QQpk6dIx4KmqV6+BUxTwguDkEw
-         zdOi50H7GKsbhpT8s6J/cVupg0CvfN60m0eZMjs6GA3FE4gf3wZdZIODcCMdNtOT7lkO
-         j81w==
-X-Gm-Message-State: ACrzQf1os/RemaT0jhdBHUFuMoUStvXiL0kEoW8RCWDIYIaytkYmwAUv
-        eGkizQAaFGWWXs5NpoPcIPNL/g==
-X-Google-Smtp-Source: AMsMyM6eFFzqPTmzFZk873+lwNSIMVE1QK7cxtTyFKHmfB/kDYySoGrx6/Ittlgmd7NNiMI/+nU9KA==
-X-Received: by 2002:a17:902:e54f:b0:187:2e45:e191 with SMTP id n15-20020a170902e54f00b001872e45e191mr13867750plf.91.1667423077348;
-        Wed, 02 Nov 2022 14:04:37 -0700 (PDT)
+        bh=SPWKli0K9g7XkFx6xypne4c3+CX6qdwNxS/7IkeGbtU=;
+        b=IPQqpy3KmXjRZUSgrWeQX6Lu0VpCmpfW9CK3nIfx//Z3CBWUlSfwITKIFNpYzkp+iN
+         FSAo9+qf+KXvCjhKj+f3oRkabunrwuu9219bZR5NnyfFCkcUP5udRUcWj5INmneJUCF3
+         3+Tiv/bdCUSCQ5ee5vdaqP2QuqrmTO+oY2zyRTJlxstWyWGTWSXKLaUBMTV3magnHY1S
+         Nr0+yBakLgUgYycqwTkWO+D/cdoC+nJcvlNSFVr61VKHnkO+aIv8X8VvShAt8/dkGOT8
+         //FGn6j/uIgyHUwULVBLL8iPfbr+7LX9qbnfKNXU3rZ90ZqjbDSOtrtFCrb8HiYoC/LC
+         4MEg==
+X-Gm-Message-State: ACrzQf3GcQVDNl8TTO3689V7e7KNX9bOgIeBpCF/4wiGr/f7Lq/1TgsK
+        mZt8TijtHIH0thAfHehsmvJ9jg==
+X-Google-Smtp-Source: AMsMyM5WNBP4EYlCbYTPSywJck0p5G9cCvONx7D9oyz1DdVI9vEGIkhoNqNjYd0I2ofxht7ZAfGuuA==
+X-Received: by 2002:a17:902:d592:b0:17a:582:4eb with SMTP id k18-20020a170902d59200b0017a058204ebmr26803155plh.40.1667423506277;
+        Wed, 02 Nov 2022 14:11:46 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au. [49.181.106.210])
-        by smtp.gmail.com with ESMTPSA id 13-20020a170902c24d00b0016cf3f124e1sm8727488plg.234.2022.11.02.14.04.36
+        by smtp.gmail.com with ESMTPSA id f26-20020aa7969a000000b0056bfd4a2702sm8860859pfk.45.2022.11.02.14.11.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Nov 2022 14:04:36 -0700 (PDT)
+        Wed, 02 Nov 2022 14:11:45 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1oqKuX-009WMK-SQ; Thu, 03 Nov 2022 08:04:33 +1100
-Date:   Thu, 3 Nov 2022 08:04:33 +1100
+        id 1oqL1S-009WQj-2E; Thu, 03 Nov 2022 08:11:42 +1100
+Date:   Thu, 3 Nov 2022 08:11:42 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 4/7] xfs: buffered write failure should not truncate the
- page cache
-Message-ID: <20221102210433.GZ3600936@dread.disaster.area>
+Subject: Re: [PATCH 1/7] xfs: write page faults in iomap are not buffered
+ writes
+Message-ID: <20221102211142.GA3600936@dread.disaster.area>
 References: <20221101003412.3842572-1-david@fromorbit.com>
- <20221101003412.3842572-5-david@fromorbit.com>
- <Y2KdumAbAF0mV0sh@magnolia>
+ <20221101003412.3842572-2-david@fromorbit.com>
+ <Y2KW1Y0kKvXtZDVr@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y2KdumAbAF0mV0sh@magnolia>
+In-Reply-To: <Y2KW1Y0kKvXtZDVr@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 02, 2022 at 09:41:30AM -0700, Darrick J. Wong wrote:
-> On Tue, Nov 01, 2022 at 11:34:09AM +1100, Dave Chinner wrote:
+On Wed, Nov 02, 2022 at 09:12:05AM -0700, Darrick J. Wong wrote:
+> On Tue, Nov 01, 2022 at 11:34:06AM +1100, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > xfs_buffered_write_iomap_end() currently invalidates the page cache
-> > over the unused range of the delalloc extent it allocated. While the
-> > write allocated the delalloc extent, it does not own it exclusively
-> > as the write does not hold any locks that prevent either writeback
-> > or mmap page faults from changing the state of either the page cache
-> > or the extent state backing this range.
+> > When we reserve a delalloc region in xfs_buffered_write_iomap_begin,
+> > we mark the iomap as IOMAP_F_NEW so that the the write context
+> > understands that it allocated the delalloc region.
 > > 
-> > Whilst xfs_bmap_punch_delalloc_range() already handles races in
-> > extent conversion - it will only punch out delalloc extents and it
-> > ignores any other type of extent - the page cache truncate does not
-> > discriminate between data written by this write or some other task.
-> > As a result, truncating the page cache can result in data corruption
-> > if the write races with mmap modifications to the file over the same
-> > range.
+> > If we then fail that buffered write, xfs_buffered_write_iomap_end()
+> > checks for the IOMAP_F_NEW flag and if it is set, it punches out
+> > the unused delalloc region that was allocated for the write.
 > > 
-> > generic/346 exercises this workload, and if we randomly fail writes
-> > (as will happen when iomap gets stale iomap detection later in the
-> > patchset), it will randomly corrupt the file data because it removes
-> > data written by mmap() in the same page as the write() that failed.
+> > The assumption this code makes is that all buffered write operations
+> > that can allocate space are run under an exclusive lock (i_rwsem).
+> > This is an invalid assumption: page faults in mmap()d regions call
+> > through this same function pair to map the file range being faulted
+> > and this runs only holding the inode->i_mapping->invalidate_lock in
+> > shared mode.
 > > 
-> > Hence we do not want to punch out the page cache over the range of
-> > the extent we failed to write to - what we actually need to do is
-> > detect the ranges that have dirty data in cache over them and *not
-> > punch them out*.
+> > IOWs, we can have races between page faults and write() calls that
+> > fail the nested page cache write operation that result in data loss.
+> > That is, the failing iomap_end call will punch out the data that
+> > the other racing iomap iteration brought into the page cache. This
+> > can be reproduced with generic/34[46] if we arbitrarily fail page
+> > cache copy-in operations from write() syscalls.
+> > 
+> > Code analysis tells us that the iomap_page_mkwrite() function holds
+> > the already instantiated and uptodate folio locked across the iomap
+> > mapping iterations. Hence the folio cannot be removed from memory
+> > whilst we are mapping the range it covers, and as such we do not
+> > care if the mapping changes state underneath the iomap iteration
+> > loop:
+> > 
+> > 1. if the folio is not already dirty, there is no writeback races
+> >    possible.
+> > 2. if we allocated the mapping (delalloc or unwritten), the folio
+> >    cannot already be dirty. See #1.
+> > 3. If the folio is already dirty, it must be up to date. As we hold
+> >    it locked, it cannot be reclaimed from memory. Hence we always
+> >    have valid data in the page cache while iterating the mapping.
+> > 4. Valid data in the page cache can exist when the underlying
+> >    mapping is DELALLOC, UNWRITTEN or WRITTEN. Having the mapping
+> >    change from DELALLOC->UNWRITTEN or UNWRITTEN->WRITTEN does not
+> >    change the data in the page - it only affects actions if we are
+> >    initialising a new page. Hence #3 applies  and we don't care
+> >    about these extent map transitions racing with
+> >    iomap_page_mkwrite().
+> > 5. iomap_page_mkwrite() checks for page invalidation races
+> >    (truncate, hole punch, etc) after it locks the folio. We also
+> >    hold the mapping->invalidation_lock here, and hence the mapping
+> >    cannot change due to extent removal operations while we are
+> >    iterating the folio.
+> > 
+> > As such, filesystems that don't use bufferheads will never fail
+> > the iomap_folio_mkwrite_iter() operation on the current mapping,
+> > regardless of whether the iomap should be considered stale.
+> > 
+> > Further, the range we are asked to iterate is limited to the range
+> > inside EOF that the folio spans. Hence, for XFS, we will only map
+> > the exact range we are asked for, and we will only do speculative
+> > preallocation with delalloc if we are mapping a hole at the EOF
+> > page. The iterator will consume the entire range of the folio that
+> > is within EOF, and anything beyond the EOF block cannot be accessed.
+> > We never need to truncate this post-EOF speculative prealloc away in
+> > the context of the iomap_page_mkwrite() iterator because if it
+> > remains unused we'll remove it when the last reference to the inode
+> > goes away.
 > 
-> Same dumb question as hch -- why do we need to punch out the nondirty
-> pagecache after a failed write?  If the folios are uptodate then we're
-> evicting cache unnecessarily, and if they're !uptodate can't we let
-> reclaim do the dirty work for us?
+> Why /do/ we need to trim the delalloc reservations after a failed
+> write(), anyway?  I gather it's because we don't want to end up with a
+> clean page backed by a delalloc reservation because writeback will never
+> get run to convert that reservation into real space, which means we've
+> leaked the reservation until someone dirties the page?
 
-Sorry, we don't punch out the page cache  - this was badly worded. I
-meant:
+Yup, we leak the delalloc reservation and extent until the inode is
+evicted from cache. What happens when reads/page faults happen over
+that page from that point is now an interesting question - it might
+all work correctly, but then again it might not...
 
-"[...] - what we actually need to do is
-detect the ranges that have dirty data in cache over the delalloc
-extent and retain those regions of the delalloc extent."
+> Ah.  Inode eviction also complains about inodes with delalloc
+> reservations.  The blockgc code only touches cow fork mappings and
+> post-eof blocks, which means it doesn't look for these dead/orphaned
+> delalloc reservations either.
 
-i.e. we never punch the page cache anymore, and we only selectively
-punch the delalloc extent that back the clean regions of thw write
-range...
+Yup, the inode eviction code that detects leaked delalloc blocks is
+a useful canary - if it fires, it tends to indicate a bug in the
+allocation/free code somewhere. If we allowed leaking delalloc
+extents, we lose that canary.
 
-> I don't know if there are hysterical raisins for this or if the goal is
-> to undo memory consumption after a write failure?  If we're stale-ing
-> the write because the iomapping changed, why not leave the folio where
-> it is, refresh the iomapping, and come back to (possibly?) the same
-> folio?
+And, yes, we'd need to make xfs_free_eofblocks() now search for
+leaked delalloc blocks within EOF and punch them out, but then it
+would have to either do the "search page cache for dirty pages" walk
+or force writeback first.
 
-I can't say for certain - I haven't gone an looked at the history.
-I suspect it goes back to the days where write() could write zeroes
-into the page cache for eof zeroing or zeroing for file extension
-before the write() started writing data. Maybe that was part of what
-it was trying to undo?
+None of these things feel like an improvement to me.
 
 -Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
