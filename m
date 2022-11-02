@@ -2,636 +2,225 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A64D1C433FE
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Nov 2022 03:47:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AA02C433FE
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Nov 2022 05:20:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230312AbiKBDrM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Nov 2022 23:47:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34018 "EHLO
+        id S229493AbiKBFUi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Nov 2022 01:20:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33946 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230298AbiKBDrK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Nov 2022 23:47:10 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4570A2716C
-        for <linux-xfs@vger.kernel.org>; Tue,  1 Nov 2022 20:46:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1667360768;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=1WhZ9J/XZ82vLg6ea9SKWs7FSqPoI4Z2U+CBd9LsgXM=;
-        b=Rlk1WuqiauqDoxBZF5Wu6nxzmXH8bguxP5Fh+/G+8yMe/ZKe/9GsGd8fVBuj0s8mtk2VPd
-        kl6zeEKWrRRAHiBEh6X5ESI9H1xM5vb+bo+G71CBgZLQ7+MJLdwoOxL+NOaP+7bX3h8Fa5
-        a8sTg2QuERmTxi3/lsL1Igk7oCYU+Rw=
-Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
- [209.85.214.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-332-8qLRs-ZcMquyW1iIxpEnfA-1; Tue, 01 Nov 2022 23:46:05 -0400
-X-MC-Unique: 8qLRs-ZcMquyW1iIxpEnfA-1
-Received: by mail-pl1-f198.google.com with SMTP id a6-20020a170902ecc600b00186f035ed74so11175621plh.12
-        for <linux-xfs@vger.kernel.org>; Tue, 01 Nov 2022 20:46:05 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=1WhZ9J/XZ82vLg6ea9SKWs7FSqPoI4Z2U+CBd9LsgXM=;
-        b=J/bd9tw3cmfrKHnC5ymqo/A0/QkyFjlXeQtnpQpg4PYWC8FAhDDbGjYBTqUFU+CNBh
-         BPsiMQOylQPNkdDGsS7IZRshslcO+bbO73qPZ2A/fFxR3s6JgB8uR6awm2Pypxffre1G
-         7uiBf02QbPQlLYHOwMmJzuelIXCNkXUPN1po9oPcn/tvqN4fAds7t71aEl3Ik9/1mKoe
-         /Qo8YeFh84XortOSbdlJtVUVk/EaxkpbCTOqfaiWm/glnPaE4rkOp6eEJW26Dsg6Q/3G
-         SKZI8ktNAO+O+qhGiczd5Q6Bx++4tBlZfrs+53JbJVUksiTqs4t/P4LnYRfnxY8q9Ho4
-         Tenw==
-X-Gm-Message-State: ACrzQf2JlJtmP71tyJP7dvG96upq/yZDDj3Cr/yuo1RUThOzr8MHAXOm
-        lEaO1tsc63+sZZ1lb08NAmZ7JPEJrLI6jBcd4nEYFfVSd12Ojg8ST33xo3SPUT2Bmy2qvtAnrr9
-        hi/5Jb7zNjM73w7uVU2HV
-X-Received: by 2002:a63:5c5a:0:b0:46e:be05:a79a with SMTP id n26-20020a635c5a000000b0046ebe05a79amr20134247pgm.138.1667360764207;
-        Tue, 01 Nov 2022 20:46:04 -0700 (PDT)
-X-Google-Smtp-Source: AMsMyM6rII9NaRtwvuul27Aj7enBgNSCXkrjFfcPy7N4OjXxPUN9lWTse3ablLFC4rD8xZt69N6Mpw==
-X-Received: by 2002:a63:5c5a:0:b0:46e:be05:a79a with SMTP id n26-20020a635c5a000000b0046ebe05a79amr20134226pgm.138.1667360763622;
-        Tue, 01 Nov 2022 20:46:03 -0700 (PDT)
-Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id i7-20020a170902c94700b00186b7443082sm7068650pla.195.2022.11.01.20.46.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Nov 2022 20:46:02 -0700 (PDT)
-Date:   Wed, 2 Nov 2022 11:45:58 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs: test xfs_scrub phase 6 media error reporting
-Message-ID: <20221102034558.v56yuo7dnlobjlqm@zlang-mailbox>
-References: <166613311327.868072.4009665862280713748.stgit@magnolia>
- <166613311880.868072.17189668251232287066.stgit@magnolia>
- <20221101164345.uirkzgnakgikw2zm@zlang-mailbox>
- <Y2HBBuZahPXSdy34@magnolia>
+        with ESMTP id S229457AbiKBFUh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Nov 2022 01:20:37 -0400
+X-Greylist: delayed 123 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 01 Nov 2022 22:20:36 PDT
+Received: from esa7.fujitsucc.c3s2.iphmx.com (esa7.fujitsucc.c3s2.iphmx.com [68.232.159.87])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AD9D2409F
+        for <linux-xfs@vger.kernel.org>; Tue,  1 Nov 2022 22:20:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj1;
+  t=1667366436; x=1698902436;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=fgT8FxU3qdon5M6tRECA0lpBxIF8Vaf/ord8oohbvEc=;
+  b=HsXHDGHfUG1RtMpI39mvQP/ILidjPnvjBglJoUNsazTOaMdHseyJRXxI
+   hIGBj1ApNt6RyL7z0oaFX0B5NrCASw0IeOmEbgp2FeCUBk1PdFIrgAbvk
+   JZ/qgJjSe9fya0l2jnHoLMqd4v2fiR27nSVYtKgaaZwJ6xxnRY1ogGOCu
+   3f0ZGS+Tgz0MjK+nJrMLkvimDI0gzvCKcAq2dH3uKZfWyjtAvJgb7RW3M
+   m9x40BusikNvunhNxakUWg0OMLrrj7NMUFTRo/fqspHqzv14n3qMg3zup
+   oFLKPBaRt2Dct+ZqKDQyr6Rh1niyyQfz22hpln4gqvbw6Pes0+bjYrY85
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10518"; a="69067830"
+X-IronPort-AV: E=Sophos;i="5.95,232,1661785200"; 
+   d="scan'208";a="69067830"
+Received: from mail-tycjpn01lp2169.outbound.protection.outlook.com (HELO JPN01-TYC-obe.outbound.protection.outlook.com) ([104.47.23.169])
+  by ob1.fujitsucc.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Nov 2022 14:17:21 +0900
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=HZdNCknWKmeNifZRQ89h6qgntURvSgqXjQ2o1P57wIVbO9CdXnNCDQoleaWFvdkiki5CBKrjMyIT/i7rp0EnTVh528JrRjdcEjGu7bDzxjT6rg4jRJoobPm1tPdkwX3/w7/vIqrjcP09iF8hKlHrTuDkXMfJuhMqZwIJWviDiXdkkVgYTlQ2Qkx6GdggjKkF6cIE39KE6LSJwfEDAgP38DXFjBpYRQ6uvdgwwokk6ZiO5DolULVRm1m+noeaPzhcWz83PHPWySa8O6jExoOrSyVPROtvR3pIpO+/9yn/QXPmVjkJTfNqqxIh3RLinQfpG+90diAFUG4cmBwbtgdlqw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=fgT8FxU3qdon5M6tRECA0lpBxIF8Vaf/ord8oohbvEc=;
+ b=PTJ8VtY3w86Rlo1vUPHiONQOIw4Yz+BDC4HZMCVr/Uxkds8H66Ok6zthiGLPHCf+q0bkjvxYr4qpmkxx5bu682scTPDXM7IirN1kayJyKof8plwzbYIlFp1G8DyAw/C3Cyff1pK02aMsshHDGcNni0pEzoQ126OmcA3l3L4uylhxklXmfRLMMGteHNBu2VZoS73ObD/p75lSCJc/hzHTCYXUGttWhpu7MKLtq5zaihHBuAJEf9OXHbMt6Wwa/Rww7KegI5ODj7Bc8Dg+Jomv7XZ1u2kb5ip+95Y6yDqxvehVfioPwVpEm7MbEqTwL1vRtyz8Np6Qp1y2K9CJeWk13A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=fujitsu.com; dmarc=pass action=none header.from=fujitsu.com;
+ dkim=pass header.d=fujitsu.com; arc=none
+Received: from OSBPR01MB2920.jpnprd01.prod.outlook.com (2603:1096:604:18::16)
+ by TYCPR01MB9569.jpnprd01.prod.outlook.com (2603:1096:400:192::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5769.21; Wed, 2 Nov
+ 2022 05:17:18 +0000
+Received: from OSBPR01MB2920.jpnprd01.prod.outlook.com
+ ([fe80::5fa2:ac9e:d081:37f1]) by OSBPR01MB2920.jpnprd01.prod.outlook.com
+ ([fe80::5fa2:ac9e:d081:37f1%5]) with mapi id 15.20.5769.021; Wed, 2 Nov 2022
+ 05:17:18 +0000
+From:   "ruansy.fnst@fujitsu.com" <ruansy.fnst@fujitsu.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Chinner <david@fromorbit.com>
+CC:     Dan Williams <dan.j.williams@intel.com>,
+        "yangx.jy@fujitsu.com" <yangx.jy@fujitsu.com>,
+        "Yasunori Gotou (Fujitsu)" <y-goto@fujitsu.com>,
+        Brian Foster <bfoster@redhat.com>,
+        "hch@infradead.org" <hch@infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "zwisler@kernel.org" <zwisler@kernel.org>,
+        Jeff Moyer <jmoyer@redhat.com>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "toshi.kani@hpe.com" <toshi.kani@hpe.com>,
+        Theodore Ts'o <tytso@mit.edu>
+Subject: Re: [PATCH] xfs: fail dax mount if reflink is enabled on a partition
+Thread-Topic: [PATCH] xfs: fail dax mount if reflink is enabled on a partition
+Thread-Index: AQHYfA4g5aj+ViA5o0mdS5cU960Zpq1oy6eAgCBSEICAACSLAIALwXoAgAASpQCAB7mIAIABcJ4AgDfaCgCAAYXbgIAHcj8AgAAwlgCAADFJAIAAQWgAgAEpzwCAAQljgIAGUv0AgA+aw4CABj0IgIAAQxUAgADul4CAGN++gIACWZ4AgALenACAAFidVoAAJVqAgAHUVwCAAI4xgIADWnYAgABLEYCAA6klgIAEI92AgABL3QA=
+Date:   Wed, 2 Nov 2022 05:17:18 +0000
+Message-ID: <384341d2-876d-2e61-d791-bad784d3add4@fujitsu.com>
+References: <6a83a56e-addc-f3c4-2357-9589a49bf582@fujitsu.com>
+ <Y1NRNtToQTjs0Dbd@magnolia> <20221023220018.GX3600936@dread.disaster.area>
+ <OSBPR01MB2920CA997DDE891C06776279F42E9@OSBPR01MB2920.jpnprd01.prod.outlook.com>
+ <20221024053109.GY3600936@dread.disaster.area>
+ <dd00529c-d3ef-40e3-9dea-834c5203e3df@fujitsu.com>
+ <Y1gjQ4wNZr3ve2+K@magnolia> <Y1rzZN0wgLcie47z@magnolia>
+ <635b325d25889_6be129446@dwillia2-xfh.jf.intel.com.notmuch>
+ <7a3aac47-1492-a3cc-c53a-53c908f4f857@fujitsu.com>
+ <Y2G9k9/XJVQ7yiWN@magnolia>
+In-Reply-To: <Y2G9k9/XJVQ7yiWN@magnolia>
+Accept-Language: en-US, zh-CN
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+msip_labels: MSIP_Label_a7295cc1-d279-42ac-ab4d-3b0f4fece050_Enabled=True;MSIP_Label_a7295cc1-d279-42ac-ab4d-3b0f4fece050_SiteId=a19f121d-81e1-4858-a9d8-736e267fd4c7;MSIP_Label_a7295cc1-d279-42ac-ab4d-3b0f4fece050_SetDate=2022-11-02T05:17:17.976Z;MSIP_Label_a7295cc1-d279-42ac-ab4d-3b0f4fece050_Name=FUJITSU-RESTRICTED;MSIP_Label_a7295cc1-d279-42ac-ab4d-3b0f4fece050_ContentBits=0;MSIP_Label_a7295cc1-d279-42ac-ab4d-3b0f4fece050_Method=Standard;
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=fujitsu.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: OSBPR01MB2920:EE_|TYCPR01MB9569:EE_
+x-ms-office365-filtering-correlation-id: 8b2668cf-1e62-400b-63eb-08dabc918355
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: FkTDq9DnegGsTpvN6sdIceynVazX8EpC5dwktVPB6fVqBg8mOEoi18LcnQjY4gpwlrvN/3m+7D+E9bN9hXAg/jizoY5Do0rP9Gz3g94qbK5Pxzz5i995anEfMYL+9x2pN0S/I9N4NQiRB0kaYK3c0ia9EYlqxw1o4i9+a9MFWvZmceUjlBeedlt1V0m5R0g4M1fyc4KFbM3Q4s9y0PLjqjqqV19tz8EIEzy8BA6dLCJZzAf23IKW1C3HEFLTBYkM2RSn7Q4R8upTFwew+OGJEowOQo8faVGB3b01QqM6iMXhnCPqVRZ0d9CQSkC9fclpe7LDSq2dpMduMU8e4lX4AhlFjR7oAQak5BUP4YjmNM6Xk5O16Iz32xpRg6+Aj1xEGl8LID5oCVFIfJKhCusADMnMe5DN+KSbVlTMPbpvrTq+qetUlsVCmun0b+oIc40xy+zFeMJK14sYjAs/KZoA4CnT3TCnfHCaTvV9E6F3vs+WhUH+LIr1ZEOX5sgvTuE3Ac9X4H/ooYldM7Abe0wxQh4PzEBbbIIsqnHwL38EG5vT8eXFDrkfSX42vwcp9fxiXV3pQg/MFL2BfeOBN3GHuED16OEYCsgBy4U57J2UzRTMZQro5SGwDcjeSdiwFWqu11Fz54T9+MrBfgN6ekeapPuErmVfYIivyYTXH7H2JTDtfugEDhhiCbT+uYF5R7+arymMQpgJ+0aC934EXj8s5lsO0FYkn6zGV4sBf39shmhMjg1HnOOhIV32lFavjBmjAvxw+bVbnx58egbnNrP5ur5bBYHHVWd4AGr0eLtY147WS9lM4dUxeaXGrdab/dmpckC/aeR0TBxdDSfPj0NxaOZdYGBzMLmfZesxQOyK9CU=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:OSBPR01MB2920.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(366004)(39860400002)(396003)(346002)(376002)(136003)(84040400005)(451199015)(1590799012)(31686004)(71200400001)(966005)(38070700005)(7416002)(1580799009)(5660300002)(31696002)(66899015)(6486002)(478600001)(8936002)(66946007)(54906003)(316002)(36756003)(66476007)(2906002)(110136005)(85182001)(76116006)(91956017)(66556008)(38100700002)(26005)(2616005)(6512007)(4326008)(8676002)(64756008)(86362001)(66446008)(6506007)(41300700001)(82960400001)(186003)(122000001)(83380400001)(45980500001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?gb2312?B?WFFSdXg3Q01nM2VudlFYT2pOVkt5cGpyTnZ5RzFyZWN0STQvRWdkcDZpakVO?=
+ =?gb2312?B?b1NyUTRMUG1tNy9abi9kM1hmcitHTmg2VXZlL1RqRnk3M21xeXVqcUJSMkZr?=
+ =?gb2312?B?WlJWcEdFY3dZQzJSTndmVEgwVVBNM04vb1pocXkvQWJjVXZuUHNPUmgralVQ?=
+ =?gb2312?B?UGFUdDB4SGdmQkFWcDYrV1cvMWdab2tHeWV6OGplZ0E2bTM0RnZMUmgyNzZn?=
+ =?gb2312?B?TllFMkpYcU5OcGZvamx1ZjMrNVB5SkVLeVp1M2VSUG9oUm5DTHpsaUtVU0RN?=
+ =?gb2312?B?ZVNQZTBNU0hjY3h6TXhldHpHdC80Z0Y5bTIydWZYb2IyeUc5b1pVTytCQkR3?=
+ =?gb2312?B?V0tBV2dOUk0rMUlWMUt2Y0kzVytZc0JQd2VXaU42RVM2bXA1M0lHTm5ockgy?=
+ =?gb2312?B?bTFXNVdELzV0cDlYaVNMaDVaRVNDTnRyR3psQTRJaHNTdmZvUzY2bGJZMGRa?=
+ =?gb2312?B?c0lCNjQ3RUJlUlE3OHlWVFM1RVF4QndPb0ZyQkFWdmxueFhuME9NQytubnhC?=
+ =?gb2312?B?YVpzcTl3L3JCRFYxUjV3aDhDSGI3bW44UzRzOEZWVG5rcERFcTdDVURlQWJ4?=
+ =?gb2312?B?WTk3SmxkbU96c284cm44a3hKc3lVbzBuNEI0WE9qbjhkbzBnZmRhMnpxZSs1?=
+ =?gb2312?B?ZTAvZW8yWk15VlZwMjV2OU1BQkU4K3d0TDlxd0JkMWZVT0NIMFBxYTU1Wkc4?=
+ =?gb2312?B?Rkl4Nm1WY0RlekNiaHZ1OXl6eDUrYkdobTY4Y2RVN0hQa0tUVTh0bEVTYTRD?=
+ =?gb2312?B?OGNWMld4S0xBOFdMNHVUT2tvV1dqMzIvQi9nSUpwVDBlS1lrZXZOQm80NGxY?=
+ =?gb2312?B?Q096QTZIT1lWVUtDamp6cDU1MSt2S0hOV0pBc0lrVTJRanlFY2gyRUFIWldj?=
+ =?gb2312?B?TVFidlcwMGpqdTlHY1cwYmZZbFVoK1lhV2hRbTRHcmlHREx6WDJ2ZHFtRlFV?=
+ =?gb2312?B?QUJJdzhQTXhxcUNpTXlwVGdHZDA5WVozbEhNeTU4S2ExdWl1TU40MWEzS2Ru?=
+ =?gb2312?B?RG8wTHlUTzdqc2N2QXVEc05IOVRwMUxIcEJFNU9XN3FMaDF6WmQxU09XdXEw?=
+ =?gb2312?B?UnZSd25XVld2TEN2VFk2cFEvSDVTY1BoTkRxUFdhUUlYUUMyN1hjdU1tTWty?=
+ =?gb2312?B?VjhKLzRqenIwQkt1d2dpcGFXalE5MWU2QVlleGFKQUJqZUdzcVdrQm5sUUNN?=
+ =?gb2312?B?Ly9TOS9wQkNpSDl4d1FadUJydVl4TENBaGZsUFhENXY4aTBHVlFGa1JhM3N6?=
+ =?gb2312?B?K0xnM0dyT01TYlE5cVNwZ2JPb1duTk5hN2VMcy9rbWFIcktmcFV2amU3bk9l?=
+ =?gb2312?B?bWNoeUpiL3hhMW5vcUh6L3UxVVEvdVVNUTZwcFZBVTVuZi83Rk92MGNYeE1E?=
+ =?gb2312?B?TkFuSlBpd0QrN1psbUxpN1A1SVhZSXIvN2drd1c0UGdJZU9lejBWeTh5T0s3?=
+ =?gb2312?B?VHB1UHRMdmlnbTZIYy9qQnc5UXd3L05na08zNnlJdkp6UGMxckR4eVV2TjZy?=
+ =?gb2312?B?VE9YaGJHZGVua3JsUy9HMTY2YnJXdXduOHdSK2RHUmhMMGZaNUFSSWh3c2lQ?=
+ =?gb2312?B?eUl0NFNVTEZvbDlRU0xaWjU5QUtxLzhNTUU1M25MTk9vQXY3Z3VVdHNWK1Zh?=
+ =?gb2312?B?ZXE5VlRvbStSVmVxOFdyZEl3eWlVZFRuZFFPMkRua21zOWt5dlpNWFdZbGN2?=
+ =?gb2312?B?N2MyQnJRWGlsazdEQUdBUFhuQkdhK3dWem5YSjU0ME4xZ1hsUFdkY2ZSUXV5?=
+ =?gb2312?B?eUtXMzh0S083T3Y3R0xlQnZ5Y3FzbmtrN1N5bzZDaE5EcFB6TGxkMlBxSnht?=
+ =?gb2312?B?TUdpeUp4M2Mza24zeFV5MFR4N1J2dFRaQkZiSnJ0UFFVT1MxQVdVTDI5ZHNH?=
+ =?gb2312?B?K3A1TVhUR0RpYXBOSDBqQTFjblhrcGQ4U2dsVFZjc2l2QXhIcWJBYTFLWUsy?=
+ =?gb2312?B?SVdKdlJYZWNEQW9JN3o1bUxUbTZQZ1lJaEtZZWd5VGpwdHVNL0RwN0I1Q2hM?=
+ =?gb2312?B?OVdaOVUzSG9BV0xVeXo5OTR0NFFwQmlsaVptWjZHelpkcERwLzhYSkY1d1dJ?=
+ =?gb2312?B?L0RHS0ExN2ludUdZbzZPVTZqelg5Sy9IbklnZ0ovRnlBVURhZUxqbnlvRFpB?=
+ =?gb2312?Q?uQKwZAxMiapzvCcf2iW/J9qo8?=
+Content-Type: text/plain; charset="gb2312"
+Content-ID: <6CDAC3A7CD7AEA488670AE6282A65F28@jpnprd01.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y2HBBuZahPXSdy34@magnolia>
+X-OriginatorOrg: fujitsu.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: OSBPR01MB2920.jpnprd01.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8b2668cf-1e62-400b-63eb-08dabc918355
+X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Nov 2022 05:17:18.5881
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a19f121d-81e1-4858-a9d8-736e267fd4c7
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: Mz3kuoU9QNxxqwk0RQGutsIlAi3Ey36yOtt5JoYG1qYZSlQM2Hu3Ka4JheMhElZsvKC0gmksAIJKgleuQ2im7A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYCPR01MB9569
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 01, 2022 at 05:59:50PM -0700, Darrick J. Wong wrote:
-> On Wed, Nov 02, 2022 at 12:43:45AM +0800, Zorro Lang wrote:
-> > On Tue, Oct 18, 2022 at 03:45:18PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Add new helpers to dmerror to provide for marking selected ranges
-> > > totally bad -- both reads and writes will fail.  Create a new test for
-> > > xfs_scrub to check that it reports media errors in data files correctly.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > ---
-> > >  common/dmerror    |  136 +++++++++++++++++++++++++++++++++++++++++++++--
-> > >  common/xfs        |    9 +++
-> > >  tests/xfs/747     |  155 +++++++++++++++++++++++++++++++++++++++++++++++++++++
-> > >  tests/xfs/747.out |   12 ++++
-> > >  4 files changed, 309 insertions(+), 3 deletions(-)
-> > >  create mode 100755 tests/xfs/747
-> > >  create mode 100644 tests/xfs/747.out
-> > > 
-> > > 
-> > > diff --git a/common/dmerror b/common/dmerror
-> > > index 54122b12ea..58ab461e0e 100644
-> > > --- a/common/dmerror
-> > > +++ b/common/dmerror
-> > > @@ -159,16 +159,16 @@ _dmerror_load_error_table()
-> > >  	fi
-> > >  
-> > >  	# Load new table
-> > > -	$DMSETUP_PROG load error-test --table "$DMERROR_TABLE"
-> > > +	echo "$DMERROR_TABLE" | $DMSETUP_PROG load error-test
-> > >  	load_res=$?
-> > >  
-> > >  	if [ -n "$NON_ERROR_RTDEV" ]; then
-> > > -		$DMSETUP_PROG load error-rttest --table "$DMERROR_RTTABLE"
-> > > +		echo "$DMERROR_RTTABLE" | $DMSETUP_PROG load error-rttest
-> > >  		[ $? -ne 0 ] && _fail "failed to load error table into error-rttest"
-> > >  	fi
-> > >  
-> > >  	if [ -n "$NON_ERROR_LOGDEV" ]; then
-> > > -		$DMSETUP_PROG load error-logtest --table "$DMERROR_LOGTABLE"
-> > > +		echo "$DMERROR_LOGTABLE" | $DMSETUP_PROG load error-logtest
-> > 
-> > Hi,
-> > 
-> > Is there any reason about why we need to replace "dmsetup --table $table" with
-> > "echo $table | dmsetup"?
-> 
-> Once we poke enough dmerror holes into the mapping, $table becomes a
-> multiline string, and I feel that pipes are better suited to that usage
-> than stuffing a huge string into argv[].
-
-Oh, make sense.
-
-> 
-> That said, I don't have any plans to create multigigabyte table
-> definitions, so it's no big deal to switch them back.
-
-If we haven't hit any real problems, how about do this change in a seperated
-patch when we need it, and at that time you might like to change other
-common/dmxxxx (e.g. dmflakey, dmthin ...) with this dmerror together?
-
-> 
-> > >  		[ $? -ne 0 ] && _fail "failed to load error table into error-logtest"
-> > >  	fi
-> > >  
-> > > @@ -250,3 +250,133 @@ _dmerror_load_working_table()
-> > >  	[ $load_res -ne 0 ] && _fail "dmsetup failed to load error table"
-> > >  	[ $resume_res -ne 0 ] && _fail  "dmsetup resume failed"
-> > >  }
-> > > +
-> > > +# Given a list of (start, length) tuples on stdin, combine adjacent tuples into
-> > > +# larger ones and write the new list to stdout.
-> > > +__dmerror_combine_extents()
-> > > +{
-> > > +	awk 'BEGIN{start = 0; len = 0;}{
-> > > +if (start + len == $1) {
-> > > +	len += $2;
-> > > +} else {
-> > > +	if (len > 0)
-> > > +		printf("%d %d\n", start, len);
-> > > +	start = $1;
-> > > +	len = $2;
-> > > +}
-> > > +} END {
-> > > +	if (len > 0)
-> > > +		printf("%d %d\n", start, len);
-> > > +}'
-> > > +}
-> > > +
-> > > +# Given a block device, the name of a preferred dm target, the name of an
-> > > +# implied dm target, and a list of (start, len) tuples on stdin, create a new
-> > > +# dm table which maps each of the tuples to the preferred target and all other
-> > > +# areas to the implied dm target.
-> > > +__dmerror_recreate_map()
-> > > +{
-> > > +	local device="$1"
-> > > +	local preferred_tgt="$2"
-> > > +	local implied_tgt="$3"
-> > > +	local size=$(blockdev --getsz "$device")
-> > > +
-> > > +	awk -v device="$device" -v size=$size -v implied_tgt="$implied_tgt" \
-> > > +		-v preferred_tgt="$preferred_tgt" 'BEGIN{implied_start = 0;}{
-> > > +	extent_start = $1;
-> > > +	extent_len = $2;
-> > > +
-> > > +	if (extent_start > size) {
-> > > +		extent_start = size;
-> > > +		extent_len = 0;
-> > > +	} else if (extent_start + extent_len > size) {
-> > > +		extent_len = size - extent_start;
-> > > +	}
-> > > +
-> > > +	if (implied_start < extent_start)
-> > > +		printf("%d %d %s %s %d\n", implied_start,
-> > > +				extent_start - implied_start, implied_tgt,
-> > > +				device, implied_start);
-> > > +	printf("%d %d %s %s %d\n", extent_start, extent_len, preferred_tgt,
-> > > +			device, extent_start);
-> > > +	implied_start = extent_start + extent_len;
-> > > +}END{
-> > > +	if (implied_start < size)
-> > > +		printf("%d %d %s %s %d\n", implied_start, size - implied_start,
-> > > +				implied_tgt, device, implied_start);
-> > > +}'
-> > 
-> > Above indentation (of awk code mix with bash function) is a little confused ...
-> 
-> I'm not sure how to make it any prettier -- embedding code from one
-> language into a function written in a different but similar language is
-> always going to be fugly.
-> 
-> Predefining the awk program text as a global string would avoid that but
-> pollute the global namespace.
-> 
-> I could indent the entire awk program so the indent might be less weird:
-> 
-> __dmerror_recreate_map()
-> {
-> 	local device="$1"
-> 	local preferred_tgt="$2"
-> 	local implied_tgt="$3"
-> 	local size=$(blockdev --getsz "$device")
-> 
-> 	awk -v device="$device" -v size=$size -v implied_tgt="$implied_tgt" \
-> 		-v preferred_tgt="$preferred_tgt" '
-> 	BEGIN {
-> 		implied_start = 0;
-> 	}
-> 	{
-> 		extent_start = $1;
-> 		extent_len = $2;
-> 
-> 		if (extent_start > size) {
-> 			extent_start = size;
-> 			extent_len = 0;
-> 		} else if (extent_start + extent_len > size) {
-> 			extent_len = size - extent_start;
-> 		}
-> 
-> 		if (implied_start < extent_start)
-> 			printf("%d %d %s %s %d\n", implied_start,
-> 					extent_start - implied_start,
-> 					implied_tgt, device, implied_start);
-> 		printf("%d %d %s %s %d\n", extent_start, extent_len,
-> 				preferred_tgt, device, extent_start);
-> 		implied_start = extent_start + extent_len;
-> 	}
-> 	END {
-> 		if (implied_start < size)
-> 			printf("%d %d %s %s %d\n", implied_start,
-> 					size - implied_start, implied_tgt,
-> 					device, implied_start);
-> 	}'
-> }
-> 
-> but now the awk code has the same level of indenting as the bash code.
-
-Yeah, it's hard to say how to deal with the format of long embedded code, but
-this one looks better to me, and I think we can add two comment lines to mark
-the 'start and end' of the embedded awk program. I think we can change this
-function and __dmerror_combine_extents() like that.
-
-> 
-> I could put a comment at the end noting that we're switching from awk
-> back to bash, or I could define the awk program as a local string, but I
-> don't think that's going to clear things up that much...
-> 
-> __dmerror_recreate_map()
-> {
-> 	local device="$1"
-> 	local preferred_tgt="$2"
-> 	local implied_tgt="$3"
-> 	local size=$(blockdev --getsz "$device")
-> 
-> 	local awk_program='
-> 	BEGIN {
-> 		implied_start = 0;
-> 	}
-> 	{
-> 		extent_start = $1;
-> 		extent_len = $2;
-> 
-> 		if (extent_start > size) {
-> 			extent_start = size;
-> 			extent_len = 0;
-> 		} else if (extent_start + extent_len > size) {
-> 			extent_len = size - extent_start;
-> 		}
-> 
-> 		if (implied_start < extent_start)
-> 			printf("%d %d %s %s %d\n", implied_start,
-> 					extent_start - implied_start,
-> 					implied_tgt, device, implied_start);
-> 		printf("%d %d %s %s %d\n", extent_start, extent_len,
-> 				preferred_tgt, device, extent_start);
-> 		implied_start = extent_start + extent_len;
-> 	}
-> 	END {
-> 		if (implied_start < size)
-> 			printf("%d %d %s %s %d\n", implied_start,
-> 					size - implied_start, implied_tgt,
-> 					device, implied_start);
-> 	}'
-> 
-> 	awk -v device="$device" -v size=$size -v implied_tgt="$implied_tgt" \
-> 		-v preferred_tgt="$preferred_tgt" "$awk_program"
-> }
-> 
-> Hm?
-> 
-> > > +}
-> > > +
-> > > +# Update the dm error table so that the range (start, len) maps to the
-> > > +# preferred dm target, overriding anything that maps to the implied dm target.
-> > > +# This assumes that the only desired targets for this dm device are the
-> > > +# preferred and and implied targets.  The fifth argument is the scratch device
-> > > +# that we want to change the table for.
-> > > +__dmerror_change()
-> > > +{
-> > > +	local start="$1"
-> > > +	local len="$2"
-> > > +	local preferred_tgt="$3"
-> > > +	local implied_tgt="$4"
-> > > +	local whichdev="$5"
-> > 
-> > local old_table ?
-> > local new_table ?
-> 
-> Oops.  Fixed.
-> 
-> > > +
-> > > +	case "$whichdev" in
-> > > +	"SCRATCH_DEV"|"")	whichdev="$SCRATCH_DEV";;
-> > > +	"SCRATCH_LOGDEV"|"LOG")	whichdev="$NON_ERROR_LOGDEV";;
-> > > +	"SCRATCH_RTDEV"|"RT")	whichdev="$NON_ERROR_RTDEV";;
-> > > +	esac
-> > > +
-> > > +	case "$whichdev" in
-> > > +	"$SCRATCH_DEV")		old_table="$DMERROR_TABLE";;
-> > > +	"$NON_ERROR_LOGDEV")	old_table="$DMERROR_LOGTABLE";;
-> > > +	"$NON_ERROR_RTDEV")	old_table="$DMERROR_RTTABLE";;
-> > > +	*)
-> > > +		echo "$whichdev: Unknown dmerror device."
-> > > +		return
-> > > +		;;
-> > > +	esac
-> > > +
-> > > +	new_table="$( (echo "$old_table"; echo "$start $len $preferred_tgt") | \
-> > > +		awk -v type="$preferred_tgt" '{if ($3 == type) print $0;}' | \
-> > > +		sort -g | \
-> > > +		__dmerror_combine_extents | \
-> > > +		__dmerror_recreate_map "$whichdev" "$preferred_tgt" \
-> > > +				"$implied_tgt" )"
-> > > +
-> > > +	case "$whichdev" in
-> > > +	"$SCRATCH_DEV")		DMERROR_TABLE="$new_table";;
-> > > +	"$NON_ERROR_LOGDEV")	DMERROR_LOGTABLE="$new_table";;
-> > > +	"$NON_ERROR_RTDEV")	DMERROR_RTTABLE="$new_table";;
-> > > +	esac
-> > > +}
-> > > +
-> > > +# Reset the dm error table to everything ok.  The dm device itself must be
-> > > +# remapped by calling _dmerror_load_error_table.
-> > > +_dmerror_reset_table()
-> > > +{
-> > > +	DMERROR_TABLE="$DMLINEAR_TABLE"
-> > > +	DMERROR_LOGTABLE="$DMLINEAR_LOGTABLE"
-> > > +	DMERROR_RTTABLE="$DMLINEAR_RTTABLE"
-> > > +}
-> > > +
-> > > +# Update the dm error table so that IOs to the given range will return EIO.
-> > > +# The dm device itself must be remapped by calling _dmerror_load_error_table.
-> > > +_dmerror_mark_range_bad()
-> > > +{
-> > > +	local start="$1"
-> > > +	local len="$2"
-> > > +	local dev="$3"
-> > > +
-> > > +	__dmerror_change "$start" "$len" error linear "$dev"
-> > > +}
-> > > +
-> > > +# Update the dm error table so that IOs to the given range will succeed.
-> > > +# The dm device itself must be remapped by calling _dmerror_load_error_table.
-> > > +_dmerror_mark_range_good()
-> > > +{
-> > > +	local start="$1"
-> > > +	local len="$2"
-> > > +	local dev="$3"
-> > > +
-> > > +	__dmerror_change "$start" "$len" linear error "$dev"
-> > > +}
-> > > diff --git a/common/xfs b/common/xfs
-> > > index e1c15d3d04..2cd8254937 100644
-> > > --- a/common/xfs
-> > > +++ b/common/xfs
-> > > @@ -194,6 +194,15 @@ _xfs_get_file_block_size()
-> > >  	$XFS_INFO_PROG "$path" | grep realtime | sed -e 's/^.*extsz=\([0-9]*\).*$/\1/g'
-> > >  }
-> > >  
-> > > +# Decide if this path is a file on the realtime device
-> > > +_xfs_is_realtime_file()
-> > > +{
-> > > +	if [ "$USE_EXTERNAL" != "yes" ] || [ -z "$SCRATCH_RTDEV" ]; then
-> > > +		return 1
-> > > +	fi
-> > > +	$XFS_IO_PROG -c 'stat -v' "$1" | grep -q -w realtime
-> > > +}
-> > > +
-> > >  # Set or clear the realtime status of every supplied path.  The first argument
-> > >  # is either 'data' or 'realtime'.  All other arguments should be paths to
-> > >  # existing directories or empty regular files.
-> > > diff --git a/tests/xfs/747 b/tests/xfs/747
-> > 
-> > I tried this case, and got below error, looks like the od error output need a filter?
-> > 
-> > # ./check -s simpledev -s logdev xfs/747
-> > SECTION       -- simpledev
-> > FSTYP         -- xfs (debug)
-> > PLATFORM      -- Linux/x86_64 hp-dl380pg8-01 6.1.0-rc3 #5 SMP PREEMPT_DYNAMIC Tue Nov  1 01:08:52 CST 2022
-> > MKFS_OPTIONS  -- -f /dev/sda3
-> > MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/sda3 /mnt/scratch
-> > 
-> > xfs/747       - output mismatch (see /root/git/xfstests/results//simpledev/xfs/747.out.bad)
-> >     --- tests/xfs/747.out       2022-11-01 14:48:56.990683131 +0800
-> >     +++ /root/git/xfstests/results//simpledev/xfs/747.out.bad   2022-11-01 19:38:34.825632961 +0800
-> >     @@ -5,7 +5,7 @@
-> >      Scrub for injected media error (multi threaded)
-> >      Unfixable Error: SCRATCH_MNT/a: media error at data offset 2FSB length 1FSB.
-> >      SCRATCH_MNT: unfixable errors found: 1
-> >     -od: SCRATCH_MNT/a: read error: Input/output error
-> >     +od: SCRATCH_MNT/a: Input/output error
-> 
-> Err, what operating system is this?
-
-# lsb_release -a
-LSB Version:    :core-4.1-amd64:core-4.1-noarch
-Distributor ID: Fedora
-Description:    Fedora release 38 (Rawhide)
-Release:        38
-Codename:       Rawhide
-# uname -r
-6.1.0-rc3
-# rpm -qf `type -P od`
-coreutils-9.1-8.fc38.x86_64
- uname -r
-6.1.0-rc3
-
-> 
-> --D
-> 
-> > 
-> > > new file mode 100755
-> > > index 0000000000..8952c24ee6
-> > > --- /dev/null
-> > > +++ b/tests/xfs/747
-> > > @@ -0,0 +1,155 @@
-> > > +#! /bin/bash
-> > > +# SPDX-License-Identifier: GPL-2.0-or-later
-> > > +# Copyright (c) 2022 Oracle.  All Rights Reserved.
-> > > +#
-> > > +# FS QA Test No. 747
-> > > +#
-> > > +# Check xfs_scrub's media scan can actually return diagnostic information for
-> > > +# media errors in file data extents.
-> > > +
-> > > +. ./common/preamble
-> > > +_begin_fstest auto quick scrub
-> > 
-> >   eio ?
-
-Thanks,
-Zorro
-
-> > 
-> > Thanks,
-> > Zorro
-> > 
-> > > +
-> > > +# Override the default cleanup function.
-> > > +_cleanup()
-> > > +{
-> > > +	cd /
-> > > +	rm -f $tmp.*
-> > > +	_dmerror_cleanup
-> > > +}
-> > > +
-> > > +# Import common functions.
-> > > +. ./common/fuzzy
-> > > +. ./common/filter
-> > > +. ./common/dmerror
-> > > +
-> > > +# real QA test starts here
-> > > +_supported_fs xfs
-> > > +_require_dm_target error
-> > > +_require_scratch
-> > > +_require_scratch_xfs_crc
-> > > +_require_scrub
-> > > +
-> > > +filter_scrub_errors() {
-> > > +	_filter_scratch | sed \
-> > > +		-e "s/offset $((fs_blksz * 2)) /offset 2FSB /g" \
-> > > +		-e "s/length $fs_blksz.*/length 1FSB./g"
-> > > +}
-> > > +
-> > > +_scratch_mkfs >> $seqres.full
-> > > +_dmerror_init
-> > > +_dmerror_mount >> $seqres.full 2>&1
-> > > +
-> > > +_supports_xfs_scrub $SCRATCH_MNT $SCRATCH_DEV || _notrun "Scrub not supported"
-> > > +
-> > > +# Write a file with 4 file blocks worth of data
-> > > +victim=$SCRATCH_MNT/a
-> > > +file_blksz=$(_get_file_block_size $SCRATCH_MNT)
-> > > +$XFS_IO_PROG -f -c "pwrite -S 0x58 0 $((4 * file_blksz))" -c "fsync" $victim >> $seqres.full
-> > > +unset errordev
-> > > +_xfs_is_realtime_file $victim && errordev="RT"
-> > > +bmap_str="$($XFS_IO_PROG -c "bmap -elpv" $victim | grep "^[[:space:]]*0:")"
-> > > +echo "$errordev:$bmap_str" >> $seqres.full
-> > > +
-> > > +phys="$(echo "$bmap_str" | $AWK_PROG '{print $3}')"
-> > > +if [ "$errordev" = "RT" ]; then
-> > > +	len="$(echo "$bmap_str" | $AWK_PROG '{print $4}')"
-> > > +else
-> > > +	len="$(echo "$bmap_str" | $AWK_PROG '{print $6}')"
-> > > +fi
-> > > +fs_blksz=$(_get_block_size $SCRATCH_MNT)
-> > > +echo "file_blksz:$file_blksz:fs_blksz:$fs_blksz" >> $seqres.full
-> > > +kernel_sectors_per_fs_block=$((fs_blksz / 512))
-> > > +
-> > > +# Did we get at least 4 fs blocks worth of extent?
-> > > +min_len_sectors=$(( 4 * kernel_sectors_per_fs_block ))
-> > > +test "$len" -lt $min_len_sectors && \
-> > > +	_fail "could not format a long enough extent on an empty fs??"
-> > > +
-> > > +phys_start=$(echo "$phys" | sed -e 's/\.\..*//g')
-> > > +
-> > > +echo "$errordev:$phys:$len:$fs_blksz:$phys_start" >> $seqres.full
-> > > +echo "victim file:" >> $seqres.full
-> > > +od -tx1 -Ad -c $victim >> $seqres.full
-> > > +
-> > > +# Set the dmerror table so that all IO will pass through.
-> > > +_dmerror_reset_table
-> > > +
-> > > +cat >> $seqres.full << ENDL
-> > > +dmerror before:
-> > > +$DMERROR_TABLE
-> > > +$DMERROR_RTTABLE
-> > > +<end table>
-> > > +ENDL
-> > > +
-> > > +# All sector numbers that we feed to the kernel must be in units of 512b, but
-> > > +# they also must be aligned to the device's logical block size.
-> > > +logical_block_size=$(_min_dio_alignment $SCRATCH_DEV)
-> > > +kernel_sectors_per_device_lba=$((logical_block_size / 512))
-> > > +
-> > > +# Mark as bad one of the device LBAs in the middle of the extent.  Target the
-> > > +# second LBA of the third block of the four-block file extent that we allocated
-> > > +# earlier, but without overflowing into the fourth file block.
-> > > +bad_sector=$(( phys_start + (2 * kernel_sectors_per_fs_block) ))
-> > > +bad_len=$kernel_sectors_per_device_lba
-> > > +if (( kernel_sectors_per_device_lba < kernel_sectors_per_fs_block )); then
-> > > +	bad_sector=$((bad_sector + kernel_sectors_per_device_lba))
-> > > +fi
-> > > +if (( (bad_sector % kernel_sectors_per_device_lba) != 0)); then
-> > > +	echo "bad_sector $bad_sector not congruent with device logical block size $logical_block_size"
-> > > +fi
-> > > +_dmerror_mark_range_bad $bad_sector $bad_len $errordev
-> > > +
-> > > +cat >> $seqres.full << ENDL
-> > > +dmerror after marking bad:
-> > > +$DMERROR_TABLE
-> > > +$DMERROR_RTTABLE
-> > > +<end table>
-> > > +ENDL
-> > > +
-> > > +_dmerror_load_error_table
-> > > +
-> > > +# See if the media scan picks it up.
-> > > +echo "Scrub for injected media error (single threaded)"
-> > > +
-> > > +# Once in single-threaded mode
-> > > +_scratch_scrub -b -x >> $seqres.full 2> $tmp.error
-> > > +cat $tmp.error | filter_scrub_errors
-> > > +
-> > > +# Once in parallel mode
-> > > +echo "Scrub for injected media error (multi threaded)"
-> > > +_scratch_scrub -x >> $seqres.full 2> $tmp.error
-> > > +cat $tmp.error | filter_scrub_errors
-> > > +
-> > > +# Remount to flush the page cache and reread to see the IO error
-> > > +_dmerror_unmount
-> > > +_dmerror_mount
-> > > +echo "victim file:" >> $seqres.full
-> > > +od -tx1 -Ad -c $victim >> $seqres.full 2> $tmp.error
-> > > +cat $tmp.error | _filter_scratch
-> > > +
-> > > +# Scrub again to re-confirm the media error across a remount
-> > > +echo "Scrub for injected media error (after remount)"
-> > > +_scratch_scrub -x >> $seqres.full 2> $tmp.error
-> > > +cat $tmp.error | filter_scrub_errors
-> > > +
-> > > +# Now mark the bad range good so that a retest shows no media failure.
-> > > +_dmerror_mark_range_good $bad_sector $bad_len $errordev
-> > > +_dmerror_load_error_table
-> > > +
-> > > +cat >> $seqres.full << ENDL
-> > > +dmerror after marking good:
-> > > +$DMERROR_TABLE
-> > > +$DMERROR_RTTABLE
-> > > +<end table>
-> > > +ENDL
-> > > +
-> > > +echo "Scrub after removing injected media error"
-> > > +
-> > > +# Scrub one last time to make sure the error's gone.
-> > > +_scratch_scrub -x >> $seqres.full 2> $tmp.error
-> > > +cat $tmp.error | filter_scrub_errors
-> > > +
-> > > +# success, all done
-> > > +status=0
-> > > +exit
-> > > diff --git a/tests/xfs/747.out b/tests/xfs/747.out
-> > > new file mode 100644
-> > > index 0000000000..f85f1753a6
-> > > --- /dev/null
-> > > +++ b/tests/xfs/747.out
-> > > @@ -0,0 +1,12 @@
-> > > +QA output created by 747
-> > > +Scrub for injected media error (single threaded)
-> > > +Unfixable Error: SCRATCH_MNT/a: media error at data offset 2FSB length 1FSB.
-> > > +SCRATCH_MNT: unfixable errors found: 1
-> > > +Scrub for injected media error (multi threaded)
-> > > +Unfixable Error: SCRATCH_MNT/a: media error at data offset 2FSB length 1FSB.
-> > > +SCRATCH_MNT: unfixable errors found: 1
-> > > +od: SCRATCH_MNT/a: read error: Input/output error
-> > > +Scrub for injected media error (after remount)
-> > > +Unfixable Error: SCRATCH_MNT/a: media error at data offset 2FSB length 1FSB.
-> > > +SCRATCH_MNT: unfixable errors found: 1
-> > > +Scrub after removing injected media error
-> > > 
-> > 
-> 
-
+CtTaIDIwMjIvMTEvMiA4OjQ1LCBEYXJyaWNrIEouIFdvbmcg0LS1wDoKPiBPbiBTdW4sIE9jdCAz
+MCwgMjAyMiBhdCAwNTozMTo0M1BNICswODAwLCBTaGl5YW5nIFJ1YW4gd3JvdGU6Cj4+Cj4+Cj4+
+INTaIDIwMjIvMTAvMjggOTozNywgRGFuIFdpbGxpYW1zINC0tcA6Cj4+PiBEYXJyaWNrIEouIFdv
+bmcgd3JvdGU6Cj4+Pj4gW2FkZCB0eXRzbyB0byBjYyBzaW5jZSBoZSBhc2tlZCBhYm91dCAiSG93
+IGRvIHlvdSBhY3R1YWxseSAvZ2V0LyBmc2RheAo+Pj4+IG1vZGUgdGhlc2UgZGF5cz8iIHRoaXMg
+bW9ybmluZ10KPj4+Pgo+Pj4+IE9uIFR1ZSwgT2N0IDI1LCAyMDIyIGF0IDEwOjU2OjE5QU0gLTA3
+MDAsIERhcnJpY2sgSi4gV29uZyB3cm90ZToKPj4+Pj4gT24gVHVlLCBPY3QgMjUsIDIwMjIgYXQg
+MDI6MjY6NTBQTSArMDAwMCwgcnVhbnN5LmZuc3RAZnVqaXRzdS5jb20gd3JvdGU6Cj4+Cj4+IC4u
+LnNraXAuLi4KPj4KPj4+Pj4KPj4+Pj4gTm9wZS4gIFNpbmNlIHRoZSBhbm5vdW5jZW1lbnQgb2Yg
+cG1lbSBhcyBhIHByb2R1Y3QsIEkgaGF2ZSBoYWQgMTUKPj4+Pj4gbWludXRlcyBvZiBhY2NlcyB0
+byBvbmUgcHJlcHJvZHVjdGlvbiBwcm90b3R5cGUgc2VydmVyIHdpdGggYWN0dWFsCj4+Pj4+IG9w
+dGFuZSBESU1NcyBpbiB0aGVtLgo+Pj4+Pgo+Pj4+PiBJIGhhdmUgL25ldmVyLyBoYWQgYWNjZXNz
+IHRvIHJlYWwgaGFyZHdhcmUgdG8gdGVzdCBhbnkgb2YgdGhpcywgc28gaXQncwo+Pj4+PiBhbGwg
+Y29uZmlndXJlZCB2aWEgbGlidmlydCB0byBzaW11bGF0ZSBwbWVtIGluIHFlbXU6Cj4+Pj4+IGh0
+dHBzOi8vbG9yZS5rZXJuZWwub3JnL2xpbnV4LXhmcy9ZelhzYXZPV01TdXdUQkVDQG1hZ25vbGlh
+Lwo+Pj4+Pgo+Pj4+PiAvcnVuL210cmRpc2svW2doXS5tZW0gYXJlIGJvdGggcmVndWxhciBmaWxl
+cyBvbiBhIHRtcGZzIGZpbGVzeXN0ZW06Cj4+Pj4+Cj4+Pj4+ICQgZ3JlcCBtdHJkaXNrIC9wcm9j
+L21vdW50cwo+Pj4+PiBub25lIC9ydW4vbXRyZGlzayB0bXBmcyBydyxyZWxhdGltZSxzaXplPTgy
+ODk0ODQ4ayxpbm9kZTY0IDAgMAo+Pj4+Pgo+Pj4+PiAkIGxzIC1sYSAvcnVuL210cmRpc2svW2do
+XS5tZW0KPj4+Pj4gLXJ3LXItLXItLSAxIGxpYnZpcnQtcWVtdSBrdm0gMTA3Mzk1MTUzOTIgT2N0
+IDI0IDE4OjA5IC9ydW4vbXRyZGlzay9nLm1lbQo+Pj4+PiAtcnctci0tci0tIDEgbGlidmlydC1x
+ZW11IGt2bSAxMDczOTUxNTM5MiBPY3QgMjQgMTk6MjggL3J1bi9tdHJkaXNrL2gubWVtCj4+Pj4K
+Pj4+PiBBbHNvIGZvcmdvdCB0byBtZW50aW9uIHRoYXQgdGhlIFZNIHdpdGggdGhlIGZha2UgcG1l
+bSBhdHRhY2hlZCBoYXMgYQo+Pj4+IHNjcmlwdCB0byBkbzoKPj4+Pgo+Pj4+IG5kY3RsIGNyZWF0
+ZS1uYW1lc3BhY2UgLS1tb2RlIGZzZGF4IC0tbWFwIGRldiAtZSBuYW1lc3BhY2UwLjAgLWYKPj4+
+PiBuZGN0bCBjcmVhdGUtbmFtZXNwYWNlIC0tbW9kZSBmc2RheCAtLW1hcCBkZXYgLWUgbmFtZXNw
+YWNlMS4wIC1mCj4+Pj4KPj4+PiBFdmVyeSB0aW1lIHRoZSBwbWVtIGRldmljZSBnZXRzIHJlY3Jl
+YXRlZCwgYmVjYXVzZSBhcHBhcmVudGx5IHRoYXQncyB0aGUKPj4+PiBvbmx5IHdheSB0byBnZXQg
+U19EQVggbW9kZSBub3dhZGF5cz8KPj4+Cj4+PiBJZiB5b3UgaGF2ZSBub3RpY2VkIGEgY2hhbmdl
+IGhlcmUgaXQgaXMgZHVlIHRvIFZNIGNvbmZpZ3VyYXRpb24gbm90Cj4+PiBhbnl0aGluZyBpbiB0
+aGUgZHJpdmVyLgo+Pj4KPj4+IElmIHlvdSBhcmUgaW50ZXJlc3RlZCB0aGVyZSBhcmUgdHdvIHdh
+eXMgdG8gZ2V0IHBtZW0gZGVjbGFyZWQgdGhlIGxlZ2FjeQo+Pj4gd2F5IHRoYXQgcHJlZGF0ZXMg
+YW55IG9mIHRoZSBEQVggd29yaywgdGhlIGtlcm5lbCBjYWxscyBpdCBFODIwX1BSQU0sCj4+PiBh
+bmQgdGhlIG1vZGVybiB3YXkgYnkgcGxhdGZvcm0gZmlybXdhcmUgdGFibGVzIGxpa2UgQUNQSSBO
+RklULiBUaGUKPj4+IGFzc3VtcHRpb24gd2l0aCBFODIwX1BSQU0gaXMgdGhhdCBpdCBpcyBkZWFs
+aW5nIHdpdGggYmF0dGVyeSBiYWNrZWQKPj4+IE5WRElNTXMgb2Ygc21hbGwgY2FwYWNpdHkuIElu
+IHRoYXQgY2FzZSB0aGUgL2Rldi9wbWVtIGRldmljZSBjYW4gc3VwcG9ydAo+Pj4gREFYIG9wZXJh
+dGlvbiBieSBkZWZhdWx0IGJlY2F1c2UgdGhlIG5lY2Vzc2FyeSBtZW1vcnkgZm9yIHRoZSAnc3Ry
+dWN0Cj4+PiBwYWdlJyBhcnJheSBmb3IgdGhhdCBtZW1vcnkgaXMgbGlrZWx5IHNtYWxsLgo+Pj4K
+Pj4+IFBsYXRmb3JtIGZpcm13YXJlIGRlZmluZWQgUE1FTSBjYW4gYmUgdGVyYWJ5dGVzLiBTbyB0
+aGUgZHJpdmVyIGRvZXMgbm90Cj4+PiBlbmFibGUgREFYIGJ5IGRlZmF1bHQgYmVjYXVzZSB0aGUg
+dXNlciBuZWVkcyB0byBtYWtlIHBvbGljeSBjaG9pY2UgYWJvdXQKPj4+IGJ1cm5pbmcgZ2lnYWJ5
+dGVzIG9mIERSQU0gZm9yIHRoYXQgbWV0YWRhdGEsIG9yIHBsYWNpbmcgaXQgaW4gUE1FTSB3aGlj
+aAo+Pj4gaXMgYWJ1bmRhbnQsIGJ1dCBzbG93ZXIuIFNvIHdoYXQgSSBzdXNwZWN0IG1pZ2h0IGJl
+IGhhcHBlbmluZyBpcyB5b3VyCj4+PiBjb25maWd1cmF0aW9uIGNoYW5nZWQgZnJvbSBzb21ldGhp
+bmcgdGhhdCBhdXRvLWFsbG9jYXRlZCB0aGUgJ3N0cnVjdAo+Pj4gcGFnZScgYXJyYXksIHRvIHNv
+bWV0aGluZyB0aGF0IG5lZWRlZCB0aG9zZSBjb21tYW5kcyB5b3UgbGlzdCBhYm92ZSB0bwo+Pj4g
+ZXhwbGljaXRseSBvcHQtaW4gdG8gcmVzZXJ2aW5nIHNvbWUgUE1FTSBjYXBhY2l0eSBmb3IgdGhl
+IHBhZ2UgbWV0YWRhdGEuCj4+Cj4+IEkgYW0gdXNpbmcgdGhlIHNhbWUgc2ltdWxhdGlvbiBlbnZp
+cm9ubWVudCBhcyBEYXJyaWNrJ3MgYW5kIERhdmUncyBhbmQgaGF2ZQo+PiB0ZXN0ZWQgbWFueSB0
+aW1lcywgYnV0IHN0aWxsIGNhbm5vdCByZXByb2R1Y2UgdGhlIGZhaWxlZCBjYXNlcyB0aGV5Cj4+
+IG1lbnRpb25lZCAoZGF4K25vbl9yZWZsaW5rIG1vZGUsIGN1cnJlbnRseSBmb2N1aW5nKSB1bnRp
+bCBub3cuIE9ubHkgYSBmZXcKPj4gY2FzZXMgcmFuZG9tbHkgZmFpbGVkIGJlY2F1c2Ugb2YgInRh
+cmdldCBpcyBidXN5Ii4gQnV0IElJUkMsIHRob3NlIGZhaWxlZAo+PiBjYXNlcyB5b3UgbWVudGlv
+bmVkIHdlcmUgZmFpbGVkIHdpdGggZG1lc2cgd2FybmluZyBhcm91bmQgdGhlIGZ1bmN0aW9uCj4+
+ICJkYXhfYXNzb2NpYXRlX2VudHJ5KCkiIG9yICJkYXhfZGlzYXNzb2NpYXRlX2VudHJ5KCkiLiBT
+aW5jZSBJIGNhbm5vdAo+PiByZXByb2R1Y2UgdGhlIGZhaWx1cmUsIGl0IGhhcmQgZm9yIG1lIHRv
+IGNvbnRpbnVlIHNvdmxpbmcgdGhlIHByb2JsZW0uCj4gCj4gRldJVyB0aGluZ3MgaGF2ZSBjYWxt
+ZWQgZG93biBhcyBvZiA2LjEtcmMzIC0tIGlmIEkgZGlzYWJsZSByZWZsaW5rLAo+IGZzdGVzdHMg
+cnVucyB3aXRob3V0IGNvbXBsYWludC4gIE5vdyBpdCBvbmx5IHNlZW1zIHRvIGJlIGFmZmVjdGlu
+Zwo+IHJlZmxpbms9MSBmaWxlc3lzdGVtcy4gPgo+PiBBbmQgaG93IGlzIHlvdXIgcmVjZW50IHRl
+c3Q/ICBTdGlsbCBmYWlsZWQgd2l0aCB0aG9zZSBkbWVzZyB3YXJuaW5ncz8gSWYgc28sCj4+IGNv
+dWxkIHlvdSB6aXAgdGhlIHRlc3QgcmVzdWx0IGFuZCBzZW5kIGl0IHRvIG1lPwo+IAo+IGh0dHBz
+Oi8vZGp3b25nLm9yZy9kb2NzL2tlcm5lbC9kYXhiYWQuemlwCgpUaGFua3MgZm9yIHlvdXIgaW5m
+byEKCgooVG8gRGF2ZSkgSSBuZWVkIHlvdXIgcmVjZW50IHRlc3QgcmVzdWx0IHRvby4gIElmIGNh
+c2VzIHdvbid0IGZhaWwgd2hlbiAKcmVmbGluayBkaXNhYmxlZCwgSSdsbCBmb2N1c2luZyBvbiBz
+b2x2aW5nIHRoZSB3YXJuaW5nIHdoZW4gcmVmbGluayBlbmFibGVkLgoKCi0tClRoYW5rcywKUnVh
+bi4KCj4gCj4gLS1ECj4gCj4+Cj4+Cj4+IC0tCj4+IFRoYW5rcywKPj4gUnVhbgo=
