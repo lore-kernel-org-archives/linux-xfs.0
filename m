@@ -2,70 +2,83 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D867AC4332F
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Nov 2022 08:41:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 573C5C4332F
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Nov 2022 08:58:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231124AbiKBIlb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Nov 2022 04:41:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48510 "EHLO
+        id S231229AbiKBI6N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Nov 2022 04:58:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60054 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231132AbiKBIl2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Nov 2022 04:41:28 -0400
+        with ESMTP id S231235AbiKBI6I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Nov 2022 04:58:08 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38E9227CDB;
-        Wed,  2 Nov 2022 01:41:26 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93565286F2;
+        Wed,  2 Nov 2022 01:58:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=t+UH3XitHYQrbQpMnhqGCbAEIZ0fIBrRF5YJYhjc25w=; b=OZJKhiPwoG1p2ULHjGaP0oa9fP
-        nDbaSGw4ERkqcx2Why/RmYeTSotLRUF1dk3f5pq4CpQef58wFCfCzG12QFroBJB07zXhPHkxm1cHj
-        LNGfMq/hhCwhTfGDbDd8cSnqK9tiWm4ual9+gpbG5ObqtfSKW18Odt9d/DCmpLEzMjR+EeYfJwJ5W
-        ubqQKYct9JivtZQHIoMpSKfv8+0f+HTIZ5bSEBvAwuHURb6lCPOU8Z1efuqsc7EvzO/zJadqQaJL5
-        EDAewY67ftIBdy2RTOVN5ZPr/FkY7/bJ39huV7hv3dkfYZY1h6FTU+oehFDXh8kuZulo/UIDMFiEA
-        qjuXpI+g==;
+        bh=tGQOZaOUhyiWD3fMwAgU0vgxkeBkDIeOotVV2G5Kocs=; b=IMLNTj6Tbti4KAjxNIhTLOMc8P
+        pdAHIuUgPOEZXL7VPFtQW0sQKRlh5xFerbL3hyggg/MowdSVQQQb/yepKs4VyppfqSfXEADXLd87q
+        W9vuUBcJH5Ipluq4gT0yMjHnTo33cmfOoX4IEAS5RrOxqvI4K3EwmVnLhqWeyVlKzuJmjO5u27b8i
+        HJpEg+GEFQ1mMAOPdS1pwWP8hwEHx/KCwg3DxGfWqcc1AHZHsvxThmwtyF4RF+ETkW5Nfl9+TxI2t
+        50iTvd6zKOuvkYFT1EGp7SLdGDqkD7Waqwi3wFJWkeh7J7fjzPK+0lOJ0sbjQPCQzAWHmrbzOJ1Zt
+        sA90f5Ow==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1oq9JN-0095De-TN; Wed, 02 Nov 2022 08:41:25 +0000
-Date:   Wed, 2 Nov 2022 01:41:25 -0700
+        id 1oq9ZO-009Hp0-9S; Wed, 02 Nov 2022 08:57:58 +0000
+Date:   Wed, 2 Nov 2022 01:57:58 -0700
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 6/7] xfs: use iomap_valid method to detect stale cached
- iomaps
-Message-ID: <Y2ItNSakpecwC9Va@infradead.org>
-References: <20221101003412.3842572-1-david@fromorbit.com>
- <20221101003412.3842572-7-david@fromorbit.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Aravinda Herle <araherle@in.ibm.com>,
+        David Howells <dhowells@redhat.com>
+Subject: Re: [RFC 2/2] iomap: Support subpage size dirty tracking to improve
+ write performance
+Message-ID: <Y2IxFlfLwPtloYc+@infradead.org>
+References: <cover.1666928993.git.ritesh.list@gmail.com>
+ <886076cfa6f547d22765c522177d33cf621013d2.1666928993.git.ritesh.list@gmail.com>
+ <20221028210422.GC3600936@dread.disaster.area>
+ <Y19EXLfn8APg3adO@casper.infradead.org>
+ <20221031070853.GL3600936@dread.disaster.area>
+ <Y1+jBDLHovtsXbyF@casper.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221101003412.3842572-7-david@fromorbit.com>
+In-Reply-To: <Y1+jBDLHovtsXbyF@casper.infradead.org>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> +	*((int *)&iomap->private) = sequence;
+On Mon, Oct 31, 2022 at 10:27:16AM +0000, Matthew Wilcox wrote:
+> > Byte range granularity is probably overkill for block based
+> > filesystems - all we need is a couple of extra bits per block to be
+> > stored in the mapping tree alongside the folio....
+> 
+> I think it's overkill for network filesystems too.  By sending a
+> sector-misaligned write to the server, you force the server to do a R-M-W
+> before it commits the write to storage.  Assuming that the file has fallen
+> out of the server's cache, and a sufficiently busy server probably doesn't
+> have the memory capacity for the working set of all of its clients.
 
-> +static bool
-> +xfs_buffered_write_iomap_valid(
-> +	struct inode		*inode,
-> +	const struct iomap	*iomap)
-> +{
-> +	int			seq = *((int *)&iomap->private);
+That really depends on your server.  For NFS there's definitively
+servers that can deal with unaligned writes fairly well because they
+just log the data in non volatile memory.  That being said I'm not sure
+it really is worth to optimize the Linux pagecache for that particular
+use case.
 
-I really hate this stuffing of the sequence into the private pointer.
-The iomap structure isn't so size constrained that we have to do that,
-so we can just add a sequence number field directly to it.  I don't
-think that is a layering violation, as the concept of a sequence
-numebr is pretty generic and we'll probably need it for all file systems
-eventually.
+> Anyway, Dave's plan for dirty tracking (as I understand the current
+> iteration) is to not store it linked from folio->private at all, but to
+> store it in a per-file tree of writes.  Then we wouldn't walk the page
+> cache looking for dirty folios, but walk the tree of writes choosing
+> which ones to write back and delete from the tree.  I don't know how
+> this will perform in practice, but it'll be generic enough to work for
+> any filesystem.
 
-> +
-> +	if (seq != READ_ONCE(XFS_I(inode)->i_df.if_seq))
-> +		return false;
-
-Which makes me wonder if we could do away with the callback entirely
-by adding an option sequence number pointer to the iomap_iter.  If set
-the core code compares it against iomap->seq and we get rid of the
-per-folio indirect call, and boilerplate code that would need to be
-implemented in every file system.
+Yes, this would be generic.  But having multiple tracking trees might
+not be super optimal - it always reminds me of the btrfs I/O code that
+is lost in a maze of trees and performs rather suboptimal.
