@@ -2,108 +2,124 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2CEAC433FE
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Nov 2022 22:42:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07BCEC4332F
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Nov 2022 23:06:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229481AbiKCWmL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Nov 2022 18:42:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56536 "EHLO
+        id S231440AbiKCXGU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Nov 2022 19:06:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229445AbiKCWmJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Nov 2022 18:42:09 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7FFE1EC7F
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Nov 2022 15:42:08 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 8045AB82A3F
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Nov 2022 22:42:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03627C433C1;
-        Thu,  3 Nov 2022 22:42:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1667515326;
-        bh=gOByN7HAbbFglgHmbEX7l1ZWSEWQwvL1kdJoOhmb9I0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=IKkp3s4QarS2gsHXscQZzj0pm1FLYY+EVh2qlxwe392ogpPl4rrXDLTiZfwCKKwDF
-         dNZqXvOfSGLzPFbM9bfn6e2JL8QqhAgIpLazQVU/O0C5swSMD6DfxUbLOHDJsM3w9g
-         yfQLCKrOZogTNN/IU4u35h7DBiwQtEAuQ6YxdAzFbXhOw3xJQYvZZoeVDE84JnCN5X
-         sjBLeYExd+Kjux8IOLlVNuWzaQO5ZVU+v6sqI9/DuO1eUtXyqrgpoiTgg9/BYj+h67
-         dAU8eemOr+HBDyPcnRMtUxOixlvlfzbNf8xGQV9iwiqSlConnFHd7953iuNtAJEHuX
-         yYI4/4jqtYYlw==
-Date:   Thu, 3 Nov 2022 15:42:05 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Lukas Czerner <lczerner@redhat.com>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        xfs <linux-xfs@vger.kernel.org>,
-        Lukas Herbolt <lukas@herbolt.com>
-Subject: Re: [PATCH] xfs: Print XFS UUID on mount and umount events.
-Message-ID: <Y2RDvUWqLY1kQ24X@magnolia>
-References: <l2a3zCkMp4g9yjUsn7MdftktWgI6xqW45ngK9WGU8-OQp_SWHRFpO5xZbUySxT3QRk1C4PyeLgqoVEY3VRRH_w==@protonmail.internalid>
- <f23e8ec8-b4cc-79d2-95b5-df4821878f91@sandeen.net>
- <20221103133252.ycw5awieh7ckiih7@ovpn-192-135.brq.redhat.com>
- <20221103205107.GG3600936@dread.disaster.area>
+        with ESMTP id S231484AbiKCXFr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Nov 2022 19:05:47 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9539F2098B
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Nov 2022 16:05:46 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id i3so2978849pfc.11
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Nov 2022 16:05:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=tJCllttmibhNCQwFie0bmyQKbcw2MJMVuYNYg2R4nSQ=;
+        b=qY3h4Wywx9Wo8pVZzQ7E5PW8geOq2iu8o+/eGAhHImnpweZIe9KY7MEgtyVLhiKa5i
+         fR4Tvnzhk50GT34N3gDB4Md3BLroyExtPxU1Q4pSc0OT6p3GD7BLfzNKg3CbZXEbDXW+
+         DOIifTvFBPBTvhrmh/AClhVvoyFafSyezQC4cgUN6e4az4p86l3iF5y02jqdzBrblAbs
+         Ccn7cS17Wy5chnfuI0FSWRoP6gHhfboK4sEi3eS9649Kr7xjTu6igXU31Ana0lcNi7JH
+         xpUSlDYcSrpzkRkQco/ZzklIdzEPQsCShPQoViGZqccdnyGFkl5uCtvswTdFWqQ1p4UX
+         LY+A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=tJCllttmibhNCQwFie0bmyQKbcw2MJMVuYNYg2R4nSQ=;
+        b=7syqFLkf3REBVvXFuOclWFHlgX6o5gTJ/mMsG+UxOVOuhoRwP+g//dsHY/XhZxGkTP
+         fKeTiD6XOYztJ5/uf8nOVoBsN9ZzwTHJYQOwmex1Qr5BoPPVrmY+qSd5QwZs9YyU6Ix5
+         X6BVZe+JCQiwGewU4d2NgJPxGeKdkQnENAfOKkWyAs+Uh04so87X7ly00sdrGcWM1FaB
+         liDkIfT0FuVADox9HfFprcZk/8aIN66QbQHviOlhS8KkNrf/8+R6jr32FWZA1Y5GwGZB
+         SbYJevwuuuBakkQHTGEFgKZ3QED1tSvr9zLJs+XO17YiPxjOtSeUMOIR0txAYCxOBzPI
+         JpqQ==
+X-Gm-Message-State: ACrzQf0qcT1CwpYWSqp9XyYFMLHuCrnnuLBPNdaN1c1cIDcDfWg6wkmk
+        9mM+9bO2qcgqa1FtJaREyMVbrg==
+X-Google-Smtp-Source: AMsMyM4qIElnDr/QXrW9Mu4E7RvNkDW74UaI2QPCWjYc+9r2+0hWK8p5CJ3N/cbcQvosAf5N6zyNGg==
+X-Received: by 2002:a63:ef48:0:b0:470:3fc:c475 with SMTP id c8-20020a63ef48000000b0047003fcc475mr10881922pgk.333.1667516746123;
+        Thu, 03 Nov 2022 16:05:46 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au. [49.181.106.210])
+        by smtp.gmail.com with ESMTPSA id n7-20020a056a00212700b00561b3ee73f6sm1302502pfj.144.2022.11.03.16.05.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Nov 2022 16:05:45 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1oqjHK-009wxE-Nq; Fri, 04 Nov 2022 10:05:42 +1100
+Date:   Fri, 4 Nov 2022 10:05:42 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Gao Xiang <hsiangkao@linux.alibaba.com>
+Cc:     linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        Brian Foster <bfoster@redhat.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Zirong Lang <zlang@redhat.com>
+Subject: Re: [PATCH v2] xfs: extend the freelist before available space check
+Message-ID: <20221103230542.GK3600936@dread.disaster.area>
+References: <20221103094639.39984-1-hsiangkao@linux.alibaba.com>
+ <20221103131025.40064-1-hsiangkao@linux.alibaba.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221103205107.GG3600936@dread.disaster.area>
+In-Reply-To: <20221103131025.40064-1-hsiangkao@linux.alibaba.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Nov 04, 2022 at 07:51:07AM +1100, Dave Chinner wrote:
-> On Thu, Nov 03, 2022 at 02:32:52PM +0100, Lukas Czerner wrote:
-> > On Tue, Nov 01, 2022 at 12:19:06PM -0500, Eric Sandeen wrote:
-> > > From: Lukas Herbolt <lukas@herbolt.com>
-> > > 
-> > > As of now only device names are printed out over __xfs_printk().
-> > > The device names are not persistent across reboots which in case
-> > > of searching for origin of corruption brings another task to properly
-> > > identify the devices. This patch add XFS UUID upon every mount/umount
-> > > event which will make the identification much easier.
-> > > 
-> > > Signed-off-by: Lukas Herbolt <lukas@herbolt.com>
-> > > [sandeen: rebase onto current upstream kernel]
-> > > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> > 
-> > Hi,
-> > 
-> > it is a simple enough, nonintrusive change so it may not really matter as
-> > much, but I was wondering if there is a way to map the device name to
-> > the fs UUID already and I think there may be.
-> > 
-> > I know that udev daemon is constantly scanning devices then they are
-> > closed in order to be able to read the signatures. It should know
-> > exactly what is on the device and I know it is able to track the history
-> > of changes. What I am not sure about is whether it is already logged
-> > somewhere?
-> > 
-> > If it's not already, maybe it can be done and then we can cross
-> > reference kernel log with udev log when tracking down problems to see
-> > exactly what is going on without needing to sprinkle UUIDs in kernel log ?
-> > 
-> > Any thoughts?
+On Thu, Nov 03, 2022 at 09:10:25PM +0800, Gao Xiang wrote:
+> There is a long standing issue which could cause fs shutdown due to
+> inode extent to btree conversion failure right after an extent
+> allocation in the same AG, which is absolutely unexpected due to the
+> proper minleft reservation in the previous allocation.  Brian once
+> addressed one of the root cause [1], however, such symptom can still
+> occur after the commit is merged as reported [2], and our cloud
+> environment is also suffering from this issue.
 > 
-> Don't like it. Emitting the UUID on the fs mount/unmount log message
-> is a trivial change that has zero impact on anything as well as
-> being really easy for log scrapers to deal with.
+> From the description of the commit [1], I found that Zirong has an
+> in-house stress test reproducer for this issue, therefore I asked him
+> to reproduce again and he confirmed that such issue can still be
+> reproducable on RHEL 9.
 > 
-> Screwing around with udev to manage and/or find this correlationi
-> is ... unnecssarily awful.
+> Thanks to him, after dumping the transaction log items, I think
+> the root cause is as below:
+>  1. Allocate space with the following condition:
+>     freeblks: 18304 pagf_flcount: 6
+>     reservation: 18276 need (min_free): 6
+>     args->minleft: 1
+>     available = freeblks + agflcount - reservation - need - minleft
+>               = 18304 + min(6, 6) - 18276 - 6 - 1 = 27
+> 
+>     The first allocation check itself is ok;
+> 
+>  2. At that time, the AG state is
+>     AGF Buffer: (XAGF)
+>         ver:1  seq#:3  len:2621424
+>         root BNO:9  CNT:7
+>         level BNO:2  CNT:2
+>         1st:64  last:69  cnt:6  freeblks:18277  longest:6395
+                                  ^^^^^^^^^^^^^^
 
-/me wonders what problem is needing to be solved here -- if support is
-having difficulty mapping fs uuids to block devices for $purpose, then
-why not capture the blkid output in the sosreport and go from there?
+Hold on - pag->pagf_freeblks != agf->freeblks, and if we start with
+the agf freeblocks:
 
-That said, I thought logging the super device name ("sda1") and the fs
-uuid in dmesg was sufficient to accomplish that task?
+	available = 18277 + 6 - 18276 - 6 - 1 = 0
 
-/me shrugs, doesn't understand, wanders off to more code refactoring...
+IOWs, the allocation should never selected this AG in the first
+place.
 
---D
+So why is pag->pagf_freeblks not equal to agf->freeblks when this
+allocation was first checked? It's clearly not because the AGFL is
+unpopulated - both the perag and the agf indicate it has the minimum
+6 blocks already allocated....
 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
