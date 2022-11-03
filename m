@@ -2,134 +2,119 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 770B5C43217
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Nov 2022 21:17:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CE43C4332F
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Nov 2022 21:44:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229487AbiKCVRP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Nov 2022 17:17:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39260 "EHLO
+        id S229560AbiKCVoN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Nov 2022 17:44:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231546AbiKCVQz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Nov 2022 17:16:55 -0400
-Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A97B1BEB0
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Nov 2022 14:16:55 -0700 (PDT)
-Received: by mail-pg1-x529.google.com with SMTP id q1so2734791pgl.11
-        for <linux-xfs@vger.kernel.org>; Thu, 03 Nov 2022 14:16:55 -0700 (PDT)
+        with ESMTP id S229487AbiKCVoM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Nov 2022 17:44:12 -0400
+Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F8E9F54
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Nov 2022 14:44:12 -0700 (PDT)
+Received: by mail-pl1-x634.google.com with SMTP id 4so3221221pli.0
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Nov 2022 14:44:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=oQnLQOqYDQ3J3f5rWv2h1dsC8pInVHtq5Sbro5Qd65I=;
-        b=KPqIgPJhndPKlVQlXRb8w+nS0+PlW8szuHQP4UD6tJ1J14ZSHis/E5d5MQXPQDWWD1
-         GUn3JqWtyipRYAzOet+egMhNUCR8r9ln5+I9GL6F0tPd/oNCQugtjjvDJvgR2VHzv97t
-         DyEIL2qZuYQA3p5SEhmCe/V59saQ+tsAtT1DsBgnc3jLtGYaw/RHiysrtIRGrW3MAP2k
-         Q5QAu3mGOX6oygHCjIeYPSXLB8111rYDxKtSQdCCoijp41xhHiXD27qTAjhuPuRpCwqo
-         o1jd2yzi4qnBKx62yW/y+KW4KEqpXYabgnQ9m+Og/vr3Ar02+5zfQv1Pb4w0kxZ6EaUe
-         zehQ==
+        bh=bE2rYo/Va6oQR+LsH4LN6otl/QXlmJMD4nEAzWeWVps=;
+        b=QE9CbeUZetIS8G3IOKGM7PVc9h94+2Eeypn70YKJG2w333AvF6EJNkQrPxZ5jFd5g9
+         llQGJIXecwJtz5aiQlMT00Rbv6M8vdEjg6+ou+l7eawNbFxnrfcNP+nMZyTyijQvYecY
+         BsL4rFti8XQw3dPuNP5py197eqqhu6yzKjsGCgaawmBkHEvhBQ1jev/XZdGZM8RfKtVv
+         yvXkvrdLm/qClxrPV+wgJrxZPyqPtx7iC6bPVvMt87k3L9n1PEUF3SjykNXN568mgWtA
+         uxMRGh8SWuN9ikIuQxhhyQ57I/EbfCg1OgVUHEQXUg87ruszccp0J3YBE4guDTazBnXE
+         iFjQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=oQnLQOqYDQ3J3f5rWv2h1dsC8pInVHtq5Sbro5Qd65I=;
-        b=dUfQ9u1R/Nd5TZZ/7lBAb9WR6+IMipTwZoI//bXghGZ6BunLTma7nL4McY2orCR+E+
-         DxeI0VGpxyOVeIApu0I105zc6ipmjNWUCfrq1XPBusvFqx+mGPYiuXv55rNOGiMm8nc4
-         W0r0Vf5ZjX52bu9FxqSCeJDgTG6Cp0mUdWL9NEleLsq1O+My1Jp0ZoyC7GkLzVuu8xVy
-         zofBCUdRAOVVWI7EgyDHFrB5bOgFzcnW0TX7EKx4luTAPPk0lqaO8ta99JJL0ugUDXHY
-         IYMzGzmHGey2zfGsY+8Ny4rGmLhHJJIUOkLDDeYNlvK378Xuq/I9y1C33OCVBkhkKnV8
-         a6VQ==
-X-Gm-Message-State: ACrzQf2WryzptjZsQP2Fapb7tRWoUhcDkvuLI6mL5CfNcEGK0iocpPzr
-        0/f3GSZaixSwyYLfq2svqYf4xg==
-X-Google-Smtp-Source: AMsMyM5GIjoLu9IApImIWdpFsdee8K8XlbYw5YEkUJWjNgEH/ZQcmzpvEv7SNXxtOgaOi9njf2jV1w==
-X-Received: by 2002:a63:914b:0:b0:46e:dbd5:ae15 with SMTP id l72-20020a63914b000000b0046edbd5ae15mr27897791pge.94.1667510214646;
-        Thu, 03 Nov 2022 14:16:54 -0700 (PDT)
+        bh=bE2rYo/Va6oQR+LsH4LN6otl/QXlmJMD4nEAzWeWVps=;
+        b=WJ9XZJzrBDHqu/v7+3XGjPgWWeWHKQS+qAOa1qKBH+F1kdqwem0lYoosknzdgq0zsW
+         6b9dROhdfF3DwBgHPtCRwp7VgGdbEcvZkMAh1wZUD1BkJCWeGveBfyXB2nDEAKg8z4Vu
+         8XB4y6jQ7x+nG57wQGchOCQteQtKxXRp6cM2eVXpF63ThWaiHoNxlmXIxkZNEBBQKgLS
+         aDJFfUElgHEHv+gkwbAMmx39dMwr+N5BjMq9RPS5tQEoFryLB/w5eoOU28lUNNuk/Rmr
+         L6yx22VI3lvAInW7dUGd0P2iJpOuge4gztsrjqNSPcIlwQjenEpvXEHeJE1GFTeDOc9b
+         UP1g==
+X-Gm-Message-State: ACrzQf1gpzxdQP2dElkk5w/0TM2a3eNfFdZCv4ykiX1tWhgC7eQkPMjR
+        TQWTDdc/LsdBi0mjzjl47eMUyQ==
+X-Google-Smtp-Source: AMsMyM4JW6rh6v69J/PRH0ee90sOIlYXbgBoTZOSubbhp0Vk4RJb6RtyBCcn08rBDKUNv4X1t1Ei3A==
+X-Received: by 2002:a17:903:22d2:b0:187:1f4a:6593 with SMTP id y18-20020a17090322d200b001871f4a6593mr24108044plg.138.1667511851658;
+        Thu, 03 Nov 2022 14:44:11 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au. [49.181.106.210])
-        by smtp.gmail.com with ESMTPSA id e11-20020a170902784b00b0016d72804664sm1084402pln.205.2022.11.03.14.16.54
+        by smtp.gmail.com with ESMTPSA id d16-20020a170902ced000b001869d71228bsm1131159plg.170.2022.11.03.14.44.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Nov 2022 14:16:54 -0700 (PDT)
+        Thu, 03 Nov 2022 14:44:11 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1oqhZz-009v1x-JS; Fri, 04 Nov 2022 08:16:51 +1100
-Date:   Fri, 4 Nov 2022 08:16:51 +1100
+        id 1oqi0O-009vWf-6v; Fri, 04 Nov 2022 08:44:08 +1100
+Date:   Fri, 4 Nov 2022 08:44:08 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     Guo Xuenan <guoxuenan@huawei.com>
 Cc:     djwong@kernel.org, dchinner@redhat.com, linux-xfs@vger.kernel.org,
         houtao1@huawei.com, jack.qiu@huawei.com, fangwei1@huawei.com,
         yi.zhang@huawei.com, zhengbin13@huawei.com, leo.lilong@huawei.com,
         zengheng4@huawei.com
-Subject: Re: [PATCH 1/2] xfs: wait xlog ioend workqueue drained before
- tearing down AIL
-Message-ID: <20221103211651.GH3600936@dread.disaster.area>
+Subject: Re: [PATCH 2/2] xfs: fix super block buf log item UAF during force
+ shutdown
+Message-ID: <20221103214408.GI3600936@dread.disaster.area>
 References: <20221103083632.150458-1-guoxuenan@huawei.com>
- <20221103083632.150458-2-guoxuenan@huawei.com>
+ <20221103083632.150458-3-guoxuenan@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221103083632.150458-2-guoxuenan@huawei.com>
+In-Reply-To: <20221103083632.150458-3-guoxuenan@huawei.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 03, 2022 at 04:36:31PM +0800, Guo Xuenan wrote:
-> Fix uaf in xfs_trans_ail_delete during xlog force shutdown.
-> In commit cd6f79d1fb32 ("xfs: run callbacks before waking waiters in
-> xlog_state_shutdown_callbacks") changed the order of running callbacks
-> and wait for iclog completion to avoid unmount path untimely destroy AIL.
-> But which seems not enough to ensue this, adding mdelay in
-> `xfs_buf_item_unpin` can prove that.
+On Thu, Nov 03, 2022 at 04:36:32PM +0800, Guo Xuenan wrote:
+> xfs log io error will trigger xlog shut down, and end_io worker call
+> shutdown_callbacks to unpin and release the buf log item. The race
+> condition is that when there are some thread doing transaction commit
+> and happened not to be intercepted by xlog_is_shutdown, then, these
+> log item will be insert into CIL, when unpin and release these buf log
+> item, UAF will occur. BTW, add delay before `xlog_cil_commit` while xlog
+> shutdown status can increase recurrence probability.
 > 
-> The reproduction is as follows. To ensure destroy AIL safely,
-> we should wait all xlog ioend workers done and sync the AIL.
-> 
-> ==================================================================
-> BUG: KASAN: use-after-free in xfs_trans_ail_delete+0x240/0x2a0
-> Read of size 8 at addr ffff888023169400 by task kworker/1:1H/43
-> 
-> CPU: 1 PID: 43 Comm: kworker/1:1H Tainted: G        W
-> 6.1.0-rc1-00002-gc28266863c4a #137
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
-> 1.13.0-1ubuntu1.1 04/01/2014
-> Workqueue: xfs-log/sda xlog_ioend_work
-> Call Trace:
->  <TASK>
->  dump_stack_lvl+0x4d/0x66
->  print_report+0x171/0x4a6
->  kasan_report+0xb3/0x130
->  xfs_trans_ail_delete+0x240/0x2a0
->  xfs_buf_item_done+0x7b/0xa0
->  xfs_buf_ioend+0x1e9/0x11f0
->  xfs_buf_item_unpin+0x4c8/0x860
->  xfs_trans_committed_bulk+0x4c2/0x7c0
->  xlog_cil_committed+0xab6/0xfb0
->  xlog_cil_process_committed+0x117/0x1e0
->  xlog_state_shutdown_callbacks+0x208/0x440
->  xlog_force_shutdown+0x1b3/0x3a0
->  xlog_ioend_work+0xef/0x1d0
+> The following call graph actually encountered this bad situation.
+> fsstress                    io end worker kworker/0:1H-216
+> 		             xlog_ioend_work
+> 		               ->xlog_force_shutdown
+> 		                 ->xlog_state_shutdown_callbacks
+> 		             	 ->xlog_cil_process_committed
+> 		             	   ->xlog_cil_committed
+> 		             	     ->xfs_trans_committed_bulk
+> ->xfs_trans_apply_sb_deltas               ->li_ops->iop_unpin(lip, 1);
+>   ->xfs_trans_getsb
+>     ->_xfs_trans_bjoin
+>       ->xfs_buf_item_init
+>         ->if (bip) { return 0;} //relog
 
-So we are still processing an iclog at this point and have it
-locked (iclog->ic_sema is held). These aren't cycled to wait for
-all processing to complete until xlog_dealloc_log() before they are
-freed.
+_xfs_trans_bjoin() takes a reference to the bli.
 
-If we cycle through the iclog->ic_sema locks when we quiesce the log
-(as we should be doing before attempting to write an unmount record)
-this UAF problem goes away, right?
+> ->xlog_cil_commit
+>   ->xlog_cil_insert_items //insert into CIL
+>                                             ->xfs_buf_ioend_fail(bp);
+>                                               ->xfs_buf_ioend
+>                                                 ->xfs_buf_item_done
+>                                                   ->xfs_buf_item_relse
+>                                                     ->xfs_buf_item_free
 
-> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> index f51df7d94ef7..1054adb29907 100644
-> --- a/fs/xfs/xfs_trans_ail.c
-> +++ b/fs/xfs/xfs_trans_ail.c
-> @@ -929,6 +929,9 @@ xfs_trans_ail_destroy(
->  {
->  	struct xfs_ail	*ailp = mp->m_ail;
->  
-> +	drain_workqueue(mp->m_log->l_ioend_workqueue);
-> +	xfs_ail_push_all_sync(ailp);
+So how is the bli getting freed here if the fstress task has just
+taken an extra reference and inserted it into the CIL?
 
-This isn't the place to be draining the AIL and waiting for IO to
-complete. As per above, that should have been done long before we
-get here...
+Ah, the problem is that xfs_buf_item_relse() isn't checking the
+reference count before it frees the BLI. That is,
+xfs_buf_item_relse() assumes that it is only called at the end of
+the BLI life cycle and so doesn't check the reference count, when in
+fact it clearly isn't.
+
+Also, should we be inserting new items into the CIL if the log is
+already marked as shut down?
 
 -Dave.
 -- 
