@@ -2,182 +2,226 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F7F5C433FE
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Nov 2022 05:24:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CC1DC433FE
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Nov 2022 05:40:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230139AbiKDFYI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Nov 2022 01:24:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46738 "EHLO
+        id S230035AbiKDFkW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Nov 2022 01:40:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51696 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229600AbiKDFYH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2022 01:24:07 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43E252251C
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Nov 2022 22:24:06 -0700 (PDT)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2A44OwLY023603;
-        Fri, 4 Nov 2022 05:24:03 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
- to : cc : subject : date : in-reply-to : message-id : content-type :
- mime-version; s=corp-2022-7-12;
- bh=ojyAbwSHy7DnbuE8etqIOKXgnSlLgtjPS6fX2Cc1gpU=;
- b=DOz+KfS6WHYi1HehIznypiU0pKc51TSJKninuQVbYUbSkOq/6D1QmrmT1EIg18uyR74U
- w1Oorc4oOT3OZJB+TUr/BvT41mDqSzBwGLKjfAvPwUOr3vaqK0xMKlKLA9uSNS+y25Na
- x+XCWedqwWH2Osdsdi5xJUvjYKCGY6PKDgyozaXp+9FnvCnviw5lyRZSonYrQnFIruQY
- kwD4DOhcwEe//JDL8UQlBDXmBXNKI62zEtfu5QjsI2YOUcjRy9j0bM2WyI0JH45P7mmh
- 7zA2qfOBtYpoUqQ8Hnu6X/mj7C+1wx8eM4gHPIw2zoeM3BtihbRKrc8UW7OQQRmveoue UA== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kgts1f3r9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 04 Nov 2022 05:24:02 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2A448LCd028963;
-        Fri, 4 Nov 2022 05:24:01 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2103.outbound.protection.outlook.com [104.47.58.103])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3kmpr8esgj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 04 Nov 2022 05:24:01 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=S6VjYdur2OMq1Oop9fHkqDq7wwWPqEpVZycnJi2wrj4mKN937qJ7MgkjHyNFbYL6+D3SEdEiQ+sr1TGHKx1P+Y3P/51FevRSXNuLJd2Wn81i4PFSBp9kID7MoQDXy6pyS2gwruNJ4NqROK4rFbNscenBFWjaEeopxxHKH3AHg/HQS2d4mMcZZC4/U21B9pUJOhAl/f8ipKlUcbSe9spRK8fi6lbYmdbAHZJgwKerYHVn6tr1CmMpI4gq7QgPdGOepVjfUn/LAFy6/e55+PWs5UO9O34LSuo3zT+N1cifUaY5jwz4R5Ws+Gx05kFw/gzV6ioioZt+w71XEBBY7gCszQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ojyAbwSHy7DnbuE8etqIOKXgnSlLgtjPS6fX2Cc1gpU=;
- b=kz+aeZHcgyZqiQPnLcj/LK7dYeyLAiz49vjf/rCbck2ISHbMgn9qbiLB6Q7mlRxZyX0A/WbHVLObNmZsCkm1VX0fQeE+FnU4E+ilF6RFumWfam9zpSbVT/JwfkVNqzpSHJdm8T84m9SjNIjyoj6+jxl63X5QiMU8CqRMKXAQlKa71D41mZDNqkJmhAxc/p62VsvKPK2CFXtSIrHXTjRbUmoH1QPP04zrA6ge+4TjgnKrP6jLIK83gG1Hu2IigzQ1jry35TEux0YTWeHGrrLvfspcXR3+37k1XjPdvAKOTV8xayL0u5S7+eu+/L9IhgbHbWSU5OS7/knudq3QtRhSHw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        with ESMTP id S229728AbiKDFkV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2022 01:40:21 -0400
+Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D932D275DC
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Nov 2022 22:40:20 -0700 (PDT)
+Received: by mail-pj1-x102e.google.com with SMTP id h14so3616765pjv.4
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Nov 2022 22:40:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ojyAbwSHy7DnbuE8etqIOKXgnSlLgtjPS6fX2Cc1gpU=;
- b=BNFA45XhnNvjInsPh7VWdrT3I4Dgdsh2bT8mWrBimDtmmE7MQZuMRRbGHtrKbtSG6+vE9Q8woz3k/2PeXQBFIVNooizZXgLqLLVFE0we4qm+d4SCUpv6lec36t/bMxT95iSdicfq8vPAwlBC0I1OVKFAPuCL0X0xD0/kZ6xg7g8=
-Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:22b::9)
- by MN2PR10MB4224.namprd10.prod.outlook.com (2603:10b6:208:1d1::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5769.19; Fri, 4 Nov
- 2022 05:23:59 +0000
-Received: from SA1PR10MB5867.namprd10.prod.outlook.com
- ([fe80::4b19:b0f9:b1c4:c8b1]) by SA1PR10MB5867.namprd10.prod.outlook.com
- ([fe80::4b19:b0f9:b1c4:c8b1%3]) with mapi id 15.20.5791.022; Fri, 4 Nov 2022
- 05:23:59 +0000
-References: <20221103115401.1810907-1-chandan.babu@oracle.com>
- <Y2Pf4qNn7LJxrJO0@magnolia>
-User-agent: mu4e 1.8.10; emacs 27.1
-From:   Chandan Babu R <chandan.babu@oracle.com>
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=yDTqexugXbU5kJXsOAAPQQpjmY8bDQkWRH+Y4a69nu4=;
+        b=TQmlUuFnbTvVYovML524XqO7siz67eHOMV3uwdL7cdCZBTi/n8jt/jjwjWR3rOet4D
+         j4Oe1yfKaVwd4hsIloCyfyRhPRPdlmSFAF6ppGXeFXz1i20Iqoxqbg20asJAWVyQspm2
+         DqBt+YhoySKN6BDDEaNXozIMdVCrHf5axShG0EYh5RMBYKh0BoGrsnS/siha1kU7O9cA
+         yIF7GC61c3A6hljY9KFN0TnqG931OmCyuorM+CFJlmsrdt9wU/em0tlTTAvi1asyh07/
+         Hwnkn5n2IszBOtfe1KZekY45hkFwZ10qpNuGWaB1HKjOhtLKEUfQjb/dBYmvYgQJJMa6
+         7laQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=yDTqexugXbU5kJXsOAAPQQpjmY8bDQkWRH+Y4a69nu4=;
+        b=FBt5xtQ0PwmHg/ZRZDKocNCOvQCjlsnwWTcc33F8YIDrANO5G94RdBNQyLYDAPQLmO
+         4Qr7y0AKN9R7cFnRdOMBDO0AzL2+VOalCNeSZ5+PB/LxlVGBzMXXuWDyXDe8RbfMATsD
+         dJ0xDoAVI6wJa+4TUsqgcZYX0NHzPa6eRDZPzazqzeN2sKTZe9U4JKnF1qDCcTWLioAN
+         zgirP8vxESZO3qbTVrNVNrPd1HIez4CcZusVekYvR/jAbPGKir1Vco4GnXDIqcFVYGxU
+         WGI6HZKe24py71MgGSg8As5zj2VYLgnFvXSLK1hpQFYROkDP2KbSYT9XOwq667Fgr1mn
+         6jyg==
+X-Gm-Message-State: ACrzQf3VhC4kZZSHFWIbgQZWDV7dbIRQIWy7kR3sN0HFJgy5ROhSDvw9
+        /0QuiG4JM1RWLJFKl3iIZ6e6Xw==
+X-Google-Smtp-Source: AMsMyM7RBYKI1F8noaszSFisFTJP1lvGQNrviR990dq5W1M38RDhyNLga4WSl3E8H3DtUOW5WyzU0g==
+X-Received: by 2002:a17:902:f551:b0:186:be04:6670 with SMTP id h17-20020a170902f55100b00186be046670mr33328109plf.159.1667540420270;
+        Thu, 03 Nov 2022 22:40:20 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au. [49.181.106.210])
+        by smtp.gmail.com with ESMTPSA id f2-20020a170902ce8200b00176acd80f69sm1677922plg.102.2022.11.03.22.40.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Nov 2022 22:40:19 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1oqpR9-00A3by-Mp; Fri, 04 Nov 2022 16:40:15 +1100
+Date:   Fri, 4 Nov 2022 16:40:15 +1100
+From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, amir73il@gmail.com,
-        leah.rumancik@gmail.com
-Subject: Re: [PATCH 5.4 CANDIDATE 0/6] xfs stable candidate patches for
- 5.4.y (from v5.8)
-Date:   Fri, 04 Nov 2022 10:51:13 +0530
-In-reply-to: <Y2Pf4qNn7LJxrJO0@magnolia>
-Message-ID: <878rkrz40m.fsf@debian-BULLSEYE-live-builder-AMD64>
-Content-Type: text/plain
-X-ClientProxiedBy: TY2PR06CA0046.apcprd06.prod.outlook.com
- (2603:1096:404:2e::34) To SA1PR10MB5867.namprd10.prod.outlook.com
- (2603:10b6:806:22b::9)
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 3/7] xfs: use byte ranges for write cleanup ranges
+Message-ID: <20221104054015.GL3600936@dread.disaster.area>
+References: <20221101003412.3842572-1-david@fromorbit.com>
+ <20221101003412.3842572-4-david@fromorbit.com>
+ <Y2KbtTf224DNsyEA@magnolia>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|MN2PR10MB4224:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5ee1b4ae-eba1-4a73-0e4e-08dabe24c6f1
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 7QJGf6zM1HtOX+INemgTrSn5v3XMeVFADI8GoecIwxrkl8ti8hkM/mE6hcszMgQN/+FlBmy2UtBQn3LhMrVlgwWMxI5Kv8z1cZQiL81gR9M0c4EC4oQZDBeL1q6gMlgztHdeqD4Pl82xAnVJsNmZvQUfH3ZZqaXNDQRKIxN8IuVtFbm5t9tY/Y4Tj6U0ICnhtpm6zR/vSzHu4joE6W+k0lhG3uohiguJx9xufw+5Ps8uY8/pcK01r/r7djjdPS2G6WO7u56BJS315dPILNAx4LcFcmUKkRBOUI5nPJ/RF9jHjobYuXAFuFUl2RuBbiaPwN+4RfgEfrwMplzaruX18TWE4OjvZ0c5MwSawNJbsIlklNJFi+2jk3cX0MksVVtOOFlLWKocH3v0h5Sn/zzsaEe7/S8Dc+7cEoxeWBBm3zSp7MsVC5Z6Z5I9jCJ+gHA3pfEhcIksK9kuwqU4pUgievQ66Nfidn+oa7hLTGhjNQzGBpLW940Q7XOD9OPWYUwSEFMOprqGKo1jpsYW4+ERLzbCw5XlC35/Fs+2GxTdOVSYzEwpS+uMwru0yEuj7Y73QzbDgCziudd4kid2uAY6WniSBFci3AyFSKfv+J0HtnK3HRhu1IUz+YGiQYOs4gnE8pFljWTV4/i57AGiFcVBe+Kro+yDeK3bqsnypLK6TDo3wOmhrRoyv7pHdoel4XO+tvJyMl5Fz0RtACm/N8Gxvg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(7916004)(396003)(376002)(366004)(39860400002)(136003)(346002)(451199015)(6486002)(66556008)(66476007)(86362001)(6916009)(316002)(478600001)(8676002)(4326008)(53546011)(66946007)(6506007)(2906002)(38100700002)(41300700001)(6666004)(9686003)(26005)(6512007)(33716001)(186003)(83380400001)(8936002)(5660300002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?fTh2JEi6FOKJFHeZ5/YVVv+L9LTs5sLUxw0Z9leRfU93oDKFmZzpk0vHccAl?=
- =?us-ascii?Q?+E/qfUpShoHtcwUcR5VS/P5inLpOKuqWv/YKmKTHQzkFMzbDIscpk70mXAzm?=
- =?us-ascii?Q?LhxZWi8JFubyC6jD5YAGgAtRGLNVqfUt1eCc6U3RUUZJm1/oBKhBNJOk9Fdu?=
- =?us-ascii?Q?fjdpxGrO6/U4XvvOw3gNPn599/zx9HsLE0w40QzPFPWSlflgPXvJNYi1CvOC?=
- =?us-ascii?Q?n1FCuhE+ITzD1ILKAjyO3psA1Hf+J6v5hHfzCO+JdCcpXv+ygzHbbue4GAmZ?=
- =?us-ascii?Q?LkzzoyABWtZsYaZQDY3NmlNQ7bGXVOEauHOVQNDDmokzYfNmWSg13VHVS0Dd?=
- =?us-ascii?Q?OrVgpjyKrweWsGQ4CCoArs9bnBlIgGYwKjNLa8IDVH7g/7EBGqa65N7LTvyN?=
- =?us-ascii?Q?CboxOZgnBpf8xoUbbF7Ss27gCxDkDTMA7mGoF6PQrjj3V7zivasP9lLojcun?=
- =?us-ascii?Q?oVk22RpYk9raf5wGnnxqkNChZWifo2glMdBlxOWTml7XHjHKnDIIIu912bmx?=
- =?us-ascii?Q?usKuYq/AH6Cpm12oJVcLeCkwtSzpLSI2lPwzpezdbjPmduhD1QDeYFxNj7QA?=
- =?us-ascii?Q?5fYD6jTYfJgeG5AHj4yYlFKFaXUh/RZ+xySEIXkPS4zlBG4K1zH3+v25Np43?=
- =?us-ascii?Q?NzQadndxMdmwjIy19dbF095nHJ/NpfQEWXF4WCnLHG2qp+rA9Lu7wtUw6sUc?=
- =?us-ascii?Q?iWX4l5w7uhSbCWd9Fh0IiWAm7FGvCSFf/iGSBCO8E3Wd8d67q7E1WZliDv1v?=
- =?us-ascii?Q?wtvAe9vQrzdNZWjvaDQiBsUVEnlMPxZpFfFEVB4GyuGwCOswTxe5nDXdyruP?=
- =?us-ascii?Q?2auzWRcgLpMNiZm2ccx0Ta6fyAqGh+xb0sI99UrrjxOwgiIp1SaOn4FVyQeo?=
- =?us-ascii?Q?uf5rOFYRH4riPbJXPY3mq1s722z2x0ytX8N8GtmXsoCDfni8xnSGb06GYjM/?=
- =?us-ascii?Q?7wFZDtLK7SGoqRSCjZPIovb/4Ynj+/ieRu8SXORQJwPZyfTUmw5slJMFPRTc?=
- =?us-ascii?Q?85Ij5qzFXwwoyhKmM2LDemRUeRTt70/lvDl4VK1Dj6lAvONS07vfWH2T6Lvb?=
- =?us-ascii?Q?cVaBbtu3E3utVjWVSzzecn+qdwTkMHfYcOTQ6kzcIGnp2uGbpH3+c3ptQ2Ny?=
- =?us-ascii?Q?f/8s8ifzI/cFgOrSD0tjB9wsRS8oa4thvVm6EcUnoFg7u+9rt2gbAgN1wI4p?=
- =?us-ascii?Q?ylBy0kRkm9WAU2ZFh5hheQAd5663XSxLYA418vDr3ylFLMd8kmAuESKXP3oT?=
- =?us-ascii?Q?4irmD2O1WzmuR63w0EP3P1EwEXT4bjU+x/Wxt8H63gGKJ23eMuLbVBL7Qog7?=
- =?us-ascii?Q?TotsPFw/SFsr/rOgqfKLFJvu9JLG2E2VFxUSip/x9mbDJ2dUW9CO6HUxcspK?=
- =?us-ascii?Q?NnBMJQjccIMiKs/WgRrh6nfCcxh5SfXNbRjAbXMopGZ0NxY/Qcusnp8M8MMg?=
- =?us-ascii?Q?Gk0BYvQ+OQw1hL59TiHYtgEBxWvAR8kVZPnWOxEjJQrFFuEY9r/DFtJWdnMJ?=
- =?us-ascii?Q?KShv886ZugBrrC14vmpLzmNA5pdAYCgSQ4MaSQ1FuD3K8Jljn7wGRx5QdxjH?=
- =?us-ascii?Q?0xGfR6JhwFL5cN8m6+PCIIJvBp+bNMDEdaqyzyzCMCjbxD413PAWhAUo3GjO?=
- =?us-ascii?Q?cA=3D=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5ee1b4ae-eba1-4a73-0e4e-08dabe24c6f1
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Nov 2022 05:23:59.4320
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: +kUd9h//uSqXQIg4FuIU3/HkbPdyMj4srlBpPISUzLg5siiBQiL/6hqUwVfWX5jUQ2tBfvqT4GU5HpZ1bN/Dqw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR10MB4224
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-11-04_02,2022-11-03_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 suspectscore=0
- adultscore=0 phishscore=0 spamscore=0 malwarescore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
- definitions=main-2211040037
-X-Proofpoint-GUID: 9mLI_q8SIAdSQm6iCjI7mo7kfsAPce9q
-X-Proofpoint-ORIG-GUID: 9mLI_q8SIAdSQm6iCjI7mo7kfsAPce9q
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Y2KbtTf224DNsyEA@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 03, 2022 at 08:36:02 AM -0700, Darrick J. Wong wrote:
-> On Thu, Nov 03, 2022 at 05:23:55PM +0530, Chandan Babu R wrote:
->> Hi Darrick,
->> 
->> This 5.4.y backport series contains fixes from v5.8 release.
->> 
->> This patchset has been tested by executing fstests (via kdevops) using
->> the following XFS configurations,
->> 
->> 1. No CRC (with 512 and 4k block size).
->> 2. Reflink/Rmapbt (1k and 4k block size).
->> 3. Reflink without Rmapbt.
->> 4. External log device.
->> 
->> None of the fixes required any other dependent patches to be
->> backported.
->
-> Patch 2 is missing quite a bit of commit message context.  Something
-> filtered out the shell screencap:
->
-> "# mkfs.xfs -f /dev/sda"
->
-> Probably because some smart tool thought it was eliding unnecessary
-> comments or something?
+On Wed, Nov 02, 2022 at 09:32:53AM -0700, Darrick J. Wong wrote:
+> On Tue, Nov 01, 2022 at 11:34:08AM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > xfs_buffered_write_iomap_end() currently converts the byte ranges
+> > passed to it to filesystem blocks to pass them to the bmap code to
+> > punch out delalloc blocks, but then has to convert filesytem
+> > blocks back to byte ranges for page cache truncate.
+> > 
+> > We're about to make the page cache truncate go away and replace it
+> > with a page cache walk, so having to convert everything to/from/to
+> > filesystem blocks is messy and error-prone. It is much easier to
+> > pass around byte ranges and convert to page indexes and/or
+> > filesystem blocks only where those units are needed.
+> > 
+> > In preparation for the page cache walk being added, add a helper
+> > that converts byte ranges to filesystem blocks and calls
+> > xfs_bmap_punch_delalloc_range() and convert
+> > xfs_buffered_write_iomap_end() to calculate limits in byte ranges.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_iomap.c | 40 +++++++++++++++++++++++++---------------
+> >  1 file changed, 25 insertions(+), 15 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> > index a2e45ea1b0cb..7bb55dbc19d3 100644
+> > --- a/fs/xfs/xfs_iomap.c
+> > +++ b/fs/xfs/xfs_iomap.c
+> > @@ -1120,6 +1120,20 @@ xfs_buffered_write_iomap_begin(
+> >  	return error;
+> >  }
+> >  
+> > +static int
+> > +xfs_buffered_write_delalloc_punch(
+> > +	struct inode		*inode,
+> > +	loff_t			start_byte,
+> > +	loff_t			end_byte)
+> > +{
+> > +	struct xfs_mount	*mp = XFS_M(inode->i_sb);
+> > +	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, start_byte);
+> > +	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, end_byte);
+> > +
+> > +	return xfs_bmap_punch_delalloc_range(XFS_I(inode), start_fsb,
+> > +				end_fsb - start_fsb);
+> > +}
+> 
+> /me echoes hch's comment that the other callers of
+> xfs_bmap_punch_delalloc_range do this byte->block conversion too.
+> 
+> > +
+> >  static int
+> >  xfs_buffered_write_iomap_end(
+> >  	struct inode		*inode,
+> > @@ -1129,10 +1143,9 @@ xfs_buffered_write_iomap_end(
+> >  	unsigned		flags,
+> >  	struct iomap		*iomap)
+> >  {
+> > -	struct xfs_inode	*ip = XFS_I(inode);
+> > -	struct xfs_mount	*mp = ip->i_mount;
+> > -	xfs_fileoff_t		start_fsb;
+> > -	xfs_fileoff_t		end_fsb;
+> > +	struct xfs_mount	*mp = XFS_M(inode->i_sb);
+> > +	loff_t			start_byte;
+> > +	loff_t			end_byte;
+> >  	int			error = 0;
+> >  
+> >  	if (iomap->type != IOMAP_DELALLOC)
+> > @@ -1157,13 +1170,13 @@ xfs_buffered_write_iomap_end(
+> >  	 * the range.
+> >  	 */
+> >  	if (unlikely(!written))
+> > -		start_fsb = XFS_B_TO_FSBT(mp, offset);
+> > +		start_byte = round_down(offset, mp->m_sb.sb_blocksize);
+> >  	else
+>  -		start_fsb = XFS_B_TO_FSB(mp, offset + written);
+> > -	end_fsb = XFS_B_TO_FSB(mp, offset + length);
+> > +		start_byte = round_up(offset + written, mp->m_sb.sb_blocksize);
+> > +	end_byte = round_up(offset + length, mp->m_sb.sb_blocksize);
+> 
+> Technically this is the byte where we should *stop* processing, right?
+> 
+> If we are told to write 1000 bytes at pos 0 and the whole thing fails,
+> the end pos of the range is 1023 and we must stop at pos 1024.  Right?
 
-Sorry, I had not noticed that. I have sent a V2 of Patch 2 which fixes this
-problem.
+Yes, the interval definition being used here is open-ended i.e.
+[start_byte, end_byte) because it makes iterative interval
+operations really easy as the value for the start of the next
+interval is the same as the value for the end of the current
+interval.
 
-Git, by default, uses # as the comment character. I was able to overcome this
-by adding the following to my ~/.gitconfig,
+That's the way we've traditionally encoded ranges in XFS
+because there's a much lower risk of off-by-one errors in
+calculations as we iterate through extents. i.e. finding the
+start and end of ranges is as simple as round_down/round_up, there's
+no magic "+ 1" or "- 1" arithmetic needed anywhere to move from one
+interval to the next, etc.
 
-[core]
-	commentChar = $
+> (The only reason I ask is that Linus ranted about XFS naming these
+> variables incorrectly in the iomap code and the (at the time only) user
+> of it.)
 
->
-> For the other 5 patches,
-> Acked-by: Darrick J. Wong <djwong@kernel.org>
->
-> --D
+I don't find that a convincing argument.  What some random dude that
+has never touched the XFS or iomap code thinks about how we define
+intervals or the notations we use that makes the code _easier for
+us to understand_ is just not relevant.
 
+> >  	/* Nothing to do if we've written the entire delalloc extent */
+> > -	if (start_fsb >= end_fsb)
+> > +	if (start_byte >= end_byte)
+> >  		return 0;
+> >  
+> >  	/*
+> > @@ -1173,15 +1186,12 @@ xfs_buffered_write_iomap_end(
+> >  	 * leave dirty pages with no space reservation in the cache.
+> >  	 */
+> >  	filemap_invalidate_lock(inode->i_mapping);
+> > -	truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
+> > -				 XFS_FSB_TO_B(mp, end_fsb) - 1);
+> > -
+> > -	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
+> > -				       end_fsb - start_fsb);
+> > +	truncate_pagecache_range(inode, start_byte, end_byte - 1);
+> 
+> ...because the expression "end_byte - 1" looks a little funny when it's
+> used to compute the "lend" argument to truncate_pagecache_range.
+
+Yup, truncate_pagecache_range() uses a [] (closed) interval to
+define the range, so we need a "- 1" when passing that open-ended
+interval into a closed interval API.
+
+But that truncate_pagecache_range() call is going away in the next
+patch, so this whole issue is moot, yes?
+
+> > +	error = xfs_buffered_write_delalloc_punch(inode, start_byte, end_byte);
+> >  	filemap_invalidate_unlock(inode->i_mapping);
+> >  	if (error && !xfs_is_shutdown(mp)) {
+> > -		xfs_alert(mp, "%s: unable to clean up ino %lld",
+> > -			__func__, ip->i_ino);
+> > +		xfs_alert(mp, "%s: unable to clean up ino 0x%llx",
+> > +			__func__, XFS_I(inode)->i_ino);
+> 
+> Oh, you did fix the ino 0x%llx format thing.  Previous comment
+> withdrawn.
+> 
+> With s/end_byte/next_byte/ and the delalloc punch thing sorted out,
+
+I don't know what you want me to do here, because I don't think this
+code is wrong and changing it to closed intervals and next/stop as
+variable names makes little sense in the context of the code....
+
+Cheers,
+
+Dave.
 -- 
-chandan
+Dave Chinner
+david@fromorbit.com
