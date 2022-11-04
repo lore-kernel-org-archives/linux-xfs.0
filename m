@@ -2,335 +2,302 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31149C433FE
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Nov 2022 18:23:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD574C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Nov 2022 18:25:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232075AbiKDSXq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Nov 2022 14:23:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41938 "EHLO
+        id S231670AbiKDSZX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Nov 2022 14:25:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41640 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232034AbiKDSXS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2022 14:23:18 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B19A4748DE
-        for <linux-xfs@vger.kernel.org>; Fri,  4 Nov 2022 11:22:05 -0700 (PDT)
+        with ESMTP id S231474AbiKDSZW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Nov 2022 14:25:22 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CEEE121275
+        for <linux-xfs@vger.kernel.org>; Fri,  4 Nov 2022 11:23:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1667586124;
+        s=mimecast20190719; t=1667586233;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=zwDZ9Rd41r6Pb11KP2XktH3+UcmJcR73juvmRix9gFE=;
-        b=JKSKSOQqCoQQgrAJj60/Woz7ZM4g+nRqzhPQ5+3X+yo+40wAOyVnG4p++DZO0HMnHX0CJN
-        BfIOEK9gUZ0Yz0zGnQnFIaKT4B+c/rVqn8JMgthlCRKuytVoCG0tpeZrs7X3N1N7ISTbZD
-        bE2c2+jSs4RAijQec99M3kDWoPhZ6Vw=
-Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
- [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-22-1NJJvOtXPWCnicNIUMZOSg-1; Fri, 04 Nov 2022 14:22:03 -0400
-X-MC-Unique: 1NJJvOtXPWCnicNIUMZOSg-1
-Received: by mail-qt1-f197.google.com with SMTP id z11-20020a05622a028b00b003a550fa8989so4113188qtw.12
-        for <linux-xfs@vger.kernel.org>; Fri, 04 Nov 2022 11:22:03 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=zwDZ9Rd41r6Pb11KP2XktH3+UcmJcR73juvmRix9gFE=;
-        b=Hxa6yARdNMfzEo/g5BCIWHLwcFIYsHs1vB7Kp5/TjxinlBOmv3/D0cZ+hCDHhFOWHU
-         MZ1pgR0Ixx1X8CU6MKEF86fseQPnuF+XBcnDdWstH2WeCnOVf+Y+lC0dw3YudyiEqY1N
-         pEDEx/IIAIXzm89IYpkTvyd0c97YcR64rhpZLvilqLtHTpuldZP3FCBnlRQA3ND7+ItS
-         5lm43xoCWA1MjKu/OAO50VIcvQPukRBhWP3a/YT2EacbYeQ8rgIAoDlgLQrsxLs1Cxq9
-         0Jvp19rTetDOOK4dyR+3UNe6Uu0IXfAIIY4YOz0z9MhhSZBEDeXWeUjL6yjcvW7bU0oo
-         xmVw==
-X-Gm-Message-State: ACrzQf0I6h/T6MkqehcXEHKfxjEIKL0mrGuIxRkADXQdIn28sVVbXcsF
-        wXNwUqzZykxi2iRyO9dgDPEIunOtbQ9+sphrxpJcL7JAhQTsJwFFme96punVhZa5kV2QaVOoLk+
-        cAm/+Fr7K7XlbAKsWS8cc
-X-Received: by 2002:a05:6214:19ef:b0:4c1:a621:9ae6 with SMTP id q15-20020a05621419ef00b004c1a6219ae6mr4788399qvc.9.1667586122798;
-        Fri, 04 Nov 2022 11:22:02 -0700 (PDT)
-X-Google-Smtp-Source: AMsMyM5skxFWdFqXkrGRtbuNAcN2PH1Fe1D/DoZunUkHGdlMssHJBbChlaS7y2Dpk/+8bj2IpIAgMg==
-X-Received: by 2002:a05:6214:19ef:b0:4c1:a621:9ae6 with SMTP id q15-20020a05621419ef00b004c1a6219ae6mr4788379qvc.9.1667586122457;
-        Fri, 04 Nov 2022 11:22:02 -0700 (PDT)
-Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
-        by smtp.gmail.com with ESMTPSA id az12-20020a05620a170c00b006bb87c4833asm39519qkb.109.2022.11.04.11.22.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Nov 2022 11:22:01 -0700 (PDT)
-Date:   Fri, 4 Nov 2022 14:22:06 -0400
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=vv7Ueb+sj7o+jJmlQoW8tsGT6dXLspFGmGj6oqgOXvI=;
+        b=XON5lzfszt19izTSpA9nacb4oTP4zFXhyoXJfU8U9i18XMH7b5ZFFmxOLjUNfiv3xdmODk
+        oxTh0hh9J05z85TwIv/TKshJJdojFa01ZUjPooZu8R8Tzfpy077iNCRQ59n4h4K75VmwxH
+        amKHcXyvc83iZVftz8bg1q0QsbQDXPk=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-217-CjFZUo9pOo-JD2YCW9SW-w-1; Fri, 04 Nov 2022 14:23:52 -0400
+X-MC-Unique: CjFZUo9pOo-JD2YCW9SW-w-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 38ED1811E7A
+        for <linux-xfs@vger.kernel.org>; Fri,  4 Nov 2022 18:23:52 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.16.42])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 192F82166B26
+        for <linux-xfs@vger.kernel.org>; Fri,  4 Nov 2022 18:23:52 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: redirty eof folio on truncate to avoid filemap flush
-Message-ID: <Y2VYTq0DlzCIepf2@bfoster>
-References: <20221028130411.977076-1-bfoster@redhat.com>
- <20221028131109.977581-1-bfoster@redhat.com>
- <Y1we59XylviZs+Ry@bfoster>
- <20221028213014.GD3600936@dread.disaster.area>
- <Y2PV3KQ9K2l+65Eu@bfoster>
- <20221103222541.GJ3600936@dread.disaster.area>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: move truncate zeroing flush into ->iomap_begin()
+Date:   Fri,  4 Nov 2022 14:23:58 -0400
+Message-Id: <20221104182358.2007475-1-bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221103222541.GJ3600936@dread.disaster.area>
+Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.6
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Nov 04, 2022 at 09:25:41AM +1100, Dave Chinner wrote:
-> On Thu, Nov 03, 2022 at 10:53:16AM -0400, Brian Foster wrote:
-> > On Sat, Oct 29, 2022 at 08:30:14AM +1100, Dave Chinner wrote:
-> > > On Fri, Oct 28, 2022 at 02:26:47PM -0400, Brian Foster wrote:
-> > > > On Fri, Oct 28, 2022 at 09:11:09AM -0400, Brian Foster wrote:
-> > > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > > > ---
-> > > > > 
-> > > > > Here's a quick prototype of "option 3" described in my previous mail.
-> > > > > This has been spot tested and confirmed to prevent the original stale
-> > > > > data exposure problem. More thorough regression testing is still
-> > > > > required. Barring unforeseen issues with that, however, I think this is
-> > > > > tentatively my new preferred option. The primary reason for that is it
-> > > > > avoids looking at extent state and is more in line with what iomap based
-> > > > > zeroing should be doing more generically.
-> > > > > 
-> > > > > Because of that, I think this provides a bit more opportunity for follow
-> > > > > on fixes (there are other truncate/zeroing problems I've come across
-> > > > > during this investigation that still need fixing), cleanup and
-> > > > > consolidation of the zeroing code. For example, I think the trajectory
-> > > > > of this could look something like:
-> > > > > 
-> > > > > - Genericize a bit more to handle all truncates.
-> > > > > - Repurpose iomap_truncate_page() (currently only used by XFS) into a
-> > > > >   unique implementation from zero range that does explicit zeroing
-> > > > >   instead of relying on pagecache truncate.
-> > > > > - Refactor XFS ranged zeroing to an abstraction that uses a combination
-> > > > >   of iomap_zero_range() and the new iomap_truncate_page().
-> > > > > 
-> > > > 
-> > > > After playing with this and thinking a bit more about the above, I think
-> > > > I managed to come up with an iomap_truncate_page() prototype that DTRT
-> > > > based on this. Only spot tested so far, needs to pass iomap_flags to the
-> > > > other bmbt_to_iomap() calls to handle the cow fork, undoubtedly has
-> > > > other bugs/warts, etc. etc. This is just a quick prototype to
-> > > > demonstrate the idea, which is essentially to check dirty state along
-> > > > with extent state while under lock and transfer that state back to iomap
-> > > > so it can decide whether it can shortcut or forcibly perform the zero.
-> > > > 
-> > > > In a nutshell, IOMAP_TRUNC_PAGE asks the fs to check dirty state while
-> > > > under lock and implies that the range is sub-block (single page).
-> > > > IOMAP_F_TRUNC_PAGE on the imap informs iomap that the range was in fact
-> > > > dirty, so perform the zero via buffered write regardless of extent
-> > > > state.
-> > > 
-> > > I'd much prefer we fix this in the iomap infrastructure - failing to
-> > > zero dirty data in memory over an unwritten extent isn't an XFS bug,
-> > > so we shouldn't be working around it in XFS like we did previously.
-> > > 
-> > 
-> > I agree, but that was the original goal from the start. It's easier said
-> > than done to just have iomap accurately write/skip the appropriate
-> > ranges..
-> > 
-> > > I don't think this should be call "IOMAP_TRUNC_PAGE", though,
-> > > because that indicates the caller context, not what we are asking
-> > > the internal iomap code to do. What we are really asking is for
-> > > iomap_zero_iter() to do is zero the page cache if it exists in
-> > > memory, otherwise ignore unwritten/hole pages.  Hence I think a name
-> > > like IOMAP_ZERO_PAGECACHE is more appropriate,
-> > > 
-> > 
-> > That was kind of the point for this prototype. The flag isn't just
-> > asking iomap to perform some generic write behavior. It also indicates
-> > this is a special snowflake mode with assumptions from the caller (i.e.,
-> > unflushed, sub-block/partial range) that facilitate forced zeroing
-> > internally.
-> > 
-> > I've since come to the conclusion that this approach is just premature.
-> > It really only does the right thing in this very particular case,
-> > otherwise there is potential for odd/unexpected behavior in sub-page
-> > blocksize scenarios. It could be made to work more appropriately
-> > eventually, but more thought and work is required and there's a jump in
-> > complexity that isn't required to fix the immediate performance problem
-> > and additional stale data exposure problems.
-> > 
-> > > > 
-> > > > Brian
-> > > > 
-> > > > --- 8< ---
-> > > > 
-> > > > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > > > index 91ee0b308e13..14a9734b2838 100644
-> > > > --- a/fs/iomap/buffered-io.c
-> > > > +++ b/fs/iomap/buffered-io.c
-> > > > @@ -899,7 +899,8 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
-> > > >  	loff_t written = 0;
-> > > >  
-> > > >  	/* already zeroed?  we're done. */
-> > > > -	if (srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN)
-> > > > +	if ((srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN) &&
-> > > > +	    !(srcmap->flags & IOMAP_F_TRUNC_PAGE))
-> > > >  		return length;
-> > > 
-> > > Why even involve the filesystem in this? We can do this directly
-> > > in iomap_zero_iter() with:
-> > > 
-> > > 	if ((srcmap->type == IOMAP_HOLE)
-> > > 		return;
-> > > 	if (srcmap->type == IOMAP_UNWRITTEN) {
-> > > 		if (!(iter->flags & IOMAP_ZERO_PAGECACHE))
-> > > 			return;
-> > > 		if (!filemap_range_needs_writeback(inode->i_mapping,
-> > > 			    iomap->offset, iomap->offset + iomap->length))
-> > > 			return;
-> > > 	}
-> > > 
-> > 
-> > This reintroduces the same stale data exposure race fixed by the
-> > original patch. folio writeback can complete and convert an extent
-> > reported as unwritten such that zeroing will not occur when it should.
-> 
-> That sounds the exact data corruption bug that is being fixed in
-> this xfs/iomap series here:
-> 
-> https://lore.kernel.org/linux-xfs/20221101003412.3842572-1-david@fromorbit.com/
-> 
-> > The writeback check either needs to be in the fs code where it can
-> > prevent writeback completion from converting extents (under ilock), or
-> > earlier in iomap such that we're guaranteed to see either writeback
-> > state or the converted extent.
-> 
-> Or we catch stale iomaps once we've locked the page we are going to
-> modify and remap the extent before continuing the modification
-> operation.
-> 
+The truncate code has a tortured history of hacks trying to prevent
+various consistency problems. The most recent example is the flush
+introduced by commit 869ae85dae64b ("xfs: flush new eof page on
+truncate to avoid post-eof corruption") to work around the fact that
+iomap zeroing doesn't handle certain extent types properly when
+backed by dirty pagecache. Unfortunately, this workaround has shown
+to cause a significant performance impact in certain small file
+overwrite and truncate workloads.
 
-I wasn't planning to modify pages for reasons mentioned earlier. It's a
-non-trivial jump in complexity for the problem I'm trying to address.
+The ideal solution here is for iomap to learn to handle such dirty
+cache scenarios and perform proper zeroing, but that is not a
+trivial endeavor and may depend on additional functionality that is
+not currently complete. In lieu of that goal, we can move the
+unconditional flush in the truncate path one step closer to iomap by
+moving it into ->iomap_begin(). This allows selective invocation for
+only the scenarios where the mapping type can change in the
+background, and therefore avoids the flush completely in the
+aforementioned overwrite scenario and provides a significant
+improvement in latency of such operations. For example, from a test
+program doing a small, fixed size overwrite and truncate:
 
-> > Given the above, I'm currently putting the prototype shown below through
-> > some regression testing. It lifts the writeback check into iomap and
-> > issues a flush and retry of the current iteration from iomap_zero_iter()
-> > when necessary.
-> 
-> Hmmm. It looks exactly like you are trying to reinvent the patchset
-> I've been working on for the past few weeks...
-> 
+On recent master:
 
-Possibly.. I've not looked at it. First and foremost what I'm really
-trying to do here is find a better way to deal with the truncate flush
-problem that moves things closer to the long term goal of being handled
-by iomap.
+path /mnt/file, 100000 iters
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 81.56    1.626925          16    100000           ftruncate
+ 18.42    0.367488           3    100000           pwrite64
+...
 
-> [...]
-> 
-> > I have some patches around that demonstrate such things, but given the
-> > current behavior of an unconditional flush and so far only seeing one
-> > user report from an oddball pattern, I don't see much need for
-> > additional hacks at the moment.
-> > 
-> > Thoughts? IMO, the iter retry and writeback check are both wonky and
-> > this is something that should first go into ->iomap_begin(), and only
-> > lift into iomap after a period of time. That's just my .02. I do plan to
-> > clean up with a retry helper and add comments and whatnot if this
-> > survives testing and/or any functional issues are worked out.
-> 
-> I think I've already solved all these problems with the above
-> IOMAP_F_STALE infrastructure in the above patchset. If that's the
-> case, then it seems like a no-brainer to me to base the fix for this
-> problem on the IOMAP_F_STALE capability we will soon have in this
-> code...
-> 
+v6.1.0-rc3 with this patch:
 
-I'd have to take a closer look. If the IOMAP_F_STALE thing is
-essentially a superset of what I was trying to do wrt to the retry thing
-(which is what it sounds like), then I agree it makes sense to reuse
-that.
+path /mnt/file, 100000 iters
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 74.76    1.077406          10    100000           ftruncate
+ 25.19    0.363060           3    100000           pwrite64
+...
 
-> > index 91ee0b308e13..649d94ad3808 100644
-> > --- a/fs/iomap/buffered-io.c
-> > +++ b/fs/iomap/buffered-io.c
-> > @@ -894,17 +894,28 @@ EXPORT_SYMBOL_GPL(iomap_file_unshare);
-> >  static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
-> >  {
-> >  	const struct iomap *srcmap = iomap_iter_srcmap(iter);
-> > +	struct inode *inode = iter->inode;
-> >  	loff_t pos = iter->pos;
-> >  	loff_t length = iomap_length(iter);
-> >  	loff_t written = 0;
-> > +	int status;
-> >  
-> >  	/* already zeroed?  we're done. */
-> > -	if (srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN)
-> > -		return length;
-> > +	if (srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN) {
-> > +		if (!(srcmap->flags & IOMAP_F_DIRTY_CACHE))
-> > +			return length;
-> > +
-> > +		status = filemap_write_and_wait_range(inode->i_mapping, pos,
-> > +						      pos + length - 1);
-> > +		if (status)
-> > +			return status;
-> > +		/* XXX: hacked up iter retry */
-> > +		iter->iomap.length = 0;
-> > +		return 1;
-> 
-> Yup, the IOMAP_F_STALE detection in iomap_write_begin() will detect
-> writeback races w/ unwritten extents that change the extent state
-> without needing to actually do physical writeback here.
-> 
-> IOWs, I think the fix here is not to skip IOMAP_UNWRITTEN extents up
-> front, but to allow zeroing to detect data in the page cache over
-> unwritten extents naturally.
-> 
-> i.e. if the iomap type is unwritten and we are zeroing, then
-> iomap_write_begin() drops the FGP_CREAT flag. This means the folio
-> lookup will only returns a folio if there was already a cached folio
-> in the page cache. If there is a cached folio, it will do iomap
-> validation and detect writeback races, marking the iomap stale. If
-> there is no folio or the folio returned is not dirty, then
-> iomap_zero_iter just moves on to checking the next folio in the
-> range...
-> 
+This also has the side effect of helping to prevent further
+outstanding post-eof data zeroing issues caused by the same
+fundamental iomap problem. For example, consider the following
+(somewhat contrived) example that demonstrates a potential stale
+data exposure vector.
 
-The problem I have is that I've got three or four additional different
-prototypes trying to do such things that haven't even been worth posting
-because they all produce tricky to diagnose issues, including one that
-literally does exactly what you note above regarding dropping FGP_CREAT
-for mappings trimmed down based on sub-extent dirty state. It probably
-has its own bugs, but I suspect aspects of iomap zeroing as well as
-extent reporting in XFS (related to zeroing) need to change to make this
-all function correctly, but I don't have it characterized enough to say
-for sure.
+On recent mainline:
 
-> > @@ -71,10 +76,16 @@ int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops)
-> >  	if (ret <= 0)
-> >  		return ret;
-> >  
-> > +	if ((iter->flags & IOMAP_ZERO) &&
-> > +	    filemap_range_needs_writeback(iter->inode->i_mapping, iter->pos,
-> > +					  iter->pos + iter->len - 1)) {
-> > +		iomap_flags |= IOMAP_F_DIRTY_CACHE;
-> > +	}
-> 
-> I really don't think we need this - I think we can do the page cache
-> state check and the iomap stale check directly in the
-> iomap_zero_iter() loop as per above...
-> 
+$ xfs_io -fc "falloc 0 1k" -c "pwrite 0 1k" \
+  -c "mmap 0 4k" -c "mwrite 3k 1k" \
+  -c "pwrite 32k 4k" -c fsync -c "pread -v 3k 32" <file>
+...
+00000c00:  58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58  XXXXXXXXXXXXXXXX
+00000c10:  58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58  XXXXXXXXXXXXXXXX
 
-Ok, this may be a reasonable end goal, but there's a clear jump in
-complexity, dependency requirements, and test scope between the targeted
-fix I proposed and ultimate iomap zeroing perfection. I'm not trying to
-achieve the latter. I'm trying to address a performance escalation that
-moves things more in that direction to the degree possible.
+... while the same command with this patch produces:
 
-I agree that if IOMAP_F_STALE overlaps with the approach in this patch,
-it makes no sense to try and duplicate that here or create code
-conflicts or dependencies. I have another version of this patch that
-implements the same dirty check, flush, retry logic within
-xfs_iomap_buffered_write_iomap_begin() such that it never returns a
-"dirty," hole/unwritten mapping. It's a bit more code, but effective
-from a functional and performance standpoint and logically simple enough
-to backport as far back as needed with minimal risk and dependencies.
-IMO, that's a fairly reasonable intermediate step to get from the
-currently broken state to a more ideal iomap-based implementation. I'll
-post it shortly and run some more testing against it.
+00000c00:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000c10:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+
+... which also happens to match behavior with the first falloc
+subcommand removed.
+
+While this patch does not implement full iomap based handling of
+dirty pagecache data, it improves correctness, performance, is
+simple enough for stable backports, and doesn't preclude replacement
+by more advanced or efficient solutions via iomap in the future.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+
+This is a followup to the RFC and discussion here[1]. Towards the end,
+Dave describes an approach to implement iomap pagecache zeroing based on
+the recently posted iomap stale mapping detection. While that sounds
+plausible, it's a notable jump in complexity and test scope and a more
+involved dependency chain than is necessary to fix the performance and
+stale data exposure problems.
+
+Therefore I'm posting this modified variant as an intermediate step
+toward that goal. Since there is apparent overlap between the iomap
+based RFC and stale iomap detection, this instead relocates the
+flush/retry step into the ->iomap_begin() callback such that it can be
+lifted into iomap sometime later when proper support mechanisms to
+validate pagecache state against extent state are stabilized. This can
+potentially enable a higher level folio state check or more explicit
+folio zeroing to avoid the need to flush entirely.
 
 Brian
+
+[1] https://lore.kernel.org/linux-xfs/20221028130411.977076-1-bfoster@redhat.com/
+
+ fs/xfs/xfs_iomap.c | 65 +++++++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_iops.c  | 10 -------
+ 2 files changed, 64 insertions(+), 11 deletions(-)
+
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 07da03976ec1..de61d68b2f77 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -895,6 +895,25 @@ const struct iomap_ops xfs_dax_write_iomap_ops = {
+ 	.iomap_end	= xfs_dax_write_iomap_end,
+ };
+ 
++/*
++ * Determine whether a mapping requires a flush and retry before returning to
++ * iomap. This is restricted to cases where a flush may change extent state in a
++ * way known to change iomap behavior.
++ */
++static inline bool
++imap_needs_flush(
++	unsigned		flags,
++	bool			range_dirty,
++	struct xfs_bmbt_irec	*imap)
++{
++	if (!(flags & IOMAP_ZERO))
++		return false;
++	if (!range_dirty)
++		return false;
++	return imap->br_startblock == HOLESTARTBLOCK ||
++		imap->br_state == XFS_EXT_UNWRITTEN;
++}
++
+ static int
+ xfs_buffered_write_iomap_begin(
+ 	struct inode		*inode,
+@@ -908,10 +927,12 @@ xfs_buffered_write_iomap_begin(
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 	xfs_fileoff_t		end_fsb = xfs_iomap_end_fsb(mp, offset, count);
++	loff_t			endoff = offset + count - 1;
+ 	struct xfs_bmbt_irec	imap, cmap;
+ 	struct xfs_iext_cursor	icur, ccur;
+ 	xfs_fsblock_t		prealloc_blocks = 0;
+ 	bool			eof = false, cow_eof = false, shared = false;
++	bool			range_dirty;
+ 	int			allocfork = XFS_DATA_FORK;
+ 	int			error = 0;
+ 	unsigned int		lockmode = XFS_ILOCK_EXCL;
+@@ -926,6 +947,8 @@ xfs_buffered_write_iomap_begin(
+ 
+ 	ASSERT(!XFS_IS_REALTIME_INODE(ip));
+ 
++restart:
++	range_dirty = false;
+ 	error = xfs_ilock_for_iomap(ip, flags, &lockmode);
+ 	if (error)
+ 		return error;
+@@ -942,6 +965,24 @@ xfs_buffered_write_iomap_begin(
+ 	if (error)
+ 		goto out_unlock;
+ 
++	/*
++	 * Certain operations may not work correctly if the associated file
++	 * range is dirty in pagecache. For example, zeroing skips unwritten
++	 * extents even if uptodate and dirty folios exist in cache. This can
++	 * cause various sorts of stale data exposure problems where zeroing is
++	 * used as part of truncate or size extending I/O operations that don't
++	 * typically flush and invalidate cache beforehand.
++	 *
++	 * To prevent this problem, flush and convert any such extent mappings
++	 * before returning to iomap. Ideally, iomap should learn to handle
++	 * pagecache correctly on its own so this can be removed. Note that this
++	 * flush should be relatively uncommon as most heavy zero range users
++	 * flush and invalidate the entire target range, so this is a simple,
++	 * low overhead step to prevent data corruption issues.
++	 */
++	if (filemap_range_needs_writeback(inode->i_mapping, offset, endoff))
++		range_dirty = true;
++
+ 	/*
+ 	 * Search the data fork first to look up our source mapping.  We
+ 	 * always need the data fork map, as we have to return it to the
+@@ -952,8 +993,18 @@ xfs_buffered_write_iomap_begin(
+ 	if (eof)
+ 		imap.br_startoff = end_fsb; /* fake hole until the end */
+ 
+-	/* We never need to allocate blocks for zeroing a hole. */
++	/*
++	 * We never need to allocate blocks for zeroing a hole, but we might
++	 * need to flush the mapping if dirty. This could mean the range is at
++	 * least partially backed by the COW fork. This is generally unexpected,
++	 * but writeback handles this situation so let it resolve the conflict
++	 * and ensure zeroing does the right thing.
++	 */
+ 	if ((flags & IOMAP_ZERO) && imap.br_startoff > offset_fsb) {
++		if (imap_needs_flush(flags, range_dirty, &imap)) {
++			xfs_iunlock(ip, XFS_ILOCK_EXCL);
++			goto flush_restart;
++		}
+ 		xfs_hole_to_iomap(ip, iomap, offset_fsb, imap.br_startoff);
+ 		goto out_unlock;
+ 	}
+@@ -1100,11 +1151,15 @@ xfs_buffered_write_iomap_begin(
+ 
+ found_imap:
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	if (imap_needs_flush(flags, range_dirty, &imap))
++		goto flush_restart;
+ 	return xfs_bmbt_to_iomap(ip, iomap, &imap, flags, 0);
+ 
+ found_cow:
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	if (imap.br_startoff <= offset_fsb) {
++		if (imap_needs_flush(flags, range_dirty, &imap))
++			goto flush_restart;
+ 		error = xfs_bmbt_to_iomap(ip, srcmap, &imap, flags, 0);
+ 		if (error)
+ 			return error;
+@@ -1112,12 +1167,20 @@ xfs_buffered_write_iomap_begin(
+ 					 IOMAP_F_SHARED);
+ 	}
+ 
++	if (imap_needs_flush(flags, range_dirty, &cmap))
++		goto flush_restart;
+ 	xfs_trim_extent(&cmap, offset_fsb, imap.br_startoff - offset_fsb);
+ 	return xfs_bmbt_to_iomap(ip, iomap, &cmap, flags, 0);
+ 
+ out_unlock:
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	return error;
++
++flush_restart:
++	error = filemap_write_and_wait_range(inode->i_mapping, offset, endoff);
++	if (!error)
++		goto restart;
++	return error;
+ }
+ 
+ static int
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 2e10e1c66ad6..3c40a81d6da0 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -840,16 +840,6 @@ xfs_setattr_size(
+ 		error = xfs_zero_range(ip, oldsize, newsize - oldsize,
+ 				&did_zeroing);
+ 	} else {
+-		/*
+-		 * iomap won't detect a dirty page over an unwritten block (or a
+-		 * cow block over a hole) and subsequently skips zeroing the
+-		 * newly post-EOF portion of the page. Flush the new EOF to
+-		 * convert the block before the pagecache truncate.
+-		 */
+-		error = filemap_write_and_wait_range(inode->i_mapping, newsize,
+-						     newsize);
+-		if (error)
+-			return error;
+ 		error = xfs_truncate_page(ip, newsize, &did_zeroing);
+ 	}
+ 
+-- 
+2.37.3
 
