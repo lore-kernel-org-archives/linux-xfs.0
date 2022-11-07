@@ -2,149 +2,180 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 259B4C433FE
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Nov 2022 16:41:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E022C4332F
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Nov 2022 16:55:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231351AbiKGQlx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Nov 2022 11:41:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38202 "EHLO
+        id S232742AbiKGQzw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Nov 2022 11:55:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232494AbiKGQlv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Nov 2022 11:41:51 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D283110F9;
-        Mon,  7 Nov 2022 08:41:50 -0800 (PST)
+        with ESMTP id S232768AbiKGQzu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Nov 2022 11:55:50 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 062EA21E3C
+        for <linux-xfs@vger.kernel.org>; Mon,  7 Nov 2022 08:55:48 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 5E7BDB812A9;
-        Mon,  7 Nov 2022 16:41:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0DDB7C433D6;
-        Mon,  7 Nov 2022 16:41:48 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 70CA0611C6
+        for <linux-xfs@vger.kernel.org>; Mon,  7 Nov 2022 16:55:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1DDFC433C1;
+        Mon,  7 Nov 2022 16:55:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1667839308;
-        bh=gClJIx7gtOIaMRKiUYCd7JlDSBfzTS0UeIcZsg9HgSM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=GoaTpHink8UJMA45vIb2/bjYYyOUItY0UbK2NK5ZtuoTSYbQeuv5rsNv55YQXqbor
-         u34xhyr4ylGRYAtH8lWtTwA3DtxBJDqJXvUPl7zdO1oIA4Byqld9LqpgHxmUbEb+Ym
-         3czrZ6+/Y2vijsO8CkH0n3PVUz2mKm+I4nN3qZ2b9DkIP88OhFR4bm7PV92/nPEiKW
-         53jvXDdh8hLh/IUtmpMj1dc6VzGggnfonhqf/jH3VrPbcI53XUojSo6OKwLvlwP+VF
-         68+E69b+ihj9Qisp75oCRqHLEBKVbaZJMQg3h0kbOSOVXbantffBcKfyR8Ceqej0Gy
-         JP4P7EPF684fg==
-Date:   Mon, 7 Nov 2022 08:41:47 -0800
+        s=k20201202; t=1667840147;
+        bh=wffLabiKC+0JoV02ZMLMYqhUkl34fI36oEiz5YPNMWY=;
+        h=Date:From:To:Subject:References:In-Reply-To:From;
+        b=sENUZ8TedeqEj+uoRdZ0ZlZSkdg5rOu1zWtkm6ahJgrzGHZu4fJNTHcAvQHmraKyV
+         f4JxszjVMKR7/JFRSnHfKUMHSz26NSKFhq7A+0sJjyXb25Yme1weMjPQorYAUVze0R
+         xIDl9gYJe1Cuu2ZJExd7L5wA1I83m3IOvmfEuQlW78SEoA3PD+qiML97zkRhLHzYkk
+         nYMNlJ6M1VLOZgk1ynCTWPWcuNxirco/sH91WLIoQvuSdy1f8E2LSQy2tajSF2KMQH
+         Yvo/dlNtgLdLKWMne65aUcaxjVhRtRK3R7MS0QeuWmfI5QqOXhFuxjowytD/ykohJf
+         SiY2Gx8mtgHDQ==
+Date:   Mon, 7 Nov 2022 08:55:47 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@kernel.org>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] generic: shutdown might leave NULL files with nonzero
- di_size
-Message-ID: <Y2k1SzblcYRsSvzK@magnolia>
-References: <20221105152324.2233310-1-zlang@kernel.org>
+To:     Srikanth C S <srikanth.c.s@oracle.com>, darrick.wong@oracle.com,
+        david@fromorbit.com, linux-xfs@vger.kernel.org,
+        rajesh.sivaramasubramaniom@oracle.com, junxiao.bi@oracle.com,
+        Joseph Qi <joseph.qi@linux.alibaba.com>
+Subject: Re: [PATCH v3] fsck.xfs: mount/umount xfs fs to replay log before
+ running xfs_repair
+Message-ID: <Y2k4kwWg2UObmfqN@magnolia>
+References: <20221104061011.4063-1-srikanth.c.s@oracle.com>
+ <Y2ie54fcHDx5bcG4@B-P7TQMD6M-0146.local>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221105152324.2233310-1-zlang@kernel.org>
+In-Reply-To: <Y2ie54fcHDx5bcG4@B-P7TQMD6M-0146.local>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Nov 05, 2022 at 11:23:24PM +0800, Zorro Lang wrote:
-> An old issue might cause on-disk inode sizes are logged prematurely
-> via the free eofblocks path on file close. Then fs shutdown might
-> leave NULL files but their di_size > 0.
+On Mon, Nov 07, 2022 at 02:00:07PM +0800, Gao Xiang wrote:
+> Hi folks,
 > 
-> Signed-off-by: Zorro Lang <zlang@kernel.org>
-> ---
+> On Fri, Nov 04, 2022 at 11:40:11AM +0530, Srikanth C S wrote:
+> > After a recent data center crash, we had to recover root filesystems
+> > on several thousands of VMs via a boot time fsck. Since these
+> > machines are remotely manageable, support can inject the kernel
+> > command line with 'fsck.mode=force fsck.repair=yes' to kick off
+> > xfs_repair if the machine won't come up or if they suspect there
+> > might be deeper issues with latent errors in the fs metadata, which
+> > is what they did to try to get everyone running ASAP while
+> > anticipating any future problems. But, fsck.xfs does not address the
+> > journal replay in case of a crash.
+> > 
+> > fsck.xfs does xfs_repair -e if fsck.mode=force is set. It is
+> > possible that when the machine crashes, the fs is in inconsistent
+> > state with the journal log not yet replayed. This can drop the machine
+> > into the rescue shell because xfs_fsck.sh does not know how to clean the
+> > log. Since the administrator told us to force repairs, address the
+> > deficiency by cleaning the log and rerunning xfs_repair.
+> > 
+> > Run xfs_repair -e when fsck.mode=force and repair=auto or yes.
+> > Replay the logs only if fsck.mode=force and fsck.repair=yes. For
+> > other option -fa and -f drop to the rescue shell if repair detects
+> > any corruptions.
+> > 
+> > Signed-off-by: Srikanth C S <srikanth.c.s@oracle.com>
+> > ---
+> >  fsck/xfs_fsck.sh | 31 +++++++++++++++++++++++++++++--
+> >  1 file changed, 29 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/fsck/xfs_fsck.sh b/fsck/xfs_fsck.sh
+> > index 6af0f22..62a1e0b 100755
+> > --- a/fsck/xfs_fsck.sh
+> > +++ b/fsck/xfs_fsck.sh
+> > @@ -31,10 +31,12 @@ repair2fsck_code() {
+> >  
+> >  AUTO=false
+> >  FORCE=false
+> > +REPAIR=false
+> >  while getopts ":aApyf" c
+> >  do
+> >         case $c in
+> > -       a|A|p|y)        AUTO=true;;
+> > +       a|A|p)          AUTO=true;;
+> > +       y)              REPAIR=true;;
+> >         f)              FORCE=true;;
+> >         esac
+> >  done
+> > @@ -64,7 +66,32 @@ fi
+> >  
+> >  if $FORCE; then
+> >         xfs_repair -e $DEV
+> > -       repair2fsck_code $?
+> > +       error=$?
+> > +       if [ $error -eq 2 ] && [ $REPAIR = true ]; then
+> > +               echo "Replaying log for $DEV"
+> > +               mkdir -p /tmp/repair_mnt || exit 1
+> > +               for x in $(cat /proc/cmdline); do
+> > +                       case $x in
+> > +                               root=*)
+> > +                                       ROOT="${x#root=}"
+> > +                               ;;
+> > +                               rootflags=*)
+> > +                                       ROOTFLAGS="-o ${x#rootflags=}"
+> > +                               ;;
+> > +                       esac
+> > +               done
+> > +               test -b "$ROOT" || ROOT=$(blkid -t "$ROOT" -o device)
 > 
-> V2 replace "fiemap" with "stat" command, to check if a file has extents.
-> That helps this case more common.
-> 
-> Thanks,
-> Zorro
-> 
->  tests/generic/999     | 42 ++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/999.out |  5 +++++
->  2 files changed, 47 insertions(+)
->  create mode 100755 tests/generic/999
->  create mode 100644 tests/generic/999.out
-> 
-> diff --git a/tests/generic/999 b/tests/generic/999
-> new file mode 100755
-> index 00000000..8b4596e0
-> --- /dev/null
-> +++ b/tests/generic/999
+> We'd also like to get a formal solution about this for our production
+> so that xfs_repair can work properly with log recovery.
 
-Ugh sorry     ^^^^^^^ I didn't notice this part and wrote my previous
-response thinking this was an xfs-only test...
+My preferred solution is to port the log recovery code to userspace, and
+then train xfs_repair to invoke it.  Handling the trivial case where
+xfs_repair can recover logs created on the same platform as the support
+script wouldn't be that hard (I think?) because log recovery is fairly
+selfcontained nowadays.
 
-> @@ -0,0 +1,42 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2022 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 999
-> +#
-> +# Test an issue in the truncate codepath where on-disk inode sizes are logged
-> +# prematurely via the free eofblocks path on file close.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick shutdown
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_require_scratch
-> +_require_scratch_shutdown
-> +_scratch_mkfs > $seqres.full 2>&1
-> +_scratch_mount
-> +
-> +echo "Create many small files with one extent at least"
-> +for ((i=0; i<10000; i++));do
-> +	$XFS_IO_PROG -f -c "pwrite 0 4k" $SCRATCH_MNT/file.$i >/dev/null 2>&1
-> +done
-> +
-> +echo "Shutdown the fs suddently"
-> +_scratch_shutdown
-> +
-> +echo "Cycle mount"
-> +_scratch_cycle_mount
-> +
-> +echo "Check file's (di_size > 0) extents"
-> +for f in $(find $SCRATCH_MNT -type f -size +0);do
-> +	# Check if the file has any extent
-> +	if [ "$(stat -c "%b" $f)" = "0" ];then
-> +		echo " - $f get no extents, but its di_size > 0"
-> +		break
-> +	fi
-> +done
+But.
 
-...so whereas I was trying to suggest that you could use the GETFSXATTR
-ioctl to return the extent count:
+Inevitably someone will suggest fixing the kernel's inability to recover
+a log from a platform with a different endianness, which will lead to a
+discussion of making the ondisk log format endian safe.  Someone else
+may also ask why not make userspace xfs_trans transactional, and... ;)
 
-$XFS_IO_PROG -c stat $f | grep fsxattr.nextents | awk '{print $3}'
+(All those extra asks are ok, but anyone taking on these task sets
+should make it /very/ clear where the scope of each set begins and ends,
+and in which order they'll be worked on.)
 
-But that won't work outside of XFS.  To make this generic, I think you
-have to do something like:
+> However, may I ask if it's the preferred way to implement this which
+> just acts as another mount-unmount cycle, since I'm not sure if there
+> are some customized initramfs-es which could get the fs busy so that it
+> won't unmount properly.
 
-$FILEFRAG_PROG -v $f | wc -l
+Seeing as initramfses are only supposed to turn on enough hardware so
+that mount can find the root volume, I really hope there aren't
+*background services* running here.
 
-to see if there are any extents.
+> Alternatively, do we consider another way like exporting the log
+> recovery functionality with ioctl() so that log recovery can work
+> without the actual fs mounting? Is it affordable?
+
+I guess you could create a 'recoveryonly' mount option that would abort
+the mount after recovering the log.  I'm not really a fan of that
+approach.
 
 --D
 
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/999.out b/tests/generic/999.out
-> new file mode 100644
-> index 00000000..50008783
-> --- /dev/null
-> +++ b/tests/generic/999.out
-> @@ -0,0 +1,5 @@
-> +QA output created by 999
-> +Create many small files with one extent at least
-> +Shutdown the fs suddently
-> +Cycle mount
-> +Check file's (di_size > 0) extents
-> -- 
-> 2.31.1
+> Thanks,
+> Gao Xiang
 > 
+> > +               if [ $(basename $DEV) = $(basename $ROOT) ]; then
+> > +                       mount $DEV /tmp/repair_mnt $ROOTFLAGS || exit 1
+> > +               else
+> > +                       mount $DEV /tmp/repair_mnt || exit 1
+> > +               fi
+> > +               umount /tmp/repair_mnt
+> > +               xfs_repair -e $DEV
+> > +               error=$?
+> > +               rm -d /tmp/repair_mnt
+> > +       fi
+> > +       repair2fsck_code $error
+> >         exit $?
+> >  fi
+> >  
+> > -- 
+> > 1.8.3.1
+> > 
