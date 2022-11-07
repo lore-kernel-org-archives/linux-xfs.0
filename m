@@ -2,94 +2,182 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80DA5C433FE
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Nov 2022 13:04:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52306C433FE
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Nov 2022 14:12:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231643AbiKGNEW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Nov 2022 08:04:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45750 "EHLO
+        id S231355AbiKGOMi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Nov 2022 09:12:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54046 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229518AbiKGNEV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Nov 2022 08:04:21 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFF0FB96
-        for <linux-xfs@vger.kernel.org>; Mon,  7 Nov 2022 05:03:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1667826202;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=+cEiL9IFBvjHgRX8A9E1dFy3V6d+XvdXPIdvJQshRw0=;
-        b=b7aoMnGv/mGee9VvR6AkUD8WhNrsF+fCwXf8Prrhje11kv3fNwEty+KWPdImKyjLU+AbBK
-        4FLSl62v9bl/6r3YbQwHHVjRtsICK9zter0ErG+agWDrvUChhW9LktbWJ9yeR4SYAiaeI2
-        Adv1Vzny/lo3V387WDngsZdEMSfp9Bk=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-612-wgZRUeZBOxe-M3M_KuO2gA-1; Mon, 07 Nov 2022 08:03:17 -0500
-X-MC-Unique: wgZRUeZBOxe-M3M_KuO2gA-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 68A9529ABA35;
-        Mon,  7 Nov 2022 13:03:17 +0000 (UTC)
-Received: from warthog.procyon.org.uk (unknown [10.33.37.22])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 5F1A140C6EC2;
-        Mon,  7 Nov 2022 13:03:16 +0000 (UTC)
-Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
-        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
-        Kingdom.
-        Registered in England and Wales under Company Registration No. 3798903
-From:   David Howells <dhowells@redhat.com>
-In-Reply-To: <Y2S/q11ijXEqr8ue@infradead.org>
-References: <Y2S/q11ijXEqr8ue@infradead.org> <Y2IyTx0VwXMxzs0G@infradead.org> <cover.1666928993.git.ritesh.list@gmail.com> <886076cfa6f547d22765c522177d33cf621013d2.1666928993.git.ritesh.list@gmail.com> <20221028210422.GC3600936@dread.disaster.area> <Y19EXLfn8APg3adO@casper.infradead.org> <7699.1667487070@warthog.procyon.org.uk>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     dhowells@redhat.com, Matthew Wilcox <willy@infradead.org>,
-        Dave Chinner <david@fromorbit.com>,
-        "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Aravinda Herle <araherle@in.ibm.com>
-Subject: Re: [RFC 2/2] iomap: Support subpage size dirty tracking to improve write performance
+        with ESMTP id S231535AbiKGOMh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Nov 2022 09:12:37 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C0FD1CFC8
+        for <linux-xfs@vger.kernel.org>; Mon,  7 Nov 2022 06:12:36 -0800 (PST)
+Received: from kwepemi500019.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4N5Y8W6mCszRp4N;
+        Mon,  7 Nov 2022 22:12:27 +0800 (CST)
+Received: from huawei.com (10.175.101.6) by kwepemi500019.china.huawei.com
+ (7.221.188.117) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Mon, 7 Nov
+ 2022 22:12:33 +0800
+From:   Guo Xuenan <guoxuenan@huawei.com>
+To:     <dchinner@redhat.com>, <djwong@kernel.org>
+CC:     <guoxuenan@huawei.com>, <fangwei1@huawei.com>,
+        <houtao1@huawei.com>, <jack.qiu@huawei.com>,
+        <leo.lilong@huawei.com>, <linux-xfs@vger.kernel.org>,
+        <yi.zhang@huawei.com>, <zengheng4@huawei.com>,
+        <zhengbin13@huawei.com>
+Subject: [PATCH v2 2/2] xfs: fix super block buf log item UAF during force shutdown
+Date:   Mon, 7 Nov 2022 22:27:16 +0800
+Message-ID: <20221107142716.1476166-2-guoxuenan@huawei.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20221107142716.1476166-1-guoxuenan@huawei.com>
+References: <20221103083632.150458-1-guoxuenan@huawei.com>
+ <20221107142716.1476166-1-guoxuenan@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <1530986.1667826195.1@warthog.procyon.org.uk>
-Date:   Mon, 07 Nov 2022 13:03:15 +0000
-Message-ID: <1530987.1667826195@warthog.procyon.org.uk>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.2
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.101.6]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ kwepemi500019.china.huawei.com (7.221.188.117)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Christoph Hellwig <hch@infradead.org> wrote:
+xfs log io error will trigger xlog shut down, and end_io worker call
+xlog_state_shutdown_callbacks to unpin and release the buf log item.
+The race condition is that when there are some thread doing transaction
+commit and happened not to be intercepted by xlog_is_shutdown, then,
+these log item will be insert into CIL, when unpin and release these
+buf log item, UAF will occur. BTW, add delay before `xlog_cil_commit`
+can increase recurrence probability.
 
-> The core iomap code (fs/iomap/iter.c) does not.  Most users of it
-> are block device centric right now, but for example the dax.c uses
-> iomap for byte level DAX accesses without ever looking at a bdev,
-> and seek.c and fiemap.c do not make any assumptions on the backend
-> implementation.
+The following call graph actually encountered this bad situation.
+fsstress                    io end worker kworker/0:1H-216
+		             xlog_ioend_work
+		               ->xlog_force_shutdown
+		                 ->xlog_state_shutdown_callbacks
+		             	 ->xlog_cil_process_committed
+		             	   ->xlog_cil_committed
+		             	     ->xfs_trans_committed_bulk
+->xfs_trans_apply_sb_deltas               ->li_ops->iop_unpin(lip, 1);
+  ->xfs_trans_getsb
+    ->_xfs_trans_bjoin
+      ->xfs_buf_item_init
+        ->if (bip) { return 0;} //relog
+->xlog_cil_commit
+  ->xlog_cil_insert_items //insert into CIL
+                                            ->xfs_buf_ioend_fail(bp);
+                                              ->xfs_buf_ioend
+                                                ->xfs_buf_item_done
+                                                  ->xfs_buf_item_relse
+                                                    ->xfs_buf_item_free
 
-Whilst that is true, what's in iter.c is extremely minimal and most definitely
-not sufficient.  There's no retry logic, for example: what happens when we try
-poking the cache and the cache says "no data"?  We have to go back and
-redivide the missing bits of the request as the netfs granularity may not
-match that of the cache.  Also, how to deal with writes that have to be
-duplicated to multiple servers that don't all have the same wsize?
+when cil push worker gather percpu cil and insert super block buf log item
+into ctx->log_items then uaf occurs.
 
-Then functions like iomap_read_folio(), iomap_readahead(), etc. *do* use
-submit_bio().  These would seem like they're meant to be the main entry points
-into iomap.
+==================================================================
+BUG: KASAN: use-after-free in xlog_cil_push_work+0x1c8f/0x22f0
+Write of size 8 at addr ffff88801800f3f0 by task kworker/u4:4/105
 
-Add to that struct iomap_iter has two bdev pointers and two dax pointers and
-the iomap_ioend struct assumes bio structs are going to be involved.
+CPU: 0 PID: 105 Comm: kworker/u4:4 Tainted: G W
+6.1.0-rc1-00001-g274115149b42 #136
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+1.13.0-1ubuntu1.1 04/01/2014
+Workqueue: xfs-cil/sda xlog_cil_push_work
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x4d/0x66
+ print_report+0x171/0x4a6
+ kasan_report+0xb3/0x130
+ xlog_cil_push_work+0x1c8f/0x22f0
+ process_one_work+0x6f9/0xf70
+ worker_thread+0x578/0xf30
+ kthread+0x28c/0x330
+ ret_from_fork+0x1f/0x30
+ </TASK>
 
-Also, there's struct iomap_page - I'm hoping to avoid the need for a dangly
-struct on each page.  I *think* I only need an extra couple of bits per page
-to discriminate between pages that need writing to the cache, pages that need
-writing to the server, and pages that need to go to both - but I think it
-might be possible to keep track of that in a separate list.  The vast majority
-of write patterns are {open,write,write,...,write,close} and for such I just
-need a single tracking struct.
+Allocated by task 2145:
+ kasan_save_stack+0x1e/0x40
+ kasan_set_track+0x21/0x30
+ __kasan_slab_alloc+0x54/0x60
+ kmem_cache_alloc+0x14a/0x510
+ xfs_buf_item_init+0x160/0x6d0
+ _xfs_trans_bjoin+0x7f/0x2e0
+ xfs_trans_getsb+0xb6/0x3f0
+ xfs_trans_apply_sb_deltas+0x1f/0x8c0
+ __xfs_trans_commit+0xa25/0xe10
+ xfs_symlink+0xe23/0x1660
+ xfs_vn_symlink+0x157/0x280
+ vfs_symlink+0x491/0x790
+ do_symlinkat+0x128/0x220
+ __x64_sys_symlink+0x7a/0x90
+ do_syscall_64+0x35/0x80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
 
-David
+Freed by task 216:
+ kasan_save_stack+0x1e/0x40
+ kasan_set_track+0x21/0x30
+ kasan_save_free_info+0x2a/0x40
+ __kasan_slab_free+0x105/0x1a0
+ kmem_cache_free+0xb6/0x460
+ xfs_buf_ioend+0x1e9/0x11f0
+ xfs_buf_item_unpin+0x3d6/0x840
+ xfs_trans_committed_bulk+0x4c2/0x7c0
+ xlog_cil_committed+0xab6/0xfb0
+ xlog_cil_process_committed+0x117/0x1e0
+ xlog_state_shutdown_callbacks+0x208/0x440
+ xlog_force_shutdown+0x1b3/0x3a0
+ xlog_ioend_work+0xef/0x1d0
+ process_one_work+0x6f9/0xf70
+ worker_thread+0x578/0xf30
+ kthread+0x28c/0x330
+ ret_from_fork+0x1f/0x30
+
+The buggy address belongs to the object at ffff88801800f388
+ which belongs to the cache xfs_buf_item of size 272
+The buggy address is located 104 bytes inside of
+ 272-byte region [ffff88801800f388, ffff88801800f498)
+
+The buggy address belongs to the physical page:
+page:ffffea0000600380 refcount:1 mapcount:0 mapping:0000000000000000
+index:0xffff88801800f208 pfn:0x1800e
+head:ffffea0000600380 order:1 compound_mapcount:0 compound_pincount:0
+flags: 0x1fffff80010200(slab|head|node=0|zone=1|lastcpupid=0x1fffff)
+raw: 001fffff80010200 ffffea0000699788 ffff88801319db50 ffff88800fb50640
+raw: ffff88801800f208 000000000015000a 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+ ffff88801800f280: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff88801800f300: fb fb fb fc fc fc fc fc fc fc fc fc fc fc fc fc
+>ffff88801800f380: fc fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                                                             ^
+ ffff88801800f400: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff88801800f480: fb fb fb fc fc fc fc fc fc fc fc fc fc fc fc fc
+==================================================================
+Disabling lock debugging due to kernel taint
+
+Signed-off-by: Guo Xuenan <guoxuenan@huawei.com>
+---
+ fs/xfs/xfs_buf_item.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 522d450a94b1..df7322ed73fa 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -1018,6 +1018,8 @@ xfs_buf_item_relse(
+ 	trace_xfs_buf_item_relse(bp, _RET_IP_);
+ 	ASSERT(!test_bit(XFS_LI_IN_AIL, &bip->bli_item.li_flags));
+ 
++	if (atomic_read(&bip->bli_refcount))
++		return;
+ 	bp->b_log_item = NULL;
+ 	xfs_buf_rele(bp);
+ 	xfs_buf_item_free(bip);
+-- 
+2.31.1
 
