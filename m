@@ -2,68 +2,113 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86E04C433FE
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Nov 2022 01:31:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC084C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Nov 2022 01:50:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233312AbiKHBbR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Nov 2022 20:31:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52244 "EHLO
+        id S233035AbiKHBue (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Nov 2022 20:50:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38812 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233335AbiKHBay (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Nov 2022 20:30:54 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F4672AE21
-        for <linux-xfs@vger.kernel.org>; Mon,  7 Nov 2022 17:29:04 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 697F461366
-        for <linux-xfs@vger.kernel.org>; Tue,  8 Nov 2022 01:29:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA38CC433C1
-        for <linux-xfs@vger.kernel.org>; Tue,  8 Nov 2022 01:29:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1667870942;
-        bh=keyt8RrlCMib3YEicAg2Q7Doq3R+3mr8ZJj4IrYKQg4=;
-        h=Date:From:To:Subject:From;
-        b=mgtPPv6i8ZwioGjwuwMdsK0grI8JUP6ZUVfu+f4Vbbjx1+IOl5zXTFpap/zS902OR
-         M4xNARPACSpHc27LtJHz3KasAdlEa/A0FvsKsMHIahNw+OO3u2acjrN3XqPymRMfDO
-         j5tI0vD9ISBkDlUqllZV1UAJq9NuuKvbXil3D9FXSWKain7PH00EGhuP1B7PJ7CQMM
-         Cbrv/elOffNT3SYaMv+zc1PHZb/UVv6DLMX1BDjBR923gws4YLNZprKCTpanNoIDae
-         jmOXNKF977rzW6KFUYHkEiuhkRNwEma4ACL34vSUsk/gPJ92aoTXk9t0psAkGSeTot
-         mbP7QmKxztLyw==
-Date:   Mon, 7 Nov 2022 17:29:02 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs: fix incorrect error-out in xfs_remove
-Message-ID: <Y2mw3oZ2YVyReWeg@magnolia>
+        with ESMTP id S232308AbiKHBue (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Nov 2022 20:50:34 -0500
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FB591CFC8
+        for <linux-xfs@vger.kernel.org>; Mon,  7 Nov 2022 17:50:32 -0800 (PST)
+Received: from kwepemi500019.china.huawei.com (unknown [172.30.72.54])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4N5rdm0KhYz15MSd;
+        Tue,  8 Nov 2022 09:50:20 +0800 (CST)
+Received: from [10.174.177.238] (10.174.177.238) by
+ kwepemi500019.china.huawei.com (7.221.188.117) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Tue, 8 Nov 2022 09:50:29 +0800
+Message-ID: <1afe73bb-481c-01b3-8c61-3d208e359f40@huawei.com>
+Date:   Tue, 8 Nov 2022 09:50:29 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.0.2
+Subject: Re: [PATCH] xfs: fix incorrect usage of xfs_btree_check_block
+To:     "Darrick J. Wong" <djwong@kernel.org>
+CC:     <dchinner@redhat.com>, <linux-xfs@vger.kernel.org>,
+        <houtao1@huawei.com>, <jack.qiu@huawei.com>, <fangwei1@huawei.com>,
+        <yi.zhang@huawei.com>, <zhengbin13@huawei.com>,
+        <leo.lilong@huawei.com>, <zengheng4@huawei.com>
+References: <20221103113709.251669-1-guoxuenan@huawei.com>
+ <Y2k5NTjTRdsDAuhN@magnolia>
+From:   Guo Xuenan <guoxuenan@huawei.com>
+In-Reply-To: <Y2k5NTjTRdsDAuhN@magnolia>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.177.238]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemi500019.china.huawei.com (7.221.188.117)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On 2022/11/8 0:58, Darrick J. Wong wrote:
+> On Thu, Nov 03, 2022 at 07:37:09PM +0800, Guo Xuenan wrote:
+>> xfs_btree_check_block contains a tag XFS_ERRTAG_BTREE_CHECK_{L,S}BLOCK,
+>> it is a fault injection tag, better not use it in the macro ASSERT.
+>>
+>> Since with XFS_DEBUG setting up, we can always trigger assert by `echo 1
+>>> /sys/fs/xfs/${disk}/errortag/btree_chk_{s,l}blk`.
+>> It's confusing and strange.
+> Please be more specific about how this is confusing or strange.
+I meant in current code, the ASSERT will alway happen,when we
+`echo 1 > /sys/fs/xfs/${disk}/errortag/btree_chk_{s,l}blk`.
+xfs_btree_islastblock
+   ->ASSERT(block && xfs_btree_check_block(cur, block, level, bp) == 0);
+     ->xfs_btree_check_{l/s}block
+       ->XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BTREE_CHECK_{S,L}BLOCK)
+we can use error injection to trigger this ASSERT.
+I think ASERRT macro and error injection are to find some effective 
+problems,
+not to create some kernel panic. So, putting the error injection 
+function in
+ASSERT is a little strange.
 
-Clean up resources if resetting the dotdot entry doesn't succeed.
-Observed through code inspection.
+>> Instead of using it in ASSERT, replace it with
+>> xfs_warn.
+>>
+>> Fixes: 27d9ee577dcc ("xfs: actually check xfs_btree_check_block return in xfs_btree_islastblock")
+>> Signed-off-by: Guo Xuenan <guoxuenan@huawei.com>
+>> ---
+>>   fs/xfs/libxfs/xfs_btree.h | 7 +++++--
+>>   1 file changed, 5 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+>> index eef27858a013..637513087c18 100644
+>> --- a/fs/xfs/libxfs/xfs_btree.h
+>> +++ b/fs/xfs/libxfs/xfs_btree.h
+>> @@ -556,8 +556,11 @@ xfs_btree_islastblock(
+>>   	struct xfs_buf		*bp;
+>>   
+>>   	block = xfs_btree_get_block(cur, level, &bp);
+>> -	ASSERT(block && xfs_btree_check_block(cur, block, level, bp) == 0);
+>> -
+>> +	ASSERT(block);
+>> +#if defined(DEBUG) || defined(XFS_WARN)
+>> +	if (xfs_btree_check_block(cur, block, level, bp))
+>> +		xfs_warn(cur->bc_mp, "%s: xfs_btree_check_block() error.", __func__);
+>> +#endif
+> ...because this seems like open-coding ASSERT, possibly without the
+> panic on errors part.
+yes，exactly！I also think it can be deleted, but i have no idea if this 
+is necessary,
+I just retain it in this fix patch; looking forward to your decision :)
+> --D
+>
+>>   	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
+>>   		return block->bb_u.l.bb_rightsib == cpu_to_be64(NULLFSBLOCK);
+>>   	return block->bb_u.s.bb_rightsib == cpu_to_be32(NULLAGBLOCK);
+>> -- 
+>> 2.31.1
+>>
+> .
 
-Fixes: 5838d0356bb3 ("xfs: reset child dir '..' entry when unlinking child")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_inode.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+-- 
+Guo Xuenan [OS Kernel Lab]
+-----------------------------
+Email: guoxuenan@huawei.com
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index aa303be11576..d354ea2b74f9 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2479,7 +2479,7 @@ xfs_remove(
- 			error = xfs_dir_replace(tp, ip, &xfs_name_dotdot,
- 					tp->t_mountp->m_sb.sb_rootino, 0);
- 			if (error)
--				return error;
-+				goto out_trans_cancel;
- 		}
- 	} else {
- 		/*
