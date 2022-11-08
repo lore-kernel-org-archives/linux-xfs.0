@@ -2,223 +2,172 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47C46C4332F
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Nov 2022 13:51:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A10BEC433FE
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Nov 2022 15:52:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234718AbiKHNvs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Nov 2022 08:51:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51042 "EHLO
+        id S234501AbiKHPwY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Nov 2022 10:52:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40316 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234720AbiKHNvc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Nov 2022 08:51:32 -0500
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 361031D0DE
-        for <linux-xfs@vger.kernel.org>; Tue,  8 Nov 2022 05:51:25 -0800 (PST)
-Received: from kwepemi500019.china.huawei.com (unknown [172.30.72.53])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4N68ZH0PqYzHqKp;
-        Tue,  8 Nov 2022 21:48:23 +0800 (CST)
-Received: from huawei.com (10.175.101.6) by kwepemi500019.china.huawei.com
- (7.221.188.117) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Tue, 8 Nov
- 2022 21:51:22 +0800
-From:   Guo Xuenan <guoxuenan@huawei.com>
-To:     <dchinner@redhat.com>, <djwong@kernel.org>
-CC:     <guoxuenan@huawei.com>, <fangwei1@huawei.com>,
-        <houtao1@huawei.com>, <jack.qiu@huawei.com>,
-        <leo.lilong@huawei.com>, <linux-xfs@vger.kernel.org>,
-        <yi.zhang@huawei.com>, <zengheng4@huawei.com>,
-        <zhengbin13@huawei.com>
-Subject: [PATCH v3 1/2] xfs: wait xlog ioend workqueue drained before tearing down AIL
-Date:   Tue, 8 Nov 2022 22:06:05 +0800
-Message-ID: <20221108140605.1558692-1-guoxuenan@huawei.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20221107142716.1476166-2-guoxuenan@huawei.com>
-References: <20221107142716.1476166-2-guoxuenan@huawei.com>
+        with ESMTP id S234380AbiKHPwS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Nov 2022 10:52:18 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BFCF5C74F;
+        Tue,  8 Nov 2022 07:52:17 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id F24E7B81BA8;
+        Tue,  8 Nov 2022 15:52:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E705C433D7;
+        Tue,  8 Nov 2022 15:52:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1667922734;
+        bh=iOAI5sGck4F5KC/s/NuLS54noS77rkRDj1IllKVff4s=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=p/Lf260U9pO4WsuIficqovLeU+3Rnb2+Jv0pufEhSbksyK6Phnel1BtvkSd76XQga
+         vJmSdZD3cW1YqBtdu4DVFpcxjAOdnbeBfQ1T4shgRoIlnie6PQJS8hwTQpgWqrWglG
+         9+OJ+EQ1R4Cu/CIiDZ643l77qsgjQMme5giopSVD6H/u37AUFYO2Atry1d7Si1g43I
+         AqwtEX2j+x6CkPE2s2qQwzXwk8ZLKq6TExUTQd0Ka7MeqYUYjguba0ROxkm9O/5jhY
+         afGncPaug2ebAxnO53/D2h6Tw3Dygx3+B4TT1GdsIJY93KaPVz7AZDVCMpeSmpB5JS
+         jLVMUvAebwufQ==
+Date:   Tue, 8 Nov 2022 07:52:14 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] generic: shutdown might leave NULL files with nonzero
+ di_size
+Message-ID: <Y2p7LnPOFXy4kitY@magnolia>
+References: <20221105152324.2233310-1-zlang@kernel.org>
+ <Y2k1SzblcYRsSvzK@magnolia>
+ <20221108060244.gixpw3v3cpwckkjq@zlang-mailbox>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.101.6]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- kwepemi500019.china.huawei.com (7.221.188.117)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221108060244.gixpw3v3cpwckkjq@zlang-mailbox>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Fix uaf in xfs_trans_ail_delete during xlog force shutdown.
-In commit cd6f79d1fb32 ("xfs: run callbacks before waking waiters in
-xlog_state_shutdown_callbacks") changed the order of running callbacks
-and wait for iclog completion to avoid unmount path untimely destroy AIL.
-But which seems not enough to ensue this, adding mdelay in
-`xfs_buf_item_unpin` can prove that.
+On Tue, Nov 08, 2022 at 02:02:44PM +0800, Zorro Lang wrote:
+> On Mon, Nov 07, 2022 at 08:41:47AM -0800, Darrick J. Wong wrote:
+> > On Sat, Nov 05, 2022 at 11:23:24PM +0800, Zorro Lang wrote:
+> > > An old issue might cause on-disk inode sizes are logged prematurely
+> > > via the free eofblocks path on file close. Then fs shutdown might
+> > > leave NULL files but their di_size > 0.
+> > > 
+> > > Signed-off-by: Zorro Lang <zlang@kernel.org>
+> > > ---
+> > > 
+> > > V2 replace "fiemap" with "stat" command, to check if a file has extents.
+> > > That helps this case more common.
+> > > 
+> > > Thanks,
+> > > Zorro
+> > > 
+> > >  tests/generic/999     | 42 ++++++++++++++++++++++++++++++++++++++++++
+> > >  tests/generic/999.out |  5 +++++
+> > >  2 files changed, 47 insertions(+)
+> > >  create mode 100755 tests/generic/999
+> > >  create mode 100644 tests/generic/999.out
+> > > 
+> > > diff --git a/tests/generic/999 b/tests/generic/999
+> > > new file mode 100755
+> > > index 00000000..8b4596e0
+> > > --- /dev/null
+> > > +++ b/tests/generic/999
+> > 
+> > Ugh sorry     ^^^^^^^ I didn't notice this part and wrote my previous
+> > response thinking this was an xfs-only test...
+> 
+> Oh, my bad, I forgot to change the "_supported_fs xfs" to "generic".
+> 
+> > 
+> > > @@ -0,0 +1,42 @@
+> > > +#! /bin/bash
+> > > +# SPDX-License-Identifier: GPL-2.0
+> > > +# Copyright (c) 2022 Red Hat, Inc.  All Rights Reserved.
+> > > +#
+> > > +# FS QA Test No. 999
+> > > +#
+> > > +# Test an issue in the truncate codepath where on-disk inode sizes are logged
+> > > +# prematurely via the free eofblocks path on file close.
+> > > +#
+> > > +. ./common/preamble
+> > > +_begin_fstest auto quick shutdown
+> > > +
+> > > +# real QA test starts here
+> > > +_supported_fs xfs
+> > > +_require_scratch
+> > > +_require_scratch_shutdown
+> > > +_scratch_mkfs > $seqres.full 2>&1
+> > > +_scratch_mount
+> > > +
+> > > +echo "Create many small files with one extent at least"
+> > > +for ((i=0; i<10000; i++));do
+> > > +	$XFS_IO_PROG -f -c "pwrite 0 4k" $SCRATCH_MNT/file.$i >/dev/null 2>&1
+> > > +done
+> > > +
+> > > +echo "Shutdown the fs suddently"
+> > > +_scratch_shutdown
+> > > +
+> > > +echo "Cycle mount"
+> > > +_scratch_cycle_mount
+> > > +
+> > > +echo "Check file's (di_size > 0) extents"
+> > > +for f in $(find $SCRATCH_MNT -type f -size +0);do
+> > > +	# Check if the file has any extent
+> > > +	if [ "$(stat -c "%b" $f)" = "0" ];then
+> > > +		echo " - $f get no extents, but its di_size > 0"
+> > > +		break
+> > > +	fi
+> > > +done
+> > 
+> > ...so whereas I was trying to suggest that you could use the GETFSXATTR
+> > ioctl to return the extent count:
+> > 
+> > $XFS_IO_PROG -c stat $f | grep fsxattr.nextents | awk '{print $3}'
+> > 
+> > But that won't work outside of XFS.  To make this generic, I think you
+> > have to do something like:
+> > 
+> > $FILEFRAG_PROG -v $f | wc -l
+> 
+> I'm wondering if we must check extent is 0, how about check allocated block = 0?
+> I tried [ "$(stat -c "%b" $f)" = "0" ], it fails on old kernel without this bug
+> fix, and test passed on new kernel. Does that make sense for you?
 
-The reproduction is as follows. To ensure destroy AIL safely,
-we should wait all xlog ioend workers done and sync the AIL.
+What if an LSM (e.g. selinux) attach enough security attrs to push the
+xattr data into an external block?  I don't think that happens often for
+XFS, but I think it will for ext3 with 128byte inodes.
 
-==================================================================
-BUG: KASAN: use-after-free in xfs_trans_ail_delete+0x240/0x2a0
-Read of size 8 at addr ffff888023169400 by task kworker/1:1H/43
+--D
 
-CPU: 1 PID: 43 Comm: kworker/1:1H Tainted: G        W
-6.1.0-rc1-00002-gc28266863c4a #137
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
-1.13.0-1ubuntu1.1 04/01/2014
-Workqueue: xfs-log/sda xlog_ioend_work
-Call Trace:
- <TASK>
- dump_stack_lvl+0x4d/0x66
- print_report+0x171/0x4a6
- kasan_report+0xb3/0x130
- xfs_trans_ail_delete+0x240/0x2a0
- xfs_buf_item_done+0x7b/0xa0
- xfs_buf_ioend+0x1e9/0x11f0
- xfs_buf_item_unpin+0x4c8/0x860
- xfs_trans_committed_bulk+0x4c2/0x7c0
- xlog_cil_committed+0xab6/0xfb0
- xlog_cil_process_committed+0x117/0x1e0
- xlog_state_shutdown_callbacks+0x208/0x440
- xlog_force_shutdown+0x1b3/0x3a0
- xlog_ioend_work+0xef/0x1d0
- process_one_work+0x6f9/0xf70
- worker_thread+0x578/0xf30
- kthread+0x28c/0x330
- ret_from_fork+0x1f/0x30
- </TASK>
-
-Allocated by task 9606:
- kasan_save_stack+0x1e/0x40
- kasan_set_track+0x21/0x30
- __kasan_kmalloc+0x7a/0x90
- __kmalloc+0x59/0x140
- kmem_alloc+0xb2/0x2f0
- xfs_trans_ail_init+0x20/0x320
- xfs_log_mount+0x37e/0x690
- xfs_mountfs+0xe36/0x1b40
- xfs_fs_fill_super+0xc5c/0x1a70
- get_tree_bdev+0x3c5/0x6c0
- vfs_get_tree+0x85/0x250
- path_mount+0xec3/0x1830
- do_mount+0xef/0x110
- __x64_sys_mount+0x150/0x1f0
- do_syscall_64+0x35/0x80
- entry_SYSCALL_64_after_hwframe+0x63/0xcd
-
-Freed by task 9662:
- kasan_save_stack+0x1e/0x40
- kasan_set_track+0x21/0x30
- kasan_save_free_info+0x2a/0x40
- __kasan_slab_free+0x105/0x1a0
- __kmem_cache_free+0x99/0x2d0
- kvfree+0x3a/0x40
- xfs_log_unmount+0x60/0xf0
- xfs_unmountfs+0xf3/0x1d0
- xfs_fs_put_super+0x78/0x300
- generic_shutdown_super+0x151/0x400
- kill_block_super+0x9a/0xe0
- deactivate_locked_super+0x82/0xe0
- deactivate_super+0x91/0xb0
- cleanup_mnt+0x32a/0x4a0
- task_work_run+0x15f/0x240
- exit_to_user_mode_prepare+0x188/0x190
- syscall_exit_to_user_mode+0x12/0x30
- do_syscall_64+0x42/0x80
- entry_SYSCALL_64_after_hwframe+0x63/0xcd
-
-The buggy address belongs to the object at ffff888023169400
- which belongs to the cache kmalloc-128 of size 128
-The buggy address is located 0 bytes inside of
- 128-byte region [ffff888023169400, ffff888023169480)
-
-The buggy address belongs to the physical page:
-page:ffffea00008c5a00 refcount:1 mapcount:0 mapping:0000000000000000
-index:0xffff888023168f80 pfn:0x23168
-head:ffffea00008c5a00 order:1 compound_mapcount:0 compound_pincount:0
-flags: 0x1fffff80010200(slab|head|node=0|zone=1|lastcpupid=0x1fffff)
-raw: 001fffff80010200 ffffea00006b3988 ffffea0000577a88 ffff88800f842ac0
-raw: ffff888023168f80 0000000000150007 00000001ffffffff 0000000000000000
-page dumped because: kasan: bad access detected
-
-Memory state around the buggy address:
- ffff888023169300: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
- ffff888023169380: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
->ffff888023169400: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-                   ^
- ffff888023169480: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
- ffff888023169500: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
-==================================================================
-Disabling lock debugging due to kernel taint
-
-Fixes: cd6f79d1fb32 ("xfs: run callbacks before waking waiters in xlog_state_shutdown_callbacks")
-Signed-off-by: Guo Xuenan <guoxuenan@huawei.com>
----
- fs/xfs/xfs_log.c | 33 +++++++++++++++++++++++++++------
- 1 file changed, 27 insertions(+), 6 deletions(-)
-
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index f02a0dd522b3..467bac00951c 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -82,6 +82,9 @@ STATIC int
- xlog_iclogs_empty(
- 	struct xlog		*log);
- 
-+static void
-+xlog_wait_iodone(struct xlog *log);
-+
- static int
- xfs_log_cover(struct xfs_mount *);
- 
-@@ -886,6 +889,23 @@ xlog_force_iclog(
- 	return xlog_state_release_iclog(iclog->ic_log, iclog, NULL);
- }
- 
-+/*
-+ * Cycle all the iclogbuf locks to make sure all log IO completion
-+ * is done before we tear down AIL/CIL.
-+ */
-+static void
-+xlog_wait_iodone(struct xlog *log)
-+{
-+	int		i;
-+	xlog_in_core_t	*iclog = log->l_iclog;
-+
-+	for (i = 0; i < log->l_iclog_bufs; i++) {
-+		down(&iclog->ic_sema);
-+		up(&iclog->ic_sema);
-+		iclog = iclog->ic_next;
-+	}
-+}
-+
- /*
-  * Wait for the iclog and all prior iclogs to be written disk as required by the
-  * log force state machine. Waiting on ic_force_wait ensures iclog completions
-@@ -1276,6 +1296,12 @@ xfs_log_cover(
- 		xfs_ail_push_all_sync(mp->m_ail);
- 	} while (xfs_log_need_covered(mp));
- 
-+	/*
-+	 * Cycle all the iclogbuf locks to make sure all log IO completion
-+	 * is done before we tear down AIL.
-+	 */
-+	xlog_wait_iodone(mp->m_log);
-+
- 	return error;
- }
- 
-@@ -2117,12 +2143,7 @@ xlog_dealloc_log(
- 	 * Cycle all the iclogbuf locks to make sure all log IO completion
- 	 * is done before we tear down these buffers.
- 	 */
--	iclog = log->l_iclog;
--	for (i = 0; i < log->l_iclog_bufs; i++) {
--		down(&iclog->ic_sema);
--		up(&iclog->ic_sema);
--		iclog = iclog->ic_next;
--	}
-+	xlog_wait_iodone(log);
- 
- 	/*
- 	 * Destroy the CIL after waiting for iclog IO completion because an
--- 
-2.31.1
-
+> Thanks,
+> Zorro
+> 
+> > 
+> > to see if there are any extents.
+> > 
+> > --D
+> > 
+> > > +
+> > > +# success, all done
+> > > +status=0
+> > > +exit
+> > > diff --git a/tests/generic/999.out b/tests/generic/999.out
+> > > new file mode 100644
+> > > index 00000000..50008783
+> > > --- /dev/null
+> > > +++ b/tests/generic/999.out
+> > > @@ -0,0 +1,5 @@
+> > > +QA output created by 999
+> > > +Create many small files with one extent at least
+> > > +Shutdown the fs suddently
+> > > +Cycle mount
+> > > +Check file's (di_size > 0) extents
+> > > -- 
+> > > 2.31.1
+> > > 
+> > 
+> 
