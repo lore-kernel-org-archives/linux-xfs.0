@@ -2,177 +2,135 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC5C6C4332F
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Nov 2022 17:24:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADBA6C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Nov 2022 22:46:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234268AbiKHRYn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Nov 2022 12:24:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57196 "EHLO
+        id S229997AbiKHWqO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Nov 2022 17:46:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234450AbiKHRYm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Nov 2022 12:24:42 -0500
-Received: from mail-qv1-xf2e.google.com (mail-qv1-xf2e.google.com [IPv6:2607:f8b0:4864:20::f2e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2773EBA7
-        for <linux-xfs@vger.kernel.org>; Tue,  8 Nov 2022 09:24:40 -0800 (PST)
-Received: by mail-qv1-xf2e.google.com with SMTP id c8so10659622qvn.10
-        for <linux-xfs@vger.kernel.org>; Tue, 08 Nov 2022 09:24:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=leadboat.com; s=google;
-        h=user-agent:content-disposition:mime-version:message-id:subject:to
-         :from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=LHzWLL+u/UiJB2XFqIHacCz2/roDkwWUvxzh1O9k0JQ=;
-        b=UMDPcSJkE6VyCa8h3pJYKE1q/2mpXf5U0BkkdFWBsnICaeNm6Ew6xk4cLI/+dHXOEK
-         4ULfO0fEAG7BiFKp6bb7q/uBW2oZaqZ8lFAb3WYa73Xoa5fDQDCewH6Ud4Z0ntc0d6Fp
-         MsGMK5UvPWwGIXxSCQar39tPvmv++KovcRgoI=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=user-agent:content-disposition:mime-version:message-id:subject:to
-         :from:date:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=LHzWLL+u/UiJB2XFqIHacCz2/roDkwWUvxzh1O9k0JQ=;
-        b=LHO5L7oCiMHBbRmk4vAdf8pCAYDVces3aFONSg2aSybmT2E1bNItuSxqXtEt1D66GG
-         XXyhSznq3EK/o7rZnCi5LpU5rfq9Z3dkk8nNUB/YACrwesPpqg8KcXEQ0FRhg5Cu5WnQ
-         w2VqKrmhBmVDVU6aCfKlEQtW62FJM/SZ9Gi9k2B6QpYEhX17wMKr7406fjLCj+6N5t0y
-         X5SMqPtkURiKgogBMqXtcwcC6Yspsu5mYa5+MPawjJ/HirjEleRYK6i3uS2szy/S9IL3
-         lxaM93SrC7twj+AHMORpsseFh30czWuMo3tR57F+J8ogD64zmvX7MUnpUpn/ZOBSWBYN
-         0zRg==
-X-Gm-Message-State: ACrzQf1UoCOfJKpce6YXaTDTUTP/cF0Jo8dMOM+1j8qMTgr6EE7YVRqJ
-        drB384QwybKLiKNyoB+lHf7NkA3Mj41vHZyY
-X-Google-Smtp-Source: AMsMyM4cY+WjP7TieBRGviMYEZwxtOqgNxgp/7c7F7F1NI7Nxh/rzXh9TEqNz45Br2WzuqTQhwMyGg==
-X-Received: by 2002:a05:6214:19e3:b0:4b6:8a99:3054 with SMTP id q3-20020a05621419e300b004b68a993054mr50298064qvc.108.1667928278983;
-        Tue, 08 Nov 2022 09:24:38 -0800 (PST)
-Received: from rfd.leadboat.com ([2600:1702:a20:5750::2e])
-        by smtp.gmail.com with ESMTPSA id ga23-20020a05622a591700b00399ad646794sm8525897qtb.41.2022.11.08.09.24.38
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 08 Nov 2022 09:24:38 -0800 (PST)
-Date:   Tue, 8 Nov 2022 09:24:36 -0800
-From:   Noah Misch <noah@leadboat.com>
+        with ESMTP id S229931AbiKHWqK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Nov 2022 17:46:10 -0500
+X-Greylist: delayed 539 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 08 Nov 2022 14:46:06 PST
+Received: from guitar.compbio.ucsf.edu (guitar.compbio.ucsf.edu [169.230.79.19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53A8064A36
+        for <linux-xfs@vger.kernel.org>; Tue,  8 Nov 2022 14:46:06 -0800 (PST)
+X-Virus-Scanned: amavisd-new at guitar.compbio.ucsf.edu
+Received: from rocky (hal2.cgl.ucsf.edu [169.230.25.10])
+        by guitar.compbio.ucsf.edu (Postfix) with ESMTPSA id 0F2BDB00F204
+        for <linux-xfs@vger.kernel.org>; Tue,  8 Nov 2022 14:37:06 -0800 (PST)
+Authentication-Results: guitar.compbio.ucsf.edu; arc=none smtp.remote-ip=169.230.25.10
+ARC-Seal: i=1; a=rsa-sha256; d=salilab.org; s=arc; t=1667947026; cv=none; b=5vKgo9WzXxxOIr6Jx//8Qj9wwR4QLCqjSg21kkBu0jXjoCO0c35KzNBGUR9tS0d2odHaVw5LX6/3L/xrNn5+1E7j3uRnhyYTyIYJom3r0EP3srTgqMwc8RgrKGVQ4aJbs/0AFB3zx330MD86GrMnwuBkNJQHsEKlmmxk/VBi/QI=
+ARC-Message-Signature: i=1; a=rsa-sha256; d=salilab.org; s=arc; t=1667947026;
+        c=relaxed/simple; bh=zUqrZmt9nfz/6Ux8cwk2iW5JzURVbYEtQ6xe3g+CplE=;
+        h=DKIM-Signature:Date:From:To:Subject:Message-ID:MIME-Version; b=uyiY7Wf7S+dKzpc0yHEAaa2UNIRqZwUkj6ZlQtw339/Zq8YYvrln/xIOcIjoEGxFEnb1QabNIZMTup8crGAXaZe6732RFPjOvxdNa5EA9DkBMg5W4TtIxVfLYPFBa8YTdZ7SLfmFD/cBzi9cElv9cmiy4KKH0bKWCebqnT3Mm/8=
+ARC-Authentication-Results: i=1; guitar.compbio.ucsf.edu
+DKIM-Filter: OpenDKIM Filter v2.11.0 guitar.compbio.ucsf.edu 0F2BDB00F204
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=salilab.org;
+        s=default; t=1667947026;
+        bh=vyMFaTJqsj/ziODnHZZLxb3PodzgixAyNAd4P3KleVg=;
+        h=Date:From:To:Subject:From;
+        b=HYoWhjGKNvJ9SnczD0yh4uRYrcLydKqMR79WxwFV8WvNmrvm8klczAIyDqnBGCzVV
+         MAJIYEb6edqEr7O0kd14BgkjrpOJzDg4n/jmDVey6C1C7V7/zakAfXUzA3MW6lKN6/
+         YGBBYdxUM7GaSqyf5adriB+zqAgXR7xt9uPTJ8Po=
+Date:   Tue, 8 Nov 2022 14:37:05 -0800 (PST)
+From:   Joshua Baker-LePain <jlb@salilab.org>
+X-X-Sender: jlb@rocky
 To:     linux-xfs@vger.kernel.org
-Subject: After block device error, FICLONE and sync_file_range() make NULs,
- unlike read()
-Message-ID: <20221108172436.GA3613139@rfd.leadboat.com>
+Subject: CentOS 7.9, 2 XFS issues
+Message-ID: <e0fb2f49-2e16-e764-f687-9ae9636ade79@rocky>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.5.24 (2015-08-30)
+Content-Type: text/plain; format=flowed; charset=US-ASCII
+X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.6.4 (guitar.compbio.ucsf.edu [0.0.0.0]); Tue, 08 Nov 2022 14:37:06 -0800 (PST)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Scenario: due to a block device error, the kernel fails to persist some file
-content.  Even so, read() always returns the file content accurately.  The
-first FICLONE returns EIO, but every subsequent FICLONE or copy_file_range()
-operates as though the file were all zeros.  How feasible is it change FICLONE
-and copy_file_range() such that they instead find the bytes that read() finds?
+First, I know that I'm running a very old kernel.  If this isn't the right 
+place to ask these questions, please let me know.  I'm running BeeGFS (a 
+parallel disributed filesystem) on CentOS 7.9 systems (kernel 
+3.10.0-1160.76.1.el7.x86_64).  On my metadata servers, I run XFS for the 
+filesystems holding the metadata.  They run on top of software RAID1 
+mirrors on SSDs, are formatted like this:
 
-- Kernel is 6.0.0-1-sparc64-smp from Debian sid, running in a Solaris-hosted VM.
+mkfs.xfs --m crc=1,finobt=1 -i maxpct=95 -l size=400m /dev/md122
 
-- The VM is gcc202 from https://cfarm.tetaneutral.net/machines/list/.
-  Accounts are available.
+and are mounted with these options:
 
-- The outcome is still reproducible in FICLONE issued two days after the
-  original block device error.  I haven't checked whether it survives a
-  reboot.
+rw,noatime,nodiratime,attr2,nobarrier,inode64,noquota
 
-- The "sync" command did not help.
+A typical one of my metadata filesystems has ~210GB of space and 
+~400M inodes used.  Last week, one of these filesystems shutdown with
+these messages:
 
-- The block device errors have been ongoing for years.  If curious, see
-  https://postgr.es/m/CA+hUKGKfrXnuyk0Z24m8x4_eziuC3kLSaCmEeKPO1DVU9t-qtQ@mail.gmail.com
-  for details.  (Fixing the sunvdc driver is out of scope for this thread.)
-  Other known symptoms are failures in truncate() and fsync().  The system has
-  been generally usable for applications not requiring persistence.  I saw the
-  FICLONE problem after the system updated coreutils from 8.32-4.1 to 9.1-1.
-  That introduced a "cp" that uses FICLONE.  My current workaround is to place
-  a "cp" in my PATH that does 'exec /usr/bin/cp --reflink=never "$@"'
+Nov  2 05:29:30 bmd3 kernel: XFS (md122): Internal error XFS_WANT_CORRUPTED_GOTO at line 3305 of file fs/xfs/libxfs/xfs_btree.c.  Caller xfs_inobt_insert_rec+0x1f/0x30 [xfs]
+Nov  2 05:29:30 bmd3 kernel: CPU: 28 PID: 11060 Comm: Worker9 Kdump: loaded Not tainted 3.10.0-1160.76.1.el7.x86_64 #1
+Nov  2 05:29:30 bmd3 kernel: Hardware name: Supermicro Super Server/X11DDW-L, BIOS 3.1 04/30/2019
+Nov  2 05:29:30 bmd3 kernel: Call Trace:
+Nov  2 05:29:30 bmd3 kernel: [<ffffffffab1865c9>] dump_stack+0x19/0x1b
+Nov  2 05:29:30 bmd3 kernel: [<ffffffffc06bc52b>] xfs_error_report+0x3b/0x40 [xfs]
+Nov  2 05:29:30 bmd3 kernel: [<ffffffffc06a70bf>] ? xfs_inobt_insert_rec+0x1f/0x30 [xfs]
+Nov  2 05:29:30 bmd3 kernel: [<ffffffffc0694ddb>] xfs_btree_insert+0x1db/0x1f0 [xfs]
+Nov  2 05:29:30 bmd3 kernel: [<ffffffffc06a70bf>] xfs_inobt_insert_rec+0x1f/0x30 [xfs]
+Nov  2 05:29:30 bmd3 kernel: [<ffffffffc06a9f53>] xfs_difree_finobt+0xb3/0x200 [xfs]
+Nov  2 05:29:30 bmd3 kernel: [<ffffffffc06aa1bb>] xfs_difree+0x11b/0x1d0 [xfs]
+Nov  2 05:29:30 bmd3 kernel: [<ffffffffc06ce133>] xfs_ifree+0x83/0x150 [xfs]
+Nov  2 05:29:30 bmd3 kernel: [<ffffffffc06ce2c8>] xfs_inactive_ifree+0xc8/0x230 [xfs]
+Nov  2 05:29:30 bmd3 kernel: [<ffffffffc06ce4bb>] xfs_inactive+0x8b/0x130 [xfs]
+Nov  2 05:29:30 bmd3 kernel: [<ffffffffc06d5b25>] xfs_fs_destroy_inode+0x95/0x190 [xfs]
+Nov  2 05:29:30 bmd3 kernel: [<ffffffffaac6c61b>] destroy_inode+0x3b/0x60
+Nov  2 05:29:30 bmd3 kernel: [<ffffffffaac6c755>] evict+0x115/0x180
+Nov  2 05:29:30 bmd3 kernel: [<ffffffffaac6cb2c>] iput+0xfc/0x190
+Nov  2 05:29:30 bmd3 kernel: [<ffffffffaac6097e>] do_unlinkat+0x1ae/0x2d0
+Nov  2 05:29:30 bmd3 kernel: [<ffffffffaad98858>] ? lockref_put_or_lock+0x48/0x80
+Nov  2 05:29:30 bmd3 kernel: [<ffffffffaac72454>] ? mntput+0x24/0x40
+Nov  2 05:29:30 bmd3 kernel: [<ffffffffaac61a36>] SyS_unlink+0x16/0x20
+Nov  2 05:29:30 bmd3 kernel: [<ffffffffab199f92>] system_call_fastpath+0x25/0x2a
+Nov  2 05:29:30 bmd3 kernel: XFS (md122): xfs_inactive_ifree: xfs_ifree returned error -117
+Nov  2 05:29:30 bmd3 kernel: XFS (md122): xfs_do_force_shutdown(0x1) called from line 1756 of file fs/xfs/xfs_inode.c.  Return address = ffffffffc06ce353
+Nov  2 05:29:31 bmd3 kernel: XFS (md122): I/O Error Detected. Shutting down filesystem
+Nov  2 05:29:31 bmd3 kernel: XFS (md122): Please umount the filesystem and rectify the problem(s)
 
+There were no other messages in the logs to indicate any sort of hardware 
+issue.  After unmounting, I tried to run "xfs_repair" and it told me I 
+needed to mount to replay the log, unmount, then run "xfs_repair".  Every 
+time I mounted, though, the filesystem shutdown with the same error.  To 
+get the filesystem back online (and because the metadata is mirrored), I 
+ended up reformatting the drive.
 
-The trouble emerged at a "cp".  To capture more details, I replaced "cp" with
-"trace-cp" containing:
+In an only tangentially related effort, I'm working on a new backup 
+strategy for these filesystems using xfsdump rather than tar.  I went to 
+run a level 0 dump of a similar filesystem on another server, and I saw 
+this:
 
-  sum "$1"
-  strace cp "$@" 2>&1 | sed -n '/^geteuid/,$p'
-  sum "$2"
+# xfsdump -f /scratch/meta22.0.xfsd -l 0 -L meta22-0 -M meta22-0 /data/meta22
+xfsdump: using file dump (drive_simple) strategy
+xfsdump: version 3.1.7 (dump format 3.0) - type ^C for status and control
+xfsdump: level 0 dump of bmd1.wynton.ucsf.edu:/data/meta22
+xfsdump: dump date: Tue Nov  8 09:13:26 2022
+xfsdump: session id: 022a0862-d5cb-41b9-88f2-9183f7821c86
+xfsdump: session label: "meta22-0"
+xfsdump: ino map phase 1: constructing initial dump list
+xfsdump: ino map phase 2: skipping (no pruning necessary)
+xfsdump: ino map phase 3: skipping (only one dump stream)
+xfsdump: ino map construction complete
+xfsdump: estimated dump size: 129459315456 bytes
+xfsdump: /var/lib/xfsdump/inventory created
+xfsdump: creating dump session media file 0 (media 0, file 0)
+xfsdump: dumping ino map
+xfsdump: dumping directories
+xfsdump: dumping non-directory files
+xfsdump: WARNING: inomap inconsistency ino 472259: map says changed dir but is now non-dir: NOT dumping
+xfsdump: WARNING: inomap inconsistency ino 1145788: map says changed dir but is now non-dir: NOT dumping
 
-Output from that follows.  FICLONE returns EIO.  "cp" then falls back to
-copy_file_range(), which yields an all-zeros file:
+This is followed by many more lines like those last 2.  Given these 2 
+issues so close together on such important systems, I'm a bit concerned. 
+Is there any hint as to what caused the filesystem crash?  Are the "inomap 
+inconsistency" messages something to be concerned about?  Are these issues 
+related in any way?  Please let me know what other info I can provide, and 
+thanks for any help.
 
-  47831 16384 pg_wal/000000030000000000000003
-  geteuid()                               = 1450
-  openat(AT_FDCWD, "/home/nm/src/pg/backbranch/extra/src/test/recovery/tmp_check/t_028_pitr_timelines_primary_data/archives/000000030000000000000003", O_RDONLY|O_PATH|O_DIRECTORY) = -1 ENOENT (No such file or directory)
-  fstatat64(AT_FDCWD, "pg_wal/000000030000000000000003", {st_mode=S_IFREG|0600, st_size=16777216, ...}, 0) = 0
-  openat(AT_FDCWD, "pg_wal/000000030000000000000003", O_RDONLY) = 4
-  fstatat64(4, "", {st_mode=S_IFREG|0600, st_size=16777216, ...}, AT_EMPTY_PATH) = 0
-  openat(AT_FDCWD, "/home/nm/src/pg/backbranch/extra/src/test/recovery/tmp_check/t_028_pitr_timelines_primary_data/archives/000000030000000000000003", O_WRONLY|O_CREAT|O_EXCL, 0600) = 5
-  ioctl(5, BTRFS_IOC_CLONE or FICLONE, 4) = -1 EIO (Input/output error)
-  fstatat64(5, "", {st_mode=S_IFREG|0600, st_size=0, ...}, AT_EMPTY_PATH) = 0
-  fadvise64_64(4, 0, 0, POSIX_FADV_SEQUENTIAL) = 0
-  copy_file_range(4, NULL, 5, NULL, 9223372035781033984, 0) = 16777216
-  copy_file_range(4, NULL, 5, NULL, 9223372035781033984, 0) = 0
-  close(5)                                = 0
-  close(4)                                = 0
-  _llseek(0, 0, [0], SEEK_CUR)            = 0
-  close(0)                                = 0
-  close(1)                                = 0
-  close(2)                                = 0
-  exit_group(0)                           = ?
-  +++ exited with 0 +++
-  00000 16384 /home/nm/src/pg/backbranch/extra/src/test/recovery/tmp_check/t_028_pitr_timelines_primary_data/archives/000000030000000000000003
-
-Subsequent FICLONE returns 0 and yields an all-zeros file.  Test script:
-
-  set -x
-  broken_source=t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003
-  dest=$HOME/tmp/discard
-  sum "$broken_source"
-  : 'FICLONE returns 0 and yields an all-zeros file'
-  strace cp --reflink=always "$broken_source" "$dest" 2>&1 | sed -n '/^geteuid/,$p'
-  sum "$dest"; rm "$dest"
-  : 'copy_file_range() returns 0 and yields an all-zeros file'
-  strace -e copy_file_range cat "$broken_source" >"$dest"
-  sum "$dest"; rm "$dest"
-  : 'read() gets the intended bytes'
-  cat "$broken_source" | cat >"$dest"
-  sum "$dest"; rm "$dest"
-
-Test script output:
-
-  + broken_source=t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003
-  + dest=/home/nm/tmp/discard
-  + sum t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003
-  49522 16384 t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003
-  + : FICLONE returns 0 and yields an all-zeros file
-  + strace cp --reflink=always t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003 /home/nm/tmp/discard
-  + sed -n /^geteuid/,$p
-  geteuid()                               = 1450
-  openat(AT_FDCWD, "/home/nm/tmp/discard", O_RDONLY|O_PATH|O_DIRECTORY) = -1 ENOENT (No such file or directory)
-  fstatat64(AT_FDCWD, "t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003", {st_mode=S_IFREG|0600, st_size=16777216, ...}, 0) = 0
-  openat(AT_FDCWD, "t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003", O_RDONLY) = 3
-  fstatat64(3, "", {st_mode=S_IFREG|0600, st_size=16777216, ...}, AT_EMPTY_PATH) = 0
-  openat(AT_FDCWD, "/home/nm/tmp/discard", O_WRONLY|O_CREAT|O_EXCL, 0600) = 4
-  ioctl(4, BTRFS_IOC_CLONE or FICLONE, 3) = 0
-  close(4)                                = 0
-  close(3)                                = 0
-  _llseek(0, 0, 0x7feffddf1c0, SEEK_CUR)  = -1 ESPIPE (Illegal seek)
-  close(0)                                = 0
-  close(1)                                = 0
-  close(2)                                = 0
-  exit_group(0)                           = ?
-  +++ exited with 0 +++
-  + sum /home/nm/tmp/discard
-  00000 16384 /home/nm/tmp/discard
-  + rm /home/nm/tmp/discard
-  + : copy_file_range() returns 0 and yields an all-zeros file
-  + strace -e copy_file_range cat t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003
-  copy_file_range(3, NULL, 1, NULL, 9223372035781033984, 0) = 16777216
-  copy_file_range(3, NULL, 1, NULL, 9223372035781033984, 0) = 0
-  +++ exited with 0 +++
-  + sum /home/nm/tmp/discard
-  00000 16384 /home/nm/tmp/discard
-  + rm /home/nm/tmp/discard
-  + : read() gets the intended bytes
-  + cat t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003
-  + cat
-  + sum /home/nm/tmp/discard
-  49522 16384 /home/nm/tmp/discard
-  + rm /home/nm/tmp/discard
+-- 
+Joshua Baker-LePain
+Wynton Cluster Sysadmin
+UCSF
