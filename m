@@ -2,96 +2,198 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 818EDC4332F
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Nov 2022 02:08:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39704C433FE
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Nov 2022 03:48:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229846AbiKICID (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Nov 2022 21:08:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46860 "EHLO
+        id S229698AbiKIDsU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Nov 2022 22:48:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33972 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229790AbiKICIA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Nov 2022 21:08:00 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A906868ADD
-        for <linux-xfs@vger.kernel.org>; Tue,  8 Nov 2022 18:07:59 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 681FAB81CF2
-        for <linux-xfs@vger.kernel.org>; Wed,  9 Nov 2022 02:07:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17577C433C1;
-        Wed,  9 Nov 2022 02:07:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1667959677;
-        bh=nWpajHOeICKFAToJyw/7xZBo1ulOqQgMlGieysfB9R0=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=dq4LTqyKIoRf7Ih+oD3MRnBQWodbCTgnzS4pdpaUb8Q/U028kySZ/YF9jIVwTh4c8
-         XUBU+huv02L7t1ijJhSkWuMejm0a3gvDkDMvE3GMQy8liAL0DVF+ZlTBhSPKW3jNBN
-         nmPxyO3LNbVzyRzK+N0v1rIRNP7KoagTbNphXA0mxKqig6fXE5lqQQYtk73Df4eiFr
-         JuHXB1zYz90itq4VDOcDj0qDHxysysOS2vMBH5//tL4NEjzrxcfN1fgcjAs44gZMN2
-         xN72lL9gbAJsVWsp9vASHhpvyDsbCPGddJqFF35H4Ua3l3cdEgKcRX1WXgOvy1kJM8
-         lBCK+DAmwougA==
-Subject: [PATCH 24/24] mkfs.xfs: add mkfs config file for the 6.1 LTS kernel
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     cem@kernel.org, djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 08 Nov 2022 18:07:56 -0800
-Message-ID: <166795967667.3761583.11171982365663628466.stgit@magnolia>
-In-Reply-To: <166795954256.3761583.3551179546135782562.stgit@magnolia>
-References: <166795954256.3761583.3551179546135782562.stgit@magnolia>
-User-Agent: StGit/0.19
+        with ESMTP id S229549AbiKIDsT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Nov 2022 22:48:19 -0500
+Received: from out30-132.freemail.mail.aliyun.com (out30-132.freemail.mail.aliyun.com [115.124.30.132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B81815FD8;
+        Tue,  8 Nov 2022 19:48:17 -0800 (PST)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R431e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046056;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=7;SR=0;TI=SMTPD_---0VULrpXB_1667965683;
+Received: from e18g06460.et15sqa.tbsite.net(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0VULrpXB_1667965683)
+          by smtp.aliyun-inc.com;
+          Wed, 09 Nov 2022 11:48:15 +0800
+From:   Gao Xiang <hsiangkao@linux.alibaba.com>
+To:     linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        Brian Foster <bfoster@redhat.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Zirong Lang <zlang@redhat.com>,
+        Gao Xiang <hsiangkao@linux.alibaba.com>
+Subject: [PATCH] xfs: account extra freespace btree splits for multiple allocations
+Date:   Wed,  9 Nov 2022 11:48:02 +0800
+Message-Id: <20221109034802.40322-1-hsiangkao@linux.alibaba.com>
+X-Mailer: git-send-email 2.24.4
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+There is a long standing issue which could cause fs shutdown due to
+inode extent-to-btree conversion failure right after an extent
+allocation in the same AG, which is absolutely unexpected due to the
+proper minleft reservation in the previous allocation.  Brian once
+addressed one of the root cause [1], however, such symptom can still
+occur after the commit is merged as reported [2], and our cloud
+environment is also suffering from this issue.
 
-Add a new mkfs config file to reflect the default featureset for the 6.1
-LTS release.
+From the description of the commit [1], I found that Zirong has an
+in-house stress test reproducer for this issue, therefore I asked him
+to reproduce again and he confirmed that such issue can still be
+reproduced on RHEL 9 in several days.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Thanks to him, after adding some debugging code to dump the current
+transaction log items, I think the root cause is as below:
+
+  1. xfs_bmapi_allocate() with the following condition:
+     freeblks: 18304 pagf_flcount: 6
+     reservation: 18276 need (min_free): 6
+     args->minleft: 1
+     available = freeblks + agflcount - reservation - need - minleft
+               = 18304 + min(6, 6) - 18276 - 6 - 1 = 27
+     The first allocation check itself is ok, and args->maxlen = 27
+     here
+
+     At this time, AG 3 also has the following state:
+     1st:64  last:69  cnt:6  longest:6395
+
+     AGFL has the following state:
+     64:547 65:167 66:1651 67:2040807 68:783 69:604
+
+  2. Tried to get 27 blocks from this AG, but in order to finish such
+     allocation, it had to need a new btree block for cntbt (so take
+     another free block from agfl).  It can be seen with a new AGF
+     recorded in the transaction:
+      blkno 62914177, len 1, map_size 1
+      00000000: 58 41 47 46 00 00 00 01 00 00 00 03 00 27 ff f0  XAGF.........'..
+      00000010: 00 00 00 09 00 00 00 07 00 00 00 00 00 00 00 02  ................
+      00000020: 00 00 00 02 00 00 00 00 00 00 00 41 00 00 00 45  ...........A...E
+      00000030: 00 00 00 05 00 00 47 65 00 00 18 fb 00 00 00 09  ......Ge........
+      00000040: 75 dc c1 b5 1a 45 40 2a 80 50 72 f0 59 6e 62 66  u....E@*.Pr.Ynbf
+
+      It can be parsed as:
+      agf 3  flfirst: 65 (0x41) fllast: 69 (0x45) cnt: 5
+      freeblks 18277
+
+  3. agfl 64 (agbno 547, daddr 62918552) was then written as a cntbt
+     block, which can also be seen in a log item as below:
+       type#011= 0x123c
+       flags#011= 0x8
+      blkno 62918552, len 8, map_size 1
+      00000000: 41 42 33 43 00 00 00 fd 00 1f 23 e4 ff ff ff ff  AB3C......#.....
+      00000010: 00 00 00 00 03 c0 0f 98 00 00 00 00 00 00 00 00  ................
+      00000020: 75 dc c1 b5 1a 45 40 2a 80 50 72 f0 59 6e 62 66  u....E@*.Pr.Ynbf
+      ...
+
+  4. Finally, the following inode extent to btree allocation fails
+     as below:
+     kernel: ------------[ cut here ]------------
+     WARNING: CPU: 15 PID: 49290 at fs/xfs/libxfs/xfs_bmap.c:717 xfs_bmap_extents_to_btree+0xc51/0x1050 [xfs]
+     ...
+     XFS (sda2): agno 3 agflcount 5 freeblks 18277 reservation 18276 6
+
+     since freeblks = 18304 - 27 = 18277, but with another agfl
+     block allocated (pagf_flcount from 6 to 5), the inequality will
+     not be satisfied:
+
+     available = freeblks + agflcount - reservation - need - minleft
+               = 18277 + min(5, 6) - 18276 - 6 - 0 = 0   < 1
+
+  Full current transaction log item dump can be fetched from [3].
+
+As a short-term solution, the following allocations (e.g. allocation
+for inode extent-to-btree conversion) can be recorded in order to count
+more blocks to reserve for safely freespace btree splits so that it
+will shorten available and args->maxlen to
+     available = freeblks + agflcount - reservation - need - minleft
+               = 18304 + min(6, 6) - 18276 - 6*2 - 1 = 21
+     args->maxlen = 21
+in the first allocation, and the following conversion should then
+succeed.  At least, it's easy to be backported and do hotfix.
+
+In the long term, args->total and args->minleft have be revisited
+although it could cause more refactoring.
+
+[1] commit 1ca89fbc48e1 ("xfs: don't account extra agfl blocks as available")
+    https://lore.kernel.org/r/20190327145000.10756-1-bfoster@redhat.com
+[2] https://lore.kernel.org/r/20220105071052.GD20464@templeofstupid.com
+[3] https://lore.kernel.org/linux-xfs/Y2RevDyoeJZSpiat@B-P7TQMD6M-0146.local/2-dmesg.log.xz
+Reported-by: Zirong Lang <zlang@redhat.com>
+Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
 ---
- mkfs/Makefile     |    3 ++-
- mkfs/lts_6.1.conf |   14 ++++++++++++++
- 2 files changed, 16 insertions(+), 1 deletion(-)
- create mode 100644 mkfs/lts_6.1.conf
+Previous discussion is at:
+https://lore.kernel.org/linux-xfs/202211040048.FeUQMLE6-lkp@intel.com/T/#mfcfac181079ddaa5a22eecb74db56534fc4ff918
 
+ fs/xfs/libxfs/xfs_alloc.c | 9 +++++++--
+ fs/xfs/libxfs/xfs_alloc.h | 1 +
+ fs/xfs/libxfs/xfs_bmap.c  | 2 ++
+ 3 files changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/mkfs/Makefile b/mkfs/Makefile
-index 55d9362f6b..6c7ee186fa 100644
---- a/mkfs/Makefile
-+++ b/mkfs/Makefile
-@@ -14,7 +14,8 @@ CFGFILES = \
- 	lts_4.19.conf \
- 	lts_5.4.conf \
- 	lts_5.10.conf \
--	lts_5.15.conf
-+	lts_5.15.conf \
-+	lts_6.1.conf
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 6261599bb389..684c67310175 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2630,7 +2630,12 @@ xfs_alloc_fix_freelist(
+ 		goto out_agbp_relse;
+ 	}
  
- LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBBLKID) \
- 	$(LIBUUID) $(LIBINIH) $(LIBURCU) $(LIBPTHREAD)
-diff --git a/mkfs/lts_6.1.conf b/mkfs/lts_6.1.conf
-new file mode 100644
-index 0000000000..08bbe9f3c7
---- /dev/null
-+++ b/mkfs/lts_6.1.conf
-@@ -0,0 +1,14 @@
-+# V5 features that were the mkfs defaults when the upstream Linux 6.1 LTS
-+# kernel was released at the end of 2022.
-+
-+[metadata]
-+nrext64=0
-+bigtime=1
-+crc=1
-+finobt=1
-+inobtcount=1
-+reflink=1
-+rmapbt=0
-+
-+[inode]
-+sparse=1
+-	need = xfs_alloc_min_freelist(mp, pag);
++	/*
++	 * Also need to fulfill freespace btree splits by reservaing more
++	 * blocks to perform multiple allocations from a single AG and
++	 * transaction if needed.
++	 */
++	need = xfs_alloc_min_freelist(mp, pag) * (1 + args->postallocs);
+ 	if (!xfs_alloc_space_available(args, need, flags |
+ 			XFS_ALLOC_FLAG_CHECK))
+ 		goto out_agbp_relse;
+@@ -2654,7 +2659,7 @@ xfs_alloc_fix_freelist(
+ 		xfs_agfl_reset(tp, agbp, pag);
+ 
+ 	/* If there isn't enough total space or single-extent, reject it. */
+-	need = xfs_alloc_min_freelist(mp, pag);
++	need = xfs_alloc_min_freelist(mp, pag) * (1 + args->postallocs);
+ 	if (!xfs_alloc_space_available(args, need, flags))
+ 		goto out_agbp_relse;
+ 
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 2c3f762dfb58..be7f15d6a40d 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -73,6 +73,7 @@ typedef struct xfs_alloc_arg {
+ 	int		datatype;	/* mask defining data type treatment */
+ 	char		wasdel;		/* set if allocation was prev delayed */
+ 	char		wasfromfl;	/* set if allocation is from freelist */
++	bool		postallocs;	/* number of post-allocations */
+ 	struct xfs_owner_info	oinfo;	/* owner of blocks being allocated */
+ 	enum xfs_ag_resv_type	resv;	/* block reservation to use */
+ #ifdef DEBUG
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 49d0d4ea63fc..ed92c6a314b6 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3497,6 +3497,7 @@ xfs_bmap_exact_minlen_extent_alloc(
+ 	args.alignment = 1;
+ 	args.minalignslop = 0;
+ 
++	args.postallocs = 1;
+ 	args.minleft = ap->minleft;
+ 	args.wasdel = ap->wasdel;
+ 	args.resv = XFS_AG_RESV_NONE;
+@@ -3658,6 +3659,7 @@ xfs_bmap_btalloc(
+ 		args.alignment = 1;
+ 		args.minalignslop = 0;
+ 	}
++	args.postallocs = 1;
+ 	args.minleft = ap->minleft;
+ 	args.wasdel = ap->wasdel;
+ 	args.resv = XFS_AG_RESV_NONE;
+-- 
+2.24.4
 
