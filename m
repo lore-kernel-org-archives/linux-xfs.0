@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D1B8C433FE
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Nov 2022 02:06:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5468C433FE
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Nov 2022 02:07:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229470AbiKICGz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Nov 2022 21:06:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46524 "EHLO
+        id S229549AbiKICG7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Nov 2022 21:06:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46626 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229610AbiKICGw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Nov 2022 21:06:52 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01BDD68AE3
-        for <linux-xfs@vger.kernel.org>; Tue,  8 Nov 2022 18:06:51 -0800 (PST)
+        with ESMTP id S229866AbiKICG7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Nov 2022 21:06:59 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C4D96868A
+        for <linux-xfs@vger.kernel.org>; Tue,  8 Nov 2022 18:06:58 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 94B1B61882
-        for <linux-xfs@vger.kernel.org>; Wed,  9 Nov 2022 02:06:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3DAAC4314E;
-        Wed,  9 Nov 2022 02:06:49 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id DAB8BB81CF3
+        for <linux-xfs@vger.kernel.org>; Wed,  9 Nov 2022 02:06:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85512C433D6;
+        Wed,  9 Nov 2022 02:06:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1667959610;
-        bh=XQU+SqyUb8sdTOQIqSN6fgw+9i9glN70NEMzoORQRHA=;
+        s=k20201202; t=1667959615;
+        bh=7Dti90X9F2xuEvqdbFllmQsnBIgdgmOdToufiR1tiF4=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=MC4DN1c0rqvhwmTffm47DhL+TZ6Yh6V0Yj49kvyk7v2oBaKuC89n31wmmYN4q47mk
-         k0kSuZAEiBSOIXTTB2N8H/mOHMZqunxkvB01IECmdCbCkvSut/kF7A6zPfUq03Ofta
-         RyJyqEZkE3cKU1Qw1mNyXwwUV2rQ0VZG3Z3q/ZVUXACblBhXkhZo7oHc6///afA63e
-         wGMua3Z/dpQV9EF2dPGTa3D+QewYTy5L1P3S3yK4ObFCIO/XaxPS7O9pDrb19NPSrp
-         qxNa/N7wysSKglLHwaGapcN3Rl3GFz/btTcbxEPcaiyMfuTzuRO3M+8hA/KNtlhF/N
-         s5ZcsYNWqjCjA==
-Subject: [PATCH 12/24] xfs: create a predicate to verify per-AG extents
+        b=QfCZPteQd83CG2Vevzn79ZAA7qz/tlM+4HYcX4apmWfcPjDfIRPH/PUS4UJpw3YmP
+         iOYCiz0vQX2SHSIWbMj24/Bf+onMn45+xfrWikWT2W9KRmGWl0hdo3hixdY72nxr6g
+         t9i+ApWlj+YE69+lvdIJ89nuQsby5RtIR4NArZ3MrJCdTqNjTQFfduUI+fZTLkhJes
+         5gwP4Rc1IGmYq1jywkUp/O+vU89dHWI8OI1M+BcUrvE9ygTPWo65lR3RHEy9vVQIXf
+         HDxCdWT0/glUoDRgJldboF0OfbQMipVLsPVTst2ngDNlkMVBCiyRhbx80GNzDiUr4Z
+         3qWPyD8EgovDQ==
+Subject: [PATCH 13/24] xfs: check deferred refcount op continuation parameters
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     cem@kernel.org, djwong@kernel.org
 Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Date:   Tue, 08 Nov 2022 18:06:49 -0800
-Message-ID: <166795960964.3761583.1986799629757742162.stgit@magnolia>
+Date:   Tue, 08 Nov 2022 18:06:55 -0800
+Message-ID: <166795961515.3761583.4388997331012220257.stgit@magnolia>
 In-Reply-To: <166795954256.3761583.3551179546135782562.stgit@magnolia>
 References: <166795954256.3761583.3551179546135782562.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,101 +49,89 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Source kernel commit: b332a16ce61f24b3392f5fc31f2a7be59d314ed4
+Source kernel commit: 4fa6f60a07b5ef09691919459cd7f6405810d4c2
 
-Create a predicate function to verify that a given agbno/blockcount pair
-fit entirely within a single allocation group and don't suffer
-mathematical overflows.  Refactor the existng open-coded logic; we're
-going to add more calls to this function in the next patch.
+If we're in the middle of a deferred refcount operation and decide to
+roll the transaction to avoid overflowing the transaction space, we need
+to check the new agbno/aglen parameters that we're about to record in
+the new intent.  Specifically, we need to check that the new extent is
+completely within the filesystem, and that continuation does not put us
+into a different AG.
+
+If the keys of a node block are wrong, the lookup to resume an
+xfs_refcount_adjust_extents operation can put us into the wrong record
+block.  If this happens, we might not find that we run out of aglen at
+an exact record boundary, which will cause the loop control to do the
+wrong thing.
+
+The previous patch should take care of that problem, but let's add this
+extra sanity check to stop corruption problems sooner than later.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/xfs_ag.h       |   15 +++++++++++++++
- libxfs/xfs_alloc.c    |    6 +-----
- libxfs/xfs_refcount.c |    6 +-----
- libxfs/xfs_rmap.c     |    9 ++-------
- 4 files changed, 19 insertions(+), 17 deletions(-)
+ libxfs/xfs_refcount.c |   38 ++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 36 insertions(+), 2 deletions(-)
 
 
-diff --git a/libxfs/xfs_ag.h b/libxfs/xfs_ag.h
-index 517a138faa..191b22b9a3 100644
---- a/libxfs/xfs_ag.h
-+++ b/libxfs/xfs_ag.h
-@@ -133,6 +133,21 @@ xfs_verify_agbno(struct xfs_perag *pag, xfs_agblock_t agbno)
- 	return true;
+diff --git a/libxfs/xfs_refcount.c b/libxfs/xfs_refcount.c
+index c1ebc5047b..5ba8241998 100644
+--- a/libxfs/xfs_refcount.c
++++ b/libxfs/xfs_refcount.c
+@@ -1133,6 +1133,32 @@ xfs_refcount_finish_one_cleanup(
+ 		xfs_trans_brelse(tp, agbp);
  }
  
-+static inline bool
-+xfs_verify_agbext(
-+	struct xfs_perag	*pag,
-+	xfs_agblock_t		agbno,
-+	xfs_agblock_t		len)
++/*
++ * Set up a continuation a deferred refcount operation by updating the intent.
++ * Checks to make sure we're not going to run off the end of the AG.
++ */
++static inline int
++xfs_refcount_continue_op(
++	struct xfs_btree_cur		*cur,
++	xfs_fsblock_t			startblock,
++	xfs_agblock_t			new_agbno,
++	xfs_extlen_t			new_len,
++	xfs_fsblock_t			*new_fsbno)
 +{
-+	if (agbno + len <= agbno)
-+		return false;
++	struct xfs_mount		*mp = cur->bc_mp;
++	struct xfs_perag		*pag = cur->bc_ag.pag;
 +
-+	if (!xfs_verify_agbno(pag, agbno))
-+		return false;
++	if (XFS_IS_CORRUPT(mp, !xfs_verify_agbext(pag, new_agbno, new_len)))
++		return -EFSCORRUPTED;
 +
-+	return xfs_verify_agbno(pag, agbno + len - 1);
++	*new_fsbno = XFS_AGB_TO_FSB(mp, pag->pag_agno, new_agbno);
++
++	ASSERT(xfs_verify_fsbext(mp, *new_fsbno, new_len));
++	ASSERT(pag->pag_agno == XFS_FSB_TO_AGNO(mp, *new_fsbno));
++
++	return 0;
 +}
 +
  /*
-  * Verify that an AG inode number pointer neither points outside the AG
-  * nor points at static metadata.
-diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-index 3e310ce3e5..8c2c2e832f 100644
---- a/libxfs/xfs_alloc.c
-+++ b/libxfs/xfs_alloc.c
-@@ -259,11 +259,7 @@ xfs_alloc_get_rec(
- 		goto out_bad_rec;
- 
- 	/* check for valid extent range, including overflow */
--	if (!xfs_verify_agbno(pag, *bno))
--		goto out_bad_rec;
--	if (*bno > *bno + *len)
--		goto out_bad_rec;
--	if (!xfs_verify_agbno(pag, *bno + *len - 1))
-+	if (!xfs_verify_agbext(pag, *bno, *len))
- 		goto out_bad_rec;
- 
- 	return 0;
-diff --git a/libxfs/xfs_refcount.c b/libxfs/xfs_refcount.c
-index 146e833b0d..c1ebc5047b 100644
---- a/libxfs/xfs_refcount.c
-+++ b/libxfs/xfs_refcount.c
-@@ -134,11 +134,7 @@ xfs_refcount_get_rec(
- 	}
- 
- 	/* check for valid extent range, including overflow */
--	if (!xfs_verify_agbno(pag, realstart))
--		goto out_bad_rec;
--	if (realstart > realstart + irec->rc_blockcount)
--		goto out_bad_rec;
--	if (!xfs_verify_agbno(pag, realstart + irec->rc_blockcount - 1))
-+	if (!xfs_verify_agbext(pag, realstart, irec->rc_blockcount))
- 		goto out_bad_rec;
- 
- 	if (irec->rc_refcount == 0 || irec->rc_refcount > MAXREFCOUNT)
-diff --git a/libxfs/xfs_rmap.c b/libxfs/xfs_rmap.c
-index fa4ae8fca3..b3caff1da3 100644
---- a/libxfs/xfs_rmap.c
-+++ b/libxfs/xfs_rmap.c
-@@ -234,13 +234,8 @@ xfs_rmap_get_rec(
- 			goto out_bad_rec;
- 	} else {
- 		/* check for valid extent range, including overflow */
--		if (!xfs_verify_agbno(pag, irec->rm_startblock))
--			goto out_bad_rec;
--		if (irec->rm_startblock >
--				irec->rm_startblock + irec->rm_blockcount)
--			goto out_bad_rec;
--		if (!xfs_verify_agbno(pag,
--				irec->rm_startblock + irec->rm_blockcount - 1))
-+		if (!xfs_verify_agbext(pag, irec->rm_startblock,
-+					    irec->rm_blockcount))
- 			goto out_bad_rec;
- 	}
- 
+  * Process one of the deferred refcount operations.  We pass back the
+  * btree cursor to maintain our lock on the btree between calls.
+@@ -1200,12 +1226,20 @@ xfs_refcount_finish_one(
+ 	case XFS_REFCOUNT_INCREASE:
+ 		error = xfs_refcount_adjust(rcur, bno, blockcount, &new_agbno,
+ 				new_len, XFS_REFCOUNT_ADJUST_INCREASE);
+-		*new_fsb = XFS_AGB_TO_FSB(mp, pag->pag_agno, new_agbno);
++		if (error)
++			goto out_drop;
++		if (*new_len > 0)
++			error = xfs_refcount_continue_op(rcur, startblock,
++					new_agbno, *new_len, new_fsb);
+ 		break;
+ 	case XFS_REFCOUNT_DECREASE:
+ 		error = xfs_refcount_adjust(rcur, bno, blockcount, &new_agbno,
+ 				new_len, XFS_REFCOUNT_ADJUST_DECREASE);
+-		*new_fsb = XFS_AGB_TO_FSB(mp, pag->pag_agno, new_agbno);
++		if (error)
++			goto out_drop;
++		if (*new_len > 0)
++			error = xfs_refcount_continue_op(rcur, startblock,
++					new_agbno, *new_len, new_fsb);
+ 		break;
+ 	case XFS_REFCOUNT_ALLOC_COW:
+ 		*new_fsb = startblock + blockcount;
 
