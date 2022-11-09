@@ -2,148 +2,124 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 709B3C4332F
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Nov 2022 16:51:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B78EC43219
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Nov 2022 18:06:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229968AbiKIQvv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Nov 2022 11:51:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51330 "EHLO
+        id S229802AbiKISGc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Nov 2022 13:06:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230146AbiKIQvu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Nov 2022 11:51:50 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E3E51EEF4;
-        Wed,  9 Nov 2022 08:51:49 -0800 (PST)
+        with ESMTP id S229517AbiKISGb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Nov 2022 13:06:31 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F19D6FCC2;
+        Wed,  9 Nov 2022 10:06:30 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 99D5ECE1FE3;
-        Wed,  9 Nov 2022 16:51:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD671C433C1;
-        Wed,  9 Nov 2022 16:51:45 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7352561965;
+        Wed,  9 Nov 2022 18:06:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8950C433D6;
+        Wed,  9 Nov 2022 18:06:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668012705;
-        bh=ScExPiaZqx2HlutJDhwEJn2QRR5/82Ondv3X1/oizGA=;
+        s=k20201202; t=1668017189;
+        bh=def/zwDwIgnLvY6DS4LJlJj5V1RwdIlh0oQC8qKGHvA=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=sI3Xzc+iFbmZhfCrT3mMModxLux/wICXLRJmdHEwyQpEVQRSmNq6XrJyA7J5Jx85P
-         oL0rrYiZOZ2y572YRvI0MdloThxYeV+SVhxqzDyuSccg+zdl5Y8oEdrPGBzuc4uKX7
-         8vFJfXoV+fc9y93LaAhRMzkxBJQtV7kWwDfW1c3tTL/fySen6yOO+/vUEOK3aQ1QOV
-         XUbhP9xZGMEKJBJiSSXGP906tuc3j9zktgAa7/wr+M/s0rJkIh9GAFAaggWUxZYccL
-         BLRRSR2Ef+rHJFRewr6jh5JSyN41qzfdhYTYIQixrZ7TrxIWcmbrtKvjQYZQC6xZAi
-         YpoS8PQ05va7g==
-Date:   Wed, 9 Nov 2022 08:51:45 -0800
+        b=SPlGxW8qPxcnuMsP4wor+EnBYavO0TH8Bg+DsY3ubPkeaTY7oTcVNgDKhqmFdx1Sy
+         2YlFRuuYpuSYdzbLkg9y81/aI+bIFKpbHiYCTzN7BE8qdpwihiLf/sJbBi8AddpTRl
+         Kv5p42m/t1Lq7mysiUvaD6AngIDScJrge7TnrmMwyNMU5f0FYlWgS/VHNXv3ZrOcji
+         uW4w2r8UzN/WeOfa+L5sqYQ2kC/HTyLDryAOUM2VXfeAo9AhphR2h+0VNHpROvAfg+
+         c2PoNOG8TdtYVIbPDf2zwd3UTWyY6IDpzsMGVXfF9UnmPzXdLqVtKXV0CVe4ZX/JQJ
+         p3PzkA93X2wOw==
+Date:   Wed, 9 Nov 2022 10:06:29 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@kernel.org>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3] generic: shutdown might leave NULL files with nonzero
- di_size
-Message-ID: <Y2vaoY486TpfKXM3@magnolia>
-References: <20221109130746.3669020-1-zlang@kernel.org>
+To:     Filipe Manana <fdmanana@kernel.org>
+Cc:     Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        Zorro Lang <zlang@redhat.com>,
+        "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
+        Linux NFS Mailing List <linux-nfs@vger.kernel.org>,
+        Chuck Lever III <chuck.lever@oracle.com>,
+        "djwong@vger.kernel.org" <djwong@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: generic/650 makes v6.0-rc client unusable
+Message-ID: <Y2vsJc1CKuUNzGID@magnolia>
+References: <3E21DFEA-8DF7-484B-8122-D578BFF7F9E0@oracle.com>
+ <20220904131553.bqdsfbfhmdpuujd3@zlang-mailbox>
+ <20221109041951.wlgxac3buutvettq@shindev>
+ <CAL3q7H5eV9Sb1axmNgvcbG7UrgGTH3AovaibQuWMz44Jfo-8_w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221109130746.3669020-1-zlang@kernel.org>
+In-Reply-To: <CAL3q7H5eV9Sb1axmNgvcbG7UrgGTH3AovaibQuWMz44Jfo-8_w@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 09, 2022 at 09:07:46PM +0800, Zorro Lang wrote:
-> An old issue might cause on-disk inode sizes are logged prematurely
-> via the free eofblocks path on file close. Then fs shutdown might
-> leave NULL files but their di_size > 0.
+On Wed, Nov 09, 2022 at 10:36:04AM +0000, Filipe Manana wrote:
+> On Wed, Nov 9, 2022 at 4:22 AM Shinichiro Kawasaki
+> <shinichiro.kawasaki@wdc.com> wrote:
+> >
+> > On Sep 04, 2022 / 21:15, Zorro Lang wrote:
+> > > On Sat, Sep 03, 2022 at 06:43:29PM +0000, Chuck Lever III wrote:
+> > > > While investigating some of the other issues that have been
+> > > > reported lately, I've found that my v6.0-rc3 NFS/TCP client
+> > > > goes off the rails often (but not always) during generic/650.
+> > > >
+> > > > This is the test that runs a workload while offlining and
+> > > > onlining CPUs. My test client has 12 physical cores.
+> > > >
+> > > > The test appears to start normally, but then after a bit
+> > > > the NFS server workload drops to zero and the NFS mount
+> > > > disappears. I can't run programs (sudo, for example) on
+> > > > the client. Can't log in, even on the console. The console
+> > > > has a constant stream of "can't rotate log: Input/Output
+> > > > error" type messages.
+> >
+> > I also observe this failure when I ran fstests using btrfs on my HDDs.
+> > The failure is recreated almost always.
 > 
-> Signed-off-by: Zorro Lang <zlang@kernel.org>
-> ---
+> I'm wondering what do you get in dmesg, any traces?
 > 
-> Hi,
+> I've excluded the test from my runs for over an year now, due to some
+> crash that I reported
+> to the mm and cpu hotplug people here:
 > 
-> V2 replace xfs_io fiemap command with stat command.
-> V3 replace the stat with the filefrag command, and change the supported_fs
-> from xfs to generic.
+> https://lore.kernel.org/linux-mm/CAL3q7H4AyrZ5erimDyO7mOVeppd5BeMw3CS=wGbzrMZrp56ktA@mail.gmail.com/
 > 
-> Thanks,
-> Zorro
+> Unfortunately I had no reply from anyone who works or maintains those
+> subsystems.
 > 
->  tests/generic/999     | 46 +++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/999.out |  5 +++++
->  2 files changed, 51 insertions(+)
->  create mode 100755 tests/generic/999
->  create mode 100644 tests/generic/999.out
-> 
-> diff --git a/tests/generic/999 b/tests/generic/999
-> new file mode 100755
-> index 00000000..ca666de7
-> --- /dev/null
-> +++ b/tests/generic/999
-> @@ -0,0 +1,46 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2022 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 999
-> +#
-> +# Test an issue in the truncate codepath where on-disk inode sizes are logged
-> +# prematurely via the free eofblocks path on file close.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto shutdown
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_require_scratch
-> +_require_scratch_shutdown
-> +_require_command "$FILEFRAG_PROG" filefrag
-> +_scratch_mkfs > $seqres.full 2>&1
-> +_scratch_mount
-> +
-> +echo "Create many small files with one extent at least"
-> +for ((i=0; i<10000; i++));do
-> +	$XFS_IO_PROG -f -c "pwrite 0 4k" $SCRATCH_MNT/file.$i >/dev/null 2>&1
-> +done
-> +
-> +echo "Shutdown the fs suddently"
-> +_scratch_shutdown
-> +
-> +echo "Cycle mount"
-> +_scratch_cycle_mount
-> +
-> +echo "Check file's (di_size > 0) extents"
-> +for f in $(find $SCRATCH_MNT -type f -size +0);do
-> +	# Check if the file has any extent
-> +	$FILEFRAG_PROG -v $f > $tmp.filefrag
-> +	grep -Eq ': 0 extents found' $tmp.filefrag
-> +	if [ $? -eq 0 ];then
+> It didn't happen very often, and I haven't tested again with recent kernels.
 
-Bash nit: You could compress these two lines to:
+I've been testing with xfs/btrfs/ext4 nightly, and haven't seen any
+problems with the last two.  There's some very infrequent log accounting
+problem that is probably a regression from Dave's recent round of log
+refactorings, so once we're clear of the write race corruption problem,
+I intend to inquire about that.
 
-	if grep -E -q ': 0 extents found' $tmp.filefrag; then
+Granted I also don't have hundreds-of-cpus machines to test this kind of
+stuff, so I don't know how well hotplug mania fares on a big iron.
 
-But otherwise this looks good.
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+I don't think it's valid to remove a test from the auto group because it
+uncovers bugs.  If test runner folks want to put it in their own exclude
+lists for their own convenience, that's fine with me.
 
 --D
 
-
-> +		echo " - $f get no extents, but its di_size > 0"
-> +		cat $tmp.filefrag
-> +		break
-> +	fi
-> +done
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/999.out b/tests/generic/999.out
-> new file mode 100644
-> index 00000000..50008783
-> --- /dev/null
-> +++ b/tests/generic/999.out
-> @@ -0,0 +1,5 @@
-> +QA output created by 999
-> +Create many small files with one extent at least
-> +Shutdown the fs suddently
-> +Cycle mount
-> +Check file's (di_size > 0) extents
-> -- 
-> 2.31.1
-> 
+> >
+> > > >
+> > > > I haven't looked further into this yet. Actually I'm not
+> > > > quite sure where to start looking.
+> > > >
+> > > > I recently switched this client from a local /home to an
+> > > > NFS-mounted one, and that's where the xfstests are built
+> > > > and run from, fwiw.
+> > >
+> > > If most of users complain generic/650, I'd like to exclude g/650 from the
+> > > "auto" default run group. Any more points?
+> >
+> > +1. I wish to remove it from the "auto" group. Since I can not login to the test
+> > machine after the failure, I suggest to put it in the "dangerous" group.
+> >
+> > --
+> > Shin'ichiro Kawasaki
