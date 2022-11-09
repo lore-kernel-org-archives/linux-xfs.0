@@ -2,43 +2,43 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52419C4332F
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Nov 2022 18:16:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C53D2C433FE
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Nov 2022 18:16:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230156AbiKISQW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Nov 2022 13:16:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45082 "EHLO
+        id S229691AbiKISQ2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Nov 2022 13:16:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230144AbiKISQP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Nov 2022 13:16:15 -0500
+        with ESMTP id S229811AbiKISQ0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Nov 2022 13:16:26 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62685264A7;
-        Wed,  9 Nov 2022 10:16:14 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 762F5275CE;
+        Wed,  9 Nov 2022 10:16:25 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E4E4461C35;
-        Wed,  9 Nov 2022 18:16:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A4F8C433C1;
-        Wed,  9 Nov 2022 18:16:13 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1382661C44;
+        Wed,  9 Nov 2022 18:16:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FA1CC433C1;
+        Wed,  9 Nov 2022 18:16:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668017773;
-        bh=ffalxco4vMIPr9QXpolVOaht3PDMHaKDBezZ/QCSaio=;
+        s=k20201202; t=1668017784;
+        bh=0ReJa/TwHG139rrqXPVfnzYv/qdOnBWd7xE3N/2M5Bw=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=W/beKbm9R9N8m336mL8TengcT11m9tdITy5V+51bjO3HrCMNHGQ7BFzpkmmJ1os/r
-         YrIVDibZUBydpWfbQuF6NANqy+AfTmbgyG2Ks160mdM5KY025VLbdoAlcQoFk6tDSJ
-         8FIfI3kLFCQ2pOK+IhxBiBXtcr06kroJVLS0ZQqAZeXYlQ6hLp6j7C48kx9br2cuGk
-         4tixgCWDAhysS+ngIjyd4Q0IBPED9ojYC3OeD295o6N5WjKSY4jC6Ws4Iup0mgB9ip
-         H3naeyHMMdNs2ar3Oy25d16xZj5SzAhfxziilJLakz6WR/DniKuetPkOFrl2tqK9Kw
-         D6uEenV1bbzyA==
-Subject: [PATCH 05/14] iomap: write iomap validity checks
+        b=EiEjjycqKAxI0mDKAdUyqOOGnB2MYliy6gc7HrrbxtcTMrfmI3/2J07+nj3Gk7Vtq
+         R/MDBbcsPw8Xojfw8v482/FEg+G/zzDmu88tU+C7E85CUbjebPdnNsVyVgOGI8VTu1
+         4ZtiWxe56b8AgcbKmiJ3kv/wffOEZzGxKjYdawl5BABef5fosojj/Cz1+XVhlFdSMv
+         www/4nsYquO2dtNtieo6LyEFzNuXpzP5n4BsgnKiQiJcZBJrGZ1TjTmWu+RR6IkFOq
+         9Riuy3BxHd3vFHwx167mgwCYR2p3pOhxgPRZEVJgawuTcMvPDJisASWS0hS3K1iCiV
+         Tvdr8Qnn27n/Q==
+Subject: [PATCH 07/14] xfs: drop write error injection is unfixable, remove it
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, david@fromorbit.com,
         hch@infradead.org
-Date:   Wed, 09 Nov 2022 10:16:12 -0800
-Message-ID: <166801777288.3992140.7344765088146895690.stgit@magnolia>
+Date:   Wed, 09 Nov 2022 10:16:24 -0800
+Message-ID: <166801778403.3992140.13027554099232613921.stgit@magnolia>
 In-Reply-To: <166801774453.3992140.241667783932550826.stgit@magnolia>
 References: <166801774453.3992140.241667783932550826.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -51,276 +51,208 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-A recent multithreaded write data corruption has been uncovered in
-the iomap write code. The core of the problem is partial folio
-writes can be flushed to disk while a new racing write can map it
-and fill the rest of the page:
+With the changes to scan the page cache for dirty data to avoid data
+corruptions from partial write cleanup racing with other page cache
+operations, the drop writes error injection no longer works the same
+way it used to and causes xfs/196 to fail. This is because xfs/196
+writes to the file and populates the page cache before it turns on
+the error injection and starts failing -overwrites-.
 
-writeback			new write
+The result is that the original drop-writes code failed writes only
+-after- overwriting the data in the cache, followed by invalidates
+the cached data, then punching out the delalloc extent from under
+that data.
 
-allocate blocks
-  blocks are unwritten
-submit IO
-.....
-				map blocks
-				iomap indicates UNWRITTEN range
-				loop {
-				  lock folio
-				  copyin data
-.....
-IO completes
-  runs unwritten extent conv
-    blocks are marked written
-				  <iomap now stale>
-				  get next folio
-				}
+On the surface, this looks fine. The problem is that page cache
+invalidation *doesn't guarantee that it removes anything from the
+page cache* and it doesn't change the dirty state of the folio. When
+block size == page size and we do page aligned IO (as xfs/196 does)
+everything happens to align perfectly and page cache invalidation
+removes the single page folios that span the written data. Hence the
+followup delalloc punch pass does not find cached data over that
+range and it can punch the extent out.
 
-Now add memory pressure such that memory reclaim evicts the
-partially written folio that has already been written to disk.
+IOWs, xfs/196 "works" for block size == page size with the new
+code. I say "works", because it actually only works for the case
+where IO is page aligned, and no data was read from disk before
+writes occur. Because the moment we actually read data first, the
+readahead code allocates multipage folios and suddenly the
+invalidate code goes back to zeroing subfolio ranges without
+changing dirty state.
 
-When the new write finally gets to the last partial page of the new
-write, it does not find it in cache, so it instantiates a new page,
-sees the iomap is unwritten, and zeros the part of the page that
-it does not have data from. This overwrites the data on disk that
-was originally written.
+Hence, with multipage folios in play, block size == page size is
+functionally identical to block size < page size behaviour, and
+drop-writes is manifestly broken w.r.t to this case. Invalidation of
+a subfolio range doesn't result in the folio being removed from the
+cache, just the range gets zeroed. Hence after we've sequentially
+walked over a folio that we've dirtied (via write data) and then
+invalidated, we end up with a dirty folio full of zeroed data.
 
-The full description of the corruption mechanism can be found here:
+And because the new code skips punching ranges that have dirty
+folios covering them, we end up leaving the delalloc range intact
+after failing all the writes. Hence failed writes now end up
+writing zeroes to disk in the cases where invalidation zeroes folios
+rather than removing them from cache.
 
-https://lore.kernel.org/linux-xfs/20220817093627.GZ3600936@dread.disaster.area/
+This is a fundamental change of behaviour that is needed to avoid
+the data corruption vectors that exist in the old write fail path,
+and it renders the drop-writes injection non-functional and
+unworkable as it stands.
 
-To solve this problem, we need to check whether the iomap is still
-valid after we lock each folio during the write. We have to do it
-after we lock the page so that we don't end up with state changes
-occurring while we wait for the folio to be locked.
+As it is, I think the error injection is also now unnecessary, as
+partial writes that need delalloc extent are going to be a lot more
+common with stale iomap detection in place. Hence this patch removes
+the drop-writes error injection completely. xfs/196 can remain for
+testing kernels that don't have this data corruption fix, but those
+that do will report:
 
-Hence we need a mechanism to be able to check that the cached iomap
-is still valid (similar to what we already do in buffered
-writeback), and we need a way for ->begin_write to back out and
-tell the high level iomap iterator that we need to remap the
-remaining write range.
+xfs/196 3s ... [not run] XFS error injection drop_writes unknown on this kernel.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/iomap/buffered-io.c |   53 ++++++++++++++++++++++++++++++++++++++----------
- fs/iomap/iter.c        |   19 ++++++++++++++++-
- include/linux/iomap.h  |   17 +++++++++++++++
- 3 files changed, 77 insertions(+), 12 deletions(-)
+ fs/xfs/libxfs/xfs_errortag.h |   12 +++++-------
+ fs/xfs/xfs_error.c           |   27 ++++++++++++++++++++-------
+ fs/xfs/xfs_iomap.c           |    9 ---------
+ 3 files changed, 25 insertions(+), 23 deletions(-)
 
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 91ee0b308e13..d3c565aa29f8 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -584,8 +584,9 @@ static int iomap_write_begin_inline(const struct iomap_iter *iter,
- 	return iomap_read_inline_data(iter, folio);
- }
- 
--static int iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
--		size_t len, struct folio **foliop)
-+static int iomap_write_begin(struct iomap_iter *iter,
-+		const struct iomap_ops *ops, loff_t pos, size_t len,
-+		struct folio **foliop)
- {
- 	const struct iomap_page_ops *page_ops = iter->iomap.page_ops;
- 	const struct iomap *srcmap = iomap_iter_srcmap(iter);
-@@ -618,6 +619,27 @@ static int iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
- 		status = (iter->flags & IOMAP_NOWAIT) ? -EAGAIN : -ENOMEM;
- 		goto out_no_page;
- 	}
+diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
+index 5362908164b0..580ccbd5aadc 100644
+--- a/fs/xfs/libxfs/xfs_errortag.h
++++ b/fs/xfs/libxfs/xfs_errortag.h
+@@ -40,13 +40,12 @@
+ #define XFS_ERRTAG_REFCOUNT_FINISH_ONE			25
+ #define XFS_ERRTAG_BMAP_FINISH_ONE			26
+ #define XFS_ERRTAG_AG_RESV_CRITICAL			27
 +
-+	/*
-+	 * Now we have a locked folio, before we do anything with it we need to
-+	 * check that the iomap we have cached is not stale. The inode extent
-+	 * mapping can change due to concurrent IO in flight (e.g.
-+	 * IOMAP_UNWRITTEN state can change and memory reclaim could have
-+	 * reclaimed a previously partially written page at this index after IO
-+	 * completion before this write reaches this file offset) and hence we
-+	 * could do the wrong thing here (zero a page range incorrectly or fail
-+	 * to zero) and corrupt data.
-+	 */
-+	if (ops->iomap_valid) {
-+		bool iomap_valid = ops->iomap_valid(iter->inode, &iter->iomap);
-+
-+		if (!iomap_valid) {
-+			iter->iomap.flags |= IOMAP_F_STALE;
-+			status = 0;
-+			goto out_unlock;
-+		}
-+	}
-+
- 	if (pos + len > folio_pos(folio) + folio_size(folio))
- 		len = folio_pos(folio) + folio_size(folio) - pos;
- 
-@@ -727,7 +749,8 @@ static size_t iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
- 	return ret;
- }
- 
--static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
-+static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i,
-+		const struct iomap_ops *ops)
- {
- 	loff_t length = iomap_length(iter);
- 	loff_t pos = iter->pos;
-@@ -770,9 +793,11 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
- 			break;
- 		}
- 
--		status = iomap_write_begin(iter, pos, bytes, &folio);
-+		status = iomap_write_begin(iter, ops, pos, bytes, &folio);
- 		if (unlikely(status))
- 			break;
-+		if (iter->iomap.flags & IOMAP_F_STALE)
-+			break;
- 
- 		page = folio_file_page(folio, pos >> PAGE_SHIFT);
- 		if (mapping_writably_mapped(mapping))
-@@ -825,14 +850,15 @@ iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *i,
- 		iter.flags |= IOMAP_NOWAIT;
- 
- 	while ((ret = iomap_iter(&iter, ops)) > 0)
--		iter.processed = iomap_write_iter(&iter, i);
-+		iter.processed = iomap_write_iter(&iter, i, ops);
- 	if (iter.pos == iocb->ki_pos)
- 		return ret;
- 	return iter.pos - iocb->ki_pos;
- }
- EXPORT_SYMBOL_GPL(iomap_file_buffered_write);
- 
--static loff_t iomap_unshare_iter(struct iomap_iter *iter)
-+static loff_t iomap_unshare_iter(struct iomap_iter *iter,
-+		const struct iomap_ops *ops)
- {
- 	struct iomap *iomap = &iter->iomap;
- 	const struct iomap *srcmap = iomap_iter_srcmap(iter);
-@@ -853,9 +879,11 @@ static loff_t iomap_unshare_iter(struct iomap_iter *iter)
- 		unsigned long bytes = min_t(loff_t, PAGE_SIZE - offset, length);
- 		struct folio *folio;
- 
--		status = iomap_write_begin(iter, pos, bytes, &folio);
-+		status = iomap_write_begin(iter, ops, pos, bytes, &folio);
- 		if (unlikely(status))
- 			return status;
-+		if (iter->iomap.flags & IOMAP_F_STALE)
-+			break;
- 
- 		status = iomap_write_end(iter, pos, bytes, bytes, folio);
- 		if (WARN_ON_ONCE(status == 0))
-@@ -886,12 +914,13 @@ iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
- 	int ret;
- 
- 	while ((ret = iomap_iter(&iter, ops)) > 0)
--		iter.processed = iomap_unshare_iter(&iter);
-+		iter.processed = iomap_unshare_iter(&iter, ops);
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(iomap_file_unshare);
- 
--static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
-+static loff_t iomap_zero_iter(struct iomap_iter *iter,
-+		const struct iomap_ops *ops, bool *did_zero)
- {
- 	const struct iomap *srcmap = iomap_iter_srcmap(iter);
- 	loff_t pos = iter->pos;
-@@ -908,9 +937,11 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
- 		size_t offset;
- 		size_t bytes = min_t(u64, SIZE_MAX, length);
- 
--		status = iomap_write_begin(iter, pos, bytes, &folio);
-+		status = iomap_write_begin(iter, ops, pos, bytes, &folio);
- 		if (status)
- 			return status;
-+		if (iter->iomap.flags & IOMAP_F_STALE)
-+			break;
- 
- 		offset = offset_in_folio(folio, pos);
- 		if (bytes > folio_size(folio) - offset)
-@@ -946,7 +977,7 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
- 	int ret;
- 
- 	while ((ret = iomap_iter(&iter, ops)) > 0)
--		iter.processed = iomap_zero_iter(&iter, did_zero);
-+		iter.processed = iomap_zero_iter(&iter, ops, did_zero);
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(iomap_zero_range);
-diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
-index a1c7592d2ade..79a0614eaab7 100644
---- a/fs/iomap/iter.c
-+++ b/fs/iomap/iter.c
-@@ -7,12 +7,28 @@
- #include <linux/iomap.h>
- #include "trace.h"
- 
-+/*
-+ * Advance to the next range we need to map.
-+ *
-+ * If the iomap is marked IOMAP_F_STALE, it means the existing map was not fully
-+ * processed - it was aborted because the extent the iomap spanned may have been
-+ * changed during the operation. In this case, the iteration behaviour is to
-+ * remap the unprocessed range of the iter, and that means we may need to remap
-+ * even when we've made no progress (i.e. iter->processed = 0). Hence the
-+ * "finished iterating" case needs to distinguish between
-+ * (processed = 0) meaning we are done and (processed = 0 && stale) meaning we
-+ * need to remap the entire remaining range.
-+ */
- static inline int iomap_iter_advance(struct iomap_iter *iter)
- {
-+	bool stale = iter->iomap.flags & IOMAP_F_STALE;
-+
- 	/* handle the previous iteration (if any) */
- 	if (iter->iomap.length) {
--		if (iter->processed <= 0)
-+		if (iter->processed < 0)
- 			return iter->processed;
-+		if (!iter->processed && !stale)
-+			return 0;
- 		if (WARN_ON_ONCE(iter->processed > iomap_length(iter)))
- 			return -EIO;
- 		iter->pos += iter->processed;
-@@ -33,6 +49,7 @@ static inline void iomap_iter_done(struct iomap_iter *iter)
- 	WARN_ON_ONCE(iter->iomap.offset > iter->pos);
- 	WARN_ON_ONCE(iter->iomap.length == 0);
- 	WARN_ON_ONCE(iter->iomap.offset + iter->iomap.length <= iter->pos);
-+	WARN_ON_ONCE(iter->iomap.flags & IOMAP_F_STALE);
- 
- 	trace_iomap_iter_dstmap(iter->inode, &iter->iomap);
- 	if (iter->srcmap.type != IOMAP_HOLE)
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 238a03087e17..308931f0840a 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -62,8 +62,13 @@ struct vm_fault;
-  *
-  * IOMAP_F_SIZE_CHANGED indicates to the iomap_end method that the file size
-  * has changed as the result of this write operation.
-+ *
-+ * IOMAP_F_STALE indicates that the iomap is not valid any longer and the file
-+ * range it covers needs to be remapped by the high level before the operation
-+ * can proceed.
-  */
- #define IOMAP_F_SIZE_CHANGED	0x100
-+#define IOMAP_F_STALE		0x200
- 
  /*
-  * Flags from 0x1000 up are for file system specific usage:
-@@ -165,6 +170,18 @@ struct iomap_ops {
- 	 */
- 	int (*iomap_end)(struct inode *inode, loff_t pos, loff_t length,
- 			ssize_t written, unsigned flags, struct iomap *iomap);
-+
-+	/*
-+	 * Check that the cached iomap still maps correctly to the filesystem's
-+	 * internal extent map. FS internal extent maps can change while iomap
-+	 * is iterating a cached iomap, so this hook allows iomap to detect that
-+	 * the iomap needs to be refreshed during a long running write
-+	 * operation.
-+	 *
-+	 * This is called with the folio over the specified file position
-+	 * held locked by the iomap code.
-+	 */
-+	bool (*iomap_valid)(struct inode *inode, const struct iomap *iomap);
- };
+- * DEBUG mode instrumentation to test and/or trigger delayed allocation
+- * block killing in the event of failed writes. When enabled, all
+- * buffered writes are silenty dropped and handled as if they failed.
+- * All delalloc blocks in the range of the write (including pre-existing
+- * delalloc blocks!) are tossed as part of the write failure error
+- * handling sequence.
++ * Drop-writes support removed because write error handling cannot trash
++ * pre-existing delalloc extents in any useful way anymore. We retain the
++ * definition so that we can reject it as an invalid value in
++ * xfs_errortag_valid().
+  */
+ #define XFS_ERRTAG_DROP_WRITES				28
+ #define XFS_ERRTAG_LOG_BAD_CRC				29
+@@ -95,7 +94,6 @@
+ #define XFS_RANDOM_REFCOUNT_FINISH_ONE			1
+ #define XFS_RANDOM_BMAP_FINISH_ONE			1
+ #define XFS_RANDOM_AG_RESV_CRITICAL			4
+-#define XFS_RANDOM_DROP_WRITES				1
+ #define XFS_RANDOM_LOG_BAD_CRC				1
+ #define XFS_RANDOM_LOG_ITEM_PIN				1
+ #define XFS_RANDOM_BUF_LRU_REF				2
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index c6b2aabd6f18..dea3c0649d2f 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -46,7 +46,7 @@ static unsigned int xfs_errortag_random_default[] = {
+ 	XFS_RANDOM_REFCOUNT_FINISH_ONE,
+ 	XFS_RANDOM_BMAP_FINISH_ONE,
+ 	XFS_RANDOM_AG_RESV_CRITICAL,
+-	XFS_RANDOM_DROP_WRITES,
++	0, /* XFS_RANDOM_DROP_WRITES has been removed */
+ 	XFS_RANDOM_LOG_BAD_CRC,
+ 	XFS_RANDOM_LOG_ITEM_PIN,
+ 	XFS_RANDOM_BUF_LRU_REF,
+@@ -162,7 +162,6 @@ XFS_ERRORTAG_ATTR_RW(refcount_continue_update,	XFS_ERRTAG_REFCOUNT_CONTINUE_UPDA
+ XFS_ERRORTAG_ATTR_RW(refcount_finish_one,	XFS_ERRTAG_REFCOUNT_FINISH_ONE);
+ XFS_ERRORTAG_ATTR_RW(bmap_finish_one,	XFS_ERRTAG_BMAP_FINISH_ONE);
+ XFS_ERRORTAG_ATTR_RW(ag_resv_critical,	XFS_ERRTAG_AG_RESV_CRITICAL);
+-XFS_ERRORTAG_ATTR_RW(drop_writes,	XFS_ERRTAG_DROP_WRITES);
+ XFS_ERRORTAG_ATTR_RW(log_bad_crc,	XFS_ERRTAG_LOG_BAD_CRC);
+ XFS_ERRORTAG_ATTR_RW(log_item_pin,	XFS_ERRTAG_LOG_ITEM_PIN);
+ XFS_ERRORTAG_ATTR_RW(buf_lru_ref,	XFS_ERRTAG_BUF_LRU_REF);
+@@ -206,7 +205,6 @@ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(refcount_finish_one),
+ 	XFS_ERRORTAG_ATTR_LIST(bmap_finish_one),
+ 	XFS_ERRORTAG_ATTR_LIST(ag_resv_critical),
+-	XFS_ERRORTAG_ATTR_LIST(drop_writes),
+ 	XFS_ERRORTAG_ATTR_LIST(log_bad_crc),
+ 	XFS_ERRORTAG_ATTR_LIST(log_item_pin),
+ 	XFS_ERRORTAG_ATTR_LIST(buf_lru_ref),
+@@ -256,6 +254,19 @@ xfs_errortag_del(
+ 	kmem_free(mp->m_errortag);
+ }
  
- /**
++static bool
++xfs_errortag_valid(
++	unsigned int		error_tag)
++{
++	if (error_tag >= XFS_ERRTAG_MAX)
++		return false;
++
++	/* Error out removed injection types */
++	if (error_tag == XFS_ERRTAG_DROP_WRITES)
++		return false;
++	return true;
++}
++
+ bool
+ xfs_errortag_test(
+ 	struct xfs_mount	*mp,
+@@ -277,7 +288,9 @@ xfs_errortag_test(
+ 	if (!mp->m_errortag)
+ 		return false;
+ 
+-	ASSERT(error_tag < XFS_ERRTAG_MAX);
++	if (!xfs_errortag_valid(error_tag))
++		return false;
++
+ 	randfactor = mp->m_errortag[error_tag];
+ 	if (!randfactor || prandom_u32_max(randfactor))
+ 		return false;
+@@ -293,7 +306,7 @@ xfs_errortag_get(
+ 	struct xfs_mount	*mp,
+ 	unsigned int		error_tag)
+ {
+-	if (error_tag >= XFS_ERRTAG_MAX)
++	if (!xfs_errortag_valid(error_tag))
+ 		return -EINVAL;
+ 
+ 	return mp->m_errortag[error_tag];
+@@ -305,7 +318,7 @@ xfs_errortag_set(
+ 	unsigned int		error_tag,
+ 	unsigned int		tag_value)
+ {
+-	if (error_tag >= XFS_ERRTAG_MAX)
++	if (!xfs_errortag_valid(error_tag))
+ 		return -EINVAL;
+ 
+ 	mp->m_errortag[error_tag] = tag_value;
+@@ -319,7 +332,7 @@ xfs_errortag_add(
+ {
+ 	BUILD_BUG_ON(ARRAY_SIZE(xfs_errortag_random_default) != XFS_ERRTAG_MAX);
+ 
+-	if (error_tag >= XFS_ERRTAG_MAX)
++	if (!xfs_errortag_valid(error_tag))
+ 		return -EINVAL;
+ 
+ 	return xfs_errortag_set(mp, error_tag,
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 5053ffcf10fe..8e7e51c5f56d 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1305,15 +1305,6 @@ xfs_buffered_write_iomap_end(
+ 	if (iomap->type != IOMAP_DELALLOC)
+ 		return 0;
+ 
+-	/*
+-	 * Behave as if the write failed if drop writes is enabled. Set the NEW
+-	 * flag to force delalloc cleanup.
+-	 */
+-	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_DROP_WRITES)) {
+-		iomap->flags |= IOMAP_F_NEW;
+-		written = 0;
+-	}
+-
+ 	/* If we didn't reserve the blocks, we're not allowed to punch them. */
+ 	if (!(iomap->flags & IOMAP_F_NEW))
+ 		return 0;
 
