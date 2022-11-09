@@ -2,198 +2,170 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39704C433FE
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Nov 2022 03:48:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82997C433FE
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Nov 2022 04:20:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229698AbiKIDsU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Nov 2022 22:48:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33972 "EHLO
+        id S229691AbiKIEUP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Nov 2022 23:20:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50250 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229549AbiKIDsT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Nov 2022 22:48:19 -0500
-Received: from out30-132.freemail.mail.aliyun.com (out30-132.freemail.mail.aliyun.com [115.124.30.132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B81815FD8;
-        Tue,  8 Nov 2022 19:48:17 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R431e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046056;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=7;SR=0;TI=SMTPD_---0VULrpXB_1667965683;
-Received: from e18g06460.et15sqa.tbsite.net(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0VULrpXB_1667965683)
-          by smtp.aliyun-inc.com;
-          Wed, 09 Nov 2022 11:48:15 +0800
-From:   Gao Xiang <hsiangkao@linux.alibaba.com>
-To:     linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        Brian Foster <bfoster@redhat.com>
-Cc:     LKML <linux-kernel@vger.kernel.org>,
-        Zirong Lang <zlang@redhat.com>,
-        Gao Xiang <hsiangkao@linux.alibaba.com>
-Subject: [PATCH] xfs: account extra freespace btree splits for multiple allocations
-Date:   Wed,  9 Nov 2022 11:48:02 +0800
-Message-Id: <20221109034802.40322-1-hsiangkao@linux.alibaba.com>
-X-Mailer: git-send-email 2.24.4
+        with ESMTP id S229509AbiKIET7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Nov 2022 23:19:59 -0500
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B01E1181C;
+        Tue,  8 Nov 2022 20:19:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1667967598; x=1699503598;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=A2586BYsOahTsgQvUCdaytclD/vORnQuTw5oC4Dkynk=;
+  b=Si+/aIX4/GI2yHDv4IFg1nzm1cBFr2uVFJrMAxsqFxGBgU2xO9lqp0dQ
+   anDnjR0TAEv0UUoYU33md598WYRLfEBir3cF2T/SD0BBIdd2QJtnw4IRT
+   nL88MBV+N8ppoFBeo5dzfznbLOa7hzFrWRQdnl73c5IaNgeWrxklc7ZMy
+   L1U948SIc+dKtASF3716F6phi1ZAy4eKvHPhdwB14b+qDIjcWwg/7RmFY
+   s9s0JgN6ei2TkimIH4Z9DQDfY1l2/gnyRqNppOQCE8RdNiJSfereJOnEw
+   BRmuNhxEzeltsqJoivYVZB1a1leaqBS7SlghB6muzQkT8v7zdJzjzqByu
+   g==;
+X-IronPort-AV: E=Sophos;i="5.96,149,1665417600"; 
+   d="scan'208";a="320161488"
+Received: from mail-co1nam11lp2169.outbound.protection.outlook.com (HELO NAM11-CO1-obe.outbound.protection.outlook.com) ([104.47.56.169])
+  by ob1.hgst.iphmx.com with ESMTP; 09 Nov 2022 12:19:56 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=WZBEtoira7UyVmguWVbPvpIiN4kYlKSlwTaiesPYA1lwTxMOoOOICmYIHfM9KggSCl8ba6/ntti1oAJiT3HhIbdPqSQwIabivfuALmqttktrVNzUkaEXZoUbzHVq0hgdDY/QLqL3JyJBa0S/w/51W/dZL8eoeeTPre4SYvorljRFNYWeb9W77r7gqaO54xgs5c1FwVEz4IBBFdZb+vLxbDf/U83ouWHskfy+E6gvFIOOjMUeMIldWV2FY5ZyLpWtLYfzcHtOdc9SYuAynIM17vK8kgSk9oZ3zWfzu/NTZqA4rac8SGwQLge7p6ehOiICgP+MEL4RemE6F7pY3/uNrw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=A2586BYsOahTsgQvUCdaytclD/vORnQuTw5oC4Dkynk=;
+ b=KYBa7ZMVPiRbogo8uUScZXFjZBK3Ghet+AMPLxBNK9Rg4/UM/xGNo/pFcCPK5NlD5ujgdUsz/6GtUHSDzWW3nrDl2jL2YohQ8LYcdBu2xk//XxZrZ8HxRzIu5GmgPpu0iI1AZtdEaOHdCRWHq0B2Ws1Y/MtwyR8ocwBcqgT7X6ZXHtKT6Clv7j+dssIEqCw/AdXILAbIC2TrAfu7GpSsSVWP05VomUYcCvTLAYgDfGt+CYps04h5usiyneKp/24tbc1jYYxmU91xJJheb6lxaTfDjirUKZ5RK+BmgVM+/Svm7PaxaCrC1xRikUXu9qgPF947oT2cAc39HrE6WulBiw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=A2586BYsOahTsgQvUCdaytclD/vORnQuTw5oC4Dkynk=;
+ b=bCqnRdg1kuWLnTnCpUkUecZmzmm5xwkHq6bAaFJhgtHxIQbx/6ric6+BNniAQ4Mq6w7diW4IKYR6f+wSF8GaVYfOPrbsX8MjCcf9KnafPeZtmg8jbhYIEb4nXiC1XPpAvNLqku9jPm9KBQhJbki2JRu7nDIpN8N0vhJ5dZmU8hw=
+Received: from DM8PR04MB8037.namprd04.prod.outlook.com (2603:10b6:8:f::6) by
+ BN8PR04MB5875.namprd04.prod.outlook.com (2603:10b6:408:a8::14) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5791.26; Wed, 9 Nov 2022 04:19:53 +0000
+Received: from DM8PR04MB8037.namprd04.prod.outlook.com
+ ([fe80::d4b9:86e9:4fc8:d6e0]) by DM8PR04MB8037.namprd04.prod.outlook.com
+ ([fe80::d4b9:86e9:4fc8:d6e0%7]) with mapi id 15.20.5791.027; Wed, 9 Nov 2022
+ 04:19:53 +0000
+From:   Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+To:     Zorro Lang <zlang@redhat.com>
+CC:     "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
+        Linux NFS Mailing List <linux-nfs@vger.kernel.org>,
+        Chuck Lever III <chuck.lever@oracle.com>,
+        "djwong@vger.kernel.org" <djwong@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: generic/650 makes v6.0-rc client unusable
+Thread-Topic: generic/650 makes v6.0-rc client unusable
+Thread-Index: AQHY8/KDAlsuTLAdeUqIt7enJlIXlA==
+Date:   Wed, 9 Nov 2022 04:19:53 +0000
+Message-ID: <20221109041951.wlgxac3buutvettq@shindev>
+References: <3E21DFEA-8DF7-484B-8122-D578BFF7F9E0@oracle.com>
+ <20220904131553.bqdsfbfhmdpuujd3@zlang-mailbox>
+In-Reply-To: <20220904131553.bqdsfbfhmdpuujd3@zlang-mailbox>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: DM8PR04MB8037:EE_|BN8PR04MB5875:EE_
+x-ms-office365-filtering-correlation-id: 20a56cea-12cb-4825-d3f1-08dac209a701
+wdcipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: mTkt64a5YVyT14lJ2TDwtjeAm26mbvNoBtt12KLXB1kNetWaIdntb8vuYGHNjGpj9Fg/fIzr60Qb7J1Bws6e7GI0Rh3PZS4sLWnW32fNWZgAHr0Sj82z2S/2iDyjqjHLsdiMTopmGResdPcouCwr/9Km84TIDLdlKnLO4OCQekPCgMVkdAIpMWgUxENO3T/jLHMZHxN+aU/kkdDkxDZSDlqclzFtF3DW0emFbs6CSJUUaWFDkBfqhHfkubVkMCatbWehZF8b3NFsPyUzejCzT0t5vCaUvyGSUv1nG4aLTNYSatzp8WQApiiLOo39k32paNbO9EmZsdsEVFkkfRmPPZiYkBe/iH5ZIW9a4mJwjFL6IJT5cclviAq6K4dLXyRj7cBkvzq2Ze1ldoCzgck6BRxnvQ8tZwwtRoHQDJj2y2ME8dhe+KFm983/B2cmBCvCUhxHwGCCdV35ZMsjX3n4Oh62eIkJuPDeuGl8yx9lIJeMdqhGuIdt1zum1RzrXuo/1ZnIvkX6L0AVFTwDYIEkRHX+fS650BSVWl/gR+u2DqffiwqDP5yECLjlaqGidoPLaELdV8nOGS9TN4Ij5sN7/bi7q/X+Q2GY4f7faRcwnh74nWXi4ueUVDO5z+C0E5mu31Cc6EG0p6vJ19/IQYaXD2O7xNvPfZipxuuBKbRB5y4TDUnInxmjSehaywJa4m48i0enyKvvHYgY5ntf8bdS7FgIaeY320wRXtGx5U8IYMTknkM9176kMv36uPxqbiCiXxaKrfq1lAZ14j7F9lr8VXoG8QxICkbOReHMxGHiMJM=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM8PR04MB8037.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(7916004)(4636009)(396003)(136003)(366004)(39860400002)(346002)(376002)(451199015)(44832011)(8936002)(5660300002)(41300700001)(8676002)(4326008)(86362001)(82960400001)(64756008)(6916009)(316002)(54906003)(6486002)(76116006)(2906002)(91956017)(66556008)(66446008)(66946007)(66476007)(71200400001)(478600001)(9686003)(6512007)(26005)(186003)(33716001)(38070700005)(38100700002)(83380400001)(6506007)(1076003)(122000001)(41533002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?0bOWeYja3LIMC73aEitdPx3y5gdfKU3mhaE8WxLIxEm82ZHTzx3ikkLcjky0?=
+ =?us-ascii?Q?kBIbQlSNfhFFuwBTmz8GnPWo1Xslh0NGvD08REML+meK30bHUtsZjv613IuM?=
+ =?us-ascii?Q?VJIxLcF2tBUc2oexD4PHug/ISFGJv8fWdL44964zh8Gm19oDBzSIpGmZdi4L?=
+ =?us-ascii?Q?mJjjYYWWPrUo0e1YkEodKmkvMwxqPw5LmT2H72BPtMbB2L3icMZpNHWNfzqg?=
+ =?us-ascii?Q?K8y5xYr0UJ2Zqo6Xn8yZCDxRqIw6IcPI8nIvNQGx+0HCWt45b0vbRsAnXC4u?=
+ =?us-ascii?Q?mNyVcP3cif+6cXDqKcuYe3dhafkVSc1UdlZ9//6ut+nznabzJRQjWp4vKd0m?=
+ =?us-ascii?Q?wU8B5ol+wOMgmXBUg9AVwuq5BNOrjxJK2ZgNPLER6H0WiDsWKZI3o56yaOjn?=
+ =?us-ascii?Q?5YGgwEct/oxaLIicJTqJn5qm9M++QpK/OCMcgiICqsWJrKbMzXI0+mx8/VEu?=
+ =?us-ascii?Q?jVmTs6I0LBUoh4xgcqRT7N4lty4mzbLsUBbs0OhcQ1r/zbqECijQbXZkQ6zS?=
+ =?us-ascii?Q?5e3butdBxr/+ztyIex6X0XqRcFyySFkAGlAYfC34NetYtusZbCHDqnrbrLM8?=
+ =?us-ascii?Q?sFKnsUcPee3C0Z5n+m4aqf9pkZduAkkZoxULA9PqNP/WPe3G78aIvsglAnQe?=
+ =?us-ascii?Q?IYMP3mAeVIXN/8aRHeFm/nwTCo/pnznU9pA6SOTFkUx0UCtuMOZq0eeJtcm6?=
+ =?us-ascii?Q?ueafEoI5e40keBnw8cFc/44hAkTb2zaJDSmpQ1KV7Nd3kXwfjW6BTIgXBHNv?=
+ =?us-ascii?Q?4mM5WO1w2KWOqZ/hkAbz9aB6XNVsBkqBja74mXNyMrGAG6o8dBUXBpkOEhOs?=
+ =?us-ascii?Q?6OfGasX6JEJ/Quyyj5XqIOIEkDngKYTzClsv7CmYhfkxcIftBUzJ5IWStDGx?=
+ =?us-ascii?Q?G+Z8f/ZJnY/zhhkQZMqncauUN4ifSZyut8S5e4xTQ2i5DExkILM+nFfjDs57?=
+ =?us-ascii?Q?6cXYDQywwinomYDluXNqCCXdwrUz/XvWmQ2+T8bTB6ZnBfWbsfVAzvqv89ez?=
+ =?us-ascii?Q?84ifxq7vjsoXPabvjLJSi0wWWI9nrGUWpf0YmwG9awaN+N7dfGWHUcIo/AEa?=
+ =?us-ascii?Q?LnSC+QolDko/oto/n4uSBMBqINnKI6tGscQUBszxI0Sk+L5fgqF0fpAmaPlZ?=
+ =?us-ascii?Q?Yl/L1Dw4Ad3aEg709IvIDM/NrM4X3MsMGtpQ1XkaSVZBZDJWrm6KjAUdACkX?=
+ =?us-ascii?Q?tAh7/HkPCQtAgnPYETykMRyhUuDx9BKWtvvi8XJzqFU/uX7tm78izGMcmHsv?=
+ =?us-ascii?Q?ToMazUde4L+ldBTix8J0se93DPsEVgEFhxXo38ENLGhPwYwjHnIEqkUfeYZ1?=
+ =?us-ascii?Q?Po84ncAXaVQ7DZrmEWZV81J/mpWnaRVq96N0ejqIn+0fS8JtJDOguKvH+Sy9?=
+ =?us-ascii?Q?/wrKzryhlii0/+8Y3rGvd1ZgwHuXbBonkC4Q6fSd4XCJW5bWkJfOzuF2mi+L?=
+ =?us-ascii?Q?t6bkvB9Z1/W7xRW3ga60zYN9q6k2pZ/0my6tsDlKZyhjj6pH3E4OID8O2pb3?=
+ =?us-ascii?Q?n+vkXZIuyNAd4QsXW0ljS0bQ3gFIATGiU6ZcEjUMpCZq/DGpVlvXt9nSCiAz?=
+ =?us-ascii?Q?CD5/N/bAZmVmKnYsuT2sSRdT+VW7fsl24XG/sA2vNn42/qR91Li9UjhU/9iY?=
+ =?us-ascii?Q?NZu2wbeMMQIG/JwNFRELnCI=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <BDCC8D78500ED84FA601D0D61AF40063@namprd04.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM8PR04MB8037.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 20a56cea-12cb-4825-d3f1-08dac209a701
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Nov 2022 04:19:53.8131
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: bo8DqozHHBT7Cb1p7RZ/LL+dZFIRhJvhb0NMV2vddF6CtPlx3/maGp7g/ou8qh3ffMWWKDUzSYePGToiTmRQYHYHmtlqP9LgZEfs1IjwD2I=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN8PR04MB5875
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-There is a long standing issue which could cause fs shutdown due to
-inode extent-to-btree conversion failure right after an extent
-allocation in the same AG, which is absolutely unexpected due to the
-proper minleft reservation in the previous allocation.  Brian once
-addressed one of the root cause [1], however, such symptom can still
-occur after the commit is merged as reported [2], and our cloud
-environment is also suffering from this issue.
+On Sep 04, 2022 / 21:15, Zorro Lang wrote:
+> On Sat, Sep 03, 2022 at 06:43:29PM +0000, Chuck Lever III wrote:
+> > While investigating some of the other issues that have been
+> > reported lately, I've found that my v6.0-rc3 NFS/TCP client
+> > goes off the rails often (but not always) during generic/650.
+> >=20
+> > This is the test that runs a workload while offlining and
+> > onlining CPUs. My test client has 12 physical cores.
+> >=20
+> > The test appears to start normally, but then after a bit
+> > the NFS server workload drops to zero and the NFS mount
+> > disappears. I can't run programs (sudo, for example) on
+> > the client. Can't log in, even on the console. The console
+> > has a constant stream of "can't rotate log: Input/Output
+> > error" type messages.
 
-From the description of the commit [1], I found that Zirong has an
-in-house stress test reproducer for this issue, therefore I asked him
-to reproduce again and he confirmed that such issue can still be
-reproduced on RHEL 9 in several days.
+I also observe this failure when I ran fstests using btrfs on my HDDs.
+The failure is recreated almost always.
 
-Thanks to him, after adding some debugging code to dump the current
-transaction log items, I think the root cause is as below:
+> >=20
+> > I haven't looked further into this yet. Actually I'm not
+> > quite sure where to start looking.
+> >=20
+> > I recently switched this client from a local /home to an
+> > NFS-mounted one, and that's where the xfstests are built
+> > and run from, fwiw.
+>=20
+> If most of users complain generic/650, I'd like to exclude g/650 from the
+> "auto" default run group. Any more points?
 
-  1. xfs_bmapi_allocate() with the following condition:
-     freeblks: 18304 pagf_flcount: 6
-     reservation: 18276 need (min_free): 6
-     args->minleft: 1
-     available = freeblks + agflcount - reservation - need - minleft
-               = 18304 + min(6, 6) - 18276 - 6 - 1 = 27
-     The first allocation check itself is ok, and args->maxlen = 27
-     here
++1. I wish to remove it from the "auto" group. Since I can not login to the=
+ test
+machine after the failure, I suggest to put it in the "dangerous" group.
 
-     At this time, AG 3 also has the following state:
-     1st:64  last:69  cnt:6  longest:6395
-
-     AGFL has the following state:
-     64:547 65:167 66:1651 67:2040807 68:783 69:604
-
-  2. Tried to get 27 blocks from this AG, but in order to finish such
-     allocation, it had to need a new btree block for cntbt (so take
-     another free block from agfl).  It can be seen with a new AGF
-     recorded in the transaction:
-      blkno 62914177, len 1, map_size 1
-      00000000: 58 41 47 46 00 00 00 01 00 00 00 03 00 27 ff f0  XAGF.........'..
-      00000010: 00 00 00 09 00 00 00 07 00 00 00 00 00 00 00 02  ................
-      00000020: 00 00 00 02 00 00 00 00 00 00 00 41 00 00 00 45  ...........A...E
-      00000030: 00 00 00 05 00 00 47 65 00 00 18 fb 00 00 00 09  ......Ge........
-      00000040: 75 dc c1 b5 1a 45 40 2a 80 50 72 f0 59 6e 62 66  u....E@*.Pr.Ynbf
-
-      It can be parsed as:
-      agf 3  flfirst: 65 (0x41) fllast: 69 (0x45) cnt: 5
-      freeblks 18277
-
-  3. agfl 64 (agbno 547, daddr 62918552) was then written as a cntbt
-     block, which can also be seen in a log item as below:
-       type#011= 0x123c
-       flags#011= 0x8
-      blkno 62918552, len 8, map_size 1
-      00000000: 41 42 33 43 00 00 00 fd 00 1f 23 e4 ff ff ff ff  AB3C......#.....
-      00000010: 00 00 00 00 03 c0 0f 98 00 00 00 00 00 00 00 00  ................
-      00000020: 75 dc c1 b5 1a 45 40 2a 80 50 72 f0 59 6e 62 66  u....E@*.Pr.Ynbf
-      ...
-
-  4. Finally, the following inode extent to btree allocation fails
-     as below:
-     kernel: ------------[ cut here ]------------
-     WARNING: CPU: 15 PID: 49290 at fs/xfs/libxfs/xfs_bmap.c:717 xfs_bmap_extents_to_btree+0xc51/0x1050 [xfs]
-     ...
-     XFS (sda2): agno 3 agflcount 5 freeblks 18277 reservation 18276 6
-
-     since freeblks = 18304 - 27 = 18277, but with another agfl
-     block allocated (pagf_flcount from 6 to 5), the inequality will
-     not be satisfied:
-
-     available = freeblks + agflcount - reservation - need - minleft
-               = 18277 + min(5, 6) - 18276 - 6 - 0 = 0   < 1
-
-  Full current transaction log item dump can be fetched from [3].
-
-As a short-term solution, the following allocations (e.g. allocation
-for inode extent-to-btree conversion) can be recorded in order to count
-more blocks to reserve for safely freespace btree splits so that it
-will shorten available and args->maxlen to
-     available = freeblks + agflcount - reservation - need - minleft
-               = 18304 + min(6, 6) - 18276 - 6*2 - 1 = 21
-     args->maxlen = 21
-in the first allocation, and the following conversion should then
-succeed.  At least, it's easy to be backported and do hotfix.
-
-In the long term, args->total and args->minleft have be revisited
-although it could cause more refactoring.
-
-[1] commit 1ca89fbc48e1 ("xfs: don't account extra agfl blocks as available")
-    https://lore.kernel.org/r/20190327145000.10756-1-bfoster@redhat.com
-[2] https://lore.kernel.org/r/20220105071052.GD20464@templeofstupid.com
-[3] https://lore.kernel.org/linux-xfs/Y2RevDyoeJZSpiat@B-P7TQMD6M-0146.local/2-dmesg.log.xz
-Reported-by: Zirong Lang <zlang@redhat.com>
-Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
----
-Previous discussion is at:
-https://lore.kernel.org/linux-xfs/202211040048.FeUQMLE6-lkp@intel.com/T/#mfcfac181079ddaa5a22eecb74db56534fc4ff918
-
- fs/xfs/libxfs/xfs_alloc.c | 9 +++++++--
- fs/xfs/libxfs/xfs_alloc.h | 1 +
- fs/xfs/libxfs/xfs_bmap.c  | 2 ++
- 3 files changed, 10 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 6261599bb389..684c67310175 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2630,7 +2630,12 @@ xfs_alloc_fix_freelist(
- 		goto out_agbp_relse;
- 	}
- 
--	need = xfs_alloc_min_freelist(mp, pag);
-+	/*
-+	 * Also need to fulfill freespace btree splits by reservaing more
-+	 * blocks to perform multiple allocations from a single AG and
-+	 * transaction if needed.
-+	 */
-+	need = xfs_alloc_min_freelist(mp, pag) * (1 + args->postallocs);
- 	if (!xfs_alloc_space_available(args, need, flags |
- 			XFS_ALLOC_FLAG_CHECK))
- 		goto out_agbp_relse;
-@@ -2654,7 +2659,7 @@ xfs_alloc_fix_freelist(
- 		xfs_agfl_reset(tp, agbp, pag);
- 
- 	/* If there isn't enough total space or single-extent, reject it. */
--	need = xfs_alloc_min_freelist(mp, pag);
-+	need = xfs_alloc_min_freelist(mp, pag) * (1 + args->postallocs);
- 	if (!xfs_alloc_space_available(args, need, flags))
- 		goto out_agbp_relse;
- 
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 2c3f762dfb58..be7f15d6a40d 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -73,6 +73,7 @@ typedef struct xfs_alloc_arg {
- 	int		datatype;	/* mask defining data type treatment */
- 	char		wasdel;		/* set if allocation was prev delayed */
- 	char		wasfromfl;	/* set if allocation is from freelist */
-+	bool		postallocs;	/* number of post-allocations */
- 	struct xfs_owner_info	oinfo;	/* owner of blocks being allocated */
- 	enum xfs_ag_resv_type	resv;	/* block reservation to use */
- #ifdef DEBUG
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 49d0d4ea63fc..ed92c6a314b6 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3497,6 +3497,7 @@ xfs_bmap_exact_minlen_extent_alloc(
- 	args.alignment = 1;
- 	args.minalignslop = 0;
- 
-+	args.postallocs = 1;
- 	args.minleft = ap->minleft;
- 	args.wasdel = ap->wasdel;
- 	args.resv = XFS_AG_RESV_NONE;
-@@ -3658,6 +3659,7 @@ xfs_bmap_btalloc(
- 		args.alignment = 1;
- 		args.minalignslop = 0;
- 	}
-+	args.postallocs = 1;
- 	args.minleft = ap->minleft;
- 	args.wasdel = ap->wasdel;
- 	args.resv = XFS_AG_RESV_NONE;
--- 
-2.24.4
-
+--=20
+Shin'ichiro Kawasaki=
