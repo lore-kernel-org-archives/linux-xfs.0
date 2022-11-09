@@ -2,93 +2,113 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23CDEC4332F
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Nov 2022 04:59:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B8EFC433FE
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Nov 2022 10:36:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229470AbiKIE7K (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Nov 2022 23:59:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38046 "EHLO
+        id S230486AbiKIKgp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Nov 2022 05:36:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229492AbiKIE7I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Nov 2022 23:59:08 -0500
-Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFF4315A19
-        for <linux-xfs@vger.kernel.org>; Tue,  8 Nov 2022 20:59:07 -0800 (PST)
-Received: by mail-pl1-x633.google.com with SMTP id p21so16055574plr.7
-        for <linux-xfs@vger.kernel.org>; Tue, 08 Nov 2022 20:59:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=KYKyOjdNF+CNJTxSK9QBVZgj+1+/qswwvoinSoGBaSE=;
-        b=BEJhQi2e/7Q0f8lFmz2rSCjKWX/wjNu/FSORP1RMXpUgBR2lLHeNrByiZd4gkW40CH
-         UiLdDUGTMttJ4O7fbarOoEFoReikIcxpisCyR/kEe2Y4msJDIbcrf5raeLYBWA3WWmYS
-         50QjoBytKn5DRMO8WJH9GbYefOPtPttWuIAVAcS8H9O3b75TuX95UvYxoXZlzMYO59n3
-         wvx/byWBpS6upB/T4NGR/5NID0j6xvtQLg86Xdn10UTx/B6d5Msx5Tgwa9eCkRtoAcPA
-         ZtcGJBd577uS/+djHgy3AKhyqAM4ub/7GllKbc5YIlfan9QFZT7ZvMnwfNI7dIS01QPt
-         TckQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=KYKyOjdNF+CNJTxSK9QBVZgj+1+/qswwvoinSoGBaSE=;
-        b=PB+OPhVOhJTBbHu1SxAVkG5x1jdneSFmn1jusmaXKdFthFmNsfXOUsWINBF+T/8xZF
-         pXyd++Sqf9YOfYReZB2JOn6ZYDLUb/GrHTzsj2p1OvoVb3KXheQKGPHiEQPQMHpQheH7
-         rvccjHqb0R4TkKe8mFqVU5wqhMtEV0Ppaiupk/hk8AiQzfR5f8fJ9s6HAU/6je9l0bm0
-         15DRdamuHxtrY5wpJRNqHzjZOJ/+85XsUAdKZYj7vUS0XJpAGmGAYzvAGhEL7qvAMh8G
-         IX777al3p24QA0G6ohbiLDUKAymbDXhvTZ/2ftBas4Fla8gAyGNP71Y3e22aEc/z/T0n
-         XsnA==
-X-Gm-Message-State: ACrzQf2d45A/NnmK3mz+fmSO996iEIMoOFCfvNcXJtcQTS2x6harGTxY
-        dExH2403VM3GpEdmZye89XmTUwlprT04wBjPALcFZ+Sy
-X-Google-Smtp-Source: AMsMyM58aPnJJox7nvhKDVysjw4ER5BLtw8qPdsY8hto8SXy1KxHanKl3T0kDUBqUL8+bZ36fimThjBdM22VwMgNKTA=
-X-Received: by 2002:a17:90b:3594:b0:213:bf67:4d50 with SMTP id
- mm20-20020a17090b359400b00213bf674d50mr57930349pjb.32.1667969946888; Tue, 08
- Nov 2022 20:59:06 -0800 (PST)
+        with ESMTP id S229593AbiKIKgn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Nov 2022 05:36:43 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D962C19C15;
+        Wed,  9 Nov 2022 02:36:42 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 675E46190F;
+        Wed,  9 Nov 2022 10:36:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD062C433D6;
+        Wed,  9 Nov 2022 10:36:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1667990201;
+        bh=EZN+bucgSCncTbUChCqJU3pLyG23nkFP4VgBICU1Bro=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=WWgbHNbZOPbmab1+kb94N0AOYgPwHiZTFtqeJZAc36pkSD15ZcyWf+qPnkkHi+zHx
+         5D0J5yCH/FPR0RG9UTX8p1YOLC0CUtE31rZrIViTSdvXl9s1pnF7D+PjGOllRW5Yqy
+         OMp0973M4DinvvfJd28wf9nM/Gm7cjWhPc3jCCP9PA/mmPPF92Q7gr99FIgn+4oaFe
+         fMdXZzeqIDuKyxFFYxlNO/uaZrOxXllsffinAImWyD5MTykb9j/0umdQRHoHN8w6Hq
+         TooZeNpio8+bJU0XWLsR++e/W1/bGuKdq9CeaO4jlrAMDDojeAVo706TtXRrOzsOly
+         MJJtuB3ipq12Q==
+Received: by mail-oa1-f45.google.com with SMTP id 586e51a60fabf-13ae8117023so19160333fac.9;
+        Wed, 09 Nov 2022 02:36:41 -0800 (PST)
+X-Gm-Message-State: ACrzQf3yS1T3zhTL18DfLcDYecldPuZTzZn+01UgDSa/4oAEGTRlKnoI
+        iKZeU8JFUWpZYZOd1t7Uu6ihifPR5HFFemVP7iY=
+X-Google-Smtp-Source: AMsMyM4N+KhWKZerEhlVcbom9YLzJ1VSJWSTjKt/pg1gK7cgcpMBY8qJlVPTddlprhevGiKxkK3I86bQs6VfA+viujM=
+X-Received: by 2002:a05:6870:2052:b0:132:7b2:2fe6 with SMTP id
+ l18-20020a056870205200b0013207b22fe6mr35805370oad.98.1667990200947; Wed, 09
+ Nov 2022 02:36:40 -0800 (PST)
 MIME-Version: 1.0
-References: <CAG5wfU0E+y_gnfQLP4x2Ctan0Ts4d3frjVgZ9dt-xegVrucdXQ@mail.gmail.com>
-In-Reply-To: <CAG5wfU0E+y_gnfQLP4x2Ctan0Ts4d3frjVgZ9dt-xegVrucdXQ@mail.gmail.com>
-From:   Alexander Hartner <thahartner@gmail.com>
-Date:   Wed, 9 Nov 2022 12:58:55 +0800
-Message-ID: <CAG5wfU2p08ju-SbaRYMjuPXzzEXGneQzTTP56xYrWatO=NUS0g@mail.gmail.com>
-Subject: Detecting disk failures on XFS
-To:     linux-xfs@vger.kernel.org
+References: <3E21DFEA-8DF7-484B-8122-D578BFF7F9E0@oracle.com>
+ <20220904131553.bqdsfbfhmdpuujd3@zlang-mailbox> <20221109041951.wlgxac3buutvettq@shindev>
+In-Reply-To: <20221109041951.wlgxac3buutvettq@shindev>
+From:   Filipe Manana <fdmanana@kernel.org>
+Date:   Wed, 9 Nov 2022 10:36:04 +0000
+X-Gmail-Original-Message-ID: <CAL3q7H5eV9Sb1axmNgvcbG7UrgGTH3AovaibQuWMz44Jfo-8_w@mail.gmail.com>
+Message-ID: <CAL3q7H5eV9Sb1axmNgvcbG7UrgGTH3AovaibQuWMz44Jfo-8_w@mail.gmail.com>
+Subject: Re: generic/650 makes v6.0-rc client unusable
+To:     Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc:     Zorro Lang <zlang@redhat.com>,
+        "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
+        Linux NFS Mailing List <linux-nfs@vger.kernel.org>,
+        Chuck Lever III <chuck.lever@oracle.com>,
+        "djwong@vger.kernel.org" <djwong@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-We have dealing with a problem where a NVME drive fails every so
-often. More than it really should. While we are trying to make sense
-of the hardware issue, we are also looking at the recovery options.
+On Wed, Nov 9, 2022 at 4:22 AM Shinichiro Kawasaki
+<shinichiro.kawasaki@wdc.com> wrote:
+>
+> On Sep 04, 2022 / 21:15, Zorro Lang wrote:
+> > On Sat, Sep 03, 2022 at 06:43:29PM +0000, Chuck Lever III wrote:
+> > > While investigating some of the other issues that have been
+> > > reported lately, I've found that my v6.0-rc3 NFS/TCP client
+> > > goes off the rails often (but not always) during generic/650.
+> > >
+> > > This is the test that runs a workload while offlining and
+> > > onlining CPUs. My test client has 12 physical cores.
+> > >
+> > > The test appears to start normally, but then after a bit
+> > > the NFS server workload drops to zero and the NFS mount
+> > > disappears. I can't run programs (sudo, for example) on
+> > > the client. Can't log in, even on the console. The console
+> > > has a constant stream of "can't rotate log: Input/Output
+> > > error" type messages.
+>
+> I also observe this failure when I ran fstests using btrfs on my HDDs.
+> The failure is recreated almost always.
 
-Currently we are using Ubuntu 20.04 LTS on XFS with a single NVME
-disk. If the disk fails the following error is reported.
+I'm wondering what do you get in dmesg, any traces?
 
-Nov 6, 2022 @ 20:27:12.000    [1095930.104279] nvme nvme0: controller
-is down; will reset: CSTS=0x3, PCI_STATUS=0x10
-Nov 6, 2022 @ 20:27:12.000    [1095930.451711] nvme nvme0: 64/0/0
-default/read/poll queues
-Nov 6, 2022 @ 20:27:12.000    [1095930.453846] blk_update_request: I/O
-error, dev nvme0n1, sector 34503744 op 0x1:(WRITE) flags 0x800
-phys_seg 1 prio class 0
+I've excluded the test from my runs for over an year now, due to some
+crash that I reported
+to the mm and cpu hotplug people here:
 
-And the system becomes completely unresponsive.
+https://lore.kernel.org/linux-mm/CAL3q7H4AyrZ5erimDyO7mOVeppd5BeMw3CS=wGbzrMZrp56ktA@mail.gmail.com/
 
-I am looking for a solution to stop the system when this happens, so
-the other nodes in our cluster can carry the work. However since the
-system is unresponsive and the disk presumably in read-only mode we
-stuck in a sort of zombie state, where the processes are still running
-but don't have access to the disk. On EXT3/4 there is an option to
-take the system down.
+Unfortunately I had no reply from anyone who works or maintains those
+subsystems.
 
-errors={continue|remount-ro|panic}
-Define the behavior when an error is encountered.  (Either ignore
-errors and just mark the filesystem erroneous and continue, or remount
-the filesystem read-only, or panic and halt the system.)  The default
-is set in the filesystem superblock, and can be changed using
-tune2fs(8).
+It didn't happen very often, and I haven't tested again with recent kernels.
 
-Is there an equivalent for XFS ? I didn't find anything similar on the
-XFS man page.
-
-Also any other suggestions to better handle this ?
+>
+> > >
+> > > I haven't looked further into this yet. Actually I'm not
+> > > quite sure where to start looking.
+> > >
+> > > I recently switched this client from a local /home to an
+> > > NFS-mounted one, and that's where the xfstests are built
+> > > and run from, fwiw.
+> >
+> > If most of users complain generic/650, I'd like to exclude g/650 from the
+> > "auto" default run group. Any more points?
+>
+> +1. I wish to remove it from the "auto" group. Since I can not login to the test
+> machine after the failure, I suggest to put it in the "dangerous" group.
+>
+> --
+> Shin'ichiro Kawasaki
