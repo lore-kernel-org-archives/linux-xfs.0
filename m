@@ -2,92 +2,135 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 666EFC433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Nov 2022 15:22:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01F05C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Nov 2022 20:05:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231359AbiKJPWJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Nov 2022 10:22:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39194 "EHLO
+        id S231416AbiKJUFf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Nov 2022 15:05:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52492 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229874AbiKJPWI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Nov 2022 10:22:08 -0500
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 188D010B4F;
-        Thu, 10 Nov 2022 07:22:05 -0800 (PST)
-Received: from letrec.thunk.org ([12.139.153.3])
-        (authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 2AAFLswW006672
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 10 Nov 2022 10:21:56 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-        t=1668093717; bh=YwdNhjsE3SJmg5CT/VWQ/NICaXgoIELaYhai8lEHU/4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To;
-        b=dSv/nfNBBhHgCYAO8XyaNXOdS5AkjC6/TPY7Vh3lTpL1ynNjqMGByChVMkGJ9fHeu
-         P4bBrDHWiXvLVwccwqeKDEyV1kUOdu7RH3Ujejw+8zZOdYK/vJT7DqPnDUXn1GREiw
-         AC3mPJ7horsy5EP6FNI8GzENxSV9TonwPkNqPOdotIEKgt33R1w+13Au8FHEUX9Usx
-         Di6uSSZTZ0U2v9srCl9eAire3ffmkSTxoeXbDSWJSIK7zUF7L3UvEmrjBwPEGngH3g
-         gksgGY3wvVDv7Ei6MS34EXc/po+wTCAKYM1JXdgO8oORLpjLKzDcsLfp1ioNmiLKE6
-         j6ojCnYks4y/Q==
-Received: by letrec.thunk.org (Postfix, from userid 15806)
-        id 9A1E88C0255; Thu, 10 Nov 2022 10:21:55 -0500 (EST)
-Date:   Thu, 10 Nov 2022 10:21:55 -0500
-From:   "Theodore Ts'o" <tytso@mit.edu>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Filipe Manana <fdmanana@kernel.org>,
-        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        Zorro Lang <zlang@redhat.com>,
-        "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
-        Linux NFS Mailing List <linux-nfs@vger.kernel.org>,
-        Chuck Lever III <chuck.lever@oracle.com>,
-        "djwong@vger.kernel.org" <djwong@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: generic/650 makes v6.0-rc client unusable
-Message-ID: <Y20XE0t0O632MI3k@mit.edu>
-References: <3E21DFEA-8DF7-484B-8122-D578BFF7F9E0@oracle.com>
- <20220904131553.bqdsfbfhmdpuujd3@zlang-mailbox>
- <20221109041951.wlgxac3buutvettq@shindev>
- <CAL3q7H5eV9Sb1axmNgvcbG7UrgGTH3AovaibQuWMz44Jfo-8_w@mail.gmail.com>
- <Y2vsJc1CKuUNzGID@magnolia>
+        with ESMTP id S230407AbiKJUFe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Nov 2022 15:05:34 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBDC42C65C
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Nov 2022 12:05:32 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id E4125B82313
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Nov 2022 20:05:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D423C433C1;
+        Thu, 10 Nov 2022 20:05:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1668110729;
+        bh=w2JEsB+ZXZ/65YSlnnyv1Wuw8O+8WMzCYV0Zc2UOJSI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=LZStNUa9X8GBfl9VUPaJyMrezTA0tpo9DBxsORQEM28IbqLRNmp4phhfqoqMIea1P
+         JXevvfss4C9zjkISNUdXpBHLSkj+EPIPMKFt4QFwejR0hvIFHvb0E/1Jb3RRf3k1/1
+         aA9xUbqKyG4zCrWSe3Rss/kZfTEnpfI2EWuOMCLfouGvOgBqLSYVJ9JCLgXzDfSaZ7
+         1kxRa44quej3THJytyrj0Ti0sUZTD7KRwVvZBHYXjL2HAoTpPDSU35bZtDKTgRKhLx
+         xJ50vkSDnkeQ2SNhAdifBgDILejFykaui9l/CnpIV5tK8BKPw2hXajrhH+5qI+Yj9F
+         X6wE88M/ERgaQ==
+Date:   Thu, 10 Nov 2022 12:05:29 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Catherine Hoang <catherine.hoang@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, tytso@mit.edu
+Subject: Re: [PATCH v1 2/2] xfs: add FS_IOC_GETFSUUID ioctl
+Message-ID: <Y21ZibTXMsyjekbW@magnolia>
+References: <20221109221959.84748-1-catherine.hoang@oracle.com>
+ <20221109221959.84748-3-catherine.hoang@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y2vsJc1CKuUNzGID@magnolia>
+In-Reply-To: <20221109221959.84748-3-catherine.hoang@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 09, 2022 at 10:06:29AM -0800, Darrick J. Wong wrote:
-> I've been testing with xfs/btrfs/ext4 nightly, and haven't seen any
-> problems with the last two.  There's some very infrequent log accounting
-> problem that is probably a regression from Dave's recent round of log
-> refactorings, so once we're clear of the write race corruption problem,
-> I intend to inquire about that.
+On Wed, Nov 09, 2022 at 02:19:59PM -0800, Catherine Hoang wrote:
+> Add a new ioctl to retrieve the UUID of a mounted xfs filesystem.
+
+I think it's worth mentioning that this is the precursor to trying to
+implement SETFSUUID... but that's something for a future series, since
+changing the uuid will upset the log, and we have to figure out how to
+deal with that gracefully.
+
+> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+> ---
+>  fs/xfs/xfs_ioctl.c | 32 ++++++++++++++++++++++++++++++++
+>  1 file changed, 32 insertions(+)
 > 
-> Granted I also don't have hundreds-of-cpus machines to test this kind of
-> stuff, so I don't know how well hotplug mania fares on a big iron.
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 1f783e979629..657fe058dfba 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1865,6 +1865,35 @@ xfs_fs_eofblocks_from_user(
+>  	return 0;
+>  }
+>  
+> +static int xfs_ioctl_getuuid(
+
+Nit: function names should start on a new line.
+
+> +	struct xfs_mount	*mp,
+> +	struct fsuuid __user	*ufsuuid)
+> +{
+> +	struct fsuuid		fsuuid;
+> +	__u8			uuid[UUID_SIZE];
+> +
+> +	if (copy_from_user(&fsuuid, ufsuuid, sizeof(fsuuid)))
+> +		return -EFAULT;
+> +
+> +	if (fsuuid.fsu_len == 0) {
+> +		fsuuid.fsu_len = UUID_SIZE;
+> +		if (copy_to_user(ufsuuid, &fsuuid, sizeof(fsuuid.fsu_len)))
+> +			return -EFAULT;
+> +		return -EINVAL;
+
+Ted and I were looking through the ext4_ioctl_getuuid function on this
+morning's ext4 concall, and we decided that copying the desired uuid
+buffer length out to userspace shouldn't result in an EINVAL return
+here...
+
+> +	}
+> +
+> +	if (fsuuid.fsu_len != UUID_SIZE || fsuuid.fsu_flags != 0)
+
+...and that we shouldn't reject the case where fsu_len > UUID_SIZE.
+Instead, we should copy the uuid and update the caller's fsu_len to
+reflect however many bytes we copied out.  I'll send patches to do that
+shortly.
+
+> +		return -EINVAL;
+> +
+> +	spin_lock(&mp->m_sb_lock);
+> +	memcpy(uuid, &mp->m_sb.sb_uuid, UUID_SIZE);
+> +	spin_unlock(&mp->m_sb_lock);
+> +
+> +	if (copy_to_user(&ufsuuid->fsu_uuid[0], uuid, UUID_SIZE))
+> +		return -EFAULT;
+
+The rest of this logic looks correct to me.  Thanks for getting this out
+there.
+
+--D
+
+> +	return 0;
+> +}
+> +
+>  /*
+>   * These long-unused ioctls were removed from the official ioctl API in 5.17,
+>   * but retain these definitions so that we can log warnings about them.
+> @@ -2153,6 +2182,9 @@ xfs_file_ioctl(
+>  		return error;
+>  	}
+>  
+> +	case FS_IOC_GETFSUUID:
+> +		return xfs_ioctl_getuuid(mp, arg);
+> +
+>  	default:
+>  		return -ENOTTY;
+>  	}
+> -- 
+> 2.25.1
 > 
-> I don't think it's valid to remove a test from the auto group because it
-> uncovers bugs.  If test runner folks want to put it in their own exclude
-> lists for their own convenience, that's fine with me.
-
-Well, for me, on a GCE VM (but not using KVM), using ***any*** file
-system, the test is an automatic instant crash of the VM.  It's a
-pretty clearly a CPU hotplug bug, not a file system bug.  And given
-that the purpose of running the test is to find file system bugs, and
-running the test prevents the rest of the file system tests from
-running, of course it's on my exclude list for gce-xfstests.
-
-I don't care *that* much whether it's removed from the auto group or
-not, or added to the dangerous group or not, but perhaps we should add
-a comment that this may trigger unrelated bugs in CPU hotplug, so that
-other testers don't run into this?
-
-I'm also especially thinking about "drive-by testers", who might not
-be tracking the fstests mailing list and won't know the nuances of "oh
-yeah, you need to add this to the exclude list, or you may be
-sorry....".  On the other hand, that's why I recommend that drive-by
-testers use things like my test runner infrastructure, and not
-xfstesets directly.  :-)
-
-						- Ted
