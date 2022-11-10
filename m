@@ -2,359 +2,193 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47769C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Nov 2022 04:55:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2C44C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Nov 2022 06:36:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231215AbiKJEy7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Nov 2022 23:54:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43222 "EHLO
+        id S229897AbiKJGgY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Nov 2022 01:36:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45596 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229959AbiKJEy6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Nov 2022 23:54:58 -0500
-Received: from mail-qv1-xf32.google.com (mail-qv1-xf32.google.com [IPv6:2607:f8b0:4864:20::f32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C83252B1B8
-        for <linux-xfs@vger.kernel.org>; Wed,  9 Nov 2022 20:54:56 -0800 (PST)
-Received: by mail-qv1-xf32.google.com with SMTP id e15so724430qvo.4
-        for <linux-xfs@vger.kernel.org>; Wed, 09 Nov 2022 20:54:56 -0800 (PST)
+        with ESMTP id S229514AbiKJGgX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Nov 2022 01:36:23 -0500
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED5642B271
+        for <linux-xfs@vger.kernel.org>; Wed,  9 Nov 2022 22:36:22 -0800 (PST)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2AA6AkEw018042;
+        Thu, 10 Nov 2022 06:36:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : content-type : content-transfer-encoding :
+ mime-version; s=corp-2022-7-12;
+ bh=tjuOY8i8gdnMrWGIE8BKqKDh8KvKC61EjAWJLE/IVjM=;
+ b=lhuWcqyqwwBgkrprxptkkNDXcOPzd/1x5Vw1j3OKu6VbypApoklBhesCPKIos0u/+2bo
+ 5eBZNXnlBXZbNM5Qa7EidjwaGLNogbmBgIO8ciVanT6WCBaUgAOUFuM7SjEqH10JREI6
+ 0LX69KMkUVEAnhbVoJQFzGWs8Jw7SYqVx6/RPGQWizFhApWO3yHIlgUj5qHb4C4tEei+
+ pS5d0z6nbjXNci5e/nmGD+pGJaPW4HXQAJQxc/Vw4zkZ2Q0f76djVRQjwyznQdPktiit
+ tVOZAmudqsUlaWrbP53Br4jRwHRIgj5i5qjcXX+An6BDjfiVcN2lST20dHmxXJtd7AWH Tg== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3krut203d8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 10 Nov 2022 06:36:19 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2AA6BEwE004370;
+        Thu, 10 Nov 2022 06:36:18 GMT
+Received: from nam04-bn8-obe.outbound.protection.outlook.com (mail-bn8nam04lp2044.outbound.protection.outlook.com [104.47.74.44])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3kpcq4fv7d-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 10 Nov 2022 06:36:18 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=XV/kGic9JZSxVwXjayMuofSMwwnWkg9KHJ17vrIKo6XZ+ZZUN7If1hC+UxD6FI9K3386dDszYqZNQ4K7Z3ZkN2Jx2t/onmcCbdrO3wpoccZYWPDjq4w5gYFf1t61zdto84CLf4FqU34m+kIf/d3Cm5d1lgmqFzld9I1Joq8aHt6f08+/rQx8H3wiYH9nsPKjSEIgwDn0tB/v+76zkmCyOUai8fHyMc+npE0cm1RsvuWMGFJoqZW7quotmNgwFD8NKEARaNA0xQZQKoXD6+dGyn89faTED3M0TvIRyPzerZSu8GY7kBIJX+v1+wcxUnKxqmY4pIsntJ95z9ifqcNczw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=tjuOY8i8gdnMrWGIE8BKqKDh8KvKC61EjAWJLE/IVjM=;
+ b=PTJ2B3EUdC2ewCEPYgke89pfxm5j+cK0Hkaw9mG5lI0SjdEN29f2hN0LKMn6K2EwoIyVkJS5s8m5BOpzffb19ihlQvMwMR1QDKdeGHxkoq0GgsP0QBOFBgwFlmqSTYN8Xeu7a/kAsVuhPyb0EhqDoy/h2GN/rFdFkFwKjPw1RqQp7Ntvbaip3brb8qdnh4uAkGQ8gbZEW5J9/ZMld/F2rq3+xx7+ZHv/nYY2MpoLPkRDRgJr+TI+PPr0ZX1HrFmP36gZv5H529KNmaqRnR55Gjglos2NTfR4Ko9ZhC2Hx8nIRCHxVRIGdQiTaFKWA2fswx6HmXiDf597umgY3mOpNQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=leadboat.com; s=google;
-        h=user-agent:in-reply-to:content-transfer-encoding
-         :content-disposition:mime-version:references:message-id:subject:cc
-         :to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=7m0pUMImb8Iozeo52ce34W2+lywW23feRfa49Jf9odk=;
-        b=Yq6NJYehcnd0H9b6aU68vK0bNXdYOUyTj07HWZBJbr5JJ0a5NM43bz04S9kMbhMHxQ
-         3d5iYhdsNmvWVul2sQdmD08v+cfarTDBisfoCNAjHtjy1hhqDNctNVIyd3I3otqZSgGp
-         7990cMzg5jSwTyqAVXVYUGPh9qJrHeN8e4wNc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=user-agent:in-reply-to:content-transfer-encoding
-         :content-disposition:mime-version:references:message-id:subject:cc
-         :to:from:date:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=7m0pUMImb8Iozeo52ce34W2+lywW23feRfa49Jf9odk=;
-        b=j/6FcklQ6TXF5qWd9xJkKglEh6LD3p0aEqC0GsBleYAvEGL/uYlHKroDXlD0Ipev6p
-         QEmVP2srMZVETdvURMjAMb9iB26hsIPkJdoTYic1igpi+C61TRvLHtBjpSlyx2vIoQtQ
-         id5fbVCYS/5NF3ckjsFbNeSvsX73DG7VCPwyrzahq0LrpCw47A2WDI9B9YaDuzr/ilzo
-         d1Msk2MG4iLRi6+nLvsXWIr5L6i7ZHSk6/tIAjcqvnTjW8Cxn2UPjNnrV67i4owg53Hy
-         AKbrV2y61LZFzO40UGoXFdP0tgpZeRCLb1Jajj+T6dmv/X0dLWslOGyQSqEa9Ic65QYn
-         kWWQ==
-X-Gm-Message-State: ACrzQf33j06Ge1bhHWy4lxWxvu8ZzA/eRlv4r5HqprToFBg+elnM/CK5
-        NIU2i8x07/gJ1DwX+r0P5/Ckm4Lt+R4f3Acc
-X-Google-Smtp-Source: AMsMyM4VbM9aMEkj2XwTlVHbrW2tzEUsA36m1OHrT+P2D4iE0KPtOfskDUVinhplNrmPQqr/x4prXw==
-X-Received: by 2002:a05:6214:ca5:b0:4bb:d57e:65e3 with SMTP id s5-20020a0562140ca500b004bbd57e65e3mr55946361qvs.65.1668056095794;
-        Wed, 09 Nov 2022 20:54:55 -0800 (PST)
-Received: from rfd.leadboat.com ([2600:1702:a20:5750::2e])
-        by smtp.gmail.com with ESMTPSA id u11-20020a05622a17cb00b003972790deb9sm10825779qtk.84.2022.11.09.20.54.54
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 09 Nov 2022 20:54:55 -0800 (PST)
-Date:   Wed, 9 Nov 2022 20:54:52 -0800
-From:   Noah Misch <noah@leadboat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: After block device error, FICLONE and sync_file_range() make
- NULs, unlike read()
-Message-ID: <20221110045452.GB3665013@rfd.leadboat.com>
-References: <20221108172436.GA3613139@rfd.leadboat.com>
- <Y2vZk7Wg0V8SvwxW@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tjuOY8i8gdnMrWGIE8BKqKDh8KvKC61EjAWJLE/IVjM=;
+ b=B6qMIkwYjdwfkWHr0NcbEVlOWP4je1os/2WwEOufbLHT4XZqdfuaYXuybUCVbqwjMR2CyG+kSXowX+br1dVo9Z/kIVcDCqCdFEhYatQo8UtpdazjRxuhooxBgaL8YSoqGJkfrNqCrEWUNISK8zedFhzyhjtbDah9kD++EjCjTQc=
+Received: from PH0PR10MB5872.namprd10.prod.outlook.com (2603:10b6:510:146::15)
+ by PH0PR10MB4742.namprd10.prod.outlook.com (2603:10b6:510:3f::24) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5791.27; Thu, 10 Nov
+ 2022 06:36:16 +0000
+Received: from PH0PR10MB5872.namprd10.prod.outlook.com
+ ([fe80::3523:c039:eec9:c78b]) by PH0PR10MB5872.namprd10.prod.outlook.com
+ ([fe80::3523:c039:eec9:c78b%5]) with mapi id 15.20.5791.027; Thu, 10 Nov 2022
+ 06:36:16 +0000
+From:   Chandan Babu R <chandan.babu@oracle.com>
+To:     djwong@kernel.org
+Cc:     chandan.babu@oracle.com, linux-xfs@vger.kernel.org,
+        amir73il@gmail.com, leah.rumancik@gmail.com
+Subject: [PATCH 5.4 CANDIDATE 0/6] xfs stable candidate patches for 5.4.y (from v5.9)
+Date:   Thu, 10 Nov 2022 12:06:02 +0530
+Message-Id: <20221110063608.629732-1-chandan.babu@oracle.com>
+X-Mailer: git-send-email 2.35.1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <Y2vZk7Wg0V8SvwxW@magnolia>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+X-ClientProxiedBy: SG2PR01CA0175.apcprd01.prod.exchangelabs.com
+ (2603:1096:4:28::31) To PH0PR10MB5872.namprd10.prod.outlook.com
+ (2603:10b6:510:146::15)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR10MB5872:EE_|PH0PR10MB4742:EE_
+X-MS-Office365-Filtering-Correlation-Id: cf832642-17cf-4041-8ac8-08dac2e5de5b
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: AsoIYdaJnEYr1Q/7PVpByvVDr4OicvUg7Mn3ElLOtPWrZFDfYd0aNm00i4BxzdMEuZtM+xXEbxh3Y/t1WzL119lFC8GAdiy0OV9Bq3Z3btWa+ncYZFmQquPbUFJlSBIEHLzLe26BU3tODwex0rDiErzjyLZkkqxHozYOzMLzmWNBspiS8v2nbwn2AKj4pQ+uoxA3+1/XNZdfPjHPcdCVxBaEFylnnmut5OZEczWNlMVOT9LGJTWyHzrxDpMsq7c9FGCqor49zIJTu7nFyuQtRKqzPqDGVn61SIKESvSZQ4GNS7QBlN5edusEH//vQelfEG/i+d7zeM/PpznX9KUQjeJUi6P98NS1oK8i24ztfOdOCx3s6JvSVK4OFcDF3ziqrMGfwNIkTothd5UaBxcICA8gjJo1wi28825dy3Y5jA+FzDg4uZnlwNcfzTYcl/+StmBmvU9WQxZl8s41J63iagHGqh3ISYe7nTYq7FczVA1TX5dPwCGX99y6LX0I+iMB2jnMPlR253YcSwpRGaob36yhg1QAZsxoAJg6ru5fjNYJ4yop2+6Pg1aaFdx1TwcKePHd1vrxH6Oce7YzKHgK5cqnZwix1ZHW2mw8sGNMJiVcNQ/LqhFza9GUQThfvmB+vz+/kq21EiVXwb4dOc2bxuxbOdVz2d/vp/sG83VOmj1tKfV0eEp0oUtwQrpvalXl7Df+sSQd6lWssTeuZaqMzw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB5872.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(366004)(39860400002)(376002)(136003)(396003)(346002)(451199015)(86362001)(36756003)(5660300002)(2906002)(8936002)(38100700002)(83380400001)(66556008)(186003)(26005)(6512007)(1076003)(6916009)(4326008)(2616005)(41300700001)(66946007)(66476007)(8676002)(316002)(6506007)(6666004)(6486002)(478600001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?V01UZjZqMkF6YkdzVC9vVTNGUHFRUzJITVVJME5PQ2Voczhpc2xnTms4N0Q3?=
+ =?utf-8?B?eUw2Tnlka0Y2Y0R5RXI1SG05TkVFWnN5dEcwWnRERlNHV21FMDNicGdremJS?=
+ =?utf-8?B?a3FZNjZ3VGxoMlM1amJSYmxJM3ZodDFIZmRpbDRVTVdQMzdCb0VMbnBwTXl2?=
+ =?utf-8?B?TUhlV1R0MDJEcWFUbUd2dWsrSWtyUjVOcTM0N3hkQm1VY2lTdjJQSEVmc2xn?=
+ =?utf-8?B?ZURzM2NpYlRkcmhFYzNhWjk4MW51NWVDaExkRElzbDlURzhjRmhIdnoydDdq?=
+ =?utf-8?B?clVWdnZ0WjBQN3JPeXh0amdpQkxCMjBnOGFISTFJZ08wenEyVnJTbHRreWRX?=
+ =?utf-8?B?bFpWVnhjcnJYbU5YRlhHYjl4NHN4eW9GejFQSWIwMzRmQkI4Q1lUa1dUVk43?=
+ =?utf-8?B?RTNhUlZ2c3pVcmZOYUlDYXpjYlErS1RRNWtnaWRiN0cvRU9lUVhpaFRGZVFl?=
+ =?utf-8?B?V3NZeG5TZDgvVDFMK3RwVFJVTVlMOFA1bEE4SkxSZGNaN2VBNG1WVEhCajdN?=
+ =?utf-8?B?bXY0OWFlYVp3WGV4MU9lVWZlYjNZR0F2WkVYOFZEdk9JcFRzeUhsOTVENlZj?=
+ =?utf-8?B?WmFMV0tBSEc0WFdEZmU0UkM3aWR4QmpZZzFQaVNZMEltMnZvb3NzTzFoc1F3?=
+ =?utf-8?B?K3hvZnZtaW0rS3ZJWDV5cG41K3NNMC9NUlR0OXdZSzl6anNwbS9uS0dqVzdz?=
+ =?utf-8?B?RmwweWNxM3YxVEVFSW45OE91dVd4OVpzbXZjRDBub204SHZiYXVDSVoyZzU4?=
+ =?utf-8?B?R2luVG90YzVibjNwNFdudUlGMzBmcWI1dUFtNy96d2RKZnBpRDZNdFVTWTJl?=
+ =?utf-8?B?WDJmeUx1K0xvZjlyMFZUY2QvM3FCNFVoNURKWFB1cWVzWmFiek5rcU5PZEox?=
+ =?utf-8?B?TkxpTlBnR3ZURmxTOWtxYlJLaktST01YaHNVaGtDTy9TcTNjbjhUdjBxUzNH?=
+ =?utf-8?B?a3lGeWkreWpoZmhYRFZiY1JUSEhFN2JhOVlXRXAzQXdLNkZ6WStuL0tTazlu?=
+ =?utf-8?B?ZHR2ZmtVd3dWUTlPcUlnNmpKRUR5enJLLy9pQjgyS3FxR0Q4UCtTWkR4L016?=
+ =?utf-8?B?cUVBUnJqRnY1ZDRjRmliVXZmalBRdzhtVk9xbGNUd0RlUFIwSTIxOVpLUGlt?=
+ =?utf-8?B?dmtWRlJ4U1p1aENJM2JXeFVudFBkUTJBSlh6elFXV3U5N3VmNndWK21UajRO?=
+ =?utf-8?B?b3M5NDR5MHFZaVk1aCtUcElVVTI3T2E3YUxuZVpqcUdqZSs5d0pFZDk0dDVR?=
+ =?utf-8?B?Yk9TT2lpdS9iR2tUYmtzallnVmZucWF0dEJ0c1FlZ1ZYMFZJemtsUjZPaG1I?=
+ =?utf-8?B?bXIyNmZZSGpxTVBYUEZVandpN0ZpeW9tWm1tamhrOFo1MHRGSXdYZEowM3Ev?=
+ =?utf-8?B?WGhRYXBDbW5OVnlKbGtQMnRWZlpWYXk4T2hFSEVlTDJIVnNuRmliV2Yzd05O?=
+ =?utf-8?B?d1FMVEpnR3EvL09kQWRkenJhRlJyWjRxakgzRmkybzNaa2tiVy9BdnhiemJz?=
+ =?utf-8?B?ZmgyZUVyVk5hVUdNK0FNRVNJNVFDTkFpQWJHckd4OTJJOGN1Mjh6MjZCSzBS?=
+ =?utf-8?B?d1pkbHhzc28zOE93eEV2aW1XQlhFOFBZeXVTbURUd2Y3REE1by82dWF0bGlm?=
+ =?utf-8?B?Q2gwRFFxUmRtTlQ5NFErR1Q4WGVERk16Wk9SS0tXeS9DZjBPVzBYdXhNUTZp?=
+ =?utf-8?B?RzJOUVZTQWtJQkdIWUlxMWVDd0R3UnA5SndKSEprWHhubXRsZkJra1VXQ2xU?=
+ =?utf-8?B?aHhxN3FyRWVCSzhDNHhzR2paSFN3WGtzWTNnVkE2VlZ3aXczYUozNDhnY3NI?=
+ =?utf-8?B?VEpOTVFDRXYwMEg3T2hyQmtIY2EyaXVvZWFaRVpVVWRRT213MjRwc3dBZVNo?=
+ =?utf-8?B?MVFnOUZHQmpURExtR1d5ajByMFgwclFXeFlmRkZ6WDB0ODhQM29jb2o4dWcz?=
+ =?utf-8?B?V0NEaHNJZjlheiszbE9qOXBBeGtUcVQ5YU5VY3hhL0lpNzNLVDhBaTZ0WkFD?=
+ =?utf-8?B?blJuOEJ4Sk8zTzBBakxtdk8zT2twLzQ2TnRDQlhxNHc2a1Y0d29hdGZtbUN2?=
+ =?utf-8?B?RFBaaFlwbFgvUXRTMkl4eVptczJZSjFsSS9VN1NrQWo1QVg3UlNZN0NIWk1U?=
+ =?utf-8?Q?c7WwOqfZPt0SF7a7eZXe7wo+Q?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: cf832642-17cf-4041-8ac8-08dac2e5de5b
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB5872.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Nov 2022 06:36:16.3009
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: I2x+4hq5+gJYmjFk2Hc5aIrRRW1uoPRxs3sRigYnBgUMEFLB2DxgZcFLrciHyjZBw0N4E8qxC/1kFkNbGKjeLw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4742
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-11-09_06,2022-11-09_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 adultscore=0
+ malwarescore=0 mlxlogscore=999 mlxscore=0 phishscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
+ definitions=main-2211100048
+X-Proofpoint-ORIG-GUID: Av2xvgdclirvAzsD7-m2qaJwS94hSVwB
+X-Proofpoint-GUID: Av2xvgdclirvAzsD7-m2qaJwS94hSVwB
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Subject line has my typo: s/sync_file_range/copy_file_range/
+Hi Darrick,
 
-On Wed, Nov 09, 2022 at 08:47:15AM -0800, Darrick J. Wong wrote:
-> On Tue, Nov 08, 2022 at 09:24:36AM -0800, Noah Misch wrote:
-> > Scenario: due to a block device error, the kernel fails to persist some file
-> > content.  Even so, read() always returns the file content accurately.
-> 
-> ...reads of the source file?  Or the destination file?  Your script
-> doesn't explicitly sum the source file after the EIO, so I'm guessing
-> the “cat $broken_source | cat > $dest; sum $dest” demonstrates that the
-> page cache of the source file is still ok?
+This 5.4.y backport series contains fixes from v5.9 release.
 
-Reads of the source file.  Yes, I believe the page cache is ok, while on-disk
-state is not okay.
+This patchset has been tested by executing fstests (via kdevops) using
+the following XFS configurations,
 
-> > The first FICLONE returns EIO, but every subsequent FICLONE or
-> > copy_file_range() operates as though the file were all zeros.
-> 
-> Note FICLONE != clone_file_range.  FICLONE flushes dirty data to disk
-> and reflinks blocks; clone_file_range has a multitude of behaviors
-> depending on fs.  On XFS, it first will try FICLONE before falling back
-> to pipe copies.
-> 
-> So the first thing is to figure out where the EIO comes from such that
-> FICLONE fails.  Kernel logs would help here, since a dirty data
-> writeback encountering a broken disk will cause FICLONE to fail with EIO
-> but leave the fs running.
+1. No CRC (with 512 and 4k block size).
+2. Reflink/Rmapbt (1k and 4k block size).
+3. Reflink without Rmapbt.
+4. External log device.
 
-The EIO always correlates with a kernel log entry like this:
+The following lists patches which required other dependency patches to
+be included,
+1. 00fd1d56dd08a
+   xfs: redesign the reflink remap loop to fix blkres depletion crash
+   - 877f58f53684
+     xfs: rename xfs_bmap_is_real_extent to is_written_extent
 
-[Mon Nov  7 10:13:40 2022] sunvdc: vdc_tx_trigger() failure, err=-11
-[Mon Nov  7 10:13:40 2022] I/O error, dev vdiskc, sector 1918699264 op 0x1:(WRITE) flags 0x4800 phys_seg 17 prio class 2
+Brian Foster (2):
+  xfs: preserve rmapbt swapext block reservation from freed blocks
+  xfs: drain the buf delwri queue before xfsaild idles
 
-> The second thing would be to step through the system behavior call by
-> call -- what is the state of $dest after the FICLONE call but before the
-> c_f_r.  Is it an empty file with size zero?
+Darrick J. Wong (2):
+  xfs: rename xfs_bmap_is_real_extent to is_written_extent
+  xfs: redesign the reflink remap loop to fix blkres depletion crash
 
-I don't have that detail from the state right after the FICLONE that returned
-EIO.  (I could get it with another test run.  The last test run took 43965s,
-though.)  However, I would guess it's the same as the state when running a
-later FICLONE on the same source file.  The file has size 16777216, is sparse,
-and reads as all NUL bytes.
+Dave Chinner (1):
+  xfs: use MMAPLOCK around filemap_map_pages()
 
-> Is the pagecache for the
-> source file still intact?  That will tell us if FICLONE is somehow
-> stamping out files full of zeroes, or if this is a weird c_f_r behavior.
+Eric Sandeen (1):
+  xfs: preserve inode versioning across remounts
 
-Yes, pagecache is intact.
+ fs/xfs/libxfs/xfs_bmap.h     |  15 ++-
+ fs/xfs/libxfs/xfs_rtbitmap.c |   2 +-
+ fs/xfs/libxfs/xfs_shared.h   |   1 +
+ fs/xfs/xfs_bmap_util.c       |  18 +--
+ fs/xfs/xfs_file.c            |  15 ++-
+ fs/xfs/xfs_reflink.c         | 244 +++++++++++++++++++----------------
+ fs/xfs/xfs_super.c           |   4 +
+ fs/xfs/xfs_trace.h           |  52 +-------
+ fs/xfs/xfs_trans.c           |  19 ++-
+ fs/xfs/xfs_trans_ail.c       |  16 +--
+ 10 files changed, 198 insertions(+), 188 deletions(-)
 
-> I wrote the FICLONE behavior in XFS, and AFAIK there isn't a vector by
-> which the $dest file would end up being 16MB all zeroed (but hey, let's
-> simulate this behavior and check anyway).  However, c_f_r is ... a mess,
-> and I wouldn't be surprised if it did something whacky like that.
+-- 
+2.35.1
 
-One of the steps of the test script uses FICLONE without copy_file_range().
-
-> > How
-> > feasible is it change FICLONE
-> > and copy_file_range() such that they instead find the bytes that read() finds?
-> > 
-> > - Kernel is 6.0.0-1-sparc64-smp from Debian sid, running in a Solaris-hosted VM.
-> > 
-> > - The VM is gcc202 from https://cfarm.tetaneutral.net/machines/list/.
-> >   Accounts are available.
-> > 
-> > - The outcome is still reproducible in FICLONE issued two days after the
-> 
-> Are you issuing raw FICLONE calls, or cp with reflink again?
-
-cp with reflink, but it's basically raw FICLONE at that point.  See the
-original post's strace fragment below "FICLONE returns 0 and yields an
-all-zeros file".
-
-> >   original block device error.  I haven't checked whether it survives a
-> >   reboot.
-> > 
-> > - The "sync" command did not help.
-> > 
-> > - The block device errors have been ongoing for years.  If curious, see
-> >   https://postgr.es/m/CA+hUKGKfrXnuyk0Z24m8x4_eziuC3kLSaCmEeKPO1DVU9t-qtQ@mail.gmail.com
-> >   for details.  (Fixing the sunvdc driver is out of scope for this thread.)
-> >   Other known symptoms are failures in truncate() and fsync().  The system has
-> >   been generally usable for applications not requiring persistence.  I saw the
-> 
-> <cough> Well I guess if you're going to tie my hands from the start...
-
-Heh.  I won't stop you from fixing the sunvdc driver!  I figured linux-xfs
-would focus on the topic, "given block devices sometimes report errors, how
-should XFS behave?"
-
-> >   FICLONE problem after the system updated coreutils from 8.32-4.1 to 9.1-1.
-> >   That introduced a "cp" that uses FICLONE.  My current workaround is to place
-> >   a "cp" in my PATH that does 'exec /usr/bin/cp --reflink=never "$@"'
-> > 
-> > 
-> > The trouble emerged at a "cp".  To capture more details, I replaced "cp" with
-> > "trace-cp" containing:
-> > 
-> >   sum "$1"
-> >   strace cp "$@" 2>&1 | sed -n '/^geteuid/,$p'
-> >   sum "$2"
-> > 
-> > Output from that follows.  FICLONE returns EIO.  "cp" then falls back to
-> > copy_file_range(), which yields an all-zeros file:
-> > 
-> >   47831 16384 pg_wal/000000030000000000000003
-> >   geteuid()                               = 1450
-> >   openat(AT_FDCWD, "/home/nm/src/pg/backbranch/extra/src/test/recovery/tmp_check/t_028_pitr_timelines_primary_data/archives/000000030000000000000003", O_RDONLY|O_PATH|O_DIRECTORY) = -1 ENOENT (No such file or directory)
-> >   fstatat64(AT_FDCWD, "pg_wal/000000030000000000000003", {st_mode=S_IFREG|0600, st_size=16777216, ...}, 0) = 0
-> >   openat(AT_FDCWD, "pg_wal/000000030000000000000003", O_RDONLY) = 4
-> >   fstatat64(4, "", {st_mode=S_IFREG|0600, st_size=16777216, ...}, AT_EMPTY_PATH) = 0
-> >   openat(AT_FDCWD, "/home/nm/src/pg/backbranch/extra/src/test/recovery/tmp_check/t_028_pitr_timelines_primary_data/archives/000000030000000000000003", O_WRONLY|O_CREAT|O_EXCL, 0600) = 5
-> >   ioctl(5, BTRFS_IOC_CLONE or FICLONE, 4) = -1 EIO (Input/output error)
-> >   fstatat64(5, "", {st_mode=S_IFREG|0600, st_size=0, ...}, AT_EMPTY_PATH) = 0
-> >   fadvise64_64(4, 0, 0, POSIX_FADV_SEQUENTIAL) = 0
-> >   copy_file_range(4, NULL, 5, NULL, 9223372035781033984, 0) = 16777216
-> >   copy_file_range(4, NULL, 5, NULL, 9223372035781033984, 0) = 0
-> 
-> Clearly c_f_r thought it had 16MB of *something* to copy here.  It would
-> be interesting to ftrace the xfs reflink calls to find out if it called
-> FICLONE a second time, or if it actually tried a pagecache copy.
-
-If needed, I can try to get access to do that.
-
-> >   close(5)                                = 0
-> >   close(4)                                = 0
-> >   _llseek(0, 0, [0], SEEK_CUR)            = 0
-> >   close(0)                                = 0
-> >   close(1)                                = 0
-> >   close(2)                                = 0
-> >   exit_group(0)                           = ?
-> >   +++ exited with 0 +++
-> >   00000 16384 /home/nm/src/pg/backbranch/extra/src/test/recovery/tmp_check/t_028_pitr_timelines_primary_data/archives/000000030000000000000003
-> > 
-> > Subsequent FICLONE returns 0 and yields an all-zeros file.  Test script:
-> > 
-> >   set -x
-> >   broken_source=t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003
-> >   dest=$HOME/tmp/discard
-> >   sum "$broken_source"
-> >   : 'FICLONE returns 0 and yields an all-zeros file'
-> >   strace cp --reflink=always "$broken_source" "$dest" 2>&1 | sed -n '/^geteuid/,$p'
-> >   sum "$dest"; rm "$dest"
-> >   : 'copy_file_range() returns 0 and yields an all-zeros file'
-> >   strace -e copy_file_range cat "$broken_source" >"$dest"
-> >   sum "$dest"; rm "$dest"
-> >   : 'read() gets the intended bytes'
-> >   cat "$broken_source" | cat >"$dest"
-> >   sum "$dest"; rm "$dest"
-> > 
-> > Test script output:
-> > 
-> >   + broken_source=t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003
-> >   + dest=/home/nm/tmp/discard
-> >   + sum t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003
-> >   49522 16384 t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003
-> >   + : FICLONE returns 0 and yields an all-zeros file
-> >   + strace cp --reflink=always t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003 /home/nm/tmp/discard
-> >   + sed -n /^geteuid/,$p
-> >   geteuid()                               = 1450
-> >   openat(AT_FDCWD, "/home/nm/tmp/discard", O_RDONLY|O_PATH|O_DIRECTORY) = -1 ENOENT (No such file or directory)
-> >   fstatat64(AT_FDCWD, "t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003", {st_mode=S_IFREG|0600, st_size=16777216, ...}, 0) = 0
-> >   openat(AT_FDCWD, "t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003", O_RDONLY) = 3
-> >   fstatat64(3, "", {st_mode=S_IFREG|0600, st_size=16777216, ...}, AT_EMPTY_PATH) = 0
-> >   openat(AT_FDCWD, "/home/nm/tmp/discard", O_WRONLY|O_CREAT|O_EXCL, 0600) = 4
-> >   ioctl(4, BTRFS_IOC_CLONE or FICLONE, 3) = 0
-> >   close(4)                                = 0
-> >   close(3)                                = 0
-> >   _llseek(0, 0, 0x7feffddf1c0, SEEK_CUR)  = -1 ESPIPE (Illegal seek)
-> >   close(0)                                = 0
-> >   close(1)                                = 0
-> >   close(2)                                = 0
-> >   exit_group(0)                           = ?
-> >   +++ exited with 0 +++
-> >   + sum /home/nm/tmp/discard
-> >   00000 16384 /home/nm/tmp/discard
-> 
-> Curious.  This time the FICLONE actually succeeded.  Can you “filefrag
-> -v $dest” here and show us if the dest file has space mapped to that 16M
-> or if it's sparse?
-
-  Filesystem type is: 58465342
-  File size of /home/nm/tmp/discard is 16777216 (4096 blocks of 4096 bytes)
-  /home/nm/tmp/discard: 0 extents found
-
-That is the output for $dest created via FICLONE and also for $dest created by
-copy_file_range().  (The test uses "cat $src >$dest" to test copy_file_range()
-in isolation.)
-
-For what it's worth, here's the output for the broken source file:
-
-  Filesystem type is: 58465342
-  File size of t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003 is 16777216 (4096 blocks of 4096 bytes)
-   ext:     logical_offset:        physical_offset: length:   expected: flags:
-     0:        0..    4095:  109234308.. 109238403:   4096:             last,unwritten,eof
-  t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003: 1 extent found
-
-And for the good copy created by cat source | cat >dest:
-
-  Filesystem type is: 58465342
-  File size of /home/nm/tmp/discard is 16777216 (4096 blocks of 4096 bytes)
-   ext:     logical_offset:        physical_offset: length:   expected: flags:
-     0:        0..    4095:          0..         0:      0:             last,unknown_loc,delalloc,eof
-  /home/nm/tmp/discard: 1 extent found
-
-In case it wasn't clear, the original post contained two scripts.  The
-three-line "trace-cp" script was called from my application (PostgreSQL).  It
-caught the evidence of the original EIO that coincided with the block device
-error.  The longer script labeled "test script" is something I run at will,
-getting the same result every time.
-
-> Waitaminute.  About that 16M of data that's in $broken_source -- was all
-> of that written to the pagecache right before the first call to cp?  I
-> have a theory here that if you did:
-> 
-> 	write(src_fd, <16M of data>) = 16M
-> 	ficlone(dst_fd, src_fd) = -EIO
-> 	copy_file_range(dst_fd, src_fd)
-
-Essentially yes.  It might have been a few smaller write() calls, not a single
-big one.  In any case, the file originated seconds before the FICLONE.
-
-> Then what's going on here is that the first write call dirties 16M of
-> pagecache.  The FICLONE does an implied fsync() to flush the dirty data
-> to disk, but that writeback fails.  The pagecache does not respond to
-> writeback failure by redirtying the pages.  After the failed FICLONE,
-> the src_fd file does not have written extents allocated to it -- either
-> it'll be an unwritten extent, or nothing at all.
-> 
-> Then the second c_f_r comes along and tries FICLONE again.  This time
-> the "flush" succeeds because the pages are "clean" so we go ahead with
-> the reflink.  (Thanks, cp, for dropping the EIO!!!)  Reflink only shares
-> written extents, so it extends dst_fd's size without mapping any real
-> space to it.  That's my theory for why you see a $dest file that's 16M
-> and all zeroes.
-> 
-> (Think of FICLONE as a low-level duplicator of disk contents whose only
-> interaction with the page cache is to flush it at the start.)
-> 
-> Then you come along and manually cat $broken_source to $dest, using that
-> odd pipe construction:
-> 
->    cat "$broken_source" | cat >"$dest"
-> 
-> The introduction of the pipe means that c_f_r immediately goes to the
-> pipe copying fallback, which reads the pagecache to the pipe; and writes
-> the pipe contents to $dest.  Hence this works where everything else
-> fails.
-
-Those paragraphs are consistent with everything I know about the situation.
- 
-> So I guess the question now is, what do we do about it?  The pagecache
-> maintainers have never been receptive to redirtying pages after a
-> writeback failure; cp should really pass that EIO out to userspace
-> instead of silently eating it; and maaaybe FICLONE should detect EIOs
-> recorded in the file's pagecache and return that, but it won't fix the
-
-I'd favor having both FICLONE and copy_file_range() "detect EIOs recorded in
-the file's pagecache and return that".  That way, they never silently make a
-bad clone when read() could have provided the bytes constituting a good clone.
-
-> underlying problem, which is that the cache thinks its clean after an
-> EIO, and the pagecache forgets about recorded EIOs after reporting them
-> via fsync/syncfs.
-
-True.
-
-> If you rebooted the machine at the end of the script, you'd likely see
-> that $broken_source is either empty or also full of zeroes.  Quite
-> possibly $dest would have the contents, since it did manage to get its
-> own copy of the "clean" pagecache data and persist it.
-
-I agree.  Thanks for the detailed reply.
-
-> 
-> --D
-> 
-> >   + rm /home/nm/tmp/discard
-> >   + : copy_file_range() returns 0 and yields an all-zeros file
-> >   + strace -e copy_file_range cat t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003
-> >   copy_file_range(3, NULL, 1, NULL, 9223372035781033984, 0) = 16777216
-> >   copy_file_range(3, NULL, 1, NULL, 9223372035781033984, 0) = 0
-> >   +++ exited with 0 +++
-> >   + sum /home/nm/tmp/discard
-> >   00000 16384 /home/nm/tmp/discard
-> >   + rm /home/nm/tmp/discard
-> >   + : read() gets the intended bytes
-> >   + cat t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003
-> >   + cat
-> >   + sum /home/nm/tmp/discard
-> >   49522 16384 /home/nm/tmp/discard
-> >   + rm /home/nm/tmp/discard
