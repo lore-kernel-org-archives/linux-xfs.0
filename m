@@ -2,203 +2,237 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38D86C433FE
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Nov 2022 04:11:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1054CC4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Nov 2022 04:11:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229907AbiKKELP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Nov 2022 23:11:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56050 "EHLO
+        id S231157AbiKKELY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Nov 2022 23:11:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56076 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230075AbiKKELN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Nov 2022 23:11:13 -0500
+        with ESMTP id S230075AbiKKELX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Nov 2022 23:11:23 -0500
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81AD61B9D6;
-        Thu, 10 Nov 2022 20:11:09 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 555041BEB7;
+        Thu, 10 Nov 2022 20:11:20 -0800 (PST)
 Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2AB42hYf028775;
-        Fri, 11 Nov 2022 04:11:05 GMT
+        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2AB42hZC028775;
+        Fri, 11 Nov 2022 04:11:16 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version; s=corp-2022-7-12;
- bh=WUGQwMXNoic9AAeji0EkgAQt7C2sSK4pmz0vHuUquvY=;
- b=MveE5C9e7eQfTewd2c3Ifbtlq534I05gOPY5OQ421DD7w3Qr0jX5vePDEdFSrQzDK9aU
- lztbxO8e7GU4vTpW+4eU9OoOFwqcLxnqPgjjv+0VvUp8p0W1ChKw1gs1cXnlfzYPo4Nb
- r08ohd0Nxt98VYtOYvPH1IgdoWxCMiIqehWi5TnjWsZmEflb2VDRsu46zz3EGRWpdb5b
- xSNH7Qk/MHWvS9ZKMyS3RVPClNFjXq4A91SD0GpTdBoG0gdGZfugRP9vYOwUD1RLr9Jv
- G5KGzyTfbUbHv7kKvBeBXYeOhRf6u5kTsfCLfedH9MluVE+qQpSuW9w4YCGG5dqKm4XU XQ== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ksf0x80et-1
+ bh=tIO1v2V0sOwtgZ7WCTh5OXsP5zqjDVlwudqk9CXEXpg=;
+ b=1Ev3OHtSENjvXdblSvFVv34NdDoYefvFXEaTOQfdfFJyFiDuVGthhHG/WQyEAzLHtOHW
+ 6LHSkoY8dcYMoZ9gEFr+P19xqHMSKMQ4tXPhVZ6N/h7eHqe7uz4tO0KeWphFVaW2CaFK
+ EZx1KycItY67ME4Kk8Uf6YBJtkQ7Phf6TDfbmpLYNnzHKHIuaXOrNpmyV9GCdqBwPBE/
+ BqabsexcXZA+k9KCcAkQ5QGG3C2XKRarjfMXuiyKMxoSMS2ilmRWuF3FTREmP7TX6aHd
+ s0mW6I8431lZBZalm3xRIRJB+aOFUypX+AVFmIPDkMsC66fZ5K15h6VB0tPtgRoh8K9j cA== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ksf0x80g3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 11 Nov 2022 04:11:04 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2AB2Vo4I004081;
-        Fri, 11 Nov 2022 04:10:58 GMT
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2168.outbound.protection.outlook.com [104.47.56.168])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3kpctqcp91-1
+        Fri, 11 Nov 2022 04:11:15 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2AB368Es019786;
+        Fri, 11 Nov 2022 04:11:11 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2171.outbound.protection.outlook.com [104.47.56.171])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3kpcqm12ja-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 11 Nov 2022 04:10:58 +0000
+        Fri, 11 Nov 2022 04:11:11 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Ot8DVUstwxQZaXK0Vp4GpS5ViIZGu58xU+oXXMEXkpa82lZNO1bscEz1acCybAWAv2NLRUuKZtjQmF/Lji0vifesxaC/6FFop08k2zTW59v7W/qTUKIVCQkOfvwMYdJrRju23M2n4MJGUSVxvnyin4ZIbkw27CL51jilNaplUvuFyH/ZI/m5/PmVjzDIZ4WYs3fVi66Rf0jXNbAyP4NNs3Dhlelog/feyg4fbstwrRC//ow+eGaynBSHcULpWUf7/Toc28vhnLwyClqCuLtHH/ZzoI3DvV7R1a1BC3BqpuGbMxfTLCjwtPks4NsczDYHDLVJ5t0rRVIBgb9mPBvwhg==
+ b=bGwJ3VrU3NOXEe460uxQR0E9dQDerGpvlPrUoTd7t3XQm5/jRFvZ0OP4N5Fgb3DHJEbh6jBpshMRxawXmhg7A53nOB1NHwbYhfoYGcbQ2W81WiZqVw4fKScjstRQ1Ctt3Adladsu4q0jn1ry9DNUWIoxyC52JFcxPVaAk1IwzL/I/GsdmDbRA58yjkbq4STYXUT5967pDOAn0OiR71Pjr7FBf5/3W+FpmZMRWJP8NtpfStN8FJO4VUAuX0knBOX/YAJxC06RgoVmcMlHGG9gUNXXdR9dmoS9LL5lgvYGGYzvmi8Jioe1qA90ntkeeKeDSLbDDPr1BiziCWVrqQe9gQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=WUGQwMXNoic9AAeji0EkgAQt7C2sSK4pmz0vHuUquvY=;
- b=h0qWabpytiTPrGuXQoU75H0pnIyd/oi4emITgGznWsdo6MExdHejuFasYmfMt79qxczwGTvNNC4Xt6Zff/wYxU6IxY22bNZrOMVDXGckwyLgtUJBCL8CnOSNZa5eYDwSwGVbrluZI75ZliigeqiA2FWdmoOZeKVvcZsYic2/BKdiH19i529W7fcGix5m0tEsslplrE/C8paJIx3yA9lD9uBk0yD8wZWK1pWf26XnPNQ9BzKi/74sfYnLe5qIe9Xq8iGx8/hnAztPuoQtKUNkSV9UECh8YpE65DtkQfWMXAly2QCaEtbXcNlTZ/zYg0Quru0vLp9+9/yJB6Q6CIIeqg==
+ bh=tIO1v2V0sOwtgZ7WCTh5OXsP5zqjDVlwudqk9CXEXpg=;
+ b=CI8LSUBv71dkKBVBE2TRxhtPvoQ60uValTVFVG3q8zhukWxCR6wIi3QYWPxEYyFSaFh8ViLER62cbvQy5utOK40qrbXqsL5nedOob6eXIVjpWzhrAqSsU0CwNPS3eXS7fhW1mUUFr7iWw1wAE8pcaQ0D/kJb005JYCq+YiSh42OQYTjiuYwuQA6NnZGNCdHWv+//p1qnoqBzZz7M7Uk9Duc1V+DP67QGs7OrWpbLq0m3gEFJ/hzHWaiHm23xwcuvvXFWsh9l38Tu9+LPtATv6eaQ5pVv4+V8UjQe5C2yniRqsoSYkEUb4Y9/YUZ+UxFpeaPai9rr0qJCXOusdH74Qg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WUGQwMXNoic9AAeji0EkgAQt7C2sSK4pmz0vHuUquvY=;
- b=GOEIdzB3443FSM+mSdD6JXhLFDgMeP0160xxI+wJlvxhuoQuJOll80ezFPFvVTx0bDXIWDUqVyin57X3utrzJKGVsfVr4xzQnE59NExjqpsHadbwY8bEDnx6OfF6XfhNKfINhWAkXjYrGiX0EQ2StujHMvUzDMDNmmV5092u42o=
+ bh=tIO1v2V0sOwtgZ7WCTh5OXsP5zqjDVlwudqk9CXEXpg=;
+ b=ruyqrWp+vchf2cX2iXM+Skp3NUX2YKJ/XDH6PnNMUxs1PmcrnJ1Ex4of4wScNDykT77NiYQR/CgcOnmErqj/FMG4t4pvHEQiwZ9pTU0X4qViWMsFujxawgUAbe3trS14EPyvTMkHSIHO/5b3/itJAVg5t4Gf0rlugdwpTx0ns5g=
 Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:22b::9)
  by SA2PR10MB4730.namprd10.prod.outlook.com (2603:10b6:806:117::21) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5791.25; Fri, 11 Nov
- 2022 04:10:56 +0000
+ 2022 04:11:09 +0000
 Received: from SA1PR10MB5867.namprd10.prod.outlook.com
  ([fe80::a671:8bae:5830:6fd]) by SA1PR10MB5867.namprd10.prod.outlook.com
  ([fe80::a671:8bae:5830:6fd%3]) with mapi id 15.20.5813.013; Fri, 11 Nov 2022
- 04:10:56 +0000
+ 04:11:09 +0000
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     gregkh@linuxfoundation.org
 Cc:     sashal@kernel.org, mcgrof@kernel.org, linux-xfs@vger.kernel.org,
         stable@vger.kernel.org, djwong@kernel.org, chandan.babu@oracle.com,
         amir73il@gmail.com, leah.rumancik@gmail.com
-Subject: [PATCH 5.4 4/6] xfs: use MMAPLOCK around filemap_map_pages()
-Date:   Fri, 11 Nov 2022 09:40:23 +0530
-Message-Id: <20221111041025.87704-5-chandan.babu@oracle.com>
+Subject: [PATCH 5.4 6/6] xfs: drain the buf delwri queue before xfsaild idles
+Date:   Fri, 11 Nov 2022 09:40:25 +0530
+Message-Id: <20221111041025.87704-7-chandan.babu@oracle.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20221111041025.87704-1-chandan.babu@oracle.com>
 References: <20221111041025.87704-1-chandan.babu@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: TYCPR01CA0063.jpnprd01.prod.outlook.com
- (2603:1096:405:2::27) To SA1PR10MB5867.namprd10.prod.outlook.com
+X-ClientProxiedBy: TY2PR02CA0068.apcprd02.prod.outlook.com
+ (2603:1096:404:e2::32) To SA1PR10MB5867.namprd10.prod.outlook.com
  (2603:10b6:806:22b::9)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|SA2PR10MB4730:EE_
-X-MS-Office365-Filtering-Correlation-Id: 6b41a7be-2755-4205-4839-08dac39abb99
+X-MS-Office365-Filtering-Correlation-Id: 5c2dd76c-0de8-4dd4-a7f5-08dac39ac327
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: n4gYrCUgFmi2cG1dJWbjx+9RGQRHxDTpDyc1WPuRbb53Hy8E8L/58IWHtRzLTXBubVFYmzvw16M4t0r6RYNTP/S0UwdQcSEIT+lnW/3P/+9WqmKhQtaG6IEgZ4sIjdtjxQdNpewF+PRSbLINuuf1VqCPRUjSDig5sw0l4Bvip0V1GSam7XRfWj1Pz65y3jr0fJllfzf1vYoCrX0ekSRJVNrB87AnWMMKXnI3eUVa1Q3W71cFOQW/85fmNSB/RK8Bb2NjX71sNc0AqyX7cSnhdkvbSWZp/J7DKbV9ej5xiYZQppoNRVCcktPNm/Wln+I5ehlS8mneut0PvY+pX9rSuWqdJCAA8xrC2EzWArVqAhll56zbkyu40PruFFOfzAyrQRwGV+Bt5W09ByJq5PvdKOqh/6fBqwNm9KLAHMHHgm2PxZPNW7BYTa+5UgVAtUg18awj6QvxNI/ST4QOR34WfRHggMDi4sJrapvgriCDqVd0oMhWW1jU6G+BpG7exm7Ip0bPNgQ67uODx+6hSorNVwGwAYlsIn/IErhBjFtMkpL7UNJEx7IvZeBW1lqb8KJS27N8vXSpKp7WqyjrFUOP4wkUNr9NCW/jmWxcKVxonjZcrqGH41T7PTUTY4fZNj9IYuundhj1t34TSrWXXFaUCoXKBNzeYng7XWOhtBbDF31+cPXhu1L5RBa7JVG4JhWeJaSETYXbFE+H748pbei3fA==
+X-Microsoft-Antispam-Message-Info: D2LxvMkoVRHPqfHSODbzzEhwz+7jbynWsCca1LrraWHpi+wGi27NlK/f5sFkBm3wmLU7rHAfquq8UhMw489pwkMvtrJXWDzEBj+UB+sMbUFzEManE6s7idt1tQPqkXcIBScgTZJC8vugEC7kdgF2LR8/fpiuY7yHeUieYpqy+d2arIPU8EQ8+zOc6AKsi1dSEfH01c7p+rA9cXCD8vi/9kTmhhc3ctpnbeXnN85nYrbS1t3A2t7WFJRSAHhAuEeaNM1fMjmoXNQxQRSLa1Ape0aTiNd0TV6zgAzZygVF4c1kMpQDfuQp/UmTQ9fIKm3IdYxAvnDRWnnXT2LUkugtnM/GdJARsWhXTZhEH24zJyl5kFb8DRwZu9yWLIQxr8Xx71LqGPsdYS8WHjpYOo2oQGg4POKxQsLGbzFRNt37rtGzxHujb80jUv6KCTjWNsuxuydEr+VFBD/Cddo1Pob/SKVdLSuYBumBRPsTpXmZbg0yYb9lcgCVXocsx+78Q704/IrO2vQOq6l2Luy3W18f26PAS0/1Xgm8MT5H3bdGF5nagq+J94APB1sQlM4csDFjT9Fd3znhBF9v/hFIn0NJUdZ970IivTp1AsbkFbTleqb38jSTZZ0iSc0D+1AxREIf86RDxvRc8Lx+pJlBh/XcBl0NnA63KlV5vSg7kpEdm7q2dU19be148nl/bkuqI1zC/x8AzGPwv8bnvkyUx0VCJw==
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(366004)(39860400002)(396003)(346002)(376002)(136003)(451199015)(36756003)(66556008)(6916009)(38100700002)(8936002)(66476007)(5660300002)(6506007)(66946007)(8676002)(316002)(2906002)(41300700001)(4326008)(6486002)(6666004)(86362001)(2616005)(186003)(6512007)(83380400001)(478600001)(26005)(1076003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?ptU6NsarDdAdDeUg2jF2NvueDkd742BO5vRb8jXdaqUISqY6hyThW9YyrHy7?=
- =?us-ascii?Q?4CWaQv5sJNEUKzFx4ndQFUJVW0l/Apt+AZV028Iu0PAz/hzcmcFQIsCf7ii0?=
- =?us-ascii?Q?B54hhSEhpmr1kn+V+FkC9eXoHfiJSisSIf+Fy3EzmdzK1xxh/dMUFtmKl3Fx?=
- =?us-ascii?Q?OwWUOkptHa6fD0Q8VK48gcyqg+bUK6wGdtP0ggM4xk6RU94cicgOazqbO2B8?=
- =?us-ascii?Q?nhJUzqnm6jV7mi9Y4gRh3VrU0c7qqGtQKSPJDbEYrxS4akfLnC9wWkAxocLA?=
- =?us-ascii?Q?AKqNNVcq1vB4bQeGCRPsjAE2gJzeGAF2jMOaxv5fXapkfxT2uH92EVIhzPjI?=
- =?us-ascii?Q?4s3eQ0zx+Qw800VWTdCmKwbK1Vqa94fUU3Fq28FbMcQF8x1oZAqvUwHC6Vnr?=
- =?us-ascii?Q?9rcSSnWgQvlVy2+JvCqtJ6j2lxlPpq/CqX/SM7oo9707Ct0Jo4oXePjJ2dQB?=
- =?us-ascii?Q?sVbrwcaxdVyW0Ptd12nDJLM+fnGgwP1DjGzE6A7ZJ/yvO14LKzUb7D+KYdTN?=
- =?us-ascii?Q?CDRtRdLNATrQS8g5fENvIwUNl2YyWkIWelXwThGmmOGvMJG8bQBAz78Q8QFf?=
- =?us-ascii?Q?OFcUTTYC7nujIIuGLp+WnXhKepNL1/tlSQfWAjMuQ8zGCyv9q3YkGJ6B2ECR?=
- =?us-ascii?Q?5K70GMisc9JixoBBJmEANBLsAeFDEXE8vcyiyUdt2mcQjNC4M/4uskDwr3lz?=
- =?us-ascii?Q?VoVYcyLUQozqT+3Ky6Gz157MD29XvVupxIFNOOpLP45UWLJN1xSD9I2kXndm?=
- =?us-ascii?Q?nRrn4j/GdlQriPo4KDN3IyNHEIhFoGSwShuVLfnrfG+L/JpgxqfrmZoEOSTj?=
- =?us-ascii?Q?/Mvma9mfaZP0ErAbQoqS2j9uJQAdHYh3R0vqIJbbyVuKE/W1dgdanYuwKnN/?=
- =?us-ascii?Q?wimbKR5deG0bwJUsTL76W7KF3BCeP1uXKxf4gAS5GCi8RsvtsCvFYqCj3sMV?=
- =?us-ascii?Q?zODR66xtV167RmZ58NahiuxtJOwEqz7HbXh7kaT3IwnXMW+3X2BdYcm6gBew?=
- =?us-ascii?Q?9mQUuzHSdCwyhFDlCnrtAx0n1VupMgYmkHEV+CwETM8rfwfz7Mu1UfVB7NSP?=
- =?us-ascii?Q?10bsoowXxa1+y2Bne+JkqqcvBBKdNlVtf2k9/riPWIOrh0oscN5WyoYnSVHp?=
- =?us-ascii?Q?EqG8bYW4/9BA3abCkgQYpy0hJZbo2wE9nZPjbwVvCUovaorkU6Gv5DAzboOD?=
- =?us-ascii?Q?S/htbTcyo62vptJFX3oNQBl+IgGb0O7y70sPWDipHsHmIfjRi0jpgJrDwyV1?=
- =?us-ascii?Q?3TOCxWuIOVTWXAHoWV4ElmW/P+5bLhdboFeRc6NygWf9EATqVrmLK0ees81o?=
- =?us-ascii?Q?n9NwTHn/PWEyPmstzbyQwihVw5lwqU2RBAlWX7Rs8zIcMRF0zilLgp92K2AF?=
- =?us-ascii?Q?Z/DhqoiZAIcllm25Qx7fHwuhlO7Qyj/ySiudGPC3G5kMZyArgOvdtTbrb8dH?=
- =?us-ascii?Q?/dlS0ux0RUN5ZwSE7/HhPEM7YVpWAVFhAHhcIWJKwmAI6+tFGphWwLMc3RXU?=
- =?us-ascii?Q?4ruF0RRDgCd8gSqETSiskHAs2MXvoFCwl4OcSWuQnduYgFuwh7gSOqDJ0kMv?=
- =?us-ascii?Q?m1mgnTsD32owHQqtSPQXsqsJooR7wa39iVqV5y91cmy25XaOlfujQbQOStlU?=
- =?us-ascii?Q?JA=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?9lEH5N87IbLrbUm4jxYB0K6n1aib1jmWiiYY4v7G+YZlQTt8k41YCAb8s+nG?=
+ =?us-ascii?Q?NkkDB1aweWtmT2+dBf+QwK1KC0XUB1hOeeT8joMp72HJJ0KOUh/nsG3dcsqr?=
+ =?us-ascii?Q?H0WlivJ+hOq7SkMcHeMVPA1i/58PwW4zd7RuA+8LTI86f8w+O1RlZINcz15w?=
+ =?us-ascii?Q?02A5YHV33c3ZygVsbphIsMF3Eeb2+lJGn82k4a1vWAolD9nlEVy46YxDHB6B?=
+ =?us-ascii?Q?5zSAiKazOY3LXbqibf44e3F++uoK8otP3LEt9ChJiylb+b4jbElDQC/+CU5H?=
+ =?us-ascii?Q?/fp9DWtk4NUgzA3IEYfs+haJ/36IRUGe6KUH+xphqTOnz2wQJmFnF1na9iQL?=
+ =?us-ascii?Q?bJbyQwTSI1nDTxbB2lrzzVy84qkaKWLMi7CmcYa0AMjyNNsK2/v28BUUTvNg?=
+ =?us-ascii?Q?Rn7HGsCE2Y/Nl8P/yy0ssVHnqGK4F4+19uHVFUAdE5AQmQc70X6VZxoMo2EQ?=
+ =?us-ascii?Q?+7KRLn8G5aMJs1hhdjJrfSge7wSAOEW6mMhqmj3/w5UP9ccMwKqxjI+r/+jn?=
+ =?us-ascii?Q?vjcH+kTodTVe4KCspp+5QDqDWDokFhFfz5fA19//zi4rU02eyp9HINPjY5OZ?=
+ =?us-ascii?Q?M76v8g3RgPR0B9TI4++XcB8XtG8vz5nPdNRtqzEbNK7ilELwPlTt7J7SFs+N?=
+ =?us-ascii?Q?6tWQ6k5yU/IBnyYadDLuKqO1UNTPnYo0/lSWZZQ0xH1ElbYzu1yBluUEhyg8?=
+ =?us-ascii?Q?LG7aOaGYKPnEISf1fwZt6grPv0yvB0JHJtir+ODmvwL0/e2gzym26GmDUwfo?=
+ =?us-ascii?Q?xQM5s2iEbX7hpFkKTmwx14XQfP3Ya3UzwzaRMFEMEzMDsJAnpeFVf4HZlxcW?=
+ =?us-ascii?Q?F7MQ8o3yitaxhiR5jjQVl7Ym40j3hnBzobqo8JO2187L2qwTbbWRX8x6ihwY?=
+ =?us-ascii?Q?6vM2QQxTaNCnA1u0+/YY4EKGjAHJ1HwMEsNICsihqacoE8cOIPs5JXSTg+gz?=
+ =?us-ascii?Q?bJOY2kC+SRePWKrLyguSsgxbDoWdMgSsKsXIH1giH6GitDGx3mEjJT5iuBq+?=
+ =?us-ascii?Q?vqPAyQDz2huFv8MvPZ/KALpwhqBj+oaescmF8gfUdV3za/ySKU26Vwy8BXMi?=
+ =?us-ascii?Q?0ATEtLrn4DGtt4gvZzbs1eSF0qbUbINcewj+PhP0qjnd6wpAy//0gDCsaAll?=
+ =?us-ascii?Q?K0Wu+lIrwoL8Dk/7lEjR3uEluwo0rY6fPI47Mv3eTNr2axISstYjPVuoWuHk?=
+ =?us-ascii?Q?DtY/bWw7yJPryPb6BnvJcO7QKWEmRSNe5ha+gnhHLKnOfbe2IlHF4cneQyMB?=
+ =?us-ascii?Q?Tw93kSg6xmIVM5KALsIa+bL1ZlQj143HjdZweeNs3XlYJoAzfHNWmmoJNUaX?=
+ =?us-ascii?Q?Bq2pD///pyQlu8iZReFiG3dZf0NkWLBkun4oIQ1IB+B42Nbg0o5P6BLEjzqX?=
+ =?us-ascii?Q?/hTLhqC8mPMYZi4iriYY9ycU+XuISCoBxfVbXyZSS+ERrpKeCFdI3tM253cm?=
+ =?us-ascii?Q?bJ55gUNVan1Oij0fDoRJho5tx9/jAjDUGxT/VErnlJswj/jw2kvCNaLo7/W/?=
+ =?us-ascii?Q?8zuWxQE8a3Bnkc4SXc4K6fW9fnAEbjOtVg1rr1kS2kUCmv1KM8XVOBquOTom?=
+ =?us-ascii?Q?aOvx9oKOcaOUHuFGCAuAtDmaO/INubCBYS1bRSp0E1d6kFAeSLK7q1BelA/g?=
+ =?us-ascii?Q?ZA=3D=3D?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6b41a7be-2755-4205-4839-08dac39abb99
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5c2dd76c-0de8-4dd4-a7f5-08dac39ac327
 X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Nov 2022 04:10:56.8297
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Nov 2022 04:11:09.5069
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: JnvMUMHD8KwA6Vv8fPYt42xFF3Gd3bqZUKgCLCSIWCTh4kRLfpDXhECgUWhOAhosSrA6qO9jK1JiieNuCziaOg==
+X-MS-Exchange-CrossTenant-UserPrincipalName: Ko7J+HXf8MLB+H96Ijjsvu71ZQ2QO5j7xsgrZOM0xz1DFmzDqHD/h4b5YVsJ6ZQ9V9Wps+EX4u4mfQ2mlc4ABg==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR10MB4730
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
  definitions=2022-11-11_01,2022-11-09_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0 bulkscore=0
- adultscore=0 mlxscore=0 suspectscore=0 malwarescore=0 phishscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0 mlxscore=0
+ suspectscore=0 spamscore=0 malwarescore=0 bulkscore=0 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
  definitions=main-2211110026
-X-Proofpoint-GUID: 2kvrpcl5aGuNJmP767zxx8d0BkdQNxML
-X-Proofpoint-ORIG-GUID: 2kvrpcl5aGuNJmP767zxx8d0BkdQNxML
+X-Proofpoint-GUID: jQ8Ej--hwCGNO1HbtpCh2EZQIfPnHdgo
+X-Proofpoint-ORIG-GUID: jQ8Ej--hwCGNO1HbtpCh2EZQIfPnHdgo
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Brian Foster <bfoster@redhat.com>
 
-commit cd647d5651c0b0deaa26c1acb9e1789437ba9bc7 upstream.
+commit f376b45e861d8b7b34bf0eceeecfdd00dbe65cde upstream.
 
-The page faultround path ->map_pages is implemented in XFS via
-filemap_map_pages(). This function checks that pages found in page
-cache lookups have not raced with truncate based invalidation by
-checking page->mapping is correct and page->index is within EOF.
+xfsaild is racy with respect to transaction abort and shutdown in
+that the task can idle or exit with an empty AIL but buffers still
+on the delwri queue. This was partly addressed by cancelling the
+delwri queue before the task exits to prevent memory leaks, but it's
+also possible for xfsaild to empty and idle with buffers on the
+delwri queue. For example, a transaction that pins a buffer that
+also happens to sit on the AIL delwri queue will explicitly remove
+the associated log item from the AIL if the transaction aborts. The
+side effect of this is an unmount hang in xfs_wait_buftarg() as the
+associated buffers remain held by the delwri queue indefinitely.
+This is reproduced on repeated runs of generic/531 with an fs format
+(-mrmapbt=1 -bsize=1k) that happens to also reproduce transaction
+aborts.
 
-However, we've known for a long time that this is not sufficient to
-protect against races with invalidations done by operations that do
-not change EOF. e.g. hole punching and other fallocate() based
-direct extent manipulations. The way we protect against these
-races is we wrap the page fault operations in a XFS_MMAPLOCK_SHARED
-lock so they serialise against fallocate and truncate before calling
-into the filemap function that processes the fault.
+Update xfsaild to not idle until both the AIL and associated delwri
+queue are empty and update the push code to continue delwri queue
+submission attempts even when the AIL is empty. This allows the AIL
+to eventually release aborted buffers stranded on the delwri queue
+when they are unlocked by the associated transaction. This should
+have no significant effect on normal runtime behavior because the
+xfsaild currently idles only when the AIL is empty and in practice
+the AIL is rarely empty with a populated delwri queue. The items
+must be AIL resident to land in the queue in the first place and
+generally aren't removed until writeback completes.
 
-Do the same for XFS's ->map_pages implementation to close this
-potential data corruption issue.
+Note that the pre-existing delwri queue cancel logic in the exit
+path is retained because task stop is external, could technically
+come at any point, and xfsaild is still responsible to release its
+buffer references before it exits.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 ---
- fs/xfs/xfs_file.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_trans_ail.c | 16 ++++++----------
+ 1 file changed, 6 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index c67fab2c37c5..b651715da8c6 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1267,10 +1267,23 @@ xfs_filemap_pfn_mkwrite(
- 	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
- }
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index af782a7de21a..a41ba155d3a3 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -402,16 +402,10 @@ xfsaild_push(
+ 	target = ailp->ail_target;
+ 	ailp->ail_target_prev = target;
  
-+static void
-+xfs_filemap_map_pages(
-+	struct vm_fault		*vmf,
-+	pgoff_t			start_pgoff,
-+	pgoff_t			end_pgoff)
-+{
-+	struct inode		*inode = file_inode(vmf->vma->vm_file);
++	/* we're done if the AIL is empty or our push has reached the end */
+ 	lip = xfs_trans_ail_cursor_first(ailp, &cur, ailp->ail_last_pushed_lsn);
+-	if (!lip) {
+-		/*
+-		 * If the AIL is empty or our push has reached the end we are
+-		 * done now.
+-		 */
+-		xfs_trans_ail_cursor_done(&cur);
+-		spin_unlock(&ailp->ail_lock);
++	if (!lip)
+ 		goto out_done;
+-	}
+ 
+ 	XFS_STATS_INC(mp, xs_push_ail);
+ 
+@@ -493,6 +487,8 @@ xfsaild_push(
+ 			break;
+ 		lsn = lip->li_lsn;
+ 	}
 +
-+	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-+	filemap_map_pages(vmf, start_pgoff, end_pgoff);
-+	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-+}
-+
- static const struct vm_operations_struct xfs_file_vm_ops = {
- 	.fault		= xfs_filemap_fault,
- 	.huge_fault	= xfs_filemap_huge_fault,
--	.map_pages	= filemap_map_pages,
-+	.map_pages	= xfs_filemap_map_pages,
- 	.page_mkwrite	= xfs_filemap_page_mkwrite,
- 	.pfn_mkwrite	= xfs_filemap_pfn_mkwrite,
- };
++out_done:
+ 	xfs_trans_ail_cursor_done(&cur);
+ 	spin_unlock(&ailp->ail_lock);
+ 
+@@ -500,7 +496,6 @@ xfsaild_push(
+ 		ailp->ail_log_flush++;
+ 
+ 	if (!count || XFS_LSN_CMP(lsn, target) >= 0) {
+-out_done:
+ 		/*
+ 		 * We reached the target or the AIL is empty, so wait a bit
+ 		 * longer for I/O to complete and remove pushed items from the
+@@ -592,7 +587,8 @@ xfsaild(
+ 		 */
+ 		smp_rmb();
+ 		if (!xfs_ail_min(ailp) &&
+-		    ailp->ail_target == ailp->ail_target_prev) {
++		    ailp->ail_target == ailp->ail_target_prev &&
++		    list_empty(&ailp->ail_buf_list)) {
+ 			spin_unlock(&ailp->ail_lock);
+ 			freezable_schedule();
+ 			tout = 0;
 -- 
 2.35.1
 
