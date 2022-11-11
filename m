@@ -2,253 +2,160 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6958C4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Nov 2022 06:06:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D46BC4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Nov 2022 06:28:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229461AbiKKGGC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Nov 2022 01:06:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40126 "EHLO
+        id S233007AbiKKG2q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Nov 2022 01:28:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52062 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230320AbiKKGGB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Nov 2022 01:06:01 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E74B35E3F4
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Nov 2022 22:05:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1668146700;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=s/JWAyjUw7bSSDwxMyzQBCXu3ytbIediVihbxXvZqjI=;
-        b=TAou51kWWYeCkgCXOXgTRlXZk/aXqNVYDBR1wgAdgprY71Zx/tEXZdWezkMG9JqOz8qGlK
-        5OqN+idU5Fz+1iO6BLaaUSUJCvs9WPmKU7/HuAJwCJdadwDnhHstlWqefSdbdE48BUxp/z
-        ynUdw/5oy7MiJwRxBVEMJitQ9NJJJlU=
-Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com
- [209.85.210.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-83-43fXgUsjOZ2NzELDVGgm5w-1; Fri, 11 Nov 2022 01:04:58 -0500
-X-MC-Unique: 43fXgUsjOZ2NzELDVGgm5w-1
-Received: by mail-pf1-f200.google.com with SMTP id x8-20020aa79568000000b0056dd717e051so2255399pfq.11
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Nov 2022 22:04:58 -0800 (PST)
+        with ESMTP id S233006AbiKKG2N (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Nov 2022 01:28:13 -0500
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BED267C8CE
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Nov 2022 22:24:29 -0800 (PST)
+Received: by mail-pj1-x102c.google.com with SMTP id c15-20020a17090a1d0f00b0021365864446so3895117pjd.4
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Nov 2022 22:24:29 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=zGF214jhqMsvXm/RYbiHRRRbsIBf0/4l13Bb39of/lI=;
+        b=jMpEp4p/aEp7NtEk9zJW5P6tA7IeINQ2xRP3tzo1paKgFtAfUW7mRPcBWtbgctDY0d
+         pqn+iRkIx1Z1NnY1hwktVpMcu804XmqdDK1P9M/kP2caHdpUzU62P7UFinejWvMFlTv1
+         S87tDfuhWR44IpTH44d5w5w3Sq42uOGXsf9NnDJwjaq/F0k0N+P10YF0pwrdoqSXAjhO
+         28V5L0tX26/ESVlNTIyd3mvSVmlsvBl0Hdynho//7EUnw7pX91mgvt90zzB0jJ+Dmbfj
+         IbVolPwnEkDYN7lS8+mzMAMkbwsenMr+dBaKHr2XqpUPPIpSnrC7F9rNmHwVn0BeOcCT
+         0I6Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=s/JWAyjUw7bSSDwxMyzQBCXu3ytbIediVihbxXvZqjI=;
-        b=qO/m/spo0d4GQNaDUmiNMJnfxOvlCMM7GD0NWRQn6XQQEq+THMcZsYt/T5d/kh9hV+
-         Qy6CmaQpaP62Khj/UBSFF4OaZIfOGpwXjTdKkqVwaFfzX6MqeSJAQc6+P45qIP1JvNb6
-         Odtnw97W2Cm5yoDAjI/FrYsZesKN9L4GnhxrPZAdbCiZ7D43KcPuoGnFIMi0qYyW4wwt
-         XXFfHj1SO0ZLX+IqCvCJgW7mcMeBDYG1SrlEccvlC2AthHA79runK9D5b4+rM8KZfYKm
-         m0v6J8bVtnTVc9jsrv2TrVfuSbTR5hoVJ9rkSfCTeDxIxU2NVoIn6Heeuw2kyVIOSHt+
-         gK8A==
-X-Gm-Message-State: ANoB5pl2yZ1dPiIufhtCo+i0vGr+TFQ4DRfg7Ygdjxcxl170QBptYZOw
-        l8+DNwk5uNszF420mE0CsZR65rxaGUZOqIwlXesmOmWa+udFoqG9aronjjRU5PfP/YgeBzXCA/a
-        kSQK0eoxVLVp/6gOul9s/
-X-Received: by 2002:a63:4747:0:b0:46f:1e8d:d6a8 with SMTP id w7-20020a634747000000b0046f1e8dd6a8mr383484pgk.248.1668146696408;
-        Thu, 10 Nov 2022 22:04:56 -0800 (PST)
-X-Google-Smtp-Source: AA0mqf5bjpjz9x8TOGd+JQjM6RdnSQ1YB0NAIU3ZKPPwrlqsFob4jQXRnSNLU4U5PxVQi54ZX4ujRA==
-X-Received: by 2002:a63:4747:0:b0:46f:1e8d:d6a8 with SMTP id w7-20020a634747000000b0046f1e8dd6a8mr383459pgk.248.1668146696005;
-        Thu, 10 Nov 2022 22:04:56 -0800 (PST)
-Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id y7-20020aa79e07000000b0056e8eb09d58sm698142pfq.170.2022.11.10.22.04.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Nov 2022 22:04:55 -0800 (PST)
-Date:   Fri, 11 Nov 2022 14:04:50 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     Gao Xiang <hsiangkao@linux.alibaba.com>
-Cc:     linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        Brian Foster <bfoster@redhat.com>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] xfs: account extra freespace btree splits for multiple
- allocations
-Message-ID: <20221111060450.nojzqvcalwowov4l@zlang-mailbox>
-References: <20221109034802.40322-1-hsiangkao@linux.alibaba.com>
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=zGF214jhqMsvXm/RYbiHRRRbsIBf0/4l13Bb39of/lI=;
+        b=EOS6oqU0owL4kYxe0zN55KCUi94EBoFtOQd8RSfZkQVD8iR1kbdour+hVnLkNMWRb8
+         PtPJ5LNt5tAwrl1Wfnm+7gidvP6QOaOjIOvK1/dl2rHXiUeZHTRlfwk6p9peA1Sph8qf
+         6MvAcwlFG/K0R0lSMbTneAkxHuZs5tQsM4HRUIW7alv8uvARASD1juaEbo33u+Md3+tB
+         lDnHzRHD42QY/JdYUmWwvYFxsbwn1hDCnM/an1zBVV8pZWDbD1lVEgIELAgru0MC3n+v
+         X3eaK/S7jm2kepYgkqC3ybz/Tvgm3CI7IArtvQ/6K8giGIr4mxW7UN8mDIa4/3kTBJSm
+         wJdA==
+X-Gm-Message-State: ANoB5pk40Ki1NYLdHWUfv7st3tSe5xD7Zv1Bkn5c++mZDudDihdWPIOH
+        leof/33eOEBoIcREQJDcqdZroGyGPGE=
+X-Google-Smtp-Source: AA0mqf7p9LU4YyRymbHwPeIz1jphM+sd2AoLcPAMNGVEGqr7HDrBuSbziXxq+0f7s4DGn3Q3Y6Vafw==
+X-Received: by 2002:a17:902:6904:b0:185:4880:91cd with SMTP id j4-20020a170902690400b00185488091cdmr1112881plk.130.1668147869017;
+        Thu, 10 Nov 2022 22:24:29 -0800 (PST)
+Received: from [30.221.128.160] ([47.246.101.48])
+        by smtp.gmail.com with ESMTPSA id f1-20020a170902ab8100b00174c1855cd9sm757251plr.267.2022.11.10.22.24.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 10 Nov 2022 22:24:28 -0800 (PST)
+Message-ID: <190cba7f-30a0-4eb3-6587-5b42d7251868@gmail.com>
+Date:   Fri, 11 Nov 2022 14:24:25 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221109034802.40322-1-hsiangkao@linux.alibaba.com>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.4.2
+Subject: Re: [PATCH v3] fsck.xfs: mount/umount xfs fs to replay log before
+ running xfs_repair
+Content-Language: en-US
+To:     Srikanth C S <srikanth.c.s@oracle.com>, linux-xfs@vger.kernel.org
+Cc:     darrick.wong@oracle.com, rajesh.sivaramasubramaniom@oracle.com,
+        junxiao.bi@oracle.com, david@fromorbit.com
+References: <20221104061011.4063-1-srikanth.c.s@oracle.com>
+From:   Joseph Qi <jiangqi903@gmail.com>
+In-Reply-To: <20221104061011.4063-1-srikanth.c.s@oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 09, 2022 at 11:48:02AM +0800, Gao Xiang wrote:
-> There is a long standing issue which could cause fs shutdown due to
-> inode extent-to-btree conversion failure right after an extent
-> allocation in the same AG, which is absolutely unexpected due to the
-> proper minleft reservation in the previous allocation.  Brian once
-> addressed one of the root cause [1], however, such symptom can still
-> occur after the commit is merged as reported [2], and our cloud
-> environment is also suffering from this issue.
+Hi，
+
+On 11/4/22 2:10 PM, Srikanth C S wrote:
+> After a recent data center crash, we had to recover root filesystems
+> on several thousands of VMs via a boot time fsck. Since these
+> machines are remotely manageable, support can inject the kernel
+> command line with 'fsck.mode=force fsck.repair=yes' to kick off
+> xfs_repair if the machine won't come up or if they suspect there
+> might be deeper issues with latent errors in the fs metadata, which
+> is what they did to try to get everyone running ASAP while
+> anticipating any future problems. But, fsck.xfs does not address the
+> journal replay in case of a crash.
 > 
-> From the description of the commit [1], I found that Zirong has an
-> in-house stress test reproducer for this issue, therefore I asked him
-> to reproduce again and he confirmed that such issue can still be
-> reproduced on RHEL 9 in several days.
+> fsck.xfs does xfs_repair -e if fsck.mode=force is set. It is
+> possible that when the machine crashes, the fs is in inconsistent
+> state with the journal log not yet replayed. This can drop the machine
+> into the rescue shell because xfs_fsck.sh does not know how to clean the
+> log. Since the administrator told us to force repairs, address the
+> deficiency by cleaning the log and rerunning xfs_repair.
 > 
-> Thanks to him, after adding some debugging code to dump the current
-> transaction log items, I think the root cause is as below:
+> Run xfs_repair -e when fsck.mode=force and repair=auto or yes.
+> Replay the logs only if fsck.mode=force and fsck.repair=yes. For
+> other option -fa and -f drop to the rescue shell if repair detects
+> any corruptions.
 > 
->   1. xfs_bmapi_allocate() with the following condition:
->      freeblks: 18304 pagf_flcount: 6
->      reservation: 18276 need (min_free): 6
->      args->minleft: 1
->      available = freeblks + agflcount - reservation - need - minleft
->                = 18304 + min(6, 6) - 18276 - 6 - 1 = 27
->      The first allocation check itself is ok, and args->maxlen = 27
->      here
-> 
->      At this time, AG 3 also has the following state:
->      1st:64  last:69  cnt:6  longest:6395
-> 
->      AGFL has the following state:
->      64:547 65:167 66:1651 67:2040807 68:783 69:604
-> 
->   2. Tried to get 27 blocks from this AG, but in order to finish such
->      allocation, it had to need a new btree block for cntbt (so take
->      another free block from agfl).  It can be seen with a new AGF
->      recorded in the transaction:
->       blkno 62914177, len 1, map_size 1
->       00000000: 58 41 47 46 00 00 00 01 00 00 00 03 00 27 ff f0  XAGF.........'..
->       00000010: 00 00 00 09 00 00 00 07 00 00 00 00 00 00 00 02  ................
->       00000020: 00 00 00 02 00 00 00 00 00 00 00 41 00 00 00 45  ...........A...E
->       00000030: 00 00 00 05 00 00 47 65 00 00 18 fb 00 00 00 09  ......Ge........
->       00000040: 75 dc c1 b5 1a 45 40 2a 80 50 72 f0 59 6e 62 66  u....E@*.Pr.Ynbf
-> 
->       It can be parsed as:
->       agf 3  flfirst: 65 (0x41) fllast: 69 (0x45) cnt: 5
->       freeblks 18277
-> 
->   3. agfl 64 (agbno 547, daddr 62918552) was then written as a cntbt
->      block, which can also be seen in a log item as below:
->        type#011= 0x123c
->        flags#011= 0x8
->       blkno 62918552, len 8, map_size 1
->       00000000: 41 42 33 43 00 00 00 fd 00 1f 23 e4 ff ff ff ff  AB3C......#.....
->       00000010: 00 00 00 00 03 c0 0f 98 00 00 00 00 00 00 00 00  ................
->       00000020: 75 dc c1 b5 1a 45 40 2a 80 50 72 f0 59 6e 62 66  u....E@*.Pr.Ynbf
->       ...
-> 
->   4. Finally, the following inode extent to btree allocation fails
->      as below:
->      kernel: ------------[ cut here ]------------
->      WARNING: CPU: 15 PID: 49290 at fs/xfs/libxfs/xfs_bmap.c:717 xfs_bmap_extents_to_btree+0xc51/0x1050 [xfs]
->      ...
->      XFS (sda2): agno 3 agflcount 5 freeblks 18277 reservation 18276 6
-> 
->      since freeblks = 18304 - 27 = 18277, but with another agfl
->      block allocated (pagf_flcount from 6 to 5), the inequality will
->      not be satisfied:
-> 
->      available = freeblks + agflcount - reservation - need - minleft
->                = 18277 + min(5, 6) - 18276 - 6 - 0 = 0   < 1
-> 
->   Full current transaction log item dump can be fetched from [3].
-> 
-> As a short-term solution, the following allocations (e.g. allocation
-> for inode extent-to-btree conversion) can be recorded in order to count
-> more blocks to reserve for safely freespace btree splits so that it
-> will shorten available and args->maxlen to
->      available = freeblks + agflcount - reservation - need - minleft
->                = 18304 + min(6, 6) - 18276 - 6*2 - 1 = 21
->      args->maxlen = 21
-> in the first allocation, and the following conversion should then
-> succeed.  At least, it's easy to be backported and do hotfix.
-> 
-> In the long term, args->total and args->minleft have be revisited
-> although it could cause more refactoring.
-> 
-> [1] commit 1ca89fbc48e1 ("xfs: don't account extra agfl blocks as available")
->     https://lore.kernel.org/r/20190327145000.10756-1-bfoster@redhat.com
-> [2] https://lore.kernel.org/r/20220105071052.GD20464@templeofstupid.com
-> [3] https://lore.kernel.org/linux-xfs/Y2RevDyoeJZSpiat@B-P7TQMD6M-0146.local/2-dmesg.log.xz
-> Reported-by: Zirong Lang <zlang@redhat.com>
-> Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
+> Signed-off-by: Srikanth C S <srikanth.c.s@oracle.com>
 > ---
+>  fsck/xfs_fsck.sh | 31 +++++++++++++++++++++++++++++--
+>  1 file changed, 29 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fsck/xfs_fsck.sh b/fsck/xfs_fsck.sh
+> index 6af0f22..62a1e0b 100755
+> --- a/fsck/xfs_fsck.sh
+> +++ b/fsck/xfs_fsck.sh
+> @@ -31,10 +31,12 @@ repair2fsck_code() {
+>  
+>  AUTO=false
+>  FORCE=false
+> +REPAIR=false
+>  while getopts ":aApyf" c
+>  do
+>         case $c in
+> -       a|A|p|y)        AUTO=true;;
+> +       a|A|p)          AUTO=true;;
+> +       y)              REPAIR=true;;
+>         f)              FORCE=true;;
+>         esac
+>  done
+> @@ -64,7 +66,32 @@ fi
+>  
+>  if $FORCE; then
+>         xfs_repair -e $DEV
+> -       repair2fsck_code $?
+> +       error=$?
+> +       if [ $error -eq 2 ] && [ $REPAIR = true ]; then
+> +               echo "Replaying log for $DEV"
+> +               mkdir -p /tmp/repair_mnt || exit 1
+> +               for x in $(cat /proc/cmdline); do
+> +                       case $x in
+> +                               root=*)
+> +                                       ROOT="${x#root=}"
+> +                               ;;
+> +                               rootflags=*)
+> +                                       ROOTFLAGS="-o ${x#rootflags=}"
+> +                               ;;
+> +                       esac
+> +               done
+> +               test -b "$ROOT" || ROOT=$(blkid -t "$ROOT" -o device)
+> +               if [ $(basename $DEV) = $(basename $ROOT) ]; then
+> +                       mount $DEV /tmp/repair_mnt $ROOTFLAGS || exit 1
+> +               else
+> +                       mount $DEV /tmp/repair_mnt || exit 1
+> +               fi
 
-FYI, I've tested this bug, with the original reproducer I hit this bug. Although
-the reproducer is a big long time (3days) stress test, and can't reproduce
-this bug 100%, but generally with about 1/5 chance.
-
-So I submitted 6 testing jobs, all test passed today, didn't this bug, so I
-think this patch works for me. (This testing can't replace regression test)
-
-Anway, for more convince, I just submitted more 6 testing jobs again. They'll
-be done on next Monday (11-14). I'll feedback if there're any problems, or
-nothing wrong.
+If do normal boot, it will try to mount according to fstab.
+So in the crash case you've described, it seems that it can't mount
+successfully? Or am I missing something?
 
 Thanks,
-Zorro
+Joseph
 
-> Previous discussion is at:
-> https://lore.kernel.org/linux-xfs/202211040048.FeUQMLE6-lkp@intel.com/T/#mfcfac181079ddaa5a22eecb74db56534fc4ff918
-> 
->  fs/xfs/libxfs/xfs_alloc.c | 9 +++++++--
->  fs/xfs/libxfs/xfs_alloc.h | 1 +
->  fs/xfs/libxfs/xfs_bmap.c  | 2 ++
->  3 files changed, 10 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 6261599bb389..684c67310175 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -2630,7 +2630,12 @@ xfs_alloc_fix_freelist(
->  		goto out_agbp_relse;
->  	}
+> +               umount /tmp/repair_mnt
+> +               xfs_repair -e $DEV
+> +               error=$?
+> +               rm -d /tmp/repair_mnt
+> +       fi
+> +       repair2fsck_code $error
+>         exit $?
+>  fi
 >  
-> -	need = xfs_alloc_min_freelist(mp, pag);
-> +	/*
-> +	 * Also need to fulfill freespace btree splits by reservaing more
-> +	 * blocks to perform multiple allocations from a single AG and
-> +	 * transaction if needed.
-> +	 */
-> +	need = xfs_alloc_min_freelist(mp, pag) * (1 + args->postallocs);
->  	if (!xfs_alloc_space_available(args, need, flags |
->  			XFS_ALLOC_FLAG_CHECK))
->  		goto out_agbp_relse;
-> @@ -2654,7 +2659,7 @@ xfs_alloc_fix_freelist(
->  		xfs_agfl_reset(tp, agbp, pag);
->  
->  	/* If there isn't enough total space or single-extent, reject it. */
-> -	need = xfs_alloc_min_freelist(mp, pag);
-> +	need = xfs_alloc_min_freelist(mp, pag) * (1 + args->postallocs);
->  	if (!xfs_alloc_space_available(args, need, flags))
->  		goto out_agbp_relse;
->  
-> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> index 2c3f762dfb58..be7f15d6a40d 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.h
-> +++ b/fs/xfs/libxfs/xfs_alloc.h
-> @@ -73,6 +73,7 @@ typedef struct xfs_alloc_arg {
->  	int		datatype;	/* mask defining data type treatment */
->  	char		wasdel;		/* set if allocation was prev delayed */
->  	char		wasfromfl;	/* set if allocation is from freelist */
-> +	bool		postallocs;	/* number of post-allocations */
->  	struct xfs_owner_info	oinfo;	/* owner of blocks being allocated */
->  	enum xfs_ag_resv_type	resv;	/* block reservation to use */
->  #ifdef DEBUG
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 49d0d4ea63fc..ed92c6a314b6 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3497,6 +3497,7 @@ xfs_bmap_exact_minlen_extent_alloc(
->  	args.alignment = 1;
->  	args.minalignslop = 0;
->  
-> +	args.postallocs = 1;
->  	args.minleft = ap->minleft;
->  	args.wasdel = ap->wasdel;
->  	args.resv = XFS_AG_RESV_NONE;
-> @@ -3658,6 +3659,7 @@ xfs_bmap_btalloc(
->  		args.alignment = 1;
->  		args.minalignslop = 0;
->  	}
-> +	args.postallocs = 1;
->  	args.minleft = ap->minleft;
->  	args.wasdel = ap->wasdel;
->  	args.resv = XFS_AG_RESV_NONE;
-> -- 
-> 2.24.4
-> 
-
