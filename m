@@ -2,283 +2,253 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB1A3C4321E
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Nov 2022 04:14:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6958C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Nov 2022 06:06:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232130AbiKKEOO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Nov 2022 23:14:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57456 "EHLO
+        id S229461AbiKKGGC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Nov 2022 01:06:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229566AbiKKEOM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Nov 2022 23:14:12 -0500
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D4D626E;
-        Thu, 10 Nov 2022 20:14:11 -0800 (PST)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2AB46SCO016433;
-        Fri, 11 Nov 2022 04:14:07 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references :
- content-transfer-encoding : content-type : mime-version; s=corp-2022-7-12;
- bh=igfgocxERVDzy9A8GoJMc/ONZOx3F4M8QXfRO2snhZc=;
- b=lLptfoGsAMvnUKda5Q0f+yLs0yJvofa9fkOxbBwc328nXHxDfSCbFWeO+U4q0XV6EH7w
- J0IdGihbdpnewUabxECORs2/7/fbkMIkFn3BhpfLOAB3VBBwAowi9y6TIrvs0T+2HVil
- dBFegsXvhBIK4ckJ4D102YnDSqMwFDmofmQ6QLJ2EBPIH5SyXb51fQFvcMvWCXJdSll1
- zw/geOdGiOWLCvB6EYH75Z2Wc3UKy5ongUxdn8g8e7Z4V342ajX94zXvRrUijBavy+6f
- Mhu08frhzMCwIfEAnwA6batBQxvttPr5M+2bc7LfZVOykvnPofPsrim29maeeRZ4qREU Eg== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ksea2r223-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 11 Nov 2022 04:14:04 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2AB2avlQ019832;
-        Fri, 11 Nov 2022 04:10:40 GMT
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2171.outbound.protection.outlook.com [104.47.56.171])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3kpcqm126r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 11 Nov 2022 04:10:40 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=SN4L963RVQW1mB8FII+Nqzll1OFfEWHB3v74AhH/9k63aLgHj06i/lhjGSiUQzXFQv2hLPgTjmrBzZv8wqCFNvEBOEQY4Nomt3iFdmpWw+NxmqyCVBkRwfEzAcypsAH1YqiUouCaT/ld2HR1K3UoRA8E8OkA3PyZEJzXGGeF2+FaaWH6qGOa+Ib96guYOe8dy3YYcBOrC4f2dsOuIyYx6jCgLAG9ubsdZ98gPtlqzv9mXU+NXtegM+rsOYo6QfRlsl5Dj3xykbHfaos7OQ3eE40MX673n/CcsB6WvJc9ckJBu/6ccO1JXBQoR0ugs30UeUvKo9i4VhXKd/g62b6Kxg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=igfgocxERVDzy9A8GoJMc/ONZOx3F4M8QXfRO2snhZc=;
- b=VD+TKJhk+W4ZJ3aTO9WpK51WhqarsETaBJTwjCPhmxgaph+qHHTfv+AZ22Iq/sNsbCqIKAEikhBLP1/ViCrvgmSg4tTgdcxltwE87bzU6Krli6Qs0gXmTWeSW8le/VqLoJWB7HWWXBIbbYto/lrwfUrx+ZxWAJh+zCszjPadikvo9aeq6A5W75Dw1Y4Jmcg2+CF45/5IFjxqZ+sBPeq1W7CzqfOos47QcyjL3VIq4YDazMnSkYLT6gvLR8TAoy3+++VSbxQxnthWsSqs6jvDfC4S5W7KCgpNdY4I8EtrHx61+SNtceGJF1GsfJrxaiI+9AMlN1zE0Nei6JGHEVIi9Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=igfgocxERVDzy9A8GoJMc/ONZOx3F4M8QXfRO2snhZc=;
- b=OQkkGe8DWwV9KFF86Rz76pnJ++6EdDjN0GUI0qcult/qw44Ooy8tFe3qEbkUN8pmwtQiegsc787xJaxghVKP65brF8dzWXdIiUekE08QGjcFwGxkP+fuDcUSXZePWHSuq1emRUmGjiAtrcU3Bfx7/XH87BV41wIxOGR4/c9S0dg=
-Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:22b::9)
- by SA2PR10MB4730.namprd10.prod.outlook.com (2603:10b6:806:117::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5791.25; Fri, 11 Nov
- 2022 04:10:38 +0000
-Received: from SA1PR10MB5867.namprd10.prod.outlook.com
- ([fe80::a671:8bae:5830:6fd]) by SA1PR10MB5867.namprd10.prod.outlook.com
- ([fe80::a671:8bae:5830:6fd%3]) with mapi id 15.20.5813.013; Fri, 11 Nov 2022
- 04:10:38 +0000
-From:   Chandan Babu R <chandan.babu@oracle.com>
-To:     gregkh@linuxfoundation.org
-Cc:     sashal@kernel.org, mcgrof@kernel.org, linux-xfs@vger.kernel.org,
-        stable@vger.kernel.org, djwong@kernel.org, chandan.babu@oracle.com,
-        amir73il@gmail.com, leah.rumancik@gmail.com
-Subject: [PATCH 5.4 1/6] xfs: preserve rmapbt swapext block reservation from freed blocks
-Date:   Fri, 11 Nov 2022 09:40:20 +0530
-Message-Id: <20221111041025.87704-2-chandan.babu@oracle.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20221111041025.87704-1-chandan.babu@oracle.com>
-References: <20221111041025.87704-1-chandan.babu@oracle.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: TY2PR06CA0004.apcprd06.prod.outlook.com
- (2603:1096:404:42::16) To SA1PR10MB5867.namprd10.prod.outlook.com
- (2603:10b6:806:22b::9)
+        with ESMTP id S230320AbiKKGGB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Nov 2022 01:06:01 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E74B35E3F4
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Nov 2022 22:05:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1668146700;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=s/JWAyjUw7bSSDwxMyzQBCXu3ytbIediVihbxXvZqjI=;
+        b=TAou51kWWYeCkgCXOXgTRlXZk/aXqNVYDBR1wgAdgprY71Zx/tEXZdWezkMG9JqOz8qGlK
+        5OqN+idU5Fz+1iO6BLaaUSUJCvs9WPmKU7/HuAJwCJdadwDnhHstlWqefSdbdE48BUxp/z
+        ynUdw/5oy7MiJwRxBVEMJitQ9NJJJlU=
+Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com
+ [209.85.210.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-83-43fXgUsjOZ2NzELDVGgm5w-1; Fri, 11 Nov 2022 01:04:58 -0500
+X-MC-Unique: 43fXgUsjOZ2NzELDVGgm5w-1
+Received: by mail-pf1-f200.google.com with SMTP id x8-20020aa79568000000b0056dd717e051so2255399pfq.11
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Nov 2022 22:04:58 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=s/JWAyjUw7bSSDwxMyzQBCXu3ytbIediVihbxXvZqjI=;
+        b=qO/m/spo0d4GQNaDUmiNMJnfxOvlCMM7GD0NWRQn6XQQEq+THMcZsYt/T5d/kh9hV+
+         Qy6CmaQpaP62Khj/UBSFF4OaZIfOGpwXjTdKkqVwaFfzX6MqeSJAQc6+P45qIP1JvNb6
+         Odtnw97W2Cm5yoDAjI/FrYsZesKN9L4GnhxrPZAdbCiZ7D43KcPuoGnFIMi0qYyW4wwt
+         XXFfHj1SO0ZLX+IqCvCJgW7mcMeBDYG1SrlEccvlC2AthHA79runK9D5b4+rM8KZfYKm
+         m0v6J8bVtnTVc9jsrv2TrVfuSbTR5hoVJ9rkSfCTeDxIxU2NVoIn6Heeuw2kyVIOSHt+
+         gK8A==
+X-Gm-Message-State: ANoB5pl2yZ1dPiIufhtCo+i0vGr+TFQ4DRfg7Ygdjxcxl170QBptYZOw
+        l8+DNwk5uNszF420mE0CsZR65rxaGUZOqIwlXesmOmWa+udFoqG9aronjjRU5PfP/YgeBzXCA/a
+        kSQK0eoxVLVp/6gOul9s/
+X-Received: by 2002:a63:4747:0:b0:46f:1e8d:d6a8 with SMTP id w7-20020a634747000000b0046f1e8dd6a8mr383484pgk.248.1668146696408;
+        Thu, 10 Nov 2022 22:04:56 -0800 (PST)
+X-Google-Smtp-Source: AA0mqf5bjpjz9x8TOGd+JQjM6RdnSQ1YB0NAIU3ZKPPwrlqsFob4jQXRnSNLU4U5PxVQi54ZX4ujRA==
+X-Received: by 2002:a63:4747:0:b0:46f:1e8d:d6a8 with SMTP id w7-20020a634747000000b0046f1e8dd6a8mr383459pgk.248.1668146696005;
+        Thu, 10 Nov 2022 22:04:56 -0800 (PST)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id y7-20020aa79e07000000b0056e8eb09d58sm698142pfq.170.2022.11.10.22.04.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 10 Nov 2022 22:04:55 -0800 (PST)
+Date:   Fri, 11 Nov 2022 14:04:50 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     Gao Xiang <hsiangkao@linux.alibaba.com>
+Cc:     linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        Brian Foster <bfoster@redhat.com>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] xfs: account extra freespace btree splits for multiple
+ allocations
+Message-ID: <20221111060450.nojzqvcalwowov4l@zlang-mailbox>
+References: <20221109034802.40322-1-hsiangkao@linux.alibaba.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|SA2PR10MB4730:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3289413d-c544-4be7-97c3-08dac39ab06e
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: ruuuka0VsVQKB9Z7PNyx47F/GYr67sYcVB1xixwQMTBbPWUQmhICkiVaNhy5Jqd671CCzmHFZQiLUnwJJlUHfiECPzj9GpxLQTazdvOAH4RlX1QjhMofe7K83lxLZ+TP9v4bfngd2y+cOKqTWFAlxV2qTDN54hnzHT5b8VBSKDmO3ru+z7sllR1M/71orRMmmy5BIHb7x5u2YlyK5mV6jYwMLiwNC1Q9ctvoX1JY9IpFLWv2EzOtcoFbOe5UmE8W/yeWniBMkSNgB7U2fBcUd8ZPRZnjrOiL7x8TlCx8qeRqUBBy1MwQsinPYTSirUVL+pVpXKx6dkqinY7FeY6vbU+c0SuexSBk9Y33AoeL4U6yhAq8KKS7B+eSCVw6GRHu6XYiXzVPIxI9GvO3Ut8gaWihQwU0yT2WPFhffaK9yMzYQLQ9fzUOK5ehh9qRK5gguub0iCBzszmlWtVzBnba77M+fkDLqQpRL69UwMl6UCw3GVqagDnKqg9Nb4YBGWWLPF4nYCjVgsY50X+IVRs3gRHEH2zTXKtKxCF1K/MGygcOcG0wUERSRkvhv3iLf84Q3gljCYHPPwSDiIgK4GooLQKVeUjpHcx9qNS1dfEElCCwkHBqe6i3LMadJDx9rjKSU5bLsokCzYVE6YNtPlIOWpM33fc7y773Ny+enymwq0gbQlvX+99Ewm3YlsuK+8LVdDD28Ehom/s+MOHpHobdhA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(366004)(39860400002)(396003)(346002)(376002)(136003)(451199015)(36756003)(66556008)(6916009)(38100700002)(8936002)(66476007)(5660300002)(6506007)(66946007)(8676002)(316002)(2906002)(41300700001)(4326008)(6486002)(6666004)(86362001)(2616005)(186003)(6512007)(83380400001)(478600001)(26005)(1076003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?cm/92TJzYW5XJYkMNeMtbI3W3JmtEodkFvkPjS2M1CXjw44Sz5xwuSWld2cl?=
- =?us-ascii?Q?Et8o+fpoj695hpXZBs0EUtqjNJpmRTUZEWjTc+YZTxTrKy3DRu0BrzFaX8W4?=
- =?us-ascii?Q?z94GhDTl4ycTG36IR73yggyKCE9HJ++31k4S9Ythxu1u3EmjM3u93dx2t03b?=
- =?us-ascii?Q?p7l/ooetGmZooRLk+UPfEBQywQJrDBhz7l7OzsGCEnwPIxxz9oyZiHQ5bAFu?=
- =?us-ascii?Q?G0G3asppA+8BGjgDEOu3M+4XBByCaIGfS8LwGhPPg/AGeGjMW/3aMFcnwxyN?=
- =?us-ascii?Q?pcGLJPNL1q1gh/DwNRKt9BMpL9qQjfKzcwwtjG+OUF+7weTkTNKWDJ+fxFg8?=
- =?us-ascii?Q?DBsDUXbSo9OwqDMAcbdY8E5XpRbAfzDofcnTcD1drSTTLXvVXv+FHVAgiEqb?=
- =?us-ascii?Q?HfP1GyAsRs1EWaPxAwPb0u5RNpGjvDHxzF23d64o5Re92mjWUoYaw9a3ScaL?=
- =?us-ascii?Q?7BEk9t+332PiRr4zCwtkzS7+DgTEvKy99bOa7hcAfP/A+EHA5DGOHDnjUffQ?=
- =?us-ascii?Q?iYUYCTQWHWkJqMNAkiY1lgla0u7rHOpAyWEJwluwC56IpuAh3EDXr/Aa3XtC?=
- =?us-ascii?Q?odF9knFrCEcw7ZTtJoLf1jLGXYL+kxGt44PFEwC7jlScOiFMAbJiN3/88vi0?=
- =?us-ascii?Q?wzs6N3Xv2o3OCBJKgFhRC+vGRisqwk0I57hMMGA7wd0c1+BXPBfYucdPTlsU?=
- =?us-ascii?Q?U+ChzjwFZMJtijGrTbc7nGmtKAI2r/8mMpLfu+nXvTxXVv61sZMN6MEkxcUY?=
- =?us-ascii?Q?25CrWUg1qLBTx1INgbTGnx6h+zZu8xuAltIus5Y4vFsu90tcVxN59bYiVv6k?=
- =?us-ascii?Q?Rl0isRpAF2vUNqUpE4jK4fjYyJbbgdfJc3UshiQ038PF7RDP6T4tUEwtCLJL?=
- =?us-ascii?Q?5QXkIexmYCyskKwOnMNOLD3ypuPvmN23Ut8GoJ1lGqZPiRHVjhw8D23FZW7V?=
- =?us-ascii?Q?Zhc8ieaWliqsy8JZCU7KPUwxGdVuFdZIiXG3bkQa0J/kZ48DeZkwtwLMwRIT?=
- =?us-ascii?Q?ed9P7IzNspeODFbpMSoiUG5a4Keto9oF7khAlHEh8UIpXncPLNBge8N+jtCj?=
- =?us-ascii?Q?t96EuCD+JkX4VwklQJlTIhD6U4a+ojw//v60lapUi/TbR4R9+fkF1lUh/7YZ?=
- =?us-ascii?Q?cr9hrIaAU6WnyueUQkJnByzZqDuUF+k79bhGzbaZA1b70GaCNEvWiKSqlZti?=
- =?us-ascii?Q?45Vq9lzk5Dx1BHWcqX8+sOxXVMtxB1SUU19rSbD84pr4x9wgcDYn5f0yTzNN?=
- =?us-ascii?Q?Sd+pdHSYJ3eAPlrpY2XBFIay9FSPMZohDILdymNlSQCOEJ/2urwaw0pJq8Qt?=
- =?us-ascii?Q?ACnSkoT3FQ1bllzb3yM1Eb/pBVtI4NgDB1Jgsqv2OsMZXWnUa9BHyCKXa+eC?=
- =?us-ascii?Q?Amg9lVH1VG6R/oLHYdMnssjDPn8n8823ewIpQ0/UF/8AShuEPNkyaElCQCwB?=
- =?us-ascii?Q?pFIVkV5uOtI8K/Bb1vLn8s8mdFJakmuIMFDsENu+dJAlOCN73XqDYPvBnz2x?=
- =?us-ascii?Q?D1OpXUGZSLVfNupp9Dx7AELU9oTyK7UK/FK36yifb7sKhd0kpHup9cE5V2VL?=
- =?us-ascii?Q?6i/5u7qWdChBFK57s3qX+IzsGbzkHr3cq1PFXE7k?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3289413d-c544-4be7-97c3-08dac39ab06e
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Nov 2022 04:10:38.0963
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 8AWGa3JTuSTEwxRysbovE1SH5vIIUm0oBQgrdRibvbX2UIDcWYXA9uIluzDrh4fNqvLX2tPgSKfG4BLYJO9jlw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR10MB4730
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-11-11_01,2022-11-09_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0 mlxscore=0
- suspectscore=0 spamscore=0 malwarescore=0 bulkscore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2210170000
- definitions=main-2211110026
-X-Proofpoint-GUID: FBqDjiBV2wDNa0_Ky6Pgg3ISArvg5VwL
-X-Proofpoint-ORIG-GUID: FBqDjiBV2wDNa0_Ky6Pgg3ISArvg5VwL
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221109034802.40322-1-hsiangkao@linux.alibaba.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Brian Foster <bfoster@redhat.com>
+On Wed, Nov 09, 2022 at 11:48:02AM +0800, Gao Xiang wrote:
+> There is a long standing issue which could cause fs shutdown due to
+> inode extent-to-btree conversion failure right after an extent
+> allocation in the same AG, which is absolutely unexpected due to the
+> proper minleft reservation in the previous allocation.  Brian once
+> addressed one of the root cause [1], however, such symptom can still
+> occur after the commit is merged as reported [2], and our cloud
+> environment is also suffering from this issue.
+> 
+> From the description of the commit [1], I found that Zirong has an
+> in-house stress test reproducer for this issue, therefore I asked him
+> to reproduce again and he confirmed that such issue can still be
+> reproduced on RHEL 9 in several days.
+> 
+> Thanks to him, after adding some debugging code to dump the current
+> transaction log items, I think the root cause is as below:
+> 
+>   1. xfs_bmapi_allocate() with the following condition:
+>      freeblks: 18304 pagf_flcount: 6
+>      reservation: 18276 need (min_free): 6
+>      args->minleft: 1
+>      available = freeblks + agflcount - reservation - need - minleft
+>                = 18304 + min(6, 6) - 18276 - 6 - 1 = 27
+>      The first allocation check itself is ok, and args->maxlen = 27
+>      here
+> 
+>      At this time, AG 3 also has the following state:
+>      1st:64  last:69  cnt:6  longest:6395
+> 
+>      AGFL has the following state:
+>      64:547 65:167 66:1651 67:2040807 68:783 69:604
+> 
+>   2. Tried to get 27 blocks from this AG, but in order to finish such
+>      allocation, it had to need a new btree block for cntbt (so take
+>      another free block from agfl).  It can be seen with a new AGF
+>      recorded in the transaction:
+>       blkno 62914177, len 1, map_size 1
+>       00000000: 58 41 47 46 00 00 00 01 00 00 00 03 00 27 ff f0  XAGF.........'..
+>       00000010: 00 00 00 09 00 00 00 07 00 00 00 00 00 00 00 02  ................
+>       00000020: 00 00 00 02 00 00 00 00 00 00 00 41 00 00 00 45  ...........A...E
+>       00000030: 00 00 00 05 00 00 47 65 00 00 18 fb 00 00 00 09  ......Ge........
+>       00000040: 75 dc c1 b5 1a 45 40 2a 80 50 72 f0 59 6e 62 66  u....E@*.Pr.Ynbf
+> 
+>       It can be parsed as:
+>       agf 3  flfirst: 65 (0x41) fllast: 69 (0x45) cnt: 5
+>       freeblks 18277
+> 
+>   3. agfl 64 (agbno 547, daddr 62918552) was then written as a cntbt
+>      block, which can also be seen in a log item as below:
+>        type#011= 0x123c
+>        flags#011= 0x8
+>       blkno 62918552, len 8, map_size 1
+>       00000000: 41 42 33 43 00 00 00 fd 00 1f 23 e4 ff ff ff ff  AB3C......#.....
+>       00000010: 00 00 00 00 03 c0 0f 98 00 00 00 00 00 00 00 00  ................
+>       00000020: 75 dc c1 b5 1a 45 40 2a 80 50 72 f0 59 6e 62 66  u....E@*.Pr.Ynbf
+>       ...
+> 
+>   4. Finally, the following inode extent to btree allocation fails
+>      as below:
+>      kernel: ------------[ cut here ]------------
+>      WARNING: CPU: 15 PID: 49290 at fs/xfs/libxfs/xfs_bmap.c:717 xfs_bmap_extents_to_btree+0xc51/0x1050 [xfs]
+>      ...
+>      XFS (sda2): agno 3 agflcount 5 freeblks 18277 reservation 18276 6
+> 
+>      since freeblks = 18304 - 27 = 18277, but with another agfl
+>      block allocated (pagf_flcount from 6 to 5), the inequality will
+>      not be satisfied:
+> 
+>      available = freeblks + agflcount - reservation - need - minleft
+>                = 18277 + min(5, 6) - 18276 - 6 - 0 = 0   < 1
+> 
+>   Full current transaction log item dump can be fetched from [3].
+> 
+> As a short-term solution, the following allocations (e.g. allocation
+> for inode extent-to-btree conversion) can be recorded in order to count
+> more blocks to reserve for safely freespace btree splits so that it
+> will shorten available and args->maxlen to
+>      available = freeblks + agflcount - reservation - need - minleft
+>                = 18304 + min(6, 6) - 18276 - 6*2 - 1 = 21
+>      args->maxlen = 21
+> in the first allocation, and the following conversion should then
+> succeed.  At least, it's easy to be backported and do hotfix.
+> 
+> In the long term, args->total and args->minleft have be revisited
+> although it could cause more refactoring.
+> 
+> [1] commit 1ca89fbc48e1 ("xfs: don't account extra agfl blocks as available")
+>     https://lore.kernel.org/r/20190327145000.10756-1-bfoster@redhat.com
+> [2] https://lore.kernel.org/r/20220105071052.GD20464@templeofstupid.com
+> [3] https://lore.kernel.org/linux-xfs/Y2RevDyoeJZSpiat@B-P7TQMD6M-0146.local/2-dmesg.log.xz
+> Reported-by: Zirong Lang <zlang@redhat.com>
+> Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
+> ---
 
-commit f74681ba2006434be195402e0b15fc5763cddd7e upstream.
+FYI, I've tested this bug, with the original reproducer I hit this bug. Although
+the reproducer is a big long time (3days) stress test, and can't reproduce
+this bug 100%, but generally with about 1/5 chance.
 
-[Slightly modify xfs_trans_alloc() to fix a merge conflict due to missing
- "atomic_inc(&mp->m_active_trans)" statement in v5.9 kernel]
+So I submitted 6 testing jobs, all test passed today, didn't this bug, so I
+think this patch works for me. (This testing can't replace regression test)
 
-The rmapbt extent swap algorithm remaps individual extents between
-the source inode and the target to trigger reverse mapping metadata
-updates. If either inode straddles a format or other bmap allocation
-boundary, the individual unmap and map cycles can trigger repeated
-bmap block allocations and frees as the extent count bounces back
-and forth across the boundary. While net block usage is bound across
-the swap operation, this behavior can prematurely exhaust the
-transaction block reservation because it continuously drains as the
-transaction rolls. Each allocation accounts against the reservation
-and each free returns to global free space on transaction roll.
+Anway, for more convince, I just submitted more 6 testing jobs again. They'll
+be done on next Monday (11-14). I'll feedback if there're any problems, or
+nothing wrong.
 
-The previous workaround to this problem attempted to detect this
-boundary condition and provide surplus block reservation to
-acommodate it. This is insufficient because more remaps can occur
-than implied by the extent counts; if start offset boundaries are
-not aligned between the two inodes, for example.
+Thanks,
+Zorro
 
-To address this problem more generically and dynamically, add a
-transaction accounting mode that returns freed blocks to the
-transaction reservation instead of the superblock counters on
-transaction roll and use it when the rmapbt based algorithm is
-active. This allows the chain of remap transactions to preserve the
-block reservation based own its own frees and prevent premature
-exhaustion regardless of the remap pattern. Note that this is only
-safe for superblocks with lazy sb accounting, but the latter is
-required for v5 supers and the rmap feature depends on v5.
-
-Fixes: b3fed434822d0 ("xfs: account format bouncing into rmapbt swapext tx reservation")
-Root-caused-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Acked-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
----
- fs/xfs/libxfs/xfs_shared.h |  1 +
- fs/xfs/xfs_bmap_util.c     | 18 +++++++++---------
- fs/xfs/xfs_trans.c         | 19 ++++++++++++++++++-
- 3 files changed, 28 insertions(+), 10 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-index c45acbd3add9..708feb8eac76 100644
---- a/fs/xfs/libxfs/xfs_shared.h
-+++ b/fs/xfs/libxfs/xfs_shared.h
-@@ -65,6 +65,7 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
- #define XFS_TRANS_DQ_DIRTY	0x10	/* at least one dquot in trx dirty */
- #define XFS_TRANS_RESERVE	0x20    /* OK to use reserved data blocks */
- #define XFS_TRANS_NO_WRITECOUNT 0x40	/* do not elevate SB writecount */
-+#define XFS_TRANS_RES_FDBLKS	0x80	/* reserve newly freed blocks */
- /*
-  * LOWMODE is used by the allocator to activate the lowspace algorithm - when
-  * free space is running low the extent allocator may choose to allocate an
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 12c12c2ef241..5eab15dde4e6 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1740,6 +1740,7 @@ xfs_swap_extents(
- 	int			lock_flags;
- 	uint64_t		f;
- 	int			resblks = 0;
-+	unsigned int		flags = 0;
- 
- 	/*
- 	 * Lock the inodes against other IO, page faults and truncate to
-@@ -1795,17 +1796,16 @@ xfs_swap_extents(
- 		resblks +=  XFS_SWAP_RMAP_SPACE_RES(mp, tipnext, w);
- 
- 		/*
--		 * Handle the corner case where either inode might straddle the
--		 * btree format boundary. If so, the inode could bounce between
--		 * btree <-> extent format on unmap -> remap cycles, freeing and
--		 * allocating a bmapbt block each time.
-+		 * If either inode straddles a bmapbt block allocation boundary,
-+		 * the rmapbt algorithm triggers repeated allocs and frees as
-+		 * extents are remapped. This can exhaust the block reservation
-+		 * prematurely and cause shutdown. Return freed blocks to the
-+		 * transaction reservation to counter this behavior.
- 		 */
--		if (ipnext == (XFS_IFORK_MAXEXT(ip, w) + 1))
--			resblks += XFS_IFORK_MAXEXT(ip, w);
--		if (tipnext == (XFS_IFORK_MAXEXT(tip, w) + 1))
--			resblks += XFS_IFORK_MAXEXT(tip, w);
-+		flags |= XFS_TRANS_RES_FDBLKS;
- 	}
--	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, flags,
-+				&tp);
- 	if (error)
- 		goto out_unlock;
- 
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 2ba9f071c5e9..47acf4096022 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -107,7 +107,8 @@ xfs_trans_dup(
- 
- 	ntp->t_flags = XFS_TRANS_PERM_LOG_RES |
- 		       (tp->t_flags & XFS_TRANS_RESERVE) |
--		       (tp->t_flags & XFS_TRANS_NO_WRITECOUNT);
-+		       (tp->t_flags & XFS_TRANS_NO_WRITECOUNT) |
-+		       (tp->t_flags & XFS_TRANS_RES_FDBLKS);
- 	/* We gave our writer reference to the new transaction */
- 	tp->t_flags |= XFS_TRANS_NO_WRITECOUNT;
- 	ntp->t_ticket = xfs_log_ticket_get(tp->t_ticket);
-@@ -273,6 +274,8 @@ xfs_trans_alloc(
- 	 */
- 	WARN_ON(resp->tr_logres > 0 &&
- 		mp->m_super->s_writers.frozen == SB_FREEZE_COMPLETE);
-+	ASSERT(!(flags & XFS_TRANS_RES_FDBLKS) ||
-+	       xfs_sb_version_haslazysbcount(&mp->m_sb));
- 	atomic_inc(&mp->m_active_trans);
- 
- 	tp->t_magic = XFS_TRANS_HEADER_MAGIC;
-@@ -368,6 +371,20 @@ xfs_trans_mod_sb(
- 			tp->t_blk_res_used += (uint)-delta;
- 			if (tp->t_blk_res_used > tp->t_blk_res)
- 				xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-+		} else if (delta > 0 && (tp->t_flags & XFS_TRANS_RES_FDBLKS)) {
-+			int64_t	blkres_delta;
-+
-+			/*
-+			 * Return freed blocks directly to the reservation
-+			 * instead of the global pool, being careful not to
-+			 * overflow the trans counter. This is used to preserve
-+			 * reservation across chains of transaction rolls that
-+			 * repeatedly free and allocate blocks.
-+			 */
-+			blkres_delta = min_t(int64_t, delta,
-+					     UINT_MAX - tp->t_blk_res);
-+			tp->t_blk_res += blkres_delta;
-+			delta -= blkres_delta;
- 		}
- 		tp->t_fdblocks_delta += delta;
- 		if (xfs_sb_version_haslazysbcount(&mp->m_sb))
--- 
-2.35.1
+> Previous discussion is at:
+> https://lore.kernel.org/linux-xfs/202211040048.FeUQMLE6-lkp@intel.com/T/#mfcfac181079ddaa5a22eecb74db56534fc4ff918
+> 
+>  fs/xfs/libxfs/xfs_alloc.c | 9 +++++++--
+>  fs/xfs/libxfs/xfs_alloc.h | 1 +
+>  fs/xfs/libxfs/xfs_bmap.c  | 2 ++
+>  3 files changed, 10 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 6261599bb389..684c67310175 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -2630,7 +2630,12 @@ xfs_alloc_fix_freelist(
+>  		goto out_agbp_relse;
+>  	}
+>  
+> -	need = xfs_alloc_min_freelist(mp, pag);
+> +	/*
+> +	 * Also need to fulfill freespace btree splits by reservaing more
+> +	 * blocks to perform multiple allocations from a single AG and
+> +	 * transaction if needed.
+> +	 */
+> +	need = xfs_alloc_min_freelist(mp, pag) * (1 + args->postallocs);
+>  	if (!xfs_alloc_space_available(args, need, flags |
+>  			XFS_ALLOC_FLAG_CHECK))
+>  		goto out_agbp_relse;
+> @@ -2654,7 +2659,7 @@ xfs_alloc_fix_freelist(
+>  		xfs_agfl_reset(tp, agbp, pag);
+>  
+>  	/* If there isn't enough total space or single-extent, reject it. */
+> -	need = xfs_alloc_min_freelist(mp, pag);
+> +	need = xfs_alloc_min_freelist(mp, pag) * (1 + args->postallocs);
+>  	if (!xfs_alloc_space_available(args, need, flags))
+>  		goto out_agbp_relse;
+>  
+> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+> index 2c3f762dfb58..be7f15d6a40d 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.h
+> +++ b/fs/xfs/libxfs/xfs_alloc.h
+> @@ -73,6 +73,7 @@ typedef struct xfs_alloc_arg {
+>  	int		datatype;	/* mask defining data type treatment */
+>  	char		wasdel;		/* set if allocation was prev delayed */
+>  	char		wasfromfl;	/* set if allocation is from freelist */
+> +	bool		postallocs;	/* number of post-allocations */
+>  	struct xfs_owner_info	oinfo;	/* owner of blocks being allocated */
+>  	enum xfs_ag_resv_type	resv;	/* block reservation to use */
+>  #ifdef DEBUG
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 49d0d4ea63fc..ed92c6a314b6 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -3497,6 +3497,7 @@ xfs_bmap_exact_minlen_extent_alloc(
+>  	args.alignment = 1;
+>  	args.minalignslop = 0;
+>  
+> +	args.postallocs = 1;
+>  	args.minleft = ap->minleft;
+>  	args.wasdel = ap->wasdel;
+>  	args.resv = XFS_AG_RESV_NONE;
+> @@ -3658,6 +3659,7 @@ xfs_bmap_btalloc(
+>  		args.alignment = 1;
+>  		args.minalignslop = 0;
+>  	}
+> +	args.postallocs = 1;
+>  	args.minleft = ap->minleft;
+>  	args.wasdel = ap->wasdel;
+>  	args.resv = XFS_AG_RESV_NONE;
+> -- 
+> 2.24.4
+> 
 
