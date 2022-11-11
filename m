@@ -2,256 +2,114 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23DBAC4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Nov 2022 20:39:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48BCAC4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Nov 2022 20:52:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233192AbiKKUjM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Nov 2022 15:39:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33684 "EHLO
+        id S234250AbiKKUw6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Nov 2022 15:52:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41318 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231261AbiKKUjL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Nov 2022 15:39:11 -0500
-Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 354F47F551
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Nov 2022 12:39:10 -0800 (PST)
-Received: by mail-pj1-x102c.google.com with SMTP id l6so5382561pjj.0
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Nov 2022 12:39:10 -0800 (PST)
+        with ESMTP id S233220AbiKKUwz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Nov 2022 15:52:55 -0500
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 763A58546E
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Nov 2022 12:52:54 -0800 (PST)
+Received: by mail-pf1-x42c.google.com with SMTP id i3so5823721pfc.11
+        for <linux-xfs@vger.kernel.org>; Fri, 11 Nov 2022 12:52:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=x/xytKuZ3zx6MdC7c9TbNGn3H9ghLnezU3uFhj/Nhsw=;
-        b=u84XApcqapdY8QOcT1PckvCfQlbH8TGuP5Ik/f1aQgWimyll3+LT/aVALdHFkG4TuG
-         m5Od14+nCuLtKTPpWYrBZbnuipFsGYZ9wph4EwbGNfVhVJfCTQRbBE9oFMM4VcuSROVD
-         6oMz9FE8kox/CNwwZxXLeFw0WPYiO2Zj14KHwar+oBaKl8b84KALD0zJR1mU7WjHlWKG
-         gKSp6ughkZmanP4x4FHVBWPRwqGKNtbOEE9PnCpmlUedG7jUwutS/rBzamY6SRW0WcDK
-         e5IvV83FemEr2s3VBqmrRTLHt+cSRmV175J+WXHGJZYEl0vfS7Q+glddv+tqSpl0uKy5
-         L0Pw==
+        bh=UkyEVG/RyW6vDupFCAQzcFg2FflfqHknNFxaJtgz67w=;
+        b=Yd59e9EioIXpyf+8YfP7XRSK3GyjACyjg1sQ4M0uSux1sBaWcyFMk/THKf8HLagG0L
+         DtYnknwJ4mEArbiJYqV4t8BrIX6BrtSwunXwJhtz7X00TWDdrLOcpxmg5rnSnv7PTSzn
+         HXnLG7lxzM6XEY+riGUmRA+aysic4nrRKVz3pS10V/OguBdn31Mou4hPbftPUSHAW5ei
+         TRoVXNfUPY7TUKOOGRHBLbv4nVT5C5p9Nfi3e4sMl6f3UxIIQESI49s3FFd8Yr4xdER1
+         flxC2IHymuPTZk5G0/QXmBAnRgOOvpszmjuJek5W5F5YHuZSeX3zOt/NHs5YvIIU62Gj
+         H84A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=x/xytKuZ3zx6MdC7c9TbNGn3H9ghLnezU3uFhj/Nhsw=;
-        b=PUzKsl7MyJZp/ovjoQbvQKX7rN5gCFVoAwgLznQ0RHFyDsQ4N1BFAZi+IXSYCoJyPp
-         fPfecA7QvifI8lciSesqHeYz94rwnsFx5V16iptpP7gcpUjbG3f7PldMlsZy6EwM9kvV
-         eisSbM096j4kejqcCe8Cn+yhgk+Zi6Aa0sxOLZKGTRapVkRkf0XFWN7gG1p/uB0HtnAy
-         2kob6GsTfaf/i2aUDC2ZezkFJUucvdEDPR5vhTdRkNI4lkBKTJbFzBsPCj2e61C9qbHm
-         ZCSXClS8NLjYQ+kUeDqAx0p47brRaPOsWv8SLtYU00b9MS+atkE0O6CVf5fKWpSnbjOP
-         Raiw==
-X-Gm-Message-State: ANoB5pkSfVobeh4BPqBEPPrJTm4Y7xEArprb9BqsDI9+xgj8mqAzhhxh
-        l6OsHiksCwKL7jaKAwDYv4mzNQ==
-X-Google-Smtp-Source: AA0mqf5OKy3j+yonaqp3rgPM9FgEkgkMZ4RrnhMxEzUd2jOIJxfRsVZd9jnydwCd9/KWbmelc+CkgQ==
-X-Received: by 2002:a17:902:d151:b0:186:7db1:d294 with SMTP id t17-20020a170902d15100b001867db1d294mr4312840plt.68.1668199149525;
-        Fri, 11 Nov 2022 12:39:09 -0800 (PST)
+        bh=UkyEVG/RyW6vDupFCAQzcFg2FflfqHknNFxaJtgz67w=;
+        b=ytBzeD0Zw7n0eAOk0CKDCoJ0FTtBPL2wiwjLBSqEUliHwLkCPb17jsoTlPqQxbR6pJ
+         esm2rHxazTU6IABjJorszjc4TJUAjhhviROiq0+OwMhjGFpzBvHGxEAc9btUAC+CqyAr
+         oghvF7t7yKd36vz7cgVrV4NFFk8PyBY8J8PN2+hjF/X33s6gGTWgyw6P4aA4NGDznWkq
+         hbGVioda8lVrc/9wbwWhi4CLH2ibUqyPVhwMuvlySspBDOcbUTISIkyX8CJIk4RI9HQm
+         4j4Xd1FQVsD6iqzSuZuDOoL/8DlZ56eeePS7QIAOwlTiuYvJiezJymleeSaHD5iJdfaT
+         iQ0A==
+X-Gm-Message-State: ANoB5pk2DVzZQAIbGXtslm1Nn8cT0yAHpyQ8ON+SVzdPlhz5ckRaigrQ
+        z++4vCgMkTrQPYYvrJ+SJ5bjFfqgpvoFFw==
+X-Google-Smtp-Source: AA0mqf4eQz3FrHuebxD6Z93l4bU664ZgbeWFnU+torpI9O58AtCi1cU1TJK5ttxeakUcVeLBqkyjQw==
+X-Received: by 2002:a65:5908:0:b0:470:1a0c:3930 with SMTP id f8-20020a655908000000b004701a0c3930mr3143311pgu.559.1668199973973;
+        Fri, 11 Nov 2022 12:52:53 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au. [49.181.106.210])
-        by smtp.gmail.com with ESMTPSA id q14-20020a635c0e000000b004597e92f99dsm1705585pgb.66.2022.11.11.12.39.08
+        by smtp.gmail.com with ESMTPSA id e11-20020a170902784b00b00186ffe62502sm2105605pln.254.2022.11.11.12.52.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Nov 2022 12:39:08 -0800 (PST)
+        Fri, 11 Nov 2022 12:52:53 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1otanp-00D47J-Lr; Sat, 12 Nov 2022 07:39:05 +1100
-Date:   Sat, 12 Nov 2022 07:39:05 +1100
+        id 1otb18-00D4FO-Kd; Sat, 12 Nov 2022 07:52:50 +1100
+Date:   Sat, 12 Nov 2022 07:52:50 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Gao Xiang <hsiangkao@linux.alibaba.com>
-Cc:     linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        Brian Foster <bfoster@redhat.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Zirong Lang <zlang@redhat.com>
-Subject: Re: [PATCH] xfs: account extra freespace btree splits for multiple
- allocations
-Message-ID: <20221111203905.GN3600936@dread.disaster.area>
-References: <20221109034802.40322-1-hsiangkao@linux.alibaba.com>
+To:     Long Li <leo.lilong@huawei.com>
+Cc:     djwong@kernel.org, houtao1@huawei.com, yi.zhang@huawei.com,
+        guoxuenan@huawei.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix incorrect i_nlink caused by inode racing
+Message-ID: <20221111205250.GO3600936@dread.disaster.area>
+References: <20221107143648.GA2013250@ceph-admin>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221109034802.40322-1-hsiangkao@linux.alibaba.com>
+In-Reply-To: <20221107143648.GA2013250@ceph-admin>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 09, 2022 at 11:48:02AM +0800, Gao Xiang wrote:
-> There is a long standing issue which could cause fs shutdown due to
-> inode extent-to-btree conversion failure right after an extent
-> allocation in the same AG, which is absolutely unexpected due to the
-> proper minleft reservation in the previous allocation.  Brian once
-> addressed one of the root cause [1], however, such symptom can still
-> occur after the commit is merged as reported [2], and our cloud
-> environment is also suffering from this issue.
+On Mon, Nov 07, 2022 at 10:36:48PM +0800, Long Li wrote:
+> The following error occurred during the fsstress test:
 > 
-> From the description of the commit [1], I found that Zirong has an
-> in-house stress test reproducer for this issue, therefore I asked him
-> to reproduce again and he confirmed that such issue can still be
-> reproduced on RHEL 9 in several days.
+> XFS: Assertion failed: VFS_I(ip)->i_nlink >= 2, file: fs/xfs/xfs_inode.c, line: 2925
 > 
-> Thanks to him, after adding some debugging code to dump the current
-> transaction log items, I think the root cause is as below:
+> The problem was that inode race condition causes incorrect i_nlink to be
+> written to disk, and then it is read into memory. Consider the following
+> call graph, inodes that are marked as both XFS_IFLUSHING and
+> XFS_IRECLAIMABLE, i_nlink will be reset to 1 and then restored to original
+> value in xfs_reinit_inode(). Therefore, the i_nlink of directory on disk
+> may be set to 1.
 > 
->   1. xfs_bmapi_allocate() with the following condition:
->      freeblks: 18304 pagf_flcount: 6
->      reservation: 18276 need (min_free): 6
->      args->minleft: 1
->      available = freeblks + agflcount - reservation - need - minleft
->                = 18304 + min(6, 6) - 18276 - 6 - 1 = 27
->      The first allocation check itself is ok, and args->maxlen = 27
->      here
+>   xfsaild
+>       xfs_inode_item_push
+>           xfs_iflush_cluster
+>               xfs_iflush
+>                   xfs_inode_to_disk
 > 
->      At this time, AG 3 also has the following state:
->      1st:64  last:69  cnt:6  longest:6395
+>   xfs_iget
+>       xfs_iget_cache_hit
+>           xfs_iget_recycle
+>               xfs_reinit_inode
+>   	          inode_init_always
 > 
->      AGFL has the following state:
->      64:547 65:167 66:1651 67:2040807 68:783 69:604
-> 
->   2. Tried to get 27 blocks from this AG, but in order to finish such
->      allocation, it had to need a new btree block for cntbt (so take
->      another free block from agfl).  It can be seen with a new AGF
->      recorded in the transaction:
->       blkno 62914177, len 1, map_size 1
->       00000000: 58 41 47 46 00 00 00 01 00 00 00 03 00 27 ff f0  XAGF.........'..
->       00000010: 00 00 00 09 00 00 00 07 00 00 00 00 00 00 00 02  ................
->       00000020: 00 00 00 02 00 00 00 00 00 00 00 41 00 00 00 45  ...........A...E
->       00000030: 00 00 00 05 00 00 47 65 00 00 18 fb 00 00 00 09  ......Ge........
->       00000040: 75 dc c1 b5 1a 45 40 2a 80 50 72 f0 59 6e 62 66  u....E@*.Pr.Ynbf
-> 
->       It can be parsed as:
->       agf 3  flfirst: 65 (0x41) fllast: 69 (0x45) cnt: 5
->       freeblks 18277
-> 
->   3. agfl 64 (agbno 547, daddr 62918552) was then written as a cntbt
->      block, which can also be seen in a log item as below:
->        type#011= 0x123c
->        flags#011= 0x8
->       blkno 62918552, len 8, map_size 1
->       00000000: 41 42 33 43 00 00 00 fd 00 1f 23 e4 ff ff ff ff  AB3C......#.....
->       00000010: 00 00 00 00 03 c0 0f 98 00 00 00 00 00 00 00 00  ................
->       00000020: 75 dc c1 b5 1a 45 40 2a 80 50 72 f0 59 6e 62 66  u....E@*.Pr.Ynbf
->       ...
-> 
->   4. Finally, the following inode extent to btree allocation fails
->      as below:
->      kernel: ------------[ cut here ]------------
->      WARNING: CPU: 15 PID: 49290 at fs/xfs/libxfs/xfs_bmap.c:717 xfs_bmap_extents_to_btree+0xc51/0x1050 [xfs]
->      ...
->      XFS (sda2): agno 3 agflcount 5 freeblks 18277 reservation 18276 6
-> 
->      since freeblks = 18304 - 27 = 18277, but with another agfl
->      block allocated (pagf_flcount from 6 to 5), the inequality will
->      not be satisfied:
-> 
->      available = freeblks + agflcount - reservation - need - minleft
->                = 18277 + min(5, 6) - 18276 - 6 - 0 = 0   < 1
-> 
->   Full current transaction log item dump can be fetched from [3].
-> 
-> As a short-term solution, the following allocations (e.g. allocation
-> for inode extent-to-btree conversion) can be recorded in order to count
-> more blocks to reserve for safely freespace btree splits so that it
-> will shorten available and args->maxlen to
->      available = freeblks + agflcount - reservation - need - minleft
->                = 18304 + min(6, 6) - 18276 - 6*2 - 1 = 21
->      args->maxlen = 21
-> in the first allocation, and the following conversion should then
-> succeed.  At least, it's easy to be backported and do hotfix.
-> 
-> In the long term, args->total and args->minleft have be revisited
-> although it could cause more refactoring.
-> 
-> [1] commit 1ca89fbc48e1 ("xfs: don't account extra agfl blocks as available")
->     https://lore.kernel.org/r/20190327145000.10756-1-bfoster@redhat.com
-> [2] https://lore.kernel.org/r/20220105071052.GD20464@templeofstupid.com
-> [3] https://lore.kernel.org/linux-xfs/Y2RevDyoeJZSpiat@B-P7TQMD6M-0146.local/2-dmesg.log.xz
-> Reported-by: Zirong Lang <zlang@redhat.com>
-> Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
-> ---
-> Previous discussion is at:
-> https://lore.kernel.org/linux-xfs/202211040048.FeUQMLE6-lkp@intel.com/T/#mfcfac181079ddaa5a22eecb74db56534fc4ff918
-> 
->  fs/xfs/libxfs/xfs_alloc.c | 9 +++++++--
->  fs/xfs/libxfs/xfs_alloc.h | 1 +
->  fs/xfs/libxfs/xfs_bmap.c  | 2 ++
->  3 files changed, 10 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 6261599bb389..684c67310175 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -2630,7 +2630,12 @@ xfs_alloc_fix_freelist(
->  		goto out_agbp_relse;
->  	}
->  
-> -	need = xfs_alloc_min_freelist(mp, pag);
-> +	/*
-> +	 * Also need to fulfill freespace btree splits by reservaing more
-> +	 * blocks to perform multiple allocations from a single AG and
-> +	 * transaction if needed.
-> +	 */
-> +	need = xfs_alloc_min_freelist(mp, pag) * (1 + args->postallocs);
->  	if (!xfs_alloc_space_available(args, need, flags |
->  			XFS_ALLOC_FLAG_CHECK))
->  		goto out_agbp_relse;
-> @@ -2654,7 +2659,7 @@ xfs_alloc_fix_freelist(
->  		xfs_agfl_reset(tp, agbp, pag);
->  
->  	/* If there isn't enough total space or single-extent, reject it. */
-> -	need = xfs_alloc_min_freelist(mp, pag);
-> +	need = xfs_alloc_min_freelist(mp, pag) * (1 + args->postallocs);
->  	if (!xfs_alloc_space_available(args, need, flags))
->  		goto out_agbp_relse;
->  
-> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> index 2c3f762dfb58..be7f15d6a40d 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.h
-> +++ b/fs/xfs/libxfs/xfs_alloc.h
-> @@ -73,6 +73,7 @@ typedef struct xfs_alloc_arg {
->  	int		datatype;	/* mask defining data type treatment */
->  	char		wasdel;		/* set if allocation was prev delayed */
->  	char		wasfromfl;	/* set if allocation is from freelist */
-> +	bool		postallocs;	/* number of post-allocations */
->  	struct xfs_owner_info	oinfo;	/* owner of blocks being allocated */
->  	enum xfs_ag_resv_type	resv;	/* block reservation to use */
->  #ifdef DEBUG
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 49d0d4ea63fc..ed92c6a314b6 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3497,6 +3497,7 @@ xfs_bmap_exact_minlen_extent_alloc(
->  	args.alignment = 1;
->  	args.minalignslop = 0;
->  
-> +	args.postallocs = 1;
->  	args.minleft = ap->minleft;
->  	args.wasdel = ap->wasdel;
->  	args.resv = XFS_AG_RESV_NONE;
-> @@ -3658,6 +3659,7 @@ xfs_bmap_btalloc(
->  		args.alignment = 1;
->  		args.minalignslop = 0;
->  	}
-> +	args.postallocs = 1;
->  	args.minleft = ap->minleft;
->  	args.wasdel = ap->wasdel;
->  	args.resv = XFS_AG_RESV_NONE;
+> So skip inodes that being flushed and markded as XFS_IRECLAIMABLE, prevent
+> concurrent read and write to inodes.
 
-That's not going to work. What happens when we do a full bno
-split? Or we do both a bno and a cnt split in the same allocation?
+urk.
 
-Regardless, I don't see anything wrong with the allocation setup -
-it's telling the allocation code exactly what it needs for
-subsequent BMBT block allocations to succeed (i.e. args->minleft).
-The problem here is that the internal allocation code is failing to
-handle the corner case where space is just about gone correctly.
+xfs_reinit_inode() needs to hold the ILOCK_EXCL as it is changing
+internal inode state and can race with other RCU protected inode
+lookups. Have a look at what xfs_iflush_cluster() does - it
+grabs the ILOCK_SHARED while under rcu + ip->i_flags_lock, and so
+xfs_iflush/xfs_inode_to_disk() are protected from racing inode
+updates (during transactions) by that lock.
 
-As I pointed out previously - we have a huge amount of reserve space
-available in the AG here, so why not use some of the reserve space
-to get out of this temporary deficit corner case? We can argue that
-it's not really a deficit, either, because moving free blocks to the
-free list still accounts them as unused and free, so could still
-make up part of the unused reservation....
+Hence it looks to me that I_FLUSHING isn't the problem here - it's
+that we have a transient modified inode state in xfs_reinit_inode()
+that is externally visisble...
 
-i.e. is the problem here simply that we don't allow AGFL blocks to
-be considered part of the reserved free space?
+Cheers,
 
--Dave.
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
