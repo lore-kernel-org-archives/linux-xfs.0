@@ -2,64 +2,92 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 921B5C4332F
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Nov 2022 11:56:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0038DC433FE
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Nov 2022 13:13:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236969AbiKNL4i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Nov 2022 06:56:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59230 "EHLO
+        id S237983AbiKNNNL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Nov 2022 08:13:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236973AbiKNL4Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Nov 2022 06:56:24 -0500
-Received: from mail.itouring.de (mail.itouring.de [IPv6:2a01:4f8:a0:4463::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 446962793C
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Nov 2022 03:51:44 -0800 (PST)
-Received: from tux.applied-asynchrony.com (p5ddd71d2.dip0.t-ipconnect.de [93.221.113.210])
-        by mail.itouring.de (Postfix) with ESMTPSA id 485BA11DD6C;
-        Mon, 14 Nov 2022 12:51:42 +0100 (CET)
-Received: from [192.168.100.221] (hho.applied-asynchrony.com [192.168.100.221])
-        by tux.applied-asynchrony.com (Postfix) with ESMTP id E168FF015A0;
-        Mon, 14 Nov 2022 12:51:41 +0100 (CET)
-Subject: Re: [ANNOUNCE] xfsprogs-6.0.0 released
-To:     Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-References: <20221114113639.mxgewf2zjgokr6cb@andromeda>
-From:   =?UTF-8?Q?Holger_Hoffst=c3=a4tte?= <holger@applied-asynchrony.com>
-Organization: Applied Asynchrony, Inc.
-Message-ID: <08c365c6-09f4-5af4-b242-7189d9f79921@applied-asynchrony.com>
-Date:   Mon, 14 Nov 2022 12:51:41 +0100
+        with ESMTP id S237952AbiKNNMw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Nov 2022 08:12:52 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D65392B1B9
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Nov 2022 05:12:51 -0800 (PST)
+Received: from kwepemi500009.china.huawei.com (unknown [172.30.72.54])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4N9qQ81tfxzqSMk;
+        Mon, 14 Nov 2022 21:09:04 +0800 (CST)
+Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
+ (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Mon, 14 Nov
+ 2022 21:12:49 +0800
+Date:   Mon, 14 Nov 2022 21:34:17 +0800
+From:   Long Li <leo.lilong@huawei.com>
+To:     Dave Chinner <david@fromorbit.com>
+CC:     <djwong@kernel.org>, <houtao1@huawei.com>, <yi.zhang@huawei.com>,
+        <guoxuenan@huawei.com>, <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: fix incorrect i_nlink caused by inode racing
+Message-ID: <20221114133417.GA1723222@ceph-admin>
+References: <20221107143648.GA2013250@ceph-admin>
+ <20221111205250.GO3600936@dread.disaster.area>
 MIME-Version: 1.0
-In-Reply-To: <20221114113639.mxgewf2zjgokr6cb@andromeda>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+In-Reply-To: <20221111205250.GO3600936@dread.disaster.area>
+X-Originating-IP: [10.175.127.227]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ kwepemi500009.china.huawei.com (7.221.188.199)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2022-11-14 12:36, Carlos Maiolino wrote:
-> Hi folks,
+On Sat, Nov 12, 2022 at 07:52:50AM +1100, Dave Chinner wrote:
+> On Mon, Nov 07, 2022 at 10:36:48PM +0800, Long Li wrote:
+> > The following error occurred during the fsstress test:
+> > 
+> > XFS: Assertion failed: VFS_I(ip)->i_nlink >= 2, file: fs/xfs/xfs_inode.c, line: 2925
+> > 
+> > The problem was that inode race condition causes incorrect i_nlink to be
+> > written to disk, and then it is read into memory. Consider the following
+> > call graph, inodes that are marked as both XFS_IFLUSHING and
+> > XFS_IRECLAIMABLE, i_nlink will be reset to 1 and then restored to original
+> > value in xfs_reinit_inode(). Therefore, the i_nlink of directory on disk
+> > may be set to 1.
+> > 
+> >   xfsaild
+> >       xfs_inode_item_push
+> >           xfs_iflush_cluster
+> >               xfs_iflush
+> >                   xfs_inode_to_disk
+> > 
+> >   xfs_iget
+> >       xfs_iget_cache_hit
+> >           xfs_iget_recycle
+> >               xfs_reinit_inode
+> >   	          inode_init_always
+> > 
+> > So skip inodes that being flushed and markded as XFS_IRECLAIMABLE, prevent
+> > concurrent read and write to inodes.
 > 
-> The xfsprogs repository at:
+> urk.
 > 
->          git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+> xfs_reinit_inode() needs to hold the ILOCK_EXCL as it is changing
+> internal inode state and can race with other RCU protected inode
+> lookups. Have a look at what xfs_iflush_cluster() does - it
+> grabs the ILOCK_SHARED while under rcu + ip->i_flags_lock, and so
+> xfs_iflush/xfs_inode_to_disk() are protected from racing inode
+> updates (during transactions) by that lock.
 > 
-> has just been updated and tagged for a v6.0.0 release. The condensed changelog
-> since v6.0.0-rc0 is below.
-> 
-> Tarballs are available at:
-> 
-> https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-6.0.0.tar.gz
-> https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-6.0.0.tar.xz
-> https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-6.0.0.tar.sign
-> 
-> Patches often get missed, so please check if your outstanding
-> patches were in this update. If they have not been in this update,
-> please resubmit them to linux-xfs@vger.kernel.org so they can be
-> picked up in the next update.
+> Hence it looks to me that I_FLUSHING isn't the problem here - it's
+> that we have a transient modified inode state in xfs_reinit_inode()
+> that is externally visisble...
 
-It looks like my compilation fix for clang-16 (and maybe gcc-13?) is missing:
+Before xfs_reinit_inode(), XFS_IRECLAIM will be set in ip->i_flags, this 
+looks like can prevent race with other RCU protected inode lookups.  
+Can it be considered that don't modifying the information about the on-disk
+values in the VFS inode in xfs_reinit_inode()? if so lock can be avoided.
 
-https://lore.kernel.org/linux-xfs/865733c7-8314-cd13-f363-5ba2c6842372@applied-asynchrony.com/
+Thanks,
+Long Li
 
-thanks
-Holger
