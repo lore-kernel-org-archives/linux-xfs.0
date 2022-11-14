@@ -2,92 +2,86 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0038DC433FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Nov 2022 13:13:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF56AC4332F
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Nov 2022 16:39:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237983AbiKNNNL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Nov 2022 08:13:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40138 "EHLO
+        id S237735AbiKNQjd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Nov 2022 11:39:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237952AbiKNNMw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Nov 2022 08:12:52 -0500
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D65392B1B9
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Nov 2022 05:12:51 -0800 (PST)
-Received: from kwepemi500009.china.huawei.com (unknown [172.30.72.54])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4N9qQ81tfxzqSMk;
-        Mon, 14 Nov 2022 21:09:04 +0800 (CST)
-Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
- (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Mon, 14 Nov
- 2022 21:12:49 +0800
-Date:   Mon, 14 Nov 2022 21:34:17 +0800
-From:   Long Li <leo.lilong@huawei.com>
-To:     Dave Chinner <david@fromorbit.com>
-CC:     <djwong@kernel.org>, <houtao1@huawei.com>, <yi.zhang@huawei.com>,
-        <guoxuenan@huawei.com>, <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: fix incorrect i_nlink caused by inode racing
-Message-ID: <20221114133417.GA1723222@ceph-admin>
-References: <20221107143648.GA2013250@ceph-admin>
- <20221111205250.GO3600936@dread.disaster.area>
+        with ESMTP id S237741AbiKNQjS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Nov 2022 11:39:18 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57B1B30547
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Nov 2022 08:35:13 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 01B0BB8104F
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Nov 2022 16:35:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6706C433D6;
+        Mon, 14 Nov 2022 16:35:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1668443710;
+        bh=hrfiU2OPmmGVbddp3xdj+au7ypjDvnXODDMUxWr0M94=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Q789GGB4oAfvErAlJfXBmlzygsqUh+QOY8neGp2HFb8hIdzzUNHf8dOOZL21hYaNk
+         Y6gm0rKE+UI2hVklEo64dlCtBtNJjLzqScXA5LB+QXThE/fMgp2NVUrDoz4VR9jOE2
+         aUM8oFstsenjbVS3tPkg/NOq7Cl+BC5GdYYK3+FfGPp+ONn+rmgHxezDN97gWOKUOu
+         L6wnP3t7lObOdY7Imj0qsKtFHhm15t+g0cJOaWCj8bcR3sPZ28Y1ckCQsesOLyNC+i
+         TbGsd5C/KivOa9LECj2CdRE/ZTyKUIruGKScpVepMY4MLTOuMuTaN8+OYW7jpwn7Cb
+         cytfXRQU2AlAA==
+Date:   Mon, 14 Nov 2022 17:35:06 +0100
+From:   Carlos Maiolino <cem@kernel.org>
+To:     Holger =?utf-8?Q?Hoffst=C3=A4tte?= <holger@applied-asynchrony.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [ANNOUNCE] xfsprogs-6.0.0 released
+Message-ID: <20221114163506.vvebiubf5e5b5obx@andromeda>
+References: <20221114113639.mxgewf2zjgokr6cb@andromeda>
+ <miYA_Urvct9JMgOavaZZdbE-7h_9GxwEaB2XWlWYI2kmcv6FqdqVRmSAhAqDrd9_iopj1BubWnUntC7eGk2H_Q==@protonmail.internalid>
+ <08c365c6-09f4-5af4-b242-7189d9f79921@applied-asynchrony.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20221111205250.GO3600936@dread.disaster.area>
-X-Originating-IP: [10.175.127.227]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- kwepemi500009.china.huawei.com (7.221.188.199)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <08c365c6-09f4-5af4-b242-7189d9f79921@applied-asynchrony.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Nov 12, 2022 at 07:52:50AM +1100, Dave Chinner wrote:
-> On Mon, Nov 07, 2022 at 10:36:48PM +0800, Long Li wrote:
-> > The following error occurred during the fsstress test:
-> > 
-> > XFS: Assertion failed: VFS_I(ip)->i_nlink >= 2, file: fs/xfs/xfs_inode.c, line: 2925
-> > 
-> > The problem was that inode race condition causes incorrect i_nlink to be
-> > written to disk, and then it is read into memory. Consider the following
-> > call graph, inodes that are marked as both XFS_IFLUSHING and
-> > XFS_IRECLAIMABLE, i_nlink will be reset to 1 and then restored to original
-> > value in xfs_reinit_inode(). Therefore, the i_nlink of directory on disk
-> > may be set to 1.
-> > 
-> >   xfsaild
-> >       xfs_inode_item_push
-> >           xfs_iflush_cluster
-> >               xfs_iflush
-> >                   xfs_inode_to_disk
-> > 
-> >   xfs_iget
-> >       xfs_iget_cache_hit
-> >           xfs_iget_recycle
-> >               xfs_reinit_inode
-> >   	          inode_init_always
-> > 
-> > So skip inodes that being flushed and markded as XFS_IRECLAIMABLE, prevent
-> > concurrent read and write to inodes.
+On Mon, Nov 14, 2022 at 12:51:41PM +0100, Holger Hoffstätte wrote:
+> On 2022-11-14 12:36, Carlos Maiolino wrote:
+> > Hi folks,
+> >
+> > The xfsprogs repository at:
+> >
+> >          git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+> >
+> > has just been updated and tagged for a v6.0.0 release. The condensed changelog
+> > since v6.0.0-rc0 is below.
+> >
+> > Tarballs are available at:
+> >
+> > https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-6.0.0.tar.gz
+> > https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-6.0.0.tar.xz
+> > https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-6.0.0.tar.sign
+> >
+> > Patches often get missed, so please check if your outstanding
+> > patches were in this update. If they have not been in this update,
+> > please resubmit them to linux-xfs@vger.kernel.org so they can be
+> > picked up in the next update.
 > 
-> urk.
+> It looks like my compilation fix for clang-16 (and maybe gcc-13?) is missing:
 > 
-> xfs_reinit_inode() needs to hold the ILOCK_EXCL as it is changing
-> internal inode state and can race with other RCU protected inode
-> lookups. Have a look at what xfs_iflush_cluster() does - it
-> grabs the ILOCK_SHARED while under rcu + ip->i_flags_lock, and so
-> xfs_iflush/xfs_inode_to_disk() are protected from racing inode
-> updates (during transactions) by that lock.
+> https://lore.kernel.org/linux-xfs/865733c7-8314-cd13-f363-5ba2c6842372@applied-asynchrony.com/
 > 
-> Hence it looks to me that I_FLUSHING isn't the problem here - it's
-> that we have a transient modified inode state in xfs_reinit_inode()
-> that is externally visisble...
 
-Before xfs_reinit_inode(), XFS_IRECLAIM will be set in ip->i_flags, this 
-looks like can prevent race with other RCU protected inode lookups.  
-Can it be considered that don't modifying the information about the on-disk
-values in the VFS inode in xfs_reinit_inode()? if so lock can be avoided.
+This should go into 6.1, I expect to push this and some more stuff into for-next
+around this week, depending on how much time libxfs sync will consume.
 
-Thanks,
-Long Li
 
+> thanks
+> Holger
+
+-- 
+Carlos Maiolino
