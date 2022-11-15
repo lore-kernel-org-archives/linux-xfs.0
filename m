@@ -2,67 +2,67 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E094C43219
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Nov 2022 01:31:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AB16C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Nov 2022 01:31:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235800AbiKOBbS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Nov 2022 20:31:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36980 "EHLO
+        id S232191AbiKOBbT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Nov 2022 20:31:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37036 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232191AbiKOBaw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Nov 2022 20:30:52 -0500
-Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4BB662E6
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Nov 2022 17:30:50 -0800 (PST)
-Received: by mail-pg1-x534.google.com with SMTP id 130so11882903pgc.5
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Nov 2022 17:30:50 -0800 (PST)
+        with ESMTP id S229865AbiKOBbC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Nov 2022 20:31:02 -0500
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E4F76301
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Nov 2022 17:30:51 -0800 (PST)
+Received: by mail-pl1-x636.google.com with SMTP id l2so11735334pld.13
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Nov 2022 17:30:51 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=jgZL4Q6/hiN7SK0U+fxjQpeeWJPO0+rsmSJULzaGQ0k=;
-        b=UUqPu/qLFSsKkqibdIyWpzTl7kJ0392Arsqxv5eqI2K6kcKDlIPK26OhDQtPxdgLk6
-         NmBy3VVOPc9exNJwbPMYA/O1J5+2B3/QWN36xbCtHZFo1XS7tAziLiwIwM1I4ZSIMSfz
-         ya5v3sLA5e4ngF5cW55rzN6yyHLIdJP385ok87P7w4GraXHJfZkCQd0rd9WUT3aIz21m
-         kZBez5immZ36uVk6aLtli7nW9CxMyY3g627gqnkAHVEJgAzsGAheJkioxNrm6Xx9p+yi
-         0q0KykfQMpzuWtFoq8of5+MbNVzqwkjdjnt0CdGcSJOfNkZKtS97NnGEg+ruJCBe2siW
-         uJGQ==
+        bh=Ao3r4ObshVMOTeg9d8XwDGgMsxE9xyLmCjV3U83plkg=;
+        b=IxLXf8uPVQk2uek4l4A7Ma0r42OMSFEwWJMY5GlhrmXuYw0hkvYTCABeUXdwgEXbCb
+         wLzxihAxsr7f8jNGmHPWcwKK3BEc7Xftau4qy1yM4n/b/hpkaFN4Xpwqgq6SMXQHZfrN
+         ubvwH07dPUs7gOIV7qduBQBGyEVmJniTH41HFk6l1fLGWWLwncjtzijD0aITz5mJ6eXb
+         VrR2KLhazGSAr4LfAf9MEePPX4GtNvjlXLq2DnDcOB9+22JRgjEIxoYa0ag2l49pdx1d
+         44ajQMaCRuhBigGiwG4dJyFBMpc/woEXbf9XCmxISbGm9yf0Q7dzeT2Rm/7LmGw8sMaF
+         YH/A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=jgZL4Q6/hiN7SK0U+fxjQpeeWJPO0+rsmSJULzaGQ0k=;
-        b=kYUBvTRYlX/H+QP3x2syjuNR+mim4yXA2W82iUwYlcejDYhM1ToAWLDlGAgSligbjK
-         JYeKMG1emKctobKZezQ3Kp/tmx988VRsfb3N/OFssH1iBLFfuBKbfTOKyQ9WLRzGyLlW
-         sJurlFl+I+Y2soGwNGvPDzD71wS/JGKoR5Mm+LGTmn0GY1r1wXFbV2H0Znh9GrfiDwWb
-         Ifo6pL8GkojkJbm5+9lbRnp7XJ1BMxe39y6RimqnTf62H+XJy3ZUbAbdKUNkfY69kmE9
-         OtMNQpUeIcgkZYMyVgq0jm3ieI8lvxcI2hAzv8VxW6J4BPyZh8nvq0gpoQBblcu7PQ+D
-         3mdQ==
-X-Gm-Message-State: ANoB5plWPTXPCe2Tr3E9ZLzfMLwWN4Y8p4XzpREcXna487Uzr12aheZU
-        ccuSCq0xv8gXRXZFtJ2EZXqbnAeh/TLLkQ==
-X-Google-Smtp-Source: AA0mqf53q+Ed2oyN1jbck8d7rOoRUBqjIi3l7i6bP6FZ3exURtjovulj7jav8V30tqIY2/ycTy12og==
-X-Received: by 2002:aa7:814e:0:b0:572:6e9b:9fa2 with SMTP id d14-20020aa7814e000000b005726e9b9fa2mr1008065pfn.8.1668475850202;
+        bh=Ao3r4ObshVMOTeg9d8XwDGgMsxE9xyLmCjV3U83plkg=;
+        b=Ogh5M7brACQsSv9rPip7PNFG3yJ2TnmKBwpPx7RYVYClZ7GuKvcuFBj/NteP5cUd3+
+         nkx2MeXvwPAGeLu5Hw+boyDp/82cRzUUXq+DdUeLx6ctl7dUbr8+/BcM1t6aPczy03Ph
+         2vf70zASSnwomIPru+e4/JTWF52n7WjTACeKlc8drkBmjoQinlYpH+WxcAMgFsaPr4r4
+         OIAuI90/WNxQ8k93VWW69WPxZ/+vyaVJyL/ggbwAD/josiYP6q+zir0QupkDKCNt/5JB
+         zuQnWyDHpEQcQCaAA6DUkW6/oSidjw39Nd4B7TKXmLOIMY5h9g5ciP4bcuYJ7+93uBVh
+         h21w==
+X-Gm-Message-State: ANoB5pnXZ21LZF1BEZpfGGBmUQP0Y4o+aXGIkoLdUlS8KJ6HYGVjjpMp
+        xVd4rY8a3dTb0sRxDLxvKp2J4Zt+eclqUQ==
+X-Google-Smtp-Source: AA0mqf6VWZhWw2NouJCG7fUJ8iXNFP6L9tR8d5A3cPmJ34Q2RxBmQHkFWBn4GqNEAHrcyqUTwhQqEw==
+X-Received: by 2002:a17:902:cf4c:b0:185:4703:9f5f with SMTP id e12-20020a170902cf4c00b0018547039f5fmr1762037plg.156.1668475850539;
         Mon, 14 Nov 2022 17:30:50 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au. [49.181.106.210])
-        by smtp.gmail.com with ESMTPSA id d17-20020a170902ced100b001868ed86a95sm8290720plg.174.2022.11.14.17.30.47
+        by smtp.gmail.com with ESMTPSA id n12-20020a170902e54c00b00186f608c543sm8304789plf.304.2022.11.14.17.30.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Mon, 14 Nov 2022 17:30:48 -0800 (PST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1oukmj-00EKGJ-Hn; Tue, 15 Nov 2022 12:30:45 +1100
+        id 1oukmj-00EKG3-Cw; Tue, 15 Nov 2022 12:30:45 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1oukmj-001Vpr-1d;
+        id 1oukmj-001VpU-1B;
         Tue, 15 Nov 2022 12:30:45 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
-Subject: [PATCH 9/9] xfs: drop write error injection is unfixable, remove it
-Date:   Tue, 15 Nov 2022 12:30:43 +1100
-Message-Id: <20221115013043.360610-10-david@fromorbit.com>
+Subject: [PATCH 5/9] xfs: buffered write failure should not truncate the page cache
+Date:   Tue, 15 Nov 2022 12:30:39 +1100
+Message-Id: <20221115013043.360610-6-david@fromorbit.com>
 X-Mailer: git-send-email 2.37.2
 In-Reply-To: <20221115013043.360610-1-david@fromorbit.com>
 References: <20221115013043.360610-1-david@fromorbit.com>
@@ -74,208 +74,229 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-With the changes to scan the page cache for dirty data to avoid data
-corruptions from partial write cleanup racing with other page cache
-operations, the drop writes error injection no longer works the same
-way it used to and causes xfs/196 to fail. This is because xfs/196
-writes to the file and populates the page cache before it turns on
-the error injection and starts failing -overwrites-.
+xfs_buffered_write_iomap_end() currently invalidates the page cache
+over the unused range of the delalloc extent it allocated. While the
+write allocated the delalloc extent, it does not own it exclusively
+as the write does not hold any locks that prevent either writeback
+or mmap page faults from changing the state of either the page cache
+or the extent state backing this range.
 
-The result is that the original drop-writes code failed writes only
--after- overwriting the data in the cache, followed by invalidates
-the cached data, then punching out the delalloc extent from under
-that data.
+Whilst xfs_bmap_punch_delalloc_range() already handles races in
+extent conversion - it will only punch out delalloc extents and it
+ignores any other type of extent - the page cache truncate does not
+discriminate between data written by this write or some other task.
+As a result, truncating the page cache can result in data corruption
+if the write races with mmap modifications to the file over the same
+range.
 
-On the surface, this looks fine. The problem is that page cache
-invalidation *doesn't guarantee that it removes anything from the
-page cache* and it doesn't change the dirty state of the folio. When
-block size == page size and we do page aligned IO (as xfs/196 does)
-everything happens to align perfectly and page cache invalidation
-removes the single page folios that span the written data. Hence the
-followup delalloc punch pass does not find cached data over that
-range and it can punch the extent out.
+generic/346 exercises this workload, and if we randomly fail writes
+(as will happen when iomap gets stale iomap detection later in the
+patchset), it will randomly corrupt the file data because it removes
+data written by mmap() in the same page as the write() that failed.
 
-IOWs, xfs/196 "works" for block size == page size with the new
-code. I say "works", because it actually only works for the case
-where IO is page aligned, and no data was read from disk before
-writes occur. Because the moment we actually read data first, the
-readahead code allocates multipage folios and suddenly the
-invalidate code goes back to zeroing subfolio ranges without
-changing dirty state.
+Hence we do not want to punch out the page cache over the range of
+the extent we failed to write to - what we actually need to do is
+detect the ranges that have dirty data in cache over them and *not
+punch them out*.
 
-Hence, with multipage folios in play, block size == page size is
-functionally identical to block size < page size behaviour, and
-drop-writes is manifestly broken w.r.t to this case. Invalidation of
-a subfolio range doesn't result in the folio being removed from the
-cache, just the range gets zeroed. Hence after we've sequentially
-walked over a folio that we've dirtied (via write data) and then
-invalidated, we end up with a dirty folio full of zeroed data.
+TO do this, we have to walk the page cache over the range of the
+delalloc extent we want to remove. This is made complex by the fact
+we have to handle partially up-to-date folios correctly and this can
+happen even when the FSB size == PAGE_SIZE because we now support
+multi-page folios in the page cache.
 
-And because the new code skips punching ranges that have dirty
-folios covering them, we end up leaving the delalloc range intact
-after failing all the writes. Hence failed writes now end up
-writing zeroes to disk in the cases where invalidation zeroes folios
-rather than removing them from cache.
+Because we are only interested in discovering the edges of data
+ranges in the page cache (i.e. hole-data boundaries) we can make use
+of mapping_seek_hole_data() to find those transitions in the page
+cache. As we hold the invalidate_lock, we know that the boundaries
+are not going to change while we walk the range. This interface is
+also byte-based and is sub-page block aware, so we can find the data
+ranges in the cache based on byte offsets rather than page, folio or
+fs block sized chunks. This greatly simplifies the logic of finding
+dirty cached ranges in the page cache.
 
-This is a fundamental change of behaviour that is needed to avoid
-the data corruption vectors that exist in the old write fail path,
-and it renders the drop-writes injection non-functional and
-unworkable as it stands.
-
-As it is, I think the error injection is also now unnecessary, as
-partial writes that need delalloc extent are going to be a lot more
-common with stale iomap detection in place. Hence this patch removes
-the drop-writes error injection completely. xfs/196 can remain for
-testing kernels that don't have this data corruption fix, but those
-that do will report:
-
-xfs/196 3s ... [not run] XFS error injection drop_writes unknown on this kernel.
+Once we've identified a range that contains cached data, we can then
+iterate the range folio by folio. This allows us to determine if the
+data is dirty and hence perform the correct delalloc extent punching
+operations. The seek interface we use to iterate data ranges will
+give us sub-folio start/end granularity, so we may end up looking up
+the same folio multiple times as the seek interface iterates across
+each discontiguous data region in the folio.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_errortag.h | 12 +++++-------
- fs/xfs/xfs_error.c           | 27 ++++++++++++++++++++-------
- fs/xfs/xfs_iomap.c           |  9 ---------
- 3 files changed, 25 insertions(+), 23 deletions(-)
+ fs/xfs/xfs_iomap.c | 151 ++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 141 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-index 5362908164b0..580ccbd5aadc 100644
---- a/fs/xfs/libxfs/xfs_errortag.h
-+++ b/fs/xfs/libxfs/xfs_errortag.h
-@@ -40,13 +40,12 @@
- #define XFS_ERRTAG_REFCOUNT_FINISH_ONE			25
- #define XFS_ERRTAG_BMAP_FINISH_ONE			26
- #define XFS_ERRTAG_AG_RESV_CRITICAL			27
-+
- /*
-- * DEBUG mode instrumentation to test and/or trigger delayed allocation
-- * block killing in the event of failed writes. When enabled, all
-- * buffered writes are silenty dropped and handled as if they failed.
-- * All delalloc blocks in the range of the write (including pre-existing
-- * delalloc blocks!) are tossed as part of the write failure error
-- * handling sequence.
-+ * Drop-writes support removed because write error handling cannot trash
-+ * pre-existing delalloc extents in any useful way anymore. We retain the
-+ * definition so that we can reject it as an invalid value in
-+ * xfs_errortag_valid().
-  */
- #define XFS_ERRTAG_DROP_WRITES				28
- #define XFS_ERRTAG_LOG_BAD_CRC				29
-@@ -95,7 +94,6 @@
- #define XFS_RANDOM_REFCOUNT_FINISH_ONE			1
- #define XFS_RANDOM_BMAP_FINISH_ONE			1
- #define XFS_RANDOM_AG_RESV_CRITICAL			4
--#define XFS_RANDOM_DROP_WRITES				1
- #define XFS_RANDOM_LOG_BAD_CRC				1
- #define XFS_RANDOM_LOG_ITEM_PIN				1
- #define XFS_RANDOM_BUF_LRU_REF				2
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index c6b2aabd6f18..dea3c0649d2f 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -46,7 +46,7 @@ static unsigned int xfs_errortag_random_default[] = {
- 	XFS_RANDOM_REFCOUNT_FINISH_ONE,
- 	XFS_RANDOM_BMAP_FINISH_ONE,
- 	XFS_RANDOM_AG_RESV_CRITICAL,
--	XFS_RANDOM_DROP_WRITES,
-+	0, /* XFS_RANDOM_DROP_WRITES has been removed */
- 	XFS_RANDOM_LOG_BAD_CRC,
- 	XFS_RANDOM_LOG_ITEM_PIN,
- 	XFS_RANDOM_BUF_LRU_REF,
-@@ -162,7 +162,6 @@ XFS_ERRORTAG_ATTR_RW(refcount_continue_update,	XFS_ERRTAG_REFCOUNT_CONTINUE_UPDA
- XFS_ERRORTAG_ATTR_RW(refcount_finish_one,	XFS_ERRTAG_REFCOUNT_FINISH_ONE);
- XFS_ERRORTAG_ATTR_RW(bmap_finish_one,	XFS_ERRTAG_BMAP_FINISH_ONE);
- XFS_ERRORTAG_ATTR_RW(ag_resv_critical,	XFS_ERRTAG_AG_RESV_CRITICAL);
--XFS_ERRORTAG_ATTR_RW(drop_writes,	XFS_ERRTAG_DROP_WRITES);
- XFS_ERRORTAG_ATTR_RW(log_bad_crc,	XFS_ERRTAG_LOG_BAD_CRC);
- XFS_ERRORTAG_ATTR_RW(log_item_pin,	XFS_ERRTAG_LOG_ITEM_PIN);
- XFS_ERRORTAG_ATTR_RW(buf_lru_ref,	XFS_ERRTAG_BUF_LRU_REF);
-@@ -206,7 +205,6 @@ static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(refcount_finish_one),
- 	XFS_ERRORTAG_ATTR_LIST(bmap_finish_one),
- 	XFS_ERRORTAG_ATTR_LIST(ag_resv_critical),
--	XFS_ERRORTAG_ATTR_LIST(drop_writes),
- 	XFS_ERRORTAG_ATTR_LIST(log_bad_crc),
- 	XFS_ERRORTAG_ATTR_LIST(log_item_pin),
- 	XFS_ERRORTAG_ATTR_LIST(buf_lru_ref),
-@@ -256,6 +254,19 @@ xfs_errortag_del(
- 	kmem_free(mp->m_errortag);
- }
- 
-+static bool
-+xfs_errortag_valid(
-+	unsigned int		error_tag)
-+{
-+	if (error_tag >= XFS_ERRTAG_MAX)
-+		return false;
-+
-+	/* Error out removed injection types */
-+	if (error_tag == XFS_ERRTAG_DROP_WRITES)
-+		return false;
-+	return true;
-+}
-+
- bool
- xfs_errortag_test(
- 	struct xfs_mount	*mp,
-@@ -277,7 +288,9 @@ xfs_errortag_test(
- 	if (!mp->m_errortag)
- 		return false;
- 
--	ASSERT(error_tag < XFS_ERRTAG_MAX);
-+	if (!xfs_errortag_valid(error_tag))
-+		return false;
-+
- 	randfactor = mp->m_errortag[error_tag];
- 	if (!randfactor || prandom_u32_max(randfactor))
- 		return false;
-@@ -293,7 +306,7 @@ xfs_errortag_get(
- 	struct xfs_mount	*mp,
- 	unsigned int		error_tag)
- {
--	if (error_tag >= XFS_ERRTAG_MAX)
-+	if (!xfs_errortag_valid(error_tag))
- 		return -EINVAL;
- 
- 	return mp->m_errortag[error_tag];
-@@ -305,7 +318,7 @@ xfs_errortag_set(
- 	unsigned int		error_tag,
- 	unsigned int		tag_value)
- {
--	if (error_tag >= XFS_ERRTAG_MAX)
-+	if (!xfs_errortag_valid(error_tag))
- 		return -EINVAL;
- 
- 	mp->m_errortag[error_tag] = tag_value;
-@@ -319,7 +332,7 @@ xfs_errortag_add(
- {
- 	BUILD_BUG_ON(ARRAY_SIZE(xfs_errortag_random_default) != XFS_ERRTAG_MAX);
- 
--	if (error_tag >= XFS_ERRTAG_MAX)
-+	if (!xfs_errortag_valid(error_tag))
- 		return -EINVAL;
- 
- 	return xfs_errortag_set(mp, error_tag,
 diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index fa578c913323..bf1661410272 100644
+index 7bb55dbc19d3..2d48fcc7bd6f 100644
 --- a/fs/xfs/xfs_iomap.c
 +++ b/fs/xfs/xfs_iomap.c
-@@ -1335,15 +1335,6 @@ xfs_buffered_write_iomap_end(
- 	if (iomap->type != IOMAP_DELALLOC)
+@@ -1134,6 +1134,146 @@ xfs_buffered_write_delalloc_punch(
+ 				end_fsb - start_fsb);
+ }
+ 
++/*
++ * Scan the data range passed to us for dirty page cache folios. If we find a
++ * dirty folio, punch out the preceeding range and update the offset from which
++ * the next punch will start from.
++ *
++ * We can punch out clean pages because they either contain data that has been
++ * written back - in which case the delalloc punch over that range is a no-op -
++ * or they have been read faults in which case they contain zeroes and we can
++ * remove the delalloc backing range and any new writes to those pages will do
++ * the normal hole filling operation...
++ *
++ * This makes the logic simple: we only need to keep the delalloc extents only
++ * over the dirty ranges of the page cache.
++ */
++static int
++xfs_buffered_write_delalloc_scan(
++	struct inode		*inode,
++	loff_t			*punch_start_byte,
++	loff_t			start_byte,
++	loff_t			end_byte)
++{
++	loff_t			offset = start_byte;
++
++	while (offset < end_byte) {
++		struct folio	*folio;
++
++		/* grab locked page */
++		folio = filemap_lock_folio(inode->i_mapping, offset >> PAGE_SHIFT);
++		if (!folio) {
++			offset = ALIGN_DOWN(offset, PAGE_SIZE) + PAGE_SIZE;
++			continue;
++		}
++
++		/* if dirty, punch up to offset */
++		if (folio_test_dirty(folio)) {
++			if (offset > *punch_start_byte) {
++				int	error;
++
++				error = xfs_buffered_write_delalloc_punch(inode,
++						*punch_start_byte, offset);
++				if (error) {
++					folio_unlock(folio);
++					folio_put(folio);
++					return error;
++				}
++			}
++
++			/*
++			 * Make sure the next punch start is correctly bound to
++			 * the end of this data range, not the end of the folio.
++			 */
++			*punch_start_byte = min_t(loff_t, end_byte,
++					folio_next_index(folio) << PAGE_SHIFT);
++		}
++
++		/* move offset to start of next folio in range */
++		offset = folio_next_index(folio) << PAGE_SHIFT;
++		folio_unlock(folio);
++		folio_put(folio);
++	}
++	return 0;
++}
++
++/*
++ * Punch out all the delalloc blocks in the range given except for those that
++ * have dirty data still pending in the page cache - those are going to be
++ * written and so must still retain the delalloc backing for writeback.
++ *
++ * As we are scanning the page cache for data, we don't need to reimplement the
++ * wheel - mapping_seek_hole_data() does exactly what we need to identify the
++ * start and end of data ranges correctly even for sub-folio block sizes. This
++ * byte range based iteration is especially convenient because it means we don't
++ * have to care about variable size folios, nor where the start or end of the
++ * data range lies within a folio, if they lie within the same folio or even if
++ * there are multiple discontiguous data ranges within the folio.
++ */
++static int
++xfs_buffered_write_delalloc_release(
++	struct inode		*inode,
++	loff_t			start_byte,
++	loff_t			end_byte)
++{
++	loff_t			punch_start_byte = start_byte;
++	int			error = 0;
++
++	/*
++	 * Lock the mapping to avoid races with page faults re-instantiating
++	 * folios and dirtying them via ->page_mkwrite whilst we walk the
++	 * cache and perform delalloc extent removal. Failing to do this can
++	 * leave dirty pages with no space reservation in the cache.
++	 */
++	filemap_invalidate_lock(inode->i_mapping);
++	while (start_byte < end_byte) {
++		loff_t		data_end;
++
++		start_byte = mapping_seek_hole_data(inode->i_mapping,
++				start_byte, end_byte, SEEK_DATA);
++		/*
++		 * If there is no more data to scan, all that is left is to
++		 * punch out the remaining range.
++		 */
++		if (start_byte == -ENXIO || start_byte == end_byte)
++			break;
++		if (start_byte < 0) {
++			error = start_byte;
++			goto out_unlock;
++		}
++		ASSERT(start_byte >= punch_start_byte);
++		ASSERT(start_byte < end_byte);
++
++		/*
++		 * We find the end of this contiguous cached data range by
++		 * seeking from start_byte to the beginning of the next hole.
++		 */
++		data_end = mapping_seek_hole_data(inode->i_mapping, start_byte,
++				end_byte, SEEK_HOLE);
++		if (data_end < 0) {
++			error = data_end;
++			goto out_unlock;
++		}
++		ASSERT(data_end > start_byte);
++		ASSERT(data_end <= end_byte);
++
++		error = xfs_buffered_write_delalloc_scan(inode,
++				&punch_start_byte, start_byte, data_end);
++		if (error)
++			goto out_unlock;
++
++		/* The next data search starts at the end of this one. */
++		start_byte = data_end;
++	}
++
++	if (punch_start_byte < end_byte)
++		error = xfs_buffered_write_delalloc_punch(inode,
++				punch_start_byte, end_byte);
++out_unlock:
++	filemap_invalidate_unlock(inode->i_mapping);
++	return error;
++}
++
+ static int
+ xfs_buffered_write_iomap_end(
+ 	struct inode		*inode,
+@@ -1179,16 +1319,7 @@ xfs_buffered_write_iomap_end(
+ 	if (start_byte >= end_byte)
  		return 0;
  
 -	/*
--	 * Behave as if the write failed if drop writes is enabled. Set the NEW
--	 * flag to force delalloc cleanup.
+-	 * Lock the mapping to avoid races with page faults re-instantiating
+-	 * folios and dirtying them via ->page_mkwrite between the page cache
+-	 * truncation and the delalloc extent removal. Failing to do this can
+-	 * leave dirty pages with no space reservation in the cache.
 -	 */
--	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_DROP_WRITES)) {
--		iomap->flags |= IOMAP_F_NEW;
--		written = 0;
--	}
--
- 	/* If we didn't reserve the blocks, we're not allowed to punch them. */
- 	if (!(iomap->flags & IOMAP_F_NEW))
- 		return 0;
+-	filemap_invalidate_lock(inode->i_mapping);
+-	truncate_pagecache_range(inode, start_byte, end_byte - 1);
+-	error = xfs_buffered_write_delalloc_punch(inode, start_byte, end_byte);
+-	filemap_invalidate_unlock(inode->i_mapping);
++	error = xfs_buffered_write_delalloc_release(inode, start_byte, end_byte);
+ 	if (error && !xfs_is_shutdown(mp)) {
+ 		xfs_alert(mp, "%s: unable to clean up ino 0x%llx",
+ 			__func__, XFS_I(inode)->i_ino);
 -- 
 2.37.2
 
