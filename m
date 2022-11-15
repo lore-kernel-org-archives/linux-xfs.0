@@ -2,162 +2,223 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 090B3C4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Nov 2022 00:23:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83293C4332F
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Nov 2022 01:30:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232149AbiKOAXU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Nov 2022 19:23:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35480 "EHLO
+        id S231583AbiKOBau (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Nov 2022 20:30:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36906 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231807AbiKOAXT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Nov 2022 19:23:19 -0500
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F84615A3D
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Nov 2022 16:23:17 -0800 (PST)
-Received: by mail-pl1-x630.google.com with SMTP id p21so11645975plr.7
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Nov 2022 16:23:17 -0800 (PST)
+        with ESMTP id S231497AbiKOBat (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Nov 2022 20:30:49 -0500
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE3535FDD
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Nov 2022 17:30:48 -0800 (PST)
+Received: by mail-pf1-x434.google.com with SMTP id y13so12723803pfp.7
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Nov 2022 17:30:48 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=eYFJpx9kuyCY3eSY9nnA/YIoIy4aZu4JLftw8XfV/Ig=;
-        b=US0siIuC0q858cjIwpdtd9H3TSJijBV7XVZlPjQkNIuiSkKuBJcoROq6exZXvCa87u
-         GU9kkKxn+2x9Q+9hnH17YGYJ0rNMMrpmNVCxUfN8W4tBYLV0ycIgcF5VRfGyMdnk6u5P
-         WkB9wamhLO3zu0vJDqv5HSc5ojSXfNITQ0XzHaG8z9Nn4NDmRd16Winj+fblJNu7KFgU
-         RCjXUa/Qxqg2mGUVI3elEz/P7kg1QFIzDADNOA5tiURXegxHRTxElWDsSnUmhal6U7O1
-         TT6c8fd7jcipA4ZIV4H1ypaInrbKiUFoVHRlUnss5OcDxdotf5BcMJlaayFV9Vhzos+H
-         iMhw==
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=XRbCKOeEzaINPi28mkymmnvdjm9021B1BlIXQDG3kyg=;
+        b=w6QrD1tRY+J5ZkwFK9ZX+G4Rt/2yPVQZoD0dbLbepFH5SuLO1KAAjZeq7Qb1AUqJyt
+         4c3/j2omnChCoLxxtTjT2tqLiQmMtuESJkzcmvj9EpZj+mTAc0Kie9ccf/g47O4yhDZl
+         pAoEH2wJPDAX1GyUG0uXtSc2hsL/SecqTcx6WuKNrYBqW0nq+khenr161SNF7KVa5XRn
+         KLClCBYCkFP9vdokQN8WBCKws7oj3uOMXg7YCYtc/f3qjaqPIH3Azr+8Mn38e598Hned
+         olK9TePB+WvV7AgUzJ3637H2oohlCYpXP86GphkDV7lJ0U7/FcuiQdkSfsz9vWg6cm+4
+         RUfA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=eYFJpx9kuyCY3eSY9nnA/YIoIy4aZu4JLftw8XfV/Ig=;
-        b=pLysavx8b7RFtXsf2m3OCnrSWFAWCL2chHKxqezXtWKheRl+ldSo/79r1x1lhTKKKA
-         I6pjj+3usw0/csgBAaMnxJQbjE5QF81v3V2reflx/Fcp7tbBGBD09t9Vc/6V5zUCnnIE
-         REdbQQlntEzr9gluxmPekCkDQ0VGQnZpSj2uCN1OWoEy/Q9fqBDFFI9BWCqwAeFgOJI3
-         xWM/iOdJJjDQ3T0AIezBsdyTEHIMDhI6PTzxIpGAsJppi8VZ44r12Db8ar2hO5kg58Tb
-         DHVYGjQE3WWVrZWu6c9J5gwbp6HIF4hoRKin7Q7CAN4WYBlcFXdVSh/7584+CZR5n6Bc
-         vLRw==
-X-Gm-Message-State: ANoB5pmaPFpFrm6AGXz+7kp91vPAKfhif0+cH5srG/fWb0dy7G9uKLd/
-        HTKBurh4IvATsR0iCmsJ1xdkBw==
-X-Google-Smtp-Source: AA0mqf4tpPJq/UwJa5NosZlZaUJBUpgxVNL32PGGq3ssI38RIRrFanDf/mV8OJn/9KtW0PkvncddHw==
-X-Received: by 2002:a17:902:e413:b0:186:9cf4:e53b with SMTP id m19-20020a170902e41300b001869cf4e53bmr1621185ple.50.1668471797191;
-        Mon, 14 Nov 2022 16:23:17 -0800 (PST)
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=XRbCKOeEzaINPi28mkymmnvdjm9021B1BlIXQDG3kyg=;
+        b=XTS1Z9SjQkQ2QcpRhseHionRVRFeqgW+3jC9IAlxpU8DMCSAyMaWNFvyNjj/NN/39I
+         NqVVNl8QvTA2JAXVA620vWotQr0oLrSqGRuT6GUiQsi5i4TLBI0IXF609F3wWb79UjFP
+         aiCs65Vl1vcVBq9RSMvHPvHJbiYj9im65rw4XJEzUYc92Q0RPMAWWm/4yR4w26dgIGsp
+         2ADIewWUYblDBiqc5PN1SIU1IfXvAg5zUoB3uVOrzeh0zJLtq/allY1XMrW4kQntNirz
+         ImWr1Hw4ix8E+JxuMt/zAYQ2kRcs+NSSoEAqwCMU+USAymZW/fDaMnF1uHDb94GDBdpR
+         7D2A==
+X-Gm-Message-State: ANoB5pkEld5cxmcKQyFONvNathG2j9aWl/o+ZSg3Ssz1Cudw3jjJc5Px
+        p6VI5j4It5ZHIpi2DafCxDW21BvIl+6q9Q==
+X-Google-Smtp-Source: AA0mqf7UjzuHUARnNssJHidYHv6IsqjUDGTSoPPpjTwRymVju/Gxhkqsrl0nYg2Vw5pGFC0Bl/4mtw==
+X-Received: by 2002:a63:40d:0:b0:470:514e:1f12 with SMTP id 13-20020a63040d000000b00470514e1f12mr13964475pge.353.1668475848378;
+        Mon, 14 Nov 2022 17:30:48 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au. [49.181.106.210])
-        by smtp.gmail.com with ESMTPSA id m2-20020a170902db0200b0016c50179b1esm8326782plx.152.2022.11.14.16.23.16
+        by smtp.gmail.com with ESMTPSA id w18-20020a170902c79200b001754064ac31sm8143681pla.280.2022.11.14.17.30.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Nov 2022 16:23:16 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        Mon, 14 Nov 2022 17:30:47 -0800 (PST)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1oujjN-00EIxF-OQ; Tue, 15 Nov 2022 11:23:13 +1100
-Date:   Tue, 15 Nov 2022 11:23:13 +1100
+        id 1oukmj-00EKG5-Dw; Tue, 15 Nov 2022 12:30:45 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1oukmj-001Vpb-1H;
+        Tue, 15 Nov 2022 12:30:45 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Long Li <leo.lilong@huawei.com>
-Cc:     djwong@kernel.org, houtao1@huawei.com, yi.zhang@huawei.com,
-        guoxuenan@huawei.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix incorrect i_nlink caused by inode racing
-Message-ID: <20221115002313.GS3600936@dread.disaster.area>
-References: <20221107143648.GA2013250@ceph-admin>
- <20221111205250.GO3600936@dread.disaster.area>
- <20221114133417.GA1723222@ceph-admin>
+To:     linux-xfs@vger.kernel.org
+Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Subject: [PATCH 6/9] xfs: xfs_bmap_punch_delalloc_range() should take a byte range
+Date:   Tue, 15 Nov 2022 12:30:40 +1100
+Message-Id: <20221115013043.360610-7-david@fromorbit.com>
+X-Mailer: git-send-email 2.37.2
+In-Reply-To: <20221115013043.360610-1-david@fromorbit.com>
+References: <20221115013043.360610-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221114133417.GA1723222@ceph-admin>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 14, 2022 at 09:34:17PM +0800, Long Li wrote:
-> On Sat, Nov 12, 2022 at 07:52:50AM +1100, Dave Chinner wrote:
-> > On Mon, Nov 07, 2022 at 10:36:48PM +0800, Long Li wrote:
-> > > The following error occurred during the fsstress test:
-> > > 
-> > > XFS: Assertion failed: VFS_I(ip)->i_nlink >= 2, file: fs/xfs/xfs_inode.c, line: 2925
-> > > 
-> > > The problem was that inode race condition causes incorrect i_nlink to be
-> > > written to disk, and then it is read into memory. Consider the following
-> > > call graph, inodes that are marked as both XFS_IFLUSHING and
-> > > XFS_IRECLAIMABLE, i_nlink will be reset to 1 and then restored to original
-> > > value in xfs_reinit_inode(). Therefore, the i_nlink of directory on disk
-> > > may be set to 1.
-> > > 
-> > >   xfsaild
-> > >       xfs_inode_item_push
-> > >           xfs_iflush_cluster
-> > >               xfs_iflush
-> > >                   xfs_inode_to_disk
-> > > 
-> > >   xfs_iget
-> > >       xfs_iget_cache_hit
-> > >           xfs_iget_recycle
-> > >               xfs_reinit_inode
-> > >   	          inode_init_always
-> > > 
-> > > So skip inodes that being flushed and markded as XFS_IRECLAIMABLE, prevent
-> > > concurrent read and write to inodes.
-> > 
-> > urk.
-> > 
-> > xfs_reinit_inode() needs to hold the ILOCK_EXCL as it is changing
-> > internal inode state and can race with other RCU protected inode
-> > lookups. Have a look at what xfs_iflush_cluster() does - it
-> > grabs the ILOCK_SHARED while under rcu + ip->i_flags_lock, and so
-> > xfs_iflush/xfs_inode_to_disk() are protected from racing inode
-> > updates (during transactions) by that lock.
-> > 
-> > Hence it looks to me that I_FLUSHING isn't the problem here - it's
-> > that we have a transient modified inode state in xfs_reinit_inode()
-> > that is externally visisble...
-> 
-> Before xfs_reinit_inode(), XFS_IRECLAIM will be set in ip->i_flags, this 
-> looks like can prevent race with other RCU protected inode lookups.  
+From: Dave Chinner <dchinner@redhat.com>
 
-That only protects against new lookups - it does not protect against the
-IRECLAIM flag being set *after* the lookup in xfs_iflush_cluster()
-whilst the inode is being flushed to the cluster buffer. That's why
-xfs_iflush_cluster() does:
+All the callers of xfs_bmap_punch_delalloc_range() jump through
+hoops to convert a byte range to filesystem blocks before calling
+xfs_bmap_punch_delalloc_range(). Instead, pass the byte range to
+xfs_bmap_punch_delalloc_range() and have it do the conversion to
+filesystem blocks internally.
 
-	rcu_read_lock()
-	lookup inode
-	spinlock(ip->i_flags_lock);
-	check IRECLAIM|IFLUSHING
->>>>>>	xfs_ilock_nowait(ip, XFS_ILOCK_SHARED)     <<<<<<<<
-	set IFLUSHING
-	spin_unlock(ip->i_flags_lock)
-	rcu_read_unlock()
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_aops.c      | 16 ++++++----------
+ fs/xfs/xfs_bmap_util.c | 10 ++++++----
+ fs/xfs/xfs_bmap_util.h |  2 +-
+ fs/xfs/xfs_iomap.c     | 21 ++++-----------------
+ 4 files changed, 17 insertions(+), 32 deletions(-)
 
-At this point, the only lock that is held is XFS_ILOCK_SHARED, and
-it's the only lock that protects the inode state outside the lookup
-scope against concurrent changes.
-
-Essentially, xfs_reinit_inode() needs to add a:
-
-	xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)
-
-before it set IRECLAIM - if it fails to get the ILOCK_EXCL, then we
-need to skip the inode, drop out of RCU scope, delay and retry the
-lookup.
-
-> Can it be considered that don't modifying the information about the on-disk
-> values in the VFS inode in xfs_reinit_inode()? if so lock can be avoided.
-
-We have to reinit the VFS inode because it has gone through
-->destroy_inode and so the state has been trashed. We have to bring
-it back as an I_NEW inode, which requires reinitialising everything.
-THe issue is that we store inode state information (like nlink) in
-the VFS inode instead of the XFS inode portion of the structure (to
-minimise memory footprint), and that means xfs_reinit_inode() has a
-transient state where the VFS inode is not correct. We can avoid
-that simply by holding the XFS_ILOCK_EXCL, guaranteeing nothing in
-XFS should be trying to read/modify the internal metadata state
-while we are reinitialising the VFS inode portion of the
-structure...
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 5d1a995b15f8..6aadc5815068 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -114,9 +114,8 @@ xfs_end_ioend(
+ 	if (unlikely(error)) {
+ 		if (ioend->io_flags & IOMAP_F_SHARED) {
+ 			xfs_reflink_cancel_cow_range(ip, offset, size, true);
+-			xfs_bmap_punch_delalloc_range(ip,
+-						      XFS_B_TO_FSBT(mp, offset),
+-						      XFS_B_TO_FSB(mp, size));
++			xfs_bmap_punch_delalloc_range(ip, offset,
++					offset + size);
+ 		}
+ 		goto done;
+ 	}
+@@ -455,12 +454,8 @@ xfs_discard_folio(
+ 	struct folio		*folio,
+ 	loff_t			pos)
+ {
+-	struct inode		*inode = folio->mapping->host;
+-	struct xfs_inode	*ip = XFS_I(inode);
++	struct xfs_inode	*ip = XFS_I(folio->mapping->host);
+ 	struct xfs_mount	*mp = ip->i_mount;
+-	size_t			offset = offset_in_folio(folio, pos);
+-	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, pos);
+-	xfs_fileoff_t		pageoff_fsb = XFS_B_TO_FSBT(mp, offset);
+ 	int			error;
+ 
+ 	if (xfs_is_shutdown(mp))
+@@ -470,8 +465,9 @@ xfs_discard_folio(
+ 		"page discard on page "PTR_FMT", inode 0x%llx, pos %llu.",
+ 			folio, ip->i_ino, pos);
+ 
+-	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
+-			i_blocks_per_folio(inode, folio) - pageoff_fsb);
++	error = xfs_bmap_punch_delalloc_range(ip, pos,
++			round_up(pos, folio_size(folio)));
++
+ 	if (error && !xfs_is_shutdown(mp))
+ 		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
+ }
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 04d0c2bff67c..867645b74d88 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -590,11 +590,13 @@ xfs_getbmap(
+ int
+ xfs_bmap_punch_delalloc_range(
+ 	struct xfs_inode	*ip,
+-	xfs_fileoff_t		start_fsb,
+-	xfs_fileoff_t		length)
++	xfs_off_t		start_byte,
++	xfs_off_t		end_byte)
+ {
++	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_ifork	*ifp = &ip->i_df;
+-	xfs_fileoff_t		end_fsb = start_fsb + length;
++	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, start_byte);
++	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, end_byte);
+ 	struct xfs_bmbt_irec	got, del;
+ 	struct xfs_iext_cursor	icur;
+ 	int			error = 0;
+@@ -607,7 +609,7 @@ xfs_bmap_punch_delalloc_range(
+ 
+ 	while (got.br_startoff + got.br_blockcount > start_fsb) {
+ 		del = got;
+-		xfs_trim_extent(&del, start_fsb, length);
++		xfs_trim_extent(&del, start_fsb, end_fsb - start_fsb);
+ 
+ 		/*
+ 		 * A delete can push the cursor forward. Step back to the
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index 24b37d211f1d..6888078f5c31 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -31,7 +31,7 @@ xfs_bmap_rtalloc(struct xfs_bmalloca *ap)
+ #endif /* CONFIG_XFS_RT */
+ 
+ int	xfs_bmap_punch_delalloc_range(struct xfs_inode *ip,
+-		xfs_fileoff_t start_fsb, xfs_fileoff_t length);
++		xfs_off_t start_byte, xfs_off_t end_byte);
+ 
+ struct kgetbmap {
+ 	__s64		bmv_offset;	/* file offset of segment in blocks */
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 2d48fcc7bd6f..04da22943e7c 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1120,20 +1120,6 @@ xfs_buffered_write_iomap_begin(
+ 	return error;
+ }
+ 
+-static int
+-xfs_buffered_write_delalloc_punch(
+-	struct inode		*inode,
+-	loff_t			start_byte,
+-	loff_t			end_byte)
+-{
+-	struct xfs_mount	*mp = XFS_M(inode->i_sb);
+-	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, start_byte);
+-	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, end_byte);
+-
+-	return xfs_bmap_punch_delalloc_range(XFS_I(inode), start_fsb,
+-				end_fsb - start_fsb);
+-}
+-
+ /*
+  * Scan the data range passed to us for dirty page cache folios. If we find a
+  * dirty folio, punch out the preceeding range and update the offset from which
+@@ -1172,8 +1158,9 @@ xfs_buffered_write_delalloc_scan(
+ 			if (offset > *punch_start_byte) {
+ 				int	error;
+ 
+-				error = xfs_buffered_write_delalloc_punch(inode,
+-						*punch_start_byte, offset);
++				error = xfs_bmap_punch_delalloc_range(
++						XFS_I(inode), *punch_start_byte,
++						offset);
+ 				if (error) {
+ 					folio_unlock(folio);
+ 					folio_put(folio);
+@@ -1267,7 +1254,7 @@ xfs_buffered_write_delalloc_release(
+ 	}
+ 
+ 	if (punch_start_byte < end_byte)
+-		error = xfs_buffered_write_delalloc_punch(inode,
++		error = xfs_bmap_punch_delalloc_range(XFS_I(inode),
+ 				punch_start_byte, end_byte);
+ out_unlock:
+ 	filemap_invalidate_unlock(inode->i_mapping);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.37.2
+
