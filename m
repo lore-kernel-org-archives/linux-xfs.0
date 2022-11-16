@@ -2,87 +2,122 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AFFBC4332F
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Nov 2022 00:59:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06894C433FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Nov 2022 02:49:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231443AbiKPA7N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Nov 2022 19:59:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41008 "EHLO
+        id S231542AbiKPCtX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Nov 2022 21:49:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55616 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229790AbiKPA7K (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Nov 2022 19:59:10 -0500
-Received: from out30-131.freemail.mail.aliyun.com (out30-131.freemail.mail.aliyun.com [115.124.30.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D43AFB86B;
-        Tue, 15 Nov 2022 16:59:08 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R751e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046056;MF=yang.lee@linux.alibaba.com;NM=1;PH=DS;RN=5;SR=0;TI=SMTPD_---0VUv04qu_1668560345;
-Received: from localhost(mailfrom:yang.lee@linux.alibaba.com fp:SMTPD_---0VUv04qu_1668560345)
-          by smtp.aliyun-inc.com;
-          Wed, 16 Nov 2022 08:59:06 +0800
-From:   Yang Li <yang.lee@linux.alibaba.com>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yang Li <yang.lee@linux.alibaba.com>,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: [PATCH -next] xfs: Fix some kernel-doc comments
-Date:   Wed, 16 Nov 2022 08:59:04 +0800
-Message-Id: <20221116005904.54375-1-yang.lee@linux.alibaba.com>
-X-Mailer: git-send-email 2.20.1.7.g153144c
+        with ESMTP id S229976AbiKPCtT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Nov 2022 21:49:19 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D06C71E72F
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Nov 2022 18:49:18 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 8DA50B81BAE
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Nov 2022 02:49:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E764C433C1;
+        Wed, 16 Nov 2022 02:49:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1668566955;
+        bh=+SAb/4zkikv2mQ+2h+T71xFsCsyvUsee8qGJiArzI2s=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=BIapHd2mF4VkeEBhU/nAqrnMz8a/ns9j6BFX4V/aXHhM+LlzlwmB2aUv6zofyaKjK
+         p3nEnHl42vf2x+rE/ncLPZ9qOFFY+ZpDUNYnjqun/UrZZ/jKDzg3wp88rwq8EI3YhQ
+         v6BWupNeb+5YWr7QjnUOIvEb8+C9R2VVgjdqLKziU7dnIF/ExH0MpAd+7OVwxUfrPA
+         UqtCZv0vr+BBs8Fb0DeL9IEY2yctafAuapkNSDK7vhkJXl/FXSAhL5veQsE29/hv47
+         XUtK5LAz58JYRfXZeTTAQc/anoQfnK1fIO0uempC/rkh+2UUQpoO165ZRB9yTPs/Al
+         t4U65CWXXwZlg==
+Date:   Tue, 15 Nov 2022 18:49:14 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/3] xfs: retain the AGI when we can't iget an inode to
+ scrub the core
+Message-ID: <Y3RPqgRr2AOBFbyc@magnolia>
+References: <166473482923.1084685.3060991494529121939.stgit@magnolia>
+ <166473482971.1084685.9939611867095895186.stgit@magnolia>
+ <20221115040816.GY3600936@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221115040816.GY3600936@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-fs/xfs/xfs_log.c:3601 xlog_verify_tail_lsn() warn: inconsistent indenting
+On Tue, Nov 15, 2022 at 03:08:16PM +1100, Dave Chinner wrote:
+> On Sun, Oct 02, 2022 at 11:20:29AM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > xchk_get_inode is not quite the right function to be calling from the
+> > inode scrubber setup function.  The common get_inode function either
+> > gets an inode and installs it in the scrub context, or it returns an
+> > error code explaining what happened.  This is acceptable for most file
+> > scrubbers because it is not in their scope to fix corruptions in the
+> > inode core and fork areas that cause iget to fail.
+> > 
+> > Dealing with these problems is within the scope of the inode scrubber,
+> > however.  If iget fails with EFSCORRUPTED, we need to xchk_inode to flag
+> > that as corruption.  Since we can't get our hands on an incore inode, we
+> > need to hold the AGI to prevent inode allocation activity so that
+> > nothing changes in the inode metadata.
+> > 
+> > Looking ahead to the inode core repair patches, we will also need to
+> > hold the AGI buffer into xrep_inode so that we can make modifications to
+> > the xfs_dinode structure without any other thread swooping in to
+> > allocate or free the inode.
+> > 
+> > Adapt the xchk_get_inode into xchk_setup_inode since this is a one-off
+> > use case where the error codes we check for are a little different, and
+> > the return state is much different from the common function.
+> 
+> The code look fine, but...
+> 
+> ... doesn't this mean that xchk_setup_inode() and xchk_get_inode()
+> now are almost identical apart from the xchk_prepare_iscrub() bits?
 
-Link: https://bugzilla.openanolis.cn/show_bug.cgi?id=3079
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Signed-off-by: Yang Li <yang.lee@linux.alibaba.com>
----
- fs/xfs/xfs_log.c | 30 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+Yes, they're /nearly/ identical in the helper functions they call, but
+they're not so similar in intent and how they handle @error values:
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 0141d9907d31..4d031ed3f3c1 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -3598,21 +3598,21 @@ xlog_verify_tail_lsn(
- 	xfs_lsn_t	tail_lsn = be64_to_cpu(iclog->ic_header.h_tail_lsn);
- 	int		blocks;
- 
--    if (CYCLE_LSN(tail_lsn) == log->l_prev_cycle) {
--	blocks =
--	    log->l_logBBsize - (log->l_prev_block - BLOCK_LSN(tail_lsn));
--	if (blocks < BTOBB(iclog->ic_offset)+BTOBB(log->l_iclog_hsize))
--		xfs_emerg(log->l_mp, "%s: ran out of log space", __func__);
--    } else {
--	ASSERT(CYCLE_LSN(tail_lsn)+1 == log->l_prev_cycle);
--
--	if (BLOCK_LSN(tail_lsn) == log->l_prev_block)
--		xfs_emerg(log->l_mp, "%s: tail wrapped", __func__);
--
--	blocks = BLOCK_LSN(tail_lsn) - log->l_prev_block;
--	if (blocks < BTOBB(iclog->ic_offset) + 1)
--		xfs_emerg(log->l_mp, "%s: ran out of log space", __func__);
--    }
-+	if (CYCLE_LSN(tail_lsn) == log->l_prev_cycle) {
-+		blocks =
-+			log->l_logBBsize - (log->l_prev_block - BLOCK_LSN(tail_lsn));
-+		if (blocks < BTOBB(iclog->ic_offset)+BTOBB(log->l_iclog_hsize))
-+			xfs_emerg(log->l_mp, "%s: ran out of log space", __func__);
-+	} else {
-+		ASSERT(CYCLE_LSN(tail_lsn)+1 == log->l_prev_cycle);
-+
-+		if (BLOCK_LSN(tail_lsn) == log->l_prev_block)
-+			xfs_emerg(log->l_mp, "%s: tail wrapped", __func__);
-+
-+		blocks = BLOCK_LSN(tail_lsn) - log->l_prev_block;
-+		if (blocks < BTOBB(iclog->ic_offset) + 1)
-+			xfs_emerg(log->l_mp, "%s: ran out of log space", __func__);
-+	}
- }
- 
- /*
--- 
-2.20.1.7.g153144c
+xchk_setup_inode prepares to check or repair an inode record, so it must
+continue the scrub operation even if the inode/inobt verifiers cause
+xfs_iget to return EFSCORRUPTED.  This is done by attaching the locked
+AGI buffer to the scrub transaction and returning 0 to move on to the
+actual scrub.  (Later, the online inode repair code will also want the
+xfs_imap structure so that it can reset the ondisk xfs_dinode
+structure.)
 
+xchk_get_inode retrieves an inode on behalf of a scrubber that operates
+on an incore inode -- data/attr/cow forks, directories, xattrs,
+symlinks, parent pointers, etc.  If the inode/inobt verifiers fail and
+xfs_iget returns EFSCORRUPTED, we want to exit to userspace (because the
+caller should be fix the inode first) and drop everything we acquired
+along the way.
+
+A behavior common to both functions is that it's possible that xfs_scrub
+asked for a scrub-by-handle concurrent with the inode being freed or the
+passed-in inumber is invalid.  In this case, we call xfs_imap to see if
+the inobt index thinks the inode is allocated, and return ENOENT
+("nothing to check here") to userspace if this is not the case.  The
+imap lookup is why both functions call xchk_iget_agi.
+
+> This kinda looks like a lot of duplicated but subtly different code
+> - does xchk_get_inode() still need all that complexity if we are now
+> doing it in xchk_setup_inode()?  If it does, why does
+> xchk_setup_inode() need to duplicate the code?
+
+So yes, we do need the complexity of both functions because the
+postconditions of the two functions are rather different.
+
+--D
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
