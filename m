@@ -2,243 +2,117 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 764D2C4332F
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Nov 2022 14:03:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31612C4332F
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Nov 2022 14:43:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232774AbiKPODQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Nov 2022 09:03:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37806 "EHLO
+        id S229675AbiKPOm7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Nov 2022 09:42:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231448AbiKPOBO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Nov 2022 09:01:14 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8518648779
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Nov 2022 05:57:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1668607037;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=U4homV+fVhvRQr3MTMK6djx4iwohawMzl3H/+thnj+U=;
-        b=WK0uoAzO6iu3sExrT7Yu9di522TAx4NduVQqto0VXS9bgmE/6UuXp1eg371lW6ey+vBUP6
-        qfiHZjQdAOZhnAhclpQlYEMytdxFMJ0b7hrD+1hQ5yjx30GiLwfBxDy6FlQFrvKKgxNhoi
-        UrQIHQBJs95zlTTgH+4miNUuoW4k8OI=
-Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
- [209.85.222.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-503-9RWi6sBwMZKPjX0v8rCHSw-1; Wed, 16 Nov 2022 08:57:16 -0500
-X-MC-Unique: 9RWi6sBwMZKPjX0v8rCHSw-1
-Received: by mail-qk1-f198.google.com with SMTP id q14-20020a05620a0d8e00b006ef0350dae1so17234542qkl.12
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Nov 2022 05:57:16 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=U4homV+fVhvRQr3MTMK6djx4iwohawMzl3H/+thnj+U=;
-        b=RqEU8l308n3OyqSglsZsMuIhTKuKuE00Gnu4GazvhApz4jGqNNeu0f6ccqfvza1k0j
-         EoELUeyi4p+cMRFlxvwrr39JeIQplhvvGkapuUbWWt5ExM9lAkZCcCRt4m07Hl1fW3ub
-         /W/HA/lGGKNa+ZKGhmEyPcV1L/nesX941kBgKukWKDRgU5WCV0robgYJ2a9FxW7PEzs5
-         47DHk5osbIpBQ7X8686Di2TbUEEjYSWPb13TMNKOP3BA0E3HHQMu+RhcLuqYiSB63DlH
-         3elmjVMPI1YWIwNWuz8hylETTF6fFU5jqqGe/VIsto3HFzafalAfdryr/r1ydI/nwh+H
-         R8yA==
-X-Gm-Message-State: ANoB5pkDXK0CqxydkYEk3rznLK4kn/Pu1nPfChQRqbzJJs5Y+40aPW1Q
-        dv76V1C43Z7XklcB0xwtyMgZ2HfDCw6Hj2YObMPN2gsayXEWmjX4PA1AngRR/kTkVGV3hn3vSg+
-        pw1Z3D9BWx4oHFHpSHe1t
-X-Received: by 2002:a05:6214:3185:b0:4c6:5682:8878 with SMTP id lb5-20020a056214318500b004c656828878mr7571440qvb.5.1668607035632;
-        Wed, 16 Nov 2022 05:57:15 -0800 (PST)
-X-Google-Smtp-Source: AA0mqf5886Oi0yVJL/ZsJCfXFajAX1bbbEKJNG9bcaFh8odkbdwQtNJ2DtnN4JzEWzF2Op9k157ZWw==
-X-Received: by 2002:a05:6214:3185:b0:4c6:5682:8878 with SMTP id lb5-20020a056214318500b004c656828878mr7571423qvb.5.1668607035332;
-        Wed, 16 Nov 2022 05:57:15 -0800 (PST)
-Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
-        by smtp.gmail.com with ESMTPSA id he31-20020a05622a601f00b00397b1c60780sm8787436qtb.61.2022.11.16.05.57.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Nov 2022 05:57:14 -0800 (PST)
-Date:   Wed, 16 Nov 2022 08:57:19 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org
-Subject: Re: [PATCH 5/9] xfs: buffered write failure should not truncate the
- page cache
-Message-ID: <Y3TsPzd0XzXXIzQv@bfoster>
-References: <20221115013043.360610-1-david@fromorbit.com>
- <20221115013043.360610-6-david@fromorbit.com>
+        with ESMTP id S233777AbiKPOmn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Nov 2022 09:42:43 -0500
+Received: from mail1.bemta37.messagelabs.com (mail1.bemta37.messagelabs.com [85.158.142.113])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54EA84045C
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Nov 2022 06:42:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
+        s=170520fj; t=1668609760; i=@fujitsu.com;
+        bh=+EAM7YZJ3m+72yWc668bBSRR2hesnpaSx/8Kkw3ezxY=;
+        h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type;
+        b=dMOfwlorRoXgOpf/FSvUj9UaE1Qk6uq3InfQJWzexuw3Wa6ySigKEMXXZNg1o43XY
+         x+2yzd3fzy6OtgtsPgiQH1JVCSXLgVzAr/OEoQq+Iv7bySqw6739NV+5mSJQst3ZUz
+         Olx7CG6mZsrdni6/OeNYkCegwoG9jRo4CvK8TnIn/Nf2YPd2S5FQICaGQl7WikJZge
+         l3zY6E04ooxU91K+9cE1NdhGR2EdBUmHVTKEXl4ZekA7UQ2v0NQSJuBp+T+UbfismB
+         GOhqiNqbwzE5Cq8geAnw7ZG8qxKRxZHZb0Rd4tjd1UKdKejblFbs2a6krzkT4N+5f6
+         ZcMMJKu18xO5A==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrGIsWRWlGSWpSXmKPExsViZ8ORqHv/W0m
+  ywcfDVhaXn/BZ7Pqzg93i6ssD7A7MHhOb37F7bFrVyebxeZNcAHMUa2ZeUn5FAmvGw95tzAXr
+  OCsWdO9gb2CcxtHFyMUhJLCFUeLI70NsEM5yJonGD/NZIZz9jBL/Ox8zdzFycrAJqEnsnP6SB
+  cQWEVCVmPJ/NlicWSBWYs/fHkYQW1jATqL1zkY2EJsFqOZm2xZWEJtXwFHi8sPTYL0SAgoSUx
+  6+Z4aIC0qcnPmEBWKOhMTBFy+YIWoUJdqW/GOHsCskZs1qY4Kw1SSuntvEPIGRfxaS9llI2hc
+  wMq1iNC9OLSpLLdI1NNRLKspMzyjJTczM0Uus0k3USy3VzcsvKsnQNdRLLC/WSy0u1iuuzE3O
+  SdHLSy3ZxAgM2pTiVPMdjN+X/dE7xCjJwaQkyru7oSRZiC8pP6UyI7E4I76oNCe1+BCjDAeHk
+  gTvjK9AOcGi1PTUirTMHGAEwaQlOHiURHj1nwKleYsLEnOLM9MhUqcYXTm2fd63l5ljbcMBID
+  l19r/9zBzLweTMr20HmIVY8vLzUqXEeWNeAzULgDRnlObBjYZF/yVGWSlhXkYGBgYhnoLUotz
+  MElT5V4ziHIxKwrxHvgBN4cnMK4G74BXQcUxAxx3wKwI5riQRISXVwJS2XFP8zPJG9+pk6ztb
+  50UoqKoqLmC+dMbM0ePfnPfC729wT7xw/bN15v2dAdJfTu57tNtk8qdL1b86Hxdu6iw72D5vj
+  7K51OOoM7HlFy/FzbtTd0xj6uGz9z/0Trut9uWBpeiX/rlLWu+sfblYtYX35Ms3UYy6nJFhZ/
+  QSI+N8P6efms18kN/hK0/RFfNXz4y88423ytrxHdnx0PCd0wGhT4E3ax9nB+/ouZ7bufGj72a
+  dFD0X0XO8AXY5K/1cld3Vbm22YTjN63KEe4HUnv9Xbc47Mt090JCVmxtg+yLpugWjfHxWjnLG
+  SbOVd1fdW8YoJNK8c+t6C4n9C+ueRHBVLt9uNm/xLvFFmce22MgpsRRnJBpqMRcVJwIALGzv+
+  XkDAAA=
+X-Env-Sender: yangx.jy@fujitsu.com
+X-Msg-Ref: server-17.tower-728.messagelabs.com!1668609759!335793!1
+X-Originating-IP: [62.60.8.97]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.100.1; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 11381 invoked from network); 16 Nov 2022 14:42:39 -0000
+Received: from unknown (HELO n03ukasimr01.n03.fujitsu.local) (62.60.8.97)
+  by server-17.tower-728.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 16 Nov 2022 14:42:39 -0000
+Received: from n03ukasimr01.n03.fujitsu.local (localhost [127.0.0.1])
+        by n03ukasimr01.n03.fujitsu.local (Postfix) with ESMTP id 6BA4F100188;
+        Wed, 16 Nov 2022 14:42:39 +0000 (GMT)
+Received: from R01UKEXCASM126.r01.fujitsu.local (R01UKEXCASM126 [10.183.43.178])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by n03ukasimr01.n03.fujitsu.local (Postfix) with ESMTPS id 5F75B100043;
+        Wed, 16 Nov 2022 14:42:39 +0000 (GMT)
+Received: from 0a0f9a8cc57f.localdomain (10.167.215.54) by
+ R01UKEXCASM126.r01.fujitsu.local (10.183.43.178) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.32; Wed, 16 Nov 2022 14:42:37 +0000
+From:   Xiao Yang <yangx.jy@fujitsu.com>
+To:     <shr@fb.com>, <djwong@kernel.org>
+CC:     <linux-xfs@vger.kernel.org>, <ruansy.fnst@fujitsu.com>,
+        Xiao Yang <yangx.jy@fujitsu.com>
+Subject: [PATCH] xfs: Call kiocb_modified() for buffered write
+Date:   Wed, 16 Nov 2022 14:42:21 +0000
+Message-ID: <1668609741-14-1-git-send-email-yangx.jy@fujitsu.com>
+X-Mailer: git-send-email 1.8.3.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221115013043.360610-6-david@fromorbit.com>
+Content-Type: text/plain
+X-Originating-IP: [10.167.215.54]
+X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
+ R01UKEXCASM126.r01.fujitsu.local (10.183.43.178)
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 15, 2022 at 12:30:39PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
+kiocb_modified() should be used for sync/async buffered write
+because it will return -EAGAIN when IOCB_NOWAIT is set. Unfortunately,
+kiocb_modified() is used by the common xfs_file_write_checks()
+which is called by all types of write(i.e. buffered/direct/dax write).
+This issue makes generic/471 with xfs always get the following error:
+--------------------------------------------------------
+QA output created by 471
+pwrite: Resource temporarily unavailable
+wrote 8388608/8388608 bytes at offset 0
+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+pwrite: Resource temporarily unavailable
 ...
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_iomap.c | 151 ++++++++++++++++++++++++++++++++++++++++++---
->  1 file changed, 141 insertions(+), 10 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 7bb55dbc19d3..2d48fcc7bd6f 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -1134,6 +1134,146 @@ xfs_buffered_write_delalloc_punch(
->  				end_fsb - start_fsb);
->  }
->  
-...
-> +/*
-> + * Punch out all the delalloc blocks in the range given except for those that
-> + * have dirty data still pending in the page cache - those are going to be
-> + * written and so must still retain the delalloc backing for writeback.
-> + *
-> + * As we are scanning the page cache for data, we don't need to reimplement the
-> + * wheel - mapping_seek_hole_data() does exactly what we need to identify the
-> + * start and end of data ranges correctly even for sub-folio block sizes. This
-> + * byte range based iteration is especially convenient because it means we don't
-> + * have to care about variable size folios, nor where the start or end of the
-> + * data range lies within a folio, if they lie within the same folio or even if
-> + * there are multiple discontiguous data ranges within the folio.
-> + */
-> +static int
-> +xfs_buffered_write_delalloc_release(
-> +	struct inode		*inode,
-> +	loff_t			start_byte,
-> +	loff_t			end_byte)
-> +{
-> +	loff_t			punch_start_byte = start_byte;
-> +	int			error = 0;
-> +
-> +	/*
-> +	 * Lock the mapping to avoid races with page faults re-instantiating
-> +	 * folios and dirtying them via ->page_mkwrite whilst we walk the
-> +	 * cache and perform delalloc extent removal. Failing to do this can
-> +	 * leave dirty pages with no space reservation in the cache.
-> +	 */
-> +	filemap_invalidate_lock(inode->i_mapping);
-> +	while (start_byte < end_byte) {
-> +		loff_t		data_end;
-> +
-> +		start_byte = mapping_seek_hole_data(inode->i_mapping,
-> +				start_byte, end_byte, SEEK_DATA);
+--------------------------------------------------------
 
-FWIW, the fact that mapping seek data is based on uptodate status means
-that seek behavior can change based on prior reads. For example, see how
-seek hole/data presents reads of unwritten ranges as data [1]. The same
-thing isn't observable for holes because iomap doesn't check the mapping
-in that case, but underlying iop state is the same and that is what this
-code is looking at.
+Fixes: 1aa91d9c9933 ("xfs: Add async buffered write support")
+Signed-off-by: Xiao Yang <yangx.jy@fujitsu.com>
+---
+ fs/xfs/xfs_file.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-The filtering being done here means we essentially only care about dirty
-pages backed by delalloc blocks. That means if you get here with a dirty
-page and the portion of the page affected by this failed write is
-uptodate, this won't punch an underlying delalloc block even though
-nothing else may have written to it in the meantime. That sort of state
-can be created by a prior read of the range on a sub-page block size fs,
-or perhaps a racing async readahead (via read fault of a lower
-offset..?), etc.
-
-I suspect this is not a serious error because the page is dirty and
-writeback will thus convert the block. The only exception to that I can
-see is if the block is beyond EOF (consider a mapped read to a page that
-straddles EOF, followed by a post-eof write that fails), writeback won't
-actually map the block directly. It may convert if contiguous with
-delalloc blocks inside EOF (and sufficiently sized physical extents
-exist), or even if not, should still otherwise be cleaned up by the
-various other means we already have to manage post-eof blocks.
-
-So IOW there's a tradeoff being made here for possible spurious
-allocation and I/O and a subtle dependency on writeback that should
-probably be documented somewhere. The larger concern is that if
-writeback eventually changes based on dirty range tracking in a way that
-breaks this dependency, that introduces yet another stale delalloc block
-landmine associated with this error handling code (regardless of whether
-you want to call that a bug in this code, seek data, whatever), and
-those problems are difficult enough to root cause as it is.
-
-Brian
-
-[1]
-
-# xfs_io -fc "falloc 0 4k" -c "seek -a 0" -c "pread 0 4k" -c "seek -a 0" <file>
-Whence  Result
-HOLE    0
-read 4096/4096 bytes at offset 0
-4 KiB, 4 ops; 0.0000 sec (156 MiB/sec and 160000.0000 ops/sec)
-Whence  Result
-DATA    0
-HOLE    4096
-
-> +		/*
-> +		 * If there is no more data to scan, all that is left is to
-> +		 * punch out the remaining range.
-> +		 */
-> +		if (start_byte == -ENXIO || start_byte == end_byte)
-> +			break;
-> +		if (start_byte < 0) {
-> +			error = start_byte;
-> +			goto out_unlock;
-> +		}
-> +		ASSERT(start_byte >= punch_start_byte);
-> +		ASSERT(start_byte < end_byte);
-> +
-> +		/*
-> +		 * We find the end of this contiguous cached data range by
-> +		 * seeking from start_byte to the beginning of the next hole.
-> +		 */
-> +		data_end = mapping_seek_hole_data(inode->i_mapping, start_byte,
-> +				end_byte, SEEK_HOLE);
-> +		if (data_end < 0) {
-> +			error = data_end;
-> +			goto out_unlock;
-> +		}
-> +		ASSERT(data_end > start_byte);
-> +		ASSERT(data_end <= end_byte);
-> +
-> +		error = xfs_buffered_write_delalloc_scan(inode,
-> +				&punch_start_byte, start_byte, data_end);
-> +		if (error)
-> +			goto out_unlock;
-> +
-> +		/* The next data search starts at the end of this one. */
-> +		start_byte = data_end;
-> +	}
-> +
-> +	if (punch_start_byte < end_byte)
-> +		error = xfs_buffered_write_delalloc_punch(inode,
-> +				punch_start_byte, end_byte);
-> +out_unlock:
-> +	filemap_invalidate_unlock(inode->i_mapping);
-> +	return error;
-> +}
-> +
->  static int
->  xfs_buffered_write_iomap_end(
->  	struct inode		*inode,
-> @@ -1179,16 +1319,7 @@ xfs_buffered_write_iomap_end(
->  	if (start_byte >= end_byte)
->  		return 0;
->  
-> -	/*
-> -	 * Lock the mapping to avoid races with page faults re-instantiating
-> -	 * folios and dirtying them via ->page_mkwrite between the page cache
-> -	 * truncation and the delalloc extent removal. Failing to do this can
-> -	 * leave dirty pages with no space reservation in the cache.
-> -	 */
-> -	filemap_invalidate_lock(inode->i_mapping);
-> -	truncate_pagecache_range(inode, start_byte, end_byte - 1);
-> -	error = xfs_buffered_write_delalloc_punch(inode, start_byte, end_byte);
-> -	filemap_invalidate_unlock(inode->i_mapping);
-> +	error = xfs_buffered_write_delalloc_release(inode, start_byte, end_byte);
->  	if (error && !xfs_is_shutdown(mp)) {
->  		xfs_alert(mp, "%s: unable to clean up ino 0x%llx",
->  			__func__, XFS_I(inode)->i_ino);
-> -- 
-> 2.37.2
-> 
-> 
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index e462d39c840e..561fab3a49c7 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -417,6 +417,9 @@ xfs_file_write_checks(
+ 		spin_unlock(&ip->i_flags_lock);
+ 
+ out:
++	if (IS_DAX(inode) || (iocb->ki_flags & IOCB_DIRECT))
++		return file_modified(file);
++
+ 	return kiocb_modified(iocb);
+ }
+ 
+-- 
+2.21.0
 
