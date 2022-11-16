@@ -2,455 +2,379 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0772EC4332F
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Nov 2022 02:51:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4864EC433FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Nov 2022 03:14:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230124AbiKPCvN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Nov 2022 21:51:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56346 "EHLO
+        id S231633AbiKPDO4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Nov 2022 22:14:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39664 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229894AbiKPCvM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Nov 2022 21:51:12 -0500
-Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3CC31EAED
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Nov 2022 18:51:10 -0800 (PST)
-Received: by mail-pg1-x52c.google.com with SMTP id s196so15427157pgs.3
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Nov 2022 18:51:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=/20hT1zOIY/n/ujE1Jylz4l0j44xAuJADztSQpK+Xv0=;
-        b=YNd4gDxKgWIJ0WsWH5qoQlEfLimjWCp++eoOMy4rFJWPEzXv+9RtbcHWuXXrLijqZu
-         ceRNHdvhEyqR74I/QJMG62yoR9ausYN2FZOXOgD+1bbAxi6OjjXYN4noXS13ULOH9SMX
-         KlJw9QnlDCGVXZV6KCc5HP/PWJDQo9TVb+lGTltIdSXOLQveJL+T1o0le0v5lKZ2Wbp/
-         MaulQVGZ32oYUIxoC1YQFwJl4zRH1iK7LILh6oBZChJxJkbA57ZhgYl69mYEJAJZi2+3
-         RL0FG5KNMDWKMzFftm5JLcLGuCMIRhWMeBGgH0m2MYdrupUIqwPUJkSPwo+UsswFWBv0
-         ajKQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/20hT1zOIY/n/ujE1Jylz4l0j44xAuJADztSQpK+Xv0=;
-        b=3wS7YJvptPHyx3+JHsbXlJ6lmFtndjbp1ruxedTl94rt1JRa4lx/0VU1BaSzQpRt/6
-         XeguUnUJqVKLUVdog+klEtAz1lf0v7cjeQUnQ8DVy06ZFqalzE5Ugvff0TeMze1JIW3C
-         +vI/gL6iO394sXK7rDZKzDjqsmwRhZELES/5nFUzz1b1Z6wpQ6BoQxAhbwwu+OIOE/cr
-         b9DTAK8347U1Y7EDQc1fmu83uV68D6l4Yo3/4sOe+fZBzGZHEwWeY0ZVyvz0GwmUeuCK
-         eeAC0eYgsjfnrlKk/tKgXhB5bCFl7NmX1sfD5mp6bNZx44DSu+LTXWGsTfpxfbliu172
-         dNIw==
-X-Gm-Message-State: ANoB5pmt6IDtCVlHetKuI+ruikESL9KReB7hZDKEvaJ5EHylek6JIz86
-        dV7FfZV2zemGQwVnFE4+WcTJNA==
-X-Google-Smtp-Source: AA0mqf69ACTqzY3lEvSApEs3DTSK64/44ncGcNMB88FaXLPiAu5mlh1NIS/OtAwRng9nJPsd+XPH2A==
-X-Received: by 2002:a63:1223:0:b0:476:95a8:de78 with SMTP id h35-20020a631223000000b0047695a8de78mr9237272pgl.66.1668567070227;
-        Tue, 15 Nov 2022 18:51:10 -0800 (PST)
-Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au. [49.181.106.210])
-        by smtp.gmail.com with ESMTPSA id g3-20020a170902868300b00186ac812ab0sm10654940plo.83.2022.11.15.18.51.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Nov 2022 18:51:09 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1ov8W2-00EjxM-39; Wed, 16 Nov 2022 13:51:06 +1100
-Date:   Wed, 16 Nov 2022 13:51:06 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        Brian Foster <bfoster@redhat.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Zirong Lang <zlang@redhat.com>
-Subject: Re: [PATCH] xfs: account extra freespace btree splits for multiple
- allocations
-Message-ID: <20221116025106.GB3600936@dread.disaster.area>
-References: <20221109034802.40322-1-hsiangkao@linux.alibaba.com>
- <20221111203905.GN3600936@dread.disaster.area>
- <Y27e2U155YvH9et4@debian>
- <20221112214545.GQ3600936@dread.disaster.area>
- <Y3NGghqFDEoMPojt@B-P7TQMD6M-0146.local>
+        with ESMTP id S231320AbiKPDOz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Nov 2022 22:14:55 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADD8525C
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Nov 2022 19:14:51 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 58F5BB81BAF
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Nov 2022 03:14:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00230C433D6;
+        Wed, 16 Nov 2022 03:14:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1668568488;
+        bh=Lcpvi4ce90kjCI23MhRTsS/wR6NellMrx1usPdZW7XQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=b+uPmBg+vj9dg/iLcNY7udhP3+lxL1mhywZ3gm/AsDrRj3Pv1wDmrRKPsDPgT6908
+         LWIAYeSwiiSfIXWuKWkokZSUvWwl8PFpOac5oTmMjFHZUbWVUl6pKH2OIEIAO+ECgh
+         msrsgOlTRSAdZR9r9+UVzJjGArvmq00473WmWTSjskppraLY/2SL8zs4OkpUZFLPOF
+         fiYD1X/+xFvfBAWAjmP/s07zHxIVr4++9eK3QwKNgV3E7XFnSdfqLK8VPEd2KkZBFk
+         zIZp+w0t23g3AakgTl9+Ix17wAaVGRDxSMnELdEOXddjJX02IWbWfnN5m068ad2tOm
+         GTmdOmofoUNEw==
+Date:   Tue, 15 Nov 2022 19:14:47 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Noah Misch <noah@leadboat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: After block device error, FICLONE and sync_file_range() make
+ NULs, unlike read()
+Message-ID: <Y3RVp74Qf58/Rh2y@magnolia>
+References: <20221108172436.GA3613139@rfd.leadboat.com>
+ <Y2vZk7Wg0V8SvwxW@magnolia>
+ <20221110045452.GB3665013@rfd.leadboat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <Y3NGghqFDEoMPojt@B-P7TQMD6M-0146.local>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20221110045452.GB3665013@rfd.leadboat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 15, 2022 at 03:57:54PM +0800, Gao Xiang wrote:
-> On Sun, Nov 13, 2022 at 08:45:45AM +1100, Dave Chinner wrote:
-> > On Sat, Nov 12, 2022 at 07:46:33AM +0800, Gao Xiang wrote:
-> > > On Sat, Nov 12, 2022 at 07:39:05AM +1100, Dave Chinner wrote:
-> > > > On Wed, Nov 09, 2022 at 11:48:02AM +0800, Gao Xiang wrote:
-> > > > > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > > > > index 6261599bb389..684c67310175 100644
-> > > > > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > > > > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > > > > @@ -2630,7 +2630,12 @@ xfs_alloc_fix_freelist(
-> > > > >  		goto out_agbp_relse;
-> > > > >  	}
-> > > > >  
-> > > > > -	need = xfs_alloc_min_freelist(mp, pag);
-> > > > > +	/
-> > > > > +	 * Also need to fulfill freespace btree splits by reservaing more
-> > > > > +	 * blocks to perform multiple allocations from a single AG and
-> > > > > +	 * transaction if needed.
-> > > > > +	 */
-> > > > > +	need = xfs_alloc_min_freelist(mp, pag) * (1 + args->postallocs);
-> > > > >  	if (!xfs_alloc_space_available(args, need, flags |
-> > > > >  			XFS_ALLOC_FLAG_CHECK))
-> > > > >  		goto out_agbp_relse;
-> > > > > @@ -2654,7 +2659,7 @@ xfs_alloc_fix_freelist(
-> > > > >  		xfs_agfl_reset(tp, agbp, pag);
-> > > > >  
-> > > > >  	/* If there isn't enough total space or single-extent, reject it. */
-> > > > > -	need = xfs_alloc_min_freelist(mp, pag);
-> > > > > +	need = xfs_alloc_min_freelist(mp, pag) * (1 + args->postallocs);
-> > > > >  	if (!xfs_alloc_space_available(args, need, flags))
-> > > > >  		goto out_agbp_relse;
-> > > > >  
-> > > > > diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> > > > > index 2c3f762dfb58..be7f15d6a40d 100644
-> > > > > --- a/fs/xfs/libxfs/xfs_alloc.h
-> > > > > +++ b/fs/xfs/libxfs/xfs_alloc.h
-> > > > > @@ -73,6 +73,7 @@ typedef struct xfs_alloc_arg {
-> > > > >  	int		datatype;	/* mask defining data type treatment */
-> > > > >  	char		wasdel;		/* set if allocation was prev delayed */
-> > > > >  	char		wasfromfl;	/* set if allocation is from freelist */
-> > > > > +	bool		postallocs;	/* number of post-allocations */
-> > > > >  	struct xfs_owner_info	oinfo;	/* owner of blocks being allocated */
-> > > > >  	enum xfs_ag_resv_type	resv;	/* block reservation to use */
-> > > > >  #ifdef DEBUG
-> > > > > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > > > > index 49d0d4ea63fc..ed92c6a314b6 100644
-> > > > > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > > > > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > > > > @@ -3497,6 +3497,7 @@ xfs_bmap_exact_minlen_extent_alloc(
-> > > > >  	args.alignment = 1;
-> > > > >  	args.minalignslop = 0;
-> > > > >  
-> > > > > +	args.postallocs = 1;
-> > > > >  	args.minleft = ap->minleft;
-> > > > >  	args.wasdel = ap->wasdel;
-> > > > >  	args.resv = XFS_AG_RESV_NONE;
-> > > > > @@ -3658,6 +3659,7 @@ xfs_bmap_btalloc(
-> > > > >  		args.alignment = 1;
-> > > > >  		args.minalignslop = 0;
-> > > > >  	}
-> > > > > +	args.postallocs = 1;
-> > > > >  	args.minleft = ap->minleft;
-> > > > >  	args.wasdel = ap->wasdel;
-> > > > >  	args.resv = XFS_AG_RESV_NONE;
-> > > > 
-> > > > That's not going to work. What happens when we do a full bno
-> > > > split? Or we do both a bno and a cnt split in the same allocation?
+On Wed, Nov 09, 2022 at 08:54:52PM -0800, Noah Misch wrote:
+> Subject line has my typo: s/sync_file_range/copy_file_range/
+> 
+> On Wed, Nov 09, 2022 at 08:47:15AM -0800, Darrick J. Wong wrote:
+> > On Tue, Nov 08, 2022 at 09:24:36AM -0800, Noah Misch wrote:
+> > > Scenario: due to a block device error, the kernel fails to persist some file
+> > > content.  Even so, read() always returns the file content accurately.
+> > 
+> > ...reads of the source file?  Or the destination file?  Your script
+> > doesn't explicitly sum the source file after the EIO, so I'm guessing
+> > the “cat $broken_source | cat > $dest; sum $dest” demonstrates that the
+> > page cache of the source file is still ok?
+> 
+> Reads of the source file.  Yes, I believe the page cache is ok, while on-disk
+> state is not okay.
+> 
+> > > The first FICLONE returns EIO, but every subsequent FICLONE or
+> > > copy_file_range() operates as though the file were all zeros.
+> > 
+> > Note FICLONE != clone_file_range.  FICLONE flushes dirty data to disk
+> > and reflinks blocks; clone_file_range has a multitude of behaviors
+> > depending on fs.  On XFS, it first will try FICLONE before falling back
+> > to pipe copies.
+> > 
+> > So the first thing is to figure out where the EIO comes from such that
+> > FICLONE fails.  Kernel logs would help here, since a dirty data
+> > writeback encountering a broken disk will cause FICLONE to fail with EIO
+> > but leave the fs running.
+> 
+> The EIO always correlates with a kernel log entry like this:
+> 
+> [Mon Nov  7 10:13:40 2022] sunvdc: vdc_tx_trigger() failure, err=-11
+> [Mon Nov  7 10:13:40 2022] I/O error, dev vdiskc, sector 1918699264 op 0x1:(WRITE) flags 0x4800 phys_seg 17 prio class 2
+> 
+> > The second thing would be to step through the system behavior call by
+> > call -- what is the state of $dest after the FICLONE call but before the
+> > c_f_r.  Is it an empty file with size zero?
+> 
+> I don't have that detail from the state right after the FICLONE that returned
+> EIO.  (I could get it with another test run.  The last test run took 43965s,
+> though.)  However, I would guess it's the same as the state when running a
+> later FICLONE on the same source file.  The file has size 16777216, is sparse,
+> and reads as all NUL bytes.
+> 
+> > Is the pagecache for the
+> > source file still intact?  That will tell us if FICLONE is somehow
+> > stamping out files full of zeroes, or if this is a weird c_f_r behavior.
+> 
+> Yes, pagecache is intact.
+> 
+> > I wrote the FICLONE behavior in XFS, and AFAIK there isn't a vector by
+> > which the $dest file would end up being 16MB all zeroed (but hey, let's
+> > simulate this behavior and check anyway).  However, c_f_r is ... a mess,
+> > and I wouldn't be surprised if it did something whacky like that.
+> 
+> One of the steps of the test script uses FICLONE without copy_file_range().
+> 
+> > > How
+> > > feasible is it change FICLONE
+> > > and copy_file_range() such that they instead find the bytes that read() finds?
 > > > 
-> > > I'm not sure if I got your point or not. I think it reserves another
-> > > full splits in the first allocation by doing:
+> > > - Kernel is 6.0.0-1-sparc64-smp from Debian sid, running in a Solaris-hosted VM.
 > > > 
-> > > 	need = xfs_alloc_min_freelist(mp, pag) * (1 + args->postallocs);
+> > > - The VM is gcc202 from https://cfarm.tetaneutral.net/machines/list/.
+> > >   Accounts are available.
 > > > 
-> > > as I wrote above.
+> > > - The outcome is still reproducible in FICLONE issued two days after the
 > > 
-> > You're changing the BMBT reservation code. If the first "post-extent
-> > BMBT block allocation" does a full split of both the bno/cnt trees,
-> > then this uses all the AGFL reservations made.
+> > Are you issuing raw FICLONE calls, or cp with reflink again?
 > 
-> Emmm... I have to align my understanding of this first, I think one
-> example of what you meant is
->   1. allocate an extent for an inode with minleft = 1;
->   2. then do extents-to-btree allocation with one block, even minleft
->      was reserved as 1 in the previous allocation but such one-block
->      allocation from non-AGFL can cause full bno/cnt splits, which
->      could takes xfs_alloc_min_freelist() blocks from AGFL and could
->      take up all AGFL blocks?
->
-> If my understanding above is like what you said, I think the current
-> codebase may also have a chance to eat up all AGFL blocks in the first
-> allocation since more agfl blocks are only filled in
-> xfs_alloc_fix_freelist(), but later xfs_alloc_ag_vextent() could
-> cause full bno/cnt splits as well?
-
-Yes, the second allocation here might only require 1 block, which is
-what args->minleft says. But the problem is that nothing is
-reserving AGFL blocks for those nested extent allocations...
-
-..... because the assumption is that AGFL blocks come from free
-space and so when we are at ENOSPC bno/cnt btrees *do no require
-splits* so will not consume extra space. Hence allocation at ENOSPC
-doesn't need to take into account AGFL block usage because the AGFL
-will not be consumed.
-
-Similarly, if we have enough free space records to split a free
-space btree block, we have enough free space to refill the AGFL
-multiple times and we don't have to reserve space for them.
-
-IOWs, the allocation code has, historically, never had to care about
-AGFL refilling when the AG is near ENOSPC as nothing will consume
-AGFL blocks when the AG is near empty.
-
-This is the design assumption that AG reservations broke. This is
-why I'm asking you to look into taking blocks that are supposedly
-reserved for the AGFL, because as reserved space is used, the
-bno/cnt btrees will shrink and return those blocks to free space and
-hence they are still available for reserved allocations to use as
-the real physical ENOSPC condition approaches.
-
-The more I look at this, the more I think overall answer to this
-problem is to allow AGFL refilling to ignore AG reserves rather than
-causing ENOSPC....
-
-----
-
-Regardless of the above, answers to the rest of you questions follow.
-
-> Please help correct me if my understanding about your ask is wrong.
+> cp with reflink, but it's basically raw FICLONE at that point.  See the
+> original post's strace fragment below "FICLONE returns 0 and yields an
+> all-zeros file".
 > 
-> > 
-> > How many blocks does a BMBT split need to allocate?
-> 
-> IMO, a full bmbt split can allocate btree level blocks at maximum,
-> but if these block allocation cause bno/cnt btree splits, that
-> needs more than such blocks.
-
-And how many individual allocations does that require?
-
-> So I think that's why AGFL is needed
-> for XFS.  IOWs, that is to prepare enough blocks for bno/cnt splits
-> to avoid cyclic dependency.
-
-The AGFL is there to ensure any *one* space allocation succeeds.
-
-> But I'm not sure if the current AGFL reservation works properly
-> if multiple allocations must be succeeded in the same AG, see below..)
-
-Right, it does not provide any guarantees across mutliple successive
-allocations like an extent + BMBT split chain. That's what
-args->minleft is supposed to provide.
-
-However, it does provide the guarantee that when near ENOSPC,
-bno/cnt splits and hence AGFL consumption will not occur, thereby
-ensuring that if args->minleft is reserved correctly, operation
-right up to ENOSPC will work correctly without AGFL reservations
-because the AGFL will not be consumed.
-
-Hence my comments above about the problem being the way AG
-reservations moved ENOSPC from "AG physically empty" to "AG still
-has thousands of free extents but remaining space unavailable to
-user data allocation".
-
-> > > > Regardless, I don't see anything wrong with the allocation setup -
-> > > > it's telling the allocation code exactly what it needs for
-> > > > subsequent BMBT block allocations to succeed (i.e. args->minleft).
+> > >   original block device error.  I haven't checked whether it survives a
+> > >   reboot.
 > > > 
-> > > In the long term, I think the main point is that args->minleft doesn't
-> > > have the exact meaning.  I don't know how many blocks should be counted
-> > > by args->minleft or other ways.
-> > 
-> > args->minleft has an *exact* meaning - that the AG must have that
-> > many blocks left available for potential btree record insertion
-> > allocations after the initial extent is allocated. For inode fork
-> > allocations, the BMBT blocks required is defined by
-> > xfs_bmapi_minleft(). For inode chunk extent allocation and inobt
-> > record insertion, it is defined by the pre-calculated
-> > igeo->inobt_maxlevels variable.
-> > 
-> > IOWs, this "postalloc" concept is redundant - minleft already
-> > provides the maximum number of single block allocations that need to
-> > have space reserved in the AG for the initial extent allocation to
-> > succeed. i.e.  the allocation setup is already taking into account
-> > blocks needed for extra allocations within the AG, but that's not
-> > being handled correctly by the AG allocation code.
-> 
-> I don't think it's the case as I described in the patch commit message,
-> if we go over the words at the top, the main point is
->  
->  In the first allocation, minleft = 1, the current allocator assumes
->  it can allocate an extent with 27 blocks (the remaining blocks are
->  18276 per-AG reservation, 6 for AGFL reservation, 1 for inode extents
->  -to-btree for the following allocation).
-> 
->  But here in order to finish this allocation with 27 blocks, it splits
->  cntbt so that it takes another unexpected block from AGFL, and
->  that wasn't accounted in minleft (or with any other fields) before.
-> 
->  I don't think it can be directly described by minleft because
->  such extra bno/cntbt reservation needs more knowledge of bno/cntbt
->  internals (such as current bno/cnt btree levels), so I don't think
->  it should belong to BMBT allocation code at least.
-> 
->  So here I introduced another variable to describe the total number
->  of post-allocations, I think it's just enough to resolve the inode
->  extents-to-btree bno/cntbt reservation issue.
-
-extents-to-btree is the degenerate case of a btree split. It's
-moving the in-inode extent block to a single btree root block - it's
-the same case as having a multi-level BMBT and splitting a single
-leaf block during an xfs_btree_insert() call. Both require a second
-discrete allocation to be made in the same transaction from the same
-AG.
-
-But if that xfs_btree_insert() call triggers a multi-level btree
-split, we've now got more than 1 "post allocation" allocation being
-done - there's one allocation for every level that needs to have a
-block split. To handle this, we'd need to set up this args.postalloc
-variable with the number of allocations a btree split might require.
-
-What I'm trying to tell you is that args->minleft is already
-configured with exactly this number of blocks/post-allocations that
-the btree split might require, and hence allow the allocation code
-to select an AG with the right amount of space needed before it
-starts.
-
-
-> > On review, it is quite possible that args->minleft is not being
-> > handled by the BMBT and inobt block allocation code correctly.
-> > Shouldn't btree block allocation drop args->minleft by 1 for
-> > each block that is allocated?
-> 
-> At least, in order to convert from inode extents-to-btree, we need
-> another block for the following allocation, so minleft = 1 here.
-> 
-> 	if (ifp->if_format != XFS_DINODE_FMT_BTREE)
-> 		return 1;
-
-Yes, as I said above, that's the degenerate case where we only need
-to allocate a root block and set the btree level to 1.
-
-> So I guess what you meant is
-> 	return be16_to_cpu(ifp->if_broot->bb_level) + 1; ?
-> 
-> I don't know why it has another 1 here,
-
-It's a btree. What does a full height btree split do?
-
-It adds a block to each existing level, and splits the root block
-into two. Which means we need to increase the tree height by 1 and
-allocate a new root block. IOWs, the number of allocations/blocks
-needed by a full split is (current height + 1).
-
-> yet even if we account an
-> extra block here, I think it doesn't have some critical result
-> since the worst case is that it just returns -ENOSPC in advance.
-> 
-> But in principle, most users use terabytes XFS, so I think such
-> one extra block doesn't matter too much.  I will update this if
-> such 1 is meaningless, but it doesn't actually contribute to the
-> real shutdown issue.
-
-I think you misunderstood what I was asking. Let's unroll the
-extent allocation/BMBT record insert loop:
-
-extent allocation
- args.minleft = bb_level + 1
- xfs_alloc_vextent(args)
-bmbt record insert
-  xfs_btree_insert()
-    leaf split
-      xfs_bmbt_alloc_block()
-        args.minleft = ???
-        xfs_alloc_vextent(args)
-    level 1 node split
-      xfs_bmbt_alloc_block()
-        args.minleft = ???
-        xfs_alloc_vextent(args)
-    level 2 node split
-      xfs_bmbt_alloc_block()
-        args.minleft = ???
-        xfs_alloc_vextent(args)
-    ....
-    root split
-      xfs_bmbt_alloc_block()
-        args.minleft = ???
-        xfs_alloc_vextent(args)
-
-A BMBT split results in a chain of individual allocations. What
-should args.minleft be set to on each of these allocations, and
-what context do we have to ensure it is set correctly? 
-So the question I was asking was whether what we are doing with
-args->minleft for each allocation in the chain is correct, and
-whether they need modification if we have to take into account the
-AGFL block refilling that may need to occur after each BMBT block
-allocation?
-
-Indeed, if we get the initial extent allocation reservation correct,
-does minleft even matter for the rest of the allocations in the
-chain?
-
-Looking at xfs_bmbt_alloc_block(), it sets args.minleft = 0 if there
-was a previous allocation in the transaction (i.e. args.fsbno !=
-NULLFSBLOCK). It assumes that the original extent reservation set
-args.minleft appropriately to reserve enough space for all
-subsequent calls to xfs_bmbt_alloc_block() in this transaction to
-succeed.
-
-Hence, given the way it is implemented right now, all we need to do
-is ensure that the initial allocation has all the space reservation
-the entire operation may need and the rest is good, yes?
-
-xfs_bmap_extents_to_btree() also sets args->minleft = 0, so as long
-as the first allocation in the transaction has reserved enough
-blocks in args->minleft it doesn't need any special help, either.
-
-So, yes, you are right that avoiding ENOSPC when running multiple
-allocations in a single transaction is all based on the initial
-allocation ensuring there is enough space in the AG for all
-subsequent allocations to succeed. But there's a lot more to it than
-that....
-
-> > > > The problem here is that the internal allocation code is failing to
-> > > > handle the corner case where space is just about gone correctly.
-> > > > 
-> > > > As I pointed out previously - we have a huge amount of reserve space
-> > > > available in the AG here, so why not use some of the reserve space
-> > > > to get out of this temporary deficit corner case? We can argue that
-> > > > it's not really a deficit, either, because moving free blocks to the
-> > > > free list still accounts them as unused and free, so could still
-> > > > make up part of the unused reservation....
-> > > > 
-> > > > i.e. is the problem here simply that we don't allow AGFL blocks to
-> > > > be considered part of the reserved free space?
+> > > - The "sync" command did not help.
 > > > 
-> > > I don't know how to simply reuse per-AG reservation blocks for this,
+> > > - The block device errors have been ongoing for years.  If curious, see
+> > >   https://postgr.es/m/CA+hUKGKfrXnuyk0Z24m8x4_eziuC3kLSaCmEeKPO1DVU9t-qtQ@mail.gmail.com
+> > >   for details.  (Fixing the sunvdc driver is out of scope for this thread.)
+> > >   Other known symptoms are failures in truncate() and fsync().  The system has
+> > >   been generally usable for applications not requiring persistence.  I saw the
 > > 
-> > I don't know either, which is *why I asked the question*. i.e. I'm
-> > asking for you to investigate a potential alternative solution that
-> > challenges a design assumption this code makes. i.e. AGBNO and AGCNT
-> > btree blocks are considered free space because when we are at ENOSPC
-> > they are empty.
+> > <cough> Well I guess if you're going to tie my hands from the start...
+> 
+> Heh.  I won't stop you from fixing the sunvdc driver!  I figured linux-xfs
+> would focus on the topic, "given block devices sometimes report errors, how
+> should XFS behave?"
+
+I wasn't going to fix sunvdc, I'm pretty sure I don't even have access to
+the relevant hardware. ;)
+
+That said... people send me a surprising number of bug reports that
+start with "My hardware is really flaky..." and end with "...and I want
+you to go to extraordinary lengths to work around all of that in
+software!"
+
+Apologies for my own defensive reaction, your report merely wanted
+"...can we have some non-weird behavior from the page cache?"
+
+> > >   FICLONE problem after the system updated coreutils from 8.32-4.1 to 9.1-1.
+> > >   That introduced a "cp" that uses FICLONE.  My current workaround is to place
+> > >   a "cp" in my PATH that does 'exec /usr/bin/cp --reflink=never "$@"'
+> > > 
+> > > 
+> > > The trouble emerged at a "cp".  To capture more details, I replaced "cp" with
+> > > "trace-cp" containing:
+> > > 
+> > >   sum "$1"
+> > >   strace cp "$@" 2>&1 | sed -n '/^geteuid/,$p'
+> > >   sum "$2"
+> > > 
+> > > Output from that follows.  FICLONE returns EIO.  "cp" then falls back to
+> > > copy_file_range(), which yields an all-zeros file:
+> > > 
+> > >   47831 16384 pg_wal/000000030000000000000003
+> > >   geteuid()                               = 1450
+> > >   openat(AT_FDCWD, "/home/nm/src/pg/backbranch/extra/src/test/recovery/tmp_check/t_028_pitr_timelines_primary_data/archives/000000030000000000000003", O_RDONLY|O_PATH|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+> > >   fstatat64(AT_FDCWD, "pg_wal/000000030000000000000003", {st_mode=S_IFREG|0600, st_size=16777216, ...}, 0) = 0
+> > >   openat(AT_FDCWD, "pg_wal/000000030000000000000003", O_RDONLY) = 4
+> > >   fstatat64(4, "", {st_mode=S_IFREG|0600, st_size=16777216, ...}, AT_EMPTY_PATH) = 0
+> > >   openat(AT_FDCWD, "/home/nm/src/pg/backbranch/extra/src/test/recovery/tmp_check/t_028_pitr_timelines_primary_data/archives/000000030000000000000003", O_WRONLY|O_CREAT|O_EXCL, 0600) = 5
+> > >   ioctl(5, BTRFS_IOC_CLONE or FICLONE, 4) = -1 EIO (Input/output error)
+> > >   fstatat64(5, "", {st_mode=S_IFREG|0600, st_size=0, ...}, AT_EMPTY_PATH) = 0
+> > >   fadvise64_64(4, 0, 0, POSIX_FADV_SEQUENTIAL) = 0
+> > >   copy_file_range(4, NULL, 5, NULL, 9223372035781033984, 0) = 16777216
+> > >   copy_file_range(4, NULL, 5, NULL, 9223372035781033984, 0) = 0
 > > 
-> > However, with this ag reservation code, we can be at ENOSPC when
-> > there are still tens of thousands of free extents, and hence the
-> > AGBNO and AGCNT btree blocks are used space, not free space. The
-> > AGFL accounting is based on AGFL blocks being considered free space,
-> > which matches the AG btree blocks being considered free space, and
-> > so maybe the root of the problem here is the assumption that AG
-> > btree blocks and AGFL blocks are accounted as free space rather than
-> > part of this new "reserved space"....
+> > Clearly c_f_r thought it had 16MB of *something* to copy here.  It would
+> > be interesting to ftrace the xfs reflink calls to find out if it called
+> > FICLONE a second time, or if it actually tried a pagecache copy.
 > 
-> I have strong feeling that the current per-AG reservation code (or
-> AGFL reservation as in xfs_alloc_min_freelist() ) doesn't work
-> properly for multiple allocations in the same AG in order to make
-> sure such multiple allocations all succeed.
+> If needed, I can try to get access to do that.
 > 
-> Also, a wilder question is that I'm not sure why such multiple
-> allocations in oneshot _cannot_ be handled with a defer ops as
-> some new log intent, so that we don't need to care about minleft
-> messy anymore.
+> > >   close(5)                                = 0
+> > >   close(4)                                = 0
+> > >   _llseek(0, 0, [0], SEEK_CUR)            = 0
+> > >   close(0)                                = 0
+> > >   close(1)                                = 0
+> > >   close(2)                                = 0
+> > >   exit_group(0)                           = ?
+> > >   +++ exited with 0 +++
+> > >   00000 16384 /home/nm/src/pg/backbranch/extra/src/test/recovery/tmp_check/t_028_pitr_timelines_primary_data/archives/000000030000000000000003
+> > > 
+> > > Subsequent FICLONE returns 0 and yields an all-zeros file.  Test script:
+> > > 
+> > >   set -x
+> > >   broken_source=t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003
+> > >   dest=$HOME/tmp/discard
+> > >   sum "$broken_source"
+> > >   : 'FICLONE returns 0 and yields an all-zeros file'
+> > >   strace cp --reflink=always "$broken_source" "$dest" 2>&1 | sed -n '/^geteuid/,$p'
+> > >   sum "$dest"; rm "$dest"
+> > >   : 'copy_file_range() returns 0 and yields an all-zeros file'
+> > >   strace -e copy_file_range cat "$broken_source" >"$dest"
+> > >   sum "$dest"; rm "$dest"
+> > >   : 'read() gets the intended bytes'
+> > >   cat "$broken_source" | cat >"$dest"
+> > >   sum "$dest"; rm "$dest"
+> > > 
+> > > Test script output:
+> > > 
+> > >   + broken_source=t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003
+> > >   + dest=/home/nm/tmp/discard
+> > >   + sum t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003
+> > >   49522 16384 t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003
+> > >   + : FICLONE returns 0 and yields an all-zeros file
+> > >   + strace cp --reflink=always t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003 /home/nm/tmp/discard
+> > >   + sed -n /^geteuid/,$p
+> > >   geteuid()                               = 1450
+> > >   openat(AT_FDCWD, "/home/nm/tmp/discard", O_RDONLY|O_PATH|O_DIRECTORY) = -1 ENOENT (No such file or directory)
+> > >   fstatat64(AT_FDCWD, "t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003", {st_mode=S_IFREG|0600, st_size=16777216, ...}, 0) = 0
+> > >   openat(AT_FDCWD, "t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003", O_RDONLY) = 3
+> > >   fstatat64(3, "", {st_mode=S_IFREG|0600, st_size=16777216, ...}, AT_EMPTY_PATH) = 0
+> > >   openat(AT_FDCWD, "/home/nm/tmp/discard", O_WRONLY|O_CREAT|O_EXCL, 0600) = 4
+> > >   ioctl(4, BTRFS_IOC_CLONE or FICLONE, 3) = 0
+> > >   close(4)                                = 0
+> > >   close(3)                                = 0
+> > >   _llseek(0, 0, 0x7feffddf1c0, SEEK_CUR)  = -1 ESPIPE (Illegal seek)
+> > >   close(0)                                = 0
+> > >   close(1)                                = 0
+> > >   close(2)                                = 0
+> > >   exit_group(0)                           = ?
+> > >   +++ exited with 0 +++
+> > >   + sum /home/nm/tmp/discard
+> > >   00000 16384 /home/nm/tmp/discard
+> > 
+> > Curious.  This time the FICLONE actually succeeded.  Can you “filefrag
+> > -v $dest” here and show us if the dest file has space mapped to that 16M
+> > or if it's sparse?
+> 
+>   Filesystem type is: 58465342
+>   File size of /home/nm/tmp/discard is 16777216 (4096 blocks of 4096 bytes)
+>   /home/nm/tmp/discard: 0 extents found
+> 
+> That is the output for $dest created via FICLONE and also for $dest created by
+> copy_file_range().  (The test uses "cat $src >$dest" to test copy_file_range()
+> in isolation.)
+> 
+> For what it's worth, here's the output for the broken source file:
+> 
+>   Filesystem type is: 58465342
+>   File size of t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003 is 16777216 (4096 blocks of 4096 bytes)
+>    ext:     logical_offset:        physical_offset: length:   expected: flags:
+>      0:        0..    4095:  109234308.. 109238403:   4096:             last,unwritten,eof
+>   t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003: 1 extent found
+> 
+> And for the good copy created by cat source | cat >dest:
+> 
+>   Filesystem type is: 58465342
+>   File size of /home/nm/tmp/discard is 16777216 (4096 blocks of 4096 bytes)
+>    ext:     logical_offset:        physical_offset: length:   expected: flags:
+>      0:        0..    4095:          0..         0:      0:             last,unknown_loc,delalloc,eof
+>   /home/nm/tmp/discard: 1 extent found
+> 
+> In case it wasn't clear, the original post contained two scripts.  The
+> three-line "trace-cp" script was called from my application (PostgreSQL).  It
+> caught the evidence of the original EIO that coincided with the block device
+> error.  The longer script labeled "test script" is something I run at will,
+> getting the same result every time.
+> 
+> > Waitaminute.  About that 16M of data that's in $broken_source -- was all
+> > of that written to the pagecache right before the first call to cp?  I
+> > have a theory here that if you did:
+> > 
+> > 	write(src_fd, <16M of data>) = 16M
+> > 	ficlone(dst_fd, src_fd) = -EIO
+> > 	copy_file_range(dst_fd, src_fd)
+> 
+> Essentially yes.  It might have been a few smaller write() calls, not a single
+> big one.  In any case, the file originated seconds before the FICLONE.
+> 
+> > Then what's going on here is that the first write call dirties 16M of
+> > pagecache.  The FICLONE does an implied fsync() to flush the dirty data
+> > to disk, but that writeback fails.  The pagecache does not respond to
+> > writeback failure by redirtying the pages.  After the failed FICLONE,
+> > the src_fd file does not have written extents allocated to it -- either
+> > it'll be an unwritten extent, or nothing at all.
+> > 
+> > Then the second c_f_r comes along and tries FICLONE again.  This time
+> > the "flush" succeeds because the pages are "clean" so we go ahead with
+> > the reflink.  (Thanks, cp, for dropping the EIO!!!)  Reflink only shares
+> > written extents, so it extends dst_fd's size without mapping any real
+> > space to it.  That's my theory for why you see a $dest file that's 16M
+> > and all zeroes.
+> > 
+> > (Think of FICLONE as a low-level duplicator of disk contents whose only
+> > interaction with the page cache is to flush it at the start.)
+> > 
+> > Then you come along and manually cat $broken_source to $dest, using that
+> > odd pipe construction:
+> > 
+> >    cat "$broken_source" | cat >"$dest"
+> > 
+> > The introduction of the pipe means that c_f_r immediately goes to the
+> > pipe copying fallback, which reads the pagecache to the pipe; and writes
+> > the pipe contents to $dest.  Hence this works where everything else
+> > fails.
+> 
+> Those paragraphs are consistent with everything I know about the situation.
 
-We do use intents and deferred ops for BMBT freeing and reflink
-based insertion, but those only log changes to individual records in
-the btree. They do not record internal btree shape changes at all.
-Yes, we could convert normal extent allocation to use these intents
-as well, but that doesn't solve the problem of chained allocations
-within a single AG.
+Ok, glad I understood what's going on.
 
-IOWs, the chain of allocations for a BMBT split I mention above
-still exists for record level intents. To handle the btree split
-case as a chain of intents involves a whole new level of complexity
-and overhead in the btree code, and likely introduces more problems
-at ENOSPC than it solves...
+> > So I guess the question now is, what do we do about it?  The pagecache
+> > maintainers have never been receptive to redirtying pages after a
+> > writeback failure; cp should really pass that EIO out to userspace
+> > instead of silently eating it; and maaaybe FICLONE should detect EIOs
+> > recorded in the file's pagecache and return that, but it won't fix the
+> 
+> I'd favor having both FICLONE and copy_file_range() "detect EIOs recorded in
+> the file's pagecache and return that".  That way, they never silently make a
+> bad clone when read() could have provided the bytes constituting a good clone.
 
-Cheers,
+So would I, but the longstanding behavior of FICLONE is that it's an
+implied fsync, so it's *vital* that calling programs do not drop the EIO
+on the floor like cp does.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Another dumb thing about how the pagecache tracks errors is that it sets
+a single state bit for the whole mapping, which means that we can't
+actually /tell/ userspace which part of their file is now busted.  We
+can't even tell if userspace has successfully rewrite()d all the regions
+where writeback failed, which leads me to...
+
+Another another dumb thing about how the pagecache tracks errors is that
+any fsync-lik operation will test_and_clear_bit the EIO state, which
+means that if we find a past EIO, we'll clear that state and return the
+EIO to userspace.
+
+We /could/ change FICLONE to flush the dirty pagecache, sample the EIO
+status *without* clearing it, and return EIO if it's set.  That's
+probably the most unabsurd way to deal with this, but it's unsettling
+that even cp ignores errno returns now.  The manpage for FICLONE doesn't
+explicitly mention any fsync behaviors, so perhaps "flush and retain
+EIO" is the right choice here.
+
+> > underlying problem, which is that the cache thinks its clean after an
+> > EIO, and the pagecache forgets about recorded EIOs after reporting them
+> > via fsync/syncfs.
+> 
+> True.
+> 
+> > If you rebooted the machine at the end of the script, you'd likely see
+> > that $broken_source is either empty or also full of zeroes.  Quite
+> > possibly $dest would have the contents, since it did manage to get its
+> > own copy of the "clean" pagecache data and persist it.
+> 
+> I agree.  Thanks for the detailed reply.
+> 
+> > 
+> > --D
+> > 
+> > >   + rm /home/nm/tmp/discard
+> > >   + : copy_file_range() returns 0 and yields an all-zeros file
+> > >   + strace -e copy_file_range cat t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003
+> > >   copy_file_range(3, NULL, 1, NULL, 9223372035781033984, 0) = 16777216
+> > >   copy_file_range(3, NULL, 1, NULL, 9223372035781033984, 0) = 0
+> > >   +++ exited with 0 +++
+> > >   + sum /home/nm/tmp/discard
+> > >   00000 16384 /home/nm/tmp/discard
+> > >   + rm /home/nm/tmp/discard
+> > >   + : read() gets the intended bytes
+> > >   + cat t_028_pitr_timelines_node_pitr_data/pgdata/pg_wal/000000030000000000000003
+> > >   + cat
+> > >   + sum /home/nm/tmp/discard
+> > >   49522 16384 /home/nm/tmp/discard
+> > >   + rm /home/nm/tmp/discard
