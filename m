@@ -2,86 +2,102 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD349C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Nov 2022 18:40:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BD67C43219
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Nov 2022 18:49:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235041AbiKQSkq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Nov 2022 13:40:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41910 "EHLO
+        id S234836AbiKQStW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Nov 2022 13:49:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234461AbiKQSkp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Nov 2022 13:40:45 -0500
-Received: from mail-qv1-xf32.google.com (mail-qv1-xf32.google.com [IPv6:2607:f8b0:4864:20::f32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D27EB7DEC7
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2022 10:40:44 -0800 (PST)
-Received: by mail-qv1-xf32.google.com with SMTP id x13so1797651qvn.6
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2022 10:40:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:subject:from:to:content-language
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ouYfmnNioAXyJxLSFfW+3/GI+6hSZMTNjvbhCt5hldU=;
-        b=WegoYRoBIunsL+clIJAr6MgJ8Hqra0tci3UJWHWu1Z2wAtXxZ6SgWsoOrQekiRBnRV
-         tqcRW9uYOJ+MR/bs4IUERNP8k18Joe8iUBRuG49po9e1HGQ45UVf+ikVoyT246jD3Hw1
-         2/ejbmEqVe8YkQ52FOwjQyxfbtq3u7oaTLaQUgcFuLKXzh9opFCdslarl9uIDRmp9MjU
-         zCeGIIQ401VpvS08uF5zmPxpiNQZTd3c0fGROCozUQIaGegTVqv/AAwfl+FQMkktUP7T
-         15igGUYctVpqFmAq1FqKfwU6K0bI7DJQVVdFYzrKdQc/AeMRgtzy+U/OyjO9Twylcy8H
-         tqNg==
+        with ESMTP id S234614AbiKQStV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Nov 2022 13:49:21 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84E1F8A14C
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2022 10:48:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1668710901;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=W6SlBK67YjmI5D5b5boT6ciO6UGU/+eRLZEJjM7xLR8=;
+        b=RkIcznc1ZER9jwQb7yupLWSY9aYv2FvKcX7N0V9fD1e6mJh5UnaKvPz0+P+QxCiNerMbyg
+        yR2xCdv61v+/XJKGmMYDGSYFA+oZFwAG9nN0eoI3c56mZRCx8SGd3qNGEX7Ri1ScCJy2pZ
+        A4H4FKN5VYVbedeMFzprHeZSEjCr3vk=
+Received: from mail-io1-f71.google.com (mail-io1-f71.google.com
+ [209.85.166.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-596-1ImgpRjOO3mzLMgY4vgybg-1; Thu, 17 Nov 2022 13:48:20 -0500
+X-MC-Unique: 1ImgpRjOO3mzLMgY4vgybg-1
+Received: by mail-io1-f71.google.com with SMTP id z15-20020a5e860f000000b006c09237cc06so1359020ioj.21
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2022 10:48:19 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:subject:from:to:content-language
-         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=ouYfmnNioAXyJxLSFfW+3/GI+6hSZMTNjvbhCt5hldU=;
-        b=U38N+O0XQknmu+nWxpitzKX32g2Fe5jINsL722KFH04gBEIgjn2nZWc4NnXiQprrsq
-         JBU9zPeYZrH3ZjOspkxii0DYa9sTFWyKTB1j/ADrgekx6vQpSQIThzbLFKBh3S/V9dU1
-         3gcBd+6RMIZvFrzfgfkjQ/uwjsB6h+3toyMeEkfm+sj4lDgIg7B9RKVrJQTW6I6Wv/iO
-         6DEIMwxwIm/WSCrQphfd+a2Tq6k2WndFxNZJhq5WOCxuXbYBhZ77NT0wj7wu+C/QOX2t
-         o8YpJxAwYB5b+4dsveHJyeTm5Dh28tCS053yZq5J23piDKwkstmlWwTxOkoNJYNqsVwR
-         gmug==
-X-Gm-Message-State: ANoB5pmsfLm6tl6eyTfVTF+RincpOy0Drr8GXDo+SkKZazUGX4mT0GPF
-        mtMtXsUlASuD/ZkNdumEygpVAypIrW/iPQ==
-X-Google-Smtp-Source: AA0mqf6ZKKwcir6bZGqbxvvToSl62fBIWOUyX0uLa7IMaLEdt8ue1i6abM1SdSCGTnYokEp0EbU+ug==
-X-Received: by 2002:a05:6214:1767:b0:4bd:e8ec:263c with SMTP id et7-20020a056214176700b004bde8ec263cmr3558847qvb.104.1668710443657;
-        Thu, 17 Nov 2022 10:40:43 -0800 (PST)
-Received: from [192.168.0.200] (cpe-24-194-110-152.nycap.res.rr.com. [24.194.110.152])
-        by smtp.gmail.com with ESMTPSA id fv11-20020a05622a4a0b00b003a526675c07sm767244qtb.52.2022.11.17.10.40.43
-        for <linux-xfs@vger.kernel.org>
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=W6SlBK67YjmI5D5b5boT6ciO6UGU/+eRLZEJjM7xLR8=;
+        b=5+o3UHtTYjuf93GPXZNYiBLG0KppLm8Rh8xhUqfHVDefCHZn/o69klPm3LzNK0WjIj
+         tkagGHhCuYO/8ehkLBuA/uxairtRzcdN6BCEo8uUSen/szLHCCln0DBNA8aXzrzaIdim
+         Z8Jp5/VB8oG1rHvUUVTGVoQfNoShCqLuMZzG7Hq+Spxb58S6YiMQli/UoljY8KFLtVCy
+         uTJtlFyQoT0k6wNRQb+XT6xzuLaGzYCzfKrVHXe80vec1iherlyg6rvYvyrsV+9jK8SP
+         ihTIO24VcRpV1dLdDGvtRT5uQ4piUAuGsVwWmI2hnGzNUWfeeyjIBv1Y9pCy9y+/Ye9r
+         jGJw==
+X-Gm-Message-State: ANoB5pl0mXP4hiUWRpDMASmylXn+zRUZ6hKhegabQo02VxwzKbtA0sqy
+        +GrNCzs6b4LYBFG1U6MEwq5YyKUlKR+RI2DEcTbXFxOeJ2ius1ZQvhr9gEg0wZkzf2jib3hNcJA
+        LBekE85YBAndRHEd7GFte
+X-Received: by 2002:a92:dcc4:0:b0:302:568e:b493 with SMTP id b4-20020a92dcc4000000b00302568eb493mr1805731ilr.183.1668710898890;
+        Thu, 17 Nov 2022 10:48:18 -0800 (PST)
+X-Google-Smtp-Source: AA0mqf6GXTTA4nKXVMAp7Y1uJMvKlZRGzx+hrr6xGFrGpfVyTEmypmJihpdxU+vObauU+wrTIboozw==
+X-Received: by 2002:a92:dcc4:0:b0:302:568e:b493 with SMTP id b4-20020a92dcc4000000b00302568eb493mr1805722ilr.183.1668710898551;
+        Thu, 17 Nov 2022 10:48:18 -0800 (PST)
+Received: from [10.0.0.146] (sandeen.net. [63.231.237.45])
+        by smtp.gmail.com with ESMTPSA id r13-20020a92440d000000b00300df8bfcf5sm569559ila.14.2022.11.17.10.48.17
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 17 Nov 2022 10:40:43 -0800 (PST)
-Message-ID: <f7f94312-ad1b-36e4-94bf-1b7f47070c1e@gmail.com>
-Date:   Thu, 17 Nov 2022 13:40:42 -0500
+        Thu, 17 Nov 2022 10:48:18 -0800 (PST)
+Message-ID: <39028244-fec6-6717-d8a7-b9f89f5a1f3b@redhat.com>
+Date:   Thu, 17 Nov 2022 12:48:16 -0600
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.2
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.4.2
+Subject: Re: xfs_repair hangs at "process newly discovered inodes..."
 Content-Language: en-US
-To:     linux-xfs@vger.kernel.org
-From:   iamdooser <iamdooser@gmail.com>
-Subject: xfs_repair hangs at "process newly discovered inodes..."
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To:     iamdooser <iamdooser@gmail.com>, linux-xfs@vger.kernel.org
+References: <f7f94312-ad1b-36e4-94bf-1b7f47070c1e@gmail.com>
+From:   Eric Sandeen <sandeen@redhat.com>
+In-Reply-To: <f7f94312-ad1b-36e4-94bf-1b7f47070c1e@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
+On 11/17/22 12:40 PM, iamdooser wrote:
+> Hello,
+> 
+> I'm not sure this is the correct forum; if not I'd appreciate guidance.
+> 
+> I have a Unraid machine that experienced an unmountable file system on an array disc. Running:
+> 
+> xfs_repair -nv /dev/md3
 
-I'm not sure this is the correct forum; if not I'd appreciate guidance.
+Did that find errors?
 
-I have a Unraid machine that experienced an unmountable file system on 
-an array disc. Running:
+> works, however when running
+> 
+> xfs_repair -v /dev/md3
+> 
+> it stops at "process newly discovered inodes..." and doesn't seem to be doing anything.
+> 
+> I've asked in the unraid forum and they've directed me to the xfs mailing list.
+> 
+> Appreciate any help.
 
-xfs_repair -nv /dev/md3
+Please tell us the version of xfsprogs you're using, and provide the full xfs_repair
+output (with and without -n).
 
-works, however when running
+If it really looks like a bug, and not simply a slow repair, providing an xfs_metadump
+may help us evaluate the problem further.
 
-xfs_repair -v /dev/md3
+-Eric
 
-it stops at "process newly discovered inodes..." and doesn't seem to be 
-doing anything.
-
-I've asked in the unraid forum and they've directed me to the xfs 
-mailing list.
-
-Appreciate any help.
