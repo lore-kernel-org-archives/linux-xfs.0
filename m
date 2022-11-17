@@ -2,177 +2,114 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24C51C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Nov 2022 05:58:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0D4FC4332F
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Nov 2022 13:17:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239268AbiKQF6c (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Nov 2022 00:58:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50066 "EHLO
+        id S239833AbiKQNRg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Nov 2022 08:17:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37492 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239241AbiKQF6S (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Nov 2022 00:58:18 -0500
-Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE1B460369
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Nov 2022 21:58:16 -0800 (PST)
-Received: by mail-pj1-x1030.google.com with SMTP id k5so740097pjo.5
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Nov 2022 21:58:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=aO/cv4YV2OVecAaYjInPMlsbv9t1F4p45l8FdZlzeH0=;
-        b=RAxcQfO4U0rS4VXbWnYkwy4yGgCEGg4YduwchgtG2QQcpRAoz7i6y7M/zY/4MNLE3D
-         h9l9zbzRANUPyK/krXdjQFrmdkgoisnSiQaTHN/Y2iu8xA5D17Gbyfi3HzKZKGb58nt5
-         IcoWzmxCCxJCYyGBtFsiQKItU1MLF4/Tsn4nz7bDHLZkCg65Rmwv8uDINyPFHia49zC7
-         rj4IAeLhJu7OcOg2lk0U2chtZO0+7nb0Iyo1w3IF/UAc63j5W6PLtQKMYnJvat3v9gQ6
-         LOgtZLVDG4gXIx4sOeIRm7bYaQnjZJ4Sj3441JDYXYhB05+2u6khhs/WO/rkYeF42k2X
-         TsCA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=aO/cv4YV2OVecAaYjInPMlsbv9t1F4p45l8FdZlzeH0=;
-        b=dpay2Ia8wFiFvT70pH9/QVH87FzHDILthCnTOyjXa/6VyUOdIEGUuWYBpTj3mieFxT
-         07BRxM0jJSRWg3D6b3xyOeIR3nsUtE+OyXF0MRxjdoHYZFK3HvKzBrwqldJJV4mh63Ni
-         HnlWF//X2iK7HNNNIf2GNmIrI8VaqOp9Vjir99+4mjjvGa95/iCzvgm+Y8i3e9qNz7oX
-         qr6yKg4bjHrlzP+TOhhcVKb/FTvHmL4yZrF1kSJ9+gauYbzwWoMfGdRBJ5gVqZJotmee
-         LDoVLEnTp7kxUK+O2vNMgOVO59ybt2kWDgGo8H90wD6eiay2jqmIIRIK/7UeqWCSDFqy
-         HHww==
-X-Gm-Message-State: ANoB5pkTpc61WM7dL5z2DBcItvmeGre0wvu8eJupuzqn5igU2GBS6gQA
-        3daGTzuxMR7XWX8F2PHcI7Wt+/hxTvX7PQ==
-X-Google-Smtp-Source: AA0mqf6tmDXAKpa+q0BiObEgAugl7x1LyHt8NYIa4FgfPg+y62lJX3Wy4LfC/2uo9P7gMhFBFBwSPQ==
-X-Received: by 2002:a17:902:ebcd:b0:188:b8cf:868 with SMTP id p13-20020a170902ebcd00b00188b8cf0868mr1300388plg.98.1668664696281;
-        Wed, 16 Nov 2022 21:58:16 -0800 (PST)
-Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au. [49.181.106.210])
-        by smtp.gmail.com with ESMTPSA id o14-20020a170902d4ce00b00186a437f4d7sm212650plg.147.2022.11.16.21.58.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Nov 2022 21:58:15 -0800 (PST)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1ovXue-00FBpE-6R; Thu, 17 Nov 2022 16:58:12 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1ovXue-0025bp-0X;
-        Thu, 17 Nov 2022 16:58:12 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     linux-fsdevel@vger.kernel.org
-Subject: [PATCH 3/9] xfs: use byte ranges for write cleanup ranges
-Date:   Thu, 17 Nov 2022 16:58:04 +1100
-Message-Id: <20221117055810.498014-4-david@fromorbit.com>
-X-Mailer: git-send-email 2.37.2
-In-Reply-To: <20221117055810.498014-1-david@fromorbit.com>
-References: <20221117055810.498014-1-david@fromorbit.com>
+        with ESMTP id S239861AbiKQNRf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Nov 2022 08:17:35 -0500
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E0F01C40A
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2022 05:17:34 -0800 (PST)
+Received: from kwepemi500009.china.huawei.com (unknown [172.30.72.56])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4NCgNs5YCSzJnmn;
+        Thu, 17 Nov 2022 21:14:21 +0800 (CST)
+Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
+ (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Thu, 17 Nov
+ 2022 21:17:31 +0800
+Date:   Thu, 17 Nov 2022 21:38:54 +0800
+From:   Long Li <leo.lilong@huawei.com>
+To:     <djwong@kernel.org>
+CC:     <david@fromorbit.com>, <linux-xfs@vger.kernel.org>,
+        <houtao1@huawei.com>, <yi.zhang@huawei.com>, <guoxuenan@huawei.com>
+Subject: [PATCH v3] xfs: fix incorrect i_nlink caused by inode racing
+Message-ID: <20221117133854.GA525799@ceph-admin>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+X-Originating-IP: [10.175.127.227]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ kwepemi500009.china.huawei.com (7.221.188.199)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+The following error occurred during the fsstress test:
 
-xfs_buffered_write_iomap_end() currently converts the byte ranges
-passed to it to filesystem blocks to pass them to the bmap code to
-punch out delalloc blocks, but then has to convert filesytem
-blocks back to byte ranges for page cache truncate.
+XFS: Assertion failed: VFS_I(ip)->i_nlink >= 2, file: fs/xfs/xfs_inode.c, line: 2452
 
-We're about to make the page cache truncate go away and replace it
-with a page cache walk, so having to convert everything to/from/to
-filesystem blocks is messy and error-prone. It is much easier to
-pass around byte ranges and convert to page indexes and/or
-filesystem blocks only where those units are needed.
+The problem was that inode race condition causes incorrect i_nlink to be
+written to disk, and then it is read into memory. Consider the following
+call graph, inodes that are marked as both XFS_IFLUSHING and
+XFS_IRECLAIMABLE, i_nlink will be reset to 1 and then restored to original
+value in xfs_reinit_inode(). Therefore, the i_nlink of directory on disk
+may be set to 1.
 
-In preparation for the page cache walk being added, add a helper
-that converts byte ranges to filesystem blocks and calls
-xfs_bmap_punch_delalloc_range() and convert
-xfs_buffered_write_iomap_end() to calculate limits in byte ranges.
+  xfsaild
+      xfs_inode_item_push
+          xfs_iflush_cluster
+              xfs_iflush
+                  xfs_inode_to_disk
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+  xfs_iget
+      xfs_iget_cache_hit
+          xfs_iget_recycle
+              xfs_reinit_inode
+  	          inode_init_always
+
+xfs_reinit_inode() needs to hold the ILOCK_EXCL as it is changing internal
+inode state and can race with other RCU protected inode lookups. On the
+read side, xfs_iflush_cluster() grabs the ILOCK_SHARED while under rcu +
+ip->i_flags_lock, and so xfs_iflush/xfs_inode_to_disk() are protected from
+racing inode updates (during transactions) by that lock.
+
+Signed-off-by: Long Li <leo.lilong@huawei.com>
 ---
- fs/xfs/xfs_iomap.c | 40 +++++++++++++++++++++++++---------------
- 1 file changed, 25 insertions(+), 15 deletions(-)
+v2:
+- Modify the assertion error code line number
+- Use ILOCK_EXCL to prevent inode racing 
+v3:
+- Put ilock and iunlock in the same function
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index a2e45ea1b0cb..7bb55dbc19d3 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1120,6 +1120,20 @@ xfs_buffered_write_iomap_begin(
- 	return error;
- }
+ fs/xfs/xfs_icache.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index eae7427062cf..f35e2cee5265 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -342,6 +342,9 @@ xfs_iget_recycle(
  
-+static int
-+xfs_buffered_write_delalloc_punch(
-+	struct inode		*inode,
-+	loff_t			start_byte,
-+	loff_t			end_byte)
-+{
-+	struct xfs_mount	*mp = XFS_M(inode->i_sb);
-+	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, start_byte);
-+	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, end_byte);
+ 	trace_xfs_iget_recycle(ip);
+ 
++	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
++		return -EAGAIN;
 +
-+	return xfs_bmap_punch_delalloc_range(XFS_I(inode), start_fsb,
-+				end_fsb - start_fsb);
-+}
-+
- static int
- xfs_buffered_write_iomap_end(
- 	struct inode		*inode,
-@@ -1129,10 +1143,9 @@ xfs_buffered_write_iomap_end(
- 	unsigned		flags,
- 	struct iomap		*iomap)
- {
--	struct xfs_inode	*ip = XFS_I(inode);
--	struct xfs_mount	*mp = ip->i_mount;
--	xfs_fileoff_t		start_fsb;
--	xfs_fileoff_t		end_fsb;
-+	struct xfs_mount	*mp = XFS_M(inode->i_sb);
-+	loff_t			start_byte;
-+	loff_t			end_byte;
- 	int			error = 0;
- 
- 	if (iomap->type != IOMAP_DELALLOC)
-@@ -1157,13 +1170,13 @@ xfs_buffered_write_iomap_end(
- 	 * the range.
- 	 */
- 	if (unlikely(!written))
--		start_fsb = XFS_B_TO_FSBT(mp, offset);
-+		start_byte = round_down(offset, mp->m_sb.sb_blocksize);
- 	else
--		start_fsb = XFS_B_TO_FSB(mp, offset + written);
--	end_fsb = XFS_B_TO_FSB(mp, offset + length);
-+		start_byte = round_up(offset + written, mp->m_sb.sb_blocksize);
-+	end_byte = round_up(offset + length, mp->m_sb.sb_blocksize);
- 
- 	/* Nothing to do if we've written the entire delalloc extent */
--	if (start_fsb >= end_fsb)
-+	if (start_byte >= end_byte)
- 		return 0;
- 
  	/*
-@@ -1173,15 +1186,12 @@ xfs_buffered_write_iomap_end(
- 	 * leave dirty pages with no space reservation in the cache.
- 	 */
- 	filemap_invalidate_lock(inode->i_mapping);
--	truncate_pagecache_range(VFS_I(ip), XFS_FSB_TO_B(mp, start_fsb),
--				 XFS_FSB_TO_B(mp, end_fsb) - 1);
--
--	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
--				       end_fsb - start_fsb);
-+	truncate_pagecache_range(inode, start_byte, end_byte - 1);
-+	error = xfs_buffered_write_delalloc_punch(inode, start_byte, end_byte);
- 	filemap_invalidate_unlock(inode->i_mapping);
- 	if (error && !xfs_is_shutdown(mp)) {
--		xfs_alert(mp, "%s: unable to clean up ino %lld",
--			__func__, ip->i_ino);
-+		xfs_alert(mp, "%s: unable to clean up ino 0x%llx",
-+			__func__, XFS_I(inode)->i_ino);
- 		return error;
- 	}
- 	return 0;
+ 	 * We need to make it look like the inode is being reclaimed to prevent
+ 	 * the actual reclaim workers from stomping over us while we recycle
+@@ -355,6 +358,7 @@ xfs_iget_recycle(
+ 
+ 	ASSERT(!rwsem_is_locked(&inode->i_rwsem));
+ 	error = xfs_reinit_inode(mp, inode);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	if (error) {
+ 		/*
+ 		 * Re-initializing the inode failed, and we are in deep
+@@ -518,6 +522,8 @@ xfs_iget_cache_hit(
+ 	if (ip->i_flags & XFS_IRECLAIMABLE) {
+ 		/* Drops i_flags_lock and RCU read lock. */
+ 		error = xfs_iget_recycle(pag, ip);
++		if (error == -EAGAIN)
++			goto out_skip;
+ 		if (error)
+ 			return error;
+ 	} else {
 -- 
-2.37.2
+2.31.1
 
