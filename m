@@ -2,218 +2,139 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF8C2C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Nov 2022 01:07:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78FF1C4332F
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Nov 2022 01:16:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232377AbiKQBG7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Nov 2022 20:06:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51960 "EHLO
+        id S239074AbiKQBQC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Nov 2022 20:16:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57090 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234547AbiKQBG4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Nov 2022 20:06:56 -0500
-Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81FDA68C5B
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Nov 2022 17:06:55 -0800 (PST)
-Received: by mail-pl1-x636.google.com with SMTP id b21so157399plc.9
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Nov 2022 17:06:55 -0800 (PST)
+        with ESMTP id S238971AbiKQBPx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Nov 2022 20:15:53 -0500
+Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6171543ACD
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Nov 2022 17:15:52 -0800 (PST)
+Received: by mail-pg1-x52a.google.com with SMTP id 62so548621pgb.13
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Nov 2022 17:15:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=gU2zkFj/4MP5TNc20vb3DQhOdiasF5SDmuyAS2d911o=;
-        b=ET84tYZYgD45j/HvPLS7jmV00d5wT+39K7h72hXkH6eqb8T3nBiI2l/MT8yebR6yhW
-         JplkLPHCQufcovqXYbUJcQvng6ICACAdeiKXBQBiXXbqXoiQxVP4blI6FtsfF3yT7PYs
-         dWhCd+8MSWrudxqsrnpLjR4UrfXbTO6LXrN2pnZoBjcKN9a9UgEs80B3FMNwZ5PyekKv
-         87Ry96axF0UvXukcuMaR9ZFPibIP8577vbig1qMdS/kTzMorAKWsuLJaaNRBXhGnMnlp
-         dIz5sTfAgax1jZ6gbxXbDjKtYxB89H/grJ4drw4XSdOiNHANmNM9huvFzuNY3kZaFa6x
-         /x6g==
+        bh=JxipC0LJHNCGjvUKQVQlhGMQOiwBTHC0MrzuSTcVoaA=;
+        b=1aO2YR/Q772skurjKf1hHODgxP9PgZ2ytPw2ANFEPQDMsj3uWpqnyS+1qtGtTg5OWp
+         azxo8LQ89nLDbVyxlbPsyGJ/6CKvch+AtPrpFjc3EFdHiFyGyfxhV3KgCLPlgvx9AjeL
+         SHjQida60F1CWWRksPTgQdVHW7AOBGzvwxubIr2vHNhjXFvoBlcoCZXyOujthAN4l11r
+         GY908JT5vrEotc8fStqgQEwUNeVyNE+vnyVNmFq2z9y/xYekCei//WZ+ztFx861SSG60
+         lt9DO1OUv1TxC0utNHa4MTz7bFunnlo4ZSPzmEOVazJwnhukor+h8eu7Iyxi2C7tq/Za
+         MHwQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=gU2zkFj/4MP5TNc20vb3DQhOdiasF5SDmuyAS2d911o=;
-        b=5RXI03RDFkriD1K9iN3kklp19VN5jSrqnlksmceVyxBsZNdx0WMjc/dy+NZ7mFyhZj
-         qL2OqA6CX/V5ycOhaODr+s7ZPLQjpY5WKwlj8OvRXcMsndSpc1wHST1I+83+bqcb8Log
-         CQ+OJ3/fHQSz6mKwV+qIGb0tXkNgmz8bH/CuMgLx0PBfUlE2/C2FQwH/4KufPYhXglI6
-         aLczvzAnF0FgCWK3waR0qX9yejsBi6vRkx9TA3sAgnIgFsA4wBpmZR+X3UbPwnnBQCAW
-         aheLuG1Klwo99/4s/ObDczJOnZYP7TPauTpp6bUW7Z9iE3eIJQxH9VvecxtDrIpxTW5M
-         ooew==
-X-Gm-Message-State: ANoB5pmepaQ/NW56US03i1IWOoLIWC/xV7HlhLopXMIvoOPBiU+XGjSc
-        LR4lVyUQXv9K5tlQd3FAHxL9SA==
-X-Google-Smtp-Source: AA0mqf4pX1MZeCYb8IjWSu2B3O1FAXKmfqkHW0QHlgAQtEueZh8lU15Cm3pMsKDalFuTBDupwgvMyA==
-X-Received: by 2002:a17:902:ccc7:b0:17d:8a77:518f with SMTP id z7-20020a170902ccc700b0017d8a77518fmr516965ple.22.1668647215000;
-        Wed, 16 Nov 2022 17:06:55 -0800 (PST)
+        bh=JxipC0LJHNCGjvUKQVQlhGMQOiwBTHC0MrzuSTcVoaA=;
+        b=ZgIH2vP2a03AIc2knAA92MLKe4CK5LY4aNfqbX1i5FeEJeg2IiRcLpJs3vDS+7Y+cc
+         Pi2wgCtgxjOpQmSmxvRoSy5/zmVzCZrhG+laXHOTkE50Q6rF5SeYTV5bHYCg0PvzN0kL
+         8S9eswygYYOD4sF9/geAO5bTodubitBxzuBN03jMrn3fTaR3SBnsr/sej0EgxeJnJaYf
+         ZqGa91QEediPlvGEfiQ8a5oCwm55qJNAOivVVNgPArG3PaG/IT8YLz4sLAzG639qwQ9q
+         aP7NaUOa9yEkT4fe/+W3QHeNuvbydRlxTvgI8psF3Oq8yQ1hSy06SgSfdBC9gBHxumdd
+         PfjA==
+X-Gm-Message-State: ANoB5pmk8qZ4HKs3etZ+5G63E8k2Y/2VLlxzqw5qQ4yfvjNDhMCmzWgk
+        6fBKRhJUMjd3fOgNYNnHVDdH4r3Qm0427g==
+X-Google-Smtp-Source: AA0mqf5jXfIzJd0WuKJJvpWR1oeUvqZw1g8NOApKS2hsnlx2ndRF4g2fhZaDJ3a8VCYC2NvhJ9ly1w==
+X-Received: by 2002:a63:887:0:b0:460:633b:5702 with SMTP id 129-20020a630887000000b00460633b5702mr45250pgi.9.1668647751778;
+        Wed, 16 Nov 2022 17:15:51 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-106-210.pa.nsw.optusnet.com.au. [49.181.106.210])
-        by smtp.gmail.com with ESMTPSA id u7-20020a17090341c700b001782a0d3eeasm13060421ple.115.2022.11.16.17.06.54
+        by smtp.gmail.com with ESMTPSA id r5-20020aa79885000000b0057293b17d64sm3108415pfl.177.2022.11.16.17.15.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Nov 2022 17:06:54 -0800 (PST)
+        Wed, 16 Nov 2022 17:15:51 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1ovTMh-00F6oq-Hb; Thu, 17 Nov 2022 12:06:51 +1100
-Date:   Thu, 17 Nov 2022 12:06:51 +1100
+        id 1ovTVM-00F6uT-A0; Thu, 17 Nov 2022 12:15:48 +1100
+Date:   Thu, 17 Nov 2022 12:15:48 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org
-Subject: Re: [PATCH 5/9] xfs: buffered write failure should not truncate the
- page cache
-Message-ID: <20221117010651.GE3600936@dread.disaster.area>
-References: <20221115013043.360610-1-david@fromorbit.com>
- <20221115013043.360610-6-david@fromorbit.com>
- <Y3QzepGAH+kvgDFE@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/3] xfs: retain the AGI when we can't iget an inode to
+ scrub the core
+Message-ID: <20221117011548.GF3600936@dread.disaster.area>
+References: <166473482923.1084685.3060991494529121939.stgit@magnolia>
+ <166473482971.1084685.9939611867095895186.stgit@magnolia>
+ <20221115040816.GY3600936@dread.disaster.area>
+ <Y3RPqgRr2AOBFbyc@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y3QzepGAH+kvgDFE@magnolia>
+In-Reply-To: <Y3RPqgRr2AOBFbyc@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 15, 2022 at 04:48:58PM -0800, Darrick J. Wong wrote:
-> On Tue, Nov 15, 2022 at 12:30:39PM +1100, Dave Chinner wrote:
-> > +/*
-> > + * Scan the data range passed to us for dirty page cache folios. If we find a
-> > + * dirty folio, punch out the preceeding range and update the offset from which
-> > + * the next punch will start from.
-> > + *
-> > + * We can punch out clean pages because they either contain data that has been
-> > + * written back - in which case the delalloc punch over that range is a no-op -
-> > + * or they have been read faults in which case they contain zeroes and we can
-> > + * remove the delalloc backing range and any new writes to those pages will do
-> > + * the normal hole filling operation...
-> > + *
-> > + * This makes the logic simple: we only need to keep the delalloc extents only
-> > + * over the dirty ranges of the page cache.
-> > + */
-> > +static int
-> > +xfs_buffered_write_delalloc_scan(
-> > +	struct inode		*inode,
-> > +	loff_t			*punch_start_byte,
-> > +	loff_t			start_byte,
-> > +	loff_t			end_byte)
-> > +{
-> > +	loff_t			offset = start_byte;
-> > +
-> > +	while (offset < end_byte) {
-> > +		struct folio	*folio;
-> > +
-> > +		/* grab locked page */
-> > +		folio = filemap_lock_folio(inode->i_mapping, offset >> PAGE_SHIFT);
-> > +		if (!folio) {
-> > +			offset = ALIGN_DOWN(offset, PAGE_SIZE) + PAGE_SIZE;
-> > +			continue;
-> > +		}
-> > +
-> > +		/* if dirty, punch up to offset */
-> > +		if (folio_test_dirty(folio)) {
-> > +			if (offset > *punch_start_byte) {
-> > +				int	error;
-> > +
-> > +				error = xfs_buffered_write_delalloc_punch(inode,
-> > +						*punch_start_byte, offset);
+On Tue, Nov 15, 2022 at 06:49:14PM -0800, Darrick J. Wong wrote:
+> On Tue, Nov 15, 2022 at 03:08:16PM +1100, Dave Chinner wrote:
+> > On Sun, Oct 02, 2022 at 11:20:29AM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > xchk_get_inode is not quite the right function to be calling from the
+> > > inode scrubber setup function.  The common get_inode function either
+> > > gets an inode and installs it in the scrub context, or it returns an
+> > > error code explaining what happened.  This is acceptable for most file
+> > > scrubbers because it is not in their scope to fix corruptions in the
+> > > inode core and fork areas that cause iget to fail.
+> > > 
+> > > Dealing with these problems is within the scope of the inode scrubber,
+> > > however.  If iget fails with EFSCORRUPTED, we need to xchk_inode to flag
+> > > that as corruption.  Since we can't get our hands on an incore inode, we
+> > > need to hold the AGI to prevent inode allocation activity so that
+> > > nothing changes in the inode metadata.
+> > > 
+> > > Looking ahead to the inode core repair patches, we will also need to
+> > > hold the AGI buffer into xrep_inode so that we can make modifications to
+> > > the xfs_dinode structure without any other thread swooping in to
+> > > allocate or free the inode.
+> > > 
+> > > Adapt the xchk_get_inode into xchk_setup_inode since this is a one-off
+> > > use case where the error codes we check for are a little different, and
+> > > the return state is much different from the common function.
+> > 
+> > The code look fine, but...
+> > 
+> > ... doesn't this mean that xchk_setup_inode() and xchk_get_inode()
+> > now are almost identical apart from the xchk_prepare_iscrub() bits?
 > 
-> This sounds an awful lot like what iomap_writeback_ops.discard_folio()
-> does, albeit without the xfs_alert screaming everywhere.
-
-similar, but .discard_folio() is trashing uncommitted written data,
-whilst this loop is explicitly preserving uncommitted written
-data....
-
-> Moving along... so we punch out delalloc reservations for any part of
-> the page cache that is clean.  "punch_start_byte" is the start pos of
-> the last range of clean cache, and we want to punch up to the start of
-> this dirty folio...
+> Yes, they're /nearly/ identical in the helper functions they call, but
+> they're not so similar in intent and how they handle @error values:
 > 
-> > +				if (error) {
-> > +					folio_unlock(folio);
-> > +					folio_put(folio);
-> > +					return error;
-> > +				}
-> > +			}
-> > +
-> > +			/*
-> > +			 * Make sure the next punch start is correctly bound to
-> > +			 * the end of this data range, not the end of the folio.
-> > +			 */
-> > +			*punch_start_byte = min_t(loff_t, end_byte,
-> > +					folio_next_index(folio) << PAGE_SHIFT);
+> xchk_setup_inode prepares to check or repair an inode record, so it must
+> continue the scrub operation even if the inode/inobt verifiers cause
+> xfs_iget to return EFSCORRUPTED.  This is done by attaching the locked
+> AGI buffer to the scrub transaction and returning 0 to move on to the
+> actual scrub.  (Later, the online inode repair code will also want the
+> xfs_imap structure so that it can reset the ondisk xfs_dinode
+> structure.)
 > 
-> ...and then start a new clean range after this folio (or at the end_byte
-> to signal that we're done)...
-
-Yes.
-
-> > +	filemap_invalidate_lock(inode->i_mapping);
-> > +	while (start_byte < end_byte) {
-> > +		loff_t		data_end;
-> > +
-> > +		start_byte = mapping_seek_hole_data(inode->i_mapping,
-> > +				start_byte, end_byte, SEEK_DATA);
-> > +		/*
-> > +		 * If there is no more data to scan, all that is left is to
-> > +		 * punch out the remaining range.
-> > +		 */
-> > +		if (start_byte == -ENXIO || start_byte == end_byte)
-> > +			break;
-> > +		if (start_byte < 0) {
-> > +			error = start_byte;
-> > +			goto out_unlock;
-> > +		}
-> > +		ASSERT(start_byte >= punch_start_byte);
-> > +		ASSERT(start_byte < end_byte);
-> > +
-> > +		/*
-> > +		 * We find the end of this contiguous cached data range by
-> > +		 * seeking from start_byte to the beginning of the next hole.
-> > +		 */
-> > +		data_end = mapping_seek_hole_data(inode->i_mapping, start_byte,
-> > +				end_byte, SEEK_HOLE);
-> > +		if (data_end < 0) {
-> > +			error = data_end;
-> > +			goto out_unlock;
-> > +		}
-> > +		ASSERT(data_end > start_byte);
-> > +		ASSERT(data_end <= end_byte);
-> > +
-> > +		error = xfs_buffered_write_delalloc_scan(inode,
-> > +				&punch_start_byte, start_byte, data_end);
+> xchk_get_inode retrieves an inode on behalf of a scrubber that operates
+> on an incore inode -- data/attr/cow forks, directories, xattrs,
+> symlinks, parent pointers, etc.  If the inode/inobt verifiers fail and
+> xfs_iget returns EFSCORRUPTED, we want to exit to userspace (because the
+> caller should be fix the inode first) and drop everything we acquired
+> along the way.
 > 
-> ...and we use SEEK_HOLE/SEEK_DATA to find the ranges of pagecache where
-> there's even going to be folios mapped.  But in structuring the code
-> like this, xfs now has to know details about folio state again, and the
-> point of iomap/buffered-io.c is to delegate handling of the pagecache
-> away from XFS, at least for filesystems that want to manage buffered IO
-> the same way XFS does.
-> 
-> IOWs, I agree with Christoph that these two functions that compute the
-> ranges that need delalloc-punching really ought to be in the iomap code.
+> A behavior common to both functions is that it's possible that xfs_scrub
+> asked for a scrub-by-handle concurrent with the inode being freed or the
+> passed-in inumber is invalid.  In this case, we call xfs_imap to see if
+> the inobt index thinks the inode is allocated, and return ENOENT
+> ("nothing to check here") to userspace if this is not the case.  The
+> imap lookup is why both functions call xchk_iget_agi.
 
-Which I've already done.
+Ok, so given all this, all I really want then is better names for
+the functions, as "setup" and "get" don't convey any of this. :)
 
-> TBH I wonder if this isn't better suited for being called by
-> iomap_write_iter after a short write on an IOMAP_F_NEW iomap, with an
-> function pointer in iomap page_ops for iomap to tell xfs to drop the
-> delalloc reservations.
-
-IIRC, the whole point of the iomap_begin()/iomap_end() operation
-pairs is that the iter functions don't need to concern themselves
-with the filesystem operations needed to manipulate extents and
-clean up filesystem state as a result of failed operations.
-
-I'm pretty sure we need this same error handling for zeroing and
-unshare operations, because they could also detect stale cached
-iomaps and have to go remap their extents. Maybe they don't allocate
-new extents, but that is beside the point - the error handling that
-is necessary is common to multiple functions, and right now they
-don't have to care about cleaning up iomap/filesystem state when
-short writes/errors occur.
-
-Hence I don't think we want to break the architectural layering by
-doing this - I think it would just lead to having to handle the same
-issues in multiple places, and we don't gain any extra control over
-or information about how to perform the cleanup of the unused
-portion of the iomap....
+Perhaps xchk_setup_inode() -> xchk_iget_for_record_check() and
+xchk_get_inode() -> xchk_iget_for_scrubbing(). This gives an
+indication taht they are being used for different purposes, and the
+implementation is tailored to the requirements of those specific
+operations....
 
 Cheers,
 
