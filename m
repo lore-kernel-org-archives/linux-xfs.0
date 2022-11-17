@@ -2,147 +2,217 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 874B7C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Nov 2022 20:20:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BA40C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Nov 2022 20:37:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233266AbiKQUUT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Nov 2022 15:20:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58320 "EHLO
+        id S234884AbiKQUhg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Nov 2022 15:37:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231570AbiKQUUS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Nov 2022 15:20:18 -0500
+        with ESMTP id S231146AbiKQUhf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Nov 2022 15:37:35 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D842E20189
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2022 12:20:17 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 996348CB91
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2022 12:37:34 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7D9FD6221A
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2022 20:20:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6DB8C433D6;
-        Thu, 17 Nov 2022 20:20:16 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3320862253
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2022 20:37:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DCA1C433D6;
+        Thu, 17 Nov 2022 20:37:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668716416;
-        bh=WeeTfN0KCGSKkDNKTe0/NxMkbZihxSuErBoTRDPt744=;
+        s=k20201202; t=1668717453;
+        bh=yrBWEKnwO3cI2DNXgzD2XJ19X6vMAjzsfIOJeiDljyA=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Dk21p2GeVxAm9ty1IUlPC/Xa+lQWPHQHr1ILwSH7UKc1QBEMG42OLg9rgeMcWCXwX
-         L0xarCH8CiX5OoMb3JHDk4GZdSYb0n9NZcAJNrLSwmqbS64icNk4rrmFJzVfo03MpX
-         j7kWulNOgXcPBhn78GUeKgY/MUIn5oESJ9NavB+KVgBhp9bxU5btQHq5iQ7nxAd+D9
-         q3Z0nXknOFBl71V2dqMmC97eC1LMpLUtAVEsZTqO62+ZVrYeTgD2Zo60frbq28coj+
-         1YOE7mpyUVDsyOsOLFKxwPqy6+DtKaZ+Fb86fWj/3A6ephsSKYKsAxnD+EB+bjJwAK
-         ZiHtfy2Q2zbug==
-Date:   Thu, 17 Nov 2022 12:20:16 -0800
+        b=otvmeO2ih6h/VRl0ZJwe8LvWjGTm7y3iqzpL0dKOkxAdTuOADaxlWfLKiYJzMS9re
+         rAWx9JAP2PKqJLCh23dtfJwRDHxC1zYWxIVhzHXQwYPfl6vxLAXnvqBy0pRqNl36PD
+         VHbQkxJtCZuYI4WAnVh56YtMrHSJz/gneKh6nctAar2dTBS8hu77PgkTDlD0JSwXgb
+         iRocfDdSnhVpEyj2zMHAULULYzHm32yqwJQ8anyKY6J2xSyvm3zIjh5UlhRYUBJkBe
+         FTSpb+0dfjtRXmu9qOvWb1X0etHrVs7oIjswRFtrh1OD1paLVOAnsvMnqD66TnbRnc
+         XSNQuCZL6PiQw==
+Date:   Thu, 17 Nov 2022 12:37:33 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
+To:     Catherine Hoang <catherine.hoang@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: retain the AGI when we can't iget an inode to
- scrub the core
-Message-ID: <Y3aXgI2DBn3vTi8F@magnolia>
-References: <166473482923.1084685.3060991494529121939.stgit@magnolia>
- <166473482971.1084685.9939611867095895186.stgit@magnolia>
- <20221115040816.GY3600936@dread.disaster.area>
- <Y3RPqgRr2AOBFbyc@magnolia>
- <20221117011548.GF3600936@dread.disaster.area>
+Subject: Re: [PATCH v1] xfs_spaceman: add fsuuid command
+Message-ID: <Y3abjYmX//CF/ey0@magnolia>
+References: <20221109222335.84920-1-catherine.hoang@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20221117011548.GF3600936@dread.disaster.area>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20221109222335.84920-1-catherine.hoang@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 17, 2022 at 12:15:48PM +1100, Dave Chinner wrote:
-> On Tue, Nov 15, 2022 at 06:49:14PM -0800, Darrick J. Wong wrote:
-> > On Tue, Nov 15, 2022 at 03:08:16PM +1100, Dave Chinner wrote:
-> > > On Sun, Oct 02, 2022 at 11:20:29AM -0700, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > 
-> > > > xchk_get_inode is not quite the right function to be calling from the
-> > > > inode scrubber setup function.  The common get_inode function either
-> > > > gets an inode and installs it in the scrub context, or it returns an
-> > > > error code explaining what happened.  This is acceptable for most file
-> > > > scrubbers because it is not in their scope to fix corruptions in the
-> > > > inode core and fork areas that cause iget to fail.
-> > > > 
-> > > > Dealing with these problems is within the scope of the inode scrubber,
-> > > > however.  If iget fails with EFSCORRUPTED, we need to xchk_inode to flag
-> > > > that as corruption.  Since we can't get our hands on an incore inode, we
-> > > > need to hold the AGI to prevent inode allocation activity so that
-> > > > nothing changes in the inode metadata.
-> > > > 
-> > > > Looking ahead to the inode core repair patches, we will also need to
-> > > > hold the AGI buffer into xrep_inode so that we can make modifications to
-> > > > the xfs_dinode structure without any other thread swooping in to
-> > > > allocate or free the inode.
-> > > > 
-> > > > Adapt the xchk_get_inode into xchk_setup_inode since this is a one-off
-> > > > use case where the error codes we check for are a little different, and
-> > > > the return state is much different from the common function.
-> > > 
-> > > The code look fine, but...
-> > > 
-> > > ... doesn't this mean that xchk_setup_inode() and xchk_get_inode()
-> > > now are almost identical apart from the xchk_prepare_iscrub() bits?
-> > 
-> > Yes, they're /nearly/ identical in the helper functions they call, but
-> > they're not so similar in intent and how they handle @error values:
-> > 
-> > xchk_setup_inode prepares to check or repair an inode record, so it must
-> > continue the scrub operation even if the inode/inobt verifiers cause
-> > xfs_iget to return EFSCORRUPTED.  This is done by attaching the locked
-> > AGI buffer to the scrub transaction and returning 0 to move on to the
-> > actual scrub.  (Later, the online inode repair code will also want the
-> > xfs_imap structure so that it can reset the ondisk xfs_dinode
-> > structure.)
-> > 
-> > xchk_get_inode retrieves an inode on behalf of a scrubber that operates
-> > on an incore inode -- data/attr/cow forks, directories, xattrs,
-> > symlinks, parent pointers, etc.  If the inode/inobt verifiers fail and
-> > xfs_iget returns EFSCORRUPTED, we want to exit to userspace (because the
-> > caller should be fix the inode first) and drop everything we acquired
-> > along the way.
-> > 
-> > A behavior common to both functions is that it's possible that xfs_scrub
-> > asked for a scrub-by-handle concurrent with the inode being freed or the
-> > passed-in inumber is invalid.  In this case, we call xfs_imap to see if
-> > the inobt index thinks the inode is allocated, and return ENOENT
-> > ("nothing to check here") to userspace if this is not the case.  The
-> > imap lookup is why both functions call xchk_iget_agi.
+On Wed, Nov 09, 2022 at 02:23:35PM -0800, Catherine Hoang wrote:
+> Add support for the fsuuid command to retrieve the UUID of a mounted
+> filesystem.
 > 
-> Ok, so given all this, all I really want then is better names for
-> the functions, as "setup" and "get" don't convey any of this. :)
+> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+> ---
+>  spaceman/Makefile |  4 +--
+>  spaceman/fsuuid.c | 63 +++++++++++++++++++++++++++++++++++++++++++++++
+>  spaceman/init.c   |  1 +
+>  spaceman/space.h  |  1 +
+>  4 files changed, 67 insertions(+), 2 deletions(-)
+>  create mode 100644 spaceman/fsuuid.c
 > 
-> Perhaps xchk_setup_inode() -> xchk_iget_for_record_check() and
+> diff --git a/spaceman/Makefile b/spaceman/Makefile
+> index 1f048d54..901e4e6d 100644
+> --- a/spaceman/Makefile
+> +++ b/spaceman/Makefile
+> @@ -7,10 +7,10 @@ include $(TOPDIR)/include/builddefs
+>  
+>  LTCOMMAND = xfs_spaceman
+>  HFILES = init.h space.h
+> -CFILES = info.c init.c file.c health.c prealloc.c trim.c
+> +CFILES = info.c init.c file.c health.c prealloc.c trim.c fsuuid.c
+>  LSRCFILES = xfs_info.sh
+>  
+> -LLDLIBS = $(LIBXCMD) $(LIBFROG)
+> +LLDLIBS = $(LIBXCMD) $(LIBFROG) $(LIBUUID)
+>  LTDEPENDENCIES = $(LIBXCMD) $(LIBFROG)
+>  LLDFLAGS = -static
+>  
+> diff --git a/spaceman/fsuuid.c b/spaceman/fsuuid.c
+> new file mode 100644
+> index 00000000..be12c1ad
+> --- /dev/null
+> +++ b/spaceman/fsuuid.c
+> @@ -0,0 +1,63 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (c) 2022 Oracle.
+> + * All Rights Reserved.
+> + */
+> +
+> +#include "libxfs.h"
+> +#include "libfrog/fsgeom.h"
+> +#include "libfrog/paths.h"
+> +#include "command.h"
+> +#include "init.h"
+> +#include "space.h"
+> +#include <sys/ioctl.h>
+> +
+> +#ifndef FS_IOC_GETFSUUID
+> +#define FS_IOC_GETFSUUID	_IOR('f', 44, struct fsuuid)
+> +#define UUID_SIZE 16
+> +struct fsuuid {
+> +    __u32   fsu_len;
+> +    __u32   fsu_flags;
+> +    __u8    fsu_uuid[];
 
-I'd rather make this function static to inode.c and export a const
-global struct xchk_meta_ops pointing to this function.  There's really
-no need for the external declaration aside from populating the
-meta_scrub_ops table in scrub.c.  The reason why I haven't done that
-already is that doing that cleanup will likely cause ~23 merge conflicts
-all the way down the branch as I add online repair functions.  Perhaps
-the next time I make a branchwide change.
+This is a flex array   ^^ which has no size.  struct fsuuid therefore
+has a size of 8 bytes (i.e. enough to cover the two u32 fields) and no
+more.  It's assumed that the caller will allocate the memory for
+fsu_uuid...
 
-Second, xchk_setup_inode doesn't necessarily return a cached inode,
-which is what most iget functions do -- if the read fails, it'll lock
-the AGI buffer to the scrub transaction.
+> +};
+> +#endif
+> +
+> +static cmdinfo_t fsuuid_cmd;
+> +
+> +static int
+> +fsuuid_f(
+> +	int		argc,
+> +	char		**argv)
+> +{
+> +	struct fsuuid	fsuuid;
+> +	int		error;
 
-I haven't any strong objections to renaming this
-xchk_setup_inode_record, if that's what's needed to get this patchset
-through review.
+...which makes this usage a problem, because we've not reserved any
+space on the stack to hold the UUID.  The kernel will blindly assume
+that there are fsuuid.fsu_len bytes after fsuuid and write to them,
+which will clobber something on the stack.
 
-> xchk_get_inode() -> xchk_iget_for_scrubbing(). This gives an
-> indication taht they are being used for different purposes, and the
-> implementation is tailored to the requirements of those specific
-> operations....
+If you're really unlucky, the C compiler will put the fsuuid right
+before the call frame, which is how stack smashing attacks work.  It
+might also lay out bp[] immediately afterwards, which will give you
+weird results as the unparse function overwrites its source buffer.  The
+C compiler controls the stack layout, which means this can go bad in
+subtle ways.
 
-I'll make this change, however.
+Either way, gcc complains about this (albeit in an opaque manner)...
+
+In file included from ../include/xfs.h:9,
+                 from ../include/libxfs.h:15,
+                 from fsuuid.c:7:
+In function ‘platform_uuid_unparse’,
+    inlined from ‘fsuuid_f’ at fsuuid.c:45:3:
+../include/xfs/linux.h:100:9: error: ‘uuid_unparse’ reading 16 bytes from a region of size 0 [-Werror=stringop-overread]
+  100 |         uuid_unparse(*uu, buffer);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~
+../include/xfs/linux.h: In function ‘fsuuid_f’:
+../include/xfs/linux.h:100:9: note: referencing argument 1 of type ‘const unsigned char *’
+In file included from ../include/xfs/linux.h:13,
+                 from ../include/xfs.h:9,
+                 from ../include/libxfs.h:15,
+                 from fsuuid.c:7:
+/usr/include/uuid/uuid.h:107:13: note: in a call to function ‘uuid_unparse’
+  107 | extern void uuid_unparse(const uuid_t uu, char *out);
+      |             ^~~~~~~~~~~~
+cc1: all warnings being treated as errors
+
+...so please allocate the struct fsuuid object dynamically.
 
 --D
 
-> 
-> Cheers,
-> 
-> Dave.
+> +	char		bp[40];
+> +
+> +	fsuuid.fsu_len = UUID_SIZE;
+> +	fsuuid.fsu_flags = 0;
+> +
+> +	error = ioctl(file->xfd.fd, FS_IOC_GETFSUUID, &fsuuid);
+> +
+> +	if (error) {
+> +		perror("fsuuid");
+> +		exitcode = 1;
+> +	} else {
+> +		platform_uuid_unparse((uuid_t *)fsuuid.fsu_uuid, bp);
+> +		printf("UUID = %s\n", bp);
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +void
+> +fsuuid_init(void)
+> +{
+> +	fsuuid_cmd.name = "fsuuid";
+> +	fsuuid_cmd.cfunc = fsuuid_f;
+> +	fsuuid_cmd.argmin = 0;
+> +	fsuuid_cmd.argmax = 0;
+> +	fsuuid_cmd.flags = CMD_FLAG_ONESHOT;
+> +	fsuuid_cmd.oneline = _("get mounted filesystem UUID");
+> +
+> +	add_command(&fsuuid_cmd);
+> +}
+> diff --git a/spaceman/init.c b/spaceman/init.c
+> index cf1ff3cb..efe1bf9b 100644
+> --- a/spaceman/init.c
+> +++ b/spaceman/init.c
+> @@ -35,6 +35,7 @@ init_commands(void)
+>  	trim_init();
+>  	freesp_init();
+>  	health_init();
+> +	fsuuid_init();
+>  }
+>  
+>  static int
+> diff --git a/spaceman/space.h b/spaceman/space.h
+> index 723209ed..dcbdca08 100644
+> --- a/spaceman/space.h
+> +++ b/spaceman/space.h
+> @@ -33,5 +33,6 @@ extern void	freesp_init(void);
+>  #endif
+>  extern void	info_init(void);
+>  extern void	health_init(void);
+> +extern void	fsuuid_init(void);
+>  
+>  #endif /* XFS_SPACEMAN_SPACE_H_ */
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.25.1
+> 
