@@ -2,114 +2,111 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 312C7C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Nov 2022 02:37:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 839A5C43217
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Nov 2022 03:09:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238884AbiKQChN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Nov 2022 21:37:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59870 "EHLO
+        id S232921AbiKQDJc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Nov 2022 22:09:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42910 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232521AbiKQChM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Nov 2022 21:37:12 -0500
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C59822ED67
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Nov 2022 18:37:07 -0800 (PST)
-Received: from kwepemi500009.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4NCPF92D1DzRpB1;
-        Thu, 17 Nov 2022 10:36:45 +0800 (CST)
-Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
- (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Thu, 17 Nov
- 2022 10:37:05 +0800
-Date:   Thu, 17 Nov 2022 10:58:29 +0800
-From:   Long Li <leo.lilong@huawei.com>
-To:     <djwong@kernel.org>
-CC:     <david@fromorbit.com>, <linux-xfs@vger.kernel.org>,
-        <houtao1@huawei.com>, <yi.zhang@huawei.com>, <guoxuenan@huawei.com>
-Subject: [PATCH v2] xfs: fix incorrect i_nlink caused by inode racing
-Message-ID: <20221117025829.GA1095675@ceph-admin>
+        with ESMTP id S232548AbiKQDJb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Nov 2022 22:09:31 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5BB848760
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Nov 2022 19:09:30 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 710AF61FDE
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2022 03:09:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C0360C433D6;
+        Thu, 17 Nov 2022 03:09:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1668654569;
+        bh=YToMC5+vzDP5NlTQHjqYAY65L9O8OrKzxMska+SZxhU=;
+        h=Date:From:To:Cc:Subject:From;
+        b=URk4lLi9gKq4+eaRb1Nb7cq0uL9fjyG0XTwPq70vPmpSLxxtjI1ICxr6PMvo9OKvk
+         mFtpHbM/7KK8aDxjBNdXPkNvKxGrjdXe5SkOv0YzOFF8d8ZDdBxWIpDhWjue6M8x91
+         I4igmlo+B4wVp5M/KQDO867AwxFbkJNn4yNK0xm/H17obTtxVwQGwujbUfcE45X5xm
+         Lfb+HsPJbzAvTZ/3eW0m20yRaGAygATxJ7vFArYvDCxlJ4S9otUYwR1GAsZxvV1y9R
+         737HK1RVPrvzd7j6N57jNpL2HFEJpOYBrM5jVIBiwX/kXg4W55iG7Wzfd0Bxs+wFjA
+         TVIiDtDFD6Zgw==
+Date:   Wed, 16 Nov 2022 19:09:29 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org
+Cc:     dchinner@redhat.com, linux-xfs@vger.kernel.org
+Subject: [GIT PULL 1/7] xfs: fix handling of AG[IF] header buffers during
+ scrub
+Message-ID: <166865410783.2381691.17025509830045469038.stg-ugh@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-X-Originating-IP: [10.175.127.227]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- kwepemi500009.china.huawei.com (7.221.188.199)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The following error occurred during the fsstress test:
+Hi Darrick,
 
-XFS: Assertion failed: VFS_I(ip)->i_nlink >= 2, file: fs/xfs/xfs_inode.c, line: 2452
+Please pull this branch with changes for xfs for 6.2-rc1.
 
-The problem was that inode race condition causes incorrect i_nlink to be
-written to disk, and then it is read into memory. Consider the following
-call graph, inodes that are marked as both XFS_IFLUSHING and
-XFS_IRECLAIMABLE, i_nlink will be reset to 1 and then restored to original
-value in xfs_reinit_inode(). Therefore, the i_nlink of directory on disk
-may be set to 1.
+As usual, I did a test-merge with the main upstream branch as of a few
+minutes ago, and didn't see any conflicts.  Please let me know if you
+encounter any problems.
 
-  xfsaild
-      xfs_inode_item_push
-          xfs_iflush_cluster
-              xfs_iflush
-                  xfs_inode_to_disk
+--D
 
-  xfs_iget
-      xfs_iget_cache_hit
-          xfs_iget_recycle
-              xfs_reinit_inode
-  	          inode_init_always
+The following changes since commit f0c4d9fc9cc9462659728d168387191387e903cc:
 
-xfs_reinit_inode() needs to hold the ILOCK_EXCL as it is changing internal
-inode state and can race with other RCU protected inode lookups. On the
-read side, xfs_iflush_cluster() grabs the ILOCK_SHARED while under rcu +
-ip->i_flags_lock, and so xfs_iflush/xfs_inode_to_disk() are protected from
-racing inode updates (during transactions) by that lock.
+Linux 6.1-rc4 (2022-11-06 15:07:11 -0800)
 
-Signed-off-by: Long Li <leo.lilong@huawei.com>
----
-v2:
-- Modify the assertion error code line number
-- Use ILOCK_EXCL to prevent inode racing 
+are available in the Git repository at:
 
- fs/xfs/xfs_icache.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/scrub-fix-ag-header-handling-6.2_2022-11-16
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index eae7427062cf..5a1650e769e7 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -329,7 +329,7 @@ xfs_reinit_inode(
- 
- /*
-  * Carefully nudge an inode whose VFS state has been torn down back into a
-- * usable state.  Drops the i_flags_lock and the rcu read lock.
-+ * usable state.  Drops the i_flags_lock, rcu read lock and XFS_ILOCK_EXCL.
-  */
- static int
- xfs_iget_recycle(
-@@ -355,6 +355,7 @@ xfs_iget_recycle(
- 
- 	ASSERT(!rwsem_is_locked(&inode->i_rwsem));
- 	error = xfs_reinit_inode(mp, inode);
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	if (error) {
- 		/*
- 		 * Re-initializing the inode failed, and we are in deep
-@@ -516,7 +517,10 @@ xfs_iget_cache_hit(
- 
- 	/* The inode fits the selection criteria; process it. */
- 	if (ip->i_flags & XFS_IRECLAIMABLE) {
--		/* Drops i_flags_lock and RCU read lock. */
-+		if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
-+			goto out_skip;
-+
-+		/* Drops i_flags_lock, RCU read lock and XFS_ILOCK_EXCL. */
- 		error = xfs_iget_recycle(pag, ip);
- 		if (error)
- 			return error;
--- 
-2.31.1
+for you to fetch changes up to b255fab0f80cc65a334fcd90cd278673cddbc988:
 
+xfs: make AGFL repair function avoid crosslinked blocks (2022-11-16 15:25:01 -0800)
+
+----------------------------------------------------------------
+xfs: fix handling of AG[IF] header buffers during scrub
+
+While reading through the online fsck code, I noticed that the setup
+code for AG metadata scrubs will attach the AGI, the AGF, and the AGFL
+buffers to the transaction.  It isn't necessary to hold the AGFL buffer,
+since any code that wants to do anything with the AGFL will need to hold
+the AGF to know which parts of the AGFL are active.  Therefore, we only
+need to hold the AGFL when scrubbing the AGFL itself.
+
+The second bug fixed by this patchset is one that I observed while
+testing online repair.  When a buffer is held across a transaction roll,
+its buffer log item will be detached if the bli was clean before the
+roll.  If we are holding the AG headers to maintain a lock on an AG, we
+then need to set the buffer type on the new bli to avoid confusing the
+logging code later.
+
+There's also a bug fix for uninitialized memory in the directory scanner
+that didn't fit anywhere else.
+
+Ths patchset finishes off by teaching the AGFL repair function to look
+for and discard crosslinked blocks instead of putting them back on the
+AGFL.
+
+v23.2: Log the buffers before rolling the transaction to keep the moving
+forward in the log and avoid the bli falling off.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+
+----------------------------------------------------------------
+Darrick J. Wong (4):
+xfs: fully initialize xfs_da_args in xchk_directory_blocks
+xfs: don't track the AGFL buffer in the scrub AG context
+xfs: log the AGI/AGF buffers when rolling transactions during an AG repair
+xfs: make AGFL repair function avoid crosslinked blocks
+
+fs/xfs/scrub/agheader.c        | 47 +++++++++++++++----------
+fs/xfs/scrub/agheader_repair.c | 79 +++++++++++++++++++++++++++++++++++-------
+fs/xfs/scrub/common.c          |  8 -----
+fs/xfs/scrub/dir.c             | 10 +++---
+fs/xfs/scrub/repair.c          | 41 ++++++++++++++--------
+fs/xfs/scrub/scrub.h           |  1 -
+6 files changed, 128 insertions(+), 58 deletions(-)
