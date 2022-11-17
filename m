@@ -2,145 +2,154 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9647C43219
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Nov 2022 16:15:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FB6EC433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Nov 2022 17:36:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234714AbiKQQPL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Nov 2022 11:15:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50248 "EHLO
+        id S233225AbiKQRgg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Nov 2022 12:36:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231469AbiKQQO5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Nov 2022 11:14:57 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3D495F92
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2022 08:13:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1668701634;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=BGMtZW26mB4neyCq67JPxIbBHmoUvkGMnI9jDxzJca8=;
-        b=DuYh1r9hv6tSr5UZS3q7IX0uKg170mkOwL2HmbtRI4m9YIXPhLOuv3TBgD7GnbjAw9svrf
-        uzayK/QpnWhk8lwP6DgRkDvEJXX99B39MabfIQyw84EmlF/4Rxmf1LLbFCHR/7mA5nNZfI
-        755cwHY98wNhc8+iCumB4+cQuPH+bF0=
-Received: from mail-il1-f200.google.com (mail-il1-f200.google.com
- [209.85.166.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-605-aci7j6U4NfyBR29DEtzI8g-1; Thu, 17 Nov 2022 11:13:50 -0500
-X-MC-Unique: aci7j6U4NfyBR29DEtzI8g-1
-Received: by mail-il1-f200.google.com with SMTP id a14-20020a921a0e000000b003016bfa7e50so1479613ila.16
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2022 08:13:50 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=BGMtZW26mB4neyCq67JPxIbBHmoUvkGMnI9jDxzJca8=;
-        b=vGDDoaXUUwimnSTYfM3xP3YoWgTw92ebGp2Ax/QXLFv5P8mN47WmwIjVDFVl3uqjql
-         ucL5n8nhl806RVnyuNzmti6LWgKw5arkUrKUDFVBRfXLHXoI1QQNhjOLsxMN7wKeQ8Za
-         nAiPA0LgLFNP2YE7axIXqD+9/fnR/HVE7AZNCWcmOkchWe+AXT+LMpquFIvNHb5+mp4U
-         zAfzSMONaZB6B2jSt/YQTdx4P+c0F7WQNiXWEDYbk5CXsZ1icmk+pIvZdSqqfD0C2Heq
-         wDNSPedDI8U8Xk0K5IP/atDuCzx51KadEOA+F7yPl1RMKSN9c/19lH45poTrmpMRSl9L
-         HGpw==
-X-Gm-Message-State: ANoB5pnsbYASuJgylRsqPwY/7kGhXQTPdE5ZS3GNJFCtl0nKx5dBV7cC
-        yWaul9Hlu2dkR14e5v80lA2Taz7b4t92z4LamEfG6NkZR3g1gZn+xBLiNIRljdMJL2yjtUgJRXT
-        yjUsXiR9bNlWC7jQa3AXL
-X-Received: by 2002:a02:3b5d:0:b0:363:d405:587 with SMTP id i29-20020a023b5d000000b00363d4050587mr1328194jaf.86.1668701629462;
-        Thu, 17 Nov 2022 08:13:49 -0800 (PST)
-X-Google-Smtp-Source: AA0mqf7HFBJIkpO7PlfPPLiSFI5dDC/12vEY0AGZ4eQ/9eQVbWFs/frq1qIVoYb2qIEyGd1/xRphSQ==
-X-Received: by 2002:a02:3b5d:0:b0:363:d405:587 with SMTP id i29-20020a023b5d000000b00363d4050587mr1328178jaf.86.1668701629185;
-        Thu, 17 Nov 2022 08:13:49 -0800 (PST)
-Received: from [10.0.0.146] (sandeen.net. [63.231.237.45])
-        by smtp.gmail.com with ESMTPSA id w22-20020a056638025600b003636e5c4612sm374380jaq.33.2022.11.17.08.13.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 17 Nov 2022 08:13:48 -0800 (PST)
-Message-ID: <6ad3b4b0-f25b-1609-e79b-82204bc5577a@redhat.com>
-Date:   Thu, 17 Nov 2022 10:13:46 -0600
+        with ESMTP id S233681AbiKQRgc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Nov 2022 12:36:32 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2D447CBA9;
+        Thu, 17 Nov 2022 09:36:31 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3007B621D3;
+        Thu, 17 Nov 2022 17:36:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89CABC433C1;
+        Thu, 17 Nov 2022 17:36:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1668706590;
+        bh=sWrAAQF4Ov9dQjPoFoEwGsvqG4sXdVa8ksxFsTvo6jg=;
+        h=Date:From:To:Subject:From;
+        b=tvo9blJyO30sVNohj0pOmHAJ2kL2YUFv8ohg71b+Jn1tmfmDnBLXZgdPn8B7tGtOs
+         RIPKnh9Rx/+wp/uB/UWgULT8BA2ttudbhg2PKJB1+u9LDD+J3B2HxaY49iuBppJESY
+         m+6Tn/F8bn9VCzUYC3G8JoCR1jpydEiH+Hbd870HAWYYGO2Ng1aDHQ27SdlW3l5WZj
+         Dd5KwhFN+hE+zL5dC6R/7hLLxQciCLL4+5+4yHovEkmRBrYv/8gTmx4kIq68I3/803
+         EEVFxzrwNhJ3ZCzcg7oM7oUEDkJCn155SA5RzA0CV/ZAoh6Fduch+OEurPwLcT8eET
+         B6LLAPic5dg0A==
+Date:   Thu, 17 Nov 2022 09:36:30 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next **REBASED** to 64c80dfd04d1
+Message-ID: <Y3ZxHgNodQ1UDxch@magnolia>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.4.2
-Subject: Re: [PATCH] xfs: fix incorrect usage of xfs_btree_check_block
-To:     Guo Xuenan <guoxuenan@huawei.com>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Cc:     dchinner@redhat.com, linux-xfs@vger.kernel.org, houtao1@huawei.com,
-        jack.qiu@huawei.com, fangwei1@huawei.com, yi.zhang@huawei.com,
-        zhengbin13@huawei.com, leo.lilong@huawei.com, zengheng4@huawei.com
-References: <20221103113709.251669-1-guoxuenan@huawei.com>
- <Y2k5NTjTRdsDAuhN@magnolia> <1afe73bb-481c-01b3-8c61-3d208e359f40@huawei.com>
-Content-Language: en-US
-From:   Eric Sandeen <sandeen@redhat.com>
-In-Reply-To: <1afe73bb-481c-01b3-8c61-3d208e359f40@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 11/7/22 7:50 PM, Guo Xuenan wrote:
-> On 2022/11/8 0:58, Darrick J. Wong wrote:
->> On Thu, Nov 03, 2022 at 07:37:09PM +0800, Guo Xuenan wrote:
->>> xfs_btree_check_block contains a tag XFS_ERRTAG_BTREE_CHECK_{L,S}BLOCK,
->>> it is a fault injection tag, better not use it in the macro ASSERT.
->>>
->>> Since with XFS_DEBUG setting up, we can always trigger assert by `echo 1
->>>> /sys/fs/xfs/${disk}/errortag/btree_chk_{s,l}blk`.
->>> It's confusing and strange.
->> Please be more specific about how this is confusing or strange.
-> I meant in current code, the ASSERT will alway happen,when we
-> `echo 1 > /sys/fs/xfs/${disk}/errortag/btree_chk_{s,l}blk`.
-> xfs_btree_islastblock
->   ->ASSERT(block && xfs_btree_check_block(cur, block, level, bp) == 0);
->     ->xfs_btree_check_{l/s}block
->       ->XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BTREE_CHECK_{S,L}BLOCK)
-> we can use error injection to trigger this ASSERT.
+Hi folks,
 
-Hmmm...
+The for-next branch of the xfs-linux repository at:
 
-> I think ASERRT macro and error injection are to find some effective problems,
-> not to create some kernel panic.
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-You can avoid a panic by turning XFS_ASSERT_FATAL off in Kconfig, or
-at runtime by setting fs.xfs.bug_on_assert to 0, but ...
+has just been **REBASED**.
 
-> So, putting the error injection function in
-> ASSERT is a little strange.
+Monday morning I was too overwhelmed with decisions to make such that I
+completely forgot that I could push my branches (with cover letters) to
+kernel.org and pull them into a new branch.  Since the goal is to enable
+pull requests like a modern organization and preserve cover letters when
+possible, I felt it was important to go back and do it right.  The code
+should be the same, its just the commit history that's a bit rewritten
+now.
 
-Ok, so I think the argument is that in the default config, setting this error
-injection tag will immediately result in a system panic, which probably isn't
-what we want.  Is my understanding correct?
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  There's a number of fix patches still out for review:
 
-But in the bigger picture, isn't this:
+The new corruption problem that only seems to manifest on arm64 is still
+happening, though it's turned into a heisenbug that disappears when I
+turn on the debugging.  Every now and then the incore extent tree
+records become out of order, which causes xfs_repair failures
+afterwards.  I've not figured out what's going on there, and I can only
+seem to reproduce it on the VM that runs the online scrub stress tests.
 
-ASSERT(block && xfs_btree_check_block(cur, block, level, bp) == 0);
+There's also Dave's v3 write()/writeback race bugfixes, which I will
+review and try to figure out how Brian's truncate speedup fits into
+that.
 
-putting a disk corruption check into an ASSERT? That in itself seems a bit
-suspect.  However, the ASSERT was all introduced in:
+There's also the problem that dax+reflink throw weird corruption errors
+everywhere.  I don't know what the status of those are, and I still
+don't have time to get to them. :/
 
-commit 27d9ee577dccec94fb0fc1a14728de64db342f86
-Author: Darrick J. Wong <darrick.wong@oracle.com>
-Date:   Wed Nov 6 08:47:09 2019 -0800
+The new head of the for-next branch is commit:
 
-    xfs: actually check xfs_btree_check_block return in xfs_btree_islastblock
-    
-    Coverity points out that xfs_btree_islastblock doesn't check the return
-    value of xfs_btree_check_block.  Since the question "Does the cursor
-    point to the last block in this level?" only makes sense if the caller
-    previously performed a lookup or seek operation, the block should
-    already have been checked.
-    
-    Therefore, check the return value in an ASSERT and turn the whole thing
-    into a static inline predicate.
-    
-    Coverity-id: 114069
-    Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
+64c80dfd04d1 xfs: Print XFS UUID on mount and umount events.
 
-which seems to imply that we really should not get here with a corrupt block during
-normal operation.
+33 new commits:
 
-Perhaps the error tag can get set after the block "should already have been checked"
-but before this test in the ASSERT?
+Darrick J. Wong (31):
+      [9a48b4a6fd51] xfs: fully initialize xfs_da_args in xchk_directory_blocks
+      [be1317fdb8d4] xfs: don't track the AGFL buffer in the scrub AG context
+      [3e59c0103e66] xfs: log the AGI/AGF buffers when rolling transactions during an AG repair
+      [48ff40458f87] xfs: standardize GFP flags usage in online scrub
+      [b255fab0f80c] xfs: make AGFL repair function avoid crosslinked blocks
+      [a7a0f9a5503f] xfs: return EINTR when a fatal signal terminates scrub
+      [0a713bd41ea2] xfs: fix return code when fatal signal encountered during dquot scrub
+      [fcd2a43488d5] xfs: initialize the check_owner object fully
+      [6bf2f8791597] xfs: don't retry repairs harder when EAGAIN is returned
+      [306195f355bb] xfs: pivot online scrub away from kmem.[ch]
+      [9e13975bb062] xfs: load rtbitmap and rtsummary extent mapping btrees at mount time
+      [11f97e684583] xfs: skip fscounters comparisons when the scan is incomplete
+      [93b0c58ed04b] xfs: don't return -EFSCORRUPTED from repair when resources cannot be grabbed
+      [5f369dc5b4eb] xfs: make rtbitmap ILOCKing consistent when scanning the rt bitmap file
+      [e74331d6fa2c] xfs: online checking of the free rt extent count
+      [033985b6fe87] xfs: fix perag loop in xchk_bmap_check_rmaps
+      [6a5777865eeb] xfs: teach scrub to check for adjacent bmaps when rmap larger than bmap
+      [830ffa09fb13] xfs: block map scrub should handle incore delalloc reservations
+      [f23c40443d1c] xfs: check quota files for unwritten extents
+      [31785537010a] xfs: check that CoW fork extents are not shared
+      [5eef46358fae] xfs: teach scrub to flag non-extents format cow forks
+      [bd5ab5f98741] xfs: don't warn about files that are exactly s_maxbytes long
+      [f36b954a1f1b] xfs: check inode core when scrubbing metadata files
+      [823ca26a8f07] Merge tag 'scrub-fix-ag-header-handling-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
+      [af1077fa87c3] Merge tag 'scrub-cleanup-malloc-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
+      [3d8426b13bac] Merge tag 'scrub-fix-return-value-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
+      [b76f593b33aa] Merge tag 'scrub-fix-rtmeta-ilocking-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
+      [7aab8a05e7c7] Merge tag 'scrub-fscounters-enhancements-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
+      [cc5f38fa12fc] Merge tag 'scrub-bmap-enhancements-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
+      [7b082b5e8afa] Merge tag 'scrub-check-metadata-inode-records-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
+      [2653d53345bd] xfs: fix incorrect error-out in xfs_remove
 
--Eric
+Long Li (1):
+      [59f6ab40fd87] xfs: fix sb write verify for lazysbcount
 
+Lukas Herbolt (1):
+      [64c80dfd04d1] xfs: Print XFS UUID on mount and umount events.
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_sb.c         |   4 +-
+ fs/xfs/scrub/agheader.c        |  47 ++++++++-----
+ fs/xfs/scrub/agheader_repair.c |  81 +++++++++++++++++++----
+ fs/xfs/scrub/attr.c            |  11 ++-
+ fs/xfs/scrub/bitmap.c          |  11 +--
+ fs/xfs/scrub/bmap.c            | 147 +++++++++++++++++++++++++++++++++--------
+ fs/xfs/scrub/btree.c           |  14 ++--
+ fs/xfs/scrub/common.c          |  48 ++++++++++----
+ fs/xfs/scrub/common.h          |   2 +-
+ fs/xfs/scrub/dabtree.c         |   4 +-
+ fs/xfs/scrub/dir.c             |  10 +--
+ fs/xfs/scrub/fscounters.c      | 109 ++++++++++++++++++++++++++++--
+ fs/xfs/scrub/inode.c           |   2 +-
+ fs/xfs/scrub/quota.c           |   8 ++-
+ fs/xfs/scrub/refcount.c        |  12 ++--
+ fs/xfs/scrub/repair.c          |  51 +++++++++-----
+ fs/xfs/scrub/scrub.c           |   6 +-
+ fs/xfs/scrub/scrub.h           |  18 ++---
+ fs/xfs/scrub/symlink.c         |   2 +-
+ fs/xfs/xfs_fsmap.c             |   4 +-
+ fs/xfs/xfs_inode.c             |   2 +-
+ fs/xfs/xfs_log.c               |  10 +--
+ fs/xfs/xfs_mount.c             |  15 +++++
+ fs/xfs/xfs_rtalloc.c           |  60 +++++++++++++++--
+ fs/xfs/xfs_super.c             |   2 +-
+ 25 files changed, 523 insertions(+), 157 deletions(-)
