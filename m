@@ -2,199 +2,147 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE2A1C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Nov 2022 19:28:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 874B7C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Nov 2022 20:20:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232347AbiKQT2c (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Nov 2022 14:28:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38938 "EHLO
+        id S233266AbiKQUUT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Nov 2022 15:20:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58320 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239647AbiKQT2a (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Nov 2022 14:28:30 -0500
+        with ESMTP id S231570AbiKQUUS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Nov 2022 15:20:18 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C12FA9FE3
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2022 11:28:27 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D842E20189
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2022 12:20:17 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5505362236
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2022 19:28:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D35DC433D6;
-        Thu, 17 Nov 2022 19:28:26 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7D9FD6221A
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Nov 2022 20:20:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6DB8C433D6;
+        Thu, 17 Nov 2022 20:20:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668713306;
-        bh=cwacZPi1+0oGD8BBiUOKrHGTrq72XuWcYNWQ6qvkvCs=;
+        s=k20201202; t=1668716416;
+        bh=WeeTfN0KCGSKkDNKTe0/NxMkbZihxSuErBoTRDPt744=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=PkAxTSqwweXKXzl8RTncOOUIgqt8U3FbE4cEwP7ZV10X+ZD8B2T74WGWi+oRZytSN
-         3rVlDRAX+DM2EoV8xrt83IR9p+oSRqQI1/vuAenvwlwnOTsdJ1G/HpiXvHEU5ALRmv
-         JTm9MsaJYPOrHnB3Ys0Tl0znaKtLae4S3RRlokNS2H09IqsWz6ssu02lYkByWhPXFb
-         0XPB4nQE/+b9Dt2qjrgv8uZ/mgH2Uy/GrNYea/agbqoEVGtUEzUOTujkhL1id6f63F
-         W0TMMqRhTCtigSGWZDa7erUcQyGpPkPrzIDBZMbh6uGtQbEsREwADpTlkfPAlJ5FP3
-         gh3rHqvoq/L9w==
-Date:   Thu, 17 Nov 2022 11:28:26 -0800
+        b=Dk21p2GeVxAm9ty1IUlPC/Xa+lQWPHQHr1ILwSH7UKc1QBEMG42OLg9rgeMcWCXwX
+         L0xarCH8CiX5OoMb3JHDk4GZdSYb0n9NZcAJNrLSwmqbS64icNk4rrmFJzVfo03MpX
+         j7kWulNOgXcPBhn78GUeKgY/MUIn5oESJ9NavB+KVgBhp9bxU5btQHq5iQ7nxAd+D9
+         q3Z0nXknOFBl71V2dqMmC97eC1LMpLUtAVEsZTqO62+ZVrYeTgD2Zo60frbq28coj+
+         1YOE7mpyUVDsyOsOLFKxwPqy6+DtKaZ+Fb86fWj/3A6ephsSKYKsAxnD+EB+bjJwAK
+         ZiHtfy2Q2zbug==
+Date:   Thu, 17 Nov 2022 12:20:16 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Guo Xuenan <guoxuenan@huawei.com>
-Cc:     dchinner@redhat.com, linux-xfs@vger.kernel.org, houtao1@huawei.com,
-        jack.qiu@huawei.com, fangwei1@huawei.com, yi.zhang@huawei.com,
-        zhengbin13@huawei.com, leo.lilong@huawei.com, zengheng4@huawei.com
-Subject: Re: [PATCH v4 2/2] xfs: fix super block buf log item UAF during
- force shutdown
-Message-ID: <Y3aLWgGStNPEo2z4@magnolia>
-References: <20221117145030.5089-1-guoxuenan@huawei.com>
- <20221117145030.5089-3-guoxuenan@huawei.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/3] xfs: retain the AGI when we can't iget an inode to
+ scrub the core
+Message-ID: <Y3aXgI2DBn3vTi8F@magnolia>
+References: <166473482923.1084685.3060991494529121939.stgit@magnolia>
+ <166473482971.1084685.9939611867095895186.stgit@magnolia>
+ <20221115040816.GY3600936@dread.disaster.area>
+ <Y3RPqgRr2AOBFbyc@magnolia>
+ <20221117011548.GF3600936@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221117145030.5089-3-guoxuenan@huawei.com>
+In-Reply-To: <20221117011548.GF3600936@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 17, 2022 at 10:50:30PM +0800, Guo Xuenan wrote:
-> xfs log io error will trigger xlog shut down, and end_io worker call
-> xlog_state_shutdown_callbacks to unpin and release the buf log item.
-> The race condition is that when there are some thread doing transaction
-> commit and happened not to be intercepted by xlog_is_shutdown, then,
-> these log item will be insert into CIL, when unpin and release these
-> buf log item, UAF will occur. BTW, add delay before `xlog_cil_commit`
-> can increase recurrence probability.
+On Thu, Nov 17, 2022 at 12:15:48PM +1100, Dave Chinner wrote:
+> On Tue, Nov 15, 2022 at 06:49:14PM -0800, Darrick J. Wong wrote:
+> > On Tue, Nov 15, 2022 at 03:08:16PM +1100, Dave Chinner wrote:
+> > > On Sun, Oct 02, 2022 at 11:20:29AM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > 
+> > > > xchk_get_inode is not quite the right function to be calling from the
+> > > > inode scrubber setup function.  The common get_inode function either
+> > > > gets an inode and installs it in the scrub context, or it returns an
+> > > > error code explaining what happened.  This is acceptable for most file
+> > > > scrubbers because it is not in their scope to fix corruptions in the
+> > > > inode core and fork areas that cause iget to fail.
+> > > > 
+> > > > Dealing with these problems is within the scope of the inode scrubber,
+> > > > however.  If iget fails with EFSCORRUPTED, we need to xchk_inode to flag
+> > > > that as corruption.  Since we can't get our hands on an incore inode, we
+> > > > need to hold the AGI to prevent inode allocation activity so that
+> > > > nothing changes in the inode metadata.
+> > > > 
+> > > > Looking ahead to the inode core repair patches, we will also need to
+> > > > hold the AGI buffer into xrep_inode so that we can make modifications to
+> > > > the xfs_dinode structure without any other thread swooping in to
+> > > > allocate or free the inode.
+> > > > 
+> > > > Adapt the xchk_get_inode into xchk_setup_inode since this is a one-off
+> > > > use case where the error codes we check for are a little different, and
+> > > > the return state is much different from the common function.
+> > > 
+> > > The code look fine, but...
+> > > 
+> > > ... doesn't this mean that xchk_setup_inode() and xchk_get_inode()
+> > > now are almost identical apart from the xchk_prepare_iscrub() bits?
+> > 
+> > Yes, they're /nearly/ identical in the helper functions they call, but
+> > they're not so similar in intent and how they handle @error values:
+> > 
+> > xchk_setup_inode prepares to check or repair an inode record, so it must
+> > continue the scrub operation even if the inode/inobt verifiers cause
+> > xfs_iget to return EFSCORRUPTED.  This is done by attaching the locked
+> > AGI buffer to the scrub transaction and returning 0 to move on to the
+> > actual scrub.  (Later, the online inode repair code will also want the
+> > xfs_imap structure so that it can reset the ondisk xfs_dinode
+> > structure.)
+> > 
+> > xchk_get_inode retrieves an inode on behalf of a scrubber that operates
+> > on an incore inode -- data/attr/cow forks, directories, xattrs,
+> > symlinks, parent pointers, etc.  If the inode/inobt verifiers fail and
+> > xfs_iget returns EFSCORRUPTED, we want to exit to userspace (because the
+> > caller should be fix the inode first) and drop everything we acquired
+> > along the way.
+> > 
+> > A behavior common to both functions is that it's possible that xfs_scrub
+> > asked for a scrub-by-handle concurrent with the inode being freed or the
+> > passed-in inumber is invalid.  In this case, we call xfs_imap to see if
+> > the inobt index thinks the inode is allocated, and return ENOENT
+> > ("nothing to check here") to userspace if this is not the case.  The
+> > imap lookup is why both functions call xchk_iget_agi.
 > 
-> The following call graph actually encountered this bad situation.
-> fsstress                    io end worker kworker/0:1H-216
-> 		             xlog_ioend_work
-> 		               ->xlog_force_shutdown
-> 		                 ->xlog_state_shutdown_callbacks
-> 		             	 ->xlog_cil_process_committed
-> 		             	   ->xlog_cil_committed
-> 		             	     ->xfs_trans_committed_bulk
+> Ok, so given all this, all I really want then is better names for
+> the functions, as "setup" and "get" don't convey any of this. :)
+> 
+> Perhaps xchk_setup_inode() -> xchk_iget_for_record_check() and
 
-Odd switch from ^^^^^^^^^^^^^ spaces to tabs here.
+I'd rather make this function static to inode.c and export a const
+global struct xchk_meta_ops pointing to this function.  There's really
+no need for the external declaration aside from populating the
+meta_scrub_ops table in scrub.c.  The reason why I haven't done that
+already is that doing that cleanup will likely cause ~23 merge conflicts
+all the way down the branch as I add online repair functions.  Perhaps
+the next time I make a branchwide change.
 
-> ->xfs_trans_apply_sb_deltas               ->li_ops->iop_unpin(lip, 1);
->   ->xfs_trans_getsb
->     ->_xfs_trans_bjoin
->       ->xfs_buf_item_init
->         ->if (bip) { return 0;} //relog
-> ->xlog_cil_commit
->   ->xlog_cil_insert_items //insert into CIL
+Second, xchk_setup_inode doesn't necessarily return a cached inode,
+which is what most iget functions do -- if the read fails, it'll lock
+the AGI buffer to the scrub transaction.
 
-Why are we still inserting things into the CIL of a dead log?
+I haven't any strong objections to renaming this
+xchk_setup_inode_record, if that's what's needed to get this patchset
+through review.
 
->                                             ->xfs_buf_ioend_fail(bp);
->                                               ->xfs_buf_ioend
->                                                 ->xfs_buf_item_done
->                                                   ->xfs_buf_item_relse
->                                                     ->xfs_buf_item_free
-> 
-> when cil push worker gather percpu cil and insert super block buf log item
-> into ctx->log_items then uaf occurs.
-> 
-> ==================================================================
-> BUG: KASAN: use-after-free in xlog_cil_push_work+0x1c8f/0x22f0
-> Write of size 8 at addr ffff88801800f3f0 by task kworker/u4:4/105
-> 
-> CPU: 0 PID: 105 Comm: kworker/u4:4 Tainted: G W
-> 6.1.0-rc1-00001-g274115149b42 #136
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
-> 1.13.0-1ubuntu1.1 04/01/2014
-> Workqueue: xfs-cil/sda xlog_cil_push_work
-> Call Trace:
->  <TASK>
->  dump_stack_lvl+0x4d/0x66
->  print_report+0x171/0x4a6
->  kasan_report+0xb3/0x130
->  xlog_cil_push_work+0x1c8f/0x22f0
->  process_one_work+0x6f9/0xf70
->  worker_thread+0x578/0xf30
->  kthread+0x28c/0x330
->  ret_from_fork+0x1f/0x30
->  </TASK>
-> 
-> Allocated by task 2145:
->  kasan_save_stack+0x1e/0x40
->  kasan_set_track+0x21/0x30
->  __kasan_slab_alloc+0x54/0x60
->  kmem_cache_alloc+0x14a/0x510
->  xfs_buf_item_init+0x160/0x6d0
->  _xfs_trans_bjoin+0x7f/0x2e0
->  xfs_trans_getsb+0xb6/0x3f0
->  xfs_trans_apply_sb_deltas+0x1f/0x8c0
->  __xfs_trans_commit+0xa25/0xe10
->  xfs_symlink+0xe23/0x1660
->  xfs_vn_symlink+0x157/0x280
->  vfs_symlink+0x491/0x790
->  do_symlinkat+0x128/0x220
->  __x64_sys_symlink+0x7a/0x90
->  do_syscall_64+0x35/0x80
->  entry_SYSCALL_64_after_hwframe+0x63/0xcd
-> 
-> Freed by task 216:
->  kasan_save_stack+0x1e/0x40
->  kasan_set_track+0x21/0x30
->  kasan_save_free_info+0x2a/0x40
->  __kasan_slab_free+0x105/0x1a0
->  kmem_cache_free+0xb6/0x460
->  xfs_buf_ioend+0x1e9/0x11f0
->  xfs_buf_item_unpin+0x3d6/0x840
->  xfs_trans_committed_bulk+0x4c2/0x7c0
->  xlog_cil_committed+0xab6/0xfb0
->  xlog_cil_process_committed+0x117/0x1e0
->  xlog_state_shutdown_callbacks+0x208/0x440
->  xlog_force_shutdown+0x1b3/0x3a0
->  xlog_ioend_work+0xef/0x1d0
->  process_one_work+0x6f9/0xf70
->  worker_thread+0x578/0xf30
->  kthread+0x28c/0x330
->  ret_from_fork+0x1f/0x30
-> 
-> The buggy address belongs to the object at ffff88801800f388
->  which belongs to the cache xfs_buf_item of size 272
-> The buggy address is located 104 bytes inside of
->  272-byte region [ffff88801800f388, ffff88801800f498)
-> 
-> The buggy address belongs to the physical page:
-> page:ffffea0000600380 refcount:1 mapcount:0 mapping:0000000000000000
-> index:0xffff88801800f208 pfn:0x1800e
-> head:ffffea0000600380 order:1 compound_mapcount:0 compound_pincount:0
-> flags: 0x1fffff80010200(slab|head|node=0|zone=1|lastcpupid=0x1fffff)
-> raw: 001fffff80010200 ffffea0000699788 ffff88801319db50 ffff88800fb50640
-> raw: ffff88801800f208 000000000015000a 00000001ffffffff 0000000000000000
-> page dumped because: kasan: bad access detected
-> 
-> Memory state around the buggy address:
->  ffff88801800f280: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
->  ffff88801800f300: fb fb fb fc fc fc fc fc fc fc fc fc fc fc fc fc
-> >ffff88801800f380: fc fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb
->                                                              ^
->  ffff88801800f400: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
->  ffff88801800f480: fb fb fb fc fc fc fc fc fc fc fc fc fc fc fc fc
-> ==================================================================
-> Disabling lock debugging due to kernel taint
-> 
-> Signed-off-by: Guo Xuenan <guoxuenan@huawei.com>
-> ---
->  fs/xfs/xfs_buf_item.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 522d450a94b1..df7322ed73fa 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -1018,6 +1018,8 @@ xfs_buf_item_relse(
->  	trace_xfs_buf_item_relse(bp, _RET_IP_);
->  	ASSERT(!test_bit(XFS_LI_IN_AIL, &bip->bli_item.li_flags));
->  
-> +	if (atomic_read(&bip->bli_refcount))
-> +		return;
+> xchk_get_inode() -> xchk_iget_for_scrubbing(). This gives an
+> indication taht they are being used for different purposes, and the
+> implementation is tailored to the requirements of those specific
+> operations....
 
-If we're releasing the buf item, shouldn't this be an
-atomic_dec_and_test or something?
+I'll make this change, however.
 
 --D
 
->  	bp->b_log_item = NULL;
->  	xfs_buf_rele(bp);
->  	xfs_buf_item_free(bip);
-> -- 
-> 2.31.1
 > 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
