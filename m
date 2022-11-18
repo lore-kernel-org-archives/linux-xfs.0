@@ -2,465 +2,161 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D540AC4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Nov 2022 17:21:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCD43C433FE
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Nov 2022 21:14:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242518AbiKRRVo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 18 Nov 2022 12:21:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54856 "EHLO
+        id S229980AbiKRVOS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 18 Nov 2022 16:14:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59616 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242540AbiKRRVi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Nov 2022 12:21:38 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4FC58E087
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Nov 2022 09:20:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1668792043;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=6+yVPT4MmupD7qMkZYRvJOseSG5Fp9ohhssX7w71Skc=;
-        b=KWaYTvCt0DcO6JDvQHJjCPyZj7ZUKywnRqMbceshMLcEGuoKuQtbZN5eoC16mJ0RRqAAro
-        RmvdbRBsZSxpuibAjE+73LxiSrOZ1sPQ1PiEwAw84r2vQWcTPf7ZAdFCy6XvaErsaj6qK8
-        xtELf/EhoJVchCPi2+z5xlSOPgns5PA=
-Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com
- [209.85.160.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-111-tf-EIeQSMvC3j2JQE4HY2Q-1; Fri, 18 Nov 2022 12:20:42 -0500
-X-MC-Unique: tf-EIeQSMvC3j2JQE4HY2Q-1
-Received: by mail-qt1-f198.google.com with SMTP id cd6-20020a05622a418600b003a54cb17ad9so5500961qtb.0
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Nov 2022 09:20:42 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=6+yVPT4MmupD7qMkZYRvJOseSG5Fp9ohhssX7w71Skc=;
-        b=W3MuRUQslC3JiymVLKBndmdIbGhESspI57rlXlkYNbTqfRBXAM+pOanumUQLemwf98
-         pEXzANrCJuONn6+G3wSWf9bz4RDHCQLG5wZcA+GI3vaSBOXc4JCt3zw0GevGbJeolO3p
-         7SjFIiVy6qb1buw4grHnvjw4jhx0eIyAlK4hhitJxfaMPDtoBTOZGPZKCLQUq1TKcaS6
-         kxyy8UJLsYZsSRBffwbV29SKzzIZOkmbHeaPQnku6qAYhGaAzwpytShnnqQ2deAHu+Ek
-         idgJGeiAxiN+9sIL7OQyH6IgKw67SACR0PfXPw9A+fjwfSTFqrSJxwenZ4VisIDmpvmA
-         jfBA==
-X-Gm-Message-State: ANoB5plt6Q/kP25DWiCgcVXBdQHDfvhkrcpYHFwbo0kSYGTLmlev8Rgp
-        PREZDRAvfEQQcK2pjuz4UuzwDlSn9ZF15gzY0Lzn49QIiwH05CLvhyA83b1ZhMMpJK2ZcXtwwSX
-        bmcAQKX7bgb969v6qr9d0
-X-Received: by 2002:a05:620a:6011:b0:6e8:1fa:13e9 with SMTP id dw17-20020a05620a601100b006e801fa13e9mr6680038qkb.393.1668792041488;
-        Fri, 18 Nov 2022 09:20:41 -0800 (PST)
-X-Google-Smtp-Source: AA0mqf5y2q166QiLwTrf7DkgypwFY3Npsq6MKhExituxvBowbtaAaEog1hpaFxhkqrcvApmcumtndw==
-X-Received: by 2002:a05:620a:6011:b0:6e8:1fa:13e9 with SMTP id dw17-20020a05620a601100b006e801fa13e9mr6680004qkb.393.1668792041035;
-        Fri, 18 Nov 2022 09:20:41 -0800 (PST)
-Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
-        by smtp.gmail.com with ESMTPSA id az20-20020a05620a171400b006ec771d8f89sm2758837qkb.112.2022.11.18.09.20.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Nov 2022 09:20:40 -0800 (PST)
-Date:   Fri, 18 Nov 2022 12:20:45 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org
-Subject: Re: [PATCH 5/9] xfs: buffered write failure should not truncate the
- page cache
-Message-ID: <Y3e+7XH5gq5gc97u@bfoster>
-References: <20221115013043.360610-1-david@fromorbit.com>
- <20221115013043.360610-6-david@fromorbit.com>
- <Y3TsPzd0XzXXIzQv@bfoster>
- <20221117004133.GD3600936@dread.disaster.area>
+        with ESMTP id S230131AbiKRVOR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Nov 2022 16:14:17 -0500
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7903227CDB;
+        Fri, 18 Nov 2022 13:14:14 -0800 (PST)
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2AILDlIa020577;
+        Fri, 18 Nov 2022 21:14:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=corp-2022-7-12;
+ bh=xVlRLKqWEc7YfLZJBVoi+wsOYdIU1BC1hDFJmF3gTc0=;
+ b=w/BQTiNto8UDnrmgagYiq2fxQZjqmdQUlQ5SvoP6xa1Frza8iQWuxoA0QMdfLQkbuG3b
+ uRsunEnIyNX5dTH1WHfj8s7Hyqumb+d3IPhI/E/jlb6yqaVljrcjq8FKCKfmDzVCGJjC
+ 7NHw3dOEfctYi8UdNBgLyq1GHDoCVfIT31zOZV5BzV4Ynppr9xwHOJKsAb3SkRZrdtxW
+ FYr4vPmWiz1lhuCOm+hLl2BSaMiZHeP+xW9VBtPEDRKIg2kiJa4/nDGky6WIlw7JowNZ
+ WAWPiY1RDubZHEOE3HLrpEI3FIbVlt1dxEYRTsPeBTGOlqc27mqp7TxB5ii5/QtWa//R +A== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3kxbrdh77y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 18 Nov 2022 21:14:13 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2AIL1HVt039202;
+        Fri, 18 Nov 2022 21:14:12 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2168.outbound.protection.outlook.com [104.47.58.168])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3kw2dfk23j-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 18 Nov 2022 21:14:12 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=iq35CKHJrLI7517Iki87eOvW5sKrsvcYA7P4c7uP1CjX+LTVnt8QvLRpoe+xizXkmegbzRi6kFA45PZKezOuhzzqH1v01sGPenFjEeIYwHllgOHVKcNlbJJr2ier+Iw0srV0i4wQ3bck9ox8v53y+CDhT+h3RNAR9ojfj7aKcBCP0/k0AnOHla6j2mxJqAm17pXwA8sXCibVfotapBBJMwZStSwG5PDIWBB5f17IakXSxMRsN8L6scui4P1R/GPbhgrND7w3684qSGlbOYxGS3r208Zuh0IbighdnzwYqVsAI/hUgkKZGBbnbES4sSqrmGCWO4s2hKiWy7Y7dqhVgQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=xVlRLKqWEc7YfLZJBVoi+wsOYdIU1BC1hDFJmF3gTc0=;
+ b=IF4WBAserfUFCi/2Z6FrXRPpyCp4tzRiYpX4MkpOQLcFj+UMh0W90PtqYDz3Gr6lfQ/4++eYI7liJQGqkf2HOnZfvVbfa4O3hSqSR2gyKwnr6E0+c+6D8VUAXRGtBaZZN7oBfDzKcLEuFgGSGkl4efazFRRbea3kf70tov+EDONUopUr8PgCLOixUEWqlq5VUOIJpvY/nWF1HAjYE/dHwJoSxnn9cuhkYTHLKWQKxptgm/bS2UM3o6w1Jk2TU6P08JA2LA/PMiG/UXvEABeRXB4JL10mO+rij1gB3L8PRe0vdSq6zI9EAfyH0NDYgomrBqUiGEsWijNpSZRZGDmqaw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=xVlRLKqWEc7YfLZJBVoi+wsOYdIU1BC1hDFJmF3gTc0=;
+ b=hyYjLWmrYj6yZQAsOKJk6y8A3E5LbrBkILJ4cczSK8YkJyUdu5ti/Y6nJvlqa4RGHfaS7OS43zLFNgYh8g3r4sQ9QkN3Z8AVEHBlM50lWDDE/L4SbSyOvaGZt3F0yH0poGXgCzZgCa1YT/SYm7bmolYaud4ImcGb+hk8MX/5qH4=
+Received: from BLAPR10MB5316.namprd10.prod.outlook.com (2603:10b6:208:326::6)
+ by SA1PR10MB6293.namprd10.prod.outlook.com (2603:10b6:806:250::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5834.9; Fri, 18 Nov
+ 2022 21:14:10 +0000
+Received: from BLAPR10MB5316.namprd10.prod.outlook.com
+ ([fe80::e1d1:c1c7:79d:4137]) by BLAPR10MB5316.namprd10.prod.outlook.com
+ ([fe80::e1d1:c1c7:79d:4137%4]) with mapi id 15.20.5834.009; Fri, 18 Nov 2022
+ 21:14:10 +0000
+From:   Catherine Hoang <catherine.hoang@oracle.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     linux-ext4@vger.kernel.org
+Subject: [PATCH v2 0/2] porting the GETFSUUID ioctl to xfs
+Date:   Fri, 18 Nov 2022 13:14:06 -0800
+Message-Id: <20221118211408.72796-1-catherine.hoang@oracle.com>
+X-Mailer: git-send-email 2.32.0 (Apple Git-132)
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SJ0PR03CA0062.namprd03.prod.outlook.com
+ (2603:10b6:a03:331::7) To BLAPR10MB5316.namprd10.prod.outlook.com
+ (2603:10b6:208:326::6)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221117004133.GD3600936@dread.disaster.area>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BLAPR10MB5316:EE_|SA1PR10MB6293:EE_
+X-MS-Office365-Filtering-Correlation-Id: da640470-2b35-4c9f-9572-08dac9a9d5f4
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: aiN4jOjcqOWq5puNxwQRQYvIeOjNkqbeIGdup9Hg+Cr9dquhRXkBnfaF3ZGAGsWcCrSSoztGeYtRmhznJ3WFb7NSXSVrtp/WxxkQL1lhKC3QVuBY1s4kThfv1hDCe8VExfH5PBAmHRuZuX/EZPSVXpDIn+PHSU5Uhq2AAiLwyMVFt6kWm3f7eaQSkSvZvF1bRCrCKIyv6Aw7ZqMilZOy8LsyQN4vYUjjo949Lgm5ykMGlPs5MLH/1wnxkCjCYj6vwddhcm5M7YQ8uWClNQqSRojEi1v/wEni9irtRmjmYF4Xs9mpBaBoxNqIxZF+CYJQZnQh3SiOBcQ/NvgIcjWoEcMEmE8NeAc2JHTQbTQd+e1BxeSLwq+j+3GyW6IL8CRkm8+bYNuT28dhP5mnVqZfjFQQex0JLrZ8tHIysZoT430laKB9UXHC/UKIJCippWcz+r5zbSdTDkQbiW6QbunFIgOxfN8dCs1vLksybfK0DHU/QCAudS3/OlP3obBuQeauwiu+kCfIMesmec0GP/MbMPHEpSDY+9mYNob5CMinTemBx064P6KM61K2Dd7sDPfVyBE2B3xtjNmthW9pYkSm1zjgC22YM3Ny4tXnJaVhchf7P7Z1eQphj59qGdZ8KPcBz2bonYBGiq2RJm1S5/RDAA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BLAPR10MB5316.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(396003)(366004)(376002)(136003)(346002)(39860400002)(451199015)(2906002)(36756003)(316002)(6916009)(478600001)(6486002)(83380400001)(38100700002)(6506007)(6666004)(6512007)(86362001)(2616005)(1076003)(186003)(8676002)(66946007)(66476007)(66556008)(4744005)(5660300002)(450100002)(44832011)(8936002)(41300700001)(4326008);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?qhU3hikNgobu3gNTddIynP4Plh1eC2VJNo7xpG/gBwSF/3zkikNCtRTDbysz?=
+ =?us-ascii?Q?s1+KQgPO8SC0+Aol99m4iT5mDLRrcb+1g7QRkgxn7RckVRQGyMZz3Q1BeJOL?=
+ =?us-ascii?Q?tzZIVHsNaeM5ZG1Wlk/eTw0CavUPCRGI1vSkYu5w+mVARNeEk7/L5L+J57e5?=
+ =?us-ascii?Q?0S4QhG0E+Z65k2AOIrpYgFqFkkI+MN7kSQ1CDRsmnA3Igz3YmlWcbBLsj9qR?=
+ =?us-ascii?Q?HpdnBOcuZ7/448VIgoxweG5tCVONmLWn2Xl+9uV9sqcu2UnavEGSE/thsqLy?=
+ =?us-ascii?Q?3ffR7vvjvcvOruw1WxPMh3OLYMcNiccl7LRDYPIyFCqEMQSZh5XTXL1FrE4a?=
+ =?us-ascii?Q?UAagiwFdasUvAeknYK9kbXAZRmslxJidMOKs4dg+3IqSHBmmtM2pBHTYRoQK?=
+ =?us-ascii?Q?PiAV8HQOrsPpa8fOfwTn0r9TcV/uU49yigPY9ElzUSi6cdnLYSjjGdQfxuFa?=
+ =?us-ascii?Q?PYdCDdS/Y50u6fZmNG4zwIM3LzlU38lTLdPemcoXZhdO7bl11cqdDwOsM4Ka?=
+ =?us-ascii?Q?rUigEv1UAjx77U0M4dw1g0svDgJgePNzPZ6WAVnfWxalMpQwByinFY0OSjXU?=
+ =?us-ascii?Q?VY7zFmcUIxI0rdc3M16vp6Iw8JAjgT0m7sYYyVSxBuIVo9aBJJ+OmNNuZwTV?=
+ =?us-ascii?Q?hFqzHdzlgDfn+AxVcuwnyKfr3KHoslUhxLIQVIZOoNH/N9Dth5wmbGY4CsFB?=
+ =?us-ascii?Q?NM3hYpd3X7k8kYr1xpG6KLKFCdfeVo6h25Hx7ZPhCTAJZ1X5IrD1oZFrybkK?=
+ =?us-ascii?Q?Z5VwVvRXkhfij9Nq2geSB8pvWXxZyaXy7PXCQ9qi/DmsivJBcFxNZ+L+OPRb?=
+ =?us-ascii?Q?ssBsCyqTg5D7jHE8X+DV8VnskVrcCzCPdcHkXrmvGx1VMyfOgQXlTwElmxBK?=
+ =?us-ascii?Q?WNgEyyD8kTsdD3Ksq+Z1FYWrEXSKooTn0S1Vujfvc38YFfeq8bN2C1+AV7W+?=
+ =?us-ascii?Q?h+6+mkhDVmANilL/uThVZf8dfhhHUxqkA0bwzN236CA5cDELckL6NdunIWdB?=
+ =?us-ascii?Q?qrqURC8tdvVblhUzpNHgz45d0bpu6Cco6577HVzrFzfzIqgnizvDNjrd47xa?=
+ =?us-ascii?Q?lIY7z4HQ+ZV88NZVoxif17gRQ89fcUtWsNN0SS+WakaYlcCIdEG+mHSPNazW?=
+ =?us-ascii?Q?34KkHcWin0j4dEbUwxlH+kwi+67fsWfQ+9C+NCWq1znbRkVUPDRjeA8qsVAW?=
+ =?us-ascii?Q?NU2gmAG/Et/tMUmD7Prw43/WE/q6P0Jf92GgHdv7G1zawLs23e+o29+Rjduv?=
+ =?us-ascii?Q?dIvc9XLvHVHoL0Ib7AzYSiHdzRUlwfTG1aGhA5gGBWvJ+Nj6dB9XfES4GtAc?=
+ =?us-ascii?Q?k8YXkI+0QRdcswPA2nPkfGuyWjmeheiNUFXR5zxTTLagf+J6/a4VrNrH7S2V?=
+ =?us-ascii?Q?IcZCT+GA1nPXUd+ifupRloTYc+TuVtMFor4+J0PYTa6m+sue579+gRZNdBpI?=
+ =?us-ascii?Q?YekPl2aCRtMY9uUOSMVbBC8z1nff3chmE4N9xSw8Sao3HATAjuNhJnkViqGr?=
+ =?us-ascii?Q?H/oUYZHXe3exTptT7i4qVxkQ+DZtGvpvvQcShmxvN6c/FTa5app6owZuSHT0?=
+ =?us-ascii?Q?xXSde94GfuLw9k+ONPJeKIl/oqMGUS2g4INU+Y9FeWbYrzVmESPOMVB90Llm?=
+ =?us-ascii?Q?a0M3dVQjoNjgz+F8zY2boG0JzyAdEULXKyvyrdU5vOL4Zmp7utwQ2IJi7G67?=
+ =?us-ascii?Q?+h54PQ=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 9iFZjaDy/xDnbRAcNpgSwLpBtEvVQr2w2nQSLdpS/iy/XW+k9ItPWO6q3VtmEN74ETFznrbSJLmso/ejxtjgYkaT0TsAAzW3ltJLR3XaNEAIuuz9ih8ArmHFJotaiI7NRXXBcmUx4J4Cc8KSXidGE1PRLnp59tGyNQV4wieaiY4pnnP/3RDvRH8WbmMYoN9rchvjFoNwejnzX7GoUC8C0ZMmct9vSDe/qI7fgCFyOgL/KEe59onN5FBp0BIoXF4uZLe3PSJ4sPjkPMqFdYbyclFNHmcGKeY53TvNtpCvOLDC9MPYFwIb1orjpjBjC8H8RwtSk/9hHs9Wh5tVTN67EV2liHvrP/DIOU+YF4LpgCjHOakklItY4iyl6r03IXJE1wxexUSB9ewokkJaeTsc3fA/06r2x4aBSHxLVcA5P/7RRFlYHDZbIjLMsuitaBA0BRuYYW/UdtQVSOwUmF+qxZl30zJRRzybHd1m2vk3yByFNMoNEQO+xr9vVQJZmUSzzyfP3UTAjzX0HEoSaRVPQ8eA2vTuKoIS2nV8owLMhmYM+PM/63uvJX6yywI/rWrTsvCjytLp08Oe6Zoz6MPenDETSD549bi7o0kkSe4L+DOFeUtUP/ZQTsSWo1+C3LDa1HOYmNLOT8PYCYt027iUIC7uy0Tjy6A9AYnB6EJHC+rw9a8YYu5DFuO653nDtU2u4OZlC1Kt53m4xhRByV9+R6giXHve1S/zzEG6/azI5cYc8jZeF/0ixzKpBO/u0ed4r82Ovl4EjIOfsF139EqRutsa0izq8Wd0uwSJn5W5Ad71isLK5O5nsM9S4F3P10mH
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: da640470-2b35-4c9f-9572-08dac9a9d5f4
+X-MS-Exchange-CrossTenant-AuthSource: BLAPR10MB5316.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Nov 2022 21:14:10.3203
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 6yX1BGFbox4LRXpmlN8TF6kKJNXdNlo3MBrzRKhawXCjHN2592cWbaqBSRgifmraAkT0QoceAKwalAo1xZygE4Oq62aaQDA5nEeYrNXNUng=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR10MB6293
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.895,Hydra:6.0.545,FMLib:17.11.122.1
+ definitions=2022-11-18_07,2022-11-18_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0
+ malwarescore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=734
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2210170000 definitions=main-2211180126
+X-Proofpoint-GUID: _2WQzP6vRPDkdunZj4HtX-f45RajxxfJ
+X-Proofpoint-ORIG-GUID: _2WQzP6vRPDkdunZj4HtX-f45RajxxfJ
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 17, 2022 at 11:41:33AM +1100, Dave Chinner wrote:
-> On Wed, Nov 16, 2022 at 08:57:19AM -0500, Brian Foster wrote:
-> > On Tue, Nov 15, 2022 at 12:30:39PM +1100, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > ...
-> > > 
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > ---
-> > >  fs/xfs/xfs_iomap.c | 151 ++++++++++++++++++++++++++++++++++++++++++---
-> > >  1 file changed, 141 insertions(+), 10 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > > index 7bb55dbc19d3..2d48fcc7bd6f 100644
-> > > --- a/fs/xfs/xfs_iomap.c
-> > > +++ b/fs/xfs/xfs_iomap.c
-> > > @@ -1134,6 +1134,146 @@ xfs_buffered_write_delalloc_punch(
-> > >  				end_fsb - start_fsb);
-> > >  }
-> > >  
-> > ...
-> > > +/*
-> > > + * Punch out all the delalloc blocks in the range given except for those that
-> > > + * have dirty data still pending in the page cache - those are going to be
-> > > + * written and so must still retain the delalloc backing for writeback.
-> > > + *
-> > > + * As we are scanning the page cache for data, we don't need to reimplement the
-> > > + * wheel - mapping_seek_hole_data() does exactly what we need to identify the
-> > > + * start and end of data ranges correctly even for sub-folio block sizes. This
-> > > + * byte range based iteration is especially convenient because it means we don't
-> > > + * have to care about variable size folios, nor where the start or end of the
-> > > + * data range lies within a folio, if they lie within the same folio or even if
-> > > + * there are multiple discontiguous data ranges within the folio.
-> > > + */
-> > > +static int
-> > > +xfs_buffered_write_delalloc_release(
-> > > +	struct inode		*inode,
-> > > +	loff_t			start_byte,
-> > > +	loff_t			end_byte)
-> > > +{
-> > > +	loff_t			punch_start_byte = start_byte;
-> > > +	int			error = 0;
-> > > +
-> > > +	/*
-> > > +	 * Lock the mapping to avoid races with page faults re-instantiating
-> > > +	 * folios and dirtying them via ->page_mkwrite whilst we walk the
-> > > +	 * cache and perform delalloc extent removal. Failing to do this can
-> > > +	 * leave dirty pages with no space reservation in the cache.
-> > > +	 */
-> > > +	filemap_invalidate_lock(inode->i_mapping);
-> > > +	while (start_byte < end_byte) {
-> > > +		loff_t		data_end;
-> > > +
-> > > +		start_byte = mapping_seek_hole_data(inode->i_mapping,
-> > > +				start_byte, end_byte, SEEK_DATA);
-> > 
-> > FWIW, the fact that mapping seek data is based on uptodate status means
-> > that seek behavior can change based on prior reads.
-> 
-> Yup. It should be obvious that any page cache scan based algorithm
-> will change based on changing page cache residency.
-> 
-> > For example, see how
-> > seek hole/data presents reads of unwritten ranges as data [1]. The same
-> > thing isn't observable for holes because iomap doesn't check the mapping
-> > in that case, but underlying iop state is the same and that is what this
-> > code is looking at.
-> 
-> Well, yes.  That's the fundamental, underlying issue that this
-> patchset is addressing for the write() operation: that the page
-> cache contents and the underlying filesystem extent map are not
-> guaranteed to be coherent and can be changed independently of each
-> other.
-> 
-> The whole problem with looking exclusively at filesystem level
-> extent state (and hence FIEMAP) is that the extent state doesn't
-> tell us whether the is uncommitted data over the range of the extent
-> in the page cache.  The filesystem extent state and page cache data
-> *can't be coherent* in a writeback caching environment. This is the
-> fundamental difference between what the filesystem extent map tells
-> us (FIEMAP) and what querying the page cache tells us
-> (SEEK_DATA/SEEK_HOLE).
-> 
-> This is also the underlying problem with iomap_truncate_page() - it
-> fails to query the page cache for data over unwritten extents, so
-> fails to zero the post-EOF part of dirty folios over unwritten
-> extents and so it all goes wrong...
-> 
-> > The filtering being done here means we essentially only care about dirty
-> > pages backed by delalloc blocks. That means if you get here with a dirty
-> > page and the portion of the page affected by this failed write is
-> > uptodate, this won't punch an underlying delalloc block even though
-> > nothing else may have written to it in the meantime.
-> 
-> Hmmm. IOMAP_F_NEW implies that the newly allocated delalloc iomap
-> will not span ranges that have pre-existing *dirty* data in the
-> page cache. Those *must* already have (del)allocated extents, hence
-> the iomap for the newly allocated delalloc extent will always end
-> before pre-existing dirty data in the page cache starts.
-> 
-> Hence the seek scan range over an IOMAP_F_NEW IOMAP_DELALLOC map
-> precludes stepping into ranges that have pre-existing cached dirty
-> data.
-> 
-> We also can't get a racing write() to the same range right now
-> because this is all under IOLOCK_EXCL, hence we only ever see dirty
-> folios as a result of race with page faults. page faults zero the
-> entire folio they insert into the page cache and
-> iomap_folio_mkwrite_iter() asserts that the entire folio is marked
-> up to date. Hence if we find a dirty folio outside the range the
-> write() dirtied, we are guaranteed that the entire dirty folio is up
-> to date....
-> 
-> Yes, there can be pre-existing *clean* folios (and clean partially
-> up to date folios) in the page cache, but we won't have dirty
-> partially up to date pages in the middle of the range we are
-> scanning. Hence we only need to care about the edge cases (folios
-> that overlap start and ends). We skip the partially written start
-> block, and we always punch up to the end block if it is different
-> from the last block we punched up to. If the end of the data spans
-> into a dirty folio, we know that dirty range is up to date because
-> the seek scan only returns ranges that are up to date. Hence we
-> don't punch those partial blocks out....
-> 
-> Regardless, let's assume we have a racing write that has partially
-> updated and dirtied a folio (because we've moved to
-> XFS_IOLOCK_SHARED locking for writes). This case is already handled
-> by the mapping_seek_hole_data() based iteration.
-> 
-> That is, the mapping_seek_hole_data() loop provides us with
-> *discrete ranges of up to date data* that are independent of folio
-> size, up-to-date range granularity, dirty range tracking, filesystem
-> block size, etc.
-> 
-> Hence if the next discrete range we discover is in the same dirty
-> folio as the previous discrete range of up to date data, we know we
-> have a sub-folio sized hole in the data that is not up to date.
-> Because there is no data over this range, we have to punch out the
-> underlying delalloc extent over that range. 
-> 
-> IOWs, the dirty state of the folio and/or the granularity of the
-> dirty range tracking is irrelevant here - we know there was no data
-> in the cache (dlean or dirty) over this range because it is
-> discontiguous with the previous range of data returned.
-> 
-> IOWs, if we have this "up to date" map on a dirty folio like this:
-> 
-> Data		+-------+UUUUUUU+-------+UUUUUUU+-------+
-> Extent map	+DDDDDDD+DDDDDDD+DDDDDDD+DDDDDDD+DDDDDDD+
-> 
-> Then the unrolled iteration and punching we do would look like this:
-> 
-> First iteration of the range:
-> 
-> punch_start:
-> 		V
-> 		+-------+UUUUUUU+-------+UUUUUUU+-------+
-> 
-> SEEK_DATA:		V
-> 		+-------+UUUUUUU+-------+UUUUUUU+-------+
-> SEEK_HOLE:			^
-> Data range:		+UUUUUUU+
-> Punch range:	+-------+
-> Extent map:	+-------+DDDDDDD+DDDDDDD+DDDDDDD+DDDDDDD+
-> 
-> Second iteration:
-> 
-> punch_start			V
-> 		+-------+UUUUUUU+-------+UUUUUUU+-------+
-> SEEK_DATA:				V
-> 		+-------+UUUUUUU+-------+UUUUUUU+-------+
-> SEEK_HOLE:					^
-> Data range:				+UUUUUUU+
-> Punch range:			+-------+
-> Extent map:	+-------+DDDDDDD+-------+DDDDDDD+DDDDDDD+
-> 
-> Third iteration:
-> 
-> punch_start					V
-> 		+-------+UUUUUUU+-------+UUUUUUU+-------+
-> SEEK_DATA: - moves into next folio in cache
-> ....
-> Punch range:					+-------+ ......
-> Extent map:	+-------+DDDDDDD+-------+DDDDDDD+-------+ ......
-> 			(to end of scan range or start of next data)
-> 
-> As you can see, this scan does not care about folio size, sub-folio
-> range granularity or filesystem block sizes.  It also matches
-> exactly how writeback handles dirty, partially up to date folios, so
-> there's no stray delalloc blocks left around to be tripped over
-> after failed or short writes occur.
-> 
-> Indeed, if we move to sub-folio dirty range tracking, we can simply
-> add a mapping_seek_hole_data() variant that walks dirty ranges in
-> the page cache rather than up to date ranges. Then we can remove the
-> inner loop from this code that looks up folios to determine dirty
-> state. The above algorithm does not change - we just walk from
-> discrete range to discrete range punching the gaps between them....
-> 
-> IOWs, the algorithm is largely future proof - the only thing that
-> needs to change if we change iomap to track sub-folio dirty ranges
-> is how we check the data range for being dirty. That should be no
-> surprise, really, the surprise should be that we can make some
-> simple mods to page cache seek to remove the need for checking dirty
-> state in this code altogether....
-> 
-> > That sort of state
-> > can be created by a prior read of the range on a sub-page block size fs,
-> > or perhaps a racing async readahead (via read fault of a lower
-> > offset..?), etc.
-> 
-> Yup, generic/346 exercises this racing unaligned, sub-folio mmap
-> write vs write() case. This test, specifically, was the reason I
-> moved to using mapping_seek_hole_data() - g/346 found an endless
-> stream of bugs in the sub-multi-page-folio range iteration code I
-> kept trying to write....
-> 
-> > I suspect this is not a serious error because the page is dirty
-> > and writeback will thus convert the block. The only exception to
-> > that I can see is if the block is beyond EOF (consider a mapped
-> > read to a page that straddles EOF, followed by a post-eof write
-> > that fails), writeback won't actually map the block directly.
-> 
-> I don't think that can happen. iomap_write_failed() calls
-> truncate_pagecache_range() to remove any newly instantiated cached
-> data beyond the original EOF. Hence the delalloc punch will remove
-> everything beyond the original EOF that was allocated for the failed
-> write. Hence when we get to writeback we're not going to find any
-> up-to-date data beyond the EOF block in the page cache, nor any
-> stray delalloc blocks way beyond EOF....
-> 
+Hi all,
 
-It can happen if the page straddles eof. I don't think much of the above
-relates to the behavior I'm describing. This doesn't require racing
-writes, theoretical shared write locking, the IOMAP_F_NEW flag or core
-iteration algorithm are not major factors, etc.
+This patch aims to hoist the ext4 get/set ioctls to the VFS so we have a
+common interface for tools such as coreutils. The second patch adds support
+for FS_IOC_GETFSUUID in xfs (with FS_IOC_SETFSUUID planned for future patches).
 
-It's easier to just use examples. Consider the following sequence on a
-bsize=1k fs on a kernel with this patch series. Note that my xfs_io is
-hacked up to turn 'pwrite -f' into a "fail" flag that triggers the
--EFAULT error check in iomap_write_iter() by passing a bad user buffer:
+Comments and feedback appreciated!
 
-# set eof and make sure entire page is uptodate (even posteof)
-$XFS_IO_PROG -fc "truncate 1k" -c "mmap 0 4k" -c "mread 0 4k" $file
-# do a delalloc and open/close cycle to set dirty release
-$XFS_IO_PROG -c "pwrite 0 1" -c "close" -c "open $file" $file
-# fail an appending write to a posteof, discontig, uptodate range on already dirty page
-$XFS_IO_PROG -c "pwrite -f 2k 1" -c fsync -c "fiemap -v" $file
+Catherine
 
-wrote 1/1 bytes at offset 0
-1.000000 bytes, 1 ops; 0.0003 sec (3.255 KiB/sec and 3333.3333 ops/sec)
-pwrite: Bad address
-/mnt/file:
- EXT: FILE-OFFSET      BLOCK-RANGE      TOTAL FLAGS
-   0: [0..1]:          22..23               2   0x0
-   1: [2..3]:          hole                 2
-   2: [4..5]:          0..1                 2   0x7
+Catherine Hoang (2):
+  fs: hoist get/set UUID ioctls
+  xfs: add FS_IOC_GETFSUUID ioctl
 
-So clearly there's a posteof delalloc (FIEMAP_EXTENT_DELALLOC == 0x4) block
-there that hasn't been written to. I call this a landmine because it's an
-unexpected/untracked instance of post-eof delalloc. I.e., post-eof block
-reclamation won't pick it up because the inode was never tagged for speculative
-preallocation:
+ fs/ext4/ext4.h          | 13 ++-----------
+ fs/xfs/xfs_ioctl.c      | 36 ++++++++++++++++++++++++++++++++++++
+ include/uapi/linux/fs.h | 11 +++++++++++
+ 3 files changed, 49 insertions(+), 11 deletions(-)
 
-$ xfs_spaceman -c "prealloc -s" /mnt
-$ xfs_io -c "fiemap -v" /mnt/file 
-/mnt/file:
- EXT: FILE-OFFSET      BLOCK-RANGE      TOTAL FLAGS
-   0: [0..1]:          22..23               2   0x0
-   1: [2..3]:          hole                 2
-   2: [4..5]:          0..1                 2   0x7
-
-At the same time, it's not an observable problem in XFS because inode
-reclaim will eventually truncate that block off due to the delalloc
-block check, which will prevent any sort of space accounting corruption.
-I also don't think anybody will miss a single block dangling off like
-that in the meantime. The only other odd side effect I can think of is
-if this happened and the user performed an explicit post-eof fallocate,
-reclaim could now lop that off due to the last resort delalloc block
-check. That can still technically happen anyways as a side effect of
-speculative prealloc so I don't see that as a major problem either.
-
-The more important point here is that just because XFS can handle this
-situation reasonably gracefully doesn't mean every other filesystem
-expects it.
-
-> > It may convert if contiguous with delalloc blocks inside EOF (and
-> > sufficiently sized physical extents exist), or even if not, should
-> > still otherwise be cleaned up by the various other means we
-> > already have to manage post-eof blocks.
-> >
-> > So IOW there's a tradeoff being made here for possible spurious
-> > allocation and I/O and a subtle dependency on writeback that
-> > should probably be documented somewhere.
-> 
-> As per above, I don't think there is any spurious/stale allocation
-> left behind by the punch code, nor is there any dependency on
-> writeback to ignore it such issues.
-> 
-
-The same sort of example as above (but within eof) demonstrates the
-writeback dependency. I.e., with this series alone the punch code leaves
-behind an in-eof uptodate delalloc block, but writeback comes along and
-maps it regardless because it also only has uptodate granularity within
-the dirty folio.
-
-When writeback changes to only map dirty sub-ranges, clearly that no
-longer happens and the landmine turns into a stale delalloc leak. This
-is also easy to reproduce with the last dirty range RFC patches pulled
-on top of this series.
-
-The changes you describe above to seek out and punch all !dirty delalloc
-ranges should address both of these problems, because the error handling
-code doesn't consider i_size the way writeback does.
-
-> > The larger concern is that if
-> > writeback eventually changes based on dirty range tracking in a way that
-> > breaks this dependency, that introduces yet another stale delalloc block
-> > landmine associated with this error handling code (regardless of whether
-> > you want to call that a bug in this code, seek data, whatever), and
-> > those problems are difficult enough to root cause as it is.
-> 
-> If iomap changes how it tracks dirty ranges, this punch code only
-> needs small changes to work with that correctly. There aren't any
-> unknown landmines here - if we change dirty tracking, we know that
-> we have to update the code that depends on the existing dirty
-> tracking mechanisms to work correctly with the new infrastructure...
-> 
-
-I'm just pointing out there are side effects / corner cases that don't
-depend on the complicated shared locking / racing write fault scenarios
-described above. Therefore, this code probably needs to be fixed at the
-same time dirty range tracking is enabled to not introduce stale
-delalloc problems for XFS.
-
-In the meantime, I don't think any fs developer just looking to use or
-debug the iomap layer and considering this punch error handling
-mechanism should be expected to immediately connect the dots between it
-using pagecache seek, that depending on Uptodate, the pagecache seek
-behavior implications of that, writeback potentially not mapping
-post-eof ranges, and therefore possibly needing to know that the fs in
-question may need its own custom post-eof error handling if dangling
-post-eof blocks aren't expected anywhere else for that fs.
-
-It may be possible to address that by doing more aggressive punching
-past the i_size boundary here, but that comes with other tradeoffs.
-Short of that, I was really just asking for a more descriptive comment
-for the punch mechanism so these quirks are not lost before they can be
-properly fixed up or are apparent to any new users besides XFS this
-might attract in the meantime. For example, something like the following
-added to the _punch_delalloc() comment (from v3):
-
-"
-...
-
-Note that since this depends on pagecache seek data, and that depends on
-folio Uptodate state to identify data regions, the scanning behavior
-here can be non-deterministic based on the state of cache at the time of
-the failed operation. For example, if the target folio of a failed write
-was already dirty and the target (sub-folio) range was previously an
-Uptodate hole before the failing write may have performed delayed
-allocation, we have no choice but to skip the punch for that sub-range
-of the folio because we can't tell whether sub-folio Uptodate ranges
-were actually written to or not. This means that delalloc block
-allocations may persist for writes that never succeeded.
-
-This can similarly skip punches beyond EOF for failed post-eof writes,
-except note that writeback will not explicitly map blocks beyond i_size.
-Therefore, filesystems that cannot gracefully accommodate dangling
-post-eof blocks via other means may need to check for and handle that
-case directly after calling this function.
-
-These quirks should all be addressed with proper sub-folio dirty range
-tracking, at which point we can deterministically scan and punch
-non-dirty delalloc ranges at the time of write failure.
-"
-
-... but I also don't want to go in circles just over a comment, so I'm
-content that it's at least documented on the list here.
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
+-- 
+2.25.1
 
