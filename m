@@ -2,81 +2,117 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC114C4167D
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Nov 2022 23:43:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BDA2C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 19 Nov 2022 17:24:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236432AbiKRXnL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 18 Nov 2022 18:43:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55004 "EHLO
+        id S234060AbiKSRYX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 19 Nov 2022 12:24:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40156 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237006AbiKRXmW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Nov 2022 18:42:22 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95B6C101E7;
-        Fri, 18 Nov 2022 15:23:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=L1Navczq1wYsve2+F0Sj0wGflk8EnLu/Y0Q5tECbri4=; b=pLqPpOyyarFNuDaaLxrOJpBl7c
-        nPd3J6Roy8E7Bq9Mho5iNehKTqJ5rx4Q8ETIWjnlxU8HDPrdHSAP4lxH5w3fhyUtMznMqEztSzwga
-        FBdpKM227BbZh34irtqkbyV/If7t88IY1ZOGVoUko6y4tgllr+JQ0YsxfA+9L6OpoXSTFn0P2nabS
-        awEZfdI8M03Nb1oLKtAU5CNSPRpZhlLq/REtQtwc5j4T9dPR7RS06BLGexgllC2L+5D4HN69vFSdd
-        yU1lFKnaDDlFfjYNgtUO5Okdfqe0EVUubPRgHNhDH327Vr9vQc8nadhE1U9uwWQeDyZUOfsOH970d
-        4Urqg/6g==;
-Received: from [2601:1c2:d80:3110::a2e7] (helo=casper.infradead.org)
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1owAhj-002mOk-Ku; Fri, 18 Nov 2022 23:23:28 +0000
-From:   Randy Dunlap <rdunlap@infradead.org>
-To:     linux-doc@vger.kernel.org
-Cc:     Randy Dunlap <rdunlap@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>,
-        Jonathan Corbet <corbet@lwn.net>
-Subject: [PATCH] Documentation: admin-guide: correct "it's" to possessive "its"
-Date:   Fri, 18 Nov 2022 15:23:17 -0800
-Message-Id: <20221118232317.3244-1-rdunlap@infradead.org>
-X-Mailer: git-send-email 2.38.1
+        with ESMTP id S233462AbiKSRYW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Nov 2022 12:24:22 -0500
+Received: from mail-qk1-x72a.google.com (mail-qk1-x72a.google.com [IPv6:2607:f8b0:4864:20::72a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A7871007F
+        for <linux-xfs@vger.kernel.org>; Sat, 19 Nov 2022 09:24:22 -0800 (PST)
+Received: by mail-qk1-x72a.google.com with SMTP id g10so5524879qkl.6
+        for <linux-xfs@vger.kernel.org>; Sat, 19 Nov 2022 09:24:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=4wyOc7ivP6OXCvGDpOwBxK8LhOFDnQOY0A20rH6AazY=;
+        b=QuWlVQjfjZQWRhmWY64lFekl4UPG1EVzZfdjIgzrSnwsTElOjZ9wQZO3brxDF3YxnV
+         DC2YpJABsBZKxZCDWS4X1h6JJ2+4nsXvujzQCVMIgaLAFpgD0hbcqgXviW6x4ManSTPK
+         Jukvz/NM+4aAPVnF484n6S7Ws6T72DAknBfuh5bnGq44PCLEYPUUqZMYk/jSsSBvw/VR
+         tEp7sFsajpZFqV6fZefMjTtsyv/UYHeonGcwAjWEUUb2dK4ZLxcRbpSZRG8rvrnySmn9
+         Owb/l1AE9FnULr2bUixOB9j55BJHygyO/8T+UByCxKuTNFMxQoqqG7mE/9Psw1j92UpJ
+         IUiQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=4wyOc7ivP6OXCvGDpOwBxK8LhOFDnQOY0A20rH6AazY=;
+        b=aBgsc7e+8x+gxO7TgnzyG2Ae3GZ/cAXE3fP6vTDy85fYVXD06TvuQT68f7kpHZ+u2O
+         +9h4KBJX9X4zlLooe9jI6HQyOLQwe3X1egY22waIqapisvolX/UwYvq3tfzOb+hMN24H
+         pi2IAD/DpNVL7OQprMF9L51zRJwMg0UBnJRa5nCTLCE7fIKaEVWAxpVpapsUip2/2+vF
+         HyAOeLsMUK8t5uHSs89NCD+5GChY+qpNhe0tHvG9r0DasX9iQNAB+oUAu/eBuOT3MCRp
+         vbwZf5wmHXCf1+DViuKhacBY1wbA243kp/l1/7+o9/xHjqy5q9WnKMAZ2xlTuZ/bQONq
+         gtmw==
+X-Gm-Message-State: ANoB5pn8PTS1t1BcHmCrifaEYaV54tg770h+A3HZgODjA5ihcY8ZmfHp
+        r2pdjywbjBPuPJ3xJ53eWFHXlxfykQjs6g==
+X-Google-Smtp-Source: AA0mqf538MRpG0nVRYGdcCzv8jKmvJJJPWz0NY7KvIWzVNisrXEI15yD3AC0xkit4WRIiuFa092VyA==
+X-Received: by 2002:a37:6557:0:b0:6fa:16f2:7f58 with SMTP id z84-20020a376557000000b006fa16f27f58mr10108348qkb.204.1668878661045;
+        Sat, 19 Nov 2022 09:24:21 -0800 (PST)
+Received: from [192.168.1.16] (cpe-24-194-122-22.nycap.res.rr.com. [24.194.122.22])
+        by smtp.gmail.com with ESMTPSA id w12-20020ac84d0c000000b00398313f286dsm4032383qtv.40.2022.11.19.09.24.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 19 Nov 2022 09:24:20 -0800 (PST)
+Message-ID: <8ed7c0ee-dd04-8346-87cb-83c2222f3454@gmail.com>
+Date:   Sat, 19 Nov 2022 12:24:18 -0500
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.5.0
+Subject: Re: xfs_repair hangs at "process newly discovered inodes..."
+Content-Language: en-US
+To:     Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
+References: <f7f94312-ad1b-36e4-94bf-1b7f47070c1e@gmail.com>
+ <39028244-fec6-6717-d8a7-b9f89f5a1f3b@redhat.com>
+From:   iamdooser <iamdooser@gmail.com>
+In-Reply-To: <39028244-fec6-6717-d8a7-b9f89f5a1f3b@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Correct 2 uses of "it's" to the possessive "its" as needed.
+Thank you for responding.
 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: Darrick J. Wong <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Cc: linux-mm@kvack.org
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jonathan Corbet <corbet@lwn.net>
----
- Documentation/admin-guide/mm/numa_memory_policy.rst |    2 +-
- Documentation/admin-guide/xfs.rst                   |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Yes that found errors, although I'm not accustomed to interpreting the 
+output.
 
-diff -- a/Documentation/admin-guide/mm/numa_memory_policy.rst b/Documentation/admin-guide/mm/numa_memory_policy.rst
---- a/Documentation/admin-guide/mm/numa_memory_policy.rst
-+++ b/Documentation/admin-guide/mm/numa_memory_policy.rst
-@@ -111,7 +111,7 @@ VMA Policy
- 	* A task may install a new VMA policy on a sub-range of a
- 	  previously mmap()ed region.  When this happens, Linux splits
- 	  the existing virtual memory area into 2 or 3 VMAs, each with
--	  it's own policy.
-+	  its own policy.
- 
- 	* By default, VMA policy applies only to pages allocated after
- 	  the policy is installed.  Any pages already faulted into the
-diff -- a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
---- a/Documentation/admin-guide/xfs.rst
-+++ b/Documentation/admin-guide/xfs.rst
-@@ -192,7 +192,7 @@ When mounting an XFS filesystem, the fol
- 	are any integer multiple of a valid ``sunit`` value.
- 
- 	Typically the only time these mount options are necessary if
--	after an underlying RAID device has had it's geometry
-+	after an underlying RAID device has had its geometry
- 	modified, such as adding a new disk to a RAID5 lun and
- 	reshaping it.
- 
+xfs_repair version 5.18.0
+
+The output of xfs_repair -nv was quite large, as was the 
+xfs_metadump...not sure that's indicative of something, but I've 
+uploaded them here:
+https://drive.google.com/drive/folders/1OyQOZNsTS1w1Utx1ZfQEH-bS_Cyj8-F2?usp=sharing
+
+
+There doesn't seem to be much activity once it hangs at "process newly 
+discovered inodes..." so it doesn't seem like just a slow repair. 
+Desipte there being no sign of activity, I've let it run for 24+ hours 
+and saw no changes..
+
+
+On 11/17/22 13:48, Eric Sandeen wrote:
+> On 11/17/22 12:40 PM, iamdooser wrote:
+>> Hello,
+>>
+>> I'm not sure this is the correct forum; if not I'd appreciate guidance.
+>>
+>> I have a Unraid machine that experienced an unmountable file system on an array disc. Running:
+>>
+>> xfs_repair -nv /dev/md3
+> 
+> Did that find errors?
+> 
+>> works, however when running
+>>
+>> xfs_repair -v /dev/md3
+>>
+>> it stops at "process newly discovered inodes..." and doesn't seem to be doing anything.
+>>
+>> I've asked in the unraid forum and they've directed me to the xfs mailing list.
+>>
+>> Appreciate any help.
+> 
+> Please tell us the version of xfsprogs you're using, and provide the full xfs_repair
+> output (with and without -n).
+> 
+> If it really looks like a bug, and not simply a slow repair, providing an xfs_metadump
+> may help us evaluate the problem further.
+> 
+> -Eric
+> 
