@@ -2,117 +2,141 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BDA2C4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 19 Nov 2022 17:24:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DF0FC4332F
+	for <linux-xfs@archiver.kernel.org>; Sun, 20 Nov 2022 01:34:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234060AbiKSRYX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 19 Nov 2022 12:24:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40156 "EHLO
+        id S229500AbiKTBeT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 19 Nov 2022 20:34:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34968 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233462AbiKSRYW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Nov 2022 12:24:22 -0500
-Received: from mail-qk1-x72a.google.com (mail-qk1-x72a.google.com [IPv6:2607:f8b0:4864:20::72a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A7871007F
-        for <linux-xfs@vger.kernel.org>; Sat, 19 Nov 2022 09:24:22 -0800 (PST)
-Received: by mail-qk1-x72a.google.com with SMTP id g10so5524879qkl.6
-        for <linux-xfs@vger.kernel.org>; Sat, 19 Nov 2022 09:24:22 -0800 (PST)
+        with ESMTP id S229499AbiKTBeS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Nov 2022 20:34:18 -0500
+Received: from mail-qk1-x734.google.com (mail-qk1-x734.google.com [IPv6:2607:f8b0:4864:20::734])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98A34B4828
+        for <linux-xfs@vger.kernel.org>; Sat, 19 Nov 2022 17:34:16 -0800 (PST)
+Received: by mail-qk1-x734.google.com with SMTP id z1so6005131qkl.9
+        for <linux-xfs@vger.kernel.org>; Sat, 19 Nov 2022 17:34:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=4wyOc7ivP6OXCvGDpOwBxK8LhOFDnQOY0A20rH6AazY=;
-        b=QuWlVQjfjZQWRhmWY64lFekl4UPG1EVzZfdjIgzrSnwsTElOjZ9wQZO3brxDF3YxnV
-         DC2YpJABsBZKxZCDWS4X1h6JJ2+4nsXvujzQCVMIgaLAFpgD0hbcqgXviW6x4ManSTPK
-         Jukvz/NM+4aAPVnF484n6S7Ws6T72DAknBfuh5bnGq44PCLEYPUUqZMYk/jSsSBvw/VR
-         tEp7sFsajpZFqV6fZefMjTtsyv/UYHeonGcwAjWEUUb2dK4ZLxcRbpSZRG8rvrnySmn9
-         Owb/l1AE9FnULr2bUixOB9j55BJHygyO/8T+UByCxKuTNFMxQoqqG7mE/9Psw1j92UpJ
-         IUiQ==
+        d=leadboat.com; s=google;
+        h=user-agent:in-reply-to:content-disposition:mime-version:references
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=E4V98Og6F3tBlStqIghJF0vQIYlZk+TgCdxEQ/T9UEM=;
+        b=UusC32F5BTQSv4DrQDjilNOOTaJKF65eF2Yt5be90f+8cYuIWll3oMY2Y+81KEOOrY
+         fJmyF62lQaEP4Tuw7Cc13nsJ7M5hW0I9w4CFu65KiQorywRYUWC8hzi4/WkOXA9szdN2
+         myRKYLRJ0Q0rZRl8oAGODqAdompafQ6dW+dWU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=4wyOc7ivP6OXCvGDpOwBxK8LhOFDnQOY0A20rH6AazY=;
-        b=aBgsc7e+8x+gxO7TgnzyG2Ae3GZ/cAXE3fP6vTDy85fYVXD06TvuQT68f7kpHZ+u2O
-         +9h4KBJX9X4zlLooe9jI6HQyOLQwe3X1egY22waIqapisvolX/UwYvq3tfzOb+hMN24H
-         pi2IAD/DpNVL7OQprMF9L51zRJwMg0UBnJRa5nCTLCE7fIKaEVWAxpVpapsUip2/2+vF
-         HyAOeLsMUK8t5uHSs89NCD+5GChY+qpNhe0tHvG9r0DasX9iQNAB+oUAu/eBuOT3MCRp
-         vbwZf5wmHXCf1+DViuKhacBY1wbA243kp/l1/7+o9/xHjqy5q9WnKMAZ2xlTuZ/bQONq
-         gtmw==
-X-Gm-Message-State: ANoB5pn8PTS1t1BcHmCrifaEYaV54tg770h+A3HZgODjA5ihcY8ZmfHp
-        r2pdjywbjBPuPJ3xJ53eWFHXlxfykQjs6g==
-X-Google-Smtp-Source: AA0mqf538MRpG0nVRYGdcCzv8jKmvJJJPWz0NY7KvIWzVNisrXEI15yD3AC0xkit4WRIiuFa092VyA==
-X-Received: by 2002:a37:6557:0:b0:6fa:16f2:7f58 with SMTP id z84-20020a376557000000b006fa16f27f58mr10108348qkb.204.1668878661045;
-        Sat, 19 Nov 2022 09:24:21 -0800 (PST)
-Received: from [192.168.1.16] (cpe-24-194-122-22.nycap.res.rr.com. [24.194.122.22])
-        by smtp.gmail.com with ESMTPSA id w12-20020ac84d0c000000b00398313f286dsm4032383qtv.40.2022.11.19.09.24.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 19 Nov 2022 09:24:20 -0800 (PST)
-Message-ID: <8ed7c0ee-dd04-8346-87cb-83c2222f3454@gmail.com>
-Date:   Sat, 19 Nov 2022 12:24:18 -0500
+        h=user-agent:in-reply-to:content-disposition:mime-version:references
+         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=E4V98Og6F3tBlStqIghJF0vQIYlZk+TgCdxEQ/T9UEM=;
+        b=4VRYGHYLnOVUX0LUfJgfFWwRX3+CC8bzYKCrH5v8dEXDWq5U021JWOEaAVRF/6uYyA
+         rHEN7f7x99mK+Rm6kXrRDf/8jTwEmvgEKIhOGq9On6V/PfQLpcloUHxjVqxkJvF5W1KZ
+         DVsHByBxhltjfLSWFDHf7NCct1+CGHH/ritC7Re9IJhPrgWPlaEuzzcfkcDthSVVUMLL
+         cUtKfT/ugn4CEOoiWcDBIv8EtZFNRueROAP2KPhOcLUkVjiVWZ6aW7zMAsGH2C+SN3lu
+         ypk1IDxukZ/UkKrSBGhK4GsZcWsOo/vVqxQQLevsg+EuZwoFp7Er3c4Jx25R+h0fXUqV
+         y/ZQ==
+X-Gm-Message-State: ANoB5pkE4HWEXVqClWCl3/6fO2jhz6aB6pYZTpO1U28cmxLvo1nSb5ma
+        AUvMJrxMekAjXvIGFS05zd03Kg==
+X-Google-Smtp-Source: AA0mqf65YkZMjCHMj/LaP63NAWn4dKMyGKgmodKPXxku92lCJCrNGEbB9h3j2WU08hIZbhI0BtwArA==
+X-Received: by 2002:a05:620a:268a:b0:6fa:2c8d:d6c7 with SMTP id c10-20020a05620a268a00b006fa2c8dd6c7mr11244737qkp.441.1668908055653;
+        Sat, 19 Nov 2022 17:34:15 -0800 (PST)
+Received: from rfd.leadboat.com ([2600:1702:a20:5750::2e])
+        by smtp.gmail.com with ESMTPSA id k7-20020ac80747000000b003a4d5fed8c3sm4435223qth.85.2022.11.19.17.34.13
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 19 Nov 2022 17:34:14 -0800 (PST)
+Date:   Sat, 19 Nov 2022 17:34:12 -0800
+From:   Noah Misch <noah@leadboat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: After block device error, FICLONE and sync_file_range() make
+ NULs, unlike read()
+Message-ID: <20221120013412.GB4097405@rfd.leadboat.com>
+References: <20221108172436.GA3613139@rfd.leadboat.com>
+ <Y2vZk7Wg0V8SvwxW@magnolia>
+ <20221110045452.GB3665013@rfd.leadboat.com>
+ <Y3RVp74Qf58/Rh2y@magnolia>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.5.0
-Subject: Re: xfs_repair hangs at "process newly discovered inodes..."
-Content-Language: en-US
-To:     Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
-References: <f7f94312-ad1b-36e4-94bf-1b7f47070c1e@gmail.com>
- <39028244-fec6-6717-d8a7-b9f89f5a1f3b@redhat.com>
-From:   iamdooser <iamdooser@gmail.com>
-In-Reply-To: <39028244-fec6-6717-d8a7-b9f89f5a1f3b@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Y3RVp74Qf58/Rh2y@magnolia>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Thank you for responding.
+On Tue, Nov 15, 2022 at 07:14:47PM -0800, Darrick J. Wong wrote:
+> On Wed, Nov 09, 2022 at 08:54:52PM -0800, Noah Misch wrote:
+> > Subject line has my typo: s/sync_file_range/copy_file_range/
+> > 
+> > On Wed, Nov 09, 2022 at 08:47:15AM -0800, Darrick J. Wong wrote:
+> > > On Tue, Nov 08, 2022 at 09:24:36AM -0800, Noah Misch wrote:
 
-Yes that found errors, although I'm not accustomed to interpreting the 
-output.
+> > > So I guess the question now is, what do we do about it?  The pagecache
+> > > maintainers have never been receptive to redirtying pages after a
 
-xfs_repair version 5.18.0
+For other readers, here are some references on that:
+https://www.kernel.org/doc/Documentation/filesystems/vfs.txt section "Handling errors during writeback"
+https://lwn.net/Articles/752105/ gives rationale
 
-The output of xfs_repair -nv was quite large, as was the 
-xfs_metadump...not sure that's indicative of something, but I've 
-uploaded them here:
-https://drive.google.com/drive/folders/1OyQOZNsTS1w1Utx1ZfQEH-bS_Cyj8-F2?usp=sharing
-
-
-There doesn't seem to be much activity once it hangs at "process newly 
-discovered inodes..." so it doesn't seem like just a slow repair. 
-Desipte there being no sign of activity, I've let it run for 24+ hours 
-and saw no changes..
-
-
-On 11/17/22 13:48, Eric Sandeen wrote:
-> On 11/17/22 12:40 PM, iamdooser wrote:
->> Hello,
->>
->> I'm not sure this is the correct forum; if not I'd appreciate guidance.
->>
->> I have a Unraid machine that experienced an unmountable file system on an array disc. Running:
->>
->> xfs_repair -nv /dev/md3
+> > > writeback failure; cp should really pass that EIO out to userspace
+> > > instead of silently eating it; and maaaybe FICLONE should detect EIOs
+> > > recorded in the file's pagecache and return that, but it won't fix the
+> > 
+> > I'd favor having both FICLONE and copy_file_range() "detect EIOs recorded in
+> > the file's pagecache and return that".  That way, they never silently make a
+> > bad clone when read() could have provided the bytes constituting a good clone.
 > 
-> Did that find errors?
+> So would I, but the longstanding behavior of FICLONE is that it's an
+> implied fsync, so it's *vital* that calling programs do not drop the EIO
+> on the floor like cp does.
+
+Having thought about that more, I agree.  While read() gave the intended file
+contents in my example, there's no guarantee the pages weren't already
+evicted.  If the user wants to trust read(), the user can opt to retry with
+--reflink=never.  "cp" shouldn't make that choice on the user's behalf.  "cp"
+can still fallback to copy_file_range() or read() after EBADF, EINVAL,
+EOPNOTSUPP, ETXTBSY, and EXDEV.  I don't know which is better, "halt on EIO
+only" or "halt on all errno except the five known-okay ones".
+
+> Another dumb thing about how the pagecache tracks errors is that it sets
+> a single state bit for the whole mapping, which means that we can't
+> actually /tell/ userspace which part of their file is now busted.  We
+> can't even tell if userspace has successfully rewrite()d all the regions
+> where writeback failed, which leads me to...
 > 
->> works, however when running
->>
->> xfs_repair -v /dev/md3
->>
->> it stops at "process newly discovered inodes..." and doesn't seem to be doing anything.
->>
->> I've asked in the unraid forum and they've directed me to the xfs mailing list.
->>
->> Appreciate any help.
+> Another another dumb thing about how the pagecache tracks errors is that
+> any fsync-lik operation will test_and_clear_bit the EIO state, which
+> means that if we find a past EIO, we'll clear that state and return the
+> EIO to userspace.
 > 
-> Please tell us the version of xfsprogs you're using, and provide the full xfs_repair
-> output (with and without -n).
-> 
-> If it really looks like a bug, and not simply a slow repair, providing an xfs_metadump
-> may help us evaluate the problem further.
-> 
-> -Eric
-> 
+> We /could/ change FICLONE to flush the dirty pagecache, sample the EIO
+> status *without* clearing it, and return EIO if it's set.  That's
+> probably the most unabsurd way to deal with this, but it's unsettling
+> that even cp ignores errno returns now.  The manpage for FICLONE doesn't
+> explicitly mention any fsync behaviors, so perhaps "flush and retain
+> EIO" is the right choice here.
+
+That reminds me of
+https://postgr.es/m//20180427222842.in2e4mibx45zdth5@alap3.anarazel.de.  Its
+summary of a LSF/MM 2018 discussion mentioned NFS writeback errors detected
+and cleared at close(), which I find similar.  I might favor a uniform policy,
+one of:
+
+a. Any syscall with a file descriptor argument might return EIO.  If it does,
+   it clears the EIO.
+b. Any syscall with a file descriptor argument might return EIO.  Only a
+   specific list of syscalls, having writeback-oriented names, clear EIO:
+   fsync(), syncfs(), [...].  Others report EIO without clearing it.
+
+One argument for (b) is that, on EIO from FICLONE or copy_file_range(), the
+caller can't know whether the broken file is the source or the destination.  A
+cautious caller should assume both are broken.  What other considerations
+should influence the decision?
+
+> > > underlying problem, which is that the cache thinks its clean after an
+> > > EIO, and the pagecache forgets about recorded EIOs after reporting them
+> > > via fsync/syncfs.
+> > 
+> > True.
