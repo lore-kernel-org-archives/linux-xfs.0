@@ -2,125 +2,143 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDA28C433FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Nov 2022 20:48:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E0CEC4332F
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Nov 2022 21:02:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230202AbiKUUsR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Nov 2022 15:48:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51790 "EHLO
+        id S230517AbiKUVCz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Nov 2022 16:02:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230070AbiKUUsQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Nov 2022 15:48:16 -0500
-Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41DBCC902D
-        for <linux-xfs@vger.kernel.org>; Mon, 21 Nov 2022 12:48:16 -0800 (PST)
-Received: by mail-pg1-x530.google.com with SMTP id h193so12195891pgc.10
-        for <linux-xfs@vger.kernel.org>; Mon, 21 Nov 2022 12:48:16 -0800 (PST)
+        with ESMTP id S231136AbiKUVCw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Nov 2022 16:02:52 -0500
+Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3110EE09
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Nov 2022 13:02:27 -0800 (PST)
+Received: by mail-pg1-x529.google.com with SMTP id 136so12291728pga.1
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Nov 2022 13:02:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=nXRCenvPbg9BURkijbBk1gurOEN5zK0/khvZ72DFJBw=;
-        b=vF9H4B7le1DEQHBa5Td4gzNcfo1HlAe3XPRTd/FaBc10x89k5GSmJn3LK53wVm3lMM
-         UXJOMIrV4Ff2OVuQ9O+vXQkrj8uCLWd+OclHygdzZ07+HnQZYTq7f5Kqj8oaSuunv4Df
-         nzSC3QsNjzoP+iZnBo/tGNYqn5OSzeJl4wDIL4Iss+tKR9Zao1DZGCDRhbet+WKEmoI0
-         Vr0IEJigtWI/NjgV7KjAlM8s2Blx3rR4xjNou//wWiEDlxxMURo8jriYyHLhrYDml7B+
-         9uJIL/8MlC0FKOkc42BSXSWo9J5tv4fDBI2tNBIdgRuAS3xv1uFHrtUovV+WqcTXLahj
-         Ob3Q==
+        bh=9CTLQFhADzE3dTllfvu5X3oDge9IC1KTSOr/JLTdcdI=;
+        b=i5wVDXUvz1Z7aO2IIkuSoLru+C9Lbky9Rr/PWRji+3mpJegUUEl0q2TMBOYVz8zeMy
+         910Hq21QWlR/iUmqi4aQApFC6yZZkkK3GqPuHX0FHjCIk+T0ocp/z/67rfg1pO6o2asK
+         CAa+evsWbS7glCaDCUtE1qMm29gH51TGXQ8jyEkPI8PEd4zVn8YEe01zWe4Gq8g78kSk
+         Rb5xbzHtcXmCP8nW/PziN+9f5RBP9uomFG3WfUafwUfM+gMlPpQVwRv3Z7ZUPFU1dy3v
+         553V35yHBH0nUyDx5bALXhRvOOhzzmUJQjZjS4WSNtVbuYDBw03SqKubWcH3pjZmtSNh
+         OW4A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=nXRCenvPbg9BURkijbBk1gurOEN5zK0/khvZ72DFJBw=;
-        b=nDMGoK8w0xYBEFmnzGOogqHgKts8rXHeL9kaS6ABrcsKRgYmPDGnbVWxnJSXyPldZ5
-         euSj6jmlAeOixTsxcrmRRTAnk9srSNO0pcKFtgNc4wqPYgA1t2zHi6hyF3XwuFwNmeCc
-         wnfDOobuyMqQfiMmmOARHk/ORoitKu8YUDp6BVt3oNbLZ5LVsOMZTZDnGCYGq5U+XM8C
-         /sxZQGuDBsdwu+12xIjknGp9IacmkKA+7GEjxlYK4nnHZO5BgyRhKpF+Xn8NxLRk9lJL
-         8LZKTHuuHe7CvoJTR4ATfB56A8DLessx91plTiHWFsbeezJE2gnAFz8GUuG6Ib8Jkquj
-         WbIQ==
-X-Gm-Message-State: ANoB5pm513iEl75TeXfjmnkHHnZ3kIx3adgcjnBxlsr8C9a7c1kYwB+M
-        /WcB84UA+NvR+I+9F0JpQPfpxVDnHX2DWg==
-X-Google-Smtp-Source: AA0mqf4NlSc3j426YhD77PxmBOljjROkDLkk+2AUPN2bOcCppY+sh73pORW2ksrbkjCiAKt0LQb/ww==
-X-Received: by 2002:a63:491c:0:b0:448:5404:6504 with SMTP id w28-20020a63491c000000b0044854046504mr1026658pga.401.1669063695778;
-        Mon, 21 Nov 2022 12:48:15 -0800 (PST)
+        bh=9CTLQFhADzE3dTllfvu5X3oDge9IC1KTSOr/JLTdcdI=;
+        b=l+iGP8M8xYRAcRQnEdNcn8pBR65Hg3UE5WbinkYHvFZAioKbZpVDKNVk+9wzC1aEFB
+         OFV/T1W79to8rTyxxv1V7CF1vT9hlNx9m6FpWt4hEguB1NZFN2SaK3B3mD5m4WQWWCST
+         ZyZWnZ/wx0jKiLQItcCVXwJVqdDU1UDCv2u3bL6fwem1l5XyfuVJNM3Oqh0fnb6NrvzS
+         vB8dGxc2b8HKHJGbDnoa/3bquBjkgyZRWToX80aVO3aLzOdxuSJW20OWsXrgWLpjUelz
+         OeLzcu/pEwLld2xA6kVMl0b/pXTL4r8XRmKx24cYDCs+KFbyH4LOV3qYED5h640TJIMm
+         MTHw==
+X-Gm-Message-State: ANoB5pllbGT2RDapWDsAsChBq7LxX6pjksFvaC/mBQ5n1jEyn8Q3d8Bm
+        n66PgjPgjgg6x90aAlP1+5OcRQ==
+X-Google-Smtp-Source: AA0mqf5P6g2NtmeRkT3aUS78NMI/LVKEGuMGE1jGWsgSK+LbDFFpN2LUzPff3CqzvPmQZsMEdRpcpw==
+X-Received: by 2002:a62:fb11:0:b0:56b:dbab:5362 with SMTP id x17-20020a62fb11000000b0056bdbab5362mr21945413pfm.47.1669064546790;
+        Mon, 21 Nov 2022 13:02:26 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-65-106.pa.vic.optusnet.com.au. [49.186.65.106])
-        by smtp.gmail.com with ESMTPSA id q20-20020aa78434000000b0056b91044485sm9084752pfn.133.2022.11.21.12.48.14
+        by smtp.gmail.com with ESMTPSA id c5-20020a170902c1c500b0017fe9b038fdsm10179926plc.14.2022.11.21.13.02.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 21 Nov 2022 12:48:15 -0800 (PST)
+        Mon, 21 Nov 2022 13:02:26 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1oxDi7-00H0YX-Sn; Tue, 22 Nov 2022 07:48:11 +1100
-Date:   Tue, 22 Nov 2022 07:48:11 +1100
+        id 1oxDvr-00H0tW-IY; Tue, 22 Nov 2022 08:02:23 +1100
+Date:   Tue, 22 Nov 2022 08:02:23 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     iamdooser <iamdooser@gmail.com>
-Cc:     Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: xfs_repair hangs at "process newly discovered inodes..."
-Message-ID: <20221121204811.GI3600936@dread.disaster.area>
-References: <f7f94312-ad1b-36e4-94bf-1b7f47070c1e@gmail.com>
- <39028244-fec6-6717-d8a7-b9f89f5a1f3b@redhat.com>
- <8ed7c0ee-dd04-8346-87cb-83c2222f3454@gmail.com>
+To:     Catherine Hoang <catherine.hoang@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] xfs: add FS_IOC_GETFSUUID ioctl
+Message-ID: <20221121210223.GJ3600936@dread.disaster.area>
+References: <20221118211408.72796-1-catherine.hoang@oracle.com>
+ <20221118211408.72796-3-catherine.hoang@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <8ed7c0ee-dd04-8346-87cb-83c2222f3454@gmail.com>
+In-Reply-To: <20221118211408.72796-3-catherine.hoang@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Nov 19, 2022 at 12:24:18PM -0500, iamdooser wrote:
-> Thank you for responding.
+On Fri, Nov 18, 2022 at 01:14:08PM -0800, Catherine Hoang wrote:
+> Add a new ioctl to retrieve the UUID of a mounted xfs filesystem. This is a
+> precursor to adding the SETFSUUID ioctl.
 > 
-> Yes that found errors, although I'm not accustomed to interpreting the
-> output.
+> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/xfs_ioctl.c | 36 ++++++++++++++++++++++++++++++++++++
+>  1 file changed, 36 insertions(+)
 > 
-> xfs_repair version 5.18.0
-> 
-> The output of xfs_repair -nv was quite large, as was the xfs_metadump...not
-> sure that's indicative of something, but I've uploaded them here:
-> https://drive.google.com/drive/folders/1OyQOZNsTS1w1Utx1ZfQEH-bS_Cyj8-F2?usp=sharing
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 1f783e979629..cf77715afe9e 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1865,6 +1865,39 @@ xfs_fs_eofblocks_from_user(
+>  	return 0;
+>  }
+>  
+> +static int
+> +xfs_ioctl_getuuid(
+> +	struct xfs_mount	*mp,
+> +	struct fsuuid __user	*ufsuuid)
+> +{
+> +	struct fsuuid		fsuuid;
+> +	__u8			uuid[UUID_SIZE];
 
-Ok....
+uuid_t, please, not an open coded uuid_t.
 
-According to the the "-nv" output, you a clean log and widespread
-per-AG btree corruptions and inconsistencies. Free inodes not found
-in the finobt, free space only found in on free sapce btree, records
-in btrees out of order, multiply-claimed blocks (cross linked files
-and cross linked free space!), etc.
+> +
+> +	if (copy_from_user(&fsuuid, ufsuuid, sizeof(fsuuid)))
+> +		return -EFAULT;
 
-Every AG shows the same corruption pattern - I've never seen a
-filesystem with a clean log in this state before. This sort of
-widespread lack of consistency in btree structures isn't a result of
-an isolated storage media or I/O error - something major has
-happened here.
+I still think this failing to copy the flex array member and then
+having to declare a local uuid buffer is an ugly wart, not just on
+the API side of things.
 
-The first thing I have to ask: did you zero the log with xfs_repair
-because you couldn't repair it and then take these repair output
-dumps? This *smells* zeroing the log with xfs_repair and throwing
-away all the metadata in the log after removing a bunch of files
-and the system crashing immediately afterwards. Log recovery in that
-case would have made the btrees and inode states mostly
-consistent...
+> +	if (fsuuid.fsu_len == 0) {
+> +		fsuuid.fsu_len = UUID_SIZE;
 
-Can you please explain how the filesystem got into this state in the
-first place? What storage you have, what kernel you are running,
-what distro/appliance this filesystem is hosted on, what operations
-were being performed when it all went wrong, etc? We really need to
-know how the fs got into this state so that we can determine if
-other users are at risk of this sort of thing...
+XFS uses sizeof(uuid_t) for the size of it's uuids, not UUID_SIZE.
 
-> There doesn't seem to be much activity once it hangs at "process newly
-> discovered inodes..." so it doesn't seem like just a slow repair. Desipte
-> there being no sign of activity, I've let it run for 24+ hours and saw no
-> changes..
+> +		if (copy_to_user(&ufsuuid->fsu_len, &fsuuid.fsu_len,
+> +					sizeof(fsuuid.fsu_len)))
+> +			return -EFAULT;
+> +		return 0;
+> +	}
+> +
+> +	if (fsuuid.fsu_len < UUID_SIZE || fsuuid.fsu_flags != 0)
+> +		return -EINVAL;
+> +
+> +	spin_lock(&mp->m_sb_lock);
+> +	memcpy(uuid, &mp->m_sb.sb_uuid, UUID_SIZE);
+> +	spin_unlock(&mp->m_sb_lock);
 
-Use "-t 300" for xfs_repair to output a progress report every 5
-minutes. Likely the operation is slow because it is IO bound moving
-one inode at a time to lost+found...
+Hmmmm. Shouldn't we be promoting xfs_fs_get_uuid() to xfs_super.c
+(without the pNFS warning!) and calling that here, rather than open
+coding another "get the XFS superblock UUID" function here?
+
+i.e.
+	if (fsuuid.fsu_flags != 0)
+		return -EINVAL;
+
+	error = xfs_fs_get_uuid(&mp->m_sb, uuid, &fsuuid.fsu_len, NULL);
+	if (error)
+		return -EINVAL;
+
+Also, uuid_copy()?
 
 Cheers,
 
 Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
