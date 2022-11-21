@@ -2,105 +2,135 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD5E0C43217
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Nov 2022 15:33:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F59DC433FE
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Nov 2022 16:14:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232528AbiKUPd5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Nov 2022 10:33:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36878 "EHLO
+        id S230032AbiKUQOI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Nov 2022 11:14:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44016 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232490AbiKUPdd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Nov 2022 10:33:33 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AFABD299C
-        for <linux-xfs@vger.kernel.org>; Mon, 21 Nov 2022 07:31:17 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1669044676;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=43gjeh12mqeKKnzpxBrG6XHUmQQh+jBPDZXXmUO7BOQ=;
-        b=SmGhZ7Hu3TDY7ElyZMFEg8NzUX80xxzGWPZrMbTqqvKL9KTSCsqBN3oG2f84i+4mxOH9q4
-        /kvN5FWyKF2N9p7rLTU7a0R2kU4jebLtc8IKVNUttnUdvPOhLHlx1EaY2w544+COcqXEZO
-        YJVscl4xIo0dNrjvMudCGvx2x1n7+U8=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-1-iFy62VxxOjCf3yA5uhfvsQ-1; Mon, 21 Nov 2022 10:31:13 -0500
-X-MC-Unique: iFy62VxxOjCf3yA5uhfvsQ-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        with ESMTP id S229541AbiKUQOH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Nov 2022 11:14:07 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64344D298C
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Nov 2022 08:14:06 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 8641888B76E;
-        Mon, 21 Nov 2022 15:31:11 +0000 (UTC)
-Received: from warthog.procyon.org.uk (unknown [10.33.36.14])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 245C04B400F;
-        Mon, 21 Nov 2022 15:31:06 +0000 (UTC)
-Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
-        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
-        Kingdom.
-        Registered in England and Wales under Company Registration No. 3798903
-From:   David Howells <dhowells@redhat.com>
-In-Reply-To: <20221120210004.381842-1-jlayton@kernel.org>
-References: <20221120210004.381842-1-jlayton@kernel.org>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     dhowells@redhat.com, Eric Van Hensbergen <ericvh@gmail.com>,
-        Latchesar Ionkov <lucho@ionkov.net>,
-        Dominique Martinet <asmadeus@codewreck.org>,
-        Christian Schoenebeck <linux_oss@crudebyte.com>,
-        Marc Dionne <marc.dionne@auristor.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Xiubo Li <xiubli@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Steve French <sfrench@samba.org>, Paulo Alcantara <pc@cjr.nz>,
-        Ronnie Sahlberg <lsahlber@redhat.com>,
-        Shyam Prasad N <sprasad@microsoft.com>,
-        Tom Talpey <tom@talpey.com>,
-        Christine Caulfield <ccaulfie@redhat.com>,
-        David Teigland <teigland@redhat.com>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Bob Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Namjae Jeon <linkinjeon@kernel.org>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Mark Fasheh <mark@fasheh.com>,
-        Joel Becker <jlbec@evilplan.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Martin Brandenburg <martin@omnibond.com>,
-        "Darrick J. Wong" <djwong@kernel.org>, hch@lst.de,
-        linux-kernel@vger.kernel.org, v9fs-developer@lists.sourceforge.net,
-        linux-afs@lists.infradead.org, linux-fsdevel@vger.kernel.org,
-        ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org,
-        samba-technical@lists.samba.org, cluster-devel@redhat.com,
-        linux-nfs@vger.kernel.org, ocfs2-devel@oss.oracle.com,
-        devel@lists.orangefs.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] filelock: move file locking definitions to separate header file
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B64CD61301
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Nov 2022 16:14:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31281C433C1;
+        Mon, 21 Nov 2022 16:14:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669047245;
+        bh=gmkeJaqd3a2h3yvK0kLzAJIB6oFFDs0q9ABEmtksT9M=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=PHw8CUlsY7n5cingfbTRDoEVfV+ou5jBZutZP3Z+KeQWqPrNBjz6OBJBNs6lwSX76
+         cemSFN/YvUUxYXRdv3ahclwuPtaLYBAxZtslt1fbpZKi9KiJxGnxx3AVc5KjfXjfH2
+         snsSOrORE+9zC1nwAks7GzP0EO7KyryJg9WYhNb+LKbw5eMDbHoDn0cU+GO2iQjhIz
+         qclJtANgVdpTQOxqOHoEmra4QjKWIcP4FNqR32vWdZXCD5JcO3Ojn0rZaUZapZl6zL
+         NpqM6XrmXW+gYAtKgTvkRbHfeJrYU3JPireSl6/fTAkXKKyTR50nTcHW2e80NAiCei
+         0lyGjgCh+Pt7w==
+Date:   Mon, 21 Nov 2022 17:14:00 +0100
+From:   Carlos Maiolino <cem@kernel.org>
+To:     iamdooser <iamdooser@gmail.com>
+Cc:     Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: xfs_repair hangs at "process newly discovered inodes..."
+Message-ID: <20221121161400.tecpfwaawiy4kt3y@andromeda>
+References: <f7f94312-ad1b-36e4-94bf-1b7f47070c1e@gmail.com>
+ <39028244-fec6-6717-d8a7-b9f89f5a1f3b@redhat.com>
+ <iOca9P0A2zA99RMVQ0MVU2m_jc4mmNS3eLXM-c7gkAp5rCgJNxdoaX6xoCN3-ByUS-4whve0zMZucYirzgGw-A==@protonmail.internalid>
+ <8ed7c0ee-dd04-8346-87cb-83c2222f3454@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <416909.1669044663.1@warthog.procyon.org.uk>
-Date:   Mon, 21 Nov 2022 15:31:03 +0000
-Message-ID: <416910.1669044663@warthog.procyon.org.uk>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8ed7c0ee-dd04-8346-87cb-83c2222f3454@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Jeff Layton <jlayton@kernel.org> wrote:
+Hi.
 
-> The file locking definitions have lived in fs.h since the dawn of time,
-> but they are only used by a small subset of the source files that
-> include it.
+
+On Sat, Nov 19, 2022 at 12:24:18PM -0500, iamdooser wrote:
+> Thank you for responding.
 > 
-> Move the file locking definitions to a new header file, and add the
-> appropriate #include directives to the source files that need them. By
-> doing this we trim down fs.h a bit and limit the amount of rebuilding
-> that has to be done when we make changes to the file locking APIs.
+> Yes that found errors, although I'm not accustomed to interpreting the
+> output.
 > 
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> xfs_repair version 5.18.0
+> 
+> The output of xfs_repair -nv was quite large, as was the
+> xfs_metadump...not sure that's indicative of something, but I've
+> uploaded them here:
+> https://drive.google.com/drive/folders/1OyQOZNsTS1w1Utx1ZfQEH-bS_Cyj8-F2?usp=sharing
+> 
+> 
+> There doesn't seem to be much activity once it hangs at "process newly
+> discovered inodes..." so it doesn't seem like just a slow repair.
+> Desipte there being no sign of activity, I've let it run for 24+ hours
+> and saw no changes..
+> 
 
-Reviewed-by: David Howells <dhowells@redhat.com>
+Before anything else, could you please try to run the latest xfsprogs from:
 
+https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/log/?h=master
+
+A quick test in my laptop using the metadump you provided, finished the repair
+in about 5 mintues:
+
+Maximum metadata LSN (2138201505:-135558109) is ahead of log (96:0).
+Format log to cycle 2138201508.
+
+        XFS_REPAIR Summary    Mon Nov 21 17:04:44 2022
+
+Phase		Start		End		Duration
+Phase 1:	11/21 16:59:36	11/21 16:59:36	
+Phase 2:	11/21 16:59:36	11/21 16:59:37	1 second
+Phase 3:	11/21 16:59:37	11/21 17:03:47	4 minutes, 10 seconds
+Phase 4:	11/21 17:03:47	11/21 17:04:06	19 seconds
+Phase 5:	11/21 17:04:06	11/21 17:04:07	1 second
+Phase 6:	11/21 17:04:07	11/21 17:04:38	31 seconds
+Phase 7:	11/21 17:04:38	11/21 17:04:38	
+
+Total run time: 5 minutes, 2 seconds
+done
+
+Also, feel free to compress any file you need to share with us :)
+
+Cheers.
+
+> 
+> On 11/17/22 13:48, Eric Sandeen wrote:
+> > On 11/17/22 12:40 PM, iamdooser wrote:
+> >> Hello,
+> >>
+> >> I'm not sure this is the correct forum; if not I'd appreciate guidance.
+> >>
+> >> I have a Unraid machine that experienced an unmountable file system on an array disc. Running:
+> >>
+> >> xfs_repair -nv /dev/md3
+> >
+> > Did that find errors?
+> >
+> >> works, however when running
+> >>
+> >> xfs_repair -v /dev/md3
+> >>
+> >> it stops at "process newly discovered inodes..." and doesn't seem to be doing anything.
+> >>
+> >> I've asked in the unraid forum and they've directed me to the xfs mailing list.
+> >>
+> >> Appreciate any help.
+> >
+> > Please tell us the version of xfsprogs you're using, and provide the full xfs_repair
+> > output (with and without -n).
+> >
+> > If it really looks like a bug, and not simply a slow repair, providing an xfs_metadump
+> > may help us evaluate the problem further.
+> >
+> > -Eric
+> >
+
+-- 
+Carlos Maiolino
