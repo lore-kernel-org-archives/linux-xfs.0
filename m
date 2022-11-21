@@ -2,93 +2,121 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB80BC433FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Nov 2022 16:54:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE28DC4332F
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Nov 2022 17:05:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229720AbiKUQya (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Nov 2022 11:54:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48968 "EHLO
+        id S229585AbiKURFU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Nov 2022 12:05:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55210 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229797AbiKUQy0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Nov 2022 11:54:26 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86229C7593;
-        Mon, 21 Nov 2022 08:54:25 -0800 (PST)
+        with ESMTP id S229825AbiKURFT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Nov 2022 12:05:19 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DAFDC6D1A
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Nov 2022 09:05:18 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1793CB810EE;
-        Mon, 21 Nov 2022 16:54:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99BD1C433C1;
-        Mon, 21 Nov 2022 16:54:22 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id DA23261350
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Nov 2022 17:05:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E3B3C433C1;
+        Mon, 21 Nov 2022 17:05:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1669049662;
-        bh=boX5N172gUqh0RSbEPCv7zPygyhpDMy9Jjtflg1HXCU=;
+        s=k20201202; t=1669050317;
+        bh=0ILwGc70GITsivgc2GM45qFz1aFw1veNyjg5iSMDNJM=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=q/OOJ3f4/pqKeoyKzSaKr5AkPC9wT2/QEkwS8Xl2s4E49DVHjn91yPWR9IoNEpsd3
-         rOeSYPLrfj+RZmnV1UEFnip1Av9fLU568SDKzEItZ4gK5bwtYLhlZPYWLzeqGkY5HV
-         56+wr03Q8ylNGHMtiqNvntWzLQ/kS4A2JXNJIHpurwCVnieOhC/xrZoAAm2NKMwDgG
-         eBQ1r4kW8le6ySt+XKydcmwRz6I9eoyOy9cMc1fhekywEaGWZqXQYxKwoUQy2QYAJl
-         5F9CuAHejnKjlLdNzFJP3hXBBPRU4yba1cFfJlHxuEX0LSsRpxMaAay4CLf2FF4KgG
-         Cdhre/X2nh36A==
-Date:   Mon, 21 Nov 2022 08:54:22 -0800
+        b=qN/BpVe9+D5/T2H7YKjr0uqxdT3QMyKIZDlFxYzRci9thuC94y5IEUfO+cExVFZ4I
+         W2jyniLb/zFtnEq0JrTIsAZLkFKdnRKc9OjrOFcLsbQfPIJ4ApG5nP5h1Q+iYsiX6+
+         ijQxdl48kveurY+c7obos5GhnCFDjhBsc06rxZvQKsMJMR6VGBLi8L5GMrcs274fmx
+         yboZ6WVfj/rLm/WbedCi+Y99VU7rnykiswatDPk1GOdmjT0Du+GTobkQZGu0Y5iZ68
+         8FWPBMv3JjTI3d7+eT9zE25rjV2b5HgiIVQe58uTFNx39uwzKQ3NkfbxjLC9yyKvS4
+         UT8wwbYgN+qjg==
+Date:   Mon, 21 Nov 2022 09:05:16 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Randy Dunlap <rdunlap@infradead.org>
-Cc:     linux-doc@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>,
-        Jonathan Corbet <corbet@lwn.net>
-Subject: Re: [PATCH] Documentation: admin-guide: correct "it's" to possessive
- "its"
-Message-ID: <Y3utPgX/SjiaWARs@magnolia>
-References: <20221118232317.3244-1-rdunlap@infradead.org>
+To:     Carlos Maiolino <cem@kernel.org>
+Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 15/24] xfs: track cow/shared record domains explicitly in
+ xfs_refcount_irec
+Message-ID: <Y3uvzC74U3NpZtGh@magnolia>
+References: <166795954256.3761583.3551179546135782562.stgit@magnolia>
+ <m2rVnmn7L8ESQIs1XdwOJFBEBbM4JZ0aXcCk-AV6m_YxUkA2WQXWRSPhC20i-ShoVrp554Ki35iUU-crDqih2A==@protonmail.internalid>
+ <166795962631.3761583.16845808206856458930.stgit@magnolia>
+ <20221118101714.vnsh7dkbctgthx7p@andromeda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221118232317.3244-1-rdunlap@infradead.org>
+In-Reply-To: <20221118101714.vnsh7dkbctgthx7p@andromeda>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Nov 18, 2022 at 03:23:17PM -0800, Randy Dunlap wrote:
-> Correct 2 uses of "it's" to the possessive "its" as needed.
+On Fri, Nov 18, 2022 at 11:17:14AM +0100, Carlos Maiolino wrote:
+> Hi Darrick.
 > 
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-> Cc: Darrick J. Wong <djwong@kernel.org>
-> Cc: linux-xfs@vger.kernel.org
-> Cc: linux-mm@kvack.org
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Jonathan Corbet <corbet@lwn.net>
-> ---
->  Documentation/admin-guide/mm/numa_memory_policy.rst |    2 +-
->  Documentation/admin-guide/xfs.rst                   |    2 +-
+> > diff --git a/repair/rmap.c b/repair/rmap.c
+> > index a7c4b25b1f..2c809fd4f2 100644
+> > --- a/repair/rmap.c
+> > +++ b/repair/rmap.c
+> > @@ -734,6 +734,8 @@ refcount_emit(
+> >  	rlrec.rc_startblock = agbno;
+> >  	rlrec.rc_blockcount = len;
+> >  	rlrec.rc_refcount = REFCOUNT_CLAMP(nr_rmaps);
+> > +	rlrec.rc_domain = XFS_REFC_DOMAIN_SHARED;
+> > +
+> >  	error = slab_add(rlslab, &rlrec);
+> >  	if (error)
+> >  		do_error(
+> > @@ -1393,7 +1395,8 @@ check_refcounts(
+> >  	while (rl_rec) {
+> >  		/* Look for a refcount record in the btree */
+> >  		error = -libxfs_refcount_lookup_le(bt_cur,
+> > -				rl_rec->rc_startblock, &have);
+> > +				XFS_REFC_DOMAIN_SHARED, rl_rec->rc_startblock,
+> > +				&have);
+> 
+> Out of curiosity, why did you pass XFS_REFC_DOMAIN_SHARED directly here, other
+> than just rl_rec->rc_domain?
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+I did that to make it more directly obvious that we're comparing ondisk
+records for shared (and not cow) blocks.  One could trace
+rl_rec->rc_domain from refcount_emit() all the way through to here, but
+that's more work.
 
 --D
 
->  2 files changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff -- a/Documentation/admin-guide/mm/numa_memory_policy.rst b/Documentation/admin-guide/mm/numa_memory_policy.rst
-> --- a/Documentation/admin-guide/mm/numa_memory_policy.rst
-> +++ b/Documentation/admin-guide/mm/numa_memory_policy.rst
-> @@ -111,7 +111,7 @@ VMA Policy
->  	* A task may install a new VMA policy on a sub-range of a
->  	  previously mmap()ed region.  When this happens, Linux splits
->  	  the existing virtual memory area into 2 or 3 VMAs, each with
-> -	  it's own policy.
-> +	  its own policy.
->  
->  	* By default, VMA policy applies only to pages allocated after
->  	  the policy is installed.  Any pages already faulted into the
-> diff -- a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
-> --- a/Documentation/admin-guide/xfs.rst
-> +++ b/Documentation/admin-guide/xfs.rst
-> @@ -192,7 +192,7 @@ When mounting an XFS filesystem, the fol
->  	are any integer multiple of a valid ``sunit`` value.
->  
->  	Typically the only time these mount options are necessary if
-> -	after an underlying RAID device has had it's geometry
-> +	after an underlying RAID device has had its geometry
->  	modified, such as adding a new disk to a RAID5 lun and
->  	reshaping it.
->  
+> 
+> Cheers.
+> 
+> >  		if (error) {
+> >  			do_warn(
+> >  _("Could not read reference count record for (%u/%u).\n"),
+> > @@ -1424,14 +1427,21 @@ _("Missing reference count record for (%u/%u) len %u count %u\n"),
+> >  		}
+> > 
+> >  		/* Compare each refcount observation against the btree's */
+> > -		if (tmp.rc_startblock != rl_rec->rc_startblock ||
+> > +		if (tmp.rc_domain != rl_rec->rc_domain ||
+> > +		    tmp.rc_startblock != rl_rec->rc_startblock ||
+> >  		    tmp.rc_blockcount != rl_rec->rc_blockcount ||
+> > -		    tmp.rc_refcount != rl_rec->rc_refcount)
+> > +		    tmp.rc_refcount != rl_rec->rc_refcount) {
+> > +			unsigned int	start;
+> > +
+> > +			start = xfs_refcount_encode_startblock(
+> > +					tmp.rc_startblock, tmp.rc_domain);
+> > +
+> >  			do_warn(
+> >  _("Incorrect reference count: saw (%u/%u) len %u nlinks %u; should be (%u/%u) len %u nlinks %u\n"),
+> > -				agno, tmp.rc_startblock, tmp.rc_blockcount,
+> > +				agno, start, tmp.rc_blockcount,
+> >  				tmp.rc_refcount, agno, rl_rec->rc_startblock,
+> >  				rl_rec->rc_blockcount, rl_rec->rc_refcount);
+> > +		}
+> >  next_loop:
+> >  		rl_rec = pop_slab_cursor(rl_cur);
+> >  	}
+> > 
+> 
+> -- 
+> Carlos Maiolino
