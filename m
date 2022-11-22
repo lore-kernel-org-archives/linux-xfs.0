@@ -2,111 +2,203 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD85FC43217
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Nov 2022 01:51:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17A8CC433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Nov 2022 01:57:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232382AbiKVBvq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Nov 2022 20:51:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52654 "EHLO
+        id S231522AbiKVB5G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Nov 2022 20:57:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231661AbiKVBvo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Nov 2022 20:51:44 -0500
-Received: from out30-130.freemail.mail.aliyun.com (out30-130.freemail.mail.aliyun.com [115.124.30.130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 123FCE123B;
-        Mon, 21 Nov 2022 17:51:41 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R211e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045192;MF=joseph.qi@linux.alibaba.com;NM=1;PH=DS;RN=16;SR=0;TI=SMTPD_---0VVPgoyJ_1669081895;
-Received: from 30.222.0.245(mailfrom:joseph.qi@linux.alibaba.com fp:SMTPD_---0VVPgoyJ_1669081895)
-          by smtp.aliyun-inc.com;
-          Tue, 22 Nov 2022 09:51:37 +0800
-Message-ID: <0c6a44ff-409e-99b2-eaa9-fd6e87a9e104@linux.alibaba.com>
-Date:   Tue, 22 Nov 2022 09:51:35 +0800
+        with ESMTP id S229553AbiKVB5F (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Nov 2022 20:57:05 -0500
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47DAF1789F
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Nov 2022 17:57:03 -0800 (PST)
+Received: from kwepemi500019.china.huawei.com (unknown [172.30.72.56])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4NGS3G5j9NzFqZ8;
+        Tue, 22 Nov 2022 09:53:46 +0800 (CST)
+Received: from [10.174.177.238] (10.174.177.238) by
+ kwepemi500019.china.huawei.com (7.221.188.117) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Tue, 22 Nov 2022 09:57:00 +0800
+Message-ID: <aec7b811-1afa-ea1f-5c5e-609c51ea2053@huawei.com>
+Date:   Tue, 22 Nov 2022 09:56:59 +0800
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.4.2
-Subject: Re: [PATCH] filelock: move file locking definitions to separate
- header file
-Content-Language: en-US
-To:     Jeff Layton <jlayton@kernel.org>, Mark Fasheh <mark@fasheh.com>,
-        Joel Becker <jlbec@evilplan.org>
-Cc:     hch@lst.de, linux-kernel@vger.kernel.org,
-        v9fs-developer@lists.sourceforge.net,
-        linux-afs@lists.infradead.org, linux-fsdevel@vger.kernel.org,
-        ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org,
-        samba-technical@lists.samba.org, cluster-devel@redhat.com,
-        linux-nfs@vger.kernel.org, ocfs2-devel@oss.oracle.com,
-        devel@lists.orangefs.org, linux-xfs@vger.kernel.org
-References: <20221120210004.381842-1-jlayton@kernel.org>
-From:   Joseph Qi <joseph.qi@linux.alibaba.com>
-In-Reply-To: <20221120210004.381842-1-jlayton@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.0.2
+Subject: Re: [PATCH v5 2/2] xfs: fix super block buf log item UAF during force
+ shutdown
+To:     "Darrick J. Wong" <djwong@kernel.org>
+CC:     <dchinner@redhat.com>, <linux-xfs@vger.kernel.org>,
+        <houtao1@huawei.com>, <jack.qiu@huawei.com>, <fangwei1@huawei.com>,
+        <yi.zhang@huawei.com>, <zhengbin13@huawei.com>,
+        <leo.lilong@huawei.com>, <zengheng4@huawei.com>
+References: <20221118121143.267895-1-guoxuenan@huawei.com>
+ <20221118121143.267895-3-guoxuenan@huawei.com> <Y3u//R0qc9MHQAtQ@magnolia>
+From:   Guo Xuenan <guoxuenan@huawei.com>
+In-Reply-To: <Y3u//R0qc9MHQAtQ@magnolia>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.177.238]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ kwepemi500019.china.huawei.com (7.221.188.117)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+Hi Darrick，
 
-On 11/21/22 4:59 AM, Jeff Layton wrote:
-> The file locking definitions have lived in fs.h since the dawn of time,
-> but they are only used by a small subset of the source files that
-> include it.
-> 
-> Move the file locking definitions to a new header file, and add the
-> appropriate #include directives to the source files that need them. By
-> doing this we trim down fs.h a bit and limit the amount of rebuilding
-> that has to be done when we make changes to the file locking APIs.
-> 
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> ---
->  fs/9p/vfs_file.c          |   1 +
->  fs/afs/internal.h         |   1 +
->  fs/attr.c                 |   1 +
->  fs/ceph/locks.c           |   1 +
->  fs/cifs/cifsfs.c          |   1 +
->  fs/cifs/cifsglob.h        |   1 +
->  fs/cifs/cifssmb.c         |   1 +
->  fs/cifs/file.c            |   1 +
->  fs/cifs/smb2file.c        |   1 +
->  fs/dlm/plock.c            |   1 +
->  fs/fcntl.c                |   1 +
->  fs/file_table.c           |   1 +
->  fs/fuse/file.c            |   1 +
->  fs/gfs2/file.c            |   1 +
->  fs/inode.c                |   1 +
->  fs/ksmbd/smb2pdu.c        |   1 +
->  fs/ksmbd/vfs.c            |   1 +
->  fs/ksmbd/vfs_cache.c      |   1 +
->  fs/lockd/clntproc.c       |   1 +
->  fs/lockd/netns.h          |   1 +
->  fs/locks.c                |   1 +
->  fs/namei.c                |   1 +
->  fs/nfs/nfs4_fs.h          |   1 +
->  fs/nfs_common/grace.c     |   1 +
->  fs/nfsd/netns.h           |   1 +
->  fs/ocfs2/locks.c          |   1 +
->  fs/ocfs2/stack_user.c     |   1 +
+On 2022/11/22 2:14, Darrick J. Wong wrote:
+> On Fri, Nov 18, 2022 at 08:11:43PM +0800, Guo Xuenan wrote:
+>> xfs log io error will trigger xlog shut down, and end_io worker call
+>> xlog_state_shutdown_callbacks to unpin and release the buf log item.
+>> The race condition is that when there are some thread doing transaction
+>> commit and happened not to be intercepted by xlog_is_shutdown, then,
+>> these log item will be insert into CIL, when unpin and release these
+>> buf log item, UAF will occur. BTW, add delay before `xlog_cil_commit`
+>> can increase recurrence probability.
+>>
+>> The following call graph actually encountered this bad situation.
+>> fsstress                    io end worker kworker/0:1H-216
+>>                              xlog_ioend_work
+>>                                ->xlog_force_shutdown
+>>                                  ->xlog_state_shutdown_callbacks
+>>                                    ->xlog_cil_process_committed
+>>                                      ->xlog_cil_committed
+>>                                        ->xfs_trans_committed_bulk
+>> ->xfs_trans_apply_sb_deltas             ->li_ops->iop_unpin(lip, 1);
+>>    ->xfs_trans_getsb
+>>      ->_xfs_trans_bjoin
+>>        ->xfs_buf_item_init
+>>          ->if (bip) { return 0;} //relog
+>> ->xlog_cil_commit
+>>    ->xlog_cil_insert_items //insert into CIL
+>>                                             ->xfs_buf_ioend_fail(bp);
+>>                                               ->xfs_buf_ioend
+>>                                                 ->xfs_buf_item_done
+>>                                                   ->xfs_buf_item_relse
+>>                                                     ->xfs_buf_item_free
+>>
+>> when cil push worker gather percpu cil and insert super block buf log item
+>> into ctx->log_items then uaf occurs.
+>>
+>> ==================================================================
+>> BUG: KASAN: use-after-free in xlog_cil_push_work+0x1c8f/0x22f0
+>> Write of size 8 at addr ffff88801800f3f0 by task kworker/u4:4/105
+>>
+>> CPU: 0 PID: 105 Comm: kworker/u4:4 Tainted: G W
+>> 6.1.0-rc1-00001-g274115149b42 #136
+>> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+>> 1.13.0-1ubuntu1.1 04/01/2014
+>> Workqueue: xfs-cil/sda xlog_cil_push_work
+>> Call Trace:
+>>   <TASK>
+>>   dump_stack_lvl+0x4d/0x66
+>>   print_report+0x171/0x4a6
+>>   kasan_report+0xb3/0x130
+>>   xlog_cil_push_work+0x1c8f/0x22f0
+>>   process_one_work+0x6f9/0xf70
+>>   worker_thread+0x578/0xf30
+>>   kthread+0x28c/0x330
+>>   ret_from_fork+0x1f/0x30
+>>   </TASK>
+>>
+>> Allocated by task 2145:
+>>   kasan_save_stack+0x1e/0x40
+>>   kasan_set_track+0x21/0x30
+>>   __kasan_slab_alloc+0x54/0x60
+>>   kmem_cache_alloc+0x14a/0x510
+>>   xfs_buf_item_init+0x160/0x6d0
+>>   _xfs_trans_bjoin+0x7f/0x2e0
+>>   xfs_trans_getsb+0xb6/0x3f0
+>>   xfs_trans_apply_sb_deltas+0x1f/0x8c0
+>>   __xfs_trans_commit+0xa25/0xe10
+>>   xfs_symlink+0xe23/0x1660
+>>   xfs_vn_symlink+0x157/0x280
+>>   vfs_symlink+0x491/0x790
+>>   do_symlinkat+0x128/0x220
+>>   __x64_sys_symlink+0x7a/0x90
+>>   do_syscall_64+0x35/0x80
+>>   entry_SYSCALL_64_after_hwframe+0x63/0xcd
+>>
+>> Freed by task 216:
+>>   kasan_save_stack+0x1e/0x40
+>>   kasan_set_track+0x21/0x30
+>>   kasan_save_free_info+0x2a/0x40
+>>   __kasan_slab_free+0x105/0x1a0
+>>   kmem_cache_free+0xb6/0x460
+>>   xfs_buf_ioend+0x1e9/0x11f0
+>>   xfs_buf_item_unpin+0x3d6/0x840
+>>   xfs_trans_committed_bulk+0x4c2/0x7c0
+>>   xlog_cil_committed+0xab6/0xfb0
+>>   xlog_cil_process_committed+0x117/0x1e0
+>>   xlog_state_shutdown_callbacks+0x208/0x440
+>>   xlog_force_shutdown+0x1b3/0x3a0
+>>   xlog_ioend_work+0xef/0x1d0
+>>   process_one_work+0x6f9/0xf70
+>>   worker_thread+0x578/0xf30
+>>   kthread+0x28c/0x330
+>>   ret_from_fork+0x1f/0x30
+>>
+>> The buggy address belongs to the object at ffff88801800f388
+>>   which belongs to the cache xfs_buf_item of size 272
+>> The buggy address is located 104 bytes inside of
+>>   272-byte region [ffff88801800f388, ffff88801800f498)
+>>
+>> The buggy address belongs to the physical page:
+>> page:ffffea0000600380 refcount:1 mapcount:0 mapping:0000000000000000
+>> index:0xffff88801800f208 pfn:0x1800e
+>> head:ffffea0000600380 order:1 compound_mapcount:0 compound_pincount:0
+>> flags: 0x1fffff80010200(slab|head|node=0|zone=1|lastcpupid=0x1fffff)
+>> raw: 001fffff80010200 ffffea0000699788 ffff88801319db50 ffff88800fb50640
+>> raw: ffff88801800f208 000000000015000a 00000001ffffffff 0000000000000000
+>> page dumped because: kasan: bad access detected
+>>
+>> Memory state around the buggy address:
+>>   ffff88801800f280: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+>>   ffff88801800f300: fb fb fb fc fc fc fc fc fc fc fc fc fc fc fc fc
+>>> ffff88801800f380: fc fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+>>                                                               ^
+>>   ffff88801800f400: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+>>   ffff88801800f480: fb fb fb fc fc fc fc fc fc fc fc fc fc fc fc fc
+>> ==================================================================
+>> Disabling lock debugging due to kernel taint
+>>
+>> Signed-off-by: Guo Xuenan <guoxuenan@huawei.com>
+>> ---
+>>   fs/xfs/xfs_buf_item.c | 2 ++
+>>   1 file changed, 2 insertions(+)
+>>
+>> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+>> index 522d450a94b1..df7322ed73fa 100644
+>> --- a/fs/xfs/xfs_buf_item.c
+>> +++ b/fs/xfs/xfs_buf_item.c
+>> @@ -1018,6 +1018,8 @@ xfs_buf_item_relse(
+>>   	trace_xfs_buf_item_relse(bp, _RET_IP_);
+>>   	ASSERT(!test_bit(XFS_LI_IN_AIL, &bip->bli_item.li_flags));
+>>   
+>> +	if (atomic_read(&bip->bli_refcount))
+>> +		return;
+> ...and the answers to the questions posed here[1] and here[2] are...?
+>
+> [1] https://lore.kernel.org/linux-xfs/Y3aLWgGStNPEo2z4@magnolia/
+> [2] https://lore.kernel.org/linux-xfs/20221103214408.GI3600936@dread.disaster.area/
+I'm so sorry about that, I have replied the mails appears in my sent box,
+there must be something wrong with my email software.
+(Sorry again, I will resend, .....hope you can get this.)
+> --D
+>
+>>   	bp->b_log_item = NULL;
+>>   	xfs_buf_rele(bp);
+>>   	xfs_buf_item_free(bip);
+>> -- 
+>> 2.31.1
+>>
+> .
 
-Seems it misses the related changes in:
-fs/ocfs2/stackglue.c
+-- 
+Guo Xuenan [OS Kernel Lab]
+-----------------------------
+Email: guoxuenan@huawei.com
 
-Thanks,
-Joseph
-
->  fs/open.c                 |   1 +
->  fs/orangefs/file.c        |   1 +
->  fs/proc/fd.c              |   1 +
->  fs/utimes.c               |   1 +
->  fs/xattr.c                |   1 +
->  fs/xfs/xfs_buf.h          |   1 +
->  fs/xfs/xfs_file.c         |   1 +
->  fs/xfs/xfs_inode.c        |   1 +
->  include/linux/filelock.h  | 428 ++++++++++++++++++++++++++++++++++++++
->  include/linux/fs.h        | 421 -------------------------------------
->  include/linux/lockd/xdr.h |   1 +
->  38 files changed, 464 insertions(+), 421 deletions(-)
->  create mode 100644 include/linux/filelock.h
-> 
-> Unless anyone has objections, I'll plan to merge this in via the file
-> locking tree for v6.3. I'd appreciate Acked-bys or Reviewed-bys from
-> maintainers, however.
-> 
