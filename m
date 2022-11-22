@@ -2,157 +2,253 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6380DC4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Nov 2022 22:43:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5C43C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Nov 2022 23:45:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234457AbiKVWnB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Nov 2022 17:43:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44966 "EHLO
+        id S235088AbiKVXpW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Nov 2022 18:45:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234076AbiKVWm7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Nov 2022 17:42:59 -0500
-Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE94DF58D
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Nov 2022 14:42:58 -0800 (PST)
-Received: by mail-pf1-x429.google.com with SMTP id d192so15742260pfd.0
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Nov 2022 14:42:58 -0800 (PST)
+        with ESMTP id S233625AbiKVXpV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Nov 2022 18:45:21 -0500
+Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 010CDC7220
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Nov 2022 15:45:20 -0800 (PST)
+Received: by mail-pf1-x432.google.com with SMTP id v28so15793863pfi.12
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Nov 2022 15:45:19 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=OHmFcekX2nghj6K3yYTF3UfA+z88ogrDddAGW0uTMMQ=;
-        b=IZKEJ/eyL163tLYNjYsB6V+Orch889GjNf75EuwI63y8CtzNejtTFnpeIeN82rEtAh
-         GuzVPJ7PFL5wxV+GoJu2XOVSS/jCtS9Gsx6x0tOeMfnvLE7gF1VrZaicwq/loQAD1sJr
-         jSVHnKHktTPdY2YU2RUUYv19mr+Gt7goHhsbzgWuvvMYnsgWSxnVosDrOXl2KDrdaK0H
-         31CfwldjP721BvpPL+txGx8Jp3w2P9RUg4AJ/DojrHApn7Sk2vOh3wZdNwIBt0cl7nS9
-         dQqG+JymcXtfL/AbRdBt8VEFWzVyr34eBCaUG9p4EMeVFaWuX5hL8anJvtoTFLjIlCrU
-         GDIg==
+        bh=4Br32V4f5RhJzAJZzqIlTw5MxWMCxMPceRuTf9fFBWs=;
+        b=LMp1DNYW9KAAMAhwIRp13A+UoP5f9oi+tOL9pTcPwVL3Hc6Ia0RKrsPyHf7sk3dYlL
+         v9YR+AZs0izub2IeIbLi9+6o8cIngufh1uDpzVlhQ/ZFDkXxqwXovqRsjKBm6NZFGvv6
+         pSeTyc8+Xrg5pYq9dVwahpyuRyB+A0L7WHBm9FYVIm3CSim0mFWLdFJcXn1W/Cirm8wU
+         4cx6I/5Z9/oLvxF/W/DNvYvSDm5Y1x5ZXSK3G4AXZe853DkbvzdSe2ugzOjJtso17frU
+         aC8o3HsIYiTKdAMhTgI75zsB1Xqbrkav8T2gO/YrQ38GZirJO2OPKZh8DErpWJLFpzvk
+         XPlg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=OHmFcekX2nghj6K3yYTF3UfA+z88ogrDddAGW0uTMMQ=;
-        b=PSjQJ62ioIjVlfQqbplm/h7zU37drqyogaksqVqDcgI4xryZlJpAXb1MbWKJOCLrjg
-         5gIES+PAeDxLgJiY/d7Dpi+XGB9Tg2Ai64klgCwD7hHwGeoi5akLYQ15cr9RxT4KCk/7
-         1R912yg6sjOz6EFsJQ1SeUA0W2AG8WffNN+9hPB9dbM8TJuFrLo5EuyFRbizYdQhtEtt
-         D16NODdxshEnAyXJd9yFerr7ynLSViaTAIzaukoV9oZ8z8PUx0N/GmiT02RTXSf79GCL
-         FhUPZ1oOpNTcGhJztvFLm1E3ps+zFkqMiPLSiq360AVc8iNo5IM9W2cucIYQS/skISUo
-         VRKA==
-X-Gm-Message-State: ANoB5plc/iomZL2zcw2m81dsG9zuEg2nOPD6N0qhdawHMAZJhPzfl46P
-        ai2nZrJjSvza2UcLY2nSADwMImwO/Hn/Ng==
-X-Google-Smtp-Source: AA0mqf58wviWfQsfRaSAqOlo8p4navvCEjA52xb4TnyBjrYz+0CHYg862H1If5As/w3Bn21CvgHgIA==
-X-Received: by 2002:a17:902:ce90:b0:186:6d34:b7b5 with SMTP id f16-20020a170902ce9000b001866d34b7b5mr9088185plg.37.1669156967537;
-        Tue, 22 Nov 2022 14:42:47 -0800 (PST)
+        bh=4Br32V4f5RhJzAJZzqIlTw5MxWMCxMPceRuTf9fFBWs=;
+        b=Fb2gg/E/f9kN/6qyHB/QBEeZJ3RynWRx69OTpOqq6UcBL6lBrO/DJb+YO1rydtQrzR
+         yGo+sUvsitehR17VVUYUIagUEUhTxywzsR0TODPBVYjToXECg3NBlY53dB4OR5giDaSB
+         1+jYyh+rFXE/ncUkNBKnyMv0c7AnLMZPVgaXTkUkHFmv8t3gugX9jNAGcnjBNgUfkYkd
+         GlsYwTL9g+T2fVdtAqt9vYTF+q0fPgoE8uMq/PbXGCT6O4B2NGQ8vWXp3GfC3edzkQbz
+         wUf4yDP/BnDjOxZmI9BQDlTIRXu8V5lH3ib7qBbBOXHUBtoUXbnizYQ354rnzF3tILJn
+         VLrg==
+X-Gm-Message-State: ANoB5pkAa6+Ag6FrwPtpz/C41lpWwtliCQwk//TSvXGH+eNoyzqrAmxM
+        OQDKiHFIyOI4+QBsUuTQ29RjRQ==
+X-Google-Smtp-Source: AA0mqf4vEA83Ja+O0Ci0KfXTX8Oj7a0KKnCvRMdSpSJjVAh65PF1JRO/J4lVuOvYHHckcCKBomIqGQ==
+X-Received: by 2002:a63:1626:0:b0:470:2c90:d89f with SMTP id w38-20020a631626000000b004702c90d89fmr7904405pgl.253.1669160719359;
+        Tue, 22 Nov 2022 15:45:19 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-65-106.pa.vic.optusnet.com.au. [49.186.65.106])
-        by smtp.gmail.com with ESMTPSA id u5-20020a170903124500b00186c3afb49esm12607967plh.209.2022.11.22.14.42.46
+        by smtp.gmail.com with ESMTPSA id e126-20020a621e84000000b00573769811d6sm6800188pfe.44.2022.11.22.15.45.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Nov 2022 14:42:46 -0800 (PST)
+        Tue, 22 Nov 2022 15:45:18 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1oxbyV-00HR09-OU; Wed, 23 Nov 2022 09:42:43 +1100
-Date:   Wed, 23 Nov 2022 09:42:43 +1100
+        id 1oxcx1-00HS2f-47; Wed, 23 Nov 2022 10:45:15 +1100
+Date:   Wed, 23 Nov 2022 10:45:15 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Oliver Sang <oliver.sang@intel.com>
-Cc:     Gao Xiang <hsiangkao@linux.alibaba.com>, oe-lkp@lists.linux.dev,
-        lkp@intel.com, Zirong Lang <zlang@redhat.com>,
-        linux-xfs@vger.kernel.org, ying.huang@intel.com,
-        feng.tang@intel.com, zhengjun.xing@linux.intel.com,
-        fengwei.yin@intel.com, "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        Brian Foster <bfoster@redhat.com>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] xfs: account extra freespace btree splits for multiple
- allocations
-Message-ID: <20221122224243.GS3600936@dread.disaster.area>
-References: <20221109034802.40322-1-hsiangkao@linux.alibaba.com>
- <202211220854.48dad6fd-oliver.sang@intel.com>
- <Y3wm8hwPMXcFNjiO@B-P7TQMD6M-0146.local>
- <Y3yeVzzt5WIIHfhm@xsang-OptiPlex-9020>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Catherine Hoang <catherine.hoang@oracle.com>,
+        linux-xfs@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-api@vger.kernel.org
+Subject: Re: [PATCH v1] xfs_spaceman: add fsuuid command
+Message-ID: <20221122234515.GT3600936@dread.disaster.area>
+References: <20221109222335.84920-1-catherine.hoang@oracle.com>
+ <Y3abjYmX//CF/ey0@magnolia>
+ <20221117215125.GH3600936@dread.disaster.area>
+ <Y3bKjm2vOwy/jV4Z@magnolia>
+ <20221121233357.GO3600936@dread.disaster.area>
+ <Y3xqhXjJpXosOPPH@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <Y3yeVzzt5WIIHfhm@xsang-OptiPlex-9020>
+In-Reply-To: <Y3xqhXjJpXosOPPH@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 22, 2022 at 06:03:03PM +0800, Oliver Sang wrote:
-> hi Gao Xiang,
+On Mon, Nov 21, 2022 at 10:21:57PM -0800, Darrick J. Wong wrote:
+> [adding Ted, the ext4 list, fsdevel, and api, because why not?]
 > 
-> On Tue, Nov 22, 2022 at 09:33:38AM +0800, Gao Xiang wrote:
-> > On Tue, Nov 22, 2022 at 09:09:34AM +0800, kernel test robot wrote:
+> On Tue, Nov 22, 2022 at 10:33:57AM +1100, Dave Chinner wrote:
+> > On Thu, Nov 17, 2022 at 03:58:06PM -0800, Darrick J. Wong wrote:
+> > > On Fri, Nov 18, 2022 at 08:51:25AM +1100, Dave Chinner wrote:
+> > > > On Thu, Nov 17, 2022 at 12:37:33PM -0800, Darrick J. Wong wrote:
+> > > > > On Wed, Nov 09, 2022 at 02:23:35PM -0800, Catherine Hoang wrote:
+> > > > > > Add support for the fsuuid command to retrieve the UUID of a mounted
+> > > > > > filesystem.
+> > > > > > 
+> > > > > > Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+> > > > > > ---
+> 
+> <snip to the good part>
+> > > > > If you're really unlucky, the C compiler will put the fsuuid right
+> > > > > before the call frame, which is how stack smashing attacks work.  It
+> > > > > might also lay out bp[] immediately afterwards, which will give you
+> > > > > weird results as the unparse function overwrites its source buffer.  The
+> > > > > C compiler controls the stack layout, which means this can go bad in
+> > > > > subtle ways.
+> > > > > 
+> > > > > Either way, gcc complains about this (albeit in an opaque manner)...
+> > > > > 
+> > > > > In file included from ../include/xfs.h:9,
+> > > > >                  from ../include/libxfs.h:15,
+> > > > >                  from fsuuid.c:7:
+> > > > > In function ‘platform_uuid_unparse’,
+> > > > >     inlined from ‘fsuuid_f’ at fsuuid.c:45:3:
+> > > > > ../include/xfs/linux.h:100:9: error: ‘uuid_unparse’ reading 16 bytes from a region of size 0 [-Werror=stringop-overread]
+> > > > >   100 |         uuid_unparse(*uu, buffer);
+> > > > >       |         ^~~~~~~~~~~~~~~~~~~~~~~~~
+> > > > > ../include/xfs/linux.h: In function ‘fsuuid_f’:
+> > > > > ../include/xfs/linux.h:100:9: note: referencing argument 1 of type ‘const unsigned char *’
+> > > > > In file included from ../include/xfs/linux.h:13,
+> > > > >                  from ../include/xfs.h:9,
+> > > > >                  from ../include/libxfs.h:15,
+> > > > >                  from fsuuid.c:7:
+> > > > > /usr/include/uuid/uuid.h:107:13: note: in a call to function ‘uuid_unparse’
+> > > > >   107 | extern void uuid_unparse(const uuid_t uu, char *out);
+> > > > >       |             ^~~~~~~~~~~~
+> > > > > cc1: all warnings being treated as errors
+> > > > > 
+> > > > > ...so please allocate the struct fsuuid object dynamically.
+> > > > 
+> > > > So, follow common convention and you'll get it wrong, eh? That a
+> > > > score of -4 on Rusty's API Design scale.
+> > > > 
+> > > > http://sweng.the-davies.net/Home/rustys-api-design-manifesto
+> > > > 
+> > > > Flex arrays in user APIs like this just look plain dangerous to me.
+> > > > 
+> > > > Really, this says that the FSUUID API should have a fixed length
+> > > > buffer size defined in the API and the length used can be anything
+> > > > up to the maximum.
+> > > > 
+> > > > We already have this being added for the ioctl API:
+> > > > 
+> > > > #define UUID_SIZE 16
+> > > > 
+> > > > So why isn't the API definition this:
+> > > > 
+> > > > struct fsuuid {
+> > > >     __u32   fsu_len;
+> > > >     __u32   fsu_flags;
+> > > >     __u8    fsu_uuid[UUID_SIZE];
+> > > > };
+> > > > 
+> > > > Or if we want to support larger ID structures:
+> > > > 
+> > > > #define MAX_FSUUID_SIZE 256
+> > > > 
+> > > > struct fsuuid {
+> > > >     __u32   fsu_len;
+> > > >     __u32   fsu_flags;
+> > > >     __u8    fsu_uuid[MAX_FSUUID_SIZE];
+> > > > };
+> > > > 
+> > > > Then the structure can be safely placed on the stack, which means
+> > > > "the obvious use is (probably) the correct one" (a score of 7 on
+> > > > Rusty's API Design scale). It also gives the kernel a fixed upper
+> > > > bound that it can use to validate the incoming fsu_len variable
+> > > > against...
 > > > 
-> > > please be noted we noticed Gao Xiang and Dave Chinner have already had lots of
-> > > discussion around this patch, which seems there is maybe new version later.
-> > > we just sent out this report FYI the possible performance impact of this patch.
-> > > 
-> > > 
-> > > Greeting,
-> > > 
-> > > FYI, we noticed a -15.1% regression of fxmark.ssd_xfs_MWCM_72_directio.works/sec due to commit:
+> > > Too late now, this already shipped in 6.0.  Changing the struct size
+> > > would change the ioctl number, which is a totally new API.  This was
+> > > already discussed back in July on fsdevel/api.
 > > 
-> > Thanks for your report!
-> > 
-> > At a glance, I have no idea why this commit can have performance
-> > impacts.  Is the result stable?
+> > It is certainly not too late - if we are going to lift this to the
+> > VFS, then we can simply make it a new ioctl. The horrible ext4 ioctl
+> > can ber left to rot in ext4 and nobody else ever needs to care that
+> > it exists.
 > 
-> in our tests, the result is quite stable.
->      45589           -15.1%      38687 �  2%  fxmark.ssd_xfs_MWCM_72_directio.works/sec
+> You're wrong.  This was discussed **multiple times** this summer on
+> the fsdevel and API lists.  You had plenty of opportunity to make these
+> suggestions about the design, and yet you did not:
 > 
-> and detail data is as below:
-> for this commit:
->   "fxmark.ssd_xfs_MWCM_72_directio.works/sec": [
->     39192.224368,
->     39665.690567,
->     38980.680601,
->     37298.99538,
->     37483.256377,
->     39504.606569
->   ],
-> 
-> for parent:
->   "fxmark.ssd_xfs_MWCM_72_directio.works/sec": [
->     45381.458009,
->     45314.376204,
->     45724.688965,
->     45751.955937,
->     45614.323267,
->     45747.216475
->   ],
+> https://lore.kernel.org/linux-api/20220701201123.183468-1-bongiojp@gmail.com/
+> https://lore.kernel.org/linux-api/20220719065551.154132-1-bongiojp@gmail.com/
+> https://lore.kernel.org/linux-api/20220719234131.235187-1-bongiojp@gmail.com/
+> https://lore.kernel.org/linux-api/20220721224422.438351-1-bongiojp@gmail.com/
 
-This MWCM workload uses a shared directory. Every worker thread (72
-of them) iterates creating a new file, writes 4kB of data to it and
-then closes it. There is no synchronisation between worker threads.
 
-The worker threads will lockstep on the directory lock for file
-creation, they will all attempt to allocate data in the same AG as
-the file is created. Hence writeback will race with file creation
-for AG locks, too.  Once the first AG is full, they will all attempt
-to allocate in the next AG (file creation and writeback).
+There's good reason for that: this was posted and reviewed as *an
+EXT4 specific API*.  Why are you expecting XFS developers to closely
+review a patchset that was titled "Add ioctls to get/set the ext4
+superblock uuid."?
 
-IOWs, this workload will race to fill AGs, will exercise the "AG
-full so skip to next AG" allocator fallbacks, etc.
+There was -no reasons- for me to pay attention to it, and I have
+enough to keep up with without having to care about the minutae of
+what ext4 internal information is being exposing to userspace.
 
-Changing where/how AGs are considered full will impact how the AG
-selection is made. I'm betting that there's a mismatch between the
-code that selects the initial AG for allocation (from
-xfs_bmap_btalloc() via the nullfb case) and the code that selects
-the actual AG for allocation (xfs_alloc_vextent() w/ NEAR_BNO
-policy) as a result of this change. This then results in
-xfs_alloc_vextent() trying to initially allocate from an AG that
-xfs_alloc_fix_freelist() considers to be full, so it skips the
-initial selected AG and starts searching for an AG it can allocate
-into.
+However, now it's being proposed as a *generic VFS API*, and so it's
+now important enough for developers from other filesystems to look
+at this ioctl API.
 
-Combine that with AGF lock contention from 70+ tasks all trying to
-allocate in the same location...
+> Jeremy built the functionality and followed the customary process,
+> sending four separate revisions for reviews.  He adapted his code based
+> on our feedback about how to future-proof it by adding an explicit
+> length parameter, and got it merged into ext4 in 6.0-rc1.
 
-Cheers,
+*As an EXT4 modification*, not a generic VFS ioctl.
 
-Dave.
+> Now you want Catherine and I to tear down his work and initiate a design
+> review of YET ANOTHER NEW IOCTL just so the API can hit this one design
+> point you care about, and then convince Ted to go back and redo all the
+> work that has already been done.  All this to extract 16 bytes from the
+> kernel in a slightly different style than the existing XFS fsgeometry
+> ioctl.
+
+I'm not asking you to tear anything down. Just leave the ext4 ioctl
+as it is currently defined and nothing existing breaks or needs
+reworking.
+
+All I'm asking is that instead of lifting the ext4 ioctl verbatim,
+you lift it with a fixed maximum size for the uuid data array to
+replace the flex array. It's a *trivial change to make*, and yes, I
+know that this means it's not the same as the ext4 ioctl.
+
+But, really, who cares that it will be a different ioctl? Nobody but
+ext4 utilities will be using the ext4 ioctl, and we expect generic
+block/fs utilities and applications to use the VFS definition of the
+ioctl, not the ext4 specific one.
+
+> This was /supposed/ to be a simple way for a less experienced staffer to
+> gain some experience wiring up an existing ioctl.  And, well, I hope she
+> doesn't take away that developing for Linux is institutionally broken
+> and frustrating, because that's what I've taken away from the last 2+
+> years of being here.
+
+When we lift stuff from filesystem specific scope (where few people
+care about API warts) to generic VFS scope that the whole world is
+expected to see, use and understand, you should expect a larger
+number of experienced developers to scrutinise it.  The wider scope
+of the API means the "acceptibility bar" is set higher.
+
+Just because the code change is simple, it doesn't mean the issues
+surrounding the code change are simple or straight forward. Just
+because it went through a review on the ext4 list it doesn't mean
+the API or implementation is flawless.
+
+The point I'm making is that lifting fs ioctl APIs verbatim is a
+*known broken process* that leads to future pain fixing all the
+problems inherited from the original fs specific API and
+implementation.  If we want to lift functionality to be generic VFS
+UAPI and at the time of lifting we find problems with the UAPI
+and/or implementation, then we need to fix the problems before we
+expose the new VFS API to the entire world.
+
+Repeat past mistakes, or learn from them. Your choice...
+
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
