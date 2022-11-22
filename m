@@ -2,295 +2,233 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D15AC4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Nov 2022 06:10:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0E78C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Nov 2022 06:22:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231354AbiKVGKn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Nov 2022 01:10:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33170 "EHLO
+        id S232181AbiKVGWC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Nov 2022 01:22:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231947AbiKVGKk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Nov 2022 01:10:40 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD1AB2A70B
-        for <linux-xfs@vger.kernel.org>; Mon, 21 Nov 2022 22:09:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1669097378;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=E0otfa5oIaXfFOn/qOpuKQ3hX2Udv94ppDYda4ZkcxI=;
-        b=GMuL7K9ZmuNyl/xYcfHF0oJzCVv7/r3ZCL0ABJ3jNGCQ9fK4UOw2Q9Da0+xuBIwbJvIkg7
-        Bz48x9vaQUKwUN0veGdnbYwdhwdeka4w/lVZgMRKL4/n1AIYWvQkoxEjLfCAUoDZ6mLdx1
-        jPmHGQmwhnpU70Jgmf6qO+rCOoqx64U=
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
- [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-209-y4Q9N7YKPKitCZCUxaBEnw-1; Tue, 22 Nov 2022 01:09:37 -0500
-X-MC-Unique: y4Q9N7YKPKitCZCUxaBEnw-1
-Received: by mail-pl1-f200.google.com with SMTP id l7-20020a170902f68700b001890d921b36so6587238plg.2
-        for <linux-xfs@vger.kernel.org>; Mon, 21 Nov 2022 22:09:37 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=E0otfa5oIaXfFOn/qOpuKQ3hX2Udv94ppDYda4ZkcxI=;
-        b=vc58U+DSPJl5mrHpxrQWu/6lK3bNAx4TBL1EqxoMyjnmOxci8LLAGb34jnQH+qgpEe
-         Cd+ui09BrGdR7hz+i5kHXdcWSg+LfmzD7sYdsK27uMYcluIz4JZa4ElEO84KnDo8rJjM
-         OCIc2WqEcX0fe0EySR+PbVNAYNkpqX4X++FWhcv5wkoZoCoFlB/gZC8pyvrksdv78yWp
-         eTyXMoQC2I0bQeIZVYRI4N7OaoYH3BtOcfDj02RZyTwwqGH+2UJqgqUTWubsxY8p0mQf
-         maM8+LO1AEu3Lv0wfR7xsziFgqjQ2eHpDUG0LRNFwuTxAV4krtxkCOf0Lr46Dcofa/Qq
-         +1Lw==
-X-Gm-Message-State: ANoB5plRLYNNdfkitQJFjJYe6r+fUviGPqideCLOj1JXWo0/mYrZNDis
-        pkPsn5/J5vj9o5flHqF0qWRTY98fyqRHpscQPf6NcPJ971wscDGCxaFlO2SkuSyS6J8icLdR0qO
-        8LE9QRgC92OHA/x7Gt3AU
-X-Received: by 2002:a63:de4a:0:b0:429:983d:22f8 with SMTP id y10-20020a63de4a000000b00429983d22f8mr2391884pgi.165.1669097376227;
-        Mon, 21 Nov 2022 22:09:36 -0800 (PST)
-X-Google-Smtp-Source: AA0mqf4lZhrFC3o+Cv91ip17F5Syxlw85Unv0JH5vucSWxf4+kuTEUWQzOs7kgg512kmH1HQBhrcGw==
-X-Received: by 2002:a63:de4a:0:b0:429:983d:22f8 with SMTP id y10-20020a63de4a000000b00429983d22f8mr2391867pgi.165.1669097375872;
-        Mon, 21 Nov 2022 22:09:35 -0800 (PST)
-Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id x4-20020a170902ec8400b001780e4e6b65sm11036329plg.114.2022.11.21.22.09.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 21 Nov 2022 22:09:35 -0800 (PST)
-Date:   Tue, 22 Nov 2022 14:09:31 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-        linux-nfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] nfs: test files written size as expected
-Message-ID: <20221122060931.yjnuljl62cehrm2a@zlang-mailbox>
-References: <20221105032329.2067299-1-zlang@kernel.org>
- <20221121184745.p3duc7thj53s5fgv@zlang-mailbox>
- <Y3vTbHqT64gsQ573@magnolia>
+        with ESMTP id S232157AbiKVGWA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Nov 2022 01:22:00 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C49732D77B;
+        Mon, 21 Nov 2022 22:21:58 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 238CE61552;
+        Tue, 22 Nov 2022 06:21:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D708C433D6;
+        Tue, 22 Nov 2022 06:21:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669098117;
+        bh=bfNLT2YUtJP1xSjZ7j5UfuX/y0pWjX4jNCEWTPv1j80=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=tRgoEpQy5REN8BKzBaovdzyF35oCrh6mGm3ozrdxaLAGicgmzYiOjeYxokQ5COyyf
+         yFOFyUpKLw5rK04aueAliIfl5oXj4kayf2QnRihJNm69a/vkFNDr4svGrK1QaTPmJc
+         hgMB8kV1OarC3/JG1HJgNPKYtqfB96jMnca0XJ5zD10fAJDPYWfzGtrhYcOLCyuvHm
+         ufnOAHSVEFDw76U/XTYwUA8K9CTxt26JThqmqOEGS48i3tSDJkSc/zIXgAf5FpMc0Y
+         PjxEv9TDZTw2gBMAY371vL/f09B8GcQPrHaM0mN3IzEiRgiJ0yZIgBxoKjiBh0Aw0w
+         ayWWK+ZSXaslw==
+Date:   Mon, 21 Nov 2022 22:21:57 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Catherine Hoang <catherine.hoang@oracle.com>,
+        linux-xfs@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-api@vger.kernel.org
+Subject: Re: [PATCH v1] xfs_spaceman: add fsuuid command
+Message-ID: <Y3xqhXjJpXosOPPH@magnolia>
+References: <20221109222335.84920-1-catherine.hoang@oracle.com>
+ <Y3abjYmX//CF/ey0@magnolia>
+ <20221117215125.GH3600936@dread.disaster.area>
+ <Y3bKjm2vOwy/jV4Z@magnolia>
+ <20221121233357.GO3600936@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <Y3vTbHqT64gsQ573@magnolia>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20221121233357.GO3600936@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 21, 2022 at 11:37:16AM -0800, Darrick J. Wong wrote:
-> On Tue, Nov 22, 2022 at 02:47:45AM +0800, Zorro Lang wrote:
-> > On Sat, Nov 05, 2022 at 11:23:29AM +0800, Zorro Lang wrote:
-> > > Test nfs and its underlying fs, make sure file size as expected
-> > > after writting a file, and the speculative allocation space can
-> > > be shrunken.
+[adding Ted, the ext4 list, fsdevel, and api, because why not?]
+
+On Tue, Nov 22, 2022 at 10:33:57AM +1100, Dave Chinner wrote:
+> On Thu, Nov 17, 2022 at 03:58:06PM -0800, Darrick J. Wong wrote:
+> > On Fri, Nov 18, 2022 at 08:51:25AM +1100, Dave Chinner wrote:
+> > > On Thu, Nov 17, 2022 at 12:37:33PM -0800, Darrick J. Wong wrote:
+> > > > On Wed, Nov 09, 2022 at 02:23:35PM -0800, Catherine Hoang wrote:
+> > > > > Add support for the fsuuid command to retrieve the UUID of a mounted
+> > > > > filesystem.
+> > > > > 
+> > > > > Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+> > > > > ---
+
+<snip to the good part>
+
+> > > > > diff --git a/spaceman/fsuuid.c b/spaceman/fsuuid.c
+> > > > > new file mode 100644
+> > > > > index 00000000..be12c1ad
+> > > > > --- /dev/null
+> > > > > +++ b/spaceman/fsuuid.c
+> > > > > @@ -0,0 +1,63 @@
+> > > > > +// SPDX-License-Identifier: GPL-2.0
+> > > > > +/*
+> > > > > + * Copyright (c) 2022 Oracle.
+> > > > > + * All Rights Reserved.
+> > > > > + */
+> > > > > +
+> > > > > +#include "libxfs.h"
+> > > > > +#include "libfrog/fsgeom.h"
+> > > > > +#include "libfrog/paths.h"
+> > > > > +#include "command.h"
+> > > > > +#include "init.h"
+> > > > > +#include "space.h"
+> > > > > +#include <sys/ioctl.h>
+> > > > > +
+> > > > > +#ifndef FS_IOC_GETFSUUID
+> > > > > +#define FS_IOC_GETFSUUID	_IOR('f', 44, struct fsuuid)
+> > > > > +#define UUID_SIZE 16
+> > > > > +struct fsuuid {
+> > > > > +    __u32   fsu_len;
+> > > > > +    __u32   fsu_flags;
+> > > > > +    __u8    fsu_uuid[];
+> > > > 
+> > > > This is a flex array   ^^ which has no size.  struct fsuuid therefore
+> > > > has a size of 8 bytes (i.e. enough to cover the two u32 fields) and no
+> > > > more.  It's assumed that the caller will allocate the memory for
+> > > > fsu_uuid...
+> > > > 
+> > > > > +};
+> > > > > +#endif
+> > > > > +
+> > > > > +static cmdinfo_t fsuuid_cmd;
+> > > > > +
+> > > > > +static int
+> > > > > +fsuuid_f(
+> > > > > +	int		argc,
+> > > > > +	char		**argv)
+> > > > > +{
+> > > > > +	struct fsuuid	fsuuid;
+> > > > > +	int		error;
+> > > > 
+> > > > ...which makes this usage a problem, because we've not reserved any
+> > > > space on the stack to hold the UUID.  The kernel will blindly assume
+> > > > that there are fsuuid.fsu_len bytes after fsuuid and write to them,
+> > > > which will clobber something on the stack.
+> > > > 
+> > > > If you're really unlucky, the C compiler will put the fsuuid right
+> > > > before the call frame, which is how stack smashing attacks work.  It
+> > > > might also lay out bp[] immediately afterwards, which will give you
+> > > > weird results as the unparse function overwrites its source buffer.  The
+> > > > C compiler controls the stack layout, which means this can go bad in
+> > > > subtle ways.
+> > > > 
+> > > > Either way, gcc complains about this (albeit in an opaque manner)...
+> > > > 
+> > > > In file included from ../include/xfs.h:9,
+> > > >                  from ../include/libxfs.h:15,
+> > > >                  from fsuuid.c:7:
+> > > > In function ‘platform_uuid_unparse’,
+> > > >     inlined from ‘fsuuid_f’ at fsuuid.c:45:3:
+> > > > ../include/xfs/linux.h:100:9: error: ‘uuid_unparse’ reading 16 bytes from a region of size 0 [-Werror=stringop-overread]
+> > > >   100 |         uuid_unparse(*uu, buffer);
+> > > >       |         ^~~~~~~~~~~~~~~~~~~~~~~~~
+> > > > ../include/xfs/linux.h: In function ‘fsuuid_f’:
+> > > > ../include/xfs/linux.h:100:9: note: referencing argument 1 of type ‘const unsigned char *’
+> > > > In file included from ../include/xfs/linux.h:13,
+> > > >                  from ../include/xfs.h:9,
+> > > >                  from ../include/libxfs.h:15,
+> > > >                  from fsuuid.c:7:
+> > > > /usr/include/uuid/uuid.h:107:13: note: in a call to function ‘uuid_unparse’
+> > > >   107 | extern void uuid_unparse(const uuid_t uu, char *out);
+> > > >       |             ^~~~~~~~~~~~
+> > > > cc1: all warnings being treated as errors
+> > > > 
+> > > > ...so please allocate the struct fsuuid object dynamically.
 > > > 
-> > > Signed-off-by: Zorro Lang <zlang@kernel.org>
-> > > ---
+> > > So, follow common convention and you'll get it wrong, eh? That a
+> > > score of -4 on Rusty's API Design scale.
 > > > 
-> > > Hi,
+> > > http://sweng.the-davies.net/Home/rustys-api-design-manifesto
 > > > 
-> > > The original bug reproducer is:
-> > > 1. mount nfs3 backed by xfs
-> > > 2. dd if=/dev/zero of=/nfs/10M bs=1M count=10
-> > > 3. du -sh /nfs/10M                           
-> > > 16M	/nfs/10M 
+> > > Flex arrays in user APIs like this just look plain dangerous to me.
 > > > 
-> > > As this was a xfs issue, so cc linux-xfs@ to get review.
+> > > Really, this says that the FSUUID API should have a fixed length
+> > > buffer size defined in the API and the length used can be anything
+> > > up to the maximum.
 > > > 
-> > > Thanks,
-> > > Zorro
+> > > We already have this being added for the ioctl API:
 > > > 
-> > >  tests/nfs/002     | 43 +++++++++++++++++++++++++++++++++++++++++++
-> > >  tests/nfs/002.out |  2 ++
-> > >  2 files changed, 45 insertions(+)
-> > >  create mode 100755 tests/nfs/002
-> > >  create mode 100644 tests/nfs/002.out
+> > > #define UUID_SIZE 16
 > > > 
-> > > diff --git a/tests/nfs/002 b/tests/nfs/002
-> > > new file mode 100755
-> > > index 00000000..3d29958d
-> > > --- /dev/null
-> > > +++ b/tests/nfs/002
-> > > @@ -0,0 +1,43 @@
-> > > +#! /bin/bash
-> > > +# SPDX-License-Identifier: GPL-2.0
-> > > +# Copyright (c) 2022 Red Hat, Inc.  All Rights Reserved.
-> > > +#
-> > > +# FS QA Test 002
-> > > +#
-> > > +# Make sure nfs gets expected file size after writting a big sized file. It's
-> > > +# not only testing nfs, test its underlying fs too. For example a known old bug
-> > > +# on xfs (underlying fs) caused nfs get larger file size (e.g. 16M) after
-> > > +# writting 10M data to a file. It's fixed by a series of patches around
-> > > +# 579b62faa5fb16 ("xfs: add background scanning to clear eofblocks inodes")
-> > > +#
-> > > +. ./common/preamble
-> > > +_begin_fstest auto rw
-> > > +
-> > > +# real QA test starts here
-> > > +_supported_fs nfs
-> > > +_require_test
-> > > +
-> > > +localfile=$TEST_DIR/testfile.$seq
-> > > +rm -rf $localfile
-> > > +
-> > > +$XFS_IO_PROG -f -t -c "pwrite 0 10m" -c "fsync" $localfile >>$seqres.full 2>&1
-> > > +block_size=`stat -c '%B' $localfile`
-> > > +iblocks_expected=$((10 * 1024 * 1024 / $block_size))
-> > > +# Try several times for the speculative allocated file size can be shrunken
-> > > +res=1
-> > > +for ((i=0; i<10; i++));do
-> > > +	iblocks_real=`stat -c '%b' $localfile`
-> > > +	if [ "$iblocks_expected" = "$iblocks_real" ];then
-> > > +		res=0
-> > > +		break
-> > > +	fi
-> > > +	sleep 10
-> > > +done
+> > > So why isn't the API definition this:
+> > > 
+> > > struct fsuuid {
+> > >     __u32   fsu_len;
+> > >     __u32   fsu_flags;
+> > >     __u8    fsu_uuid[UUID_SIZE];
+> > > };
+> > > 
+> > > Or if we want to support larger ID structures:
+> > > 
+> > > #define MAX_FSUUID_SIZE 256
+> > > 
+> > > struct fsuuid {
+> > >     __u32   fsu_len;
+> > >     __u32   fsu_flags;
+> > >     __u8    fsu_uuid[MAX_FSUUID_SIZE];
+> > > };
+> > > 
+> > > Then the structure can be safely placed on the stack, which means
+> > > "the obvious use is (probably) the correct one" (a score of 7 on
+> > > Rusty's API Design scale). It also gives the kernel a fixed upper
+> > > bound that it can use to validate the incoming fsu_len variable
+> > > against...
 > > 
-> > Hmm... this case sometimes fails on kernel 6.1.0-rc6 [1] (nfs4.2 base on xfs),
-> > even I changed the sleep time to 20s * 10, it still fails. But I can't reproduce
-> > this failure if the underlying fs is ext4... cc linux-xfs, to check if I miss
-> > something for xfs? Or this's a xfs issue?
+> > Too late now, this already shipped in 6.0.  Changing the struct size
+> > would change the ioctl number, which is a totally new API.  This was
+> > already discussed back in July on fsdevel/api.
 > 
-> Could be anything, really -- speculative preallocation on the server, or
-> xattrs blowing up the attr fork.  You'd have to go query the file
-> mappings and whatnot of the xfs file on the server to find out.
+> It is certainly not too late - if we are going to lift this to the
+> VFS, then we can simply make it a new ioctl. The horrible ext4 ioctl
+> can ber left to rot in ext4 and nobody else ever needs to care that
+> it exists.
 
-Hi Darrick,
+You're wrong.  This was discussed **multiple times** this summer on
+the fsdevel and API lists.  You had plenty of opportunity to make these
+suggestions about the design, and yet you did not:
 
-Thanks for your reply.
+https://lore.kernel.org/linux-api/20220701201123.183468-1-bongiojp@gmail.com/
+https://lore.kernel.org/linux-api/20220719065551.154132-1-bongiojp@gmail.com/
+https://lore.kernel.org/linux-api/20220719234131.235187-1-bongiojp@gmail.com/
+https://lore.kernel.org/linux-api/20220721224422.438351-1-bongiojp@gmail.com/
 
-When the number of blocks isn't as expected, I printed the bmap of the test
-file on xfs, it really shows 20480 blocks [1], not 32640 blocks.
+Jeremy built the functionality and followed the customary process,
+sending four separate revisions for reviews.  He adapted his code based
+on our feedback about how to future-proof it by adding an explicit
+length parameter, and got it merged into ext4 in 6.0-rc1.
 
-And I checked the xattr of the file on xfs, it doesn't has attr blocks [2], it's
-local format. Even if it has some attr blocks, 32640 too much bigger than 20480,
-I don't think selinux or other xattr takes that many blocks.
+Now you want Catherine and I to tear down his work and initiate a design
+review of YET ANOTHER NEW IOCTL just so the API can hit this one design
+point you care about, and then convince Ted to go back and redo all the
+work that has already been done.  All this to extract 16 bytes from the
+kernel in a slightly different style than the existing XFS fsgeometry
+ioctl.
 
-Hmm... this test case passed on nfs3 and nfs4.0 with xfs, but fails on nfs4.1 or
-nfs4.2 with xfs. cc linux-nfs@ list to get more review.
+This was /supposed/ to be a simple way for a less experienced staffer to
+gain some experience wiring up an existing ioctl.  And, well, I hope she
+doesn't take away that developing for Linux is institutionally broken
+and frustrating, because that's what I've taken away from the last 2+
+years of being here.
 
-BTW, this case is an original regression test for a rhel bug:
-https://bugzilla.redhat.com/show_bug.cgi?id=955254 (you might can't open it)
-which blamed that "xfs files written over nfs are bigger due to speculative
-allocation and may never shrink while fs is mounted".
+--D
 
-Dave said:
-For NFS servers, keeping the speculative prealloc around for as long as possible
-is the desired behaviour. It will get truncated away when the inode is cycled
-out of the cache by memory pressure on the NFS server. So the code is currently
-behaving as designed.
-
-But there are changes upstream that give different behaviour, so we merged
-below xfs patches to "fix" that bug:
-
-  xfs: add EOFBLOCKS inode tagging/untagging
-  xfs: support a tag-based inode_ag_iterator
-  xfs: create helper to check whether to free eofblocks on inode
-  xfs: make xfs_free_eofblocks() non-static, return EAGAIN on trylock failure
-  xfs: create function to scan and clear EOFBLOCKS inodes
-  xfs: add XFS_IOC_FREE_EOFBLOCKS ioctl
-  xfs: add inode id filtering to eofblocks scan
-  xfs: support multiple inode id filtering in eofblocks scan
-  xfs: add minimum file size filtering to eofblocks scan
-  xfs: add background scanning to clear eofblocks inodes
-  xfs: limit speculative prealloc near ENOSPC thresholds
-  xfs: limit speculative prealloc size on sparse files
-  xfs: fix potential infinite loop in xfs_iomap_prealloc_size()
-  xfs: increase prealloc size to double that of the previous extent
-  xfs: fix xfs_iomap_eof_prealloc_initial_size type
-  xfs: Define a new function xfs_this_quota_on()
-  xfs: Define a new function xfs_inode_dquot()
-  xfs: reorganize xfs_iomap_prealloc_size to remove indentation
-  xfs: push rounddown_pow_of_two() to after prealloc throttle
-  xfs: pass xfs_dquot to xfs_qm_adjust_dqlimits() instead of xfs_disk_dquot_t
-  xfs: xfs_dquot prealloc throttling watermarks and low free space
-  xfs: add quota-driven speculative preallocation throttling
-  xfs: xfs_iomap_prealloc_size() tracepoint
-  xfs: don't use speculative prealloc for small files
-
-How I'm not sure if it's a bug again, or an expected result for nfs4.2 with xfs.
-
-Thanks,
-Zorro
-
-[1]
-/mnt/xfstests/test/nfs-server/testfile.002:
- EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL FLAGS
-   0: [0..20479]:      192..20671        0 (192..20671)     20480 000000
- FLAG Values:
-    0100000 Shared extent
-    0010000 Unwritten preallocated extent
-    0001000 Doesn't begin on stripe unit
-    0000100 Doesn't end   on stripe unit
-    0000010 Doesn't begin on stripe width
-    0000001 Doesn't end   on stripe width
-
-
-[2]
-core.format = 2 (extents)
-...
-core.size = 10485760     
-core.nblocks = 2560   
-core.extsize = 0            
-core.nextents = 1             
-core.naextents = 0       
-core.forkoff = 24          
-core.aformat = 1 (local)
-...
-u3.bmx[0] = [startoff,startblock,blockcount,extentflag] 
-0:[0,24,2560,0]
-a.sfattr.hdr.totsize = 47
-a.sfattr.hdr.count = 1
-a.sfattr.list[0].namelen = 7
-a.sfattr.list[0].valuelen = 33
-a.sfattr.list[0].root = 0
-a.sfattr.list[0].secure = 1
-a.sfattr.list[0].name = "selinux"
-a.sfattr.list[0].value = "system_u:object_r:unlabeled_t:s0\000"
-
-> 
-> --D
-> 
-> > Thanks,
-> > Zorro
-> > 
-> > [1]
-> > # ./check nfs/002
-> > FSTYP         -- nfs
-> > PLATFORM      -- Linux/x86_64 dell-per640-04 6.1.0-rc6 #1 SMP PREEMPT_DYNAMIC Mon Nov 21 00:51:20 EST 2022
-> > MKFS_OPTIONS  -- dell-per640-04.dell2.lab.eng.bos.redhat.com:/mnt/xfstests/scratch/nfs-server
-> > MOUNT_OPTIONS -- -o vers=4.2 -o context=system_u:object_r:root_t:s0 dell-per640-04.dell2.lab.eng.bos.redhat.com:/mnt/xfstests/scratch/nfs-server /mnt/xfstests/scratch/nfs-client
-> > 
-> > nfs/002 3s ... - output mismatch (see /var/lib/xfstests/results//nfs/002.out.bad)
-> >     --- tests/nfs/002.out       2022-11-21 01:29:33.861770474 -0500
-> >     +++ /var/lib/xfstests/results//nfs/002.out.bad      2022-11-21 13:27:37.424199056 -0500
-> >     @@ -1,2 +1,3 @@
-> >      QA output created by 002
-> >     +Write 20480 blocks, but get 32640 blocks
-> >      Silence is golden
-> >     ...
-> >     (Run 'diff -u /var/lib/xfstests/tests/nfs/002.out /var/lib/xfstests/results//nfs/002.out.bad'  to see the entire diff)
-> > Ran: nfs/002
-> > Failures: nfs/002
-> > Failed 1 of 1 tests
-> > 
-> > 
-> > > +if [ $res -ne 0 ];then
-> > > +	echo "Write $iblocks_expected blocks, but get $iblocks_real blocks"
-> > > +fi
-> > > +
-> > > +echo "Silence is golden"
-> > > +# success, all done
-> > > +status=0
-> > > +exit
-> > > diff --git a/tests/nfs/002.out b/tests/nfs/002.out
-> > > new file mode 100644
-> > > index 00000000..61705c7c
-> > > --- /dev/null
-> > > +++ b/tests/nfs/002.out
-> > > @@ -0,0 +1,2 @@
-> > > +QA output created by 002
-> > > +Silence is golden
-> > > -- 
-> > > 2.31.1
-> > > 
-> > 
-> 
-
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
