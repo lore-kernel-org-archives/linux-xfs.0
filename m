@@ -2,148 +2,257 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6E6DC4332F
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Nov 2022 00:42:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14D54C433FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Nov 2022 05:58:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232341AbiKWAmb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Nov 2022 19:42:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56672 "EHLO
+        id S235722AbiKWF6X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Nov 2022 00:58:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233443AbiKWAm3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Nov 2022 19:42:29 -0500
-Received: from out30-131.freemail.mail.aliyun.com (out30-131.freemail.mail.aliyun.com [115.124.30.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7F6360E7;
-        Tue, 22 Nov 2022 16:42:26 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R131e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045168;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=14;SR=0;TI=SMTPD_---0VVU6Gh8_1669164140;
-Received: from B-P7TQMD6M-0146.local(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0VVU6Gh8_1669164140)
-          by smtp.aliyun-inc.com;
-          Wed, 23 Nov 2022 08:42:23 +0800
-Date:   Wed, 23 Nov 2022 08:42:16 +0800
-From:   Gao Xiang <hsiangkao@linux.alibaba.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Oliver Sang <oliver.sang@intel.com>, oe-lkp@lists.linux.dev,
-        lkp@intel.com, Zirong Lang <zlang@redhat.com>,
-        linux-xfs@vger.kernel.org, ying.huang@intel.com,
-        feng.tang@intel.com, zhengjun.xing@linux.intel.com,
-        fengwei.yin@intel.com, "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        Brian Foster <bfoster@redhat.com>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] xfs: account extra freespace btree splits for multiple
- allocations
-Message-ID: <Y31saO9m0ixZKdkV@B-P7TQMD6M-0146.local>
-Mail-Followup-To: Dave Chinner <david@fromorbit.com>,
-        Oliver Sang <oliver.sang@intel.com>, oe-lkp@lists.linux.dev,
-        lkp@intel.com, Zirong Lang <zlang@redhat.com>,
-        linux-xfs@vger.kernel.org, ying.huang@intel.com,
-        feng.tang@intel.com, zhengjun.xing@linux.intel.com,
-        fengwei.yin@intel.com, "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        Brian Foster <bfoster@redhat.com>,
-        LKML <linux-kernel@vger.kernel.org>
-References: <20221109034802.40322-1-hsiangkao@linux.alibaba.com>
- <202211220854.48dad6fd-oliver.sang@intel.com>
- <Y3wm8hwPMXcFNjiO@B-P7TQMD6M-0146.local>
- <Y3yeVzzt5WIIHfhm@xsang-OptiPlex-9020>
- <20221122224243.GS3600936@dread.disaster.area>
+        with ESMTP id S229486AbiKWF6U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Nov 2022 00:58:20 -0500
+Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C0ADD2298
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Nov 2022 21:58:18 -0800 (PST)
+Received: by mail-pl1-x632.google.com with SMTP id w23so15703521ply.12
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Nov 2022 21:58:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=yPpqj4Yshcqb2cYauCNON2cTie17OBtxWH9iE1E0p8o=;
+        b=l6FAZ8AuimKxQ/tHOI/8hINaYg7XT6TDqubAa3BJrqGhkrCp7RCEE/h1uKVc9v0c9J
+         rl/QrVIKPNCE7UjAlT2+71HzjIFdRVBTZQ2JKLCVf8Dyb2+AzCOEvzg+e5Cz1bZxjppK
+         NM7HNrhl8CNqJ7rRltvWZD+sWZWnSfwhYD5P3tWk1pvOdg3nB1C4nNSo3q1ib0LDbimy
+         0IvzSm9MwbEV41LPo8Y9Q0AHTztrjWF9rrDySRC9ulRQ/Aa5/1ViwPRNKtHaYnw/klBz
+         lg8zr44h6EwDeFruPthrZabcnmxxStpd1ezhItEcVPguBRA9ttGca92H9kLByLwpctXz
+         hP3Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=yPpqj4Yshcqb2cYauCNON2cTie17OBtxWH9iE1E0p8o=;
+        b=Hx7Jgf7RfjO02v2pHbWrkjt7OpjhtiCADcHo1bhWiHPsGT098eSG6mvGBHQdzcXWDg
+         ijYPDrDyaL909oL1EdYnDUVRjn2UDKv63yWR+pu94rYsP/8bnd1ZtSUPX7/h4/La4DDe
+         YbbvC/EGryOXqx+pApmUx4VQXE8i15WRpnvRXoT8Z2jG7nPinJ4Vap6ge/tyFssaNO2/
+         /A3r5vFS9v0SYJcWdhaZCu0/MdNZiLVA+tWM2B5uQ88sB+WZHDX44bF6V4sim3T3xsDC
+         WHbxPKbbegYUlY1HM1ZZNTw6LR1LYxrVmgOCEB/z4PN7Oyqhlnra8WJP1pA1l3ycMLd4
+         d/Gg==
+X-Gm-Message-State: ANoB5pkpY3PP2CPM4rKMmxuG1NsIrvCBaWyfnjqbqcVA1sLkLGYUQ3D0
+        umYkgdzlpzcCTqpFCbA48h13t+BlGkoXPQ==
+X-Google-Smtp-Source: AA0mqf4FPLVrQoCTzsoOzmQ6jU0jxcMpPibRsKvbvFp7SPPpS097gdvFi1oaOfbB2qvtXmehArzQTA==
+X-Received: by 2002:a17:902:ec01:b0:188:b8cf:83f with SMTP id l1-20020a170902ec0100b00188b8cf083fmr9959423pld.134.1669183097749;
+        Tue, 22 Nov 2022 21:58:17 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-65-106.pa.vic.optusnet.com.au. [49.186.65.106])
+        by smtp.gmail.com with ESMTPSA id q44-20020a17090a1b2f00b00218ddc8048bsm545909pjq.34.2022.11.22.21.58.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 22 Nov 2022 21:58:17 -0800 (PST)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1oxily-00HYSZ-FF; Wed, 23 Nov 2022 16:58:14 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1oxily-003A2a-1Q;
+        Wed, 23 Nov 2022 16:58:14 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     linux-fsdevel@vger.kernel.org
+Subject: [PATCH 4/9] xfs,iomap: move delalloc punching to iomap
+Date:   Wed, 23 Nov 2022 16:58:07 +1100
+Message-Id: <20221123055812.747923-5-david@fromorbit.com>
+X-Mailer: git-send-email 2.37.2
+In-Reply-To: <20221123055812.747923-1-david@fromorbit.com>
+References: <20221123055812.747923-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20221122224243.GS3600936@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 23, 2022 at 09:42:43AM +1100, Dave Chinner wrote:
-> On Tue, Nov 22, 2022 at 06:03:03PM +0800, Oliver Sang wrote:
-> > hi Gao Xiang,
-> > 
-> > On Tue, Nov 22, 2022 at 09:33:38AM +0800, Gao Xiang wrote:
-> > > On Tue, Nov 22, 2022 at 09:09:34AM +0800, kernel test robot wrote:
-> > > > 
-> > > > please be noted we noticed Gao Xiang and Dave Chinner have already had lots of
-> > > > discussion around this patch, which seems there is maybe new version later.
-> > > > we just sent out this report FYI the possible performance impact of this patch.
-> > > > 
-> > > > 
-> > > > Greeting,
-> > > > 
-> > > > FYI, we noticed a -15.1% regression of fxmark.ssd_xfs_MWCM_72_directio.works/sec due to commit:
-> > > 
-> > > Thanks for your report!
-> > > 
-> > > At a glance, I have no idea why this commit can have performance
-> > > impacts.  Is the result stable?
-> > 
-> > in our tests, the result is quite stable.
-> >      45589           -15.1%      38687 ±  2%  fxmark.ssd_xfs_MWCM_72_directio.works/sec
-> > 
-> > and detail data is as below:
-> > for this commit:
-> >   "fxmark.ssd_xfs_MWCM_72_directio.works/sec": [
-> >     39192.224368,
-> >     39665.690567,
-> >     38980.680601,
-> >     37298.99538,
-> >     37483.256377,
-> >     39504.606569
-> >   ],
-> > 
-> > for parent:
-> >   "fxmark.ssd_xfs_MWCM_72_directio.works/sec": [
-> >     45381.458009,
-> >     45314.376204,
-> >     45724.688965,
-> >     45751.955937,
-> >     45614.323267,
-> >     45747.216475
-> >   ],
-> 
-> This MWCM workload uses a shared directory. Every worker thread (72
-> of them) iterates creating a new file, writes 4kB of data to it and
-> then closes it. There is no synchronisation between worker threads.
-> 
-> The worker threads will lockstep on the directory lock for file
-> creation, they will all attempt to allocate data in the same AG as
-> the file is created. Hence writeback will race with file creation
-> for AG locks, too.  Once the first AG is full, they will all attempt
-> to allocate in the next AG (file creation and writeback).
-> 
-> IOWs, this workload will race to fill AGs, will exercise the "AG
-> full so skip to next AG" allocator fallbacks, etc.
+From: Dave Chinner <dchinner@redhat.com>
 
-Glad to know about that.  I didn't look into the MWCM workload before.
+Because that's what Christoph wants for this error handling path
+only XFS uses.
 
-> 
-> Changing where/how AGs are considered full will impact how the AG
-> selection is made. I'm betting that there's a mismatch between the
-> code that selects the initial AG for allocation (from
-> xfs_bmap_btalloc() via the nullfb case) and the code that selects
-> the actual AG for allocation (xfs_alloc_vextent() w/ NEAR_BNO
-> policy) as a result of this change. This then results in
-> xfs_alloc_vextent() trying to initially allocate from an AG that
-> xfs_alloc_fix_freelist() considers to be full, so it skips the
-> initial selected AG and starts searching for an AG it can allocate
-> into.
+It requires a new iomap export for handling errors over delalloc
+ranges. This is basically the XFS code as is stands, but even though
+Christoph wants this as iomap funcitonality, we still have
+to call it from the filesystem specific ->iomap_end callback, and
+call into the iomap code with yet another filesystem specific
+callback to punch the delalloc extent within the defined ranges.
 
-I can imagine, but I didn't think out several block reservation could
-cause such huge impacts.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/iomap/buffered-io.c | 60 ++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_iomap.c     | 47 ++++++---------------------------
+ include/linux/iomap.h  |  4 +++
+ 3 files changed, 72 insertions(+), 39 deletions(-)
 
-> 
-> Combine that with AGF lock contention from 70+ tasks all trying to
-> allocate in the same location...
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 91ee0b308e13..734b761a1e4a 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -832,6 +832,66 @@ iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *i,
+ }
+ EXPORT_SYMBOL_GPL(iomap_file_buffered_write);
+ 
++/*
++ * When a short write occurs, the filesystem may need to remove reserved space
++ * that was allocated in ->iomap_begin from it's ->iomap_end method. For
++ * filesystems that use delayed allocation, we need to punch out delalloc
++ * extents from the range that are not dirty in the page cache. As the write can
++ * race with page faults, there can be dirty pages over the delalloc extent
++ * outside the range of a short write but still within the delalloc extent
++ * allocated for this iomap.
++ *
++ * This function uses [start_byte, end_byte) intervals (i.e. open ended) to
++ * simplify range iterations, but converts them back to {offset,len} tuples for
++ * the punch callback.
++ */
++int iomap_file_buffered_write_punch_delalloc(struct inode *inode,
++		struct iomap *iomap, loff_t pos, loff_t length,
++		ssize_t written,
++		int (*punch)(struct inode *inode, loff_t pos, loff_t length))
++{
++	loff_t			start_byte;
++	loff_t			end_byte;
++	int			blocksize = i_blocksize(inode);
++	int			error = 0;
++
++	if (iomap->type != IOMAP_DELALLOC)
++		return 0;
++
++	/* If we didn't reserve the blocks, we're not allowed to punch them. */
++	if (!(iomap->flags & IOMAP_F_NEW))
++		return 0;
++
++	/*
++	 * start_byte refers to the first unused block after a short write. If
++	 * nothing was written, round offset down to point at the first block in
++	 * the range.
++	 */
++	if (unlikely(!written))
++		start_byte = round_down(pos, blocksize);
++	else
++		start_byte = round_up(pos + written, blocksize);
++	end_byte = round_up(pos + length, blocksize);
++
++	/* Nothing to do if we've written the entire delalloc extent */
++	if (start_byte >= end_byte)
++		return 0;
++
++	/*
++	 * Lock the mapping to avoid races with page faults re-instantiating
++	 * folios and dirtying them via ->page_mkwrite between the page cache
++	 * truncation and the delalloc extent removal. Failing to do this can
++	 * leave dirty pages with no space reservation in the cache.
++	 */
++	filemap_invalidate_lock(inode->i_mapping);
++	truncate_pagecache_range(inode, start_byte, end_byte - 1);
++	error = punch(inode, start_byte, end_byte - start_byte);
++	filemap_invalidate_unlock(inode->i_mapping);
++
++	return error;
++}
++EXPORT_SYMBOL_GPL(iomap_file_buffered_write_punch_delalloc);
++
+ static loff_t iomap_unshare_iter(struct iomap_iter *iter)
+ {
+ 	struct iomap *iomap = &iter->iomap;
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 7bb55dbc19d3..ea96e8a34868 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1123,12 +1123,12 @@ xfs_buffered_write_iomap_begin(
+ static int
+ xfs_buffered_write_delalloc_punch(
+ 	struct inode		*inode,
+-	loff_t			start_byte,
+-	loff_t			end_byte)
++	loff_t			offset,
++	loff_t			length)
+ {
+ 	struct xfs_mount	*mp = XFS_M(inode->i_sb);
+-	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, start_byte);
+-	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, end_byte);
++	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, offset);
++	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + length);
+ 
+ 	return xfs_bmap_punch_delalloc_range(XFS_I(inode), start_fsb,
+ 				end_fsb - start_fsb);
+@@ -1143,13 +1143,9 @@ xfs_buffered_write_iomap_end(
+ 	unsigned		flags,
+ 	struct iomap		*iomap)
+ {
+-	struct xfs_mount	*mp = XFS_M(inode->i_sb);
+-	loff_t			start_byte;
+-	loff_t			end_byte;
+-	int			error = 0;
+ 
+-	if (iomap->type != IOMAP_DELALLOC)
+-		return 0;
++	struct xfs_mount	*mp = XFS_M(inode->i_sb);
++	int			error;
+ 
+ 	/*
+ 	 * Behave as if the write failed if drop writes is enabled. Set the NEW
+@@ -1160,35 +1156,8 @@ xfs_buffered_write_iomap_end(
+ 		written = 0;
+ 	}
+ 
+-	/* If we didn't reserve the blocks, we're not allowed to punch them. */
+-	if (!(iomap->flags & IOMAP_F_NEW))
+-		return 0;
+-
+-	/*
+-	 * start_fsb refers to the first unused block after a short write. If
+-	 * nothing was written, round offset down to point at the first block in
+-	 * the range.
+-	 */
+-	if (unlikely(!written))
+-		start_byte = round_down(offset, mp->m_sb.sb_blocksize);
+-	else
+-		start_byte = round_up(offset + written, mp->m_sb.sb_blocksize);
+-	end_byte = round_up(offset + length, mp->m_sb.sb_blocksize);
+-
+-	/* Nothing to do if we've written the entire delalloc extent */
+-	if (start_byte >= end_byte)
+-		return 0;
+-
+-	/*
+-	 * Lock the mapping to avoid races with page faults re-instantiating
+-	 * folios and dirtying them via ->page_mkwrite between the page cache
+-	 * truncation and the delalloc extent removal. Failing to do this can
+-	 * leave dirty pages with no space reservation in the cache.
+-	 */
+-	filemap_invalidate_lock(inode->i_mapping);
+-	truncate_pagecache_range(inode, start_byte, end_byte - 1);
+-	error = xfs_buffered_write_delalloc_punch(inode, start_byte, end_byte);
+-	filemap_invalidate_unlock(inode->i_mapping);
++	error = iomap_file_buffered_write_punch_delalloc(inode, iomap, offset,
++			length, written, &xfs_buffered_write_delalloc_punch);
+ 	if (error && !xfs_is_shutdown(mp)) {
+ 		xfs_alert(mp, "%s: unable to clean up ino 0x%llx",
+ 			__func__, XFS_I(inode)->i_ino);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 238a03087e17..0698c4b8ce0e 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -226,6 +226,10 @@ static inline const struct iomap *iomap_iter_srcmap(const struct iomap_iter *i)
+ 
+ ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
+ 		const struct iomap_ops *ops);
++int iomap_file_buffered_write_punch_delalloc(struct inode *inode,
++		struct iomap *iomap, loff_t pos, loff_t length, ssize_t written,
++		int (*punch)(struct inode *inode, loff_t pos, loff_t length));
++
+ int iomap_read_folio(struct folio *folio, const struct iomap_ops *ops);
+ void iomap_readahead(struct readahead_control *, const struct iomap_ops *ops);
+ bool iomap_is_partially_uptodate(struct folio *, size_t from, size_t count);
+-- 
+2.37.2
 
-Yeah, anyway, I will reconfirm on our side about this workload
-as well.
-
-Thanks,
-Gao Xiang
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
