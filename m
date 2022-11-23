@@ -2,253 +2,397 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5C43C433FE
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Nov 2022 23:45:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AA2BC4332F
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Nov 2022 00:33:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235088AbiKVXpW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Nov 2022 18:45:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54944 "EHLO
+        id S234373AbiKWAdQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Nov 2022 19:33:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233625AbiKVXpV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Nov 2022 18:45:21 -0500
-Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 010CDC7220
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Nov 2022 15:45:20 -0800 (PST)
-Received: by mail-pf1-x432.google.com with SMTP id v28so15793863pfi.12
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Nov 2022 15:45:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=4Br32V4f5RhJzAJZzqIlTw5MxWMCxMPceRuTf9fFBWs=;
-        b=LMp1DNYW9KAAMAhwIRp13A+UoP5f9oi+tOL9pTcPwVL3Hc6Ia0RKrsPyHf7sk3dYlL
-         v9YR+AZs0izub2IeIbLi9+6o8cIngufh1uDpzVlhQ/ZFDkXxqwXovqRsjKBm6NZFGvv6
-         pSeTyc8+Xrg5pYq9dVwahpyuRyB+A0L7WHBm9FYVIm3CSim0mFWLdFJcXn1W/Cirm8wU
-         4cx6I/5Z9/oLvxF/W/DNvYvSDm5Y1x5ZXSK3G4AXZe853DkbvzdSe2ugzOjJtso17frU
-         aC8o3HsIYiTKdAMhTgI75zsB1Xqbrkav8T2gO/YrQ38GZirJO2OPKZh8DErpWJLFpzvk
-         XPlg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=4Br32V4f5RhJzAJZzqIlTw5MxWMCxMPceRuTf9fFBWs=;
-        b=Fb2gg/E/f9kN/6qyHB/QBEeZJ3RynWRx69OTpOqq6UcBL6lBrO/DJb+YO1rydtQrzR
-         yGo+sUvsitehR17VVUYUIagUEUhTxywzsR0TODPBVYjToXECg3NBlY53dB4OR5giDaSB
-         1+jYyh+rFXE/ncUkNBKnyMv0c7AnLMZPVgaXTkUkHFmv8t3gugX9jNAGcnjBNgUfkYkd
-         GlsYwTL9g+T2fVdtAqt9vYTF+q0fPgoE8uMq/PbXGCT6O4B2NGQ8vWXp3GfC3edzkQbz
-         wUf4yDP/BnDjOxZmI9BQDlTIRXu8V5lH3ib7qBbBOXHUBtoUXbnizYQ354rnzF3tILJn
-         VLrg==
-X-Gm-Message-State: ANoB5pkAa6+Ag6FrwPtpz/C41lpWwtliCQwk//TSvXGH+eNoyzqrAmxM
-        OQDKiHFIyOI4+QBsUuTQ29RjRQ==
-X-Google-Smtp-Source: AA0mqf4vEA83Ja+O0Ci0KfXTX8Oj7a0KKnCvRMdSpSJjVAh65PF1JRO/J4lVuOvYHHckcCKBomIqGQ==
-X-Received: by 2002:a63:1626:0:b0:470:2c90:d89f with SMTP id w38-20020a631626000000b004702c90d89fmr7904405pgl.253.1669160719359;
-        Tue, 22 Nov 2022 15:45:19 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-65-106.pa.vic.optusnet.com.au. [49.186.65.106])
-        by smtp.gmail.com with ESMTPSA id e126-20020a621e84000000b00573769811d6sm6800188pfe.44.2022.11.22.15.45.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Nov 2022 15:45:18 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1oxcx1-00HS2f-47; Wed, 23 Nov 2022 10:45:15 +1100
-Date:   Wed, 23 Nov 2022 10:45:15 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Catherine Hoang <catherine.hoang@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-ext4 <linux-ext4@vger.kernel.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-api@vger.kernel.org
-Subject: Re: [PATCH v1] xfs_spaceman: add fsuuid command
-Message-ID: <20221122234515.GT3600936@dread.disaster.area>
-References: <20221109222335.84920-1-catherine.hoang@oracle.com>
- <Y3abjYmX//CF/ey0@magnolia>
- <20221117215125.GH3600936@dread.disaster.area>
- <Y3bKjm2vOwy/jV4Z@magnolia>
- <20221121233357.GO3600936@dread.disaster.area>
- <Y3xqhXjJpXosOPPH@magnolia>
+        with ESMTP id S234023AbiKWAdP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Nov 2022 19:33:15 -0500
+Received: from out30-133.freemail.mail.aliyun.com (out30-133.freemail.mail.aliyun.com [115.124.30.133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7A297AF47;
+        Tue, 22 Nov 2022 16:33:12 -0800 (PST)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R231e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046051;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=13;SR=0;TI=SMTPD_---0VVU6y22_1669163586;
+Received: from B-P7TQMD6M-0146.local(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0VVU6y22_1669163586)
+          by smtp.aliyun-inc.com;
+          Wed, 23 Nov 2022 08:33:09 +0800
+Date:   Wed, 23 Nov 2022 08:33:02 +0800
+From:   Gao Xiang <hsiangkao@linux.alibaba.com>
+To:     Oliver Sang <oliver.sang@intel.com>
+Cc:     oe-lkp@lists.linux.dev, lkp@intel.com,
+        Zirong Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
+        ying.huang@intel.com, feng.tang@intel.com,
+        zhengjun.xing@linux.intel.com, fengwei.yin@intel.com,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        Brian Foster <bfoster@redhat.com>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] xfs: account extra freespace btree splits for multiple
+ allocations
+Message-ID: <Y31qPk6+h80cFGXn@B-P7TQMD6M-0146.local>
+Mail-Followup-To: Oliver Sang <oliver.sang@intel.com>,
+        oe-lkp@lists.linux.dev, lkp@intel.com,
+        Zirong Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
+        ying.huang@intel.com, feng.tang@intel.com,
+        zhengjun.xing@linux.intel.com, fengwei.yin@intel.com,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        Brian Foster <bfoster@redhat.com>,
+        LKML <linux-kernel@vger.kernel.org>
+References: <20221109034802.40322-1-hsiangkao@linux.alibaba.com>
+ <202211220854.48dad6fd-oliver.sang@intel.com>
+ <Y3wm8hwPMXcFNjiO@B-P7TQMD6M-0146.local>
+ <Y3yeVzzt5WIIHfhm@xsang-OptiPlex-9020>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <Y3xqhXjJpXosOPPH@magnolia>
+In-Reply-To: <Y3yeVzzt5WIIHfhm@xsang-OptiPlex-9020>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 21, 2022 at 10:21:57PM -0800, Darrick J. Wong wrote:
-> [adding Ted, the ext4 list, fsdevel, and api, because why not?]
+On Tue, Nov 22, 2022 at 06:03:03PM +0800, Oliver Sang wrote:
+> hi Gao Xiang,
 > 
-> On Tue, Nov 22, 2022 at 10:33:57AM +1100, Dave Chinner wrote:
-> > On Thu, Nov 17, 2022 at 03:58:06PM -0800, Darrick J. Wong wrote:
-> > > On Fri, Nov 18, 2022 at 08:51:25AM +1100, Dave Chinner wrote:
-> > > > On Thu, Nov 17, 2022 at 12:37:33PM -0800, Darrick J. Wong wrote:
-> > > > > On Wed, Nov 09, 2022 at 02:23:35PM -0800, Catherine Hoang wrote:
-> > > > > > Add support for the fsuuid command to retrieve the UUID of a mounted
-> > > > > > filesystem.
-> > > > > > 
-> > > > > > Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-> > > > > > ---
-> 
-> <snip to the good part>
-> > > > > If you're really unlucky, the C compiler will put the fsuuid right
-> > > > > before the call frame, which is how stack smashing attacks work.  It
-> > > > > might also lay out bp[] immediately afterwards, which will give you
-> > > > > weird results as the unparse function overwrites its source buffer.  The
-> > > > > C compiler controls the stack layout, which means this can go bad in
-> > > > > subtle ways.
-> > > > > 
-> > > > > Either way, gcc complains about this (albeit in an opaque manner)...
-> > > > > 
-> > > > > In file included from ../include/xfs.h:9,
-> > > > >                  from ../include/libxfs.h:15,
-> > > > >                  from fsuuid.c:7:
-> > > > > In function ‘platform_uuid_unparse’,
-> > > > >     inlined from ‘fsuuid_f’ at fsuuid.c:45:3:
-> > > > > ../include/xfs/linux.h:100:9: error: ‘uuid_unparse’ reading 16 bytes from a region of size 0 [-Werror=stringop-overread]
-> > > > >   100 |         uuid_unparse(*uu, buffer);
-> > > > >       |         ^~~~~~~~~~~~~~~~~~~~~~~~~
-> > > > > ../include/xfs/linux.h: In function ‘fsuuid_f’:
-> > > > > ../include/xfs/linux.h:100:9: note: referencing argument 1 of type ‘const unsigned char *’
-> > > > > In file included from ../include/xfs/linux.h:13,
-> > > > >                  from ../include/xfs.h:9,
-> > > > >                  from ../include/libxfs.h:15,
-> > > > >                  from fsuuid.c:7:
-> > > > > /usr/include/uuid/uuid.h:107:13: note: in a call to function ‘uuid_unparse’
-> > > > >   107 | extern void uuid_unparse(const uuid_t uu, char *out);
-> > > > >       |             ^~~~~~~~~~~~
-> > > > > cc1: all warnings being treated as errors
-> > > > > 
-> > > > > ...so please allocate the struct fsuuid object dynamically.
-> > > > 
-> > > > So, follow common convention and you'll get it wrong, eh? That a
-> > > > score of -4 on Rusty's API Design scale.
-> > > > 
-> > > > http://sweng.the-davies.net/Home/rustys-api-design-manifesto
-> > > > 
-> > > > Flex arrays in user APIs like this just look plain dangerous to me.
-> > > > 
-> > > > Really, this says that the FSUUID API should have a fixed length
-> > > > buffer size defined in the API and the length used can be anything
-> > > > up to the maximum.
-> > > > 
-> > > > We already have this being added for the ioctl API:
-> > > > 
-> > > > #define UUID_SIZE 16
-> > > > 
-> > > > So why isn't the API definition this:
-> > > > 
-> > > > struct fsuuid {
-> > > >     __u32   fsu_len;
-> > > >     __u32   fsu_flags;
-> > > >     __u8    fsu_uuid[UUID_SIZE];
-> > > > };
-> > > > 
-> > > > Or if we want to support larger ID structures:
-> > > > 
-> > > > #define MAX_FSUUID_SIZE 256
-> > > > 
-> > > > struct fsuuid {
-> > > >     __u32   fsu_len;
-> > > >     __u32   fsu_flags;
-> > > >     __u8    fsu_uuid[MAX_FSUUID_SIZE];
-> > > > };
-> > > > 
-> > > > Then the structure can be safely placed on the stack, which means
-> > > > "the obvious use is (probably) the correct one" (a score of 7 on
-> > > > Rusty's API Design scale). It also gives the kernel a fixed upper
-> > > > bound that it can use to validate the incoming fsu_len variable
-> > > > against...
+> On Tue, Nov 22, 2022 at 09:33:38AM +0800, Gao Xiang wrote:
+> > On Tue, Nov 22, 2022 at 09:09:34AM +0800, kernel test robot wrote:
 > > > 
-> > > Too late now, this already shipped in 6.0.  Changing the struct size
-> > > would change the ioctl number, which is a totally new API.  This was
-> > > already discussed back in July on fsdevel/api.
+> > > please be noted we noticed Gao Xiang and Dave Chinner have already had lots of
+> > > discussion around this patch, which seems there is maybe new version later.
+> > > we just sent out this report FYI the possible performance impact of this patch.
+> > > 
+> > > 
+> > > Greeting,
+> > > 
+> > > FYI, we noticed a -15.1% regression of fxmark.ssd_xfs_MWCM_72_directio.works/sec due to commit:
 > > 
-> > It is certainly not too late - if we are going to lift this to the
-> > VFS, then we can simply make it a new ioctl. The horrible ext4 ioctl
-> > can ber left to rot in ext4 and nobody else ever needs to care that
-> > it exists.
+> > Thanks for your report!
+> > 
+> > At a glance, I have no idea why this commit can have performance
+> > impacts.  Is the result stable?
 > 
-> You're wrong.  This was discussed **multiple times** this summer on
-> the fsdevel and API lists.  You had plenty of opportunity to make these
-> suggestions about the design, and yet you did not:
+> in our tests, the result is quite stable.
+>      45589           -15.1%      38687 ±  2%  fxmark.ssd_xfs_MWCM_72_directio.works/sec
 > 
-> https://lore.kernel.org/linux-api/20220701201123.183468-1-bongiojp@gmail.com/
-> https://lore.kernel.org/linux-api/20220719065551.154132-1-bongiojp@gmail.com/
-> https://lore.kernel.org/linux-api/20220719234131.235187-1-bongiojp@gmail.com/
-> https://lore.kernel.org/linux-api/20220721224422.438351-1-bongiojp@gmail.com/
+> and detail data is as below:
+> for this commit:
+>   "fxmark.ssd_xfs_MWCM_72_directio.works/sec": [
+>     39192.224368,
+>     39665.690567,
+>     38980.680601,
+>     37298.99538,
+>     37483.256377,
+>     39504.606569
+>   ],
+> 
+> for parent:
+>   "fxmark.ssd_xfs_MWCM_72_directio.works/sec": [
+>     45381.458009,
+>     45314.376204,
+>     45724.688965,
+>     45751.955937,
+>     45614.323267,
+>     45747.216475
+>   ],
+> 
+> 
+> if you still have concern, we could rerun tests. Thanks!
+
+According to the report, I can see:
+	67262           -29.6%      47384 ±  7%  fxmark.ssd_xfs_MWCM_18_directio.works/sec
+	52786           -15.6%      44567 ±  4%  fxmark.ssd_xfs_MWCM_1_directio.works/sec
+	63189           -23.3%      48486 ±  5%  fxmark.ssd_xfs_MWCM_2_directio.works/sec
 
 
-There's good reason for that: this was posted and reviewed as *an
-EXT4 specific API*.  Why are you expecting XFS developers to closely
-review a patchset that was titled "Add ioctls to get/set the ext4
-superblock uuid."?
-
-There was -no reasons- for me to pay attention to it, and I have
-enough to keep up with without having to care about the minutae of
-what ext4 internal information is being exposing to userspace.
-
-However, now it's being proposed as a *generic VFS API*, and so it's
-now important enough for developers from other filesystems to look
-at this ioctl API.
-
-> Jeremy built the functionality and followed the customary process,
-> sending four separate revisions for reviews.  He adapted his code based
-> on our feedback about how to future-proof it by adding an explicit
-> length parameter, and got it merged into ext4 in 6.0-rc1.
-
-*As an EXT4 modification*, not a generic VFS ioctl.
-
-> Now you want Catherine and I to tear down his work and initiate a design
-> review of YET ANOTHER NEW IOCTL just so the API can hit this one design
-> point you care about, and then convince Ted to go back and redo all the
-> work that has already been done.  All this to extract 16 bytes from the
-> kernel in a slightly different style than the existing XFS fsgeometry
-> ioctl.
-
-I'm not asking you to tear anything down. Just leave the ext4 ioctl
-as it is currently defined and nothing existing breaks or needs
-reworking.
-
-All I'm asking is that instead of lifting the ext4 ioctl verbatim,
-you lift it with a fixed maximum size for the uuid data array to
-replace the flex array. It's a *trivial change to make*, and yes, I
-know that this means it's not the same as the ext4 ioctl.
-
-But, really, who cares that it will be a different ioctl? Nobody but
-ext4 utilities will be using the ext4 ioctl, and we expect generic
-block/fs utilities and applications to use the VFS definition of the
-ioctl, not the ext4 specific one.
-
-> This was /supposed/ to be a simple way for a less experienced staffer to
-> gain some experience wiring up an existing ioctl.  And, well, I hope she
-> doesn't take away that developing for Linux is institutionally broken
-> and frustrating, because that's what I've taken away from the last 2+
-> years of being here.
-
-When we lift stuff from filesystem specific scope (where few people
-care about API warts) to generic VFS scope that the whole world is
-expected to see, use and understand, you should expect a larger
-number of experienced developers to scrutinise it.  The wider scope
-of the API means the "acceptibility bar" is set higher.
-
-Just because the code change is simple, it doesn't mean the issues
-surrounding the code change are simple or straight forward. Just
-because it went through a review on the ext4 list it doesn't mean
-the API or implementation is flawless.
-
-The point I'm making is that lifting fs ioctl APIs verbatim is a
-*known broken process* that leads to future pain fixing all the
-problems inherited from the original fs specific API and
-implementation.  If we want to lift functionality to be generic VFS
-UAPI and at the time of lifting we find problems with the UAPI
-and/or implementation, then we need to fix the problems before we
-expose the new VFS API to the entire world.
-
-Repeat past mistakes, or learn from them. Your choice...
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> 
+> > 
+> > Thanks,
+> > Gao Xiang
+> > 
+> > > 
+> > > 
+> > > commit: ada76f94c5b32c1828955d70f692b111a9ec2d33 ("[PATCH] xfs: account extra freespace btree splits for multiple allocations")
+> > > url: https://github.com/intel-lab-lkp/linux/commits/Gao-Xiang/xfs-account-extra-freespace-btree-splits-for-multiple-allocations/20221109-114953
+> > > base: https://git.kernel.org/cgit/fs/xfs/xfs-linux.git for-next
+> > > patch link: https://lore.kernel.org/all/20221109034802.40322-1-hsiangkao@linux.alibaba.com/
+> > > patch subject: [PATCH] xfs: account extra freespace btree splits for multiple allocations
+> > > 
+> > > in testcase: fxmark
+> > > on test machine: 128 threads 2 sockets Intel(R) Xeon(R) Platinum 8358 CPU @ 2.60GHz (Ice Lake) with 128G memory
+> > > with following parameters:
+> > > 
+> > > 	disk: 1SSD
+> > > 	media: ssd
+> > > 	test: MWCM
+> > > 	fstype: xfs
+> > > 	directio: directio
+> > > 	cpufreq_governor: performance
+> > > 
+> > > test-description: FxMark is a filesystem benchmark that test multicore scalability.
+> > > test-url: https://github.com/sslab-gatech/fxmark
+> > > 
+> > > 
+> > > 
+> > > If you fix the issue, kindly add following tag
+> > > | Reported-by: kernel test robot <oliver.sang@intel.com>
+> > > | Link: https://lore.kernel.org/oe-lkp/202211220854.48dad6fd-oliver.sang@intel.com
+> > > 
+> > > 
+> > > Details are as below:
+> > > -------------------------------------------------------------------------------------------------->
+> > > 
+> > > 
+> > > To reproduce:
+> > > 
+> > >         git clone https://github.com/intel/lkp-tests.git
+> > >         cd lkp-tests
+> > >         sudo bin/lkp install job.yaml           # job file is attached in this email
+> > >         bin/lkp split-job --compatible job.yaml # generate the yaml file for lkp run
+> > >         sudo bin/lkp run generated-yaml-file
+> > > 
+> > >         # if come across any failure that blocks the test,
+> > >         # please remove ~/.lkp and /lkp dir to run from a clean state.
+> > > 
+> > > =========================================================================================
+> > > compiler/cpufreq_governor/directio/disk/fstype/kconfig/media/rootfs/tbox_group/test/testcase:
+> > >   gcc-11/performance/directio/1SSD/xfs/x86_64-rhel-8.3/ssd/debian-11.1-x86_64-20220510.cgz/lkp-icl-2sp5/MWCM/fxmark
+> > > 
+> > > commit: 
+> > >   4eb559dd15 ("Merge tag 'refcount-cow-domain-6.1_2022-10-31' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.1-fixesA")
+> > >   ada76f94c5 ("xfs: account extra freespace btree splits for multiple allocations")
+> > > 
+> > > 4eb559dd15671cca ada76f94c5b32c1828955d70f69 
+> > > ---------------- --------------------------- 
+> > >          %stddev     %change         %stddev
+> > >              \          |                \  
+> > >     260.92           +90.8%     497.93 ± 13%  fxmark.ssd_xfs_MWCM_18_directio.idle_sec
+> > >      29.10           +91.5%      55.74 ± 14%  fxmark.ssd_xfs_MWCM_18_directio.idle_util
+> > >       9.11 ±  2%     -17.6%       7.51 ±  8%  fxmark.ssd_xfs_MWCM_18_directio.iowait_sec
+> > >       1.02 ±  2%     -17.3%       0.84 ±  8%  fxmark.ssd_xfs_MWCM_18_directio.iowait_util
+> > >     617.96           -38.8%     378.15 ± 19%  fxmark.ssd_xfs_MWCM_18_directio.sys_sec
+> > >      68.93           -38.6%      42.31 ± 18%  fxmark.ssd_xfs_MWCM_18_directio.sys_util
+> > >       1.80 ±  4%     -18.5%       1.47 ±  5%  fxmark.ssd_xfs_MWCM_18_directio.user_sec
+> > >       0.20 ±  4%     -18.2%       0.16 ±  4%  fxmark.ssd_xfs_MWCM_18_directio.user_util
+> > >    3363535           -29.6%    2369575 ±  7%  fxmark.ssd_xfs_MWCM_18_directio.works
+> > >      67262           -29.6%      47384 ±  7%  fxmark.ssd_xfs_MWCM_18_directio.works/sec
+> > >       0.01 ±111%  +51925.0%       3.47 ±  9%  fxmark.ssd_xfs_MWCM_1_directio.idle_sec
+> > >       0.01 ±111%  +52382.0%       6.99 ±  9%  fxmark.ssd_xfs_MWCM_1_directio.idle_util
+> > >       0.23 ± 14%   +1481.9%       3.64 ± 14%  fxmark.ssd_xfs_MWCM_1_directio.iowait_sec
+> > >       0.46 ± 14%   +1496.0%       7.33 ± 14%  fxmark.ssd_xfs_MWCM_1_directio.iowait_util
+> > >       0.58           +20.9%       0.70 ±  2%  fxmark.ssd_xfs_MWCM_1_directio.irq_sec
+> > >       1.15           +21.9%       1.40 ±  2%  fxmark.ssd_xfs_MWCM_1_directio.irq_util
+> > >       0.37 ±  2%     +18.9%       0.44 ±  5%  fxmark.ssd_xfs_MWCM_1_directio.softirq_sec
+> > >       0.74 ±  2%     +20.0%       0.89 ±  5%  fxmark.ssd_xfs_MWCM_1_directio.softirq_util
+> > >      47.70           -15.4%      40.33 ±  2%  fxmark.ssd_xfs_MWCM_1_directio.sys_sec
+> > >      95.24           -14.7%      81.24 ±  2%  fxmark.ssd_xfs_MWCM_1_directio.sys_util
+> > >       1.20 ±  5%     -11.0%       1.07 ±  4%  fxmark.ssd_xfs_MWCM_1_directio.user_sec
+> > >       2.40 ±  6%     -10.2%       2.15 ±  4%  fxmark.ssd_xfs_MWCM_1_directio.user_util
+> > >    2639345           -15.6%    2228369 ±  4%  fxmark.ssd_xfs_MWCM_1_directio.works
+> > >      52786           -15.6%      44567 ±  4%  fxmark.ssd_xfs_MWCM_1_directio.works/sec
+> > >       4.11 ±  3%    +254.5%      14.56 ± 18%  fxmark.ssd_xfs_MWCM_2_directio.idle_sec
+> > >       4.10 ±  3%    +255.9%      14.60 ± 18%  fxmark.ssd_xfs_MWCM_2_directio.idle_util
+> > >       1.42 ±  6%    +435.2%       7.57 ±  6%  fxmark.ssd_xfs_MWCM_2_directio.iowait_sec
+> > >       1.41 ±  6%    +437.2%       7.59 ±  6%  fxmark.ssd_xfs_MWCM_2_directio.iowait_util
+> > >       0.82           +20.2%       0.99 ±  4%  fxmark.ssd_xfs_MWCM_2_directio.irq_sec
+> > >       0.82           +20.7%       0.99 ±  4%  fxmark.ssd_xfs_MWCM_2_directio.irq_util
+> > >       0.52 ±  4%     +30.0%       0.67 ±  4%  fxmark.ssd_xfs_MWCM_2_directio.softirq_sec
+> > >       0.52 ±  4%     +30.5%       0.67 ±  4%  fxmark.ssd_xfs_MWCM_2_directio.softirq_util
+> > >      91.86           -18.6%      74.82 ±  4%  fxmark.ssd_xfs_MWCM_2_directio.sys_sec
+> > >      91.73           -18.3%      74.99 ±  4%  fxmark.ssd_xfs_MWCM_2_directio.sys_util
+> > >       1.42 ±  4%     -18.7%       1.15 ±  4%  fxmark.ssd_xfs_MWCM_2_directio.user_sec
+> > >       1.42 ±  4%     -18.4%       1.16 ±  4%  fxmark.ssd_xfs_MWCM_2_directio.user_util
+> > >    3159498           -23.2%    2425056 ±  5%  fxmark.ssd_xfs_MWCM_2_directio.works
+> > >      63189           -23.3%      48486 ±  5%  fxmark.ssd_xfs_MWCM_2_directio.works/sec
+> > >     413.60 ±  4%    +103.5%     841.63 ± 20%  fxmark.ssd_xfs_MWCM_36_directio.idle_sec
+> > >      22.94 ±  4%    +103.9%      46.78 ± 20%  fxmark.ssd_xfs_MWCM_36_directio.idle_util
+> > >       1364           -31.6%     933.33 ± 19%  fxmark.ssd_xfs_MWCM_36_directio.sys_sec
+> > >      75.70           -31.5%      51.85 ± 18%  fxmark.ssd_xfs_MWCM_36_directio.sys_util
+> > >       1.82 ±  4%     -11.7%       1.60 ±  5%  fxmark.ssd_xfs_MWCM_36_directio.user_sec
+> > >       0.10 ±  4%     -11.5%       0.09 ±  5%  fxmark.ssd_xfs_MWCM_36_directio.user_util
+> > >    2850816           -22.9%    2197955 ±  7%  fxmark.ssd_xfs_MWCM_36_directio.works
+> > >      57006           -22.9%      43943 ±  7%  fxmark.ssd_xfs_MWCM_36_directio.works/sec
+> > >      54.22           +63.5%      88.65 ±  2%  fxmark.ssd_xfs_MWCM_4_directio.idle_sec
+> > >      27.33           +64.7%      45.02 ±  2%  fxmark.ssd_xfs_MWCM_4_directio.idle_util
+> > >       6.53           +36.1%       8.89 ±  8%  fxmark.ssd_xfs_MWCM_4_directio.iowait_sec
+> > >       3.29           +37.1%       4.51 ±  8%  fxmark.ssd_xfs_MWCM_4_directio.iowait_util
+> > >       1.37           +21.7%       1.67 ±  3%  fxmark.ssd_xfs_MWCM_4_directio.irq_sec
+> > >       0.69           +22.6%       0.85 ±  3%  fxmark.ssd_xfs_MWCM_4_directio.irq_util
+> > >       0.64           +20.3%       0.77 ±  3%  fxmark.ssd_xfs_MWCM_4_directio.softirq_sec
+> > >       0.32           +21.2%       0.39 ±  3%  fxmark.ssd_xfs_MWCM_4_directio.softirq_util
+> > >     134.06           -28.6%      95.67 ±  2%  fxmark.ssd_xfs_MWCM_4_directio.sys_sec
+> > >      67.58           -28.1%      48.59 ±  2%  fxmark.ssd_xfs_MWCM_4_directio.sys_util
+> > >       1.55 ±  2%     -18.4%       1.26 ±  5%  fxmark.ssd_xfs_MWCM_4_directio.user_sec
+> > >       0.78 ±  2%     -17.8%       0.64 ±  5%  fxmark.ssd_xfs_MWCM_4_directio.user_util
+> > >    3262962           -26.9%    2383952        fxmark.ssd_xfs_MWCM_4_directio.works
+> > >      65256           -26.9%      47670        fxmark.ssd_xfs_MWCM_4_directio.works/sec
+> > >     489.98 ±  3%    +160.6%       1277 ± 24%  fxmark.ssd_xfs_MWCM_54_directio.idle_sec
+> > >      18.11 ±  3%    +161.0%      47.27 ± 24%  fxmark.ssd_xfs_MWCM_54_directio.idle_util
+> > >       2185           -36.3%       1391 ± 22%  fxmark.ssd_xfs_MWCM_54_directio.sys_sec
+> > >      80.77           -36.2%      51.49 ± 22%  fxmark.ssd_xfs_MWCM_54_directio.sys_util
+> > >    2448443           -24.0%    1859708 ±  9%  fxmark.ssd_xfs_MWCM_54_directio.works
+> > >      48963           -24.1%      37175 ±  9%  fxmark.ssd_xfs_MWCM_54_directio.works/sec
+> > >     614.60 ±  2%     +88.5%       1158 ±  9%  fxmark.ssd_xfs_MWCM_72_directio.idle_sec
+> > >      17.04 ±  2%     +88.6%      32.13 ±  9%  fxmark.ssd_xfs_MWCM_72_directio.idle_util
+> > >       6.44 ±  4%     -14.8%       5.48 ±  9%  fxmark.ssd_xfs_MWCM_72_directio.iowait_sec
+> > >       0.18 ±  4%     -14.8%       0.15 ± 10%  fxmark.ssd_xfs_MWCM_72_directio.iowait_util
+> > >       2953           -18.5%       2407 ±  4%  fxmark.ssd_xfs_MWCM_72_directio.sys_sec
+> > >      81.89           -18.5%      66.77 ±  4%  fxmark.ssd_xfs_MWCM_72_directio.sys_util
+> > >    2279692           -15.1%    1935171 ±  2%  fxmark.ssd_xfs_MWCM_72_directio.works
+> > >      45589           -15.1%      38687 ±  2%  fxmark.ssd_xfs_MWCM_72_directio.works/sec
+> > >     934.32           -10.3%     838.20        fxmark.time.elapsed_time
+> > >     934.32           -10.3%     838.20        fxmark.time.elapsed_time.max
+> > >   43490089           -20.8%   34446960 ±  3%  fxmark.time.file_system_outputs
+> > >     128601 ±  3%     -31.6%      87922 ±  4%  fxmark.time.involuntary_context_switches
+> > >      31.83           -17.8%      26.17 ±  5%  fxmark.time.percent_of_cpu_this_job_got
+> > >     301.24           -26.5%     221.43 ±  5%  fxmark.time.system_time
+> > >     841264 ±  3%     -11.2%     747133 ±  5%  fxmark.time.voluntary_context_switches
+> > >     989.01            -9.6%     893.57        uptime.boot
+> > >      54.77           +10.7%      60.61        iostat.cpu.idle
+> > >       5.31 ±  4%     +21.4%       6.45 ±  4%  iostat.cpu.iowait
+> > >      38.42           -18.0%      31.51 ±  2%  iostat.cpu.system
+> > >      55.66            +5.8       61.45        mpstat.cpu.all.idle%
+> > >       5.31 ±  5%      +1.2        6.46 ±  4%  mpstat.cpu.all.iowait%
+> > >       0.60 ±  2%      -0.1        0.53        mpstat.cpu.all.soft%
+> > >      36.50            -6.6       29.87 ±  3%  mpstat.cpu.all.sys%
+> > >   26496967           -20.9%   20947493 ±  2%  numa-numastat.node0.local_node
+> > >   26548700           -20.8%   21022864 ±  2%  numa-numastat.node0.numa_hit
+> > >    3332141 ±  6%     -22.1%    2595871 ±  4%  numa-numastat.node1.local_node
+> > >    3400117 ±  5%     -22.4%    2638708 ±  5%  numa-numastat.node1.numa_hit
+> > >       2211            +1.0%       2233        perf-stat.i.minor-faults
+> > >       0.39 ±  9%      +0.1        0.44 ±  3%  perf-stat.i.node-load-miss-rate%
+> > >       2211            +1.0%       2233        perf-stat.i.page-faults
+> > >       2209            +1.0%       2230        perf-stat.ps.minor-faults
+> > >       2209            +1.0%       2230        perf-stat.ps.page-faults
+> > >      53.83           +11.5%      60.00        vmstat.cpu.id
+> > >       5430 ±  2%     -14.0%       4668 ±  3%  vmstat.io.bi
+> > >     123556            -8.3%     113294 ±  2%  vmstat.io.bo
+> > >   11181852           -16.7%    9318758 ±  2%  vmstat.memory.cache
+> > >       7.67 ±  6%     -19.6%       6.17 ± 11%  vmstat.procs.r
+> > >    9247281           -15.1%    7847381        meminfo.Cached
+> > >    3299044 ±  2%     -21.5%    2591082 ±  2%  meminfo.Dirty
+> > >    5715841 ±  2%     -24.4%    4320653 ±  3%  meminfo.Inactive
+> > >    5389224 ±  2%     -25.9%    3991807 ±  3%  meminfo.Inactive(file)
+> > >    1914390           -24.3%    1449759 ±  3%  meminfo.KReclaimable
+> > >      31406 ± 13%     -22.0%      24510 ±  7%  meminfo.KernelStack
+> > >   14111361           -16.6%   11775228 ±  2%  meminfo.Memused
+> > >    1914390           -24.3%    1449759 ±  3%  meminfo.SReclaimable
+> > >    1427015           -25.6%    1061962 ±  4%  meminfo.SUnreclaim
+> > >      18397 ±  2%      -8.4%      16846        meminfo.Shmem
+> > >    3341406           -24.8%    2511722 ±  3%  meminfo.Slab
+> > >   24035030           -18.6%   19557858 ±  2%  meminfo.max_used_kB
+> > >       1.23 ± 22%      +0.4        1.58 ± 18%  perf-profile.calltrace.cycles-pp.xlog_cil_push_work.process_one_work.worker_thread.kthread.ret_from_fork
+> > >       0.76 ± 44%      -0.4        0.38 ± 74%  perf-profile.children.cycles-pp.rcu_sched_clock_irq
+> > >       0.09 ± 10%      -0.0        0.05 ± 47%  perf-profile.children.cycles-pp.mod_find
+> > >       0.10 ± 47%      +0.1        0.18 ± 26%  perf-profile.children.cycles-pp.xfs_iext_lookup_extent
+> > >       0.17 ± 26%      +0.1        0.25 ± 16%  perf-profile.children.cycles-pp.s_show
+> > >       0.05 ± 82%      +0.1        0.13 ± 46%  perf-profile.children.cycles-pp.timekeeping_advance
+> > >       0.05 ± 82%      +0.1        0.13 ± 46%  perf-profile.children.cycles-pp.update_wall_time
+> > >       0.21 ± 21%      +0.1        0.31 ± 20%  perf-profile.children.cycles-pp.vsnprintf
+> > >       0.20 ± 26%      +0.1        0.30 ± 17%  perf-profile.children.cycles-pp.seq_printf
+> > >       1.23 ± 22%      +0.4        1.58 ± 18%  perf-profile.children.cycles-pp.xlog_cil_push_work
+> > >       0.08 ± 14%      -0.0        0.04 ± 72%  perf-profile.self.cycles-pp.mod_find
+> > >       0.14 ± 26%      +0.1        0.22 ± 16%  perf-profile.self.cycles-pp.xlog_cil_push_work
+> > >       0.13 ± 37%      +0.1        0.21 ± 22%  perf-profile.self.cycles-pp.__folio_end_writeback
+> > >       1339 ±  6%     -12.1%       1177 ±  6%  numa-meminfo.node0.Active
+> > >       1317 ±  4%     -10.6%       1177 ±  6%  numa-meminfo.node0.Active(anon)
+> > >    2938921 ±  2%     -22.3%    2284083 ±  2%  numa-meminfo.node0.Dirty
+> > >    4950896 ±  2%     -25.3%    3699254 ±  2%  numa-meminfo.node0.Inactive
+> > >    4806022 ±  2%     -27.0%    3510366 ±  3%  numa-meminfo.node0.Inactive(file)
+> > >    1663428 ±  2%     -25.0%    1246833 ±  3%  numa-meminfo.node0.KReclaimable
+> > >      15585 ±  4%     -12.4%      13655 ±  4%  numa-meminfo.node0.KernelStack
+> > >    1663428 ±  2%     -25.0%    1246833 ±  3%  numa-meminfo.node0.SReclaimable
+> > >    1224137 ±  2%     -25.5%     912586 ±  4%  numa-meminfo.node0.SUnreclaim
+> > >      15785 ±  5%     -12.5%      13811 ±  4%  numa-meminfo.node0.Shmem
+> > >    2887566           -25.2%    2159421 ±  3%  numa-meminfo.node0.Slab
+> > >     358435 ±  3%     -14.3%     307335 ±  6%  numa-meminfo.node1.Dirty
+> > >     764404 ±  6%     -18.6%     622071 ± 10%  numa-meminfo.node1.Inactive
+> > >     582651 ±  2%     -17.3%     482089 ±  9%  numa-meminfo.node1.Inactive(file)
+> > >     250653 ± 10%     -18.9%     203397 ± 13%  numa-meminfo.node1.KReclaimable
+> > >    3410163 ± 54%     -26.4%    2508459 ± 68%  numa-meminfo.node1.MemUsed
+> > >     250653 ± 10%     -18.9%     203397 ± 13%  numa-meminfo.node1.SReclaimable
+> > >     202812 ± 17%     -26.2%     149763 ±  5%  numa-meminfo.node1.SUnreclaim
+> > >     453467 ±  9%     -22.1%     353161 ±  8%  numa-meminfo.node1.Slab
+> > >       0.71 ± 14%     -21.5%       0.56 ± 14%  sched_debug.cfs_rq:/.h_nr_running.avg
+> > >       1405 ± 55%     -68.3%     445.08 ± 27%  sched_debug.cfs_rq:/.load_avg.avg
+> > >    5023746           -33.8%    3324248 ± 13%  sched_debug.cfs_rq:/.min_vruntime.avg
+> > >    5080937           -33.2%    3395209 ± 12%  sched_debug.cfs_rq:/.min_vruntime.max
+> > >    4683128           -31.3%    3217873 ± 13%  sched_debug.cfs_rq:/.min_vruntime.min
+> > >       0.59 ±  9%     -17.4%       0.49 ± 18%  sched_debug.cfs_rq:/.nr_running.avg
+> > >     650.51 ± 13%     -32.3%     440.38 ±  9%  sched_debug.cfs_rq:/.runnable_avg.avg
+> > >       1007 ±  8%     -18.5%     821.27 ±  6%  sched_debug.cfs_rq:/.runnable_avg.max
+> > >     476.07 ± 17%     -38.7%     291.80 ± 16%  sched_debug.cfs_rq:/.runnable_avg.min
+> > >     517.96 ±  5%     -20.3%     412.57 ±  9%  sched_debug.cfs_rq:/.util_avg.avg
+> > >     352.69 ±  5%     -26.1%     260.66 ± 14%  sched_debug.cfs_rq:/.util_avg.min
+> > >     113.13 ±  9%     -26.8%      82.85 ± 15%  sched_debug.cfs_rq:/.util_est_enqueued.stddev
+> > >      18547 ±  4%      -9.5%      16791 ±  3%  sched_debug.cpu.curr->pid.max
+> > >       1549 ± 11%   +1106.2%      18692 ±123%  sched_debug.cpu.max_idle_balance_cost.stddev
+> > >       0.70 ± 16%     -25.1%       0.52 ± 18%  sched_debug.cpu.nr_running.avg
+> > >     862357 ±  4%     -16.3%     722142 ±  3%  sched_debug.cpu.nr_switches.avg
+> > >    1440368 ±  6%     -22.2%    1120203 ±  6%  sched_debug.cpu.nr_switches.max
+> > >     756963 ±  4%     -14.6%     646359 ±  5%  sched_debug.cpu.nr_switches.min
+> > >     150642 ± 10%     -33.8%      99651 ± 18%  sched_debug.cpu.nr_switches.stddev
+> > >   17687949           -23.3%   13563229 ±  2%  numa-vmstat.node0.nr_dirtied
+> > >     734675 ±  2%     -22.3%     570784 ±  2%  numa-vmstat.node0.nr_dirty
+> > >    1201580 ±  2%     -27.0%     877113 ±  3%  numa-vmstat.node0.nr_inactive_file
+> > >      15586 ±  4%     -12.4%      13655 ±  4%  numa-vmstat.node0.nr_kernel_stack
+> > >       3945 ±  5%     -12.5%       3453 ±  4%  numa-vmstat.node0.nr_shmem
+> > >     415866 ±  2%     -25.1%     311497 ±  3%  numa-vmstat.node0.nr_slab_reclaimable
+> > >     306030 ±  2%     -25.5%     228011 ±  4%  numa-vmstat.node0.nr_slab_unreclaimable
+> > >   17687949           -23.3%   13563229 ±  2%  numa-vmstat.node0.nr_written
+> > >    1201580 ±  2%     -27.0%     877113 ±  3%  numa-vmstat.node0.nr_zone_inactive_file
+> > >     734697 ±  2%     -22.3%     570821 ±  2%  numa-vmstat.node0.nr_zone_write_pending
+> > >   26548703           -20.8%   21023488 ±  2%  numa-vmstat.node0.numa_hit
+> > >   26496970           -20.9%   20948116 ±  2%  numa-vmstat.node0.numa_local
+> > >    2316618           -20.7%    1836559 ±  5%  numa-vmstat.node1.nr_dirtied
+> > >      89623 ±  3%     -14.3%      76800 ±  6%  numa-vmstat.node1.nr_dirty
+> > >     145701 ±  2%     -17.3%     120486 ±  9%  numa-vmstat.node1.nr_inactive_file
+> > >      62668 ± 10%     -18.9%      50828 ± 13%  numa-vmstat.node1.nr_slab_reclaimable
+> > >      50710 ± 17%     -26.2%      37434 ±  5%  numa-vmstat.node1.nr_slab_unreclaimable
+> > >    2316618           -20.7%    1836559 ±  5%  numa-vmstat.node1.nr_written
+> > >     145701 ±  2%     -17.3%     120486 ±  9%  numa-vmstat.node1.nr_zone_inactive_file
+> > >      89584 ±  3%     -14.3%      76792 ±  6%  numa-vmstat.node1.nr_zone_write_pending
+> > >    3400024 ±  5%     -22.4%    2639087 ±  5%  numa-vmstat.node1.numa_hit
+> > >    3332048 ±  6%     -22.1%    2596249 ±  4%  numa-vmstat.node1.numa_local
+> > >      77508            +1.2%      78432        proc-vmstat.nr_anon_pages
+> > >   20004568           -23.0%   15399788 ±  2%  proc-vmstat.nr_dirtied
+> > >     825597 ±  2%     -21.4%     648654 ±  2%  proc-vmstat.nr_dirty
+> > >    2311462           -15.1%    1961741        proc-vmstat.nr_file_pages
+> > >   29390035            +2.0%   29973527        proc-vmstat.nr_free_pages
+> > >    1346949 ±  2%     -25.9%     997847 ±  3%  proc-vmstat.nr_inactive_file
+> > >      31402 ± 13%     -21.9%      24514 ±  7%  proc-vmstat.nr_kernel_stack
+> > >       4599 ±  2%      -8.4%       4211        proc-vmstat.nr_shmem
+> > >     478540           -24.3%     362476 ±  3%  proc-vmstat.nr_slab_reclaimable
+> > >     356646           -25.6%     265413 ±  4%  proc-vmstat.nr_slab_unreclaimable
+> > >   20004568           -23.0%   15399788 ±  2%  proc-vmstat.nr_written
+> > >    1346949 ±  2%     -25.9%     997847 ±  3%  proc-vmstat.nr_zone_inactive_file
+> > >     825584 ±  2%     -21.4%     648681 ±  2%  proc-vmstat.nr_zone_write_pending
+> > >   29951284           -21.0%   23664558 ±  2%  proc-vmstat.numa_hit
+> > >   29831574           -21.1%   23546349 ±  2%  proc-vmstat.numa_local
+> > >   51777954           -21.0%   40906350 ±  2%  proc-vmstat.pgalloc_normal
+> > >       5920 ±  2%      -7.6%       5472 ±  2%  proc-vmstat.pgdeactivate
+> > >    2342027            -8.5%    2142047        proc-vmstat.pgfault
+> > >   51819442           -21.0%   40950599 ±  2%  proc-vmstat.pgfree
+> > >    5071045 ±  3%     -22.9%    3908046 ±  4%  proc-vmstat.pgpgin
+> > >  1.153e+08           -17.9%   94738236        proc-vmstat.pgpgout
+> > >     141611            -6.3%     132656        proc-vmstat.pgreuse
+> > >   10386182 ±  3%     -24.2%    7877205 ±  4%  proc-vmstat.pgrotated
+> > >   36803772           -24.1%   27916664 ±  2%  proc-vmstat.slabs_scanned
+> > > 
+> > > 
+> > > 
+> > > 
+> > > Disclaimer:
+> > > Results have been estimated based on internal Intel analysis and are provided
+> > > for informational purposes only. Any difference in system hardware or software
+> > > design or configuration may affect actual performance.
+> > > 
+> > > 
+> > > -- 
+> > > 0-DAY CI Kernel Test Service
+> > > https://01.org/lkp
+> > > 
+> > > 
