@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E30AFC433FE
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Nov 2022 17:09:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F01D8C4332F
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Nov 2022 17:09:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239206AbiKWRJu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Nov 2022 12:09:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56768 "EHLO
+        id S239222AbiKWRJy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Nov 2022 12:09:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239224AbiKWRJX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Nov 2022 12:09:23 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F2B527177
-        for <linux-xfs@vger.kernel.org>; Wed, 23 Nov 2022 09:09:15 -0800 (PST)
+        with ESMTP id S239233AbiKWRJZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Nov 2022 12:09:25 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 011AC5B859
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Nov 2022 09:09:19 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id AFE39CE2497
-        for <linux-xfs@vger.kernel.org>; Wed, 23 Nov 2022 17:09:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC9E8C433C1;
-        Wed, 23 Nov 2022 17:09:11 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id B2AAFB821BC
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Nov 2022 17:09:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BFCBC433D6;
+        Wed, 23 Nov 2022 17:09:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1669223352;
-        bh=PsFSUpI4Dtk5T88JogAd7uG6ZwUeo4HDquPdeZ/XI+8=;
+        s=k20201202; t=1669223357;
+        bh=DpRD44229X9amFgdS4JeB2pQvuQtapjqy1Yi7iG+D2c=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=diywI7/VYHkg+Y5puM+a0zrtWVnZExRYrIJaFkLmbTlJ5RRcgkB1w3Dzrc6PjyRzb
-         a6hUVEZ9TnyFWracibocCezA1w7+vSSQKTiy8p89P/Zic2TdCMEz7/Y0DWbT4sqguD
-         30bUMFu2b2sCKeh1poCkeMiPB597EWVWeSQRz1ici6/GRBvUynIxzQjPX6yYZQdTXp
-         oR+Dyjt4ziraPux3PSbinqK6hATZWF7KOQMF2ZPP9R/Ck6yCJPFc4bNQNE8OGBO/GG
-         QsQXsYvnUJTU8FpHcmJMS+Po+6pX7LQXC9T12N00ZnjvnILYhJZUb4nW/bmkBAxfeG
-         03wNIR189P49g==
-Subject: [PATCH 3/9] misc: add missing includes
+        b=UlZfvnD1o0YR00U4ejebbTshUZRPty46jOPsaXdOpQ6sltNohTmunFFwEtwUSvwuQ
+         tjSmePWo/Mk4RvrloK15HZSua7yiWhPeYyfoaaGM21IWckutRCHx1RXyo7SnJ/rr8d
+         4fcrmiTujvxPVttGfhYVwDQQg51DRPfkspznffpOieCnl5n62sLVROi1zoMvvXtny1
+         fvcJcJw7FdrO5UGPCPxwzugIk7ogvbVPXoR5JoiohPk7Cz8Fixt2FMpis6+TJxu0ZM
+         +AyOffJIPnxLhyhFB5VZ53ePAYvWk2uN+td8Ov4dAv+8r6nc97e+SPJsTgk6C9A41X
+         2CCX53D9SiXKQ==
+Subject: [PATCH 4/9] xfs_db: fix octal conversion logic
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     cem@kernel.org, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 23 Nov 2022 09:09:11 -0800
-Message-ID: <166922335148.1572664.9580374600448542934.stgit@magnolia>
+Date:   Wed, 23 Nov 2022 09:09:17 -0800
+Message-ID: <166922335710.1572664.4478914425268206526.stgit@magnolia>
 In-Reply-To: <166922333463.1572664.2330601679911464739.stgit@magnolia>
 References: <166922333463.1572664.2330601679911464739.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,39 +49,46 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add missing #include directives so that the compiler can typecheck
-functions against their declarations.  IOWs, -Wmissing-declarations
-found some things.
+Fix the backwards boolean logic here, which results in weird behavior.
+
+# xfs_db -x -c /dev/sda
+xfs_db> print fname
+fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
+xfs_db> write fname "mo\0h5o"
+fname = "mo\005o\000\000\000\000\000\000\000\000"
+xfs_db> print fname
+fname = "mo\005o\000\000\000\000\000\000\000\000"
+
+Notice that we passed in octal-zero, 'h', '5', 'o', but the fs label is
+set to octal-5, 'o' because of the incorrect loop logic.  -Wlogical-op
+found this one.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libfrog/linux.c |    1 +
- libxfs/util.c   |    1 +
- 2 files changed, 2 insertions(+)
+ db/write.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 
-diff --git a/libfrog/linux.c b/libfrog/linux.c
-index a45d99ab5bb..0d9bd355fc3 100644
---- a/libfrog/linux.c
-+++ b/libfrog/linux.c
-@@ -12,6 +12,7 @@
- #include "platform_defs.h"
- #include "xfs.h"
- #include "init.h"
-+#include "libfrog/platform.h"
+diff --git a/db/write.c b/db/write.c
+index 70cb0518d01..6c67e839a9e 100644
+--- a/db/write.c
++++ b/db/write.c
+@@ -479,7 +479,7 @@ convert_oct(
+ 		if (arg[count] == '\0')
+ 			break;
  
- extern char *progname;
- static int max_block_alignment;
-diff --git a/libxfs/util.c b/libxfs/util.c
-index a41d50c4a7f..6525f63de00 100644
---- a/libxfs/util.c
-+++ b/libxfs/util.c
-@@ -28,6 +28,7 @@
- #include "xfs_da_format.h"
- #include "xfs_da_btree.h"
- #include "xfs_dir2_priv.h"
-+#include "xfs_health.h"
+-		if ((arg[count] < '0') && (arg[count] > '7'))
++		if ((arg[count] < '0') || (arg[count] > '7'))
+ 			break;
+ 	}
  
- /*
-  * Calculate the worst case log unit reservation for a given superblock
+@@ -553,7 +553,7 @@ convert_arg(
+ 
+ 			/* do octal conversion */
+ 			if (*ostr == '\\') {
+-				if (*(ostr + 1) >= '0' || *(ostr + 1) <= '7') {
++				if (*(ostr + 1) >= '0' && *(ostr + 1) <= '7') {
+ 					ret = convert_oct(ostr + 1, &octval);
+ 					*rbuf++ = octval;
+ 					ostr += ret + 1;
 
