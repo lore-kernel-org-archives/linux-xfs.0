@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AF81C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Nov 2022 16:59:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32472C433FE
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Nov 2022 16:59:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229582AbiKXQ7c (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Nov 2022 11:59:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57696 "EHLO
+        id S229481AbiKXQ7j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Nov 2022 11:59:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57710 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229452AbiKXQ7b (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Nov 2022 11:59:31 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34DBE7C036
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Nov 2022 08:59:31 -0800 (PST)
+        with ESMTP id S229452AbiKXQ7j (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Nov 2022 11:59:39 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5538CB54CF
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Nov 2022 08:59:38 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B5FB1621AA
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Nov 2022 16:59:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E50BC433C1;
-        Thu, 24 Nov 2022 16:59:30 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 1150FB82899
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Nov 2022 16:59:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA9EAC433C1;
+        Thu, 24 Nov 2022 16:59:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1669309170;
-        bh=EAyYS4iwINg9EfiQ4+s56XcTxK7HXRkbS2b/udMknR0=;
+        s=k20201202; t=1669309175;
+        bh=B+rifbk15R8VDExDcIh4ROAoGhjJRQcwXJct6Y6SuXY=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=MOf63xjRkCWzKNSAo9+h4dt48C01c8HingzPqjAgzDSYswCuU06Kvvl6RMrFV9DRH
-         /0KYfEzIuu03AWJd9iTx0Hj+5ms115hKilfc1Gn9c6X892inAIi64RhrZRZjavnNxE
-         stvJmWoMGQT/w7oFhEA/+6xYeI63k7HpNeasSbajWU1k4LLoAslAyih0NFN40dkIEV
-         n7+wNJeBJFgYBEEz3rMzYj6ETO5Mbk6b4YbK9ZxTqB5PD7YsHdfcz8A2aU9MsCC1FV
-         kgH5Bdf+cttTs0HGa83Bevf5C4mySyUjTQrsciOqat+PvbAJNkFFbu7G/mDbrtZBTP
-         k+I49R1h0FCCQ==
-Subject: [PATCH 2/3] xfs: use memcpy, not strncpy,
- to format the attr prefix during listxattr
+        b=dT3hftHtsbHL3hvDCdp3pk43STiaW0lNtPidrwnwCpbxtzHdgAUXuGyuxHFnbJhZJ
+         Z9UFKyGDu6ccu1l5+AYqZz1st/kMk8Y5TbNyr5q9woDCQuBZUOA2sB2pKzCzGOHySb
+         IZTtNMjeOMX0/cvmFNTK5G/fNzNYXtgg1lX3zsmzJKlGI/9FtD4AdO+jeHfBzPKRjx
+         Sz43SR8qHI1xU+sSsOgs9xsF3EImDDZxFSbQwI/yv7hO0stpAykTyTV2rbhcoKyolD
+         hktG1dFPm0dWqTe+/eLwkS2a3cASTm8UlCRZZznjVCMhmQ0jeYgfj11lZ9/3h4lyi9
+         qgxOGSfE1F/6w==
+Subject: [PATCH 3/3] xfs: shut up -Wuninitialized in xfsaild_push
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 24 Nov 2022 08:59:29 -0800
-Message-ID: <166930916972.2061853.5449429916617568478.stgit@magnolia>
+Date:   Thu, 24 Nov 2022 08:59:35 -0800
+Message-ID: <166930917525.2061853.17523624187254825450.stgit@magnolia>
 In-Reply-To: <166930915825.2061853.2470510849612284907.stgit@magnolia>
 References: <166930915825.2061853.2470510849612284907.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,32 +49,38 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When -Wstringop-truncation is enabled, the compiler complains about
-truncation of the null byte at the end of the xattr name prefix.  This
-is intentional, since we're concatenating the two strings together and
-do _not_ want a null byte in the middle of the name.
-
-We've already ensured that the name buffer is long enough to handle
-prefix and name, and the prefix_len is supposed to be the length of the
-prefix string without the null byte, so use memcpy here instead.
+-Wuninitialized complains about @target in xfsaild_push being
+uninitialized in the case where the waitqueue is active but there is no
+last item in the AIL to wait for.  I /think/ it should never be the case
+that the subsequent xfs_trans_ail_cursor_first returns a log item and
+hence we'll never end up at XFS_LSN_CMP, but let's make this explicit.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_xattr.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_trans_ail.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index c325a28b89a8..10aa1fd39d2b 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -210,7 +210,7 @@ __xfs_xattr_put_listent(
- 		return;
- 	}
- 	offset = context->buffer + context->count;
--	strncpy(offset, prefix, prefix_len);
-+	memcpy(offset, prefix, prefix_len);
- 	offset += prefix_len;
- 	strncpy(offset, (char *)name, namelen);			/* real name */
- 	offset += namelen;
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index f51df7d94ef7..7d4109af193e 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -422,7 +422,7 @@ xfsaild_push(
+ 	struct xfs_ail_cursor	cur;
+ 	struct xfs_log_item	*lip;
+ 	xfs_lsn_t		lsn;
+-	xfs_lsn_t		target;
++	xfs_lsn_t		target = NULLCOMMITLSN;
+ 	long			tout;
+ 	int			stuck = 0;
+ 	int			flushing = 0;
+@@ -472,6 +472,8 @@ xfsaild_push(
+ 
+ 	XFS_STATS_INC(mp, xs_push_ail);
+ 
++	ASSERT(target != NULLCOMMITLSN);
++
+ 	lsn = lip->li_lsn;
+ 	while ((XFS_LSN_CMP(lip->li_lsn, target) <= 0)) {
+ 		int	lock_result;
 
