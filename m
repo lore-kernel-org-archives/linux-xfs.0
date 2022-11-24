@@ -2,85 +2,140 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32472C433FE
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Nov 2022 16:59:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7C49C43219
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Nov 2022 20:45:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229481AbiKXQ7j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Nov 2022 11:59:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57710 "EHLO
+        id S229468AbiKXUpB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Nov 2022 15:45:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229452AbiKXQ7j (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Nov 2022 11:59:39 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5538CB54CF
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Nov 2022 08:59:38 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1150FB82899
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Nov 2022 16:59:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA9EAC433C1;
-        Thu, 24 Nov 2022 16:59:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1669309175;
-        bh=B+rifbk15R8VDExDcIh4ROAoGhjJRQcwXJct6Y6SuXY=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=dT3hftHtsbHL3hvDCdp3pk43STiaW0lNtPidrwnwCpbxtzHdgAUXuGyuxHFnbJhZJ
-         Z9UFKyGDu6ccu1l5+AYqZz1st/kMk8Y5TbNyr5q9woDCQuBZUOA2sB2pKzCzGOHySb
-         IZTtNMjeOMX0/cvmFNTK5G/fNzNYXtgg1lX3zsmzJKlGI/9FtD4AdO+jeHfBzPKRjx
-         Sz43SR8qHI1xU+sSsOgs9xsF3EImDDZxFSbQwI/yv7hO0stpAykTyTV2rbhcoKyolD
-         hktG1dFPm0dWqTe+/eLwkS2a3cASTm8UlCRZZznjVCMhmQ0jeYgfj11lZ9/3h4lyi9
-         qgxOGSfE1F/6w==
-Subject: [PATCH 3/3] xfs: shut up -Wuninitialized in xfsaild_push
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 24 Nov 2022 08:59:35 -0800
-Message-ID: <166930917525.2061853.17523624187254825450.stgit@magnolia>
-In-Reply-To: <166930915825.2061853.2470510849612284907.stgit@magnolia>
-References: <166930915825.2061853.2470510849612284907.stgit@magnolia>
-User-Agent: StGit/0.19
+        with ESMTP id S229450AbiKXUpA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Nov 2022 15:45:00 -0500
+Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 036CF81FAC
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Nov 2022 12:45:00 -0800 (PST)
+Received: by mail-pj1-x102d.google.com with SMTP id a22-20020a17090a6d9600b0021896eb5554so5970782pjk.1
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Nov 2022 12:44:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=D77u237wgxEadOqm6nQieA3HK3Q7LdUQB41qqXnSgSY=;
+        b=KZ25/ZOt5eDSpF+P3y/548DDNntXvIfsrclemDEeFOr9bWUgXjsDZl9c3h13C30FfD
+         7Lm6o/0MVWfbIqiqJgPA1eh0Wa9J2n8r9K5FQhCEJIi0vYFxIAQYyZaIw6nnt8h/ZZ8+
+         pid/eESn16vcYlNP345jgoS9p94pCSNicPsCttNPPUNV03EnnKC5N4apSz2Ps0P678py
+         kKtYAxtvxnD843CzJn5SGDiVU8zxlr1V0LVrQm9glVRzyG8T/kZgQsBvNf0WtVkj7Jmt
+         iKRRqTcK5XnjWvrdw9Z7dJUyTfnppatPPSX3VmD99QIe4DBITx4Uke4B5Tjodn03Ss5V
+         c7TQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=D77u237wgxEadOqm6nQieA3HK3Q7LdUQB41qqXnSgSY=;
+        b=Y3dNbeQkGMFHFkeFDXeJCMuUaIZ9yQlChZBEudO6e/GvoGopEJ4fdzOxT1tT237dzu
+         21EoqOK1Zpszt9XEl+bIzgDD735WyYVHt9XEQKHiFfVB/UxxgDfsXG46igVJ0ePKkEPH
+         S/dOACH2RtuOXPPFofV8ELhlMkGs5o4elw/RO8vS6On0qXnJ26xngksxn//+qB753cUh
+         A7sHA9KUEa5hRNlaw3QjTBWPfYHMiz0Q083qPchUv5jeOBBDbkpMOpNnKHKxbnzKUKKG
+         +h76EEW5NSA+Z4czxfQOEjw5BzPpK9sBT694IZsbXjZ3M6bGnFyzBm/XrsMim+Z+ha/m
+         xu8Q==
+X-Gm-Message-State: ANoB5pkiQvO3DhOfPGE061Jk0qJKChrpTUYGVuACcgEIFmusi7YSqg1b
+        l95jLIkygtIsWq4bWuwJ/KRmW5GWTmzsDg==
+X-Google-Smtp-Source: AA0mqf7jACWT5WjIx7Giiqv9BkuP5xfTPl4kxMLqJ68w4DExv1qSG0AwlIvPD849Av3YqoHOKOYr/w==
+X-Received: by 2002:a17:90b:8d:b0:218:c14b:4e6e with SMTP id bb13-20020a17090b008d00b00218c14b4e6emr18196132pjb.171.1669322699166;
+        Thu, 24 Nov 2022 12:44:59 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-65-106.pa.vic.optusnet.com.au. [49.186.65.106])
+        by smtp.gmail.com with ESMTPSA id d1-20020a170903230100b0017a0668befasm1781233plh.124.2022.11.24.12.44.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 24 Nov 2022 12:44:58 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1oyJ5b-000awe-P7; Fri, 25 Nov 2022 07:44:55 +1100
+Date:   Fri, 25 Nov 2022 07:44:55 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: moar weird metadata corruptions, this time on arm64
+Message-ID: <20221124204455.GV3600936@dread.disaster.area>
+References: <Y3wUwvcxijj0oqBl@magnolia>
+ <20221122015806.GQ3600936@dread.disaster.area>
+ <Y3579xWtwQEdBFw6@magnolia>
+ <20221124044023.GU3600936@dread.disaster.area>
+ <Y38TNTspBy9RPuBz@magnolia>
+ <Y3+fdyRj6tV9/WZu@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Y3+fdyRj6tV9/WZu@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Nov 24, 2022 at 08:44:39AM -0800, Darrick J. Wong wrote:
+> Also, last night's run produced this:
+> 
+> ino 0x140bb3 func xfs_bmapi_reserve_delalloc line 4164 data fork:
+>     ino 0x140bb3 nr 0x0 nr_real 0x0 offset 0xb9 blockcount 0x1f startblock 0x935de2 state 1
+>     ino 0x140bb3 nr 0x1 nr_real 0x1 offset 0xe6 blockcount 0xa startblock 0xffffffffe0007 state 0
+>     ino 0x140bb3 nr 0x2 nr_real 0x1 offset 0xd8 blockcount 0xe startblock 0x935e01 state 0
+> ino 0x140bb3 fork 0 oldoff 0xe6 oldlen 0x4 oldprealloc 0x6 isize 0xe6000
+>     ino 0x140bb3 oldgotoff 0xea oldgotstart 0xfffffffffffffffe oldgotcount 0x0 oldgotstate 0
+>     ino 0x140bb3 crapgotoff 0x0 crapgotstart 0x0 crapgotcount 0x0 crapgotstate 0
+>     ino 0x140bb3 freshgotoff 0xd8 freshgotstart 0x935e01 freshgotcount 0xe freshgotstate 0
+>     ino 0x140bb3 nowgotoff 0xe6 nowgotstart 0xffffffffe0007 nowgotcount 0xa nowgotstate 0
+>     ino 0x140bb3 oldicurpos 1 oldleafnr 2 oldleaf 0xfffffc00f0609a00
+>     ino 0x140bb3 crapicurpos 2 crapleafnr 2 crapleaf 0xfffffc00f0609a00
+>     ino 0x140bb3 freshicurpos 1 freshleafnr 2 freshleaf 0xfffffc00f0609a00
+>     ino 0x140bb3 newicurpos 1 newleafnr 3 newleaf 0xfffffc00f0609a00
+> 
+> The old/fresh/nowgot have the same meaning as yesterday.  "crapgot" is
+> the results of duplicating the cursor at the start of the body of
+> xfs_bmapi_reserve_delalloc and performing a fresh lookup at @off.
+> I think @oldgot is a HOLESTARTBLOCK extent because the first lookup
+> didn't find anything, so we filled in imap with "fake hole until the
+> end".  At the time of the first lookup, I suspect that there's only one
+> 32-block unwritten extent in the mapping (hence oldicurpos==1) but by
+> the time we get to recording crapgot, crapicurpos==2.
 
--Wuninitialized complains about @target in xfsaild_push being
-uninitialized in the case where the waitqueue is active but there is no
-last item in the AIL to wait for.  I /think/ it should never be the case
-that the subsequent xfs_trans_ail_cursor_first returns a log item and
-hence we'll never end up at XFS_LSN_CMP, but let's make this explicit.
+Ok, that's much simpler to reason about, and implies the smoke is
+coming from xfs_buffered_write_iomap_begin() or
+xfs_bmapi_reserve_delalloc(). I suspect the former - it does a lot
+of stuff with the ILOCK_EXCL held.....
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_trans_ail.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+.... including calling xfs_qm_dqattach_locked().
 
+xfs_buffered_write_iomap_begin
+  ILOCK_EXCL
+  look up icur
+  xfs_qm_dqattach_locked
+    xfs_qm_dqattach_one
+      xfs_qm_dqget_inode
+        dquot cache miss
+        xfs_iunlock(ip, XFS_ILOCK_EXCL);
+        error = xfs_qm_dqread(mp, id, type, can_alloc, &dqp);
+        xfs_ilock(ip, XFS_ILOCK_EXCL);
+  ....
+  xfs_bmapi_reserve_delalloc(icur)
 
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index f51df7d94ef7..7d4109af193e 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -422,7 +422,7 @@ xfsaild_push(
- 	struct xfs_ail_cursor	cur;
- 	struct xfs_log_item	*lip;
- 	xfs_lsn_t		lsn;
--	xfs_lsn_t		target;
-+	xfs_lsn_t		target = NULLCOMMITLSN;
- 	long			tout;
- 	int			stuck = 0;
- 	int			flushing = 0;
-@@ -472,6 +472,8 @@ xfsaild_push(
- 
- 	XFS_STATS_INC(mp, xs_push_ail);
- 
-+	ASSERT(target != NULLCOMMITLSN);
-+
- 	lsn = lip->li_lsn;
- 	while ((XFS_LSN_CMP(lip->li_lsn, target) <= 0)) {
- 		int	lock_result;
+Yup, that's what is letting the magic smoke out -
+xfs_qm_dqattach_locked() can cycle the ILOCK. If that happens, we
+can pass a stale icur to xfs_bmapi_reserve_delalloc() and it all
+goes downhill from there.
 
+> IOWS, I think I can safely eliminate FIEXCHANGE shenanigans and
+> concentrate on finding an unlocked unwritten -> written extent
+> conversion.  Or possibly a written -> unwritten extent conversion?
+> 
+> Anyway, long holiday weekend, so I won't get back to this until Monday.
+> Just wanted to persist my notes to the mailing list so I can move on to
+> testing the write race fixes with djwong-dev.
+
+And I'm on PTO for the next couple of working days, too, so I'm not
+going to write a patch for it right now, either.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
