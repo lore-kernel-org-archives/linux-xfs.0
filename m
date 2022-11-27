@@ -2,123 +2,83 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FAFBC433FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Nov 2022 13:19:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2381CC43217
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Nov 2022 18:30:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231660AbiK1NTQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Nov 2022 08:19:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47878 "EHLO
+        id S229498AbiK0Sa3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Nov 2022 13:30:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231706AbiK1NS6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Nov 2022 08:18:58 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07A281E3C3
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2022 05:16:18 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9C4C96117A
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2022 13:16:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DE58C433D6
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2022 13:16:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1669641373;
-        bh=eRI8B1+vq602Z7vo+SMEsMoX5D/JdHTy046yDCDxXjo=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=LIE2ZOPFyAdr39ZvHCx3Ri5ivqzjFCzTULY4Cd7YHdNTqv6j/qN9vAVL4+BlREi96
-         ahy8l0ElsW2dTbN4XW6BwYlubT+tbSI23mRwcA0AHaGvXrYcyjmTQqLMIjvvt3RIGX
-         5H2txOaq1CF2UwB7jDLeNsuhNQoGPm+1B0GYCaGp5XDMItBrF29sLh2MjUJVR11Jb+
-         CX0RU27PR4iloNw/FXMFCzaQlsTUzuofNS19nUzF9hrCj+j/0i/AvVmWiSd59vShYp
-         plZYdbLsJA+oNhcqEgMMD+nuII1EJiv1Tp2SdNuujmBk05Qgf+wmb1db+bekZiokCN
-         zIYkueF5Vw4Yg==
-From:   cem@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 2/2] xfs_repair: Fix rmaps_verify_btree() error path
-Date:   Mon, 28 Nov 2022 14:14:34 +0100
-Message-Id: <20221128131434.21496-3-cem@kernel.org>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20221128131434.21496-1-cem@kernel.org>
-References: <20221128131434.21496-1-cem@kernel.org>
+        with ESMTP id S229487AbiK0Sa2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Nov 2022 13:30:28 -0500
+X-Greylist: delayed 1642 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 27 Nov 2022 10:30:27 PST
+Received: from buxtehude.debian.org (buxtehude.debian.org [IPv6:2607:f8f0:614:1::1274:39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5907DF64
+        for <linux-xfs@vger.kernel.org>; Sun, 27 Nov 2022 10:30:27 -0800 (PST)
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.94.2)
+        (envelope-from <debbugs@buxtehude.debian.org>)
+        id 1ozLzb-003cEZ-C7; Sun, 27 Nov 2022 18:03:03 +0000
+X-Loop: owner@bugs.debian.org
+Subject: Bug#924307: xfsprogs: xfs_fsr needlessly defragments fully defragmented files
+Reply-To: Marc Lehmann <schmorp@schmorp.de>, 924307@bugs.debian.org
+X-Loop: owner@bugs.debian.org
+X-Debian-PR-Message: followup 924307
+X-Debian-PR-Package: xfsprogs
+X-Debian-PR-Keywords: 
+References: <155230535650.755.1614381112413278305.reportbug@cerebro.laendle>
+X-Debian-PR-Source: xfsprogs
+Received: via spool by 924307-submit@bugs.debian.org id=B924307.1669571967861280
+          (code B ref 924307); Sun, 27 Nov 2022 18:03:02 +0000
+Received: (at 924307) by bugs.debian.org; 27 Nov 2022 17:59:27 +0000
+Received: from mail.nethype.de ([5.9.56.24]:43045)
+        by buxtehude.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94.2)
+        (envelope-from <schmorp@schmorp.de>)
+        id 1ozLw7-003c3N-JM
+        for 924307@bugs.debian.org; Sun, 27 Nov 2022 17:59:27 +0000
+Received: from [10.0.0.5] (helo=doom.schmorp.de)
+        by mail.nethype.de with esmtp (Exim 4.94.2)
+        (envelope-from <schmorp@schmorp.de>)
+        id 1ozLgy-001OmP-Bd
+        for 924307@bugs.debian.org; Sun, 27 Nov 2022 17:43:48 +0000
+Received: from [10.0.0.1] (helo=cerebro.laendle)
+        by doom.schmorp.de with esmtp (Exim 4.94.2)
+        (envelope-from <schmorp@schmorp.de>)
+        id 1ozLgy-00BQPP-02
+        for 924307@bugs.debian.org; Sun, 27 Nov 2022 17:43:48 +0000
+Received: from root by cerebro.laendle with local (Exim 4.94.2)
+        (envelope-from <root@schmorp.de>)
+        id 1ozLgx-0001R5-PL
+        for 924307@bugs.debian.org; Sun, 27 Nov 2022 18:43:47 +0100
+Date:   Sun, 27 Nov 2022 18:43:47 +0100
+From:   Marc Lehmann <schmorp@schmorp.de>
+To:     924307@bugs.debian.org
+Message-ID: <Y4Oh0y9gHZ77iwl/@schmorp.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+OpenPGP: id=904ad2f81fb16978e7536f726dea2ba30bc39eb6;
+ url=http://pgp.schmorp.de/schmorp-pgpkey.txt; preference=signencrypt
+X-Greylist: delayed 933 seconds by postgrey-1.36 at buxtehude; Sun, 27 Nov 2022 17:59:27 UTC
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Carlos Maiolino <cmaiolino@redhat.com>
+Seems that current versions of e2fsprogs have improved filefrag, which now
+reports one "extent" for these files, even though it has two extents:
 
-Add proper exit error paths to avoid checking all pointers at the current path
+   File size of 014798 is 87556096 (21376 blocks of 4096 bytes)
+    ext:     logical_offset:        physical_offset: length:   expected: flags:
+      0:        0..   21373:  352550127.. 352571500:  21374:            
+      1:    21374..   21375:  352571501.. 352571502:      2:             last,unwritten,eof
+   014798: 1 extent found
 
-Fixes-coverity-id: 1512654
+not quite correct, but arguably more useful (2 _extents_ vs. 1
+_fragment_, just a wording issue).
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
-V2:
-	- Rename error label from err_agf to err_pag
+xfs_fsr still considers these files fragmented, though:
 
- repair/rmap.c | 21 ++++++++++-----------
- 1 file changed, 10 insertions(+), 11 deletions(-)
+   014798
+   extents before:2 after:1 DONE 014798
 
-diff --git a/repair/rmap.c b/repair/rmap.c
-index e76a8f611..4001df57a 100644
---- a/repair/rmap.c
-+++ b/repair/rmap.c
-@@ -1004,7 +1004,7 @@ rmaps_verify_btree(
- 	if (error) {
- 		do_warn(_("Could not read AGF %u to check rmap btree.\n"),
- 				agno);
--		goto err;
-+		goto err_pag;
- 	}
- 
- 	/* Leave the per-ag data "uninitialized" since we rewrite it later */
-@@ -1013,7 +1013,7 @@ rmaps_verify_btree(
- 	bt_cur = libxfs_rmapbt_init_cursor(mp, NULL, agbp, pag);
- 	if (!bt_cur) {
- 		do_warn(_("Not enough memory to check reverse mappings.\n"));
--		goto err;
-+		goto err_bt_cur;
- 	}
- 
- 	rm_rec = pop_slab_cursor(rm_cur);
-@@ -1023,7 +1023,7 @@ rmaps_verify_btree(
- 			do_warn(
- _("Could not read reverse-mapping record for (%u/%u).\n"),
- 					agno, rm_rec->rm_startblock);
--			goto err;
-+			goto err_loop;
- 		}
- 
- 		/*
-@@ -1039,7 +1039,7 @@ _("Could not read reverse-mapping record for (%u/%u).\n"),
- 				do_warn(
- _("Could not read reverse-mapping record for (%u/%u).\n"),
- 						agno, rm_rec->rm_startblock);
--				goto err;
-+				goto err_loop;
- 			}
- 		}
- 		if (!have) {
-@@ -1090,13 +1090,12 @@ next_loop:
- 		rm_rec = pop_slab_cursor(rm_cur);
- 	}
- 
--err:
--	if (bt_cur)
--		libxfs_btree_del_cursor(bt_cur, XFS_BTREE_NOERROR);
--	if (pag)
--		libxfs_perag_put(pag);
--	if (agbp)
--		libxfs_buf_relse(agbp);
-+err_loop:
-+	libxfs_btree_del_cursor(bt_cur, XFS_BTREE_NOERROR);
-+err_bt_cur:
-+	libxfs_buf_relse(agbp);
-+err_pag:
-+	libxfs_perag_put(pag);
- 	free_slab_cursor(&rm_cur);
- }
- 
 -- 
-2.30.2
-
