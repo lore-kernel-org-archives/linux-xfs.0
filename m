@@ -2,83 +2,156 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2381CC43217
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Nov 2022 18:30:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58A0AC4332F
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Nov 2022 17:43:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229498AbiK0Sa3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Nov 2022 13:30:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38490 "EHLO
+        id S233260AbiK1RnO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Nov 2022 12:43:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51810 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229487AbiK0Sa2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Nov 2022 13:30:28 -0500
-X-Greylist: delayed 1642 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 27 Nov 2022 10:30:27 PST
-Received: from buxtehude.debian.org (buxtehude.debian.org [IPv6:2607:f8f0:614:1::1274:39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5907DF64
-        for <linux-xfs@vger.kernel.org>; Sun, 27 Nov 2022 10:30:27 -0800 (PST)
-Received: from debbugs by buxtehude.debian.org with local (Exim 4.94.2)
-        (envelope-from <debbugs@buxtehude.debian.org>)
-        id 1ozLzb-003cEZ-C7; Sun, 27 Nov 2022 18:03:03 +0000
-X-Loop: owner@bugs.debian.org
-Subject: Bug#924307: xfsprogs: xfs_fsr needlessly defragments fully defragmented files
-Reply-To: Marc Lehmann <schmorp@schmorp.de>, 924307@bugs.debian.org
-X-Loop: owner@bugs.debian.org
-X-Debian-PR-Message: followup 924307
-X-Debian-PR-Package: xfsprogs
-X-Debian-PR-Keywords: 
-References: <155230535650.755.1614381112413278305.reportbug@cerebro.laendle>
-X-Debian-PR-Source: xfsprogs
-Received: via spool by 924307-submit@bugs.debian.org id=B924307.1669571967861280
-          (code B ref 924307); Sun, 27 Nov 2022 18:03:02 +0000
-Received: (at 924307) by bugs.debian.org; 27 Nov 2022 17:59:27 +0000
-Received: from mail.nethype.de ([5.9.56.24]:43045)
-        by buxtehude.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.94.2)
-        (envelope-from <schmorp@schmorp.de>)
-        id 1ozLw7-003c3N-JM
-        for 924307@bugs.debian.org; Sun, 27 Nov 2022 17:59:27 +0000
-Received: from [10.0.0.5] (helo=doom.schmorp.de)
-        by mail.nethype.de with esmtp (Exim 4.94.2)
-        (envelope-from <schmorp@schmorp.de>)
-        id 1ozLgy-001OmP-Bd
-        for 924307@bugs.debian.org; Sun, 27 Nov 2022 17:43:48 +0000
-Received: from [10.0.0.1] (helo=cerebro.laendle)
-        by doom.schmorp.de with esmtp (Exim 4.94.2)
-        (envelope-from <schmorp@schmorp.de>)
-        id 1ozLgy-00BQPP-02
-        for 924307@bugs.debian.org; Sun, 27 Nov 2022 17:43:48 +0000
-Received: from root by cerebro.laendle with local (Exim 4.94.2)
-        (envelope-from <root@schmorp.de>)
-        id 1ozLgx-0001R5-PL
-        for 924307@bugs.debian.org; Sun, 27 Nov 2022 18:43:47 +0100
-Date:   Sun, 27 Nov 2022 18:43:47 +0100
-From:   Marc Lehmann <schmorp@schmorp.de>
-To:     924307@bugs.debian.org
-Message-ID: <Y4Oh0y9gHZ77iwl/@schmorp.de>
+        with ESMTP id S233256AbiK1Rmx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Nov 2022 12:42:53 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34577286EC
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2022 09:39:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1669657182;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=eQPjuAtjowCpN/x3NgMEuvJ2bzg0KVPgoSLTrpqCfcA=;
+        b=dn7XuDE5gw3cvbBJlknYnmWk2ZThPbMIjZUNzHvjCWfDMiBW8JbSRVkUcQ31OZ9IWIg+VA
+        UuY8tWgyUKUnfjYvoGCg15tcOQElFm3LExcIgLuXn9ia5OeHfT9ZSIGLpau0E62FNz9I+h
+        wAF8ZzLxmZ6+cNSrgVBovsjqGI6sgNs=
+Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
+ [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-610-ukWMI1o2NGCZISvL_03dEg-1; Mon, 28 Nov 2022 12:39:40 -0500
+X-MC-Unique: ukWMI1o2NGCZISvL_03dEg-1
+Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 3C73B29AA3BB
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2022 17:39:40 +0000 (UTC)
+Received: from bfoster.redhat.com (unknown [10.22.8.52])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 2321549BB60
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2022 17:39:40 +0000 (UTC)
+From:   Brian Foster <bfoster@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: fix broken truncate pre-size update flushing
+Date:   Mon, 28 Nov 2022 12:39:45 -0500
+Message-Id: <20221128173945.3953659-1-bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-OpenPGP: id=904ad2f81fb16978e7536f726dea2ba30bc39eb6;
- url=http://pgp.schmorp.de/schmorp-pgpkey.txt; preference=signencrypt
-X-Greylist: delayed 933 seconds by postgrey-1.36 at buxtehude; Sun, 27 Nov 2022 17:59:27 UTC
+Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Seems that current versions of e2fsprogs have improved filefrag, which now
-reports one "extent" for these files, even though it has two extents:
+The pre-size update flush logic in xfs_setattr_size() has become
+warped enough that it's difficult to surmise how it is actually
+supposed to work. The original purpose of this flush is to mitigate
+the "NULL file" problem when a truncate logs a size update before
+preceding writes have been flushed and the fs happens to crash. This
+code has seen several incremental changes since then that alter
+behavior in potentially unexpected ways.
 
-   File size of 014798 is 87556096 (21376 blocks of 4096 bytes)
-    ext:     logical_offset:        physical_offset: length:   expected: flags:
-      0:        0..   21373:  352550127.. 352571500:  21374:            
-      1:    21374..   21375:  352571501.. 352571502:      2:             last,unwritten,eof
-   014798: 1 extent found
+For context, the first in line is commit 5885ebda878b ("xfs: ensure
+truncate forces zeroed blocks to disk"). This introduced the zeroing
+check specifically for extending truncates and seems straightforward
+enough of a change to accomplish that correctly.
 
-not quite correct, but arguably more useful (2 _extents_ vs. 1
-_fragment_, just a wording issue).
+Next, commit 68a9f5e7007c ("xfs: implement iomap based buffered
+write path") switched over to iomap and introduced did_zeroing for
+the truncate down case. This didn't change the flush range offsets,
+however, which means partial post-eof zeroing on a truncate down may
+only flush if the on disk inode size hadn't been updated to reflect
+the in-core size at the start of the truncate.
 
-xfs_fsr still considers these files fragmented, though:
+Sometime after that, commit 350976ae2187 ("xfs: truncate pagecache
+before writeback in xfs_setattr_size()") reordered the flush to
+after the pagecache truncate to prevent a stale data exposure due to
+iomap not zeroing properly. This failed to account for the fact that
+pagecache truncate doesn't mark pages dirty and thus leaves the
+filesystem responsible for on-disk consistency. Therefore, post-eof
+data exposure was still possible if a dirty page was cleaned before
+pagecache truncate. This also introduced an off by one issue for the
+newsize == oldsize scenario which causes the flush to submit the EOF
+page for I/O, but not actually wait on it if the offsets align to
+the same page.
 
-   014798
-   extents before:2 after:1 DONE 014798
+Finally, commit 869ae85dae64 ("xfs: flush new eof page on truncate
+to avoid post-eof corruption") came along to address the
+aforementioned stale data exposure race. This fails to account for
+the same scenario on extending truncates, for one, but can also work
+against the NULL file detection logic the flush was introduced to
+mitigate the first place. This is because selectively flushing the
+EOF block can update on-disk size before any preceding dirty data
+may have been written back.
 
+Since it is confusing enough to assess intent of the current code
+and the various ways it might or might not be broken, this patch
+just assumes we want to flush any combination of block zeroing or
+previous I/O patterns deemed susceptible to the NULL file problem,
+and then tries to do that correctly. Note that the EOF block flush
+cannot be removed without reintroducing the data exposure race, but
+that problem is mitigated by a separate patch that moves the flush
+out of truncate and into iomap processing callbacks such that it is
+no longer unconditional.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_iops.c | 28 ++++++++++++++++++----------
+ 1 file changed, 18 insertions(+), 10 deletions(-)
+
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 2e10e1c66ad6..39e9088cd32c 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -785,6 +785,7 @@ xfs_setattr_size(
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct inode		*inode = VFS_I(ip);
+ 	xfs_off_t		oldsize, newsize;
++	loff_t			flushoff = LLONG_MAX;
+ 	struct xfs_trans	*tp;
+ 	int			error;
+ 	uint			lock_flags = 0;
+@@ -880,17 +881,24 @@ xfs_setattr_size(
+ 	truncate_setsize(inode, newsize);
+ 
+ 	/*
+-	 * We are going to log the inode size change in this transaction so
+-	 * any previous writes that are beyond the on disk EOF and the new
+-	 * EOF that have not been written out need to be written here.  If we
+-	 * do not write the data out, we expose ourselves to the null files
+-	 * problem. Note that this includes any block zeroing we did above;
+-	 * otherwise those blocks may not be zeroed after a crash.
++	 * We are going to log the inode size change in this transaction so any
++	 * previous writes that are beyond the on disk EOF and the new EOF that
++	 * have not been written out need to be written here. If we do not write
++	 * the data out, we expose ourselves to the null files problem.
++	 *
++	 * To also cover block zeroing performed above, start with the lowest of
++	 * the old and new sizes to handle truncate up or down, and then factor
++	 * in ->i_disk_size if necessary. Since pagecache was truncated just
++	 * above, we don't need a precise end offset and can flush through the
++	 * end of the mapping.
+ 	 */
+-	if (did_zeroing ||
+-	    (newsize > ip->i_disk_size && oldsize != ip->i_disk_size)) {
+-		error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+-						ip->i_disk_size, newsize - 1);
++	if (did_zeroing)
++		flushoff = min_t(loff_t, oldsize, newsize);
++	if (newsize > ip->i_disk_size && oldsize != ip->i_disk_size)
++		flushoff = min_t(loff_t, flushoff, ip->i_disk_size);
++	if (flushoff != LLONG_MAX) {
++		error = filemap_write_and_wait_range(inode->i_mapping, flushoff,
++						     LLONG_MAX);
+ 		if (error)
+ 			return error;
+ 	}
 -- 
+2.37.3
+
