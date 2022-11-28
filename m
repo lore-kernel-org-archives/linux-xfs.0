@@ -2,144 +2,148 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CCC3C43217
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Nov 2022 02:16:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FA14C46467
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Nov 2022 10:54:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229514AbiK1CQl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Nov 2022 21:16:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36450 "EHLO
+        id S230401AbiK1KyD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Nov 2022 05:54:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48404 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229599AbiK1CQh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Nov 2022 21:16:37 -0500
-Received: from mail1.bemta32.messagelabs.com (mail1.bemta32.messagelabs.com [195.245.230.2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E662FE7;
-        Sun, 27 Nov 2022 18:16:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
-        s=170520fj; t=1669601794; i=@fujitsu.com;
-        bh=TwTlIt2eIgARO/bxfsCvSmRj8m2zdwxth+ui333Yj8U=;
-        h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-         In-Reply-To:Content-Type:Content-Transfer-Encoding;
-        b=KPz5pnQvf10uuOe8wgQEfsy7xbbnkbso+vZ7YCRbInP0PQVi38EyCZ7m51PZirfUB
-         Edr/wcp+kSRJBQsP89IONSiVwT+qr+wa+/tBZyyOYdEmeKFvjzL2iP/omDnUvdVFc3
-         B91avo87U11HEVaMGU7KGVWzpJWa1l2egCUplZ3Nj6PBxoPHVQWsmgxWrTJ3km2auB
-         OQzlm8iNSgfH51O2yt6ZH/Qxc4gLE0p3KU4n73BEuUue+q81dYn/bRvmnrds1ZV4T0
-         RTeCl4AbhJ0MqH0EMSXE5MLaTjUoZJXQm+N+r/kHWl1WAmtXqi+TDskKZHGJd8+3wH
-         UNVPzfz+27fNQ==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprHKsWRWlGSWpSXmKPExsViZ8ORpMsg1ZJ
-  scPC0tsX0qRcYLbYcu8docfkJn8WevSdZLC7vmsNmsevPDnaLlT/+sDqwe5xaJOGxeM9LJo9N
-  qzrZPF5snsno8XmTXABrFGtmXlJ+RQJrxuHD8QW7+Cu+rd/M3MC4h6eLkYtDSGAjo8T31d/Zu
-  xg5gZzFTBLz3ztDJLYxSqycs5UZJMErYCexrGMuK4jNIqAq0bN9GwtEXFDi5MwnYLaoQLJEX/
-  9MNhBbWMBC4s6+7WC9IgKaEke+XWMCsZkF1jNKbOkUhFiWKHHgAUScTUBH4sKCv2DzOQU0JO5
-  cecMMUW8hsfjNQXYIW16ieetssLiEgKJEw/05TBB2hcSsWW1QtprE1XObmCcwCs1Cct4sJKNm
-  IRm1gJF5FaNZcWpRWWqRrqGhXlJRZnpGSW5iZo5eYpVuol5qqW55anGJrqFeYnmxXmpxsV5xZ
-  W5yTopeXmrJJkZgJKUUM0zfwfhz2R+9Q4ySHExKorwLLzUlC/El5adUZiQWZ8QXleakFh9ilO
-  HgUJLgVRdoSRYSLEpNT61Iy8wBRjVMWoKDR0mEdxULUJq3uCAxtzgzHSJ1itGYY23Dgb3MHJP
-  +XNvLLMSSl5+XKiXOe1wMqFQApDSjNA9uECzZXGKUlRLmZWRgYBDiKUgtys0sQZV/xSjOwagk
-  zDsLZApPZl4J3L5XQKcwAZ2ySbEJ5JSSRISUVAOTvTUzY4ad9u2ei3+cvbhVfz3l4pBcNql9I
-  1vovD0Sq+4FHLfsjJAtnLwq7MupvyuKqhfEc3d5vWy6sPtQsMERPXEGscqLbu7Wxf++RDX9W2
-  jOdDp1d16Rwd7043t2bDyxadHrt/e717RNZMnJvMpwlf9U5QKmNxO+i1/bPptJ0cnbevd78SL
-  vef9/NdRnrXKYtvS3DE/m1Wpf4a/bGjrnGS3cE2z3PkTyJWukMk/3Qt+QeNW+vDWL9y8zeKZ4
-  sOHgsdj0Sa218bfTuX8nMz0ubaqfp3T1RebZZNVNmiovHGuzWX2N5kyavONkoHXS48YvwnyT/
-  nvIVdo81lxhc+ZOzvk3bw3vnT+wTV1g6QFjJZbijERDLeai4kQA45xWqrEDAAA=
-X-Env-Sender: ruansy.fnst@fujitsu.com
-X-Msg-Ref: server-19.tower-587.messagelabs.com!1669601792!191793!1
-X-Originating-IP: [62.60.8.98]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.101.1; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 3126 invoked from network); 28 Nov 2022 02:16:32 -0000
-Received: from unknown (HELO n03ukasimr03.n03.fujitsu.local) (62.60.8.98)
-  by server-19.tower-587.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 28 Nov 2022 02:16:32 -0000
-Received: from n03ukasimr03.n03.fujitsu.local (localhost [127.0.0.1])
-        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTP id 5315F1AC;
-        Mon, 28 Nov 2022 02:16:32 +0000 (GMT)
-Received: from R01UKEXCASM126.r01.fujitsu.local (R01UKEXCASM126 [10.183.43.178])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        with ESMTP id S229603AbiK1KyB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Nov 2022 05:54:01 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D70701E4;
+        Mon, 28 Nov 2022 02:54:00 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTPS id 47DA97B;
-        Mon, 28 Nov 2022 02:16:32 +0000 (GMT)
-Received: from [10.167.216.27] (10.167.216.27) by
- R01UKEXCASM126.r01.fujitsu.local (10.183.43.178) with Microsoft SMTP Server
- (TLS) id 15.0.1497.32; Mon, 28 Nov 2022 02:16:29 +0000
-Message-ID: <113e8b0d-7349-94ac-c017-3624c34fe73b@fujitsu.com>
-Date:   Mon, 28 Nov 2022 10:16:23 +0800
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 73DA360F9F;
+        Mon, 28 Nov 2022 10:54:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02102C433D6;
+        Mon, 28 Nov 2022 10:53:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669632839;
+        bh=TCH4X0vYXDYZIjposZLwuZH5bK38a+ap9JQQcvpsmrQ=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=NiNiD/NIPJwPZZvubu2no8wdsdDDjItBldgVSQaImG5cxRrl7n6IQYZBc0nV5JpBQ
+         xVnrX+B1v8v8ehMk7vofau11mkaKHiqPTVjq0mOg6uPLSQDNcWU6ra7XZX/5SPPGhe
+         3NTDUsRcNblciTaLJIOHNpisMvl41lRYHx3bKhRvui4ToVySHHAMBffDg6ovppKkDe
+         qsAeUfpeq06hna20AvMvcPdONgQBIVeU0n576fCL1sfDRo1XzYu64pPEHg4b2C61ur
+         Lr2NVgPJPqeEYUjJtggTrBXIJXDvpIqIvFPOspCvYeix5kRtYTD6U+z1lN7Xo1zCxs
+         ZI6W95+J1AmkQ==
+Message-ID: <6a093484bb977355db40c70ffa51386f3d4ed57b.camel@kernel.org>
+Subject: Re: [PATCH] filelock: move file locking definitions to separate
+ header file
+From:   Jeff Layton <jlayton@kernel.org>
+To:     Al Viro <viro@zeniv.linux.org.uk>
+Cc:     Eric Van Hensbergen <ericvh@gmail.com>,
+        Latchesar Ionkov <lucho@ionkov.net>,
+        Dominique Martinet <asmadeus@codewreck.org>,
+        Christian Schoenebeck <linux_oss@crudebyte.com>,
+        David Howells <dhowells@redhat.com>,
+        Marc Dionne <marc.dionne@auristor.com>,
+        Xiubo Li <xiubli@redhat.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Steve French <sfrench@samba.org>, Paulo Alcantara <pc@cjr.nz>,
+        Ronnie Sahlberg <lsahlber@redhat.com>,
+        Shyam Prasad N <sprasad@microsoft.com>,
+        Tom Talpey <tom@talpey.com>,
+        Christine Caulfield <ccaulfie@redhat.com>,
+        David Teigland <teigland@redhat.com>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Bob Peterson <rpeterso@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Namjae Jeon <linkinjeon@kernel.org>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Mark Fasheh <mark@fasheh.com>,
+        Joel Becker <jlbec@evilplan.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Mike Marshall <hubcap@omnibond.com>,
+        Martin Brandenburg <martin@omnibond.com>,
+        "Darrick J. Wong" <djwong@kernel.org>, hch@lst.de,
+        linux-kernel@vger.kernel.org, v9fs-developer@lists.sourceforge.net,
+        linux-afs@lists.infradead.org, linux-fsdevel@vger.kernel.org,
+        ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org,
+        samba-technical@lists.samba.org, cluster-devel@redhat.com,
+        linux-nfs@vger.kernel.org, ocfs2-devel@oss.oracle.com,
+        devel@lists.orangefs.org, linux-xfs@vger.kernel.org
+Date:   Mon, 28 Nov 2022 05:53:54 -0500
+In-Reply-To: <Y4Dw65Nzt4bX9esd@ZenIV>
+References: <20221120210004.381842-1-jlayton@kernel.org>
+         <Y4A6/ozhUncxbimi@ZenIV>
+         <1d474f53670771f324745f597ec94b63a006d687.camel@kernel.org>
+         <Y4Dw65Nzt4bX9esd@ZenIV>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.46.1 (3.46.1-1.fc37) 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.2
-Subject: Re: [PATCH 0/2] fsdax,xfs: fix warning messages
-To:     "Darrick J. Wong" <djwong@kernel.org>
-CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <nvdimm@lists.linux.dev>, <linux-fsdevel@vger.kernel.org>,
-        <david@fromorbit.com>, <dan.j.williams@intel.com>
-References: <1669301694-16-1-git-send-email-ruansy.fnst@fujitsu.com>
- <Y4OuntOVjId9FLzL@magnolia>
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-In-Reply-To: <Y4OuntOVjId9FLzL@magnolia>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.167.216.27]
-X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
- R01UKEXCASM126.r01.fujitsu.local (10.183.43.178)
-X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Fri, 2022-11-25 at 16:44 +0000, Al Viro wrote:
+> On Fri, Nov 25, 2022 at 08:23:45AM -0500, Jeff Layton wrote:
+>=20
+> > I left it in fs.h for now. Some of the file_operations prototypes need
+> > that typedef, and I figure that anyone who is including filelock.h will
+> > almost certainly need to include fs.h anyway. We could move it into a
+> > separate header too, but it's probably not worth it.
+> >=20
+> > HCH mentioned years ago though that we should just get rid of fl_owner_=
+t
+> > altogether and just use 'void *'. I didn't do it at the time because I
+> > was focused on other changes, but this might be a good time to change
+> > it.
+>=20
+> Might be...
+>=20
+> > > > +extern void show_fd_locks(struct seq_file *f,
+> > > > +			 struct file *filp, struct files_struct *files);
+> > >=20
+> > > If anything, that would be better off as fl_owner_t...  Again, a sepa=
+rate
+> > > patch.
+> >=20
+> > I'm not sure what you mean here. This prototype hasn't changed, and is
+> > only called from procfs.
+>=20
+> Take a look at that function and its caller.  The use of 'files' argument=
+ there
+> is (and can be) only as an opaque pointer to be compared to ->fl_owner; a=
+t that
+> point it might be pointing to freed memory, for all we know (and give fal=
+se
+> positives if already reused).
 
+Ok. What we want this function to do is show any traditional POSIX or
+OFD locks that were set on a particular file. The logic in
+__show_fd_locks looks right, but you're correct that we don't want
+anyone dereferencing those pointers in that codepath.
 
-在 2022/11/28 2:38, Darrick J. Wong 写道:
-> On Thu, Nov 24, 2022 at 02:54:52PM +0000, Shiyang Ruan wrote:
->> Many testcases failed in dax+reflink mode with warning message in dmesg.
->> This also effects dax+noreflink mode if we run the test after a
->> dax+reflink test.  So, the most urgent thing is solving the warning
->> messages.
->>
->> Patch 1 fixes some mistakes and adds handling of CoW cases not
->> previously considered (srcmap is HOLE or UNWRITTEN).
->> Patch 2 adds the implementation of unshare for fsdax.
->>
->> With these fixes, most warning messages in dax_associate_entry() are
->> gone.  But honestly, generic/388 will randomly failed with the warning.
->> The case shutdown the xfs when fsstress is running, and do it for many
->> times.  I think the reason is that dax pages in use are not able to be
->> invalidated in time when fs is shutdown.  The next time dax page to be
->> associated, it still remains the mapping value set last time.  I'll keep
->> on solving it.
->>
->> The warning message in dax_writeback_one() can also be fixed because of
->> the dax unshare.
-> 
-> This cuts down the amount of test failures quite a bit, but I think
-> you're still missing a piece or two -- namely the part that refuses to
-> enable S_DAX mode on a reflinked file when the inode is being loaded
-> from disk.  However, thank you for fixing dax.c, because that was the
-> part I couldn't figure out at all. :)
+Note too that this info is not wholly reliable. POSIX locks can merge
+with other locks that were set within the same process (same
+files_struct) but on different fds.
 
-I didn't include it[1] in this patchset...
+I think we want to get rid of fl_owner_t anyway. Maybe we should replace
+it with an unsigned long instead of void * to discourage anyone from
+trying to dereference those pointers?
 
-[1] 
-https://lore.kernel.org/linux-xfs/1663234002-17-1-git-send-email-ruansy.fnst@fujitsu.com/
+> TBH, I'd never been able to finish the audit of files_struct pointers pas=
+sed
+> into locks subsystem; there definitely are moments when code from fs/lock=
+s.c
+> is dealing with pointers to already freed instances - show_fd_locks() at =
+the
+> very least.  They are not dereferenced, but beyond that...
 
+Yeah. In general, we try to ensure that locks are torn down before the
+file with which it is associated, but with some of the delayed freeing,
+they can outlive the file at times. For example:
 
---
-Thanks,
-Ruan.
+    https://tracker.ceph.com/issues/57986
 
-> 
-> --D
-> 
->>
->> Shiyang Ruan (2):
->>    fsdax,xfs: fix warning messages at dax_[dis]associate_entry()
->>    fsdax,xfs: port unshare to fsdax
->>
->>   fs/dax.c             | 166 ++++++++++++++++++++++++++++++-------------
->>   fs/xfs/xfs_iomap.c   |   6 +-
->>   fs/xfs/xfs_reflink.c |   8 ++-
->>   include/linux/dax.h  |   2 +
->>   4 files changed, 129 insertions(+), 53 deletions(-)
->>
->> -- 
->> 2.38.1
->>
+--=20
+Jeff Layton <jlayton@kernel.org>
