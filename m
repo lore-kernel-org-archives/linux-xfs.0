@@ -2,156 +2,137 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58A0AC4332F
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Nov 2022 17:43:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAFF6C433FE
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Nov 2022 22:09:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233260AbiK1RnO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Nov 2022 12:43:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51810 "EHLO
+        id S232957AbiK1WJp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Nov 2022 17:09:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233256AbiK1Rmx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Nov 2022 12:42:53 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34577286EC
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2022 09:39:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1669657182;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=eQPjuAtjowCpN/x3NgMEuvJ2bzg0KVPgoSLTrpqCfcA=;
-        b=dn7XuDE5gw3cvbBJlknYnmWk2ZThPbMIjZUNzHvjCWfDMiBW8JbSRVkUcQ31OZ9IWIg+VA
-        UuY8tWgyUKUnfjYvoGCg15tcOQElFm3LExcIgLuXn9ia5OeHfT9ZSIGLpau0E62FNz9I+h
-        wAF8ZzLxmZ6+cNSrgVBovsjqGI6sgNs=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-610-ukWMI1o2NGCZISvL_03dEg-1; Mon, 28 Nov 2022 12:39:40 -0500
-X-MC-Unique: ukWMI1o2NGCZISvL_03dEg-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        with ESMTP id S232370AbiK1WJo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Nov 2022 17:09:44 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7130813D73
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2022 14:09:43 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 3C73B29AA3BB
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2022 17:39:40 +0000 (UTC)
-Received: from bfoster.redhat.com (unknown [10.22.8.52])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 2321549BB60
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2022 17:39:40 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: fix broken truncate pre-size update flushing
-Date:   Mon, 28 Nov 2022 12:39:45 -0500
-Message-Id: <20221128173945.3953659-1-bfoster@redhat.com>
+        by ams.source.kernel.org (Postfix) with ESMTPS id 2F566B80F79
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2022 22:09:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB187C433D7;
+        Mon, 28 Nov 2022 22:09:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669673381;
+        bh=bjKmuTG+pwJpEw1JCLUomwELerw6zwSoELriUd+VWU8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=P+bO27FRdueSukNyWLu0BBYwgbDUEmTxozER/cJg15wnDfIFDa1e/3n0+UFLfCrP5
+         0f55gW2SWVMsagiPbBm/TfOSz2XN5qia81XsKgxhk32UdJE0Y+jQLme1c2yZhMDgwi
+         sUPIYztpvUow8BoZ148eFNa7kmtMdR+0in6KKBkxD/liLmehXPRmdSv+Sj4Gj9D1tI
+         FSYLTwvR/jgrVjG+kKC5bq1sL/PbVYjaTPN2N/oyB6q9UCw3lMk8B+JMnyCIFaErWI
+         buCq1OEyBCcWiN82s4XZ0qjNVeBofYCI5+/U4yyS7TDPAfbA8M3BmuMQc9kRMW7I7N
+         m/20Lh5zVwAuw==
+Date:   Mon, 28 Nov 2022 14:09:40 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     cem@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs_repair: Fix check_refcount() error path
+Message-ID: <Y4UxpPgxbmOi/T9/@magnolia>
+References: <20221128131434.21496-1-cem@kernel.org>
+ <20221128131434.21496-2-cem@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221128131434.21496-2-cem@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The pre-size update flush logic in xfs_setattr_size() has become
-warped enough that it's difficult to surmise how it is actually
-supposed to work. The original purpose of this flush is to mitigate
-the "NULL file" problem when a truncate logs a size update before
-preceding writes have been flushed and the fs happens to crash. This
-code has seen several incremental changes since then that alter
-behavior in potentially unexpected ways.
+On Mon, Nov 28, 2022 at 02:14:33PM +0100, cem@kernel.org wrote:
+> From: Carlos Maiolino <cmaiolino@redhat.com>
+> 
+> Add proper exit error paths to avoid checking all pointers at the current path
+> 
+> Fixes-coverity-id: 1512651
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
+> V2:
+> 	- Rename error label from err_agf to err_pag
+> 	- pass error directly to libxfs_btree_del_cursor() without
+> 	  using ternary operator
+> 
+>  repair/rmap.c | 22 ++++++++++------------
+>  1 file changed, 10 insertions(+), 12 deletions(-)
+> 
+> diff --git a/repair/rmap.c b/repair/rmap.c
+> index 2c809fd4f..e76a8f611 100644
+> --- a/repair/rmap.c
+> +++ b/repair/rmap.c
+> @@ -1379,7 +1379,7 @@ check_refcounts(
+>  	if (error) {
+>  		do_warn(_("Could not read AGF %u to check refcount btree.\n"),
+>  				agno);
+> -		goto err;
+> +		goto err_pag;
+>  	}
+>  
+>  	/* Leave the per-ag data "uninitialized" since we rewrite it later */
+> @@ -1388,7 +1388,7 @@ check_refcounts(
+>  	bt_cur = libxfs_refcountbt_init_cursor(mp, NULL, agbp, pag);
+>  	if (!bt_cur) {
+>  		do_warn(_("Not enough memory to check refcount data.\n"));
+> -		goto err;
+> +		goto err_bt_cur;
+>  	}
+>  
+>  	rl_rec = pop_slab_cursor(rl_cur);
+> @@ -1401,7 +1401,7 @@ check_refcounts(
+>  			do_warn(
+>  _("Could not read reference count record for (%u/%u).\n"),
+>  					agno, rl_rec->rc_startblock);
+> -			goto err;
+> +			goto err_loop;
+>  		}
+>  		if (!have) {
+>  			do_warn(
+> @@ -1416,7 +1416,7 @@ _("Missing reference count record for (%u/%u) len %u count %u\n"),
+>  			do_warn(
+>  _("Could not read reference count record for (%u/%u).\n"),
+>  					agno, rl_rec->rc_startblock);
+> -			goto err;
+> +			goto err_loop;
+>  		}
+>  		if (!i) {
+>  			do_warn(
+> @@ -1446,14 +1446,12 @@ next_loop:
+>  		rl_rec = pop_slab_cursor(rl_cur);
+>  	}
+>  
+> -err:
+> -	if (bt_cur)
+> -		libxfs_btree_del_cursor(bt_cur, error ? XFS_BTREE_ERROR :
+> -							XFS_BTREE_NOERROR);
+> -	if (pag)
+> -		libxfs_perag_put(pag);
+> -	if (agbp)
+> -		libxfs_buf_relse(agbp);
+> +err_loop:
+> +	libxfs_btree_del_cursor(bt_cur, error);
+> +err_bt_cur:
+> +	libxfs_buf_relse(agbp);
+> +err_pag:
+> +	libxfs_perag_put(pag);
 
-For context, the first in line is commit 5885ebda878b ("xfs: ensure
-truncate forces zeroed blocks to disk"). This introduced the zeroing
-check specifically for extending truncates and seems straightforward
-enough of a change to accomplish that correctly.
+So I see that you fixed one of the labels so that err_pag jumps to
+releasing the perag pointer, but it's still the case that err_bt_cur
+frees the AGF buffer, not the btree cursor; and that err_loop actually
+frees the btree cursor.
 
-Next, commit 68a9f5e7007c ("xfs: implement iomap based buffered
-write path") switched over to iomap and introduced did_zeroing for
-the truncate down case. This didn't change the flush range offsets,
-however, which means partial post-eof zeroing on a truncate down may
-only flush if the on disk inode size hadn't been updated to reflect
-the in-core size at the start of the truncate.
+--D
 
-Sometime after that, commit 350976ae2187 ("xfs: truncate pagecache
-before writeback in xfs_setattr_size()") reordered the flush to
-after the pagecache truncate to prevent a stale data exposure due to
-iomap not zeroing properly. This failed to account for the fact that
-pagecache truncate doesn't mark pages dirty and thus leaves the
-filesystem responsible for on-disk consistency. Therefore, post-eof
-data exposure was still possible if a dirty page was cleaned before
-pagecache truncate. This also introduced an off by one issue for the
-newsize == oldsize scenario which causes the flush to submit the EOF
-page for I/O, but not actually wait on it if the offsets align to
-the same page.
-
-Finally, commit 869ae85dae64 ("xfs: flush new eof page on truncate
-to avoid post-eof corruption") came along to address the
-aforementioned stale data exposure race. This fails to account for
-the same scenario on extending truncates, for one, but can also work
-against the NULL file detection logic the flush was introduced to
-mitigate the first place. This is because selectively flushing the
-EOF block can update on-disk size before any preceding dirty data
-may have been written back.
-
-Since it is confusing enough to assess intent of the current code
-and the various ways it might or might not be broken, this patch
-just assumes we want to flush any combination of block zeroing or
-previous I/O patterns deemed susceptible to the NULL file problem,
-and then tries to do that correctly. Note that the EOF block flush
-cannot be removed without reintroducing the data exposure race, but
-that problem is mitigated by a separate patch that moves the flush
-out of truncate and into iomap processing callbacks such that it is
-no longer unconditional.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_iops.c | 28 ++++++++++++++++++----------
- 1 file changed, 18 insertions(+), 10 deletions(-)
-
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 2e10e1c66ad6..39e9088cd32c 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -785,6 +785,7 @@ xfs_setattr_size(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct inode		*inode = VFS_I(ip);
- 	xfs_off_t		oldsize, newsize;
-+	loff_t			flushoff = LLONG_MAX;
- 	struct xfs_trans	*tp;
- 	int			error;
- 	uint			lock_flags = 0;
-@@ -880,17 +881,24 @@ xfs_setattr_size(
- 	truncate_setsize(inode, newsize);
- 
- 	/*
--	 * We are going to log the inode size change in this transaction so
--	 * any previous writes that are beyond the on disk EOF and the new
--	 * EOF that have not been written out need to be written here.  If we
--	 * do not write the data out, we expose ourselves to the null files
--	 * problem. Note that this includes any block zeroing we did above;
--	 * otherwise those blocks may not be zeroed after a crash.
-+	 * We are going to log the inode size change in this transaction so any
-+	 * previous writes that are beyond the on disk EOF and the new EOF that
-+	 * have not been written out need to be written here. If we do not write
-+	 * the data out, we expose ourselves to the null files problem.
-+	 *
-+	 * To also cover block zeroing performed above, start with the lowest of
-+	 * the old and new sizes to handle truncate up or down, and then factor
-+	 * in ->i_disk_size if necessary. Since pagecache was truncated just
-+	 * above, we don't need a precise end offset and can flush through the
-+	 * end of the mapping.
- 	 */
--	if (did_zeroing ||
--	    (newsize > ip->i_disk_size && oldsize != ip->i_disk_size)) {
--		error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
--						ip->i_disk_size, newsize - 1);
-+	if (did_zeroing)
-+		flushoff = min_t(loff_t, oldsize, newsize);
-+	if (newsize > ip->i_disk_size && oldsize != ip->i_disk_size)
-+		flushoff = min_t(loff_t, flushoff, ip->i_disk_size);
-+	if (flushoff != LLONG_MAX) {
-+		error = filemap_write_and_wait_range(inode->i_mapping, flushoff,
-+						     LLONG_MAX);
- 		if (error)
- 			return error;
- 	}
--- 
-2.37.3
-
+>  	free_slab_cursor(&rl_cur);
+>  }
+>  
+> -- 
+> 2.30.2
+> 
