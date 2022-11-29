@@ -2,130 +2,227 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BD2AC43217
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Nov 2022 23:39:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04164C43217
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Nov 2022 00:16:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234747AbiK1Xjv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Nov 2022 18:39:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54016 "EHLO
+        id S234631AbiK2AQj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Nov 2022 19:16:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46134 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234764AbiK1Xjt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Nov 2022 18:39:49 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A71A186E9;
-        Mon, 28 Nov 2022 15:39:49 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AAD6E6126D;
-        Mon, 28 Nov 2022 23:39:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D3ACC433D6;
-        Mon, 28 Nov 2022 23:39:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1669678788;
-        bh=0fTYGhNX3ugTtLYLVq5oHYj+A1qDs0fJ8qrs1EFEBY0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=kMc66HiiN4a7E9Tm9cVo4XydfdgVvx9TMvV3Ae6pas0D/06HXVPGCdYSMfjv+F1j1
-         W9VBwt4zwLs4XXKy8BN4Gc4pWb0/7qVUVanZLyJi0ObvwGmSC3aGtIrqEO01d2aFdj
-         pXeqeOjAgYNbFKLVNQsxWle/f1nX38+P+FhYl7JVcOmP9HQ82RVFwuoS5TjkNbZfhp
-         7ZAgjGnrNW1KJezoyFyTGU89XAzw17IeUFAsg1ztsd1hOVssXxNemFx5iWIEm1rlqZ
-         ZpidpCxWQh6wLN5q321h2YxoIk6OFMEUBhy0y4GPZ/fTP5z0mTYq8rVvkGNTT5Weme
-         Uu1ri/Cdd6JIw==
-Date:   Mon, 28 Nov 2022 15:39:47 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
+        with ESMTP id S234614AbiK2AQh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Nov 2022 19:16:37 -0500
+Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3D042B19F
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2022 16:16:36 -0800 (PST)
+Received: by mail-pj1-x1029.google.com with SMTP id b11so11109458pjp.2
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2022 16:16:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=rmT4p4LUlgKisuvS5tqZbtaFiBayJl0Eii/OEnGHHtU=;
+        b=tS0jlh80ya4JjgLjJkratxjwUQtwsJQ2uzig/9jrTFeTv6hzDbwbdiCwUogq75pSh1
+         tQ1QBpFoi/zAFhKfKq0mdpPwXMUNF85xOpaWwPh7t64FqCnm42OVKWXWE9vTWCY3wGoj
+         Hv4G3jWw9KYdtfRX08q4wTQBn9lP/oi5zbPD+MUBtNBAc5vE0Wxw6+QaVTe5cKjMuvaE
+         Cbpkgd5hXOiAbqcvvtszCD+aivtEc7x4MLcy0KMqnSoxu4LekuSFOEDF7sCCUpmP0aN3
+         bAzYnLWfegFRHx8EOoxpJ5XLtMnAXZLvQ2Sz+DIvqE6YTNepx+7C1vu98xZ7eFYQqHpt
+         HtRg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=rmT4p4LUlgKisuvS5tqZbtaFiBayJl0Eii/OEnGHHtU=;
+        b=qBg9M5t4A7+g66mUYqq2s8zc/7LjpMRyIEDn2zgtemCTE1NYMp5L0MOtsHeNinTWTT
+         HsBJPqt92H6wkxDpM1djfR8pVyAl4aNMAsD/VeelFuB2TAJrXk2lvwjKxufOf2Xq7sIj
+         nj2AgT9XG/zVJkVXmc7c1zbekK4jz69SSKviLjIyFhSvwuYf0qt9rMtYE5MzAUu7cVmL
+         8yhyFxcUjWvWGunTZxiNue0UHsMusKQVQkK9b6HBllgCCrlXHiNn5CD+wHgOcsGWs48a
+         6xHvSouC5WrWf68dosWaCSlBSrlXshAM9o5nNC7Ms8fJ0kD4VsKIGXZbI7zzCnsyHn6W
+         onOA==
+X-Gm-Message-State: ANoB5pn+ghL/oPSTCJ6DrnWOAMP+HhHxFJEMEN5nxRD5T5svBDR3IDeN
+        lOZmGZnZdoDqAF0pQTI3AS6+MPoDZ+vwYg==
+X-Google-Smtp-Source: AA0mqf5+RMi8gPwujU5z/tOoNaZz4hNMrZtCkUI2nZql1qYR4idryLE601Q51u0M21dSkajfM6LruQ==
+X-Received: by 2002:a17:902:bb10:b0:189:6292:827e with SMTP id im16-20020a170902bb1000b001896292827emr21668249plb.97.1669680996313;
+        Mon, 28 Nov 2022 16:16:36 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-65-106.pa.vic.optusnet.com.au. [49.186.65.106])
+        by smtp.gmail.com with ESMTPSA id y22-20020a170902b49600b0018099c9618esm9388374plr.231.2022.11.28.16.16.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 28 Nov 2022 16:16:35 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1ozoIa-002E5Z-Cw; Tue, 29 Nov 2022 11:16:32 +1100
+Date:   Tue, 29 Nov 2022 11:16:32 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 10/9] xfs: add debug knob to slow down writeback for fun
-Message-ID: <Y4VGw38+m3+e/wpO@magnolia>
-References: <20221123055812.747923-1-david@fromorbit.com>
- <Y4U3XWf5j1zVGvV4@magnolia>
- <20221128233021.GW3600936@dread.disaster.area>
+Subject: [GIT PULL] xfs, iomap: fix data corruption due to stale cached iomaps
+Message-ID: <20221129001632.GX3600936@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221128233021.GW3600936@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 29, 2022 at 10:30:21AM +1100, Dave Chinner wrote:
-> On Mon, Nov 28, 2022 at 02:34:05PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Add a new error injection knob so that we can arbitrarily slow down
-> > writeback to test for race conditions and aberrant reclaim behavior if
-> > the writeback mechanisms are slow to issue writeback.  This will enable
-> > functional testing for the ifork sequence counters introduced in commit
-> > 745b3f76d1c8 ("xfs: maintain a sequence count for inode fork
-> > manipulations").
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  fs/xfs/libxfs/xfs_errortag.h |    4 +++-
-> >  fs/xfs/xfs_aops.c            |   12 ++++++++++--
-> >  fs/xfs/xfs_error.c           |   11 +++++++++++
-> >  fs/xfs/xfs_error.h           |   22 ++++++++++++++++++++++
-> >  4 files changed, 46 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-> > index 580ccbd5aadc..f5f629174eca 100644
-> > --- a/fs/xfs/libxfs/xfs_errortag.h
-> > +++ b/fs/xfs/libxfs/xfs_errortag.h
-> > @@ -61,7 +61,8 @@
-> >  #define XFS_ERRTAG_LARP					39
-> >  #define XFS_ERRTAG_DA_LEAF_SPLIT			40
-> >  #define XFS_ERRTAG_ATTR_LEAF_TO_NODE			41
-> > -#define XFS_ERRTAG_MAX					42
-> > +#define XFS_ERRTAG_WB_DELAY_MS				42
-> > +#define XFS_ERRTAG_MAX					43
-> >  
-> >  /*
-> >   * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-> > @@ -107,5 +108,6 @@
-> >  #define XFS_RANDOM_LARP					1
-> >  #define XFS_RANDOM_DA_LEAF_SPLIT			1
-> >  #define XFS_RANDOM_ATTR_LEAF_TO_NODE			1
-> > +#define XFS_RANDOM_WB_DELAY_MS				3000
-> >  
-> >  #endif /* __XFS_ERRORTAG_H_ */
-> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > index a22d90af40c8..4a13260527b9 100644
-> > --- a/fs/xfs/xfs_aops.c
-> > +++ b/fs/xfs/xfs_aops.c
-> > @@ -17,6 +17,8 @@
-> >  #include "xfs_bmap.h"
-> >  #include "xfs_bmap_util.h"
-> >  #include "xfs_reflink.h"
-> > +#include "xfs_errortag.h"
-> > +#include "xfs_error.h"
-> >  
-> >  struct xfs_writepage_ctx {
-> >  	struct iomap_writepage_ctx ctx;
-> > @@ -217,11 +219,15 @@ xfs_imap_valid(
-> >  	 * checked (and found nothing at this offset) could have added
-> >  	 * overlapping blocks.
-> >  	 */
-> > -	if (XFS_WPC(wpc)->data_seq != READ_ONCE(ip->i_df.if_seq))
-> > +	if (XFS_WPC(wpc)->data_seq != READ_ONCE(ip->i_df.if_seq)) {
-> > +		XFS_ERRORTAG_REPORT(ip->i_mount, XFS_ERRTAG_WB_DELAY_MS);
-> >  		return false;
-> > +	}
-> >  	if (xfs_inode_has_cow_data(ip) &&
-> > -	    XFS_WPC(wpc)->cow_seq != READ_ONCE(ip->i_cowfp->if_seq))
-> > +	    XFS_WPC(wpc)->cow_seq != READ_ONCE(ip->i_cowfp->if_seq)) {
-> > +		XFS_ERRORTAG_REPORT(ip->i_mount, XFS_ERRTAG_WB_DELAY_MS);
-> >  		return false;
-> 
-> These should be tracepoints, right?
-> 
-> Otherwise I don't see a problem with the delay code.
+Hi Darrick,
 
-Yeah.  I suppose this'll be the first fstest that has to go wrangle with
-setting up its own tracepoint filtering.  :)
+Can you please pull the data corruption fix from the tag below? The
+only change since the last posting was to remove the unused error
+variable from the iomap punch code. I haven't seen any regressions
+in local testing over the past week, so I think it is good to go.
 
---D
+-Dave.
 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+------
+
+The following changes since commit f0c4d9fc9cc9462659728d168387191387e903cc:
+
+  Linux 6.1-rc4 (2022-11-06 15:07:11 -0800)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs tags/xfs-iomap-stale-fixes
+
+for you to fetch changes up to 6e8af15ccdc4e138a5b529c1901a0013e1dcaa09:
+
+  xfs: drop write error injection is unfixable, remove it (2022-11-29 09:09:17 +1100)
+
+----------------------------------------------------------------
+xfs, iomap: fix data corruption due to stale cached iomaps
+
+This patch series fixes a data corruption that occurs in a specific
+multi-threaded write workload. The workload combined
+racing unaligned adjacent buffered writes with low memory conditions
+that caused both writeback and memory reclaim to race with the
+writes.
+
+The result of this was random partial blocks containing zeroes
+instead of the correct data.  The underlying problem is that iomap
+caches the write iomap for the duration of the write() operation,
+but it fails to take into account that the extent underlying the
+iomap can change whilst the write is in progress.
+
+The short story is that an iomap can span mutliple folios, and so
+under low memory writeback can be cleaning folios the write()
+overlaps. Whilst the overlapping data is cached in memory, this
+isn't a problem, but because the folios are now clean they can be
+reclaimed. Once reclaimed, the write() does the wrong thing when
+re-instantiating partial folios because the iomap no longer reflects
+the underlying state of the extent. e.g. it thinks the extent is
+unwritten, so it zeroes the partial range, when in fact the
+underlying extent is now written and so it should have read the data
+from disk.  This is how we get random zero ranges in the file
+instead of the correct data.
+
+The gory details of the race condition can be found here:
+
+https://lore.kernel.org/linux-xfs/20220817093627.GZ3600936@dread.disaster.area/
+
+Fixing the problem has two aspects. The first aspect of the problem
+is ensuring that iomap can detect a stale cached iomap during a
+write in a race-free manner. We already do this stale iomap
+detection in the writeback path, so we have a mechanism for
+detecting that the iomap backing the data range may have changed
+and needs to be remapped.
+
+In the case of the write() path, we have to ensure that the iomap is
+validated at a point in time when the page cache is stable and
+cannot be reclaimed from under us. We also need to validate the
+extent before we start performing any modifications to the folio
+state or contents. Combine these two requirements together, and the
+only "safe" place to validate the iomap is after we have looked up
+and locked the folio we are going to copy the data into, but before
+we've performed any initialisation operations on that folio.
+
+If the iomap fails validation, we then mark it stale, unlock the
+folio and end the write. This effectively means a stale iomap
+results in a short write. Filesystems should already be able to
+handle this, as write operations can end short for many reasons and
+need to iterate through another mapping cycle to be completed. Hence
+the iomap changes needed to detect and handle stale iomaps during
+write() operations is relatively simple...
+
+However, the assumption is that filesystems should already be able
+to handle write failures safely, and that's where the second
+(first?) part of the problem exists. That is, handling a partial
+write is harder than just "punching out the unused delayed
+allocation extent". This is because mmap() based faults can race
+with writes, and if they land in the delalloc region that the write
+allocated, then punching out the delalloc region can cause data
+corruption.
+
+This data corruption problem is exposed by generic/346 when iomap is
+converted to detect stale iomaps during write() operations. Hence
+write failure in the filesytems needs to handle the fact that the
+write() in progress doesn't necessarily own the data in the page
+cache over the range of the delalloc extent it just allocated.
+
+As a result, we can't just truncate the page cache over the range
+the write() didn't reach and punch all the delalloc extent. We have
+to walk the page cache over the untouched range and skip over any
+dirty data region in the cache in that range. Which is ....
+non-trivial.
+
+That is, iterating the page cache has to handle partially populated
+folios (i.e. block size < page size) that contain data. The data
+might be discontiguous within a folio. Indeed, there might be
+*multiple* discontiguous data regions within a single folio. And to
+make matters more complex, multi-page folios mean we just don't know
+how many sub-folio regions we might have to iterate to find all
+these regions. All the corner cases between the conversions and
+rounding between filesystem block size, folio size and multi-page
+folio size combined with unaligned write offsets kept breaking my
+brain.
+
+However, if we convert the code to track the processed
+write regions by byte ranges instead of fileystem block or page
+cache index, we could simply use mapping_seek_hole_data() to find
+the start and end of each discrete data region within the range we
+needed to scan. SEEK_DATA finds the start of the cached data region,
+SEEK_HOLE finds the end of the region. These are byte based
+interfaces that understand partially uptodate folio regions, and so
+can iterate discrete sub-folio data regions directly. This largely
+solved the problem of discovering the dirty regions we need to keep
+the delalloc extent over.
+
+However, to use mapping_seek_hole_data() without needing to export
+it, we have to move all the delalloc extent cleanup to the iomap
+core and so now the iomap core can clean up delayed allocation
+extents in a safe, sane and filesystem neutral manner.
+
+With all this done, the original data corruption never occurs
+anymore, and we now have a generic mechanism for ensuring that page
+cache writes do not do the wrong thing when writeback and reclaim
+change the state of the physical extent and/or page cache contents
+whilst the write is in progress.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
+----------------------------------------------------------------
+Dave Chinner (9):
+      xfs: write page faults in iomap are not buffered writes
+      xfs: punching delalloc extents on write failure is racy
+      xfs: use byte ranges for write cleanup ranges
+      xfs,iomap: move delalloc punching to iomap
+      iomap: buffered write failure should not truncate the page cache
+      xfs: xfs_bmap_punch_delalloc_range() should take a byte range
+      iomap: write iomap validity checks
+      xfs: use iomap_valid method to detect stale cached iomaps
+      xfs: drop write error injection is unfixable, remove it
+
+ fs/iomap/buffered-io.c       | 254 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ fs/iomap/iter.c              |  19 +++++++++-
+ fs/xfs/libxfs/xfs_bmap.c     |   6 ++-
+ fs/xfs/libxfs/xfs_errortag.h |  12 +++---
+ fs/xfs/xfs_aops.c            |  18 ++++-----
+ fs/xfs/xfs_bmap_util.c       |  10 +++--
+ fs/xfs/xfs_bmap_util.h       |   2 +-
+ fs/xfs/xfs_error.c           |  27 +++++++++----
+ fs/xfs/xfs_file.c            |   2 +-
+ fs/xfs/xfs_iomap.c           | 169 +++++++++++++++++++++++++++++++++++++++++++++++++---------------------------------
+ fs/xfs/xfs_iomap.h           |   6 ++-
+ fs/xfs/xfs_pnfs.c            |   6 ++-
+ include/linux/iomap.h        |  47 +++++++++++++++++++----
+ 13 files changed, 464 insertions(+), 114 deletions(-)
+-- 
+Dave Chinner
+david@fromorbit.com
