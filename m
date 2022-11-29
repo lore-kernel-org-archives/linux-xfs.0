@@ -2,282 +2,206 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A04DFC433FE
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Nov 2022 20:50:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8726C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Nov 2022 21:03:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235700AbiK2Uuz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Nov 2022 15:50:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50510 "EHLO
+        id S235700AbiK2VD6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Nov 2022 16:03:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33310 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236811AbiK2Uuk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2022 15:50:40 -0500
-Received: from out1-smtp.messagingengine.com (out1-smtp.messagingengine.com [66.111.4.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60F952BFE
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 12:49:33 -0800 (PST)
-Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
-        by mailout.nyi.internal (Postfix) with ESMTP id E954F5C00F0
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 15:49:30 -0500 (EST)
-Received: from mailfrontend2 ([10.202.2.163])
-  by compute2.internal (MEProxy); Tue, 29 Nov 2022 15:49:30 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=boo.tc; h=cc
-        :content-type:date:date:from:from:in-reply-to:message-id
-        :mime-version:reply-to:sender:subject:subject:to:to; s=fm3; t=
-        1669754970; x=1669841370; bh=mkhaJq2QcXucHu5iQ2PFnBEWgVdo/CuNgji
-        MFgokRhE=; b=QQBDMT8cvLcAdq0mVOmmnhlg12liyF2jxc9ZPEg2kwv9DNQdOP7
-        GLlI7wkTUUgpx0cN7aY7jvyD04RLrVUtl6hfsjB6eUOZLPU1o1OJI1w9E4MrA2IT
-        X2WGLH+WmHHlr5CWyOFrF8i4vN7DMP6ntzDw5pYAkjRss7rBPPPSnc2V3FJ/M9TJ
-        nSt7uG1blrsDTYOOiUB2Q4seKaD5j8H3cTmzCSZXQMEiSEsWB5pUI6l886I+1gfk
-        Ze2lJr2SyPHiZdz04iPJVLHZ5oKpPTuoCMDrI+6WFsI2F6Vx847jmEUvPiIpZTQd
-        P4GVNDdN2oV+PC1mgTxEKU8mWCzC6TIxtLA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-type:date:date:feedback-id
-        :feedback-id:from:from:in-reply-to:message-id:mime-version
-        :reply-to:sender:subject:subject:to:to:x-me-proxy:x-me-proxy
-        :x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1669754970; x=
-        1669841370; bh=mkhaJq2QcXucHu5iQ2PFnBEWgVdo/CuNgjiMFgokRhE=; b=o
-        pppxx+nOvqxJnHNld/+NeTqV7QcrjjMFnZ9o53T5mC1DGgXICB0qAnRZHCESITZU
-        J8NhcmyJmRJrEvjNu/Ll/2Z05og7V3sTEvFMEVwr2/Qbkte9Cne1LGzNZt+F5BYn
-        JirBLulLTFQJyNnDkd2DDdcexqpAYxEIPaIxNXr1Nm2u3FGVMBCtDLRU61CBKQPJ
-        DaETGt3Vi9OlLie/Ll08zMimITKD0cRMNADiaraACoEIZF92PGKmMFgjSw+y/Y3G
-        qwhbHwUX0v6i0FMe1o77yNXWfHuHw40hHgsfiu7auwcijfseM76GMfegJHkHSX1o
-        Kvk2kY5q4UX7ic4dTD3PA==
-X-ME-Sender: <xms:WnCGYxfCmAePXg3Ci333yqifJ13Ehhjk8rfHNQ35Eoxxb1BiF6EUkw>
-    <xme:WnCGY_NplaFEq1p-3WVyTF9f8f5thKqoW9HNQiLiEta5oNjSiT0whPizUH0aD1Ivt
-    8cm4QTI6vKETvjhXA>
-X-ME-Received: <xmr:WnCGY6jGMmftWMRueQj4_SeC9Bjc9zY8qUeLHef2zIQCin7dGya5LlSncvlGg0udH0OwLRAVYms>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrtddtgddutdeiucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucgfrhhlucfvnfffucdlhedtmdenucfjughrpegtkf
-    ffgggfvffhufesmhdtreertdefjeenucfhrhhomhepvehhrhhishcuuehoohhtuceolhhi
-    shhtshessghoohhttgdrsghoohdrthgtqeenucggtffrrghtthgvrhhnpedtleeiffevge
-    fhhedvkedujeekheevledtvdehueeifefgheetfeefieetkefgjeenucevlhhushhtvghr
-    ufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehlihhsthhssegsohhothgtrd
-    gsohhordhttg
-X-ME-Proxy: <xmx:WnCGY6_x3KbV_9x6gCrWZPwnCROa_BbJrWxtToGcKl3KttZHdDJO4g>
-    <xmx:WnCGY9vlzVgwRLSd6xIy2KvITB8x5uKLkHmuAaPH8uK3xK4uhz5iWA>
-    <xmx:WnCGY5E8-BwHqpfuKfXonesmXLcbY9JuuAOjpUk_0COSvfONRFooPQ>
-    <xmx:WnCGY70Qgw1zzlUSZ5YGPIguEfnf8CpA5Slhg5dkm7qxbBSvq4atRA>
-Feedback-ID: i5869458d:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA for
- <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 15:49:29 -0500 (EST)
-Content-Type: multipart/mixed; boundary="------------ZdbXxuoXRh1JX11zRW7EmN2V"
-Message-ID: <c3fc1808-dbbf-b1c0-36de-1e55be1942e8@bootc.boo.tc>
-Date:   Tue, 29 Nov 2022 20:49:27 +0000
+        with ESMTP id S235854AbiK2VD5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2022 16:03:57 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ABCE54B36
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 13:03:56 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 181A5B818F8
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 21:03:55 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4136C433C1;
+        Tue, 29 Nov 2022 21:03:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669755833;
+        bh=Ly1pQh5Ix5Mt6TpnRzyCsaiN25LU943ArJ7QK5xDoJ8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=mnWpFUA3VkfCkKxCkeoMBPIMsbxKpLxsIU00WR7GAipVKDYh82QvjvuuKpTjG+lTa
+         h6J1Kc7AXrZkxh0Up3YEhMy5wmx9yzhwQTofIiv9Us/BYkza+OhTjIb48yfMTqHjOR
+         GhrNbfmrn1bgWgrTxSI4bzd8jUKOw2oWTiYHDhZqRjYCNWV/6YkAmwvU+LTpKb5oOT
+         J3aVVwbYephoQo4kjoVtWuID8nsdKhUL+Ms6yEPX9ED5KyB+7+FwPNmjE6QSXmU9gE
+         wXp0Wuf0rjtBaIU53Yzmasr9nEYJvsaWwy7nZaTRXzmEorEfUqpacSQ/Ecpuzf0vX9
+         +wuhXYd8niyzA==
+Date:   Tue, 29 Nov 2022 13:03:53 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/3] xfs: attach dquots to inode before reading data/cow
+ fork mappings
+Message-ID: <Y4ZzuZsBWZcbrrzm@magnolia>
+References: <166930915825.2061853.2470510849612284907.stgit@magnolia>
+ <Y4OuLTwPVdiHMBGi@magnolia>
+ <20221129063104.GD3600936@dread.disaster.area>
+ <Y4WrwDE/318NJ+tz@magnolia>
+ <20221129080450.GE3600936@dread.disaster.area>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.5.0
-Content-Language: en-GB
-To:     linux-xfs@vger.kernel.org
-From:   Chris Boot <lists@bootc.boo.tc>
-Subject: XFS corruption help; xfs_repair isn't working
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221129080450.GE3600936@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------ZdbXxuoXRh1JX11zRW7EmN2V
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+On Tue, Nov 29, 2022 at 07:04:50PM +1100, Dave Chinner wrote:
+> On Mon, Nov 28, 2022 at 10:50:40PM -0800, Darrick J. Wong wrote:
+> > On Tue, Nov 29, 2022 at 05:31:04PM +1100, Dave Chinner wrote:
+> > > On Sun, Nov 27, 2022 at 10:36:29AM -0800, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > 
+> > > > I've been running near-continuous integration testing of online fsck,
+> > > > and I've noticed that once a day, one of the ARM VMs will fail the test
+> > > > with out of order records in the data fork.
+> > > > 
+> > > > xfs/804 races fsstress with online scrub (aka scan but do not change
+> > > > anything), so I think this might be a bug in the core xfs code.  This
+> > > > also only seems to trigger if one runs the test for more than ~6 minutes
+> > > > via TIME_FACTOR=13 or something.
+> > > > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/tree/tests/xfs/804?h=djwong-wtf
+> > > .....
+> > > > So.  Fix this by moving the dqattach_locked call up, and add a comment
+> > > > about how we must attach the dquots *before* sampling the data/cow fork
+> > > > contents.
+> > > > 
+> > > > Fixes: a526c85c2236 ("xfs: move xfs_file_iomap_begin_delay around") # goes further back than this
+> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > ---
+> > > >  fs/xfs/xfs_iomap.c |   12 ++++++++----
+> > > >  1 file changed, 8 insertions(+), 4 deletions(-)
+> > > > 
+> > > > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> > > > index 1bdd7afc1010..d903f0586490 100644
+> > > > --- a/fs/xfs/xfs_iomap.c
+> > > > +++ b/fs/xfs/xfs_iomap.c
+> > > > @@ -984,6 +984,14 @@ xfs_buffered_write_iomap_begin(
+> > > >  	if (error)
+> > > >  		goto out_unlock;
+> > > >  
+> > > > +	/*
+> > > > +	 * Attach dquots before we access the data/cow fork mappings, because
+> > > > +	 * this function can cycle the ILOCK.
+> > > > +	 */
+> > > > +	error = xfs_qm_dqattach_locked(ip, false);
+> > > > +	if (error)
+> > > > +		goto out_unlock;
+> > > > +
+> > > >  	/*
+> > > >  	 * Search the data fork first to look up our source mapping.  We
+> > > >  	 * always need the data fork map, as we have to return it to the
+> > > > @@ -1071,10 +1079,6 @@ xfs_buffered_write_iomap_begin(
+> > > >  			allocfork = XFS_COW_FORK;
+> > > >  	}
+> > > >  
+> > > > -	error = xfs_qm_dqattach_locked(ip, false);
+> > > > -	if (error)
+> > > > -		goto out_unlock;
+> > > > -
+> > > >  	if (eof && offset + count > XFS_ISIZE(ip)) {
+> > > >  		/*
+> > > >  		 * Determine the initial size of the preallocation.
+> > > > 
+> > > 
+> > > Why not attached the dquots before we call xfs_ilock_for_iomap()?
+> > 
+> > I wanted to minimize the number of xfs_ilock calls -- under the scheme
+> > you outline, xfs_qm_dqattach will lock it once; a dquot cache miss
+> > will drop and retake it; and then xfs_ilock_for_iomap would take it yet
+> > again.  That's one more ilock song-and-dance than this patch does...
+> 
+> Ture, but we don't have an extra lock cycle if the dquots are
+> already attached to the inode - xfs_qm_dqattach() checks for
+> attached inodes before it takes the ILOCK to attach them. Hence if
+> we are doing lots of small writes to a file, we only take this extra
+> lock cycle for the first delalloc reservation that we make, not
+> every single one....
+> 
+> We have to do it this way for anything that runs an actual
+> transaction (like the direct IO write path we take if an extent size
+> hint is set) as we can't cycle the ILOCK within a transaction
+> context, so the code is already optimised for the "dquots already
+> attached" case....
 
-Hi all,
+<nod> In the end, I decided to rewrite the patch to xfs_qm_dqattach at
+the start of xfs_buffered_write_iomap_begin.  I'll send that shortly.
 
-Sorry, I'm mailing here as a last resort before declaring this 
-filesystem done for. Following a string of unclean reboots and a dying 
-hard disk I have this filesystem in a very poor state that xfs_repair 
-can't make any progress on.
+> > > That way we can just call xfs_qm_dqattach(ip, false) and just return
+> > > on failure immediately. That's exactly what we do in the
+> > > xfs_iomap_write_direct() path, and it avoids the need to mention
+> > > anything about lock cycling because we just don't care
+> > > about cycling the ILOCK to read in or allocate dquots before we
+> > > start the real work that needs to be done...
+> > 
+> > ...but I guess it's cleaner once you start assuming that dqattach has
+> > grown its own NOWAIT flag.  I'd sorta prefer to commit this corruption
+> > fix as it is and rearrange dqget with NOWAIT as a separate series since
+> > Linus has already warned us[1] to get things done sooner than later.
+> > 
+> > [1] https://lore.kernel.org/lkml/CAHk-=wgUZwX8Sbb8Zvm7FxWVfX6CGuE7x+E16VKoqL7Ok9vv7g@mail.gmail.com/
+> 
+> <shrug>
+> 
+> If that's your concern, then
+> 
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-It has been mounted on kernel 5.18.14-1~bpo11+1 (from Debian 
-bullseye-backports). Most of the repairs were done using xfsprogs 
-5.10.0-4 (from Debian bullseye stable), though I did also try with 
-6.0.0-1 (from Debian bookworm/testing re-built myself).
+Thanks! ;)
 
-I've attached the full log from xfs_repair, but the summary is it all 
-starts with multiple instances of this in Phase 3:
+> However, as maintainer I was never concerned about being "too late
+> in the cycle". I'd just push it into the for next tree with a stable
+> tag and when it gets merged in a couple of weeks the stable
+> maintainers should notice it and backport it appropriately
+> automatically....
 
-Metadata CRC error detected at 0x5609236ce178, xfs_dir3_block block 
-0xe101f32f8/0x1000
-bad directory block magic # 0x1859dc06 in block 0 for directory inode 
-64426557977
-bad bestfree table in block 0 in directory inode 64426557977: repairing 
-table
+<nod> Normally I wouldn't care about timing since it's a bugfix, but I
+kinda want to get all these sharp ends wrapped up, to minimize the
+number of fixes that we still have to work on for -rc1+ in January.
 
-As it is the filesystem can be mounted and most data appears accessible, 
-but several directories are corrupt and can't be read or removed; the 
-kernel reports metadata corruption and CRC errors and returns EUCLEAN.
+> For distro backports, merging into the XFS tree is good enough to be
+> iconsidered upstream as it's pretty much guaranteed to end up in the
+> mainline tree once it's been merged by the maintainer....
+> 
+> > (OTOH it's already 6pm your time so I may very well be done with all
+> > the quota nowait changes before you wake up :P)
+> 
+> NOWAIT changes are definitely next cycle stuff :)
+> 
+> > > Hmmmmm - this means there's a potential problem with IOCB_NOWAIT
+> > > here - if the dquots are not in memory, we're going to drop and then
+> > > retake the ILOCK_EXCL without trylocks, potentially blocking a task
+> > > that should not get blocked. That's a separate problem, though, and
+> > > we probably need to plumb NOWAIT through to the dquot lookup cache
+> > > miss case to solve that.
+> > 
+> > It wouldn't be that hard to turn that second parameter into the usual
+> > uint flags argument, but I agree that's a separate patch.
+> 
+> *nod*
+> 
+> > How much you wanna bet the FB people have never turned on quota and
+> > hence have not yet played whackanowait with that subsystem?
+> 
+> No bet, we both know the odds. :/
+> 
+> Indeed, set an extent size hint on a file and then run io_uring
+> async buffered writes and watch all the massive long tail latencies
+> that occur on the transaction reservations and btree block IO and
+> locking in the allocation path....
 
-Ideally I'd like to remove the corrupt directories, recover as much of 
-what's left as possible, and make the filesystem usable again (it's an 
-rsnapshot destination) - but I'll take what I can.
+Granted, I wonder what would
 
-Many thanks in advance,
-Chris
+--D
 
-PS: Please Cc me in replies
-
--- 
-Chris Boot
-bootc@boo.tc
---------------ZdbXxuoXRh1JX11zRW7EmN2V
-Content-Type: text/plain; charset=UTF-8; name="xfs_repair.log"
-Content-Disposition: attachment; filename="xfs_repair.log"
-Content-Transfer-Encoding: base64
-
-UGhhc2UgMSAtIGZpbmQgYW5kIHZlcmlmeSBzdXBlcmJsb2NrLi4uCiAgICAgICAgLSByZXBv
-cnRpbmcgcHJvZ3Jlc3MgaW4gaW50ZXJ2YWxzIG9mIDE1IG1pbnV0ZXMKUGhhc2UgMiAtIHVz
-aW5nIGludGVybmFsIGxvZwogICAgICAgIC0gemVybyBsb2cuLi4KICAgICAgICAtIDIwOjI1
-OjIwOiB6ZXJvaW5nIGxvZyAtIDUyMTcyOCBvZiA1MjE3MjggYmxvY2tzIGRvbmUKICAgICAg
-ICAtIHNjYW4gZmlsZXN5c3RlbSBmcmVlc3BhY2UgYW5kIGlub2RlIG1hcHMuLi4KICAgICAg
-ICAtIDIwOjI1OjIzOiBzY2FubmluZyBmaWxlc3lzdGVtIGZyZWVzcGFjZSAtIDM4IG9mIDM4
-IGFsbG9jYXRpb24gZ3JvdXBzIGRvbmUKICAgICAgICAtIGZvdW5kIHJvb3QgaW5vZGUgY2h1
-bmsKUGhhc2UgMyAtIGZvciBlYWNoIEFHLi4uCiAgICAgICAgLSBzY2FuIGFuZCBjbGVhciBh
-Z2kgdW5saW5rZWQgbGlzdHMuLi4KICAgICAgICAtIDIwOjI1OjIzOiBzY2FubmluZyBhZ2kg
-dW5saW5rZWQgbGlzdHMgLSAzOCBvZiAzOCBhbGxvY2F0aW9uIGdyb3VwcyBkb25lCiAgICAg
-ICAgLSBwcm9jZXNzIGtub3duIGlub2RlcyBhbmQgcGVyZm9ybSBpbm9kZSBkaXNjb3Zlcnku
-Li4KICAgICAgICAtIGFnbm8gPSAxNQogICAgICAgIC0gYWdubyA9IDAKICAgICAgICAtIGFn
-bm8gPSAzMApNZXRhZGF0YSBDUkMgZXJyb3IgZGV0ZWN0ZWQgYXQgMHg1NjA5MjM2Y2UxNzgs
-IHhmc19kaXIzX2Jsb2NrIGJsb2NrIDB4ZTEwMWYzMmY4LzB4MTAwMApiYWQgZGlyZWN0b3J5
-IGJsb2NrIG1hZ2ljICMgMHgxODU5ZGMwNiBpbiBibG9jayAwIGZvciBkaXJlY3RvcnkgaW5v
-ZGUgNjQ0MjY1NTc5NzcKYmFkIGJlc3RmcmVlIHRhYmxlIGluIGJsb2NrIDAgaW4gZGlyZWN0
-b3J5IGlub2RlIDY0NDI2NTU3OTc3OiByZXBhaXJpbmcgdGFibGUKICAgICAgICAtIGFnbm8g
-PSAxNgogICAgICAgIC0gYWdubyA9IDMxCiAgICAgICAgLSBhZ25vID0gMQogICAgICAgIC0g
-YWdubyA9IDE3CiAgICAgICAgLSBhZ25vID0gMzIKICAgICAgICAtIGFnbm8gPSAyCk1ldGFk
-YXRhIENSQyBlcnJvciBkZXRlY3RlZCBhdCAweDU2MDkyMzZjZTE3OCwgeGZzX2RpcjNfYmxv
-Y2sgYmxvY2sgMHg3ZjgwMDdiZjgvMHgxMDAwCmJhZCBkaXJlY3RvcnkgYmxvY2sgbWFnaWMg
-IyAweDkyYjM2YzkyIGluIGJsb2NrIDAgZm9yIGRpcmVjdG9yeSBpbm9kZSAzNjUwNzI1NDQw
-MApiYWQgYmVzdGZyZWUgdGFibGUgaW4gYmxvY2sgMCBpbiBkaXJlY3RvcnkgaW5vZGUgMzY1
-MDcyNTQ0MDA6IHJlcGFpcmluZyB0YWJsZQogICAgICAgIC0gYWdubyA9IDE4CiAgICAgICAg
-LSBhZ25vID0gMzMKTWV0YWRhdGEgQ1JDIGVycm9yIGRldGVjdGVkIGF0IDB4NTYwOTIzNmNl
-MTc4LCB4ZnNfZGlyM19ibG9jayBibG9jayAweGY3N2ZmZjIyOC8weDEwMDAKYmFkIGRpcmVj
-dG9yeSBibG9jayBtYWdpYyAjIDB4ZDlhYzRjYTUgaW4gYmxvY2sgMCBmb3IgZGlyZWN0b3J5
-IGlub2RlIDcwODY2OTYyODIzCmJhZCBiZXN0ZnJlZSB0YWJsZSBpbiBibG9jayAwIGluIGRp
-cmVjdG9yeSBpbm9kZSA3MDg2Njk2MjgyMzogcmVwYWlyaW5nIHRhYmxlCiAgICAgICAgLSBh
-Z25vID0gMwogICAgICAgIC0gYWdubyA9IDM0CiAgICAgICAgLSBhZ25vID0gMTkKTWV0YWRh
-dGEgQ1JDIGVycm9yIGRldGVjdGVkIGF0IDB4NTYwOTIzNmNlMTc4LCB4ZnNfZGlyM19ibG9j
-ayBibG9jayAweGZmMDAzMzJlMC8weDEwMDAKYmFkIGRpcmVjdG9yeSBibG9jayBtYWdpYyAj
-IDB4YTAzODcxZWMgaW4gYmxvY2sgMCBmb3IgZGlyZWN0b3J5IGlub2RlIDczMDE0NTg1ODY4
-CmJhZCBiZXN0ZnJlZSB0YWJsZSBpbiBibG9jayAwIGluIGRpcmVjdG9yeSBpbm9kZSA3MzAx
-NDU4NTg2ODogcmVwYWlyaW5nIHRhYmxlCiAgICAgICAgLSBhZ25vID0gNAogICAgICAgIC0g
-YWdubyA9IDM1CiAgICAgICAgLSBhZ25vID0gMjAKTWV0YWRhdGEgQ1JDIGVycm9yIGRldGVj
-dGVkIGF0IDB4NTYwOTIzNmNlMTc4LCB4ZnNfZGlyM19ibG9jayBibG9jayAweDk2MDAwMDY0
-MC8weDEwMDAKYmFkIGRpcmVjdG9yeSBibG9jayBtYWdpYyAjIDB4MTBhNWJmOWMgaW4gYmxv
-Y2sgMCBmb3IgZGlyZWN0b3J5IGlub2RlIDQyOTQ5Njc1NzE1CmJhZCBiZXN0ZnJlZSB0YWJs
-ZSBpbiBibG9jayAwIGluIGRpcmVjdG9yeSBpbm9kZSA0Mjk0OTY3NTcxNTogcmVwYWlyaW5n
-IHRhYmxlCiAgICAgICAgLSBhZ25vID0gNQogICAgICAgIC0gYWdubyA9IDM2CiAgICAgICAg
-LSBhZ25vID0gMjEKICAgICAgICAtIGFnbm8gPSAzNwogICAgICAgIC0gYWdubyA9IDYKICAg
-ICAgICAtIGFnbm8gPSAyMgogICAgICAgIC0gYWdubyA9IDcKICAgICAgICAtIGFnbm8gPSAy
-MwogICAgICAgIC0gYWdubyA9IDgKICAgICAgICAtIGFnbm8gPSAyNAogICAgICAgIC0gYWdu
-byA9IDkKTWV0YWRhdGEgQ1JDIGVycm9yIGRldGVjdGVkIGF0IDB4NTYwOTIzNmNlMTc4LCB4
-ZnNfZGlyM19ibG9jayBibG9jayAweGI0MDAyZDRmMC8weDEwMDAKYmFkIGRpcmVjdG9yeSBi
-bG9jayBtYWdpYyAjIDB4OTIxNGQwNTUgaW4gYmxvY2sgMCBmb3IgZGlyZWN0b3J5IGlub2Rl
-IDUxNTM5Nzk1ODcyCmJhZCBiZXN0ZnJlZSB0YWJsZSBpbiBibG9jayAwIGluIGRpcmVjdG9y
-eSBpbm9kZSA1MTUzOTc5NTg3MjogcmVwYWlyaW5nIHRhYmxlCiAgICAgICAgLSBhZ25vID0g
-MjUKICAgICAgICAtIGFnbm8gPSAxMAogICAgICAgIC0gYWdubyA9IDI2CiAgICAgICAgLSBh
-Z25vID0gMTEKICAgICAgICAtIGFnbm8gPSAyNwpNZXRhZGF0YSBDUkMgZXJyb3IgZGV0ZWN0
-ZWQgYXQgMHg1NjA5MjM2Y2UxNzgsIHhmc19kaXIzX2Jsb2NrIGJsb2NrIDB4Y2E3ZmZmOTc4
-LzB4MTAwMApiYWQgZGlyZWN0b3J5IGJsb2NrIG1hZ2ljICMgMHg1YjU4MzQ2YyBpbiBibG9j
-ayAwIGZvciBkaXJlY3RvcnkgaW5vZGUgNTc5ODIwNTkxNjIKYmFkIGJlc3RmcmVlIHRhYmxl
-IGluIGJsb2NrIDAgaW4gZGlyZWN0b3J5IGlub2RlIDU3OTgyMDU5MTYyOiByZXBhaXJpbmcg
-dGFibGUKICAgICAgICAtIGFnbm8gPSAxMgogICAgICAgIC0gYWdubyA9IDI4CiAgICAgICAg
-LSBhZ25vID0gMTMKICAgICAgICAtIGFnbm8gPSAyOQogICAgICAgIC0gYWdubyA9IDE0CiAg
-ICAgICAgLSAyMDozMjoyNjogcHJvY2VzcyBrbm93biBpbm9kZXMgYW5kIGlub2RlIGRpc2Nv
-dmVyeSAtIDMyNjc4NjU2IG9mIDMyNjc4NjU2IGlub2RlcyBkb25lCiAgICAgICAgLSBwcm9j
-ZXNzIG5ld2x5IGRpc2NvdmVyZWQgaW5vZGVzLi4uCiAgICAgICAgLSAyMDozMjoyNjogcHJv
-Y2VzcyBuZXdseSBkaXNjb3ZlcmVkIGlub2RlcyAtIDM4IG9mIDM4IGFsbG9jYXRpb24gZ3Jv
-dXBzIGRvbmUKUGhhc2UgNCAtIGNoZWNrIGZvciBkdXBsaWNhdGUgYmxvY2tzLi4uCiAgICAg
-ICAgLSBzZXR0aW5nIHVwIGR1cGxpY2F0ZSBleHRlbnQgbGlzdC4uLgogICAgICAgIC0gMjA6
-MzI6Mjc6IHNldHRpbmcgdXAgZHVwbGljYXRlIGV4dGVudCBsaXN0IC0gMzggb2YgMzggYWxs
-b2NhdGlvbiBncm91cHMgZG9uZQogICAgICAgIC0gY2hlY2sgZm9yIGlub2RlcyBjbGFpbWlu
-ZyBkdXBsaWNhdGUgYmxvY2tzLi4uCiAgICAgICAgLSBhZ25vID0gMAogICAgICAgIC0gYWdu
-byA9IDIKICAgICAgICAtIGFnbm8gPSA0CiAgICAgICAgLSBhZ25vID0gNwogICAgICAgIC0g
-YWdubyA9IDEwCiAgICAgICAgLSBhZ25vID0gMwogICAgICAgIC0gYWdubyA9IDExCiAgICAg
-ICAgLSBhZ25vID0gOAogICAgICAgIC0gYWdubyA9IDEzCiAgICAgICAgLSBhZ25vID0gMjQK
-ICAgICAgICAtIGFnbm8gPSAxNwogICAgICAgIC0gYWdubyA9IDEKICAgICAgICAtIGFnbm8g
-PSA5CiAgICAgICAgLSBhZ25vID0gMTQKICAgICAgICAtIGFnbm8gPSAyMgogICAgICAgIC0g
-YWdubyA9IDM1CiAgICAgICAgLSBhZ25vID0gMzAKICAgICAgICAtIGFnbm8gPSAxMgogICAg
-ICAgIC0gYWdubyA9IDI5CiAgICAgICAgLSBhZ25vID0gMjcKICAgICAgICAtIGFnbm8gPSAy
-NQogICAgICAgIC0gYWdubyA9IDI4CiAgICAgICAgLSBhZ25vID0gMjYKICAgICAgICAtIGFn
-bm8gPSAyMwogICAgICAgIC0gYWdubyA9IDMyCiAgICAgICAgLSBhZ25vID0gMjAKYmFkIGRp
-cmVjdG9yeSBibG9jayBtYWdpYyAjIDB4NWI1ODM0NmMgaW4gYmxvY2sgMCBmb3IgZGlyZWN0
-b3J5IGlub2RlIDU3OTgyMDU5MTYyCiAgICAgICAgLSBhZ25vID0gMzYKYmFkIGJlc3RmcmVl
-IHRhYmxlIGluIGJsb2NrIDAgaW4gZGlyZWN0b3J5IGlub2RlIDU3OTgyMDU5MTYyOiByZXBh
-aXJpbmcgdGFibGUKICAgICAgICAtIGFnbm8gPSA2CiAgICAgICAgLSBhZ25vID0gMzMKICAg
-ICAgICAtIGFnbm8gPSAzNAogICAgICAgIC0gYWdubyA9IDIxCiAgICAgICAgLSBhZ25vID0g
-MzcKICAgICAgICAtIGFnbm8gPSA1CiAgICAgICAgLSBhZ25vID0gMTkKICAgICAgICAtIGFn
-bm8gPSAxNgpiYWQgZGlyZWN0b3J5IGJsb2NrIG1hZ2ljICMgMHgxMGE1YmY5YyBpbiBibG9j
-ayAwIGZvciBkaXJlY3RvcnkgaW5vZGUgNDI5NDk2NzU3MTUKYmFkIGJlc3RmcmVlIHRhYmxl
-IGluIGJsb2NrIDAgaW4gZGlyZWN0b3J5IGlub2RlIDQyOTQ5Njc1NzE1OiByZXBhaXJpbmcg
-dGFibGUKICAgICAgICAtIGFnbm8gPSAzMQogICAgICAgIC0gYWdubyA9IDE1CiAgICAgICAg
-LSBhZ25vID0gMTgKYmFkIGRpcmVjdG9yeSBibG9jayBtYWdpYyAjIDB4ZDlhYzRjYTUgaW4g
-YmxvY2sgMCBmb3IgZGlyZWN0b3J5IGlub2RlIDcwODY2OTYyODIzCmJhZCBiZXN0ZnJlZSB0
-YWJsZSBpbiBibG9jayAwIGluIGRpcmVjdG9yeSBpbm9kZSA3MDg2Njk2MjgyMzogcmVwYWly
-aW5nIHRhYmxlCmJhZCBkaXJlY3RvcnkgYmxvY2sgbWFnaWMgIyAweDkyYjM2YzkyIGluIGJs
-b2NrIDAgZm9yIGRpcmVjdG9yeSBpbm9kZSAzNjUwNzI1NDQwMApiYWQgYmVzdGZyZWUgdGFi
-bGUgaW4gYmxvY2sgMCBpbiBkaXJlY3RvcnkgaW5vZGUgMzY1MDcyNTQ0MDA6IHJlcGFpcmlu
-ZyB0YWJsZQpiYWQgZGlyZWN0b3J5IGJsb2NrIG1hZ2ljICMgMHg5MjE0ZDA1NSBpbiBibG9j
-ayAwIGZvciBkaXJlY3RvcnkgaW5vZGUgNTE1Mzk3OTU4NzIKYmFkIGJlc3RmcmVlIHRhYmxl
-IGluIGJsb2NrIDAgaW4gZGlyZWN0b3J5IGlub2RlIDUxNTM5Nzk1ODcyOiByZXBhaXJpbmcg
-dGFibGUKYmFkIGRpcmVjdG9yeSBibG9jayBtYWdpYyAjIDB4YTAzODcxZWMgaW4gYmxvY2sg
-MCBmb3IgZGlyZWN0b3J5IGlub2RlIDczMDE0NTg1ODY4CmJhZCBiZXN0ZnJlZSB0YWJsZSBp
-biBibG9jayAwIGluIGRpcmVjdG9yeSBpbm9kZSA3MzAxNDU4NTg2ODogcmVwYWlyaW5nIHRh
-YmxlCmJhZCBkaXJlY3RvcnkgYmxvY2sgbWFnaWMgIyAweDE4NTlkYzA2IGluIGJsb2NrIDAg
-Zm9yIGRpcmVjdG9yeSBpbm9kZSA2NDQyNjU1Nzk3NwpiYWQgYmVzdGZyZWUgdGFibGUgaW4g
-YmxvY2sgMCBpbiBkaXJlY3RvcnkgaW5vZGUgNjQ0MjY1NTc5Nzc6IHJlcGFpcmluZyB0YWJs
-ZQogICAgICAgIC0gMjA6MzI6MzU6IGNoZWNrIGZvciBpbm9kZXMgY2xhaW1pbmcgZHVwbGlj
-YXRlIGJsb2NrcyAtIDMyNjc4NjU2IG9mIDMyNjc4NjU2IGlub2RlcyBkb25lClBoYXNlIDUg
-LSByZWJ1aWxkIEFHIGhlYWRlcnMgYW5kIHRyZWVzLi4uCiAgICAgICAgLSAyMDozMjozNzog
-cmVidWlsZCBBRyBoZWFkZXJzIGFuZCB0cmVlcyAtIDM4IG9mIDM4IGFsbG9jYXRpb24gZ3Jv
-dXBzIGRvbmUKICAgICAgICAtIHJlc2V0IHN1cGVyYmxvY2suLi4KUGhhc2UgNiAtIGNoZWNr
-IGlub2RlIGNvbm5lY3Rpdml0eS4uLgogICAgICAgIC0gcmVzZXR0aW5nIGNvbnRlbnRzIG9m
-IHJlYWx0aW1lIGJpdG1hcCBhbmQgc3VtbWFyeSBpbm9kZXMKICAgICAgICAtIHRyYXZlcnNp
-bmcgZmlsZXN5c3RlbSAuLi4KYmFkIGRpcmVjdG9yeSBibG9jayBtYWdpYyAjIDB4MTg1OWRj
-MDYgZm9yIGRpcmVjdG9yeSBpbm9kZSA2NDQyNjU1Nzk3NyBibG9jayAwOiBmaXhpbmcgbWFn
-aWMgIyB0byAweDU4NDQ0MjMzCmJhZCBkaXJlY3RvcnkgYmxvY2sgbWFnaWMgIyAweDkyYjM2
-YzkyIGZvciBkaXJlY3RvcnkgaW5vZGUgMzY1MDcyNTQ0MDAgYmxvY2sgMDogZml4aW5nIG1h
-Z2ljICMgdG8gMHg1ODQ0NDIzMwpiYWQgZGlyZWN0b3J5IGJsb2NrIG1hZ2ljICMgMHhkOWFj
-NGNhNSBmb3IgZGlyZWN0b3J5IGlub2RlIDcwODY2OTYyODIzIGJsb2NrIDA6IGZpeGluZyBt
-YWdpYyAjIHRvIDB4NTg0NDQyMzMKYmFkIGRpcmVjdG9yeSBibG9jayBtYWdpYyAjIDB4YTAz
-ODcxZWMgZm9yIGRpcmVjdG9yeSBpbm9kZSA3MzAxNDU4NTg2OCBibG9jayAwOiBmaXhpbmcg
-bWFnaWMgIyB0byAweDU4NDQ0MjMzCmJhZCBkaXJlY3RvcnkgYmxvY2sgbWFnaWMgIyAweDEw
-YTViZjljIGZvciBkaXJlY3RvcnkgaW5vZGUgNDI5NDk2NzU3MTUgYmxvY2sgMDogZml4aW5n
-IG1hZ2ljICMgdG8gMHg1ODQ0NDIzMwpiYWQgZGlyZWN0b3J5IGJsb2NrIG1hZ2ljICMgMHg5
-MjE0ZDA1NSBmb3IgZGlyZWN0b3J5IGlub2RlIDUxNTM5Nzk1ODcyIGJsb2NrIDA6IGZpeGlu
-ZyBtYWdpYyAjIHRvIDB4NTg0NDQyMzMKYmFkIGRpcmVjdG9yeSBibG9jayBtYWdpYyAjIDB4
-NWI1ODM0NmMgZm9yIGRpcmVjdG9yeSBpbm9kZSA1Nzk4MjA1OTE2MiBibG9jayAwOiBmaXhp
-bmcgbWFnaWMgIyB0byAweDU4NDQ0MjMzCiAgICAgICAgLSB0cmF2ZXJzYWwgZmluaXNoZWQg
-Li4uCiAgICAgICAgLSBtb3ZpbmcgZGlzY29ubmVjdGVkIGlub2RlcyB0byBsb3N0K2ZvdW5k
-IC4uLgpQaGFzZSA3IC0gdmVyaWZ5IGFuZCBjb3JyZWN0IGxpbmsgY291bnRzLi4uCiAgICAg
-ICAgLSAyMDozOTowNjogdmVyaWZ5IGFuZCBjb3JyZWN0IGxpbmsgY291bnRzIC0gMzggb2Yg
-MzggYWxsb2NhdGlvbiBncm91cHMgZG9uZQpNZXRhZGF0YSBjb3JydXB0aW9uIGRldGVjdGVk
-IGF0IDB4NTYwOTIzNmNkY2M4LCB4ZnNfZGlyM19ibG9jayBibG9jayAweGZmMDAzMzJlMC8w
-eDEwMDAKbGlieGZzX2J3cml0ZTogd3JpdGUgdmVyaWZpZXIgZmFpbGVkIG9uIHhmc19kaXIz
-X2Jsb2NrIGJubyAweGZmMDAzMzJlMC8weDgKTWV0YWRhdGEgY29ycnVwdGlvbiBkZXRlY3Rl
-ZCBhdCAweDU2MDkyMzZjZGNjOCwgeGZzX2RpcjNfYmxvY2sgYmxvY2sgMHhmNzdmZmYyMjgv
-MHgxMDAwCmxpYnhmc19id3JpdGU6IHdyaXRlIHZlcmlmaWVyIGZhaWxlZCBvbiB4ZnNfZGly
-M19ibG9jayBibm8gMHhmNzdmZmYyMjgvMHg4Ck1ldGFkYXRhIGNvcnJ1cHRpb24gZGV0ZWN0
-ZWQgYXQgMHg1NjA5MjM2Y2RjYzgsIHhmc19kaXIzX2Jsb2NrIGJsb2NrIDB4N2Y4MDA3YmY4
-LzB4MTAwMApsaWJ4ZnNfYndyaXRlOiB3cml0ZSB2ZXJpZmllciBmYWlsZWQgb24geGZzX2Rp
-cjNfYmxvY2sgYm5vIDB4N2Y4MDA3YmY4LzB4OApNZXRhZGF0YSBjb3JydXB0aW9uIGRldGVj
-dGVkIGF0IDB4NTYwOTIzNmNkY2M4LCB4ZnNfZGlyM19ibG9jayBibG9jayAweGUxMDFmMzJm
-OC8weDEwMDAKbGlieGZzX2J3cml0ZTogd3JpdGUgdmVyaWZpZXIgZmFpbGVkIG9uIHhmc19k
-aXIzX2Jsb2NrIGJubyAweGUxMDFmMzJmOC8weDgKTWV0YWRhdGEgY29ycnVwdGlvbiBkZXRl
-Y3RlZCBhdCAweDU2MDkyMzZjZGNjOCwgeGZzX2RpcjNfYmxvY2sgYmxvY2sgMHg5NjAwMDA2
-NDAvMHgxMDAwCmxpYnhmc19id3JpdGU6IHdyaXRlIHZlcmlmaWVyIGZhaWxlZCBvbiB4ZnNf
-ZGlyM19ibG9jayBibm8gMHg5NjAwMDA2NDAvMHg4Ck1ldGFkYXRhIGNvcnJ1cHRpb24gZGV0
-ZWN0ZWQgYXQgMHg1NjA5MjM2Y2RjYzgsIHhmc19kaXIzX2Jsb2NrIGJsb2NrIDB4Y2E3ZmZm
-OTc4LzB4MTAwMApsaWJ4ZnNfYndyaXRlOiB3cml0ZSB2ZXJpZmllciBmYWlsZWQgb24geGZz
-X2RpcjNfYmxvY2sgYm5vIDB4Y2E3ZmZmOTc4LzB4OApNZXRhZGF0YSBjb3JydXB0aW9uIGRl
-dGVjdGVkIGF0IDB4NTYwOTIzNmNkY2M4LCB4ZnNfZGlyM19ibG9jayBibG9jayAweGI0MDAy
-ZDRmMC8weDEwMDAKbGlieGZzX2J3cml0ZTogd3JpdGUgdmVyaWZpZXIgZmFpbGVkIG9uIHhm
-c19kaXIzX2Jsb2NrIGJubyAweGI0MDAyZDRmMC8weDgKeGZzX3JlcGFpcjogUmVsZWFzaW5n
-IGRpcnR5IGJ1ZmZlciB0byBmcmVlIGxpc3QhCnhmc19yZXBhaXI6IFJlbGVhc2luZyBkaXJ0
-eSBidWZmZXIgdG8gZnJlZSBsaXN0IQp4ZnNfcmVwYWlyOiBSZWxlYXNpbmcgZGlydHkgYnVm
-ZmVyIHRvIGZyZWUgbGlzdCEKeGZzX3JlcGFpcjogUmVsZWFzaW5nIGRpcnR5IGJ1ZmZlciB0
-byBmcmVlIGxpc3QhCnhmc19yZXBhaXI6IFJlbGVhc2luZyBkaXJ0eSBidWZmZXIgdG8gZnJl
-ZSBsaXN0IQp4ZnNfcmVwYWlyOiBSZWxlYXNpbmcgZGlydHkgYnVmZmVyIHRvIGZyZWUgbGlz
-dCEKeGZzX3JlcGFpcjogUmVsZWFzaW5nIGRpcnR5IGJ1ZmZlciB0byBmcmVlIGxpc3QhCnhm
-c19yZXBhaXI6IFJlZnVzaW5nIHRvIHdyaXRlIGEgY29ycnVwdCBidWZmZXIgdG8gdGhlIGRh
-dGEgZGV2aWNlIQp4ZnNfcmVwYWlyOiBMb3N0IGEgd3JpdGUgdG8gdGhlIGRhdGEgZGV2aWNl
-IQoKZmF0YWwgZXJyb3IgLS0gRmlsZSBzeXN0ZW0gbWV0YWRhdGEgd3JpdGVvdXQgZmFpbGVk
-LCBlcnI9MTE3LiAgUmUtcnVuIHhmc19yZXBhaXIuCg==
-
---------------ZdbXxuoXRh1JX11zRW7EmN2V--
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
