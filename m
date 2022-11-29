@@ -2,105 +2,131 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54A90C4321E
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Nov 2022 21:38:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0095C4321E
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Nov 2022 21:53:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236152AbiK2Vit (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Nov 2022 16:38:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58524 "EHLO
+        id S236361AbiK2VxS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Nov 2022 16:53:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236345AbiK2Vir (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2022 16:38:47 -0500
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9430B5F866
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 13:38:46 -0800 (PST)
-Received: by mail-pj1-x1034.google.com with SMTP id mv18so13949806pjb.0
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 13:38:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=A79DnCxs1Un+TibUL269HZBRFGRYvo+dk2qAobdfpBs=;
-        b=CHWxaSNLwt9ak6ppVlbOhtzH7/JLWno6x2Yth69bZ/Zqa6A1e6gdAbTjvClPi7iXl3
-         O6srYFv640uvrj6OtIAv8V28UGo2jWXkLi9v86QYLJaqQSseDBMmlFPT1KkSc1/IV4lE
-         OE/7JdgUAhnVp3ivykYGyjsPb8f7cVUZqDxQ3agB7FaAgYisnzBWn+dkcS/UUYo2EuVA
-         tMOG1I7Mx0iLP86Jf2SX7A1pf91RSwB9jwT3KooZLl2fHoItilX/G4A1/lNqq6hpTUnJ
-         FmKdCrUeetiWYy07jJOBvBMScOhvYCcf5gjwNups7SDFRCH2aA5b1UafBA1Kv7lw7mFX
-         rK7g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=A79DnCxs1Un+TibUL269HZBRFGRYvo+dk2qAobdfpBs=;
-        b=Zo1XI8v6aBI/lihlBlAzQfjKuzs1/jJ6pU4vqlUOXWX1XNg8szKdZdZawJBWtQTV4d
-         nKdGfUIn5GrO7ao/qtXklbvmNYRuLZ0wRW1feMiXVxH6hGqigXSaVFf4sRNXEo+dNvTE
-         PQiZ0v5RRm3r9+InU+hZOdEo2dDPj2ibubicuYYfzBNK4M3A2pITRbk8RE6Db1+51iVe
-         nV33He9w71zw/wezV20D2pTygjC1OBVmBAhCtkEgVadJm7d3VY6XYc4lT9wopAVRmvek
-         XC5Dy7/3L3Fm94IyCu701K4u+QG/zl5NghHpt58+MIYbEX2QNojkyvaswbSx7c59nz8P
-         SgLQ==
-X-Gm-Message-State: ANoB5pkVn7DO60VWRsdli+xlGMfztJXiSyo0GKvP1pNjqcmnub8KaC/x
-        Z1Wi9sunWJ5j3uGb0gai/lPamQ==
-X-Google-Smtp-Source: AA0mqf6Wt8nndKP6mgNbx4kXEHPKAg8ECdWNY2AsWyWnOmMnG4oIOHlWW8u82KUu6mNiqyZKmN8MdA==
-X-Received: by 2002:a17:902:e849:b0:17a:aca0:e295 with SMTP id t9-20020a170902e84900b0017aaca0e295mr52405648plg.3.1669757926084;
-        Tue, 29 Nov 2022 13:38:46 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-65-106.pa.vic.optusnet.com.au. [49.186.65.106])
-        by smtp.gmail.com with ESMTPSA id 23-20020a630417000000b004393f60db36sm16638pge.32.2022.11.29.13.38.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Nov 2022 13:38:45 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1p08JO-002a23-AY; Wed, 30 Nov 2022 08:38:42 +1100
-Date:   Wed, 30 Nov 2022 08:38:42 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 4/3] xfs: attach dquots to inode before reading
- data/cow fork mappings
-Message-ID: <20221129213842.GH3600936@dread.disaster.area>
-References: <166930915825.2061853.2470510849612284907.stgit@magnolia>
- <Y4OuLTwPVdiHMBGi@magnolia>
- <Y4Z0FH0RORXeV17g@magnolia>
+        with ESMTP id S235908AbiK2VxQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2022 16:53:16 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47F33C778;
+        Tue, 29 Nov 2022 13:53:15 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id DE4E36190F;
+        Tue, 29 Nov 2022 21:53:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F489C433C1;
+        Tue, 29 Nov 2022 21:53:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669758794;
+        bh=bTRQpleHw3e1K5h45HcxReRuVfkr0k9Fzd604qTzi5g=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=dpDk1X6tQ2hnPFoGDJRzCv91NF9jt8l573UZXNLtRR3q2bgDYdsC5L0ja5KkP4GSE
+         k+1HuESDtsV6nLetO4cFAmy2hjwSpuy+MseHExN6KLofSazIW0ziY5rNuB9NbFcwPQ
+         +za2U8Z+pOD4mB8mjgM2qbwUaW28eEHCA3tWdRCRS4JFhU20dvER+Sp6WnqfOVmOez
+         cETU5OOEkfhxkvGyc71fhQfjLYxopKod9flKUFVOKHvL9d3sYvFCNPU9MA1rA56bqT
+         PLh0IEj9QuiDvc8ZJGsdc00HcnhflwQxvKr5I5XZiGUiNqf2w4B5BCMSswGjWmKERz
+         ponDng64FfQoA==
+Date:   Tue, 29 Nov 2022 13:53:13 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v2 10/9] xfs: add debug knob to slow down writeback for
+ fun
+Message-ID: <Y4Z/SRoONpVMv3dZ@magnolia>
+References: <20221123055812.747923-1-david@fromorbit.com>
+ <Y4U3XWf5j1zVGvV4@magnolia>
+ <Y4VejsHGU/tZuRYs@magnolia>
+ <20221129013453.GY3600936@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y4Z0FH0RORXeV17g@magnolia>
+In-Reply-To: <20221129013453.GY3600936@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 29, 2022 at 01:05:24PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Nov 29, 2022 at 12:34:53PM +1100, Dave Chinner wrote:
+> On Mon, Nov 28, 2022 at 05:21:18PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Add a new error injection knob so that we can arbitrarily slow down
+> > writeback to test for race conditions and aberrant reclaim behavior if
+> > the writeback mechanisms are slow to issue writeback.  This will enable
+> > functional testing for the ifork sequence counters introduced in commit
+> > 745b3f76d1c8 ("xfs: maintain a sequence count for inode fork
+> > manipulations").
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> > v2: this time with tracepoints
+> > ---
+> .....
 > 
-> I've been running near-continuous integration testing of online fsck,
-> and I've noticed that once a day, one of the ARM VMs will fail the test
-> with out of order records in the data fork.
+> > @@ -267,6 +270,14 @@ xfs_errortag_valid(
+> >  	return true;
+> >  }
+> >  
+> > +bool
+> > +xfs_errortag_enabled(
+> > +	struct xfs_mount	*mp,
+> > +	unsigned int		tag)
+> > +{
+> > +	return mp->m_errortag && mp->m_errortag[tag] != 0;
+> > +}
 > 
-> xfs/804 races fsstress with online scrub (aka scan but do not change
-> anything), so I think this might be a bug in the core xfs code.  This
-> also only seems to trigger if one runs the test for more than ~6 minutes
-> via TIME_FACTOR=13 or something.
-> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/tree/tests/xfs/804?h=djwong-wtf
+> Perhaps consider using the new xfs_errortag_valid() helper? i.e.
 > 
-> I added a debugging patch to the kernel to check the data fork extents
-> after taking the ILOCK, before dropping ILOCK, and before and after each
-> bmapping operation.  So far I've narrowed it down to the delalloc code
-> inserting a record in the wrong place in the iext tree:
-.....
+> {
+> 	if (!mp->errortag)
+> 		return false;
+> 	if (!xfs_errortag_valid(tag))
+> 		return false;
+> 	return mp->m_errortag[tag] != 0;
+
+Fixed.
+
+> }
 > 
-> So.  Fix this by moving the dqattach_locked call up before we take the
-> ILOCK, like all the other callers in that file.
+> > +
+> >  bool
+> >  xfs_errortag_test(
+> >  	struct xfs_mount	*mp,
+> > diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+> > index 5191e9145e55..936d0c52d6af 100644
+> > --- a/fs/xfs/xfs_error.h
+> > +++ b/fs/xfs/xfs_error.h
+> > @@ -45,6 +45,17 @@ extern bool xfs_errortag_test(struct xfs_mount *mp, const char *expression,
+> >  		const char *file, int line, unsigned int error_tag);
+> >  #define XFS_TEST_ERROR(expr, mp, tag)		\
+> >  	((expr) || xfs_errortag_test((mp), #expr, __FILE__, __LINE__, (tag)))
+> > +bool xfs_errortag_enabled(struct xfs_mount *mp, unsigned int tag);
+> > +#define XFS_ERRORTAG_DELAY(mp, tag)		\
+> > +	do { \
+> > +		if (!xfs_errortag_enabled((mp), (tag))) \
+> > +			break; \
+> > +		xfs_warn_ratelimited((mp), \
+> > +"Injecting %ums delay at file %s, line %d, on filesystem \"%s\"", \
+> > +				(mp)->m_errortag[(tag)], __FILE__, __LINE__, \
+> > +				(mp)->m_super->s_id); \
+> > +		mdelay((mp)->m_errortag[(tag)]); \
+> > +	} while (0)
 > 
-> Fixes: a526c85c2236 ("xfs: move xfs_file_iomap_begin_delay around") # goes further back than this
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Putting a might_sleep() in this macro might be a good idea - that
+> will catch delays being added inside spin lock contexts...
+
+Done.  Thanks for the review!
+
+--D
+
+> Other than that, it looks fine.
+> 
 > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> ---
-> v2: just do a regular dqattach, and tweak the commit message to make it
-> clearer if it's dave or me talking
-
-All looks good, thanks for doing the updates :)
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
