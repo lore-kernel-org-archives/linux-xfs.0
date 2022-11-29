@@ -2,227 +2,273 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04164C43217
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Nov 2022 00:16:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAEAAC4321E
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Nov 2022 01:21:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234631AbiK2AQj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Nov 2022 19:16:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46134 "EHLO
+        id S234601AbiK2BV3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Nov 2022 20:21:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234614AbiK2AQh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Nov 2022 19:16:37 -0500
-Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3D042B19F
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2022 16:16:36 -0800 (PST)
-Received: by mail-pj1-x1029.google.com with SMTP id b11so11109458pjp.2
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2022 16:16:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=rmT4p4LUlgKisuvS5tqZbtaFiBayJl0Eii/OEnGHHtU=;
-        b=tS0jlh80ya4JjgLjJkratxjwUQtwsJQ2uzig/9jrTFeTv6hzDbwbdiCwUogq75pSh1
-         tQ1QBpFoi/zAFhKfKq0mdpPwXMUNF85xOpaWwPh7t64FqCnm42OVKWXWE9vTWCY3wGoj
-         Hv4G3jWw9KYdtfRX08q4wTQBn9lP/oi5zbPD+MUBtNBAc5vE0Wxw6+QaVTe5cKjMuvaE
-         Cbpkgd5hXOiAbqcvvtszCD+aivtEc7x4MLcy0KMqnSoxu4LekuSFOEDF7sCCUpmP0aN3
-         bAzYnLWfegFRHx8EOoxpJ5XLtMnAXZLvQ2Sz+DIvqE6YTNepx+7C1vu98xZ7eFYQqHpt
-         HtRg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=rmT4p4LUlgKisuvS5tqZbtaFiBayJl0Eii/OEnGHHtU=;
-        b=qBg9M5t4A7+g66mUYqq2s8zc/7LjpMRyIEDn2zgtemCTE1NYMp5L0MOtsHeNinTWTT
-         HsBJPqt92H6wkxDpM1djfR8pVyAl4aNMAsD/VeelFuB2TAJrXk2lvwjKxufOf2Xq7sIj
-         nj2AgT9XG/zVJkVXmc7c1zbekK4jz69SSKviLjIyFhSvwuYf0qt9rMtYE5MzAUu7cVmL
-         8yhyFxcUjWvWGunTZxiNue0UHsMusKQVQkK9b6HBllgCCrlXHiNn5CD+wHgOcsGWs48a
-         6xHvSouC5WrWf68dosWaCSlBSrlXshAM9o5nNC7Ms8fJ0kD4VsKIGXZbI7zzCnsyHn6W
-         onOA==
-X-Gm-Message-State: ANoB5pn+ghL/oPSTCJ6DrnWOAMP+HhHxFJEMEN5nxRD5T5svBDR3IDeN
-        lOZmGZnZdoDqAF0pQTI3AS6+MPoDZ+vwYg==
-X-Google-Smtp-Source: AA0mqf5+RMi8gPwujU5z/tOoNaZz4hNMrZtCkUI2nZql1qYR4idryLE601Q51u0M21dSkajfM6LruQ==
-X-Received: by 2002:a17:902:bb10:b0:189:6292:827e with SMTP id im16-20020a170902bb1000b001896292827emr21668249plb.97.1669680996313;
-        Mon, 28 Nov 2022 16:16:36 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-65-106.pa.vic.optusnet.com.au. [49.186.65.106])
-        by smtp.gmail.com with ESMTPSA id y22-20020a170902b49600b0018099c9618esm9388374plr.231.2022.11.28.16.16.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Nov 2022 16:16:35 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1ozoIa-002E5Z-Cw; Tue, 29 Nov 2022 11:16:32 +1100
-Date:   Tue, 29 Nov 2022 11:16:32 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     djwong@kernel.org
+        with ESMTP id S234988AbiK2BVY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Nov 2022 20:21:24 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A71240931;
+        Mon, 28 Nov 2022 17:21:20 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 493B061356;
+        Tue, 29 Nov 2022 01:21:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9EFA3C433C1;
+        Tue, 29 Nov 2022 01:21:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669684878;
+        bh=nDVt+11vimimGgPmn28oMbn4U3yRubU+C+8rSKam9+g=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=HLOHXBcxR8e61qwTQp0riHHwXZvZ5fQ4sZ0RNpzhl0Xkzc0uzhs1nPpZTw0oFmPas
+         YWLbZ6/9w0Xo79g8SOFSO+Hfx/QomaBkBvLc4oXC0+KIs6HBMVAexgkAAilcayPL9C
+         R/NO3CW5hJ6wbMcICD/JfA2DOvEcp8nCwa9GTcS5BM12BDDSLvDrvLwfE+AfeaK8ys
+         naZcoox5lJouV8b/h8RUVMf8GN2OvsVtyWBs6ZiSFOgaFk9FUOJI43JqntJgFm068x
+         JsoGj0RL3hOPxRnmmu7k66S9RIlL1kUOjZM8yw7MZADVHTlYtGkZjoeG137fd/sCkL
+         WDhQgcrAv+25g==
+Date:   Mon, 28 Nov 2022 17:21:18 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [GIT PULL] xfs, iomap: fix data corruption due to stale cached iomaps
-Message-ID: <20221129001632.GX3600936@dread.disaster.area>
+Subject: [PATCH v2 10/9] xfs: add debug knob to slow down writeback for fun
+Message-ID: <Y4VejsHGU/tZuRYs@magnolia>
+References: <20221123055812.747923-1-david@fromorbit.com>
+ <Y4U3XWf5j1zVGvV4@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <Y4U3XWf5j1zVGvV4@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Darrick,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Can you please pull the data corruption fix from the tag below? The
-only change since the last posting was to remove the unused error
-variable from the iomap punch code. I haven't seen any regressions
-in local testing over the past week, so I think it is good to go.
+Add a new error injection knob so that we can arbitrarily slow down
+writeback to test for race conditions and aberrant reclaim behavior if
+the writeback mechanisms are slow to issue writeback.  This will enable
+functional testing for the ifork sequence counters introduced in commit
+745b3f76d1c8 ("xfs: maintain a sequence count for inode fork
+manipulations").
 
--Dave.
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+v2: this time with tracepoints
+---
+ fs/xfs/libxfs/xfs_errortag.h |    4 +++-
+ fs/xfs/xfs_aops.c            |   14 +++++++++++--
+ fs/xfs/xfs_error.c           |   11 +++++++++++
+ fs/xfs/xfs_error.h           |   12 +++++++++++
+ fs/xfs/xfs_trace.c           |    2 ++
+ fs/xfs/xfs_trace.h           |   44 ++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 84 insertions(+), 3 deletions(-)
 
-------
-
-The following changes since commit f0c4d9fc9cc9462659728d168387191387e903cc:
-
-  Linux 6.1-rc4 (2022-11-06 15:07:11 -0800)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs tags/xfs-iomap-stale-fixes
-
-for you to fetch changes up to 6e8af15ccdc4e138a5b529c1901a0013e1dcaa09:
-
-  xfs: drop write error injection is unfixable, remove it (2022-11-29 09:09:17 +1100)
-
-----------------------------------------------------------------
-xfs, iomap: fix data corruption due to stale cached iomaps
-
-This patch series fixes a data corruption that occurs in a specific
-multi-threaded write workload. The workload combined
-racing unaligned adjacent buffered writes with low memory conditions
-that caused both writeback and memory reclaim to race with the
-writes.
-
-The result of this was random partial blocks containing zeroes
-instead of the correct data.  The underlying problem is that iomap
-caches the write iomap for the duration of the write() operation,
-but it fails to take into account that the extent underlying the
-iomap can change whilst the write is in progress.
-
-The short story is that an iomap can span mutliple folios, and so
-under low memory writeback can be cleaning folios the write()
-overlaps. Whilst the overlapping data is cached in memory, this
-isn't a problem, but because the folios are now clean they can be
-reclaimed. Once reclaimed, the write() does the wrong thing when
-re-instantiating partial folios because the iomap no longer reflects
-the underlying state of the extent. e.g. it thinks the extent is
-unwritten, so it zeroes the partial range, when in fact the
-underlying extent is now written and so it should have read the data
-from disk.  This is how we get random zero ranges in the file
-instead of the correct data.
-
-The gory details of the race condition can be found here:
-
-https://lore.kernel.org/linux-xfs/20220817093627.GZ3600936@dread.disaster.area/
-
-Fixing the problem has two aspects. The first aspect of the problem
-is ensuring that iomap can detect a stale cached iomap during a
-write in a race-free manner. We already do this stale iomap
-detection in the writeback path, so we have a mechanism for
-detecting that the iomap backing the data range may have changed
-and needs to be remapped.
-
-In the case of the write() path, we have to ensure that the iomap is
-validated at a point in time when the page cache is stable and
-cannot be reclaimed from under us. We also need to validate the
-extent before we start performing any modifications to the folio
-state or contents. Combine these two requirements together, and the
-only "safe" place to validate the iomap is after we have looked up
-and locked the folio we are going to copy the data into, but before
-we've performed any initialisation operations on that folio.
-
-If the iomap fails validation, we then mark it stale, unlock the
-folio and end the write. This effectively means a stale iomap
-results in a short write. Filesystems should already be able to
-handle this, as write operations can end short for many reasons and
-need to iterate through another mapping cycle to be completed. Hence
-the iomap changes needed to detect and handle stale iomaps during
-write() operations is relatively simple...
-
-However, the assumption is that filesystems should already be able
-to handle write failures safely, and that's where the second
-(first?) part of the problem exists. That is, handling a partial
-write is harder than just "punching out the unused delayed
-allocation extent". This is because mmap() based faults can race
-with writes, and if they land in the delalloc region that the write
-allocated, then punching out the delalloc region can cause data
-corruption.
-
-This data corruption problem is exposed by generic/346 when iomap is
-converted to detect stale iomaps during write() operations. Hence
-write failure in the filesytems needs to handle the fact that the
-write() in progress doesn't necessarily own the data in the page
-cache over the range of the delalloc extent it just allocated.
-
-As a result, we can't just truncate the page cache over the range
-the write() didn't reach and punch all the delalloc extent. We have
-to walk the page cache over the untouched range and skip over any
-dirty data region in the cache in that range. Which is ....
-non-trivial.
-
-That is, iterating the page cache has to handle partially populated
-folios (i.e. block size < page size) that contain data. The data
-might be discontiguous within a folio. Indeed, there might be
-*multiple* discontiguous data regions within a single folio. And to
-make matters more complex, multi-page folios mean we just don't know
-how many sub-folio regions we might have to iterate to find all
-these regions. All the corner cases between the conversions and
-rounding between filesystem block size, folio size and multi-page
-folio size combined with unaligned write offsets kept breaking my
-brain.
-
-However, if we convert the code to track the processed
-write regions by byte ranges instead of fileystem block or page
-cache index, we could simply use mapping_seek_hole_data() to find
-the start and end of each discrete data region within the range we
-needed to scan. SEEK_DATA finds the start of the cached data region,
-SEEK_HOLE finds the end of the region. These are byte based
-interfaces that understand partially uptodate folio regions, and so
-can iterate discrete sub-folio data regions directly. This largely
-solved the problem of discovering the dirty regions we need to keep
-the delalloc extent over.
-
-However, to use mapping_seek_hole_data() without needing to export
-it, we have to move all the delalloc extent cleanup to the iomap
-core and so now the iomap core can clean up delayed allocation
-extents in a safe, sane and filesystem neutral manner.
-
-With all this done, the original data corruption never occurs
-anymore, and we now have a generic mechanism for ensuring that page
-cache writes do not do the wrong thing when writeback and reclaim
-change the state of the physical extent and/or page cache contents
-whilst the write is in progress.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
-----------------------------------------------------------------
-Dave Chinner (9):
-      xfs: write page faults in iomap are not buffered writes
-      xfs: punching delalloc extents on write failure is racy
-      xfs: use byte ranges for write cleanup ranges
-      xfs,iomap: move delalloc punching to iomap
-      iomap: buffered write failure should not truncate the page cache
-      xfs: xfs_bmap_punch_delalloc_range() should take a byte range
-      iomap: write iomap validity checks
-      xfs: use iomap_valid method to detect stale cached iomaps
-      xfs: drop write error injection is unfixable, remove it
-
- fs/iomap/buffered-io.c       | 254 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- fs/iomap/iter.c              |  19 +++++++++-
- fs/xfs/libxfs/xfs_bmap.c     |   6 ++-
- fs/xfs/libxfs/xfs_errortag.h |  12 +++---
- fs/xfs/xfs_aops.c            |  18 ++++-----
- fs/xfs/xfs_bmap_util.c       |  10 +++--
- fs/xfs/xfs_bmap_util.h       |   2 +-
- fs/xfs/xfs_error.c           |  27 +++++++++----
- fs/xfs/xfs_file.c            |   2 +-
- fs/xfs/xfs_iomap.c           | 169 +++++++++++++++++++++++++++++++++++++++++++++++++---------------------------------
- fs/xfs/xfs_iomap.h           |   6 ++-
- fs/xfs/xfs_pnfs.c            |   6 ++-
- include/linux/iomap.h        |  47 +++++++++++++++++++----
- 13 files changed, 464 insertions(+), 114 deletions(-)
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
+index 580ccbd5aadc..f5f629174eca 100644
+--- a/fs/xfs/libxfs/xfs_errortag.h
++++ b/fs/xfs/libxfs/xfs_errortag.h
+@@ -61,7 +61,8 @@
+ #define XFS_ERRTAG_LARP					39
+ #define XFS_ERRTAG_DA_LEAF_SPLIT			40
+ #define XFS_ERRTAG_ATTR_LEAF_TO_NODE			41
+-#define XFS_ERRTAG_MAX					42
++#define XFS_ERRTAG_WB_DELAY_MS				42
++#define XFS_ERRTAG_MAX					43
+ 
+ /*
+  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+@@ -107,5 +108,6 @@
+ #define XFS_RANDOM_LARP					1
+ #define XFS_RANDOM_DA_LEAF_SPLIT			1
+ #define XFS_RANDOM_ATTR_LEAF_TO_NODE			1
++#define XFS_RANDOM_WB_DELAY_MS				3000
+ 
+ #endif /* __XFS_ERRORTAG_H_ */
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index a22d90af40c8..41734202796f 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -17,6 +17,8 @@
+ #include "xfs_bmap.h"
+ #include "xfs_bmap_util.h"
+ #include "xfs_reflink.h"
++#include "xfs_errortag.h"
++#include "xfs_error.h"
+ 
+ struct xfs_writepage_ctx {
+ 	struct iomap_writepage_ctx ctx;
+@@ -217,11 +219,17 @@ xfs_imap_valid(
+ 	 * checked (and found nothing at this offset) could have added
+ 	 * overlapping blocks.
+ 	 */
+-	if (XFS_WPC(wpc)->data_seq != READ_ONCE(ip->i_df.if_seq))
++	if (XFS_WPC(wpc)->data_seq != READ_ONCE(ip->i_df.if_seq)) {
++		trace_xfs_wb_data_iomap_invalid(ip, &wpc->iomap,
++				XFS_WPC(wpc)->data_seq, XFS_DATA_FORK);
+ 		return false;
++	}
+ 	if (xfs_inode_has_cow_data(ip) &&
+-	    XFS_WPC(wpc)->cow_seq != READ_ONCE(ip->i_cowfp->if_seq))
++	    XFS_WPC(wpc)->cow_seq != READ_ONCE(ip->i_cowfp->if_seq)) {
++		trace_xfs_wb_cow_iomap_invalid(ip, &wpc->iomap,
++				XFS_WPC(wpc)->cow_seq, XFS_COW_FORK);
+ 		return false;
++	}
+ 	return true;
+ }
+ 
+@@ -285,6 +293,8 @@ xfs_map_blocks(
+ 	if (xfs_is_shutdown(mp))
+ 		return -EIO;
+ 
++	XFS_ERRORTAG_DELAY(mp, XFS_ERRTAG_WB_DELAY_MS);
++
+ 	/*
+ 	 * COW fork blocks can overlap data fork blocks even if the blocks
+ 	 * aren't shared.  COW I/O always takes precedent, so we must always
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index dea3c0649d2f..13ac52e7f9e5 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -60,6 +60,7 @@ static unsigned int xfs_errortag_random_default[] = {
+ 	XFS_RANDOM_LARP,
+ 	XFS_RANDOM_DA_LEAF_SPLIT,
+ 	XFS_RANDOM_ATTR_LEAF_TO_NODE,
++	XFS_RANDOM_WB_DELAY_MS,
+ };
+ 
+ struct xfs_errortag_attr {
+@@ -175,6 +176,7 @@ XFS_ERRORTAG_ATTR_RW(ag_resv_fail, XFS_ERRTAG_AG_RESV_FAIL);
+ XFS_ERRORTAG_ATTR_RW(larp,		XFS_ERRTAG_LARP);
+ XFS_ERRORTAG_ATTR_RW(da_leaf_split,	XFS_ERRTAG_DA_LEAF_SPLIT);
+ XFS_ERRORTAG_ATTR_RW(attr_leaf_to_node,	XFS_ERRTAG_ATTR_LEAF_TO_NODE);
++XFS_ERRORTAG_ATTR_RW(wb_delay_ms,	XFS_ERRTAG_WB_DELAY_MS);
+ 
+ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(noerror),
+@@ -218,6 +220,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(larp),
+ 	XFS_ERRORTAG_ATTR_LIST(da_leaf_split),
+ 	XFS_ERRORTAG_ATTR_LIST(attr_leaf_to_node),
++	XFS_ERRORTAG_ATTR_LIST(wb_delay_ms),
+ 	NULL,
+ };
+ ATTRIBUTE_GROUPS(xfs_errortag);
+@@ -267,6 +270,14 @@ xfs_errortag_valid(
+ 	return true;
+ }
+ 
++bool
++xfs_errortag_enabled(
++	struct xfs_mount	*mp,
++	unsigned int		tag)
++{
++	return mp->m_errortag && mp->m_errortag[tag] != 0;
++}
++
+ bool
+ xfs_errortag_test(
+ 	struct xfs_mount	*mp,
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index 5191e9145e55..936d0c52d6af 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -45,6 +45,17 @@ extern bool xfs_errortag_test(struct xfs_mount *mp, const char *expression,
+ 		const char *file, int line, unsigned int error_tag);
+ #define XFS_TEST_ERROR(expr, mp, tag)		\
+ 	((expr) || xfs_errortag_test((mp), #expr, __FILE__, __LINE__, (tag)))
++bool xfs_errortag_enabled(struct xfs_mount *mp, unsigned int tag);
++#define XFS_ERRORTAG_DELAY(mp, tag)		\
++	do { \
++		if (!xfs_errortag_enabled((mp), (tag))) \
++			break; \
++		xfs_warn_ratelimited((mp), \
++"Injecting %ums delay at file %s, line %d, on filesystem \"%s\"", \
++				(mp)->m_errortag[(tag)], __FILE__, __LINE__, \
++				(mp)->m_super->s_id); \
++		mdelay((mp)->m_errortag[(tag)]); \
++	} while (0)
+ 
+ extern int xfs_errortag_get(struct xfs_mount *mp, unsigned int error_tag);
+ extern int xfs_errortag_set(struct xfs_mount *mp, unsigned int error_tag,
+@@ -55,6 +66,7 @@ extern int xfs_errortag_clearall(struct xfs_mount *mp);
+ #define xfs_errortag_init(mp)			(0)
+ #define xfs_errortag_del(mp)
+ #define XFS_TEST_ERROR(expr, mp, tag)		(expr)
++#define XFS_ERRORTAG_DELAY(mp, tag)		((void)0)
+ #define xfs_errortag_set(mp, tag, val)		(ENOSYS)
+ #define xfs_errortag_add(mp, tag)		(ENOSYS)
+ #define xfs_errortag_clearall(mp)		(ENOSYS)
+diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
+index d269ef57ff01..8a5dc1538aa8 100644
+--- a/fs/xfs/xfs_trace.c
++++ b/fs/xfs/xfs_trace.c
+@@ -34,6 +34,8 @@
+ #include "xfs_ag.h"
+ #include "xfs_ag_resv.h"
+ #include "xfs_error.h"
++#include <linux/iomap.h>
++#include "xfs_iomap.h"
+ 
+ /*
+  * We include this last to have the helpers above available for the trace
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 372d871bccc5..c9ada9577a4a 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3352,6 +3352,50 @@ DEFINE_EVENT(xfs_inode_irec_class, name, \
+ 	TP_PROTO(struct xfs_inode *ip, struct xfs_bmbt_irec *irec), \
+ 	TP_ARGS(ip, irec))
+ 
++/* inode iomap invalidation events */
++DECLARE_EVENT_CLASS(xfs_wb_invalid_class,
++	TP_PROTO(struct xfs_inode *ip, const struct iomap *iomap, unsigned int wpcseq, int whichfork),
++	TP_ARGS(ip, iomap, wpcseq, whichfork),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(u64, addr)
++		__field(loff_t, pos)
++		__field(u64, len)
++		__field(u16, type)
++		__field(u16, flags)
++		__field(u32, wpcseq)
++		__field(u32, forkseq)
++	),
++	TP_fast_assign(
++		__entry->dev = VFS_I(ip)->i_sb->s_dev;
++		__entry->ino = ip->i_ino;
++		__entry->addr = iomap->addr;
++		__entry->pos = iomap->offset;
++		__entry->len = iomap->length;
++		__entry->type = iomap->type;
++		__entry->flags = iomap->flags;
++		__entry->wpcseq = wpcseq;
++		__entry->forkseq = READ_ONCE(xfs_ifork_ptr(ip, whichfork)->if_seq);
++	),
++	TP_printk("dev %d:%d ino 0x%llx pos 0x%llx addr 0x%llx bytecount 0x%llx type 0x%x flags 0x%x wpcseq 0x%x forkseq 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino,
++		  __entry->pos,
++		  __entry->addr,
++		  __entry->len,
++		  __entry->type,
++		  __entry->flags,
++		  __entry->wpcseq,
++		  __entry->forkseq)
++);
++#define DEFINE_WB_INVALID_EVENT(name) \
++DEFINE_EVENT(xfs_wb_invalid_class, name, \
++	TP_PROTO(struct xfs_inode *ip, const struct iomap *iomap, unsigned int wpcseq, int whichfork), \
++	TP_ARGS(ip, iomap, wpcseq, whichfork))
++DEFINE_WB_INVALID_EVENT(xfs_wb_cow_iomap_invalid);
++DEFINE_WB_INVALID_EVENT(xfs_wb_data_iomap_invalid);
++
+ /* refcount/reflink tracepoint definitions */
+ 
+ /* reflink tracepoints */
