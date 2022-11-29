@@ -2,141 +2,153 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91624C4321E
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Nov 2022 22:07:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 379AFC4321E
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Nov 2022 22:35:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236964AbiK2WHE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Nov 2022 17:07:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43908 "EHLO
+        id S235589AbiK2Wfi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Nov 2022 17:35:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232970AbiK2WGu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2022 17:06:50 -0500
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4C1E6F0E6
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 14:06:49 -0800 (PST)
-Received: by mail-pj1-x102d.google.com with SMTP id b13-20020a17090a5a0d00b0021906102d05so67526pjd.5
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 14:06:49 -0800 (PST)
+        with ESMTP id S236464AbiK2Wfg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2022 17:35:36 -0500
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE0416F81B
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 14:35:35 -0800 (PST)
+Received: by mail-pj1-x102b.google.com with SMTP id o5-20020a17090a678500b00218cd5a21c9so132736pjj.4
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 14:35:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=XMtjXlIm2cNL+TD6AmrjXoFZbnbnwLpz/+JAJhhK9lg=;
-        b=UgIWiQj97GW5iQLOhYutWRwHC6cFMu6l0ZHFsIoDvqjhMuRayyJ5mPLti8Cpv3/UxY
-         g0ZswrtSvMwiYUHP4dBJkpHyNCZ+pXHJPrxErO2fNH0K/JRbkxgBLAZixm1zwuuR4NVT
-         XGGOsH1jxHw/LJGzwja5plT53ChWsFk2t9BKTWpjOyIHZlLdoUuf476vXnpUKLZZXDqo
-         SjDKoukE9+wSwTsIbPXXfGqbd7bLgf4vS1gQi214lV5psCnwvWqlA4lI9o269EHHzGVM
-         NJKPQ506nrBLwa1c9uH1cKVBISICVEUZZ+W4JLD4D+K995XUWq2+glVhpgcrUEAfEWYz
-         7GoA==
+        bh=P9uthek4YM80vO0YfM6ARWDQu0bWEW2AdDA9mvSATtc=;
+        b=0rk5oJD8V4XCYJcVhlzqruL9t+VYHvBuB5PxlCEz+MvKe6ofo4fWAQiBN/i4/P5c3L
+         EerVvFO7xuQcy9Wem8OnqvyCrDn3nBzkUplVqcF6Eyp/oQG27QVfMfZcBe41sWFxAVdM
+         K6h0p3eZGfr8rrkBLU/iwqVAb7yDuOmgo2TICe0yHVFbLZAhAMoKJDg9eGfg0glvR7ih
+         +ryMmRWPU06+1UAvfganBJ7WbSbvOWXbRwMofcxH5Ri4V2kjUddsTn8267UEJhVEafNV
+         EvLKty0p9CrmrRekoeeL1zlnlNyMkVznq+fr1L0Qy9ayMnk+1tE9mjVD4SH2OoWhQ8PW
+         riSg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=XMtjXlIm2cNL+TD6AmrjXoFZbnbnwLpz/+JAJhhK9lg=;
-        b=06T4PMYhcAfw10CYTQh9QN3ZwFg+142nrCHHr3OUiWyHVj78oewl9+u2g99ruXRxwE
-         rlvRqWNxmI+B5CvJQsI46TJXwjdW9FQ2yMKYfl5tLyqdTl5okEOQ6Sh23AKOiz7XA1+t
-         MUO0A7KglQFTqGu2e4up2HW8EfgbDzTvPNvMxpeyTe9oLK1i+UmR67nXT3O9Kp7FyNNH
-         pM1TYR2vLtkOYRtoZXY2ZTfIiItam2RCYamitGQ5yWm83po6ArXUXoPB7GCC4q7nUOQG
-         kiQHwKqvFA9KzinZPwdo91hn9rAVs228TzkSrKZ/7PUGfOk/qAJW6mT5fuH1GgkMzQX+
-         C45w==
-X-Gm-Message-State: ANoB5pk16QIQl6ON9vgm37pSkxb+uv0xc6OU5nvUW4a33ZYFwVoPHLpu
-        FEbk92SHU9DT29wevL3Fxoqglpuj/BxPNQ==
-X-Google-Smtp-Source: AA0mqf7uTQuPyt738AhAVc41FlgxG0TXX1z2D9xsgpMVRrMUms+OIPk8I1VYkBb/vz6Jv3OZBVABCw==
-X-Received: by 2002:a17:90a:7183:b0:212:ede4:3c19 with SMTP id i3-20020a17090a718300b00212ede43c19mr62917820pjk.151.1669759609419;
-        Tue, 29 Nov 2022 14:06:49 -0800 (PST)
+        bh=P9uthek4YM80vO0YfM6ARWDQu0bWEW2AdDA9mvSATtc=;
+        b=ZXIkG5x9ZXI4PLCjiJB0fngToR99SwffjRFjb94Aa8jN+NXZ/+3h+JN9Z1s2YdBQWd
+         wu63rD1y64HWmTMIDothRzGb7FKgAA2CoihDllTSsh+QWBjOn1RcxtOKkLG9tc237toC
+         WxH9Py9x7kM/U7amOdc52kY6tzFiTku8vsqIo8Gy1E886R0Z6fFM0dVs6KA+aTz3Uvoo
+         cj0+jEo6VGb2tA+/HQhlPiDWImzXiciBSjuKqqD1qsGQyVTRAd92UgME2XGq5UIpuq+s
+         bjl/CqP5yCP4VyVFpQEGluRaaflOfolu9+ktcFrwUgad0QNCzADW5f2r9H/eKGjv420G
+         O+vQ==
+X-Gm-Message-State: ANoB5pkl0ifmA0BrJ6x1LrD6kd/p/tKASvVIBWOLVVuN/SVog0Nn6Jck
+        ELCBq3jTDHYlkT1aUs4NN/sPZ6MppDgK8w==
+X-Google-Smtp-Source: AA0mqf52GI6ZBSgXgudiHwlLx9RjiT8k587LFmzW/MQsqjgg5TdFV1X2xDP6hK+dPwXcaPy9RSJcCQ==
+X-Received: by 2002:a17:902:6804:b0:189:907c:8380 with SMTP id h4-20020a170902680400b00189907c8380mr9921070plk.104.1669761335265;
+        Tue, 29 Nov 2022 14:35:35 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-65-106.pa.vic.optusnet.com.au. [49.186.65.106])
-        by smtp.gmail.com with ESMTPSA id f197-20020a6238ce000000b0056a7486da77sm10755966pfa.13.2022.11.29.14.06.49
+        by smtp.gmail.com with ESMTPSA id br8-20020a17090b0f0800b002135a57029dsm1857052pjb.29.2022.11.29.14.35.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Nov 2022 14:06:49 -0800 (PST)
+        Tue, 29 Nov 2022 14:35:34 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1p08kY-002aW6-3Y; Wed, 30 Nov 2022 09:06:46 +1100
-Date:   Wed, 30 Nov 2022 09:06:46 +1100
+        id 1p09CN-002b1m-Ig; Wed, 30 Nov 2022 09:35:31 +1100
+Date:   Wed, 30 Nov 2022 09:35:31 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Chris Boot <lists@bootc.boo.tc>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: XFS corruption help; xfs_repair isn't working
-Message-ID: <20221129220646.GI3600936@dread.disaster.area>
-References: <c3fc1808-dbbf-b1c0-36de-1e55be1942e8@bootc.boo.tc>
+Subject: Re: [PATCH 1/2] xfs: hoist refcount record merge predicates
+Message-ID: <20221129223531.GJ3600936@dread.disaster.area>
+References: <166975928548.3768925.15141817742859398250.stgit@magnolia>
+ <166975929118.3768925.9568770405264708473.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <c3fc1808-dbbf-b1c0-36de-1e55be1942e8@bootc.boo.tc>
+In-Reply-To: <166975929118.3768925.9568770405264708473.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 29, 2022 at 08:49:27PM +0000, Chris Boot wrote:
-> Hi all,
+On Tue, Nov 29, 2022 at 02:01:31PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Sorry, I'm mailing here as a last resort before declaring this filesystem
-> done for. Following a string of unclean reboots and a dying hard disk I have
-> this filesystem in a very poor state that xfs_repair can't make any progress
-> on.
+> Hoist these multiline conditionals into separate static inline helpers
+> to improve readability and set the stage for corruption fixes that will
+> be introduced in the next patch.
 > 
-> It has been mounted on kernel 5.18.14-1~bpo11+1 (from Debian
-> bullseye-backports). Most of the repairs were done using xfsprogs 5.10.0-4
-> (from Debian bullseye stable), though I did also try with 6.0.0-1 (from
-> Debian bookworm/testing re-built myself).
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_refcount.c |  126 +++++++++++++++++++++++++++++++++++++-----
+>  1 file changed, 110 insertions(+), 16 deletions(-)
+
+Looks OK. Minor nit below.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
 > 
-> I've attached the full log from xfs_repair, but the summary is it all starts
-> with multiple instances of this in Phase 3:
 > 
-> Metadata CRC error detected at 0x5609236ce178, xfs_dir3_block block
-> 0xe101f32f8/0x1000
-> bad directory block magic # 0x1859dc06 in block 0 for directory inode
-> 64426557977
-> bad bestfree table in block 0 in directory inode 64426557977: repairing
-> table
+> diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+> index 3f34bafe18dd..8c68994d09f3 100644
+> --- a/fs/xfs/libxfs/xfs_refcount.c
+> +++ b/fs/xfs/libxfs/xfs_refcount.c
+> @@ -815,11 +815,116 @@ xfs_refcount_find_right_extents(
+>  /* Is this extent valid? */
+>  static inline bool
+>  xfs_refc_valid(
+> -	struct xfs_refcount_irec	*rc)
+> +	const struct xfs_refcount_irec	*rc)
+>  {
+>  	return rc->rc_startblock != NULLAGBLOCK;
+>  }
+>  
+> +static inline bool
+> +xfs_refc_want_merge_center(
+> +	const struct xfs_refcount_irec	*left,
+> +	const struct xfs_refcount_irec	*cleft,
+> +	const struct xfs_refcount_irec	*cright,
+> +	const struct xfs_refcount_irec	*right,
+> +	bool				cleft_is_cright,
+> +	enum xfs_refc_adjust_op		adjust,
+> +	unsigned long long		*ulenp)
+> +{
+> +	unsigned long long		ulen = left->rc_blockcount;
+> +
+> +	/*
+> +	 * To merge with a center record, both shoulder records must be
+> +	 * adjacent to the record we want to adjust.  This is only true if
+> +	 * find_left and find_right made all four records valid.
+> +	 */
+> +	if (!xfs_refc_valid(left)  || !xfs_refc_valid(right) ||
+> +	    !xfs_refc_valid(cleft) || !xfs_refc_valid(cright))
+> +		return false;
+> +
+> +	/* There must only be one record for the entire range. */
+> +	if (!cleft_is_cright)
+> +		return false;
+> +
+> +	/* The shoulder record refcounts must match the new refcount. */
+> +	if (left->rc_refcount != cleft->rc_refcount + adjust)
+> +		return false;
+> +	if (right->rc_refcount != cleft->rc_refcount + adjust)
+> +		return false;
+> +
+> +	/*
+> +	 * The new record cannot exceed the max length.  The funny computation
+> +	 * of ulen avoids casting.
+> +	 */
+> +	ulen += cleft->rc_blockcount + right->rc_blockcount;
+> +	if (ulen >= MAXREFCEXTLEN)
+> +		return false;
 
-I think that the problem is that we are trying to repair garbage
-without completely reinitialising the directory block header. We
-don't bother checking the incoming directory block for sanity after
-the CRC fails, and then we only warn that it has a bad magic number.
+The comment took me a bit of spelunking to decipher what the "funny
+computation" was. Better to spell it out directly (catch u32
+overflows) than just hint that there's somethign special about it.
+Say:
 
-We then go a process it as though it is a directory block,
-essentially trusting that the directory block header is actually
-sane. Which it clearly isn't because the magic number in the dir
-block has been trashed.
-
-We then rescan parts of the directory block and rewrite parts of the
-block header, but the next time we re-scan the block we find that
-there are still bad parts in the header/directory block. Then we
-rewrite the magic number to make it look like a directory block,
-and when repair is finished it goes to write the recovered directory
-block to disk and it fails the verifier check - it's still a corrupt
-directory block because it's still full of garbage that doesn't pass
-muster.
-
-From a recovery persepective, I think that if we get a bad CRC and
-an unrecognisable magic number, we have no idea what the block is
-meant to contain - we cannot trust it to contain directory
-information, so we should just trash the block rather than try to
-rebuild it. If it was a valid directory block, this will result in
-the files it pointed to being moved to lost+found so no data is
-actually lost.
-
-If it wasn't a dir block at all, then simply trashing the data fork
-of the inode and not touching the contents of the block at all is
-right thing to do. Modifying something that may be cross-linked
-before we've resolved all the cross-linked extents is a bad thing to
-be doing, so if we cannot recognise the block as a directory block,
-we shouldn't try to recover it as a directory block at all....
-
-Darrick, what are your thoughts on this?
-
-> As it is the filesystem can be mounted and most data appears accessible, but
-> several directories are corrupt and can't be read or removed; the kernel
-> reports metadata corruption and CRC errors and returns EUCLEAN.
-> 
-> Ideally I'd like to remove the corrupt directories, recover as much of
-> what's left as possible, and make the filesystem usable again (it's an
-> rsnapshot destination) - but I'll take what I can.
-
-Yup, it's only a small number of directory inodes, so we might be
-able to do this with some manual xfs_db magic. I think all we'd
-need to do is rewrite specific parts of the dir block header and
-repair should then do the rest...
+	/*
+	 * The new record cannot exceed the max length. ulen is a
+	 * ULL as the individual record block counts can be up to
+	 * (u32 - 1) in length hence we need to catch u32 addition
+	 * overflows here.
+	 */
 
 Cheers,
 
