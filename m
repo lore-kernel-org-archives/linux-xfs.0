@@ -2,157 +2,98 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 379AFC4321E
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Nov 2022 22:35:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC852C433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Nov 2022 22:37:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235589AbiK2Wfi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Nov 2022 17:35:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58490 "EHLO
+        id S236132AbiK2WhO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Nov 2022 17:37:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58736 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236464AbiK2Wfg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2022 17:35:36 -0500
-Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE0416F81B
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 14:35:35 -0800 (PST)
-Received: by mail-pj1-x102b.google.com with SMTP id o5-20020a17090a678500b00218cd5a21c9so132736pjj.4
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 14:35:35 -0800 (PST)
+        with ESMTP id S235908AbiK2WhN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2022 17:37:13 -0500
+Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6DAE45EDB
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 14:37:12 -0800 (PST)
+Received: by mail-pg1-x530.google.com with SMTP id f3so14398922pgc.2
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 14:37:12 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=P9uthek4YM80vO0YfM6ARWDQu0bWEW2AdDA9mvSATtc=;
-        b=0rk5oJD8V4XCYJcVhlzqruL9t+VYHvBuB5PxlCEz+MvKe6ofo4fWAQiBN/i4/P5c3L
-         EerVvFO7xuQcy9Wem8OnqvyCrDn3nBzkUplVqcF6Eyp/oQG27QVfMfZcBe41sWFxAVdM
-         K6h0p3eZGfr8rrkBLU/iwqVAb7yDuOmgo2TICe0yHVFbLZAhAMoKJDg9eGfg0glvR7ih
-         +ryMmRWPU06+1UAvfganBJ7WbSbvOWXbRwMofcxH5Ri4V2kjUddsTn8267UEJhVEafNV
-         EvLKty0p9CrmrRekoeeL1zlnlNyMkVznq+fr1L0Qy9ayMnk+1tE9mjVD4SH2OoWhQ8PW
-         riSg==
+        bh=t763N2jh7rg4kYAponJtkCimLoATeF1Sc8wIRXOylYE=;
+        b=oPc9siN1bngML2NEm0rZfCTXEwYqamHUaL2WtAegExSesqOwaUjXlwrUT71y6xmj4M
+         rLk5+aIOn6JQsV/c0vVoakq8XEOBNh0o1J48tMxcyAGH2EIBpGFshymYm/Xicz8mvPNx
+         BVhoWMdrS72LqV19N9U/CdE0qr7/g2egvSPKVpscttApzUUdxOownpEzoN4UVflagcF+
+         T3YWyAwyK+UwiN8Gn04pePrCYlres3vdrd8NSv1K5oEgLVPlJpbodWUe5lA6rzo6DnyF
+         xNQ66AnHbnXIj8SPOGHjTEdjm0qi2utSJiUatp9oTacg2hH67iyHm92iSf44My045uUs
+         6+TA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=P9uthek4YM80vO0YfM6ARWDQu0bWEW2AdDA9mvSATtc=;
-        b=ZXIkG5x9ZXI4PLCjiJB0fngToR99SwffjRFjb94Aa8jN+NXZ/+3h+JN9Z1s2YdBQWd
-         wu63rD1y64HWmTMIDothRzGb7FKgAA2CoihDllTSsh+QWBjOn1RcxtOKkLG9tc237toC
-         WxH9Py9x7kM/U7amOdc52kY6tzFiTku8vsqIo8Gy1E886R0Z6fFM0dVs6KA+aTz3Uvoo
-         cj0+jEo6VGb2tA+/HQhlPiDWImzXiciBSjuKqqD1qsGQyVTRAd92UgME2XGq5UIpuq+s
-         bjl/CqP5yCP4VyVFpQEGluRaaflOfolu9+ktcFrwUgad0QNCzADW5f2r9H/eKGjv420G
-         O+vQ==
-X-Gm-Message-State: ANoB5pkl0ifmA0BrJ6x1LrD6kd/p/tKASvVIBWOLVVuN/SVog0Nn6Jck
-        ELCBq3jTDHYlkT1aUs4NN/sPZ6MppDgK8w==
-X-Google-Smtp-Source: AA0mqf52GI6ZBSgXgudiHwlLx9RjiT8k587LFmzW/MQsqjgg5TdFV1X2xDP6hK+dPwXcaPy9RSJcCQ==
-X-Received: by 2002:a17:902:6804:b0:189:907c:8380 with SMTP id h4-20020a170902680400b00189907c8380mr9921070plk.104.1669761335265;
-        Tue, 29 Nov 2022 14:35:35 -0800 (PST)
+        bh=t763N2jh7rg4kYAponJtkCimLoATeF1Sc8wIRXOylYE=;
+        b=73x0kJX+xbfGhEHFx0VsWVUEBypYRiHjdWr4qnchc90IpAkSJSM3wcwJUEKAZvroDC
+         kqB8dFAuTz2Eb0cOeCRIhPy3/k/GBqA4AVx09rDIcUUwKyrlA2SVK8qBsTee4eyJZ1gC
+         foDl/iXcLXMeCx+652jZP2JKjeaoN1ClV8jOOsVSgbQ1IGpuYseCVxTIA52fKKnUzlds
+         O1hib3n5zkW9O0TVnIXLoVTaX3AqyWad94XFuJRnxg3Mm+o6aM9Z8IXLiNBycoAtzd2/
+         +K44kwFxpGmYgq3sJRmYMw8IEn2S01ecV0OXrVQKOmgNtJdontwA+MxpR9lFSfdx+csA
+         Mr+A==
+X-Gm-Message-State: ANoB5pmG2acwExbyRe+bAyy++jDjdm352RXAnuxvhSPpmeXk4OMoo1FQ
+        HyA9iguy9I/Kds6z6uS0Ge6GT5s8cf/6zg==
+X-Google-Smtp-Source: AA0mqf6wlpzf9pF15MuiYVlcwwla4CwGcB26A19Dv/yVkqliiI12PChjMR9zS1vglFdhJUrHAR65eA==
+X-Received: by 2002:a63:e70b:0:b0:473:e502:9a21 with SMTP id b11-20020a63e70b000000b00473e5029a21mr33513217pgi.238.1669761432180;
+        Tue, 29 Nov 2022 14:37:12 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-65-106.pa.vic.optusnet.com.au. [49.186.65.106])
-        by smtp.gmail.com with ESMTPSA id br8-20020a17090b0f0800b002135a57029dsm1857052pjb.29.2022.11.29.14.35.34
+        by smtp.gmail.com with ESMTPSA id u207-20020a6279d8000000b00575da69a16asm10854pfc.179.2022.11.29.14.37.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Nov 2022 14:35:34 -0800 (PST)
+        Tue, 29 Nov 2022 14:37:11 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1p09CN-002b1m-Ig; Wed, 30 Nov 2022 09:35:31 +1100
-Date:   Wed, 30 Nov 2022 09:35:31 +1100
+        id 1p09Dw-002b38-W0; Wed, 30 Nov 2022 09:37:09 +1100
+Date:   Wed, 30 Nov 2022 09:37:08 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: hoist refcount record merge predicates
-Message-ID: <20221129223531.GJ3600936@dread.disaster.area>
+Subject: Re: [PATCH 2/2] xfs: estimate post-merge refcounts correctly
+Message-ID: <20221129223708.GK3600936@dread.disaster.area>
 References: <166975928548.3768925.15141817742859398250.stgit@magnolia>
- <166975929118.3768925.9568770405264708473.stgit@magnolia>
+ <166975929675.3768925.10238207487640742011.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <166975929118.3768925.9568770405264708473.stgit@magnolia>
+In-Reply-To: <166975929675.3768925.10238207487640742011.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 29, 2022 at 02:01:31PM -0800, Darrick J. Wong wrote:
+On Tue, Nov 29, 2022 at 02:01:36PM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Hoist these multiline conditionals into separate static inline helpers
-> to improve readability and set the stage for corruption fixes that will
-> be introduced in the next patch.
+> Upon enabling fsdax + reflink for XFS, xfs/179 began to report refcount
+> metadata corruptions after being run.  Specifically, xfs_repair noticed
+> single-block refcount records that could be combined but had not been.
 > 
+> The root cause of this is improper MAXREFCOUNT edge case handling in
+> xfs_refcount_merge_extents.  When we're trying to find candidates for a
+> refcount btree record merge, we compute the refcount attribute of the
+> merged record, but we fail to account for the fact that once a record
+> hits rc_refcount == MAXREFCOUNT, it is pinned that way forever.  Hence
+> the computed refcount is wrong, and we fail to merge the extents.
+> 
+> Fix this by adjusting the merge predicates to compute the adjusted
+> refcount correctly.
+> 
+> Fixes: 3172725814f9 ("xfs: adjust refcount of an extent of blocks in refcount btree")
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  fs/xfs/libxfs/xfs_refcount.c |  126 +++++++++++++++++++++++++++++++++++++-----
->  1 file changed, 110 insertions(+), 16 deletions(-)
+>  fs/xfs/libxfs/xfs_refcount.c |   25 +++++++++++++++++++++----
+>  1 file changed, 21 insertions(+), 4 deletions(-)
 
-Looks OK. Minor nit below.
+Looks good to me.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-> index 3f34bafe18dd..8c68994d09f3 100644
-> --- a/fs/xfs/libxfs/xfs_refcount.c
-> +++ b/fs/xfs/libxfs/xfs_refcount.c
-> @@ -815,11 +815,116 @@ xfs_refcount_find_right_extents(
->  /* Is this extent valid? */
->  static inline bool
->  xfs_refc_valid(
-> -	struct xfs_refcount_irec	*rc)
-> +	const struct xfs_refcount_irec	*rc)
->  {
->  	return rc->rc_startblock != NULLAGBLOCK;
->  }
->  
-> +static inline bool
-> +xfs_refc_want_merge_center(
-> +	const struct xfs_refcount_irec	*left,
-> +	const struct xfs_refcount_irec	*cleft,
-> +	const struct xfs_refcount_irec	*cright,
-> +	const struct xfs_refcount_irec	*right,
-> +	bool				cleft_is_cright,
-> +	enum xfs_refc_adjust_op		adjust,
-> +	unsigned long long		*ulenp)
-> +{
-> +	unsigned long long		ulen = left->rc_blockcount;
-> +
-> +	/*
-> +	 * To merge with a center record, both shoulder records must be
-> +	 * adjacent to the record we want to adjust.  This is only true if
-> +	 * find_left and find_right made all four records valid.
-> +	 */
-> +	if (!xfs_refc_valid(left)  || !xfs_refc_valid(right) ||
-> +	    !xfs_refc_valid(cleft) || !xfs_refc_valid(cright))
-> +		return false;
-> +
-> +	/* There must only be one record for the entire range. */
-> +	if (!cleft_is_cright)
-> +		return false;
-> +
-> +	/* The shoulder record refcounts must match the new refcount. */
-> +	if (left->rc_refcount != cleft->rc_refcount + adjust)
-> +		return false;
-> +	if (right->rc_refcount != cleft->rc_refcount + adjust)
-> +		return false;
-> +
-> +	/*
-> +	 * The new record cannot exceed the max length.  The funny computation
-> +	 * of ulen avoids casting.
-> +	 */
-> +	ulen += cleft->rc_blockcount + right->rc_blockcount;
-> +	if (ulen >= MAXREFCEXTLEN)
-> +		return false;
-
-The comment took me a bit of spelunking to decipher what the "funny
-computation" was. Better to spell it out directly (catch u32
-overflows) than just hint that there's somethign special about it.
-Say:
-
-	/*
-	 * The new record cannot exceed the max length. ulen is a
-	 * ULL as the individual record block counts can be up to
-	 * (u32 - 1) in length hence we need to catch u32 addition
-	 * overflows here.
-	 */
-
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
