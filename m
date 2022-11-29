@@ -2,177 +2,282 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FD8AC4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Nov 2022 20:31:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A04DFC433FE
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Nov 2022 20:50:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236125AbiK2UbS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Nov 2022 15:31:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36322 "EHLO
+        id S235700AbiK2Uuz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Nov 2022 15:50:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50510 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235854AbiK2UbN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2022 15:31:13 -0500
-Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E727565E60
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 12:30:58 -0800 (PST)
-Received: by mail-pf1-x42c.google.com with SMTP id z17so10008603pff.1
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 12:30:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=4DZsE5XiUZI87HOlyr8oUGdLutA4UCZ/RQ3zHuJElFw=;
-        b=F8DCmwYhwxmFJ8vqf3lkpTRrq1vWGnY4tNhrM2pSV5/YaLgbKVjKMEatxYxymJgoWf
-         VqRIrDZcn9yFHDfxsn2+uy+AcOmH7y9ci2qzrvKZfhhZn2LkG3O0tBi+u5orWokq9Lwg
-         OIiqlXxOgDqeEGRoo41LJq49NI2FORXndP+6wpl6NVNNdpRxkwu8Gt3JvKK6bvRqUdBH
-         HdP7ML9LN+t5MAZTj0mRt7+cqOM8RtmFGIVySMZm9kMZO8pLHSn/EJihtJhE7XH1A5FW
-         PE4oa4QsggfUWVrrOWqzPGGx8UbWjb9qkpmnCQoJMH+cyuFqApFLbpvzsP19/ITY/cuj
-         r+jQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4DZsE5XiUZI87HOlyr8oUGdLutA4UCZ/RQ3zHuJElFw=;
-        b=DhZ8VqtTm8NrkZQeHNh4ZUqxQL13nqXNUHqWKgmshtrJSmz0j6phkSgJtZqZPzOMl5
-         2bYW2ZAsb0L8ZopwwyBHkmylrGrGIHZAHUyTtlzmWaZbXLPcY/uTUMoNtvR2Yfk1/uor
-         oKHhBvjkRzdPRaYpBUohYXFXKBI0ogkG8ibN/adWl65USPUx+0W+x3hUazSe8yy/DPZD
-         AWR/cAzViD1tmcwHKDL4MeSCI4ZiYz9PlVTQYscxDG7sP/Qed0+Intn2TPRQUy2yLtEm
-         9xvUoO2OVe625SO2H/7d4XlyNcv4YwbMzLUMi0H7zKQitEO3cQcH/SI6CFUQM2c8G0KH
-         C88w==
-X-Gm-Message-State: ANoB5plGEzGrak1jtbropYz2j8yJDTh7b/7i9Yl2Fyam2DcTVrlWCXer
-        S7531hQHr67leCUKT6IVvEspQg==
-X-Google-Smtp-Source: AA0mqf5ACAJZHic0fCNYYiNi+cbyRAZ9KueLP2d/X4YoJlWbywhZaRFAA16EnkXF9cmHBKPHsCvbNg==
-X-Received: by 2002:a63:4c58:0:b0:476:b165:c83f with SMTP id m24-20020a634c58000000b00476b165c83fmr36383662pgl.602.1669753858421;
-        Tue, 29 Nov 2022 12:30:58 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-65-106.pa.vic.optusnet.com.au. [49.186.65.106])
-        by smtp.gmail.com with ESMTPSA id m4-20020a62a204000000b0056ba7ce4d5asm4140376pff.52.2022.11.29.12.30.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Nov 2022 12:30:58 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1p07Fm-002YtV-SB; Wed, 30 Nov 2022 07:30:54 +1100
-Date:   Wed, 30 Nov 2022 07:30:54 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     syzbot <syzbot+7bb81dfa9cda07d9cd9d@syzkaller.appspotmail.com>
-Cc:     djwong@kernel.org, hch@infradead.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com,
-        cluster-devel@redhat.com
-Subject: Re: [syzbot] WARNING in iomap_read_inline_data
-Message-ID: <20221129203054.GF3600936@dread.disaster.area>
-References: <000000000000d1663705ee97d4d7@google.com>
+        with ESMTP id S236811AbiK2Uuk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2022 15:50:40 -0500
+Received: from out1-smtp.messagingengine.com (out1-smtp.messagingengine.com [66.111.4.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60F952BFE
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 12:49:33 -0800 (PST)
+Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
+        by mailout.nyi.internal (Postfix) with ESMTP id E954F5C00F0
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 15:49:30 -0500 (EST)
+Received: from mailfrontend2 ([10.202.2.163])
+  by compute2.internal (MEProxy); Tue, 29 Nov 2022 15:49:30 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=boo.tc; h=cc
+        :content-type:date:date:from:from:in-reply-to:message-id
+        :mime-version:reply-to:sender:subject:subject:to:to; s=fm3; t=
+        1669754970; x=1669841370; bh=mkhaJq2QcXucHu5iQ2PFnBEWgVdo/CuNgji
+        MFgokRhE=; b=QQBDMT8cvLcAdq0mVOmmnhlg12liyF2jxc9ZPEg2kwv9DNQdOP7
+        GLlI7wkTUUgpx0cN7aY7jvyD04RLrVUtl6hfsjB6eUOZLPU1o1OJI1w9E4MrA2IT
+        X2WGLH+WmHHlr5CWyOFrF8i4vN7DMP6ntzDw5pYAkjRss7rBPPPSnc2V3FJ/M9TJ
+        nSt7uG1blrsDTYOOiUB2Q4seKaD5j8H3cTmzCSZXQMEiSEsWB5pUI6l886I+1gfk
+        Ze2lJr2SyPHiZdz04iPJVLHZ5oKpPTuoCMDrI+6WFsI2F6Vx847jmEUvPiIpZTQd
+        P4GVNDdN2oV+PC1mgTxEKU8mWCzC6TIxtLA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-type:date:date:feedback-id
+        :feedback-id:from:from:in-reply-to:message-id:mime-version
+        :reply-to:sender:subject:subject:to:to:x-me-proxy:x-me-proxy
+        :x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1669754970; x=
+        1669841370; bh=mkhaJq2QcXucHu5iQ2PFnBEWgVdo/CuNgjiMFgokRhE=; b=o
+        pppxx+nOvqxJnHNld/+NeTqV7QcrjjMFnZ9o53T5mC1DGgXICB0qAnRZHCESITZU
+        J8NhcmyJmRJrEvjNu/Ll/2Z05og7V3sTEvFMEVwr2/Qbkte9Cne1LGzNZt+F5BYn
+        JirBLulLTFQJyNnDkd2DDdcexqpAYxEIPaIxNXr1Nm2u3FGVMBCtDLRU61CBKQPJ
+        DaETGt3Vi9OlLie/Ll08zMimITKD0cRMNADiaraACoEIZF92PGKmMFgjSw+y/Y3G
+        qwhbHwUX0v6i0FMe1o77yNXWfHuHw40hHgsfiu7auwcijfseM76GMfegJHkHSX1o
+        Kvk2kY5q4UX7ic4dTD3PA==
+X-ME-Sender: <xms:WnCGYxfCmAePXg3Ci333yqifJ13Ehhjk8rfHNQ35Eoxxb1BiF6EUkw>
+    <xme:WnCGY_NplaFEq1p-3WVyTF9f8f5thKqoW9HNQiLiEta5oNjSiT0whPizUH0aD1Ivt
+    8cm4QTI6vKETvjhXA>
+X-ME-Received: <xmr:WnCGY6jGMmftWMRueQj4_SeC9Bjc9zY8qUeLHef2zIQCin7dGya5LlSncvlGg0udH0OwLRAVYms>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrtddtgddutdeiucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucgfrhhlucfvnfffucdlhedtmdenucfjughrpegtkf
+    ffgggfvffhufesmhdtreertdefjeenucfhrhhomhepvehhrhhishcuuehoohhtuceolhhi
+    shhtshessghoohhttgdrsghoohdrthgtqeenucggtffrrghtthgvrhhnpedtleeiffevge
+    fhhedvkedujeekheevledtvdehueeifefgheetfeefieetkefgjeenucevlhhushhtvghr
+    ufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehlihhsthhssegsohhothgtrd
+    gsohhordhttg
+X-ME-Proxy: <xmx:WnCGY6_x3KbV_9x6gCrWZPwnCROa_BbJrWxtToGcKl3KttZHdDJO4g>
+    <xmx:WnCGY9vlzVgwRLSd6xIy2KvITB8x5uKLkHmuAaPH8uK3xK4uhz5iWA>
+    <xmx:WnCGY5E8-BwHqpfuKfXonesmXLcbY9JuuAOjpUk_0COSvfONRFooPQ>
+    <xmx:WnCGY70Qgw1zzlUSZ5YGPIguEfnf8CpA5Slhg5dkm7qxbBSvq4atRA>
+Feedback-ID: i5869458d:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA for
+ <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 15:49:29 -0500 (EST)
+Content-Type: multipart/mixed; boundary="------------ZdbXxuoXRh1JX11zRW7EmN2V"
+Message-ID: <c3fc1808-dbbf-b1c0-36de-1e55be1942e8@bootc.boo.tc>
+Date:   Tue, 29 Nov 2022 20:49:27 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <000000000000d1663705ee97d4d7@google.com>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.5.0
+Content-Language: en-GB
+To:     linux-xfs@vger.kernel.org
+From:   Chris Boot <lists@bootc.boo.tc>
+Subject: XFS corruption help; xfs_repair isn't working
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+This is a multi-part message in MIME format.
+--------------ZdbXxuoXRh1JX11zRW7EmN2V
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Looks like something to do with the gfs2 inline data functionality -
-syzbot probably corrupted the resource index inode given the
-gfs2_fill_super() context.
+Hi all,
 
-cc += cluster-devel@redhat.com.
+Sorry, I'm mailing here as a last resort before declaring this 
+filesystem done for. Following a string of unclean reboots and a dying 
+hard disk I have this filesystem in a very poor state that xfs_repair 
+can't make any progress on.
 
--Dave.
+It has been mounted on kernel 5.18.14-1~bpo11+1 (from Debian 
+bullseye-backports). Most of the repairs were done using xfsprogs 
+5.10.0-4 (from Debian bullseye stable), though I did also try with 
+6.0.0-1 (from Debian bookworm/testing re-built myself).
 
-On Tue, Nov 29, 2022 at 12:32:41AM -0800, syzbot wrote:
-> Hello,
-> 
-> syzbot found the following issue on:
-> 
-> HEAD commit:    6d464646530f Merge branch 'for-next/core' into for-kernelci
-> git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git for-kernelci
-> console output: https://syzkaller.appspot.com/x/log.txt?x=121e694b880000
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=54b747d981acc7b7
-> dashboard link: https://syzkaller.appspot.com/bug?extid=7bb81dfa9cda07d9cd9d
-> compiler:       Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2
-> userspace arch: arm64
-> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=105c8fed880000
-> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=170fa303880000
-> 
-> Downloadable assets:
-> disk image: https://storage.googleapis.com/syzbot-assets/d75f5f77b3a3/disk-6d464646.raw.xz
-> vmlinux: https://storage.googleapis.com/syzbot-assets/9382f86e4d95/vmlinux-6d464646.xz
-> kernel image: https://storage.googleapis.com/syzbot-assets/cf2b5f0d51dd/Image-6d464646.gz.xz
-> mounted in repro: https://storage.googleapis.com/syzbot-assets/eb9ce7b05830/mount_0.gz
-> 
-> IMPORTANT: if you fix the issue, please add the following tag to the commit:
-> Reported-by: syzbot+7bb81dfa9cda07d9cd9d@syzkaller.appspotmail.com
-> 
-> gfs2: fsid=syz:syz.0: first mount done, others may mount
-> ------------[ cut here ]------------
-> WARNING: CPU: 1 PID: 3072 at fs/iomap/buffered-io.c:226 iomap_read_inline_data+0x274/0x440 fs/iomap/buffered-io.c:226
-> Modules linked in:
-> CPU: 1 PID: 3072 Comm: syz-executor694 Not tainted 6.1.0-rc6-syzkaller-32662-g6d464646530f #0
-> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 09/30/2022
-> pstate: 80400005 (Nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-> pc : iomap_read_inline_data+0x274/0x440 fs/iomap/buffered-io.c:226
-> lr : iomap_read_inline_data+0x274/0x440 fs/iomap/buffered-io.c:226
-> sp : ffff80000fb9b5a0
-> x29: ffff80000fb9b5a0 x28: 0000000000000000 x27: 0000000000000000
-> x26: 0000000000000000 x25: ffff80000fb9b6e0 x24: ffff80000fb9b6b8
-> x23: ffffffc000000f40 x22: 00000040000000c0 x21: 0000000000001000
-> x20: ffff80000fb9b6b8 x19: fffffc0003390a40 x18: fffffffffffffff5
-> x17: ffff80000c0cd83c x16: 0000000000000000 x15: 0000000000000000
-> x14: 0000000000000000 x13: 0000000000000002 x12: ffff80000d6227e0
-> x11: ff808000086c12c4 x10: 0000000000000000 x9 : ffff8000086c12c4
-> x8 : ffff0000c6f13480 x7 : ffff80000845ec00 x6 : 0000000000000000
-> x5 : ffff0000c6f13480 x4 : 0000000000000000 x3 : 0000000000000002
-> x2 : 0000000000000000 x1 : 00000040000000c0 x0 : 0000000000001000
-> Call trace:
->  iomap_read_inline_data+0x274/0x440 fs/iomap/buffered-io.c:226
->  iomap_readpage_iter+0xdc/0x7dc fs/iomap/buffered-io.c:269
->  iomap_read_folio+0x114/0x364 fs/iomap/buffered-io.c:343
->  gfs2_read_folio+0x54/0x130 fs/gfs2/aops.c:456
->  filemap_read_folio+0xc4/0x468 mm/filemap.c:2407
->  do_read_cache_folio+0x1c8/0x588 mm/filemap.c:3534
->  do_read_cache_page mm/filemap.c:3576 [inline]
->  read_cache_page+0x40/0x174 mm/filemap.c:3585
->  gfs2_internal_read+0x90/0x304 fs/gfs2/aops.c:494
->  read_rindex_entry fs/gfs2/rgrp.c:906 [inline]
->  gfs2_ri_update+0xb4/0x7e4 fs/gfs2/rgrp.c:1001
->  gfs2_rindex_update+0x1b0/0x21c fs/gfs2/rgrp.c:1051
->  init_inodes+0x11c/0x184 fs/gfs2/ops_fstype.c:917
->  gfs2_fill_super+0x630/0x874 fs/gfs2/ops_fstype.c:1247
->  get_tree_bdev+0x1e8/0x2a0 fs/super.c:1324
->  gfs2_get_tree+0x30/0xc0 fs/gfs2/ops_fstype.c:1330
->  vfs_get_tree+0x40/0x140 fs/super.c:1531
->  do_new_mount+0x1dc/0x4e4 fs/namespace.c:3040
->  path_mount+0x358/0x890 fs/namespace.c:3370
->  do_mount fs/namespace.c:3383 [inline]
->  __do_sys_mount fs/namespace.c:3591 [inline]
->  __se_sys_mount fs/namespace.c:3568 [inline]
->  __arm64_sys_mount+0x2c4/0x3c4 fs/namespace.c:3568
->  __invoke_syscall arch/arm64/kernel/syscall.c:38 [inline]
->  invoke_syscall arch/arm64/kernel/syscall.c:52 [inline]
->  el0_svc_common+0x138/0x220 arch/arm64/kernel/syscall.c:142
->  do_el0_svc+0x48/0x164 arch/arm64/kernel/syscall.c:206
->  el0_svc+0x58/0x150 arch/arm64/kernel/entry-common.c:637
->  el0t_64_sync_handler+0x84/0xf0 arch/arm64/kernel/entry-common.c:655
->  el0t_64_sync+0x190/0x194 arch/arm64/kernel/entry.S:584
-> irq event stamp: 104804
-> hardirqs last  enabled at (104803): [<ffff80000c090604>] __raw_spin_unlock_irq include/linux/spinlock_api_smp.h:159 [inline]
-> hardirqs last  enabled at (104803): [<ffff80000c090604>] _raw_spin_unlock_irq+0x3c/0x70 kernel/locking/spinlock.c:202
-> hardirqs last disabled at (104804): [<ffff80000c07d8b4>] el1_dbg+0x24/0x80 arch/arm64/kernel/entry-common.c:405
-> softirqs last  enabled at (104756): [<ffff800009270a7c>] local_bh_enable+0x10/0x34 include/linux/bottom_half.h:32
-> softirqs last disabled at (104754): [<ffff800009270a48>] local_bh_disable+0x10/0x34 include/linux/bottom_half.h:19
-> ---[ end trace 0000000000000000 ]---
-> 
-> 
-> ---
-> This report is generated by a bot. It may contain errors.
-> See https://goo.gl/tpsmEJ for more information about syzbot.
-> syzbot engineers can be reached at syzkaller@googlegroups.com.
-> 
-> syzbot will keep track of this issue. See:
-> https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-> syzbot can test patches for this issue, for details see:
-> https://goo.gl/tpsmEJ#testing-patches
-> 
+I've attached the full log from xfs_repair, but the summary is it all 
+starts with multiple instances of this in Phase 3:
+
+Metadata CRC error detected at 0x5609236ce178, xfs_dir3_block block 
+0xe101f32f8/0x1000
+bad directory block magic # 0x1859dc06 in block 0 for directory inode 
+64426557977
+bad bestfree table in block 0 in directory inode 64426557977: repairing 
+table
+
+As it is the filesystem can be mounted and most data appears accessible, 
+but several directories are corrupt and can't be read or removed; the 
+kernel reports metadata corruption and CRC errors and returns EUCLEAN.
+
+Ideally I'd like to remove the corrupt directories, recover as much of 
+what's left as possible, and make the filesystem usable again (it's an 
+rsnapshot destination) - but I'll take what I can.
+
+Many thanks in advance,
+Chris
+
+PS: Please Cc me in replies
 
 -- 
-Dave Chinner
-david@fromorbit.com
+Chris Boot
+bootc@boo.tc
+--------------ZdbXxuoXRh1JX11zRW7EmN2V
+Content-Type: text/plain; charset=UTF-8; name="xfs_repair.log"
+Content-Disposition: attachment; filename="xfs_repair.log"
+Content-Transfer-Encoding: base64
+
+UGhhc2UgMSAtIGZpbmQgYW5kIHZlcmlmeSBzdXBlcmJsb2NrLi4uCiAgICAgICAgLSByZXBv
+cnRpbmcgcHJvZ3Jlc3MgaW4gaW50ZXJ2YWxzIG9mIDE1IG1pbnV0ZXMKUGhhc2UgMiAtIHVz
+aW5nIGludGVybmFsIGxvZwogICAgICAgIC0gemVybyBsb2cuLi4KICAgICAgICAtIDIwOjI1
+OjIwOiB6ZXJvaW5nIGxvZyAtIDUyMTcyOCBvZiA1MjE3MjggYmxvY2tzIGRvbmUKICAgICAg
+ICAtIHNjYW4gZmlsZXN5c3RlbSBmcmVlc3BhY2UgYW5kIGlub2RlIG1hcHMuLi4KICAgICAg
+ICAtIDIwOjI1OjIzOiBzY2FubmluZyBmaWxlc3lzdGVtIGZyZWVzcGFjZSAtIDM4IG9mIDM4
+IGFsbG9jYXRpb24gZ3JvdXBzIGRvbmUKICAgICAgICAtIGZvdW5kIHJvb3QgaW5vZGUgY2h1
+bmsKUGhhc2UgMyAtIGZvciBlYWNoIEFHLi4uCiAgICAgICAgLSBzY2FuIGFuZCBjbGVhciBh
+Z2kgdW5saW5rZWQgbGlzdHMuLi4KICAgICAgICAtIDIwOjI1OjIzOiBzY2FubmluZyBhZ2kg
+dW5saW5rZWQgbGlzdHMgLSAzOCBvZiAzOCBhbGxvY2F0aW9uIGdyb3VwcyBkb25lCiAgICAg
+ICAgLSBwcm9jZXNzIGtub3duIGlub2RlcyBhbmQgcGVyZm9ybSBpbm9kZSBkaXNjb3Zlcnku
+Li4KICAgICAgICAtIGFnbm8gPSAxNQogICAgICAgIC0gYWdubyA9IDAKICAgICAgICAtIGFn
+bm8gPSAzMApNZXRhZGF0YSBDUkMgZXJyb3IgZGV0ZWN0ZWQgYXQgMHg1NjA5MjM2Y2UxNzgs
+IHhmc19kaXIzX2Jsb2NrIGJsb2NrIDB4ZTEwMWYzMmY4LzB4MTAwMApiYWQgZGlyZWN0b3J5
+IGJsb2NrIG1hZ2ljICMgMHgxODU5ZGMwNiBpbiBibG9jayAwIGZvciBkaXJlY3RvcnkgaW5v
+ZGUgNjQ0MjY1NTc5NzcKYmFkIGJlc3RmcmVlIHRhYmxlIGluIGJsb2NrIDAgaW4gZGlyZWN0
+b3J5IGlub2RlIDY0NDI2NTU3OTc3OiByZXBhaXJpbmcgdGFibGUKICAgICAgICAtIGFnbm8g
+PSAxNgogICAgICAgIC0gYWdubyA9IDMxCiAgICAgICAgLSBhZ25vID0gMQogICAgICAgIC0g
+YWdubyA9IDE3CiAgICAgICAgLSBhZ25vID0gMzIKICAgICAgICAtIGFnbm8gPSAyCk1ldGFk
+YXRhIENSQyBlcnJvciBkZXRlY3RlZCBhdCAweDU2MDkyMzZjZTE3OCwgeGZzX2RpcjNfYmxv
+Y2sgYmxvY2sgMHg3ZjgwMDdiZjgvMHgxMDAwCmJhZCBkaXJlY3RvcnkgYmxvY2sgbWFnaWMg
+IyAweDkyYjM2YzkyIGluIGJsb2NrIDAgZm9yIGRpcmVjdG9yeSBpbm9kZSAzNjUwNzI1NDQw
+MApiYWQgYmVzdGZyZWUgdGFibGUgaW4gYmxvY2sgMCBpbiBkaXJlY3RvcnkgaW5vZGUgMzY1
+MDcyNTQ0MDA6IHJlcGFpcmluZyB0YWJsZQogICAgICAgIC0gYWdubyA9IDE4CiAgICAgICAg
+LSBhZ25vID0gMzMKTWV0YWRhdGEgQ1JDIGVycm9yIGRldGVjdGVkIGF0IDB4NTYwOTIzNmNl
+MTc4LCB4ZnNfZGlyM19ibG9jayBibG9jayAweGY3N2ZmZjIyOC8weDEwMDAKYmFkIGRpcmVj
+dG9yeSBibG9jayBtYWdpYyAjIDB4ZDlhYzRjYTUgaW4gYmxvY2sgMCBmb3IgZGlyZWN0b3J5
+IGlub2RlIDcwODY2OTYyODIzCmJhZCBiZXN0ZnJlZSB0YWJsZSBpbiBibG9jayAwIGluIGRp
+cmVjdG9yeSBpbm9kZSA3MDg2Njk2MjgyMzogcmVwYWlyaW5nIHRhYmxlCiAgICAgICAgLSBh
+Z25vID0gMwogICAgICAgIC0gYWdubyA9IDM0CiAgICAgICAgLSBhZ25vID0gMTkKTWV0YWRh
+dGEgQ1JDIGVycm9yIGRldGVjdGVkIGF0IDB4NTYwOTIzNmNlMTc4LCB4ZnNfZGlyM19ibG9j
+ayBibG9jayAweGZmMDAzMzJlMC8weDEwMDAKYmFkIGRpcmVjdG9yeSBibG9jayBtYWdpYyAj
+IDB4YTAzODcxZWMgaW4gYmxvY2sgMCBmb3IgZGlyZWN0b3J5IGlub2RlIDczMDE0NTg1ODY4
+CmJhZCBiZXN0ZnJlZSB0YWJsZSBpbiBibG9jayAwIGluIGRpcmVjdG9yeSBpbm9kZSA3MzAx
+NDU4NTg2ODogcmVwYWlyaW5nIHRhYmxlCiAgICAgICAgLSBhZ25vID0gNAogICAgICAgIC0g
+YWdubyA9IDM1CiAgICAgICAgLSBhZ25vID0gMjAKTWV0YWRhdGEgQ1JDIGVycm9yIGRldGVj
+dGVkIGF0IDB4NTYwOTIzNmNlMTc4LCB4ZnNfZGlyM19ibG9jayBibG9jayAweDk2MDAwMDY0
+MC8weDEwMDAKYmFkIGRpcmVjdG9yeSBibG9jayBtYWdpYyAjIDB4MTBhNWJmOWMgaW4gYmxv
+Y2sgMCBmb3IgZGlyZWN0b3J5IGlub2RlIDQyOTQ5Njc1NzE1CmJhZCBiZXN0ZnJlZSB0YWJs
+ZSBpbiBibG9jayAwIGluIGRpcmVjdG9yeSBpbm9kZSA0Mjk0OTY3NTcxNTogcmVwYWlyaW5n
+IHRhYmxlCiAgICAgICAgLSBhZ25vID0gNQogICAgICAgIC0gYWdubyA9IDM2CiAgICAgICAg
+LSBhZ25vID0gMjEKICAgICAgICAtIGFnbm8gPSAzNwogICAgICAgIC0gYWdubyA9IDYKICAg
+ICAgICAtIGFnbm8gPSAyMgogICAgICAgIC0gYWdubyA9IDcKICAgICAgICAtIGFnbm8gPSAy
+MwogICAgICAgIC0gYWdubyA9IDgKICAgICAgICAtIGFnbm8gPSAyNAogICAgICAgIC0gYWdu
+byA9IDkKTWV0YWRhdGEgQ1JDIGVycm9yIGRldGVjdGVkIGF0IDB4NTYwOTIzNmNlMTc4LCB4
+ZnNfZGlyM19ibG9jayBibG9jayAweGI0MDAyZDRmMC8weDEwMDAKYmFkIGRpcmVjdG9yeSBi
+bG9jayBtYWdpYyAjIDB4OTIxNGQwNTUgaW4gYmxvY2sgMCBmb3IgZGlyZWN0b3J5IGlub2Rl
+IDUxNTM5Nzk1ODcyCmJhZCBiZXN0ZnJlZSB0YWJsZSBpbiBibG9jayAwIGluIGRpcmVjdG9y
+eSBpbm9kZSA1MTUzOTc5NTg3MjogcmVwYWlyaW5nIHRhYmxlCiAgICAgICAgLSBhZ25vID0g
+MjUKICAgICAgICAtIGFnbm8gPSAxMAogICAgICAgIC0gYWdubyA9IDI2CiAgICAgICAgLSBh
+Z25vID0gMTEKICAgICAgICAtIGFnbm8gPSAyNwpNZXRhZGF0YSBDUkMgZXJyb3IgZGV0ZWN0
+ZWQgYXQgMHg1NjA5MjM2Y2UxNzgsIHhmc19kaXIzX2Jsb2NrIGJsb2NrIDB4Y2E3ZmZmOTc4
+LzB4MTAwMApiYWQgZGlyZWN0b3J5IGJsb2NrIG1hZ2ljICMgMHg1YjU4MzQ2YyBpbiBibG9j
+ayAwIGZvciBkaXJlY3RvcnkgaW5vZGUgNTc5ODIwNTkxNjIKYmFkIGJlc3RmcmVlIHRhYmxl
+IGluIGJsb2NrIDAgaW4gZGlyZWN0b3J5IGlub2RlIDU3OTgyMDU5MTYyOiByZXBhaXJpbmcg
+dGFibGUKICAgICAgICAtIGFnbm8gPSAxMgogICAgICAgIC0gYWdubyA9IDI4CiAgICAgICAg
+LSBhZ25vID0gMTMKICAgICAgICAtIGFnbm8gPSAyOQogICAgICAgIC0gYWdubyA9IDE0CiAg
+ICAgICAgLSAyMDozMjoyNjogcHJvY2VzcyBrbm93biBpbm9kZXMgYW5kIGlub2RlIGRpc2Nv
+dmVyeSAtIDMyNjc4NjU2IG9mIDMyNjc4NjU2IGlub2RlcyBkb25lCiAgICAgICAgLSBwcm9j
+ZXNzIG5ld2x5IGRpc2NvdmVyZWQgaW5vZGVzLi4uCiAgICAgICAgLSAyMDozMjoyNjogcHJv
+Y2VzcyBuZXdseSBkaXNjb3ZlcmVkIGlub2RlcyAtIDM4IG9mIDM4IGFsbG9jYXRpb24gZ3Jv
+dXBzIGRvbmUKUGhhc2UgNCAtIGNoZWNrIGZvciBkdXBsaWNhdGUgYmxvY2tzLi4uCiAgICAg
+ICAgLSBzZXR0aW5nIHVwIGR1cGxpY2F0ZSBleHRlbnQgbGlzdC4uLgogICAgICAgIC0gMjA6
+MzI6Mjc6IHNldHRpbmcgdXAgZHVwbGljYXRlIGV4dGVudCBsaXN0IC0gMzggb2YgMzggYWxs
+b2NhdGlvbiBncm91cHMgZG9uZQogICAgICAgIC0gY2hlY2sgZm9yIGlub2RlcyBjbGFpbWlu
+ZyBkdXBsaWNhdGUgYmxvY2tzLi4uCiAgICAgICAgLSBhZ25vID0gMAogICAgICAgIC0gYWdu
+byA9IDIKICAgICAgICAtIGFnbm8gPSA0CiAgICAgICAgLSBhZ25vID0gNwogICAgICAgIC0g
+YWdubyA9IDEwCiAgICAgICAgLSBhZ25vID0gMwogICAgICAgIC0gYWdubyA9IDExCiAgICAg
+ICAgLSBhZ25vID0gOAogICAgICAgIC0gYWdubyA9IDEzCiAgICAgICAgLSBhZ25vID0gMjQK
+ICAgICAgICAtIGFnbm8gPSAxNwogICAgICAgIC0gYWdubyA9IDEKICAgICAgICAtIGFnbm8g
+PSA5CiAgICAgICAgLSBhZ25vID0gMTQKICAgICAgICAtIGFnbm8gPSAyMgogICAgICAgIC0g
+YWdubyA9IDM1CiAgICAgICAgLSBhZ25vID0gMzAKICAgICAgICAtIGFnbm8gPSAxMgogICAg
+ICAgIC0gYWdubyA9IDI5CiAgICAgICAgLSBhZ25vID0gMjcKICAgICAgICAtIGFnbm8gPSAy
+NQogICAgICAgIC0gYWdubyA9IDI4CiAgICAgICAgLSBhZ25vID0gMjYKICAgICAgICAtIGFn
+bm8gPSAyMwogICAgICAgIC0gYWdubyA9IDMyCiAgICAgICAgLSBhZ25vID0gMjAKYmFkIGRp
+cmVjdG9yeSBibG9jayBtYWdpYyAjIDB4NWI1ODM0NmMgaW4gYmxvY2sgMCBmb3IgZGlyZWN0
+b3J5IGlub2RlIDU3OTgyMDU5MTYyCiAgICAgICAgLSBhZ25vID0gMzYKYmFkIGJlc3RmcmVl
+IHRhYmxlIGluIGJsb2NrIDAgaW4gZGlyZWN0b3J5IGlub2RlIDU3OTgyMDU5MTYyOiByZXBh
+aXJpbmcgdGFibGUKICAgICAgICAtIGFnbm8gPSA2CiAgICAgICAgLSBhZ25vID0gMzMKICAg
+ICAgICAtIGFnbm8gPSAzNAogICAgICAgIC0gYWdubyA9IDIxCiAgICAgICAgLSBhZ25vID0g
+MzcKICAgICAgICAtIGFnbm8gPSA1CiAgICAgICAgLSBhZ25vID0gMTkKICAgICAgICAtIGFn
+bm8gPSAxNgpiYWQgZGlyZWN0b3J5IGJsb2NrIG1hZ2ljICMgMHgxMGE1YmY5YyBpbiBibG9j
+ayAwIGZvciBkaXJlY3RvcnkgaW5vZGUgNDI5NDk2NzU3MTUKYmFkIGJlc3RmcmVlIHRhYmxl
+IGluIGJsb2NrIDAgaW4gZGlyZWN0b3J5IGlub2RlIDQyOTQ5Njc1NzE1OiByZXBhaXJpbmcg
+dGFibGUKICAgICAgICAtIGFnbm8gPSAzMQogICAgICAgIC0gYWdubyA9IDE1CiAgICAgICAg
+LSBhZ25vID0gMTgKYmFkIGRpcmVjdG9yeSBibG9jayBtYWdpYyAjIDB4ZDlhYzRjYTUgaW4g
+YmxvY2sgMCBmb3IgZGlyZWN0b3J5IGlub2RlIDcwODY2OTYyODIzCmJhZCBiZXN0ZnJlZSB0
+YWJsZSBpbiBibG9jayAwIGluIGRpcmVjdG9yeSBpbm9kZSA3MDg2Njk2MjgyMzogcmVwYWly
+aW5nIHRhYmxlCmJhZCBkaXJlY3RvcnkgYmxvY2sgbWFnaWMgIyAweDkyYjM2YzkyIGluIGJs
+b2NrIDAgZm9yIGRpcmVjdG9yeSBpbm9kZSAzNjUwNzI1NDQwMApiYWQgYmVzdGZyZWUgdGFi
+bGUgaW4gYmxvY2sgMCBpbiBkaXJlY3RvcnkgaW5vZGUgMzY1MDcyNTQ0MDA6IHJlcGFpcmlu
+ZyB0YWJsZQpiYWQgZGlyZWN0b3J5IGJsb2NrIG1hZ2ljICMgMHg5MjE0ZDA1NSBpbiBibG9j
+ayAwIGZvciBkaXJlY3RvcnkgaW5vZGUgNTE1Mzk3OTU4NzIKYmFkIGJlc3RmcmVlIHRhYmxl
+IGluIGJsb2NrIDAgaW4gZGlyZWN0b3J5IGlub2RlIDUxNTM5Nzk1ODcyOiByZXBhaXJpbmcg
+dGFibGUKYmFkIGRpcmVjdG9yeSBibG9jayBtYWdpYyAjIDB4YTAzODcxZWMgaW4gYmxvY2sg
+MCBmb3IgZGlyZWN0b3J5IGlub2RlIDczMDE0NTg1ODY4CmJhZCBiZXN0ZnJlZSB0YWJsZSBp
+biBibG9jayAwIGluIGRpcmVjdG9yeSBpbm9kZSA3MzAxNDU4NTg2ODogcmVwYWlyaW5nIHRh
+YmxlCmJhZCBkaXJlY3RvcnkgYmxvY2sgbWFnaWMgIyAweDE4NTlkYzA2IGluIGJsb2NrIDAg
+Zm9yIGRpcmVjdG9yeSBpbm9kZSA2NDQyNjU1Nzk3NwpiYWQgYmVzdGZyZWUgdGFibGUgaW4g
+YmxvY2sgMCBpbiBkaXJlY3RvcnkgaW5vZGUgNjQ0MjY1NTc5Nzc6IHJlcGFpcmluZyB0YWJs
+ZQogICAgICAgIC0gMjA6MzI6MzU6IGNoZWNrIGZvciBpbm9kZXMgY2xhaW1pbmcgZHVwbGlj
+YXRlIGJsb2NrcyAtIDMyNjc4NjU2IG9mIDMyNjc4NjU2IGlub2RlcyBkb25lClBoYXNlIDUg
+LSByZWJ1aWxkIEFHIGhlYWRlcnMgYW5kIHRyZWVzLi4uCiAgICAgICAgLSAyMDozMjozNzog
+cmVidWlsZCBBRyBoZWFkZXJzIGFuZCB0cmVlcyAtIDM4IG9mIDM4IGFsbG9jYXRpb24gZ3Jv
+dXBzIGRvbmUKICAgICAgICAtIHJlc2V0IHN1cGVyYmxvY2suLi4KUGhhc2UgNiAtIGNoZWNr
+IGlub2RlIGNvbm5lY3Rpdml0eS4uLgogICAgICAgIC0gcmVzZXR0aW5nIGNvbnRlbnRzIG9m
+IHJlYWx0aW1lIGJpdG1hcCBhbmQgc3VtbWFyeSBpbm9kZXMKICAgICAgICAtIHRyYXZlcnNp
+bmcgZmlsZXN5c3RlbSAuLi4KYmFkIGRpcmVjdG9yeSBibG9jayBtYWdpYyAjIDB4MTg1OWRj
+MDYgZm9yIGRpcmVjdG9yeSBpbm9kZSA2NDQyNjU1Nzk3NyBibG9jayAwOiBmaXhpbmcgbWFn
+aWMgIyB0byAweDU4NDQ0MjMzCmJhZCBkaXJlY3RvcnkgYmxvY2sgbWFnaWMgIyAweDkyYjM2
+YzkyIGZvciBkaXJlY3RvcnkgaW5vZGUgMzY1MDcyNTQ0MDAgYmxvY2sgMDogZml4aW5nIG1h
+Z2ljICMgdG8gMHg1ODQ0NDIzMwpiYWQgZGlyZWN0b3J5IGJsb2NrIG1hZ2ljICMgMHhkOWFj
+NGNhNSBmb3IgZGlyZWN0b3J5IGlub2RlIDcwODY2OTYyODIzIGJsb2NrIDA6IGZpeGluZyBt
+YWdpYyAjIHRvIDB4NTg0NDQyMzMKYmFkIGRpcmVjdG9yeSBibG9jayBtYWdpYyAjIDB4YTAz
+ODcxZWMgZm9yIGRpcmVjdG9yeSBpbm9kZSA3MzAxNDU4NTg2OCBibG9jayAwOiBmaXhpbmcg
+bWFnaWMgIyB0byAweDU4NDQ0MjMzCmJhZCBkaXJlY3RvcnkgYmxvY2sgbWFnaWMgIyAweDEw
+YTViZjljIGZvciBkaXJlY3RvcnkgaW5vZGUgNDI5NDk2NzU3MTUgYmxvY2sgMDogZml4aW5n
+IG1hZ2ljICMgdG8gMHg1ODQ0NDIzMwpiYWQgZGlyZWN0b3J5IGJsb2NrIG1hZ2ljICMgMHg5
+MjE0ZDA1NSBmb3IgZGlyZWN0b3J5IGlub2RlIDUxNTM5Nzk1ODcyIGJsb2NrIDA6IGZpeGlu
+ZyBtYWdpYyAjIHRvIDB4NTg0NDQyMzMKYmFkIGRpcmVjdG9yeSBibG9jayBtYWdpYyAjIDB4
+NWI1ODM0NmMgZm9yIGRpcmVjdG9yeSBpbm9kZSA1Nzk4MjA1OTE2MiBibG9jayAwOiBmaXhp
+bmcgbWFnaWMgIyB0byAweDU4NDQ0MjMzCiAgICAgICAgLSB0cmF2ZXJzYWwgZmluaXNoZWQg
+Li4uCiAgICAgICAgLSBtb3ZpbmcgZGlzY29ubmVjdGVkIGlub2RlcyB0byBsb3N0K2ZvdW5k
+IC4uLgpQaGFzZSA3IC0gdmVyaWZ5IGFuZCBjb3JyZWN0IGxpbmsgY291bnRzLi4uCiAgICAg
+ICAgLSAyMDozOTowNjogdmVyaWZ5IGFuZCBjb3JyZWN0IGxpbmsgY291bnRzIC0gMzggb2Yg
+MzggYWxsb2NhdGlvbiBncm91cHMgZG9uZQpNZXRhZGF0YSBjb3JydXB0aW9uIGRldGVjdGVk
+IGF0IDB4NTYwOTIzNmNkY2M4LCB4ZnNfZGlyM19ibG9jayBibG9jayAweGZmMDAzMzJlMC8w
+eDEwMDAKbGlieGZzX2J3cml0ZTogd3JpdGUgdmVyaWZpZXIgZmFpbGVkIG9uIHhmc19kaXIz
+X2Jsb2NrIGJubyAweGZmMDAzMzJlMC8weDgKTWV0YWRhdGEgY29ycnVwdGlvbiBkZXRlY3Rl
+ZCBhdCAweDU2MDkyMzZjZGNjOCwgeGZzX2RpcjNfYmxvY2sgYmxvY2sgMHhmNzdmZmYyMjgv
+MHgxMDAwCmxpYnhmc19id3JpdGU6IHdyaXRlIHZlcmlmaWVyIGZhaWxlZCBvbiB4ZnNfZGly
+M19ibG9jayBibm8gMHhmNzdmZmYyMjgvMHg4Ck1ldGFkYXRhIGNvcnJ1cHRpb24gZGV0ZWN0
+ZWQgYXQgMHg1NjA5MjM2Y2RjYzgsIHhmc19kaXIzX2Jsb2NrIGJsb2NrIDB4N2Y4MDA3YmY4
+LzB4MTAwMApsaWJ4ZnNfYndyaXRlOiB3cml0ZSB2ZXJpZmllciBmYWlsZWQgb24geGZzX2Rp
+cjNfYmxvY2sgYm5vIDB4N2Y4MDA3YmY4LzB4OApNZXRhZGF0YSBjb3JydXB0aW9uIGRldGVj
+dGVkIGF0IDB4NTYwOTIzNmNkY2M4LCB4ZnNfZGlyM19ibG9jayBibG9jayAweGUxMDFmMzJm
+OC8weDEwMDAKbGlieGZzX2J3cml0ZTogd3JpdGUgdmVyaWZpZXIgZmFpbGVkIG9uIHhmc19k
+aXIzX2Jsb2NrIGJubyAweGUxMDFmMzJmOC8weDgKTWV0YWRhdGEgY29ycnVwdGlvbiBkZXRl
+Y3RlZCBhdCAweDU2MDkyMzZjZGNjOCwgeGZzX2RpcjNfYmxvY2sgYmxvY2sgMHg5NjAwMDA2
+NDAvMHgxMDAwCmxpYnhmc19id3JpdGU6IHdyaXRlIHZlcmlmaWVyIGZhaWxlZCBvbiB4ZnNf
+ZGlyM19ibG9jayBibm8gMHg5NjAwMDA2NDAvMHg4Ck1ldGFkYXRhIGNvcnJ1cHRpb24gZGV0
+ZWN0ZWQgYXQgMHg1NjA5MjM2Y2RjYzgsIHhmc19kaXIzX2Jsb2NrIGJsb2NrIDB4Y2E3ZmZm
+OTc4LzB4MTAwMApsaWJ4ZnNfYndyaXRlOiB3cml0ZSB2ZXJpZmllciBmYWlsZWQgb24geGZz
+X2RpcjNfYmxvY2sgYm5vIDB4Y2E3ZmZmOTc4LzB4OApNZXRhZGF0YSBjb3JydXB0aW9uIGRl
+dGVjdGVkIGF0IDB4NTYwOTIzNmNkY2M4LCB4ZnNfZGlyM19ibG9jayBibG9jayAweGI0MDAy
+ZDRmMC8weDEwMDAKbGlieGZzX2J3cml0ZTogd3JpdGUgdmVyaWZpZXIgZmFpbGVkIG9uIHhm
+c19kaXIzX2Jsb2NrIGJubyAweGI0MDAyZDRmMC8weDgKeGZzX3JlcGFpcjogUmVsZWFzaW5n
+IGRpcnR5IGJ1ZmZlciB0byBmcmVlIGxpc3QhCnhmc19yZXBhaXI6IFJlbGVhc2luZyBkaXJ0
+eSBidWZmZXIgdG8gZnJlZSBsaXN0IQp4ZnNfcmVwYWlyOiBSZWxlYXNpbmcgZGlydHkgYnVm
+ZmVyIHRvIGZyZWUgbGlzdCEKeGZzX3JlcGFpcjogUmVsZWFzaW5nIGRpcnR5IGJ1ZmZlciB0
+byBmcmVlIGxpc3QhCnhmc19yZXBhaXI6IFJlbGVhc2luZyBkaXJ0eSBidWZmZXIgdG8gZnJl
+ZSBsaXN0IQp4ZnNfcmVwYWlyOiBSZWxlYXNpbmcgZGlydHkgYnVmZmVyIHRvIGZyZWUgbGlz
+dCEKeGZzX3JlcGFpcjogUmVsZWFzaW5nIGRpcnR5IGJ1ZmZlciB0byBmcmVlIGxpc3QhCnhm
+c19yZXBhaXI6IFJlZnVzaW5nIHRvIHdyaXRlIGEgY29ycnVwdCBidWZmZXIgdG8gdGhlIGRh
+dGEgZGV2aWNlIQp4ZnNfcmVwYWlyOiBMb3N0IGEgd3JpdGUgdG8gdGhlIGRhdGEgZGV2aWNl
+IQoKZmF0YWwgZXJyb3IgLS0gRmlsZSBzeXN0ZW0gbWV0YWRhdGEgd3JpdGVvdXQgZmFpbGVk
+LCBlcnI9MTE3LiAgUmUtcnVuIHhmc19yZXBhaXIuCg==
+
+--------------ZdbXxuoXRh1JX11zRW7EmN2V--
