@@ -2,190 +2,105 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39BC6C4321E
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Nov 2022 21:34:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54A90C4321E
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Nov 2022 21:38:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236267AbiK2Ven (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Nov 2022 16:34:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56574 "EHLO
+        id S236152AbiK2Vit (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Nov 2022 16:38:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58524 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229512AbiK2Vem (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2022 16:34:42 -0500
-Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20CF45C75D
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 13:34:41 -0800 (PST)
-Received: by mail-pj1-x1032.google.com with SMTP id u15-20020a17090a3fcf00b002191825cf02so3491pjm.2
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 13:34:41 -0800 (PST)
+        with ESMTP id S236345AbiK2Vir (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2022 16:38:47 -0500
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9430B5F866
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 13:38:46 -0800 (PST)
+Received: by mail-pj1-x1034.google.com with SMTP id mv18so13949806pjb.0
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 13:38:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=w2LoJHDH0WJgsHqf4eErgeVgUuUlLkPkgirXXlHMuqM=;
-        b=HIPLIiyooIwuVm5/AX/B92CpxNms6IYc26s63XA+L6uJwV4J/DrysRPuxqOA7vhG6H
-         RTB91Q5XnKTZG1D8Z/fsBm5U+vpx/SolvQkOacbphPRTozocyBgCszjerdgm/xDSYHPN
-         CgekKi/0+2ai0RdwnPZ6lGYeWTbV/BbK8TsbGB0nJ/NxdKpuvGu/GvAoDSV19fywYKAl
-         pu7dkttFeE4St7HQKtbTOJT0HhURmjWHAHc7FQeguom0+di6nMXEXFbcXnKHoY0bKASG
-         qioP+DbReKzifbBNu3NapZIv8Etr28u38gTNXBCmlCa5O4TxcThka8VpbOVuV9s1wcYy
-         wuOQ==
+        bh=A79DnCxs1Un+TibUL269HZBRFGRYvo+dk2qAobdfpBs=;
+        b=CHWxaSNLwt9ak6ppVlbOhtzH7/JLWno6x2Yth69bZ/Zqa6A1e6gdAbTjvClPi7iXl3
+         O6srYFv640uvrj6OtIAv8V28UGo2jWXkLi9v86QYLJaqQSseDBMmlFPT1KkSc1/IV4lE
+         OE/7JdgUAhnVp3ivykYGyjsPb8f7cVUZqDxQ3agB7FaAgYisnzBWn+dkcS/UUYo2EuVA
+         tMOG1I7Mx0iLP86Jf2SX7A1pf91RSwB9jwT3KooZLl2fHoItilX/G4A1/lNqq6hpTUnJ
+         FmKdCrUeetiWYy07jJOBvBMScOhvYCcf5gjwNups7SDFRCH2aA5b1UafBA1Kv7lw7mFX
+         rK7g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=w2LoJHDH0WJgsHqf4eErgeVgUuUlLkPkgirXXlHMuqM=;
-        b=Hbw+O/0mQ/SfHrEJ+lHSd7AR7OOxddIsPNKFtb0ycBntVR1W2z2nbd9UXT325v12lq
-         Qw+0hq7xUGFK3m4iFPc4kD5LWYIU3QYQ6w5Za0Xq9TmfCWC7NALBsvMG8hLe3eqFEfhz
-         n8y/1r1mjlMgbfDkcjMWCyudvLLQQmcJvy1OEs+RS/DXmUfDVpvabZXJVppI+6IWxqiE
-         BY2P8eK5SYM4gzBnAVuTLq9eAKpiZCj7/4mb7TJtfVyE1gG58lRgC4in9MH7O0P3BDnn
-         ImKqBYJA9+b/9SkMssDDTyiZOqNjwooCRViiF7zhKCxsXzD4V+tfVVKXyJPQ2Ygbo6Sz
-         GRag==
-X-Gm-Message-State: ANoB5plLQTTcdFRFxgyYqNBJfzsHMJsuMsMLb4jszmQKSl5JSGoMDt1w
-        rdWcFshs4frVogSs07LjmcR1BQ==
-X-Google-Smtp-Source: AA0mqf44eO0bIdqIfePC6giT8cKIZJiU2hABpbacDBWu+ZgN9OLtqEdIS+YmG0qK6S8oq3XANwuDiQ==
-X-Received: by 2002:a17:902:9695:b0:189:93d4:db5 with SMTP id n21-20020a170902969500b0018993d40db5mr8374065plp.44.1669757680571;
-        Tue, 29 Nov 2022 13:34:40 -0800 (PST)
+        bh=A79DnCxs1Un+TibUL269HZBRFGRYvo+dk2qAobdfpBs=;
+        b=Zo1XI8v6aBI/lihlBlAzQfjKuzs1/jJ6pU4vqlUOXWX1XNg8szKdZdZawJBWtQTV4d
+         nKdGfUIn5GrO7ao/qtXklbvmNYRuLZ0wRW1feMiXVxH6hGqigXSaVFf4sRNXEo+dNvTE
+         PQiZ0v5RRm3r9+InU+hZOdEo2dDPj2ibubicuYYfzBNK4M3A2pITRbk8RE6Db1+51iVe
+         nV33He9w71zw/wezV20D2pTygjC1OBVmBAhCtkEgVadJm7d3VY6XYc4lT9wopAVRmvek
+         XC5Dy7/3L3Fm94IyCu701K4u+QG/zl5NghHpt58+MIYbEX2QNojkyvaswbSx7c59nz8P
+         SgLQ==
+X-Gm-Message-State: ANoB5pkVn7DO60VWRsdli+xlGMfztJXiSyo0GKvP1pNjqcmnub8KaC/x
+        Z1Wi9sunWJ5j3uGb0gai/lPamQ==
+X-Google-Smtp-Source: AA0mqf6Wt8nndKP6mgNbx4kXEHPKAg8ECdWNY2AsWyWnOmMnG4oIOHlWW8u82KUu6mNiqyZKmN8MdA==
+X-Received: by 2002:a17:902:e849:b0:17a:aca0:e295 with SMTP id t9-20020a170902e84900b0017aaca0e295mr52405648plg.3.1669757926084;
+        Tue, 29 Nov 2022 13:38:46 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-65-106.pa.vic.optusnet.com.au. [49.186.65.106])
-        by smtp.gmail.com with ESMTPSA id u11-20020a170902bf4b00b0017f7c4e260fsm11377534pls.150.2022.11.29.13.34.40
+        by smtp.gmail.com with ESMTPSA id 23-20020a630417000000b004393f60db36sm16638pge.32.2022.11.29.13.38.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Nov 2022 13:34:40 -0800 (PST)
+        Tue, 29 Nov 2022 13:38:45 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1p08FQ-002ZzR-Uv; Wed, 30 Nov 2022 08:34:37 +1100
-Date:   Wed, 30 Nov 2022 08:34:36 +1100
+        id 1p08JO-002a23-AY; Wed, 30 Nov 2022 08:38:42 +1100
+Date:   Wed, 30 Nov 2022 08:38:42 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Shawn <neutronsharc@gmail.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: Do I have to fsync after aio_write finishes (with fallocate
- preallocation) ?
-Message-ID: <20221129213436.GG3600936@dread.disaster.area>
-References: <CAB-bdyQVJdTcaaDLWmm+rsW_U6FLF3qCTqLEKLkM6hOgk09uZQ@mail.gmail.com>
+Subject: Re: [PATCH v2 4/3] xfs: attach dquots to inode before reading
+ data/cow fork mappings
+Message-ID: <20221129213842.GH3600936@dread.disaster.area>
+References: <166930915825.2061853.2470510849612284907.stgit@magnolia>
+ <Y4OuLTwPVdiHMBGi@magnolia>
+ <Y4Z0FH0RORXeV17g@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAB-bdyQVJdTcaaDLWmm+rsW_U6FLF3qCTqLEKLkM6hOgk09uZQ@mail.gmail.com>
+In-Reply-To: <Y4Z0FH0RORXeV17g@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 29, 2022 at 11:20:05AM -0800, Shawn wrote:
-> Hello all,
-> I implemented a write workload by sequentially appending to the file
-> end using libaio aio_write in O_DIRECT mode (with proper offset and
-> buffer address alignment).  When I reach a 1MB boundary I call
-> fallocate() to extend the file.
+On Tue, Nov 29, 2022 at 01:05:24PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> I've been running near-continuous integration testing of online fsck,
+> and I've noticed that once a day, one of the ARM VMs will fail the test
+> with out of order records in the data fork.
+> 
+> xfs/804 races fsstress with online scrub (aka scan but do not change
+> anything), so I think this might be a bug in the core xfs code.  This
+> also only seems to trigger if one runs the test for more than ~6 minutes
+> via TIME_FACTOR=13 or something.
+> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/tree/tests/xfs/804?h=djwong-wtf
+> 
+> I added a debugging patch to the kernel to check the data fork extents
+> after taking the ILOCK, before dropping ILOCK, and before and after each
+> bmapping operation.  So far I've narrowed it down to the delalloc code
+> inserting a record in the wrong place in the iext tree:
+.....
+> 
+> So.  Fix this by moving the dqattach_locked call up before we take the
+> ILOCK, like all the other callers in that file.
+> 
+> Fixes: a526c85c2236 ("xfs: move xfs_file_iomap_begin_delay around") # goes further back than this
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> ---
+> v2: just do a regular dqattach, and tweak the commit message to make it
+> clearer if it's dave or me talking
 
-Ah, yet another fallocate anti-pattern.
+All looks good, thanks for doing the updates :)
 
-Firstly, friends don't let friends use fallocate() with AIO+DIO.
-
-fallocate() serialises all IO to that file - it waits for existing
-IO to complete, and prevents new IO from being issued until the
-the fallocate() operation completes. It is a completely synchronous
-operation and it does not play well with non-blocking IO paths (AIO
-or io_uring). Put simply: fallocate() is an IO performance and
-scalability killer.
-
-If you need to *allocate* in aligned 1MB chunks, then use extent
-size hints to tell the filesystem to allocate 1MB aligned chunks
-when it does IO. This does not serialise all IO to the file like
-fallocate does, it acheives exactly the same result as using
-fallocate to extend the file, yet the application doesn't need to
-know anything about controlling file layout.
-
-Further, using DIO write()s call to extend the file rather than
-fallocate() or ftruncate() also means that there will always be data
-right up to the end of the file.  That's because XFS will not update
-the file size on extension until the IO has completed, and making
-the file size extension persistent (i.e. journalling it) doesn't
-happen until the data has been made persistent via device cache
-flushes.
-
-IOWs, if the file has been extended by a write IO, then XFS has
-*guaranteed* that the data written to thatextended region has been
-persisted to disk before the size extension is persisted.
-
-> I need to protect the write from various failures such as disk unplug
-> / power failure.  The bottom line is,  once I ack a write-complete,
-> the user must be able to read it back later after a disk/power failure
-> and recovery.
-
-Fallocate() does not provide data integrity guarantees. The
-application needs to use O_DSYNC/RWF_DSYNC IO controls to tell the
-filesystem to provide data integrity guarnatees.
-
-> In my understanding,  fallocate() will preallocate disk space for the
-> file,  and I can call fsync to make sure the file metadata about this
-> new space is persisted when fallocate returns.
-
-Yes, but as it just contains zeros so if it is missing after a
-crash, what does it matter? It just looks like the file wasn't
-extended, and the application has to be able to recover from that
-situation already, yes?
-
-> Once aio_write returns
-> the data is in the disk.  So it seems I don't need fsync after
-> aio-write completion, because (1) the data is in disk,  and (2) the
-> file metadata to address the disk blocks is in disk.
-
-Wrong. Direct IO does not guarantee persistence when the
-write()/aio_write() completes. Even with direct IO, the data can be
-held in volatile caches in the storage stack and the data is not
-guaranteed to be persistent until directed by the application to be
-made persistent.
-
-> On the other hand, it seems XFS always does a delayed allocation
-> which might break my assumption that file=>disk space mapping is
-> persisted by fallocate.
-
-Wrong on many levels. The first is the same as above - fallocate()
-does not provide any data persistence guarantees.
-
-Secondly, DIO writes do not use delayed allocation because they
-can't - we have to issue the IO immediately, so there's nothign that
-can be delayed. IOWs, delayed allocation is only done for buffered
-IO. This is true for delayed allocation on both ext4 and btrfs as
-well.
-
-Further, on XFS buffered writes into preallocated space from
-fallocate() do not use delayed allocation either - the space is
-already allocated, so there's nothing to allocate and hence nothing
-to delay!
-
-To drive the point home even further: if you use extent size
-hints with buffered writes, then this also turns off delayed
-allocation and instead uses immediate allocation just like DIO
-writes to preallocate the aligned extent around the range being
-written.
-
-Lastly, if you write an fallocate() based algorithm that works
-"well" on XFS, there's every chance it's going to absolutely suck on
-a different filesystem (e.g. btrfs) because different filesystems
-have very different allocation policies and interact with
-preallocation very differently.
-
-IOWs, there's a major step between knowing what concepts like
-delayed allocation and preallocation do versus understanding the
-complex policies that filesystems weave around these concepts to
-make general purpose workloads perform optimally in most
-situations....
-
-> I can improve the data-in-disk format to carry proper header/footer to
-> detect a broken write when scanning the file after a disk/power
-> failure.
->
-> Given all those above,  do I still need a fsync() after aio_write
-> completion in XFS to protect data persistence?
-
-Regardless of the filesystem, applications *always* need to use
-fsync/fdatasync/O_SYNC/O_DSYNC/RWF_DSYNC to guarantee data
-persistence. The filesystem doesn't provide any persistence
-guarantees in the absence of these application directives -
-guaranteeing user data integrity is the responsibility of the
-application manipulating the user data, not the filesystem.
-
-Cheers,
-
-Dave.
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
