@@ -2,93 +2,104 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91721C43217
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Nov 2022 01:37:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBA99C4332F
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Nov 2022 02:37:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234663AbiK2Bht (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Nov 2022 20:37:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36084 "EHLO
+        id S234990AbiK2Ch0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Nov 2022 21:37:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41074 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234652AbiK2Bhs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Nov 2022 20:37:48 -0500
-Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 470D76350
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2022 17:37:48 -0800 (PST)
-Received: by mail-pf1-x436.google.com with SMTP id 140so12274909pfz.6
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2022 17:37:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=9hwYJmo88IBZZEvj8mXF/0I11UwksQNJX5xkLBkjDU8=;
-        b=AnfbiLN7xR3/GZjMV0uhgr5gu/e3NfLfkw2rZo1fJDOCFUQOnFY1xapvJmiyFPbFRm
-         St9CEKN4Z/rpnFVdXj4d9N6puN2kKmZuUu1peGzmIgTbGeXF+1f3fI1og4OMEqiImMm0
-         yPe/Yqtj4ckn+cc2IfmKcGd9T0LJyzCEHCSw3IdJzZj5oxUbDTGoUMiby4yy+Y4qpuRK
-         NIxfe7Siz1YNh8vN2sWMHH0IWpXBy4B6BrPlyh+Xs286Je3v8j97XQ3+5CI4kIxlF6TL
-         vhtWyG3r6WGjTyMmUyP+85cbhAbfpVL9BQDdTCMuoqm1BDJvhyPSexeQIXH9raqTv4i7
-         nPCw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=9hwYJmo88IBZZEvj8mXF/0I11UwksQNJX5xkLBkjDU8=;
-        b=fnD/HAd1E3mmgE1IUL+UN8aJERMCzMcx+Fx/uCBO5pu1DhKpEOMlxiRjbon+NAczVX
-         R+ffCv7DuOkngwNVe4sBwETemjdDk+fdDxu2WIFm4pcpVPEKEhBdL4JZNVhW6d8NmtOo
-         TNBGkVpiTGBUhhnXEtVNTKT1rD4fz0tctBlqXrjkZYibxo06yCb+heXY8fUHAuBT0F4A
-         k69CCDHvF8BW247WysfuHyxas8ZNm2/Nb0abB5s2dgn/VVCxAZddGFKK1rQoaoiQH6sS
-         DihxcjvFbqyh8BkQc5H/eqkFo/oPMArdhZl3eypuC8cbYgrrCOoCdFPaODNSY0HseYy0
-         Y+pw==
-X-Gm-Message-State: ANoB5pkjGvveFO00kaHL8sLpO1+g0pyuqv/0cDDL/hPFJcEPCIMtiR6z
-        N4ugU3meSfZMg9tAS5lTenqpyg==
-X-Google-Smtp-Source: AA0mqf52yWf09g6//BZNdN+q+Xm6N2wkCRZ7/Hv1TUwLnAdnsBUZGEQLBDW8mxB0sfBZLP8a7o9XXw==
-X-Received: by 2002:a63:d21:0:b0:438:c2f0:c2cf with SMTP id c33-20020a630d21000000b00438c2f0c2cfmr15236566pgl.116.1669685867794;
-        Mon, 28 Nov 2022 17:37:47 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-65-106.pa.vic.optusnet.com.au. [49.186.65.106])
-        by smtp.gmail.com with ESMTPSA id q100-20020a17090a1b6d00b00218ddc8048bsm106025pjq.34.2022.11.28.17.37.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Nov 2022 17:37:47 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1ozpZA-002FYx-S2; Tue, 29 Nov 2022 12:37:44 +1100
-Date:   Tue, 29 Nov 2022 12:37:44 +1100
-From:   Dave Chinner <david@fromorbit.com>
+        with ESMTP id S235280AbiK2ChK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Nov 2022 21:37:10 -0500
+Received: from out30-44.freemail.mail.aliyun.com (out30-44.freemail.mail.aliyun.com [115.124.30.44])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDD62421B0
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Nov 2022 18:36:59 -0800 (PST)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R721e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045192;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=2;SR=0;TI=SMTPD_---0VVyFTwN_1669689415;
+Received: from B-P7TQMD6M-0146.local(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0VVyFTwN_1669689415)
+          by smtp.aliyun-inc.com;
+          Tue, 29 Nov 2022 10:36:57 +0800
+Date:   Tue, 29 Nov 2022 10:36:55 +0800
+From:   Gao Xiang <hsiangkao@linux.alibaba.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v2 11/9] xfs: add debug knob to slow down write for fun
-Message-ID: <20221129013744.GZ3600936@dread.disaster.area>
-References: <20221123055812.747923-1-david@fromorbit.com>
- <Y4U3dj5qvpKSQuNM@magnolia>
- <Y4VeuqfVBU4/x9aB@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs: invalidate block device page cache during
+ unmount
+Message-ID: <Y4VwR531D5nKO6cA@B-P7TQMD6M-0146.local>
+Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
+        linux-xfs@vger.kernel.org
+References: <166930915825.2061853.2470510849612284907.stgit@magnolia>
+ <166930916399.2061853.16165124824627761814.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <Y4VeuqfVBU4/x9aB@magnolia>
+In-Reply-To: <166930916399.2061853.16165124824627761814.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 28, 2022 at 05:22:02PM -0800, Darrick J. Wong wrote:
+On Thu, Nov 24, 2022 at 08:59:24AM -0800, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Add a new error injection knob so that we can arbitrarily slow down
-> pagecahe writes to test for race conditions and aberrant reclaim
-
-pagecache
-
-> behavior if the writeback mechanisms are slow to issue writeback.  This
-> will enable functional testing for the ifork sequence counters
-> introduced in commit XXXXXXXXXXXX that fixes write racing with reclaim
-> writeback.
+> Every now and then I see fstests failures on aarch64 (64k pages) that
+> trigger on the following sequence:
+> 
+> mkfs.xfs $dev
+> mount $dev $mnt
+> touch $mnt/a
+> umount $mnt
+> xfs_db -c 'path /a' -c 'print' $dev
+> 
+> 99% of the time this succeeds, but every now and then xfs_db cannot find
+> /a and fails.  This turns out to be a race involving udev/blkid, the
+> page cache for the block device, and the xfs_db process.
+> 
+> udev is triggered whenever anyone closes a block device or unmounts it.
+> The default udev rules invoke blkid to read the fs super and create
+> symlinks to the bdev under /dev/disk.  For this, it uses buffered reads
+> through the page cache.
+> 
+> xfs_db also uses buffered reads to examine metadata.  There is no
+> coordination between xfs_db and udev, which means that they can run
+> concurrently.  Note there is no coordination between the kernel and
+> blkid either.
+> 
+> On a system with 64k pages, the page cache can cache the superblock and
+> the root inode (and hence the root dir) with the same 64k page.  If
+> udev spawns blkid after the mkfs and the system is busy enough that it
+> is still running when xfs_db starts up, they'll both read from the same
+> page in the pagecache.
+> 
+> The unmount writes updated inode metadata to disk directly.  The XFS
+> buffer cache does not use the bdev pagecache, nor does it invalidate the
+> pagecache on umount.  If the above scenario occurs, the pagecache no
+> longer reflects what's on disk, xfs_db reads the stale metadata, and
+> fails to find /a.  Most of the time this succeeds because closing a bdev
+> invalidates the page cache, but when processes race, everyone loses.
+> 
+> Fix the problem by invalidating the bdev pagecache after flushing the
+> bdev, so that xfs_db will see up to date metadata.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
-> v2: this time with tracepoints
-> ---
 
-Looks OK to me.
+Reviewed-by: Gao Xiang <hsiangkao@linux.alibaba.com>
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Gao Xiang
+
+> ---
+>  fs/xfs/xfs_buf.c |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index dde346450952..54c774af6e1c 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1945,6 +1945,7 @@ xfs_free_buftarg(
+>  	list_lru_destroy(&btp->bt_lru);
+>  
+>  	blkdev_issue_flush(btp->bt_bdev);
+> +	invalidate_bdev(btp->bt_bdev);
+>  	fs_put_dax(btp->bt_daxdev, btp->bt_mount);
+>  
+>  	kmem_free(btp);
