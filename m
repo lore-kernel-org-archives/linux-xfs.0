@@ -2,117 +2,144 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8EBCC433FE
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Nov 2022 22:43:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E78C9C433FE
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Nov 2022 00:14:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236680AbiK2Wni (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Nov 2022 17:43:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35058 "EHLO
+        id S231664AbiK3AOQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Nov 2022 19:14:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236526AbiK2Wne (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2022 17:43:34 -0500
-Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CAEA5C746
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 14:43:33 -0800 (PST)
-Received: by mail-pf1-x42d.google.com with SMTP id q12so11044357pfn.10
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 14:43:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=l5YE1TXhC/KTHWPoNHJrYw5l7Dfd21t1MY0wJqd1YU4=;
-        b=dwzkOKV8sx0Lc9bcGYwhUDaUsX3bgXrRjI1MXPk8+7Yx+p8j0IQzpRurTUPmwyu8eQ
-         s/Esn0MGuz3KhRDAbsN5gqzMbZWEtI2zph073DKpi8GRih15xCkNhR1HXuKc3naEFcSx
-         GwwxSZ1K0JvI54EMIDZ/qjHPzyDi+u+HEbsm7ogSCZCjIUJDi1YlMdz2WVWwLL2LYgHF
-         dhhoB+BkmOYg1vRZjqpkOWWDBFSb8sNosfOLC4wM/TCqWTxeLoHptNpBwS9OXs6RlBpn
-         XMVMDQbt9UcA9+M0+Ms6Uz8KpJa3EarK2OdUf/W2jy9YLL0IvmkVtbAf/n9HUGWCPiMw
-         q6gg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=l5YE1TXhC/KTHWPoNHJrYw5l7Dfd21t1MY0wJqd1YU4=;
-        b=KPKeLjNEwYXV4Pt9ZNizeb+MoOPyMCWQkSL5P3So6S6T3hZol1hmeIzDBS3vAAcMZK
-         PXAqBgdIeObRyZgVS1jWoymRvFym3DQ2yM2EUd2W3aZ2CBUmwK6+odCisyBKRproJj6i
-         JpqshkJ5V3Kk7HUREdS40ELO5SCI/b2HW4V5uLiB1Rq8EM4p7XJa0K0jzrXRAVPruruM
-         2x8VKUNypzhM9Yr/Nbs5p+teYniMAFBDPmM4l0TX2Fxl/ARYozTCi+pHVl45knHY+TLf
-         TQiBIeZhP9CzjY2lUiSEO2vyfIjAhMoIWCjmbkJZgXZoImy3HHcNPGVZlOzXzLXMZ3I0
-         70YQ==
-X-Gm-Message-State: ANoB5pn7ukvcvFEn+ZL3ghJ+6Y6Idge5cfEh6nRjJRKpD6+R8zBdWvzv
-        WwuL1drcJaLcWD9gDTLarHETTsCPWckFLw==
-X-Google-Smtp-Source: AA0mqf7djbqz4x8Ri4OENImf7Yv3kCskKowX0g6JRgRe3bssRFb9WMbzP4sMhozooPsUmTigJ5SB+g==
-X-Received: by 2002:a63:1a52:0:b0:464:3985:3c63 with SMTP id a18-20020a631a52000000b0046439853c63mr34215986pgm.141.1669761751281;
-        Tue, 29 Nov 2022 14:42:31 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-65-106.pa.vic.optusnet.com.au. [49.186.65.106])
-        by smtp.gmail.com with ESMTPSA id q12-20020a170902dacc00b00189a50d2a3esm445238plx.241.2022.11.29.14.42.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Nov 2022 14:42:30 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1p09J5-002b6F-Qm; Wed, 30 Nov 2022 09:42:27 +1100
-Date:   Wed, 30 Nov 2022 09:42:27 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
+        with ESMTP id S231284AbiK3ANt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Nov 2022 19:13:49 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F3B271F39
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Nov 2022 16:13:48 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 30BCCB81897
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Nov 2022 00:13:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBB51C433C1;
+        Wed, 30 Nov 2022 00:13:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669767225;
+        bh=tLbY/X4oUYg06/OxDOhlat04A8dBJvD+82RqlE62mXI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=KMNJFLy7Y6NJxp3nlwRTBeHrYXGWn15gj8U8jDLL0y5rRF3Mh2/65x9roCE8SrH/u
+         YP3LI6PSzCsUTU4ROQxj3yF88gXaJUPRWc+bkuAvHjVb2hlqh2FCF5BO2f0nbXGiNV
+         ryS6zovOfIajlnSt8vxVEzFt+qpbsPA2Nl0uUM0QOVjyWINEGLmDjcp1MFhO7wRhPB
+         fFXmB/4PaU5dgT0hQzarOMq9Wicx050g1alwkJYIq1gCy3pQPypIAXZwm77u7S1jX3
+         TzAWJgAmN+BuONmOJOzXLnTF+W27zk7HlqgLV5z9jc0hxFYPrWl+GMspgQ3MlJRc0r
+         HqE6NhgLW1m1g==
+Date:   Tue, 29 Nov 2022 16:13:45 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH] xfs/179: modify test to trigger refcount update bugs
-Message-ID: <20221129224227.GL3600936@dread.disaster.area>
+Subject: Re: [PATCH 1/2] xfs: hoist refcount record merge predicates
+Message-ID: <Y4agOW31nIxz0whD@magnolia>
 References: <166975928548.3768925.15141817742859398250.stgit@magnolia>
- <Y4aCb+y2ej1TBE/R@magnolia>
+ <166975929118.3768925.9568770405264708473.stgit@magnolia>
+ <20221129223531.GJ3600936@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y4aCb+y2ej1TBE/R@magnolia>
+In-Reply-To: <20221129223531.GJ3600936@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 29, 2022 at 02:06:39PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Nov 30, 2022 at 09:35:31AM +1100, Dave Chinner wrote:
+> On Tue, Nov 29, 2022 at 02:01:31PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Hoist these multiline conditionals into separate static inline helpers
+> > to improve readability and set the stage for corruption fixes that will
+> > be introduced in the next patch.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  fs/xfs/libxfs/xfs_refcount.c |  126 +++++++++++++++++++++++++++++++++++++-----
+> >  1 file changed, 110 insertions(+), 16 deletions(-)
 > 
-> Upon enabling fsdax + reflink for XFS, this test began to report
-> refcount metadata corruptions after being run.  Specifically, xfs_repair
-> noticed single-block refcount records that could be combined but had not
-> been.
+> Looks OK. Minor nit below.
 > 
-> The root cause of this is improper MAXREFCOUNT edge case handling in
-> xfs_refcount_merge_extents.  When we're trying to find candidates for a
-> record merge, we compute the refcount of the merged record, but without
-> accounting for the fact that once a record hits rc_refcount ==
-> MAXREFCOUNT, it is pinned that way forever.
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 > 
-> Adjust this test to use a sub-filesize write for one of the COW writes,
-> because this is how we force the extent merge code to run.
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+> > index 3f34bafe18dd..8c68994d09f3 100644
+> > --- a/fs/xfs/libxfs/xfs_refcount.c
+> > +++ b/fs/xfs/libxfs/xfs_refcount.c
+> > @@ -815,11 +815,116 @@ xfs_refcount_find_right_extents(
+> >  /* Is this extent valid? */
+> >  static inline bool
+> >  xfs_refc_valid(
+> > -	struct xfs_refcount_irec	*rc)
+> > +	const struct xfs_refcount_irec	*rc)
+> >  {
+> >  	return rc->rc_startblock != NULLAGBLOCK;
+> >  }
+> >  
+> > +static inline bool
+> > +xfs_refc_want_merge_center(
+> > +	const struct xfs_refcount_irec	*left,
+> > +	const struct xfs_refcount_irec	*cleft,
+> > +	const struct xfs_refcount_irec	*cright,
+> > +	const struct xfs_refcount_irec	*right,
+> > +	bool				cleft_is_cright,
+> > +	enum xfs_refc_adjust_op		adjust,
+> > +	unsigned long long		*ulenp)
+> > +{
+> > +	unsigned long long		ulen = left->rc_blockcount;
+> > +
+> > +	/*
+> > +	 * To merge with a center record, both shoulder records must be
+> > +	 * adjacent to the record we want to adjust.  This is only true if
+> > +	 * find_left and find_right made all four records valid.
+> > +	 */
+> > +	if (!xfs_refc_valid(left)  || !xfs_refc_valid(right) ||
+> > +	    !xfs_refc_valid(cleft) || !xfs_refc_valid(cright))
+> > +		return false;
+> > +
+> > +	/* There must only be one record for the entire range. */
+> > +	if (!cleft_is_cright)
+> > +		return false;
+> > +
+> > +	/* The shoulder record refcounts must match the new refcount. */
+> > +	if (left->rc_refcount != cleft->rc_refcount + adjust)
+> > +		return false;
+> > +	if (right->rc_refcount != cleft->rc_refcount + adjust)
+> > +		return false;
+> > +
+> > +	/*
+> > +	 * The new record cannot exceed the max length.  The funny computation
+> > +	 * of ulen avoids casting.
+> > +	 */
+> > +	ulen += cleft->rc_blockcount + right->rc_blockcount;
+> > +	if (ulen >= MAXREFCEXTLEN)
+> > +		return false;
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-
-Seems like a reasonable modification to the test....
-
-> ---
->  tests/xfs/179 |   28 +++++++++++++++++++++++++---
->  1 file changed, 25 insertions(+), 3 deletions(-)
+> The comment took me a bit of spelunking to decipher what the "funny
+> computation" was. Better to spell it out directly (catch u32
+> overflows) than just hint that there's somethign special about it.
+> Say:
 > 
-> diff --git a/tests/xfs/179 b/tests/xfs/179
-> index ec0cb7e5b4..214558f694 100755
-> --- a/tests/xfs/179
-> +++ b/tests/xfs/179
-> @@ -21,17 +21,28 @@ _require_scratch_nocheck
->  _require_cp_reflink
->  _require_test_program "punch-alternating"
->  
-> +_fixed_by_kernel_commit XXXXXXXXXXXX "xfs: estimate post-merge refcounts correctly"
+> 	/*
+> 	 * The new record cannot exceed the max length. ulen is a
+> 	 * ULL as the individual record block counts can be up to
+> 	 * (u32 - 1) in length hence we need to catch u32 addition
+> 	 * overflows here.
+> 	 */
 
-Though I really don't like these annotation because when the test
-fails in future as I'm developing new code it's going to tell me I
-need a fix I already have in the kernel. This is just extra noise
-that I have to filter out of the results output. IMO a comment for
-this information or a line in the commit message is fine - it
-just doesn't belong in the test output....
+Done; thanks for the quick review!
 
-Other than that:
+--D
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
