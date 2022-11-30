@@ -2,65 +2,83 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2827C433FE
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Nov 2022 10:31:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61F19C4332F
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Nov 2022 14:22:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235993AbiK3KbD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Nov 2022 05:31:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59808 "EHLO
+        id S229580AbiK3OWp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Nov 2022 09:22:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54504 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236012AbiK3Kaq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Nov 2022 05:30:46 -0500
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AAAC326E3;
-        Wed, 30 Nov 2022 02:30:44 -0800 (PST)
-Received: from [2a02:8108:963f:de38:eca4:7d19:f9a2:22c5]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1p0KMV-00077a-7B; Wed, 30 Nov 2022 11:30:43 +0100
-Message-ID: <da90b96d-ef1e-4827-b983-15d103a3a1ef@leemhuis.info>
-Date:   Wed, 30 Nov 2022 11:30:42 +0100
+        with ESMTP id S229728AbiK3OWo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Nov 2022 09:22:44 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1924E2F
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Nov 2022 06:22:35 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 4E4AEB81B60
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Nov 2022 14:22:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 353BBC433C1;
+        Wed, 30 Nov 2022 14:22:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669818153;
+        bh=ba9cOuEwR0L0woYbg2XumDL7fSXYqhVxK/LE4HgAQds=;
+        h=Date:From:To:Subject:References:In-Reply-To:From;
+        b=sooPC+TFnRvOGPBhhFl4IBkBbebWSINEO1SyhJslN+Z9xZQyoSA7eXujHOjdoZW7g
+         8VxvuNm3ScFu/jxtSC03/29N+BuEI7PUuM9EQbTmFp79hpF69EdrB6qV/LcSGydbfI
+         7wtqF4UiXB+ZF6xwVhoFIWtt1wcT161xExV15JRE/cab1gnpXNXeZSMZZaG6YEE9IL
+         80FcRu4Pb1LsCidMFKXzXEWoFsOOTyxda9bYCRtwegRg84cNXF5yq1EPkK4FGlMaca
+         4V+x4r+hkst5Iota148YHnXZhAwDwg0CxJvyhSLXjokxJ9INwaU4zD6/yIDnxigiTm
+         Lb1vojTB5ToWQ==
+Date:   Wed, 30 Nov 2022 15:22:28 +0100
+From:   Carlos Maiolino <cem@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs_repair: Fix check_refcount() error path
+Message-ID: <20221130142228.s3taflpvaj5bfia3@andromeda>
+References: <20221128131434.21496-1-cem@kernel.org>
+ <20221128131434.21496-2-cem@kernel.org>
+ <0NyqEHx7QX5M7O3PkRWy9sATHt9hJPj8dbnNIMJyNpqeq9aoBrZvkghW9BWkoENYiKkmi-Yg3IBf-l_G4jUy8w==@protonmail.internalid>
+ <Y4UxpPgxbmOi/T9/@magnolia>
+ <KPMLSPXiDKono7p55z3gbfWueVu9cMSWxiXEtLwYLP8iiFwccJfklgds0T-ARwMz5Ca6x-5l9GYTgsgalM7W6Q==@protonmail.internalid>
+ <20221129141821.4goi2odggvztefhq@andromeda>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.1
-Subject: Re: [PATCH 0/2] fsdax,xfs: fix warning messages #forregzbot
-Content-Language: en-US, de-DE
-To:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        nvdimm@lists.linux.dev, linux-fsdevel@vger.kernel.org
-Cc:     "regressions@lists.linux.dev" <regressions@lists.linux.dev>
-References: <1669301694-16-1-git-send-email-ruansy.fnst@fujitsu.com>
-From:   Thorsten Leemhuis <regressions@leemhuis.info>
-In-Reply-To: <1669301694-16-1-git-send-email-ruansy.fnst@fujitsu.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1669804245;cde9a49c;
-X-HE-SMSGID: 1p0KMV-00077a-7B
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221129141821.4goi2odggvztefhq@andromeda>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-[Note: this mail is primarily send for documentation purposes and/or for
-regzbot, my Linux kernel regression tracking bot. That's why I removed
-most or all folks from the list of recipients, but left any that looked
-like a mailing lists. These mails usually contain '#forregzbot' in the
-subject, to make them easy to spot and filter out.]
+> > > +err_loop:
+> > > +	libxfs_btree_del_cursor(bt_cur, error);
+> > > +err_bt_cur:
+> > > +	libxfs_buf_relse(agbp);
+> > > +err_pag:
+> > > +	libxfs_perag_put(pag);
+> >
+> > So I see that you fixed one of the labels so that err_pag jumps to
+> > releasing the perag pointer, but it's still the case that err_bt_cur
+> > frees the AGF buffer, not the btree cursor; and that err_loop actually
+> > frees the btree cursor.
+> 
+> Totally true. I focused on your comments regarding err_pag, and forgot to review
+> the remaining labels. I'll fix it and send a V3.
 
-On 24.11.22 15:54, Shiyang Ruan wrote:
-> Many testcases failed in dax+reflink mode with warning message in dmesg.
-> This also effects dax+noreflink mode if we run the test after a
-> dax+reflink test.  So, the most urgent thing is solving the warning
-> messages.
+Just to avoid unnecessary new versions :)
+Are the fallowing names ok?
 
-Darrick in https://lore.kernel.org/all/Y4bZGvP8Ozp+4De%2F@magnolia/
-wrote "dax and reflink are totally broken on 6.1". Hence, add this to
-the tracking to be sure it's not forgotten.
+err_cur
+err_agf
+err_pag
 
-#regzbot ^introduced 35fcd75af3ed
-#regzbot title xfs/dax/reflink are totally broken on 6.1
-#regzbot ignore-activity
+Could be err_agbp too, but I'd rather be explicit this buffer belongs to the
+agf.
 
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
 
-P.S.: As the Linux kernel's regression tracker I deal with a lot of
-reports and sometimes miss something important when writing mails like
-this. If that's the case here, don't hesitate to tell me in a public
-reply, it's in everyone's interest to set the public record straight.
+> 
+> Thanks for the review.
+> 
+
+-- 
+Carlos Maiolino
