@@ -2,448 +2,191 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43AA3C47088
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Nov 2022 19:05:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4084C4708C
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Nov 2022 21:08:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229533AbiK3TFm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Nov 2022 14:05:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54874 "EHLO
+        id S229661AbiK3VI1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Nov 2022 16:08:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229807AbiK3TFY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Nov 2022 14:05:24 -0500
+        with ESMTP id S229456AbiK3VI1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Nov 2022 16:08:27 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D952A769C3;
-        Wed, 30 Nov 2022 11:04:56 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFA3C8659C;
+        Wed, 30 Nov 2022 13:08:25 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 6309CB81B46;
-        Wed, 30 Nov 2022 19:04:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E3CFC433D6;
-        Wed, 30 Nov 2022 19:04:19 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 785C7B81B95;
+        Wed, 30 Nov 2022 21:08:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38BC8C433C1;
+        Wed, 30 Nov 2022 21:08:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1669835059;
-        bh=z0LW1mL5+2bIf70tMJESY9MBkv3m6F2OkSfou5OPy3c=;
+        s=k20201202; t=1669842503;
+        bh=noqMNqOBTDPae+cbPFOdBXG8mgWA547Qeq0S6UUujaQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Hknvn0DzqiEHHshtHVKOZWNZGZitgxqk6OkieFpUFtWxfX7xZtgp4SZ5kD3nwLh1d
-         /6wyOSQnmg7M47t6ZLYUXMfmhtbJVvhaZq/y/yluxg3+X9BLg983m4TdRlZY07MiQ9
-         XHyQFG+jvIDRrffYNW0c/qxk16f1XGUsd1mSpZtkBVk4c0QX80mi5aBfCXcqg0wuWq
-         zG2lwxP/o6+cndolnYCORhkyyfFfGR4jEkkTfOMA2c3/58vqZoH73sChFahb+jUYhb
-         uEpT9bzLT0yVZ7pv7g7UTiP2Z9qvqjXQLZG48LlAlozmcObtl+J65aq+773GDjl8CF
-         eR8dGvZuRONEw==
-Date:   Wed, 30 Nov 2022 11:04:18 -0800
+        b=Qykynp6U9unyTiRJ0xf78319VbxxcO8rGguhmR1xIc3BEDY7fFhO8K/vGQIboxH7/
+         2BwLjEYY+HpoJPHjNdjG2FcG6TjtyAHdj4FNVfhmpXceLcFBeVTJ38kGo6LnhMcx3t
+         JFk+6wL/cvfFKLawP46F6l0J+kdbGCqdRSiqd9y51WEeR12wHh6F6i36tfML5jyGiY
+         0jlQi1sz/wASUYH63srZoJkO87IrpHCzHpv7t7EXhgnkctkdzeKShBZc2sHwc5CSIv
+         i6rCUZz/I8MMfiPwIfRrsLm1uQ1UEDltuPk0G92b5QAy802kG7sqwBgwTGVkKsqve6
+         T2KLFU2FwyaTw==
+Date:   Wed, 30 Nov 2022 13:08:22 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, wen.gang.wang@oracle.com,
-        fstests <fstests@vger.kernel.org>
-Subject: Re: [RFC PATCH] xfs: regression test for writeback corruption bug
-Message-ID: <Y4epMqdZmL/NX1YI@magnolia>
-References: <20221123055812.747923-1-david@fromorbit.com>
- <Y4U3XWf5j1zVGvV4@magnolia>
- <Y4VejsHGU/tZuRYs@magnolia>
- <Y4aAOn7CUTr9tUBN@magnolia>
- <20221130173447.52eribihqfiptw3r@zlang-mailbox>
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        nvdimm@lists.linux.dev, linux-fsdevel@vger.kernel.org,
+        david@fromorbit.com, akpm@linux-foundation.org
+Subject: Re: [PATCH 0/2] fsdax,xfs: fix warning messages
+Message-ID: <Y4fGRurfXoFSBqMB@magnolia>
+References: <1669301694-16-1-git-send-email-ruansy.fnst@fujitsu.com>
+ <6386d512ce3fc_c9572944e@dwillia2-mobl3.amr.corp.intel.com.notmuch>
+ <Y4bZGvP8Ozp+4De/@magnolia>
+ <638700ba5db1_c95729435@dwillia2-mobl3.amr.corp.intel.com.notmuch>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20221130173447.52eribihqfiptw3r@zlang-mailbox>
+In-Reply-To: <638700ba5db1_c95729435@dwillia2-mobl3.amr.corp.intel.com.notmuch>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 01, 2022 at 01:34:47AM +0800, Zorro Lang wrote:
-> On Tue, Nov 29, 2022 at 01:57:14PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Nov 29, 2022 at 11:05:30PM -0800, Dan Williams wrote:
+> Darrick J. Wong wrote:
+> > On Tue, Nov 29, 2022 at 07:59:14PM -0800, Dan Williams wrote:
+> > > [ add Andrew ]
+> > > 
+> > > Shiyang Ruan wrote:
+> > > > Many testcases failed in dax+reflink mode with warning message in dmesg.
+> > > > This also effects dax+noreflink mode if we run the test after a
+> > > > dax+reflink test.  So, the most urgent thing is solving the warning
+> > > > messages.
+> > > > 
+> > > > Patch 1 fixes some mistakes and adds handling of CoW cases not
+> > > > previously considered (srcmap is HOLE or UNWRITTEN).
+> > > > Patch 2 adds the implementation of unshare for fsdax.
+> > > > 
+> > > > With these fixes, most warning messages in dax_associate_entry() are
+> > > > gone.  But honestly, generic/388 will randomly failed with the warning.
+> > > > The case shutdown the xfs when fsstress is running, and do it for many
+> > > > times.  I think the reason is that dax pages in use are not able to be
+> > > > invalidated in time when fs is shutdown.  The next time dax page to be
+> > > > associated, it still remains the mapping value set last time.  I'll keep
+> > > > on solving it.
+> > > > 
+> > > > The warning message in dax_writeback_one() can also be fixed because of
+> > > > the dax unshare.
+> > > 
+> > > Thank you for digging in on this, I had been pinned down on CXL tasks
+> > > and worried that we would need to mark FS_DAX broken for a cycle, so
+> > > this is timely.
+> > > 
+> > > My only concern is that these patches look to have significant collisions with
+> > > the fsdax page reference counting reworks pending in linux-next. Although,
+> > > those are still sitting in mm-unstable:
+> > > 
+> > > http://lore.kernel.org/r/20221108162059.2ee440d5244657c4f16bdca0@linux-foundation.org
+> > > 
+> > > My preference would be to move ahead with both in which case I can help
+> > > rebase these fixes on top. In that scenario everything would go through
+> > > Andrew.
+> > > 
+> > > However, if we are getting too late in the cycle for that path I think
+> > > these dax-fixes take precedence, and one more cycle to let the page
+> > > reference count reworks sit is ok.
 > > 
-> > This is a regression test for a data corruption bug that existed in XFS'
-> > copy on write code between 4.9 and 4.19.  The root cause is a
-> > concurrency bug wherein we would drop ILOCK_SHARED after querying the
-> > CoW fork in xfs_map_cow and retake it before querying the data fork in
-> > xfs_map_blocks.  See the test description for a lot more details.
+> > Well now that raises some interesting questions -- dax and reflink are
+> > totally broken on 6.1.  I was thinking about cramming them into 6.2 as a
+> > data corruption fix on the grounds that is not an acceptable state of
+> > affairs.
+> 
+> I agree it's not an acceptable state of affairs, but for 6.1 the answer
+> may be to just revert to dax+reflink being forbidden again. The fact
+> that no end user has noticed is probably a good sign that we can disable
+> that without any one screaming. That may be the easy answer for 6.2 as
+> well given how late this all is.
+> 
+> > OTOH we're past -rc7, which is **really late** to be changing core code.
+> > Then again, there aren't so many fsdax users and nobody's complained
+> > about 6.0/6.1 being busted, so perhaps the risk of regression isn't so
+> > bad?  Then again, that could be a sign that this could wait, if you and
+> > Andrew are really eager to merge the reworks.
+> 
+> The page reference counting has also been languishing for a long time. A
+> 6.2 merge would be nice, it relieves maintenance burden, but they do not
+> start to have real end user implications until CXL memory hotplug
+> platforms arrive and the warts in the reference counting start to show
+> real problems in production.
+
+Hm.  How bad *would* it be to rebase that patchset atop this one?
+
+After overnight testing on -rc7 it looks like Ruan's patchset fixes all
+the problems AFAICT.  Most of the remaining regressions are to mask off
+fragmentation testing because fsdax cow (like the directio write paths)
+doesn't make much use of extent size hints.
+
+> > Just looking at the stuff that's still broken with dax+reflink -- I
+> > noticed that xfs/550-552 (aka the dax poison tests) are still regressing
+> > on reflink filesystems.
+> 
+> That's worrying because the whole point of reworking dax, xfs, and
+> mm/memory-failure all at once was to handle the collision of poison and
+> reflink'd dax files.
+
+I just tried out -rc7 and all three pass, so disregard this please.
+
+> > So, uh, what would this patchset need to change if the "fsdax page
+> > reference counting reworks" were applied?  Would it be changing the page
+> > refcount instead of stashing that in page->index?
+> 
+> Nah, it's things like switching from pages to folios and shifting how
+> dax goes from pfns to pages.
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git/commit/?h=mm-unstable&id=cca48ba3196
+> 
+> Ideally fsdax would never deal in pfns at all and do everything in terms
+> of offsets relative to a 'struct dax_device'.
+> 
+> My gut is saying these patches, the refcount reworks, and the
+> dax+reflink fixes, are important but not end user critical. One more
+> status quo release does not hurt, and we can circle back to get this all
+> straightened early in v6.3.
+
+Being a data corruption fix, I don't see why we shouldn't revisit this
+during the 6.2 cycle, even if it comes after merging the refcounting
+stuff.
+
+Question for Ruan: Would it be terribly difficult to push out a v2 with
+the review comments applied so that we have something we can backport to
+6.1; and then rebase the series atop 6.2-rc1 so we can apply it to
+upstream (and then apply the 6.1 version to the LTS)?  Or is this too
+convoluted...?
+
+> I.e. just revert:
+> 
+> 35fcd75af3ed xfs: fail dax mount if reflink is enabled on a partition
+> 
+> ...for v6.1-rc8 and get back to this early in the New Year.
+
+Hm.  Tempting.
+
+--D
+
 > > 
-> > Cc: Wengang Wang <wen.gang.wang@oracle.com>
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  common/rc         |   15 ++++
-> >  common/tracing    |   69 +++++++++++++++++
-> >  tests/xfs/924     |  215 +++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/924.out |    2 
-> >  4 files changed, 301 insertions(+)
-> >  create mode 100644 common/tracing
-> >  create mode 100755 tests/xfs/924
-> >  create mode 100644 tests/xfs/924.out
+> > --D
 > > 
-> > diff --git a/common/rc b/common/rc
-> > index d71fc0603f..b1b7a3e553 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -3625,6 +3625,21 @@ _check_xflag()
-> >  	fi
-> >  }
-> >  
-> > +# Make sure the given file access mode is set to use the pagecache.  If
-> > +# userspace or kernel don't support statx or STATX_ATTR_DAX, we assume that
-> > +# means pagecache.  The sole parameter must be a directory.
-> > +_require_pagecache_access() {
-> > +	local testfile="$1/testfile"
-> > +
-> > +	touch "$testfile"
-> > +	if ! _check_s_dax "$testfile" 0 &>> $seqres.full; then
-> > +		rm -f "$testfile"
-> > +		_notrun 'test requires pagecache access'
-> > +	fi
-> > +
-> > +	rm -f "$testfile"
-> > +}
-> > +
-> >  # Check if dax mount options are supported
-> >  #
-> >  # $1 can be either 'dax=always' or 'dax'
-> > diff --git a/common/tracing b/common/tracing
-> > new file mode 100644
-> > index 0000000000..35e5ed41c2
-> > --- /dev/null
-> > +++ b/common/tracing
-> > @@ -0,0 +1,69 @@
-> > +##/bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0-or-later
-> > +# Copyright (c) 2022 Oracle.  All Rights Reserved.
-> > +#
-> > +# Routines for dealing with ftrace (or any other tracing).
-> > +
-> > +_require_ftrace() {
-> > +	local ftrace_dir="/sys/kernel/debug/tracing/instances/"
-> > +	test -d "$ftrace_dir" || _notrun "kernel does not support ftrace"
-> > +
-> > +	# Give this fstest its own ftrace buffer so that we don't mess up
-> > +	# any other tracers that might be running.
-> > +	FTRACE_DIR="$ftrace_dir/fstests.$seq"
-> > +	test -d "$FTRACE_DIR" && rmdir "$FTRACE_DIR"
-> > +}
-> > +
-> > +_ftrace_cleanup() {
-> > +	if [ -d "$FTRACE_DIR" ]; then
-> > +		_ftrace_ignore_events
-> > +		# Removing an ftrace buffer requires rmdir, even though the
-> > +		# virtual directory contains children.
-> > +		rmdir "$FTRACE_DIR"
-> > +	fi
-> > +}
-> > +
-> > +# Intercept the given events.  Arguments may be regular expressions.
-> > +_ftrace_record_events() {
-> > +	local pwd="$PWD"
-> > +
-> > +	test -n "$FTRACE_DIR" || _fail "_require_ftrace not run?"
-> > +	mkdir "$FTRACE_DIR"
-> > +	cd "$FTRACE_DIR/events/" || _fail "$FTRACE_DIR: ftrace not set up?"
-> > +
-> > +	for arg in "$@"; do
-> > +		for tp in */${arg}; do
-> > +			# Replace slashes with semicolons per ftrace convention
-> > +			echo "${tp////:}" >> ../set_event
-> > +		done
-> > +	done
-> > +	cd "$pwd"
+> > > > Shiyang Ruan (2):
+> > > >   fsdax,xfs: fix warning messages at dax_[dis]associate_entry()
+> > > >   fsdax,xfs: port unshare to fsdax
+> > > > 
+> > > >  fs/dax.c             | 166 ++++++++++++++++++++++++++++++-------------
+> > > >  fs/xfs/xfs_iomap.c   |   6 +-
+> > > >  fs/xfs/xfs_reflink.c |   8 ++-
+> > > >  include/linux/dax.h  |   2 +
+> > > >  4 files changed, 129 insertions(+), 53 deletions(-)
+> > > > 
+> > > > -- 
+> > > > 2.38.1
 > 
-> Is the relative path necessary, can we use absolute path at here?
-
-Hm.  I suppose that inner loop could be replaced by:
-
-		find "$FTRACE_DIR/events/ -type d -name "$arg" -printf '%P\n' | \
-			tr '/' ':' >> "$FTRACE_DIR/set_event"
-
-and then we don't need all this cd'ing insanity.  I'll try that and
-report back.
-
-> > +}
-> > +
-> > +# Stop intercepting the given events.  If no arguments, stops all events.
-> > +_ftrace_ignore_events() {
-> > +	local pwd="$PWD"
-> > +
-> > +	test -n "$FTRACE_DIR" || _fail "_require_ftrace not run?"
-> > +	cd "$FTRACE_DIR/events/" || _fail "$FTRACE_DIR: ftrace not set up?"
-> > +
-> > +	if [ "$#" -eq 0 ]; then
-> > +		echo > ../set_event
-> > +	else
-> > +		for arg in "$@"; do
-> > +			for tp in */${arg}; do
-> > +				# Replace slashes with semicolons per ftrace convention
-> > +				echo "!${tp////:}" >> ../set_event
-> > +			done
-> > +		done
-> > +	fi
-> > +
-> > +	cd "$pwd"
-> 
-> Same at here
-> 
-> > +}
-> > +
-> > +# Dump whatever was written to the ftrace buffer since the last time this
-> > +# helper was called.
-> > +_ftrace_dump() {
-> > +	test -n "$FTRACE_DIR" || _fail "_require_ftrace not run?"
-> > +	(cd "$FTRACE_DIR" && cat trace)
-> 
-> Why not "cat $FTRACE_DIR/trace" ?
-
-Fixed.
-
-> > +}
-> > diff --git a/tests/xfs/924 b/tests/xfs/924
-> > new file mode 100755
-> > index 0000000000..81f8ba2743
-> > --- /dev/null
-> > +++ b/tests/xfs/924
-> > @@ -0,0 +1,215 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2022 Oracle.  All Rights Reserved.
-> > +#
-> > +# FS QA Test 924
-> > +#
-> > +# This is a regression test for a data corruption bug that existed in XFS' copy
-> > +# on write code between 4.9 and 4.19.  The root cause is a concurrency bug
-> > +# wherein we would drop ILOCK_SHARED after querying the CoW fork in xfs_map_cow
-> > +# and retake it before querying the data fork in xfs_map_blocks.  If a second
-> > +# thread changes the CoW fork mappings between the two calls, it's possible for
-> > +# xfs_map_blocks to return a zero-block mapping, which results in writeback
-> > +# being elided for that block.  Elided writeback of dirty data results in
-> > +# silent loss of writes.
-> > +#
-> > +# Worse yet, kernels from that era still used buffer heads, which means that an
-> > +# elided writeback leaves the page clean but the bufferheads dirty.  Due to a
-> > +# naïve optimization in mark_buffer_dirty, the SetPageDirty call is elided if
-> > +# the bufferhead is dirty, which means that a subsequent rewrite of the data
-> > +# block will never result in the page being marked dirty, and all subsequent
-> > +# writes are lost.
-> > +#
-> > +# It turns out that Christoph Hellwig unwittingly fixed the race in commit
-> > +# 5c665e5b5af6 ("xfs: remove xfs_map_cow"), and no testcase was ever written.
-> > +# Four years later, we hit it on a production 4.14 kernel.  This testcase
-> > +# relies on a debugging knob that introduces artificial delays into writeback.
-> > +#
-> > +# Before the race, the file blocks 0-1 are not shared and blocks 2-5 are
-> > +# shared.  There are no extents in CoW fork.
-> > +#
-> > +# Two threads race like this:
-> > +#
-> > +# Thread 1 (writeback block 0)     | Thread 2  (write to block 2)
-> > +# ---------------------------------|--------------------------------
-> > +#                                  |
-> > +# 1. Check if block 0 in CoW fork  |
-> > +#    from xfs_map_cow.             |
-> > +#                                  |
-> > +# 2. Block 0 not found in CoW      |
-> > +#    fork; the block is considered |
-> > +#    not shared.                   |
-> > +#                                  |
-> > +# 3. xfs_map_blocks looks up data  |
-> > +#    fork to get a map covering    |
-> > +#    block 0.                      |
-> > +#                                  |
-> > +# 4. It gets a data fork mapping   |
-> > +#    for block 0 with length 2.    |
-> > +#                                  |
-> > +#                                  | 1. A buffered write to block 2 sees
-> > +#                                  |    that it is a shared block and no
-> > +#                                  |    extent covers block 2 in CoW fork.
-> > +#                                  |
-> > +#                                  |    It creates a new CoW fork mapping.
-> > +#                                  |    Due to the cowextsize, the new
-> > +#                                  |    extent starts at block 0 with
-> > +#                                  |    length 128.
-> > +#                                  |
-> > +#                                  |
-> > +# 5. It lookup CoW fork again to   |
-> > +#    trim the map (0, 2) to a      |
-> > +#    shared block boundary.        |
-> > +#                                  |
-> > +# 5a. It finds (0, 128) in CoW fork|
-> > +# 5b. It trims the data fork map   |
-> > +#     from (0, 1) to (0, 0) (!!!)  |
-> > +#                                  |
-> > +# 6. The xfs_imap_valid call after |
-> > +#    the xfs_map_blocks call checks|
-> > +#    if the mapping (0, 0) covers  |
-> > +#    block 0.  The result is "NO". |
-> > +#                                  |
-> > +# 7. Since block 0 has no physical |
-> > +#    block mapped, it's not added  |
-> > +#    to the ioend.  This is the    |
-> > +#    first problem.                |
-> > +#                                  |
-> > +# 8. xfs_add_to_ioend usually      |
-> > +#    clears the bufferhead dirty   |
-> > +#    flag  Because this is skipped,|
-> > +#    we leave the page clean with  |
-> > +#    the associated buffer head(s) |
-> > +#    dirty (the second problem).   |
-> > +#    Now the dirty state is        |
-> > +#    inconsistent.
-> > +#
-> > +# On newer kernels, this is also a functionality test for the ifork sequence
-> > +# counter because the writeback completions will change the data fork and force
-> > +# revalidations of the wb mapping.
-> > +#
-> > +. ./common/preamble
-> > +_begin_fstest auto quick clone
-> > +
-> > +# Import common functions.
-> > +. ./common/reflink
-> > +. ./common/inject
-> > +. ./common/tracing
-> > +
-> > +# real QA test starts here
-> > +_cleanup()
-> > +{
-> > +	_ftrace_cleanup
-> > +	cd /
-> > +	rm -r -f $tmp.* $sentryfile $tracefile
-> > +}
-> > +
-> > +# Modify as appropriate.
-> > +_supported_fs xfs
-> > +_fixed_by_kernel_commit 5c665e5b5af6 "xfs: remove xfs_map_cow"
-> > +_require_ftrace
-> > +_require_error_injection
-> > +_require_scratch_reflink
-> > +_require_cp_reflink
-> > +
-> > +_scratch_mkfs >> $seqres.full
-> > +_scratch_mount >> $seqres.full
-> > +
-> > +# This is a pagecache test, so try to disable fsdax mode.
-> > +$XFS_IO_PROG -c 'chattr -x' $SCRATCH_MNT &> $seqres.full
-> > +_require_pagecache_access $SCRATCH_MNT
-> > +
-> > +knob="$(_find_xfs_mountdev_errortag_knob $SCRATCH_DEV "wb_delay_ms")"
-> > +test -w "$knob" || _notrun "Kernel does not have wb_delay_ms error injector"
-> 
-> Can `_require_xfs_io_error_injection` help that?
-> 
-> > +
-> > +blksz=65536
-> > +_require_congruent_file_oplen $SCRATCH_MNT $blksz
-> > +
-> > +# Make sure we have sufficient extent size to create speculative CoW
-> > +# preallocations.
-> > +$XFS_IO_PROG -c 'cowextsize 1m' $SCRATCH_MNT
-> > +
-> > +# Write out a file with the first two blocks unshared and the rest shared.
-> > +_pwrite_byte 0x59 0 $((160 * blksz)) $SCRATCH_MNT/file >> $seqres.full
-> > +_pwrite_byte 0x59 0 $((160 * blksz)) $SCRATCH_MNT/file.compare >> $seqres.full
-> > +sync
-> > +
-> > +_cp_reflink $SCRATCH_MNT/file $SCRATCH_MNT/file.reflink
-> > +
-> > +_pwrite_byte 0x58 0 $((2 * blksz)) $SCRATCH_MNT/file >> $seqres.full
-> > +_pwrite_byte 0x58 0 $((2 * blksz)) $SCRATCH_MNT/file.compare >> $seqres.full
-> > +sync
-> > +
-> > +# Avoid creation of large folios on newer kernels by cycling the mount and
-> > +# immediately writing to the page cache.
-> > +_scratch_cycle_mount
-> > +
-> > +# Write the same data to file.compare as we're about to do to file.  Do this
-> > +# before slowing down writeback to avoid unnecessary delay.
-> > +_pwrite_byte 0x57 0 $((2 * blksz)) $SCRATCH_MNT/file.compare >> $seqres.full
-> > +_pwrite_byte 0x56 $((2 * blksz)) $((2 * blksz)) $SCRATCH_MNT/file.compare >> $seqres.full
-> > +sync
-> > +
-> > +# Introduce a half-second wait to each writeback block mapping call.  This
-> > +# gives us a chance to race speculative cow prealloc with writeback.
-> > +wb_delay=500
-> > +echo $wb_delay > $knob
-> 
-> Oh, you'd like to avoid depending on xfs_io ?
-
-Oops, this was leftover from before I ported the xfs_errortag.h changes
-to xfsprogs.
-
-> > +curval="$(cat $knob)"
-> > +test "$curval" -eq $wb_delay || echo "expected wb_delay_ms == $wb_delay"
-> > +
-> > +_ftrace_record_events 'xfs_wb*iomap_invalid'
-> > +
-> > +# Start thread 1 + writeback above
-> > +$XFS_IO_PROG -c "pwrite -S 0x57 0 $((2 * blksz))" \
-> > +	-c 'bmap -celpv' -c 'bmap -elpv' \
-> 
-> I didn't find the "bmap -c" option, is it a new option? Won't it break the
-> golden image if a system doesn't support it?
-
--c is a deliberately undocumented option to the bmap command; it's been
-there since the introduction of reflink.
-
-> > +	-c 'fsync' $SCRATCH_MNT/file >> $seqres.full &
-> > +sleep 1
-> > +
-> > +# Start a sentry to look for evidence of the XFS_ERRORTAG_REPORT logging.  If
-> > +# we see that, we know we've forced writeback to revalidate a mapping.  The
-> > +# test has been successful, so turn off the delay.
-> > +sentryfile=$TEST_DIR/$seq.sentry
-> > +tracefile=$TEST_DIR/$seq.ftrace
-> > +wait_for_errortag() {
-> > +	while [ -e "$sentryfile" ]; do
-> > +		_ftrace_dump | grep iomap_invalid >> "$tracefile"
-> > +		if grep -q iomap_invalid "$tracefile"; then
-> > +			echo 0 > "$knob"
-> > +			_ftrace_ignore_events
-> > +			break;
-> > +		fi
-> > +		sleep 0.5
-> > +	done
-> > +}
-> > +touch $sentryfile
-> > +wait_for_errortag &
-> 
-> Should we *wait* background processes in cleanup after removing $sentryfile.
-
-Yes.
-
-> > +
-> > +# Start thread 2 to create the cowextsize reservation
-> > +$XFS_IO_PROG -c "pwrite -S 0x56 $((2 * blksz)) $((2 * blksz))" \
-> > +	-c 'bmap -celpv' -c 'bmap -elpv' \
-> > +	-c 'fsync' $SCRATCH_MNT/file >> $seqres.full
-> > +rm -f $sentryfile
-> > +
-> > +cat "$tracefile" >> $seqres.full
-> > +grep -q iomap_invalid "$tracefile"
-> > +saw_invalidation=$?
-> > +
-> > +# Flush everything to disk.  If the bug manifests, then after the cycle,
-> > +# file should have stale 0x58 in block 0 because we silently dropped a write.
-> > +_scratch_cycle_mount
-> > +
-> > +if ! cmp -s $SCRATCH_MNT/file $SCRATCH_MNT/file.compare; then
-> > +	echo file and file.compare do not match
-> > +	$XFS_IO_PROG -c 'bmap -celpv' -c 'bmap -elpv' $SCRATCH_MNT/file >> $seqres.full
-> > +	echo file.compare
-> > +	od -tx1 -Ad -c $SCRATCH_MNT/file.compare
-> > +	echo file
-> > +	od -tx1 -Ad -c $SCRATCH_MNT/file
-> > +elif [ $saw_invalidation -ne 0 ]; then
-> > +	# The files matched, but nothing got logged about the revalidation?
-> > +	echo "Expected to hear about writeback iomap invalidations?"
-> > +fi
-> > +
-> > +echo Silence is golden
-> > +status=0
-> > +exit
-> > diff --git a/tests/xfs/924.out b/tests/xfs/924.out
-> > new file mode 100644
-> > index 0000000000..c6655da35a
-> > --- /dev/null
-> > +++ b/tests/xfs/924.out
-> > @@ -0,0 +1,2 @@
-> > +QA output created by 924
-> > +Silence is golden
-> > 
 > 
