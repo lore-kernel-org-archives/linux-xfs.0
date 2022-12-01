@@ -2,42 +2,44 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 232E7C4321E
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Dec 2022 17:34:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C54CCC636F9
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Dec 2022 17:44:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230107AbiLAReq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Dec 2022 12:34:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51086 "EHLO
+        id S229512AbiLARok (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Dec 2022 12:44:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32820 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230118AbiLARej (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Dec 2022 12:34:39 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27ADDAD9AD
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Dec 2022 09:34:34 -0800 (PST)
+        with ESMTP id S230243AbiLARoW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Dec 2022 12:44:22 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BE1DB955A;
+        Thu,  1 Dec 2022 09:44:14 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3B703620AC
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Dec 2022 17:34:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A3E8C433B5;
-        Thu,  1 Dec 2022 17:34:33 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 084C7B81FCA;
+        Thu,  1 Dec 2022 17:44:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF8CDC433D7;
+        Thu,  1 Dec 2022 17:44:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1669916073;
-        bh=mhinNx3dFfejiEDqlF/2peWOBSwe+65GgyLkcN+NVmw=;
+        s=k20201202; t=1669916651;
+        bh=WuEZanLpr0Tkt1lHwSJ3IaRAWshoSxFoRdlZpu0/HJ0=;
         h=Date:From:To:Cc:Subject:From;
-        b=SksfnTUXemv2Lf7zQ4jYYdCD8jfLHa6wE4G8ZRt21UVlMgxkbIYjO50z2wzivFV2j
-         w+R1FE3v+JNORFO1QM58+E9COcszGQpasYijt2jE05rw9rXGj5Nz/K1zsggsbwJVh2
-         JnTqMVAYj9mvu25mQ7k+isk3kE6mvXMkJbEc6ttdlzjttUFNayijZanLJW3/eKvl7W
-         ygmnMnMTT2FlTDha622Nq2nkho4Pf+f/VkXBMBYW8K+LpAPiwMmH5bDmoKHUdAILZy
-         tyL2ePcFjVpSLkdTZ1UT/2SR4QRLIl/kYMUWj2JVPjxynO9dTI4kLZgwAGeCYrU/U5
-         boDEJyIE+0GUw==
-Date:   Thu, 1 Dec 2022 09:34:33 -0800
+        b=nK5YKCfDpVv4F8PPH5M6p9Z1wOw9sNdgWK87z9W9AaJgnmYj8jb7PUqsFsJjQVk6g
+         EqNdLkrm2YyWJmET89hf7sZ/al8yHKUT0wfT4E1Q5SM9Rrcd0chU1TAJfDsY2tAW69
+         0wpRaU+FHT2uSgri+ZDgU+u5/2TehhJY1sf7TFgesOKLgjVWgQhfbQg2VUtlTZZr/s
+         WVWBxdmXXlqHWXftFBZQWLD0wwx0H3Gq2p7hiyIHriH82m/zy7Z+ULvGVYA+cYY6m5
+         YBQCmC7KW6a9ZGGz1f/LvSNKNzsJtkb7MClifZ2pJafo8A+R2PUAhvxfC+/DdS7Z8R
+         i0GUXZOxp5P/Q==
+Date:   Thu, 1 Dec 2022 09:44:11 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     david@fromorbit.com, dchinner@redhat.com,
-        linux-xfs@vger.kernel.org, yangx.jy@fujitsu.com
-Subject: [GIT PULL] xfs: fix broken MAXREFCOUNT handling
-Message-ID: <166991600827.671955.16596502896674132543.stg-ugh@magnolia>
+Cc:     aalbersh@redhat.com, dchinner@redhat.com, guoxuenan@huawei.com,
+        hch@lst.de, hsiangkao@linux.alibaba.com, leo.lilong@huawei.com,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        lukas@herbolt.com, sandeen@redhat.com, yangx.jy@fujitsu.com
+Subject: [ANNOUNCE] xfs-linux: for-next updated to ddfdd530e43f
+Message-ID: <166991654280.681720.7866694108038285758.stg-ugh@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -45,42 +47,144 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Darrick,
+Hi folks,
 
-Please pull this branch with changes for xfs for 6.2-rc1.
+The for-next branch of the xfs-linux repository at:
 
-As usual, I did a test-merge with the main upstream branch as of a few
-minutes ago, and didn't see any conflicts.  Please let me know if you
-encounter any problems.
+git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
---D
+has just been updated.
 
-The following changes since commit 4b4d11bbeca4e3ebb235c8c3c875a986a8c90427:
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  The only inflight patches that I know of are Shiyang
+Ruan's fsdax corruption fixes; other than that, we're mostly done for
+6.2.
 
-Merge tag 'random-fixes-6.2_2022-11-30' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeC (2022-11-30 09:25:25 -0800)
+The new head of the for-next branch is commit:
 
-are available in the Git repository at:
+ddfdd530e43f xfs: invalidate xfs_bufs when allocating cow extents
 
-git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/maxrefcount-fixes-6.2_2022-12-01
+59 new commits:
 
-for you to fetch changes up to b25d1984aa884fc91a73a5a407b9ac976d441e9b:
+Darrick J. Wong (44):
+[9a48b4a6fd51] xfs: fully initialize xfs_da_args in xchk_directory_blocks
+[be1317fdb8d4] xfs: don't track the AGFL buffer in the scrub AG context
+[3e59c0103e66] xfs: log the AGI/AGF buffers when rolling transactions during an AG repair
+[48ff40458f87] xfs: standardize GFP flags usage in online scrub
+[b255fab0f80c] xfs: make AGFL repair function avoid crosslinked blocks
+[a7a0f9a5503f] xfs: return EINTR when a fatal signal terminates scrub
+[0a713bd41ea2] xfs: fix return code when fatal signal encountered during dquot scrub
+[fcd2a43488d5] xfs: initialize the check_owner object fully
+[6bf2f8791597] xfs: don't retry repairs harder when EAGAIN is returned
+[306195f355bb] xfs: pivot online scrub away from kmem.[ch]
+[9e13975bb062] xfs: load rtbitmap and rtsummary extent mapping btrees at mount time
+[11f97e684583] xfs: skip fscounters comparisons when the scan is incomplete
+[93b0c58ed04b] xfs: don't return -EFSCORRUPTED from repair when resources cannot be grabbed
+[5f369dc5b4eb] xfs: make rtbitmap ILOCKing consistent when scanning the rt bitmap file
+[e74331d6fa2c] xfs: online checking of the free rt extent count
+[033985b6fe87] xfs: fix perag loop in xchk_bmap_check_rmaps
+[6a5777865eeb] xfs: teach scrub to check for adjacent bmaps when rmap larger than bmap
+[830ffa09fb13] xfs: block map scrub should handle incore delalloc reservations
+[f23c40443d1c] xfs: check quota files for unwritten extents
+[31785537010a] xfs: check that CoW fork extents are not shared
+[5eef46358fae] xfs: teach scrub to flag non-extents format cow forks
+[bd5ab5f98741] xfs: don't warn about files that are exactly s_maxbytes long
+[f36b954a1f1b] xfs: check inode core when scrubbing metadata files
+[823ca26a8f07] Merge tag 'scrub-fix-ag-header-handling-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
+[af1077fa87c3] Merge tag 'scrub-cleanup-malloc-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
+[3d8426b13bac] Merge tag 'scrub-fix-return-value-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
+[b76f593b33aa] Merge tag 'scrub-fix-rtmeta-ilocking-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
+[7aab8a05e7c7] Merge tag 'scrub-fscounters-enhancements-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
+[cc5f38fa12fc] Merge tag 'scrub-bmap-enhancements-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
+[7b082b5e8afa] Merge tag 'scrub-check-metadata-inode-records-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
+[2653d53345bd] xfs: fix incorrect error-out in xfs_remove
+[7dd73802f97d] Merge tag 'xfs-iomap-stale-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-6.2-mergeB
+[c2beff99eb03] xfs: add debug knob to slow down writeback for fun
+[254e3459285c] xfs: add debug knob to slow down write for fun
+[032e160305f6] xfs: invalidate block device page cache during unmount
+[fd5beaff250d] xfs: use memcpy, not strncpy, to format the attr prefix during listxattr
+[e5827a007aa4] xfs: shut up -Wuninitialized in xfsaild_push
+[4c6dbfd2756b] xfs: attach dquots to inode before reading data/cow fork mappings
+[cd14f15b0e64] Merge tag 'iomap-write-race-testing-6.2_2022-11-30' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeC
+[4b4d11bbeca4] Merge tag 'random-fixes-6.2_2022-11-30' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeC
+[9d720a5a658f] xfs: hoist refcount record merge predicates
+[b25d1984aa88] xfs: estimate post-merge refcounts correctly
+[948961964b24] Merge tag 'maxrefcount-fixes-6.2_2022-12-01' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeD
+[ddfdd530e43f] xfs: invalidate xfs_bufs when allocating cow extents
 
-xfs: estimate post-merge refcounts correctly (2022-12-01 09:32:04 -0800)
+Dave Chinner (9):
+[118e021b4b66] xfs: write page faults in iomap are not buffered writes
+[198dd8aedee6] xfs: punching delalloc extents on write failure is racy
+[b71f889c18ad] xfs: use byte ranges for write cleanup ranges
+[9c7babf94a0d] xfs,iomap: move delalloc punching to iomap
+[f43dc4dc3eff] iomap: buffered write failure should not truncate the page cache
+[7348b322332d] xfs: xfs_bmap_punch_delalloc_range() should take a byte range
+[d7b64041164c] iomap: write iomap validity checks
+[304a68b9c63b] xfs: use iomap_valid method to detect stale cached iomaps
+[6e8af15ccdc4] xfs: drop write error injection is unfixable, remove it
 
-----------------------------------------------------------------
-xfs: fix broken MAXREFCOUNT handling
+Guo Xuenan (3):
+[1eb52a6a7198] xfs: wait iclog complete before tearing down AIL
+[575689fc0ffa] xfs: fix super block buf log item UAF during force shutdown
+[8c25febf2396] xfs: get rid of assert from xfs_btree_islastblock
 
-This series fixes a bug in the refcount code where we don't merge
-records correctly if the refcount is hovering around MAXREFCOUNT.  This
-fixes regressions in xfs/179 when fsdax is enabled.  xfs/179 itself will
-be modified to exploit the bug through the pagecache path.
+Long Li (2):
+[59f6ab40fd87] xfs: fix sb write verify for lazysbcount
+[28b4b0596343] xfs: fix incorrect i_nlink caused by inode racing
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Lukas Herbolt (1):
+[64c80dfd04d1] xfs: Print XFS UUID on mount and umount events.
 
-----------------------------------------------------------------
-Darrick J. Wong (2):
-xfs: hoist refcount record merge predicates
-xfs: estimate post-merge refcounts correctly
+Code Diffstat:
 
-fs/xfs/libxfs/xfs_refcount.c | 146 ++++++++++++++++++++++++++++++++++++++-----
-1 file changed, 130 insertions(+), 16 deletions(-)
+fs/iomap/buffered-io.c         | 254 ++++++++++++++++++++++++++++++++++++++++-
+fs/iomap/iter.c                |  19 ++-
+fs/xfs/libxfs/xfs_bmap.c       |   8 +-
+fs/xfs/libxfs/xfs_btree.h      |   1 -
+fs/xfs/libxfs/xfs_errortag.h   |  18 +--
+fs/xfs/libxfs/xfs_refcount.c   | 146 ++++++++++++++++++++---
+fs/xfs/libxfs/xfs_sb.c         |   4 +-
+fs/xfs/scrub/agheader.c        |  47 +++++---
+fs/xfs/scrub/agheader_repair.c |  81 ++++++++++---
+fs/xfs/scrub/attr.c            |  11 +-
+fs/xfs/scrub/bitmap.c          |  11 +-
+fs/xfs/scrub/bmap.c            | 147 +++++++++++++++++++-----
+fs/xfs/scrub/btree.c           |  14 ++-
+fs/xfs/scrub/common.c          |  48 +++++---
+fs/xfs/scrub/common.h          |   2 +-
+fs/xfs/scrub/dabtree.c         |   4 +-
+fs/xfs/scrub/dir.c             |  10 +-
+fs/xfs/scrub/fscounters.c      | 109 +++++++++++++++++-
+fs/xfs/scrub/inode.c           |   2 +-
+fs/xfs/scrub/quota.c           |   8 +-
+fs/xfs/scrub/refcount.c        |  12 +-
+fs/xfs/scrub/repair.c          |  51 ++++++---
+fs/xfs/scrub/scrub.c           |   6 +-
+fs/xfs/scrub/scrub.h           |  18 +--
+fs/xfs/scrub/symlink.c         |   2 +-
+fs/xfs/xfs_aops.c              |  32 +++---
+fs/xfs/xfs_bmap_util.c         |  10 +-
+fs/xfs/xfs_bmap_util.h         |   2 +-
+fs/xfs/xfs_buf.c               |   1 +
+fs/xfs/xfs_buf_item.c          |   2 +
+fs/xfs/xfs_error.c             |  46 ++++++--
+fs/xfs/xfs_error.h             |  13 +++
+fs/xfs/xfs_file.c              |   2 +-
+fs/xfs/xfs_fsmap.c             |   4 +-
+fs/xfs/xfs_icache.c            |   6 +
+fs/xfs/xfs_inode.c             |   2 +-
+fs/xfs/xfs_iomap.c             | 187 ++++++++++++++++++------------
+fs/xfs/xfs_iomap.h             |   6 +-
+fs/xfs/xfs_log.c               |  46 +++++---
+fs/xfs/xfs_mount.c             |  15 +++
+fs/xfs/xfs_pnfs.c              |   6 +-
+fs/xfs/xfs_rtalloc.c           |  60 +++++++++-
+fs/xfs/xfs_super.c             |   2 +-
+fs/xfs/xfs_trace.c             |   2 +
+fs/xfs/xfs_trace.h             |  86 ++++++++++++++
+fs/xfs/xfs_trans_ail.c         |   4 +-
+fs/xfs/xfs_xattr.c             |   2 +-
+include/linux/iomap.h          |  47 ++++++--
+48 files changed, 1307 insertions(+), 309 deletions(-)
