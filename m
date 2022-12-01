@@ -2,107 +2,103 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C709EC43217
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Dec 2022 03:59:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E7E6C43217
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Dec 2022 08:12:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229563AbiLAD7o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Nov 2022 22:59:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44598 "EHLO
+        id S229501AbiLAIMU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Dec 2022 03:12:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46824 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229520AbiLAD7n (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Nov 2022 22:59:43 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 679D497913;
-        Wed, 30 Nov 2022 19:59:42 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0EF5EB81DC8;
-        Thu,  1 Dec 2022 03:59:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C07A6C433D6;
-        Thu,  1 Dec 2022 03:59:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1669867179;
-        bh=mk2uzIOw2PmOIDLp2j0wd/RvWHXF0sTLsxuBpMlb8oc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=oQxC0tORfHCGqELEG/9QJeh+Z8salDxYyRydv8UdbNF4P45iQ2YRNY/T9jzdzfHuF
-         Dz7GT/NP8hofKB2X0kV/mnIPV42Mx+EduK6QcawmLrtjJ+uTnhKa8xUNzW4pDZe3Er
-         QA2d5hI81BK2vIRnErzIWA6pWfAX8Dz59P91jRUs08UEbTsysU8YzIyYKkVcBvt8Rk
-         JXUdx6uCWSWaEcnA9mM/bWaKN/jl3VPApvLNlHNbm1MlEHhkp5iUiC7EgXs42ng1/h
-         bRRIU5YjIPwK65lWlHwAaNhvhO6bAk5vG4L1wN9shSF2ZiKPGDJZmugXBjZDy9UwZB
-         6RFfvMw8cr+ig==
-Date:   Wed, 30 Nov 2022 19:59:39 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH] [RFC] iomap: zeroing needs to be pagecache aware
-Message-ID: <Y4gmqy6FfFTUInmP@magnolia>
-References: <20221201005214.3836105-1-david@fromorbit.com>
- <Y4gMhHsGriqPhNsR@magnolia>
- <20221201024329.GN3600936@dread.disaster.area>
+        with ESMTP id S229520AbiLAIMT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Dec 2022 03:12:19 -0500
+Received: from out30-57.freemail.mail.aliyun.com (out30-57.freemail.mail.aliyun.com [115.124.30.57])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB37B1D67D;
+        Thu,  1 Dec 2022 00:12:17 -0800 (PST)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R301e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045170;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=5;SR=0;TI=SMTPD_---0VW7y28d_1669882328;
+Received: from e18g06460.et15sqa.tbsite.net(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0VW7y28d_1669882328)
+          by smtp.aliyun-inc.com;
+          Thu, 01 Dec 2022 16:12:15 +0800
+From:   Gao Xiang <hsiangkao@linux.alibaba.com>
+To:     fstests <fstests@vger.kernel.org>, linux-xfs@vger.kernel.org
+Cc:     Gao Xiang <hsiangkao@linux.alibaba.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
+Subject: [PATCH] common/populate: Ensure that S_IFDIR.FMT_BTREE is in btree format
+Date:   Thu,  1 Dec 2022 16:12:08 +0800
+Message-Id: <20221201081208.40147-1-hsiangkao@linux.alibaba.com>
+X-Mailer: git-send-email 2.24.4
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221201024329.GN3600936@dread.disaster.area>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 01, 2022 at 01:43:29PM +1100, Dave Chinner wrote:
-> On Wed, Nov 30, 2022 at 06:08:04PM -0800, Darrick J. Wong wrote:
-> > On Thu, Dec 01, 2022 at 11:52:14AM +1100, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > Unwritten extents can have page cache data over the range being
-> > > zeroed so we can't just skip them entirely. Fix this by checking for
-> > > an existing dirty folio over the unwritten range we are zeroing
-> > > and only performing zeroing if the folio is already dirty.
-> > 
-> > Hm, I'll look at this tomorrow morning when I'm less bleary.  From a
-> > cursory glance it looks ok though.
-> > 
-> > > XXX: how do we detect a iomap containing a cow mapping over a hole
-> > > in iomap_zero_iter()? The XFS code implies this case also needs to
-> > > zero the page cache if there is data present, so trigger for page
-> > > cache lookup only in iomap_zero_iter() needs to handle this case as
-> > > well.
-> > 
-> > I've been wondering for a while if we ought to rename iomap_iter.iomap
-> > to write_iomap and iomap_iter.srcmap to read_iomap, and change all the
-> > ->iomap_begin and ->iomap_end functions as needed.  I think that would
-> > make it more clear to iomap users which one they're supposed to use.
-> > Right now we overload iomap_iter.iomap for reads and for writes if
-> > srcmap is a hole (or SHARED isn't set on iomap) and it's getting
-> > confusing to keep track of all that.
-> 
-> *nod*
-> 
-> We definitely need to clarify this - I find the overloading
-> confusing at the best of times.  No idea what the solution to this
-> looks like, though...
+Sometimes "$((128 * dblksz / 40))" dirents cannot make sure that
+S_IFDIR.FMT_BTREE could become btree format for its DATA fork.
 
-<nod> It probably means a largeish cleanup for 6.3.  Maybe start with
-the patches I'd sent earlier that shortened the ->iomap_begin and
-->iomap_end parameter list, and move on to redefining the two?
+Actually we just observed it can fail after apply our inode
+extent-to-btree workaround. The root cause is that the kernel may be
+too good at allocating consecutive blocks so that the data fork is
+still in extents format.
 
-https://lore.kernel.org/linux-xfs/166801778962.3992140.13451716594530581376.stgit@magnolia/
-https://lore.kernel.org/linux-xfs/166801779522.3992140.4135946031734299717.stgit@magnolia/
+Therefore instead of using a fixed number, let's make sure the number
+of extents is large enough than (inode size - inode core size) /
+sizeof(xfs_bmbt_rec_t).
 
+Suggested-by: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
+Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
+---
+ common/populate | 22 +++++++++++++++++++++-
+ 1 file changed, 21 insertions(+), 1 deletion(-)
 
-> > I guess the hard part of all that is that writes to the pagecache don't
-> > touch storage; and writeback doesn't care about the source mapping since
-> > it's only using block granularity.
-> 
-> Yup, that's why this code needs the IOMAP_F_STALE code to be in
-> place before we can use the page cache lookups like this.
+diff --git a/common/populate b/common/populate
+index 6e004997..e179a300 100644
+--- a/common/populate
++++ b/common/populate
+@@ -71,6 +71,25 @@ __populate_create_dir() {
+ 	done
+ }
+ 
++# Create a large directory and ensure that it's a btree format
++__populate_create_btree_dir() {
++	name="$1"
++	isize="$2"
++
++	mkdir -p "${name}"
++	d=0
++	while true; do
++		creat=mkdir
++		test "$((d % 20))" -eq 0 && creat=touch
++		$creat "${name}/$(printf "%.08d" "$d")"
++		if [ "$((d % 40))" -eq 0 ]; then
++			nexts="$($XFS_IO_PROG -c "stat" $name | grep 'fsxattr.nextents' | sed -e 's/^.*nextents = //g' -e 's/\([0-9]*\).*$/\1/g')"
++			[ "$nexts" -gt "$(((isize - 176) / 16))" ] && break
++		fi
++		d=$((d+1))
++	done
++}
++
+ # Add a bunch of attrs to a file
+ __populate_create_attr() {
+ 	name="$1"
+@@ -176,6 +195,7 @@ _scratch_xfs_populate() {
+ 
+ 	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
+ 	dblksz="$(_xfs_get_dir_blocksize "$SCRATCH_MNT")"
++	isize="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep meta-data=.*isize | sed -e 's/^.*isize=//g' -e 's/\([0-9]*\).*$/\1/g')"
+ 	crc="$(_xfs_has_feature "$SCRATCH_MNT" crc -v)"
+ 	if [ $crc -eq 1 ]; then
+ 		leaf_hdr_size=64
+@@ -226,7 +246,7 @@ _scratch_xfs_populate() {
+ 
+ 	# - BTREE
+ 	echo "+ btree dir"
+-	__populate_create_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$((128 * dblksz / 40))" true
++	__populate_create_btree_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$isize"
+ 
+ 	# Symlinks
+ 	# - FMT_LOCAL
+-- 
+2.24.4
 
-Well it's in for-next now, so it'll land in 6.2.
-
---D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
