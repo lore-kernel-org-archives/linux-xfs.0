@@ -2,178 +2,476 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F117AC43217
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Dec 2022 15:52:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CAE4C43217
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Dec 2022 15:53:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231926AbiLAPwt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Dec 2022 10:52:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38206 "EHLO
+        id S231578AbiLAPxn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Dec 2022 10:53:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231468AbiLAPwt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Dec 2022 10:52:49 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFAA417A9A;
-        Thu,  1 Dec 2022 07:52:47 -0800 (PST)
+        with ESMTP id S231193AbiLAPxm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Dec 2022 10:53:42 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA99183259;
+        Thu,  1 Dec 2022 07:53:39 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C5E04B81F0A;
-        Thu,  1 Dec 2022 15:52:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8828DC433D6;
-        Thu,  1 Dec 2022 15:52:44 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3A12E61F21;
+        Thu,  1 Dec 2022 15:53:39 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 948C4C433D6;
+        Thu,  1 Dec 2022 15:53:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1669909964;
-        bh=N69NN84jKEfRgJKvcS8eNJmNLvnfZdUZo3vvMogW0ho=;
+        s=k20201202; t=1669910018;
+        bh=uYvV7lFx5biZUxw/IXN1y9VuzsW2rgzlun5wOORCu7k=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=h0g4ot8fLIxe9BPyr7iMRUZYCqckdaRaKqWQ83qvfwRMk5fa0jf2nR+iQVd7nDjAY
-         wqDS/mhk0BEJsNzqmOTMSGPqTPcRYzS+g4jP290chnY+pOIjdNPrHjmgSloDb0pgKH
-         jyFVJb8XnZZZkv6okvsC+34soh/R9iOjY9DlcepaMZDfouTmeRjpLU8JuHaftVX9oK
-         Jb+iSok9RGp93NP6qbaN8mYcRCREoX/2GUKJml4sZmUnqExIIn5GlFNRV8lackLfaY
-         ojfAfTiKzfJYcQwFjlvETRM2EfPBc0IG3p+CSuang9ezuSwOqEvNXUguuwxhTXuA7T
-         4ls1q4fiyGHgA==
-Date:   Thu, 1 Dec 2022 07:52:44 -0800
+        b=IIufDX3PwSdmaNOFWQWkCDIaqbRfLzdqu7ztxvjUJYsIHa1ORK6YG/YvS+is4g7VB
+         S+A8qHH5Qw7MYS0d2HnC2sj+fVdaqBFgpFen0tCRCTHKkb7IxTrZSY0C42YBGOIdhG
+         nzxufIBBxL/L+HTzJMdZDtiyQUIFjPXmiYqW/LD8bp5zSq1VYeILnQae8Wxn3d9sqV
+         S7dWVqyI+CW5rcWAUW8E0i6hlqD/+tMLEzAcSzIFU+vaEqGlLPoq/4ysj3XU6ci5lx
+         syOF0AvDxGPSI1HmRXFAkgsRB0hmOhenIX8XhQJIe2wdUMy3kPxXGsXSkH5m7FJ9Ca
+         7I/33AkdLVnsA==
+Date:   Thu, 1 Dec 2022 07:53:38 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Gao Xiang <hsiangkao@linux.alibaba.com>
-Cc:     fstests <fstests@vger.kernel.org>, linux-xfs@vger.kernel.org,
-        Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
-Subject: Re: [PATCH] common/populate: Ensure that S_IFDIR.FMT_BTREE is in
- btree format
-Message-ID: <Y4jNzE5YJ3wFtsaz@magnolia>
-References: <20221201081208.40147-1-hsiangkao@linux.alibaba.com>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, wen.gang.wang@oracle.com,
+        fstests <fstests@vger.kernel.org>
+Subject: Re: [RFC PATCH] xfs: regression test for writeback corruption bug
+Message-ID: <Y4jOAjbSiOPRmTDB@magnolia>
+References: <20221123055812.747923-1-david@fromorbit.com>
+ <Y4U3XWf5j1zVGvV4@magnolia>
+ <Y4VejsHGU/tZuRYs@magnolia>
+ <Y4aAOn7CUTr9tUBN@magnolia>
+ <20221130173447.52eribihqfiptw3r@zlang-mailbox>
+ <Y4epMqdZmL/NX1YI@magnolia>
+ <20221201152145.eer3lffiq6m4b256@zlang-mailbox>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20221201081208.40147-1-hsiangkao@linux.alibaba.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20221201152145.eer3lffiq6m4b256@zlang-mailbox>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 01, 2022 at 04:12:08PM +0800, Gao Xiang wrote:
-> Sometimes "$((128 * dblksz / 40))" dirents cannot make sure that
-> S_IFDIR.FMT_BTREE could become btree format for its DATA fork.
+On Thu, Dec 01, 2022 at 11:21:45PM +0800, Zorro Lang wrote:
+> On Wed, Nov 30, 2022 at 11:04:18AM -0800, Darrick J. Wong wrote:
+> > On Thu, Dec 01, 2022 at 01:34:47AM +0800, Zorro Lang wrote:
+> > > On Tue, Nov 29, 2022 at 01:57:14PM -0800, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > 
+> > > > This is a regression test for a data corruption bug that existed in XFS'
+> > > > copy on write code between 4.9 and 4.19.  The root cause is a
+> > > > concurrency bug wherein we would drop ILOCK_SHARED after querying the
+> > > > CoW fork in xfs_map_cow and retake it before querying the data fork in
+> > > > xfs_map_blocks.  See the test description for a lot more details.
+> > > > 
+> > > > Cc: Wengang Wang <wen.gang.wang@oracle.com>
+> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > ---
+> > > >  common/rc         |   15 ++++
+> > > >  common/tracing    |   69 +++++++++++++++++
+> > > >  tests/xfs/924     |  215 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+> > > >  tests/xfs/924.out |    2 
+> > > >  4 files changed, 301 insertions(+)
+> > > >  create mode 100644 common/tracing
+> > > >  create mode 100755 tests/xfs/924
+> > > >  create mode 100644 tests/xfs/924.out
+> > > > 
+> > > > diff --git a/common/rc b/common/rc
+> > > > index d71fc0603f..b1b7a3e553 100644
+> > > > --- a/common/rc
+> > > > +++ b/common/rc
+> > > > @@ -3625,6 +3625,21 @@ _check_xflag()
+> > > >  	fi
+> > > >  }
+> > > >  
+> > > > +# Make sure the given file access mode is set to use the pagecache.  If
+> > > > +# userspace or kernel don't support statx or STATX_ATTR_DAX, we assume that
+> > > > +# means pagecache.  The sole parameter must be a directory.
+> > > > +_require_pagecache_access() {
+> > > > +	local testfile="$1/testfile"
+> > > > +
+> > > > +	touch "$testfile"
+> > > > +	if ! _check_s_dax "$testfile" 0 &>> $seqres.full; then
+> > > > +		rm -f "$testfile"
+> > > > +		_notrun 'test requires pagecache access'
+> > > > +	fi
+> > > > +
+> > > > +	rm -f "$testfile"
+> > > > +}
+> > > > +
+> > > >  # Check if dax mount options are supported
+> > > >  #
+> > > >  # $1 can be either 'dax=always' or 'dax'
+> > > > diff --git a/common/tracing b/common/tracing
+> > > > new file mode 100644
+> > > > index 0000000000..35e5ed41c2
+> > > > --- /dev/null
+> > > > +++ b/common/tracing
+> > > > @@ -0,0 +1,69 @@
+> > > > +##/bin/bash
+> > > > +# SPDX-License-Identifier: GPL-2.0-or-later
+> > > > +# Copyright (c) 2022 Oracle.  All Rights Reserved.
+> > > > +#
+> > > > +# Routines for dealing with ftrace (or any other tracing).
+> > > > +
+> > > > +_require_ftrace() {
+> > > > +	local ftrace_dir="/sys/kernel/debug/tracing/instances/"
+> > > > +	test -d "$ftrace_dir" || _notrun "kernel does not support ftrace"
+> > > > +
+> > > > +	# Give this fstest its own ftrace buffer so that we don't mess up
+> > > > +	# any other tracers that might be running.
+> > > > +	FTRACE_DIR="$ftrace_dir/fstests.$seq"
+> > > > +	test -d "$FTRACE_DIR" && rmdir "$FTRACE_DIR"
+> > > > +}
+> > > > +
+> > > > +_ftrace_cleanup() {
+> > > > +	if [ -d "$FTRACE_DIR" ]; then
+> > > > +		_ftrace_ignore_events
+> > > > +		# Removing an ftrace buffer requires rmdir, even though the
+> > > > +		# virtual directory contains children.
+> > > > +		rmdir "$FTRACE_DIR"
+> > > > +	fi
+> > > > +}
+> > > > +
+> > > > +# Intercept the given events.  Arguments may be regular expressions.
+> > > > +_ftrace_record_events() {
+> > > > +	local pwd="$PWD"
+> > > > +
+> > > > +	test -n "$FTRACE_DIR" || _fail "_require_ftrace not run?"
+> > > > +	mkdir "$FTRACE_DIR"
+> > > > +	cd "$FTRACE_DIR/events/" || _fail "$FTRACE_DIR: ftrace not set up?"
+> > > > +
+> > > > +	for arg in "$@"; do
+> > > > +		for tp in */${arg}; do
+> > > > +			# Replace slashes with semicolons per ftrace convention
+> > > > +			echo "${tp////:}" >> ../set_event
+> > > > +		done
+> > > > +	done
+> > > > +	cd "$pwd"
+> > > 
+> > > Is the relative path necessary, can we use absolute path at here?
+> > 
+> > Hm.  I suppose that inner loop could be replaced by:
+> > 
+> > 		find "$FTRACE_DIR/events/ -type d -name "$arg" -printf '%P\n' | \
+> > 			tr '/' ':' >> "$FTRACE_DIR/set_event"
+> > 
+> > and then we don't need all this cd'ing insanity.  I'll try that and
+> > report back.
+> > 
+> > > > +}
+> > > > +
+> > > > +# Stop intercepting the given events.  If no arguments, stops all events.
+> > > > +_ftrace_ignore_events() {
+> > > > +	local pwd="$PWD"
+> > > > +
+> > > > +	test -n "$FTRACE_DIR" || _fail "_require_ftrace not run?"
+> > > > +	cd "$FTRACE_DIR/events/" || _fail "$FTRACE_DIR: ftrace not set up?"
+> > > > +
+> > > > +	if [ "$#" -eq 0 ]; then
+> > > > +		echo > ../set_event
+> > > > +	else
+> > > > +		for arg in "$@"; do
+> > > > +			for tp in */${arg}; do
+> > > > +				# Replace slashes with semicolons per ftrace convention
+> > > > +				echo "!${tp////:}" >> ../set_event
+> > > > +			done
+> > > > +		done
+> > > > +	fi
+> > > > +
+> > > > +	cd "$pwd"
+> > > 
+> > > Same at here
+> > > 
+> > > > +}
+> > > > +
+> > > > +# Dump whatever was written to the ftrace buffer since the last time this
+> > > > +# helper was called.
+> > > > +_ftrace_dump() {
+> > > > +	test -n "$FTRACE_DIR" || _fail "_require_ftrace not run?"
+> > > > +	(cd "$FTRACE_DIR" && cat trace)
+> > > 
+> > > Why not "cat $FTRACE_DIR/trace" ?
+> > 
+> > Fixed.
+> > 
+> > > > +}
+> > > > diff --git a/tests/xfs/924 b/tests/xfs/924
+> > > > new file mode 100755
+> > > > index 0000000000..81f8ba2743
+> > > > --- /dev/null
+> > > > +++ b/tests/xfs/924
+> > > > @@ -0,0 +1,215 @@
+> > > > +#! /bin/bash
+> > > > +# SPDX-License-Identifier: GPL-2.0
+> > > > +# Copyright (c) 2022 Oracle.  All Rights Reserved.
+> > > > +#
+> > > > +# FS QA Test 924
+> > > > +#
+> > > > +# This is a regression test for a data corruption bug that existed in XFS' copy
+> > > > +# on write code between 4.9 and 4.19.  The root cause is a concurrency bug
+> > > > +# wherein we would drop ILOCK_SHARED after querying the CoW fork in xfs_map_cow
+> > > > +# and retake it before querying the data fork in xfs_map_blocks.  If a second
+> > > > +# thread changes the CoW fork mappings between the two calls, it's possible for
+> > > > +# xfs_map_blocks to return a zero-block mapping, which results in writeback
+> > > > +# being elided for that block.  Elided writeback of dirty data results in
+> > > > +# silent loss of writes.
+> > > > +#
+> > > > +# Worse yet, kernels from that era still used buffer heads, which means that an
+> > > > +# elided writeback leaves the page clean but the bufferheads dirty.  Due to a
+> > > > +# naïve optimization in mark_buffer_dirty, the SetPageDirty call is elided if
+> > > > +# the bufferhead is dirty, which means that a subsequent rewrite of the data
+> > > > +# block will never result in the page being marked dirty, and all subsequent
+> > > > +# writes are lost.
+> > > > +#
+> > > > +# It turns out that Christoph Hellwig unwittingly fixed the race in commit
+> > > > +# 5c665e5b5af6 ("xfs: remove xfs_map_cow"), and no testcase was ever written.
+> > > > +# Four years later, we hit it on a production 4.14 kernel.  This testcase
+> > > > +# relies on a debugging knob that introduces artificial delays into writeback.
+> > > > +#
+> > > > +# Before the race, the file blocks 0-1 are not shared and blocks 2-5 are
+> > > > +# shared.  There are no extents in CoW fork.
+> > > > +#
+> > > > +# Two threads race like this:
+> > > > +#
+> > > > +# Thread 1 (writeback block 0)     | Thread 2  (write to block 2)
+> > > > +# ---------------------------------|--------------------------------
+> > > > +#                                  |
+> > > > +# 1. Check if block 0 in CoW fork  |
+> > > > +#    from xfs_map_cow.             |
+> > > > +#                                  |
+> > > > +# 2. Block 0 not found in CoW      |
+> > > > +#    fork; the block is considered |
+> > > > +#    not shared.                   |
+> > > > +#                                  |
+> > > > +# 3. xfs_map_blocks looks up data  |
+> > > > +#    fork to get a map covering    |
+> > > > +#    block 0.                      |
+> > > > +#                                  |
+> > > > +# 4. It gets a data fork mapping   |
+> > > > +#    for block 0 with length 2.    |
+> > > > +#                                  |
+> > > > +#                                  | 1. A buffered write to block 2 sees
+> > > > +#                                  |    that it is a shared block and no
+> > > > +#                                  |    extent covers block 2 in CoW fork.
+> > > > +#                                  |
+> > > > +#                                  |    It creates a new CoW fork mapping.
+> > > > +#                                  |    Due to the cowextsize, the new
+> > > > +#                                  |    extent starts at block 0 with
+> > > > +#                                  |    length 128.
+> > > > +#                                  |
+> > > > +#                                  |
+> > > > +# 5. It lookup CoW fork again to   |
+> > > > +#    trim the map (0, 2) to a      |
+> > > > +#    shared block boundary.        |
+> > > > +#                                  |
+> > > > +# 5a. It finds (0, 128) in CoW fork|
+> > > > +# 5b. It trims the data fork map   |
+> > > > +#     from (0, 1) to (0, 0) (!!!)  |
+> > > > +#                                  |
+> > > > +# 6. The xfs_imap_valid call after |
+> > > > +#    the xfs_map_blocks call checks|
+> > > > +#    if the mapping (0, 0) covers  |
+> > > > +#    block 0.  The result is "NO". |
+> > > > +#                                  |
+> > > > +# 7. Since block 0 has no physical |
+> > > > +#    block mapped, it's not added  |
+> > > > +#    to the ioend.  This is the    |
+> > > > +#    first problem.                |
+> > > > +#                                  |
+> > > > +# 8. xfs_add_to_ioend usually      |
+> > > > +#    clears the bufferhead dirty   |
+> > > > +#    flag  Because this is skipped,|
+> > > > +#    we leave the page clean with  |
+> > > > +#    the associated buffer head(s) |
+> > > > +#    dirty (the second problem).   |
+> > > > +#    Now the dirty state is        |
+> > > > +#    inconsistent.
+> > > > +#
+> > > > +# On newer kernels, this is also a functionality test for the ifork sequence
+> > > > +# counter because the writeback completions will change the data fork and force
+> > > > +# revalidations of the wb mapping.
+> > > > +#
+> > > > +. ./common/preamble
+> > > > +_begin_fstest auto quick clone
+> > > > +
+> > > > +# Import common functions.
+> > > > +. ./common/reflink
+> > > > +. ./common/inject
+> > > > +. ./common/tracing
+> > > > +
+> > > > +# real QA test starts here
+> > > > +_cleanup()
+> > > > +{
+> > > > +	_ftrace_cleanup
+> > > > +	cd /
+> > > > +	rm -r -f $tmp.* $sentryfile $tracefile
+> > > > +}
+> > > > +
+> > > > +# Modify as appropriate.
+> > > > +_supported_fs xfs
+> > > > +_fixed_by_kernel_commit 5c665e5b5af6 "xfs: remove xfs_map_cow"
+> > > > +_require_ftrace
+> > > > +_require_error_injection
+> > > > +_require_scratch_reflink
+> > > > +_require_cp_reflink
+> > > > +
+> > > > +_scratch_mkfs >> $seqres.full
+> > > > +_scratch_mount >> $seqres.full
+> > > > +
+> > > > +# This is a pagecache test, so try to disable fsdax mode.
+> > > > +$XFS_IO_PROG -c 'chattr -x' $SCRATCH_MNT &> $seqres.full
+> > > > +_require_pagecache_access $SCRATCH_MNT
+> > > > +
+> > > > +knob="$(_find_xfs_mountdev_errortag_knob $SCRATCH_DEV "wb_delay_ms")"
+> > > > +test -w "$knob" || _notrun "Kernel does not have wb_delay_ms error injector"
+> > > 
+> > > Can `_require_xfs_io_error_injection` help that?
+> > > 
+> > > > +
+> > > > +blksz=65536
+> > > > +_require_congruent_file_oplen $SCRATCH_MNT $blksz
+> > > > +
+> > > > +# Make sure we have sufficient extent size to create speculative CoW
+> > > > +# preallocations.
+> > > > +$XFS_IO_PROG -c 'cowextsize 1m' $SCRATCH_MNT
+> > > > +
+> > > > +# Write out a file with the first two blocks unshared and the rest shared.
+> > > > +_pwrite_byte 0x59 0 $((160 * blksz)) $SCRATCH_MNT/file >> $seqres.full
+> > > > +_pwrite_byte 0x59 0 $((160 * blksz)) $SCRATCH_MNT/file.compare >> $seqres.full
+> > > > +sync
+> > > > +
+> > > > +_cp_reflink $SCRATCH_MNT/file $SCRATCH_MNT/file.reflink
+> > > > +
+> > > > +_pwrite_byte 0x58 0 $((2 * blksz)) $SCRATCH_MNT/file >> $seqres.full
+> > > > +_pwrite_byte 0x58 0 $((2 * blksz)) $SCRATCH_MNT/file.compare >> $seqres.full
+> > > > +sync
+> > > > +
+> > > > +# Avoid creation of large folios on newer kernels by cycling the mount and
+> > > > +# immediately writing to the page cache.
+> > > > +_scratch_cycle_mount
+> > > > +
+> > > > +# Write the same data to file.compare as we're about to do to file.  Do this
+> > > > +# before slowing down writeback to avoid unnecessary delay.
+> > > > +_pwrite_byte 0x57 0 $((2 * blksz)) $SCRATCH_MNT/file.compare >> $seqres.full
+> > > > +_pwrite_byte 0x56 $((2 * blksz)) $((2 * blksz)) $SCRATCH_MNT/file.compare >> $seqres.full
+> > > > +sync
+> > > > +
+> > > > +# Introduce a half-second wait to each writeback block mapping call.  This
+> > > > +# gives us a chance to race speculative cow prealloc with writeback.
+> > > > +wb_delay=500
+> > > > +echo $wb_delay > $knob
+> > > 
+> > > Oh, you'd like to avoid depending on xfs_io ?
+> > 
+> > Oops, this was leftover from before I ported the xfs_errortag.h changes
+> > to xfsprogs.
+> > 
+> > > > +curval="$(cat $knob)"
+> > > > +test "$curval" -eq $wb_delay || echo "expected wb_delay_ms == $wb_delay"
+> > > > +
+> > > > +_ftrace_record_events 'xfs_wb*iomap_invalid'
+> > > > +
+> > > > +# Start thread 1 + writeback above
+> > > > +$XFS_IO_PROG -c "pwrite -S 0x57 0 $((2 * blksz))" \
+> > > > +	-c 'bmap -celpv' -c 'bmap -elpv' \
+> > > 
+> > > I didn't find the "bmap -c" option, is it a new option? Won't it break the
+> > > golden image if a system doesn't support it?
+> > 
+> > -c is a deliberately undocumented option to the bmap command; it's been
+> > there since the introduction of reflink.
 > 
-> Actually we just observed it can fail after apply our inode
-> extent-to-btree workaround. The root cause is that the kernel may be
-> too good at allocating consecutive blocks so that the data fork is
-> still in extents format.
+> But when I tried that on rhel8 with a varietal ersion of xfsprogs 5.0.0
+> (xfsprogs-5.0.0-10.el8), I got below error output:
 > 
-> Therefore instead of using a fixed number, let's make sure the number
-> of extents is large enough than (inode size - inode core size) /
-> sizeof(xfs_bmbt_rec_t).
+> # xfs_io -c "bmap -celpv" testfile >/dev/null
+> xfs_io: xfsctl(XFS_IOC_GETBMAPX) iflags=0x28 ["testfile"]: Invalid argument
+> # xfs_io -c "bmap -c" testfile >/dev/null
+> xfs_io: xfsctl(XFS_IOC_GETBMAPX) iflags=0x28 ["testfile"]: Invalid argument
+> # xfs_io -c "bmap -elpv" testfile >/dev/null
+> (no error output)
 > 
-> Suggested-by: "Darrick J. Wong" <djwong@kernel.org>
-> Cc: Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
-> Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
-> ---
->  common/populate | 22 +++++++++++++++++++++-
->  1 file changed, 21 insertions(+), 1 deletion(-)
-> 
-> diff --git a/common/populate b/common/populate
-> index 6e004997..e179a300 100644
-> --- a/common/populate
-> +++ b/common/populate
-> @@ -71,6 +71,25 @@ __populate_create_dir() {
->  	done
->  }
->  
-> +# Create a large directory and ensure that it's a btree format
-> +__populate_create_btree_dir() {
+> So, maybe, if you don't need this output to be golden image, how about filter
+> out the error output to $seqres.full too? Or any better idea?
 
-Since this encodes behavior specific to xfs, this ought to be called
-
-__populate_xfs_create_btree_dir
-
-or something like that.
-
-> +	name="$1"
-> +	isize="$2"
-
-These ought to be local variables, e.g.
-
-	local name="$1"
-	local isize="$2"
-
-So that they don't pollute the global name scope.  Yay bash.
-
-> +
-> +	mkdir -p "${name}"
-> +	d=0
-> +	while true; do
-> +		creat=mkdir
-> +		test "$((d % 20))" -eq 0 && creat=touch
-> +		$creat "${name}/$(printf "%.08d" "$d")"
-> +		if [ "$((d % 40))" -eq 0 ]; then
-> +			nexts="$($XFS_IO_PROG -c "stat" $name | grep 'fsxattr.nextents' | sed -e 's/^.*nextents = //g' -e 's/\([0-9]*\).*$/\1/g')"
-
-_xfs_get_fsxattr...
-
-> +			[ "$nexts" -gt "$(((isize - 176) / 16))" ] && break
-
-Only need to calculate this once if you declare this at the top:
-
-	# We need enough extents to guarantee that the data fork is in
-	# btree format.  Cycling the mount to use xfs_db is too slow, so
-	# watch for when the extent count exceeds the space after the
-	# inode core.
-	local max_nextents="$(((isize - 176) / 16))"
-
-and then you can do:
-
-			[[ $nexts -gt $max_nextents ]] && break
-
-Also not a fan of hardcoding 176 around fstests, but I don't know how
-we'd detect that at all.
-
-# Number of bytes reserved for only the inode record, excluding the
-# immediate fork areas.
-_xfs_inode_core_bytes()
-{
-	echo 176
-}
-
-I guess?  Or extract it from tests/xfs/122.out?
-
-> +		fi
-> +		d=$((d+1))
-> +	done
-> +}
-> +
->  # Add a bunch of attrs to a file
->  __populate_create_attr() {
->  	name="$1"
-> @@ -176,6 +195,7 @@ _scratch_xfs_populate() {
->  
->  	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
->  	dblksz="$(_xfs_get_dir_blocksize "$SCRATCH_MNT")"
-> +	isize="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep meta-data=.*isize | sed -e 's/^.*isize=//g' -e 's/\([0-9]*\).*$/\1/g')"
-
-Please hoist this to common/xfs:
-
-# Number of bytes reserved for a full inode record, which includes the
-# immediate fork areas.
-_xfs_inode_size()
-{
-	local mntpoint="$1"
-
-	$XFS_INFO_PROG "$mountpoint" | grep 'meta-data=.*isize' | sed -e 's/^.*isize=\([0-9]*\).*$/\1/g')"
-}
-
-Otherwise this looks reasonable.
+D'oh, forgot that -c only works if CONFFIG_XFS_DEBUG=y.  I'll remove the
+bmap commands, since the trace data now tells us everything we need.
 
 --D
 
->  	crc="$(_xfs_has_feature "$SCRATCH_MNT" crc -v)"
->  	if [ $crc -eq 1 ]; then
->  		leaf_hdr_size=64
-> @@ -226,7 +246,7 @@ _scratch_xfs_populate() {
->  
->  	# - BTREE
->  	echo "+ btree dir"
-> -	__populate_create_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$((128 * dblksz / 40))" true
-> +	__populate_create_btree_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$isize"
->  
->  	# Symlinks
->  	# - FMT_LOCAL
-> -- 
-> 2.24.4
+> Thanks,
+> Zorro
+> 
+> > 
+> > > > +	-c 'fsync' $SCRATCH_MNT/file >> $seqres.full &
+> > > > +sleep 1
+> > > > +
+> > > > +# Start a sentry to look for evidence of the XFS_ERRORTAG_REPORT logging.  If
+> > > > +# we see that, we know we've forced writeback to revalidate a mapping.  The
+> > > > +# test has been successful, so turn off the delay.
+> > > > +sentryfile=$TEST_DIR/$seq.sentry
+> > > > +tracefile=$TEST_DIR/$seq.ftrace
+> > > > +wait_for_errortag() {
+> > > > +	while [ -e "$sentryfile" ]; do
+> > > > +		_ftrace_dump | grep iomap_invalid >> "$tracefile"
+> > > > +		if grep -q iomap_invalid "$tracefile"; then
+> > > > +			echo 0 > "$knob"
+> > > > +			_ftrace_ignore_events
+> > > > +			break;
+> > > > +		fi
+> > > > +		sleep 0.5
+> > > > +	done
+> > > > +}
+> > > > +touch $sentryfile
+> > > > +wait_for_errortag &
+> > > 
+> > > Should we *wait* background processes in cleanup after removing $sentryfile.
+> > 
+> > Yes.
+> > 
+> > > > +
+> > > > +# Start thread 2 to create the cowextsize reservation
+> > > > +$XFS_IO_PROG -c "pwrite -S 0x56 $((2 * blksz)) $((2 * blksz))" \
+> > > > +	-c 'bmap -celpv' -c 'bmap -elpv' \
+> > > > +	-c 'fsync' $SCRATCH_MNT/file >> $seqres.full
+> > > > +rm -f $sentryfile
+> > > > +
+> > > > +cat "$tracefile" >> $seqres.full
+> > > > +grep -q iomap_invalid "$tracefile"
+> > > > +saw_invalidation=$?
+> > > > +
+> > > > +# Flush everything to disk.  If the bug manifests, then after the cycle,
+> > > > +# file should have stale 0x58 in block 0 because we silently dropped a write.
+> > > > +_scratch_cycle_mount
+> > > > +
+> > > > +if ! cmp -s $SCRATCH_MNT/file $SCRATCH_MNT/file.compare; then
+> > > > +	echo file and file.compare do not match
+> > > > +	$XFS_IO_PROG -c 'bmap -celpv' -c 'bmap -elpv' $SCRATCH_MNT/file >> $seqres.full
+> > > > +	echo file.compare
+> > > > +	od -tx1 -Ad -c $SCRATCH_MNT/file.compare
+> > > > +	echo file
+> > > > +	od -tx1 -Ad -c $SCRATCH_MNT/file
+> > > > +elif [ $saw_invalidation -ne 0 ]; then
+> > > > +	# The files matched, but nothing got logged about the revalidation?
+> > > > +	echo "Expected to hear about writeback iomap invalidations?"
+> > > > +fi
+> > > > +
+> > > > +echo Silence is golden
+> > > > +status=0
+> > > > +exit
+> > > > diff --git a/tests/xfs/924.out b/tests/xfs/924.out
+> > > > new file mode 100644
+> > > > index 0000000000..c6655da35a
+> > > > --- /dev/null
+> > > > +++ b/tests/xfs/924.out
+> > > > @@ -0,0 +1,2 @@
+> > > > +QA output created by 924
+> > > > +Silence is golden
+> > > > 
+> > > 
+> > 
 > 
