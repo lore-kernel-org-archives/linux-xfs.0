@@ -2,144 +2,113 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0118CC4321E
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Dec 2022 02:12:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BDB5C4321E
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Dec 2022 02:43:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229501AbiLACMv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Nov 2022 21:12:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47644 "EHLO
+        id S229566AbiLACng (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Nov 2022 21:43:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229521AbiLACMu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Nov 2022 21:12:50 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 093CE1583A
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Nov 2022 18:12:48 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1FD8761E28
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Dec 2022 02:12:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4435EC433C1;
-        Thu,  1 Dec 2022 02:12:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1669860767;
-        bh=+uOQVuU56FCKGDr2dGbqkc3UlLC0WmIkeKVPK8NANSM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=QNYuT1mdFEWB0Ok4fck/G8N+1I9WW2WccMOdN6w7+WOlXhLY4noqp8AVdoucLo2V4
-         vZW0rQQIdbsRYm3/7lCzazA6AusnUnJdC9DHQWsrbvSAzQ1Zb6ZZwGvga9CdrYQq9P
-         +cVo/PD4NKgyyBe1PS+srV2HNu2pYQMR+FtJztNVkJM8tV1p1pHmHNfOjhuVz/VNMz
-         HRTp9nWpitYfr5NOZ7b2p/lK1SgvW9osJ0jmR1iU1P3l5YomwzmGPAYq0D25ckUzCM
-         JAHAY7T/6tmAIeMte19Ev2aROb25sb89yt+bLxc9jePlQ+1xVw+sSfUJ1eJleC/ODk
-         dvu2e/gukgrSA==
-Date:   Wed, 30 Nov 2022 18:12:46 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Chris Boot <lists@bootc.boo.tc>, linux-xfs@vger.kernel.org
-Subject: Re: XFS corruption help; xfs_repair isn't working
-Message-ID: <Y4gNntJTb1dZLejo@magnolia>
-References: <c3fc1808-dbbf-b1c0-36de-1e55be1942e8@bootc.boo.tc>
- <20221129220646.GI3600936@dread.disaster.area>
+        with ESMTP id S229708AbiLACnf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Nov 2022 21:43:35 -0500
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC91A326CC
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Nov 2022 18:43:33 -0800 (PST)
+Received: by mail-pj1-x102a.google.com with SMTP id b13-20020a17090a5a0d00b0021906102d05so600293pjd.5
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Nov 2022 18:43:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=oIfsju+FFj49HB7JpJx7BcFuQqxoVzT7pFhtla5kBbc=;
+        b=Xpn5XkG4fEavYcL8QdoNnwS1c/sXEg+Q2wH/QmDGlMdsvEvm85GO+ObmFyFJVH2Eqt
+         2oMj3016/WLtLyU33UNo+kmu0jTyi85FTVJKNaPYvLaTqHxFlbvfslmyktE1AluuEEO5
+         HguvkZVGIRC5L+f1fxcZLxUfu2dUaR96VY3ca9grMfJeN5SHmyRuc7nGlLmijis25UmM
+         hb5bRt2Pl3j/kiqDJNZ0fmWQ1jUevUe4JHN18v/ipbmXPFz4JHMbjNtpW1ffER0hT+oh
+         jKeRg/ScOaHuFhcvs/+d16KQV0H2m8QT4jLmaJBV7yG3OqJlDSi2hBdRd1L1u3n0nJ1+
+         l7Yg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=oIfsju+FFj49HB7JpJx7BcFuQqxoVzT7pFhtla5kBbc=;
+        b=LmhYTVcTCozFaZXHwdMc7DwQI3aCjC8QTZlyV8nDlSSYbETCCToMF7kch1z18Jvv3q
+         0YGmiIgk+qExqF70dmH3vG0fcnpaY5cFVMbrnKnmAe8Xnqss58UCjrWXkFSLAG8gycfF
+         ++FJJnRqvxcYMDjb3J0evxDENmjWiATQBO7NaK3niCELJN7GR/GTgZKsY6cIUlqjnKpL
+         ghO4cdoXW4bu1QBlVwXhn3lGuU8RGIs3v+XzQFa6tlnvHlQsi99a34b0GqMW/hh+6ZBw
+         ARf+P/r230w5RSFvwB85Nr3kHJLUpUVo8L/ZNQeww3xHAwyVKDSRcdYGNE34olirhGdS
+         Qikw==
+X-Gm-Message-State: ANoB5pn3zbopqgqddNmBg7WzTu+87KOoLHhpYh3j9QBPe93xdrv3n7IA
+        NZOgv689As/JCQTY8UgzoOqRqEaFps3A9Q==
+X-Google-Smtp-Source: AA0mqf5Rlb+Y2Lmx8+0JlEe6oEn76lX43Ws/Z+S3fI8YAmv7SK82WvgT70mNHl4/fkzFvwYIqU8xXA==
+X-Received: by 2002:a17:902:6bc6:b0:186:fb90:5758 with SMTP id m6-20020a1709026bc600b00186fb905758mr46250243plt.115.1669862613371;
+        Wed, 30 Nov 2022 18:43:33 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-65-106.pa.vic.optusnet.com.au. [49.186.65.106])
+        by smtp.gmail.com with ESMTPSA id z23-20020aa79497000000b0056bd59eaef0sm2067830pfk.4.2022.11.30.18.43.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 30 Nov 2022 18:43:32 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1p0ZXt-0033kZ-RT; Thu, 01 Dec 2022 13:43:29 +1100
+Date:   Thu, 1 Dec 2022 13:43:29 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH] [RFC] iomap: zeroing needs to be pagecache aware
+Message-ID: <20221201024329.GN3600936@dread.disaster.area>
+References: <20221201005214.3836105-1-david@fromorbit.com>
+ <Y4gMhHsGriqPhNsR@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221129220646.GI3600936@dread.disaster.area>
+In-Reply-To: <Y4gMhHsGriqPhNsR@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 30, 2022 at 09:06:46AM +1100, Dave Chinner wrote:
-> On Tue, Nov 29, 2022 at 08:49:27PM +0000, Chris Boot wrote:
-> > Hi all,
+On Wed, Nov 30, 2022 at 06:08:04PM -0800, Darrick J. Wong wrote:
+> On Thu, Dec 01, 2022 at 11:52:14AM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > Sorry, I'm mailing here as a last resort before declaring this filesystem
-> > done for. Following a string of unclean reboots and a dying hard disk I have
-> > this filesystem in a very poor state that xfs_repair can't make any progress
-> > on.
-> > 
-> > It has been mounted on kernel 5.18.14-1~bpo11+1 (from Debian
-> > bullseye-backports). Most of the repairs were done using xfsprogs 5.10.0-4
-> > (from Debian bullseye stable), though I did also try with 6.0.0-1 (from
-> > Debian bookworm/testing re-built myself).
-> > 
-> > I've attached the full log from xfs_repair, but the summary is it all starts
-> > with multiple instances of this in Phase 3:
-> > 
-> > Metadata CRC error detected at 0x5609236ce178, xfs_dir3_block block
-> > 0xe101f32f8/0x1000
-> > bad directory block magic # 0x1859dc06 in block 0 for directory inode
-> > 64426557977
-> > bad bestfree table in block 0 in directory inode 64426557977: repairing
-> > table
+> > Unwritten extents can have page cache data over the range being
+> > zeroed so we can't just skip them entirely. Fix this by checking for
+> > an existing dirty folio over the unwritten range we are zeroing
+> > and only performing zeroing if the folio is already dirty.
 > 
-> I think that the problem is that we are trying to repair garbage
-> without completely reinitialising the directory block header. We
-> don't bother checking the incoming directory block for sanity after
-> the CRC fails, and then we only warn that it has a bad magic number.
+> Hm, I'll look at this tomorrow morning when I'm less bleary.  From a
+> cursory glance it looks ok though.
 > 
-> We then go a process it as though it is a directory block,
-> essentially trusting that the directory block header is actually
-> sane. Which it clearly isn't because the magic number in the dir
-> block has been trashed.
+> > XXX: how do we detect a iomap containing a cow mapping over a hole
+> > in iomap_zero_iter()? The XFS code implies this case also needs to
+> > zero the page cache if there is data present, so trigger for page
+> > cache lookup only in iomap_zero_iter() needs to handle this case as
+> > well.
 > 
-> We then rescan parts of the directory block and rewrite parts of the
-> block header, but the next time we re-scan the block we find that
-> there are still bad parts in the header/directory block. Then we
-> rewrite the magic number to make it look like a directory block,
-> and when repair is finished it goes to write the recovered directory
-> block to disk and it fails the verifier check - it's still a corrupt
-> directory block because it's still full of garbage that doesn't pass
-> muster.
-> 
-> From a recovery persepective, I think that if we get a bad CRC and
-> an unrecognisable magic number, we have no idea what the block is
-> meant to contain - we cannot trust it to contain directory
-> information, so we should just trash the block rather than try to
-> rebuild it. If it was a valid directory block, this will result in
-> the files it pointed to being moved to lost+found so no data is
-> actually lost.
-> 
-> If it wasn't a dir block at all, then simply trashing the data fork
-> of the inode and not touching the contents of the block at all is
-> right thing to do. Modifying something that may be cross-linked
-> before we've resolved all the cross-linked extents is a bad thing to
-> be doing, so if we cannot recognise the block as a directory block,
-> we shouldn't try to recover it as a directory block at all....
-> 
-> Darrick, what are your thoughts on this?
+> I've been wondering for a while if we ought to rename iomap_iter.iomap
+> to write_iomap and iomap_iter.srcmap to read_iomap, and change all the
+> ->iomap_begin and ->iomap_end functions as needed.  I think that would
+> make it more clear to iomap users which one they're supposed to use.
+> Right now we overload iomap_iter.iomap for reads and for writes if
+> srcmap is a hole (or SHARED isn't set on iomap) and it's getting
+> confusing to keep track of all that.
 
-I kinda want to see the metadump of this (possibly enormous) filesystem.
+*nod*
 
-Probably the best outcome is to figure out which blocks in each
-directory are corrupt, remove them from the data fork mapping, and see
-if repair can fix up the other things (e.g. bestfree data) and dump the
-unlinked files in /lost+found.  Hopefully rsnapshot can deal with the
-directory tree if we can at least get the bad dirblocks out of the way.
+We definitely need to clarify this - I find the overloading
+confusing at the best of times.  No idea what the solution to this
+looks like, though...
 
-If reflink is turned on, repair can deal with crosslinked file data
-blocks, though anything other kind of block results in the usual
-scraping-till-its-clean behavior.
+> I guess the hard part of all that is that writes to the pagecache don't
+> touch storage; and writeback doesn't care about the source mapping since
+> it's only using block granularity.
 
-I'm also kinda curious what started this corruption problem, and did any
-of it leak through to other files?
+Yup, that's why this code needs the IOMAP_F_STALE code to be in
+place before we can use the page cache lookups like this.
 
---D
+Cheers,
 
-> > As it is the filesystem can be mounted and most data appears accessible, but
-> > several directories are corrupt and can't be read or removed; the kernel
-> > reports metadata corruption and CRC errors and returns EUCLEAN.
-> > 
-> > Ideally I'd like to remove the corrupt directories, recover as much of
-> > what's left as possible, and make the filesystem usable again (it's an
-> > rsnapshot destination) - but I'll take what I can.
-> 
-> Yup, it's only a small number of directory inodes, so we might be
-> able to do this with some manual xfs_db magic. I think all we'd
-> need to do is rewrite specific parts of the dir block header and
-> repair should then do the rest...
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
