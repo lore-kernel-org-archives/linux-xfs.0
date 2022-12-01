@@ -2,126 +2,137 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 772A5C43217
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Dec 2022 15:34:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B379C4321E
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Dec 2022 15:34:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232024AbiLAPe0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Dec 2022 10:34:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43016 "EHLO
+        id S231837AbiLAPel (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Dec 2022 10:34:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43152 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231768AbiLAPd7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Dec 2022 10:33:59 -0500
-Received: from mail3.bemta32.messagelabs.com (mail3.bemta32.messagelabs.com [195.245.230.82])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FE691144;
-        Thu,  1 Dec 2022 07:33:21 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
-        s=170520fj; t=1669908800; i=@fujitsu.com;
-        bh=N56u62cITdKOZ72UbsVRhOqgpDhCsAHPIjg3XTUEUqo=;
-        h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-         MIME-Version:Content-Type;
-        b=ZqX9Ng/A5FRaOBokMqIa1rXjoF/vL4mEWMY9qBs6VW9pt/CrHzwlPyE0l++hjl5/y
-         dtYF0f14NOEulZWC7nEIWnb0MVrKLdXclRd4PbV0I3QmTfGl6qOnbvHaWRalVL75Vs
-         /9PQhTnveAm247+CIRT9N4gAExtzOGHADFYJt0qw0rWWprL4i+1sk7fVBv4KXws/5L
-         1j1sveZ9b55rwjadsclvaaNYq9IvzA0uqiVTdNMrSm1CDhcb+YkMxU22Y1NWU/K1DQ
-         w1ywzpvnWTBiguOaldpkj/8aOEh+GrjOwwMhxfVDEmcKWNDYcgQXPm2lGbyvFEpbBG
-         74+OhpNxjmhvw==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupnleJIrShJLcpLzFFi42Kxs+FI1LU/2ZF
-  s8OuMssWc9WvYLKZPvcBoseXYPUaLy0/4LPbsPclicXnXHDaLXX92sFus/PGH1YHD49QiCY/F
-  e14yeWxa1cnmcWLGbxaPF5tnMnp83iQXwBbFmpmXlF+RwJpx8d4FpoIVXBWXn89gbmB8ztHFy
-  MUhJLCFUaJxywVmCGc5k8SMwyvZIJw9jBLTv01i7GLk5GAT0JG4sOAvaxcjB4eIQLXEraVsIG
-  FmgQyJ41f+MIPYwgJuEp9vPwezWQRUJOa3H2QFsXkFXCV+d95hAbElBBQkpjx8D1bDCRR/+Xc
-  jO4gtJOAicb35IDNEvaDEyZlPWCDmS0gcfPGCGWSthICSxMzueIgxFRKzZrUxQdhqElfPbWKe
-  wCg4C0n3LCTdCxiZVjGaFqcWlaUW6RrpJRVlpmeU5CZm5uglVukm6qWW6panFpfoGuollhfrp
-  RYX6xVX5ibnpOjlpZZsYgTGSkoxy+wdjD1L/+gdYpTkYFIS5dXe15EsxJeUn1KZkVicEV9Ump
-  NafIhRhoNDSYI3ZQ9QTrAoNT21Ii0zBxi3MGkJDh4lEV6+Y0Bp3uKCxNzizHSI1ClGY461DQf
-  2MnNMnf1vP7MQS15+XqqUOG/gcaBSAZDSjNI8uEGwdHKJUVZKmJeRgYFBiKcgtSg3swRV/hWj
-  OAejkjDvtm1AU3gy80rg9r0COoUJ6JRIsTaQU0oSEVJSDUx7StSUf/q9cbwdxXSDReDKiie6G
-  nqBtyar6LrxKldu2lt5SVzgbDqn6lOrxxP2SGje/nAus+VBsc3PhntM/VyH1uuvs5xy/5yHC5
-  fQ8bBV663V9sSf3eL3vWWJqJd9uu57ceE8h2v5TUfj3Dq7uSJ6C55+iJundn7ngu77p7+GtNi
-  7S79nvWO2r9pddZXyx1nT/rX26ruuWfjRKn3HdLv4mUZsOpePGMrd7Ht7o1dTz08iLXtqzUqH
-  uwv/aiUbyQVW7znk+/6K2IMVUdErJrH2dCx9kbd0VY7unK+zPKxtncqd7ETXpOY7lcbN2P1h5
-  xKFhMVB7J1WbO8m7mz6/qQjoyF1yqceVxc+9fh5/5VYijMSDbWYi4oTActQn4KiAwAA
-X-Env-Sender: ruansy.fnst@fujitsu.com
-X-Msg-Ref: server-20.tower-585.messagelabs.com!1669908799!42492!1
-X-Originating-IP: [62.60.8.97]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.101.1; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 23032 invoked from network); 1 Dec 2022 15:33:19 -0000
-Received: from unknown (HELO n03ukasimr01.n03.fujitsu.local) (62.60.8.97)
-  by server-20.tower-585.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 1 Dec 2022 15:33:19 -0000
-Received: from n03ukasimr01.n03.fujitsu.local (localhost [127.0.0.1])
-        by n03ukasimr01.n03.fujitsu.local (Postfix) with ESMTP id 297E81001A3;
-        Thu,  1 Dec 2022 15:33:19 +0000 (GMT)
-Received: from R01UKEXCASM126.r01.fujitsu.local (R01UKEXCASM126 [10.183.43.178])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        with ESMTP id S231968AbiLAPeN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Dec 2022 10:34:13 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA898B0DE1
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Dec 2022 07:33:30 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by n03ukasimr01.n03.fujitsu.local (Postfix) with ESMTPS id 1D4EB10019E;
-        Thu,  1 Dec 2022 15:33:19 +0000 (GMT)
-Received: from localhost.localdomain (10.167.225.141) by
- R01UKEXCASM126.r01.fujitsu.local (10.183.43.178) with Microsoft SMTP Server
- (TLS) id 15.0.1497.42; Thu, 1 Dec 2022 15:33:15 +0000
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <nvdimm@lists.linux.dev>, <linux-fsdevel@vger.kernel.org>
-CC:     <djwong@kernel.org>, <david@fromorbit.com>,
-        <dan.j.williams@intel.com>, <akpm@linux-foundation.org>
-Subject: [PATCH v2 8/8] xfs: remove restrictions for fsdax and reflink
-Date:   Thu, 1 Dec 2022 15:32:53 +0000
-Message-ID: <1669908773-207-1-git-send-email-ruansy.fnst@fujitsu.com>
-X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1669908538-55-1-git-send-email-ruansy.fnst@fujitsu.com>
-References: <1669908538-55-1-git-send-email-ruansy.fnst@fujitsu.com>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 48D596204A
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Dec 2022 15:33:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5AB8C433C1;
+        Thu,  1 Dec 2022 15:33:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669908809;
+        bh=3saToF7532w09ow9rWEWP1Cm1YI3VJpUk4872EvBR4g=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=o/62IRo5gFE9P2lvCInECpnUWnskmImuqW3DlZqtZoshOt1fFMp0yR3gmMVGPorc4
+         uzDhU8LeXe8ECDhHQ+IgnPD+l1KCQlGfnw02W6+bjLIOop2iB0FShRAPS1rUVbLKAz
+         CNWmib3Y3j4pZDiwO6zOAiCS91b3vEPWq9ukegT1bgb9vfgzQaux/jXh4Bmlqh0HLv
+         CmRyo3L+GAxA6SGoMX0YuvWdyQvR9PrCrmAeLrShqroIFpMwPKAWWp8pHHSuTUzBNE
+         zWzxK5E5U/rdh0zVOzTcCS6Nmhs3aoxZOY8d9lEZtiqEGH+ir0SpKtXgDtGhdDmvxm
+         qpOFgVLKHdWgw==
+Date:   Thu, 1 Dec 2022 07:33:29 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     cem@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs_repair: Fix check_refcount() error path
+Message-ID: <Y4jJSQx8klc/NwAg@magnolia>
+References: <20221201093408.87820-1-cem@kernel.org>
+ <20221201093408.87820-2-cem@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.167.225.141]
-X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
- R01UKEXCASM126.r01.fujitsu.local (10.183.43.178)
-X-Virus-Scanned: ClamAV using ClamSMTP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221201093408.87820-2-cem@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Since the basic function for fsdax and reflink has been implemented,
-remove the restrictions of them for widly test.
+On Thu, Dec 01, 2022 at 10:34:07AM +0100, cem@kernel.org wrote:
+> From: Carlos Maiolino <cmaiolino@redhat.com>
+> 
+> Add proper exit error paths to avoid checking all pointers at the current path
+> 
+> Fixes-coverity-id: 1512651
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
----
- fs/xfs/xfs_ioctl.c | 4 ----
- fs/xfs/xfs_iops.c  | 4 ----
- 2 files changed, 8 deletions(-)
+Looks good to me,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 1f783e979629..13f1b2add390 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1138,10 +1138,6 @@ xfs_ioctl_setattr_xflags(
- 	if ((fa->fsx_xflags & FS_XFLAG_REALTIME) && xfs_is_reflink_inode(ip))
- 		ip->i_diflags2 &= ~XFS_DIFLAG2_REFLINK;
- 
--	/* Don't allow us to set DAX mode for a reflinked file for now. */
--	if ((fa->fsx_xflags & FS_XFLAG_DAX) && xfs_is_reflink_inode(ip))
--		return -EINVAL;
--
- 	/* diflags2 only valid for v3 inodes. */
- 	i_flags2 = xfs_flags2diflags2(ip, fa->fsx_xflags);
- 	if (i_flags2 && !xfs_has_v3inodes(mp))
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 2e10e1c66ad6..bf0495f7a5e1 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1185,10 +1185,6 @@ xfs_inode_supports_dax(
- 	if (!S_ISREG(VFS_I(ip)->i_mode))
- 		return false;
- 
--	/* Only supported on non-reflinked files. */
--	if (xfs_is_reflink_inode(ip))
--		return false;
--
- 	/* Block size must match page size */
- 	if (mp->m_sb.sb_blocksize != PAGE_SIZE)
- 		return false;
--- 
-2.38.1
+--D
 
+> ---
+> V2:
+> 	- Rename error label from err_agf to err_pag
+> 	- pass error directly to libxfs_btree_del_cursor() without
+> 	  using ternary operator
+> V3:
+> 	- Rename the remaining 2 err labels to match what they are freeing
+> 
+>  repair/rmap.c | 22 ++++++++++------------
+>  1 file changed, 10 insertions(+), 12 deletions(-)
+> 
+> diff --git a/repair/rmap.c b/repair/rmap.c
+> index 2c809fd4f..9ec5e9e13 100644
+> --- a/repair/rmap.c
+> +++ b/repair/rmap.c
+> @@ -1379,7 +1379,7 @@ check_refcounts(
+>  	if (error) {
+>  		do_warn(_("Could not read AGF %u to check refcount btree.\n"),
+>  				agno);
+> -		goto err;
+> +		goto err_pag;
+>  	}
+>  
+>  	/* Leave the per-ag data "uninitialized" since we rewrite it later */
+> @@ -1388,7 +1388,7 @@ check_refcounts(
+>  	bt_cur = libxfs_refcountbt_init_cursor(mp, NULL, agbp, pag);
+>  	if (!bt_cur) {
+>  		do_warn(_("Not enough memory to check refcount data.\n"));
+> -		goto err;
+> +		goto err_agf;
+>  	}
+>  
+>  	rl_rec = pop_slab_cursor(rl_cur);
+> @@ -1401,7 +1401,7 @@ check_refcounts(
+>  			do_warn(
+>  _("Could not read reference count record for (%u/%u).\n"),
+>  					agno, rl_rec->rc_startblock);
+> -			goto err;
+> +			goto err_cur;
+>  		}
+>  		if (!have) {
+>  			do_warn(
+> @@ -1416,7 +1416,7 @@ _("Missing reference count record for (%u/%u) len %u count %u\n"),
+>  			do_warn(
+>  _("Could not read reference count record for (%u/%u).\n"),
+>  					agno, rl_rec->rc_startblock);
+> -			goto err;
+> +			goto err_cur;
+>  		}
+>  		if (!i) {
+>  			do_warn(
+> @@ -1446,14 +1446,12 @@ next_loop:
+>  		rl_rec = pop_slab_cursor(rl_cur);
+>  	}
+>  
+> -err:
+> -	if (bt_cur)
+> -		libxfs_btree_del_cursor(bt_cur, error ? XFS_BTREE_ERROR :
+> -							XFS_BTREE_NOERROR);
+> -	if (pag)
+> -		libxfs_perag_put(pag);
+> -	if (agbp)
+> -		libxfs_buf_relse(agbp);
+> +err_cur:
+> +	libxfs_btree_del_cursor(bt_cur, error);
+> +err_agf:
+> +	libxfs_buf_relse(agbp);
+> +err_pag:
+> +	libxfs_perag_put(pag);
+>  	free_slab_cursor(&rl_cur);
+>  }
+>  
+> -- 
+> 2.30.2
+> 
