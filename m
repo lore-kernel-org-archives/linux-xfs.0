@@ -2,103 +2,60 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E7E6C43217
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Dec 2022 08:12:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44713C43217
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Dec 2022 09:34:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229501AbiLAIMU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Dec 2022 03:12:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46824 "EHLO
+        id S229676AbiLAJeR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Dec 2022 04:34:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229520AbiLAIMT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Dec 2022 03:12:19 -0500
-Received: from out30-57.freemail.mail.aliyun.com (out30-57.freemail.mail.aliyun.com [115.124.30.57])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB37B1D67D;
-        Thu,  1 Dec 2022 00:12:17 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R301e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045170;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=5;SR=0;TI=SMTPD_---0VW7y28d_1669882328;
-Received: from e18g06460.et15sqa.tbsite.net(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0VW7y28d_1669882328)
-          by smtp.aliyun-inc.com;
-          Thu, 01 Dec 2022 16:12:15 +0800
-From:   Gao Xiang <hsiangkao@linux.alibaba.com>
-To:     fstests <fstests@vger.kernel.org>, linux-xfs@vger.kernel.org
-Cc:     Gao Xiang <hsiangkao@linux.alibaba.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
-Subject: [PATCH] common/populate: Ensure that S_IFDIR.FMT_BTREE is in btree format
-Date:   Thu,  1 Dec 2022 16:12:08 +0800
-Message-Id: <20221201081208.40147-1-hsiangkao@linux.alibaba.com>
-X-Mailer: git-send-email 2.24.4
+        with ESMTP id S229551AbiLAJeR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Dec 2022 04:34:17 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D9A8B8D
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Dec 2022 01:34:15 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 4C648B81E62
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Dec 2022 09:34:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71520C433D6
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Dec 2022 09:34:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669887253;
+        bh=NzR4YmC4wNoG/JMH14Br7Rx64Sq8quigbqIfa97zkuU=;
+        h=From:To:Subject:Date:From;
+        b=tCPaOCOlqszl6fsuo4GhAy1mLQlQgaj3IeYYn0UHLWHFBJT0HZthGjirIVMRZTAls
+         H5+Euv8FDpDFZzUuACA6F2GIcngbUU4zQ8wZtorhswe83HeFEUWdbB2qmAM7VPvKH6
+         U/yYZHiIZBGBZnCGvUwtN3uNVUSaGYwd461jGvHkSOsU8U2MFJXt7W0RHsGoBTHbq5
+         vE6nmhnQft7wgpiwPK65tD6HtgZOto249w6FgrLFeVMNbQGXLWHMoe11Y6nbSxaNVI
+         C5nR3ghDh6YdeCmjokWG6hwdlwvbacKABYxx00f22I9u4/aHmPqp4upeBxWVS6jQje
+         Kn/yoRtstSZjw==
+From:   cem@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH V3 0/2] xfsprogs: fix covscan issues
+Date:   Thu,  1 Dec 2022 10:34:06 +0100
+Message-Id: <20221201093408.87820-1-cem@kernel.org>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Sometimes "$((128 * dblksz / 40))" dirents cannot make sure that
-S_IFDIR.FMT_BTREE could become btree format for its DATA fork.
+From: Carlos Maiolino <cmaiolino@redhat.com>
 
-Actually we just observed it can fail after apply our inode
-extent-to-btree workaround. The root cause is that the kernel may be
-too good at allocating consecutive blocks so that the data fork is
-still in extents format.
+Fix a couple of minor issues found by covscan
 
-Therefore instead of using a fixed number, let's make sure the number
-of extents is large enough than (inode size - inode core size) /
-sizeof(xfs_bmbt_rec_t).
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-Suggested-by: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
-Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
----
- common/populate | 22 +++++++++++++++++++++-
- 1 file changed, 21 insertions(+), 1 deletion(-)
+Carlos Maiolino (2):
+  xfs_repair: Fix check_refcount() error path
+  xfs_repair: Fix rmaps_verify_btree() error path
 
-diff --git a/common/populate b/common/populate
-index 6e004997..e179a300 100644
---- a/common/populate
-+++ b/common/populate
-@@ -71,6 +71,25 @@ __populate_create_dir() {
- 	done
- }
- 
-+# Create a large directory and ensure that it's a btree format
-+__populate_create_btree_dir() {
-+	name="$1"
-+	isize="$2"
-+
-+	mkdir -p "${name}"
-+	d=0
-+	while true; do
-+		creat=mkdir
-+		test "$((d % 20))" -eq 0 && creat=touch
-+		$creat "${name}/$(printf "%.08d" "$d")"
-+		if [ "$((d % 40))" -eq 0 ]; then
-+			nexts="$($XFS_IO_PROG -c "stat" $name | grep 'fsxattr.nextents' | sed -e 's/^.*nextents = //g' -e 's/\([0-9]*\).*$/\1/g')"
-+			[ "$nexts" -gt "$(((isize - 176) / 16))" ] && break
-+		fi
-+		d=$((d+1))
-+	done
-+}
-+
- # Add a bunch of attrs to a file
- __populate_create_attr() {
- 	name="$1"
-@@ -176,6 +195,7 @@ _scratch_xfs_populate() {
- 
- 	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
- 	dblksz="$(_xfs_get_dir_blocksize "$SCRATCH_MNT")"
-+	isize="$($XFS_INFO_PROG "${SCRATCH_MNT}" | grep meta-data=.*isize | sed -e 's/^.*isize=//g' -e 's/\([0-9]*\).*$/\1/g')"
- 	crc="$(_xfs_has_feature "$SCRATCH_MNT" crc -v)"
- 	if [ $crc -eq 1 ]; then
- 		leaf_hdr_size=64
-@@ -226,7 +246,7 @@ _scratch_xfs_populate() {
- 
- 	# - BTREE
- 	echo "+ btree dir"
--	__populate_create_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$((128 * dblksz / 40))" true
-+	__populate_create_btree_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$isize"
- 
- 	# Symlinks
- 	# - FMT_LOCAL
+ repair/rmap.c | 43 ++++++++++++++++++++-----------------------
+ 1 file changed, 20 insertions(+), 23 deletions(-)
+
 -- 
-2.24.4
+2.30.2
 
