@@ -2,88 +2,312 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C148C4321E
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Dec 2022 00:21:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7839BC4321E
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Dec 2022 00:52:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229468AbiLAAVm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Nov 2022 19:21:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41954 "EHLO
+        id S229548AbiLAAwU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Nov 2022 19:52:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229461AbiLAAVl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Nov 2022 19:21:41 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B68B0D2
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Nov 2022 16:21:40 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4ED6D60DFB
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Dec 2022 00:21:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90B04C433C1;
-        Thu,  1 Dec 2022 00:21:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1669854099;
-        bh=0gvgo88ptiFXxPpSGD1uWAvFCQD1a49r6TOT3jrwSkk=;
-        h=Date:From:To:Cc:Subject:From;
-        b=kAlSnY9VAbAcRmUnmUaACz6nI2ayZyrWnMXme6KNHKv9EpX26c7wsT0vKb8lqQ8KH
-         nB0HPhcbLGLAflbVnaBFPE2gYJ7bo052s/78we5rmeAcOJg83m1n4Q84tqa9McskiL
-         r7zI19qrrwAi/2QRHn10XRuaLJBKPz0K4Vs4cltZptQXuO1LF6OTx9HHNjgkSIJMLY
-         iWkfUqBTOALDGNtdK7u7LTU0zMtupB/+ZFwKoUcAd6VP3r1ezDMS9CFTiHdnyjns/d
-         JcwvahjYxrNa5mCBpCzC1ql31z6u3BCdl8f5pDqkBC5937prrwaS6pxpFtkb4oMflr
-         RaiJX9DaPvbEw==
-Date:   Wed, 30 Nov 2022 16:21:39 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs: invalidate xfs_bufs when allocating cow extents
-Message-ID: <Y4fzk0YCTA9qC45l@magnolia>
+        with ESMTP id S229477AbiLAAwU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Nov 2022 19:52:20 -0500
+Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C56597B4E1
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Nov 2022 16:52:18 -0800 (PST)
+Received: by mail-pf1-x436.google.com with SMTP id k79so387595pfd.7
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Nov 2022 16:52:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=SYKYdxyKPtZTuclEa/DlBvagxLBIJj6S+cE59VjlIW4=;
+        b=EdOXDSlaMLmGfZfVvKqM/WCE1lzER3Nbdcab6XA2yfly3+D+dyWiRaSCAiXKTGqhaw
+         j50t2DyiwR4Ka9Z+eS0Kidvaa9rsWjES1/BfUL0MawrEkgZVOacn+hVIfW7PuNHMM5/d
+         eWL34IQcRbZEZ/HMbpnjYVAyNSdGs+6Vbh5FhEMXCga1dp18sunnmlPxuFkcGgockm9B
+         S3MzALAClyXv6FyGgUge0ODGLrMXJVYNqPJETM+OU8EuOl/3++tUDKx9JZPN7OyROH3x
+         vBZDKhkD/w9uCUmIaCNpMkYQ2nfAiQxs54C+Ilwfj9VrP6LRZnmhAaTzCUq+BV02A/C6
+         K/IA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=SYKYdxyKPtZTuclEa/DlBvagxLBIJj6S+cE59VjlIW4=;
+        b=MMp2DKlVk4/0kOT5TO7XV9y7z73f9eMC06XT2bw2NmfTGEqjVU040MgDyXevP2rQmN
+         fm7dAQmG71PB80JWv41yeOlWcQTYtj817/irTnZSw547IHr82Jx0BuBypikDFdKE62kI
+         l/ZS0pLVCT96zyJ9nbWHmwoI3qoAD+nMkHGOe1q7aBtFwnujRqIV/AaZvfDhfFxofW7L
+         ieXvv8+jJ6MI2JEg5YA3QBY5uUyM4kNC7dcx8HfekOBOgn9CxLZ6XvtdpGleRNPBLqp3
+         kdxIP/mb8RfZwCilXubi5Q9eVUUIxnaEgARoBgEvCfo4I3C61Q/LbiIW7zYYKCaNZ9q8
+         bGoQ==
+X-Gm-Message-State: ANoB5pk7JPHlCxu0OQoANoAZSs9kqX3/7oz6zORn/5IsN32voJRCObcO
+        6Ie7zjKfbEwmHpr39FF7HD8Nf66K3AlQyQ==
+X-Google-Smtp-Source: AA0mqf4O/QT60/7hyCo7rh/KmIHdvsC/6Adn7BSyljx6Ci6c/z3NzIAWHuJG4Zx/1Uw6YGSfm1Ev6A==
+X-Received: by 2002:a63:d34e:0:b0:477:650a:705c with SMTP id u14-20020a63d34e000000b00477650a705cmr37659008pgi.588.1669855938239;
+        Wed, 30 Nov 2022 16:52:18 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-65-106.pa.vic.optusnet.com.au. [49.186.65.106])
+        by smtp.gmail.com with ESMTPSA id 3-20020a631543000000b0044ed37dbca8sm1504054pgv.2.2022.11.30.16.52.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 30 Nov 2022 16:52:17 -0800 (PST)
+Received: from [192.168.253.23] (helo=devoid.disaster.area)
+        by dread.disaster.area with esmtp (Exim 4.92.3)
+        (envelope-from <dave@fromorbit.com>)
+        id 1p0XoE-0031ny-Bx; Thu, 01 Dec 2022 11:52:14 +1100
+Received: from dave by devoid.disaster.area with local (Exim 4.96)
+        (envelope-from <dave@devoid.disaster.area>)
+        id 1p0XoE-00G5ws-0v;
+        Thu, 01 Dec 2022 11:52:14 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     linux-fsdevel@vger.kernel.org
+Subject: [PATCH] [RFC] iomap: zeroing needs to be pagecache aware
+Date:   Thu,  1 Dec 2022 11:52:14 +1100
+Message-Id: <20221201005214.3836105-1-david@fromorbit.com>
+X-Mailer: git-send-email 2.38.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Dave Chinner <dchinner@redhat.com>
 
-While investigating test failures in xfs/17[1-3] in alwayscow mode, I
-noticed through code inspection that xfs_bmap_alloc_userdata isn't
-setting XFS_ALLOC_USERDATA when allocating extents for a file's CoW
-fork.  COW staging extents should be flagged as USERDATA, since user
-data are persisted to these blocks before being remapped into a file.
+Unwritten extents can have page cache data over the range being
+zeroed so we can't just skip them entirely. Fix this by checking for
+an existing dirty folio over the unwritten range we are zeroing
+and only performing zeroing if the folio is already dirty.
 
-This mis-classification has a few impacts on the behavior of the system.
-First, the filestreams allocator is supposed to keep allocating from a
-chosen AG until it runs out of space in that AG.  However, it only does
-that for USERDATA allocations, which means that COW allocations aren't
-tied to the filestreams AG.  Fortunately, few people use filestreams, so
-nobody's noticed.
+XXX: how do we detect a iomap containing a cow mapping over a hole
+in iomap_zero_iter()? The XFS code implies this case also needs to
+zero the page cache if there is data present, so trigger for page
+cache lookup only in iomap_zero_iter() needs to handle this case as
+well.
 
-A more serious problem is that xfs_alloc_ag_vextent_small looks for a
-buffer to invalidate *if* the USERDATA flag is set and the AG is so full
-that the allocation had to come from the AGFL because the cntbt is
-empty.  The consequences of not invalidating the buffer are severe --
-if the AIL incorrectly checkpoints a buffer that is now being used to
-store user data, that action will clobber the user's written data.
+Before:
 
-Fix filestreams and yet another data corruption vector by flagging COW
-allocations as USERDATA.
+$ time sudo ./pwrite-trunc /mnt/scratch/foo 50000
+path /mnt/scratch/foo, 50000 iters
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+real    0m14.103s
+user    0m0.015s
+sys     0m0.020s
+
+$ sudo strace -c ./pwrite-trunc /mnt/scratch/foo 50000
+path /mnt/scratch/foo, 50000 iters
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 85.90    0.847616          16     50000           ftruncate
+ 14.01    0.138229           2     50000           pwrite64
+....
+
+After:
+
+$ time sudo ./pwrite-trunc /mnt/scratch/foo 50000
+path /mnt/scratch/foo, 50000 iters
+
+real    0m0.144s
+user    0m0.021s
+sys     0m0.012s
+
+$ sudo strace -c ./pwrite-trunc /mnt/scratch/foo 50000
+path /mnt/scratch/foo, 50000 iters
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 53.86    0.505964          10     50000           ftruncate
+ 46.12    0.433251           8     50000           pwrite64
+....
+
+Yup, we get back all the performance.
+
+As for the "mmap write beyond EOF" data exposure aspect
+documented here:
+
+https://lore.kernel.org/linux-xfs/20221104182358.2007475-1-bfoster@redhat.com/
+
+With this command:
+
+$ sudo xfs_io -tfc "falloc 0 1k" -c "pwrite 0 1k" \
+  -c "mmap 0 4k" -c "mwrite 3k 1k" -c "pwrite 32k 4k" \
+  -c fsync -c "pread -v 3k 32" /mnt/scratch/foo
+
+Before:
+
+wrote 1024/1024 bytes at offset 0
+1 KiB, 1 ops; 0.0000 sec (34.877 MiB/sec and 35714.2857 ops/sec)
+wrote 4096/4096 bytes at offset 32768
+4 KiB, 1 ops; 0.0000 sec (229.779 MiB/sec and 58823.5294 ops/sec)
+00000c00:  58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58  XXXXXXXXXXXXXXXX
+00000c10:  58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58  XXXXXXXXXXXXXXXX
+read 32/32 bytes at offset 3072
+32.000000 bytes, 1 ops; 0.0000 sec (568.182 KiB/sec and 18181.8182 ops/sec
+
+After:
+
+wrote 1024/1024 bytes at offset 0
+1 KiB, 1 ops; 0.0000 sec (40.690 MiB/sec and 41666.6667 ops/sec)
+wrote 4096/4096 bytes at offset 32768
+4 KiB, 1 ops; 0.0000 sec (150.240 MiB/sec and 38461.5385 ops/sec)
+00000c00:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000c10:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+read 32/32 bytes at offset 3072
+32.000000 bytes, 1 ops; 0.0000 sec (558.036 KiB/sec and 17857.1429 ops/sec)
+
+We see that this post-eof unwritten extent dirty page zeroing is
+working correctly.
+
+This has passed through most of fstests on a couple of test VMs
+without issues at the moment, so I think this approach to fixing the
+issue is going to be solid once we've worked out how to detect the
+COW-hole mapping case.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/iomap/buffered-io.c | 50 +++++++++++++++++++++++++++++++++++-------
+ fs/xfs/xfs_iops.c      | 12 +---------
+ 2 files changed, 43 insertions(+), 19 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 56b9b7db38bb..0d56a8d862e8 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4058,7 +4058,7 @@ xfs_bmap_alloc_userdata(
- 	 * the busy list.
- 	 */
- 	bma->datatype = XFS_ALLOC_NOBUSY;
--	if (whichfork == XFS_DATA_FORK) {
-+	if (whichfork == XFS_DATA_FORK || whichfork == XFS_COW_FORK) {
- 		bma->datatype |= XFS_ALLOC_USERDATA;
- 		if (bma->offset == 0)
- 			bma->datatype |= XFS_ALLOC_INITIAL_USER_DATA;
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 356193e44cf0..0969e4525507 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -585,14 +585,14 @@ static int iomap_write_begin_inline(const struct iomap_iter *iter,
+ }
+ 
+ static int iomap_write_begin(struct iomap_iter *iter, loff_t pos,
+-		size_t len, struct folio **foliop)
++		size_t len, struct folio **foliop, unsigned fgp)
+ {
+ 	const struct iomap_page_ops *page_ops = iter->iomap.page_ops;
+ 	const struct iomap *srcmap = iomap_iter_srcmap(iter);
+ 	struct folio *folio;
+-	unsigned fgp = FGP_LOCK | FGP_WRITE | FGP_CREAT | FGP_STABLE | FGP_NOFS;
+ 	int status = 0;
+ 
++	fgp |= FGP_LOCK | FGP_WRITE | FGP_STABLE | FGP_NOFS;
+ 	if (iter->flags & IOMAP_NOWAIT)
+ 		fgp |= FGP_NOWAIT;
+ 
+@@ -615,7 +615,12 @@ static int iomap_write_begin(struct iomap_iter *iter, loff_t pos,
+ 	folio = __filemap_get_folio(iter->inode->i_mapping, pos >> PAGE_SHIFT,
+ 			fgp, mapping_gfp_mask(iter->inode->i_mapping));
+ 	if (!folio) {
+-		status = (iter->flags & IOMAP_NOWAIT) ? -EAGAIN : -ENOMEM;
++		if (!(fgp & FGP_CREAT))
++			status = -ENODATA;
++		else if (iter->flags & IOMAP_NOWAIT)
++			status = -EAGAIN;
++		else
++			status = -ENOMEM;
+ 		goto out_no_page;
+ 	}
+ 
+@@ -791,7 +796,7 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 			break;
+ 		}
+ 
+-		status = iomap_write_begin(iter, pos, bytes, &folio);
++		status = iomap_write_begin(iter, pos, bytes, &folio, FGP_CREAT);
+ 		if (unlikely(status))
+ 			break;
+ 		if (iter->iomap.flags & IOMAP_F_STALE)
+@@ -1101,7 +1106,7 @@ static loff_t iomap_unshare_iter(struct iomap_iter *iter)
+ 		unsigned long bytes = min_t(loff_t, PAGE_SIZE - offset, length);
+ 		struct folio *folio;
+ 
+-		status = iomap_write_begin(iter, pos, bytes, &folio);
++		status = iomap_write_begin(iter, pos, bytes, &folio, FGP_CREAT);
+ 		if (unlikely(status))
+ 			return status;
+ 		if (iter->iomap.flags & IOMAP_F_STALE)
+@@ -1147,10 +1152,14 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+ 	loff_t pos = iter->pos;
+ 	loff_t length = iomap_length(iter);
+ 	loff_t written = 0;
++	unsigned fgp = FGP_CREAT;
+ 
+ 	/* already zeroed?  we're done. */
+-	if (srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN)
++	if (srcmap->type == IOMAP_HOLE)
+ 		return length;
++	/* only do page cache lookups over unwritten extents */
++	if (srcmap->type == IOMAP_UNWRITTEN)
++		fgp = 0;
+ 
+ 	do {
+ 		struct folio *folio;
+@@ -1158,9 +1167,20 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+ 		size_t offset;
+ 		size_t bytes = min_t(u64, SIZE_MAX, length);
+ 
+-		status = iomap_write_begin(iter, pos, bytes, &folio);
+-		if (status)
++		status = iomap_write_begin(iter, pos, bytes, &folio, fgp);
++		if (status) {
++			if (status == -ENODATA) {
++				/*
++				 * No folio was found, so skip to the start of
++				 * the next potential entry in the page cache
++				 * and continue from there.
++				 */
++				if (bytes > PAGE_SIZE - offset_in_page(pos))
++					bytes = PAGE_SIZE - offset_in_page(pos);
++				goto loop_continue;
++			}
+ 			return status;
++		}
+ 		if (iter->iomap.flags & IOMAP_F_STALE)
+ 			break;
+ 
+@@ -1168,6 +1188,19 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+ 		if (bytes > folio_size(folio) - offset)
+ 			bytes = folio_size(folio) - offset;
+ 
++		/*
++		 * If the folio over an unwritten extent is clean, then we
++		 * aren't going to touch the data in it at all. We don't want to
++		 * mark it dirty or change the uptodate state of data in the
++		 * page, so we just unlock it and skip to the next range over
++		 * the unwritten extent we need to check.
++		 */
++		if (srcmap->type == IOMAP_UNWRITTEN &&
++		    !folio_test_dirty(folio)) {
++			folio_unlock(folio);
++			goto loop_continue;
++		}
++
+ 		folio_zero_range(folio, offset, bytes);
+ 		folio_mark_accessed(folio);
+ 
+@@ -1175,6 +1208,7 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+ 		if (WARN_ON_ONCE(bytes == 0))
+ 			return -EIO;
+ 
++loop_continue:
+ 		pos += bytes;
+ 		length -= bytes;
+ 		written += bytes;
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 2e10e1c66ad6..d7c2f8c49f94 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -839,17 +839,7 @@ xfs_setattr_size(
+ 		trace_xfs_zero_eof(ip, oldsize, newsize - oldsize);
+ 		error = xfs_zero_range(ip, oldsize, newsize - oldsize,
+ 				&did_zeroing);
+-	} else {
+-		/*
+-		 * iomap won't detect a dirty page over an unwritten block (or a
+-		 * cow block over a hole) and subsequently skips zeroing the
+-		 * newly post-EOF portion of the page. Flush the new EOF to
+-		 * convert the block before the pagecache truncate.
+-		 */
+-		error = filemap_write_and_wait_range(inode->i_mapping, newsize,
+-						     newsize);
+-		if (error)
+-			return error;
++	} else if (newsize != oldsize) {
+ 		error = xfs_truncate_page(ip, newsize, &did_zeroing);
+ 	}
+ 
+-- 
+2.38.1
+
