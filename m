@@ -2,160 +2,138 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E6E1C4321E
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Dec 2022 01:55:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C686C3A5A7
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Dec 2022 02:23:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231626AbiLBBzK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Dec 2022 20:55:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45422 "EHLO
+        id S231518AbiLBCXQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Dec 2022 21:23:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42780 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231426AbiLBBzJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Dec 2022 20:55:09 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5BAAD3DEB
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Dec 2022 17:54:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1669946053;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=COzjxy6Cx/yoL60phqF9Y1iVWuFzG9VgVu3jRR0Ap+U=;
-        b=gWed493kMMgxuuf1FUOH+kRxyXt6sGGHpC42jy7eF3atgfYQ+/lHdhS7l5hpif6WfPPibi
-        6+Ueo+q4PgAmZyCfGGIwEYxvdcQ7iYscMBE7iP/lphH3DoD4K9f9Re9mOIu2Ss6+Ecp69L
-        8J3NkTMZQQIXNuSrzh4q7mOyD4cax5Y=
-Received: from mail-yb1-f199.google.com (mail-yb1-f199.google.com
- [209.85.219.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-326-W8DqB2kcMsCUAFxj4bE5Gg-1; Thu, 01 Dec 2022 20:54:12 -0500
-X-MC-Unique: W8DqB2kcMsCUAFxj4bE5Gg-1
-Received: by mail-yb1-f199.google.com with SMTP id t5-20020a5b07c5000000b006dfa2102debso3666616ybq.4
-        for <linux-xfs@vger.kernel.org>; Thu, 01 Dec 2022 17:54:12 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=COzjxy6Cx/yoL60phqF9Y1iVWuFzG9VgVu3jRR0Ap+U=;
-        b=3nXuHOJb5DPtBw50UdWOpEfCaTByVo/Nf1AZ5aH/cHeEqoPlkWt8E6dCQ6gvGUuNWY
-         crTFxF7JGAJSkY41KD/ynu1WacF4ADF0HHi3wW7aoG9bAzpDBoWx1A+lg+Po2sJzTRte
-         qU+2mWT2CAe3iRqWaBIjL2bOzi7aPv6MFAELuWxMFIeHpkI40AJ0LhztnwxRD3DXrSG2
-         LLtnkC6t0m4kb90prlez22qAuhVedIDnmeWTkr6Gpl9JriFmwMFLiQAMKTgzMUvUgy5d
-         jNGwe+SvivyNpJzpAgRPZkO7v1OfXUu/h95jUMpgE+dd2Oe+KMQ3QtqLT8dzyAlXNPEM
-         4oYg==
-X-Gm-Message-State: ANoB5pmKKVk0Bc1YWsRavk+K0bEOtknl34pXsVITWrzJCc2XUERegcI0
-        wRWr5QlMF8SvWIv0zd2jrUisjoiPouh48sroRAiFVIGHgAf+wwMd8jyc4XfGaG5KvDeE117YvWN
-        Xyv50X03QTersvfC/cek/kHKwQPLgsYnPQuVT
-X-Received: by 2002:a81:d92:0:b0:3bd:77de:3652 with SMTP id 140-20020a810d92000000b003bd77de3652mr29752902ywn.147.1669946052364;
-        Thu, 01 Dec 2022 17:54:12 -0800 (PST)
-X-Google-Smtp-Source: AA0mqf4zl5/yw2S0gY5SqLJMEn3kK+Mc23RWKMLXVRNIap4XekIskw7GEsiU1dqL8mTyQsVHGqUk1+lUCQo3JuJVWvY=
-X-Received: by 2002:a81:d92:0:b0:3bd:77de:3652 with SMTP id
- 140-20020a810d92000000b003bd77de3652mr29752883ywn.147.1669946052084; Thu, 01
- Dec 2022 17:54:12 -0800 (PST)
+        with ESMTP id S230070AbiLBCXO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Dec 2022 21:23:14 -0500
+Received: from out30-57.freemail.mail.aliyun.com (out30-57.freemail.mail.aliyun.com [115.124.30.57])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 068C7B955C;
+        Thu,  1 Dec 2022 18:23:12 -0800 (PST)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R121e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046049;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=4;SR=0;TI=SMTPD_---0VWAhKHX_1669947788;
+Received: from B-P7TQMD6M-0146.local(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0VWAhKHX_1669947788)
+          by smtp.aliyun-inc.com;
+          Fri, 02 Dec 2022 10:23:10 +0800
+Date:   Fri, 2 Dec 2022 10:23:07 +0800
+From:   Gao Xiang <hsiangkao@linux.alibaba.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     fstests <fstests@vger.kernel.org>, linux-xfs@vger.kernel.org,
+        Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
+Subject: Re: [PATCH] common/populate: Ensure that S_IFDIR.FMT_BTREE is in
+ btree format
+Message-ID: <Y4lhi+5nJNl0diaj@B-P7TQMD6M-0146.local>
+Mail-Followup-To: "Darrick J. Wong" <djwong@kernel.org>,
+        fstests <fstests@vger.kernel.org>, linux-xfs@vger.kernel.org,
+        Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
+References: <20221201081208.40147-1-hsiangkao@linux.alibaba.com>
+ <Y4jNzE5YJ3wFtsaz@magnolia>
 MIME-Version: 1.0
-References: <20221201160619.1247788-1-agruenba@redhat.com> <20221201180957.1268079-1-agruenba@redhat.com>
- <20221201212956.GO3600936@dread.disaster.area>
-In-Reply-To: <20221201212956.GO3600936@dread.disaster.area>
-From:   Andreas Gruenbacher <agruenba@redhat.com>
-Date:   Fri, 2 Dec 2022 02:54:00 +0100
-Message-ID: <CAHc6FU6u9A0S-EwyB6vq89XPj1rucL8U0oqq__OzB1d0evM-yA@mail.gmail.com>
-Subject: Re: [RFC v2 0/3] Turn iomap_page_ops into iomap_folio_ops
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, cluster-devel@redhat.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <Y4jNzE5YJ3wFtsaz@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 1, 2022 at 10:30 PM Dave Chinner <david@fromorbit.com> wrote:
-> On Thu, Dec 01, 2022 at 07:09:54PM +0100, Andreas Gruenbacher wrote:
-> > Hi again,
-> >
-> > [Same thing, but with the patches split correctly this time.]
-> >
-> > we're seeing a race between journaled data writes and the shrinker on
-> > gfs2.  What's happening is that gfs2_iomap_page_done() is called after
-> > the page has been unlocked, so try_to_free_buffers() can come in and
-> > free the buffers while gfs2_iomap_page_done() is trying to add them to
-> > the transaction.  Not good.
-> >
-> > This is a proposal to change iomap_page_ops so that page_prepare()
-> > prepares the write and grabs the locked page, and page_done() unlocks
-> > and puts that page again.  While at it, this also converts the hooks
-> > from pages to folios.
-> >
-> > To move the pagecache_isize_extended() call in iomap_write_end() out of
-> > the way, a new folio_may_straddle_isize() helper is introduced that
-> > takes a locked folio.  That is then used when the inode size is updated,
-> > before the folio is unlocked.
-> >
-> > I've also converted the other applicable folio_may_straddle_isize()
-> > users, namely generic_write_end(), ext4_write_end(), and
-> > ext4_journalled_write_end().
-> >
-> > Any thoughts?
->
-> I doubt that moving page cache operations from the iomap core to
-> filesystem specific callouts will be acceptible. I recently proposed
-> patches that added page cache walking to an XFS iomap callout to fix
-> a data corruption, but they were NAKd on the basis that iomap is
-> supposed to completely abstract away the folio and page cache
-> manipulations from the filesystem.
+Hi Darrick,
 
-Right. The resulting code is really quite disgusting, for a
-fundamentalist dream of abstraction.
+On Thu, Dec 01, 2022 at 07:52:44AM -0800, Darrick J. Wong wrote:
+> On Thu, Dec 01, 2022 at 04:12:08PM +0800, Gao Xiang wrote:
+> > Sometimes "$((128 * dblksz / 40))" dirents cannot make sure that
+> > S_IFDIR.FMT_BTREE could become btree format for its DATA fork.
+> > 
+> > Actually we just observed it can fail after apply our inode
+> > extent-to-btree workaround. The root cause is that the kernel may be
+> > too good at allocating consecutive blocks so that the data fork is
+> > still in extents format.
+> > 
+> > Therefore instead of using a fixed number, let's make sure the number
+> > of extents is large enough than (inode size - inode core size) /
+> > sizeof(xfs_bmbt_rec_t).
+> > 
+> > Suggested-by: "Darrick J. Wong" <djwong@kernel.org>
+> > Cc: Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
+> > Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
+> > ---
+> >  common/populate | 22 +++++++++++++++++++++-
+> >  1 file changed, 21 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/common/populate b/common/populate
+> > index 6e004997..e179a300 100644
+> > --- a/common/populate
+> > +++ b/common/populate
+> > @@ -71,6 +71,25 @@ __populate_create_dir() {
+> >  	done
+> >  }
+> >  
+> > +# Create a large directory and ensure that it's a btree format
+> > +__populate_create_btree_dir() {
+> 
+> Since this encodes behavior specific to xfs, this ought to be called
+> 
+> __populate_xfs_create_btree_dir
+> 
+> or something like that.
+> 
+> > +	name="$1"
+> > +	isize="$2"
+> 
+> These ought to be local variables, e.g.
+> 
+> 	local name="$1"
+> 	local isize="$2"
+> 
+> So that they don't pollute the global name scope.  Yay bash.
+> 
+> > +
+> > +	mkdir -p "${name}"
+> > +	d=0
+> > +	while true; do
+> > +		creat=mkdir
+> > +		test "$((d % 20))" -eq 0 && creat=touch
+> > +		$creat "${name}/$(printf "%.08d" "$d")"
+> > +		if [ "$((d % 40))" -eq 0 ]; then
+> > +			nexts="$($XFS_IO_PROG -c "stat" $name | grep 'fsxattr.nextents' | sed -e 's/^.*nextents = //g' -e 's/\([0-9]*\).*$/\1/g')"
+> 
+> _xfs_get_fsxattr...
+> 
+> > +			[ "$nexts" -gt "$(((isize - 176) / 16))" ] && break
+> 
+> Only need to calculate this once if you declare this at the top:
+> 
+> 	# We need enough extents to guarantee that the data fork is in
+> 	# btree format.  Cycling the mount to use xfs_db is too slow, so
+> 	# watch for when the extent count exceeds the space after the
+> 	# inode core.
+> 	local max_nextents="$(((isize - 176) / 16))"
+> 
+> and then you can do:
+> 
+> 			[[ $nexts -gt $max_nextents ]] && break
+> 
+> Also not a fan of hardcoding 176 around fstests, but I don't know how
+> we'd detect that at all.
+> 
+> # Number of bytes reserved for only the inode record, excluding the
+> # immediate fork areas.
+> _xfs_inode_core_bytes()
+> {
+> 	echo 176
+> }
+> 
+> I guess?  Or extract it from tests/xfs/122.out?
 
-> This patchset seems to be doing the same thing - moving page cache
-> and folio management directly in filesystem specific callouts. Hence
-> I'm going to assume that the same architectural demarcation is
-> going to apply here, too...
->
-> FYI, there is already significant change committed to the iomap
-> write path in the current XFS tree as a result of the changes I
-> mention - there is stale IOMAP detection which adds a new page ops
-> method and adds new error paths with a locked folio in
-> iomap_write_begin().
+Thanks for your comments.
 
-That would have belonged on the iomap-for-next branch rather than in
-the middle of a bunch of xfs commits.
+I guess hard-coded 176 in _xfs_inode_core_bytes() is fine for now
+(It seems a bit weird to extract a number from a test expected result..)
 
-> And this other data corruption (and performance) fix for handling
-> zeroing over unwritten extents properly:
->
-> https://lore.kernel.org/linux-xfs/20221201005214.3836105-1-david@fromorbit.com/
->
-> changes the way folios are looked up and instantiated in the page
-> cache in iomap_write_begin(). It also adds new error conditions that
-> need to be returned to callers so to implement conditional "folio
-> must be present and dirty" page cache zeroing from
-> iomap_zero_iter(). Those semantics would also have to be supported
-> by gfs2, and that greatly complicates modifying and testing iomap
-> core changes.
->
-> To avoid all this, can we simple move the ->page_done() callout in
-> the error path and iomap_write_end() to before we unlock the folio?
-> You've already done that for pagecache_isize_extended(), and I can't
-> see anything obvious in the gfs2 ->page_done callout that
-> would cause issues if it is called with a locked dirty folio...
-
-Yes, I guess we can do that once pagecache_isize_extended() is
-replaced by folio_may_straddle_isize().
-
-Can people please scrutinize the math in folio_may_straddle_isize() in
-particular?
+Otherwise I agree with your comments.  I will ask Ziyang to follow your
+comments and send out v2.
 
 Thanks,
-Andreas
-
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
->
-
+Gao Xiang
