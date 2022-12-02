@@ -2,82 +2,60 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 873CEC4332F
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Dec 2022 00:39:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D376C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Dec 2022 01:06:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229777AbiLBAjf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Dec 2022 19:39:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57396 "EHLO
+        id S230043AbiLBBGC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Dec 2022 20:06:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231514AbiLBAjf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Dec 2022 19:39:35 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 514602FA7B;
-        Thu,  1 Dec 2022 16:39:33 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0A478B82042;
-        Fri,  2 Dec 2022 00:39:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B7AFC433D6;
-        Fri,  2 Dec 2022 00:39:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1669941570;
-        bh=rRla3WD1t6c5uPu2w5Yjfhg4lc18eD2qbBTVmaDIASE=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=d11f2HoAOPHkMupwCxvr8N4gFdCqA2nDVBUuNVJNKsPpcwu/qRpcAC3kgId3jJ+Ux
-         +XYLKR4qSoFJNi5/3n9O5u6v9QkDGivEKRTlNpnQdKJQrSAJt+qkr03Hqaq9LjsH99
-         qBMLCpiOIBQ/91h886TAbxuT0h3BFCCyjhshN0Zo=
-Date:   Thu, 1 Dec 2022 16:39:29 -0800
-From:   Andrew Morton <akpm@linux-foundation.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        nvdimm@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-        david@fromorbit.com, dan.j.williams@intel.com
-Subject: Re: [PATCH v2 3/8] fsdax: zero the edges if source is HOLE or
- UNWRITTEN
-Message-Id: <20221201163929.ddd992063d9872ab33459bbf@linux-foundation.org>
-In-Reply-To: <Y4k/kxuPOirdlctI@magnolia>
-References: <1669908538-55-1-git-send-email-ruansy.fnst@fujitsu.com>
-        <1669908538-55-4-git-send-email-ruansy.fnst@fujitsu.com>
-        <Y4k/kxuPOirdlctI@magnolia>
-X-Mailer: Sylpheed 3.7.0 (GTK+ 2.24.33; x86_64-redhat-linux-gnu)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S229893AbiLBBGC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Dec 2022 20:06:02 -0500
+Received: from out199-17.us.a.mail.aliyun.com (out199-17.us.a.mail.aliyun.com [47.90.199.17])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BD7CC5102;
+        Thu,  1 Dec 2022 17:05:59 -0800 (PST)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R771e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046050;MF=yang.lee@linux.alibaba.com;NM=1;PH=DS;RN=5;SR=0;TI=SMTPD_---0VWAT0c4_1669943155;
+Received: from localhost(mailfrom:yang.lee@linux.alibaba.com fp:SMTPD_---0VWAT0c4_1669943155)
+          by smtp.aliyun-inc.com;
+          Fri, 02 Dec 2022 09:05:56 +0800
+From:   Yang Li <yang.lee@linux.alibaba.com>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yang Li <yang.lee@linux.alibaba.com>,
+        Abaci Robot <abaci@linux.alibaba.com>
+Subject: [PATCH -next] xfs: Remove duplicated include in xfs_iomap.c
+Date:   Fri,  2 Dec 2022 09:05:54 +0800
+Message-Id: <20221202010554.127100-1-yang.lee@linux.alibaba.com>
+X-Mailer: git-send-email 2.20.1.7.g153144c
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, 1 Dec 2022 15:58:11 -0800 "Darrick J. Wong" <djwong@kernel.org> wrote:
+./fs/xfs/xfs_iomap.c: xfs_error.h is included more than once.
+./fs/xfs/xfs_iomap.c: xfs_errortag.h is included more than once.
 
-> > --- a/fs/dax.c
-> > +++ b/fs/dax.c
-> > @@ -1092,7 +1092,7 @@ static int dax_iomap_direct_access(const struct iomap *iomap, loff_t pos,
-> >  }
-> >  
-> >  /**
-> > - * dax_iomap_cow_copy - Copy the data from source to destination before write
-> > + * dax_iomap_copy_around - Copy the data from source to destination before write
-> 
->  * dax_iomap_copy_around - Prepare for an unaligned write to a
->  * shared/cow page by copying the data before and after the range to be
->  * written.
+Link: https://bugzilla.openanolis.cn/show_bug.cgi?id=3337
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Signed-off-by: Yang Li <yang.lee@linux.alibaba.com>
+---
+ fs/xfs/xfs_iomap.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Thanks, I added this:
-
---- a/fs/dax.c~fsdax-zero-the-edges-if-source-is-hole-or-unwritten-fix
-+++ a/fs/dax.c
-@@ -1092,7 +1092,8 @@ out:
- }
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 68436370927d..43f447199c08 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -27,8 +27,6 @@
+ #include "xfs_dquot_item.h"
+ #include "xfs_dquot.h"
+ #include "xfs_reflink.h"
+-#include "xfs_error.h"
+-#include "xfs_errortag.h"
  
- /**
-- * dax_iomap_copy_around - Copy the data from source to destination before write
-+ * dax_iomap_copy_around - Prepare for an unaligned write to a shared/cow page
-+ * by copying the data before and after the range to be written.
-  * @pos:	address to do copy from.
-  * @length:	size of copy operation.
-  * @align_size:	aligned w.r.t align_size (either PMD_SIZE or PAGE_SIZE)
-_
+ #define XFS_ALLOC_ALIGN(mp, off) \
+ 	(((off) >> mp->m_allocsize_log) << mp->m_allocsize_log)
+-- 
+2.20.1.7.g153144c
 
