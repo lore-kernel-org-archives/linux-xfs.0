@@ -2,133 +2,135 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D251EC47088
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Dec 2022 11:28:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15564C4708D
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Dec 2022 20:18:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233155AbiLBL2Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Dec 2022 06:28:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44756 "EHLO
+        id S234876AbiLBUSE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Dec 2022 15:18:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53534 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233170AbiLBL2N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Dec 2022 06:28:13 -0500
-Received: from out30-45.freemail.mail.aliyun.com (out30-45.freemail.mail.aliyun.com [115.124.30.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2359053EE8;
-        Fri,  2 Dec 2022 03:28:08 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R141e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046050;MF=ziyangzhang@linux.alibaba.com;NM=1;PH=DS;RN=5;SR=0;TI=SMTPD_---0VWE3TvX_1669980481;
-Received: from localhost.localdomain(mailfrom:ZiyangZhang@linux.alibaba.com fp:SMTPD_---0VWE3TvX_1669980481)
-          by smtp.aliyun-inc.com;
-          Fri, 02 Dec 2022 19:28:06 +0800
-From:   Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
-To:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc:     djwong@kernel.org, Ziyang Zhang <ZiyangZhang@linux.alibaba.com>,
-        Gao Xiang <hsiangkao@linux.alibaba.com>
-Subject: [RESEND PATCH V2] common/populate: Ensure that S_IFDIR.FMT_BTREE is in btree format
-Date:   Fri,  2 Dec 2022 19:27:40 +0800
-Message-Id: <20221202112740.1233028-1-ZiyangZhang@linux.alibaba.com>
-X-Mailer: git-send-email 2.18.4
+        with ESMTP id S234878AbiLBUSD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Dec 2022 15:18:03 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 469D4317CE;
+        Fri,  2 Dec 2022 12:18:02 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D7E96623B2;
+        Fri,  2 Dec 2022 20:18:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0366EC433C1;
+        Fri,  2 Dec 2022 20:18:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+        s=korg; t=1670012281;
+        bh=vzzVaosh6o8JL4+OzaJBhy3ljlqNHLgnYfdJDBqdxdM=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=Qiy/Rz8BpdMFrfatVnHWOKxqNt2djdf4PTkeB4ZV0Tyn/Jb62vwuneHFMPvFBOLkw
+         w+r2SMd4NOzTl+0auLMbL5P9Ju/DUFPVUf9f6PpA331zT7i0awPSCxDvrLwf3LVuOZ
+         5NfKJOs/ikde+UrvqNcQBJIVEwVlRSMNBkhNHLXY=
+Date:   Fri, 2 Dec 2022 12:18:00 -0800
+From:   Andrew Morton <akpm@linux-foundation.org>
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Cc:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <nvdimm@lists.linux.dev>, <linux-fsdevel@vger.kernel.org>,
+        <djwong@kernel.org>, <david@fromorbit.com>,
+        <dan.j.williams@intel.com>
+Subject: Re: [PATCH v2.1 1/8] fsdax: introduce page->share for fsdax in
+ reflink mode
+Message-Id: <20221202121800.598afc7a5124561069f91014@linux-foundation.org>
+In-Reply-To: <1669972991-246-1-git-send-email-ruansy.fnst@fujitsu.com>
+References: <1669908538-55-2-git-send-email-ruansy.fnst@fujitsu.com>
+        <1669972991-246-1-git-send-email-ruansy.fnst@fujitsu.com>
+X-Mailer: Sylpheed 3.7.0 (GTK+ 2.24.33; x86_64-redhat-linux-gnu)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Sometimes "$((128 * dblksz / 40))" dirents cannot make sure that
-S_IFDIR.FMT_BTREE could become btree format for its DATA fork.
+On Fri, 2 Dec 2022 09:23:11 +0000 Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
 
-Actually we just observed it can fail after apply our inode
-extent-to-btree workaround. The root cause is that the kernel may be
-too good at allocating consecutive blocks so that the data fork is
-still in extents format.
+> fsdax page is used not only when CoW, but also mapread. To make the it
+> easily understood, use 'share' to indicate that the dax page is shared
+> by more than one extent.  And add helper functions to use it.
+> 
+> Also, the flag needs to be renamed to PAGE_MAPPING_DAX_SHARED.
+> 
 
-Therefore instead of using a fixed number, let's make sure the number
-of extents is large enough than (inode size - inode core size) /
-sizeof(xfs_bmbt_rec_t).
+For those who are wondering what changed, I queued the below incremental
+patch.
 
-Suggested-by: "Darrick J. Wong" <djwong@kernel.org>
-Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
-Signed-off-by: Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
+
+From: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Subject: fsdax: introduce page->share for fsdax in reflink mode
+Date: Fri, 2 Dec 2022 09:23:11 +0000
+
+rename several functions
+
+Link: https://lkml.kernel.org/r/1669972991-246-1-git-send-email-ruansy.fnst@fujitsu.com
+Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Cc: Alistair Popple <apopple@nvidia.com>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Darrick J. Wong <djwong@kernel.org>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: Jason Gunthorpe <jgg@nvidia.com>
+Cc: John Hubbard <jhubbard@nvidia.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
-V2: take Darrick's advice to cleanup code
- common/populate | 28 +++++++++++++++++++++++++++-
- common/xfs      | 17 +++++++++++++++++
- 2 files changed, 44 insertions(+), 1 deletion(-)
 
-diff --git a/common/populate b/common/populate
-index 6e004997..1ca76459 100644
---- a/common/populate
-+++ b/common/populate
-@@ -71,6 +71,31 @@ __populate_create_dir() {
- 	done
+ fs/dax.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+--- a/fs/dax.c~fsdax-introduce-page-share-for-fsdax-in-reflink-mode-fix
++++ a/fs/dax.c
+@@ -334,7 +334,7 @@ static unsigned long dax_end_pfn(void *e
+ 	for (pfn = dax_to_pfn(entry); \
+ 			pfn < dax_end_pfn(entry); pfn++)
+ 
+-static inline bool dax_mapping_is_shared(struct page *page)
++static inline bool dax_page_is_shared(struct page *page)
+ {
+ 	return (unsigned long)page->mapping == PAGE_MAPPING_DAX_SHARED;
+ }
+@@ -343,7 +343,7 @@ static inline bool dax_mapping_is_shared
+  * Set the page->mapping with PAGE_MAPPING_DAX_SHARED flag, increase the
+  * refcount.
+  */
+-static inline void dax_mapping_set_shared(struct page *page)
++static inline void dax_page_bump_sharing(struct page *page)
+ {
+ 	if ((uintptr_t)page->mapping != PAGE_MAPPING_DAX_SHARED) {
+ 		/*
+@@ -357,7 +357,7 @@ static inline void dax_mapping_set_share
+ 	page->share++;
  }
  
-+# Create a large directory and ensure that it's a btree format
-+__populate_xfs_create_btree_dir() {
-+	local name="$1"
-+	local isize="$2"
-+	local icore_size="$(_xfs_inode_core_bytes)"
-+	# We need enough extents to guarantee that the data fork is in
-+	# btree format.  Cycling the mount to use xfs_db is too slow, so
-+	# watch for when the extent count exceeds the space after the
-+	# inode core.
-+	local max_nextents="$(((isize - icore_size) / 16))"
-+
-+	mkdir -p "${name}"
-+	d=0
-+	while true; do
-+		creat=mkdir
-+		test "$((d % 20))" -eq 0 && creat=touch
-+		$creat "${name}/$(printf "%.08d" "$d")"
-+		if [ "$((d % 40))" -eq 0 ]; then
-+			nextents="$(_xfs_get_fsxattr nextents $name)"
-+			[ $nextents -gt $max_nextents ] && break
-+		fi
-+		d=$((d+1))
-+	done
-+}
-+
- # Add a bunch of attrs to a file
- __populate_create_attr() {
- 	name="$1"
-@@ -176,6 +201,7 @@ _scratch_xfs_populate() {
- 
- 	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
- 	dblksz="$(_xfs_get_dir_blocksize "$SCRATCH_MNT")"
-+	isize="$(_xfs_inode_size "$SCRATCH_MNT")"
- 	crc="$(_xfs_has_feature "$SCRATCH_MNT" crc -v)"
- 	if [ $crc -eq 1 ]; then
- 		leaf_hdr_size=64
-@@ -226,7 +252,7 @@ _scratch_xfs_populate() {
- 
- 	# - BTREE
- 	echo "+ btree dir"
--	__populate_create_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$((128 * dblksz / 40))" true
-+	__populate_xfs_create_btree_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$isize"
- 
- 	# Symlinks
- 	# - FMT_LOCAL
-diff --git a/common/xfs b/common/xfs
-index 8ac1964e..0359e422 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -1486,3 +1486,20 @@ _require_xfsrestore_xflag()
- 	$XFSRESTORE_PROG -h 2>&1 | grep -q -e '-x' || \
- 			_notrun 'xfsrestore does not support -x flag.'
+-static inline unsigned long dax_mapping_decrease_shared(struct page *page)
++static inline unsigned long dax_page_drop_sharing(struct page *page)
+ {
+ 	return --page->share;
  }
-+
-+
-+# Number of bytes reserved for a full inode record, which includes the
-+# immediate fork areas.
-+_xfs_inode_size()
-+{
-+	local mntpoint="$1"
-+
-+	$XFS_INFO_PROG "$mntpoint" | grep 'meta-data=.*isize' | sed -e 's/^.*isize=\([0-9]*\).*$/\1/g'
-+}
-+
-+# Number of bytes reserved for only the inode record, excluding the
-+# immediate fork areas.
-+_xfs_inode_core_bytes()
-+{
-+	echo 176
-+}
--- 
-2.18.4
+@@ -381,7 +381,7 @@ static void dax_associate_entry(void *en
+ 		struct page *page = pfn_to_page(pfn);
+ 
+ 		if (shared) {
+-			dax_mapping_set_shared(page);
++			dax_page_bump_sharing(page);
+ 		} else {
+ 			WARN_ON_ONCE(page->mapping);
+ 			page->mapping = mapping;
+@@ -402,9 +402,9 @@ static void dax_disassociate_entry(void
+ 		struct page *page = pfn_to_page(pfn);
+ 
+ 		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
+-		if (dax_mapping_is_shared(page)) {
++		if (dax_page_is_shared(page)) {
+ 			/* keep the shared flag if this page is still shared */
+-			if (dax_mapping_decrease_shared(page) > 0)
++			if (dax_page_drop_sharing(page) > 0)
+ 				continue;
+ 		} else
+ 			WARN_ON_ONCE(page->mapping && page->mapping != mapping);
+_
 
