@@ -2,191 +2,253 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CB75C47089
-	for <linux-xfs@archiver.kernel.org>; Sun,  4 Dec 2022 17:45:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B4F5C4321E
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Dec 2022 05:56:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230042AbiLDRpg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 4 Dec 2022 12:45:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36644 "EHLO
+        id S231730AbiLEF4r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Dec 2022 00:56:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229999AbiLDRpg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Dec 2022 12:45:36 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE68D12A85;
-        Sun,  4 Dec 2022 09:45:34 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S231680AbiLEF4k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Dec 2022 00:56:40 -0500
+Received: from mail1.bemta37.messagelabs.com (mail1.bemta37.messagelabs.com [85.158.142.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9F6BDF10;
+        Sun,  4 Dec 2022 21:56:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
+        s=170520fj; t=1670219796; i=@fujitsu.com;
+        bh=tsULHP0IlQLfDHqLIXze7Yj4nJkeFJmjEoOpk9YqPNw=;
+        h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+         In-Reply-To:Content-Type:Content-Transfer-Encoding;
+        b=M9tZr6QKnwdcqPjVEflWWGtGz/1N76WJoEOpKivb1CrUjwApeZ8IJ2u3xfuh6tVH1
+         XbxP0YHR6XHC4TjyrGaTqP+br4Mk059ZEhBf4neO/v8+M1BoAQL/IBx5CtBYAJ207o
+         R36fL9lvkQ8241u1mW9SxsISmNAPfcCWH3DLyFyfK32EHHTXEcFoWetftQggm1+kpM
+         4YpQkzT7pVj8g2eiRn9xT5AtC9dzIVgY3bVEfdIO2pX9oyGYQE4N2zRLsq1B33Td/6
+         ExKGhaXiUjMxKMQyF2U2lABoiTNlDi25i7zwaO4H4ub7lI6T9an1Wf2MNLxiionzPe
+         R/P54ssxpCDgA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA1VSfUgTYRj33W3zLM/OzfJV+tBpUemOIoozQrS
+  iFlQUFkZEepund7XNdTdrFYUViomrBHNujjRn0iQ0l4r5gWmfWsg0TAuyL6P5UQT1x0D72Lky
+  ++/3PL+vF54XRWRWSSRKm4w0p6e0Cuk8ceImVK2UF5g1a+o84aS9/paUtFx1A7Lx0Qggn4+Gk
+  O0dPWLyeatdSrZOtwSSTu+0JAlV9VZBlaN9TKRy1V6Uqp6UTYlVnjtWoPrmWrpHelDC6tXZpn
+  QJM+LxAMNkvGm4mMkF12MLwTxUhjcA2NLfKPYP1SI48eC7yD80AdjQapYUgiAUwxNhybu+GSz
+  GY2Hn1JjUvw+FPdZRsYAX4hp46bJ1Zi/H98OyobYZfRgeB4vtXYgQiuAPASzvb/5T1wGg40pX
+  oKCS4vHQXfljxhGE74CtwwNAwAhOQsekX4Pgy+CFpnJEwBCPhrlv7CI/NkGbLf8PXgEH+1zIF
+  SCzzXmgbU6UbU5UJUBqwQae5o7TnDKBUHNsFmPUUayWoE4pKYLOUeqzOSOjXEtQJ3iC5nmCP6
+  nTaDMIPW10Ad/FMvgsXQsYqJkmukEEKlIsxKh8s0YWos7OOMlQPJPG5WhpvhssRlEFxFx5Pi6
+  Uo7NoUyar9d39Lw3RYEUYxglWjDdQOp7N8lO9IDoyHLsn+HCBYHL0s7a/P2YALImUYyAgIEAW
+  bKA5HWv8nx8H4ShQyLEzQnwwqzfOpo/7ikW+4oYFhUKxkfpHReaKdoeO/9zZGHjm1bbyzREU3
+  nv4wYJVqNn9tn15WkXmueakdO0vgzW9oKkfWuazNlxU5LHdDeqqT1u+LnDfIjN2lFi/10G/dj
+  5jHB+/xcjdUy+aT/cYvnqVcdGKmqFr5q3OwvtRjkfNy15m3L1dcr0vL7zMMgSqnMkxD3OiDiE
+  HrjUebXGnfg72njUuLthjWTnBdx3frk70tpmS37DDExrX44ralF2DwFO1LqZCV1xasmYw/8OJ
+  sLaQLZKo4dSQw+eLMu/TX1K2FMUfe1pXfwB8sivHbiriTMmV45Pvn/ZWISPejXhp0pHqzo8Jo
+  6XTN9xOMABg99u4YxE/f1QkBFgUYp6h1q5GOJ76DW0HXjmsAwAA
+X-Env-Sender: ruansy.fnst@fujitsu.com
+X-Msg-Ref: server-6.tower-732.messagelabs.com!1670219794!133009!1
+X-Originating-IP: [62.60.8.98]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.101.1; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 6269 invoked from network); 5 Dec 2022 05:56:35 -0000
+Received: from unknown (HELO n03ukasimr03.n03.fujitsu.local) (62.60.8.98)
+  by server-6.tower-732.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 5 Dec 2022 05:56:35 -0000
+Received: from n03ukasimr03.n03.fujitsu.local (localhost [127.0.0.1])
+        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTP id C56331AF;
+        Mon,  5 Dec 2022 05:56:34 +0000 (GMT)
+Received: from R01UKEXCASM126.r01.fujitsu.local (R01UKEXCASM126 [10.183.43.178])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0F6EAB80B72;
-        Sun,  4 Dec 2022 17:45:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99A3AC433C1;
-        Sun,  4 Dec 2022 17:45:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670175931;
-        bh=Af4THgWNCSbBdS00Y/eUDg3Of6Vyyi7iLZqMhIrVirM=;
-        h=Date:From:To:Cc:Subject:From;
-        b=Y5U4WRnPXLlC7vfve4F35v+tFDCVmvnj9WZOpOb4H9LCYPQNZ6JIry0AQcoFaUCpN
-         Wts43K4dhzOYfLvSbD/gYNcV+cr763YXiKtQKYKJyvGpdpWaYlYOnEVXymGRhKovw2
-         y6InYfixSKhy5Vd8f6n9TKErYInnWfhvco93mOumHafqUlJz0A4KJp5Eqo5QGQal5l
-         V4llxiiRXC8ZqEW63LD/nLGjErjxbRg/XeuRJiP9X04GV9NvNBTbdTWV4SIsnmcz1Q
-         UggJJiAocdb/e+QgLy9QdKUM5JK+V97PPL8VTb3s+bEEFnFo7NDnpawkQO4uJ3/Glp
-         tmmuSRLanMhOw==
-Date:   Sun, 4 Dec 2022 09:45:31 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     aalbersh@redhat.com, abaci@linux.alibaba.com, dchinner@redhat.com,
-        guoxuenan@huawei.com, hch@lst.de, hsiangkao@linux.alibaba.com,
-        leo.lilong@huawei.com, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, lukas@herbolt.com, sandeen@redhat.com,
-        yang.lee@linux.alibaba.com, yangx.jy@fujitsu.com
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 1f5619ed8810
-Message-ID: <167017588282.1802405.1759707049507526763.stg-ugh@magnolia>
+        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTPS id B9C031AD;
+        Mon,  5 Dec 2022 05:56:34 +0000 (GMT)
+Received: from [10.167.216.27] (10.167.216.27) by
+ R01UKEXCASM126.r01.fujitsu.local (10.183.43.178) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.42; Mon, 5 Dec 2022 05:56:31 +0000
+Message-ID: <9c5528bf-b183-7e30-08e8-72ef9c0321ef@fujitsu.com>
+Date:   Mon, 5 Dec 2022 13:56:24 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.2
+Subject: Re: [PATCH v2.1 1/8] fsdax: introduce page->share for fsdax in
+ reflink mode
+To:     Dan Williams <dan.j.williams@intel.com>
+CC:     <djwong@kernel.org>, <david@fromorbit.com>,
+        <akpm@linux-foundation.org>, <linux-kernel@vger.kernel.org>,
+        <linux-xfs@vger.kernel.org>, <nvdimm@lists.linux.dev>,
+        <linux-fsdevel@vger.kernel.org>
+References: <1669908538-55-2-git-send-email-ruansy.fnst@fujitsu.com>
+ <1669972991-246-1-git-send-email-ruansy.fnst@fujitsu.com>
+ <638aaf72cba2a_3cbe029479@dwillia2-xfh.jf.intel.com.notmuch>
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+In-Reply-To: <638aaf72cba2a_3cbe029479@dwillia2-xfh.jf.intel.com.notmuch>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.167.216.27]
+X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
+ R01UKEXCASM126.r01.fujitsu.local (10.183.43.178)
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
 
-The for-next branch of the xfs-linux repository at:
 
-git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+在 2022/12/3 10:07, Dan Williams 写道:
+> Shiyang Ruan wrote:
+>> fsdax page is used not only when CoW, but also mapread. To make the it
+>> easily understood, use 'share' to indicate that the dax page is shared
+>> by more than one extent.  And add helper functions to use it.
+>>
+>> Also, the flag needs to be renamed to PAGE_MAPPING_DAX_SHARED.
+>>
+>> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+>> ---
+>>   fs/dax.c                   | 38 ++++++++++++++++++++++----------------
+>>   include/linux/mm_types.h   |  5 ++++-
+>>   include/linux/page-flags.h |  2 +-
+>>   3 files changed, 27 insertions(+), 18 deletions(-)
+>>
+>> diff --git a/fs/dax.c b/fs/dax.c
+>> index 1c6867810cbd..edbacb273ab5 100644
+>> --- a/fs/dax.c
+>> +++ b/fs/dax.c
+>> @@ -334,35 +334,41 @@ static unsigned long dax_end_pfn(void *entry)
+>>   	for (pfn = dax_to_pfn(entry); \
+>>   			pfn < dax_end_pfn(entry); pfn++)
+>>   
+>> -static inline bool dax_mapping_is_cow(struct address_space *mapping)
+>> +static inline bool dax_page_is_shared(struct page *page)
+>>   {
+>> -	return (unsigned long)mapping == PAGE_MAPPING_DAX_COW;
+>> +	return (unsigned long)page->mapping == PAGE_MAPPING_DAX_SHARED;
+>>   }
+>>   
+>>   /*
+>> - * Set the page->mapping with FS_DAX_MAPPING_COW flag, increase the refcount.
+>> + * Set the page->mapping with PAGE_MAPPING_DAX_SHARED flag, increase the
+>> + * refcount.
+>>    */
+>> -static inline void dax_mapping_set_cow(struct page *page)
+>> +static inline void dax_page_bump_sharing(struct page *page)
+> 
+> Similar to page_ref naming I would call this page_share_get() and the
+> corresponding function page_share_put().
+> 
+>>   {
+>> -	if ((uintptr_t)page->mapping != PAGE_MAPPING_DAX_COW) {
+>> +	if ((uintptr_t)page->mapping != PAGE_MAPPING_DAX_SHARED) {
+>>   		/*
+>>   		 * Reset the index if the page was already mapped
+>>   		 * regularly before.
+>>   		 */
+>>   		if (page->mapping)
+>> -			page->index = 1;
+>> -		page->mapping = (void *)PAGE_MAPPING_DAX_COW;
+>> +			page->share = 1;
+>> +		page->mapping = (void *)PAGE_MAPPING_DAX_SHARED;
+> 
+> Small nit, You could save a cast here by defining
+> PAGE_MAPPING_DAX_SHARED as "((void *) 1)".
 
-has just been updated.
+Ok.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  Bug fixes only now.
+> 
+>>   	}
+>> -	page->index++;
+>> +	page->share++;
+>> +}
+>> +
+>> +static inline unsigned long dax_page_drop_sharing(struct page *page)
+>> +{
+>> +	return --page->share;
+>>   }
+>>   
+>>   /*
+>> - * When it is called in dax_insert_entry(), the cow flag will indicate that
+>> + * When it is called in dax_insert_entry(), the shared flag will indicate that
+>>    * whether this entry is shared by multiple files.  If so, set the page->mapping
+>> - * FS_DAX_MAPPING_COW, and use page->index as refcount.
+>> + * PAGE_MAPPING_DAX_SHARED, and use page->share as refcount.
+>>    */
+>>   static void dax_associate_entry(void *entry, struct address_space *mapping,
+>> -		struct vm_area_struct *vma, unsigned long address, bool cow)
+>> +		struct vm_area_struct *vma, unsigned long address, bool shared)
+>>   {
+>>   	unsigned long size = dax_entry_size(entry), pfn, index;
+>>   	int i = 0;
+>> @@ -374,8 +380,8 @@ static void dax_associate_entry(void *entry, struct address_space *mapping,
+>>   	for_each_mapped_pfn(entry, pfn) {
+>>   		struct page *page = pfn_to_page(pfn);
+>>   
+>> -		if (cow) {
+>> -			dax_mapping_set_cow(page);
+>> +		if (shared) {
+>> +			dax_page_bump_sharing(page);
+>>   		} else {
+>>   			WARN_ON_ONCE(page->mapping);
+>>   			page->mapping = mapping;
+>> @@ -396,9 +402,9 @@ static void dax_disassociate_entry(void *entry, struct address_space *mapping,
+>>   		struct page *page = pfn_to_page(pfn);
+>>   
+>>   		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
+>> -		if (dax_mapping_is_cow(page->mapping)) {
+>> -			/* keep the CoW flag if this page is still shared */
+>> -			if (page->index-- > 0)
+>> +		if (dax_page_is_shared(page)) {
+>> +			/* keep the shared flag if this page is still shared */
+>> +			if (dax_page_drop_sharing(page) > 0)
+>>   				continue;
+> 
+> I think part of what makes this hard to read is trying to preserve the
+> same code paths for shared pages and typical pages.
+> 
+> page_share_put() should, in addition to decrementing the share, clear
+> out page->mapping value.
 
-The new head of the for-next branch is commit:
+In order to be consistent, how about naming the 3 helper functions like 
+this:
 
-1f5619ed8810 xfs: Remove duplicated include in xfs_iomap.c
+bool          dax_page_is_shared(struct page *page);
+void          dax_page_share_get(struct page *page);
+unsigned long dax_page_share_put(struct page *page);
 
-60 new commits:
 
-Darrick J. Wong (44):
-[9a48b4a6fd51] xfs: fully initialize xfs_da_args in xchk_directory_blocks
-[be1317fdb8d4] xfs: don't track the AGFL buffer in the scrub AG context
-[3e59c0103e66] xfs: log the AGI/AGF buffers when rolling transactions during an AG repair
-[48ff40458f87] xfs: standardize GFP flags usage in online scrub
-[b255fab0f80c] xfs: make AGFL repair function avoid crosslinked blocks
-[a7a0f9a5503f] xfs: return EINTR when a fatal signal terminates scrub
-[0a713bd41ea2] xfs: fix return code when fatal signal encountered during dquot scrub
-[fcd2a43488d5] xfs: initialize the check_owner object fully
-[6bf2f8791597] xfs: don't retry repairs harder when EAGAIN is returned
-[306195f355bb] xfs: pivot online scrub away from kmem.[ch]
-[9e13975bb062] xfs: load rtbitmap and rtsummary extent mapping btrees at mount time
-[11f97e684583] xfs: skip fscounters comparisons when the scan is incomplete
-[93b0c58ed04b] xfs: don't return -EFSCORRUPTED from repair when resources cannot be grabbed
-[5f369dc5b4eb] xfs: make rtbitmap ILOCKing consistent when scanning the rt bitmap file
-[e74331d6fa2c] xfs: online checking of the free rt extent count
-[033985b6fe87] xfs: fix perag loop in xchk_bmap_check_rmaps
-[6a5777865eeb] xfs: teach scrub to check for adjacent bmaps when rmap larger than bmap
-[830ffa09fb13] xfs: block map scrub should handle incore delalloc reservations
-[f23c40443d1c] xfs: check quota files for unwritten extents
-[31785537010a] xfs: check that CoW fork extents are not shared
-[5eef46358fae] xfs: teach scrub to flag non-extents format cow forks
-[bd5ab5f98741] xfs: don't warn about files that are exactly s_maxbytes long
-[f36b954a1f1b] xfs: check inode core when scrubbing metadata files
-[823ca26a8f07] Merge tag 'scrub-fix-ag-header-handling-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
-[af1077fa87c3] Merge tag 'scrub-cleanup-malloc-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
-[3d8426b13bac] Merge tag 'scrub-fix-return-value-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
-[b76f593b33aa] Merge tag 'scrub-fix-rtmeta-ilocking-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
-[7aab8a05e7c7] Merge tag 'scrub-fscounters-enhancements-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
-[cc5f38fa12fc] Merge tag 'scrub-bmap-enhancements-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
-[7b082b5e8afa] Merge tag 'scrub-check-metadata-inode-records-6.2_2022-11-16' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeA
-[2653d53345bd] xfs: fix incorrect error-out in xfs_remove
-[7dd73802f97d] Merge tag 'xfs-iomap-stale-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-6.2-mergeB
-[c2beff99eb03] xfs: add debug knob to slow down writeback for fun
-[254e3459285c] xfs: add debug knob to slow down write for fun
-[032e160305f6] xfs: invalidate block device page cache during unmount
-[fd5beaff250d] xfs: use memcpy, not strncpy, to format the attr prefix during listxattr
-[e5827a007aa4] xfs: shut up -Wuninitialized in xfsaild_push
-[4c6dbfd2756b] xfs: attach dquots to inode before reading data/cow fork mappings
-[cd14f15b0e64] Merge tag 'iomap-write-race-testing-6.2_2022-11-30' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeC
-[4b4d11bbeca4] Merge tag 'random-fixes-6.2_2022-11-30' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeC
-[9d720a5a658f] xfs: hoist refcount record merge predicates
-[b25d1984aa88] xfs: estimate post-merge refcounts correctly
-[948961964b24] Merge tag 'maxrefcount-fixes-6.2_2022-12-01' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.2-mergeD
-[ddfdd530e43f] xfs: invalidate xfs_bufs when allocating cow extents
+--
+Thanks,
+Ruan.
 
-Dave Chinner (9):
-[118e021b4b66] xfs: write page faults in iomap are not buffered writes
-[198dd8aedee6] xfs: punching delalloc extents on write failure is racy
-[b71f889c18ad] xfs: use byte ranges for write cleanup ranges
-[9c7babf94a0d] xfs,iomap: move delalloc punching to iomap
-[f43dc4dc3eff] iomap: buffered write failure should not truncate the page cache
-[7348b322332d] xfs: xfs_bmap_punch_delalloc_range() should take a byte range
-[d7b64041164c] iomap: write iomap validity checks
-[304a68b9c63b] xfs: use iomap_valid method to detect stale cached iomaps
-[6e8af15ccdc4] xfs: drop write error injection is unfixable, remove it
-
-Guo Xuenan (3):
-[1eb52a6a7198] xfs: wait iclog complete before tearing down AIL
-[575689fc0ffa] xfs: fix super block buf log item UAF during force shutdown
-[8c25febf2396] xfs: get rid of assert from xfs_btree_islastblock
-
-Long Li (2):
-[59f6ab40fd87] xfs: fix sb write verify for lazysbcount
-[28b4b0596343] xfs: fix incorrect i_nlink caused by inode racing
-
-Lukas Herbolt (1):
-[64c80dfd04d1] xfs: Print XFS UUID on mount and umount events.
-
-Yang Li (1):
-[1f5619ed8810] xfs: Remove duplicated include in xfs_iomap.c
-
-Code Diffstat:
-
-fs/iomap/buffered-io.c         | 254 ++++++++++++++++++++++++++++++++++++++++-
-fs/iomap/iter.c                |  19 ++-
-fs/xfs/libxfs/xfs_bmap.c       |   8 +-
-fs/xfs/libxfs/xfs_btree.h      |   1 -
-fs/xfs/libxfs/xfs_errortag.h   |  18 +--
-fs/xfs/libxfs/xfs_refcount.c   | 146 ++++++++++++++++++++---
-fs/xfs/libxfs/xfs_sb.c         |   4 +-
-fs/xfs/scrub/agheader.c        |  47 +++++---
-fs/xfs/scrub/agheader_repair.c |  81 ++++++++++---
-fs/xfs/scrub/attr.c            |  11 +-
-fs/xfs/scrub/bitmap.c          |  11 +-
-fs/xfs/scrub/bmap.c            | 147 +++++++++++++++++++-----
-fs/xfs/scrub/btree.c           |  14 ++-
-fs/xfs/scrub/common.c          |  48 +++++---
-fs/xfs/scrub/common.h          |   2 +-
-fs/xfs/scrub/dabtree.c         |   4 +-
-fs/xfs/scrub/dir.c             |  10 +-
-fs/xfs/scrub/fscounters.c      | 109 +++++++++++++++++-
-fs/xfs/scrub/inode.c           |   2 +-
-fs/xfs/scrub/quota.c           |   8 +-
-fs/xfs/scrub/refcount.c        |  12 +-
-fs/xfs/scrub/repair.c          |  51 ++++++---
-fs/xfs/scrub/scrub.c           |   6 +-
-fs/xfs/scrub/scrub.h           |  18 +--
-fs/xfs/scrub/symlink.c         |   2 +-
-fs/xfs/xfs_aops.c              |  32 +++---
-fs/xfs/xfs_bmap_util.c         |  10 +-
-fs/xfs/xfs_bmap_util.h         |   2 +-
-fs/xfs/xfs_buf.c               |   1 +
-fs/xfs/xfs_buf_item.c          |   2 +
-fs/xfs/xfs_error.c             |  46 ++++++--
-fs/xfs/xfs_error.h             |  13 +++
-fs/xfs/xfs_file.c              |   2 +-
-fs/xfs/xfs_fsmap.c             |   4 +-
-fs/xfs/xfs_icache.c            |   6 +
-fs/xfs/xfs_inode.c             |   2 +-
-fs/xfs/xfs_iomap.c             | 185 ++++++++++++++++++------------
-fs/xfs/xfs_iomap.h             |   6 +-
-fs/xfs/xfs_log.c               |  46 +++++---
-fs/xfs/xfs_mount.c             |  15 +++
-fs/xfs/xfs_pnfs.c              |   6 +-
-fs/xfs/xfs_rtalloc.c           |  60 +++++++++-
-fs/xfs/xfs_super.c             |   2 +-
-fs/xfs/xfs_trace.c             |   2 +
-fs/xfs/xfs_trace.h             |  86 ++++++++++++++
-fs/xfs/xfs_trans_ail.c         |   4 +-
-fs/xfs/xfs_xattr.c             |   2 +-
-include/linux/iomap.h          |  47 ++++++--
-48 files changed, 1305 insertions(+), 309 deletions(-)
+> 
+>>   		} else
+>>   			WARN_ON_ONCE(page->mapping && page->mapping != mapping);
+>> diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
+>> index 500e536796ca..f46cac3657ad 100644
+>> --- a/include/linux/mm_types.h
+>> +++ b/include/linux/mm_types.h
+>> @@ -103,7 +103,10 @@ struct page {
+>>   			};
+>>   			/* See page-flags.h for PAGE_MAPPING_FLAGS */
+>>   			struct address_space *mapping;
+>> -			pgoff_t index;		/* Our offset within mapping. */
+>> +			union {
+>> +				pgoff_t index;		/* Our offset within mapping. */
+>> +				unsigned long share;	/* share count for fsdax */
+>> +			};
+>>   			/**
+>>   			 * @private: Mapping-private opaque data.
+>>   			 * Usually used for buffer_heads if PagePrivate.
+>> diff --git a/include/linux/page-flags.h b/include/linux/page-flags.h
+>> index 0b0ae5084e60..c8a3aa02278d 100644
+>> --- a/include/linux/page-flags.h
+>> +++ b/include/linux/page-flags.h
+>> @@ -641,7 +641,7 @@ PAGEFLAG_FALSE(VmemmapSelfHosted, vmemmap_self_hosted)
+>>    * Different with flags above, this flag is used only for fsdax mode.  It
+>>    * indicates that this page->mapping is now under reflink case.
+>>    */
+>> -#define PAGE_MAPPING_DAX_COW	0x1
+>> +#define PAGE_MAPPING_DAX_SHARED	0x1
+>>   
+>>   static __always_inline bool folio_mapping_flags(struct folio *folio)
+>>   {
+>> -- 
+>> 2.38.1
+>>
+> 
+> 
