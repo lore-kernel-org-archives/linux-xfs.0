@@ -2,190 +2,148 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF599C636F9
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Dec 2022 23:04:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38B9BC4708C
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Dec 2022 23:58:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232947AbiLEXEo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Dec 2022 18:04:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56054 "EHLO
+        id S232584AbiLEX6e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Dec 2022 18:58:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233987AbiLEXEN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Dec 2022 18:04:13 -0500
-Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B63141DDFA
-        for <linux-xfs@vger.kernel.org>; Mon,  5 Dec 2022 15:04:12 -0800 (PST)
-Received: by mail-pg1-x535.google.com with SMTP id 136so11821830pga.1
-        for <linux-xfs@vger.kernel.org>; Mon, 05 Dec 2022 15:04:12 -0800 (PST)
+        with ESMTP id S232481AbiLEX6c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Dec 2022 18:58:32 -0500
+Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C91C65E7
+        for <linux-xfs@vger.kernel.org>; Mon,  5 Dec 2022 15:58:31 -0800 (PST)
+Received: by mail-pj1-x102d.google.com with SMTP id b11so12800163pjp.2
+        for <linux-xfs@vger.kernel.org>; Mon, 05 Dec 2022 15:58:31 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=EMxgvk2yFo8Rbo93eUfFPWH3YMgPyr5c5rnRRAyyLVQ=;
-        b=iOrSXyGTxznYf60vxpgZw1BUGdPVNNnMlULWbDKMC/irJbL/DtCnl3UE6To5r3i0l7
-         cBucxsHbsUsdJdGcFE4d82oijuHcHOqR+xhnFPOq0V2wdAC2GeDLMz/hiHnnM9mqqqtP
-         PLka0Va0yo9KktVSFPbzPYQBWMMSZBgkOu+uWLMI2lxVX83AvcNKwrJuNq02j/0M6Ifq
-         qZwwzMUcXXwV3+yKx0oEYc5qd1ddbGHf3Wpv7XvB4ctfZTc7PmpAu5k1fEG/aL15KyHB
-         cT0wsUcmslmk1OebxljI2vMc9KmCx+lK941ay7frIZgQuyyOclqJqhWcLEm4nH1VbCf5
-         NRYg==
+        bh=U/HXLTVye+YBHgwzsVjQE7IM6Q/B5dkMbda8W38AW5U=;
+        b=1VD2+yeaoB56MIKwkZMtD+CBgiolHgSXmTJSsOr/tV472LlQ73j5kvScI62kK8NbAi
+         aVmtI6CIeeQOAjd+FXaXzwo3EqBEqvIP44z+9wSz2KAI/UPJWgoPibpt6lyOyF384rJ+
+         3JYob4Wb1wWXGsPJsenKlizwLwW6RghQ9/GlhqmKKZeCxASyzFaK3e6JoYsDz37X+/G5
+         QuGrU/RZUO9mVY4C3bDZ/p36gB5z8AlLbhox2ewY48LURtH5KY4A+4ch+4f+J1cM9Nyc
+         BGM2AO5l1lIbb3WyQPZx6o4USCsOOq2Nw4/BcVVsPV69jZLYibOTjlqbMl9QN9nvIFp/
+         En/w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=EMxgvk2yFo8Rbo93eUfFPWH3YMgPyr5c5rnRRAyyLVQ=;
-        b=uNVzmAH4V4kEfwtDuws6QR15pEjjZtWa9sdvIJPQpngPe3wTH9Cl5ZWRIdVG473Jl/
-         WCyGkjLtjgl72lZCpru7EmKO8Dzw6jB1d72aLS8X08pLq3MOGOJDTaBr2qiIlLYUubRt
-         FlhhSwlZmj0dJeIoGt/OQbKrV6EnFOYCQYuHdQy2xYbOnYjCJAmKo+eQ488zzY2YxhrG
-         s3M8R00w3DMFEzAxYJf+t2/Mw62YqpCUox5mPRU436wyQEQP2KGPDeSS3WFmji154jpJ
-         IQ3Kr9hu46jwKnmPN+zgiQRiSCEpePwvwIbbBLTQhf59JkilwelmqY9NP4G/IAy6SGFw
-         GVeQ==
-X-Gm-Message-State: ANoB5pnmy/MTn2AMiXJyJlcCO0lTAPxqHu0HIxxRurTkgCGYM7KOJp3x
-        qv84r+yvnjhIUsLTF8dWq87cgg==
-X-Google-Smtp-Source: AA0mqf5eDxwr9JDrHbPttLGwszxyGTK5GHFn8edQbmPwIKgeDp4Nde0sxZFhRR/hZfKvOlnUTyuXfw==
-X-Received: by 2002:a63:d48:0:b0:474:6739:6a09 with SMTP id 8-20020a630d48000000b0047467396a09mr66392507pgn.292.1670281452243;
-        Mon, 05 Dec 2022 15:04:12 -0800 (PST)
+        bh=U/HXLTVye+YBHgwzsVjQE7IM6Q/B5dkMbda8W38AW5U=;
+        b=gy07FvEX8EfgCnWgI6hdUFf32Cziyg48h8dr4lT7nTh/opaild25HYkJEHhHw6789c
+         PpbjHU19OZAG0IpLYCC/gYnyUj/2aixVmdZ2yjKEmoIcz7Pf9OWbcEHo+WSnu3+FChVv
+         8789pR9jkNdhQJ9zqNeTAmMcNKej1xWDWyQuEDAjMDPlGf6LVL7NAJyfJ2qggX8/ebLB
+         azU88FWEtDoJqYmuOlvEo3tpjN1kymfNFo2T2oTvdupNyLxXVQ242RUhjTTGtwSx9v8P
+         mWRNBM5Gnwy0uDacARt6o+tk0CQ/UIdsJUhFa7DCeNF7eQQ1wG+LyBVPjELwaU0tBFBF
+         yJTw==
+X-Gm-Message-State: ANoB5pnT1jzyENYYVfxrlAYbay/jgagEhk8gEreKKDWJrxLFEUAJSGQl
+        L611zNJDg2BetHRXOCHeosOS1w==
+X-Google-Smtp-Source: AA0mqf75pQcKCeUlHim+EYQnMg/KLDWrpiR4pcZDA7OzIc1fg1wmHYfyVg/dUk9hamdjldnFtxbhLA==
+X-Received: by 2002:a17:90a:dc18:b0:219:b8f8:9b80 with SMTP id i24-20020a17090adc1800b00219b8f89b80mr11859093pjv.54.1670284711125;
+        Mon, 05 Dec 2022 15:58:31 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-54-199.pa.nsw.optusnet.com.au. [49.181.54.199])
-        by smtp.gmail.com with ESMTPSA id b15-20020a170902d50f00b00174f61a7d09sm11120251plg.247.2022.12.05.15.04.11
+        by smtp.gmail.com with ESMTPSA id i17-20020a170902c95100b00189847cd4acsm11282927pla.237.2022.12.05.15.58.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 05 Dec 2022 15:04:11 -0800 (PST)
+        Mon, 05 Dec 2022 15:58:30 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1p2KVM-004y9z-6R; Tue, 06 Dec 2022 10:04:08 +1100
-Date:   Tue, 6 Dec 2022 10:04:08 +1100
+        id 1p2LLv-004z6x-PA; Tue, 06 Dec 2022 10:58:27 +1100
+Date:   Tue, 6 Dec 2022 10:58:27 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Andreas Gruenbacher <agruenba@redhat.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, cluster-devel@redhat.com
-Subject: Re: [RFC v2 0/3] Turn iomap_page_ops into iomap_folio_ops
-Message-ID: <20221205230408.GQ3600936@dread.disaster.area>
-References: <20221201160619.1247788-1-agruenba@redhat.com>
- <20221201180957.1268079-1-agruenba@redhat.com>
- <20221201212956.GO3600936@dread.disaster.area>
- <CAHc6FU6u9A0S-EwyB6vq89XPj1rucL8U0oqq__OzB1d0evM-yA@mail.gmail.com>
+To:     syzbot <syzbot+912776840162c13db1a3@syzkaller.appspotmail.com>
+Cc:     djwong@kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Subject: Re: [syzbot] KASAN: use-after-free Read in xfs_qm_dqfree_one
+Message-ID: <20221205235827.GR3600936@dread.disaster.area>
+References: <000000000000abbde005ef113644@google.com>
+ <0000000000009a423705ef123f9a@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAHc6FU6u9A0S-EwyB6vq89XPj1rucL8U0oqq__OzB1d0evM-yA@mail.gmail.com>
+In-Reply-To: <0000000000009a423705ef123f9a@google.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Dec 02, 2022 at 02:54:00AM +0100, Andreas Gruenbacher wrote:
-> On Thu, Dec 1, 2022 at 10:30 PM Dave Chinner <david@fromorbit.com> wrote:
-> > On Thu, Dec 01, 2022 at 07:09:54PM +0100, Andreas Gruenbacher wrote:
-> > > Hi again,
-> > >
-> > > [Same thing, but with the patches split correctly this time.]
-> > >
-> > > we're seeing a race between journaled data writes and the shrinker on
-> > > gfs2.  What's happening is that gfs2_iomap_page_done() is called after
-> > > the page has been unlocked, so try_to_free_buffers() can come in and
-> > > free the buffers while gfs2_iomap_page_done() is trying to add them to
-> > > the transaction.  Not good.
-> > >
-> > > This is a proposal to change iomap_page_ops so that page_prepare()
-> > > prepares the write and grabs the locked page, and page_done() unlocks
-> > > and puts that page again.  While at it, this also converts the hooks
-> > > from pages to folios.
-> > >
-> > > To move the pagecache_isize_extended() call in iomap_write_end() out of
-> > > the way, a new folio_may_straddle_isize() helper is introduced that
-> > > takes a locked folio.  That is then used when the inode size is updated,
-> > > before the folio is unlocked.
-> > >
-> > > I've also converted the other applicable folio_may_straddle_isize()
-> > > users, namely generic_write_end(), ext4_write_end(), and
-> > > ext4_journalled_write_end().
-> > >
-> > > Any thoughts?
-> >
-> > I doubt that moving page cache operations from the iomap core to
-> > filesystem specific callouts will be acceptible. I recently proposed
-> > patches that added page cache walking to an XFS iomap callout to fix
-> > a data corruption, but they were NAKd on the basis that iomap is
-> > supposed to completely abstract away the folio and page cache
-> > manipulations from the filesystem.
+On Mon, Dec 05, 2022 at 02:35:39AM -0800, syzbot wrote:
+> syzbot has found a reproducer for the following issue on:
 > 
-> Right. The resulting code is really quite disgusting, for a
-> fundamentalist dream of abstraction.
+> HEAD commit:    0ba09b173387 Revert "mm: align larger anonymous mappings o..
+> git tree:       upstream
+> console output: https://syzkaller.appspot.com/x/log.txt?x=15550c47880000
+> kernel config:  https://syzkaller.appspot.com/x/.config?x=2325e409a9a893e1
+> dashboard link: https://syzkaller.appspot.com/bug?extid=912776840162c13db1a3
+> compiler:       Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2
+> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=128c9e23880000
 > 
-> > This patchset seems to be doing the same thing - moving page cache
-> > and folio management directly in filesystem specific callouts. Hence
-> > I'm going to assume that the same architectural demarcation is
-> > going to apply here, too...
-> >
-> > FYI, there is already significant change committed to the iomap
-> > write path in the current XFS tree as a result of the changes I
-> > mention - there is stale IOMAP detection which adds a new page ops
-> > method and adds new error paths with a locked folio in
-> > iomap_write_begin().
+> Downloadable assets:
+> disk image: https://storage.googleapis.com/syzbot-assets/9758ec2c06f4/disk-0ba09b17.raw.xz
+> vmlinux: https://storage.googleapis.com/syzbot-assets/06781dbfd581/vmlinux-0ba09b17.xz
+> kernel image: https://storage.googleapis.com/syzbot-assets/3d44a22d15fa/bzImage-0ba09b17.xz
+> mounted in repro: https://storage.googleapis.com/syzbot-assets/335889b2d730/mount_0.gz
 > 
-> That would have belonged on the iomap-for-next branch rather than in
-> the middle of a bunch of xfs commits.
+> IMPORTANT: if you fix the issue, please add the following tag to the commit:
+> Reported-by: syzbot+912776840162c13db1a3@syzkaller.appspotmail.com
 
-Damned if you do, damned if you don't.
+#syz test https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git master
 
-There were non-trivial cross dependencies between XFS and iomap in
-that patch set.  The initial IOMAP_F_STALE infrastructure needed XFS
-changes first, otherwise it could deadlock at ENOSPC on write page
-faults. i.e. the iomap change in isolation broke stuff, so we're
-forced to either carry XFs changes in iomap or iomap changes in XFS
-so that there are no regressions in a given tree.
 
-Then we had to move XFS functionality to iomap to fix another data
-corruption that the IOMAP_F_STALE infrastructure exposed in XFS via
-generic/346. Once the code was moved, then we could build it up into
-the page cache scanning functionality in iomap. And only then could
-we add the XFS IOMAP_F_STALE validation to XFS to solve the original
-data corruption that started all this off.
+xfs: dquot shrinker doesn't check for XFS_DQFLAG_FREEING
 
-IOWs, there were so many cross dependencies between XFs and iomap
-that it was largely impossible to break it up into two separate sets
-of indpendent patches that didn't cause regressions in one or the
-other tree. And in the end, we'd still have to merge the iomap tree
-into XFS or vice versa to actually test that the data corruption fix
-worked.
+From: Dave Chinner <dchinner@redhat.com>
 
-In situations like this, we commonly take the entire series into one
-of the two trees rather than make a whole lot more work for
-ourselves by trying to separate them out. And in this case, because
-it was XFS data corruption and race conditions that needed fixing,
-it made sense to take it through the XFS tree so that it gets
-coverage from all the XFS testing that happens - the iomap tree gets
-a lot less early coverage than the XFS tree...
+Resulting in a UAF if the shrinker races with some other dquot
+freeing mechanism that sets XFS_DQFLAG_FREEING before the dquot is
+removed from the LRU. This can occur if a dquot purge races with
+drop_caches.
 
-> > And this other data corruption (and performance) fix for handling
-> > zeroing over unwritten extents properly:
-> >
-> > https://lore.kernel.org/linux-xfs/20221201005214.3836105-1-david@fromorbit.com/
-> >
-> > changes the way folios are looked up and instantiated in the page
-> > cache in iomap_write_begin(). It also adds new error conditions that
-> > need to be returned to callers so to implement conditional "folio
-> > must be present and dirty" page cache zeroing from
-> > iomap_zero_iter(). Those semantics would also have to be supported
-> > by gfs2, and that greatly complicates modifying and testing iomap
-> > core changes.
-> >
-> > To avoid all this, can we simple move the ->page_done() callout in
-> > the error path and iomap_write_end() to before we unlock the folio?
-> > You've already done that for pagecache_isize_extended(), and I can't
-> > see anything obvious in the gfs2 ->page_done callout that
-> > would cause issues if it is called with a locked dirty folio...
-> 
-> Yes, I guess we can do that once pagecache_isize_extended() is
-> replaced by folio_may_straddle_isize().
-> 
-> Can people please scrutinize the math in folio_may_straddle_isize() in
-> particular?
+Reported-by: syzbot+912776840162c13db1a3@syzkaller.appspotmail.com
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_qm.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-I'll look at it more closely in the next couple of days.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 18bb4ec4d7c9..ff53d40a2dae 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -422,6 +422,14 @@ xfs_qm_dquot_isolate(
+ 	if (!xfs_dqlock_nowait(dqp))
+ 		goto out_miss_busy;
+ 
++	/*
++	 * If something else is freeing this dquot and hasn't yet removed it
++	 * from the LRU, leave it for the freeing task to complete the freeing
++	 * process rather than risk it being free from under us here.
++	 */
++	if (dqp->q_flags & XFS_DQFLAG_FREEING)
++		goto out_miss_unlock;
++
+ 	/*
+ 	 * This dquot has acquired a reference in the meantime remove it from
+ 	 * the freelist and try again.
+@@ -441,10 +449,8 @@ xfs_qm_dquot_isolate(
+ 	 * skip it so there is time for the IO to complete before we try to
+ 	 * reclaim it again on the next LRU pass.
+ 	 */
+-	if (!xfs_dqflock_nowait(dqp)) {
+-		xfs_dqunlock(dqp);
+-		goto out_miss_busy;
+-	}
++	if (!xfs_dqflock_nowait(dqp))
++		goto out_miss_unlock;
+ 
+ 	if (XFS_DQ_IS_DIRTY(dqp)) {
+ 		struct xfs_buf	*bp = NULL;
+@@ -478,6 +484,8 @@ xfs_qm_dquot_isolate(
+ 	XFS_STATS_INC(dqp->q_mount, xs_qm_dqreclaims);
+ 	return LRU_REMOVED;
+ 
++out_miss_unlock:
++	xfs_dqunlock(dqp);
+ out_miss_busy:
+ 	trace_xfs_dqreclaim_busy(dqp);
+ 	XFS_STATS_INC(dqp->q_mount, xs_qm_dqreclaim_misses);
