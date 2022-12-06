@@ -2,69 +2,179 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66AB4C4708C
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Dec 2022 03:12:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3164BC47089
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Dec 2022 03:13:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233277AbiLFDMS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Dec 2022 22:12:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39394 "EHLO
+        id S232119AbiLFDNQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Dec 2022 22:13:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40370 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231530AbiLFDMR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Dec 2022 22:12:17 -0500
-Received: from mail-io1-f70.google.com (mail-io1-f70.google.com [209.85.166.70])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A71A19C10
-        for <linux-xfs@vger.kernel.org>; Mon,  5 Dec 2022 19:12:16 -0800 (PST)
-Received: by mail-io1-f70.google.com with SMTP id e15-20020a056602158f00b006e01d8fa493so1884727iow.3
-        for <linux-xfs@vger.kernel.org>; Mon, 05 Dec 2022 19:12:16 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=UvD+MZjtUR1zcO4JD+kq1ILF5xn9xebsMtnvhQcAkAE=;
-        b=4RsWiNU/pRFizWue8JwgS/UCkp0mIRqbiKMijEZcGwWJ+b4fawt1iLgmxraxTXzbH8
-         Dh4SlmsSzmPcxxitR97+q4SGCpgcCHzq02gEa37RIfS2qa+f6paDo8OwgJvLIh92Re6w
-         ehDM3oA7GNEtHMxV1J891uVCKQbHdAXQ9oqw40UQEnGFo73EFwWwvKDiUnw6Y9uxnxsH
-         Vvp+TZqVZaDIJJ+wwn94WGXMYxfp9guXsTpH4/Xp8gy1kvTtMYiwCydyzq+T/BNNo3N5
-         VL9brX/UAWmVBGSLGpsVsHGxQZHiv/S1+d8Dj058VDMFPnu8SlVVQBqKpUDkC9xxAnBD
-         2IrQ==
-X-Gm-Message-State: ANoB5pkEASiV6QruyYH/vesj0SOQo/v29N2ldLwohxEOWQxfV+leuvSR
-        E6GfeiiekqxLi7VP9stdNE5/74JECQU/WYopjZJg8S0dZ4o8
-X-Google-Smtp-Source: AA0mqf6A0GebHKYwEIp76zOIrRahHhD9zg1SBqJJFP7ufPb0tnRDBwWyKhcL9tmmAF8gUTA4P7QEV6FIh3yV6A26PFMBJA+62NY8
+        with ESMTP id S232113AbiLFDNQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Dec 2022 22:13:16 -0500
+Received: from out30-43.freemail.mail.aliyun.com (out30-43.freemail.mail.aliyun.com [115.124.30.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DD541A203;
+        Mon,  5 Dec 2022 19:13:14 -0800 (PST)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R121e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045170;MF=ziyangzhang@linux.alibaba.com;NM=0;PH=DS;RN=5;SR=0;TI=SMTPD_---0VWd6U-R_1670296391;
+Received: from 30.97.56.248(mailfrom:ZiyangZhang@linux.alibaba.com fp:SMTPD_---0VWd6U-R_1670296391)
+          by smtp.aliyun-inc.com;
+          Tue, 06 Dec 2022 11:13:12 +0800
+Message-ID: <4096c6d3-f88f-82a1-4d5c-7c162c179483@linux.alibaba.com>
+Date:   Tue, 6 Dec 2022 11:13:10 +0800
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:156c:b0:303:4885:a1fe with SMTP id
- k12-20020a056e02156c00b003034885a1femr6044451ilu.261.1670296335371; Mon, 05
- Dec 2022 19:12:15 -0800 (PST)
-Date:   Mon, 05 Dec 2022 19:12:15 -0800
-In-Reply-To: <20221205235827.GR3600936@dread.disaster.area>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000bd587705ef202b08@google.com>
-Subject: Re: [syzbot] KASAN: use-after-free Read in xfs_qm_dqfree_one
-From:   syzbot <syzbot+912776840162c13db1a3@syzkaller.appspotmail.com>
-To:     david@fromorbit.com, djwong@kernel.org,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.5.0
+Subject: Re: [RESEND PATCH V2] common/populate: Ensure that S_IFDIR.FMT_BTREE
+ is in btree format
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "hsiangkao@linux.alibaba.com" <hsiangkao@linux.alibaba.com>,
+        Allison Henderson <allison.henderson@oracle.com>
+References: <20221202112740.1233028-1-ZiyangZhang@linux.alibaba.com>
+ <030e253f14fcdff29d43bafa690435be06abacb4.camel@oracle.com>
+ <Y45n8Xy+j3fV/TtG@magnolia>
+Content-Language: en-US
+From:   Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
+In-Reply-To: <Y45n8Xy+j3fV/TtG@magnolia>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
+On 2022/12/6 05:51, Darrick J. Wong wrote:
+> On Sat, Dec 03, 2022 at 12:26:57AM +0000, Allison Henderson wrote:
+>> On Fri, 2022-12-02 at 19:27 +0800, Ziyang Zhang wrote:
+>>> Sometimes "$((128 * dblksz / 40))" dirents cannot make sure that
+>>> S_IFDIR.FMT_BTREE could become btree format for its DATA fork.
+>>>
+>>> Actually we just observed it can fail after apply our inode
+>>> extent-to-btree workaround. The root cause is that the kernel may be
+>>> too good at allocating consecutive blocks so that the data fork is
+>>> still in extents format.
+>>>
+>>> Therefore instead of using a fixed number, let's make sure the number
+>>> of extents is large enough than (inode size - inode core size) /
+>>> sizeof(xfs_bmbt_rec_t).
+>>>
+>>> Suggested-by: "Darrick J. Wong" <djwong@kernel.org>
+>>> Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
+>>> Signed-off-by: Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
+>>
+>> New version looks much cleaner.  
+>> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+>>
+>>> ---
+>>> V2: take Darrick's advice to cleanup code
+>>>  common/populate | 28 +++++++++++++++++++++++++++-
+>>>  common/xfs      | 17 +++++++++++++++++
+>>>  2 files changed, 44 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/common/populate b/common/populate
+>>> index 6e004997..1ca76459 100644
+>>> --- a/common/populate
+>>> +++ b/common/populate
+>>> @@ -71,6 +71,31 @@ __populate_create_dir() {
+>>>         done
+>>>  }
+>>>  
+>>> +# Create a large directory and ensure that it's a btree format
+>>> +__populate_xfs_create_btree_dir() {
+>>> +       local name="$1"
+>>> +       local isize="$2"
+>>> +       local icore_size="$(_xfs_inode_core_bytes)"
+>>> +       # We need enough extents to guarantee that the data fork is
+>>> in
+>>> +       # btree format.  Cycling the mount to use xfs_db is too slow,
+>>> so
+>>> +       # watch for when the extent count exceeds the space after the
+>>> +       # inode core.
+>>> +       local max_nextents="$(((isize - icore_size) / 16))"
+>>> +
+>>> +       mkdir -p "${name}"
+>>> +       d=0
+>>> +       while true; do
+>>> +               creat=mkdir
+>>> +               test "$((d % 20))" -eq 0 && creat=touch
+>>> +               $creat "${name}/$(printf "%.08d" "$d")"
+>>> +               if [ "$((d % 40))" -eq 0 ]; then
+>>> +                       nextents="$(_xfs_get_fsxattr nextents $name)"
+>>> +                       [ $nextents -gt $max_nextents ] && break
+>>> +               fi
+>>> +               d=$((d+1))
+>>> +       done
+>>> +}
+>>> +
+>>>  # Add a bunch of attrs to a file
+>>>  __populate_create_attr() {
+>>>         name="$1"
+>>> @@ -176,6 +201,7 @@ _scratch_xfs_populate() {
+>>>  
+>>>         blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
+>>>         dblksz="$(_xfs_get_dir_blocksize "$SCRATCH_MNT")"
+>>> +       isize="$(_xfs_inode_size "$SCRATCH_MNT")"
+>>>         crc="$(_xfs_has_feature "$SCRATCH_MNT" crc -v)"
+>>>         if [ $crc -eq 1 ]; then
+>>>                 leaf_hdr_size=64
+>>> @@ -226,7 +252,7 @@ _scratch_xfs_populate() {
+>>>  
+>>>         # - BTREE
+>>>         echo "+ btree dir"
+>>> -       __populate_create_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE"
+>>> "$((128 * dblksz / 40))" true
+>>> +       __populate_xfs_create_btree_dir
+>>> "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$isize"
+>>>  
+>>>         # Symlinks
+>>>         # - FMT_LOCAL
+>>> diff --git a/common/xfs b/common/xfs
+>>> index 8ac1964e..0359e422 100644
+>>> --- a/common/xfs
+>>> +++ b/common/xfs
+>>> @@ -1486,3 +1486,20 @@ _require_xfsrestore_xflag()
+>>>         $XFSRESTORE_PROG -h 2>&1 | grep -q -e '-x' || \
+>>>                         _notrun 'xfsrestore does not support -x
+>>> flag.'
+>>>  }
+>>> +
+>>> +
+>>> +# Number of bytes reserved for a full inode record, which includes
+>>> the
+>>> +# immediate fork areas.
+>>> +_xfs_inode_size()
+>>> +{
+>>> +       local mntpoint="$1"
+>>> +
+>>> +       $XFS_INFO_PROG "$mntpoint" | grep 'meta-data=.*isize' | sed -
+>>> e 's/^.*isize=\([0-9]*\).*$/\1/g'
+>>> +}
+>>> +
+>>> +# Number of bytes reserved for only the inode record, excluding the
+>>> +# immediate fork areas.
+>>> +_xfs_inode_core_bytes()
+>>> +{
+>>> +       echo 176
+>>> +}
+> 
+> Please refactor all the other users:
+> 
+> $ git grep -w isize.*176
+> tests/xfs/335:34:i_ptrs=$(( (isize - 176) / 56 ))
+> tests/xfs/336:45:i_ptrs=$(( (isize - 176) / 56 ))
+> tests/xfs/337:36:i_ptrs=$(( (isize - 176) / 56 ))
+> tests/xfs/341:36:i_ptrs=$(( (isize - 176) / 48 ))
+> tests/xfs/342:33:i_ptrs=$(( (isize - 176) / 56 ))
+> 
+> (I'll test out this patch and try to do the same for ATTR.FMT_BTREE in
+> the meantime)
 
-syzbot has tested the proposed patch but the reproducer is still triggering an issue:
-INFO: rcu detected stall in corrupted
+Hi, Darrick
 
-rcu: INFO: rcu_preempt detected expedited stalls on CPUs/tasks: { P4122 } 2641 jiffies s: 2877 root: 0x0/T
-rcu: blocking rcu_node structures (internal RCU debug):
+Should I create a new patch to refactor these test cases
+or refactor them just in this patch?
 
+Looks like these test cases just need _xfs_inode_core_bytes()
+and commit message of this patch is not written for them.
 
-Tested on:
-
-commit:         bce93322 proc: proc_skip_spaces() shouldn't think it i..
-git tree:       https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git master
-console output: https://syzkaller.appspot.com/x/log.txt?x=1566216b880000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=d58e7fe7f9cf5e24
-dashboard link: https://syzkaller.appspot.com/bug?extid=912776840162c13db1a3
-compiler:       Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2
-patch:          https://syzkaller.appspot.com/x/patch.diff?x=164cad83880000
-
+Regards,
+Zhang
