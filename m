@@ -2,152 +2,173 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79E48C352A1
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Dec 2022 16:17:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B491C352A1
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Dec 2022 17:44:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229990AbiLGQRc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Dec 2022 11:17:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42810 "EHLO
+        id S230004AbiLGRon (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Dec 2022 12:44:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230020AbiLGQRa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Dec 2022 11:17:30 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DC7F62EB0;
-        Wed,  7 Dec 2022 08:17:27 -0800 (PST)
+        with ESMTP id S230055AbiLGRo3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Dec 2022 12:44:29 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61B8C654E9
+        for <linux-xfs@vger.kernel.org>; Wed,  7 Dec 2022 09:44:26 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id A97B0CE1AFE;
-        Wed,  7 Dec 2022 16:17:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C569FC433C1;
-        Wed,  7 Dec 2022 16:17:23 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 25512B81F1F
+        for <linux-xfs@vger.kernel.org>; Wed,  7 Dec 2022 17:44:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAB22C433D6;
+        Wed,  7 Dec 2022 17:44:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670429843;
-        bh=MvxnN6BYfRwcFGpZLKnETxCa2619sEnvs1dSo1RoeFA=;
+        s=k20201202; t=1670435063;
+        bh=P1erhoSAIapA+WOetCeETXw0v41vPSznfumMWVg18ms=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=GRMibxXYH8N/hivYh+EpOLDIMjG7QOqNUh7Kk72UspODOLVezObLy6b0mW5om2dw0
-         +G7JGeWxgqW1OF7FcYxpYx1AXqTwpdQjRY1mNdkRQIYpj5QKQ7rGFSsEsS10hYaqyB
-         LEboIrp+dNw754jzDaX2PGcjb8RfUkgge2dlw7ZBQFhuutPEo1xO3ThcRtWODVnHGn
-         U79yv85OMgrPtPW6e7PLkSt7cQgxADg0+mG0F+fdvEGko6FA9or2v5WcpvvhEVUJuE
-         IGg4exxY9wQ4nDNg+Y6zl+Vx62daDlzWZI3VIRY+EbcRq9q9jMar9klR3sgIDJDv7w
-         SlAa9lYeY7ltg==
-Date:   Wed, 7 Dec 2022 08:17:23 -0800
+        b=f8aZdVDHJMwEbKqOUOiQMqQePpAAC+7VmubnCSQ1oW/gzJSHjoGjvLGqYB6pXyzaV
+         zw7ka68j1P9v2rtjbW54KoOE0p715ZZiLQUM8l6Zkc6dfPvCBscLirUWRqQhRlCRgj
+         3R/BbdE6OaPWkcn+xRJ7faTh4ucsD19PAxW/3Hqh4lWLapTrxZF2XEWkugbSWIS3Cm
+         8oKHAfhAia4BkPKkDFQpkcI2112cIAgUPKZExvV0mbGWUCZOhyNi3X/Iw9LnupYq92
+         tfRnebm207jNW7qR0OllYaV02GhnOu30I/ukaViz1PynBGY2vlvUFspxF9A7jllNO2
+         cefgc/u3Bf+4g==
+Date:   Wed, 7 Dec 2022 09:44:23 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     syzbot <syzbot+912776840162c13db1a3@syzkaller.appspotmail.com>,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        syzkaller-bugs@googlegroups.com
-Subject: Re: [PATCH] xfs: dquot shrinker doesn't check for XFS_DQFLAG_FREEING
-Message-ID: <Y5C8k3ef4LqU4v0x@magnolia>
-References: <000000000000abbde005ef113644@google.com>
- <0000000000009a423705ef123f9a@google.com>
- <20221205225246.GP3600936@dread.disaster.area>
+To:     Catherine Hoang <catherine.hoang@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v1 1/2] xfs_io: add fsuuid command
+Message-ID: <Y5DQ9089o0YFk85E@magnolia>
+References: <20221207022346.56671-1-catherine.hoang@oracle.com>
+ <20221207022346.56671-2-catherine.hoang@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221205225246.GP3600936@dread.disaster.area>
+In-Reply-To: <20221207022346.56671-2-catherine.hoang@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 06, 2022 at 09:52:46AM +1100, Dave Chinner wrote:
-> On Mon, Dec 05, 2022 at 02:35:39AM -0800, syzbot wrote:
-> > syzbot has found a reproducer for the following issue on:
-> > 
-> > HEAD commit:    0ba09b173387 Revert "mm: align larger anonymous mappings o..
-> > git tree:       upstream
-> > console output: https://syzkaller.appspot.com/x/log.txt?x=15550c47880000
-> > kernel config:  https://syzkaller.appspot.com/x/.config?x=2325e409a9a893e1
-> > dashboard link: https://syzkaller.appspot.com/bug?extid=912776840162c13db1a3
-> > compiler:       Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2
-> > syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=128c9e23880000
-> > 
-> > Downloadable assets:
-> > disk image: https://storage.googleapis.com/syzbot-assets/9758ec2c06f4/disk-0ba09b17.raw.xz
-> > vmlinux: https://storage.googleapis.com/syzbot-assets/06781dbfd581/vmlinux-0ba09b17.xz
-> > kernel image: https://storage.googleapis.com/syzbot-assets/3d44a22d15fa/bzImage-0ba09b17.xz
-> > mounted in repro: https://storage.googleapis.com/syzbot-assets/335889b2d730/mount_0.gz
-> > 
-> > IMPORTANT: if you fix the issue, please add the following tag to the commit:
-> > Reported-by: syzbot+912776840162c13db1a3@syzkaller.appspotmail.com
-> > 
-> > XFS (loop1): Quotacheck: Done.
-> > syz-executor.1 (4657): drop_caches: 2
-> > ==================================================================
-> > BUG: KASAN: use-after-free in xfs_dquot_type fs/xfs/xfs_dquot.h:136 [inline]
-> > BUG: KASAN: use-after-free in xfs_qm_dqfree_one+0x12f/0x170 fs/xfs/xfs_qm.c:1604
-> > Read of size 1 at addr ffff888079a6aa58 by task syz-executor.1/4657
+On Tue, Dec 06, 2022 at 06:23:45PM -0800, Catherine Hoang wrote:
+> Add support for the fsuuid command to retrieve the UUID of a mounted
+> filesystem.
 > 
-> Looks like we've missed a XFS_DQUOT_FREEING check in
-> xfs_qm_shrink_scan(), and the dquot purge run by unmount has raced
-> with the shrinker. Patch below should fix it.
+> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+> ---
+>  io/Makefile |  6 +++---
+>  io/fsuuid.c | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  io/init.c   |  1 +
+>  io/io.h     |  1 +
+>  4 files changed, 54 insertions(+), 3 deletions(-)
+>  create mode 100644 io/fsuuid.c
 > 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> xfs: dquot shrinker doesn't check for XFS_DQFLAG_FREEING
-> 
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Resulting in a UAF if the shrinker races with some other dquot
-> freeing mechanism that sets XFS_DQFLAG_FREEING before the dquot is
-> removed from the LRU. This can occur if a dquot purge races with
-> drop_caches.
-> 
-> Reported-by: syzbot+912776840162c13db1a3@syzkaller.appspotmail.com
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> diff --git a/io/Makefile b/io/Makefile
+> index 498174cf..53fef09e 100644
+> --- a/io/Makefile
+> +++ b/io/Makefile
+> @@ -10,12 +10,12 @@ LSRCFILES = xfs_bmap.sh xfs_freeze.sh xfs_mkfile.sh
+>  HFILES = init.h io.h
+>  CFILES = init.c \
+>  	attr.c bmap.c bulkstat.c crc32cselftest.c cowextsize.c encrypt.c \
+> -	file.c freeze.c fsync.c getrusage.c imap.c inject.c label.c link.c \
+> -	mmap.c open.c parent.c pread.c prealloc.c pwrite.c reflink.c \
+> +	file.c freeze.c fsuuid.c fsync.c getrusage.c imap.c inject.c label.c \
+> +	link.c mmap.c open.c parent.c pread.c prealloc.c pwrite.c reflink.c \
+>  	resblks.c scrub.c seek.c shutdown.c stat.c swapext.c sync.c \
+>  	truncate.c utimes.c
+>  
+> -LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD)
+> +LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD) $(LIBUUID)
+>  LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG)
+>  LLDFLAGS = -static-libtool-libs
+>  
+> diff --git a/io/fsuuid.c b/io/fsuuid.c
+> new file mode 100644
+> index 00000000..7e14a95d
+> --- /dev/null
+> +++ b/io/fsuuid.c
+> @@ -0,0 +1,49 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (c) 2022 Oracle.
+> + * All Rights Reserved.
+> + */
+> +
+> +#include "libxfs.h"
+> +#include "command.h"
+> +#include "init.h"
+> +#include "io.h"
+> +#include "libfrog/fsgeom.h"
+> +#include "libfrog/logging.h"
+> +
+> +static cmdinfo_t fsuuid_cmd;
+> +
+> +static int
+> +fsuuid_f(
+> +	int			argc,
+> +	char			**argv)
+> +{
+> +	struct xfs_fsop_geom	fsgeo;
+> +	int			ret;
+> +	char			bp[40];
+> +
+> +	ret = -xfrog_geometry(file->fd, &fsgeo);
+> +
+> +	if (ret) {
+> +		xfrog_perror(ret, "XFS_IOC_FSGEOMETRY");
+> +		exitcode = 1;
+> +	} else {
+> +		platform_uuid_unparse((uuid_t *)fsgeo.uuid, bp);
+> +		printf("UUID = %s\n", bp);
 
-Please repost this as a toplevel thread so it doesn't get lost in the
-depths.  Anyway, this looks correct so:
+Lowercase "uuid" to match the xfs_db uuid command.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +void
+> +fsuuid_init(void)
+> +{
+> +	fsuuid_cmd.name = "fsuuid";
+> +	fsuuid_cmd.cfunc = fsuuid_f;
+> +	fsuuid_cmd.argmin = 0;
+> +	fsuuid_cmd.argmax = 0;
+> +	fsuuid_cmd.flags = CMD_FLAG_ONESHOT | CMD_NOMAP_OK;
+> +	fsuuid_cmd.oneline = _("get mounted filesystem UUID");
+> +
+> +	add_command(&fsuuid_cmd);
+
+New xfs_io commands should be added to man/man/xfs_io.8.
+
+Other than those two issues, this looks good to me.
 
 --D
 
-> ---
->  fs/xfs/xfs_qm.c | 16 ++++++++++++----
->  1 file changed, 12 insertions(+), 4 deletions(-)
+> +}
+> diff --git a/io/init.c b/io/init.c
+> index 033ed67d..104cd2c1 100644
+> --- a/io/init.c
+> +++ b/io/init.c
+> @@ -56,6 +56,7 @@ init_commands(void)
+>  	flink_init();
+>  	freeze_init();
+>  	fsmap_init();
+> +	fsuuid_init();
+>  	fsync_init();
+>  	getrusage_init();
+>  	help_init();
+> diff --git a/io/io.h b/io/io.h
+> index 64b7a663..fe474faf 100644
+> --- a/io/io.h
+> +++ b/io/io.h
+> @@ -94,6 +94,7 @@ extern void		encrypt_init(void);
+>  extern void		file_init(void);
+>  extern void		flink_init(void);
+>  extern void		freeze_init(void);
+> +extern void		fsuuid_init(void);
+>  extern void		fsync_init(void);
+>  extern void		getrusage_init(void);
+>  extern void		help_init(void);
+> -- 
+> 2.25.1
 > 
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index 18bb4ec4d7c9..ff53d40a2dae 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -422,6 +422,14 @@ xfs_qm_dquot_isolate(
->  	if (!xfs_dqlock_nowait(dqp))
->  		goto out_miss_busy;
->  
-> +	/*
-> +	 * If something else is freeing this dquot and hasn't yet removed it
-> +	 * from the LRU, leave it for the freeing task to complete the freeing
-> +	 * process rather than risk it being free from under us here.
-> +	 */
-> +	if (dqp->q_flags & XFS_DQFLAG_FREEING)
-> +		goto out_miss_unlock;
-> +
->  	/*
->  	 * This dquot has acquired a reference in the meantime remove it from
->  	 * the freelist and try again.
-> @@ -441,10 +449,8 @@ xfs_qm_dquot_isolate(
->  	 * skip it so there is time for the IO to complete before we try to
->  	 * reclaim it again on the next LRU pass.
->  	 */
-> -	if (!xfs_dqflock_nowait(dqp)) {
-> -		xfs_dqunlock(dqp);
-> -		goto out_miss_busy;
-> -	}
-> +	if (!xfs_dqflock_nowait(dqp))
-> +		goto out_miss_unlock;
->  
->  	if (XFS_DQ_IS_DIRTY(dqp)) {
->  		struct xfs_buf	*bp = NULL;
-> @@ -478,6 +484,8 @@ xfs_qm_dquot_isolate(
->  	XFS_STATS_INC(dqp->q_mount, xs_qm_dqreclaims);
->  	return LRU_REMOVED;
->  
-> +out_miss_unlock:
-> +	xfs_dqunlock(dqp);
->  out_miss_busy:
->  	trace_xfs_dqreclaim_busy(dqp);
->  	XFS_STATS_INC(dqp->q_mount, xs_qm_dqreclaim_misses);
