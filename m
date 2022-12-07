@@ -2,233 +2,150 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B965C4708D
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Dec 2022 19:38:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6492EC4708D
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Dec 2022 21:48:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229500AbiLGTiT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Dec 2022 14:38:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52858 "EHLO
+        id S229915AbiLGVsp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Dec 2022 16:48:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229456AbiLGTiQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Dec 2022 14:38:16 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 184D427CD0;
-        Wed,  7 Dec 2022 11:38:15 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B0451B81DD6;
-        Wed,  7 Dec 2022 19:38:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B7DAC433C1;
-        Wed,  7 Dec 2022 19:38:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670441892;
-        bh=GLdw+tZCjmAAj1Pe7vrX5W4b2j/An0rEq/0XNqtgmJ8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mlCQANgtM3vAK4JOUNRhyOjt4N0Rv8xgZOWd1cWPD511E2Q0DP4xgQhxBcUjhoh0r
-         ebWocuCEw4H9i6L1mfhORoIm1aF939e4Hu+L0AjSOPoDRa4vK4MqyVTv2YhHF9DOWp
-         Hbrky9jrBkUH6bJNjjOddYdA1ME72K3K7QXsxZWCTFOjp9puev6TAZ7EpDGc7O2vR1
-         zroglxvKQAY35zCPfKSy7VYUNG2xTQjG5Ave13sJLF+LEshSpK3ZkrfqUA4Dnf6zbA
-         aVE7OUowkPafMmzDrAHGBOx68ASzitG+CEK0kOBJ2dXQUvCYm1rLl4XneFIdbn4t2p
-         bcNbMxFVCSunQ==
-Date:   Wed, 7 Dec 2022 11:38:11 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     Ziyang Zhang <ZiyangZhang@linux.alibaba.com>,
-        fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-        hsiangkao@linux.alibaba.com, allison.henderson@oracle.com
-Subject: Re: [PATCH V4 2/2] common/populate: Ensure that S_IFDIR.FMT_BTREE is
- in btree format
-Message-ID: <Y5Dro1PUBZ+2juSx@magnolia>
-References: <20221207093147.1634425-1-ZiyangZhang@linux.alibaba.com>
- <20221207093147.1634425-3-ZiyangZhang@linux.alibaba.com>
- <20221207182850.lnuijxc3qipwtnof@zlang-mailbox>
+        with ESMTP id S229791AbiLGVsh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Dec 2022 16:48:37 -0500
+Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A2AC813BA
+        for <linux-xfs@vger.kernel.org>; Wed,  7 Dec 2022 13:48:36 -0800 (PST)
+Received: by mail-pf1-x436.google.com with SMTP id 21so18660793pfw.4
+        for <linux-xfs@vger.kernel.org>; Wed, 07 Dec 2022 13:48:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Tos5tkBcYyuJlBWEfLnos/GnRiwMSc7BrvTQatB97HE=;
+        b=fF/VTroEX5Gye7zG8uW8kbCTCxKy23hRqhwmzv9I2n9oSLXNFx6/4UDEupWp9Ozrb0
+         YomPHo9UvVi3XBlCET3Xari18VuJ0jSlaEOmsCyNomnOj4L37TEs3RAcHqW/RDZ2dFWj
+         9S9vLZ24cRVWsaqHuSImIVbhTUNRjHfgNgdA3yI+sH0xV0dyXq/4YuEfVOGKYxcHvkqd
+         oTW3S0GKbXJyWNAZ0Tj8IqFVZVbOfzAh1UwodoGS6X5TIFLCDl3zo80MOx9gtjjoVTY2
+         wdN1GIe4weXSnSAvWUZ1Bl6A4uIKC2yUyxFiu8w+4AG8LijIQGNkuhU209v2cBQ6Jlhy
+         N5Tg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Tos5tkBcYyuJlBWEfLnos/GnRiwMSc7BrvTQatB97HE=;
+        b=7A2+mzGZMaS3cPH8Teu3dYFKIp1M/sx413AX1kegtIgaAAxXKoe1xn63deIR9fHuY6
+         BVoU46ZTSzfb8BPOi7bHhh1+kwDbgM9EafPINbneuSWwx1DSHHIe7hZ3+zwkyJIfJphV
+         ONT/gF0i+8IaIWYNsH63zQBDeeMZ5BVDgXocnEIZ4fMdSEbHSU3G0xYkgqIVl8lR0tN1
+         OcihChwLHfp6pdpFqlBqW+cF1V77RW8UZgjyeIgAeJj5o1Jty5CsW+w7cltzumwWX/lb
+         bDatwXvoPKZ1LBD9Ut0E3SIr/eRSv3S7/RQ4cVezt0jXGqhdV6tKs1M0wHDzA0JMsQcy
+         zXsQ==
+X-Gm-Message-State: ANoB5pm0GSr1XFiqqu+sudwcimT0TgzJbv8kk+ePaxfYDJjZDulK/Dya
+        0FQ/f2eCOckyq7cFCcHNawRMQONc+NDiD3NO
+X-Google-Smtp-Source: AA0mqf7Ke5l3ctc3yfIcWEreEp6XeZARPxn97qzPzNJusua5eTiDkOzQEqlsDVdAHgGZZirMk/EqEw==
+X-Received: by 2002:a63:500f:0:b0:478:bc19:a510 with SMTP id e15-20020a63500f000000b00478bc19a510mr14061542pgb.288.1670449715568;
+        Wed, 07 Dec 2022 13:48:35 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-138-158.pa.nsw.optusnet.com.au. [49.181.138.158])
+        by smtp.gmail.com with ESMTPSA id k9-20020a17090a514900b00218abadb6a8sm1598121pjm.49.2022.12.07.13.48.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 07 Dec 2022 13:48:35 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1p32HH-005jih-5m; Thu, 08 Dec 2022 08:48:31 +1100
+Date:   Thu, 8 Dec 2022 08:48:31 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        fstests <fstests@vger.kernel.org>, linux-xfs@vger.kernel.org,
+        Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
+Subject: Re: [PATCH] common/populate: Ensure that S_IFDIR.FMT_BTREE is in
+ btree format
+Message-ID: <20221207214831.GI2703033@dread.disaster.area>
+References: <20221201081208.40147-1-hsiangkao@linux.alibaba.com>
+ <Y4jNzE5YJ3wFtsaz@magnolia>
+ <Y4lhi+5nJNl0diaj@B-P7TQMD6M-0146.local>
+ <20221206233417.GF2703033@dread.disaster.area>
+ <Y4/2ZUIm2MKs6UID@B-P7TQMD6M-0146.local>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221207182850.lnuijxc3qipwtnof@zlang-mailbox>
+In-Reply-To: <Y4/2ZUIm2MKs6UID@B-P7TQMD6M-0146.local>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 08, 2022 at 02:28:50AM +0800, Zorro Lang wrote:
-> On Wed, Dec 07, 2022 at 05:31:47PM +0800, Ziyang Zhang wrote:
-> > Sometimes "$((128 * dblksz / 40))" dirents cannot make sure that
-> > S_IFDIR.FMT_BTREE could become btree format for its DATA fork.
+On Wed, Dec 07, 2022 at 10:11:49AM +0800, Gao Xiang wrote:
+> On Wed, Dec 07, 2022 at 10:34:17AM +1100, Dave Chinner wrote:
+> > On Fri, Dec 02, 2022 at 10:23:07AM +0800, Gao Xiang wrote:
+> > > > > +			[ "$nexts" -gt "$(((isize - 176) / 16))" ] && break
+> > > > 
+> > > > Only need to calculate this once if you declare this at the top:
+> > > > 
+> > > > 	# We need enough extents to guarantee that the data fork is in
+> > > > 	# btree format.  Cycling the mount to use xfs_db is too slow, so
+> > > > 	# watch for when the extent count exceeds the space after the
+> > > > 	# inode core.
+> > > > 	local max_nextents="$(((isize - 176) / 16))"
+> > > > 
+> > > > and then you can do:
+> > > > 
+> > > > 			[[ $nexts -gt $max_nextents ]] && break
+> > > > 
+> > > > Also not a fan of hardcoding 176 around fstests, but I don't know how
+> > > > we'd detect that at all.
+> > > > 
+> > > > # Number of bytes reserved for only the inode record, excluding the
+> > > > # immediate fork areas.
+> > > > _xfs_inode_core_bytes()
+> > > > {
+> > > > 	echo 176
+> > > > }
+> > > > 
+> > > > I guess?  Or extract it from tests/xfs/122.out?
+> > > 
+> > > Thanks for your comments.
+> > > 
+> > > I guess hard-coded 176 in _xfs_inode_core_bytes() is fine for now
+> > > (It seems a bit weird to extract a number from a test expected result..)
 > > 
-> > Actually we just observed it can fail after apply our inode
-> > extent-to-btree workaround. The root cause is that the kernel may be
-> > too good at allocating consecutive blocks so that the data fork is
-> > still in extents format.
-> > 
-> > Therefore instead of using a fixed number, let's make sure the number
-> > of extents is large enough than (inode size - inode core size) /
-> > sizeof(xfs_bmbt_rec_t).
-> > 
-> > Suggested-by: "Darrick J. Wong" <djwong@kernel.org>
-> > Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
-> > Signed-off-by: Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
-> > ---
-> >  common/populate | 34 +++++++++++++++++++++++++++++++++-
-> >  common/xfs      |  9 +++++++++
-> >  2 files changed, 42 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/common/populate b/common/populate
-> > index 6e004997..95cf56de 100644
-> > --- a/common/populate
-> > +++ b/common/populate
-> > @@ -71,6 +71,37 @@ __populate_create_dir() {
-> >  	done
-> >  }
-> >  
-> > +# Create a large directory and ensure that it's a btree format
-> > +__populate_xfs_create_btree_dir() {
-> > +	local name="$1"
-> > +	local isize="$2"
-> > +	local missing="$3"
-> > +	local icore_size="$(_xfs_inode_core_bytes)"
-> > +	# We need enough extents to guarantee that the data fork is in
-> > +	# btree format.  Cycling the mount to use xfs_db is too slow, so
-> > +	# watch for when the extent count exceeds the space after the
-> > +	# inode core.
-> > +	local max_nextents="$(((isize - icore_size) / 16))"
-> > +
-> > +	mkdir -p "${name}"
-> > +	nr=0
-> > +	while true; do
-> > +		creat=mkdir
-> > +		test "$((nr % 20))" -eq 0 && creat=touch
-> > +		$creat "${name}/$(printf "%.08d" "$nr")"
-> > +		if [ "$((nr % 40))" -eq 0 ]; then
-> > +			nextents="$(_xfs_get_fsxattr nextents $name)"
-> > +			[ $nextents -gt $max_nextents ] && break
-> > +		fi
-> > +		nr=$((nr+1))
-> > +	done
-> > +
-> > +	test -z "${missing}" && return
-> > +	seq 1 2 "${nr}" | while read d; do
-> > +		rm -rf "${name}/$(printf "%.08d" "$d")"
-> > +	done
+> > Which is wrong when testing a v4 filesystem - in that case the inode
+> > core size is 96 bytes and so max extents may be larger on v4
+> > filesystems than v5 filesystems....
 > 
-> Oh, you've done this change in V4, sorry I just reviewed an old version. A
-> little picky review points as below:
-> 
-> This function makes sense to me, just the "local" key word is used so randomly,
-> some variables have, some doesn't :)
+> Do we really care v4 fs for now since it's deprecated?...
 
-All variables inside a helper function *should* be using 'local', unless
-the goal is to set variables in an ancestor scope.  Note that this can
-mean variables in the top level namespace, or a different function
-further up in the call stack.
+Yes, there are still lots of v4 filesystems in production
+environments. There shouldn't be many new ones, but there is a long
+tail of existing storage containing v4 filesystems that we must not
+break.
 
-Unfortunately, I didn't know about this bashism when I started writing
-fstests, which is why it's inconsistent all over the place. :(
+We have to support v4 filesystems for another few years yet, hence
+we still need solid test coverage on them to ensure we don't
+accidentally break something that is going to bite users before they
+migrate to newer filesystems....
 
-This little script:
+> Darrick once also 
+> suggested using (isize / 16) but it seems it could take unnecessary time to
+> prepare.. Or we could just use (isize - 96) / 16 to keep v4 work.
 
-#!/bin/bash
+It's taken me longer to write this email than it does to write the
+code to make it work properly. e.g.:
 
-moo=5
+	xfs_info $scratch | sed -ne 's/.*crc=\([01]\).*/\1/p'
 
-bar() {
-	moo=$((moo + 1))
-}
+And now we have 0 = v4, 1 = v5, and it's trivial to return the
+correct inode size.
 
-fubar() {
-	bar
-}
+You can even do this trivially with grep:
 
-cow() {
-	local moo=7
-	bar
-	echo "cow $moo"
-}
+	xfs_info $scratch | grep -wq "crc=1"
+	if [ $? -eq 0 ]; then
+		echo 176
+	else
+		echo 96
+	fi
 
-grud() {
-	local moo=11
-	fubar
-	echo "grud $moo"
-}
+and now the return value tells us if we have a v4 or v5 filesystem.
 
-cow
-bar
-echo "global $moo"
-grud
-echo "global $moo"
-fubar
-echo "global $moo"
-
-Prints this on output:
-
-$ ./demo.sh
-global 5
-cow 8
-global 5
-global 6
-grud 12
-global 6
-global 7
-
---D
-
-> > +}
-> > +
-> >  # Add a bunch of attrs to a file
-> >  __populate_create_attr() {
-> >  	name="$1"
-> > @@ -176,6 +207,7 @@ _scratch_xfs_populate() {
-> >  
-> >  	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
-> >  	dblksz="$(_xfs_get_dir_blocksize "$SCRATCH_MNT")"
-> > +	isize="$(_xfs_inode_size "$SCRATCH_MNT")"
-> >  	crc="$(_xfs_has_feature "$SCRATCH_MNT" crc -v)"
-> >  	if [ $crc -eq 1 ]; then
-> >  		leaf_hdr_size=64
-> > @@ -226,7 +258,7 @@ _scratch_xfs_populate() {
-> >  
-> >  	# - BTREE
-> >  	echo "+ btree dir"
-> > -	__populate_create_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$((128 * dblksz / 40))" true
-> > +	__populate_xfs_create_btree_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$isize" true
-> >  
-> >  	# Symlinks
-> >  	# - FMT_LOCAL
-> > diff --git a/common/xfs b/common/xfs
-> > index 5074c350..3bfe8566 100644
-> > --- a/common/xfs
-> > +++ b/common/xfs
-> > @@ -1487,6 +1487,15 @@ _require_xfsrestore_xflag()
-> >  			_notrun 'xfsrestore does not support -x flag.'
-> >  }
-> >  
-> > +# Number of bytes reserved for a full inode record, which includes the
-> > +# immediate fork areas.
-> > +_xfs_inode_size()
-> 
-> Generally common/xfs names this kind of helpers as _xfs_get_xxxx(), likes
-> _xfs_get_rtextents()
-> _xfs_get_rtextsize()
-> _xfs_get_dir_blocksize()
-> ...
-> 
-> > +{
-> > +	local mntpoint="$1"
-> > +
-> > +	$XFS_INFO_PROG "$mntpoint" | grep 'meta-data=.*isize' | sed -e 's/^.*isize=\([0-9]*\).*$/\1/g'
-> 
-> It can be done with one pipe:
-> $XFS_INFO_PROG "$mntpoint" | sed -n '/meta-data=.*isize/s/^.*isize=\([0-9]*\).*$/\1/p'
-> 
-> With above changes you can have:
-> Reviewed-by: Zorro Lang <zlang@redhat.com>
-> 
-> > +}
-> > +
-> >  # Number of bytes reserved for only the inode record, excluding the
-> >  # immediate fork areas.
-> >  _xfs_inode_core_bytes()
-> > -- 
-> > 2.18.4
-> > 
-> 
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
