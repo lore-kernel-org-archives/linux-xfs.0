@@ -2,136 +2,152 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D77CC63706
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Dec 2022 09:32:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79E48C352A1
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Dec 2022 16:17:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230004AbiLGJci (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Dec 2022 04:32:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44784 "EHLO
+        id S229990AbiLGQRc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Dec 2022 11:17:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42810 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229956AbiLGJce (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Dec 2022 04:32:34 -0500
-Received: from out30-43.freemail.mail.aliyun.com (out30-43.freemail.mail.aliyun.com [115.124.30.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 090612BC;
-        Wed,  7 Dec 2022 01:32:31 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R161e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045176;MF=ziyangzhang@linux.alibaba.com;NM=0;PH=DS;RN=6;SR=0;TI=SMTPD_---0VWlPCOi_1670405547;
-Received: from localhost.localdomain(mailfrom:ZiyangZhang@linux.alibaba.com fp:SMTPD_---0VWlPCOi_1670405547)
-          by smtp.aliyun-inc.com;
-          Wed, 07 Dec 2022 17:32:29 +0800
-From:   Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
-To:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc:     djwong@kernel.org, hsiangkao@linux.alibaba.com,
-        allison.henderson@oracle.com,
-        Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
-Subject: [PATCH V4 2/2] common/populate: Ensure that S_IFDIR.FMT_BTREE is in btree format
-Date:   Wed,  7 Dec 2022 17:31:47 +0800
-Message-Id: <20221207093147.1634425-3-ZiyangZhang@linux.alibaba.com>
-X-Mailer: git-send-email 2.18.4
-In-Reply-To: <20221207093147.1634425-1-ZiyangZhang@linux.alibaba.com>
-References: <20221207093147.1634425-1-ZiyangZhang@linux.alibaba.com>
+        with ESMTP id S230020AbiLGQRa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Dec 2022 11:17:30 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DC7F62EB0;
+        Wed,  7 Dec 2022 08:17:27 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id A97B0CE1AFE;
+        Wed,  7 Dec 2022 16:17:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C569FC433C1;
+        Wed,  7 Dec 2022 16:17:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1670429843;
+        bh=MvxnN6BYfRwcFGpZLKnETxCa2619sEnvs1dSo1RoeFA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=GRMibxXYH8N/hivYh+EpOLDIMjG7QOqNUh7Kk72UspODOLVezObLy6b0mW5om2dw0
+         +G7JGeWxgqW1OF7FcYxpYx1AXqTwpdQjRY1mNdkRQIYpj5QKQ7rGFSsEsS10hYaqyB
+         LEboIrp+dNw754jzDaX2PGcjb8RfUkgge2dlw7ZBQFhuutPEo1xO3ThcRtWODVnHGn
+         U79yv85OMgrPtPW6e7PLkSt7cQgxADg0+mG0F+fdvEGko6FA9or2v5WcpvvhEVUJuE
+         IGg4exxY9wQ4nDNg+Y6zl+Vx62daDlzWZI3VIRY+EbcRq9q9jMar9klR3sgIDJDv7w
+         SlAa9lYeY7ltg==
+Date:   Wed, 7 Dec 2022 08:17:23 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     syzbot <syzbot+912776840162c13db1a3@syzkaller.appspotmail.com>,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        syzkaller-bugs@googlegroups.com
+Subject: Re: [PATCH] xfs: dquot shrinker doesn't check for XFS_DQFLAG_FREEING
+Message-ID: <Y5C8k3ef4LqU4v0x@magnolia>
+References: <000000000000abbde005ef113644@google.com>
+ <0000000000009a423705ef123f9a@google.com>
+ <20221205225246.GP3600936@dread.disaster.area>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221205225246.GP3600936@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Sometimes "$((128 * dblksz / 40))" dirents cannot make sure that
-S_IFDIR.FMT_BTREE could become btree format for its DATA fork.
+On Tue, Dec 06, 2022 at 09:52:46AM +1100, Dave Chinner wrote:
+> On Mon, Dec 05, 2022 at 02:35:39AM -0800, syzbot wrote:
+> > syzbot has found a reproducer for the following issue on:
+> > 
+> > HEAD commit:    0ba09b173387 Revert "mm: align larger anonymous mappings o..
+> > git tree:       upstream
+> > console output: https://syzkaller.appspot.com/x/log.txt?x=15550c47880000
+> > kernel config:  https://syzkaller.appspot.com/x/.config?x=2325e409a9a893e1
+> > dashboard link: https://syzkaller.appspot.com/bug?extid=912776840162c13db1a3
+> > compiler:       Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2
+> > syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=128c9e23880000
+> > 
+> > Downloadable assets:
+> > disk image: https://storage.googleapis.com/syzbot-assets/9758ec2c06f4/disk-0ba09b17.raw.xz
+> > vmlinux: https://storage.googleapis.com/syzbot-assets/06781dbfd581/vmlinux-0ba09b17.xz
+> > kernel image: https://storage.googleapis.com/syzbot-assets/3d44a22d15fa/bzImage-0ba09b17.xz
+> > mounted in repro: https://storage.googleapis.com/syzbot-assets/335889b2d730/mount_0.gz
+> > 
+> > IMPORTANT: if you fix the issue, please add the following tag to the commit:
+> > Reported-by: syzbot+912776840162c13db1a3@syzkaller.appspotmail.com
+> > 
+> > XFS (loop1): Quotacheck: Done.
+> > syz-executor.1 (4657): drop_caches: 2
+> > ==================================================================
+> > BUG: KASAN: use-after-free in xfs_dquot_type fs/xfs/xfs_dquot.h:136 [inline]
+> > BUG: KASAN: use-after-free in xfs_qm_dqfree_one+0x12f/0x170 fs/xfs/xfs_qm.c:1604
+> > Read of size 1 at addr ffff888079a6aa58 by task syz-executor.1/4657
+> 
+> Looks like we've missed a XFS_DQUOT_FREEING check in
+> xfs_qm_shrink_scan(), and the dquot purge run by unmount has raced
+> with the shrinker. Patch below should fix it.
+> 
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> xfs: dquot shrinker doesn't check for XFS_DQFLAG_FREEING
+> 
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Resulting in a UAF if the shrinker races with some other dquot
+> freeing mechanism that sets XFS_DQFLAG_FREEING before the dquot is
+> removed from the LRU. This can occur if a dquot purge races with
+> drop_caches.
+> 
+> Reported-by: syzbot+912776840162c13db1a3@syzkaller.appspotmail.com
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Actually we just observed it can fail after apply our inode
-extent-to-btree workaround. The root cause is that the kernel may be
-too good at allocating consecutive blocks so that the data fork is
-still in extents format.
+Please repost this as a toplevel thread so it doesn't get lost in the
+depths.  Anyway, this looks correct so:
 
-Therefore instead of using a fixed number, let's make sure the number
-of extents is large enough than (inode size - inode core size) /
-sizeof(xfs_bmbt_rec_t).
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Suggested-by: "Darrick J. Wong" <djwong@kernel.org>
-Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
-Signed-off-by: Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
----
- common/populate | 34 +++++++++++++++++++++++++++++++++-
- common/xfs      |  9 +++++++++
- 2 files changed, 42 insertions(+), 1 deletion(-)
+--D
 
-diff --git a/common/populate b/common/populate
-index 6e004997..95cf56de 100644
---- a/common/populate
-+++ b/common/populate
-@@ -71,6 +71,37 @@ __populate_create_dir() {
- 	done
- }
- 
-+# Create a large directory and ensure that it's a btree format
-+__populate_xfs_create_btree_dir() {
-+	local name="$1"
-+	local isize="$2"
-+	local missing="$3"
-+	local icore_size="$(_xfs_inode_core_bytes)"
-+	# We need enough extents to guarantee that the data fork is in
-+	# btree format.  Cycling the mount to use xfs_db is too slow, so
-+	# watch for when the extent count exceeds the space after the
-+	# inode core.
-+	local max_nextents="$(((isize - icore_size) / 16))"
-+
-+	mkdir -p "${name}"
-+	nr=0
-+	while true; do
-+		creat=mkdir
-+		test "$((nr % 20))" -eq 0 && creat=touch
-+		$creat "${name}/$(printf "%.08d" "$nr")"
-+		if [ "$((nr % 40))" -eq 0 ]; then
-+			nextents="$(_xfs_get_fsxattr nextents $name)"
-+			[ $nextents -gt $max_nextents ] && break
-+		fi
-+		nr=$((nr+1))
-+	done
-+
-+	test -z "${missing}" && return
-+	seq 1 2 "${nr}" | while read d; do
-+		rm -rf "${name}/$(printf "%.08d" "$d")"
-+	done
-+}
-+
- # Add a bunch of attrs to a file
- __populate_create_attr() {
- 	name="$1"
-@@ -176,6 +207,7 @@ _scratch_xfs_populate() {
- 
- 	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
- 	dblksz="$(_xfs_get_dir_blocksize "$SCRATCH_MNT")"
-+	isize="$(_xfs_inode_size "$SCRATCH_MNT")"
- 	crc="$(_xfs_has_feature "$SCRATCH_MNT" crc -v)"
- 	if [ $crc -eq 1 ]; then
- 		leaf_hdr_size=64
-@@ -226,7 +258,7 @@ _scratch_xfs_populate() {
- 
- 	# - BTREE
- 	echo "+ btree dir"
--	__populate_create_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$((128 * dblksz / 40))" true
-+	__populate_xfs_create_btree_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$isize" true
- 
- 	# Symlinks
- 	# - FMT_LOCAL
-diff --git a/common/xfs b/common/xfs
-index 5074c350..3bfe8566 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -1487,6 +1487,15 @@ _require_xfsrestore_xflag()
- 			_notrun 'xfsrestore does not support -x flag.'
- }
- 
-+# Number of bytes reserved for a full inode record, which includes the
-+# immediate fork areas.
-+_xfs_inode_size()
-+{
-+	local mntpoint="$1"
-+
-+	$XFS_INFO_PROG "$mntpoint" | grep 'meta-data=.*isize' | sed -e 's/^.*isize=\([0-9]*\).*$/\1/g'
-+}
-+
- # Number of bytes reserved for only the inode record, excluding the
- # immediate fork areas.
- _xfs_inode_core_bytes()
--- 
-2.18.4
-
+> ---
+>  fs/xfs/xfs_qm.c | 16 ++++++++++++----
+>  1 file changed, 12 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index 18bb4ec4d7c9..ff53d40a2dae 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -422,6 +422,14 @@ xfs_qm_dquot_isolate(
+>  	if (!xfs_dqlock_nowait(dqp))
+>  		goto out_miss_busy;
+>  
+> +	/*
+> +	 * If something else is freeing this dquot and hasn't yet removed it
+> +	 * from the LRU, leave it for the freeing task to complete the freeing
+> +	 * process rather than risk it being free from under us here.
+> +	 */
+> +	if (dqp->q_flags & XFS_DQFLAG_FREEING)
+> +		goto out_miss_unlock;
+> +
+>  	/*
+>  	 * This dquot has acquired a reference in the meantime remove it from
+>  	 * the freelist and try again.
+> @@ -441,10 +449,8 @@ xfs_qm_dquot_isolate(
+>  	 * skip it so there is time for the IO to complete before we try to
+>  	 * reclaim it again on the next LRU pass.
+>  	 */
+> -	if (!xfs_dqflock_nowait(dqp)) {
+> -		xfs_dqunlock(dqp);
+> -		goto out_miss_busy;
+> -	}
+> +	if (!xfs_dqflock_nowait(dqp))
+> +		goto out_miss_unlock;
+>  
+>  	if (XFS_DQ_IS_DIRTY(dqp)) {
+>  		struct xfs_buf	*bp = NULL;
+> @@ -478,6 +484,8 @@ xfs_qm_dquot_isolate(
+>  	XFS_STATS_INC(dqp->q_mount, xs_qm_dqreclaims);
+>  	return LRU_REMOVED;
+>  
+> +out_miss_unlock:
+> +	xfs_dqunlock(dqp);
+>  out_miss_busy:
+>  	trace_xfs_dqreclaim_busy(dqp);
+>  	XFS_STATS_INC(dqp->q_mount, xs_qm_dqreclaim_misses);
