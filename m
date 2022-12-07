@@ -2,173 +2,194 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B491C352A1
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Dec 2022 17:44:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42A15C4708D
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Dec 2022 18:03:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230004AbiLGRon (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Dec 2022 12:44:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49978 "EHLO
+        id S229572AbiLGSDz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Dec 2022 13:03:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34870 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230055AbiLGRo3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Dec 2022 12:44:29 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61B8C654E9
-        for <linux-xfs@vger.kernel.org>; Wed,  7 Dec 2022 09:44:26 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 25512B81F1F
-        for <linux-xfs@vger.kernel.org>; Wed,  7 Dec 2022 17:44:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAB22C433D6;
-        Wed,  7 Dec 2022 17:44:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670435063;
-        bh=P1erhoSAIapA+WOetCeETXw0v41vPSznfumMWVg18ms=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=f8aZdVDHJMwEbKqOUOiQMqQePpAAC+7VmubnCSQ1oW/gzJSHjoGjvLGqYB6pXyzaV
-         zw7ka68j1P9v2rtjbW54KoOE0p715ZZiLQUM8l6Zkc6dfPvCBscLirUWRqQhRlCRgj
-         3R/BbdE6OaPWkcn+xRJ7faTh4ucsD19PAxW/3Hqh4lWLapTrxZF2XEWkugbSWIS3Cm
-         8oKHAfhAia4BkPKkDFQpkcI2112cIAgUPKZExvV0mbGWUCZOhyNi3X/Iw9LnupYq92
-         tfRnebm207jNW7qR0OllYaV02GhnOu30I/ukaViz1PynBGY2vlvUFspxF9A7jllNO2
-         cefgc/u3Bf+4g==
-Date:   Wed, 7 Dec 2022 09:44:23 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Catherine Hoang <catherine.hoang@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v1 1/2] xfs_io: add fsuuid command
-Message-ID: <Y5DQ9089o0YFk85E@magnolia>
-References: <20221207022346.56671-1-catherine.hoang@oracle.com>
- <20221207022346.56671-2-catherine.hoang@oracle.com>
+        with ESMTP id S229548AbiLGSDz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Dec 2022 13:03:55 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78BD55D68D
+        for <linux-xfs@vger.kernel.org>; Wed,  7 Dec 2022 10:03:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1670436179;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=mAUw8mr5gob9KRJvX/lopDofECYekDPnPXYYvZOjiaw=;
+        b=BxOcl5RvP3j51Mnc4BWa9S6QqzIDCbwDf9N8WhkjeyztC98fVo0QJvNO9/3mH2AzrEm7fr
+        3H5CQk8xILvlhtsaQiaKPCBEGgOleoKklziI4mAsMePcOM2Izv8aiXZb6Z1YbRmFNDr65B
+        JnPkFpgNYHwCUKBHRsmHiaIe9ygPQfI=
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
+ [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-528-Qj-YhTAFNiSlvkiBKvuTrw-1; Wed, 07 Dec 2022 13:02:58 -0500
+X-MC-Unique: Qj-YhTAFNiSlvkiBKvuTrw-1
+Received: by mail-pj1-f71.google.com with SMTP id mg21-20020a17090b371500b00219767e0175so14137851pjb.1
+        for <linux-xfs@vger.kernel.org>; Wed, 07 Dec 2022 10:02:58 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=mAUw8mr5gob9KRJvX/lopDofECYekDPnPXYYvZOjiaw=;
+        b=O0Ha3DVKH26F2pg1CZShIocARG1mWYlEMqqfUJ+GbKo7MN36ihXfKnxv1CgKYI+Yqu
+         +Kgos+pk724G9X4xmwRpWr/03/2tOqih4rji63goZCKub04nn63cClQMu+yESRbW0K1R
+         7r9CMdZYUyTW8viw8r3gLFDhsMPfGS6XszdrWZoXSvXE7It0+FFGwjI9B3VXQHzscXnZ
+         RCXTZhF9jgvQt/oWmM73drSbJqlZGRzfWXR941EPFrQYArOd+ViVQ29B7k/bBn6F6eEp
+         pF2yMaPF0QLgQlmNFaUNOUNq1jYeauL0tx37HcK1vAl21G6eFj6p9MVb7J5VpEXAl0vz
+         c/7g==
+X-Gm-Message-State: ANoB5plTzgrfI4NqOqMvmq36vrym2eIPnx085xsHLj4589mqKmYfyIN1
+        96LwY6Av0Tr0UEJ6XNOJGLnOx0X5m4MdxmCyAQWi06u322FLs3MPZQdWWS9X52AURSrShurosQ1
+        8QgrEGdV0kH+JmOkOoRMO
+X-Received: by 2002:a17:90a:fb92:b0:219:7a1e:e643 with SMTP id cp18-20020a17090afb9200b002197a1ee643mr880150pjb.9.1670436177319;
+        Wed, 07 Dec 2022 10:02:57 -0800 (PST)
+X-Google-Smtp-Source: AA0mqf5R/SV86CymtgER73xU79VBUD+kCPQmx8Bcw/mX+h94Zbk2r5SiIQNSGAep7+7jjnqrx6tjOA==
+X-Received: by 2002:a17:90a:fb92:b0:219:7a1e:e643 with SMTP id cp18-20020a17090afb9200b002197a1ee643mr880145pjb.9.1670436176933;
+        Wed, 07 Dec 2022 10:02:56 -0800 (PST)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id n8-20020a17090a2bc800b002193f87fb4asm1486191pje.4.2022.12.07.10.02.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 07 Dec 2022 10:02:56 -0800 (PST)
+Date:   Thu, 8 Dec 2022 02:02:51 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, fstests@vger.kernel.org,
+        linux-xfs@vger.kernel.org, hsiangkao@linux.alibaba.com,
+        allison.henderson@oracle.com
+Subject: Re: [PATCH V3 2/2] common/populate: Ensure that S_IFDIR.FMT_BTREE is
+ in btree format
+Message-ID: <20221207180251.fze2vdavljchgvbt@zlang-mailbox>
+References: <20221206100517.1369625-1-ZiyangZhang@linux.alibaba.com>
+ <20221206100517.1369625-3-ZiyangZhang@linux.alibaba.com>
+ <Y498Ej35Bf9Oi6Wx@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221207022346.56671-2-catherine.hoang@oracle.com>
+In-Reply-To: <Y498Ej35Bf9Oi6Wx@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 06, 2022 at 06:23:45PM -0800, Catherine Hoang wrote:
-> Add support for the fsuuid command to retrieve the UUID of a mounted
-> filesystem.
+On Tue, Dec 06, 2022 at 09:29:54AM -0800, Darrick J. Wong wrote:
+> On Tue, Dec 06, 2022 at 06:05:17PM +0800, Ziyang Zhang wrote:
+> > Sometimes "$((128 * dblksz / 40))" dirents cannot make sure that
+> > S_IFDIR.FMT_BTREE could become btree format for its DATA fork.
+> > 
+> > Actually we just observed it can fail after apply our inode
+> > extent-to-btree workaround. The root cause is that the kernel may be
+> > too good at allocating consecutive blocks so that the data fork is
+> > still in extents format.
+> > 
+> > Therefore instead of using a fixed number, let's make sure the number
+> > of extents is large enough than (inode size - inode core size) /
+> > sizeof(xfs_bmbt_rec_t).
+> > 
+> > Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+> > Suggested-by: "Darrick J. Wong" <djwong@kernel.org>
+> > Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
+> > Signed-off-by: Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
+> > ---
+> >  common/populate | 28 +++++++++++++++++++++++++++-
+> >  common/xfs      |  9 +++++++++
+> >  2 files changed, 36 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/common/populate b/common/populate
+> > index 6e004997..1ca76459 100644
+> > --- a/common/populate
+> > +++ b/common/populate
+> > @@ -71,6 +71,31 @@ __populate_create_dir() {
+> >  	done
+> >  }
+> >  
+> > +# Create a large directory and ensure that it's a btree format
+> > +__populate_xfs_create_btree_dir() {
+> > +	local name="$1"
+> > +	local isize="$2"
+> > +	local icore_size="$(_xfs_inode_core_bytes)"
+> > +	# We need enough extents to guarantee that the data fork is in
+> > +	# btree format.  Cycling the mount to use xfs_db is too slow, so
+> > +	# watch for when the extent count exceeds the space after the
+> > +	# inode core.
+> > +	local max_nextents="$(((isize - icore_size) / 16))"
+> > +
+> > +	mkdir -p "${name}"
+> > +	d=0
+> > +	while true; do
+> > +		creat=mkdir
+> > +		test "$((d % 20))" -eq 0 && creat=touch
+> > +		$creat "${name}/$(printf "%.08d" "$d")"
+> > +		if [ "$((d % 40))" -eq 0 ]; then
+> > +			nextents="$(_xfs_get_fsxattr nextents $name)"
+> > +			[ $nextents -gt $max_nextents ] && break
+> > +		fi
+> > +		d=$((d+1))
+> > +	done
+> > +}
+> > +
+> >  # Add a bunch of attrs to a file
+> >  __populate_create_attr() {
+> >  	name="$1"
+> > @@ -176,6 +201,7 @@ _scratch_xfs_populate() {
+> >  
+> >  	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
+> >  	dblksz="$(_xfs_get_dir_blocksize "$SCRATCH_MNT")"
+> > +	isize="$(_xfs_inode_size "$SCRATCH_MNT")"
+> >  	crc="$(_xfs_has_feature "$SCRATCH_MNT" crc -v)"
+> >  	if [ $crc -eq 1 ]; then
+> >  		leaf_hdr_size=64
+> > @@ -226,7 +252,7 @@ _scratch_xfs_populate() {
+> >  
+> >  	# - BTREE
+> >  	echo "+ btree dir"
+> > -	__populate_create_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$((128 * dblksz / 40))" true
+> > +	__populate_xfs_create_btree_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$isize"
 > 
-> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-> ---
->  io/Makefile |  6 +++---
->  io/fsuuid.c | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
->  io/init.c   |  1 +
->  io/io.h     |  1 +
->  4 files changed, 54 insertions(+), 3 deletions(-)
->  create mode 100644 io/fsuuid.c
+> The new helper function omits the "missing" parameter, which means that
+> it no longer creates the directory entry blocks with a lot of free space
+> in them, unlike current TOT.
+
+Hi Ziyang,
+
+Is there any reason we must drop this "missing" step. If no special reason, I'd
+like to keep the original operation (the missing parameter is "true") to free
+some space sparsely. I think that only removes some entries, won't remove the
+dir-blocks (generally), so it won't affect the btree format you create.
+
+Thanks,
+Zorro
+
 > 
-> diff --git a/io/Makefile b/io/Makefile
-> index 498174cf..53fef09e 100644
-> --- a/io/Makefile
-> +++ b/io/Makefile
-> @@ -10,12 +10,12 @@ LSRCFILES = xfs_bmap.sh xfs_freeze.sh xfs_mkfile.sh
->  HFILES = init.h io.h
->  CFILES = init.c \
->  	attr.c bmap.c bulkstat.c crc32cselftest.c cowextsize.c encrypt.c \
-> -	file.c freeze.c fsync.c getrusage.c imap.c inject.c label.c link.c \
-> -	mmap.c open.c parent.c pread.c prealloc.c pwrite.c reflink.c \
-> +	file.c freeze.c fsuuid.c fsync.c getrusage.c imap.c inject.c label.c \
-> +	link.c mmap.c open.c parent.c pread.c prealloc.c pwrite.c reflink.c \
->  	resblks.c scrub.c seek.c shutdown.c stat.c swapext.c sync.c \
->  	truncate.c utimes.c
->  
-> -LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD)
-> +LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD) $(LIBUUID)
->  LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG)
->  LLDFLAGS = -static-libtool-libs
->  
-> diff --git a/io/fsuuid.c b/io/fsuuid.c
-> new file mode 100644
-> index 00000000..7e14a95d
-> --- /dev/null
-> +++ b/io/fsuuid.c
-> @@ -0,0 +1,49 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright (c) 2022 Oracle.
-> + * All Rights Reserved.
-> + */
-> +
-> +#include "libxfs.h"
-> +#include "command.h"
-> +#include "init.h"
-> +#include "io.h"
-> +#include "libfrog/fsgeom.h"
-> +#include "libfrog/logging.h"
-> +
-> +static cmdinfo_t fsuuid_cmd;
-> +
-> +static int
-> +fsuuid_f(
-> +	int			argc,
-> +	char			**argv)
-> +{
-> +	struct xfs_fsop_geom	fsgeo;
-> +	int			ret;
-> +	char			bp[40];
-> +
-> +	ret = -xfrog_geometry(file->fd, &fsgeo);
-> +
-> +	if (ret) {
-> +		xfrog_perror(ret, "XFS_IOC_FSGEOMETRY");
-> +		exitcode = 1;
-> +	} else {
-> +		platform_uuid_unparse((uuid_t *)fsgeo.uuid, bp);
-> +		printf("UUID = %s\n", bp);
-
-Lowercase "uuid" to match the xfs_db uuid command.
-
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +void
-> +fsuuid_init(void)
-> +{
-> +	fsuuid_cmd.name = "fsuuid";
-> +	fsuuid_cmd.cfunc = fsuuid_f;
-> +	fsuuid_cmd.argmin = 0;
-> +	fsuuid_cmd.argmax = 0;
-> +	fsuuid_cmd.flags = CMD_FLAG_ONESHOT | CMD_NOMAP_OK;
-> +	fsuuid_cmd.oneline = _("get mounted filesystem UUID");
-> +
-> +	add_command(&fsuuid_cmd);
-
-New xfs_io commands should be added to man/man/xfs_io.8.
-
-Other than those two issues, this looks good to me.
-
---D
-
-> +}
-> diff --git a/io/init.c b/io/init.c
-> index 033ed67d..104cd2c1 100644
-> --- a/io/init.c
-> +++ b/io/init.c
-> @@ -56,6 +56,7 @@ init_commands(void)
->  	flink_init();
->  	freeze_init();
->  	fsmap_init();
-> +	fsuuid_init();
->  	fsync_init();
->  	getrusage_init();
->  	help_init();
-> diff --git a/io/io.h b/io/io.h
-> index 64b7a663..fe474faf 100644
-> --- a/io/io.h
-> +++ b/io/io.h
-> @@ -94,6 +94,7 @@ extern void		encrypt_init(void);
->  extern void		file_init(void);
->  extern void		flink_init(void);
->  extern void		freeze_init(void);
-> +extern void		fsuuid_init(void);
->  extern void		fsync_init(void);
->  extern void		getrusage_init(void);
->  extern void		help_init(void);
-> -- 
-> 2.25.1
+> --D
 > 
+> >  
+> >  	# Symlinks
+> >  	# - FMT_LOCAL
+> > diff --git a/common/xfs b/common/xfs
+> > index 5180b9d3..744f0040 100644
+> > --- a/common/xfs
+> > +++ b/common/xfs
+> > @@ -1487,6 +1487,15 @@ _require_xfsrestore_xflag()
+> >  			_notrun 'xfsrestore does not support -x flag.'
+> >  }
+> >  
+> > +# Number of bytes reserved for a full inode record, which includes the
+> > +# immediate fork areas.
+> > +_xfs_inode_size()
+> > +{
+> > +	local mntpoint="$1"
+> > +
+> > +	$XFS_INFO_PROG "$mntpoint" | grep 'meta-data=.*isize' | sed -e 's/^.*isize=\([0-9]*\).*$/\1/g'
+> > +}
+> > +
+> >  # Number of bytes reserved for only the inode record, excluding the
+> >  # immediate fork areas.
+> >  _xfs_inode_core_bytes()
+> > -- 
+> > 2.18.4
+> > 
+> 
+
