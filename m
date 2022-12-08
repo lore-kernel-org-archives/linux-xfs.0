@@ -2,46 +2,47 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43096C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Dec 2022 16:36:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 724ADC4332F
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Dec 2022 17:08:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229637AbiLHQgS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Dec 2022 11:36:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46878 "EHLO
+        id S230077AbiLHRI2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 8 Dec 2022 12:08:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37872 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229523AbiLHQgR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Dec 2022 11:36:17 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A92061533;
-        Thu,  8 Dec 2022 08:36:16 -0800 (PST)
+        with ESMTP id S229685AbiLHRI1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Dec 2022 12:08:27 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A27FC85D1B
+        for <linux-xfs@vger.kernel.org>; Thu,  8 Dec 2022 09:08:26 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id ED6E3B82437;
-        Thu,  8 Dec 2022 16:36:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CE40C433D2;
-        Thu,  8 Dec 2022 16:36:13 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3322F61FEB
+        for <linux-xfs@vger.kernel.org>; Thu,  8 Dec 2022 17:08:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EC48C433D2;
+        Thu,  8 Dec 2022 17:08:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670517373;
-        bh=cTM7EXlrKYPyXUg9Ipbs5EUQ4K34enjX5X4s7Fr/Ihw=;
+        s=k20201202; t=1670519305;
+        bh=y7va8rItEiNsI6zTWMbvHsV7WVMO+4iyR7hN0HwV/cY=;
         h=Date:From:To:Cc:Subject:From;
-        b=MwZVojDbaBuC6mzyUu8ShNe4YcH2boyMOZqA35NVkbmWNI952TRte96PEx18HNOkU
-         HnWJESrkmMvdci+stbfEtHIr7o2BqlHN4NiouH1aMApg28s/GNwNvQ+fZa5vMvf/ri
-         2OKf0CWyB2isXyMWnYQLz1D/uTS8d5USG0RwwFIRdCrKV6EPdhRXJYCsoLgRjNv9x7
-         jmauUBpA+/7EJYxpwlGL7SzonZKCSSkibh3rUfYVuCjhYzbibrZijX9r3M+2cg1JPl
-         c1pMuMoB6nRotPTIqJfSr+fZYE55UWgws5kmanQdXturwM0BDnrV4KNIXg6dNGeFK4
-         fifj77wNkUH9w==
-Date:   Thu, 8 Dec 2022 08:36:13 -0800
+        b=K3+OVFu4e5ANCaWTNNOpJzUgHWMbGbC7zgq8qvBGExU7HFDK2WY7O3uXqoTSSKI30
+         9bT8m6sF80+EJ7bdUa+UnX4fC49crIqCO3jw6m1wHGtbwrUs3E8lFIQF+cew0UUfMG
+         W1saSg3TtPyuHMkBdVb3ShyVFhmM3vz2euDeAtArD6SbHYsh+mhVmlrg8OloFVt9Kw
+         6zFi9v5e+PYTS/8TxD+kMAriYPUQbuytvoCPRXIa/uKcvGFGbhQ846QsYaMo2nZMUB
+         dC8O9tjqxSyZfmEHmxw5WdcG2wHS99hz8o6nzDlL13lLpcZoZr5r1gM6OM9Q/Oi4yl
+         SKQzSKFQxFakQ==
+Date:   Thu, 8 Dec 2022 09:08:24 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     aalbersh@redhat.com, abaci@linux.alibaba.com, dchinner@redhat.com,
+Cc:     aalbersh@redhat.com, abaci@linux.alibaba.com,
+        allison.henderson@oracle.com, dchinner@redhat.com,
         guoxuenan@huawei.com, hch@lst.de, hsiangkao@linux.alibaba.com,
-        leo.lilong@huawei.com, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, lukas@herbolt.com, sandeen@redhat.com,
+        leo.lilong@huawei.com, linux-xfs@vger.kernel.org,
+        lukas@herbolt.com, ruansy.fnst@fujitsu.com, sandeen@redhat.com,
         syzbot+912776840162c13db1a3@syzkaller.appspotmail.com,
         yang.lee@linux.alibaba.com, yangx.jy@fujitsu.com
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 52f31ed22821
-Message-ID: <167051717541.3814129.14692218228376897367.stg-ugh@magnolia>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 4883f57a2d86
+Message-ID: <167051815561.3827402.12763361680222654455.stg-ugh@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -60,16 +61,25 @@ has just been updated.
 Patches often get missed, so please check if your outstanding patches
 were in this update. If they have not been in this update, please
 resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  This is it as far as the main XFS merge is concerned.
-There will be one more tag (and announcement) to add the fsdax
-corruption fixes, which I intend to push during the second week of the
-merge window.
+the next update.
+
+As promised, this push includes the data corruption fixes for fsdax and
+reflink mode that Ruan has been working on for some time.  I think I'll
+hold off on pushing this to Linus until the second week of the merge
+window, because this is a lot of changes to core code (insofar as
+fs/dax.c is core code) that appeared /very/ late in the 6.2 cycle.
+
+I am therefore very tempted to hold it for 6.3, but for the patchset
+eliminating data corruption vectors.  The general lack of users of
+dax+reflink makes me less anxious about pushing for 6.2, or so I gather
+since this has been broken since 6.0-rc1 and nobody outside of the
+fsdevel community has noticed.  Thoughts?
 
 The new head of the for-next branch is commit:
 
-52f31ed22821 xfs: dquot shrinker doesn't check for XFS_DQFLAG_FREEING
+4883f57a2d86 xfs: remove restrictions for fsdax and reflink
 
-61 new commits:
+69 new commits:
 
 Darrick J. Wong (44):
 [9a48b4a6fd51] xfs: fully initialize xfs_da_args in xchk_directory_blocks
@@ -141,11 +151,22 @@ Long Li (2):
 Lukas Herbolt (1):
 [64c80dfd04d1] xfs: Print XFS UUID on mount and umount events.
 
+Shiyang Ruan (8):
+[0587d473e256] fsdax: introduce page->share for fsdax in reflink mode
+[038587477f43] fsdax: invalidate pages when CoW
+[624c2f49637c] fsdax: zero the edges if source is HOLE or UNWRITTEN
+[03e54f961bda] fsdax,xfs: set the shared flag when file extent is shared
+[06573bf13dc7] fsdax: dedupe: iter two files at the same time
+[0d3ca2b4cbb3] xfs: use dax ops for zero and truncate in fsdax mode
+[3a0a36f143e4] fsdax,xfs: port unshare to fsdax
+[4883f57a2d86] xfs: remove restrictions for fsdax and reflink
+
 Yang Li (1):
 [1f5619ed8810] xfs: Remove duplicated include in xfs_iomap.c
 
 Code Diffstat:
 
+fs/dax.c                       | 221 +++++++++++++++++++++++------------
 fs/iomap/buffered-io.c         | 254 ++++++++++++++++++++++++++++++++++++++++-
 fs/iomap/iter.c                |  19 ++-
 fs/xfs/libxfs/xfs_bmap.c       |   8 +-
@@ -182,17 +203,23 @@ fs/xfs/xfs_file.c              |   2 +-
 fs/xfs/xfs_fsmap.c             |   4 +-
 fs/xfs/xfs_icache.c            |   6 +
 fs/xfs/xfs_inode.c             |   2 +-
-fs/xfs/xfs_iomap.c             | 185 ++++++++++++++++++------------
+fs/xfs/xfs_ioctl.c             |   4 -
+fs/xfs/xfs_iomap.c             | 191 +++++++++++++++++++------------
 fs/xfs/xfs_iomap.h             |   6 +-
+fs/xfs/xfs_iops.c              |   4 -
 fs/xfs/xfs_log.c               |  46 +++++---
 fs/xfs/xfs_mount.c             |  15 +++
 fs/xfs/xfs_pnfs.c              |   6 +-
 fs/xfs/xfs_qm.c                |  16 ++-
+fs/xfs/xfs_reflink.c           |   8 +-
 fs/xfs/xfs_rtalloc.c           |  60 +++++++++-
 fs/xfs/xfs_super.c             |   2 +-
 fs/xfs/xfs_trace.c             |   2 +
 fs/xfs/xfs_trace.h             |  86 ++++++++++++++
 fs/xfs/xfs_trans_ail.c         |   4 +-
 fs/xfs/xfs_xattr.c             |   2 +-
+include/linux/dax.h            |   2 +
 include/linux/iomap.h          |  47 ++++++--
-49 files changed, 1317 insertions(+), 313 deletions(-)
+include/linux/mm_types.h       |   5 +-
+include/linux/page-flags.h     |   2 +-
+56 files changed, 1484 insertions(+), 398 deletions(-)
