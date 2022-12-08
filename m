@@ -2,158 +2,187 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A5A9C63703
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Dec 2022 23:38:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F755C4708D
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Dec 2022 01:26:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230122AbiLGXiI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Dec 2022 18:38:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48980 "EHLO
+        id S229658AbiLHB0r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Dec 2022 20:26:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229675AbiLGXiI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Dec 2022 18:38:08 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C4C7528A4
-        for <linux-xfs@vger.kernel.org>; Wed,  7 Dec 2022 15:38:07 -0800 (PST)
+        with ESMTP id S229462AbiLHB0r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Dec 2022 20:26:47 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BD28900D5;
+        Wed,  7 Dec 2022 17:26:46 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BA0D861CC3
-        for <linux-xfs@vger.kernel.org>; Wed,  7 Dec 2022 23:38:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E478C433D6;
-        Wed,  7 Dec 2022 23:38:06 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id BDA19B82144;
+        Thu,  8 Dec 2022 01:26:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 692E2C433C1;
+        Thu,  8 Dec 2022 01:26:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670456286;
-        bh=Brv95WIsEpwMCXAE6Ar6T0kYvKpXe8jnVYrDbWzpdVc=;
+        s=k20201202; t=1670462803;
+        bh=w4h8E1rUddz+mzBNAte5bv9cCRd0SRyTRAA9Do+iWsk=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=G1Xve4QE+U6JDKgkuMytfCsQ9DANd4qxHD3+ENoKLjGlm5hQ1/7S4lGOkEIyczQMH
-         xpM2jCXVy8jQ12h9Gly8lQYjqeVRk8UsfPonGOGv7byd1E19n016JmCWRybnmtDKf+
-         sLUftojST6agQUiMLIX4OAJDwsEAIb4zD+PLKu8eZlHQqjH5DO0jLnOtpjTUGxNC/C
-         UOpu4F12CCF6DtfavGK0vC3a2YOOpvvqo+IMM3eR+PzatFkcSdPPMYKeq6+jBxpNaG
-         Zm0qLoSshSjo78mKEg9fPQcM0XyZ2xEjFyFBia69v/jxaLaGfc8Z2fjWu5YaqqkAph
-         il8jUz+Inxlpw==
-Date:   Wed, 7 Dec 2022 15:38:05 -0800
+        b=n/ohPV9MwZHrqQxBjPgAylUX9/OWK8wUbAmjSnllSWuL9w/F268nHhTJPdqm+UXnK
+         xVQjr4FOPp6VuPT7WuWgpKihnO7ecRzKodBcEU5uQ3qBcNoHK/1PTIdU35ID7Pfz8/
+         k1wJtkUDXn4MZQIV8mfPxXCg8qlaPyoCs6KU0jb+euz/XKnEq9boQDckirgwuaI/BJ
+         L/1kmvzTJKPR5Y7gsHwXoZ/9ii8Rh8MZvjGL+dl6lKpgFfcesJWEDlEVo0OEQs6oUZ
+         bEgdDCt2logJCy+AO7HUSAn6rl19IsGNqDrUzna79Y/QlZ2FujKA1dUtqNM6j1Edtq
+         tgp0nj466NesA==
+Date:   Wed, 7 Dec 2022 17:26:42 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Catherine Hoang <catherine.hoang@oracle.com>,
-        Carlos Maiolino <cmaiolino@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v1 2/2] xfs_admin: get UUID of mounted filesystem
-Message-ID: <Y5Ej3Q9DWtpQ4+Cq@magnolia>
-References: <20221207022346.56671-1-catherine.hoang@oracle.com>
- <20221207022346.56671-3-catherine.hoang@oracle.com>
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        nvdimm@lists.linux.dev, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, dan.j.williams@intel.com,
+        david@fromorbit.com, akpm@linux-foundation.org,
+        allison.henderson@oracle.com
+Subject: Re: [PATCH v2.2 1/8] fsdax: introduce page->share for fsdax in
+ reflink mode
+Message-ID: <Y5E9UgUyidulL2yp@magnolia>
+References: <1669908538-55-2-git-send-email-ruansy.fnst@fujitsu.com>
+ <1670381359-53-1-git-send-email-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221207022346.56671-3-catherine.hoang@oracle.com>
+In-Reply-To: <1670381359-53-1-git-send-email-ruansy.fnst@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 06, 2022 at 06:23:46PM -0800, Catherine Hoang wrote:
-> Adapt this tool to call xfs_io to retrieve the UUID of a mounted filesystem.
-> This is a precursor to enabling xfs_admin to set the UUID of a mounted
-> filesystem.
+On Wed, Dec 07, 2022 at 02:49:19AM +0000, Shiyang Ruan wrote:
+> fsdax page is used not only when CoW, but also mapread. To make the it
+> easily understood, use 'share' to indicate that the dax page is shared
+> by more than one extent.  And add helper functions to use it.
 > 
-> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-> ---
->  db/xfs_admin.sh | 21 ++++++++++++++++++---
->  1 file changed, 18 insertions(+), 3 deletions(-)
+> Also, the flag needs to be renamed to PAGE_MAPPING_DAX_SHARED.
 > 
-> diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
-> index 409975b2..0dcb9940 100755
-> --- a/db/xfs_admin.sh
-> +++ b/db/xfs_admin.sh
-> @@ -6,6 +6,8 @@
->  
->  status=0
->  DB_OPTS=""
-> +DB_EXTRA_OPTS=""
-> +IO_OPTS=""
+> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 
-This seemed oddly familiar until I remembered that we've been here
-before:
-https://lore.kernel.org/linux-xfs/ac736821-83de-4bde-a1a1-d0d2711932d7@sandeen.net/
-
-And now that I've reread that thread, I've now realized /why/ I gave up
-on adding things to this script -- there were too many questions from
-the maintainer for which I couldn't come up with any satisfying answer.
-Then I burned out and gave up.
-
-Ofc now we have a new maintainer, so I'll put the questions to the new
-one.  To summarize:
-
-What happens if there are multiple sources of truth because the fs is
-mounted?  Do we stop after processing the online options and ignore the
-offline ones?  Do we keep going, even though -f is almost certainly
-required?
-
-If the user specifies multiple options, is it ok to change the order in
-which we run them so that we can run xfs_io and then xfs_db?
-
-If it's not ok to change the order, how do we make the two tools run in
-lockstep so we only have to open the filesystem once?
-
-If it's not ok to change the order and we cannot do lockstep, is it ok
-to invoke io/db once for each subcommand instead of assembling a giant
-cli option array like we now for db?
-
-If we have to invoke io/db multiple times, what do we do if the state
-changes between invocations (e.g. someone else mounts the block dev or
-unmounts the fs)?  What happens if this all results in multiple
-xfs_repair invocations?
-
-Can we prohibit people from running multiple subcommands?  Even if
-that's a breaking change for someone who might be relying on the exact
-behaviors of this shell script?
-
-What if, instead of trying to find answers to all these annoying
-questions, we instead decide that either all the subcommands have to
-target a mountpoint or they all have to target a blockdev, or xfs_admin
-will exit with an error code?
+Looks fine to me,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
->  REPAIR_OPTS=""
->  REPAIR_DEV_OPTS=""
->  LOG_OPTS=""
-> @@ -23,7 +25,8 @@ do
->  	O)	REPAIR_OPTS=$REPAIR_OPTS" -c $OPTARG";;
->  	p)	DB_OPTS=$DB_OPTS" -c 'version projid32bit'";;
->  	r)	REPAIR_DEV_OPTS=" -r '$OPTARG'";;
-> -	u)	DB_OPTS=$DB_OPTS" -r -c uuid";;
-> +	u)	DB_EXTRA_OPTS=$DB_EXTRA_OPTS" -r -c uuid";
-> +		IO_OPTS=$IO_OPTS" -r -c fsuuid";;
->  	U)	DB_OPTS=$DB_OPTS" -c 'uuid "$OPTARG"'";;
->  	V)	xfs_db -p xfs_admin -V
->  		status=$?
-> @@ -38,14 +41,26 @@ set -- extra $@
->  shift $OPTIND
->  case $# in
->  	1|2)
-> +		# Use xfs_io if mounted and xfs_db if not mounted
-> +		if [ -n "$(findmnt -t xfs -T $1)" ]; then
-> +			DB_EXTRA_OPTS=""
-> +		else
-> +			IO_OPTS=""
-> +		fi
-> +
->  		# Pick up the log device, if present
->  		if [ -n "$2" ]; then
->  			LOG_OPTS=" -l '$2'"
->  		fi
+> ---
+>  fs/dax.c                   | 38 ++++++++++++++++++++++----------------
+>  include/linux/mm_types.h   |  5 ++++-
+>  include/linux/page-flags.h |  2 +-
+>  3 files changed, 27 insertions(+), 18 deletions(-)
+> 
+> diff --git a/fs/dax.c b/fs/dax.c
+> index 1c6867810cbd..84fadea08705 100644
+> --- a/fs/dax.c
+> +++ b/fs/dax.c
+> @@ -334,35 +334,41 @@ static unsigned long dax_end_pfn(void *entry)
+>  	for (pfn = dax_to_pfn(entry); \
+>  			pfn < dax_end_pfn(entry); pfn++)
 >  
-> -		if [ -n "$DB_OPTS" ]
-> +		if [ -n "$DB_OPTS" ] || [ -n "$DB_EXTRA_OPTS" ]
-> +		then
-> +			eval xfs_db -x -p xfs_admin $LOG_OPTS $DB_OPTS $DB_EXTRA_OPTS "$1"
-> +			status=$?
-> +		fi
-> +		if [ -n "$IO_OPTS" ]
->  		then
-> -			eval xfs_db -x -p xfs_admin $LOG_OPTS $DB_OPTS "$1"
-> +			eval xfs_io -x -p xfs_admin $IO_OPTS "$1"
->  			status=$?
->  		fi
->  		if [ -n "$REPAIR_OPTS" ]
+> -static inline bool dax_mapping_is_cow(struct address_space *mapping)
+> +static inline bool dax_page_is_shared(struct page *page)
+>  {
+> -	return (unsigned long)mapping == PAGE_MAPPING_DAX_COW;
+> +	return page->mapping == PAGE_MAPPING_DAX_SHARED;
+>  }
+>  
+>  /*
+> - * Set the page->mapping with FS_DAX_MAPPING_COW flag, increase the refcount.
+> + * Set the page->mapping with PAGE_MAPPING_DAX_SHARED flag, increase the
+> + * refcount.
+>   */
+> -static inline void dax_mapping_set_cow(struct page *page)
+> +static inline void dax_page_share_get(struct page *page)
+>  {
+> -	if ((uintptr_t)page->mapping != PAGE_MAPPING_DAX_COW) {
+> +	if (page->mapping != PAGE_MAPPING_DAX_SHARED) {
+>  		/*
+>  		 * Reset the index if the page was already mapped
+>  		 * regularly before.
+>  		 */
+>  		if (page->mapping)
+> -			page->index = 1;
+> -		page->mapping = (void *)PAGE_MAPPING_DAX_COW;
+> +			page->share = 1;
+> +		page->mapping = PAGE_MAPPING_DAX_SHARED;
+>  	}
+> -	page->index++;
+> +	page->share++;
+> +}
+> +
+> +static inline unsigned long dax_page_share_put(struct page *page)
+> +{
+> +	return --page->share;
+>  }
+>  
+>  /*
+> - * When it is called in dax_insert_entry(), the cow flag will indicate that
+> + * When it is called in dax_insert_entry(), the shared flag will indicate that
+>   * whether this entry is shared by multiple files.  If so, set the page->mapping
+> - * FS_DAX_MAPPING_COW, and use page->index as refcount.
+> + * PAGE_MAPPING_DAX_SHARED, and use page->share as refcount.
+>   */
+>  static void dax_associate_entry(void *entry, struct address_space *mapping,
+> -		struct vm_area_struct *vma, unsigned long address, bool cow)
+> +		struct vm_area_struct *vma, unsigned long address, bool shared)
+>  {
+>  	unsigned long size = dax_entry_size(entry), pfn, index;
+>  	int i = 0;
+> @@ -374,8 +380,8 @@ static void dax_associate_entry(void *entry, struct address_space *mapping,
+>  	for_each_mapped_pfn(entry, pfn) {
+>  		struct page *page = pfn_to_page(pfn);
+>  
+> -		if (cow) {
+> -			dax_mapping_set_cow(page);
+> +		if (shared) {
+> +			dax_page_share_get(page);
+>  		} else {
+>  			WARN_ON_ONCE(page->mapping);
+>  			page->mapping = mapping;
+> @@ -396,9 +402,9 @@ static void dax_disassociate_entry(void *entry, struct address_space *mapping,
+>  		struct page *page = pfn_to_page(pfn);
+>  
+>  		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
+> -		if (dax_mapping_is_cow(page->mapping)) {
+> -			/* keep the CoW flag if this page is still shared */
+> -			if (page->index-- > 0)
+> +		if (dax_page_is_shared(page)) {
+> +			/* keep the shared flag if this page is still shared */
+> +			if (dax_page_share_put(page) > 0)
+>  				continue;
+>  		} else
+>  			WARN_ON_ONCE(page->mapping && page->mapping != mapping);
+> diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
+> index 500e536796ca..f46cac3657ad 100644
+> --- a/include/linux/mm_types.h
+> +++ b/include/linux/mm_types.h
+> @@ -103,7 +103,10 @@ struct page {
+>  			};
+>  			/* See page-flags.h for PAGE_MAPPING_FLAGS */
+>  			struct address_space *mapping;
+> -			pgoff_t index;		/* Our offset within mapping. */
+> +			union {
+> +				pgoff_t index;		/* Our offset within mapping. */
+> +				unsigned long share;	/* share count for fsdax */
+> +			};
+>  			/**
+>  			 * @private: Mapping-private opaque data.
+>  			 * Usually used for buffer_heads if PagePrivate.
+> diff --git a/include/linux/page-flags.h b/include/linux/page-flags.h
+> index 0b0ae5084e60..d8e94f2f704a 100644
+> --- a/include/linux/page-flags.h
+> +++ b/include/linux/page-flags.h
+> @@ -641,7 +641,7 @@ PAGEFLAG_FALSE(VmemmapSelfHosted, vmemmap_self_hosted)
+>   * Different with flags above, this flag is used only for fsdax mode.  It
+>   * indicates that this page->mapping is now under reflink case.
+>   */
+> -#define PAGE_MAPPING_DAX_COW	0x1
+> +#define PAGE_MAPPING_DAX_SHARED	((void *)0x1)
+>  
+>  static __always_inline bool folio_mapping_flags(struct folio *folio)
+>  {
 > -- 
-> 2.25.1
+> 2.38.1
 > 
