@@ -2,71 +2,73 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51AEFC4332F
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Dec 2022 09:44:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46A8AC4332F
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Dec 2022 09:52:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229530AbiLIJo2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 9 Dec 2022 04:44:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54296 "EHLO
+        id S229558AbiLIJwS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 9 Dec 2022 04:52:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229498AbiLIJo1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Dec 2022 04:44:27 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7BE65F6E7
-        for <linux-xfs@vger.kernel.org>; Fri,  9 Dec 2022 01:44:25 -0800 (PST)
+        with ESMTP id S229498AbiLIJvw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Dec 2022 04:51:52 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61004186D2
+        for <linux-xfs@vger.kernel.org>; Fri,  9 Dec 2022 01:51:52 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 70AB1621E3
-        for <linux-xfs@vger.kernel.org>; Fri,  9 Dec 2022 09:44:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1E68C433D2;
-        Fri,  9 Dec 2022 09:44:23 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 04E5762134
+        for <linux-xfs@vger.kernel.org>; Fri,  9 Dec 2022 09:51:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93112C433D2;
+        Fri,  9 Dec 2022 09:51:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670579064;
-        bh=HSejx1t790YeTMcj2OZujlW2T1F+aUSmpLCOWgkpyNg=;
+        s=k20201202; t=1670579511;
+        bh=0PaXvTizXQHDj0N9RuBc7JOWVXFhaNWoKwDCSsB6LDY=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=QVKOCgir03fPjHeTOgXvM0gaHIk1gqMIj1wb6/zlrDRaAQwNL9YUO2xDzwqHbaNvd
-         nN1D3/F7OrH2Fr/fEDsyzeQYqC2G/QzEhwLNGCxUhxx4PBKcTaqjpJ9WyjOhE5JX+z
-         ZkdWpZvf3sbiIjuhtsUtTL5/iiAvBU2JEZNR4RhasmaTg57Uohvx9SylUEekvIcfcp
-         IrT/ywbfL7v83hjE6NLKjoPzH3qLmoVatszu7hyEDd39usMNI8PkwypXIyp2DOIImw
-         S9SqB5HP9hhLTQcOZKEmT+95hSEZtDFJeydC6b8rRzmbVyGdjJvkAOyh87o5wBMrek
-         7+j4jXLBAfIpg==
-Date:   Fri, 9 Dec 2022 10:44:20 +0100
+        b=JAQ0h1VrIS/HwOGUKfthb0BRXXaRqG8l/LhkQENiqTiTwk7o2+Fd0C1Fgxx2SzkFk
+         fX57ukL+IB5oMS/Id4mGGx+YwE71sH8JNqaRT/+yf0xaqy4bD7PtVWnq2YQhmaOAmU
+         4OwpOVKvGREusdttrkIo7VEmn+JSGj3Yd0W2Gge+2pmjyJDcMtxXlIbW4BUUR+mOQm
+         yFTtoE3NTWCrWv4wKdnY7EHWgLHE5JnLkKZiuSugRmaZ1JBt2nwvOi3vadZA24bCqv
+         nLjFt1q3dCmJaKEC6N6KBZVWGT62yzjPtO2dzZKusjbHfxkFcI/CzGca2Fu/eafcqP
+         ODG9XWNKrZPEA==
+Date:   Fri, 9 Dec 2022 10:51:46 +0100
 From:   Carlos Maiolino <cem@kernel.org>
-To:     Chris Boot <lists@bootc.boo.tc>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: XFS corruption help; xfs_repair isn't working
-Message-ID: <20221209094420.npdlf36p4eydnwlr@andromeda>
-References: <c3fc1808-dbbf-b1c0-36de-1e55be1942e8@bootc.boo.tc>
- <20221129220646.GI3600936@dread.disaster.area>
- <Y4gNntJTb1dZLejo@magnolia>
- <a019db45-2f05-e2ec-5953-26e20aa9484b@bootc.boo.tc>
- <ATlUYJ1o-KWXzdv2pkYVYcZ5oplRX3e-9flZ5uIzHo54ND075lzD_m41vdZUX60h2vWA-mup705INyHy6cQgDw==@protonmail.internalid>
- <3f7796b5-478a-2660-86a8-caeb2c58851a@bootc.boo.tc>
+To:     Srikanth C S <srikanth.c.s@oracle.com>
+Cc:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        Darrick Wong <darrick.wong@oracle.com>,
+        Rajesh Sivaramasubramaniom 
+        <rajesh.sivaramasubramaniom@oracle.com>,
+        Junxiao Bi <junxiao.bi@oracle.com>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Subject: Re: [External] : Re: [PATCH v3] fsck.xfs: mount/umount xfs fs to
+ replay log before running xfs_repair
+Message-ID: <20221209095146.72urohonkttuzkui@andromeda>
+References: <NdSU2Rq0FpWJ3II4JAnJNk-0HW5bns_UxhQ03sSOaek-nu9QPA-ZMx0HDXFtVx8ahgKhWe0Wcfh13NH0ZSwJjg==@protonmail.internalid>
+ <20221123063050.208-1-srikanth.c.s@oracle.com>
+ <20221123083636.el5fivqey5qmx6ie@andromeda>
+ <c-vuqhpmmrL6JSN0ZRnqX7c1BUcXw5gJ9L2UZ2lG3H8hCJRNIn_uan2rVHLDUPwgY24Nv3WZpiBt2nflhVadtA==@protonmail.internalid>
+ <CY4PR10MB1479D19A047EAB8558445EC7A30C9@CY4PR10MB1479.namprd10.prod.outlook.com>
+ <20221123122305.oht2bspxqb6ndnlm@andromeda>
+ <MWHPR10MB148619277A997E1D8A715257A30E9@MWHPR10MB1486.namprd10.prod.outlook.com>
+ <Y4U+dDlv2ylHApxo@magnolia>
+ <WuljuDxGZprSR8FYvaB5tfuqKWsgyktc0am1Ct-Gz40iCCgoCCcSXx01oWWSajgXIzkzla5RIDUsyFYxloZksA==@protonmail.internalid>
+ <MWHPR10MB1486C55C14A9D4F8CA32D33DA31B9@MWHPR10MB1486.namprd10.prod.outlook.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3f7796b5-478a-2660-86a8-caeb2c58851a@bootc.boo.tc>
+In-Reply-To: <MWHPR10MB1486C55C14A9D4F8CA32D33DA31B9@MWHPR10MB1486.namprd10.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 06, 2022 at 02:43:32PM +0000, Chris Boot wrote:
-> On 01/12/2022 13:00, Chris Boot wrote:
-> >> I kinda want to see the metadump of this (possibly enormous) filesystem.
+> > > So I am still wondering on how to proceed with this patch. Any
+> > > comments would be helpful.
 > >
-> > I've asked whether I can share this with you. The filesystem is indeed
-> > huge (35TiB) and I wouldn't be surprised if the metadata alone was
-> > rather large. What would be the most efficient way of sharing that with
-> > you?
-> 
-> I've got approval to send a metadata dump to you. What's the best way of
-> getting it over? It's 31GiB uncompressed, 6.5GiB with zstd compression.
+> @Carlos Maiolino, Any comments or thoughts on this patch?
 
-Place it somewhere we can easily download, and if you feel uncomfortable sharing
-the link publicly to the list, you can send it directly to those who asked for
-it, off-list, but please keep the remaining discussion within the list.
+Sorry, didn't have time to look into it yet.
+
 
 -- 
 Carlos Maiolino
