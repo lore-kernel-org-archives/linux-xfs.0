@@ -2,125 +2,192 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DEA8C4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 10 Dec 2022 07:43:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8707CC4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 10 Dec 2022 15:49:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229468AbiLJHnv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 10 Dec 2022 02:43:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59786 "EHLO
+        id S229568AbiLJPtY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 10 Dec 2022 10:49:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38084 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229494AbiLJHnu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Dec 2022 02:43:50 -0500
-Received: from mail-qt1-x82c.google.com (mail-qt1-x82c.google.com [IPv6:2607:f8b0:4864:20::82c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A7ECBF76
-        for <linux-xfs@vger.kernel.org>; Fri,  9 Dec 2022 23:43:49 -0800 (PST)
-Received: by mail-qt1-x82c.google.com with SMTP id fu10so5424641qtb.0
-        for <linux-xfs@vger.kernel.org>; Fri, 09 Dec 2022 23:43:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=leadboat.com; s=google;
-        h=user-agent:in-reply-to:content-disposition:mime-version:references
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=0ceoTV6nZoXR/X37nHZ9qBDyb3e6ell1iBJCJZyL9Mo=;
-        b=QcD5cZE0tHolv34mlKxWoBIJnBeNdorH/7Rt08qNKdJw/bNcSmf4OEfrhI4Cu5Aup+
-         RlXNr3bnPojvk7U+mbct0R8QuYVVAnrVk90y56aay8OkrBiztilla68cX/ZfeYOyb7JJ
-         vuIu31jPcjQ/VNllsGznsbRwEWCt8Zvz5YYaU=
+        with ESMTP id S229545AbiLJPtX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Dec 2022 10:49:23 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A0C7FAE8
+        for <linux-xfs@vger.kernel.org>; Sat, 10 Dec 2022 07:48:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1670687307;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=iuJ9A/gY3J5YkbOFP3dDSzitByWWfHJ2BOP16ILAS38=;
+        b=TzMobYFrzR4eY6D+FMrjTSPPfcw7SRwbFTGfILj5NiFuWE0PvsIa5cZIqE3IVTk97ceWDn
+        PjNgoi0ZsQUffI1dGO6wEHkfobuGcJf1tl8WFe0R1Hknfw6be36gm/lG1YGZ7omz6cLynA
+        WIUhoSgYrbSAOdOkUF33oKMDI7IOySQ=
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
+ [209.85.214.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-211-KROSVVPQNxuUU0meAfYQkw-1; Sat, 10 Dec 2022 10:48:26 -0500
+X-MC-Unique: KROSVVPQNxuUU0meAfYQkw-1
+Received: by mail-pl1-f197.google.com with SMTP id n5-20020a170902d2c500b00189e5b86fe2so6587376plc.16
+        for <linux-xfs@vger.kernel.org>; Sat, 10 Dec 2022 07:48:26 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=user-agent:in-reply-to:content-disposition:mime-version:references
-         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=0ceoTV6nZoXR/X37nHZ9qBDyb3e6ell1iBJCJZyL9Mo=;
-        b=5WSsnoT/FSKwBI0qa7FDn0Bp42ZyB0SvWnHF1Z25v6hI1vgRxY/FvJevc2jLewvI9X
-         OqWno87Y92kMamo6vR5RkpLwCB44DOOPxHrCDEnpdj99pTdNusFRQFeqZZhrSb7iR3K0
-         P1UqioUmbGRdIUvfT3S5EDBoaYgkJqe6nO9iDOI9zIUZASvdiDsmG6jI4Law++5s3Ew8
-         88tsA7eDIuXshH5Tgq6Cf1SWi+FKHVOH3ajCpaHBO00cOXLkgwb2AT37xZiwvgCVNUBG
-         0tv8CmXLN9nmoxVqyteI0mfkzpgIse24mWM7GQpnzsUwBCnzWiTxDktEYU72YVeaaNFz
-         HAEQ==
-X-Gm-Message-State: ANoB5pnOTtVB95S4SqwRdvTqnOYMHS6/kVc5nhCm3uep2BnPFVPCvF1t
-        TJ5bPLupU8mx8/lKt7YBA56Kgg==
-X-Google-Smtp-Source: AA0mqf5xv+bR2Hy/+6La9ZNg5z3TILjB5yd9UesoqNXrXUM03ErDCAfidt2ooI8JmzBkVtEff0IJOA==
-X-Received: by 2002:ac8:7d01:0:b0:3a7:e22d:e316 with SMTP id g1-20020ac87d01000000b003a7e22de316mr15497407qtb.21.1670658228052;
-        Fri, 09 Dec 2022 23:43:48 -0800 (PST)
-Received: from rfd.leadboat.com ([2600:1702:a20:5750::2e])
-        by smtp.gmail.com with ESMTPSA id y8-20020a05620a25c800b006fa8299b4d5sm1621475qko.100.2022.12.09.23.43.46
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 09 Dec 2022 23:43:47 -0800 (PST)
-Date:   Fri, 9 Dec 2022 23:43:44 -0800
-From:   Noah Misch <noah@leadboat.com>
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=iuJ9A/gY3J5YkbOFP3dDSzitByWWfHJ2BOP16ILAS38=;
+        b=D+casaX7z5wEdoqURuCccevJZE0YTA3dSigpXwG9skfG6iHR8PyIfcOoG0y7NBPua5
+         rUOUxKPSY0IpioLDMB4v7FCIO/QMbfDzkrCzwklhzXMQhhqvcXf8SKtpbZSf8407L+PD
+         AW1wiYAooAHtG9SKDrCyXpIz4eAVNzCRZ4I1AlJ11v+9wlI2OFm+2/63O4BSoIB4Pfme
+         oKY6398UPKBsCVLmG5ozuHMwzu3MSzWCc2HRGtyvR5e1TNWg3wq8Am2Kw5Pm60TCeX7M
+         Zzlc3hBDnY5rk+2zMFolyZVF6u6TbLMiH/KtGQuaQqi0UAvcC4dZ4nx9PALFfVhUCbWM
+         0oVw==
+X-Gm-Message-State: ANoB5pnoBNVBLpWLiy692VcfVx/grJlPTtSVDNmtv0Y8KBd0AlJV1o73
+        yM0cy3jXl/LsGu+9ReqzHmkn9MbQhepRxqVTdlzaXIA3n2hXIrmkONhl++nxJWyAFv0CIqpI8Kl
+        LwSgAKIOA0YJ6jkOJYeky
+X-Received: by 2002:a05:622a:5987:b0:3a7:f7c1:5b65 with SMTP id gb7-20020a05622a598700b003a7f7c15b65mr15817210qtb.40.1670682478330;
+        Sat, 10 Dec 2022 06:27:58 -0800 (PST)
+X-Google-Smtp-Source: AA0mqf6i/5AYSjVByw3CA0BzavanEHjmQiJcweNQXd2G1tRqPY3va/b+c2dkTISlprC+mqFvc6Grng==
+X-Received: by 2002:a17:903:40cd:b0:18e:5710:eef3 with SMTP id t13-20020a17090340cd00b0018e5710eef3mr1144517pld.47.1670680649514;
+        Sat, 10 Dec 2022 05:57:29 -0800 (PST)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id ik28-20020a170902ab1c00b0017d97d13b18sm3051601plb.65.2022.12.10.05.57.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 10 Dec 2022 05:57:28 -0800 (PST)
+Date:   Sat, 10 Dec 2022 21:57:24 +0800
+From:   Zorro Lang <zlang@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: After block device error, FICLONE and sync_file_range() make
- NULs, unlike read()
-Message-ID: <20221210074344.GA646514@rfd.leadboat.com>
-References: <20221108172436.GA3613139@rfd.leadboat.com>
- <Y2vZk7Wg0V8SvwxW@magnolia>
- <20221110045452.GB3665013@rfd.leadboat.com>
- <Y3RVp74Qf58/Rh2y@magnolia>
- <20221120013412.GB4097405@rfd.leadboat.com>
- <Y4Vzk54RzjjEApOR@magnolia>
+Cc:     Ziyang Zhang <ZiyangZhang@linux.alibaba.com>,
+        fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
+        hsiangkao@linux.alibaba.com
+Subject: Re: [PATCH V5 2/2] common/populate: Ensure that S_IFDIR.FMT_BTREE is
+ in btree format
+Message-ID: <20221210135724.owsxdqiirtkqsv6e@zlang-mailbox>
+References: <20221208072843.1866615-1-ZiyangZhang@linux.alibaba.com>
+ <20221208072843.1866615-3-ZiyangZhang@linux.alibaba.com>
+ <Y5NkVRNhQgZpWNMj@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y4Vzk54RzjjEApOR@magnolia>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <Y5NkVRNhQgZpWNMj@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 28, 2022 at 06:50:59PM -0800, Darrick J. Wong wrote:
-> On Sat, Nov 19, 2022 at 05:34:12PM -0800, Noah Misch wrote:
-> > On Tue, Nov 15, 2022 at 07:14:47PM -0800, Darrick J. Wong wrote:
-> > > On Wed, Nov 09, 2022 at 08:54:52PM -0800, Noah Misch wrote:
-> > > > Subject line has my typo: s/sync_file_range/copy_file_range/
+On Fri, Dec 09, 2022 at 08:37:41AM -0800, Darrick J. Wong wrote:
+> On Thu, Dec 08, 2022 at 03:28:43PM +0800, Ziyang Zhang wrote:
+> > Sometimes "$((128 * dblksz / 40))" dirents cannot make sure that
+> > S_IFDIR.FMT_BTREE could become btree format for its DATA fork.
+> > 
+> > Actually we just observed it can fail after apply our inode
+> > extent-to-btree workaround. The root cause is that the kernel may be
+> > too good at allocating consecutive blocks so that the data fork is
+> > still in extents format.
+> > 
+> > Therefore instead of using a fixed number, let's make sure the number
+> > of extents is large enough than (inode size - inode core size) /
+> > sizeof(xfs_bmbt_rec_t).
+> > 
+> > Reviewed-by: Zorro Lang <zlang@redhat.com>
+> > Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+> > Suggested-by: "Darrick J. Wong" <djwong@kernel.org>
+> > Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
+> > Signed-off-by: Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
+> > ---
+> >  common/populate | 34 +++++++++++++++++++++++++++++++++-
+> >  common/xfs      |  9 +++++++++
+> >  2 files changed, 42 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/common/populate b/common/populate
+> > index 6e004997..0d334a13 100644
+> > --- a/common/populate
+> > +++ b/common/populate
+> > @@ -71,6 +71,37 @@ __populate_create_dir() {
+> >  	done
+> >  }
+> >  
+> > +# Create a large directory and ensure that it's a btree format
+> > +__populate_xfs_create_btree_dir() {
+> > +	local name="$1"
+> > +	local isize="$2"
+> > +	local missing="$3"
+> > +	local icore_size="$(_xfs_inode_core_bytes)"
+> 
+> Doesn't this helper require a path argument now?
 
-> > > Another dumb thing about how the pagecache tracks errors is that it sets
-> > > a single state bit for the whole mapping, which means that we can't
-> > > actually /tell/ userspace which part of their file is now busted.  We
-> > > can't even tell if userspace has successfully rewrite()d all the regions
-> > > where writeback failed, which leads me to...
-> > > 
-> > > Another another dumb thing about how the pagecache tracks errors is that
-> > > any fsync-lik operation will test_and_clear_bit the EIO state, which
-> > > means that if we find a past EIO, we'll clear that state and return the
-> > > EIO to userspace.
-> > > 
-> > > We /could/ change FICLONE to flush the dirty pagecache, sample the EIO
-> > > status *without* clearing it, and return EIO if it's set.  That's
-> > > probably the most unabsurd way to deal with this, but it's unsettling
-> > > that even cp ignores errno returns now.  The manpage for FICLONE doesn't
-> > > explicitly mention any fsync behaviors, so perhaps "flush and retain
-> > > EIO" is the right choice here.
-> > 
-> > That reminds me of
-> > https://postgr.es/m//20180427222842.in2e4mibx45zdth5@alap3.anarazel.de.  Its
-> > summary of a LSF/MM 2018 discussion mentioned NFS writeback errors detected
-> > and cleared at close(), which I find similar.  I might favor a uniform policy,
-> > one of:
-> > 
-> > a. Any syscall with a file descriptor argument might return EIO.  If it does,
-> >    it clears the EIO.
-> > b. Any syscall with a file descriptor argument might return EIO.  Only a
-> >    specific list of syscalls, having writeback-oriented names, clear EIO:
-> >    fsync(), syncfs(), [...].  Others report EIO without clearing it.
-> > 
-> > One argument for (b) is that, on EIO from FICLONE or copy_file_range(), the
-> > caller can't know whether the broken file is the source or the destination.  A
-> > cautious caller should assume both are broken.  What other considerations
-> > should influence the decision?
-> 
-> That's a very good point you've raised -- userspace can't associate an
-> EIO return value with either of the fds in use.  It can't even tell if
-> the filesystem itself hit some metadata error somewhere else (e.g.
-> refcount data), and that's the real reason why EIO got thrown back to
-> userspace.
-> 
-> On those grounds, I think FICLONE/FIEDEDUPE need to preserve the
-> AS_EIO/AS_ENOSPC state in the address_space so that actual fsync (or
-> syncfs, or any of the known 'persist me now' calls) can also return the
-> status.
-> 
-> I'll try to push that for 6.3.
+What kind of "path" argument? I think he copy it from __populate_create_dir(),
+and keep using the "name" as the root path to create files/dir.
 
-That sounds good.  Thank you.  Please CC me on any threads you create for
-this, if not inconvenient.
+> 
+> --D
+> 
+> > +	# We need enough extents to guarantee that the data fork is in
+> > +	# btree format.  Cycling the mount to use xfs_db is too slow, so
+> > +	# watch for when the extent count exceeds the space after the
+> > +	# inode core.
+> > +	local max_nextents="$(((isize - icore_size) / 16))"
+> > +	local nr=0
+> > +
+> > +	mkdir -p "${name}"
+> > +	while true; do
+> > +		local creat=mkdir
+> > +		test "$((nr % 20))" -eq 0 && creat=touch
+> > +		$creat "${name}/$(printf "%.08d" "$nr")"
+> > +		if [ "$((nr % 40))" -eq 0 ]; then
+> > +			local nextents="$(_xfs_get_fsxattr nextents $name)"
+> > +			[ $nextents -gt $max_nextents ] && break
+> > +		fi
+> > +		nr=$((nr+1))
+> > +	done
+> > +
+> > +	test -z "${missing}" && return
+> > +	seq 1 2 "${nr}" | while read d; do
+> > +		rm -rf "${name}/$(printf "%.08d" "$d")"
+> > +	done
+> > +}
+> > +
+> >  # Add a bunch of attrs to a file
+> >  __populate_create_attr() {
+> >  	name="$1"
+> > @@ -176,6 +207,7 @@ _scratch_xfs_populate() {
+> >  
+> >  	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
+> >  	dblksz="$(_xfs_get_dir_blocksize "$SCRATCH_MNT")"
+> > +	isize="$(_xfs_get_inode_size "$SCRATCH_MNT")"
+> >  	crc="$(_xfs_has_feature "$SCRATCH_MNT" crc -v)"
+> >  	if [ $crc -eq 1 ]; then
+> >  		leaf_hdr_size=64
+> > @@ -226,7 +258,7 @@ _scratch_xfs_populate() {
+> >  
+> >  	# - BTREE
+> >  	echo "+ btree dir"
+> > -	__populate_create_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$((128 * dblksz / 40))" true
+> > +	__populate_xfs_create_btree_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$isize" true
+> >  
+> >  	# Symlinks
+> >  	# - FMT_LOCAL
+> > diff --git a/common/xfs b/common/xfs
+> > index 674384a9..7aaa63c7 100644
+> > --- a/common/xfs
+> > +++ b/common/xfs
+> > @@ -1487,6 +1487,15 @@ _require_xfsrestore_xflag()
+> >  			_notrun 'xfsrestore does not support -x flag.'
+> >  }
+> >  
+> > +# Number of bytes reserved for a full inode record, which includes the
+> > +# immediate fork areas.
+> > +_xfs_get_inode_size()
+> > +{
+> > +	local mntpoint="$1"
+> > +
+> > +	$XFS_INFO_PROG "$mntpoint" | sed -n '/meta-data=.*isize/s/^.*isize=\([0-9]*\).*$/\1/p'
+> > +}
+> > +
+> >  # Number of bytes reserved for only the inode record, excluding the
+> >  # immediate fork areas.
+> >  _xfs_get_inode_core_bytes()
+> > -- 
+> > 2.18.4
+> > 
+> 
+
