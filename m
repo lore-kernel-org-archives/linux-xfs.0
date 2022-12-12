@@ -2,138 +2,192 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31ABBC4167B
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Dec 2022 05:58:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F3BAC4332F
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Dec 2022 07:01:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229726AbiLLF6C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Dec 2022 00:58:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58552 "EHLO
+        id S231365AbiLLHB5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Dec 2022 02:01:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229639AbiLLF6A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Dec 2022 00:58:00 -0500
-Received: from out30-56.freemail.mail.aliyun.com (out30-56.freemail.mail.aliyun.com [115.124.30.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4940C2AE6;
-        Sun, 11 Dec 2022 21:57:56 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R541e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045176;MF=ziyangzhang@linux.alibaba.com;NM=0;PH=DS;RN=8;SR=0;TI=SMTPD_---0VX1Kn9f_1670824634;
-Received: from localhost.localdomain(mailfrom:ZiyangZhang@linux.alibaba.com fp:SMTPD_---0VX1Kn9f_1670824634)
-          by smtp.aliyun-inc.com;
-          Mon, 12 Dec 2022 13:57:52 +0800
-From:   Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
-To:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc:     zlang@redhat.com, david@fromorbit.com, djwong@kernel.org,
-        hsiangkao@linux.alibaba.com, allison.henderson@oracle.com,
-        Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
-Subject: [PATCH V6 2/2] common/populate: Ensure that S_IFDIR.FMT_BTREE is in btree format
-Date:   Mon, 12 Dec 2022 13:56:45 +0800
-Message-Id: <20221212055645.2067020-3-ZiyangZhang@linux.alibaba.com>
-X-Mailer: git-send-email 2.18.4
-In-Reply-To: <20221212055645.2067020-1-ZiyangZhang@linux.alibaba.com>
-References: <20221212055645.2067020-1-ZiyangZhang@linux.alibaba.com>
+        with ESMTP id S229448AbiLLHB4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Dec 2022 02:01:56 -0500
+Received: from mail-io1-f69.google.com (mail-io1-f69.google.com [209.85.166.69])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 608C7BF45
+        for <linux-xfs@vger.kernel.org>; Sun, 11 Dec 2022 23:01:55 -0800 (PST)
+Received: by mail-io1-f69.google.com with SMTP id n10-20020a6b590a000000b006e03471b3eeso5684918iob.11
+        for <linux-xfs@vger.kernel.org>; Sun, 11 Dec 2022 23:01:55 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=0mPgoMg87vPOKC0UjuNxDbWwpmOmscsf4VbkK7wqqwg=;
+        b=CdnIZ0SaHLWhrbcQOvxYtZWpoADibb+JMcgx8nRyWbg4O/+prOFCyzBWLtLF2ycqbT
+         o1/AT9bcUg4VzkI6QPmE5VtdRVscwdgWO8ODwnXxAeoEre68R+3XytMlwHGcUlvJLYY9
+         CzXkp+UXms+uc0NFPhcMLJp4inqKhTvB6W2uEUSmw4C0Zor7qWPdbxaMlE/3JR8LMJOI
+         u6NJGHLsyh4OuOHLt4J5FjtanmV87GOzlaOOwwBKF0u/uE4tCmecv7gjvWjU8BPoiRdy
+         VcF5zmbnCyhDazSXnhbQF2LZ2AeIIRDRczVtmDgn2JE+ys/cd3qjuNYQqPzod46CbO5C
+         DzaA==
+X-Gm-Message-State: ANoB5pnkki6gcht4DN7VjKHLaxY2QBXsuMrn42TBb/rFOa54KXAzdqY2
+        zncQ0j8JX25AerBiz1sc8isYReZPMSfqeWfOtozUrdk6vGG7
+X-Google-Smtp-Source: AA0mqf4QZsRMXyeLfqq3XZnYm1GdTP4D0wyE7RvDzCPp1YR13yy0dSZ5WUVgQUFSfEcXgWup3y8V+ozK1sAoZWZpspcg4HpuVZ4o
+MIME-Version: 1.0
+X-Received: by 2002:a6b:c84f:0:b0:6e0:2b9e:b1c4 with SMTP id
+ y76-20020a6bc84f000000b006e02b9eb1c4mr5255683iof.186.1670828514726; Sun, 11
+ Dec 2022 23:01:54 -0800 (PST)
+Date:   Sun, 11 Dec 2022 23:01:54 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <00000000000019e05005ef9c1481@google.com>
+Subject: [syzbot] KASAN: stack-out-of-bounds Read in xfs_buf_delwri_submit_buffers
+From:   syzbot <syzbot+d2cdeba65d32ed1d2c4d@syzkaller.appspotmail.com>
+To:     djwong@kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Sometimes "$((128 * dblksz / 40))" dirents cannot make sure that
-S_IFDIR.FMT_BTREE could become btree format for its DATA fork.
+Hello,
 
-Actually we just observed it can fail after apply our inode
-extent-to-btree workaround. The root cause is that the kernel may be
-too good at allocating consecutive blocks so that the data fork is
-still in extents format.
+syzbot found the following issue on:
 
-Therefore instead of using a fixed number, let's make sure the number
-of extents is large enough than (inode size - inode core size) /
-sizeof(xfs_bmbt_rec_t).
+HEAD commit:    3ecc37918c80 Merge tag 'media/v6.1-4' of git://git.kernel...
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=162de243880000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=d58e7fe7f9cf5e24
+dashboard link: https://syzkaller.appspot.com/bug?extid=d2cdeba65d32ed1d2c4d
+compiler:       Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=170a950b880000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1625948f880000
 
-Reviewed-by: Zorro Lang <zlang@redhat.com>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-Suggested-by: "Darrick J. Wong" <djwong@kernel.org>
-Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
-Signed-off-by: Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/be14794fd26b/disk-3ecc3791.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/35b850996388/vmlinux-3ecc3791.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/0eec0f8f6777/bzImage-3ecc3791.xz
+mounted in repro: https://storage.googleapis.com/syzbot-assets/f72864a73792/mount_0.gz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+d2cdeba65d32ed1d2c4d@syzkaller.appspotmail.com
+
+XFS (loop5): Quotacheck: Done.
+==================================================================
+BUG: KASAN: stack-out-of-bounds in __lock_acquire+0x79/0x1f60 kernel/locking/lockdep.c:4925
+Read of size 8 at addr ffffc9000cad7918 by task syz-executor223/5006
+
+CPU: 1 PID: 5006 Comm: syz-executor223 Not tainted 6.1.0-rc8-syzkaller-00152-g3ecc37918c80 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/26/2022
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:88 [inline]
+ dump_stack_lvl+0x1b1/0x28e lib/dump_stack.c:106
+ print_address_description+0x74/0x340 mm/kasan/report.c:284
+ print_report+0x107/0x1f0 mm/kasan/report.c:395
+ kasan_report+0xcd/0x100 mm/kasan/report.c:495
+ __lock_acquire+0x79/0x1f60 kernel/locking/lockdep.c:4925
+ lock_acquire+0x182/0x3c0 kernel/locking/lockdep.c:5668
+ __raw_spin_lock_irqsave include/linux/spinlock_api_smp.h:110 [inline]
+ _raw_spin_lock_irqsave+0xb3/0x100 kernel/locking/spinlock.c:162
+ down+0x35/0xb0 kernel/locking/semaphore.c:59
+ xfs_buf_lock fs/xfs/xfs_buf.c:1120 [inline]
+ xfs_buf_delwri_submit_buffers+0x22e/0x820 fs/xfs/xfs_buf.c:2164
+ xfs_buf_delwri_submit+0xbb/0x320 fs/xfs/xfs_buf.c:2242
+ xfs_qm_shrink_scan+0x1ca/0x410 fs/xfs/xfs_qm.c:514
+ do_shrink_slab+0x4e1/0xa00 mm/vmscan.c:842
+ shrink_slab+0x1e6/0x340 mm/vmscan.c:1002
+ drop_slab_node mm/vmscan.c:1037 [inline]
+ drop_slab+0x185/0x2c0 mm/vmscan.c:1047
+ drop_caches_sysctl_handler+0xb1/0x160 fs/drop_caches.c:66
+ proc_sys_call_handler+0x576/0x890 fs/proc/proc_sysctl.c:604
+ do_iter_write+0x6c2/0xc20 fs/read_write.c:861
+ iter_file_splice_write+0x7fc/0xfc0 fs/splice.c:686
+ do_splice_from fs/splice.c:764 [inline]
+ direct_splice_actor+0xe6/0x1c0 fs/splice.c:931
+ splice_direct_to_actor+0x4e4/0xc00 fs/splice.c:886
+ do_splice_direct+0x279/0x3d0 fs/splice.c:974
+ do_sendfile+0x5fb/0xf80 fs/read_write.c:1255
+ __do_sys_sendfile64 fs/read_write.c:1317 [inline]
+ __se_sys_sendfile64+0xd0/0x1b0 fs/read_write.c:1309
+ do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+ do_syscall_64+0x3d/0xb0 arch/x86/entry/common.c:80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7fb176007db9
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 31 18 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 c0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fff863d4df8 EFLAGS: 00000246 ORIG_RAX: 0000000000000028
+RAX: ffffffffffffffda RBX: 0000000000055e8c RCX: 00007fb176007db9
+RDX: 0000000020002080 RSI: 0000000000000004 RDI: 0000000000000005
+RBP: 0000000000000000 R08: 00007fff863d4e20 R09: 00007fff863d4e20
+R10: 0000000000000870 R11: 0000000000000246 R12: 00007fff863d4e1c
+R13: 00007fff863d4e50 R14: 00007fff863d4e30 R15: 000000000000001a
+ </TASK>
+
+The buggy address belongs to the virtual mapping at
+ [ffffc9000cad0000, ffffc9000cad9000) created by:
+ dup_task_struct+0x8b/0x490 kernel/fork.c:974
+
+The buggy address belongs to the physical page:
+page:ffffea0001dbf580 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x76fd6
+flags: 0xfff00000000000(node=0|zone=1|lastcpupid=0x7ff)
+raw: 00fff00000000000 0000000000000000 dead000000000122 0000000000000000
+raw: 0000000000000000 0000000000000000 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 0, migratetype Unmovable, gfp_mask 0x2dc2(GFP_KERNEL|__GFP_HIGHMEM|__GFP_NOWARN|__GFP_ZERO), pid 2, tgid 2 (kthreadd), ts 350542932176, free_ts 350448019466
+ prep_new_page mm/page_alloc.c:2539 [inline]
+ get_page_from_freelist+0x742/0x7c0 mm/page_alloc.c:4291
+ __alloc_pages+0x259/0x560 mm/page_alloc.c:5558
+ vm_area_alloc_pages mm/vmalloc.c:2975 [inline]
+ __vmalloc_area_node mm/vmalloc.c:3043 [inline]
+ __vmalloc_node_range+0x9b2/0x1400 mm/vmalloc.c:3213
+ alloc_thread_stack_node+0x307/0x500 kernel/fork.c:311
+ dup_task_struct+0x8b/0x490 kernel/fork.c:974
+ copy_process+0x637/0x4000 kernel/fork.c:2084
+ kernel_clone+0x21b/0x620 kernel/fork.c:2671
+ kernel_thread+0x150/0x1d0 kernel/fork.c:2731
+ create_kthread kernel/kthread.c:399 [inline]
+ kthreadd+0x57c/0x750 kernel/kthread.c:746
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:306
+page last free stack trace:
+ reset_page_owner include/linux/page_owner.h:24 [inline]
+ free_pages_prepare mm/page_alloc.c:1459 [inline]
+ free_pcp_prepare+0x80c/0x8f0 mm/page_alloc.c:1509
+ free_unref_page_prepare mm/page_alloc.c:3387 [inline]
+ free_unref_page_list+0xb4/0x7b0 mm/page_alloc.c:3529
+ release_pages+0x232a/0x25c0 mm/swap.c:1055
+ __pagevec_release+0x7d/0xf0 mm/swap.c:1075
+ pagevec_release include/linux/pagevec.h:71 [inline]
+ folio_batch_release include/linux/pagevec.h:135 [inline]
+ truncate_inode_pages_range+0x472/0x17f0 mm/truncate.c:373
+ kill_bdev block/bdev.c:76 [inline]
+ blkdev_flush_mapping+0x153/0x2c0 block/bdev.c:662
+ blkdev_put_whole block/bdev.c:693 [inline]
+ blkdev_put+0x4a5/0x730 block/bdev.c:953
+ deactivate_locked_super+0xa7/0xf0 fs/super.c:332
+ cleanup_mnt+0x494/0x520 fs/namespace.c:1186
+ task_work_run+0x243/0x300 kernel/task_work.c:179
+ resume_user_mode_work include/linux/resume_user_mode.h:49 [inline]
+ exit_to_user_mode_loop+0x124/0x150 kernel/entry/common.c:171
+ exit_to_user_mode_prepare+0xb2/0x140 kernel/entry/common.c:203
+ __syscall_exit_to_user_mode_work kernel/entry/common.c:285 [inline]
+ syscall_exit_to_user_mode+0x26/0x60 kernel/entry/common.c:296
+ do_syscall_64+0x49/0xb0 arch/x86/entry/common.c:86
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+Memory state around the buggy address:
+ ffffc9000cad7800: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ ffffc9000cad7880: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>ffffc9000cad7900: f3 f3 f3 f3 f3 f3 f3 f3 00 00 00 00 00 00 00 00
+                            ^
+ ffffc9000cad7980: 00 00 00 00 00 00 00 00 00 00 00 00 f1 f1 f1 f1
+ ffffc9000cad7a00: 00 00 f3 f3 00 00 00 00 00 00 00 00 00 00 00 00
+==================================================================
+
+
 ---
- common/populate | 34 +++++++++++++++++++++++++++++++++-
- common/xfs      |  9 +++++++++
- 2 files changed, 42 insertions(+), 1 deletion(-)
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-diff --git a/common/populate b/common/populate
-index 6e004997..8f7f2113 100644
---- a/common/populate
-+++ b/common/populate
-@@ -71,6 +71,37 @@ __populate_create_dir() {
- 	done
- }
- 
-+# Create a large directory and ensure that it's a btree format
-+__populate_xfs_create_btree_dir() {
-+	local name="$1"
-+	local isize="$2"
-+	local missing="$3"
-+	local icore_size="$(_xfs_get_inode_core_bytes $SCRATCH_MNT)"
-+	# We need enough extents to guarantee that the data fork is in
-+	# btree format.  Cycling the mount to use xfs_db is too slow, so
-+	# watch for when the extent count exceeds the space after the
-+	# inode core.
-+	local max_nextents="$(((isize - icore_size) / 16))"
-+	local nr=0
-+
-+	mkdir -p "${name}"
-+	while true; do
-+		local creat=mkdir
-+		test "$((nr % 20))" -eq 0 && creat=touch
-+		$creat "${name}/$(printf "%.08d" "$nr")"
-+		if [ "$((nr % 40))" -eq 0 ]; then
-+			local nextents="$(_xfs_get_fsxattr nextents $name)"
-+			[ $nextents -gt $max_nextents ] && break
-+		fi
-+		nr=$((nr+1))
-+	done
-+
-+	test -z "${missing}" && return
-+	seq 1 2 "${nr}" | while read d; do
-+		rm -rf "${name}/$(printf "%.08d" "$d")"
-+	done
-+}
-+
- # Add a bunch of attrs to a file
- __populate_create_attr() {
- 	name="$1"
-@@ -176,6 +207,7 @@ _scratch_xfs_populate() {
- 
- 	blksz="$(stat -f -c '%s' "${SCRATCH_MNT}")"
- 	dblksz="$(_xfs_get_dir_blocksize "$SCRATCH_MNT")"
-+	isize="$(_xfs_get_inode_size "$SCRATCH_MNT")"
- 	crc="$(_xfs_has_feature "$SCRATCH_MNT" crc -v)"
- 	if [ $crc -eq 1 ]; then
- 		leaf_hdr_size=64
-@@ -226,7 +258,7 @@ _scratch_xfs_populate() {
- 
- 	# - BTREE
- 	echo "+ btree dir"
--	__populate_create_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$((128 * dblksz / 40))" true
-+	__populate_xfs_create_btree_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$isize" true
- 
- 	# Symlinks
- 	# - FMT_LOCAL
-diff --git a/common/xfs b/common/xfs
-index 674384a9..7aaa63c7 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -1487,6 +1487,15 @@ _require_xfsrestore_xflag()
- 			_notrun 'xfsrestore does not support -x flag.'
- }
- 
-+# Number of bytes reserved for a full inode record, which includes the
-+# immediate fork areas.
-+_xfs_get_inode_size()
-+{
-+	local mntpoint="$1"
-+
-+	$XFS_INFO_PROG "$mntpoint" | sed -n '/meta-data=.*isize/s/^.*isize=\([0-9]*\).*$/\1/p'
-+}
-+
- # Number of bytes reserved for only the inode record, excluding the
- # immediate fork areas.
- _xfs_get_inode_core_bytes()
--- 
-2.18.4
-
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+syzbot can test patches for this issue, for details see:
+https://goo.gl/tpsmEJ#testing-patches
