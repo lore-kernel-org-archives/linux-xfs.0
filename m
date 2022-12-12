@@ -2,44 +2,44 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F3BAC4332F
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Dec 2022 07:01:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 092E8C4332F
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Dec 2022 07:03:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231365AbiLLHB5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Dec 2022 02:01:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44694 "EHLO
+        id S231405AbiLLHDL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Dec 2022 02:03:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45648 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229448AbiLLHB4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Dec 2022 02:01:56 -0500
-Received: from mail-io1-f69.google.com (mail-io1-f69.google.com [209.85.166.69])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 608C7BF45
-        for <linux-xfs@vger.kernel.org>; Sun, 11 Dec 2022 23:01:55 -0800 (PST)
-Received: by mail-io1-f69.google.com with SMTP id n10-20020a6b590a000000b006e03471b3eeso5684918iob.11
-        for <linux-xfs@vger.kernel.org>; Sun, 11 Dec 2022 23:01:55 -0800 (PST)
+        with ESMTP id S231340AbiLLHDI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Dec 2022 02:03:08 -0500
+Received: from mail-il1-f200.google.com (mail-il1-f200.google.com [209.85.166.200])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA3FA285
+        for <linux-xfs@vger.kernel.org>; Sun, 11 Dec 2022 23:03:03 -0800 (PST)
+Received: by mail-il1-f200.google.com with SMTP id j3-20020a056e02154300b00304bc968ef1so721700ilu.4
+        for <linux-xfs@vger.kernel.org>; Sun, 11 Dec 2022 23:03:03 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=to:from:subject:message-id:date:mime-version:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=0mPgoMg87vPOKC0UjuNxDbWwpmOmscsf4VbkK7wqqwg=;
-        b=CdnIZ0SaHLWhrbcQOvxYtZWpoADibb+JMcgx8nRyWbg4O/+prOFCyzBWLtLF2ycqbT
-         o1/AT9bcUg4VzkI6QPmE5VtdRVscwdgWO8ODwnXxAeoEre68R+3XytMlwHGcUlvJLYY9
-         CzXkp+UXms+uc0NFPhcMLJp4inqKhTvB6W2uEUSmw4C0Zor7qWPdbxaMlE/3JR8LMJOI
-         u6NJGHLsyh4OuOHLt4J5FjtanmV87GOzlaOOwwBKF0u/uE4tCmecv7gjvWjU8BPoiRdy
-         VcF5zmbnCyhDazSXnhbQF2LZ2AeIIRDRczVtmDgn2JE+ys/cd3qjuNYQqPzod46CbO5C
-         DzaA==
-X-Gm-Message-State: ANoB5pnkki6gcht4DN7VjKHLaxY2QBXsuMrn42TBb/rFOa54KXAzdqY2
-        zncQ0j8JX25AerBiz1sc8isYReZPMSfqeWfOtozUrdk6vGG7
-X-Google-Smtp-Source: AA0mqf4QZsRMXyeLfqq3XZnYm1GdTP4D0wyE7RvDzCPp1YR13yy0dSZ5WUVgQUFSfEcXgWup3y8V+ozK1sAoZWZpspcg4HpuVZ4o
+        bh=7pRxe8xcGVdH/WupVjdusylJxDyL2uy8nmSKsprdS8g=;
+        b=DuReOS1chz4yEl59ALfGWMnYffUnI6kpngRURXkt6oq8qG1Vgz0cKXvaFAjxUfwKqv
+         9nHVUke0KhYcSxk8EwIx2759ZYJ8PQAEArmT/khLSQfWqzVac22aP5WqEQjBkpnkvM+6
+         58stOnwdBPHOMUOk25uhxwQ/ys22s9X90Lbiibrn3VxbsATDq1qHd33/9iMnJXtYOkEu
+         CohCx+wZwwPkZRm/cXbRb7SiKA83CIiawWKdSluwCAc2EuJC1xgoy2tpk7a85RJZqtZZ
+         HbEMoSHR2G/iY8OPLMWXHHtdgKlmKhDEjycc1HtWRMw8HAtv0wk0W9cd8+CzVpBpgRDG
+         Wa1w==
+X-Gm-Message-State: ANoB5pmHN2VJRR/xU48bYnpu7zUOMReG47VzoBmtOVZfjr9ZYBp1qK2G
+        5Vs/DkZ00IoiBSPk+QYc7gpEGBqKWd56NGFbVqGkalXyAsQr
+X-Google-Smtp-Source: AA0mqf5ocQ6LCSq9AEL78yKX4L9ZLbLE2Nd320kFza0By6V8AFx8E6kWiL9tcUBasx22xuVfo3B9c2g3xGAn93bQvF+mHXI8T6oY
 MIME-Version: 1.0
-X-Received: by 2002:a6b:c84f:0:b0:6e0:2b9e:b1c4 with SMTP id
- y76-20020a6bc84f000000b006e02b9eb1c4mr5255683iof.186.1670828514726; Sun, 11
- Dec 2022 23:01:54 -0800 (PST)
-Date:   Sun, 11 Dec 2022 23:01:54 -0800
+X-Received: by 2002:a02:5442:0:b0:389:d81a:1d80 with SMTP id
+ t63-20020a025442000000b00389d81a1d80mr24546860jaa.80.1670828583189; Sun, 11
+ Dec 2022 23:03:03 -0800 (PST)
+Date:   Sun, 11 Dec 2022 23:03:03 -0800
 X-Google-Appengine-App-Id: s~syzkaller
 X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <00000000000019e05005ef9c1481@google.com>
-Subject: [syzbot] KASAN: stack-out-of-bounds Read in xfs_buf_delwri_submit_buffers
-From:   syzbot <syzbot+d2cdeba65d32ed1d2c4d@syzkaller.appspotmail.com>
+Message-ID: <0000000000002e833305ef9c18a3@google.com>
+Subject: [syzbot] INFO: trying to register non-static key in xfs_buf_delwri_submit_buffers
+From:   syzbot <syzbot+11d99e499adff05631cc@syzkaller.appspotmail.com>
 To:     djwong@kernel.org, linux-kernel@vger.kernel.org,
         linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
 Content-Type: text/plain; charset="UTF-8"
@@ -51,135 +51,135 @@ Hello,
 
 syzbot found the following issue on:
 
-HEAD commit:    3ecc37918c80 Merge tag 'media/v6.1-4' of git://git.kernel...
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=162de243880000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=d58e7fe7f9cf5e24
-dashboard link: https://syzkaller.appspot.com/bug?extid=d2cdeba65d32ed1d2c4d
+HEAD commit:    a5541c0811a0 Merge branch 'for-next/core' into for-kernelci
+git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git for-kernelci
+console output: https://syzkaller.appspot.com/x/log.txt?x=126cf0cd880000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=cbd4e584773e9397
+dashboard link: https://syzkaller.appspot.com/bug?extid=11d99e499adff05631cc
 compiler:       Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=170a950b880000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1625948f880000
+userspace arch: arm64
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=11918e67880000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=116013db880000
 
 Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/be14794fd26b/disk-3ecc3791.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/35b850996388/vmlinux-3ecc3791.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/0eec0f8f6777/bzImage-3ecc3791.xz
-mounted in repro: https://storage.googleapis.com/syzbot-assets/f72864a73792/mount_0.gz
+disk image: https://storage.googleapis.com/syzbot-assets/4b7702208fb9/disk-a5541c08.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/9ec0153ec051/vmlinux-a5541c08.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/6f8725ad290a/Image-a5541c08.gz.xz
+mounted in repro: https://storage.googleapis.com/syzbot-assets/afae3f863cb9/mount_0.gz
 
 IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+d2cdeba65d32ed1d2c4d@syzkaller.appspotmail.com
+Reported-by: syzbot+11d99e499adff05631cc@syzkaller.appspotmail.com
 
-XFS (loop5): Quotacheck: Done.
-==================================================================
-BUG: KASAN: stack-out-of-bounds in __lock_acquire+0x79/0x1f60 kernel/locking/lockdep.c:4925
-Read of size 8 at addr ffffc9000cad7918 by task syz-executor223/5006
-
-CPU: 1 PID: 5006 Comm: syz-executor223 Not tainted 6.1.0-rc8-syzkaller-00152-g3ecc37918c80 #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/26/2022
-Call Trace:
- <TASK>
+XFS (loop1): Quotacheck: Done.
+syz-executor383 (9789): drop_caches: 2
+INFO: trying to register non-static key.
+The code is fine but needs lockdep annotation, or maybe
+you didn't initialize this object before use?
+turning off the locking correctness validator.
+CPU: 1 PID: 9789 Comm: syz-executor383 Not tainted 6.1.0-rc8-syzkaller-33330-ga5541c0811a0 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 09/30/2022
+Call trace:
+ dump_backtrace+0x1c4/0x1f0 arch/arm64/kernel/stacktrace.c:156
+ show_stack+0x2c/0x3c arch/arm64/kernel/stacktrace.c:163
  __dump_stack lib/dump_stack.c:88 [inline]
- dump_stack_lvl+0x1b1/0x28e lib/dump_stack.c:106
- print_address_description+0x74/0x340 mm/kasan/report.c:284
- print_report+0x107/0x1f0 mm/kasan/report.c:395
- kasan_report+0xcd/0x100 mm/kasan/report.c:495
- __lock_acquire+0x79/0x1f60 kernel/locking/lockdep.c:4925
- lock_acquire+0x182/0x3c0 kernel/locking/lockdep.c:5668
+ dump_stack_lvl+0x104/0x16c lib/dump_stack.c:106
+ dump_stack+0x1c/0x58 lib/dump_stack.c:113
+ assign_lock_key+0x134/0x140 kernel/locking/lockdep.c:981
+ register_lock_class+0xc4/0x2f8 kernel/locking/lockdep.c:1294
+ __lock_acquire+0xa8/0x3084 kernel/locking/lockdep.c:4934
+ lock_acquire+0x100/0x1f8 kernel/locking/lockdep.c:5668
  __raw_spin_lock_irqsave include/linux/spinlock_api_smp.h:110 [inline]
- _raw_spin_lock_irqsave+0xb3/0x100 kernel/locking/spinlock.c:162
- down+0x35/0xb0 kernel/locking/semaphore.c:59
+ _raw_spin_lock_irqsave+0x6c/0xb4 kernel/locking/spinlock.c:162
+ down+0x2c/0x68 kernel/locking/semaphore.c:59
  xfs_buf_lock fs/xfs/xfs_buf.c:1120 [inline]
- xfs_buf_delwri_submit_buffers+0x22e/0x820 fs/xfs/xfs_buf.c:2164
- xfs_buf_delwri_submit+0xbb/0x320 fs/xfs/xfs_buf.c:2242
- xfs_qm_shrink_scan+0x1ca/0x410 fs/xfs/xfs_qm.c:514
- do_shrink_slab+0x4e1/0xa00 mm/vmscan.c:842
- shrink_slab+0x1e6/0x340 mm/vmscan.c:1002
+ xfs_buf_delwri_submit_buffers+0x15c/0x394 fs/xfs/xfs_buf.c:2164
+ xfs_buf_delwri_submit+0x4c/0x160 fs/xfs/xfs_buf.c:2242
+ xfs_qm_shrink_scan+0x94/0x174 fs/xfs/xfs_qm.c:514
+ do_shrink_slab+0x240/0x55c mm/vmscan.c:842
+ shrink_slab+0xe4/0x1b8 mm/vmscan.c:1002
  drop_slab_node mm/vmscan.c:1037 [inline]
- drop_slab+0x185/0x2c0 mm/vmscan.c:1047
- drop_caches_sysctl_handler+0xb1/0x160 fs/drop_caches.c:66
- proc_sys_call_handler+0x576/0x890 fs/proc/proc_sysctl.c:604
- do_iter_write+0x6c2/0xc20 fs/read_write.c:861
- iter_file_splice_write+0x7fc/0xfc0 fs/splice.c:686
+ drop_slab+0xc8/0x19c mm/vmscan.c:1047
+ drop_caches_sysctl_handler+0x130/0x22c fs/drop_caches.c:66
+ proc_sys_call_handler+0x240/0x3d8 fs/proc/proc_sysctl.c:604
+ proc_sys_write+0x2c/0x3c fs/proc/proc_sysctl.c:630
+ do_iter_write+0x318/0x560 fs/read_write.c:861
+ vfs_iter_write+0x4c/0x6c fs/read_write.c:902
+ iter_file_splice_write+0x2a8/0x518 fs/splice.c:686
  do_splice_from fs/splice.c:764 [inline]
- direct_splice_actor+0xe6/0x1c0 fs/splice.c:931
- splice_direct_to_actor+0x4e4/0xc00 fs/splice.c:886
- do_splice_direct+0x279/0x3d0 fs/splice.c:974
- do_sendfile+0x5fb/0xf80 fs/read_write.c:1255
+ direct_splice_actor+0x4c/0xe0 fs/splice.c:931
+ splice_direct_to_actor+0x1dc/0x3e4 fs/splice.c:886
+ do_splice_direct+0xc4/0x14c fs/splice.c:974
+ do_sendfile+0x298/0x68c fs/read_write.c:1255
  __do_sys_sendfile64 fs/read_write.c:1317 [inline]
- __se_sys_sendfile64+0xd0/0x1b0 fs/read_write.c:1309
- do_syscall_x64 arch/x86/entry/common.c:50 [inline]
- do_syscall_64+0x3d/0xb0 arch/x86/entry/common.c:80
- entry_SYSCALL_64_after_hwframe+0x63/0xcd
-RIP: 0033:0x7fb176007db9
-Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 31 18 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 c0 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007fff863d4df8 EFLAGS: 00000246 ORIG_RAX: 0000000000000028
-RAX: ffffffffffffffda RBX: 0000000000055e8c RCX: 00007fb176007db9
-RDX: 0000000020002080 RSI: 0000000000000004 RDI: 0000000000000005
-RBP: 0000000000000000 R08: 00007fff863d4e20 R09: 00007fff863d4e20
-R10: 0000000000000870 R11: 0000000000000246 R12: 00007fff863d4e1c
-R13: 00007fff863d4e50 R14: 00007fff863d4e30 R15: 000000000000001a
- </TASK>
-
-The buggy address belongs to the virtual mapping at
- [ffffc9000cad0000, ffffc9000cad9000) created by:
- dup_task_struct+0x8b/0x490 kernel/fork.c:974
-
-The buggy address belongs to the physical page:
-page:ffffea0001dbf580 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x76fd6
-flags: 0xfff00000000000(node=0|zone=1|lastcpupid=0x7ff)
-raw: 00fff00000000000 0000000000000000 dead000000000122 0000000000000000
-raw: 0000000000000000 0000000000000000 00000001ffffffff 0000000000000000
-page dumped because: kasan: bad access detected
-page_owner tracks the page as allocated
-page last allocated via order 0, migratetype Unmovable, gfp_mask 0x2dc2(GFP_KERNEL|__GFP_HIGHMEM|__GFP_NOWARN|__GFP_ZERO), pid 2, tgid 2 (kthreadd), ts 350542932176, free_ts 350448019466
- prep_new_page mm/page_alloc.c:2539 [inline]
- get_page_from_freelist+0x742/0x7c0 mm/page_alloc.c:4291
- __alloc_pages+0x259/0x560 mm/page_alloc.c:5558
- vm_area_alloc_pages mm/vmalloc.c:2975 [inline]
- __vmalloc_area_node mm/vmalloc.c:3043 [inline]
- __vmalloc_node_range+0x9b2/0x1400 mm/vmalloc.c:3213
- alloc_thread_stack_node+0x307/0x500 kernel/fork.c:311
- dup_task_struct+0x8b/0x490 kernel/fork.c:974
- copy_process+0x637/0x4000 kernel/fork.c:2084
- kernel_clone+0x21b/0x620 kernel/fork.c:2671
- kernel_thread+0x150/0x1d0 kernel/fork.c:2731
- create_kthread kernel/kthread.c:399 [inline]
- kthreadd+0x57c/0x750 kernel/kthread.c:746
- ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:306
-page last free stack trace:
- reset_page_owner include/linux/page_owner.h:24 [inline]
- free_pages_prepare mm/page_alloc.c:1459 [inline]
- free_pcp_prepare+0x80c/0x8f0 mm/page_alloc.c:1509
- free_unref_page_prepare mm/page_alloc.c:3387 [inline]
- free_unref_page_list+0xb4/0x7b0 mm/page_alloc.c:3529
- release_pages+0x232a/0x25c0 mm/swap.c:1055
- __pagevec_release+0x7d/0xf0 mm/swap.c:1075
- pagevec_release include/linux/pagevec.h:71 [inline]
- folio_batch_release include/linux/pagevec.h:135 [inline]
- truncate_inode_pages_range+0x472/0x17f0 mm/truncate.c:373
- kill_bdev block/bdev.c:76 [inline]
- blkdev_flush_mapping+0x153/0x2c0 block/bdev.c:662
- blkdev_put_whole block/bdev.c:693 [inline]
- blkdev_put+0x4a5/0x730 block/bdev.c:953
- deactivate_locked_super+0xa7/0xf0 fs/super.c:332
- cleanup_mnt+0x494/0x520 fs/namespace.c:1186
- task_work_run+0x243/0x300 kernel/task_work.c:179
- resume_user_mode_work include/linux/resume_user_mode.h:49 [inline]
- exit_to_user_mode_loop+0x124/0x150 kernel/entry/common.c:171
- exit_to_user_mode_prepare+0xb2/0x140 kernel/entry/common.c:203
- __syscall_exit_to_user_mode_work kernel/entry/common.c:285 [inline]
- syscall_exit_to_user_mode+0x26/0x60 kernel/entry/common.c:296
- do_syscall_64+0x49/0xb0 arch/x86/entry/common.c:86
- entry_SYSCALL_64_after_hwframe+0x63/0xcd
-
-Memory state around the buggy address:
- ffffc9000cad7800: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
- ffffc9000cad7880: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->ffffc9000cad7900: f3 f3 f3 f3 f3 f3 f3 f3 00 00 00 00 00 00 00 00
-                            ^
- ffffc9000cad7980: 00 00 00 00 00 00 00 00 00 00 00 00 f1 f1 f1 f1
- ffffc9000cad7a00: 00 00 f3 f3 00 00 00 00 00 00 00 00 00 00 00 00
-==================================================================
+ __se_sys_sendfile64 fs/read_write.c:1309 [inline]
+ __arm64_sys_sendfile64+0x14c/0x230 fs/read_write.c:1309
+ __invoke_syscall arch/arm64/kernel/syscall.c:38 [inline]
+ invoke_syscall arch/arm64/kernel/syscall.c:52 [inline]
+ el0_svc_common+0x138/0x220 arch/arm64/kernel/syscall.c:142
+ do_el0_svc+0x48/0x140 arch/arm64/kernel/syscall.c:197
+ el0_svc+0x58/0x150 arch/arm64/kernel/entry-common.c:637
+ el0t_64_sync_handler+0x84/0xf0 arch/arm64/kernel/entry-common.c:655
+ el0t_64_sync+0x190/0x194 arch/arm64/kernel/entry.S:584
+list_add corruption. prev is NULL.
+------------[ cut here ]------------
+kernel BUG at lib/list_debug.c:24!
+Internal error: Oops - BUG: 00000000f2000800 [#1] PREEMPT SMP
+Modules linked in:
+CPU: 1 PID: 9789 Comm: syz-executor383 Not tainted 6.1.0-rc8-syzkaller-33330-ga5541c0811a0 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 09/30/2022
+pstate: 604000c5 (nZCv daIF +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+pc : __list_add_valid+0x78/0xb8 lib/list_debug.c:23
+lr : __list_add_valid+0x78/0xb8 lib/list_debug.c:23
+sp : ffff80001795b5b0
+x29: ffff80001795b5b0 x28: ffff8000178c3aa8 x27: 0000000000000003
+x26: 0000000000000000 x25: ffff800008e51208 x24: ffff80001795b5c8
+x23: ffff8000178c39f0 x22: 0000000000000000 x21: 7fffffffffffffff
+x20: ffff8000178c39a8 x19: 0000000000000002 x18: 00000000000002d4
+x17: 6e69676e45206574 x16: 0000000000000002 x15: 0000000000000000
+x14: 0000000000000000 x13: 205d393837395420 x12: 5b5d353332323338
+x11: ff808000081c4d64 x10: 0000000000000000 x9 : 73a8e374c5aaba00
+x8 : 73a8e374c5aaba00 x7 : 205b5d3533323233 x6 : ffff80000c091ebc
+x5 : 0000000000000000 x4 : 0000000000000001 x3 : 0000000000000000
+x2 : 0000000000000000 x1 : 0000000100000001 x0 : 0000000000000022
+Call trace:
+ __list_add_valid+0x78/0xb8 lib/list_debug.c:23
+ __list_add include/linux/list.h:69 [inline]
+ list_add_tail include/linux/list.h:102 [inline]
+ ___down_common+0x5c/0x17c kernel/locking/semaphore.c:214
+ __down_common kernel/locking/semaphore.c:246 [inline]
+ __down+0x28/0x44 kernel/locking/semaphore.c:254
+ down+0x64/0x68 kernel/locking/semaphore.c:63
+ xfs_buf_lock fs/xfs/xfs_buf.c:1120 [inline]
+ xfs_buf_delwri_submit_buffers+0x15c/0x394 fs/xfs/xfs_buf.c:2164
+ xfs_buf_delwri_submit+0x4c/0x160 fs/xfs/xfs_buf.c:2242
+ xfs_qm_shrink_scan+0x94/0x174 fs/xfs/xfs_qm.c:514
+ do_shrink_slab+0x240/0x55c mm/vmscan.c:842
+ shrink_slab+0xe4/0x1b8 mm/vmscan.c:1002
+ drop_slab_node mm/vmscan.c:1037 [inline]
+ drop_slab+0xc8/0x19c mm/vmscan.c:1047
+ drop_caches_sysctl_handler+0x130/0x22c fs/drop_caches.c:66
+ proc_sys_call_handler+0x240/0x3d8 fs/proc/proc_sysctl.c:604
+ proc_sys_write+0x2c/0x3c fs/proc/proc_sysctl.c:630
+ do_iter_write+0x318/0x560 fs/read_write.c:861
+ vfs_iter_write+0x4c/0x6c fs/read_write.c:902
+ iter_file_splice_write+0x2a8/0x518 fs/splice.c:686
+ do_splice_from fs/splice.c:764 [inline]
+ direct_splice_actor+0x4c/0xe0 fs/splice.c:931
+ splice_direct_to_actor+0x1dc/0x3e4 fs/splice.c:886
+ do_splice_direct+0xc4/0x14c fs/splice.c:974
+ do_sendfile+0x298/0x68c fs/read_write.c:1255
+ __do_sys_sendfile64 fs/read_write.c:1317 [inline]
+ __se_sys_sendfile64 fs/read_write.c:1309 [inline]
+ __arm64_sys_sendfile64+0x14c/0x230 fs/read_write.c:1309
+ __invoke_syscall arch/arm64/kernel/syscall.c:38 [inline]
+ invoke_syscall arch/arm64/kernel/syscall.c:52 [inline]
+ el0_svc_common+0x138/0x220 arch/arm64/kernel/syscall.c:142
+ do_el0_svc+0x48/0x140 arch/arm64/kernel/syscall.c:197
+ el0_svc+0x58/0x150 arch/arm64/kernel/entry-common.c:637
+ el0t_64_sync_handler+0x84/0xf0 arch/arm64/kernel/entry-common.c:655
+ el0t_64_sync+0x190/0x194 arch/arm64/kernel/entry.S:584
+Code: d4210000 9001b740 913c9c00 94aa8a26 (d4210000) 
+---[ end trace 0000000000000000 ]---
 
 
 ---
