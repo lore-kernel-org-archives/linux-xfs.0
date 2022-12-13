@@ -2,65 +2,65 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A07AC10F1D
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Dec 2022 17:31:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03923C10F1D
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Dec 2022 17:31:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236300AbiLMRa6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Dec 2022 12:30:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49176 "EHLO
+        id S236302AbiLMRbA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Dec 2022 12:31:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49034 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236296AbiLMRai (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Dec 2022 12:30:38 -0500
+        with ESMTP id S236306AbiLMRaj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Dec 2022 12:30:39 -0500
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBAC822B3E
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 09:29:47 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A11D423149
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 09:29:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1670952587;
+        s=mimecast20190719; t=1670952584;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=DMVdYEIjGzzgVCYG3YnfAdNBSxBfSOUyway7T/qxVAM=;
-        b=RLQARqNKkgbuw0LbqfoQP3qe6kpa9twIKV43StAwJVGvc1Ybuw9cVfVS5+Vzv98UWexq/q
-        cpk8wuO/+aNQZZhqz2cBRPDfTNxkWLN1a26XTTP1lV/sQ3VYa5ZEbujhKggjSln3eFe20h
-        FuZrJgDdkqKx0VqARtWFR6JlDloDb1c=
+        bh=dpUw5Y2TLDVtTXCSF2V9Ww7xiFXDGmNlxyIGTd/fNF8=;
+        b=G8QBirJ4r4lnstU5I/evCHMCfKYiwFJyprkxm2hE0BQpa4CMDVM5YFoOuWt9HIQRtM4VLw
+        mkE8H8MozRNZiHTyCn/dq4Aq3qDp7pFDxOV9afujIvA2v+uKsn3siCV73bWyNHqshLYXja
+        h8Hi19N1YgS9ao90+06rw541Jl1cAFA=
 Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
  [209.85.208.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-211-4IGDLpM1NIaISE_w-imXEg-1; Tue, 13 Dec 2022 12:29:46 -0500
-X-MC-Unique: 4IGDLpM1NIaISE_w-imXEg-1
-Received: by mail-ed1-f72.google.com with SMTP id m18-20020a056402511200b0046db14dc1c9so7719492edd.10
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 09:29:45 -0800 (PST)
+ us-mta-139-D_GN_m_gOb2jL-3U78vVEg-1; Tue, 13 Dec 2022 12:29:43 -0500
+X-MC-Unique: D_GN_m_gOb2jL-3U78vVEg-1
+Received: by mail-ed1-f72.google.com with SMTP id m18-20020a056402511200b0046db14dc1c9so7719415edd.10
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 09:29:43 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=DMVdYEIjGzzgVCYG3YnfAdNBSxBfSOUyway7T/qxVAM=;
-        b=S3XkeozkU0HFYVeWmRG5gHN9uVvhdB6ubDTU1NCfKGYdy5SL2Foa+LBEs/tyM6DF8a
-         f0lz3BlCMYULzo3ZAeAZIC+Jm2/jkS0PSlr9KwtqLkHxseDYT24pr2xCKEvfWsXFGuXd
-         P1a2sR2ZwABgYYwGwM5bQMkIXjytGV0iUayJ/od6/rL0AgwBDJ6AjGiNcEE86GsiVpwS
-         NVMb8r/pZBB+gY0MROoZlwK4ZL8kXub2PJgNawDoicvSHp0wKl82CV7O3yFA3dJpmoHx
-         QFbrowQ+bD2O5qh/fMmpToGOBkfIrCY+fGD5OYfqGnfQPTKlIMO/+sPKblGuoEJ0TnvP
-         SMBQ==
-X-Gm-Message-State: ANoB5plWqxVeLskASkl7tasr2BSUJDbyBHAQkY2c7DzwScYfY8GcMf1h
-        pcQBP3RGwP1fISTOM+fJc8X5YiHZ4mTONQ+GXUQhCBKLK01FZU6TeNV2ovJ628sKx3hCLiolRXv
-        WDc/xyf5JzpZ3nBQ4SkTZ0JAAKm4m/7aV+yKRiFEZTI37VZiIY1g03tCj3L9OXkavzV3XPd4=
-X-Received: by 2002:a05:6402:f19:b0:46f:7453:a999 with SMTP id i25-20020a0564020f1900b0046f7453a999mr17902911eda.39.1670952584767;
-        Tue, 13 Dec 2022 09:29:44 -0800 (PST)
-X-Google-Smtp-Source: AA0mqf5dpb+BtrXOV48EoDvxcYKIw/k9+7UnUHv1T33vANcGszfmmkbpje/gNx4hIvVmQXcwPVhXtQ==
-X-Received: by 2002:a05:6402:f19:b0:46f:7453:a999 with SMTP id i25-20020a0564020f1900b0046f7453a999mr17902886eda.39.1670952584513;
-        Tue, 13 Dec 2022 09:29:44 -0800 (PST)
+        bh=dpUw5Y2TLDVtTXCSF2V9Ww7xiFXDGmNlxyIGTd/fNF8=;
+        b=EJjtAovmRdfZcW6MKbeliAAOc2NOB3tN5LjQvCUmIwFKdeykaqFe4mablA9a0O2TcD
+         YdbXExke81BBmoPE0r6glPbxR/X9rUcMxH3Jqf8+7VCv/BYiWkhestowhZNG6fWFd8DI
+         wPenLkXilAncLil1woBP0FOaKdZDGgkWMdA8b5yo6ivdsoAzkNsq9eqvyki78o3c5qcF
+         rDf3Wu5/OSOeyCG51r8pe3IhlL2ry6HwF8aYsCd1cEG0W6UlXAE2x1Ceemu9gvHiK975
+         cv2xF8umeEDAvla7EdojiyRfmnnlAqcCC/4RG38iqyC9j8TJedqMWjfp3FDBonRU1Kmp
+         qetw==
+X-Gm-Message-State: ANoB5pkkidmE1RwqZUZLcaKMZkVF/iB4RpwN3QN2TBLKE440HhAm6I+r
+        O+lirbLX1GcmrNQX9ZzpkBDhIss0pnEn8A4gSV1BB98x/sQpN4nMDYT/w1NktL0BihZ9zeo+C76
+        pIdSQA6RoxG7JNX6j9E85GmZIWTBzoIpXQWMQ0ctOP8pOsOLAFMOHFoXYJhnI8f0eTGeea0c=
+X-Received: by 2002:aa7:d814:0:b0:46f:d952:a0c with SMTP id v20-20020aa7d814000000b0046fd9520a0cmr8877993edq.20.1670952582375;
+        Tue, 13 Dec 2022 09:29:42 -0800 (PST)
+X-Google-Smtp-Source: AA0mqf7PlCjp9cbbaShxk8BtTSop2M36G/FuymBo9yWHBHKi3JC/lYLxCB5Njfs0kRqD07nB5KwLEQ==
+X-Received: by 2002:aa7:d814:0:b0:46f:d952:a0c with SMTP id v20-20020aa7d814000000b0046fd9520a0cmr8877979edq.20.1670952582152;
+        Tue, 13 Dec 2022 09:29:42 -0800 (PST)
 Received: from aalbersh.remote.csb ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id ec14-20020a0564020d4e00b0047025bf942bsm1204187edb.16.2022.12.13.09.29.43
+        by smtp.gmail.com with ESMTPSA id ec14-20020a0564020d4e00b0047025bf942bsm1204187edb.16.2022.12.13.09.29.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 Dec 2022 09:29:43 -0800 (PST)
+        Tue, 13 Dec 2022 09:29:41 -0800 (PST)
 From:   Andrey Albershteyn <aalbersh@redhat.com>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Cc:     Andrey Albershteyn <aalbersh@redhat.com>
-Subject: [RFC PATCH 06/11] xfs: initialize fs-verity on file open and cleanup on inode destruction
-Date:   Tue, 13 Dec 2022 18:29:30 +0100
-Message-Id: <20221213172935.680971-7-aalbersh@redhat.com>
+Subject: [RFC PATCH 04/11] xfs: add fs-verity ro-compat flag
+Date:   Tue, 13 Dec 2022 18:29:28 +0100
+Message-Id: <20221213172935.680971-5-aalbersh@redhat.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20221213172935.680971-1-aalbersh@redhat.com>
 References: <20221213172935.680971-1-aalbersh@redhat.com>
@@ -70,64 +70,72 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-fs-verity will read and attach metadata (not the tree itself) from
-a disk for those inodes which already have fs-verity enabled.
+To mark inodes sealed with fs-verity the new XFS_DIFLAG2_VERITY flag
+will be added in further patch. This requires ro-compat flag to let
+older kernels know that fs with fs-verity can not be modified.
 
 Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
 ---
- fs/xfs/xfs_file.c  | 8 ++++++++
- fs/xfs/xfs_super.c | 2 ++
- 2 files changed, 10 insertions(+)
+ fs/xfs/libxfs/xfs_format.h | 10 ++++++----
+ fs/xfs/libxfs/xfs_sb.c     |  2 ++
+ fs/xfs/xfs_mount.h         |  2 ++
+ 3 files changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 242165580e682..5eadd9a37c50e 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -32,6 +32,7 @@
- #include <linux/mman.h>
- #include <linux/fadvise.h>
- #include <linux/mount.h>
-+#include <linux/fsverity.h>
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index f413819b2a8aa..2b76e646e6f14 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -353,11 +353,13 @@ xfs_sb_has_compat_feature(
+ #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
+ #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
+ #define XFS_SB_FEAT_RO_COMPAT_INOBTCNT (1 << 3)		/* inobt block counts */
++#define XFS_SB_FEAT_RO_COMPAT_VERITY   (1 << 4)		/* fs-verity */
+ #define XFS_SB_FEAT_RO_COMPAT_ALL \
+-		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
+-		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
+-		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
+-		 XFS_SB_FEAT_RO_COMPAT_INOBTCNT)
++		(XFS_SB_FEAT_RO_COMPAT_FINOBT  | \
++		 XFS_SB_FEAT_RO_COMPAT_RMAPBT  | \
++		 XFS_SB_FEAT_RO_COMPAT_REFLINK | \
++		 XFS_SB_FEAT_RO_COMPAT_INOBTCNT| \
++		 XFS_SB_FEAT_RO_COMPAT_VERITY)
+ #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
+ static inline bool
+ xfs_sb_has_ro_compat_feature(
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index a59bf09495b1d..5c975879f5664 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -161,6 +161,8 @@ xfs_sb_version_to_features(
+ 		features |= XFS_FEAT_REFLINK;
+ 	if (sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_INOBTCNT)
+ 		features |= XFS_FEAT_INOBTCNT;
++	if (sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_VERITY)
++		features |= XFS_FEAT_VERITY;
+ 	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_FTYPE)
+ 		features |= XFS_FEAT_FTYPE;
+ 	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_SPINODES)
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 8aca2cc173ac1..3da28271011d1 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -279,6 +279,7 @@ typedef struct xfs_mount {
+ #define XFS_FEAT_BIGTIME	(1ULL << 24)	/* large timestamps */
+ #define XFS_FEAT_NEEDSREPAIR	(1ULL << 25)	/* needs xfs_repair */
+ #define XFS_FEAT_NREXT64	(1ULL << 26)	/* large extent counters */
++#define XFS_FEAT_VERITY		(1ULL << 27)	/* fs-verity */
  
- static const struct vm_operations_struct xfs_file_vm_ops;
+ /* Mount features */
+ #define XFS_FEAT_NOATTR2	(1ULL << 48)	/* disable attr2 creation */
+@@ -342,6 +343,7 @@ __XFS_HAS_FEAT(inobtcounts, INOBTCNT)
+ __XFS_HAS_FEAT(bigtime, BIGTIME)
+ __XFS_HAS_FEAT(needsrepair, NEEDSREPAIR)
+ __XFS_HAS_FEAT(large_extent_counts, NREXT64)
++__XFS_HAS_FEAT(verity, VERITY)
  
-@@ -1170,9 +1171,16 @@ xfs_file_open(
- 	struct inode	*inode,
- 	struct file	*file)
- {
-+	int		error = 0;
-+
- 	if (xfs_is_shutdown(XFS_M(inode->i_sb)))
- 		return -EIO;
- 	file->f_mode |= FMODE_NOWAIT | FMODE_BUF_RASYNC | FMODE_BUF_WASYNC;
-+
-+	error = fsverity_file_open(inode, file);
-+	if (error)
-+		return error;
-+
- 	return generic_file_open(inode, file);
- }
- 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 8f1e9b9ed35d9..50c2c819ba940 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -45,6 +45,7 @@
- #include <linux/magic.h>
- #include <linux/fs_context.h>
- #include <linux/fs_parser.h>
-+#include <linux/fsverity.h>
- 
- static const struct super_operations xfs_super_operations;
- 
-@@ -647,6 +648,7 @@ xfs_fs_destroy_inode(
- 	ASSERT(!rwsem_is_locked(&inode->i_rwsem));
- 	XFS_STATS_INC(ip->i_mount, vn_rele);
- 	XFS_STATS_INC(ip->i_mount, vn_remove);
-+	fsverity_cleanup_inode(inode);
- 	xfs_inode_mark_reclaimable(ip);
- }
- 
+ /*
+  * Mount features
 -- 
 2.31.1
 
