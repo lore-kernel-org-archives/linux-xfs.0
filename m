@@ -2,87 +2,83 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D2D3C4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Dec 2022 17:55:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E33B9C4332F
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Dec 2022 18:19:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236101AbiLMRzV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Dec 2022 12:55:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36396 "EHLO
+        id S235645AbiLMSTV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Dec 2022 13:19:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229820AbiLMRzU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Dec 2022 12:55:20 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C21F22B13;
-        Tue, 13 Dec 2022 09:55:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=mV0qwzG31bTb5vj921caNZbXANVzA4Jj24SrJofjGtg=; b=WB5lO1TfVwVMiMjtTiqxdnuFTR
-        tYhqgd0ydjpA9ATz4zaVEn5+6xd0gBv0iChpT6jN8oSufw8R5pOF63rc5F38dNmgpG+lTceO3Uli1
-        xanQLhjYPbe9c8rJ+DpoEiMVvCKryY7vgdCb4TcXYA33fQtpH8X2IDx6CpYEErqM2lJX2wl58fncn
-        TzxiH7nTFfKM+RGmURlb3d4KCqeZgqJNjfSv48zK/lULJnVXd9j7KC3NZoCNlgOCvNKmjuNmftlie
-        NA+aU3phvyCTvQek2egp9fN/uxXMVUtjgfQscbzoJ1JcbGobfyYXHKwzWSU/gUSV39h8bT9tt2V02
-        sQ4sTpVQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1p59Uw-00CSBD-Dp; Tue, 13 Dec 2022 17:55:22 +0000
-Date:   Tue, 13 Dec 2022 17:55:22 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Andrey Albershteyn <aalbersh@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC PATCH 02/11] pagemap: add mapping_clear_large_folios()
- wrapper
-Message-ID: <Y5i8igBLu+6OQt8H@casper.infradead.org>
-References: <20221213172935.680971-1-aalbersh@redhat.com>
- <20221213172935.680971-3-aalbersh@redhat.com>
+        with ESMTP id S235025AbiLMSTV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Dec 2022 13:19:21 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58BE4210;
+        Tue, 13 Dec 2022 10:19:20 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 14A62B815B3;
+        Tue, 13 Dec 2022 18:19:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA7E0C433EF;
+        Tue, 13 Dec 2022 18:19:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1670955557;
+        bh=U7KEGHmRR40NvE6yDpb7nHyAevMxF/ypv1NEplKQMy8=;
+        h=Date:From:To:Cc:Subject:From;
+        b=G9NS5vyTldRekqD9Ia6bPmP3Nye0ujnvkL+hd9pzy/aXABKXeOLQIJOYo6Ut4Xq1A
+         n+JkVNfkB/jU+OrtxDc9xcVpHvwCwHTBmROlmH5XkgL21c5azDQCQm+oLM/S7XYjGL
+         bgcI35ePNXcwVB8FIjepUbiU4y6O3GvZ4Bb6iVThklUdZr3bNkZdWzsSzFHIxIq8kC
+         Y/GtxSwlT9xAnrL/oDTVChr3qVBift99UodHEInbNC86molsP1r2x3DjkVa7OMjWbz
+         xuvhAnIgK7qcZ0x3HXsmIj1wNmKscaKHpxZ+hjEcwUq4i55bxltsRbYqUVoQyn8FTY
+         H78ZA+obQXENw==
+Date:   Tue, 13 Dec 2022 10:19:17 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org, linux-kernel@vger.kernel.org,
+        torvalds@linux-foundation.org
+Cc:     bfoster@redhat.com, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: [GIT PULL] vfs: new code for 6.2
+Message-ID: <167095549511.1666109.751880057026708836.stg-ugh@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221213172935.680971-3-aalbersh@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 13, 2022 at 06:29:26PM +0100, Andrey Albershteyn wrote:
-> Add wrapper to clear mapping's large folio flag. This is handy for
-> disabling large folios on already existing inodes (e.g. future XFS
-> integration of fs-verity).
+Hi Linus,
 
-I have two problems with this.  One is your use of __clear_bit().
-We can use __set_bit() because it's done as part of initialisation.
-As far as I can tell from your patches, mapping_clear_large_folios() is
-called on a live inode, so you'd have to use clear_bit() to avoid races.
+Please pull this branch with changes for vfs for 6.2-rc1.
 
-The second is that verity should obviously be enhanced to support
-large folios (and for that matter, block sizes smaller than PAGE_SIZE).
-Without that, this is just a toy or a prototype.  Disabling large folios
-is not an option.
+As usual, I did a test-merge with the main upstream branch as of a few
+minutes ago, and didn't see any conflicts.  Please let me know if you
+encounter any problems.
 
-I'm happy to work with you to add support for large folios to verity.
-It hasn't been high priority for me, but I'm now working on folio support
-for bufferhead filesystems and this would probably fit in.
+The following changes since commit f0c4d9fc9cc9462659728d168387191387e903cc:
 
-> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> ---
->  include/linux/pagemap.h | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-> index bbccb40442224..63ca600bdf8f7 100644
-> --- a/include/linux/pagemap.h
-> +++ b/include/linux/pagemap.h
-> @@ -306,6 +306,11 @@ static inline void mapping_set_large_folios(struct address_space *mapping)
->  	__set_bit(AS_LARGE_FOLIO_SUPPORT, &mapping->flags);
->  }
->  
-> +static inline void mapping_clear_large_folios(struct address_space *mapping)
-> +{
-> +	__clear_bit(AS_LARGE_FOLIO_SUPPORT, &mapping->flags);
-> +}
-> +
->  /*
->   * Large folio support currently depends on THP.  These dependencies are
->   * being worked on but are not yet fixed.
-> -- 
-> 2.31.1
-> 
+Linux 6.1-rc4 (2022-11-06 15:07:11 -0800)
+
+are available in the Git repository at:
+
+git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/vfs-6.2-merge-1
+
+for you to fetch changes up to a79168a0c00d710420c1758f6c38df89e12f0763:
+
+fs/remap_range: avoid spurious writeback on zero length request (2022-11-30 08:41:01 -0800)
+
+----------------------------------------------------------------
+New VFS code for 6.2:
+
+- Make some minor adjustments to the remap range preparation function to
+skip file updates when the request length is adjusted downwards to
+zero.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+
+----------------------------------------------------------------
+Brian Foster (1):
+fs/remap_range: avoid spurious writeback on zero length request
+
+fs/remap_range.c | 7 ++-----
+1 file changed, 2 insertions(+), 5 deletions(-)
+
