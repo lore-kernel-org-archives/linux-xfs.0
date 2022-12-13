@@ -2,91 +2,154 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAB99C4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Dec 2022 21:10:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52CE3C4332F
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Dec 2022 21:40:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236073AbiLMVKQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Dec 2022 16:10:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58528 "EHLO
+        id S236408AbiLMVkx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Dec 2022 16:40:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235574AbiLMVKP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Dec 2022 16:10:15 -0500
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6F7A38A6
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 13:10:14 -0800 (PST)
-Received: by mail-pf1-x431.google.com with SMTP id 21so3095639pfw.4
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 13:10:14 -0800 (PST)
+        with ESMTP id S236318AbiLMVkw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Dec 2022 16:40:52 -0500
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF71A1A22B
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 13:40:51 -0800 (PST)
+Received: by mail-pj1-x1033.google.com with SMTP id n65-20020a17090a2cc700b0021bc5ef7a14so5028246pjd.0
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 13:40:51 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=hadOBlhZ0LgV9SDQeQd2Aydc95qiZ+JqtdMXDKY6ntw=;
-        b=r6mFUEuTxSGL6nPKeQaBsPNILzGlWE26+u0Qfep9+Rbkj1gUoWODw0dA8zTcoE/axO
-         ZhTWW5bdzr7h0ECnGwjYiKr5wYztGLebHMIexWD6d7PetIa1gDmC7wm3h+ixuK/OgJCM
-         yUHrp4FFmE7XYnykG29Hxh6DcP4+qGinpekWyhu6jYMhNay1kv+XSUCEC2r8phVP4/6d
-         QjyXPlCkioZ092OCeLhgF1W+7OhP0ukwawqoahPFtSQ+JRxwwB5EXj0W7S7H+IENfI+7
-         I4dtGJjRblP3mVv0X4m6ONiBx1/BC+MtXgBUjCjYsRxQ5BHO34UxNs5oPezGwYTkQtne
-         KqDw==
+        bh=WWOreJPQx5jt0V0oltby0KYxV6q8nWo5V1Bt/xC127M=;
+        b=l3oX1rtw3raFFroaEmbpolXxzpo6JcgJ+bqOf4pLeQUW6ghXrUi6UOP3xpqruOc1jB
+         bxr8dPt5qlTyWJ65qDnuHC3ULzcGuFq6yfcASRBD9z1O9NH4HCKvXJNQOiBbr28YysAm
+         vj8Hh54+a3/bpvZWE2zJm/y0agfbWTUPz280CRQJvLeIzmJDnbyydP7pFOI7Z4yzDlkB
+         F02q53UrxzdNkqr+PggEZFsLTnq3WwKrcnnGgsg+GPxxb5JIVSIMuFe0VXR/6N+2CKMv
+         Q+GTi8P9lBdE8FXXCqNeiZdo1N4itQwZo4fu4dxCQXnc6webZXclbTf2bbTUl2cfwrPm
+         Z5GA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=hadOBlhZ0LgV9SDQeQd2Aydc95qiZ+JqtdMXDKY6ntw=;
-        b=vyAXaYn6gfqzC0/SjZRbWmd8GFsPwEq6s1bQFgiPxX9keuvX81ddtUyqOLJveBvRI2
-         UIKoHSJt9QyLcDXSudB479jFrujSRviCEMqQvhjNjao5nEc755DB2Qzl/nnEdX7F4huq
-         m5/sMnQ6x3IHmwqrIqhl2BjnWUr1EeEvSw77kiU1ocuCyl/mIRYqCX15M0j9dS0gcUsR
-         ofMmREkiChBxf9LYSvjcE9llGKG+322Eexmpnlj1oKOynk4wd/MEzwwc6zoJB8jJUf9N
-         8gzXs0c25ttVVNYRCe5HFlqNPOKQ6Yt7G2QMK3fwCrK+ePb060Rnwlc56hPvi83kX4h5
-         h+uQ==
-X-Gm-Message-State: ANoB5pkTGb0+l69FfmY4l3fIbIku/ZOCdBDyq+FGjB+DA3x2tyR2/d1b
-        g7h0ahVqCqhwxE52nK8Yfw7zBg==
-X-Google-Smtp-Source: AA0mqf6o0CFF/uAYsJFXasGYiQ/c9HujQxHgJ2Zih6hOCbrcPL9R5Nc0LXOypClKLFSDHHMXmZbPdw==
-X-Received: by 2002:a62:7983:0:b0:577:8d87:d8f4 with SMTP id u125-20020a627983000000b005778d87d8f4mr22643807pfc.34.1670965813777;
-        Tue, 13 Dec 2022 13:10:13 -0800 (PST)
+        bh=WWOreJPQx5jt0V0oltby0KYxV6q8nWo5V1Bt/xC127M=;
+        b=6gKNtS3+uK094QSMMlrlBmc7YntjdPLt7mo5y+iBKAA6/KMbfzckzIrlHdI1ld3zEW
+         r5wKlbAV+hmJGzpqtQEbaMvokik64sGioWEOgzqOkBs7Kblf767hLVg4HK72djGzMuFu
+         x2lIxSMtlO8roV59flmy2iNfPtzBqy43LOo/2YiuoG4BbL6p4njQSfJMb2yuCUKrlwfz
+         1z78XjN243oJ/ba6tJgkccPQk/6fmplOhRUTTBXno7jbV3CNc45SpEJo+EU8Jss3hb4r
+         zosAo6XF+EQZHyA04+hBMfE54eAeeFFijgncIlmTOZvp0QqYMceAWV8U3tUBTvrOfvgV
+         +NtA==
+X-Gm-Message-State: ANoB5pkPwdcRQDxy4j3EEBvfgiOGZVPiU65SgpRJYMNi5DcYKkiJx11+
+        m9nsIexmmeLDGyRPa9oIGvq9Aw==
+X-Google-Smtp-Source: AA0mqf7nRdA9TjhwgmnelX9M4i3O367M3cDxRaiadXWXydAbqGuTYmSxzPwDrYF+IQtJE9Lx+ax+QQ==
+X-Received: by 2002:a17:902:f2ca:b0:189:ac49:fe9d with SMTP id h10-20020a170902f2ca00b00189ac49fe9dmr20556259plc.19.1670967651169;
+        Tue, 13 Dec 2022 13:40:51 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-138-158.pa.nsw.optusnet.com.au. [49.181.138.158])
-        by smtp.gmail.com with ESMTPSA id a197-20020a621ace000000b00574d8d64560sm8329302pfa.175.2022.12.13.13.10.13
+        by smtp.gmail.com with ESMTPSA id q13-20020a170902f34d00b001869581f7ecsm362068ple.116.2022.12.13.13.40.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 Dec 2022 13:10:13 -0800 (PST)
+        Tue, 13 Dec 2022 13:40:50 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1p5CXS-0085by-SF; Wed, 14 Dec 2022 08:10:10 +1100
-Date:   Wed, 14 Dec 2022 08:10:10 +1100
+        id 1p5D15-00867t-Rw; Wed, 14 Dec 2022 08:40:47 +1100
+Date:   Wed, 14 Dec 2022 08:40:47 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        Andrey Albershteyn <aalbersh@redhat.com>,
+Cc:     Andrey Albershteyn <aalbersh@redhat.com>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC PATCH 02/11] pagemap: add mapping_clear_large_folios()
- wrapper
-Message-ID: <20221213211010.GX3600936@dread.disaster.area>
+Subject: Re: [RFC PATCH 10/11] xfs: add fs-verity support
+Message-ID: <20221213214047.GY3600936@dread.disaster.area>
 References: <20221213172935.680971-1-aalbersh@redhat.com>
- <20221213172935.680971-3-aalbersh@redhat.com>
- <Y5i8igBLu+6OQt8H@casper.infradead.org>
- <Y5jTosRngrhzPoge@sol.localdomain>
+ <20221213172935.680971-11-aalbersh@redhat.com>
+ <Y5jNvXbW1cXGRPk2@sol.localdomain>
+ <20221213203319.GV3600936@dread.disaster.area>
+ <Y5jjC5kcF4kCiwNB@sol.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y5jTosRngrhzPoge@sol.localdomain>
+In-Reply-To: <Y5jjC5kcF4kCiwNB@sol.localdomain>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 13, 2022 at 11:33:54AM -0800, Eric Biggers wrote:
-> On Tue, Dec 13, 2022 at 05:55:22PM +0000, Matthew Wilcox wrote:
-> > I'm happy to work with you to add support for large folios to verity.
-> > It hasn't been high priority for me, but I'm now working on folio support
-> > for bufferhead filesystems and this would probably fit in.
+On Tue, Dec 13, 2022 at 12:39:39PM -0800, Eric Biggers wrote:
+> On Wed, Dec 14, 2022 at 07:33:19AM +1100, Dave Chinner wrote:
+> > On Tue, Dec 13, 2022 at 11:08:45AM -0800, Eric Biggers wrote:
+> > > On Tue, Dec 13, 2022 at 06:29:34PM +0100, Andrey Albershteyn wrote:
+> > > > 
+> > > > Also add check that block size == PAGE_SIZE as fs-verity doesn't
+> > > > support different sizes yet.
+> > > 
+> > > That's coming with
+> > > https://lore.kernel.org/linux-fsdevel/20221028224539.171818-1-ebiggers@kernel.org/T/#u,
+> > > which I'll be resending soon and I hope to apply for 6.3.
+> > > Review and testing of that patchset, along with its associated xfstests update
+> > > (https://lore.kernel.org/fstests/20221211070704.341481-1-ebiggers@kernel.org/T/#u),
+> > > would be greatly appreciated.
+> > > 
+> > > Note, as proposed there will still be a limit of:
+> > > 
+> > > 	merkle_tree_block_size <= fs_block_size <= page_size
+> > 
+> > > Hopefully you don't need fs_block_size > page_size or
+> > 
+> > Yes, we will.
+> > 
+> > This back on my radar now that folios have settled down. It's
+> > pretty trivial for XFS to do because we already support metadata
+> > block sizes > filesystem block size. Here is an old prototype:
+> > 
+> > https://lore.kernel.org/linux-xfs/20181107063127.3902-1-david@fromorbit.com/
 > 
-> I'd be very interested to know what else is needed after commit 98dc08bae678
-> ("fsverity: stop using PG_error to track error status") which is upstream now,
-> and
-> https://lore.kernel.org/linux-fsdevel/20221028224539.171818-1-ebiggers@kernel.org/T/#u
-> ("fsverity: support for non-4K pages") which is planned for 6.3.
+> As per my follow-up response
+> (https://lore.kernel.org/r/Y5jc7P1ZeWHiTKRF@sol.localdomain),
+> I now think that wouldn't actually be a problem.
 
-Did you change the bio interfaces to iterate a bvec full of
-variable sized folios, or does it still expect a bio to only have
-PAGE_SIZE pages attached to it?
+Good to hear.
+
+> > > merkle_tree_block_size > fs_block_size?
+> > 
+> > That's also a desirable addition.
+> > 
+> > XFS is using xattrs to hold merkle tree blocks so the merkle tree
+> > storage is are already independent of the filesystem block size and
+> > page cache limitations. Being able to using 64kB merkle tree blocks
+> > would be really handy for reducing the search depth and overall IO
+> > footprint of really large files.
+> 
+> Well, the main problem is that using a Merkle tree block of 64K would mean that
+> you can never read less than 64K at a time.
+
+Sure, but why does that matter?
+
+The typical cost of a 64kB IO is only about 5% more than a
+4kB IO, even on slow spinning storage.  However, we bring an order
+of magnitude more data into the cache with that IO, so we can then
+process more data before we have to go to disk again and take
+another latency hit.
+
+FYI, we have this large 64kB block size option for directories in
+XFS already - you can have a 4kB block size filesystem with a 64kB
+directory block size. The larger block size is a little slower for
+small directories because they have higher per-leaf block CPU
+processing overhead, but once you get to millions of records in a
+single directory or really high sustained IO load, the larger block
+size is *much* faster because the reduction in IO latency and search
+efficiency more than makes up for the single block CPU processing
+overhead...
+
+The merkle tree is little different - once we get into TB scale
+files, the merkle tree is indexing millions of individual records.
+At this point overall record lookup and IO efficiency dominates the
+data access time, not the amount of data each individual IO
+retreives from disk.
+
+Keep in mind that the block size used for the merkle tree would be a
+filesystem choice. If we have the capability to support 64kB
+merkle tree blocks, then XFS can make the choice of what block size
+to use at the point where we are measuring the file because we know
+how large the file is at that point. And because we're storing the
+merkle tree blocks in xattrs, we know exactly what block size the
+merkle tree data was stored in from the xattr metadata...
 
 Cheers,
 
