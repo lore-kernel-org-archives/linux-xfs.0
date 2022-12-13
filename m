@@ -2,41 +2,44 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E364C10F1B
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Dec 2022 19:45:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0713FC10F1B
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Dec 2022 19:45:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236495AbiLMTpQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Dec 2022 14:45:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48184 "EHLO
+        id S236692AbiLMTpT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Dec 2022 14:45:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235584AbiLMTpO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Dec 2022 14:45:14 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88AD2DFF6;
-        Tue, 13 Dec 2022 11:45:13 -0800 (PST)
+        with ESMTP id S236674AbiLMTpT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Dec 2022 14:45:19 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BC2A2494A;
+        Tue, 13 Dec 2022 11:45:18 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id D7E29CE1784;
-        Tue, 13 Dec 2022 19:45:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF7F5C433D2;
-        Tue, 13 Dec 2022 19:45:09 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C48F3B815B1;
+        Tue, 13 Dec 2022 19:45:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85B94C433EF;
+        Tue, 13 Dec 2022 19:45:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670960710;
-        bh=hvq8LGyDN5pS8eNftlJ1dMtKC2RlI2/Giihf0icM7Uw=;
-        h=Subject:From:To:Cc:Date:From;
-        b=UcO1ImSWlcObD0HTGoGRefIR13iZF9mT6S10R9+t4zYd5PDgxJPLJ6EocNXHr96bv
-         wJ1EehW+hf9Eby7qRJP0jOkp4aVaSlFBCmaLmT7u452xTKo+4Cmipf1MNdiJgEgVim
-         4It3eBx4c/EhMB663Uuhl7cV+Aj+UWaHB/1bpdpPlPicOsOsIaI85+I4TpF47EgZf3
-         fCjL3mqdODP6XFUtQtyd/m0wkHcNDCXVIgBovrOfTTxQ63jgpxqyQHaB9/ElqdFJn5
-         xPnXzmK/mjtUU3swx/76hLY0AzXsOy7t/sufdCWLROirRV+gUDkmQealZVqev/cLwo
-         Myga21Tm+tEEg==
-Subject: [PATCHSET 0/4] fstests: fix broken fuzzing xfs_mdrestore calls
+        s=k20201202; t=1670960715;
+        bh=NHGfY35oR8EUPomUFOSE8wOPn7JdR+FoqlMQtXdmSMU=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=uR9/DP7L2uDAqlVUE8aGfyK71vLzOJdmIR/l9imEqXd2k6JsUuvHZ1O5EgPf1KmSv
+         8obVemZkBv1voc52Y86Emv/15cXmCGI6jout3NwbTOuFFaHmHuK/8KqAS3T+f/9bSF
+         zR9pIk1AtvqfSiFefLTYDL/ONwDwQan/0SSahQgm8D4Wa4oB3PYKRad4cHuiHu8Xh1
+         tFPPItJIAkyLpf6v3Fp2ZI2NANJIHd9n8gameNH1wN5/hWI/dBdF818FP5YOS0Payy
+         XfXy//i00y+/hE4/1xUd42Fed0W4DBpKQadXJrPb5lWXnjKkE5cghrUiQbtk+j7xPf
+         h2HxPk+WP4e2w==
+Subject: [PATCH 1/4] common/populate: create helpers to handle restoring
+ metadumps
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, zlang@redhat.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 13 Dec 2022 11:45:09 -0800
-Message-ID: <167096070957.1750373.5715692265711468248.stgit@magnolia>
+Date:   Tue, 13 Dec 2022 11:45:15 -0800
+Message-ID: <167096071510.1750373.2221240504175764288.stgit@magnolia>
+In-Reply-To: <167096070957.1750373.5715692265711468248.stgit@magnolia>
+References: <167096070957.1750373.5715692265711468248.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -45,42 +48,94 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Back in 2021, I amended the xfs create-a-filesystem helper code to
-support the generation of compressed metadumps.  Unfortunately, I
-neglected to submit the other half of that code which detects a
-*compressed* metadump file and uses it, which means that the metadump
-caching used by all the xfs fuzz tests have been broken ever since, but
-only if DUMP_COMPRESSOR is set by the user.
+Refactor _scratch_populate_restore_cached so that the actual commands
+for restoring metadumps are filesystem-specific helpers.
 
-Fast-forward to 2022, and I noticed that fuzz tests runs would
-occasionally complain about POPULATE_METADUMP not pointing to a valid
-file if DUMP_COMPRESSOR is set, and no dump file exists, compressed or
-uncompressed.  After some curious looks from Zorro, I finally realized
-that POPULATE_METADUMP points to the uncompressed file, so checking for
-its existence is not correct.
-
-Hence port all the code that fixed mdrestore of compressed metadumps
-further down the patch stack, and fix the broken conditional to get
-things running again.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/ext4     |   21 +++++++++++++++++++++
- common/fuzzy    |    5 ++---
- common/populate |   15 ++-------------
- common/xfs      |   29 +++++++++++++++++++++++++++++
- tests/xfs/129   |    2 +-
- tests/xfs/234   |    2 +-
- tests/xfs/253   |    2 +-
- tests/xfs/284   |    2 +-
- tests/xfs/291   |    2 +-
- tests/xfs/336   |    2 +-
- tests/xfs/432   |    2 +-
- tests/xfs/503   |    8 ++++----
- 12 files changed, 65 insertions(+), 27 deletions(-)
+ common/ext4     |   10 ++++++++++
+ common/fuzzy    |    2 +-
+ common/populate |    4 ++--
+ common/xfs      |    9 +++++++++
+ 4 files changed, 22 insertions(+), 3 deletions(-)
+
+
+diff --git a/common/ext4 b/common/ext4
+index 4a2eaa157f..dc2e4e59cc 100644
+--- a/common/ext4
++++ b/common/ext4
+@@ -125,6 +125,16 @@ _ext4_metadump()
+ 		$DUMP_COMPRESSOR -f "$dumpfile" &>> "$seqres.full"
+ }
+ 
++_ext4_mdrestore()
++{
++	local metadump="$1"
++	local device="$2"
++	shift; shift
++	local options="$@"
++
++	$E2IMAGE_PROG $options -r "${metadump}" "${SCRATCH_DEV}"
++}
++
+ # this test requires the ext4 kernel support crc feature on scratch device
+ #
+ _require_scratch_ext4_crc()
+diff --git a/common/fuzzy b/common/fuzzy
+index 2d688fd27b..fad79124e5 100644
+--- a/common/fuzzy
++++ b/common/fuzzy
+@@ -159,7 +159,7 @@ __scratch_xfs_fuzz_mdrestore()
+ 	test -e "${POPULATE_METADUMP}" || _fail "Need to set POPULATE_METADUMP"
+ 
+ 	__scratch_xfs_fuzz_unmount
+-	$XFS_MDRESTORE_PROG "${POPULATE_METADUMP}" "${SCRATCH_DEV}"
++	_xfs_mdrestore "${POPULATE_METADUMP}" "${SCRATCH_DEV}"
+ }
+ 
+ __fuzz_notify() {
+diff --git a/common/populate b/common/populate
+index 6e00499734..f382c40aca 100644
+--- a/common/populate
++++ b/common/populate
+@@ -861,7 +861,7 @@ _scratch_populate_restore_cached() {
+ 
+ 	case "${FSTYP}" in
+ 	"xfs")
+-		$XFS_MDRESTORE_PROG "${metadump}" "${SCRATCH_DEV}"
++		_xfs_mdrestore "${metadump}" "${SCRATCH_DEV}"
+ 		res=$?
+ 		test $res -ne 0 && return $res
+ 
+@@ -876,7 +876,7 @@ _scratch_populate_restore_cached() {
+ 		return $res
+ 		;;
+ 	"ext2"|"ext3"|"ext4")
+-		$E2IMAGE_PROG -r "${metadump}" "${SCRATCH_DEV}"
++		_ext4_mdrestore "${metadump}" "${SCRATCH_DEV}"
+ 		ret=$?
+ 		test $ret -ne 0 && return $ret
+ 
+diff --git a/common/xfs b/common/xfs
+index f466d2c42f..27d6ac84e3 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -638,6 +638,15 @@ _xfs_metadump() {
+ 	return $res
+ }
+ 
++_xfs_mdrestore() {
++	local metadump="$1"
++	local device="$2"
++	shift; shift
++	local options="$@"
++
++	$XFS_MDRESTORE_PROG $options "${metadump}" "${device}"
++}
++
+ # Snapshot the metadata on the scratch device
+ _scratch_xfs_metadump()
+ {
 
