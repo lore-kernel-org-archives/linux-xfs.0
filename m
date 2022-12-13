@@ -2,424 +2,105 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5857DC4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Dec 2022 17:31:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1A89C4332F
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Dec 2022 17:44:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235962AbiLMRb5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Dec 2022 12:31:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49202 "EHLO
+        id S236149AbiLMRoh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Dec 2022 12:44:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236355AbiLMRas (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Dec 2022 12:30:48 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55A5A23159
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 09:29:52 -0800 (PST)
+        with ESMTP id S236311AbiLMRoZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Dec 2022 12:44:25 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3A9D205F5
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 09:43:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1670952591;
+        s=mimecast20190719; t=1670953426;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=7AcOPhjBNP3YYrMH1MpqCjdI1yvhV6rSsFzQUZOjVA4=;
-        b=HCAdOtqgvacJlmz5RDVuH8rOFKWP1xAll4afd7NCuXeGvMlDGvd3avZLoLaK6Xs7NPYHp3
-        VIm0y/3Qh6Ob2LgHzSU1b8/54D+LC7K19VQJx/FW4l5AWvZFnNT360gGErq/fFnDwMIEtd
-        Bv0ULfkxfD4lF6IbTuARoJMdTTcz3CA=
-Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
- [209.85.208.72]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=hq1k1DYaSlNwrW9zUpeSaQNVENAlTPEkQgzrv3qXyjs=;
+        b=WPqmNmYTH/CIRvXwv/ZH5yLa1JqcAmJT0+zl+4L1YuPe8HKFiBvu07qNl9Nf27Wv4kfvT5
+        hi45QIjNF1+IzZO1j3isx5ZP2WanvcQ3Fl0t+ZnrHeIIk6RleP98EQt5Rc4SPt52/n36eU
+        hBm7oXtx8e9j2dw+iirC2YGCzQLzOU4=
+Received: from mail-il1-f200.google.com (mail-il1-f200.google.com
+ [209.85.166.200]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-642-bSmQohenPSiXc5DjpgqjBg-1; Tue, 13 Dec 2022 12:29:50 -0500
-X-MC-Unique: bSmQohenPSiXc5DjpgqjBg-1
-Received: by mail-ed1-f72.google.com with SMTP id w15-20020a05640234cf00b0046d32d7b153so7610364edc.0
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 09:29:49 -0800 (PST)
+ us-mta-135-AQhUTZAwMZOL_D-qZqU0og-1; Tue, 13 Dec 2022 12:43:45 -0500
+X-MC-Unique: AQhUTZAwMZOL_D-qZqU0og-1
+Received: by mail-il1-f200.google.com with SMTP id s4-20020a056e02216400b00304cd64ce20so1220408ilv.6
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 09:43:44 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=7AcOPhjBNP3YYrMH1MpqCjdI1yvhV6rSsFzQUZOjVA4=;
-        b=S4S/jQf/6JEKz0yWbGz3OloI1MbDUm4rOPpQz94akHlxz+y7FAYYUjX0l956dboRRC
-         +chqQ05JVGweZu3xGTXBd8wJVyTaedu9f0zRx24qYnqtdhpXxapkE35XQ0w4vmcLLLbx
-         vtDPKbhdvs5m+78XjqsXgUtG3by0upTI12y8FCSkLdq6uh4RpFTlvzGaiK8UxG/i9pZs
-         HziNRrxuplG2+fpqQl3uwNpHp1F+ib5sEpzJ1en31soXWP/8K0MrVEIxU4zgWdmh59P1
-         HFzoDT25syDy28JBpTt2IUhJaFn2rA7dsC95ljyvC62Ikf9n4+u9Bc7HtKKuRGp3tOtN
-         rgdg==
-X-Gm-Message-State: ANoB5pnL7JRfn64fgvXDD36+HjXzgUoT+mbq44jQtkbpTNHOVEvJxURG
-        YPlAcv9226+N8vRcRnEbo3U7kVW4hw8Xm1BHWun6XbTelTv8KzaQr0X1weKMbkX9+UpuL4k4ROA
-        w25VLL7EwF9fPlobcmFmfCzz5t4ESm6iCXYwNyRadX5Wi1DhhBwxGhbHXzhDjjpA+6Bw5/NQ=
-X-Received: by 2002:a05:6402:294d:b0:45c:cd16:aeae with SMTP id ed13-20020a056402294d00b0045ccd16aeaemr17634095edb.13.1670952588801;
-        Tue, 13 Dec 2022 09:29:48 -0800 (PST)
-X-Google-Smtp-Source: AA0mqf7g+f81AoDPxBBSymiyRRy+EhAfrPjPqsbZz/ctE8vnernSk7jZGWtN7Vj8WarlzeMC5phV4A==
-X-Received: by 2002:a05:6402:294d:b0:45c:cd16:aeae with SMTP id ed13-20020a056402294d00b0045ccd16aeaemr17634066edb.13.1670952588390;
-        Tue, 13 Dec 2022 09:29:48 -0800 (PST)
-Received: from aalbersh.remote.csb ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id ec14-20020a0564020d4e00b0047025bf942bsm1204187edb.16.2022.12.13.09.29.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 Dec 2022 09:29:47 -0800 (PST)
-From:   Andrey Albershteyn <aalbersh@redhat.com>
-To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Cc:     Andrey Albershteyn <aalbersh@redhat.com>
-Subject: [RFC PATCH 10/11] xfs: add fs-verity support
-Date:   Tue, 13 Dec 2022 18:29:34 +0100
-Message-Id: <20221213172935.680971-11-aalbersh@redhat.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20221213172935.680971-1-aalbersh@redhat.com>
-References: <20221213172935.680971-1-aalbersh@redhat.com>
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=hq1k1DYaSlNwrW9zUpeSaQNVENAlTPEkQgzrv3qXyjs=;
+        b=tB2W6q52sD71uKgsfOdh6EVF2ZkMMZcAp9efbFtAiPrfHfM808EyV3dC5zVJOEGRS/
+         iN1YbCCgbqxl5MUsY3nbZlYwyE3CxlXBJunec4Qd9Igmm+eQ5IAVoWqQbBCZJTmgspJU
+         IOmbUX7Zp9vRZEMbSMKKXiRDkNmhtu9C+VAdOTXfq+fvBWQgJBoX0lEUASK1edL2AqOn
+         DXeoSH3MFSVHPxjUsyaonsuq40waneLfU4mshEFEUSSlOQ8woESS6MsUpP/PUes9Vz5c
+         OuSoPTwVaVEWEwSo6MSBg93KJ+C0PHvbtZjCvwzMiMzxycAWDVVMmgiIRmZSjDVTCJI+
+         8niA==
+X-Gm-Message-State: ANoB5plVtXj4vYxlPhh7Pcsd423DQIM9AjHpuNKA4UlSMLHxiMNqUeGE
+        5UIJKeU10O5xjDFjjCofUGR+d32Uyz0kJZZbBOYr2QMTWdQW/CICrVAaRV1T7LfNbiK2zsd6JSq
+        gexE4HzKu0DpvfIm1RtA4
+X-Received: by 2002:a6b:4e0e:0:b0:6ca:d145:9e with SMTP id c14-20020a6b4e0e000000b006cad145009emr11512665iob.14.1670953423869;
+        Tue, 13 Dec 2022 09:43:43 -0800 (PST)
+X-Google-Smtp-Source: AA0mqf7jwqunq+jXYvfeI1EBTbH77VZw3KgSksjImP+PYOQQp2A2JolwObRQQo3oDc6GvazHHd0Pww==
+X-Received: by 2002:a6b:4e0e:0:b0:6ca:d145:9e with SMTP id c14-20020a6b4e0e000000b006cad145009emr11512654iob.14.1670953423571;
+        Tue, 13 Dec 2022 09:43:43 -0800 (PST)
+Received: from [10.0.0.146] (sandeen.net. [63.231.237.45])
+        by smtp.gmail.com with ESMTPSA id l20-20020a0566022dd400b006dfbfec899esm583737iow.28.2022.12.13.09.43.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 13 Dec 2022 09:43:43 -0800 (PST)
+Message-ID: <733b882c-30fc-eea0-db01-55d25f272d92@redhat.com>
+Date:   Tue, 13 Dec 2022 11:43:42 -0600
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.5.1
+Subject: Re: [RFC PATCH 03/11] xfs: add attribute type for fs-verity
+Content-Language: en-US
+To:     Andrey Albershteyn <aalbersh@redhat.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+References: <20221213172935.680971-1-aalbersh@redhat.com>
+ <20221213172935.680971-4-aalbersh@redhat.com>
+From:   Eric Sandeen <sandeen@redhat.com>
+In-Reply-To: <20221213172935.680971-4-aalbersh@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Add integration with fs-verity. The XFS store fs-verity metadata in
-the extended attributes. The metadata consist of verity descriptor
-and Merkle tree pages.
+On 12/13/22 11:29 AM, Andrey Albershteyn wrote:
+> The Merkle tree pages and descriptor are stored in the extended
+> attributes of the inode. Add new attribute type for fs-verity
+> metadata. Skip fs-verity attributes for getfattr as it can not parse
+> binary page names.
+> 
+> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
 
-The descriptor is stored under "verity_descriptor" extended
-attribute. The Merkle tree pages are stored under binary indexes.
 
-When fs-verity is enabled on an inode, the XFS_IVERITY flag is set
-meaning that the Merkle tree is being build. Then, pagecache is
-flushed and large folios are disabled as these aren't yet supported
-by fs-verity. This is done in xfs_begin_enable_verity() to make sure
-that fs-verity operations on the inode don't populate cache with
-large folios during a tree build. The initialization ends with
-storing of verity descriptor and setting inode on-disk flag
-(XFS_DIFLAG2_VERITY).
+>  DECLARE_EVENT_CLASS(xfs_attr_list_class,
+> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+> index 5b57f6348d630..acbfa29d04af0 100644
+> --- a/fs/xfs/xfs_xattr.c
+> +++ b/fs/xfs/xfs_xattr.c
+> @@ -237,6 +237,9 @@ xfs_xattr_put_listent(
+>  	if (flags & XFS_ATTR_PARENT)
+>  		return;
+>  
+> +	if (flags & XFS_ATTR_VERITY)
+> +		return;
+> +
 
-Also add check that block size == PAGE_SIZE as fs-verity doesn't
-support different sizes yet.
+Just a nitpick, but now that there are already 2 cases like this, I wonder
+if it would be wise to #define something like an XFS_ATTR_VISIBLE_MASK
+(or maybe XFS_ATTR_INTERNAL_MASK) and use that to decide, rather than
+testing each one individually?
 
-Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
----
- fs/xfs/Makefile          |   1 +
- fs/xfs/libxfs/xfs_attr.c |   8 ++
- fs/xfs/xfs_inode.h       |   1 +
- fs/xfs/xfs_super.c       |  10 ++
- fs/xfs/xfs_verity.c      | 203 +++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_verity.h      |  19 ++++
- 6 files changed, 242 insertions(+)
- create mode 100644 fs/xfs/xfs_verity.c
- create mode 100644 fs/xfs/xfs_verity.h
-
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 42d0496fdad7d..5afa8ae5b3b7f 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -131,6 +131,7 @@ xfs-$(CONFIG_XFS_POSIX_ACL)	+= xfs_acl.o
- xfs-$(CONFIG_SYSCTL)		+= xfs_sysctl.o
- xfs-$(CONFIG_COMPAT)		+= xfs_ioctl32.o
- xfs-$(CONFIG_EXPORTFS_BLOCK_OPS)	+= xfs_pnfs.o
-+xfs-$(CONFIG_FS_VERITY)		+= xfs_verity.o
- 
- # notify failure
- ifeq ($(CONFIG_MEMORY_FAILURE),y)
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 57080ea4c869b..42013fc99b76a 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -26,6 +26,7 @@
- #include "xfs_trace.h"
- #include "xfs_attr_item.h"
- #include "xfs_xattr.h"
-+#include "xfs_verity.h"
- 
- struct kmem_cache		*xfs_attr_intent_cache;
- 
-@@ -1632,6 +1633,13 @@ xfs_attr_namecheck(
- 		return xfs_verify_pptr(mp, (struct xfs_parent_name_rec *)name);
- 	}
- 
-+	if (flags & XFS_ATTR_VERITY) {
-+		if (length != sizeof(__be64) &&
-+				length != XFS_VERITY_DESCRIPTOR_NAME_LEN)
-+			return false;
-+		return true;
-+	}
-+
- 	return xfs_str_attr_namecheck(name, length);
- }
- 
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 5735de32beebd..070631adac572 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -325,6 +325,7 @@ static inline bool xfs_inode_has_large_extent_counts(struct xfs_inode *ip)
-  * plain old IRECLAIMABLE inode.
-  */
- #define XFS_INACTIVATING	(1 << 13)
-+#define XFS_IVERITY		(1 << 14) /* merkle tree is in progress */
- 
- /* All inode state flags related to inode reclaim. */
- #define XFS_ALL_IRECLAIM_FLAGS	(XFS_IRECLAIMABLE | \
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 50c2c819ba940..a3c89d2c06a8a 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -41,6 +41,7 @@
- #include "xfs_attr_item.h"
- #include "xfs_xattr.h"
- #include "xfs_iunlink_item.h"
-+#include "xfs_verity.h"
- 
- #include <linux/magic.h>
- #include <linux/fs_context.h>
-@@ -1469,6 +1470,9 @@ xfs_fs_fill_super(
- 	sb->s_quota_types = QTYPE_MASK_USR | QTYPE_MASK_GRP | QTYPE_MASK_PRJ;
- #endif
- 	sb->s_op = &xfs_super_operations;
-+#ifdef CONFIG_FS_VERITY
-+	sb->s_vop = &xfs_verity_ops;
-+#endif
- 
- 	/*
- 	 * Delay mount work if the debug hook is set. This is debug
-@@ -1669,6 +1673,12 @@ xfs_fs_fill_super(
- 		xfs_alert(mp,
- 	"EXPERIMENTAL parent pointer feature enabled. Use at your own risk!");
- 
-+	if (xfs_has_verity(mp) && mp->m_super->s_blocksize != PAGE_SIZE) {
-+		xfs_alert(mp,
-+			"Cannot use fs-verity with block size != PAGE_SIZE");
-+		goto out_filestream_unmount;
-+	}
-+
- 	error = xfs_mountfs(mp);
- 	if (error)
- 		goto out_filestream_unmount;
-diff --git a/fs/xfs/xfs_verity.c b/fs/xfs/xfs_verity.c
-new file mode 100644
-index 0000000000000..112a72d0b0ca7
---- /dev/null
-+++ b/fs/xfs/xfs_verity.c
-@@ -0,0 +1,203 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (C) 2022 Red Hat, Inc.
-+ */
-+#include "xfs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_da_format.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_inode.h"
-+#include "xfs_attr.h"
-+#include "xfs_verity.h"
-+#include "xfs_bmap_util.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+
-+static int
-+xfs_get_verity_descriptor(
-+	struct inode		*inode,
-+	void			*buf,
-+	size_t			buf_size)
-+{
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	int			error = 0;
-+	struct xfs_da_args	args = {
-+		.dp		= ip,
-+		.attr_filter	= XFS_ATTR_VERITY,
-+		.name		= (const uint8_t *)XFS_VERITY_DESCRIPTOR_NAME,
-+		.namelen	= XFS_VERITY_DESCRIPTOR_NAME_LEN,
-+		.valuelen	= buf_size,
-+	};
-+
-+	error = xfs_attr_get(&args);
-+	if (error)
-+		return error;
-+
-+	if (buf_size == 0)
-+		return args.valuelen;
-+
-+	if (args.valuelen > buf_size) {
-+		kmem_free(args.value);
-+		return -ERANGE;
-+	}
-+
-+	memcpy(buf, args.value, buf_size);
-+
-+	kmem_free(args.value);
-+	return args.valuelen;
-+}
-+
-+static int
-+xfs_begin_enable_verity(
-+	struct file	    *filp)
-+{
-+	struct inode	    *inode = file_inode(filp);
-+	struct xfs_inode    *ip = XFS_I(inode);
-+	int		    error = 0;
-+
-+	if (IS_DAX(inode))
-+		return -EINVAL;
-+
-+	if (xfs_iflags_test(ip, XFS_IVERITY))
-+		return -EBUSY;
-+	xfs_iflags_set(ip, XFS_IVERITY);
-+
-+	/*
-+	 * As fs-verity doesn't support multi-page folios yet, flush everything
-+	 * from page cache and disable it
-+	 */
-+	filemap_invalidate_lock(inode->i_mapping);
-+
-+	inode_dio_wait(inode);
-+	error = xfs_flush_unmap_range(ip, 0, XFS_ISIZE(ip));
-+	if (error)
-+		goto out;
-+	mapping_clear_large_folios(inode->i_mapping);
-+
-+out:
-+	filemap_invalidate_unlock(inode->i_mapping);
-+	if (error)
-+		xfs_iflags_clear(ip, XFS_IVERITY);
-+	return error;
-+}
-+
-+static int
-+xfs_end_enable_verity(
-+	struct file		*filp,
-+	const void		*desc,
-+	size_t			desc_size,
-+	u64			merkle_tree_size)
-+{
-+	struct inode		*inode = file_inode(filp);
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_trans	*tp;
-+	struct xfs_da_args	args = {
-+		.dp		= ip,
-+		.whichfork	= XFS_ATTR_FORK,
-+		.attr_filter	= XFS_ATTR_VERITY,
-+		.attr_flags	= XATTR_CREATE,
-+		.name		= (const uint8_t *)XFS_VERITY_DESCRIPTOR_NAME,
-+		.namelen	= XFS_VERITY_DESCRIPTOR_NAME_LEN,
-+		.value		= (void *)desc,
-+		.valuelen	= desc_size,
-+	};
-+	int			error = 0;
-+
-+	/* fs-verity failed, just cleanup */
-+	if (desc == NULL) {
-+		mapping_set_large_folios(inode->i_mapping);
-+		goto out;
-+	}
-+
-+	error = xfs_attr_set(&args);
-+	if (error)
-+		goto out;
-+
-+	/* Set fsverity inode flag */
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ichange, 0, 0, 0, &tp);
-+	if (error)
-+		goto out;
-+
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-+
-+	ip->i_diflags2 |= XFS_DIFLAG2_VERITY;
-+	inode->i_flags |= S_VERITY;
-+
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	error = xfs_trans_commit(tp);
-+
-+out:
-+	if (error)
-+		mapping_set_large_folios(inode->i_mapping);
-+
-+	xfs_iflags_clear(ip, XFS_IVERITY);
-+	return error;
-+}
-+
-+static struct page *
-+xfs_read_merkle_tree_page(
-+	struct inode		*inode,
-+	pgoff_t			index,
-+	unsigned long		num_ra_pages)
-+{
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	struct page		*page;
-+	__be64			name = cpu_to_be64(index);
-+	struct xfs_da_args	args = {
-+		.dp		= ip,
-+		.attr_filter	= XFS_ATTR_VERITY,
-+		.name		= (const uint8_t *)&name,
-+		.namelen	= sizeof(__be64),
-+		.valuelen	= PAGE_SIZE,
-+	};
-+	int			error = 0;
-+
-+	error = xfs_attr_get(&args);
-+	if (error)
-+		return ERR_PTR(-EFAULT);
-+
-+	page = alloc_page(GFP_KERNEL);
-+	if (!page)
-+		return ERR_PTR(-ENOMEM);
-+
-+	memcpy(page_address(page), args.value, args.valuelen);
-+
-+	kmem_free(args.value);
-+	return page;
-+}
-+
-+static int
-+xfs_write_merkle_tree_block(
-+	struct inode		*inode,
-+	const void		*buf,
-+	u64			index,
-+	int			log_blocksize)
-+{
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	__be64			name = cpu_to_be64(index);
-+	struct xfs_da_args	args = {
-+		.dp		= ip,
-+		.whichfork	= XFS_ATTR_FORK,
-+		.attr_filter	= XFS_ATTR_VERITY,
-+		.attr_flags	= XATTR_CREATE,
-+		.name		= (const uint8_t *)&name,
-+		.namelen	= sizeof(__be64),
-+		.value		= (void *)buf,
-+		.valuelen	= 1 << log_blocksize,
-+	};
-+
-+	return xfs_attr_set(&args);
-+}
-+
-+const struct fsverity_operations xfs_verity_ops = {
-+	.begin_enable_verity = &xfs_begin_enable_verity,
-+	.end_enable_verity = &xfs_end_enable_verity,
-+	.get_verity_descriptor = &xfs_get_verity_descriptor,
-+	.read_merkle_tree_page = &xfs_read_merkle_tree_page,
-+	.write_merkle_tree_block = &xfs_write_merkle_tree_block,
-+};
-diff --git a/fs/xfs/xfs_verity.h b/fs/xfs/xfs_verity.h
-new file mode 100644
-index 0000000000000..ae5d87ca32a86
---- /dev/null
-+++ b/fs/xfs/xfs_verity.h
-@@ -0,0 +1,19 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (C) 2022 Red Hat, Inc.
-+ */
-+#ifndef __XFS_VERITY_H__
-+#define __XFS_VERITY_H__
-+
-+#include <linux/fsverity.h>
-+
-+#define XFS_VERITY_DESCRIPTOR_NAME "verity_descriptor"
-+#define XFS_VERITY_DESCRIPTOR_NAME_LEN 17
-+
-+#ifdef CONFIG_FS_VERITY
-+extern const struct fsverity_operations xfs_verity_ops;
-+#else
-+#define xfs_verity_ops NULL
-+#endif	/* CONFIG_FS_VERITY */
-+
-+#endif	/* __XFS_VERITY_H__ */
--- 
-2.31.1
+Thanks,
+-Eric
 
