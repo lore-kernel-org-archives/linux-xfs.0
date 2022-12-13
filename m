@@ -2,273 +2,334 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FBEAC4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Dec 2022 12:32:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED528C4332F
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Dec 2022 15:20:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229999AbiLMMcx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Dec 2022 07:32:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44526 "EHLO
+        id S235030AbiLMPUL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Dec 2022 10:20:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54362 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230032AbiLMMcw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Dec 2022 07:32:52 -0500
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CAB8E000
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 04:32:48 -0800 (PST)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 2BDBwxBo002866;
-        Tue, 13 Dec 2022 12:32:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=uKr9w63ZYFqsXDhuGG0wMYkhdMgz/HYexizYGyGVJIQ=;
- b=caHmhm912dPIGkWCEAoYym6goVrPmiUuuGy//p3FbNubJUKyf0yKJHFRsEZAfAyN7ecC
- I4NONWsCXk56i1HTbpPCd9/DcYuonOdN64mvQO+r9jC+1skyk3xT5k0BFuujd28fjZEB
- F7uUCLDN7jIOCY1uLD4BvJUwUFFfbKbEmb1WUjImwutnc99S0B5p1lvVJtfuaHnPd8EK
- MJJTzdHaZsdGBT0lWhcjHEqYnLrJosurun2nGW7NyLClzh5c7HIc5Y86ImYdbS1Rin0a
- Mpozt4I5ZUxLBUf5iaqjx28Q0IJ0D5cu1f/uVF16/fUrtq7GJQIkdw+KlSmu6NvaLwFG eA== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3mchqsw78j-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 13 Dec 2022 12:32:44 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 2BDBYTaQ009275;
-        Tue, 13 Dec 2022 12:32:43 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2104.outbound.protection.outlook.com [104.47.58.104])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3mcgj5kjr2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 13 Dec 2022 12:32:43 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=L9fekBSPzzH+cH+G5XDm+h/fZZIHVu4uEoQ6A8DUv66781UpteYAWvQ9VR1HfKa8ig1pm0KRYdAIqHs4amgPWWz8XFO/ukeSsV+2fo+vQExMG4DAraJtYWoumUoEFwzlzAyGFGM2JcUm85pPi3lqa3cZErh7RbsUBKCtgIGEV6D74wfBQuNsoHElmeb0dF8pDstQMTxjNCtjSgCfWUhcO27LZKHyrBOHLQP+rBXEr9StL0LEeT0IfINSD2fQ0691jjdjVvoaO5rTNz66FZ/4PvnzK26i642IPnYFv2kV+Lq58PwPTYB0jrL5cvxdfe+Mk4uM2C8m5dmZh7Wdi9OOeA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=uKr9w63ZYFqsXDhuGG0wMYkhdMgz/HYexizYGyGVJIQ=;
- b=jBIDej0luGPUUaK2t4ya2V8a+YKzmlfDAZ3Xxm2Bt1zEpSJCmp4YmyAGe+2cOvX0JbRJnBQvIQbHsUjc3z7Jg0eRV7RNi/km27vUhe54ZSK5pYCIzI0NpzXGn2HNPfWn7/XGRYfZ4V3YJzHOIRq2aoeKr1OzHmYMtrwO8Gwzni0cppxMSVAnJ5D7BRQapaWCoGH3kkhHR7MuC28jFbY2AWRHO6tJjqpI1JWePzANELmt2EM6pyCBuIN5LV1pFm6gZT86R/SpX/SFPBvVui07k10yp6hOxZqoXl1Dbc3sIM8yf4vhVbMb9HEJJvbj60qGihFtvJfB4iugF7752PId2Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=uKr9w63ZYFqsXDhuGG0wMYkhdMgz/HYexizYGyGVJIQ=;
- b=y1FxbKXjn7WyPI+CvSU/CuiRMHcFmD4/CJSD9+4cE7fSV9pkb4pGGyAm2Px6rceS7Tg/VNzrg1Lx6vqFFjczDCoPyhpzS65PcWgQx8qwSRUuMLGBzObVNEX9hU2TgwNU4uA+gcVyN1K3PL/+h2aBsuvxdZfSE0Bf+6+ecR3t22k=
-Received: from MWHPR10MB1486.namprd10.prod.outlook.com (2603:10b6:300:24::13)
- by PH0PR10MB5730.namprd10.prod.outlook.com (2603:10b6:510:148::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5880.19; Tue, 13 Dec
- 2022 12:32:41 +0000
-Received: from MWHPR10MB1486.namprd10.prod.outlook.com
- ([fe80::fe5c:7287:5e2d:4194]) by MWHPR10MB1486.namprd10.prod.outlook.com
- ([fe80::fe5c:7287:5e2d:4194%10]) with mapi id 15.20.5880.019; Tue, 13 Dec
- 2022 12:32:41 +0000
-From:   Srikanth C S <srikanth.c.s@oracle.com>
-To:     Carlos Maiolino <cem@kernel.org>
-CC:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        Darrick Wong <darrick.wong@oracle.com>,
-        Rajesh Sivaramasubramaniom 
-        <rajesh.sivaramasubramaniom@oracle.com>,
-        Junxiao Bi <junxiao.bi@oracle.com>,
-        "david@fromorbit.com" <david@fromorbit.com>
-Subject: RE: [External] : Re: [PATCH v3] fsck.xfs: mount/umount xfs fs to
- replay log before running xfs_repair
-Thread-Topic: [External] : Re: [PATCH v3] fsck.xfs: mount/umount xfs fs to
- replay log before running xfs_repair
-Thread-Index: AQHY/wVBvROg5/0DFkCHIEtc3i5PT65rr5oAgAAuw4A=
-Date:   Tue, 13 Dec 2022 12:32:41 +0000
-Message-ID: <MWHPR10MB14869C35BE8213C7BFA3AC3DA3E39@MWHPR10MB1486.namprd10.prod.outlook.com>
-References: <NdSU2Rq0FpWJ3II4JAnJNk-0HW5bns_UxhQ03sSOaek-nu9QPA-ZMx0HDXFtVx8ahgKhWe0Wcfh13NH0ZSwJjg==@protonmail.internalid>
- <20221123063050.208-1-srikanth.c.s@oracle.com>
- <20221213093940.2ibze6idpozpthrd@andromeda>
-In-Reply-To: <20221213093940.2ibze6idpozpthrd@andromeda>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: MWHPR10MB1486:EE_|PH0PR10MB5730:EE_
-x-ms-office365-filtering-correlation-id: a0d2c198-1824-42e1-2bc9-08dadd062084
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: bXWjleUCKvk7+l/4ujHnwMxrSKF0F+YbfNQnTBwbQ1PXQ7hORrLfhFyntzvytyPa1+npVVb/h+Xu1a6fVb9KtCC0xTv32FkIOIJsVBkl3oaSBP8Vrq/kPGsPYuLmY9frdixpxFV6w0SXgjf8jSDALJLrErzPiy27JbLboeYav6H7zY6lDYDvQymW8FTtAXFaloWFHRmTUu7DxQLe+qZ7l4ywlHzZ08m3AggCYnbne6ty3xMoBZrI/WGbG0bTq4WFs8bfmnH/iLg2SRJpgTX00FWxBxVBUPJJPsukIQ+wsIRq6NWwyiQlkaHCuJQO/Mvd+/d0JwaVWo/pt1TJaW2THMEaKLhRtSGWP2yxmThdv01+75HgI6PLWfOR2WRf2yglcMkCn/+WWsx3Zo3BFu97pUUXAdaAUpI8BmLl2K6mX/T4RXx5dr6ujEJ49GFdBS1BaM0Nl3l0oZjwQQRRXIX3AgJm0/PGSt9oHL2XKmNKsvGM5dDShZh0Kn/g0TkLatQvntttATILtDRIKBkv3WINXp2cgN1eewnhLfYZLAc2378uBHe5zChbNMazwYq0zMijWrDC17LZ8NPTr68+EuJ72ZHEqfFb+fEYDwG96gMsU1t+XTxK3Wli9ITA62+qkLJwiP+3RaGmP6tcijkWvKNuTC5/3AifZ+SODaqIg1lHYiZWaMTyD93k3Z5Dz/QJOsER0p59DkeZD2eGeu3vFqoKLQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR10MB1486.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(376002)(346002)(366004)(136003)(39860400002)(396003)(451199015)(55016003)(66946007)(86362001)(6506007)(6916009)(26005)(33656002)(9686003)(7696005)(54906003)(186003)(478600001)(41300700001)(83380400001)(2906002)(8936002)(52536014)(5660300002)(66556008)(38100700002)(4326008)(66446008)(66476007)(71200400001)(76116006)(64756008)(316002)(38070700005)(8676002)(122000001)(53546011);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?fSN4EBHAgEnzd9R2VtPbIRtPOMP+nwBet4XFB3ocSFy7ArqglkwcjYLG2LL8?=
- =?us-ascii?Q?QOCEfRCWvYlUP+3Yuwnhc42SDdk+kNfUWtYd17cInjdwTCec7ZsdapQpQr+4?=
- =?us-ascii?Q?Ct7izri97/3tnfZLOp5syVLS7DcfnXX4g14a55nfXRi5G5y6UqvHy94u3as9?=
- =?us-ascii?Q?bq7c8tsjDA9PZ/V6rQdz4NrlL6fB2zH8sX7j1QOXU84fnVbZ8EiabFHqZ6e+?=
- =?us-ascii?Q?eoMJfxC4ygFnTsN9sBz4+ziRSJgRbxzKY713G5/KZ0uOPa0toze2BruSW6od?=
- =?us-ascii?Q?NO7fYa2R3nvBZJkXP8Sw6zNoXu/JDcJIyzexEBFLQdAwVtyLzdcOfI82hdhQ?=
- =?us-ascii?Q?zWRKzWyjJw6PEC9NSHmRD560J7QmnsjdRZaRNw7ZK4hAuTWI1dcLkAeAPNkt?=
- =?us-ascii?Q?HrIK/lQZCuagv/LvSlo3irQ6XvJsinhgrYG9ABHuEf8BeBS0k+AWnkUK4kAA?=
- =?us-ascii?Q?Q8ywEISHfMY/fDlaNrQwNwu6826yy0JcL7QtHH3UUjgcnkpWkT/msi4a29ZC?=
- =?us-ascii?Q?wL4kWBFrX3ogKFQ7Glm2cRHo/xZrOVjzxH+ajxVCek0tXqe91zvLiiMOIKho?=
- =?us-ascii?Q?27Xg2QkXKQHLQp7vRFHFdTnrCm1nz0rtUqCxsQKNBHPLYGD+ZmMOPoBit844?=
- =?us-ascii?Q?BRYKUSzsg2xN7ztrneKztzH0j4gQYd2kLCmG8V0gIVNASG8P+/wvqYVW8xzp?=
- =?us-ascii?Q?vfsxWiKyEFpIdvm2bNiFneaFXKlIbna8N49RmXjoOtyzN2pVGvJr/Dbw0Ex9?=
- =?us-ascii?Q?LaTQ5me+M0hZ/NYQjszyCnpqnt+k38Sps4Es31EJ9DRO8FHkL5YKMdExyTo6?=
- =?us-ascii?Q?IaBWc/AElYhJ+imR1OOtlS32jDQ6KwaPzCy6mK+5C3vj4I3ahIyBny6XPaBO?=
- =?us-ascii?Q?FE1GbJSR/+aYyxb81gFd53IAQgZLrhz0xkRvPhwUMEy43AZ5lpKsgCrSRoid?=
- =?us-ascii?Q?QupzihmMsFSl6xoAVztlRbyeLyFXXYsvQrJu67x2VK4qiaU7/houDmGO52s+?=
- =?us-ascii?Q?nAyzkpwT1N+CNKIEx36cq//3m/PuEHI2L7WIvuyFS24IV2U6DVlDWTsWB0Qn?=
- =?us-ascii?Q?5pLtoduquVk3ooGwJ5XdI/SXw0eEw9HMQbMeRWEh792349BV0VRZuBu/pJr8?=
- =?us-ascii?Q?rjcW6TwcMezTFPiWW+6Z64bwL7B7EBEvKl5atRFuM2L0rFS8PMixf/2uRsSE?=
- =?us-ascii?Q?BWuqwz4aKLV3Jj61SWinJrsfAq1E25Agk8axeMDLMKnrjmH2a2c/vm7ZgQzE?=
- =?us-ascii?Q?BnFnxsVnBAKsq0nhz1t+hPSYip+qwTmEU7XmrfE223wWopplT/FwCowFvqhi?=
- =?us-ascii?Q?MF1ywXDPz9ZBVmGTP4XrSLapyj66WJI4rACAA0eTiYzedhgIApeJHQFeaAw9?=
- =?us-ascii?Q?ZcG5sWlocFm+vDVcia4gC9xHEP32zEn+mHnYeRmdDsEZ/5s1dvah1x2uh1HS?=
- =?us-ascii?Q?ehoN5JgLBzY5GWvBQNxzHO5Au1AYOtiCCVwcnPgAcdCVY010Js+YWloMscpD?=
- =?us-ascii?Q?mzmiM3f190xgWXwD0fr4eOaeZOJacvTscyq+aGPBK3fVnWxwWBh12kPVPA+Q?=
- =?us-ascii?Q?ySlyzCocoEvmjM8fBlQt9I/iUfKF4CAwAxUpLcVz?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S236091AbiLMPUD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Dec 2022 10:20:03 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07CD6205CE
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 07:19:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1670944751;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=C1ntaThQV1vrlsYkFdp61j4SoO2vy5wkj3XY/vEMOo0=;
+        b=D/oXS4H+4poP0zSojKtVTqWM5latbTZkdrrnJdZP6Zyn6Di9W3emnKP5NQaXTdIwI8c7+5
+        epll8jJNwx4T321rC3VsLhwaHNIwS4nbNGy8lBmg8QXJ0CEdqT8JnbKf0gjni20XfgvCF8
+        Oze6qvdxQVtDwSkWTDOsoJA6ZVbI5fU=
+Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com
+ [209.85.219.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-374-i-uiuUW2OT-BC0K6y-1StA-1; Tue, 13 Dec 2022 10:18:45 -0500
+X-MC-Unique: i-uiuUW2OT-BC0K6y-1StA-1
+Received: by mail-qv1-f71.google.com with SMTP id kl19-20020a056214519300b004e174020eebso4830320qvb.23
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 07:18:45 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=C1ntaThQV1vrlsYkFdp61j4SoO2vy5wkj3XY/vEMOo0=;
+        b=gwtTDwOXyGUqBV5OyI32AFB7GKVcBVgVJi1RszDnD1ZbPWxEOUHE8I9jn7ZVAxjDHV
+         4ZJqNEemtRFDLwQbNX27n1JanjUDDJ9GMBXzp7vhhBEu3BQ4eDK7FxDH92uCVtVzZRKf
+         geaCvL+Va4s6DMxKvdD++WkpZE76bjvc8+dNNJ7EIjmUUtHx4nJgmia/4xL6tUg0pNbU
+         Gfhtwwv5Q1y+Jg/N00JEu81ap8OuRAZUL2y17rVHLXz3pi9/Ub/67/B8wdM0NJpMc0C6
+         Y4SGnkBTPANmDNofbxmVR8uxxqXIi57l4d4hvSSzS3iWujR9rHKG20wyo+f5rYgB8qQn
+         F/Aw==
+X-Gm-Message-State: ANoB5pnBRlgALaMSgcQ9d9xuc+tu5ka5w6t/0RMwQJ28abRBRaXY6bAA
+        oBSFVV64kCVPdmC+P1R5v7vXdrEUq0bx2a8QUeV3VYaVvZkMwThoLDHRDKCslB7jUTyrFo9UJNz
+        Tzil0K9ylnXxpbpV7mwnN
+X-Received: by 2002:a05:622a:4114:b0:3a5:2031:f22a with SMTP id cc20-20020a05622a411400b003a52031f22amr24236038qtb.25.1670944723865;
+        Tue, 13 Dec 2022 07:18:43 -0800 (PST)
+X-Google-Smtp-Source: AA0mqf4G2+5Lr74P4zNKtxpd6ek0F6IjDvnj6h1yOn1FGFZCcDrWL7cGghlNNJnF+cq8rE/cXCU9BQ==
+X-Received: by 2002:a05:622a:4114:b0:3a5:2031:f22a with SMTP id cc20-20020a05622a411400b003a52031f22amr24236015qtb.25.1670944723434;
+        Tue, 13 Dec 2022 07:18:43 -0800 (PST)
+Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
+        by smtp.gmail.com with ESMTPSA id t16-20020a05622a01d000b0039cb59f00fcsm33621qtw.30.2022.12.13.07.18.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 13 Dec 2022 07:18:42 -0800 (PST)
+Date:   Tue, 13 Dec 2022 10:18:48 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH] [RFC] iomap: zeroing needs to be pagecache aware
+Message-ID: <Y5iX2Ilw1JrUU47z@bfoster>
+References: <20221201005214.3836105-1-david@fromorbit.com>
 MIME-Version: 1.0
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MWHPR10MB1486.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a0d2c198-1824-42e1-2bc9-08dadd062084
-X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Dec 2022 12:32:41.0796
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 4Pl1CLZJVwqI/UmPCkKgQgM5/tVQOAiFhbcD/S7LARBgnBgXvnQJt++oqFH2oY/SbThdkGw2nobTpyj9QHyoqg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB5730
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.923,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2022-12-13_03,2022-12-13_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0
- adultscore=0 bulkscore=0 spamscore=0 suspectscore=0 mlxlogscore=999
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2210170000 definitions=main-2212130110
-X-Proofpoint-ORIG-GUID: XmSw_IE9fqnEWXo61HH8xBguQQ_C1053
-X-Proofpoint-GUID: XmSw_IE9fqnEWXo61HH8xBguQQ_C1053
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221201005214.3836105-1-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Thu, Dec 01, 2022 at 11:52:14AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Unwritten extents can have page cache data over the range being
+> zeroed so we can't just skip them entirely. Fix this by checking for
+> an existing dirty folio over the unwritten range we are zeroing
+> and only performing zeroing if the folio is already dirty.
+> 
+> XXX: how do we detect a iomap containing a cow mapping over a hole
+> in iomap_zero_iter()? The XFS code implies this case also needs to
+> zero the page cache if there is data present, so trigger for page
+> cache lookup only in iomap_zero_iter() needs to handle this case as
+> well.
+> 
 
+I think iomap generally would report the COW mapping in srcmap for that
+case. The problem I suspect is that if XFS sees a hole in the data fork
+for an IOMAP_ZERO operation, it doesn't bother checking the COW fork at
+all and just returns the data fork hole. That probably needs to be
+reworked to perform IOMAP_ZERO lookups similar to those for a normal
+buffered write, otherwise iomap_zero_range() would fail to zero in the
+particular case where a COW prealloc might overlap a hole.
 
-> -----Original Message-----
-> From: Carlos Maiolino <cem@kernel.org>
-> Sent: 13 December 2022 03:10 PM
-> To: Srikanth C S <srikanth.c.s@oracle.com>
-> Cc: linux-xfs@vger.kernel.org; Darrick Wong <darrick.wong@oracle.com>;
-> Rajesh Sivaramasubramaniom <rajesh.sivaramasubramaniom@oracle.com>;
-> Junxiao Bi <junxiao.bi@oracle.com>; david@fromorbit.com
-> Subject: [External] : Re: [PATCH v3] fsck.xfs: mount/umount xfs fs to rep=
-lay
-> log before running xfs_repair
->=20
-> Hi Srikanth.
->=20
-> On Wed, Nov 23, 2022 at 12:00:50PM +0530, Srikanth C S wrote:
-> > After a recent data center crash, we had to recover root filesystems
-> > on several thousands of VMs via a boot time fsck. Since these machines
-> > are remotely manageable, support can inject the kernel command line
-> > with 'fsck.mode=3Dforce fsck.repair=3Dyes' to kick off xfs_repair if th=
-e
-> > machine won't come up or if they suspect there might be deeper issues
-> > with latent errors in the fs metadata, which is what they did to try
-> > to get everyone running ASAP while anticipating any future problems.
-> > But, fsck.xfs does not address the journal replay in case of a crash.
-> >
-> > fsck.xfs does xfs_repair -e if fsck.mode=3Dforce is set. It is possible
-> > that when the machine crashes, the fs is in inconsistent state with
-> > the journal log not yet replayed. This can drop the machine into the
-> > rescue shell because xfs_fsck.sh does not know how to clean the log.
-> > Since the administrator told us to force repairs, address the
-> > deficiency by cleaning the log and rerunning xfs_repair.
-> >
-> > Run xfs_repair -e when fsck.mode=3Dforce and repair=3Dauto or yes.
-> > Replay the logs only if fsck.mode=3Dforce and fsck.repair=3Dyes. For ot=
-her
-> > option -fa and -f drop to the rescue shell if repair detects any
-> > corruptions.
-> >
-> > Signed-off-by: Srikanth C S <srikanth.c.s@oracle.com>
-> > ---
-> >  fsck/xfs_fsck.sh | 31 +++++++++++++++++++++++++++++--
-> >  1 file changed, 29 insertions(+), 2 deletions(-)
->=20
-> Did you by any chance wrote this patch on top of something else you have =
-in
-> your tree?
->=20
-> It doesn't apply to the tree without tweaking it, and the last changes we=
-'ve in
-> the fsck/xfs_fsck.sh file are from 2018, so I assume you have something
-> before this patch in your tree.
->=20
-Sorry for the inconvenience, will verify this.
+Either way, I agree with the followon point that the iomap map
+naming/reporting wrt to COW is far too confusing to keep straight.
 
-> Could you please rebase this patch against xfsprogs for-next and resend i=
-t?
-> Feel free to keep my RwB as long as you don't change the code semantics.
->=20
-Let me rebase the patch and resend it. Thanks for the Reviewed by.
+> Before:
+> 
+> $ time sudo ./pwrite-trunc /mnt/scratch/foo 50000
+> path /mnt/scratch/foo, 50000 iters
+> 
+> real    0m14.103s
+> user    0m0.015s
+> sys     0m0.020s
+> 
+> $ sudo strace -c ./pwrite-trunc /mnt/scratch/foo 50000
+> path /mnt/scratch/foo, 50000 iters
+> % time     seconds  usecs/call     calls    errors syscall
+> ------ ----------- ----------- --------- --------- ----------------
+>  85.90    0.847616          16     50000           ftruncate
+>  14.01    0.138229           2     50000           pwrite64
+> ....
+> 
+> After:
+> 
+> $ time sudo ./pwrite-trunc /mnt/scratch/foo 50000
+> path /mnt/scratch/foo, 50000 iters
+> 
+> real    0m0.144s
+> user    0m0.021s
+> sys     0m0.012s
+> 
+> $ sudo strace -c ./pwrite-trunc /mnt/scratch/foo 50000
+> path /mnt/scratch/foo, 50000 iters
+> % time     seconds  usecs/call     calls    errors syscall
+> ------ ----------- ----------- --------- --------- ----------------
+>  53.86    0.505964          10     50000           ftruncate
+>  46.12    0.433251           8     50000           pwrite64
+> ....
+> 
+> Yup, we get back all the performance.
+> 
+> As for the "mmap write beyond EOF" data exposure aspect
+> documented here:
+> 
+> https://lore.kernel.org/linux-xfs/20221104182358.2007475-1-bfoster@redhat.com/
+> 
+> With this command:
+> 
+> $ sudo xfs_io -tfc "falloc 0 1k" -c "pwrite 0 1k" \
+>   -c "mmap 0 4k" -c "mwrite 3k 1k" -c "pwrite 32k 4k" \
+>   -c fsync -c "pread -v 3k 32" /mnt/scratch/foo
+> 
+> Before:
+> 
+> wrote 1024/1024 bytes at offset 0
+> 1 KiB, 1 ops; 0.0000 sec (34.877 MiB/sec and 35714.2857 ops/sec)
+> wrote 4096/4096 bytes at offset 32768
+> 4 KiB, 1 ops; 0.0000 sec (229.779 MiB/sec and 58823.5294 ops/sec)
+> 00000c00:  58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58  XXXXXXXXXXXXXXXX
+> 00000c10:  58 58 58 58 58 58 58 58 58 58 58 58 58 58 58 58  XXXXXXXXXXXXXXXX
+> read 32/32 bytes at offset 3072
+> 32.000000 bytes, 1 ops; 0.0000 sec (568.182 KiB/sec and 18181.8182 ops/sec
+> 
+> After:
+> 
+> wrote 1024/1024 bytes at offset 0
+> 1 KiB, 1 ops; 0.0000 sec (40.690 MiB/sec and 41666.6667 ops/sec)
+> wrote 4096/4096 bytes at offset 32768
+> 4 KiB, 1 ops; 0.0000 sec (150.240 MiB/sec and 38461.5385 ops/sec)
+> 00000c00:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> 00000c10:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> read 32/32 bytes at offset 3072
+> 32.000000 bytes, 1 ops; 0.0000 sec (558.036 KiB/sec and 17857.1429 ops/sec)
+> 
+> We see that this post-eof unwritten extent dirty page zeroing is
+> working correctly.
+> 
+> This has passed through most of fstests on a couple of test VMs
+> without issues at the moment, so I think this approach to fixing the
+> issue is going to be solid once we've worked out how to detect the
+> COW-hole mapping case.
+> 
 
-> Cheers.
->=20
-> >
-> > diff --git a/fsck/xfs_fsck.sh b/fsck/xfs_fsck.sh index
-> > 6af0f22..62a1e0b 100755
-> > --- a/fsck/xfs_fsck.sh
-> > +++ b/fsck/xfs_fsck.sh
-> > @@ -31,10 +31,12 @@ repair2fsck_code() {
-> >
-> >  AUTO=3Dfalse
-> >  FORCE=3Dfalse
-> > +REPAIR=3Dfalse
-> >  while getopts ":aApyf" c
-> >  do
-> >         case $c in
-> > -       a|A|p|y)        AUTO=3Dtrue;;
-> > +       a|A|p)          AUTO=3Dtrue;;
-> > +       y)              REPAIR=3Dtrue;;
-> >         f)              FORCE=3Dtrue;;
-> >         esac
-> >  done
-> > @@ -64,7 +66,32 @@ fi
-> >
-> >  if $FORCE; then
-> >         xfs_repair -e $DEV
-> > -       repair2fsck_code $?
-> > +       error=3D$?
-> > +       if [ $error -eq 2 ] && [ $REPAIR =3D true ]; then
-> > +               echo "Replaying log for $DEV"
-> > +               mkdir -p /tmp/repair_mnt || exit 1
-> > +               for x in $(cat /proc/cmdline); do
-> > +                       case $x in
-> > +                               root=3D*)
-> > +                                       ROOT=3D"${x#root=3D}"
-> > +                               ;;
-> > +                               rootflags=3D*)
-> > +                                       ROOTFLAGS=3D"-o ${x#rootflags=
-=3D}"
-> > +                               ;;
-> > +                       esac
-> > +               done
-> > +               test -b "$ROOT" || ROOT=3D$(blkid -t "$ROOT" -o device)
-> > +               if [ $(basename $DEV) =3D $(basename $ROOT) ]; then
-> > +                       mount $DEV /tmp/repair_mnt $ROOTFLAGS || exit 1
-> > +               else
-> > +                       mount $DEV /tmp/repair_mnt || exit 1
-> > +               fi
-> > +               umount /tmp/repair_mnt
-> > +               xfs_repair -e $DEV
-> > +               error=3D$?
-> > +               rm -d /tmp/repair_mnt
-> > +       fi
-> > +       repair2fsck_code $error
-> >         exit $?
-> >  fi
-> >
-> > --
-> > 1.8.3.1
->=20
-> --
-> Carlos Maiolino
+Does fstests currently have any coverage for zero range operations over
+multiple folios? I'm not sure that it does. I suspect the reason this
+problem went undetected for so long is that the primary uses of zero
+range (i.e. falloc) always flush and invalidate the range. The only
+exceptions that I'm aware of are the eof boundary handling scenarios in
+XFS (i.e. write past eof, truncate), and those typically only expect to
+handle a single folio at the eof block.
 
-Thanks,
-Srikanth
+Given there's also no test cases for the historical and subtle stale
+data exposure problems with this code, I suspect we'd want to come up
+with at least one test case that has the ability to effectively stress
+new zero range logic. Perhaps fallocate zero range could elide the cache
+flush/inval? Even if that were just an occasional/random debug mode
+thing, that would add some fsx coverage from the various associated
+tests, which would be better than what we have now.
+
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/iomap/buffered-io.c | 50 +++++++++++++++++++++++++++++++++++-------
+>  fs/xfs/xfs_iops.c      | 12 +---------
+>  2 files changed, 43 insertions(+), 19 deletions(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 356193e44cf0..0969e4525507 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+...
+> @@ -791,7 +796,7 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+>  			break;
+>  		}
+>  
+> -		status = iomap_write_begin(iter, pos, bytes, &folio);
+> +		status = iomap_write_begin(iter, pos, bytes, &folio, FGP_CREAT);
+>  		if (unlikely(status))
+>  			break;
+>  		if (iter->iomap.flags & IOMAP_F_STALE)
+
+Not necessarily related to this patch, but this looks like it creates a
+bit of a negative feedback loop for buffered writes. I.e., a streaming
+buffered write workload performs delayed allocation, XFS converts
+delalloc to unwritten extents, writeback comes in behind and converts
+unwritten extents in ioend batch size chunks, each extent conversion
+updates the data fork sequence number and leads to spurious
+invalidations on subsequent writes. I don't know if that will ever lead
+to enough of a hit that it might be observable on a real workload, or
+otherwise if it can just be chalked up to being like any other
+background work that comes as a side effect of user operations (i.e.
+balance dirty pages, writeback, etc.).
+
+Just out of curiosity and to explore potential worst case
+characteristics, I ran a quick test to spin up a bunch of background
+flushers of a file while doing a larger streaming write. This seems able
+to trigger a 40-50% drop in buffered write throughput compared to the
+same workload without stale iomap detection, fwiw. Obviously that is not
+testing a sane workload, but probably something to keep in mind if
+somebody happens to observe/report that sort of behavior in the near
+future.
+
+...
+> @@ -1158,9 +1167,20 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+>  		size_t offset;
+>  		size_t bytes = min_t(u64, SIZE_MAX, length);
+>  
+> -		status = iomap_write_begin(iter, pos, bytes, &folio);
+> -		if (status)
+> +		status = iomap_write_begin(iter, pos, bytes, &folio, fgp);
+> +		if (status) {
+> +			if (status == -ENODATA) {
+> +				/*
+> +				 * No folio was found, so skip to the start of
+> +				 * the next potential entry in the page cache
+> +				 * and continue from there.
+> +				 */
+> +				if (bytes > PAGE_SIZE - offset_in_page(pos))
+> +					bytes = PAGE_SIZE - offset_in_page(pos);
+> +				goto loop_continue;
+> +			}
+
+I don't think this logic is safe because nothing prevents folio eviction
+between the mapping lookup and folio lookup. So if there's a dirty folio
+over an unwritten extent, iomap looks up the unwritten extent, and the
+folio writes back and is evicted before this lookup, we skip zeroing
+data on disk when we shouldn't. That reintroduces a variant of the stale
+data exposure vector the flush in xfs_setattr_size() is intended to
+prevent.
+
+If we wanted to use stale iomap detection for this purpose, one possible
+approach might be to try and support a revalidation check outside of
+locked folio context (because there's no guarantee one will exist for a
+mapping that might have become stale). With something like that
+available, uncached ranges would just have to be revalidated before they
+can be tracked as processed by the iter. That might not be too much
+trouble to do here since I think the existing stale check (if a folio is
+found) would indirectly validate any preceding uncached range. The iter
+function would just have to process the 'written' count appropriately
+and handle the added scenario where an uncached range must be directly
+revalidated.
+
+Brian
+
+>  			return status;
+> +		}
+>  		if (iter->iomap.flags & IOMAP_F_STALE)
+>  			break;
+>  
+> @@ -1168,6 +1188,19 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+>  		if (bytes > folio_size(folio) - offset)
+>  			bytes = folio_size(folio) - offset;
+>  
+> +		/*
+> +		 * If the folio over an unwritten extent is clean, then we
+> +		 * aren't going to touch the data in it at all. We don't want to
+> +		 * mark it dirty or change the uptodate state of data in the
+> +		 * page, so we just unlock it and skip to the next range over
+> +		 * the unwritten extent we need to check.
+> +		 */
+> +		if (srcmap->type == IOMAP_UNWRITTEN &&
+> +		    !folio_test_dirty(folio)) {
+> +			folio_unlock(folio);
+> +			goto loop_continue;
+> +		}
+> +
+>  		folio_zero_range(folio, offset, bytes);
+>  		folio_mark_accessed(folio);
+>  
+> @@ -1175,6 +1208,7 @@ static loff_t iomap_zero_iter(struct iomap_iter *iter, bool *did_zero)
+>  		if (WARN_ON_ONCE(bytes == 0))
+>  			return -EIO;
+>  
+> +loop_continue:
+>  		pos += bytes;
+>  		length -= bytes;
+>  		written += bytes;
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 2e10e1c66ad6..d7c2f8c49f94 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -839,17 +839,7 @@ xfs_setattr_size(
+>  		trace_xfs_zero_eof(ip, oldsize, newsize - oldsize);
+>  		error = xfs_zero_range(ip, oldsize, newsize - oldsize,
+>  				&did_zeroing);
+> -	} else {
+> -		/*
+> -		 * iomap won't detect a dirty page over an unwritten block (or a
+> -		 * cow block over a hole) and subsequently skips zeroing the
+> -		 * newly post-EOF portion of the page. Flush the new EOF to
+> -		 * convert the block before the pagecache truncate.
+> -		 */
+> -		error = filemap_write_and_wait_range(inode->i_mapping, newsize,
+> -						     newsize);
+> -		if (error)
+> -			return error;
+> +	} else if (newsize != oldsize) {
+>  		error = xfs_truncate_page(ip, newsize, &did_zeroing);
+>  	}
+>  
+> -- 
+> 2.38.1
+> 
+
