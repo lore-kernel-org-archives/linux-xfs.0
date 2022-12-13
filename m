@@ -2,63 +2,70 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09714C4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Dec 2022 19:34:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2747C4332F
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Dec 2022 19:39:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236538AbiLMTeA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Dec 2022 14:34:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43438 "EHLO
+        id S235545AbiLMTjk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Dec 2022 14:39:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235640AbiLMTd6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Dec 2022 14:33:58 -0500
+        with ESMTP id S234940AbiLMTjj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Dec 2022 14:39:39 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 817A0B868;
-        Tue, 13 Dec 2022 11:33:57 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F31C8205D8
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 11:39:38 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1CCD5614D7;
-        Tue, 13 Dec 2022 19:33:57 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 650E1C433EF;
-        Tue, 13 Dec 2022 19:33:56 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8EAF761715
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 19:39:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0DA8C433D2;
+        Tue, 13 Dec 2022 19:39:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670960036;
-        bh=xDfy76WPvUiI9NW5O+KVtoaGIA40PH1420HVharcVJo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Lyaf1iEKludQzosSQ3j8HJEPqdRGtqXE39wA2C6/dXhDF6R1uEdcX8DqS/QaZ6wLx
-         La1Wo4sOxDCJOvQX2WdIcU+EN6JVjnkZdbY+SOs9VT5kh00zyq4MAi/LCp3COTvPhP
-         Pxx3L9ZceTyFGLkmjslB0vAWAGB8VsqTiyqpwVGQaGKKjGfbKZmYYJP2gBExoNyKJN
-         aqzz1i+AQGZDYEQ7t/QDjCPOJ0Z0BM3Fm8KBaBTBT11inlSs5oE29/1bRlOhCDGoA2
-         ilS6c7lcmowi7OTTB/Dm1zmNcqC9ULjZAIAWj3muC8HgFJDTYDwr4DbPlCjJYfAS0Y
-         BuR5cNxLxUqYg==
-Date:   Tue, 13 Dec 2022 11:33:54 -0800
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Andrey Albershteyn <aalbersh@redhat.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC PATCH 02/11] pagemap: add mapping_clear_large_folios()
- wrapper
-Message-ID: <Y5jTosRngrhzPoge@sol.localdomain>
-References: <20221213172935.680971-1-aalbersh@redhat.com>
- <20221213172935.680971-3-aalbersh@redhat.com>
- <Y5i8igBLu+6OQt8H@casper.infradead.org>
+        s=k20201202; t=1670960377;
+        bh=WnnvQ9VslpdNLKwyfIt96BDuCFl1UWuypAhtlW+KW4c=;
+        h=Subject:From:To:Cc:Date:From;
+        b=Qo+iLPEJumtqU+8i+3FkYLbxA7QUXIddZgz/Bt9UwCJ5ICSOwMHjWORVnpTMZw0wp
+         iSPFT4b2hU8Ww1SK1QsCMqt6gZnD6QOTrLp+yO5DSpk0t5/2qHCMu5lvR3lCysSdRf
+         htKDM2f3FcRE260O9h5KN1ixeASnDSPxX5Axw4B6btt25wDRZa8mlHwsDhhpVJVyQf
+         CF62YBqw60g7ejxiBTpIXLp0LSfkGzroiYUCpLlgYfsiCR4qYDBz05VZO2hvo/5KtD
+         uSTa/AKBDOYs3oQv9NI31x6VXUMA/C3KGqSMrCmsFTdY+iQ2tZsiFOmVkW5sM6vhmN
+         fhnOYxAUfT1Kg==
+Subject: [PATCHSET 0/2] xfsprogs: random fixes for 6.1, part 2
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org, cem@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Date:   Tue, 13 Dec 2022 11:39:37 -0800
+Message-ID: <167096037742.1739636.10785934352963408920.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y5i8igBLu+6OQt8H@casper.infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 13, 2022 at 05:55:22PM +0000, Matthew Wilcox wrote:
-> I'm happy to work with you to add support for large folios to verity.
-> It hasn't been high priority for me, but I'm now working on folio support
-> for bufferhead filesystems and this would probably fit in.
+Hi all,
 
-I'd be very interested to know what else is needed after commit 98dc08bae678
-("fsverity: stop using PG_error to track error status") which is upstream now,
-and
-https://lore.kernel.org/linux-fsdevel/20221028224539.171818-1-ebiggers@kernel.org/T/#u
-("fsverity: support for non-4K pages") which is planned for 6.3.
+This is the second rollup of all the random fixes I've collected for
+xfsprogs 6.1.
 
-- Eric
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=xfsprogs-fixes-6.1
+---
+ db/btblock.c |   70 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ db/btblock.h |    6 +++++
+ db/field.c   |    8 +++++++
+ db/field.h   |    4 +++
+ db/type.c    |    6 ++---
+ io/fsmap.c   |    4 ++-
+ 6 files changed, 93 insertions(+), 5 deletions(-)
+
