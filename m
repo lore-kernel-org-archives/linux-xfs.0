@@ -2,71 +2,114 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7326CC46467
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Dec 2022 22:45:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 502E2C4167B
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Dec 2022 22:45:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229564AbiLNWpo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Dec 2022 17:45:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36348 "EHLO
+        id S229572AbiLNWpq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Dec 2022 17:45:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36364 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229446AbiLNWpn (ORCPT
+        with ESMTP id S229484AbiLNWpn (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Dec 2022 17:45:43 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 307B8B1CA;
-        Wed, 14 Dec 2022 14:45:42 -0800 (PST)
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19A72FCED;
+        Wed, 14 Dec 2022 14:45:43 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B8BE261C36;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A1B6661C3C;
+        Wed, 14 Dec 2022 22:45:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E012AC433D2;
         Wed, 14 Dec 2022 22:45:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC9F9C433D2;
-        Wed, 14 Dec 2022 22:45:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671057941;
-        bh=7p0zl/jG1hqhXufm5ECGwbi68i+bng+vFDX0eMjfN3M=;
-        h=From:To:Cc:Subject:Date:From;
-        b=HxY4DkrK0t2KL6AL8sKo0g2/D5iAe7VQX6OgGC3naPJVeEJEV6nNQkqY4gA+y4cG4
-         gJGQq9GoJ/u4/1J/gXYwiqWYgnehjQRd9NKijW3cnM2uSb/F6RDuwR1Skv1zS0A6HW
-         gkuPB4XmVHPXs8BE/CVtQoj8yF1j+c/cv7x+NFxNuki/F9En1mCKFgcQDZ3CZrT1Nx
-         /b7rMYC79Jr3KYvp6jJ/CCn/BgY3vjp7qtKuph7wffB+XuS7en6bA8g+qxgVRdENLQ
-         S23YmDznCogG6eONQt+xTuPW6tFpluup/Da3+Ih2MFxxbPsAtWf9AHNlGeWUcpaI35
-         FHHlEcITf4ptQ==
+        s=k20201202; t=1671057942;
+        bh=s8dg1vvBSOe1uFDb6X0c7Lo1qJtF6A37tS92++ok0e0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=XtUriyDzkRFPg4njwQjjGG6jpMpkutiINigs/Wv2bMtLBVzTvcSX4F5DkYlXNiZOt
+         zLA9iiJCMQ3dst+01fJVh6ksPbvnjoWW5M6UXO2N5jNXTZQB2Wb2dC12IRz+7yv0yf
+         AywvCVZfvh/7oc0LOlOccnongCuLUyuDFOp/joMg6Yo9JnskD4c6R9CtRAIdUtb79e
+         291m10yspAAJpN2MO+vco+K2vsZBOX/bmAIDYE9shLc5qmXFi4PSEfZ2HUeyS5Y0On
+         5VGX6RdU1ac8VCy/Lm+g1FHyrRbL4CBEVPNT7GdB2vjS0VkzmVcAohXGzFklXzqf1K
+         vLLQDWD25QVPA==
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-fscrypt@vger.kernel.org
 Cc:     linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
         linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: [PATCH 0/4] fsverity cleanups
-Date:   Wed, 14 Dec 2022 14:43:00 -0800
-Message-Id: <20221214224304.145712-1-ebiggers@kernel.org>
+Subject: [PATCH 3/4] fsverity: optimize fsverity_cleanup_inode() on non-verity files
+Date:   Wed, 14 Dec 2022 14:43:03 -0800
+Message-Id: <20221214224304.145712-4-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.38.1
+In-Reply-To: <20221214224304.145712-1-ebiggers@kernel.org>
+References: <20221214224304.145712-1-ebiggers@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This series implements a few cleanups that have been suggested 
-in the thread "[RFC PATCH 00/11] fs-verity support for XFS"
-(https://lore.kernel.org/linux-fsdevel/20221213172935.680971-1-aalbersh@redhat.com/T/#u).
+From: Eric Biggers <ebiggers@google.com>
 
-This applies to mainline (commit 93761c93e9da).
+Make fsverity_cleanup_inode() an inline function that checks for
+non-NULL ->i_verity_info, then (if needed) calls
+__fsverity_cleanup_inode() to do the real work.  This reduces the
+overhead on non-verity files.
 
-Eric Biggers (4):
-  fsverity: optimize fsverity_file_open() on non-verity files
-  fsverity: optimize fsverity_prepare_setattr() on non-verity files
-  fsverity: optimize fsverity_cleanup_inode() on non-verity files
-  fsverity: pass pos and size to ->write_merkle_tree_block
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ fs/verity/open.c         | 10 ++--------
+ include/linux/fsverity.h | 14 +++++++++++++-
+ 2 files changed, 15 insertions(+), 9 deletions(-)
 
- fs/btrfs/verity.c        | 19 ++++-------
- fs/ext4/verity.c         |  6 ++--
- fs/f2fs/verity.c         |  6 ++--
- fs/verity/enable.c       |  4 +--
- fs/verity/open.c         | 46 ++++---------------------
- include/linux/fsverity.h | 74 +++++++++++++++++++++++++++++++++-------
- 6 files changed, 84 insertions(+), 71 deletions(-)
-
-
-base-commit: 93761c93e9da28d8a020777cee2a84133082b477
+diff --git a/fs/verity/open.c b/fs/verity/open.c
+index e1e531d5e09a..c723a62841db 100644
+--- a/fs/verity/open.c
++++ b/fs/verity/open.c
+@@ -348,18 +348,12 @@ int __fsverity_prepare_setattr(struct dentry *dentry, struct iattr *attr)
+ }
+ EXPORT_SYMBOL_GPL(__fsverity_prepare_setattr);
+ 
+-/**
+- * fsverity_cleanup_inode() - free the inode's verity info, if present
+- * @inode: an inode being evicted
+- *
+- * Filesystems must call this on inode eviction to free ->i_verity_info.
+- */
+-void fsverity_cleanup_inode(struct inode *inode)
++void __fsverity_cleanup_inode(struct inode *inode)
+ {
+ 	fsverity_free_info(inode->i_verity_info);
+ 	inode->i_verity_info = NULL;
+ }
+-EXPORT_SYMBOL_GPL(fsverity_cleanup_inode);
++EXPORT_SYMBOL_GPL(__fsverity_cleanup_inode);
+ 
+ int __init fsverity_init_info_cache(void)
+ {
+diff --git a/include/linux/fsverity.h b/include/linux/fsverity.h
+index 84b498fff7ec..203f4962c54a 100644
+--- a/include/linux/fsverity.h
++++ b/include/linux/fsverity.h
+@@ -150,7 +150,19 @@ int fsverity_get_digest(struct inode *inode,
+ 
+ int __fsverity_file_open(struct inode *inode, struct file *filp);
+ int __fsverity_prepare_setattr(struct dentry *dentry, struct iattr *attr);
+-void fsverity_cleanup_inode(struct inode *inode);
++void __fsverity_cleanup_inode(struct inode *inode);
++
++/**
++ * fsverity_cleanup_inode() - free the inode's verity info, if present
++ * @inode: an inode being evicted
++ *
++ * Filesystems must call this on inode eviction to free ->i_verity_info.
++ */
++static inline void fsverity_cleanup_inode(struct inode *inode)
++{
++	if (inode->i_verity_info)
++		__fsverity_cleanup_inode(inode);
++}
+ 
+ /* read_metadata.c */
+ 
 -- 
 2.38.1
 
