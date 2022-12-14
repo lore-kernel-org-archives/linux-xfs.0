@@ -2,83 +2,67 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8224CC4332F
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Dec 2022 06:52:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61278C4332F
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Dec 2022 07:40:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237124AbiLNGwP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Dec 2022 01:52:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39214 "EHLO
+        id S237448AbiLNHkE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Dec 2022 02:40:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58620 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229615AbiLNGwO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Dec 2022 01:52:14 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E41045582;
-        Tue, 13 Dec 2022 22:52:13 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 801EB6181B;
-        Wed, 14 Dec 2022 06:52:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6922C433D2;
-        Wed, 14 Dec 2022 06:52:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671000732;
-        bh=uB3/VeNb2+E5JcJLM4VRq5oQgPUO+MOKFU9Idpe8kfc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Tv7bJx11/Nf8xIF4/IPCrqHr/oMMr3GMNPMXn9BsPnTJs1UllJNc+YUKkxQ4XrUjr
-         uaE8SkfeZTxkKYahp1KiDWkmzplxNwrtSPbNfWiN1eDhAR5mmjAc1eRwn5DdUR1P7e
-         6hP88Y6OP1JNKbtmj0hYNvm48WfPgFQYCH3mMpHiVdM62rN4Xoe00J7jsnYAQnRM4F
-         3KoLCwvB8ynUWg0rroOVvpjtk6nABvzTfF1lqOSrCB6wBqehaamLGpvCqiB3hV179D
-         k1mRPe2fJdfzngWC6ACZudjojASw9H3LgNnSf2YgRhiRH/n3qkloUmRTNtOrJwghvp
-         m6SxKQw37dD9Q==
-Date:   Tue, 13 Dec 2022 22:52:11 -0800
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        Andrey Albershteyn <aalbersh@redhat.com>,
+        with ESMTP id S237434AbiLNHkC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Dec 2022 02:40:02 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC8E517A8D;
+        Tue, 13 Dec 2022 23:40:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=+nxD7XdSw3U/Ra/8yIJ5YBegpzleiXNCdwiUk3c3++k=; b=OixfO7pZRvWbKad+xSV532iJ9m
+        2oaray3qDFZzyIqw/1Tpd6zrvTGtlfFdeZdnwHvKkXpnDPkpytIGx39Amd7a/1UJdx/ArbWK5Lwhk
+        VP3fDytHPDDkjwRROlLR98jzZoF39PXcfcKXIajWjNzkYhbY/adtf7WaxR5G0p88GlSsSJAOulagS
+        AeYUvdf4a1UfF5BdX18GImq82Xxpg/lF9illYxoKXcfRxJ/m4dAuA/nGwD1ZeKHIdwlsOGw+AzuNh
+        eUlBa96bp41vx0pcPPD52wPjQmyl1eOq+hHVVGJetXTtoXgU6ROVJwI2Za1mlVJS6Z0fHXXOp/ujs
+        /xNxcRFw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1p5MMw-00E8DI-Im; Wed, 14 Dec 2022 07:39:58 +0000
+Date:   Tue, 13 Dec 2022 23:39:58 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Andreas Gruenbacher <agruenba@redhat.com>,
+        Christoph Hellwig <hch@infradead.org>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC PATCH 02/11] pagemap: add mapping_clear_large_folios()
- wrapper
-Message-ID: <Y5lym4fJK+9u2cxe@sol.localdomain>
-References: <20221213172935.680971-1-aalbersh@redhat.com>
- <20221213172935.680971-3-aalbersh@redhat.com>
- <Y5i8igBLu+6OQt8H@casper.infradead.org>
- <Y5jTosRngrhzPoge@sol.localdomain>
- <20221213211010.GX3600936@dread.disaster.area>
+Subject: Re: [PATCH] iomap: Move page_done callback under the folio lock
+Message-ID: <Y5l9zhhyOE+RNVgO@infradead.org>
+References: <20221213194833.1636649-1-agruenba@redhat.com>
+ <Y5janUs2/29XZRbc@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221213211010.GX3600936@dread.disaster.area>
+In-Reply-To: <Y5janUs2/29XZRbc@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Dec 14, 2022 at 08:10:10AM +1100, Dave Chinner wrote:
-> On Tue, Dec 13, 2022 at 11:33:54AM -0800, Eric Biggers wrote:
-> > On Tue, Dec 13, 2022 at 05:55:22PM +0000, Matthew Wilcox wrote:
-> > > I'm happy to work with you to add support for large folios to verity.
-> > > It hasn't been high priority for me, but I'm now working on folio support
-> > > for bufferhead filesystems and this would probably fit in.
+On Tue, Dec 13, 2022 at 12:03:41PM -0800, Darrick J. Wong wrote:
+> On Tue, Dec 13, 2022 at 08:48:33PM +0100, Andreas Gruenbacher wrote:
+> > Hi Darrick,
 > > 
-> > I'd be very interested to know what else is needed after commit 98dc08bae678
-> > ("fsverity: stop using PG_error to track error status") which is upstream now,
-> > and
-> > https://lore.kernel.org/linux-fsdevel/20221028224539.171818-1-ebiggers@kernel.org/T/#u
-> > ("fsverity: support for non-4K pages") which is planned for 6.3.
+> > I'd like to get the following iomap change into this merge window.  This
+> > only affects gfs2, so I can push it as part of the gfs2 updates if you
+> > don't mind, provided that I'll get your Reviewed-by confirmation.
+> > Otherwise, if you'd prefer to pass this through the xfs tree, could you
+> > please take it?
 > 
-> Did you change the bio interfaces to iterate a bvec full of
-> variable sized folios, or does it still expect a bio to only have
-> PAGE_SIZE pages attached to it?
-> 
+> I don't mind you pushing changes to ->page_done through the gfs2 tree,
+> but don't you need to move the other callsite at the bottom of
+> iomap_write_begin?
 
-You can take a look at fsverity_verify_bio() with
-https://lore.kernel.org/r/20221028224539.171818-2-ebiggers@kernel.org applied.
-It uses bio_for_each_segment_all() to iterate through the bio's segments.  For
-each segment, it verifies each data block in the segment, assuming bv_len and
-bv_offset are multiples of the Merkle tree block size.  The file position of
-each data block is computed as '(page->index << PAGE_SHIFT) + bv_offset'.
+Yes.  And if we touch this anyway it really should switch to passing
+a folio, which also nicely breaks any in progress code (if there is any)
+and makes them notice the change.
 
-I suppose the issue is going to be that only the first page of a folio actually
-has an index.  Using bio_for_each_folio_all() would avoid this problem, I think?
-
-- Eric
+That being said, do you mean 6.2 with "this window"?  Unless the gfs2
+changes are a critical bug fix, I don't think Linux will take them if
+applied after 6.1 was released.
