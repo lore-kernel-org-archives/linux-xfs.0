@@ -2,146 +2,82 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1878C4167B
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Dec 2022 10:25:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F294C4332F
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Dec 2022 12:34:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237832AbiLNKZL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Dec 2022 05:25:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45090 "EHLO
+        id S237841AbiLNMeO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Dec 2022 07:34:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38102 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237804AbiLNKZE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Dec 2022 05:25:04 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAD841D0DB
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Dec 2022 02:24:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1671013455;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=9DJ2kTciZzCUi4gXkRMDzEafqQw+pBRgsl61iDLuufk=;
-        b=i5OjYJiUpAs/oINg3OVBdk/U61Q9nGBg17fqLIOQVGE5u6BwVEySJ0vOHAvykQW0nd528U
-        eXUqTP0YR3fJ29s6XwzafgGdBjk+Fp1zMzyUEACiiknpvtWXGUCl/BWsPxzYrUBkGSTYRQ
-        S0FLRGvy9GG32icpfEXvZxyyrYphumE=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-622-lUglsYFDMFq9neTi2pjZgw-1; Wed, 14 Dec 2022 05:24:12 -0500
-X-MC-Unique: lUglsYFDMFq9neTi2pjZgw-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        with ESMTP id S237905AbiLNMdy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Dec 2022 07:33:54 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E8A5275F9
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Dec 2022 04:31:35 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 382D318A6460;
-        Wed, 14 Dec 2022 10:24:12 +0000 (UTC)
-Received: from pasta.redhat.com (ovpn-192-138.brq.redhat.com [10.40.192.138])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D4A5F51FF;
-        Wed, 14 Dec 2022 10:24:10 +0000 (UTC)
-From:   Andreas Gruenbacher <agruenba@redhat.com>
-To:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Andreas Gruenbacher <agruenba@redhat.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH v2] iomap: Move page_done callback under the folio lock
-Date:   Wed, 14 Dec 2022 11:24:09 +0100
-Message-Id: <20221214102409.1857526-1-agruenba@redhat.com>
-In-Reply-To: <Y5l9zhhyOE+RNVgO@infradead.org>
-References: <Y5l9zhhyOE+RNVgO@infradead.org>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 057E461A14
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Dec 2022 12:31:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89A22C433D2;
+        Wed, 14 Dec 2022 12:31:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1671021094;
+        bh=HxOR82ZmL5ri/H04itHIvf72WHysRAlzH8AXy+SIFjo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=BidZVj0SLOHtdEDH2dMnjL7FXZLTqPowPH/nrAKeSOpyQor9IotHgpoC60DdmkLZN
+         SPeopOzrLPNp/SXgvaXGhahyOP6dLDEXlVknPGmBCfF9gM4ItID2OGfDrLxb1c0otA
+         j0tHQSRPvuwm55aLAluZxWssnD5v2v3oBOHcifKlkUO0gt5UYecgjBlabFq+BSzBCH
+         rL2Go2qYx67dlSBb/BYVYkUWPgzbGBJEKif7pb8B9Y8ST5LnzeGd7/Oj5Z0wFf0OA6
+         ozVD8GxlxdtKaFIpkiW5uh3jVNRh4dKEAZCFC8ZeuRvDuruztD7h6RuNwk61STfOax
+         ZdiG8abFixaFg==
+Date:   Wed, 14 Dec 2022 13:31:29 +0100
+From:   Carlos Maiolino <cem@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCHSET 0/2] xfsprogs: random fixes for 6.1, part 2
+Message-ID: <20221214123129.prfhdw5muaw4zfdr@andromeda>
+References: <WB-YtuPdt3dQP5Mq_d7zIPvl9D2SwK2INUA72m_LPSP0m8TCLLKHpROJHWeh3WR6__1UfPyVJjOMyBQAUvzXBQ==@protonmail.internalid>
+ <167096037742.1739636.10785934352963408920.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.5
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <167096037742.1739636.10785934352963408920.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Move the ->page_done() call in iomap_write_end() under the folio lock.
-This closes a race between journaled data writes and the shrinker in
-gfs2.  What's happening is that gfs2_iomap_page_done() is called after
-the page has been unlocked, so try_to_free_buffers() can come in and
-free the buffers while gfs2_iomap_page_done() is trying to add them to
-the current transaction.  The folio lock prevents that from happening.
+On Tue, Dec 13, 2022 at 11:39:37AM -0800, Darrick J. Wong wrote:
+> Hi all,
+> 
+> This is the second rollup of all the random fixes I've collected for
+> xfsprogs 6.1.
+> 
+> If you're going to start using this mess, you probably ought to just
+> pull from my git trees, which are linked below.
+> 
+> This is an extraordinary way to destroy everything.  Enjoy!
+> Comments and questions are, as always, welcome.
+> 
 
-The only current user of ->page_done() is gfs2, so other filesystems are
-not affected.  Still, to catch out any new users, switch from page to
-folio in ->page_done().
+Series looks good, will test.
+Thanks Darrick.
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- fs/gfs2/bmap.c         |  7 ++++---
- fs/iomap/buffered-io.c |  4 ++--
- include/linux/iomap.h  | 10 +++++-----
- 3 files changed, 11 insertions(+), 10 deletions(-)
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
-index e7537fd305dd..c4ee47f8e499 100644
---- a/fs/gfs2/bmap.c
-+++ b/fs/gfs2/bmap.c
-@@ -968,14 +968,15 @@ static int gfs2_iomap_page_prepare(struct inode *inode, loff_t pos,
- }
- 
- static void gfs2_iomap_page_done(struct inode *inode, loff_t pos,
--				 unsigned copied, struct page *page)
-+				 unsigned copied, struct folio *folio)
- {
- 	struct gfs2_trans *tr = current->journal_info;
- 	struct gfs2_inode *ip = GFS2_I(inode);
- 	struct gfs2_sbd *sdp = GFS2_SB(inode);
- 
--	if (page && !gfs2_is_stuffed(ip))
--		gfs2_page_add_databufs(ip, page, offset_in_page(pos), copied);
-+	if (folio && !gfs2_is_stuffed(ip))
-+		gfs2_page_add_databufs(ip, &folio->page, offset_in_page(pos),
-+				       copied);
- 
- 	if (tr->tr_num_buf_new)
- 		__mark_inode_dirty(inode, I_DIRTY_DATASYNC);
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 91ee0b308e13..d988c1bedf70 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -714,12 +714,12 @@ static size_t iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
- 		i_size_write(iter->inode, pos + ret);
- 		iter->iomap.flags |= IOMAP_F_SIZE_CHANGED;
- 	}
-+	if (page_ops && page_ops->page_done)
-+		page_ops->page_done(iter->inode, pos, ret, folio);
- 	folio_unlock(folio);
- 
- 	if (old_size < pos)
- 		pagecache_isize_extended(iter->inode, old_size, pos);
--	if (page_ops && page_ops->page_done)
--		page_ops->page_done(iter->inode, pos, ret, &folio->page);
- 	folio_put(folio);
- 
- 	if (ret < len)
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 238a03087e17..bd6d80453726 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -116,18 +116,18 @@ static inline bool iomap_inline_data_valid(const struct iomap *iomap)
- 
- /*
-  * When a filesystem sets page_ops in an iomap mapping it returns, page_prepare
-- * and page_done will be called for each page written to.  This only applies to
-- * buffered writes as unbuffered writes will not typically have pages
-+ * and page_done will be called for each folio written to.  This only applies
-+ * to buffered writes as unbuffered writes will not typically have folios
-  * associated with them.
-  *
-  * When page_prepare succeeds, page_done will always be called to do any
-- * cleanup work necessary.  In that page_done call, @page will be NULL if the
-- * associated page could not be obtained.
-+ * cleanup work necessary.  In that page_done call, @folio will be NULL if the
-+ * associated folio could not be obtained.
-  */
- struct iomap_page_ops {
- 	int (*page_prepare)(struct inode *inode, loff_t pos, unsigned len);
- 	void (*page_done)(struct inode *inode, loff_t pos, unsigned copied,
--			struct page *page);
-+			struct folio *folio);
- };
- 
- /*
+> --D
+> 
+> xfsprogs git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=xfsprogs-fixes-6.1
+> ---
+>  db/btblock.c |   70 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  db/btblock.h |    6 +++++
+>  db/field.c   |    8 +++++++
+>  db/field.h   |    4 +++
+>  db/type.c    |    6 ++---
+>  io/fsmap.c   |    4 ++-
+>  6 files changed, 93 insertions(+), 5 deletions(-)
+> 
+
 -- 
-2.38.1
-
+Carlos Maiolino
