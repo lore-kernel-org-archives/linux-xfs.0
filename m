@@ -2,112 +2,72 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D508AC001B2
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Dec 2022 18:41:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59192C4332F
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Dec 2022 19:17:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237752AbiLNSlv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Dec 2022 13:41:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54212 "EHLO
+        id S238951AbiLNTRK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Dec 2022 14:17:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237767AbiLNSls (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Dec 2022 13:41:48 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E51755B5
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Dec 2022 10:40:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1671043257;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=LTDcKqysoJsS1IFGNutz6UdMJGnvNSrJ858y5VWuguE=;
-        b=Q9kFzQ/3gU9GhDcN6ITy/oIUQVkdgfgleiWC5PsmYN6WLcV1EfamEQx9ihzdtGsS+iL0P4
-        KxxNn5B9LzX4wfd7Px+CabJfT48lVqz4RaR7Og9h0Rk3bneEFOSjsgrnDi4eNcDqZF2JOy
-        Er4AoMOa6qBeoq8GXEqTWUJOOBV7368=
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
- [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-240-gjGycf5VN0micvhIi5yZMA-1; Wed, 14 Dec 2022 13:40:53 -0500
-X-MC-Unique: gjGycf5VN0micvhIi5yZMA-1
-Received: by mail-pl1-f200.google.com with SMTP id u10-20020a17090341ca00b001897a151311so3134573ple.8
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Dec 2022 10:40:53 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=LTDcKqysoJsS1IFGNutz6UdMJGnvNSrJ858y5VWuguE=;
-        b=RNsEXsVNyuCTGj9sX5kGl4CZ+2YaMyCsmMnwd3ejOtDvpCEpzZ+ZHpflhSklmGSOhH
-         75j+KZ8LUCa8eQ3ndpRlYOa5jUZXsbzG9g2fgGtEIP1zQgCPIY2NyQc3QFZtmP4nbTAR
-         k1RmH5iuv6vfFTjk/JJZzUUM1OKMQJZyFDGoFRPz2UQGf2trVoZXu8cirqRdLNJcnVoj
-         HdTlix/VXyiuzoMSi4sTem43THgfThFmc1qTlZE0gqh6V8yvEXMXZOM9S9JXeu8BI3pu
-         Wfq7ZISL9qekZVb5XptcGLZh2tS/OhomsQ8qsObiQKiF1Of+Aaq6vyvV0rpGXAmd5+ha
-         ZyzQ==
-X-Gm-Message-State: ANoB5pkcNFs/+rCDrYQZMoxY0AEpCEWqKOcSg18eDz7VDs0AOWBb2KX1
-        3FPhpf+Lv2hC6KWMfHvCNGtHTSosVyEykXPf7Hcyw/XP7uMcHhcBv1yvHKfENl1QoM0u1ZKTAxx
-        f4Lkr26/j/6QYZrHqt+4U
-X-Received: by 2002:a17:902:7845:b0:186:971c:297e with SMTP id e5-20020a170902784500b00186971c297emr21555459pln.20.1671043252405;
-        Wed, 14 Dec 2022 10:40:52 -0800 (PST)
-X-Google-Smtp-Source: AA0mqf5iR1wrQqQRxW0bqEfeL/rXr2uPe4/LiVucxwt/FboDDX1zdQN+lnMB3swZHVacI9usvJj+yw==
-X-Received: by 2002:a17:902:7845:b0:186:971c:297e with SMTP id e5-20020a170902784500b00186971c297emr21555441pln.20.1671043252066;
-        Wed, 14 Dec 2022 10:40:52 -0800 (PST)
-Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id z1-20020a1709027e8100b00188f7ad561asm2171488pla.249.2022.12.14.10.40.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Dec 2022 10:40:51 -0800 (PST)
-Date:   Thu, 15 Dec 2022 02:40:47 +0800
-From:   Zorro Lang <zlang@redhat.com>
+        with ESMTP id S239209AbiLNTRC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Dec 2022 14:17:02 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92C5A101C1;
+        Wed, 14 Dec 2022 11:17:00 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0FD4561857;
+        Wed, 14 Dec 2022 19:17:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 63BC3C433EF;
+        Wed, 14 Dec 2022 19:16:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1671045419;
+        bh=DEU23idWnHqHEI4rr4cJ5kq50LF+J35SVC+UqRvM9lE=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=NlyNkwFqkxmc5CXq/bwiDo847PTLuhVwCzIC1snqWwE+iQ5IF25BQUp5W8TWMqDVJ
+         f65lgjK+GttPScU2kCE0f58+Ufsvd8wcEWcgXhm05/QDC+2JQAg9yFmzjBaGEY1yQB
+         K42F+RsGJrQCrUuzWq/occqgR8pYxpDSGlsOxyLorEYrr+9QRiA0MPXxpe2wN+k6th
+         SXqlrSb5dQpRw5vU7blc+M0o7h4b9JfNUNFoq//BJCd62Wn2GTu1sz9b01D5fPy9dB
+         xeInwVb7nPUv9yy0EZ9FBu8VbivDqNSTBLd3Tc72IMN3bA53MQ2rT/0vPBa5kiJ62p
+         QiWbjjS/JU/5A==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 526CFC41612;
+        Wed, 14 Dec 2022 19:16:59 +0000 (UTC)
+Subject: Re: [GIT PULL] xfs: new code for 6.2
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <167095620599.1676030.3465657691717452291.stg-ugh@magnolia>
+References: <167095620599.1676030.3465657691717452291.stg-ugh@magnolia>
+X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
+X-PR-Tracked-Message-Id: <167095620599.1676030.3465657691717452291.stg-ugh@magnolia>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.2-merge-8
+X-PR-Tracked-Commit-Id: 52f31ed228212ba572c44e15e818a3a5c74122c0
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 87be949912eedb73690d8eaeb086f24bfe17438d
+Message-Id: <167104541932.22233.3380119867797546136.pr-tracker-bot@kernel.org>
+Date:   Wed, 14 Dec 2022 19:16:59 +0000
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs/122: fix EFI/EFD log format structure size after
- flex array conversion
-Message-ID: <20221214184047.k3iaxggotcli4423@zlang-mailbox>
-References: <167096073708.1750519.5668846655153278713.stgit@magnolia>
- <167096074260.1750519.311637326793150150.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <167096074260.1750519.311637326793150150.stgit@magnolia>
+Cc:     djwong@kernel.org, torvalds@linux-foundation.org,
+        aalbersh@redhat.com, abaci@linux.alibaba.com, dchinner@redhat.com,
+        guoxuenan@huawei.com, hch@lst.de, hsiangkao@linux.alibaba.com,
+        leo.lilong@huawei.com, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, lukas@herbolt.com, sandeen@redhat.com,
+        syzbot+912776840162c13db1a3@syzkaller.appspotmail.com,
+        yang.lee@linux.alibaba.com, yangx.jy@fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 13, 2022 at 11:45:42AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Adjust this test since made EFI/EFD log item format structs proper flex
-> arrays instead of array[1].
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
+The pull request you sent on Tue, 13 Dec 2022 10:58:54 -0800:
 
-So we let this case fail on all older system/kernel? Is the kernel patch
-recommended to be merged on downstream kernel?
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.2-merge-8
 
-Thanks,
-Zorro
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/87be949912eedb73690d8eaeb086f24bfe17438d
 
->  tests/xfs/122.out |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> 
-> diff --git a/tests/xfs/122.out b/tests/xfs/122.out
-> index a56cbee84f..95e53c5081 100644
-> --- a/tests/xfs/122.out
-> +++ b/tests/xfs/122.out
-> @@ -161,10 +161,10 @@ sizeof(xfs_disk_dquot_t) = 104
->  sizeof(xfs_dq_logformat_t) = 24
->  sizeof(xfs_dqblk_t) = 136
->  sizeof(xfs_dsb_t) = 264
-> -sizeof(xfs_efd_log_format_32_t) = 28
-> -sizeof(xfs_efd_log_format_64_t) = 32
-> -sizeof(xfs_efi_log_format_32_t) = 28
-> -sizeof(xfs_efi_log_format_64_t) = 32
-> +sizeof(xfs_efd_log_format_32_t) = 16
-> +sizeof(xfs_efd_log_format_64_t) = 16
-> +sizeof(xfs_efi_log_format_32_t) = 16
-> +sizeof(xfs_efi_log_format_64_t) = 16
->  sizeof(xfs_error_injection_t) = 8
->  sizeof(xfs_exntfmt_t) = 4
->  sizeof(xfs_exntst_t) = 4
-> 
+Thank you!
 
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
