@@ -2,85 +2,116 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DB8AC10F1B
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Dec 2022 00:53:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71CADC4332F
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Dec 2022 01:04:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237041AbiLNAxs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Dec 2022 19:53:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35266 "EHLO
+        id S236731AbiLNBEF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Dec 2022 20:04:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237048AbiLNAxr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Dec 2022 19:53:47 -0500
-Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8E5924BD2
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 16:53:45 -0800 (PST)
-Received: by mail-pj1-x1035.google.com with SMTP id z8-20020a17090abd8800b00219ed30ce47so5443440pjr.3
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 16:53:45 -0800 (PST)
+        with ESMTP id S237473AbiLNBEB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Dec 2022 20:04:01 -0500
+Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54D98642F
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 17:04:00 -0800 (PST)
+Received: by mail-pj1-x1031.google.com with SMTP id t11-20020a17090a024b00b0021932afece4so5456806pje.5
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Dec 2022 17:04:00 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=6FPkAv72GYYparyOjopC4+0TyiONk3xjxwzE/01pbQw=;
-        b=xcLF+nYK5jvQlV8/BNLBVSVxdyf+dQlZPWF9D1ueXEfpI6r76ImwZPCVWJef3joDZO
-         IV4pusV0rpl1j/Bqvt1NMYqVAUo/Vl+F6W1i5bCgXw0lnp0ycVBjIfiH5PK66eQsuEfv
-         fxjnn1/TFfpPC9GZ287CMc4KzkvDaYhP9gz0FHxW36aRjJw0syK0yTk8+Vb0BZnPNbJj
-         TVl+hndk1fZuw+mK9GlkjOEHsyDQS0MmpijeRzNfD22khR0POP8gqwm0iSNp13gDY08f
-         J9yfIBSC/Xn8KaVkDNBow9bjJI/ypkrNtG/yBLGVa1LbujVA7VHFD55CrxQgO2mIecEU
-         vj0Q==
+        bh=zpUmdOuAvPLOXWGLYtoeozqDtZuDJ0T7JGbSJUQF3s0=;
+        b=w8fNmYnh+h0hOxp0QP+B2r1PGviUfYD7Ji6odwgkRaS/3X8U3LXIZsh0RoIifjvqKy
+         AZRDrRwXRdJHUD+Rzis2omEeMSfr+g3xkuKkPLJUmwkEFDecZ4bojz0ahoSTCu9Xy6rn
+         29IVb7a3O1agDYwccPCL+FI4qEuyDtUzj+xsTSuRRJai6C22a9RqzegDsP/DxauYl70I
+         idfPOhbf/OSo7m78CLlK1FIlS1VV1O2/VSGgDjFy1uwvbi1cpO6ttEWDdRCuFhPC4PSH
+         z0mIxHD6SUpP8Bjcxui4xmBlA4n48wTqGMSM37Oy1b+isTJBdJVbPwP34S/BTS0v5mHQ
+         kbUA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=6FPkAv72GYYparyOjopC4+0TyiONk3xjxwzE/01pbQw=;
-        b=S754fPSBNmaV66yZ5DiPJxjbdVJSiZSjHAVNXCDXRrYQCDbG7K/lb1JY1ShgWj/fWw
-         T3g2T5D5MUNMyiMQBBjb0GT9vmBExGs2fF5umniLw4t+4gUqrj8IsfOTnQ1zELzjJDPR
-         LaDM1oF8MXlIxN5+QTi4MxufIjPwhTutvcuXSFkkSx8EjAgeMczCk8KpX9qKcXjkwiK0
-         qQxoE5mOj00t68DuwMix4A6Z3HQOFqwV2WN9p9mZP1R5D2ZOA5b2vK2t99rpmYVXq4mk
-         DawtF9W1uq0tg14BRLEkvRQwCUTUkouGfBe6vqMEWhM3VggvBk7jm/az5h2vByzr0g4m
-         dz5A==
-X-Gm-Message-State: ANoB5pnUc3WF8Afrc/kMOsZqOszPwyihK8u/T/FFKlA8NZj/LEG+Db9h
-        t2k5fX5S6RK3MDVRLzJkH9SisY0aOvPCbFSS
-X-Google-Smtp-Source: AA0mqf5BbaixKSd/wkuwLlznlJvzmAnqWjKT5bPkY326ZcTQF/FFoDINZHMs8V9tKIrF+2fxLNy+yg==
-X-Received: by 2002:a17:903:40ce:b0:189:c83f:d5 with SMTP id t14-20020a17090340ce00b00189c83f00d5mr24619081pld.52.1670979225273;
-        Tue, 13 Dec 2022 16:53:45 -0800 (PST)
+        bh=zpUmdOuAvPLOXWGLYtoeozqDtZuDJ0T7JGbSJUQF3s0=;
+        b=sMDYjaOLj9Hkyel7XsXJqaep3bVmAtLNZQerrBMNhz8rQz/HcnXf0KEHYEngjT2eCX
+         rihN2YvJbwHYBBj7C1UU7DAq3KRa9f7ebYoZ7aCNTGGP2PCVcxbGafMHwmIkDdLLW+DU
+         Zs5fdCJ49Q8WW1eQ10IunhmhNeMjaWzytxyvh3BnTo6yPQ1vBay0hvP6v3p6iAKTp+eT
+         paq1Pi7h/w8aBekFjL8tsIh7Cb5X3o5Ik5VRqSIPKW30zFqZsPGFlCgG0upWpv3fUbA5
+         hmnFlkklapBkMETckfi8tNv1ylWRqHcGJDzKoLjUt8SkGdlz97DP8LUZsqldeIAiivHE
+         licA==
+X-Gm-Message-State: ANoB5pmH0bthz/vyzg2NjHSutwGcBzEE3YGoZGUZhYdxu1DUTZ2SVYUD
+        NBX3tINkpfpctCx0NnVFGA+VH6j4Ou2cxyoB
+X-Google-Smtp-Source: AA0mqf7rAVl4WzMknooT99JjC0M0vKLT4ko1CgBWNeqep8OjR2PYpf+ZiORN7jKrVMH9M3T8UgpFdA==
+X-Received: by 2002:a17:902:c3cd:b0:189:d3dc:a9c4 with SMTP id j13-20020a170902c3cd00b00189d3dca9c4mr21879575plj.36.1670979839841;
+        Tue, 13 Dec 2022 17:03:59 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-138-158.pa.nsw.optusnet.com.au. [49.181.138.158])
-        by smtp.gmail.com with ESMTPSA id a15-20020a1709027e4f00b0018b61ecf36fsm441258pln.287.2022.12.13.16.53.44
+        by smtp.gmail.com with ESMTPSA id 73-20020a63064c000000b0047915d582ccsm7335057pgg.20.2022.12.13.17.03.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 Dec 2022 16:53:44 -0800 (PST)
+        Tue, 13 Dec 2022 17:03:59 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1p5G1m-0089IT-Au; Wed, 14 Dec 2022 11:53:42 +1100
-Date:   Wed, 14 Dec 2022 11:53:42 +1100
+        id 1p5GBg-0089ay-Eh; Wed, 14 Dec 2022 12:03:56 +1100
+Date:   Wed, 14 Dec 2022 12:03:56 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Andrey Albershteyn <aalbersh@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC PATCH 01/11] xfs: enable large folios in xfs_setup_inode()
-Message-ID: <20221214005342.GB3600936@dread.disaster.area>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     Andrey Albershteyn <aalbersh@redhat.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [RFC PATCH 03/11] xfs: add attribute type for fs-verity
+Message-ID: <20221214010356.GC3600936@dread.disaster.area>
 References: <20221213172935.680971-1-aalbersh@redhat.com>
- <20221213172935.680971-2-aalbersh@redhat.com>
+ <20221213172935.680971-4-aalbersh@redhat.com>
+ <733b882c-30fc-eea0-db01-55d25f272d92@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221213172935.680971-2-aalbersh@redhat.com>
+In-Reply-To: <733b882c-30fc-eea0-db01-55d25f272d92@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 13, 2022 at 06:29:25PM +0100, Andrey Albershteyn wrote:
-> This is more appropriate place to set large folios flag as other
-> mapping's flags are set here. This will also allow to conditionally
-> enable large folios based on inode's diflags (e.g. fs-verity).
+On Tue, Dec 13, 2022 at 11:43:42AM -0600, Eric Sandeen wrote:
+> On 12/13/22 11:29 AM, Andrey Albershteyn wrote:
+> > The Merkle tree pages and descriptor are stored in the extended
+> > attributes of the inode. Add new attribute type for fs-verity
+> > metadata. Skip fs-verity attributes for getfattr as it can not parse
+> > binary page names.
+> > 
+> > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
 > 
-> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> ---
->  fs/xfs/xfs_icache.c | 2 --
->  fs/xfs/xfs_iops.c   | 2 ++
->  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> >  DECLARE_EVENT_CLASS(xfs_attr_list_class,
+> > diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+> > index 5b57f6348d630..acbfa29d04af0 100644
+> > --- a/fs/xfs/xfs_xattr.c
+> > +++ b/fs/xfs/xfs_xattr.c
+> > @@ -237,6 +237,9 @@ xfs_xattr_put_listent(
+> >  	if (flags & XFS_ATTR_PARENT)
+> >  		return;
+> >  
+> > +	if (flags & XFS_ATTR_VERITY)
+> > +		return;
+> > +
+> 
+> Just a nitpick, but now that there are already 2 cases like this, I wonder
+> if it would be wise to #define something like an XFS_ATTR_VISIBLE_MASK
+> (or maybe XFS_ATTR_INTERNAL_MASK) and use that to decide, rather than
+> testing each one individually?
 
-LGTM.
+Seems like a good idea to me.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+There's also a couple of other spots that a comment about internal
+vs externally visible xattr namespaces might be appropriate. e.g
+xfs_attr_filter() in the ioctl code should never have internal xattr
+namespaces added to it, and similarly a comment at the top of
+fs/xfs/xfs_xattr.c that the interfaces implemented in the file are
+only for exposing externally visible xattr namespaces to users.
+
+That way it becomes more obvious that we handle internal vs external
+xattr namespaces very differently.
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
