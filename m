@@ -2,183 +2,296 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACAE3C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Dec 2022 00:20:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3341CC4332F
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Dec 2022 06:06:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229994AbiLOAUy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Dec 2022 19:20:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40496 "EHLO
+        id S229566AbiLOGGZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 15 Dec 2022 01:06:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230002AbiLOAUY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Dec 2022 19:20:24 -0500
-Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28F1C2B1A4
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Dec 2022 16:19:48 -0800 (PST)
-Received: by mail-pg1-x531.google.com with SMTP id 79so3097266pgf.11
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Dec 2022 16:19:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=rRpO3QnyU6ChdHPazl5zqgJFuB/om7CEHPWIzKyAGmw=;
-        b=Uc2FAWV50Q/fgLz4Kz7Iz3qqqUvK/eUk42Ll9KWqr0gl6i2qOyWB+317FVLE2jTac1
-         bIbzepGCO/N3nxywK3m74mwleAn2fKtycxVSS2rb0Xgj7xHXx3O1bbKZ5JYf6JDcCdGK
-         aue79iEp4gj5T2M9MYgo3HxPyQ4WRsacGqxVfecpnOWZQCHelcifAPr6ZJSiF92Zhpws
-         yNm3h6A4bresmGu09PV7G+MiubISp99oeqL/0chOl8EfTcMlmcIxwOY9NsFAH420VIPl
-         lbEvdz502Q6/yhOsG2pQLCrL8aLQ+W4+HGQAxtUp6Ye637IVRE3a8ny8ZfpFzOr55NdV
-         +jDQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=rRpO3QnyU6ChdHPazl5zqgJFuB/om7CEHPWIzKyAGmw=;
-        b=N69G+MSejH3Dtx7JLHX3xCGlNzzpnyBzkD5883fnJI59gAT42QMVTtrhkr1v3p8NJp
-         1ZfYssujZKWTTIbaV/8awdaowSuPUi9/FlkV8q9t8NHpwchGbKncALGXnSoaAzvEIi0q
-         EGVpUKE4zgp7fLnTY16nuomEU1k9oJTmCgDhhXPMe32ngacvp5lXbr2iLJTU+ZjA2h18
-         p1GW9FjEgjgvhKwbvb8hAh1YLqr3Odw9EyQt9KEcSZ1NXLQ9rgUHBsE4kK+5HIMrFL3H
-         4Ynv+h4r0d7qpLCubgUHs9jGGj27qKHUoWOD0CAqSvpebKAZeFs3V4Yz93BU/ip8NmCg
-         mAUw==
-X-Gm-Message-State: ANoB5pkC69okpuYtaOIFccnMR/c/VoOIdAWPOOIoGOnC1Hj7E9y7H3aR
-        vpQ2BVNtrRUJXYhh4V3FBR04kw==
-X-Google-Smtp-Source: AA0mqf5/FJf+I6OMoKPqxw8Vu5oa5pdOexrWPhBqwuSiBZxvPhIailjRjQAynaVor/Gm5opVVMQDaA==
-X-Received: by 2002:aa7:814f:0:b0:56c:232e:3b00 with SMTP id d15-20020aa7814f000000b0056c232e3b00mr23787141pfn.7.1671063587594;
-        Wed, 14 Dec 2022 16:19:47 -0800 (PST)
-Received: from dread.disaster.area (pa49-181-138-158.pa.nsw.optusnet.com.au. [49.181.138.158])
-        by smtp.gmail.com with ESMTPSA id i11-20020aa796eb000000b005749f5d9d07sm429565pfq.99.2022.12.14.16.19.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Dec 2022 16:19:47 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1p5byS-008XDn-KN; Thu, 15 Dec 2022 11:19:44 +1100
-Date:   Thu, 15 Dec 2022 11:19:44 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Suyash Mahar <smahar@ucsd.edu>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        tpkelly@eecs.umich.edu, Suyash Mahar <suyash12mahar@outlook.com>
-Subject: Re: XFS reflink overhead, ioctl(FICLONE)
-Message-ID: <20221215001944.GC1971568@dread.disaster.area>
-References: <CACQnzjuhRzNruTm369wVQU3y091da2c+h+AfRED+AtA-dYqXNQ@mail.gmail.com>
- <Y5i0ALbAdEf4yNuZ@magnolia>
- <CACQnzjua_0=Nz_gyza=iFVigceJO6Wbzn4X86E2y4N_Od3Yi0g@mail.gmail.com>
+        with ESMTP id S229451AbiLOGGY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2022 01:06:24 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 468443F04A;
+        Wed, 14 Dec 2022 22:06:23 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D7A9F61CF8;
+        Thu, 15 Dec 2022 06:06:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 174D3C433EF;
+        Thu, 15 Dec 2022 06:06:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1671084382;
+        bh=oUUTcNGCxne4bIvsKsWaj+oTN6NR5UQmZDveEZOr+7k=;
+        h=From:To:Cc:Subject:Date:From;
+        b=QgYs6oa4cNZXmrblrSnFAei9T8fknp9gyrSrfDWrAv16WQQcAWeQFdCyQue8LEf37
+         WbDOYX/ftTQw8DIl+QHAn82hAE1gKkKj3sI9Sw5Zn9bSRMLeHHx5qph8ZD7TWmZ8ZA
+         1rSC5LnAUz+YLN0jNJTqKtl25UemjMlZ0dcVAtRliQ0STjEarwoET6uOzuMF/jdZNQ
+         Kq1OSRRCeE3N3umSPoZmuBx9L4NYFfn9aj4bFAq/S+g+lMblOqmrlsixAIcAV7mNB9
+         X8mH7m7BZm0PPuaws4939kx6KQadRASKqIASnTYwNuYpi/zkIF+/kcRWOe3CMXr9UA
+         tx6cFNHxaPZLA==
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     linux-fscrypt@vger.kernel.org
+Cc:     linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: [PATCH] fsverity: remove debug messages and CONFIG_FS_VERITY_DEBUG
+Date:   Wed, 14 Dec 2022 22:04:20 -0800
+Message-Id: <20221215060420.60692-1-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.38.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CACQnzjua_0=Nz_gyza=iFVigceJO6Wbzn4X86E2y4N_Od3Yi0g@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 13, 2022 at 08:47:03PM -0800, Suyash Mahar wrote:
-> Hi Darrick,
-> 
-> Thank you for the response. I have replied inline.
-> 
-> -Suyash
-> 
-> Le mar. 13 déc. 2022 à 09:18, Darrick J. Wong <djwong@kernel.org> a écrit :
-> >
-> > [ugh, your email never made it to the list.  I bet the email security
-> > standards have been tightened again.  <insert rant about dkim and dmarc
-> > silent failures here>] :(
-> >
-> > On Sat, Dec 10, 2022 at 09:28:36PM -0800, Suyash Mahar wrote:
-> > > Hi all!
-> > >
-> > > While using XFS's ioctl(FICLONE), we found that XFS seems to have
-> > > poor performance (ioctl takes milliseconds for sparse files) and the
-> > > overhead
-> > > increases with every call.
-> > >
-> > > For the demo, we are using an Optane DC-PMM configured as a
-> > > block device (fsdax) and running XFS (Linux v5.18.13).
-> >
-> > How are you using fsdax and reflink on a 5.18 kernel?  That combination
-> > of features wasn't supported until 6.0, and the data corruption problems
-> > won't get fixed until a pull request that's about to happen for 6.2.
-> 
-> We did not enable the dax option. The optane DIMMs are configured to
-> appear as a block device.
-> 
-> $ mount | grep xfs
-> /dev/pmem0p4 on /mnt/pmem0p4 type xfs
-> (rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota)
-> 
-> Regardless of the block device (the plot includes results for optane
-> and RamFS), it seems like the ioctl(FICLONE) call is slow.
+From: Eric Biggers <ebiggers@google.com>
 
-Please define "slow" - is it actually slower than it should be
-(i.e. a bug) or does it simply not perform according to your
-expectations?
+I've gotten very little use out of these debug messages, and I'm not
+aware of anyone else having used them.
 
-A few things that you can quantify to answer these questions.
+Indeed, sprinkling pr_debug around is not really a best practice these
+days, especially for filesystem code.  Tracepoints are used instead.
 
-1. What is the actual rate it is cloning extents at? i.e. extent count
-/ clone time?  Is this rate consistent/sustained, or is it dropping substantially
-over time and/or increase in extent count?
+Let's just remove these and start from a clean slate.
 
-3. How does clone speed of a given file compare to the actual data
-copy speed of that file (please include fsync time in the data
-copy results)? Is cloning faster or slower than copying
-the data? What is the extent count of the file at the cross-over
-point where cloning goes from being faster to slower than copying
-the data?
+This change does not affect info, warning, and error messages.
 
-3. How does it compare with btrfs running the same write/clone
-workload? Does btrfs run faster? Does it perform better with
-high extent counts than XFS? What about with high sharing counts
-(e.g. after 500 or 1000 clones of the source file)?
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ fs/verity/Kconfig            |  8 --------
+ fs/verity/enable.c           | 11 -----------
+ fs/verity/fsverity_private.h |  4 ----
+ fs/verity/init.c             |  1 -
+ fs/verity/open.c             | 21 ++-------------------
+ fs/verity/signature.c        |  2 --
+ fs/verity/verify.c           | 13 -------------
+ 7 files changed, 2 insertions(+), 58 deletions(-)
 
-Basically, I'm trying to understand what "slow" means in teh context
-of the operations you are performing.  I haven't seen any recent
-performance regressions in clone speed on XFS, so I'm trying to
-understand what you are seeing and why you think it is slower than
-it should be.
+diff --git a/fs/verity/Kconfig b/fs/verity/Kconfig
+index aad1f1d998b9..a7ffd718f171 100644
+--- a/fs/verity/Kconfig
++++ b/fs/verity/Kconfig
+@@ -34,14 +34,6 @@ config FS_VERITY
+ 
+ 	  If unsure, say N.
+ 
+-config FS_VERITY_DEBUG
+-	bool "FS Verity debugging"
+-	depends on FS_VERITY
+-	help
+-	  Enable debugging messages related to fs-verity by default.
+-
+-	  Say N unless you are an fs-verity developer.
+-
+ config FS_VERITY_BUILTIN_SIGNATURES
+ 	bool "FS Verity builtin signature support"
+ 	depends on FS_VERITY
+diff --git a/fs/verity/enable.c b/fs/verity/enable.c
+index df6b499bf6a1..ef4df451fce7 100644
+--- a/fs/verity/enable.c
++++ b/fs/verity/enable.c
+@@ -70,10 +70,6 @@ static int build_merkle_tree_level(struct file *filp, unsigned int level,
+ 	for (i = 0; i < num_blocks_to_hash; i++) {
+ 		struct page *src_page;
+ 
+-		if ((pgoff_t)i % 10000 == 0 || i + 1 == num_blocks_to_hash)
+-			pr_debug("Hashing block %llu of %llu for level %u\n",
+-				 i + 1, num_blocks_to_hash, level);
+-
+ 		if (level == 0) {
+ 			/* Leaf: hashing a data block */
+ 			src_page = read_file_data_page(filp, i, &ra,
+@@ -263,15 +259,12 @@ static int enable_verity(struct file *filp,
+ 	 * ->begin_enable_verity() and ->end_enable_verity() using the inode
+ 	 * lock and only allow one process to be here at a time on a given file.
+ 	 */
+-	pr_debug("Building Merkle tree...\n");
+ 	BUILD_BUG_ON(sizeof(desc->root_hash) < FS_VERITY_MAX_DIGEST_SIZE);
+ 	err = build_merkle_tree(filp, &params, desc->root_hash);
+ 	if (err) {
+ 		fsverity_err(inode, "Error %d building Merkle tree", err);
+ 		goto rollback;
+ 	}
+-	pr_debug("Done building Merkle tree.  Root hash is %s:%*phN\n",
+-		 params.hash_alg->name, params.digest_size, desc->root_hash);
+ 
+ 	/*
+ 	 * Create the fsverity_info.  Don't bother trying to save work by
+@@ -286,10 +279,6 @@ static int enable_verity(struct file *filp,
+ 		goto rollback;
+ 	}
+ 
+-	if (arg->sig_size)
+-		pr_debug("Storing a %u-byte PKCS#7 signature alongside the file\n",
+-			 arg->sig_size);
+-
+ 	/*
+ 	 * Tell the filesystem to finish enabling verity on the file.
+ 	 * Serialized with ->begin_enable_verity() by the inode lock.
+diff --git a/fs/verity/fsverity_private.h b/fs/verity/fsverity_private.h
+index c7fcb855e068..a16038a0ee67 100644
+--- a/fs/verity/fsverity_private.h
++++ b/fs/verity/fsverity_private.h
+@@ -8,10 +8,6 @@
+ #ifndef _FSVERITY_PRIVATE_H
+ #define _FSVERITY_PRIVATE_H
+ 
+-#ifdef CONFIG_FS_VERITY_DEBUG
+-#define DEBUG
+-#endif
+-
+ #define pr_fmt(fmt) "fs-verity: " fmt
+ 
+ #include <linux/fsverity.h>
+diff --git a/fs/verity/init.c b/fs/verity/init.c
+index c98b7016f446..023905151035 100644
+--- a/fs/verity/init.c
++++ b/fs/verity/init.c
+@@ -49,7 +49,6 @@ static int __init fsverity_init(void)
+ 	if (err)
+ 		goto err_exit_workqueue;
+ 
+-	pr_debug("Initialized fs-verity\n");
+ 	return 0;
+ 
+ err_exit_workqueue:
+diff --git a/fs/verity/open.c b/fs/verity/open.c
+index 81ff94442f7b..12bf2596b173 100644
+--- a/fs/verity/open.c
++++ b/fs/verity/open.c
+@@ -77,10 +77,6 @@ int fsverity_init_merkle_tree_params(struct merkle_tree_params *params,
+ 	params->log_arity = params->log_blocksize - ilog2(params->digest_size);
+ 	params->hashes_per_block = 1 << params->log_arity;
+ 
+-	pr_debug("Merkle tree uses %s with %u-byte blocks (%u hashes/block), salt=%*phN\n",
+-		 hash_alg->name, params->block_size, params->hashes_per_block,
+-		 (int)salt_size, salt);
+-
+ 	/*
+ 	 * Compute the number of levels in the Merkle tree and create a map from
+ 	 * level to the starting block of that level.  Level 'num_levels - 1' is
+@@ -90,7 +86,6 @@ int fsverity_init_merkle_tree_params(struct merkle_tree_params *params,
+ 
+ 	/* Compute number of levels and the number of blocks in each level */
+ 	blocks = ((u64)inode->i_size + params->block_size - 1) >> log_blocksize;
+-	pr_debug("Data is %lld bytes (%llu blocks)\n", inode->i_size, blocks);
+ 	while (blocks > 1) {
+ 		if (params->num_levels >= FS_VERITY_MAX_LEVELS) {
+ 			fsverity_err(inode, "Too many levels in Merkle tree");
+@@ -109,8 +104,6 @@ int fsverity_init_merkle_tree_params(struct merkle_tree_params *params,
+ 	for (level = (int)params->num_levels - 1; level >= 0; level--) {
+ 		blocks = params->level_start[level];
+ 		params->level_start[level] = offset;
+-		pr_debug("Level %d is %llu blocks starting at index %llu\n",
+-			 level, blocks, offset);
+ 		offset += blocks;
+ 	}
+ 
+@@ -176,9 +169,6 @@ struct fsverity_info *fsverity_create_info(const struct inode *inode,
+ 		fsverity_err(inode, "Error %d computing file digest", err);
+ 		goto out;
+ 	}
+-	pr_debug("Computed file digest: %s:%*phN\n",
+-		 vi->tree_params.hash_alg->name,
+-		 vi->tree_params.digest_size, vi->file_digest);
+ 
+ 	err = fsverity_verify_signature(vi, desc->signature,
+ 					le32_to_cpu(desc->sig_size));
+@@ -343,12 +333,8 @@ int fsverity_file_open(struct inode *inode, struct file *filp)
+ 	if (!IS_VERITY(inode))
+ 		return 0;
+ 
+-	if (filp->f_mode & FMODE_WRITE) {
+-		pr_debug("Denying opening verity file (ino %lu) for write\n",
+-			 inode->i_ino);
++	if (filp->f_mode & FMODE_WRITE)
+ 		return -EPERM;
+-	}
+-
+ 	return ensure_verity_info(inode);
+ }
+ EXPORT_SYMBOL_GPL(fsverity_file_open);
+@@ -365,11 +351,8 @@ EXPORT_SYMBOL_GPL(fsverity_file_open);
+  */
+ int fsverity_prepare_setattr(struct dentry *dentry, struct iattr *attr)
+ {
+-	if (IS_VERITY(d_inode(dentry)) && (attr->ia_valid & ATTR_SIZE)) {
+-		pr_debug("Denying truncate of verity file (ino %lu)\n",
+-			 d_inode(dentry)->i_ino);
++	if (IS_VERITY(d_inode(dentry)) && (attr->ia_valid & ATTR_SIZE))
+ 		return -EPERM;
+-	}
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(fsverity_prepare_setattr);
+diff --git a/fs/verity/signature.c b/fs/verity/signature.c
+index 143a530a8008..e7d3ca919a1e 100644
+--- a/fs/verity/signature.c
++++ b/fs/verity/signature.c
+@@ -82,8 +82,6 @@ int fsverity_verify_signature(const struct fsverity_info *vi,
+ 		return err;
+ 	}
+ 
+-	pr_debug("Valid signature for file digest %s:%*phN\n",
+-		 hash_alg->name, hash_alg->digest_size, vi->file_digest);
+ 	return 0;
+ }
+ 
+diff --git a/fs/verity/verify.c b/fs/verity/verify.c
+index 961ba248021f..92f36b5522fa 100644
+--- a/fs/verity/verify.c
++++ b/fs/verity/verify.c
+@@ -91,8 +91,6 @@ static bool verify_page(struct inode *inode, const struct fsverity_info *vi,
+ 	if (WARN_ON_ONCE(!PageLocked(data_page) || PageUptodate(data_page)))
+ 		return false;
+ 
+-	pr_debug_ratelimited("Verifying data page %lu...\n", index);
+-
+ 	/*
+ 	 * Starting at the leaf level, ascend the tree saving hash pages along
+ 	 * the way until we find a verified hash page, indicated by PageChecked;
+@@ -105,9 +103,6 @@ static bool verify_page(struct inode *inode, const struct fsverity_info *vi,
+ 
+ 		hash_at_level(params, index, level, &hindex, &hoffset);
+ 
+-		pr_debug_ratelimited("Level %d: hindex=%lu, hoffset=%u\n",
+-				     level, hindex, hoffset);
+-
+ 		hpage = inode->i_sb->s_vop->read_merkle_tree_page(inode, hindex,
+ 				level == 0 ? level0_ra_pages : 0);
+ 		if (IS_ERR(hpage)) {
+@@ -122,19 +117,13 @@ static bool verify_page(struct inode *inode, const struct fsverity_info *vi,
+ 			memcpy_from_page(_want_hash, hpage, hoffset, hsize);
+ 			want_hash = _want_hash;
+ 			put_page(hpage);
+-			pr_debug_ratelimited("Hash page already checked, want %s:%*phN\n",
+-					     params->hash_alg->name,
+-					     hsize, want_hash);
+ 			goto descend;
+ 		}
+-		pr_debug_ratelimited("Hash page not yet checked\n");
+ 		hpages[level] = hpage;
+ 		hoffsets[level] = hoffset;
+ 	}
+ 
+ 	want_hash = vi->root_hash;
+-	pr_debug("Want root hash: %s:%*phN\n",
+-		 params->hash_alg->name, hsize, want_hash);
+ descend:
+ 	/* Descend the tree verifying hash pages */
+ 	for (; level > 0; level--) {
+@@ -151,8 +140,6 @@ static bool verify_page(struct inode *inode, const struct fsverity_info *vi,
+ 		memcpy_from_page(_want_hash, hpage, hoffset, hsize);
+ 		want_hash = _want_hash;
+ 		put_page(hpage);
+-		pr_debug("Verified hash page at level %d, now want %s:%*phN\n",
+-			 level - 1, params->hash_alg->name, hsize, want_hash);
+ 	}
+ 
+ 	/* Finally, verify the data page */
 
-> > > We create a 1 GiB dense file, then repeatedly modify a tiny random
-> > > fraction of it and make a clone via ioctl(FICLONE).
-> >
-> > Yay, random cow writes, that will slowly increase the number of space
-> > mapping records in the file metadata.
-
-Yup, the scripts I use do exactly this - 10,000 random 4kB writes to
-a 8GB file between reflink clones. I then iterate a few thousand
-times and measure the reflink time.
-
-> > > The time required for the ioctl() calls increases from large to insane
-> > > over the course of ~250 iterations: From roughly a millisecond for the
-> > > first iteration or two (which seems high, given that this is on
-> > > Optane and the code doesn't fsync or msync anywhere at all, ever) to 20
-> > > milliseconds (which seems crazy).
-> >
-> > Does the system call runtime increase with O(number_extents)?  You might
-> > record the number of extents in the file you're cloning by running this
-> > periodically:
-> >
-> > xfs_io -c stat $path | grep fsxattr.nextents
-> 
-> The extent count does increase linearly (just like the ioctl() call latency).
-
-As expected. Changing the sharing state a single extent has a
-roughly constant overhead regardless of the number of extents in the
-file. Hence clone time should scale linearly with the number of
-extents that need to have their shared state modified.
-
-> I used the xfs_bmap tool, let me know if this is not the right way. If
-> it is not, I'll update the microbenchmark to run xfs_io.
-
-xfs_bmap is the slow way - it has to iterate every extents and
-format them out to userspace. the above mechanism just does a single
-syscall to query the count of extents from the inode. Using the
-fsxattr extent count query is much faster, especially when you have
-files with tens of millions of extents in them....
-
-Cheers,
-
-Dave.
-
+base-commit: 041fae9c105ae342a4245cf1e0dc56a23fbb9d3c
 -- 
-Dave Chinner
-david@fromorbit.com
+2.38.1
+
