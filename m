@@ -2,106 +2,236 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F579C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Dec 2022 06:47:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3E93C3DA79
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Dec 2022 13:41:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229592AbiLOGro (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 15 Dec 2022 01:47:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46870 "EHLO
+        id S229675AbiLONlH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 15 Dec 2022 08:41:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58304 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229451AbiLOGrm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2022 01:47:42 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7DAD3E0BF;
-        Wed, 14 Dec 2022 22:47:41 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 7E6B8B81A26;
-        Thu, 15 Dec 2022 06:47:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0423AC433EF;
-        Thu, 15 Dec 2022 06:47:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671086859;
-        bh=tY1pH6u316sgaqlU1fqZ7NzWxeOJOnB62LOoW3a5ljE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=kgzBkdCF2tSJ3KQgbq9KSDciEMgwfOLZ2fQ+fuuyx/eIdduS7mAAiXANh4uAMg1DE
-         huO/dZdVrsBGjvQpM1Q1hL+C5VMRTUiJ9JyJvGcNaAziD/UlisTi9SFz8rz/5Dj7YI
-         0irU9qmnLRhwgYd9HQpqydhbsfDHPtz6p0p8gudcYk86LKbTFjq2Qg8qYwBQoG7oLA
-         k/KFeK7xfoqri64UFCqjTIE5rwzChBpM+/Kt4/qeEKiT3BggXxwDHHVUyhzln2EQtY
-         AKaLiJiV/9BwpNdg3ua2Sie/F8PbDKxO1g3OcnYxCmWrk/sb/XXci4NzvPk9gKPLLu
-         aHmDnqpts+TUw==
-Date:   Wed, 14 Dec 2022 22:47:37 -0800
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Andrey Albershteyn <aalbersh@redhat.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC PATCH 00/11] fs-verity support for XFS
-Message-ID: <Y5rDCcYGgH72Wn/e@sol.localdomain>
-References: <20221213172935.680971-1-aalbersh@redhat.com>
- <Y5jllLwXlfB7BzTz@sol.localdomain>
- <20221213221139.GZ3600936@dread.disaster.area>
- <Y5ltzp6yeMo1oDSk@sol.localdomain>
- <20221214230632.GA1971568@dread.disaster.area>
+        with ESMTP id S229488AbiLONlG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2022 08:41:06 -0500
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93A5214D16;
+        Thu, 15 Dec 2022 05:41:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1671111664; x=1702647664;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=4wh4eb0YGFGHFG9dwz94YTVzd1p9vAC1js7+jLRKDKY=;
+  b=n7t//DygNOpd2Qp8Gv7lDTHud79cspZN1qhTzOYjMJe9l3OwHUFEuVeG
+   9y6E/xDHX16yD4w3U2JHlQKiVN1UjGHHoh2i/aSngka0tWXtqd6le1mtP
+   /k++BJoMhk3AwPIs/oOG2ASDabvO1E5nn0danVvIRvwwbANDIWzFmunMk
+   kaptnTg+GWfUB9FbB0JdnXhSGHRDSB78i1qJb0mlEqPoljcgKAseeObvl
+   sdOqbwKGrtwTEbaQDsdkEIPCukdtu+HsiKEhuzvgybUSx2m37yrmZG6cC
+   RuTjyqwq7dQ4OZ9DjCD6RHhZE/vt5B29GQOcE0mEUyv9x3QHr+qVWSSZW
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10561"; a="319819371"
+X-IronPort-AV: E=Sophos;i="5.96,247,1665471600"; 
+   d="scan'208";a="319819371"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Dec 2022 05:40:55 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10561"; a="738110965"
+X-IronPort-AV: E=Sophos;i="5.96,247,1665471600"; 
+   d="scan'208";a="738110965"
+Received: from lkp-server01.sh.intel.com (HELO b5d47979f3ad) ([10.239.97.150])
+  by FMSMGA003.fm.intel.com with ESMTP; 15 Dec 2022 05:40:52 -0800
+Received: from kbuild by b5d47979f3ad with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1p5oTj-0006Iw-0a;
+        Thu, 15 Dec 2022 13:40:51 +0000
+Date:   Thu, 15 Dec 2022 21:40:24 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Andrew Morton <akpm@linux-foundation.org>
+Cc:     loongarch@lists.linux.dev, linuxppc-dev@lists.ozlabs.org,
+        linux-xfs@vger.kernel.org, linux-parisc@vger.kernel.org,
+        linux-omap@vger.kernel.org, linux-can@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, kvm@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org,
+        Linux Memory Management List <linux-mm@kvack.org>
+Subject: [linux-next:master] BUILD REGRESSION
+ 459c73db4069c27c1d4a0e20d055b837396364b8
+Message-ID: <639b23c8.DdUNqMCLdxZ7gLv2%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221214230632.GA1971568@dread.disaster.area>
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 15, 2022 at 10:06:32AM +1100, Dave Chinner wrote:
-> > Well, my proposal at
-> > https://lore.kernel.org/r/20221028224539.171818-2-ebiggers@kernel.org is to keep
-> > tracking the "verified" status at the individual Merkle tree block level, by
-> > adding a bitmap fsverity_info::hash_block_verified.  That is part of the
-> > fs/verity/ infrastructure, and all filesystems would be able to use it.
-> 
-> Yeah, i had a look at that rewrite of the verification code last
-> night - I get the gist of what it is doing, but a single patch of
-> that complexity is largely impossible to sanely review...
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
+branch HEAD: 459c73db4069c27c1d4a0e20d055b837396364b8  Add linux-next specific files for 20221215
 
-Thanks for taking a look at it.  It doesn't really lend itself to being split
-up, unfortunately, but I'll see what I can do.
+Error/Warning reports:
 
-> Correct me if I'm wrong, but won't using a bitmap with 1 bit per
-> verified block cause problems with contiguous memory allocation
-> pretty quickly? i.e. a 64kB bitmap only tracks 512k blocks, which is
-> only 2GB of merkle tree data. Hence at file sizes of 100+GB, the
-> bitmap would have to be kvmalloc()d to guarantee allocation will
-> succeed.
-> 
-> I'm not really worried about the bitmap memory usage, just that it
-> handles large contiguous allocations sanely. I suspect we may
-> eventually need a sparse bitmap (e.g. the old btrfs bit-radix
-> implementation) to track verification in really large files
-> efficiently.
+https://lore.kernel.org/oe-kbuild-all/202211242120.MzZVGULn-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202212141410.IlFkWqph-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202212142121.vendKsOc-lkp@intel.com
 
-Well, that's why my patch uses kvmalloc() to allocate the bitmap.
+Error/Warning: (recently discovered and may have been fixed)
 
-I did originally think it was going to have to be a sparse bitmap that ties into
-the shrinker so that pages of it can be evicted.  But if you do the math, the
-required bitmap size is only 1 / 2^22 the size of the file, assuming the Merkle
-tree uses SHA-256 and 4K blocks.  So a 100MB file only needs a 24-byte bitmap,
-and the bitmap for any file under 17GB fits in a 4K page.
+Documentation/gpu/drm-internals:179: ./include/drm/drm_file.h:411: WARNING: undefined label: drm_accel_node (if the link has no caption the label must precede a section header)
+Documentation/networking/devlink/etas_es58x.rst: WARNING: document isn't included in any toctree
+Warning: tools/power/cpupower/man/cpupower-powercap-info.1 references a file that doesn't exist: Documentation/power/powercap/powercap.txt
+arch/loongarch/kernel/asm-offsets.c:265:6: warning: no previous prototype for 'output_pbe_defines' [-Wmissing-prototypes]
+arch/parisc/include/asm/pgtable.h:154:32: warning: "PMD_SHIFT" is not defined, evaluates to 0 [-Wundef]
+arch/powerpc/kernel/kvm_emul.o: warning: objtool: kvm_template_end(): can't find starting instruction
+arch/powerpc/kernel/optprobes_head.o: warning: objtool: optprobe_template_end(): can't find starting instruction
+drivers/gpu/drm/amd/amdgpu/../display/dc/irq/dcn201/irq_service_dcn201.c:40:20: warning: no previous prototype for 'to_dal_irq_source_dcn201' [-Wmissing-prototypes]
+drivers/regulator/tps65219-regulator.c:310:60: warning: parameter 'dev' set but not used [-Wunused-but-set-parameter]
+drivers/regulator/tps65219-regulator.c:370:26: warning: ordered comparison of pointer with integer zero [-Wextra]
 
-My patch puts an arbitrary limit at a 1 MiB bitmap, which would be a 4.4TB file.
+Unverified Error/Warning (likely false positive, please contact us if interested):
 
-It's not ideal to say "4 TB Ought To Be Enough For Anybody".  But it does feel
-that it's not currently worth the extra complexity and runtime overhead of
-implementing a full-blown sparse bitmap with cache eviction support, when no one
-currently has a use case for fsverity on files anywhere near that large.
+drivers/i2c/busses/i2c-qcom-geni.c:1028:28: sparse: sparse: symbol 'i2c_master_hub' was not declared. Should it be static?
+fs/xfs/xfs_iomap.c:86:29: sparse: sparse: symbol 'xfs_iomap_page_ops' was not declared. Should it be static?
 
-> The other issue is that verify_page() assumes that it can drop the
-> reference to the cached object itself - the caller actually owns the
-> reference to the object, not the verify_page() code. Hence if we are
-> passing opaque buffers to verify_page() rather page cache pages, we
-> need a ->drop_block method that gets called instead of put_page().
-> This will allow the filesystem to hold a reference to the merkle
-> tree block data while the verification occurs, ensuring that they
-> don't get reclaimed by memory pressure whilst still in use...
+Error/Warning ids grouped by kconfigs:
 
-Yes, probably the prototype of ->read_merkle_tree_page will need to change too.
+gcc_recent_errors
+|-- alpha-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-irq-dcn201-irq_service_dcn201.c:warning:no-previous-prototype-for-to_dal_irq_source_dcn201
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- arc-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-irq-dcn201-irq_service_dcn201.c:warning:no-previous-prototype-for-to_dal_irq_source_dcn201
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- arm-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-irq-dcn201-irq_service_dcn201.c:warning:no-previous-prototype-for-to_dal_irq_source_dcn201
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- arm-randconfig-c033-20221214
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-irq-dcn201-irq_service_dcn201.c:warning:no-previous-prototype-for-to_dal_irq_source_dcn201
+|-- arm64-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-irq-dcn201-irq_service_dcn201.c:warning:no-previous-prototype-for-to_dal_irq_source_dcn201
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- i386-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-irq-dcn201-irq_service_dcn201.c:warning:no-previous-prototype-for-to_dal_irq_source_dcn201
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- i386-randconfig-s002
+|   `-- fs-xfs-xfs_iomap.c:sparse:sparse:symbol-xfs_iomap_page_ops-was-not-declared.-Should-it-be-static
+|-- ia64-allmodconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-irq-dcn201-irq_service_dcn201.c:warning:no-previous-prototype-for-to_dal_irq_source_dcn201
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- ia64-randconfig-r032-20221214
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-irq-dcn201-irq_service_dcn201.c:warning:no-previous-prototype-for-to_dal_irq_source_dcn201
+|-- loongarch-allyesconfig
+|   `-- arch-loongarch-kernel-asm-offsets.c:warning:no-previous-prototype-for-output_pbe_defines
+|-- m68k-allmodconfig
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- m68k-allyesconfig
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- microblaze-randconfig-r033-20221214
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-irq-dcn201-irq_service_dcn201.c:warning:no-previous-prototype-for-to_dal_irq_source_dcn201
+|-- mips-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-irq-dcn201-irq_service_dcn201.c:warning:no-previous-prototype-for-to_dal_irq_source_dcn201
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- parisc-randconfig-r015-20221214
+|   `-- arch-parisc-include-asm-pgtable.h:warning:PMD_SHIFT-is-not-defined-evaluates-to
+|-- parisc-randconfig-r032-20221214
+|   `-- arch-parisc-include-asm-pgtable.h:warning:PMD_SHIFT-is-not-defined-evaluates-to
+|-- parisc-randconfig-r034-20221214
+|   `-- arch-parisc-include-asm-pgtable.h:warning:PMD_SHIFT-is-not-defined-evaluates-to
 
-- Eric
+elapsed time: 722m
+
+configs tested: 80
+configs skipped: 2
+
+gcc tested configs:
+powerpc                           allnoconfig
+um                             i386_defconfig
+um                           x86_64_defconfig
+x86_64                              defconfig
+arc                                 defconfig
+i386                                defconfig
+s390                             allmodconfig
+x86_64                        randconfig-a004
+alpha                               defconfig
+x86_64                        randconfig-a002
+s390                                defconfig
+x86_64                               rhel-8.3
+arc                  randconfig-r043-20221214
+x86_64                           rhel-8.3-bpf
+ia64                             allmodconfig
+x86_64                           allyesconfig
+x86_64                         rhel-8.3-kunit
+x86_64                           rhel-8.3-kvm
+s390                             allyesconfig
+arm                                 defconfig
+i386                          randconfig-a014
+s390                 randconfig-r044-20221214
+sh                   secureedge5410_defconfig
+i386                          randconfig-a001
+x86_64                        randconfig-a013
+riscv                randconfig-r042-20221214
+x86_64                        randconfig-a006
+x86_64                        randconfig-a011
+x86_64                          rhel-8.3-rust
+i386                          randconfig-a003
+alpha                            allyesconfig
+x86_64                           rhel-8.3-syz
+x86_64                          rhel-8.3-func
+x86_64                    rhel-8.3-kselftests
+i386                          randconfig-a005
+arm64                            allyesconfig
+x86_64                        randconfig-a015
+sh                               allmodconfig
+m68k                             allyesconfig
+i386                          randconfig-a012
+sh                          urquell_defconfig
+arm                              allyesconfig
+i386                          randconfig-a016
+x86_64                            allnoconfig
+sparc                               defconfig
+m68k                             allmodconfig
+arc                              allyesconfig
+mips                             allyesconfig
+powerpc                          allmodconfig
+i386                             allyesconfig
+arm                          pxa3xx_defconfig
+sh                                  defconfig
+powerpc                     rainier_defconfig
+powerpc                         wii_defconfig
+sh                           se7705_defconfig
+loongarch                         allnoconfig
+sh                        sh7763rdp_defconfig
+sh                             espt_defconfig
+powerpc                 canyonlands_defconfig
+i386                          randconfig-c001
+
+clang tested configs:
+arm                  randconfig-r046-20221214
+hexagon              randconfig-r041-20221214
+hexagon              randconfig-r045-20221214
+x86_64                        randconfig-a014
+x86_64                        randconfig-a001
+i386                          randconfig-a013
+x86_64                        randconfig-a003
+x86_64                        randconfig-a016
+x86_64                        randconfig-a012
+x86_64                        randconfig-a005
+i386                          randconfig-a002
+i386                          randconfig-a011
+i386                          randconfig-a004
+arm                          ixp4xx_defconfig
+i386                          randconfig-a015
+i386                          randconfig-a006
+powerpc                      obs600_defconfig
+x86_64                        randconfig-k001
+mips                        bcm63xx_defconfig
+arm                      pxa255-idp_defconfig
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
