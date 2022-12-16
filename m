@@ -2,57 +2,86 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23835C4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Dec 2022 08:22:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C9CEC4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Dec 2022 11:02:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229948AbiLPIWK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 16 Dec 2022 03:22:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36894 "EHLO
+        id S229754AbiLPLCP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 16 Dec 2022 06:02:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229548AbiLPIWI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Dec 2022 03:22:08 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62BDD120A0;
-        Fri, 16 Dec 2022 00:22:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=lii3xy4O7bUjw9nZv4RVN82j4ze+kjU9vl2nFYJaAFc=; b=C9CREsrUs2SQFjXVVTfe2VeCVx
-        E480RJdQRJTLfLCV1VRuY5SHGnCQAN58RQnZxzg6m0QRoR9EZOARCtGkCh3N9l3KOEop/eaqWPdfY
-        p4e5Exp+hCKGKdU2ZugFErAfhFkI0auDQkESDlwmV1U0Ez/nqS9FHYjb+FQinWi6d5/vpCXtGQOJs
-        zm17bYOw853qvvtJUcRkDfOlMcF2PNJWHMpFAOXB25gPZ8e9PlUfUrZJcdA6pCP/DsmaBP4cFMS2C
-        cSdTX1s8dHdSe8jAKqxf505rU1dzYMRJ25XuVrlq+XVEBwJDj1vwX1qMkq2w8m1T6b6RwUEwT5Ziy
-        p5IXwC4g==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1p65yi-00DZou-HN; Fri, 16 Dec 2022 08:22:00 +0000
-Date:   Fri, 16 Dec 2022 00:22:00 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Andreas Gruenbacher <agruenba@redhat.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v2] iomap: Move page_done callback under the folio lock
-Message-ID: <Y5wqqNHf6lo9oAYd@infradead.org>
-References: <Y5l9zhhyOE+RNVgO@infradead.org>
- <20221214102409.1857526-1-agruenba@redhat.com>
- <CAHc6FU7pgH+nLS_0WFx8aFBenKtNy0z6DBiyAUSdjix0t57t5g@mail.gmail.com>
+        with ESMTP id S229475AbiLPLCN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Dec 2022 06:02:13 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B9B1656F
+        for <linux-xfs@vger.kernel.org>; Fri, 16 Dec 2022 03:02:08 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CB88A62053
+        for <linux-xfs@vger.kernel.org>; Fri, 16 Dec 2022 11:02:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 952F5C433D2
+        for <linux-xfs@vger.kernel.org>; Fri, 16 Dec 2022 11:02:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1671188527;
+        bh=wWF+0HjUEXTIwtENKmcAmMcAqL8Q41SHKDKS2OiXGDc=;
+        h=Date:From:To:Subject:From;
+        b=milzhD0cwkRCxZ1G+APwIpKDd57cc+bF9kXiGkGp3tF/JEVWG5yz+kvLH5FMf0ybd
+         eMY8IxbQ/QVnBx2aPDNbxXqElbChh7ZG5iEttMa//sRx/uSE/Bd0563/MPY+y/OIcn
+         B02lnAQVrd+G37SAmL66Bd+t4zkY4iggJRnc2QAxae8bHqaT8NQQf7r/+5j8To0+mL
+         dYII3c5YwN1Puc41QnQpYbViiMm/aVmF7/v1qygZwz6R0lYr+YhVm9+VjARe8qIx7a
+         5qqzTSdbX5wAuLlOLFo53gY6swQgoPEJEJqKEoOGGaTIjNDfB8egwBBNbwJ93uFo3k
+         7dSZu3O0OLNWw==
+Date:   Fri, 16 Dec 2022 12:02:03 +0100
+From:   Carlos Maiolino <cem@kernel.org>
+To:     linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfsdump: Release 3.1.12
+Message-ID: <20221216110203.f4q3asbudhtva3er@andromeda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAHc6FU7pgH+nLS_0WFx8aFBenKtNy0z6DBiyAUSdjix0t57t5g@mail.gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Dec 15, 2022 at 09:13:50PM +0100, Andreas Gruenbacher wrote:
-> This is still screwed up. We really need to unlock the page before
-> calling into __mark_inode_dirty() and ending the transaction. The
-> current page_done() hook would force us to then re-lock the page just
-> so that the caller can unlock it again. This just doesn't make sense,
-> particularly since the page_prepare and page_done hooks only exist to
-> allow gfs2 to do data journaling via iomap. I'll follow up with a more
-> useful approach ...
+Hi folks,
 
-Yes.  And it would make sense to include the gfs2 patches.
+The xfsdump repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+The new head of the master branch is commit:
+
+acb8083 xfsdump: Release 3.1.12
+
+New Commits:
+
+Carlos Maiolino (1):
+      [acb8083] xfsdump: Release 3.1.12
+
+Donald Douwsma (4):
+      [06dd184] xfsrestore: fix on-media inventory media unpacking
+      [6503407] xfsrestore: fix on-media inventory stream unpacking
+      [7b843fd] xfsdump: fix on-media inventory stream packing
+      [aaaa57f] xfsrestore: untangle inventory unpacking logic
+
+
+Diffstat:
+
+ VERSION               |  2 +-
+ configure.ac          |  2 +-
+ debian/changelog      |  6 ++++++
+ doc/CHANGES           |  3 +++
+ inventory/inv_stobj.c | 42 +++++++++++++++---------------------------
+ restore/content.c     | 13 +++++--------
+ 6 files changed, 31 insertions(+), 37 deletions(-)
+
+
+-- 
+Carlos Maiolino
