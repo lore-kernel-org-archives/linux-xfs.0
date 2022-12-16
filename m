@@ -2,80 +2,57 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4371DC4167B
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Dec 2022 05:04:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23835C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Dec 2022 08:22:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229524AbiLPFEa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 16 Dec 2022 00:04:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53336 "EHLO
+        id S229948AbiLPIWK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 16 Dec 2022 03:22:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229518AbiLPFE2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Dec 2022 00:04:28 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A8514A04E;
-        Thu, 15 Dec 2022 21:04:28 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A6890B81C9A;
-        Fri, 16 Dec 2022 05:04:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03B0CC433D2;
-        Fri, 16 Dec 2022 05:04:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671167065;
-        bh=51ypuloz2foDttekJgabwM5fTg/0aKUSlqb1chQkiko=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Ulbrsgxk0UBUAIIX/DLUXa1GMj9oKn3Dim3Kc7FQJsAlwHxvG934GOXOcys42SkzI
-         UBQRcS/df3r69nGRL8a5f8s09cjP0avxJFwfQMOWna6bJ2xtTdfAjYiwnL2tTA2XEx
-         qoYGJPtoDU2+QXuSfY/xae34OBtjPxov/SdhDtmI3KywRqZFJWdQohgzKXU55jwQza
-         wBVTm/X6E/cYu55XpCIMFBMdjURnPhwZrV8piZ9UnuUxTrdJAAdj7p9CfW2blmwooa
-         5eJ+bzPt40KbXsyNZlt4AJyDI5yfpen+UxsmLOAIhmxVKe2ilalf5okS/Iv9dj7FeN
-         xKITdoVLS5W7Q==
-Date:   Thu, 15 Dec 2022 21:04:23 -0800
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Andrey Albershteyn <aalbersh@redhat.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC PATCH 00/11] fs-verity support for XFS
-Message-ID: <Y5v8V2BLONOVByTm@sol.localdomain>
-References: <20221213172935.680971-1-aalbersh@redhat.com>
- <Y5jllLwXlfB7BzTz@sol.localdomain>
- <20221213221139.GZ3600936@dread.disaster.area>
- <Y5ltzp6yeMo1oDSk@sol.localdomain>
- <20221214230632.GA1971568@dread.disaster.area>
- <Y5rDCcYGgH72Wn/e@sol.localdomain>
- <20221215205737.GD1971568@dread.disaster.area>
+        with ESMTP id S229548AbiLPIWI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Dec 2022 03:22:08 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62BDD120A0;
+        Fri, 16 Dec 2022 00:22:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=lii3xy4O7bUjw9nZv4RVN82j4ze+kjU9vl2nFYJaAFc=; b=C9CREsrUs2SQFjXVVTfe2VeCVx
+        E480RJdQRJTLfLCV1VRuY5SHGnCQAN58RQnZxzg6m0QRoR9EZOARCtGkCh3N9l3KOEop/eaqWPdfY
+        p4e5Exp+hCKGKdU2ZugFErAfhFkI0auDQkESDlwmV1U0Ez/nqS9FHYjb+FQinWi6d5/vpCXtGQOJs
+        zm17bYOw853qvvtJUcRkDfOlMcF2PNJWHMpFAOXB25gPZ8e9PlUfUrZJcdA6pCP/DsmaBP4cFMS2C
+        cSdTX1s8dHdSe8jAKqxf505rU1dzYMRJ25XuVrlq+XVEBwJDj1vwX1qMkq2w8m1T6b6RwUEwT5Ziy
+        p5IXwC4g==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1p65yi-00DZou-HN; Fri, 16 Dec 2022 08:22:00 +0000
+Date:   Fri, 16 Dec 2022 00:22:00 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Andreas Gruenbacher <agruenba@redhat.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v2] iomap: Move page_done callback under the folio lock
+Message-ID: <Y5wqqNHf6lo9oAYd@infradead.org>
+References: <Y5l9zhhyOE+RNVgO@infradead.org>
+ <20221214102409.1857526-1-agruenba@redhat.com>
+ <CAHc6FU7pgH+nLS_0WFx8aFBenKtNy0z6DBiyAUSdjix0t57t5g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221215205737.GD1971568@dread.disaster.area>
+In-Reply-To: <CAHc6FU7pgH+nLS_0WFx8aFBenKtNy0z6DBiyAUSdjix0t57t5g@mail.gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Dec 16, 2022 at 07:57:37AM +1100, Dave Chinner wrote:
-> > 
-> > Well, that's why my patch uses kvmalloc() to allocate the bitmap.
-> > 
-> > I did originally think it was going to have to be a sparse bitmap that ties into
-> > the shrinker so that pages of it can be evicted.  But if you do the math, the
-> > required bitmap size is only 1 / 2^22 the size of the file, assuming the Merkle
-> > tree uses SHA-256 and 4K blocks.  So a 100MB file only needs a 24-byte bitmap,
-> > and the bitmap for any file under 17GB fits in a 4K page.
-> > 
-> > My patch puts an arbitrary limit at a 1 MiB bitmap, which would be a 4.4TB file.
-> > 
-> > It's not ideal to say "4 TB Ought To Be Enough For Anybody".  But it does feel
-> > that it's not currently worth the extra complexity and runtime overhead of
-> > implementing a full-blown sparse bitmap with cache eviction support, when no one
-> > currently has a use case for fsverity on files anywhere near that large.
-> 
-> I think we can live with that for the moment, but I suspect that 4TB
-> filesize limit will become an issue sooner rather than later. What
-> will happen if someone tries to measure a file larger than this
-> limit? What's the failure mode?
-> 
+On Thu, Dec 15, 2022 at 09:13:50PM +0100, Andreas Gruenbacher wrote:
+> This is still screwed up. We really need to unlock the page before
+> calling into __mark_inode_dirty() and ending the transaction. The
+> current page_done() hook would force us to then re-lock the page just
+> so that the caller can unlock it again. This just doesn't make sense,
+> particularly since the page_prepare and page_done hooks only exist to
+> allow gfs2 to do data journaling via iomap. I'll follow up with a more
+> useful approach ...
 
-FS_IOC_ENABLE_VERITY will fail with EFBIG.
-
-- Eric
+Yes.  And it would make sense to include the gfs2 patches.
