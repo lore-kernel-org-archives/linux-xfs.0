@@ -2,128 +2,125 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B1F8C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Dec 2022 20:57:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48D81C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Dec 2022 01:06:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229488AbiLOU5o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 15 Dec 2022 15:57:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46032 "EHLO
+        id S229718AbiLPBGj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 15 Dec 2022 20:06:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229480AbiLOU5n (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2022 15:57:43 -0500
-Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0041A528AD
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Dec 2022 12:57:41 -0800 (PST)
-Received: by mail-pg1-x532.google.com with SMTP id f9so439458pgf.7
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Dec 2022 12:57:41 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=FGlgG65UXPdq7YvcqlgjjW36/ERNfTZqDYuDWENGbu8=;
-        b=v4T1uygL5ZIuGoU1nKeJ2S6HM0bKfVT8vOSMQRBFHs7ZdQOKZm2ZLafTTVXRMN8n2r
-         0ZUf2QIvTfXYMpoD2jwtabM9kr9JGGrRrkIEN9NqLlvXlGArXNJiumj3A1k4tESITmdl
-         WFb466dCE568BXZh+aYXBerMt29s5RS9bqmeHNLzLmzmwKtqE5trAqqK7JgBKwkVdHu6
-         w9zX9He9+eY5aI2OVhjUUaIJOFMe1/7ZfQbxAAH/ZdRT9onbGCy5fH54dPZBeS+kdNKx
-         2KSBE5vriWptao3hYIm+d/+RsGLbIWHanDkJJqFByjs/TgNHNI767QKuZmM+mF6a5p+6
-         26ng==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=FGlgG65UXPdq7YvcqlgjjW36/ERNfTZqDYuDWENGbu8=;
-        b=XKkbsgYptfi4qXjEmx7gYODU/R/KQKBGuhLOVYElz443B98TAv1QjQQRl4cpb7Mr3D
-         PYap3UoRW5NP0ATRrAsmb1ilXSJH9d22qQ842TTfNRByqRC0d8fwKkXyylwUfPLJpRpN
-         hXkMJ8LEU40/a4Uipk2PMyB9ZQVqZFkyyLtK4i4NTDPh/zOCUcMPV35DDUbKBxgLJZtY
-         C+7Kvsz/epWHA/miYPai9Ld+EBrCWnIIPfoVGTcdvrqbtn3jAlCmGRhxMP4KcP64r0L7
-         4NJBnK3XghuWpTcc/4FRQzOurABD5vJtT9gIElN0ohkwiwpdh76qjW5UJRs+xq7FmiVS
-         rUHQ==
-X-Gm-Message-State: ANoB5pngHFTS892uz634uB/LQ6+rD9H3JJutObJ9qMDIf6QXlq+/M8bd
-        j4DWPo/AgQF2Oq79L4vglqDf8c1rBat5ZqA7
-X-Google-Smtp-Source: AA0mqf7+C0W4VsYl4Q0pz20esq6X7Hc9K9Y5ZTA8oeFHjubSafBeKjFUoLBintjBMQS1JAPSm9kBJg==
-X-Received: by 2002:a62:53c5:0:b0:563:cc80:fb66 with SMTP id h188-20020a6253c5000000b00563cc80fb66mr27930943pfb.0.1671137861454;
-        Thu, 15 Dec 2022 12:57:41 -0800 (PST)
-Received: from dread.disaster.area (pa49-181-138-158.pa.nsw.optusnet.com.au. [49.181.138.158])
-        by smtp.gmail.com with ESMTPSA id k18-20020aa79992000000b0056d7cc80ea4sm36829pfh.110.2022.12.15.12.57.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Dec 2022 12:57:40 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1p5vIP-008sJh-34; Fri, 16 Dec 2022 07:57:37 +1100
-Date:   Fri, 16 Dec 2022 07:57:37 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Andrey Albershteyn <aalbersh@redhat.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC PATCH 00/11] fs-verity support for XFS
-Message-ID: <20221215205737.GD1971568@dread.disaster.area>
-References: <20221213172935.680971-1-aalbersh@redhat.com>
- <Y5jllLwXlfB7BzTz@sol.localdomain>
- <20221213221139.GZ3600936@dread.disaster.area>
- <Y5ltzp6yeMo1oDSk@sol.localdomain>
- <20221214230632.GA1971568@dread.disaster.area>
- <Y5rDCcYGgH72Wn/e@sol.localdomain>
+        with ESMTP id S229475AbiLPBGh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2022 20:06:37 -0500
+Received: from newman.eecs.umich.edu (newman.eecs.umich.edu [141.212.113.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B3A457B68
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Dec 2022 17:06:35 -0800 (PST)
+Received: from email.eecs.umich.edu (email.eecs.umich.edu [141.212.113.99] (may be forged))
+        by newman.eecs.umich.edu (8.15.2/8.14.4) with ESMTPS id 2BG16IuC2912583
+        (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO);
+        Thu, 15 Dec 2022 20:06:18 -0500
+Received: from email.eecs.umich.edu (localhost [127.0.0.1])
+        by email.eecs.umich.edu (8.15.2/8.13.0) with ESMTP id 2BG16IhA1842493;
+        Thu, 15 Dec 2022 20:06:18 -0500
+Received: from localhost (tpkelly@localhost)
+        by email.eecs.umich.edu (8.15.2/8.14.4/Submit) with ESMTP id 2BG16IoG1842490;
+        Thu, 15 Dec 2022 20:06:18 -0500
+Date:   Thu, 15 Dec 2022 20:06:18 -0500 (EST)
+From:   Terence Kelly <tpkelly@eecs.umich.edu>
+To:     Dave Chinner <david@fromorbit.com>
+cc:     Suyash Mahar <smahar@ucsd.edu>,
+        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        Suyash Mahar <suyash12mahar@outlook.com>
+Subject: Re: XFS reflink overhead, ioctl(FICLONE)
+In-Reply-To: <20221215001944.GC1971568@dread.disaster.area>
+Message-ID: <alpine.DEB.2.22.394.2212151910210.1790310@email.eecs.umich.edu>
+References: <CACQnzjuhRzNruTm369wVQU3y091da2c+h+AfRED+AtA-dYqXNQ@mail.gmail.com> <Y5i0ALbAdEf4yNuZ@magnolia> <CACQnzjua_0=Nz_gyza=iFVigceJO6Wbzn4X86E2y4N_Od3Yi0g@mail.gmail.com> <20221215001944.GC1971568@dread.disaster.area>
+User-Agent: Alpine 2.22 (DEB 394 2020-01-19)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y5rDCcYGgH72Wn/e@sol.localdomain>
+Content-Type: text/plain; format=flowed; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Dec 14, 2022 at 10:47:37PM -0800, Eric Biggers wrote:
-> On Thu, Dec 15, 2022 at 10:06:32AM +1100, Dave Chinner wrote:
-> > > Well, my proposal at
-> > > https://lore.kernel.org/r/20221028224539.171818-2-ebiggers@kernel.org is to keep
-> > > tracking the "verified" status at the individual Merkle tree block level, by
-> > > adding a bitmap fsverity_info::hash_block_verified.  That is part of the
-> > > fs/verity/ infrastructure, and all filesystems would be able to use it.
-> > 
-> > Yeah, i had a look at that rewrite of the verification code last
-> > night - I get the gist of what it is doing, but a single patch of
-> > that complexity is largely impossible to sanely review...
-> 
-> Thanks for taking a look at it.  It doesn't really lend itself to being split
-> up, unfortunately, but I'll see what I can do.
-> 
-> > Correct me if I'm wrong, but won't using a bitmap with 1 bit per
-> > verified block cause problems with contiguous memory allocation
-> > pretty quickly? i.e. a 64kB bitmap only tracks 512k blocks, which is
-> > only 2GB of merkle tree data. Hence at file sizes of 100+GB, the
-> > bitmap would have to be kvmalloc()d to guarantee allocation will
-> > succeed.
-> > 
-> > I'm not really worried about the bitmap memory usage, just that it
-> > handles large contiguous allocations sanely. I suspect we may
-> > eventually need a sparse bitmap (e.g. the old btrfs bit-radix
-> > implementation) to track verification in really large files
-> > efficiently.
-> 
-> Well, that's why my patch uses kvmalloc() to allocate the bitmap.
-> 
-> I did originally think it was going to have to be a sparse bitmap that ties into
-> the shrinker so that pages of it can be evicted.  But if you do the math, the
-> required bitmap size is only 1 / 2^22 the size of the file, assuming the Merkle
-> tree uses SHA-256 and 4K blocks.  So a 100MB file only needs a 24-byte bitmap,
-> and the bitmap for any file under 17GB fits in a 4K page.
-> 
-> My patch puts an arbitrary limit at a 1 MiB bitmap, which would be a 4.4TB file.
-> 
-> It's not ideal to say "4 TB Ought To Be Enough For Anybody".  But it does feel
-> that it's not currently worth the extra complexity and runtime overhead of
-> implementing a full-blown sparse bitmap with cache eviction support, when no one
-> currently has a use case for fsverity on files anywhere near that large.
 
-I think we can live with that for the moment, but I suspect that 4TB
-filesize limit will become an issue sooner rather than later. What
-will happen if someone tries to measure a file larger than this
-limit? What's the failure mode?
+Hi Dave,
 
-Cheers,
+Thanks for your quick and detailed reply.  More inline....
 
-Dave.
+On Thu, 15 Dec 2022, Dave Chinner wrote:
 
--- 
-Dave Chinner
-david@fromorbit.com
+>> Regardless of the block device (the plot includes results for optane 
+>> and RamFS), it seems like the ioctl(FICLONE) call is slow.
+>
+> Please define "slow" - is it actually slower than it should be (i.e. a 
+> bug) or does it simply not perform according to your expectations?
+
+I was surprised that on a DRAM-backed file system the ioctl(FICLONE) took 
+*milli*seconds right from the start, and grew to *tens* of milliseconds. 
+There's no slow block storage device to increase latency; all of the 
+latency is due to software.  I was expecting microseconds of latency with 
+DRAM underneath.
+
+Performance matters because cloning is an excellent crash-tolerance 
+mechanism.  Applications that maintain persistent state in files --- 
+that's a huge number of applications --- can make clones of said files and 
+recover from crashes by reverting to the most recent successful clone. 
+In many situations this is much easier and better than shoe-horning 
+application data into something like an ACID-transactional relational 
+database or transactional key-value store.  But the run-time cost of 
+making a clone during failure-free operation can't be excessive.  Cloning 
+for crash tolerance usually requires durable media beneath the file system 
+(HDD or SSD, not DRAM), so performance on block storage devices matters 
+too.  We measured performance of cloning atop DRAM to understand how much 
+latency is due to block storage hardware vs. software alone.
+
+My colleagues and I started working on clone-based crash tolerance 
+mechanisms nearly a decade ago.  Extensive experience with cloning and 
+related mechanisms in the HP Advanced File System (AdvFS), a Linux port of 
+the DEC Tru64 file system, taught me to expect cloning to be *faster* than 
+alternatives for crash tolerance:
+
+https://www.usenix.org/system/files/conference/fast15/fast15-paper-verma.pdf
+
+https://web.eecs.umich.edu/~tpkelly/papers/HPL-2015-103.pdf
+
+The point I'm trying to make is:  I'm a serious customer who loves cloning 
+and my performance expectations aren't based on idle speculation but on 
+experience with other cloning implementations.  (AdvFS is not open source 
+and I'm no longer an HP employee, so I no longer have access to it.)
+
+More recently I torture-tested XFS cloning as a crash-tolerance mechanism 
+by subjecting it to real whole-system power interruptions:
+
+https://dl.acm.org/doi/pdf/10.1145/3400899.3400902
+
+I performed these correctness tests before making any performance 
+measurements because I don't care how fast a mechanism is if it doesn't 
+correctly tolerate crashes.  XFS passed the power-fail tests with flying 
+colors.  Now it's time to consider performance.
+
+I'm surprised that in XFS, cloning alone *without* fsync() pushes data 
+down to storage.  I would have expected that the implementation of cloning 
+would always operate upon memory alone, and that an explicit fsync() would 
+be required to force data down to durable media.  Analogy:  write() 
+doesn't modify storage; write() plus fsync() does.  Is there a reason why 
+copying via ioctl(FICLONE) isn't similar?
+
+Finally I understand your explanation that the cost of cloning is 
+proportional to the size of the extent map, and that in the limit where 
+the extent map is very large, cloning a file of size N requires O(N) time. 
+However the constant factors surprise me.  If memory serves we were seeing 
+latencies of milliseconds atop DRAM for the first few clones on files that 
+began as sparse files and had only a few blocks written to them.  Copying 
+the extent map on a DRAM file system must be tantamount to a bunch of 
+memcpy() calls (right?), and I'm surprised that the volume of data that 
+must be memcpy'd is so large that it takes milliseconds.
+
+We might be able to take some of the additional measurements you suggested 
+during/after the holidays.
+
+Thanks again.
+
+> A few things that you can quantify to answer these questions.
+>
+> ...
+
