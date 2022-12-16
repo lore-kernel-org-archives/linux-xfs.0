@@ -2,83 +2,80 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBC33C46467
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Dec 2022 04:37:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4371DC4167B
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Dec 2022 05:04:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229806AbiLPEhe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 15 Dec 2022 23:37:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47652 "EHLO
+        id S229524AbiLPFEa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 16 Dec 2022 00:04:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229488AbiLPEhd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Dec 2022 23:37:33 -0500
-Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E32FB1147E;
-        Thu, 15 Dec 2022 20:37:31 -0800 (PST)
-Received: by mail-pg1-x532.google.com with SMTP id r18so986096pgr.12;
-        Thu, 15 Dec 2022 20:37:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=XLygs21yUm+BsQ9K/jaILqjtoVN7cCv+GmldKd5jCoY=;
-        b=atuW7kj1tICjX6XOEoGlMKRElIbgy8WI/deoKifcFx1519QZRpDCOoxmKj7EgE2l4w
-         PKzJI7L2ZbVuy2LOhWOolJwT0c6HGC5z3GYIC7j6xM/AunIUu1/hMOhZv9S06C7VFhC1
-         4Q2nDbmd0YUF9RndxPqP2p/GdMMZ3K4yhoxZk3FVJ0hYXbi4IN4jZVfHJrGPnQoXbTYJ
-         YAB5z7iNwRy7E4EGbWHbVIEyT9ICXQ8iqfiE3z4SLn1NrJW7NLywpAeLKJB/g9wvfmaM
-         r5jcdkMrnO+dY5EbBAyyZATVFCQYX6igkBalPuLJ6BkhstYEmOV58RsJNRueXOX7Ax8G
-         6CbQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=XLygs21yUm+BsQ9K/jaILqjtoVN7cCv+GmldKd5jCoY=;
-        b=1RDrx1hZ8KHNAUD1/NRRTJ1CPTNhPrld6r2CD6nnJSi5rEybp6koCneM3aNZte9UBO
-         cmDjJ7ObK2xdG8AixelWloZR1cGFaWt+L23EdMB1GSOiKHoLErguHgiF04Q24K6kjbD5
-         JYKpKNAJPInTwyfZgymWBhR8UVMAwWJA3TlJ8iuR6zH16YLbK3AbPB0gt6yB/sytYR7z
-         9dE/ikpFRmcOiB+qpcLUFGuTdO1j9+qdCFa5ifoItvkfjSFE2vGjal+EbK/6hRegywLh
-         HDE5OPllMYS9sV6BAQmdjbenUXor3mHmKymQM3O0RYgsCJqIKaQxUJBTuQez460TA7iR
-         2Zmw==
-X-Gm-Message-State: AFqh2kqo1LdKxAEzULNywHgPzgjgnME/mdLFRsdSc6n6vPpAdXnpMm9V
-        qM3EpT/p1resnd9qPpoHFbF1TFpJvVYrvz4OC/mm9WQjBiU=
-X-Google-Smtp-Source: AMrXdXt5JWumad1PiboheGKsXmVaNjeH8snNXdAqZ+Iojn+pij8j6t8nwEgKCk6P8kauAlDPnokzu+Szv1Dew2bD4rM=
-X-Received: by 2002:a63:584c:0:b0:484:2672:2c6a with SMTP id
- i12-20020a63584c000000b0048426722c6amr142358pgm.535.1671165451321; Thu, 15
- Dec 2022 20:37:31 -0800 (PST)
+        with ESMTP id S229518AbiLPFE2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Dec 2022 00:04:28 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A8514A04E;
+        Thu, 15 Dec 2022 21:04:28 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A6890B81C9A;
+        Fri, 16 Dec 2022 05:04:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03B0CC433D2;
+        Fri, 16 Dec 2022 05:04:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1671167065;
+        bh=51ypuloz2foDttekJgabwM5fTg/0aKUSlqb1chQkiko=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Ulbrsgxk0UBUAIIX/DLUXa1GMj9oKn3Dim3Kc7FQJsAlwHxvG934GOXOcys42SkzI
+         UBQRcS/df3r69nGRL8a5f8s09cjP0avxJFwfQMOWna6bJ2xtTdfAjYiwnL2tTA2XEx
+         qoYGJPtoDU2+QXuSfY/xae34OBtjPxov/SdhDtmI3KywRqZFJWdQohgzKXU55jwQza
+         wBVTm/X6E/cYu55XpCIMFBMdjURnPhwZrV8piZ9UnuUxTrdJAAdj7p9CfW2blmwooa
+         5eJ+bzPt40KbXsyNZlt4AJyDI5yfpen+UxsmLOAIhmxVKe2ilalf5okS/Iv9dj7FeN
+         xKITdoVLS5W7Q==
+Date:   Thu, 15 Dec 2022 21:04:23 -0800
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Andrey Albershteyn <aalbersh@redhat.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [RFC PATCH 00/11] fs-verity support for XFS
+Message-ID: <Y5v8V2BLONOVByTm@sol.localdomain>
+References: <20221213172935.680971-1-aalbersh@redhat.com>
+ <Y5jllLwXlfB7BzTz@sol.localdomain>
+ <20221213221139.GZ3600936@dread.disaster.area>
+ <Y5ltzp6yeMo1oDSk@sol.localdomain>
+ <20221214230632.GA1971568@dread.disaster.area>
+ <Y5rDCcYGgH72Wn/e@sol.localdomain>
+ <20221215205737.GD1971568@dread.disaster.area>
 MIME-Version: 1.0
-References: <639b23c8.DdUNqMCLdxZ7gLv2%lkp@intel.com>
-In-Reply-To: <639b23c8.DdUNqMCLdxZ7gLv2%lkp@intel.com>
-From:   Vincent Mailhol <vincent.mailhol@gmail.com>
-Date:   Fri, 16 Dec 2022 13:37:20 +0900
-Message-ID: <CAMZ6RqJ7-GTPe7tNdhTYCF6OrnagfNL_7EXrhn5HD=YB8dtCGw@mail.gmail.com>
-Subject: Re: [linux-next:master] BUILD REGRESSION 459c73db4069c27c1d4a0e20d055b837396364b8
-To:     kernel test robot <lkp@intel.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        loongarch@lists.linux.dev, linuxppc-dev@lists.ozlabs.org,
-        linux-xfs@vger.kernel.org, linux-parisc@vger.kernel.org,
-        linux-omap@vger.kernel.org, linux-can@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, kvm@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org,
-        Linux Memory Management List <linux-mm@kvack.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221215205737.GD1971568@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue. 15 Dec. 2022 at 22:57, kernel test robot <lkp@intel.com> wrote:
-> tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
-> branch HEAD: 459c73db4069c27c1d4a0e20d055b837396364b8  Add linux-next specific files for 20221215
->
-> Error/Warning reports:
+On Fri, Dec 16, 2022 at 07:57:37AM +1100, Dave Chinner wrote:
+> > 
+> > Well, that's why my patch uses kvmalloc() to allocate the bitmap.
+> > 
+> > I did originally think it was going to have to be a sparse bitmap that ties into
+> > the shrinker so that pages of it can be evicted.  But if you do the math, the
+> > required bitmap size is only 1 / 2^22 the size of the file, assuming the Merkle
+> > tree uses SHA-256 and 4K blocks.  So a 100MB file only needs a 24-byte bitmap,
+> > and the bitmap for any file under 17GB fits in a 4K page.
+> > 
+> > My patch puts an arbitrary limit at a 1 MiB bitmap, which would be a 4.4TB file.
+> > 
+> > It's not ideal to say "4 TB Ought To Be Enough For Anybody".  But it does feel
+> > that it's not currently worth the extra complexity and runtime overhead of
+> > implementing a full-blown sparse bitmap with cache eviction support, when no one
+> > currently has a use case for fsverity on files anywhere near that large.
+> 
+> I think we can live with that for the moment, but I suspect that 4TB
+> filesize limit will become an issue sooner rather than later. What
+> will happen if someone tries to measure a file larger than this
+> limit? What's the failure mode?
+> 
 
-(...)
+FS_IOC_ENABLE_VERITY will fail with EFBIG.
 
-> Documentation/networking/devlink/etas_es58x.rst: WARNING: document isn't included in any toctree
-
-A patch for this warning is on its way:
-  https://lore.kernel.org/linux-next/20221213051136.721887-1-mailhol.vincent@wanadoo.fr/T/#u
-
-(...)
-
-Yours sincerely,
-Vincent Mailhol
+- Eric
