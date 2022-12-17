@@ -2,165 +2,140 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE4EFC3DA6E
-	for <linux-xfs@archiver.kernel.org>; Sat, 17 Dec 2022 09:51:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42120C3DA6E
+	for <linux-xfs@archiver.kernel.org>; Sat, 17 Dec 2022 10:01:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230110AbiLQJvg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 17 Dec 2022 04:51:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53608 "EHLO
+        id S230237AbiLQKBZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 17 Dec 2022 05:01:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55582 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230040AbiLQJvf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 17 Dec 2022 04:51:35 -0500
+        with ESMTP id S229496AbiLQKBY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 17 Dec 2022 05:01:24 -0500
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56B3C64CF
-        for <linux-xfs@vger.kernel.org>; Sat, 17 Dec 2022 01:50:49 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 708331BA
+        for <linux-xfs@vger.kernel.org>; Sat, 17 Dec 2022 02:00:37 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1671270648;
+        s=mimecast20190719; t=1671271236;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=SoPj9mC+7dZa40Zj36zf5IfoAg8z5HIfhVGxnwDD3IM=;
-        b=a07ittZeRXrnAK5sXlIxo0r9ub/7Kd8NPmLXnGwgK4oKbrnTZMGSgKTsR20a5c4s9tf6AK
-        7WhyfrjiFxze4vWNiVlmGSjmPYkU7/3P4lItO7gfWn7TUmFWTB++mpeHGVcYbZ1UiuE71J
-        +dFA+J19UmcJX+k7Y5lK6VEl98wnF10=
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
- [209.85.210.198]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=QiA0eqs2hIrTXVUuAbOZCJqheHyB9QNMtE3D6bFqT3o=;
+        b=VfJ7jVJH2ZFzOVQ5GvttDGcCabqSqs2ota2bmMOQnVhXpiCxqUSrLeBXj5EeY2GKU+okhV
+        DmAgjGX0dyiMxD2WYHdSeJdRdwFAW8Uhvh0a1hNKyMsRkEQsC9JUT3yoDjHGM+00ze2viv
+        b7aV77vtXBefKrhzQ/gtOiF+mHNTvoI=
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
+ [209.85.214.199]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-212-IlmvLSHCNBKnboBTn5ob2A-1; Sat, 17 Dec 2022 04:50:47 -0500
-X-MC-Unique: IlmvLSHCNBKnboBTn5ob2A-1
-Received: by mail-pf1-f198.google.com with SMTP id v23-20020aa78097000000b005748c087db1so2710136pff.2
-        for <linux-xfs@vger.kernel.org>; Sat, 17 Dec 2022 01:50:47 -0800 (PST)
+ us-mta-438-lmnAW25eOFG_9TZwHi72nA-1; Sat, 17 Dec 2022 05:00:35 -0500
+X-MC-Unique: lmnAW25eOFG_9TZwHi72nA-1
+Received: by mail-pl1-f199.google.com with SMTP id z10-20020a170902ccca00b001898329db72so3358307ple.21
+        for <linux-xfs@vger.kernel.org>; Sat, 17 Dec 2022 02:00:34 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=SoPj9mC+7dZa40Zj36zf5IfoAg8z5HIfhVGxnwDD3IM=;
-        b=YiH02e55ALFnGeOpsb/wS/cLdxTR5cb8kvUUkqHhdNFnYpoUrLwyFAD4OsKtwRODBf
-         SnUiLEyawmew5Dh1GGAxXSfjU7gh2njOq4llAGlsh+BJdaGGQ/sLyNWJRgcKIjHqIj3f
-         fVorEHEG1smZpFZqN6ZnRDdyRLatciX7ZkEi0eggDIpShd2eM0JX2vfT+1GpbOepXcDE
-         Pth1ZV9YGsefrryVzOoFGoUXJQPbJBll+uu9/b+E2D51sIMZSWzp7G+R3KyNXqQ7rZRu
-         /NBtdVmrHIS50Vxc+2INbgrvEkkFV2U+Dl2T7uBCFAkLAAor/ihLfGx9cRx1A0Nng/9I
-         zJvA==
-X-Gm-Message-State: ANoB5pml+icCJ/2Xnc+hEhwsxO4Bwex4yMSxP2GNKKtvONCFgbfWtV2R
-        aoVYZ2kG6waySMqCTnbxPzOTSu7rtTF0Mmc434hdVjRG295U/eAyqPSropzllbZGZZJURLdWOXH
-        Uyegaozv0DgOs7F/Y7WvU
-X-Received: by 2002:a17:902:8e81:b0:186:a43b:a5 with SMTP id bg1-20020a1709028e8100b00186a43b00a5mr33301717plb.13.1671270645987;
-        Sat, 17 Dec 2022 01:50:45 -0800 (PST)
-X-Google-Smtp-Source: AA0mqf6H8ilVd3NpvI0xW4UcQziXTarqYf8Qd60QVEDBi949xhHLm0HE3wNGxi6KhHJFDUpvEnR+AA==
-X-Received: by 2002:a17:902:8e81:b0:186:a43b:a5 with SMTP id bg1-20020a1709028e8100b00186a43b00a5mr33301708plb.13.1671270645653;
-        Sat, 17 Dec 2022 01:50:45 -0800 (PST)
+        bh=QiA0eqs2hIrTXVUuAbOZCJqheHyB9QNMtE3D6bFqT3o=;
+        b=zaWxEnKw8fHcnbXdvD/rag6pNW3yvrnGk/RDbc4RnK5K4A+GL0Fq3cqZ86yxTULDO9
+         hOpT5k9ZTQjeULqhx33BZG/aUPpprwoZYOE2m1U5dUqB2ibewHZrbWgJcxUG8s3xxL7H
+         a1QCbKD8TEIpHFDh7sdtNmRh/pXfJl/eKoLKnqxkP4ykvykW+zHj14mP2QO7TR+udMeO
+         kcdv+vvawO+6LCY/UoFEYmUhRTaTHlFWMY2iAemFhYkb7aM8Ok99QdcfWhb/btleXtMM
+         ls9B+J/cAKIq1MI3O+sQqJic+prwd0y/TWHYLee5gMUAiktKfKSBE/yJvzaGzQ0EKWfi
+         xebQ==
+X-Gm-Message-State: ANoB5pmPTQ7kGmOVQp5Tgr+3A2amZ5Sqy7WCWKAr31kRj4kB/Jros6hC
+        XsEStinKGgPBCdQMRdggMLVTmvH+SiEcjCFHQPdtvt3TAbhQPF1yIjbbqwJQb0VLmLdy5urDIZZ
+        ttEUd1GmxIILwgs8cPaVk
+X-Received: by 2002:a17:902:d192:b0:189:c19a:2cd9 with SMTP id m18-20020a170902d19200b00189c19a2cd9mr29951026plb.25.1671271233811;
+        Sat, 17 Dec 2022 02:00:33 -0800 (PST)
+X-Google-Smtp-Source: AA0mqf5IuFjDnmGqXa9ce7q7mVU7eUmroPAmzsPZ/4PzEzc1n99LL0sS2IZjrNWwS83lpQd+1qw5MQ==
+X-Received: by 2002:a17:902:d192:b0:189:c19a:2cd9 with SMTP id m18-20020a170902d19200b00189c19a2cd9mr29951007plb.25.1671271233494;
+        Sat, 17 Dec 2022 02:00:33 -0800 (PST)
 Received: from zlang-mailbox ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id l6-20020a170902d34600b00189393ab02csm3101616plk.99.2022.12.17.01.50.43
+        by smtp.gmail.com with ESMTPSA id 13-20020a170902c24d00b00189348ab156sm3092346plg.283.2022.12.17.02.00.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 17 Dec 2022 01:50:45 -0800 (PST)
-Date:   Sat, 17 Dec 2022 17:50:40 +0800
+        Sat, 17 Dec 2022 02:00:33 -0800 (PST)
+Date:   Sat, 17 Dec 2022 18:00:29 +0800
 From:   Zorro Lang <zlang@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH v1.1 3/4] common/populate: move decompression code to
- _{xfs,ext4}_mdrestore
-Message-ID: <20221217095040.buxwb5sfg2r36pqo@zlang-mailbox>
-References: <167096070957.1750373.5715692265711468248.stgit@magnolia>
- <167096072838.1750373.11954125201906427521.stgit@magnolia>
- <Y517WiHeORSpumeK@magnolia>
+Subject: Re: [PATCH 1/1] xfs/122: fix EFI/EFD log format structure size after
+ flex array conversion
+Message-ID: <20221217100029.x4su3x5n3tlnuldi@zlang-mailbox>
+References: <167096073708.1750519.5668846655153278713.stgit@magnolia>
+ <167096074260.1750519.311637326793150150.stgit@magnolia>
+ <20221214184047.k3iaxggotcli4423@zlang-mailbox>
+ <Y516UhlSugONPpVp@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y517WiHeORSpumeK@magnolia>
+In-Reply-To: <Y516UhlSugONPpVp@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Dec 17, 2022 at 12:18:34AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Sat, Dec 17, 2022 at 12:14:10AM -0800, Darrick J. Wong wrote:
+> On Thu, Dec 15, 2022 at 02:40:47AM +0800, Zorro Lang wrote:
+> > On Tue, Dec 13, 2022 at 11:45:42AM -0800, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Adjust this test since made EFI/EFD log item format structs proper flex
+> > > arrays instead of array[1].
+> > > 
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > 
+> > So we let this case fail on all older system/kernel? Is the kernel patch
+> > recommended to be merged on downstream kernel?
 > 
-> Move the metadump decompression code to the per-filesystem mdrestore
-> commands so that everyone can take advantage of them.  This enables the
-> XFS and ext4 _mdrestore helpers to handle metadata dumps compressed with
-> their respective _metadump helpers.
+> Yes, since there are certain buggy compilers that mishandle the array
+> size computation.  Prior to the introduction of xfs_ondisk.h, they were
+> silently writing out filesystem structures that would not be recognized
+> by more mainstream systems (e.g. x86).
 > 
-> In turn, this means that the xfs fuzz tests can now handle the
-> compressed metadumps created by the _scratch_populate_cached helper.
-> This is key to unbreaking fuzz testing for xfs.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
-> v1.1: remove unnecessary parameter
+> OFC nearly all those reports about buggy compilers are for tiny
+> architectures that XFS doesn't work well on anyways, so in practice it
+> hasn't created any user problems (AFAIK).
 
-This version looks good to me,
+Thanks, may you provide this detailed explanation in commit log, and better
+to point out the kernel commits which is related with this testing change.
 
-Reviewed-by: Zorro Lang <zlang@redhat.com>
+Due to this case isn't a case for a known issue, I think it might be no
+suitable to add _fixed_by_kernel_commit in this case, but how about giving
+more details in commit log.
 
-> ---
->  common/ext4     |   10 ++++++++++
->  common/populate |   11 -----------
->  common/xfs      |   10 ++++++++++
->  3 files changed, 20 insertions(+), 11 deletions(-)
+Thanks,
+Zorro
+
 > 
-> diff --git a/common/ext4 b/common/ext4
-> index dc2e4e59cc..8fd6dbc682 100644
-> --- a/common/ext4
-> +++ b/common/ext4
-> @@ -132,6 +132,16 @@ _ext4_mdrestore()
->  	shift; shift
->  	local options="$@"
->  
-> +	# If we're configured for compressed dumps and there isn't already an
-> +	# uncompressed dump, see if we can use DUMP_COMPRESSOR to decompress
-> +	# something.
-> +	if [ ! -e "$metadump" ] && [ -n "$DUMP_COMPRESSOR" ]; then
-> +		for compr in "$metadump".*; do
-> +			[ -e "$compr" ] && $DUMP_COMPRESSOR -d -f -k "$compr" && break
-> +		done
-> +	fi
-> +	test -r "$metadump" || return 1
-> +
->  	$E2IMAGE_PROG $options -r "${metadump}" "${SCRATCH_DEV}"
->  }
->  
-> diff --git a/common/populate b/common/populate
-> index f382c40aca..0a8a6390d4 100644
-> --- a/common/populate
-> +++ b/common/populate
-> @@ -848,17 +848,6 @@ _scratch_populate_cache_tag() {
->  _scratch_populate_restore_cached() {
->  	local metadump="$1"
->  
-> -	# If we're configured for compressed dumps and there isn't already an
-> -	# uncompressed dump, see if we can use DUMP_COMPRESSOR to decompress
-> -	# something.
-> -	if [ -n "$DUMP_COMPRESSOR" ]; then
-> -		for compr in "$metadump".*; do
-> -			[ -e "$compr" ] && $DUMP_COMPRESSOR -d -f -k "$compr" && break
-> -		done
-> -	fi
-> -
-> -	test -r "$metadump" || return 1
-> -
->  	case "${FSTYP}" in
->  	"xfs")
->  		_xfs_mdrestore "${metadump}" "${SCRATCH_DEV}"
-> diff --git a/common/xfs b/common/xfs
-> index 216dab3bcd..60848a5b8a 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -644,6 +644,16 @@ _xfs_mdrestore() {
->  	shift; shift
->  	local options="$@"
->  
-> +	# If we're configured for compressed dumps and there isn't already an
-> +	# uncompressed dump, see if we can use DUMP_COMPRESSOR to decompress
-> +	# something.
-> +	if [ ! -e "$metadump" ] && [ -n "$DUMP_COMPRESSOR" ]; then
-> +		for compr in "$metadump".*; do
-> +			[ -e "$compr" ] && $DUMP_COMPRESSOR -d -f -k "$compr" && break
-> +		done
-> +	fi
-> +	test -r "$metadump" || return 1
-> +
->  	$XFS_MDRESTORE_PROG $options "${metadump}" "${device}"
->  }
->  
+> --D
+> 
+> > Thanks,
+> > Zorro
+> > 
+> > >  tests/xfs/122.out |    8 ++++----
+> > >  1 file changed, 4 insertions(+), 4 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/tests/xfs/122.out b/tests/xfs/122.out
+> > > index a56cbee84f..95e53c5081 100644
+> > > --- a/tests/xfs/122.out
+> > > +++ b/tests/xfs/122.out
+> > > @@ -161,10 +161,10 @@ sizeof(xfs_disk_dquot_t) = 104
+> > >  sizeof(xfs_dq_logformat_t) = 24
+> > >  sizeof(xfs_dqblk_t) = 136
+> > >  sizeof(xfs_dsb_t) = 264
+> > > -sizeof(xfs_efd_log_format_32_t) = 28
+> > > -sizeof(xfs_efd_log_format_64_t) = 32
+> > > -sizeof(xfs_efi_log_format_32_t) = 28
+> > > -sizeof(xfs_efi_log_format_64_t) = 32
+> > > +sizeof(xfs_efd_log_format_32_t) = 16
+> > > +sizeof(xfs_efd_log_format_64_t) = 16
+> > > +sizeof(xfs_efi_log_format_32_t) = 16
+> > > +sizeof(xfs_efi_log_format_64_t) = 16
+> > >  sizeof(xfs_error_injection_t) = 8
+> > >  sizeof(xfs_exntfmt_t) = 4
+> > >  sizeof(xfs_exntst_t) = 4
+> > > 
+> > 
 > 
 
