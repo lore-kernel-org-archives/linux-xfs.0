@@ -2,235 +2,241 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F8F6C4332F
-	for <linux-xfs@archiver.kernel.org>; Sun, 18 Dec 2022 23:41:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF05DC4167B
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Dec 2022 04:12:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230494AbiLRXlO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 18 Dec 2022 18:41:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57816 "EHLO
+        id S231239AbiLSEMk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 18 Dec 2022 23:12:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229730AbiLRXlN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Dec 2022 18:41:13 -0500
-Received: from newman.eecs.umich.edu (newman.eecs.umich.edu [141.212.113.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFD0D63C3
-        for <linux-xfs@vger.kernel.org>; Sun, 18 Dec 2022 15:41:11 -0800 (PST)
-Received: from email.eecs.umich.edu (email.eecs.umich.edu [141.212.113.99] (may be forged))
-        by newman.eecs.umich.edu (8.15.2/8.14.4) with ESMTPS id 2BINesIN3080355
-        (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO);
-        Sun, 18 Dec 2022 18:40:54 -0500
-Received: from email.eecs.umich.edu (localhost [127.0.0.1])
-        by email.eecs.umich.edu (8.15.2/8.13.0) with ESMTP id 2BINesgr2812753;
-        Sun, 18 Dec 2022 18:40:54 -0500
-Received: from localhost (tpkelly@localhost)
-        by email.eecs.umich.edu (8.15.2/8.14.4/Submit) with ESMTP id 2BINesC12812749;
-        Sun, 18 Dec 2022 18:40:54 -0500
-Date:   Sun, 18 Dec 2022 18:40:54 -0500 (EST)
-From:   Terence Kelly <tpkelly@eecs.umich.edu>
-To:     Dave Chinner <david@fromorbit.com>
-cc:     Suyash Mahar <smahar@ucsd.edu>,
-        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        Suyash Mahar <suyash12mahar@outlook.com>
-Subject: Re: XFS reflink overhead, ioctl(FICLONE)
-In-Reply-To: <20221218014649.GE1971568@dread.disaster.area>
-Message-ID: <alpine.DEB.2.22.394.2212180125330.2578935@email.eecs.umich.edu>
-References: <CACQnzjuhRzNruTm369wVQU3y091da2c+h+AfRED+AtA-dYqXNQ@mail.gmail.com> <Y5i0ALbAdEf4yNuZ@magnolia> <CACQnzjua_0=Nz_gyza=iFVigceJO6Wbzn4X86E2y4N_Od3Yi0g@mail.gmail.com> <20221215001944.GC1971568@dread.disaster.area>
- <alpine.DEB.2.22.394.2212151910210.1790310@email.eecs.umich.edu> <20221218014649.GE1971568@dread.disaster.area>
-User-Agent: Alpine 2.22 (DEB 394 2020-01-19)
+        with ESMTP id S229570AbiLSEMi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Dec 2022 23:12:38 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AB7762F2
+        for <linux-xfs@vger.kernel.org>; Sun, 18 Dec 2022 20:11:54 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1671423113;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=A0AB2ImfmpGTbJT2hjx7MPlfSDg/2sQoTphheKvNM0Y=;
+        b=bhJ+agef5GcPgdTtq9Zp9nZzBfBASfBQz0VQMY6RFV0sbKSHRaSP9jC43LD6rvVjjVhSgY
+        1Otano50xHwXZu831ZzbUQRs0fBefpQsLWc1ZSnhV7VMOjR1WbAhJC6QOZIqtq1EEZFWa5
+        58RJK4014MK3Ixsd7X8Zcdlw1gE+WjU=
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com
+ [209.85.215.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-213-iqJ7iSrOOlyDKPOgyFHnPA-1; Sun, 18 Dec 2022 23:11:51 -0500
+X-MC-Unique: iqJ7iSrOOlyDKPOgyFHnPA-1
+Received: by mail-pg1-f200.google.com with SMTP id r22-20020a63ce56000000b00478f1cfb0fbso4819860pgi.0
+        for <linux-xfs@vger.kernel.org>; Sun, 18 Dec 2022 20:11:51 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=A0AB2ImfmpGTbJT2hjx7MPlfSDg/2sQoTphheKvNM0Y=;
+        b=MRYjHbOAgr3lFIJ5OvAi+J6J3xzNXRaa8NbfRgMwr8G5PEpFo/VrlvT53ef+AhzqsC
+         kITqlltU8sKoIx+fCibOcReoMmJ+Ws0sjO5yvNmA3XCuTsPkliVcFmlDwFCUx9/UPY8p
+         PmevvsBFssZWaXsQS4Kgqz3twwkqxnJnVtk8OOA1Z3QwY4HntAtYxe8QZxnyeKSNyPpM
+         5m5DcNNueLvEqeNcDnQg8XFZuoUzG7XHjG1ngnK+N9WffLcUDwLM/Lei3iyQxtG6EjL4
+         KBHvTTTnVTSowqo1+476qR8thP6fNPcKbsNSYS6cJQjP2y0YYfTWWYLfN7/fAFLYyEge
+         Rayw==
+X-Gm-Message-State: ANoB5pkQyg1KRaoRYD7e5XhIkcX9C/ZRKKyUhceq+OFoPZ89vFF0xcSN
+        qG+MtM5movrofYHOzQExKx2VZOGsmVM/kav+jZJ13cnGnKNHi0Tch9iQnT5FqHWi9iHIDqw0YCX
+        70cQhBT+DeaS1F9VWbK5k
+X-Received: by 2002:a62:e119:0:b0:576:ebde:78fa with SMTP id q25-20020a62e119000000b00576ebde78famr38331764pfh.9.1671423110687;
+        Sun, 18 Dec 2022 20:11:50 -0800 (PST)
+X-Google-Smtp-Source: AA0mqf720nHMfb68bj8qiOJnzbnzU1AcmZyjuyDAjZEpoMMzhPYNyukYDVHp7TzjrKXGaXWE2ePS8A==
+X-Received: by 2002:a62:e119:0:b0:576:ebde:78fa with SMTP id q25-20020a62e119000000b00576ebde78famr38331742pfh.9.1671423110283;
+        Sun, 18 Dec 2022 20:11:50 -0800 (PST)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id i62-20020a62c141000000b0057737e403d9sm5353225pfg.209.2022.12.18.20.11.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 18 Dec 2022 20:11:49 -0800 (PST)
+Date:   Mon, 19 Dec 2022 12:11:44 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org,
+        fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, Christian Brauner <brauner@kernel.org>
+Subject: Re: Why fstests g/673 and g/683~687 suddently fail (on xfs, ext4...)
+ on latest linux v6.1+ ?
+Message-ID: <20221219041144.fc4gj5bdw3dgobhp@zlang-mailbox>
+References: <20221218103850.cbqdq3bmw7zl7iad@zlang-mailbox>
+ <CAOQ4uxhmCgyorYVtD6=n=khqwUc=MPbZs+y=sqt09XbGoNm_tA@mail.gmail.com>
+ <20221218130432.fgitgsn522shmpwi@zlang-mailbox>
+ <Y59YkDch8b6v/KfD@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Y59YkDch8b6v/KfD@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Sun, Dec 18, 2022 at 10:14:40AM -0800, Darrick J. Wong wrote:
+> On Sun, Dec 18, 2022 at 09:04:32PM +0800, Zorro Lang wrote:
+> > On Sun, Dec 18, 2022 at 02:11:01PM +0200, Amir Goldstein wrote:
+> > > On Sun, Dec 18, 2022 at 1:06 PM Zorro Lang <zlang@redhat.com> wrote:
+> > > >
+> > > > Hi,
+> > > >
+> > > > fstests generic/673 and generic/683~687 are a series of test cases to
+> > > > verify suid and sgid bits are dropped properly. xfs-list writes these
+> > > > cases to verify xfs behavior follows vfs, e.g. [1]. And these cases
+> > > > test passed on xfs and ext4 for long time. Even on my last regression
+> > > > test on linux v6.1-rc8+, they were passed too.
+> > > >
+> > > > But now the default behavior looks like be changed again, xfs and ext4
+> > > > start to fail [2] on latest linux v6.1+ (HEAD [0]), So there must be
+> > > > changed. I'd like to make sure what's changed, and if it's expected?
+> > > 
+> > > I think that is expected and I assume Christian was planning to fix the tests.
+> > > 
+> > > See Christian's pull request:
+> > > https://lore.kernel.org/linux-fsdevel/20221212112053.99208-1-brauner@kernel.org/
+> > > 
+> > > "Note, that some xfstests will now fail as these patches will cause the setgid
+> > > bit to be lost in certain conditions for unprivileged users modifying a setgid
+> > > file when they would've been kept otherwise. I think this risk is worth taking
+> > > and I explained and mentioned this multiple times on the list:
+> > > https://lore.kernel.org/linux-fsdevel/20221122142010.zchf2jz2oymx55qi@wittgenstein"
+> > 
+> > Hi Amir,
+> > 
+> > Thanks for your reply. Yes, these test cases were failed on overlayfs, passed on
+> > xfs, ext4 and btrfs. Now it's reversed, overlayfs passed on this test, xfs and
+> > ext4 failed.
+> 
+> Odd, I'll have to look into why things work here ... maybe it's the
+> selinux contexts?
+> 
+> > Anyway, if this's an expected behavior change, and it's reviewed and accepted by
+> > linux upstream, I don't have objection. Just to make sure if there's a regression.
+> > Feel free to send patch to fstests@ to update the expected results, and show
+> > details about why change them again :)
+> 
+> Somewhat unrelated, but are you going to merge
+> https://lore.kernel.org/fstests/20220816121551.88407-1-glass@fydeos.io/
 
+Hi Darrick,
 
-On Sun, 18 Dec 2022, Dave Chinner wrote:
+This change has been done by another patch:
 
->> https://www.usenix.org/system/files/conference/fast15/fast15-paper-verma.pdf
->
-> Ah, now I get it. You want *anonymous ephemeral clones*, not named 
-> persistent clones.  For everyone else, so they don't have to read the 
-> paper and try to work it out:
->
-> The mechanism is a hacked the O_ATOMIC path ...
+commit 7c7a73c43be8e41a324eed01e3f5aa69860b0ddf
+Author: Christian Brauner <brauner@kernel.org>
+Date:   Tue Sep 20 10:35:22 2022 +0200
 
-No.  To be clear, nobody now in 2022 is asking for the AdvFS features of 
-the FAST 2015 paper to be implemented in XFS (or BtrFS or any other FS).
+    idmapped-mounts: account for EOVERFLOW
 
-The current XFS/BtrFS/Liunux ioctl(FICLONE) is perfect for my current and 
-foreseeable needs, except for performance.
+Thanks,
+Zorro
 
-I cited the FAST 2015 paper simply to show that I've worked with a 
-clone-based mechanism in the past and it delighted me in every way.  It's 
-simply an existence proof that cloning can be delightful for crash 
-tolerance.
-
-> Hence the difference in functionality is that FICLONE provides 
-> persistent, unrestricted named clones rather than ephemeral clones.
-
-For the record, the AdvFS implementation of clone-based crash tolerance 
---- the moral equivalent of failure-atomic msync(), which was the topic of 
-my EuroSys 2013 paper --- involved persistent files on durable storage; 
-the files were hidden and were discarded when their usefulness was over 
-but the hidden files were not "ephemeral" in the sense of a file in a 
-DRAM-backed file system (/tmp/ or /dev/shm/ or whatnot).  AdvFS crash 
-tolerance survived real power failures.  But this is a side issue of 
-historical interest only.
-
-I mainly want to emphasize that nobody is asking for the behavior of AdvFS 
-in that FAST 2015 paper.
-
-> We could implement ephemeral clones in XFS, but nobody has ever 
-> mentioned needing or wanting such functionality until this thread.
-
-Nobody needs or wants such functionality, even in this thread.  The 
-current ioctl(FICLONE) is perfect except for performance.
-
->> https://dl.acm.org/doi/pdf/10.1145/3400899.3400902
->
-> Heh. You're still using hardware to do filesystem power fail testing? 
-> We moved away from needing hardware to do power fail testing of 
-> filesystems several years ago.
->
-> Using functionality like dm-logwrites, we can simulate the effect of 
-> several hundred different power fail cases with write-by-write replay 
-> and recovery in the space of a couple of minutes.
-
-Cool.  I assume you're familiar with a paper on a similar technique that 
-my HP Labs colleagues wrote circa 2013 or 2014:  "Torturing Databases for 
-Fun and Profit."
-
-> Not only that, failures are fully replayable and so we can actually 
-> debug every single individual failure without having to guess at the 
-> runtime context that created the failure or the recovery context that 
-> exposed the failure.
->
-> This infrastructure has provided us with a massive step forward for 
-> improving crash resilence and recovery capability in ext4, btrfs and 
-> XFS.  These tests are built into automated tests suites (e.g. fstests) 
-> that pretty much all linux fs engineers and distro QE teams run these 
-> days.
-
-If you think the world would benefit from reading about this technique and 
-using it more widely, I might be able to help.  My column in _Queue_ 
-magazine reaches thousands of readers, sometimes tens of thousands.  It's 
-about teaching better techniques to working programmers.
-
-I'd be honored to help pass along to my readers practical techniques that 
-you're using to improve quality.
-
-> IOWs, hardware based power fail testing of filesystems is largely 
-> obsolete these days....
-
-I don't mind telling the world that my own past work is obsolete.  That's 
-what progress is all about.
-
->> I'm surprised that in XFS, cloning alone *without* fsync() pushes data 
->> down to storage.  I would have expected that the implementation of 
->> cloning would always operate upon memory alone, and that an explicit 
->> fsync() would be required to force data down to durable media. 
->> Analogy:  write() doesn't modify storage; write() plus fsync() does. 
->> Is there a reason why copying via ioctl(FICLONE) isn't similar?
->
-> Because FICLONE provides a persistent named clone that is a fully 
-> functioning file in it's own right.  That means it has to be completely 
-> indepedent of the source file by the time the FICLONE operation 
-> completes.  This implies that there is a certain order to the operations 
-> the clone performances - the data has to be on disk before the clone is 
-> made persistent and recoverable so that both files as guaranteed to have 
-> identical contents if we crash immediately after the clone completes.
-
-I thought the rule was that if an application doesn't call fsync() or 
-msync(), no durability of any kind is guaranteed.  I thought modern file 
-systems did all their work in DRAM until an explicit fsync/msync or other 
-necessity compelled them to push data down to durable media (in the right 
-order etc.).
-
-Also, we might be using terminology differently:
-
-I use "persistent" in the sense of "outlives processes".  Files in /tmp/ 
-and /dev/shm/ are persistent, but not durable.
-
-I use "durable" to mean "written to non-volatile media (HDD or SSD) in 
-such a way as to guarantee that it will survive power cycling."
-
-I expect *persistence* from ioctl(FICLONE) but I didn't expect a 
-*durability* guarantee without fsync().  If I'm understanding you 
-correctly, cloning in XFS gives us durability whether we want it or not.
-
->> Finally I understand your explanation that the cost of cloning is 
->> proportional to the size of the extent map, and that in the limit where 
->> the extent map is very large, cloning a file of size N requires O(N) 
->> time. However the constant factors surprise me.  If memory serves we 
->> were seeing latencies of milliseconds atop DRAM for the first few 
->> clones on files that began as sparse files and had only a few blocks 
->> written to them.  Copying the extent map on a DRAM file system must be 
->> tantamount to a bunch of memcpy() calls (right?),
->
-> At the IO layer, yes, it's just a memcpy.
->
-> But we can't just copy a million extents from one in-memory btree to 
-> another.  We have to modify the filesystem metadata in an atomic, 
-> transactional, recoverable way. Those transactions work one extent at a 
-> time because each extent might require a different set of modifications.
-
-Ah, so now I see where the time goes.  This is clear.
-
-> Persistent clones require tracking of the number of times a given block 
-> on disk is shared so that we know when extent removals result in the 
-> extent no longer being shared and/or referenced. A file that has been 
-> cloned a million times might have a million extents each shared a 
-> different number of times. When we remove one of those clones, how do we 
-> know which blocks are now unreferenced and need to be freed?
->
-> IOWs, named persistent clones are *much more complex* than ephemeral 
-> clones.
-
-Again, I don't know where you're getting "ephemeral" from; that word does 
-not appear in the FAST '15 paper.  The AdvFS clones of the FAST '15 paper 
-were both durable and persistent; they were just hidden from the 
-user-visible namespace.  A crash (power outage or whatever ) caused a file 
-to revert to the most recent hidden clone.  In AdvFS, a hidden clone was 
-created by an fsync/msync call.  This is how AdvFS made file updates 
-failure-atomic.
-
-Again, we're not asking for the same functionality of the FAST '15 paper.
-
-However if the contrast between what AdvFS did with clones and how XFS 
-works illuminates issues like XFS performance, then it might be worth 
-understanding AdvFS.
-
-Incidentally, I really appreciate the time & effort you're taking to 
-educate me & Suyash.  I hope I'm not being too sluggish a student, though 
-sometimes I am.
-
-For the near term, Suyash and I are getting closer to an understanding of 
-today's ioctl(FICLONE) that we can pass along to readers in the paper 
-we're writing.
-
-> The overhead you are measuring is the result of all the persistent cross 
-> referencing and reference counting metadata we need to atomically update 
-> on each extent sharing operation ensure long term persistent clones work 
-> correctly.
-
-This is clear.  Thanks.
-
-> If we were to implement ephemeral clones as per the mechanism you've 
-> outlined in the papers above, then we could just copy the in-memory 
-> extent list btree with a series of memcpy() operations because we don't 
-> need persistent on-disk shared reference counting to implement it....
-
-We're not on the same page about what AdvFS did.
-
-Of course I'll understand if you don't have time or interest to get on the 
-same page; we understand that you're busy with a lot of important work.
-
-Thanks for your help and Happy Holidays!
-
-> Cheers,
->
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> 
+> ?
+> 
+> --D
+> 
+> > Thanks,
+> > Zorro
+> > 
+> > > 
+> > > Thanks,
+> > > Amir.
+> > > 
+> > > >
+> > > > Thanks,
+> > > > Zorro
+> > > >
+> > > > [0]
+> > > > commit f9ff5644bcc04221bae56f922122f2b7f5d24d62
+> > > > Author: Linus Torvalds <torvalds@linux-foundation.org>
+> > > > Date:   Sat Dec 17 08:55:19 2022 -0600
+> > > >
+> > > >     Merge tag 'hsi-for-6.2' of git://git.kernel.org/pub/scm/linux/kernel/git/sre/linux-h
+> > > >
+> > > > [1]
+> > > > commit e014f37db1a2d109afa750042ac4d69cf3e3d88e
+> > > > Author: Darrick J. Wong <djwong@kernel.org>
+> > > > Date:   Tue Mar 8 10:51:16 2022 -0800
+> > > >
+> > > >     xfs: use setattr_copy to set vfs inode attributes
+> > > >
+> > > > [2]
+> > > > FSTYP         -- xfs (debug)
+> > > > PLATFORM      -- Linux/s390x ibm-z-510 6.1.0+ #1 SMP Sat Dec 17 13:23:59 EST 2022
+> > > > MKFS_OPTIONS  -- -f -m crc=1,finobt=1,reflink=1,rmapbt=0,bigtime=1,inobtcount=1 -b size=1024 /dev/loop1
+> > > > MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/loop1 /mnt/fstests/SCRATCH_DIR
+> > > >
+> > > > generic/673       - output mismatch (see /var/lib/xfstests/results//generic/673.out.bad)
+> > > >     --- tests/generic/673.out   2022-12-17 13:57:40.336589178 -0500
+> > > >     +++ /var/lib/xfstests/results//generic/673.out.bad  2022-12-18 00:00:53.627210256 -0500
+> > > >     @@ -51,7 +51,7 @@
+> > > >      310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/a
+> > > >      2666 -rw-rwSrw- SCRATCH_MNT/a
+> > > >      3784de23efab7a2074c9ec66901e39e5  SCRATCH_MNT/a
+> > > >     -2666 -rw-rwSrw- SCRATCH_MNT/a
+> > > >     +666 -rw-rw-rw- SCRATCH_MNT/a
+> > > >
+> > > >      Test 10 - qa_user, group-exec file, only sgid
+> > > >     ...
+> > > >     (Run 'diff -u /var/lib/xfstests/tests/generic/673.out /var/lib/xfstests/results//generic/673.out.bad'  to see the entire diff)
+> > > > Ran: generic/673
+> > > > Failures: generic/673
+> > > > Failed 1 of 1 tests
+> > > >
+> > > > FSTYP         -- xfs (debug)
+> > > > PLATFORM      -- Linux/s390x ibm-z-510 6.1.0+ #1 SMP Sat Dec 17 13:23:59 EST 2022
+> > > > MKFS_OPTIONS  -- -f -m crc=1,finobt=1,reflink=1,rmapbt=0,bigtime=1,inobtcount=1 -b size=1024 /dev/loop1
+> > > > MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/loop1 /mnt/fstests/SCRATCH_DIR
+> > > >
+> > > > generic/683       - output mismatch (see /var/lib/xfstests/results//generic/683.out.bad)
+> > > >     --- tests/generic/683.out   2022-12-17 13:57:40.696589178 -0500
+> > > >     +++ /var/lib/xfstests/results//generic/683.out.bad  2022-12-18 00:04:55.297220255 -0500
+> > > >     @@ -33,7 +33,7 @@
+> > > >
+> > > >      Test 9 - qa_user, non-exec file falloc, only sgid
+> > > >      2666 -rw-rwSrw- TEST_DIR/683/a
+> > > >     -2666 -rw-rwSrw- TEST_DIR/683/a
+> > > >     +666 -rw-rw-rw- TEST_DIR/683/a
+> > > >
+> > > >      Test 10 - qa_user, group-exec file falloc, only sgid
+> > > >     ...
+> > > >     (Run 'diff -u /var/lib/xfstests/tests/generic/683.out /var/lib/xfstests/results//generic/683.out.bad'  to see the entire diff)
+> > > > Ran: generic/683
+> > > > Failures: generic/683
+> > > > Failed 1 of 1 tests
+> > > >
+> > > > FSTYP         -- xfs (debug)
+> > > > PLATFORM      -- Linux/s390x ibm-z-510 6.1.0+ #1 SMP Sat Dec 17 13:23:59 EST 2022
+> > > > MKFS_OPTIONS  -- -f -m crc=1,finobt=1,reflink=1,rmapbt=0,bigtime=1,inobtcount=1 -b size=1024 /dev/loop1
+> > > > MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/loop1 /mnt/fstests/SCRATCH_DIR
+> > > >
+> > > > generic/684       - output mismatch (see /var/lib/xfstests/results//generic/684.out.bad)
+> > > >     --- tests/generic/684.out   2022-12-17 13:57:40.766589178 -0500
+> > > >     +++ /var/lib/xfstests/results//generic/684.out.bad  2022-12-18 00:05:27.597220255 -0500
+> > > >     @@ -33,7 +33,7 @@
+> > > >
+> > > >      Test 9 - qa_user, non-exec file fpunch, only sgid
+> > > >      2666 -rw-rwSrw- TEST_DIR/684/a
+> > > >     -2666 -rw-rwSrw- TEST_DIR/684/a
+> > > >     +666 -rw-rw-rw- TEST_DIR/684/a
+> > > >
+> > > >      Test 10 - qa_user, group-exec file fpunch, only sgid
+> > > >     ...
+> > > >     (Run 'diff -u /var/lib/xfstests/tests/generic/684.out /var/lib/xfstests/results//generic/684.out.bad'  to see the entire diff)
+> > > > Ran: generic/684
+> > > > Failures: generic/684
+> > > > Failed 1 of 1 tests
+> > > > ....
+> > > > ....
+> > > >
+> > > >
+> > > > Thanks,
+> > > > Zorro
+> > > >
+> > > 
+> > 
+> 
 
