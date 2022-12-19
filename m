@@ -2,241 +2,304 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF05DC4167B
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Dec 2022 04:12:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28AF4C4332F
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Dec 2022 14:35:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231239AbiLSEMk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 18 Dec 2022 23:12:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47424 "EHLO
+        id S232256AbiLSOfV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 19 Dec 2022 09:35:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229570AbiLSEMi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Dec 2022 23:12:38 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AB7762F2
-        for <linux-xfs@vger.kernel.org>; Sun, 18 Dec 2022 20:11:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1671423113;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=A0AB2ImfmpGTbJT2hjx7MPlfSDg/2sQoTphheKvNM0Y=;
-        b=bhJ+agef5GcPgdTtq9Zp9nZzBfBASfBQz0VQMY6RFV0sbKSHRaSP9jC43LD6rvVjjVhSgY
-        1Otano50xHwXZu831ZzbUQRs0fBefpQsLWc1ZSnhV7VMOjR1WbAhJC6QOZIqtq1EEZFWa5
-        58RJK4014MK3Ixsd7X8Zcdlw1gE+WjU=
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com
- [209.85.215.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-213-iqJ7iSrOOlyDKPOgyFHnPA-1; Sun, 18 Dec 2022 23:11:51 -0500
-X-MC-Unique: iqJ7iSrOOlyDKPOgyFHnPA-1
-Received: by mail-pg1-f200.google.com with SMTP id r22-20020a63ce56000000b00478f1cfb0fbso4819860pgi.0
-        for <linux-xfs@vger.kernel.org>; Sun, 18 Dec 2022 20:11:51 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=A0AB2ImfmpGTbJT2hjx7MPlfSDg/2sQoTphheKvNM0Y=;
-        b=MRYjHbOAgr3lFIJ5OvAi+J6J3xzNXRaa8NbfRgMwr8G5PEpFo/VrlvT53ef+AhzqsC
-         kITqlltU8sKoIx+fCibOcReoMmJ+Ws0sjO5yvNmA3XCuTsPkliVcFmlDwFCUx9/UPY8p
-         PmevvsBFssZWaXsQS4Kgqz3twwkqxnJnVtk8OOA1Z3QwY4HntAtYxe8QZxnyeKSNyPpM
-         5m5DcNNueLvEqeNcDnQg8XFZuoUzG7XHjG1ngnK+N9WffLcUDwLM/Lei3iyQxtG6EjL4
-         KBHvTTTnVTSowqo1+476qR8thP6fNPcKbsNSYS6cJQjP2y0YYfTWWYLfN7/fAFLYyEge
-         Rayw==
-X-Gm-Message-State: ANoB5pkQyg1KRaoRYD7e5XhIkcX9C/ZRKKyUhceq+OFoPZ89vFF0xcSN
-        qG+MtM5movrofYHOzQExKx2VZOGsmVM/kav+jZJ13cnGnKNHi0Tch9iQnT5FqHWi9iHIDqw0YCX
-        70cQhBT+DeaS1F9VWbK5k
-X-Received: by 2002:a62:e119:0:b0:576:ebde:78fa with SMTP id q25-20020a62e119000000b00576ebde78famr38331764pfh.9.1671423110687;
-        Sun, 18 Dec 2022 20:11:50 -0800 (PST)
-X-Google-Smtp-Source: AA0mqf720nHMfb68bj8qiOJnzbnzU1AcmZyjuyDAjZEpoMMzhPYNyukYDVHp7TzjrKXGaXWE2ePS8A==
-X-Received: by 2002:a62:e119:0:b0:576:ebde:78fa with SMTP id q25-20020a62e119000000b00576ebde78famr38331742pfh.9.1671423110283;
-        Sun, 18 Dec 2022 20:11:50 -0800 (PST)
-Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id i62-20020a62c141000000b0057737e403d9sm5353225pfg.209.2022.12.18.20.11.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 18 Dec 2022 20:11:49 -0800 (PST)
-Date:   Mon, 19 Dec 2022 12:11:44 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org,
-        fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, Christian Brauner <brauner@kernel.org>
-Subject: Re: Why fstests g/673 and g/683~687 suddently fail (on xfs, ext4...)
- on latest linux v6.1+ ?
-Message-ID: <20221219041144.fc4gj5bdw3dgobhp@zlang-mailbox>
-References: <20221218103850.cbqdq3bmw7zl7iad@zlang-mailbox>
- <CAOQ4uxhmCgyorYVtD6=n=khqwUc=MPbZs+y=sqt09XbGoNm_tA@mail.gmail.com>
- <20221218130432.fgitgsn522shmpwi@zlang-mailbox>
- <Y59YkDch8b6v/KfD@magnolia>
+        with ESMTP id S232261AbiLSOfP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Dec 2022 09:35:15 -0500
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA613B49;
+        Mon, 19 Dec 2022 06:35:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1671460514; x=1702996514;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=LVsOQvzkOtTm5a/HbIKG/rvJvKxEXOkq5De3oJvkS9U=;
+  b=PHRdOQHDJgwpccjshx6HRAg49Xw+dcOe5J/pLeWnkBWlegxpHelOxiGd
+   OhgiCHhkpPQZy1PV4BFMvtxeuP9+xseqMQGnAbIzJJa6zwb8g8FEKjpoy
+   n0xmgqOy51XogRJCh+EvsxUDasUATYZ4j2dRUUJHeMO3rtBAhk/KZBdeu
+   qkwIo4LLsotxyvRwinPgmNlS5p8z7FBsTz0jPGDd9DUrR/qM4f837REvX
+   WDt/f1zfCIbcDVis9RJMW3SPPm6287nhDgoBfAlfTEi0KT4/Bi92nCqKz
+   FA6DcKAKoo6WSdKp+Rta8KqHRUTee7z3l7nU4uuky8mKVDMvGaGCSWbDI
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10566"; a="307034207"
+X-IronPort-AV: E=Sophos;i="5.96,255,1665471600"; 
+   d="scan'208";a="307034207"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Dec 2022 06:35:12 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10566"; a="896064818"
+X-IronPort-AV: E=Sophos;i="5.96,255,1665471600"; 
+   d="scan'208";a="896064818"
+Received: from lkp-server01.sh.intel.com (HELO b5d47979f3ad) ([10.239.97.150])
+  by fmsmga006.fm.intel.com with ESMTP; 19 Dec 2022 06:35:09 -0800
+Received: from kbuild by b5d47979f3ad with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1p7HES-0008kZ-17;
+        Mon, 19 Dec 2022 14:35:08 +0000
+Date:   Mon, 19 Dec 2022 22:34:58 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Andrew Morton <akpm@linux-foundation.org>
+Cc:     speakup@linux-speakup.org, netdev@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-xfs@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-omap@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-cxl@vger.kernel.org,
+        linux-can@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, kvm@vger.kernel.org,
+        Linux Memory Management List <linux-mm@kvack.org>
+Subject: [linux-next:master] BUILD REGRESSION
+ d650871875b2ccc670f1044be7f3cc90f276745d
+Message-ID: <63a07692.6I76+dHvnFt0bil/%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y59YkDch8b6v/KfD@magnolia>
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Dec 18, 2022 at 10:14:40AM -0800, Darrick J. Wong wrote:
-> On Sun, Dec 18, 2022 at 09:04:32PM +0800, Zorro Lang wrote:
-> > On Sun, Dec 18, 2022 at 02:11:01PM +0200, Amir Goldstein wrote:
-> > > On Sun, Dec 18, 2022 at 1:06 PM Zorro Lang <zlang@redhat.com> wrote:
-> > > >
-> > > > Hi,
-> > > >
-> > > > fstests generic/673 and generic/683~687 are a series of test cases to
-> > > > verify suid and sgid bits are dropped properly. xfs-list writes these
-> > > > cases to verify xfs behavior follows vfs, e.g. [1]. And these cases
-> > > > test passed on xfs and ext4 for long time. Even on my last regression
-> > > > test on linux v6.1-rc8+, they were passed too.
-> > > >
-> > > > But now the default behavior looks like be changed again, xfs and ext4
-> > > > start to fail [2] on latest linux v6.1+ (HEAD [0]), So there must be
-> > > > changed. I'd like to make sure what's changed, and if it's expected?
-> > > 
-> > > I think that is expected and I assume Christian was planning to fix the tests.
-> > > 
-> > > See Christian's pull request:
-> > > https://lore.kernel.org/linux-fsdevel/20221212112053.99208-1-brauner@kernel.org/
-> > > 
-> > > "Note, that some xfstests will now fail as these patches will cause the setgid
-> > > bit to be lost in certain conditions for unprivileged users modifying a setgid
-> > > file when they would've been kept otherwise. I think this risk is worth taking
-> > > and I explained and mentioned this multiple times on the list:
-> > > https://lore.kernel.org/linux-fsdevel/20221122142010.zchf2jz2oymx55qi@wittgenstein"
-> > 
-> > Hi Amir,
-> > 
-> > Thanks for your reply. Yes, these test cases were failed on overlayfs, passed on
-> > xfs, ext4 and btrfs. Now it's reversed, overlayfs passed on this test, xfs and
-> > ext4 failed.
-> 
-> Odd, I'll have to look into why things work here ... maybe it's the
-> selinux contexts?
-> 
-> > Anyway, if this's an expected behavior change, and it's reviewed and accepted by
-> > linux upstream, I don't have objection. Just to make sure if there's a regression.
-> > Feel free to send patch to fstests@ to update the expected results, and show
-> > details about why change them again :)
-> 
-> Somewhat unrelated, but are you going to merge
-> https://lore.kernel.org/fstests/20220816121551.88407-1-glass@fydeos.io/
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
+branch HEAD: d650871875b2ccc670f1044be7f3cc90f276745d  Add linux-next specific files for 20221219
 
-Hi Darrick,
+Error/Warning reports:
 
-This change has been done by another patch:
+https://lore.kernel.org/oe-kbuild-all/202211242120.MzZVGULn-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202212020520.0OkMIno3-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202212040713.rVney9e8-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202212061455.6GE7y0jg-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202212090509.NjAl9tbo-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202212142121.vendKsOc-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202212191708.Xk9yBj52-lkp@intel.com
 
-commit 7c7a73c43be8e41a324eed01e3f5aa69860b0ddf
-Author: Christian Brauner <brauner@kernel.org>
-Date:   Tue Sep 20 10:35:22 2022 +0200
+Error/Warning: (recently discovered and may have been fixed)
 
-    idmapped-mounts: account for EOVERFLOW
+Documentation/gpu/drm-internals:179: ./include/drm/drm_file.h:411: WARNING: undefined label: drm_accel_node (if the link has no caption the label must precede a section header)
+Documentation/networking/devlink/etas_es58x.rst: WARNING: document isn't included in any toctree
+Warning: tools/power/cpupower/man/cpupower-powercap-info.1 references a file that doesn't exist: Documentation/power/powercap/powercap.txt
+aarch64-linux-ld: ID map text too big or misaligned
+arch/arm/kernel/entry-armv.S:485:5: warning: "CONFIG_ARM_THUMB" is not defined, evaluates to 0 [-Wundef]
+arch/powerpc/kernel/kvm_emul.o: warning: objtool: kvm_template_end(): can't find starting instruction
+arch/powerpc/kernel/optprobes_head.o: warning: objtool: optprobe_template_end(): can't find starting instruction
+cistpl.c:(.text+0x82): undefined reference to `iounmap'
+drivers/regulator/tps65219-regulator.c:310:32: warning: parameter 'dev' set but not used [-Wunused-but-set-parameter]
+drivers/regulator/tps65219-regulator.c:310:60: warning: parameter 'dev' set but not used [-Wunused-but-set-parameter]
+drivers/regulator/tps65219-regulator.c:370:26: warning: ordered comparison of pointer with integer zero [-Wextra]
+irq-al-fic.c:(.init.text+0x2e): undefined reference to `of_iomap'
+lib/dhry_run.c:61:6: warning: variable 'ret' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
+s390x-linux-ld: cistpl.c:(.text+0x210): undefined reference to `iounmap'
+s390x-linux-ld: cistpl.c:(.text+0x222): undefined reference to `ioremap'
+s390x-linux-ld: irq-al-fic.c:(.init.text+0x898): undefined reference to `iounmap'
 
-Thanks,
-Zorro
+Unverified Error/Warning (likely false positive, please contact us if interested):
 
-> 
-> ?
-> 
-> --D
-> 
-> > Thanks,
-> > Zorro
-> > 
-> > > 
-> > > Thanks,
-> > > Amir.
-> > > 
-> > > >
-> > > > Thanks,
-> > > > Zorro
-> > > >
-> > > > [0]
-> > > > commit f9ff5644bcc04221bae56f922122f2b7f5d24d62
-> > > > Author: Linus Torvalds <torvalds@linux-foundation.org>
-> > > > Date:   Sat Dec 17 08:55:19 2022 -0600
-> > > >
-> > > >     Merge tag 'hsi-for-6.2' of git://git.kernel.org/pub/scm/linux/kernel/git/sre/linux-h
-> > > >
-> > > > [1]
-> > > > commit e014f37db1a2d109afa750042ac4d69cf3e3d88e
-> > > > Author: Darrick J. Wong <djwong@kernel.org>
-> > > > Date:   Tue Mar 8 10:51:16 2022 -0800
-> > > >
-> > > >     xfs: use setattr_copy to set vfs inode attributes
-> > > >
-> > > > [2]
-> > > > FSTYP         -- xfs (debug)
-> > > > PLATFORM      -- Linux/s390x ibm-z-510 6.1.0+ #1 SMP Sat Dec 17 13:23:59 EST 2022
-> > > > MKFS_OPTIONS  -- -f -m crc=1,finobt=1,reflink=1,rmapbt=0,bigtime=1,inobtcount=1 -b size=1024 /dev/loop1
-> > > > MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/loop1 /mnt/fstests/SCRATCH_DIR
-> > > >
-> > > > generic/673       - output mismatch (see /var/lib/xfstests/results//generic/673.out.bad)
-> > > >     --- tests/generic/673.out   2022-12-17 13:57:40.336589178 -0500
-> > > >     +++ /var/lib/xfstests/results//generic/673.out.bad  2022-12-18 00:00:53.627210256 -0500
-> > > >     @@ -51,7 +51,7 @@
-> > > >      310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/a
-> > > >      2666 -rw-rwSrw- SCRATCH_MNT/a
-> > > >      3784de23efab7a2074c9ec66901e39e5  SCRATCH_MNT/a
-> > > >     -2666 -rw-rwSrw- SCRATCH_MNT/a
-> > > >     +666 -rw-rw-rw- SCRATCH_MNT/a
-> > > >
-> > > >      Test 10 - qa_user, group-exec file, only sgid
-> > > >     ...
-> > > >     (Run 'diff -u /var/lib/xfstests/tests/generic/673.out /var/lib/xfstests/results//generic/673.out.bad'  to see the entire diff)
-> > > > Ran: generic/673
-> > > > Failures: generic/673
-> > > > Failed 1 of 1 tests
-> > > >
-> > > > FSTYP         -- xfs (debug)
-> > > > PLATFORM      -- Linux/s390x ibm-z-510 6.1.0+ #1 SMP Sat Dec 17 13:23:59 EST 2022
-> > > > MKFS_OPTIONS  -- -f -m crc=1,finobt=1,reflink=1,rmapbt=0,bigtime=1,inobtcount=1 -b size=1024 /dev/loop1
-> > > > MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/loop1 /mnt/fstests/SCRATCH_DIR
-> > > >
-> > > > generic/683       - output mismatch (see /var/lib/xfstests/results//generic/683.out.bad)
-> > > >     --- tests/generic/683.out   2022-12-17 13:57:40.696589178 -0500
-> > > >     +++ /var/lib/xfstests/results//generic/683.out.bad  2022-12-18 00:04:55.297220255 -0500
-> > > >     @@ -33,7 +33,7 @@
-> > > >
-> > > >      Test 9 - qa_user, non-exec file falloc, only sgid
-> > > >      2666 -rw-rwSrw- TEST_DIR/683/a
-> > > >     -2666 -rw-rwSrw- TEST_DIR/683/a
-> > > >     +666 -rw-rw-rw- TEST_DIR/683/a
-> > > >
-> > > >      Test 10 - qa_user, group-exec file falloc, only sgid
-> > > >     ...
-> > > >     (Run 'diff -u /var/lib/xfstests/tests/generic/683.out /var/lib/xfstests/results//generic/683.out.bad'  to see the entire diff)
-> > > > Ran: generic/683
-> > > > Failures: generic/683
-> > > > Failed 1 of 1 tests
-> > > >
-> > > > FSTYP         -- xfs (debug)
-> > > > PLATFORM      -- Linux/s390x ibm-z-510 6.1.0+ #1 SMP Sat Dec 17 13:23:59 EST 2022
-> > > > MKFS_OPTIONS  -- -f -m crc=1,finobt=1,reflink=1,rmapbt=0,bigtime=1,inobtcount=1 -b size=1024 /dev/loop1
-> > > > MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/loop1 /mnt/fstests/SCRATCH_DIR
-> > > >
-> > > > generic/684       - output mismatch (see /var/lib/xfstests/results//generic/684.out.bad)
-> > > >     --- tests/generic/684.out   2022-12-17 13:57:40.766589178 -0500
-> > > >     +++ /var/lib/xfstests/results//generic/684.out.bad  2022-12-18 00:05:27.597220255 -0500
-> > > >     @@ -33,7 +33,7 @@
-> > > >
-> > > >      Test 9 - qa_user, non-exec file fpunch, only sgid
-> > > >      2666 -rw-rwSrw- TEST_DIR/684/a
-> > > >     -2666 -rw-rwSrw- TEST_DIR/684/a
-> > > >     +666 -rw-rw-rw- TEST_DIR/684/a
-> > > >
-> > > >      Test 10 - qa_user, group-exec file fpunch, only sgid
-> > > >     ...
-> > > >     (Run 'diff -u /var/lib/xfstests/tests/generic/684.out /var/lib/xfstests/results//generic/684.out.bad'  to see the entire diff)
-> > > > Ran: generic/684
-> > > > Failures: generic/684
-> > > > Failed 1 of 1 tests
-> > > > ....
-> > > > ....
-> > > >
-> > > >
-> > > > Thanks,
-> > > > Zorro
-> > > >
-> > > 
-> > 
-> 
+drivers/accessibility/speakup/main.c:1290:26: sparse: sparse: obsolete array initializer, use C99 syntax
+drivers/cxl/core/mbox.c:832:18: sparse: sparse: cast from non-scalar
+drivers/cxl/core/mbox.c:832:18: sparse: sparse: cast to non-scalar
+drivers/i2c/busses/i2c-qcom-geni.c:1028:28: sparse: sparse: symbol 'i2c_master_hub' was not declared. Should it be static?
+drivers/media/test-drivers/visl/visl-video.c:690:22: sparse: sparse: symbol 'visl_qops' was not declared. Should it be static?
+drivers/usb/misc/sisusbvga/sisusbvga.c:528:9: sparse: sparse: incorrect type in assignment (different base types)
+fs/xfs/xfs_iomap.c:86:29: sparse: sparse: symbol 'xfs_iomap_page_ops' was not declared. Should it be static?
+hidma.c:(.text+0x9a): undefined reference to `devm_ioremap_resource'
+s390x-linux-ld: fsl-edma.c:(.text+0x15c): undefined reference to `devm_ioremap_resource'
+s390x-linux-ld: fsl-edma.c:(.text+0x49c): undefined reference to `devm_ioremap_resource'
+timer-of.c:(.init.text+0x1aee): undefined reference to `iounmap'
+timer-of.c:(.init.text+0x5a2): undefined reference to `of_iomap'
 
+Error/Warning ids grouped by kconfigs:
+
+gcc_recent_errors
+|-- alpha-randconfig-s031-20221218
+|   |-- drivers-cxl-core-mbox.c:sparse:sparse:cast-from-non-scalar
+|   `-- drivers-cxl-core-mbox.c:sparse:sparse:cast-to-non-scalar
+|-- arc-randconfig-r031-20221219
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- arc-randconfig-s033-20221218
+|   |-- drivers-cxl-core-mbox.c:sparse:sparse:cast-from-non-scalar
+|   `-- drivers-cxl-core-mbox.c:sparse:sparse:cast-to-non-scalar
+|-- arm-cerfcube_defconfig
+|   `-- arch-arm-kernel-entry-armv.S:warning:CONFIG_ARM_THUMB-is-not-defined-evaluates-to
+|-- arm-footbridge_defconfig
+|   `-- arch-arm-kernel-entry-armv.S:warning:CONFIG_ARM_THUMB-is-not-defined-evaluates-to
+|-- arm64-allyesconfig
+|   `-- aarch64-linux-ld:ID-map-text-too-big-or-misaligned
+|-- csky-randconfig-s051-20221218
+|   |-- drivers-nvmem-u-boot-env.c:sparse:sparse:cast-to-restricted-__le32
+|   `-- drivers-nvmem-u-boot-env.c:sparse:sparse:restricted-__le32-degrades-to-integer
+|-- i386-allyesconfig
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- i386-randconfig-s002
+|   `-- fs-xfs-xfs_iomap.c:sparse:sparse:symbol-xfs_iomap_page_ops-was-not-declared.-Should-it-be-static
+|-- ia64-allmodconfig
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- loongarch-randconfig-s053-20221218
+|   |-- drivers-cxl-core-mbox.c:sparse:sparse:cast-from-non-scalar
+|   |-- drivers-cxl-core-mbox.c:sparse:sparse:cast-to-non-scalar
+|   `-- drivers-media-test-drivers-visl-visl-video.c:sparse:sparse:symbol-visl_qops-was-not-declared.-Should-it-be-static
+|-- microblaze-randconfig-s052-20221218
+|   |-- drivers-cxl-core-mbox.c:sparse:sparse:cast-from-non-scalar
+|   `-- drivers-cxl-core-mbox.c:sparse:sparse:cast-to-non-scalar
+|-- nios2-allyesconfig
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- openrisc-allyesconfig
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- openrisc-randconfig-r025-20221219
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- parisc-allyesconfig
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- powerpc-allmodconfig
+|   |-- arch-powerpc-kernel-kvm_emul.o:warning:objtool:kvm_template_end():can-t-find-starting-instruction
+|   |-- arch-powerpc-kernel-optprobes_head.o:warning:objtool:optprobe_template_end():can-t-find-starting-instruction
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+clang_recent_errors
+|-- riscv-randconfig-r024-20221219
+|   |-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|   `-- lib-dhry_run.c:warning:variable-ret-is-used-uninitialized-whenever-if-condition-is-false
+|-- s390-randconfig-r003-20221218
+|   |-- hidma.c:(.text):undefined-reference-to-devm_ioremap_resource
+|   |-- irq-al-fic.c:(.init.text):undefined-reference-to-of_iomap
+|   |-- s39-linux-ld:fsl-edma.c:(.text):undefined-reference-to-devm_ioremap_resource
+|   |-- s39-linux-ld:irq-al-fic.c:(.init.text):undefined-reference-to-iounmap
+|   |-- timer-of.c:(.init.text):undefined-reference-to-iounmap
+|   `-- timer-of.c:(.init.text):undefined-reference-to-of_iomap
+|-- s390-randconfig-r036-20221218
+|   |-- cistpl.c:(.text):undefined-reference-to-iounmap
+|   |-- s39-linux-ld:cistpl.c:(.text):undefined-reference-to-ioremap
+|   |-- s39-linux-ld:cistpl.c:(.text):undefined-reference-to-iounmap
+|   `-- s39-linux-ld:fsl-edma.c:(.text):undefined-reference-to-devm_ioremap_resource
+`-- x86_64-rhel-8.3-rust
+    `-- vmlinux.o:warning:objtool:___ksymtab_gpl-_RNvNtCsfATHBUcknU9_6kernel5print16call_printk_cont:data-relocation-to-ENDBR:_RNvNtCsfATHBUcknU9_6kernel5print16call_printk_cont
+
+elapsed time: 745m
+
+configs tested: 109
+configs skipped: 3
+
+gcc tested configs:
+x86_64               randconfig-a002-20221219
+um                             i386_defconfig
+x86_64                            allnoconfig
+x86_64               randconfig-a003-20221219
+x86_64               randconfig-a001-20221219
+um                           x86_64_defconfig
+x86_64               randconfig-a004-20221219
+x86_64               randconfig-a005-20221219
+x86_64               randconfig-a006-20221219
+i386                 randconfig-a001-20221219
+i386                 randconfig-a003-20221219
+arm                            pleb_defconfig
+i386                 randconfig-a002-20221219
+i386                 randconfig-a004-20221219
+i386                 randconfig-a006-20221219
+ia64                             allmodconfig
+i386                 randconfig-a005-20221219
+powerpc                     taishan_defconfig
+powerpc                   currituck_defconfig
+arm                        cerfcube_defconfig
+arc                          axs103_defconfig
+powerpc                     ep8248e_defconfig
+arm                           sama5_defconfig
+openrisc                            defconfig
+powerpc                           allnoconfig
+x86_64                           rhel-8.3-bpf
+x86_64                           rhel-8.3-syz
+i386                                defconfig
+x86_64                    rhel-8.3-kselftests
+riscv                randconfig-r042-20221218
+alpha                            allyesconfig
+m68k                             allyesconfig
+x86_64                         rhel-8.3-kunit
+m68k                             allmodconfig
+x86_64                          rhel-8.3-func
+arc                              allyesconfig
+x86_64                              defconfig
+x86_64                           rhel-8.3-kvm
+sh                               allmodconfig
+arc                                 defconfig
+sh                             sh03_defconfig
+s390                             allmodconfig
+alpha                               defconfig
+mips                             allyesconfig
+arm                                 defconfig
+powerpc                      ppc40x_defconfig
+x86_64                               rhel-8.3
+powerpc                          allmodconfig
+s390                             allyesconfig
+arm64                            allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+arm                              allyesconfig
+mips                      fuloong2e_defconfig
+ia64                                defconfig
+x86_64                           allyesconfig
+m68k                            mac_defconfig
+riscv                               defconfig
+i386                          randconfig-c001
+arc                  randconfig-r043-20221219
+arm                      footbridge_defconfig
+arm                  randconfig-r046-20221219
+powerpc                  storcenter_defconfig
+arc                  randconfig-r043-20221218
+s390                 randconfig-r044-20221218
+mips                    maltaup_xpa_defconfig
+powerpc                  iss476-smp_defconfig
+nios2                               defconfig
+parisc                              defconfig
+riscv                             allnoconfig
+i386                        debian-10.3-kunit
+i386                         debian-10.3-func
+i386                          debian-10.3-kvm
+riscv                    nommu_virt_defconfig
+riscv                    nommu_k210_defconfig
+parisc64                            defconfig
+riscv                          rv32_defconfig
+i386                              debian-10.3
+nios2                            allyesconfig
+parisc                           allyesconfig
+
+clang tested configs:
+powerpc                     ppa8548_defconfig
+arm                          pxa168_defconfig
+x86_64               randconfig-a011-20221219
+x86_64               randconfig-a012-20221219
+mips                       rbtx49xx_defconfig
+arm                         s5pv210_defconfig
+x86_64               randconfig-a014-20221219
+x86_64               randconfig-a015-20221219
+x86_64               randconfig-a013-20221219
+x86_64                          rhel-8.3-rust
+arm                  randconfig-r046-20221218
+x86_64               randconfig-a016-20221219
+i386                 randconfig-a014-20221219
+i386                 randconfig-a012-20221219
+i386                 randconfig-a013-20221219
+i386                 randconfig-a011-20221219
+hexagon              randconfig-r041-20221218
+hexagon              randconfig-r045-20221219
+s390                 randconfig-r044-20221219
+i386                 randconfig-a015-20221219
+hexagon              randconfig-r041-20221219
+powerpc                     tqm8560_defconfig
+i386                 randconfig-a016-20221219
+hexagon              randconfig-r045-20221218
+riscv                randconfig-r042-20221219
+mips                     cu1830-neo_defconfig
+arm                       imx_v4_v5_defconfig
+x86_64                        randconfig-k001
+powerpc                      ppc44x_defconfig
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
