@@ -2,177 +2,187 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF454C4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Dec 2022 21:07:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FFD2C4332F
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Dec 2022 21:55:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230058AbiLTVH2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Dec 2022 16:07:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44292 "EHLO
+        id S233726AbiLTVzO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Dec 2022 16:55:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57798 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229791AbiLTVH1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2022 16:07:27 -0500
-Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D5CD1DF0F
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2022 13:07:27 -0800 (PST)
-Received: by mail-pg1-x530.google.com with SMTP id 7so4106444pga.1
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2022 13:07:27 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=mjrn1Qfw3bhXdZSXQPdFQ3DY4RPGm3eEdpI9xqMRHxM=;
-        b=oRf2CE7tCxo+WD1aChjhPMcYAA3aXKF/pOkq4tzIenyZZVcNXmEWWrh6VPFBFYe9GF
-         vIP67l1umXuv35r5hlX7/FUvRohh77QVqSlt50YpUc5et3q2wevGnJoepXCcPX+jbsgG
-         6kZ2gEekDrug4TXV5lfVVhX6qtdUBpGdMdLj+Snp+bluVNHk2IvNhqVTU4dgMiIkNi9m
-         8V3CIr404+g1geSlbuo8WO6aMof7fm3LpVQX9yzH88Mk9ycF41fFZc1HqYnwqAxECYbD
-         RH+7rpnu8IQo0Cq5kjMSbOs72y8wyFEZRYnr8EFZUqnDQGOhnDQcl/af0QeLzdBx/rfH
-         NgqA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=mjrn1Qfw3bhXdZSXQPdFQ3DY4RPGm3eEdpI9xqMRHxM=;
-        b=iG38gHLSDYo7EC5yGvneaPneWj136Bsvkfe7tIRrrKskZB2lLld6TkeCXe0jrOhdzL
-         iRPVMzppaa2TtDlZiJ1M8VtsZwz+JywWepsdIVeS0nMfdsnJo68nKcIUpl2shvByKfqg
-         dcavAg0a3lvZS3zPLXJw7JAhJmNcwivRFQGADfsnScjUOQrzM5f4OXfNMP5gYl4WGs+c
-         62wgE9+EFIyQwzEmjgFVWLCB6x+SaTuogbz2AxjW5Oe1ubIFvYDeBmy/mjaLmLrXLPDS
-         qQQt8I0RRkUlYAduAQiFmlW8TiWkr/iohkBkgOlyo7+vA17w0YWDyd1sHo6dREcm1Lmu
-         P49Q==
-X-Gm-Message-State: ANoB5pkPtkHYLDkpKMdnHc/c+D686ifmZG3Nw9fzPuRW0iT5xlIwevmb
-        W01m6kbzWh+JE/JBx2rRL8V7bUenAz3rgk3k
-X-Google-Smtp-Source: AA0mqf7Ct7ltLANoMmUdts68wgzs8pc520m3i5ga/2mjyqytI447ebbVlg//Uy5SZeDpwtCllu0RHg==
-X-Received: by 2002:a05:6a00:324b:b0:574:3cde:385a with SMTP id bn11-20020a056a00324b00b005743cde385amr42801082pfb.32.1671570446371;
-        Tue, 20 Dec 2022 13:07:26 -0800 (PST)
-Received: from dread.disaster.area (pa49-181-138-158.pa.nsw.optusnet.com.au. [49.181.138.158])
-        by smtp.gmail.com with ESMTPSA id t13-20020a62d14d000000b00578199ea5afsm9078354pfl.9.2022.12.20.13.07.25
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 Dec 2022 13:07:26 -0800 (PST)
-Received: from [192.168.253.23] (helo=devoid.disaster.area)
-        by dread.disaster.area with esmtp (Exim 4.92.3)
-        (envelope-from <dave@fromorbit.com>)
-        id 1p7jpb-00Aqa3-6Y
-        for linux-xfs@vger.kernel.org; Wed, 21 Dec 2022 08:07:23 +1100
-Received: from dave by devoid.disaster.area with local (Exim 4.96)
-        (envelope-from <dave@devoid.disaster.area>)
-        id 1p7jpb-00EVPt-0k
-        for linux-xfs@vger.kernel.org;
-        Wed, 21 Dec 2022 08:07:23 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: don't use BMBT btree split workers for IO completion
-Date:   Wed, 21 Dec 2022 08:07:23 +1100
-Message-Id: <20221220210723.3457348-1-david@fromorbit.com>
-X-Mailer: git-send-email 2.38.1
+        with ESMTP id S229451AbiLTVzN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2022 16:55:13 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 603D61EEDB
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2022 13:55:12 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id F04A1615D4
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2022 21:55:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54825C433D2;
+        Tue, 20 Dec 2022 21:55:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1671573311;
+        bh=X7u26GFQyTR/hkDZtScYDKzsQEBAwUwXIBO5RvYPCg4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Ap8LYz2tjyD76SAUpP2Jt4X8xJH+RX2HTKQhW1/Mfd3E7nE7qK7LufrQxJy9dNh5/
+         ZktiTHeKhWcjTQdInaJG+hVBjZgq2/rbPBxZ37bYghBjUK9lBc8t0mSKmbntJaQceN
+         N0elP6NSMfsA0fY10pmhlq88iHQjZ6RLMl8Ri9b+SgWmU2ckx2CaMgImf694sOGVTJ
+         UZNlM+8XwkYgW8ZHjM1Fm5zzOI9d/L6Et/JKfSsR3tCLdttah87eY8+YWtk/npXLJz
+         LcGqwZ2OVy6DziX0zGTin6OJmG4dapbuVC1pjPlq2qW3SsLIVK/dRJlvx77ynY8QIP
+         yqAC6PmaZUtUA==
+Date:   Tue, 20 Dec 2022 13:55:10 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Catherine Hoang <catherine.hoang@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] xfs_io: add fsuuid command
+Message-ID: <Y6IvPpDfS/fmNQTJ@magnolia>
+References: <20221219181824.25157-1-catherine.hoang@oracle.com>
+ <20221219181824.25157-2-catherine.hoang@oracle.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221219181824.25157-2-catherine.hoang@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Mon, Dec 19, 2022 at 10:18:23AM -0800, Catherine Hoang wrote:
+> Add support for the fsuuid command to retrieve the UUID of a mounted
+> filesystem.
+> 
+> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  io/Makefile       |  6 +++---
+>  io/fsuuid.c       | 49 +++++++++++++++++++++++++++++++++++++++++++++++
+>  io/init.c         |  1 +
+>  io/io.h           |  1 +
+>  man/man8/xfs_io.8 |  3 +++
+>  5 files changed, 57 insertions(+), 3 deletions(-)
+>  create mode 100644 io/fsuuid.c
+> 
+> diff --git a/io/Makefile b/io/Makefile
+> index 498174cf..53fef09e 100644
+> --- a/io/Makefile
+> +++ b/io/Makefile
+> @@ -10,12 +10,12 @@ LSRCFILES = xfs_bmap.sh xfs_freeze.sh xfs_mkfile.sh
+>  HFILES = init.h io.h
+>  CFILES = init.c \
+>  	attr.c bmap.c bulkstat.c crc32cselftest.c cowextsize.c encrypt.c \
+> -	file.c freeze.c fsync.c getrusage.c imap.c inject.c label.c link.c \
+> -	mmap.c open.c parent.c pread.c prealloc.c pwrite.c reflink.c \
+> +	file.c freeze.c fsuuid.c fsync.c getrusage.c imap.c inject.c label.c \
+> +	link.c mmap.c open.c parent.c pread.c prealloc.c pwrite.c reflink.c \
+>  	resblks.c scrub.c seek.c shutdown.c stat.c swapext.c sync.c \
+>  	truncate.c utimes.c
+>  
+> -LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD)
+> +LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD) $(LIBUUID)
+>  LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG)
+>  LLDFLAGS = -static-libtool-libs
+>  
+> diff --git a/io/fsuuid.c b/io/fsuuid.c
+> new file mode 100644
+> index 00000000..7e14a95d
+> --- /dev/null
+> +++ b/io/fsuuid.c
+> @@ -0,0 +1,49 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (c) 2022 Oracle.
+> + * All Rights Reserved.
+> + */
+> +
+> +#include "libxfs.h"
+> +#include "command.h"
+> +#include "init.h"
+> +#include "io.h"
+> +#include "libfrog/fsgeom.h"
+> +#include "libfrog/logging.h"
+> +
+> +static cmdinfo_t fsuuid_cmd;
+> +
+> +static int
+> +fsuuid_f(
+> +	int			argc,
+> +	char			**argv)
+> +{
+> +	struct xfs_fsop_geom	fsgeo;
+> +	int			ret;
+> +	char			bp[40];
+> +
+> +	ret = -xfrog_geometry(file->fd, &fsgeo);
+> +
+> +	if (ret) {
+> +		xfrog_perror(ret, "XFS_IOC_FSGEOMETRY");
+> +		exitcode = 1;
+> +	} else {
+> +		platform_uuid_unparse((uuid_t *)fsgeo.uuid, bp);
+> +		printf("UUID = %s\n", bp);
 
-When we split a BMBT due to record insertion, we offload it to a
-worker thread because we can be deep in the stack when we try to
-allocate a new block for the BMBT. Allocation can use several
-kilobytes of stack (full memory reclaim, swap and/or IO path can
-end up on the stack during allocation) and we can already be several
-kilobytes deep in the stack when we need to split the BMBT.
+Lowercase "uuid" to match the xfs_db uuid command.
 
-A recent workload demonstrated a deadlock in this BMBT split
-offload. It requires several things to happen at once:
+With that fixed,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-1. two inodes need a BMBT split at the same time, one must be
-unwritten extent conversion from IO completion, the other must be
-from extent allocation.
+--D
 
-2. there must be a no available xfs_alloc_wq worker threads
-available in the worker pool.
-
-3. There must be sustained severe memory shortages such that new
-kworker threads cannot be allocated to the xfs_alloc_wq pool for
-both threads that need split work to be run
-
-4. The split work from the unwritten extent conversion must run
-first.
-
-5. when the BMBT block allocation runs from the split work, it must
-loop over all AGs and not be able to either trylock an AGF
-successfully, or each AGF is is able to lock has no space available
-for a single block allocation.
-
-6. The BMBT allocation must then attempt to lock the AGF that the
-second task queued to the rescuer thread already has locked before
-it finds an AGF it can allocate from.
-
-At this point, we have an ABBA deadlock between tasks queued on the
-xfs_alloc_wq rescuer thread and a locked AGF. i.e. The queued task
-holding the AGF lock can't be run by the rescuer thread until the
-task the rescuer thread is runing gets the AGF lock....
-
-This is a highly improbably series of events, but there it is.
-
-There's a couple of ways to fix this, but the easiest way to ensure
-that we only punt tasks with a locked AGF that holds enough space
-for the BMBT block allocations to the worker thread.
-
-This works for unwritten extent conversion in IO completion (which
-doesn't have a locked AGF and space reservations) because we have
-tight control over the IO completion stack. It is typically only 6
-functions deep when xfs_btree_split() is called because we've
-already offloaded the IO completion work to a worker thread and
-hence we don't need to worry about stack overruns here.
-
-The other place we can be called for a BMBT split without a
-preceeding allocation is __xfs_bunmapi() when punching out the
-center of an existing extent. We don't remove extents in the IO
-path, so these operations don't tend to be called with a lot of
-stack consumed. Hence we don't really need to ship the split off to
-a worker thread in these cases, either.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_btree.c | 18 ++++++++++++++++--
- 1 file changed, 16 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 4c16c8c31fcb..6b084b3cac83 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -2913,9 +2913,22 @@ xfs_btree_split_worker(
- }
- 
- /*
-- * BMBT split requests often come in with little stack to work on. Push
-+ * BMBT split requests often come in with little stack to work on so we push
-  * them off to a worker thread so there is lots of stack to use. For the other
-  * btree types, just call directly to avoid the context switch overhead here.
-+ *
-+ * Care must be taken here - the work queue rescuer thread introduces potential
-+ * AGF <> worker queue deadlocks if the BMBT block allocation has to lock new
-+ * AGFs to allocate blocks. A task being run by the rescuer could attempt to
-+ * lock an AGF that is already locked by a task queued to run by the rescuer,
-+ * resulting in an ABBA deadlock as the rescuer cannot run the lock holder to
-+ * release it until the current thread it is running gains the lock.
-+ *
-+ * To avoid this issue, we only ever queue BMBT splits that don't have an AGF
-+ * already locked to allocate from. The only place that doesn't hold an AGF
-+ * locked is unwritten extent conversion at IO completion, but that has already
-+ * been offloaded to a worker thread and hence has no stack consumption issues
-+ * we have to worry about.
-  */
- STATIC int					/* error */
- xfs_btree_split(
-@@ -2929,7 +2942,8 @@ xfs_btree_split(
- 	struct xfs_btree_split_args	args;
- 	DECLARE_COMPLETION_ONSTACK(done);
- 
--	if (cur->bc_btnum != XFS_BTNUM_BMAP)
-+	if (cur->bc_btnum != XFS_BTNUM_BMAP ||
-+	    cur->bc_tp->t_firstblock == NULLFSBLOCK)
- 		return __xfs_btree_split(cur, level, ptrp, key, curp, stat);
- 
- 	args.cur = cur;
--- 
-2.38.1
-
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +void
+> +fsuuid_init(void)
+> +{
+> +	fsuuid_cmd.name = "fsuuid";
+> +	fsuuid_cmd.cfunc = fsuuid_f;
+> +	fsuuid_cmd.argmin = 0;
+> +	fsuuid_cmd.argmax = 0;
+> +	fsuuid_cmd.flags = CMD_FLAG_ONESHOT | CMD_NOMAP_OK;
+> +	fsuuid_cmd.oneline = _("get mounted filesystem UUID");
+> +
+> +	add_command(&fsuuid_cmd);
+> +}
+> diff --git a/io/init.c b/io/init.c
+> index 033ed67d..104cd2c1 100644
+> --- a/io/init.c
+> +++ b/io/init.c
+> @@ -56,6 +56,7 @@ init_commands(void)
+>  	flink_init();
+>  	freeze_init();
+>  	fsmap_init();
+> +	fsuuid_init();
+>  	fsync_init();
+>  	getrusage_init();
+>  	help_init();
+> diff --git a/io/io.h b/io/io.h
+> index 64b7a663..fe474faf 100644
+> --- a/io/io.h
+> +++ b/io/io.h
+> @@ -94,6 +94,7 @@ extern void		encrypt_init(void);
+>  extern void		file_init(void);
+>  extern void		flink_init(void);
+>  extern void		freeze_init(void);
+> +extern void		fsuuid_init(void);
+>  extern void		fsync_init(void);
+>  extern void		getrusage_init(void);
+>  extern void		help_init(void);
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index 223b5152..ef7087b3 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -1455,6 +1455,9 @@ This option is not compatible with the
+>  flag.
+>  .RE
+>  .PD
+> +.TP
+> +.B fsuuid
+> +Print the mounted filesystem UUID.
+>  
+>  
+>  .SH OTHER COMMANDS
+> -- 
+> 2.25.1
+> 
