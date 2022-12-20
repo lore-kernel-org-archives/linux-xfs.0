@@ -2,160 +2,243 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28DB8C4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Dec 2022 05:00:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79264C3DA7A
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Dec 2022 13:49:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229657AbiLTFA0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Dec 2022 00:00:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46162 "EHLO
+        id S233685AbiLTNtm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Dec 2022 08:49:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58964 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232442AbiLTFAH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2022 00:00:07 -0500
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57FDA13DD6
-        for <linux-xfs@vger.kernel.org>; Mon, 19 Dec 2022 21:00:05 -0800 (PST)
-Received: by mail-pj1-x102d.google.com with SMTP id q17-20020a17090aa01100b002194cba32e9so15338435pjp.1
-        for <linux-xfs@vger.kernel.org>; Mon, 19 Dec 2022 21:00:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Rw+CgAj/5VtQVjZFW9Cis0SCYvbbhcjHTggYpaHEXh4=;
-        b=uiyTqUhVpes7tuKWeU5MYdfO61ZsuMcW5aDHFZqjdE6Bv38SiSP6OBfvBA+pOFtZrd
-         fm7IztP17N6GhQZxTUbQKsCLFhFYcOVNM/t7s1zKAWGuRczgnhzq8ebVTgHSFm45zV9q
-         wxOGd2jZn72CMwRz1S+HsbesG/n3umJLYi5Zo5Nx9kLsCLoJNmw21LSQ81aNE3Z87aGj
-         BJ4cQDhDBpAnMgFJrgseLqMObjWIs9j8wPDaFgYWaVKZAD1oyHUQX+jLILojjnctDUrv
-         0d2k+lY4xcAWDJDCsO1I1Ba+NT6GmlXDk1cDoZUIQAGTlYN8G3yXXLxprfWRlISzHf6+
-         XZNA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Rw+CgAj/5VtQVjZFW9Cis0SCYvbbhcjHTggYpaHEXh4=;
-        b=2LyP1PwV16nTYgH+lVQbt24JW9da8+NC05QnzB/t6pllp/rsE1Qm4sp/PyFnI4doT7
-         MM3NaJ/GeCGutvIqyQyLLRsLHGfn72MIOaJC6zFkE2hn3U+sdFMSrxLPCFWK3brVDrKE
-         ctyQJSLFn5u7HCIn2ySSWv3Ma3hA5dnf811mdc4sa9uirwKd35dsJlDQFvdLAYbO4PNL
-         ugSm24/V38zXnkTiGhCXjaTi9gnWcq9IkY50rAIVmBYx7ckUQILeVG9+83B1i2T3dhQS
-         jeRLNNqMG8Ye18iDoDtmqRFeYHYuyO21OiQWg9GoYKSKg3tos1XdBHhy2wXnoHNIIcoA
-         Tkog==
-X-Gm-Message-State: AFqh2komGJyrjCHwPLAN1wpJ2knydbAp2BXQnfHgs1N06qaI3Vgmc1Tp
-        QeAFSOGEwvVcH/Lvt2XrHLHqBQ==
-X-Google-Smtp-Source: AMrXdXvPj/FE+CR+cxjadvv7msfEW1mU6ZbT3FJduPw4U8pefhQ5Bq4/U1FDsr4aXwJ6IU1syMlwwg==
-X-Received: by 2002:a17:902:b109:b0:190:bf01:3a45 with SMTP id q9-20020a170902b10900b00190bf013a45mr14251253plr.25.1671512404836;
-        Mon, 19 Dec 2022 21:00:04 -0800 (PST)
-Received: from dread.disaster.area (pa49-181-138-158.pa.nsw.optusnet.com.au. [49.181.138.158])
-        by smtp.gmail.com with ESMTPSA id a3-20020a170902710300b0016d773aae60sm8101432pll.19.2022.12.19.21.00.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Dec 2022 21:00:04 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1p7UjR-00AaB9-LG; Tue, 20 Dec 2022 16:00:01 +1100
-Date:   Tue, 20 Dec 2022 16:00:01 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs: fix off-by-one error in
- xfs_btree_space_to_height
-Message-ID: <20221220050001.GK1971568@dread.disaster.area>
-References: <167149469744.336919.13748690081866673267.stgit@magnolia>
- <167149471987.336919.3277522603824048839.stgit@magnolia>
+        with ESMTP id S229563AbiLTNtj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2022 08:49:39 -0500
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D962E65F1;
+        Tue, 20 Dec 2022 05:49:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1671544178; x=1703080178;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=ILvH76aAgDaS9txxLdxKFTa4pafrJSu2zimzPO8hm0o=;
+  b=Q0KdwWehjyjPhPBo94tVDzcQdGxR0PM9AgDg0duQCGWm7jRZnZS+iuBe
+   qp4lNm7X3MYVznxy0Ui+Apl5th/L0h2dYj5cSB4LGhy+pUPBvW7bgYnAQ
+   jBI+81JULyi5bWE1yTdL8A1lnPaT3775wNAVAIeR9POnz5mnOQriY1fzU
+   poe3kSOQBhkGFfzTmWs4pnhm1hqch0Z8a3AnOQkofuUmDwpQpI5Ud077E
+   42EMkbFohsiDsHSTg7uNlYiNV43K+zbzrDRMqeUqon4NCHDk11P/jpYAo
+   R1t4oVTVcfwFK+i41u8eFgkDUsX0sawJ3AmBtW7/UIHGxqewZAvtbYWs7
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10567"; a="299956961"
+X-IronPort-AV: E=Sophos;i="5.96,259,1665471600"; 
+   d="scan'208";a="299956961"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Dec 2022 05:49:38 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10567"; a="714435955"
+X-IronPort-AV: E=Sophos;i="5.96,259,1665471600"; 
+   d="scan'208";a="714435955"
+Received: from lkp-server01.sh.intel.com (HELO b5d47979f3ad) ([10.239.97.150])
+  by fmsmga008.fm.intel.com with ESMTP; 20 Dec 2022 05:49:34 -0800
+Received: from kbuild by b5d47979f3ad with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1p7czu-0009XY-00;
+        Tue, 20 Dec 2022 13:49:34 +0000
+Date:   Tue, 20 Dec 2022 21:49:08 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Andrew Morton <akpm@linux-foundation.org>
+Cc:     virtualization@lists.linux-foundation.org,
+        speakup@linux-speakup.org, netdev@vger.kernel.org,
+        loongarch@lists.linux.dev, linuxppc-dev@lists.ozlabs.org,
+        linux-xfs@vger.kernel.org, linux-omap@vger.kernel.org,
+        linux-mm@kvack.org, linux-media@vger.kernel.org,
+        linux-cxl@vger.kernel.org, linux-can@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Linux Memory Management List <linux-mm@kvack.org>
+Subject: [linux-next:master] BUILD REGRESSION
+ e45fb347b630ee76482fe938ba76cf8eab811290
+Message-ID: <63a1bd54.a88xtgO0grxGBbe+%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <167149471987.336919.3277522603824048839.stgit@magnolia>
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Dec 19, 2022 at 04:05:19PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Lately I've been stress-testing extreme-sized rmap btrees by using the
-> (new) xfs_db bmap_inflate command to clone bmbt mappings billions of
-> times and then using xfs_repair to build new rmap and refcount btrees.
-> This of course is /much/ faster than actually FICLONEing a file billions
-> of times.
-> 
-> Unfortunately, xfs_repair fails in xfs_btree_bload_compute_geometry with
-> EOVERFLOW, which indicates that xfs_mount.m_rmap_maxlevels is not
-> sufficiently large for the test scenario.  For a 1TB filesystem (~67
-> million AG blocks, 4 AGs) the btheight command reports:
-> 
-> $ xfs_db -c 'btheight -n 4400801200 -w min rmapbt' /dev/sda
-> rmapbt: worst case per 4096-byte block: 84 records (leaf) / 45 keyptrs (node)
-> level 0: 4400801200 records, 52390491 blocks
-> level 1: 52390491 records, 1164234 blocks
-> level 2: 1164234 records, 25872 blocks
-> level 3: 25872 records, 575 blocks
-> level 4: 575 records, 13 blocks
-> level 5: 13 records, 1 block
-> 6 levels, 53581186 blocks total
-> 
-> The AG is sufficiently large to build this rmap btree.  Unfortunately,
-> m_rmap_maxlevels is 5.  Augmenting the loop in the space->height
-> function to report height, node blocks, and blocks remaining produces
-> this:
-> 
-> ht 1 node_blocks 45 blockleft 67108863
-> ht 2 node_blocks 2025 blockleft 67108818
-> ht 3 node_blocks 91125 blockleft 67106793
-> ht 4 node_blocks 4100625 blockleft 67015668
-> final height: 5
-> 
-> The goal of this function is to compute the maximum height btree that
-> can be stored in the given number of ondisk fsblocks.  Starting with the
-> top level of the tree, each iteration through the loop adds the fanout
-> factor of the next level down until we run out of blocks.  IOWs, maximum
-> height is achieved by using the smallest fanout factor that can apply
-> to that level.
-> 
-> However, the loop setup is not correct.  Top level btree blocks are
-> allowed to contain fewer than minrecs items, so the computation is
-  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
+branch HEAD: e45fb347b630ee76482fe938ba76cf8eab811290  Add linux-next specific files for 20221220
 
-Ah, that's the critical piece of information I was looking for. I
-couldn't work out from the code change below what was wrong with
-limits[1]. So....
+Error/Warning reports:
 
-> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> index 4c16c8c31fcb..8d11d3f5e529 100644
-> --- a/fs/xfs/libxfs/xfs_btree.c
-> +++ b/fs/xfs/libxfs/xfs_btree.c
-> @@ -4666,7 +4666,11 @@ xfs_btree_space_to_height(
->  	const unsigned int	*limits,
->  	unsigned long long	leaf_blocks)
->  {
-> -	unsigned long long	node_blocks = limits[1];
-> +	/*
-> +	 * The root btree block can have a fanout between 2 and maxrecs because
-> +	 * the tree might not be big enough to fill it.
-> +	 */
+https://lore.kernel.org/oe-kbuild-all/202211242120.MzZVGULn-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202212020520.0OkMIno3-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202212040713.rVney9e8-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202212061455.6GE7y0jg-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202212090509.NjAl9tbo-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202212191708.Xk9yBj52-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202212201859.qUGugK1F-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202212202020.qL8Aaqu0-lkp@intel.com
 
-Can you change this comment to say something like:
+Error/Warning: (recently discovered and may have been fixed)
 
-	/*
-	 * The root btree block can have less than minrecs pointers
-	 * in it because the tree might not be big enough to require
-	 * that amount of fanout. Hence it has a minimum size of
-	 * 2 pointers, not limits[1].
-	 */
+Documentation/gpu/drm-internals:179: ./include/drm/drm_file.h:411: WARNING: undefined label: drm_accel_node (if the link has no caption the label must precede a section header)
+Documentation/networking/devlink/etas_es58x.rst: WARNING: document isn't included in any toctree
+Warning: tools/power/cpupower/man/cpupower-powercap-info.1 references a file that doesn't exist: Documentation/power/powercap/powercap.txt
+arch/arm/kernel/entry-armv.S:485:5: warning: "CONFIG_ARM_THUMB" is not defined, evaluates to 0 [-Wundef]
+arch/loongarch/kernel/asm-offsets.c:265:6: warning: no previous prototype for 'output_pbe_defines' [-Wmissing-prototypes]
+arch/powerpc/kernel/kvm_emul.o: warning: objtool: kvm_template_end(): can't find starting instruction
+arch/powerpc/kernel/optprobes_head.o: warning: objtool: optprobe_template_end(): can't find starting instruction
+drivers/regulator/tps65219-regulator.c:310:32: warning: parameter 'dev' set but not used [-Wunused-but-set-parameter]
+drivers/regulator/tps65219-regulator.c:310:60: warning: parameter 'dev' set but not used [-Wunused-but-set-parameter]
+drivers/regulator/tps65219-regulator.c:370:26: warning: ordered comparison of pointer with integer zero [-Wextra]
+lib/dhry_run.c:61:6: warning: variable 'ret' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
+mm/memfd.c:274:31: warning: unused variable 'ns' [-Wunused-variable]
 
-Otherwise it looks good.
+Unverified Error/Warning (likely false positive, please contact us if interested):
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+drivers/accessibility/speakup/main.c:1290:26: sparse: sparse: obsolete array initializer, use C99 syntax
+drivers/cxl/core/mbox.c:832:18: sparse: sparse: cast from non-scalar
+drivers/cxl/core/mbox.c:832:18: sparse: sparse: cast to non-scalar
+drivers/i2c/busses/i2c-qcom-geni.c:1028:28: sparse: sparse: symbol 'i2c_master_hub' was not declared. Should it be static?
+drivers/media/platform/ti/davinci/vpif.c:483:20: sparse: sparse: cast from non-scalar
+drivers/media/platform/ti/davinci/vpif.c:483:20: sparse: sparse: cast to non-scalar
+fs/xfs/xfs_iomap.c:86:29: sparse: sparse: symbol 'xfs_iomap_page_ops' was not declared. Should it be static?
 
-> +	unsigned long long	node_blocks = 2;
->  	unsigned long long	blocks_left = leaf_blocks - 1;
->  	unsigned int		height = 1;
+Error/Warning ids grouped by kconfigs:
 
-For future consideration, we don't use maxrecs in this calculation
-at all - should we just pass minrecs into the function rather than
-an array of limits?
+gcc_recent_errors
+|-- alpha-allyesconfig
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- arc-allyesconfig
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- arm-allyesconfig
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- arm-buildonly-randconfig-r005-20221219
+|   `-- arch-arm-kernel-entry-armv.S:warning:CONFIG_ARM_THUMB-is-not-defined-evaluates-to
+|-- arm64-allyesconfig
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- i386-allyesconfig
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- i386-buildonly-randconfig-r001-20221219
+|   `-- mm-memfd.c:warning:unused-variable-ns
+|-- ia64-allmodconfig
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- loongarch-allyesconfig
+|   `-- arch-loongarch-kernel-asm-offsets.c:warning:no-previous-prototype-for-output_pbe_defines
+|-- loongarch-randconfig-s051-20221218
+|   |-- drivers-i2c-busses-i2c-qcom-geni.c:sparse:sparse:symbol-i2c_master_hub-was-not-declared.-Should-it-be-static
+|   `-- fs-xfs-xfs_iomap.c:sparse:sparse:symbol-xfs_iomap_page_ops-was-not-declared.-Should-it-be-static
+|-- m68k-allmodconfig
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- m68k-allyesconfig
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- mips-allyesconfig
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- powerpc-allmodconfig
+|   |-- arch-powerpc-kernel-kvm_emul.o:warning:objtool:kvm_template_end():can-t-find-starting-instruction
+|   |-- arch-powerpc-kernel-optprobes_head.o:warning:objtool:optprobe_template_end():can-t-find-starting-instruction
+|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
+|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|-- riscv-randconfig-s041-20221218
+|   |-- drivers-accessibility-speakup-main.c:sparse:sparse:obsolete-array-initializer-use-C99-syntax
+|   `-- fs-xfs-xfs_iomap.c:sparse:sparse:symbol-xfs_iomap_page_ops-was-not-declared.-Should-it-be-static
+|-- riscv-randconfig-s042-20221218
+|   |-- drivers-cxl-core-mbox.c:sparse:sparse:cast-from-non-scalar
+|   |-- drivers-cxl-core-mbox.c:sparse:sparse:cast-to-non-scalar
+|   |-- drivers-net-thunderbolt.c:sparse:sparse:incorrect-type-in-assignment-(different-base-types)-expected-restricted-__le16-usertype-frame_id-got-unsigned-short-usertype
+|   |-- drivers-net-thunderbolt.c:sparse:sparse:incorrect-type-in-assignment-(different-base-types)-expected-restricted-__le16-usertype-frame_index-got-unsigned-short-usertype
+|   |-- drivers-net-thunderbolt.c:sparse:sparse:incorrect-type-in-assignment-(different-base-types)-expected-restricted-__le32-usertype-frame_count-got-unsigned-int-usertype
+clang_recent_errors
+|-- hexagon-allmodconfig
+|   |-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
+|   `-- lib-dhry_run.c:warning:variable-ret-is-used-uninitialized-whenever-if-condition-is-false
+`-- x86_64-rhel-8.3-rust
+    `-- vmlinux.o:warning:objtool:___ksymtab_gpl-_RNvNtCsfATHBUcknU9_6kernel5print16call_printk_cont:data-relocation-to-ENDBR:_RNvNtCsfATHBUcknU9_6kernel5print16call_printk_cont
 
-Cheers,
+elapsed time: 726m
 
-Dave.
+configs tested: 66
+configs skipped: 2
+
+gcc tested configs:
+um                             i386_defconfig
+um                           x86_64_defconfig
+powerpc                           allnoconfig
+arc                                 defconfig
+x86_64                    rhel-8.3-kselftests
+s390                             allmodconfig
+x86_64                          rhel-8.3-func
+alpha                               defconfig
+i386                                defconfig
+s390                                defconfig
+arm                                 defconfig
+sh                               allmodconfig
+s390                             allyesconfig
+x86_64               randconfig-a002-20221219
+x86_64               randconfig-a003-20221219
+alpha                            allyesconfig
+x86_64               randconfig-a001-20221219
+m68k                             allyesconfig
+x86_64               randconfig-a004-20221219
+mips                             allyesconfig
+m68k                             allmodconfig
+powerpc                          allmodconfig
+arc                              allyesconfig
+x86_64               randconfig-a005-20221219
+arc                  randconfig-r043-20221220
+x86_64                           rhel-8.3-bpf
+x86_64               randconfig-a006-20221219
+x86_64                           rhel-8.3-syz
+riscv                randconfig-r042-20221220
+x86_64                         rhel-8.3-kunit
+ia64                             allmodconfig
+x86_64                            allnoconfig
+arm                              allyesconfig
+x86_64                           rhel-8.3-kvm
+arm64                            allyesconfig
+s390                 randconfig-r044-20221220
+i386                             allyesconfig
+i386                 randconfig-a001-20221219
+i386                 randconfig-a003-20221219
+i386                 randconfig-a002-20221219
+i386                 randconfig-a006-20221219
+i386                 randconfig-a005-20221219
+i386                 randconfig-a004-20221219
+powerpc                     ep8248e_defconfig
+powerpc                     rainier_defconfig
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                           allyesconfig
+
+clang tested configs:
+x86_64                          rhel-8.3-rust
+hexagon              randconfig-r041-20221220
+arm                  randconfig-r046-20221220
+i386                 randconfig-a011-20221219
+i386                 randconfig-a014-20221219
+hexagon              randconfig-r045-20221220
+i386                 randconfig-a012-20221219
+i386                 randconfig-a013-20221219
+i386                 randconfig-a015-20221219
+i386                 randconfig-a016-20221219
+x86_64               randconfig-a014-20221219
+x86_64               randconfig-a015-20221219
+x86_64               randconfig-a012-20221219
+x86_64               randconfig-a011-20221219
+arm                             mxs_defconfig
+x86_64               randconfig-a016-20221219
+powerpc                     ppa8548_defconfig
+x86_64               randconfig-a013-20221219
+
 -- 
-Dave Chinner
-david@fromorbit.com
+0-DAY CI Kernel Test Service
+https://01.org/lkp
