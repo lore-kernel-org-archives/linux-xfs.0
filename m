@@ -2,69 +2,69 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0823EC4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Dec 2022 23:23:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20886C3DA6E
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Dec 2022 23:23:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233010AbiLTXXR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Dec 2022 18:23:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33464 "EHLO
+        id S229448AbiLTXXS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Dec 2022 18:23:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229448AbiLTXXQ (ORCPT
+        with ESMTP id S229727AbiLTXXQ (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2022 18:23:16 -0500
-Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B49A1B6E
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2022 15:23:14 -0800 (PST)
-Received: by mail-pj1-x102c.google.com with SMTP id t11-20020a17090a024b00b0021932afece4so333381pje.5
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2022 15:23:14 -0800 (PST)
+Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 133B7D2
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2022 15:23:15 -0800 (PST)
+Received: by mail-pj1-x1032.google.com with SMTP id q17-20020a17090aa01100b002194cba32e9so366179pjp.1
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2022 15:23:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=lOvEMabZNP9tp8fxKZvuU26KMP190ld+nJhrqriI51s=;
-        b=k2AyjlaApBX9BH/p/bFKRQTq0WuZzR1z89sgnevxsPcasfTqCPWa7wd9qyhTD9cxSd
-         N6LTsV4YmH7OwnRbPWAqmRhC3xbgqYEJl1h0lpVVLBIRXKXm7P+bfVdNbFqAeimZOtpJ
-         VHQIAOuM2h/mvgRyl4/qm1CTWfIc/730Rle43/PXj+u0/Z5Q+CuugzbZb1Ac037uzPew
-         p1c2O6q1NV0E4VFNRT6evrf7EUV88lwcyPhYTjux3++R+7/6t3pbOcDIm0CbyLoAHfGH
-         xfOsEsigqEb1Gec2U0iQVkEOe7nzKWfpklwaHvxpOb/iIDobXnxXkb8o/HzH39diUS0w
-         28RA==
+        bh=XH0Af/kN7ZInRidEVnPhB06qxYUPQCuixBX8Udkd4Qw=;
+        b=39/EIQKiyO2QKpalRlskpMgvoELraX4GNd917QDE6RU80DNWpgEai984dFIWNEJyd6
+         Xbi95HY5bpiEBhCEWjFwicFJp1H76EPi6hCOMPIKmlclsAlhsdHVWcrrEpTCyfH6SMpV
+         HtYjG92y0Y7UdDraNdwuJQiV6GZK1qISr2DVOnt8CUzK7LqEgC/tzoom1WTLn+8IFmcy
+         qci9jL8J8B5V3w8Imq2u0IfXKTGXPjSgobINm3QAj5r2MPEIv+bybmFmWTda9ifIrt6b
+         RgVaaoskem2RP59O9BheazesdsKOPrWDFeaxWkQUOc2uypqIeyfIm1pl0YUCY/A2HUy9
+         Pt6g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=lOvEMabZNP9tp8fxKZvuU26KMP190ld+nJhrqriI51s=;
-        b=J2PPryWOj5Sa2HZbhQY3/aaOCc6BsI+Bet6bKD5cy9YMiwSyZxfmCgG+HvosO/7MTO
-         MuLUvDTBo7OsHkZ0V1TT6DyrQyTZyqOc6D/wL1ZvYetlJ/dmItTw8i+nsQRNEI42I/CA
-         gG7FlGRBZypJp0TscqQIEZ6kT8+/DIaQvxh64ZBszaCkprNyQQXbz4YPQ+ee40Ztgm7V
-         M282bey7ifR/C4xDEIxb2N9fqSG1rLty+nSJWOQuZIDUVD6XLOgmOujTYflaq6k5iNSK
-         6WTHNMvBxoaRm3CUdzkfb02sjjZJXWMSps2h5e0qEidXofIcSGz3m/jbzolHuDUSn3zi
-         Anhg==
-X-Gm-Message-State: ANoB5pk9u98EJgN1A/4ajNhJCDb5PPNcddP4STjFiY2N6Fta9nNNgNz0
-        c5Kwgj2JIiLhgc3p1nK3gnM/2r/eiIETfsT3
-X-Google-Smtp-Source: AA0mqf61Jp4wmLOdJeYivp3uP5R6fzu+rYgZWvPH5nPgXiZqaCxYiny3jqzhsfiLm93Q4yfA8+LJPA==
-X-Received: by 2002:a17:90a:cf83:b0:219:d72:2ea5 with SMTP id i3-20020a17090acf8300b002190d722ea5mr49915348pju.2.1671578594221;
+        bh=XH0Af/kN7ZInRidEVnPhB06qxYUPQCuixBX8Udkd4Qw=;
+        b=ZTqzOAiRD4HYT2KG76HGxDoaSnBjM79zItyigOhBrsaEaQMzKhUOktTx5Okzp9XcSa
+         5DJjetsZ5mH1hFl4uo0t25kztNxJFLwulD+XRZfCYVMnmIZAf1cqWHoM2rbarZfdyexj
+         grAmSIMwyzIxhTAzMF000RkvbYT5MMKzUh+8pJAyK9E1USNluIdagP43KkJoAXDjs+oF
+         ty3ieujFx+MUJHm6W4T3aHq1u8zlj3WCitAgpwDCQ2z3oVj5XUNdl7490IxQZ/MQLJOu
+         724OejIXcCBvCseAJHShUwRK7INp1rqgDCXKKlEqS1JjjxgkHJtDOxzmpNsVWQjrs6mO
+         4/ig==
+X-Gm-Message-State: AFqh2kqIQP6ld5tjh2/9P7MhC+G/GU1+SVdczuPCeeVhJ6lMtUXQw7Qi
+        lhVjbDAwy1/nbY997iIKBQ8mZ7CK+eLOmNq/
+X-Google-Smtp-Source: AMrXdXu3s7WAwGEFypWytpacjzZNOQZ9SdJSjbOgJaF5GQTZ3+LV/sKZCCqB0IHeo9yvxabFiVDniA==
+X-Received: by 2002:a17:90b:2d8a:b0:223:b1e4:146 with SMTP id sj10-20020a17090b2d8a00b00223b1e40146mr14004942pjb.37.1671578594494;
         Tue, 20 Dec 2022 15:23:14 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-138-158.pa.nsw.optusnet.com.au. [49.181.138.158])
-        by smtp.gmail.com with ESMTPSA id j6-20020a17090a31c600b0020a81cf4a9asm82202pjf.14.2022.12.20.15.23.13
+        by smtp.gmail.com with ESMTPSA id s8-20020a17090a760800b00218e8a0d7f0sm71378pjk.22.2022.12.20.15.23.13
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 20 Dec 2022 15:23:13 -0800 (PST)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <dave@fromorbit.com>)
-        id 1p7lx1-00AsnU-5x
+        id 1p7lx1-00Asnf-9z
         for linux-xfs@vger.kernel.org; Wed, 21 Dec 2022 10:23:11 +1100
 Received: from dave by devoid.disaster.area with local (Exim 4.96)
         (envelope-from <dave@devoid.disaster.area>)
-        id 1p7lx1-00Ec5y-0W
+        id 1p7lx1-00Ec6J-0v
         for linux-xfs@vger.kernel.org;
         Wed, 21 Dec 2022 10:23:11 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 3/9] xfs: background AIL push targets physical space, not grant space
-Date:   Wed, 21 Dec 2022 10:23:02 +1100
-Message-Id: <20221220232308.3482960-4-david@fromorbit.com>
+Subject: [PATCH 7/9] xfs: track log space pinned by the AIL
+Date:   Wed, 21 Dec 2022 10:23:06 +1100
+Message-Id: <20221220232308.3482960-8-david@fromorbit.com>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221220232308.3482960-1-david@fromorbit.com>
 References: <20221220232308.3482960-1-david@fromorbit.com>
@@ -76,148 +76,137 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Currently the AIL attempts to keep 25% of the "log space" free,
-where the current used space is tracked by the reserve grant head.
-That is, it tracks both physical space used plus the amount reserved
-by transactions in progress.
+Currently we track space used in the log by grant heads.
+These store the reserved space as a physical log location and
+combine both space reserved for future use with space already used in
+the log in a single variable. The amount of space consumed in the
+log is then calculated as the  distance between the log tail and
+the grant head.
 
-When we start tail pushing, we are trying to make space for new
-reservations by writing back older metadata and the log is generally
-physically full of dirty metadata, and reservations for modifications
-in flight take up whatever space the AIL can physically free up.
+The problem with tracking the grant head as a physical location
+comes from the fact that it tracks both log cycle count and offset
+into the log in bytes in a single 64 bit variable. because the cycle
+count on disk is a 32 bit number, this also limits the offset into
+the log to 32 bits. ANd because that is in bytes, we are limited to
+being able to track only 2GB of log space in the grant head.
 
-Hence we don't really need to take into account the reservation
-space that has been used - we just need to keep the log tail moving
-as fast as we can to free up space for more reservations to be made.
-We know exactly how much physical space the journal is consuming in
-the AIL (i.e. max LSN - min LSN) so we can base push thresholds
-directly on this state rather than have to look at grant head
-reservations to determine how much to physically push out of the
-log.
+Hence to support larger physical logs, we need to track used space
+differently in the grant head. We no longer use the grant head for
+guiding AIL pushing, so the only thing it is now used for is
+determining if we've run out of reservation space via the
+calculation in xlog_space_left().
+
+What we really need to do is move the grant heads away from tracking
+physical space in the log. The issue here is that space consumed in
+the log is not directly tracked by the current mechanism - the
+space consumed in the log by grant head reservations gets returned
+to the free pool by the tail of the log moving forward. i.e. the
+space isn't directly tracked or calculated, but the used grant space
+gets "freed" as the physical limits of the log are updated without
+actually needing to update the grant heads.
+
+Hence to move away from implicit, zero-update log space tracking we
+need to explicitly track the amount of physical space the log
+actually consumes separately to the in-memory reservations for
+operations that will be committed to the journal. Luckily, we
+already track the information we need to calculate this in the AIL
+itself.
+
+That is, the space currently consumed by the journal is the maximum
+LSN that the AIL has seen minus the current log tail. As we update
+both of these items dynamically as the head and tail of the log
+moves, we always know exactly how much space the journal consumes.
+
+This means that we also know exactly how much space the currently
+active reservations require, and exactly how much free space we have
+remaining for new reservations to be made. Most importantly, we know
+what these spaces are indepedently of the physical locations of
+the head and tail of the log.
+
+Hence by separating out the physical space consumed by the journal,
+we can now track reservations in the grant heads purely as a byte
+count, and the log can be considered full when the tail space +
+reservation space exceeds the size of the log. This means we can use
+the full 64 bits of grant head space for reservation space,
+completely removing the 32 bit byte count limitation on log size
+that they impose.
+
+Hence the first step in this conversion is to track and update the
+"log tail space" every time the AIL tail or maximum seen LSN
+changes.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_log_priv.h  | 18 ++++++++++++
- fs/xfs/xfs_trans_ail.c | 65 +++++++++++++++++++-----------------------
- 2 files changed, 48 insertions(+), 35 deletions(-)
+ fs/xfs/xfs_log_cil.c   | 9 ++++++---
+ fs/xfs/xfs_log_priv.h  | 1 +
+ fs/xfs/xfs_trans_ail.c | 9 ++++++---
+ 3 files changed, 13 insertions(+), 6 deletions(-)
 
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index f12e7e8dba30..b294e349798c 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -761,14 +761,17 @@ xlog_cil_ail_insert(
+ 	 * always be the same (as iclogs can contain multiple commit records) or
+ 	 * higher LSN than the current head. We do this before insertion of the
+ 	 * items so that log space checks during insertion will reflect the
+-	 * space that this checkpoint has already consumed.
++	 * space that this checkpoint has already consumed.  We call
++	 * xfs_ail_update_finish() so that tail space and space-based wakeups
++	 * will be recalculated appropriately.
+ 	 */
+ 	ASSERT(XFS_LSN_CMP(ctx->commit_lsn, ailp->ail_head_lsn) >= 0 ||
+ 			aborted);
+ 	spin_lock(&ailp->ail_lock);
+-	ailp->ail_head_lsn = ctx->commit_lsn;
+ 	xfs_trans_ail_cursor_last(ailp, &cur, ctx->start_lsn);
+-	spin_unlock(&ailp->ail_lock);
++	ailp->ail_head_lsn = ctx->commit_lsn;
++	/* xfs_ail_update_finish() drops the ail_lock */
++	xfs_ail_update_finish(ailp, NULLCOMMITLSN);
+ 
+ 	/* unpin all the log items */
+ 	list_for_each_entry(lv, &ctx->lv_chain, lv_list) {
 diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index f196b65b322a..205249f5a423 100644
+index 70b4280086f2..9c173c48cbcd 100644
 --- a/fs/xfs/xfs_log_priv.h
 +++ b/fs/xfs/xfs_log_priv.h
-@@ -622,6 +622,24 @@ xlog_wait(
+@@ -435,6 +435,7 @@ struct xlog {
  
- int xlog_wait_on_iclog(struct xlog_in_core *iclog);
+ 	struct xlog_grant_head	l_reserve_head;
+ 	struct xlog_grant_head	l_write_head;
++	uint64_t		l_tail_space;
  
-+/* Calculate the distance between two LSNs in bytes */
-+static inline uint64_t
-+xlog_lsn_sub(
-+	struct xlog	*log,
-+	xfs_lsn_t	high,
-+	xfs_lsn_t	low)
-+{
-+	uint32_t	hi_cycle = CYCLE_LSN(high);
-+	uint32_t	hi_block = BLOCK_LSN(high);
-+	uint32_t	lo_cycle = CYCLE_LSN(low);
-+	uint32_t	lo_block = BLOCK_LSN(low);
-+
-+	if (hi_cycle == lo_cycle)
-+	       return BBTOB(hi_block - lo_block);
-+	ASSERT((hi_cycle == lo_cycle + 1) || xlog_is_shutdown(log));
-+	return (uint64_t)log->l_logsize - BBTOB(lo_block - hi_block);
-+}
-+
- /*
-  * The LSN is valid so long as it is behind the current LSN. If it isn't, this
-  * means that the next log record that includes this metadata could have a
+ 	struct xfs_kobj		l_kobj;
+ 
 diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 8ea8b7d83e84..7354b5379014 100644
+index 1b5942ef378a..6b1556325277 100644
 --- a/fs/xfs/xfs_trans_ail.c
 +++ b/fs/xfs/xfs_trans_ail.c
-@@ -398,51 +398,46 @@ xfsaild_push_item(
- /*
-  * Compute the LSN that we'd need to push the log tail towards in order to have
-  * at least 25% of the log space free.  If the log free space already meets this
-- * threshold, this function returns NULLCOMMITLSN.
-+ * threshold, this function returns the lowest LSN in the AIL to slowly keep
-+ * writeback ticking over and the tail of the log moving forward.
-  */
- xfs_lsn_t
- __xfs_ail_push_target(
- 	struct xfs_ail		*ailp)
- {
--	struct xlog	*log = ailp->ail_log;
--	xfs_lsn_t	threshold_lsn = 0;
--	xfs_lsn_t	last_sync_lsn;
--	int		free_blocks;
--	int		free_bytes;
--	int		threshold_block;
--	int		threshold_cycle;
--	int		free_threshold;
--
--	free_bytes = xlog_space_left(log, &log->l_reserve_head.grant);
--	free_blocks = BTOBBT(free_bytes);
-+	struct xlog		*log = ailp->ail_log;
-+	struct xfs_log_item	*lip;
-+	xfs_lsn_t		target_lsn = 0;
-+	xfs_lsn_t		max_lsn;
-+	xfs_lsn_t		min_lsn;
-+	int32_t			free_bytes;
-+	uint32_t		target_block;
-+	uint32_t		target_cycle;
+@@ -731,6 +731,8 @@ __xfs_ail_assign_tail_lsn(
+ 	if (!tail_lsn)
+ 		tail_lsn = ailp->ail_head_lsn;
  
--	/*
--	 * The threshold for the minimum number of free blocks is one quarter of
--	 * the entire log space.
--	 */
--	free_threshold = log->l_logBBsize >> 2;
--	if (free_blocks >= free_threshold)
-+	lockdep_assert_held(&ailp->ail_lock);
-+
-+	lip = xfs_ail_max(ailp);
-+	if (!lip)
-+		return NULLCOMMITLSN;
-+	max_lsn = lip->li_lsn;
-+	min_lsn = __xfs_ail_min_lsn(ailp);
-+
-+	free_bytes = log->l_logsize - xlog_lsn_sub(log, max_lsn, min_lsn);
-+	if (free_bytes >= log->l_logsize >> 2)
- 		return NULLCOMMITLSN;
- 
--	xlog_crack_atomic_lsn(&log->l_tail_lsn, &threshold_cycle,
--						&threshold_block);
--	threshold_block += free_threshold;
--	if (threshold_block >= log->l_logBBsize) {
--		threshold_block -= log->l_logBBsize;
--		threshold_cycle += 1;
-+	target_cycle = CYCLE_LSN(min_lsn);
-+	target_block = BLOCK_LSN(min_lsn) + (log->l_logBBsize >> 2);
-+	if (target_block >= log->l_logBBsize) {
-+		target_block -= log->l_logBBsize;
-+		target_cycle += 1;
- 	}
--	threshold_lsn = xlog_assign_lsn(threshold_cycle,
--					threshold_block);
--	/*
--	 * Don't pass in an lsn greater than the lsn of the last
--	 * log record known to be on disk. Use a snapshot of the last sync lsn
--	 * so that it doesn't change between the compare and the set.
--	 */
--	last_sync_lsn = atomic64_read(&log->l_last_sync_lsn);
--	if (XFS_LSN_CMP(threshold_lsn, last_sync_lsn) > 0)
--		threshold_lsn = last_sync_lsn;
-+	target_lsn = xlog_assign_lsn(target_cycle, target_block);
- 
--	return threshold_lsn;
-+	/* Cap the target to the highest LSN known to be in the AIL. */
-+	if (XFS_LSN_CMP(target_lsn, max_lsn) > 0)
-+		return max_lsn;
-+	return target_lsn;
++	WRITE_ONCE(log->l_tail_space,
++			xlog_lsn_sub(log, ailp->ail_head_lsn, tail_lsn));
+ 	trace_xfs_log_assign_tail_lsn(log, tail_lsn);
+ 	atomic64_set(&log->l_tail_lsn, tail_lsn);
  }
- 
- static long
+@@ -738,9 +740,10 @@ __xfs_ail_assign_tail_lsn(
+ /*
+  * Callers should pass the the original tail lsn so that we can detect if the
+  * tail has moved as a result of the operation that was performed. If the caller
+- * needs to force a tail LSN update, it should pass NULLCOMMITLSN to bypass the
+- * "did the tail LSN change?" checks. If the caller wants to avoid a tail update
+- * (e.g. it knows the tail did not change) it should pass an @old_lsn of 0.
++ * needs to force a tail space update, it should pass NULLCOMMITLSN to bypass
++ * the "did the tail LSN change?" checks. If the caller wants to avoid a tail
++ * update (e.g. it knows the tail did not change) it should pass an @old_lsn of
++ * 0.
+  */
+ void
+ xfs_ail_update_finish(
 -- 
 2.38.1
 
