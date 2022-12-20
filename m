@@ -2,243 +2,116 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79264C3DA7A
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Dec 2022 13:49:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB4D0C10F1E
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Dec 2022 16:01:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233685AbiLTNtm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Dec 2022 08:49:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58964 "EHLO
+        id S229610AbiLTQBY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Dec 2022 11:01:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48200 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229563AbiLTNtj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2022 08:49:39 -0500
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D962E65F1;
-        Tue, 20 Dec 2022 05:49:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1671544178; x=1703080178;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=ILvH76aAgDaS9txxLdxKFTa4pafrJSu2zimzPO8hm0o=;
-  b=Q0KdwWehjyjPhPBo94tVDzcQdGxR0PM9AgDg0duQCGWm7jRZnZS+iuBe
-   qp4lNm7X3MYVznxy0Ui+Apl5th/L0h2dYj5cSB4LGhy+pUPBvW7bgYnAQ
-   jBI+81JULyi5bWE1yTdL8A1lnPaT3775wNAVAIeR9POnz5mnOQriY1fzU
-   poe3kSOQBhkGFfzTmWs4pnhm1hqch0Z8a3AnOQkofuUmDwpQpI5Ud077E
-   42EMkbFohsiDsHSTg7uNlYiNV43K+zbzrDRMqeUqon4NCHDk11P/jpYAo
-   R1t4oVTVcfwFK+i41u8eFgkDUsX0sawJ3AmBtW7/UIHGxqewZAvtbYWs7
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10567"; a="299956961"
-X-IronPort-AV: E=Sophos;i="5.96,259,1665471600"; 
-   d="scan'208";a="299956961"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Dec 2022 05:49:38 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10567"; a="714435955"
-X-IronPort-AV: E=Sophos;i="5.96,259,1665471600"; 
-   d="scan'208";a="714435955"
-Received: from lkp-server01.sh.intel.com (HELO b5d47979f3ad) ([10.239.97.150])
-  by fmsmga008.fm.intel.com with ESMTP; 20 Dec 2022 05:49:34 -0800
-Received: from kbuild by b5d47979f3ad with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1p7czu-0009XY-00;
-        Tue, 20 Dec 2022 13:49:34 +0000
-Date:   Tue, 20 Dec 2022 21:49:08 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     virtualization@lists.linux-foundation.org,
-        speakup@linux-speakup.org, netdev@vger.kernel.org,
-        loongarch@lists.linux.dev, linuxppc-dev@lists.ozlabs.org,
-        linux-xfs@vger.kernel.org, linux-omap@vger.kernel.org,
-        linux-mm@kvack.org, linux-media@vger.kernel.org,
-        linux-cxl@vger.kernel.org, linux-can@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Linux Memory Management List <linux-mm@kvack.org>
-Subject: [linux-next:master] BUILD REGRESSION
- e45fb347b630ee76482fe938ba76cf8eab811290
-Message-ID: <63a1bd54.a88xtgO0grxGBbe+%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        with ESMTP id S229575AbiLTQBV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2022 11:01:21 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7141F389F
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2022 08:01:19 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3D2F3B81699
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2022 16:01:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE3D1C433D2;
+        Tue, 20 Dec 2022 16:01:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1671552076;
+        bh=WzAsbg85ckexzuV6s2NqZz44svOJI8g2CO65zJOdM+k=;
+        h=Date:From:To:Cc:Subject:From;
+        b=JvGsNN6p3hI5fH9HCr2x7d8jjl0hMs9T5lePF5yLEcc9trNXwgUfE4gByUrCcQDI5
+         ZJ7FUgprf/yGm7wdOwsGn/e1qcDO2dm39RLWTWfL2ThcWD+AcbHJ3h0tIrw0WM5Bl3
+         S35PMFvSS5racMD0CvJUWwpUs/sbApCd4EL0znxEnm0IA7xlWuvidGHWiHd0tYugKl
+         Yzze9cXYdVe2lHritvHqSdQBjRh9keVmKErUVFCTc2J+eJB6g322K7/pywjFPU8lRq
+         3rlJetJF4V6cWrRraCCLa/hSOW9RuypXq3WYGjGitNiNECQ4a8ihYL/N7/8+bk5xWN
+         97JL3Cp+dm+9g==
+Date:   Tue, 20 Dec 2022 08:01:15 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org, torvalds@linux-foundation.org
+Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org,
+        ruansy.fnst@fujitsu.com
+Subject: [GIT PULL] fsdax,xfs: fix data corruption problems
+Message-ID: <167155161011.40255.9717951395121213068.stg-ugh@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
-branch HEAD: e45fb347b630ee76482fe938ba76cf8eab811290  Add linux-next specific files for 20221220
+Hi Linus,
 
-Error/Warning reports:
+Please pull this branch with changes for xfs for 6.2-rc1.  As promised,
+this second pull request contains data corruption fixes for fsdax
+filesystems that support mapping pmem storage to multiple files.  (IOWs,
+XFS, which is the only fs that uses it.)
 
-https://lore.kernel.org/oe-kbuild-all/202211242120.MzZVGULn-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202212020520.0OkMIno3-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202212040713.rVney9e8-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202212061455.6GE7y0jg-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202212090509.NjAl9tbo-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202212191708.Xk9yBj52-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202212201859.qUGugK1F-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202212202020.qL8Aaqu0-lkp@intel.com
+I anticipate a third pull request in a couple of days to start the
+stabilization phase of 6.2, though seeing as it's the last workweek of
+the year I could just as well punt to January.
 
-Error/Warning: (recently discovered and may have been fixed)
+As usual, I did a test-merge with the main upstream branch as of a few
+minutes ago, and didn't see any conflicts.  Please let me know if you
+encounter any problems.
 
-Documentation/gpu/drm-internals:179: ./include/drm/drm_file.h:411: WARNING: undefined label: drm_accel_node (if the link has no caption the label must precede a section header)
-Documentation/networking/devlink/etas_es58x.rst: WARNING: document isn't included in any toctree
-Warning: tools/power/cpupower/man/cpupower-powercap-info.1 references a file that doesn't exist: Documentation/power/powercap/powercap.txt
-arch/arm/kernel/entry-armv.S:485:5: warning: "CONFIG_ARM_THUMB" is not defined, evaluates to 0 [-Wundef]
-arch/loongarch/kernel/asm-offsets.c:265:6: warning: no previous prototype for 'output_pbe_defines' [-Wmissing-prototypes]
-arch/powerpc/kernel/kvm_emul.o: warning: objtool: kvm_template_end(): can't find starting instruction
-arch/powerpc/kernel/optprobes_head.o: warning: objtool: optprobe_template_end(): can't find starting instruction
-drivers/regulator/tps65219-regulator.c:310:32: warning: parameter 'dev' set but not used [-Wunused-but-set-parameter]
-drivers/regulator/tps65219-regulator.c:310:60: warning: parameter 'dev' set but not used [-Wunused-but-set-parameter]
-drivers/regulator/tps65219-regulator.c:370:26: warning: ordered comparison of pointer with integer zero [-Wextra]
-lib/dhry_run.c:61:6: warning: variable 'ret' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
-mm/memfd.c:274:31: warning: unused variable 'ns' [-Wunused-variable]
+--D
 
-Unverified Error/Warning (likely false positive, please contact us if interested):
+The following changes since commit 52f31ed228212ba572c44e15e818a3a5c74122c0:
 
-drivers/accessibility/speakup/main.c:1290:26: sparse: sparse: obsolete array initializer, use C99 syntax
-drivers/cxl/core/mbox.c:832:18: sparse: sparse: cast from non-scalar
-drivers/cxl/core/mbox.c:832:18: sparse: sparse: cast to non-scalar
-drivers/i2c/busses/i2c-qcom-geni.c:1028:28: sparse: sparse: symbol 'i2c_master_hub' was not declared. Should it be static?
-drivers/media/platform/ti/davinci/vpif.c:483:20: sparse: sparse: cast from non-scalar
-drivers/media/platform/ti/davinci/vpif.c:483:20: sparse: sparse: cast to non-scalar
-fs/xfs/xfs_iomap.c:86:29: sparse: sparse: symbol 'xfs_iomap_page_ops' was not declared. Should it be static?
+xfs: dquot shrinker doesn't check for XFS_DQFLAG_FREEING (2022-12-08 08:29:58 -0800)
 
-Error/Warning ids grouped by kconfigs:
+are available in the Git repository at:
 
-gcc_recent_errors
-|-- alpha-allyesconfig
-|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
-|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
-|-- arc-allyesconfig
-|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
-|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
-|-- arm-allyesconfig
-|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
-|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
-|-- arm-buildonly-randconfig-r005-20221219
-|   `-- arch-arm-kernel-entry-armv.S:warning:CONFIG_ARM_THUMB-is-not-defined-evaluates-to
-|-- arm64-allyesconfig
-|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
-|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
-|-- i386-allyesconfig
-|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
-|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
-|-- i386-buildonly-randconfig-r001-20221219
-|   `-- mm-memfd.c:warning:unused-variable-ns
-|-- ia64-allmodconfig
-|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
-|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
-|-- loongarch-allyesconfig
-|   `-- arch-loongarch-kernel-asm-offsets.c:warning:no-previous-prototype-for-output_pbe_defines
-|-- loongarch-randconfig-s051-20221218
-|   |-- drivers-i2c-busses-i2c-qcom-geni.c:sparse:sparse:symbol-i2c_master_hub-was-not-declared.-Should-it-be-static
-|   `-- fs-xfs-xfs_iomap.c:sparse:sparse:symbol-xfs_iomap_page_ops-was-not-declared.-Should-it-be-static
-|-- m68k-allmodconfig
-|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
-|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
-|-- m68k-allyesconfig
-|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
-|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
-|-- mips-allyesconfig
-|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
-|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
-|-- powerpc-allmodconfig
-|   |-- arch-powerpc-kernel-kvm_emul.o:warning:objtool:kvm_template_end():can-t-find-starting-instruction
-|   |-- arch-powerpc-kernel-optprobes_head.o:warning:objtool:optprobe_template_end():can-t-find-starting-instruction
-|   |-- drivers-regulator-tps65219-regulator.c:warning:ordered-comparison-of-pointer-with-integer-zero
-|   `-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
-|-- riscv-randconfig-s041-20221218
-|   |-- drivers-accessibility-speakup-main.c:sparse:sparse:obsolete-array-initializer-use-C99-syntax
-|   `-- fs-xfs-xfs_iomap.c:sparse:sparse:symbol-xfs_iomap_page_ops-was-not-declared.-Should-it-be-static
-|-- riscv-randconfig-s042-20221218
-|   |-- drivers-cxl-core-mbox.c:sparse:sparse:cast-from-non-scalar
-|   |-- drivers-cxl-core-mbox.c:sparse:sparse:cast-to-non-scalar
-|   |-- drivers-net-thunderbolt.c:sparse:sparse:incorrect-type-in-assignment-(different-base-types)-expected-restricted-__le16-usertype-frame_id-got-unsigned-short-usertype
-|   |-- drivers-net-thunderbolt.c:sparse:sparse:incorrect-type-in-assignment-(different-base-types)-expected-restricted-__le16-usertype-frame_index-got-unsigned-short-usertype
-|   |-- drivers-net-thunderbolt.c:sparse:sparse:incorrect-type-in-assignment-(different-base-types)-expected-restricted-__le32-usertype-frame_count-got-unsigned-int-usertype
-clang_recent_errors
-|-- hexagon-allmodconfig
-|   |-- drivers-regulator-tps65219-regulator.c:warning:parameter-dev-set-but-not-used
-|   `-- lib-dhry_run.c:warning:variable-ret-is-used-uninitialized-whenever-if-condition-is-false
-`-- x86_64-rhel-8.3-rust
-    `-- vmlinux.o:warning:objtool:___ksymtab_gpl-_RNvNtCsfATHBUcknU9_6kernel5print16call_printk_cont:data-relocation-to-ENDBR:_RNvNtCsfATHBUcknU9_6kernel5print16call_printk_cont
+git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.2-merge-9
 
-elapsed time: 726m
+for you to fetch changes up to 4883f57a2d861a68588aefbf592f86d1e059f1ec:
 
-configs tested: 66
-configs skipped: 2
+xfs: remove restrictions for fsdax and reflink (2022-12-08 08:29:59 -0800)
 
-gcc tested configs:
-um                             i386_defconfig
-um                           x86_64_defconfig
-powerpc                           allnoconfig
-arc                                 defconfig
-x86_64                    rhel-8.3-kselftests
-s390                             allmodconfig
-x86_64                          rhel-8.3-func
-alpha                               defconfig
-i386                                defconfig
-s390                                defconfig
-arm                                 defconfig
-sh                               allmodconfig
-s390                             allyesconfig
-x86_64               randconfig-a002-20221219
-x86_64               randconfig-a003-20221219
-alpha                            allyesconfig
-x86_64               randconfig-a001-20221219
-m68k                             allyesconfig
-x86_64               randconfig-a004-20221219
-mips                             allyesconfig
-m68k                             allmodconfig
-powerpc                          allmodconfig
-arc                              allyesconfig
-x86_64               randconfig-a005-20221219
-arc                  randconfig-r043-20221220
-x86_64                           rhel-8.3-bpf
-x86_64               randconfig-a006-20221219
-x86_64                           rhel-8.3-syz
-riscv                randconfig-r042-20221220
-x86_64                         rhel-8.3-kunit
-ia64                             allmodconfig
-x86_64                            allnoconfig
-arm                              allyesconfig
-x86_64                           rhel-8.3-kvm
-arm64                            allyesconfig
-s390                 randconfig-r044-20221220
-i386                             allyesconfig
-i386                 randconfig-a001-20221219
-i386                 randconfig-a003-20221219
-i386                 randconfig-a002-20221219
-i386                 randconfig-a006-20221219
-i386                 randconfig-a005-20221219
-i386                 randconfig-a004-20221219
-powerpc                     ep8248e_defconfig
-powerpc                     rainier_defconfig
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                           allyesconfig
+----------------------------------------------------------------
+New XFS/fsdax code for 6.2, part 2:
 
-clang tested configs:
-x86_64                          rhel-8.3-rust
-hexagon              randconfig-r041-20221220
-arm                  randconfig-r046-20221220
-i386                 randconfig-a011-20221219
-i386                 randconfig-a014-20221219
-hexagon              randconfig-r045-20221220
-i386                 randconfig-a012-20221219
-i386                 randconfig-a013-20221219
-i386                 randconfig-a015-20221219
-i386                 randconfig-a016-20221219
-x86_64               randconfig-a014-20221219
-x86_64               randconfig-a015-20221219
-x86_64               randconfig-a012-20221219
-x86_64               randconfig-a011-20221219
-arm                             mxs_defconfig
-x86_64               randconfig-a016-20221219
-powerpc                     ppa8548_defconfig
-x86_64               randconfig-a013-20221219
+- Fixes for some serious data corruption problems that were introduced
+in the 6.0 series allowing for files to share pmem.  These include:
 
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+- Invalidate mapped pages whenever we write to a shared pmem page so
+that all the involved processes take a page fault so that they can
+actually set up the COW
+- Fix missing zeroing around a file range that is about to be written
+and is backed by shared pmem
+- Set up fsdax mappings to be shared any time we notice shared
+storage, even on a read operation
+- Fix the dax dedupe comparison function misusing iterators and doing no
+comparison at all
+- Fix missing implementation of the fallocate funshare command which led
+to callers using the pagecache implementation on fsdax(!)
+- Fix some broken inode reflink/dax state handling in XFS
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+
+----------------------------------------------------------------
+Shiyang Ruan (8):
+fsdax: introduce page->share for fsdax in reflink mode
+fsdax: invalidate pages when CoW
+fsdax: zero the edges if source is HOLE or UNWRITTEN
+fsdax,xfs: set the shared flag when file extent is shared
+fsdax: dedupe: iter two files at the same time
+xfs: use dax ops for zero and truncate in fsdax mode
+fsdax,xfs: port unshare to fsdax
+xfs: remove restrictions for fsdax and reflink
+
+fs/dax.c                   | 221 +++++++++++++++++++++++++++++++--------------
+fs/xfs/xfs_ioctl.c         |   4 -
+fs/xfs/xfs_iomap.c         |   6 +-
+fs/xfs/xfs_iops.c          |   4 -
+fs/xfs/xfs_reflink.c       |   8 +-
+include/linux/dax.h        |   2 +
+include/linux/mm_types.h   |   5 +-
+include/linux/page-flags.h |   2 +-
+8 files changed, 167 insertions(+), 85 deletions(-)
