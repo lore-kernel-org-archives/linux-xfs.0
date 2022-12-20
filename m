@@ -2,405 +2,250 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 575DEC3DA6E
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Dec 2022 23:23:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78B56C4167B
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Dec 2022 23:23:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229983AbiLTXXV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Dec 2022 18:23:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33496 "EHLO
+        id S233934AbiLTXXX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Dec 2022 18:23:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33500 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229906AbiLTXXR (ORCPT
+        with ESMTP id S233319AbiLTXXR (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2022 18:23:17 -0500
-Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 318A8F4F
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8332710A4
         for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2022 15:23:16 -0800 (PST)
-Received: by mail-pg1-x52e.google.com with SMTP id d10so649387pgm.13
+Received: by mail-pj1-x102a.google.com with SMTP id fy4so14027161pjb.0
         for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2022 15:23:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=4zkrPNxNQfuqeXolSjD0fop010vx+bHcdJ3i4reoBfw=;
-        b=SeoxBidyosl4ZxqzTFYRyMbgBQwPn3D0PRYMSQBobvDy4GlU0or/BmXP4BZxyAAo36
-         AC67rd0cBXdcOzE0n53iERD9pCvi2wTK7y8OzhwKQ5+cjgK4EqEhy5v6yYMbAI4qR7hX
-         jg1y2WfGdcEjhdt+tjiLrnS0FvF3M68Qh3TlDmR79Ef0K3NLxSK41GpgX2RAnRCxKlNR
-         fhsLE7+c6+5xDITcz6Pdu9EPQHsyCzDXPPzSUMA25Vrc6pyWgagIWzoXOCgifBSftmil
-         TFYLCJZNpBbrlsIskoBylVL+ZiEQkY+VN2Kl3Jts8hcnCa+7AVnKkXr8Jq9zmIW/uH3s
-         DRrw==
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=bQmS641ZcG9XGlSDCRNew6UvM+LbS2/OilZ9ZSSFq2M=;
+        b=yUXnWLDjJGfXdALm2b8clzwaAcadWfRHGKCFGVQ4CB9QMLTbLZSD9Tk7BypzAjWUrK
+         HallT6E8Y84tWyvV6ZMkwrxT3F+k6QgAU+t9M02dNiiHsDGAi2W28A+H7YYqbwQ9AScQ
+         pBAjpwapVZ0lvhW/QzSdt2vO7WyM4K2wWussooUhlS765ho+bnLmDsCS7tXdLfKVFb8y
+         XPkxmKZ2YDLH6QFdASJmhQNCbSWNeBihXIu7fr4OMsqUv2Si/I9jots5mRjFEf6KSnBm
+         JGQV7sFDiJLiBbOTP7l2OLcO02ZhgPLjr8WvKW2AFrQ7lDjpTKtszf68hFn5sjYH+QM+
+         /pJw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=4zkrPNxNQfuqeXolSjD0fop010vx+bHcdJ3i4reoBfw=;
-        b=yh5ZJIcMKqyUzvt4th5GtwjHcijE0BIpARiqBGVbasij4W79aztmAE+ANtruqAhC01
-         Lcjgyc0zTkf+Oq3qXMnIcZXCQxCP1ceZ4wPAO2Tr038d5gS8l+c8MMBgMSLT1tUTdoki
-         5lc4ot+rI2Wd4LwY7AuOIsmFHJAKlyvvabfdOzYMbGaYLlra5tTL7W4DBA2u2LeZiMF5
-         4TqwkqHL1AOuN+8B6Ev6wR/sbX66PFfjscyyI5toJskA3ISDPOUo5BZ1Y9HTCM+P4acS
-         ORDO9v2PWIGv28LhJtn3C/yb5tOvza48eBTZH2Ca2WkRUMlSC1a8Wa0sYrUZ+6HQnuKQ
-         4RhA==
-X-Gm-Message-State: AFqh2kpbMCPViEMV9lIeBIGS5GOxeR/GdhK1S8CtynrH5ItUJTIVxOSl
-        sCEGfR20ypEJOqTLc7X5fxOHZ+TNmFPZth9i
-X-Google-Smtp-Source: AMrXdXtMxaQyu9NClkvwHKswIRY2u7+2qoAuEnDgHilpbWRlrriKUAt0m3hvqR/aEKm9ygG0ddUL6w==
-X-Received: by 2002:a62:384e:0:b0:575:fbab:a152 with SMTP id f75-20020a62384e000000b00575fbaba152mr49651pfa.31.1671578595519;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=bQmS641ZcG9XGlSDCRNew6UvM+LbS2/OilZ9ZSSFq2M=;
+        b=DZGS4+a395V/4Ku68i7KfTBHwyM461JIflu6FYVi9TPWcqXJlrMf5Hb9MfAaJDk2xx
+         m70V9p7NsYXeHkz+Hx8cu4fF6hDt5Xsaa4IXU6g4zyyhac+J1pyP0VtwRndY8oayxQ5u
+         DpXY32G61sR+TBJwIEMg0etfaDG+AJ+b6PabwWVkFAoJvkP8FsEtnfZuv4FgkR73LlC8
+         bE43CPOuZt6Yw3WGoOT9bgWzMXR2wlfUsEx2riE2yAVgvqXQRaoI2+Ida0+B/yaOfMJ7
+         YzZ3taRR8z1AXSptlo+2f3m4ltp0FpM6D2ttJaXBTZGd9xC6C9+gaB+/KlREJe/SJZLh
+         /zow==
+X-Gm-Message-State: ANoB5pldvtDan8rUYnqzVSOOoSnrc6lNkZI0S3RlAxVpX4xIh97X3xKX
+        DmkYWRRVTlvVLM6SikRlI/4FrAq719r1sEI8
+X-Google-Smtp-Source: AA0mqf5hKHtNJCZYlNXY44fUYAJQKJao1bpmqIprXnY4ioKJLu7YpZ+3yiShNzOL1RLTKHgas/hs8A==
+X-Received: by 2002:a05:6a21:8cc2:b0:9d:efbe:52bf with SMTP id ta2-20020a056a218cc200b0009defbe52bfmr57417347pzb.47.1671578595950;
         Tue, 20 Dec 2022 15:23:15 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-138-158.pa.nsw.optusnet.com.au. [49.181.138.158])
-        by smtp.gmail.com with ESMTPSA id h18-20020aa79f52000000b00576df4543d4sm9117230pfr.166.2022.12.20.15.23.13
+        by smtp.gmail.com with ESMTPSA id u31-20020a63235f000000b00488b8ad57bfsm6249051pgm.54.2022.12.20.15.23.13
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 20 Dec 2022 15:23:14 -0800 (PST)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <dave@fromorbit.com>)
-        id 1p7lx1-00AsnS-4D
+        id 1p7lx1-00AsnR-3N
         for linux-xfs@vger.kernel.org; Wed, 21 Dec 2022 10:23:11 +1100
 Received: from dave by devoid.disaster.area with local (Exim 4.96)
         (envelope-from <dave@devoid.disaster.area>)
-        id 1p7lx1-00Ec5q-0M
+        id 1p7lx1-00Ec5n-09
         for linux-xfs@vger.kernel.org;
         Wed, 21 Dec 2022 10:23:11 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 1/9] xfs: move and xfs_trans_committed_bulk
-Date:   Wed, 21 Dec 2022 10:23:00 +1100
-Message-Id: <20221220232308.3482960-2-david@fromorbit.com>
+Subject: [PATCH 0/9 v3] xfs: byte-based grant head reservation tracking
+Date:   Wed, 21 Dec 2022 10:22:59 +1100
+Message-Id: <20221220232308.3482960-1-david@fromorbit.com>
 X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20221220232308.3482960-1-david@fromorbit.com>
-References: <20221220232308.3482960-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-Ever since the CIL and delayed logging was introduced,
-xfs_trans_committed_bulk() has been a purely CIL checkpoint
-completion function and not a transaction commit completion
-function. Now that we are adding log specific updates to this
-function, it really does not have anything to do with the
-transaction subsystem - it is really log and log item level
-functionality.
+One of the significant limitations of the log reservation code is
+that it uses physical tracking of the reservation space to account
+for both the space used in the journal as well as the reservations
+held in memory by the CIL and activei running transactions. Because
+this in-memory reservation tracking requires byte-level granularity,
+this means that the "LSN" that the grant head stores it's location
+in is split into 32 bits for the log cycle and 32 bits for the grant
+head offset into the log.
 
-This should be part of the CIL code as it is the callback
-that moves log items from the CIL checkpoint to the AIL. Move it
-and rename it to xlog_cil_ail_insert().
+Storing a byte count as the grant head offset into the log means
+that we can only index 4GB of space with the grant head. This is one
+of the primary limiting factors preventing us from increasing the
+physical log size beyond 2GB. Hence to increase the physical log
+size, we have to increase the space available for storing the grant
+head.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_log_cil.c    | 132 +++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_trans.c      | 129 ---------------------------------------
- fs/xfs/xfs_trans_priv.h |   3 -
- 3 files changed, 131 insertions(+), 133 deletions(-)
+Needing more physical space to store the grant head is an issue
+because we use lockless atomic accounting for the grant head to
+minimise the overhead of new incoming transaction reservations.
+These have unbound concurrency, and hence any lock in the
+reservation path will cause serious scalability issues. The lockless
+accounting fast path was the solution to these scalability problems
+that we had over a decade ago, and hence we know we cannot go back
+to a lock based solution.
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index eccbfb99e894..a430ef863c55 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -683,6 +683,136 @@ xlog_cil_insert_items(
- 	}
- }
- 
-+static inline void
-+xlog_cil_ail_insert_batch(
-+	struct xfs_ail		*ailp,
-+	struct xfs_ail_cursor	*cur,
-+	struct xfs_log_item	**log_items,
-+	int			nr_items,
-+	xfs_lsn_t		commit_lsn)
-+{
-+	int	i;
-+
-+	spin_lock(&ailp->ail_lock);
-+	/* xfs_trans_ail_update_bulk drops ailp->ail_lock */
-+	xfs_trans_ail_update_bulk(ailp, cur, log_items, nr_items, commit_lsn);
-+
-+	for (i = 0; i < nr_items; i++) {
-+		struct xfs_log_item *lip = log_items[i];
-+
-+		if (lip->li_ops->iop_unpin)
-+			lip->li_ops->iop_unpin(lip, 0);
-+	}
-+}
-+
-+/*
-+ * Take the checkpoint's log vector chain of items and insert the attached log
-+ * items into the the AIL. This uses bulk insertion techniques to minimise AIL
-+ * lock traffic.
-+ *
-+ * If we are called with the aborted flag set, it is because a log write during
-+ * a CIL checkpoint commit has failed. In this case, all the items in the
-+ * checkpoint have already gone through iop_committed and iop_committing, which
-+ * means that checkpoint commit abort handling is treated exactly the same as an
-+ * iclog write error even though we haven't started any IO yet. Hence in this
-+ * case all we need to do is iop_committed processing, followed by an
-+ * iop_unpin(aborted) call.
-+ *
-+ * The AIL cursor is used to optimise the insert process. If commit_lsn is not
-+ * at the end of the AIL, the insert cursor avoids the need to walk the AIL to
-+ * find the insertion point on every xfs_log_item_batch_insert() call. This
-+ * saves a lot of needless list walking and is a net win, even though it
-+ * slightly increases that amount of AIL lock traffic to set it up and tear it
-+ * down.
-+ */
-+static void
-+xlog_cil_ail_insert(
-+	struct xlog		*log,
-+	struct list_head	*lv_chain,
-+	xfs_lsn_t		commit_lsn,
-+	bool			aborted)
-+{
-+#define LOG_ITEM_BATCH_SIZE	32
-+	struct xfs_ail		*ailp = log->l_ailp;
-+	struct xfs_log_item	*log_items[LOG_ITEM_BATCH_SIZE];
-+	struct xfs_log_vec	*lv;
-+	struct xfs_ail_cursor	cur;
-+	int			i = 0;
-+
-+	spin_lock(&ailp->ail_lock);
-+	xfs_trans_ail_cursor_last(ailp, &cur, commit_lsn);
-+	spin_unlock(&ailp->ail_lock);
-+
-+	/* unpin all the log items */
-+	list_for_each_entry(lv, lv_chain, lv_list) {
-+		struct xfs_log_item	*lip = lv->lv_item;
-+		xfs_lsn_t		item_lsn;
-+
-+		if (aborted)
-+			set_bit(XFS_LI_ABORTED, &lip->li_flags);
-+
-+		if (lip->li_ops->flags & XFS_ITEM_RELEASE_WHEN_COMMITTED) {
-+			lip->li_ops->iop_release(lip);
-+			continue;
-+		}
-+
-+		if (lip->li_ops->iop_committed)
-+			item_lsn = lip->li_ops->iop_committed(lip, commit_lsn);
-+		else
-+			item_lsn = commit_lsn;
-+
-+		/* item_lsn of -1 means the item needs no further processing */
-+		if (XFS_LSN_CMP(item_lsn, (xfs_lsn_t)-1) == 0)
-+			continue;
-+
-+		/*
-+		 * if we are aborting the operation, no point in inserting the
-+		 * object into the AIL as we are in a shutdown situation.
-+		 */
-+		if (aborted) {
-+			ASSERT(xlog_is_shutdown(ailp->ail_log));
-+			if (lip->li_ops->iop_unpin)
-+				lip->li_ops->iop_unpin(lip, 1);
-+			continue;
-+		}
-+
-+		if (item_lsn != commit_lsn) {
-+
-+			/*
-+			 * Not a bulk update option due to unusual item_lsn.
-+			 * Push into AIL immediately, rechecking the lsn once
-+			 * we have the ail lock. Then unpin the item. This does
-+			 * not affect the AIL cursor the bulk insert path is
-+			 * using.
-+			 */
-+			spin_lock(&ailp->ail_lock);
-+			if (XFS_LSN_CMP(item_lsn, lip->li_lsn) > 0)
-+				xfs_trans_ail_update(ailp, lip, item_lsn);
-+			else
-+				spin_unlock(&ailp->ail_lock);
-+			if (lip->li_ops->iop_unpin)
-+				lip->li_ops->iop_unpin(lip, 0);
-+			continue;
-+		}
-+
-+		/* Item is a candidate for bulk AIL insert.  */
-+		log_items[i++] = lv->lv_item;
-+		if (i >= LOG_ITEM_BATCH_SIZE) {
-+			xlog_cil_ail_insert_batch(ailp, &cur, log_items,
-+					LOG_ITEM_BATCH_SIZE, commit_lsn);
-+			i = 0;
-+		}
-+	}
-+
-+	/* make sure we insert the remainder! */
-+	if (i)
-+		xlog_cil_ail_insert_batch(ailp, &cur, log_items, i, commit_lsn);
-+
-+	spin_lock(&ailp->ail_lock);
-+	xfs_trans_ail_cursor_done(&cur);
-+	spin_unlock(&ailp->ail_lock);
-+}
-+
- static void
- xlog_cil_free_logvec(
- 	struct list_head	*lv_chain)
-@@ -792,7 +922,7 @@ xlog_cil_committed(
- 		spin_unlock(&ctx->cil->xc_push_lock);
- 	}
- 
--	xfs_trans_committed_bulk(ctx->cil->xc_log->l_ailp, &ctx->lv_chain,
-+	xlog_cil_ail_insert(ctx->cil->xc_log, &ctx->lv_chain,
- 					ctx->start_lsn, abort);
- 
- 	xfs_extent_busy_sort(&ctx->busy_extents);
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 7bd16fbff534..58c4e875eb12 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -715,135 +715,6 @@ xfs_trans_free_items(
- 	}
- }
- 
--static inline void
--xfs_log_item_batch_insert(
--	struct xfs_ail		*ailp,
--	struct xfs_ail_cursor	*cur,
--	struct xfs_log_item	**log_items,
--	int			nr_items,
--	xfs_lsn_t		commit_lsn)
--{
--	int	i;
--
--	spin_lock(&ailp->ail_lock);
--	/* xfs_trans_ail_update_bulk drops ailp->ail_lock */
--	xfs_trans_ail_update_bulk(ailp, cur, log_items, nr_items, commit_lsn);
--
--	for (i = 0; i < nr_items; i++) {
--		struct xfs_log_item *lip = log_items[i];
--
--		if (lip->li_ops->iop_unpin)
--			lip->li_ops->iop_unpin(lip, 0);
--	}
--}
--
--/*
-- * Bulk operation version of xfs_trans_committed that takes a log vector of
-- * items to insert into the AIL. This uses bulk AIL insertion techniques to
-- * minimise lock traffic.
-- *
-- * If we are called with the aborted flag set, it is because a log write during
-- * a CIL checkpoint commit has failed. In this case, all the items in the
-- * checkpoint have already gone through iop_committed and iop_committing, which
-- * means that checkpoint commit abort handling is treated exactly the same
-- * as an iclog write error even though we haven't started any IO yet. Hence in
-- * this case all we need to do is iop_committed processing, followed by an
-- * iop_unpin(aborted) call.
-- *
-- * The AIL cursor is used to optimise the insert process. If commit_lsn is not
-- * at the end of the AIL, the insert cursor avoids the need to walk
-- * the AIL to find the insertion point on every xfs_log_item_batch_insert()
-- * call. This saves a lot of needless list walking and is a net win, even
-- * though it slightly increases that amount of AIL lock traffic to set it up
-- * and tear it down.
-- */
--void
--xfs_trans_committed_bulk(
--	struct xfs_ail		*ailp,
--	struct list_head	*lv_chain,
--	xfs_lsn_t		commit_lsn,
--	bool			aborted)
--{
--#define LOG_ITEM_BATCH_SIZE	32
--	struct xfs_log_item	*log_items[LOG_ITEM_BATCH_SIZE];
--	struct xfs_log_vec	*lv;
--	struct xfs_ail_cursor	cur;
--	int			i = 0;
--
--	spin_lock(&ailp->ail_lock);
--	xfs_trans_ail_cursor_last(ailp, &cur, commit_lsn);
--	spin_unlock(&ailp->ail_lock);
--
--	/* unpin all the log items */
--	list_for_each_entry(lv, lv_chain, lv_list) {
--		struct xfs_log_item	*lip = lv->lv_item;
--		xfs_lsn_t		item_lsn;
--
--		if (aborted)
--			set_bit(XFS_LI_ABORTED, &lip->li_flags);
--
--		if (lip->li_ops->flags & XFS_ITEM_RELEASE_WHEN_COMMITTED) {
--			lip->li_ops->iop_release(lip);
--			continue;
--		}
--
--		if (lip->li_ops->iop_committed)
--			item_lsn = lip->li_ops->iop_committed(lip, commit_lsn);
--		else
--			item_lsn = commit_lsn;
--
--		/* item_lsn of -1 means the item needs no further processing */
--		if (XFS_LSN_CMP(item_lsn, (xfs_lsn_t)-1) == 0)
--			continue;
--
--		/*
--		 * if we are aborting the operation, no point in inserting the
--		 * object into the AIL as we are in a shutdown situation.
--		 */
--		if (aborted) {
--			ASSERT(xlog_is_shutdown(ailp->ail_log));
--			if (lip->li_ops->iop_unpin)
--				lip->li_ops->iop_unpin(lip, 1);
--			continue;
--		}
--
--		if (item_lsn != commit_lsn) {
--
--			/*
--			 * Not a bulk update option due to unusual item_lsn.
--			 * Push into AIL immediately, rechecking the lsn once
--			 * we have the ail lock. Then unpin the item. This does
--			 * not affect the AIL cursor the bulk insert path is
--			 * using.
--			 */
--			spin_lock(&ailp->ail_lock);
--			if (XFS_LSN_CMP(item_lsn, lip->li_lsn) > 0)
--				xfs_trans_ail_update(ailp, lip, item_lsn);
--			else
--				spin_unlock(&ailp->ail_lock);
--			if (lip->li_ops->iop_unpin)
--				lip->li_ops->iop_unpin(lip, 0);
--			continue;
--		}
--
--		/* Item is a candidate for bulk AIL insert.  */
--		log_items[i++] = lv->lv_item;
--		if (i >= LOG_ITEM_BATCH_SIZE) {
--			xfs_log_item_batch_insert(ailp, &cur, log_items,
--					LOG_ITEM_BATCH_SIZE, commit_lsn);
--			i = 0;
--		}
--	}
--
--	/* make sure we insert the remainder! */
--	if (i)
--		xfs_log_item_batch_insert(ailp, &cur, log_items, i, commit_lsn);
--
--	spin_lock(&ailp->ail_lock);
--	xfs_trans_ail_cursor_done(&cur);
--	spin_unlock(&ailp->ail_lock);
--}
--
- /*
-  * Sort transaction items prior to running precommit operations. This will
-  * attempt to order the items such that they will always be locked in the same
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index d5400150358e..52a45f0a5ef1 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -19,9 +19,6 @@ void	xfs_trans_add_item(struct xfs_trans *, struct xfs_log_item *);
- void	xfs_trans_del_item(struct xfs_log_item *);
- void	xfs_trans_unreserve_and_mod_sb(struct xfs_trans *tp);
- 
--void	xfs_trans_committed_bulk(struct xfs_ail *ailp,
--				struct list_head *lv_chain,
--				xfs_lsn_t commit_lsn, bool aborted);
- /*
-  * AIL traversal cursor.
-  *
--- 
-2.38.1
+Therefore we are still largely limited to the storage space we can
+perform atomic operations on. We already use 64 bit compare/exchange
+operations, and there is not widespread hardware support for 128 bit
+atomic compare/exchange operations so increasing the grant head LSN
+to a structure > 64 bits in size is not really an option.
+
+Hence we have to look for a different solution - one that doesn't
+require us to increase the amount of storage space for the grant
+head. This is where we need to recognise that the grant head is
+actually tracking three things:
+
+1. physical log space that is tracked by the AIL;
+2. physical log space that the CIL will soon consume; and
+3. potential log space that active transactions *may* consume.
+
+One of the tricks that the grant heads play is that the don't need
+to explicitly track the space consumed by the AIL (#1), because the
+consumed log space is simply "grant head - log tail", and so it
+doesn't not matter how the space that is consumed moves between the
+three separate accounting groups. Reservation space is automatically
+returned to the "available pool" by the AIL moving the log tail
+forwards. Hence the grant head only needs to account for the
+journal space that transactions consume as they complete, and never
+have to be updated to account for metadata writeback emptying the
+journal.
+
+This all works because xlog_space_left() is a calculation of the
+difference between two LSNs - the log tail and the grant head. When
+the grant head wraps the log tail, we've run out of log space and
+the journal reservations get throttled until the log tail is moved
+forward to "unwrap" the grant head and make space available again.
+
+But there's no reason why we have to track log space in this way
+to determine that we've run out of reservation space - all we need
+is for xlog_space_left() to be able to accurately calculate when
+we've run out of space. So let's break this down.
+
+Firstly, the AIL tracks all the items in the journal, and so at
+any given time it should know exactly where the on-disk head and
+tail of the journal are located. At the moment, we only know where
+the tail is (xfs_ail_min_lsn()), and we update the log tail
+(log->l_tail_lsn) whenever the AIL minimum LSN changes.
+
+The AIL will see the maximum committed LSN, but it does not track
+this. Instead, the log tracks this as log->l_last_sync_lsn and
+updates this directly in iclog IO completion when a iclog has
+callbacks attached. That is, log->l_last_sync_lsn is updated
+whenever journal IO completion is going to insert the latest
+committed log items into the AIL. If the AIL is empty, the log tail
+is assigned the value stored in l_last_sync_lsn as the log tail
+now points to the last written checkpoint in the journal.
+
+The simplest way I can describe how we track the log space is
+as follows:
+
+   l_tail_lsn		l_last_sync_lsn		grant head lsn
+	|-----------------------|+++++++++++++++++++++|
+	|    physical space	|   in memory space   |
+	| - - - - - - xlog_space_left() - - - - - - - |
+
+It is simple for the AIL to track the maximum LSN that has been
+inserted into the AIL. If we do this, we no longer need to track
+log->l_last_sync_lsn in the journal itself and we can always get the
+physical space tracked by the journal directly from the AIL. The AIL
+functions can calculate the "log tail space" dynamically when either
+the log tail or the max LSN seen changes, thereby removing all need
+for the log itself to track this state. Hence we now have:
+
+   l_tail_lsn		ail_max_lsn_seen	grant head lsn
+	|-----------------------|+++++++++++++++++++++|
+	|    log->l_tail_space	|   in memory space   |
+	| - - - - - - xlog_space_left() - - - - - - - |
+
+And we've solved the problem of efficiently calculating the amount
+of physical space the log is consuming. All this leaves is now
+calculating how much space we are consuming in memory.
+
+Luckily for us, we've just added all the update hooks needed to do
+this. From the above diagram, two things are obvious:
+
+1. when the tail moves, only log->l_tail_space reduces
+2. when the ail_max_lsn_seen increases, log->l_tail_space increases
+   and "in memory space" reduces by the same amount.
+
+IOWs, we now have a mechanism that can transfer the in-memory
+reservation space directly to the on-disk tail space accounting. At
+this point, we can change the grant head from tracking physical
+location to tracking a simple byte count:
+
+   l_tail_lsn		ail_max_lsn_seen	grant head bytes
+	|-----------------------|+++++++++++++++++++++|
+	|    log->l_tail_space	|     grant space     |
+	| - - - - - - xlog_space_left() - - - - - - - |
+
+and xlog_space_left() simply changes to:
+
+space left = log->l_logsize - grant space - log->l_tail_space;
+
+All of the complex grant head cracking, combining and
+compare/exchange code gets replaced by simple atomic add/sub
+operations, and the grant heads can now track a full 64 bit bytes
+space. The fastpath reservation accounting is also much faster
+because it is much simpler.
+
+There's one little problem, though. The transaction reservation code
+has to set the LSN target for the AIL to push to ensure that the log
+tail keeps moving forward (xlog_grant_push_ail()), and the deferred
+intent logging code also tries to keep abreast of the amount of
+space available in the log via xlog_grant_push_threshold().
+
+The AIL pushing problem is actually easy to solve - we don't need to
+push the AIL from the transaction reservation code as the AIL
+already tracks all the space used by the journal. All the
+transaction reservation code does is try to keep 25% of the journal
+physically free, and there's no reason why the AIL can't do that
+itself.
+
+Hence before we start changing any of the grant head accounting, we
+remove all the AIL pushing hooks from the reservation code and let
+the AIL determine the target it needs to push to itself. We also
+allow the deferred intent logging code to determine if the AIL
+should be tail pushing similar to how it currently checks if we are
+running out of log space, so the intent relogging still works as it
+should.
+
+WIth these changes in place, there is no external code that is
+dependent on the grant heads tracking physical space, and hence we
+can then implement the change to pure in-memory reservation space
+tracking in the grant heads.....
+
+This all passes fstests for default and rmapbt enable configs.
+Performance tests also show good improvements where the transaction
+accounting is the bottleneck.
+
+-Dave.
+
+Version 3
+- forward port onto current for-next dev branch.
+- cleaned up static warnings from build bot.
+- fixed comment about minimum AIL push target.
+- fixed whitespace problems in multiple patches.
+
+Version 2
+- https://lore.kernel.org/linux-xfs/20220809230353.3353059-1-david@fromorbit.com/
+- reorder moving xfs_trans_bulk_commit() patch to start of series
+- fix failure to consider NULLCOMMITLSN push target in AIL
+- grant space release based on ctx->start_lsn fails to release the space used in
+  the checkpoint that was just committed. Release needs to be based on the the
+  ctx->commit_lsn which is the end of the region that the checkpoint consumes in
+  the log.
+
 
