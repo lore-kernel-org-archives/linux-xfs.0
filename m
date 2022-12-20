@@ -2,165 +2,179 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98804C4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Dec 2022 16:20:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7238C4332F
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Dec 2022 16:28:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230149AbiLTQUL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Dec 2022 11:20:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60592 "EHLO
+        id S230017AbiLTQ2L (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Dec 2022 11:28:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36102 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233928AbiLTQUI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2022 11:20:08 -0500
+        with ESMTP id S229653AbiLTQ2K (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2022 11:28:10 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F9DA1A3B5
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2022 08:20:05 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA7CE1AA08
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2022 08:28:09 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D609461309
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2022 16:20:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43A9AC433EF;
-        Tue, 20 Dec 2022 16:20:04 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 64B5461467
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2022 16:28:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C804CC433F0;
+        Tue, 20 Dec 2022 16:28:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671553204;
-        bh=Fmum8od/3UmkckjIh3dKqg4bg4xyamlrJZdYjf8vPos=;
+        s=k20201202; t=1671553688;
+        bh=PnrpduKUc/9lIteXujS2o+3YHyQYwdNBX/h3IlRnJl0=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=EGDPPDqQDK/ETuKP/PBeAmd3r6/TypbGpET1v+uN5G63k0kbeVKORIkRamzTgrXD+
-         lacwe2qJWTlpOht/keEDwWNYC7WCr2qsCilmnDPhtdrDfq3ncEnsD/+09vSa5bNynI
-         VB5/2PCkUZqQe8H/DE+4tNtptc7qVsfL7meOdaMGldiUqV4/wRj/uwvjk0jHbvwM44
-         ot1DgcODgnDyBd29UbjJtAXKm8ZuxPw5rR4rPFqi29CHZgfd53ZIJB4goemxxzyEsl
-         EAO2CZRzVUBtwVKaEnCZfRQ61BUM2Pm8TY5/Wqp+MR0xKbtba/AvGnHmF4Q0s2w/cm
-         rbzS1rYWsoToQ==
-Date:   Tue, 20 Dec 2022 08:20:03 -0800
+        b=teqNJQtQvKjBgFKxBcHbSN/dLuBepo/XZXXgHs6L8dqdb/IYkTIak7eHg6ESsaFjB
+         bPF7uzNzze6WxnA0giywYEt0f7Bxv+50Px13h68qoWo4kP2cu76Q6dWlwveYeofCtS
+         bBZGXJChley5ktB7xbiaBJmQB5KZ9WuE3vELfzRP4lBZwucRMDHl30Cg3bh3I2MIhc
+         lyzWMFEs24MLMB4463Hn9ZCjBDedZN31OqrbMsjVCpTno7wUPevPPF9dKXD+/xBlhe
+         J0A/zqeDRjLpaYrWtzGuT2jlzwU/OxiADhveQvhHG9cE1nxGRnz203nhYNLacstyLD
+         7Qt6Uw76E+pdQ==
+Date:   Tue, 20 Dec 2022 08:28:08 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs: fix off-by-one error in
- xfs_btree_space_to_height
-Message-ID: <Y6HfiWz4R55RbW5G@magnolia>
+Subject: Re: [PATCH 2/4] xfs: don't stall background reclaim on inactvation
+Message-ID: <Y6HimJkzwH2yG1dq@magnolia>
 References: <167149469744.336919.13748690081866673267.stgit@magnolia>
- <167149471987.336919.3277522603824048839.stgit@magnolia>
- <20221220050001.GK1971568@dread.disaster.area>
- <Y6HeYJXVhamT589A@magnolia>
+ <167149470870.336919.10695086693636688760.stgit@magnolia>
+ <20221220044908.GH1971568@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y6HeYJXVhamT589A@magnolia>
+In-Reply-To: <20221220044908.GH1971568@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 20, 2022 at 08:10:08AM -0800, Darrick J. Wong wrote:
-> On Tue, Dec 20, 2022 at 04:00:01PM +1100, Dave Chinner wrote:
-> > On Mon, Dec 19, 2022 at 04:05:19PM -0800, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Lately I've been stress-testing extreme-sized rmap btrees by using the
-> > > (new) xfs_db bmap_inflate command to clone bmbt mappings billions of
-> > > times and then using xfs_repair to build new rmap and refcount btrees.
-> > > This of course is /much/ faster than actually FICLONEing a file billions
-> > > of times.
-> > > 
-> > > Unfortunately, xfs_repair fails in xfs_btree_bload_compute_geometry with
-> > > EOVERFLOW, which indicates that xfs_mount.m_rmap_maxlevels is not
-> > > sufficiently large for the test scenario.  For a 1TB filesystem (~67
-> > > million AG blocks, 4 AGs) the btheight command reports:
-> > > 
-> > > $ xfs_db -c 'btheight -n 4400801200 -w min rmapbt' /dev/sda
-> > > rmapbt: worst case per 4096-byte block: 84 records (leaf) / 45 keyptrs (node)
-> > > level 0: 4400801200 records, 52390491 blocks
-> > > level 1: 52390491 records, 1164234 blocks
-> > > level 2: 1164234 records, 25872 blocks
-> > > level 3: 25872 records, 575 blocks
-> > > level 4: 575 records, 13 blocks
-> > > level 5: 13 records, 1 block
-> > > 6 levels, 53581186 blocks total
-> > > 
-> > > The AG is sufficiently large to build this rmap btree.  Unfortunately,
-> > > m_rmap_maxlevels is 5.  Augmenting the loop in the space->height
-> > > function to report height, node blocks, and blocks remaining produces
-> > > this:
-> > > 
-> > > ht 1 node_blocks 45 blockleft 67108863
-> > > ht 2 node_blocks 2025 blockleft 67108818
-> > > ht 3 node_blocks 91125 blockleft 67106793
-> > > ht 4 node_blocks 4100625 blockleft 67015668
-> > > final height: 5
-> > > 
-> > > The goal of this function is to compute the maximum height btree that
-> > > can be stored in the given number of ondisk fsblocks.  Starting with the
-> > > top level of the tree, each iteration through the loop adds the fanout
-> > > factor of the next level down until we run out of blocks.  IOWs, maximum
-> > > height is achieved by using the smallest fanout factor that can apply
-> > > to that level.
-> > > 
-> > > However, the loop setup is not correct.  Top level btree blocks are
-> > > allowed to contain fewer than minrecs items, so the computation is
-> >   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+On Tue, Dec 20, 2022 at 03:49:08PM +1100, Dave Chinner wrote:
+> On Mon, Dec 19, 2022 at 04:05:08PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Ah, that's the critical piece of information I was looking for. I
-> > couldn't work out from the code change below what was wrong with
-> > limits[1]. So....
+> > The online fsck stress tests deadlocked a test VM the other night.  The
+> > deadlock happened because:
 > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> > > index 4c16c8c31fcb..8d11d3f5e529 100644
-> > > --- a/fs/xfs/libxfs/xfs_btree.c
-> > > +++ b/fs/xfs/libxfs/xfs_btree.c
-> > > @@ -4666,7 +4666,11 @@ xfs_btree_space_to_height(
-> > >  	const unsigned int	*limits,
-> > >  	unsigned long long	leaf_blocks)
-> > >  {
-> > > -	unsigned long long	node_blocks = limits[1];
-> > > +	/*
-> > > +	 * The root btree block can have a fanout between 2 and maxrecs because
-> > > +	 * the tree might not be big enough to fill it.
-> > > +	 */
+> > 1. kswapd tried to prune the sb inode list, xfs found that it needed to
+> > inactivate an inode and that the queue was long enough that it should
+> > wait for the worker.  It was holding shrinker_rwsem.
 > > 
-> > Can you change this comment to say something like:
+> > 2. The inactivation worker allocated a transaction and then stalled
+> > trying to obtain the AGI buffer lock.
 > > 
-> > 	/*
-> > 	 * The root btree block can have less than minrecs pointers
-> > 	 * in it because the tree might not be big enough to require
-> > 	 * that amount of fanout. Hence it has a minimum size of
-> > 	 * 2 pointers, not limits[1].
-> > 	 */
+> > 3. An online repair function called unregister_shrinker while in
+> > transaction context and holding the AGI lock.  It also tried to grab
+> > shrinker_rwsem.
+> > 
+> > #3 shouldn't happen and was easily fixed, but seeing as we designed
+> > background inodegc to avoid stalling reclaim, I feel that #1 shouldn't
+> > be happening either.  Fix xfs_inodegc_want_flush_work to avoid stalling
+> > background reclaim on inode inactivation.
 > 
-> Done.  Thanks for the reviews! :)
+> Yup, I see what you are saying, but I specifically left GFP_KERNEL
+> reclaim to throttle on inodegc if necessary.  kswapd runs in
+> GFP_KERNEL context - it's the only memory reclaim context where it
+> is actually safe to block in this manner in the filesystem. The
+> question becomes one of whether we allow kswapd to ignore inodegc
+> queue limits.
 > 
-> --D
+> Before the background inodegc, we used to do all the xfs_inactive()
+> work in ->destroy_inode, directly from the VFS inode cache shrinker
+> context run by GFP_KERNEL memory reclaim contexts such as kswapd().
+> IOWs, causing kswapd to wait while we run inactivation in the VFS
+> inode cache shrinker context is something we've done for a long
+> time. kswapd did:
 > 
-> > 
-> > Otherwise it looks good.
-> > 
-> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> > 
-> > > +	unsigned long long	node_blocks = 2;
-> > >  	unsigned long long	blocks_left = leaf_blocks - 1;
-> > >  	unsigned int		height = 1;
-> > 
-> > For future consideration, we don't use maxrecs in this calculation
-> > at all - should we just pass minrecs into the function rather than
-> > an array of limits?
+> 	vfs inode shrinker
+> 	  destroy inode
+> 	    xfs_inactive()
+> 	    mark inode inactivated
+> 	    update radix tree tags
+> 
+> And then the XFS inode shrinker walks INACTIVATED inodes and frees
+> them.
+> 
+> Now the code does:
+> 
+> 	vfs inode shrinker
+> 	  NEED_INACTIVE
+> 	  -> inodegc queue
+> 	     if (throttle needed)
+> 		flush_work(gc->work);
+> 	  return
+> 
+> Then some time later in a different context inodegc then runs and
+> we do:
+> 
+> 	xfs_inactive
+> 	INACTIVATED
+> 
+> And then sometime later in a different context the XFS inode
+> shrinker walks INACTIVATED inodes and frees them.
+> 
+> Essentially, without throttling the bulk of the memory freeing work
+> is shifted from the immediate GFP_KERNEL reclaim context to some
+> later GFP_KERNEL reclaim context.
+> 
+> For small memory reclaim scans (i.e. low priority shrinker
+> invocations) this doesn't matter - we aren't at risk of OOM in these
+> situations, and these are the typical situations in which memory
+> reclaim is needed. Generally speaking the the background work is
+> fast enough that memory is freed before shortages escalate.
+> 
+> However, when we have large inode caches and a significant memory
+> demand event, we get into the situation where reclaim might be
+> scanning a hundreds of thousands of cached VFS inodes at a time.
 
-I prefer to replace all those mxr/mnr array constructs with an explicit
-structure:
+...and the problem with removing the flush_workqueue() calls from
+background reclaim is that it doesn't know that xfs will try to push
+things out of memory in a different thread, because there's no way to
+tell it that we're separately working on freeing XXX bytes?
 
-struct xfs_btblock_geometry {
-	uint16_t	leaf_maxrecs;
-	uint16_t	leaf_minrecs;
+> We kinda need to stall kswapd in these cases - it may be the only
+> reclaim context that can free inodes - and we need to avoid kswapd
+> dumping all the freeable inodes on the node to a queue that isn't
+> being processed, decided it has no more memory that can be freed
+> because all the VFS inodes have gone and there's nothing reclaimable
+> on the XFS inode lists, so it declares OOM when we have hundreds of
+> thousands of freeable inodes sitting there waiting for inodegc to
+> run.
 
-	uint16_t	node_maxrecs;
-	uint16_t	node_minrecs;
-};
+Ah, yep.  XFS has no way to convey this to background reclaim, and
+reclaim might not even be able to make much use of that information,
+because anyone supplying it could be (a) wrong or (b) unable to free the
+objects within whatever timeframe reclaim needs.  Thinking ahead, even
+if XFS could give the shrinker an ETA, reclaim would still end up
+waiting.  I suppose it might be nice for reclaim to trigger multiple
+asynchronous freeings and wait on all of them, but that just shifts the
+question to "how does xfs know how long it'll take?" and "how many more
+cleverness beans will it take for support to figure out the system has
+wedged itself in this weird state?"
 
-and get rid of all the mp->m_rmap_mxr[leaf != 0] stuff that slows me
-down every time I have to read it.
+Right now we at least get a nice compact stack trace when xfs stalls
+background reclaim.
+
+> I note that inodes queued for inodegc are not counted as reclaimable
+> XFS inodes, so for the purposes of shrinkers those inodes queued on
+> inodegc disappear from the shrinker accounting compeltely. Maybe we
+> could consider a separate bug hidden by the inodegc throttling -
+> maybe that's the bug that makes throttling kswapd on inodegc
+> necessary.
+> 
+> But this re-inforces my point - I don't think we can just make
+> kswapd skip inodegc throttling without further investion into the
+> effect on performance under memory pressure as well as OOM killer
+> resistance. It's likely a solvable issue, but given how complex and
+> subtle the inode shrinker interactions can be, I'd like to make sure
+> we don't wake a sleeping dragon here....
+
+Ah, ok.  I'll drop this then.
 
 --D
 
-> > Cheers,
-> > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
