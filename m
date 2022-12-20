@@ -2,110 +2,152 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19277C001B2
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Dec 2022 03:30:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85B5CC4167B
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Dec 2022 04:02:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229454AbiLTDaS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 19 Dec 2022 22:30:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56834 "EHLO
+        id S233076AbiLTECP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 19 Dec 2022 23:02:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232444AbiLTDaQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Dec 2022 22:30:16 -0500
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14C022AF3
-        for <linux-xfs@vger.kernel.org>; Mon, 19 Dec 2022 19:30:15 -0800 (PST)
-Received: from cwcc.thunk.org (pool-173-48-120-46.bstnma.fios.verizon.net [173.48.120.46])
-        (authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 2BK3Tw0h031574
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 19 Dec 2022 22:30:00 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-        t=1671507002; bh=Qf6faypoXHGg6tawwxUgy9DzZhgNXLnAIn3mummMjhc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To;
-        b=gwomMzzH9z/BJ3PA7iMzZGRkjs/VohjHIgJ34dIuCg3pLdNvDDxNHxzRp15fyA8+X
-         nfXzyRgsBwYkPQ2NWtfLqa4QRIiEmOTVDjL41k8olr8C9gBm+IpAXU2UP+OIMRIU7Z
-         YqnMVSsHDaPxT7wwMrVZa5gzt2F8+Qo8QYXOzwmykYlwKnWlCAc3npSMygf8th9mOk
-         NkC1gnLjOUJzJFALY+C9X5KAKAGgUUh29BfQJzD6jey1LKuAfZ3xd8A6+ObHf7surc
-         2mc4840R3U3RjoCOBN9+KlzskRdiMLdkkYgP5LlKkdt7i4Lgf8wKD9pYHGrRACKwUt
-         Lf3Vd+GijTppA==
-Received: by cwcc.thunk.org (Postfix, from userid 15806)
-        id 523BB15C3511; Mon, 19 Dec 2022 22:29:58 -0500 (EST)
-Date:   Mon, 19 Dec 2022 22:29:58 -0500
-From:   "Theodore Ts'o" <tytso@mit.edu>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     zlang@redhat.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me, leah.rumancik@gmail.com,
-        quwenruo.btrfs@gmx.com
-Subject: Re: [PATCH 6/8] report: collect basic information about a test run
-Message-ID: <Y6EsNkIcA7bd9aHR@mit.edu>
-References: <167149446381.332657.9402608531757557463.stgit@magnolia>
- <167149449737.332657.1308561091226926848.stgit@magnolia>
+        with ESMTP id S233019AbiLTEBY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Dec 2022 23:01:24 -0500
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9AFCE5590
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Dec 2022 20:01:16 -0800 (PST)
+Received: by mail-pl1-x629.google.com with SMTP id x2so10992545plb.13
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Dec 2022 20:01:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=3i7/epIg3s+Kg1aMbgN7iVzAn5rV9ORpLJbbqj4cTkw=;
+        b=yDnv1q8deLFxHxBQNOIR/iufCtokHzMiD1MzZapj25LREJBioDi20wFFxr6jfLaKWo
+         7uVB/HDXY0kbxexXHnLj1I1cvVe8f8LjBQnhubnsOLFa90yep2eNTLKrYYrp2ag9WjyN
+         fNVLpBcX+Do3+G6w1lldnJb8pHbiJZJBWwaaMcJ+mB9suLe7QAQs9/TrJ1NAcnYp4H65
+         R1OM6Ou+FyvXBu/gjOXebVI4gR+yAEc3G+mSfPTQzVfoQJYMkcK8uB5z1jLlEKxRjv+X
+         MRoUuthRnZ9Ge1ZA6zkVnEEfJ302ExHTm2Jy/39Kfh/Oq72YCu9PD2oizMD/QOM/5ON9
+         8UAw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=3i7/epIg3s+Kg1aMbgN7iVzAn5rV9ORpLJbbqj4cTkw=;
+        b=tub1FCVdT+o/BTH+oCMRk7F+MouIUayOaUiiz4OjlxRumbmx5DyOsZseJnwgq1kfaJ
+         ULLdj66JMFBh3yzNaxltlHH0+w5vVGTOD/UFGLUNePRiaRuVfrx4mzX/cUqFPNYfNHN5
+         TNDCARDUFoNgFe3unPvVf86ITShmr5m6X0/wudDt2tHbqCC0lr/WacauTZ0EeWF/6E1P
+         A8nbWrdNcott8M7ujcfcXXqv1/MYrHN7nEjrnfo8X0ytffpNTLYugOWb/gJsfMQ7XVIS
+         MJn44ZkJsBi9ptR8Ix1IYw6NeY2J4iYaCt+xkMNBfOT4moORMNen/iKqyYeVAiTFvGwe
+         QyQg==
+X-Gm-Message-State: ANoB5plgIZnVmzbsDzSva+GPGhH4mokXatJRse3gP8I8/INfaZWkwN+v
+        GKY+b2uXKRn7XIP6Wrk6251sqg==
+X-Google-Smtp-Source: AA0mqf63Bp0La3N1p3vEbRqVZRTRw6skueolslB9+Rk3feMRmvq/+KAqiFRLkqu92YSXrsqnI5uzZw==
+X-Received: by 2002:a17:902:e193:b0:189:8002:1996 with SMTP id y19-20020a170902e19300b0018980021996mr38673719pla.35.1671508876105;
+        Mon, 19 Dec 2022 20:01:16 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-138-158.pa.nsw.optusnet.com.au. [49.181.138.158])
+        by smtp.gmail.com with ESMTPSA id d11-20020a170902cecb00b0018980f14ecfsm8070483plg.115.2022.12.19.20.01.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Dec 2022 20:01:15 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1p7ToW-00AZBS-Ui; Tue, 20 Dec 2022 15:01:12 +1100
+Date:   Tue, 20 Dec 2022 15:01:12 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Sasha Levin <sashal@kernel.org>
+Cc:     linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+        Dave Chinner <dchinner@redhat.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Darrick J . Wong" <djwong@kernel.org>, hch@infradead.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH AUTOSEL 6.1 13/16] iomap: write iomap validity checks
+Message-ID: <20221220040112.GG1971568@dread.disaster.area>
+References: <20221220012053.1222101-1-sashal@kernel.org>
+ <20221220012053.1222101-13-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <167149449737.332657.1308561091226926848.stgit@magnolia>
+In-Reply-To: <20221220012053.1222101-13-sashal@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Dec 19, 2022 at 04:01:37PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Dec 19, 2022 at 08:20:50PM -0500, Sasha Levin wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Record various generic information about an fstests run when generating
-> a junit xml report.  This includes the cpu architecture, the kernel
-> revision, the CPU, memory, and numa node counts, and some information
-> about the block devices passed in.
+> [ Upstream commit d7b64041164ca177170191d2ad775da074ab2926 ]
+> 
+> A recent multithreaded write data corruption has been uncovered in
+> the iomap write code. The core of the problem is partial folio
+> writes can be flushed to disk while a new racing write can map it
+> and fill the rest of the page:
+> 
+> writeback			new write
+> 
+> allocate blocks
+>   blocks are unwritten
+> submit IO
+> .....
+> 				map blocks
+> 				iomap indicates UNWRITTEN range
+> 				loop {
+> 				  lock folio
+> 				  copyin data
+> .....
+> IO completes
+>   runs unwritten extent conv
+>     blocks are marked written
+> 				  <iomap now stale>
+> 				  get next folio
+> 				}
+> 
+> Now add memory pressure such that memory reclaim evicts the
+> partially written folio that has already been written to disk.
+> 
+> When the new write finally gets to the last partial page of the new
+> write, it does not find it in cache, so it instantiates a new page,
+> sees the iomap is unwritten, and zeros the part of the page that
+> it does not have data from. This overwrites the data on disk that
+> was originally written.
+> 
+> The full description of the corruption mechanism can be found here:
+> 
+> https://lore.kernel.org/linux-xfs/20220817093627.GZ3600936@dread.disaster.area/
+> 
+> To solve this problem, we need to check whether the iomap is still
+> valid after we lock each folio during the write. We have to do it
+> after we lock the page so that we don't end up with state changes
+> occurring while we wait for the folio to be locked.
+> 
+> Hence we need a mechanism to be able to check that the cached iomap
+> is still valid (similar to what we already do in buffered
+> writeback), and we need a way for ->begin_write to back out and
+> tell the high level iomap iterator that we need to remap the
+> remaining write range.
+> 
+> The iomap needs to grow some storage for the validity cookie that
+> the filesystem provides to travel with the iomap. XFS, in
+> particular, also needs to know some more information about what the
+> iomap maps (attribute extents rather than file data extents) to for
+> the validity cookie to cover all the types of iomaps we might need
+> to validate.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Sasha Levin <sashal@kernel.org>
 
-It would be nice if there was a way that the test runner could pass
-information that would be added to the xunit properties.  As I
-mentioned in another e-mail, I currently do this via a post-processing
-step which adds the properties to the junit xml file via a python
-script.  And there are a number of additional properties that are used
-by my report generator[1] which takes the junit xml file as input, and
-generates a summary report which is convenient for humans.
+This commit is not a standalone backport candidate. It is a pure
+infrastructure change that does nothing by itself except to add more
+code that won't get executed. There are another 7-8 patches that
+need to be backported along with this patch to fix the data
+corruption that is mentioned in this commit.
 
-[1] https://github.com/tytso/xfstests-bld/blob/master/test-appliance/files/usr/local/bin/gen_results_summary
+I'd stronly suggest that you leave this whole series of commits to
+the XFS LTS maintainers to backport if they so choose to - randomly
+backporting commits from the middle of the series only makes their
+job more complex....
 
-Some of these properties include the version of xfstests, xfsprogs,
-and other key software components (for example, I've had test failures
-traced to bugs in fio, so knowing the version of fio that is used is
-super-handy).
-
-So maybe we could pass in a properties file, either via a command-line
-option or an environment variable?  My script[2] uses a colon
-separated format, but I'm not wedded to that delimiter.
-
-CMDLINE: "-c f2fs/default -g auto"
-FSTESTIMG: gce-xfstests/xfstests-amd64-202212131454
-FSTESTPRJ: gce-xfstests
-KERNEL: kernel	6.1.0-xfstests #2 SMP PREEMPT_DYNAMIC Mon Dec 12 16:09:40 EST 2022 x86_64
-FSTESTVER: blktests	068bd2a (Fri, 18 Nov 2022 08:38:35 +0900)
-FSTESTVER: fio		fio-3.31 (Tue, 9 Aug 2022 14:41:25 -0600)
-FSTESTVER: fsverity	v1.5 (Sun, 6 Feb 2022 10:59:13 -0800)
-FSTESTVER: ima-evm-utils	v1.3.2 (Wed, 28 Oct 2020 13:18:08 -0400)
-FSTESTVER: nvme-cli	v1.16 (Thu, 11 Nov 2021 13:09:06 -0800)
-FSTESTVER: quota		v4.05-52-gf7e24ee (Tue, 1 Nov 2022 11:45:06 +0100)
-FSTESTVER: util-linux	v2.38.1 (Thu, 4 Aug 2022 11:06:21 +0200)
-FSTESTVER: xfsprogs	v6.0.0 (Mon, 14 Nov 2022 12:06:23 +0100)
-FSTESTVER: xfstests-bld	65edab38 (Wed, 30 Nov 2022 12:11:57 -0500)
-FSTESTVER: xfstests	v2022.11.27-8-g3c178050c (Wed, 30 Nov 2022 10:25:39 -0500)
-FSTESTVER: zz_build-distro	bullseye
-FSTESTCFG: "f2fs/default"
-FSTESTSET: "-g auto"
-FSTESTEXC: ""
-FSTESTOPT: "aex"
-MNTOPTS: ""
-CPUS: "2"
-MEM: "7680"
-DMI_MEM: 8 GB (Max capacity)
-PARAM_MEM: 7680 (restricted by cmdline)
-GCE ID: "3198461547210171740"
-MACHINE TYPE: "e2-standard-2"
-TESTRUNID: tytso-20221213150813
-
-[2] https://github.com/tytso/xfstests-bld/blob/master/test-appliance/files/usr/local/bin/update_properties_xunit
-
-Cheers,
-
-					- Ted
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
