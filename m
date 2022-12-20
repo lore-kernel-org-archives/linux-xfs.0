@@ -2,69 +2,69 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 435FEC4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Dec 2022 23:23:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 575DEC3DA6E
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Dec 2022 23:23:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229572AbiLTXXV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S229983AbiLTXXV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 20 Dec 2022 18:23:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33498 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33496 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229983AbiLTXXR (ORCPT
+        with ESMTP id S229906AbiLTXXR (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2022 18:23:17 -0500
-Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4692AF7C
+Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 318A8F4F
         for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2022 15:23:16 -0800 (PST)
-Received: by mail-pl1-x632.google.com with SMTP id d3so13797941plr.10
+Received: by mail-pg1-x52e.google.com with SMTP id d10so649387pgm.13
         for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2022 15:23:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=c++6OYFdV2U0lktZ7Ykrx8pQFe/3/DEC8n1YNN7iJTA=;
-        b=g+lAo3VNc5IJzy5Cm59UX57NmMFWvbrPjHH/5yUCjJWRl5Zb3txlYMKu+0GJ5FdFUd
-         riE0c1PELYqR4/h/xNdWBdXbtQVrIGPbUlUqYjBAPzn1D0i9Sr8WgG5CIfEgqiUfmbSY
-         AZdDTaGWaBuX18+ZhzAk6tMOFiaow2sXWZ46W4SmqmoUYKeqyyXfwFJoNBVvu3X8Pyvb
-         UGWCDubbBSERaGeMODVz3MQbu3G+/k5LPR7abrX+DpmILefGxTYz0yvb9iyFK/XZekbM
-         ocvtE5p7ASGZ9UO2tUkBBplkTcbkPDfQtqYRxQSNVvjIguom2sa7zt8O53M7tMGgSw75
-         jvjw==
+        bh=4zkrPNxNQfuqeXolSjD0fop010vx+bHcdJ3i4reoBfw=;
+        b=SeoxBidyosl4ZxqzTFYRyMbgBQwPn3D0PRYMSQBobvDy4GlU0or/BmXP4BZxyAAo36
+         AC67rd0cBXdcOzE0n53iERD9pCvi2wTK7y8OzhwKQ5+cjgK4EqEhy5v6yYMbAI4qR7hX
+         jg1y2WfGdcEjhdt+tjiLrnS0FvF3M68Qh3TlDmR79Ef0K3NLxSK41GpgX2RAnRCxKlNR
+         fhsLE7+c6+5xDITcz6Pdu9EPQHsyCzDXPPzSUMA25Vrc6pyWgagIWzoXOCgifBSftmil
+         TFYLCJZNpBbrlsIskoBylVL+ZiEQkY+VN2Kl3Jts8hcnCa+7AVnKkXr8Jq9zmIW/uH3s
+         DRrw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=c++6OYFdV2U0lktZ7Ykrx8pQFe/3/DEC8n1YNN7iJTA=;
-        b=w+FsnZT2wSLA6VEcsFR67kf/qSnSn1zRDHuL6OSA8+asJvd4Ou8mZJnoCekB2KlcwJ
-         GOMYk1F9rKXGm6Vj59Iw1eLFPChZdiPfZcYkBVgsZlR00SJVEWKyg5zkf4peSFRwfV+p
-         k354MyMpucTfn54j7Znq0pPfI2PrzgN0ZXbpQrIBOjkXpvpGcIdJ/j2jsk50fpsxd72n
-         qBqwIJhXAdv1+Xgb5/IFY+j8nMV7fTqbnqtrtwrEDawFlJX/jgjpRFV1ezUJpBHGNcbF
-         gRakbdaZLOpF+q0yBRhdieW9Rour2KnP73qPsAOpToGnyi1cISfzJYiWaCToBsEoVg5j
-         Aidw==
-X-Gm-Message-State: ANoB5pnO/ecYPyW6GaIeAo2hJ9I3tV2tyh4JDQyTnyxcIQGY5mhX64yB
-        lCl4g8IuGDPuQGBWnFoRtxYDaMDCuRnk2l7M
-X-Google-Smtp-Source: AA0mqf7UzECjoBtQd9zzxs280fQLXwrdHRB20k2fEtt9+yrE/2rTXP2bNKXetsb8+0D5/G0gfwOkDQ==
-X-Received: by 2002:a17:90b:e98:b0:219:a6ab:b95a with SMTP id fv24-20020a17090b0e9800b00219a6abb95amr49383296pjb.22.1671578595659;
+        bh=4zkrPNxNQfuqeXolSjD0fop010vx+bHcdJ3i4reoBfw=;
+        b=yh5ZJIcMKqyUzvt4th5GtwjHcijE0BIpARiqBGVbasij4W79aztmAE+ANtruqAhC01
+         Lcjgyc0zTkf+Oq3qXMnIcZXCQxCP1ceZ4wPAO2Tr038d5gS8l+c8MMBgMSLT1tUTdoki
+         5lc4ot+rI2Wd4LwY7AuOIsmFHJAKlyvvabfdOzYMbGaYLlra5tTL7W4DBA2u2LeZiMF5
+         4TqwkqHL1AOuN+8B6Ev6wR/sbX66PFfjscyyI5toJskA3ISDPOUo5BZ1Y9HTCM+P4acS
+         ORDO9v2PWIGv28LhJtn3C/yb5tOvza48eBTZH2Ca2WkRUMlSC1a8Wa0sYrUZ+6HQnuKQ
+         4RhA==
+X-Gm-Message-State: AFqh2kpbMCPViEMV9lIeBIGS5GOxeR/GdhK1S8CtynrH5ItUJTIVxOSl
+        sCEGfR20ypEJOqTLc7X5fxOHZ+TNmFPZth9i
+X-Google-Smtp-Source: AMrXdXtMxaQyu9NClkvwHKswIRY2u7+2qoAuEnDgHilpbWRlrriKUAt0m3hvqR/aEKm9ygG0ddUL6w==
+X-Received: by 2002:a62:384e:0:b0:575:fbab:a152 with SMTP id f75-20020a62384e000000b00575fbaba152mr49651pfa.31.1671578595519;
         Tue, 20 Dec 2022 15:23:15 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-138-158.pa.nsw.optusnet.com.au. [49.181.138.158])
-        by smtp.gmail.com with ESMTPSA id om15-20020a17090b3a8f00b00218fba260e2sm58597pjb.43.2022.12.20.15.23.13
+        by smtp.gmail.com with ESMTPSA id h18-20020aa79f52000000b00576df4543d4sm9117230pfr.166.2022.12.20.15.23.13
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 20 Dec 2022 15:23:14 -0800 (PST)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <dave@fromorbit.com>)
-        id 1p7lx1-00Asnh-Ar
+        id 1p7lx1-00AsnS-4D
         for linux-xfs@vger.kernel.org; Wed, 21 Dec 2022 10:23:11 +1100
 Received: from dave by devoid.disaster.area with local (Exim 4.96)
         (envelope-from <dave@devoid.disaster.area>)
-        id 1p7lx1-00Ec6O-11
+        id 1p7lx1-00Ec5q-0M
         for linux-xfs@vger.kernel.org;
         Wed, 21 Dec 2022 10:23:11 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 8/9] xfs: pass the full grant head to accounting functions
-Date:   Wed, 21 Dec 2022 10:23:07 +1100
-Message-Id: <20221220232308.3482960-9-david@fromorbit.com>
+Subject: [PATCH 1/9] xfs: move and xfs_trans_committed_bulk
+Date:   Wed, 21 Dec 2022 10:23:00 +1100
+Message-Id: <20221220232308.3482960-2-david@fromorbit.com>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221220232308.3482960-1-david@fromorbit.com>
 References: <20221220232308.3482960-1-david@fromorbit.com>
@@ -76,304 +76,331 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Because we are going to need them soon. API change only, no logic
-changes.
+Ever since the CIL and delayed logging was introduced,
+xfs_trans_committed_bulk() has been a purely CIL checkpoint
+completion function and not a transaction commit completion
+function. Now that we are adding log specific updates to this
+function, it really does not have anything to do with the
+transaction subsystem - it is really log and log item level
+functionality.
+
+This should be part of the CIL code as it is the callback
+that moves log items from the CIL checkpoint to the AIL. Move it
+and rename it to xlog_cil_ail_insert().
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_log.c      | 157 +++++++++++++++++++++---------------------
- fs/xfs/xfs_log_priv.h |   2 -
- 2 files changed, 77 insertions(+), 82 deletions(-)
+ fs/xfs/xfs_log_cil.c    | 132 +++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_trans.c      | 129 ---------------------------------------
+ fs/xfs/xfs_trans_priv.h |   3 -
+ 3 files changed, 131 insertions(+), 133 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 25168b38fa25..677636653d39 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -136,10 +136,10 @@ xlog_prepare_iovec(
- static void
- xlog_grant_sub_space(
- 	struct xlog		*log,
--	atomic64_t		*head,
-+	struct xlog_grant_head	*head,
- 	int			bytes)
- {
--	int64_t	head_val = atomic64_read(head);
-+	int64_t	head_val = atomic64_read(&head->grant);
- 	int64_t new, old;
- 
- 	do {
-@@ -155,17 +155,17 @@ xlog_grant_sub_space(
- 
- 		old = head_val;
- 		new = xlog_assign_grant_head_val(cycle, space);
--		head_val = atomic64_cmpxchg(head, old, new);
-+		head_val = atomic64_cmpxchg(&head->grant, old, new);
- 	} while (head_val != old);
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index eccbfb99e894..a430ef863c55 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -683,6 +683,136 @@ xlog_cil_insert_items(
+ 	}
  }
  
- static void
- xlog_grant_add_space(
- 	struct xlog		*log,
--	atomic64_t		*head,
-+	struct xlog_grant_head	*head,
- 	int			bytes)
- {
--	int64_t	head_val = atomic64_read(head);
-+	int64_t	head_val = atomic64_read(&head->grant);
- 	int64_t new, old;
- 
- 	do {
-@@ -184,7 +184,7 @@ xlog_grant_add_space(
- 
- 		old = head_val;
- 		new = xlog_assign_grant_head_val(cycle, space);
--		head_val = atomic64_cmpxchg(head, old, new);
-+		head_val = atomic64_cmpxchg(&head->grant, old, new);
- 	} while (head_val != old);
- }
- 
-@@ -197,6 +197,63 @@ xlog_grant_head_init(
- 	spin_lock_init(&head->lock);
- }
- 
-+/*
-+ * Return the space in the log between the tail and the head.  The head
-+ * is passed in the cycle/bytes formal parms.  In the special case where
-+ * the reserve head has wrapped passed the tail, this calculation is no
-+ * longer valid.  In this case, just return 0 which means there is no space
-+ * in the log.  This works for all places where this function is called
-+ * with the reserve head.  Of course, if the write head were to ever
-+ * wrap the tail, we should blow up.  Rather than catch this case here,
-+ * we depend on other ASSERTions in other parts of the code.   XXXmiken
-+ *
-+ * If reservation head is behind the tail, we have a problem. Warn about it,
-+ * but then treat it as if the log is empty.
-+ *
-+ * If the log is shut down, the head and tail may be invalid or out of whack, so
-+ * shortcut invalidity asserts in this case so that we don't trigger them
-+ * falsely.
-+ */
-+static int
-+xlog_grant_space_left(
-+	struct xlog		*log,
-+	struct xlog_grant_head	*head)
++static inline void
++xlog_cil_ail_insert_batch(
++	struct xfs_ail		*ailp,
++	struct xfs_ail_cursor	*cur,
++	struct xfs_log_item	**log_items,
++	int			nr_items,
++	xfs_lsn_t		commit_lsn)
 +{
-+	int			tail_bytes;
-+	int			tail_cycle;
-+	int			head_cycle;
-+	int			head_bytes;
++	int	i;
 +
-+	xlog_crack_grant_head(&head->grant, &head_cycle, &head_bytes);
-+	xlog_crack_atomic_lsn(&log->l_tail_lsn, &tail_cycle, &tail_bytes);
-+	tail_bytes = BBTOB(tail_bytes);
-+	if (tail_cycle == head_cycle && head_bytes >= tail_bytes)
-+		return log->l_logsize - (head_bytes - tail_bytes);
-+	if (tail_cycle + 1 < head_cycle)
-+		return 0;
++	spin_lock(&ailp->ail_lock);
++	/* xfs_trans_ail_update_bulk drops ailp->ail_lock */
++	xfs_trans_ail_update_bulk(ailp, cur, log_items, nr_items, commit_lsn);
 +
-+	/* Ignore potential inconsistency when shutdown. */
-+	if (xlog_is_shutdown(log))
-+		return log->l_logsize;
++	for (i = 0; i < nr_items; i++) {
++		struct xfs_log_item *lip = log_items[i];
 +
-+	if (tail_cycle < head_cycle) {
-+		ASSERT(tail_cycle == (head_cycle - 1));
-+		return tail_bytes - head_bytes;
++		if (lip->li_ops->iop_unpin)
++			lip->li_ops->iop_unpin(lip, 0);
 +	}
-+
-+	/*
-+	 * The reservation head is behind the tail. In this case we just want to
-+	 * return the size of the log as the amount of space left.
-+	 */
-+	xfs_alert(log->l_mp, "xlog_grant_space_left: head behind tail");
-+	xfs_alert(log->l_mp, "  tail_cycle = %d, tail_bytes = %d",
-+		  tail_cycle, tail_bytes);
-+	xfs_alert(log->l_mp, "  GH   cycle = %d, GH   bytes = %d",
-+		  head_cycle, head_bytes);
-+	ASSERT(0);
-+	return log->l_logsize;
 +}
 +
- STATIC void
- xlog_grant_head_wake_all(
- 	struct xlog_grant_head	*head)
-@@ -277,7 +334,7 @@ xlog_grant_head_wait(
- 		spin_lock(&head->lock);
- 		if (xlog_is_shutdown(log))
- 			goto shutdown;
--	} while (xlog_space_left(log, &head->grant) < need_bytes);
-+	} while (xlog_grant_space_left(log, head) < need_bytes);
- 
- 	list_del_init(&tic->t_queue);
- 	return 0;
-@@ -322,7 +379,7 @@ xlog_grant_head_check(
- 	 * otherwise try to get some space for this transaction.
- 	 */
- 	*need_bytes = xlog_ticket_reservation(log, head, tic);
--	free_bytes = xlog_space_left(log, &head->grant);
-+	free_bytes = xlog_grant_space_left(log, head);
- 	if (!list_empty_careful(&head->waiters)) {
- 		spin_lock(&head->lock);
- 		if (!xlog_grant_head_wake(log, head, &free_bytes) ||
-@@ -396,7 +453,7 @@ xfs_log_regrant(
- 	if (error)
- 		goto out_error;
- 
--	xlog_grant_add_space(log, &log->l_write_head.grant, need_bytes);
-+	xlog_grant_add_space(log, &log->l_write_head, need_bytes);
- 	trace_xfs_log_regrant_exit(log, tic);
- 	xlog_verify_grant_tail(log);
- 	return 0;
-@@ -447,8 +504,8 @@ xfs_log_reserve(
- 	if (error)
- 		goto out_error;
- 
--	xlog_grant_add_space(log, &log->l_reserve_head.grant, need_bytes);
--	xlog_grant_add_space(log, &log->l_write_head.grant, need_bytes);
-+	xlog_grant_add_space(log, &log->l_reserve_head, need_bytes);
-+	xlog_grant_add_space(log, &log->l_write_head, need_bytes);
- 	trace_xfs_log_reserve_exit(log, tic);
- 	xlog_verify_grant_tail(log);
- 	return 0;
-@@ -1141,7 +1198,7 @@ xfs_log_space_wake(
- 		ASSERT(!xlog_in_recovery(log));
- 
- 		spin_lock(&log->l_write_head.lock);
--		free_bytes = xlog_space_left(log, &log->l_write_head.grant);
-+		free_bytes = xlog_grant_space_left(log, &log->l_write_head);
- 		xlog_grant_head_wake(log, &log->l_write_head, &free_bytes);
- 		spin_unlock(&log->l_write_head.lock);
++/*
++ * Take the checkpoint's log vector chain of items and insert the attached log
++ * items into the the AIL. This uses bulk insertion techniques to minimise AIL
++ * lock traffic.
++ *
++ * If we are called with the aborted flag set, it is because a log write during
++ * a CIL checkpoint commit has failed. In this case, all the items in the
++ * checkpoint have already gone through iop_committed and iop_committing, which
++ * means that checkpoint commit abort handling is treated exactly the same as an
++ * iclog write error even though we haven't started any IO yet. Hence in this
++ * case all we need to do is iop_committed processing, followed by an
++ * iop_unpin(aborted) call.
++ *
++ * The AIL cursor is used to optimise the insert process. If commit_lsn is not
++ * at the end of the AIL, the insert cursor avoids the need to walk the AIL to
++ * find the insertion point on every xfs_log_item_batch_insert() call. This
++ * saves a lot of needless list walking and is a net win, even though it
++ * slightly increases that amount of AIL lock traffic to set it up and tear it
++ * down.
++ */
++static void
++xlog_cil_ail_insert(
++	struct xlog		*log,
++	struct list_head	*lv_chain,
++	xfs_lsn_t		commit_lsn,
++	bool			aborted)
++{
++#define LOG_ITEM_BATCH_SIZE	32
++	struct xfs_ail		*ailp = log->l_ailp;
++	struct xfs_log_item	*log_items[LOG_ITEM_BATCH_SIZE];
++	struct xfs_log_vec	*lv;
++	struct xfs_ail_cursor	cur;
++	int			i = 0;
++
++	spin_lock(&ailp->ail_lock);
++	xfs_trans_ail_cursor_last(ailp, &cur, commit_lsn);
++	spin_unlock(&ailp->ail_lock);
++
++	/* unpin all the log items */
++	list_for_each_entry(lv, lv_chain, lv_list) {
++		struct xfs_log_item	*lip = lv->lv_item;
++		xfs_lsn_t		item_lsn;
++
++		if (aborted)
++			set_bit(XFS_LI_ABORTED, &lip->li_flags);
++
++		if (lip->li_ops->flags & XFS_ITEM_RELEASE_WHEN_COMMITTED) {
++			lip->li_ops->iop_release(lip);
++			continue;
++		}
++
++		if (lip->li_ops->iop_committed)
++			item_lsn = lip->li_ops->iop_committed(lip, commit_lsn);
++		else
++			item_lsn = commit_lsn;
++
++		/* item_lsn of -1 means the item needs no further processing */
++		if (XFS_LSN_CMP(item_lsn, (xfs_lsn_t)-1) == 0)
++			continue;
++
++		/*
++		 * if we are aborting the operation, no point in inserting the
++		 * object into the AIL as we are in a shutdown situation.
++		 */
++		if (aborted) {
++			ASSERT(xlog_is_shutdown(ailp->ail_log));
++			if (lip->li_ops->iop_unpin)
++				lip->li_ops->iop_unpin(lip, 1);
++			continue;
++		}
++
++		if (item_lsn != commit_lsn) {
++
++			/*
++			 * Not a bulk update option due to unusual item_lsn.
++			 * Push into AIL immediately, rechecking the lsn once
++			 * we have the ail lock. Then unpin the item. This does
++			 * not affect the AIL cursor the bulk insert path is
++			 * using.
++			 */
++			spin_lock(&ailp->ail_lock);
++			if (XFS_LSN_CMP(item_lsn, lip->li_lsn) > 0)
++				xfs_trans_ail_update(ailp, lip, item_lsn);
++			else
++				spin_unlock(&ailp->ail_lock);
++			if (lip->li_ops->iop_unpin)
++				lip->li_ops->iop_unpin(lip, 0);
++			continue;
++		}
++
++		/* Item is a candidate for bulk AIL insert.  */
++		log_items[i++] = lv->lv_item;
++		if (i >= LOG_ITEM_BATCH_SIZE) {
++			xlog_cil_ail_insert_batch(ailp, &cur, log_items,
++					LOG_ITEM_BATCH_SIZE, commit_lsn);
++			i = 0;
++		}
++	}
++
++	/* make sure we insert the remainder! */
++	if (i)
++		xlog_cil_ail_insert_batch(ailp, &cur, log_items, i, commit_lsn);
++
++	spin_lock(&ailp->ail_lock);
++	xfs_trans_ail_cursor_done(&cur);
++	spin_unlock(&ailp->ail_lock);
++}
++
+ static void
+ xlog_cil_free_logvec(
+ 	struct list_head	*lv_chain)
+@@ -792,7 +922,7 @@ xlog_cil_committed(
+ 		spin_unlock(&ctx->cil->xc_push_lock);
  	}
-@@ -1150,7 +1207,7 @@ xfs_log_space_wake(
- 		ASSERT(!xlog_in_recovery(log));
  
- 		spin_lock(&log->l_reserve_head.lock);
--		free_bytes = xlog_space_left(log, &log->l_reserve_head.grant);
-+		free_bytes = xlog_grant_space_left(log, &log->l_reserve_head);
- 		xlog_grant_head_wake(log, &log->l_reserve_head, &free_bytes);
- 		spin_unlock(&log->l_reserve_head.lock);
+-	xfs_trans_committed_bulk(ctx->cil->xc_log->l_ailp, &ctx->lv_chain,
++	xlog_cil_ail_insert(ctx->cil->xc_log, &ctx->lv_chain,
+ 					ctx->start_lsn, abort);
+ 
+ 	xfs_extent_busy_sort(&ctx->busy_extents);
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 7bd16fbff534..58c4e875eb12 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -715,135 +715,6 @@ xfs_trans_free_items(
  	}
-@@ -1264,64 +1321,6 @@ xfs_log_cover(
- 	return error;
  }
  
--/*
-- * Return the space in the log between the tail and the head.  The head
-- * is passed in the cycle/bytes formal parms.  In the special case where
-- * the reserve head has wrapped passed the tail, this calculation is no
-- * longer valid.  In this case, just return 0 which means there is no space
-- * in the log.  This works for all places where this function is called
-- * with the reserve head.  Of course, if the write head were to ever
-- * wrap the tail, we should blow up.  Rather than catch this case here,
-- * we depend on other ASSERTions in other parts of the code.   XXXmiken
-- *
-- * If reservation head is behind the tail, we have a problem. Warn about it,
-- * but then treat it as if the log is empty.
-- *
-- * If the log is shut down, the head and tail may be invalid or out of whack, so
-- * shortcut invalidity asserts in this case so that we don't trigger them
-- * falsely.
-- */
--int
--xlog_space_left(
--	struct xlog	*log,
--	atomic64_t	*head)
+-static inline void
+-xfs_log_item_batch_insert(
+-	struct xfs_ail		*ailp,
+-	struct xfs_ail_cursor	*cur,
+-	struct xfs_log_item	**log_items,
+-	int			nr_items,
+-	xfs_lsn_t		commit_lsn)
 -{
--	int		tail_bytes;
--	int		tail_cycle;
--	int		head_cycle;
--	int		head_bytes;
+-	int	i;
 -
--	xlog_crack_grant_head(head, &head_cycle, &head_bytes);
--	xlog_crack_atomic_lsn(&log->l_tail_lsn, &tail_cycle, &tail_bytes);
--	tail_bytes = BBTOB(tail_bytes);
--	if (tail_cycle == head_cycle && head_bytes >= tail_bytes)
--		return log->l_logsize - (head_bytes - tail_bytes);
--	if (tail_cycle + 1 < head_cycle)
--		return 0;
+-	spin_lock(&ailp->ail_lock);
+-	/* xfs_trans_ail_update_bulk drops ailp->ail_lock */
+-	xfs_trans_ail_update_bulk(ailp, cur, log_items, nr_items, commit_lsn);
 -
--	/* Ignore potential inconsistency when shutdown. */
--	if (xlog_is_shutdown(log))
--		return log->l_logsize;
+-	for (i = 0; i < nr_items; i++) {
+-		struct xfs_log_item *lip = log_items[i];
 -
--	if (tail_cycle < head_cycle) {
--		ASSERT(tail_cycle == (head_cycle - 1));
--		return tail_bytes - head_bytes;
+-		if (lip->li_ops->iop_unpin)
+-			lip->li_ops->iop_unpin(lip, 0);
 -	}
--
--	/*
--	 * The reservation head is behind the tail. In this case we just want to
--	 * return the size of the log as the amount of space left.
--	 */
--	xfs_alert(log->l_mp, "xlog_space_left: head behind tail");
--	xfs_alert(log->l_mp, "  tail_cycle = %d, tail_bytes = %d",
--		  tail_cycle, tail_bytes);
--	xfs_alert(log->l_mp, "  GH   cycle = %d, GH   bytes = %d",
--		  head_cycle, head_bytes);
--	ASSERT(0);
--	return log->l_logsize;
 -}
 -
+-/*
+- * Bulk operation version of xfs_trans_committed that takes a log vector of
+- * items to insert into the AIL. This uses bulk AIL insertion techniques to
+- * minimise lock traffic.
+- *
+- * If we are called with the aborted flag set, it is because a log write during
+- * a CIL checkpoint commit has failed. In this case, all the items in the
+- * checkpoint have already gone through iop_committed and iop_committing, which
+- * means that checkpoint commit abort handling is treated exactly the same
+- * as an iclog write error even though we haven't started any IO yet. Hence in
+- * this case all we need to do is iop_committed processing, followed by an
+- * iop_unpin(aborted) call.
+- *
+- * The AIL cursor is used to optimise the insert process. If commit_lsn is not
+- * at the end of the AIL, the insert cursor avoids the need to walk
+- * the AIL to find the insertion point on every xfs_log_item_batch_insert()
+- * call. This saves a lot of needless list walking and is a net win, even
+- * though it slightly increases that amount of AIL lock traffic to set it up
+- * and tear it down.
+- */
+-void
+-xfs_trans_committed_bulk(
+-	struct xfs_ail		*ailp,
+-	struct list_head	*lv_chain,
+-	xfs_lsn_t		commit_lsn,
+-	bool			aborted)
+-{
+-#define LOG_ITEM_BATCH_SIZE	32
+-	struct xfs_log_item	*log_items[LOG_ITEM_BATCH_SIZE];
+-	struct xfs_log_vec	*lv;
+-	struct xfs_ail_cursor	cur;
+-	int			i = 0;
 -
- static void
- xlog_ioend_work(
- 	struct work_struct	*work)
-@@ -1918,8 +1917,8 @@ xlog_sync(
- 	if (ticket) {
- 		ticket->t_curr_res -= roundoff;
- 	} else {
--		xlog_grant_add_space(log, &log->l_reserve_head.grant, roundoff);
--		xlog_grant_add_space(log, &log->l_write_head.grant, roundoff);
-+		xlog_grant_add_space(log, &log->l_reserve_head, roundoff);
-+		xlog_grant_add_space(log, &log->l_write_head, roundoff);
- 	}
- 
- 	/* put cycle number in every block */
-@@ -2839,17 +2838,15 @@ xfs_log_ticket_regrant(
- 	if (ticket->t_cnt > 0)
- 		ticket->t_cnt--;
- 
--	xlog_grant_sub_space(log, &log->l_reserve_head.grant,
--					ticket->t_curr_res);
--	xlog_grant_sub_space(log, &log->l_write_head.grant,
--					ticket->t_curr_res);
-+	xlog_grant_sub_space(log, &log->l_reserve_head, ticket->t_curr_res);
-+	xlog_grant_sub_space(log, &log->l_write_head, ticket->t_curr_res);
- 	ticket->t_curr_res = ticket->t_unit_res;
- 
- 	trace_xfs_log_ticket_regrant_sub(log, ticket);
- 
- 	/* just return if we still have some of the pre-reserved space */
- 	if (!ticket->t_cnt) {
--		xlog_grant_add_space(log, &log->l_reserve_head.grant,
-+		xlog_grant_add_space(log, &log->l_reserve_head,
- 				     ticket->t_unit_res);
- 		trace_xfs_log_ticket_regrant_exit(log, ticket);
- 
-@@ -2897,8 +2894,8 @@ xfs_log_ticket_ungrant(
- 		bytes += ticket->t_unit_res*ticket->t_cnt;
- 	}
- 
--	xlog_grant_sub_space(log, &log->l_reserve_head.grant, bytes);
--	xlog_grant_sub_space(log, &log->l_write_head.grant, bytes);
-+	xlog_grant_sub_space(log, &log->l_reserve_head, bytes);
-+	xlog_grant_sub_space(log, &log->l_write_head, bytes);
- 
- 	trace_xfs_log_ticket_ungrant_exit(log, ticket);
- 
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 9c173c48cbcd..86b5959b5ef2 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -571,8 +571,6 @@ xlog_assign_grant_head(atomic64_t *head, int cycle, int space)
- 	atomic64_set(head, xlog_assign_grant_head_val(cycle, space));
- }
- 
--int xlog_space_left(struct xlog *log, atomic64_t *head);
+-	spin_lock(&ailp->ail_lock);
+-	xfs_trans_ail_cursor_last(ailp, &cur, commit_lsn);
+-	spin_unlock(&ailp->ail_lock);
+-
+-	/* unpin all the log items */
+-	list_for_each_entry(lv, lv_chain, lv_list) {
+-		struct xfs_log_item	*lip = lv->lv_item;
+-		xfs_lsn_t		item_lsn;
+-
+-		if (aborted)
+-			set_bit(XFS_LI_ABORTED, &lip->li_flags);
+-
+-		if (lip->li_ops->flags & XFS_ITEM_RELEASE_WHEN_COMMITTED) {
+-			lip->li_ops->iop_release(lip);
+-			continue;
+-		}
+-
+-		if (lip->li_ops->iop_committed)
+-			item_lsn = lip->li_ops->iop_committed(lip, commit_lsn);
+-		else
+-			item_lsn = commit_lsn;
+-
+-		/* item_lsn of -1 means the item needs no further processing */
+-		if (XFS_LSN_CMP(item_lsn, (xfs_lsn_t)-1) == 0)
+-			continue;
+-
+-		/*
+-		 * if we are aborting the operation, no point in inserting the
+-		 * object into the AIL as we are in a shutdown situation.
+-		 */
+-		if (aborted) {
+-			ASSERT(xlog_is_shutdown(ailp->ail_log));
+-			if (lip->li_ops->iop_unpin)
+-				lip->li_ops->iop_unpin(lip, 1);
+-			continue;
+-		}
+-
+-		if (item_lsn != commit_lsn) {
+-
+-			/*
+-			 * Not a bulk update option due to unusual item_lsn.
+-			 * Push into AIL immediately, rechecking the lsn once
+-			 * we have the ail lock. Then unpin the item. This does
+-			 * not affect the AIL cursor the bulk insert path is
+-			 * using.
+-			 */
+-			spin_lock(&ailp->ail_lock);
+-			if (XFS_LSN_CMP(item_lsn, lip->li_lsn) > 0)
+-				xfs_trans_ail_update(ailp, lip, item_lsn);
+-			else
+-				spin_unlock(&ailp->ail_lock);
+-			if (lip->li_ops->iop_unpin)
+-				lip->li_ops->iop_unpin(lip, 0);
+-			continue;
+-		}
+-
+-		/* Item is a candidate for bulk AIL insert.  */
+-		log_items[i++] = lv->lv_item;
+-		if (i >= LOG_ITEM_BATCH_SIZE) {
+-			xfs_log_item_batch_insert(ailp, &cur, log_items,
+-					LOG_ITEM_BATCH_SIZE, commit_lsn);
+-			i = 0;
+-		}
+-	}
+-
+-	/* make sure we insert the remainder! */
+-	if (i)
+-		xfs_log_item_batch_insert(ailp, &cur, log_items, i, commit_lsn);
+-
+-	spin_lock(&ailp->ail_lock);
+-	xfs_trans_ail_cursor_done(&cur);
+-	spin_unlock(&ailp->ail_lock);
+-}
 -
  /*
-  * Committed Item List interfaces
-  */
+  * Sort transaction items prior to running precommit operations. This will
+  * attempt to order the items such that they will always be locked in the same
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index d5400150358e..52a45f0a5ef1 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -19,9 +19,6 @@ void	xfs_trans_add_item(struct xfs_trans *, struct xfs_log_item *);
+ void	xfs_trans_del_item(struct xfs_log_item *);
+ void	xfs_trans_unreserve_and_mod_sb(struct xfs_trans *tp);
+ 
+-void	xfs_trans_committed_bulk(struct xfs_ail *ailp,
+-				struct list_head *lv_chain,
+-				xfs_lsn_t commit_lsn, bool aborted);
+ /*
+  * AIL traversal cursor.
+  *
 -- 
 2.38.1
 
