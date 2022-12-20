@@ -2,69 +2,69 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FE5CC3DA79
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Dec 2022 23:23:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C943AC4167B
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Dec 2022 23:23:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229804AbiLTXXU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Dec 2022 18:23:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33478 "EHLO
+        id S233909AbiLTXXT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Dec 2022 18:23:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229572AbiLTXXQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2022 18:23:16 -0500
-Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B01AB88
+        with ESMTP id S229804AbiLTXXR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Dec 2022 18:23:17 -0500
+Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91452BBF
         for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2022 15:23:15 -0800 (PST)
-Received: by mail-pj1-x1031.google.com with SMTP id o8-20020a17090a9f8800b00223de0364beso337249pjp.4
+Received: by mail-pl1-x633.google.com with SMTP id s7so13826910plk.5
         for <linux-xfs@vger.kernel.org>; Tue, 20 Dec 2022 15:23:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=2/k4p+F2J2msDAa+iHXuzkjg4CqrJdEP/jFmYYLf3lU=;
-        b=SMtdCI/cZtyv3UE0V+Itesfd9J9JfsTywcZ5u90nWtsqijbjEuKKDqiT3w4jt8/m3N
-         QDAeC5crVrQ2gAGeHFgV3wxHDbDv69e9fEWNTfSRwbz2ePWSGN4hKWtDGHdmntXVSgmi
-         lBND996tYLioAVbpOsYJdfyV2NCZNrsYap2qkjb+NVqebgDap0qAGPlV9Dkx8ADdXfTq
-         E40Pz1ihG125hn5UjYXEoQjasXgQSPoFlNDDx/XWHSGom9SBhQcP8Cznacw2KSUNm/OL
-         orisiXM3As3iiTosVjqgy5MPHIlzRexLCHy6oDLJ0uMgSVaacCwFj6FA9RTsEf45RGok
-         IvEA==
+        bh=L+sknzRXc6uxNYMDlGCEierIiGCTaTEw+b3RJv+ySZo=;
+        b=JOeAMCI9+F9WRF85d30onamjlzvX8XQhFbX7tkZeO684BS8AnNMS/bFxvNDZUhpOU/
+         V4uJ0/iM6EElpB0Wc6aEMOp7tqjr6UiBMvl4jRuJC4vWPf8viXKCSto5s+SFA0l/RD17
+         7TkSZ/zFs04AAkxXFfb5uCFtKnZR1ZFxU4E7Mxn8wMjE38LztHLv64fcgFQUQsXU3uCL
+         IisfgMbOa+N9cs3gg5v++rAX8svUiY4FLHUrbFNuEjcRD2aLRDM5yC4rJK9oNY+LGP7s
+         y3uXGVihrtFADwkZs2izoKfl+1q5DqEhyV+td3BOvLugKousgQVPcV01cB+Ghp5vcMOp
+         0dpg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=2/k4p+F2J2msDAa+iHXuzkjg4CqrJdEP/jFmYYLf3lU=;
-        b=7QXk1H1yek+YFXscnyQkR2ZOxJQNdMh9zeTlVKyO1ssa2KKM1wf3dt2LG7+Mn/xhAD
-         NYgzbbOC3V+0ByQqSAl1YiuwnyCzT3el0wc+h86j2Amy4aIlYaGxr829PhCrjeA2GMzP
-         AS0YH9VVMWAoTk99cdveFjD3jbvixu0crOQzYnyHxLcYsc0SJSOulRwJEURntm5l6vYU
-         4a2mrKQPQSyuPdrkDAvCDGE2VxYAAPADvzRXiAsBKLtig3MyKDNXOn8cnwLU0b68CcNq
-         3bYDX6g+qFAZ+CSGRRdyB5Yli+S94ERNOLZLlTzjcpd/daQPl/JuAc39FgpsLl90cJg0
-         RNKg==
-X-Gm-Message-State: ANoB5ploLMCv2CmzGWbgGvMS7iq5vfyeKJsG3kilRE13KcZDmsaxuuLv
-        HfFYQY6TerMP9lhY8hzWplW3mILlBe2n6FgE
-X-Google-Smtp-Source: AA0mqf4826LYjZ0kusEse6Pu9K4B869A4M2LKIg5CBUG5pMU/cV2wZLTpG7cmSFi5gwMAhhiX4Gjzw==
-X-Received: by 2002:a17:90b:3942:b0:221:5596:593b with SMTP id oe2-20020a17090b394200b002215596593bmr37555470pjb.5.1671578594773;
-        Tue, 20 Dec 2022 15:23:14 -0800 (PST)
+        bh=L+sknzRXc6uxNYMDlGCEierIiGCTaTEw+b3RJv+ySZo=;
+        b=XYH/Y3OaOMsMA2DJjdpYQbrbLNKhxpgoXrDkzAm+PStdBg3PzcG9d5JGk7w88zq2i4
+         28WY1HltSlag9Bf+SHOr+yQKHryKnHPLPXmj5z/1GPcVQHZhDc6aPkOel3i3XpfgUnry
+         wk+R+LgA+ZiVlGrO+KX6J+NgwOjjVdBtFYfvnYo+HPLaUPZt6Uo4OewD9egglo3AjsNu
+         B/nbJq6rpCzpS7VZ32dP1VedRt6T4CClZiq6Gom5VpDGc7Fm6pZXG3ScDplOUAYAfomd
+         DBZ4x65vjURLtHsRVDM8DJzj3BGZp1nx7AGYCYFiPh2QwxJTFAvmAx95noIe56R7K3gp
+         wiKw==
+X-Gm-Message-State: AFqh2kp9W17s5XKfcz0n7rhr9oo3RWjSjUmJfSM5sp2Tnt6b974LDmMr
+        DRuMTI2DfJ5sa7z4xFSD8Vz0wJEg6skIR7IB
+X-Google-Smtp-Source: AMrXdXvDEvUeSHD2kQMVcRFE195tyxpQJmnM/644GX6zOjbGkaAAE1Mhq2jJXkw8g3ko3NqDk5qmMQ==
+X-Received: by 2002:a17:902:ba89:b0:189:c62e:ac34 with SMTP id k9-20020a170902ba8900b00189c62eac34mr15094559pls.47.1671578595097;
+        Tue, 20 Dec 2022 15:23:15 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-138-158.pa.nsw.optusnet.com.au. [49.181.138.158])
-        by smtp.gmail.com with ESMTPSA id x14-20020a17090ab00e00b00219220edf0dsm56793pjq.48.2022.12.20.15.23.13
+        by smtp.gmail.com with ESMTPSA id n7-20020a170902e54700b0017f74cab9eesm9868998plf.128.2022.12.20.15.23.13
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Tue, 20 Dec 2022 15:23:13 -0800 (PST)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <dave@fromorbit.com>)
-        id 1p7lx1-00Asnd-8u
+        id 1p7lx1-00AsnV-6t
         for linux-xfs@vger.kernel.org; Wed, 21 Dec 2022 10:23:11 +1100
 Received: from dave by devoid.disaster.area with local (Exim 4.96)
         (envelope-from <dave@devoid.disaster.area>)
-        id 1p7lx1-00Ec6B-0o
+        id 1p7lx1-00Ec62-0c
         for linux-xfs@vger.kernel.org;
         Wed, 21 Dec 2022 10:23:11 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 6/9] xfs: collapse xlog_state_set_callback in caller
-Date:   Wed, 21 Dec 2022 10:23:05 +1100
-Message-Id: <20221220232308.3482960-7-david@fromorbit.com>
+Subject: [PATCH 4/9] xfs: ensure log tail is always up to date
+Date:   Wed, 21 Dec 2022 10:23:03 +1100
+Message-Id: <20221220232308.3482960-5-david@fromorbit.com>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221220232308.3482960-1-david@fromorbit.com>
 References: <20221220232308.3482960-1-david@fromorbit.com>
@@ -76,68 +76,94 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The function is called from a single place, and it isn't just
-setting the iclog state to XLOG_STATE_CALLBACK - it can mark iclogs
-clean, which moves them to states after CALLBACK. Hence the function
-is now badly named, and should just be folded into the caller where
-the iclog completion logic makes a whole lot more sense.
+Whenever we write an iclog, we call xlog_assign_tail_lsn() to update
+the current tail before we write it into the iclog header. This
+means we have to take the AIL lock on every iclog write just to
+check if the tail of the log has moved.
+
+This doesn't avoid races with log tail updates - the log tail could
+move immediately after we assign the tail to the iclog header and
+hence by the time the iclog reaches stable storage the tail LSN has
+moved forward in memory. Hence the log tail LSN in the iclog header
+is really just a point in time snapshot of the current state of the
+AIL.
+
+With this in mind, if we simply update the in memory log->l_tail_lsn
+every time it changes in the AIL, there is no need to update the in
+memory value when we are writing it into an iclog - it will already
+be up-to-date in memory and checking the AIL again will not change
+this. Hence xlog_state_release_iclog() does not need to check the
+AIL to update the tail lsn and can just sample it directly without
+needing to take the AIL lock.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_log.c | 31 +++++++++++--------------------
- 1 file changed, 11 insertions(+), 20 deletions(-)
+ fs/xfs/xfs_log.c       |  5 ++---
+ fs/xfs/xfs_trans_ail.c | 17 +++++++++++++++--
+ 2 files changed, 17 insertions(+), 5 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 2795157e345e..25168b38fa25 100644
+index 7de23639a2a2..473f585aa930 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -2544,25 +2544,6 @@ xlog_get_lowest_lsn(
- 	return lowest_lsn;
+@@ -530,7 +530,6 @@ xlog_state_release_iclog(
+ 	struct xlog_in_core	*iclog,
+ 	struct xlog_ticket	*ticket)
+ {
+-	xfs_lsn_t		tail_lsn;
+ 	bool			last_ref;
+ 
+ 	lockdep_assert_held(&log->l_icloglock);
+@@ -545,8 +544,8 @@ xlog_state_release_iclog(
+ 	if ((iclog->ic_state == XLOG_STATE_WANT_SYNC ||
+ 	     (iclog->ic_flags & XLOG_ICL_NEED_FUA)) &&
+ 	    !iclog->ic_header.h_tail_lsn) {
+-		tail_lsn = xlog_assign_tail_lsn(log->l_mp);
+-		iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
++		iclog->ic_header.h_tail_lsn =
++				cpu_to_be64(atomic64_read(&log->l_tail_lsn));
+ 	}
+ 
+ 	last_ref = atomic_dec_and_test(&iclog->ic_refcnt);
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 7354b5379014..0274e478d8a0 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -715,6 +715,13 @@ xfs_ail_push_all_sync(
+ 	finish_wait(&ailp->ail_empty, &wait);
  }
  
--static void
--xlog_state_set_callback(
--	struct xlog		*log,
--	struct xlog_in_core	*iclog,
--	xfs_lsn_t		header_lsn)
--{
--	/*
--	 * If there are no callbacks on this iclog, we can mark it clean
--	 * immediately and return. Otherwise we need to run the
--	 * callbacks.
--	 */
--	if (list_empty(&iclog->ic_callbacks)) {
--		xlog_state_clean_iclog(log, iclog);
--		return;
--	}
--	trace_xlog_iclog_callback(iclog, _RET_IP_);
--	iclog->ic_state = XLOG_STATE_CALLBACK;
--}
--
- /*
-  * Return true if we need to stop processing, false to continue to the next
-  * iclog. The caller will need to run callbacks if the iclog is returned in the
-@@ -2594,7 +2575,17 @@ xlog_state_iodone_process_iclog(
- 		lowest_lsn = xlog_get_lowest_lsn(log);
- 		if (lowest_lsn && XFS_LSN_CMP(lowest_lsn, header_lsn) < 0)
- 			return false;
--		xlog_state_set_callback(log, iclog, header_lsn);
-+		/*
-+		 * If there are no callbacks on this iclog, we can mark it clean
-+		 * immediately and return. Otherwise we need to run the
-+		 * callbacks.
-+		 */
-+		if (list_empty(&iclog->ic_callbacks)) {
-+			xlog_state_clean_iclog(log, iclog);
-+			return false;
-+		}
-+		trace_xlog_iclog_callback(iclog, _RET_IP_);
-+		iclog->ic_state = XLOG_STATE_CALLBACK;
- 		return false;
- 	default:
- 		/*
++/*
++ * Callers should pass the the original tail lsn so that we can detect if the
++ * tail has moved as a result of the operation that was performed. If the caller
++ * needs to force a tail LSN update, it should pass NULLCOMMITLSN to bypass the
++ * "did the tail LSN change?" checks. If the caller wants to avoid a tail update
++ * (e.g. it knows the tail did not change) it should pass an @old_lsn of 0.
++ */
+ void
+ xfs_ail_update_finish(
+ 	struct xfs_ail		*ailp,
+@@ -799,10 +806,16 @@ xfs_trans_ail_update_bulk(
+ 
+ 	/*
+ 	 * If this is the first insert, wake up the push daemon so it can
+-	 * actively scan for items to push.
++	 * actively scan for items to push. We also need to do a log tail
++	 * LSN update to ensure that it is correctly tracked by the log, so
++	 * set the tail_lsn to NULLCOMMITLSN so that xfs_ail_update_finish()
++	 * will see that the tail lsn has changed and will update the tail
++	 * appropriately.
+ 	 */
+-	if (!mlip)
++	if (!mlip) {
+ 		wake_up_process(ailp->ail_task);
++		tail_lsn = NULLCOMMITLSN;
++	}
+ 
+ 	xfs_ail_update_finish(ailp, tail_lsn);
+ }
 -- 
 2.38.1
 
