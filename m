@@ -2,213 +2,102 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0385C46467
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Dec 2022 16:57:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DD9CC4332F
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Dec 2022 18:40:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229932AbiLUQ5G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Dec 2022 11:57:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46576 "EHLO
+        id S234804AbiLUSkI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Dec 2022 13:40:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47084 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229578AbiLUQ5F (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Dec 2022 11:57:05 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5073C4;
-        Wed, 21 Dec 2022 08:57:04 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 819B261857;
-        Wed, 21 Dec 2022 16:57:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9972C433D2;
-        Wed, 21 Dec 2022 16:57:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671641823;
-        bh=I5azBKcXw+FkB6zYEZyUEqcS9DZe0v83Q1kSgPM33YA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pXoaMiqInh1micsNFzqZAq9vfa650BnNzgLwmc+YQBDhRLrCktVI1Bwi1ADBUzIb3
-         DTnn8ywDX7twzL3kF4LdskWSD0umnu9aAoE7DndnxQ42yC+tc3TpfEphExkXcZRrPx
-         /OoXPkUWeTskTlcZVaFBIwsp/R8WqZApbmF3HIjH/7FyYQpTydirkvbFL/sMzQlzdM
-         iSD3QIHcpI4H+fBUWWB6HfFPIWejoCWrvlKaBkL3s02QJQNgEJCq4p7aU3llOHK16W
-         xiF3Uy7gri4IxVl3OJFOgO5jpTcXi/MaLyuTFNPiyfNi/APrJX6axGkyg/zxww68dY
-         6Oe6SICzAfBvw==
-Date:   Wed, 21 Dec 2022 08:57:03 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     zlang@redhat.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
-        Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v1.1 2/3] xfs: regression test for writes racing with reclaim
- writeback
-Message-ID: <Y6M632A1x7l9m4HQ@magnolia>
-References: <167158210534.235429.10062024114428012379.stgit@magnolia>
- <167158211644.235429.5374511574924758421.stgit@magnolia>
+        with ESMTP id S229578AbiLUSkI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Dec 2022 13:40:08 -0500
+Received: from mail-qt1-x830.google.com (mail-qt1-x830.google.com [IPv6:2607:f8b0:4864:20::830])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3497226553
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Dec 2022 10:40:07 -0800 (PST)
+Received: by mail-qt1-x830.google.com with SMTP id jr11so14350382qtb.7
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Dec 2022 10:40:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=j9DuR/4OGCoWN0467mEaULUjcAOjTyT79yl+s3BbH0w=;
+        b=Nkz0zl1U7Q00ABqDvJs8hPQU8XJ56556QErttlJHjrbjT4dsyO7/Y4t9Jp2Ew+stEq
+         gFsUEYQCsplVczcqKymUnU9LP8XGVsLIOTyIIRwCEkNY8vds1Y8r/m5EUc6N2LG1Vo6l
+         3l7SEe3vrt0PT1/1BLwfj6utOP4gu2U0E/+dc=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=j9DuR/4OGCoWN0467mEaULUjcAOjTyT79yl+s3BbH0w=;
+        b=WaCasIzdW7p2cWty6+F49vI3UZXZMuLEr1aS6+dKNTUnXto8+Nh6jFH/Mc20mlPvMZ
+         9IYDI5UpfUTkVrLNqb030KbErUdvNGZq/GMz+w4b2dQVZA5ux1j+FbWT5KVbFYE/cEwM
+         6o2ba1Z6FJPbys/ev6mWDa2bSpbDlfrCUzifY5mQEQAgLIln6TteyTCbCBpgR7ksfSuW
+         8HRDqkXirITGbL2s4d/omT566v7e11n8l6DmO+0X1QImLb586TGTe7iI2d8GlLu/ENoD
+         YLJfJuL1MHI4N30BjUATAk1tYZEXyAbG6vki7jaEIC1WPfqtlMlSLT/8ZvT2pOT6j7/P
+         pqgw==
+X-Gm-Message-State: AFqh2koWnBWR2VXhAU7FmzAaWvD18p3tBqDG6nKg2FBFMhfnKvE+vbv1
+        1fMMyf6bQdIyI9LBKZ+1R0qyeV1WkrkxBs8Y
+X-Google-Smtp-Source: AMrXdXs1l8y5AtiPYsQ2E5ueQc1W5CKVQZnryzQLTfwkobXL1ul1I/1YDI3YohZeCFBafwEq7tYJLw==
+X-Received: by 2002:a05:622a:59cb:b0:3a9:80b6:4c9c with SMTP id gc11-20020a05622a59cb00b003a980b64c9cmr3345420qtb.47.1671648006025;
+        Wed, 21 Dec 2022 10:40:06 -0800 (PST)
+Received: from mail-qk1-f175.google.com (mail-qk1-f175.google.com. [209.85.222.175])
+        by smtp.gmail.com with ESMTPSA id bn35-20020a05620a2ae300b006ce76811a07sm11077117qkb.75.2022.12.21.10.40.04
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 21 Dec 2022 10:40:04 -0800 (PST)
+Received: by mail-qk1-f175.google.com with SMTP id p12so2272004qkm.0
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Dec 2022 10:40:04 -0800 (PST)
+X-Received: by 2002:ae9:ef49:0:b0:6fe:d4a6:dcef with SMTP id
+ d70-20020ae9ef49000000b006fed4a6dcefmr97898qkg.594.1671648004539; Wed, 21 Dec
+ 2022 10:40:04 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <167158211644.235429.5374511574924758421.stgit@magnolia>
+References: <167155161011.40255.9717951395121213068.stg-ugh@magnolia>
+In-Reply-To: <167155161011.40255.9717951395121213068.stg-ugh@magnolia>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Wed, 21 Dec 2022 10:39:48 -0800
+X-Gmail-Original-Message-ID: <CAHk-=wjxdo-VBecNV90ye_X6C_zdkTUNqtqxuxbwz5OnL8Jhqg@mail.gmail.com>
+Message-ID: <CAHk-=wjxdo-VBecNV90ye_X6C_zdkTUNqtqxuxbwz5OnL8Jhqg@mail.gmail.com>
+Subject: Re: [GIT PULL] fsdax,xfs: fix data corruption problems
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>
+Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org,
+        ruansy.fnst@fujitsu.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Dec 20, 2022 at 8:01 AM Darrick J. Wong <djwong@kernel.org> wrote:
+>
+> As usual, I did a test-merge with the main upstream branch as of a few
+> minutes ago, and didn't see any conflicts.  Please let me know if you
+> encounter any problems.
 
-This test uses the new write delay debug knobs to set up a slow-moving
-write racing with writeback of an unwritten block at the end of the
-file range targetted by the slow write.  The test succeeds if the file
-does not end up corrupt and if the ftrace log captures a message about
-the revalidation occurring.
+Well... There are no conflicts, because there are no changes.
 
-NOTE: I'm not convinced that madvise actually causes the page to be
-removed from the pagecache, which means that this is effectively a
-functional test for the invalidation, not a corruption reproducer.
-On the other hand, the functional test can be done quickly.
+All of these commits actually already came to me earlier through Andrew's tree.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
-v1.1: add regression annotations
----
- tests/xfs/925     |  126 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/925.out |    2 +
- 2 files changed, 128 insertions(+)
- create mode 100755 tests/xfs/925
- create mode 100644 tests/xfs/925.out
+I suspect you actually saw an empty diff when you did the test-merge,
+but didn't realize that "empty diff" in this case was literally
+exactly that (as opposed to "there was a diff, just that it was not
+shown").
 
-diff --git a/tests/xfs/925 b/tests/xfs/925
-new file mode 100755
-index 0000000000..49d22019d3
---- /dev/null
-+++ b/tests/xfs/925
-@@ -0,0 +1,126 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test 925
-+#
-+# This is a regression test for a data corruption bug that existed in iomap's
-+# buffered write routines.
-+#
-+. ./common/preamble
-+_begin_fstest auto quick rw
-+
-+# Import common functions.
-+. ./common/inject
-+. ./common/tracing
-+
-+# real QA test starts here
-+_cleanup()
-+{
-+	test -n "$sentryfile" && rm -f $sentryfile
-+	wait
-+	_ftrace_cleanup
-+	cd /
-+	rm -r -f $tmp.* $sentryfile $tracefile
-+}
-+
-+# Modify as appropriate.
-+_supported_fs xfs
-+_require_ftrace
-+_require_xfs_io_command "falloc"
-+_require_xfs_io_error_injection "write_delay_ms"
-+_require_scratch
-+
-+_fixed_by_kernel_commit 304a68b9c63b \
-+	"xfs: use iomap_valid method to detect stale cached iomaps"
-+
-+_scratch_mkfs >> $seqres.full
-+_scratch_mount >> $seqres.full
-+
-+# This is a pagecache test, so try to disable fsdax mode.
-+$XFS_IO_PROG -c 'chattr -x' $SCRATCH_MNT &> $seqres.full
-+_require_pagecache_access $SCRATCH_MNT
-+
-+blocks=10
-+blksz=$(get_page_size)
-+filesz=$((blocks * blksz))
-+dirty_offset=$(( filesz - 1 ))
-+write_len=$(( ( (blocks - 1) * blksz) + 1 ))
-+
-+# Create a large file with a large unwritten range.
-+$XFS_IO_PROG -f -c "falloc 0 $filesz" $SCRATCH_MNT/file >> $seqres.full
-+
-+# Write the same data to file.compare as we're about to do to file.  Do this
-+# before slowing down writeback to avoid unnecessary delay.
-+_pwrite_byte 0x58 $dirty_offset 1 $SCRATCH_MNT/file.compare >> $seqres.full
-+_pwrite_byte 0x57 0 $write_len $SCRATCH_MNT/file.compare >> $seqres.full
-+
-+# Reinitialize the page cache for this file.
-+_scratch_cycle_mount
-+
-+# Dirty the last page in the range and immediately set the write delay so that
-+# any subsequent writes have to wait.
-+$XFS_IO_PROG -c "pwrite -S 0x58 $dirty_offset 1" $SCRATCH_MNT/file >> $seqres.full
-+_scratch_inject_error "write_delay_ms" 500
-+
-+_ftrace_setup
-+_ftrace_record_events 'xfs_iomap_invalid'
-+
-+# Start a sentry to look for evidence of invalidation tracepoint tripping.  If
-+# we see that, we know we've forced writeback to revalidate a mapping.  The
-+# test has been successful, so turn off the delay.
-+sentryfile=$TEST_DIR/$seq.sentry
-+tracefile=$TEST_DIR/$seq.ftrace
-+wait_for_errortag() {
-+	while [ -e "$sentryfile" ]; do
-+		_ftrace_dump | grep iomap_invalid >> "$tracefile"
-+		if grep -q iomap_invalid "$tracefile"; then
-+			_scratch_inject_error "write_delay_ms" 0
-+			_ftrace_ignore_events
-+			break;
-+		fi
-+		sleep 0.5
-+	done
-+}
-+touch $sentryfile
-+wait_for_errortag &
-+
-+# Start thread 1 + writeback above
-+($XFS_IO_PROG -c "pwrite -S 0x57 -b $write_len 0 $write_len" \
-+	$SCRATCH_MNT/file >> $seqres.full; rm -f $sentryfile) &
-+sleep 1
-+
-+# Start thread 2 to simulate reclaim writeback via sync_file_range and fadvise
-+# to drop the page cache.
-+#	-c "fadvise -d $dirty_offset 1" \
-+dirty_pageoff=$((filesz - blksz))
-+$XFS_IO_PROG -c "sync_range -a -w $dirty_pageoff $blksz" \
-+	-c "mmap -r 0 $filesz" \
-+	-c "madvise -d 0 $filesz" \
-+	$SCRATCH_MNT/file >> $seqres.full
-+wait
-+rm -f $sentryfile
-+
-+cat "$tracefile" >> $seqres.full
-+grep -q iomap_invalid "$tracefile"
-+saw_invalidation=$?
-+
-+# Flush everything to disk.  If the bug manifests, then after the cycle,
-+# file should have stale 0x58 in block 0 because we silently dropped a write.
-+_scratch_cycle_mount
-+
-+if ! cmp -s $SCRATCH_MNT/file $SCRATCH_MNT/file.compare; then
-+	echo file and file.compare do not match
-+	$XFS_IO_PROG -c 'bmap -celpv' -c 'bmap -elpv' $SCRATCH_MNT/file &>> $seqres.full
-+	echo file.compare
-+	od -tx1 -Ad -c $SCRATCH_MNT/file.compare
-+	echo file
-+	od -tx1 -Ad -c $SCRATCH_MNT/file
-+elif [ $saw_invalidation -ne 0 ]; then
-+	# The files matched, but nothing got logged about the revalidation?
-+	echo "Expected to hear about write iomap invalidation?"
-+fi
-+
-+echo Silence is golden
-+status=0
-+exit
-diff --git a/tests/xfs/925.out b/tests/xfs/925.out
-new file mode 100644
-index 0000000000..95088ce8a5
---- /dev/null
-+++ b/tests/xfs/925.out
-@@ -0,0 +1,2 @@
-+QA output created by 925
-+Silence is golden
+So for example, you had commit 3a0a36f143e4 ("fsdax,xfs: port unshare
+to fsdax") but my tree got commit d984648e428b ("fsdax,xfs: port
+unshare to fsdax") from Andrew Morton back last week when I did his MM
+merge (my merge commit is e2ca6ba6ba01).
+
+I'm skipping this pull request, because the end result ends up being
+zero actual code changes, with all the commits having duplicates.
+
+Git handled it fine, auto-merging it all, but it just doesn't seem
+sensible to merge just to get that duplicate history.
+
+Adding Andrew to the Cc, because obviously there was some
+communication failure and confusion here. Quite often the dax changes
+*do* fome through Andrew, so maybe the only issue this time was that
+because it only really affected XFS, we ended up having that "xfs
+people _also_ worked on it".
+
+              Linus
