@@ -2,135 +2,91 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F781C4167B
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Dec 2022 12:19:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 290C8C4332F
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Dec 2022 15:23:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229647AbiLUMTh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Dec 2022 07:19:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60110 "EHLO
+        id S234571AbiLUPXV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Dec 2022 10:23:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55746 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229547AbiLUMTg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Dec 2022 07:19:36 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2371220DD;
-        Wed, 21 Dec 2022 04:19:35 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4A9B461792;
-        Wed, 21 Dec 2022 12:19:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68142C433D2;
-        Wed, 21 Dec 2022 12:19:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671625174;
-        bh=pthlogEooDT8pRMqu/J+s3iAWMMQL8B8jIrFyvSiPCU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=tY5pRXgPybIyKKTS6VpOarrkA9PBVNAmZvFCJJTwZAShEaNsskzK01hTqiOctDeey
-         Jr2sQPbwmFW8PDB6xSKIsrnr8yxd1G8Ljq2AJ3WPkg9BzSa0kapE2pIRTiWTRgZacH
-         nXnVve8gfcGcgjnAfx0EdiTvM+x+MvTF1FCPhNpiZpO8LgmhgD+GtmaYYIfSdK/Jxj
-         WBEA1lhIXQcAg9FkaMjBMSTZEpbnoMhxrkNFt47NT8HFMKf2BsRsZB1TdxxsGhMSXD
-         Cdvn1KqTb/aGAnwBiEbocggxBoqXXUzLMg7I9kARDKVnM0g74+/4I9xFYGs4BA1NkB
-         wxeNFpKPoVaww==
-Date:   Wed, 21 Dec 2022 07:19:33 -0500
-From:   Sasha Levin <sashal@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        Dave Chinner <dchinner@redhat.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Darrick J . Wong" <djwong@kernel.org>, hch@infradead.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH AUTOSEL 6.1 13/16] iomap: write iomap validity checks
-Message-ID: <Y6L51cR5EZ//cw8J@sashalap>
-References: <20221220012053.1222101-1-sashal@kernel.org>
- <20221220012053.1222101-13-sashal@kernel.org>
- <20221220040112.GG1971568@dread.disaster.area>
+        with ESMTP id S234581AbiLUPXO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Dec 2022 10:23:14 -0500
+Received: from mail-qv1-xf35.google.com (mail-qv1-xf35.google.com [IPv6:2607:f8b0:4864:20::f35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 597282339C
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Dec 2022 07:23:13 -0800 (PST)
+Received: by mail-qv1-xf35.google.com with SMTP id q10so10495330qvt.10
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Dec 2022 07:23:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=7Igu/3MchCXKLzDBdD3GPkaU5cX53uLzAFQpMQw/1Hk=;
+        b=YFrm6DHnid2OMstuS0QkDlSjNzxZvkTVkXp2IribXmOfIgLeDCbGKAY36at7Nm7p2l
+         m5nTtk2CcBjuSPGL7Gt9QUXliFkiuki5zmitjKpxkkhCWeIOKqnZyaJ15GwsgQcbysS8
+         xm0KwQ2e8DQrXw7td/sPJxKe0mPUMQhKQKDFkPh2ykwzb/Ug/Exoh5Px2bA4xFWswH7Q
+         nbu7cPs/W9H3Q5KG0ddgYji+qSjDgIppZVBfQPa2uk3vI0v+fST5UKaf4cDfInIg7olq
+         lNuZIqS5oNkvDZ+wuYA8E5ZgdSl4e0txfNzYitdWCzcH4hE8d9msal/ZoG/pKpPSdG54
+         HXow==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=7Igu/3MchCXKLzDBdD3GPkaU5cX53uLzAFQpMQw/1Hk=;
+        b=3F144gz3nuuHy5keT2mQh+g9RdPKz7Fkc/YQe7wHKOfGPZ6zHILCVfhEj0krcOOJJe
+         9pCkrG31Xs99GkEkM9aICmtrguveTcUzphkuwge3sTDBZJv5NPZzx5RHRbUmmoxW/Sst
+         Q4+Chu0aap0afqi1/aIkNO4cOtmxdrE80eYLMZ9RYCan9wqeIuUW7bf9S8XvUfK4X8qj
+         WRxrGqK2ZUAJLzw4xRcq1gZquMpNvih6OR8CFaILATpmCKwdheVh99TPG77yKlAuaojV
+         QCOMP+/1pJ2OyIf+YSEBXpZgr10sDSFMDbF4HJ0yibMcX5/zalX7cDflrwokB5004qq6
+         vdTw==
+X-Gm-Message-State: AFqh2krTEIbGYdk/p3txa15j83CWj81B2dYm4yTVwcRRrOgVfAz+HhHw
+        DPG9mQfxLvY3UpVXkEQNC7CYuHzhCno=
+X-Google-Smtp-Source: AMrXdXvoTYnKvXO6DCXaO8l3WAzQuTwnzCGiDysEVCmHvx5UN3/9TqaQcOp76AC3lTMiw6IxoPLaXA==
+X-Received: by 2002:a05:6214:5e10:b0:4c7:9adf:3637 with SMTP id li16-20020a0562145e1000b004c79adf3637mr3410057qvb.13.1671636192529;
+        Wed, 21 Dec 2022 07:23:12 -0800 (PST)
+Received: from shiina-laptop.hsd1.ma.comcast.net ([2601:18f:47f:7270:54c1:7162:1772:f1d])
+        by smtp.gmail.com with ESMTPSA id v18-20020a05620a0f1200b006cf38fd659asm11296220qkl.103.2022.12.21.07.23.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 21 Dec 2022 07:23:12 -0800 (PST)
+From:   Hironori Shiina <shiina.hironori@gmail.com>
+X-Google-Original-From: Hironori Shiina <shiina.hironori@fujitsu.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Hironori Shiina <shiina.hironori@fujitsu.com>
+Subject: [PATCH] xfs: get root inode correctly at bulkstat
+Date:   Wed, 21 Dec 2022 10:22:21 -0500
+Message-Id: <20221221152221.120005-1-shiina.hironori@fujitsu.com>
+X-Mailer: git-send-email 2.38.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <20221220040112.GG1971568@dread.disaster.area>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 20, 2022 at 03:01:12PM +1100, Dave Chinner wrote:
->On Mon, Dec 19, 2022 at 08:20:50PM -0500, Sasha Levin wrote:
->> From: Dave Chinner <dchinner@redhat.com>
->>
->> [ Upstream commit d7b64041164ca177170191d2ad775da074ab2926 ]
->>
->> A recent multithreaded write data corruption has been uncovered in
->> the iomap write code. The core of the problem is partial folio
->> writes can be flushed to disk while a new racing write can map it
->> and fill the rest of the page:
->>
->> writeback			new write
->>
->> allocate blocks
->>   blocks are unwritten
->> submit IO
->> .....
->> 				map blocks
->> 				iomap indicates UNWRITTEN range
->> 				loop {
->> 				  lock folio
->> 				  copyin data
->> .....
->> IO completes
->>   runs unwritten extent conv
->>     blocks are marked written
->> 				  <iomap now stale>
->> 				  get next folio
->> 				}
->>
->> Now add memory pressure such that memory reclaim evicts the
->> partially written folio that has already been written to disk.
->>
->> When the new write finally gets to the last partial page of the new
->> write, it does not find it in cache, so it instantiates a new page,
->> sees the iomap is unwritten, and zeros the part of the page that
->> it does not have data from. This overwrites the data on disk that
->> was originally written.
->>
->> The full description of the corruption mechanism can be found here:
->>
->> https://lore.kernel.org/linux-xfs/20220817093627.GZ3600936@dread.disaster.area/
->>
->> To solve this problem, we need to check whether the iomap is still
->> valid after we lock each folio during the write. We have to do it
->> after we lock the page so that we don't end up with state changes
->> occurring while we wait for the folio to be locked.
->>
->> Hence we need a mechanism to be able to check that the cached iomap
->> is still valid (similar to what we already do in buffered
->> writeback), and we need a way for ->begin_write to back out and
->> tell the high level iomap iterator that we need to remap the
->> remaining write range.
->>
->> The iomap needs to grow some storage for the validity cookie that
->> the filesystem provides to travel with the iomap. XFS, in
->> particular, also needs to know some more information about what the
->> iomap maps (attribute extents rather than file data extents) to for
->> the validity cookie to cover all the types of iomaps we might need
->> to validate.
->>
->> Signed-off-by: Dave Chinner <dchinner@redhat.com>
->> Reviewed-by: Christoph Hellwig <hch@lst.de>
->> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
->> Signed-off-by: Sasha Levin <sashal@kernel.org>
->
->This commit is not a standalone backport candidate. It is a pure
->infrastructure change that does nothing by itself except to add more
->code that won't get executed. There are another 7-8 patches that
->need to be backported along with this patch to fix the data
->corruption that is mentioned in this commit.
->
->I'd stronly suggest that you leave this whole series of commits to
->the XFS LTS maintainers to backport if they so choose to - randomly
->backporting commits from the middle of the series only makes their
->job more complex....
+The root inode number should be set to `breq->startino` for getting stat
+information of the root when XFS_BULK_IREQ_SPECIAL_ROOT is used.
+Otherwise, the inode search is started from 1
+(XFS_BULK_IREQ_SPECIAL_ROOT) and the inode with the lowest number in a
+filesystem is returned.
 
-Ack, I'll drop it, thanks!
+Fixes: bf3cb3944792 ("xfs: allow single bulkstat of special inodes")
+Signed-off-by: Hironori Shiina <shiina.hironori@fujitsu.com>
+---
+ fs/xfs/xfs_ioctl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 13f1b2add390..020111f0f2a2 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -780,7 +780,7 @@ xfs_bulk_ireq_setup(
+ 
+ 		switch (hdr->ino) {
+ 		case XFS_BULK_IREQ_SPECIAL_ROOT:
+-			hdr->ino = mp->m_sb.sb_rootino;
++			breq->startino = mp->m_sb.sb_rootino;
+ 			break;
+ 		default:
+ 			return -EINVAL;
 -- 
-Thanks,
-Sasha
+2.38.1
+
