@@ -2,150 +2,172 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1762CC001B2
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Dec 2022 18:10:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5A7EC4167B
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Dec 2022 18:38:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229793AbiLVSKc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Dec 2022 13:10:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48352 "EHLO
+        id S235235AbiLVSit (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Dec 2022 13:38:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56350 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229764AbiLVSKb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Dec 2022 13:10:31 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60B3513EA3;
-        Thu, 22 Dec 2022 10:10:30 -0800 (PST)
+        with ESMTP id S235221AbiLVSiq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Dec 2022 13:38:46 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A37521D320;
+        Thu, 22 Dec 2022 10:38:45 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1460FB81F3F;
-        Thu, 22 Dec 2022 18:10:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5B3DC433D2;
-        Thu, 22 Dec 2022 18:10:27 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2549A61CEF;
+        Thu, 22 Dec 2022 18:38:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67E0EC433D2;
+        Thu, 22 Dec 2022 18:38:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671732627;
-        bh=rFlJ5umulmnQkWwQiL8LQ//9yzUdQ47Bd3CzEt5sEqo=;
+        s=k20201202; t=1671734324;
+        bh=+I0RJGn943uUpdjCptbK3wTmBwDrcMLyvzssPOj+nMs=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=LpmWJV6PwDlhm0CMyXVQ+RMaYy33g6F5JuBroPdia13vLCWAJvs98afnXP7MRGQ3D
-         OoPdB2Do29ezUmPSVBJJCiPaya2qU16wneb4Y8a/ce5JyG4lD2g+x1zr5Z6Fy/v44Y
-         gOv3FRZBJdp7TBWIpIAxT6H7ag+iMJ0etVVoRUM1VZWlPysqFHt4/1YUVhmXUE2JWd
-         zWRwa0Pz2kw10zF6l+MT0ZfAbNMy9wTREYYY6h5nnYoy+dJtqZTq0qolKlYS3ex4EK
-         JtCttVKI5voDE5fAnEqgwBy8UcxZLftEvs3X5nxbks8wW1lJvj/nQ/ePKshxbnpUS9
-         Q0+hjGGnlTMfw==
-Date:   Thu, 22 Dec 2022 10:10:27 -0800
+        b=oiXN9yz14nPuEt3VT3e8oQauQB0ANCEO33l/ri+Qm61v7n9fBbMckYCZyCs7jS9Jr
+         VweJ+xUpXAUVwlosMA7qLUm8eowy5G3vxSeM0STc2HIgYMZoehQJCw6QWeuwgi+iD5
+         3UNRO086KbSyl8RTE+JxtaQjB9ZhobBn0FbtDnwBdO1EhyCCmRxSW8u5YgbNr9YIWw
+         QjsXkjOGEv3S1FV5z8EuYyd8U+lljQcFoUakPUvuAi5ugsIeqkvIM0fSNoWp6kIFeW
+         pdwT7G9RmLMPQcdIUZmWniQ/AxJCtLcvvERH0tDQfbfvHsF51tGqdlNN5OTDAtUw3b
+         pJ05SJvLfRc+w==
+Date:   Thu, 22 Dec 2022 10:38:43 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Hironori Shiina <shiina.hironori@gmail.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Hironori Shiina <shiina.hironori@fujitsu.com>
-Subject: Re: [PATCH v2] xfs: Test bulkstat special query for root inode
-Message-ID: <Y6SdkwtvvMfvkakG@magnolia>
-References: <20221221161843.124707-1-shiina.hironori@fujitsu.com>
- <20221221223805.148788-1-shiina.hironori@fujitsu.com>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 1/1] xfs/122: fix EFI/EFD log format structure size after
+ flex array conversion
+Message-ID: <Y6SkM9VPnDB+ens0@magnolia>
+References: <167158209640.235360.13061162358544554094.stgit@magnolia>
+ <167158210207.235360.12388823078640206103.stgit@magnolia>
+ <20221222071900.dngksnsq374c5cdj@zlang-mailbox>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221221223805.148788-1-shiina.hironori@fujitsu.com>
+In-Reply-To: <20221222071900.dngksnsq374c5cdj@zlang-mailbox>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Dec 21, 2022 at 05:38:05PM -0500, Hironori Shiina wrote:
-> This is a test for the fix:
->   bf3cb3944792 xfs: allow single bulkstat of special inodes
-> This fix added a feature to query the root inode number of a filesystem.
-> This test creates a file with a lower inode number than the root and run
-> a query for the root inode.
+On Thu, Dec 22, 2022 at 03:19:00PM +0800, Zorro Lang wrote:
+> On Tue, Dec 20, 2022 at 04:21:42PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Adjust this test since made EFI/EFD log item format structs proper flex
+> > arrays instead of array[1].
+> > 
+> > This adjustment was made to the kernel source tree as part of a project
+> > to make the use of flex arrays more consistent throughout the kernel.
+> > Converting array[1] and array[0] to array[] also avoids bugs in various
+> > compiler ports that mishandle the array size computation.  Prior to the
+> > introduction of xfs_ondisk.h, these miscomputations resulted in kernels
+> > that would silently write out filesystem structures that would then not
+> > be recognized by more mainstream systems (e.g.  x86).
+> > 
+> > OFC nearly all those reports about buggy compilers are for tiny
+> > architectures that XFS doesn't work well on anyways, so in practice it
+> > hasn't created any user problems (AFAIK).
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
 > 
-> Signed-off-by: Hironori Shiina <shiina.hironori@fujitsu.com>
+> This version looks good to me, thanks for all these detailed information!
+> 
+> Reviewed-by: Zorro Lang <zlang@redhat.com>
+> 
+> >  common/rc         |   15 +++++++++++++++
+> >  tests/xfs/122     |    5 +++++
+> >  tests/xfs/122.out |    8 ++++----
+> >  3 files changed, 24 insertions(+), 4 deletions(-)
+> > 
+> > 
+> > diff --git a/common/rc b/common/rc
+> > index 8060c03b7d..67bd74dc89 100644
+> > --- a/common/rc
+> > +++ b/common/rc
+> > @@ -1502,6 +1502,21 @@ _fixed_by_kernel_commit()
+> >  	_fixed_by_git_commit kernel $*
+> >  }
+> >  
+> 
+> I'd like to give some comments to the new _wants_* helpers when I merge
+> it (don't need send a new version again: ), to help others know the
+> different usage of _wants_* and _fixed_by_*. How about below comment:
+> 
+> # Compare with _fixed_by_* helpers, this helper is used for un-regression
+> # test case, e.g. xfs/122. Or a case would like to mention a git commit
+> # which is not a bug fix (maybe a default behavior/format change). Then
+> # use this helpers.
 
-Looks good to me,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+How about:
+
+"For test cases that are not regression tests, e.g. functional tests or
+maintainer tests, this helper suggests git commits that should be
+applied to source trees to avoid test failures."
 
 --D
 
-> ---
->  tests/xfs/557     | 63 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/557.out |  2 ++
->  2 files changed, 65 insertions(+)
->  create mode 100644 tests/xfs/557
->  create mode 100644 tests/xfs/557.out
 > 
-> diff --git a/tests/xfs/557 b/tests/xfs/557
-> new file mode 100644
-> index 00000000..608ce13c
-> --- /dev/null
-> +++ b/tests/xfs/557
-> @@ -0,0 +1,63 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2022 Fujitsu Limited. All Rights Reserved.
-> +#
-> +# FS QA Test No. 557
-> +#
-> +# This is a test for:
-> +#   bf3cb3944792 (xfs: allow single bulkstat of special inodes)
-> +# Create a filesystem which contains an inode with a lower number
-> +# than the root inode. Then verify that XFS_BULK_IREQ_SPECIAL_ROOT gets
-> +# the correct root inode number.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick
-> +
-> +_supported_fs xfs
-> +_require_xfs_io_command "falloc"
-> +_require_xfs_io_command "bulkstat_single"
-> +_require_scratch
-> +
-> +_fixed_by_kernel_commit XXXXXXXXXXXX \
-> +	"xfs: get root inode correctly at bulkstat"
-> +
-> +# A large stripe unit will put the root inode out quite far
-> +# due to alignment, leaving free blocks ahead of it.
-> +_scratch_mkfs_xfs -d sunit=1024,swidth=1024 > $seqres.full 2>&1 || _fail "mkfs failed"
-> +
-> +# Mounting /without/ a stripe should allow inodes to be allocated
-> +# in lower free blocks, without the stripe alignment.
-> +_scratch_mount -o sunit=0,swidth=0
-> +
-> +root_inum=$(stat -c %i $SCRATCH_MNT)
-> +
-> +# Consume space after the root inode so that the blocks before
-> +# root look "close" for the next inode chunk allocation
-> +$XFS_IO_PROG -f -c "falloc 0 16m" $SCRATCH_MNT/fillfile
-> +
-> +# And make a bunch of inodes until we (hopefully) get one lower
-> +# than root, in a new inode chunk.
-> +echo "root_inum: $root_inum" >> $seqres.full
-> +for i in $(seq 0 4096) ; do
-> +	fname=$SCRATCH_MNT/$(printf "FILE_%03d" $i)
-> +	touch $fname
-> +	inum=$(stat -c "%i" $fname)
-> +	[[ $inum -lt $root_inum ]] && break
-> +done
-> +
-> +echo "created: $inum" >> $seqres.full
-> +
-> +[[ $inum -lt $root_inum ]] || _notrun "Could not set up test"
-> +
-> +# Get root ino with XFS_BULK_IREQ_SPECIAL_ROOT
-> +bulkstat_root_inum=$($XFS_IO_PROG -c 'bulkstat_single root' $SCRATCH_MNT | grep bs_ino | awk '{print $3;}')
-> +echo "bulkstat_root_inum: $bulkstat_root_inum" >> $seqres.full
-> +if [ $root_inum -ne $bulkstat_root_inum ]; then
-> +	echo "root ino mismatch: expected:${root_inum}, actual:${bulkstat_root_inum}"
-> +fi
-> +
-> +echo "Silence is golden"
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/557.out b/tests/xfs/557.out
-> new file mode 100644
-> index 00000000..1f1ae1d4
-> --- /dev/null
-> +++ b/tests/xfs/557.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 557
-> +Silence is golden
-> -- 
-> 2.38.1
+> > +_wants_git_commit()
+> > +{
+> > +	local pkg=$1
+> > +	shift
+> > +
+> > +	echo "This test wants $pkg fix:" >> $seqres.hints
+> > +	echo "      $*" >> $seqres.hints
+> > +	echo >> $seqres.hints
+> > +}
+> > +
+> 
+> # Refer to _wants_git_commit
+> 
+> Feel free to make it better :)
+> 
+> Thanks,
+> Zorro
+> 
+> > +_wants_kernel_commit()
+> > +{
+> > +	_wants_git_commit kernel $*
+> > +}
+> > +
+> >  _check_if_dev_already_mounted()
+> >  {
+> >  	local dev=$1
+> > diff --git a/tests/xfs/122 b/tests/xfs/122
+> > index 91083d6036..e616f1987d 100755
+> > --- a/tests/xfs/122
+> > +++ b/tests/xfs/122
+> > @@ -17,6 +17,11 @@ _begin_fstest other auto quick clone realtime
+> >  _supported_fs xfs
+> >  _require_command "$INDENT_PROG" indent
+> >  
+> > +# Starting in Linux 6.1, the EFI log formats were adjusted away from using
+> > +# single-element arrays as flex arrays.
+> > +_wants_kernel_commit 03a7485cd701 \
+> > +	"xfs: fix memcpy fortify errors in EFI log format copying"
+> > +
+> >  # filter out known changes to xfs type sizes
+> >  _type_size_filter()
+> >  {
+> > diff --git a/tests/xfs/122.out b/tests/xfs/122.out
+> > index a56cbee84f..95e53c5081 100644
+> > --- a/tests/xfs/122.out
+> > +++ b/tests/xfs/122.out
+> > @@ -161,10 +161,10 @@ sizeof(xfs_disk_dquot_t) = 104
+> >  sizeof(xfs_dq_logformat_t) = 24
+> >  sizeof(xfs_dqblk_t) = 136
+> >  sizeof(xfs_dsb_t) = 264
+> > -sizeof(xfs_efd_log_format_32_t) = 28
+> > -sizeof(xfs_efd_log_format_64_t) = 32
+> > -sizeof(xfs_efi_log_format_32_t) = 28
+> > -sizeof(xfs_efi_log_format_64_t) = 32
+> > +sizeof(xfs_efd_log_format_32_t) = 16
+> > +sizeof(xfs_efd_log_format_64_t) = 16
+> > +sizeof(xfs_efi_log_format_32_t) = 16
+> > +sizeof(xfs_efi_log_format_64_t) = 16
+> >  sizeof(xfs_error_injection_t) = 8
+> >  sizeof(xfs_exntfmt_t) = 4
+> >  sizeof(xfs_exntst_t) = 4
+> > 
 > 
