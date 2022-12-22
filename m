@@ -2,57 +2,73 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82F45C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Dec 2022 07:44:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02F92C001B2
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Dec 2022 16:52:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234981AbiLVHoT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Dec 2022 02:44:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46792 "EHLO
+        id S229807AbiLVQwD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Dec 2022 11:52:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54612 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229922AbiLVHoS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Dec 2022 02:44:18 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 270BD1A07C
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Dec 2022 23:44:18 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A63BE619E2
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Dec 2022 07:44:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A6ADC433EF
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Dec 2022 07:44:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671695057;
-        bh=xFAVifJ94TtT1Nn/APfnNNJcFEOb2qU2eJn8guN7u68=;
-        h=Date:From:To:Subject:From;
-        b=SZZYTJY6WyufEwYw3fs5V93Fta/lWkFHM1nryW0kTOzuYy+3fTTS8P7QFpv0UX1qA
-         6JJyxHRup5cwXtdPQkkmgz3hVo2bu3lqQMY++9hlcRJrMKyZ6OhMm6t7rNx/WzZNb4
-         XlP9W4g7PMJl4YD47HsLUIHfOrbl3ttQoDjBv9kf15U461gXEZpqkIkW2Np8x6CxbN
-         3sAZ9e10/wl6DMQVFUowYRnYO/p7fQD7UnQ9LpGaKfeo8+aeubtIJbxSEZoOQiJldJ
-         uBrgvGgtuLQHrmCKM9dF8x+SzcjDd2CWQ1Z2IxyLVBxF3D1j7ZOXvRszsJlB9iPwhG
-         HHqgSD2B0R0pw==
-Date:   Thu, 22 Dec 2022 08:44:12 +0100
-From:   Carlos Maiolino <cem@kernel.org>
-To:     linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfsprogs for-next branch updated
-Message-ID: <20221222074412.d6dsmln7zd32blde@andromeda>
+        with ESMTP id S229704AbiLVQvz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Dec 2022 11:51:55 -0500
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2EC231ED4
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Dec 2022 08:51:54 -0800 (PST)
+Received: from cwcc.thunk.org (pool-173-48-120-46.bstnma.fios.verizon.net [173.48.120.46])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 2BMGpOt9009971
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 22 Dec 2022 11:51:24 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
+        t=1671727886; bh=8VQE476fItcQEyvNi8YKNC8SHTVYFOvKq/RWJ11ZYc4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To;
+        b=Y1HUp4TlkjWs/IvOpsjLbqbpZe+niMvbTyQFgq18Rn7JlP6ObL6lD9ZL5Xnb/S0ue
+         7iHqTFmahQYKRygUKPKZDG8lqTJ8ZzzJIfFiovx5n6ShIphokTD5AF1yJhNOU8A8O2
+         hyU19A5xaWaML2UA+BXAGFCY3f51984ew9C5fSNV8mrd9gB2NefJn6U/o338pQKl16
+         bWZ/t/Sf4bjjkjzOCuuRpEy4IFbCPX2c+X/kAQAFZW9JzTBbaQhIiLnUcUTH6208gg
+         7unZOMQnyuw8bTiHMGjyn04+lWpvvkSCvQzOVH/QpmmM3Q4olO1oAhAP6SHieRES+t
+         JdB6A/aagyooQ==
+Received: by cwcc.thunk.org (Postfix, from userid 15806)
+        id C831615C39F2; Thu, 22 Dec 2022 11:51:23 -0500 (EST)
+Date:   Thu, 22 Dec 2022 11:51:23 -0500
+From:   "Theodore Ts'o" <tytso@mit.edu>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-fscrypt@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net
+Subject: Re: Separate mailing list (and git and patchwork) for fsverity?
+Message-ID: <Y6SLC9DG1s/4NhPL@mit.edu>
+References: <Y5jRbLEJh3S46Jer@sol.localdomain>
+ <Y6ObULdVm2UN5kw1@sol.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <Y6ObULdVm2UN5kw1@sol.localdomain>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello folks.
+On Wed, Dec 21, 2022 at 03:48:32PM -0800, Eric Biggers wrote:
+> > What would people say about having a separate mailing list, git repo, and
+> > patchwork project for fsverity?  So the fsverity entry would look like:
+> > 
+> > FSVERITY: READ-ONLY FILE-BASED AUTHENTICITY PROTECTION
+> > [...]
+> > L:      linux-fsverity@vger.kernel.org
+> > Q:      https://patchwork.kernel.org/project/linux-fsverity/list/
+> > T:      git git://git.kernel.org/pub/scm/fs/fsverity/fsverity.git
+> > [...]
 
-This is an 'extra' xfsprogs for-next branch update before the v6.1 release on
-tomorrow, so that we can include a xfs_db fix in the new version.
+This makes sense to me.  I wonder if we should use the new
+https://lists.linux.dev mailing list hosting service with a mailing
+list name fsverity@lsts.linux.dev?
 
-This update only contains this commit:
+The thinking was that we would eventually migrate lists from vger to
+the new list infrastructure, so it might make sense to just use it for
+a new list.  All mailing lists lists.linux.dev are archived on
+lore.kernel.org, so other than the e-mail address and using something
+a bit more modern than Majordomo for list management, it's mostly the
+same.
 
-Darrick J. Wong (1):
-      7374f58bf xfs_db: fix dir3 block magic check
-
-
--- 
-Carlos Maiolino
+						- Ted
