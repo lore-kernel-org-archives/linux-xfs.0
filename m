@@ -2,44 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38B19C3DA79
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Dec 2022 20:37:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47470C54EBF
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Dec 2022 20:37:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233273AbiLWUhA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Dec 2022 15:37:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56426 "EHLO
+        id S229937AbiLWUhF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Dec 2022 15:37:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56430 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232902AbiLWUg7 (ORCPT
+        with ESMTP id S232894AbiLWUg7 (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Dec 2022 15:36:59 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 013C81DA4E;
-        Fri, 23 Dec 2022 12:36:57 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A74B31DA52;
+        Fri, 23 Dec 2022 12:36:58 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 617AB60AC5;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 221B061EF8;
+        Fri, 23 Dec 2022 20:36:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0D06C433D2;
         Fri, 23 Dec 2022 20:36:57 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AB06C433F1;
-        Fri, 23 Dec 2022 20:36:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671827816;
-        bh=t0yAzf0aY4TIwKR3lJb5ncYuHOsUm40J81t2ZXzWYCw=;
+        s=k20201202; t=1671827817;
+        bh=Z8CoE1PrgXB4eCUJFPaeZnMBi1T65cAAQrdPuKXjbOU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OrB9nct0a4D75w6OZb/PSADeO79+yJwZst83UJeD+WY4kVJr7xzqBKafuOYGiydbt
-         DFBA/1jsp1UtZ45r05r5BpGhQn58FTfFYWUxdIug8yNDjXpbK1Jk56GbMRE6MTPX/X
-         Jg1i+Tk1sadNzYRvqZWbUb1umRD1ailVYXQV97mbspBG8y7C57Z3oLQXhXKYeJPHM4
-         +o+7Iyok+em4Zkzw2AkQI+IY8ysPbxMU818Q8qOqubpg5WNVStEQF6M3vNB2sPo8VF
-         pneBVurJaEV04Vc1JTOKA10j3s8g/EK1VOdp+hMlfzjzMoe1qWQmZkrO1LHjpjJAIb
-         ast7KgPHOwJDA==
+        b=eCLe0H2xFKnziAiqA2LNbf2DlfdqUPb/wum6IDM32pPVFT/cKXXtSWm14HjE4+Qjq
+         DFVdyJ76MyUk00jJ9ZNdS5Emr5EPZsLOExbHr+EVn6ADX6sznqcDox+alvSDym6qBU
+         GaBvJdK1PG2B7ztRY/vTIuTRoTRQoY0T/nmBF7O5b6clLy12I4r18+8EQslc66iPdu
+         YUndUmZry26NfrH+dYisSN06/Imxj9koAbw07slDBCXsxxci7v6qjtNQSMMEBYHvrv
+         1qGcgrGGbg/Wxz1MmNaw/uXD7VezoenL7uG3JMipXFVsdoFQeeYmcRJpglaKysu5YD
+         v8kkjgNQDRqzQ==
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-fscrypt@vger.kernel.org
 Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net,
         linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org,
         Andrey Albershteyn <aalbersh@redhat.com>
-Subject: [PATCH v2 02/11] fsverity: simplify Merkle tree readahead size calculation
-Date:   Fri, 23 Dec 2022 12:36:29 -0800
-Message-Id: <20221223203638.41293-3-ebiggers@kernel.org>
+Subject: [PATCH v2 05/11] fsverity: replace fsverity_hash_page() with fsverity_hash_block()
+Date:   Fri, 23 Dec 2022 12:36:32 -0800
+Message-Id: <20221223203638.41293-6-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20221223203638.41293-1-ebiggers@kernel.org>
 References: <20221223203638.41293-1-ebiggers@kernel.org>
@@ -51,128 +51,143 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Eric Biggers <ebiggers@google.com>
 
-First, calculate max_ra_pages more efficiently by using the bio size.
+In preparation for allowing the Merkle tree block size to differ from
+PAGE_SIZE, replace fsverity_hash_page() with fsverity_hash_block().  The
+new function is similar to the old one, but it operates on the block at
+the given offset in the page instead of on the full page.
 
-Second, calculate the number of readahead pages from the hash page
-index, instead of calculating it ahead of time using the data page
-index.  This ends up being a bit simpler, especially since level 0 is
-last in the tree, so we can just limit the readahead to the tree size.
+(For now, all callers still pass a full page.)
 
 Signed-off-by: Eric Biggers <ebiggers@google.com>
 ---
- fs/verity/fsverity_private.h |  2 +-
- fs/verity/open.c             |  3 ++-
- fs/verity/verify.c           | 21 +++++++--------------
- 3 files changed, 10 insertions(+), 16 deletions(-)
+ fs/verity/enable.c           |  4 ++--
+ fs/verity/fsverity_private.h |  6 +++---
+ fs/verity/hash_algs.c        | 24 +++++++++++-------------
+ fs/verity/verify.c           |  9 +++++----
+ 4 files changed, 21 insertions(+), 22 deletions(-)
 
+diff --git a/fs/verity/enable.c b/fs/verity/enable.c
+index 8a9189d479837..144483319f1a3 100644
+--- a/fs/verity/enable.c
++++ b/fs/verity/enable.c
+@@ -99,8 +99,8 @@ static int build_merkle_tree_level(struct file *filp, unsigned int level,
+ 			}
+ 		}
+ 
+-		err = fsverity_hash_page(params, inode, req, src_page,
+-					 &pending_hashes[pending_size]);
++		err = fsverity_hash_block(params, inode, req, src_page, 0,
++					  &pending_hashes[pending_size]);
+ 		put_page(src_page);
+ 		if (err)
+ 			return err;
 diff --git a/fs/verity/fsverity_private.h b/fs/verity/fsverity_private.h
-index e8b40c8000be7..48b97f5d05569 100644
+index fc1c2797fab19..23ded939d649f 100644
 --- a/fs/verity/fsverity_private.h
 +++ b/fs/verity/fsverity_private.h
-@@ -46,7 +46,7 @@ struct merkle_tree_params {
- 	unsigned int log_arity;		/* log2(hashes_per_block) */
- 	unsigned int num_levels;	/* number of levels in Merkle tree */
- 	u64 tree_size;			/* Merkle tree size in bytes */
--	unsigned long level0_blocks;	/* number of blocks in tree level 0 */
-+	unsigned long tree_pages;	/* Merkle tree size in pages */
+@@ -88,9 +88,9 @@ void fsverity_free_hash_request(struct fsverity_hash_alg *alg,
+ 				struct ahash_request *req);
+ const u8 *fsverity_prepare_hash_state(struct fsverity_hash_alg *alg,
+ 				      const u8 *salt, size_t salt_size);
+-int fsverity_hash_page(const struct merkle_tree_params *params,
+-		       const struct inode *inode,
+-		       struct ahash_request *req, struct page *page, u8 *out);
++int fsverity_hash_block(const struct merkle_tree_params *params,
++			const struct inode *inode, struct ahash_request *req,
++			struct page *page, unsigned int offset, u8 *out);
+ int fsverity_hash_buffer(struct fsverity_hash_alg *alg,
+ 			 const void *data, size_t size, u8 *out);
+ void __init fsverity_check_hash_algs(void);
+diff --git a/fs/verity/hash_algs.c b/fs/verity/hash_algs.c
+index 6f8170cf4ae71..13fcf31be8441 100644
+--- a/fs/verity/hash_algs.c
++++ b/fs/verity/hash_algs.c
+@@ -220,35 +220,33 @@ const u8 *fsverity_prepare_hash_state(struct fsverity_hash_alg *alg,
+ }
  
- 	/*
- 	 * Starting block index for each tree level, ordered from leaf level (0)
-diff --git a/fs/verity/open.c b/fs/verity/open.c
-index 83ccc3c137363..e356eefb54d7b 100644
---- a/fs/verity/open.c
-+++ b/fs/verity/open.c
-@@ -7,6 +7,7 @@
+ /**
+- * fsverity_hash_page() - hash a single data or hash page
++ * fsverity_hash_block() - hash a single data or hash block
+  * @params: the Merkle tree's parameters
+  * @inode: inode for which the hashing is being done
+  * @req: preallocated hash request
+- * @page: the page to hash
++ * @page: the page containing the block to hash
++ * @offset: the offset of the block within @page
+  * @out: output digest, size 'params->digest_size' bytes
+  *
+- * Hash a single data or hash block, assuming block_size == PAGE_SIZE.
+- * The hash is salted if a salt is specified in the Merkle tree parameters.
++ * Hash a single data or hash block.  The hash is salted if a salt is specified
++ * in the Merkle tree parameters.
+  *
+  * Return: 0 on success, -errno on failure
+  */
+-int fsverity_hash_page(const struct merkle_tree_params *params,
+-		       const struct inode *inode,
+-		       struct ahash_request *req, struct page *page, u8 *out)
++int fsverity_hash_block(const struct merkle_tree_params *params,
++			const struct inode *inode, struct ahash_request *req,
++			struct page *page, unsigned int offset, u8 *out)
+ {
+ 	struct scatterlist sg;
+ 	DECLARE_CRYPTO_WAIT(wait);
+ 	int err;
  
- #include "fsverity_private.h"
+-	if (WARN_ON(params->block_size != PAGE_SIZE))
+-		return -EINVAL;
+-
+ 	sg_init_table(&sg, 1);
+-	sg_set_page(&sg, page, PAGE_SIZE, 0);
++	sg_set_page(&sg, page, params->block_size, offset);
+ 	ahash_request_set_callback(req, CRYPTO_TFM_REQ_MAY_SLEEP |
+ 					CRYPTO_TFM_REQ_MAY_BACKLOG,
+ 				   crypto_req_done, &wait);
+-	ahash_request_set_crypt(req, &sg, out, PAGE_SIZE);
++	ahash_request_set_crypt(req, &sg, out, params->block_size);
  
-+#include <linux/mm.h>
- #include <linux/slab.h>
+ 	if (params->hashstate) {
+ 		err = crypto_ahash_import(req, params->hashstate);
+@@ -264,7 +262,7 @@ int fsverity_hash_page(const struct merkle_tree_params *params,
  
- static struct kmem_cache *fsverity_info_cachep;
-@@ -97,7 +98,6 @@ int fsverity_init_merkle_tree_params(struct merkle_tree_params *params,
- 			 params->log_arity;
- 		blocks_in_level[params->num_levels++] = blocks;
- 	}
--	params->level0_blocks = blocks_in_level[0];
+ 	err = crypto_wait_req(err, &wait);
+ 	if (err)
+-		fsverity_err(inode, "Error %d computing page hash", err);
++		fsverity_err(inode, "Error %d computing block hash", err);
+ 	return err;
+ }
  
- 	/* Compute the starting block of each level */
- 	offset = 0;
-@@ -118,6 +118,7 @@ int fsverity_init_merkle_tree_params(struct merkle_tree_params *params,
- 	}
- 
- 	params->tree_size = offset << log_blocksize;
-+	params->tree_pages = PAGE_ALIGN(params->tree_size) >> PAGE_SHIFT;
- 	return 0;
- 
- out_err:
 diff --git a/fs/verity/verify.c b/fs/verity/verify.c
-index de0d7aef785bf..4c57a1bd01afc 100644
+index d2fcb6a21ea8e..44df06ddcc603 100644
 --- a/fs/verity/verify.c
 +++ b/fs/verity/verify.c
-@@ -74,7 +74,7 @@ static inline int cmp_hashes(const struct fsverity_info *vi,
-  */
- static bool verify_page(struct inode *inode, const struct fsverity_info *vi,
- 			struct ahash_request *req, struct page *data_page,
--			unsigned long level0_ra_pages)
-+			unsigned long max_ra_pages)
- {
- 	const struct merkle_tree_params *params = &vi->tree_params;
- 	const unsigned int hsize = params->digest_size;
-@@ -103,7 +103,8 @@ static bool verify_page(struct inode *inode, const struct fsverity_info *vi,
- 		hash_at_level(params, index, level, &hindex, &hoffset);
+@@ -125,12 +125,13 @@ static bool verify_page(struct inode *inode, const struct fsverity_info *vi,
  
- 		hpage = inode->i_sb->s_vop->read_merkle_tree_page(inode, hindex,
--				level == 0 ? level0_ra_pages : 0);
-+				level == 0 ? min(max_ra_pages,
-+					params->tree_pages - hindex) : 0);
- 		if (IS_ERR(hpage)) {
- 			err = PTR_ERR(hpage);
- 			fsverity_err(inode,
-@@ -199,14 +200,13 @@ void fsverity_verify_bio(struct bio *bio)
- {
- 	struct inode *inode = bio_first_page_all(bio)->mapping->host;
- 	const struct fsverity_info *vi = inode->i_verity_info;
--	const struct merkle_tree_params *params = &vi->tree_params;
- 	struct ahash_request *req;
- 	struct bio_vec *bv;
- 	struct bvec_iter_all iter_all;
- 	unsigned long max_ra_pages = 0;
+ 	want_hash = vi->root_hash;
+ descend:
+-	/* Descend the tree verifying hash pages */
++	/* Descend the tree verifying hash blocks. */
+ 	for (; level > 0; level--) {
+ 		struct page *hpage = hpages[level - 1];
+ 		unsigned int hoffset = hoffsets[level - 1];
  
- 	/* This allocation never fails, since it's mempool-backed. */
--	req = fsverity_alloc_hash_request(params->hash_alg, GFP_NOFS);
-+	req = fsverity_alloc_hash_request(vi->tree_params.hash_alg, GFP_NOFS);
- 
- 	if (bio->bi_opf & REQ_RAHEAD) {
- 		/*
-@@ -218,24 +218,17 @@ void fsverity_verify_bio(struct bio *bio)
- 		 * This improves sequential read performance, as it greatly
- 		 * reduces the number of I/O requests made to the Merkle tree.
- 		 */
--		bio_for_each_segment_all(bv, bio, iter_all)
--			max_ra_pages++;
--		max_ra_pages /= 4;
-+		max_ra_pages = bio->bi_iter.bi_size >> (PAGE_SHIFT + 2);
+-		err = fsverity_hash_page(params, inode, req, hpage, real_hash);
++		err = fsverity_hash_block(params, inode, req, hpage, 0,
++					  real_hash);
+ 		if (err)
+ 			goto out;
+ 		err = cmp_hashes(vi, want_hash, real_hash, index, level - 1);
+@@ -142,8 +143,8 @@ static bool verify_page(struct inode *inode, const struct fsverity_info *vi,
+ 		put_page(hpage);
  	}
  
- 	bio_for_each_segment_all(bv, bio, iter_all) {
--		struct page *page = bv->bv_page;
--		unsigned long level0_index = page->index >> params->log_arity;
--		unsigned long level0_ra_pages =
--			min(max_ra_pages, params->level0_blocks - level0_index);
--
--		if (!verify_page(inode, vi, req, page, level0_ra_pages)) {
-+		if (!verify_page(inode, vi, req, bv->bv_page, max_ra_pages)) {
- 			bio->bi_status = BLK_STS_IOERR;
- 			break;
- 		}
- 	}
- 
--	fsverity_free_hash_request(params->hash_alg, req);
-+	fsverity_free_hash_request(vi->tree_params.hash_alg, req);
- }
- EXPORT_SYMBOL_GPL(fsverity_verify_bio);
- #endif /* CONFIG_BLOCK */
+-	/* Finally, verify the data page */
+-	err = fsverity_hash_page(params, inode, req, data_page, real_hash);
++	/* Finally, verify the data block. */
++	err = fsverity_hash_block(params, inode, req, data_page, 0, real_hash);
+ 	if (err)
+ 		goto out;
+ 	err = cmp_hashes(vi, want_hash, real_hash, index, -1);
 -- 
 2.39.0
 
