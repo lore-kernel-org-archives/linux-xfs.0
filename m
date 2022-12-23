@@ -2,139 +2,177 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E038FC3DA7D
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Dec 2022 20:37:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38B19C3DA79
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Dec 2022 20:37:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233226AbiLWUhA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S233273AbiLWUhA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Fri, 23 Dec 2022 15:37:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56414 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232555AbiLWUg6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Dec 2022 15:36:58 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15F581D307;
-        Fri, 23 Dec 2022 12:36:56 -0800 (PST)
+        with ESMTP id S232902AbiLWUg7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Dec 2022 15:36:59 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 013C81DA4E;
+        Fri, 23 Dec 2022 12:36:57 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 95C8861D28;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 617AB60AC5;
+        Fri, 23 Dec 2022 20:36:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AB06C433F1;
         Fri, 23 Dec 2022 20:36:56 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1111C433D2;
-        Fri, 23 Dec 2022 20:36:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1671827816;
-        bh=kuHoLDiwzIWt/yosaiuNbL76iPgmKQeB3oMrh4p5xhg=;
-        h=From:To:Cc:Subject:Date:From;
-        b=B7Cu5MHwFXyHpkWZYORJe5npw6Jrf1ax1VKcHSg3IFIcJDzGR9a97Ncit2dNZPAIn
-         zchceSAsxgUW9LWZwY+Qs21W42THfLhyb73HWKYCQMD6C3nyrNmv03p6rEqIKff2vX
-         rGocAZ5zYfyRKsGNeRx5kmBn6OpsxJaxvfI0pqee3hx1HNdZXebmxhO1m0ANxY9Osp
-         w/RSqDNgQw3oGnoM8VKaM1pEOZnyb0VQUtFSgmrbPXZ4DFlh6cLeHnmzpgqJ0IJS7e
-         oHfsWT1U3jch+XCx3vCHk3VC1pQueY3KEUpgWxfGU6DxWmkttz2NYAqCwQeIyJzmL0
-         RCxP/GM9U3Qmg==
+        bh=t0yAzf0aY4TIwKR3lJb5ncYuHOsUm40J81t2ZXzWYCw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=OrB9nct0a4D75w6OZb/PSADeO79+yJwZst83UJeD+WY4kVJr7xzqBKafuOYGiydbt
+         DFBA/1jsp1UtZ45r05r5BpGhQn58FTfFYWUxdIug8yNDjXpbK1Jk56GbMRE6MTPX/X
+         Jg1i+Tk1sadNzYRvqZWbUb1umRD1ailVYXQV97mbspBG8y7C57Z3oLQXhXKYeJPHM4
+         +o+7Iyok+em4Zkzw2AkQI+IY8ysPbxMU818Q8qOqubpg5WNVStEQF6M3vNB2sPo8VF
+         pneBVurJaEV04Vc1JTOKA10j3s8g/EK1VOdp+hMlfzjzMoe1qWQmZkrO1LHjpjJAIb
+         ast7KgPHOwJDA==
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-fscrypt@vger.kernel.org
 Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net,
         linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org,
         Andrey Albershteyn <aalbersh@redhat.com>
-Subject: [PATCH v2 00/11] fsverity: support for non-4K pages
-Date:   Fri, 23 Dec 2022 12:36:27 -0800
-Message-Id: <20221223203638.41293-1-ebiggers@kernel.org>
+Subject: [PATCH v2 02/11] fsverity: simplify Merkle tree readahead size calculation
+Date:   Fri, 23 Dec 2022 12:36:29 -0800
+Message-Id: <20221223203638.41293-3-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.39.0
+In-Reply-To: <20221223203638.41293-1-ebiggers@kernel.org>
+References: <20221223203638.41293-1-ebiggers@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-[This patchset applies to mainline + some fsverity cleanups I sent out
- recently.  You can get everything from tag "fsverity-non4k-v2" of
- https://git.kernel.org/pub/scm/fs/fscrypt/fscrypt.git ]
+From: Eric Biggers <ebiggers@google.com>
 
-Currently, filesystems (ext4, f2fs, and btrfs) only support fsverity
-when the Merkle tree block size, filesystem block size, and page size
-are all the same.  In practice that means 4K, since increasing the page
-size, e.g. to 16K, forces the Merkle tree block size and filesystem
-block size to be increased accordingly.  That can be impractical; for
-one, users want the same file signatures to work on all systems.
+First, calculate max_ra_pages more efficiently by using the bio size.
 
-Therefore, this patchset reduces the coupling between these sizes.
+Second, calculate the number of readahead pages from the hash page
+index, instead of calculating it ahead of time using the data page
+index.  This ends up being a bit simpler, especially since level 0 is
+last in the tree, so we can just limit the readahead to the tree size.
 
-First, patches 1-4 are cleanups.
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ fs/verity/fsverity_private.h |  2 +-
+ fs/verity/open.c             |  3 ++-
+ fs/verity/verify.c           | 21 +++++++--------------
+ 3 files changed, 10 insertions(+), 16 deletions(-)
 
-Second, patches 5-9 allow the Merkle tree block size to be less than the
-page size or filesystem block size, provided that it's not larger than
-either one.  This involves, among other things, changing the way that
-fs/verity/verify.c tracks which hash blocks have been verified.
-
-Finally, patches 10-11 make ext4 support fsverity when the filesystem
-block size is less than the page size.  Note, f2fs doesn't need similar
-changes because f2fs always assumes that the filesystem block size and
-page size are the same anyway.  I haven't looked into btrfs yet.
-
-I've tested this patchset using the "verity" group of tests in xfstests
-with the following xfstests patchset applied:
-"[PATCH v2 00/10] xfstests: update verity tests for non-4K block and page size"
-(https://lore.kernel.org/fstests/20221223010554.281679-1-ebiggers@kernel.org/T/#u)
-
-Note: on the thread "[RFC PATCH 00/11] fs-verity support for XFS"
-(https://lore.kernel.org/linux-xfs/20221213172935.680971-1-aalbersh@redhat.com/T/#u)
-there have been many requests for other things to support, including:
-
-  * folios in the pagecache
-  * alternative Merkle tree caching methods
-  * direct I/O
-  * merkle_tree_block_size > page_size
-  * extremely large files, using a reclaimable bitmap
-
-We shouldn't try to boil the ocean, though, so to keep the scope of this
-patchset manageable I haven't changed it significantly from v1.  This
-patchset does bring us closer to many of the above, just not all the way
-there.  I'd like to follow up this patchset with a change to support
-folios, which should be straightforward.  Next, we can do a change to
-generalize the Merkle tree interface to allow XFS to use an alternative
-caching method, as that sounds like the highest priority item for XFS.
-
-Anyway, the changelog is:
-
-Changed in v2:
-   - Rebased onto the recent fsverity cleanups.
-   - Split some parts of the big "support verification" patch into
-     separate patches.
-   - Passed the data_pos to verify_data_block() instead of computing it
-     using page->index, to make it ready for folio and DIO support.
-   - Eliminated some unnecessary arithmetic in verify_data_block().
-   - Changed the log_* fields in merkle_tree_params to u8.
-   - Restored PageLocked and !PageUptodate checks for pagecache pages.
-   - Eliminated the change to fsverity_hash_buffer().
-   - Other small cleanups
-
-Eric Biggers (11):
-  fsverity: use unsigned long for level_start
-  fsverity: simplify Merkle tree readahead size calculation
-  fsverity: store log2(digest_size) precomputed
-  fsverity: use EFBIG for file too large to enable verity
-  fsverity: replace fsverity_hash_page() with fsverity_hash_block()
-  fsverity: support verification with tree block size < PAGE_SIZE
-  fsverity: support enabling with tree block size < PAGE_SIZE
-  ext4: simplify ext4_readpage_limit()
-  f2fs: simplify f2fs_readpage_limit()
-  fs/buffer.c: support fsverity in block_read_full_folio()
-  ext4: allow verity with fs block size < PAGE_SIZE
-
- Documentation/filesystems/fsverity.rst |  76 +++---
- fs/buffer.c                            |  67 ++++-
- fs/ext4/readpage.c                     |   3 +-
- fs/ext4/super.c                        |   5 -
- fs/f2fs/data.c                         |   3 +-
- fs/verity/enable.c                     | 260 ++++++++++----------
- fs/verity/fsverity_private.h           |  20 +-
- fs/verity/hash_algs.c                  |  24 +-
- fs/verity/open.c                       |  98 ++++++--
- fs/verity/verify.c                     | 325 +++++++++++++++++--------
- include/linux/fsverity.h               |  14 +-
- 11 files changed, 565 insertions(+), 330 deletions(-)
-
+diff --git a/fs/verity/fsverity_private.h b/fs/verity/fsverity_private.h
+index e8b40c8000be7..48b97f5d05569 100644
+--- a/fs/verity/fsverity_private.h
++++ b/fs/verity/fsverity_private.h
+@@ -46,7 +46,7 @@ struct merkle_tree_params {
+ 	unsigned int log_arity;		/* log2(hashes_per_block) */
+ 	unsigned int num_levels;	/* number of levels in Merkle tree */
+ 	u64 tree_size;			/* Merkle tree size in bytes */
+-	unsigned long level0_blocks;	/* number of blocks in tree level 0 */
++	unsigned long tree_pages;	/* Merkle tree size in pages */
+ 
+ 	/*
+ 	 * Starting block index for each tree level, ordered from leaf level (0)
+diff --git a/fs/verity/open.c b/fs/verity/open.c
+index 83ccc3c137363..e356eefb54d7b 100644
+--- a/fs/verity/open.c
++++ b/fs/verity/open.c
+@@ -7,6 +7,7 @@
+ 
+ #include "fsverity_private.h"
+ 
++#include <linux/mm.h>
+ #include <linux/slab.h>
+ 
+ static struct kmem_cache *fsverity_info_cachep;
+@@ -97,7 +98,6 @@ int fsverity_init_merkle_tree_params(struct merkle_tree_params *params,
+ 			 params->log_arity;
+ 		blocks_in_level[params->num_levels++] = blocks;
+ 	}
+-	params->level0_blocks = blocks_in_level[0];
+ 
+ 	/* Compute the starting block of each level */
+ 	offset = 0;
+@@ -118,6 +118,7 @@ int fsverity_init_merkle_tree_params(struct merkle_tree_params *params,
+ 	}
+ 
+ 	params->tree_size = offset << log_blocksize;
++	params->tree_pages = PAGE_ALIGN(params->tree_size) >> PAGE_SHIFT;
+ 	return 0;
+ 
+ out_err:
+diff --git a/fs/verity/verify.c b/fs/verity/verify.c
+index de0d7aef785bf..4c57a1bd01afc 100644
+--- a/fs/verity/verify.c
++++ b/fs/verity/verify.c
+@@ -74,7 +74,7 @@ static inline int cmp_hashes(const struct fsverity_info *vi,
+  */
+ static bool verify_page(struct inode *inode, const struct fsverity_info *vi,
+ 			struct ahash_request *req, struct page *data_page,
+-			unsigned long level0_ra_pages)
++			unsigned long max_ra_pages)
+ {
+ 	const struct merkle_tree_params *params = &vi->tree_params;
+ 	const unsigned int hsize = params->digest_size;
+@@ -103,7 +103,8 @@ static bool verify_page(struct inode *inode, const struct fsverity_info *vi,
+ 		hash_at_level(params, index, level, &hindex, &hoffset);
+ 
+ 		hpage = inode->i_sb->s_vop->read_merkle_tree_page(inode, hindex,
+-				level == 0 ? level0_ra_pages : 0);
++				level == 0 ? min(max_ra_pages,
++					params->tree_pages - hindex) : 0);
+ 		if (IS_ERR(hpage)) {
+ 			err = PTR_ERR(hpage);
+ 			fsverity_err(inode,
+@@ -199,14 +200,13 @@ void fsverity_verify_bio(struct bio *bio)
+ {
+ 	struct inode *inode = bio_first_page_all(bio)->mapping->host;
+ 	const struct fsverity_info *vi = inode->i_verity_info;
+-	const struct merkle_tree_params *params = &vi->tree_params;
+ 	struct ahash_request *req;
+ 	struct bio_vec *bv;
+ 	struct bvec_iter_all iter_all;
+ 	unsigned long max_ra_pages = 0;
+ 
+ 	/* This allocation never fails, since it's mempool-backed. */
+-	req = fsverity_alloc_hash_request(params->hash_alg, GFP_NOFS);
++	req = fsverity_alloc_hash_request(vi->tree_params.hash_alg, GFP_NOFS);
+ 
+ 	if (bio->bi_opf & REQ_RAHEAD) {
+ 		/*
+@@ -218,24 +218,17 @@ void fsverity_verify_bio(struct bio *bio)
+ 		 * This improves sequential read performance, as it greatly
+ 		 * reduces the number of I/O requests made to the Merkle tree.
+ 		 */
+-		bio_for_each_segment_all(bv, bio, iter_all)
+-			max_ra_pages++;
+-		max_ra_pages /= 4;
++		max_ra_pages = bio->bi_iter.bi_size >> (PAGE_SHIFT + 2);
+ 	}
+ 
+ 	bio_for_each_segment_all(bv, bio, iter_all) {
+-		struct page *page = bv->bv_page;
+-		unsigned long level0_index = page->index >> params->log_arity;
+-		unsigned long level0_ra_pages =
+-			min(max_ra_pages, params->level0_blocks - level0_index);
+-
+-		if (!verify_page(inode, vi, req, page, level0_ra_pages)) {
++		if (!verify_page(inode, vi, req, bv->bv_page, max_ra_pages)) {
+ 			bio->bi_status = BLK_STS_IOERR;
+ 			break;
+ 		}
+ 	}
+ 
+-	fsverity_free_hash_request(params->hash_alg, req);
++	fsverity_free_hash_request(vi->tree_params.hash_alg, req);
+ }
+ EXPORT_SYMBOL_GPL(fsverity_verify_bio);
+ #endif /* CONFIG_BLOCK */
 -- 
 2.39.0
 
