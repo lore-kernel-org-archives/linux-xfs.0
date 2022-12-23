@@ -2,133 +2,89 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC46FC3DA7C
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Dec 2022 15:10:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 081FDC4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Dec 2022 16:15:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236287AbiLWPKk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Dec 2022 10:10:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46614 "EHLO
+        id S231249AbiLWQPH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Dec 2022 11:15:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230229AbiLWPKj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Dec 2022 10:10:39 -0500
+        with ESMTP id S231279AbiLWQPG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Dec 2022 11:15:06 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3478826ADF;
-        Fri, 23 Dec 2022 07:10:39 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76F5B3EAEF;
+        Fri, 23 Dec 2022 08:15:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=2bi42ObmzJhIVRGH9DaM47E730Lbb8ApGNNgjPXCVUQ=; b=brAgZQKgy5qoSpkVGCvPi67iOZ
-        UCsPe+FtDBr/XQU2ezYTH683mETwF8yEEGux2C8f1jTbdW9JLvIfTe8QdXcvyiaL7aQd4Z7ImtZVX
-        G4m4iPP3bCAlUVW1XhIy8Wq1s6eKdLiOBB/oXOHYE648aPig1BkqJKxEtpG4gZz1G18bRZ+Q39B/x
-        7wze59tMR/upOtUZjGLkIEri4YdbcDe4TEzRIwy4CeMmyW2XT2CvTEaSgxEpv3YedkQWPeMFiBzxA
-        PAwfaeeM11Vq00a3r/PBz9rTZEWxraVnxb/Duhy6dacos5vN3z6q1lA8ZhBlGkl3xCQxpB3/OD6ka
-        Ythqya2g==;
+        bh=FOq+IQwreCAb5o5To4xtNwUVGrFfO+bGPhpkASaB1VQ=; b=ecOqksS/Qv7xqVgyuhb9U6fLLC
+        mXCeg0KLXrUw9c3jhI8vITWaPjJc8jxilQlvNuI9QIJ2zEQrn2hEZELq/76mnzJ8LzouIaDlVGiv3
+        y5pFiChIOHF3ytLdNb5U29o/wYDLFJNAVI9DIAPtpsSzRajVSsX9Rve7Z4Gh6ko6t847Go83gzFdB
+        94dchHeXeM6EQTkX4569O15CFh+ICJOc6TatTkNURH4qXfDj7n12xYGGTYtU6JYzwCqhMdIgtJiJT
+        SEGGO+QUHXcfDqkjBXT4rBWJgK27jPfLh5DyaHg6CxNPiLwHLQ8Zwa3zH0YCFw2Gu+fe53NuvpQ7e
+        yHGfVvrw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1p8jgw-009FFs-Ll; Fri, 23 Dec 2022 15:10:34 +0000
-Date:   Fri, 23 Dec 2022 07:10:34 -0800
+        id 1p8khL-009riT-04; Fri, 23 Dec 2022 16:15:03 +0000
+Date:   Fri, 23 Dec 2022 08:15:02 -0800
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Andreas Gruenbacher <agruenba@redhat.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, cluster-devel@redhat.com
-Subject: Re: [RFC v3 6/7] iomap/xfs: Eliminate the iomap_valid handler
-Message-ID: <Y6XE6jLIax/+xcjF@infradead.org>
-References: <20221216150626.670312-1-agruenba@redhat.com>
- <20221216150626.670312-7-agruenba@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        willy@infradead.org
+Subject: Re: [PATCH] [RFC] iomap: zeroing needs to be pagecache aware
+Message-ID: <Y6XUBhYnH4P9oRt8@infradead.org>
+References: <20221201005214.3836105-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221216150626.670312-7-agruenba@redhat.com>
+In-Reply-To: <20221201005214.3836105-1-david@fromorbit.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Dec 16, 2022 at 04:06:25PM +0100, Andreas Gruenbacher wrote:
-> Eliminate the ->iomap_valid() handler by switching to a ->page_prepare()
-> handler and validating the mapping there.
-> 
-> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-> ---
->  fs/iomap/buffered-io.c | 24 ++++--------------------
->  fs/xfs/xfs_iomap.c     | 38 +++++++++++++++++++++++++++-----------
->  include/linux/iomap.h  | 17 -----------------
->  3 files changed, 31 insertions(+), 48 deletions(-)
-> 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 6b7c1a10b8ec..b73ff317da21 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -623,7 +623,7 @@ static int iomap_write_begin(struct iomap_iter *iter, loff_t pos,
->  	const struct iomap_page_ops *page_ops = iter->iomap.page_ops;
->  	const struct iomap *srcmap = iomap_iter_srcmap(iter);
->  	struct folio *folio;
-> -	int status = 0;
-> +	int status;
->  
->  	BUG_ON(pos + len > iter->iomap.offset + iter->iomap.length);
->  	if (srcmap != &iter->iomap)
-> @@ -642,27 +642,11 @@ static int iomap_write_begin(struct iomap_iter *iter, loff_t pos,
->  	if (IS_ERR_OR_NULL(folio)) {
->  		if (!folio)
->  			return (iter->flags & IOMAP_NOWAIT) ? -EAGAIN : -ENOMEM;
-> +		if (folio == ERR_PTR(-ESTALE)) {
->  			iter->iomap.flags |= IOMAP_F_STALE;
-> +			return 0;
->  		}
-> +		return PTR_ERR(folio);
->  	}
->  
->  	if (pos + len > folio_pos(folio) + folio_size(folio))
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 669c1bc5c3a7..2248ce7be2e3 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -62,29 +62,45 @@ xfs_iomap_inode_sequence(
->  	return cookie | READ_ONCE(ip->i_df.if_seq);
->  }
->  
-> -/*
-> - * Check that the iomap passed to us is still valid for the given offset and
-> - * length.
-> - */
-> -static bool
-> -xfs_iomap_valid(
-> -	struct inode		*inode,
-> -	const struct iomap	*iomap)
-> +static struct folio *
-> +xfs_page_prepare(
-> +	struct iomap_iter	*iter,
-> +	loff_t			pos,
-> +	unsigned		len)
->  {
-> +	struct inode		*inode = iter->inode;
-> +	struct iomap		*iomap = &iter->iomap;
->  	struct xfs_inode	*ip = XFS_I(inode);
-> +	struct folio *folio;
+On Thu, Dec 01, 2022 at 11:52:14AM +1100, Dave Chinner wrote:
+>  	folio = __filemap_get_folio(iter->inode->i_mapping, pos >> PAGE_SHIFT,
+>  			fgp, mapping_gfp_mask(iter->inode->i_mapping));
+>  	if (!folio) {
+> -		status = (iter->flags & IOMAP_NOWAIT) ? -EAGAIN : -ENOMEM;
+> +		if (!(fgp & FGP_CREAT))
+> +			status = -ENODATA;
+> +		else if (iter->flags & IOMAP_NOWAIT)
+> +			status = -EAGAIN;
+> +		else
+> +			status = -ENOMEM;
 
-Please tab align this like the other variable declarations above.
+Trying to reverse engineer the error case based on the flags passed
+seems a bit problematic, even if I think for now it mostl still
+works as !FGP_CREAT is exclusive vs IOMAP_NOWAIT.
 
-> -	/*
-> -	 * Check that the cached iomap still maps correctly to the filesystem's
-> -	 * internal extent map. FS internal extent maps can change while iomap
-> -	 * is iterating a cached iomap, so this hook allows iomap to detect that
-> -	 * the iomap needs to be refreshed during a long running write
-> -	 * operation.
-> -	 *
-> -	 * The filesystem can store internal state (e.g. a sequence number) in
-> -	 * iomap->validity_cookie when the iomap is first mapped to be able to
-> -	 * detect changes between mapping time and whenever .iomap_valid() is
-> -	 * called.
-> -	 *
-> -	 * This is called with the folio over the specified file position held
-> -	 * locked by the iomap code.
-> -	 */
+Matthew, what do you think of switching __filemap_get_folio to an
+ERR_PTR return and return actual cause?  Or do we have too many
+callers and need ____filemap_get_folio (urrg..)?
 
-We'll still need to capture this information somewhere.  I'd suggest
-to move it to the prepare/get method and reword it so that this is
-mentioned as an additional use case / requirement.
+> +		status = iomap_write_begin(iter, pos, bytes, &folio, fgp);
+> +		if (status) {
+> +			if (status == -ENODATA) {
+> +				/*
+> +				 * No folio was found, so skip to the start of
+> +				 * the next potential entry in the page cache
+> +				 * and continue from there.
+> +				 */
+> +				if (bytes > PAGE_SIZE - offset_in_page(pos))
+> +					bytes = PAGE_SIZE - offset_in_page(pos);
+> +				goto loop_continue;
+> +			}
+>  			return status;
+> +		}
+
+Nit: I'd check for -ENODATA one level of identation out to keep
+the nesting limited:
+
+		status = iomap_write_begin(iter, pos, bytes, &folio, fgp);
+		if (status == -ENODATA) {
+			...
+			goto loop_continue;
+		}
+		if (status)
+ 			return status;
