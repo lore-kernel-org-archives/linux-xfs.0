@@ -2,173 +2,160 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D006C10F1B
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Dec 2022 07:36:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC198C4708E
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Dec 2022 13:33:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229496AbiL0HgD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Dec 2022 02:36:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47112 "EHLO
+        id S230095AbiL1Nc5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Dec 2022 08:32:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229632AbiL0HgC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Dec 2022 02:36:02 -0500
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CC4ABBB
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Dec 2022 23:35:59 -0800 (PST)
-Received: from dggpemm500014.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Nh5tk6zYmzqTH9;
-        Tue, 27 Dec 2022 15:31:26 +0800 (CST)
-Received: from [10.174.177.211] (10.174.177.211) by
- dggpemm500014.china.huawei.com (7.185.36.153) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.34; Tue, 27 Dec 2022 15:35:57 +0800
-Message-ID: <ef8a958d-741f-5bfd-7b2f-db65bf6dc3ac@huawei.com>
-Date:   Tue, 27 Dec 2022 15:35:57 +0800
+        with ESMTP id S232965AbiL1Ncy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Dec 2022 08:32:54 -0500
+Received: from frasgout13.his.huawei.com (frasgout13.his.huawei.com [14.137.139.46])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A7E1F5A0
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Dec 2022 05:32:51 -0800 (PST)
+Received: from mail02.huawei.com (unknown [172.18.147.228])
+        by frasgout13.his.huawei.com (SkyGuard) with ESMTP id 4Nhshc33pbz9v7Yg
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Dec 2022 21:25:20 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.170])
+        by APP2 (Coremail) with SMTP id BqC_BwDH831tRaxjRYy6AA--.10559S2;
+        Wed, 28 Dec 2022 13:32:37 +0000 (GMT)
+From:   Guo Xuenan <guoxuenan@huawei.com>
+To:     djwong@kernel.org, dchinner@redhat.com, linux-xfs@vger.kernel.org
+Cc:     guoxuenan@huawei.com, guoxuenan@huaweicloud.com,
+        houtao1@huawei.com, jack.qiu@huawei.com, yi.zhang@huawei.com,
+        zhengbin13@huawei.com
+Subject: [PATCH] xfs: fix btree splitting failure when AG space about to be exhausted
+Date:   Wed, 28 Dec 2022 21:32:04 +0800
+Message-Id: <20221228133204.4021519-1-guoxuenan@huawei.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.0.3
-From:   Wu Guanghao <wuguanghao3@huawei.com>
-Subject: [PATCH V2] xfs: Fix deadlock on xfs_inodegc_worker
-To:     Dave Chinner <david@fromorbit.com>, <djwong@kernel.org>
-CC:     <guoxuenan@huawei.com>,
-        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>,
-        <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.177.211]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- dggpemm500014.china.huawei.com (7.185.36.153)
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: BqC_BwDH831tRaxjRYy6AA--.10559S2
+X-Coremail-Antispam: 1UD129KBjvJXoW3WrW3Xr15WF1DGw1DZr1xAFb_yoW7Aw4rpr
+        W2kw1fGa9IqF10grs0qw1kK3WrKayrur4UJrnYgr18ZrZxG3Z2grnYkr4UZa47Arn5W3Wj
+        qr40vw47AFyUAaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUvGb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Jr0_Gr1l84ACjcxK6I8E87Iv67AKxVW8JVWxJwA2z4x0Y4vEx4A2jsIEc7CjxV
+        AFwI0_Gr0_Gr1UM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+        x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+        0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7Iv64x0x7Aq67IIx4CEVc8vx2IErcIFxwCF
+        04k20xvY0x0EwIxGrwCF04k20xvEw4C26cxK6c8Ij28IcwCFx2IqxVCFs4IE7xkEbVWUJV
+        W8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF
+        1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6x
+        IIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAI
+        cVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa
+        73UjIFyTuYvjxUFjg4DUUUU
+Sender: guoxuenan@huaweicloud.com
+X-CM-SenderInfo: xjxr53hhqd0q5kxd4v5lfo033gof0z/
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-We are doing a test about deleting a large number of files
-when memory is low. A deadlock problem was found.
+Recently, I noticed an special problem on our products. The disk space
+is sufficient, while encounter btree split failure. After looking inside
+the disk, I found the specific AG space is about to be exhausted.
+More seriously, under this special situation, btree split failure will
+always be triggered and XFS filesystem is unavailable.
 
-[ 1240.279183] -> #1 (fs_reclaim){+.+.}-{0:0}:
-[ 1240.280450]        lock_acquire+0x197/0x460
-[ 1240.281548]        fs_reclaim_acquire.part.0+0x20/0x30
-[ 1240.282625]        kmem_cache_alloc+0x2b/0x940
-[ 1240.283816]        xfs_trans_alloc+0x8a/0x8b0
-[ 1240.284757]        xfs_inactive_ifree+0xe4/0x4e0
-[ 1240.285935]        xfs_inactive+0x4e9/0x8a0
-[ 1240.286836]        xfs_inodegc_worker+0x160/0x5e0
-[ 1240.287969]        process_one_work+0xa19/0x16b0
-[ 1240.289030]        worker_thread+0x9e/0x1050
-[ 1240.290131]        kthread+0x34f/0x460
-[ 1240.290999]        ret_from_fork+0x22/0x30
-[ 1240.291905]
-[ 1240.291905] -> #0 ((work_completion)(&gc->work)){+.+.}-{0:0}:
-[ 1240.293569]        check_prev_add+0x160/0x2490
-[ 1240.294473]        __lock_acquire+0x2c4d/0x5160
-[ 1240.295544]        lock_acquire+0x197/0x460
-[ 1240.296403]        __flush_work+0x6bc/0xa20
-[ 1240.297522]        xfs_inode_mark_reclaimable+0x6f0/0xdc0
-[ 1240.298649]        destroy_inode+0xc6/0x1b0
-[ 1240.299677]        dispose_list+0xe1/0x1d0
-[ 1240.300567]        prune_icache_sb+0xec/0x150
-[ 1240.301794]        super_cache_scan+0x2c9/0x480
-[ 1240.302776]        do_shrink_slab+0x3f0/0xaa0
-[ 1240.303671]        shrink_slab+0x170/0x660
-[ 1240.304601]        shrink_node+0x7f7/0x1df0
-[ 1240.305515]        balance_pgdat+0x766/0xf50
-[ 1240.306657]        kswapd+0x5bd/0xd20
-[ 1240.307551]        kthread+0x34f/0x460
-[ 1240.308346]        ret_from_fork+0x22/0x30
-[ 1240.309247]
-[ 1240.309247] other info that might help us debug this:
-[ 1240.309247]
-[ 1240.310944]  Possible unsafe locking scenario:
-[ 1240.310944]
-[ 1240.312379]        CPU0                    CPU1
-[ 1240.313363]        ----                    ----
-[ 1240.314433]   lock(fs_reclaim);
-[ 1240.315107]                                lock((work_completion)(&gc->work));
-[ 1240.316828]                                lock(fs_reclaim);
-[ 1240.318088]   lock((work_completion)(&gc->work));
-[ 1240.319203]
-[ 1240.319203]  *** DEADLOCK ***
-...
-[ 2438.431081] Workqueue: xfs-inodegc/sda xfs_inodegc_worker
-[ 2438.432089] Call Trace:
-[ 2438.432562]  __schedule+0xa94/0x1d20
-[ 2438.435787]  schedule+0xbf/0x270
-[ 2438.436397]  schedule_timeout+0x6f8/0x8b0
-[ 2438.445126]  wait_for_completion+0x163/0x260
-[ 2438.448610]  __flush_work+0x4c4/0xa40
-[ 2438.455011]  xfs_inode_mark_reclaimable+0x6ef/0xda0
-[ 2438.456695]  destroy_inode+0xc6/0x1b0
-[ 2438.457375]  dispose_list+0xe1/0x1d0
-[ 2438.458834]  prune_icache_sb+0xe8/0x150
-[ 2438.461181]  super_cache_scan+0x2b3/0x470
-[ 2438.461950]  do_shrink_slab+0x3cf/0xa50
-[ 2438.462687]  shrink_slab+0x17d/0x660
-[ 2438.466392]  shrink_node+0x87e/0x1d40
-[ 2438.467894]  do_try_to_free_pages+0x364/0x1300
-[ 2438.471188]  try_to_free_pages+0x26c/0x5b0
-[ 2438.473567]  __alloc_pages_slowpath.constprop.136+0x7aa/0x2100
-[ 2438.482577]  __alloc_pages+0x5db/0x710
-[ 2438.485231]  alloc_pages+0x100/0x200
-[ 2438.485923]  allocate_slab+0x2c0/0x380
-[ 2438.486623]  ___slab_alloc+0x41f/0x690
-[ 2438.490254]  __slab_alloc+0x54/0x70
-[ 2438.491692]  kmem_cache_alloc+0x23e/0x270
-[ 2438.492437]  xfs_trans_alloc+0x88/0x880
-[ 2438.493168]  xfs_inactive_ifree+0xe2/0x4e0
-[ 2438.496419]  xfs_inactive+0x4eb/0x8b0
-[ 2438.497123]  xfs_inodegc_worker+0x16b/0x5e0
-[ 2438.497918]  process_one_work+0xbf7/0x1a20
-[ 2438.500316]  worker_thread+0x8c/0x1060
-[ 2438.504938]  ret_from_fork+0x22/0x30
+After analysis the disk image and the AG, which seem same as Gao Xiang met
+before [1], The slight difference is my problem is triggered by creating
+new inode, I read through your discussion the mailing list[1], I think it's
+probably the same root cause.
 
-When the memory is insufficient, xfs_inonodegc_worker will trigger memory
-reclamation when memory is allocated, then flush_work() may be called to
-wait for the work to complete. This causes a deadlock.
+As Dave pointed out, args->minleft has an *exact* meaning, both inode fork
+allocations and inode chunk extent allocation pre-calculate args->minleft
+to ensure inobt record insertion succeed in any circumstances. But, this
+guarantee dosen't seem to be reliable, especially when it happens to meet
+cnt&bno btree splitting. Gao Xiang proposed an solution by adding postalloc
+to make current allocation reserve more space for inobt splitting, I think
+it's ok to slove their own problem, but may not be sloved completely, since
+inode chunk extent allocation may failed during inobt splitting too.
 
-So use memalloc_nofs_save() to avoid triggering memory reclamation in
-xfs_inodegc_worker.
+Meanwhile, Gao Xiang also noticed strip align requirement may increase
+probablility of the problem, which is totally true. I think the reason is
+that align requirement may lead to one free extent divied into two, which
+increase probablility of the problem. eg: we needs an extent length 4 and
+align 4 and find a suitable free extent [3,10] ([start,length]), after this
+allocation, the lefted extents are [3,1] and [9,5]. Therefore, alignment
+allocation is more likely to increase the number of free extents, then may
+lead cnt&bno btree splitting, which increases likelihood of the problem.
 
-Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
+In my opinion, XFS has avariety of btrees, in order to ensure the growth of
+the btrees, XFS use args->minleft/agfl/perag reservation to achieve this,
+which corresponds as follows:
+
+perag reservation: for reverse map & freeinode & refcount btree
+args->minleft    : for inode btree & inode/attr fork btree
+agfl             : for block btree (bnobt) & count btree (cntbt)
+(rmapbt is exception, it has reservation but get free block from agfl,
+since agfl blocks are considered as free when calculate available space,
+and rmapbt allocates block from it's reservation, *rmapbt growth* don't
+affect available space calculation, so don't care about it)
+
+Before each allocation need to calculate or prepare these reservation,
+more precisely, call `xfs_alloc_space_available` to determine whether there
+is enough space to complete current allocation, including those involved
+tree growth. if xfs_alloc_space_available is true which means tree growth
+can definitely success.
+
+I think the root cause of the current problem is when AG space is about to
+exhausted and happened to encounter cnt&bno btree splitting,
+`xfs_alloc_space_available` does't work well.
+
+Because, considering btree splitting during "space allocation", we will
+meet block allocations many times for each "space allocation":
+1st. allocation for space required at the beginning, i.e extent A1.
+2nd. then need to *insert* or *update* free extent to cntbt & bnobt, which
+     *may* lead to btree splitting and need allocation (as explained above)
+3rd. extent A1 need to insert inode/attr fork btree or inobt etc.. which
+     *may* also lead to splitting and allocation
+
+So, during block allocations, which will calling xfs_alloc_space_available
+at least 2 times (2nd don't call it, because bnt&cnt btree get block from
+agfl). Since the 1st judgement of space available, it has guaranteed there
+is enough space to complete 2nd and 3rd allocation, *BUT* after 2nd
+allocation, if the height bno&cnt btree increase, min_freelist of agfl will
+increase, more acurrate, xfs_alloc_min_freelist will increase, which may
+lead to 3rd allocation failed, and 3rd allocation failure will make our xfs
+filesystem unavailable.
+
+According to the above description, since every space allocation, we have
+guaranteed agfl min free list is enough for bno&cnt btree growth by
+calling `xfs_alloc_fix_freelist` to reserve enough agfl before we do 1st
+allocation. So the 2nd allocation will always succeed. args->minleft can
+guaranteed 3rd allocation will make it, it is no need to rejudge space
+available in 3rd allocation, so xfs_alloc_space_available should always
+be true.
+
+In summary, since btree alloc_block don't need any minleft, both 2rd and
+3rd allocation are allocation for btree. So just treat these allocation
+same as freeing extents (caller with flag XFS_ALLOC_FLAG_FREEING set).
+
+[1] https://lore.kernel.org/linux-xfs/20221109034802.40322-1-hsiangkao@linux.alibaba.com/
+
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Signed-off-by: Guo Xuenan <guoxuenan@huawei.com>
 ---
-v2:
-- use memalloc_nofs_save() to avoid triggering memory reclamation
+ fs/xfs/libxfs/xfs_alloc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- fs/xfs/xfs_icache.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 989cf341779b..6d9ada93aec3 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2305,7 +2305,7 @@ xfs_alloc_space_available(
+ 	int			available;
+ 	xfs_extlen_t		agflcount;
+ 
+-	if (flags & XFS_ALLOC_FLAG_FREEING)
++	if (flags & XFS_ALLOC_FLAG_FREEING || args->minleft == 0)
+ 		return true;
+ 
+ 	reservation = xfs_ag_resv_needed(pag, args->resv);
+-- 
+2.31.1
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index f35e2cee5265..ddeaccc04aec 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1853,12 +1853,20 @@ xfs_inodegc_worker(
-                                                struct xfs_inodegc, work);
-        struct llist_node       *node = llist_del_all(&gc->list);
-        struct xfs_inode        *ip, *n;
-+       unsigned int            nofs_flag;
-
-        WRITE_ONCE(gc->items, 0);
-
-        if (!node)
-                return;
-
-+       /*
-+        * We can allocate memory here while doing writeback on behalf of
-+        * memory reclaim.  To avoid memory allocation deadlocks set the
-+        * task-wide nofs context for the following operations.
-+        */
-+       nofs_flag = memalloc_nofs_save();
-+
-        ip = llist_entry(node, struct xfs_inode, i_gclist);
-        trace_xfs_inodegc_worker(ip->i_mount, READ_ONCE(gc->shrinker_hits));
-
-@@ -1867,6 +1875,8 @@ xfs_inodegc_worker(
-                xfs_iflags_set(ip, XFS_INACTIVATING);
-                xfs_inodegc_inactivate(ip);
-        }
-+
-+       memalloc_nofs_restore(nofs_flag);
- }
-
- /*
---
-2.27.0
