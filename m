@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 070C5C4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 01:49:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42708C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 01:49:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236064AbiLaBtY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 20:49:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49464 "EHLO
+        id S236082AbiLaBti (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 20:49:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49500 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236079AbiLaBtX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 20:49:23 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 953091DDFF
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 17:49:22 -0800 (PST)
+        with ESMTP id S236079AbiLaBth (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 20:49:37 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A92FA1DDF7
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 17:49:36 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 5666CB81DF9
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 01:49:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1805FC433D2;
-        Sat, 31 Dec 2022 01:49:20 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 476ED61CD0
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 01:49:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4177C433D2;
+        Sat, 31 Dec 2022 01:49:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672451360;
-        bh=Gia+DuWNZ1ewXa4T2NngBVONHn6W4xPrAj+654Mmwi0=;
+        s=k20201202; t=1672451375;
+        bh=tD9NvOuuGzM0XArO54GRX658vM4eNvAJId3HZwdsLHg=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=GisqnqojEI1Q2wKy01BO7YvJDNk/IpDGFYBAMSv5IZUSlO702k7qUYbditPr+fXRW
-         LSTn/uDyT+HX5Rkls/yAm6hnZyfyaLJvTh1/TrXaU6zM+kvn4vAJumVmUAu7/vr6Xa
-         91y2KlmUH30lfTqdUe6tZWvVCVQEdFKUFDh0ckoiriye1fE9j8T3SHjfY/jq6nYTSZ
-         AYmf/ydOwn736v15xGQ0za+b4qJQymGuFcx8A9EmfR0+oy7UATNkkK/GKL5MUHW+R4
-         4WDePiu8Zw9DLOCNNY1K1uMUeDZcthf7M78Lr+YSVGjxLs9f10nmTzOhnym+Qw9Y90
-         u5e6KUDndZ0lg==
-Subject: [PATCH 05/42] xfs: realtime refcount btree transaction reservations
+        b=VZVohukBt3bqgmEvCY7Rt22vUG23sgg7kTTPJctQ8/HBRubyAXTpXAURwPPG84PtO
+         V5rkt6jEBuOV0LUB3UCx+QlFFKDNe5KhdyY2Td7NOvsSe+eenIp2cr+P9Y/TzeaEyC
+         JCs5/MEMo7bxBncuf3fvhMxSToRd1BVXY9VRH8Ukd/px5WV2hYe2axzrPbUUDpuhpe
+         7+PAR7U8uLOmlTtezgmA4136OS7kK/fqI43cViBYBx4FcQNuiTicMrl0SGZVPxg00C
+         YB8+W9gzfzPR8WFOpByl9Q4+dPd/2DoMs1vVmXb4xbDwXvRXqo6WrUz6/jnj8jyIXA
+         /6GuTX/+1GXYg==
+Subject: [PATCH 06/42] xfs: add realtime refcount btree operations
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:18:29 -0800
-Message-ID: <167243870969.717073.10174042531639869915.stgit@magnolia>
+Message-ID: <167243870983.717073.6818978594509030568.stgit@magnolia>
 In-Reply-To: <167243870849.717073.203452386730176902.stgit@magnolia>
 References: <167243870849.717073.203452386730176902.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,72 +49,196 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make sure that there's enough log reservation to handle mapping
-and unmapping realtime extents.  We have to reserve enough space
-to handle a split in the rtrefcountbt to add the record and a second
-split in the regular refcountbt to record the rtrefcountbt split.
+Implement the generic btree operations needed to manipulate rtrefcount
+btree blocks. This is different from the regular refcountbt in that we
+allocate space from the filesystem at large, and are neither constrained
+to the free space nor any particular AG.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_trans_resv.c |   25 ++++++++++++++++++++++---
- 1 file changed, 22 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_rtrefcount_btree.c |  148 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 148 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index 52a4386a3d96..2b8b8dd5dec3 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -90,6 +90,14 @@ xfs_refcountbt_block_count(
- 	return num_ops * (2 * mp->m_refc_maxlevels - 1);
+diff --git a/fs/xfs/libxfs/xfs_rtrefcount_btree.c b/fs/xfs/libxfs/xfs_rtrefcount_btree.c
+index dd8e628b068b..bdefc4f5939d 100644
+--- a/fs/xfs/libxfs/xfs_rtrefcount_btree.c
++++ b/fs/xfs/libxfs/xfs_rtrefcount_btree.c
+@@ -19,6 +19,7 @@
+ #include "xfs_btree.h"
+ #include "xfs_btree_staging.h"
+ #include "xfs_rtrefcount_btree.h"
++#include "xfs_refcount.h"
+ #include "xfs_trace.h"
+ #include "xfs_cksum.h"
+ #include "xfs_error.h"
+@@ -53,6 +54,106 @@ xfs_rtrefcountbt_dup_cursor(
+ 	return new;
  }
  
-+static unsigned int
-+xfs_rtrefcountbt_block_count(
-+	struct xfs_mount	*mp,
-+	unsigned int		num_ops)
++STATIC int
++xfs_rtrefcountbt_get_minrecs(
++	struct xfs_btree_cur	*cur,
++	int			level)
 +{
-+	return num_ops * (2 * mp->m_rtrefc_maxlevels - 1);
++	if (level == cur->bc_nlevels - 1) {
++		struct xfs_ifork	*ifp = xfs_btree_ifork_ptr(cur);
++
++		return xfs_rtrefcountbt_maxrecs(cur->bc_mp, ifp->if_broot_bytes,
++				level == 0) / 2;
++	}
++
++	return cur->bc_mp->m_rtrefc_mnr[level != 0];
 +}
 +
- /*
-  * Logging inodes is really tricksy. They are logged in memory format,
-  * which means that what we write into the log doesn't directly translate into
-@@ -257,10 +265,13 @@ xfs_rtalloc_block_count(
-  * Compute the log reservation required to handle the refcount update
-  * transaction.  Refcount updates are always done via deferred log items.
-  *
-- * This is calculated as:
-+ * This is calculated as the max of:
-  * Data device refcount updates (t1):
-  *    the agfs of the ags containing the blocks: nr_ops * sector size
-  *    the refcount btrees: nr_ops * 1 trees * (2 * max depth - 1) * block size
-+ * Realtime refcount updates (t2);
-+ *    the rt refcount inode
-+ *    the rtrefcount btrees: nr_ops * 1 trees * (2 * max depth - 1) * block size
-  */
- static unsigned int
- xfs_calc_refcountbt_reservation(
-@@ -268,12 +279,20 @@ xfs_calc_refcountbt_reservation(
- 	unsigned int		nr_ops)
- {
- 	unsigned int		blksz = XFS_FSB_TO_B(mp, 1);
-+	unsigned int		t1, t2 = 0;
- 
- 	if (!xfs_has_reflink(mp))
- 		return 0;
- 
--	return xfs_calc_buf_res(nr_ops, mp->m_sb.sb_sectsize) +
--	       xfs_calc_buf_res(xfs_refcountbt_block_count(mp, nr_ops), blksz);
-+	t1 = xfs_calc_buf_res(nr_ops, mp->m_sb.sb_sectsize) +
-+	     xfs_calc_buf_res(xfs_refcountbt_block_count(mp, nr_ops), blksz);
++STATIC int
++xfs_rtrefcountbt_get_maxrecs(
++	struct xfs_btree_cur	*cur,
++	int			level)
++{
++	if (level == cur->bc_nlevels - 1) {
++		struct xfs_ifork	*ifp = xfs_btree_ifork_ptr(cur);
 +
-+	if (xfs_has_realtime(mp))
-+		t2 = xfs_calc_inode_res(mp, 1) +
-+		     xfs_calc_buf_res(xfs_rtrefcountbt_block_count(mp, nr_ops),
-+				     blksz);
++		return xfs_rtrefcountbt_maxrecs(cur->bc_mp, ifp->if_broot_bytes,
++				level == 0);
++	}
 +
-+	return max(t1, t2);
- }
++	return cur->bc_mp->m_rtrefc_mxr[level != 0];
++}
++
++STATIC void
++xfs_rtrefcountbt_init_key_from_rec(
++	union xfs_btree_key		*key,
++	const union xfs_btree_rec	*rec)
++{
++	key->refc.rc_startblock = rec->refc.rc_startblock;
++}
++
++STATIC void
++xfs_rtrefcountbt_init_high_key_from_rec(
++	union xfs_btree_key		*key,
++	const union xfs_btree_rec	*rec)
++{
++	__u32				x;
++
++	x = be32_to_cpu(rec->refc.rc_startblock);
++	x += be32_to_cpu(rec->refc.rc_blockcount) - 1;
++	key->refc.rc_startblock = cpu_to_be32(x);
++}
++
++STATIC void
++xfs_rtrefcountbt_init_rec_from_cur(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_rec	*rec)
++{
++	const struct xfs_refcount_irec *irec = &cur->bc_rec.rc;
++	uint32_t		start;
++
++	start = xfs_refcount_encode_startblock(irec->rc_startblock,
++			irec->rc_domain);
++	rec->refc.rc_startblock = cpu_to_be32(start);
++	rec->refc.rc_blockcount = cpu_to_be32(cur->bc_rec.rc.rc_blockcount);
++	rec->refc.rc_refcount = cpu_to_be32(cur->bc_rec.rc.rc_refcount);
++}
++
++STATIC void
++xfs_rtrefcountbt_init_ptr_from_cur(
++	struct xfs_btree_cur	*cur,
++	union xfs_btree_ptr	*ptr)
++{
++	ptr->l = 0;
++}
++
++STATIC int64_t
++xfs_rtrefcountbt_key_diff(
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_key	*key)
++{
++	const struct xfs_refcount_key	*kp = &key->refc;
++	const struct xfs_refcount_irec	*irec = &cur->bc_rec.rc;
++	uint32_t			start;
++
++	start = xfs_refcount_encode_startblock(irec->rc_startblock,
++			irec->rc_domain);
++	return (int64_t)be32_to_cpu(kp->rc_startblock) - start;
++}
++
++STATIC int64_t
++xfs_rtrefcountbt_diff_two_keys(
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_key	*k1,
++	const union xfs_btree_key	*k2,
++	const union xfs_btree_key	*mask)
++{
++	ASSERT(!mask || mask->refc.rc_startblock);
++
++	return (int64_t)be32_to_cpu(k1->refc.rc_startblock) -
++			be32_to_cpu(k2->refc.rc_startblock);
++}
++
+ static xfs_failaddr_t
+ xfs_rtrefcountbt_verify(
+ 	struct xfs_buf		*bp)
+@@ -119,6 +220,40 @@ const struct xfs_buf_ops xfs_rtrefcountbt_buf_ops = {
+ 	.verify_struct		= xfs_rtrefcountbt_verify,
+ };
  
- /*
++STATIC int
++xfs_rtrefcountbt_keys_inorder(
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_key	*k1,
++	const union xfs_btree_key	*k2)
++{
++	return be32_to_cpu(k1->refc.rc_startblock) <
++	       be32_to_cpu(k2->refc.rc_startblock);
++}
++
++STATIC int
++xfs_rtrefcountbt_recs_inorder(
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_rec	*r1,
++	const union xfs_btree_rec	*r2)
++{
++	return  be32_to_cpu(r1->refc.rc_startblock) +
++		be32_to_cpu(r1->refc.rc_blockcount) <=
++		be32_to_cpu(r2->refc.rc_startblock);
++}
++
++STATIC enum xbtree_key_contig
++xfs_rtrefcountbt_keys_contiguous(
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_key	*key1,
++	const union xfs_btree_key	*key2,
++	const union xfs_btree_key	*mask)
++{
++	ASSERT(!mask || mask->refc.rc_startblock);
++
++	return xbtree_key_contig(be32_to_cpu(key1->refc.rc_startblock),
++				 be32_to_cpu(key2->refc.rc_startblock));
++}
++
+ const struct xfs_btree_ops xfs_rtrefcountbt_ops = {
+ 	.rec_len		= sizeof(struct xfs_refcount_rec),
+ 	.key_len		= sizeof(struct xfs_refcount_key),
+@@ -126,7 +261,20 @@ const struct xfs_btree_ops xfs_rtrefcountbt_ops = {
+ 				  XFS_BTREE_CRC_BLOCKS | XFS_BTREE_IROOT_RECORDS,
+ 
+ 	.dup_cursor		= xfs_rtrefcountbt_dup_cursor,
++	.alloc_block		= xfs_btree_alloc_imeta_block,
++	.free_block		= xfs_btree_free_imeta_block,
++	.get_minrecs		= xfs_rtrefcountbt_get_minrecs,
++	.get_maxrecs		= xfs_rtrefcountbt_get_maxrecs,
++	.init_key_from_rec	= xfs_rtrefcountbt_init_key_from_rec,
++	.init_high_key_from_rec	= xfs_rtrefcountbt_init_high_key_from_rec,
++	.init_rec_from_cur	= xfs_rtrefcountbt_init_rec_from_cur,
++	.init_ptr_from_cur	= xfs_rtrefcountbt_init_ptr_from_cur,
++	.key_diff		= xfs_rtrefcountbt_key_diff,
+ 	.buf_ops		= &xfs_rtrefcountbt_buf_ops,
++	.diff_two_keys		= xfs_rtrefcountbt_diff_two_keys,
++	.keys_inorder		= xfs_rtrefcountbt_keys_inorder,
++	.recs_inorder		= xfs_rtrefcountbt_recs_inorder,
++	.keys_contiguous	= xfs_rtrefcountbt_keys_contiguous,
+ };
+ 
+ /* Initialize a new rt refcount btree cursor. */
 
