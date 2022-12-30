@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 038B3C3DA7C
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:39:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4408FC3DA7C
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:40:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235784AbiLaAjs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 19:39:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34866 "EHLO
+        id S235711AbiLaAkC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 19:40:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34880 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235671AbiLaAjr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:39:47 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 302421E3FE;
-        Fri, 30 Dec 2022 16:39:46 -0800 (PST)
+        with ESMTP id S235671AbiLaAkB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:40:01 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 383141E3FE;
+        Fri, 30 Dec 2022 16:40:00 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id DD91FB81E49;
-        Sat, 31 Dec 2022 00:39:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EE41C433EF;
-        Sat, 31 Dec 2022 00:39:43 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BAA1D61D18;
+        Sat, 31 Dec 2022 00:39:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B57DC433EF;
+        Sat, 31 Dec 2022 00:39:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672447183;
-        bh=pQq4B40v4RhHW7cz7BJ0dBjlQZsjXNE87BVyendgV24=;
+        s=k20201202; t=1672447199;
+        bh=x0mlas2Jn1y5z4fXt1IrR39/BN9IQ7pKbZJ4w3zYLDk=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=ADHXVMBq+odZH7IhRl2pBlYNt25PAfU8854sb4YVqmp5rO2MXCpeqjSlWHmj144Qc
-         m5tRPOp5HFPNKdWT1jw3dx4elvb0/Uk4fuw9n3qr4C+Z4LYFbpa/C3++XoShJBOewj
-         /lGJBgcHEIe1J1FgxwT3BcbbR5LTZHs8IY9C2ALnhbsgSWAgEOoWLOxFzAGkq8JWkv
-         YXOCQ02aQC9NIvNKdPpB+qrleu0TvuXghWTJb2sNhysdWLWubFvXFCfO400X5EgOtc
-         MFzZpm8HZgdYP8KU47w6NKqKea3fMGxqVMdvdrszYGjeD3EXhIWDDWrwbw1ruk451Q
-         a+HgkR2Irzmsw==
-Subject: [PATCH 4/5] fuzzy: allow xfs scrub stress tests to pick preconfigured
- fsstress configs
+        b=MAhLukp820jl89E6FTAv8yXQA7BbSz9taYCJZgq0sNUnTBF5v6IKBLZltNHv4x37B
+         eEnbye8rSYpmmJWVwLAfhSylUPuoYdjX7F9qTnUxZpcU8AviCVGLEaRUvI7fpBhW9K
+         1+Y3U8iw48/QqVDL2S5PWhMwd/qq9K1dWjUCQjnGWLqFyxVbnxKGt94JqxKLXWYoia
+         0vdlLVAhAn/8xnnMB5kqhNwDtZcnCw6bA78lh33buz/1xnXOdLdl+eJzIFOXf1KjhB
+         jA7d+xlRggYOyMBuqgU7plOfqEb5N8B3WrXKLDB/4cUhq/G7/+zVuSUvkLgU3vgEN9
+         JtqkNrmQxiFvw==
+Subject: [PATCH 5/5] xfs: race fsstress with online scrubbers for file
+ metadata
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     zlang@redhat.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
 Date:   Fri, 30 Dec 2022 14:19:06 -0800
-Message-ID: <167243874662.722028.15090629914232187990.stgit@magnolia>
+Message-ID: <167243874673.722028.7027496052735734173.stgit@magnolia>
 In-Reply-To: <167243874614.722028.11987534226186856347.stgit@magnolia>
 References: <167243874614.722028.11987534226186856347.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,148 +50,667 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make it so that xfs_scrub stress tests can select what kind of fsstress
-operations they want to run.  This will make it easier for, say,
-directory scrubbers to configure fsstress to exercise directory tree
-changes while skipping file data updates, because those are irrelevant.
+For each XFS_SCRUB_TYPE_* that looks at file metadata, create a test
+that runs that scrubber in the foreground and fsstress in the
+background.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/fuzzy |   77 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 74 insertions(+), 3 deletions(-)
+ common/fuzzy      |   89 ++++++++++++++++++++++++++++++++++++++++++++++++++---
+ tests/xfs/792     |   38 +++++++++++++++++++++++
+ tests/xfs/792.out |    2 +
+ tests/xfs/793     |   37 ++++++++++++++++++++++
+ tests/xfs/793.out |    2 +
+ tests/xfs/794     |   39 +++++++++++++++++++++++
+ tests/xfs/794.out |    2 +
+ tests/xfs/795     |   39 +++++++++++++++++++++++
+ tests/xfs/795.out |    2 +
+ tests/xfs/796     |   37 ++++++++++++++++++++++
+ tests/xfs/796.out |    2 +
+ tests/xfs/797     |   40 ++++++++++++++++++++++++
+ tests/xfs/797.out |    2 +
+ tests/xfs/799     |   38 +++++++++++++++++++++++
+ tests/xfs/799.out |    2 +
+ tests/xfs/826     |   38 +++++++++++++++++++++++
+ tests/xfs/826.out |    2 +
+ tests/xfs/827     |   39 +++++++++++++++++++++++
+ tests/xfs/827.out |    2 +
+ 19 files changed, 447 insertions(+), 5 deletions(-)
+ create mode 100755 tests/xfs/792
+ create mode 100644 tests/xfs/792.out
+ create mode 100755 tests/xfs/793
+ create mode 100644 tests/xfs/793.out
+ create mode 100755 tests/xfs/794
+ create mode 100644 tests/xfs/794.out
+ create mode 100755 tests/xfs/795
+ create mode 100644 tests/xfs/795.out
+ create mode 100755 tests/xfs/796
+ create mode 100644 tests/xfs/796.out
+ create mode 100755 tests/xfs/797
+ create mode 100644 tests/xfs/797.out
+ create mode 100755 tests/xfs/799
+ create mode 100644 tests/xfs/799.out
+ create mode 100755 tests/xfs/826
+ create mode 100644 tests/xfs/826.out
+ create mode 100755 tests/xfs/827
+ create mode 100644 tests/xfs/827.out
 
 
 diff --git a/common/fuzzy b/common/fuzzy
-index e39f787e78..c4a5bc9261 100644
+index c4a5bc9261..f7f660bc31 100644
 --- a/common/fuzzy
 +++ b/common/fuzzy
-@@ -466,6 +466,7 @@ __stress_scrub_fsx_loop() {
- 	local end="$1"
- 	local runningfile="$2"
- 	local remount_period="$3"
-+	local stress_tgt="$4"	# ignored
- 	local focus=(-q -X)	# quiet, validate file contents
+@@ -330,12 +330,20 @@ __stress_freeze_filter_output() {
  
- 	# As of November 2022, 2 million fsx ops should be enough to keep
-@@ -528,10 +529,70 @@ __stress_scrub_fsstress_loop() {
- 	local end="$1"
- 	local runningfile="$2"
- 	local remount_period="$3"
-+	local stress_tgt="$4"
-+	local focus=()
+ # Filter scrub output so that we don't tarnish the golden output if the fs is
+ # too busy to scrub.  Note: Tests should _notrun if the scrub type is not
+-# supported.
++# supported.  Callers can provide extra strings to filter out as function
++# arguments.
+ __stress_scrub_filter_output() {
++	local extra_args=()
 +
-+	case "$stress_tgt" in
-+	"dir")
-+		focus+=('-z')
++	for arg in "$@"; do
++		extra_args+=(-e "/${arg}/d")
++	done
 +
-+		# Create a directory tree rapidly
-+		for op in creat link mkdir mknod symlink; do
-+			focus+=('-f' "${op}=8")
-+		done
-+		focus+=('-f' 'rmdir=2' '-f' 'unlink=8')
-+
-+		# Rename half as often
-+		for op in rename rnoreplace rexchange; do
-+			focus+=('-f' "${op}=4")
-+		done
-+
-+		# Read and sync occasionally
-+		for op in getdents stat fsync; do
-+			focus+=('-f' "${op}=1")
-+		done
+ 	_filter_scratch | \
+ 		sed -e '/Device or resource busy/d' \
+ 		    -e '/Optimization possible/d' \
+-		    -e '/No space left on device/d'
++		    -e '/No space left on device/d' \
++		    "${extra_args[@]}"
+ }
+ 
+ # Decide if the scratch filesystem is still alive.
+@@ -401,13 +409,34 @@ __stress_one_scrub_loop() {
+ 		fi
+ 	done
+ 
++	local extra_filters=()
++	local target_cmd=(echo "$scrub_tgt")
++	case "$scrub_tgt" in
++	"%file%"|"%datafile%"|"%attrfile%")
++		extra_filters+=('No such file or directory' 'No such device or address')
++		target_cmd=(find "$SCRATCH_MNT" -print)
 +		;;
-+	"xattr")
-+		focus+=('-z')
-+
-+		# Create a directory tree slowly
-+		for op in creat ; do
-+			focus+=('-f' "${op}=2")
-+		done
-+		for op in unlink rmdir; do
-+			focus+=('-f' "${op}=1")
-+		done
-+
-+		# Create xattrs rapidly
-+		for op in attr_set setfattr; do
-+			focus+=('-f' "${op}=80")
-+		done
-+
-+		# Remove xattrs 1/4 as quickly
-+		for op in attr_remove removefattr; do
-+			focus+=('-f' "${op}=20")
-+		done
-+
-+		# Read and sync occasionally
-+		for op in listfattr getfattr fsync; do
-+			focus+=('-f' "${op}=10")
-+		done
++	"%dir%")
++		extra_filters+=('No such file or directory' 'Not a directory')
++		target_cmd=(find "$SCRATCH_MNT" -type d -print)
 +		;;
-+	"writeonly")
-+		# Only do things that cause filesystem writes
-+		focus+=('-w')
-+		;;
-+	"default")
-+		# No new arguments
-+		;;
-+	*)
-+		echo "$stress_tgt: Unrecognized stress target, using defaults."
++	"%regfile%"|"%cowfile%")
++		extra_filters+=('No such file or directory')
++		target_cmd=(find "$SCRATCH_MNT" -type f -print)
 +		;;
 +	esac
++
+ 	while __stress_scrub_running "$scrub_startat" "$runningfile"; do
+ 		sleep 1
+ 	done
  
- 	# As of March 2022, 2 million fsstress ops should be enough to keep
- 	# any filesystem busy for a couple of hours.
--	local args=$(_scale_fsstress_args -p 4 -d $SCRATCH_MNT -n 2000000 $FSSTRESS_AVOID)
-+	local args=$(_scale_fsstress_args -p 4 -d $SCRATCH_MNT -n 2000000 "${focus[@]}" $FSSTRESS_AVOID)
- 	echo "Running $FSSTRESS_PROG $args" >> $seqres.full
+ 	while __stress_scrub_running "$end" "$runningfile"; do
+-		$XFS_IO_PROG -x "${xfs_io_args[@]}" "$scrub_tgt" 2>&1 | \
+-			__stress_scrub_filter_output
++		readarray -t fnames < <("${target_cmd[@]}" 2>/dev/null)
++		for fname in "${fnames[@]}"; do
++			$XFS_IO_PROG -x "${xfs_io_args[@]}" "$fname" 2>&1 | \
++				__stress_scrub_filter_output "${extra_filters[@]}"
++			__stress_scrub_running "$end" "$runningfile" || break
++		done
+ 	done
+ }
  
- 	if [ -n "$remount_period" ]; then
-@@ -691,6 +752,14 @@ __stress_scrub_check_commands() {
+@@ -585,6 +614,22 @@ __stress_scrub_fsstress_loop() {
+ 	"default")
+ 		# No new arguments
+ 		;;
++	"symlink")
++		focus+=('-z')
++
++		# Only create, read, and delete symbolic links
++		focus+=('-f' 'symlink=4')
++		focus+=('-f' 'readlink=10')
++		focus+=('-f' 'unlink=1')
++		;;
++	"mknod")
++		focus+=('-z')
++
++		# Only create and delete special files
++		focus+=('-f' 'mknod=4')
++		focus+=('-f' 'getdents=100')
++		focus+=('-f' 'unlink=1')
++		;;
+ 	*)
+ 		echo "$stress_tgt: Unrecognized stress target, using defaults."
+ 		;;
+@@ -715,9 +760,31 @@ __stress_scrub_check_commands() {
+ 	local scrub_tgt="$1"
+ 	shift
+ 
++	local cooked_tgt="$scrub_tgt"
++	case "$scrub_tgt" in
++	"%file%"|"%dir%")
++		cooked_tgt="$SCRATCH_MNT"
++		;;
++	"%regfile%"|"%datafile%")
++		cooked_tgt="$SCRATCH_MNT/testfile"
++		echo test > "$cooked_tgt"
++		;;
++	"%attrfile%")
++		cooked_tgt="$SCRATCH_MNT/testfile"
++		$XFS_IO_PROG -f -c 'pwrite -S 0x58 0 64k' "$cooked_tgt" &>/dev/null
++		attr -s attrname "$cooked_tgt" < "$cooked_tgt" &>/dev/null
++		;;
++	"%cowfile%")
++		cooked_tgt="$SCRATCH_MNT/testfile"
++		$XFS_IO_PROG -f -c 'pwrite -S 0x58 0 128k' "$cooked_tgt" &>/dev/null
++		_cp_reflink "$cooked_tgt" "$cooked_tgt.1"
++		$XFS_IO_PROG -f -c 'pwrite -S 0x58 0 1' "$cooked_tgt.1" &>/dev/null
++		;;
++	esac
++
+ 	for arg in "$@"; do
+ 		local cooked_arg="$(echo "$arg" | sed -e "s/%agno%/0/g")"
+-		testio=`$XFS_IO_PROG -x -c "$cooked_arg" $scrub_tgt 2>&1`
++		testio=`$XFS_IO_PROG -x -c "$cooked_arg" "$cooked_tgt" 2>&1`
+ 		echo $testio | grep -q "Unknown type" && \
+ 			_notrun "xfs_io scrub subcommand support is missing"
+ 		echo $testio | grep -q "Inappropriate ioctl" && \
+@@ -749,6 +816,16 @@ __stress_scrub_check_commands() {
+ # -S	Pass this option to xfs_scrub.  If zero -S options are specified,
+ #	xfs_scrub will not be run.  To select repair mode, pass '-k' or '-v'.
+ # -t	Run online scrub against this file; $SCRATCH_MNT is the default.
++#	Special values are as follows:
++#
++#	%file%		all files
++#	%regfile%	regular files
++#	%dir%		direct
++#	%datafile%	regular files with data blocks
++#	%attrfile%	regular files with xattr blocks
++#	%cowfile%	regular files with shared blocks
++#
++#	File selection races with fsstress, so the selection is best-effort.
  # -w	Delay the start of the scrub/repair loop by this number of seconds.
  #	Defaults to no delay unless XFS_SCRUB_STRESS_DELAY is set.  This value
  #	will be clamped to ten seconds before the end time.
-+# -x	Focus on this type of fsstress operation.  Possible values:
-+#
-+#       'dir': Grow the directory trees as much as possible.
-+#       'xattr': Grow extended attributes in a small tree.
-+#       'default': Run fsstress with default arguments.
-+#       'writeonly': Only perform fs updates, no reads.
-+#
-+#       The default is 'default' unless XFS_SCRUB_STRESS_TARGET is set.
+@@ -758,6 +835,8 @@ __stress_scrub_check_commands() {
+ #       'xattr': Grow extended attributes in a small tree.
+ #       'default': Run fsstress with default arguments.
+ #       'writeonly': Only perform fs updates, no reads.
++#       'symlink': Only create symbolic links.
++#       'mknod': Only create special files.
+ #
+ #       The default is 'default' unless XFS_SCRUB_STRESS_TARGET is set.
  # -X	Run this program to exercise the filesystem.  Currently supported
- #       options are 'fsx' and 'fsstress'.  The default is 'fsstress'.
- _scratch_xfs_stress_scrub() {
-@@ -703,6 +772,7 @@ _scratch_xfs_stress_scrub() {
- 	local exerciser="fsstress"
- 	local io_args=()
- 	local remount_period="${XFS_SCRUB_STRESS_REMOUNT_PERIOD}"
-+	local stress_tgt="${XFS_SCRUB_STRESS_TARGET:-default}"
- 
- 	__SCRUB_STRESS_FREEZE_PID=""
- 	__SCRUB_STRESS_REMOUNT_LOOP=""
-@@ -710,7 +780,7 @@ _scratch_xfs_stress_scrub() {
- 	touch "$runningfile"
- 
- 	OPTIND=1
--	while getopts "fi:r:s:S:t:w:X:" c; do
-+	while getopts "fi:r:s:S:t:w:x:X:" c; do
- 		case "$c" in
- 			f) freeze=yes;;
- 			i) io_args+=("$OPTARG");;
-@@ -719,6 +789,7 @@ _scratch_xfs_stress_scrub() {
- 			S) xfs_scrub_args+=("$OPTARG");;
- 			t) scrub_tgt="$OPTARG";;
- 			w) scrub_delay="$OPTARG";;
-+			x) stress_tgt="$OPTARG";;
- 			X) exerciser="$OPTARG";;
- 			*) return 1; ;;
- 		esac
-@@ -757,7 +828,7 @@ _scratch_xfs_stress_scrub() {
- 	fi
- 
- 	"__stress_scrub_${exerciser}_loop" "$end" "$runningfile" \
--			"$remount_period" &
-+			"$remount_period" "$stress_tgt" &
- 
- 	if [ -n "$freeze" ]; then
- 		__stress_scrub_freeze_loop "$end" "$runningfile" &
+diff --git a/tests/xfs/792 b/tests/xfs/792
+new file mode 100755
+index 0000000000..0806e87909
+--- /dev/null
++++ b/tests/xfs/792
+@@ -0,0 +1,38 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022 Oracle. Inc.  All Rights Reserved.
++#
++# FS QA Test No. 792
++#
++# Race fsstress and inode record scrub for a while to see if we crash or
++# livelock.
++#
++. ./common/preamble
++_begin_fstest scrub dangerous_fsstress_scrub
++
++_cleanup() {
++	_scratch_xfs_stress_scrub_cleanup &> /dev/null
++	cd /
++	rm -r -f $tmp.*
++}
++_register_cleanup "_cleanup" BUS
++
++# Import common functions.
++. ./common/filter
++. ./common/fuzzy
++. ./common/inject
++. ./common/xfs
++
++# real QA test starts here
++_supported_fs xfs
++_require_scratch
++_require_xfs_stress_scrub
++
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount
++_scratch_xfs_stress_scrub -s "scrub inode" -t "%file%"
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/792.out b/tests/xfs/792.out
+new file mode 100644
+index 0000000000..c9b5ef3a7c
+--- /dev/null
++++ b/tests/xfs/792.out
+@@ -0,0 +1,2 @@
++QA output created by 792
++Silence is golden
+diff --git a/tests/xfs/793 b/tests/xfs/793
+new file mode 100755
+index 0000000000..41be82d621
+--- /dev/null
++++ b/tests/xfs/793
+@@ -0,0 +1,37 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022 Oracle. Inc.  All Rights Reserved.
++#
++# FS QA Test No. 793
++#
++# Race fsstress and data fork scrub for a while to see if we crash or livelock.
++#
++. ./common/preamble
++_begin_fstest scrub dangerous_fsstress_scrub
++
++_cleanup() {
++	_scratch_xfs_stress_scrub_cleanup &> /dev/null
++	cd /
++	rm -r -f $tmp.*
++}
++_register_cleanup "_cleanup" BUS
++
++# Import common functions.
++. ./common/filter
++. ./common/fuzzy
++. ./common/inject
++. ./common/xfs
++
++# real QA test starts here
++_supported_fs xfs
++_require_scratch
++_require_xfs_stress_scrub
++
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount
++_scratch_xfs_stress_scrub -s "scrub bmapbtd" -t "%datafile%"
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/793.out b/tests/xfs/793.out
+new file mode 100644
+index 0000000000..e8a17d4ecb
+--- /dev/null
++++ b/tests/xfs/793.out
+@@ -0,0 +1,2 @@
++QA output created by 793
++Silence is golden
+diff --git a/tests/xfs/794 b/tests/xfs/794
+new file mode 100755
+index 0000000000..8f4835dbc9
+--- /dev/null
++++ b/tests/xfs/794
+@@ -0,0 +1,39 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022 Oracle. Inc.  All Rights Reserved.
++#
++# FS QA Test No. 794
++#
++# Race fsstress and attr fork scrub for a while to see if we crash or livelock.
++#
++. ./common/preamble
++_begin_fstest scrub dangerous_fsstress_scrub
++
++_cleanup() {
++	_scratch_xfs_stress_scrub_cleanup &> /dev/null
++	cd /
++	rm -r -f $tmp.*
++}
++_register_cleanup "_cleanup" BUS
++
++# Import common functions.
++. ./common/filter
++. ./common/fuzzy
++. ./common/inject
++. ./common/xfs
++. ./common/attr
++
++# real QA test starts here
++_supported_fs xfs
++_require_scratch
++_require_attrs
++_require_xfs_stress_scrub
++
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount
++_scratch_xfs_stress_scrub -x 'xattr' -s "scrub bmapbta" -t "%attrfile%"
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/794.out b/tests/xfs/794.out
+new file mode 100644
+index 0000000000..bc999c055c
+--- /dev/null
++++ b/tests/xfs/794.out
+@@ -0,0 +1,2 @@
++QA output created by 794
++Silence is golden
+diff --git a/tests/xfs/795 b/tests/xfs/795
+new file mode 100755
+index 0000000000..ec065bafdd
+--- /dev/null
++++ b/tests/xfs/795
+@@ -0,0 +1,39 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022 Oracle. Inc.  All Rights Reserved.
++#
++# FS QA Test No. 795
++#
++# Race fsstress and cow fork scrub for a while to see if we crash or livelock.
++#
++. ./common/preamble
++_begin_fstest scrub dangerous_fsstress_scrub
++
++_cleanup() {
++	_scratch_xfs_stress_scrub_cleanup &> /dev/null
++	cd /
++	rm -r -f $tmp.*
++}
++_register_cleanup "_cleanup" BUS
++
++# Import common functions.
++. ./common/filter
++. ./common/fuzzy
++. ./common/inject
++. ./common/xfs
++. ./common/reflink
++
++# real QA test starts here
++_supported_fs xfs
++_require_scratch
++_require_xfs_stress_scrub
++
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount
++_require_xfs_has_feature "$SCRATCH_MNT" reflink
++_scratch_xfs_stress_scrub -s "scrub bmapbtc" -t "%cowfile%"
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/795.out b/tests/xfs/795.out
+new file mode 100644
+index 0000000000..cb357003dd
+--- /dev/null
++++ b/tests/xfs/795.out
+@@ -0,0 +1,2 @@
++QA output created by 795
++Silence is golden
+diff --git a/tests/xfs/796 b/tests/xfs/796
+new file mode 100755
+index 0000000000..d337701264
+--- /dev/null
++++ b/tests/xfs/796
+@@ -0,0 +1,37 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022 Oracle. Inc.  All Rights Reserved.
++#
++# FS QA Test No. 796
++#
++# Race fsstress and directory scrub for a while to see if we crash or livelock.
++#
++. ./common/preamble
++_begin_fstest scrub dangerous_fsstress_scrub
++
++_cleanup() {
++	_scratch_xfs_stress_scrub_cleanup &> /dev/null
++	cd /
++	rm -r -f $tmp.*
++}
++_register_cleanup "_cleanup" BUS
++
++# Import common functions.
++. ./common/filter
++. ./common/fuzzy
++. ./common/inject
++. ./common/xfs
++
++# real QA test starts here
++_supported_fs xfs
++_require_scratch
++_require_xfs_stress_scrub
++
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount
++_scratch_xfs_stress_scrub -x 'dir' -s "scrub directory" -t "%dir%"
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/796.out b/tests/xfs/796.out
+new file mode 100644
+index 0000000000..374e3774a2
+--- /dev/null
++++ b/tests/xfs/796.out
+@@ -0,0 +1,2 @@
++QA output created by 796
++Silence is golden
+diff --git a/tests/xfs/797 b/tests/xfs/797
+new file mode 100755
+index 0000000000..c68b43be7a
+--- /dev/null
++++ b/tests/xfs/797
+@@ -0,0 +1,40 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022 Oracle. Inc.  All Rights Reserved.
++#
++# FS QA Test No. 797
++#
++# Race fsstress and extended attributes scrub for a while to see if we crash or
++# livelock.
++#
++. ./common/preamble
++_begin_fstest scrub dangerous_fsstress_scrub
++
++_cleanup() {
++	_scratch_xfs_stress_scrub_cleanup &> /dev/null
++	cd /
++	rm -r -f $tmp.*
++}
++_register_cleanup "_cleanup" BUS
++
++# Import common functions.
++. ./common/filter
++. ./common/fuzzy
++. ./common/inject
++. ./common/xfs
++. ./common/attr
++
++# real QA test starts here
++_supported_fs xfs
++_require_scratch
++_require_attrs
++_require_xfs_stress_scrub
++
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount
++_scratch_xfs_stress_scrub -x 'xattr' -s "scrub xattr" -t "%attrfile%"
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/797.out b/tests/xfs/797.out
+new file mode 100644
+index 0000000000..6b64f4bf21
+--- /dev/null
++++ b/tests/xfs/797.out
+@@ -0,0 +1,2 @@
++QA output created by 797
++Silence is golden
+diff --git a/tests/xfs/799 b/tests/xfs/799
+new file mode 100755
+index 0000000000..84007ea9c0
+--- /dev/null
++++ b/tests/xfs/799
+@@ -0,0 +1,38 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022 Oracle. Inc.  All Rights Reserved.
++#
++# FS QA Test No. 799
++#
++# Race fsstress and parent pointers scrub for a while to see if we crash or
++# livelock.
++#
++. ./common/preamble
++_begin_fstest scrub dangerous_fsstress_scrub
++
++_cleanup() {
++	_scratch_xfs_stress_scrub_cleanup &> /dev/null
++	cd /
++	rm -r -f $tmp.*
++}
++_register_cleanup "_cleanup" BUS
++
++# Import common functions.
++. ./common/filter
++. ./common/fuzzy
++. ./common/inject
++. ./common/xfs
++
++# real QA test starts here
++_supported_fs xfs
++_require_scratch
++_require_xfs_stress_scrub
++
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount
++_scratch_xfs_stress_scrub -s "scrub parent" -t "%dir%"
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/799.out b/tests/xfs/799.out
+new file mode 100644
+index 0000000000..f3fd9fa2a0
+--- /dev/null
++++ b/tests/xfs/799.out
+@@ -0,0 +1,2 @@
++QA output created by 799
++Silence is golden
+diff --git a/tests/xfs/826 b/tests/xfs/826
+new file mode 100755
+index 0000000000..7660270571
+--- /dev/null
++++ b/tests/xfs/826
+@@ -0,0 +1,38 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022 Oracle. Inc.  All Rights Reserved.
++#
++# FS QA Test No. 826
++#
++# Race fsstress and symlink scrub for a while to see if we crash or livelock.
++# We can't open symlink files directly for scrubbing, so we use xfs_scrub(8).
++#
++. ./common/preamble
++_begin_fstest scrub dangerous_fsstress_scrub
++
++_cleanup() {
++	_scratch_xfs_stress_scrub_cleanup &> /dev/null
++	cd /
++	rm -r -f $tmp.*
++}
++_register_cleanup "_cleanup" BUS
++
++# Import common functions.
++. ./common/filter
++. ./common/fuzzy
++. ./common/inject
++. ./common/xfs
++
++# real QA test starts here
++_supported_fs xfs
++_require_scratch
++_require_xfs_stress_scrub
++
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount
++XFS_SCRUB_PHASE=3 _scratch_xfs_stress_scrub -x 'symlink' -S '-n'
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/826.out b/tests/xfs/826.out
+new file mode 100644
+index 0000000000..93fae86b82
+--- /dev/null
++++ b/tests/xfs/826.out
+@@ -0,0 +1,2 @@
++QA output created by 826
++Silence is golden
+diff --git a/tests/xfs/827 b/tests/xfs/827
+new file mode 100755
+index 0000000000..55ec01d1e6
+--- /dev/null
++++ b/tests/xfs/827
+@@ -0,0 +1,39 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2022 Oracle. Inc.  All Rights Reserved.
++#
++# FS QA Test No. 827
++#
++# Race fsstress and special file scrub for a while to see if we crash or
++# livelock.  We can't open special files directly for scrubbing, so we use
++# xfs_scrub(8).
++#
++. ./common/preamble
++_begin_fstest scrub dangerous_fsstress_scrub
++
++_cleanup() {
++	_scratch_xfs_stress_scrub_cleanup &> /dev/null
++	cd /
++	rm -r -f $tmp.*
++}
++_register_cleanup "_cleanup" BUS
++
++# Import common functions.
++. ./common/filter
++. ./common/fuzzy
++. ./common/inject
++. ./common/xfs
++
++# real QA test starts here
++_supported_fs xfs
++_require_scratch
++_require_xfs_stress_scrub
++
++_scratch_mkfs > "$seqres.full" 2>&1
++_scratch_mount
++XFS_SCRUB_PHASE=3 _scratch_xfs_stress_scrub -x 'mknod' -S '-n'
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/827.out b/tests/xfs/827.out
+new file mode 100644
+index 0000000000..65f29d949d
+--- /dev/null
++++ b/tests/xfs/827.out
+@@ -0,0 +1,2 @@
++QA output created by 827
++Silence is golden
 
