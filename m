@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF14BC3DA7C
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 03:15:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 413A4C3DA7C
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 03:15:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236274AbiLaDOl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 22:14:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36422 "EHLO
+        id S236326AbiLaDPP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 22:15:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236259AbiLaDO1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 22:14:27 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85FAEE59;
-        Fri, 30 Dec 2022 19:14:26 -0800 (PST)
+        with ESMTP id S236350AbiLaDPM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 22:15:12 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 874811104;
+        Fri, 30 Dec 2022 19:15:11 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 35A0FB81E5C;
-        Sat, 31 Dec 2022 03:14:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1EFBC433EF;
-        Sat, 31 Dec 2022 03:14:23 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 20FE461D12;
+        Sat, 31 Dec 2022 03:15:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C15DC433EF;
+        Sat, 31 Dec 2022 03:15:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672456463;
-        bh=5tGYjlAVtTsCmR1z/8/XOITcG+nNZq/DfjTeq+f8+nc=;
+        s=k20201202; t=1672456510;
+        bh=IfjQZHXjRIiqHQ3FFzV1RNJqYfT5tIMuzLDYlQRjQf0=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=pmSv/KwBUhYdRngWGImXGbMeTOlWzj1jLIornZCWEQF5iwHcZr2ZWZGCG+sb/Fzhg
-         UYjiEW37zEJkVKJiz+lsC50ofcIR9e+NWSRU5wQHHWB45/yzBXiJnaZFvO16Vyu/bj
-         YQyTPJgmWvcpWnQEcFR4HhcRc/7EfGjTN6KiaGOjTMEFKRy9pq0y5wR4SoOz59UGKb
-         8tKQp9h7zR69iuoG3probEP0q9Zhq4t/5ROitx3zDRJ3Pp8dtMV4/4wpYpcjyFNMW7
-         txRNK3OkGyvsTiIXqvh2zahrCv1lmaKcu1FzBIPoh2fYpqoovlz343hmGWse8SCmiI
-         cxwwT7f5C/V9A==
-Subject: [PATCH 07/13] xfs/341: update test for rtgroup-based rmap
+        b=eRu/8RE9NcCcWjswP/9f7JWEFfo0ZSQ4powzCrMapzFcOIcGOnVVL9mifXO/jfWUp
+         5kZHLbGCMOO+tuIbrMLxhIkOfRZEi3hmVNp8uz3XcLzx5rCaAloYCSgIQCIIFwd7Kc
+         h1ns5T+zPavYYdd7z1H6EPP3iCUmGIAAbJ6C2oJplK8R3JXfY8hY/5HneWspYlYLRr
+         J1o/3tnG/rA6rpjXYAMKx7vFIRUjUaEGStxNU89JY37HbMbVpM1PM/A83oaSBgLMpv
+         jCHnwz7OoTosQaQ1GiQut7o6Ii6054pRu7CoQQ2Ik6MgU9XVO7NlAN4rdi2fa+E+jQ
+         Eou/NzbrZNH/Q==
+Subject: [PATCH 10/13] xfs/443: use file allocation unit, not dbsize
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     zlang@redhat.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Fri, 30 Dec 2022 14:20:44 -0800
-Message-ID: <167243884485.739669.4899909585795610128.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:20:45 -0800
+Message-ID: <167243884525.739669.1970186950244287006.stgit@magnolia>
 In-Reply-To: <167243884390.739669.13524725872131241203.stgit@magnolia>
 References: <167243884390.739669.13524725872131241203.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,58 +49,50 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that we're sharding the realtime volume into multiple allocation
-groups, update this test to reflect the new reality.  The realtime rmap
-btree record and key sizes have shrunk, and we can't guarantee that a
-quick file write actually hits the same rt group as the one we fuzzed,
-so eliminate the file write test since we're really only curious if
-xfs_repair will fix the problem.
+We can only punch in units of file allocation boundaries, so update this
+test to use that instead of the fs blocksize.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/341     |   10 +++-------
- tests/xfs/341.out |    1 -
- 2 files changed, 3 insertions(+), 8 deletions(-)
+ tests/xfs/443 |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
 
-diff --git a/tests/xfs/341 b/tests/xfs/341
-index 8861e751a9..561054f0bd 100755
---- a/tests/xfs/341
-+++ b/tests/xfs/341
-@@ -32,10 +32,10 @@ blksz="$(_get_block_size $SCRATCH_MNT)"
- rtextsz_blks=$((rtextsz / blksz))
+diff --git a/tests/xfs/443 b/tests/xfs/443
+index 56828decae..ab3cda59f3 100755
+--- a/tests/xfs/443
++++ b/tests/xfs/443
+@@ -40,14 +40,15 @@ _scratch_mount
  
- # inode core size is at least 176 bytes; btree header is 56 bytes;
--# rtrmap record is 32 bytes; and rtrmap key/pointer are 56 bytes.
-+# rtrmap record is 24 bytes; and rtrmap key/pointer are 48 bytes.
- i_core_size="$(_xfs_get_inode_core_bytes $SCRATCH_MNT)"
--i_ptrs=$(( (isize - i_core_size) / 56 ))
--bt_recs=$(( (blksz - 56) / 32 ))
-+i_ptrs=$(( (isize - i_core_size) / 48 ))
-+bt_recs=$(( (blksz - 56) / 24 ))
+ file1=$SCRATCH_MNT/file1
+ file2=$SCRATCH_MNT/file2
++file_blksz=$(_get_file_block_size $SCRATCH_MNT)
  
- blocks=$((i_ptrs * bt_recs + 1))
- len=$((blocks * rtextsz))
-@@ -57,10 +57,6 @@ _scratch_xfs_db -x -c 'path -m /realtime/0.rmap' \
- 	-c "write u3.rtrmapbt.ptrs[1] $fsbno" -c 'p' >> $seqres.full
- _scratch_mount
+ # The goal is run an extent swap where one of the associated files has the
+ # minimum number of extents to remain in btree format. First, create a couple
+ # files with large enough extent counts (200 or so should be plenty) to ensure
+ # btree format on the largest possible inode size filesystems.
+-$XFS_IO_PROG -fc "falloc 0 $((400 * dbsize))" $file1
++$XFS_IO_PROG -fc "falloc 0 $((400 * file_blksz))" $file1
+ $here/src/punch-alternating $file1
+-$XFS_IO_PROG -fc "falloc 0 $((400 * dbsize))" $file2
++$XFS_IO_PROG -fc "falloc 0 $((400 * file_blksz))" $file2
+ $here/src/punch-alternating $file2
  
--echo "Try to create more files"
--$XFS_IO_PROG -f -R -c "pwrite -S 0x68 0 9999" $SCRATCH_MNT/f5 >> $seqres.full 2>&1
--test -e $SCRATCH_MNT/f5 && echo "should not have been able to write f5"
--
- echo "Repair fs"
- _scratch_unmount 2>&1 | _filter_scratch
- _repair_scratch_fs >> $seqres.full 2>&1
-diff --git a/tests/xfs/341.out b/tests/xfs/341.out
-index 75a5bc6c61..580d788954 100644
---- a/tests/xfs/341.out
-+++ b/tests/xfs/341.out
-@@ -2,6 +2,5 @@ QA output created by 341
- Format and mount
- Create some files
- Corrupt fs
--Try to create more files
- Repair fs
- Try to create more files (again)
+ # Now run an extent swap at every possible extent count down to 0. Depending on
+@@ -55,12 +56,12 @@ $here/src/punch-alternating $file2
+ # btree format.
+ for i in $(seq 1 2 399); do
+ 	# punch one extent from the tmpfile and swap
+-	$XFS_IO_PROG -c "fpunch $((i * dbsize)) $dbsize" $file2
++	$XFS_IO_PROG -c "fpunch $((i * file_blksz)) $file_blksz" $file2
+ 	$XFS_IO_PROG -c "swapext $file2" $file1
+ 
+ 	# punch the same extent from the old fork (now in file2) to resync the
+ 	# extent counts and repeat
+-	$XFS_IO_PROG -c "fpunch $((i * dbsize)) $dbsize" $file2
++	$XFS_IO_PROG -c "fpunch $((i * file_blksz)) $file_blksz" $file2
+ done
+ 
+ # sanity check that no extents are left over
 
