@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D74C4C4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:57:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01CE6C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:57:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236292AbiLaC5g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 21:57:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33360 "EHLO
+        id S236282AbiLaC5x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 21:57:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236282AbiLaC5f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:57:35 -0500
+        with ESMTP id S236248AbiLaC5v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:57:51 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECFB5192B4
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:57:34 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79B781929B
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:57:50 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A1715B81E68
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:57:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62491C433D2;
-        Sat, 31 Dec 2022 02:57:32 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 2F0A6B81E67
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:57:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3276C433EF;
+        Sat, 31 Dec 2022 02:57:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672455452;
-        bh=cPjWVhMn+CVsSXxzlxrTmt5RRWWddZ8G5kGqiY8Iu4s=;
+        s=k20201202; t=1672455468;
+        bh=H9YvggU21v5pqGkbuTfZLBCQavJU6rOZXVLVAnIw6HA=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=DmtelhNmeLmdLZpHUr2Jseo5hOMvWYio3mkHvD0upd1RXt1ZFLxvjuxv5vrMKqxbe
-         LoQZBOjIch9IKrlfwC0iXbxejmyD64MtmJ7HnMDKKvOfY5heu42kyHVopWgY1hh8Wh
-         QZ2uwBEcRxTyQ5Qtu9YyfI73KvnpABdJpmoXMciPSiIoeNOWUunYiQqXvQFjodhVNK
-         Llvj2tZvhWibACQE9gxqSZf08CjnoeU4czv/jESR3+MtNaFIxTnTdN/Z8Aj5hfAaeX
-         b/faP88POrvwzCa3Jix2RKRN+CJ3/PQynjjrydWx/3+WdVNiTsy/0UttWmxyRreCDW
-         ug4slUJDysBJw==
-Subject: [PATCH 13/41] xfs: update rmap to allow cow staging extents in the rt
- rmap
+        b=ZaDR6nHX6rfxCllyl5ylA4vmosLE1ooi1XP9rXqHZXk1sWUECFLRSkCSY90Y9s3tD
+         GyDcA3yrCTmlpoIzlQ8jdTKWShZqRWGdl4/EFpK91kGPtW8He+gIzP9jawj7l3Hei/
+         triRldm2GXCILpKYufedhUr+eg8n5QPYcHzODtoHHAD7vq+3LeMw8CMsqLemaxBpJJ
+         CF1l/hQCiTPWR8FCq+hs0g/X7fSNCN832JJlcam8R4z4Y5zVBNOOW2LXWnHtKHUlXd
+         eVa26M3zeOUljO7jldtqVxL6YIG8lo+M5krWWanUnzRmai2snVweFbgmUm6KR8uSVM
+         9Q9PhyZX9qxAA==
+Subject: [PATCH 14/41] xfs: compute rtrmap btree max levels when reflink
+ enabled
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:20:09 -0800
-Message-ID: <167243880941.734096.13968884111379475420.stgit@magnolia>
+Message-ID: <167243880954.734096.4151758764000191857.stgit@magnolia>
 In-Reply-To: <167243880752.734096.171910706541747310.stgit@magnolia>
 References: <167243880752.734096.171910706541747310.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,60 +50,69 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Don't error out on CoW staging extent records when realtime reflink is
-enabled.
+Compute the maximum possible height of the realtime rmap btree when
+reflink is enabled.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_rmap.c |   14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+ libxfs/xfs_rtrmap_btree.c |   28 ++++++++++++++++++++++++++--
+ 1 file changed, 26 insertions(+), 2 deletions(-)
 
 
-diff --git a/libxfs/xfs_rmap.c b/libxfs/xfs_rmap.c
-index a8ba49a89cf..1e2798ec709 100644
---- a/libxfs/xfs_rmap.c
-+++ b/libxfs/xfs_rmap.c
-@@ -273,6 +273,7 @@ xfs_rmap_check_rtgroup_irec(
- 	bool				is_unwritten;
- 	bool				is_bmbt;
- 	bool				is_attr;
-+	bool				is_cow;
+diff --git a/libxfs/xfs_rtrmap_btree.c b/libxfs/xfs_rtrmap_btree.c
+index ea5b3db3b32..1c8fe661e69 100644
+--- a/libxfs/xfs_rtrmap_btree.c
++++ b/libxfs/xfs_rtrmap_btree.c
+@@ -734,6 +734,7 @@ xfs_rtrmapbt_maxrecs(
+ unsigned int
+ xfs_rtrmapbt_maxlevels_ondisk(void)
+ {
++	unsigned long long	max_dblocks;
+ 	unsigned int		minrecs[2];
+ 	unsigned int		blocklen;
  
- 	if (irec->rm_blockcount == 0)
- 		return __this_address;
-@@ -284,6 +285,12 @@ xfs_rmap_check_rtgroup_irec(
- 			return __this_address;
- 		if (irec->rm_offset != 0)
- 			return __this_address;
-+	} else if (irec->rm_owner == XFS_RMAP_OWN_COW) {
-+		if (!xfs_has_rtreflink(mp))
-+			return __this_address;
-+		if (!xfs_verify_rgbext(rtg, irec->rm_startblock,
-+					    irec->rm_blockcount))
-+			return __this_address;
- 	} else {
- 		if (!xfs_verify_rgbext(rtg, irec->rm_startblock,
- 					    irec->rm_blockcount))
-@@ -300,8 +307,10 @@ xfs_rmap_check_rtgroup_irec(
- 	is_bmbt = irec->rm_flags & XFS_RMAP_BMBT_BLOCK;
- 	is_attr = irec->rm_flags & XFS_RMAP_ATTR_FORK;
- 	is_unwritten = irec->rm_flags & XFS_RMAP_UNWRITTEN;
-+	is_cow = xfs_has_rtreflink(mp) &&
-+		 irec->rm_owner == XFS_RMAP_OWN_COW;
+@@ -742,8 +743,20 @@ xfs_rtrmapbt_maxlevels_ondisk(void)
+ 	minrecs[0] = xfs_rtrmapbt_block_maxrecs(blocklen, true) / 2;
+ 	minrecs[1] = xfs_rtrmapbt_block_maxrecs(blocklen, false) / 2;
  
--	if (!is_inode && irec->rm_owner != XFS_RMAP_OWN_FS)
-+	if (!is_inode && !is_cow && irec->rm_owner != XFS_RMAP_OWN_FS)
- 		return __this_address;
+-	/* We need at most one record for every block in an rt group. */
+-	return xfs_btree_compute_maxlevels(minrecs, XFS_MAX_RGBLOCKS);
++	/*
++	 * Compute the asymptotic maxlevels for an rtrmapbt on any rtreflink fs.
++	 *
++	 * On a reflink filesystem, each block in an rtgroup can have up to
++	 * 2^32 (per the refcount record format) owners, which means that
++	 * theoretically we could face up to 2^64 rmap records.  However, we're
++	 * likely to run out of blocks in the data device long before that
++	 * happens, which means that we must compute the max height based on
++	 * what the btree will look like if it consumes almost all the blocks
++	 * in the data device due to maximal sharing factor.
++	 */
++	max_dblocks = -1U; /* max ag count */
++	max_dblocks *= XFS_MAX_CRC_AG_BLOCKS;
++	return xfs_btree_space_to_height(minrecs, max_dblocks);
+ }
  
- 	if (!is_inode && irec->rm_offset != 0)
-@@ -313,6 +322,9 @@ xfs_rmap_check_rtgroup_irec(
- 	if (is_unwritten && !is_inode)
- 		return __this_address;
- 
-+	if (is_unwritten && is_cow)
-+		return __this_address;
+ int __init
+@@ -782,9 +795,20 @@ xfs_rtrmapbt_compute_maxlevels(
+ 	 * maximum height is constrained by the size of the data device and
+ 	 * the height required to store one rmap record for each block in an
+ 	 * rt group.
++	 *
++	 * On a reflink filesystem, each rt block can have up to 2^32 (per the
++	 * refcount record format) owners, which means that theoretically we
++	 * could face up to 2^64 rmap records.  This makes the computation of
++	 * maxlevels based on record count meaningless, so we only consider the
++	 * size of the data device.
+ 	 */
+ 	d_maxlevels = xfs_btree_space_to_height(mp->m_rtrmap_mnr,
+ 				mp->m_sb.sb_dblocks);
++	if (xfs_has_rtreflink(mp)) {
++		mp->m_rtrmap_maxlevels = d_maxlevels + 1;
++		return;
++	}
 +
- 	/* Check for a valid fork offset, if applicable. */
- 	if (is_inode &&
- 	    !xfs_verify_fileext(mp, irec->rm_offset, irec->rm_blockcount))
+ 	r_maxlevels = xfs_btree_compute_maxlevels(mp->m_rtrmap_mnr,
+ 				mp->m_sb.sb_rgblocks);
+ 
 
