@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 406ACC4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:00:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15258C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:00:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235687AbiL3XAN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 18:00:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58734 "EHLO
+        id S235694AbiL3XAb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 18:00:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235692AbiL3XAM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:00:12 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19C2C1CFC9
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 15:00:12 -0800 (PST)
+        with ESMTP id S235692AbiL3XAa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:00:30 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 658EE1CFC9;
+        Fri, 30 Dec 2022 15:00:29 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9D36061C16
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 23:00:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1A95C433EF;
-        Fri, 30 Dec 2022 23:00:10 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 1702FB81D84;
+        Fri, 30 Dec 2022 23:00:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A26AAC433EF;
+        Fri, 30 Dec 2022 23:00:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672441211;
-        bh=hdYisSbn85PkE0srC+bjqKVg8SPysmBvsq7xlFN0WD0=;
+        s=k20201202; t=1672441226;
+        bh=30AGiV7N3yLx3LEE00Lz5n1GV3M5wwwMQ2QfGSyjFJU=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=uwboQPIiaURQj3hCHmHfllUqkz4fPUl78/S3vOp8bUqdiKgx7NZy9AUZMhSmgvzl8
-         9lrAENHnw6+QAWF9xpxybbubA2Xi5732MRESgZee3lQYyLr1jVkLuS00aZCgIhzGOA
-         e7wjXu9+j/2ZOGMoKT+5uaInVt58vC2Os1KC7+IVUe7ORG+KlGpWIO1r5vU0kKLIyy
-         daHp3SMrBLk03ShwrruEczQ+vwysPCTNMUojHlVOsrSlikhoxtKaSmZ+chvfx3qRIS
-         +tMcn6UcCS3U2c79MdjYgNFSZ8n9OiEwZqNg3UdNFkV9KGG4JG9T2Y197qIxKZsAaE
-         qzTsLmZ6OPp1g==
-Subject: [PATCHSET v24.0 0/6] xfs: prepare repair for bulk loading
+        b=C/Qo/sD0Z13ThavkOQqlOkZBsPVswFifsqfTmsaRCqUUhv0pAId7dfQa102tPXYwW
+         AUcS5zNyQTbJ+bCU6WI68UHUDACqZwfQb0HwOwwAzW0vbxwhsYm8Z1BsgTqcVjh2PH
+         fqYon4s8eB3fVEVyHFaQlrQnPqo/HwsIrhnnTmCJ0eH67DAwMWjEuNenhpH/biGpIW
+         TWuATc4gQnb0S4K/+JYC2mMZsALhQSBkk+J7Uv+NFxoVliKaSklU+WoiJCF7c9gQE9
+         NEObYlTrtm9rrfj6c2FugVkmEbUG1S7TRiUjyW2o5NBtfrswHs5SpISly9OzHrdEuq
+         mdYRPs9ZfRQ4A==
+Subject: [PATCHSET v24.0 0/7] xfs: stage repair information in pageable memory
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 30 Dec 2022 14:12:31 -0800
-Message-ID: <167243835101.692312.6690367712200502185.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, willy@infradead.org,
+        linux-fsdevel@vger.kernel.org
+Date:   Fri, 30 Dec 2022 14:12:34 -0800
+Message-ID: <167243835481.692498.14657125042725378987.stgit@magnolia>
 In-Reply-To: <Y69Unb7KRM5awJoV@magnolia>
 References: <Y69Unb7KRM5awJoV@magnolia>
 User-Agent: StGit/0.19
@@ -49,19 +50,22 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Hi all,
 
-Before we start merging the online repair functions, let's improve the
-bulk loading code a bit.  First, we need to fix a misinteraction between
-the AIL and the btree bulkloader wherein the delwri at the end of the
-bulk load fails to queue a buffer for writeback if it happens to be on
-the AIL list.
+In general, online repair of an indexed record set walks the filesystem
+looking for records.  These records are sorted and bulk-loaded into a
+new btree.  To make this happen without pinning gigabytes of metadata in
+memory, first create an abstraction ('xfile') of memfd files so that
+kernel code can access paged memory, and then an array abstraction
+('xfarray') based on xfiles so that online repair can create an array of
+new records without pinning memory.
 
-Second, we introduce EFIs in the btree bulkloader block allocator to to
-guarantee that staging blocks are freed if the filesystem goes down
-before committing the new btree.
+These two data storage abstractions are critical for repair of space
+metadata -- the memory used is pageable, which helps us avoid pinning
+kernel memory and driving OOM problems; and they are byte-accessible
+enough that we can use them like (very slow and programmatic) memory
+buffers.
 
-Third, we change the bulkloader itself to copy multiple records into a
-block if possible, and add some debugging knobs so that developers can
-control the slack factors, just like they can do for xfs_repair.
+Later patchsets will build on this functionality to provide blob storage
+and btrees.
 
 If you're going to start using this mess, you probably ought to just
 pull from my git trees, which are linked below.
@@ -72,30 +76,19 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-prep-for-bulk-loading
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-prep-for-bulk-loading
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=big-array
 ---
- fs/xfs/Makefile                   |    1 
- fs/xfs/libxfs/xfs_btree.c         |    2 
- fs/xfs/libxfs/xfs_btree.h         |    3 
- fs/xfs/libxfs/xfs_btree_staging.c |   67 +++-
- fs/xfs/libxfs/xfs_btree_staging.h |   32 +-
- fs/xfs/scrub/agheader_repair.c    |    1 
- fs/xfs/scrub/common.c             |    1 
- fs/xfs/scrub/newbt.c              |  567 +++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/newbt.h              |   68 ++++
- fs/xfs/scrub/repair.c             |   10 +
- fs/xfs/scrub/repair.h             |    1 
- fs/xfs/scrub/scrub.c              |    2 
- fs/xfs/scrub/trace.h              |   36 ++
- fs/xfs/xfs_buf.c                  |   31 ++
- fs/xfs/xfs_buf.h                  |    1 
- fs/xfs/xfs_globals.c              |   12 +
- fs/xfs/xfs_sysctl.h               |    2 
- fs/xfs/xfs_sysfs.c                |   54 ++++
- 18 files changed, 858 insertions(+), 33 deletions(-)
- create mode 100644 fs/xfs/scrub/newbt.c
- create mode 100644 fs/xfs/scrub/newbt.h
+ fs/xfs/Kconfig         |    1 
+ fs/xfs/Makefile        |    2 
+ fs/xfs/scrub/trace.c   |    4 
+ fs/xfs/scrub/trace.h   |  262 ++++++++++++
+ fs/xfs/scrub/xfarray.c | 1084 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/xfarray.h |  142 ++++++
+ fs/xfs/scrub/xfile.c   |  426 +++++++++++++++++++
+ fs/xfs/scrub/xfile.h   |   78 +++
+ 8 files changed, 1998 insertions(+), 1 deletion(-)
+ create mode 100644 fs/xfs/scrub/xfarray.c
+ create mode 100644 fs/xfs/scrub/xfarray.h
+ create mode 100644 fs/xfs/scrub/xfile.c
+ create mode 100644 fs/xfs/scrub/xfile.h
 
