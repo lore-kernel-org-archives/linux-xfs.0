@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82BCFC4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:34:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C398C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:34:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236244AbiLaCd7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 21:33:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56760 "EHLO
+        id S236243AbiLaCeS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 21:34:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236243AbiLaCd7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:33:59 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8363D26D9
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:33:58 -0800 (PST)
+        with ESMTP id S236245AbiLaCeP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:34:15 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C4771CB21
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:34:14 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3ECE4B81DED
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:33:57 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2FB0C433D2;
-        Sat, 31 Dec 2022 02:33:55 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id CCA40B81C22
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:34:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C500C433EF;
+        Sat, 31 Dec 2022 02:34:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672454036;
-        bh=VAhmcfNQEaTNX7DChoQS48AFAvs/CIv/NO9I60W4Q0w=;
+        s=k20201202; t=1672454051;
+        bh=hslgFdebPew+0RjSKZG69pr4YqNQXM5R/Dsrbuw7Q0w=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=iqIzwhfsN0NjErs4YYpId35qr41YFF+mireiwyWJtEg1r/AUx9suPKf/zh+UVED+y
-         XR7emWJ2PNf+mpQcMWeOmPnv8w/GOyIHOhOIauim2PVSJr71Ta7m5VEZ5Qc6bq1JgB
-         Uc0BhXgfKBCft3kCoMIpyestno+Ey+vmxd7zG6MKrmXeSLc2b90NPF3VcnGbxu2NSz
-         X9d5XmFlHrkLkpC50L7vzGg/r+DO/gn4c0BTgwWMvRHcTdn3ZamaE98Zb49VoNOou1
-         t5YgNcfxagxxoUnFx8vgtkPLo/FYK+JN7N3wHbz0KCvIersBkf4FFOVhAHrFhXZshs
-         axQXm27/pBIJA==
-Subject: [PATCH 15/45] xfs: encode the rtsummary in big endian format
+        b=hAT9RjMqBjx/jbZP+UQQ8htDYhtpyRgtywl44SR6VcUUrkVc39+wCaOkjMGRuK/Am
+         w1zOLrlViE6xVDva3xrOaTTYBV86pB0V2Yo7g6wzALuGtYA/VcfkywHJmLsnE67SJg
+         fsfX+gf61DTVPmHZJ7LEWQV16nP0QCInMVT7iTbRRmWtMg9jZStc6cUo13GdTAcddh
+         viygKwKC/HWZqhCA5cN/inDjsmU75VroukT6EXIqTlIEqeOtxAYATXG0dZiCOikEE9
+         P+ePmsAf+zmtkzy1nDdccKfES3CBJSW/aHBKSWJZUIjTYdNhiPvBWvSk4iW2PAsVgu
+         gj2tV+tuuNqHA==
+Subject: [PATCH 16/45] xfs: store rtgroup information with a bmap intent
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:19:45 -0800
-Message-ID: <167243878562.731133.13874280726766187783.stgit@magnolia>
+Message-ID: <167243878576.731133.2170551438718575869.stgit@magnolia>
 In-Reply-To: <167243878346.731133.14642166452774753637.stgit@magnolia>
 References: <167243878346.731133.14642166452774753637.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,63 +49,69 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Currently, the ondisk realtime summary file counters are accessed in
-units of 32-bit words.  There's no endian translation of the contents of
-this file, which means that the Bad Things Happen(tm) if you go from
-(say) x86 to powerpc.  Since we have a new feature flag, let's take the
-opportunity to enforce an endianness on the file.  Encode the summary
-information in big endian format, like most of the rest of the
-filesystem.
+Make the bmap intent items take an active reference to the rtgroup
+containing the space that is being mapped or unmapped.  We will need
+this functionality once we start enabling rmap and reflink on the rt
+volume.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_format.h   |    4 +++-
- libxfs/xfs_rtbitmap.c |    8 +++++++-
- 2 files changed, 10 insertions(+), 2 deletions(-)
+ libxfs/defer_item.c |   17 +++++++++++++++--
+ libxfs/xfs_bmap.h   |    5 ++++-
+ 2 files changed, 19 insertions(+), 3 deletions(-)
 
 
-diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-index 47b2e31e256..7e76bedda68 100644
---- a/libxfs/xfs_format.h
-+++ b/libxfs/xfs_format.h
-@@ -748,10 +748,12 @@ union xfs_rtword_ondisk {
+diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
+index 316cc87a802..be6ecbc348f 100644
+--- a/libxfs/defer_item.c
++++ b/libxfs/defer_item.c
+@@ -479,8 +479,18 @@ xfs_bmap_update_get_group(
+ {
+ 	xfs_agnumber_t		agno;
  
- /*
-  * Realtime summary counts are accessed by the word, which is currently
-- * stored in host-endian format.
-+ * stored in host-endian format.  Starting with the realtime groups feature,
-+ * the words are stored in be32 ondisk.
-  */
- union xfs_suminfo_ondisk {
- 	__u32		raw;
-+	__be32		rtg;
+-	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork))
++	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork)) {
++		if (xfs_has_rtgroups(mp)) {
++			xfs_rgnumber_t	rgno;
++
++			rgno = xfs_rtb_to_rgno(mp, bi->bi_bmap.br_startblock);
++			bi->bi_rtg = xfs_rtgroup_get(mp, rgno);
++		} else {
++			bi->bi_rtg = NULL;
++		}
++
+ 		return;
++	}
+ 
+ 	agno = XFS_FSB_TO_AGNO(mp, bi->bi_bmap.br_startblock);
+ 	bi->bi_pag = xfs_perag_get(mp, agno);
+@@ -500,8 +510,11 @@ static inline void
+ xfs_bmap_update_put_group(
+ 	struct xfs_bmap_intent	*bi)
+ {
+-	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork))
++	if (xfs_ifork_is_realtime(bi->bi_owner, bi->bi_whichfork)) {
++		if (xfs_has_rtgroups(bi->bi_owner->i_mount))
++			xfs_rtgroup_put(bi->bi_rtg);
+ 		return;
++	}
+ 
+ 	xfs_perag_drop_intents(bi->bi_pag);
+ 	xfs_perag_put(bi->bi_pag);
+diff --git a/libxfs/xfs_bmap.h b/libxfs/xfs_bmap.h
+index d870c6a62e4..05097b1d5c7 100644
+--- a/libxfs/xfs_bmap.h
++++ b/libxfs/xfs_bmap.h
+@@ -241,7 +241,10 @@ struct xfs_bmap_intent {
+ 	enum xfs_bmap_intent_type		bi_type;
+ 	int					bi_whichfork;
+ 	struct xfs_inode			*bi_owner;
+-	struct xfs_perag			*bi_pag;
++	union {
++		struct xfs_perag		*bi_pag;
++		struct xfs_rtgroup		*bi_rtg;
++	};
+ 	struct xfs_bmbt_irec			bi_bmap;
  };
  
- /*
-diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
-index 4ed3bd261f6..26428898d60 100644
---- a/libxfs/xfs_rtbitmap.c
-+++ b/libxfs/xfs_rtbitmap.c
-@@ -558,6 +558,9 @@ xfs_suminfo_get(
- 	struct xfs_mount	*mp,
- 	union xfs_suminfo_ondisk *infoptr)
- {
-+	if (xfs_has_rtgroups(mp))
-+		return be32_to_cpu(infoptr->rtg);
-+
- 	return infoptr->raw;
- }
- 
-@@ -567,7 +570,10 @@ xfs_suminfo_add(
- 	union xfs_suminfo_ondisk *infoptr,
- 	int			delta)
- {
--	infoptr->raw += delta;
-+	if (xfs_has_rtgroups(mp))
-+		be32_add_cpu(&infoptr->rtg, delta);
-+	else
-+		infoptr->raw += delta;
- }
- 
- /*
 
