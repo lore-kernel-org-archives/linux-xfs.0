@@ -2,43 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 140EAC4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 01:34:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6961CC3DA7C
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 01:34:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236109AbiLaBeD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 20:34:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46496 "EHLO
+        id S236001AbiLaBeR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 20:34:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229750AbiLaBeB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 20:34:01 -0500
+        with ESMTP id S229750AbiLaBeQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 20:34:16 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F8ABDEB7
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 17:34:00 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC6A2DEB7
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 17:34:15 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 08943B81E09
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 01:33:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1770C433D2;
-        Sat, 31 Dec 2022 01:33:57 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 85319B81E07
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 01:34:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 427FDC433D2;
+        Sat, 31 Dec 2022 01:34:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672450437;
-        bh=NUKlXYJQSSuJ1szDdttYAXE53M1+LMIcyNhBZpa1ZoA=;
+        s=k20201202; t=1672450453;
+        bh=vbWNqrHfzCegYiUJ5SjoTtHCLpvWfapNlNU19lvkd68=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Sz1V8G6FdL+hsjvN3Lxy3lRONOmZKMBVDU9EtIkRmil3+ZgiMysNy/ezTO4it3KyT
-         P/MLWgho9lfRThbkZ74hn4is3fHAFAFiOFmlR6p43ANxjhJiZC54ZFq2NvSdipZtjX
-         kPlpdRiJziMqMK1QW3h5p8hKJuBKEHG+htoI+af3vH0u3TbibJMtoWzhl0hUlLXHAp
-         2Wda52YvFxT6AAFBphwPru4Y+2rODmbDKwx//l/DklqeqY86F++GIDWFfTOoUIV51u
-         HATgZOGXmvEMLE6qxMPL7bulIVvTXfQSb/JMNqxCxPpyE2cqZ1J46UAuP3HjLZcj8n
-         tC4Rmnjm2mrXQ==
-Subject: [PATCH 3/3] xfs: enable FITRIM on the realtime device
+        b=GxA17hUZDTe349UIHM64PssTBfGRy33XQ5a8O1NxDybF63V7bMm9TkIUHg737nCkq
+         BAdSgDUkWEuOaDpCg+8x/4AUUgoKCeP6u8QZSvajbQxZ2zpKf2pMs3CAc2ijNCKOUe
+         LXjULNkoZO62lGWp26nididV2FGnrFE4mvyu5w84+gt3Rc/KF4xE63ZljNUX31SI9m
+         vWWnwEAxcwtDbtlKg6lVeEUN5N3T+DRmE2FPejauis4bLFXAAR5JD2iYB8Nf+9HQ7j
+         L7SNphetl+jY5w4Qv7iaHE52sUSFVxWyXVav6pHgFBJL+aeaHXIgmFiEk19KLsvYIx
+         m4LqpJm5PPJGQ==
+Subject: [PATCH 1/2] xfs: simplify xfs_ag_resv_free signature
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 30 Dec 2022 14:17:59 -0800
-Message-ID: <167243867907.713699.3220336734546600556.stgit@magnolia>
-In-Reply-To: <167243867862.713699.17132272459502557791.stgit@magnolia>
-References: <167243867862.713699.17132272459502557791.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:18:02 -0800
+Message-ID: <167243868212.714306.2868193225075481960.stgit@magnolia>
+In-Reply-To: <167243868195.714306.16190516279141417082.stgit@magnolia>
+References: <167243868195.714306.16190516279141417082.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,203 +49,214 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
+It's not possible to fail at increasing fdblocks, so get rid of all the
+error returns here.
+
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_discard.c |  106 ++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_trace.h   |   20 +++++++++
- 2 files changed, 125 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_ag.c      |    4 +---
+ fs/xfs/libxfs/xfs_ag_resv.c |   22 +++++-----------------
+ fs/xfs/libxfs/xfs_ag_resv.h |    2 +-
+ fs/xfs/scrub/repair.c       |    5 +----
+ fs/xfs/xfs_fsops.c          |   24 ++++++------------------
+ fs/xfs/xfs_fsops.h          |    2 +-
+ fs/xfs/xfs_super.c          |    6 +-----
+ fs/xfs/xfs_trace.h          |    1 -
+ 8 files changed, 16 insertions(+), 50 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index 6d3400771e21..f6ee2b8e5e9c 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -19,6 +19,7 @@
- #include "xfs_log.h"
- #include "xfs_ag.h"
- #include "xfs_health.h"
-+#include "xfs_rtbitmap.h"
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index 05d0a97e08c3..bc1fc86df322 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -887,9 +887,7 @@ xfs_ag_shrink_space(
+ 	 * Disable perag reservations so it doesn't cause the allocation request
+ 	 * to fail. We'll reestablish reservation before we return.
+ 	 */
+-	error = xfs_ag_resv_free(pag);
+-	if (error)
+-		return error;
++	xfs_ag_resv_free(pag);
  
- STATIC int
- xfs_trim_perag_extents(
-@@ -168,6 +169,86 @@ xfs_trim_ddev_extents(
- 	return last_error;
+ 	/* internal log shouldn't also show up in the free space btrees */
+ 	error = xfs_alloc_vextent(&args);
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index 2e6128a25635..8723cd0d3f58 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -126,14 +126,13 @@ xfs_ag_resv_needed(
  }
  
-+#ifdef CONFIG_XFS_RT
-+static int
-+xfs_trim_rtdev_extent(
-+	struct xfs_mount		*mp,
-+	struct xfs_trans		*tp,
-+	const struct xfs_rtalloc_rec	*rec,
-+	void				*priv)
-+{
-+	struct block_device	*bdev = xfs_buftarg_bdev(mp->m_rtdev_targp);
-+	uint64_t		*blocks_trimmed = priv;
-+	xfs_rtblock_t		rbno, rlen;
-+	xfs_daddr_t		dbno, dlen;
-+	int			error;
-+
-+	if (fatal_signal_pending(current))
-+		return -ERESTARTSYS;
-+
-+	rbno = xfs_rtx_to_rtb(mp, rec->ar_startext);
-+	rlen = xfs_rtx_to_rtb(mp, rec->ar_extcount);
-+
-+	trace_xfs_discard_rtextent(mp, rbno, rlen);
-+
-+	dbno = XFS_FSB_TO_BB(mp, rbno);
-+	dlen = XFS_FSB_TO_BB(mp, rlen);
-+
-+	error = blkdev_issue_discard(bdev, dbno, dlen, GFP_NOFS);
-+	if (error)
-+		return error;
-+
-+	*blocks_trimmed += rlen;
-+	return 0;
-+}
-+
-+static int
-+xfs_trim_rtdev_extents(
-+	struct xfs_mount	*mp,
-+	xfs_daddr_t		start,
-+	xfs_daddr_t		end,
-+	xfs_daddr_t		minlen,
-+	uint64_t		*blocks_trimmed)
-+{
-+	struct xfs_rtalloc_rec	low = { }, high = { };
-+	xfs_daddr_t		rtdev_daddr;
-+	xfs_extlen_t		mod;
-+	int			error;
-+
-+	/* Shift the start and end downwards to match the rt device. */
-+	rtdev_daddr = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
-+	if (start > rtdev_daddr)
-+		start -= rtdev_daddr;
-+	else
-+		start = 0;
-+
-+	if (end <= rtdev_daddr)
-+		return 0;
-+	end -= rtdev_daddr;
-+
-+	if (end > XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks) - 1)
-+		end = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rblocks) - 1;
-+
-+	/* Convert the rt blocks to rt extents */
-+	low.ar_startext = xfs_rtb_to_rtx(mp, XFS_BB_TO_FSB(mp, start), &mod);
-+	if (mod)
-+		low.ar_startext++;
-+	high.ar_startext = xfs_rtb_to_rtx(mp, XFS_BB_TO_FSBT(mp, end), &mod);
-+
-+	/*
-+	 * Walk the free ranges between low and high.  The query_range function
-+	 * trims the extents returned.
-+	 */
-+	xfs_rtbitmap_lock_shared(mp, XFS_RBMLOCK_BITMAP);
-+	error = xfs_rtalloc_query_range(mp, NULL, &low, &high,
-+			xfs_trim_rtdev_extent, blocks_trimmed);
-+	xfs_rtbitmap_unlock_shared(mp, XFS_RBMLOCK_BITMAP);
-+	return error;
-+}
-+#else
-+# define xfs_trim_rtdev_extents(m,s,e,n,b)	(-EOPNOTSUPP)
-+#endif /* CONFIG_XFS_RT */
-+
- /*
-  * trim a range of the filesystem.
-  *
-@@ -176,6 +257,9 @@ xfs_trim_ddev_extents(
-  * addressing. FSB addressing is sparse (AGNO|AGBNO), while the incoming format
-  * is a linear address range. Hence we need to use DADDR based conversions and
-  * comparisons for determining the correct offset and regions to trim.
-+ *
-+ * The realtime device is mapped into the FITRIM "address space" immediately
-+ * after the data device.
-  */
- int
- xfs_ioc_trim(
-@@ -183,8 +267,10 @@ xfs_ioc_trim(
- 	struct fstrim_range __user	*urange)
+ /* Clean out a reservation */
+-static int
++static void
+ __xfs_ag_resv_free(
+ 	struct xfs_perag		*pag,
+ 	enum xfs_ag_resv_type		type)
  {
- 	struct block_device	*bdev = xfs_buftarg_bdev(mp->m_ddev_targp);
-+	struct block_device	*rt_bdev = NULL;
- 	unsigned int		granularity = bdev_discard_granularity(bdev);
- 	struct fstrim_range	range;
-+	xfs_rfsblock_t		max_blocks;
- 	xfs_daddr_t		start, end, minlen;
- 	uint64_t		blocks_trimmed = 0;
- 	int			error, last_error = 0;
-@@ -194,6 +280,14 @@ xfs_ioc_trim(
- 	if (!bdev_max_discard_sectors(bdev))
- 		return -EOPNOTSUPP;
+ 	struct xfs_ag_resv		*resv;
+ 	xfs_extlen_t			oldresv;
+-	int				error;
  
-+	if (mp->m_rtdev_targp) {
-+		rt_bdev = xfs_buftarg_bdev(mp->m_rtdev_targp);
-+		if (!bdev_max_discard_sectors(rt_bdev))
-+			return -EOPNOTSUPP;
-+		granularity = max(granularity,
-+				  bdev_discard_granularity(rt_bdev));
-+	}
+ 	trace_xfs_ag_resv_free(pag, type, 0);
+ 
+@@ -149,30 +148,19 @@ __xfs_ag_resv_free(
+ 		oldresv = resv->ar_orig_reserved;
+ 	else
+ 		oldresv = resv->ar_reserved;
+-	error = xfs_mod_fdblocks(pag->pag_mount, oldresv, true);
++	xfs_mod_fdblocks(pag->pag_mount, oldresv, true);
+ 	resv->ar_reserved = 0;
+ 	resv->ar_asked = 0;
+ 	resv->ar_orig_reserved = 0;
+-
+-	if (error)
+-		trace_xfs_ag_resv_free_error(pag->pag_mount, pag->pag_agno,
+-				error, _RET_IP_);
+-	return error;
+ }
+ 
+ /* Free a per-AG reservation. */
+-int
++void
+ xfs_ag_resv_free(
+ 	struct xfs_perag		*pag)
+ {
+-	int				error;
+-	int				err2;
+-
+-	error = __xfs_ag_resv_free(pag, XFS_AG_RESV_RMAPBT);
+-	err2 = __xfs_ag_resv_free(pag, XFS_AG_RESV_METADATA);
+-	if (err2 && !error)
+-		error = err2;
+-	return error;
++	__xfs_ag_resv_free(pag, XFS_AG_RESV_RMAPBT);
++	__xfs_ag_resv_free(pag, XFS_AG_RESV_METADATA);
+ }
+ 
+ static int
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.h b/fs/xfs/libxfs/xfs_ag_resv.h
+index b74b210008ea..ff20ed93de77 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.h
++++ b/fs/xfs/libxfs/xfs_ag_resv.h
+@@ -6,7 +6,7 @@
+ #ifndef __XFS_AG_RESV_H__
+ #define	__XFS_AG_RESV_H__
+ 
+-int xfs_ag_resv_free(struct xfs_perag *pag);
++void xfs_ag_resv_free(struct xfs_perag *pag);
+ int xfs_ag_resv_init(struct xfs_perag *pag, struct xfs_trans *tp);
+ 
+ bool xfs_ag_resv_critical(struct xfs_perag *pag, enum xfs_ag_resv_type type);
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index b5c5ee7f512b..1652f633f692 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -951,9 +951,7 @@ xrep_reset_perag_resv(
+ 	ASSERT(sc->tp);
+ 
+ 	sc->flags &= ~XREP_RESET_PERAG_RESV;
+-	error = xfs_ag_resv_free(sc->sa.pag);
+-	if (error)
+-		goto out;
++	xfs_ag_resv_free(sc->sa.pag);
+ 	error = xfs_ag_resv_init(sc->sa.pag, sc->tp);
+ 	if (error == -ENOSPC) {
+ 		xfs_err(sc->mp,
+@@ -962,7 +960,6 @@ xrep_reset_perag_resv(
+ 		error = 0;
+ 	}
+ 
+-out:
+ 	return error;
+ }
+ 
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 2da86f05e0e5..8186f142864a 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -201,11 +201,10 @@ xfs_growfs_data_private(
+ 			struct xfs_perag	*pag;
+ 
+ 			pag = xfs_perag_get(mp, id.agno);
+-			error = xfs_ag_resv_free(pag);
++			xfs_ag_resv_free(pag);
+ 			xfs_perag_put(pag);
+-			if (error)
+-				return error;
+ 		}
 +
+ 		/*
+ 		 * Reserve AG metadata blocks. ENOSPC here does not mean there
+ 		 * was a growfs failure, just that there still isn't space for
+@@ -585,24 +584,13 @@ xfs_fs_reserve_ag_blocks(
+ /*
+  * Free space reserved for per-AG metadata.
+  */
+-int
++void
+ xfs_fs_unreserve_ag_blocks(
+ 	struct xfs_mount	*mp)
+ {
+-	xfs_agnumber_t		agno;
+ 	struct xfs_perag	*pag;
+-	int			error = 0;
+-	int			err2;
++	xfs_agnumber_t		agno;
+ 
+-	for_each_perag(mp, agno, pag) {
+-		err2 = xfs_ag_resv_free(pag);
+-		if (err2 && !error)
+-			error = err2;
+-	}
+-
+-	if (error)
+-		xfs_warn(mp,
+-	"Error %d freeing per-AG metadata reserve pool.", error);
+-
+-	return error;
++	for_each_perag(mp, agno, pag)
++		xfs_ag_resv_free(pag);
+ }
+diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
+index 2cffe51a31e8..dba17c404e7d 100644
+--- a/fs/xfs/xfs_fsops.h
++++ b/fs/xfs/xfs_fsops.h
+@@ -14,6 +14,6 @@ extern int xfs_reserve_blocks(xfs_mount_t *mp, uint64_t *inval,
+ extern int xfs_fs_goingdown(xfs_mount_t *mp, uint32_t inflags);
+ 
+ extern int xfs_fs_reserve_ag_blocks(struct xfs_mount *mp);
+-extern int xfs_fs_unreserve_ag_blocks(struct xfs_mount *mp);
++extern void xfs_fs_unreserve_ag_blocks(struct xfs_mount *mp);
+ 
+ #endif	/* __XFS_FSOPS_H__ */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index bfe93ca6eed4..e145de0bd562 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1830,11 +1830,7 @@ xfs_remount_ro(
+ 	xfs_inodegc_stop(mp);
+ 
+ 	/* Free the per-AG metadata reservation pool. */
+-	error = xfs_fs_unreserve_ag_blocks(mp);
+-	if (error) {
+-		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+-		return error;
+-	}
++	xfs_fs_unreserve_ag_blocks(mp);
+ 
  	/*
- 	 * We haven't recovered the log, so we cannot use our bnobt-guided
- 	 * storage zapping commands.
-@@ -213,7 +307,8 @@ xfs_ioc_trim(
- 	 * used by the fstrim application.  In the end it really doesn't
- 	 * matter as trimming blocks is an advisory interface.
- 	 */
--	if (range.start >= XFS_FSB_TO_B(mp, mp->m_sb.sb_dblocks) ||
-+	max_blocks = mp->m_sb.sb_dblocks + mp->m_sb.sb_rblocks;
-+	if (range.start >= XFS_FSB_TO_B(mp, max_blocks) ||
- 	    range.minlen > XFS_FSB_TO_B(mp, mp->m_ag_max_usable) ||
- 	    range.len < mp->m_sb.sb_blocksize)
- 		return -EINVAL;
-@@ -227,6 +322,15 @@ xfs_ioc_trim(
- 	if (error)
- 		last_error = error;
- 
-+	if (rt_bdev) {
-+		error = xfs_trim_rtdev_extents(mp, start, end, minlen,
-+				&blocks_trimmed);
-+		if (error == -ERESTARTSYS)
-+			return error;
-+		if (error)
-+			last_error = error;
-+	}
-+
- 	if (last_error)
- 		return last_error;
- 
+ 	 * Before we sync the metadata, we need to free up the reserve block
 diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index ec9aa1914a93..cfb26288394a 100644
+index cfb26288394a..d0e939f5b706 100644
 --- a/fs/xfs/xfs_trace.h
 +++ b/fs/xfs/xfs_trace.h
-@@ -2520,6 +2520,26 @@ DEFINE_DISCARD_EVENT(xfs_discard_toosmall);
- DEFINE_DISCARD_EVENT(xfs_discard_exclude);
- DEFINE_DISCARD_EVENT(xfs_discard_busy);
+@@ -3145,7 +3145,6 @@ DEFINE_AG_RESV_EVENT(xfs_ag_resv_free_extent);
+ DEFINE_AG_RESV_EVENT(xfs_ag_resv_critical);
+ DEFINE_AG_RESV_EVENT(xfs_ag_resv_needed);
  
-+TRACE_EVENT(xfs_discard_rtextent,
-+	TP_PROTO(struct xfs_mount *mp,
-+		 xfs_rtblock_t rtbno, xfs_rtblock_t len),
-+	TP_ARGS(mp, rtbno, len),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_rtblock_t, rtbno)
-+		__field(xfs_rtblock_t, len)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_rtdev_targp->bt_dev;
-+		__entry->rtbno = rtbno;
-+		__entry->len = len;
-+	),
-+	TP_printk("dev %d:%d rtbno 0x%llx rtbcount 0x%llx",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->rtbno,
-+		  __entry->len)
-+);
-+
- /* btree cursor events */
- TRACE_DEFINE_ENUM(XFS_BTNUM_BNOi);
- TRACE_DEFINE_ENUM(XFS_BTNUM_CNTi);
+-DEFINE_AG_ERROR_EVENT(xfs_ag_resv_free_error);
+ DEFINE_AG_ERROR_EVENT(xfs_ag_resv_init_error);
+ 
+ /* refcount tracepoint classes */
 
