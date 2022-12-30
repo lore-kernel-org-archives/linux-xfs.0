@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D35BC4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 01:15:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B3C0C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 01:16:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236028AbiLaBPu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 20:15:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43270 "EHLO
+        id S236039AbiLaBQG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 20:16:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236035AbiLaBPt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 20:15:49 -0500
+        with ESMTP id S236035AbiLaBQF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 20:16:05 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A541E2BC4
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 17:15:48 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EDE7267A
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 17:16:04 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4442261D39
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 01:15:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1A2FC433EF;
-        Sat, 31 Dec 2022 01:15:47 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E0E1F61D76
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 01:16:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B053C433EF;
+        Sat, 31 Dec 2022 01:16:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672449347;
-        bh=8UkypakY+PbI/zJ6e/y7KMHxq0HSS1AeXyyQI34mGrU=;
+        s=k20201202; t=1672449363;
+        bh=IUq+uTtRhJRY47zdelTje8W+8i/0bgteo7TdGj2BOVw=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=gJXDSiYnCa/+vZJPyPRVnOR8upTWsN5Gze/pZljZKHkii+w4gFg7QtJarahnHUJmo
-         sib4vqQnAFXAJtgu77b0DycTSZLvmHzZYQtQGOTct3xGRYPs7MK9PDcjASvXXBdU9t
-         ExzQB7yXLWjhrQUhlfaMJmYgjU/DyU5uXLf5k7prMgfLS2xcG7/pSWa0jLGrAzy/E7
-         D/l66XnS2oQHirds1JipvwVadaJNpKWIjgdogvmPGk8jhIj3tYqXk1XGviTO3uAaCb
-         Eeb+itQHvjYO4YN6nBhU/+bLI7dP2yZa3qUWNuL1eOg/nI4w8F4CIlb839uBxH1WBi
-         to2dKaAoUgQHg==
-Subject: [PATCH 21/23] xfs: teach nlink scrubber to deal with metadata
- directory roots
+        b=f43mVKyCZY3zpxoNNar4/k/hcdR/S4x+3c1HGrjUilKQ5zccORoOnNyL7TmmO4ZzN
+         G8ZwHHn668yya3bWaKuIsYbnUPQZLOuQyglqG4KL5yXUWgRoeX+OOvuT1doi/EUoGZ
+         oU3eLuhU231+8eLbc9XQ0DPx083CcF81enUpBmLw74okDwyVNw4EdMJg79/cwDM7iD
+         V6+Yrk9x22fw01QhEFM6o2CrzK/fy9LWzZtVfwH8LOTBfSzu3mCY6TlZ8W+phmNFqj
+         D2wss2ctBE1o7hoYdR83uffoCGUbmOAOkuy7VsfzD2KhixklW4cnuKmik6g+cShjz/
+         devMnUihqve8w==
+Subject: [PATCH 22/23] xfs: don't check secondary super inode pointers when
+ metadir enabled
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:17:27 -0800
-Message-ID: <167243864755.708110.16970195189174285046.stgit@magnolia>
+Message-ID: <167243864769.708110.11113843210077455683.stgit@magnolia>
 In-Reply-To: <167243864431.708110.1688096566212843499.stgit@magnolia>
 References: <167243864431.708110.1688096566212843499.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,65 +50,70 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Enhance the inode link count online fsck code alter their behavior when
-they detect metadata directory tree roots, just like they do for the
-regular root directory.
+When metadata directories are enabled, the rt and quota inodes are no
+longer pointed to by the superblock, so it doesn't make sense to check
+these.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/nlinks.c        |   12 +++++++-----
- fs/xfs/scrub/nlinks_repair.c |    2 +-
- 2 files changed, 8 insertions(+), 6 deletions(-)
+ fs/xfs/scrub/agheader.c |   29 +++++++++++++++++++----------
+ 1 file changed, 19 insertions(+), 10 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/nlinks.c b/fs/xfs/scrub/nlinks.c
-index dca759d27ac4..5325bb0e196e 100644
---- a/fs/xfs/scrub/nlinks.c
-+++ b/fs/xfs/scrub/nlinks.c
-@@ -282,7 +282,7 @@ xchk_nlinks_collect_dirent(
- 	 * Otherwise, increment the number of backrefs pointing back to ino.
- 	 */
- 	if (dotdot) {
--		if (dp == sc->mp->m_rootip)
-+		if (dp == sc->mp->m_rootip || dp == sc->mp->m_metadirip)
- 			error = xchk_nlinks_update_incore(xnc, ino, 1, 0, 0);
- 		else
- 			error = xchk_nlinks_update_incore(xnc, ino, 0, 1, 0);
-@@ -458,9 +458,11 @@ xchk_nlinks_collect(
- 	int			error;
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index fb2f32a2af5d..e5edba4219fd 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -144,11 +144,16 @@ xchk_superblock(
+ 	if (sb->sb_rootino != cpu_to_be64(mp->m_sb.sb_rootino))
+ 		xchk_block_set_preen(sc, bp);
  
- 	/* Count the rt and quota files that are rooted in the superblock. */
--	error = xchk_nlinks_collect_metafiles(xnc);
--	if (error)
--		return error;
+-	if (sb->sb_rbmino != cpu_to_be64(mp->m_sb.sb_rbmino))
+-		xchk_block_set_preen(sc, bp);
++	if (xfs_has_metadir(sc->mp)) {
++		if (sb->sb_rbmino != cpu_to_be64(mp->m_sb.sb_metadirino))
++			xchk_block_set_preen(sc, bp);
++	} else {
++		if (sb->sb_rbmino != cpu_to_be64(mp->m_sb.sb_rbmino))
++			xchk_block_set_preen(sc, bp);
+ 
+-	if (sb->sb_rsumino != cpu_to_be64(mp->m_sb.sb_rsumino))
+-		xchk_block_set_preen(sc, bp);
++		if (sb->sb_rsumino != cpu_to_be64(mp->m_sb.sb_rsumino))
++			xchk_block_set_preen(sc, bp);
++	}
+ 
+ 	if (sb->sb_rextsize != cpu_to_be32(mp->m_sb.sb_rextsize))
+ 		xchk_block_set_corrupt(sc, bp);
+@@ -225,11 +230,13 @@ xchk_superblock(
+ 	 * sb_icount, sb_ifree, sb_fdblocks, sb_frexents
+ 	 */
+ 
+-	if (sb->sb_uquotino != cpu_to_be64(mp->m_sb.sb_uquotino))
+-		xchk_block_set_preen(sc, bp);
 +	if (!xfs_has_metadir(sc->mp)) {
-+		error = xchk_nlinks_collect_metafiles(xnc);
-+		if (error)
-+			return error;
++		if (sb->sb_uquotino != cpu_to_be64(mp->m_sb.sb_uquotino))
++			xchk_block_set_preen(sc, bp);
+ 
+-	if (sb->sb_gquotino != cpu_to_be64(mp->m_sb.sb_gquotino))
+-		xchk_block_set_preen(sc, bp);
++		if (sb->sb_gquotino != cpu_to_be64(mp->m_sb.sb_gquotino))
++			xchk_block_set_preen(sc, bp);
 +	}
  
  	/*
- 	 * Set up for a potentially lengthy filesystem scan by reducing our
-@@ -648,7 +650,7 @@ xchk_nlinks_compare_inode(
- 			xchk_ino_set_corrupt(sc, ip->i_ino);
+ 	 * Skip the quota flags since repair will force quotacheck.
+@@ -338,8 +345,10 @@ xchk_superblock(
+ 		if (sb->sb_spino_align != cpu_to_be32(mp->m_sb.sb_spino_align))
+ 			xchk_block_set_corrupt(sc, bp);
+ 
+-		if (sb->sb_pquotino != cpu_to_be64(mp->m_sb.sb_pquotino))
+-			xchk_block_set_preen(sc, bp);
++		if (!xfs_has_metadir(sc->mp)) {
++			if (sb->sb_pquotino != cpu_to_be64(mp->m_sb.sb_pquotino))
++				xchk_block_set_preen(sc, bp);
++		}
+ 
+ 		/* Don't care about sb_lsn */
  	}
- 
--	if (ip == sc->mp->m_rootip) {
-+	if (ip == sc->mp->m_rootip || ip == sc->mp->m_metadirip) {
- 		/*
- 		 * For the root of a directory tree, both the '.' and '..'
- 		 * entries should point to the root directory.  The dot entry
-diff --git a/fs/xfs/scrub/nlinks_repair.c b/fs/xfs/scrub/nlinks_repair.c
-index f881e5dbd432..055eb4b67053 100644
---- a/fs/xfs/scrub/nlinks_repair.c
-+++ b/fs/xfs/scrub/nlinks_repair.c
-@@ -86,7 +86,7 @@ xrep_nlinks_is_orphaned(
- 
- 	if (obs->parents != 0)
- 		return false;
--	if (ip == mp->m_rootip || ip == sc->orphanage)
-+	if (ip == mp->m_rootip || ip == sc->orphanage || ip == mp->m_metadirip)
- 		return false;
- 	return actual_nlink != 0;
- }
 
