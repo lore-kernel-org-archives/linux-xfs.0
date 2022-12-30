@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C14E0C3DA7C
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:30:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B36EDC53210
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:30:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235583AbiLaAa3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 19:30:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33022 "EHLO
+        id S229677AbiLaAam (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 19:30:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235625AbiLaAaJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:30:09 -0500
+        with ESMTP id S235635AbiLaAal (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:30:41 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 081EB1EAC9
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 16:30:08 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1880E1EAC9
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 16:30:39 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9754561D49
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 00:30:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F11A3C433D2;
-        Sat, 31 Dec 2022 00:30:06 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A933D61D4E
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 00:30:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10C2FC433EF;
+        Sat, 31 Dec 2022 00:30:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672446607;
-        bh=6incI2MCs/Tczc2JspzIea5KJuaXbI+jl6jhS3ZABog=;
+        s=k20201202; t=1672446638;
+        bh=coN6UL/W+xhy2N0adpIcmp/JiBh2EbEQoLE55uda76E=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=jpmSqGkucuHCIv7vyW25lWRxBcVMif66QgQvFgHA6VziwRT7MCI/Ejytd+6p7qjII
-         EROOz/h350Yn23iCC3ciClhkZW+c2YuONylgsUnvrUuaoZlQiS3zI2olx+UYK6b54J
-         qA7acaEHyFyPyUrXrEOgsHAPgZgqqXa2FL2PuY+SFmDILd/H+wRpNwDy5GfRldmwEo
-         uau14CJ3OcswmUkROrT/6U490nZn4L5JnOCxhT/qeGCzlbvDC5w6fYHCeQO7vH2bIu
-         Dbg04mNLTgJNT5CZRAsguOyi9f0xwxANlqKk9+HoG7cF6RZm8///B5X0Na4LghcXoA
-         rDTT2ZiwkXoQQ==
-Subject: [PATCH 2/5] xfs_scrub: remove enum check_outcome
+        b=fQGfo/8SONUw44n8B+RmtTsX/9RNuyO405hMXsWvShls1Q0eNS0YW398kNR+ShWBE
+         HhLfWqzfv0tpkqDGrrqPmaf6pqR83/BdrXTbP6TBRh7uixZZ7EEW9KTtXbwkaWJWnv
+         f9ZqfI7adAa/zNr8iLaEPutQbTp5lIX2mTsI/rWlW3ibTH5CrlMCwklQFpLSKwaLhj
+         HhQ5HUVNEC89ExT/QLRpbiDQApY0mty7A2bbLDiBtb9CCiQm2SBctGEn0HbP83bbnC
+         WfPyExh4SjEoFzW0IKEZW0osIHMgLSDOOXs567cYNm/A+7tVCqGFT9LqhlWe3zKD/V
+         TV5RcGemRQYHw==
+Subject: [PATCH 4/5] xfs_scrub: hoist repair retry loop to repair_item_class
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     cem@kernel.org, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:18:21 -0800
-Message-ID: <167243870127.716382.594721188903094401.stgit@magnolia>
+Message-ID: <167243870154.716382.4065561229338671158.stgit@magnolia>
 In-Reply-To: <167243870099.716382.3489355808439125232.stgit@magnolia>
 References: <167243870099.716382.3489355808439125232.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,363 +49,176 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Get rid of this enumeration, and just do what we will directly.
+For metadata repair calls, move the ioctl retry and freeze permission
+tracking into scrub_item.  This enables us to move the repair retry loop
+out of xfs_repair_metadata and into its caller to remove a long
+backwards jump, and gets us closer to vectorizing scrub calls.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- scrub/repair.c |   56 ++++++++++++++++++++++----------------------------
- scrub/scrub.c  |   63 +++++++++++++++++++++++++++++---------------------------
- scrub/scrub.h  |    8 -------
- 3 files changed, 58 insertions(+), 69 deletions(-)
+ scrub/repair.c        |   21 ++++++++++++---------
+ scrub/scrub.c         |   32 ++++++++++++++++++++++++++++++--
+ scrub/scrub.h         |    6 ++++++
+ scrub/scrub_private.h |   14 ++++++++++++++
+ 4 files changed, 62 insertions(+), 11 deletions(-)
 
 
 diff --git a/scrub/repair.c b/scrub/repair.c
-index a552b445e90..9cce421223b 100644
+index 9cce421223b..d0434e3d6d1 100644
 --- a/scrub/repair.c
 +++ b/scrub/repair.c
-@@ -45,7 +45,7 @@ static const unsigned int repair_deps[XFS_SCRUB_TYPE_NR] = {
- #undef DEP
- 
- /* Repair some metadata. */
--static enum check_outcome
-+static int
- xfs_repair_metadata(
- 	struct scrub_ctx		*ctx,
- 	struct xfs_fd			*xfdp,
-@@ -87,7 +87,7 @@ xfs_repair_metadata(
- 	}
- 
- 	if (!is_corrupt(&meta) && repair_only)
--		return CHECK_RETRY;
-+		return 0;
- 
- 	memcpy(&oldm, &meta, sizeof(oldm));
- 	oldm.sm_flags = sri->sri_state[scrub_type] & SCRUB_ITEM_REPAIR_ANY;
-@@ -111,12 +111,12 @@ xfs_repair_metadata(
- 		if (debug || verbose)
- 			str_info(ctx, descr_render(&dsc),
- _("Filesystem is busy, deferring repair."));
--		return CHECK_RETRY;
-+		return 0;
- 	case ESHUTDOWN:
- 		/* Filesystem is already shut down, abort. */
- 		str_error(ctx, descr_render(&dsc),
- _("Filesystem is shut down, aborting."));
--		return CHECK_ABORT;
-+		return ECANCELED;
- 	case ENOTTY:
- 	case EOPNOTSUPP:
- 		/*
-@@ -128,7 +128,7 @@ _("Filesystem is shut down, aborting."));
- 		 * again to see if another repair fixed it.
- 		 */
- 		if (!(repair_flags & XRM_FINAL_WARNING))
--			return CHECK_RETRY;
-+			return 0;
- 		/*
- 		 * If we forced repairs or this is a preen, don't
- 		 * error out if the kernel doesn't know how to fix.
-@@ -136,7 +136,7 @@ _("Filesystem is shut down, aborting."));
- 		if (is_unoptimized(&oldm) ||
- 		    debug_tweak_on("XFS_SCRUB_FORCE_REPAIR")) {
- 			scrub_item_clean_state(sri, scrub_type);
--			return CHECK_DONE;
-+			return 0;
- 		}
- 		fallthrough;
- 	case EINVAL:
-@@ -144,23 +144,23 @@ _("Filesystem is shut down, aborting."));
- 		str_corrupt(ctx, descr_render(&dsc),
- _("Don't know how to fix; offline repair required."));
- 		scrub_item_clean_state(sri, scrub_type);
--		return CHECK_DONE;
-+		return 0;
- 	case EROFS:
- 		/* Read-only filesystem, can't fix. */
- 		if (verbose || debug || needs_repair(&oldm))
- 			str_error(ctx, descr_render(&dsc),
- _("Read-only filesystem; cannot make changes."));
--		return CHECK_ABORT;
-+		return ECANCELED;
- 	case ENOENT:
- 		/* Metadata not present, just skip it. */
- 		scrub_item_clean_state(sri, scrub_type);
--		return CHECK_DONE;
-+		return 0;
- 	case ENOMEM:
- 	case ENOSPC:
- 		/* Don't care if preen fails due to low resources. */
- 		if (is_unoptimized(&oldm) && !needs_repair(&oldm)) {
- 			scrub_item_clean_state(sri, scrub_type);
--			return CHECK_DONE;
-+			return 0;
- 		}
- 		fallthrough;
- 	default:
-@@ -172,10 +172,10 @@ _("Read-only filesystem; cannot make changes."));
- 		 * trying to repair it, and bail out.
- 		 */
- 		if (!(repair_flags & XRM_FINAL_WARNING))
--			return CHECK_RETRY;
-+			return 0;
- 		str_liberror(ctx, error, descr_render(&dsc));
- 		scrub_item_clean_state(sri, scrub_type);
--		return CHECK_DONE;
-+		return 0;
- 	}
+@@ -57,7 +57,6 @@ xfs_repair_metadata(
+ 	struct xfs_scrub_metadata	oldm;
+ 	DEFINE_DESCR(dsc, ctx, format_scrub_descr);
+ 	bool				repair_only;
+-	unsigned int			tries = 0;
+ 	int				error;
  
  	/*
-@@ -198,7 +198,7 @@ _("Read-only filesystem; cannot make changes."));
- 		 * log the error loudly and don't try again.
- 		 */
- 		if (!(repair_flags & XRM_FINAL_WARNING))
--			return CHECK_RETRY;
-+			return 0;
- 		str_corrupt(ctx, descr_render(&dsc),
-  _("Repair unsuccessful; offline repair required."));
- 	} else if (xref_failed(&meta)) {
-@@ -216,7 +216,7 @@ _("Read-only filesystem; cannot make changes."));
- 			if (verbose)
- 				str_info(ctx, descr_render(&dsc),
-  _("Seems correct but cross-referencing failed; will keep checking."));
--			return CHECK_RETRY;
-+			return 0;
- 		}
- 	} else if (meta.sm_flags & XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED) {
- 		if (verbose)
-@@ -233,7 +233,7 @@ _("Read-only filesystem; cannot make changes."));
- 	}
+@@ -99,7 +98,6 @@ xfs_repair_metadata(
+ 		str_info(ctx, descr_render(&dsc),
+ 				_("Attempting optimization."));
  
- 	scrub_item_clean_state(sri, scrub_type);
--	return CHECK_DONE;
-+	return 0;
- }
+-retry:
+ 	error = -xfrog_scrub_metadata(xfdp, &meta);
+ 	switch (error) {
+ 	case 0:
+@@ -184,10 +182,8 @@ _("Read-only filesystem; cannot make changes."));
+ 	 * the repair again, just in case the fs was busy.  Only retry so many
+ 	 * times.
+ 	 */
+-	if (want_retry(&meta) && tries < 10) {
+-		tries++;
+-		goto retry;
+-	}
++	if (want_retry(&meta) && scrub_item_schedule_retry(sri, scrub_type))
++		return 0;
  
- /*
-@@ -534,6 +534,7 @@ repair_item_class(
+ 	if (repair_flags & XRM_FINAL_WARNING)
+ 		scrub_warn_incomplete_scrub(ctx, &dsc, &meta);
+@@ -532,6 +528,7 @@ repair_item_class(
+ 	unsigned int			flags)
+ {
  	struct xfs_fd			xfd;
++	struct scrub_item		old_sri;
  	struct xfs_fd			*xfdp = &ctx->mnt;
  	unsigned int			scrub_type;
-+	int				error = 0;
- 
- 	if (ctx->mode < SCRUB_MODE_REPAIR)
- 		return 0;
-@@ -550,8 +551,6 @@ repair_item_class(
- 	}
- 
- 	foreach_scrub_type(scrub_type) {
--		enum check_outcome	fix;
--
- 		if (scrub_excessive_errors(ctx))
- 			return ECANCELED;
- 
-@@ -567,22 +566,17 @@ repair_item_class(
+ 	int				error = 0;
+@@ -566,9 +563,15 @@ repair_item_class(
  		    !repair_item_dependencies_ok(sri, scrub_type))
  			continue;
  
--		fix = xfs_repair_metadata(ctx, xfdp, scrub_type, sri, flags);
--		switch (fix) {
--		case CHECK_DONE:
--			if (!(flags & XRM_NOPROGRESS))
--				progress_add(1);
--			continue;
--		case CHECK_ABORT:
--			return ECANCELED;
--		case CHECK_RETRY:
--			continue;
--		case CHECK_REPAIR:
--			abort();
--		}
-+		error = xfs_repair_metadata(ctx, xfdp, scrub_type, sri, flags);
-+		if (error)
-+			break;
-+
-+		/* Maybe update progress if we fixed the problem. */
-+		if (!(flags & XRM_NOPROGRESS) &&
-+		    !(sri->sri_state[scrub_type] & SCRUB_ITEM_REPAIR_ANY))
-+			progress_add(1);
- 	}
+-		error = xfs_repair_metadata(ctx, xfdp, scrub_type, sri, flags);
+-		if (error)
+-			break;
++		sri->sri_tries[scrub_type] = SCRUB_ITEM_MAX_RETRIES;
++		do {
++			memcpy(&old_sri, sri, sizeof(old_sri));
++			error = xfs_repair_metadata(ctx, xfdp, scrub_type, sri,
++					flags);
++			if (error)
++				return error;
++		} while (scrub_item_call_kernel_again(sri, scrub_type,
++					repair_mask, &old_sri));
  
--	return 0;
-+	return error;
- }
- 
- /*
+ 		/* Maybe update progress if we fixed the problem. */
+ 		if (!(flags & XRM_NOPROGRESS) &&
 diff --git a/scrub/scrub.c b/scrub/scrub.c
-index 1a60631eddc..da49285be78 100644
+index ccc6a7a4047..d3d96a85903 100644
 --- a/scrub/scrub.c
 +++ b/scrub/scrub.c
-@@ -78,12 +78,12 @@ scrub_warn_incomplete_scrub(
+@@ -268,6 +268,34 @@ scrub_item_schedule_group(
+ 	}
  }
  
- /* Do a read-only check of some metadata. */
--static enum check_outcome
-+static int
- xfs_check_metadata(
- 	struct scrub_ctx		*ctx,
- 	struct xfs_fd			*xfdp,
- 	struct xfs_scrub_metadata	*meta,
--	bool				is_inode)
-+	struct scrub_item		*sri)
- {
- 	DEFINE_DESCR(dsc, ctx, format_scrub_descr);
- 	enum xfrog_scrub_group		group;
-@@ -106,17 +106,18 @@ xfs_check_metadata(
- 		break;
- 	case ENOENT:
- 		/* Metadata not present, just skip it. */
--		return CHECK_DONE;
-+		scrub_item_clean_state(sri, meta->sm_type);
-+		return 0;
- 	case ESHUTDOWN:
- 		/* FS already crashed, give up. */
- 		str_error(ctx, descr_render(&dsc),
- _("Filesystem is shut down, aborting."));
--		return CHECK_ABORT;
-+		return ECANCELED;
- 	case EIO:
- 	case ENOMEM:
- 		/* Abort on I/O errors or insufficient memory. */
- 		str_liberror(ctx, error, descr_render(&dsc));
--		return CHECK_ABORT;
-+		return ECANCELED;
- 	case EDEADLOCK:
- 	case EBUSY:
- 	case EFSBADCRC:
-@@ -124,13 +125,16 @@ _("Filesystem is shut down, aborting."));
- 		/*
- 		 * The first two should never escape the kernel,
- 		 * and the other two should be reported via sm_flags.
-+		 * Log it and move on.
- 		 */
- 		str_liberror(ctx, error, _("Kernel bug"));
--		return CHECK_DONE;
-+		scrub_item_clean_state(sri, meta->sm_type);
-+		return 0;
- 	default:
--		/* Operational error. */
-+		/* Operational error.  Log it and move on. */
- 		str_liberror(ctx, error, descr_render(&dsc));
--		return CHECK_DONE;
-+		scrub_item_clean_state(sri, meta->sm_type);
-+		return 0;
++/* Decide if we call the kernel again to finish scrub/repair activity. */
++bool
++scrub_item_call_kernel_again(
++	struct scrub_item	*sri,
++	unsigned int		scrub_type,
++	uint8_t			work_mask,
++	const struct scrub_item	*old)
++{
++	uint8_t			statex;
++
++	/* If there's nothing to do, we're done. */
++	if (!(sri->sri_state[scrub_type] & work_mask))
++		return false;
++
++	/*
++	 * We are willing to go again if the last call had any effect on the
++	 * state of the scrub item that the caller cares about, if the freeze
++	 * flag got set, or if the kernel asked us to try again...
++	 */
++	statex = sri->sri_state[scrub_type] ^ old->sri_state[scrub_type];
++	if (statex & work_mask)
++		return true;
++	if (sri->sri_tries[scrub_type] != old->sri_tries[scrub_type])
++		return true;
++
++	return false;
++}
++
+ /* Run all the incomplete scans on this scrub principal. */
+ int
+ scrub_item_check_file(
+@@ -383,9 +411,9 @@ scrub_item_dump(
+ 		unsigned int	g = 1U << xfrog_scrubbers[i].group;
+ 
+ 		if (g & group_mask)
+-			printf("[%u]: type '%s' state 0x%x\n", i,
++			printf("[%u]: type '%s' state 0x%x tries %u\n", i,
+ 					xfrog_scrubbers[i].name,
+-					sri->sri_state[i]);
++					sri->sri_state[i], sri->sri_tries[i]);
  	}
- 
- 	/*
-@@ -153,12 +157,16 @@ _("Filesystem is shut down, aborting."));
- 	 */
- 	if (is_corrupt(meta) || xref_disagrees(meta)) {
- 		if (ctx->mode < SCRUB_MODE_REPAIR) {
-+			/* Dry-run mode, so log an error and forget it. */
- 			str_corrupt(ctx, descr_render(&dsc),
- _("Repairs are required."));
--			return CHECK_DONE;
-+			scrub_item_clean_state(sri, meta->sm_type);
-+			return 0;
- 		}
- 
--		return CHECK_REPAIR;
-+		/* Schedule repairs. */
-+		scrub_item_save_state(sri, meta->sm_type, meta->sm_flags);
-+		return 0;
- 	}
- 
- 	/*
-@@ -167,6 +175,7 @@ _("Repairs are required."));
- 	 */
- 	if (is_unoptimized(meta)) {
- 		if (ctx->mode != SCRUB_MODE_REPAIR) {
-+			/* Dry-run mode, so log an error and forget it. */
- 			if (group != XFROG_SCRUB_GROUP_INODE) {
- 				/* AG or FS metadata, always warn. */
- 				str_info(ctx, descr_render(&dsc),
-@@ -178,10 +187,13 @@ _("Optimization is possible."));
- 					ctx->preen_triggers[meta->sm_type] = true;
- 				pthread_mutex_unlock(&ctx->lock);
- 			}
--			return CHECK_DONE;
-+			scrub_item_clean_state(sri, meta->sm_type);
-+			return 0;
- 		}
- 
--		return CHECK_REPAIR;
-+		/* Schedule optimizations. */
-+		scrub_item_save_state(sri, meta->sm_type, meta->sm_flags);
-+		return 0;
- 	}
- 
- 	/*
-@@ -191,11 +203,14 @@ _("Optimization is possible."));
- 	 * re-examine the object as repairs progress to see if the kernel will
- 	 * deem it completely consistent at some point.
- 	 */
--	if (xref_failed(meta) && ctx->mode == SCRUB_MODE_REPAIR)
--		return CHECK_REPAIR;
-+	if (xref_failed(meta) && ctx->mode == SCRUB_MODE_REPAIR) {
-+		scrub_item_save_state(sri, meta->sm_type, meta->sm_flags);
-+		return 0;
-+	}
- 
- 	/* Everything is ok. */
--	return CHECK_DONE;
-+	scrub_item_clean_state(sri, meta->sm_type);
-+	return 0;
+ 	fflush(stdout);
  }
- 
- /* Bulk-notify user about things that could be optimized. */
-@@ -235,7 +250,7 @@ scrub_meta_type(
- 	struct xfs_scrub_metadata	meta = {
- 		.sm_type		= type,
- 	};
--	enum check_outcome		fix;
-+	int				error;
- 
- 	background_sleep();
- 
-@@ -256,24 +271,12 @@ scrub_meta_type(
- 	}
- 
- 	/* Check the item. */
--	fix = xfs_check_metadata(ctx, xfdp, &meta, false);
-+	error = xfs_check_metadata(ctx, xfdp, &meta, sri);
- 
- 	if (xfrog_scrubbers[type].group != XFROG_SCRUB_GROUP_INODE)
- 		progress_add(1);
- 
--	switch (fix) {
--	case CHECK_ABORT:
--		return ECANCELED;
--	case CHECK_REPAIR:
--		scrub_item_save_state(sri, type, meta.sm_flags);
--		return 0;
--	case CHECK_DONE:
--		scrub_item_clean_state(sri, type);
--		return 0;
--	default:
--		/* CHECK_RETRY should never happen. */
--		abort();
--	}
-+	return error;
- }
- 
- /* Schedule scrub for all metadata of a given group. */
 diff --git a/scrub/scrub.h b/scrub/scrub.h
-index 1c24b054fd9..797b872246d 100644
+index 797b872246d..e1ce6ed2f59 100644
 --- a/scrub/scrub.h
 +++ b/scrub/scrub.h
-@@ -8,14 +8,6 @@
+@@ -45,6 +45,9 @@ enum xfrog_scrub_group;
+ 				 SCRUB_ITEM_XFAIL | \
+ 				 SCRUB_ITEM_XCORRUPT)
  
- enum xfrog_scrub_group;
++/* Maximum number of times we'll retry a scrub ioctl call. */
++#define SCRUB_ITEM_MAX_RETRIES	10
++
+ struct scrub_item {
+ 	/*
+ 	 * Information we need to call the scrub and repair ioctls.  Per-AG
+@@ -58,6 +61,9 @@ struct scrub_item {
  
--/* Online scrub and repair. */
--enum check_outcome {
--	CHECK_DONE,	/* no further processing needed */
--	CHECK_REPAIR,	/* schedule this for repairs */
--	CHECK_ABORT,	/* end program */
--	CHECK_RETRY,	/* repair failed, try again later */
--};
--
- /*
-  * This flag boosts the repair priority of a scrub item when a dependent scrub
-  * item is scheduled for repair.  Use a separate flag to preserve the
+ 	/* Scrub item state flags, one for each XFS_SCRUB_TYPE. */
+ 	__u8			sri_state[XFS_SCRUB_TYPE_NR];
++
++	/* Track scrub and repair call retries for each scrub type. */
++	__u8			sri_tries[XFS_SCRUB_TYPE_NR];
+ };
+ 
+ #define foreach_scrub_type(loopvar) \
+diff --git a/scrub/scrub_private.h b/scrub/scrub_private.h
+index b54384c2091..6380779c90b 100644
+--- a/scrub/scrub_private.h
++++ b/scrub/scrub_private.h
+@@ -89,4 +89,18 @@ scrub_item_type_boosted(
+ 	return sri->sri_state[scrub_type] & SCRUB_ITEM_BOOST_REPAIR;
+ }
+ 
++/* Decide if we want to retry this operation and update bookkeeping if yes. */
++static inline bool
++scrub_item_schedule_retry(struct scrub_item *sri, unsigned int scrub_type)
++{
++	if (sri->sri_tries[scrub_type] == 0)
++		return false;
++	sri->sri_tries[scrub_type]--;
++	return true;
++}
++
++bool scrub_item_call_kernel_again(struct scrub_item *sri,
++		unsigned int scrub_type, uint8_t work_mask,
++		const struct scrub_item *old);
++
+ #endif /* XFS_SCRUB_SCRUB_PRIVATE_H_ */
 
