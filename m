@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58A55C4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:52:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E5CEC4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:53:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236277AbiLaCwz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 21:52:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60640 "EHLO
+        id S236278AbiLaCxM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 21:53:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60674 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236243AbiLaCwy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:52:54 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C03E18387
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:52:53 -0800 (PST)
+        with ESMTP id S236243AbiLaCxL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:53:11 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FE0018387
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:53:10 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DA8DE61BC8
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:52:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 475D3C433D2;
-        Sat, 31 Dec 2022 02:52:52 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 1EDABB81E49
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:53:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C214CC433D2;
+        Sat, 31 Dec 2022 02:53:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672455172;
-        bh=mbDqidvA+NpFWYp62pHk7eo4jwU1qN0AxYnlF31zVoc=;
+        s=k20201202; t=1672455187;
+        bh=kaCeD074OxuQ4OelpyCZR2oiYivFD+EEJWkqqOQyg1o=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=puw2imvzAq8KmpVunGUIBsVP0WVBdjVoDrDHpX0ZVhFB1I4r8hTjzNR+y+nC0O2zJ
-         fgo5cqeVGMBD0aTFXpkJE98lUkQQdWPtWCyMcGlWMSiqVoao5JLcJYGYqkuRmN0z1Z
-         MglhJ3oHJdoOvcuzUDsDbFscj9IiUheiZLtLpwwxtQhNRkHtukJZ2tJG94ypEFo4/8
-         fu8YUEQvLyyFbskAYlPxlK4jkdxKvdy24J7X2aBD18KINeIHexI8Z0gOi+PBPGWy29
-         vT0pWh9p0jfcLLccg1frFx2xCo8KKwd6bSmSX4VF2UjmznlvEDCRSf+qxBwr09BX+p
-         2c9hv5OKGiNHg==
-Subject: [PATCH 40/41] xfs_scrub: retest metadata across scrub groups after a
- repair
+        b=ShkvfO7NiDG17+hM/ZIIvKdY7Ya6iFPLY8iY+wvuGP+8XjolahpIcvaMh/8UU0OD/
+         ONfORMA1FLVJYfXHcBRiqS81q9EAqL7HwYuZslU8VfydE6fa7OjuRx+Fihal5SYcL0
+         9q6aqW3JxgvrF5BrIBVHNv/gQ5kiyk8JyRBj1VaI6NGc3/qHY2pGFSZ538C2yjaUHE
+         9/ncSUbCRKRMNVsuD0ss+8cLhFtdgtRUB3BXS1OMyALfBh4MZvQ8zZbRcdqp97gXeS
+         GiY1/O0nwpasSBFtZ+qJ/DdLQIPv+tZcG6+JN8dZTVYFEULTIcj3VEyeZNhka4nxvu
+         a97R8f5ELg79g==
+Subject: [PATCH 41/41] mkfs: create the realtime rmap inode
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:20:01 -0800
-Message-ID: <167243880122.732820.7337094835824044775.stgit@magnolia>
+Message-ID: <167243880136.732820.14784846856345197333.stgit@magnolia>
 In-Reply-To: <167243879574.732820.4725863402652761218.stgit@magnolia>
 References: <167243879574.732820.4725863402652761218.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,237 +49,232 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Certain types of metadata have dependencies that cross scrub groups.
-For example, after a repair the part of realtime bitmap corresponding to
-a realtime group, we potentially need to rebuild the realtime summary to
-reflect the new bitmap contents.  The rtsummary is a separate scrub group
-(metafiles) from the rgbitmap (rtgroup), which means that the rtsummary
-repairs must be tracked by a separate scrub_item.
-
-Create the necessary dependency table and code to make these kinds of
-cross-group validations possible.
+Create a realtime rmapbt inode if we format the fs with realtime
+and rmap.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- scrub/phase4.c |   43 ++++++++++++++++++++
- scrub/repair.c |  123 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/repair.h |    5 ++
- 3 files changed, 171 insertions(+)
+ libxfs/init.c   |    7 ----
+ mkfs/proto.c    |   62 ++++++++++++++++++++++++++++++++++++++
+ mkfs/xfs_mkfs.c |   90 ++++++++++++++++++++++++++++++++++++++++++++++++++++---
+ 3 files changed, 147 insertions(+), 12 deletions(-)
 
 
-diff --git a/scrub/phase4.c b/scrub/phase4.c
-index 74fcc55b379..2d0a448e268 100644
---- a/scrub/phase4.c
-+++ b/scrub/phase4.c
-@@ -42,6 +42,47 @@ struct repair_list_schedule {
- 	bool				made_progress;
- };
+diff --git a/libxfs/init.c b/libxfs/init.c
+index 6f549996b1e..aa94c87ccd4 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -455,13 +455,6 @@ rtmount_init(
+ 		return -1;
+ 	}
  
-+/*
-+ * After a successful repair, schedule any additional revalidations needed in
-+ * other scrub groups.
-+ */
-+static int
-+revalidate_across_groups(
-+	struct scrub_ctx		*ctx,
-+	const struct action_item	*old_aitem,
-+	struct repair_list_schedule	*rls)
-+{
-+	struct action_list		alist;
-+	int				error;
-+
-+	action_list_init(&alist);
-+
-+	error = action_item_schedule_revalidation(ctx, old_aitem, &alist);
-+	if (error) {
-+		rls->aborted = true;
-+		return error;
-+	}
-+
-+	if (action_list_empty(&alist))
-+		return 0;
-+
-+	pthread_mutex_unlock(&rls->lock);
-+	error = action_list_revalidate(ctx, &alist);
-+	pthread_mutex_lock(&rls->lock);
-+
-+	if (error)
-+		rls->aborted = true;
-+	else
-+		rls->made_progress = true;
-+
-+	/*
-+	 * Merge the action items into the scrub context for freeing, even if
-+	 * there was an error.
-+	 */
-+	action_list_merge(&rls->requeue_list, &alist);
-+	return error;
-+}
-+
- /* Try to repair as many things on our list as we can. */
- static void
- repair_list_worker(
-@@ -89,6 +130,8 @@ repair_list_worker(
- 			action_list_add(&rls->requeue_list, aitem);
- 			break;
- 		case TR_REPAIRED:
-+			revalidate_across_groups(ctx, aitem, rls);
-+
- 			/* Item is clean.  Free it. */
- 			free(aitem);
- 			break;
-diff --git a/scrub/repair.c b/scrub/repair.c
-index 79a15f907a1..3e00db7a2fd 100644
---- a/scrub/repair.c
-+++ b/scrub/repair.c
-@@ -42,6 +42,15 @@ static const unsigned int repair_deps[XFS_SCRUB_TYPE_NR] = {
- 					  DEP(XFS_SCRUB_TYPE_PQUOTA),
- 	[XFS_SCRUB_TYPE_RTSUM]		= DEP(XFS_SCRUB_TYPE_RTBITMAP),
- };
-+
-+/*
-+ * Data dependencies that cross scrub groups.  When we repair a metadata object
-+ * of the given type (e.g. rtgroup bitmaps), we want to trigger a revalidation
-+ * of the specified objects (e.g. rt summary file).
-+ */
-+static const unsigned int cross_group_recheck[XFS_SCRUB_TYPE_NR] = {
-+	[XFS_SCRUB_TYPE_RGBITMAP]	= DEP(XFS_SCRUB_TYPE_RTSUM),
-+};
- #undef DEP
- 
- /*
-@@ -781,3 +790,117 @@ repair_item_to_action_item(
- 	*aitemp = aitem;
- 	return 0;
+-	if (xfs_has_rmapbt(mp)) {
+-		fprintf(stderr,
+-	_("%s: Reverse mapping btree not compatible with realtime device. Please try a newer xfsprogs.\n"),
+-				progname);
+-		return -1;
+-	}
+-
+ 	if (mp->m_rtdev_targp->bt_bdev == 0 && !xfs_is_debugger(mp)) {
+ 		fprintf(stderr, _("%s: filesystem has a realtime subvolume\n"),
+ 			progname);
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index e734269864e..36af61ed5c0 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -813,6 +813,60 @@ rtsummary_create(
+ 	libxfs_imeta_end_update(mp, &upd, 0);
  }
-+
-+static int
-+schedule_cross_group_recheck(
-+	struct scrub_ctx	*ctx,
-+	unsigned int		recheck_mask,
-+	struct action_list	*new_items)
+ 
++/* Create the realtime rmap btree inode. */
++static void
++rtrmapbt_create(
++	struct xfs_rtgroup	*rtg)
 +{
-+	unsigned int		scrub_type;
-+
-+	foreach_scrub_type(scrub_type) {
-+		struct action_item	*aitem;
-+
-+		if (!(recheck_mask & (1U << scrub_type)))
-+			continue;
-+
-+		switch (xfrog_scrubbers[scrub_type].group) {
-+		case XFROG_SCRUB_GROUP_METAFILES:
-+			/*
-+			 * XXX gcc fortify gets confused on the memset in
-+			 * scrub_item_init_fs if we hoist this allocation to a
-+			 * helper function.
-+			 */
-+			aitem = malloc(sizeof(struct action_item));
-+			if (!aitem) {
-+				int	error = errno;
-+
-+				str_liberror(ctx, error,
-+						_("creating repair revalidation action item"));
-+				return error;
-+			}
-+
-+			INIT_LIST_HEAD(&aitem->list);
-+			aitem->sri.sri_revalidate = true;
-+
-+			scrub_item_init_fs(&aitem->sri);
-+			scrub_item_schedule(&aitem->sri, scrub_type);
-+			action_list_add(new_items, aitem);
-+			break;
-+		default:
-+			/* We don't support any other groups yet. */
-+			assert(false);
-+			continue;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * After a successful repair, schedule revalidation of metadata outside of this
-+ * scrub item's group.
-+ */
-+int
-+action_item_schedule_revalidation(
-+	struct scrub_ctx		*ctx,
-+	const struct action_item	*old_aitem,
-+	struct action_list		*new_items)
-+{
-+	struct action_item		*aitem, *n;
-+	unsigned int			scrub_type;
-+	int				error = 0;
-+
-+	foreach_scrub_type(scrub_type) {
-+		unsigned int		mask;
-+
-+		if (!(old_aitem->sri.sri_selected & (1U << scrub_type)))
-+			continue;
-+		mask = cross_group_recheck[scrub_type];
-+		if (!mask)
-+			continue;
-+
-+		error = schedule_cross_group_recheck(ctx, mask, new_items);
-+		if (error)
-+			goto bad;
-+	}
-+
-+	return 0;
-+bad:
-+	list_for_each_entry_safe(aitem, n, &new_items->list, list) {
-+		list_del(&aitem->list);
-+		free(aitem);
-+	}
-+	return error;
-+}
-+
-+/*
-+ * Revalidate all items scheduled for a recheck, and drop the ones that are
-+ * clean.
-+ */
-+int
-+action_list_revalidate(
-+	struct scrub_ctx	*ctx,
-+	struct action_list	*alist)
-+{
-+	struct action_item	*aitem, *n;
++	struct xfs_mount	*mp = rtg->rtg_mount;
++	struct xfs_imeta_update	upd;
++	struct xfs_rmap_irec	rmap = {
++		.rm_startblock	= 0,
++		.rm_blockcount	= mp->m_sb.sb_rextsize,
++		.rm_owner	= XFS_RMAP_OWN_FS,
++		.rm_offset	= 0,
++		.rm_flags	= 0,
++	};
++	struct xfs_imeta_path	*path;
++	struct xfs_trans	*tp;
++	struct xfs_btree_cur	*cur;
 +	int			error;
 +
-+	list_for_each_entry_safe(aitem, n, &alist->list, list) {
-+		error = scrub_item_check(ctx, &aitem->sri);
-+		if (error)
-+			return error;
++	error = -libxfs_rtrmapbt_create_path(mp, rtg->rtg_rgno, &path);
++	if (error)
++		fail( _("rtrmap inode path creation failed"), error);
 +
-+		if (repair_item_count_needsrepair(&aitem->sri) > 0) {
-+			aitem->sri.sri_revalidate = false;
-+			continue;
-+		}
++	error = -libxfs_imeta_ensure_dirpath(mp, path);
++	if (error)
++		fail(_("rtgroup directory allocation failed"), error);
 +
-+		/* Metadata are clean, delete from list. */
-+		list_del(&aitem->list);
-+		free(aitem);
++	error = -libxfs_imeta_start_update(mp, path, &upd);
++	if (error)
++		res_failed(error);
++
++	error = -libxfs_trans_alloc(mp, &M_RES(mp)->tr_imeta_create,
++			libxfs_imeta_create_space_res(mp), 0, 0, &tp);
++	if (error)
++		res_failed(error);
++
++	error = -libxfs_rtrmapbt_create(&tp, path, &upd, &rtg->rtg_rmapip);
++	if (error)
++		fail(_("rtrmap inode creation failed"), error);
++
++	cur = libxfs_rtrmapbt_init_cursor(mp, tp, rtg, rtg->rtg_rmapip);
++	error = -libxfs_rmap_map_raw(cur, &rmap);
++	libxfs_btree_del_cursor(cur, error);
++	if (error)
++		fail(_("rtrmapbt initialization failed"), error);
++
++	error = -libxfs_trans_commit(tp);
++	if (error)
++		fail(_("rtrmapbt commit failed"), error);
++
++	libxfs_imeta_end_update(mp, &upd, 0);
++	libxfs_imeta_free_path(path);
++}
++
+ /* Initialize block headers of rt free space files. */
+ static int
+ init_rtblock_headers(
+@@ -1046,9 +1100,17 @@ static void
+ rtinit(
+ 	struct xfs_mount	*mp)
+ {
++	struct xfs_rtgroup	*rtg;
++	xfs_rgnumber_t		rgno;
++
+ 	rtbitmap_create(mp);
+ 	rtsummary_create(mp);
+ 
++	for_each_rtgroup(mp, rgno, rtg) {
++		if (xfs_has_rtrmapbt(mp))
++			rtrmapbt_create(rtg);
 +	}
 +
-+	return 0;
+ 	rtbitmap_init(mp);
+ 	rtsummary_init(mp);
+ 	if (xfs_has_rtgroups(mp))
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 4f96e436d32..eebcade7d1a 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2392,12 +2392,18 @@ _("reflink not supported with realtime devices\n"));
+ 		}
+ 		cli->sb_feat.reflink = false;
+ 
+-		if (cli->sb_feat.rmapbt && cli_opt_set(&mopts, M_RMAPBT)) {
+-			fprintf(stderr,
+-_("rmapbt not supported with realtime devices\n"));
+-			usage();
++		if (!cli->sb_feat.rtgroups && cli->sb_feat.rmapbt) {
++			if (cli_opt_set(&mopts, M_RMAPBT) &&
++			    cli_opt_set(&ropts, R_RTGROUPS)) {
++				fprintf(stderr,
++_("rmapbt not supported on realtime devices without rtgroups feature\n"));
++				usage();
++			} else if (cli_opt_set(&mopts, M_RMAPBT)) {
++				cli->sb_feat.rtgroups = true;
++			} else {
++				cli->sb_feat.rmapbt = false;
++			}
+ 		}
+-		cli->sb_feat.rmapbt = false;
+ 	}
+ 
+ 	if ((cli->fsx.fsx_xflags & FS_XFLAG_COWEXTSIZE) &&
+@@ -4500,6 +4506,77 @@ cfgfile_parse(
+ 		cli->cfgfile);
+ }
+ 
++static inline void
++prealloc_fail(
++	struct xfs_mount	*mp,
++	int			error,
++	xfs_filblks_t		ask,
++	const char		*tag)
++{
++	if (error == ENOSPC)
++		fprintf(stderr,
++	_("%s: cannot handle expansion of %s; need %llu free blocks, have %llu\n"),
++				progname, tag, (unsigned long long)ask,
++				(unsigned long long)mp->m_sb.sb_fdblocks);
++	else
++		fprintf(stderr,
++	_("%s: error %d while checking free space for %s\n"),
++				progname, error, tag);
++	exit(1);
 +}
-diff --git a/scrub/repair.h b/scrub/repair.h
-index c4b9b5799e2..f90ac16b13f 100644
---- a/scrub/repair.h
-+++ b/scrub/repair.h
-@@ -50,6 +50,11 @@ enum tryrepair_outcome {
- int action_item_try_repair(struct scrub_ctx *ctx, struct action_item *aitem,
- 		enum tryrepair_outcome *outcome);
- 
-+int action_item_schedule_revalidation(struct scrub_ctx *ctx,
-+		const struct action_item *old_aitem,
-+		struct action_list *new_items);
-+int action_list_revalidate(struct scrub_ctx *sc, struct action_list *alist);
 +
- void repair_item_mustfix(struct scrub_item *sri, struct scrub_item *fix_now);
++/*
++ * Make sure there's enough space on the data device to handle realtime
++ * metadata btree expansions.
++ */
++static void
++check_rt_meta_prealloc(
++	struct xfs_mount	*mp)
++{
++	struct xfs_perag	*pag;
++	struct xfs_rtgroup	*rtg;
++	xfs_agnumber_t		agno;
++	xfs_rgnumber_t		rgno;
++	xfs_filblks_t		ask;
++	int			error;
++
++	/*
++	 * First create all the per-AG reservations, since they take from the
++	 * free block count.  Each AG should start with enough free space for
++	 * the per-AG reservation.
++	 */
++	mp->m_finobt_nores = false;
++
++	for_each_perag(mp, agno, pag) {
++		error = -libxfs_ag_resv_init(pag, NULL);
++		if (error && error != ENOSPC) {
++			fprintf(stderr,
++	_("%s: error %d while checking AG free space for realtime metadata\n"),
++					progname, error);
++			exit(1);
++		}
++	}
++
++	/* Realtime metadata btree inode */
++	for_each_rtgroup(mp, rgno, rtg) {
++		ask = libxfs_rtrmapbt_calc_reserves(mp);
++		error = -libxfs_imeta_resv_init_inode(rtg->rtg_rmapip, ask);
++		if (error)
++			prealloc_fail(mp, error, ask, _("realtime rmap btree"));
++	}
++
++	/* Unreserve the realtime metadata reservations. */
++	for_each_rtgroup(mp, rgno, rtg) {
++		libxfs_imeta_resv_free_inode(rtg->rtg_rmapip);
++	}
++
++	/* Unreserve the per-AG reservations. */
++	for_each_perag(mp, agno, pag)
++		libxfs_ag_resv_free(pag);
++
++	mp->m_finobt_nores = false;
++}
++
+ int
+ main(
+ 	int			argc,
+@@ -4873,6 +4950,9 @@ main(
+ 	 */
+ 	check_root_ino(mp);
  
- /* Primary metadata is corrupt */
++	/* Make sure we can handle space preallocations of rt metadata btrees */
++	check_rt_meta_prealloc(mp);
++
+ 	/*
+ 	 * Re-write multiple secondary superblocks with rootinode field set
+ 	 */
 
