@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80E84C4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:12:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 948F6C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:12:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235697AbiL3XMc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 18:12:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33124 "EHLO
+        id S235696AbiL3XMs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 18:12:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33156 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235696AbiL3XMb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:12:31 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1702BDE81
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 15:12:31 -0800 (PST)
+        with ESMTP id S235698AbiL3XMr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:12:47 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7CD11D0C0
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 15:12:46 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C64A4B81D67
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 23:12:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8546FC433EF;
-        Fri, 30 Dec 2022 23:12:28 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 82DB5B81D67
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 23:12:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3748BC433D2;
+        Fri, 30 Dec 2022 23:12:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672441948;
-        bh=qBwyfTpqVGnMJ2XBjYuwhBaOpiIz4w4Jl35jBCmXW38=;
+        s=k20201202; t=1672441964;
+        bh=prGCuuXKr9PY1/sFwss/lYDOIDFz6OBcpcosGnFsxe0=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=qn01/utY96nofFZvVuPAPm2XD0bqDzpp0nSHoUJDaFnB3JabDm89/5qGzYGdUN703
-         HLT8X9OSwBrXq0TMpG65/zi9C/eoShO3Dt0KEVqEVycmcllKCFTj+lukaTTV+uSPBX
-         ZJDYh7JsaW2+Yu+EDT5w8qPYPnLBa4W6sohAHy6iEXaRonPlUtvMW5+Pga1XW5B5L7
-         nBihnXvw0vUcjhySk/o0v7TLVYnB1Tu24Jc33B2dCs/WKvFZjmERfjeKIZw5iLojTK
-         QURDmVn/OFw6LnA7nf6mN8APO2VwWumlCiwws18NjKwT74frJm4jDwFRETOch8ytRE
-         oS84jEy6ishZQ==
-Subject: [PATCHSET v24.0 0/1] xfs: online fsck of iunlink buckets
+        b=ckvSzRfM8ozu5PzTbGY5THyMHH9QVRRleLWaMSLXIp8rdXg0coBe7pIknui+IzU3M
+         hxuXnIX0jI3IUL7+xnH09YEJpGoldsKCQ0ylea6p3TT0IzKPDuE68LRl+zOOAcBsI7
+         wh3abqY6PoCxXirH7JNgLu/L/8R9RuRaglRO/KUFv+oIUftZtynyB1OATQLYVA18FD
+         xCwqBCVqPdSQ9kjNeYS4zn5sdN5LUn+AZcFO/Ftq+5bPQtsf8qH+HDNt3LocXeJVxA
+         hUHe14aRe3tqelB3F/1nvRjxAWM2DI8BZ/IkpOG17XZ5DWcphQWey09XxRdohKPZ9c
+         L7f7quXTIeNWA==
+Subject: [PATCHSET v24.0 0/1] xfs: cache xfile pages for better performance
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     cem@kernel.org, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 30 Dec 2022 14:18:04 -0800
-Message-ID: <167243868463.714425.14936757185529800411.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:18:07 -0800
+Message-ID: <167243868750.714598.6299645052246352439.stgit@magnolia>
 In-Reply-To: <Y69Unb7KRM5awJoV@magnolia>
 References: <Y69Unb7KRM5awJoV@magnolia>
 User-Agent: StGit/0.19
@@ -49,10 +49,13 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Hi all,
 
-This series enhances the AGI scrub code to check the unlinked inode
-bucket lists for errors, and fixes them if necessary.  Now that iunlink
-pointer updates are virtual log items, we can batch updates pretty
-efficiently in the logging code.
+Congratulations!  You have made it to the final patchset of the main
+online fsck feature!  This last series improves the performance of
+xfile-backed btrees by teaching the buffer cache to directly map pages
+from the xfile.  It also speeds up xfarray operations substantially by
+implementing a small page cache to avoid repeated kmap/kunmap calls.
+Collectively, these can reduce the runtime of online repair functions by
+twenty percent or so.
 
 If you're going to start using this mess, you probably ought to just
 pull from my git trees, which are linked below.
@@ -63,16 +66,12 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-iunlink
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=xfile-page-caching
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-iunlink
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=xfile-page-caching
 ---
- db/Makefile       |    2 -
- db/command.c      |    1 
- db/command.h      |    1 
- db/unlinked.c     |  204 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- man/man8/xfs_db.8 |   19 +++++
- 5 files changed, 226 insertions(+), 1 deletion(-)
- create mode 100644 db/unlinked.c
+ libxfs/xfs_btree_mem.h  |    6 ++++++
+ libxfs/xfs_rmap_btree.c |    1 +
+ 2 files changed, 7 insertions(+)
 
