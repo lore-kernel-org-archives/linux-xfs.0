@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92FD7C4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:43:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AD91C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:43:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235635AbiL3WnH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 17:43:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55628 "EHLO
+        id S235634AbiL3WnW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 17:43:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55680 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235634AbiL3WnG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:43:06 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1902E12D26
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 14:43:05 -0800 (PST)
+        with ESMTP id S235640AbiL3WnV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:43:21 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F0B112D26
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 14:43:20 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C45D3B81C06
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 22:43:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AF90C433D2;
-        Fri, 30 Dec 2022 22:43:02 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 53E0EB81C06
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 22:43:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16966C433EF;
+        Fri, 30 Dec 2022 22:43:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672440182;
-        bh=OEFPZDX9CyCI98ZLu99+7oICwPUfqwkBF6YQfBYV0Ow=;
+        s=k20201202; t=1672440198;
+        bh=+5z9n9Dxx0Bv5OmwgBljIBAZYjUjlh49hHP75hmJNKo=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=i7dWD+6w2I7DDFSbDG0bcdaWvaCfaOyhwwuQKdpamuzyakAZ935miAlwRGUxVNz3n
-         uty791RyYix+hLF+x0PR/jHrT7vKrOTdhiGbXL9AxVzc1IvzsYbjJTlNGqtXGuNdP9
-         PPsQwkpnVdlQFE+dBXSbhNY+LGKlAL02I+g3bqM82j2VZjOsTnddRqp8bczaoH2Pks
-         wbOEj5Zh0g9qB3weKTpO7e5u7odm4bn+rDPjzfC5+lUn6qo1bPqbJHQSGQgNI9gFQx
-         Ujtfux/hT/5SHydTAOiN41+xoB0+Nk1rYpP4zwnJ2FH0cTwMPMih9Ha/tE3hB3shke
-         UGf7NJo5xmDeg==
-Subject: [PATCH 5/6] xfs: check the reference counts of gaps in the refcount
- btree
+        b=dK61hsD672ekO34oyhXExfTI50dScINpM2/bKA2WZUa6ndmO3hKp2BDhJI72K+CwT
+         uq9mjK15ocQlJ4hqULo0lGBLtWKaA4aWhPtnNN1tF3+pBeO1HYvMXLUiaYwhKm43l4
+         4Z7gDMFDlUIOvObjAQDpE/PxJyV3QF/xVxXKSqoi19rWRD20gkw0A/Ng0QR4ETQbvV
+         k9ZVl74jOxiyRTiSXaZz6uhiq5tk3klWmQ8gdMlmoYFrIpaUijSsmj6HhNkO1hbpJ0
+         4kg+drIh/Vudyg5IwdfstcSjWmEK2Dba8aBaG4K1turShPBv2MS5M9voD+UYW2vpj9
+         M7LvYy4dPveOQ==
+Subject: [PATCH 6/6] xfs: ensure that all metadata and data blocks are not cow
+ staging extents
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Date:   Fri, 30 Dec 2022 14:11:25 -0800
-Message-ID: <167243828584.684405.7881225190931317148.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:11:26 -0800
+Message-ID: <167243828598.684405.10197316668398155741.stgit@magnolia>
 In-Reply-To: <167243828503.684405.18151259725784634316.stgit@magnolia>
 References: <167243828503.684405.18151259725784634316.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,151 +50,170 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Gaps in the reference count btree are also significant -- for these
-regions, there must not be any overlapping reverse mappings.  We don't
-currently check this, so make the refcount scrubber more complete.
+Make sure that all filesystem metadata blocks and file data blocks are
+not also marked as CoW staging extents.  The extra checking added here
+was inspired by an actual VM host filesystem corruption incident due to
+bugs in the CoW handling of 4.x kernels.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/scrub/refcount.c |   95 +++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 90 insertions(+), 5 deletions(-)
+ fs/xfs/scrub/agheader.c |    5 +++++
+ fs/xfs/scrub/alloc.c    |    1 +
+ fs/xfs/scrub/bmap.c     |   11 ++++++++---
+ fs/xfs/scrub/ialloc.c   |    2 +-
+ fs/xfs/scrub/inode.c    |    1 +
+ fs/xfs/scrub/refcount.c |   21 +++++++++++++++++++++
+ fs/xfs/scrub/scrub.h    |    2 ++
+ 7 files changed, 39 insertions(+), 4 deletions(-)
 
 
+diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
+index 3dd9151a20ad..520ec054e4a6 100644
+--- a/fs/xfs/scrub/agheader.c
++++ b/fs/xfs/scrub/agheader.c
+@@ -53,6 +53,7 @@ xchk_superblock_xref(
+ 	xchk_xref_is_not_inode_chunk(sc, agbno, 1);
+ 	xchk_xref_is_owned_by(sc, agbno, 1, &XFS_RMAP_OINFO_FS);
+ 	xchk_xref_is_not_shared(sc, agbno, 1);
++	xchk_xref_is_not_cow_staging(sc, agbno, 1);
+ 
+ 	/* scrub teardown will take care of sc->sa for us */
+ }
+@@ -517,6 +518,7 @@ xchk_agf_xref(
+ 	xchk_xref_is_owned_by(sc, agbno, 1, &XFS_RMAP_OINFO_FS);
+ 	xchk_agf_xref_btreeblks(sc);
+ 	xchk_xref_is_not_shared(sc, agbno, 1);
++	xchk_xref_is_not_cow_staging(sc, agbno, 1);
+ 	xchk_agf_xref_refcblks(sc);
+ 
+ 	/* scrub teardown will take care of sc->sa for us */
+@@ -644,6 +646,7 @@ xchk_agfl_block_xref(
+ 	xchk_xref_is_not_inode_chunk(sc, agbno, 1);
+ 	xchk_xref_is_owned_by(sc, agbno, 1, &XFS_RMAP_OINFO_AG);
+ 	xchk_xref_is_not_shared(sc, agbno, 1);
++	xchk_xref_is_not_cow_staging(sc, agbno, 1);
+ }
+ 
+ /* Scrub an AGFL block. */
+@@ -700,6 +703,7 @@ xchk_agfl_xref(
+ 	xchk_xref_is_not_inode_chunk(sc, agbno, 1);
+ 	xchk_xref_is_owned_by(sc, agbno, 1, &XFS_RMAP_OINFO_FS);
+ 	xchk_xref_is_not_shared(sc, agbno, 1);
++	xchk_xref_is_not_cow_staging(sc, agbno, 1);
+ 
+ 	/*
+ 	 * Scrub teardown will take care of sc->sa for us.  Leave sc->sa
+@@ -855,6 +859,7 @@ xchk_agi_xref(
+ 	xchk_agi_xref_icounts(sc);
+ 	xchk_xref_is_owned_by(sc, agbno, 1, &XFS_RMAP_OINFO_FS);
+ 	xchk_xref_is_not_shared(sc, agbno, 1);
++	xchk_xref_is_not_cow_staging(sc, agbno, 1);
+ 	xchk_agi_xref_fiblocks(sc);
+ 
+ 	/* scrub teardown will take care of sc->sa for us */
+diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
+index c72001f6bad9..e9f8d29544aa 100644
+--- a/fs/xfs/scrub/alloc.c
++++ b/fs/xfs/scrub/alloc.c
+@@ -90,6 +90,7 @@ xchk_allocbt_xref(
+ 	xchk_xref_is_not_inode_chunk(sc, agbno, len);
+ 	xchk_xref_has_no_owner(sc, agbno, len);
+ 	xchk_xref_is_not_shared(sc, agbno, len);
++	xchk_xref_is_not_cow_staging(sc, agbno, len);
+ }
+ 
+ /* Scrub a bnobt/cntbt record. */
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index 575f2c80d055..abc2da0b1824 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -328,12 +328,17 @@ xchk_bmap_iextent_xref(
+ 	xchk_bmap_xref_rmap(info, irec, agbno);
+ 	switch (info->whichfork) {
+ 	case XFS_DATA_FORK:
+-		if (xfs_is_reflink_inode(info->sc->ip))
+-			break;
+-		fallthrough;
++		if (!xfs_is_reflink_inode(info->sc->ip))
++			xchk_xref_is_not_shared(info->sc, agbno,
++					irec->br_blockcount);
++		xchk_xref_is_not_cow_staging(info->sc, agbno,
++				irec->br_blockcount);
++		break;
+ 	case XFS_ATTR_FORK:
+ 		xchk_xref_is_not_shared(info->sc, agbno,
+ 				irec->br_blockcount);
++		xchk_xref_is_not_cow_staging(info->sc, agbno,
++				irec->br_blockcount);
+ 		break;
+ 	case XFS_COW_FORK:
+ 		xchk_xref_is_cow_staging(info->sc, agbno,
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index b85f0cd00bc2..5f04030b86c8 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -115,7 +115,7 @@ xchk_iallocbt_chunk(
+ 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+ 
+ 	xchk_iallocbt_chunk_xref(bs->sc, irec, agino, bno, len);
+-
++	xchk_xref_is_not_cow_staging(bs->sc, bno, len);
+ 	return true;
+ }
+ 
+diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+index 8c972ee15a30..95694eca3851 100644
+--- a/fs/xfs/scrub/inode.c
++++ b/fs/xfs/scrub/inode.c
+@@ -558,6 +558,7 @@ xchk_inode_xref(
+ 	xchk_inode_xref_finobt(sc, ino);
+ 	xchk_xref_is_owned_by(sc, agbno, 1, &XFS_RMAP_OINFO_INODES);
+ 	xchk_xref_is_not_shared(sc, agbno, 1);
++	xchk_xref_is_not_cow_staging(sc, agbno, 1);
+ 	xchk_inode_xref_bmap(sc, dip);
+ 
+ out_free:
 diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-index 220b2850659e..10ef377873f6 100644
+index 10ef377873f6..e99c1e1246f8 100644
 --- a/fs/xfs/scrub/refcount.c
 +++ b/fs/xfs/scrub/refcount.c
-@@ -332,6 +332,64 @@ xchk_refcountbt_xref(
- 	xchk_refcountbt_xref_rmap(sc, irec);
+@@ -555,3 +555,24 @@ xchk_xref_is_not_shared(
+ 	if (outcome != XBTREE_RECPACKING_EMPTY)
+ 		xchk_btree_xref_set_corrupt(sc, sc->sa.refc_cur, 0);
  }
- 
-+struct xchk_refcbt_records {
-+	/* The next AG block where we aren't expecting shared extents. */
-+	xfs_agblock_t		next_unshared_agbno;
 +
-+	/* Number of CoW blocks we expect. */
-+	xfs_agblock_t		cow_blocks;
-+
-+	/* Was the last record a shared or CoW staging extent? */
-+	enum xfs_refc_domain	prev_domain;
-+};
-+
-+STATIC int
-+xchk_refcountbt_rmap_check_gap(
-+	struct xfs_btree_cur		*cur,
-+	const struct xfs_rmap_irec	*rec,
-+	void				*priv)
-+{
-+	xfs_agblock_t			*next_bno = priv;
-+
-+	if (*next_bno != NULLAGBLOCK && rec->rm_startblock < *next_bno)
-+		return -ECANCELED;
-+
-+	*next_bno = rec->rm_startblock + rec->rm_blockcount;
-+	return 0;
-+}
-+
-+/*
-+ * Make sure that a gap in the reference count records does not correspond to
-+ * overlapping records (i.e. shared extents) in the reverse mappings.
-+ */
-+static inline void
-+xchk_refcountbt_xref_gaps(
++/* xref check that the extent is not being used for CoW staging. */
++void
++xchk_xref_is_not_cow_staging(
 +	struct xfs_scrub	*sc,
-+	struct xchk_refcbt_records *rrc,
-+	xfs_agblock_t		bno)
++	xfs_agblock_t		agbno,
++	xfs_extlen_t		len)
 +{
-+	struct xfs_rmap_irec	low;
-+	struct xfs_rmap_irec	high;
-+	xfs_agblock_t		next_bno = NULLAGBLOCK;
++	enum xbtree_recpacking	outcome;
 +	int			error;
 +
-+	if (bno <= rrc->next_unshared_agbno || !sc->sa.rmap_cur ||
-+            xchk_skip_xref(sc->sm))
++	if (!sc->sa.refc_cur || xchk_skip_xref(sc->sm))
 +		return;
 +
-+	memset(&low, 0, sizeof(low));
-+	low.rm_startblock = rrc->next_unshared_agbno;
-+	memset(&high, 0xFF, sizeof(high));
-+	high.rm_startblock = bno - 1;
-+
-+	error = xfs_rmap_query_range(sc->sa.rmap_cur, &low, &high,
-+			xchk_refcountbt_rmap_check_gap, &next_bno);
-+	if (error == -ECANCELED)
-+		xchk_btree_xref_set_corrupt(sc, sc->sa.rmap_cur, 0);
-+	else
-+		xchk_should_check_xref(sc, &error, &sc->sa.rmap_cur);
++	error = xfs_refcount_has_records(sc->sa.refc_cur, XFS_REFC_DOMAIN_COW,
++			agbno, len, &outcome);
++	if (!xchk_should_check_xref(sc, &error, &sc->sa.refc_cur))
++		return;
++	if (outcome != XBTREE_RECPACKING_EMPTY)
++		xchk_btree_xref_set_corrupt(sc, sc->sa.refc_cur, 0);
 +}
-+
- /* Scrub a refcountbt record. */
- STATIC int
- xchk_refcountbt_rec(
-@@ -339,7 +397,7 @@ xchk_refcountbt_rec(
- 	const union xfs_btree_rec *rec)
- {
- 	struct xfs_refcount_irec irec;
--	xfs_agblock_t		*cow_blocks = bs->private;
-+	struct xchk_refcbt_records *rrc = bs->private;
- 
- 	xfs_refcount_btrec_to_irec(rec, &irec);
- 	if (xfs_refcount_check_irec(bs->cur, &irec) != NULL) {
-@@ -348,10 +406,27 @@ xchk_refcountbt_rec(
- 	}
- 
- 	if (irec.rc_domain == XFS_REFC_DOMAIN_COW)
--		(*cow_blocks) += irec.rc_blockcount;
-+		rrc->cow_blocks += irec.rc_blockcount;
-+
-+	/* Shared records always come before CoW records. */
-+	if (irec.rc_domain == XFS_REFC_DOMAIN_SHARED &&
-+	    rrc->prev_domain == XFS_REFC_DOMAIN_COW)
-+		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-+	rrc->prev_domain = irec.rc_domain;
- 
- 	xchk_refcountbt_xref(bs->sc, &irec);
- 
-+	/*
-+	 * If this is a record for a shared extent, check that all blocks
-+	 * between the previous record and this one have at most one reverse
-+	 * mapping.
-+	 */
-+	if (irec.rc_domain == XFS_REFC_DOMAIN_SHARED) {
-+		xchk_refcountbt_xref_gaps(bs->sc, rrc, irec.rc_startblock);
-+		rrc->next_unshared_agbno = irec.rc_startblock +
-+					   irec.rc_blockcount;
-+	}
-+
- 	return 0;
- }
- 
-@@ -393,15 +468,25 @@ int
- xchk_refcountbt(
- 	struct xfs_scrub	*sc)
- {
--	xfs_agblock_t		cow_blocks = 0;
-+	struct xchk_refcbt_records rrc = {
-+		.cow_blocks		= 0,
-+		.next_unshared_agbno	= 0,
-+		.prev_domain		= XFS_REFC_DOMAIN_SHARED,
-+	};
- 	int			error;
- 
- 	error = xchk_btree(sc, sc->sa.refc_cur, xchk_refcountbt_rec,
--			&XFS_RMAP_OINFO_REFC, &cow_blocks);
-+			&XFS_RMAP_OINFO_REFC, &rrc);
- 	if (error)
- 		return error;
- 
--	xchk_refcount_xref_rmap(sc, cow_blocks);
-+	/*
-+	 * Check that all blocks between the last refcount > 1 record and the
-+	 * end of the AG have at most one reverse mapping.
-+	 */
-+	xchk_refcountbt_xref_gaps(sc, &rrc, sc->mp->m_sb.sb_agblocks);
-+
-+	xchk_refcount_xref_rmap(sc, rrc.cow_blocks);
- 
- 	return 0;
- }
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index 85c055c2ddc5..a331838e22ff 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -166,6 +166,8 @@ void xchk_xref_is_cow_staging(struct xfs_scrub *sc, xfs_agblock_t bno,
+ 		xfs_extlen_t len);
+ void xchk_xref_is_not_shared(struct xfs_scrub *sc, xfs_agblock_t bno,
+ 		xfs_extlen_t len);
++void xchk_xref_is_not_cow_staging(struct xfs_scrub *sc, xfs_agblock_t bno,
++		xfs_extlen_t len);
+ #ifdef CONFIG_XFS_RT
+ void xchk_xref_is_used_rt_space(struct xfs_scrub *sc, xfs_rtblock_t rtbno,
+ 		xfs_extlen_t len);
 
