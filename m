@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E164C3DA7D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EC09C4332F
 	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:38:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236255AbiLaCiB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S236256AbiLaCiB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Fri, 30 Dec 2022 21:38:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57528 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236259AbiLaChw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:37:52 -0500
+        with ESMTP id S236255AbiLaChh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:37:37 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07AA8BC9C
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:37:52 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FE57BC95
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:37:36 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C037EB81DED
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:37:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69B0CC433EF;
-        Sat, 31 Dec 2022 02:37:49 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 2B370B81C22
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:37:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDB14C433EF;
+        Sat, 31 Dec 2022 02:37:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672454269;
-        bh=T2rcw9zijVnEhsZ2JOKIJLSqrX3XBWHev44gfq4Jv8Y=;
+        s=k20201202; t=1672454253;
+        bh=aFf6OOBBrcWaH38lfwNi3I8sVBAnhW0EqEZV6yZVj7E=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=SXLcYrXgoEfOmT01BlHl9AQ5Lz1RvHTcy1A7nWxvJmIMFzsxaun8PHtxYWvsq8zE5
-         x62+C/qL/jU/ypeHb/DiiNs8gVHmK9WJpnGIUYx9cBEcZiV0S4bsd0ec/pWFHhuM68
-         NwZuPJie7/zRyPLtkVnovr6ctzSWd4Z0xQgWSA6EEG7yMqVm6qGxR3YEzE3BwHZfCz
-         ZOP/4LyKmfTjIzO2e0Q/nodZ4mNN2ze3ZQ8v4+G/7a/wqCLRvWtRjCmJTUR/ml+Fef
-         coMgpGrPk4avpeTOjJGqsS2BT/yGbju9HjDV5YzYVsB+bC9jC3fOtYJOVq0tutUGM9
-         +wROf4twTOWeg==
-Subject: [PATCH 30/45] xfs_db: enable conversion of rt space units
+        b=ey1Ao4yQ9mqPAkiZDFDm3XcL0e4WAEtSoSbKI40SObW2DMVwPnjv5VoT2JnlgAYas
+         J+JobLARB54UXw4gv/pjEhZJpSQ+/YIJwSzC5GN9fVrLPp3LzUyVWt1caTru8iyPMv
+         CDV2PHjqqnwSUMIYvT2KSNw7ACMU/OG+GYEaT2QEvHETFJm3EGNcq2KyPxK6YMZCd8
+         YOU5+z7iKbBVCFLxgq2fklZPGZbInG4Vk+YPaING8Cu64ffIxwtTgnhEb2PgclOraM
+         M2EkY+V6SlpSYYq8VM4OdT5KZnMz4ejjqz5gONlE5C2VAg3LLnG09kel83UIBGa0Yp
+         sRXacHABSwy+g==
+Subject: [PATCH 29/45] xfs_db: implement check for rt superblocks
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:19:47 -0800
-Message-ID: <167243878758.731133.6306481528555037356.stgit@magnolia>
+Message-ID: <167243878744.731133.5132949239718266830.stgit@magnolia>
 In-Reply-To: <167243878346.731133.14642166452774753637.stgit@magnolia>
 References: <167243878346.731133.14642166452774753637.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,161 +49,65 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Teach the xfs_db convert function about realtime extents, blocks, and
-realtime group numbers.
+Implement the bare minimum needed to avoid xfs_check regressions when
+realtime groups are enabled.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/convert.c      |   38 +++++++++++++++++++++++++++++++++++++-
- man/man8/xfs_db.8 |   17 +++++++++++++++++
- 2 files changed, 54 insertions(+), 1 deletion(-)
+ db/check.c |   20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
 
-diff --git a/db/convert.c b/db/convert.c
-index 072ccc8f6ef..2214649650d 100644
---- a/db/convert.c
-+++ b/db/convert.c
-@@ -34,6 +34,10 @@
- 	rtblock_to_bytes(rtx_to_rtblock(xfs_rbmblock_to_rtx(mp, (uint64_t)x)))
- #define rbmword_to_bytes(x)	\
- 	rtblock_to_bytes(rtx_to_rtblock((uint64_t)(x) << XFS_NBWORDLOG))
-+#define	rgblock_to_bytes(x)	\
-+	((uint64_t)(x) << mp->m_sb.sb_blocklog)
-+#define	rgnumber_to_bytes(x)	\
-+	rgblock_to_bytes((uint64_t)(x) * mp->m_sb.sb_rgblocks)
+diff --git a/db/check.c b/db/check.c
+index 4f4bff58e22..d3d22f0531c 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -56,6 +56,7 @@ typedef enum {
+ 	DBM_BTREFC,
+ 	DBM_RLDATA,
+ 	DBM_COWDATA,
++	DBM_RTSB,
+ 	DBM_NDBM
+ } dbm_t;
  
- typedef enum {
- 	CT_NONE = -1,
-@@ -55,6 +59,8 @@ typedef enum {
- 	CT_RSUMBLOCK,		/* block within rt summary */
- 	CT_RSUMLOG,		/* log level for rtsummary computations */
- 	CT_RSUMINFO,		/* info word within rt summary */
-+	CT_RGBLOCK,		/* xfs_rgblock_t */
-+	CT_RGNUMBER,		/* xfs_rgno_t */
- 	NCTS
- } ctype_t;
- 
-@@ -80,6 +86,8 @@ typedef union {
- 	xfs_fileoff_t	rbmblock;
- 	unsigned int	rbmword;
- 	xfs_fileoff_t	rsumblock;
-+	xfs_rgnumber_t	rgnumber;
-+	xfs_rgblock_t	rgblock;
- } cval_t;
- 
- static uint64_t		bytevalue(ctype_t ctype, cval_t *val);
-@@ -95,7 +103,7 @@ static const char	*agnumber_names[] = { "agnumber", "agno", NULL };
- static const char	*bboff_names[] = { "bboff", "daddroff", NULL };
- static const char	*blkoff_names[] = { "blkoff", "fsboff", "agboff",
- 					    NULL };
--static const char	*rtblkoff_names[] = { "blkoff", "rtboff",
-+static const char	*rtblkoff_names[] = { "blkoff", "rtboff", "rgboff",
- 					    NULL };
- static const char	*byte_names[] = { "byte", "fsbyte", NULL };
- static const char	*daddr_names[] = { "daddr", "bb", NULL };
-@@ -111,6 +119,8 @@ static const char	*rbmword_names[] = { "rbmword", "rbmw", NULL };
- static const char	*rsumblock_names[] = { "rsumblock", "rsmb", NULL };
- static const char	*rsumlog_names[] = { "rsumlog", "rsml", NULL };
- static const char	*rsumword_names[] = { "rsuminfo", "rsmi", NULL };
-+static const char	*rgblock_names[] = { "rgblock", "rgbno", NULL };
-+static const char	*rgnumber_names[] = { "rgnumber", "rgno", NULL };
- 
- static int		rsuminfo;
- static int		rsumlog;
-@@ -208,6 +218,14 @@ static const ctydesc_t	ctydescs_rt[NCTS] = {
- 		.allowed = M(RSUMBLOCK),
- 		.names   = rsumword_names,
- 	},
-+	[CT_RGBLOCK] = {
-+		.allowed = M(RGNUMBER)|M(BBOFF)|M(BLKOFF)|M(RSUMLOG),
-+		.names   = rgblock_names,
-+	},
-+	[CT_RGNUMBER] = {
-+		.allowed = M(RGBLOCK)|M(BBOFF)|M(BLKOFF)|M(RSUMLOG),
-+		.names   = rgnumber_names,
-+	},
+@@ -187,6 +188,7 @@ static const char	*typename[] = {
+ 	"btrefcnt",
+ 	"rldata",
+ 	"cowdata",
++	"rtsb",
+ 	NULL
  };
  
- static const cmdinfo_t	convert_cmd =
-@@ -295,6 +313,10 @@ bytevalue(ctype_t ctype, cval_t *val)
- 		 * value.
- 		 */
- 		return 0;
-+	case CT_RGBLOCK:
-+		return rgblock_to_bytes(val->rgblock);
-+	case CT_RGNUMBER:
-+		return rgnumber_to_bytes(val->rgnumber);
- 	case CT_NONE:
- 	case NCTS:
- 		break;
-@@ -401,6 +423,8 @@ convert_f(int argc, char **argv)
- 	case CT_RSUMBLOCK:
- 	case CT_RSUMLOG:
- 	case CT_RSUMINFO:
-+	case CT_RGBLOCK:
-+	case CT_RGNUMBER:
- 		/* shouldn't get here */
- 		ASSERT(0);
- 		break;
-@@ -537,6 +561,12 @@ rtconvert_f(int argc, char **argv)
- 	case CT_RSUMINFO:
- 		v = rt_daddr_to_rsuminfo(mp, v);
- 		break;
-+	case CT_RGBLOCK:
-+		v = xfs_daddr_to_rgbno(mp, v >> BBSHIFT);
-+		break;
-+	case CT_RGNUMBER:
-+		v = xfs_daddr_to_rgno(mp, v >> BBSHIFT);
-+		break;
- 	case CT_AGBLOCK:
- 	case CT_AGINO:
- 	case CT_AGNUMBER:
-@@ -629,6 +659,12 @@ getvalue(char *s, ctype_t ctype, cval_t *val)
- 	case CT_RSUMINFO:
- 		rsuminfo = (unsigned int)v;
- 		break;
-+	case CT_RGBLOCK:
-+		val->rgblock = (xfs_rgblock_t)v;
-+		break;
-+	case CT_RGNUMBER:
-+		val->rgnumber = (xfs_rgnumber_t)v;
-+		break;
- 	case CT_NONE:
- 	case NCTS:
- 		/* NOTREACHED */
-diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index 9c1ce5d79cf..bcb4c871827 100644
---- a/man/man8/xfs_db.8
-+++ b/man/man8/xfs_db.8
-@@ -978,6 +978,16 @@ with alternate names, are:
- .RS 1.0i
- .PD 0
- .HP
-+.B rgblock
-+or
-+.B rgbno
-+(realtime block within a realtime group)
-+.HP
-+.B rgnumber
-+or
-+.B rgno
-+(realtime group number)
-+.HP
- .B bboff
- or
- .B daddroff
-@@ -1045,6 +1055,13 @@ or
- .RE
- .IP
- Only conversions that "make sense" are allowed.
-+The compound form (with more than three arguments) is useful for
-+conversions such as
-+.B convert rgno
-+.I rg
-+.B rgbno
-+.I rgb
-+.BR rtblock .
+@@ -809,6 +811,23 @@ blockfree_f(
+ 	return 0;
+ }
  
- Realtime summary file location conversions have the following rules:
- Each info word in the rt summary file counts the number of free extents of a
++static void
++rtgroups_init(
++	struct xfs_mount	*mp)
++{
++	xfs_rgnumber_t		rgno;
++
++	if (!xfs_has_rtgroups(mp))
++		return;
++
++	for (rgno = 0; rgno < mp->m_sb.sb_rgcount; rgno++) {
++		xfs_rtblock_t	rtbno;
++
++		rtbno = xfs_rgbno_to_rtb(mp, rgno, 0);
++		set_rdbmap(rtbno, mp->m_sb.sb_rextsize, DBM_RTSB);
++	}
++}
++
+ /*
+  * Check consistency of xfs filesystem contents.
+  */
+@@ -843,6 +862,7 @@ blockget_f(
+ 				 "filesystem.\n"));
+ 		}
+ 	}
++	rtgroups_init(mp);
+ 	if (blist_size) {
+ 		xfree(blist);
+ 		blist = NULL;
 
