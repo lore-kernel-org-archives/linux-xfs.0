@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E35C8C3DA7C
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:39:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 038B3C3DA7C
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:39:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235742AbiLaAjd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 19:39:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34848 "EHLO
+        id S235784AbiLaAjs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 19:39:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34866 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235484AbiLaAjc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:39:32 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A47321E3EE;
-        Fri, 30 Dec 2022 16:39:30 -0800 (PST)
+        with ESMTP id S235671AbiLaAjr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:39:47 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 302421E3FE;
+        Fri, 30 Dec 2022 16:39:46 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 2D2D3B81E08;
-        Sat, 31 Dec 2022 00:39:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2EDAC433EF;
-        Sat, 31 Dec 2022 00:39:27 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id DD91FB81E49;
+        Sat, 31 Dec 2022 00:39:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EE41C433EF;
+        Sat, 31 Dec 2022 00:39:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672447168;
-        bh=qI1nM5AgkcQc6k9j4+Wk8hGuLtQyJr1zJmuSbs25oxw=;
+        s=k20201202; t=1672447183;
+        bh=pQq4B40v4RhHW7cz7BJ0dBjlQZsjXNE87BVyendgV24=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=fcD5OSqUpgfUYc/YVKyMu84Z92t1Q5vppDg+nMIokZRp9XG01LwaLbokeQzOFyfz1
-         /4aT/T4MKXZN3JUImzeoi4Q6w+8pYH5sU6gsbnYZPSo2H53mGJYgxfE5AC/YeeOaLb
-         2D163B11O3zJQtRbnJSQON35vlZn5FuiSG/1WujwPohprNV0nCG+RqLJ7uzS23UMi9
-         6BtvWergaP5uCtv7UcrfJZ4OIjzEYcNCDMu6mqBsDjlCKF1iqe4l2FU0O3uE6tqcwL
-         b/YfLnuCxU2AQrpyljUzfMR11ShuELTvvZViKO8CSasoo0QKgQsO0bU6J5ufjQlBx5
-         YIVi47KvH1n5g==
-Subject: [PATCH 3/5] fuzzy: add a custom xfs find utility for scrub stress
- tests
+        b=ADHXVMBq+odZH7IhRl2pBlYNt25PAfU8854sb4YVqmp5rO2MXCpeqjSlWHmj144Qc
+         m5tRPOp5HFPNKdWT1jw3dx4elvb0/Uk4fuw9n3qr4C+Z4LYFbpa/C3++XoShJBOewj
+         /lGJBgcHEIe1J1FgxwT3BcbbR5LTZHs8IY9C2ALnhbsgSWAgEOoWLOxFzAGkq8JWkv
+         YXOCQ02aQC9NIvNKdPpB+qrleu0TvuXghWTJb2sNhysdWLWubFvXFCfO400X5EgOtc
+         MFzZpm8HZgdYP8KU47w6NKqKea3fMGxqVMdvdrszYGjeD3EXhIWDDWrwbw1ruk451Q
+         a+HgkR2Irzmsw==
+Subject: [PATCH 4/5] fuzzy: allow xfs scrub stress tests to pick preconfigured
+ fsstress configs
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     zlang@redhat.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
 Date:   Fri, 30 Dec 2022 14:19:06 -0800
-Message-ID: <167243874650.722028.10607547751700517177.stgit@magnolia>
+Message-ID: <167243874662.722028.15090629914232187990.stgit@magnolia>
 In-Reply-To: <167243874614.722028.11987534226186856347.stgit@magnolia>
 References: <167243874614.722028.11987534226186856347.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,449 +50,148 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a new find(1) like utility that doesn't crash on directory tree
-changes (like find does due to bugs in its loop detector) and actually
-implements the custom xfs attribute predicates that we need for scrub
-stress tests.  This program will be needed for a future patch where we
-add stress tests for scrub and repair of file metadata.
+Make it so that xfs_scrub stress tests can select what kind of fsstress
+operations they want to run.  This will make it easier for, say,
+directory scrubbers to configure fsstress to exercise directory tree
+changes while skipping file data updates, because those are irrelevant.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- configure.ac          |    5 +
- include/builddefs.in  |    4 +
- m4/package_libcdev.m4 |   47 ++++++++
- m4/package_xfslibs.m4 |   16 +++
- src/Makefile          |   10 ++
- src/xfsfind.c         |  290 +++++++++++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 372 insertions(+)
- create mode 100644 src/xfsfind.c
+ common/fuzzy |   77 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 74 insertions(+), 3 deletions(-)
 
 
-diff --git a/configure.ac b/configure.ac
-index cbf8377988..e92bd6b26d 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -66,6 +66,11 @@ AC_PACKAGE_WANT_LINUX_FS_H
- AC_PACKAGE_WANT_LIBBTRFSUTIL
+diff --git a/common/fuzzy b/common/fuzzy
+index e39f787e78..c4a5bc9261 100644
+--- a/common/fuzzy
++++ b/common/fuzzy
+@@ -466,6 +466,7 @@ __stress_scrub_fsx_loop() {
+ 	local end="$1"
+ 	local runningfile="$2"
+ 	local remount_period="$3"
++	local stress_tgt="$4"	# ignored
+ 	local focus=(-q -X)	# quiet, validate file contents
  
- AC_HAVE_COPY_FILE_RANGE
-+AC_HAVE_SEEK_DATA
-+AC_HAVE_BMV_OF_SHARED
-+AC_HAVE_NFTW
-+AC_HAVE_RLIMIT_NOFILE
+ 	# As of November 2022, 2 million fsx ops should be enough to keep
+@@ -528,10 +529,70 @@ __stress_scrub_fsstress_loop() {
+ 	local end="$1"
+ 	local runningfile="$2"
+ 	local remount_period="$3"
++	local stress_tgt="$4"
++	local focus=()
 +
- AC_CHECK_FUNCS([renameat2])
- AC_CHECK_FUNCS([reallocarray])
- AC_CHECK_TYPES([struct mount_attr], [], [], [[#include <linux/mount.h>]])
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 6641209f81..dab10c968f 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -68,6 +68,10 @@ HAVE_FIEMAP = @have_fiemap@
- HAVE_FALLOCATE = @have_fallocate@
- HAVE_COPY_FILE_RANGE = @have_copy_file_range@
- HAVE_LIBBTRFSUTIL = @have_libbtrfsutil@
-+HAVE_SEEK_DATA = @have_seek_data@
-+HAVE_NFTW = @have_nftw@
-+HAVE_BMV_OF_SHARED = @have_bmv_of_shared@
-+HAVE_RLIMIT_NOFILE = @have_rlimit_nofile@
++	case "$stress_tgt" in
++	"dir")
++		focus+=('-z')
++
++		# Create a directory tree rapidly
++		for op in creat link mkdir mknod symlink; do
++			focus+=('-f' "${op}=8")
++		done
++		focus+=('-f' 'rmdir=2' '-f' 'unlink=8')
++
++		# Rename half as often
++		for op in rename rnoreplace rexchange; do
++			focus+=('-f' "${op}=4")
++		done
++
++		# Read and sync occasionally
++		for op in getdents stat fsync; do
++			focus+=('-f' "${op}=1")
++		done
++		;;
++	"xattr")
++		focus+=('-z')
++
++		# Create a directory tree slowly
++		for op in creat ; do
++			focus+=('-f' "${op}=2")
++		done
++		for op in unlink rmdir; do
++			focus+=('-f' "${op}=1")
++		done
++
++		# Create xattrs rapidly
++		for op in attr_set setfattr; do
++			focus+=('-f' "${op}=80")
++		done
++
++		# Remove xattrs 1/4 as quickly
++		for op in attr_remove removefattr; do
++			focus+=('-f' "${op}=20")
++		done
++
++		# Read and sync occasionally
++		for op in listfattr getfattr fsync; do
++			focus+=('-f' "${op}=10")
++		done
++		;;
++	"writeonly")
++		# Only do things that cause filesystem writes
++		focus+=('-w')
++		;;
++	"default")
++		# No new arguments
++		;;
++	*)
++		echo "$stress_tgt: Unrecognized stress target, using defaults."
++		;;
++	esac
  
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+ 	# As of March 2022, 2 million fsstress ops should be enough to keep
+ 	# any filesystem busy for a couple of hours.
+-	local args=$(_scale_fsstress_args -p 4 -d $SCRATCH_MNT -n 2000000 $FSSTRESS_AVOID)
++	local args=$(_scale_fsstress_args -p 4 -d $SCRATCH_MNT -n 2000000 "${focus[@]}" $FSSTRESS_AVOID)
+ 	echo "Running $FSSTRESS_PROG $args" >> $seqres.full
  
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index 5c76c0f73e..e1b381c16f 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -110,3 +110,50 @@ AC_DEFUN([AC_HAVE_COPY_FILE_RANGE],
-     AC_SUBST(have_copy_file_range)
-   ])
+ 	if [ -n "$remount_period" ]; then
+@@ -691,6 +752,14 @@ __stress_scrub_check_commands() {
+ # -w	Delay the start of the scrub/repair loop by this number of seconds.
+ #	Defaults to no delay unless XFS_SCRUB_STRESS_DELAY is set.  This value
+ #	will be clamped to ten seconds before the end time.
++# -x	Focus on this type of fsstress operation.  Possible values:
++#
++#       'dir': Grow the directory trees as much as possible.
++#       'xattr': Grow extended attributes in a small tree.
++#       'default': Run fsstress with default arguments.
++#       'writeonly': Only perform fs updates, no reads.
++#
++#       The default is 'default' unless XFS_SCRUB_STRESS_TARGET is set.
+ # -X	Run this program to exercise the filesystem.  Currently supported
+ #       options are 'fsx' and 'fsstress'.  The default is 'fsstress'.
+ _scratch_xfs_stress_scrub() {
+@@ -703,6 +772,7 @@ _scratch_xfs_stress_scrub() {
+ 	local exerciser="fsstress"
+ 	local io_args=()
+ 	local remount_period="${XFS_SCRUB_STRESS_REMOUNT_PERIOD}"
++	local stress_tgt="${XFS_SCRUB_STRESS_TARGET:-default}"
  
-+# Check if we have SEEK_DATA
-+AC_DEFUN([AC_HAVE_SEEK_DATA],
-+  [ AC_MSG_CHECKING([for SEEK_DATA])
-+    AC_TRY_LINK([
-+#define _GNU_SOURCE
-+#include <sys/types.h>
-+#include <unistd.h>
-+    ], [
-+         lseek(-1, 0, SEEK_DATA);
-+    ], have_seek_data=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_seek_data)
-+  ])
-+
-+# Check if we have nftw
-+AC_DEFUN([AC_HAVE_NFTW],
-+  [ AC_MSG_CHECKING([for nftw])
-+    AC_TRY_LINK([
-+#define _GNU_SOURCE
-+#include <stddef.h>
-+#include <ftw.h>
-+    ], [
-+         nftw("/", (int (*)(const char *, const struct stat *, int, struct FTW *))1, 0, 0);
-+    ], have_nftw=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_nftw)
-+  ])
-+
-+# Check if we have RLIMIT_NOFILE
-+AC_DEFUN([AC_HAVE_RLIMIT_NOFILE],
-+  [ AC_MSG_CHECKING([for RLIMIT_NOFILE])
-+    AC_TRY_LINK([
-+#define _GNU_SOURCE
-+#include <sys/time.h>
-+#include <sys/resource.h>
-+    ], [
-+         struct rlimit rlimit;
-+
-+         rlimit.rlim_cur = 0;
-+         getrlimit(RLIMIT_NOFILE, &rlimit);
-+    ], have_rlimit_nofile=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_rlimit_nofile)
-+  ])
-diff --git a/m4/package_xfslibs.m4 b/m4/package_xfslibs.m4
-index 0746cd1dc5..479f30a29b 100644
---- a/m4/package_xfslibs.m4
-+++ b/m4/package_xfslibs.m4
-@@ -104,3 +104,19 @@ AC_DEFUN([AC_PACKAGE_NEED_XFSCTL_MACRO],
-         exit 1
-       ])
-   ])
-+
-+# Check if we have BMV_OF_SHARED from the GETBMAPX ioctl
-+AC_DEFUN([AC_HAVE_BMV_OF_SHARED],
-+  [ AC_MSG_CHECKING([for BMV_OF_SHARED])
-+    AC_TRY_LINK([
-+#define _GNU_SOURCE
-+#include <xfs/xfs.h>
-+    ], [
-+         struct getbmapx obj;
-+         ioctl(-1, XFS_IOC_GETBMAPX, &obj);
-+         obj.bmv_oflags |= BMV_OF_SHARED;
-+    ], have_bmv_of_shared=yes
-+       AC_MSG_RESULT(yes),
-+       AC_MSG_RESULT(no))
-+    AC_SUBST(have_bmv_of_shared)
-+  ])
-diff --git a/src/Makefile b/src/Makefile
-index afdf6b30c5..7807ca89a5 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -83,6 +83,16 @@ ifeq ($(HAVE_LIBCAP), true)
- LLDLIBS += -lcap
- endif
+ 	__SCRUB_STRESS_FREEZE_PID=""
+ 	__SCRUB_STRESS_REMOUNT_LOOP=""
+@@ -710,7 +780,7 @@ _scratch_xfs_stress_scrub() {
+ 	touch "$runningfile"
  
-+ifeq ($(HAVE_SEEK_DATA), yes)
-+ ifeq ($(HAVE_NFTW), yes)
-+  ifeq ($(HAVE_BMV_OF_SHARED), yes)
-+   ifeq ($(HAVE_RLIMIT_NOFILE), yes)
-+     TARGETS += xfsfind
-+   endif
-+  endif
-+ endif
-+endif
-+
- CFILES = $(TARGETS:=.c)
- LDIRT = $(TARGETS) fssum
+ 	OPTIND=1
+-	while getopts "fi:r:s:S:t:w:X:" c; do
++	while getopts "fi:r:s:S:t:w:x:X:" c; do
+ 		case "$c" in
+ 			f) freeze=yes;;
+ 			i) io_args+=("$OPTARG");;
+@@ -719,6 +789,7 @@ _scratch_xfs_stress_scrub() {
+ 			S) xfs_scrub_args+=("$OPTARG");;
+ 			t) scrub_tgt="$OPTARG";;
+ 			w) scrub_delay="$OPTARG";;
++			x) stress_tgt="$OPTARG";;
+ 			X) exerciser="$OPTARG";;
+ 			*) return 1; ;;
+ 		esac
+@@ -757,7 +828,7 @@ _scratch_xfs_stress_scrub() {
+ 	fi
  
-diff --git a/src/xfsfind.c b/src/xfsfind.c
-new file mode 100644
-index 0000000000..6b0a93e793
---- /dev/null
-+++ b/src/xfsfind.c
-@@ -0,0 +1,290 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * find(1) but with special predicates for finding XFS attributes.
-+ * Copyright (C) 2022 Oracle.
-+ */
-+#include <sys/time.h>
-+#include <sys/resource.h>
-+#include <sys/types.h>
-+#include <stdio.h>
-+#include <unistd.h>
-+#include <ftw.h>
-+#include <linux/fs.h>
-+#include <xfs/xfs.h>
-+
-+#include "global.h"
-+
-+static int want_anyfile;
-+static int want_datafile;
-+static int want_attrfile;
-+static int want_dir;
-+static int want_regfile;
-+static int want_sharedfile;
-+static int report_errors = 1;
-+
-+static int
-+check_datafile(
-+	const char		*path,
-+	int			fd)
-+{
-+	off_t			off;
-+
-+	off = lseek(fd, 0, SEEK_DATA);
-+	if (off >= 0)
-+		return 1;
-+
-+	if (errno == ENXIO)
-+		return 0;
-+
-+	if (report_errors)
-+		perror(path);
-+
-+	return -1;
-+}
-+
-+static int
-+check_attrfile(
-+	const char		*path,
-+	int			fd)
-+{
-+	struct fsxattr		fsx;
-+	int			ret;
-+
-+	ret = ioctl(fd, XFS_IOC_FSGETXATTR, &fsx);
-+	if (ret) {
-+		if (report_errors)
-+			perror(path);
-+		return -1;
-+	}
-+
-+	if (want_attrfile && (fsx.fsx_xflags & XFS_XFLAG_HASATTR))
-+		return 1;
-+	return 0;
-+}
-+
-+#define BMAP_NR			33
-+static struct getbmapx		bmaps[BMAP_NR];
-+
-+static int
-+check_sharedfile(
-+	const char		*path,
-+	int			fd)
-+{
-+	struct getbmapx		*key = &bmaps[0];
-+	unsigned int		i;
-+	int			ret;
-+
-+	memset(key, 0, sizeof(struct getbmapx));
-+	key->bmv_length = ULLONG_MAX;
-+	/* no holes and don't flush dirty pages */
-+	key->bmv_iflags = BMV_IF_DELALLOC | BMV_IF_NO_HOLES;
-+	key->bmv_count = BMAP_NR;
-+
-+	while ((ret = ioctl(fd, XFS_IOC_GETBMAPX, bmaps)) == 0) {
-+		struct getbmapx	*p = &bmaps[1];
-+		xfs_off_t	new_off;
-+
-+		for (i = 0; i < key->bmv_entries; i++, p++) {
-+			if (p->bmv_oflags & BMV_OF_SHARED)
-+				return 1;
-+		}
-+
-+		if (key->bmv_entries == 0)
-+			break;
-+		p = key + key->bmv_entries;
-+		if (p->bmv_oflags & BMV_OF_LAST)
-+			return 0;
-+
-+		new_off = p->bmv_offset + p->bmv_length;
-+		key->bmv_length -= new_off - key->bmv_offset;
-+		key->bmv_offset = new_off;
-+	}
-+	if (ret < 0) {
-+		if (report_errors)
-+			perror(path);
-+		return -1;
-+	}
-+
-+	return 0;
-+}
-+
-+static void
-+print_help(
-+	const char		*name)
-+{
-+	printf("Usage: %s [OPTIONS] path\n", name);
-+	printf("\n");
-+	printf("Print all file paths matching any of the given predicates.\n");
-+	printf("\n");
-+	printf("-a	Match files with xattrs.\n");
-+	printf("-b	Match files with data blocks.\n");
-+	printf("-d	Match directories.\n");
-+	printf("-q	Ignore errors while walking directory tree.\n");
-+	printf("-r	Match regular files.\n");
-+	printf("-s	Match files with shared blocks.\n");
-+	printf("\n");
-+	printf("If no matching options are given, match all files found.\n");
-+}
-+
-+static int
-+visit(
-+	const char		*path,
-+	const struct stat	*sb,
-+	int			typeflag,
-+	struct FTW		*ftwbuf)
-+{
-+	int			printme = 1;
-+	int			fd = -1;
-+	int			retval = FTW_CONTINUE;
-+
-+	if (want_anyfile)
-+		goto out;
-+	if (want_regfile && typeflag == FTW_F)
-+		goto out;
-+	if (want_dir && typeflag == FTW_D)
-+		goto out;
-+
-+	/*
-+	 * We can only open directories and files; screen out everything else.
-+	 * Note that nftw lies and reports FTW_F for device files, so check the
-+	 * statbuf mode too.
-+	 */
-+	if (typeflag != FTW_F && typeflag != FTW_D) {
-+		printme = 0;
-+		goto out;
-+	}
-+
-+	if (!S_ISREG(sb->st_mode) && !S_ISDIR(sb->st_mode)) {
-+		printme = 0;
-+		goto out;
-+	}
-+
-+	fd = open(path, O_RDONLY);
-+	if (fd < 0) {
-+		if (report_errors) {
-+			perror(path);
-+			return FTW_STOP;
-+		}
-+
-+		return FTW_CONTINUE;
-+	}
-+
-+	if (want_datafile && typeflag == FTW_F) {
-+		int ret = check_datafile(path, fd);
-+		if (ret < 0 && report_errors) {
-+			printme = 0;
-+			retval = FTW_STOP;
-+			goto out_fd;
-+		}
-+
-+		if (ret == 1)
-+			goto out_fd;
-+	}
-+
-+	if (want_attrfile) {
-+		int ret = check_attrfile(path, fd);
-+		if (ret < 0 && report_errors) {
-+			printme = 0;
-+			retval = FTW_STOP;
-+			goto out_fd;
-+		}
-+
-+		if (ret == 1)
-+			goto out_fd;
-+	}
-+
-+	if (want_sharedfile) {
-+		int ret = check_sharedfile(path, fd);
-+		if (ret < 0 && report_errors) {
-+			printme = 0;
-+			retval = FTW_STOP;
-+			goto out_fd;
-+		}
-+
-+		if (ret == 1)
-+			goto out_fd;
-+	}
-+
-+	printme = 0;
-+out_fd:
-+	close(fd);
-+out:
-+	if (printme)
-+		printf("%s\n", path);
-+	return retval;
-+}
-+
-+static void
-+handle_sigabrt(
-+	int		signal,
-+	siginfo_t	*info,
-+	void		*ucontext)
-+{
-+	fprintf(stderr, "Signal %u, exiting.\n", signal);
-+	exit(2);
-+}
-+
-+int
-+main(
-+	int			argc,
-+	char			*argv[])
-+{
-+	struct rlimit		rlimit;
-+	struct sigaction	abrt = {
-+		.sa_sigaction	= handle_sigabrt,
-+		.sa_flags	= SA_SIGINFO,
-+	};
-+	int			c;
-+	int			ret;
-+
-+	while ((c = getopt(argc, argv, "abdqrs")) >= 0) {
-+		switch (c) {
-+		case 'a':	want_attrfile = 1;   break;
-+		case 'b':	want_datafile = 1;   break;
-+		case 'd':	want_dir = 1;        break;
-+		case 'q':	report_errors = 0;   break;
-+		case 'r':	want_regfile = 1;    break;
-+		case 's':	want_sharedfile = 1; break;
-+		default:
-+			print_help(argv[0]);
-+			return 1;
-+		}
-+	}
-+
-+	ret = getrlimit(RLIMIT_NOFILE, &rlimit);
-+	if (ret) {
-+		perror("RLIMIT_NOFILE");
-+		return 1;
-+	}
-+
-+	if (!want_attrfile && !want_datafile && !want_dir && !want_regfile &&
-+	    !want_sharedfile)
-+		want_anyfile = 1;
-+
-+	/*
-+	 * nftw is known to abort() if a directory it is walking disappears out
-+	 * from under it.  Handle this with grace if the caller wants us to run
-+	 * quietly.
-+	 */
-+	if (!report_errors) {
-+		ret = sigaction(SIGABRT, &abrt, NULL);
-+		if (ret) {
-+			perror("SIGABRT handler");
-+			return 1;
-+		}
-+	}
-+
-+	for (c = optind; c < argc; c++) {
-+		ret = nftw(argv[c], visit, rlimit.rlim_cur - 5,
-+				FTW_ACTIONRETVAL | FTW_CHDIR | FTW_MOUNT |
-+				FTW_PHYS);
-+		if (ret && report_errors) {
-+			perror(argv[c]);
-+			break;
-+		}
-+	}
-+
-+	if (ret)
-+		return 1;
-+	return 0;
-+}
+ 	"__stress_scrub_${exerciser}_loop" "$end" "$runningfile" \
+-			"$remount_period" &
++			"$remount_period" "$stress_tgt" &
+ 
+ 	if [ -n "$freeze" ]; then
+ 		__stress_scrub_freeze_loop "$end" "$runningfile" &
 
