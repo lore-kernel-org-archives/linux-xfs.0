@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1A71C4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:38:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CF84C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:38:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230074AbiL3WiM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 17:38:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54380 "EHLO
+        id S235440AbiL3Wi1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 17:38:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229827AbiL3WiL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:38:11 -0500
+        with ESMTP id S229827AbiL3Wi0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:38:26 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C23A17E33
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 14:38:09 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2786D17E33
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 14:38:25 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 51532B81C22
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 22:38:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18F3EC433D2;
-        Fri, 30 Dec 2022 22:38:07 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C93AFB81C22
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 22:38:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90FF5C433D2;
+        Fri, 30 Dec 2022 22:38:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672439887;
-        bh=7g9jviRNDaVqxJOF+5EZEZEMORa8evLf1rg4VijjlBU=;
+        s=k20201202; t=1672439902;
+        bh=w2X/+rUYxu/DDmq+k3pp0V7AD8LjlyZ7nI6b2G39VWI=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=PihZeSP3axgrxW0lmjWIDbj64DO5asZp59a4jp1PnDT0o6hZtw71Jgwu+lj1KrZDv
-         Gyy39p7PWclkAVexiCJQC8nvdZcyz6rNk3yXp0NY9PrU2EKt/aO4cxVyI3jPuL+saT
-         07/O+ShHDZbeai1Q6h6Fa7Sz3oRG00rkEk7c31643HJLQP9mI0llJPGxxRirp79Zp8
-         JXFQm7dcwoVVHs0YHhDyxtZjoeO7TECWK030HouapglN3ewXYNdc+EukJMKQZGTI68
-         w/U7vHZnspBtssfO+IZMdKUXq2EOZyVDHZsHmv1pZAW8BDDcoLFr3EjxqMHbcMOBMY
-         b8Iq3gPsOdjXA==
-Subject: [PATCH 1/8] xfs: standardize ondisk to incore conversion for free
- space btrees
+        b=FrY/K/rB09eCfIWlhu5Cdq1PAOn42h0SVq6HUPcW9x/5leGzr3g6aGBxpXUPFGq81
+         iRT5kqRWKzBzNDFubW9hmRgm3Hdf1R/MuH+S5M1J6zVLhhy6Ko9mFn77l+o1UdNH9p
+         CxSjtzQa1ACYjoOQnDX3X5UjOW7BqR3TlBr/fTWDOkRkbKuoVa3Md9BxHXKmA3uLJL
+         hdhYhzZ4Nh05/DxJ6YIWGJbYKj36wEBhghQvBPHl5U8+QZMwYz28q/yr9fywD4xvoS
+         VqR/TiL19g5r8/Gltb1c2yiJV/Ir8RoVdqUVHK1OGyFOi9SWNaLc7F5sQZ1iQhNfrc
+         vDOwYiB/dohRw==
+Subject: [PATCH 2/8] xfs: standardize ondisk to incore conversion for inode
+ btrees
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:11:11 -0800
-Message-ID: <167243827145.683855.2636636289945550594.stgit@magnolia>
+Message-ID: <167243827159.683855.13707304181971939138.stgit@magnolia>
 In-Reply-To: <167243827121.683855.6049797551028464473.stgit@magnolia>
 References: <167243827121.683855.6049797551028464473.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,179 +50,206 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a xfs_alloc_btrec_to_irec function to convert an ondisk record to
-an incore record, and a xfs_alloc_check_irec function to detect
-corruption.  Replace all the open-coded logic with calls to the new
-helpers and bubble up corruption reports.
+Create a xfs_inobt_check_irec function to detect corruption in btree
+records.  Fix all xfs_inobt_btrec_to_irec callsites to call the new
+helper and bubble up corruption reports.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_alloc.c |   56 +++++++++++++++++++++++++++++++++++----------
- fs/xfs/libxfs/xfs_alloc.h |    6 +++++
- fs/xfs/scrub/alloc.c      |   24 ++++++++++---------
- 3 files changed, 61 insertions(+), 25 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.c       |   61 ++++++++++++++++++++++++--------------
+ fs/xfs/libxfs/xfs_ialloc.h       |    2 +
+ fs/xfs/libxfs/xfs_ialloc_btree.c |    2 +
+ fs/xfs/libxfs/xfs_ialloc_btree.h |    2 +
+ fs/xfs/scrub/ialloc.c            |   24 ++-------------
+ 5 files changed, 47 insertions(+), 44 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 199f22ddc379..13b668673243 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -237,6 +237,34 @@ xfs_alloc_update(
- 	return xfs_btree_update(cur, &rec);
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 5118dedf9267..010d1f514742 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -95,33 +95,21 @@ xfs_inobt_btrec_to_irec(
+ 	irec->ir_free = be64_to_cpu(rec->inobt.ir_free);
  }
  
-+/* Convert the ondisk btree record to its incore representation. */
-+void
-+xfs_alloc_btrec_to_irec(
-+	const union xfs_btree_rec	*rec,
-+	struct xfs_alloc_rec_incore	*irec)
-+{
-+	irec->ar_startblock = be32_to_cpu(rec->alloc.ar_startblock);
-+	irec->ar_blockcount = be32_to_cpu(rec->alloc.ar_blockcount);
-+}
-+
-+/* Simple checks for free space records. */
+-/*
+- * Get the data from the pointed-to record.
+- */
+-int
+-xfs_inobt_get_rec(
+-	struct xfs_btree_cur		*cur,
+-	struct xfs_inobt_rec_incore	*irec,
+-	int				*stat)
++/* Simple checks for inode records. */
 +xfs_failaddr_t
-+xfs_alloc_check_irec(
-+	struct xfs_btree_cur		*cur,
-+	const struct xfs_alloc_rec_incore *irec)
-+{
-+	struct xfs_perag		*pag = cur->bc_ag.pag;
-+
-+	if (irec->ar_blockcount == 0)
++xfs_inobt_check_irec(
++	struct xfs_btree_cur			*cur,
++	const struct xfs_inobt_rec_incore	*irec)
+ {
+-	struct xfs_mount		*mp = cur->bc_mp;
+-	union xfs_btree_rec		*rec;
+-	int				error;
+ 	uint64_t			realfree;
+ 
+-	error = xfs_btree_get_rec(cur, &rec, stat);
+-	if (error || *stat == 0)
+-		return error;
+-
+-	xfs_inobt_btrec_to_irec(mp, rec, irec);
+-
+ 	if (!xfs_verify_agino(cur->bc_ag.pag, irec->ir_startino))
+-		goto out_bad_rec;
 +		return __this_address;
-+
-+	/* check for valid extent range, including overflow */
-+	if (!xfs_verify_agbext(pag, irec->ar_startblock, irec->ar_blockcount))
+ 	if (irec->ir_count < XFS_INODES_PER_HOLEMASK_BIT ||
+ 	    irec->ir_count > XFS_INODES_PER_CHUNK)
+-		goto out_bad_rec;
++		return __this_address;
+ 	if (irec->ir_freecount > XFS_INODES_PER_CHUNK)
+-		goto out_bad_rec;
++		return __this_address;
+ 
+ 	/* if there are no holes, return the first available offset */
+ 	if (!xfs_inobt_issparse(irec->ir_holemask))
+@@ -129,15 +117,41 @@ xfs_inobt_get_rec(
+ 	else
+ 		realfree = irec->ir_free & xfs_inobt_irec_to_allocmask(irec);
+ 	if (hweight64(realfree) != irec->ir_freecount)
 +		return __this_address;
 +
 +	return NULL;
 +}
 +
- /*
-  * Get the data from the pointed-to record.
-  */
-@@ -247,34 +275,34 @@ xfs_alloc_get_rec(
- 	xfs_extlen_t		*len,	/* output: length of extent */
- 	int			*stat)	/* output: success/failure */
- {
-+	struct xfs_alloc_rec_incore irec;
- 	struct xfs_mount	*mp = cur->bc_mp;
- 	struct xfs_perag	*pag = cur->bc_ag.pag;
- 	union xfs_btree_rec	*rec;
-+	xfs_failaddr_t		fa;
- 	int			error;
- 
- 	error = xfs_btree_get_rec(cur, &rec, stat);
- 	if (error || !(*stat))
- 		return error;
- 
--	*bno = be32_to_cpu(rec->alloc.ar_startblock);
--	*len = be32_to_cpu(rec->alloc.ar_blockcount);
--
--	if (*len == 0)
--		goto out_bad_rec;
--
--	/* check for valid extent range, including overflow */
--	if (!xfs_verify_agbext(pag, *bno, *len))
-+	xfs_alloc_btrec_to_irec(rec, &irec);
-+	fa = xfs_alloc_check_irec(cur, &irec);
++/*
++ * Get the data from the pointed-to record.
++ */
++int
++xfs_inobt_get_rec(
++	struct xfs_btree_cur		*cur,
++	struct xfs_inobt_rec_incore	*irec,
++	int				*stat)
++{
++	struct xfs_mount		*mp = cur->bc_mp;
++	union xfs_btree_rec		*rec;
++	xfs_failaddr_t			fa;
++	int				error;
++
++	error = xfs_btree_get_rec(cur, &rec, stat);
++	if (error || *stat == 0)
++		return error;
++
++	xfs_inobt_btrec_to_irec(mp, rec, irec);
++	fa = xfs_inobt_check_irec(cur, irec);
 +	if (fa)
  		goto out_bad_rec;
  
-+	*bno = irec.ar_startblock;
-+	*len = irec.ar_blockcount;
  	return 0;
  
  out_bad_rec:
  	xfs_warn(mp,
--		"%s Freespace BTree record corruption in AG %d detected!",
-+		"%s Freespace BTree record corruption in AG %d detected at %pS!",
- 		cur->bc_btnum == XFS_BTNUM_BNO ? "Block" : "Size",
--		pag->pag_agno);
-+		pag->pag_agno, fa);
+-		"%s Inode BTree record corruption in AG %d detected!",
++		"%s Inode BTree record corruption in AG %d detected at %pS!",
+ 		cur->bc_btnum == XFS_BTNUM_INO ? "Used" : "Free",
+-		cur->bc_ag.pag->pag_agno);
++		cur->bc_ag.pag->pag_agno, fa);
  	xfs_warn(mp,
--		"start block 0x%x block count 0x%x", *bno, *len);
-+		"start block 0x%x block count 0x%x", irec.ar_startblock,
-+		irec.ar_blockcount);
- 	return -EFSCORRUPTED;
- }
+ "start inode 0x%x, count 0x%x, free 0x%x freemask 0x%llx, holemask 0x%x",
+ 		irec->ir_startino, irec->ir_count, irec->ir_freecount,
+@@ -2705,6 +2719,9 @@ xfs_ialloc_count_inodes_rec(
+ 	struct xfs_ialloc_count_inodes	*ci = priv;
  
-@@ -3450,8 +3478,10 @@ xfs_alloc_query_range_helper(
- 	struct xfs_alloc_query_range_info	*query = priv;
- 	struct xfs_alloc_rec_incore		irec;
- 
--	irec.ar_startblock = be32_to_cpu(rec->alloc.ar_startblock);
--	irec.ar_blockcount = be32_to_cpu(rec->alloc.ar_blockcount);
-+	xfs_alloc_btrec_to_irec(rec, &irec);
-+	if (xfs_alloc_check_irec(cur, &irec) != NULL)
+ 	xfs_inobt_btrec_to_irec(cur->bc_mp, rec, &irec);
++	if (xfs_inobt_check_irec(cur, &irec) != NULL)
 +		return -EFSCORRUPTED;
 +
- 	return query->fn(cur, &irec, query->priv);
+ 	ci->count += irec.ir_count;
+ 	ci->freecount += irec.ir_freecount;
+ 
+diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
+index 9bbbca6ac4ed..fa67bb090c01 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.h
++++ b/fs/xfs/libxfs/xfs_ialloc.h
+@@ -92,6 +92,8 @@ union xfs_btree_rec;
+ void xfs_inobt_btrec_to_irec(struct xfs_mount *mp,
+ 		const union xfs_btree_rec *rec,
+ 		struct xfs_inobt_rec_incore *irec);
++xfs_failaddr_t xfs_inobt_check_irec(struct xfs_btree_cur *cur,
++		const struct xfs_inobt_rec_incore *irec);
+ int xfs_ialloc_has_inodes_at_extent(struct xfs_btree_cur *cur,
+ 		xfs_agblock_t bno, xfs_extlen_t len, bool *exists);
+ int xfs_ialloc_has_inode_record(struct xfs_btree_cur *cur, xfs_agino_t low,
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index fb10760fd686..e849faae405a 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -610,7 +610,7 @@ xfs_iallocbt_maxlevels_ondisk(void)
+  */
+ uint64_t
+ xfs_inobt_irec_to_allocmask(
+-	struct xfs_inobt_rec_incore	*rec)
++	const struct xfs_inobt_rec_incore	*rec)
+ {
+ 	uint64_t			bitmap = 0;
+ 	uint64_t			inodespbit;
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.h b/fs/xfs/libxfs/xfs_ialloc_btree.h
+index 26451cb76b98..6d8d6bcd594d 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.h
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.h
+@@ -55,7 +55,7 @@ struct xfs_btree_cur *xfs_inobt_stage_cursor(struct xfs_mount *mp,
+ extern int xfs_inobt_maxrecs(struct xfs_mount *, int, int);
+ 
+ /* ir_holemask to inode allocation bitmap conversion */
+-uint64_t xfs_inobt_irec_to_allocmask(struct xfs_inobt_rec_incore *);
++uint64_t xfs_inobt_irec_to_allocmask(const struct xfs_inobt_rec_incore *irec);
+ 
+ #if defined(DEBUG) || defined(XFS_WARN)
+ int xfs_inobt_rec_check_count(struct xfs_mount *,
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index fd5bc289de4c..9aec5a793397 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -119,15 +119,6 @@ xchk_iallocbt_chunk(
+ 	return true;
  }
  
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index f84f3966e849..becd06e5d0b8 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -170,6 +170,12 @@ xfs_alloc_get_rec(
- 	xfs_extlen_t		*len,	/* output: length of extent */
- 	int			*stat);	/* output: success/failure */
- 
-+union xfs_btree_rec;
-+void xfs_alloc_btrec_to_irec(const union xfs_btree_rec *rec,
-+		struct xfs_alloc_rec_incore *irec);
-+xfs_failaddr_t xfs_alloc_check_irec(struct xfs_btree_cur *cur,
-+		const struct xfs_alloc_rec_incore *irec);
-+
- int xfs_read_agf(struct xfs_perag *pag, struct xfs_trans *tp, int flags,
- 		struct xfs_buf **agfbpp);
- int xfs_alloc_read_agf(struct xfs_perag *pag, struct xfs_trans *tp, int flags,
-diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
-index d0509219722f..fb4f96716f6a 100644
---- a/fs/xfs/scrub/alloc.c
-+++ b/fs/xfs/scrub/alloc.c
-@@ -78,9 +78,11 @@ xchk_allocbt_xref_other(
- STATIC void
- xchk_allocbt_xref(
- 	struct xfs_scrub	*sc,
--	xfs_agblock_t		agbno,
--	xfs_extlen_t		len)
-+	const struct xfs_alloc_rec_incore *irec)
- {
-+	xfs_agblock_t		agbno = irec->ar_startblock;
-+	xfs_extlen_t		len = irec->ar_blockcount;
-+
- 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
- 		return;
- 
-@@ -93,20 +95,18 @@ xchk_allocbt_xref(
- /* Scrub a bnobt/cntbt record. */
- STATIC int
- xchk_allocbt_rec(
--	struct xchk_btree	*bs,
--	const union xfs_btree_rec *rec)
-+	struct xchk_btree		*bs,
-+	const union xfs_btree_rec	*rec)
- {
--	struct xfs_perag	*pag = bs->cur->bc_ag.pag;
--	xfs_agblock_t		bno;
--	xfs_extlen_t		len;
-+	struct xfs_alloc_rec_incore	irec;
- 
--	bno = be32_to_cpu(rec->alloc.ar_startblock);
--	len = be32_to_cpu(rec->alloc.ar_blockcount);
+-/* Count the number of free inodes. */
+-static unsigned int
+-xchk_iallocbt_freecount(
+-	xfs_inofree_t			freemask)
+-{
+-	BUILD_BUG_ON(sizeof(freemask) != sizeof(__u64));
+-	return hweight64(freemask);
+-}
 -
--	if (!xfs_verify_agbext(pag, bno, len))
-+	xfs_alloc_btrec_to_irec(rec, &irec);
-+	if (xfs_alloc_check_irec(bs->cur, &irec) != NULL) {
+ /*
+  * Check that an inode's allocation status matches ir_free in the inobt
+  * record.  First we try querying the in-core inode state, and if the inode
+@@ -431,24 +422,17 @@ xchk_iallocbt_rec(
+ 	int				holecount;
+ 	int				i;
+ 	int				error = 0;
+-	unsigned int			real_freecount;
+ 	uint16_t			holemask;
+ 
+ 	xfs_inobt_btrec_to_irec(mp, rec, &irec);
+-
+-	if (irec.ir_count > XFS_INODES_PER_CHUNK ||
+-	    irec.ir_freecount > XFS_INODES_PER_CHUNK)
+-		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+-
+-	real_freecount = irec.ir_freecount +
+-			(XFS_INODES_PER_CHUNK - irec.ir_count);
+-	if (real_freecount != xchk_iallocbt_freecount(irec.ir_free))
++	if (xfs_inobt_check_irec(bs->cur, &irec) != NULL) {
  		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
 +		return 0;
 +	}
  
--	xchk_allocbt_xref(bs->sc, bno, len);
-+	xchk_allocbt_xref(bs->sc, &irec);
- 
- 	return 0;
- }
+ 	agino = irec.ir_startino;
+ 	/* Record has to be properly aligned within the AG. */
+-	if (!xfs_verify_agino(pag, agino) ||
+-	    !xfs_verify_agino(pag, agino + XFS_INODES_PER_CHUNK - 1)) {
++	if (!xfs_verify_agino(pag, agino + XFS_INODES_PER_CHUNK - 1)) {
+ 		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
+ 		goto out;
+ 	}
 
