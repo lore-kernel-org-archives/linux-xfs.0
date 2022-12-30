@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 292F1C4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:42:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 652F5C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:42:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235689AbiL3XmR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 18:42:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43940 "EHLO
+        id S235683AbiL3Xma (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 18:42:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235678AbiL3XmI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:42:08 -0500
+        with ESMTP id S235701AbiL3XmY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:42:24 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4EAC1DF1A;
-        Fri, 30 Dec 2022 15:42:07 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78D76120AF;
+        Fri, 30 Dec 2022 15:42:23 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 80A1361C31;
-        Fri, 30 Dec 2022 23:42:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E70E1C433EF;
-        Fri, 30 Dec 2022 23:42:06 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 17C4561C4A;
+        Fri, 30 Dec 2022 23:42:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7565BC433D2;
+        Fri, 30 Dec 2022 23:42:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672443726;
-        bh=bmcf5Ciu1VeuaaKrB3UQb0SOVUyuNBT/v9QTl+XQDBc=;
+        s=k20201202; t=1672443742;
+        bh=CzmAfxjnTBpHpIgWJd1E8d4oBdW7inMzYCZWZKeLrEI=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=B1sVqHBSe0AWk0dPRrXqx15SwKZ4R3vry4OXCxWH79PY7lDmpBbKaJcYLEr31cCTU
-         WhVMuggv9DaP4mjqxHI/JN60i6GDdv3x4N6lkqgRxz+jlmDxxiPY69WZiuaIXIRTDr
-         lu7muwIN0SaC9tX5Lqd5lMqtBDZwiP1r2MAAMM+5ejeSqgSAlCKs8K/f1VloZwvxw0
-         04hwQwr9B/4HxXjHZtH56fAcmsGr4OR3KascOU2fcdkEAT917j0X5PhKGJfMJ0Ntk2
-         VEaGZwNERa33ANoadFWDkuPCFHoDYpSczAsNzwWY12XyWC+JNPOIDCnqjiTUOQhwz6
-         AORGWM0R/jVkw==
-Subject: [PATCH 4/7] xfs: consolidate btree block freeing tracepoints
+        b=aV9/0DszgOhC+4Zwus9k9F7s8uWorAH6xNsyaTPTUZHXfaHiSNXKQsRVMB1HoJv2c
+         NwHE8q5FeZ7B99BTUZdgLMHfqkllR9gnpa36Sg0ll0D7msaK5BoHlQbR7cEz/ry9Qt
+         mrdk6LoGn1m3GqdPuMS8ES5ekopEFzvj9FWJTPUovzJID//ey8B+z7WYlJxQsk4xm3
+         s+AKjyvvOfQg4Hds78jcFGSymxjSgjijmmnfSHY3Qsg3rpZnRrbjF2VX4eMsS4t3d0
+         rJgkvwc9GJCwt1NR0JkIwRr4Ru4L0yQkdsZ5cz21S+8gJjFMtE5vZKcflmiNWbdi5j
+         nqS3/vz5BCfrQ==
+Subject: [PATCH 5/7] xfs: consolidate btree block allocation tracepoints
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, willy@infradead.org,
         linux-fsdevel@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:13:26 -0800
-Message-ID: <167243840656.696535.17469067472257583534.stgit@magnolia>
+Message-ID: <167243840671.696535.5630839227413502256.stgit@magnolia>
 In-Reply-To: <167243840589.696535.4812770109109400531.stgit@magnolia>
 References: <167243840589.696535.4812770109109400531.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,111 +50,167 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Don't waste tracepoint segment memory on per-btree block freeing
+Don't waste tracepoint segment memory on per-btree block allocation
 tracepoints when we can do it from the generic btree code.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_btree.c          |    2 ++
- fs/xfs/libxfs/xfs_refcount_btree.c |    2 --
- fs/xfs/libxfs/xfs_rmap_btree.c     |    2 --
- fs/xfs/xfs_trace.h                 |   32 ++++++++++++++++++++++++++++++--
- 4 files changed, 32 insertions(+), 6 deletions(-)
+ fs/xfs/libxfs/xfs_btree.c          |   20 ++++++++++++---
+ fs/xfs/libxfs/xfs_refcount_btree.c |    2 -
+ fs/xfs/libxfs/xfs_rmap_btree.c     |    2 -
+ fs/xfs/xfs_trace.h                 |   49 +++++++++++++++++++++++++++++++++++-
+ 4 files changed, 64 insertions(+), 9 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 02c237984fa6..7fab2df1046f 100644
+index 7fab2df1046f..f577c0463c6e 100644
 --- a/fs/xfs/libxfs/xfs_btree.c
 +++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -414,6 +414,8 @@ xfs_btree_free_block(
- {
- 	int			error;
+@@ -2693,6 +2693,20 @@ xfs_btree_rshift(
+ 	return error;
+ }
  
-+	trace_xfs_btree_free_block(cur, bp);
++static inline int
++xfs_btree_alloc_block(
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_ptr	*hint_block,
++	union xfs_btree_ptr		*new_block,
++	int				*stat)
++{
++	int				error;
 +
- 	error = cur->bc_ops->free_block(cur, bp);
- 	if (!error) {
- 		xfs_trans_binval(cur->bc_tp, bp);
++	error = cur->bc_ops->alloc_block(cur, hint_block, new_block, stat);
++	trace_xfs_btree_alloc_block(cur, new_block, *stat, error);
++	return error;
++}
++
+ /*
+  * Split cur/level block in half.
+  * Return new block number and the key to its first
+@@ -2736,7 +2750,7 @@ __xfs_btree_split(
+ 	xfs_btree_buf_to_ptr(cur, lbp, &lptr);
+ 
+ 	/* Allocate the new block. If we can't do it, we're toast. Give up. */
+-	error = cur->bc_ops->alloc_block(cur, &lptr, &rptr, stat);
++	error = xfs_btree_alloc_block(cur, &lptr, &rptr, stat);
+ 	if (error)
+ 		goto error0;
+ 	if (*stat == 0)
+@@ -3002,7 +3016,7 @@ xfs_btree_new_iroot(
+ 	pp = xfs_btree_ptr_addr(cur, 1, block);
+ 
+ 	/* Allocate the new block. If we can't do it, we're toast. Give up. */
+-	error = cur->bc_ops->alloc_block(cur, pp, &nptr, stat);
++	error = xfs_btree_alloc_block(cur, pp, &nptr, stat);
+ 	if (error)
+ 		goto error0;
+ 	if (*stat == 0)
+@@ -3102,7 +3116,7 @@ xfs_btree_new_root(
+ 	cur->bc_ops->init_ptr_from_cur(cur, &rptr);
+ 
+ 	/* Allocate the new block. If we can't do it, we're toast. Give up. */
+-	error = cur->bc_ops->alloc_block(cur, &rptr, &lptr, stat);
++	error = xfs_btree_alloc_block(cur, &rptr, &lptr, stat);
+ 	if (error)
+ 		goto error0;
+ 	if (*stat == 0)
 diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-index 1bf991bf452f..b1d1f3bb159f 100644
+index b1d1f3bb159f..b75005684aa2 100644
 --- a/fs/xfs/libxfs/xfs_refcount_btree.c
 +++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-@@ -108,8 +108,6 @@ xfs_refcountbt_free_block(
- 	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, xfs_buf_daddr(bp));
- 	int			error;
- 
--	trace_xfs_refcountbt_free_block(cur->bc_mp, cur->bc_ag.pag->pag_agno,
--			XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno), 1);
- 	be32_add_cpu(&agf->agf_refcount_blocks, -1);
- 	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_REFCOUNT_BLOCKS);
- 	error = xfs_free_extent(cur->bc_tp, cur->bc_ag.pag,
+@@ -77,8 +77,6 @@ xfs_refcountbt_alloc_block(
+ 	error = xfs_alloc_vextent(&args);
+ 	if (error)
+ 		goto out_error;
+-	trace_xfs_refcountbt_alloc_block(cur->bc_mp, cur->bc_ag.pag->pag_agno,
+-			args.agbno, 1);
+ 	if (args.fsbno == NULLFSBLOCK) {
+ 		*stat = 0;
+ 		return 0;
 diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
-index 2c90a05ca814..1421fcfcad64 100644
+index 1421fcfcad64..5583dbe43bb5 100644
 --- a/fs/xfs/libxfs/xfs_rmap_btree.c
 +++ b/fs/xfs/libxfs/xfs_rmap_btree.c
-@@ -125,8 +125,6 @@ xfs_rmapbt_free_block(
- 	int			error;
- 
- 	bno = xfs_daddr_to_agbno(cur->bc_mp, xfs_buf_daddr(bp));
--	trace_xfs_rmapbt_free_block(cur->bc_mp, pag->pag_agno,
--			bno, 1);
- 	be32_add_cpu(&agf->agf_rmap_blocks, -1);
- 	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_RMAP_BLOCKS);
- 	error = xfs_alloc_put_freelist(pag, cur->bc_tp, agbp, NULL, bno, 1);
+@@ -94,8 +94,6 @@ xfs_rmapbt_alloc_block(
+ 				       &bno, 1);
+ 	if (error)
+ 		return error;
+-
+-	trace_xfs_rmapbt_alloc_block(cur->bc_mp, pag->pag_agno, bno, 1);
+ 	if (bno == NULLAGBLOCK) {
+ 		*stat = 0;
+ 		return 0;
 diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 145808b733ce..50f4d4410976 100644
+index 50f4d4410976..d86dd34127f2 100644
 --- a/fs/xfs/xfs_trace.h
 +++ b/fs/xfs/xfs_trace.h
-@@ -2515,6 +2515,36 @@ DEFINE_EVENT(xfs_btree_cur_class, name, \
+@@ -2515,6 +2515,53 @@ DEFINE_EVENT(xfs_btree_cur_class, name, \
  DEFINE_BTREE_CUR_EVENT(xfs_btree_updkeys);
  DEFINE_BTREE_CUR_EVENT(xfs_btree_overlapped_query_range);
  
-+TRACE_EVENT(xfs_btree_free_block,
-+	TP_PROTO(struct xfs_btree_cur *cur, struct xfs_buf *bp),
-+	TP_ARGS(cur, bp),
++TRACE_EVENT(xfs_btree_alloc_block,
++	TP_PROTO(struct xfs_btree_cur *cur, union xfs_btree_ptr *ptr, int stat,
++		 int error),
++	TP_ARGS(cur, ptr, stat, error),
 +	TP_STRUCT__entry(
 +		__field(dev_t, dev)
 +		__field(xfs_agnumber_t, agno)
 +		__field(xfs_ino_t, ino)
 +		__field(xfs_btnum_t, btnum)
++		__field(int, error)
 +		__field(xfs_agblock_t, agbno)
 +	),
 +	TP_fast_assign(
 +		__entry->dev = cur->bc_mp->m_super->s_dev;
-+		__entry->agno = xfs_daddr_to_agno(cur->bc_mp,
-+							xfs_buf_daddr(bp));
-+		if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
++		if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) {
++			__entry->agno = 0;
 +			__entry->ino = cur->bc_ino.ip->i_ino;
-+		else
++		} else {
++			__entry->agno = cur->bc_ag.pag->pag_agno;
 +			__entry->ino = 0;
++		}
 +		__entry->btnum = cur->bc_btnum;
-+		__entry->agbno = xfs_daddr_to_agbno(cur->bc_mp,
-+							xfs_buf_daddr(bp));
++		__entry->error = error;
++		if (!error && stat) {
++			if (cur->bc_flags & XFS_BTREE_LONG_PTRS) {
++				xfs_fsblock_t	fsb = be64_to_cpu(ptr->l);
++
++				__entry->agno = XFS_FSB_TO_AGNO(cur->bc_mp,
++								fsb);
++				__entry->agbno = XFS_FSB_TO_AGBNO(cur->bc_mp,
++								fsb);
++			} else {
++				__entry->agbno = be32_to_cpu(ptr->s);
++			}
++		} else {
++			__entry->agbno = NULLAGBLOCK;
++		}
 +	),
-+	TP_printk("dev %d:%d btree %s agno 0x%x ino 0x%llx agbno 0x%x",
++	TP_printk("dev %d:%d btree %s agno 0x%x ino 0x%llx agbno 0x%x error %d",
 +		  MAJOR(__entry->dev), MINOR(__entry->dev),
 +		  __print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
 +		  __entry->agno,
 +		  __entry->ino,
-+		  __entry->agbno)
++		  __entry->agbno,
++		  __entry->error)
 +);
 +
- /* deferred ops */
- struct xfs_defer_pending;
- 
-@@ -2869,7 +2899,6 @@ DEFINE_RMAP_DEFERRED_EVENT(xfs_rmap_defer);
+ TRACE_EVENT(xfs_btree_free_block,
+ 	TP_PROTO(struct xfs_btree_cur *cur, struct xfs_buf *bp),
+ 	TP_ARGS(cur, bp),
+@@ -2898,7 +2945,6 @@ DEFINE_EVENT(xfs_rmapbt_class, name, \
+ DEFINE_RMAP_DEFERRED_EVENT(xfs_rmap_defer);
  DEFINE_RMAP_DEFERRED_EVENT(xfs_rmap_deferred);
  
- DEFINE_BUSY_EVENT(xfs_rmapbt_alloc_block);
--DEFINE_BUSY_EVENT(xfs_rmapbt_free_block);
+-DEFINE_BUSY_EVENT(xfs_rmapbt_alloc_block);
  DEFINE_RMAPBT_EVENT(xfs_rmap_update);
  DEFINE_RMAPBT_EVENT(xfs_rmap_insert);
  DEFINE_RMAPBT_EVENT(xfs_rmap_delete);
-@@ -3228,7 +3257,6 @@ DEFINE_EVENT(xfs_refcount_triple_extent_class, name, \
+@@ -3256,7 +3302,6 @@ DEFINE_EVENT(xfs_refcount_triple_extent_class, name, \
+ 	TP_ARGS(mp, agno, i1, i2, i3))
  
  /* refcount btree tracepoints */
- DEFINE_BUSY_EVENT(xfs_refcountbt_alloc_block);
--DEFINE_BUSY_EVENT(xfs_refcountbt_free_block);
+-DEFINE_BUSY_EVENT(xfs_refcountbt_alloc_block);
  DEFINE_AG_BTREE_LOOKUP_EVENT(xfs_refcount_lookup);
  DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcount_get);
  DEFINE_REFCOUNT_EXTENT_EVENT(xfs_refcount_update);
