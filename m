@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A10AC4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:06:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4AB5C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:06:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235845AbiLaAGE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 19:06:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53592 "EHLO
+        id S235435AbiLaAGT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 19:06:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235435AbiLaAGC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:06:02 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 479061B1D4
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 16:06:01 -0800 (PST)
+        with ESMTP id S235850AbiLaAGS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:06:18 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C98441E3C3
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 16:06:16 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 003E1B81DE9
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 00:06:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9EFEC433EF;
-        Sat, 31 Dec 2022 00:05:58 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 86CFDB81DEC
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 00:06:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 458B9C433EF;
+        Sat, 31 Dec 2022 00:06:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672445158;
-        bh=mCHnM0BzjhS5tq403JOmyF/qfOdCIdJ4YJbg3mC/DKE=;
+        s=k20201202; t=1672445174;
+        bh=fAX0EHj69GwzC89bFxzPUE6s00AP9GzBs2oKwH2gbik=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=uhrY3rTH60+nuVyUVkqBIBSK1ynhdRL/pUjHN0HEtgucgiCFOFvxVvVutZ92W0Pgf
-         iLCI7hgGTh6mH3obFiFh4+FMxkesf+f0QZrUSx174AlwZ1ON/eW4LX1O5S1rbFc4Nh
-         L77SChzxEItuwcTJ9AW3jgD179ntzSbBmtS7POn6MdzfM+cHhoK4crODss4nA7P31m
-         c5eplDgxJ8tyYb4lT8pbtdeJyYBI2GRdTA8W5krKTtdRo/nFi10MQRAdKDfG7vCyQp
-         TjPBQhLR2N1py+q30wN+45NjownwpG39keTuA1EbFAS+oMgoFchJPWqxLvv9E32Oj/
-         qBUbhqmXIwCDg==
-Subject: [PATCH 4/5] xfs: constrain dirty buffers while formatting a staged
- btree
+        b=qsVGXDacY4arvQYqh9Y6Nighky1xpm/4c9vFo5Ypp4jBHd1+wZxtrLH0fHlZRJWUt
+         91UHB2IlOyRRWCMPutAfJFWj9qDAiExv7HFRUHQluN9LuCAq7OGLO+OZtcYJpepsKS
+         l9lIE5rx3nWkFwhpuDo+Kh17wG8ka/Fs7+YgubtKviPH9E3LZ3kdYalWxw4v6HFt5g
+         hAXU0Oa07bFXO1GhmrLkP7q62IxzfcA67cn0yLvnwAUNgiJOdPkkLsbawpZlOy2Zpm
+         WTjdBMyCkDlZGavRbu+oxRBU7F0OUdnRWcsmv/O8Rfpis1d+ZB7Q0g+za+6mrIe1nM
+         BKclLdGCpKA1A==
+Subject: [PATCH 5/5] xfs_repair: bulk load records into new btree blocks
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     cem@kernel.org, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:17:19 -0800
-Message-ID: <167243863957.707598.4173177371145564589.stgit@magnolia>
+Message-ID: <167243863970.707598.5919935346304694103.stgit@magnolia>
 In-Reply-To: <167243863904.707598.12385476439101029022.stgit@magnolia>
 References: <167243863904.707598.12385476439101029022.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,180 +49,221 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Constrain the number of dirty buffers that are locked by the btree
-staging code at any given time by establishing a threshold at which we
-put them all on the delwri queue and push them to disk.  This limits
-memory consumption while writing out new btrees.
+Amortize the cost of indirect calls further by loading a batch of
+records into a new btree block instead of one record per ->get_record
+call.  On a rmap btree with 3.9 million records, this reduces the
+runtime of xfs_btree_bload by 3% for xfsprogs.  For the upcoming online
+repair functionality, this will reduce runtime by 6% when spectre
+mitigations are enabled in the kernel.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_btree.c         |    2 +-
- libxfs/xfs_btree.h         |    3 +++
- libxfs/xfs_btree_staging.c |   50 ++++++++++++++++++++++++++++++++++----------
- libxfs/xfs_btree_staging.h |   10 +++++++++
- repair/agbtree.c           |    1 +
- 5 files changed, 54 insertions(+), 12 deletions(-)
+ repair/agbtree.c |  161 ++++++++++++++++++++++++++++++------------------------
+ 1 file changed, 90 insertions(+), 71 deletions(-)
 
 
-diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index 3402c25c344..7b2df32960c 100644
---- a/libxfs/xfs_btree.c
-+++ b/libxfs/xfs_btree.c
-@@ -1327,7 +1327,7 @@ xfs_btree_get_buf_block(
-  * Read in the buffer at the given ptr and return the buffer and
-  * the block pointer within the buffer.
-  */
--STATIC int
-+int
- xfs_btree_read_buf_block(
- 	struct xfs_btree_cur		*cur,
- 	const union xfs_btree_ptr	*ptr,
-diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
-index d8b390e895b..6a565ad5e83 100644
---- a/libxfs/xfs_btree.h
-+++ b/libxfs/xfs_btree.h
-@@ -701,6 +701,9 @@ void xfs_btree_set_ptr_null(struct xfs_btree_cur *cur,
- int xfs_btree_get_buf_block(struct xfs_btree_cur *cur,
- 		const union xfs_btree_ptr *ptr, struct xfs_btree_block **block,
- 		struct xfs_buf **bpp);
-+int xfs_btree_read_buf_block(struct xfs_btree_cur *cur,
-+		const union xfs_btree_ptr *ptr, int flags,
-+		struct xfs_btree_block **block, struct xfs_buf **bpp);
- void xfs_btree_set_sibling(struct xfs_btree_cur *cur,
- 		struct xfs_btree_block *block, const union xfs_btree_ptr *ptr,
- 		int lr);
-diff --git a/libxfs/xfs_btree_staging.c b/libxfs/xfs_btree_staging.c
-index 97fade90622..5391d3fead2 100644
---- a/libxfs/xfs_btree_staging.c
-+++ b/libxfs/xfs_btree_staging.c
-@@ -333,18 +333,35 @@ xfs_btree_commit_ifakeroot(
- /*
-  * Put a btree block that we're loading onto the ordered list and release it.
-  * The btree blocks will be written to disk when bulk loading is finished.
-+ * If we reach the dirty buffer threshold, flush them to disk before
-+ * continuing.
-  */
--static void
-+static int
- xfs_btree_bload_drop_buf(
--	struct list_head	*buffers_list,
--	struct xfs_buf		**bpp)
-+	struct xfs_btree_bload		*bbl,
-+	struct list_head		*buffers_list,
-+	struct xfs_buf			**bpp)
- {
--	if (*bpp == NULL)
--		return;
-+	struct xfs_buf			*bp = *bpp;
-+	int				error;
- 
--	xfs_buf_delwri_queue_here(*bpp, buffers_list);
--	xfs_buf_relse(*bpp);
-+	if (!bp)
-+		return 0;
-+
-+	xfs_buf_delwri_queue_here(bp, buffers_list);
-+	xfs_buf_relse(bp);
- 	*bpp = NULL;
-+	bbl->nr_dirty++;
-+
-+	if (!bbl->max_dirty || bbl->nr_dirty < bbl->max_dirty)
-+		return 0;
-+
-+	error = xfs_buf_delwri_submit(buffers_list);
-+	if (error)
-+		return error;
-+
-+	bbl->nr_dirty = 0;
-+	return 0;
- }
- 
- /*
-@@ -416,7 +433,10 @@ xfs_btree_bload_prep_block(
- 	 */
- 	if (*blockp)
- 		xfs_btree_set_sibling(cur, *blockp, &new_ptr, XFS_BB_RIGHTSIB);
--	xfs_btree_bload_drop_buf(buffers_list, bpp);
-+
-+	ret = xfs_btree_bload_drop_buf(bbl, buffers_list, bpp);
-+	if (ret)
-+		return ret;
- 
- 	/* Initialize the new btree block. */
- 	xfs_btree_init_block_cur(cur, new_bp, level, nr_this_block);
-@@ -480,7 +500,7 @@ xfs_btree_bload_node(
- 
- 		ASSERT(!xfs_btree_ptr_is_null(cur, child_ptr));
- 
--		ret = xfs_btree_get_buf_block(cur, child_ptr, &child_block,
-+		ret = xfs_btree_read_buf_block(cur, child_ptr, 0, &child_block,
- 				&child_bp);
- 		if (ret)
- 			return ret;
-@@ -759,6 +779,7 @@ xfs_btree_bload(
- 	cur->bc_nlevels = bbl->btree_height;
- 	xfs_btree_set_ptr_null(cur, &child_ptr);
- 	xfs_btree_set_ptr_null(cur, &ptr);
-+	bbl->nr_dirty = 0;
- 
- 	xfs_btree_bload_level_geometry(cur, bbl, level, nr_this_level,
- 			&avg_per_block, &blocks, &blocks_with_extra);
-@@ -797,7 +818,10 @@ xfs_btree_bload(
- 			xfs_btree_copy_ptrs(cur, &child_ptr, &ptr, 1);
- 	}
- 	total_blocks += blocks;
--	xfs_btree_bload_drop_buf(&buffers_list, &bp);
-+
-+	ret = xfs_btree_bload_drop_buf(bbl, &buffers_list, &bp);
-+	if (ret)
-+		goto out;
- 
- 	/* Populate the internal btree nodes. */
- 	for (level = 1; level < cur->bc_nlevels; level++) {
-@@ -839,7 +863,11 @@ xfs_btree_bload(
- 				xfs_btree_copy_ptrs(cur, &first_ptr, &ptr, 1);
- 		}
- 		total_blocks += blocks;
--		xfs_btree_bload_drop_buf(&buffers_list, &bp);
-+
-+		ret = xfs_btree_bload_drop_buf(bbl, &buffers_list, &bp);
-+		if (ret)
-+			goto out;
-+
- 		xfs_btree_copy_ptrs(cur, &child_ptr, &first_ptr, 1);
- 	}
- 
-diff --git a/libxfs/xfs_btree_staging.h b/libxfs/xfs_btree_staging.h
-index 82a3a8ef0f1..d2eaf4fdc60 100644
---- a/libxfs/xfs_btree_staging.h
-+++ b/libxfs/xfs_btree_staging.h
-@@ -115,6 +115,16 @@ struct xfs_btree_bload {
- 	 * height of the new btree.
- 	 */
- 	unsigned int			btree_height;
-+
-+	/*
-+	 * Flush the new btree block buffer list to disk after this many blocks
-+	 * have been formatted.  Zero prohibits writing any buffers until all
-+	 * blocks have been formatted.
-+	 */
-+	uint16_t			max_dirty;
-+
-+	/* Number of dirty buffers. */
-+	uint16_t			nr_dirty;
- };
- 
- int xfs_btree_bload_compute_geometry(struct xfs_btree_cur *cur,
 diff --git a/repair/agbtree.c b/repair/agbtree.c
-index d90cbcc2f28..70ad042f832 100644
+index 70ad042f832..cba67c5fbf4 100644
 --- a/repair/agbtree.c
 +++ b/repair/agbtree.c
-@@ -23,6 +23,7 @@ init_rebuild(
- 	memset(btr, 0, sizeof(struct bt_rebuild));
+@@ -220,15 +220,19 @@ get_bnobt_records(
+ 	struct bt_rebuild		*btr = priv;
+ 	struct xfs_alloc_rec_incore	*arec = &cur->bc_rec.a;
+ 	union xfs_btree_rec		*block_rec;
++	unsigned int			loaded;
  
- 	bulkload_init_ag(&btr->newbt, sc, oinfo);
-+	btr->bload.max_dirty = XFS_B_TO_FSBT(sc->mp, 256U << 10); /* 256K */
- 	bulkload_estimate_ag_slack(sc, &btr->bload, free_space);
+-	btr->bno_rec = get_bno_rec(cur, btr->bno_rec);
+-	arec->ar_startblock = btr->bno_rec->ex_startblock;
+-	arec->ar_blockcount = btr->bno_rec->ex_blockcount;
+-	btr->freeblks += btr->bno_rec->ex_blockcount;
++	for (loaded = 0; loaded < nr_wanted; loaded++, idx++) {
++		btr->bno_rec = get_bno_rec(cur, btr->bno_rec);
++		arec->ar_startblock = btr->bno_rec->ex_startblock;
++		arec->ar_blockcount = btr->bno_rec->ex_blockcount;
++		btr->freeblks += btr->bno_rec->ex_blockcount;
+ 
+-	block_rec = libxfs_btree_rec_addr(cur, idx, block);
+-	cur->bc_ops->init_rec_from_cur(cur, block_rec);
+-	return 1;
++		block_rec = libxfs_btree_rec_addr(cur, idx, block);
++		cur->bc_ops->init_rec_from_cur(cur, block_rec);
++	}
++
++	return loaded;
  }
  
+ void
+@@ -388,65 +392,72 @@ get_inobt_records(
+ {
+ 	struct bt_rebuild		*btr = priv;
+ 	struct xfs_inobt_rec_incore	*irec = &cur->bc_rec.i;
+-	struct ino_tree_node		*ino_rec;
+-	union xfs_btree_rec		*block_rec;
+-	int				inocnt = 0;
+-	int				finocnt = 0;
+-	int				k;
+-
+-	btr->ino_rec = ino_rec = get_ino_rec(cur, btr->ino_rec);
+-
+-	/* Transform the incore record into an on-disk record. */
+-	irec->ir_startino = ino_rec->ino_startnum;
+-	irec->ir_free = ino_rec->ir_free;
+-
+-	for (k = 0; k < sizeof(xfs_inofree_t) * NBBY; k++)  {
+-		ASSERT(is_inode_confirmed(ino_rec, k));
+-
+-		if (is_inode_sparse(ino_rec, k))
+-			continue;
+-		if (is_inode_free(ino_rec, k))
+-			finocnt++;
+-		inocnt++;
+-	}
++	unsigned int			loaded = 0;
++
++	while (loaded < nr_wanted) {
++		struct ino_tree_node	*ino_rec;
++		union xfs_btree_rec	*block_rec;
++		int			inocnt = 0;
++		int			finocnt = 0;
++		int			k;
++
++		btr->ino_rec = ino_rec = get_ino_rec(cur, btr->ino_rec);
+ 
+-	irec->ir_count = inocnt;
+-	irec->ir_freecount = finocnt;
+-
+-	if (xfs_has_sparseinodes(cur->bc_mp)) {
+-		uint64_t		sparse;
+-		int			spmask;
+-		uint16_t		holemask;
+-
+-		/*
+-		 * Convert the 64-bit in-core sparse inode state to the
+-		 * 16-bit on-disk holemask.
+-		 */
+-		holemask = 0;
+-		spmask = (1 << XFS_INODES_PER_HOLEMASK_BIT) - 1;
+-		sparse = ino_rec->ir_sparse;
+-		for (k = 0; k < XFS_INOBT_HOLEMASK_BITS; k++) {
+-			if (sparse & spmask) {
+-				ASSERT((sparse & spmask) == spmask);
+-				holemask |= (1 << k);
+-			} else
+-				ASSERT((sparse & spmask) == 0);
+-			sparse >>= XFS_INODES_PER_HOLEMASK_BIT;
++		/* Transform the incore record into an on-disk record. */
++		irec->ir_startino = ino_rec->ino_startnum;
++		irec->ir_free = ino_rec->ir_free;
++
++		for (k = 0; k < sizeof(xfs_inofree_t) * NBBY; k++)  {
++			ASSERT(is_inode_confirmed(ino_rec, k));
++
++			if (is_inode_sparse(ino_rec, k))
++				continue;
++			if (is_inode_free(ino_rec, k))
++				finocnt++;
++			inocnt++;
+ 		}
+ 
+-		irec->ir_holemask = holemask;
+-	} else {
+-		irec->ir_holemask = 0;
+-	}
++		irec->ir_count = inocnt;
++		irec->ir_freecount = finocnt;
+ 
+-	if (btr->first_agino == NULLAGINO)
+-		btr->first_agino = ino_rec->ino_startnum;
+-	btr->freecount += finocnt;
+-	btr->count += inocnt;
++		if (xfs_has_sparseinodes(cur->bc_mp)) {
++			uint64_t		sparse;
++			int			spmask;
++			uint16_t		holemask;
++
++			/*
++			 * Convert the 64-bit in-core sparse inode state to the
++			 * 16-bit on-disk holemask.
++			 */
++			holemask = 0;
++			spmask = (1 << XFS_INODES_PER_HOLEMASK_BIT) - 1;
++			sparse = ino_rec->ir_sparse;
++			for (k = 0; k < XFS_INOBT_HOLEMASK_BITS; k++) {
++				if (sparse & spmask) {
++					ASSERT((sparse & spmask) == spmask);
++					holemask |= (1 << k);
++				} else
++					ASSERT((sparse & spmask) == 0);
++				sparse >>= XFS_INODES_PER_HOLEMASK_BIT;
++			}
++
++			irec->ir_holemask = holemask;
++		} else {
++			irec->ir_holemask = 0;
++		}
++
++		if (btr->first_agino == NULLAGINO)
++			btr->first_agino = ino_rec->ino_startnum;
++		btr->freecount += finocnt;
++		btr->count += inocnt;
++
++		block_rec = libxfs_btree_rec_addr(cur, idx, block);
++		cur->bc_ops->init_rec_from_cur(cur, block_rec);
++		loaded++;
++		idx++;
++	}
+ 
+-	block_rec = libxfs_btree_rec_addr(cur, idx, block);
+-	cur->bc_ops->init_rec_from_cur(cur, block_rec);
+-	return 1;
++	return loaded;
+ }
+ 
+ /* Initialize both inode btree cursors as needed. */
+@@ -585,13 +596,17 @@ get_rmapbt_records(
+ 	struct xfs_rmap_irec		*rec;
+ 	struct bt_rebuild		*btr = priv;
+ 	union xfs_btree_rec		*block_rec;
++	unsigned int			loaded;
+ 
+-	rec = pop_slab_cursor(btr->slab_cursor);
+-	memcpy(&cur->bc_rec.r, rec, sizeof(struct xfs_rmap_irec));
++	for (loaded = 0; loaded < nr_wanted; loaded++, idx++) {
++		rec = pop_slab_cursor(btr->slab_cursor);
++		memcpy(&cur->bc_rec.r, rec, sizeof(struct xfs_rmap_irec));
+ 
+-	block_rec = libxfs_btree_rec_addr(cur, idx, block);
+-	cur->bc_ops->init_rec_from_cur(cur, block_rec);
+-	return 1;
++		block_rec = libxfs_btree_rec_addr(cur, idx, block);
++		cur->bc_ops->init_rec_from_cur(cur, block_rec);
++	}
++
++	return loaded;
+ }
+ 
+ /* Set up the rmap rebuild parameters. */
+@@ -663,13 +678,17 @@ get_refcountbt_records(
+ 	struct xfs_refcount_irec	*rec;
+ 	struct bt_rebuild		*btr = priv;
+ 	union xfs_btree_rec		*block_rec;
++	unsigned int			loaded;
+ 
+-	rec = pop_slab_cursor(btr->slab_cursor);
+-	memcpy(&cur->bc_rec.rc, rec, sizeof(struct xfs_refcount_irec));
++	for (loaded = 0; loaded < nr_wanted; loaded++, idx++) {
++		rec = pop_slab_cursor(btr->slab_cursor);
++		memcpy(&cur->bc_rec.rc, rec, sizeof(struct xfs_refcount_irec));
+ 
+-	block_rec = libxfs_btree_rec_addr(cur, idx, block);
+-	cur->bc_ops->init_rec_from_cur(cur, block_rec);
+-	return 1;
++		block_rec = libxfs_btree_rec_addr(cur, idx, block);
++		cur->bc_ops->init_rec_from_cur(cur, block_rec);
++	}
++
++	return loaded;
+ }
+ 
+ /* Set up the refcount rebuild parameters. */
 
