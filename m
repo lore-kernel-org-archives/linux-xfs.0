@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF833C4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:00:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C8B3C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:00:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236118AbiLaCAD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 21:00:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51292 "EHLO
+        id S236043AbiLaCAS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 21:00:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236043AbiLaCAC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:00:02 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 657461C430
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:00:01 -0800 (PST)
+        with ESMTP id S236120AbiLaCAQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:00:16 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E49C1C430
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:00:16 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id B4AFBCE19E6
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 01:59:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04CC9C433EF;
-        Sat, 31 Dec 2022 01:59:57 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id D827AB81DF8
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:00:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97696C433EF;
+        Sat, 31 Dec 2022 02:00:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672451998;
-        bh=bdZVzcx7TM743pMqModRBCcFr8EA8SWIYJEWReq1mSM=;
+        s=k20201202; t=1672452013;
+        bh=N7FfoUGu7e4T+0ipGOtxdhtzzvJEIL6t7LRRRrO4C0I=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=aTlDfDsO8BxcFs2s2fJI5u79y5qzvGmR/zDDhx9NQYdZAp9pm6xxQQrb/EOMxXm64
-         SyqFUpSEJJbYfvQyXJoiSA+/cEGPkn8H8nfPKGsmYBm+epYi+7jdLQwvn8vVywQjKV
-         DLFwJzuCTiE8G0A3BtqyXqL94hGG/AG1fFb2G6gaijaoivmI/SvdW++0H3sMJv60VI
-         loiXDT+ksc/N3eXFGOuHukkuekOAAZ+NZ0XTkTvMjgWq9CdzSD3q/opC+4KpXIdh7E
-         aEyLdEbAkPmk11ZoUMzKCNjwJPMc+Oy4x9ElN+Qj3XdGpEdxkSRD7o7k80U3dQgi3l
-         1mNlK10Cl+eoQ==
-Subject: [PATCH 4/9] xfs: forcibly convert unwritten blocks within an rt
- extent before sharing
+        b=MQj/pw6gYC7JxakuZcpfh6Ym4DA9MpceqJpHl6Pe0sTv+Uh/27My7ulUd8bODvGXb
+         8Bq0zXx0y5rlFlwPD2ra+L7sx2L3T8uuoZ0Z67gJavmPZNYmPeIkNhHiR0QY1BAdg8
+         5KGrIAWu5Do1qB/5PgIcinzVVKaJtarNmZHmrY7QtTTqrW8XyjS4W1HkzUPqh7iNmE
+         EoMaxu4kPyQt5podvbwr6EZ7IZkGxmpPqsw4C04qs9waOhQBPiTpRzU9hunAxZ+wAk
+         x7c+9o+RKBVt+9+ux/whc00oCxZcP6xCaKnBKQGfghuhH1NcZAXcJtMX1oaxAbOnWC
+         6ySem9IaUpC6A==
+Subject: [PATCH 5/9] xfs: extend writeback requests to handle rt cow correctly
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:18:38 -0800
-Message-ID: <167243871861.718512.15989906047218636590.stgit@magnolia>
+Message-ID: <167243871875.718512.10357363440477128738.stgit@magnolia>
 In-Reply-To: <167243871792.718512.13170681692847163098.stgit@magnolia>
 References: <167243871792.718512.13170681692847163098.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,50 +49,77 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-As noted in the previous patch, XFS can only unmap and map full rt
-extents.  This means that we cannot stop mid-extent for any reason,
-including stepping around unwritten/written extents.  Second, the
-reflink and CoW mechanisms were not designed to handle shared unwritten
-extents, so we have to do something to get rid of them.
-
-If the user asks us to remap two files, we must scan both ranges
-beforehand to convert any unwritten extents that are not aligned to rt
-extent boundaries into zeroed written extents before sharing.
+If we have shared realtime files and the rt extent size is larger than a
+single fs block, we need to extend writeback requests to be aligned to
+rt extent size granularity because we cannot share partial rt extents.
+The front end should have set us up for this by dirtying the relevant
+ranges.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_reflink.c |   19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ fs/xfs/xfs_aops.c |   40 ++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 36 insertions(+), 4 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 8690017beb9b..b9f47bdbe383 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1689,6 +1689,25 @@ xfs_reflink_remap_prep(
- 	if (ret)
- 		goto out_unlock;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index c3a9df0c0eab..af5c854a72dc 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -488,12 +488,41 @@ static const struct iomap_writeback_ops xfs_writeback_ops = {
+ 	.discard_folio		= xfs_discard_folio,
+ };
  
-+	/*
-+	 * Now that we've marked both inodes for reflink, make sure that all
-+	 * possible rt extents in both files' ranges are either wholly written,
-+	 * wholly unwritten, or holes.  The bmap code requires that we align
-+	 * all unmap and remap requests to a rt extent boundary.  We've already
-+	 * flushed the page cache and finished directio for the range that's
-+	 * being remapped, so we can convert the extents directly.
-+	 */
-+	if (xfs_inode_has_bigrtextents(src)) {
-+		ret = xfs_rtfile_convert_unwritten(src, pos_in, *len);
-+		if (ret)
-+			goto out_unlock;
-+	}
-+	if (xfs_inode_has_bigrtextents(dest)) {
-+		ret = xfs_rtfile_convert_unwritten(dest, pos_out, *len);
-+		if (ret)
-+			goto out_unlock;
-+	}
++/*
++ * Extend the writeback range to allocation unit granularity and alignment.
++ * This is a requirement for blocksize > pagesize scenarios such as realtime
++ * copy on write, since we can only share full rt extents.
++ */
++static void
++xfs_vm_writepage_extend(
++	struct xfs_inode		*ip,
++	struct writeback_control	*wbc)
++{
++	unsigned int			bsize = xfs_inode_alloc_unitsize(ip);
++	long long int			pages_to_write;
 +
++	wbc->range_start = rounddown_64(wbc->range_start, bsize);
++	if (wbc->range_end != LLONG_MAX)
++		wbc->range_end = roundup_64(wbc->range_end, bsize);
++
++	if (wbc->nr_to_write == LONG_MAX)
++		return;
++
++	pages_to_write = roundup_64(wbc->range_end - wbc->range_start,
++				    PAGE_SIZE);
++	if (pages_to_write >= LONG_MAX)
++		pages_to_write = LONG_MAX;
++	if (wbc->nr_to_write < pages_to_write)
++		wbc->nr_to_write = pages_to_write;
++}
++
+ STATIC int
+ xfs_vm_writepages(
+-	struct address_space	*mapping,
+-	struct writeback_control *wbc)
++	struct address_space		*mapping,
++	struct writeback_control	*wbc)
+ {
+-	struct xfs_writepage_ctx wpc = { };
++	struct xfs_writepage_ctx	wpc = { };
++	struct xfs_inode		*ip = XFS_I(mapping->host);
+ 
  	/*
- 	 * If pos_out > EOF, we may have dirtied blocks between EOF and
- 	 * pos_out. In that case, we need to extend the flush and unmap to cover
+ 	 * Writing back data in a transaction context can result in recursive
+@@ -502,7 +531,10 @@ xfs_vm_writepages(
+ 	if (WARN_ON_ONCE(current->journal_info))
+ 		return 0;
+ 
+-	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
++	if (xfs_inode_needs_cow_around(ip))
++		xfs_vm_writepage_extend(ip, wbc);
++
++	xfs_iflags_clear(ip, XFS_ITRUNCATED);
+ 	return iomap_writepages(mapping, wbc, &wpc.ctx, &xfs_writeback_ops);
+ }
+ 
 
