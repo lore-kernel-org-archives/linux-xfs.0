@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE73CC4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:41:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C551C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:41:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235636AbiL3Wle (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 17:41:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55178 "EHLO
+        id S230117AbiL3Wlt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 17:41:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55384 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235634AbiL3Wlc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:41:32 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8A3013CE7
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 14:41:31 -0800 (PST)
+        with ESMTP id S235634AbiL3Wls (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:41:48 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7468D1573A
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 14:41:47 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 685F8B81D95
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 22:41:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2257EC433EF;
-        Fri, 30 Dec 2022 22:41:29 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 1EABDB81C06
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 22:41:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B36E2C433EF;
+        Fri, 30 Dec 2022 22:41:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672440089;
-        bh=7L+aOcKLpNLPKvoIugfFJw/fl+zzX+Fq/hpQZ1eJdYs=;
+        s=k20201202; t=1672440104;
+        bh=lv+kkNEaCXtoYYZUB/f4rogo2c0HBrktmNnqyOewztU=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=sDF0c6F8AUNS757HkUUOAcvvFC3aFD6vxBsItqp4dQxEZuQRHkY7h/UbpTW5Mp4w2
-         1Qo8PkLZTGaK0tac72LuibeApEiCQwBtPM+rSXzRJOCmu94Pj0c1b5lCxmXu4KNLQj
-         3UIu8PVF2BMBrFTwtGO7VyNvl/uMYonl4QSLLFiLvmmzq0k8FfCVufadrMaq+4LUg9
-         YeWsPk9+Kt9mk4L1h7s9YETQVyVTnEZriRk7GJGOMsK6tlJdxUzd79+Qq+IE2h/ZQL
-         4Rp+PkaAsv/cbvHKMi2xDbME0Gyqyr+58gXokEzpaEKKAV10WkLMXzG73e1znEuJZY
-         KV3omH0z2lpJw==
-Subject: [PATCH 1/2] xfs: check btree keys reflect the child block
+        b=GubAod50T1dUoKeXyHTF0cdTeIITryXorp7D0yJFQZuYQPtJI9vuZTsSRoggqcBdT
+         QAymcF/tPRd8X5YSphx6dwxTpyAaAsZzDRfzDvzb7ZBskzB81CP3Zpl/88L3XhR1Us
+         8cXPy8Cw5BGusWDu/AQSK6dfMRWiGIFwvu5jELHY6+XyWpTw/cIGCRWEJDR+qQPEOx
+         YGFRRYJSblaKWURYzolfV5OQz0o+osN08YzD4O4r20aghoWez9cPrqdkD4YQK/gpqe
+         RwrXOzzP6oJ7mqGZ5T5o12uZCZjgNODRF0BPyLtadmnP1II5Z1Qt0TzJPapxQp2XM+
+         i49SY+CjVn6OA==
+Subject: [PATCH 2/2] xfs: always scrub record/key order of interior records
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:11:22 -0800
-Message-ID: <167243828197.684307.5795011464354303562.stgit@magnolia>
+Message-ID: <167243828211.684307.6247609605843739354.stgit@magnolia>
 In-Reply-To: <167243828182.684307.10793765593002840378.stgit@magnolia>
 References: <167243828182.684307.10793765593002840378.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,82 +49,90 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When scrub is checking a non-root btree block, it should make sure that
-the keys in the parent btree block accurately capture the keyspace that
-the child block stores.
+In commit d47fef9342d0, we removed the firstrec and firstkey fields of
+struct xchk_btree because Christoph thought they were unnecessary
+because we could use the record index in the btree cursor.  This is
+incorrect because bc_ptrs (now bc_levels[].ptr) tracks the cursor
+position within a specific btree block, not within the entire level.
 
+The end result is that scrub no longer detects situations where the
+rightmost record of a block is identical to the leftmost record of that
+block's right sibling.  Fix this regression by reintroducing record
+validity booleans so that order checking skips *only* the leftmost
+record/key in each level.
+
+Fixes: d47fef9342d0 ("xfs: don't track firstrec/firstkey separately in xchk_btree")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/scrub/btree.c |   49 ++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 48 insertions(+), 1 deletion(-)
+ fs/xfs/scrub/btree.c |   14 ++++++++------
+ fs/xfs/scrub/btree.h |    8 +++++++-
+ 2 files changed, 15 insertions(+), 7 deletions(-)
 
 
 diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index 634c504bac20..615f52e56f4e 100644
+index 615f52e56f4e..2dfa3e1d5841 100644
 --- a/fs/xfs/scrub/btree.c
 +++ b/fs/xfs/scrub/btree.c
-@@ -529,6 +529,48 @@ xchk_btree_check_minrecs(
- 		xchk_btree_set_corrupt(bs->sc, cur, level);
- }
+@@ -151,11 +151,12 @@ xchk_btree_rec(
  
-+/*
-+ * If this btree block has a parent, make sure that the parent's keys capture
-+ * the keyspace contained in this block.
-+ */
-+STATIC void
-+xchk_btree_block_check_keys(
-+	struct xchk_btree	*bs,
-+	int			level,
-+	struct xfs_btree_block	*block)
-+{
-+	union xfs_btree_key	block_key;
-+	union xfs_btree_key	*block_high_key;
-+	union xfs_btree_key	*parent_low_key, *parent_high_key;
-+	struct xfs_btree_cur	*cur = bs->cur;
-+	struct xfs_btree_block	*parent_block;
-+	struct xfs_buf		*bp;
+ 	trace_xchk_btree_rec(bs->sc, cur, 0);
+ 
+-	/* If this isn't the first record, are they in order? */
+-	if (cur->bc_levels[0].ptr > 1 &&
++	/* Are all records across all record blocks in order? */
++	if (bs->lastrec_valid &&
+ 	    !cur->bc_ops->recs_inorder(cur, &bs->lastrec, rec))
+ 		xchk_btree_set_corrupt(bs->sc, cur, 0);
+ 	memcpy(&bs->lastrec, rec, cur->bc_ops->rec_len);
++	bs->lastrec_valid = true;
+ 
+ 	if (cur->bc_nlevels == 1)
+ 		return;
+@@ -198,11 +199,12 @@ xchk_btree_key(
+ 
+ 	trace_xchk_btree_key(bs->sc, cur, level);
+ 
+-	/* If this isn't the first key, are they in order? */
+-	if (cur->bc_levels[level].ptr > 1 &&
+-	    !cur->bc_ops->keys_inorder(cur, &bs->lastkey[level - 1], key))
++	/* Are all low keys across all node blocks in order? */
++	if (bs->lastkey[level - 1].valid &&
++	    !cur->bc_ops->keys_inorder(cur, &bs->lastkey[level - 1].key, key))
+ 		xchk_btree_set_corrupt(bs->sc, cur, level);
+-	memcpy(&bs->lastkey[level - 1], key, cur->bc_ops->key_len);
++	memcpy(&bs->lastkey[level - 1].key, key, cur->bc_ops->key_len);
++	bs->lastkey[level - 1].valid = true;
+ 
+ 	if (level + 1 >= cur->bc_nlevels)
+ 		return;
+diff --git a/fs/xfs/scrub/btree.h b/fs/xfs/scrub/btree.h
+index 26c499925b5e..def8da9c4b4a 100644
+--- a/fs/xfs/scrub/btree.h
++++ b/fs/xfs/scrub/btree.h
+@@ -31,6 +31,11 @@ typedef int (*xchk_btree_rec_fn)(
+ 	struct xchk_btree		*bs,
+ 	const union xfs_btree_rec	*rec);
+ 
++struct xchk_btree_key {
++	union xfs_btree_key		key;
++	bool				valid;
++};
 +
-+	if (level == cur->bc_nlevels - 1)
-+		return;
-+
-+	xfs_btree_get_keys(cur, block, &block_key);
-+
-+	/* Make sure the low key of this block matches the parent. */
-+	parent_block = xfs_btree_get_block(cur, level + 1, &bp);
-+	parent_low_key = xfs_btree_key_addr(cur, cur->bc_levels[level + 1].ptr,
-+			parent_block);
-+	if (cur->bc_ops->diff_two_keys(cur, &block_key, parent_low_key)) {
-+		xchk_btree_set_corrupt(bs->sc, bs->cur, level);
-+		return;
-+	}
-+
-+	if (!(cur->bc_flags & XFS_BTREE_OVERLAPPING))
-+		return;
-+
-+	/* Make sure the high key of this block matches the parent. */
-+	parent_high_key = xfs_btree_high_key_addr(cur,
-+			cur->bc_levels[level + 1].ptr, parent_block);
-+	block_high_key = xfs_btree_high_key_from_key(cur, &block_key);
-+	if (cur->bc_ops->diff_two_keys(cur, block_high_key, parent_high_key))
-+		xchk_btree_set_corrupt(bs->sc, bs->cur, level);
-+}
-+
- /*
-  * Grab and scrub a btree block given a btree pointer.  Returns block
-  * and buffer pointers (if applicable) if they're ok to use.
-@@ -580,7 +622,12 @@ xchk_btree_get_block(
- 	 * Check the block's siblings; this function absorbs error codes
- 	 * for us.
- 	 */
--	return xchk_btree_block_check_siblings(bs, *pblock);
-+	error = xchk_btree_block_check_siblings(bs, *pblock);
-+	if (error)
-+		return error;
-+
-+	xchk_btree_block_check_keys(bs, level, *pblock);
-+	return 0;
- }
+ struct xchk_btree {
+ 	/* caller-provided scrub state */
+ 	struct xfs_scrub		*sc;
+@@ -40,11 +45,12 @@ struct xchk_btree {
+ 	void				*private;
+ 
+ 	/* internal scrub state */
++	bool				lastrec_valid;
+ 	union xfs_btree_rec		lastrec;
+ 	struct list_head		to_check;
+ 
+ 	/* this element must come last! */
+-	union xfs_btree_key		lastkey[];
++	struct xchk_btree_key		lastkey[];
+ };
  
  /*
 
