@@ -2,43 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 024E7C4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:43:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BACFAC4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:43:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236156AbiLaCmf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 21:42:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58238 "EHLO
+        id S236092AbiLaCnG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 21:43:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236092AbiLaCme (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:42:34 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 460402DED
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:42:33 -0800 (PST)
+        with ESMTP id S236191AbiLaCnF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:43:05 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 515BE2DED
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:43:04 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 9510BCE1A76
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:42:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7BC5C433EF;
-        Sat, 31 Dec 2022 02:42:29 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id C1F6DCE1A8E
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:43:02 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C78EC433EF;
+        Sat, 31 Dec 2022 02:43:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672454549;
-        bh=AgKYC7IJLDW/A7Ez9N1sqmy3x/mg5S7yhqZaZhX2dyc=;
+        s=k20201202; t=1672454581;
+        bh=Iwg1LFcYAUErKLO2xTGSk6OiCneK/Fzmkze3Mr8PHCI=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=EN1rEvsi/Mesi9Y/DrobWEHynwX5k+2px8j9Sx/vznch5tL8MYkJSnLIoUBbYqDI1
-         44rnZh/jLs5X/5hAQZbc0pLArlgjm/iG0t91yeOeueo8QzDjHmhJgrnT/745I4c+HG
-         WIfIICZfqT057bdPJVfy1Gw1IxJV1pUZ49TzmmfncrlPx91341hIwWStQAokbj8qvp
-         SeLr99VkaSZqHz/6e0smbK4hVDf3LkBP6O43UNpnvR1L2rUjp075KVJm8rbaYORR3I
-         Mg6kDe4E1Crb/IoYU2ELAaAkNef+zOk/qnBkTS40Q1OXRIpC7Fd6aBa1UliYysiayE
-         qkT7wDHf/Jqlg==
-Subject: [PATCH 3/3] xfs: support error injection when freeing rt extents
+        b=Jys/w7sfUvAhbg/yFUP0kHBdsYWEOoo59Rv+DTW+3TRU0W2IgwDi2B4FdGuFWfJyf
+         yihiS8pY1hKm4vkqiFcgn81d4lpCHabXl/qpCTa4LgOISTXdG5OJRMGQNRVfvXVY2K
+         +u3hBnVuIKKf+xpVUNgbQtoSsUwcoMN4D6CGCn4OKfHHBCBOOHe2cVxBbCySjVg+Ua
+         e0AlCgYeuSENypeO7c83MOO6kj2P4nS9bi1Z3Uv3vtvdsjS+Ym87pk7Tert2HoZkuO
+         WTz5mFmjfAktvOa3klV7fdVZEVPDiUwOLnZvsGLmgrdVt9NQRib0K6TAlDYiNrKcXS
+         Z4QV5CjchJvDA==
+Subject: [PATCH 02/41] xfs: introduce realtime rmap btree definitions
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 30 Dec 2022 14:19:52 -0800
-Message-ID: <167243879271.732626.167002049028322051.stgit@magnolia>
-In-Reply-To: <167243879231.732626.2849871285052288588.stgit@magnolia>
-References: <167243879231.732626.2849871285052288588.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:19:56 -0800
+Message-ID: <167243879620.732820.15052983975141259462.stgit@magnolia>
+In-Reply-To: <167243879574.732820.4725863402652761218.stgit@magnolia>
+References: <167243879574.732820.4725863402652761218.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,37 +49,69 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-A handful of fstests expect to be able to test what happens when extent
-free intents fail to actually free the extent.  Now that we're
-supporting EFIs for realtime extents, add to xfs_rtfree_extent the same
-injection point that exists in the regular extent freeing code.
+Add new realtime rmap btree definitions. The realtime rmap btree will
+be rooted from a hidden inode, but has its own shape and therefore
+needs to have most of its own separate types.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_rtbitmap.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ libxfs/xfs_btree.h  |    1 +
+ libxfs/xfs_format.h |    7 +++++++
+ libxfs/xfs_types.h  |    5 +++--
+ 3 files changed, 11 insertions(+), 2 deletions(-)
 
 
-diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
-index 26428898d60..b0934b1f24a 100644
---- a/libxfs/xfs_rtbitmap.c
-+++ b/libxfs/xfs_rtbitmap.c
-@@ -16,6 +16,7 @@
- #include "xfs_trans.h"
- #include "xfs_health.h"
- #include "xfs_rtbitmap.h"
-+#include "xfs_errortag.h"
+diff --git a/libxfs/xfs_btree.h b/libxfs/xfs_btree.h
+index 6ded5af94b3..72fd341eccd 100644
+--- a/libxfs/xfs_btree.h
++++ b/libxfs/xfs_btree.h
+@@ -64,6 +64,7 @@ union xfs_btree_rec {
+ #define	XFS_BTNUM_RMAP	((xfs_btnum_t)XFS_BTNUM_RMAPi)
+ #define	XFS_BTNUM_REFC	((xfs_btnum_t)XFS_BTNUM_REFCi)
+ #define	XFS_BTNUM_RCBAG	((xfs_btnum_t)XFS_BTNUM_RCBAGi)
++#define	XFS_BTNUM_RTRMAP ((xfs_btnum_t)XFS_BTNUM_RTRMAPi)
  
- /*
-  * Realtime allocator bitmap functions shared with userspace.
-@@ -1135,6 +1136,9 @@ xfs_rtfree_extent(
- 	ASSERT(mp->m_rbmip->i_itemp != NULL);
- 	ASSERT(xfs_isilocked(mp->m_rbmip, XFS_ILOCK_EXCL));
+ struct xfs_btree_ops;
+ uint32_t xfs_btree_magic(struct xfs_mount *mp, const struct xfs_btree_ops *ops);
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index e4f3b2c5c05..b2d4ef28a48 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -1727,6 +1727,13 @@ typedef __be32 xfs_rmap_ptr_t;
+ 	 XFS_FIBT_BLOCK(mp) + 1 : \
+ 	 XFS_IBT_BLOCK(mp) + 1)
  
-+	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_FREE_EXTENT))
-+		return -EIO;
++/*
++ * Realtime Reverse mapping btree format definitions
++ *
++ * This is a btree for reverse mapping records for realtime volumes
++ */
++#define	XFS_RTRMAP_CRC_MAGIC	0x4d415052	/* 'MAPR' */
 +
- 	error = xfs_rtcheck_alloc_range(mp, tp, start, len);
- 	if (error)
- 		return error;
+ /*
+  * Reference Count Btree format definitions
+  *
+diff --git a/libxfs/xfs_types.h b/libxfs/xfs_types.h
+index d37f8a7ce5f..e6a4f4a7d00 100644
+--- a/libxfs/xfs_types.h
++++ b/libxfs/xfs_types.h
+@@ -126,7 +126,7 @@ typedef enum {
+ typedef enum {
+ 	XFS_BTNUM_BNOi, XFS_BTNUM_CNTi, XFS_BTNUM_RMAPi, XFS_BTNUM_BMAPi,
+ 	XFS_BTNUM_INOi, XFS_BTNUM_FINOi, XFS_BTNUM_REFCi, XFS_BTNUM_RCBAGi,
+-	XFS_BTNUM_MAX
++	XFS_BTNUM_RTRMAPi, XFS_BTNUM_MAX
+ } xfs_btnum_t;
+ 
+ #define XFS_BTNUM_STRINGS \
+@@ -137,7 +137,8 @@ typedef enum {
+ 	{ XFS_BTNUM_INOi,	"inobt" }, \
+ 	{ XFS_BTNUM_FINOi,	"finobt" }, \
+ 	{ XFS_BTNUM_REFCi,	"refcbt" }, \
+-	{ XFS_BTNUM_RCBAGi,	"rcbagbt" }
++	{ XFS_BTNUM_RCBAGi,	"rcbagbt" }, \
++	{ XFS_BTNUM_RTRMAPi,	"rtrmapbt" }
+ 
+ struct xfs_name {
+ 	const unsigned char	*name;
 
