@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9E8BC4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:29:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9B30C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:29:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231466AbiLaC3g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 21:29:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56104 "EHLO
+        id S236149AbiLaC3v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 21:29:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236141AbiLaC3d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:29:33 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA7CD1CB19
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:29:32 -0800 (PST)
+        with ESMTP id S236141AbiLaC3v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:29:51 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2C6F1CB17
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:29:49 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 392A361CFE
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:29:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C7D5C433D2;
-        Sat, 31 Dec 2022 02:29:31 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 5E367B81E72
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:29:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1EE80C433EF;
+        Sat, 31 Dec 2022 02:29:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672453771;
-        bh=nEAtQNa7OQkQABY+p9/cW81hxe3Ae4yyhUolspb077Q=;
+        s=k20201202; t=1672453787;
+        bh=c+dlL9gCIxOVHKYd7GxKSXIdJB4iLg98Gp4SUnZq2Po=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=is8WFG9Jxo7T3jYcmyOZkwebfg83GhrqhDa94u/uhiIgY9PfqKgYKTAFiJMTQEerT
-         +8mWlRsLiMc3PY/JfxMMaXemJfS6HpjBV6wCLksKHFhZTwsWONWoEiSRBcBWuaLCuL
-         egZG9ly5bgjaJzyB5DpD0Ontrl7XV5/9Xw+w20UbwiyuT4wGpDlSzTCVwbHbUXuAoA
-         YqCRelMMZ7oUlduBOiowjDwAwTRf8lmMf4xzo6kXYvozPKhndHmR9Zh37ojYfcQtam
-         PtNPrX91g6Iux/F6C3VdmDYFcej9QPHLSe4Ar52XAkZl1hAz0/DamnjpT2OMvbWgTb
-         uyCrHw+BhFQ7g==
-Subject: [PATCH 3/5] xfs_db: metadump external log devices
+        b=kV1HJlysTJ9n0uLhYLanKx6ewkbzNSOCb0IbFBUIbFPdc2nySdGNfnnuXkO11XYCS
+         gtSFGxIeQLisYBECrJZTYmKGxaDm+aXOlMVnhTuC0FRqEn/nlyXl1UqkyVgbYgSomj
+         cFoEHvSxHLw/JfrEe9FJzpmR91qRAoQunC2ewXVtuNUxXll7DMc1OfqUF6O+zvejvk
+         54JwrZF+zlGTDyOaCEXkQOvumy0xo5n8VLjN2d1c/NapfhXuM62ps/R06KVrFtRAzJ
+         CwCSzrw0hZ1INAHEkQTJSRDRW8t5deSWUQ1HfPXcby/35feuRREUDJAArbVPtnkbrT
+         /d3QXg5QNvo/Q==
+Subject: [PATCH 4/5] xfs_mdrestore: restore log contents to external log
+ devices
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:19:40 -0800
-Message-ID: <167243878022.730695.17197730934160899346.stgit@magnolia>
+Message-ID: <167243878035.730695.15058686240875755491.stgit@magnolia>
 In-Reply-To: <167243877981.730695.7761889719607533776.stgit@magnolia>
 References: <167243877981.730695.7761889719607533776.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,261 +50,325 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Teach the metadump command to dump the contents of an external log to
-the metadump file.
-
-Older mdrestore programs aren't going to recognize the new metablock
-info flag, change the magic number before adding new information flags
-to signal that the metablock is describing blocks on either an external
-log device or a realtime device.  Realtime support isn't needed now, but
-it will be for realtime groups.
+Support restoring log data to an external log device, if the dumped
+filesystem had one.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/metadump.c           |   98 ++++++++++++++++++++++++++++++++++++++++++++++-
- db/xfs_metadump.sh      |    5 +-
- include/xfs_metadump.h  |    3 +
- man/man8/xfs_metadump.8 |   13 +++++-
- 4 files changed, 111 insertions(+), 8 deletions(-)
+ man/man8/xfs_mdrestore.8  |    8 ++
+ mdrestore/xfs_mdrestore.c |  176 +++++++++++++++++++++++++++++++--------------
+ 2 files changed, 131 insertions(+), 53 deletions(-)
 
 
-diff --git a/db/metadump.c b/db/metadump.c
-index 996c97ca6a2..f337493d505 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -3002,6 +3002,74 @@ _("Could not discern log; image will contain unobfuscated metadata in log."));
- 	return !write_buf(iocur_top);
+diff --git a/man/man8/xfs_mdrestore.8 b/man/man8/xfs_mdrestore.8
+index 72f3b297787..4626b98e749 100644
+--- a/man/man8/xfs_mdrestore.8
++++ b/man/man8/xfs_mdrestore.8
+@@ -5,12 +5,17 @@ xfs_mdrestore \- restores an XFS metadump image to a filesystem image
+ .B xfs_mdrestore
+ [
+ .B \-gi
++] [
++.B \-l logdev
+ ]
+ .I source
+ .I target
+ .br
+ .B xfs_mdrestore
+ .B \-i
++[
++.B \-l logdev
++]
+ .I source
+ .br
+ .B xfs_mdrestore \-V
+@@ -43,6 +48,9 @@ can be destroyed.
+ .B \-g
+ Shows restore progress on stdout.
+ .TP
++.B \-l
++Restore log contents to this external log device.
++.TP
+ .B \-i
+ Shows metadump information on stdout.  If no
+ .I target
+diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+index 9f8cbe98cd6..4318fac9008 100644
+--- a/mdrestore/xfs_mdrestore.c
++++ b/mdrestore/xfs_mdrestore.c
+@@ -38,6 +38,67 @@ print_progress(const char *fmt, ...)
+ 	progress_since_warning = 1;
  }
  
++extern int	platform_check_ismounted(char *, char *, struct stat *, int);
++
 +static int
-+copy_external_log(void)
++open_device(
++	char		*path,
++	int		*is_target_file)
 +{
-+	struct xlog	log;
-+	int		dirty;
-+	xfs_daddr_t	logstart;
-+	int		logblocks;
-+	int		logversion;
-+	int		cycle = XLOG_INIT_CYCLE;
-+	int		error;
++	struct stat	statbuf;
++	int		open_flags = O_RDWR;
++	int		dst_fd;
 +
-+	if (show_progress)
-+		print_progress("Copying external log");
-+
-+	push_cur();
-+	error = set_log_cur(&typtab[TYP_LOG],
-+			XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
-+			mp->m_sb.sb_logblocks * blkbb, DB_RING_IGN, NULL);
-+	if (error)
-+		return 0;
-+	if (iocur_top->data == NULL) {
-+		pop_cur();
-+		print_warning("cannot read external log");
-+		return !stop_on_read_error;
++	*is_target_file = 0;
++	if (stat(path, &statbuf) < 0)  {
++		/* ok, assume it's a file and create it */
++		open_flags |= O_CREAT;
++		*is_target_file = 1;
++	} else if (S_ISREG(statbuf.st_mode))  {
++		open_flags |= O_TRUNC;
++		*is_target_file = 1;
++	} else  {
++		/*
++		 * check to make sure a filesystem isn't mounted on the device
++		 */
++		if (platform_check_ismounted(path, NULL, &statbuf, 0))
++			fatal("a filesystem is mounted on target device \"%s\","
++				" cannot restore to a mounted filesystem.\n",
++				path);
 +	}
 +
-+	/* If not obfuscating or zeroing, just copy the log as it is */
-+	if (!obfuscate && !zero_stale_data)
-+		goto done;
++	dst_fd = open(path, open_flags, 0644);
++	if (dst_fd < 0)
++		fatal("couldn't open target \"%s\"\n", path);
 +
-+	dirty = xlog_is_dirty(mp, &log, &x, 0);
-+
-+	switch (dirty) {
-+	case 0:
-+		/* clear out a clean log */
-+		if (show_progress)
-+			print_progress("Zeroing clean log");
-+
-+		logstart = XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart);
-+		logblocks = XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
-+		logversion = xfs_has_logv2(mp) ? 2 : 1;
-+		if (xfs_has_crc(mp))
-+			cycle = log.l_curr_cycle + 1;
-+
-+		libxfs_log_clear(NULL, iocur_top->data, logstart, logblocks,
-+				 &mp->m_sb.sb_uuid, logversion,
-+				 mp->m_sb.sb_logsunit, XLOG_FMT, cycle, true);
-+		break;
-+	case 1:
-+		/* keep the dirty log */
-+		if (obfuscate)
-+			print_warning(
-+_("Warning: log recovery of an obfuscated metadata image can leak "
-+"unobfuscated metadata and/or cause image corruption.  If possible, "
-+"please mount the filesystem to clean the log, or disable obfuscation."));
-+		break;
-+	case -1:
-+		/* log detection error */
-+		if (obfuscate)
-+			print_warning(
-+_("Could not discern log; image will contain unobfuscated metadata in log."));
-+		break;
-+	}
-+
-+done:
-+	return !write_buf(iocur_top);
++	return dst_fd;
 +}
 +
- static int
- metadump_f(
- 	int 		argc,
-@@ -3012,6 +3080,7 @@ metadump_f(
- 	int		start_iocur_sp;
- 	int		outfd = -1;
- 	int		ret;
-+	bool		copy_external = false;
- 	char		*p;
- 
- 	exitcode = 1;
-@@ -3035,7 +3104,7 @@ metadump_f(
- 		return 0;
- 	}
- 
--	while ((c = getopt(argc, argv, "aegm:ow")) != EOF) {
-+	while ((c = getopt(argc, argv, "aegm:owx")) != EOF) {
- 		switch (c) {
- 			case 'a':
- 				zero_stale_data = 0;
-@@ -3060,6 +3129,9 @@ metadump_f(
- 			case 'w':
- 				show_warnings = 1;
- 				break;
-+			case 'x':
-+				copy_external = true;
-+				break;
- 			default:
- 				print_warning("bad option for metadump command");
- 				return 0;
-@@ -3071,13 +3143,23 @@ metadump_f(
- 		return 0;
- 	}
- 
-+	/*
-+	 * Use the old format if there are no external devices with metadata to
-+	 * dump.
-+	 */
-+	if (mp->m_sb.sb_logstart != 0)
-+		copy_external = false;
++static void
++check_dev(
++	int			dst_fd,
++	int			is_target_file,
++	unsigned long long	bytes)
++{
++	if (is_target_file)  {
++		/* ensure regular files are correctly sized */
 +
- 	metablock = (xfs_metablock_t *)calloc(BBSIZE + 1, BBSIZE);
- 	if (metablock == NULL) {
- 		print_warning("memory allocation failure");
- 		return 0;
- 	}
- 	metablock->mb_blocklog = BBSHIFT;
--	metablock->mb_magic = cpu_to_be32(XFS_MD_MAGIC);
-+	if (copy_external)
-+		metablock->mb_magic = cpu_to_be32(XFS_MDX_MAGIC);
-+	else
-+		metablock->mb_magic = cpu_to_be32(XFS_MD_MAGIC);
- 
- 	/* Set flags about state of metadump */
- 	metablock->mb_info = XFS_METADUMP_INFO_FLAGS;
-@@ -3165,7 +3247,7 @@ metadump_f(
- 
- 	exitcode = 0;
- 
--	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-+	for (agno = 0; !exitcode && agno < mp->m_sb.sb_agcount; agno++) {
- 		if (!scan_ag(agno)) {
- 			exitcode = 1;
- 			break;
-@@ -3184,6 +3266,16 @@ metadump_f(
- 	if (!exitcode)
- 		exitcode = write_index() < 0;
- 
-+	/* write the external log, if desired */
-+	if (!exitcode && mp->m_sb.sb_logstart == 0 && copy_external) {
-+		metablock->mb_info |= XFS_METADUMP_LOGDEV;
++		if (ftruncate(dst_fd, bytes))
++			fatal("cannot set filesystem image size: %s\n",
++				strerror(errno));
++	} else  {
++		/* ensure device is sufficiently large enough */
 +
-+		if (!copy_external_log())
-+			exitcode = 1;
-+		if (!exitcode)
-+			exitcode = write_index() < 0;
++		char		*lb[XFS_MAX_SECTORSIZE] = { NULL };
++		off64_t		off;
++
++		off = bytes - sizeof(lb);
++		if (pwrite(dst_fd, lb, sizeof(lb), off) < 0)
++			fatal("failed to write last block, is target too "
++				"small? (error: %s)\n", strerror(errno));
 +	}
++}
 +
- 	if (progress_since_warning)
- 		fputc('\n', stdout_metadump ? stderr : stdout);
+ /*
+  * perform_restore() -- do the actual work to restore the metadump
+  *
+@@ -53,7 +114,8 @@ perform_restore(
+ 	FILE			*src_f,
+ 	int			dst_fd,
+ 	int			is_target_file,
+-	const struct xfs_metablock	*mbp)
++	const struct xfs_metablock	*mbp,
++	char			*log_path)
+ {
+ 	struct xfs_metablock	*metablock;	/* header + index + blocks */
+ 	__be64			*block_index;
+@@ -64,6 +126,10 @@ perform_restore(
+ 	int			mb_count;
+ 	xfs_sb_t		sb;
+ 	int64_t			bytes_read;
++	int			log_fd = -1;
++	bool			is_mdx;
++
++	is_mdx = mbp->mb_magic == cpu_to_be32(XFS_MDX_MAGIC);
  
-diff --git a/db/xfs_metadump.sh b/db/xfs_metadump.sh
-index 9852a5bc2b0..06bfc4e7bd4 100755
---- a/db/xfs_metadump.sh
-+++ b/db/xfs_metadump.sh
-@@ -6,9 +6,9 @@
+ 	block_size = 1 << mbp->mb_blocklog;
+ 	max_indices = (block_size - sizeof(xfs_metablock_t)) / sizeof(__be64);
+@@ -76,6 +142,7 @@ perform_restore(
+ 	if (mb_count == 0 || mb_count > max_indices)
+ 		fatal("bad block count: %u\n", mb_count);
  
- OPTS=" "
- DBOPTS=" "
--USAGE="Usage: xfs_metadump [-aefFogwV] [-m max_extents] [-l logdev] source target"
-+USAGE="Usage: xfs_metadump [-aefFgoVwx] [-m max_extents] [-l logdev] source target"
++	memcpy(metablock, mbp, sizeof(struct xfs_metablock));
+ 	block_index = (__be64 *)((char *)metablock + sizeof(xfs_metablock_t));
+ 	block_buffer = (char *)metablock + block_size;
  
--while getopts "aefgl:m:owFV" c
-+while getopts "aefgl:m:owFVx" c
- do
- 	case $c in
- 	a)	OPTS=$OPTS"-a ";;
-@@ -24,6 +24,7 @@ do
- 		status=$?
- 		exit $status
- 		;;
-+	x)	OPTS=$OPTS"-x ";;
- 	\?)	echo $USAGE 1>&2
- 		exit 2
- 		;;
-diff --git a/include/xfs_metadump.h b/include/xfs_metadump.h
-index fbd9902327b..2373b0d8b50 100644
---- a/include/xfs_metadump.h
-+++ b/include/xfs_metadump.h
-@@ -8,6 +8,7 @@
- #define _XFS_METADUMP_H_
+@@ -106,32 +173,43 @@ perform_restore(
  
- #define	XFS_MD_MAGIC		0x5846534d	/* 'XFSM' */
-+#define	XFS_MDX_MAGIC		0x584d4458	/* 'XMDX' */
+ 	((struct xfs_dsb*)block_buffer)->sb_inprogress = 1;
  
- typedef struct xfs_metablock {
- 	__be32		mb_magic;
-@@ -22,5 +23,7 @@ typedef struct xfs_metablock {
- #define XFS_METADUMP_OBFUSCATED	(1 << 1)
- #define XFS_METADUMP_FULLBLOCKS	(1 << 2)
- #define XFS_METADUMP_DIRTYLOG	(1 << 3)
-+#define XFS_METADUMP_LOGDEV	(1 << 4) /* targets external log device */
-+#define XFS_METADUMP_RTDEV	(1 << 5) /* targets realtime volume */
+-	if (is_target_file)  {
+-		/* ensure regular files are correctly sized */
+-
+-		if (ftruncate(dst_fd, sb.sb_dblocks * sb.sb_blocksize))
+-			fatal("cannot set filesystem image size: %s\n",
+-				strerror(errno));
+-	} else  {
+-		/* ensure device is sufficiently large enough */
+-
+-		char		*lb[XFS_MAX_SECTORSIZE] = { NULL };
+-		off64_t		off;
+-
+-		off = sb.sb_dblocks * sb.sb_blocksize - sizeof(lb);
+-		if (pwrite(dst_fd, lb, sizeof(lb), off) < 0)
+-			fatal("failed to write last block, is target too "
+-				"small? (error: %s)\n", strerror(errno));
+-	}
++	check_dev(dst_fd, is_target_file, sb.sb_dblocks * sb.sb_blocksize);
  
- #endif /* _XFS_METADUMP_H_ */
-diff --git a/man/man8/xfs_metadump.8 b/man/man8/xfs_metadump.8
-index c0e79d77993..b940cb084b5 100644
---- a/man/man8/xfs_metadump.8
-+++ b/man/man8/xfs_metadump.8
-@@ -4,7 +4,7 @@ xfs_metadump \- copy XFS filesystem metadata to a file
- .SH SYNOPSIS
- .B xfs_metadump
- [
--.B \-aefFgow
-+.B \-aefFgowx
- ] [
- .B \-m
- .I max_extents
-@@ -123,8 +123,10 @@ is stdout.
- .TP
- .BI \-l " logdev"
- For filesystems which use an external log, this specifies the device where the
--external log resides. The external log is not copied, only internal logs are
--copied.
-+external log resides.
-+To record the contents of the external log in the dump, the
-+.B \-x
-+option must also be specified.
- .TP
- .B \-m
- Set the maximum size of an allowed metadata extent.  Extremely large metadata
-@@ -138,6 +140,11 @@ Disables obfuscation of file names and extended attributes.
- Prints warnings of inconsistent metadata encountered to stderr. Bad metadata
- is still copied.
- .TP
-+.B \-x
-+Dump the external log device, if present.
-+The metadump file will not be compatible with older versions of
-+.BR xfs_mdrestore (1).
-+.TP
- .B \-V
- Prints the version number and exits.
- .SH DIAGNOSTICS
+ 	bytes_read = 0;
+ 
+ 	for (;;) {
++		int		write_fd = dst_fd;
++
++		if (metablock->mb_magic != mbp->mb_magic)
++			fatal("magic value 0x%x wrong, expected 0x%x\n",
++					metablock->mb_magic, mbp->mb_magic);
++
++		if (metablock->mb_info & XFS_METADUMP_LOGDEV) {
++			int	log_is_file;
++
++			if (!is_mdx)
++				fatal("logdev set on an old style metadump?\n");
++			if (log_fd == -1) {
++				if (!log_path)
++					fatal(
++	"metadump has log contents but -l was not specified?\n");
++				log_fd = open_device(log_path, &log_is_file);
++				check_dev(log_fd, log_is_file,
++						sb.sb_logblocks * sb.sb_blocksize);
++			}
++			write_fd = log_fd;
++		}
++		if (metablock->mb_info & XFS_METADUMP_RTDEV) {
++			if (!is_mdx)
++				fatal("rtdev set on an old style metadump?\n");
++			fatal("rtdev not supported\n");
++		}
++
+ 		if (show_progress && (bytes_read & ((1 << 20) - 1)) == 0)
+ 			print_progress("%lld MB read", bytes_read >> 20);
+ 
+ 		for (cur_index = 0; cur_index < mb_count; cur_index++) {
+-			if (pwrite(dst_fd, &block_buffer[cur_index <<
++			if (pwrite(write_fd, &block_buffer[cur_index <<
+ 					mbp->mb_blocklog], block_size,
+ 					be64_to_cpu(block_index[cur_index]) <<
+ 						BBSHIFT) < 0)
+@@ -139,11 +217,20 @@ perform_restore(
+ 					be64_to_cpu(block_index[cur_index]) << BBSHIFT,
+ 					strerror(errno));
+ 		}
+-		if (mb_count < max_indices)
+-			break;
++		if (is_mdx) {
++			size_t	nr = fread(metablock, block_size, 1, src_f);
+ 
+-		if (fread(metablock, block_size, 1, src_f) != 1)
+-			fatal("error reading from metadump file\n");
++			if (nr == 0)
++				break;
++			if (nr != 1)
++				fatal("error reading from extended metadump file\n");
++		} else {
++			if (mb_count < max_indices)
++				break;
++
++			if (fread(metablock, block_size, 1, src_f) != 1)
++				fatal("error reading from metadump file\n");
++		}
+ 
+ 		mb_count = be16_to_cpu(metablock->mb_count);
+ 		if (mb_count == 0)
+@@ -170,38 +257,41 @@ perform_restore(
+ 	if (pwrite(dst_fd, block_buffer, sb.sb_sectsize, 0) < 0)
+ 		fatal("error writing primary superblock: %s\n", strerror(errno));
+ 
++	if (log_fd >= 0)
++		close(log_fd);
++
+ 	free(metablock);
+ }
+ 
+ static void
+ usage(void)
+ {
+-	fprintf(stderr, "Usage: %s [-V] [-g] [-i] source target\n", progname);
++	fprintf(stderr, "Usage: %s [-V] [-g] [-i] [-l logdev] source target\n", progname);
+ 	exit(1);
+ }
+ 
+-extern int	platform_check_ismounted(char *, char *, struct stat *, int);
+-
+ int
+ main(
+ 	int 		argc,
+ 	char 		**argv)
+ {
++	char		*log_path = NULL;
+ 	FILE		*src_f;
+ 	int		dst_fd;
+ 	int		c;
+-	int		open_flags;
+-	struct stat	statbuf;
+ 	int		is_target_file;
+ 	struct xfs_metablock	mb;
+ 
+ 	progname = basename(argv[0]);
+ 
+-	while ((c = getopt(argc, argv, "giV")) != EOF) {
++	while ((c = getopt(argc, argv, "gl:iV")) != EOF) {
+ 		switch (c) {
+ 			case 'g':
+ 				show_progress = 1;
+ 				break;
++			case 'l':
++				log_path = optarg;
++				break;
+ 			case 'i':
+ 				show_info = 1;
+ 				break;
+@@ -238,7 +328,8 @@ main(
+ 
+ 	if (fread(&mb, sizeof(mb), 1, src_f) != 1)
+ 		fatal("error reading from metadump file\n");
+-	if (mb.mb_magic != cpu_to_be32(XFS_MD_MAGIC))
++	if (mb.mb_magic != cpu_to_be32(XFS_MD_MAGIC) &&
++	    mb.mb_magic != cpu_to_be32(XFS_MDX_MAGIC))
+ 		fatal("specified file is not a metadata dump\n");
+ 
+ 	if (show_info) {
+@@ -260,30 +351,9 @@ main(
+ 	optind++;
+ 
+ 	/* check and open target */
+-	open_flags = O_RDWR;
+-	is_target_file = 0;
+-	if (stat(argv[optind], &statbuf) < 0)  {
+-		/* ok, assume it's a file and create it */
+-		open_flags |= O_CREAT;
+-		is_target_file = 1;
+-	} else if (S_ISREG(statbuf.st_mode))  {
+-		open_flags |= O_TRUNC;
+-		is_target_file = 1;
+-	} else  {
+-		/*
+-		 * check to make sure a filesystem isn't mounted on the device
+-		 */
+-		if (platform_check_ismounted(argv[optind], NULL, &statbuf, 0))
+-			fatal("a filesystem is mounted on target device \"%s\","
+-				" cannot restore to a mounted filesystem.\n",
+-				argv[optind]);
+-	}
++	dst_fd = open_device(argv[optind], &is_target_file);
+ 
+-	dst_fd = open(argv[optind], open_flags, 0644);
+-	if (dst_fd < 0)
+-		fatal("couldn't open target \"%s\"\n", argv[optind]);
+-
+-	perform_restore(src_f, dst_fd, is_target_file, &mb);
++	perform_restore(src_f, dst_fd, is_target_file, &mb, log_path);
+ 
+ 	close(dst_fd);
+ 	if (src_f != stdin)
 
