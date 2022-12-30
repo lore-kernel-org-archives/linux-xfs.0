@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1075C4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 01:22:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B145C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 01:22:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236083AbiLaBWH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 20:22:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44570 "EHLO
+        id S236067AbiLaBWT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 20:22:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44598 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236085AbiLaBWE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 20:22:04 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8A779FE3
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 17:22:03 -0800 (PST)
+        with ESMTP id S236061AbiLaBWS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 20:22:18 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAE899FE3
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 17:22:17 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 6AE39B81DF6
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 01:22:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AE98C433F0;
-        Sat, 31 Dec 2022 01:22:01 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 49C3861CAB
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 01:22:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A511DC433D2;
+        Sat, 31 Dec 2022 01:22:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672449721;
-        bh=8QkNWMdYUrtBLLJcnaWgB2uCs0G6qg1j85N5HOEv9YY=;
+        s=k20201202; t=1672449736;
+        bh=FINzVwHEaa7i+XRi9rf/3l9DE9wS4pdnw8158GRJYho=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=O2wlLbQ7d58BmdjlTxtsLyeqb7GbG4C4Q5MPvGQGMtQHYayg8aC25bo+PR/dm6SsT
-         dowUfhxrZQGzzBchyTiruX7xBinbYAgNMPX+j/qMqJl1M2i1P1tkpfO+8iOa3tebKZ
-         pngZJfJTJz6nP/PtN2mmrTKm7jiz/pyw+O9O8wult5q0Bf3XUSQbi2ajJuIEFw+aOg
-         +xLPp6DHA7XO7ecgSr23CbCtccQfMcoslS/5L/9Y86E+OORXXaRTUepbwPxPPlO+fi
-         eLFbXyTn8Rf711oFRTTj6J+E77XmXDWbVmwx3I/O4NgWOl+d+XTeSUaoCn3lHw/bnf
-         fV2vKpXXbBZmg==
-Subject: [PATCH 08/11] xfs: convert rt bitmap/summary block numbers to
- xfs_fileoff_t
+        b=WZllx91s98mG31dKL8lyeBZgyKV5g2hVAfnMmg5vh/Y5Id8hOeRnDyA0aPJFfVKiO
+         CIVv0MbDuUz3zEUQf6UpZQd/ZEusT/UrWoyfosQXYXmt28uFMtvqhLnA5ug3dDFTFF
+         cC5/lX7y4s8oDyo1eTux7S6IcD9KYTcWj9IhzOeg7fUXjuYeSuF+LsYfwhH0sPJv75
+         pezbfxvROvjZekXkIoNeT2OPogrRqpjno/Jg2yUKnBh7aCV1loWQ9n/2Rcv6shATVB
+         PLLkNqE3IaZz3pUT5EGuSD7kzFyNX7BicSEKNY3nMNLgpq364aSZRwIkrfkpi0WTyL
+         Uu6ZiPZknU+tQ==
+Subject: [PATCH 09/11] xfs: convert rt bitmap extent lengths to xfs_rtbxlen_t
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:17:37 -0800
-Message-ID: <167243865731.709511.17431431600080726993.stgit@magnolia>
+Message-ID: <167243865744.709511.3118888222246144108.stgit@magnolia>
 In-Reply-To: <167243865605.709511.15650588946095003543.stgit@magnolia>
 References: <167243865605.709511.15650588946095003543.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,287 +49,76 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-We should use xfs_fileoff_t to store the file block offset of any
-location within the realtime bitmap or summary files.
+XFS uses xfs_rtblock_t for many different uses, which makes it much more
+difficult to perform a unit analysis on the codebase.  One of these
+(ab)uses is when we need to store the length of a free space extent as
+stored in the realtime bitmap.  Because there can be up to 2^64 realtime
+extents in a filesystem, we need a new type that is larger than
+xfs_rtxlen_t for callers that are querying the bitmap directly.  This
+means scrub and growfs.
+
+Create this type as "xfs_rtbxlen_t" and use it to store 64-bit rtx
+lengths.  'b' stands for 'bitmap' or 'big'; reader's choice.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_rtbitmap.c |   22 +++++++++++-----------
- fs/xfs/libxfs/xfs_rtbitmap.h |   12 ++++++------
- fs/xfs/scrub/rtbitmap.c      |    2 +-
- fs/xfs/xfs_rtalloc.c         |   34 +++++++++++++++++-----------------
- 4 files changed, 35 insertions(+), 35 deletions(-)
+ fs/xfs/libxfs/xfs_format.h   |    2 +-
+ fs/xfs/libxfs/xfs_rtbitmap.h |    2 +-
+ fs/xfs/libxfs/xfs_types.h    |    1 +
+ fs/xfs/scrub/trace.h         |    3 ++-
+ 4 files changed, 5 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-index b90d2f2d5bde..50a9d23c00c6 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.c
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -56,7 +56,7 @@ int
- xfs_rtbuf_get(
- 	xfs_mount_t	*mp,		/* file system mount structure */
- 	xfs_trans_t	*tp,		/* transaction pointer */
--	xfs_rtblock_t	block,		/* block number in bitmap or summary */
-+	xfs_fileoff_t	block,		/* block number in bitmap or summary */
- 	int		issum,		/* is summary not bitmap */
- 	struct xfs_buf	**bpp)		/* output: buffer for the block */
- {
-@@ -108,7 +108,7 @@ xfs_rtfind_back(
- {
- 	xfs_rtword_t	*b;		/* current word in buffer */
- 	int		bit;		/* bit number in the word */
--	xfs_rtblock_t	block;		/* bitmap block number */
-+	xfs_fileoff_t	block;		/* bitmap block number */
- 	struct xfs_buf	*bp;		/* buf for the block */
- 	xfs_rtword_t	*bufp;		/* starting word in buffer */
- 	int		error;		/* error value */
-@@ -283,7 +283,7 @@ xfs_rtfind_forw(
- {
- 	xfs_rtword_t	*b;		/* current word in buffer */
- 	int		bit;		/* bit number in the word */
--	xfs_rtblock_t	block;		/* bitmap block number */
-+	xfs_fileoff_t	block;		/* bitmap block number */
- 	struct xfs_buf	*bp;		/* buf for the block */
- 	xfs_rtword_t	*bufp;		/* starting word in buffer */
- 	int		error;		/* error value */
-@@ -453,15 +453,15 @@ xfs_rtmodify_summary_int(
- 	xfs_mount_t	*mp,		/* file system mount structure */
- 	xfs_trans_t	*tp,		/* transaction pointer */
- 	int		log,		/* log2 of extent size */
--	xfs_rtblock_t	bbno,		/* bitmap block number */
-+	xfs_fileoff_t	bbno,		/* bitmap block number */
- 	int		delta,		/* change to make to summary info */
- 	struct xfs_buf	**rbpp,		/* in/out: summary block buffer */
--	xfs_fsblock_t	*rsb,		/* in/out: summary block number */
-+	xfs_fileoff_t	*rsb,		/* in/out: summary block number */
- 	xfs_suminfo_t	*sum)		/* out: summary info for this block */
- {
- 	struct xfs_buf	*bp;		/* buffer for the summary block */
- 	int		error;		/* error value */
--	xfs_fsblock_t	sb;		/* summary fsblock */
-+	xfs_fileoff_t	sb;		/* summary fsblock */
- 	int		so;		/* index into the summary file */
- 	xfs_suminfo_t	*sp;		/* pointer to returned data */
- 
-@@ -523,10 +523,10 @@ xfs_rtmodify_summary(
- 	xfs_mount_t	*mp,		/* file system mount structure */
- 	xfs_trans_t	*tp,		/* transaction pointer */
- 	int		log,		/* log2 of extent size */
--	xfs_rtblock_t	bbno,		/* bitmap block number */
-+	xfs_fileoff_t	bbno,		/* bitmap block number */
- 	int		delta,		/* change to make to summary info */
- 	struct xfs_buf	**rbpp,		/* in/out: summary block buffer */
--	xfs_fsblock_t	*rsb)		/* in/out: summary block number */
-+	xfs_fileoff_t	*rsb)		/* in/out: summary block number */
- {
- 	return xfs_rtmodify_summary_int(mp, tp, log, bbno,
- 					delta, rbpp, rsb, NULL);
-@@ -546,7 +546,7 @@ xfs_rtmodify_range(
- {
- 	xfs_rtword_t	*b;		/* current word in buffer */
- 	int		bit;		/* bit number in the word */
--	xfs_rtblock_t	block;		/* bitmap block number */
-+	xfs_fileoff_t	block;		/* bitmap block number */
- 	struct xfs_buf	*bp;		/* buf for the block */
- 	xfs_rtword_t	*bufp;		/* starting word in buffer */
- 	int		error;		/* error value */
-@@ -699,7 +699,7 @@ xfs_rtfree_range(
- 	xfs_rtblock_t	start,		/* starting block to free */
- 	xfs_rtxlen_t	len,		/* length to free */
- 	struct xfs_buf	**rbpp,		/* in/out: summary block buffer */
--	xfs_fsblock_t	*rsb)		/* in/out: summary block number */
-+	xfs_fileoff_t	*rsb)		/* in/out: summary block number */
- {
- 	xfs_rtblock_t	end;		/* end of the freed extent */
- 	int		error;		/* error value */
-@@ -780,7 +780,7 @@ xfs_rtcheck_range(
- {
- 	xfs_rtword_t	*b;		/* current word in buffer */
- 	int		bit;		/* bit number in the word */
--	xfs_rtblock_t	block;		/* bitmap block number */
-+	xfs_fileoff_t	block;		/* bitmap block number */
- 	struct xfs_buf	*bp;		/* buf for the block */
- 	xfs_rtword_t	*bufp;		/* starting word in buffer */
- 	int		error;		/* error value */
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 33b047f9cf03..d93cc0ea20e3 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -97,7 +97,7 @@ typedef struct xfs_sb {
+ 	uint32_t	sb_blocksize;	/* logical block size, bytes */
+ 	xfs_rfsblock_t	sb_dblocks;	/* number of data blocks */
+ 	xfs_rfsblock_t	sb_rblocks;	/* number of realtime blocks */
+-	xfs_rtblock_t	sb_rextents;	/* number of realtime extents */
++	xfs_rtbxlen_t	sb_rextents;	/* number of realtime extents */
+ 	uuid_t		sb_uuid;	/* user-visible file system unique id */
+ 	xfs_fsblock_t	sb_logstart;	/* starting block of log if internal */
+ 	xfs_ino_t	sb_rootino;	/* root inode number */
 diff --git a/fs/xfs/libxfs/xfs_rtbitmap.h b/fs/xfs/libxfs/xfs_rtbitmap.h
-index d4449610154a..e2ea6d31c38b 100644
+index e2ea6d31c38b..b0a81fb8dbda 100644
 --- a/fs/xfs/libxfs/xfs_rtbitmap.h
 +++ b/fs/xfs/libxfs/xfs_rtbitmap.h
-@@ -24,7 +24,7 @@ typedef int (*xfs_rtalloc_query_range_fn)(
+@@ -13,7 +13,7 @@
+  */
+ struct xfs_rtalloc_rec {
+ 	xfs_rtblock_t		ar_startext;
+-	xfs_rtblock_t		ar_extcount;
++	xfs_rtbxlen_t		ar_extcount;
+ };
  
+ typedef int (*xfs_rtalloc_query_range_fn)(
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index 0856997f84d6..a2fb880433b5 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -32,6 +32,7 @@ typedef uint64_t	xfs_rfsblock_t;	/* blockno in filesystem (raw) */
+ typedef uint64_t	xfs_rtblock_t;	/* extent (block) in realtime area */
+ typedef uint64_t	xfs_fileoff_t;	/* block number in a file */
+ typedef uint64_t	xfs_filblks_t;	/* number of blocks in a file */
++typedef uint64_t	xfs_rtbxlen_t;	/* rtbitmap extent length in rtextents */
+ 
+ typedef int64_t		xfs_srtblock_t;	/* signed version of xfs_rtblock_t */
+ 
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index 3652ac4a3eff..13fea23a9ab2 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -1082,7 +1082,8 @@ TRACE_EVENT(xfarray_sort_stats,
  #ifdef CONFIG_XFS_RT
- int xfs_rtbuf_get(struct xfs_mount *mp, struct xfs_trans *tp,
--		  xfs_rtblock_t block, int issum, struct xfs_buf **bpp);
-+		  xfs_fileoff_t block, int issum, struct xfs_buf **bpp);
- int xfs_rtcheck_range(struct xfs_mount *mp, struct xfs_trans *tp,
- 		      xfs_rtblock_t start, xfs_rtxlen_t len, int val,
- 		      xfs_rtblock_t *new, int *stat);
-@@ -37,15 +37,15 @@ int xfs_rtfind_forw(struct xfs_mount *mp, struct xfs_trans *tp,
- int xfs_rtmodify_range(struct xfs_mount *mp, struct xfs_trans *tp,
- 		       xfs_rtblock_t start, xfs_rtxlen_t len, int val);
- int xfs_rtmodify_summary_int(struct xfs_mount *mp, struct xfs_trans *tp,
--			     int log, xfs_rtblock_t bbno, int delta,
--			     struct xfs_buf **rbpp, xfs_fsblock_t *rsb,
-+			     int log, xfs_fileoff_t bbno, int delta,
-+			     struct xfs_buf **rbpp, xfs_fileoff_t *rsb,
- 			     xfs_suminfo_t *sum);
- int xfs_rtmodify_summary(struct xfs_mount *mp, struct xfs_trans *tp, int log,
--			 xfs_rtblock_t bbno, int delta, struct xfs_buf **rbpp,
--			 xfs_fsblock_t *rsb);
-+			 xfs_fileoff_t bbno, int delta, struct xfs_buf **rbpp,
-+			 xfs_fileoff_t *rsb);
- int xfs_rtfree_range(struct xfs_mount *mp, struct xfs_trans *tp,
- 		     xfs_rtblock_t start, xfs_rtxlen_t len,
--		     struct xfs_buf **rbpp, xfs_fsblock_t *rsb);
-+		     struct xfs_buf **rbpp, xfs_fileoff_t *rsb);
- int xfs_rtalloc_query_range(struct xfs_mount *mp, struct xfs_trans *tp,
- 		const struct xfs_rtalloc_rec *low_rec,
- 		const struct xfs_rtalloc_rec *high_rec,
-diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
-index 86f726577ca7..6f8becb557bd 100644
---- a/fs/xfs/scrub/rtbitmap.c
-+++ b/fs/xfs/scrub/rtbitmap.c
-@@ -77,7 +77,7 @@ xchk_rtbitmap_check_extents(
- {
- 	struct xfs_mount	*mp = sc->mp;
- 	struct xfs_bmbt_irec	map;
--	xfs_rtblock_t		off;
-+	xfs_fileoff_t		off;
- 	int			nmap;
- 	int			error = 0;
- 
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 21f0ac611ef8..12d1fe425d22 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -37,9 +37,9 @@ xfs_rtget_summary(
- 	xfs_mount_t	*mp,		/* file system mount structure */
- 	xfs_trans_t	*tp,		/* transaction pointer */
- 	int		log,		/* log2 of extent size */
--	xfs_rtblock_t	bbno,		/* bitmap block number */
-+	xfs_fileoff_t	bbno,		/* bitmap block number */
- 	struct xfs_buf	**rbpp,		/* in/out: summary block buffer */
--	xfs_fsblock_t	*rsb,		/* in/out: summary block number */
-+	xfs_fileoff_t	*rsb,		/* in/out: summary block number */
- 	xfs_suminfo_t	*sum)		/* out: summary info for this block */
- {
- 	return xfs_rtmodify_summary_int(mp, tp, log, bbno, 0, rbpp, rsb, sum);
-@@ -55,9 +55,9 @@ xfs_rtany_summary(
- 	xfs_trans_t	*tp,		/* transaction pointer */
- 	int		low,		/* low log2 extent size */
- 	int		high,		/* high log2 extent size */
--	xfs_rtblock_t	bbno,		/* bitmap block number */
-+	xfs_fileoff_t	bbno,		/* bitmap block number */
- 	struct xfs_buf	**rbpp,		/* in/out: summary block buffer */
--	xfs_fsblock_t	*rsb,		/* in/out: summary block number */
-+	xfs_fileoff_t	*rsb,		/* in/out: summary block number */
- 	int		*stat)		/* out: any good extents here? */
- {
- 	int		error;		/* error value */
-@@ -109,12 +109,12 @@ xfs_rtcopy_summary(
- 	xfs_mount_t	*nmp,		/* new file system mount point */
- 	xfs_trans_t	*tp)		/* transaction pointer */
- {
--	xfs_rtblock_t	bbno;		/* bitmap block number */
-+	xfs_fileoff_t	bbno;		/* bitmap block number */
- 	struct xfs_buf	*bp;		/* summary buffer */
- 	int		error;		/* error return value */
- 	int		log;		/* summary level number (log length) */
- 	xfs_suminfo_t	sum;		/* summary data */
--	xfs_fsblock_t	sumbno;		/* summary block number */
-+	xfs_fileoff_t	sumbno;		/* summary block number */
- 
- 	bp = NULL;
- 	for (log = omp->m_rsumlevels - 1; log >= 0; log--) {
-@@ -151,7 +151,7 @@ xfs_rtallocate_range(
- 	xfs_rtblock_t	start,		/* start block to allocate */
- 	xfs_rtxlen_t	len,		/* length to allocate */
- 	struct xfs_buf	**rbpp,		/* in/out: summary block buffer */
--	xfs_fsblock_t	*rsb)		/* in/out: summary block number */
-+	xfs_fileoff_t	*rsb)		/* in/out: summary block number */
- {
- 	xfs_rtblock_t	end;		/* end of the allocated extent */
- 	int		error;		/* error value */
-@@ -227,13 +227,13 @@ STATIC int				/* error */
- xfs_rtallocate_extent_block(
- 	xfs_mount_t	*mp,		/* file system mount point */
- 	xfs_trans_t	*tp,		/* transaction pointer */
--	xfs_rtblock_t	bbno,		/* bitmap block number */
-+	xfs_fileoff_t	bbno,		/* bitmap block number */
- 	xfs_rtxlen_t	minlen,		/* minimum length to allocate */
- 	xfs_rtxlen_t	maxlen,		/* maximum length to allocate */
- 	xfs_rtxlen_t	*len,		/* out: actual length allocated */
- 	xfs_rtblock_t	*nextp,		/* out: next block to try */
- 	struct xfs_buf	**rbpp,		/* in/out: summary block buffer */
--	xfs_fsblock_t	*rsb,		/* in/out: summary block number */
-+	xfs_fileoff_t	*rsb,		/* in/out: summary block number */
- 	xfs_rtxlen_t	prod,		/* extent product factor */
- 	xfs_rtblock_t	*rtblock)	/* out: start block allocated */
- {
-@@ -357,7 +357,7 @@ xfs_rtallocate_extent_exact(
- 	xfs_rtxlen_t	maxlen,		/* maximum length to allocate */
- 	xfs_rtxlen_t	*len,		/* out: actual length allocated */
- 	struct xfs_buf	**rbpp,		/* in/out: summary block buffer */
--	xfs_fsblock_t	*rsb,		/* in/out: summary block number */
-+	xfs_fileoff_t	*rsb,		/* in/out: summary block number */
- 	xfs_rtxlen_t	prod,		/* extent product factor */
- 	xfs_rtblock_t	*rtblock)	/* out: start block allocated */
- {
-@@ -437,12 +437,12 @@ xfs_rtallocate_extent_near(
- 	xfs_rtxlen_t	maxlen,		/* maximum length to allocate */
- 	xfs_rtxlen_t	*len,		/* out: actual length allocated */
- 	struct xfs_buf	**rbpp,		/* in/out: summary block buffer */
--	xfs_fsblock_t	*rsb,		/* in/out: summary block number */
-+	xfs_fileoff_t	*rsb,		/* in/out: summary block number */
- 	xfs_rtxlen_t	prod,		/* extent product factor */
- 	xfs_rtblock_t	*rtblock)	/* out: start block allocated */
- {
- 	int		any;		/* any useful extents from summary */
--	xfs_rtblock_t	bbno;		/* bitmap block number */
-+	xfs_fileoff_t	bbno;		/* bitmap block number */
- 	int		error;		/* error value */
- 	int		i;		/* bitmap block offset (loop control) */
- 	int		j;		/* secondary loop control */
-@@ -646,12 +646,12 @@ xfs_rtallocate_extent_size(
- 	xfs_rtxlen_t	maxlen,		/* maximum length to allocate */
- 	xfs_rtxlen_t	*len,		/* out: actual length allocated */
- 	struct xfs_buf	**rbpp,		/* in/out: summary block buffer */
--	xfs_fsblock_t	*rsb,		/* in/out: summary block number */
-+	xfs_fileoff_t	*rsb,		/* in/out: summary block number */
- 	xfs_rtxlen_t	prod,		/* extent product factor */
- 	xfs_rtblock_t	*rtblock)	/* out: start block allocated */
- {
- 	int		error;		/* error value */
--	int		i;		/* bitmap block number */
-+	xfs_fileoff_t	i;		/* bitmap block number */
- 	int		l;		/* level number (loop control) */
- 	xfs_rtblock_t	n;		/* next block to be tried */
- 	xfs_rtblock_t	r;		/* result block number */
-@@ -927,7 +927,7 @@ xfs_growfs_rt(
- 	xfs_mount_t	*mp,		/* mount point for filesystem */
- 	xfs_growfs_rt_t	*in)		/* growfs rt input struct */
- {
--	xfs_rtblock_t	bmbno;		/* bitmap block number */
-+	xfs_fileoff_t	bmbno;		/* bitmap block number */
- 	struct xfs_buf	*bp;		/* temporary buffer */
- 	int		error;		/* error return value */
- 	xfs_mount_t	*nmp;		/* new (fake) mount structure */
-@@ -942,7 +942,7 @@ xfs_growfs_rt(
- 	xfs_extlen_t	rbmblocks;	/* current number of rt bitmap blocks */
- 	xfs_extlen_t	rsumblocks;	/* current number of rt summary blks */
- 	xfs_sb_t	*sbp;		/* old superblock */
--	xfs_fsblock_t	sumbno;		/* summary block number */
-+	xfs_fileoff_t	sumbno;		/* summary block number */
- 	uint8_t		*rsum_cache;	/* old summary cache */
- 
- 	sbp = &mp->m_sb;
-@@ -1205,7 +1205,7 @@ xfs_rtallocate_extent(
- 	xfs_mount_t	*mp = tp->t_mountp;
- 	int		error;		/* error value */
- 	xfs_rtblock_t	r;		/* result allocated block */
--	xfs_fsblock_t	sb;		/* summary file block number */
-+	xfs_fileoff_t	sb;		/* summary file block number */
- 	struct xfs_buf	*sumbp;		/* summary file block buffer */
- 
- 	ASSERT(xfs_isilocked(mp->m_rbmip, XFS_ILOCK_EXCL));
+ TRACE_EVENT(xchk_rtsum_record_free,
+ 	TP_PROTO(struct xfs_mount *mp, xfs_rtblock_t start,
+-		 uint64_t len, unsigned int log, loff_t pos, xfs_suminfo_t v),
++		 xfs_rtbxlen_t len, unsigned int log, loff_t pos,
++		 xfs_suminfo_t v),
+ 	TP_ARGS(mp, start, len, log, pos, v),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
 
