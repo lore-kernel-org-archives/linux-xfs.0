@@ -2,44 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B36FEC4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:48:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07CECC4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:48:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235524AbiL3WsQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 17:48:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56636 "EHLO
+        id S235164AbiL3Wsd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 17:48:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235164AbiL3WsP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:48:15 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC6D818E1D
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 14:48:14 -0800 (PST)
+        with ESMTP id S235455AbiL3Wsc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:48:32 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC85318E30
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 14:48:31 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 65DA161B98
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 22:48:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAB05C433D2;
-        Fri, 30 Dec 2022 22:48:13 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 9C3F5B81C22
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 22:48:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50133C433D2;
+        Fri, 30 Dec 2022 22:48:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672440493;
-        bh=YvduKITYQLysOZfOehPGaUEqSmlIeOQn1oMlna0q49E=;
+        s=k20201202; t=1672440509;
+        bh=mGwgeu1hj9D453WbT89vVxXyKPx12WmK8r+med5VdL0=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=jZysfg+EdXbxeKdqJbtwn4KTXHaUxFsXX3u1Vx1p3mo2WP1HFabmdgjCE9ZcZWeAh
-         1vHeobEr6aobzidOAIHuk42jGPlpmkNQ31jLUvRjq8HMCEAlhU7jdyEqdBFr6z+KEf
-         jO60D/VHHsHWmxpD814zKuxuqAOaC5hb7DBEEIPpuqdw5jg9qzd1kSvqQct8Q8rf1C
-         AEFaKGy9ikF29zAYOyEKcy1Z+D/4pmmcPqFZoB11iDiLLRpVdGpVIfmUvjxRL1Ypv3
-         BHt4DXm7kKGaCY/c+Kfkxew5znP+LX7iaBv1K97Q/CXynpUaiYOrpVda8X0BwsIjLi
-         Fuc9kZmuqPWIQ==
-Subject: [PATCH 6/6] xfs: check for reverse mapping records that could be
- merged
+        b=aJy541lxfNedi0xldlBz3lyZKKhrEMTvVeTph+dDaRHmprxvdq6iL21Qo7nZpChz2
+         Pcc7Q64AVA8mTRD1UiX/JveN/dT7avxRWZY6F6u7iTB+tlfT54EGEDzk/d6Fgpg8mY
+         RO/gXCTT7XbgSdA8B4wJ1Cyptg6oI79PqNhFKjge5V98xn2NwUNw5wAieiFCCQ0yrg
+         bxVtiN/b0HEOadVW6VdJnb6wwOVcVAbncNZmCjKdtuxcnWDX6pSMBFIynepFKuBk3w
+         MfpNvOKkzv/5riD5o7lvtTakIntEpouFY0ikHfUPgqEtRzTxMcZG4IAc+7u4r79ppq
+         g/pO8NMI8zafA==
+Subject: [PATCH 01/11] xfs: xattr scrub should ensure one namespace bit per
+ name
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 30 Dec 2022 14:11:43 -0800
-Message-ID: <167243830308.686829.2436455458356097769.stgit@magnolia>
-In-Reply-To: <167243830218.686829.12866790282629472160.stgit@magnolia>
-References: <167243830218.686829.12866790282629472160.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:11:46 -0800
+Message-ID: <167243830623.687022.11979221984710331928.stgit@magnolia>
+In-Reply-To: <167243830598.687022.17067931640967897645.stgit@magnolia>
+References: <167243830598.687022.17067931640967897645.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -50,89 +50,34 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Enhance the rmap scrubber to flag adjacent records that could be merged.
+Check that each extended attribute exists in only one namespace.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/rmap.c |   52 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 52 insertions(+)
+ fs/xfs/scrub/attr.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/scrub/rmap.c b/fs/xfs/scrub/rmap.c
-index 270c4f1e76c9..3cb92f7ac165 100644
---- a/fs/xfs/scrub/rmap.c
-+++ b/fs/xfs/scrub/rmap.c
-@@ -39,6 +39,12 @@ struct xchk_rmap {
- 	 * allocations that cannot be shared.
- 	 */
- 	struct xfs_rmap_irec	overlap_rec;
-+
-+	/*
-+	 * The previous rmapbt record, so that we can check for two records
-+	 * that could be one.
-+	 */
-+	struct xfs_rmap_irec	prev_rec;
- };
- 
- /* Cross-reference a rmap against the refcount btree. */
-@@ -198,6 +204,51 @@ xchk_rmapbt_check_overlapping(
- 	memcpy(&cr->overlap_rec, irec, sizeof(struct xfs_rmap_irec));
- }
- 
-+/* Decide if two reverse-mapping records can be merged. */
-+static inline bool
-+xchk_rmap_mergeable(
-+	struct xchk_rmap		*cr,
-+	const struct xfs_rmap_irec	*r2)
-+{
-+	const struct xfs_rmap_irec	*r1 = &cr->prev_rec;
-+
-+	/* Ignore if prev_rec is not yet initialized. */
-+	if (cr->prev_rec.rm_blockcount == 0)
-+		return false;
-+
-+	if (r1->rm_owner != r2->rm_owner)
-+		return false;
-+	if (r1->rm_startblock + r1->rm_blockcount != r2->rm_startblock)
-+		return false;
-+	if ((unsigned long long)r1->rm_blockcount + r2->rm_blockcount >
-+	    XFS_RMAP_LEN_MAX)
-+		return false;
-+	if (XFS_RMAP_NON_INODE_OWNER(r2->rm_owner))
-+		return true;
-+	/* must be an inode owner below here */
-+	if (r1->rm_flags != r2->rm_flags)
-+		return false;
-+	if (r1->rm_flags & XFS_RMAP_BMBT_BLOCK)
-+		return true;
-+	return r1->rm_offset + r1->rm_blockcount == r2->rm_offset;
-+}
-+
-+/* Flag failures for records that could be merged. */
-+STATIC void
-+xchk_rmapbt_check_mergeable(
-+	struct xchk_btree		*bs,
-+	struct xchk_rmap		*cr,
-+	const struct xfs_rmap_irec	*irec)
-+{
-+	if (bs->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return;
-+
-+	if (xchk_rmap_mergeable(cr, irec))
-+		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-+
-+	memcpy(&cr->prev_rec, irec, sizeof(struct xfs_rmap_irec));
-+}
-+
- /* Scrub an rmapbt record. */
- STATIC int
- xchk_rmapbt_rec(
-@@ -214,6 +265,7 @@ xchk_rmapbt_rec(
+diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+index 31529b9bf389..95752e300105 100644
+--- a/fs/xfs/scrub/attr.c
++++ b/fs/xfs/scrub/attr.c
+@@ -128,10 +128,16 @@ xchk_xattr_listent(
+ 		return;
  	}
  
- 	xchk_rmapbt_check_unwritten_in_keyflags(bs);
-+	xchk_rmapbt_check_mergeable(bs, cr, &irec);
- 	xchk_rmapbt_check_overlapping(bs, cr, &irec);
- 	xchk_rmapbt_xref(bs->sc, &irec);
- 	return 0;
++	/* Only one namespace bit allowed. */
++	if (hweight32(flags & XFS_ATTR_NSP_ONDISK_MASK) > 1) {
++		xchk_fblock_set_corrupt(sx->sc, XFS_ATTR_FORK, args.blkno);
++		goto fail_xref;
++	}
++
+ 	/* Does this name make sense? */
+ 	if (!xfs_attr_namecheck(name, namelen)) {
+ 		xchk_fblock_set_corrupt(sx->sc, XFS_ATTR_FORK, args.blkno);
+-		return;
++		goto fail_xref;
+ 	}
+ 
+ 	/*
 
