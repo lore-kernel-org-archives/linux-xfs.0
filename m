@@ -2,44 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47CB4C4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:01:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EBFBC4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:01:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236134AbiLaCBU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 21:01:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51566 "EHLO
+        id S236136AbiLaCBi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 21:01:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236120AbiLaCBT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:01:19 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69B9C2AF8
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:01:18 -0800 (PST)
+        with ESMTP id S236120AbiLaCBf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:01:35 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 217A02AF8
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:01:34 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1F2F1B81DED
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:01:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8D02C433D2;
-        Sat, 31 Dec 2022 02:01:15 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C2701B81DED
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:01:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58390C433D2;
+        Sat, 31 Dec 2022 02:01:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672452075;
-        bh=6pqZwELMJP34cAJ4OwI73I/8KEUNmgqjziWNYXfCq3s=;
+        s=k20201202; t=1672452091;
+        bh=Nhg9XnIxbRcOazeLPGim7QUcEXhTxz6E+QMjsiPw1Pk=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=HFQZ+jL0JZ45CCwLHFLY/DzqNeoNTNIh4G78VwOrla45FO4PK3Q9ENqtywN1JB9x9
-         H+ADVHZCpC2ay0yZZc0j43fDvrsUBtljWm3Wqtu/Obq3acQsqNqs+hujCNPVvW7Zm1
-         FCqzgoLz1hsgodRUf8iUsYmw6C3fTLLtKvskcmLZVPbW8qm4Qf47n1HYTP0ahLUJ0S
-         G4kzrJeTI86N+nzAKOduEAuOwxRdew6NRyQGaTme0fbRCC58UdZFFDwNzvHDCbx24q
-         V7G8CAPa1+BRjtxlz2S2ydRkwMthA/Q12mX2RzqLhamQevg5f+URkTPoMMD2OmzPAe
-         ZwB3hufmvJmRg==
-Subject: [PATCH 9/9] xfs: support realtime reflink with an extent size that
- isn't a power of 2
+        b=MIYt3MoY+nPrjZ8YgZTVMS2DG2vwv3Vd5aMIA1BE9jInMLtOHaTe/QvgKfyZ1tIGs
+         H8deF2ouwWm1PqxZVlV2hTa6aJUeTLqUsmIcj9V11UpSywgavm9qKcd4FdypVpvQ23
+         7LdDmZcF+/Wv77EAdUj3W8siQgScv/SyqhVcpUNCeO68IBlGw6Spti0KWAKkXKqHjF
+         1RuIY7m3uNu6aVnpVwdrcnVk9Vmzxk7gBeOigd6UsmnqVqrbftNCJVczAYz5uCGWFB
+         X8EPOiCkSSiS17tmzKfstWETBfZBfdyc+vndIJfYzsvdsTbFrMMJWk1vArrlLNLfJ7
+         fxcUIL9jX70Lg==
+Subject: [PATCH 1/3] xfs: fix chown with rt quota
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 30 Dec 2022 14:18:39 -0800
-Message-ID: <167243871932.718512.16891050272429194261.stgit@magnolia>
-In-Reply-To: <167243871792.718512.13170681692847163098.stgit@magnolia>
-References: <167243871792.718512.13170681692847163098.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:18:42 -0800
+Message-ID: <167243872241.719004.9109959626867199625.stgit@magnolia>
+In-Reply-To: <167243872224.719004.160021889997830176.stgit@magnolia>
+References: <167243872224.719004.160021889997830176.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -50,183 +49,164 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add the necessary alignment checking code to the reflink remap code to
-ensure that remap requests are aligned to rt extent boundaries if the
-realtime extent size isn't a power of two.  The VFS helpers assume that
-they can use the usual (blocksize - 1) masking to avoid slow 64-bit
-division, but since XFS is special we won't make everyone pay that cost
-for our weird edge case.
+Make chown's quota adjustments work with realtime files.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_reflink.c |   92 ++++++++++++++++++++++++++++++++++++++++++++++++--
- fs/xfs/xfs_rtalloc.c |    3 +-
- fs/xfs/xfs_super.c   |   12 +++----
- 3 files changed, 97 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_qm.c    |   44 +++++++++++++++++++++++++++-----------------
+ fs/xfs/xfs_trans.c |   31 +++++++++++++++++++++++++++++--
+ 2 files changed, 56 insertions(+), 19 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 28fe946ecd08..1ec00204b33f 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1658,6 +1658,83 @@ xfs_reflink_remap_adjust_rtlen(
- # define xfs_reflink_remap_adjust_rtlen(...)		(0)
- #endif /* CONFIG_XFS_RT */
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 63085d8b5ec1..7a69857c4e49 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1214,8 +1214,8 @@ xfs_qm_dqusage_adjust(
+ 	void			*data)
+ {
+ 	struct xfs_inode	*ip;
+-	xfs_qcnt_t		nblks;
+-	xfs_filblks_t		rtblks = 0;	/* total rt blks */
++	xfs_filblks_t		nblks, rtblks;
++	unsigned int		lock_mode;
+ 	int			error;
  
-+/*
-+ * Check the alignment of a remap request when the allocation unit size isn't a
-+ * power of two.  The VFS helpers use (fast) bitmask-based alignment checks,
-+ * but here we have to use slow long division.
-+ */
-+static int
-+xfs_reflink_remap_check_rtalign(
-+	struct xfs_inode		*ip_in,
-+	loff_t				pos_in,
-+	struct xfs_inode		*ip_out,
-+	loff_t				pos_out,
-+	loff_t				*req_len,
-+	unsigned int			remap_flags)
-+{
-+	struct xfs_mount		*mp = ip_in->i_mount;
-+	uint32_t			rextbytes;
-+	loff_t				in_size, out_size;
-+	loff_t				new_length, length = *req_len;
-+	loff_t				blen;
+ 	ASSERT(XFS_IS_QUOTA_ON(mp));
+@@ -1239,17 +1239,16 @@ xfs_qm_dqusage_adjust(
+ 
+ 	ASSERT(ip->i_delayed_blks == 0);
+ 
++	lock_mode = xfs_ilock_data_map_shared(ip);
+ 	if (XFS_IS_REALTIME_INODE(ip)) {
+-		struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, XFS_DATA_FORK);
+-
+ 		error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
+-		if (error)
++		if (error) {
++			xfs_iunlock(ip, lock_mode);
+ 			goto error0;
+-
+-		xfs_bmap_count_leaves(ifp, &rtblks);
++		}
+ 	}
+-
+-	nblks = (xfs_qcnt_t)ip->i_nblocks - rtblks;
++	xfs_inode_count_blocks(tp, ip, &nblks, &rtblks);
++	xfs_iunlock(ip, lock_mode);
+ 
+ 	/*
+ 	 * Add the (disk blocks and inode) resources occupied by this
+@@ -1870,9 +1869,8 @@ xfs_qm_vop_chown(
+ 	struct xfs_dquot	*newdq)
+ {
+ 	struct xfs_dquot	*prevdq;
+-	uint		bfield = XFS_IS_REALTIME_INODE(ip) ?
+-				 XFS_TRANS_DQ_RTBCOUNT : XFS_TRANS_DQ_BCOUNT;
+-
++	xfs_filblks_t		dblocks, rblocks;
++	bool			isrt = XFS_IS_REALTIME_INODE(ip);
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 	ASSERT(XFS_IS_QUOTA_ON(ip->i_mount));
+@@ -1882,11 +1880,17 @@ xfs_qm_vop_chown(
+ 	ASSERT(prevdq);
+ 	ASSERT(prevdq != newdq);
+ 
+-	xfs_trans_mod_ino_dquot(tp, ip, prevdq, bfield, -(ip->i_nblocks));
++	xfs_inode_count_blocks(tp, ip, &dblocks, &rblocks);
 +
-+	rextbytes = XFS_FSB_TO_B(mp, mp->m_sb.sb_rextsize);
-+	in_size = i_size_read(VFS_I(ip_in));
-+	out_size = i_size_read(VFS_I(ip_out));
-+
-+	/* The start of both ranges must be aligned to a rt extent. */
-+	if (!isaligned_64(pos_in, rextbytes) ||
-+	    !isaligned_64(pos_out, rextbytes))
-+		return -EINVAL;
-+
-+	if (length == 0)
-+		length = in_size - pos_in;
-+
-+	/*
-+	 * If the user wanted us to exchange up to the infile's EOF, round up
-+	 * to the next block boundary for this check.
-+	 *
-+	 * Otherwise, reject the range length if it's not extent aligned.  We
-+	 * already confirmed the starting offsets' extent alignment.
-+	 */
-+	if (pos_in + length == in_size)
-+		blen = roundup_64(in_size, rextbytes) - pos_in;
-+	else
-+		blen = rounddown_64(length, rextbytes);
-+
-+	/* Don't allow overlapped remappings within the same file. */
-+	if (ip_in == ip_out &&
-+	    pos_out + blen > pos_in &&
-+	    pos_in + blen > pos_out)
-+		return -EINVAL;
-+
-+	/*
-+	 * Ensure that we don't exchange a partial EOF extent into the middle
-+	 * of another file.
-+	 */
-+	if (isaligned_64(length, rextbytes))
-+		return 0;
-+
-+	new_length = length;
-+	if (pos_out + length < out_size)
-+		new_length = rounddown_64(new_length, rextbytes);
-+
-+	if (new_length == length)
-+		return 0;
-+
-+	/*
-+	 * Return the shortened request if the caller permits it.  If the
-+	 * request was shortened to zero rt extents, we know that the original
-+	 * arguments weren't valid in the first place.
-+	 */
-+	if ((remap_flags & REMAP_FILE_CAN_SHORTEN) && new_length > 0) {
-+		*req_len = new_length;
-+		return 0;
++	xfs_trans_mod_ino_dquot(tp, ip, prevdq, XFS_TRANS_DQ_BCOUNT,
++			-(xfs_qcnt_t)dblocks);
++	xfs_trans_mod_ino_dquot(tp, ip, prevdq, XFS_TRANS_DQ_RTBCOUNT,
++			-(xfs_qcnt_t)rblocks);
+ 	xfs_trans_mod_ino_dquot(tp, ip, prevdq, XFS_TRANS_DQ_ICOUNT, -1);
+ 
+ 	/* the sparkling new dquot */
+-	xfs_trans_mod_ino_dquot(tp, ip, newdq, bfield, ip->i_nblocks);
++	xfs_trans_mod_ino_dquot(tp, ip, newdq, XFS_TRANS_DQ_BCOUNT, dblocks);
++	xfs_trans_mod_ino_dquot(tp, ip, newdq, XFS_TRANS_DQ_RTBCOUNT, rblocks);
+ 	xfs_trans_mod_ino_dquot(tp, ip, newdq, XFS_TRANS_DQ_ICOUNT, 1);
+ 
+ 	/*
+@@ -1896,7 +1900,8 @@ xfs_qm_vop_chown(
+ 	 * (having already bumped up the real counter) so that we don't have
+ 	 * any reservation to give back when we commit.
+ 	 */
+-	xfs_trans_mod_dquot(tp, newdq, XFS_TRANS_DQ_RES_BLKS,
++	xfs_trans_mod_dquot(tp, newdq,
++			isrt ? XFS_TRANS_DQ_RES_RTBLKS : XFS_TRANS_DQ_RES_BLKS,
+ 			-ip->i_delayed_blks);
+ 
+ 	/*
+@@ -1908,8 +1913,13 @@ xfs_qm_vop_chown(
+ 	 */
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+ 	xfs_dqlock(prevdq);
+-	ASSERT(prevdq->q_blk.reserved >= ip->i_delayed_blks);
+-	prevdq->q_blk.reserved -= ip->i_delayed_blks;
++	if (isrt) {
++		ASSERT(prevdq->q_rtb.reserved >= ip->i_delayed_blks);
++		prevdq->q_rtb.reserved -= ip->i_delayed_blks;
++	} else {
++		ASSERT(prevdq->q_blk.reserved >= ip->i_delayed_blks);
++		prevdq->q_blk.reserved -= ip->i_delayed_blks;
 +	}
+ 	xfs_dqunlock(prevdq);
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 05e93af190df..fd389a8582fd 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -1446,11 +1446,26 @@ xfs_trans_alloc_ichange(
+ 	gdqp = (new_gdqp != ip->i_gdquot) ? new_gdqp : NULL;
+ 	pdqp = (new_pdqp != ip->i_pdquot) ? new_pdqp : NULL;
+ 	if (udqp || gdqp || pdqp) {
++		xfs_filblks_t	dblocks, rblocks;
+ 		unsigned int	qflags = XFS_QMOPT_RES_REGBLKS;
++		bool		isrt = XFS_IS_REALTIME_INODE(ip);
+ 
+ 		if (force)
+ 			qflags |= XFS_QMOPT_FORCE_RES;
+ 
++		if (isrt) {
++			error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
++			if (error)
++				goto out_cancel;
++		}
 +
-+	return (remap_flags & REMAP_FILE_DEDUP) ? -EBADE : -EINVAL;
-+}
++		xfs_inode_count_blocks(tp, ip, &dblocks, &rblocks);
 +
- /*
-  * Prepare two files for range cloning.  Upon a successful return both inodes
-  * will have the iolock and mmaplock held, the page cache of the out file will
-@@ -1701,6 +1778,7 @@ xfs_reflink_remap_prep(
- 	struct inode		*inode_out = file_inode(file_out);
- 	struct xfs_inode	*dest = XFS_I(inode_out);
- 	const struct iomap_ops	*dax_read_ops = NULL;
-+	unsigned int		alloc_unit = xfs_inode_alloc_unitsize(dest);
- 	int			ret;
- 
- 	/* Lock both files against IO */
-@@ -1718,14 +1796,22 @@ xfs_reflink_remap_prep(
- 	if (IS_DAX(inode_in) != IS_DAX(inode_out))
- 		goto out_unlock;
- 
--	ASSERT(is_power_of_2(xfs_inode_alloc_unitsize(dest)));
-+	/* Check non-power of two alignment issues, if necessary. */
-+	if (XFS_IS_REALTIME_INODE(dest) && !is_power_of_2(alloc_unit)) {
-+		ret = xfs_reflink_remap_check_rtalign(src, pos_in, dest,
-+				pos_out, len, remap_flags);
-+		if (ret)
-+			goto out_unlock;
++		if (isrt)
++			rblocks += ip->i_delayed_blks;
++		else
++			dblocks += ip->i_delayed_blks;
 +
-+		/* Do the VFS checks with the regular block alignment. */
-+		alloc_unit = src->i_mount->m_sb.sb_blocksize;
-+	}
- 
- 	if (IS_DAX(inode_in))
- 		dax_read_ops = &xfs_read_iomap_ops;
- 
- 	ret = __generic_remap_file_range_prep(file_in, pos_in, file_out,
--			pos_out, len, remap_flags, dax_read_ops,
--			xfs_inode_alloc_unitsize(dest));
-+			pos_out, len, remap_flags, dax_read_ops, alloc_unit);
- 	if (ret || *len == 0)
- 		goto out_unlock;
- 
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 7c1edd5c2554..5e27cb7fce36 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -1312,7 +1312,8 @@ xfs_growfs_rt(
- 		return -EOPNOTSUPP;
- 	if (xfs_has_quota(mp))
- 		return -EOPNOTSUPP;
--	if (xfs_has_reflink(mp) && !is_power_of_2(mp->m_sb.sb_rextsize))
-+	if (xfs_has_reflink(mp) && !is_power_of_2(mp->m_sb.sb_rextsize) &&
-+	    (XFS_FSB_TO_B(mp, mp->m_sb.sb_rextsize) & ~PAGE_MASK))
- 		return -EOPNOTSUPP;
- 
- 	nrblocks = in->newblocks;
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 31c1690ed847..627fa40bbc5b 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1662,17 +1662,17 @@ xfs_fs_fill_super(
- 		 * state.  This means that we cannot dirty all the pages
- 		 * backing an rt extent without dirtying the adjoining rt
- 		 * extents.  If those rt extents are shared and extend into
--		 * other pages, this leads to crazy write amplification.  The
--		 * VFS remap_range checks assume power-of-two block sizes.
-+		 * other pages, this leads to crazy write amplification.
- 		 *
- 		 * Hence we only support rt extent sizes that are an integer
--		 * power of two because we know those will align with the page
--		 * size.
-+		 * power of two or an integer multiple of the page size because
-+		 * we know those will align with the page size.
+ 		/*
+ 		 * Reserve enough quota to handle blocks on disk and reserved
+ 		 * for a delayed allocation.  We'll actually transfer the
+@@ -1458,8 +1473,20 @@ xfs_trans_alloc_ichange(
+ 		 * though that part is only semi-transactional.
  		 */
- 		if (xfs_has_realtime(mp) &&
--		    !is_power_of_2(mp->m_sb.sb_rextsize)) {
-+		    !is_power_of_2(mp->m_sb.sb_rextsize) &&
-+		    (XFS_FSB_TO_B(mp, mp->m_sb.sb_rextsize) & ~PAGE_MASK)) {
- 			xfs_alert(mp,
--	"reflink not compatible with non-power-of-2 realtime extent size %u!",
-+	"reflink not compatible with realtime extent size %u!",
- 					mp->m_sb.sb_rextsize);
- 			error = -EINVAL;
- 			goto out_filestream_unmount;
+ 		error = xfs_trans_reserve_quota_bydquots(tp, mp, udqp, gdqp,
+-				pdqp, ip->i_nblocks + ip->i_delayed_blks,
+-				1, qflags);
++				pdqp, dblocks, 1, qflags);
++		if ((error == -EDQUOT || error == -ENOSPC) && !retried) {
++			xfs_trans_cancel(tp);
++			xfs_blockgc_free_dquots(mp, udqp, gdqp, pdqp, 0);
++			retried = true;
++			goto retry;
++		}
++		if (error)
++			goto out_cancel;
++
++		/* Do the same for realtime. */
++		qflags = XFS_QMOPT_RES_RTBLKS | (qflags & XFS_QMOPT_FORCE_RES);
++		error = xfs_trans_reserve_quota_bydquots(tp, mp, udqp, gdqp,
++				pdqp, rblocks, 0, qflags);
+ 		if ((error == -EDQUOT || error == -ENOSPC) && !retried) {
+ 			xfs_trans_cancel(tp);
+ 			xfs_blockgc_free_dquots(mp, udqp, gdqp, pdqp, 0);
 
