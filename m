@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A70DC4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:23:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D56CDC4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:24:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235767AbiL3XXl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 18:23:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35720 "EHLO
+        id S235730AbiL3XYF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 18:24:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235772AbiL3XXb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:23:31 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 615ED1DF30
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 15:23:12 -0800 (PST)
+        with ESMTP id S235804AbiL3XXt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:23:49 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 682531EAFC
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 15:23:28 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1B5C5B81DAE
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 23:23:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF113C433EF;
-        Fri, 30 Dec 2022 23:23:09 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id B2C2BB81DAD
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 23:23:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A84EC433D2;
+        Fri, 30 Dec 2022 23:23:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672442589;
-        bh=hdL6d7uHOWNWoGtJp48UKndP9auPsR9UodUmEAABNsI=;
+        s=k20201202; t=1672442605;
+        bh=vsYDe4ZQfKwR5JT8q+FC3hvtkLpNrvaorSki2N/JfzU=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=fPIexlSWAghvCI9h1yB244GgP96w15tJZ4bq/Xnotg90W/2yyUdknCJNZ96l4g2p5
-         vDR6hIr5VJMd3PFlbRCa8jQz8ePW5lIg3mXZF15ngsFG6iroryG12pk7dqWzuLJGGY
-         PkQ4WLHZUH4PtkIQJQYtIHcvub1OPqCqvGgQPiKcP8g/QRfgajKY3C+nRLE7urQItm
-         jFy4FL2mRgvxtWk6AqpUj9TR+oG0YOIr2f2YO/gQdrtvx40Y4xgvvakNVvcwccCz6z
-         hHUS212gIoF4KBJIivAabxjqhGcCMc6oYwJkS+/FH96a4raKJoSkFoE1x6sPRvhGve
-         4xbB6ayOQ3E4Q==
-Subject: [PATCH 3/6] xfs: log EFIs for all btree blocks being used to stage a
- btree
+        b=Yp3q2WyJmaMHEbtyqIInPYdqq9RJZDxOzuxxuI+/tNpj6a4/M1rNCWc6TktnQ+X30
+         GkQxCn3JkWdgq8yTh1UPS/vSFWoNzpsGOXcD9thdQ3RgWjM00ncOGLaJ4BNXezrKWl
+         wi1sOd9To7y80w1uqLvUvo2HZEgOxvBwo/32ZsZD2oF4zK3ORDzM8reExkT03kIFPM
+         0qZuxuGnrcFWx8Fhl2voOoy/IjMYtLpRWNRHrrUYDcUMpe4lap2w6t6ZJrdu9IoiQ/
+         +lxX3XKQLNbBLLhU7mi1PUaq6zfeGrq6EO6xtchWB040MLo0s181WnhgNc8Ektsug2
+         7YiQA2F/QuAbw==
+Subject: [PATCH 4/6] xfs: add debug knobs to control btree bulk load slack
+ factors
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:12:31 -0800
-Message-ID: <167243835151.692312.11046002977806393418.stgit@magnolia>
+Message-ID: <167243835165.692312.18233981524683364661.stgit@magnolia>
 In-Reply-To: <167243835101.692312.6690367712200502185.stgit@magnolia>
 References: <167243835101.692312.6690367712200502185.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,306 +50,143 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-We need to log EFIs for every extent that we allocate for the purpose of
-staging a new btree so that if we fail then the blocks will be freed
-during log recovery.  Add a function to relog the EFIs, so that repair
-can relog them all every time it creates a new btree block, which will
-help us to avoid pinning the log tail.
+Add some debug knobs so that we can control the leaf and node block
+slack when rebuilding btrees.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/newbt.c  |  171 ++++++++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/scrub/newbt.h  |    4 +
- fs/xfs/scrub/repair.c |   10 +++
- fs/xfs/scrub/repair.h |    1 
- 4 files changed, 182 insertions(+), 4 deletions(-)
+ fs/xfs/scrub/newbt.c |   10 ++++++---
+ fs/xfs/xfs_globals.c |   12 +++++++++++
+ fs/xfs/xfs_sysctl.h  |    2 ++
+ fs/xfs/xfs_sysfs.c   |   54 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 75 insertions(+), 3 deletions(-)
 
 
 diff --git a/fs/xfs/scrub/newbt.c b/fs/xfs/scrub/newbt.c
-index 9d677640e65e..4eee8923a9bc 100644
+index 4eee8923a9bc..56c790fa0f9a 100644
 --- a/fs/xfs/scrub/newbt.c
 +++ b/fs/xfs/scrub/newbt.c
-@@ -13,12 +13,14 @@
- #include "xfs_btree_staging.h"
- #include "xfs_log_format.h"
- #include "xfs_trans.h"
-+#include "xfs_log.h"
- #include "xfs_sb.h"
- #include "xfs_inode.h"
- #include "xfs_alloc.h"
- #include "xfs_rmap.h"
- #include "xfs_ag.h"
- #include "xfs_defer.h"
-+#include "xfs_extfree_item.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/trace.h"
-@@ -124,15 +126,150 @@ xrep_newbt_init_bare(
- 			XFS_AG_RESV_NONE);
- }
+@@ -49,9 +49,13 @@ xrep_newbt_estimate_slack(
+ 	uint64_t		free;
+ 	uint64_t		sz;
  
-+/*
-+ * Set up automatic reaping of the blocks reserved for btree reconstruction in
-+ * case we crash by logging a deferred free item for each extent we allocate so
-+ * that we can get all of the space back if we crash before we can commit the
-+ * new btree.  This function returns a token that can be used to cancel
-+ * automatic reaping if repair is successful.
-+ */
-+static int
-+xrep_newbt_schedule_autoreap(
-+	struct xrep_newbt		*xnr,
-+	struct xrep_newbt_resv		*resv)
+-	/* Let the btree code compute the default slack values. */
+-	bload->leaf_slack = -1;
+-	bload->node_slack = -1;
++	/*
++	 * The xfs_globals values are set to -1 (i.e. take the bload defaults)
++	 * unless someone has set them otherwise, so we just pull the values
++	 * here.
++	 */
++	bload->leaf_slack = xfs_globals.bload_leaf_slack;
++	bload->node_slack = xfs_globals.bload_node_slack;
+ 
+ 	if (sc->ops->type == ST_PERAG) {
+ 		free = sc->sa.pag->pagf_freeblks;
+diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
+index 4d0a98f920ca..eaee77491bca 100644
+--- a/fs/xfs/xfs_globals.c
++++ b/fs/xfs/xfs_globals.c
+@@ -43,4 +43,16 @@ struct xfs_globals xfs_globals = {
+ 	.pwork_threads		=	-1,	/* automatic thread detection */
+ 	.larp			=	false,	/* log attribute replay */
+ #endif
++
++	/*
++	 * Leave this many record slots empty when bulk loading btrees.  By
++	 * default we load new btree leaf blocks 75% full.
++	 */
++	.bload_leaf_slack	=	-1,
++
++	/*
++	 * Leave this many key/ptr slots empty when bulk loading btrees.  By
++	 * default we load new btree node blocks 75% full.
++	 */
++	.bload_node_slack	=	-1,
+ };
+diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
+index f78ad6b10ea5..276696a07040 100644
+--- a/fs/xfs/xfs_sysctl.h
++++ b/fs/xfs/xfs_sysctl.h
+@@ -85,6 +85,8 @@ struct xfs_globals {
+ 	int	pwork_threads;		/* parallel workqueue threads */
+ 	bool	larp;			/* log attribute replay */
+ #endif
++	int	bload_leaf_slack;	/* btree bulk load leaf slack */
++	int	bload_node_slack;	/* btree bulk load node slack */
+ 	int	log_recovery_delay;	/* log recovery delay (secs) */
+ 	int	mount_delay;		/* mount setup delay (secs) */
+ 	bool	bug_on_assert;		/* BUG() the kernel on assert failure */
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index f7faf6e70d7f..57dea30fa757 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -253,6 +253,58 @@ larp_show(
+ XFS_SYSFS_ATTR_RW(larp);
+ #endif /* DEBUG */
+ 
++STATIC ssize_t
++bload_leaf_slack_store(
++	struct kobject	*kobject,
++	const char	*buf,
++	size_t		count)
 +{
-+	struct xfs_extent_free_item	efi_item = {
-+		.xefi_blockcount	= resv->len,
-+		.xefi_owner		= xnr->oinfo.oi_owner,
-+		.xefi_flags		= XFS_EFI_SKIP_DISCARD,
-+		.xefi_pag		= resv->pag,
-+	};
-+	struct xfs_scrub		*sc = xnr->sc;
-+	struct xfs_log_item		*lip;
-+	LIST_HEAD(items);
++	int		ret;
++	int		val;
 +
-+	ASSERT(xnr->oinfo.oi_offset == 0);
++	ret = kstrtoint(buf, 0, &val);
++	if (ret)
++		return ret;
 +
-+	efi_item.xefi_startblock = XFS_AGB_TO_FSB(sc->mp, resv->pag->pag_agno,
-+			resv->agbno);
-+	if (xnr->oinfo.oi_flags & XFS_OWNER_INFO_ATTR_FORK)
-+		efi_item.xefi_flags |= XFS_EFI_ATTR_FORK;
-+	if (xnr->oinfo.oi_flags & XFS_OWNER_INFO_BMBT_BLOCK)
-+		efi_item.xefi_flags |= XFS_EFI_BMBT_BLOCK;
-+
-+	INIT_LIST_HEAD(&efi_item.xefi_list);
-+	list_add(&efi_item.xefi_list, &items);
-+
-+	xfs_perag_bump_intents(resv->pag);
-+	lip = xfs_extent_free_defer_type.create_intent(sc->tp, &items, 1,
-+			false);
-+	ASSERT(lip != NULL && !IS_ERR(lip));
-+
-+	resv->efi = lip;
-+	return 0;
++	xfs_globals.bload_leaf_slack = val;
++	return count;
 +}
 +
-+/*
-+ * Earlier, we logged EFIs for the extents that we allocated to hold the new
-+ * btree so that we could automatically roll back those allocations if the
-+ * system crashed.  Now we log an EFD to cancel the EFI, either because the
-+ * repair succeeded and the new blocks are in use; or because the repair was
-+ * cancelled and we're about to free the extents directly.
-+ */
-+static inline void
-+xrep_newbt_finish_autoreap(
-+	struct xfs_scrub	*sc,
-+	struct xrep_newbt_resv	*resv)
++STATIC ssize_t
++bload_leaf_slack_show(
++	struct kobject	*kobject,
++	char		*buf)
 +{
-+	struct xfs_efd_log_item	*efdp;
-+	struct xfs_extent	*extp;
-+	struct xfs_log_item	*efd_lip;
++	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.bload_leaf_slack);
++}
++XFS_SYSFS_ATTR_RW(bload_leaf_slack);
 +
-+	efd_lip = xfs_extent_free_defer_type.create_done(sc->tp, resv->efi, 1);
-+	efdp = container_of(efd_lip, struct xfs_efd_log_item, efd_item);
-+	extp = efdp->efd_format.efd_extents;
-+	extp->ext_start = XFS_AGB_TO_FSB(sc->mp, resv->pag->pag_agno,
-+					 resv->agbno);
-+	extp->ext_len = resv->len;
-+	efdp->efd_next_extent++;
-+	set_bit(XFS_LI_DIRTY, &efd_lip->li_flags);
-+	xfs_perag_drop_intents(resv->pag);
++STATIC ssize_t
++bload_node_slack_store(
++	struct kobject	*kobject,
++	const char	*buf,
++	size_t		count)
++{
++	int		ret;
++	int		val;
++
++	ret = kstrtoint(buf, 0, &val);
++	if (ret)
++		return ret;
++
++	xfs_globals.bload_node_slack = val;
++	return count;
 +}
 +
-+/* Abort an EFI logged for a new btree block reservation. */
-+static inline void
-+xrep_newbt_cancel_autoreap(
-+	struct xrep_newbt_resv	*resv)
++STATIC ssize_t
++bload_node_slack_show(
++	struct kobject	*kobject,
++	char		*buf)
 +{
-+	xfs_extent_free_defer_type.abort_intent(resv->efi);
-+	xfs_perag_drop_intents(resv->pag);
++	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.bload_node_slack);
 +}
++XFS_SYSFS_ATTR_RW(bload_node_slack);
 +
-+/*
-+ * Relog the EFIs attached to a staging btree so that we don't pin the log
-+ * tail.  Same logic as xfs_defer_relog.
-+ */
-+int
-+xrep_newbt_relog_autoreap(
-+	struct xrep_newbt	*xnr)
-+{
-+	struct xrep_newbt_resv	*resv;
-+	unsigned int		efi_bytes = 0;
-+
-+	list_for_each_entry(resv, &xnr->resv_list, list) {
-+		/*
-+		 * If the log intent item for this deferred op is in a
-+		 * different checkpoint, relog it to keep the log tail moving
-+		 * forward.  We're ok with this being racy because an incorrect
-+		 * decision means we'll be a little slower at pushing the tail.
-+		 */
-+		if (!resv->efi || xfs_log_item_in_current_chkpt(resv->efi))
-+			continue;
-+
-+		resv->efi = xfs_trans_item_relog(resv->efi, xnr->sc->tp);
-+
-+		/*
-+		 * If free space is very fragmented, it's possible that the new
-+		 * btree will be allocated a large number of small extents.
-+		 * On an active system, it's possible that so many of those
-+		 * EFIs will need relogging here that doing them all in one
-+		 * transaction will overflow the reservation.
-+		 *
-+		 * Each allocation for the new btree (xrep_newbt_resv) points
-+		 * to a unique single-mapping EFI, so each relog operation logs
-+		 * a single-mapping EFD followed by a new EFI.  Each single
-+		 * mapping EF[ID] item consumes about 128 bytes, so we'll
-+		 * assume 256 bytes per relog.  Roll if we consume more than
-+		 * half of the transaction reservation.
-+		 */
-+		efi_bytes += 256;
-+		if (efi_bytes > xnr->sc->tp->t_log_res / 2) {
-+			int	error;
-+
-+			error = xrep_roll_trans(xnr->sc);
-+			if (error)
-+				return error;
-+
-+			efi_bytes = 0;
-+		}
-+	}
-+
-+	if (xnr->sc->tp->t_flags & XFS_TRANS_DIRTY)
-+		return xrep_roll_trans(xnr->sc);
-+	return 0;
-+}
-+
- /* Designate specific blocks to be used to build our new btree. */
--int
--xrep_newbt_add_blocks(
-+static int
-+__xrep_newbt_add_blocks(
- 	struct xrep_newbt		*xnr,
- 	xfs_fsblock_t			fsbno,
--	xfs_extlen_t			len)
-+	xfs_extlen_t			len,
-+	bool				auto_reap)
- {
- 	struct xrep_newbt_resv		*resv;
- 	struct xfs_mount		*mp = xnr->sc->mp;
-+	int				error;
- 
- 	resv = kmalloc(sizeof(struct xrep_newbt_resv), XCHK_GFP_FLAGS);
- 	if (!resv)
-@@ -144,10 +281,32 @@ xrep_newbt_add_blocks(
- 	resv->used = 0;
- 	resv->pag = xfs_perag_get(mp, XFS_FSB_TO_AGNO(mp, fsbno));
- 
-+	if (auto_reap) {
-+		error = xrep_newbt_schedule_autoreap(xnr, resv);
-+		if (error) {
-+			xfs_perag_put(resv->pag);
-+			kfree(resv);
-+			return error;
-+		}
-+	}
-+
- 	list_add_tail(&resv->list, &xnr->resv_list);
- 	return 0;
- }
- 
-+/*
-+ * Allow certain callers to add disk space directly to the reservation.
-+ * Callers are responsible for cleaning up the reservations.
-+ */
-+int
-+xrep_newbt_add_blocks(
-+	struct xrep_newbt		*xnr,
-+	xfs_fsblock_t			fsbno,
-+	xfs_extlen_t			len)
-+{
-+	return __xrep_newbt_add_blocks(xnr, fsbno, len, false);
-+}
-+
- /* Allocate disk space for our new btree. */
- int
- xrep_newbt_alloc_blocks(
-@@ -189,7 +348,8 @@ xrep_newbt_alloc_blocks(
- 				XFS_FSB_TO_AGBNO(sc->mp, args.fsbno),
- 				args.len, xnr->oinfo.oi_owner);
- 
--		error = xrep_newbt_add_blocks(xnr, args.fsbno, args.len);
-+		error = __xrep_newbt_add_blocks(xnr, args.fsbno, args.len,
-+				true);
- 		if (error)
- 			return error;
- 
-@@ -233,6 +393,8 @@ xrep_newbt_free_extent(
- 		free_aglen -= resv->used;
- 	}
- 
-+	xrep_newbt_finish_autoreap(sc, resv);
-+
- 	if (free_aglen == 0)
- 		return 0;
- 
-@@ -318,6 +480,7 @@ xrep_newbt_free(
- 	 * reservations.
- 	 */
- 	list_for_each_entry_safe(resv, n, &xnr->resv_list, list) {
-+		xrep_newbt_cancel_autoreap(resv);
- 		list_del(&resv->list);
- 		xfs_perag_put(resv->pag);
- 		kfree(resv);
-diff --git a/fs/xfs/scrub/newbt.h b/fs/xfs/scrub/newbt.h
-index ad24cb32a7f1..a1eda5213b83 100644
---- a/fs/xfs/scrub/newbt.h
-+++ b/fs/xfs/scrub/newbt.h
-@@ -12,6 +12,9 @@ struct xrep_newbt_resv {
- 
- 	struct xfs_perag	*pag;
- 
-+	/* EFI tracking this space reservation */
-+	struct xfs_log_item	*efi;
-+
- 	/* AG block of the extent we reserved. */
- 	xfs_agblock_t		agbno;
- 
-@@ -60,5 +63,6 @@ void xrep_newbt_cancel(struct xrep_newbt *xnr);
- int xrep_newbt_commit(struct xrep_newbt *xnr);
- int xrep_newbt_claim_block(struct xfs_btree_cur *cur, struct xrep_newbt *xnr,
- 		union xfs_btree_ptr *ptr);
-+int xrep_newbt_relog_autoreap(struct xrep_newbt *xnr);
- 
- #endif /* __XFS_SCRUB_NEWBT_H__ */
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index 8d990a42119e..b4117ff221aa 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -167,6 +167,16 @@ xrep_roll_ag_trans(
- 	return 0;
- }
- 
-+/* Roll the scrub transaction, holding the primary metadata locked. */
-+int
-+xrep_roll_trans(
-+	struct xfs_scrub	*sc)
-+{
-+	if (!sc->ip)
-+		return xrep_roll_ag_trans(sc);
-+	return xfs_trans_roll_inode(&sc->tp, sc->ip);
-+}
-+
- /* Finish all deferred work attached to the repair transaction. */
- int
- xrep_defer_finish(
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index a0df121e6866..3179746a063e 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -20,6 +20,7 @@ static inline int xrep_notsupported(struct xfs_scrub *sc)
- int xrep_attempt(struct xfs_scrub *sc);
- void xrep_failure(struct xfs_mount *mp);
- int xrep_roll_ag_trans(struct xfs_scrub *sc);
-+int xrep_roll_trans(struct xfs_scrub *sc);
- int xrep_defer_finish(struct xfs_scrub *sc);
- bool xrep_ag_has_space(struct xfs_perag *pag, xfs_extlen_t nr_blocks,
- 		enum xfs_ag_resv_type type);
+ static struct attribute *xfs_dbg_attrs[] = {
+ 	ATTR_LIST(bug_on_assert),
+ 	ATTR_LIST(log_recovery_delay),
+@@ -262,6 +314,8 @@ static struct attribute *xfs_dbg_attrs[] = {
+ 	ATTR_LIST(pwork_threads),
+ 	ATTR_LIST(larp),
+ #endif
++	ATTR_LIST(bload_leaf_slack),
++	ATTR_LIST(bload_node_slack),
+ 	NULL,
+ };
+ ATTRIBUTE_GROUPS(xfs_dbg);
 
