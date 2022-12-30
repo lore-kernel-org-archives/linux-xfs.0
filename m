@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81C92C4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:02:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5F9EC4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:02:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235843AbiLaACZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 19:02:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52864 "EHLO
+        id S235610AbiLaACl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 19:02:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235598AbiLaACY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:02:24 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F22D41E3CA
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 16:02:21 -0800 (PST)
+        with ESMTP id S235598AbiLaACk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:02:40 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D8C01E3C3
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 16:02:39 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8DBC061CAD
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 00:02:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA757C433EF;
-        Sat, 31 Dec 2022 00:02:20 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C538BB81DAF
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 00:02:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C1A3C433EF;
+        Sat, 31 Dec 2022 00:02:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672444941;
-        bh=jeDO0OrQVi2j0mRiCpmZdxY/hkO6U2ymvzLOhqT4c5E=;
+        s=k20201202; t=1672444956;
+        bh=pK4lCzOtjQKF9kAGAlhS5Ml5fZOENt0luz7HjH9XaSs=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Yw01RsQ88uNoYmfWSDayIEOdKPdKQrUu3o8+USS408mN9MrD0rdL0QsHsQZRIsVj2
-         /rjUoeKaAl4qlew5qD4JJUIIsOdRGpdMfa59RBqmOr58MVnH+Iwvcjs2z+Bhi6/pRX
-         dzJtt2MdrTWdRdi08b55HhDZSnr9lwAjsgRSfa42hR249hDbP3C+Tf5RShSvFp3IeO
-         NM7PtJeU+0UB1TmOvkWRHWmEJ0fw9K5O07kuwK6yg909qswY4vRG7mFY4oylJ6lB/S
-         /aIQnwe1FPV7SQ655gqO1yz5Obvp89f1n0ZseCEctCCuKoTOoQJCvpOG7KPWY8QID0
-         HRpdNY3k5UoLQ==
-Subject: [PATCH 2/3] xfs: move files to orphanage instead of letting nlinks
- drop to zero
+        b=n8pvngOCrDwiu+sruvDU9oPSMup61XcuzBtLyHJP2uOYHFsRKRpRqHRC4NyHTSoAS
+         SYC82WLVI+OY0b9g+WLOPd6hSJF82lHgtIOfteIq5hYNvzU01A1gMuKpIRKH1vQVXi
+         rkrwDkTMJ/DKWwIwNBpKZOrHaNVyegPSr7xus/6iJM9A/F/mDQ4ZrLwL0gEwXWTB+x
+         w6fhdhxaP2OuAvP+mZUHKuu98vECZclsdOrb1iyx94W7QCKnwGVb5QVhIJa8fb/+CV
+         1CS8RNV8ceGb/RzOeKUqlB4uuJltTgz/TjbM9qLdEWXnX6AbUOeO78nE6f9I95q8BL
+         q/MWkJCbi7RaA==
+Subject: [PATCH 3/3] xfs: ensure dentry consistency when the orphanage adopts
+ a file
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:14:20 -0800
-Message-ID: <167243845997.700780.344208408610659929.stgit@magnolia>
+Message-ID: <167243846012.700780.86032622922709412.stgit@magnolia>
 In-Reply-To: <167243845965.700780.5558696077743355523.stgit@magnolia>
 References: <167243845965.700780.5558696077743355523.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,415 +50,184 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If we encounter an inode with a nonzero link count but zero observed
-links, move it to the orphanage.
+When the orphanage adopts a file, that file becomes a child of the
+orphanage.  The dentry cache may have entries for the orphanage
+directory and the name we've chosen, so (1) make sure we abort if the
+dcache has a positive entry because something's not right; and (2)
+invalidate and purge negative dentries if the adoption goes through.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/nlinks.c        |   11 ++
- fs/xfs/scrub/nlinks.h        |    6 +
- fs/xfs/scrub/nlinks_repair.c |  250 +++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/scrub/repair.h        |    2 
- fs/xfs/scrub/trace.c         |    1 
- fs/xfs/scrub/trace.h         |   26 ++++
- 6 files changed, 290 insertions(+), 6 deletions(-)
+ fs/xfs/scrub/orphanage.c |  100 ++++++++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/scrub/trace.h     |   32 +++++++++++++++
+ 2 files changed, 127 insertions(+), 5 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/nlinks.c b/fs/xfs/scrub/nlinks.c
-index 54aa3dc4dc89..dca759d27ac4 100644
---- a/fs/xfs/scrub/nlinks.c
-+++ b/fs/xfs/scrub/nlinks.c
-@@ -24,6 +24,7 @@
- #include "scrub/xfile.h"
- #include "scrub/xfarray.h"
- #include "scrub/iscan.h"
-+#include "scrub/orphanage.h"
- #include "scrub/nlinks.h"
- #include "scrub/trace.h"
- #include "scrub/readdir.h"
-@@ -44,9 +45,17 @@ int
- xchk_setup_nlinks(
- 	struct xfs_scrub	*sc)
- {
-+	int			error;
-+
- 	xchk_fshooks_enable(sc, XCHK_FSHOOKS_NLINKS);
+diff --git a/fs/xfs/scrub/orphanage.c b/fs/xfs/scrub/orphanage.c
+index 1fe7935433bf..08ff273dbb39 100644
+--- a/fs/xfs/scrub/orphanage.c
++++ b/fs/xfs/scrub/orphanage.c
+@@ -356,6 +356,89 @@ xrep_orphanage_adoption_prep(
+ 	return 0;
+ }
  
--	sc->buf = kzalloc(sizeof(struct xchk_nlink_ctrs), XCHK_GFP_FLAGS);
-+	if (xchk_could_repair(sc)) {
-+		error = xrep_setup_nlinks(sc);
-+		if (error)
-+			return error;
-+	}
-+
-+	sc->buf = kvzalloc(sizeof(struct xchk_nlink_ctrs), XCHK_GFP_FLAGS);
- 	if (!sc->buf)
- 		return -ENOMEM;
- 
-diff --git a/fs/xfs/scrub/nlinks.h b/fs/xfs/scrub/nlinks.h
-index 46baef3c2237..f5108369cc2b 100644
---- a/fs/xfs/scrub/nlinks.h
-+++ b/fs/xfs/scrub/nlinks.h
-@@ -28,6 +28,12 @@ struct xchk_nlink_ctrs {
- 	 * from other writer threads.
- 	 */
- 	struct xfs_nlink_hook	hooks;
-+
-+	/* Orphanage reparinting request. */
-+	struct xrep_orphanage_req adoption;
-+
-+	/* Directory entry name, plus the trailing null. */
-+	char			namebuf[MAXNAMELEN];
- };
- 
- /*
-diff --git a/fs/xfs/scrub/nlinks_repair.c b/fs/xfs/scrub/nlinks_repair.c
-index 4723b015a1c1..f881e5dbd432 100644
---- a/fs/xfs/scrub/nlinks_repair.c
-+++ b/fs/xfs/scrub/nlinks_repair.c
-@@ -23,6 +23,7 @@
- #include "scrub/xfile.h"
- #include "scrub/xfarray.h"
- #include "scrub/iscan.h"
-+#include "scrub/orphanage.h"
- #include "scrub/nlinks.h"
- #include "scrub/trace.h"
- #include "scrub/tempfile.h"
-@@ -37,6 +38,242 @@
-  * inode is locked.
-  */
- 
-+/* Set up to repair inode link counts. */
-+int
-+xrep_setup_nlinks(
-+	struct xfs_scrub	*sc)
-+{
-+	return xrep_orphanage_try_create(sc);
-+}
-+
-+/* Update incore link count information.  Caller must hold the xnc lock. */
-+STATIC int
-+xrep_nlinks_set_record(
-+	struct xchk_nlink_ctrs	*xnc,
-+	xfs_ino_t		ino,
-+	const struct xchk_nlink	*nl)
-+{
-+	int			error;
-+
-+	trace_xrep_nlinks_set_record(xnc->sc->mp, ino, nl);
-+
-+	error = xfarray_store(xnc->nlinks, ino, nl);
-+	if (error == -EFBIG) {
-+		/*
-+		 * EFBIG means we tried to store data at too high a byte offset
-+		 * in the sparse array.  This should be impossible since we
-+		 * presumably already stored an nlink count, but we still need
-+		 * to fail gracefully.
-+		 */
-+		return -ECANCELED;
-+	}
-+
-+	return error;
-+}
-+
 +/*
-+ * Inodes that aren't the root directory or the orphanage, have a nonzero link
-+ * count, and no observed parents should be moved to the orphanage.
++ * Make sure the dcache does not have a positive dentry for the name we've
++ * chosen.  The caller should have checked with the ondisk directory, so any
++ * discrepancy is a sign that something is seriously wrong.
 + */
-+static inline bool
-+xrep_nlinks_is_orphaned(
-+	struct xfs_scrub	*sc,
-+	struct xfs_inode	*ip,
-+	unsigned int		actual_nlink,
-+	const struct xchk_nlink	*obs)
++static int
++xrep_orphanage_check_dcache(
++	struct xrep_orphanage_req	*orph)
 +{
-+	struct xfs_mount	*mp = ip->i_mount;
++	struct qstr			qname = QSTR_INIT(orph->xname.name,
++							  orph->xname.len);
++	struct dentry			*d_orphanage, *d_child, *dentry;
++	int				error = 0;
 +
-+	if (obs->parents != 0)
-+		return false;
-+	if (ip == mp->m_rootip || ip == sc->orphanage)
-+		return false;
-+	return actual_nlink != 0;
-+}
-+
-+/*
-+ * Correct the link count of the given inode or move it to the orphanage.
-+ * Because we have to grab locks and resources in a certain order, it's
-+ * possible that this will be a no-op.
-+ */
-+STATIC int
-+xrep_nlinks_repair_and_relink_inode(
-+	struct xchk_nlink_ctrs		*xnc)
-+{
-+	struct xchk_nlink		obs;
-+	struct xfs_scrub		*sc = xnc->sc;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_inode		*ip = sc->ip;
-+	uint64_t			total_links;
-+	unsigned int			actual_nlink;
-+	bool				orphan = false;
-+	int				error;
-+
-+	/*
-+	 * Ignore temporary files being used to stage repairs, since we assume
-+	 * they're correct for non-directories, and the directory repair code
-+	 * doesn't bump the link counts for the children.
-+	 */
-+	if (xrep_is_tempfile(ip))
++	d_orphanage = d_find_alias(VFS_I(orph->sc->orphanage));
++	if (!d_orphanage)
 +		return 0;
 +
-+	/* Grab the IOLOCK of the orphanage and the child directory. */
-+	error = xrep_orphanage_iolock_two(sc);
++	d_child = d_hash_and_lookup(d_orphanage, &qname);
++	if (d_child) {
++		trace_xrep_orphanage_check_child(orph->sc->mp, d_child);
++
++		if (d_is_positive(d_child)) {
++			ASSERT(d_is_negative(d_child));
++			error = -EFSCORRUPTED;
++		}
++
++		dput(d_child);
++	}
++
++	dput(d_orphanage);
 +	if (error)
 +		return error;
 +
 +	/*
-+	 * Allocate a transaction for the adoption.  We'll reserve space for
-+	 * the transaction in the adoption preparation step.
++	 * Do we need to update d_parent of the dentry for the file being
++	 * repaired?  In theory there shouldn't be one since the file had
++	 * nonzero nlink but wasn't connected to any parent dir.
 +	 */
-+	xrep_orphanage_compute_blkres(sc, &xnc->adoption);
++	dentry = d_find_alias(VFS_I(orph->sc->ip));
++	if (dentry) {
++		trace_xrep_orphanage_check_dentry(orph->sc->mp, d_child);
++		ASSERT(dentry->d_parent == NULL);
 +
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_link, 0, 0, 0, &sc->tp);
-+	if (error)
-+		goto out_iolock;
-+
-+	/*
-+	 * Before we take the ILOCKs, compute the name of the potential
-+	 * orphanage directory entry.
-+	 */
-+	error = xrep_orphanage_compute_name(&xnc->adoption, xnc->namebuf);
-+	if (error)
-+		goto out_trans;
-+
-+	error = xrep_orphanage_adoption_prep(&xnc->adoption);
-+	if (error)
-+		goto out_trans;
-+
-+	mutex_lock(&xnc->lock);
-+
-+	if (xchk_iscan_aborted(&xnc->collect_iscan)) {
-+		error = -ECANCELED;
-+		goto out_scanlock;
++		dput(dentry);
++		return -EFSCORRUPTED;
 +	}
 +
-+	error = xfarray_load_sparse(xnc->nlinks, ip->i_ino, &obs);
-+	if (error)
-+		goto out_scanlock;
-+
-+	total_links = xchk_nlink_total(&obs);
-+	actual_nlink = VFS_I(ip)->i_nlink;
-+
-+	/* Cannot set more than the maxiumum possible link count. */
-+	if (total_links > U32_MAX) {
-+		trace_xrep_nlinks_unfixable_inode(mp, ip, &obs);
-+		error = 0;
-+		goto out_scanlock;
-+	}
-+
-+	/*
-+	 * Linked directories should have at least one "child" (the dot entry)
-+	 * pointing up to them.
-+	 */
-+	if (S_ISDIR(VFS_I(ip)->i_mode) && actual_nlink > 0 &&
-+					  obs.children == 0) {
-+		trace_xrep_nlinks_unfixable_inode(mp, ip, &obs);
-+		error = 0;
-+		goto out_scanlock;
-+	}
-+
-+	/* Non-directories cannot have directories pointing up to them. */
-+	if (!S_ISDIR(VFS_I(ip)->i_mode) && obs.children > 0) {
-+		trace_xrep_nlinks_unfixable_inode(mp, ip, &obs);
-+		error = 0;
-+		goto out_scanlock;
-+	}
-+
-+	/*
-+	 * Decide if we're going to move this file to the orphanage, and fix
-+	 * up the incore link counts if we are.
-+	 */
-+	if (xrep_nlinks_is_orphaned(sc, ip, actual_nlink, &obs)) {
-+		obs.parents++;
-+		total_links++;
-+
-+		error = xrep_nlinks_set_record(xnc, ip->i_ino, &obs);
-+		if (error)
-+			goto out_scanlock;
-+
-+		orphan = true;
-+	}
-+
-+	/*
-+	 * We did not find any links to this inode and we're not planning to
-+	 * move it to the orphanage.  If the inode link count is also zero, we
-+	 * have nothing further to do.  Otherwise, the situation is unfixable.
-+	 */
-+	if (total_links == 0) {
-+		if (actual_nlink != 0)
-+			trace_xrep_nlinks_unfixable_inode(mp, ip, &obs);
-+		error = 0;
-+		goto out_scanlock;
-+	}
-+
-+	/* If the inode has the correct link count and isn't orphaned, exit. */
-+	if (total_links == actual_nlink && !orphan) {
-+		error = 0;
-+		goto out_scanlock;
-+	}
-+
-+	/* Commit the new link count. */
-+	trace_xrep_nlinks_update_inode(mp, ip, &obs);
-+
-+	/*
-+	 * If this is an orphan, create the new name in the orphanage, and bump
-+	 * the link count of the orphanage if we just added a directory.  Then
-+	 * we can set the correct nlink.
-+	 */
-+	if (orphan) {
-+		error = xrep_orphanage_adopt(&xnc->adoption);
-+		if (error)
-+			goto out_scanlock;
-+
-+		/*
-+		 * If the child is a directory, we need to bump the incore link
-+		 * count of the orphanage to account for the new orphan's
-+		 * child subdirectory entry.
-+		 */
-+		if (S_ISDIR(VFS_I(ip)->i_mode)) {
-+			error = xfarray_load_sparse(xnc->nlinks,
-+					sc->orphanage->i_ino, &obs);
-+			if (error)
-+				goto out_scanlock;
-+
-+			obs.flags |= XCHK_NLINK_WRITTEN;
-+			obs.children++;
-+
-+			error = xrep_nlinks_set_record(xnc,
-+					sc->orphanage->i_ino, &obs);
-+			if (error)
-+				goto out_scanlock;
-+		}
-+	}
-+	set_nlink(VFS_I(ip), total_links);
-+	xfs_trans_log_inode(sc->tp, ip, XFS_ILOG_CORE);
-+	mutex_unlock(&xnc->lock);
-+
-+	error = xrep_trans_commit(sc);
-+	if (error)
-+		goto out_ilock;
-+
-+	xchk_iunlock(sc, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
-+	xrep_orphanage_iunlock(sc, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
 +	return 0;
++}
 +
-+out_scanlock:
-+	mutex_unlock(&xnc->lock);
-+out_trans:
-+	xchk_trans_cancel(sc);
-+out_ilock:
-+	xchk_iunlock(sc, XFS_ILOCK_EXCL);
-+	xrep_orphanage_iunlock(sc, XFS_ILOCK_EXCL);
-+out_iolock:
-+	xchk_iunlock(sc, XFS_IOLOCK_EXCL);
-+	xrep_orphanage_iunlock(sc, XFS_IOLOCK_EXCL);
++/*
++ * Remove all negative dentries from the dcache.  There should not be any
++ * positive entries, since we've maintained our lock on the orphanage
++ * directory.
++ */
++static int
++xrep_orphanage_zap_dcache(
++	struct xrep_orphanage_req	*orph)
++{
++	struct qstr			qname = QSTR_INIT(orph->xname.name,
++							  orph->xname.len);
++	struct dentry			*d_orphanage, *d_child;
++	int				error = 0;
++
++	d_orphanage = d_find_alias(VFS_I(orph->sc->orphanage));
++	if (!d_orphanage)
++		return 0;
++
++	d_child = d_hash_and_lookup(d_orphanage, &qname);
++	while (d_child != NULL) {
++		trace_xrep_orphanage_zap_child(orph->sc->mp, d_child);
++
++		ASSERT(d_is_negative(d_child));
++		d_invalidate(d_child);
++		dput(d_child);
++		d_child = d_lookup(d_orphanage, &qname);
++	}
++
++	dput(d_orphanage);
 +	return error;
 +}
 +
  /*
-  * Correct the link count of the given inode.  Because we have to grab locks
-  * and resources in a certain order, it's possible that this will be a no-op.
-@@ -185,10 +422,10 @@ xrep_nlinks(
+  * Move the current file to the orphanage.
+  *
+@@ -375,6 +458,10 @@ xrep_orphanage_adopt(
+ 
+ 	trace_xrep_orphanage_adopt(sc->orphanage, &orph->xname, sc->ip->i_ino);
+ 
++	error = xrep_orphanage_check_dcache(orph);
++	if (error)
++		return error;
++
  	/*
- 	 * We need ftype for an accurate count of the number of child
- 	 * subdirectory links.  Child subdirectories with a back link (dotdot
--	 * entry) but no forward link are unfixable, so we cannot repair the
--	 * link count of the parent directory based on the back link count
--	 * alone.  Filesystems without ftype support are rare (old V4) so we
--	 * just skip out here.
-+	 * entry) but no forward link are moved to the orphanage, so we cannot
-+	 * repair the link count of the parent directory based on the back link
-+	 * count alone.  Filesystems without ftype support are rare (old V4) so
-+	 * we just skip out here.
- 	 */
- 	if (!xfs_has_ftype(sc->mp))
- 		return -EOPNOTSUPP;
-@@ -209,7 +446,10 @@ xrep_nlinks(
- 		 */
- 		xchk_trans_cancel(sc);
+ 	 * Create the new name in the orphanage, and bump the link count of
+ 	 * the orphanage if we just added a directory.
+@@ -390,12 +477,15 @@ xrep_orphanage_adopt(
+ 		xfs_bumplink(sc->tp, sc->orphanage);
+ 	xfs_trans_log_inode(sc->tp, sc->orphanage, XFS_ILOG_CORE);
  
--		error = xrep_nlinks_repair_inode(xnc);
-+		if (sc->orphanage && sc->ip != sc->orphanage)
-+			error = xrep_nlinks_repair_and_relink_inode(xnc);
-+		else
-+			error = xrep_nlinks_repair_inode(xnc);
- 		xchk_iscan_mark_visited(&xnc->compare_iscan, sc->ip);
- 		xchk_irele(sc, sc->ip);
- 		sc->ip = NULL;
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index 596993b06256..5a7787e3d3a1 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -85,6 +85,7 @@ int xrep_setup_rtsummary(struct xfs_scrub *sc, unsigned int *resblks,
- int xrep_setup_xattr(struct xfs_scrub *sc);
- int xrep_setup_directory(struct xfs_scrub *sc);
- int xrep_setup_parent(struct xfs_scrub *sc);
-+int xrep_setup_nlinks(struct xfs_scrub *sc);
+-	if (!isdir)
+-		return 0;
++	if (isdir) {
++		/* Replace the dotdot entry in the child directory. */
++		error = xfs_dir_replace(sc->tp, sc->ip, &xfs_name_dotdot,
++				sc->orphanage->i_ino, orph->child_blkres);
++		if (error)
++			return error;
++	}
  
- int xrep_xattr_reset_fork(struct xfs_scrub *sc);
+-	/* Replace the dotdot entry in the child directory. */
+-	return xfs_dir_replace(sc->tp, sc->ip, &xfs_name_dotdot,
+-			sc->orphanage->i_ino, orph->child_blkres);
++	return xrep_orphanage_zap_dcache(orph);
+ }
  
-@@ -196,6 +197,7 @@ xrep_setup_nothing(
- #define xrep_setup_xattr		xrep_setup_nothing
- #define xrep_setup_directory		xrep_setup_nothing
- #define xrep_setup_parent		xrep_setup_nothing
-+#define xrep_setup_nlinks		xrep_setup_nothing
- 
- #define xrep_setup_inode(sc, imap)	((void)0)
- 
-diff --git a/fs/xfs/scrub/trace.c b/fs/xfs/scrub/trace.c
-index f8f50c5a02c0..2e36fcc12e40 100644
---- a/fs/xfs/scrub/trace.c
-+++ b/fs/xfs/scrub/trace.c
-@@ -23,6 +23,7 @@
- #include "scrub/xfile.h"
- #include "scrub/xfarray.h"
- #include "scrub/iscan.h"
-+#include "scrub/orphanage.h"
- #include "scrub/nlinks.h"
- #include "scrub/fscounters.h"
- #include "scrub/xfbtree.h"
+ /* Release the orphanage. */
 diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index ae8a5852e258..116f03c2fe48 100644
+index 116f03c2fe48..b29ed4dde427 100644
 --- a/fs/xfs/scrub/trace.h
 +++ b/fs/xfs/scrub/trace.h
-@@ -2538,6 +2538,32 @@ DEFINE_XREP_PARENT_SALVAGE_CLASS(xrep_dir_salvaged_parent);
- DEFINE_XREP_PARENT_SALVAGE_CLASS(xrep_findparent_dirent);
- DEFINE_XREP_PARENT_SALVAGE_CLASS(xrep_findparent_from_dcache);
+@@ -2564,6 +2564,38 @@ TRACE_EVENT(xrep_nlinks_set_record,
+ 		  __entry->children)
+ );
  
-+TRACE_EVENT(xrep_nlinks_set_record,
-+	TP_PROTO(struct xfs_mount *mp, xfs_ino_t ino,
-+		 const struct xchk_nlink *obs),
-+	TP_ARGS(mp, ino, obs),
++DECLARE_EVENT_CLASS(xrep_dentry_class,
++	TP_PROTO(struct xfs_mount *mp, const struct dentry *dentry),
++	TP_ARGS(mp, dentry),
 +	TP_STRUCT__entry(
 +		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(xfs_nlink_t, parents)
-+		__field(xfs_nlink_t, backrefs)
-+		__field(xfs_nlink_t, children)
++		__field(unsigned int, type)
++		__field(unsigned long, ino)
++		__field(bool, positive)
++		__field(bool, has_parent)
 +	),
 +	TP_fast_assign(
 +		__entry->dev = mp->m_super->s_dev;
-+		__entry->ino = ino;
-+		__entry->parents = obs->parents;
-+		__entry->backrefs = obs->backrefs;
-+		__entry->children = obs->children;
++		__entry->type = __d_entry_type(dentry);
++		__entry->positive = d_is_positive(dentry);
++		__entry->has_parent = dentry->d_parent != NULL;
++		__entry->ino = d_inode(dentry) ? d_inode(dentry)->i_ino : 0;
 +	),
-+	TP_printk("dev %d:%d ino 0x%llx parents %u backrefs %u children %u",
++	TP_printk("dev %d:%d type 0x%x positive? %d parent? %d ino 0x%lx",
 +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->parents,
-+		  __entry->backrefs,
-+		  __entry->children)
++		  __entry->type,
++		  __entry->positive,
++		  __entry->has_parent,
++		  __entry->ino)
 +);
++#define DEFINE_REPAIR_DENTRY_EVENT(name) \
++DEFINE_EVENT(xrep_dentry_class, name, \
++	TP_PROTO(struct xfs_mount *mp, const struct dentry *dentry), \
++	TP_ARGS(mp, dentry))
++DEFINE_REPAIR_DENTRY_EVENT(xrep_orphanage_check_child);
++DEFINE_REPAIR_DENTRY_EVENT(xrep_orphanage_check_dentry);
++DEFINE_REPAIR_DENTRY_EVENT(xrep_orphanage_zap_child);
 +
  #endif /* IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR) */
  
