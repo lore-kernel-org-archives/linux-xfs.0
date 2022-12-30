@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9511C4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:59:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD89EC4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:59:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235836AbiL3X7B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 18:59:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52338 "EHLO
+        id S235841AbiL3X7Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 18:59:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52364 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235840AbiL3X7A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:59:00 -0500
+        with ESMTP id S235840AbiL3X7Q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:59:16 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50E8C16588
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 15:58:59 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3D4A16588
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 15:59:14 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DFF0061CAD
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 23:58:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 466BBC433EF;
-        Fri, 30 Dec 2022 23:58:58 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7EECD61CAB
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 23:59:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D66B2C433EF;
+        Fri, 30 Dec 2022 23:59:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672444738;
-        bh=hdEXecwgsJ4w3Q9QWwCNP45Qs4zuslK6HsZCZtBazg4=;
+        s=k20201202; t=1672444753;
+        bh=QCViV2p4egx2kGvG/E18SeW4DWwvBus9w0VDcahRZ0c=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=rUbIZGB1FK+gyyu+1wxHojJDwWE6v1fmrjANac+SlTgrGrTJiE6g2mB9aGIbD+dkM
-         gcjnp187VEt0bs8k0Gn2PJionZPX7hsH7QUeNueq5sL3OE/yWx+xMbU6nF2hHy26FY
-         lhmmHsW4qjr7USF7VicuDcz5AJxsO/jHSseAjP8vOdwjBp5p8V60aMwU/b3GgAqqqT
-         pP7G1AHzpctRjE6bnXyOdVpr2BZCFuV/ESB43n8LuCFEhm43M27FgUbK6zLFvPEKqt
-         P+Cf0tL5AZSOT4WPVMzaFUcdEw9ubgklzJAsam5MYNvd1A73wdQIt1hdMcST2IurHU
-         yiFSFP1srVr8Q==
-Subject: [PATCH 6/9] xfs: validate directory leaf buffer owners
+        b=sBoW6rbxc22cVC9sPrFF39ye33X/bBtcAjwHb60SyuvNlWA7cwsGQH9//pIz+dGl9
+         bR6ONwoYEDNzBBVlf0VZ4a7iiYgFFvjlfRg7VtpNU4cfjNSKscxp0HXjq8osjLqdLd
+         5gWHvqkEU3q8z0BlwEYKavVn62hpAC8m/xCXDQCIPSMB/+9Qu22FGJ+/cxH1jsAJLh
+         njC2227gqc/Qw+kszxRNvPsUGjw9M9kxRDZtJPsqq76JplNnUq36800paBW1LYd+28
+         lw5bV4sAk8sNsmkcT93s8CtvW0mqVJBxRElno5VlLEkJdMU01DM5XP3cfcmwwV27H1
+         cUb0QlC9jCSsw==
+Subject: [PATCH 7/9] xfs: validate explicit directory data buffer owners
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:14:09 -0800
-Message-ID: <167243844920.700244.1435356997655532082.stgit@magnolia>
+Message-ID: <167243844934.700244.14400842742894388891.stgit@magnolia>
 In-Reply-To: <167243844821.700244.10251762547708755105.stgit@magnolia>
 References: <167243844821.700244.10251762547708755105.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,234 +49,260 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Check the owner field of directory leaf blocks.
+Port the existing directory data header checking function to accept an
+owner number instead of an xfs_inode, then update the callsites to use
+xfs_da_args.owner when possible.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_da_btree.c  |   16 ++++++++++
- fs/xfs/libxfs/xfs_dir2.h      |    2 +
- fs/xfs/libxfs/xfs_dir2_leaf.c |   64 +++++++++++++++++++++++++++++++++++++----
- fs/xfs/libxfs/xfs_dir2_node.c |    3 +-
- fs/xfs/libxfs/xfs_dir2_priv.h |    4 +--
- fs/xfs/scrub/dir.c            |    2 +
- 6 files changed, 81 insertions(+), 10 deletions(-)
+ fs/xfs/libxfs/xfs_dir2.h       |    1 +
+ fs/xfs/libxfs/xfs_dir2_block.c |    3 ++-
+ fs/xfs/libxfs/xfs_dir2_data.c  |   15 +++++++++------
+ fs/xfs/libxfs/xfs_dir2_leaf.c  |   21 +++++++++++----------
+ fs/xfs/libxfs/xfs_dir2_node.c  |    7 +++----
+ fs/xfs/libxfs/xfs_dir2_priv.h  |    3 ++-
+ fs/xfs/scrub/dir.c             |   14 +++++++-------
+ fs/xfs/scrub/readdir.c         |    2 +-
+ fs/xfs/xfs_dir2_readdir.c      |    3 ++-
+ 9 files changed, 38 insertions(+), 31 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index 1b4771b0ac50..89bf350f3f1c 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -286,8 +286,12 @@ xfs_da3_header_check(
- 		return xfs_attr3_leaf_header_check(bp, owner);
- 	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
- 		return xfs_da3_node_header_check(bp, owner);
-+	case cpu_to_be16(XFS_DIR3_LEAF1_MAGIC):
-+	case cpu_to_be16(XFS_DIR3_LEAFN_MAGIC):
-+		return xfs_dir3_leaf_header_check(bp, owner);
- 	}
- 
-+	ASSERT(0);
- 	return NULL;
- }
- 
-@@ -1706,6 +1710,12 @@ xfs_da3_node_lookup_int(
- 
- 		if (magic == XFS_DIR2_LEAFN_MAGIC ||
- 		    magic == XFS_DIR3_LEAFN_MAGIC) {
-+			fa = xfs_dir3_leaf_header_check(blk->bp, args->owner);
-+			if (fa) {
-+				__xfs_buf_mark_corrupt(blk->bp, fa);
-+				xfs_da_mark_sick(args);
-+				return -EFSCORRUPTED;
-+			}
- 			blk->magic = XFS_DIR2_LEAFN_MAGIC;
- 			blk->hashval = xfs_dir2_leaf_lasthash(args->dp,
- 							      blk->bp, NULL);
-@@ -2214,6 +2224,12 @@ xfs_da3_path_shift(
- 			break;
- 		case XFS_DIR2_LEAFN_MAGIC:
- 		case XFS_DIR3_LEAFN_MAGIC:
-+			fa = xfs_dir3_leaf_header_check(blk->bp, args->owner);
-+			if (fa) {
-+				__xfs_buf_mark_corrupt(blk->bp, fa);
-+				xfs_da_mark_sick(args);
-+				return -EFSCORRUPTED;
-+			}
- 			blk->magic = XFS_DIR2_LEAFN_MAGIC;
- 			ASSERT(level == path->active-1);
- 			blk->index = 0;
 diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-index 15a36cf7ae87..b5ad503e47b3 100644
+index b5ad503e47b3..2c2564c2158d 100644
 --- a/fs/xfs/libxfs/xfs_dir2.h
 +++ b/fs/xfs/libxfs/xfs_dir2.h
-@@ -89,6 +89,8 @@ extern struct xfs_dir2_data_free *xfs_dir2_data_freefind(
- 
+@@ -90,6 +90,7 @@ extern struct xfs_dir2_data_free *xfs_dir2_data_freefind(
  extern int xfs_dir_ino_validate(struct xfs_mount *mp, xfs_ino_t ino);
  
-+xfs_failaddr_t xfs_dir3_leaf_header_check(struct xfs_buf *bp, xfs_ino_t owner);
-+
+ xfs_failaddr_t xfs_dir3_leaf_header_check(struct xfs_buf *bp, xfs_ino_t owner);
++xfs_failaddr_t xfs_dir3_data_header_check(struct xfs_buf *bp, xfs_ino_t owner);
+ 
  extern const struct xfs_buf_ops xfs_dir3_block_buf_ops;
  extern const struct xfs_buf_ops xfs_dir3_leafn_buf_ops;
- extern const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops;
-diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-index 20ce057d12e8..16a581e225a3 100644
---- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-@@ -208,6 +208,28 @@ xfs_dir3_leaf_verify(
- 	return xfs_dir3_leaf_check_int(mp, &leafhdr, bp->b_addr, true);
- }
+diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+index 6bda6a490671..184341bb1f6a 100644
+--- a/fs/xfs/libxfs/xfs_dir2_block.c
++++ b/fs/xfs/libxfs/xfs_dir2_block.c
+@@ -982,7 +982,8 @@ xfs_dir2_leaf_to_block(
+ 	 * Read the data block if we don't already have it, give up if it fails.
+ 	 */
+ 	if (!dbp) {
+-		error = xfs_dir3_data_read(tp, dp, args->geo->datablk, 0, &dbp);
++		error = xfs_dir3_data_read(tp, dp, args->owner,
++				args->geo->datablk, 0, &dbp);
+ 		if (error)
+ 			return error;
+ 	}
+diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
+index c3ef720b5ff6..00c2061aed34 100644
+--- a/fs/xfs/libxfs/xfs_dir2_data.c
++++ b/fs/xfs/libxfs/xfs_dir2_data.c
+@@ -395,17 +395,19 @@ static const struct xfs_buf_ops xfs_dir3_data_reada_buf_ops = {
+ 	.verify_write = xfs_dir3_data_write_verify,
+ };
  
+-static xfs_failaddr_t
 +xfs_failaddr_t
-+xfs_dir3_leaf_header_check(
+ xfs_dir3_data_header_check(
+-	struct xfs_inode	*dp,
+-	struct xfs_buf		*bp)
 +	struct xfs_buf		*bp,
 +	xfs_ino_t		owner)
-+{
+ {
+-	struct xfs_mount	*mp = dp->i_mount;
 +	struct xfs_mount	*mp = bp->b_mount;
+ 
+ 	if (xfs_has_crc(mp)) {
+ 		struct xfs_dir3_data_hdr *hdr3 = bp->b_addr;
+ 
+-		if (be64_to_cpu(hdr3->hdr.owner) != dp->i_ino)
++		ASSERT(hdr3->hdr.magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC));
 +
-+	if (xfs_has_crc(mp)) {
-+		struct xfs_dir3_leaf *hdr3 = bp->b_addr;
-+
-+		ASSERT(hdr3->hdr.info.hdr.magic ==
-+					cpu_to_be16(XFS_DIR3_LEAF1_MAGIC) ||
-+		       hdr3->hdr.info.hdr.magic ==
-+					cpu_to_be16(XFS_DIR3_LEAFN_MAGIC));
-+
-+		if (be64_to_cpu(hdr3->hdr.info.owner) != owner)
-+			return __this_address;
-+	}
-+
-+	return NULL;
-+}
-+
- static void
- xfs_dir3_leaf_read_verify(
- 	struct xfs_buf  *bp)
-@@ -271,32 +293,60 @@ int
- xfs_dir3_leaf_read(
++		if (be64_to_cpu(hdr3->hdr.owner) != owner)
+ 			return __this_address;
+ 	}
+ 
+@@ -416,6 +418,7 @@ int
+ xfs_dir3_data_read(
  	struct xfs_trans	*tp,
  	struct xfs_inode	*dp,
 +	xfs_ino_t		owner,
- 	xfs_dablk_t		fbno,
+ 	xfs_dablk_t		bno,
+ 	unsigned int		flags,
  	struct xfs_buf		**bpp)
- {
-+	xfs_failaddr_t		fa;
- 	int			err;
+@@ -429,7 +432,7 @@ xfs_dir3_data_read(
+ 		return err;
  
- 	err = xfs_da_read_buf(tp, dp, fbno, 0, bpp, XFS_DATA_FORK,
- 			&xfs_dir3_leaf1_buf_ops);
--	if (!err && tp && *bpp)
-+	if (err || !(*bpp))
-+		return err;
-+
-+	fa = xfs_dir3_leaf_header_check(*bpp, owner);
-+	if (fa) {
-+		__xfs_buf_mark_corrupt(*bpp, fa);
-+		xfs_trans_brelse(tp, *bpp);
-+		*bpp = NULL;
-+		xfs_dirattr_mark_sick(dp, XFS_DATA_FORK);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	if (tp)
- 		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_LEAF1_BUF);
--	return err;
-+	return 0;
- }
- 
- int
- xfs_dir3_leafn_read(
- 	struct xfs_trans	*tp,
- 	struct xfs_inode	*dp,
-+	xfs_ino_t		owner,
- 	xfs_dablk_t		fbno,
- 	struct xfs_buf		**bpp)
- {
-+	xfs_failaddr_t		fa;
- 	int			err;
- 
- 	err = xfs_da_read_buf(tp, dp, fbno, 0, bpp, XFS_DATA_FORK,
- 			&xfs_dir3_leafn_buf_ops);
--	if (!err && tp && *bpp)
-+	if (err || !(*bpp))
-+		return err;
-+
-+	fa = xfs_dir3_leaf_header_check(*bpp, owner);
-+	if (fa) {
-+		__xfs_buf_mark_corrupt(*bpp, fa);
-+		xfs_trans_brelse(tp, *bpp);
-+		*bpp = NULL;
-+		xfs_dirattr_mark_sick(dp, XFS_DATA_FORK);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	if (tp)
- 		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_LEAFN_BUF);
--	return err;
-+	return 0;
- }
- 
- /*
-@@ -646,7 +696,8 @@ xfs_dir2_leaf_addname(
- 
- 	trace_xfs_dir2_leaf_addname(args);
- 
--	error = xfs_dir3_leaf_read(tp, dp, args->geo->leafblk, &lbp);
-+	error = xfs_dir3_leaf_read(tp, dp, args->owner, args->geo->leafblk,
-+			&lbp);
- 	if (error)
- 		return error;
- 
-@@ -1237,7 +1288,8 @@ xfs_dir2_leaf_lookup_int(
- 	tp = args->trans;
- 	mp = dp->i_mount;
- 
--	error = xfs_dir3_leaf_read(tp, dp, args->geo->leafblk, &lbp);
-+	error = xfs_dir3_leaf_read(tp, dp, args->owner, args->geo->leafblk,
-+			&lbp);
+ 	/* Check things that we can't do in the verifier. */
+-	fa = xfs_dir3_data_header_check(dp, *bpp);
++	fa = xfs_dir3_data_header_check(*bpp, owner);
+ 	if (fa) {
+ 		__xfs_buf_mark_corrupt(*bpp, fa);
+ 		xfs_trans_brelse(tp, *bpp);
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index 16a581e225a3..a6eee2604487 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -884,9 +884,9 @@ xfs_dir2_leaf_addname(
+ 		 * Already had space in some data block.
+ 		 * Just read that one in.
+ 		 */
+-		error = xfs_dir3_data_read(tp, dp,
+-				   xfs_dir2_db_to_da(args->geo, use_block),
+-				   0, &dbp);
++		error = xfs_dir3_data_read(tp, dp, args->owner,
++				xfs_dir2_db_to_da(args->geo, use_block), 0,
++				&dbp);
+ 		if (error) {
+ 			xfs_trans_brelse(tp, lbp);
+ 			return error;
+@@ -1327,9 +1327,9 @@ xfs_dir2_leaf_lookup_int(
+ 		if (newdb != curdb) {
+ 			if (dbp)
+ 				xfs_trans_brelse(tp, dbp);
+-			error = xfs_dir3_data_read(tp, dp,
+-					   xfs_dir2_db_to_da(args->geo, newdb),
+-					   0, &dbp);
++			error = xfs_dir3_data_read(tp, dp, args->owner,
++					xfs_dir2_db_to_da(args->geo, newdb), 0,
++					&dbp);
+ 			if (error) {
+ 				xfs_trans_brelse(tp, lbp);
+ 				return error;
+@@ -1369,9 +1369,9 @@ xfs_dir2_leaf_lookup_int(
+ 		ASSERT(cidb != -1);
+ 		if (cidb != curdb) {
+ 			xfs_trans_brelse(tp, dbp);
+-			error = xfs_dir3_data_read(tp, dp,
+-					   xfs_dir2_db_to_da(args->geo, cidb),
+-					   0, &dbp);
++			error = xfs_dir3_data_read(tp, dp, args->owner,
++					xfs_dir2_db_to_da(args->geo, cidb), 0,
++					&dbp);
+ 			if (error) {
+ 				xfs_trans_brelse(tp, lbp);
+ 				return error;
+@@ -1665,7 +1665,8 @@ xfs_dir2_leaf_trim_data(
+ 	/*
+ 	 * Read the offending data block.  We need its buffer.
+ 	 */
+-	error = xfs_dir3_data_read(tp, dp, xfs_dir2_db_to_da(geo, db), 0, &dbp);
++	error = xfs_dir3_data_read(tp, dp, args->owner,
++			xfs_dir2_db_to_da(geo, db), 0, &dbp);
  	if (error)
  		return error;
  
 diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index 1ad7405f9c38..e21965788188 100644
+index e21965788188..dc85197b8448 100644
 --- a/fs/xfs/libxfs/xfs_dir2_node.c
 +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -1562,7 +1562,8 @@ xfs_dir2_leafn_toosmall(
- 		/*
- 		 * Read the sibling leaf block.
- 		 */
--		error = xfs_dir3_leafn_read(state->args->trans, dp, blkno, &bp);
-+		error = xfs_dir3_leafn_read(state->args->trans, dp,
-+				state->args->owner, blkno, &bp);
- 		if (error)
- 			return error;
- 
+@@ -863,7 +863,7 @@ xfs_dir2_leafn_lookup_for_entry(
+ 				ASSERT(state->extravalid);
+ 				curbp = state->extrablk.bp;
+ 			} else {
+-				error = xfs_dir3_data_read(tp, dp,
++				error = xfs_dir3_data_read(tp, dp, args->owner,
+ 						xfs_dir2_db_to_da(args->geo,
+ 								  newdb),
+ 						0, &curbp);
+@@ -1949,9 +1949,8 @@ xfs_dir2_node_addname_int(
+ 						  &freehdr, &findex);
+ 	} else {
+ 		/* Read the data block in. */
+-		error = xfs_dir3_data_read(tp, dp,
+-					   xfs_dir2_db_to_da(args->geo, dbno),
+-					   0, &dbp);
++		error = xfs_dir3_data_read(tp, dp, args->owner,
++				xfs_dir2_db_to_da(args->geo, dbno), 0, &dbp);
+ 	}
+ 	if (error)
+ 		return error;
 diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
-index b10859a43776..8a7b5f030a6c 100644
+index 8a7b5f030a6c..22267a6e651a 100644
 --- a/fs/xfs/libxfs/xfs_dir2_priv.h
 +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
-@@ -95,9 +95,9 @@ void xfs_dir2_leaf_hdr_from_disk(struct xfs_mount *mp,
- void xfs_dir2_leaf_hdr_to_disk(struct xfs_mount *mp, struct xfs_dir2_leaf *to,
- 		struct xfs_dir3_icleaf_hdr *from);
- int xfs_dir3_leaf_read(struct xfs_trans *tp, struct xfs_inode *dp,
--		xfs_dablk_t fbno, struct xfs_buf **bpp);
-+		xfs_ino_t owner, xfs_dablk_t fbno, struct xfs_buf **bpp);
- int xfs_dir3_leafn_read(struct xfs_trans *tp, struct xfs_inode *dp,
--		xfs_dablk_t fbno, struct xfs_buf **bpp);
-+		xfs_ino_t owner, xfs_dablk_t fbno, struct xfs_buf **bpp);
- extern int xfs_dir2_block_to_leaf(struct xfs_da_args *args,
- 		struct xfs_buf *dbp);
- extern int xfs_dir2_leaf_addname(struct xfs_da_args *args);
+@@ -78,7 +78,8 @@ extern void xfs_dir3_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
+ extern xfs_failaddr_t __xfs_dir3_data_check(struct xfs_inode *dp,
+ 		struct xfs_buf *bp);
+ int xfs_dir3_data_read(struct xfs_trans *tp, struct xfs_inode *dp,
+-		xfs_dablk_t bno, unsigned int flags, struct xfs_buf **bpp);
++		xfs_ino_t owner, xfs_dablk_t bno, unsigned int flags,
++		struct xfs_buf **bpp);
+ int xfs_dir3_data_readahead(struct xfs_inode *dp, xfs_dablk_t bno,
+ 		unsigned int flags);
+ 
 diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-index 8b4e58416327..81348bea8add 100644
+index 81348bea8add..01b00edfeb6d 100644
 --- a/fs/xfs/scrub/dir.c
 +++ b/fs/xfs/scrub/dir.c
-@@ -463,7 +463,7 @@ xchk_directory_leaf1_bestfree(
- 	int				error;
- 
- 	/* Read the free space block. */
--	error = xfs_dir3_leaf_read(sc->tp, sc->ip, lblk, &bp);
-+	error = xfs_dir3_leaf_read(sc->tp, sc->ip, sc->ip->i_ino, lblk, &bp);
+@@ -193,8 +193,8 @@ xchk_dir_rec(
+ 		xchk_da_set_corrupt(ds, level);
+ 		goto out;
+ 	}
+-	error = xfs_dir3_data_read(ds->dargs.trans, dp, rec_bno,
+-			XFS_DABUF_MAP_HOLE_OK, &bp);
++	error = xfs_dir3_data_read(ds->dargs.trans, dp, ds->dargs.owner,
++			rec_bno, XFS_DABUF_MAP_HOLE_OK, &bp);
+ 	if (!xchk_fblock_process_error(ds->sc, XFS_DATA_FORK, rec_bno,
+ 			&error))
+ 		goto out;
+@@ -311,7 +311,8 @@ xchk_directory_data_bestfree(
+ 		error = xfs_dir3_block_read(sc->tp, sc->ip, &bp);
+ 	} else {
+ 		/* dir data format */
+-		error = xfs_dir3_data_read(sc->tp, sc->ip, lblk, 0, &bp);
++		error = xfs_dir3_data_read(sc->tp, sc->ip, sc->ip->i_ino, lblk,
++				0, &bp);
+ 	}
  	if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, lblk, &error))
- 		return error;
- 	xchk_buffer_recheck(sc, bp);
+ 		goto out;
+@@ -524,10 +525,9 @@ xchk_directory_leaf1_bestfree(
+ 	/* Check all the bestfree entries. */
+ 	for (i = 0; i < bestcount; i++, bestp++) {
+ 		best = be16_to_cpu(*bestp);
+-		error = xfs_dir3_data_read(sc->tp, sc->ip,
++		error = xfs_dir3_data_read(sc->tp, sc->ip, args->owner,
+ 				xfs_dir2_db_to_da(args->geo, i),
+-				XFS_DABUF_MAP_HOLE_OK,
+-				&dbp);
++				XFS_DABUF_MAP_HOLE_OK, &dbp);
+ 		if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, lblk,
+ 				&error))
+ 			break;
+@@ -590,7 +590,7 @@ xchk_directory_free_bestfree(
+ 			stale++;
+ 			continue;
+ 		}
+-		error = xfs_dir3_data_read(sc->tp, sc->ip,
++		error = xfs_dir3_data_read(sc->tp, sc->ip, args->owner,
+ 				(freehdr.firstdb + i) * args->geo->fsbcount,
+ 				0, &dbp);
+ 		if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, lblk,
+diff --git a/fs/xfs/scrub/readdir.c b/fs/xfs/scrub/readdir.c
+index 59a658362b2b..b385325707e0 100644
+--- a/fs/xfs/scrub/readdir.c
++++ b/fs/xfs/scrub/readdir.c
+@@ -177,7 +177,7 @@ xchk_read_leaf_dir_buf(
+ 	if (new_off > *curoff)
+ 		*curoff = new_off;
+ 
+-	return xfs_dir3_data_read(tp, dp, map.br_startoff, 0, bpp);
++	return xfs_dir3_data_read(tp, dp, dp->i_ino, map.br_startoff, 0, bpp);
+ }
+ 
+ /* Call a function for every entry in a leaf directory. */
+diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+index fc2524b8f1f1..37a521f47f20 100644
+--- a/fs/xfs/xfs_dir2_readdir.c
++++ b/fs/xfs/xfs_dir2_readdir.c
+@@ -284,7 +284,8 @@ xfs_dir2_leaf_readbuf(
+ 	new_off = xfs_dir2_da_to_byte(geo, map.br_startoff);
+ 	if (new_off > *cur_off)
+ 		*cur_off = new_off;
+-	error = xfs_dir3_data_read(args->trans, dp, map.br_startoff, 0, &bp);
++	error = xfs_dir3_data_read(args->trans, dp, args->owner,
++			map.br_startoff, 0, &bp);
+ 	if (error)
+ 		goto out;
+ 
 
