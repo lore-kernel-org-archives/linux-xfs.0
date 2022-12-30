@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94D63C3DA7D
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:52:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6967CC3DA7C
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:53:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235649AbiL3Xwu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 18:52:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49296 "EHLO
+        id S235781AbiL3XxF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 18:53:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235424AbiL3Xwr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:52:47 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFDC51DF3A;
-        Fri, 30 Dec 2022 15:52:45 -0800 (PST)
+        with ESMTP id S235783AbiL3XxE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:53:04 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38F4D1E3E2;
+        Fri, 30 Dec 2022 15:53:03 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8CA0861C43;
-        Fri, 30 Dec 2022 23:52:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2FC7C433EF;
-        Fri, 30 Dec 2022 23:52:44 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id D2649B80883;
+        Fri, 30 Dec 2022 23:53:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F9E1C433EF;
+        Fri, 30 Dec 2022 23:53:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672444365;
-        bh=2oh73mlzD1sPSN+bFzwE2eyzq1B6W0++rBwka2oIIUw=;
+        s=k20201202; t=1672444380;
+        bh=6jDbZQzQFUtiKixlRWE6RAZepECmkaHvKDIqDs7AvPc=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=iCpejZzscE79nVD1hBchW/BRPpS+L35hpusBRVYMwIINA3/RXBNTnnCuR8poWSWbz
-         v3lRmxfA6LoXRqTbZWZr21K37u4vNncKSBxZjGA8+ELQo2djD3qdjrVp/I5m2BnmJR
-         ZmICPqXdt0whrCWvaPZLNNyXNnfQzt7dCTKid2QzfFtKPFcetUY+pzu0pUuGkwHddO
-         EO82wDReMZHfzLHcwYmqNhRTl0bL25+AeRC43DRm+qaCft+wipJRrnUx+P6EcgOt8r
-         9XiuvZhSK+qZMBN5ecSrmAIrqjGSF6WTnQk0dvsDSB7rBS7hC7bRVWHf6o1lzjrGXP
-         i3X2miviI5sNw==
-Subject: [PATCH 10/21] xfs: add error injection to test swapext recovery
+        b=YgGHsEf9Q5wDgVCzgcAYAdDIj4oRrnmG41tG+p1YQV1MnxMvuBKl+UDzrbpeZ6tWv
+         SS9nWTqKuSU8+jKuOshF/95S54PVT7nkTe3JfMD7ONB2gbzXBfR0zLvfE6xFjBKm2o
+         OmBvgyL/wuJnRSRB2gNWSerbF/G6US3PxGQR1CEVt9DE5bJgR0kXHrE6+FurLp2lOL
+         GgwDTtgBwwWfMJ4Ys3xENvl6+eruEAd6ZvtiCSvi2mh1A22jwcauKxq8kDQDT0hIOm
+         +qWcell0ca8QmYHeIsn5ymyxDiFTycEs2gQ3iK44VVxpGIRxbrhuNaiMzdfIrDO20N
+         CxE1JbFfUiL+g==
+Subject: [PATCH 11/21] xfs: port xfs_swap_extents_rmap to our new code
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-api@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:13:56 -0800
-Message-ID: <167243843669.699466.12618888634612571770.stgit@magnolia>
+Message-ID: <167243843684.699466.18215544953813368074.stgit@magnolia>
 In-Reply-To: <167243843494.699466.5163281976943635014.stgit@magnolia>
 References: <167243843494.699466.5163281976943635014.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,77 +50,209 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add an errortag so that we can test recovery of swapext log items.
+The inner loop of xfs_swap_extents_rmap does the same work as
+xfs_swapext_finish_one, so adapt it to use that.  Doing so has the side
+benefit that the older code path no longer wastes its time remapping
+shared extents.
+
+This forms the basis of the non-atomic swaprange implementation.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_errortag.h |    4 +++-
- fs/xfs/libxfs/xfs_swapext.c  |    3 +++
- fs/xfs/xfs_error.c           |    3 +++
- 3 files changed, 9 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_bmap_util.c |  151 +++++-------------------------------------------
+ fs/xfs/xfs_trace.h     |    5 --
+ 2 files changed, 16 insertions(+), 140 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-index 01a9e86b3037..263d62a8d70f 100644
---- a/fs/xfs/libxfs/xfs_errortag.h
-+++ b/fs/xfs/libxfs/xfs_errortag.h
-@@ -63,7 +63,8 @@
- #define XFS_ERRTAG_ATTR_LEAF_TO_NODE			41
- #define XFS_ERRTAG_WB_DELAY_MS				42
- #define XFS_ERRTAG_WRITE_DELAY_MS			43
--#define XFS_ERRTAG_MAX					44
-+#define XFS_ERRTAG_SWAPEXT_FINISH_ONE			44
-+#define XFS_ERRTAG_MAX					45
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index d587015aec0e..4d4696bf9b08 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1360,138 +1360,6 @@ xfs_swap_extent_flush(
+ 	return 0;
+ }
  
- /*
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-@@ -111,5 +112,6 @@
- #define XFS_RANDOM_ATTR_LEAF_TO_NODE			1
- #define XFS_RANDOM_WB_DELAY_MS				3000
- #define XFS_RANDOM_WRITE_DELAY_MS			3000
-+#define XFS_RANDOM_SWAPEXT_FINISH_ONE			1
+-/*
+- * Move extents from one file to another, when rmap is enabled.
+- */
+-STATIC int
+-xfs_swap_extent_rmap(
+-	struct xfs_trans		**tpp,
+-	struct xfs_inode		*ip,
+-	struct xfs_inode		*tip)
+-{
+-	struct xfs_trans		*tp = *tpp;
+-	struct xfs_bmbt_irec		irec;
+-	struct xfs_bmbt_irec		uirec;
+-	struct xfs_bmbt_irec		tirec;
+-	xfs_fileoff_t			offset_fsb;
+-	xfs_fileoff_t			end_fsb;
+-	xfs_filblks_t			count_fsb;
+-	int				error;
+-	xfs_filblks_t			ilen;
+-	xfs_filblks_t			rlen;
+-	int				nimaps;
+-	uint64_t			tip_flags2;
+-
+-	/*
+-	 * If the source file has shared blocks, we must flag the donor
+-	 * file as having shared blocks so that we get the shared-block
+-	 * rmap functions when we go to fix up the rmaps.  The flags
+-	 * will be switch for reals later.
+-	 */
+-	tip_flags2 = tip->i_diflags2;
+-	if (ip->i_diflags2 & XFS_DIFLAG2_REFLINK)
+-		tip->i_diflags2 |= XFS_DIFLAG2_REFLINK;
+-
+-	offset_fsb = 0;
+-	end_fsb = XFS_B_TO_FSB(ip->i_mount, i_size_read(VFS_I(ip)));
+-	count_fsb = (xfs_filblks_t)(end_fsb - offset_fsb);
+-
+-	while (count_fsb) {
+-		/* Read extent from the donor file */
+-		nimaps = 1;
+-		error = xfs_bmapi_read(tip, offset_fsb, count_fsb, &tirec,
+-				&nimaps, 0);
+-		if (error)
+-			goto out;
+-		ASSERT(nimaps == 1);
+-		ASSERT(tirec.br_startblock != DELAYSTARTBLOCK);
+-
+-		trace_xfs_swap_extent_rmap_remap(tip, &tirec);
+-		ilen = tirec.br_blockcount;
+-
+-		/* Unmap the old blocks in the source file. */
+-		while (tirec.br_blockcount) {
+-			ASSERT(tp->t_firstblock == NULLFSBLOCK);
+-			trace_xfs_swap_extent_rmap_remap_piece(tip, &tirec);
+-
+-			/* Read extent from the source file */
+-			nimaps = 1;
+-			error = xfs_bmapi_read(ip, tirec.br_startoff,
+-					tirec.br_blockcount, &irec,
+-					&nimaps, 0);
+-			if (error)
+-				goto out;
+-			ASSERT(nimaps == 1);
+-			ASSERT(tirec.br_startoff == irec.br_startoff);
+-			trace_xfs_swap_extent_rmap_remap_piece(ip, &irec);
+-
+-			/* Trim the extent. */
+-			uirec = tirec;
+-			uirec.br_blockcount = rlen = min_t(xfs_filblks_t,
+-					tirec.br_blockcount,
+-					irec.br_blockcount);
+-			trace_xfs_swap_extent_rmap_remap_piece(tip, &uirec);
+-
+-			if (xfs_bmap_is_real_extent(&uirec)) {
+-				error = xfs_iext_count_may_overflow(ip,
+-						XFS_DATA_FORK,
+-						XFS_IEXT_SWAP_RMAP_CNT);
+-				if (error == -EFBIG)
+-					error = xfs_iext_count_upgrade(tp, ip,
+-							XFS_IEXT_SWAP_RMAP_CNT);
+-				if (error)
+-					goto out;
+-			}
+-
+-			if (xfs_bmap_is_real_extent(&irec)) {
+-				error = xfs_iext_count_may_overflow(tip,
+-						XFS_DATA_FORK,
+-						XFS_IEXT_SWAP_RMAP_CNT);
+-				if (error == -EFBIG)
+-					error = xfs_iext_count_upgrade(tp, ip,
+-							XFS_IEXT_SWAP_RMAP_CNT);
+-				if (error)
+-					goto out;
+-			}
+-
+-			/* Remove the mapping from the donor file. */
+-			xfs_bmap_unmap_extent(tp, tip, XFS_DATA_FORK, &uirec);
+-
+-			/* Remove the mapping from the source file. */
+-			xfs_bmap_unmap_extent(tp, ip, XFS_DATA_FORK, &irec);
+-
+-			/* Map the donor file's blocks into the source file. */
+-			xfs_bmap_map_extent(tp, ip, XFS_DATA_FORK, &uirec);
+-
+-			/* Map the source file's blocks into the donor file. */
+-			xfs_bmap_map_extent(tp, tip, XFS_DATA_FORK, &irec);
+-
+-			error = xfs_defer_finish(tpp);
+-			tp = *tpp;
+-			if (error)
+-				goto out;
+-
+-			tirec.br_startoff += rlen;
+-			if (tirec.br_startblock != HOLESTARTBLOCK &&
+-			    tirec.br_startblock != DELAYSTARTBLOCK)
+-				tirec.br_startblock += rlen;
+-			tirec.br_blockcount -= rlen;
+-		}
+-
+-		/* Roll on... */
+-		count_fsb -= ilen;
+-		offset_fsb += ilen;
+-	}
+-
+-	tip->i_diflags2 = tip_flags2;
+-	return 0;
+-
+-out:
+-	trace_xfs_swap_extent_rmap_error(ip, error, _RET_IP_);
+-	tip->i_diflags2 = tip_flags2;
+-	return error;
+-}
+-
+ /* Swap the extents of two files by swapping data forks. */
+ STATIC int
+ xfs_swap_extent_forks(
+@@ -1775,13 +1643,24 @@ xfs_swap_extents(
+ 	src_log_flags = XFS_ILOG_CORE;
+ 	target_log_flags = XFS_ILOG_CORE;
  
- #endif /* __XFS_ERRORTAG_H_ */
-diff --git a/fs/xfs/libxfs/xfs_swapext.c b/fs/xfs/libxfs/xfs_swapext.c
-index 0bc758c5cf5c..227a08ac5d4b 100644
---- a/fs/xfs/libxfs/xfs_swapext.c
-+++ b/fs/xfs/libxfs/xfs_swapext.c
-@@ -426,6 +426,9 @@ xfs_swapext_finish_one(
- 			return error;
- 	}
- 
-+	if (XFS_TEST_ERROR(false, tp->t_mountp, XFS_ERRTAG_SWAPEXT_FINISH_ONE))
-+		return -EIO;
+-	if (xfs_has_rmapbt(mp))
+-		error = xfs_swap_extent_rmap(&tp, ip, tip);
+-	else
++	if (xfs_has_rmapbt(mp)) {
++		struct xfs_swapext_req	req = {
++			.ip1		= tip,
++			.ip2		= ip,
++			.whichfork	= XFS_DATA_FORK,
++			.blockcount	= XFS_B_TO_FSB(ip->i_mount,
++						       i_size_read(VFS_I(ip))),
++		};
 +
- 	/* If we still have work to do, ask for a new transaction. */
- 	if (sxi_has_more_swap_work(sxi) || sxi_has_postop_work(sxi)) {
- 		trace_xfs_swapext_defer(tp->t_mountp, sxi);
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index ae082808cfed..4b57a809ced5 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -62,6 +62,7 @@ static unsigned int xfs_errortag_random_default[] = {
- 	XFS_RANDOM_ATTR_LEAF_TO_NODE,
- 	XFS_RANDOM_WB_DELAY_MS,
- 	XFS_RANDOM_WRITE_DELAY_MS,
-+	XFS_RANDOM_SWAPEXT_FINISH_ONE,
- };
++		xfs_swapext(tp, &req);
++		error = xfs_defer_finish(&tp);
++	} else
+ 		error = xfs_swap_extent_forks(tp, ip, tip, &src_log_flags,
+ 				&target_log_flags);
+-	if (error)
++	if (error) {
++		trace_xfs_swap_extent_error(ip, error, _THIS_IP_);
+ 		goto out_trans_cancel;
++	}
  
- struct xfs_errortag_attr {
-@@ -179,6 +180,7 @@ XFS_ERRORTAG_ATTR_RW(da_leaf_split,	XFS_ERRTAG_DA_LEAF_SPLIT);
- XFS_ERRORTAG_ATTR_RW(attr_leaf_to_node,	XFS_ERRTAG_ATTR_LEAF_TO_NODE);
- XFS_ERRORTAG_ATTR_RW(wb_delay_ms,	XFS_ERRTAG_WB_DELAY_MS);
- XFS_ERRORTAG_ATTR_RW(write_delay_ms,	XFS_ERRTAG_WRITE_DELAY_MS);
-+XFS_ERRORTAG_ATTR_RW(swapext_finish_one, XFS_ERRTAG_SWAPEXT_FINISH_ONE);
+ 	/* Do we have to swap reflink flags? */
+ 	if ((ip->i_diflags2 & XFS_DIFLAG2_REFLINK) ^
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 6841f04ee38d..b0ced76af3b9 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3759,13 +3759,10 @@ DEFINE_INODE_ERROR_EVENT(xfs_reflink_end_cow_error);
  
- static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(noerror),
-@@ -224,6 +226,7 @@ static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(attr_leaf_to_node),
- 	XFS_ERRORTAG_ATTR_LIST(wb_delay_ms),
- 	XFS_ERRORTAG_ATTR_LIST(write_delay_ms),
-+	XFS_ERRORTAG_ATTR_LIST(swapext_finish_one),
- 	NULL,
- };
- ATTRIBUTE_GROUPS(xfs_errortag);
+ DEFINE_INODE_IREC_EVENT(xfs_reflink_cancel_cow);
+ 
+-/* rmap swapext tracepoints */
+-DEFINE_INODE_IREC_EVENT(xfs_swap_extent_rmap_remap);
+-DEFINE_INODE_IREC_EVENT(xfs_swap_extent_rmap_remap_piece);
+-DEFINE_INODE_ERROR_EVENT(xfs_swap_extent_rmap_error);
+ 
+ /* swapext tracepoints */
+ DEFINE_INODE_ERROR_EVENT(xfs_file_xchg_range_error);
++DEFINE_INODE_ERROR_EVENT(xfs_swap_extent_error);
+ DEFINE_INODE_IREC_EVENT(xfs_swapext_extent1);
+ DEFINE_INODE_IREC_EVENT(xfs_swapext_extent2);
+ DEFINE_ITRUNC_EVENT(xfs_swapext_update_inode_size);
 
