@@ -2,43 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4AB5C4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:06:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BE7CC4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:06:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235435AbiLaAGT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 19:06:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53632 "EHLO
+        id S235717AbiLaAGd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 19:06:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53652 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235850AbiLaAGS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:06:18 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C98441E3C3
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 16:06:16 -0800 (PST)
+        with ESMTP id S235621AbiLaAGc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:06:32 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 503E71B1D4
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 16:06:32 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 86CFDB81DEC
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 00:06:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 458B9C433EF;
-        Sat, 31 Dec 2022 00:06:14 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 0CBD6B81DEC
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 00:06:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C21E6C433EF;
+        Sat, 31 Dec 2022 00:06:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672445174;
-        bh=fAX0EHj69GwzC89bFxzPUE6s00AP9GzBs2oKwH2gbik=;
+        s=k20201202; t=1672445189;
+        bh=NTBaJAE/DOH61sX9qllU7ErApPpj3Y9xTzqaF5QenSI=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=qsVGXDacY4arvQYqh9Y6Nighky1xpm/4c9vFo5Ypp4jBHd1+wZxtrLH0fHlZRJWUt
-         91UHB2IlOyRRWCMPutAfJFWj9qDAiExv7HFRUHQluN9LuCAq7OGLO+OZtcYJpepsKS
-         l9lIE5rx3nWkFwhpuDo+Kh17wG8ka/Fs7+YgubtKviPH9E3LZ3kdYalWxw4v6HFt5g
-         hAXU0Oa07bFXO1GhmrLkP7q62IxzfcA67cn0yLvnwAUNgiJOdPkkLsbawpZlOy2Zpm
-         WTjdBMyCkDlZGavRbu+oxRBU7F0OUdnRWcsmv/O8Rfpis1d+ZB7Q0g+za+6mrIe1nM
-         BKclLdGCpKA1A==
-Subject: [PATCH 5/5] xfs_repair: bulk load records into new btree blocks
+        b=sulNfqEJJap8Yfkt05ljU9uIRayGkLYd/GYYSVSt9UnPizwZsJGcq5e3LFnA/nQwL
+         RvvLneArc8UxgjJc9+626Z57zT0akUhCcfepes1aaKcmmFeh0EjX0ijBwD9gFdtvb/
+         0LSqRXnxw5pUYgc/GA+UuOLro76C9UkJXsMNVn71OLv0JTzhepDWWJzNb7AnWgNDql
+         TF8ftBIZghdzeIczkbdp+i7gFjOWzuPisrTNeGauu67ywwCwY9D6ArmF6Jkk7V4aWS
+         Df67mo4XUtFXaRIylFRgMjzAraIy40X61icTTxinzLkQUxUGrorMNaa8xGYybmZ9PW
+         Ch3ZVdD0zjBWg==
+Subject: [PATCH 1/3] xfs: allow userspace to rebuild metadata structures
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     cem@kernel.org, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 30 Dec 2022 14:17:19 -0800
-Message-ID: <167243863970.707598.5919935346304694103.stgit@magnolia>
-In-Reply-To: <167243863904.707598.12385476439101029022.stgit@magnolia>
-References: <167243863904.707598.12385476439101029022.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:17:22 -0800
+Message-ID: <167243864265.707991.3461580373977289965.stgit@magnolia>
+In-Reply-To: <167243864252.707991.14471233385651088983.stgit@magnolia>
+References: <167243864252.707991.14471233385651088983.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,221 +49,49 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Amortize the cost of indirect calls further by loading a batch of
-records into a new btree block instead of one record per ->get_record
-call.  On a rmap btree with 3.9 million records, this reduces the
-runtime of xfs_btree_bload by 3% for xfsprogs.  For the upcoming online
-repair functionality, this will reduce runtime by 6% when spectre
-mitigations are enabled in the kernel.
+Add a new (superuser-only) flag to the online metadata repair ioctl to
+force it to rebuild structures, even if they're not broken.  We will use
+this to move metadata structures out of the way during a free space
+defragmentation operation.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/agbtree.c |  161 ++++++++++++++++++++++++++++++------------------------
- 1 file changed, 90 insertions(+), 71 deletions(-)
+ libxfs/xfs_fs.h                     |    6 +++++-
+ man/man2/ioctl_xfs_scrub_metadata.2 |    5 +++++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
 
-diff --git a/repair/agbtree.c b/repair/agbtree.c
-index 70ad042f832..cba67c5fbf4 100644
---- a/repair/agbtree.c
-+++ b/repair/agbtree.c
-@@ -220,15 +220,19 @@ get_bnobt_records(
- 	struct bt_rebuild		*btr = priv;
- 	struct xfs_alloc_rec_incore	*arec = &cur->bc_rec.a;
- 	union xfs_btree_rec		*block_rec;
-+	unsigned int			loaded;
+diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+index 1cfd5bc6520..920fd4513fc 100644
+--- a/libxfs/xfs_fs.h
++++ b/libxfs/xfs_fs.h
+@@ -741,7 +741,11 @@ struct xfs_scrub_metadata {
+  */
+ #define XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED (1u << 7)
  
--	btr->bno_rec = get_bno_rec(cur, btr->bno_rec);
--	arec->ar_startblock = btr->bno_rec->ex_startblock;
--	arec->ar_blockcount = btr->bno_rec->ex_blockcount;
--	btr->freeblks += btr->bno_rec->ex_blockcount;
-+	for (loaded = 0; loaded < nr_wanted; loaded++, idx++) {
-+		btr->bno_rec = get_bno_rec(cur, btr->bno_rec);
-+		arec->ar_startblock = btr->bno_rec->ex_startblock;
-+		arec->ar_blockcount = btr->bno_rec->ex_blockcount;
-+		btr->freeblks += btr->bno_rec->ex_blockcount;
- 
--	block_rec = libxfs_btree_rec_addr(cur, idx, block);
--	cur->bc_ops->init_rec_from_cur(cur, block_rec);
--	return 1;
-+		block_rec = libxfs_btree_rec_addr(cur, idx, block);
-+		cur->bc_ops->init_rec_from_cur(cur, block_rec);
-+	}
+-#define XFS_SCRUB_FLAGS_IN	(XFS_SCRUB_IFLAG_REPAIR)
++/* i: Rebuild the data structure. */
++#define XFS_SCRUB_IFLAG_FORCE_REBUILD	(1 << 31)
 +
-+	return loaded;
- }
- 
- void
-@@ -388,65 +392,72 @@ get_inobt_records(
- {
- 	struct bt_rebuild		*btr = priv;
- 	struct xfs_inobt_rec_incore	*irec = &cur->bc_rec.i;
--	struct ino_tree_node		*ino_rec;
--	union xfs_btree_rec		*block_rec;
--	int				inocnt = 0;
--	int				finocnt = 0;
--	int				k;
--
--	btr->ino_rec = ino_rec = get_ino_rec(cur, btr->ino_rec);
--
--	/* Transform the incore record into an on-disk record. */
--	irec->ir_startino = ino_rec->ino_startnum;
--	irec->ir_free = ino_rec->ir_free;
--
--	for (k = 0; k < sizeof(xfs_inofree_t) * NBBY; k++)  {
--		ASSERT(is_inode_confirmed(ino_rec, k));
--
--		if (is_inode_sparse(ino_rec, k))
--			continue;
--		if (is_inode_free(ino_rec, k))
--			finocnt++;
--		inocnt++;
--	}
-+	unsigned int			loaded = 0;
-+
-+	while (loaded < nr_wanted) {
-+		struct ino_tree_node	*ino_rec;
-+		union xfs_btree_rec	*block_rec;
-+		int			inocnt = 0;
-+		int			finocnt = 0;
-+		int			k;
-+
-+		btr->ino_rec = ino_rec = get_ino_rec(cur, btr->ino_rec);
- 
--	irec->ir_count = inocnt;
--	irec->ir_freecount = finocnt;
--
--	if (xfs_has_sparseinodes(cur->bc_mp)) {
--		uint64_t		sparse;
--		int			spmask;
--		uint16_t		holemask;
--
--		/*
--		 * Convert the 64-bit in-core sparse inode state to the
--		 * 16-bit on-disk holemask.
--		 */
--		holemask = 0;
--		spmask = (1 << XFS_INODES_PER_HOLEMASK_BIT) - 1;
--		sparse = ino_rec->ir_sparse;
--		for (k = 0; k < XFS_INOBT_HOLEMASK_BITS; k++) {
--			if (sparse & spmask) {
--				ASSERT((sparse & spmask) == spmask);
--				holemask |= (1 << k);
--			} else
--				ASSERT((sparse & spmask) == 0);
--			sparse >>= XFS_INODES_PER_HOLEMASK_BIT;
-+		/* Transform the incore record into an on-disk record. */
-+		irec->ir_startino = ino_rec->ino_startnum;
-+		irec->ir_free = ino_rec->ir_free;
-+
-+		for (k = 0; k < sizeof(xfs_inofree_t) * NBBY; k++)  {
-+			ASSERT(is_inode_confirmed(ino_rec, k));
-+
-+			if (is_inode_sparse(ino_rec, k))
-+				continue;
-+			if (is_inode_free(ino_rec, k))
-+				finocnt++;
-+			inocnt++;
- 		}
- 
--		irec->ir_holemask = holemask;
--	} else {
--		irec->ir_holemask = 0;
--	}
-+		irec->ir_count = inocnt;
-+		irec->ir_freecount = finocnt;
- 
--	if (btr->first_agino == NULLAGINO)
--		btr->first_agino = ino_rec->ino_startnum;
--	btr->freecount += finocnt;
--	btr->count += inocnt;
-+		if (xfs_has_sparseinodes(cur->bc_mp)) {
-+			uint64_t		sparse;
-+			int			spmask;
-+			uint16_t		holemask;
-+
-+			/*
-+			 * Convert the 64-bit in-core sparse inode state to the
-+			 * 16-bit on-disk holemask.
-+			 */
-+			holemask = 0;
-+			spmask = (1 << XFS_INODES_PER_HOLEMASK_BIT) - 1;
-+			sparse = ino_rec->ir_sparse;
-+			for (k = 0; k < XFS_INOBT_HOLEMASK_BITS; k++) {
-+				if (sparse & spmask) {
-+					ASSERT((sparse & spmask) == spmask);
-+					holemask |= (1 << k);
-+				} else
-+					ASSERT((sparse & spmask) == 0);
-+				sparse >>= XFS_INODES_PER_HOLEMASK_BIT;
-+			}
-+
-+			irec->ir_holemask = holemask;
-+		} else {
-+			irec->ir_holemask = 0;
-+		}
-+
-+		if (btr->first_agino == NULLAGINO)
-+			btr->first_agino = ino_rec->ino_startnum;
-+		btr->freecount += finocnt;
-+		btr->count += inocnt;
-+
-+		block_rec = libxfs_btree_rec_addr(cur, idx, block);
-+		cur->bc_ops->init_rec_from_cur(cur, block_rec);
-+		loaded++;
-+		idx++;
-+	}
- 
--	block_rec = libxfs_btree_rec_addr(cur, idx, block);
--	cur->bc_ops->init_rec_from_cur(cur, block_rec);
--	return 1;
-+	return loaded;
- }
- 
- /* Initialize both inode btree cursors as needed. */
-@@ -585,13 +596,17 @@ get_rmapbt_records(
- 	struct xfs_rmap_irec		*rec;
- 	struct bt_rebuild		*btr = priv;
- 	union xfs_btree_rec		*block_rec;
-+	unsigned int			loaded;
- 
--	rec = pop_slab_cursor(btr->slab_cursor);
--	memcpy(&cur->bc_rec.r, rec, sizeof(struct xfs_rmap_irec));
-+	for (loaded = 0; loaded < nr_wanted; loaded++, idx++) {
-+		rec = pop_slab_cursor(btr->slab_cursor);
-+		memcpy(&cur->bc_rec.r, rec, sizeof(struct xfs_rmap_irec));
- 
--	block_rec = libxfs_btree_rec_addr(cur, idx, block);
--	cur->bc_ops->init_rec_from_cur(cur, block_rec);
--	return 1;
-+		block_rec = libxfs_btree_rec_addr(cur, idx, block);
-+		cur->bc_ops->init_rec_from_cur(cur, block_rec);
-+	}
-+
-+	return loaded;
- }
- 
- /* Set up the rmap rebuild parameters. */
-@@ -663,13 +678,17 @@ get_refcountbt_records(
- 	struct xfs_refcount_irec	*rec;
- 	struct bt_rebuild		*btr = priv;
- 	union xfs_btree_rec		*block_rec;
-+	unsigned int			loaded;
- 
--	rec = pop_slab_cursor(btr->slab_cursor);
--	memcpy(&cur->bc_rec.rc, rec, sizeof(struct xfs_refcount_irec));
-+	for (loaded = 0; loaded < nr_wanted; loaded++, idx++) {
-+		rec = pop_slab_cursor(btr->slab_cursor);
-+		memcpy(&cur->bc_rec.rc, rec, sizeof(struct xfs_refcount_irec));
- 
--	block_rec = libxfs_btree_rec_addr(cur, idx, block);
--	cur->bc_ops->init_rec_from_cur(cur, block_rec);
--	return 1;
-+		block_rec = libxfs_btree_rec_addr(cur, idx, block);
-+		cur->bc_ops->init_rec_from_cur(cur, block_rec);
-+	}
-+
-+	return loaded;
- }
- 
- /* Set up the refcount rebuild parameters. */
++#define XFS_SCRUB_FLAGS_IN	(XFS_SCRUB_IFLAG_REPAIR | \
++				 XFS_SCRUB_IFLAG_FORCE_REBUILD)
+ #define XFS_SCRUB_FLAGS_OUT	(XFS_SCRUB_OFLAG_CORRUPT | \
+ 				 XFS_SCRUB_OFLAG_PREEN | \
+ 				 XFS_SCRUB_OFLAG_XFAIL | \
+diff --git a/man/man2/ioctl_xfs_scrub_metadata.2 b/man/man2/ioctl_xfs_scrub_metadata.2
+index 046e3e3657b..42bf1e1cac5 100644
+--- a/man/man2/ioctl_xfs_scrub_metadata.2
++++ b/man/man2/ioctl_xfs_scrub_metadata.2
+@@ -216,6 +216,11 @@ The checker was unable to complete its check of all records.
+ The checker encountered a metadata object with potentially problematic
+ records.
+ However, the records were not obviously corrupt.
++.TP
++.B XFS_SCRUB_IFLAG_FORCE_REBUILD
++Force the kernel to rebuild the specified piece of metadata, even if it's
++healthy.
++This can only be specified by the system administrator.
+ .RE
+ .PP
+ For metadata checkers that operate on inodes or inode metadata, the fields
 
