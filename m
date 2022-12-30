@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27483C4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 01:09:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E07DAC4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 01:09:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236007AbiLaBJU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 20:09:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41610 "EHLO
+        id S236008AbiLaBJf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 20:09:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41658 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235827AbiLaBJT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 20:09:19 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 856861DDF0
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 17:09:18 -0800 (PST)
+        with ESMTP id S231425AbiLaBJf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 20:09:35 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08E4A1573A
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 17:09:34 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2222261D33
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 01:09:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81433C433D2;
-        Sat, 31 Dec 2022 01:09:17 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A31BC61D45
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 01:09:33 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F59CC433D2;
+        Sat, 31 Dec 2022 01:09:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672448957;
-        bh=gb+Fy8Zpq48kdEHBJZl/5btK4yizTEHI3BtPJnDURKQ=;
+        s=k20201202; t=1672448973;
+        bh=UsHDECBx47qGrTaFBCkSZPquEFDKQwecAGi1iJi1Ac4=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=ooTzkpdqeGk1Il7q8KzyCas5e/Rm0KUsQSFP5m5fYp+9/UAE/vMgiVIjPiIUNT94O
-         IPiO7X4wxcgf0XpKtjaztOrx5NcQwkEissvfLIVV/J2EBOBG1gL7Rg7QerOgrgDRbK
-         tBuD5K/vsWXQe81xIFloi3B1aDSa+f8jGiSQUKvoUkXGlsBR2TL+Jdk5cRyqexSeBi
-         4WZ3fRxY97WhihZ+xso32iWML/IyCykAJY2HcpdzBdkQT9KlT7rqPuW28E37yStXod
-         K9WoRssQ84HTDCVy3ESXNcthWzO1K29SiP8kUb4yE6kozq+K+bbkB1WwfkLRJKD4c9
-         XLvNYFSgC4JBA==
-Subject: [PATCH 16/20] xfs: hoist inode free function to libxfs
+        b=AyZztw26nIVRTm6GfPs1zWpumFCCMXjWo4SHk+0k54C8NGrYR64YQXaqQ1Lqn5Gyq
+         zzybugPuXUqpE/ixuJvDAExkt8tBHxcQYZRaPTZnk9V4Batk4oWdmyiMgTuEI8JSmy
+         y2qR/0IGEEjvgXqrkcP8DM1cLU3PSEme6c4lCORM6cFj+JU/MXRsp8GlKEyXqjhcxo
+         6F9Pho/pLGYY07usqSAOxzH2ZAvF3pd0bg+qF0fFDwJ9yY4kna5YbBw6fd45CyI6Wx
+         AA17e7eENfzvceS/mStVp2J/iltjJJEeSMw/zQ4CwBS2oEPX2jik6H0GtoJStf9Ik8
+         oyjvn0N744YaA==
+Subject: [PATCH 17/20] xfs: create libxfs helper to remove an existing
+ inode/name from a directory
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:17:20 -0800
-Message-ID: <167243864060.707335.16448396748632349504.stgit@magnolia>
+Message-ID: <167243864074.707335.4873300496146568470.stgit@magnolia>
 In-Reply-To: <167243863809.707335.15895322495460356300.stgit@magnolia>
 References: <167243863809.707335.15895322495460356300.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,159 +50,179 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a libxfs helper function that marks an inode free on disk.
+Create a new libxfs function to remove a (name, inode) entry from a
+directory.  The upcoming metadata directory feature will need this to
+create a metadata directory tree.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_inode_util.c |   51 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_inode_util.h |    5 ++++
- fs/xfs/xfs_inode.c             |   35 +--------------------------
- 3 files changed, 57 insertions(+), 34 deletions(-)
+ fs/xfs/libxfs/xfs_dir2.c |   73 ++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_dir2.h |    3 ++
+ fs/xfs/xfs_inode.c       |   55 +----------------------------------
+ 3 files changed, 77 insertions(+), 54 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_inode_util.c b/fs/xfs/libxfs/xfs_inode_util.c
-index e32b3152c3df..1135bec1328b 100644
---- a/fs/xfs/libxfs/xfs_inode_util.c
-+++ b/fs/xfs/libxfs/xfs_inode_util.c
-@@ -22,6 +22,7 @@
- #include "xfs_trace.h"
- #include "xfs_ag.h"
- #include "xfs_iunlink_item.h"
-+#include "xfs_inode_item.h"
- 
- uint16_t
- xfs_flags2diflags(
-@@ -645,3 +646,53 @@ xfs_bumplink(
- 	inc_nlink(VFS_I(ip));
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index e14464712eff..2923cf568e9d 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -876,3 +876,76 @@ xfs_dir_link_existing_child(
+ 	xfs_bumplink(tp, ip);
+ 	return 0;
  }
 +
-+/* Mark an inode free on disk. */
++/*
++ * Given a directory @dp, a child @ip, and a @name, remove the (@name, @ip)
++ * entry from the directory.  Both inodes must have the ILOCK held.
++ */
 +int
-+xfs_dir_ifree(
-+	struct xfs_trans	*tp,
-+	struct xfs_perag	*pag,
-+	struct xfs_inode	*ip,
-+	struct xfs_icluster	*xic)
++xfs_dir_remove_child(
++	struct xfs_trans		*tp,
++	uint				resblks,
++	struct xfs_inode		*dp,
++	struct xfs_name			*name,
++	struct xfs_inode		*ip)
 +{
-+	int			error;
++	int				error;
++
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++	ASSERT(xfs_isilocked(dp, XFS_ILOCK_EXCL));
 +
 +	/*
-+	 * Free the inode first so that we guarantee that the AGI lock is going
-+	 * to be taken before we remove the inode from the unlinked list. This
-+	 * makes the AGI lock -> unlinked list modification order the same as
-+	 * used in O_TMPFILE creation.
++	 * If we're removing a directory perform some additional validation.
 +	 */
-+	error = xfs_difree(tp, pag, ip->i_ino, xic);
++	if (S_ISDIR(VFS_I(ip)->i_mode)) {
++		ASSERT(VFS_I(ip)->i_nlink >= 2);
++		if (VFS_I(ip)->i_nlink != 2)
++			return -ENOTEMPTY;
++		if (!xfs_dir_isempty(ip))
++			return -ENOTEMPTY;
++
++		/* Drop the link from ip's "..".  */
++		error = xfs_droplink(tp, dp);
++		if (error)
++			return error;
++
++		/* Drop the "." link from ip to self.  */
++		error = xfs_droplink(tp, ip);
++		if (error)
++			return error;
++
++		/*
++		 * Point the unlinked child directory's ".." entry to the root
++		 * directory to eliminate back-references to inodes that may
++		 * get freed before the child directory is closed.  If the fs
++		 * gets shrunk, this can lead to dirent inode validation errors.
++		 */
++		if (dp->i_ino != tp->t_mountp->m_sb.sb_rootino) {
++			error = xfs_dir_replace(tp, ip, &xfs_name_dotdot,
++					tp->t_mountp->m_sb.sb_rootino, 0);
++			if (error)
++				return error;
++		}
++	} else {
++		/*
++		 * When removing a non-directory we need to log the parent
++		 * inode here.  For a directory this is done implicitly
++		 * by the xfs_droplink call for the ".." entry.
++		 */
++		xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
++	}
++	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++
++	/* Drop the link from dp to ip. */
++	error = xfs_droplink(tp, ip);
 +	if (error)
 +		return error;
 +
-+	error = xfs_iunlink_remove(tp, pag, ip);
-+	if (error)
++	error = xfs_dir_removename(tp, dp, name, ip->i_ino, resblks);
++	if (error) {
++		ASSERT(error != -ENOENT);
 +		return error;
-+
-+	/*
-+	 * Free any local-format data sitting around before we reset the
-+	 * data fork to extents format.  Note that the attr fork data has
-+	 * already been freed by xfs_attr_inactive.
-+	 */
-+	if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
-+		kmem_free(ip->i_df.if_u1.if_data);
-+		ip->i_df.if_u1.if_data = NULL;
-+		ip->i_df.if_bytes = 0;
 +	}
 +
-+	VFS_I(ip)->i_mode = 0;		/* mark incore inode as free */
-+	ip->i_diflags = 0;
-+	ip->i_diflags2 = ip->i_mount->m_ino_geo.new_diflags2;
-+	ip->i_forkoff = 0;		/* mark the attr fork not in use */
-+	ip->i_df.if_format = XFS_DINODE_FMT_EXTENTS;
-+
-+	/*
-+	 * Bump the generation count so no one will be confused
-+	 * by reincarnations of this inode.
-+	 */
-+	VFS_I(ip)->i_generation++;
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
 +	return 0;
 +}
-diff --git a/fs/xfs/libxfs/xfs_inode_util.h b/fs/xfs/libxfs/xfs_inode_util.h
-index f92b14a6fbe8..fcddaa6f738c 100644
---- a/fs/xfs/libxfs/xfs_inode_util.h
-+++ b/fs/xfs/libxfs/xfs_inode_util.h
-@@ -6,6 +6,8 @@
- #ifndef	__XFS_INODE_UTIL_H__
- #define	__XFS_INODE_UTIL_H__
- 
-+struct xfs_icluster;
-+
- uint16_t	xfs_flags2diflags(struct xfs_inode *ip, unsigned int xflags);
- uint64_t	xfs_flags2diflags2(struct xfs_inode *ip, unsigned int xflags);
- uint32_t	xfs_dic2xflags(struct xfs_inode *ip);
-@@ -56,6 +58,9 @@ void xfs_trans_ichgtime(struct xfs_trans *tp, struct xfs_inode *ip, int flags);
- void xfs_inode_init(struct xfs_trans *tp, const struct xfs_icreate_args *args,
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index 4afade8b0877..e35deb273d84 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -259,5 +259,8 @@ int xfs_dir_create_new_child(struct xfs_trans *tp, uint resblks,
+ int xfs_dir_link_existing_child(struct xfs_trans *tp, uint resblks,
+ 		struct xfs_inode *dp, struct xfs_name *name,
  		struct xfs_inode *ip);
++int xfs_dir_remove_child(struct xfs_trans *tp, uint resblks,
++		struct xfs_inode *dp, struct xfs_name *name,
++		struct xfs_inode *ip);
  
-+int xfs_dir_ifree(struct xfs_trans *tp, struct xfs_perag *pag,
-+		struct xfs_inode *ip, struct xfs_icluster *xic);
-+
- int xfs_iunlink(struct xfs_trans *tp, struct xfs_inode *ip);
- int xfs_iunlink_remove(struct xfs_trans *tp, struct xfs_perag *pag,
- 		struct xfs_inode *ip);
+ #endif	/* __XFS_DIR2_H__ */
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index e2563401b27d..8bd9d47bf6fa 100644
+index 8bd9d47bf6fa..f2a5de0119b3 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -1886,36 +1886,10 @@ xfs_ifree(
- 
- 	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+@@ -2020,63 +2020,10 @@ xfs_remove(
+ 		goto std_return;
+ 	}
  
 -	/*
--	 * Free the inode first so that we guarantee that the AGI lock is going
--	 * to be taken before we remove the inode from the unlinked list. This
--	 * makes the AGI lock -> unlinked list modification order the same as
--	 * used in O_TMPFILE creation.
+-	 * If we're removing a directory perform some additional validation.
 -	 */
--	error = xfs_difree(tp, pag, ip->i_ino, &xic);
-+	error = xfs_dir_ifree(tp, pag, ip, &xic);
- 	if (error)
- 		goto out;
- 
--	error = xfs_iunlink_remove(tp, pag, ip);
--	if (error)
--		goto out;
+-	if (is_dir) {
+-		ASSERT(VFS_I(ip)->i_nlink >= 2);
+-		if (VFS_I(ip)->i_nlink != 2) {
+-			error = -ENOTEMPTY;
+-			goto out_trans_cancel;
+-		}
+-		if (!xfs_dir_isempty(ip)) {
+-			error = -ENOTEMPTY;
+-			goto out_trans_cancel;
+-		}
 -
--	/*
--	 * Free any local-format data sitting around before we reset the
--	 * data fork to extents format.  Note that the attr fork data has
--	 * already been freed by xfs_attr_inactive.
--	 */
--	if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
--		kmem_free(ip->i_df.if_u1.if_data);
--		ip->i_df.if_u1.if_data = NULL;
--		ip->i_df.if_bytes = 0;
+-		/* Drop the link from ip's "..".  */
+-		error = xfs_droplink(tp, dp);
+-		if (error)
+-			goto out_trans_cancel;
+-
+-		/* Drop the "." link from ip to self.  */
+-		error = xfs_droplink(tp, ip);
+-		if (error)
+-			goto out_trans_cancel;
+-
+-		/*
+-		 * Point the unlinked child directory's ".." entry to the root
+-		 * directory to eliminate back-references to inodes that may
+-		 * get freed before the child directory is closed.  If the fs
+-		 * gets shrunk, this can lead to dirent inode validation errors.
+-		 */
+-		if (dp->i_ino != tp->t_mountp->m_sb.sb_rootino) {
+-			error = xfs_dir_replace(tp, ip, &xfs_name_dotdot,
+-					tp->t_mountp->m_sb.sb_rootino, 0);
+-			if (error)
+-				goto out_trans_cancel;
+-		}
+-	} else {
+-		/*
+-		 * When removing a non-directory we need to log the parent
+-		 * inode here.  For a directory this is done implicitly
+-		 * by the xfs_droplink call for the ".." entry.
+-		 */
+-		xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
+-	}
+-	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+-
+-	/* Drop the link from dp to ip. */
+-	error = xfs_droplink(tp, ip);
++	error = xfs_dir_remove_child(tp, resblks, dp, name, ip);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 
+-	error = xfs_dir_removename(tp, dp, name, ip->i_ino, resblks);
+-	if (error) {
+-		ASSERT(error != -ENOENT);
+-		goto out_trans_cancel;
 -	}
 -
--	VFS_I(ip)->i_mode = 0;		/* mark incore inode as free */
--	ip->i_diflags = 0;
--	ip->i_diflags2 = mp->m_ino_geo.new_diflags2;
--	ip->i_forkoff = 0;		/* mark the attr fork not in use */
--	ip->i_df.if_format = XFS_DINODE_FMT_EXTENTS;
- 	if (xfs_iflags_test(ip, XFS_IPRESERVE_DM_FIELDS))
- 		xfs_iflags_clear(ip, XFS_IPRESERVE_DM_FIELDS);
- 
-@@ -1924,13 +1898,6 @@ xfs_ifree(
- 	iip->ili_fields &= ~(XFS_ILOG_AOWNER | XFS_ILOG_DOWNER);
- 	spin_unlock(&iip->ili_lock);
- 
--	/*
--	 * Bump the generation count so no one will be confused
--	 * by reincarnations of this inode.
--	 */
--	VFS_I(ip)->i_generation++;
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--
- 	if (xic.deleted)
- 		error = xfs_ifree_cluster(tp, pag, ip, &xic);
- out:
+ 	/*
+ 	 * Drop the link from dp to ip, and if ip was a directory, remove the
+ 	 * '.' and '..' references since we freed the directory.
 
