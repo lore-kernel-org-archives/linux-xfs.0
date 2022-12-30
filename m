@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE130C4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:55:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31E88C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:55:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235999AbiLaAzh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 19:55:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38364 "EHLO
+        id S235930AbiLaAzv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 19:55:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38662 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235930AbiLaAzg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:55:36 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A3A413F29
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 16:55:35 -0800 (PST)
+        with ESMTP id S235815AbiLaAzu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:55:50 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A3FACF3
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 16:55:49 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 4B3D6B81E03
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 00:55:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE32AC433EF;
-        Sat, 31 Dec 2022 00:55:32 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 16E6361D5B
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 00:55:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73764C433D2;
+        Sat, 31 Dec 2022 00:55:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672448132;
-        bh=hjFjoR4ZdV58z4cVYEsJSwt+UFpW24LoPh5Tq3bikhw=;
+        s=k20201202; t=1672448148;
+        bh=NU1jqoDUKyW2hgjaKWLOqlRzoqTU+l/Cbp3CEEmHUtk=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=lj5zMer42NE2SgwY5b4wKxIM/5gT93c0X8TI4IrPy9z3D0xUx5BzYZ2rSyLleTATW
-         cUbbb00KiiQvSTt7SB4BotiuOIWue20UTJX1W2mF16eMXVdqx6gnBczFlSw8jCkT7c
-         D6r3UHb1lP68GUiTZZnfI+UzVMjYlColJUCxikhMShau+CDsf0n1LyoG4DXiRGgEtJ
-         3/wbugLK6Hy6EHcoEhDB9sABBxlrvu2XHDULZxox0l38PuBOJc3bNGCTYeZtJMKEe0
-         VetqG7OLmi2uc35bjWMe4AvVDLApxWo7MzdacP3WnM+Qtix18ruJA3ild6S5GNNEbb
-         ctnl22FkWxl4g==
-Subject: [PATCHSET v1.0 00/14] xfs: refactor btrees to support records in
- inode root
+        b=JqegUbiZSRs0YbIr21g2pGDHzFlfKEjy4nDsI59uvC72vPq8eEeVWgVuZ4tac7Qqt
+         JZsWn1vccqGr8oV8h+ZmxxlI3cYq3oi/qeDuiEfJPYwY0GPrM77IZqOl0NqrUtEFSx
+         6oxNlAH+s8YkhO9i/LVFqkogYpKMn8uu6iP1TX613FgSbnF29/Nn1szXehJNNIatrh
+         fOBwrgA9Pe+aSgam0W/Hidj5NlPlivZKMO1FVJypG3YN8ehEJ+2Es586zl458PdrzP
+         iEREDHg0IW4oFDPxKnonejG+ibCBQVlrqElKPJyjWjMktuyFm/b41+7SR3gL4jyTdS
+         2KyVJsoV7XwVg==
+Subject: [PATCHSET v1.0 00/11] xfs: clean up realtime type usage
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 30 Dec 2022 14:17:31 -0800
-Message-ID: <167243865089.708933.5645420573863731083.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:17:36 -0800
+Message-ID: <167243865605.709511.15650588946095003543.stgit@magnolia>
 In-Reply-To: <Y69UsO7tDT3HcFri@magnolia>
 References: <Y69UsO7tDT3HcFri@magnolia>
 User-Agent: StGit/0.19
@@ -50,12 +49,11 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Hi all,
 
-This series prepares the btree code to support realtime reverse mapping
-btrees by refactoring xfs_ifork_realloc to be fed a per-btree ops
-structure so that it can handle multiple types of inode-rooted btrees.
-It moves on to refactoring the btree code to use the new realloc
-routines and to support storing btree rcords in the inode root, because
-the current bmbt code does not support this.
+The realtime code uses xfs_rtblock_t and xfs_fsblock_t in a lot of
+places, and it's very confusing.  Clean up all the type usage so that an
+xfs_rtblock_t is always a block within the realtime volume, an
+xfs_fileoff_t is always a file offset within a realtime metadata file,
+and an xfs_rtxnumber_t is always a rt extent within the realtime volume.
 
 If you're going to start using this mess, you probably ought to just
 pull from my git trees, which are linked below.
@@ -66,33 +64,32 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=btree-ifork-records
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=clean-up-realtime-units
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=btree-ifork-records
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=clean-up-realtime-units
 ---
- fs/xfs/libxfs/xfs_alloc_btree.c    |    6 -
- fs/xfs/libxfs/xfs_alloc_btree.h    |    3 
- fs/xfs/libxfs/xfs_attr_leaf.c      |    8 -
- fs/xfs/libxfs/xfs_bmap.c           |   59 ++----
- fs/xfs/libxfs/xfs_bmap_btree.c     |   93 ++++++++-
- fs/xfs/libxfs/xfs_bmap_btree.h     |  219 +++++++++++++++------
- fs/xfs/libxfs/xfs_btree.c          |  382 ++++++++++++++++++++++++++++--------
- fs/xfs/libxfs/xfs_btree.h          |    4 
- fs/xfs/libxfs/xfs_btree_staging.c  |    4 
- fs/xfs/libxfs/xfs_ialloc.c         |    4 
- fs/xfs/libxfs/xfs_ialloc_btree.c   |    6 -
- fs/xfs/libxfs/xfs_ialloc_btree.h   |    3 
- fs/xfs/libxfs/xfs_inode_fork.c     |  163 +++++++--------
- fs/xfs/libxfs/xfs_inode_fork.h     |   27 ++-
- fs/xfs/libxfs/xfs_refcount_btree.c |    5 
- fs/xfs/libxfs/xfs_refcount_btree.h |    3 
- fs/xfs/libxfs/xfs_rmap_btree.c     |    9 -
- fs/xfs/libxfs/xfs_rmap_btree.h     |    3 
- fs/xfs/libxfs/xfs_sb.c             |   16 +-
- fs/xfs/libxfs/xfs_trans_resv.c     |    2 
- fs/xfs/scrub/bmap_repair.c         |    2 
- fs/xfs/scrub/inode_repair.c        |    8 -
- fs/xfs/xfs_xchgrange.c             |    4 
- 23 files changed, 705 insertions(+), 328 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c     |    4 -
+ fs/xfs/libxfs/xfs_format.h   |    2 
+ fs/xfs/libxfs/xfs_rtbitmap.c |  121 ++++++++++-----------
+ fs/xfs/libxfs/xfs_rtbitmap.h |   79 ++++++++++++++
+ fs/xfs/libxfs/xfs_sb.h       |    2 
+ fs/xfs/libxfs/xfs_types.c    |    4 -
+ fs/xfs/libxfs/xfs_types.h    |    8 +
+ fs/xfs/scrub/bmap.c          |    4 +
+ fs/xfs/scrub/common.c        |   58 ++++++++++
+ fs/xfs/scrub/common.h        |   17 +++
+ fs/xfs/scrub/fscounters.c    |    2 
+ fs/xfs/scrub/rtbitmap.c      |   23 ++--
+ fs/xfs/scrub/rtsummary.c     |   30 ++---
+ fs/xfs/scrub/scrub.c         |    1 
+ fs/xfs/scrub/scrub.h         |    9 ++
+ fs/xfs/scrub/trace.h         |    7 +
+ fs/xfs/xfs_bmap_item.c       |    2 
+ fs/xfs/xfs_bmap_util.c       |   18 +--
+ fs/xfs/xfs_fsmap.c           |    2 
+ fs/xfs/xfs_rtalloc.c         |  245 ++++++++++++++++++++++--------------------
+ fs/xfs/xfs_rtalloc.h         |   99 ++---------------
+ 21 files changed, 417 insertions(+), 320 deletions(-)
+ create mode 100644 fs/xfs/libxfs/xfs_rtbitmap.h
 
