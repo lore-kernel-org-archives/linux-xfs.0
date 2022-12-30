@@ -2,44 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3381FC4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:25:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C69ADC4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:26:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230117AbiLaAZr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 19:25:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59612 "EHLO
+        id S235793AbiLaA0C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 19:26:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59748 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235760AbiLaAZq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:25:46 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8285BB82
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 16:25:45 -0800 (PST)
+        with ESMTP id S235760AbiLaA0B (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:26:01 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3DA7E0D8
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 16:26:00 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 2BD12B81E9F
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 00:25:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0C2EC433D2;
-        Sat, 31 Dec 2022 00:25:42 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A7328B81EA1
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 00:25:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6997CC433EF;
+        Sat, 31 Dec 2022 00:25:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672446342;
-        bh=kkXZpw2e8SvSEmL4krT9vPo+q94TeWS39AGuQ9Eoa0A=;
+        s=k20201202; t=1672446358;
+        bh=hPid5sDd1EZX4XITG7kOesEiS2yu1h+NpytY/azsVPo=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=l7NQ9/W/rt1PoAbuhpArKHVe7KcutDV/32Kzh95cAkERfZJM0UWLEcBYWOZ14EuWI
-         eq8ucOpMD/tZTfrGBHoSJ3TZL9kaYxWaAkAwIrPZbdLeB/70PxWW+/sHblywikGUYG
-         WvcmrA2MdxBnQvdTEcbAAOf2jrC0jlBsUBmYuiNHIkZ+3zEHfE1taGA7+CcmJ9oWir
-         mM8OF+gUB+aG0OJ9F1uUZSU3r/cwir/4MOctVmtRcN8QuN1c1H9HjrYjUO/iDY4H0a
-         Rac8CNKa1dXo3iTiewZR6PCcptbPG5VmaaD4ecIxJJ/CRFCsZLI5DUORisPcMQ/vc3
-         meOjT/KD9Ssmw==
-Subject: [PATCH 6/6] xfs_scrub: actually try to fix summary counters ahead of
- repairs
+        b=R8vGSpU+lXYbxawT4GCIAmCrQU4enp4LBo/AYlOcKO94unssu3MNns3K12Aq2aP1N
+         ZYylBY4izIo3zu3nzGtyOKb1HKnx3JMyeByBHLwQAnxTVVc5DWUrCqAUXCHwB0NChd
+         J3B9kXI98ypVmFOqGv0+s/KxQsrG2DPwqkXmlt+VPlWmFpa3qhQ7WenLgGGKTgSSrH
+         jX4/HdILw7iAeukM4TLZnrv3iReQ+4dW7/c/FuS5uHoKJgxzVQXTQICJ+0u9MpcObb
+         4rG3v4uNkLt0EtjoAZKPsyNS664q7l3BcmcOOgGEvtSCMMCZX383z/2jW8FqDP8FGW
+         ZNPQry6Hpg7KQ==
+Subject: [PATCH 1/6] xfs_scrub: collapse trivial superblock scrub helpers
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     cem@kernel.org, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 30 Dec 2022 14:18:11 -0800
-Message-ID: <167243869104.714771.2428848445593088790.stgit@magnolia>
-In-Reply-To: <167243869023.714771.3955258526251265287.stgit@magnolia>
-References: <167243869023.714771.3955258526251265287.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:18:13 -0800
+Message-ID: <167243869380.715119.14385098544986541173.stgit@magnolia>
+In-Reply-To: <167243869365.715119.17881025524336922669.stgit@magnolia>
+References: <167243869365.715119.17881025524336922669.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -50,71 +49,93 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-A while ago, I decided to make phase 4 check the summary counters before
-it starts any other repairs, having observed that repairs of primary
-metadata can fail because the summary counters (incorrectly) claim that
-there aren't enough free resources in the filesystem.  However, if
-problems are found in the summary counters, the repair work will be run
-as part of the AG 0 repairs, which means that it runs concurrently with
-other scrubbers.  This doesn't quite get us to the intended goal, so try
-to fix the scrubbers ahead of time.  If that fails, tough, we'll get
-back to it in phase 7 if scrub gets that far.
+Remove the trivial primary super scrub helper function since it makes
+tracing code paths difficult and will become annoying in the patches
+that follow.
 
-Fixes: cbaf1c9d91a0 ("xfs_scrub: check summary counters")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- scrub/phase4.c |   20 +++++++++++++++-----
- 1 file changed, 15 insertions(+), 5 deletions(-)
+ scrub/phase2.c |    9 +++++----
+ scrub/scrub.c  |   16 +---------------
+ scrub/scrub.h  |    3 ++-
+ 3 files changed, 8 insertions(+), 20 deletions(-)
 
 
-diff --git a/scrub/phase4.c b/scrub/phase4.c
-index c71b56b7bda..5929df38084 100644
---- a/scrub/phase4.c
-+++ b/scrub/phase4.c
-@@ -129,6 +129,7 @@ phase4_func(
- 	struct scrub_ctx	*ctx)
- {
- 	struct xfs_fsop_geom	fsgeom;
-+	struct action_list	alist;
- 	int			ret;
- 
- 	if (!have_action_items(ctx))
-@@ -136,11 +137,13 @@ phase4_func(
- 
- 	/*
- 	 * Check the summary counters early.  Normally we do this during phase
--	 * seven, but some of the cross-referencing requires fairly-accurate
--	 * counters, so counter repairs have to be put on the list now so that
--	 * they get fixed before we stop retrying unfixed metadata repairs.
-+	 * seven, but some of the cross-referencing requires fairly accurate
-+	 * summary counters.  Check and try to repair them now to minimize the
-+	 * chance that repairs of primary metadata fail due to secondary
-+	 * metadata.  If repairs fails, we'll come back during phase 7.
- 	 */
--	ret = scrub_fs_counters(ctx, &ctx->action_lists[0]);
-+	action_list_init(&alist);
-+	ret = scrub_fs_counters(ctx, &alist);
- 	if (ret)
- 		return ret;
- 
-@@ -155,11 +158,18 @@ phase4_func(
- 		return ret;
- 
- 	if (fsgeom.sick & XFS_FSOP_GEOM_SICK_QUOTACHECK) {
--		ret = scrub_quotacheck(ctx, &ctx->action_lists[0]);
-+		ret = scrub_quotacheck(ctx, &alist);
- 		if (ret)
- 			return ret;
+diff --git a/scrub/phase2.c b/scrub/phase2.c
+index 774f3a17e9e..7b6933a7475 100644
+--- a/scrub/phase2.c
++++ b/scrub/phase2.c
+@@ -166,12 +166,13 @@ phase2_func(
  	}
  
-+	/* Repair counters before starting on the rest. */
-+	ret = action_list_process(ctx, -1, &alist,
-+			XRM_REPAIR_ONLY | XRM_NOPROGRESS);
-+	if (ret)
-+		return ret;
-+	action_list_discard(&alist);
-+
- 	ret = repair_everything(ctx);
+ 	/*
+-	 * In case we ever use the primary super scrubber to perform fs
+-	 * upgrades (followed by a full scrub), do that before we launch
+-	 * anything else.
++	 * Scrub primary superblock.  This will be useful if we ever need to
++	 * hook a filesystem-wide pre-scrub activity (e.g. enable filesystem
++	 * upgrades) off of the sb 0 scrubber (which currently does nothing).
++	 * If errors occur, this function will log them and return nonzero.
+ 	 */
+ 	action_list_init(&alist);
+-	ret = scrub_primary_super(ctx, &alist);
++	ret = scrub_meta_type(ctx, XFS_SCRUB_TYPE_SB, 0, &alist);
  	if (ret)
- 		return ret;
+ 		goto out_wq;
+ 	ret = action_list_process(ctx, -1, &alist,
+diff --git a/scrub/scrub.c b/scrub/scrub.c
+index 0f080028879..bd33fcb770c 100644
+--- a/scrub/scrub.c
++++ b/scrub/scrub.c
+@@ -259,7 +259,7 @@ scrub_save_repair(
+  * Returns 0 for success.  If errors occur, this function will log them and
+  * return a positive error code.
+  */
+-static int
++int
+ scrub_meta_type(
+ 	struct scrub_ctx		*ctx,
+ 	unsigned int			type,
+@@ -325,20 +325,6 @@ scrub_group(
+ 	return 0;
+ }
+ 
+-/*
+- * Scrub primary superblock.  This will be useful if we ever need to hook
+- * a filesystem-wide pre-scrub activity off of the sb 0 scrubber (which
+- * currently does nothing).  If errors occur, this function will log them and
+- * return nonzero.
+- */
+-int
+-scrub_primary_super(
+-	struct scrub_ctx		*ctx,
+-	struct action_list		*alist)
+-{
+-	return scrub_meta_type(ctx, XFS_SCRUB_TYPE_SB, 0, alist);
+-}
+-
+ /* Scrub each AG's header blocks. */
+ int
+ scrub_ag_headers(
+diff --git a/scrub/scrub.h b/scrub/scrub.h
+index 9558c29f32d..f228ffb89fc 100644
+--- a/scrub/scrub.h
++++ b/scrub/scrub.h
+@@ -17,7 +17,6 @@ enum check_outcome {
+ struct action_item;
+ 
+ void scrub_report_preen_triggers(struct scrub_ctx *ctx);
+-int scrub_primary_super(struct scrub_ctx *ctx, struct action_list *alist);
+ int scrub_ag_headers(struct scrub_ctx *ctx, xfs_agnumber_t agno,
+ 		struct action_list *alist);
+ int scrub_ag_metadata(struct scrub_ctx *ctx, xfs_agnumber_t agno,
+@@ -30,6 +29,8 @@ int scrub_fs_counters(struct scrub_ctx *ctx, struct action_list *alist);
+ int scrub_quotacheck(struct scrub_ctx *ctx, struct action_list *alist);
+ int scrub_nlinks(struct scrub_ctx *ctx, struct action_list *alist);
+ int scrub_clean_health(struct scrub_ctx *ctx, struct action_list *alist);
++int scrub_meta_type(struct scrub_ctx *ctx, unsigned int type,
++		xfs_agnumber_t agno, struct action_list *alist);
+ 
+ bool can_scrub_fs_metadata(struct scrub_ctx *ctx);
+ bool can_scrub_inode(struct scrub_ctx *ctx);
 
