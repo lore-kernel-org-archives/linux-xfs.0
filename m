@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ED19C4167B
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 03:14:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF14BC3DA7C
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 03:15:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236311AbiLaDOk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 22:14:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36380 "EHLO
+        id S236274AbiLaDOl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 22:14:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36422 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236274AbiLaDOL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 22:14:11 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2FCAE59;
-        Fri, 30 Dec 2022 19:14:10 -0800 (PST)
+        with ESMTP id S236259AbiLaDO1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 22:14:27 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85FAEE59;
+        Fri, 30 Dec 2022 19:14:26 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 8BF4EB81DF4;
-        Sat, 31 Dec 2022 03:14:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48335C433D2;
-        Sat, 31 Dec 2022 03:14:08 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 35A0FB81E5C;
+        Sat, 31 Dec 2022 03:14:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1EFBC433EF;
+        Sat, 31 Dec 2022 03:14:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672456448;
-        bh=eKweqmmK1IHTPih4dDKHKrkHOW6OO0+H6TWr1S8/ZWc=;
+        s=k20201202; t=1672456463;
+        bh=5tGYjlAVtTsCmR1z/8/XOITcG+nNZq/DfjTeq+f8+nc=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=kOnWtW+q4kYKiRlqRy347DKFMDh+03mtFTP8eyDtnhblOndUROWETkbzuoYg3Coka
-         OkJ3KPpWRVnvE73TOJQn4UzFp6cSFz54lBHjHLLpibZJPmaZmnRfxAbauRC+pbTMc8
-         5NZfhpp4M/078HBAkIjC1gwBUead3PCaZN53+myUQ+lT8SAAgAF7wX0HtCpL/EcTd0
-         uBOLaylD8X2NRcRXrDX5pktSDiQTO74vNyoVFoQKNZNWWniu5oGEkcc3VDchcSa2Av
-         ocuOkKW7pQB6IVHZqSntO8VqgYSLhly+/nNizEK32tVxHvpPlqj0rbnKs7M8rZd755
-         onKgpvv+sY7lw==
-Subject: [PATCH 06/13] xfs: fix various problems with fsmap detecting the data
- device
+        b=pmSv/KwBUhYdRngWGImXGbMeTOlWzj1jLIornZCWEQF5iwHcZr2ZWZGCG+sb/Fzhg
+         UYjiEW37zEJkVKJiz+lsC50ofcIR9e+NWSRU5wQHHWB45/yzBXiJnaZFvO16Vyu/bj
+         YQyTPJgmWvcpWnQEcFR4HhcRc/7EfGjTN6KiaGOjTMEFKRy9pq0y5wR4SoOz59UGKb
+         8tKQp9h7zR69iuoG3probEP0q9Zhq4t/5ROitx3zDRJ3Pp8dtMV4/4wpYpcjyFNMW7
+         txRNK3OkGyvsTiIXqvh2zahrCv1lmaKcu1FzBIPoh2fYpqoovlz343hmGWse8SCmiI
+         cxwwT7f5C/V9A==
+Subject: [PATCH 07/13] xfs/341: update test for rtgroup-based rmap
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     zlang@redhat.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
 Date:   Fri, 30 Dec 2022 14:20:44 -0800
-Message-ID: <167243884472.739669.5281387878552818216.stgit@magnolia>
+Message-ID: <167243884485.739669.4899909585795610128.stgit@magnolia>
 In-Reply-To: <167243884390.739669.13524725872131241203.stgit@magnolia>
 References: <167243884390.739669.13524725872131241203.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,56 +49,58 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Various tests of realtime rmap functionality assumed that the data
-device could be picked out from the GETFSMAP output by looking for
-static fs metadata.  This is no longer true, since rtgroups have a
-static superblock header at the start, so update these tests.
+Now that we're sharding the realtime volume into multiple allocation
+groups, update this test to reflect the new reality.  The realtime rmap
+btree record and key sizes have shrunk, and we can't guarantee that a
+quick file write actually hits the same rt group as the one we fuzzed,
+so eliminate the file write test since we're really only curious if
+xfs_repair will fix the problem.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/272 |    2 +-
- tests/xfs/276 |    2 +-
- tests/xfs/277 |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ tests/xfs/341     |   10 +++-------
+ tests/xfs/341.out |    1 -
+ 2 files changed, 3 insertions(+), 8 deletions(-)
 
 
-diff --git a/tests/xfs/272 b/tests/xfs/272
-index 7ed8b95122..42b4a2edb5 100755
---- a/tests/xfs/272
-+++ b/tests/xfs/272
-@@ -57,7 +57,7 @@ cat $TEST_DIR/bmap | while read ext offrange colon blockrange ag agrange total c
- done
+diff --git a/tests/xfs/341 b/tests/xfs/341
+index 8861e751a9..561054f0bd 100755
+--- a/tests/xfs/341
++++ b/tests/xfs/341
+@@ -32,10 +32,10 @@ blksz="$(_get_block_size $SCRATCH_MNT)"
+ rtextsz_blks=$((rtextsz / blksz))
  
- echo "Check device field of FS metadata and regular file"
--data_dev=$(grep 'static fs metadata' $TEST_DIR/fsmap | head -n 1 | awk '{print $2}')
-+data_dev=$(grep 'inode btree' $TEST_DIR/fsmap | head -n 1 | awk '{print $2}')
- rt_dev=$(grep "${ino}[[:space:]]*[0-9]*\.\.[0-9]*" $TEST_DIR/fsmap | head -n 1 | awk '{print $2}')
- test "${data_dev}" = "${rt_dev}" || echo "data ${data_dev} realtime ${rt_dev}?"
+ # inode core size is at least 176 bytes; btree header is 56 bytes;
+-# rtrmap record is 32 bytes; and rtrmap key/pointer are 56 bytes.
++# rtrmap record is 24 bytes; and rtrmap key/pointer are 48 bytes.
+ i_core_size="$(_xfs_get_inode_core_bytes $SCRATCH_MNT)"
+-i_ptrs=$(( (isize - i_core_size) / 56 ))
+-bt_recs=$(( (blksz - 56) / 32 ))
++i_ptrs=$(( (isize - i_core_size) / 48 ))
++bt_recs=$(( (blksz - 56) / 24 ))
  
-diff --git a/tests/xfs/276 b/tests/xfs/276
-index 8cc486752a..a05ca1961d 100755
---- a/tests/xfs/276
-+++ b/tests/xfs/276
-@@ -61,7 +61,7 @@ cat $TEST_DIR/bmap | while read ext offrange colon blockrange ag agrange total c
- done
+ blocks=$((i_ptrs * bt_recs + 1))
+ len=$((blocks * rtextsz))
+@@ -57,10 +57,6 @@ _scratch_xfs_db -x -c 'path -m /realtime/0.rmap' \
+ 	-c "write u3.rtrmapbt.ptrs[1] $fsbno" -c 'p' >> $seqres.full
+ _scratch_mount
  
- echo "Check device field of FS metadata and realtime file"
--data_dev=$(grep 'static fs metadata' $TEST_DIR/fsmap | head -n 1 | awk '{print $2}')
-+data_dev=$(grep 'inode btree' $TEST_DIR/fsmap | head -n 1 | awk '{print $2}')
- rt_dev=$(grep "${ino}[[:space:]]*[0-9]*\.\.[0-9]*[[:space:]]*[0-9]*$" $TEST_DIR/fsmap | head -n 1 | awk '{print $2}')
- test "${data_dev}" != "${rt_dev}" || echo "data ${data_dev} realtime ${rt_dev}?"
- 
-diff --git a/tests/xfs/277 b/tests/xfs/277
-index 03208ef233..eff54a2a50 100755
---- a/tests/xfs/277
-+++ b/tests/xfs/277
-@@ -38,7 +38,7 @@ $XFS_IO_PROG -c 'fsmap -v' $SCRATCH_MNT >> $seqres.full
- $XFS_IO_PROG -c 'fsmap -v' $SCRATCH_MNT | tr '[]()' '    ' > $TEST_DIR/fsmap
- 
- echo "Check device field of FS metadata and journalling log"
--data_dev=$(grep 'static fs metadata' $TEST_DIR/fsmap | head -n 1 | awk '{print $2}')
-+data_dev=$(grep 'inode btree' $TEST_DIR/fsmap | head -n 1 | awk '{print $2}')
- journal_dev=$(grep 'journalling log' $TEST_DIR/fsmap | head -n 1 | awk '{print $2}')
- test "${data_dev}" = "${journal_dev}" || echo "data ${data_dev} journal ${journal_dev}?"
- 
+-echo "Try to create more files"
+-$XFS_IO_PROG -f -R -c "pwrite -S 0x68 0 9999" $SCRATCH_MNT/f5 >> $seqres.full 2>&1
+-test -e $SCRATCH_MNT/f5 && echo "should not have been able to write f5"
+-
+ echo "Repair fs"
+ _scratch_unmount 2>&1 | _filter_scratch
+ _repair_scratch_fs >> $seqres.full 2>&1
+diff --git a/tests/xfs/341.out b/tests/xfs/341.out
+index 75a5bc6c61..580d788954 100644
+--- a/tests/xfs/341.out
++++ b/tests/xfs/341.out
+@@ -2,6 +2,5 @@ QA output created by 341
+ Format and mount
+ Create some files
+ Corrupt fs
+-Try to create more files
+ Repair fs
+ Try to create more files (again)
 
