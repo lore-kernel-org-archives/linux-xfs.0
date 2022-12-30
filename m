@@ -2,43 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3AEBC4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:24:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDC85C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:24:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229758AbiLaAYM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 19:24:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59000 "EHLO
+        id S235634AbiLaAY3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 19:24:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230117AbiLaAYL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:24:11 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B80FD104
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 16:24:10 -0800 (PST)
+        with ESMTP id S230117AbiLaAY3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:24:29 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95029BE0E
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 16:24:27 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 279E261CE2
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 00:24:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86CBEC433EF;
-        Sat, 31 Dec 2022 00:24:09 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 4FBB5B81E99
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 00:24:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 153EEC433EF;
+        Sat, 31 Dec 2022 00:24:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672446249;
-        bh=r4KoeO7sXxeqp4oAUJrgOf8pHnzBa18ko+n8vo0w2fY=;
+        s=k20201202; t=1672446265;
+        bh=phkSImHAqApCt9RyrgXNUa3NTNw6dntsxrfRGnqtYsA=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=QIvZP2ITPo5E4xXqMzmmRoNgC84auS4YpKotjd8IKv/aLPOer2q5riMuzolo+AwT9
-         Xs2FAkgrQ0gV1B3+JWrfm1qlptyAjv3o9FdI2Rj314o96PccUH1/eTPZwUAMv0qVNH
-         1dV3FMgkZlHQYvcNBqDq86Jo9s0eVdBetWTwJ5ovpjQ/XKYGEwpKYbO7HsJiOYqMT+
-         FBpBTL/VqYm0lZ0qEJdpcfOegGdvKp/1iskeBVTub+cx8F4JX8By7nmfvg8qVpt2qM
-         Vw++xlvTj1jEos3EKKxVpy0RXHBjKRB35cnL0Dzd3TZqc+zSaPfs5SJHwY5BcBsmJ+
-         tx1xmTNj9dEHA==
-Subject: [PATCH 1/1] xfs: map xfile pages directly into xfs_buf
+        b=fpiJwZPcmA/mel13f2N+lpnod8eg6GfGcUWdosqMbDs6hQIztyQXKzq6xZseM/f8X
+         m/Q5PHifGP/6HlPg+otEjvn8bxrz9QuClc9v+tsmpvCCP0yN4X+2ysdrqTZUEO5fKG
+         RM9spNIbPBK4MSZ9hpslBHyANHtZe3iS8y8B8gH09nJDnS2M9G3mnJiXLmUVLLUE0s
+         dsHHt6geaEtY9A8GYDchGGudaGar2k4lIVPZ7zmunMWpVS2ySGKSGPUJ2RXOWyUy+0
+         +Jf3OsobECk1qU1iOIODI10M0NYy+9rAz7Rt7QQuhaPObqpE0B1nKYj16jqLCsiVHO
+         Vkc6PC862UCsQ==
+Subject: [PATCH 1/6] xfs_scrub: don't report media errors for space with
+ unknowable owner
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     cem@kernel.org, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 30 Dec 2022 14:18:07 -0800
-Message-ID: <167243868762.714598.3181270732734956525.stgit@magnolia>
-In-Reply-To: <167243868750.714598.6299645052246352439.stgit@magnolia>
-References: <167243868750.714598.6299645052246352439.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:18:10 -0800
+Message-ID: <167243869037.714771.16498518334442187393.stgit@magnolia>
+In-Reply-To: <167243869023.714771.3955258526251265287.stgit@magnolia>
+References: <167243869023.714771.3955258526251265287.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,46 +50,46 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Map the xfile pages directly into xfs_buf to reduce memory overhead.
-It's silly to use memory to stage changes to shmem pages for ephemeral
-btrees that don't care about transactionality.
+On filesystems that don't have the reverse mapping feature enabled, the
+GETFSMAP call cannot tell us much about the owner of a space extent --
+we're limited to static fs metadata, free space, or "unknown".  In this
+case, nothing is corrupt, so str_corrupt is not an appropriate logging
+function.  Relax this to str_info so that the user sees a notice that
+media errors have been found so that the user knows something bad
+happened even if the directory tree walker cannot find the file owning
+the space where the media error was found.
+
+Filesystems with rmap enabled are never supposed to return OWN_UNKNOWN
+from a GETFSMAP report, so continue to report that as a corruption.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_btree_mem.h  |    6 ++++++
- libxfs/xfs_rmap_btree.c |    1 +
- 2 files changed, 7 insertions(+)
+ scrub/phase6.c |   13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
 
-diff --git a/libxfs/xfs_btree_mem.h b/libxfs/xfs_btree_mem.h
-index ee142b97283..8feb104522b 100644
---- a/libxfs/xfs_btree_mem.h
-+++ b/libxfs/xfs_btree_mem.h
-@@ -17,8 +17,14 @@ struct xfbtree_config {
+diff --git a/scrub/phase6.c b/scrub/phase6.c
+index afdb16b689c..1a2643bdaf0 100644
+--- a/scrub/phase6.c
++++ b/scrub/phase6.c
+@@ -397,7 +397,18 @@ report_ioerr_fsmap(
+ 		snprintf(buf, DESCR_BUFSZ, _("disk offset %"PRIu64),
+ 				(uint64_t)map->fmr_physical + err_off);
+ 		type = decode_special_owner(map->fmr_owner);
+-		str_corrupt(ctx, buf, _("media error in %s."), type);
++		/*
++		 * On filesystems that don't store reverse mappings, the
++		 * GETFSMAP call returns OWNER_UNKNOWN for allocated space.
++		 * We'll have to let the directory tree walker find the file
++		 * that lost data.
++		 */
++		if (!(ctx->mnt.fsgeom.flags & XFS_FSOP_GEOM_FLAGS_RMAPBT) &&
++		    map->fmr_owner == XFS_FMR_OWN_UNKNOWN) {
++			str_info(ctx, buf, _("media error detected."));
++		} else {
++			str_corrupt(ctx, buf, _("media error in %s."), type);
++		}
+ 	}
  
- 	/* Owner of this btree. */
- 	unsigned long long		owner;
-+
-+	/* XFBTREE_* flags */
-+	unsigned int			flags;
- };
- 
-+/* buffers should be directly mapped from memory */
-+#define XFBTREE_DIRECT_MAP		(1U << 0)
-+
- #ifdef CONFIG_XFS_IN_MEMORY_BTREE
- unsigned int xfs_btree_mem_head_nlevels(struct xfs_buf *head_bp);
- 
-diff --git a/libxfs/xfs_rmap_btree.c b/libxfs/xfs_rmap_btree.c
-index d6db7dfe22f..bc953516a98 100644
---- a/libxfs/xfs_rmap_btree.c
-+++ b/libxfs/xfs_rmap_btree.c
-@@ -668,6 +668,7 @@ xfs_rmapbt_mem_create(
- 		.btree_ops	= &xfs_rmapbt_mem_ops,
- 		.target		= target,
- 		.owner		= agno,
-+		.flags		= XFBTREE_DIRECT_MAP,
- 	};
- 
- 	return xfbtree_create(mp, &cfg, xfbtreep);
+ 	/* Report extent maps */
 
