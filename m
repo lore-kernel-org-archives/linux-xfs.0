@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD50FC4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:23:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F797C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:23:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236216AbiLaCXV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 21:23:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55124 "EHLO
+        id S236221AbiLaCXi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 21:23:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55144 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236221AbiLaCXU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:23:20 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E9DA1A23D
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:23:19 -0800 (PST)
+        with ESMTP id S236215AbiLaCXh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:23:37 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A754919C12
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:23:36 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0B55461CB1
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:23:19 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64CEDC433D2;
-        Sat, 31 Dec 2022 02:23:18 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 507BDB81E0E
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:23:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02CDBC433D2;
+        Sat, 31 Dec 2022 02:23:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672453398;
-        bh=yFoELNdPaEWhPPPvv0MJxpEMtp7RLJ5ku740hwKJmSw=;
+        s=k20201202; t=1672453414;
+        bh=GLz7od4ocL289uRHQQCdRtTVz9WOkpG5uBHiZTHWO+k=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=DtXKARCge8zvDMa0XFY4FQps4ZvNHTLOn3W1bZG9hamjsM4AdtY0bBtCPV32p3JqV
-         Kv7ec7nwSi2aUze49f/AH8o0uxF1S2mGGSPLQ8ZrETykC7IHKScx5ah62TnO6MYcnj
-         VvGHldlzeNSb7SJVG4yqb32UyccaTZEJ9PpA4VmYLJn0fIKaDcVtP6yOOIPjpW2OAN
-         6EhD9N6avOY0gyiCWTyq2cdDsbwgOsg5ytjBqHCBv+wsX08lKMF+IWmkr37Ltj/4bW
-         60awen0WwSGV6qjYg83geaEvgIiFM6iNPsvTMdzP5xNVdtpOsZzq0UoA6zhZpw3+8A
-         UbRic89p/Xivg==
-Subject: [PATCH 06/10] xfs: convert do_div calls to xfs_rtb_to_rtx helper
- calls
+        b=V6SCJU7YIEwwCtTvDuqeizbWmpqmXgbQ60Yw2DM8iWuGL8tYJJtiF6LUlXvGFRJkp
+         7X7s+OgCyERftcOxoBBvT2UKuyZTmJq0K2o80NySsfRfPopQ9okwkvdQwTxQjHa6aY
+         8FU7/cbMe51mlOc17OoKNaCcJZ1zxmCOFyj+z4Fj9cOHoGCXxKxUhTU4PaxrMVY30L
+         ZxHTxB8cRNBoyyT4GYyzxc1MRn7SZu+yWNSgkaslsM1gcF2VkM59F0CaF8O7U13z+D
+         xIk1HzJo2cYdSDBTttF1kqw5UPGvV+Wbx8y4wWKkkxRd28DNzLOl9dgVZzrYOGtVeq
+         oSJ+Z2fzWsSUQ==
+Subject: [PATCH 07/10] xfs: create rt extent rounding helpers for realtime
+ extent blocks
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 30 Dec 2022 14:19:28 -0800
-Message-ID: <167243876895.727509.11114523582352015622.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:19:29 -0800
+Message-ID: <167243876908.727509.5702400227090536615.stgit@magnolia>
 In-Reply-To: <167243876812.727509.17144221830951566022.stgit@magnolia>
 References: <167243876812.727509.17144221830951566022.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,33 +50,86 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Convert these calls to use the helpers, and clean up all these places
-where the same variable can have different units depending on where it
-is in the function.
+Create a pair of functions to round rtblock numbers up or down to the
+nearest rt extent.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_bmap.c |    8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+ libfrog/div64.h       |   14 ++++++++++++++
+ libxfs/libxfs_priv.h  |    8 --------
+ libxfs/xfs_rtbitmap.h |   18 ++++++++++++++++++
+ 3 files changed, 32 insertions(+), 8 deletions(-)
 
 
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 5fbfc5372c9..3637b07feba 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -4915,12 +4915,8 @@ xfs_bmap_del_extent_delay(
- 	ASSERT(got->br_startoff <= del->br_startoff);
- 	ASSERT(got_endoff >= del_endoff);
+diff --git a/libfrog/div64.h b/libfrog/div64.h
+index 265487916fc..9317b28aad4 100644
+--- a/libfrog/div64.h
++++ b/libfrog/div64.h
+@@ -66,4 +66,18 @@ div64_u64_rem(uint64_t dividend, uint64_t divisor, uint64_t *remainder)
+ 	return dividend / divisor;
+ }
  
--	if (isrt) {
--		uint64_t rtexts = XFS_FSB_TO_B(mp, del->br_blockcount);
++static inline uint64_t rounddown_64(uint64_t x, uint32_t y)
++{
++	do_div(x, y);
++	return x * y;
++}
++
++static inline uint64_t
++roundup_64(uint64_t x, uint32_t y)
++{
++	x += y - 1;
++	do_div(x, y);
++	return x * y;
++}
++
+ #endif /* LIBFROG_DIV64_H_ */
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index 49441ac787f..71abfdbe401 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -363,14 +363,6 @@ roundup_pow_of_two(uint v)
+ 	return 0;
+ }
+ 
+-static inline uint64_t
+-roundup_64(uint64_t x, uint32_t y)
+-{
+-	x += y - 1;
+-	do_div(x, y);
+-	return x * y;
+-}
 -
--		do_div(rtexts, mp->m_sb.sb_rextsize);
--		xfs_mod_frextents(mp, rtexts);
--	}
-+	if (isrt)
-+		xfs_mod_frextents(mp, xfs_rtb_to_rtxt(mp, del->br_blockcount));
+ static inline uint64_t
+ howmany_64(uint64_t x, uint32_t y)
+ {
+diff --git a/libxfs/xfs_rtbitmap.h b/libxfs/xfs_rtbitmap.h
+index bdd4858a794..bc51d3bfc7c 100644
+--- a/libxfs/xfs_rtbitmap.h
++++ b/libxfs/xfs_rtbitmap.h
+@@ -56,6 +56,24 @@ xfs_rtb_to_rtxt(
+ 	return div_u64(rtbno, mp->m_sb.sb_rextsize);
+ }
  
- 	/*
- 	 * Update the inode delalloc counter now and wait to update the
++/* Round this rtblock up to the nearest rt extent size. */
++static inline xfs_rtblock_t
++xfs_rtb_roundup_rtx(
++	struct xfs_mount	*mp,
++	xfs_rtblock_t		rtbno)
++{
++	return roundup_64(rtbno, mp->m_sb.sb_rextsize);
++}
++
++/* Round this rtblock down to the nearest rt extent size. */
++static inline xfs_rtblock_t
++xfs_rtb_rounddown_rtx(
++	struct xfs_mount	*mp,
++	xfs_rtblock_t		rtbno)
++{
++	return rounddown_64(rtbno, mp->m_sb.sb_rextsize);
++}
++
+ /*
+  * Functions for walking free space rtextents in the realtime bitmap.
+  */
 
