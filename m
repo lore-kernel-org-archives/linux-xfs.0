@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52C54C3DA7D
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:48:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BF5EC3DA7D
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:48:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235935AbiLaAsG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 19:48:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37238 "EHLO
+        id S235950AbiLaAsT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 19:48:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37278 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235851AbiLaAsF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:48:05 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 035341C90A;
-        Fri, 30 Dec 2022 16:48:04 -0800 (PST)
+        with ESMTP id S235851AbiLaAsS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:48:18 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1652E1C90A;
+        Fri, 30 Dec 2022 16:48:18 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B3D4FB81DE6;
-        Sat, 31 Dec 2022 00:48:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74415C433D2;
-        Sat, 31 Dec 2022 00:48:01 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id AA4FF61D5F;
+        Sat, 31 Dec 2022 00:48:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1345EC433D2;
+        Sat, 31 Dec 2022 00:48:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672447681;
-        bh=1wtoFtDm/6CQJOn2zVo4LsS5ocZt8ThnrjDTHAKBiR8=;
+        s=k20201202; t=1672447697;
+        bh=c8QkEqe00lw8DQ0TO3dWToOxaWxUcwYcOP0E/w0lp1k=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=cm2stuGqhFtK8yvjD1ujabqfwf5cJT3mfvUmRNrvRehyH0SBgSov0Ki+G7yuQkHZ6
-         jdYgSXr3j1hy3k5dk6o3tBQAdaHQrg400Shp4HjXKkE2O4N4g/9Rk2rw1wpGqcStpI
-         jr8bTMV7BJVXilyfzAXSMU3vPBGnbVvUqXCFhNKkNaW3f4Rini/yZxPG8RjZL3xca0
-         ysokw4l3m/U/KwhR1rj2C9gBezBP5pD823z2KjmVk55UEnqX6wqDnWpiW1Rhj77L9Y
-         n1dgYEVBrw6iqS7UqeXpCIzTEhl1+kkL2gev/BRlY493LURMbORZfQp8F3t7YnGuc1
-         JB3nCFDlo49Gg==
-Subject: [PATCH 15/24] common/fuzzy: fix some problems with the post-repair fs
- modification code
+        b=e3x/uW3q5Bkm+hf4lHUKE4DLuxbl2X0SygOtv0DAcKXa86PCBSUVIAit5H++pav3d
+         +lU/bNUvvZJYK8quiBZdRK92OXRMAjeQyq+gDU+sppsvrHzQ3wGDBNs8Kt9qPs48KB
+         OETchGE8ffCy8E//5watHGAmDRhuc/xNIOBUo/KM/neXp6eoWanWj6+PjtGH+ieMTI
+         KHq2GMrDc/2X3PzO/4tvmyYY58g8mDUZmPUFNNd6lpw0LmdjC3tGfdpQHkZq2BRc8L
+         PZk8ABXfAivUKRugYsLpgovTFCddftjIO0qLkJ/XgqD1poBD1egEoaiHT+SoGLdSz3
+         +kakcAmH/M4UQ==
+Subject: [PATCH 16/24] xfs/{35[45],455}: fix bogus corruption errors
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     zlang@redhat.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
 Date:   Fri, 30 Dec 2022 14:19:41 -0800
-Message-ID: <167243878102.730387.2695454576885664463.stgit@magnolia>
+Message-ID: <167243878115.730387.3527984376924446960.stgit@magnolia>
 In-Reply-To: <167243877899.730387.9276624623424433346.stgit@magnolia>
 References: <167243877899.730387.9276624623424433346.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,90 +49,86 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-While auditing the fuzz tester code, I noticed there were numerous
-problems with the code that test-drives the filesystem after we've run
-the repair strategy.  Now that we've made sure that the repair strategy
-checks its own efficacy, we can rearrange this function to try making
-mods and then re-check the filesystem afterwards.  Also, disable
-xfs_repair prefetch to reduce the likelihood of OOM kills.
+The AGFL fuzz tests first fuzz the entire block header, and second
+extract flfirst from the AGF header to start a second round of targeted
+fuzzing of live bno pointers in the AGFL.  However, flfirst (and the
+AGFL field detection at the start of the second round of fuzzing) are
+detected after we've already been fuzz testing, which means that the
+AGFL might be garbage because repair failed or was not called.  If this
+is the case, test will fail because the _scratch_xfs_db -c 'agf 0' -c
+'p flfirst' call emits things like this:
+
+Fuzz AGFL flfirst
+Metadata corruption detected at 0x55f4f789fbc0, xfs_agfl block 0x3/0x200
+Metadata corruption detected at 0x55b7356e0bc0, xfs_agfl block 0x3/0x200
+Done fuzzing AGFL flfirst
+
+Fix this by restoring the scratch fs before probing flfirst and starting
+the second round of fuzzing.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/fuzzy |   56 +++++++++++++++++++++++++++++++-------------------------
- 1 file changed, 31 insertions(+), 25 deletions(-)
+ tests/xfs/354 |    7 ++++++-
+ tests/xfs/355 |    7 ++++++-
+ tests/xfs/455 |    7 ++++++-
+ 3 files changed, 18 insertions(+), 3 deletions(-)
 
 
-diff --git a/common/fuzzy b/common/fuzzy
-index a33c230b40..e9a5d67592 100644
---- a/common/fuzzy
-+++ b/common/fuzzy
-@@ -380,37 +380,43 @@ _scratch_xfs_fuzz_field_modifyfs() {
- 	local fuzz_action="$1"
- 	local repair="$2"
+diff --git a/tests/xfs/354 b/tests/xfs/354
+index b10ce1d68f..8abf527ea6 100755
+--- a/tests/xfs/354
++++ b/tests/xfs/354
+@@ -28,8 +28,13 @@ echo "Fuzz AGFL"
+ _scratch_xfs_fuzz_metadata '' 'offline' 'agfl 0' >> $seqres.full
+ echo "Done fuzzing AGFL"
  
--	# Try to mount the filesystem
--	echo "+ Make sure error is gone (online)"
-+	# Try to mount the filesystem so that we can make changes
-+	__fuzz_notify "+ Mount filesystem to make changes"
- 	_try_scratch_mount 2>&1
- 	res=$?
--	if [ $res -eq 0 ]; then
--		# Make sure online scrub says the filesystem is clean now
--		if [ "${repair}" != "none" ]; then
--			echo "++ Online scrub"
--			_scratch_scrub -n -e continue 2>&1
--				res=$?
--				test $res -ne 0 && \
--					(>&2 echo "online re-scrub ($res) with ${field} = ${fuzzverb}.")
--			fi
--		fi
-+	if [ $res -ne 0 ]; then
-+		(>&2 echo "${fuzz_action}: pre-mod mount failed ($res).")
-+		return $res
-+	fi
- 
--		# Try modifying the filesystem again
--		__fuzz_notify "++ Try to write filesystem again"
--		_scratch_fuzz_modify 100 2>&1
-+	# Try modifying the filesystem again
-+	__fuzz_notify "++ Try to write filesystem again"
-+	_scratch_fuzz_modify 100 2>&1
+-echo "Fuzz AGFL flfirst"
++# Restore a correct copy of the filesystem before we start the second round of
++# fuzzing.  This avoids corruption errors from xfs_db when we probe for flfirst
++# in the AGF and later when _scratch_xfs_fuzz_metadata probes the AGFL fields.
++__scratch_xfs_fuzz_mdrestore
+ flfirst=$(_scratch_xfs_db -c 'agf 0' -c 'p flfirst' | sed -e 's/flfirst = //g')
 +
-+	# If we didn't repair anything, there's no point in checking further,
-+	# the fs is still corrupt.
-+	if [ "${repair}" = "none" ]; then
- 		__scratch_xfs_fuzz_unmount
--	else
--		(>&2 echo "re-mount failed ($res) with ${fuzz_action}.")
-+		return 0
- 	fi
++echo "Fuzz AGFL flfirst"
+ SCRATCH_XFS_LIST_METADATA_FIELDS="bno[${flfirst}]" _scratch_xfs_fuzz_metadata '' 'offline' 'agfl 0' >> $seqres.full
+ echo "Done fuzzing AGFL flfirst"
  
--	# See if repair finds a clean fs
--	if [ "${repair}" != "none" ]; then
--		echo "+ Re-check the filesystem (offline)"
--		_scratch_xfs_repair -n 2>&1
--		res=$?
--		test $res -ne 0 && \
--			(>&2 echo "re-repair failed ($res) with ${field} = ${fuzzverb}.")
--	fi
-+	# Run an online check to make sure the fs is still ok, unless we
-+	# are running the norepair strategy.
-+	__fuzz_notify "+ Re-check the filesystem (online)"
-+	_scratch_scrub -n -e continue 2>&1
-+	res=$?
-+	test $res -ne 0 && \
-+		(>&2 echo "${fuzz_action}: online post-mod scrub failed ($res).")
-+
-+	__scratch_xfs_fuzz_unmount
-+
-+	# Run an offline check to make sure the fs is still ok, unless we
-+	# are running the norepair strategy.
-+	__fuzz_notify "+ Re-check the filesystem (offline)"
-+	_scratch_xfs_repair -P -n 2>&1
-+	res=$?
-+	test $res -ne 0 && \
-+		(>&2 echo "${fuzz_action}: offline post-mod scrub failed ($res).")
+diff --git a/tests/xfs/355 b/tests/xfs/355
+index 530c9a970a..2d552a591c 100755
+--- a/tests/xfs/355
++++ b/tests/xfs/355
+@@ -28,8 +28,13 @@ echo "Fuzz AGFL"
+ _scratch_xfs_fuzz_metadata '' 'online' 'agfl 0' >> $seqres.full
+ echo "Done fuzzing AGFL"
  
- 	return 0
- }
+-echo "Fuzz AGFL flfirst"
++# Restore a correct copy of the filesystem before we start the second round of
++# fuzzing.  This avoids corruption errors from xfs_db when we probe for flfirst
++# in the AGF and later when _scratch_xfs_fuzz_metadata probes the AGFL fields.
++__scratch_xfs_fuzz_mdrestore
+ flfirst=$(_scratch_xfs_db -c 'agf 0' -c 'p flfirst' | sed -e 's/flfirst = //g')
++
++echo "Fuzz AGFL flfirst"
+ SCRATCH_XFS_LIST_METADATA_FIELDS="bno[${flfirst}]" _scratch_xfs_fuzz_metadata '' 'online' 'agfl 0' >> $seqres.full
+ echo "Done fuzzing AGFL flfirst"
+ 
+diff --git a/tests/xfs/455 b/tests/xfs/455
+index 96820bc3b8..9f06c71fa2 100755
+--- a/tests/xfs/455
++++ b/tests/xfs/455
+@@ -29,8 +29,13 @@ echo "Fuzz AGFL"
+ _scratch_xfs_fuzz_metadata '' 'none' 'agfl 0' >> $seqres.full
+ echo "Done fuzzing AGFL"
+ 
+-echo "Fuzz AGFL flfirst"
++# Restore a correct copy of the filesystem before we start the second round of
++# fuzzing.  This avoids corruption errors from xfs_db when we probe for flfirst
++# in the AGF and later when _scratch_xfs_fuzz_metadata probes the AGFL fields.
++__scratch_xfs_fuzz_mdrestore
+ flfirst=$(_scratch_xfs_db -c 'agf 0' -c 'p flfirst' | sed -e 's/flfirst = //g')
++
++echo "Fuzz AGFL flfirst"
+ SCRATCH_XFS_LIST_METADATA_FIELDS="bno[${flfirst}]" _scratch_xfs_fuzz_metadata '' 'none' 'agfl 0' >> $seqres.full
+ echo "Done fuzzing AGFL flfirst"
+ 
 
