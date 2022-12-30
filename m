@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0AF8C3DA7C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF540C4332F
 	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:41:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231522AbiLaClD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 21:41:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58074 "EHLO
+        id S231494AbiLaClB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 21:41:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58046 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236169AbiLaClB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:41:01 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDB2D62FD
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:40:59 -0800 (PST)
+        with ESMTP id S231522AbiLaCko (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:40:44 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87C82BD4
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:40:43 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 28B88CE1A06
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:40:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6634BC433D2;
-        Sat, 31 Dec 2022 02:40:56 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 25D16B81E08
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:40:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D96ABC433EF;
+        Sat, 31 Dec 2022 02:40:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672454456;
-        bh=qBbU7P2UGSbrLYvWzT5xFtb9AgVtPubHpTp9ZhA1g54=;
+        s=k20201202; t=1672454440;
+        bh=k1iOpzSfh1AiUNApi+5H7MbtsEZ3IA0yJW2dhzF7NzU=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=ulX+7w/VYmnWIzjpaMtDAKB1OegtzNwEMMHtHTMHgwScD+UwuWg6bXwgU3tg1ZFWh
-         xQKhacCCUPeg2zqj8k8AwpRpThhE3YqkP6kgBIm0M4Vb0yJn/peFU1Mpqh5p6YdUIe
-         eGSTm35NYdljr3lqD/74Ylw/eNPOmGLYgOFIVaWMIvCMxba40Ztv22QVeVRK6jUGrY
-         VIMhfjx1Wtv5yjfwLpWMq/wm8swq/gLnB8VQWaJfmKZhYnpUEx9B8nbYldz6axwGod
-         ZCMoU3ewK34ADvx/1IflLgJ1tX8wZCDsmAu6P8Du51MWFKzQ6EyirKlVPC6MhluuaT
-         2RAVmjBI0jDUA==
-Subject: [PATCH 42/45] xfs_scrub: fstrim each rtgroup in parallel
+        b=k+HUJ9XXys/uxIc7u2+PcadVzzjp/KLXAf71mf3KzKCbE6AoJinVWpD/AL+0E2K3G
+         NfBuJifTeqrpGpFqaYD7pSTSwujZJ8BlgfZOwn5PptqAgBg9udrZ1YG4yk0sK1m+vv
+         f3rQSdXGj9a42qRgTM+MOXFeVwvEx8PGx1YBxvGGBvhPh/lTm7SbweScDgp/Pdouwx
+         82tFl8GCTvv4Ix8MwLtUY7lBLXtO3h/Qg1nmFAAWP/cty3bmtFmFyFaDQQ/9r5TvIW
+         RZnzqNEF4HyJmcbC2K0kU7lehnSSIC4NrUhQNzAWTjD48ztbqTU3wcargeVDKQnecG
+         i8DGqVO4hC9/A==
+Subject: [PATCH 41/45] xfs_scrub: scrub realtime allocation group metadata
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:19:49 -0800
-Message-ID: <167243878911.731133.1130139562119311184.stgit@magnolia>
+Message-ID: <167243878898.731133.9688954837507947732.stgit@magnolia>
 In-Reply-To: <167243878346.731133.14642166452774753637.stgit@magnolia>
 References: <167243878346.731133.14642166452774753637.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,126 +49,170 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
+Scan realtime group metadata as part of phase 2, just like we do for AG
+metadata.
+
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libfrog/fsgeom.h |   21 +++++++++++++++++++++
- scrub/phase8.c   |   46 +++++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 66 insertions(+), 1 deletion(-)
+ scrub/phase2.c |   97 +++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ scrub/scrub.h  |    9 +++++
+ 2 files changed, 104 insertions(+), 2 deletions(-)
 
 
-diff --git a/libfrog/fsgeom.h b/libfrog/fsgeom.h
-index 8c21b240bb2..6c6d6bb815a 100644
---- a/libfrog/fsgeom.h
-+++ b/libfrog/fsgeom.h
-@@ -203,4 +203,25 @@ cvt_b_to_agbno(
- 	return cvt_daddr_to_agbno(xfd, cvt_btobbt(byteno));
- }
+diff --git a/scrub/phase2.c b/scrub/phase2.c
+index ebe3ad3ad5c..a224af11ed4 100644
+--- a/scrub/phase2.c
++++ b/scrub/phase2.c
+@@ -28,6 +28,14 @@ struct scan_ctl {
+ 	pthread_mutex_t		rbm_waitlock;
+ 	bool			rbm_done;
  
-+/* Convert rtgroup number and rtgroup block to fs block number */
-+static inline uint64_t
-+cvt_rgbno_to_daddr(
-+	struct xfs_fd		*xfd,
-+	uint32_t		rgno,
-+	uint32_t		rgbno)
-+{
-+	return cvt_off_fsb_to_bb(xfd,
-+			(uint64_t)rgno * xfd->fsgeom.rgblocks + rgbno);
-+}
++	/*
++	 * Control mechanism to signal that each group's scan of the rt bitmap
++	 * file scan is done and wake up any waiters.
++	 */
++	pthread_cond_t		rbm_group_wait;
++	pthread_mutex_t		rbm_group_waitlock;
++	unsigned int		rbm_group_count;
 +
-+/* Convert rtgroup number and rtgroup block to a byte location on disk. */
-+static inline uint64_t
-+cvt_rgbno_to_b(
-+	struct xfs_fd		*xfd,
-+	xfs_rgnumber_t		rgno,
-+	xfs_rgblock_t		rgbno)
-+{
-+	return cvt_bbtob(cvt_rgbno_to_daddr(xfd, rgno, rgbno));
-+}
-+
- #endif /* __LIBFROG_FSGEOM_H__ */
-diff --git a/scrub/phase8.c b/scrub/phase8.c
-index a8ea8db706b..cc4901f8614 100644
---- a/scrub/phase8.c
-+++ b/scrub/phase8.c
-@@ -48,6 +48,7 @@ fstrim_ok(
- 
- struct trim_ctl {
- 	uint64_t	datadev_end_pos;
-+	uint64_t	rtdev_end_pos;
- 	bool		aborted;
+ 	bool			aborted;
  };
  
-@@ -80,6 +81,35 @@ trim_ag(
- 	progress_add(1);
+@@ -178,6 +186,48 @@ scan_metafile(
+ 	}
  }
  
-+/* Trim each rt group. */
++/* Scrub each rt group's metadata. */
 +static void
-+trim_rtgroup(
++scan_rtgroup_metadata(
 +	struct workqueue	*wq,
 +	xfs_agnumber_t		rgno,
 +	void			*arg)
 +{
++	struct scrub_item	sri;
 +	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
-+	struct trim_ctl		*tctl = arg;
-+	uint64_t		pos, len, eortg_pos;
-+	int			error;
++	struct scan_ctl		*sctl = arg;
++	char			descr[DESCR_BUFSZ];
++	int			ret;
 +
-+	pos = cvt_rgbno_to_b(&ctx->mnt, rgno, 0);
-+	eortg_pos = cvt_rgbno_to_b(&ctx->mnt, rgno, ctx->mnt.fsgeom.rgblocks);
-+	len = min(tctl->rtdev_end_pos, eortg_pos) - pos;
++	if (sctl->aborted)
++		goto out;
 +
-+	error = fstrim(ctx, pos + tctl->datadev_end_pos, len);
-+	if (error) {
-+		char		descr[DESCR_BUFSZ];
++	scrub_item_init_rtgroup(&sri, rgno);
++	snprintf(descr, DESCR_BUFSZ, _("rtgroup %u"), rgno);
 +
-+		snprintf(descr, sizeof(descr) - 1, _("fstrim rgno %u"), rgno);
-+		str_liberror(ctx, error, descr);
-+		tctl->aborted = true;
-+		return;
++	scrub_item_schedule_group(&sri, XFROG_SCRUB_GROUP_RTGROUP);
++	ret = scrub_item_check(ctx, &sri);
++	if (ret) {
++		sctl->aborted = true;
++		goto out;
 +	}
 +
-+	progress_add(1);
++	/* Everything else gets fixed during phase 4. */
++	ret = defer_fs_repair(ctx, &sri);
++	if (ret) {
++		sctl->aborted = true;
++		goto out;
++	}
++
++out:
++	/* Signal anybody waiting for the group bitmap scan to finish. */
++	pthread_mutex_lock(&sctl->rbm_group_waitlock);
++	sctl->rbm_group_count--;
++	if (sctl->rbm_group_count == 0)
++		pthread_cond_broadcast(&sctl->rbm_group_wait);
++	pthread_mutex_unlock(&sctl->rbm_group_waitlock);
 +}
 +
- /* Trim the filesystem, if desired. */
+ /* Scan all filesystem metadata. */
  int
- phase8_func(
-@@ -97,6 +127,8 @@ phase8_func(
+ phase2_func(
+@@ -191,6 +241,7 @@ phase2_func(
+ 	struct scrub_item	sri;
+ 	const struct xfrog_scrub_descr *sc = xfrog_scrubbers;
+ 	xfs_agnumber_t		agno;
++	xfs_rgnumber_t		rgno;
+ 	unsigned int		type;
+ 	int			ret, ret2;
  
- 	tctl.datadev_end_pos = cvt_off_fsb_to_b(&ctx->mnt,
- 			ctx->mnt.fsgeom.datablocks);
-+	tctl.rtdev_end_pos = cvt_off_fsb_to_b(&ctx->mnt,
-+			ctx->mnt.fsgeom.rtblocks);
+@@ -256,8 +307,10 @@ phase2_func(
+ 		goto out_wq;
  
- 	error = -workqueue_create(&wq, (struct xfs_mount *)ctx,
- 			disk_heads(ctx->datadev));
-@@ -117,6 +149,18 @@ phase8_func(
- 		}
+ 	/*
+-	 * Wait for the rt bitmap to finish scanning, then scan the rt summary
+-	 * since the summary can be regenerated completely from the bitmap.
++	 * Wait for the rt bitmap to finish scanning, then scan the realtime
++	 * group metadata.  When rtgroups are enabled, the RTBITMAP scanner
++	 * only checks the inode and fork data of the rt bitmap file, and each
++	 * group checks its own part of the rtbitmap.
+ 	 */
+ 	ret = pthread_mutex_lock(&sctl.rbm_waitlock);
+ 	if (ret) {
+@@ -274,6 +327,46 @@ phase2_func(
  	}
+ 	pthread_mutex_unlock(&sctl.rbm_waitlock);
  
-+	/* Trim each rtgroup in parallel. */
-+	for (agno = 0;
-+	     agno < ctx->mnt.fsgeom.rgcount && !tctl.aborted;
-+	     agno++) {
-+		error = -workqueue_add(&wq, trim_rtgroup, agno, &tctl);
-+		if (error) {
-+			str_liberror(ctx, error,
-+					_("queueing per-rtgroup fstrim work"));
++	if (sctl.aborted)
++		goto out_wq;
++
++	for (rgno = 0;
++	     rgno < ctx->mnt.fsgeom.rgcount && !sctl.aborted;
++	     rgno++) {
++		pthread_mutex_lock(&sctl.rbm_group_waitlock);
++		sctl.rbm_group_count++;
++		pthread_mutex_unlock(&sctl.rbm_group_waitlock);
++		ret = -workqueue_add(&wq, scan_rtgroup_metadata, rgno, &sctl);
++		if (ret) {
++			str_liberror(ctx, ret,
++					_("queueing rtgroup scrub work"));
 +			goto out_wq;
 +		}
 +	}
 +
- out_wq:
- 	err2 = -workqueue_terminate(&wq);
- 	if (err2) {
-@@ -142,7 +186,7 @@ phase8_estimate(
- 	*items = 0;
++	if (sctl.aborted)
++		goto out_wq;
++
++	/*
++	 * Wait for the rtgroups to finish scanning, then scan the rt summary
++	 * since the summary can be regenerated completely from the bitmap.
++	 */
++	ret = pthread_mutex_lock(&sctl.rbm_group_waitlock);
++	if (ret) {
++		str_liberror(ctx, ret, _("waiting for rtgroup scrubbers"));
++		goto out_wq;
++	}
++	if (sctl.rbm_group_count > 0) {
++		ret = pthread_cond_wait(&sctl.rbm_group_wait,
++				&sctl.rbm_group_waitlock);
++		if (ret) {
++			str_liberror(ctx, ret,
++	_("waiting for rtgroup scrubbers"));
++			goto out_wq;
++		}
++	}
++	pthread_mutex_unlock(&sctl.rbm_group_waitlock);
++
+ 	if (sctl.aborted)
+ 		goto out_wq;
  
- 	if (fstrim_ok(ctx))
--		*items = ctx->mnt.fsgeom.agcount;
-+		*items = ctx->mnt.fsgeom.agcount + ctx->mnt.fsgeom.rgcount;
+diff --git a/scrub/scrub.h b/scrub/scrub.h
+index 53354099c81..b7e6173f8fa 100644
+--- a/scrub/scrub.h
++++ b/scrub/scrub.h
+@@ -87,6 +87,15 @@ scrub_item_init_ag(struct scrub_item *sri, xfs_agnumber_t agno)
+ 	sri->sri_gen = -1U;
+ }
  
- 	*nr_threads = disk_heads(ctx->datadev);
- 	*rshift = 0;
++static inline void
++scrub_item_init_rtgroup(struct scrub_item *sri, xfs_rgnumber_t rgno)
++{
++	memset(sri, 0, sizeof(*sri));
++	sri->sri_agno = rgno;
++	sri->sri_ino = -1ULL;
++	sri->sri_gen = -1U;
++}
++
+ static inline void
+ scrub_item_init_fs(struct scrub_item *sri)
+ {
 
