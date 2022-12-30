@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D80B3C4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:57:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FD14C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:57:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235751AbiL3X5O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 18:57:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52078 "EHLO
+        id S235659AbiL3X5a (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 18:57:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235659AbiL3X5M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:57:12 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F92416588
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 15:57:10 -0800 (PST)
+        with ESMTP id S235835AbiL3X52 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:57:28 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 960DE1E3C5
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 15:57:27 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id F105761C44
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 23:57:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BA95C433EF;
-        Fri, 30 Dec 2022 23:57:09 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 35A14B81DD1
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 23:57:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDA91C433D2;
+        Fri, 30 Dec 2022 23:57:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672444629;
-        bh=CGuNHKBrVnO5T/r/7tmrhJ/ZU222MZtN5xcDgLj4rhs=;
+        s=k20201202; t=1672444645;
+        bh=J3WCx5kihU5kYTvkD/CUFzixZdMHJzshsBTdfiaU4Lg=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Vzbic5B2NzO8iJ0UubkIgdXh1q5YVKrmVozOAZexfWgtXfrDcG74ZVUou3VgsiEtj
-         XjKncyisTuuHTeqQoXignlbo0hyisR8gWZeHCMrwWyAjawV0NjVUtjUUYZWTSWFSeP
-         0Kt4UKrb+9xvoWcnez0cqpwVyC2ZX/KcDVtMyqWq7YM8xdC2E3HzND45pSbSRPGNC4
-         kN8kp2AUtVKiIW0t0b7xpAj480KZ+OfDixymWP3hSOL4yK3Lq/4EDChopr+Tf6Re7d
-         OYacru20/6kPn4Tn1zCOScRaMoCy/RgvnTLQjEv/P2H977owNlyGWgwUC46sYGKzdV
-         8JVcSeAE2Hs2A==
-Subject: [PATCH 2/3] xfs: teach the tempfile to support atomic extent swapping
+        b=QirIcVUDfcm7QW3mOHIe1vti/fPV0o+dtLYBZy+2F5QPrHRNmM9GuI+k8UZU8PWSa
+         TMpDhiWUNcNPg+ouqosQTO7kP2unebTk3NY2aIDS3s3mCIf0j4yy/ALCLa0z94M9in
+         hbFVPN49gQkuGpVD/wozeBPrw189gaRNWe5NEBQeYlxHMWISgqljo8ogjn2XUuM9Bp
+         Za/ZD7EILQAQS6Tt+ImegJO24cjU4781lq1xNIt2aY3PXfl2u4O3jDixV2F+CC1x1E
+         mupHWu50/rTVhfdpS+s1ML6p8R/Y+br33uLG5w/HpZovEeRx+SZFXYsIz8jM6UJ4Y1
+         ubk/0HP/yg0tQ==
+Subject: [PATCH 3/3] xfs: online repair of realtime summaries
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:14:05 -0800
-Message-ID: <167243844505.700124.13639617427288035717.stgit@magnolia>
+Message-ID: <167243844519.700124.14532389095888627394.stgit@magnolia>
 In-Reply-To: <167243844474.700124.6546659007531232200.stgit@magnolia>
 References: <167243844474.700124.6546659007531232200.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,312 +49,372 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create some new routines to exchange the contents of a temporary file
-created to stage a repair with another ondisk file.  This will be used
-by the realtime summary repair function to commit atomically the new
-rtsummary data, which will be staged in the tempfile.
-
-The rest of XFS coordinates access to the realtime metadata inodes
-solely through the ILOCK.  For repair to hold its exclusive access to
-the realtime summary file, it has to allocate a single large transaction
-and roll it repeatedly throughout the repair while holding the ILOCK.
-In turn, this means that for now there's only a partial swapext
-implementation for the temporary file, because we can only work within
-an existing transaction.  Hence the only tempswap functions needed here
-are to estimate the resource requirements of swapext between, reserve
-more space/quota to an existing transaction, and kick off the actual
-swap.  The rest will be added in a later patch in preparation for
-repairing xattrs and directories.
+Repair the realtime summary data by constructing a new rtsummary file in
+the scrub temporary file, then atomically swapping the contents.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/scrub.c    |    4 +
- fs/xfs/scrub/scrub.h    |    1 
- fs/xfs/scrub/tempfile.c |  193 +++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/tempswap.h |   21 +++++
- fs/xfs/scrub/trace.h    |    1 
- 5 files changed, 220 insertions(+)
- create mode 100644 fs/xfs/scrub/tempswap.h
+ fs/xfs/Makefile                 |    1 
+ fs/xfs/scrub/common.c           |    1 
+ fs/xfs/scrub/repair.h           |   14 +++
+ fs/xfs/scrub/rtsummary.c        |   18 +++-
+ fs/xfs/scrub/rtsummary.h        |   14 +++
+ fs/xfs/scrub/rtsummary_repair.c |  169 +++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/scrub.c            |    3 -
+ 7 files changed, 214 insertions(+), 6 deletions(-)
+ create mode 100644 fs/xfs/scrub/rtsummary.h
+ create mode 100644 fs/xfs/scrub/rtsummary_repair.c
 
 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 7bab30c2766e..a994710d99ae 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -193,6 +193,10 @@ xchk_teardown(
- 		xchk_irele(sc, sc->ip);
- 		sc->ip = NULL;
- 	}
-+	if (sc->flags & XREP_ATOMIC_EXCHANGE) {
-+		sc->flags &= ~XREP_ATOMIC_EXCHANGE;
-+		xfs_xchg_range_rele_log_assist(sc->mp);
-+	}
- 	if (sc->flags & XCHK_HAVE_FREEZE_PROT) {
- 		sc->flags &= ~XCHK_HAVE_FREEZE_PROT;
- 		mnt_drop_write_file(sc->file);
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index 7892901ad70b..9c26a6092c52 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -131,6 +131,7 @@ struct xfs_scrub {
- #define XCHK_FSHOOKS_QUOTA	(1 << 4)  /* quota live update enabled */
- #define XCHK_FSHOOKS_NLINKS	(1 << 5)  /* link count live update enabled */
- #define XCHK_FSHOOKS_RMAP	(1 << 6)  /* rmapbt live update enabled */
-+#define XREP_ATOMIC_EXCHANGE	(1 << 29) /* uses atomic file content exchange */
- #define XREP_RESET_PERAG_RESV	(1 << 30) /* must reset AG space reservation */
- #define XREP_ALREADY_FIXED	(1 << 31) /* checking our repair work */
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 6df1cd3b46ca..0abdcc69cd7f 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -207,6 +207,7 @@ xfs-y				+= $(addprefix scrub/, \
  
-diff --git a/fs/xfs/scrub/tempfile.c b/fs/xfs/scrub/tempfile.c
-index d45ed229b8cb..7214d2370bc9 100644
---- a/fs/xfs/scrub/tempfile.c
-+++ b/fs/xfs/scrub/tempfile.c
-@@ -19,12 +19,14 @@
- #include "xfs_trans_space.h"
- #include "xfs_dir2.h"
- #include "xfs_xchgrange.h"
+ xfs-$(CONFIG_XFS_RT)		+= $(addprefix scrub/, \
+ 				   rtbitmap_repair.o \
++				   rtsummary_repair.o \
+ 				   )
+ 
+ xfs-$(CONFIG_XFS_QUOTA)		+= $(addprefix scrub/, \
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 7eade2567af6..2fbd8aa01ef7 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -32,6 +32,7 @@
+ #include "xfs_ag.h"
+ #include "xfs_error.h"
+ #include "xfs_quota.h"
 +#include "xfs_swapext.h"
- #include "xfs_defer.h"
  #include "scrub/scrub.h"
  #include "scrub/common.h"
- #include "scrub/repair.h"
  #include "scrub/trace.h"
- #include "scrub/tempfile.h"
-+#include "scrub/tempswap.h"
- #include "scrub/xfile.h"
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index 3b25f2fa629e..086e8e739264 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -80,6 +80,8 @@ int xrep_bmap(struct xfs_scrub *sc, int whichfork, bool allow_unwritten);
+ int xrep_metadata_inode_forks(struct xfs_scrub *sc);
+ int xrep_setup_ag_rmapbt(struct xfs_scrub *sc);
+ int xrep_setup_ag_refcountbt(struct xfs_scrub *sc);
++int xrep_setup_rtsummary(struct xfs_scrub *sc, unsigned int *resblks,
++		size_t *bufsize);
  
- /*
-@@ -424,3 +426,194 @@ xrep_tempfile_roll_trans(
- 	xfs_trans_ijoin(sc->tp, sc->tempip, 0);
+ /* Repair setup functions */
+ int xrep_setup_ag_allocbt(struct xfs_scrub *sc);
+@@ -117,8 +119,10 @@ int xrep_fscounters(struct xfs_scrub *sc);
+ 
+ #ifdef CONFIG_XFS_RT
+ int xrep_rtbitmap(struct xfs_scrub *sc);
++int xrep_rtsummary(struct xfs_scrub *sc);
+ #else
+ # define xrep_rtbitmap			xrep_notsupported
++# define xrep_rtsummary			xrep_notsupported
+ #endif /* CONFIG_XFS_RT */
+ 
+ #ifdef CONFIG_XFS_QUOTA
+@@ -186,6 +190,15 @@ static inline int xrep_setup_rtbitmap(struct xfs_scrub *sc, unsigned int *x)
  	return 0;
  }
-+
-+/* Enable atomic extent swapping. */
-+int
-+xrep_tempswap_grab_log_assist(
-+	struct xfs_scrub	*sc)
+ 
++static inline int
++xrep_setup_rtsummary(
++	struct xfs_scrub	*sc,
++	unsigned int		*whatever,
++	size_t			*dontcare)
 +{
-+	bool			need_rele = false;
-+	int			error;
-+
-+	ASSERT(!(sc->flags & XREP_ATOMIC_EXCHANGE));
-+
-+	error = xfs_xchg_range_grab_log_assist(sc->mp, true, &need_rele);
-+	if (error)
-+		return error;
-+	if (!need_rele) {
-+		ASSERT(need_rele);
-+		return -EOPNOTSUPP;
-+	}
-+
-+	sc->flags |= XREP_ATOMIC_EXCHANGE;
 +	return 0;
 +}
 +
-+/*
-+ * Fill out the swapext request in preparation for swapping the contents of a
-+ * metadata file that we've rebuilt in the temp file.
-+ */
-+STATIC int
-+xrep_tempswap_prep_request(
-+	struct xfs_scrub	*sc,
-+	int			whichfork,
-+	struct xrep_tempswap	*tx)
-+{
-+	struct xfs_swapext_req	*req = &tx->req;
-+
-+	memset(tx, 0, sizeof(struct xrep_tempswap));
-+
-+	/* COW forks don't exist on disk. */
-+	if (whichfork == XFS_COW_FORK) {
-+		ASSERT(0);
-+		return -EINVAL;
+ #define xrep_revalidate_allocbt		(NULL)
+ #define xrep_revalidate_iallocbt	(NULL)
+ 
+@@ -207,6 +220,7 @@ static inline int xrep_setup_rtbitmap(struct xfs_scrub *sc, unsigned int *x)
+ #define xrep_quotacheck			xrep_notsupported
+ #define xrep_nlinks			xrep_notsupported
+ #define xrep_fscounters			xrep_notsupported
++#define xrep_rtsummary			xrep_notsupported
+ 
+ #endif /* CONFIG_XFS_ONLINE_REPAIR */
+ 
+diff --git a/fs/xfs/scrub/rtsummary.c b/fs/xfs/scrub/rtsummary.c
+index 73c75d41ef3c..7d1bc49fb3dd 100644
+--- a/fs/xfs/scrub/rtsummary.c
++++ b/fs/xfs/scrub/rtsummary.c
+@@ -20,6 +20,8 @@
+ #include "scrub/common.h"
+ #include "scrub/trace.h"
+ #include "scrub/xfile.h"
++#include "scrub/repair.h"
++#include "scrub/rtsummary.h"
+ 
+ /*
+  * Realtime Summary
+@@ -37,8 +39,16 @@ xchk_setup_rtsummary(
+ 	struct xfs_scrub	*sc)
+ {
+ 	struct xfs_mount	*mp = sc->mp;
++	size_t			bufsize = mp->m_sb.sb_blocksize;
++	unsigned int		resblks = 0;
+ 	int			error;
+ 
++	if (xchk_could_repair(sc)) {
++		error = xrep_setup_rtsummary(sc, &resblks, &bufsize);
++		if (error)
++			return error;
 +	}
 +
-+	/* Both files should have the relevant forks. */
-+	if (!xfs_ifork_ptr(sc->ip, whichfork) ||
-+	    !xfs_ifork_ptr(sc->tempip, whichfork)) {
-+		ASSERT(0);
-+		return -EINVAL;
-+	}
-+
-+	/* Swap all mappings in both forks. */
-+	req->ip1 = sc->tempip;
-+	req->ip2 = sc->ip;
-+	req->startoff1 = 0;
-+	req->startoff2 = 0;
-+	req->whichfork = whichfork;
-+	req->blockcount = XFS_MAX_FILEOFF;
-+	req->req_flags = XFS_SWAP_REQ_LOGGED;
-+
-+	/* Always swap sizes when we're swapping data fork mappings. */
-+	if (whichfork == XFS_DATA_FORK)
-+		req->req_flags |= XFS_SWAP_REQ_SET_SIZES;
-+
-+	/*
-+	 * If we're repairing symlinks, xattrs, or directories, always try to
-+	 * convert ip2 to short format after swapping.
-+	 */
-+	if (whichfork == XFS_ATTR_FORK || S_ISDIR(VFS_I(sc->ip)->i_mode) ||
-+	    S_ISLNK(VFS_I(sc->ip)->i_mode))
-+		req->req_flags |= XFS_SWAP_REQ_CVT_INO2_SF;
-+
-+	return 0;
-+}
-+
-+/*
-+ * Obtain a quota reservation to make sure we don't hit EDQUOT.  We can skip
-+ * this if quota enforcement is disabled or if both inodes' dquots are the
-+ * same.  The qretry structure must be initialized to zeroes before the first
-+ * call to this function.
-+ */
-+STATIC int
-+xrep_tempswap_reserve_quota(
-+	struct xfs_scrub		*sc,
-+	const struct xrep_tempswap	*tx)
-+{
-+	struct xfs_trans		*tp = sc->tp;
-+	const struct xfs_swapext_req	*req = &tx->req;
-+	int64_t				ddelta, rdelta;
-+	int				error;
-+
-+	/*
-+	 * Don't bother with a quota reservation if we're not enforcing them
-+	 * or the two inodes have the same dquots.
-+	 */
-+	if (!XFS_IS_QUOTA_ON(tp->t_mountp) || req->ip1 == req->ip2 ||
-+	    (req->ip1->i_udquot == req->ip2->i_udquot &&
-+	     req->ip1->i_gdquot == req->ip2->i_gdquot &&
-+	     req->ip1->i_pdquot == req->ip2->i_pdquot))
-+		return 0;
-+
-+	/*
-+	 * Quota reservation for each file comes from two sources.  First, we
-+	 * need to account for any net gain in mapped blocks during the swap.
-+	 * Second, we need reservation for the gross gain in mapped blocks so
-+	 * that we don't trip over any quota block reservation assertions.  We
-+	 * must reserve the gross gain because the quota code subtracts from
-+	 * bcount the number of blocks that we unmap; it does not add that
-+	 * quantity back to the quota block reservation.
-+	 */
-+	ddelta = max_t(int64_t, 0, req->ip2_bcount - req->ip1_bcount);
-+	rdelta = max_t(int64_t, 0, req->ip2_rtbcount - req->ip1_rtbcount);
-+	error = xfs_trans_reserve_quota_nblks(tp, req->ip1,
-+			ddelta + req->ip1_bcount, rdelta + req->ip1_rtbcount,
-+			true);
-+	if (error)
-+		return error;
-+
-+	ddelta = max_t(int64_t, 0, req->ip1_bcount - req->ip2_bcount);
-+	rdelta = max_t(int64_t, 0, req->ip1_rtbcount - req->ip2_rtbcount);
-+	return xfs_trans_reserve_quota_nblks(tp, req->ip2,
-+			ddelta + req->ip2_bcount, rdelta + req->ip2_rtbcount,
-+			true);
-+}
-+
-+/*
-+ * Prepare an existing transaction for a swap.  The caller must hold
-+ * the ILOCK of both the inode being repaired and the temporary file.
-+ * Only use this when those ILOCKs cannot be dropped.
-+ *
-+ * Fill out the swapext request and resource estimation structures in
-+ * preparation for swapping the contents of a metadata file that we've rebuilt
-+ * in the temp file, then reserve space and quota to the transaction.
-+ */
-+int
-+xrep_tempswap_trans_reserve(
-+	struct xfs_scrub	*sc,
-+	int			whichfork,
-+	struct xrep_tempswap	*tx)
-+{
-+	int			error;
-+
-+	ASSERT(sc->tp != NULL);
-+	ASSERT(xfs_isilocked(sc->ip, XFS_ILOCK_EXCL));
-+	ASSERT(xfs_isilocked(sc->tempip, XFS_ILOCK_EXCL));
-+
-+	error = xrep_tempswap_prep_request(sc, whichfork, tx);
-+	if (error)
-+		return error;
-+
-+	error = xfs_swapext_estimate(&tx->req);
-+	if (error)
-+		return error;
-+
-+	error = xfs_trans_reserve_more(sc->tp, tx->req.resblks, 0);
-+	if (error)
-+		return error;
-+
-+	return xrep_tempswap_reserve_quota(sc, tx);
-+}
-+
-+/* Swap forks between the file being repaired and the temporary file. */
-+int
-+xrep_tempswap_contents(
-+	struct xfs_scrub	*sc,
-+	struct xrep_tempswap	*tx)
-+{
-+	int			error;
-+
-+	ASSERT(sc->flags & XREP_ATOMIC_EXCHANGE);
-+
-+	xfs_swapext(sc->tp, &tx->req);
-+	error = xfs_defer_finish(&sc->tp);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * If we swapped the ondisk sizes of two metadata files, we must swap
-+	 * the incore sizes as well.  Since online fsck doesn't use swapext on
-+	 * the data forks of user-accessible files, the two sizes are always
-+	 * the same, so we don't need to log the inodes.
-+	 */
-+	if (tx->req.req_flags & XFS_SWAP_REQ_SET_SIZES) {
-+		loff_t	temp;
-+
-+		temp = i_size_read(VFS_I(sc->ip));
-+		i_size_write(VFS_I(sc->ip), i_size_read(VFS_I(sc->tempip)));
-+		i_size_write(VFS_I(sc->tempip), temp);
-+	}
-+
-+	return 0;
-+}
-diff --git a/fs/xfs/scrub/tempswap.h b/fs/xfs/scrub/tempswap.h
+ 	/*
+ 	 * Create an xfile to construct a new rtsummary file.  The xfile allows
+ 	 * us to avoid pinning kernel memory for this purpose.
+@@ -48,12 +58,12 @@ xchk_setup_rtsummary(
+ 	if (error)
+ 		return error;
+ 
+-	error = xchk_trans_alloc(sc, 0);
++	error = xchk_trans_alloc(sc, resblks);
+ 	if (error)
+ 		return error;
+ 
+ 	/* Allocate a memory buffer for the summary comparison. */
+-	sc->buf = kvmalloc(mp->m_sb.sb_blocksize, XCHK_GFP_FLAGS);
++	sc->buf = kvmalloc(bufsize, XCHK_GFP_FLAGS);
+ 	if (!sc->buf)
+ 		return -ENOMEM;
+ 
+@@ -78,8 +88,6 @@ xchk_setup_rtsummary(
+ 
+ /* Helper functions to record suminfo words in an xfile. */
+ 
+-typedef unsigned int xchk_rtsumoff_t;
+-
+ static inline int
+ xfsum_load(
+ 	struct xfs_scrub	*sc,
+@@ -100,7 +108,7 @@ xfsum_store(
+ 			sumoff << XFS_WORDLOG);
+ }
+ 
+-static inline int
++inline int
+ xfsum_copyout(
+ 	struct xfs_scrub	*sc,
+ 	xchk_rtsumoff_t		sumoff,
+diff --git a/fs/xfs/scrub/rtsummary.h b/fs/xfs/scrub/rtsummary.h
 new file mode 100644
-index 000000000000..62e88cc6d91a
+index 000000000000..e5f3c69c4cbf
 --- /dev/null
-+++ b/fs/xfs/scrub/tempswap.h
-@@ -0,0 +1,21 @@
++++ b/fs/xfs/scrub/rtsummary.h
+@@ -0,0 +1,14 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * Copyright (C) 2022 Oracle.  All Rights Reserved.
 + * Author: Darrick J. Wong <djwong@kernel.org>
 + */
-+#ifndef __XFS_SCRUB_TEMPSWAP_H__
-+#define __XFS_SCRUB_TEMPSWAP_H__
++#ifndef __XFS_SCRUB_RTSUMMARY_H__
++#define __XFS_SCRUB_RTSUMMARY_H__
 +
-+#ifdef CONFIG_XFS_ONLINE_REPAIR
-+struct xrep_tempswap {
-+	struct xfs_swapext_req	req;
++typedef unsigned int xchk_rtsumoff_t;
++
++int xfsum_copyout(struct xfs_scrub *sc, xchk_rtsumoff_t sumoff,
++		xfs_suminfo_t *info, unsigned int nr_words);
++
++#endif /* __XFS_SCRUB_RTSUMMARY_H__ */
+diff --git a/fs/xfs/scrub/rtsummary_repair.c b/fs/xfs/scrub/rtsummary_repair.c
+new file mode 100644
+index 000000000000..f5c14c50ebf3
+--- /dev/null
++++ b/fs/xfs/scrub/rtsummary_repair.c
+@@ -0,0 +1,169 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (C) 2022 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_btree.h"
++#include "xfs_log_format.h"
++#include "xfs_trans.h"
++#include "xfs_rtalloc.h"
++#include "xfs_inode.h"
++#include "xfs_bit.h"
++#include "xfs_bmap.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_swapext.h"
++#include "scrub/scrub.h"
++#include "scrub/common.h"
++#include "scrub/trace.h"
++#include "scrub/repair.h"
++#include "scrub/tempfile.h"
++#include "scrub/tempswap.h"
++#include "scrub/reap.h"
++#include "scrub/xfile.h"
++#include "scrub/rtsummary.h"
++
++struct xrep_rtsummary {
++	/* suminfo position of xfile as we write buffers to disk. */
++	xchk_rtsumoff_t		prep_wordoff;
 +};
 +
-+int xrep_tempswap_grab_log_assist(struct xfs_scrub *sc);
-+int xrep_tempswap_trans_reserve(struct xfs_scrub *sc, int whichfork,
-+		struct xrep_tempswap *ti);
++/* Set us up to repair the rtsummary file. */
++int
++xrep_setup_rtsummary(
++	struct xfs_scrub	*sc,
++	unsigned int		*resblks,
++	size_t			*bufsize)
++{
++	struct xfs_mount	*mp = sc->mp;
++	unsigned long long	blocks;
++	int			error;
 +
-+int xrep_tempswap_contents(struct xfs_scrub *sc, struct xrep_tempswap *ti);
-+#endif /* CONFIG_XFS_ONLINE_REPAIR */
++	*bufsize = max(*bufsize, sizeof(struct xrep_tempswap));
 +
-+#endif /* __XFS_SCRUB_TEMPFILE_H__ */
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 292e2c3ece1d..aebfaef07e2d 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -124,6 +124,7 @@ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_HEALTHY);
- 	{ XCHK_FSHOOKS_QUOTA,			"fshooks_quota" }, \
- 	{ XCHK_FSHOOKS_NLINKS,			"fshooks_nlinks" }, \
- 	{ XCHK_FSHOOKS_RMAP,			"fshooks_rmap" }, \
-+	{ XREP_ATOMIC_EXCHANGE,			"atomic_swapext" }, \
- 	{ XREP_RESET_PERAG_RESV,		"reset_perag_resv" }, \
- 	{ XREP_ALREADY_FIXED,			"already_fixed" }
- 
++	error = xrep_tempfile_create(sc, S_IFREG);
++	if (error)
++		return error;
++
++	/*
++	 * If we're doing a repair, we reserve enough blocks to write out a
++	 * completely new summary file, plus twice as many blocks as we would
++	 * need if we can only allocate one block per data fork mapping.  This
++	 * should cover the preallocation of the temporary file and swapping
++	 * the extent mappings.
++	 *
++	 * We cannot use xfs_swapext_estimate because we have not yet
++	 * constructed the replacement rtsummary and therefore do not know how
++	 * many extents it will use.  By the time we do, we will have a dirty
++	 * transaction (which we cannot drop because we cannot drop the
++	 * rtsummary ILOCK) and cannot ask for more reservation.
++	 */
++	blocks = XFS_B_TO_FSB(mp, mp->m_rsumsize);
++	blocks += xfs_bmbt_calc_size(mp, blocks) * 2;
++	if (blocks > UINT_MAX)
++		return -EOPNOTSUPP;
++
++	*resblks += blocks;
++
++	/*
++	 * Grab support for atomic extent swapping before we allocate any
++	 * transactions or grab ILOCKs.
++	 */
++	return xrep_tempswap_grab_log_assist(sc);
++}
++
++static int
++xrep_rtsummary_prep_buf(
++	struct xfs_scrub	*sc,
++	struct xfs_buf		*bp,
++	void			*data)
++{
++	struct xrep_rtsummary	*rs = data;
++	struct xfs_mount	*mp = sc->mp;
++	int			error;
++
++	bp->b_ops = &xfs_rtbuf_ops;
++
++	error = xfsum_copyout(sc, rs->prep_wordoff, bp->b_addr,
++			mp->m_blockwsize);
++	if (error)
++		return error;
++
++	rs->prep_wordoff += mp->m_blockwsize;
++	xfs_trans_buf_set_type(sc->tp, bp, XFS_BLFT_RTSUMMARY_BUF);
++	return 0;
++}
++
++/* Repair the realtime summary. */
++int
++xrep_rtsummary(
++	struct xfs_scrub	*sc)
++{
++	struct xrep_rtsummary	rs = { .prep_wordoff = 0, };
++	struct xrep_tempswap	*ti = NULL;
++	xfs_filblks_t		rsumblocks;
++	int			error;
++
++	/* We require the rmapbt to rebuild anything. */
++	if (!xfs_has_rmapbt(sc->mp))
++		return -EOPNOTSUPP;
++
++	/* Make sure any problems with the fork are fixed. */
++	error = xrep_metadata_inode_forks(sc);
++	if (error)
++		return error;
++
++	/*
++	 * Try to take ILOCK_EXCL of the temporary file.  We had better be the
++	 * only ones holding onto this inode, but we can't block while holding
++	 * the rtsummary file's ILOCK_EXCL.
++	 */
++	while (!xrep_tempfile_ilock_nowait(sc)) {
++		if (xchk_should_terminate(sc, &error))
++			return error;
++		delay(1);
++	}
++
++	/* Make sure we have space allocated for the entire summary file. */
++	rsumblocks = XFS_B_TO_FSB(sc->mp, sc->mp->m_rsumsize);
++	xfs_trans_ijoin(sc->tp, sc->ip, 0);
++	xfs_trans_ijoin(sc->tp, sc->tempip, 0);
++	error = xrep_tempfile_prealloc(sc, 0, rsumblocks);
++	if (error)
++		return error;
++
++	/* Last chance to abort before we start committing fixes. */
++	if (xchk_should_terminate(sc, &error))
++		return error;
++
++	/* Copy the rtsummary file that we generated. */
++	error = xrep_tempfile_copyin(sc, 0, rsumblocks,
++			xrep_rtsummary_prep_buf, &rs);
++	if (error)
++		return error;
++	error = xrep_tempfile_set_isize(sc, sc->mp->m_rsumsize);
++	if (error)
++		return error;
++
++	/*
++	 * Now swap the extents.  Nothing in repair uses the temporary buffer,
++	 * so we can reuse it for the tempfile swapext information.
++	 */
++	ti = sc->buf;
++	error = xrep_tempswap_trans_reserve(sc, XFS_DATA_FORK, ti);
++	if (error)
++		return error;
++
++	error = xrep_tempswap_contents(sc, ti);
++	if (error)
++		return error;
++	ti = NULL;
++
++	/* Free the old rtsummary blocks if they're not in use. */
++	return xrep_reap_ifork(sc, sc->tempip, XFS_DATA_FORK);
++}
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index a994710d99ae..a9030603b424 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -19,6 +19,7 @@
+ #include "xfs_btree_staging.h"
+ #include "xfs_rmap.h"
+ #include "xfs_xchgrange.h"
++#include "xfs_swapext.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ #include "scrub/trace.h"
+@@ -358,7 +359,7 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
+ 		.setup	= xchk_setup_rtsummary,
+ 		.scrub	= xchk_rtsummary,
+ 		.has	= xfs_has_realtime,
+-		.repair	= xrep_notsupported,
++		.repair	= xrep_rtsummary,
+ 	},
+ 	[XFS_SCRUB_TYPE_UQUOTA] = {	/* user quota */
+ 		.type	= ST_FS,
 
