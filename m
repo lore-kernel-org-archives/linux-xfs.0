@@ -2,43 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29B61C4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:34:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A133CC3DA7C
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:34:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235438AbiL3XeJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 18:34:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42060 "EHLO
+        id S235547AbiL3Xe1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 18:34:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231282AbiL3XeI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:34:08 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 460C21DDF0
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 15:34:07 -0800 (PST)
+        with ESMTP id S235545AbiL3XeY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:34:24 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08EDB1DF13
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 15:34:23 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E6FBFB81D97
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 23:34:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1712C433D2;
-        Fri, 30 Dec 2022 23:34:04 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 9E36EB81DA0
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 23:34:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4175AC433EF;
+        Fri, 30 Dec 2022 23:34:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672443244;
-        bh=L8AXkrrL7wSaKAEmwBWNehD8Wp9AaKklyAzUuSFHl8k=;
+        s=k20201202; t=1672443260;
+        bh=cPgakDQsa3A1MwIVvOWOz961tbDhZEHl0i72eRgqYyU=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=sNmQuTD5+H8nOL/Q3R3lQzLQs6mppZ+rAyz8AXF1mQraekoAQ6W5/cwxbh7/5I11E
-         Bu9n4D2lwSRYylFNdntBx58j0djNoYdCgbdMV+QYV7RFQX6CqkrumjQPhzGBxYEkug
-         a9zCIPQ2rBeqVyTMR55sJRUqe5KVacdrpLRXROT1BBue307QWyJnBF3251d8XnGheo
-         s5lwM93efuJ4Uy4c1AQ3N3Y8BCP2qkFeopKKc105kfj2p1MA34zCmPzaIcoI/H+5x0
-         vdXTFHoch4di4MiiOHUP3lIqOcHsMUUwqyPRRw8n3Mape55RwoTkk5svn+QAhKSV83
-         UtDv96sTrqovw==
-Subject: [PATCH 4/4] xfs: allow blocking notifier chains with filesystem hooks
+        b=VVuihoBURgTeBTgL1KT8J91ogJ6zt3KxR0CwRNw5iqWD/V6hkqh51ABna3Pkv4zjR
+         hwf4vL6R811+rZOHNb7DNl92TQ7OmkyDXuihTBb4C5Yqz3sUXGg2FaxcomGI+MlvaK
+         ahnCktqE0BUFnKHvjjM0jg1SaLq81uW/sU/DtVE3OoI/X4eJRZgOWfbJNIQtfS5St2
+         3e6ISH/02utTixXqOKV3xocl5dNbTfrcbBj/QNB0pvudKnhR+p32AI7CDVWYBxlYi9
+         ufkVOaGkMctoO1e0nmXUXvKOT68o1aUQ6WcGzoVW/FDfX1Zcs62ait5wFahi74ccLd
+         GNu5RzS8fJR3Q==
+Subject: [PATCH 1/5] xfs: report the health of quota counts
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 30 Dec 2022 14:13:03 -0800
-Message-ID: <167243838390.695519.7389091201360281273.stgit@magnolia>
-In-Reply-To: <167243838331.695519.18058154683213474280.stgit@magnolia>
-References: <167243838331.695519.18058154683213474280.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:13:07 -0800
+Message-ID: <167243838705.695667.3899535754623623042.stgit@magnolia>
+In-Reply-To: <167243838686.695667.4884256571173103690.stgit@magnolia>
+References: <167243838686.695667.4884256571173103690.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,144 +49,108 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make it so that we can switch between notifier chain implementations for
-testing purposes.  On the author's test system, calling an empty srcu
-notifier chain cost about 19ns per call, vs. 4ns for a blocking notifier
-chain.  Hm.  Might we actually want regular blocking notifiers?
+Report the health of quota counts.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/Kconfig     |   33 ++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_hooks.c |   41 +++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_hooks.h |    6 +++++-
- 3 files changed, 78 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_fs.h     |    1 +
+ fs/xfs/libxfs/xfs_health.h |    4 +++-
+ fs/xfs/xfs_health.c        |    1 +
+ fs/xfs/xfs_qm.c            |    7 ++++++-
+ fs/xfs/xfs_trans_dquot.c   |    2 ++
+ 5 files changed, 13 insertions(+), 2 deletions(-)
 
 
-diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-index db60944ab3c3..54806c2b80d4 100644
---- a/fs/xfs/Kconfig
-+++ b/fs/xfs/Kconfig
-@@ -106,7 +106,6 @@ config XFS_ONLINE_SCRUB
- 	default n
- 	depends on XFS_FS
- 	depends on TMPFS && SHMEM
--	depends on SRCU
- 	select XFS_LIVE_HOOKS
- 	select XFS_DRAIN_INTENTS
- 	help
-@@ -122,6 +121,38 @@ config XFS_ONLINE_SCRUB
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 920fd4513fcb..7e86e1db66dd 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -195,6 +195,7 @@ struct xfs_fsop_geom {
+ #define XFS_FSOP_GEOM_SICK_PQUOTA	(1 << 3)  /* project quota */
+ #define XFS_FSOP_GEOM_SICK_RT_BITMAP	(1 << 4)  /* realtime bitmap */
+ #define XFS_FSOP_GEOM_SICK_RT_SUMMARY	(1 << 5)  /* realtime summary */
++#define XFS_FSOP_GEOM_SICK_QUOTACHECK	(1 << 6)  /* quota counts */
  
- 	  If unsure, say N.
+ /* Output for XFS_FS_COUNTS */
+ typedef struct xfs_fsop_counts {
+diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
+index 99e796256c5d..1dea286bb157 100644
+--- a/fs/xfs/libxfs/xfs_health.h
++++ b/fs/xfs/libxfs/xfs_health.h
+@@ -41,6 +41,7 @@ struct xfs_fsop_geom;
+ #define XFS_SICK_FS_UQUOTA	(1 << 1)  /* user quota */
+ #define XFS_SICK_FS_GQUOTA	(1 << 2)  /* group quota */
+ #define XFS_SICK_FS_PQUOTA	(1 << 3)  /* project quota */
++#define XFS_SICK_FS_QUOTACHECK	(1 << 4)  /* quota counts */
  
-+choice
-+	prompt "XFS hook implementation"
-+	depends on XFS_FS && XFS_LIVE_HOOKS && XFS_ONLINE_SCRUB
-+	default XFS_LIVE_HOOKS_BLOCKING if HAVE_ARCH_JUMP_LABEL
-+	default XFS_LIVE_HOOKS_SRCU if !HAVE_ARCH_JUMP_LABEL
-+	help
-+	  Pick one
-+
-+config XFS_LIVE_HOOKS_SRCU
-+	bool "SRCU notifier chains"
-+	depends on SRCU
-+	help
-+	  Use SRCU notifier chains for filesystem hooks.  These have very low
-+	  overhead for event initiators (the main filesystem) and higher
-+	  overhead for chain modifiers (scrub waits for RCU grace).  This is
-+	  the best option when jump labels are not supported or there are many
-+	  CPUs in the system.
-+
-+	  This may cause problems with CPU hotplug invoking reclaim invoking
-+	  XFS.
-+
-+config XFS_LIVE_HOOKS_BLOCKING
-+	bool "Blocking notifier chains"
-+	help
-+	  Use blocking notifier chains for filesystem hooks.  These have medium
-+	  overhead for event initiators (the main fs) and chain modifiers
-+	  (scrub) due to their use of rwsems.  This is the best option when
-+	  jump labels can be used to eliminate overhead for the filesystem when
-+	  scrub is not running.
-+
-+endchoice
-+
- config XFS_ONLINE_REPAIR
- 	bool "XFS online metadata repair support"
- 	default n
-diff --git a/fs/xfs/xfs_hooks.c b/fs/xfs/xfs_hooks.c
-index 3f958ece0dc0..653fc1f82516 100644
---- a/fs/xfs/xfs_hooks.c
-+++ b/fs/xfs/xfs_hooks.c
-@@ -12,6 +12,7 @@
- #include "xfs_ag.h"
- #include "xfs_trace.h"
+ /* Observable health issues for realtime volume metadata. */
+ #define XFS_SICK_RT_BITMAP	(1 << 0)  /* realtime bitmap */
+@@ -72,7 +73,8 @@ struct xfs_fsop_geom;
+ #define XFS_SICK_FS_PRIMARY	(XFS_SICK_FS_COUNTERS | \
+ 				 XFS_SICK_FS_UQUOTA | \
+ 				 XFS_SICK_FS_GQUOTA | \
+-				 XFS_SICK_FS_PQUOTA)
++				 XFS_SICK_FS_PQUOTA | \
++				 XFS_SICK_FS_QUOTACHECK)
  
-+#if defined(CONFIG_XFS_LIVE_HOOKS_SRCU)
- /* Initialize a notifier chain. */
- void
- xfs_hooks_init(
-@@ -51,3 +52,43 @@ xfs_hooks_call(
- {
- 	return srcu_notifier_call_chain(&chain->head, val, priv);
- }
-+#elif defined(CONFIG_XFS_LIVE_HOOKS_BLOCKING)
-+/* Initialize a notifier chain. */
-+void
-+xfs_hooks_init(
-+	struct xfs_hooks	*chain)
-+{
-+	BLOCKING_INIT_NOTIFIER_HEAD(&chain->head);
-+}
-+
-+/* Make it so a function gets called whenever we hit a certain hook point. */
-+int
-+xfs_hooks_add(
-+	struct xfs_hooks	*chain,
-+	struct xfs_hook		*hook)
-+{
-+	ASSERT(hook->nb.notifier_call != NULL);
-+	BUILD_BUG_ON(offsetof(struct xfs_hook, nb) != 0);
-+
-+	return blocking_notifier_chain_register(&chain->head, &hook->nb);
-+}
-+
-+/* Remove a previously installed hook. */
-+void
-+xfs_hooks_del(
-+	struct xfs_hooks	*chain,
-+	struct xfs_hook		*hook)
-+{
-+	blocking_notifier_chain_unregister(&chain->head, &hook->nb);
-+}
-+
-+/* Call a hook.  Returns the NOTIFY_* value returned by the last hook. */
-+int
-+xfs_hooks_call(
-+	struct xfs_hooks	*chain,
-+	unsigned long		val,
-+	void			*priv)
-+{
-+	return blocking_notifier_call_chain(&chain->head, val, priv);
-+}
-+#endif /* CONFIG_XFS_LIVE_HOOKS_BLOCKING */
-diff --git a/fs/xfs/xfs_hooks.h b/fs/xfs/xfs_hooks.h
-index 9cd3f6e07751..7e5ef53f5829 100644
---- a/fs/xfs/xfs_hooks.h
-+++ b/fs/xfs/xfs_hooks.h
-@@ -6,10 +6,14 @@
- #ifndef XFS_HOOKS_H_
- #define XFS_HOOKS_H_
- 
--#ifdef CONFIG_XFS_LIVE_HOOKS
-+#if defined(CONFIG_XFS_LIVE_HOOKS_SRCU)
- struct xfs_hooks {
- 	struct srcu_notifier_head	head;
+ #define XFS_SICK_RT_PRIMARY	(XFS_SICK_RT_BITMAP | \
+ 				 XFS_SICK_RT_SUMMARY)
+diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+index 72a075bb2c10..cd32f0fc0643 100644
+--- a/fs/xfs/xfs_health.c
++++ b/fs/xfs/xfs_health.c
+@@ -280,6 +280,7 @@ static const struct ioctl_sick_map fs_map[] = {
+ 	{ XFS_SICK_FS_UQUOTA,	XFS_FSOP_GEOM_SICK_UQUOTA },
+ 	{ XFS_SICK_FS_GQUOTA,	XFS_FSOP_GEOM_SICK_GQUOTA },
+ 	{ XFS_SICK_FS_PQUOTA,	XFS_FSOP_GEOM_SICK_PQUOTA },
++	{ XFS_SICK_FS_QUOTACHECK, XFS_FSOP_GEOM_SICK_QUOTACHECK },
+ 	{ 0, 0 },
  };
-+#elif defined(CONFIG_XFS_LIVE_HOOKS_BLOCKING)
-+struct xfs_hooks {
-+	struct blocking_notifier_head	head;
-+};
- #else
- struct xfs_hooks { /* empty */ };
- #endif
+ 
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index ff53d40a2dae..8356b7500d75 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -26,6 +26,7 @@
+ #include "xfs_ag.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_log_priv.h"
++#include "xfs_health.h"
+ 
+ /*
+  * The global quota manager. There is only one of these for the entire
+@@ -1392,8 +1393,12 @@ xfs_qm_quotacheck(
+ 			xfs_warn(mp,
+ 				"Quotacheck: Failed to reset quota flags.");
+ 		}
+-	} else
++		xfs_fs_mark_sick(mp, XFS_SICK_FS_QUOTACHECK);
++	} else {
+ 		xfs_notice(mp, "Quotacheck: Done.");
++		xfs_fs_mark_healthy(mp, XFS_SICK_FS_QUOTACHECK);
++	}
++
+ 	return error;
+ }
+ 
+diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+index aa00cf67ad72..968dc7af4fc7 100644
+--- a/fs/xfs/xfs_trans_dquot.c
++++ b/fs/xfs/xfs_trans_dquot.c
+@@ -17,6 +17,7 @@
+ #include "xfs_qm.h"
+ #include "xfs_trace.h"
+ #include "xfs_error.h"
++#include "xfs_health.h"
+ 
+ STATIC void	xfs_trans_alloc_dqinfo(xfs_trans_t *);
+ 
+@@ -706,6 +707,7 @@ xfs_trans_dqresv(
+ error_corrupt:
+ 	xfs_dqunlock(dqp);
+ 	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
++	xfs_fs_mark_sick(mp, XFS_SICK_FS_QUOTACHECK);
+ 	return -EFSCORRUPTED;
+ }
+ 
 
