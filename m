@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09B9DC4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:52:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16E9BC4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:52:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235506AbiL3Ww1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 17:52:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57330 "EHLO
+        id S231348AbiL3Wwk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 17:52:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57362 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229681AbiL3Ww0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:52:26 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 436B01AA0F
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 14:52:25 -0800 (PST)
+        with ESMTP id S229681AbiL3Wwk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:52:40 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2628C1AA0F
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 14:52:39 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E8F07B81D94
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 22:52:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94981C433EF;
-        Fri, 30 Dec 2022 22:52:22 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B433161C16
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 22:52:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C63BC433D2;
+        Fri, 30 Dec 2022 22:52:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672440742;
-        bh=iP9n19aRbZUU1tHEqr/eWuGOQIT5dN59cvVjSFV70/o=;
+        s=k20201202; t=1672440758;
+        bh=hcFQAFNQtC3AEiC6MKe8jjxFee6UzCsFhUOWArcTdVY=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=e5A9O/Gzj6LKQ1V5w2x8LXv+dk+RkOI9gpgv6MjoI85z118OxdWqQza3Cy1T3oIJE
-         KNEEnXZp9OdOOA0F0MyEIEDnsWEJP8YsnxH0JGyLp7WduReYNsYO8vZcknDriJJq9Q
-         utkQOvUL0HT/X2dq9N3Pxg/Qkl3w3fnVbEGnvvZ8/o/54t0Qs1cGgYuwciwZzg0ktM
-         AW91dgB/0z2oiPA/6WIMmWvS1Rw4NirxhFlfA8eWv5sWHJXWeNgsyDb2xtypoqgmNS
-         51Q8LtojCr3Jb0vgZOsC68VS33vxKErnbmj7daT2DDRZgNA5sjaa8yyliJBHJ1aeXX
-         VNWPRdTSuFmVQ==
-Subject: [PATCH 2/5] xfs: cross-reference rmap records with ag btrees
+        b=TwtHHBUI56Wl8CZ7jIqHlp+SLMn5gXR9cilAt2BUIWT6dHrOO+R1eHirJSwEZhfEN
+         M1T7W+Ahryr+mSZTKzYF4mKCGUOAVNDo2jmYCJbIY98C+P+2vu0CLg2OlyIA2EV+VD
+         K/hF0/9BIG8kN1W9R5VutnM7G3hPqWBN7/KzA+kc01xwSXjunETHlpYVN13/xWjxsC
+         +V2tXLQH3oB7dLnpODHq4vX9pAHdSX2EAKumxSYnz6rziE4VA7qQmjwqJPT7WIPB8O
+         pBeFYPaZ0ezvzHMzJ9x/5SpPcnogwzSDkx2VyKIyjiKEuC748PfsDgyosnGuqj4uCr
+         s9gsZh7BkwC/w==
+Subject: [PATCH 3/5] xfs: cross-reference rmap records with free space btrees
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:11:54 -0800
-Message-ID: <167243831403.687445.17583741832521258699.stgit@magnolia>
+Message-ID: <167243831417.687445.5403451725365535251.stgit@magnolia>
 In-Reply-To: <167243831370.687445.933956691451974089.stgit@magnolia>
 References: <167243831370.687445.933956691451974089.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,309 +50,221 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 From: Darrick J. Wong <djwong@kernel.org>
 
 Strengthen the rmap btree record checker a little more by comparing
-OWN_FS and OWN_LOG reverse mappings against the AG headers and internal
-logs, respectively.
+OWN_AG reverse mappings against the free space btrees, the rmap btree,
+and the AGFL.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/Makefile       |    2 -
- fs/xfs/scrub/bitmap.c |   22 +++++++
- fs/xfs/scrub/bitmap.h |   19 ++++++
- fs/xfs/scrub/rmap.c   |  159 +++++++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 200 insertions(+), 2 deletions(-)
+ fs/xfs/scrub/bitmap.c |   33 +++++++++++++++++++++++++
+ fs/xfs/scrub/bitmap.h |    3 ++
+ fs/xfs/scrub/rmap.c   |   66 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 102 insertions(+)
 
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index ea0725cfb6fb..0b8dfac6d9a3 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -147,6 +147,7 @@ xfs-y				+= $(addprefix scrub/, \
- 				   agheader.o \
- 				   alloc.o \
- 				   attr.o \
-+				   bitmap.o \
- 				   bmap.o \
- 				   btree.o \
- 				   common.o \
-@@ -170,7 +171,6 @@ xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota.o
- ifeq ($(CONFIG_XFS_ONLINE_REPAIR),y)
- xfs-y				+= $(addprefix scrub/, \
- 				   agheader_repair.o \
--				   bitmap.o \
- 				   repair.o \
- 				   )
- endif
 diff --git a/fs/xfs/scrub/bitmap.c b/fs/xfs/scrub/bitmap.c
-index 1b04d2ce020a..14caff0a28ce 100644
+index 14caff0a28ce..72fdb6cd69b4 100644
 --- a/fs/xfs/scrub/bitmap.c
 +++ b/fs/xfs/scrub/bitmap.c
-@@ -396,3 +396,25 @@ xbitmap_empty(
- {
- 	return bitmap->xb_root.rb_root.rb_node == NULL;
- }
-+
-+/* Is the start of the range set or clear?  And for how long? */
-+bool
-+xbitmap_test(
-+	struct xbitmap		*bitmap,
-+	uint64_t		start,
-+	uint64_t		*len)
+@@ -6,6 +6,7 @@
+ #include "xfs.h"
+ #include "xfs_fs.h"
+ #include "xfs_shared.h"
++#include "xfs_bit.h"
+ #include "xfs_format.h"
+ #include "xfs_trans_resv.h"
+ #include "xfs_mount.h"
+@@ -262,6 +263,38 @@ xbitmap_disunion(
+  * For the 300th record we just exit, with the list being [1, 4, 2, 3].
+  */
+ 
++/* Mark a btree block to the agblock bitmap. */
++STATIC int
++xagb_bitmap_visit_btblock(
++	struct xfs_btree_cur	*cur,
++	int			level,
++	void			*priv)
 +{
-+	struct xbitmap_node	*bn;
-+	uint64_t		last = start + *len - 1;
++	struct xagb_bitmap	*bitmap = priv;
++	struct xfs_buf		*bp;
++	xfs_fsblock_t		fsbno;
++	xfs_agblock_t		agbno;
 +
-+	bn = xbitmap_tree_iter_first(&bitmap->xb_root, start, last);
-+	if (!bn)
-+		return false;
-+	if (bn->bn_start <= start) {
-+		if (bn->bn_last < last)
-+			*len = bn->bn_last - start + 1;
-+		return true;
-+	}
-+	*len = bn->bn_start - start;
-+	return false;
++	xfs_btree_get_block(cur, level, &bp);
++	if (!bp)
++		return 0;
++
++	fsbno = XFS_DADDR_TO_FSB(cur->bc_mp, xfs_buf_daddr(bp));
++	agbno = XFS_FSB_TO_AGBNO(cur->bc_mp, fsbno);
++
++	return xagb_bitmap_set(bitmap, agbno, 1);
 +}
++
++/* Mark all (per-AG) btree blocks in the agblock bitmap. */
++int
++xagb_bitmap_set_btblocks(
++	struct xagb_bitmap	*bitmap,
++	struct xfs_btree_cur	*cur)
++{
++	return xfs_btree_visit_blocks(cur, xagb_bitmap_visit_btblock,
++			XFS_BTREE_VISIT_ALL, bitmap);
++}
++
+ /*
+  * Record all the buffers pointed to by the btree cursor.  Callers already
+  * engaged in a btree walk should call this function to capture the list of
 diff --git a/fs/xfs/scrub/bitmap.h b/fs/xfs/scrub/bitmap.h
-index 7f538effc196..65a6c5a92c7a 100644
+index 65a6c5a92c7a..ab67073f4f01 100644
 --- a/fs/xfs/scrub/bitmap.h
 +++ b/fs/xfs/scrub/bitmap.h
-@@ -38,6 +38,7 @@ int xbitmap_walk_bits(struct xbitmap *bitmap, xbitmap_walk_bits_fn fn,
- 		void *priv);
- 
- bool xbitmap_empty(struct xbitmap *bitmap);
-+bool xbitmap_test(struct xbitmap *bitmap, uint64_t start, uint64_t *len);
- 
- /* Bitmaps, but for type-checked for xfs_agblock_t */
- 
-@@ -65,6 +66,24 @@ static inline int xagb_bitmap_set(struct xagb_bitmap *bitmap,
- {
- 	return xbitmap_set(&bitmap->agbitmap, start, len);
+@@ -106,4 +106,7 @@ static inline int xagb_bitmap_walk(struct xagb_bitmap *bitmap,
+ 	return xbitmap_walk(&bitmap->agbitmap, fn, priv);
  }
-+static inline bool xagb_bitmap_test(struct xagb_bitmap *bitmap,
-+		xfs_agblock_t start, xfs_extlen_t *len)
-+{
-+	uint64_t	biglen = *len;
-+	int		error;
-+
-+	error = xbitmap_test(&bitmap->agbitmap, start, &biglen);
-+	if (error)
-+		return error;
-+
-+	if (biglen >= UINT_MAX) {
-+		ASSERT(0);
-+		return -EOVERFLOW;
-+	}
-+
-+	*len = biglen;
-+	return 0;
-+}
  
- static inline int xagb_bitmap_disunion(struct xagb_bitmap *bitmap,
- 		struct xagb_bitmap *sub)
++int xagb_bitmap_set_btblocks(struct xagb_bitmap *bitmap,
++		struct xfs_btree_cur *cur);
++
+ #endif	/* __XFS_SCRUB_BITMAP_H__ */
 diff --git a/fs/xfs/scrub/rmap.c b/fs/xfs/scrub/rmap.c
-index 3cb92f7ac165..415d8e9918da 100644
+index 415d8e9918da..b8e82f5b84f4 100644
 --- a/fs/xfs/scrub/rmap.c
 +++ b/fs/xfs/scrub/rmap.c
-@@ -12,10 +12,12 @@
+@@ -7,13 +7,17 @@
+ #include "xfs_fs.h"
+ #include "xfs_shared.h"
+ #include "xfs_format.h"
++#include "xfs_log_format.h"
+ #include "xfs_trans_resv.h"
+ #include "xfs_mount.h"
++#include "xfs_trans.h"
  #include "xfs_btree.h"
  #include "xfs_rmap.h"
  #include "xfs_refcount.h"
-+#include "xfs_ag.h"
-+#include "xfs_bit.h"
+ #include "xfs_ag.h"
+ #include "xfs_bit.h"
++#include "xfs_alloc.h"
++#include "xfs_alloc_btree.h"
  #include "scrub/scrub.h"
  #include "scrub/common.h"
  #include "scrub/btree.h"
--#include "xfs_ag.h"
-+#include "scrub/bitmap.h"
+@@ -51,6 +55,7 @@ struct xchk_rmap {
+ 	/* Bitmaps containing all blocks for each type of AG metadata. */
+ 	struct xagb_bitmap	fs_owned;
+ 	struct xagb_bitmap	log_owned;
++	struct xagb_bitmap	ag_owned;
  
+ 	/* Did we complete the AG space metadata bitmaps? */
+ 	bool			bitmaps_complete;
+@@ -291,6 +296,9 @@ xchk_rmapbt_mark_bitmap(
+ 	case XFS_RMAP_OWN_LOG:
+ 		bmp = &cr->log_owned;
+ 		break;
++	case XFS_RMAP_OWN_AG:
++		bmp = &cr->ag_owned;
++		break;
+ 	}
+ 
+ 	if (!bmp)
+@@ -343,9 +351,26 @@ xchk_rmapbt_rec(
+ 	return xchk_rmapbt_mark_bitmap(bs, cr, &irec);
+ }
+ 
++/* Add an AGFL block to the rmap list. */
++STATIC int
++xchk_rmapbt_walk_agfl(
++	struct xfs_mount	*mp,
++	xfs_agblock_t		agbno,
++	void			*priv)
++{
++	struct xagb_bitmap	*bitmap = priv;
++
++	return xagb_bitmap_set(bitmap, agbno, 1);
++}
++
  /*
-  * Set us up to scrub reverse mapping btrees.
-@@ -45,6 +47,13 @@ struct xchk_rmap {
- 	 * that could be one.
- 	 */
- 	struct xfs_rmap_irec	prev_rec;
-+
-+	/* Bitmaps containing all blocks for each type of AG metadata. */
-+	struct xagb_bitmap	fs_owned;
-+	struct xagb_bitmap	log_owned;
-+
-+	/* Did we complete the AG space metadata bitmaps? */
-+	bool			bitmaps_complete;
- };
- 
- /* Cross-reference a rmap against the refcount btree. */
-@@ -249,6 +258,68 @@ xchk_rmapbt_check_mergeable(
- 	memcpy(&cr->prev_rec, irec, sizeof(struct xfs_rmap_irec));
- }
- 
-+/* Compare an rmap for AG metadata against the metadata walk. */
-+STATIC int
-+xchk_rmapbt_mark_bitmap(
-+	struct xchk_btree		*bs,
-+	struct xchk_rmap		*cr,
-+	const struct xfs_rmap_irec	*irec)
-+{
-+	struct xfs_scrub		*sc = bs->sc;
-+	struct xagb_bitmap		*bmp = NULL;
-+	xfs_extlen_t			fsbcount = irec->rm_blockcount;
-+
-+	/*
-+	 * Skip corrupt records.  It is essential that we detect records in the
-+	 * btree that cannot overlap but do, flag those as CORRUPT, and skip
-+	 * the bitmap comparison to avoid generating false XCORRUPT reports.
-+	 */
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return 0;
-+
-+	/*
-+	 * If the AG metadata walk didn't complete, there's no point in
-+	 * comparing against partial results.
-+	 */
-+	if (!cr->bitmaps_complete)
-+		return 0;
-+
-+	switch (irec->rm_owner) {
-+	case XFS_RMAP_OWN_FS:
-+		bmp = &cr->fs_owned;
-+		break;
-+	case XFS_RMAP_OWN_LOG:
-+		bmp = &cr->log_owned;
-+		break;
-+	}
-+
-+	if (!bmp)
-+		return 0;
-+
-+	if (xagb_bitmap_test(bmp, irec->rm_startblock, &fsbcount)) {
-+		/*
-+		 * The start of this reverse mapping corresponds to a set
-+		 * region in the bitmap.  If the mapping covers more area than
-+		 * the set region, then it covers space that wasn't found by
-+		 * the AG metadata walk.
-+		 */
-+		if (fsbcount < irec->rm_blockcount)
-+			xchk_btree_xref_set_corrupt(bs->sc,
-+					bs->sc->sa.rmap_cur, 0);
-+	} else {
-+		/*
-+		 * The start of this reverse mapping does not correspond to a
-+		 * completely set region in the bitmap.  The region wasn't
-+		 * fully set by walking the AG metadata, so this is a
-+		 * cross-referencing corruption.
-+		 */
-+		xchk_btree_xref_set_corrupt(bs->sc, bs->sc->sa.rmap_cur, 0);
-+	}
-+
-+	/* Unset the region so that we can detect missing rmap records. */
-+	return xagb_bitmap_clear(bmp, irec->rm_startblock, irec->rm_blockcount);
-+}
-+
- /* Scrub an rmapbt record. */
+  * Set up bitmaps mapping all the AG metadata to compare with the rmapbt
+  * records.
++ *
++ * Grab our own btree cursors here if the scrub setup function didn't give us a
++ * btree cursor due to reports of poor health.  We need to find out if the
++ * rmapbt disagrees with primary metadata btrees to tag the rmapbt as being
++ * XCORRUPT.
+  */
  STATIC int
- xchk_rmapbt_rec(
-@@ -268,9 +339,80 @@ xchk_rmapbt_rec(
- 	xchk_rmapbt_check_mergeable(bs, cr, &irec);
- 	xchk_rmapbt_check_overlapping(bs, cr, &irec);
- 	xchk_rmapbt_xref(bs->sc, &irec);
-+
-+	return xchk_rmapbt_mark_bitmap(bs, cr, &irec);
-+}
-+
-+/*
-+ * Set up bitmaps mapping all the AG metadata to compare with the rmapbt
-+ * records.
-+ */
-+STATIC int
-+xchk_rmapbt_walk_ag_metadata(
-+	struct xfs_scrub	*sc,
-+	struct xchk_rmap	*cr)
-+{
-+	struct xfs_mount	*mp = sc->mp;
-+	int			error;
-+
-+	/* OWN_FS: AG headers */
-+	error = xagb_bitmap_set(&cr->fs_owned, XFS_SB_BLOCK(mp),
-+			XFS_AGFL_BLOCK(mp) - XFS_SB_BLOCK(mp) + 1);
-+	if (error)
-+		goto out;
-+
-+	/* OWN_LOG: Internal log */
-+	if (xfs_ag_contains_log(mp, sc->sa.pag->pag_agno)) {
-+		error = xagb_bitmap_set(&cr->log_owned,
-+				XFS_FSB_TO_AGBNO(mp, mp->m_sb.sb_logstart),
-+				mp->m_sb.sb_logblocks);
-+		if (error)
-+			goto out;
-+	}
-+
-+out:
-+	/*
-+	 * If there's an error, set XFAIL and disable the bitmap
-+	 * cross-referencing checks, but proceed with the scrub anyway.
-+	 */
-+	if (error)
-+		xchk_btree_xref_process_error(sc, sc->sa.rmap_cur,
-+				sc->sa.rmap_cur->bc_nlevels - 1, &error);
-+	else
-+		cr->bitmaps_complete = true;
- 	return 0;
- }
+ xchk_rmapbt_walk_ag_metadata(
+@@ -353,6 +378,9 @@ xchk_rmapbt_walk_ag_metadata(
+ 	struct xchk_rmap	*cr)
+ {
+ 	struct xfs_mount	*mp = sc->mp;
++	struct xfs_buf		*agfl_bp;
++	struct xfs_agf		*agf = sc->sa.agf_bp->b_addr;
++	struct xfs_btree_cur	*cur;
+ 	int			error;
  
-+/*
-+ * Check for set regions in the bitmaps; if there are any, the rmap records do
-+ * not describe all the AG metadata.
-+ */
-+STATIC void
-+xchk_rmapbt_check_bitmaps(
-+	struct xfs_scrub	*sc,
-+	struct xchk_rmap	*cr)
-+{
-+	struct xfs_btree_cur	*cur = sc->sa.rmap_cur;
-+	unsigned int		level;
-+
-+	if (sc->sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
-+				XFS_SCRUB_OFLAG_XFAIL))
-+		return;
+ 	/* OWN_FS: AG headers */
+@@ -370,6 +398,39 @@ xchk_rmapbt_walk_ag_metadata(
+ 			goto out;
+ 	}
+ 
++	/* OWN_AG: bnobt, cntbt, rmapbt, and AGFL */
++	cur = sc->sa.bno_cur;
 +	if (!cur)
-+		return;
-+	level = cur->bc_nlevels - 1;
++		cur = xfs_allocbt_init_cursor(sc->mp, sc->tp, sc->sa.agf_bp,
++				sc->sa.pag, XFS_BTNUM_BNO);
++	error = xagb_bitmap_set_btblocks(&cr->ag_owned, cur);
++	if (cur != sc->sa.bno_cur)
++		xfs_btree_del_cursor(cur, error);
++	if (error)
++		goto out;
 +
-+	/*
-+	 * Any bitmap with bits still set indicates that the reverse mapping
-+	 * doesn't cover the entire primary structure.
-+	 */
-+	if (xagb_bitmap_hweight(&cr->fs_owned) != 0)
-+		xchk_btree_xref_set_corrupt(sc, cur, level);
++	cur = sc->sa.cnt_cur;
++	if (!cur)
++		cur = xfs_allocbt_init_cursor(sc->mp, sc->tp, sc->sa.agf_bp,
++				sc->sa.pag, XFS_BTNUM_CNT);
++	error = xagb_bitmap_set_btblocks(&cr->ag_owned, cur);
++	if (cur != sc->sa.cnt_cur)
++		xfs_btree_del_cursor(cur, error);
++	if (error)
++		goto out;
 +
-+	if (xagb_bitmap_hweight(&cr->log_owned) != 0)
-+		xchk_btree_xref_set_corrupt(sc, cur, level);
-+}
++	error = xagb_bitmap_set_btblocks(&cr->ag_owned, sc->sa.rmap_cur);
++	if (error)
++		goto out;
 +
- /* Scrub the rmap btree for some AG. */
- int
- xchk_rmapbt(
-@@ -283,8 +425,23 @@ xchk_rmapbt(
- 	if (!cr)
- 		return -ENOMEM;
++	error = xfs_alloc_read_agfl(sc->sa.pag, sc->tp, &agfl_bp);
++	if (error)
++		goto out;
++
++	error = xfs_agfl_walk(sc->mp, agf, agfl_bp, xchk_rmapbt_walk_agfl,
++			&cr->ag_owned);
++	xfs_trans_brelse(sc->tp, agfl_bp);
++
+ out:
+ 	/*
+ 	 * If there's an error, set XFAIL and disable the bitmap
+@@ -411,6 +472,9 @@ xchk_rmapbt_check_bitmaps(
  
-+	xagb_bitmap_init(&cr->fs_owned);
-+	xagb_bitmap_init(&cr->log_owned);
+ 	if (xagb_bitmap_hweight(&cr->log_owned) != 0)
+ 		xchk_btree_xref_set_corrupt(sc, cur, level);
 +
-+	error = xchk_rmapbt_walk_ag_metadata(sc, cr);
-+	if (error)
-+		goto out;
-+
- 	error = xchk_btree(sc, sc->sa.rmap_cur, xchk_rmapbt_rec,
- 			&XFS_RMAP_OINFO_AG, cr);
-+	if (error)
-+		goto out;
-+
-+	xchk_rmapbt_check_bitmaps(sc, cr);
-+
-+out:
-+	xagb_bitmap_destroy(&cr->log_owned);
-+	xagb_bitmap_destroy(&cr->fs_owned);
- 	kfree(cr);
- 	return error;
++	if (xagb_bitmap_hweight(&cr->ag_owned) != 0)
++		xchk_btree_xref_set_corrupt(sc, cur, level);
  }
+ 
+ /* Scrub the rmap btree for some AG. */
+@@ -427,6 +491,7 @@ xchk_rmapbt(
+ 
+ 	xagb_bitmap_init(&cr->fs_owned);
+ 	xagb_bitmap_init(&cr->log_owned);
++	xagb_bitmap_init(&cr->ag_owned);
+ 
+ 	error = xchk_rmapbt_walk_ag_metadata(sc, cr);
+ 	if (error)
+@@ -440,6 +505,7 @@ xchk_rmapbt(
+ 	xchk_rmapbt_check_bitmaps(sc, cr);
+ 
+ out:
++	xagb_bitmap_destroy(&cr->ag_owned);
+ 	xagb_bitmap_destroy(&cr->log_owned);
+ 	xagb_bitmap_destroy(&cr->fs_owned);
+ 	kfree(cr);
 
