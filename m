@@ -2,44 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43FE5C4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:35:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75C07C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:36:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235777AbiLaAf4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 19:35:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34470 "EHLO
+        id S235722AbiLaAgJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 19:36:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235750AbiLaAfz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:35:55 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0AD712A9B
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 16:35:53 -0800 (PST)
+        with ESMTP id S235750AbiLaAgH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:36:07 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D987512A8D
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 16:36:06 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 1A1B5CE1A94
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 00:35:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48597C433EF;
-        Sat, 31 Dec 2022 00:35:50 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 688EA61CAA
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 00:36:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C087EC433D2;
+        Sat, 31 Dec 2022 00:36:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672446950;
-        bh=PoauaQzO0cPN8emQdPOl+YoqXrb5acYl7m8JTFZJbac=;
+        s=k20201202; t=1672446965;
+        bh=ivCyPMTxgydXyBsNfhSM9J+xa6rIloBozJrCTvqQ/Bw=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=b3B+582uYI8Nl2hDoy603JJSI8kjGnUq682cZ0JM9tFXvdm4I7xLuxOC43UNv65HE
-         agXeKBWukm1PveeoEDl2AAKf2sKR2EK28UB1ccOa09YALuFxxFFmSNdBJ/IlaqG2ZU
-         bu26iDx1vm5aIbecDaGC6wM9BT0/Co4cKYb8q0e0worIEjknPxOEwssWpo7UR6CpiF
-         qtqv0DsuEMl3smbySccP37WxFxY/BLrJH12b/h42OSdoQTRFvN8lvqWVIVAulxA6fD
-         G7/CitH4OY9n2rOykFX4Z1yV1viia188tyXM3fI3NcjzfvoY0CbG0HNZQOr44c2lMa
-         2/UBPnmrZhgRQ==
-Subject: [PATCH 8/8] xfs_scrub_all: survive systemd restarts when waiting for
- services
+        b=rOMyZlxS6yrPUMmex4oYNN1iSXRV3K3KKfAkz5lBFFXbMTu7cVbg7hmPAk2Pg4c7p
+         FygmuJevvu6TgrCeMkV9xlh8LqIipt6r8e12+gWrmiUPLPBtBRuRAw0v9DjGQEzH+w
+         WeMx2gpqHW6Ubu6LxQbNLVGFMGQR7LH/ZHvR11htLBIhzdNGUG6lvPSgcoOD/ksO4P
+         rkalAZ3JEq7ReYJzxfl0VkiBbz1q8R6vCYKedG6ccJPtixGCHXyufnpvfrq3XNSZeT
+         PlMcZlYWkr+L6apfGSQSA4vNJsT3kYiTx+jVyJsqNQ5Ltl3waBDPxjmKqoUI9JqAoL
+         VM61ZhmoITkBA==
+Subject: [PATCH 1/5] xfs_scrub: allow auxiliary pathnames for sandboxing
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     cem@kernel.org, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 30 Dec 2022 14:18:32 -0800
-Message-ID: <167243871205.717702.16197845816644006295.stgit@magnolia>
-In-Reply-To: <167243871097.717702.15336500890922415647.stgit@magnolia>
-References: <167243871097.717702.15336500890922415647.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:18:34 -0800
+Message-ID: <167243871478.718298.14119656193739596554.stgit@magnolia>
+In-Reply-To: <167243871464.718298.4729609315819255063.stgit@magnolia>
+References: <167243871464.718298.4729609315819255063.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -50,149 +49,125 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If xfs_scrub_all detects a running systemd, it will use it to invoke
-xfs_scrub subprocesses in a sandboxed and resource-controlled
-environment.  Unfortunately, if you happen to restart dbus or systemd
-while it's running, you get this:
-
-systemd[1]: Reexecuting.
-xfs_scrub_all[9958]: Warning! D-Bus connection terminated.
-xfs_scrub_all[9956]: Warning! D-Bus connection terminated.
-xfs_scrub_all[9956]: Failed to wait for response: Connection reset by peer
-xfs_scrub_all[9958]: Failed to wait for response: Connection reset by peer
-xfs_scrub_all[9930]: Scrubbing / done, (err=1)
-xfs_scrub_all[9930]: Scrubbing /storage done, (err=1)
-
-The xfs_scrub units themselves are still running, it's just that the
-`systemctl start' command that xfs_scrub_all uses to start and wait for
-the unit lost its connection to dbus and hence is no longer monitoring
-sub-services.
-
-When this happens, we don't have great options -- systemctl doesn't have
-a command to wait on an activating (aka running) unit.  Emulate the
-functionality we normally get by polling the failed/active statuses.
+In the next patch, we'll tighten up the security on the xfs_scrub
+service so that it can't escape.  However, sanboxing the service
+involves making the host filesystem as inaccessible as possible, with
+the filesystem to scrub bind mounted onto a known location within the
+sandbox.  Hence we need one path for reporting and a new -A argument to
+tell scrub what it should actually be trying to open.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- scrub/xfs_scrub_all.in |   78 ++++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 65 insertions(+), 13 deletions(-)
+ doc/README-env-vars.txt |    2 ++
+ scrub/phase1.c          |    4 ++--
+ scrub/vfs.c             |    2 +-
+ scrub/xfs_scrub.c       |    9 +++++++--
+ scrub/xfs_scrub.h       |    5 ++++-
+ 5 files changed, 16 insertions(+), 6 deletions(-)
 
 
-diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-index 2bdbccffd9c..3e0c48acb39 100644
---- a/scrub/xfs_scrub_all.in
-+++ b/scrub/xfs_scrub_all.in
-@@ -14,6 +14,7 @@ import time
- import sys
- import os
- import argparse
-+from io import TextIOWrapper
+diff --git a/doc/README-env-vars.txt b/doc/README-env-vars.txt
+index eec59a82513..d7984df8202 100644
+--- a/doc/README-env-vars.txt
++++ b/doc/README-env-vars.txt
+@@ -24,3 +24,5 @@ XFS_SCRUB_THREADS            -- start exactly this number of threads
+ Available even in non-debug mode:
+ SERVICE_MODE                 -- compress all error codes to 1 for LSB
+                                 service action compliance
++SERVICE_MOUNTPOINT           -- actual path to open for issuing kernel
++                                scrub calls
+diff --git a/scrub/phase1.c b/scrub/phase1.c
+index faa554f1e1e..80fd0c6e27c 100644
+--- a/scrub/phase1.c
++++ b/scrub/phase1.c
+@@ -146,7 +146,7 @@ phase1_func(
+ 	 * CAP_SYS_ADMIN, which we probably need to do anything fancy
+ 	 * with the (XFS driver) kernel.
+ 	 */
+-	error = -xfd_open(&ctx->mnt, ctx->mntpoint,
++	error = -xfd_open(&ctx->mnt, ctx->actual_mntpoint,
+ 			O_RDONLY | O_NOATIME | O_DIRECTORY);
+ 	if (error) {
+ 		if (error == EPERM)
+@@ -199,7 +199,7 @@ _("Not an XFS filesystem."));
+ 		return error;
+ 	}
  
- retcode = 0
- terminate = False
-@@ -58,12 +59,18 @@ def find_mounts():
+-	error = path_to_fshandle(ctx->mntpoint, &ctx->fshandle,
++	error = path_to_fshandle(ctx->actual_mntpoint, &ctx->fshandle,
+ 			&ctx->fshandle_len);
+ 	if (error) {
+ 		str_errno(ctx, _("getting fshandle"));
+diff --git a/scrub/vfs.c b/scrub/vfs.c
+index 85ee2694b00..c64c6c41105 100644
+--- a/scrub/vfs.c
++++ b/scrub/vfs.c
+@@ -249,7 +249,7 @@ scan_fs_tree(
+ 		goto out_cond;
+ 	}
  
- 	return fs
+-	ret = queue_subdir(ctx, &sft, &wq, ctx->mntpoint, true);
++	ret = queue_subdir(ctx, &sft, &wq, ctx->actual_mntpoint, true);
+ 	if (ret) {
+ 		str_liberror(ctx, ret, _("queueing directory scan"));
+ 		goto out_wq;
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index bdee8e4fdae..23d8fec5d9b 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -118,6 +118,8 @@
+  * Available even in non-debug mode:
+  * SERVICE_MODE			-- compress all error codes to 1 for LSB
+  *				   service action compliance
++ * SERVICE_MOUNTPOINT		-- actual path to open for issuing kernel
++ *				   scrub calls
+  */
  
--def kill_systemd(unitname, proc):
--	'''Kill systemd unit.'''
--	proc.terminate()
--	cmd = ['systemctl', 'stop', unitname]
--	x = subprocess.Popen(cmd)
--	x.wait()
-+def backtick(cmd):
-+	'''Generator function that yields lines of a program's stdout.'''
-+	p = subprocess.Popen(cmd, stdout = subprocess.PIPE)
-+	for line in TextIOWrapper(p.stdout, encoding="utf-8"):
-+		yield line.strip()
-+
-+def remove_killfunc(killfuncs, fn):
-+	'''Ensure fn is not in killfuncs.'''
-+	try:
-+		killfuncs.remove(fn)
-+	except:
-+		pass
+ /* Program name; needed for libfrog error reports. */
+@@ -739,6 +741,9 @@ main(
+ 		usage();
  
- def run_killable(cmd, stdout, killfuncs, kill_fn):
- 	'''Run a killable program.  Returns program retcode or -1 if we can't start it.'''
-@@ -72,10 +79,7 @@ def run_killable(cmd, stdout, killfuncs, kill_fn):
- 		real_kill_fn = lambda: kill_fn(proc)
- 		killfuncs.add(real_kill_fn)
- 		proc.wait()
--		try:
--			killfuncs.remove(real_kill_fn)
--		except:
--			pass
-+		remove_killfunc(killfuncs, real_kill_fn)
- 		return proc.returncode
- 	except:
- 		return -1
-@@ -107,6 +111,56 @@ def systemd_escape(path):
- 	except:
- 		return path
+ 	ctx.mntpoint = argv[optind];
++	ctx.actual_mntpoint = getenv("SERVICE_MOUNTPOINT");
++	if (!ctx.actual_mntpoint)
++		ctx.actual_mntpoint = ctx.mntpoint;
  
-+def systemctl_stop(unitname):
-+	'''Stop a systemd unit.'''
-+	cmd = ['systemctl', 'stop', unitname]
-+	x = subprocess.Popen(cmd)
-+	x.wait()
-+
-+def systemctl_start(unitname, killfuncs):
-+	'''Start a systemd unit and wait for it to complete.'''
-+	stop_fn = None
-+	cmd = ['systemctl', 'start', unitname]
-+	try:
-+		proc = subprocess.Popen(cmd, stdout = DEVNULL())
-+		stop_fn = lambda: systemctl_stop(unitname)
-+		killfuncs.add(stop_fn)
-+		proc.wait()
-+		ret = proc.returncode
-+	except:
-+		if stop_fn is not None:
-+			remove_killfunc(killfuncs, stop_fn)
-+		return -1
-+
-+	if ret != 1:
-+		remove_killfunc(killfuncs, stop_fn)
-+		return ret
-+
-+	# If systemctl-start returns 1, it's possible that the service failed
-+	# or that dbus/systemd restarted and the client program lost its
-+	# connection -- according to the systemctl man page, 1 means "unit not
-+	# failed".
-+	#
-+	# Either way, we switch to polling the service status to try to wait
-+	# for the service to end.  As of systemd 249, the is-active command
-+	# returns any of the following states: active, reloading, inactive,
-+	# failed, activating, deactivating, or maintenance.  Apparently these
-+	# strings are not localized.
-+	while True:
-+		try:
-+			for l in backtick(['systemctl', 'is-active', unitname]):
-+				if l == 'failed':
-+					remove_killfunc(killfuncs, stop_fn)
-+					return 1
-+				if l == 'inactive':
-+					remove_killfunc(killfuncs, stop_fn)
-+					return 0
-+		except:
-+			remove_killfunc(killfuncs, stop_fn)
-+			return -1
-+
-+		time.sleep(1)
-+
- def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
- 	'''Run a scrub process.'''
- 	global retcode, terminate
-@@ -120,9 +174,7 @@ def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
+ 	stdout_isatty = isatty(STDOUT_FILENO);
+ 	stderr_isatty = isatty(STDERR_FILENO);
+@@ -756,7 +761,7 @@ main(
+ 		return SCRUB_RET_OPERROR;
  
- 		# Try it the systemd way
- 		unitname = 'xfs_scrub@%s' % systemd_escape(mnt)
--		cmd = ['systemctl', 'start', unitname]
--		ret = run_killable(cmd, DEVNULL(), killfuncs, \
--				lambda proc: kill_systemd(unitname, proc))
-+		ret = systemctl_start(unitname, killfuncs)
- 		if ret == 0 or ret == 1:
- 			print("Scrubbing %s done, (err=%d)" % (mnt, ret))
- 			sys.stdout.flush()
+ 	/* Find the mount record for the passed-in argument. */
+-	if (stat(argv[optind], &ctx.mnt_sb) < 0) {
++	if (stat(ctx.actual_mntpoint, &ctx.mnt_sb) < 0) {
+ 		fprintf(stderr,
+ 			_("%s: could not stat: %s: %s\n"),
+ 			progname, argv[optind], strerror(errno));
+@@ -779,7 +784,7 @@ main(
+ 	}
+ 
+ 	fs_table_initialise(0, NULL, 0, NULL);
+-	fsp = fs_table_lookup_mount(ctx.mntpoint);
++	fsp = fs_table_lookup_mount(ctx.actual_mntpoint);
+ 	if (!fsp) {
+ 		fprintf(stderr, _("%s: Not a XFS mount point.\n"),
+ 				ctx.mntpoint);
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index 004d2d02587..2ef8b2e5066 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -36,9 +36,12 @@ enum error_action {
+ struct scrub_ctx {
+ 	/* Immutable scrub state. */
+ 
+-	/* Strings we need for presentation */
++	/* Mountpoint we use for presentation */
+ 	char			*mntpoint;
+ 
++	/* Actual VFS path to the filesystem */
++	char			*actual_mntpoint;
++
+ 	/* Mountpoint info */
+ 	struct stat		mnt_sb;
+ 	struct statvfs		mnt_sv;
 
