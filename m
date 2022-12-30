@@ -2,83 +2,106 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4ABEC4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 06:23:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D827CC4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 21:13:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234412AbiL3GXS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 01:23:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38696 "EHLO
+        id S235531AbiL3VN0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 16:13:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37642 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229876AbiL3GXS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 01:23:18 -0500
-Received: from frasgout11.his.huawei.com (frasgout11.his.huawei.com [14.137.139.23])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 942E11F7
-        for <linux-xfs@vger.kernel.org>; Thu, 29 Dec 2022 22:23:15 -0800 (PST)
-Received: from mail02.huawei.com (unknown [172.18.147.227])
-        by frasgout11.his.huawei.com (SkyGuard) with ESMTP id 4Njw3w3Qjhz9v7HJ
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 14:15:40 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.170])
-        by APP2 (Coremail) with SMTP id BqC_BwDXBH_Ag65j7ezMAA--.12751S2;
-        Fri, 30 Dec 2022 06:23:01 +0000 (GMT)
-From:   Guo Xuenan <guoxuenan@huawei.com>
-To:     djwong@kernel.org, dchinner@redhat.com, linux-xfs@vger.kernel.org
-Cc:     guoxuenan@huawei.com, guoxuenan@huaweicloud.com,
-        houtao1@huawei.com, jack.qiu@huawei.com, yi.zhang@huawei.com,
-        zhengbin13@huawei.com
-Subject: [PATCH] xfs: set minleft correctly for randomly sparse inode allocations
-Date:   Fri, 30 Dec 2022 14:22:29 +0800
-Message-Id: <20221230062229.211186-1-guoxuenan@huawei.com>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S229519AbiL3VNZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 16:13:25 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 795891C40D;
+        Fri, 30 Dec 2022 13:13:24 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 365A9B81C26;
+        Fri, 30 Dec 2022 21:13:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ACD8FC433EF;
+        Fri, 30 Dec 2022 21:13:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1672434801;
+        bh=SHf6Q4nQqn/WFPsljH3FIiwRu8zRTh2NBmsBnXPz+X0=;
+        h=Date:From:To:Cc:Subject:From;
+        b=qn2blO/I5TKRjQ7MuGWpbIpCR7UxL/l922b0eL2F0SHtz9vGlqil3N3FQakH5Wwgb
+         /YB7aY7zCEDMZovkImXPhWuBIl6e0yx/K4hfGAHTLnkm5ApfC6b9WENGoUPEcYRFW+
+         WzBjWM4qAolNmHm3eO+83sxDkOMsUmjVAl71NkRS5VBGTP937PeYBM3l7fXnTGP0N2
+         BM74AYDS5CbFke2pO0I+yVTI2UzS9NWkWyciETntZMRirCVzySCJI6sTsfXOR3EY6E
+         +lgWx5Nyz3kSBIIOk7KtDVSwU4k2TxzPX070lFeB/imcyq5SyNbwXIeukWSXZVbmlk
+         ySSkNXwn+W3OQ==
+Date:   Fri, 30 Dec 2022 13:13:21 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        Chandan Babu R <chandanrlinux@gmail.com>,
+        Catherine Hoang <catherine.hoang@oracle.com>, djwong@kernel.org
+Cc:     xfs <linux-xfs@vger.kernel.org>, greg.marsden@oracle.com,
+        shirley.ma@oracle.com, konrad.wilk@oracle.com,
+        fstests <fstests@vger.kernel.org>, Zorro Lang <zlang@redhat.com>,
+        Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [NYE DELUGE 1/4] xfs: all pending online scrub improvements
+Message-ID: <Y69UceeA2MEpjMJ8@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: BqC_BwDXBH_Ag65j7ezMAA--.12751S2
-X-Coremail-Antispam: 1UD129KBjvdXoWruFW3Aw1rZryfur47Zr4ruFg_yoWfZrc_Ja
-        9FkFZ7Z3s8Ww1xA3y2qrs0qFykKFWxXrnrGw45tF9xt34UuFn7Xws7XrsxXFW3CF93Ar15
-        Xw1xC34S9ryqvjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUbVxYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
-        Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
-        A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWUJVWUCwA2z4x0Y4vE2Ix0cI8IcVCY1x02
-        67AKxVWUJVW8JwA2z4x0Y4vEx4A2jsIE14v26r1j6r4UM28EF7xvwVC2z280aVCY1x0267
-        AKxVW8JVW8Jr1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2
-        j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7x
-        kEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjsIEF7I21c0EjII2zVCS5cI20VAGYxC7MxAI
-        w28IcxkI7VAKI48JMxAIw28IcVAKzI0EY4vE52x082I5MxC20s026xCaFVCjc4AY6r1j6r
-        4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF
-        67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2I
-        x0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY
-        6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa
-        73UjIFyTuYvjxUFjg4DUUUU
-Sender: guoxuenan@huaweicloud.com
-X-CM-SenderInfo: xjxr53hhqd0q5kxd4v5lfo033gof0z/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In DEBUG mode may do sparse inode allocations randomly, but forget to
-set the remaining space correctly for the inode btree to split.
-It's OK for most cases, only under DEBUG mode and AG space is running
-out may bring something bad.
+Hi everyone,
 
-Fixes: 1cdadee11f8d ("xfs: randomly do sparse inode allocations in DEBUG mode")
-Signed-off-by: Guo Xuenan <guoxuenan@huawei.com>
----
- fs/xfs/libxfs/xfs_ialloc.c | 2 ++
- 1 file changed, 2 insertions(+)
+As I've mentioned several times throughout 2022, I would like to merge
+the online fsck feature in time for the 2023 LTS kernel.  The first big
+step in this process is to merge all the pending bug fixes, validation
+improvements, and general reorganization of the existing metadata
+scrubbing functionality.
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 94db50eb706a..29bc160312ec 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -763,6 +763,8 @@ xfs_ialloc_ag_alloc(
- 		args.alignment = args.mp->m_sb.sb_spino_align;
- 		args.prod = 1;
- 
-+		/* Allow space for the inode btree to split */
-+		args.minleft = igeo->inobt_maxlevels;
- 		args.minlen = igeo->ialloc_min_blks;
- 		args.maxlen = args.minlen;
- 
--- 
-2.31.1
+This first deluge starts with the design document for the entirety of
+the online fsck feature.  The design doc should be familiar to most of
+you, as it's been on the list for review for months already.  It
+outlines in brief the problems we're trying to solve, the use cases and
+testing plan, and the fundamental data structures and algorithms
+underlying the entire feature.
 
+After that come all the code changes to wrap up the metadata checking
+part of the feature.  The biggest piece here is the scrub drains that
+allow scrub to quiesce deferred ops targeting AGs so that it can
+cross-reference recordsets.  Most of the rest is tweaking the btree code
+so that we can do keyspace scans to look for conflicting records.
+
+For this review, I would like people to focus the following:
+
+- Are the major subsystems sufficiently documented that you could figure
+  out what the code does?
+
+- Do you see any problems that are severe enough to cause long term
+  support hassles? (e.g. bad API design, writing weird metadata to disk)
+
+- Can you spot mis-interactions between the subsystems?
+
+- What were my blind spots in devising this feature?
+
+- Are there missing pieces that you'd like to help build?
+
+- Can I just merge all of this?
+
+The one thing that is /not/ in scope for this review are requests for
+more refactoring of existing subsystems.  While there are usually valid
+arguments for performing such cleanups, those are separate tasks to be
+prioritized separately.  I will get to them after merging online fsck.
+
+I've been running daily online scrubs of every computer I own for the
+last five years, which has helped me iron out real problems in (limited
+scope) production.  All issues observed in that time have been corrected
+in this submission.
+
+As a warning, the patches will likely take several days to trickle in.
+All four patch deluges are based off kernel 6.2-rc1, xfsprogs 6.1, and
+fstests 2022-12-25.
+
+Thank you all for your participation in the XFS community.  Have a safe
+New Years, and I'll see you all next year!
+
+--D
