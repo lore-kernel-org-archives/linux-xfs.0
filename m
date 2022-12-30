@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 792A7C5479D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BB51C53210
 	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 03:15:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236314AbiLaDPP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 22:15:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36590 "EHLO
+        id S236259AbiLaDPO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 22:15:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236344AbiLaDO4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 22:14:56 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA3FAE59;
-        Fri, 30 Dec 2022 19:14:55 -0800 (PST)
+        with ESMTP id S236326AbiLaDOm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 22:14:42 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09947E59;
+        Fri, 30 Dec 2022 19:14:42 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8A66C61D06;
-        Sat, 31 Dec 2022 03:14:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E592AC433D2;
-        Sat, 31 Dec 2022 03:14:54 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id B37EDB81E5D;
+        Sat, 31 Dec 2022 03:14:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BC41C433EF;
+        Sat, 31 Dec 2022 03:14:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672456495;
-        bh=aatZZfEshMVICDl/LR2THfmIvimPMuKO3zsT1Z6FkzE=;
+        s=k20201202; t=1672456479;
+        bh=rZQRoAcAh/3zfW2Sh1mMP3nA4r5gUeCjbevpArYJvM4=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=DiN6zNBqsbBPvfg5QS18PoC1/OdFRVw9Y1NryClF8lKOS2ltV+z6V0EZolS0ksYDT
-         KP3zypsq9oRC5vPNamlOjc/TAp2JphJZDJaJE64B7smmdMJ6oFexIxbe7QBhlKrXps
-         +MEz+eUJdGOhxhZIbgHxTBEB2CNCKAy8rEoIG9AlZITIgdu8c2VuicDa1X2kBCSRdT
-         O1ufgtDHcBtpUwG/woNn+YtOwfbc5O8oPGELrfLHV80rMjziylNBma0aCs8YIAC4pz
-         q3aMxQybalW9WhbLadnslS9WgkXFnmdv//m1EyYWzKjBP22TnH7dcB2BviStgUFH72
-         oxVBrTBAGor8g==
-Subject: [PATCH 09/13] xfs: skip tests if formatting small filesystem fails
+        b=NilYoXh3PhOAHkgVjcs4JtdwzG+ON5BSm/+lWETds0gP0JdwWeB6yH21OgiR8+fL6
+         PK/iOTs1pU6y771OFkx3kvMMltD3p03XZeToiCoZlno4JRNvM/HTggT5kOMgVmvDOt
+         c9v9mZOmtafGjxfk7o927Uy/yl7PpaGB3rXgVVeg0XZnAPzU9pCRUlZc0oEBRLdmRm
+         +VdMpPDDJyBzCDF1AiRUFmHYZ0DUCrN2xt8ipVjEYrOTJyAEmuqJFrylWC4PvfLftd
+         zkzQI3DtguqibOqnhx/y3Q9auv2olBilbWSkpkZAEjoio+q5moJpi3mEMMDsvwqqih
+         Zu6Ye/AyY36lw==
+Subject: [PATCH 08/13] xfs/3{43,32}: adapt tests for rt extent size greater
+ than 1
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     zlang@redhat.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
 Date:   Fri, 30 Dec 2022 14:20:45 -0800
-Message-ID: <167243884511.739669.5884465847496705430.stgit@magnolia>
+Message-ID: <167243884498.739669.5577631514595742923.stgit@magnolia>
 In-Reply-To: <167243884390.739669.13524725872131241203.stgit@magnolia>
 References: <167243884390.739669.13524725872131241203.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,44 +50,73 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-There are a few tests that try to exercise XFS functionality with an
-unusually small (< 500MB) filesystem.  Formatting can fail if the test
-configuration also specifies a very large realtime device because mkfs
-hits ENOSPC when allocating the realtime metadata.  The test proceeds
-anyway (which causes an immediate mount failure) so we might as well
-skip these.
+Both of these tests for the realtime volume can fail when the rt extent
+size is larger than a single block.
+
+332 is a read-write functionality test that encodes md5sum in the
+output, so we need to skip it if $blksz isn't congruent with the extent
+size, because the fcollapse call will fail.
+
+343 is a test of the rmap btree, so the fix here is simpler -- make
+$blksz the file allocation unit, and get rid of the md5sum in the
+golden output.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/104 |    1 +
- tests/xfs/291 |    3 ++-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ tests/xfs/332     |    6 +-----
+ tests/xfs/332.out |    2 --
+ tests/xfs/343     |    2 ++
+ 3 files changed, 3 insertions(+), 7 deletions(-)
 
 
-diff --git a/tests/xfs/104 b/tests/xfs/104
-index d16f46d8e4..c3d1d18a58 100755
---- a/tests/xfs/104
-+++ b/tests/xfs/104
-@@ -16,6 +16,7 @@ _create_scratch()
- {
- 	echo "*** mkfs"
- 	_scratch_mkfs_xfs $@ | tee -a $seqres.full | _filter_mkfs 2>$tmp.mkfs
-+	test "${PIPESTATUS[0]}" -eq 0 || _notrun "formatting small scratch fs failed"
- 	. $tmp.mkfs
- 
- 	echo "*** mount"
-diff --git a/tests/xfs/291 b/tests/xfs/291
-index 600dcb2eba..70e5f51cee 100755
---- a/tests/xfs/291
-+++ b/tests/xfs/291
-@@ -18,7 +18,8 @@ _require_command "$XFS_MDRESTORE_PROG" "xfs_mdrestore"
- # real QA test starts here
- _require_scratch
- logblks=$(_scratch_find_xfs_min_logblocks -n size=16k -d size=133m)
--_scratch_mkfs_xfs -n size=16k -l size=${logblks}b -d size=133m >> $seqres.full 2>&1
-+_scratch_mkfs_xfs -n size=16k -l size=${logblks}b -d size=133m >> $seqres.full 2>&1 || \
-+	_notrun "formatting small scratch fs failed"
+diff --git a/tests/xfs/332 b/tests/xfs/332
+index a2d37ee905..c1ac87adcb 100755
+--- a/tests/xfs/332
++++ b/tests/xfs/332
+@@ -28,7 +28,7 @@ rm -f "$seqres.full"
+ echo "Format and mount"
+ _scratch_mkfs > "$seqres.full" 2>&1
  _scratch_mount
+-blksz=65536
++blksz=$(_get_file_block_size $SCRATCH_MNT) # 65536
+ blocks=16
+ len=$((blocks * blksz))
  
- # First we cause very badly fragmented freespace, then
+@@ -45,10 +45,6 @@ $XFS_IO_PROG -c "fpunch $blksz $blksz" \
+ 	-c "fcollapse $((9 * blksz)) $blksz" \
+ 	-c "finsert $((10 * blksz)) $blksz" $SCRATCH_MNT/f1 >> $seqres.full
+ 
+-echo "Check file"
+-md5sum $SCRATCH_MNT/f1 | _filter_scratch
+-od -tx1 -Ad -c $SCRATCH_MNT/f1 >> $seqres.full
+-
+ echo "Unmount"
+ _scratch_unmount
+ 
+diff --git a/tests/xfs/332.out b/tests/xfs/332.out
+index 9beff7cc37..3a7ca95b40 100644
+--- a/tests/xfs/332.out
++++ b/tests/xfs/332.out
+@@ -2,8 +2,6 @@ QA output created by 332
+ Format and mount
+ Create some files
+ Manipulate file
+-Check file
+-e45c5707fcf6817e914ffb6ce37a0ac7  SCRATCH_MNT/f1
+ Unmount
+ Try a regular fsmap
+ Try a bad fsmap
+diff --git a/tests/xfs/343 b/tests/xfs/343
+index bffcc7d9ac..fe461847ed 100755
+--- a/tests/xfs/343
++++ b/tests/xfs/343
+@@ -31,6 +31,8 @@ blksz=65536
+ blocks=16
+ len=$((blocks * blksz))
+ 
++_require_congruent_file_oplen $SCRATCH_MNT $blksz
++
+ echo "Create some files"
+ $XFS_IO_PROG -f -R -c "falloc 0 $len" -c "pwrite -S 0x68 -b 1048576 0 $len" $SCRATCH_MNT/f1 >> $seqres.full
+ 
 
