@@ -2,43 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DCA3C4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:02:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00136C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:02:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236139AbiLaCCU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 21:02:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51670 "EHLO
+        id S236140AbiLaCCg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 21:02:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51704 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236120AbiLaCCT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:02:19 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC39A2AF8
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:02:18 -0800 (PST)
+        with ESMTP id S236120AbiLaCCf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:02:35 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F63E2AF8
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:02:34 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 893E461C99
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:02:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5C35C433D2;
-        Sat, 31 Dec 2022 02:02:17 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0F5CF61C5B
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:02:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7602FC433EF;
+        Sat, 31 Dec 2022 02:02:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672452138;
-        bh=QaJrL2cmIQ2WOM9q2+cPjG9Xg218Vs8JTI7fxOmRSy8=;
+        s=k20201202; t=1672452153;
+        bh=xNhE/0wPZqS0LUNMz3Yo96SQYPSGYrTirrMGNu/FyVk=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=ptnQqWum8eShm3WMoi/uNvg+MbdD5Euz1soO/FTAVvflHJa385q3hGBbZa2eZYEQ2
-         IsZSWDKH9nuU0T3hFTmJYkfakf/4KhBjIdn/7EdVuHo8vX5Er8XqZ9DeQD9F4/FTeo
-         tMtRUiu9BZJ8XDJG5jzLDrimYIbX8ktIuqoBH1qWwKp+tIxWkE3azNK9OSZFnLGMTQ
-         5qqYM8JGwLDSksj928vXFp2CdZ1e8yU+4i5JeWZxs4DBLb1AvUTWqM2c7KzlCTygEU
-         FNKIC5WEg9WUBmEywt/r8KXGdMPYU84tUkxveftKQKzmSN3c23QcCGvC+0cvmhOP3b
-         mr2/pmWzVRiIQ==
-Subject: [PATCH 1/4] xfs_repair: check free space requirements before allowing
- upgrades
+        b=bW6F38L0OjwUE+MmHEe1GNQCF+d3WOuwRG4o0ePKXhdTOAAmxfQAlilS+uLn85q7s
+         AaPMdZklLLmG/j4ZE9NKOdeV/o/4hralZ7XTUQ9gDi0aOs67E9X0js0iHL0e59XlIV
+         MZ/gWK+hJ15CbWWQJTvEXcKWRNLJqd35X5bIxF/lx0PLgOpgDVu4fBuFsb1fuvX7b6
+         EOuGIUT203+T0cwy5ewQRfn9EpMB55LuBoMCdIt3L/qinY3BKATCPw+tzuK/vKeu+f
+         hS5WOfOWjarL6Z/bbkUeIC8dThXKE62a9LV9sGsXGESQkT0T0vadjCq/BR7rgJwg9S
+         rubFYIrvrKozQ==
+Subject: [PATCH 2/4] xfs_repair: allow sysadmins to add free inode btree
+ indexes
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
-Cc:     Chandan Babu R <chandan.babu@oracle.com>,
-        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Date:   Fri, 30 Dec 2022 14:19:09 -0800
-Message-ID: <167243874992.722663.6667434379472157722.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Date:   Fri, 30 Dec 2022 14:19:10 -0800
+Message-ID: <167243875006.722663.7398630779865539391.stgit@magnolia>
 In-Reply-To: <167243874979.722663.18268822003736829003.stgit@magnolia>
 References: <167243874979.722663.18268822003736829003.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -51,187 +50,146 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Currently, the V5 feature upgrades permitted by xfs_repair do not affect
-filesystem space usage, so we haven't needed to verify the geometry.
-
-However, this will change once we start to allow the sysadmin to add new
-metadata indexes to existing filesystems.  Add all the infrastructure we
-need to ensure that there's enough space for metadata space reservations
-and per-AG reservations the next time the filesystem will be mounted.
+Allow the sysadmin to use xfs_repair to upgrade an existing filesystem
+to support the free inode btree.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
-[david: Recompute transaction reservation values; Exit with error if upgrade fails]
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-[djwong: Refuse to upgrade if any part of the fs has < 10% free]
 ---
- include/libxfs.h |    1 
- repair/phase2.c  |  134 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 135 insertions(+)
+ man/man8/xfs_admin.8 |    7 +++++++
+ repair/globals.c     |    1 +
+ repair/globals.h     |    1 +
+ repair/phase2.c      |   26 ++++++++++++++++++++++++++
+ repair/xfs_repair.c  |   11 +++++++++++
+ 5 files changed, 46 insertions(+)
 
 
-diff --git a/include/libxfs.h b/include/libxfs.h
-index d4b5d8e564d..14f6d629c9f 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -80,6 +80,7 @@ struct iomap;
- #include "xfs_refcount.h"
- #include "xfs_btree_staging.h"
- #include "xfs_symlink_remote.h"
-+#include "xfs_ag_resv.h"
+diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
+index 4794d6774ed..efe2ce45fc2 100644
+--- a/man/man8/xfs_admin.8
++++ b/man/man8/xfs_admin.8
+@@ -156,6 +156,13 @@ data fork extent count will be 2^48 - 1, while the maximum attribute fork
+ extent count will be 2^32 - 1. The filesystem cannot be downgraded after this
+ feature is enabled. Once enabled, the filesystem will not be mountable by
+ older kernels.  This feature was added to Linux 5.19.
++.TP 0.4i
++.B finobt
++Track free inodes through a separate free inode btree index to speed up inode
++allocation on old filesystems.
++This upgrade can fail if any AG has less than 1% free space remaining.
++The filesystem cannot be downgraded after this feature is enabled.
++This feature was added to Linux 3.16.
+ .RE
+ .TP
+ .BI \-U " uuid"
+diff --git a/repair/globals.c b/repair/globals.c
+index c40849853b8..9640877b703 100644
+--- a/repair/globals.c
++++ b/repair/globals.c
+@@ -52,6 +52,7 @@ bool	features_changed;	/* did we change superblock feature bits? */
+ bool	add_inobtcount;		/* add inode btree counts to AGI */
+ bool	add_bigtime;		/* add support for timestamps up to 2486 */
+ bool	add_nrext64;
++bool	add_finobt;		/* add free inode btrees */
  
- #ifndef ARRAY_SIZE
- #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+ /* misc status variables */
+ 
+diff --git a/repair/globals.h b/repair/globals.h
+index b65e4a2d09c..d7539294b5f 100644
+--- a/repair/globals.h
++++ b/repair/globals.h
+@@ -93,6 +93,7 @@ extern bool	features_changed;	/* did we change superblock feature bits? */
+ extern bool	add_inobtcount;		/* add inode btree counts to AGI */
+ extern bool	add_bigtime;		/* add support for timestamps up to 2486 */
+ extern bool	add_nrext64;
++extern bool	add_finobt;		/* add free inode btrees */
+ 
+ /* misc status variables */
+ 
 diff --git a/repair/phase2.c b/repair/phase2.c
-index 2ada95aefd1..cdfc98bf39f 100644
+index cdfc98bf39f..29bc0e34363 100644
 --- a/repair/phase2.c
 +++ b/repair/phase2.c
-@@ -242,6 +242,137 @@ install_new_state(
- 	libxfs_trans_init(mp);
+@@ -203,6 +203,28 @@ set_nrext64(
+ 	return true;
  }
  
-+#define GIGABYTES(count, blog)     ((uint64_t)(count) << (30 - (blog)))
-+static inline bool
-+check_free_space(
-+	struct xfs_mount	*mp,
-+	unsigned long long	avail,
-+	unsigned long long	total)
-+{
-+	/* Ok if there's more than 10% free. */
-+	if (avail >= total / 10)
-+		return true;
-+
-+	/* Not ok if there's less than 5% free. */
-+	if (avail < total / 5)
-+		return false;
-+
-+	/* Let it slide if there's at least 10GB free. */
-+	return avail > GIGABYTES(10, mp->m_sb.sb_blocklog);
-+}
-+
-+static void
-+check_fs_free_space(
-+	struct xfs_mount		*mp,
-+	const struct check_state	*old,
-+	struct xfs_sb			*new_sb)
-+{
-+	struct xfs_perag		*pag;
-+	xfs_agnumber_t			agno;
-+	int				error;
-+
-+	/* Make sure we have enough space for per-AG reservations. */
-+	for_each_perag(mp, agno, pag) {
-+		struct xfs_trans	*tp;
-+		struct xfs_agf		*agf;
-+		struct xfs_buf		*agi_bp, *agf_bp;
-+		unsigned int		avail, agblocks;
-+
-+		/* Put back the old super so that we can read AG headers. */
-+		restore_old_state(mp, old);
-+
-+		/*
-+		 * Create a dummy transaction so that we can load the AGI and
-+		 * AGF buffers in memory with the old fs geometry and pin them
-+		 * there while we try to make a per-AG reservation with the new
-+		 * geometry.
-+		 */
-+		error = -libxfs_trans_alloc_empty(mp, &tp);
-+		if (error)
-+			do_error(
-+	_("Cannot reserve resources for upgrade check, err=%d.\n"),
-+					error);
-+
-+		error = -libxfs_ialloc_read_agi(pag, tp, &agi_bp);
-+		if (error)
-+			do_error(
-+	_("Cannot read AGI %u for upgrade check, err=%d.\n"),
-+					pag->pag_agno, error);
-+
-+		error = -libxfs_alloc_read_agf(pag, tp, 0, &agf_bp);
-+		if (error)
-+			do_error(
-+	_("Cannot read AGF %u for upgrade check, err=%d.\n"),
-+					pag->pag_agno, error);
-+		agf = agf_bp->b_addr;
-+		agblocks = be32_to_cpu(agf->agf_length);
-+
-+		/*
-+		 * Install the new superblock and try to make a per-AG space
-+		 * reservation with the new geometry.  We pinned the AG header
-+		 * buffers to the transaction, so we shouldn't hit any
-+		 * corruption errors on account of the new geometry.
-+		 */
-+		install_new_state(mp, new_sb);
-+
-+		error = -libxfs_ag_resv_init(pag, tp);
-+		if (error == ENOSPC) {
-+			printf(
-+	_("Not enough free space would remain in AG %u for metadata.\n"),
-+					pag->pag_agno);
-+			exit(1);
-+		}
-+		if (error)
-+			do_error(
-+	_("Error %d while checking AG %u space reservation.\n"),
-+					error, pag->pag_agno);
-+
-+		/*
-+		 * Would the post-upgrade filesystem have enough free space in
-+		 * this AG after making per-AG reservations?
-+		 */
-+		avail = pag->pagf_freeblks + pag->pagf_flcount;
-+		avail -= pag->pag_meta_resv.ar_reserved;
-+		avail -= pag->pag_rmapbt_resv.ar_asked;
-+
-+		if (!check_free_space(mp, avail, agblocks)) {
-+			printf(
-+	_("AG %u will be low on space after upgrade.\n"),
-+					pag->pag_agno);
-+			exit(1);
-+		}
-+		libxfs_trans_cancel(tp);
-+	}
-+
-+	/*
-+	 * Would the post-upgrade filesystem have enough free space on the data
-+	 * device after making per-AG reservations?
-+	 */
-+	if (!check_free_space(mp, mp->m_sb.sb_fdblocks, mp->m_sb.sb_dblocks)) {
-+		printf(_("Filesystem will be low on space after upgrade.\n"));
-+		exit(1);
-+	}
-+
-+	/*
-+	 * Release the per-AG reservations and mark the per-AG structure as
-+	 * uninitialized so that we don't trip over stale cached counters
-+	 * after the upgrade/
-+	 */
-+	for_each_perag(mp, agno, pag) {
-+		libxfs_ag_resv_free(pag);
-+		pag->pagf_init = 0;
-+		pag->pagi_init = 0;
-+	}
-+}
-+
 +static bool
-+need_check_fs_free_space(
-+	struct xfs_mount		*mp,
-+	const struct check_state	*old)
++set_finobt(
++	struct xfs_mount	*mp,
++	struct xfs_sb		*new_sb)
 +{
-+	return false;
++	if (!xfs_has_crc(mp)) {
++		printf(
++	_("Free inode btree feature only supported on V5 filesystems.\n"));
++		exit(0);
++	}
++
++	if (xfs_has_finobt(mp)) {
++		printf(_("Filesystem already supports free inode btrees.\n"));
++		exit(0);
++	}
++
++	printf(_("Adding free inode btrees to filesystem.\n"));
++	new_sb->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_FINOBT;
++	new_sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
++	return true;
 +}
 +
- /*
-  * Make sure we can actually upgrade this (v5) filesystem without running afoul
-  * of root inode or log size requirements that would prevent us from mounting
-@@ -284,6 +415,9 @@ install_new_geometry(
- 		exit(1);
- 	}
+ struct check_state {
+ 	struct xfs_sb		sb;
+ 	uint64_t		features;
+@@ -370,6 +392,8 @@ need_check_fs_free_space(
+ 	struct xfs_mount		*mp,
+ 	const struct check_state	*old)
+ {
++	if (xfs_has_finobt(mp) && !(old->features & XFS_FEAT_FINOBT))
++		return true;
+ 	return false;
+ }
  
-+	if (need_check_fs_free_space(mp, &old))
-+		check_fs_free_space(mp, &old, new_sb);
-+
- 	/*
- 	 * Restore the old state to get everything back to a clean state,
- 	 * upgrade the featureset one more time, and recompute the btree max
+@@ -445,6 +469,8 @@ upgrade_filesystem(
+ 		dirty |= set_bigtime(mp, &new_sb);
+ 	if (add_nrext64)
+ 		dirty |= set_nrext64(mp, &new_sb);
++	if (add_finobt)
++		dirty |= set_finobt(mp, &new_sb);
+ 	if (!dirty)
+ 		return;
+ 
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 8e62533ac53..45130ab7559 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -69,6 +69,7 @@ enum c_opt_nums {
+ 	CONVERT_INOBTCOUNT,
+ 	CONVERT_BIGTIME,
+ 	CONVERT_NREXT64,
++	CONVERT_FINOBT,
+ 	C_MAX_OPTS,
+ };
+ 
+@@ -77,6 +78,7 @@ static char *c_opts[] = {
+ 	[CONVERT_INOBTCOUNT]	= "inobtcount",
+ 	[CONVERT_BIGTIME]	= "bigtime",
+ 	[CONVERT_NREXT64]	= "nrext64",
++	[CONVERT_FINOBT]	= "finobt",
+ 	[C_MAX_OPTS]		= NULL,
+ };
+ 
+@@ -336,6 +338,15 @@ process_args(int argc, char **argv)
+ 		_("-c nrext64 only supports upgrades\n"));
+ 					add_nrext64 = true;
+ 					break;
++				case CONVERT_FINOBT:
++					if (!val)
++						do_abort(
++		_("-c finobt requires a parameter\n"));
++					if (strtol(val, NULL, 0) != 1)
++						do_abort(
++		_("-c finobt only supports upgrades\n"));
++					add_finobt = true;
++					break;
+ 				default:
+ 					unknown('c', val);
+ 					break;
 
