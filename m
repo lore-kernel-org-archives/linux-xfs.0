@@ -2,43 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 455A1C4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:36:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 579D9C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:36:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235424AbiL3WgW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 17:36:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54202 "EHLO
+        id S231294AbiL3Wgg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 17:36:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231294AbiL3WgW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:36:22 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E62B41021
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 14:36:20 -0800 (PST)
+        with ESMTP id S229938AbiL3Wgf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:36:35 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF2A01114
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 14:36:34 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 8F8BBB81C22
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 22:36:19 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38B28C433EF;
-        Fri, 30 Dec 2022 22:36:18 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4DD8061645
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 22:36:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB037C433D2;
+        Fri, 30 Dec 2022 22:36:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672439778;
-        bh=cnTGZRRlNXBrLSoJ9WTv4cHiujZjNCwSsN/prkIKvGs=;
+        s=k20201202; t=1672439793;
+        bh=BA45CchuKqmHTLADak6FNoUfg4ulwmrRDgswfILuXwM=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=IxXuKglwZN0pum1ksbty+JSxSEjv4FrA8E0BPsF0WOSW297SbmNHdvjHvyoZyqCOk
-         M9mHYYn58pUvC5PBwW7+GI6ku3riyQHhV2jIhKjPZw8uaaUXyJGODkhKAP5BXvWuEL
-         Ln/a8ou2Z4CcAof8ZZnmEjnFhtFX88iZdlM7UCrCmyk0aLhGQCeoQpnTQT99AmeQB8
-         pac2LHJLefL8s5IQYvvxPL/V9QgnCBrRpauZxzOb0exbWM5dBPcF/jTZ7Hdza+49vr
-         aTVhOz54f/biJXbG2bEFb6wsArcze5PMP+7jO0cRG8CrH9DQQcTPZWkqLHa5b7iVCu
-         xISwQS8G68LjA==
-Subject: [PATCH 5/5] xfs: give xfs_refcount_intent its own perag reference
+        b=ZDBKlBYg69+fzg3MNs33ScM1MF6yPdl4zQmzcuAsCzrgu724qhB3IX5AXCGZBLjek
+         qWBddvoB+QXJ7hAhJZyZpgT7qeeISFfoF5JpsXZtZmW20+hLH1o6kPM6HGt3c2aweM
+         BLCuYF0t4Vx7Y5P1Jt8B8L8YUPRLhtKy8HRVcWOtDDvZ7ZEuD5VsRlGQYpu4jJ83h0
+         AGjAm6+92WM6d5KkkEvOcpyYQLXbaEwttZx0JioSgC6OCEtKyuuTuKXpGYqR8DdMnA
+         0QN50jklfRAaYYzqoTVsqgT66LqJ6uAS3eHxFV13lQyXxmCkTzYK7WtomxsXI2vQrS
+         juJR8STQ5xXHQ==
+Subject: [PATCH 1/1] xfs: create a function to duplicate an active perag
+ reference
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 30 Dec 2022 14:11:01 -0800
-Message-ID: <167243826147.683449.5541940667449680335.stgit@magnolia>
-In-Reply-To: <167243826070.683449.502057797810903920.stgit@magnolia>
-References: <167243826070.683449.502057797810903920.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:11:04 -0800
+Message-ID: <167243826451.683615.8962179924574213683.stgit@magnolia>
+In-Reply-To: <167243826436.683615.15521013040575221575.stgit@magnolia>
+References: <167243826436.683615.15521013040575221575.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,233 +50,169 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Give the xfs_refcount_intent an active reference to the perag structure
-data.  This reference will be used to enable scrub intent draining
-functionality in subsequent patches.  Later, shrink will use these
-active references to know if an AG is quiesced or not.
+There a few object constructor functions throughout XFS where a caller
+provides an active perag reference and the constructor wants to give the
+new object its own active reference.  Replace the open-coded logic with
+a common function to do this instead of open-coding atomic_inc logic.
+
+This new function adds a few safeguards -- it checks that there's at
+least one active reference to the perag structure passed in, and it
+records the refcount bump in the ftrace information.  This makes it much
+easier to debug refcounting problems.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_refcount.c |   33 ++++++++++++++-------------------
- fs/xfs/libxfs/xfs_refcount.h |    4 ++++
- fs/xfs/xfs_refcount_item.c   |   36 ++++++++++++++++++++++++++++++++----
- 3 files changed, 50 insertions(+), 23 deletions(-)
+ fs/xfs/libxfs/xfs_ag.c             |   15 +++++++++++++++
+ fs/xfs/libxfs/xfs_ag.h             |    1 +
+ fs/xfs/libxfs/xfs_alloc_btree.c    |    4 +---
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |    4 +---
+ fs/xfs/libxfs/xfs_refcount_btree.c |    5 +----
+ fs/xfs/libxfs/xfs_rmap_btree.c     |    5 +----
+ fs/xfs/xfs_iunlink_item.c          |    4 +---
+ fs/xfs/xfs_iwalk.c                 |    3 +--
+ fs/xfs/xfs_trace.h                 |    1 +
+ 9 files changed, 23 insertions(+), 19 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
-index bcf46aa0d08b..6dc968618e66 100644
---- a/fs/xfs/libxfs/xfs_refcount.c
-+++ b/fs/xfs/libxfs/xfs_refcount.c
-@@ -1332,26 +1332,22 @@ xfs_refcount_finish_one(
- 	xfs_agblock_t			bno;
- 	unsigned long			nr_ops = 0;
- 	int				shape_changes = 0;
--	struct xfs_perag		*pag;
- 
--	pag = xfs_perag_get(mp, XFS_FSB_TO_AGNO(mp, ri->ri_startblock));
- 	bno = XFS_FSB_TO_AGBNO(mp, ri->ri_startblock);
- 
- 	trace_xfs_refcount_deferred(mp, XFS_FSB_TO_AGNO(mp, ri->ri_startblock),
- 			ri->ri_type, XFS_FSB_TO_AGBNO(mp, ri->ri_startblock),
- 			ri->ri_blockcount);
- 
--	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_REFCOUNT_FINISH_ONE)) {
--		error = -EIO;
--		goto out_drop;
--	}
-+	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_REFCOUNT_FINISH_ONE))
-+		return -EIO;
- 
- 	/*
- 	 * If we haven't gotten a cursor or the cursor AG doesn't match
- 	 * the startblock, get one now.
- 	 */
- 	rcur = *pcur;
--	if (rcur != NULL && rcur->bc_ag.pag != pag) {
-+	if (rcur != NULL && rcur->bc_ag.pag != ri->ri_pag) {
- 		nr_ops = rcur->bc_ag.refc.nr_ops;
- 		shape_changes = rcur->bc_ag.refc.shape_changes;
- 		xfs_refcount_finish_one_cleanup(tp, rcur, 0);
-@@ -1359,12 +1355,12 @@ xfs_refcount_finish_one(
- 		*pcur = NULL;
- 	}
- 	if (rcur == NULL) {
--		error = xfs_alloc_read_agf(pag, tp, XFS_ALLOC_FLAG_FREEING,
--				&agbp);
-+		error = xfs_alloc_read_agf(ri->ri_pag, tp,
-+				XFS_ALLOC_FLAG_FREEING, &agbp);
- 		if (error)
--			goto out_drop;
-+			return error;
- 
--		rcur = xfs_refcountbt_init_cursor(mp, tp, agbp, pag);
-+		rcur = xfs_refcountbt_init_cursor(mp, tp, agbp, ri->ri_pag);
- 		rcur->bc_ag.refc.nr_ops = nr_ops;
- 		rcur->bc_ag.refc.shape_changes = shape_changes;
- 	}
-@@ -1375,7 +1371,7 @@ xfs_refcount_finish_one(
- 		error = xfs_refcount_adjust(rcur, &bno, &ri->ri_blockcount,
- 				XFS_REFCOUNT_ADJUST_INCREASE);
- 		if (error)
--			goto out_drop;
-+			return error;
- 		if (ri->ri_blockcount > 0)
- 			error = xfs_refcount_continue_op(rcur, ri, bno);
- 		break;
-@@ -1383,31 +1379,29 @@ xfs_refcount_finish_one(
- 		error = xfs_refcount_adjust(rcur, &bno, &ri->ri_blockcount,
- 				XFS_REFCOUNT_ADJUST_DECREASE);
- 		if (error)
--			goto out_drop;
-+			return error;
- 		if (ri->ri_blockcount > 0)
- 			error = xfs_refcount_continue_op(rcur, ri, bno);
- 		break;
- 	case XFS_REFCOUNT_ALLOC_COW:
- 		error = __xfs_refcount_cow_alloc(rcur, bno, ri->ri_blockcount);
- 		if (error)
--			goto out_drop;
-+			return error;
- 		ri->ri_blockcount = 0;
- 		break;
- 	case XFS_REFCOUNT_FREE_COW:
- 		error = __xfs_refcount_cow_free(rcur, bno, ri->ri_blockcount);
- 		if (error)
--			goto out_drop;
-+			return error;
- 		ri->ri_blockcount = 0;
- 		break;
- 	default:
- 		ASSERT(0);
--		error = -EFSCORRUPTED;
-+		return -EFSCORRUPTED;
- 	}
- 	if (!error && ri->ri_blockcount > 0)
--		trace_xfs_refcount_finish_one_leftover(mp, pag->pag_agno,
-+		trace_xfs_refcount_finish_one_leftover(mp, ri->ri_pag->pag_agno,
- 				ri->ri_type, bno, ri->ri_blockcount);
--out_drop:
--	xfs_perag_put(pag);
- 	return error;
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index 8de4143a5899..fed965831f2d 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -57,6 +57,21 @@ xfs_perag_get(
+ 	return pag;
  }
  
-@@ -1435,6 +1429,7 @@ __xfs_refcount_add(
- 	ri->ri_startblock = startblock;
- 	ri->ri_blockcount = blockcount;
- 
-+	xfs_refcount_update_get_group(tp->t_mountp, ri);
- 	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_REFCOUNT, &ri->ri_list);
- }
- 
-diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
-index c633477ce3ce..c89f0fcd1ee3 100644
---- a/fs/xfs/libxfs/xfs_refcount.h
-+++ b/fs/xfs/libxfs/xfs_refcount.h
-@@ -50,6 +50,7 @@ enum xfs_refcount_intent_type {
- 
- struct xfs_refcount_intent {
- 	struct list_head			ri_list;
-+	struct xfs_perag			*ri_pag;
- 	enum xfs_refcount_intent_type		ri_type;
- 	xfs_extlen_t				ri_blockcount;
- 	xfs_fsblock_t				ri_startblock;
-@@ -67,6 +68,9 @@ xfs_refcount_check_domain(
- 	return true;
- }
- 
-+void xfs_refcount_update_get_group(struct xfs_mount *mp,
-+		struct xfs_refcount_intent *ri);
-+
- void xfs_refcount_increase_extent(struct xfs_trans *tp,
- 		struct xfs_bmbt_irec *irec);
- void xfs_refcount_decrease_extent(struct xfs_trans *tp,
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index 48d771a76add..4c4706a15056 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -20,6 +20,7 @@
- #include "xfs_error.h"
- #include "xfs_log_priv.h"
- #include "xfs_log_recover.h"
-+#include "xfs_ag.h"
- 
- struct kmem_cache	*xfs_cui_cache;
- struct kmem_cache	*xfs_cud_cache;
-@@ -279,14 +280,13 @@ xfs_refcount_update_diff_items(
- 	const struct list_head		*a,
- 	const struct list_head		*b)
- {
--	struct xfs_mount		*mp = priv;
- 	struct xfs_refcount_intent	*ra;
- 	struct xfs_refcount_intent	*rb;
- 
- 	ra = container_of(a, struct xfs_refcount_intent, ri_list);
- 	rb = container_of(b, struct xfs_refcount_intent, ri_list);
--	return  XFS_FSB_TO_AGNO(mp, ra->ri_startblock) -
--		XFS_FSB_TO_AGNO(mp, rb->ri_startblock);
-+
-+	return ra->ri_pag->pag_agno - rb->ri_pag->pag_agno;
- }
- 
- /* Set the phys extent flags for this reverse mapping. */
-@@ -365,6 +365,26 @@ xfs_refcount_update_create_done(
- 	return &xfs_trans_get_cud(tp, CUI_ITEM(intent))->cud_item;
- }
- 
-+/* Take an active ref to the AG containing the space we're refcounting. */
-+void
-+xfs_refcount_update_get_group(
-+	struct xfs_mount		*mp,
-+	struct xfs_refcount_intent	*ri)
++/* Get our own reference to a perag, given an existing active reference. */
++struct xfs_perag *
++xfs_perag_bump(
++	struct xfs_perag	*pag)
 +{
-+	xfs_agnumber_t			agno;
++	if (!atomic_inc_not_zero(&pag->pag_ref)) {
++		ASSERT(0);
++		return NULL;
++	}
 +
-+	agno = XFS_FSB_TO_AGNO(mp, ri->ri_startblock);
-+	ri->ri_pag = xfs_perag_get(mp, agno);
++	trace_xfs_perag_bump(pag->pag_mount, pag->pag_agno,
++			atomic_read(&pag->pag_ref), _RET_IP_);
++	return pag;
 +}
 +
-+/* Release an active AG ref after finishing refcounting work. */
-+static inline void
-+xfs_refcount_update_put_group(
-+	struct xfs_refcount_intent	*ri)
-+{
-+	xfs_perag_put(ri->ri_pag);
-+}
-+
- /* Process a deferred refcount update. */
- STATIC int
- xfs_refcount_update_finish_item(
-@@ -386,6 +406,8 @@ xfs_refcount_update_finish_item(
- 		       ri->ri_type == XFS_REFCOUNT_DECREASE);
- 		return -EAGAIN;
+ /*
+  * search from @first to find the next perag with the given tag set.
+  */
+diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+index 191b22b9a35b..d61b07e60802 100644
+--- a/fs/xfs/libxfs/xfs_ag.h
++++ b/fs/xfs/libxfs/xfs_ag.h
+@@ -112,6 +112,7 @@ int xfs_initialize_perag_data(struct xfs_mount *mp, xfs_agnumber_t agno);
+ void xfs_free_perag(struct xfs_mount *mp);
+ 
+ struct xfs_perag *xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno);
++struct xfs_perag *xfs_perag_bump(struct xfs_perag *pag);
+ struct xfs_perag *xfs_perag_get_tag(struct xfs_mount *mp, xfs_agnumber_t agno,
+ 		unsigned int tag);
+ void xfs_perag_put(struct xfs_perag *pag);
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index 549a3cba0234..0e78e00e02f9 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -492,9 +492,7 @@ xfs_allocbt_init_common(
+ 		cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_abtb_2);
  	}
-+
-+	xfs_refcount_update_put_group(ri);
- 	kmem_cache_free(xfs_refcount_intent_cache, ri);
- 	return error;
+ 
+-	/* take a reference for the cursor */
+-	atomic_inc(&pag->pag_ref);
+-	cur->bc_ag.pag = pag;
++	cur->bc_ag.pag = xfs_perag_bump(pag);
+ 
+ 	if (xfs_has_crc(mp))
+ 		cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index 2dbe553d87fb..fb10760fd686 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -450,9 +450,7 @@ xfs_inobt_init_common(
+ 	if (xfs_has_crc(mp))
+ 		cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
+ 
+-	/* take a reference for the cursor */
+-	atomic_inc(&pag->pag_ref);
+-	cur->bc_ag.pag = pag;
++	cur->bc_ag.pag = xfs_perag_bump(pag);
+ 	return cur;
  }
-@@ -406,6 +428,8 @@ xfs_refcount_update_cancel_item(
- 	struct xfs_refcount_intent	*ri;
  
- 	ri = container_of(item, struct xfs_refcount_intent, ri_list);
-+
-+	xfs_refcount_update_put_group(ri);
- 	kmem_cache_free(xfs_refcount_intent_cache, ri);
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+index 3d8e62da2ccc..f5bdac3cf19f 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.c
++++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+@@ -340,10 +340,7 @@ xfs_refcountbt_init_common(
+ 
+ 	cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
+ 
+-	/* take a reference for the cursor */
+-	atomic_inc(&pag->pag_ref);
+-	cur->bc_ag.pag = pag;
+-
++	cur->bc_ag.pag = xfs_perag_bump(pag);
+ 	cur->bc_ag.refc.nr_ops = 0;
+ 	cur->bc_ag.refc.shape_changes = 0;
+ 	cur->bc_ops = &xfs_refcountbt_ops;
+diff --git a/fs/xfs/libxfs/xfs_rmap_btree.c b/fs/xfs/libxfs/xfs_rmap_btree.c
+index 7f83f62e51e0..12c26c42c162 100644
+--- a/fs/xfs/libxfs/xfs_rmap_btree.c
++++ b/fs/xfs/libxfs/xfs_rmap_btree.c
+@@ -460,10 +460,7 @@ xfs_rmapbt_init_common(
+ 	cur->bc_statoff = XFS_STATS_CALC_INDEX(xs_rmap_2);
+ 	cur->bc_ops = &xfs_rmapbt_ops;
+ 
+-	/* take a reference for the cursor */
+-	atomic_inc(&pag->pag_ref);
+-	cur->bc_ag.pag = pag;
+-
++	cur->bc_ag.pag = xfs_perag_bump(pag);
+ 	return cur;
  }
  
-@@ -520,9 +544,13 @@ xfs_cui_item_recover(
+diff --git a/fs/xfs/xfs_iunlink_item.c b/fs/xfs/xfs_iunlink_item.c
+index 43005ce8bd48..5024a59f0c75 100644
+--- a/fs/xfs/xfs_iunlink_item.c
++++ b/fs/xfs/xfs_iunlink_item.c
+@@ -168,9 +168,7 @@ xfs_iunlink_log_inode(
+ 	iup->ip = ip;
+ 	iup->next_agino = next_agino;
+ 	iup->old_agino = ip->i_next_unlinked;
+-
+-	atomic_inc(&pag->pag_ref);
+-	iup->pag = pag;
++	iup->pag = xfs_perag_bump(pag);
  
- 		fake.ri_startblock = pmap->pe_startblock;
- 		fake.ri_blockcount = pmap->pe_len;
--		if (!requeue_only)
-+
-+		if (!requeue_only) {
-+			xfs_refcount_update_get_group(mp, &fake);
- 			error = xfs_trans_log_finish_refcount_update(tp, cudp,
- 					&fake, &rcur);
-+			xfs_refcount_update_put_group(&fake);
-+		}
- 		if (error == -EFSCORRUPTED)
- 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
- 					&cuip->cui_format,
+ 	xfs_trans_add_item(tp, &iup->item);
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
+index 7558486f4937..594ccadb729f 100644
+--- a/fs/xfs/xfs_iwalk.c
++++ b/fs/xfs/xfs_iwalk.c
+@@ -670,8 +670,7 @@ xfs_iwalk_threaded(
+ 		 * perag is being handed off to async work, so take another
+ 		 * reference for the async work to release.
+ 		 */
+-		atomic_inc(&pag->pag_ref);
+-		iwag->pag = pag;
++		iwag->pag = xfs_perag_bump(pag);
+ 		iwag->iwalk_fn = iwalk_fn;
+ 		iwag->data = data;
+ 		iwag->startino = startino;
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 6b0e9ae7c513..0448b992a561 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -187,6 +187,7 @@ DEFINE_EVENT(xfs_perag_class, name,	\
+ 		 unsigned long caller_ip),					\
+ 	TP_ARGS(mp, agno, refcount, caller_ip))
+ DEFINE_PERAG_REF_EVENT(xfs_perag_get);
++DEFINE_PERAG_REF_EVENT(xfs_perag_bump);
+ DEFINE_PERAG_REF_EVENT(xfs_perag_get_tag);
+ DEFINE_PERAG_REF_EVENT(xfs_perag_put);
+ DEFINE_PERAG_REF_EVENT(xfs_perag_set_inode_tag);
 
