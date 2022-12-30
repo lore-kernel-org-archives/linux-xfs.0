@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A24CEC4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 01:56:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C476C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 01:56:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236030AbiLaB4K (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 20:56:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50712 "EHLO
+        id S236031AbiLaB4X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 20:56:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235949AbiLaB4I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 20:56:08 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 279CB5F76
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 17:56:08 -0800 (PST)
+        with ESMTP id S235949AbiLaB4W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 20:56:22 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4756FAE5C
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 17:56:21 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 7571FCE19E6
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 01:56:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0A0FC433D2;
-        Sat, 31 Dec 2022 01:56:04 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D9B6661C63
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 01:56:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 431F0C433EF;
+        Sat, 31 Dec 2022 01:56:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672451764;
-        bh=uew8H4Sc10IVJ3VmA+bYQwJQrBvdRbPe2/87iLkab+Y=;
+        s=k20201202; t=1672451780;
+        bh=8nyt3bfFmYyo3to7g0XUFNOT/zOvYt6kGnZ9Vy3Rtaw=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=ZS4btJfFacvyBsZfOtZCP/OLVZBJId6Rrso6Qd9i28jQJePwVvb/kWlvA9I9TyQ/Z
-         FYD7VhVNFReA+z5ePwZmJiY0ZrmWvA+m+Mn6s5oweQcpG8pb43g9E6IxknCU38CW3V
-         0XA/kpydouxrVvxVPbtg8a8gH8uAc7+lEti0E/OLEn3fd8lYMV8sVf+ScwOmvymc9H
-         CVkMy2ToKOsuPYYbPBLEeEDl9b+o0tWgToJSIBnC0GxtPNN5dmPFfJbzFW/8Xs/R4v
-         eArdf09m4SHiAxNu5udE/cEJjkRj+JiRXFLIu5edZLVakKt4BM1XRMhtprxTTmI1jI
-         X6n09nP4BhpEQ==
-Subject: [PATCH 31/42] xfs: allow overlapping rtrmapbt records for shared data
- extents
+        b=Ekaq2HqeZNM2VXh6FW4b1IoHAZ+zohXwyuwr4VLiYsybLVqV9XclNYLwrPuR2Qhjf
+         yTQ0x8hsG6mR6pOFxL7QUntEMwyZHPU+abi64cxldi7ID29htR9iXWZHdtAK+M4X6E
+         RSrKdAZhTZt/dDT956NhbQTvpvS7JcFaOfUjcwrcYa1R0ZXRb5e043jo6XGGkt73bt
+         m3JszyHTTvnnUfRALWR2Jo3QKzwDudhmfutwG6X3U+6p9KdMLdGcz61s7MbSoJ8Ga0
+         JROdHsrEOoXDDtn3hAgQY5I8FVewBV+w/+95nUqhn+yK0R7ym2rVUISiMzJp301CFZ
+         35RPYedyA8WZw==
+Subject: [PATCH 32/42] xfs: check reference counts of gaps between rt refcount
+ records
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:18:33 -0800
-Message-ID: <167243871338.717073.13427743306191179302.stgit@magnolia>
+Message-ID: <167243871351.717073.16895686653523718159.stgit@magnolia>
 In-Reply-To: <167243870849.717073.203452386730176902.stgit@magnolia>
 References: <167243870849.717073.203452386730176902.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,48 +50,147 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Allow overlapping realtime reverse mapping records if they both describe
-shared data extents and the fs supports reflink on the realtime volume.
+If there's a gap between records in the rt refcount btree, we ought to
+cross-reference the gap with the rtrmap records to make sure that there
+aren't any overlapping records for a region that doesn't have any shared
+ownership.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/rtrmap.c |   17 ++++++++++++++++-
- 1 file changed, 16 insertions(+), 1 deletion(-)
+ fs/xfs/scrub/rtrefcount.c |   81 ++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 80 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/scrub/rtrmap.c b/fs/xfs/scrub/rtrmap.c
-index e89d5310117a..3ff4151b2c0a 100644
---- a/fs/xfs/scrub/rtrmap.c
-+++ b/fs/xfs/scrub/rtrmap.c
-@@ -86,6 +86,18 @@ struct xchk_rtrmap {
- 	struct xfs_rmap_irec	prev_rec;
+diff --git a/fs/xfs/scrub/rtrefcount.c b/fs/xfs/scrub/rtrefcount.c
+index 05512f8443a2..3cb2ff8443da 100644
+--- a/fs/xfs/scrub/rtrefcount.c
++++ b/fs/xfs/scrub/rtrefcount.c
+@@ -15,6 +15,7 @@
+ #include "xfs_inode.h"
+ #include "xfs_rtbitmap.h"
+ #include "xfs_rtgroup.h"
++#include "xfs_rtalloc.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ #include "scrub/btree.h"
+@@ -356,8 +357,14 @@ struct xchk_rtrefcbt_records {
+ 	/* Previous refcount record. */
+ 	struct xfs_refcount_irec	prev_rec;
+ 
++	/* The next rtgroup block where we aren't expecting shared extents. */
++	xfs_rgblock_t			next_unshared_rgbno;
++
+ 	/* Number of CoW blocks we expect. */
+ 	xfs_extlen_t			cow_blocks;
++
++	/* Was the last record a shared or CoW staging extent? */
++	enum xfs_refc_domain		prev_domain;
  };
  
-+static inline bool
-+xchk_rtrmapbt_is_shareable(
-+	struct xfs_scrub		*sc,
-+	const struct xfs_rmap_irec	*irec)
+ static inline bool
+@@ -398,6 +405,53 @@ xchk_rtrefcountbt_check_mergeable(
+ 	memcpy(&rrc->prev_rec, irec, sizeof(struct xfs_refcount_irec));
+ }
+ 
++STATIC int
++xchk_rtrefcountbt_rmap_check_gap(
++	struct xfs_btree_cur		*cur,
++	const struct xfs_rmap_irec	*rec,
++	void				*priv)
 +{
-+	if (!xfs_has_rtreflink(sc->mp))
-+		return false;
-+	if (irec->rm_flags & XFS_RMAP_UNWRITTEN)
-+		return false;
-+	return true;
++	xfs_rgblock_t			*next_bno = priv;
++
++	if (*next_bno != NULLRGBLOCK && rec->rm_startblock < *next_bno)
++		return -ECANCELED;
++
++	*next_bno = rec->rm_startblock + rec->rm_blockcount;
++	return 0;
 +}
 +
- /* Flag failures for records that overlap but cannot. */
- STATIC void
- xchk_rtrmapbt_check_overlapping(
-@@ -107,7 +119,10 @@ xchk_rtrmapbt_check_overlapping(
- 	if (pnext <= irec->rm_startblock)
- 		goto set_prev;
++/*
++ * Make sure that a gap in the reference count records does not correspond to
++ * overlapping records (i.e. shared extents) in the reverse mappings.
++ */
++static inline void
++xchk_rtrefcountbt_xref_gaps(
++	struct xfs_scrub	*sc,
++	struct xchk_rtrefcbt_records *rrc,
++	xfs_rtblock_t		bno)
++{
++	struct xfs_rmap_irec	low;
++	struct xfs_rmap_irec	high;
++	xfs_rgblock_t		next_bno = NULLRGBLOCK;
++	int			error;
++
++	if (bno <= rrc->next_unshared_rgbno || !sc->sr.rmap_cur ||
++            xchk_skip_xref(sc->sm))
++		return;
++
++	memset(&low, 0, sizeof(low));
++	low.rm_startblock = rrc->next_unshared_rgbno;
++	memset(&high, 0xFF, sizeof(high));
++	high.rm_startblock = bno - 1;
++
++	error = xfs_rmap_query_range(sc->sr.rmap_cur, &low, &high,
++			xchk_rtrefcountbt_rmap_check_gap, &next_bno);
++	if (error == -ECANCELED)
++		xchk_btree_xref_set_corrupt(sc, sc->sr.rmap_cur, 0);
++	else
++		xchk_should_check_xref(sc, &error, &sc->sr.rmap_cur);
++}
++
+ /* Scrub a rtrefcountbt record. */
+ STATIC int
+ xchk_rtrefcountbt_rec(
+@@ -426,9 +480,26 @@ xchk_rtrefcountbt_rec(
+ 	if (irec.rc_domain == XFS_REFC_DOMAIN_COW)
+ 		rrc->cow_blocks += irec.rc_blockcount;
  
--	xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
-+	/* Overlap is only allowed if both records are data fork mappings. */
-+	if (!xchk_rtrmapbt_is_shareable(bs->sc, &cr->overlap_rec) ||
-+	    !xchk_rtrmapbt_is_shareable(bs->sc, irec))
++	/* Shared records always come before CoW records. */
++	if (irec.rc_domain == XFS_REFC_DOMAIN_SHARED &&
++	    rrc->prev_domain == XFS_REFC_DOMAIN_COW)
 +		xchk_btree_set_corrupt(bs->sc, bs->cur, 0);
++	rrc->prev_domain = irec.rc_domain;
++
+ 	xchk_rtrefcountbt_check_mergeable(bs, rrc, &irec);
+ 	xchk_rtrefcountbt_xref(bs->sc, &irec);
  
- 	/* Save whichever rmap record extends furthest. */
- 	inext = irec->rm_startblock + irec->rm_blockcount;
++	/*
++	 * If this is a record for a shared extent, check that all blocks
++	 * between the previous record and this one have at most one reverse
++	 * mapping.
++	 */
++	if (irec.rc_domain == XFS_REFC_DOMAIN_SHARED) {
++		xchk_rtrefcountbt_xref_gaps(bs->sc, rrc, irec.rc_startblock);
++		rrc->next_unshared_rgbno = irec.rc_startblock +
++					   irec.rc_blockcount;
++	}
++
+ 	return 0;
+ }
+ 
+@@ -473,7 +544,9 @@ xchk_rtrefcountbt(
+ {
+ 	struct xfs_owner_info	btree_oinfo;
+ 	struct xchk_rtrefcbt_records rrc = {
+-		.cow_blocks	= 0,
++		.cow_blocks		= 0,
++		.next_unshared_rgbno	= 0,
++		.prev_domain		= XFS_REFC_DOMAIN_SHARED,
+ 	};
+ 	int			error;
+ 
+@@ -488,6 +561,12 @@ xchk_rtrefcountbt(
+ 	if (error)
+ 		goto out_unlock;
+ 
++	/*
++	 * Check that all blocks between the last refcount > 1 record and the
++	 * end of the rt volume have at most one reverse mapping.
++	 */
++	xchk_rtrefcountbt_xref_gaps(sc, &rrc, sc->mp->m_sb.sb_rblocks);
++
+ 	xchk_refcount_xref_rmap(sc, &btree_oinfo, rrc.cow_blocks);
+ 
+ out_unlock:
 
