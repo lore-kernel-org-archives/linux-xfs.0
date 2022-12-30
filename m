@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07351C4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:03:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A1CFC4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:03:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229827AbiL3XDg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 18:03:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59428 "EHLO
+        id S230468AbiL3XDx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 18:03:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59460 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229519AbiL3XDf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:03:35 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DC5415FC1
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 15:03:35 -0800 (PST)
+        with ESMTP id S229519AbiL3XDv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:03:51 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA83915FC1
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 15:03:50 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BE59761BA9
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 23:03:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24384C433EF;
-        Fri, 30 Dec 2022 23:03:34 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7774561C30
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 23:03:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF8ABC433EF;
+        Fri, 30 Dec 2022 23:03:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672441414;
-        bh=kvy92R98HVFLyc+5U2k9Il/hXTbO5EOJfHaXPHWHlmA=;
+        s=k20201202; t=1672441429;
+        bh=QCAIP1SjFKBef+j7vFX7LNeNNWwqDwGRgG89yb8maFw=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=COtxL7AdP7mpEIpP/cjSKDIwAyrz3JNYU1ihYaU2nq4GBEU8T0RN2qhsLsneyQRr/
-         4l19a+DeUmvlPeJ9febdICawjw9xt/77yeU8rvZMPWIfUPgbbugadYBm6AuJ72iihW
-         FMcPgDvzcm2Hl5cOF1p/j7oQiDtPVscfLeEyfsWjyd4zCd9p/k+k5jYCn14Jm3iZUj
-         hqJ/NRtebsTEeTI+VU/7cIUqhjqWhIw7AK8u3+P8nJFGdr0UDJKH69BsHYWFbXeqL0
-         3fDJXeF0okzkkt50TibAntRlaNxifOWGyNSkG6377VfMlg4uYM8gy0qdUuPG1+5I2r
-         3vAaJ3T6kvF4Q==
-Subject: [PATCHSET v24.0 0/3] xfs: indirect health reporting
+        b=AaBsQvjFaHhIdVpQVyLd+UJ46XsBKxEP4VWlxoCGA1cf1ITXR1wJLXzHtf8lpyG2r
+         ehp3lHr9mxXXZvcHEJaDKSnz1aEyc940nI/oXUJUHfvFGIOIdhL1qxszEWSA8v3UtM
+         3vkzkl0Td2Q3XjzshtVnDarJKPdv5AKxfRuRBQUDnyMH3V+DcA/Nwv7yQJym/hMy2q
+         /4JeCGLO380gwO0VTuv3qlKancabGI9G0SQ9h7YCjSXBC/siynDSMnxlApNtQknkr7
+         1/Adq/gZ8hiWehgpHyU+fNWNpzoIZgy3qIAG50Fu2rVv4DOKMMKUOZIcW8agAlNdUY
+         +axRbOHqB7rjg==
+Subject: [PATCHSET v24.0 0/3] xfs: online repair for fs summary counters
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 30 Dec 2022 14:13:19 -0800
-Message-ID: <167243839911.696295.17985265962177375571.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:13:22 -0800
+Message-ID: <167243840246.696415.12006477739455537131.stgit@magnolia>
 In-Reply-To: <Y69Unb7KRM5awJoV@magnolia>
 References: <Y69Unb7KRM5awJoV@magnolia>
 User-Agent: StGit/0.19
@@ -49,16 +49,20 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Hi all,
 
-This series enables the XFS health reporting infrastructure to remember
-indirect health concerns when resources are scarce.  For example, if a
-scrub notices that there's something wrong with an inode's metadata but
-memory reclaim needs to free the incore inode, we want to record in the
-perag data the fact that there was some inode somewhere with an error.
-The perag structures never go away.
+A longstanding deficiency in the online fs summary counter scrubbing
+code is that it hasn't any means to quiesce the incore percpu counters
+while it's running.  There is no way to coordinate with other threads
+are reserving or freeing free space simultaneously, which leads to false
+error reports.  Right now, if the discrepancy is large, we just sort of
+shrug and bail out with an incomplete flag, but this is lame.
 
-The first two patches in this series set that up, and the third one
-provides a means for xfs_scrub to tell the kernel that it can forget the
-indirect problem report.
+For repair activity, we actually /do/ need to stabilize the counters to
+get an accurate reading and install it in the percpu counter.  To
+improve the former and enable the latter, allow the fscounters online
+fsck code to perform an exclusive mini-freeze on the filesystem.  The
+exclusivity prevents userspace from thawing while we're running, and the
+mini-freeze means that we don't wait for the log to quiesce, which will
+make both speedier.
 
 If you're going to start using this mess, you probably ought to just
 pull from my git trees, which are linked below.
@@ -69,21 +73,23 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=indirect-health-reporting
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-fscounters
 
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=indirect-health-reporting
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=repair-fscounters
 ---
- fs/xfs/libxfs/xfs_fs.h        |    4 ++
- fs/xfs/libxfs/xfs_health.h    |   45 ++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_inode_buf.c |    2 +
- fs/xfs/scrub/health.c         |   76 ++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/scrub/health.h         |    1 +
- fs/xfs/scrub/repair.c         |    1 +
- fs/xfs/scrub/scrub.c          |    6 +++
- fs/xfs/scrub/trace.h          |    4 ++
- fs/xfs/xfs_health.c           |   25 +++++++++----
- fs/xfs/xfs_inode.c            |   29 ++++++++++++++++
- fs/xfs/xfs_trace.h            |    1 +
- 11 files changed, 182 insertions(+), 12 deletions(-)
+ fs/xfs/Makefile                  |    1 
+ fs/xfs/scrub/common.c            |   26 ----
+ fs/xfs/scrub/common.h            |    2 
+ fs/xfs/scrub/fscounters.c        |  264 +++++++++++++++++++++++++++++++-------
+ fs/xfs/scrub/fscounters.h        |   20 +++
+ fs/xfs/scrub/fscounters_repair.c |   72 ++++++++++
+ fs/xfs/scrub/repair.h            |    2 
+ fs/xfs/scrub/scrub.c             |   10 +
+ fs/xfs/scrub/scrub.h             |    2 
+ fs/xfs/scrub/trace.c             |    1 
+ fs/xfs/scrub/trace.h             |   23 +++
+ 11 files changed, 339 insertions(+), 84 deletions(-)
+ create mode 100644 fs/xfs/scrub/fscounters.h
+ create mode 100644 fs/xfs/scrub/fscounters_repair.c
 
