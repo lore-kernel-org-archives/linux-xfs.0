@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86669C4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:25:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 710DBC4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:25:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229519AbiL3WZL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 17:25:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50800 "EHLO
+        id S235580AbiL3WZa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 17:25:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235581AbiL3WZK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:25:10 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 215081D0E4
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 14:25:10 -0800 (PST)
+        with ESMTP id S235435AbiL3WZ3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:25:29 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47A9D1D0CF
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 14:25:28 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AB3B261C15
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 22:25:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13CD3C433D2;
-        Fri, 30 Dec 2022 22:25:09 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 8BE9BCE19B8
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 22:25:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B378C433EF;
+        Fri, 30 Dec 2022 22:25:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672439109;
-        bh=F4yayb5jkEpVKSn1W7WEYfD7sAI1MfkDS9FslYH6jFo=;
+        s=k20201202; t=1672439124;
+        bh=oy6b9nD3CittG/zSgQgeBJLpfDBncmJEcfs0gHn9ZS0=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=gzqbgYVuM5dw57E7KkDz+Q6c66aimfe0QtiagXazIL5X2Sfk7VDeV1ApaxUuOrvwI
-         DuZjwIEvmJPrBBmX7jui7XILQtYc7OlXfGW/JuMA8mejyj6XEFdiRZvxjql6a5sPI1
-         YqiZbrP2CHiyBEvrYDb4VjcN71bZSGcklAE+qhNHoyit2NGXbJAofPsbHOigcUFsVy
-         pNzhmI3QHcD/SpfI75PLuU480mdljBma/xgfCBgtZWmKd4+3l9h14UWg5JFbYs9pS6
-         BDE6psZob++oY7TLbOhLoo1py4C+W7ENasJsp0975AIZuIwM8EdRfG6hFHWkKWIdis
-         EnNMJanOl7ZyQ==
-Subject: [PATCHSET v24.0 0/8] xfs: standardize btree record checking code
+        b=XDrvpBDQY7gibhPkINYNt8hGm6tRSyxlb1XDShmNw7vBlPXtVIzzrrfyTcWXRTINo
+         e/924d99AMX6VQeQeGvG9dSLy7cI6GmswiNOW6AMT3XdvKu4+nECJBYHVDEI/gkRxs
+         CGQ5sPI2Bdr9diACDxwD+dICKibZ1PHZE+wg4A6YxIdYfe7s3aoLViRknD+/TbgG6o
+         Zrvi+Kms3SeE1ivql9MsYlhDBXGG9WR70BBy2mG261A53xuJZ37AWmNSPLY22TZdbn
+         n3we7o/gTPVsd1lms2U0+1NQ7gHZfnENLvWAYr1FzfinPpdN8JfOFcDObLkuxXQB5d
+         S9rmkqwpcj4Gg==
+Subject: [PATCHSET v24.0 0/3] xfs: hoist scrub record checks into libxfs
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 30 Dec 2022 14:11:11 -0800
-Message-ID: <167243827121.683855.6049797551028464473.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:11:15 -0800
+Message-ID: <167243827537.684088.11219968589590305107.stgit@magnolia>
 In-Reply-To: <Y69UceeA2MEpjMJ8@magnolia>
 References: <Y69UceeA2MEpjMJ8@magnolia>
 User-Agent: StGit/0.19
@@ -49,17 +49,9 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Hi all,
 
-While I was cleaning things up for 6.1, I noticed that the btree
-_query_range and _query_all functions don't perform the same checking
-that the _get_rec functions perform.  In fact, they don't perform /any/
-sanity checking, which means that callers aren't warned about impossible
-records.
-
-Therefore, hoist the record validation and complaint logging code into
-separate functions, and call them from any place where we convert an
-ondisk record into an incore record.  For online scrub, we can replace
-checking code with a call to the record checking functions in libxfs,
-thereby reducing the size of the codebase.
+There are a few things about btree records that scrub checked but the
+libxfs _get_rec functions didn't.  Move these bits into libxfs so that
+everyone can benefit.
 
 If you're going to start using this mess, you probably ought to just
 pull from my git trees, which are linked below.
@@ -70,28 +62,14 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=btree-complain-bad-records
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=btree-hoist-scrub-checks
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=btree-complain-bad-records
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=btree-hoist-scrub-checks
 ---
- fs/xfs/libxfs/xfs_alloc.c        |   82 ++++++++++++++++++++++++---------
- fs/xfs/libxfs/xfs_alloc.h        |    6 ++
- fs/xfs/libxfs/xfs_bmap.c         |   31 ++++++++++++
- fs/xfs/libxfs/xfs_bmap.h         |    2 +
- fs/xfs/libxfs/xfs_ialloc.c       |   77 +++++++++++++++++++++----------
- fs/xfs/libxfs/xfs_ialloc.h       |    2 +
- fs/xfs/libxfs/xfs_ialloc_btree.c |    2 -
- fs/xfs/libxfs/xfs_ialloc_btree.h |    2 -
- fs/xfs/libxfs/xfs_inode_fork.c   |    3 +
- fs/xfs/libxfs/xfs_refcount.c     |   73 +++++++++++++++++++----------
- fs/xfs/libxfs/xfs_refcount.h     |    2 +
- fs/xfs/libxfs/xfs_rmap.c         |   95 ++++++++++++++++++++++++--------------
- fs/xfs/libxfs/xfs_rmap.h         |   12 +++--
- fs/xfs/scrub/alloc.c             |   24 +++++-----
- fs/xfs/scrub/bmap.c              |    6 ++
- fs/xfs/scrub/ialloc.c            |   24 ++--------
- fs/xfs/scrub/refcount.c          |   14 +-----
- fs/xfs/scrub/rmap.c              |   44 ++----------------
- 18 files changed, 303 insertions(+), 198 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.c |    4 ++++
+ fs/xfs/libxfs/xfs_rmap.c   |   27 +++++++++++++++++++++++++++
+ fs/xfs/scrub/ialloc.c      |    6 ------
+ fs/xfs/scrub/rmap.c        |   22 ----------------------
+ 4 files changed, 31 insertions(+), 28 deletions(-)
 
