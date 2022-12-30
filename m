@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E455AC4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:23:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C64B6C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:24:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236222AbiLaCXv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 21:23:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55162 "EHLO
+        id S236223AbiLaCYI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 21:24:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236215AbiLaCXv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:23:51 -0500
+        with ESMTP id S236215AbiLaCYG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:24:06 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E4AE19C12
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:23:50 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F27A19C12
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:24:06 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1A17261CBB
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:23:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7919FC433D2;
-        Sat, 31 Dec 2022 02:23:49 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A00A161CBF
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:24:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A51EC433D2;
+        Sat, 31 Dec 2022 02:24:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672453429;
-        bh=Y9+YQlNUaEVi7eydmWZiSyacyrCGJuqqAq3Gi/L96Wo=;
+        s=k20201202; t=1672453445;
+        bh=zcPsXmyhnw2ndlyW4IdPQMN0o0bk10UApbKdnmJ3y2w=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Gfe9z7e2GyxLKdnk7sbqLQyP8teAHkjbDKCVB/q5uRnJ2jgrweuf7mwbCiqQ6KDbO
-         ogyCfT4iW2PGw1UpX87wxKu/P7wB1idU2negkjJyz1j26DYAELWsw51pKcKfJh92wF
-         q1fsN6uF9XUaf2drqoP2Qw17Y5bxTh/8dnsPMso14IO62Cayrgqo2e5rOZdTW9TAZT
-         uURYjYpMouDXCTGDRKjMoAWJs2ZcvPkKEhfq8zMLmQdmx5LRJ2dKGCWy0sEkUMk1eO
-         zajwSplDdIQwhLRohYCEJY3w7wIgQeYcXxVvU/1A9HU5d6heCAq/rN2N7cyBbDVy/X
-         45TobiHwfno9A==
-Subject: [PATCH 08/10] xfs: use shifting and masking when converting rt
- extents, if possible
+        b=uJ67EMe0iFFbIxqFRMowclzrTlxq44+P+gZ8qdyvRObKsxIGk/l77lie7s3TAb1TR
+         y/bOXPn2E65BgOTh+nZV8fkCERKobcqjGW6w9q9oI6/YFTxQTbIy7677fUMthTkQVz
+         56SRZFhokqRps6MRcgpkdG2vWdhiK+MJMqEY9zucgqPC25N1toFyqv9kD3KEPJBzby
+         hzJocPOeTYn+Y0/Md+SpHgTdvooqJQFAwPE6mwTES8zKayBZ0Y3aA2QbHnqEOoxO8Z
+         DxJnUnZZKN0ttJirdXYAAGl2AsU1Bfhi94xyWWk3ikHxfSOkZBubw/WSv3ywwm4sU8
+         4e+zyoG2Ojm2A==
+Subject: [PATCH 09/10] xfs_repair: convert utility to use new rt extent
+ helpers and types
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:19:29 -0800
-Message-ID: <167243876921.727509.1590098999260165627.stgit@magnolia>
+Message-ID: <167243876934.727509.595013064865664971.stgit@magnolia>
 In-Reply-To: <167243876812.727509.17144221830951566022.stgit@magnolia>
 References: <167243876812.727509.17144221830951566022.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,150 +50,208 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Avoid the costs of integer division (32-bit and 64-bit) if the realtime
-extent size is a power of two.
+Convert the repair program to use the new realtime extent types and
+helper functions instead of open-coding them.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- include/xfs_mount.h   |    2 ++
- libxfs/libxfs_priv.h  |   24 ++++++++++++++++++++++++
- libxfs/xfs_rtbitmap.h |   20 ++++++++++++++++++++
- libxfs/xfs_sb.c       |    2 ++
- 4 files changed, 48 insertions(+)
+ repair/agheader.h |    2 +-
+ repair/dinode.c   |   21 ++++++++++++---------
+ repair/incore.c   |   16 ++++++++--------
+ repair/incore.h   |    4 ++--
+ repair/phase4.c   |   16 ++++++++--------
+ repair/rt.c       |    4 ++--
+ 6 files changed, 33 insertions(+), 30 deletions(-)
 
 
-diff --git a/include/xfs_mount.h b/include/xfs_mount.h
-index 4347098dc7e..6de360d33d3 100644
---- a/include/xfs_mount.h
-+++ b/include/xfs_mount.h
-@@ -67,6 +67,7 @@ typedef struct xfs_mount {
- 	uint8_t			m_blkbb_log;	/* blocklog - BBSHIFT */
- 	uint8_t			m_sectbb_log;	/* sectorlog - BBSHIFT */
- 	uint8_t			m_agno_log;	/* log #ag's */
-+	int8_t			m_rtxblklog;	/* log2 of rextsize, if possible */
- 	uint			m_blockmask;	/* sb_blocksize-1 */
- 	uint			m_blockwsize;	/* sb_blocksize in words */
- 	uint			m_blockwmask;	/* blockwsize-1 */
-@@ -88,6 +89,7 @@ typedef struct xfs_mount {
- 	uint			m_ag_max_usable; /* max space per AG */
- 	struct radix_tree_root	m_perag_tree;
- 	uint64_t		m_features;	/* active filesystem features */
-+	uint64_t		m_rtxblkmask;	/* rt extent block mask */
- 	unsigned long		m_opstate;	/* dynamic state flags */
- 	bool			m_finobt_nores; /* no per-AG finobt resv. */
- 	uint			m_qflags;	/* quota status flags */
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index 71abfdbe401..268c52b508d 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -371,6 +371,30 @@ howmany_64(uint64_t x, uint32_t y)
- 	return x;
- }
- 
-+/* If @b is a power of 2, return log2(b).  Else return -1. */
-+static inline int8_t log2_if_power2(unsigned long b)
-+{
-+	unsigned long   mask = 1;
-+	unsigned int    i;
-+	unsigned int    ret = 1;
-+
-+	if (!is_power_of_2(b))
-+		return -1;
-+
-+	for (i = 0; i < NBBY * sizeof(unsigned long); i++, mask <<= 1) {
-+		if (b & mask)
-+			ret = i;
-+	}
-+
-+	return ret;
-+}
-+
-+/* If @b is a power of 2, return a mask of the lower bits, else return zero. */
-+static inline unsigned long long mask64_if_power2(unsigned long b)
-+{
-+	return is_power_of_2(b) ? b - 1 : 0;
-+}
-+
- /* buffer management */
- #define XBF_TRYLOCK			0
- #define XBF_UNMAPPED			0
-diff --git a/libxfs/xfs_rtbitmap.h b/libxfs/xfs_rtbitmap.h
-index bc51d3bfc7c..9dd791181ca 100644
---- a/libxfs/xfs_rtbitmap.h
-+++ b/libxfs/xfs_rtbitmap.h
-@@ -11,6 +11,9 @@ xfs_rtx_to_rtb(
- 	struct xfs_mount	*mp,
- 	xfs_rtxnum_t		rtx)
+diff --git a/repair/agheader.h b/repair/agheader.h
+index a63827c8725..e3e4a21e02b 100644
+--- a/repair/agheader.h
++++ b/repair/agheader.h
+@@ -11,7 +11,7 @@ typedef struct fs_geometry  {
+ 	uint32_t	sb_blocksize;	/* blocksize (bytes) */
+ 	xfs_rfsblock_t	sb_dblocks;	/* # data blocks */
+ 	xfs_rfsblock_t	sb_rblocks;	/* # realtime blocks */
+-	xfs_rtblock_t	sb_rextents;	/* # realtime extents */
++	xfs_rtbxlen_t	sb_rextents;	/* # realtime extents */
+ 	xfs_fsblock_t	sb_logstart;	/* starting log block # */
+ 	xfs_agblock_t	sb_rextsize;	/* realtime extent size (blocks )*/
+ 	xfs_agblock_t	sb_agblocks;	/* # of blocks per ag */
+diff --git a/repair/dinode.c b/repair/dinode.c
+index cc2c3474634..e66f93abb1d 100644
+--- a/repair/dinode.c
++++ b/repair/dinode.c
+@@ -194,13 +194,13 @@ process_rt_rec_dups(
+ 	xfs_ino_t		ino,
+ 	struct xfs_bmbt_irec	*irec)
  {
-+	if (mp->m_rtxblklog >= 0)
-+		return rtx << mp->m_rtxblklog;
-+
- 	return rtx * mp->m_sb.sb_rextsize;
- }
+-	xfs_fsblock_t		b;
+-	xfs_rtblock_t		ext;
++	xfs_rtblock_t		b;
++	xfs_rtxnum_t		ext;
  
-@@ -19,6 +22,9 @@ xfs_rtxlen_to_extlen(
- 	struct xfs_mount	*mp,
- 	xfs_rtxlen_t		rtxlen)
+-	for (b = rounddown(irec->br_startblock, mp->m_sb.sb_rextsize);
++	for (b = xfs_rtb_rounddown_rtx(mp, irec->br_startblock);
+ 	     b < irec->br_startblock + irec->br_blockcount;
+ 	     b += mp->m_sb.sb_rextsize) {
+-		ext = (xfs_rtblock_t) b / mp->m_sb.sb_rextsize;
++		ext = xfs_rtb_to_rtxt(mp, b);
+ 		if (search_rt_dup_extent(mp, ext))  {
+ 			do_warn(
+ _("data fork in rt ino %" PRIu64 " claims dup rt extent,"
+@@ -224,14 +224,17 @@ process_rt_rec_state(
+ 	struct xfs_bmbt_irec	*irec)
  {
-+	if (mp->m_rtxblklog >= 0)
-+		return rtxlen << mp->m_rtxblklog;
-+
- 	return rtxlen * mp->m_sb.sb_rextsize;
- }
+ 	xfs_fsblock_t		b = irec->br_startblock;
+-	xfs_rtblock_t		ext;
++	xfs_rtxnum_t		ext;
+ 	int			state;
  
-@@ -28,6 +34,9 @@ xfs_extlen_to_rtxmod(
- 	struct xfs_mount	*mp,
- 	xfs_extlen_t		len)
+ 	do {
+-		ext = (xfs_rtblock_t)b / mp->m_sb.sb_rextsize;
++		xfs_extlen_t	mod;
++
++		ext = xfs_rtb_to_rtxt(mp, b);
+ 		state = get_rtbmap(ext);
+ 
+-		if ((b % mp->m_sb.sb_rextsize) != 0) {
++		xfs_rtb_to_rtx(mp, b, &mod);
++		if (mod) {
+ 			/*
+ 			 * We are midway through a partially written extent.
+ 			 * If we don't find the state that gets set in the
+@@ -242,7 +245,7 @@ process_rt_rec_state(
+ 				do_error(
+ _("data fork in rt inode %" PRIu64 " found invalid rt extent %"PRIu64" state %d at rt block %"PRIu64"\n"),
+ 					ino, ext, state, b);
+-			b = roundup(b, mp->m_sb.sb_rextsize);
++			b = xfs_rtb_roundup_rtx(mp, b);
+ 			continue;
+ 		}
+ 
+@@ -2321,7 +2324,7 @@ validate_extsize(
+ 	 */
+ 	if ((flags & XFS_DIFLAG_EXTSZINHERIT) &&
+ 	    (flags & XFS_DIFLAG_RTINHERIT) &&
+-	    value % mp->m_sb.sb_rextsize > 0)
++	    xfs_extlen_to_rtxmod(mp, value) > 0)
+ 		misaligned = true;
+ 
+ 	/*
+diff --git a/repair/incore.c b/repair/incore.c
+index f7a89e70d91..06edaf0d605 100644
+--- a/repair/incore.c
++++ b/repair/incore.c
+@@ -178,21 +178,21 @@ static size_t		rt_bmap_size;
+  */
+ int
+ get_rtbmap(
+-	xfs_rtblock_t	bno)
++	xfs_rtxnum_t	rtx)
  {
-+	if (mp->m_rtxblklog >= 0)
-+		return len & mp->m_rtxblkmask;
-+
- 	return len % mp->m_sb.sb_rextsize;
+-	return (*(rt_bmap + bno /  XR_BB_NUM) >>
+-		((bno % XR_BB_NUM) * XR_BB)) & XR_BB_MASK;
++	return (*(rt_bmap + rtx /  XR_BB_NUM) >>
++		((rtx % XR_BB_NUM) * XR_BB)) & XR_BB_MASK;
  }
  
-@@ -36,6 +45,9 @@ xfs_extlen_to_rtxlen(
- 	struct xfs_mount	*mp,
- 	xfs_extlen_t		len)
+ void
+ set_rtbmap(
+-	xfs_rtblock_t	bno,
++	xfs_rtxnum_t	rtx,
+ 	int		state)
  {
-+	if (mp->m_rtxblklog >= 0)
-+		return len >> mp->m_rtxblklog;
-+
- 	return len / mp->m_sb.sb_rextsize;
+-	*(rt_bmap + bno / XR_BB_NUM) =
+-	 ((*(rt_bmap + bno / XR_BB_NUM) &
+-	  (~((uint64_t) XR_BB_MASK << ((bno % XR_BB_NUM) * XR_BB)))) |
+-	 (((uint64_t) state) << ((bno % XR_BB_NUM) * XR_BB)));
++	*(rt_bmap + rtx / XR_BB_NUM) =
++	 ((*(rt_bmap + rtx / XR_BB_NUM) &
++	  (~((uint64_t) XR_BB_MASK << ((rtx % XR_BB_NUM) * XR_BB)))) |
++	 (((uint64_t) state) << ((rtx % XR_BB_NUM) * XR_BB)));
  }
  
-@@ -45,6 +57,11 @@ xfs_rtb_to_rtx(
- 	xfs_rtblock_t		rtbno,
- 	xfs_extlen_t		*mod)
+ static void
+diff --git a/repair/incore.h b/repair/incore.h
+index 53609f683af..c31b778a0fb 100644
+--- a/repair/incore.h
++++ b/repair/incore.h
+@@ -28,8 +28,8 @@ void		set_bmap_ext(xfs_agnumber_t agno, xfs_agblock_t agbno,
+ int		get_bmap_ext(xfs_agnumber_t agno, xfs_agblock_t agbno,
+ 			     xfs_agblock_t maxbno, xfs_extlen_t *blen);
+ 
+-void		set_rtbmap(xfs_rtblock_t bno, int state);
+-int		get_rtbmap(xfs_rtblock_t bno);
++void		set_rtbmap(xfs_rtxnum_t rtx, int state);
++int		get_rtbmap(xfs_rtxnum_t rtx);
+ 
+ static inline void
+ set_bmap(xfs_agnumber_t agno, xfs_agblock_t agbno, int state)
+diff --git a/repair/phase4.c b/repair/phase4.c
+index 28ecf56f45b..cfdea1460e5 100644
+--- a/repair/phase4.c
++++ b/repair/phase4.c
+@@ -229,9 +229,9 @@ void
+ phase4(xfs_mount_t *mp)
  {
-+	if (mp->m_rtxblklog >= 0) {
-+		*mod = rtbno & mp->m_rtxblkmask;
-+		return rtbno >> mp->m_rtxblklog;
-+	}
-+
- 	return div_u64_rem(rtbno, mp->m_sb.sb_rextsize, mod);
- }
+ 	ino_tree_node_t		*irec;
+-	xfs_rtblock_t		bno;
+-	xfs_rtblock_t		rt_start;
+-	xfs_extlen_t		rt_len;
++	xfs_rtxnum_t		rtx;
++	xfs_rtxnum_t		rt_start;
++	xfs_rtxlen_t		rt_len;
+ 	xfs_agnumber_t		i;
+ 	xfs_agblock_t		j;
+ 	xfs_agblock_t		ag_end;
+@@ -330,14 +330,14 @@ phase4(xfs_mount_t *mp)
+ 	rt_start = 0;
+ 	rt_len = 0;
  
-@@ -53,6 +70,9 @@ xfs_rtb_to_rtxt(
- 	struct xfs_mount	*mp,
- 	xfs_rtblock_t		rtbno)
+-	for (bno = 0; bno < mp->m_sb.sb_rextents; bno++)  {
+-		bstate = get_rtbmap(bno);
++	for (rtx = 0; rtx < mp->m_sb.sb_rextents; rtx++)  {
++		bstate = get_rtbmap(rtx);
+ 		switch (bstate)  {
+ 		case XR_E_BAD_STATE:
+ 		default:
+ 			do_warn(
+ 	_("unknown rt extent state, extent %" PRIu64 "\n"),
+-				bno);
++				rtx);
+ 			fallthrough;
+ 		case XR_E_METADATA:
+ 		case XR_E_UNKNOWN:
+@@ -360,14 +360,14 @@ phase4(xfs_mount_t *mp)
+ 			break;
+ 		case XR_E_MULT:
+ 			if (rt_start == 0)  {
+-				rt_start = bno;
++				rt_start = rtx;
+ 				rt_len = 1;
+ 			} else if (rt_len == XFS_MAX_BMBT_EXTLEN)  {
+ 				/*
+ 				 * large extent case
+ 				 */
+ 				add_rt_dup_extent(rt_start, rt_len);
+-				rt_start = bno;
++				rt_start = rtx;
+ 				rt_len = 1;
+ 			} else
+ 				rt_len++;
+diff --git a/repair/rt.c b/repair/rt.c
+index a4cca7aa223..947382e9ede 100644
+--- a/repair/rt.c
++++ b/repair/rt.c
+@@ -48,8 +48,8 @@ generate_rtinfo(xfs_mount_t	*mp,
+ 		xfs_rtword_t	*words,
+ 		xfs_suminfo_t	*sumcompute)
  {
-+	if (mp->m_rtxblklog >= 0)
-+		return rtbno >> mp->m_rtxblklog;
-+
- 	return div_u64(rtbno, mp->m_sb.sb_rextsize);
- }
- 
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index 55a5c5fc631..8605c91e212 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -950,6 +950,8 @@ xfs_sb_mount_common(
- 	mp->m_blockmask = sbp->sb_blocksize - 1;
- 	mp->m_blockwsize = sbp->sb_blocksize >> XFS_WORDLOG;
- 	mp->m_blockwmask = mp->m_blockwsize - 1;
-+	mp->m_rtxblklog = log2_if_power2(sbp->sb_rextsize);
-+	mp->m_rtxblkmask = mask64_if_power2(sbp->sb_rextsize);
- 
- 	mp->m_alloc_mxr[0] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 1);
- 	mp->m_alloc_mxr[1] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 0);
+-	xfs_rtblock_t	extno;
+-	xfs_rtblock_t	start_ext;
++	xfs_rtxnum_t	extno;
++	xfs_rtxnum_t	start_ext;
+ 	int		bitsperblock;
+ 	int		bmbno;
+ 	xfs_rtword_t	freebit;
 
