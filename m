@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDA95C3DA7C
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:57:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 213FBC3DA7C
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:57:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231294AbiL3W5G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 17:57:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58212 "EHLO
+        id S235665AbiL3W5W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 17:57:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235647AbiL3W5E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:57:04 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A92B1B9E2;
-        Fri, 30 Dec 2022 14:57:04 -0800 (PST)
+        with ESMTP id S235647AbiL3W5W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:57:22 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EB241B9E2;
+        Fri, 30 Dec 2022 14:57:21 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B820A61C30;
-        Fri, 30 Dec 2022 22:57:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2036DC433F1;
-        Fri, 30 Dec 2022 22:57:03 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 0E086B81D95;
+        Fri, 30 Dec 2022 22:57:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE989C433EF;
+        Fri, 30 Dec 2022 22:57:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672441023;
-        bh=okdMoSbtkbYrBQB1NH2KJpgYM/rd0QyX4yIcR9uhfL4=;
+        s=k20201202; t=1672441038;
+        bh=28h2JW4kYwgtShJujLRwlnsZt43YsOlA6fDOLH1qXL4=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=hQvN9gmE3OqID5QXh+8NVNvPyQfZy0QvQV+RYvrSl6X3ze+b48MDEs4ZsGNVAlaQq
-         3wy4dp5dC9qGLMWo/13O4OmzUuVT9CdaOta4hajfK0nEFyLlm8RN5ij/R5rBkX5jsh
-         5tDrp6RxLuYcjd6MPe0zimvbR0hj8+SC0XZRFkKMNyXHU0MJAQL/vCLzmgHbY4NkPj
-         zcX0R50FdmtiCRdr+iI+Oi1MoUJGLEKutA5HvD0u2iw8ep8oUXLOIQ5/EIQe3qxchD
-         Wpv5QWttFOkJgG6rqQn9hydo1TFUxmGQtPP5Ua1HIX17l+P9JPS4u78eMcmqxgD6qy
-         f/N4k8Vso/3yg==
-Subject: [PATCH 11/16] fuzzy: clear out the scratch filesystem if it's too
- full
+        b=QxX0Ivy+aMHlukTCOMvLoh6SgDhPmz3Tml1xv0Oo05/E4qGjAVCST8SrBll7nAFDQ
+         ixz9uW2i/R+Ak2K2m20PrgbS6z3/2Sdu9N3gKvh1Aj6cH9tq3JO1cYwKUirctzvil/
+         JsyzY4Afh9NgFvJaJCfluXX261dfaj5zb5FqoCzdsqTt18xrkO6lhVZ2A04wr0z92Y
+         nCOxRsOXWCjbtmqmv+P84q2SAHYctimEOmKDAL5bRivnSbwVoSmunABjM0fMJ8FmH5
+         EZ25QOfW4WnE9C6HcgUsnuVPXMTIMi5qeq/LabV3mj1Eqdj+36F802eTmEjO0zClFD
+         jYz0mAXQZ6fww==
+Subject: [PATCH 12/16] fuzzy: increase operation count for each fsstress
+ invocation
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     zlang@redhat.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
 Date:   Fri, 30 Dec 2022 14:12:54 -0800
-Message-ID: <167243837447.694541.8212586612646646637.stgit@magnolia>
+Message-ID: <167243837460.694541.14076101650568669658.stgit@magnolia>
 In-Reply-To: <167243837296.694541.13203497631389630964.stgit@magnolia>
 References: <167243837296.694541.13203497631389630964.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,52 +50,31 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If the online fsck stress tests run for long enough, they'll fill up the
-scratch filesystem completely.  While it is interesting to test repair
-functionality on a *nearly* full filesystem undergoing a heavy workload,
-a totally full filesystem is really only exercising the ENOSPC handlers
-in the kernel.  That's not what we came here to test, so change the
-fsstress loop to detect a nearly full filesystem and erase everything
-before starting fsstress again.
+For online fsck stress testing, increase the number of filesystem
+operations per fsstress run to 2 million, now that we have the ability
+to kill fsstress if the user should push ^C to abort the test early.
+This should guarantee a couple of hours of continuous stress testing in
+between clearing the scratch filesystem.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/fuzzy |   16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ common/fuzzy |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 
 diff --git a/common/fuzzy b/common/fuzzy
-index f1bc2dc756..01cf7f00d8 100644
+index 01cf7f00d8..3e23edc9e4 100644
 --- a/common/fuzzy
 +++ b/common/fuzzy
-@@ -380,6 +380,20 @@ __stress_one_scrub_loop() {
- 	done
- }
- 
-+# Clean the scratch filesystem between rounds of fsstress if there is 2%
-+# available space or less because that isn't an interesting stress test.
-+#
-+# Returns 0 if we cleared anything, and 1 if we did nothing.
-+__stress_scrub_clean_scratch() {
-+	local used_pct="$(_used $SCRATCH_DEV)"
-+
-+	test "$used_pct" -lt 98 && return 1
-+
-+	echo "Clearing scratch fs at $(date)" >> $seqres.full
-+	rm -r -f $SCRATCH_MNT/p*
-+	return 0
-+}
-+
- # Run fsstress while we're testing online fsck.
- __stress_scrub_fsstress_loop() {
+@@ -399,7 +399,9 @@ __stress_scrub_fsstress_loop() {
  	local end="$1"
-@@ -389,6 +403,8 @@ __stress_scrub_fsstress_loop() {
+ 	local runningfile="$2"
+ 
+-	local args=$(_scale_fsstress_args -p 4 -d $SCRATCH_MNT -n 2000 $FSSTRESS_AVOID)
++	# As of March 2022, 2 million fsstress ops should be enough to keep
++	# any filesystem busy for a couple of hours.
++	local args=$(_scale_fsstress_args -p 4 -d $SCRATCH_MNT -n 2000000 $FSSTRESS_AVOID)
  	echo "Running $FSSTRESS_PROG $args" >> $seqres.full
  
  	while __stress_scrub_running "$end" "$runningfile"; do
-+		# Need to recheck running conditions if we cleared anything
-+		__stress_scrub_clean_scratch && continue
- 		$FSSTRESS_PROG $args >> $seqres.full
- 		echo "fsstress exits with $? at $(date)" >> $seqres.full
- 	done
 
