@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9CC5C3DA7C
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:16:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02878C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:16:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235470AbiL3XQL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 18:16:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34204 "EHLO
+        id S235576AbiL3XQ2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 18:16:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235164AbiL3XQK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:16:10 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14335BE2D;
-        Fri, 30 Dec 2022 15:16:10 -0800 (PST)
+        with ESMTP id S235506AbiL3XQZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:16:25 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2576C95B0;
+        Fri, 30 Dec 2022 15:16:24 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C902BB81DA2;
-        Fri, 30 Dec 2022 23:16:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86C48C433D2;
-        Fri, 30 Dec 2022 23:16:07 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B6B4461C3A;
+        Fri, 30 Dec 2022 23:16:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AE75C433D2;
+        Fri, 30 Dec 2022 23:16:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672442167;
-        bh=ovcKWM5Uho36USPv9J6yLJTaLefJBBEhmq1kOETlN1k=;
+        s=k20201202; t=1672442183;
+        bh=zBnHFdZ/5bpxk9LsMkIk4K0AxtYw7XjH3W407tp5gf4=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=W7En7Fz7jN0QQoD6PBUpHHTU7ET9u33VWQN9xQNWYSoEfRoUcbhztqgsvq+6K4VFl
-         rXCo1fRJp8372yKMC08Xg1MlIgMJ76cD0swDgj2KgIHxCZdKBgDOQVXMn0hoZ+Wnp9
-         x3xuKxPBdwux6P57+1QyuDeGGMZzT2ah9sF7kN4MWUCH0u6ppkgefPmB6QyyBR73CQ
-         HkHRciTy+/7r0KGxyOUF9+CTAYeaY+xM+L6F0B/Kec6PKb56VPrjJkL1OkZCTclScO
-         oA72eSYLvfiilX28f/SjZub7a8899UGG9GlHtHr73aTAZ9+n6k4ntYV5FxxijZ+wZd
-         SITAljvasK3GA==
-Subject: [PATCHSET v24.0 0/2] fstests: online repair of AG btrees
+        b=lJhUY9ClocgInXcWs8P6OGIE2jojFGA31rFK3exk7Cv2TLeE7XfNR4V/6gm8uzVdl
+         rwrCwVJS+3LYOe4qitXD0MmwM6wCodpW55wSZ54HQsc1R8pWS6fjxFIkevc9hBobGu
+         Qx8jdqYvZ7S7VXeWRDTfOYYip/FuUtbIRvZA29UqttbOhV7ReSPrRzBf1Az4uFlDD9
+         0S2Y2hthaDoe5Tnq3zOEvM0OfqJV+XSIDgjC/eFgxMuBwrvhUqgVOT/+XJnVNZZZxA
+         UjpMLLOJq0vg4qWjIh15eVHgjuglShc/wP4zjplDZcGcqlnaQ3FteM26qzyv8iAmg6
+         SbWLjpAsoMwig==
+Subject: [PATCHSET v24.0 0/1] fstests: online repair of inodes
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     zlang@redhat.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Fri, 30 Dec 2022 14:19:12 -0800
-Message-ID: <167243875241.723308.1395808663517469875.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:19:15 -0800
+Message-ID: <167243875538.724875.4064833218427202716.stgit@magnolia>
 In-Reply-To: <Y69Unb7KRM5awJoV@magnolia>
 References: <Y69Unb7KRM5awJoV@magnolia>
 User-Agent: StGit/0.19
@@ -49,12 +49,12 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Hi all,
 
-Now that we've spent a lot of time reworking common code in online fsck,
-we're ready to start rebuilding the AG space btrees.  This series
-implements repair functions for the free space, inode, and refcount
-btrees.  Rebuilding the reverse mapping btree is much more intense and
-is left for a subsequent patchset.  The fstests counterpart of this
-patchset implements stress testing of repair.
+In this series, online repair gains the ability to repair inode records.
+To do this, we must repair the ondisk inode and fork information enough
+to pass the iget verifiers and hence make the inode igettable again.
+Once that's done, we can perform higher level repairs on the incore
+inode.  The fstests counterpart of this patchset implements stress
+testing of repair.
 
 If you're going to start using this mess, you probably ought to just
 pull from my git trees, which are linked below.
@@ -65,45 +65,17 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-ag-btrees
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-inodes
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-ag-btrees
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-inodes
 
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=repair-ag-btrees
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=repair-inodes
 ---
- README            |    3 ++
- common/fuzzy      |   39 +++++++++++++++++++--------
- common/rc         |    2 +
- common/xfs        |   77 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/725     |   37 +++++++++++++++++++++++++
- tests/xfs/725.out |    2 +
- tests/xfs/726     |   37 +++++++++++++++++++++++++
- tests/xfs/726.out |    2 +
- tests/xfs/727     |   38 ++++++++++++++++++++++++++
- tests/xfs/727.out |    2 +
- tests/xfs/728     |   37 +++++++++++++++++++++++++
- tests/xfs/728.out |    2 +
- tests/xfs/729     |   37 +++++++++++++++++++++++++
- tests/xfs/729.out |    2 +
- tests/xfs/730     |   37 +++++++++++++++++++++++++
- tests/xfs/730.out |    2 +
- tests/xfs/731     |   37 +++++++++++++++++++++++++
- tests/xfs/731.out |    2 +
- 18 files changed, 382 insertions(+), 13 deletions(-)
- create mode 100755 tests/xfs/725
- create mode 100644 tests/xfs/725.out
- create mode 100755 tests/xfs/726
- create mode 100644 tests/xfs/726.out
- create mode 100755 tests/xfs/727
- create mode 100644 tests/xfs/727.out
- create mode 100755 tests/xfs/728
- create mode 100644 tests/xfs/728.out
- create mode 100755 tests/xfs/729
- create mode 100644 tests/xfs/729.out
- create mode 100755 tests/xfs/730
- create mode 100644 tests/xfs/730.out
- create mode 100755 tests/xfs/731
- create mode 100644 tests/xfs/731.out
+ tests/xfs/806     |   38 ++++++++++++++++++++++++++++++++++++++
+ tests/xfs/806.out |    2 ++
+ 2 files changed, 40 insertions(+)
+ create mode 100755 tests/xfs/806
+ create mode 100644 tests/xfs/806.out
 
