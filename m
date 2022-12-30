@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 096D5C4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:25:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70A2DC4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:25:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236226AbiLaCZJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 21:25:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55518 "EHLO
+        id S236228AbiLaCZ0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 21:25:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236224AbiLaCZJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:25:09 -0500
+        with ESMTP id S236224AbiLaCZZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:25:25 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4746019C12
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:25:08 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E11BC1A833
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:25:23 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C808061CC4
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:25:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C379C433D2;
-        Sat, 31 Dec 2022 02:25:07 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5985761CC2
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:25:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6E9DC433EF;
+        Sat, 31 Dec 2022 02:25:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672453507;
-        bh=0EiYA4sq2EI7kCdZtbaILwJODvh29kmSTJXmxHqdwBw=;
+        s=k20201202; t=1672453522;
+        bh=tBbH2apdIRE/lBrPVg30s6uUJSks/pZLVPntfIE/XO8=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=JyMmtLD81EzHDwJz80azYXJRuGeN/MNN9L3lAmuBsOkQx6gFyFvDFZvrSEKIYW+RK
-         bH4a7L045MyFJK+GE4V4g05cqj8wk3UZFwut8zFErK0250j8xZ34KqDSxKejdBrhii
-         OctJAvNcSAbbU4vUy56Wot57G2j+Gogn9uZXhPUZimTTm5nNEQQ0VoBkD8IkxhKAx8
-         2kzM/uHrAnPUreDygUHjMpoVhHg+CYwKhLqKg6n3reheE8xFb1fdku3Dic56RL4ln7
-         bHNk6hGIp+XI/qrQr1/DjjEk1eIO0JVe3VjzNM36F0NOQXPEUbuiKskMemkSuln7E+
-         xyhOlRKXjJLKA==
-Subject: [PATCH 3/9] xfs: convert open-coded xfs_rtword_t pointer accesses to
- helper
+        b=eTxnUlgOmXnH+QcPyy/EFSuvM+kNutQk+DBhFLH/FN0U/B2rSSsZDQn7t7ip+GK5y
+         flisf52eOZWiVlN8orV8Rc3o3EmROLSCrqfugNFRSkumlusX1WVP0SGdz3N/L2sNix
+         Wv34RacJfPBI4wTpJVGY0BcKWitWDp6ZNh9PA5cZT7Ykw8rY2VETEPXm2G4wfJsaAi
+         b2vI062QiZWN42zjtEVfBPrnjZNqwc7IYbuPgBHpUFEhh6dZcRP3e6yQGKvSAIQHCU
+         dZnupJR7k0cqT6BV/ygd6kmycxe9BYCbXsSe0LgqVdbgMyde1IDfLuH4WKyixY+80s
+         rxBdSf+1RsToQ==
+Subject: [PATCH 4/9] xfs: convert rt summary macros to helpers
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:19:32 -0800
-Message-ID: <167243877269.727982.17249505634999501680.stgit@magnolia>
+Message-ID: <167243877282.727982.128490008596996579.stgit@magnolia>
 In-Reply-To: <167243877226.727982.8292582053571487702.stgit@magnolia>
 References: <167243877226.727982.8292582053571487702.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,302 +49,209 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-There are a bunch of places where we use open-coded logic to find a
-pointer to an xfs_rtword_t within a rt bitmap buffer.  Convert all that
-to helper functions for better type safety.
+Convert the realtime summary file macros to helper functions so that we
+can improve type checking.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
  db/check.c            |    4 ++-
- libxfs/xfs_rtbitmap.c |   59 ++++++++++++++++++++++++++-----------------------
- libxfs/xfs_rtbitmap.h |   20 +++++++++++++++++
- repair/phase6.c       |    4 ++-
- 4 files changed, 56 insertions(+), 31 deletions(-)
+ libxfs/xfs_format.h   |    9 +------
+ libxfs/xfs_rtbitmap.c |   10 +++++---
+ libxfs/xfs_rtbitmap.h |   59 +++++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfs_types.h    |    2 ++
+ repair/rt.c           |    4 ++-
+ 6 files changed, 72 insertions(+), 16 deletions(-)
 
 
 diff --git a/db/check.c b/db/check.c
-index 5297ea25459..185be6352b8 100644
+index 185be6352b8..4e1d3c6d366 100644
 --- a/db/check.c
 +++ b/db/check.c
-@@ -3635,7 +3635,7 @@ process_rtbitmap(
- 		push_cur();
- 		set_cur(&typtab[TYP_RTBITMAP], XFS_FSB_TO_DADDR(mp, bno), blkbb,
- 			DB_RING_IGN, NULL);
--		if ((words = iocur_top->data) == NULL) {
-+		if (!iocur_top->bp) {
- 			if (!sflag)
- 				dbprintf(_("can't read block %lld for rtbitmap "
- 					 "inode\n"),
-@@ -3644,6 +3644,8 @@ process_rtbitmap(
- 			pop_cur();
- 			continue;
- 		}
-+
-+		words = xfs_rbmblock_wordptr(iocur_top->bp, 0);
- 		for (bit = 0;
- 		     bit < bitsperblock && extno < mp->m_sb.sb_rextents;
- 		     bit++, extno++) {
+@@ -3663,7 +3663,7 @@ process_rtbitmap(
+ 				len = ((int)bmbno - start_bmbno) *
+ 					bitsperblock + (bit - start_bit);
+ 				log = XFS_RTBLOCKLOG(len);
+-				offs = XFS_SUMOFFS(mp, log, start_bmbno);
++				offs = xfs_rtsumoffs(mp, log, start_bmbno);
+ 				sumcompute[offs]++;
+ 				prevbit = 0;
+ 			}
+@@ -3676,7 +3676,7 @@ process_rtbitmap(
+ 		len = ((int)bmbno - start_bmbno) * bitsperblock +
+ 			(bit - start_bit);
+ 		log = XFS_RTBLOCKLOG(len);
+-		offs = XFS_SUMOFFS(mp, log, start_bmbno);
++		offs = xfs_rtsumoffs(mp, log, start_bmbno);
+ 		sumcompute[offs]++;
+ 	}
+ }
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index a4278c8fba5..d95497c064f 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -1198,15 +1198,8 @@ static inline bool xfs_dinode_has_large_extent_counts(
+ #define	XFS_BLOCKMASK(mp)	((mp)->m_blockmask)
+ 
+ /*
+- * RT Summary and bit manipulation macros.
++ * RT bit manipulation macros.
+  */
+-#define	XFS_SUMOFFS(mp,ls,bb)	((int)((ls) * (mp)->m_sb.sb_rbmblocks + (bb)))
+-#define	XFS_SUMOFFSTOBLOCK(mp,s)	\
+-	(((s) * (uint)sizeof(xfs_suminfo_t)) >> (mp)->m_sb.sb_blocklog)
+-#define	XFS_SUMPTR(mp,bp,so)	\
+-	((xfs_suminfo_t *)((bp)->b_addr + \
+-		(((so) * (uint)sizeof(xfs_suminfo_t)) & XFS_BLOCKMASK(mp))))
+-
+ #define	XFS_RTMIN(a,b)	((a) < (b) ? (a) : (b))
+ #define	XFS_RTMAX(a,b)	((a) > (b) ? (a) : (b))
+ 
 diff --git a/libxfs/xfs_rtbitmap.c b/libxfs/xfs_rtbitmap.c
-index 5301b0448f1..8fec2b769d5 100644
+index 8fec2b769d5..e17af3b9d28 100644
 --- a/libxfs/xfs_rtbitmap.c
 +++ b/libxfs/xfs_rtbitmap.c
-@@ -108,7 +108,6 @@ xfs_rtfind_back(
- 	int		bit;		/* bit number in the word */
- 	xfs_fileoff_t	block;		/* bitmap block number */
- 	struct xfs_buf	*bp;		/* buf for the block */
--	xfs_rtword_t	*bufp;		/* starting word in buffer */
+@@ -460,17 +460,18 @@ xfs_rtmodify_summary_int(
+ 	struct xfs_buf	*bp;		/* buffer for the summary block */
  	int		error;		/* error value */
- 	xfs_rtxnum_t	firstbit;	/* first useful bit in the word */
- 	xfs_rtxnum_t	i;		/* current bit number rel. to start */
-@@ -126,12 +125,12 @@ xfs_rtfind_back(
- 	if (error) {
- 		return error;
- 	}
--	bufp = bp->b_addr;
-+
- 	/*
- 	 * Get the first word's index & point to it.
- 	 */
- 	word = xfs_rtx_to_rbmword(mp, start);
--	b = &bufp[word];
-+	b = xfs_rbmblock_wordptr(bp, word);
- 	bit = (int)(start & (XFS_NBWORD - 1));
- 	len = start - limit + 1;
- 	/*
-@@ -178,9 +177,9 @@ xfs_rtfind_back(
- 			if (error) {
- 				return error;
- 			}
--			bufp = bp->b_addr;
-+
- 			word = mp->m_blockwsize - 1;
--			b = &bufp[word];
-+			b = xfs_rbmblock_wordptr(bp, word);
- 		} else {
- 			/*
- 			 * Go on to the previous word in the buffer.
-@@ -224,9 +223,9 @@ xfs_rtfind_back(
- 			if (error) {
- 				return error;
- 			}
--			bufp = bp->b_addr;
-+
- 			word = mp->m_blockwsize - 1;
--			b = &bufp[word];
-+			b = xfs_rbmblock_wordptr(bp, word);
- 		} else {
- 			/*
- 			 * Go on to the previous word in the buffer.
-@@ -283,7 +282,6 @@ xfs_rtfind_forw(
- 	int		bit;		/* bit number in the word */
- 	xfs_fileoff_t	block;		/* bitmap block number */
- 	struct xfs_buf	*bp;		/* buf for the block */
--	xfs_rtword_t	*bufp;		/* starting word in buffer */
- 	int		error;		/* error value */
- 	xfs_rtxnum_t	i;		/* current bit number rel. to start */
- 	xfs_rtxnum_t	lastbit;	/* last useful bit in the word */
-@@ -301,12 +299,12 @@ xfs_rtfind_forw(
- 	if (error) {
- 		return error;
- 	}
--	bufp = bp->b_addr;
-+
- 	/*
- 	 * Get the first word's index & point to it.
- 	 */
- 	word = xfs_rtx_to_rbmword(mp, start);
--	b = &bufp[word];
-+	b = xfs_rbmblock_wordptr(bp, word);
- 	bit = (int)(start & (XFS_NBWORD - 1));
- 	len = limit - start + 1;
- 	/*
-@@ -352,8 +350,9 @@ xfs_rtfind_forw(
- 			if (error) {
- 				return error;
- 			}
--			b = bufp = bp->b_addr;
-+
- 			word = 0;
-+			b = xfs_rbmblock_wordptr(bp, word);
- 		} else {
- 			/*
- 			 * Go on to the previous word in the buffer.
-@@ -397,8 +396,9 @@ xfs_rtfind_forw(
- 			if (error) {
- 				return error;
- 			}
--			b = bufp = bp->b_addr;
-+
- 			word = 0;
-+			b = xfs_rbmblock_wordptr(bp, word);
- 		} else {
- 			/*
- 			 * Go on to the next word in the buffer.
-@@ -546,7 +546,6 @@ xfs_rtmodify_range(
- 	int		bit;		/* bit number in the word */
- 	xfs_fileoff_t	block;		/* bitmap block number */
- 	struct xfs_buf	*bp;		/* buf for the block */
--	xfs_rtword_t	*bufp;		/* starting word in buffer */
- 	int		error;		/* error value */
- 	xfs_rtword_t	*first;		/* first used word in the buffer */
- 	int		i;		/* current bit number rel. to start */
-@@ -565,12 +564,12 @@ xfs_rtmodify_range(
- 	if (error) {
- 		return error;
- 	}
--	bufp = bp->b_addr;
-+
- 	/*
- 	 * Compute the starting word's address, and starting bit.
- 	 */
- 	word = xfs_rtx_to_rbmword(mp, start);
--	first = b = &bufp[word];
-+	first = b = xfs_rbmblock_wordptr(bp, word);
- 	bit = (int)(start & (XFS_NBWORD - 1));
- 	/*
- 	 * 0 (allocated) => all zeroes; 1 (free) => all ones.
-@@ -604,14 +603,15 @@ xfs_rtmodify_range(
- 			 * Get the next one.
- 			 */
- 			xfs_trans_log_buf(tp, bp,
--				(uint)((char *)first - (char *)bufp),
--				(uint)((char *)b - (char *)bufp));
-+				(uint)((char *)first - (char *)bp->b_addr),
-+				(uint)((char *)b - (char *)bp->b_addr));
- 			error = xfs_rtbuf_get(mp, tp, ++block, 0, &bp);
- 			if (error) {
- 				return error;
- 			}
--			first = b = bufp = bp->b_addr;
-+
- 			word = 0;
-+			first = b = xfs_rbmblock_wordptr(bp, word);
- 		} else {
- 			/*
- 			 * Go on to the next word in the buffer
-@@ -644,14 +644,15 @@ xfs_rtmodify_range(
- 			 * Get the next one.
- 			 */
- 			xfs_trans_log_buf(tp, bp,
--				(uint)((char *)first - (char *)bufp),
--				(uint)((char *)b - (char *)bufp));
-+				(uint)((char *)first - (char *)bp->b_addr),
-+				(uint)((char *)b - (char *)bp->b_addr));
- 			error = xfs_rtbuf_get(mp, tp, ++block, 0, &bp);
- 			if (error) {
- 				return error;
- 			}
--			first = b = bufp = bp->b_addr;
-+
- 			word = 0;
-+			first = b = xfs_rbmblock_wordptr(bp, word);
- 		} else {
- 			/*
- 			 * Go on to the next word in the buffer
-@@ -681,8 +682,9 @@ xfs_rtmodify_range(
- 	 * Log any remaining changed bytes.
- 	 */
- 	if (b > first)
--		xfs_trans_log_buf(tp, bp, (uint)((char *)first - (char *)bufp),
--			(uint)((char *)b - (char *)bufp - 1));
-+		xfs_trans_log_buf(tp, bp,
-+			(uint)((char *)first - (char *)bp->b_addr),
-+			(uint)((char *)b - (char *)bp->b_addr - 1));
- 	return 0;
- }
+ 	xfs_fileoff_t	sb;		/* summary fsblock */
+-	int		so;		/* index into the summary file */
++	xfs_rtsumoff_t	so;		/* index into the summary file */
+ 	xfs_suminfo_t	*sp;		/* pointer to returned data */
++	unsigned int	infoword;
  
-@@ -780,7 +782,6 @@ xfs_rtcheck_range(
- 	int		bit;		/* bit number in the word */
- 	xfs_fileoff_t	block;		/* bitmap block number */
- 	struct xfs_buf	*bp;		/* buf for the block */
--	xfs_rtword_t	*bufp;		/* starting word in buffer */
- 	int		error;		/* error value */
- 	xfs_rtxnum_t	i;		/* current bit number rel. to start */
- 	xfs_rtxnum_t	lastbit;	/* last useful bit in word */
-@@ -799,12 +800,12 @@ xfs_rtcheck_range(
- 	if (error) {
- 		return error;
- 	}
--	bufp = bp->b_addr;
-+
  	/*
- 	 * Compute the starting word's address, and starting bit.
+ 	 * Compute entry number in the summary file.
  	 */
- 	word = xfs_rtx_to_rbmword(mp, start);
--	b = &bufp[word];
-+	b = xfs_rbmblock_wordptr(bp, word);
- 	bit = (int)(start & (XFS_NBWORD - 1));
+-	so = XFS_SUMOFFS(mp, log, bbno);
++	so = xfs_rtsumoffs(mp, log, bbno);
  	/*
- 	 * 0 (allocated) => all zero's; 1 (free) => all one's.
-@@ -850,8 +851,9 @@ xfs_rtcheck_range(
- 			if (error) {
- 				return error;
- 			}
--			b = bufp = bp->b_addr;
-+
- 			word = 0;
-+			b = xfs_rbmblock_wordptr(bp, word);
- 		} else {
- 			/*
- 			 * Go on to the next word in the buffer.
-@@ -896,8 +898,9 @@ xfs_rtcheck_range(
- 			if (error) {
- 				return error;
- 			}
--			b = bufp = bp->b_addr;
-+
- 			word = 0;
-+			b = xfs_rbmblock_wordptr(bp, word);
- 		} else {
- 			/*
- 			 * Go on to the next word in the buffer.
+ 	 * Compute the block number in the summary file.
+ 	 */
+-	sb = XFS_SUMOFFSTOBLOCK(mp, so);
++	sb = xfs_rtsumoffs_to_block(mp, so);
+ 	/*
+ 	 * If we have an old buffer, and the block number matches, use that.
+ 	 */
+@@ -498,7 +499,8 @@ xfs_rtmodify_summary_int(
+ 	/*
+ 	 * Point to the summary information, modify/log it, and/or copy it out.
+ 	 */
+-	sp = XFS_SUMPTR(mp, bp, so);
++	infoword = xfs_rtsumoffs_to_infoword(mp, so);
++	sp = xfs_rsumblock_infoptr(bp, infoword);
+ 	if (delta) {
+ 		uint first = (uint)((char *)sp - (char *)bp->b_addr);
+ 
 diff --git a/libxfs/xfs_rtbitmap.h b/libxfs/xfs_rtbitmap.h
-index 5f4a453e29e..af37afec2b0 100644
+index af37afec2b0..f616956b289 100644
 --- a/libxfs/xfs_rtbitmap.h
 +++ b/libxfs/xfs_rtbitmap.h
-@@ -121,6 +121,26 @@ xfs_rbmblock_to_rtx(
- 	return rbmoff << mp->m_blkbit_log;
+@@ -141,6 +141,65 @@ xfs_rbmblock_wordptr(
+ 	return xfs_rbmbuf_wordptr(bp->b_addr, rbmword);
  }
  
-+/* Return a pointer to a bitmap word within a rt bitmap block buffer. */
-+static inline xfs_rtword_t *
-+xfs_rbmbuf_wordptr(
-+	void			*buf,
-+	unsigned int		rbmword)
++/*
++ * Convert a rt extent length and rt bitmap block number to a xfs_suminfo_t
++ * offset within the rt summary file.
++ */
++static inline xfs_rtsumoff_t
++xfs_rtsumoffs(
++	struct xfs_mount	*mp,
++	int			log2_len,
++	xfs_fileoff_t		rbmoff)
 +{
-+	xfs_rtword_t		*wordp = buf;
-+
-+	return &wordp[rbmword];
++	return log2_len * mp->m_sb.sb_rbmblocks + rbmoff;
 +}
 +
-+/* Return a pointer to a bitmap word within a rt bitmap block. */
-+static inline xfs_rtword_t *
-+xfs_rbmblock_wordptr(
-+	struct xfs_buf		*bp,
-+	unsigned int		rbmword)
++/*
++ * Convert an xfs_suminfo_t offset to a file block offset within the rt summary
++ * file.
++ */
++static inline xfs_fileoff_t
++xfs_rtsumoffs_to_block(
++	struct xfs_mount	*mp,
++	xfs_rtsumoff_t		rsumoff)
 +{
-+	return xfs_rbmbuf_wordptr(bp->b_addr, rbmword);
++	return XFS_B_TO_FSBT(mp, rsumoff * sizeof(xfs_suminfo_t));
++}
++
++/*
++ * Convert an xfs_suminfo_t offset to an info word offset within an rt summary
++ * block.
++ */
++static inline unsigned int
++xfs_rtsumoffs_to_infoword(
++	struct xfs_mount	*mp,
++	xfs_rtsumoff_t		rsumoff)
++{
++	unsigned int		mask = mp->m_blockmask >> XFS_SUMINFOLOG;
++
++	return rsumoff & mask;
++}
++
++/* Return a pointer to a summary info word within a rt summary block buffer. */
++static inline xfs_suminfo_t *
++xfs_rsumbuf_infoptr(
++	void			*buf,
++	unsigned int		infoword)
++{
++	xfs_suminfo_t		*infop = buf;
++
++	return &infop[infoword];
++}
++
++/* Return a pointer to a summary info word within a rt summary block. */
++static inline xfs_suminfo_t *
++xfs_rsumblock_infoptr(
++	struct xfs_buf		*bp,
++	unsigned int		infoword)
++{
++	return xfs_rsumbuf_infoptr(bp->b_addr, infoword);
 +}
 +
  /*
   * Functions for walking free space rtextents in the realtime bitmap.
   */
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 13094730407..aef8a0d6b3f 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -828,11 +828,11 @@ _("can't access block %" PRIu64 " (fsbno %" PRIu64 ") of realtime bitmap inode %
- 			return(1);
- 		}
+diff --git a/libxfs/xfs_types.h b/libxfs/xfs_types.h
+index abb07a1c7b0..f4615c5be34 100644
+--- a/libxfs/xfs_types.h
++++ b/libxfs/xfs_types.h
+@@ -19,6 +19,7 @@ typedef int64_t		xfs_fsize_t;	/* bytes in a file */
+ typedef uint64_t	xfs_ufsize_t;	/* unsigned bytes in a file */
  
--		memmove(bp->b_addr, bmp, mp->m_sb.sb_blocksize);
-+		memcpy(xfs_rbmblock_wordptr(bp, 0), bmp, mp->m_sb.sb_blocksize);
+ typedef int32_t		xfs_suminfo_t;	/* type of bitmap summary info */
++typedef uint32_t	xfs_rtsumoff_t;	/* offset of an rtsummary info word */
+ typedef uint32_t	xfs_rtword_t;	/* word type for bitmap manipulations */
  
- 		libxfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
- 
--		bmp = (xfs_rtword_t *)((intptr_t) bmp + mp->m_sb.sb_blocksize);
-+		bmp += mp->m_blockwsize;
- 		bno++;
+ typedef int64_t		xfs_lsn_t;	/* log sequence number */
+@@ -151,6 +152,7 @@ typedef uint32_t	xfs_dqid_t;
+  */
+ #define	XFS_NBBYLOG	3		/* log2(NBBY) */
+ #define	XFS_WORDLOG	2		/* log2(sizeof(xfs_rtword_t)) */
++#define	XFS_SUMINFOLOG	2		/* log2(sizeof(xfs_suminfo_t)) */
+ #define	XFS_NBWORDLOG	(XFS_NBBYLOG + XFS_WORDLOG)
+ #define	XFS_NBWORD	(1 << XFS_NBWORDLOG)
+ #define	XFS_WORDMASK	((1 << XFS_WORDLOG) - 1)
+diff --git a/repair/rt.c b/repair/rt.c
+index 947382e9ede..8f3b9082a9b 100644
+--- a/repair/rt.c
++++ b/repair/rt.c
+@@ -91,7 +91,7 @@ generate_rtinfo(xfs_mount_t	*mp,
+ 			} else if (in_extent == 1) {
+ 				len = (int) (extno - start_ext);
+ 				log = XFS_RTBLOCKLOG(len);
+-				offs = XFS_SUMOFFS(mp, log, start_bmbno);
++				offs = xfs_rtsumoffs(mp, log, start_bmbno);
+ 				sumcompute[offs]++;
+ 				in_extent = 0;
+ 			}
+@@ -107,7 +107,7 @@ generate_rtinfo(xfs_mount_t	*mp,
+ 	if (in_extent == 1) {
+ 		len = (int) (extno - start_ext);
+ 		log = XFS_RTBLOCKLOG(len);
+-		offs = XFS_SUMOFFS(mp, log, start_bmbno);
++		offs = xfs_rtsumoffs(mp, log, start_bmbno);
+ 		sumcompute[offs]++;
  	}
  
 
