@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7CE9C4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 01:34:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61F97C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 01:35:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236087AbiLaBeu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 20:34:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46786 "EHLO
+        id S236050AbiLaBfF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 20:35:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236116AbiLaBet (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 20:34:49 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79BEF1E3CE
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 17:34:47 -0800 (PST)
+        with ESMTP id S235857AbiLaBfE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 20:35:04 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B974DEB7
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 17:35:02 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C33F6B81E0A
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 01:34:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77D02C433EF;
-        Sat, 31 Dec 2022 01:34:44 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 48CC7B81E0C
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 01:35:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09601C433D2;
+        Sat, 31 Dec 2022 01:35:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672450484;
-        bh=Pah5anWnrvyNYsFUiNVPxzlUMMaRZXC1CtzpQWxDA1E=;
+        s=k20201202; t=1672450500;
+        bh=8LrT17KqNaBckobM4YNyYY36b4UqwH/rajYGXYWQxok=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=gmGnOiCwYpmrIeZCmon9uZsd1ETPeXDqEqLB1S0hL4I04OrF8eofp+FbbGTxzpvlL
-         EJoxtj3f1gblyVpzmgufYhj1A9eceFnjfDwPisNRCUJdgx/v44o0sVXQ3mzpGvA2VU
-         cf/rwTrmhi+PAgZKTIzgutm62YozjGBWEaYlLeiTE9dDgnAFfl5PRreupCoApXKN2O
-         PKM29iuyqvnBq6EAhUDnldmtvETnkfHlp7OyY/uEjtb4vvgF4pf03hBSnvC+lf21F1
-         3H/AfYiZWhwEMEWVFw8D0NloyjSlYhtgZ8OdzeWHQ9jMzeLjdlDCq4j7wLib0dQfYw
-         GRg5qRGpn9PoQ==
-Subject: [PATCH 1/2] xfs: clean up extent free log intent item tracepoint
- callsites
+        b=ouguCV3WaEWCJXtmB8XcpLYz5dcCRz16KiXE5s1+7raLpesf4Rgqv3SNQ9mBkrqhf
+         Zk6ryrFfKQMBRF2mRD5RzUHrZPL/TBmnnLEUzVCgMvl8NKmkHcbw3b8p5CCt8E2Zxb
+         bBhEHmUncMfMRhKndBnltJPnbmxMD4je1sPT6RZDiihVkslwa5PdyMvpqK55ZFZ8R5
+         JLQ4Iyo3XZiFh5fWXAq+gWS00jdAPBBvpVuIe9wsRezLbp41TAqnDnam89FAjEm1PT
+         Kn39KirIp9QSaArYiBJGnaRpLt0U+5viY3nNUAJf3vJ2lGe8NmLmTrk/EBP+HgFcUj
+         kk6iRVTbKMIMA==
+Subject: [PATCH 2/2] xfs: convert "skip_discard" to a proper flags bitset
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:18:05 -0800
-Message-ID: <167243868534.714498.1611693606749841148.stgit@magnolia>
+Message-ID: <167243868548.714498.11115919528347820153.stgit@magnolia>
 In-Reply-To: <167243868517.714498.12799285534857942283.stgit@magnolia>
 References: <167243868517.714498.12799285534857942283.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,145 +49,274 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Pass the incore EFI structure to the tracepoints instead of open-coding
-the argument passing.  This cleans up the call sites a bit.
+Convert the boolean to skip discard on free into a proper flags field so
+that we can add more flags in the next patch.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_alloc.c |    7 +++----
- fs/xfs/libxfs/xfs_alloc.h |    1 -
- fs/xfs/xfs_extfree_item.c |    6 ++----
- fs/xfs/xfs_trace.h        |   33 +++++++++++++++------------------
- 4 files changed, 20 insertions(+), 27 deletions(-)
+ fs/xfs/libxfs/xfs_ag.c         |    3 ++-
+ fs/xfs/libxfs/xfs_alloc.c      |    7 ++++---
+ fs/xfs/libxfs/xfs_alloc.h      |   19 +++++++------------
+ fs/xfs/libxfs/xfs_bmap.c       |   14 +++++++++-----
+ fs/xfs/libxfs/xfs_bmap_btree.c |    2 +-
+ fs/xfs/libxfs/xfs_ialloc.c     |    6 +++---
+ fs/xfs/libxfs/xfs_refcount.c   |    7 ++++---
+ fs/xfs/scrub/newbt.c           |    4 ++--
+ fs/xfs/scrub/reap.c            |   11 +++++++----
+ fs/xfs/xfs_reflink.c           |    2 +-
+ 10 files changed, 40 insertions(+), 35 deletions(-)
 
 
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index bc1fc86df322..baf13b4fc0f2 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -921,7 +921,8 @@ xfs_ag_shrink_space(
+ 		if (err2 != -ENOSPC)
+ 			goto resv_err;
+ 
+-		__xfs_free_extent_later(*tpp, args.fsbno, delta, NULL, true);
++		xfs_free_extent_later(*tpp, args.fsbno, delta, NULL,
++				XFS_FREE_EXTENT_SKIP_DISCARD);
+ 
+ 		/*
+ 		 * Roll the transaction before trying to re-init the per-ag
 diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 550d0e3c8528..b9aef7937a2c 100644
+index b9aef7937a2c..d4943c197a76 100644
 --- a/fs/xfs/libxfs/xfs_alloc.c
 +++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2587,7 +2587,7 @@ xfs_defer_agfl_block(
- 	xefi->xefi_blockcount = 1;
- 	xefi->xefi_owner = oinfo->oi_owner;
+@@ -2598,12 +2598,12 @@ xfs_defer_agfl_block(
+  * The list is maintained sorted (by block number).
+  */
+ void
+-__xfs_free_extent_later(
++xfs_free_extent_later(
+ 	struct xfs_trans		*tp,
+ 	xfs_fsblock_t			bno,
+ 	xfs_filblks_t			len,
+ 	const struct xfs_owner_info	*oinfo,
+-	bool				skip_discard)
++	unsigned int			flags)
+ {
+ 	struct xfs_extent_free_item	*xefi;
+ 	struct xfs_mount		*mp = tp->t_mountp;
+@@ -2622,13 +2622,14 @@ __xfs_free_extent_later(
+ 	ASSERT(len < mp->m_sb.sb_agblocks);
+ 	ASSERT(agbno + len <= mp->m_sb.sb_agblocks);
+ #endif
++	ASSERT(!(flags & ~XFS_FREE_EXTENT_ALL_FLAGS));
+ 	ASSERT(xfs_extfree_item_cache != NULL);
  
--	trace_xfs_agfl_free_defer(mp, agno, 0, agbno, 1);
-+	trace_xfs_agfl_free_defer(mp, xefi);
- 
- 	xfs_extent_free_get_group(mp, xefi);
- 	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_AGFL_FREE, &xefi->xefi_list);
-@@ -2641,9 +2641,8 @@ __xfs_free_extent_later(
- 	} else {
- 		xefi->xefi_owner = XFS_RMAP_OWN_NULL;
- 	}
--	trace_xfs_bmap_free_defer(mp,
--			XFS_FSB_TO_AGNO(tp->t_mountp, bno), 0,
--			XFS_FSB_TO_AGBNO(tp->t_mountp, bno), len);
-+
-+	trace_xfs_extent_free_defer(mp, xefi);
- 
- 	xfs_extent_free_get_group(mp, xefi);
- 	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_FREE, &xefi->xefi_list);
+ 	xefi = kmem_cache_zalloc(xfs_extfree_item_cache,
+ 			       GFP_KERNEL | __GFP_NOFAIL);
+ 	xefi->xefi_startblock = bno;
+ 	xefi->xefi_blockcount = (xfs_extlen_t)len;
+-	if (skip_discard)
++	if (flags & XFS_FREE_EXTENT_SKIP_DISCARD)
+ 		xefi->xefi_flags |= XFS_EFI_SKIP_DISCARD;
+ 	if (oinfo) {
+ 		ASSERT(oinfo->oi_offset == 0);
 diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 5b05c8bfa60a..83b92c3b3452 100644
+index 83b92c3b3452..19c5f046c3c4 100644
 --- a/fs/xfs/libxfs/xfs_alloc.h
 +++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -255,7 +255,6 @@ xfs_free_extent_later(
- 	__xfs_free_extent_later(tp, bno, len, oinfo, false);
+@@ -221,9 +221,14 @@ xfs_buf_to_agfl_bno(
+ 	return bp->b_addr;
  }
  
+-void __xfs_free_extent_later(struct xfs_trans *tp, xfs_fsblock_t bno,
++void xfs_free_extent_later(struct xfs_trans *tp, xfs_fsblock_t bno,
+ 		xfs_filblks_t len, const struct xfs_owner_info *oinfo,
+-		bool skip_discard);
++		unsigned int flags);
++
++/* Don't issue a discard for the blocks freed. */
++#define XFS_FREE_EXTENT_SKIP_DISCARD	(1U << 0)
++
++#define XFS_FREE_EXTENT_ALL_FLAGS	(XFS_FREE_EXTENT_SKIP_DISCARD)
+ 
+ /*
+  * List of extents to be free "later".
+@@ -245,16 +250,6 @@ void xfs_extent_free_get_group(struct xfs_mount *mp,
+ #define XFS_EFI_ATTR_FORK	(1U << 1) /* freeing attr fork block */
+ #define XFS_EFI_BMBT_BLOCK	(1U << 2) /* freeing bmap btree block */
+ 
+-static inline void
+-xfs_free_extent_later(
+-	struct xfs_trans		*tp,
+-	xfs_fsblock_t			bno,
+-	xfs_filblks_t			len,
+-	const struct xfs_owner_info	*oinfo)
+-{
+-	__xfs_free_extent_later(tp, bno, len, oinfo, false);
+-}
 -
  extern struct kmem_cache	*xfs_extfree_item_cache;
  
  int __init xfs_extfree_intent_init_cache(void);
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index cec637de322e..e23af5ee16b1 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -361,8 +361,7 @@ xfs_trans_free_extent(
- 	if (xefi->xefi_flags & XFS_EFI_BMBT_BLOCK)
- 		oinfo.oi_flags |= XFS_OWNER_INFO_BMBT_BLOCK;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index eda20bb5c4af..2e93b018d150 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -585,7 +585,7 @@ xfs_bmap_btree_to_extents(
+ 	if ((error = xfs_btree_check_block(cur, cblock, 0, cbp)))
+ 		return error;
+ 	xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, whichfork);
+-	xfs_free_extent_later(cur->bc_tp, cbno, 1, &oinfo);
++	xfs_free_extent_later(cur->bc_tp, cbno, 1, &oinfo, 0);
+ 	ip->i_nblocks--;
+ 	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, -1L);
+ 	xfs_trans_binval(tp, cbp);
+@@ -5307,10 +5307,14 @@ xfs_bmap_del_extent_real(
+ 		if (xfs_is_reflink_inode(ip) && whichfork == XFS_DATA_FORK) {
+ 			xfs_refcount_decrease_extent(tp, del);
+ 		} else {
+-			__xfs_free_extent_later(tp, del->br_startblock,
+-					del->br_blockcount, NULL,
+-					(bflags & XFS_BMAPI_NODISCARD) ||
+-					del->br_state == XFS_EXT_UNWRITTEN);
++			unsigned int	efi_flags = 0;
++
++			if ((bflags & XFS_BMAPI_NODISCARD) ||
++			    del->br_state == XFS_EXT_UNWRITTEN)
++				efi_flags |= XFS_FREE_EXTENT_SKIP_DISCARD;
++
++			xfs_free_extent_later(tp, del->br_startblock,
++					del->br_blockcount, NULL, efi_flags);
+ 		}
+ 	}
  
--	trace_xfs_bmap_free_deferred(tp->t_mountp, xefi->xefi_pag->pag_agno, 0,
--			agbno, xefi->xefi_blockcount);
-+	trace_xfs_extent_free_deferred(mp, xefi);
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index 4c6a91acdad6..4f0bf593c2a5 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -287,7 +287,7 @@ xfs_bmbt_free_block(
+ 	struct xfs_owner_info	oinfo;
  
- 	error = __xfs_free_extent(tp, xefi->xefi_pag, agbno,
- 			xefi->xefi_blockcount, &oinfo, XFS_AG_RESV_NONE,
-@@ -558,8 +557,7 @@ xfs_agfl_free_finish_item(
- 	agbno = XFS_FSB_TO_AGBNO(mp, xefi->xefi_startblock);
- 	oinfo.oi_owner = xefi->xefi_owner;
+ 	xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, cur->bc_ino.whichfork);
+-	xfs_free_extent_later(cur->bc_tp, fsbno, 1, &oinfo);
++	xfs_free_extent_later(cur->bc_tp, fsbno, 1, &oinfo, 0);
+ 	ip->i_nblocks--;
  
--	trace_xfs_agfl_free_deferred(mp, xefi->xefi_pag->pag_agno, 0, agbno,
--			xefi->xefi_blockcount);
-+	trace_xfs_agfl_free_deferred(mp, xefi);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 331d22a60272..7bfda1c884aa 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -1918,8 +1918,8 @@ xfs_difree_inode_chunk(
+ 	if (!xfs_inobt_issparse(rec->ir_holemask)) {
+ 		/* not sparse, calculate extent info directly */
+ 		xfs_free_extent_later(tp, XFS_AGB_TO_FSB(mp, agno, sagbno),
+-				  M_IGEO(mp)->ialloc_blks,
+-				  &XFS_RMAP_OINFO_INODES);
++				M_IGEO(mp)->ialloc_blks,
++				&XFS_RMAP_OINFO_INODES, 0);
+ 		return;
+ 	}
  
- 	error = xfs_alloc_read_agf(xefi->xefi_pag, tp, 0, &agbp);
- 	if (!error)
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 0b5748546c4c..698616531ea0 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -83,6 +83,7 @@ struct xfs_bmap_intent;
- struct xfs_swapext_intent;
- struct xfs_swapext_req;
- struct xfs_rtgroup;
-+struct xfs_extent_free_item;
+@@ -1963,7 +1963,7 @@ xfs_difree_inode_chunk(
+ 		ASSERT(agbno % mp->m_sb.sb_spino_align == 0);
+ 		ASSERT(contigblk % mp->m_sb.sb_spino_align == 0);
+ 		xfs_free_extent_later(tp, XFS_AGB_TO_FSB(mp, agno, agbno),
+-				  contigblk, &XFS_RMAP_OINFO_INODES);
++				  contigblk, &XFS_RMAP_OINFO_INODES, 0);
  
- #define XFS_ATTR_FILTER_FLAGS \
- 	{ XFS_ATTR_ROOT,	"ROOT" }, \
-@@ -2761,41 +2762,37 @@ DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_abort);
- DEFINE_DEFER_PENDING_EVENT(xfs_defer_relog_intent);
+ 		/* reset range to current bit and carry on... */
+ 		startidx = endidx = nextbit;
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index ba329fa53a56..2721c6076712 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1180,7 +1180,7 @@ xfs_refcount_adjust_extents(
+ 						cur->bc_ag.pag->pag_agno,
+ 						tmp.rc_startblock);
+ 				xfs_free_extent_later(cur->bc_tp, fsbno,
+-						  tmp.rc_blockcount, NULL);
++						tmp.rc_blockcount, NULL, 0);
+ 			}
  
- DECLARE_EVENT_CLASS(xfs_free_extent_deferred_class,
--	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
--		 int type, xfs_agblock_t agbno, xfs_extlen_t len),
--	TP_ARGS(mp, agno, type, agbno, len),
-+	TP_PROTO(struct xfs_mount *mp, struct xfs_extent_free_item *free),
-+	TP_ARGS(mp, free),
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
- 		__field(xfs_agnumber_t, agno)
--		__field(int, type)
- 		__field(xfs_agblock_t, agbno)
- 		__field(xfs_extlen_t, len)
-+		__field(unsigned int, flags)
- 	),
- 	TP_fast_assign(
- 		__entry->dev = mp->m_super->s_dev;
--		__entry->agno = agno;
--		__entry->type = type;
--		__entry->agbno = agbno;
--		__entry->len = len;
-+		__entry->agno = XFS_FSB_TO_AGNO(mp, free->xefi_startblock);
-+		__entry->agbno = XFS_FSB_TO_AGBNO(mp, free->xefi_startblock);
-+		__entry->len = free->xefi_blockcount;
-+		__entry->flags = free->xefi_flags;
- 	),
--	TP_printk("dev %d:%d op %d agno 0x%x agbno 0x%x fsbcount 0x%x",
-+	TP_printk("dev %d:%d agno 0x%x agbno 0x%x fsbcount 0x%x flags 0x%x",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
--		  __entry->type,
- 		  __entry->agno,
- 		  __entry->agbno,
--		  __entry->len)
-+		  __entry->len,
-+		  __entry->flags)
- );
- #define DEFINE_FREE_EXTENT_DEFERRED_EVENT(name) \
- DEFINE_EVENT(xfs_free_extent_deferred_class, name, \
--	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
--		 int type, \
--		 xfs_agblock_t bno, \
--		 xfs_extlen_t len), \
--	TP_ARGS(mp, agno, type, bno, len))
--DEFINE_FREE_EXTENT_DEFERRED_EVENT(xfs_bmap_free_defer);
--DEFINE_FREE_EXTENT_DEFERRED_EVENT(xfs_bmap_free_deferred);
-+	TP_PROTO(struct xfs_mount *mp, struct xfs_extent_free_item *free), \
-+	TP_ARGS(mp, free))
- DEFINE_FREE_EXTENT_DEFERRED_EVENT(xfs_agfl_free_defer);
- DEFINE_FREE_EXTENT_DEFERRED_EVENT(xfs_agfl_free_deferred);
-+DEFINE_FREE_EXTENT_DEFERRED_EVENT(xfs_extent_free_defer);
-+DEFINE_FREE_EXTENT_DEFERRED_EVENT(xfs_extent_free_deferred);
+ 			(*agbno) += tmp.rc_blockcount;
+@@ -1241,7 +1241,7 @@ xfs_refcount_adjust_extents(
+ 					cur->bc_ag.pag->pag_agno,
+ 					ext.rc_startblock);
+ 			xfs_free_extent_later(cur->bc_tp, fsbno,
+-					ext.rc_blockcount, NULL);
++					ext.rc_blockcount, NULL, 0);
+ 		}
  
- DECLARE_EVENT_CLASS(xfs_defer_pending_item_class,
- 	TP_PROTO(struct xfs_mount *mp, struct xfs_defer_pending *dfp,
+ skip:
+@@ -2021,7 +2021,8 @@ xfs_refcount_recover_cow_leftovers(
+ 				rr->rr_rrec.rc_blockcount);
+ 
+ 		/* Free the block. */
+-		xfs_free_extent_later(tp, fsb, rr->rr_rrec.rc_blockcount, NULL);
++		xfs_free_extent_later(tp, fsb, rr->rr_rrec.rc_blockcount, NULL,
++				0);
+ 
+ 		error = xfs_trans_commit(tp);
+ 		if (error)
+diff --git a/fs/xfs/scrub/newbt.c b/fs/xfs/scrub/newbt.c
+index 9c0ccba75656..6812ff67848d 100644
+--- a/fs/xfs/scrub/newbt.c
++++ b/fs/xfs/scrub/newbt.c
+@@ -416,8 +416,8 @@ xrep_newbt_free_extent(
+ 		 * if the system goes down.
+ 		 */
+ 		fsbno = XFS_AGB_TO_FSB(sc->mp, resv->pag->pag_agno, free_agbno);
+-		__xfs_free_extent_later(sc->tp, fsbno, free_aglen, &xnr->oinfo,
+-				true);
++		xfs_free_extent_later(sc->tp, fsbno, free_aglen, &xnr->oinfo,
++				XFS_FREE_EXTENT_SKIP_DISCARD);
+ 		return 1;
+ 	}
+ 
+diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
+index f43ad4dfc6f7..151afacab982 100644
+--- a/fs/xfs/scrub/reap.c
++++ b/fs/xfs/scrub/reap.c
+@@ -382,7 +382,8 @@ xreap_agextent(
+ 
+ 		rs->force_roll = true;
+ 		xfs_refcount_free_cow_extent(sc->tp, fsbno, *aglenp);
+-		__xfs_free_extent_later(sc->tp, fsbno, *aglenp, NULL, true);
++		xfs_free_extent_later(sc->tp, fsbno, *aglenp, NULL,
++				XFS_FREE_EXTENT_SKIP_DISCARD);
+ 		return 0;
+ 	}
+ 
+@@ -412,7 +413,8 @@ xreap_agextent(
+ 		 * to minimize the window in which we could crash and lose the
+ 		 * old blocks.
+ 		 */
+-		__xfs_free_extent_later(sc->tp, fsbno, *aglenp, rs->oinfo, true);
++		xfs_free_extent_later(sc->tp, fsbno, *aglenp, rs->oinfo,
++				XFS_FREE_EXTENT_SKIP_DISCARD);
+ 		rs->deferred++;
+ 		break;
+ 	}
+@@ -959,8 +961,9 @@ xreap_ifork_extent(
+ 		xfs_bmap_unmap_extent(sc->tp, ip, whichfork, imap);
+ 		xfs_trans_mod_dquot_byino(sc->tp, ip, XFS_TRANS_DQ_BCOUNT,
+ 				-(int64_t)imap->br_blockcount);
+-		__xfs_free_extent_later(sc->tp, imap->br_startblock,
+-				imap->br_blockcount, NULL, true);
++		xfs_free_extent_later(sc->tp, imap->br_startblock,
++				imap->br_blockcount, NULL,
++				XFS_FREE_EXTENT_SKIP_DISCARD);
+ 	}
+ 
+ out_agf:
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 0804f0ad6b1c..cf514af238ce 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -618,7 +618,7 @@ xfs_reflink_cancel_cow_blocks(
+ 					del.br_blockcount);
+ 
+ 			xfs_free_extent_later(*tpp, del.br_startblock,
+-					  del.br_blockcount, NULL);
++					del.br_blockcount, NULL, 0);
+ 
+ 			/* Roll the transaction */
+ 			error = xfs_defer_finish(tpp);
 
