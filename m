@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CE23C4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 01:13:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D39C5C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 01:14:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236025AbiLaBNs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 20:13:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42404 "EHLO
+        id S236026AbiLaBOC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 20:14:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236023AbiLaBNr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 20:13:47 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C366016588
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 17:13:45 -0800 (PST)
+        with ESMTP id S236023AbiLaBOC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 20:14:02 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2087B16588
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 17:14:01 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 742E1B81A16
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 01:13:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 124C0C433D2;
-        Sat, 31 Dec 2022 01:13:43 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id D9498B81DF6
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 01:13:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0BB5C433D2;
+        Sat, 31 Dec 2022 01:13:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672449223;
-        bh=qTNfy8/YeMoSSKWe5FNNgZ0+O3wUzQzpQaUtZqpp6KU=;
+        s=k20201202; t=1672449238;
+        bh=RR5Kd7D8yEIMHWudheZ7fESnyjMOVGqXqbJ2hU4Kzqs=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=de6NRU/TYZm0AxaMR9JsBU3tr70XQBPspqY1XImLmnAu/dXt4fP+2fg1PzPQWkfso
-         9W5Cpngnrq/eCDX+r98SJgc1H34yQ1obFGGCE9KL+819e8mDRtekRve3XHahueKm5B
-         Nm918RNcAkHgCS93rZJl8gSBJaUxclXvGZykpOTkaWoaKl6/qXok7PAw6mi4im/REK
-         c+BgAmclvbTwm+Fcx+jZ2fI4y0b5zYN4QB+FEPUusG/R1gqZPGjoE/Msy27S7HbuhR
-         gykV9v80TUr+B96hvDfZgP46TsuHncukgzrQHGGO6WM6bvzDvWUopbxV59qhqZtnEj
-         uSfKizPHTsrSg==
-Subject: [PATCH 13/23] xfs: ensure metadata directory paths exist before
- creating files
+        b=iDhZrLLOD7FcmOV+IEYySjXfpClJLEDv6rA1Ou2Hc0RDHFDR/yfs3N6wPn1cPVtR0
+         VppnYFZOHvzqx4a/bQfL3K7lL/8hhIaNVXG2TDzuzkhWPm5alVZXT1cT0I07qXx0Rx
+         0mQyS2nlUDwD0wo7atFgnzBY0j8GM4kUY6vLa2bpus4VP/cx2Fta7jtpCibiKnKRbI
+         wGjNOKG6A6IUFLgUVyPPlTDbbjrIm8GfTBHB66UJI19DEtoVkMrNfiCFiH7MXiChwR
+         H6M3G+V6yGCiZCntCwdHbUBcjr0TDT1BEtrFbHafz4RXf/7KD6vWJQzhTtii0KPvD2
+         JvaokPdGi4OPQ==
+Subject: [PATCH 14/23] xfs: disable the agi rotor for metadata inodes
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:17:26 -0800
-Message-ID: <167243864640.708110.10841816937652886747.stgit@magnolia>
+Message-ID: <167243864655.708110.16700641660672261534.stgit@magnolia>
 In-Reply-To: <167243864431.708110.1688096566212843499.stgit@magnolia>
 References: <167243864431.708110.1688096566212843499.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,170 +49,144 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Since xfs_imeta_create can create new metadata files arbitrarily deep in
-the metadata directory tree, we must supply a function that can ensure
-that all directories in a path exist, and call it before the quota
-functions create the quota inodes.
+Ideally, we'd put all the metadata inodes in one place if we could, so
+that the metadata all stay reasonably close together instead of
+spreading out over the disk.  Furthermore, if the log is internal we'd
+probably prefer to keep the metadata near the log.  Therefore, disable
+AGI rotoring for metadata inode allocations.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_imeta.h |    2 +
- fs/xfs/xfs_inode.c        |  103 +++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_qm.c           |   16 +++++++
- 3 files changed, 121 insertions(+)
+ fs/xfs/libxfs/xfs_ialloc.c |   16 +++++++++-------
+ fs/xfs/libxfs/xfs_ialloc.h |    2 +-
+ fs/xfs/libxfs/xfs_imeta.c  |    4 ++--
+ fs/xfs/scrub/tempfile.c    |    2 +-
+ fs/xfs/xfs_inode.c         |    4 ++--
+ fs/xfs/xfs_symlink.c       |    2 +-
+ 6 files changed, 16 insertions(+), 14 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_imeta.h b/fs/xfs/libxfs/xfs_imeta.h
-index 9b139f6809f0..741f426c6a4a 100644
---- a/fs/xfs/libxfs/xfs_imeta.h
-+++ b/fs/xfs/libxfs/xfs_imeta.h
-@@ -80,5 +80,7 @@ unsigned int xfs_imeta_unlink_space_res(struct xfs_mount *mp);
- int xfs_imeta_iget(struct xfs_mount *mp, xfs_ino_t ino, unsigned char ftype,
- 		struct xfs_inode **ipp);
- void xfs_imeta_irele(struct xfs_inode *ip);
-+int xfs_imeta_ensure_dirpath(struct xfs_mount *mp,
-+			     const struct xfs_imeta_path *path);
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index d4c202da84cb..1d1c3cb0389c 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -1798,26 +1798,28 @@ xfs_dialloc_try_ag(
+ int
+ xfs_dialloc(
+ 	struct xfs_trans	**tpp,
+-	xfs_ino_t		parent,
++	struct xfs_inode	*pip,
+ 	umode_t			mode,
+ 	xfs_ino_t		*new_ino)
+ {
+ 	struct xfs_mount	*mp = (*tpp)->t_mountp;
++	struct xfs_perag	*pag;
++	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
++	xfs_ino_t		ino;
++	xfs_ino_t		parent = pip ? pip->i_ino : 0;
+ 	xfs_agnumber_t		agno;
+-	int			error = 0;
+ 	xfs_agnumber_t		start_agno;
+-	struct xfs_perag	*pag;
+-	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
+ 	bool			ok_alloc = true;
+ 	int			flags;
+-	xfs_ino_t		ino;
++	int			error = 0;
  
- #endif /* __XFS_IMETA_H__ */
+ 	/*
+ 	 * Directories, symlinks, and regular files frequently allocate at least
+ 	 * one block, so factor that potential expansion when we examine whether
+-	 * an AG has enough space for file creation.
++	 * an AG has enough space for file creation.  Try to keep metadata
++	 * files all in the same AG.
+ 	 */
+-	if (S_ISDIR(mode))
++	if (S_ISDIR(mode) && (!pip || !xfs_is_metadata_inode(pip)))
+ 		start_agno = xfs_ialloc_next_ag(mp);
+ 	else {
+ 		start_agno = XFS_INO_TO_AGNO(mp, parent);
+diff --git a/fs/xfs/libxfs/xfs_ialloc.h b/fs/xfs/libxfs/xfs_ialloc.h
+index f4dc97bb8e83..adf60dc56e73 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.h
++++ b/fs/xfs/libxfs/xfs_ialloc.h
+@@ -36,7 +36,7 @@ xfs_make_iptr(struct xfs_mount *mp, struct xfs_buf *b, int o)
+  * Allocate an inode on disk.  Mode is used to tell whether the new inode will
+  * need space, and whether it is a directory.
+  */
+-int xfs_dialloc(struct xfs_trans **tpp, xfs_ino_t parent, umode_t mode,
++int xfs_dialloc(struct xfs_trans **tpp, struct xfs_inode *dp, umode_t mode,
+ 		xfs_ino_t *new_ino);
+ 
+ int xfs_difree(struct xfs_trans *tp, struct xfs_perag *pag,
+diff --git a/fs/xfs/libxfs/xfs_imeta.c b/fs/xfs/libxfs/xfs_imeta.c
+index d3f60150f8ef..07f88df7a7e5 100644
+--- a/fs/xfs/libxfs/xfs_imeta.c
++++ b/fs/xfs/libxfs/xfs_imeta.c
+@@ -232,7 +232,7 @@ xfs_imeta_sb_create(
+ 		return -EEXIST;
+ 
+ 	/* Create a new inode and set the sb pointer. */
+-	error = xfs_dialloc(tpp, 0, mode, &ino);
++	error = xfs_dialloc(tpp, NULL, mode, &ino);
+ 	if (error)
+ 		return error;
+ 	error = xfs_icreate(*tpp, ino, &args, ipp);
+@@ -642,7 +642,7 @@ xfs_imeta_dir_create(
+ 	 * entry pointing to them, but a directory also the "." entry
+ 	 * pointing to itself.
+ 	 */
+-	error = xfs_dialloc(tpp, dp->i_ino, mode, &ino);
++	error = xfs_dialloc(tpp, dp, mode, &ino);
+ 	if (error)
+ 		goto out_ilock;
+ 	error = xfs_icreate(*tpp, ino, &args, ipp);
+diff --git a/fs/xfs/scrub/tempfile.c b/fs/xfs/scrub/tempfile.c
+index 6efaab50440f..beaaebf27284 100644
+--- a/fs/xfs/scrub/tempfile.c
++++ b/fs/xfs/scrub/tempfile.c
+@@ -87,7 +87,7 @@ xrep_tempfile_create(
+ 		goto out_release_dquots;
+ 
+ 	/* Allocate inode, set up directory. */
+-	error = xfs_dialloc(&tp, dp->i_ino, mode, &ino);
++	error = xfs_dialloc(&tp, dp, mode, &ino);
+ 	if (error)
+ 		goto out_trans_cancel;
+ 	error = xfs_icreate(tp, ino, &args, &sc->tempip);
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 3830e03ceb0a..1eb53ed0097d 100644
+index 1eb53ed0097d..187c6025cfd8 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -1031,6 +1031,109 @@ xfs_create_tmpfile(
- 	return error;
- }
- 
-+/* Create a metadata for the last component of the path. */
-+STATIC int
-+xfs_imeta_mkdir(
-+	struct xfs_mount		*mp,
-+	const struct xfs_imeta_path	*path)
-+{
-+	struct xfs_imeta_update		upd;
-+	struct xfs_inode		*ip = NULL;
-+	struct xfs_trans		*tp = NULL;
-+	struct xfs_dquot		*udqp = NULL;
-+	struct xfs_dquot		*gdqp = NULL;
-+	struct xfs_dquot		*pdqp = NULL;
-+	unsigned int			resblks;
-+	int				error;
-+
-+	if (xfs_is_shutdown(mp))
-+		return -EIO;
-+
-+	error = xfs_imeta_start_update(mp, path, &upd);
-+	if (error)
-+		return error;
-+
-+	/* Grab all the root dquots. */
-+	error = xfs_qm_vop_dqalloc(mp->m_metadirip, GLOBAL_ROOT_UID,
-+			GLOBAL_ROOT_GID, 0, XFS_QMOPT_QUOTALL, &udqp, &gdqp,
-+			&pdqp);
-+	if (error)
-+		goto out_end;
-+
-+	/* Allocate a transaction to create the last directory. */
-+	resblks = xfs_imeta_create_space_res(mp);
-+	error = xfs_trans_alloc_icreate(mp, &M_RES(mp)->tr_imeta_create, udqp,
-+			gdqp, pdqp, resblks, &tp);
-+	if (error)
-+		goto out_dqrele;
-+
-+	/* Create the subdirectory. */
-+	error = xfs_imeta_create(&tp, path, S_IFDIR, 0, &ip, &upd);
-+	if (error)
-+		goto out_trans_cancel;
-+
-+	/*
-+	 * Attach the dquot(s) to the inodes and modify them incore.
-+	 * These ids of the inode couldn't have changed since the new
-+	 * inode has been locked ever since it was created.
-+	 */
-+	xfs_qm_vop_create_dqattach(tp, ip, udqp, gdqp, pdqp);
-+
-+	error = xfs_trans_commit(tp);
-+
-+	/*
-+	 * We don't pass the directory we just created to the caller, so finish
-+	 * setting up the inode, then release the dir and the dquots.
-+	 */
-+	goto out_irele;
-+
-+out_trans_cancel:
-+	xfs_trans_cancel(tp);
-+out_irele:
-+	/* Have to finish setting up the inode to ensure it's deleted. */
-+	if (ip) {
-+		xfs_finish_inode_setup(ip);
-+		xfs_irele(ip);
-+	}
-+
-+out_dqrele:
-+	xfs_qm_dqrele(udqp);
-+	xfs_qm_dqrele(gdqp);
-+	xfs_qm_dqrele(pdqp);
-+out_end:
-+	xfs_imeta_end_update(mp, &upd, error);
-+	return error;
-+}
-+
-+/*
-+ * Make sure that every metadata directory path component exists and is a
-+ * directory.
-+ */
-+int
-+xfs_imeta_ensure_dirpath(
-+	struct xfs_mount		*mp,
-+	const struct xfs_imeta_path	*path)
-+{
-+	struct xfs_imeta_path		temp_path = {
-+		.im_path		= path->im_path,
-+		.im_depth		= 1,
-+		.im_ftype		= XFS_DIR3_FT_DIR,
-+	};
-+	unsigned int			i;
-+	int				error = 0;
-+
-+	if (!xfs_has_metadir(mp))
-+		return 0;
-+
-+	for (i = 0; i < path->im_depth - 1; i++, temp_path.im_depth++) {
-+		error = xfs_imeta_mkdir(mp, &temp_path);
-+		if (error && error != -EEXIST)
-+			break;
-+	}
-+
-+	return error == -EEXIST ? 0 : error;
-+}
-+
- int
- xfs_link(
- 	xfs_inode_t		*tdp,
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 8828e8cafca5..905765eedcb0 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -829,6 +829,22 @@ xfs_qm_qino_alloc(
+@@ -864,7 +864,7 @@ xfs_create(
+ 	 * entry pointing to them, but a directory also the "." entry
+ 	 * pointing to itself.
+ 	 */
+-	error = xfs_dialloc(&tp, dp->i_ino, args->mode, &ino);
++	error = xfs_dialloc(&tp, dp, args->mode, &ino);
+ 	if (!error)
+ 		error = xfs_icreate(tp, ino, args, &ip);
  	if (error)
- 		return error;
- 
-+	/*
-+	 * Ensure the quota directory exists, being careful to disable quotas
-+	 * while we do this.  We'll have to quotacheck anyway, so the temporary
-+	 * undercount of the directory tree shouldn't affect the quota count.
-+	 */
-+	if (xfs_has_metadir(mp)) {
-+		unsigned int	old_qflags;
-+
-+		old_qflags = mp->m_qflags & XFS_ALL_QUOTA_ACCT;
-+		mp->m_qflags &= ~XFS_ALL_QUOTA_ACCT;
-+		error = xfs_imeta_ensure_dirpath(mp, path);
-+		mp->m_qflags |= old_qflags;
-+		if (error)
-+			return error;
-+	}
-+
- 	error = xfs_imeta_start_update(mp, path, &upd);
+@@ -980,7 +980,7 @@ xfs_create_tmpfile(
  	if (error)
- 		return error;
+ 		goto out_release_dquots;
+ 
+-	error = xfs_dialloc(&tp, dp->i_ino, args->mode, &ino);
++	error = xfs_dialloc(&tp, dp, args->mode, &ino);
+ 	if (!error)
+ 		error = xfs_icreate(tp, ino, args, &ip);
+ 	if (error)
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index 6dc15f125895..f26ed3eba6cc 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -158,7 +158,7 @@ xfs_symlink(
+ 	/*
+ 	 * Allocate an inode for the symlink.
+ 	 */
+-	error = xfs_dialloc(&tp, dp->i_ino, S_IFLNK, &ino);
++	error = xfs_dialloc(&tp, dp, S_IFLNK, &ino);
+ 	if (!error)
+ 		error = xfs_icreate(tp, ino, &args, &ip);
+ 	if (error)
 
