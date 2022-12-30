@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40CBCC4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:15:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 379B6C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:15:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235722AbiLaAPH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 19:15:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55694 "EHLO
+        id S235743AbiLaAPX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 19:15:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55718 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235661AbiLaAPG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:15:06 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CAF560EF
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 16:15:05 -0800 (PST)
+        with ESMTP id S235661AbiLaAPX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:15:23 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54CE1102E
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 16:15:21 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 18A3F61CF1
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 00:15:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7389CC433D2;
-        Sat, 31 Dec 2022 00:15:04 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B553361CC8
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 00:15:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20FE3C433EF;
+        Sat, 31 Dec 2022 00:15:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672445704;
-        bh=WVLEsTCHeiM/tF4yytgpwss6yRYJ/1NuYQ50Nnx+Nj4=;
+        s=k20201202; t=1672445720;
+        bh=XQjSbZFT7d/71dFr4It9Q1yxRG+izxdiNXI/FRWAfpQ=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=frdp0q/nC5UhfyrRql5vywcYd/k3fqYGks+zBvFocWBAe2j0bZCb1ftH/DA4K4L39
-         6QICLodjYb9kE1i5D9pfWRPj/PTh8fi206bxqtGa1vboetb5LNqqZo7dll1ew070z2
-         RERN+M2l/6fbysJcqL5Lz1gysRLOpV1feY8TDC3FqpZ61ZcftpthJ8TZwEN+8kjgG/
-         RYWmLHrxqvtVDJB6JqaGOSilPAb2sHlb7aMn0SmYg/VMmB571LvYHtzcqQQADxhHte
-         THvsitvQ6II7uq/sDrx6ZtWQCDHXYZAp4mtJuU3/QYdJKuaRLX72VLK4JIyoA09ntA
-         4mF20djDeYg7w==
-Subject: [PATCH 1/6] libxfs: partition memfd files to avoid using too many fds
+        b=demIVn2ZpsMZH3YXUrfw0Z56Kg+sruIoAVWYvmH2Owlg6KkzUNh7XuxfmwWFPvz2i
+         qyUfLUgNEjGyQp/N6GEbnh6LLc4lVE4flJA//gAOtsLnUgPKdeenVnNQqqCYmrw3h7
+         6I6sO7Saj1rA/G8I9US3TfUoAWBvBHco4HEY2xXmPu/Uuhn8K8tjjmZpdwrR1F3J1I
+         xEvtSkRHKHgjnSrPaa+1tAYfxDx6VFn9tPc24AMtfMIdbZwG3Aeq/nho3GuHWDEr7Y
+         LYUBwnils4HefdETVXyQhat1F0AiIxDmYGS8+stjvedz1GVYNg0lpm1NLEhdJ7mZgp
+         xd4KwpjkGsk0A==
+Subject: [PATCH 2/6] xfs_repair: convert regular rmap repair to use in-memory
+ btrees
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     cem@kernel.org, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:17:49 -0800
-Message-ID: <167243866905.712584.180383149963743658.stgit@magnolia>
+Message-ID: <167243866918.712584.17607959563091717049.stgit@magnolia>
 In-Reply-To: <167243866890.712584.9795710743681868714.stgit@magnolia>
 References: <167243866890.712584.9795710743681868714.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,287 +50,539 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make it so that we can partition a memfd file to avoid running out of
-file descriptors.
+Convert the rmap btree repair code to use in-memory rmap btrees to store
+the observed reverse mapping records.  This will eliminate the need for
+a separate record sorting step, as well as eliminate the need for all
+the code that turns multiple consecutive bmap records into a single rmap
+record.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfile.c |  169 +++++++++++++++++++++++++++++++++++++++++++++++++++++---
- libxfs/xfile.h |   10 ++-
- 2 files changed, 167 insertions(+), 12 deletions(-)
+ libxfs/libxfs_api_defs.h |    9 ++
+ repair/agbtree.c         |   18 ++-
+ repair/agbtree.h         |    1 
+ repair/phase5.c          |    2 
+ repair/rmap.c            |  243 ++++++++++++++++++++++++++++++++++++++++++++--
+ repair/rmap.h            |   16 +++
+ repair/xfs_repair.c      |    6 +
+ 7 files changed, 278 insertions(+), 17 deletions(-)
 
 
-diff --git a/libxfs/xfile.c b/libxfs/xfile.c
-index c1b8b1c5928..dfe3c60a9b3 100644
---- a/libxfs/xfile.c
-+++ b/libxfs/xfile.c
-@@ -95,6 +95,146 @@ xfile_create_fd(
- 	return fd;
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 5d73111b508..ce5eb27c1fd 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -56,8 +56,13 @@
+ #define xfs_btree_bload			libxfs_btree_bload
+ #define xfs_btree_bload_compute_geometry libxfs_btree_bload_compute_geometry
+ #define xfs_btree_del_cursor		libxfs_btree_del_cursor
++#define xfs_btree_get_block		libxfs_btree_get_block
++#define xfs_btree_goto_left_edge	libxfs_btree_goto_left_edge
++#define xfs_btree_increment		libxfs_btree_increment
+ #define xfs_btree_init_block		libxfs_btree_init_block
++#define xfs_btree_mem_head_read_buf	libxfs_btree_mem_head_read_buf
+ #define xfs_btree_rec_addr		libxfs_btree_rec_addr
++#define xfs_btree_visit_blocks		libxfs_btree_visit_blocks
+ #define xfs_buf_delwri_submit		libxfs_buf_delwri_submit
+ #define xfs_buf_get			libxfs_buf_get
+ #define xfs_buf_get_uncached		libxfs_buf_get_uncached
+@@ -170,6 +175,8 @@
+ #define xfs_rmapbt_init_cursor		libxfs_rmapbt_init_cursor
+ #define xfs_rmapbt_maxlevels_ondisk	libxfs_rmapbt_maxlevels_ondisk
+ #define xfs_rmapbt_maxrecs		libxfs_rmapbt_maxrecs
++#define xfs_rmapbt_mem_create		libxfs_rmapbt_mem_create
++#define xfs_rmapbt_mem_cursor		libxfs_rmapbt_mem_cursor
+ #define xfs_rmapbt_stage_cursor		libxfs_rmapbt_stage_cursor
+ #define xfs_rmap_compare		libxfs_rmap_compare
+ #define xfs_rmap_get_rec		libxfs_rmap_get_rec
+@@ -178,6 +185,7 @@
+ #define xfs_rmap_irec_offset_unpack	libxfs_rmap_irec_offset_unpack
+ #define xfs_rmap_lookup_le		libxfs_rmap_lookup_le
+ #define xfs_rmap_lookup_le_range	libxfs_rmap_lookup_le_range
++#define xfs_rmap_map_raw		libxfs_rmap_map_raw
+ #define xfs_rmap_query_all		libxfs_rmap_query_all
+ #define xfs_rmap_query_range		libxfs_rmap_query_range
+ 
+@@ -225,6 +233,7 @@
+ 
+ #define xfs_validate_stripe_geometry	libxfs_validate_stripe_geometry
+ #define xfs_verify_agbno		libxfs_verify_agbno
++#define xfs_verify_agbext		libxfs_verify_agbext
+ #define xfs_verify_agino		libxfs_verify_agino
+ #define xfs_verify_cksum		libxfs_verify_cksum
+ #define xfs_verify_dir_ino		libxfs_verify_dir_ino
+diff --git a/repair/agbtree.c b/repair/agbtree.c
+index 23851f17b61..26e282d57c8 100644
+--- a/repair/agbtree.c
++++ b/repair/agbtree.c
+@@ -100,7 +100,8 @@ reserve_agblocks(
+ 			do_error(_("could not set up btree reservation: %s\n"),
+ 				strerror(-error));
+ 
+-		error = rmap_add_ag_rec(mp, agno, ext_ptr->ex_startblock, len,
++		error = rmap_add_agbtree_mapping(mp, agno,
++				ext_ptr->ex_startblock, len,
+ 				btr->newbt.oinfo.oi_owner);
+ 		if (error)
+ 			do_error(_("could not set up btree rmaps: %s\n"),
+@@ -593,14 +594,19 @@ get_rmapbt_records(
+ 	unsigned int			nr_wanted,
+ 	void				*priv)
+ {
+-	struct xfs_rmap_irec		*rec;
+ 	struct bt_rebuild		*btr = priv;
+ 	union xfs_btree_rec		*block_rec;
+ 	unsigned int			loaded;
++	int				ret;
+ 
+ 	for (loaded = 0; loaded < nr_wanted; loaded++, idx++) {
+-		rec = pop_slab_cursor(btr->slab_cursor);
+-		memcpy(&cur->bc_rec.r, rec, sizeof(struct xfs_rmap_irec));
++		ret = rmap_get_mem_rec(&btr->rmapbt_cursor, &cur->bc_rec.r);
++		if (ret < 0)
++			return ret;
++		if (ret == 0)
++			do_error(
++ _("ran out of records while rebuilding AG %u rmap btree\n"),
++					cur->bc_ag.pag->pag_agno);
+ 
+ 		block_rec = libxfs_btree_rec_addr(cur, idx, block);
+ 		cur->bc_ops->init_rec_from_cur(cur, block_rec);
+@@ -648,7 +654,7 @@ build_rmap_tree(
+ {
+ 	int			error;
+ 
+-	error = rmap_init_cursor(agno, &btr->slab_cursor);
++	error = rmap_init_mem_cursor(sc->mp, NULL, agno, &btr->rmapbt_cursor);
+ 	if (error)
+ 		do_error(
+ _("Insufficient memory to construct rmap cursor.\n"));
+@@ -661,7 +667,7 @@ _("Error %d while creating rmap btree for AG %u.\n"), error, agno);
+ 
+ 	/* Since we're not writing the AGF yet, no need to commit the cursor */
+ 	libxfs_btree_del_cursor(btr->cur, 0);
+-	free_slab_cursor(&btr->slab_cursor);
++	rmap_free_mem_cursor(NULL, &btr->rmapbt_cursor, 0);
  }
  
-+struct xfile_fcb {
-+	struct list_head	fcb_list;
-+	int			fd;
-+	unsigned int		refcount;
-+};
-+
-+static LIST_HEAD(fcb_list);
-+static pthread_mutex_t fcb_mutex = PTHREAD_MUTEX_INITIALIZER;
-+
-+/* Create a new memfd. */
-+static inline int
-+xfile_fcb_create(
-+	const char		*description,
-+	struct xfile_fcb	**fcbp)
+ /* rebuild the refcount tree */
+diff --git a/repair/agbtree.h b/repair/agbtree.h
+index 84f7083de20..4fb8e82e03e 100644
+--- a/repair/agbtree.h
++++ b/repair/agbtree.h
+@@ -20,6 +20,7 @@ struct bt_rebuild {
+ 	/* Tree-specific data. */
+ 	union {
+ 		struct xfs_slab_cursor	*slab_cursor;
++		struct rmap_mem_cur	rmapbt_cursor;
+ 		struct {
+ 			struct extent_tree_node	*bno_rec;
+ 			unsigned int		freeblks;
+diff --git a/repair/phase5.c b/repair/phase5.c
+index 40f991b6626..361e5649b29 100644
+--- a/repair/phase5.c
++++ b/repair/phase5.c
+@@ -703,7 +703,7 @@ phase5(xfs_mount_t *mp)
+ 	 * the superblock counters.
+ 	 */
+ 	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+-		error = rmap_store_ag_btree_rec(mp, agno);
++		error = rmap_commit_agbtree_mappings(mp, agno);
+ 		if (error)
+ 			do_error(
+ _("unable to add AG %u reverse-mapping data to btree.\n"), agno);
+diff --git a/repair/rmap.c b/repair/rmap.c
+index 5fbae50d5b7..64a5786faca 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -13,6 +13,8 @@
+ #include "slab.h"
+ #include "rmap.h"
+ #include "libfrog/bitmap.h"
++#include "libxfs/xfile.h"
++#include "libxfs/xfbtree.h"
+ 
+ #undef RMAP_DEBUG
+ 
+@@ -24,6 +26,7 @@
+ 
+ /* per-AG rmap object anchor */
+ struct xfs_ag_rmap {
++	struct xfbtree	*ar_xfbtree;		/* rmap observations */
+ 	struct xfs_slab	*ar_rmaps;		/* rmap observations, p4 */
+ 	struct xfs_slab	*ar_raw_rmaps;		/* unmerged rmaps */
+ 	int		ar_flcount;		/* agfl entries from leftover */
+@@ -53,6 +56,65 @@ rmap_needs_work(
+ 	       xfs_has_rmapbt(mp);
+ }
+ 
++/* Destroy an in-memory rmap btree. */
++STATIC void
++rmaps_destroy(
++	struct xfs_mount	*mp,
++	struct xfs_ag_rmap	*ag_rmap)
 +{
-+	struct xfile_fcb	*fcb;
-+	int			fd;
++	struct xfile		*xfile;
++	struct xfs_buftarg	*target;
 +
-+	fd = xfile_create_fd(description);
-+	if (fd < 0)
-+		return -errno;
++	free_slab(&ag_rmap->ar_refcount_items);
 +
-+	fcb = malloc(sizeof(struct xfile_fcb));
-+	if (!fcb) {
-+		close(fd);
-+		return -ENOMEM;
-+	}
-+
-+	list_head_init(&fcb->fcb_list);
-+	fcb->fd = fd;
-+	fcb->refcount = 1;
-+
-+	*fcbp = fcb;
-+	return 0;
-+}
-+
-+/* Release an xfile control block */
-+static void
-+xfile_fcb_irele(
-+	struct xfile_fcb	*fcb,
-+	loff_t			pos,
-+	uint64_t		len)
-+{
-+	/*
-+	 * If this memfd is linked only to itself, it's private, so we can
-+	 * close it without taking any locks.
-+	 */
-+	if (list_empty(&fcb->fcb_list)) {
-+		close(fcb->fd);
-+		free(fcb);
++	if (!ag_rmap->ar_xfbtree)
 +		return;
-+	}
 +
-+	pthread_mutex_lock(&fcb_mutex);
-+	if (--fcb->refcount == 0) {
-+		/* If we're the last user of this memfd file, kill it fast. */
-+		list_del(&fcb->fcb_list);
-+		close(fcb->fd);
-+		free(fcb);
-+	} else if (len > 0) {
-+		struct stat	statbuf;
-+		int		ret;
++	target = ag_rmap->ar_xfbtree->target;
++	xfile = target->bt_xfile;
 +
-+		/*
-+		 * If we were using the end of a partitioned file, free the
-+		 * address space.  IOWs, bonus points if you delete these in
-+		 * reverse-order of creation.
-+		 */
-+		ret = fstat(fcb->fd, &statbuf);
-+		if (!ret && statbuf.st_size == pos + len) {
-+			ret = ftruncate(fcb->fd, pos);
-+		}
-+	}
-+	pthread_mutex_unlock(&fcb_mutex);
++	xfbtree_destroy(ag_rmap->ar_xfbtree);
++	libxfs_buftarg_free(target);
++	xfile_destroy(xfile);
 +}
 +
-+/*
-+ * Find an memfd that can accomodate the given amount of address space.
-+ */
-+static int
-+xfile_fcb_find(
-+	const char		*description,
-+	uint64_t		maxrange,
-+	loff_t			*pos,
-+	struct xfile_fcb	**fcbp)
++/* Initialize the in-memory rmap btree for collecting per-AG rmap records. */
++STATIC void
++rmaps_init_ag(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	struct xfs_ag_rmap	*ag_rmap)
 +{
-+	struct xfile_fcb	*fcb;
-+	int			ret;
++	struct xfile		*xfile;
++	struct xfs_buftarg	*target;
++	unsigned long long	maxbytes;
 +	int			error;
 +
-+	/* No maximum range means that the caller gets a private memfd. */
-+	if (maxrange == 0) {
-+		*pos = 0;
-+		return xfile_fcb_create(description, fcbp);
-+	}
-+
-+	pthread_mutex_lock(&fcb_mutex);
-+
-+	/*
-+	 * If we only need a certain number of byte range, look for one with
-+	 * available file range.
-+	 */
-+	list_for_each_entry(fcb, &fcb_list, fcb_list) {
-+		struct stat	statbuf;
-+
-+		ret = fstat(fcb->fd, &statbuf);
-+		if (ret)
-+			continue;
-+
-+		ret = ftruncate(fcb->fd, statbuf.st_size + maxrange);
-+		if (ret)
-+			continue;
-+
-+		fcb->refcount++;
-+		*pos = statbuf.st_size;
-+		*fcbp = fcb;
-+		goto out_unlock;
-+	}
-+
-+	/* Otherwise, open a new memfd and add it to our list. */
-+	error = xfile_fcb_create(description, &fcb);
++	maxbytes = XFS_FSB_TO_B(mp, mp->m_sb.sb_agblocks);
++	error = xfile_create(mp, maxbytes, "rmapbt repair", &xfile);
 +	if (error)
-+		return error;
++		goto nomem;
 +
-+	ret = ftruncate(fcb->fd, maxrange);
-+	if (ret) {
-+		error = -errno;
-+		xfile_fcb_irele(fcb, 0, maxrange);
-+		return error;
-+	}
++	error = -libxfs_alloc_memory_buftarg(mp, xfile, &target);
++	if (error)
++		goto nomem;
 +
-+	list_add_tail(&fcb->fcb_list, &fcb_list);
-+	*pos = 0;
-+	*fcbp = fcb;
++	error = -libxfs_rmapbt_mem_create(mp, agno, target,
++			&ag_rmap->ar_xfbtree);
++	if (error)
++		goto nomem;
 +
-+out_unlock:
-+	pthread_mutex_unlock(&fcb_mutex);
-+	return error;
++	error = init_slab(&ag_rmap->ar_refcount_items,
++			  sizeof(struct xfs_refcount_irec));
++	if (error)
++		goto nomem;
++
++	return;
++nomem:
++	do_error(
++_("Insufficient memory while allocating realtime reverse mapping btree."));
 +}
 +
  /*
-  * Create an xfile of the given size.  The description will be used in the
-  * trace output.
-@@ -102,6 +242,7 @@ xfile_create_fd(
- int
- xfile_create(
- 	struct xfs_mount	*mp,
-+	unsigned long long	maxrange,
- 	const char		*description,
- 	struct xfile		**xfilep)
- {
-@@ -117,13 +258,14 @@ xfile_create(
- 	if (!xf)
- 		return -ENOMEM;
+  * Initialize per-AG reverse map data.
+  */
+@@ -71,6 +133,8 @@ rmaps_init(
+ 		do_error(_("couldn't allocate per-AG reverse map roots\n"));
  
--	xf->fd = xfile_create_fd(fname);
--	if (xf->fd < 0) {
--		error = -errno;
-+	error = xfile_fcb_find(description, maxrange, &xf->partition_pos,
-+			&xf->fcb);
-+	if (error) {
- 		kmem_free(xf);
- 		return error;
- 	}
- 
-+	xf->partition_bytes = maxrange;
- 	*xfilep = xf;
- 	return 0;
- }
-@@ -133,7 +275,7 @@ void
- xfile_destroy(
- 	struct xfile		*xf)
- {
--	close(xf->fd);
-+	xfile_fcb_irele(xf->fcb, xf->partition_pos, xf->partition_bytes);
- 	kmem_free(xf);
- }
- 
-@@ -141,6 +283,9 @@ static inline loff_t
- xfile_maxbytes(
- 	struct xfile		*xf)
- {
-+	if (xf->partition_bytes > 0)
-+		return xf->partition_bytes;
+ 	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
++		rmaps_init_ag(mp, i, &ag_rmaps[i]);
 +
- 	if (sizeof(loff_t) == 8)
- 		return LLONG_MAX;
- 	return LONG_MAX;
-@@ -166,7 +311,7 @@ xfile_pread(
- 	if (xfile_maxbytes(xf) - pos < count)
- 		return -EFBIG;
+ 		error = init_slab(&ag_rmaps[i].ar_rmaps,
+ 				sizeof(struct xfs_rmap_irec));
+ 		if (error)
+@@ -82,11 +146,6 @@ _("Insufficient memory while allocating reverse mapping slabs."));
+ 			do_error(
+ _("Insufficient memory while allocating raw metadata reverse mapping slabs."));
+ 		ag_rmaps[i].ar_last_rmap.rm_owner = XFS_RMAP_OWN_UNKNOWN;
+-		error = init_slab(&ag_rmaps[i].ar_refcount_items,
+-				  sizeof(struct xfs_refcount_irec));
+-		if (error)
+-			do_error(
+-_("Insufficient memory while allocating refcount item slabs."));
+ 	}
+ }
  
--	ret = pread(xf->fd, buf, count, pos);
-+	ret = pread(xf->fcb->fd, buf, count, pos + xf->partition_pos);
- 	if (ret >= 0)
- 		return ret;
- 	return -errno;
-@@ -192,7 +337,7 @@ xfile_pwrite(
- 	if (xfile_maxbytes(xf) - pos < count)
- 		return -EFBIG;
+@@ -105,7 +164,7 @@ rmaps_free(
+ 	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+ 		free_slab(&ag_rmaps[i].ar_rmaps);
+ 		free_slab(&ag_rmaps[i].ar_raw_rmaps);
+-		free_slab(&ag_rmaps[i].ar_refcount_items);
++		rmaps_destroy(mp, &ag_rmaps[i]);
+ 	}
+ 	free(ag_rmaps);
+ 	ag_rmaps = NULL;
+@@ -136,6 +195,103 @@ rmaps_are_mergeable(
+ 	return r1->rm_offset + r1->rm_blockcount == r2->rm_offset;
+ }
  
--	ret = pwrite(xf->fd, buf, count, pos);
-+	ret = pwrite(xf->fcb->fd, buf, count, pos + xf->partition_pos);
- 	if (ret >= 0)
- 		return ret;
- 	return -errno;
-@@ -207,7 +352,13 @@ xfile_stat(
- 	struct stat		ks;
- 	int			error;
- 
--	error = fstat(xf->fd, &ks);
-+	if (xf->partition_bytes > 0) {
-+		statbuf->size = xf->partition_bytes;
-+		statbuf->bytes = xf->partition_bytes;
++int
++rmap_init_mem_cursor(
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	xfs_agnumber_t		agno,
++	struct rmap_mem_cur	*rmcur)
++{
++	struct xfbtree		*xfbt;
++	struct xfs_perag	*pag;
++	int			error;
++
++	xfbt = ag_rmaps[agno].ar_xfbtree;
++	error = -xfbtree_head_read_buf(xfbt, tp, &rmcur->mhead_bp);
++	if (error)
++		return error;
++
++	pag = libxfs_perag_get(mp, agno);
++	rmcur->mcur = libxfs_rmapbt_mem_cursor(pag, tp, rmcur->mhead_bp, xfbt);
++
++	error = -libxfs_btree_goto_left_edge(rmcur->mcur);
++	if (error)
++		rmap_free_mem_cursor(tp, rmcur, error);
++
++	libxfs_perag_put(pag);
++	return error;
++}
++
++void
++rmap_free_mem_cursor(
++	struct xfs_trans	*tp,
++	struct rmap_mem_cur	*rmcur,
++	int			error)
++{
++	libxfs_btree_del_cursor(rmcur->mcur, error);
++	libxfs_trans_brelse(tp, rmcur->mhead_bp);
++	rmcur->mcur = NULL;
++	rmcur->mhead_bp = NULL;
++}
++
++/*
++ * Retrieve the next record from the in-memory rmap btree.  Returns 1 if irec
++ * has been filled out, 0 if there aren't any more records, or a negative errno
++ * value if an error happened.
++ */
++int
++rmap_get_mem_rec(
++	struct rmap_mem_cur	*rmcur,
++	struct xfs_rmap_irec	*irec)
++{
++	int			stat = 0;
++	int			error;
++
++	error = -libxfs_btree_increment(rmcur->mcur, 0, &stat);
++	if (error)
++		return -error;
++	if (!stat)
 +		return 0;
-+	}
 +
-+	error = fstat(xf->fcb->fd, &ks);
- 	if (error)
- 		return -errno;
- 
-@@ -234,7 +385,7 @@ xfile_dump(
- 	}
- 
- 	/* reroute our xfile to stdin and shut everything else */
--	dup2(xf->fd, 0);
-+	dup2(xf->fcb->fd, 0);
- 	for (i = 3; i < 1024; i++)
- 		close(i);
- 
-@@ -251,7 +402,7 @@ xfile_prealloc(
- 	int		error;
- 
- 	count = min(count, xfile_maxbytes(xf) - pos);
--	error = fallocate(xf->fd, 0, pos, count);
-+	error = fallocate(xf->fcb->fd, 0, pos + xf->partition_pos, count);
- 	if (error)
- 		return -errno;
- 	return 0;
-diff --git a/libxfs/xfile.h b/libxfs/xfile.h
-index 9580de32864..9923fe8e5ec 100644
---- a/libxfs/xfile.h
-+++ b/libxfs/xfile.h
-@@ -6,14 +6,18 @@
- #ifndef __LIBXFS_XFILE_H__
- #define __LIBXFS_XFILE_H__
- 
-+struct xfile_fcb;
++	error = -libxfs_rmap_get_rec(rmcur->mcur, irec, &stat);
++	if (error)
++		return -error;
 +
- struct xfile {
--	int		fd;
-+	struct xfile_fcb	*fcb;
-+	loff_t			partition_pos;
-+	uint64_t		partition_bytes;
- };
++	return stat;
++}
++
++static void
++rmap_add_mem_rec(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	struct xfs_rmap_irec	*rmap)
++{
++	struct rmap_mem_cur	rmcur;
++	struct xfbtree		*xfbt;
++	struct xfs_trans	*tp;
++	int			error;
++
++	xfbt = ag_rmaps[agno].ar_xfbtree;
++	error = -libxfs_trans_alloc_empty(mp, &tp);
++	if (error)
++		do_error(_("allocating tx for in-memory rmap update\n"));
++
++	error = rmap_init_mem_cursor(mp, tp, agno, &rmcur);
++	if (error)
++		do_error(_("reading in-memory rmap btree head\n"));
++
++	error = -libxfs_rmap_map_raw(rmcur.mcur, rmap);
++	if (error)
++		do_error(_("adding rmap to in-memory btree, err %d\n"), error);
++	rmap_free_mem_cursor(tp, &rmcur, 0);
++
++	error = xfbtree_trans_commit(xfbt, tp);
++	if (error)
++		do_error(_("committing in-memory rmap record\n"));
++
++	libxfs_trans_cancel(tp);
++}
++
+ /*
+  * Add an observation about a block mapping in an inode's data or attribute
+  * fork for later btree reconstruction.
+@@ -173,6 +329,9 @@ rmap_add_rec(
+ 	rmap.rm_blockcount = irec->br_blockcount;
+ 	if (irec->br_state == XFS_EXT_UNWRITTEN)
+ 		rmap.rm_flags |= XFS_RMAP_UNWRITTEN;
++
++	rmap_add_mem_rec(mp, agno, &rmap);
++
+ 	last_rmap = &ag_rmaps[agno].ar_last_rmap;
+ 	if (last_rmap->rm_owner == XFS_RMAP_OWN_UNKNOWN)
+ 		*last_rmap = rmap;
+@@ -223,6 +382,8 @@ __rmap_add_raw_rec(
+ 		rmap.rm_flags |= XFS_RMAP_BMBT_BLOCK;
+ 	rmap.rm_startblock = agbno;
+ 	rmap.rm_blockcount = len;
++
++	rmap_add_mem_rec(mp, agno, &rmap);
+ 	return slab_add(ag_rmaps[agno].ar_raw_rmaps, &rmap);
+ }
  
- void xfile_libinit(void);
+@@ -273,6 +434,36 @@ rmap_add_ag_rec(
+ 	return __rmap_add_raw_rec(mp, agno, agbno, len, owner, false, false);
+ }
  
--int xfile_create(struct xfs_mount *mp, const char *description,
--		struct xfile **xfilep);
-+int xfile_create(struct xfs_mount *mp, unsigned long long maxrange,
-+		const char *description, struct xfile **xfilep);
- void xfile_destroy(struct xfile *xf);
++/*
++ * Add a reverse mapping for a per-AG btree extent.  These are /not/ tracked
++ * in the in-memory rmap btree because they can only be added to the rmap
++ * data after the in-memory btrees have been written to disk.
++ */
++int
++rmap_add_agbtree_mapping(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	xfs_agblock_t		agbno,
++	xfs_extlen_t		len,
++	uint64_t		owner)
++{
++	struct xfs_rmap_irec	rmap = {
++		.rm_owner	= owner,
++		.rm_startblock	= agbno,
++		.rm_blockcount	= len,
++	};
++	struct xfs_perag	*pag;
++
++	if (!rmap_needs_work(mp))
++		return 0;
++
++	pag = libxfs_perag_get(mp, agno);
++	assert(libxfs_verify_agbext(pag, agbno, len));
++	libxfs_perag_put(pag);
++
++	return slab_add(ag_rmaps[agno].ar_raw_rmaps, &rmap);
++}
++
+ /*
+  * Merge adjacent raw rmaps and add them to the main rmap list.
+  */
+@@ -441,7 +632,7 @@ rmap_add_fixed_ag_rec(
+  * the rmapbt, after which it is fully regenerated.
+  */
+ int
+-rmap_store_ag_btree_rec(
++rmap_commit_agbtree_mappings(
+ 	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno)
+ {
+@@ -536,7 +727,7 @@ rmap_store_ag_btree_rec(
+ 	if (error)
+ 		goto err;
  
- ssize_t xfile_pread(struct xfile *xf, void *buf, size_t count, loff_t pos);
+-	/* Create cursors to refcount structures */
++	/* Create cursors to rmap structures */
+ 	error = init_slab_cursor(ag_rmap->ar_rmaps, rmap_compare, &rm_cur);
+ 	if (error)
+ 		goto err;
+@@ -870,6 +1061,21 @@ compute_refcounts(
+ }
+ #undef RMAP_END
+ 
++static int
++count_btree_records(
++	struct xfs_btree_cur	*cur,
++	int			level,
++	void			*data)
++{
++	uint64_t		*nr = data;
++	struct xfs_btree_block	*block;
++	struct xfs_buf		*bp;
++
++	block = libxfs_btree_get_block(cur, level, &bp);
++	*nr += be16_to_cpu(block->bb_numrecs);
++	return 0;
++}
++
+ /*
+  * Return the number of rmap objects for an AG.
+  */
+@@ -878,7 +1084,26 @@ rmap_record_count(
+ 	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno)
+ {
+-	return slab_count(ag_rmaps[agno].ar_rmaps);
++	struct rmap_mem_cur	rmcur;
++	uint64_t		nr = 0;
++	int			error;
++
++	if (ag_rmaps[agno].ar_xfbtree == NULL)
++		return 0;
++
++	error = rmap_init_mem_cursor(mp, NULL, agno, &rmcur);
++	if (error)
++		do_error(_("%s while reading in-memory rmap btree\n"),
++				strerror(error));
++
++	error = -libxfs_btree_visit_blocks(rmcur.mcur, count_btree_records,
++			XFS_BTREE_VISIT_RECORDS, &nr);
++	if (error)
++		do_error(_("%s while counting in-memory rmap records\n"),
++				strerror(error));
++
++	rmap_free_mem_cursor(NULL, &rmcur, 0);
++	return nr;
+ }
+ 
+ /*
+diff --git a/repair/rmap.h b/repair/rmap.h
+index 782256f8b7e..d8eec58ab8d 100644
+--- a/repair/rmap.h
++++ b/repair/rmap.h
+@@ -24,7 +24,10 @@ extern int rmap_fold_raw_recs(struct xfs_mount *mp, xfs_agnumber_t agno);
+ extern bool rmaps_are_mergeable(struct xfs_rmap_irec *r1, struct xfs_rmap_irec *r2);
+ 
+ extern int rmap_add_fixed_ag_rec(struct xfs_mount *, xfs_agnumber_t);
+-extern int rmap_store_ag_btree_rec(struct xfs_mount *, xfs_agnumber_t);
++
++int rmap_add_agbtree_mapping(struct xfs_mount *mp, xfs_agnumber_t agno,
++		xfs_agblock_t agbno, xfs_extlen_t len, uint64_t owner);
++int rmap_commit_agbtree_mappings(struct xfs_mount *mp, xfs_agnumber_t agno);
+ 
+ uint64_t rmap_record_count(struct xfs_mount *mp, xfs_agnumber_t agno);
+ extern int rmap_init_cursor(xfs_agnumber_t, struct xfs_slab_cursor **);
+@@ -49,4 +52,15 @@ extern int fix_inode_reflink_flags(struct xfs_mount *, xfs_agnumber_t);
+ extern void fix_freelist(struct xfs_mount *, xfs_agnumber_t, bool);
+ extern void rmap_store_agflcount(struct xfs_mount *, xfs_agnumber_t, int);
+ 
++struct rmap_mem_cur {
++	struct xfs_btree_cur	*mcur;
++	struct xfs_buf		*mhead_bp;
++};
++
++int rmap_init_mem_cursor(struct xfs_mount *mp, struct xfs_trans *tp,
++		xfs_agnumber_t agno, struct rmap_mem_cur *rmcur);
++void rmap_free_mem_cursor(struct xfs_trans *tp, struct rmap_mem_cur *rmcur,
++		int error);
++int rmap_get_mem_rec(struct rmap_mem_cur *rmcur, struct xfs_rmap_irec *irec);
++
+ #endif /* RMAP_H_ */
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index e49d4292ad4..251a46d11fe 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -913,6 +913,12 @@ repair_capture_writeback(
+ 	struct xfs_mount	*mp = bp->b_mount;
+ 	static pthread_mutex_t	wb_mutex = PTHREAD_MUTEX_INITIALIZER;
+ 
++	/* We only care about ondisk metadata. */
++	if (bp->b_target != mp->m_ddev_targp &&
++	    bp->b_target != mp->m_logdev_targp &&
++	    bp->b_target != mp->m_rtdev_targp)
++		return;
++
+ 	/*
+ 	 * This write hook ignores any buffer that looks like a superblock to
+ 	 * avoid hook recursion when setting NEEDSREPAIR.  Higher level code
 
