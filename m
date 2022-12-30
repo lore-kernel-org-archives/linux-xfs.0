@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A477CC4332F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:57:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2954BC3DA7D
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:58:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235668AbiL3W5w (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 17:57:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58308 "EHLO
+        id S235581AbiL3W6K (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 17:58:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235581AbiL3W5v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:57:51 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CA7D1B9E2;
-        Fri, 30 Dec 2022 14:57:51 -0800 (PST)
+        with ESMTP id S235671AbiL3W6J (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:58:09 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 673B01CB3F;
+        Fri, 30 Dec 2022 14:58:08 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AC34361C30;
-        Fri, 30 Dec 2022 22:57:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10B2FC433D2;
-        Fri, 30 Dec 2022 22:57:50 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 12B70B81DA0;
+        Fri, 30 Dec 2022 22:58:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF14DC433EF;
+        Fri, 30 Dec 2022 22:58:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672441070;
-        bh=N7ng7JtzN4kW7DNFVLF0bvK5xmgiuIB/v1OJKPdAJqg=;
+        s=k20201202; t=1672441085;
+        bh=BfjqOk88ZtFx6eLVmz4NC6IzcTQjwPAa+NLXr7NEQ7Y=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=taPrPJgG1byzU5mjLTth/jW36w3PcBLyc9Cx8eJLLVmFFPwjAOxgGniH5vQP98Sok
-         lzPS72RgDgPOgJsdbSmBfE3m1UIDsQnkSvicZmJMApym8YulD7BvntJ735pu1Zx/dO
-         GQ0xfAtt/k/7CT4y/dmTFXZo3BD/9Jhgt5A37h4kKpZj3GnUI/D6JDJ/0DaGiXXyTo
-         Eknj2+OHHHEKhQQA1cFSHjIZF+v8OC8+R2c03b/OV5apd+yfB/hrqAuHPxYwp0hHx7
-         9iAcw1NSJeqJtBPpsM5rdq1sTgaLuDYc4pEXnh1eUmNSYHfCFCLUc3K3U7y1LxT5zn
-         NygyaaUMh2DNA==
-Subject: [PATCH 14/16] fuzzy: make freezing optional for scrub stress tests
+        b=iIAjnb94P8z1z1WiIeXvb1frkWxgSdVAzbuf5SsrlUoaqkOYP8iCi0OGi0cv63VRv
+         TH7AQCUGIqI154rov3rPj0+ORTgXau146vDJfO87UGzXoefsXbwDxyjaD97TqB9kgb
+         gjECpvvzt0kHjl0Aie5upRtmkobRA0EEtSD+hjJDF6Mic1JXHHzen1AaMZzjMK2woh
+         c/jCKKQwKf9ZT5DKKx1fhAR1HR3GQnznXM9y1qhe4yyRLaqo2ru+Z9jeuTTCdL6ogt
+         WIgBvunckqcvYM2OXThzESh4OdgAgOIYKHg6k/7osVlwjh5kgbVHc9yBf9CJQwW9By
+         WgeOXm7yjSzdQ==
+Subject: [PATCH 15/16] fuzzy: allow substitution of AG numbers when
+ configuring scrub stress test
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     zlang@redhat.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Fri, 30 Dec 2022 14:12:54 -0800
-Message-ID: <167243837487.694541.11855121854386930402.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:12:55 -0800
+Message-ID: <167243837501.694541.13900520713966204152.stgit@magnolia>
 In-Reply-To: <167243837296.694541.13203497631389630964.stgit@magnolia>
 References: <167243837296.694541.13203497631389630964.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,71 +50,62 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make the freeze/thaw loop optional, since that's a significant change in
-behavior if it's enabled.
+Allow the test program to use the metavariable '%agno%' when passing
+scrub commands to the scrub stress loop.  This makes it easier for tests
+to scrub or repair every AG in the filesystem without a lot of work.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/fuzzy  |   13 ++++++++++---
+ common/fuzzy  |   14 ++++++++++++--
  tests/xfs/422 |    2 +-
- 2 files changed, 11 insertions(+), 4 deletions(-)
+ 2 files changed, 13 insertions(+), 3 deletions(-)
 
 
 diff --git a/common/fuzzy b/common/fuzzy
-index 0f6fc91b80..219dd3bb0a 100644
+index 219dd3bb0a..e42e2ccec1 100644
 --- a/common/fuzzy
 +++ b/common/fuzzy
-@@ -499,6 +499,8 @@ __stress_scrub_check_commands() {
- #
- # Various options include:
- #
-+# -f	Run a freeze/thaw loop while we're doing other things.  Defaults to
-+#	disabled, unless XFS_SCRUB_STRESS_FREEZE is set.
- # -s	Pass this command to xfs_io to test scrub.  If zero -s options are
- #	specified, xfs_io will not be run.
- # -t	Run online scrub against this file; $SCRATCH_MNT is the default.
-@@ -506,14 +508,16 @@ _scratch_xfs_stress_scrub() {
- 	local one_scrub_args=()
- 	local scrub_tgt="$SCRATCH_MNT"
- 	local runningfile="$tmp.fsstress"
-+	local freeze="${XFS_SCRUB_STRESS_FREEZE}"
+@@ -368,10 +368,19 @@ __stress_one_scrub_loop() {
+ 	local runningfile="$2"
+ 	local scrub_tgt="$3"
+ 	shift; shift; shift
++	local agcount="$(_xfs_mount_agcount $SCRATCH_MNT)"
  
- 	__SCRUB_STRESS_FREEZE_PID=""
- 	rm -f "$runningfile"
- 	touch "$runningfile"
+ 	local xfs_io_args=()
+ 	for arg in "$@"; do
+-		xfs_io_args+=('-c' "$arg")
++		if echo "$arg" | grep -q -w '%agno%'; then
++			# Substitute the AG number
++			for ((agno = 0; agno < agcount; agno++)); do
++				local ag_arg="$(echo "$arg" | sed -e "s|%agno%|$agno|g")"
++				xfs_io_args+=('-c' "$ag_arg")
++			done
++		else
++			xfs_io_args+=('-c' "$arg")
++		fi
+ 	done
  
- 	OPTIND=1
--	while getopts "s:t:" c; do
-+	while getopts "fs:t:" c; do
- 		case "$c" in
-+			f) freeze=yes;;
- 			s) one_scrub_args+=("$OPTARG");;
- 			t) scrub_tgt="$OPTARG";;
- 			*) return 1; ;;
-@@ -529,8 +533,11 @@ _scratch_xfs_stress_scrub() {
- 		   "ending at $(date --date="@${end}")" >> $seqres.full
+ 	while __stress_scrub_running "$end" "$runningfile"; do
+@@ -481,7 +490,8 @@ __stress_scrub_check_commands() {
+ 	shift
  
- 	__stress_scrub_fsstress_loop "$end" "$runningfile" &
--	__stress_scrub_freeze_loop "$end" "$runningfile" &
--	__SCRUB_STRESS_FREEZE_PID="$!"
-+
-+	if [ -n "$freeze" ]; then
-+		__stress_scrub_freeze_loop "$end" "$runningfile" &
-+		__SCRUB_STRESS_FREEZE_PID="$!"
-+	fi
- 
- 	if [ "${#one_scrub_args[@]}" -gt 0 ]; then
- 		__stress_one_scrub_loop "$end" "$runningfile" "$scrub_tgt" \
+ 	for arg in "$@"; do
+-		testio=`$XFS_IO_PROG -x -c "$arg" $scrub_tgt 2>&1`
++		local cooked_arg="$(echo "$arg" | sed -e "s/%agno%/0/g")"
++		testio=`$XFS_IO_PROG -x -c "$cooked_arg" $scrub_tgt 2>&1`
+ 		echo $testio | grep -q "Unknown type" && \
+ 			_notrun "xfs_io scrub subcommand support is missing"
+ 		echo $testio | grep -q "Inappropriate ioctl" && \
 diff --git a/tests/xfs/422 b/tests/xfs/422
-index faea5d6792..ac88713257 100755
+index ac88713257..995f612166 100755
 --- a/tests/xfs/422
 +++ b/tests/xfs/422
 @@ -31,7 +31,7 @@ _require_xfs_stress_online_repair
  _scratch_mkfs > "$seqres.full" 2>&1
  _scratch_mount
  _require_xfs_has_feature "$SCRATCH_MNT" rmapbt
--_scratch_xfs_stress_online_repair -s "repair rmapbt 0" -s "repair rmapbt 1"
-+_scratch_xfs_stress_online_repair -f -s "repair rmapbt 0" -s "repair rmapbt 1"
+-_scratch_xfs_stress_online_repair -f -s "repair rmapbt 0" -s "repair rmapbt 1"
++_scratch_xfs_stress_online_repair -f -s "repair rmapbt %agno%"
  
  # success, all done
  echo Silence is golden
