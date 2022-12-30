@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 213FBC3DA7C
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:57:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A370C3DA7C
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:57:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235665AbiL3W5W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 17:57:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58246 "EHLO
+        id S235666AbiL3W5h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 17:57:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58278 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235647AbiL3W5W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:57:22 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EB241B9E2;
-        Fri, 30 Dec 2022 14:57:21 -0800 (PST)
+        with ESMTP id S235581AbiL3W5g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:57:36 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C8F21CB3F;
+        Fri, 30 Dec 2022 14:57:35 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0E086B81D95;
-        Fri, 30 Dec 2022 22:57:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE989C433EF;
-        Fri, 30 Dec 2022 22:57:18 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 18C5161C16;
+        Fri, 30 Dec 2022 22:57:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7214FC433D2;
+        Fri, 30 Dec 2022 22:57:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672441038;
-        bh=28h2JW4kYwgtShJujLRwlnsZt43YsOlA6fDOLH1qXL4=;
+        s=k20201202; t=1672441054;
+        bh=4tKDUK0K0HxPCY3EkqtsA2OGOFvXBLo51hAlhJealJ4=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=QxX0Ivy+aMHlukTCOMvLoh6SgDhPmz3Tml1xv0Oo05/E4qGjAVCST8SrBll7nAFDQ
-         ixz9uW2i/R+Ak2K2m20PrgbS6z3/2Sdu9N3gKvh1Aj6cH9tq3JO1cYwKUirctzvil/
-         JsyzY4Afh9NgFvJaJCfluXX261dfaj5zb5FqoCzdsqTt18xrkO6lhVZ2A04wr0z92Y
-         nCOxRsOXWCjbtmqmv+P84q2SAHYctimEOmKDAL5bRivnSbwVoSmunABjM0fMJ8FmH5
-         EZ25QOfW4WnE9C6HcgUsnuVPXMTIMi5qeq/LabV3mj1Eqdj+36F802eTmEjO0zClFD
-         jYz0mAXQZ6fww==
-Subject: [PATCH 12/16] fuzzy: increase operation count for each fsstress
- invocation
+        b=EIeIRkCdP/18NRR+Sj8iYI9VQ87m9zJg/WgOciXoW/X0o8Zqh8jQjyzipAjzotnMX
+         6YiqFpftcnCB0ixSRTQlKqzBD0AF28k/Tm1OOBvt8Nyq5bAok+l9xGK7q0buIIJpN3
+         dZuBeu3YhedxsLPSgRpMz6Eck5QCFKES2MrwckDo8/h9q8QH7klh4HVI6+X9xEFyAc
+         umjZeOonYX7wpdm+w44H3dT/8t6MOjYiv8r4cBBe00OwMj5tHRPk0xme+7HZG9XC/m
+         fdzHbwYtZfvUPZANGdNSz2Zhf+LAOSDxPTVWiClf61/HwHFiOnf1jvUjroZ0S8w++Q
+         +DD+IgRvQEEQQ==
+Subject: [PATCH 13/16] fuzzy: clean up frozen fses after scrub stress testing
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     zlang@redhat.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
 Date:   Fri, 30 Dec 2022 14:12:54 -0800
-Message-ID: <167243837460.694541.14076101650568669658.stgit@magnolia>
+Message-ID: <167243837474.694541.10883151107803003382.stgit@magnolia>
 In-Reply-To: <167243837296.694541.13203497631389630964.stgit@magnolia>
 References: <167243837296.694541.13203497631389630964.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,31 +49,87 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-For online fsck stress testing, increase the number of filesystem
-operations per fsstress run to 2 million, now that we have the ability
-to kill fsstress if the user should push ^C to abort the test early.
-This should guarantee a couple of hours of continuous stress testing in
-between clearing the scratch filesystem.
+Some of our scrub stress tests involve racing scrub, fsstress, and a
+program that repeatedly freeze and thaws the scratch filesystem.  The
+current cleanup code suffers from the deficiency that it doesn't
+actually wait for the child processes to exit.  First, change it to do
+that.
+
+However, that exposes a second problem: there's a race condition with a
+freezer process that leads to the stress test exiting with a frozen fs.
+If the freezer process is blocked trying to acquire the unmount or
+sb_write locks, the receipt of a signal (even a fatal one) doesn't cause
+it to abort the freeze.  This causes further problems with fstests,
+since ./check doesn't expect to regain control with the scratch fs
+frozen.
+
+Fix both problems by making the cleanup function smarter.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/fuzzy |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ common/fuzzy |   35 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 34 insertions(+), 1 deletion(-)
 
 
 diff --git a/common/fuzzy b/common/fuzzy
-index 01cf7f00d8..3e23edc9e4 100644
+index 3e23edc9e4..0f6fc91b80 100644
 --- a/common/fuzzy
 +++ b/common/fuzzy
-@@ -399,7 +399,9 @@ __stress_scrub_fsstress_loop() {
- 	local end="$1"
- 	local runningfile="$2"
+@@ -439,8 +439,39 @@ _scratch_xfs_stress_scrub_cleanup() {
  
--	local args=$(_scale_fsstress_args -p 4 -d $SCRATCH_MNT -n 2000 $FSSTRESS_AVOID)
-+	# As of March 2022, 2 million fsstress ops should be enough to keep
-+	# any filesystem busy for a couple of hours.
-+	local args=$(_scale_fsstress_args -p 4 -d $SCRATCH_MNT -n 2000000 $FSSTRESS_AVOID)
- 	echo "Running $FSSTRESS_PROG $args" >> $seqres.full
+ 	# Send SIGINT so that bash won't print a 'Terminated' message that
+ 	# distorts the golden output.
++	echo "Killing stressor processes at $(date)" >> $seqres.full
+ 	$KILLALL_PROG -INT xfs_io fsstress >> $seqres.full 2>&1
+-	$XFS_IO_PROG -x -c 'thaw' $SCRATCH_MNT >> $seqres.full 2>&1
++
++	# Tests are not allowed to exit with the scratch fs frozen.  If we
++	# started a fs freeze/thaw background loop, wait for that loop to exit
++	# and then thaw the filesystem.  Cleanup for the freeze loop must be
++	# performed prior to waiting for the other children to avoid triggering
++	# a race condition that can hang fstests.
++	#
++	# If the xfs_io -c freeze process is asleep waiting for a write lock on
++	# s_umount or sb_write when the killall signal is delivered, it will
++	# not check for pending signals until after it has frozen the fs.  If
++	# even one thread of the stress test processes (xfs_io, fsstress, etc.)
++	# is waiting for read locks on sb_write when the killall signals are
++	# delivered, they will block in the kernel until someone thaws the fs,
++	# and the `wait' below will wait forever.
++	#
++	# Hence we issue the killall, wait for the freezer loop to exit, thaw
++	# the filesystem, and wait for the rest of the children.
++	if [ -n "$__SCRUB_STRESS_FREEZE_PID" ]; then
++		echo "Waiting for fs freezer $__SCRUB_STRESS_FREEZE_PID to exit at $(date)" >> $seqres.full
++		wait "$__SCRUB_STRESS_FREEZE_PID"
++
++		echo "Thawing filesystem at $(date)" >> $seqres.full
++		$XFS_IO_PROG -x -c 'thaw' $SCRATCH_MNT >> $seqres.full 2>&1
++		__SCRUB_STRESS_FREEZE_PID=""
++	fi
++
++	# Wait for the remaining children to exit.
++	echo "Waiting for children to exit at $(date)" >> $seqres.full
++	wait
++
++	echo "Cleanup finished at $(date)" >> $seqres.full
+ }
  
- 	while __stress_scrub_running "$end" "$runningfile"; do
+ # Make sure the provided scrub/repair commands actually work on the scratch
+@@ -476,6 +507,7 @@ _scratch_xfs_stress_scrub() {
+ 	local scrub_tgt="$SCRATCH_MNT"
+ 	local runningfile="$tmp.fsstress"
+ 
++	__SCRUB_STRESS_FREEZE_PID=""
+ 	rm -f "$runningfile"
+ 	touch "$runningfile"
+ 
+@@ -498,6 +530,7 @@ _scratch_xfs_stress_scrub() {
+ 
+ 	__stress_scrub_fsstress_loop "$end" "$runningfile" &
+ 	__stress_scrub_freeze_loop "$end" "$runningfile" &
++	__SCRUB_STRESS_FREEZE_PID="$!"
+ 
+ 	if [ "${#one_scrub_args[@]}" -gt 0 ]; then
+ 		__stress_one_scrub_loop "$end" "$runningfile" "$scrub_tgt" \
 
