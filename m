@@ -2,44 +2,46 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83F55C10F1B
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:29:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D53AFC4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 22:29:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229821AbiL3W3W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 17:29:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51570 "EHLO
+        id S235164AbiL3W3j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 17:29:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51594 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229527AbiL3W3W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:29:22 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61BE71D0E2;
-        Fri, 30 Dec 2022 14:29:21 -0800 (PST)
+        with ESMTP id S230117AbiL3W3i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 17:29:38 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0609C1C913;
+        Fri, 30 Dec 2022 14:29:36 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id C92BDCE19BB;
-        Fri, 30 Dec 2022 22:29:19 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 131BBC433EF;
-        Fri, 30 Dec 2022 22:29:18 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 4DE96CE17F6;
+        Fri, 30 Dec 2022 22:29:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 929A7C433EF;
+        Fri, 30 Dec 2022 22:29:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672439358;
-        bh=Tea2cDALhGhYv7r3QiZFvT544ztxUfUUk5+tD7XtxRU=;
+        s=k20201202; t=1672439373;
+        bh=TNiO9oPPCwjUuuZ+Ez/N1z67SQ1tGrCbmqUoqDs0540=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=IokQuVRxiV1g+Vm/AsXqx3QEMgT3340GpGGjQ9QUltaNWVjcM4YrMbR4PPJ7y/shX
-         MhOlX66DeCaRe8DyVrfmXm8vQnEnHjIV4QoC37aCDAtk6jyAkLMYos1OhmdgWYbtPo
-         tzfTxcyrlFhF+UTM7e1O98+wFkB3p+qixPU9z+cmzTTEcacONbgXAtTkj/RtU/yWT1
-         Ox832AG7BnJuu4IFnDmkoEnLCFs7iCS1UE965XAH+XegF08qFedyuYMnEoF28GET32
-         OYdwGl1MD4ihUW5EOjVSrdhPulurJQs66v2bhE7/DDAHkzd+wLITg5QT/g1PzlK3Nr
-         CmFF9cOwvOjbA==
-Subject: [PATCHSET v24.0 0/2] fstests: race online scrub with mount state
- changes
+        b=LzbBmS8dYaIDJgVNkaqaF3611y17RVL7MnLCCFey/Ei76dx7PH+2f2HYMLNpCdE4g
+         pWEAbV9lc9XjmZHSWHy7/WdQflPQCeUBlC+vPKIYYYLLaU77v9vnwEC0PiODxEJyEY
+         rxcOSf1EouYrr1rDFLhvWZVgPv+ebTTDrGQChI2GNwhL8FHEpdyob3eGU4BAWGZasy
+         0SuQBABSjWTIzrdV57Q2LkEhVbQc+OXYs/6Juq6+Inag2PorYaoLhnjv+ohFyPbCPT
+         YDqN2DbvGeOX4cekMuTmO6q3GVYz7NU7CCSAR/QDmDVjggzTyaKz7IrPQGfYpERVJ8
+         TmKoGMXfVesPw==
+Subject: [PATCH 01/14] xfs: document the motivation for online fsck design
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     zlang@redhat.com, djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Fri, 30 Dec 2022 14:13:00 -0800
-Message-ID: <167243838066.695417.12457890635253015617.stgit@magnolia>
-In-Reply-To: <Y69UceeA2MEpjMJ8@magnolia>
-References: <Y69UceeA2MEpjMJ8@magnolia>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, willy@infradead.org,
+        chandan.babu@oracle.com, allison.henderson@oracle.com,
+        linux-fsdevel@vger.kernel.org, hch@infradead.org,
+        catherine.hoang@oracle.com, david@fromorbit.com
+Date:   Fri, 30 Dec 2022 14:10:51 -0800
+Message-ID: <167243825174.682859.4770282034026097725.stgit@magnolia>
+In-Reply-To: <167243825144.682859.12802259329489258661.stgit@magnolia>
+References: <167243825144.682859.12802259329489258661.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -48,44 +50,232 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Introduce the ability to run xfs_scrub(8) itself from our online fsck
-stress test harness.  Create two new tests to race scrub and repair
-against fsstress, and four more tests to do the same but racing against
-fs freeze and ro remounts.
+Start the first chapter of the online fsck design documentation.
+This covers the motivations for creating this in the first place.
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=race-scrub-and-mount-state-changes
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/fuzzy      |   63 ++++++++++++++++++++++++++++++++++++++++++++++++++---
- tests/xfs/285     |   44 ++++++++++---------------------------
- tests/xfs/285.out |    4 +--
- tests/xfs/286     |   46 ++++++++++-----------------------------
- tests/xfs/286.out |    4 +--
- tests/xfs/733     |   39 +++++++++++++++++++++++++++++++++
- tests/xfs/733.out |    2 ++
- tests/xfs/771     |   39 +++++++++++++++++++++++++++++++++
- tests/xfs/771.out |    2 ++
- tests/xfs/824     |   40 ++++++++++++++++++++++++++++++++++
- tests/xfs/824.out |    2 ++
- tests/xfs/825     |   40 ++++++++++++++++++++++++++++++++++
- tests/xfs/825.out |    2 ++
- 13 files changed, 252 insertions(+), 75 deletions(-)
- create mode 100755 tests/xfs/733
- create mode 100644 tests/xfs/733.out
- create mode 100755 tests/xfs/771
- create mode 100644 tests/xfs/771.out
- create mode 100755 tests/xfs/824
- create mode 100644 tests/xfs/824.out
- create mode 100755 tests/xfs/825
- create mode 100644 tests/xfs/825.out
+ Documentation/filesystems/index.rst                |    1 
+ .../filesystems/xfs-online-fsck-design.rst         |  199 ++++++++++++++++++++
+ 2 files changed, 200 insertions(+)
+ create mode 100644 Documentation/filesystems/xfs-online-fsck-design.rst
+
+
+diff --git a/Documentation/filesystems/index.rst b/Documentation/filesystems/index.rst
+index bee63d42e5ec..fbb2b5ada95b 100644
+--- a/Documentation/filesystems/index.rst
++++ b/Documentation/filesystems/index.rst
+@@ -123,4 +123,5 @@ Documentation for filesystem implementations.
+    vfat
+    xfs-delayed-logging-design
+    xfs-self-describing-metadata
++   xfs-online-fsck-design
+    zonefs
+diff --git a/Documentation/filesystems/xfs-online-fsck-design.rst b/Documentation/filesystems/xfs-online-fsck-design.rst
+new file mode 100644
+index 000000000000..25717ebb5f80
+--- /dev/null
++++ b/Documentation/filesystems/xfs-online-fsck-design.rst
+@@ -0,0 +1,199 @@
++.. SPDX-License-Identifier: GPL-2.0
++.. _xfs_online_fsck_design:
++
++..
++        Mapping of heading styles within this document:
++        Heading 1 uses "====" above and below
++        Heading 2 uses "===="
++        Heading 3 uses "----"
++        Heading 4 uses "````"
++        Heading 5 uses "^^^^"
++        Heading 6 uses "~~~~"
++        Heading 7 uses "...."
++
++        Sections are manually numbered because apparently that's what everyone
++        does in the kernel.
++
++======================
++XFS Online Fsck Design
++======================
++
++This document captures the design of the online filesystem check feature for
++XFS.
++The purpose of this document is threefold:
++
++- To help kernel distributors understand exactly what the XFS online fsck
++  feature is, and issues about which they should be aware.
++
++- To help people reading the code to familiarize themselves with the relevant
++  concepts and design points before they start digging into the code.
++
++- To help developers maintaining the system by capturing the reasons
++  supporting higher level decisionmaking.
++
++As the online fsck code is merged, the links in this document to topic branches
++will be replaced with links to code.
++
++This document is licensed under the terms of the GNU Public License, v2.
++The primary author is Darrick J. Wong.
++
++This design document is split into seven parts.
++Part 1 defines what fsck tools are and the motivations for writing a new one.
++Parts 2 and 3 present a high level overview of how online fsck process works
++and how it is tested to ensure correct functionality.
++Part 4 discusses the user interface and the intended usage modes of the new
++program.
++Parts 5 and 6 show off the high level components and how they fit together, and
++then present case studies of how each repair function actually works.
++Part 7 sums up what has been discussed so far and speculates about what else
++might be built atop online fsck.
++
++.. contents:: Table of Contents
++   :local:
++
++1. What is a Filesystem Check?
++==============================
++
++A Unix filesystem has three main jobs: to provide a hierarchy of names through
++which application programs can associate arbitrary blobs of data for any
++length of time, to virtualize physical storage media across those names, and
++to retrieve the named data blobs at any time.
++The filesystem check (fsck) tool examines all the metadata in a filesystem
++to look for errors.
++Simple tools only check for obvious corruptions, but the more sophisticated
++ones cross-reference metadata records to look for inconsistencies.
++People do not like losing data, so most fsck tools also contains some ability
++to deal with any problems found.
++As a word of caution -- the primary goal of most Linux fsck tools is to restore
++the filesystem metadata to a consistent state, not to maximize the data
++recovered.
++That precedent will not be challenged here.
++
++Filesystems of the 20th century generally lacked any redundancy in the ondisk
++format, which means that fsck can only respond to errors by erasing files until
++errors are no longer detected.
++System administrators avoid data loss by increasing the number of separate
++storage systems through the creation of backups; and they avoid downtime by
++increasing the redundancy of each storage system through the creation of RAID.
++More recent filesystem designs contain enough redundancy in their metadata that
++it is now possible to regenerate data structures when non-catastrophic errors
++occur; this capability aids both strategies.
++Over the past few years, XFS has added a storage space reverse mapping index to
++make it easy to find which files or metadata objects think they own a
++particular range of storage.
++Efforts are under way to develop a similar reverse mapping index for the naming
++hierarchy, which will involve storing directory parent pointers in each file.
++With these two pieces in place, XFS uses secondary information to perform more
++sophisticated repairs.
++
++TLDR; Show Me the Code!
++-----------------------
++
++Code is posted to the kernel.org git trees as follows:
++`kernel changes <https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-symlink>`_,
++`userspace changes <https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-media-scan-service>`_, and
++`QA test changes <https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/log/?h=repair-dirs>`_.
++Each kernel patchset adding an online repair function will use the same branch
++name across the kernel, xfsprogs, and fstests git repos.
++
++Existing Tools
++--------------
++
++The online fsck tool described here will be the third tool in the history of
++XFS (on Linux) to check and repair filesystems.
++Two programs precede it:
++
++The first program, ``xfs_check``, was created as part of the XFS debugger
++(``xfs_db``) and can only be used with unmounted filesystems.
++It walks all metadata in the filesystem looking for inconsistencies in the
++metadata, though it lacks any ability to repair what it finds.
++Due to its high memory requirements and inability to repair things, this
++program is now deprecated and will not be discussed further.
++
++The second program, ``xfs_repair``, was created to be faster and more robust
++than the first program.
++Like its predecessor, it can only be used with unmounted filesystems.
++It uses extent-based in-memory data structures to reduce memory consumption,
++and tries to schedule readahead IO appropriately to reduce I/O waiting time
++while it scans the metadata of the entire filesystem.
++The most important feature of this tool is its ability to respond to
++inconsistencies in file metadata and directory tree by erasing things as needed
++to eliminate problems.
++Space usage metadata are rebuilt from the observed file metadata.
++
++Problem Statement
++-----------------
++
++The current XFS tools leave several problems unsolved:
++
++1. **User programs** suddenly **lose access** to information in the computer
++   when unexpected shutdowns occur as a result of silent corruptions in the
++   filesystem metadata.
++   These occur **unpredictably** and often without warning.
++
++2. **Users** experience a **total loss of service** during the recovery period
++   after an **unexpected shutdown** occurs.
++
++3. **Users** experience a **total loss of service** if the filesystem is taken
++   offline to **look for problems** proactively.
++
++4. **Data owners** cannot **check the integrity** of their stored data without
++   reading all of it.
++   This may expose them to substantial billing costs when a linear media scan
++   might suffice.
++
++5. **System administrators** cannot **schedule** a maintenance window to deal
++   with corruptions if they **lack the means** to assess filesystem health
++   while the filesystem is online.
++
++6. **Fleet monitoring tools** cannot **automate periodic checks** of filesystem
++   health when doing so requires **manual intervention** and downtime.
++
++7. **Users** can be tricked into **doing things they do not desire** when
++   malicious actors **exploit quirks of Unicode** to place misleading names
++   in directories.
++
++Given this definition of the problems to be solved and the actors who would
++benefit, the proposed solution is a third fsck tool that acts on a running
++filesystem.
++
++This new third program has three components: an in-kernel facility to check
++metadata, an in-kernel facility to repair metadata, and a userspace driver
++program to drive fsck activity on a live filesystem.
++``xfs_scrub`` is the name of the driver program.
++The rest of this document presents the goals and use cases of the new fsck
++tool, describes its major design points in connection to those goals, and
++discusses the similarities and differences with existing tools.
++
+++--------------------------------------------------------------------------+
++| **Note**:                                                                |
+++--------------------------------------------------------------------------+
++| Throughout this document, the existing offline fsck tool can also be     |
++| referred to by its current name "``xfs_repair``".                        |
++| The userspace driver program for the new online fsck tool can be         |
++| referred to as "``xfs_scrub``".                                          |
++| The kernel portion of online fsck that validates metadata is called      |
++| "online scrub", and portion of the kernel that fixes metadata is called  |
++| "online repair".                                                         |
+++--------------------------------------------------------------------------+
++
++Secondary metadata indices enable the reconstruction of parts of a damaged
++primary metadata object from secondary information.
++XFS filesystems shard themselves into multiple primary objects to enable better
++performance on highly threaded systems and to contain the blast radius when
++problems happen.
++The naming hierarchy is broken up into objects known as directories and files;
++and the physical space is split into pieces known as allocation groups.
++The division of the filesystem into principal objects (allocation groups and
++inodes) means that there are ample opportunities to perform targeted checks and
++repairs on a subset of the filesystem.
++While this is going on, other parts continue processing IO requests.
++Even if a piece of filesystem metadata can only be regenerated by scanning the
++entire system, the scan can still be done in the background while other file
++operations continue.
++
++In summary, online fsck takes advantage of resource sharding and redundant
++metadata to enable targeted checking and repair operations while the system
++is running.
++This capability will be coupled to automatic system management so that
++autonomous self-healing of XFS maximizes service availability.
 
