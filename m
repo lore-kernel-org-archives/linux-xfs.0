@@ -2,43 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B13CC3DA7C
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:41:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE005C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 23:42:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235619AbiL3Xlk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 18:41:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43846 "EHLO
+        id S235640AbiL3XmG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 18:42:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235598AbiL3Xlj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:41:39 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADB0C1DDE7;
-        Fri, 30 Dec 2022 15:41:38 -0800 (PST)
+        with ESMTP id S235598AbiL3Xly (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 18:41:54 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F3481DDE7;
+        Fri, 30 Dec 2022 15:41:52 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 2F5CBB81DCB;
-        Fri, 30 Dec 2022 23:41:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5618C433D2;
-        Fri, 30 Dec 2022 23:41:35 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id F2B8661C17;
+        Fri, 30 Dec 2022 23:41:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B25DC433D2;
+        Fri, 30 Dec 2022 23:41:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672443695;
-        bh=iV3LhJ9EAMhW9zWHRgbsuT27rQFSTxz3t2SSyTexDm4=;
+        s=k20201202; t=1672443711;
+        bh=kgd2HV4W1zeAMYGsDmb9nU9cAfHBExoPhOalx9fzpOA=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=NBtHTug/o5mwivAxoIWIge1m5jkvXYJinnjKSEbMjuSU4JSH7RoTrgrZUoX2FF0pk
-         1QaJlYdmaNOFQTAU0azvRMZ1X8Vlws+3JjIcXzquaBgVZJIcrB0bn88iRUuZdxmQ98
-         a20sbTmfrLEvoKHRqUYED27onSgy1BJ99ttGX4jcnHPmTenQc6zcMH59d22jnZIR3K
-         8ItEx/s4dLGK2sfwRprFCFHPPCz1/9YMyk9QQoHcZWP3nB/FjVeyw/TIOFHa1m0J9K
-         uRfEw/2tWGBfp1/zqY2nhIy/tdoVviRjy2pgFuPCqTFPXVPO+OTHckSz1Bo5L1k/y0
-         1NsOIF37M9wIA==
-Subject: [PATCH 2/7] xfs: teach buftargs to maintain their own buffer
- hashtable
+        b=W19AReN/9oSCycIloiaL+zX/v6TrcadKLFGaPVr/blPhzgJLAEMgIDsdyFyZZCyUA
+         ixsaTPZZh63QRqNrdX0jyLks41iAK5rPwgpMFigfExsQUlrPq7zKbmI1ALcZWx/34b
+         sL1Wee7m7GRduW/NzbZHdhv8fCg0Wq84XVh8CXG5JhnmvY70J6CK5wJV2khs9quiI2
+         N7IOi27geJCieix8/jMe3GqjGD3nM3borJXoDHMInd6Lv9RZSHKc1oBnZasJ4jNf/s
+         BTxOjRQDy5hSOfpwxzcviUkgDasEz/fCNQB7GURFS/VzymfGZvVMyrh/FSMsWPy4Jx
+         aGoBHL63/4bkA==
+Subject: [PATCH 3/7] xfs: support in-memory buffer cache targets
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, willy@infradead.org,
         linux-fsdevel@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:13:26 -0800
-Message-ID: <167243840627.696535.15938554761194724741.stgit@magnolia>
+Message-ID: <167243840641.696535.16094394391484791125.stgit@magnolia>
 In-Reply-To: <167243840589.696535.4812770109109400531.stgit@magnolia>
 References: <167243840589.696535.4812770109109400531.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -51,368 +50,531 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Currently, cached buffers are indexed by per-AG hashtables.  This works
-great for the data device, but won't work for in-memory btrees.  Make it
-so that buftargs can index buffers too.  Introduce XFS_BSTATE_CACHED as
-an explicit state flag for buffers that are cached in an rhashtable,
-since we can't rely on b_pag being set for buffers that are cached but
-not on behalf of an AG.  We'll soon be using the buffer cache for
+Allow the buffer cache to target in-memory files by connecting it to
 xfiles.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_buf.c |  142 ++++++++++++++++++++++++++++++++++++++++--------------
- fs/xfs/xfs_buf.h |    9 +++
- 2 files changed, 113 insertions(+), 38 deletions(-)
+ fs/xfs/Kconfig           |    4 ++
+ fs/xfs/scrub/xfile.h     |   15 +++++++++
+ fs/xfs/xfs_aops.c        |    5 ++-
+ fs/xfs/xfs_bmap_util.c   |    8 ++---
+ fs/xfs/xfs_buf.c         |   80 +++++++++++++++++++++++++++++++++++++++++++---
+ fs/xfs/xfs_buf.h         |   71 +++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/xfs_discard.c     |    8 ++---
+ fs/xfs/xfs_file.c        |    6 ++-
+ fs/xfs/xfs_ioctl.c       |    3 +-
+ fs/xfs/xfs_iomap.c       |    4 +-
+ fs/xfs/xfs_log.c         |    4 +-
+ fs/xfs/xfs_log_cil.c     |    3 +-
+ fs/xfs/xfs_log_recover.c |    3 +-
+ fs/xfs/xfs_super.c       |    4 +-
+ 14 files changed, 188 insertions(+), 30 deletions(-)
 
 
+diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+index 54806c2b80d4..2373324be997 100644
+--- a/fs/xfs/Kconfig
++++ b/fs/xfs/Kconfig
+@@ -101,6 +101,9 @@ config XFS_LIVE_HOOKS
+ 	bool
+ 	select JUMP_LABEL if HAVE_ARCH_JUMP_LABEL
+ 
++config XFS_IN_MEMORY_FILE
++	bool
++
+ config XFS_ONLINE_SCRUB
+ 	bool "XFS online metadata check support"
+ 	default n
+@@ -108,6 +111,7 @@ config XFS_ONLINE_SCRUB
+ 	depends on TMPFS && SHMEM
+ 	select XFS_LIVE_HOOKS
+ 	select XFS_DRAIN_INTENTS
++	select XFS_IN_MEMORY_FILE
+ 	help
+ 	  If you say Y here you will be able to check metadata on a
+ 	  mounted XFS filesystem.  This feature is intended to reduce
+diff --git a/fs/xfs/scrub/xfile.h b/fs/xfs/scrub/xfile.h
+index b7f046016b1b..99b6db838612 100644
+--- a/fs/xfs/scrub/xfile.h
++++ b/fs/xfs/scrub/xfile.h
+@@ -6,6 +6,8 @@
+ #ifndef __XFS_SCRUB_XFILE_H__
+ #define __XFS_SCRUB_XFILE_H__
+ 
++#ifdef CONFIG_XFS_IN_MEMORY_FILE
++
+ struct xfile_page {
+ 	struct page		*page;
+ 	void			*fsdata;
+@@ -76,5 +78,18 @@ int xfile_get_page(struct xfile *xf, loff_t offset, unsigned int len,
+ int xfile_put_page(struct xfile *xf, struct xfile_page *xbuf);
+ 
+ int xfile_dump(struct xfile *xf);
++#else
++static inline int
++xfile_obj_load(struct xfile *xf, void *buf, size_t count, loff_t offset)
++{
++	return -EIO;
++}
++
++static inline int
++xfile_obj_store(struct xfile *xf, const void *buf, size_t count, loff_t offset)
++{
++	return -EIO;
++}
++#endif /* CONFIG_XFS_IN_MEMORY_FILE */
+ 
+ #endif /* __XFS_SCRUB_XFILE_H__ */
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 41734202796f..c3a9df0c0eab 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -562,7 +562,10 @@ xfs_iomap_swapfile_activate(
+ 	struct file			*swap_file,
+ 	sector_t			*span)
+ {
+-	sis->bdev = xfs_inode_buftarg(XFS_I(file_inode(swap_file)))->bt_bdev;
++	struct xfs_inode		*ip = XFS_I(file_inode(swap_file));
++	struct xfs_buftarg		*btp = xfs_inode_buftarg(ip);
++
++	sis->bdev = xfs_buftarg_bdev(btp);
+ 	return iomap_swapfile_activate(sis, swap_file, span,
+ 			&xfs_read_iomap_ops);
+ }
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 867645b74d88..e094932869f6 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -62,10 +62,10 @@ xfs_zero_extent(
+ 	xfs_daddr_t		sector = xfs_fsb_to_db(ip, start_fsb);
+ 	sector_t		block = XFS_BB_TO_FSBT(mp, sector);
+ 
+-	return blkdev_issue_zeroout(target->bt_bdev,
+-		block << (mp->m_super->s_blocksize_bits - 9),
+-		count_fsb << (mp->m_super->s_blocksize_bits - 9),
+-		GFP_NOFS, 0);
++	return xfs_buftarg_zeroout(target,
++			block << (mp->m_super->s_blocksize_bits - 9),
++			count_fsb << (mp->m_super->s_blocksize_bits - 9),
++			GFP_NOFS, 0);
+ }
+ 
+ #ifdef CONFIG_XFS_RT
 diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 2bea2c3f9ead..7dfc1db566fa 100644
+index 7dfc1db566fa..2ec8d39def9c 100644
 --- a/fs/xfs/xfs_buf.c
 +++ b/fs/xfs/xfs_buf.c
-@@ -570,7 +570,7 @@ xfs_buf_find_lock(
+@@ -21,6 +21,7 @@
+ #include "xfs_errortag.h"
+ #include "xfs_error.h"
+ #include "xfs_ag.h"
++#include "scrub/xfile.h"
  
- static inline int
- xfs_buf_lookup(
--	struct xfs_perag	*pag,
-+	struct rhashtable	*bufhash,
- 	struct xfs_buf_map	*map,
- 	xfs_buf_flags_t		flags,
- 	struct xfs_buf		**bpp)
-@@ -579,7 +579,7 @@ xfs_buf_lookup(
+ struct kmem_cache *xfs_buf_cache;
+ 
+@@ -1554,6 +1555,36 @@ xfs_buf_ioapply_map(
+ 
+ }
+ 
++static inline void
++xfs_buf_ioapply_in_memory(
++	struct xfs_buf		*bp)
++{
++	struct xfile		*xfile = bp->b_target->bt_xfile;
++	loff_t			pos = BBTOB(xfs_buf_daddr(bp));
++	size_t			size = BBTOB(bp->b_length);
++	int			error;
++
++	atomic_inc(&bp->b_io_remaining);
++
++	if (bp->b_map_count > 1) {
++		/* We don't need or support multi-map buffers. */
++		ASSERT(0);
++		error = -EIO;
++	} else if (bp->b_flags & XBF_WRITE) {
++		error = xfile_obj_store(xfile, bp->b_addr, size, pos);
++	} else {
++		error = xfile_obj_load(xfile, bp->b_addr, size, pos);
++	}
++	if (error)
++		cmpxchg(&bp->b_io_error, 0, error);
++
++	if (!bp->b_error && xfs_buf_is_vmapped(bp) && (bp->b_flags & XBF_READ))
++		invalidate_kernel_vmap_range(bp->b_addr, xfs_buf_vmap_len(bp));
++
++	if (atomic_dec_and_test(&bp->b_io_remaining) == 1)
++		xfs_buf_ioend(bp);
++}
++
+ STATIC void
+ _xfs_buf_ioapply(
+ 	struct xfs_buf	*bp)
+@@ -1611,6 +1642,11 @@ _xfs_buf_ioapply(
+ 	/* we only use the buffer cache for meta-data */
+ 	op |= REQ_META;
+ 
++	if (bp->b_target->bt_flags & XFS_BUFTARG_IN_MEMORY) {
++		xfs_buf_ioapply_in_memory(bp);
++		return;
++	}
++
+ 	/*
+ 	 * Walk all the vectors issuing IO on them. Set up the initial offset
+ 	 * into the buffer and the desired IO size before we start -
+@@ -1978,9 +2014,11 @@ xfs_free_buftarg(
+ 	if (btp->bt_flags & XFS_BUFTARG_SELF_CACHED)
+ 		rhashtable_destroy(&btp->bt_bufhash);
+ 
+-	blkdev_issue_flush(btp->bt_bdev);
+-	invalidate_bdev(btp->bt_bdev);
+-	fs_put_dax(btp->bt_daxdev, btp->bt_mount);
++	if (!(btp->bt_flags & XFS_BUFTARG_IN_MEMORY)) {
++		blkdev_issue_flush(btp->bt_bdev);
++		invalidate_bdev(btp->bt_bdev);
++		fs_put_dax(btp->bt_daxdev, btp->bt_mount);
++	}
+ 
+ 	kmem_free(btp);
+ }
+@@ -2024,12 +2062,13 @@ xfs_setsize_buftarg_early(
+ static struct xfs_buftarg *
+ __xfs_alloc_buftarg(
+ 	struct xfs_mount	*mp,
+-	unsigned int		flags)
++	unsigned int		flags,
++	xfs_km_flags_t		km_flags)
+ {
+ 	struct xfs_buftarg	*btp;
  	int			error;
  
- 	rcu_read_lock();
--	bp = rhashtable_lookup(&pag->pag_buf_hash, map, xfs_buf_hash_params);
-+	bp = rhashtable_lookup(bufhash, map, xfs_buf_hash_params);
- 	if (!bp || !atomic_inc_not_zero(&bp->b_hold)) {
- 		rcu_read_unlock();
- 		return -ENOENT;
-@@ -605,6 +605,8 @@ static int
- xfs_buf_find_insert(
- 	struct xfs_buftarg	*btp,
- 	struct xfs_perag	*pag,
-+	spinlock_t		*hashlock,
-+	struct rhashtable	*bufhash,
- 	struct xfs_buf_map	*cmap,
- 	struct xfs_buf_map	*map,
- 	int			nmaps,
-@@ -632,18 +634,18 @@ xfs_buf_find_insert(
- 			goto out_free_buf;
- 	}
+-	btp = kmem_zalloc(sizeof(*btp), KM_NOFS);
++	btp = kmem_zalloc(sizeof(*btp), KM_NOFS | km_flags);
+ 	if (!btp)
+ 		return NULL;
  
--	spin_lock(&pag->pag_buf_lock);
--	bp = rhashtable_lookup_get_insert_fast(&pag->pag_buf_hash,
--			&new_bp->b_rhash_head, xfs_buf_hash_params);
-+	spin_lock(hashlock);
-+	bp = rhashtable_lookup_get_insert_fast(bufhash, &new_bp->b_rhash_head,
-+			xfs_buf_hash_params);
- 	if (IS_ERR(bp)) {
- 		error = PTR_ERR(bp);
--		spin_unlock(&pag->pag_buf_lock);
-+		spin_unlock(hashlock);
- 		goto out_free_buf;
- 	}
- 	if (bp) {
- 		/* found an existing buffer */
- 		atomic_inc(&bp->b_hold);
--		spin_unlock(&pag->pag_buf_lock);
-+		spin_unlock(hashlock);
- 		error = xfs_buf_find_lock(bp, flags);
- 		if (error)
- 			xfs_buf_rele(bp);
-@@ -654,14 +656,16 @@ xfs_buf_find_insert(
+@@ -2090,7 +2129,7 @@ xfs_alloc_buftarg(
+ 	ops = &xfs_dax_holder_operations;
+ #endif
  
- 	/* The new buffer keeps the perag reference until it is freed. */
- 	new_bp->b_pag = pag;
--	spin_unlock(&pag->pag_buf_lock);
-+	new_bp->b_state |= XFS_BSTATE_CACHED;
-+	spin_unlock(hashlock);
- 	*bpp = new_bp;
- 	return 0;
+-	btp = __xfs_alloc_buftarg(mp, 0);
++	btp = __xfs_alloc_buftarg(mp, 0, 0);
+ 	if (!btp)
+ 		return NULL;
  
- out_free_buf:
- 	xfs_buf_free(new_bp);
- out_drop_pag:
--	xfs_perag_put(pag);
-+	if (pag)
-+		xfs_perag_put(pag);
- 	return error;
- }
- 
-@@ -678,6 +682,8 @@ xfs_buf_get_map(
- 	xfs_buf_flags_t		flags,
- 	struct xfs_buf		**bpp)
- {
-+	spinlock_t		*hashlock;
-+	struct rhashtable	*bufhash;
- 	struct xfs_perag	*pag;
- 	struct xfs_buf		*bp = NULL;
- 	struct xfs_buf_map	cmap = { .bm_bn = map[0].bm_bn };
-@@ -693,10 +699,18 @@ xfs_buf_get_map(
- 	if (error)
- 		return error;
- 
--	pag = xfs_perag_get(btp->bt_mount,
--			    xfs_daddr_to_agno(btp->bt_mount, cmap.bm_bn));
-+	if (btp->bt_flags & XFS_BUFTARG_SELF_CACHED) {
-+		pag = NULL;
-+		hashlock = &btp->bt_hashlock;
-+		bufhash = &btp->bt_bufhash;
-+	} else {
-+		pag = xfs_perag_get(btp->bt_mount,
-+				xfs_daddr_to_agno(btp->bt_mount, cmap.bm_bn));
-+		hashlock = &pag->pag_buf_lock;
-+		bufhash = &pag->pag_buf_hash;
-+	}
- 
--	error = xfs_buf_lookup(pag, &cmap, flags, &bp);
-+	error = xfs_buf_lookup(bufhash, &cmap, flags, &bp);
- 	if (error && error != -ENOENT)
- 		goto out_put_perag;
- 
-@@ -708,13 +722,14 @@ xfs_buf_get_map(
- 			goto out_put_perag;
- 
- 		/* xfs_buf_find_insert() consumes the perag reference. */
--		error = xfs_buf_find_insert(btp, pag, &cmap, map, nmaps,
--				flags, &bp);
-+		error = xfs_buf_find_insert(btp, pag, hashlock, bufhash, &cmap,
-+				map, nmaps, flags, &bp);
- 		if (error)
- 			return error;
- 	} else {
- 		XFS_STATS_INC(btp->bt_mount, xb_get_locked);
--		xfs_perag_put(pag);
-+		if (pag)
-+			xfs_perag_put(pag);
- 	}
- 
- 	/* We do not hold a perag reference anymore. */
-@@ -742,7 +757,8 @@ xfs_buf_get_map(
- 	return 0;
- 
- out_put_perag:
--	xfs_perag_put(pag);
-+	if (pag)
-+		xfs_perag_put(pag);
- 	return error;
- }
- 
-@@ -996,12 +1012,14 @@ xfs_buf_rele(
- 	struct xfs_buf		*bp)
- {
- 	struct xfs_perag	*pag = bp->b_pag;
-+	spinlock_t		*hashlock;
-+	struct rhashtable	*bufhash;
- 	bool			release;
- 	bool			freebuf = false;
- 
- 	trace_xfs_buf_rele(bp, _RET_IP_);
- 
--	if (!pag) {
-+	if (!(bp->b_state & XFS_BSTATE_CACHED)) {
- 		ASSERT(list_empty(&bp->b_lru));
- 		if (atomic_dec_and_test(&bp->b_hold)) {
- 			xfs_buf_ioacct_dec(bp);
-@@ -1012,6 +1030,14 @@ xfs_buf_rele(
- 
- 	ASSERT(atomic_read(&bp->b_hold) > 0);
- 
-+	if (bp->b_target->bt_flags & XFS_BUFTARG_SELF_CACHED) {
-+		hashlock = &bp->b_target->bt_hashlock;
-+		bufhash = &bp->b_target->bt_bufhash;
-+	} else {
-+		hashlock = &pag->pag_buf_lock;
-+		bufhash = &pag->pag_buf_hash;
-+	}
-+
- 	/*
- 	 * We grab the b_lock here first to serialise racing xfs_buf_rele()
- 	 * calls. The pag_buf_lock being taken on the last reference only
-@@ -1023,7 +1049,7 @@ xfs_buf_rele(
- 	 * leading to a use-after-free scenario.
- 	 */
- 	spin_lock(&bp->b_lock);
--	release = atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock);
-+	release = atomic_dec_and_lock(&bp->b_hold, hashlock);
- 	if (!release) {
- 		/*
- 		 * Drop the in-flight state if the buffer is already on the LRU
-@@ -1048,7 +1074,7 @@ xfs_buf_rele(
- 			bp->b_state &= ~XFS_BSTATE_DISPOSE;
- 			atomic_inc(&bp->b_hold);
- 		}
--		spin_unlock(&pag->pag_buf_lock);
-+		spin_unlock(hashlock);
- 	} else {
- 		/*
- 		 * most of the time buffers will already be removed from the
-@@ -1063,10 +1089,13 @@ xfs_buf_rele(
- 		}
- 
- 		ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
--		rhashtable_remove_fast(&pag->pag_buf_hash, &bp->b_rhash_head,
--				       xfs_buf_hash_params);
--		spin_unlock(&pag->pag_buf_lock);
--		xfs_perag_put(pag);
-+		rhashtable_remove_fast(bufhash, &bp->b_rhash_head,
-+				xfs_buf_hash_params);
-+		spin_unlock(hashlock);
-+		if (pag)
-+			xfs_perag_put(pag);
-+		bp->b_state &= ~XFS_BSTATE_CACHED;
-+		bp->b_pag = NULL;
- 		freebuf = true;
- 	}
- 
-@@ -1946,6 +1975,8 @@ xfs_free_buftarg(
- 	ASSERT(percpu_counter_sum(&btp->bt_io_count) == 0);
- 	percpu_counter_destroy(&btp->bt_io_count);
- 	list_lru_destroy(&btp->bt_lru);
-+	if (btp->bt_flags & XFS_BUFTARG_SELF_CACHED)
-+		rhashtable_destroy(&btp->bt_bufhash);
- 
- 	blkdev_issue_flush(btp->bt_bdev);
- 	invalidate_bdev(btp->bt_bdev);
-@@ -1990,24 +2021,20 @@ xfs_setsize_buftarg_early(
- 	return xfs_setsize_buftarg(btp, bdev_logical_block_size(bdev));
- }
- 
--struct xfs_buftarg *
--xfs_alloc_buftarg(
-+static struct xfs_buftarg *
-+__xfs_alloc_buftarg(
- 	struct xfs_mount	*mp,
--	struct block_device	*bdev)
-+	unsigned int		flags)
- {
--	xfs_buftarg_t		*btp;
--	const struct dax_holder_operations *ops = NULL;
-+	struct xfs_buftarg	*btp;
-+	int			error;
- 
--#if defined(CONFIG_FS_DAX) && defined(CONFIG_MEMORY_FAILURE)
--	ops = &xfs_dax_holder_operations;
--#endif
- 	btp = kmem_zalloc(sizeof(*btp), KM_NOFS);
-+	if (!btp)
-+		return NULL;
- 
- 	btp->bt_mount = mp;
--	btp->bt_dev =  bdev->bd_dev;
--	btp->bt_bdev = bdev;
--	btp->bt_daxdev = fs_dax_get_by_bdev(bdev, &btp->bt_dax_part_off,
--					    mp, ops);
-+	btp->bt_flags = flags;
- 
- 	/*
- 	 * Buffer IO error rate limiting. Limit it to no more than 10 messages
-@@ -2016,9 +2043,6 @@ xfs_alloc_buftarg(
- 	ratelimit_state_init(&btp->bt_ioerror_rl, 30 * HZ,
- 			     DEFAULT_RATELIMIT_BURST);
- 
--	if (xfs_setsize_buftarg_early(btp, bdev))
--		goto error_free;
--
- 	if (list_lru_init(&btp->bt_lru))
- 		goto error_free;
- 
-@@ -2032,8 +2056,18 @@ xfs_alloc_buftarg(
- 	if (register_shrinker(&btp->bt_shrinker, "xfs-buf:%s",
- 			      mp->m_super->s_id))
- 		goto error_pcpu;
-+
-+	if (btp->bt_flags & XFS_BUFTARG_SELF_CACHED) {
-+		spin_lock_init(&btp->bt_hashlock);
-+		error = rhashtable_init(&btp->bt_bufhash, &xfs_buf_hash_params);
-+		if (error)
-+			goto error_shrinker;
-+	}
-+
- 	return btp;
- 
-+error_shrinker:
-+	unregister_shrinker(&btp->bt_shrinker);
- error_pcpu:
- 	percpu_counter_destroy(&btp->bt_io_count);
- error_lru:
-@@ -2043,6 +2077,38 @@ xfs_alloc_buftarg(
+@@ -2109,6 +2148,35 @@ xfs_alloc_buftarg(
  	return NULL;
  }
  
-+/* Allocate a buffer cache target for a persistent block device. */
-+struct xfs_buftarg *
-+xfs_alloc_buftarg(
++#ifdef CONFIG_XFS_IN_MEMORY_FILE
++/* Allocate a buffer cache target for a memory-backed file. */
++int
++xfs_alloc_memory_buftarg(
 +	struct xfs_mount	*mp,
-+	struct block_device	*bdev)
++	struct xfile		*xfile,
++	struct xfs_buftarg	**btpp)
 +{
 +	struct xfs_buftarg	*btp;
-+	const struct dax_holder_operations *ops = NULL;
 +
-+#if defined(CONFIG_FS_DAX) && defined(CONFIG_MEMORY_FAILURE)
-+	ops = &xfs_dax_holder_operations;
-+#endif
-+
-+	btp = __xfs_alloc_buftarg(mp, 0);
++	btp = __xfs_alloc_buftarg(mp,
++			XFS_BUFTARG_SELF_CACHED | XFS_BUFTARG_IN_MEMORY,
++			KM_MAYFAIL);
 +	if (!btp)
-+		return NULL;
++		return -ENOMEM;
 +
-+	btp->bt_dev =  bdev->bd_dev;
-+	btp->bt_bdev = bdev;
-+	btp->bt_daxdev = fs_dax_get_by_bdev(bdev, &btp->bt_dax_part_off,
-+					    mp, ops);
++	btp->bt_xfile = xfile;
++	btp->bt_dev = (dev_t)-1U;
 +
-+	if (xfs_setsize_buftarg_early(btp, bdev))
-+		goto error_free;
++	btp->bt_meta_sectorsize = SECTOR_SIZE;
++	btp->bt_meta_sectormask = SECTOR_SIZE - 1;
++	btp->bt_logical_sectorsize = SECTOR_SIZE;
++	btp->bt_logical_sectormask = SECTOR_SIZE - 1;
 +
-+	return btp;
-+
-+error_free:
-+	xfs_free_buftarg(btp);
-+	return NULL;
++	*btpp = btp;
++	return 0;
 +}
++#endif /* CONFIG_XFS_IN_MEMORY_FILE */
 +
  /*
   * Cancel a delayed write list.
   *
 diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 467ddb2e2f0d..d7bf7f657e99 100644
+index d7bf7f657e99..dcae77dabdcc 100644
 --- a/fs/xfs/xfs_buf.h
 +++ b/fs/xfs/xfs_buf.h
-@@ -82,6 +82,7 @@ typedef unsigned int xfs_buf_flags_t;
+@@ -21,6 +21,7 @@ extern struct kmem_cache *xfs_buf_cache;
+  *	Base types
   */
- #define XFS_BSTATE_DISPOSE	 (1 << 0)	/* buffer being discarded */
- #define XFS_BSTATE_IN_FLIGHT	 (1 << 1)	/* I/O in flight */
-+#define XFS_BSTATE_CACHED	 (1 << 2)	/* cached buffer */
+ struct xfs_buf;
++struct xfile;
  
- /*
-  * The xfs_buftarg contains 2 notions of "sector size" -
-@@ -102,11 +103,16 @@ typedef struct xfs_buftarg {
+ #define XFS_BUF_DADDR_NULL	((xfs_daddr_t) (-1LL))
+ 
+@@ -99,7 +100,10 @@ typedef unsigned int xfs_buf_flags_t;
+  */
+ typedef struct xfs_buftarg {
+ 	dev_t			bt_dev;
+-	struct block_device	*bt_bdev;
++	union {
++		struct block_device	*bt_bdev;
++		struct xfile		*bt_xfile;
++	};
  	struct dax_device	*bt_daxdev;
  	u64			bt_dax_part_off;
  	struct xfs_mount	*bt_mount;
-+	unsigned int		bt_flags;
- 	unsigned int		bt_meta_sectorsize;
- 	size_t			bt_meta_sectormask;
- 	size_t			bt_logical_sectorsize;
- 	size_t			bt_logical_sectormask;
+@@ -124,6 +128,20 @@ typedef struct xfs_buftarg {
+ /* the xfs_buftarg indexes buffers via bt_buf_hash */
+ #define XFS_BUFTARG_SELF_CACHED	(1U << 0)
  
-+	/* self-caching buftargs */
-+	spinlock_t		bt_hashlock;
-+	struct rhashtable	bt_bufhash;
++/* in-memory buftarg via bt_xfile */
++#ifdef CONFIG_XFS_IN_MEMORY_FILE
++# define XFS_BUFTARG_IN_MEMORY	(1U << 1)
++#else
++# define XFS_BUFTARG_IN_MEMORY	(0)
++#endif
 +
- 	/* LRU control structures */
- 	struct shrinker		bt_shrinker;
- 	struct list_lru		bt_lru;
-@@ -115,6 +121,9 @@ typedef struct xfs_buftarg {
- 	struct ratelimit_state	bt_ioerror_rl;
- } xfs_buftarg_t;
- 
-+/* the xfs_buftarg indexes buffers via bt_buf_hash */
-+#define XFS_BUFTARG_SELF_CACHED	(1U << 0)
++static inline bool
++xfs_buftarg_in_memory(
++	struct xfs_buftarg	*btp)
++{
++	return btp->bt_flags & XFS_BUFTARG_IN_MEMORY;
++}
 +
  #define XB_PAGES	2
  
  struct xfs_buf_map {
+@@ -372,13 +390,60 @@ xfs_buf_update_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
+  */
+ struct xfs_buftarg *xfs_alloc_buftarg(struct xfs_mount *mp,
+ 		struct block_device *bdev);
++#ifdef CONFIG_XFS_IN_MEMORY_FILE
++int xfs_alloc_memory_buftarg(struct xfs_mount *mp, struct xfile *xfile,
++		struct xfs_buftarg **btpp);
++#endif
+ extern void xfs_free_buftarg(struct xfs_buftarg *);
+ extern void xfs_buftarg_wait(struct xfs_buftarg *);
+ extern void xfs_buftarg_drain(struct xfs_buftarg *);
+ extern int xfs_setsize_buftarg(struct xfs_buftarg *, unsigned int);
+ 
+-#define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_bdev)
+-#define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
++static inline struct block_device *
++xfs_buftarg_bdev(struct xfs_buftarg *btp)
++{
++	if (btp->bt_flags & XFS_BUFTARG_IN_MEMORY)
++		return NULL;
++	return btp->bt_bdev;
++}
++
++static inline unsigned int
++xfs_getsize_buftarg(struct xfs_buftarg *btp)
++{
++	if (btp->bt_flags & XFS_BUFTARG_IN_MEMORY)
++		return SECTOR_SIZE;
++	return block_size(btp->bt_bdev);
++}
++
++static inline bool
++xfs_readonly_buftarg(struct xfs_buftarg *btp)
++{
++	if (btp->bt_flags & XFS_BUFTARG_IN_MEMORY)
++		return false;
++	return bdev_read_only(btp->bt_bdev);
++}
++
++static inline int
++xfs_buftarg_flush(struct xfs_buftarg *btp)
++{
++	if (btp->bt_flags & XFS_BUFTARG_IN_MEMORY)
++		return 0;
++	return blkdev_issue_flush(btp->bt_bdev);
++}
++
++static inline int
++xfs_buftarg_zeroout(
++	struct xfs_buftarg	*btp,
++	sector_t		sector,
++	sector_t		nr_sects,
++	gfp_t			gfp_mask,
++	unsigned		flags)
++{
++	if (btp->bt_flags & XFS_BUFTARG_IN_MEMORY)
++		return -EOPNOTSUPP;
++	return blkdev_issue_zeroout(btp->bt_bdev, sector, nr_sects, gfp_mask,
++			flags);
++}
+ 
+ int xfs_buf_reverify(struct xfs_buf *bp, const struct xfs_buf_ops *ops);
+ bool xfs_verify_magic(struct xfs_buf *bp, __be32 dmagic);
+diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+index 3fa6b0ab9ed6..44658cc7d3f2 100644
+--- a/fs/xfs/xfs_discard.c
++++ b/fs/xfs/xfs_discard.c
+@@ -29,7 +29,7 @@ xfs_trim_extents(
+ 	xfs_daddr_t		minlen,
+ 	uint64_t		*blocks_trimmed)
+ {
+-	struct block_device	*bdev = mp->m_ddev_targp->bt_bdev;
++	struct block_device	*bdev = xfs_buftarg_bdev(mp->m_ddev_targp);
+ 	struct xfs_btree_cur	*cur;
+ 	struct xfs_buf		*agbp;
+ 	struct xfs_agf		*agf;
+@@ -154,8 +154,8 @@ xfs_ioc_trim(
+ 	struct xfs_mount		*mp,
+ 	struct fstrim_range __user	*urange)
+ {
+-	unsigned int		granularity =
+-		bdev_discard_granularity(mp->m_ddev_targp->bt_bdev);
++	struct block_device	*bdev = xfs_buftarg_bdev(mp->m_ddev_targp);
++	unsigned int		granularity = bdev_discard_granularity(bdev);
+ 	struct fstrim_range	range;
+ 	xfs_daddr_t		start, end, minlen;
+ 	xfs_agnumber_t		start_agno, end_agno, agno;
+@@ -164,7 +164,7 @@ xfs_ioc_trim(
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
+-	if (!bdev_max_discard_sectors(mp->m_ddev_targp->bt_bdev))
++	if (!bdev_max_discard_sectors(bdev))
+ 		return -EOPNOTSUPP;
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 595a5bcf46b9..c4bdadd8fa71 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -164,9 +164,9 @@ xfs_file_fsync(
+ 	 * inode size in case of an extending write.
+ 	 */
+ 	if (XFS_IS_REALTIME_INODE(ip))
+-		error = blkdev_issue_flush(mp->m_rtdev_targp->bt_bdev);
++		error = xfs_buftarg_flush(mp->m_rtdev_targp);
+ 	else if (mp->m_logdev_targp != mp->m_ddev_targp)
+-		error = blkdev_issue_flush(mp->m_ddev_targp->bt_bdev);
++		error = xfs_buftarg_flush(mp->m_ddev_targp);
+ 
+ 	/*
+ 	 * Any inode that has dirty modifications in the log is pinned.  The
+@@ -189,7 +189,7 @@ xfs_file_fsync(
+ 	 */
+ 	if (!log_flushed && !XFS_IS_REALTIME_INODE(ip) &&
+ 	    mp->m_logdev_targp == mp->m_ddev_targp) {
+-		err2 = blkdev_issue_flush(mp->m_ddev_targp->bt_bdev);
++		err2 = xfs_buftarg_flush(mp->m_ddev_targp);
+ 		if (err2 && !error)
+ 			error = err2;
+ 	}
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 020111f0f2a2..4b2a02a08dfa 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1762,6 +1762,7 @@ xfs_ioc_setlabel(
+ 	char			__user *newlabel)
+ {
+ 	struct xfs_sb		*sbp = &mp->m_sb;
++	struct block_device	*bdev = xfs_buftarg_bdev(mp->m_ddev_targp);
+ 	char			label[XFSLABEL_MAX + 1];
+ 	size_t			len;
+ 	int			error;
+@@ -1808,7 +1809,7 @@ xfs_ioc_setlabel(
+ 	error = xfs_update_secondary_sbs(mp);
+ 	mutex_unlock(&mp->m_growlock);
+ 
+-	invalidate_bdev(mp->m_ddev_targp->bt_bdev);
++	invalidate_bdev(bdev);
+ 
+ out:
+ 	mnt_drop_write_file(filp);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index c2ba03281daf..99a7c271c353 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -129,7 +129,7 @@ xfs_bmbt_to_iomap(
+ 	if (mapping_flags & IOMAP_DAX)
+ 		iomap->dax_dev = target->bt_daxdev;
+ 	else
+-		iomap->bdev = target->bt_bdev;
++		iomap->bdev = xfs_buftarg_bdev(target);
+ 	iomap->flags = iomap_flags;
+ 
+ 	if (xfs_ipincount(ip) &&
+@@ -154,7 +154,7 @@ xfs_hole_to_iomap(
+ 	iomap->type = IOMAP_HOLE;
+ 	iomap->offset = XFS_FSB_TO_B(ip->i_mount, offset_fsb);
+ 	iomap->length = XFS_FSB_TO_B(ip->i_mount, end_fsb - offset_fsb);
+-	iomap->bdev = target->bt_bdev;
++	iomap->bdev = xfs_buftarg_bdev(target);
+ 	iomap->dax_dev = target->bt_daxdev;
+ }
+ 
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index fc61cc024023..b32a8e57f576 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1938,7 +1938,7 @@ xlog_write_iclog(
+ 	 * writeback throttle from throttling log writes behind background
+ 	 * metadata writeback and causing priority inversions.
+ 	 */
+-	bio_init(&iclog->ic_bio, log->l_targ->bt_bdev, iclog->ic_bvec,
++	bio_init(&iclog->ic_bio, xfs_buftarg_bdev(log->l_targ), iclog->ic_bvec,
+ 		 howmany(count, PAGE_SIZE),
+ 		 REQ_OP_WRITE | REQ_META | REQ_SYNC | REQ_IDLE);
+ 	iclog->ic_bio.bi_iter.bi_sector = log->l_logBBstart + bno;
+@@ -1959,7 +1959,7 @@ xlog_write_iclog(
+ 		 * avoid shutdown re-entering this path and erroring out again.
+ 		 */
+ 		if (log->l_targ != log->l_mp->m_ddev_targp &&
+-		    blkdev_issue_flush(log->l_mp->m_ddev_targp->bt_bdev)) {
++		    xfs_buftarg_flush(log->l_mp->m_ddev_targp)) {
+ 			xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
+ 			return;
+ 		}
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index eccbfb99e894..12cd2874048f 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -742,7 +742,8 @@ xlog_discard_busy_extents(
+ 		trace_xfs_discard_extent(mp, busyp->agno, busyp->bno,
+ 					 busyp->length);
+ 
+-		error = __blkdev_issue_discard(mp->m_ddev_targp->bt_bdev,
++		error = __blkdev_issue_discard(
++				xfs_buftarg_bdev(mp->m_ddev_targp),
+ 				XFS_AGB_TO_DADDR(mp, busyp->agno, busyp->bno),
+ 				XFS_FSB_TO_BB(mp, busyp->length),
+ 				GFP_NOFS, &bio);
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 322eb2ee6c55..6b1f37bc3e95 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -137,7 +137,8 @@ xlog_do_io(
+ 	nbblks = round_up(nbblks, log->l_sectBBsize);
+ 	ASSERT(nbblks > 0);
+ 
+-	error = xfs_rw_bdev(log->l_targ->bt_bdev, log->l_logBBstart + blk_no,
++	error = xfs_rw_bdev(xfs_buftarg_bdev(log->l_targ),
++			log->l_logBBstart + blk_no,
+ 			BBTOB(nbblks), data, op);
+ 	if (error && !xlog_is_shutdown(log)) {
+ 		xfs_alert(log->l_mp,
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 020ff2d93f23..8841947bdce7 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -397,13 +397,13 @@ xfs_close_devices(
+ 	struct xfs_mount	*mp)
+ {
+ 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp) {
+-		struct block_device *logdev = mp->m_logdev_targp->bt_bdev;
++		struct block_device *logdev = xfs_buftarg_bdev(mp->m_logdev_targp);
+ 
+ 		xfs_free_buftarg(mp->m_logdev_targp);
+ 		xfs_blkdev_put(logdev);
+ 	}
+ 	if (mp->m_rtdev_targp) {
+-		struct block_device *rtdev = mp->m_rtdev_targp->bt_bdev;
++		struct block_device *rtdev = xfs_buftarg_bdev(mp->m_rtdev_targp);
+ 
+ 		xfs_free_buftarg(mp->m_rtdev_targp);
+ 		xfs_blkdev_put(rtdev);
 
