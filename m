@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61088C4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:39:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B46CC4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:40:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236264AbiLaCj4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 21:39:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57736 "EHLO
+        id S236168AbiLaCkM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 21:40:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236164AbiLaCjz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:39:55 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B8182DED
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:39:55 -0800 (PST)
+        with ESMTP id S236164AbiLaCkL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:40:11 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B11B02DED
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:40:10 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AE7FC61CCF
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:39:54 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15D31C433D2;
-        Sat, 31 Dec 2022 02:39:54 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4BF8B61CCF
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:40:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7D47C433D2;
+        Sat, 31 Dec 2022 02:40:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672454394;
-        bh=O39Y4n7rhLCTqAdJSyUNYIm0gcM4UcYgZ0SWiCppngI=;
+        s=k20201202; t=1672454409;
+        bh=02GBLLvxLye5fdM6Ogk3SxhPv9oIBiNrBLWrwyERkRY=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=H+Tdu2i3+glfF9PXwamUY9DIpSDPPsNiw0eckUPou9Y+KeVl+5psawTwcjfSHJTQI
-         PmtKgnxR9Y8bXspQJlbdlKVVdqen9oiyiOLb/sFg2EDBENIRUzCp7FbcoFB1BbOKSq
-         wDcbg5c9WeizDBAhax7/q6LICs4chpoPIlTDQa6wYbgd6R4WjLSfSOIb/IJyB2isdy
-         4aYkwpiQlpX1/UKkereQWunRWOXA/QgAu1uk7Xl5ZrLbN9QFDiamuaBy8aChdyYq45
-         LvRTnAP9Y1dmzXslt1p1QvzyFLgdddAIrlQ1B0OYHCl7K6wPW81r+d7lq4o+p5aUZW
-         qpC4aUnso8PUg==
-Subject: [PATCH 38/45] xfs_io: display rt group in verbose bmap output
+        b=Qmbiz4MZE9tjKaqV7hZc9UbuHr/AfMIjDc8CdVjAV16Ew+pJY4j3aQ/MYja6u/RMk
+         7PgD5GiM2a+ESaZ9/rffeOc48DmzzNK+3bw9JXs9eUr4bBc0asSEtMo57UDNHLS9ns
+         xf/28iou07QnzlumctDewjBDWj9Sv3TsWVLE2BdXAw76GrSpsCSnJOB8C7poceovnR
+         cuytYoXEY621T49kgkPPjj0VIHcMtSFfT3WoLLmlD35HR5hrZ97TeHRceixYA3op2D
+         VTxMdUU6IlAh+TAaBK0E1nyUUUyPF+Y0PD0JTEqAkOZkJgmX2sFi1f68ID7y6d/bcb
+         k7FBUV2KbX5XQ==
+Subject: [PATCH 39/45] xfs_io: display rt group in verbose fsmap output
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:19:48 -0800
-Message-ID: <167243878860.731133.14232316103222149536.stgit@magnolia>
+Message-ID: <167243878873.731133.4190432176522703778.stgit@magnolia>
 In-Reply-To: <167243878346.731133.14642166452774753637.stgit@magnolia>
 References: <167243878346.731133.14642166452774753637.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,79 +49,82 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Display the rt group number in the bmap -v output, just like we do for
+Display the rt group number in the fsmap output, just like we do for
 regular data files.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- io/bmap.c |   30 ++++++++++++++++++++++--------
- 1 file changed, 22 insertions(+), 8 deletions(-)
+ io/fsmap.c |   23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
 
 
-diff --git a/io/bmap.c b/io/bmap.c
-index 27383ca6037..a78e0c65440 100644
---- a/io/bmap.c
-+++ b/io/bmap.c
-@@ -264,9 +264,16 @@ bmap_f(
+diff --git a/io/fsmap.c b/io/fsmap.c
+index 7db51847e2b..cb70f86cb96 100644
+--- a/io/fsmap.c
++++ b/io/fsmap.c
+@@ -14,6 +14,7 @@
  
- 		foff_w = boff_w = aoff_w = MINRANGE_WIDTH;
- 		tot_w = MINTOT_WIDTH;
--		if (is_rt)
--			sunit = swidth = bbperag = 0;
--		else {
-+		if (is_rt) {
-+			if (fsgeo.rgcount == 0) {
-+				bbperag = 0;
-+			} else {
-+				bbperag = (off64_t)fsgeo.rgblocks *
-+					  (off64_t)fsgeo.blocksize / BBSIZE;
-+			}
-+			sunit = 0;
-+			swidth = 0;
-+		} else {
- 			bbperag = (off64_t)fsgeo.agblocks *
- 				  (off64_t)fsgeo.blocksize / BBSIZE;
- 			sunit = (fsgeo.sunit * fsgeo.blocksize) / BBSIZE;
-@@ -295,7 +302,7 @@ bmap_f(
- 					(long long)(map[i + 1].bmv_block +
- 						map[i + 1].bmv_length - 1LL));
- 				boff_w = max(boff_w, strlen(bbuf));
--				if (!is_rt) {
-+				if (bbperag > 0) {
- 					agno = map[i + 1].bmv_block / bbperag;
- 					agoff = map[i + 1].bmv_block -
- 							(agno * bbperag);
-@@ -312,13 +319,20 @@ bmap_f(
- 					numlen(map[i+1].bmv_length, 10));
- 			}
- 		}
--		agno_w = is_rt ? 0 : max(MINAG_WIDTH, numlen(fsgeo.agcount, 10));
-+		if (is_rt) {
-+			if (fsgeo.rgcount > 0)
-+				agno_w = max(MINAG_WIDTH, numlen(fsgeo.rgcount, 10));
-+			else
-+				agno_w = 0;
-+		} else {
-+			agno_w = max(MINAG_WIDTH, numlen(fsgeo.agcount, 10));
-+		}
- 		printf("%4s: %-*s %-*s %*s %-*s %*s%s\n",
- 			_("EXT"),
- 			foff_w, _("FILE-OFFSET"),
- 			boff_w, is_rt ? _("RT-BLOCK-RANGE") : _("BLOCK-RANGE"),
--			agno_w, is_rt ? "" : _("AG"),
--			aoff_w, is_rt ? "" : _("AG-OFFSET"),
-+			agno_w, is_rt ? (fsgeo.rgcount ? _("RG") : "") : _("AG"),
-+			aoff_w, is_rt ? (fsgeo.rgcount ? _("RG-OFFSET") : "") : _("AG-OFFSET"),
- 			tot_w, _("TOTAL"),
- 			flg ? _(" FLAGS") : "");
- 		for (i = 0; i < egcnt; i++) {
-@@ -377,7 +391,7 @@ bmap_f(
- 						map[i + 1].bmv_length - 1LL));
- 				printf("%4d: %-*s %-*s", i, foff_w, rbuf,
- 					boff_w, bbuf);
--				if (!is_rt) {
-+				if (bbperag > 0) {
- 					agno = map[i + 1].bmv_block / bbperag;
- 					agoff = map[i + 1].bmv_block -
- 							(agno * bbperag);
+ static cmdinfo_t	fsmap_cmd;
+ static dev_t		xfs_data_dev;
++static dev_t		xfs_rt_dev;
+ 
+ static void
+ fsmap_help(void)
+@@ -170,7 +171,7 @@ dump_map_verbose(
+ 	unsigned long long	i;
+ 	struct fsmap		*p;
+ 	int			agno;
+-	off64_t			agoff, bperag;
++	off64_t			agoff, bperag, bperrtg;
+ 	int			foff_w, boff_w, aoff_w, tot_w, agno_w, own_w;
+ 	int			nr_w, dev_w;
+ 	char			rbuf[40], bbuf[40], abuf[40], obuf[40];
+@@ -185,6 +186,8 @@ dump_map_verbose(
+ 	tot_w = MINTOT_WIDTH;
+ 	bperag = (off64_t)fsgeo->agblocks *
+ 		  (off64_t)fsgeo->blocksize;
++	bperrtg = (off64_t)fsgeo->rgblocks *
++		  (off64_t)fsgeo->blocksize;
+ 	sunit = (fsgeo->sunit * fsgeo->blocksize);
+ 	swidth = (fsgeo->swidth * fsgeo->blocksize);
+ 
+@@ -243,6 +246,13 @@ dump_map_verbose(
+ 				"(%lld..%lld)",
+ 				(long long)BTOBBT(agoff),
+ 				(long long)BTOBBT(agoff + p->fmr_length - 1));
++		} else if (p->fmr_device == xfs_rt_dev && fsgeo->rgcount > 0) {
++			agno = p->fmr_physical / bperrtg;
++			agoff = p->fmr_physical - (agno * bperrtg);
++			snprintf(abuf, sizeof(abuf),
++				"(%lld..%lld)",
++				(long long)BTOBBT(agoff),
++				(long long)BTOBBT(agoff + p->fmr_length - 1));
+ 		} else
+ 			abuf[0] = 0;
+ 		aoff_w = max(aoff_w, strlen(abuf));
+@@ -315,6 +325,16 @@ dump_map_verbose(
+ 			snprintf(gbuf, sizeof(gbuf),
+ 				"%lld",
+ 				(long long)agno);
++		} else if (p->fmr_device == xfs_rt_dev && fsgeo->rgcount > 0) {
++			agno = p->fmr_physical / bperrtg;
++			agoff = p->fmr_physical - (agno * bperrtg);
++			snprintf(abuf, sizeof(abuf),
++				"(%lld..%lld)",
++				(long long)BTOBBT(agoff),
++				(long long)BTOBBT(agoff + p->fmr_length - 1));
++			snprintf(gbuf, sizeof(gbuf),
++				"%lld",
++				(long long)agno);
+ 		} else {
+ 			abuf[0] = 0;
+ 			gbuf[0] = 0;
+@@ -501,6 +521,7 @@ fsmap_f(
+ 	}
+ 	fs = fs_table_lookup(file->name, FS_MOUNT_POINT);
+ 	xfs_data_dev = fs ? fs->fs_datadev : 0;
++	xfs_rt_dev = fs ? fs->fs_rtdev : 0;
+ 
+ 	head->fmh_count = map_size;
+ 	do {
 
