@@ -2,43 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48CCBC4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 01:35:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9392BC4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 01:35:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235857AbiLaBfd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 20:35:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46894 "EHLO
+        id S235856AbiLaBfx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 20:35:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47110 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235856AbiLaBfc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 20:35:32 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E395DEB7
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 17:35:32 -0800 (PST)
+        with ESMTP id S235853AbiLaBfv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 20:35:51 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5292721B2
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 17:35:49 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B90FD61CC6
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 01:35:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C150C433EF;
-        Sat, 31 Dec 2022 01:35:31 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 04DB4B81E11
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 01:35:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B168FC433D2;
+        Sat, 31 Dec 2022 01:35:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672450531;
-        bh=4J2ubBY+hNfeB++cRx4hlG/dnyMgHM8xK592lFlBzZI=;
+        s=k20201202; t=1672450546;
+        bh=+y92eAdaacXVpso0oDsQ3b1gj32CA4Emzi4+ogFJ+o8=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=c0BB5hCTfSPLhbfrQB9wqKBV3yR+hlNlm/8MrSWhJv/QceauSx8aeajj4uwU4+Wqf
-         PVS25/0t9U0cyH0m3V4HQwNcDAqs7mKUZbsAo43MttVp90N1p7W8OH95a86qdCMRo9
-         a6PoLsvvTwr4Xo07hxczaB6jI6p+qiRphfArWuYkF2sdmez6caLS892ysdql3rq5XA
-         nHeT04lbeE3w7GBrCrxWhZ6VZ5pBpea11w3iYm6lvxmC9xJkDCirRiv4EveUq70haE
-         8pJv6wh8YISLvqbmwCNxfp85yfY2m1ntyY+iio5kpX13RJuYoF+W6rbMKIxcIL238t
-         CAQhuuvIZVlUg==
-Subject: [PATCH 2/2] xfs: support error injection when freeing rt extents
+        b=VFIr/2MA11ZXABzdkiJXOp8mwi+1+vi0/3l640XPhmJ5qkq3XniAi6rlg8m1tBvJf
+         GF2KffhGpiR9fBnFVAGgmCJKMEfXTrzkcaasB9tMX+Ko1uzh0kQWQiwh5X0/PA3abL
+         lCkFnejlkAbfO4xVjQm8lr6cvNSk303b/VPc9rRWCSWDkOVoab9d76ff3xpg/xpsxQ
+         3l3GHGHuOtSH+KyLM5UDhbCGqwsS916BzY1T3c6b2wD3+4pBemZwMN+/wtzl95m9n4
+         Hsz2OspfSp5ZaiuV8PxkyMoKl1vghN7falj7GjIrIBd2c5NU8CkN6zogK8jqRboQht
+         /MUonG0X6yZAQ==
+Subject: [PATCH 1/5] xfs: attach rtgroup objects to btree cursors
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 30 Dec 2022 14:18:08 -0800
-Message-ID: <167243868866.714671.584997460355004822.stgit@magnolia>
-In-Reply-To: <167243868836.714671.1578924317888085757.stgit@magnolia>
-References: <167243868836.714671.1578924317888085757.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:18:11 -0800
+Message-ID: <167243869175.714954.2927866081417377028.stgit@magnolia>
+In-Reply-To: <167243869156.714954.12346064053546135919.stgit@magnolia>
+References: <167243869156.714954.12346064053546135919.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,37 +49,56 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-A handful of fstests expect to be able to test what happens when extent
-free intents fail to actually free the extent.  Now that we're
-supporting EFIs for realtime extents, add to xfs_rtfree_extent the same
-injection point that exists in the regular extent freeing code.
+Make it so that we can attach realtime group objects to btree cursors.
+This will be crucial for enabling rmap btrees in realtime groups.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_rtbitmap.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ fs/xfs/libxfs/xfs_btree.c |    4 ++++
+ fs/xfs/libxfs/xfs_btree.h |    2 ++
+ 2 files changed, 6 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-index ccefbfc70f8b..a4cd7925492d 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.c
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -20,6 +20,7 @@
- #include "xfs_rtbitmap.h"
- #include "xfs_log.h"
- #include "xfs_buf_item.h"
-+#include "xfs_errortag.h"
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 00bc1dd73675..c02748e16075 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -31,6 +31,7 @@
+ #include "scrub/xfile.h"
+ #include "scrub/xfbtree.h"
+ #include "xfs_btree_mem.h"
++#include "xfs_rtgroup.h"
  
  /*
-  * Realtime allocator bitmap functions shared with userspace.
-@@ -1139,6 +1140,9 @@ xfs_rtfree_extent(
- 	ASSERT(mp->m_rbmip->i_itemp != NULL);
- 	ASSERT(xfs_isilocked(mp->m_rbmip, XFS_ILOCK_EXCL));
+  * Btree magic numbers.
+@@ -476,6 +477,9 @@ xfs_btree_del_cursor(
+ 	       xfs_is_shutdown(cur->bc_mp) || error != 0);
+ 	if (unlikely(cur->bc_flags & XFS_BTREE_STAGING))
+ 		kmem_free(cur->bc_ops);
++	if ((cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) &&
++	    !(cur->bc_flags & XFS_BTREE_IN_MEMORY) && cur->bc_ino.rtg)
++		xfs_rtgroup_put(cur->bc_ino.rtg);
+ 	if (!(cur->bc_flags & XFS_BTREE_LONG_PTRS) &&
+ 	    !(cur->bc_flags & XFS_BTREE_IN_MEMORY) && cur->bc_ag.pag)
+ 		xfs_perag_put(cur->bc_ag.pag);
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index b15bc77369cf..125f45731a54 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -12,6 +12,7 @@ struct xfs_mount;
+ struct xfs_trans;
+ struct xfs_ifork;
+ struct xfs_perag;
++struct xfs_rtgroup;
  
-+	if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_FREE_EXTENT))
-+		return -EIO;
-+
- 	error = xfs_rtcheck_alloc_range(mp, tp, start, len);
- 	if (error)
- 		return error;
+ /*
+  * Generic key, ptr and record wrapper structures.
+@@ -244,6 +245,7 @@ struct xfs_btree_cur_ag {
+ /* Btree-in-inode cursor information */
+ struct xfs_btree_cur_ino {
+ 	struct xfs_inode		*ip;
++	struct xfs_rtgroup		*rtg;	/* if realtime metadata */
+ 	struct xbtree_ifakeroot		*ifake;	/* for staging cursor */
+ 	int				allocated;
+ 	short				forksize;
 
