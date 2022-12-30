@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF763C3DA7D
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 01:04:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1D97C3DA7D
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 01:04:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235939AbiLaBEL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 20:04:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39974 "EHLO
+        id S235964AbiLaBE1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 20:04:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40004 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235932AbiLaBEK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 20:04:10 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FF4A1DDE4;
-        Fri, 30 Dec 2022 17:04:09 -0800 (PST)
+        with ESMTP id S235955AbiLaBEZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 20:04:25 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D4161DF10;
+        Fri, 30 Dec 2022 17:04:24 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id AE6F7B81DFB;
-        Sat, 31 Dec 2022 01:04:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A6F0C433EF;
-        Sat, 31 Dec 2022 01:04:06 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 4717BB81DE6;
+        Sat, 31 Dec 2022 01:04:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7208C433D2;
+        Sat, 31 Dec 2022 01:04:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672448646;
-        bh=rIYxkUDlz265Yg6+kEk3fy+cqf2vke66TjSyz3DKS8o=;
+        s=k20201202; t=1672448662;
+        bh=qnAwUDmrpu77SUHWkqtHLQytX9/85ucSuhO0+0RPtzA=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=VPcmaay+T4EGtEAAizR8RVqDC2IE4wvHbd0wmv/ne4oWOpxeMSoXwuFer52BhggkL
-         NobmV63uK2R4hsOOIS6Snv7pbsRihHOrAT2xTng2f3/zE45nMnOz0fe8eWu9a4keyx
-         YYJmWisE2x5N6bhEmfeNXSKNVXQ+UVC7fCeq7iqePJszWPq+KMqqLmWChzCNALzeJN
-         EsB+ETsGJZg3BuV8l/F/m0VbiH0FEWHS4IR8feIJMy0zZvs4uYGj1D1/3JamZQB6sz
-         d9h8CJQDDHzLkJW/5ZDKUT0+22h/Q74sWrW/t3HUINULe2dLmhK0pweTki8gthN/r1
-         Fgw21QKd9qC0Q==
-Subject: [PATCHSET v1.0 00/12] xfsprogs: shard the realtime section
+        b=aOVZAxG9KpWN4mim4ndCiXLPID5Kxo7LcQfMq91/7IBX8VtYPzwVGpHkRrN6f4uaP
+         Ec85ZTqsShdToPX5dGZ23dTuPLMRvqygRD75+92u9HhED/LnoCzX0q/AhX7/kdrS/c
+         rfws/CP2MhnOw6zBgh0N3J4VAvDpK1zC0YrzTP/y6zHyFKUeOrOjOWwKxf9tQ0s4lW
+         FuygUzztm06/PimOI6oQUq1bp1dpF5xAcLYVTAkA9hm2G7scL8FP65eEayUDFJCyLS
+         ZK0UYCE3H27kL1WqlhRlGaLSW4NCO7bJJk9T4gdIc13QfYp3G1/ll3eDGcXMJ6kjNs
+         eBbPeQQKZhXLA==
+Subject: [PATCHSET v1.0 00/13] fstests: fixes for realtime rmap
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     zlang@redhat.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Fri, 30 Dec 2022 14:20:39 -0800
-Message-ID: <167243883943.739029.3041109696120604285.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:20:43 -0800
+Message-ID: <167243884390.739669.13524725872131241203.stgit@magnolia>
 In-Reply-To: <Y69UsO7tDT3HcFri@magnolia>
 References: <Y69UsO7tDT3HcFri@magnolia>
 User-Agent: StGit/0.19
@@ -49,23 +49,8 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Hi all,
 
-Right now, the realtime section uses a single pair of metadata inodes to
-store the free space information.  This presents a scalability problem
-since every thread trying to allocate or free rt extents have to lock
-these files.  It would be very useful if we could begin to tackle these
-problems by sharding the realtime section, so create the notion of
-realtime groups, which are similar to allocation groups on the data
-section.
-
-While we're at it, define a superblock to be stamped into the start of
-each rt section.  This enables utilities such as blkid to identify block
-devices containing realtime sections, and helpfully avoids the situation
-where a file extent can cross an rtgroup boundary.
-
-The best advantage for rtgroups will become evident later when we get to
-adding rmap and reflink to the realtime volume, since the geometry
-constraints are the same for rt groups and AGs.  Hence we can reuse all
-that code directly.
+Fix a few regressions in fstests when rmap is enabled on the realtime
+volume.
 
 If you're going to start using this mess, you probably ought to just
 pull from my git trees, which are linked below.
@@ -76,31 +61,66 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-groups
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=realtime-rmap
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=realtime-groups
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=realtime-rmap
 
 fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=realtime-groups
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=realtime-rmap
+
+xfsdocs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-documentation.git/log/?h=realtime-rmap
 ---
- common/fuzzy            |   33 +++++++++++++++----
- common/populate         |   12 ++++++-
- common/xfs              |   83 ++++++++++++++++++++++++++++++++++++++++-------
- src/punch-alternating.c |   28 +++++++++++++++-
- tests/xfs/114           |    4 ++
- tests/xfs/122           |    2 +
- tests/xfs/122.out       |    8 +++++
- tests/xfs/146           |    2 +
- tests/xfs/185           |    2 +
- tests/xfs/187           |    3 +-
- tests/xfs/206           |    3 +-
- tests/xfs/271           |    3 +-
- tests/xfs/341           |    4 +-
- tests/xfs/449           |    6 +++
- tests/xfs/556           |   16 ++++++---
- tests/xfs/800           |    2 +
- tests/xfs/840           |    2 +
- tests/xfs/841           |    2 +
- 18 files changed, 176 insertions(+), 39 deletions(-)
+ common/populate    |   36 +++++++++++++++++++++++++++++++++++-
+ common/xfs         |   51 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/104      |    1 +
+ tests/xfs/122.out  |    5 ++---
+ tests/xfs/1528     |   41 +++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1528.out |    4 ++++
+ tests/xfs/1529     |   40 ++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1529.out |    4 ++++
+ tests/xfs/272      |    2 +-
+ tests/xfs/276      |    2 +-
+ tests/xfs/277      |    2 +-
+ tests/xfs/291      |    3 ++-
+ tests/xfs/332      |    6 +-----
+ tests/xfs/332.out  |    2 --
+ tests/xfs/333      |   45 ---------------------------------------------
+ tests/xfs/333.out  |    6 ------
+ tests/xfs/337      |    2 +-
+ tests/xfs/338      |   21 ++++++++++++++++-----
+ tests/xfs/339      |    5 +++--
+ tests/xfs/340      |   15 ++++++++++-----
+ tests/xfs/341      |   12 ++++--------
+ tests/xfs/341.out  |    1 -
+ tests/xfs/342      |    4 ++--
+ tests/xfs/343      |    2 ++
+ tests/xfs/406      |    6 ++++--
+ tests/xfs/407      |    6 ++++--
+ tests/xfs/408      |    7 +++++--
+ tests/xfs/409      |    7 +++++--
+ tests/xfs/443      |    9 +++++----
+ tests/xfs/481      |    6 ++++--
+ tests/xfs/482      |    7 +++++--
+ tests/xfs/769      |   29 ++++++++++++++++++++++++++++-
+ tests/xfs/781      |   42 ++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/781.out  |    2 ++
+ tests/xfs/817      |   42 ++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/817.out  |    2 ++
+ tests/xfs/821      |   42 ++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/821.out  |    2 ++
+ 38 files changed, 414 insertions(+), 107 deletions(-)
+ create mode 100755 tests/xfs/1528
+ create mode 100644 tests/xfs/1528.out
+ create mode 100755 tests/xfs/1529
+ create mode 100644 tests/xfs/1529.out
+ delete mode 100755 tests/xfs/333
+ delete mode 100644 tests/xfs/333.out
+ create mode 100755 tests/xfs/781
+ create mode 100644 tests/xfs/781.out
+ create mode 100755 tests/xfs/817
+ create mode 100644 tests/xfs/817.out
+ create mode 100755 tests/xfs/821
+ create mode 100644 tests/xfs/821.out
 
