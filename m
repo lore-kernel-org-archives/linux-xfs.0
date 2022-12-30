@@ -2,50 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F60AC3DA7C
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 21:14:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06905C10F1B
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Dec 2022 21:14:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230100AbiL3VOK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 16:14:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37704 "EHLO
+        id S235566AbiL3VO3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 16:14:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37714 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235566AbiL3VOJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 16:14:09 -0500
+        with ESMTP id S231443AbiL3VO2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 16:14:28 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 127121C917;
-        Fri, 30 Dec 2022 13:14:09 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 965911C40D;
+        Fri, 30 Dec 2022 13:14:27 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C57FEB81B92;
-        Fri, 30 Dec 2022 21:14:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6402BC433F1;
-        Fri, 30 Dec 2022 21:14:06 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 53688B81B92;
+        Fri, 30 Dec 2022 21:14:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E344C433EF;
+        Fri, 30 Dec 2022 21:14:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672434846;
-        bh=973hIYWP6eAHqnngY5o23SwPcOWYj0/yiqEtAI9T6zk=;
+        s=k20201202; t=1672434865;
+        bh=1BI7e5iCN+fE/llwnMT6wLlx2hfwSAiAWz+JVHB5au4=;
         h=Date:From:To:Cc:Subject:From;
-        b=MrHnL6Jwe802GSyKIvZ5xiMROqNFyhffibiP5O2ReLcv2q3J6HB6BxzTYPT2W0vLC
-         xoSAMSvbi458Yo+akVvGz0dNB9Ll92qOlfkhUSKGpkLVtVzCJO2UX8hzjsgHyA50Fy
-         qkcHE+uqMZq4+MkvR1yTL2/gZJgS4k4yoBrHkVeWaZz9yFMVqadTkz8blcft3jFfXv
-         RU4/rGIlCwvv9upk609eGy5SZbzdNPxeaMU8waWDRcFUmcL+czZtxeWC5mo8XlyV8q
-         xKtwJoYaIOD7fD7b5bFymmn5ZDJgUF43ukkwFn9YvoUNMCn9rfjS4SPxf+CFgpEG6T
-         1SEiJPXdCpp4w==
-Date:   Fri, 30 Dec 2022 13:14:05 -0800
+        b=OMAjaCY1sFXw7qlvP48R1hiMgZr1CUslUMSVTf4OQWLZXSV5G04joTun9SrNhphN0
+         xxJqHAJ4tSnXfMdC0lrohHxZUbf4QwlErLH7sfKmEvRqs8WE52NvXywoEgiJ4Kb+J5
+         SEOCgaaJVj2YS0UNRMVAXretJAkCYGSsy9yM9u2EKUc2OuGyOTNO5TK/U8ytGTX4N8
+         T4x5ulmoCrqW6+bFO+ktb5TJlDTz+bMTnNQCBE0fHKvCRUguIsvxkm6yLZIxMZETpd
+         x2u96zWUomi8/8s8hhmFVF9z7JzIDfDVvP4Urg0tuMMbfxu8beaBHikNhLnH+wv06V
+         AkUtUAJY7Do2Q==
+Date:   Fri, 30 Dec 2022 13:14:24 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>,
-        Allison Henderson <allison.henderson@oracle.com>,
-        Chandan Babu R <chandanrlinux@gmail.com>,
-        Catherine Hoang <catherine.hoang@oracle.com>, djwong@kernel.org
-Cc:     xfs <linux-xfs@vger.kernel.org>, greg.marsden@oracle.com,
-        shirley.ma@oracle.com, konrad.wilk@oracle.com,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Matthew Wilcox <willy@infradead.org>, tpkelly@eecs.umich.edu,
-        smahar@ucsd.edu, Christoph Hellwig <hch@infradead.org>,
-        fstests <fstests@vger.kernel.org>, Zorro Lang <zlang@redhat.com>,
-        Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [NYE DELUGE 2/4] xfs: online repair in its entirety
-Message-ID: <Y69Unb7KRM5awJoV@magnolia>
+To:     djwong@kernel.org
+Cc:     xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
+Subject: [NYE DELUGE 3/4] xfs: modernize the realtime volume
+Message-ID: <Y69UsO7tDT3HcFri@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -53,80 +44,30 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi everyone,
+Hi all,
 
-As I've mentioned several times throughout 2022, I would like to merge
-the online fsck feature in time for the 2023 LTS kernel.  This is the
-second part of that effort.
+This third patchset deluge is for the realtime modernization project.
+There are five main parts to this effort -- adding a metadata directory
+tree; sharding the realtime volume into allocation groups to reduce
+metadata lock contention; adding reverse mapping; adding reflink; and
+adding the one piece needed to make quotas work on realtime.  This
+brings the robustness of the realtime volume up to par with the data
+volume.
 
-This deluge contains all of the online repair kernel code, a significant
-amount of restructuring of how repairs work in the userspace driver
-program, and a ton of fstests updates to provide automated fuzz testing
-and stress testing of forced repairs.
+Originally, the modernization effort was a side project that was
+intended to match XFS up to the proliferation of persistent memory.  The
+data device would store metadata on cheap(er) flash storage, and the
+realtime volume would be used to map persistent memory to files and take
+advantage of the ability to do PMD-aligned allocations.  It's now less
+clear how much of that will actually happen (CXL?), but the code's
+finished, reasonably well tested, and ready for review.
 
-Within the kernel section, the major pieces are the use of tmpfs files
-to provide pageable kernel memory for staging repair information;
-lightweight hooks into the main xfs filesystem for scrub via jump
-labels; coordinated inode scans for live index construction; and the
-atomic file mapping swap feature.
-
-Changes to the userspace driver program fall into two main categories:
-restructuring how repairs are scheduled so that they're tracked by inode
-or AG; establishing data dependency chains so that we scan and repair
-things in the correct order; and reworking the systemd background
-services to be more secure, enable periodic media scans, and provide
-some semblance of fs corruption reporting.
-
-The fstests changes are a substantial reworking of the fuzzing code to
-fit the testing described in the design documentation; adding stress
-testing of online repairs vs. fsstress; and functional tests for all the
-new features that ride in with online repair.
-
-For this review, I would like people to focus the following:
-
-- Are the major subsystems sufficiently documented that you could figure
-  out what the code does?
-
-- Do you see any problems that are severe enough to cause long term
-  support hassles? (e.g. bad API design, writing weird metadata to disk)
-
-- Can you spot mis-interactions between the subsystems?
-
-- What were my blind spots in devising this feature?
-
-- Are there missing pieces that you'd like to help build?
-
-- Can I just merge all of this?
-
-The one thing that is /not/ in scope for this review are requests for
-more refactoring of existing subsystems.  While there are usually valid
-arguments for performing such cleanups, those are separate tasks to be
-prioritized separately.  I will get to them after merging online fsck,
-because revising existing subsystems generally involves rebasing work
-in this patchset, which means the affected patches need re-reviewing.
-Unless it's absolutely necessary, this just creates more work for
-everybody.
-
-I've been running daily online **repairs** of every computer I own for
-the last eight months.  All modifications so far have been to optimize
-data structures (holes in the xattr structures, excessively large rmap
-btrees, and bugs in quota resource counter updates).  So far, no damage
-has resulted from these operations.  All issues observed in that time
-have been corrected in this submission.
-
-Fuzz and stress testing of online repairs have been running well for a
-year now.  As of this writing, online repair can fix slightly more
-things than offline repair, and the fsstress+repair long soak test has
-passed 100 million repairs with zero problems observed.
-
-(For comparison, the long soak fsx test recently passed 92 billion file
-operations, so online fsck has a ways to go...)
+NOTE: I hacked up metadump to support saving the metadata contents of
+external logs and realtime devices so that I could run fuzz testing in
+the least thoughtful way possible.  Chandan is working on improving the
+deployment image story for our customers, and will likely produce
+something better than my rush job.
 
 As a warning, the patches will likely take several days to trickle in.
-While everyone else looks at this, I plan to prototype directory tree
-reconstruction with Allison's parent pointers v27 patchset.  Having a
-user of that functionality is (I think) the last major hurdle to
-ensuring that parent pointers are a good fit for the problems that need
-solving, which in turn is the last requirement for merging that feature.
 
 --D
