@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9946DC4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:52:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58A55C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:52:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236275AbiLaCwl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 21:52:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60608 "EHLO
+        id S236277AbiLaCwz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 21:52:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60640 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236243AbiLaCwk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:52:40 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49DD511450
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:52:39 -0800 (PST)
+        with ESMTP id S236243AbiLaCwy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:52:54 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C03E18387
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:52:53 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 04864B81E6E
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:52:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7BF3C433EF;
-        Sat, 31 Dec 2022 02:52:36 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id DA8DE61BC8
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:52:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 475D3C433D2;
+        Sat, 31 Dec 2022 02:52:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672455156;
-        bh=W6slZE1tX8eA8BR0DrNVp9qjjnyUoEjHeee5fKVNtVw=;
+        s=k20201202; t=1672455172;
+        bh=mbDqidvA+NpFWYp62pHk7eo4jwU1qN0AxYnlF31zVoc=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=KfNJqhaBGIIbSRhq15j78ksFeSYZ2GR0UssZAbpZA4BXP/xLuoczpk7TTTF9+jizF
-         u/yeo62UCNfsdzScAidEdeQiAjrmWZXd/DmnBBernrLkiQL7FOIpKqviJXM+2gRU/9
-         aNSaD03DNQb2T0U+TXdDqHhTF8mgZyPh30rTeNBM15FVRQSdFwejHY45UuiTtrJ/ba
-         H3nfr+DK35wB1t6rTY3ZKXXvYxalb4u7XAupuB9Ow1q2eVu+Jd6M5nhCE035rIOY7m
-         cEsoV7XuE9SlhIh1t4W2D4uwEkfmz6/0mRUEYRzPWSPly1F8ot+4PmjJIoFLdbnx0c
-         f1Smv0FG2SdCA==
-Subject: [PATCH 39/41] xfs_repair: allow sysadmins to add realtime reverse
- mapping indexes
+        b=puw2imvzAq8KmpVunGUIBsVP0WVBdjVoDrDHpX0ZVhFB1I4r8hTjzNR+y+nC0O2zJ
+         fgo5cqeVGMBD0aTFXpkJE98lUkQQdWPtWCyMcGlWMSiqVoao5JLcJYGYqkuRmN0z1Z
+         MglhJ3oHJdoOvcuzUDsDbFscj9IiUheiZLtLpwwxtQhNRkHtukJZ2tJG94ypEFo4/8
+         fu8YUEQvLyyFbskAYlPxlK4jkdxKvdy24J7X2aBD18KINeIHexI8Z0gOi+PBPGWy29
+         vT0pWh9p0jfcLLccg1frFx2xCo8KKwd6bSmSX4VF2UjmznlvEDCRSf+qxBwr09BX+p
+         2c9hv5OKGiNHg==
+Subject: [PATCH 40/41] xfs_scrub: retest metadata across scrub groups after a
+ repair
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:20:01 -0800
-Message-ID: <167243880110.732820.729630067665593667.stgit@magnolia>
+Message-ID: <167243880122.732820.7337094835824044775.stgit@magnolia>
 In-Reply-To: <167243879574.732820.4725863402652761218.stgit@magnolia>
 References: <167243879574.732820.4725863402652761218.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,183 +50,237 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Allow the sysadmin to use xfs_repair to upgrade an existing filesystem
-to support the reverse mapping btree index for realtime volumes.  This
-is needed for online fsck.
+Certain types of metadata have dependencies that cross scrub groups.
+For example, after a repair the part of realtime bitmap corresponding to
+a realtime group, we potentially need to rebuild the realtime summary to
+reflect the new bitmap contents.  The rtsummary is a separate scrub group
+(metafiles) from the rgbitmap (rtgroup), which means that the rtsummary
+repairs must be tracked by a separate scrub_item.
+
+Create the necessary dependency table and code to make these kinds of
+cross-group validations possible.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/libxfs_api_defs.h |    4 ++
- repair/phase2.c          |   92 ++++++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 91 insertions(+), 5 deletions(-)
+ scrub/phase4.c |   43 ++++++++++++++++++++
+ scrub/repair.c |  123 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scrub/repair.h |    5 ++
+ 3 files changed, 171 insertions(+)
 
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index ee864911e5e..2e7529cec54 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -56,6 +56,7 @@
- #define xfs_btree_bload			libxfs_btree_bload
- #define xfs_btree_bload_compute_geometry libxfs_btree_bload_compute_geometry
- #define xfs_btree_calc_size		libxfs_btree_calc_size
-+#define xfs_btree_compute_maxlevels	libxfs_btree_compute_maxlevels
- #define xfs_btree_decrement		libxfs_btree_decrement
- #define xfs_btree_del_cursor		libxfs_btree_del_cursor
- #define xfs_btree_delete		libxfs_btree_delete
-@@ -171,6 +172,8 @@
- #define xfs_imeta_link			libxfs_imeta_link
- #define xfs_imeta_lookup		libxfs_imeta_lookup
- #define xfs_imeta_mount			libxfs_imeta_mount
-+#define xfs_imeta_resv_free_inode	libxfs_imeta_resv_free_inode
-+#define xfs_imeta_resv_init_inode	libxfs_imeta_resv_init_inode
- #define xfs_imeta_set_metaflag		libxfs_imeta_set_metaflag
- #define xfs_imeta_start_update		libxfs_imeta_start_update
- #define xfs_imeta_unlink		libxfs_imeta_unlink
-@@ -246,6 +249,7 @@
- #define xfs_rtgroup_put			libxfs_rtgroup_put
- #define xfs_rtgroup_update_secondary_sbs	libxfs_rtgroup_update_secondary_sbs
- #define xfs_rtgroup_update_super	libxfs_rtgroup_update_super
-+#define xfs_rtrmapbt_calc_reserves	libxfs_rtrmapbt_calc_reserves
- #define xfs_rtrmapbt_commit_staged_btree	libxfs_rtrmapbt_commit_staged_btree
- #define xfs_rtrmapbt_create		libxfs_rtrmapbt_create
- #define xfs_rtrmapbt_create_path	libxfs_rtrmapbt_create_path
-diff --git a/repair/phase2.c b/repair/phase2.c
-index 707fe5ca519..35c1214be9a 100644
---- a/repair/phase2.c
-+++ b/repair/phase2.c
-@@ -264,9 +264,8 @@ set_rmapbt(
- 		exit(0);
- 	}
- 
--	if (xfs_has_realtime(mp)) {
--		printf(
--	_("Reverse mapping btree feature not supported with realtime.\n"));
-+	if (xfs_has_realtime(mp) && !xfs_has_rtgroups(mp)) {
-+		printf(_("Reverse mapping btree requires realtime groups.\n"));
- 		exit(0);
- 	}
- 
-@@ -284,6 +283,11 @@ set_rmapbt(
- 	printf(_("Adding reverse mapping btrees to filesystem.\n"));
- 	new_sb->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_RMAPBT;
- 	new_sb->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR;
-+
-+	/* Quota counts will be wrong once we add the rmap inodes. */
-+	if (xfs_has_realtime(mp))
-+		quotacheck_skip();
-+
- 	return true;
- }
- 
-@@ -409,6 +413,55 @@ check_free_space(
- 	return avail > GIGABYTES(10, mp->m_sb.sb_blocklog);
- }
+diff --git a/scrub/phase4.c b/scrub/phase4.c
+index 74fcc55b379..2d0a448e268 100644
+--- a/scrub/phase4.c
++++ b/scrub/phase4.c
+@@ -42,6 +42,47 @@ struct repair_list_schedule {
+ 	bool				made_progress;
+ };
  
 +/*
-+ * Reserve space to handle rt rmap btree expansion.
-+ *
-+ * If the rmap inode for this group already exists, we assume that we're adding
-+ * some other feature.  Note that we have not validated the metadata directory
-+ * tree, so we must perform the lookup by hand and abort the upgrade if there
-+ * are errors.  Otherwise, the amount of space needed to handle a new maximally
-+ * sized rmap btree is added to @new_resv.
++ * After a successful repair, schedule any additional revalidations needed in
++ * other scrub groups.
 + */
 +static int
-+reserve_rtrmap_inode(
-+	struct xfs_rtgroup	*rtg,
-+	xfs_rfsblock_t		*new_resv)
++revalidate_across_groups(
++	struct scrub_ctx		*ctx,
++	const struct action_item	*old_aitem,
++	struct repair_list_schedule	*rls)
 +{
-+	struct xfs_mount	*mp = rtg->rtg_mount;
-+	struct xfs_imeta_path	*path;
-+	xfs_ino_t		ino;
-+	xfs_filblks_t		ask;
-+	int			error;
++	struct action_list		alist;
++	int				error;
 +
-+	if (!xfs_has_rtrmapbt(mp))
-+		return 0;
++	action_list_init(&alist);
 +
-+	error = -libxfs_rtrmapbt_create_path(mp, rtg->rtg_rgno, &path);
-+	if (error)
++	error = action_item_schedule_revalidation(ctx, old_aitem, &alist);
++	if (error) {
++		rls->aborted = true;
 +		return error;
-+
-+	ask = libxfs_rtrmapbt_calc_reserves(mp);
-+
-+	error = -libxfs_imeta_lookup(mp, path, &ino);
-+	libxfs_imeta_free_path(path);
-+	if (error == EFSCORRUPTED) {
-+		if (ask > mp->m_sb.sb_fdblocks)
-+			return ENOSPC;
-+
-+		*new_resv += ask;
-+		return 0;
 +	}
-+	if (error)
-+		return error;
 +
-+	error = -libxfs_imeta_iget(mp, ino, XFS_DIR3_FT_REG_FILE,
-+			&rtg->rtg_rmapip);
-+	if (error)
-+		return error;
++	if (action_list_empty(&alist))
++		return 0;
 +
-+	return -libxfs_imeta_resv_init_inode(rtg->rtg_rmapip, ask);
++	pthread_mutex_unlock(&rls->lock);
++	error = action_list_revalidate(ctx, &alist);
++	pthread_mutex_lock(&rls->lock);
++
++	if (error)
++		rls->aborted = true;
++	else
++		rls->made_progress = true;
++
++	/*
++	 * Merge the action items into the scrub context for freeing, even if
++	 * there was an error.
++	 */
++	action_list_merge(&rls->requeue_list, &alist);
++	return error;
 +}
 +
+ /* Try to repair as many things on our list as we can. */
  static void
- check_fs_free_space(
- 	struct xfs_mount		*mp,
-@@ -416,7 +469,10 @@ check_fs_free_space(
- 	struct xfs_sb			*new_sb)
- {
- 	struct xfs_perag		*pag;
-+	struct xfs_rtgroup		*rtg;
-+	xfs_rfsblock_t			new_resv = 0;
- 	xfs_agnumber_t			agno;
-+	xfs_rgnumber_t			rgno;
- 	int				error;
+ repair_list_worker(
+@@ -89,6 +130,8 @@ repair_list_worker(
+ 			action_list_add(&rls->requeue_list, aitem);
+ 			break;
+ 		case TR_REPAIRED:
++			revalidate_across_groups(ctx, aitem, rls);
++
+ 			/* Item is clean.  Free it. */
+ 			free(aitem);
+ 			break;
+diff --git a/scrub/repair.c b/scrub/repair.c
+index 79a15f907a1..3e00db7a2fd 100644
+--- a/scrub/repair.c
++++ b/scrub/repair.c
+@@ -42,6 +42,15 @@ static const unsigned int repair_deps[XFS_SCRUB_TYPE_NR] = {
+ 					  DEP(XFS_SCRUB_TYPE_PQUOTA),
+ 	[XFS_SCRUB_TYPE_RTSUM]		= DEP(XFS_SCRUB_TYPE_RTBITMAP),
+ };
++
++/*
++ * Data dependencies that cross scrub groups.  When we repair a metadata object
++ * of the given type (e.g. rtgroup bitmaps), we want to trigger a revalidation
++ * of the specified objects (e.g. rt summary file).
++ */
++static const unsigned int cross_group_recheck[XFS_SCRUB_TYPE_NR] = {
++	[XFS_SCRUB_TYPE_RGBITMAP]	= DEP(XFS_SCRUB_TYPE_RTSUM),
++};
+ #undef DEP
  
- 	/* Make sure we have enough space for per-AG reservations. */
-@@ -492,15 +548,41 @@ check_fs_free_space(
- 		libxfs_trans_cancel(tp);
- 	}
- 
-+	/* Realtime metadata btree inodes */
-+	for_each_rtgroup(mp, rgno, rtg) {
-+		error = reserve_rtrmap_inode(rtg, &new_resv);
-+		if (error == ENOSPC) {
-+			printf(
-+_("Not enough free space would remain for rtgroup %u rmap inode.\n"),
-+					rtg->rtg_rgno);
-+			exit(0);
+ /*
+@@ -781,3 +790,117 @@ repair_item_to_action_item(
+ 	*aitemp = aitem;
+ 	return 0;
+ }
++
++static int
++schedule_cross_group_recheck(
++	struct scrub_ctx	*ctx,
++	unsigned int		recheck_mask,
++	struct action_list	*new_items)
++{
++	unsigned int		scrub_type;
++
++	foreach_scrub_type(scrub_type) {
++		struct action_item	*aitem;
++
++		if (!(recheck_mask & (1U << scrub_type)))
++			continue;
++
++		switch (xfrog_scrubbers[scrub_type].group) {
++		case XFROG_SCRUB_GROUP_METAFILES:
++			/*
++			 * XXX gcc fortify gets confused on the memset in
++			 * scrub_item_init_fs if we hoist this allocation to a
++			 * helper function.
++			 */
++			aitem = malloc(sizeof(struct action_item));
++			if (!aitem) {
++				int	error = errno;
++
++				str_liberror(ctx, error,
++						_("creating repair revalidation action item"));
++				return error;
++			}
++
++			INIT_LIST_HEAD(&aitem->list);
++			aitem->sri.sri_revalidate = true;
++
++			scrub_item_init_fs(&aitem->sri);
++			scrub_item_schedule(&aitem->sri, scrub_type);
++			action_list_add(new_items, aitem);
++			break;
++		default:
++			/* We don't support any other groups yet. */
++			assert(false);
++			continue;
 +		}
++	}
++
++	return 0;
++}
++
++/*
++ * After a successful repair, schedule revalidation of metadata outside of this
++ * scrub item's group.
++ */
++int
++action_item_schedule_revalidation(
++	struct scrub_ctx		*ctx,
++	const struct action_item	*old_aitem,
++	struct action_list		*new_items)
++{
++	struct action_item		*aitem, *n;
++	unsigned int			scrub_type;
++	int				error = 0;
++
++	foreach_scrub_type(scrub_type) {
++		unsigned int		mask;
++
++		if (!(old_aitem->sri.sri_selected & (1U << scrub_type)))
++			continue;
++		mask = cross_group_recheck[scrub_type];
++		if (!mask)
++			continue;
++
++		error = schedule_cross_group_recheck(ctx, mask, new_items);
 +		if (error)
-+			do_error(
-+_("Error %d while checking rtgroup %u rmap inode space reservation.\n"),
-+					rtg->rtg_rgno, error);
++			goto bad;
 +	}
 +
- 	/*
- 	 * Would the post-upgrade filesystem have enough free space on the data
--	 * device after making per-AG reservations?
-+	 * device after making per-AG reservations and reserving rt metadata
-+	 * inode blocks?
- 	 */
--	if (!check_free_space(mp, mp->m_sb.sb_fdblocks, mp->m_sb.sb_dblocks)) {
-+	if (new_resv > mp->m_sb.sb_fdblocks ||
-+	    !check_free_space(mp, mp->m_sb.sb_fdblocks, mp->m_sb.sb_dblocks)) {
- 		printf(_("Filesystem will be low on space after upgrade.\n"));
- 		exit(1);
- 	}
- 
-+	/* Unreserve the realtime metadata reservations. */
-+	for_each_rtgroup(mp, rgno, rtg) {
-+		if (rtg->rtg_rmapip) {
-+			libxfs_imeta_resv_free_inode(rtg->rtg_rmapip);
-+			libxfs_imeta_irele(rtg->rtg_rmapip);
-+			rtg->rtg_rmapip = NULL;
++	return 0;
++bad:
++	list_for_each_entry_safe(aitem, n, &new_items->list, list) {
++		list_del(&aitem->list);
++		free(aitem);
++	}
++	return error;
++}
++
++/*
++ * Revalidate all items scheduled for a recheck, and drop the ones that are
++ * clean.
++ */
++int
++action_list_revalidate(
++	struct scrub_ctx	*ctx,
++	struct action_list	*alist)
++{
++	struct action_item	*aitem, *n;
++	int			error;
++
++	list_for_each_entry_safe(aitem, n, &alist->list, list) {
++		error = scrub_item_check(ctx, &aitem->sri);
++		if (error)
++			return error;
++
++		if (repair_item_count_needsrepair(&aitem->sri) > 0) {
++			aitem->sri.sri_revalidate = false;
++			continue;
 +		}
++
++		/* Metadata are clean, delete from list. */
++		list_del(&aitem->list);
++		free(aitem);
 +	}
 +
- 	/*
- 	 * Release the per-AG reservations and mark the per-AG structure as
- 	 * uninitialized so that we don't trip over stale cached counters
++	return 0;
++}
+diff --git a/scrub/repair.h b/scrub/repair.h
+index c4b9b5799e2..f90ac16b13f 100644
+--- a/scrub/repair.h
++++ b/scrub/repair.h
+@@ -50,6 +50,11 @@ enum tryrepair_outcome {
+ int action_item_try_repair(struct scrub_ctx *ctx, struct action_item *aitem,
+ 		enum tryrepair_outcome *outcome);
+ 
++int action_item_schedule_revalidation(struct scrub_ctx *ctx,
++		const struct action_item *old_aitem,
++		struct action_list *new_items);
++int action_list_revalidate(struct scrub_ctx *sc, struct action_list *alist);
++
+ void repair_item_mustfix(struct scrub_item *sri, struct scrub_item *fix_now);
+ 
+ /* Primary metadata is corrupt */
 
