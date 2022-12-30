@@ -2,43 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9898BC4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 03:05:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 435B1C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 03:05:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230132AbiLaDFq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 22:05:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34618 "EHLO
+        id S236156AbiLaDFz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 22:05:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34906 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236267AbiLaDFj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 22:05:39 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA3A815F27
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 19:05:37 -0800 (PST)
+        with ESMTP id S236092AbiLaDFy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 22:05:54 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E912DDFA
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 19:05:52 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1ACACB81EA2
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 03:05:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C624BC433EF;
-        Sat, 31 Dec 2022 03:05:34 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A2CA2B81EA8
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 03:05:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B678C433EF;
+        Sat, 31 Dec 2022 03:05:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672455934;
-        bh=sjSBYA/knL1WWk0Oudvpjp0psOsDs7f+DmVXuSiNjI0=;
+        s=k20201202; t=1672455950;
+        bh=Bt57fd7ZfCOo59EYeSLCkPUULYA1YDFg5I96GhEifSw=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=tSGut9Nfa0kWh7FITamIxy1nHEAsqA/F1VY68h3ah6eco34QZhY8Aw1I0O/i+y+iF
-         h2EKjk3kC6juQiJAdA5KyjZS+tfGKRpqADqWEjTLnk13oEgqmckZhfFzgZ1v+3BQEi
-         kau5mgRWtMX5kabuQmdrYT9s+fywyLS1fqG+1GMTsDDhST9Cdt+YxgjVbq2VNvmqVv
-         lh1rxUBWmZzBPJfupvcyLysZ35g8nIcVcWaKV8HQfCU4RUK177oegjNJiJmRZgWsHn
-         qkAtJnKQOgQGozCb4MpEsU/lAxl/6n1ah6E2HORSuBO5fSTIy0mNOIhyFiNZdu7sqe
-         JcM/NutQRKYvg==
-Subject: [PATCH 3/3] mkfs: enable reflink with realtime extent sizes > 1
+        b=nNa736cAvkPLvDpKyPy4648zGYM2icUMSBBF55tLEMcktyd87N4Doyv+RVKn4i2kx
+         KeKM6yn9UDTRdEeVILZQldhU1Qk1CAshc50ylv3T8V7tSpVJFJGV2UenCJL15++c42
+         tbiZ79f/eNjBt+8kh4J9mUJ70PzTw6jmYBeomW7IAAlzOvOBtZWr4Eu/szOX1y8yFd
+         2PYXmGJkjS5xlw2+QYTPZAryFXMJvvV/kzV7C2M0APZYEFBPT555/F9Z2qXFeky0Bb
+         pVu5yDwbXthd84SqUtretaIDu17UO96mx86RiB8dGaOsR25K+h8EorUW8m8i3PAQNV
+         kqpVQGRnmI7Gw==
+Subject: [PATCH 1/1] xfs_quota: report warning limits for realtime space
+ quotas
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Fri, 30 Dec 2022 14:20:16 -0800
-Message-ID: <167243881638.735065.16589572258129197530.stgit@magnolia>
-In-Reply-To: <167243881598.735065.1487919004054265294.stgit@magnolia>
-References: <167243881598.735065.1487919004054265294.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:20:19 -0800
+Message-ID: <167243881939.735184.11258120793213103815.stgit@magnolia>
+In-Reply-To: <167243881927.735184.9698389452163804435.stgit@magnolia>
+References: <167243881927.735184.9698389452163804435.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,94 +50,42 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Allow creation of filesystems with reflink enabled and realtime extent
-size larger than 1 block.
+Report the number of warnings that a user will get for exceeding the
+soft limit of a realtime volume.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/init.c   |    7 -------
- mkfs/xfs_mkfs.c |   37 -------------------------------------
- 2 files changed, 44 deletions(-)
+ include/xqm.h |    5 ++++-
+ quota/state.c |    1 +
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
 
-diff --git a/libxfs/init.c b/libxfs/init.c
-index a4023f78655..c04a30bb829 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -448,13 +448,6 @@ rtmount_init(
- 	if (mp->m_sb.sb_rblocks == 0)
- 		return 0;
+diff --git a/include/xqm.h b/include/xqm.h
+index 573441db986..045af9b67fd 100644
+--- a/include/xqm.h
++++ b/include/xqm.h
+@@ -184,7 +184,10 @@ struct fs_quota_statv {
+ 	__s32			qs_rtbtimelimit;/* limit for rt blks timer */
+ 	__u16			qs_bwarnlimit;	/* limit for num warnings */
+ 	__u16			qs_iwarnlimit;	/* limit for num warnings */
+-	__u64			qs_pad2[8];	/* for future proofing */
++	__u16			qs_rtbwarnlimit;/* limit for rt blks warnings */
++	__u16			qs_pad3;
++	__u32			qs_pad4;
++	__u64			qs_pad2[7];	/* for future proofing */
+ };
  
--	if (xfs_has_reflink(mp) && mp->m_sb.sb_rextsize > 1) {
--		fprintf(stderr,
--	_("%s: Reflink not compatible with realtime extent size > 1. Please try a newer xfsprogs.\n"),
--				progname);
--		return -1;
--	}
--
- 	if (mp->m_rtdev_targp->bt_bdev == 0 && !xfs_is_debugger(mp)) {
- 		fprintf(stderr, _("%s: filesystem has a realtime subvolume\n"),
- 			progname);
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index e406fa6a5ea..db828deadfb 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2385,24 +2385,6 @@ _("inode btree counters not supported without finobt support\n"));
- 	}
+ #endif	/* __XQM_H__ */
+diff --git a/quota/state.c b/quota/state.c
+index 260ef51db18..43fb700f9a7 100644
+--- a/quota/state.c
++++ b/quota/state.c
+@@ -244,6 +244,7 @@ state_quotafile_stat(
+ 	state_warnlimit(fp, XFS_INODE_QUOTA, sv->qs_iwarnlimit);
  
- 	if (cli->xi->rtname) {
--		if (cli->rtextsize && cli->sb_feat.reflink) {
--			if (cli_opt_set(&mopts, M_REFLINK)) {
--				fprintf(stderr,
--_("reflink not supported on realtime devices with rt extent size specified\n"));
--				usage();
--			}
--			cli->sb_feat.reflink = false;
--		}
--		if (cli->blocksize < XFS_MIN_RTEXTSIZE && cli->sb_feat.reflink) {
--			if (cli_opt_set(&mopts, M_REFLINK)) {
--				fprintf(stderr,
--_("reflink not supported on realtime devices with blocksize %d < %d\n"),
--						cli->blocksize,
--						XFS_MIN_RTEXTSIZE);
--				usage();
--			}
--			cli->sb_feat.reflink = false;
--		}
- 		if (!cli->sb_feat.rtgroups && cli->sb_feat.reflink) {
- 			if (cli_opt_set(&mopts, M_REFLINK) &&
- 			    cli_opt_set(&ropts, R_RTGROUPS)) {
-@@ -2582,19 +2564,6 @@ validate_rtextsize(
- 			usage();
- 		}
- 		cfg->rtextblocks = (xfs_extlen_t)(rtextbytes >> cfg->blocklog);
--	} else if (cli->sb_feat.reflink && cli->xi->rtname) {
--		/*
--		 * reflink doesn't support rt extent size > 1FSB yet, so set
--		 * an extent size of 1FSB.  Make sure we still satisfy the
--		 * minimum rt extent size.
--		 */
--		if (cfg->blocksize < XFS_MIN_RTEXTSIZE) {
--			fprintf(stderr,
--		_("reflink not supported on rt volume with blocksize %d\n"),
--				cfg->blocksize);
--			usage();
--		}
--		cfg->rtextblocks = 1;
- 	} else {
- 		/*
- 		 * If realtime extsize has not been specified by the user,
-@@ -2626,12 +2595,6 @@ validate_rtextsize(
- 		}
- 	}
- 	ASSERT(cfg->rtextblocks);
--
--	if (cli->sb_feat.reflink && cfg->rtblocks > 0 && cfg->rtextblocks > 1) {
--		fprintf(stderr,
--_("reflink not supported on realtime with extent sizes > 1\n"));
--		usage();
--	}
+ 	state_timelimit(fp, XFS_RTBLOCK_QUOTA, sv->qs_rtbtimelimit);
++	state_warnlimit(fp, XFS_RTBLOCK_QUOTA, sv->qs_rtbwarnlimit);
  }
  
- /* Validate the incoming extsize hint. */
+ static void
 
