@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8BEEC4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:16:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78197C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 02:16:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236190AbiLaCQV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 21:16:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54104 "EHLO
+        id S236192AbiLaCQi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 21:16:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54132 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231485AbiLaCQU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:16:20 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45D0A2DD5
-        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:16:19 -0800 (PST)
+        with ESMTP id S231485AbiLaCQh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 21:16:37 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 631562DD5
+        for <linux-xfs@vger.kernel.org>; Fri, 30 Dec 2022 18:16:36 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D866761C9C
-        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:16:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F18AC433EF;
-        Sat, 31 Dec 2022 02:16:18 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 16AB2B81E5A
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 02:16:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAA4BC433D2;
+        Sat, 31 Dec 2022 02:16:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672452978;
-        bh=8tiAYtVeFDRmFNcU8yDqeaT7trQTAFnf33IWlvVUFjA=;
+        s=k20201202; t=1672452993;
+        bh=BLmvg4Rqwhm12Rw3rZK/YwtDQ2tBM4JT+/eZfurvbto=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=KBkN03dBsJUoyrSP8ZxhRwtN89mBqWNTvPV0c/9ckLHGb3zQL/tzrsVxmLuiYWIft
-         4ZY6YwgojSB50Wa8o6vWnc8GvXWYhMMXM0nqqPTvQZM0mw+fO0rUZLa9ypMS/d7ue8
-         FIPs7wfBOI0kWi37n6dEPJVjtlZxWgr1o4nmH2n3eA5+x+vSSNIs7b6dGJSjuuaoe9
-         5UVHWXGdjR/0Dx/yqENgbRmK/lS9lsgSEvAr61/RP1ICERi20nYJ0e/hksjFS0enKm
-         2ifBQwbmutreR50H4Z1VKrAkU/bKQa2DwpojIHl7fklILs/auDE6ZYtle+FPqz0V0R
-         nj/bbujhTVwFw==
-Subject: [PATCH 25/46] xfs_io: support the bulkstat metadata directory flag
+        b=GrQxcD2MdHQMqXdhv0lT7pizt+2qQl1u/2DlJfWYgUGN9ypZwxDxc6Y9gJR/stqop
+         HrvzRD9uWXEkuDgyt1dyRSHFjITCAToKUkuUpClFgT2YRq2gZEo73tXV4r+dfWPKYa
+         YywZ2vn37lBlZODt9+tmBJ//lguBAoqELFZ3ITRrsd+aZ4AcPJqCtpRkNXSFx66pLm
+         uu9Uf8knw/FqfNPgaodp9TPLUu6k2nAu2BZuC6mkd5NQRZsx/oIGY5zx7HlcSSgmTP
+         v9yPjeCbTsPGaJHSaZCluCSMwfcTQk8YWfvO8VoJMrMsxR2dXFxdIusdoFQ0YR1R5r
+         coRkScpoPQYOg==
+Subject: [PATCH 26/46] xfs_scrub: scan metadata directories during phase 3
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
 Date:   Fri, 30 Dec 2022 14:19:22 -0800
-Message-ID: <167243876263.725900.14223423886543197158.stgit@magnolia>
+Message-ID: <167243876276.725900.10798991288646986623.stgit@magnolia>
 In-Reply-To: <167243875924.725900.7061782826830118387.stgit@magnolia>
 References: <167243875924.725900.7061782826830118387.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,123 +49,125 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Support the new XFS_BULK_IREQ_METADIR flag for bulkstat commands.
+Scan metadata directories for correctness during phase 3.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- io/bulkstat.c     |   16 +++++++++++++++-
- man/man8/xfs_io.8 |   10 +++++++---
- 2 files changed, 22 insertions(+), 4 deletions(-)
+ scrub/inodes.c |    5 +++++
+ scrub/inodes.h |    5 ++++-
+ scrub/phase3.c |    7 ++++++-
+ scrub/phase5.c |    2 +-
+ scrub/phase6.c |    2 +-
+ 5 files changed, 17 insertions(+), 4 deletions(-)
 
 
-diff --git a/io/bulkstat.c b/io/bulkstat.c
-index a9ad87ca183..829f6a02515 100644
---- a/io/bulkstat.c
-+++ b/io/bulkstat.c
-@@ -70,6 +70,7 @@ bulkstat_help(void)
- "   -d         Print debugging output.\n"
- "   -q         Be quiet, no output.\n"
- "   -e <ino>   Stop after this inode.\n"
-+"   -m         Include metadata directories.\n"
- "   -n <nr>    Ask for this many results at once.\n"
- "   -s <ino>   Inode to start with.\n"
- "   -v <ver>   Use this version of the ioctl (1 or 5).\n"));
-@@ -107,11 +108,12 @@ bulkstat_f(
- 	bool			has_agno = false;
- 	bool			debug = false;
- 	bool			quiet = false;
-+	bool			metadir = false;
- 	unsigned int		i;
- 	int			c;
- 	int			ret;
+diff --git a/scrub/inodes.c b/scrub/inodes.c
+index 78f0914b8d9..52d17c5c646 100644
+--- a/scrub/inodes.c
++++ b/scrub/inodes.c
+@@ -100,6 +100,7 @@ struct scan_inodes {
+ 	scrub_inode_iter_fn	fn;
+ 	void			*arg;
+ 	unsigned int		nr_threads;
++	unsigned int		flags;
+ 	bool			aborted;
+ };
  
--	while ((c = getopt(argc, argv, "a:de:n:qs:v:")) != -1) {
-+	while ((c = getopt(argc, argv, "a:de:mn:qs:v:")) != -1) {
- 		switch (c) {
- 		case 'a':
- 			agno = cvt_u32(optarg, 10);
-@@ -131,6 +133,9 @@ bulkstat_f(
- 				return 1;
- 			}
- 			break;
-+		case 'm':
-+			metadir = true;
-+			break;
- 		case 'n':
- 			batch_size = cvt_u32(optarg, 10);
- 			if (errno) {
-@@ -185,6 +190,8 @@ bulkstat_f(
+@@ -158,6 +159,8 @@ alloc_ichunk(
  
- 	if (has_agno)
- 		xfrog_bulkstat_set_ag(breq, agno);
-+	if (metadir)
+ 	breq = ichunk_to_bulkstat(ichunk);
+ 	breq->hdr.icount = LIBFROG_BULKSTAT_CHUNKSIZE;
++	if (si->flags & SCRUB_SCAN_METADIR)
 +		breq->hdr.flags |= XFS_BULK_IREQ_METADIR;
  
- 	set_xfd_flags(&xfd, ver);
+ 	*ichunkp = ichunk;
+ 	return 0;
+@@ -380,10 +383,12 @@ int
+ scrub_scan_all_inodes(
+ 	struct scrub_ctx	*ctx,
+ 	scrub_inode_iter_fn	fn,
++	unsigned int		flags,
+ 	void			*arg)
+ {
+ 	struct scan_inodes	si = {
+ 		.fn		= fn,
++		.flags		= flags,
+ 		.arg		= arg,
+ 		.nr_threads	= scrub_nproc_workqueue(ctx),
+ 	};
+diff --git a/scrub/inodes.h b/scrub/inodes.h
+index f03180458ab..d99eaf0a2a7 100644
+--- a/scrub/inodes.h
++++ b/scrub/inodes.h
+@@ -17,8 +17,11 @@
+ typedef int (*scrub_inode_iter_fn)(struct scrub_ctx *ctx,
+ 		struct xfs_handle *handle, struct xfs_bulkstat *bs, void *arg);
  
-@@ -253,6 +260,7 @@ bulkstat_single_f(
- 	unsigned long		ver = 0;
- 	unsigned int		i;
- 	bool			debug = false;
-+	bool			metadir = false;
- 	int			c;
- 	int			ret;
- 
-@@ -261,6 +269,9 @@ bulkstat_single_f(
- 		case 'd':
- 			debug = true;
- 			break;
-+		case 'm':
-+			metadir = true;
-+			break;
- 		case 'v':
- 			errno = 0;
- 			ver = strtoull(optarg, NULL, 10);
-@@ -313,6 +324,9 @@ bulkstat_single_f(
- 			}
- 		}
- 
-+		if (metadir)
-+			flags |= XFS_BULK_IREQ_METADIR;
++/* Return metadata directories too. */
++#define SCRUB_SCAN_METADIR	(1 << 0)
 +
- 		ret = -xfrog_bulkstat_single(&xfd, ino, flags, &bulkstat);
- 		if (ret) {
- 			xfrog_perror(ret, "xfrog_bulkstat_single");
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index d531cabc3ef..0c0b00b5712 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -1228,7 +1228,7 @@ for the current memory mapping.
+ int scrub_scan_all_inodes(struct scrub_ctx *ctx, scrub_inode_iter_fn fn,
+-		void *arg);
++		unsigned int flags, void *arg);
  
- .SH FILESYSTEM COMMANDS
- .TP
--.BI "bulkstat [ \-a " agno " ] [ \-d ] [ \-e " endino " ] [ \-n " batchsize " ] [ \-q ] [ \-s " startino " ] [ \-v " version" ]
-+.BI "bulkstat [ \-a " agno " ] [ \-d ] [ \-e " endino " ] [ \-m ] [ \-n " batchsize " ] [ \-q ] [ \-s " startino " ] [ \-v " version" ]
- Display raw stat information about a bunch of inodes in an XFS filesystem.
- Options are as follows:
- .RS 1.0i
-@@ -1245,6 +1245,9 @@ Print debugging information about call results.
- Stop displaying records when this inode number is reached.
- Defaults to stopping when the system call stops returning results.
- .TP
-+.BI \-m
-+Include metadata directories in the output.
-+.TP
- .BI \-n " batchsize"
- Retrieve at most this many records per call.
- Defaults to 4,096.
-@@ -1265,10 +1268,11 @@ Currently supported versions are 1 and 5.
- .RE
- .PD
- .TP
--.BI "bulkstat_single [ \-d ] [ \-v " version " ] [ " inum... " | " special... " ]
-+.BI "bulkstat_single [ \-d ] [ \-m ] [ \-v " version " ] [ " inum... " | " special... " ]
- Display raw stat information about individual inodes in an XFS filesystem.
- The
--.B \-d
-+.BR \-d ,
-+.BR \-m ,
- and
- .B \-v
- options are the same as the
+ int scrub_open_handle(struct xfs_handle *handle);
+ 
+diff --git a/scrub/phase3.c b/scrub/phase3.c
+index c5950b1b9e3..56a4385a408 100644
+--- a/scrub/phase3.c
++++ b/scrub/phase3.c
+@@ -247,6 +247,7 @@ phase3_func(
+ 	struct scrub_inode_ctx	ictx = { .ctx = ctx };
+ 	uint64_t		val;
+ 	xfs_agnumber_t		agno;
++	unsigned int		scan_flags = 0;
+ 	int			err;
+ 
+ 	err = -ptvar_alloc(scrub_nproc(ctx), sizeof(struct action_list),
+@@ -263,6 +264,10 @@ phase3_func(
+ 		goto out_ptvar;
+ 	}
+ 
++	/* Scan the metadata directory tree too. */
++	if (ctx->mnt.fsgeom.flags & XFS_FSOP_GEOM_FLAGS_METADIR)
++		scan_flags |= SCRUB_SCAN_METADIR;
++
+ 	/*
+ 	 * If we already have ag/fs metadata to repair from previous phases,
+ 	 * we would rather not try to repair file metadata until we've tried
+@@ -273,7 +278,7 @@ phase3_func(
+ 			ictx.always_defer_repairs = true;
+ 	}
+ 
+-	err = scrub_scan_all_inodes(ctx, scrub_inode, &ictx);
++	err = scrub_scan_all_inodes(ctx, scrub_inode, scan_flags, &ictx);
+ 	if (!err && ictx.aborted)
+ 		err = ECANCELED;
+ 	if (err)
+diff --git a/scrub/phase5.c b/scrub/phase5.c
+index 96e13ac423f..e6786b4f25c 100644
+--- a/scrub/phase5.c
++++ b/scrub/phase5.c
+@@ -532,7 +532,7 @@ _("Filesystem has errors, skipping connectivity checks."));
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = scrub_scan_all_inodes(ctx, check_inode_names, &aborted);
++	ret = scrub_scan_all_inodes(ctx, check_inode_names, 0, &aborted);
+ 	if (ret)
+ 		return ret;
+ 	if (aborted)
+diff --git a/scrub/phase6.c b/scrub/phase6.c
+index 1a2643bdaf0..fb7cd3f13ea 100644
+--- a/scrub/phase6.c
++++ b/scrub/phase6.c
+@@ -507,7 +507,7 @@ report_all_media_errors(
+ 		return ret;
+ 
+ 	/* Scan for unlinked files. */
+-	return scrub_scan_all_inodes(ctx, report_inode_loss, vs);
++	return scrub_scan_all_inodes(ctx, report_inode_loss, 0, vs);
+ }
+ 
+ /* Schedule a read-verify of a (data block) extent. */
 
