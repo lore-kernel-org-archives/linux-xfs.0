@@ -2,44 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD0FDC4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:50:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3774C3DA7D
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 00:50:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235966AbiLaAu0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 19:50:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37470 "EHLO
+        id S235968AbiLaAum (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 19:50:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37494 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235961AbiLaAu0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:50:26 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 508521C90A;
-        Fri, 30 Dec 2022 16:50:24 -0800 (PST)
+        with ESMTP id S235961AbiLaAum (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 19:50:42 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3CFD1C921;
+        Fri, 30 Dec 2022 16:50:40 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id CCE9EB81DF1;
-        Sat, 31 Dec 2022 00:50:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8705FC433EF;
-        Sat, 31 Dec 2022 00:50:21 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id E2893CE19DF;
+        Sat, 31 Dec 2022 00:50:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25C33C433EF;
+        Sat, 31 Dec 2022 00:50:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672447821;
-        bh=7qF8prR8cdmJPChy8VnI2i2RPMsH7gWhmnpQjimVnAc=;
+        s=k20201202; t=1672447837;
+        bh=meuYBXXD8Z+1Tas5iSvK50WmvFyiTG0iKDZc1QiqUWA=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=HVwz79V59fld7R3oh8bteazVWjwssvm3PU3QDYy5ePwUNqRtPyCf4BQy4bYjytVJ8
-         36K8t+RHDk0F1Z+odbAdfBCBEF8Z85rF0rDSlkeI3cPBNt53DncdiJgH4YKNb+k3AQ
-         0hDK8qpFuaL9M7LMpVqDyvzZm92Jtq1StGIb+qG/pnoNss/GSHPDVhFdhZVe273kl6
-         vH03HC8oOzq/TF11jTO5aCf/e0jsaK/kGgkNxRUqOuFfHlFxrx5dd+fOVFmGJolLj4
-         8pXiC9gMjtbHbXFCMmHxp4AJbvnTWkJ3kqlLxMRL3IvfQDA+rDanJZrmFt7qYweWFy
-         fSZoHBDrgqgWA==
-Subject: [PATCH 24/24] fuzzy: for fuzzing ag btrees,
- find the path to the AG header
+        b=jhYeL9fLZvlD982UY9l/DjQnNICLsR/18fjPcXhWw+NZ/MGlrWs1rxZ46Z+kaR3YZ
+         DwY6e2bPzzeQQOdOx502ET7+DcJ5YEhkR9qLrOF5CGjACaKkXrwkWHSSbE7CaFdCOn
+         vH+kuRuM04YAJjno1wBj99Fb33Fuwo7iq/wbH+IF80gviZpzPW602bGAqNfuFlZkZI
+         wGPXWFVKXUIeuRr0Dxc7xMFg3uHsM8bDw4T5fK7OfI7Hz3yaZE9D9/zAPPIWTfWBAn
+         NTWa318y8A0YfFJieOnTBBCPkkCk1D0YkMm6ukF+3KXJpXfZHd5/xkfKkqAkqXOwxA
+         Jf/0sV211cxSw==
+Subject: [PATCH 1/5] fuzzy: test fuzzing directory block mappings
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     zlang@redhat.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Fri, 30 Dec 2022 14:19:42 -0800
-Message-ID: <167243878211.730387.7658682202200874885.stgit@magnolia>
-In-Reply-To: <167243877899.730387.9276624623424433346.stgit@magnolia>
-References: <167243877899.730387.9276624623424433346.stgit@magnolia>
+Date:   Fri, 30 Dec 2022 14:19:44 -0800
+Message-ID: <167243878483.731641.7350453901027339940.stgit@magnolia>
+In-Reply-To: <167243878469.731641.981302372644525592.stgit@magnolia>
+References: <167243878469.731641.981302372644525592.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -50,565 +49,261 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The fs population code creates various btrees in /some/ allocation group
-with at least two levels.  These btrees aren't necessarily created in
-agno 0, so we need to find it programmatically.  While we're at it, fix
-a few of the comments that failed to mention when we're fuzzing interior
-nodes and not leaves.
+Fuzz the block mappings of directories to see what happens.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/xfs    |   37 +++++++++++++++++++++++++++++++++++++
- tests/xfs/358 |    5 ++++-
- tests/xfs/359 |    5 ++++-
- tests/xfs/360 |    5 ++++-
- tests/xfs/361 |    5 ++++-
- tests/xfs/362 |    5 ++++-
- tests/xfs/363 |    5 ++++-
- tests/xfs/364 |    5 ++++-
- tests/xfs/365 |    5 ++++-
- tests/xfs/366 |    5 ++++-
- tests/xfs/367 |    5 ++++-
- tests/xfs/368 |    5 ++++-
- tests/xfs/369 |    5 ++++-
- tests/xfs/370 |    5 ++++-
- tests/xfs/371 |    5 ++++-
- tests/xfs/372 |    5 ++++-
- tests/xfs/373 |    7 +++++--
- tests/xfs/410 |    5 ++++-
- tests/xfs/411 |    5 ++++-
- tests/xfs/457 |    5 ++++-
- tests/xfs/458 |    5 ++++-
- tests/xfs/459 |    5 ++++-
- tests/xfs/460 |    5 ++++-
- tests/xfs/461 |    5 ++++-
- tests/xfs/462 |    5 ++++-
- tests/xfs/463 |    5 ++++-
- tests/xfs/464 |    7 +++++--
- tests/xfs/483 |    5 ++++-
- 28 files changed, 147 insertions(+), 29 deletions(-)
+ common/fuzzy       |   16 ++++++++++++++++
+ tests/xfs/1554     |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1554.out |   10 ++++++++++
+ tests/xfs/1555     |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1555.out |   10 ++++++++++
+ tests/xfs/1556     |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/1556.out |   10 ++++++++++
+ 7 files changed, 190 insertions(+)
+ create mode 100755 tests/xfs/1554
+ create mode 100644 tests/xfs/1554.out
+ create mode 100755 tests/xfs/1555
+ create mode 100644 tests/xfs/1555.out
+ create mode 100755 tests/xfs/1556
+ create mode 100644 tests/xfs/1556.out
 
 
-diff --git a/common/xfs b/common/xfs
-index 371618dc7b..610730e5ef 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -1686,3 +1686,40 @@ _xfs_get_inode_core_bytes()
- 		echo 96
- 	fi
+diff --git a/common/fuzzy b/common/fuzzy
+index 53fe22db69..09f42d9225 100644
+--- a/common/fuzzy
++++ b/common/fuzzy
+@@ -549,6 +549,22 @@ _require_scratch_xfs_fuzz_fields()
+ 	_require_xfs_db_command "fuzz"
  }
+ 
++# Sets the array SCRATCH_XFS_DIR_FUZZ_TYPES to the list of directory formats
++# available for fuzzing.  Each list item must match one of the /S_IFDIR.FMT_*
++# files created by the fs population code.  Users can override this by setting
++# SCRATCH_XFS_LIST_FUZZ_DIRTYPE in the environment.  BTREE is omitted here
++# because that refers to the fork format and does not affect the directory
++# structure at all.
++_scratch_xfs_set_dir_fuzz_types() {
++	if [ -n "${SCRATCH_XFS_LIST_FUZZ_DIRTYPE}" ]; then
++		mapfile -t SCRATCH_XFS_DIR_FUZZ_TYPES < \
++				<(echo "${SCRATCH_XFS_LIST_FUZZ_DIRTYPE}" | tr '[ ,]' '[\n\n]')
++		return
++	fi
 +
-+# Find us the path to the AG header containing a per-AG btree with a specific
-+# height.
-+_scratch_xfs_find_agbtree_height() {
-+	local bt_type="$1"
-+	local bt_height="$2"
-+	local agcount=$(_xfs_mount_agcount $SCRATCH_DEV)
-+
-+	case "${bt_type}" in
-+	"bno"|"cnt"|"rmap"|"refcnt")
-+		hdr="agf"
-+		bt_prefix="${bt_type}"
-+		;;
-+	"ino")
-+		hdr="agi"
-+		bt_prefix=""
-+		;;
-+	"fino")
-+		hdr="agi"
-+		bt_prefix="free_"
-+		;;
-+	*)
-+		_fail "Don't know about AG btree ${bt_type}"
-+		;;
-+	esac
-+
-+	for ((agno = 0; agno < agcount; agno++)); do
-+		bt_level=$(_scratch_xfs_db -c "${hdr} ${agno}" -c "p ${bt_prefix}level" | awk '{print $3}')
-+		# "level" is really the btree height
-+		if [ "${bt_level}" -eq "${bt_height}" ]; then
-+			echo "${hdr} ${agno}"
-+			return 0
-+		fi
-+	done
-+
-+	return 1
++	SCRATCH_XFS_DIR_FUZZ_TYPES=(BLOCK LEAF LEAFN NODE)
 +}
-diff --git a/tests/xfs/358 b/tests/xfs/358
-index a00eb6f9cb..92180e5196 100755
---- a/tests/xfs/358
-+++ b/tests/xfs/358
-@@ -24,8 +24,11 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'bno' 2)" || \
-+	_fail "could not find two-level bnobt"
 +
- echo "Fuzz bnobt recs"
--_scratch_xfs_fuzz_metadata '' 'offline'  'agf 0' 'addr bnoroot' 'addr ptrs[1]' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'offline'  "$path" 'addr bnoroot' 'addr ptrs[1]' >> $seqres.full
- echo "Done fuzzing bnobt recs"
- 
- # success, all done
-diff --git a/tests/xfs/359 b/tests/xfs/359
-index f0a82db4b8..0498aaccf5 100755
---- a/tests/xfs/359
-+++ b/tests/xfs/359
-@@ -24,8 +24,11 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'bno' 2)" || \
-+	_fail "could not find two-level bnobt"
+ # Grab the list of available fuzzing verbs
+ _scratch_xfs_list_fuzz_verbs() {
+ 	if [ -n "${SCRATCH_XFS_LIST_FUZZ_VERBS}" ]; then
+diff --git a/tests/xfs/1554 b/tests/xfs/1554
+new file mode 100755
+index 0000000000..b43c705cb9
+--- /dev/null
++++ b/tests/xfs/1554
+@@ -0,0 +1,48 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0-or-later
++# Copyright (c) 2022 Oracle.  All Rights Reserved.
++#
++# FS QA Test No. 1554
++#
++# Populate a XFS filesystem and fuzz the data mappings of every directory type.
++# Use xfs_scrub to fix the corruption.
++#
++. ./common/preamble
++_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_online_repair
 +
- echo "Fuzz bnobt recs"
--_scratch_xfs_fuzz_metadata '' 'online'  'agf 0' 'addr bnoroot' 'addr ptrs[1]' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'online'  "$path" 'addr bnoroot' 'addr ptrs[1]' >> $seqres.full
- echo "Done fuzzing bnobt recs"
- 
- # success, all done
-diff --git a/tests/xfs/360 b/tests/xfs/360
-index 3942ffd1b2..c34f455403 100755
---- a/tests/xfs/360
-+++ b/tests/xfs/360
-@@ -24,8 +24,11 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'bno' 2)" || \
-+	_fail "could not find two-level bnobt"
++_register_cleanup "_cleanup" BUS
 +
- echo "Fuzz bnobt keyptr"
--_scratch_xfs_fuzz_metadata '' 'offline'  'agf 0' 'addr bnoroot' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'offline'  "$path" 'addr bnoroot' >> $seqres.full
- echo "Done fuzzing bnobt keyptr"
- 
- # success, all done
-diff --git a/tests/xfs/361 b/tests/xfs/361
-index b7ee0f6f94..22b1af4ea3 100755
---- a/tests/xfs/361
-+++ b/tests/xfs/361
-@@ -24,8 +24,11 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'bno' 2)" || \
-+	_fail "could not find two-level bnobt"
++# Import common functions.
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
 +
- echo "Fuzz bnobt keyptr"
--_scratch_xfs_fuzz_metadata '' 'online'  'agf 0' 'addr bnoroot' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'online'  "$path" 'addr bnoroot' >> $seqres.full
- echo "Done fuzzing bnobt keyptr"
- 
- # success, all done
-diff --git a/tests/xfs/362 b/tests/xfs/362
-index f711661b02..51727edc06 100755
---- a/tests/xfs/362
-+++ b/tests/xfs/362
-@@ -24,8 +24,11 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'cnt' 2)" || \
-+	_fail "could not find two-level cntbt"
++# real QA test starts here
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
 +
- echo "Fuzz cntbt"
--_scratch_xfs_fuzz_metadata '' 'offline'  'agf 0' 'addr cntroot' 'addr ptrs[1]' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'offline'  "$path" 'addr cntroot' 'addr ptrs[1]' >> $seqres.full
- echo "Done fuzzing cntbt"
- 
- # success, all done
-diff --git a/tests/xfs/363 b/tests/xfs/363
-index 6be9109eca..8a62c1c821 100755
---- a/tests/xfs/363
-+++ b/tests/xfs/363
-@@ -24,8 +24,11 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'cnt' 2)" || \
-+	_fail "could not find two-level cntbt"
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
 +
- echo "Fuzz cntbt"
--_scratch_xfs_fuzz_metadata '' 'online'  'agf 0' 'addr cntroot' 'addr ptrs[1]' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'online'  "$path" 'addr cntroot' 'addr ptrs[1]' >> $seqres.full
- echo "Done fuzzing cntbt"
- 
- # success, all done
-diff --git a/tests/xfs/364 b/tests/xfs/364
-index fcd18fe686..984ecdafed 100755
---- a/tests/xfs/364
-+++ b/tests/xfs/364
-@@ -24,8 +24,11 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'ino' 2)" || \
-+	_fail "could not find two-level inobt"
++_scratch_xfs_set_dir_fuzz_types
 +
- echo "Fuzz inobt"
--_scratch_xfs_fuzz_metadata '' 'offline'  'agi 0' 'addr root' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'offline'  "$path" 'addr root' 'addr ptrs[1]' >> $seqres.full
- echo "Done fuzzing inobt"
- 
- # success, all done
-diff --git a/tests/xfs/365 b/tests/xfs/365
-index 6f116f9b9c..e4325c35d1 100755
---- a/tests/xfs/365
-+++ b/tests/xfs/365
-@@ -24,8 +24,11 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'ino' 2)" || \
-+	_fail "could not find two-level inobt"
++# Now fuzz the block maps of each directory type.
++for dirtype in "${SCRATCH_XFS_DIR_FUZZ_TYPES[@]}"; do
++	echo "Fuzz block map for ${dirtype}" | tee -a $seqres.full
 +
- echo "Fuzz inobt"
--_scratch_xfs_fuzz_metadata '' 'online'  'agi 1' 'addr root' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'online'  "$path" 'addr root' 'addr ptrs[1]' >> $seqres.full
- echo "Done fuzzing inobt"
- 
- # success, all done
-diff --git a/tests/xfs/366 b/tests/xfs/366
-index 4c651288c0..8a52d21a0f 100755
---- a/tests/xfs/366
-+++ b/tests/xfs/366
-@@ -25,8 +25,11 @@ _require_xfs_finobt
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'fino' 2)" || \
-+	_fail "could not find two-level finobt"
++	# Restore a correct copy of the filesystem before we start a round of
++	# fuzzing.  This avoids corruption errors from xfs_db when
++	# _scratch_xfs_fuzz_metadata probes the directory block fields.
++	__scratch_xfs_fuzz_mdrestore
 +
- echo "Fuzz finobt"
--_scratch_xfs_fuzz_metadata '' 'offline'  'agi 0' 'addr free_root' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'offline'  "$path" 'addr free_root' 'addr ptrs[1]' >> $seqres.full
- echo "Done fuzzing finobt"
- 
- # success, all done
-diff --git a/tests/xfs/367 b/tests/xfs/367
-index c474a9e7d8..d9d07faab2 100755
---- a/tests/xfs/367
-+++ b/tests/xfs/367
-@@ -25,8 +25,11 @@ _require_xfs_finobt
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'fino' 2)" || \
-+	_fail "could not find two-level finobt"
++	_scratch_mount
++	inum=$(stat -c '%i' $SCRATCH_MNT/S_IFDIR.FMT_${dirtype})
++	_scratch_unmount
 +
- echo "Fuzz finobt"
--_scratch_xfs_fuzz_metadata '' 'online'  'agi 0' 'addr free_root' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'online'  "$path" 'addr free_root' 'addr ptrs[1]' >> $seqres.full
- echo "Done fuzzing finobt"
- 
- # success, all done
-diff --git a/tests/xfs/368 b/tests/xfs/368
-index b1c1f97664..83499827c9 100755
---- a/tests/xfs/368
-+++ b/tests/xfs/368
-@@ -25,8 +25,11 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'rmap' 2)" || \
-+	_fail "could not find two-level rmapbt"
++	_scratch_xfs_fuzz_metadata 'u*.bmx' 'online'  "inode ${inum}" >> $seqres.full
++	echo "Done fuzzing dir map ${dirtype}"
++done
 +
- echo "Fuzz rmapbt recs"
--_scratch_xfs_fuzz_metadata '' 'offline' 'agf 0' 'addr rmaproot' 'addr ptrs[1]' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'offline' "$path" 'addr rmaproot' 'addr ptrs[1]' >> $seqres.full
- echo "Done fuzzing rmapbt recs"
- 
- # success, all done
-diff --git a/tests/xfs/369 b/tests/xfs/369
-index 5e6d8d9be0..3236b50e00 100755
---- a/tests/xfs/369
-+++ b/tests/xfs/369
-@@ -25,8 +25,11 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'rmap' 2)" || \
-+	_fail "could not find two-level rmapbt"
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1554.out b/tests/xfs/1554.out
+new file mode 100644
+index 0000000000..9985ed1990
+--- /dev/null
++++ b/tests/xfs/1554.out
+@@ -0,0 +1,10 @@
++QA output created by 1554
++Format and populate
++Fuzz block map for BLOCK
++Done fuzzing dir map BLOCK
++Fuzz block map for LEAF
++Done fuzzing dir map LEAF
++Fuzz block map for LEAFN
++Done fuzzing dir map LEAFN
++Fuzz block map for NODE
++Done fuzzing dir map NODE
+diff --git a/tests/xfs/1555 b/tests/xfs/1555
+new file mode 100755
+index 0000000000..8dee177a3d
+--- /dev/null
++++ b/tests/xfs/1555
+@@ -0,0 +1,48 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0-or-later
++# Copyright (c) 2022 Oracle.  All Rights Reserved.
++#
++# FS QA Test No. 1555
++#
++# Populate a XFS filesystem and fuzz the data mappings of every directory type.
++# Use xfs_repair to fix the corruption.
++#
++. ./common/preamble
++_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_repair
 +
- echo "Fuzz rmapbt recs"
--_scratch_xfs_fuzz_metadata '' 'online' 'agf 0' 'addr rmaproot' 'addr ptrs[1]' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'online' "$path" 'addr rmaproot' 'addr ptrs[1]' >> $seqres.full
- echo "Done fuzzing rmapbt recs"
- 
- # success, all done
-diff --git a/tests/xfs/370 b/tests/xfs/370
-index 0a916242e2..891d5e2572 100755
---- a/tests/xfs/370
-+++ b/tests/xfs/370
-@@ -26,8 +26,11 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'rmap' 2)" || \
-+	_fail "could not find two-level rmapbt"
++_register_cleanup "_cleanup" BUS
 +
- echo "Fuzz rmapbt keyptr"
--_scratch_xfs_fuzz_metadata '' 'offline' 'agf 0' 'addr rmaproot' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'offline' "$path" 'addr rmaproot' >> $seqres.full
- echo "Done fuzzing rmapbt keyptr"
- 
- # success, all done
-diff --git a/tests/xfs/371 b/tests/xfs/371
-index a9b914d9f5..f7a336b170 100755
---- a/tests/xfs/371
-+++ b/tests/xfs/371
-@@ -26,8 +26,11 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'rmap' 2)" || \
-+	_fail "could not find two-level rmapbt"
++# Import common functions.
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
 +
- echo "Fuzz rmapbt keyptr"
--_scratch_xfs_fuzz_metadata '' 'online' 'agf 0' 'addr rmaproot' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'online' "$path" 'addr rmaproot' >> $seqres.full
- echo "Done fuzzing rmapbt keyptr"
- 
- # success, all done
-diff --git a/tests/xfs/372 b/tests/xfs/372
-index c39a917500..2250322527 100755
---- a/tests/xfs/372
-+++ b/tests/xfs/372
-@@ -26,8 +26,11 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'refcnt' 2)" || \
-+	_fail "could not find two-level refcountbt"
++# real QA test starts here
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
 +
- echo "Fuzz refcountbt"
--_scratch_xfs_fuzz_metadata '' 'offline'  'agf 0' 'addr refcntroot' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'offline'  "$path" 'addr refcntroot' >> $seqres.full
- echo "Done fuzzing refcountbt"
- 
- # success, all done
-diff --git a/tests/xfs/373 b/tests/xfs/373
-index 324aa9fe7d..e0c20044ec 100755
---- a/tests/xfs/373
-+++ b/tests/xfs/373
-@@ -4,7 +4,7 @@
- #
- # FS QA Test No. 373
- #
--# Populate a XFS filesystem and fuzz every refcountbt field.
-+# Populate a XFS filesystem and fuzz every refcountbt key/pointer field.
- # Use xfs_scrub to fix the corruption.
- #
- . ./common/preamble
-@@ -26,8 +26,11 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'refcnt' 2)" || \
-+	_fail "could not find two-level refcountbt"
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
 +
- echo "Fuzz refcountbt"
--_scratch_xfs_fuzz_metadata '' 'online'  'agf 0' 'addr refcntroot' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'online'  "$path" 'addr refcntroot' >> $seqres.full
- echo "Done fuzzing refcountbt"
- 
- # success, all done
-diff --git a/tests/xfs/410 b/tests/xfs/410
-index e98a63ebf5..388ed7d190 100755
---- a/tests/xfs/410
-+++ b/tests/xfs/410
-@@ -26,8 +26,11 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'refcnt' 2)" || \
-+	_fail "could not find two-level refcountbt"
++_scratch_xfs_set_dir_fuzz_types
 +
- echo "Fuzz refcountbt"
--_scratch_xfs_fuzz_metadata '' 'offline'  'agf 0' 'addr refcntroot' 'addr ptrs[1]' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'offline'  "$path" 'addr refcntroot' 'addr ptrs[1]' >> $seqres.full
- echo "Done fuzzing refcountbt"
- 
- # success, all done
-diff --git a/tests/xfs/411 b/tests/xfs/411
-index cfe7796102..a9fc25ce7d 100755
---- a/tests/xfs/411
-+++ b/tests/xfs/411
-@@ -26,8 +26,11 @@ _require_scratch_xfs_fuzz_fields
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'refcnt' 2)" || \
-+	_fail "could not find two-level refcountbt"
++# Now fuzz the block maps of each directory type.
++for dirtype in "${SCRATCH_XFS_DIR_FUZZ_TYPES[@]}"; do
++	echo "Fuzz block map for ${dirtype}" | tee -a $seqres.full
 +
- echo "Fuzz refcountbt"
--_scratch_xfs_fuzz_metadata '' 'online'  'agf 0' 'addr refcntroot' 'addr ptrs[1]' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'online'  "$path" 'addr refcntroot' 'addr ptrs[1]' >> $seqres.full
- echo "Done fuzzing refcountbt"
- 
- # success, all done
-diff --git a/tests/xfs/457 b/tests/xfs/457
-index 332eeb9837..64cd6b4b82 100755
---- a/tests/xfs/457
-+++ b/tests/xfs/457
-@@ -25,8 +25,11 @@ _disable_dmesg_check
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'bno' 2)" || \
-+	_fail "could not find two-level bnobt"
++	# Restore a correct copy of the filesystem before we start a round of
++	# fuzzing.  This avoids corruption errors from xfs_db when
++	# _scratch_xfs_fuzz_metadata probes the directory block fields.
++	__scratch_xfs_fuzz_mdrestore
 +
- echo "Fuzz bnobt recs"
--_scratch_xfs_fuzz_metadata '' 'none'  'agf 0' 'addr bnoroot' 'addr ptrs[1]' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'none'  "$path" 'addr bnoroot' 'addr ptrs[1]' >> $seqres.full
- echo "Done fuzzing bnobt recs"
- 
- # success, all done
-diff --git a/tests/xfs/458 b/tests/xfs/458
-index ce03d687ab..8d87ec569f 100755
---- a/tests/xfs/458
-+++ b/tests/xfs/458
-@@ -25,8 +25,11 @@ _disable_dmesg_check
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'bno' 2)" || \
-+	_fail "could not find two-level bnobt"
++	_scratch_mount
++	inum=$(stat -c '%i' $SCRATCH_MNT/S_IFDIR.FMT_${dirtype})
++	_scratch_unmount
 +
- echo "Fuzz bnobt keyptr"
--_scratch_xfs_fuzz_metadata '' 'none'  'agf 0' 'addr bnoroot' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'none'  "$path" 'addr bnoroot' >> $seqres.full
- echo "Done fuzzing bnobt keyptr"
- 
- # success, all done
-diff --git a/tests/xfs/459 b/tests/xfs/459
-index d166160f87..5989bc1e6e 100755
---- a/tests/xfs/459
-+++ b/tests/xfs/459
-@@ -25,8 +25,11 @@ _disable_dmesg_check
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'cnt' 2)" || \
-+	_fail "could not find two-level cntbt"
++	_scratch_xfs_fuzz_metadata 'u*.bmx' 'offline'  "inode ${inum}" >> $seqres.full
++	echo "Done fuzzing dir map ${dirtype}"
++done
 +
- echo "Fuzz cntbt"
--_scratch_xfs_fuzz_metadata '' 'none'  'agf 0' 'addr cntroot' 'addr ptrs[1]' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'none'  "$path" 'addr cntroot' 'addr ptrs[1]' >> $seqres.full
- echo "Done fuzzing cntbt"
- 
- # success, all done
-diff --git a/tests/xfs/460 b/tests/xfs/460
-index 0daafa3066..7117477011 100755
---- a/tests/xfs/460
-+++ b/tests/xfs/460
-@@ -25,8 +25,11 @@ _disable_dmesg_check
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'ino' 2)" || \
-+	_fail "could not find two-level inobt"
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1555.out b/tests/xfs/1555.out
+new file mode 100644
+index 0000000000..38c5714d13
+--- /dev/null
++++ b/tests/xfs/1555.out
+@@ -0,0 +1,10 @@
++QA output created by 1555
++Format and populate
++Fuzz block map for BLOCK
++Done fuzzing dir map BLOCK
++Fuzz block map for LEAF
++Done fuzzing dir map LEAF
++Fuzz block map for LEAFN
++Done fuzzing dir map LEAFN
++Fuzz block map for NODE
++Done fuzzing dir map NODE
+diff --git a/tests/xfs/1556 b/tests/xfs/1556
+new file mode 100755
+index 0000000000..54df601c11
+--- /dev/null
++++ b/tests/xfs/1556
+@@ -0,0 +1,48 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0-or-later
++# Copyright (c) 2022 Oracle.  All Rights Reserved.
++#
++# FS QA Test No. 1556
++#
++# Populate a XFS filesystem and fuzz the data mappings of every directory type.
++# Do not fix the filesystem, to test metadata verifiers.
++#
++. ./common/preamble
++_begin_fstest dangerous_fuzzers dangerous_scrub dangerous_norepair
 +
- echo "Fuzz inobt"
--_scratch_xfs_fuzz_metadata '' 'none'  'agi 1' 'addr root' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'none'  "$path" 'addr root' 'addr ptrs[1]' >> $seqres.full
- echo "Done fuzzing inobt"
- 
- # success, all done
-diff --git a/tests/xfs/461 b/tests/xfs/461
-index 2d20c69d87..7c1327b052 100755
---- a/tests/xfs/461
-+++ b/tests/xfs/461
-@@ -26,8 +26,11 @@ _require_xfs_finobt
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'fino' 2)" || \
-+	_fail "could not find two-level finobt"
++_register_cleanup "_cleanup" BUS
 +
- echo "Fuzz finobt"
--_scratch_xfs_fuzz_metadata '' 'none'  'agi 0' 'addr free_root' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'none'  "$path" 'addr free_root' 'addr ptrs[1]' >> $seqres.full
- echo "Done fuzzing finobt"
- 
- # success, all done
-diff --git a/tests/xfs/462 b/tests/xfs/462
-index 587facc03c..1ee4d27e92 100755
---- a/tests/xfs/462
-+++ b/tests/xfs/462
-@@ -26,8 +26,11 @@ _disable_dmesg_check
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'rmap' 2)" || \
-+	_fail "could not find two-level rmapbt"
++# Import common functions.
++. ./common/filter
++. ./common/populate
++. ./common/fuzzy
 +
- echo "Fuzz rmapbt recs"
--_scratch_xfs_fuzz_metadata '' 'none' 'agf 0' 'addr rmaproot' 'addr ptrs[1]' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'none' "$path" 'addr rmaproot' 'addr ptrs[1]' >> $seqres.full
- echo "Done fuzzing rmapbt recs"
- 
- # success, all done
-diff --git a/tests/xfs/463 b/tests/xfs/463
-index 7270f7017a..7dd2d37dea 100755
---- a/tests/xfs/463
-+++ b/tests/xfs/463
-@@ -26,8 +26,11 @@ _disable_dmesg_check
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'rmap' 2)" || \
-+	_fail "could not find two-level rmapbt"
++# real QA test starts here
++_supported_fs xfs
++_require_scratch_xfs_fuzz_fields
 +
- echo "Fuzz rmapbt keyptr"
--_scratch_xfs_fuzz_metadata '' 'none' 'agf 0' 'addr rmaproot' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'none' "$path" 'addr rmaproot' >> $seqres.full
- echo "Done fuzzing rmapbt keyptr"
- 
- # success, all done
-diff --git a/tests/xfs/464 b/tests/xfs/464
-index 59d25ae1c0..719901e66d 100755
---- a/tests/xfs/464
-+++ b/tests/xfs/464
-@@ -4,7 +4,7 @@
- #
- # FS QA Test No. 464
- #
--# Populate a XFS filesystem and fuzz every refcountbt field.
-+# Populate a XFS filesystem and fuzz every refcountbt key/pointer field.
- # Do not fix the filesystem, to test metadata verifiers.
- 
- . ./common/preamble
-@@ -27,8 +27,11 @@ _disable_dmesg_check
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'refcnt' 2)" || \
-+	_fail "could not find two-level refcountbt"
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
 +
- echo "Fuzz refcountbt"
--_scratch_xfs_fuzz_metadata '' 'none'  'agf 0' 'addr refcntroot' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'none'  "$path" 'addr refcntroot' >> $seqres.full
- echo "Done fuzzing refcountbt"
- 
- # success, all done
-diff --git a/tests/xfs/483 b/tests/xfs/483
-index d7b0101a82..56670ba178 100755
---- a/tests/xfs/483
-+++ b/tests/xfs/483
-@@ -27,8 +27,11 @@ _disable_dmesg_check
- echo "Format and populate"
- _scratch_populate_cached nofill > $seqres.full 2>&1
- 
-+path="$(_scratch_xfs_find_agbtree_height 'refcnt' 2)" || \
-+	_fail "could not find two-level refcountbt"
++_scratch_xfs_set_dir_fuzz_types
 +
- echo "Fuzz refcountbt"
--_scratch_xfs_fuzz_metadata '' 'none'  'agf 0' 'addr refcntroot' 'addr ptrs[1]' >> $seqres.full
-+_scratch_xfs_fuzz_metadata '' 'none'  "$path" 'addr refcntroot' 'addr ptrs[1]' >> $seqres.full
- echo "Done fuzzing refcountbt"
- 
- # success, all done
++# Now fuzz the block maps of each directory type.
++for dirtype in "${SCRATCH_XFS_DIR_FUZZ_TYPES[@]}"; do
++	echo "Fuzz block map for ${dirtype}" | tee -a $seqres.full
++
++	# Restore a correct copy of the filesystem before we start a round of
++	# fuzzing.  This avoids corruption errors from xfs_db when
++	# _scratch_xfs_fuzz_metadata probes the directory block fields.
++	__scratch_xfs_fuzz_mdrestore
++
++	_scratch_mount
++	inum=$(stat -c '%i' $SCRATCH_MNT/S_IFDIR.FMT_${dirtype})
++	_scratch_unmount
++
++	_scratch_xfs_fuzz_metadata 'u*.bmx' 'none'  "inode ${inum}" >> $seqres.full
++	echo "Done fuzzing dir map ${dirtype}"
++done
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/1556.out b/tests/xfs/1556.out
+new file mode 100644
+index 0000000000..b947285caa
+--- /dev/null
++++ b/tests/xfs/1556.out
+@@ -0,0 +1,10 @@
++QA output created by 1556
++Format and populate
++Fuzz block map for BLOCK
++Done fuzzing dir map BLOCK
++Fuzz block map for LEAF
++Done fuzzing dir map LEAF
++Fuzz block map for LEAFN
++Done fuzzing dir map LEAFN
++Fuzz block map for NODE
++Done fuzzing dir map NODE
 
