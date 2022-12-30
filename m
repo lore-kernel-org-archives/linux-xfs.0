@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E20FC46467
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 03:11:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D47EEC3DA7C
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 03:11:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236322AbiLaDLg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 22:11:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36144 "EHLO
+        id S236327AbiLaDLw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Dec 2022 22:11:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231476AbiLaDLf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 22:11:35 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9C03FCD8;
-        Fri, 30 Dec 2022 19:11:33 -0800 (PST)
+        with ESMTP id S231476AbiLaDLv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 22:11:51 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4B49E59;
+        Fri, 30 Dec 2022 19:11:50 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5658A61C7A;
-        Sat, 31 Dec 2022 03:11:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9705C433EF;
-        Sat, 31 Dec 2022 03:11:32 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 89F9DB81E6B;
+        Sat, 31 Dec 2022 03:11:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48092C433D2;
+        Sat, 31 Dec 2022 03:11:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672456292;
-        bh=oEf/zdfQhR48NYLAlvHHlJ9PBd0QNd/wjeiAJ8+ka5Q=;
+        s=k20201202; t=1672456308;
+        bh=j/LDjaycDFOUuOJOHXG9wZs/COuMk+TbL0io55B4u7o=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=VErj2lI+baO7B9VqF1lAbBTCcJbLnqZX2PLEna5efEr3FZKtgx15FYAiLyKzC8N+H
-         TxJVI88Hh0oeVT8Zi33qpY1RyO1c9vvdnTm5Wff1DpKVeE4eoyu6NqxxOBphBLCEM+
-         tg6Rzvq8RKvnU0vYooQTxT8s+cxOruR3jvzUs/5dKSBPDDCPg3cBYkZtSaom2XzP5w
-         aa2mu2EXQeKXmQhzpaMW/qFACzuD8Nu7LJLAPmed7GS5UKyZC9Q/UVWo7E2aHw3+Zm
-         3nMQ6V4dIHDizv++N1lqtDMCARsMORTb/dbzcjRqhCFH7szvtXRw590LNrWaIeFLSS
-         HLsTGRfx1sAnw==
-Subject: [PATCH 08/12] xfs/122: update for rtbitmap headers
+        b=WLZiCGroHty9yO2wM/+VhHCxUvJh77OpMA36ekIkOL4vwnyRYz2WHClNXZS1if5TZ
+         DRS1EdmXKjcZxD+cpuARIut+pjIVL/K0Ujma1Ly7OgZe2m5lzN4fYUrRQKkedo64a6
+         H1LLHoAIEs+aDqAKpbOB0WxMw0b3jralbK8c2cS+ePzhsbyxPs6k07JjTtSeldkrwS
+         bi9JFIaX+ue5v1CsEojWdfQPUAhCZoleHYHnw7cKI4IfsPuDA//IDTcJg3Ui6GCYNu
+         K3wdqaAegoczsXgYrUz8dGE04CwAq1s/kDUGv7RldpL6EuLjfng6p3oQwdffSqiuLL
+         tiRNepRabcdtA==
+Subject: [PATCH 09/12] xfs/122: udpate test to pick up rtword/suminfo ondisk
+ unions
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     zlang@redhat.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
 Date:   Fri, 30 Dec 2022 14:20:40 -0800
-Message-ID: <167243884050.739029.15010077823493214188.stgit@magnolia>
+Message-ID: <167243884063.739029.10787000865854510244.stgit@magnolia>
 In-Reply-To: <167243883943.739029.3041109696120604285.stgit@magnolia>
 References: <167243883943.739029.3041109696120604285.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,22 +50,40 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
+Update this test to check that the ondisk unions for rt bitmap word and
+rt summary counts are always the correct size.
+
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/122.out |    1 +
- 1 file changed, 1 insertion(+)
+ tests/xfs/122     |    2 +-
+ tests/xfs/122.out |    2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
 
+diff --git a/tests/xfs/122 b/tests/xfs/122
+index e616f1987d..fe6c1e36e9 100755
+--- a/tests/xfs/122
++++ b/tests/xfs/122
+@@ -187,7 +187,7 @@ echo 'int main(int argc, char *argv[]) {' >>$cprog
+ #
+ cat /usr/include/xfs/xfs*.h | indent |\
+ _attribute_filter |\
+-grep -E '(} *xfs_.*_t|^struct xfs_[a-z0-9_]*$)' |\
++grep -E '(} *xfs_.*_t|^(union|struct) xfs_[a-z0-9_]*$)' |\
+ grep -E -v -f $tmp.ignore |\
+ sed -e 's/^.*}[[:space:]]*//g' -e 's/;.*$//g' -e 's/_t, /_t\n/g' |\
+ sort | uniq |\
 diff --git a/tests/xfs/122.out b/tests/xfs/122.out
-index 01376180cc..336618cf7a 100644
+index 336618cf7a..1379c7b3b5 100644
 --- a/tests/xfs/122.out
 +++ b/tests/xfs/122.out
-@@ -115,6 +115,7 @@ sizeof(struct xfs_refcount_key) = 4
- sizeof(struct xfs_refcount_rec) = 12
- sizeof(struct xfs_rmap_key) = 20
- sizeof(struct xfs_rmap_rec) = 24
-+sizeof(struct xfs_rtbuf_blkinfo) = 48
- sizeof(struct xfs_rtgroup_geometry) = 128
- sizeof(struct xfs_rtrmap_key) = 24
- sizeof(struct xfs_rtrmap_rec) = 32
+@@ -128,6 +128,8 @@ sizeof(struct xfs_swap_extent) = 64
+ sizeof(struct xfs_sxd_log_format) = 16
+ sizeof(struct xfs_sxi_log_format) = 80
+ sizeof(struct xfs_unmount_log_format) = 8
++sizeof(union xfs_rtword_ondisk) = 4
++sizeof(union xfs_suminfo_ondisk) = 4
+ sizeof(xfs_agf_t) = 224
+ sizeof(xfs_agfl_t) = 36
+ sizeof(xfs_agi_t) = 344
 
