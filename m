@@ -2,246 +2,98 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70494C46467
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 03:30:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A6DAC3DA7D
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Dec 2022 15:10:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236403AbiLaDaT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Dec 2022 22:30:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39808 "EHLO
+        id S231738AbiLaPKI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 31 Dec 2022 10:10:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42642 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236433AbiLaDaB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Dec 2022 22:30:01 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB9BD1659F;
-        Fri, 30 Dec 2022 19:30:00 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S231700AbiLaPKH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 31 Dec 2022 10:10:07 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0884D633D
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Dec 2022 07:09:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1672499364;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=S46GJjFnRtEs4ZF4WLB+hxVTgfYfNE/hUwjLY/tXs74=;
+        b=H2j4BDJxxryQkerFyPAjyHofSVgO3Ut27MWzSBv3N5rC42LFAq4DOSUeX/hWLSOcCBiupc
+        fcifPRs5iJ3FWY5Dv7kTQGwadqRgy+g7BG6UyODHyohtRHaG2jwgkQksWedn0EhpreGKYZ
+        RQzHB4aNnlMSvQtkGUsaNi5RGQ6lOpc=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-93-6d9x8k0TNpuKVA_6fvvkaw-1; Sat, 31 Dec 2022 10:09:23 -0500
+X-MC-Unique: 6d9x8k0TNpuKVA_6fvvkaw-1
+Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 5B6E4B81DDB;
-        Sat, 31 Dec 2022 03:29:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18905C433EF;
-        Sat, 31 Dec 2022 03:29:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672457398;
-        bh=w5Olm+IHvx7OA9BizKYwVMqrcIpd8/x0mBpZQx4dICM=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=svGoJU96n8p69L/S0C2BjUHLRNSwR84t1KoTAphCJmpTHoOCAuM4Sheit6dHkq/YV
-         lej7q/yenK86fLDsEp76JdJ9n22XuWSatF2C38t8NES9xvwKa7DW2Vj3UyAlz+TzGX
-         9FqgHz9gWbz0FuUHIGdBDb8LvZByec8aWJgwVK1E37boekFTm3/BRKERhHWNZ/L1ql
-         g3iBWJoUKCCTjSgUkMqgQtniFxuGi3rH2kFjSmIEwJHl0LywPBo5uxtK+2rnd166Cb
-         u603+Ca+O51D5C/yWULnQf3GSvY8p0koAJzKuWYD3e40D8I7pUNKpeTqXMn+tN6UVt
-         uD8AhpF0EU5bA==
-Subject: [PATCH 1/1] xfs: test clearing of free space
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org, zlang@redhat.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Fri, 30 Dec 2022 14:21:17 -0800
-Message-ID: <167243887793.742091.4995044378945793592.stgit@magnolia>
-In-Reply-To: <167243887781.742091.16659657751012326997.stgit@magnolia>
-References: <167243887781.742091.16659657751012326997.stgit@magnolia>
-User-Agent: StGit/0.19
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id E89D58F6E80;
+        Sat, 31 Dec 2022 15:09:22 +0000 (UTC)
+Received: from pasta.redhat.com (ovpn-192-3.brq.redhat.com [10.40.192.3])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id A7AE9492B00;
+        Sat, 31 Dec 2022 15:09:20 +0000 (UTC)
+From:   Andreas Gruenbacher <agruenba@redhat.com>
+To:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Matthew Wilcox <willy@infradead.org>
+Cc:     Andreas Gruenbacher <agruenba@redhat.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, cluster-devel@redhat.com
+Subject: [PATCH v5 0/9] Turn iomap_page_ops into iomap_folio_ops
+Date:   Sat, 31 Dec 2022 16:09:10 +0100
+Message-Id: <20221231150919.659533-1-agruenba@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.10
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Here's an updated version of this patch queue.  Changes since v4 [*]:
 
-Simple regression test for the spaceman clearspace command, which tries
-to free all the used space in some part of the filesystem.
+* I've removed "fs: Add folio_may_straddle_isize helper" as I couldn't
+  get any feedback from Al Viro; the patch isn't essential for this
+  patch queue.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- common/rc          |    2 +
- tests/xfs/1400     |   57 +++++++++++++++++++++++++++++++++++++
- tests/xfs/1400.out |    2 +
- tests/xfs/1401     |   80 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/1401.out |    2 +
- 5 files changed, 142 insertions(+), 1 deletion(-)
- create mode 100755 tests/xfs/1400
- create mode 100644 tests/xfs/1400.out
- create mode 100755 tests/xfs/1401
- create mode 100644 tests/xfs/1401.out
+* The iomap_folio_ops operations have been renamed to ->get_folio() and
+  ->put_folio(), and the helpers have been renamed to iomap_get_folio()
+  and iomap_put_folio().
 
+* Patch "xfs: Make xfs_iomap_folio_ops static" has been added at the
+  end.
 
-diff --git a/common/rc b/common/rc
-index 20fe51f502..bf1d0ded39 100644
---- a/common/rc
-+++ b/common/rc
-@@ -2512,7 +2512,7 @@ _require_xfs_io_command()
- 		testio=`$XFS_IO_PROG -F -f -c "$command $param 0 1m" $testfile 2>&1`
- 		param_checked="$param"
- 		;;
--	"fpunch" | "fcollapse" | "zero" | "fzero" | "finsert" | "funshare")
-+	"fpunch" | "fcollapse" | "zero" | "fzero" | "finsert" | "funshare" | "fmapfree")
- 		local blocksize=$(_get_file_block_size $TEST_DIR)
- 		testio=`$XFS_IO_PROG -F -f -c "pwrite 0 $((5 * $blocksize))" \
- 			-c "fsync" -c "$command $blocksize $((2 * $blocksize))" \
-diff --git a/tests/xfs/1400 b/tests/xfs/1400
-new file mode 100755
-index 0000000000..c054bf6ed7
---- /dev/null
-+++ b/tests/xfs/1400
-@@ -0,0 +1,57 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test 1400
-+#
-+# Basic functionality testing for FALLOC_FL_MAP_FREE
-+#
-+. ./common/preamble
-+_begin_fstest auto prealloc
-+
-+# Import common functions.
-+. ./common/filter
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs generic
-+_require_scratch
-+_require_xfs_io_command "fmapfree"
-+
-+_scratch_mkfs | _filter_mkfs 2> $tmp.mkfs > /dev/null
-+_scratch_mount >> $seqres.full
-+. $tmp.mkfs
-+
-+testfile="$SCRATCH_MNT/$seq.txt"
-+touch $testfile
-+if $XFS_IO_PROG -c 'stat -v' $testfile | grep -q 'realtime'; then
-+	# realtime
-+	increment=$((dbsize * rtblocks / 10))
-+	length=$((dbsize * rtblocks))
-+else
-+	# data
-+	increment=$((dbsize * dblocks / 10))
-+	length=$((dbsize * dblocks))
-+fi
-+
-+free_bytes=$(stat -f -c '%f * %S' $testfile | bc)
-+
-+echo "free space: $free_bytes; increment: $increment; length: $length" >> $seqres.full
-+
-+# Map all the free space on that device, 10% at a time
-+for ((start = 0; start < length; start += increment)); do
-+	$XFS_IO_PROG -f -c "fmapfree $start $increment" $testfile
-+done
-+
-+space_used=$(stat -c '%b * %B' $testfile | bc)
-+
-+echo "space captured: $space_used" >> $seqres.full
-+$FILEFRAG_PROG -v $testfile >> $seqres.full
-+
-+# Did we get within 10% of the free space?
-+_within_tolerance "mapfree space used" $space_used $free_bytes 10% -v
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/1400.out b/tests/xfs/1400.out
-new file mode 100644
-index 0000000000..601404d7a4
---- /dev/null
-+++ b/tests/xfs/1400.out
-@@ -0,0 +1,2 @@
-+QA output created by 1400
-+mapfree space used is in range
-diff --git a/tests/xfs/1401 b/tests/xfs/1401
-new file mode 100755
-index 0000000000..8c0a545858
---- /dev/null
-+++ b/tests/xfs/1401
-@@ -0,0 +1,80 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2022 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 1401
-+#
-+# Basic functionality testing for the free space defragmenter.
-+#
-+. ./common/preamble
-+_begin_fstest auto defrag shrinkfs
-+
-+# Override the default cleanup function.
-+# _cleanup()
-+# {
-+# 	cd /
-+# 	rm -r -f $tmp.*
-+# }
-+
-+# Import common functions.
-+. ./common/filter
-+
-+# real QA test starts here
-+
-+_notrun "XXX test is not ready yet; you need to deal with tail blocks"
-+
-+# Modify as appropriate.
-+_supported_fs generic
-+_require_scratch
-+_require_xfs_spaceman_command "clearfree"
-+
-+_scratch_mkfs | _filter_mkfs 2> $tmp.mkfs > /dev/null
-+cat $tmp.mkfs >> $seqres.full
-+. $tmp.mkfs
-+_scratch_mount >> $seqres.full
-+
-+cpus=$(( $(src/feature -o) * 4))
-+
-+# Use fsstress to create a directory tree with some variability
-+FSSTRESS_ARGS=$(_scale_fsstress_args -p 4 -d $SCRATCH_MNT -n 4000 $FSSTRESS_AVOID)
-+$FSSTRESS_PROG $FSSTRESS_ARGS >> $seqres.full
-+
-+$XFS_IO_PROG -c 'stat -v' $SCRATCH_MNT >> $seqres.full
-+
-+if $XFS_IO_PROG -c 'stat -v' $SCRATCH_MNT | grep -q 'rt-inherit'; then
-+	# realtime
-+	increment=$((dbsize * rtblocks / agcount))
-+	length=$((dbsize * rtblocks))
-+	fsmap_devarg="-r"
-+else
-+	# data
-+	increment=$((dbsize * agsize))
-+	length=$((dbsize * dblocks))
-+	fsmap_devarg="-d"
-+fi
-+
-+echo "start: $start; increment: $increment; length: $length" >> $seqres.full
-+$DF_PROG $SCRATCH_MNT >> $seqres.full
-+
-+TRACE_PROG="strace -s99 -e fallocate,ioctl,openat -o $tmp.strace"
-+
-+for ((start = 0; start < length; start += increment)); do
-+	echo "---------------------------" >> $seqres.full
-+	echo "start: $start end: $((start + increment))" >> $seqres.full
-+	echo "---------------------------" >> $seqres.full
-+
-+	fsmap_args="-vvvv $fsmap_devarg $((start / 512)) $((increment / 512))"
-+	clearfree_args="-vall $start $increment"
-+
-+	$XFS_IO_PROG -c "fsmap $fsmap_args" $SCRATCH_MNT > $tmp.before
-+	$TRACE_PROG $XFS_SPACEMAN_PROG -c "clearfree $clearfree_args" $SCRATCH_MNT &>> $seqres.full || break
-+	cat $tmp.strace >> $seqres.full
-+	$XFS_IO_PROG -c "fsmap $fsmap_args" $SCRATCH_MNT > $tmp.after
-+	cat $tmp.before >> $seqres.full
-+	cat $tmp.after >> $seqres.full
-+done
-+
-+# success, all done
-+echo Silence is golden
-+status=0
-+exit
-diff --git a/tests/xfs/1401.out b/tests/xfs/1401.out
-new file mode 100644
-index 0000000000..504999381e
---- /dev/null
-+++ b/tests/xfs/1401.out
-@@ -0,0 +1,2 @@
-+QA output created by 1401
-+Silence is golden
+The patches are split up into relatively small pieces.  That may seem
+unnecessary, but at least it makes reviewing the patches easier.
+
+If there are no more objections, can this go into iomap-for-next?
+
+Thanks,
+Andreas
+
+[*] https://lore.kernel.org/linux-xfs/20221218221054.3946886-1-agruenba@redhat.com/
+
+Andreas Gruenbacher (9):
+  iomap: Add iomap_put_folio helper
+  iomap/gfs2: Unlock and put folio in page_done handler
+  iomap: Rename page_done handler to put_folio
+  iomap: Add iomap_get_folio helper
+  iomap/gfs2: Get page in page_prepare handler
+  iomap: Rename page_prepare handler to get_folio
+  iomap/xfs: Eliminate the iomap_valid handler
+  iomap: Rename page_ops to folio_ops
+  xfs: Make xfs_iomap_folio_ops static
+
+ fs/gfs2/bmap.c         | 38 ++++++++++------
+ fs/iomap/buffered-io.c | 98 ++++++++++++++++++++++--------------------
+ fs/xfs/xfs_iomap.c     | 41 ++++++++++++------
+ include/linux/iomap.h  | 51 +++++++++-------------
+ 4 files changed, 127 insertions(+), 101 deletions(-)
+
+-- 
+2.38.1
 
