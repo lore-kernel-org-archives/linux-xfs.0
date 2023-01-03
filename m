@@ -2,79 +2,91 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D3A5C46467
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Jan 2023 18:07:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C760C3DA7D
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Jan 2023 18:30:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238480AbjACSHs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Jan 2023 13:07:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59654 "EHLO
+        id S230397AbjACSad (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Jan 2023 13:30:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46414 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233912AbjACSHr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jan 2023 13:07:47 -0500
+        with ESMTP id S230504AbjACSac (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Jan 2023 13:30:32 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A949AFCE9;
-        Tue,  3 Jan 2023 10:07:46 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAD9BA8
+        for <linux-xfs@vger.kernel.org>; Tue,  3 Jan 2023 10:30:31 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 66406B8104D;
-        Tue,  3 Jan 2023 18:07:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22B02C433F0;
-        Tue,  3 Jan 2023 18:07:44 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id B6226B81058
+        for <linux-xfs@vger.kernel.org>; Tue,  3 Jan 2023 18:30:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7315BC433EF;
+        Tue,  3 Jan 2023 18:30:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672769264;
-        bh=hc462o+l9XpW/Q/bFPST6QDkeqeth8pIAYp1w1HJQZQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=FP5AbZrEOtmHBHdANpGNCQZKFkyicUUXDoC8ttFDGXEQZsbjbbw5lZDtCGbEJQtty
-         AzfSq9qdwxDi0TTM0WTseOGf8Hr6SgGzxztjyRERB4f+MxvN4ZAKWnrlRTcNAMgNPu
-         tFCzNN7G1lMXbtKBwYKLmN0Uhhl/XMY0I3WGnDemVSxyJtAjNqDjzoD0B2fzm/BtGl
-         d+XycUhOianWlKhN34E5KYZC0A2g8/D0QPLXe/rm5cRUaoaxOEhePVvP2LV0DVCgCf
-         f8em16RlUp815HtBBycs5RgH0kTdRshl/dL+Fiso8+xkF0h9wCMN424Km5IyOmbpe9
-         LwVm4XHje+pzw==
-Date:   Tue, 3 Jan 2023 10:07:43 -0800
+        s=k20201202; t=1672770629;
+        bh=qzYXxcRqXTFri65Jyv2HHpR9TASkImY1Tx6tArIuLQ4=;
+        h=Date:From:To:Cc:Subject:From;
+        b=AyA574J+sOEq7LRafQfLzL+YSBCPwW0VV+a48GdhNXSXP4zk0cLvtTXDbu3wF3jfu
+         qv8Jg34yO9HOd7QPTY8+Y0kGYJ2WqH7OLPfOKi1YKp70S40NtIWbzEmo379K3NyNsE
+         pdRsRVTdnpG8MSdzc3qTb96OIqXvY8ghrLjud706lZhwQmDXlwpW+F/Yu4fBhUuH1O
+         DC+buOTVMAFYCAeib1LFaYnxPvT87NiC7HhgdG9BnvECgMrxFr/DGdlaeaHFH9PlSL
+         aEoSg7qwQt4VJrIE5BG7QrXa8d0ORMqdEI/w/0n+awtE21ic/RGpcTPGsUxtr9KMNk
+         VkNUEc0CoPa1Q==
+Date:   Tue, 3 Jan 2023 10:30:29 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Li zeming <zeming@nfschina.com>
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: xfs_qm: =?utf-8?Q?remove_?=
- =?utf-8?B?dW5uZWNlc3Nhcnkg4oCYMOKAmQ==?= values from error
-Message-ID: <Y7Ru73JbumMnTEqc@magnolia>
-References: <20221223081114.3959-1-zeming@nfschina.com>
+To:     djwong@kernel.org
+Cc:     david@fromorbit.com, dchinner@redhat.com,
+        linux-xfs@vger.kernel.org, shiina.hironori@fujitsu.com,
+        wuguanghao3@huawei.com, zeming@nfschina.com
+Subject: [ANNOUNCE] xfs-linux: for-next updated to e195605ed28b
+Message-ID: <167277043338.2757622.9329696766206812287.stg-ugh@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20221223081114.3959-1-zeming@nfschina.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Dec 23, 2022 at 04:11:14PM +0800, Li zeming wrote:
-> error is assigned first, so it does not need to initialize the
-> assignment.
-> 
-> Signed-off-by: Li zeming <zeming@nfschina.com>
+Hi folks,
 
-Looks fine to me...
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+The for-next branch of the xfs-linux repository at:
 
---D
+git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-> ---
->  fs/xfs/xfs_qm.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index ff53d40a2dae..e2c542f6dcd4 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -68,7 +68,7 @@ xfs_qm_dquot_walk(
->  
->  	while (1) {
->  		struct xfs_dquot *batch[XFS_DQ_LOOKUP_BATCH];
-> -		int		error = 0;
-> +		int		error;
->  		int		i;
->  
->  		mutex_lock(&qi->qi_tree_lock);
-> -- 
-> 2.18.2
-> 
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+e195605ed28b xfs: xfs_qm: remove unnecessary ‘0’ values from error
+
+6 new commits:
+
+Darrick J. Wong (3):
+[26870c3f5b15] xfs: don't assert if cmap covers imap after cycling lock
+[d4542f314507] xfs: make xfs_iomap_page_ops static
+[c0f399ff5149] xfs: fix off-by-one error in xfs_btree_space_to_height
+
+Hironori Shiina (1):
+[817644fa4525] xfs: get root inode correctly at bulkstat
+
+Li zeming (1):
+[e195605ed28b] xfs: xfs_qm: remove unnecessary ‘0’ values from error
+
+Wu Guanghao (1):
+[4da112513c01] xfs: Fix deadlock on xfs_inodegc_worker
+
+Code Diffstat:
+
+fs/xfs/libxfs/xfs_btree.c |  7 ++++++-
+fs/xfs/xfs_icache.c       | 10 ++++++++++
+fs/xfs/xfs_ioctl.c        |  4 ++--
+fs/xfs/xfs_iomap.c        |  2 +-
+fs/xfs/xfs_qm.c           |  2 +-
+fs/xfs/xfs_reflink.c      |  2 --
+6 files changed, 20 insertions(+), 7 deletions(-)
+
