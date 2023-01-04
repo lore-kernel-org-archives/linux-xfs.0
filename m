@@ -2,200 +2,141 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1210C4332F
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Jan 2023 17:30:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98379C4708E
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Jan 2023 17:37:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234899AbjADRaS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Jan 2023 12:30:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40534 "EHLO
+        id S231359AbjADRho (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Jan 2023 12:37:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231197AbjADRaP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2023 12:30:15 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BAEC39F90
-        for <linux-xfs@vger.kernel.org>; Wed,  4 Jan 2023 09:30:14 -0800 (PST)
+        with ESMTP id S229489AbjADRhN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2023 12:37:13 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B002539FB9;
+        Wed,  4 Jan 2023 09:37:12 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 946D061745
-        for <linux-xfs@vger.kernel.org>; Wed,  4 Jan 2023 17:30:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5490C433EF;
-        Wed,  4 Jan 2023 17:30:12 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 272F1CE1870;
+        Wed,  4 Jan 2023 17:37:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2BFBEC433EF;
+        Wed,  4 Jan 2023 17:37:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672853412;
-        bh=GM+zY48yFd7hooONisyzpEOfUTwH4Ok9ZU8v7ICJug8=;
+        s=k20201202; t=1672853829;
+        bh=vp+DMrtggOEZmBfs4AiT/cEptNthRadidDs/zv7+q5c=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pwT668Kn13ghXBh/GtO52/9iaFJGyvTu4hY+fchWpqxY2f9NWK14RHF+4ZbF5fd6R
-         OIrkGQxxlBKKXL7m9hTvcFBYyiBC6s9uBqIhCRkSq5rYEt6mNbsA2ZWg/2mXQWGS6X
-         O5Z/vzzyJmzy6S/Pk/kzfo0nYFF32AUgj1giJNGUgB29A22L9PhkGKkf905L4E3+ap
-         AxsRNlN6kDOb/s+2yXv0Vy7OtSLK44eThWGpseoj5DI82Agb1jteHB00SEHGtJ6RRs
-         GV05rLTL4uck9yY10cNhfDq2I/D+Ib0twaf0IU9AojghMWqLIZPJQI4l0Ch+Hveo6g
-         rZrHVZB27TvsQ==
-Date:   Wed, 4 Jan 2023 09:30:12 -0800
+        b=PFO2NXVLMI2SAJ0ZiGC8nci7O2/WMNc+cfBJztMKtQ38TX2A/iQCw3MLCdY/GGFJB
+         ORFScJjb3h16kSU/DJOv5sPE6EO2hNJMSGGUjM7lFeO8llXxAc2i0Uq2ECy9tUlwjt
+         Xf+/dZO/1C3VUxw1ZD1N0go16w2F00LpJgoDBsSp+Ncw+iawOGU4eNs5beLTH3/HUG
+         9Cq9t5WkvX5eZ0dBhtWhGzGDSir/3uqH4OSTLwfq0SbL1zOyx8DwrjA5lkW5x2CEBX
+         TJRKPwrEySabbeKgD33rXhp4uHmamBA6yzTrph3ttXmzl1w21fsNPgubVaPG2xG+aQ
+         fzrVdTpHw/N8w==
+Date:   Wed, 4 Jan 2023 09:37:08 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Carlos Maiolino <cem@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [ANNOUNCE] xfsprogs-6.1.0 released
-Message-ID: <Y7W3pLNuhWliwJf6@magnolia>
-References: <20221223104351.gwi7qyns7eww6gel@andromeda>
+To:     Andreas Gruenbacher <agruenba@redhat.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Matthew Wilcox <willy@infradead.org>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, cluster-devel@redhat.com
+Subject: Re: [PATCH v5 3/9] iomap: Rename page_done handler to put_folio
+Message-ID: <Y7W5RGsOgOThtlg3@magnolia>
+References: <20221231150919.659533-1-agruenba@redhat.com>
+ <20221231150919.659533-4-agruenba@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221223104351.gwi7qyns7eww6gel@andromeda>
+In-Reply-To: <20221231150919.659533-4-agruenba@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Dec 23, 2022 at 11:43:51AM +0100, Carlos Maiolino wrote:
-> Hi folks,
+On Sat, Dec 31, 2022 at 04:09:13PM +0100, Andreas Gruenbacher wrote:
+> The ->page_done() handler in struct iomap_page_ops is now somewhat
+> misnamed in that it mainly deals with unlocking and putting a folio, so
+> rename it to ->put_folio().
 > 
-> The xfsprogs repository at:
+> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+> ---
+>  fs/gfs2/bmap.c         |  4 ++--
+>  fs/iomap/buffered-io.c |  4 ++--
+>  include/linux/iomap.h  | 10 +++++-----
+>  3 files changed, 9 insertions(+), 9 deletions(-)
 > 
-> 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-> 
-> has just been updated.
-> 
-> If you were expecting your patch to be in this version, and for some reason it
-> is not, please let me know.
+> diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
+> index 46206286ad42..0c041459677b 100644
+> --- a/fs/gfs2/bmap.c
+> +++ b/fs/gfs2/bmap.c
+> @@ -967,7 +967,7 @@ static int gfs2_iomap_page_prepare(struct inode *inode, loff_t pos,
+>  	return gfs2_trans_begin(sdp, RES_DINODE + blocks, 0);
+>  }
+>  
+> -static void gfs2_iomap_page_done(struct inode *inode, loff_t pos,
+> +static void gfs2_iomap_put_folio(struct inode *inode, loff_t pos,
+>  				 unsigned copied, struct folio *folio)
+>  {
+>  	struct gfs2_trans *tr = current->journal_info;
+> @@ -994,7 +994,7 @@ static void gfs2_iomap_page_done(struct inode *inode, loff_t pos,
+>  
+>  static const struct iomap_page_ops gfs2_iomap_page_ops = {
+>  	.page_prepare = gfs2_iomap_page_prepare,
+> -	.page_done = gfs2_iomap_page_done,
+> +	.put_folio = gfs2_iomap_put_folio,
+>  };
+>  
+>  static int gfs2_iomap_begin_write(struct inode *inode, loff_t pos,
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index e13d5694e299..2a9bab4f3c79 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -580,8 +580,8 @@ static void iomap_put_folio(struct iomap_iter *iter, loff_t pos, size_t ret,
+>  {
+>  	const struct iomap_page_ops *page_ops = iter->iomap.page_ops;
+>  
+> -	if (page_ops && page_ops->page_done) {
+> -		page_ops->page_done(iter->inode, pos, ret, folio);
+> +	if (page_ops && page_ops->put_folio) {
+> +		page_ops->put_folio(iter->inode, pos, ret, folio);
+>  	} else if (folio) {
+>  		folio_unlock(folio);
+>  		folio_put(folio);
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 743e2a909162..10ec36f373f4 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -126,18 +126,18 @@ static inline bool iomap_inline_data_valid(const struct iomap *iomap)
+>  
+>  /*
+>   * When a filesystem sets page_ops in an iomap mapping it returns, page_prepare
+> - * and page_done will be called for each page written to.  This only applies to
+> + * and put_folio will be called for each page written to.  This only applies to
 
-Er... the debian/changelog file says 6.0.1.  It's probably not a big
-deal unless the Debian folks decide to pull that in, but probably worth
-fixing since nothing else has been committed to master or for-next.
+"...for each folio written to."
 
-Also, would you mind updating for-next to match master?
+With that fixed,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> 
-> The commit log and diffstat are described below...
-> 
-> 
-> Happy Holidays everyone!
-> 
-> 
-> The new head of the master branch is commit:
-> 
-> 37e6e80a6 xfsprogs: Release v6.1.0
-> 
-> New Commits:
-> 
-> Allison Henderson (1):
->       [227bc97f1] xfs: increase rename inode reservation
-> 
-> Carlos Maiolino (3):
->       [fbd9b2363] xfs_repair: Fix check_refcount() error path
->       [2dac91b3d] xfs_repair: Fix rmaps_verify_btree() error path
->       [37e6e80a6] xfsprogs: Release v6.1.0
-> 
-> Darrick J. Wong (26):
->       [d267ac6a0] xfs: fix memcpy fortify errors in EFI log format copying
->       [4b69afdc4] xfs: refactor all the EFI/EFD log item sizeof logic
->       [2d5166b9d] xfs: make sure aglen never goes negative in xfs_refcount_adjust_extents
->       [b3f9ae08e] xfs: create a predicate to verify per-AG extents
->       [7ccbdec2b] xfs: check deferred refcount op continuation parameters
->       [bec88ec72] xfs: move _irec structs to xfs_types.h
->       [6b2f464dd] xfs: track cow/shared record domains explicitly in xfs_refcount_irec
->       [8160aeff0] xfs: report refcount domain in tracepoints
->       [cc2a3c2ad] xfs: refactor domain and refcount checking
->       [f275d70e8] xfs: remove XFS_FIND_RCEXT_SHARED and _COW
->       [817ea9f0f] xfs: check record domain when accessing refcount records
->       [8b2b27581] xfs: fix agblocks check in the cow leftover recovery function
->       [7accbcd00] xfs: fix uninitialized list head in struct xfs_refcount_recovery
->       [7257eb3ed] xfs: rename XFS_REFC_COW_START to _COWFLAG
->       [60066f61c] libxfs: consume the xfs_warn mountpoint argument
->       [b6fef47a8] misc: add static to various sourcefile-local functions
->       [a946664de] misc: add missing includes
->       [b84d0823d] xfs_db: fix octal conversion logic
->       [e9dea7eff] xfs_db: fix printing of reverse mapping record blockcounts
->       [978c3087b] xfs_repair: don't crash on unknown inode parents in dry run mode
->       [945c7341d] xfs_repair: retain superblock buffer to avoid write hook deadlock
->       [2b9d6f15b] xfs_{db,repair}: fix XFS_REFC_COW_START usage
->       [765809a0d] mkfs.xfs: add mkfs config file for the 6.1 LTS kernel
->       [f6fb1c078] xfs_io: don't display stripe alignment flags for realtime files
->       [e229a59f0] xfs_db: create separate struct and field definitions for finobts
->       [7374f58bf] xfs_db: fix dir3 block magic check
-> 
-> Guo Xuenan (1):
->       [20798cc06] xfs: fix exception caused by unexpected illegal bestcount in leaf dir
-> 
-> Jason A. Donenfeld (2):
->       [4947ac5b3] treewide: use prandom_u32_max() when possible, part 1
->       [11d2f5afc] treewide: use get_random_u32() when possible
-> 
-> Long Li (1):
->       [b827e2318] xfs: fix sb write verify for lazysbcount
-> 
-> Shida Zhang (2):
->       [04d4c27af] xfs: trim the mapp array accordingly in xfs_da_grow_inode_int
->       [1a3bfffee] xfs: rearrange the logic and remove the broken comment for xfs_dir2_isxx
-> 
-> Srikanth C S (1):
->       [79ba1e15d] fsck.xfs: mount/umount xfs fs to replay log before running xfs_repair
-> 
-> Zeng Heng (1):
->       [be98db856] xfs: clean up "%Ld/%Lu" which doesn't meet C standard
-> 
-> ye xingchen (1):
->       [e8dbbca18] xfs: Remove the unneeded result variable
-> 
-> 
-> Code Diffstat:
-> 
->  VERSION                     |   2 +-
->  configure.ac                |   2 +-
->  db/btblock.c                |  72 +++++++++++++++++-
->  db/btblock.h                |   6 ++
->  db/check.c                  |   6 +-
->  db/field.c                  |   8 ++
->  db/field.h                  |   4 +
->  db/namei.c                  |   4 +-
->  db/type.c                   |   6 +-
->  db/write.c                  |   4 +-
->  debian/changelog            |   6 ++
->  doc/CHANGES                 |  18 +++++
->  fsck/xfs_fsck.sh            |  31 +++++++-
->  include/kmem.h              |  10 +++
->  io/fsmap.c                  |   4 +-
->  io/pread.c                  |   2 +-
->  libfrog/linux.c             |   1 +
->  libxfs/libxfs_api_defs.h    |   2 +
->  libxfs/libxfs_io.h          |   1 +
->  libxfs/libxfs_priv.h        |   8 +-
->  libxfs/rdwr.c               |   8 ++
->  libxfs/util.c               |   1 +
->  libxfs/xfs_ag.h             |  15 ++++
->  libxfs/xfs_alloc.c          |   8 +-
->  libxfs/xfs_bmap.c           |   2 +-
->  libxfs/xfs_da_btree.c       |   2 +-
->  libxfs/xfs_dir2.c           |  50 ++++++++-----
->  libxfs/xfs_dir2.h           |   4 +-
->  libxfs/xfs_dir2_leaf.c      |   9 ++-
->  libxfs/xfs_dir2_sf.c        |   4 +-
->  libxfs/xfs_format.h         |  22 +-----
->  libxfs/xfs_ialloc.c         |   4 +-
->  libxfs/xfs_inode_fork.c     |   4 +-
->  libxfs/xfs_log_format.h     |  60 +++++++++++++--
->  libxfs/xfs_refcount.c       | 286
-> +++++++++++++++++++++++++++++++++++++++++++++++++---------------------
->  libxfs/xfs_refcount.h       |  40 +++++++++-
->  libxfs/xfs_refcount_btree.c |  15 +++-
->  libxfs/xfs_rmap.c           |   9 +--
->  libxfs/xfs_sb.c             |   4 +-
->  libxfs/xfs_trans_resv.c     |   4 +-
->  libxfs/xfs_types.h          |  30 ++++++++
->  logprint/log_redo.c         |  12 +--
->  mkfs/Makefile               |   3 +-
->  mkfs/lts_6.1.conf           |  14 ++++
->  mkfs/xfs_mkfs.c             |   2 +-
->  repair/phase2.c             |   8 ++
->  repair/phase6.c             |  15 +++-
->  repair/protos.h             |   1 +
->  repair/rmap.c               |  61 ++++++++-------
->  repair/scan.c               |  22 ++++--
->  repair/xfs_repair.c         |  77 ++++++++++++++++---
->  scrub/inodes.c              |   2 +-
->  52 files changed, 747 insertions(+), 248 deletions(-)
->  create mode 100644 mkfs/lts_6.1.conf
-> 
+
+>   * buffered writes as unbuffered writes will not typically have pages
+>   * associated with them.
+>   *
+> - * When page_prepare succeeds, page_done will always be called to do any
+> - * cleanup work necessary.  In that page_done call, @folio will be NULL if the
+> - * associated folio could not be obtained.  When folio is not NULL, page_done
+> + * When page_prepare succeeds, put_folio will always be called to do any
+> + * cleanup work necessary.  In that put_folio call, @folio will be NULL if the
+> + * associated folio could not be obtained.  When folio is not NULL, put_folio
+>   * is responsible for unlocking and putting the folio.
+>   */
+>  struct iomap_page_ops {
+>  	int (*page_prepare)(struct inode *inode, loff_t pos, unsigned len);
+> -	void (*page_done)(struct inode *inode, loff_t pos, unsigned copied,
+> +	void (*put_folio)(struct inode *inode, loff_t pos, unsigned copied,
+>  			struct folio *folio);
+>  
+>  	/*
 > -- 
-> Carlos Maiolino
+> 2.38.1
+> 
