@@ -2,86 +2,77 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE42BC4708D
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Jan 2023 07:25:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1640FC63707
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Jan 2023 16:25:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233532AbjADHZY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Jan 2023 02:25:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38406 "EHLO
+        id S230073AbjADQZz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Jan 2023 11:25:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48220 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230387AbjADHZY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2023 02:25:24 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D022A44D;
-        Tue,  3 Jan 2023 23:25:23 -0800 (PST)
+        with ESMTP id S239999AbjADQZR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2023 11:25:17 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 687A63D1C1
+        for <linux-xfs@vger.kernel.org>; Wed,  4 Jan 2023 08:24:44 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B2E51B811A3;
-        Wed,  4 Jan 2023 07:25:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AFCBC433D2;
-        Wed,  4 Jan 2023 07:25:20 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 08593617AE
+        for <linux-xfs@vger.kernel.org>; Wed,  4 Jan 2023 16:24:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 646C0C433F1;
+        Wed,  4 Jan 2023 16:24:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672817120;
-        bh=EY0QIS6ah2VRlLsuBHHzFqCxhBDp5eEMXYtwzaAjNBw=;
+        s=k20201202; t=1672849483;
+        bh=h89W5fHGwB3rpxAeaZDsUkf9H0QOo1DzBgvh8AAgAfI=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Y8eevhPlbLQQByJxtZSN0ftIYXlnqoyA5BJUM6AP5KbL8Hdw0HMg2nuBQ5sdlamXc
-         LExL2VFObRchVEVgRsCm15mnz4C6rXRbtTsMN2cr4b6oRiHMmmABbSNflU3EWaJhst
-         5J1PEpb3DqjERtGwRqlzrEMz3WeV19T0b43MtEWOjh9knfnp7tviL6qmTp7aHZSXLT
-         IEN/P6uhszJ2K9eZEk+XPP3yijgHtnJlqNNbbV7wSwv2r5oqXKVzoj6Y3IR7JL9E+a
-         vEiPUYFi+z+qSUbJ0/w3bVi8IcSNUBhhDXmmHc9rII8AQDlMi9JWlYLQi6CtdvuVhT
-         N9g/5kMqBLp7w==
-Date:   Tue, 3 Jan 2023 23:25:18 -0800
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Ojaswin Mujoo <ojaswin@linux.ibm.com>
-Cc:     linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Andrey Albershteyn <aalbersh@redhat.com>
-Subject: Re: [PATCH v2 00/11] fsverity: support for non-4K pages
-Message-ID: <Y7Up3kpGcJr0FCgq@sol.localdomain>
-References: <20221223203638.41293-1-ebiggers@kernel.org>
- <Y7UeuYVkyy2/fWF1@li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com>
+        b=ThFLmoZgYY2147icg5Zp0L63qStM46LqE5dDdFTL2/0jiQX3fAYXMBPmSffm8AFDx
+         7n0QsBoe0N3hFby/tvS8lc5OO9e8Ga+cZGsJX8KYGj9UOVbM7+Zt7+67e1Bi1mPxoa
+         Nuasoi89/SRIbYjKtpQ2KYTt5ubFjO2cNlGA0zfxJp2oye4ALDzmeD6W+3LmXfGK9H
+         csNH69cJtYaFcdl4rm+AJkxiz8ZRXhYtdLEO4u9bLdqu5GLsqpHNUmIaJ+sIouP830
+         Q10tCrPhk5/207ABkATkIo6I5tJ65V51pbc9hfv5dSja6U+l4gBSKWpK3j/bdrKy2y
+         oxyIkNVgXaOHw==
+Date:   Wed, 4 Jan 2023 08:24:42 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Wengang Wang <wen.gang.wang@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix extent busy updating
+Message-ID: <Y7WoStJT4ImufLct@magnolia>
+References: <20230103193217.4941-1-wen.gang.wang@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y7UeuYVkyy2/fWF1@li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com>
+In-Reply-To: <20230103193217.4941-1-wen.gang.wang@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 04, 2023 at 12:08:09PM +0530, Ojaswin Mujoo wrote:
-> Hi Eric,
+On Tue, Jan 03, 2023 at 11:32:17AM -0800, Wengang Wang wrote:
+> In xfs_extent_busy_update_extent() case 6 and 7, whenever bno is modified on
+> extent busy, the relavent length has to be modified accordingly.
 > 
-> I have roughly gone through the series and run the (patched) xfstests on
-> this patchset on a powerpc machine with 64k pagesize and 64k,4k and 1k
-> merkle tree size on EXT4 and everything seems to work correctly. 
+> Signed-off-by: Wengang Wang <wen.gang.wang@oracle.com>
+> ---
+>  fs/xfs/xfs_extent_busy.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> Just for records, test generic/692 takes a lot of time to complete with
-> 64k merkel tree size due to the calculations assuming it to be 4k,
-> however I was able to manually test that particular scenario. (I'll try
-> to send a patch to fix the fstest later).
-> 
-> Anyways, feel free to add:
-> 
-> Tested-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-> 
-> Since I was not very familiar with the fsverty codebase, I'll try to
-> take some more time to review the code and get back with any
-> comments/RVBs.
-> 
-> Regards,
-> ojaswin
+> diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+> index ad22a003f959..f3d328e4a440 100644
+> --- a/fs/xfs/xfs_extent_busy.c
+> +++ b/fs/xfs/xfs_extent_busy.c
+> @@ -236,6 +236,7 @@ xfs_extent_busy_update_extent(
+>  		 *
+>  		 */
+>  		busyp->bno = fend;
+> +		busyp->length = bend - fend;
 
-Thanks Ojaswin!  That's a good point about generic/692.  The right fix for it is
-to make it use $FSV_BLOCK_SIZE instead of 4K in its calculations.
+Looks correct to me, but how did you find this?  Is there some sort of
+test case we could attach to this?
 
-I suppose you saw that issue by running the test on ext4 with fs_block_size ==
-page_size == 64K, causing xfstests to use merkle_tree_block_size == 64K by
-default.  Thanks for doing that; that's something I haven't been able to test
-yet.  My focus has been on merkle_tree_block_size < page_size.
-merkle_tree_block_size > 4K should just work, though, assuming
-merkle_tree_block_size <= min(fs_block_size, page_size).  (Or
-merkle_tree_block_size == fs_block_size == page_size before this patch series.)
+--D
 
-- Eric
+>  	} else if (bbno < fbno) {
+>  		/*
+>  		 * Case 8:
+> -- 
+> 2.21.0 (Apple Git-122.2)
+> 
