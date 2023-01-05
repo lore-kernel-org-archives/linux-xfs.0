@@ -2,271 +2,305 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A0A4C53210
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Jan 2023 00:37:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D494C3DA7D
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Jan 2023 05:50:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235652AbjAEAh1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Jan 2023 19:37:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40458 "EHLO
+        id S229957AbjAEFuT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Jan 2023 00:50:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241151AbjAEAg2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Jan 2023 19:36:28 -0500
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31707BB4
-        for <linux-xfs@vger.kernel.org>; Wed,  4 Jan 2023 16:36:27 -0800 (PST)
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 304ME18a004538
-        for <linux-xfs@vger.kernel.org>; Thu, 5 Jan 2023 00:36:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
- date : message-id : in-reply-to : references : content-transfer-encoding :
- content-type : mime-version; s=corp-2022-7-12;
- bh=rciOqpHFBPOEXwmYiVHmEkyV21iA+ydaAqt2tLc8t6w=;
- b=vdIAdwI0O0MmUjXZiPdmcfHhlGv8qu/pJoD8B9lMnxvTiyzydrQYgIMdOXJlsqvyUg4U
- 7+KY1C3is5nx5vuY28/SDwT7C4hQFBedL2Fh5CRycLGHAzc2Xctaw0Iugs5rYcRRMy+1
- 72Hoyoh6MY8e8sHYHAe+Tlt7DDfouEsF+rsI/rik6UsVz0TX/c4XWWhbbKafxLlG8xzz
- jHGXryYnxOkSyB5LqfCstAcrss2YZ5j+qS0B0+a/o68EEC+9cEtf1NY+hMAVQgL9M9LC
- bSkBkxJ/aWFLvTHfyusYcO1j+0FWf52Lakb1Jg3gdekpB7Je/x7efjBGzasUAwGevOTc mw== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3mtd4c7x39-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Jan 2023 00:36:26 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 304MFMm9031216
-        for <linux-xfs@vger.kernel.org>; Thu, 5 Jan 2023 00:36:25 GMT
-Received: from nam04-bn8-obe.outbound.protection.outlook.com (mail-bn8nam04lp2047.outbound.protection.outlook.com [104.47.74.47])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3mwg377ym7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Jan 2023 00:36:25 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=QtZnHCDLvotzDEovIvzqVe9EW1dFcsAziA9QqxI9cNDn8un2OxhPl72bPG3MkavJfhni5TV3ZAFHmMrfcUx60EfUIoU36pcBRKB8w3X7JYrZhwTNe4uP6a9OQQEEtCUGrSdU7TZXggzjDxDWhj8EZ+4ulqGP0F3dlQgYN1XUDTJzNI/f/ixlMFT7pi6cPaxbIEPohNoUNHJPzYA85bDxmM/kn70CKdUFdGlc+iNhX6mBPpgcdyZsPf8nBSQEfHsFby2/f2DnvYVE9vYxxNEpv8L6F4ensLvJLmQYX1QeJKJwiTp2S4kzdAOn7eR0rpnhQosHN4X+Dy7jP2FJu0G+aA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=rciOqpHFBPOEXwmYiVHmEkyV21iA+ydaAqt2tLc8t6w=;
- b=k9pA8+xgqEhVSH6Sf0zOH2tQIQOXpiLneFfF6xOXuFqAD2RVoezBWBxwXw3ztR6g49e3C7/OCPzcIguBsF5lRlGTlpfzNsjhgg4znZDxAyN/MVllXIsQNxITq5m9a2tpifX56RnofB88BPhID2+bRPQjEqoCP3vnkzgfBPwZERH61rp7W6h7OSUANYUUgRXPseQWK5/dyeiw/8nBUq/eSyXBSheAny40dispZKAk+SDeVXac7Vv1gpUwxZwUWhKByI2PdXI8lA/lN9pTstLBJaC0nHc7s7qzvGzjStUYBvuMtZaufkT7/LquuVQcl3/szNtEWBSbrNVkaKWm0RQACw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=rciOqpHFBPOEXwmYiVHmEkyV21iA+ydaAqt2tLc8t6w=;
- b=LvWHaqaBfcKUgJh51GBMRpDRA+g/CMelupce984+WY4T6EYfD20FTf2Fh0lt46W4NJ7Wnpud6cmecz/464LDn9OgZy2wzGMKJ4Ite8KEcFgkVB9tla1+JXat5k23dSMbv7JnjB16paNhItdqvcnvBHhCt0eRdGiv9cjlt5cKhY8=
-Received: from BLAPR10MB5316.namprd10.prod.outlook.com (2603:10b6:208:326::6)
- by SJ0PR10MB4622.namprd10.prod.outlook.com (2603:10b6:a03:2d6::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5944.19; Thu, 5 Jan
- 2023 00:36:23 +0000
-Received: from BLAPR10MB5316.namprd10.prod.outlook.com
- ([fe80::6916:547f:bdc5:181e]) by BLAPR10MB5316.namprd10.prod.outlook.com
- ([fe80::6916:547f:bdc5:181e%9]) with mapi id 15.20.5944.019; Thu, 5 Jan 2023
- 00:36:22 +0000
-From:   Catherine Hoang <catherine.hoang@oracle.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v3 1/2] xfs_io: add fsuuid command
-Date:   Wed,  4 Jan 2023 16:36:12 -0800
-Message-Id: <20230105003613.29394-2-catherine.hoang@oracle.com>
-X-Mailer: git-send-email 2.32.0 (Apple Git-132)
-In-Reply-To: <20230105003613.29394-1-catherine.hoang@oracle.com>
-References: <20230105003613.29394-1-catherine.hoang@oracle.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: BY5PR17CA0002.namprd17.prod.outlook.com
- (2603:10b6:a03:1b8::15) To BLAPR10MB5316.namprd10.prod.outlook.com
- (2603:10b6:208:326::6)
+        with ESMTP id S229970AbjAEFuR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Jan 2023 00:50:17 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8768240851
+        for <linux-xfs@vger.kernel.org>; Wed,  4 Jan 2023 21:49:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1672897770;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Mvahmqk0U+b3APw7gmdhzBs+Yi3sMhLUNAJRUvuI6YM=;
+        b=iz59wDzG7yAhH0bvWUAoAaH7qPfXdOahuMxo1jntP5MlwmZIW+JfUGvjLmPyMIciEZzDOM
+        26CYPPbyqxxKnRbWHv7jMNwHMyZkiJXckEyPTefTFoiQGKBzYckxw198RA6mdt2AnbpB/0
+        pPswhC7GgIEWkQvBIYryaT5ETXgGqzE=
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
+ [209.85.214.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-227-RvAkD0DFM4WJfzYlDrqueQ-1; Thu, 05 Jan 2023 00:49:26 -0500
+X-MC-Unique: RvAkD0DFM4WJfzYlDrqueQ-1
+Received: by mail-pl1-f198.google.com with SMTP id u6-20020a170903124600b00188cd4769bcso25181811plh.0
+        for <linux-xfs@vger.kernel.org>; Wed, 04 Jan 2023 21:49:26 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Mvahmqk0U+b3APw7gmdhzBs+Yi3sMhLUNAJRUvuI6YM=;
+        b=i1U2c/M47Vns5luEl5SW/SLLdDuF2GguT8F5sTWzGGEISu+kTiDdfiyWqJgsp1N+af
+         XDYyyCVXMfCJIs/T+FbOwcR7DJPpCN3VA3ZOe1eHtawVqaP3viJpfO1UgdqR7+QImTKa
+         nC93QhlR8fURkzdlR4Dnbc1ibU26orz6ux2RaIfawldEAcjmR7R3PW7AXIONR39mPGBR
+         rnpvMWOR8iP6ndeYf4gzntg+vQ+/pjZiUPeDnJpX601yoYOhNEjQ2siYyWDieY8TCKoS
+         OPk1QlfPldjaX2EsyW0cqyZPsc6L8v28JsKxeLHtqRCAP0mMKKs+M0pLc3pS4AeSz1xN
+         zVaw==
+X-Gm-Message-State: AFqh2kqQVaFHtVqnDyaqj0koT7z2lZrr7VRlyaPyusAASNyFZBysqBqX
+        fUAHz+Var+u9YUWkKjKkMzBv0TiolsatrrqqCwtO07crSwx0/NWFewlNSjxNvMJk6E8qqEtRT0w
+        7+xJCQgjPxlejGAqAuTNw
+X-Received: by 2002:a17:90a:1345:b0:226:1495:3dca with SMTP id y5-20020a17090a134500b0022614953dcamr28348251pjf.45.1672897765314;
+        Wed, 04 Jan 2023 21:49:25 -0800 (PST)
+X-Google-Smtp-Source: AMrXdXvYICwp3498gAuISM8MjFEtY8Htil5fa5cNqV+T0eom4GSjvwoQsQ1bRjZjE8j8D4TB5wXHBA==
+X-Received: by 2002:a17:90a:1345:b0:226:1495:3dca with SMTP id y5-20020a17090a134500b0022614953dcamr28348235pjf.45.1672897764873;
+        Wed, 04 Jan 2023 21:49:24 -0800 (PST)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id y6-20020a17090a474600b002139459e121sm476873pjg.27.2023.01.04.21.49.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Jan 2023 21:49:24 -0800 (PST)
+Date:   Thu, 5 Jan 2023 13:49:20 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 1/3] fuzzy: enhance scrub stress testing to use fsx
+Message-ID: <20230105054920.bekb5vw5ah6o6m4f@zlang-mailbox>
+References: <167243837772.695156.17793145241363597974.stgit@magnolia>
+ <167243837785.695156.13821918047950372871.stgit@magnolia>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BLAPR10MB5316:EE_|SJ0PR10MB4622:EE_
-X-MS-Office365-Filtering-Correlation-Id: 003b5108-5c6b-40c3-91e0-08daeeb4de3f
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: nCeIodof25RH7ih7OFU+C1DLCTvSuVUDfqQaQNF7Ak6+Fu+0Zc6JD6+5XhpKmL+aoyx5sz++04i800agL4vfkSymqDBnLDBuDd4B9d/0Of7BDza2D0V7yT7agCxhNs7fSmqgBvRSdLPpur4fTMvDVXrAaag1GcibeCmIjbwwPqCkfFHp/ofTDacR3gPQUrAtwWtqPO04LECW3tP0KH3F7Y7het6CgSimMbKB0DbSNBonzdyVn624Xn/Ep8Y7bSazGy7Lpa7CQq9Xx6rZwm3d9l16LgtSfS0if5YXRpZ3G912G987CBIKdv6JM+pTGm9xd6otOQ5FPU2VmTHhZvPUQ3FW6gf6IlpDFEfs37I73RyN8MEVPWwfONayevx6yc3hteYU33xuHGdvjXI6+bIDgkE6HnRhQA/+vqyT4k+KJYdykN/O5fkonAklg/oDYOyKjtfCXayCGxMPymtAgF1sONphDWYmZgMiUvpelBuK91q9hUuXLt3pifWkgT00/p6kymp+NtBUmY3T+ix4QAgGU1FdVryunx6drnde6JWPFUgiwUxLzkiixxiRLiGeHgg/uvZjqxJQROXFlYsR4ulT8HPSHdPtqPBvQkbz2Ktfgs4XcpUOPm24LQMIT2Z/cLStqJrQ+Ug6QEsP3BDtf3I4Fw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BLAPR10MB5316.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(376002)(366004)(396003)(346002)(136003)(39860400002)(451199015)(6916009)(86362001)(6486002)(6506007)(316002)(36756003)(186003)(6512007)(83380400001)(2616005)(1076003)(6666004)(8936002)(478600001)(66556008)(38100700002)(2906002)(44832011)(5660300002)(41300700001)(8676002)(66476007)(66946007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?x7a2jXp082LOxS17AoV8exXjRRvjylME38BGpQUIu2ZbcmRaN+WlwqfxoY/Z?=
- =?us-ascii?Q?wwIWsU7vlZnPpZ4EkZQcoKR4FKLOcXSHZThQhFjRpal0oVw4rJlIPYa/ryl+?=
- =?us-ascii?Q?uOCAvuNtJVeNcY2kZvZf4DQUxXGj1dakVqsLKQy96A0rVPsOOAfL2wzmkzKE?=
- =?us-ascii?Q?c1SZiPx9Qo0rOIGcRBsUPRMcJL8m1xSXbfFSwyl5FSsgIc6ktVZfDbHM6Slg?=
- =?us-ascii?Q?mSL1Vqes1RaSuHn2k9HytFRpsEwwwuGtPR6fJ3lMHub8KrCD8yuPjAEUjkyw?=
- =?us-ascii?Q?FIMFmi9dZRPoUrkLF8KTrxrOCD0kl0CJrqOIppvC4QWsxPScwpoBepDG351N?=
- =?us-ascii?Q?vgprNeILKKAF5QtCVNuuBe9O6VSs6rAirLJ5VhHBuIfYRtnZCzKc3AFM0pQ2?=
- =?us-ascii?Q?/jas0HWslUA4c6jOas/LEfQtUo9xPXiTqUE4oleBE9AY598eq7mCEGBxbrrL?=
- =?us-ascii?Q?4h12ZGaqJ8JAgSc6RAkxabLbVJVfgYm2fVA4i3ESS2RMSfH1RvX+8cxIHvB5?=
- =?us-ascii?Q?ANWv6NnsSeyRjU6H2d/yUqfML2qRKNe2bXXLnNbat7whUCbqVa7lVgT6VVG+?=
- =?us-ascii?Q?8wpmQgPT+FaCDSKCHThq3PQJXrHlOqBROb52cxdbgBzg8i9wQEZ4qgKAmg2Q?=
- =?us-ascii?Q?OsQ6JdDmtNBkX70/TlgXl/+S6clX8jQMPWoOalR3di6/2szbUXwXtWkstgxE?=
- =?us-ascii?Q?ECRX64Kjh1MS+GsFI11PL+aRNBj9SzzaC4IRD33fQi6Zr6duzIfB6CW1epwx?=
- =?us-ascii?Q?Zwp40RakImPUBVl6BJzS+l0BxF+rBoXGBjT34lOy8Fh4R8de4BErCeyzd/5r?=
- =?us-ascii?Q?ai+tVrTYLdczBSflcA2SbCC6j2wH43MAl8xwNeS9xtTYv13x47MXtrrIA/9A?=
- =?us-ascii?Q?HWc9H1YUNTojL3a7GsMFwDJ1cQyxNmkhKQyeP7uBXEV7ZeOtMFt0WV3aZHnV?=
- =?us-ascii?Q?6xCSBVpWWkpA+zwPY1T/8CkPTOmKuOjIauNwD8/XKyIUGiaDTatalcPMsojQ?=
- =?us-ascii?Q?lkvCEVSLfTY0QbuNVvU4FKO2WQnIN++qFTZSG/rUrnRD2Zd1aeRdoFcKSr6t?=
- =?us-ascii?Q?6LLRxi2Ri3Synh0u8h9dydY1ZPX23BhbipKMn+BFwv+RJKXbGsYEMOXNx8HP?=
- =?us-ascii?Q?L8ZU/N5YB0d4FWlAObq4Leci3TH+MKzT/ApaL7E42I0jRGrdT1mEKdc5qYIT?=
- =?us-ascii?Q?qlypdMyVlanyr92zcQBcVQmvZE1jrIEEIub8KCyIAteMtOuPT5w+59ivHukE?=
- =?us-ascii?Q?9tpQSarQVYvn+7Qri99FkyJiuU3BiWJ+tF/kv3Rt/UOaNcyEKmAo+Xe4MLC/?=
- =?us-ascii?Q?gnGzYGBioxeGOvd8oTF4WDrSzlGFDMzbgtSPIkd8RQOkTGoztTwlWtzs1j+1?=
- =?us-ascii?Q?/pdxuxtXvPL0H+/sY99B3j58tCSH7wS7CA92Ifa6x1qDqqMwim9xrx8MfB51?=
- =?us-ascii?Q?fM38hQjnnCf1Kwbq4LMp3E/+NGj8QmHLCH+NeTnn5NaVspMteUpEaeHHDvlx?=
- =?us-ascii?Q?4fSoHnjIz36Wq/0yJBtleJpODBP0tEj9U7rTMMa2Obpii7pl+ZRNFk4nQUkl?=
- =?us-ascii?Q?XbKQ+ulLXwpf95murRme7bUau+pzY/wjKilKkY8KW2B4lI7jLy3UCOu10udg?=
- =?us-ascii?Q?4E5UEp6hr+t+qAtmgQRorKtpXDKcteQKYQVcL7WycdMiSLZcsGSQQfx00P/f?=
- =?us-ascii?Q?opcF4A=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: ROXacL8idd8OMEwHc9rQlpOR6kRIF/zHjZXMTCRT343a2Flot15hi9rX0kmxuUeSAiX0jafmHMZ5yIZugQo7njZpI5Cy9mIlQ/IH7rLEi8buR+VhLeDiswgtT8ibccVDn9Uv07CUkN+6e/Y0L9hCxyq4I8SU+z54nbkDNb8GB5ZPUZx/4rgYDMNF4U76h/BUBUA3F9auLNv5uILkv5gO2PrEm9fOnStZ/1Ejy7GaVDeCRme6FYNfqwFbRHE1cRcHP3iT/9/SibGTXj0qkUKOx1ztRgVdVRYe8ycc5VuED780jcr8hP1yB6/5ftq7lQHSsej2o6sxVuqeQFngMe9nnhYQPp4fuziVAWkeTVYbzEBI7BLHtQ6sDoQvR3QJLCuHq68WTDfYud9YGR4iGyAiw2svkxJupF21JF+2ONxo81i/7KE4hi78Rp4Se4LxIRVpqn55Tv/MN0TX/E4UPdc7K9dGbyCw/8ZsL3dm+pttINl08EBMR4ytJO0ZsRimafMxB61Zp/P1GVqbk9V+9yPOLaTvRVHgtcQ/nzTyl6xBEsk3n7QsvuOYrX8kD6StnAtyJmFLthUnRC52CIT4bQnSEPMHAobtc6AJPkwBNlLRDN0eMIZ09xZEgT8/4H6LqSSx14WMs9ysxdmq54hMv23el0bBKwOP+yu0CWYKUgD7bNLgxtAydG7VljJBsK1D014IMtZym7AsSqd4CmCOx03vmKJ1L/BgEiacES1ZuTBqcNu2mWsmT1Oa3auUyth9gYixgrdujsA/md0aUwAAVTjA5w==
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 003b5108-5c6b-40c3-91e0-08daeeb4de3f
-X-MS-Exchange-CrossTenant-AuthSource: BLAPR10MB5316.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jan 2023 00:36:22.9245
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Tx2bH77ybdZL5yFaF2XHGGDyk9pgRAu1anG7FUp54ZfzOx7HQPaucuU+Y3FkVMo8Fw3RPV8fWXp7c2hPa4MdqidBZKceUAVk5x//u8/f5/I=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB4622
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.923,Hydra:6.0.545,FMLib:17.11.122.1
- definitions=2023-01-04_07,2023-01-04_02,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 mlxlogscore=999
- malwarescore=0 suspectscore=0 phishscore=0 adultscore=0 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
- definitions=main-2301050002
-X-Proofpoint-GUID: xGT9TwP81Rdrdz0-wpicEHoxvjeYZJ2e
-X-Proofpoint-ORIG-GUID: xGT9TwP81Rdrdz0-wpicEHoxvjeYZJ2e
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <167243837785.695156.13821918047950372871.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Add support for the fsuuid command to retrieve the UUID of a mounted
-filesystem.
+On Fri, Dec 30, 2022 at 02:12:57PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Add a couple of new online fsck stress tests that race fsx against
+> online fsck.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  common/fuzzy      |   39 ++++++++++++++++++++++++++++++++++++---
+>  tests/xfs/847     |   38 ++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/847.out |    2 ++
+>  tests/xfs/848     |   38 ++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/848.out |    2 ++
+>  5 files changed, 116 insertions(+), 3 deletions(-)
+>  create mode 100755 tests/xfs/847
+>  create mode 100644 tests/xfs/847.out
+>  create mode 100755 tests/xfs/848
+>  create mode 100644 tests/xfs/848.out
+> 
+> 
+> diff --git a/common/fuzzy b/common/fuzzy
+> index 1df51a6dd8..3512e95e02 100644
+> --- a/common/fuzzy
+> +++ b/common/fuzzy
+> @@ -408,6 +408,30 @@ __stress_scrub_clean_scratch() {
+>  	return 0
+>  }
+>  
+> +# Run fsx while we're testing online fsck.
+> +__stress_scrub_fsx_loop() {
+> +	local end="$1"
+> +	local runningfile="$2"
+> +	local focus=(-q -X)	# quiet, validate file contents
+> +
+> +	# As of November 2022, 2 million fsx ops should be enough to keep
+> +	# any filesystem busy for a couple of hours.
+> +	focus+=(-N 2000000)
+> +	focus+=(-o $((128000 * LOAD_FACTOR)) )
+> +	focus+=(-l $((600000 * LOAD_FACTOR)) )
+> +
+> +	local args="$FSX_AVOID ${focus[@]} ${SCRATCH_MNT}/fsx.$seq"
+> +	echo "Running $here/ltp/fsx $args" >> $seqres.full
+> +
+> +	while __stress_scrub_running "$end" "$runningfile"; do
+> +		# Need to recheck running conditions if we cleared anything
+> +		__stress_scrub_clean_scratch && continue
+> +		$here/ltp/fsx $args >> $seqres.full
+> +		echo "fsx exits with $? at $(date)" >> $seqres.full
+> +	done
+> +	rm -f "$runningfile"
+> +}
+> +
+>  # Run fsstress while we're testing online fsck.
+>  __stress_scrub_fsstress_loop() {
+>  	local end="$1"
+> @@ -454,7 +478,7 @@ _scratch_xfs_stress_scrub_cleanup() {
+>  	# Send SIGINT so that bash won't print a 'Terminated' message that
+>  	# distorts the golden output.
+>  	echo "Killing stressor processes at $(date)" >> $seqres.full
+> -	$KILLALL_PROG -INT xfs_io fsstress >> $seqres.full 2>&1
+> +	$KILLALL_PROG -INT xfs_io fsstress fsx >> $seqres.full 2>&1
+>  
+>  	# Tests are not allowed to exit with the scratch fs frozen.  If we
+>  	# started a fs freeze/thaw background loop, wait for that loop to exit
+> @@ -522,30 +546,39 @@ __stress_scrub_check_commands() {
+>  # -w	Delay the start of the scrub/repair loop by this number of seconds.
+>  #	Defaults to no delay unless XFS_SCRUB_STRESS_DELAY is set.  This value
+>  #	will be clamped to ten seconds before the end time.
+> +# -X	Run this program to exercise the filesystem.  Currently supported
+> +#       options are 'fsx' and 'fsstress'.  The default is 'fsstress'.
+>  _scratch_xfs_stress_scrub() {
+>  	local one_scrub_args=()
+>  	local scrub_tgt="$SCRATCH_MNT"
+>  	local runningfile="$tmp.fsstress"
+>  	local freeze="${XFS_SCRUB_STRESS_FREEZE}"
+>  	local scrub_delay="${XFS_SCRUB_STRESS_DELAY:--1}"
+> +	local exerciser="fsstress"
+>  
+>  	__SCRUB_STRESS_FREEZE_PID=""
+>  	rm -f "$runningfile"
+>  	touch "$runningfile"
+>  
+>  	OPTIND=1
+> -	while getopts "fs:t:w:" c; do
+> +	while getopts "fs:t:w:X:" c; do
+>  		case "$c" in
+>  			f) freeze=yes;;
+>  			s) one_scrub_args+=("$OPTARG");;
+>  			t) scrub_tgt="$OPTARG";;
+>  			w) scrub_delay="$OPTARG";;
+> +			X) exerciser="$OPTARG";;
+>  			*) return 1; ;;
+>  		esac
+>  	done
+>  
+>  	__stress_scrub_check_commands "$scrub_tgt" "${one_scrub_args[@]}"
+>  
+> +	if ! command -v "__stress_scrub_${exerciser}_loop" &>/dev/null; then
+> +		echo "${exerciser}: Unknown fs exercise program."
+> +		return 1
+> +	fi
+> +
+>  	local start="$(date +%s)"
+>  	local end="$((start + (30 * TIME_FACTOR) ))"
+>  	local scrub_startat="$((start + scrub_delay))"
+> @@ -555,7 +588,7 @@ _scratch_xfs_stress_scrub() {
+>  	echo "Loop started at $(date --date="@${start}")," \
+>  		   "ending at $(date --date="@${end}")" >> $seqres.full
+>  
+> -	__stress_scrub_fsstress_loop "$end" "$runningfile" &
+> +	"__stress_scrub_${exerciser}_loop" "$end" "$runningfile" &
+>  
+>  	if [ -n "$freeze" ]; then
+>  		__stress_scrub_freeze_loop "$end" "$runningfile" &
+> diff --git a/tests/xfs/847 b/tests/xfs/847
+> new file mode 100755
+> index 0000000000..856e9a6c26
+> --- /dev/null
+> +++ b/tests/xfs/847
+> @@ -0,0 +1,38 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2022 Oracle, Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 847
+> +#
+> +# Race fsx and xfs_scrub in read-only mode for a while to see if we crash
+> +# or livelock.
+> +#
+> +. ./common/preamble
+> +_begin_fstest scrub dangerous_fsstress_scrub
 
-Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- io/Makefile       |  6 +++---
- io/fsuuid.c       | 49 +++++++++++++++++++++++++++++++++++++++++++++++
- io/init.c         |  1 +
- io/io.h           |  1 +
- man/man8/xfs_io.8 |  3 +++
- 5 files changed, 57 insertions(+), 3 deletions(-)
- create mode 100644 io/fsuuid.c
+Hi Darrick,
 
-diff --git a/io/Makefile b/io/Makefile
-index 498174cf..53fef09e 100644
---- a/io/Makefile
-+++ b/io/Makefile
-@@ -10,12 +10,12 @@ LSRCFILES = xfs_bmap.sh xfs_freeze.sh xfs_mkfile.sh
- HFILES = init.h io.h
- CFILES = init.c \
- 	attr.c bmap.c bulkstat.c crc32cselftest.c cowextsize.c encrypt.c \
--	file.c freeze.c fsync.c getrusage.c imap.c inject.c label.c link.c \
--	mmap.c open.c parent.c pread.c prealloc.c pwrite.c reflink.c \
-+	file.c freeze.c fsuuid.c fsync.c getrusage.c imap.c inject.c label.c \
-+	link.c mmap.c open.c parent.c pread.c prealloc.c pwrite.c reflink.c \
- 	resblks.c scrub.c seek.c shutdown.c stat.c swapext.c sync.c \
- 	truncate.c utimes.c
- 
--LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD)
-+LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD) $(LIBUUID)
- LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG)
- LLDFLAGS = -static-libtool-libs
- 
-diff --git a/io/fsuuid.c b/io/fsuuid.c
-new file mode 100644
-index 00000000..af2f87a2
---- /dev/null
-+++ b/io/fsuuid.c
-@@ -0,0 +1,49 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2023 Oracle.
-+ * All Rights Reserved.
-+ */
-+
-+#include "libxfs.h"
-+#include "command.h"
-+#include "init.h"
-+#include "io.h"
-+#include "libfrog/fsgeom.h"
-+#include "libfrog/logging.h"
-+
-+static cmdinfo_t fsuuid_cmd;
-+
-+static int
-+fsuuid_f(
-+	int			argc,
-+	char			**argv)
-+{
-+	struct xfs_fsop_geom	fsgeo;
-+	int			ret;
-+	char			bp[40];
-+
-+	ret = -xfrog_geometry(file->fd, &fsgeo);
-+
-+	if (ret) {
-+		xfrog_perror(ret, "XFS_IOC_FSGEOMETRY");
-+		exitcode = 1;
-+	} else {
-+		platform_uuid_unparse((uuid_t *)fsgeo.uuid, bp);
-+		printf("UUID = %s\n", bp);
-+	}
-+
-+	return 0;
-+}
-+
-+void
-+fsuuid_init(void)
-+{
-+	fsuuid_cmd.name = "fsuuid";
-+	fsuuid_cmd.cfunc = fsuuid_f;
-+	fsuuid_cmd.argmin = 0;
-+	fsuuid_cmd.argmax = 0;
-+	fsuuid_cmd.flags = CMD_FLAG_ONESHOT | CMD_NOMAP_OK;
-+	fsuuid_cmd.oneline = _("get mounted filesystem UUID");
-+
-+	add_command(&fsuuid_cmd);
-+}
-diff --git a/io/init.c b/io/init.c
-index 033ed67d..104cd2c1 100644
---- a/io/init.c
-+++ b/io/init.c
-@@ -56,6 +56,7 @@ init_commands(void)
- 	flink_init();
- 	freeze_init();
- 	fsmap_init();
-+	fsuuid_init();
- 	fsync_init();
- 	getrusage_init();
- 	help_init();
-diff --git a/io/io.h b/io/io.h
-index 64b7a663..fe474faf 100644
---- a/io/io.h
-+++ b/io/io.h
-@@ -94,6 +94,7 @@ extern void		encrypt_init(void);
- extern void		file_init(void);
- extern void		flink_init(void);
- extern void		freeze_init(void);
-+extern void		fsuuid_init(void);
- extern void		fsync_init(void);
- extern void		getrusage_init(void);
- extern void		help_init(void);
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 223b5152..ef7087b3 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -1455,6 +1455,9 @@ This option is not compatible with the
- flag.
- .RE
- .PD
-+.TP
-+.B fsuuid
-+Print the mounted filesystem UUID.
- 
- 
- .SH OTHER COMMANDS
--- 
-2.25.1
+Such huge patchsets :) I'll try to review them one by one (patchset).
+
+Now I'm trying to review "[NYE DELUGE 1/4]", but I can't find the
+"dangerous_fsstress_scrub" group in the whole patchsets. Is there any
+prepositive patch(set)? Or you'd like to use "dangerous_fsstress_repair"?
+
+P.S: More cases use "dangerous_fsstress_scrub" in your new patchsets.
+
+Thanks,
+Zorro
+
+> +
+> +_cleanup() {
+> +	cd /
+> +	_scratch_xfs_stress_scrub_cleanup &> /dev/null
+> +	rm -r -f $tmp.*
+> +}
+> +_register_cleanup "_cleanup" BUS
+> +
+> +# Import common functions.
+> +. ./common/filter
+> +. ./common/fuzzy
+> +. ./common/inject
+> +. ./common/xfs
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_require_scratch
+> +_require_xfs_stress_scrub
+> +
+> +_scratch_mkfs > "$seqres.full" 2>&1
+> +_scratch_mount
+> +_scratch_xfs_stress_scrub -S '-n' -X 'fsx'
+> +
+> +# success, all done
+> +echo Silence is golden
+> +status=0
+> +exit
+> diff --git a/tests/xfs/847.out b/tests/xfs/847.out
+> new file mode 100644
+> index 0000000000..b7041db159
+> --- /dev/null
+> +++ b/tests/xfs/847.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 847
+> +Silence is golden
+> diff --git a/tests/xfs/848 b/tests/xfs/848
+> new file mode 100755
+> index 0000000000..ab32020624
+> --- /dev/null
+> +++ b/tests/xfs/848
+> @@ -0,0 +1,38 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2022 Oracle, Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 848
+> +#
+> +# Race fsx and xfs_scrub in force-repair mode for a while to see if we
+> +# crash or livelock.
+> +#
+> +. ./common/preamble
+> +_begin_fstest online_repair dangerous_fsstress_repair
+> +
+> +_cleanup() {
+> +	cd /
+> +	_scratch_xfs_stress_scrub_cleanup &> /dev/null
+> +	rm -r -f $tmp.*
+> +}
+> +_register_cleanup "_cleanup" BUS
+> +
+> +# Import common functions.
+> +. ./common/filter
+> +. ./common/fuzzy
+> +. ./common/inject
+> +. ./common/xfs
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_require_scratch
+> +_require_xfs_stress_online_repair
+> +
+> +_scratch_mkfs > "$seqres.full" 2>&1
+> +_scratch_mount
+> +_scratch_xfs_stress_online_repair -S '-k' -X 'fsx'
+> +
+> +# success, all done
+> +echo Silence is golden
+> +status=0
+> +exit
+> diff --git a/tests/xfs/848.out b/tests/xfs/848.out
+> new file mode 100644
+> index 0000000000..23f674045c
+> --- /dev/null
+> +++ b/tests/xfs/848.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 848
+> +Silence is golden
+> 
 
