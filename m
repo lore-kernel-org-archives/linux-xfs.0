@@ -2,274 +2,168 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17DB6C54EBC
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Jan 2023 19:41:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3154BC3DA7A
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Jan 2023 19:48:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231523AbjAETlh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Jan 2023 14:41:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35938 "EHLO
+        id S235058AbjAETsB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Jan 2023 14:48:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235977AbjAETlE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Jan 2023 14:41:04 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C4A06368;
-        Thu,  5 Jan 2023 11:40:37 -0800 (PST)
+        with ESMTP id S234720AbjAETrh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Jan 2023 14:47:37 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8351E14D29
+        for <linux-xfs@vger.kernel.org>; Thu,  5 Jan 2023 11:47:36 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2779761AA9;
-        Thu,  5 Jan 2023 19:40:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78BE6C433D2;
-        Thu,  5 Jan 2023 19:40:36 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 207EE61C17
+        for <linux-xfs@vger.kernel.org>; Thu,  5 Jan 2023 19:47:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76798C433D2;
+        Thu,  5 Jan 2023 19:47:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672947636;
-        bh=LhCfr7NF0ZHI87asHZUYtP5yOP6kDQp34LDd/yIDE8M=;
+        s=k20201202; t=1672948055;
+        bh=G5u9p44cxoovzog286o8B2olPPAs3q8LR0N00fIqxE4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=UN7YQQp/skBvGufAUNBOIaPkJP/YoIItV1uGdrYC4kKm0W9emwNEGQeDN82rcHtZx
-         CHp/RIkzk3BS4igB3pV/NevcEJnOnsYI0t49bjYarTPmxE5UkJr5k5VxmDhs9bj9cG
-         iGiodw3seBMAh3xeivgyYMa+QtykMeqbu+GnKScwIeheNos861icmhMQU7AKtMpiso
-         kKAHD2/QXX4SgEnXF1pdFWcPBxIDdoYXFYIbbMjFeE7YaF2mjqID6T4/NDQJO87IQb
-         OHhchgJ3sXPXKVBIQcyMiCcFb73p45+wTBfjbyV/n3qK5ylEfQtL6qDfc4qVAvJIkf
-         ldfhaTMqxHYHg==
-Date:   Thu, 5 Jan 2023 11:40:35 -0800
+        b=H7GhSgMxg55Dc2u0rChigJTNdLTOhX7Wm4/hGo+0OSme7heIiLjqM7fIUVH0LpsAS
+         f6bS3JoruemyO1AH3Fw7fLEPbtvlTd6PG07lbbiAeBmUlEGoqEZSQMfW6ueowVEOdT
+         dVQOxkPZYzLKQA220CYY9lml1RF8f/T0AY4xcZxcr2fdP9+qGea64INGkmcXM/Diw1
+         Wke7rEN7SBxR8sbrbgjtqwE76pYeht5DshuqMBzbDZoQNuNrtOtWOGuU5363NJ+09D
+         YLZGnDDn67DPrm2VZWr6CjxM/1hsVDfc4tR0enrJ4d5J5vaStmSapReU6HqdcxE14H
+         1XStNuydI6y+A==
+Date:   Thu, 5 Jan 2023 11:47:34 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     linux-xfs@vger.kernel.org, willy@infradead.org,
-        chandan.babu@oracle.com, allison.henderson@oracle.com,
-        linux-fsdevel@vger.kernel.org, hch@infradead.org,
-        catherine.hoang@oracle.com, david@fromorbit.com
-Subject: Re: [PATCH 06/14] xfs: document how online fsck deals with eventual
- consistency
-Message-ID: <Y7cns4x+lJuAKIXj@magnolia>
-References: <167243825144.682859.12802259329489258661.stgit@magnolia>
- <167243825245.682859.4827095718073568782.stgit@magnolia>
- <CAOQ4uxgqYCXi_c3PA8d0vVaaicGU=D9kvsR5fo9eb_89L0Y6PA@mail.gmail.com>
+To:     Catherine Hoang <catherine.hoang@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3 2/2] xfs_admin: get UUID of mounted filesystem
+Message-ID: <Y7cpVnPqLwBLFHmM@magnolia>
+References: <20230105003613.29394-1-catherine.hoang@oracle.com>
+ <20230105003613.29394-3-catherine.hoang@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxgqYCXi_c3PA8d0vVaaicGU=D9kvsR5fo9eb_89L0Y6PA@mail.gmail.com>
+In-Reply-To: <20230105003613.29394-3-catherine.hoang@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 05, 2023 at 11:08:51AM +0200, Amir Goldstein wrote:
-> On Sat, Dec 31, 2022 at 12:32 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > From: Darrick J. Wong <djwong@kernel.org>
-> >
-> > Writes to an XFS filesystem employ an eventual consistency update model
-> > to break up complex multistep metadata updates into small chained
-> > transactions.  This is generally good for performance and scalability
-> > because XFS doesn't need to prepare for enormous transactions, but it
-> > also means that online fsck must be careful not to attempt a fsck action
-> > unless it can be shown that there are no other threads processing a
-> > transaction chain.  This part of the design documentation covers the
-> > thinking behind the consistency model and how scrub deals with it.
-> >
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  .../filesystems/xfs-online-fsck-design.rst         |  303 ++++++++++++++++++++
-> >  1 file changed, 303 insertions(+)
-> >
-> >
-> > diff --git a/Documentation/filesystems/xfs-online-fsck-design.rst b/Documentation/filesystems/xfs-online-fsck-design.rst
-> > index f45bf97fa9c4..419eb54ee200 100644
-> > --- a/Documentation/filesystems/xfs-online-fsck-design.rst
-> > +++ b/Documentation/filesystems/xfs-online-fsck-design.rst
-> > @@ -1443,3 +1443,306 @@ This step is critical for enabling system administrator to monitor the status
-> >  of the filesystem and the progress of any repairs.
-> >  For developers, it is a useful means to judge the efficacy of error detection
-> >  and correction in the online and offline checking tools.
-> > +
-> > +Eventual Consistency vs. Online Fsck
-> > +------------------------------------
-> > +
-> > +Midway through the development of online scrubbing, the fsstress tests
-> > +uncovered a misinteraction between online fsck and compound transaction chains
-> > +created by other writer threads that resulted in false reports of metadata
-> > +inconsistency.
-> > +The root cause of these reports is the eventual consistency model introduced by
-> > +the expansion of deferred work items and compound transaction chains when
-> > +reverse mapping and reflink were introduced.
-> > +
-> > +Originally, transaction chains were added to XFS to avoid deadlocks when
-> > +unmapping space from files.
-> > +Deadlock avoidance rules require that AGs only be locked in increasing order,
-> > +which makes it impossible (say) to use a single transaction to free a space
-> > +extent in AG 7 and then try to free a now superfluous block mapping btree block
-> > +in AG 3.
-> > +To avoid these kinds of deadlocks, XFS creates Extent Freeing Intent (EFI) log
-> > +items to commit to freeing some space in one transaction while deferring the
-> > +actual metadata updates to a fresh transaction.
-> > +The transaction sequence looks like this:
-> > +
-> > +1. The first transaction contains a physical update to the file's block mapping
-> > +   structures to remove the mapping from the btree blocks.
-> > +   It then attaches to the in-memory transaction an action item to schedule
-> > +   deferred freeing of space.
-> > +   Concretely, each transaction maintains a list of ``struct
-> > +   xfs_defer_pending`` objects, each of which maintains a list of ``struct
-> > +   xfs_extent_free_item`` objects.
-> > +   Returning to the example above, the action item tracks the freeing of both
-> > +   the unmapped space from AG 7 and the block mapping btree (BMBT) block from
-> > +   AG 3.
-> > +   Deferred frees recorded in this manner are committed in the log by creating
-> > +   an EFI log item from the ``struct xfs_extent_free_item`` object and
-> > +   attaching the log item to the transaction.
-> > +   When the log is persisted to disk, the EFI item is written into the ondisk
-> > +   transaction record.
-> > +   EFIs can list up to 16 extents to free, all sorted in AG order.
-> > +
-> > +2. The second transaction contains a physical update to the free space btrees
-> > +   of AG 3 to release the former BMBT block and a second physical update to the
-> > +   free space btrees of AG 7 to release the unmapped file space.
-> > +   Observe that the the physical updates are resequenced in the correct order
-> > +   when possible.
-> > +   Attached to the transaction is a an extent free done (EFD) log item.
-> > +   The EFD contains a pointer to the EFI logged in transaction #1 so that log
-> > +   recovery can tell if the EFI needs to be replayed.
-> > +
-> > +If the system goes down after transaction #1 is written back to the filesystem
-> > +but before #2 is committed, a scan of the filesystem metadata would show
-> > +inconsistent filesystem metadata because there would not appear to be any owner
-> > +of the unmapped space.
-> > +Happily, log recovery corrects this inconsistency for us -- when recovery finds
-> > +an intent log item but does not find a corresponding intent done item, it will
-> > +reconstruct the incore state of the intent item and finish it.
-> > +In the example above, the log must replay both frees described in the recovered
-> > +EFI to complete the recovery phase.
-> > +
-> > +There are two subtleties to XFS' transaction chaining strategy to consider.
-> > +The first is that log items must be added to a transaction in the correct order
-> > +to prevent conflicts with principal objects that are not held by the
-> > +transaction.
-> > +In other words, all per-AG metadata updates for an unmapped block must be
-> > +completed before the last update to free the extent, and extents should not
-> > +be reallocated until that last update commits to the log.
-> > +The second subtlety comes from the fact that AG header buffers are (usually)
-> > +released between each transaction in a chain.
-> > +This means that other threads can observe an AG in an intermediate state,
-> > +but as long as the first subtlety is handled, this should not affect the
-> > +correctness of filesystem operations.
-> > +Unmounting the filesystem flushes all pending work to disk, which means that
-> > +offline fsck never sees the temporary inconsistencies caused by deferred work
-> > +item processing.
-> > +In this manner, XFS employs a form of eventual consistency to avoid deadlocks
-> > +and increase parallelism.
-> > +
-> > +During the design phase of the reverse mapping and reflink features, it was
-> > +decided that it was impractical to cram all the reverse mapping updates for a
-> > +single filesystem change into a single transaction because a single file
-> > +mapping operation can explode into many small updates:
-> > +
-> > +* The block mapping update itself
-> > +* A reverse mapping update for the block mapping update
-> > +* Fixing the freelist
-> > +* A reverse mapping update for the freelist fix
-> > +
-> > +* A shape change to the block mapping btree
-> > +* A reverse mapping update for the btree update
-> > +* Fixing the freelist (again)
-> > +* A reverse mapping update for the freelist fix
-> > +
-> > +* An update to the reference counting information
-> > +* A reverse mapping update for the refcount update
-> > +* Fixing the freelist (a third time)
-> > +* A reverse mapping update for the freelist fix
-> > +
-> > +* Freeing any space that was unmapped and not owned by any other file
-> > +* Fixing the freelist (a fourth time)
-> > +* A reverse mapping update for the freelist fix
-> > +
-> > +* Freeing the space used by the block mapping btree
-> > +* Fixing the freelist (a fifth time)
-> > +* A reverse mapping update for the freelist fix
-> > +
-> > +Free list fixups are not usually needed more than once per AG per transaction
-> > +chain, but it is theoretically possible if space is very tight.
-> > +For copy-on-write updates this is even worse, because this must be done once to
-> > +remove the space from a staging area and again to map it into the file!
-> > +
-> > +To deal with this explosion in a calm manner, XFS expands its use of deferred
-> > +work items to cover most reverse mapping updates and all refcount updates.
-> > +This reduces the worst case size of transaction reservations by breaking the
-> > +work into a long chain of small updates, which increases the degree of eventual
-> > +consistency in the system.
-> > +Again, this generally isn't a problem because XFS orders its deferred work
-> > +items carefully to avoid resource reuse conflicts between unsuspecting threads.
-> > +
-> > +However, online fsck changes the rules -- remember that although physical
-> > +updates to per-AG structures are coordinated by locking the buffers for AG
-> > +headers, buffer locks are dropped between transactions.
-> > +Once scrub acquires resources and takes locks for a data structure, it must do
-> > +all the validation work without releasing the lock.
-> > +If the main lock for a space btree is an AG header buffer lock, scrub may have
-> > +interrupted another thread that is midway through finishing a chain.
-> > +For example, if a thread performing a copy-on-write has completed a reverse
-> > +mapping update but not the corresponding refcount update, the two AG btrees
-> > +will appear inconsistent to scrub and an observation of corruption will be
-> > +recorded.  This observation will not be correct.
-> > +If a repair is attempted in this state, the results will be catastrophic!
-> > +
-> > +Several solutions to this problem were evaluated upon discovery of this flaw:
-> > +
-> > +1. Add a higher level lock to allocation groups and require writer threads to
-> > +   acquire the higher level lock in AG order before making any changes.
-> > +   This would be very difficult to implement in practice because it is
-> > +   difficult to determine which locks need to be obtained, and in what order,
-> > +   without simulating the entire operation.
-> > +   Performing a dry run of a file operation to discover necessary locks would
-> > +   make the filesystem very slow.
-> > +
-> > +2. Make the deferred work coordinator code aware of consecutive intent items
-> > +   targeting the same AG and have it hold the AG header buffers locked across
-> > +   the transaction roll between updates.
-> > +   This would introduce a lot of complexity into the coordinator since it is
-> > +   only loosely coupled with the actual deferred work items.
-> > +   It would also fail to solve the problem because deferred work items can
-> > +   generate new deferred subtasks, but all subtasks must be complete before
-> > +   work can start on a new sibling task.
-> > +
-> > +3. Teach online fsck to walk all transactions waiting for whichever lock(s)
-> > +   protect the data structure being scrubbed to look for pending operations.
-> > +   The checking and repair operations must factor these pending operations into
-> > +   the evaluations being performed.
-> > +   This solution is a nonstarter because it is *extremely* invasive to the main
-> > +   filesystem.
-> > +
-> > +4. Recognize that only online fsck has this requirement of total consistency
-> > +   of AG metadata, and that online fsck should be relatively rare as compared
-> > +   to filesystem change operations.
-> > +   For each AG, maintain a count of intent items targetting that AG.
-> > +   When online fsck wants to examine an AG, it should lock the AG header
-> > +   buffers to quiesce all transaction chains that want to modify that AG, and
-> > +   only proceed with the scrub if the count is zero.
-> > +   In other words, scrub only proceeds if it can lock the AG header buffers and
-> > +   there can't possibly be any intents in progress.
-> > +   This may lead to fairness and starvation issues, but regular filesystem
-> > +   updates take precedence over online fsck activity.
-> > +
+On Wed, Jan 04, 2023 at 04:36:13PM -0800, Catherine Hoang wrote:
+> Adapt this tool to call xfs_io to retrieve the UUID of a mounted filesystem.
+> This is a precursor to enabling xfs_admin to set the UUID of a mounted
+> filesystem.
 > 
-> Is there any guarantee that some silly real life regular filesystem workload
-> won't starve online fsck forever?
-> IOW, is forward progress of online fsck guaranteed?
+> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+> ---
+>  db/xfs_admin.sh | 61 +++++++++++++++++++++++++++++++++++++++++--------
+>  1 file changed, 51 insertions(+), 10 deletions(-)
+> 
+> diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
+> index 409975b2..b73fb3ad 100755
+> --- a/db/xfs_admin.sh
+> +++ b/db/xfs_admin.sh
+> @@ -5,8 +5,11 @@
+>  #
+>  
+>  status=0
+> +require_offline=""
+> +require_online=""
+>  DB_OPTS=""
+>  REPAIR_OPTS=""
+> +IO_OPTS=""
+>  REPAIR_DEV_OPTS=""
+>  LOG_OPTS=""
+>  USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-O v5_feature] [-r rtdev] [-U uuid] device [logdev]"
+> @@ -14,17 +17,37 @@ USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-O v5_feature] [-r rtdev
+>  while getopts "c:efjlL:O:pr:uU:V" c
+>  do
+>  	case $c in
+> -	c)	REPAIR_OPTS=$REPAIR_OPTS" -c lazycount="$OPTARG;;
+> -	e)	DB_OPTS=$DB_OPTS" -c 'version extflg'";;
+> -	f)	DB_OPTS=$DB_OPTS" -f";;
+> -	j)	DB_OPTS=$DB_OPTS" -c 'version log2'";;
+> +	c)	REPAIR_OPTS=$REPAIR_OPTS" -c lazycount="$OPTARG
+> +		require_offline=1
+> +		;;
+> +	e)	DB_OPTS=$DB_OPTS" -c 'version extflg'"
+> +		require_offline=1
+> +		;;
+> +	f)	DB_OPTS=$DB_OPTS" -f"
+> +		require_offline=1
+> +		;;
+> +	j)	DB_OPTS=$DB_OPTS" -c 'version log2'"
+> +		require_offline=1
+> +		;;
+>  	l)	DB_OPTS=$DB_OPTS" -r -c label";;
 
-Nope, forward progress isn't guaranteed.  The kernel checks for fatal
-signals every time it backs off a scrub so at least we don't end up with
-unkillable processes.  At one point I added a timeout field to the ioctl
-interface so that the kernel could time out an operation if it took too
-long to acquire the necessary resources.  So far, the "race fsstress and
-xfs_scrub" tests have not shown scrub failing to make any forward
-progress.
+Now that xfs_admin can issue commands directly against mounted
+filesystems, I suppose it ought to wire up support for querying and
+changing the label as well.  Doing that should be trivial, and
+definitely an idea for a separate patch:
 
-That said, I have /not/ yet had a chance to try it out any of these
-massive 1000-core systems with an according workload.
+# xfs_io -c 'label' /mnt
+label = "hi"
+# xfs_io -c 'label -s bye' /mnt
+label = "bye"
+# xfs_io -c 'label' /mnt
+label = "bye"
 
-> Good luck with landing online fsck before the 2024 NYE deluge ;)
-
-Thank *you* for reading this chapter of the design document!! :)
+*This* patch looks correct to me, so
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> Thanks,
-> Amir.
+> -	L)	DB_OPTS=$DB_OPTS" -c 'label "$OPTARG"'";;
+> -	O)	REPAIR_OPTS=$REPAIR_OPTS" -c $OPTARG";;
+> -	p)	DB_OPTS=$DB_OPTS" -c 'version projid32bit'";;
+> -	r)	REPAIR_DEV_OPTS=" -r '$OPTARG'";;
+> -	u)	DB_OPTS=$DB_OPTS" -r -c uuid";;
+> -	U)	DB_OPTS=$DB_OPTS" -c 'uuid "$OPTARG"'";;
+> +	L)	DB_OPTS=$DB_OPTS" -c 'label "$OPTARG"'"
+> +		require_offline=1
+> +		;;
+> +	O)	REPAIR_OPTS=$REPAIR_OPTS" -c $OPTARG"
+> +		require_offline=1
+> +		;;
+> +	p)	DB_OPTS=$DB_OPTS" -c 'version projid32bit'"
+> +		require_offline=1
+> +		;;
+> +	r)	REPAIR_DEV_OPTS=" -r '$OPTARG'"
+> +		require_offline=1
+> +		;;
+> +	u)	DB_OPTS=$DB_OPTS" -r -c uuid"
+> +		IO_OPTS=$IO_OPTS" -r -c fsuuid"
+> +		;;
+> +	U)	DB_OPTS=$DB_OPTS" -c 'uuid "$OPTARG"'"
+> +		require_offline=1
+> +		;;
+>  	V)	xfs_db -p xfs_admin -V
+>  		status=$?
+>  		exit $status
+> @@ -38,6 +61,24 @@ set -- extra $@
+>  shift $OPTIND
+>  case $# in
+>  	1|2)
+> +		if mntpt="$(findmnt -t xfs -f -n -o TARGET "$1" 2>/dev/null)"; then
+> +			# filesystem is mounted
+> +			if [ -n "$require_offline" ]; then
+> +				echo "$1: filesystem is mounted."
+> +				exit 2
+> +			fi
+> +
+> +			if [ -n "$IO_OPTS" ]; then
+> +				exec xfs_io -p xfs_admin $IO_OPTS "$mntpt"
+> +			fi
+> +		fi
+> +
+> +		# filesystem is not mounted
+> +		if [ -n "$require_online" ]; then
+> +			echo "$1: filesystem is not mounted"
+> +			exit 2
+> +		fi
+> +
+>  		# Pick up the log device, if present
+>  		if [ -n "$2" ]; then
+>  			LOG_OPTS=" -l '$2'"
+> -- 
+> 2.25.1
+> 
