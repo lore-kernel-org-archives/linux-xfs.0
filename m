@@ -2,184 +2,218 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86903C3DA7A
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Jan 2023 09:56:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01192C5479D
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Jan 2023 10:29:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231561AbjAFJ4W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Jan 2023 04:56:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48094 "EHLO
+        id S234102AbjAFK3t (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Jan 2023 05:29:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34050 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232456AbjAFJ4C (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2023 04:56:02 -0500
-Received: from out30-7.freemail.mail.aliyun.com (out30-7.freemail.mail.aliyun.com [115.124.30.7])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18E4110FA;
-        Fri,  6 Jan 2023 01:55:59 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R171e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045168;MF=ziyangzhang@linux.alibaba.com;NM=1;PH=DS;RN=5;SR=0;TI=SMTPD_---0VYzme23_1672998956;
-Received: from 30.97.56.214(mailfrom:ZiyangZhang@linux.alibaba.com fp:SMTPD_---0VYzme23_1672998956)
-          by smtp.aliyun-inc.com;
-          Fri, 06 Jan 2023 17:55:57 +0800
-Message-ID: <3d9d3d69-4a6b-0661-97ea-facc33149c80@linux.alibaba.com>
-Date:   Fri, 6 Jan 2023 17:55:54 +0800
+        with ESMTP id S234369AbjAFK30 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Jan 2023 05:29:26 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99388714A9
+        for <linux-xfs@vger.kernel.org>; Fri,  6 Jan 2023 02:27:24 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id EDD5861D5C
+        for <linux-xfs@vger.kernel.org>; Fri,  6 Jan 2023 10:27:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D6CAC433D2;
+        Fri,  6 Jan 2023 10:27:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1673000843;
+        bh=37GAzJ/qx5iA8jrPY48WC5TvXZJzUh5vehiXlvYWH2o=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=T1b47+uEXBdVmu4DN3JfQt0xJx8NZjXJc4tFhY9K/gWTNm1sdMd3vgOgRaHCsp8V6
+         u9lBg2iig56D1vQbhgv2MNxGfg1MmwGp/ZcCrzG8jR79Vl2lKeduWM6DwtLd8ebJHJ
+         ZmPSS6s8cH7Ysqqju4yPBIGOoJPaXeYxt1er//iVgAmKFeYv9yzC8SxUuP/kf9Eejy
+         A+gonrX4ZNezYFegQuCpwhn60W9EoYoRVuUv2DVsFJ/4QctFNFEhbjpRwgYaBZxy/F
+         m8UI0fDBadV1illZgJWhw9/AyuFLC3tBmhjK24I1d+BtCgKh+MQ4WMknMpVlA0/Wtu
+         lp1rvECV7tW3g==
+Date:   Fri, 6 Jan 2023 11:27:19 +0100
+From:   Carlos Maiolino <cem@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [ANNOUNCE] xfsprogs-6.1.0 released
+Message-ID: <20230106102719.rwbu2jio352pkgaq@andromeda>
+References: <20221223104351.gwi7qyns7eww6gel@andromeda>
+ <-j7ipreoC6Ioj_OcM-n56c_u9BudLZfHGB6RkmaBwp24Ue0VLPpBob7HPoXHtGZp7ojVRD5Kh0xyFzKAZSMNCQ==@protonmail.internalid>
+ <Y7W3pLNuhWliwJf6@magnolia>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.6.1
-Subject: Re: [PATCH V6 2/2] common/populate: Ensure that S_IFDIR.FMT_BTREE is
- in btree format
-Content-Language: en-US
-To:     "xuyang2018.jy@fujitsu.com" <xuyang2018.jy@fujitsu.com>
-Cc:     "hsiangkao@linux.alibaba.com" <hsiangkao@linux.alibaba.com>,
-        "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>
-References: <20221212055645.2067020-1-ZiyangZhang@linux.alibaba.com>
- <20221212055645.2067020-3-ZiyangZhang@linux.alibaba.com>
- <c984985a-ec53-9f32-ef93-946b0500bcd5@fujitsu.com>
- <0b95a29d-43ca-ba29-365f-9161a213dc17@linux.alibaba.com>
- <c9355efb-cebe-8efd-8844-1d00d649e602@fujitsu.com>
-From:   Ziyang Zhang <ZiyangZhang@linux.alibaba.com>
-In-Reply-To: <c9355efb-cebe-8efd-8844-1d00d649e602@fujitsu.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Y7W3pLNuhWliwJf6@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2023/1/3 17:58, xuyang2018.jy@fujitsu.com wrote:
-> on  2023/01/03 17:29, Ziyang Zhang wrote
->> On 2023/1/3 14:54, xuyang2018.jy@fujitsu.com wrote:
->>>
->>>
->>> on 2022/12/12 13:56, Ziyang Zhang wrote:
->>>
->>>> Sometimes "$((128 * dblksz / 40))" dirents cannot make sure that
->>>> S_IFDIR.FMT_BTREE could become btree format for its DATA fork.
->>>>
->>>> Actually we just observed it can fail after apply our inode
->>>> extent-to-btree workaround. The root cause is that the kernel may be
->>>> too good at allocating consecutive blocks so that the data fork is
->>>> still in extents format.
->>>>
->>>> Therefore instead of using a fixed number, let's make sure the number
->>>> of extents is large enough than (inode size - inode core size) /
->>>> sizeof(xfs_bmbt_rec_t).
->>>
->>> After this patch, xfs/083 and xfs/155 failed on my envrionment(6.1.0+
->>> kernel).
->>>
->>> the 083 fail as below:
->>> 1 fuzzing xfs with FUZZ_ARGS=-3 -n 32 and FSCK_PASSES=10
->>>     2 + create scratch fs
->>>     3 meta-data=/dev/sdb9              isize=512    agcount=4,
->>> agsize=529878 blks
->>>     4          =                       sectsz=512   attr=2, projid32bit=1
->>>     5          =                       crc=1        finobt=1, sparse=1,
->>> rmapbt=0
->>>     6          =                       reflink=0    bigtime=1
->>> inobtcount=1 nrext64=0
->>>     7 data     =                       bsize=4096   blocks=2119510,
->>> imaxpct=25
->>>     8          =                       sunit=0      swidth=0 blks
->>>     9 naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
->>>    10 log      =internal log           bsize=4096   blocks=16384, version=2
->>>    11          =                       sectsz=512   sunit=0 blks,
->>> lazy-count=1
->>>    12 realtime =none                   extsz=4096   blocks=0, rtextents=0
->>>    13 + populate fs image
->>>    14 MOUNT_OPTIONS =  -o usrquota,grpquota,prjquota
->>>    15 + fill root ino chunk
->>>    16 + extents file
->>>    17 wrote 4096/4096 bytes at offset 0
->>>    18 4 KiB, 1 ops; 0.0187 sec (212.891 KiB/sec and 53.2226 ops/sec)
->>>    19 + btree extents file
->>>    20 wrote 2097152/2097152 bytes at offset 0
->>>    21 2 MiB, 2 ops; 0.0637 sec (31.370 MiB/sec and 31.3701 ops/sec)
->>>    22 + inline dir
->>>    23 + block dir
->>>    24 + leaf dir
->>>    25 + leafn dir
->>>    26 + node dir
->>>    27 + btree dir
->>>    28 + inline symlink
->>>    29 + extents symlink
->>>    30 + special
->>>    31 + local attr
->>>    32 + leaf attr
->>>    33 + node attr
->>>    34 + btree attr
->>>    35 + attr extents with a remote less-than-a-block value
->>>    36 + attr extents with a remote one-block value
->>>    37 + empty file
->>>    38 + freesp btree
->>>    39 wrote 4194304/4194304 bytes at offset 0
->>>    40 4 MiB, 4 ops; 0.0941 sec (42.470 MiB/sec and 42.4696 ops/sec)
->>>    41 + inobt btree
->>>    42 + real files
->>>    43 FILL FS
->>>    44 src_sz 2052 fs_sz 8342940 nr 203
->>>    45 failed to create ino 8578 dformat expected btree saw extents
->>>    46 failed to create ino 8578 dformat expected btree saw extents
->>>    47 (see /var/lib/xfstests/results//xfs/083.full for details)
->>>
->>>
->>> It seems this logic can't ensure to creat a btree format dir and it
->>> is a  extent format dir. Or I miss something?
->>>
->>>
->>> Best Regards
->>> Yang Xu
->>
->> Hi Yang,
->>
->> Looks like xfs/083 does call __populate_xfs_create_btree_dir.
+On Wed, Jan 04, 2023 at 09:30:12AM -0800, Darrick J. Wong wrote:
+> On Fri, Dec 23, 2022 at 11:43:51AM +0100, Carlos Maiolino wrote:
+> > Hi folks,
+> >
+> > The xfsprogs repository at:
+> >
+> > 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+> >
+> > has just been updated.
+> >
+> > If you were expecting your patch to be in this version, and for some reason it
+> > is not, please let me know.
 > 
-> Yes.
->> Could you please share your test environment and config in
->> detail and I will try to reproduce your report.
-> 
-> Of course, I use fedora31 and 6.1 kernel. xfsprogs uses upstream version 
-> xfsprogs: Release v6.0.0.
-> 
-> local.config
-> export TEST_DEV=/dev/sdb8
-> export TEST_DIR=/mnt/xfstests/test
-> export SCRATCH_DEV=/dev/sdb9
-> export SCRATCH_MNT=/mnt/xfstests/scratch
-> export XFS_MKFS_OPTIONS="-b size=4096 -m reflink=1"
-> 
-> 
-> disk info:
-> /dev/sdb8       566241280 608184319  41943040    20G 83 Linux
-> /dev/sdb9       608186368 625142447  16956080   8.1G 83 Linux
-> 
-> 
-> BTW, xfs/273 xfs/495 that called _scratch_populate_cached also failed 
-> with this commit under selinux Permissive status and passed under 
-> selinux  enforcing status. I guess the extend attr fork was filled
-> in selinux enabled status, so we can create btree dir by smaller number 
-> files.
+Sorry the late reply, quite busy here these days.
+
+> Er... the debian/changelog file says 6.0.1.  It's probably not a big
+> deal unless the Debian folks decide to pull that in, but probably worth
+> fixing since nothing else has been committed to master or for-next.
 > 
 
+Heh, Eric mentioned it to me, sorry about the fat fingers :(
+You mean fixing it by rebasing the tree, or adding a patch on top of it with the
+fix? I thought by adding a patch on top of it would fix it, but yet, outside of
+the 6.1.0 tag, and yet, rebasing it will be basically a re-release of 6.1 :P
 
-Hi Yang,
+> Also, would you mind updating for-next to match master?
 
-Could you please try this patch:
+Sure, I'll do that together with the fix, however we decide to fix it.
 
-diff --git a/common/populate b/common/populate
-index 44b4af16..bedcdc41 100644
---- a/common/populate
-+++ b/common/populate
-@@ -81,7 +81,7 @@ __populate_xfs_create_btree_dir() {
-        # btree format.  Cycling the mount to use xfs_db is too slow, so
-        # watch for when the extent count exceeds the space after the
-        # inode core.
--       local max_nextents="$(((isize - icore_size) / 16))"
-+       local max_nextents="$(((isize - icore_size) / 16 + 1))"
-        local nr=0
- 
-        mkdir -p "${name}"
 
-This will add 1 to max_nextents. Then xfs/083 will pass on my env(6.1 kernel,
-6.0.0 xfsprogs, selinux disabled)
+> 
+> --D
+> 
+> >
+> > The commit log and diffstat are described below...
+> >
+> >
+> > Happy Holidays everyone!
+> >
+> >
+> > The new head of the master branch is commit:
+> >
+> > 37e6e80a6 xfsprogs: Release v6.1.0
+> >
+> > New Commits:
+> >
+> > Allison Henderson (1):
+> >       [227bc97f1] xfs: increase rename inode reservation
+> >
+> > Carlos Maiolino (3):
+> >       [fbd9b2363] xfs_repair: Fix check_refcount() error path
+> >       [2dac91b3d] xfs_repair: Fix rmaps_verify_btree() error path
+> >       [37e6e80a6] xfsprogs: Release v6.1.0
+> >
+> > Darrick J. Wong (26):
+> >       [d267ac6a0] xfs: fix memcpy fortify errors in EFI log format copying
+> >       [4b69afdc4] xfs: refactor all the EFI/EFD log item sizeof logic
+> >       [2d5166b9d] xfs: make sure aglen never goes negative in xfs_refcount_adjust_extents
+> >       [b3f9ae08e] xfs: create a predicate to verify per-AG extents
+> >       [7ccbdec2b] xfs: check deferred refcount op continuation parameters
+> >       [bec88ec72] xfs: move _irec structs to xfs_types.h
+> >       [6b2f464dd] xfs: track cow/shared record domains explicitly in xfs_refcount_irec
+> >       [8160aeff0] xfs: report refcount domain in tracepoints
+> >       [cc2a3c2ad] xfs: refactor domain and refcount checking
+> >       [f275d70e8] xfs: remove XFS_FIND_RCEXT_SHARED and _COW
+> >       [817ea9f0f] xfs: check record domain when accessing refcount records
+> >       [8b2b27581] xfs: fix agblocks check in the cow leftover recovery function
+> >       [7accbcd00] xfs: fix uninitialized list head in struct xfs_refcount_recovery
+> >       [7257eb3ed] xfs: rename XFS_REFC_COW_START to _COWFLAG
+> >       [60066f61c] libxfs: consume the xfs_warn mountpoint argument
+> >       [b6fef47a8] misc: add static to various sourcefile-local functions
+> >       [a946664de] misc: add missing includes
+> >       [b84d0823d] xfs_db: fix octal conversion logic
+> >       [e9dea7eff] xfs_db: fix printing of reverse mapping record blockcounts
+> >       [978c3087b] xfs_repair: don't crash on unknown inode parents in dry run mode
+> >       [945c7341d] xfs_repair: retain superblock buffer to avoid write hook deadlock
+> >       [2b9d6f15b] xfs_{db,repair}: fix XFS_REFC_COW_START usage
+> >       [765809a0d] mkfs.xfs: add mkfs config file for the 6.1 LTS kernel
+> >       [f6fb1c078] xfs_io: don't display stripe alignment flags for realtime files
+> >       [e229a59f0] xfs_db: create separate struct and field definitions for finobts
+> >       [7374f58bf] xfs_db: fix dir3 block magic check
+> >
+> > Guo Xuenan (1):
+> >       [20798cc06] xfs: fix exception caused by unexpected illegal bestcount in leaf dir
+> >
+> > Jason A. Donenfeld (2):
+> >       [4947ac5b3] treewide: use prandom_u32_max() when possible, part 1
+> >       [11d2f5afc] treewide: use get_random_u32() when possible
+> >
+> > Long Li (1):
+> >       [b827e2318] xfs: fix sb write verify for lazysbcount
+> >
+> > Shida Zhang (2):
+> >       [04d4c27af] xfs: trim the mapp array accordingly in xfs_da_grow_inode_int
+> >       [1a3bfffee] xfs: rearrange the logic and remove the broken comment for xfs_dir2_isxx
+> >
+> > Srikanth C S (1):
+> >       [79ba1e15d] fsck.xfs: mount/umount xfs fs to replay log before running xfs_repair
+> >
+> > Zeng Heng (1):
+> >       [be98db856] xfs: clean up "%Ld/%Lu" which doesn't meet C standard
+> >
+> > ye xingchen (1):
+> >       [e8dbbca18] xfs: Remove the unneeded result variable
+> >
+> >
+> > Code Diffstat:
+> >
+> >  VERSION                     |   2 +-
+> >  configure.ac                |   2 +-
+> >  db/btblock.c                |  72 +++++++++++++++++-
+> >  db/btblock.h                |   6 ++
+> >  db/check.c                  |   6 +-
+> >  db/field.c                  |   8 ++
+> >  db/field.h                  |   4 +
+> >  db/namei.c                  |   4 +-
+> >  db/type.c                   |   6 +-
+> >  db/write.c                  |   4 +-
+> >  debian/changelog            |   6 ++
+> >  doc/CHANGES                 |  18 +++++
+> >  fsck/xfs_fsck.sh            |  31 +++++++-
+> >  include/kmem.h              |  10 +++
+> >  io/fsmap.c                  |   4 +-
+> >  io/pread.c                  |   2 +-
+> >  libfrog/linux.c             |   1 +
+> >  libxfs/libxfs_api_defs.h    |   2 +
+> >  libxfs/libxfs_io.h          |   1 +
+> >  libxfs/libxfs_priv.h        |   8 +-
+> >  libxfs/rdwr.c               |   8 ++
+> >  libxfs/util.c               |   1 +
+> >  libxfs/xfs_ag.h             |  15 ++++
+> >  libxfs/xfs_alloc.c          |   8 +-
+> >  libxfs/xfs_bmap.c           |   2 +-
+> >  libxfs/xfs_da_btree.c       |   2 +-
+> >  libxfs/xfs_dir2.c           |  50 ++++++++-----
+> >  libxfs/xfs_dir2.h           |   4 +-
+> >  libxfs/xfs_dir2_leaf.c      |   9 ++-
+> >  libxfs/xfs_dir2_sf.c        |   4 +-
+> >  libxfs/xfs_format.h         |  22 +-----
+> >  libxfs/xfs_ialloc.c         |   4 +-
+> >  libxfs/xfs_inode_fork.c     |   4 +-
+> >  libxfs/xfs_log_format.h     |  60 +++++++++++++--
+> >  libxfs/xfs_refcount.c       | 286
+> > +++++++++++++++++++++++++++++++++++++++++++++++++---------------------
+> >  libxfs/xfs_refcount.h       |  40 +++++++++-
+> >  libxfs/xfs_refcount_btree.c |  15 +++-
+> >  libxfs/xfs_rmap.c           |   9 +--
+> >  libxfs/xfs_sb.c             |   4 +-
+> >  libxfs/xfs_trans_resv.c     |   4 +-
+> >  libxfs/xfs_types.h          |  30 ++++++++
+> >  logprint/log_redo.c         |  12 +--
+> >  mkfs/Makefile               |   3 +-
+> >  mkfs/lts_6.1.conf           |  14 ++++
+> >  mkfs/xfs_mkfs.c             |   2 +-
+> >  repair/phase2.c             |   8 ++
+> >  repair/phase6.c             |  15 +++-
+> >  repair/protos.h             |   1 +
+> >  repair/rmap.c               |  61 ++++++++-------
+> >  repair/scan.c               |  22 ++++--
+> >  repair/xfs_repair.c         |  77 ++++++++++++++++---
+> >  scrub/inodes.c              |   2 +-
+> >  52 files changed, 747 insertions(+), 248 deletions(-)
+> >  create mode 100644 mkfs/lts_6.1.conf
+> >
+> > --
+> > Carlos Maiolino
 
-Regards,
-Zhang
+-- 
+Carlos Maiolino
