@@ -2,72 +2,52 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1A4BC53210
-	for <linux-xfs@archiver.kernel.org>; Sun,  8 Jan 2023 17:32:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C5B1C54EBD
+	for <linux-xfs@archiver.kernel.org>; Sun,  8 Jan 2023 17:33:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233526AbjAHRco (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 8 Jan 2023 12:32:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57250 "EHLO
+        id S233618AbjAHRdF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 8 Jan 2023 12:33:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231163AbjAHRcn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jan 2023 12:32:43 -0500
+        with ESMTP id S233558AbjAHRdE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jan 2023 12:33:04 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8AADD2DC;
-        Sun,  8 Jan 2023 09:32:42 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A8BED2DC;
+        Sun,  8 Jan 2023 09:33:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=R1tQhMLwN4df2mTt6NSEvjv94KFR0xXR92Y8zCvhpFM=; b=FssYgoKFZHidY6HJOtw1t5D7qT
-        SSnDu0S20XK2dNzQNI8l0X5KMIHIcnVb6jVkqjkGYnzT0cIyCmrK3luFDFLF996tLChKZyvWZzVyT
-        7EWr3fK5//ghnW+GmM535i3S/Sk42dJbL9ZV5e3Gh2SERN0Js3TZoMHdhX08INzVa+7zC85fBegvL
-        FhuxML8FV3b7Fmk2yiXf3+DD92bNzk6atxHviRWCcPOmVOXP7lQgD1ylf4Ak+fpVXpsQ6dUHynlWr
-        0btDgzUlioKghS95IKzKMLHe2XZt4tFc46mvD2oRehwuYwFMFeDxeemxNcTNYzz7wgz7Vc8Ywir8I
-        3+ubsOfw==;
+        bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=Ck9xftdOy/FYE5Mu15FDIoWWlA
+        Nse0BA2aS7N0FhM6zIyGwcHgJDsxXVp+Va46MRAOCAw20XL2WgZbyUwtkyTHf2RJ68GLe5Qeg+3TI
+        aDKy1/U+swa8i3USjLr4+TvR/qyXIyfjVSiCuEL5TOT8F282Jth3DZ15u+W2Ddl7OQHD+7Mt3gwMu
+        euN5q4i9kVgawhvON7i0UovrRMA08MRg1lSi10uBqvSWXSJHWIKgzntqLbyI0EQJoKappNa+ao68E
+        BQAlgPU2sppolLS0dWNDrLeI+NQ4vidfT6REbA9ftSY57n6Z2U8WipW+TwhLf+E8xLeis2TAgnBHJ
+        mQKijkAw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pEZXC-00EdRV-2f; Sun, 08 Jan 2023 17:32:38 +0000
-Date:   Sun, 8 Jan 2023 09:32:38 -0800
+        id 1pEZXY-00Edcz-Th; Sun, 08 Jan 2023 17:33:01 +0000
+Date:   Sun, 8 Jan 2023 09:33:00 -0800
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Christoph Hellwig <hch@infradead.org>,
+To:     Andreas Gruenbacher <agruenba@redhat.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
         Alexander Viro <viro@zeniv.linux.org.uk>,
+        Matthew Wilcox <willy@infradead.org>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-ext4@vger.kernel.org, cluster-devel@redhat.com
-Subject: Re: [PATCH v5 7/9] iomap/xfs: Eliminate the iomap_valid handler
-Message-ID: <Y7r+NkbfDqat9uHA@infradead.org>
+Subject: Re: [PATCH v5 8/9] iomap: Rename page_ops to folio_ops
+Message-ID: <Y7r+TNz5rVMNcG9V@infradead.org>
 References: <20221231150919.659533-1-agruenba@redhat.com>
- <20221231150919.659533-8-agruenba@redhat.com>
- <Y7W9Dfub1WeTvG8G@magnolia>
- <Y7XOoZNxZCpjCJLH@casper.infradead.org>
+ <20221231150919.659533-9-agruenba@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y7XOoZNxZCpjCJLH@casper.infradead.org>
+In-Reply-To: <20221231150919.659533-9-agruenba@redhat.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 04, 2023 at 07:08:17PM +0000, Matthew Wilcox wrote:
-> On Wed, Jan 04, 2023 at 09:53:17AM -0800, Darrick J. Wong wrote:
-> > I wonder if this should be reworked a bit to reduce indenting:
-> > 
-> > 	if (PTR_ERR(folio) == -ESTALE) {
-> 
-> FYI this is a bad habit to be in.  The compiler can optimise
-> 
-> 	if (folio == ERR_PTR(-ESTALE))
-> 
-> better than it can optimise the other way around.
+Looks good:
 
-Yes.  I think doing the recording that Darrick suggested combined
-with this style would be best:
-
-	if (folio == ERR_PTR(-ESTALE)) {
-		iter->iomap.flags |= IOMAP_F_STALE;
-		return 0;
-	}
-	if (IS_ERR(folio))
-		return PTR_ERR(folio);
+Reviewed-by: Christoph Hellwig <hch@lst.de>
