@@ -2,121 +2,104 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3ECFC53210
-	for <linux-xfs@archiver.kernel.org>; Sun,  8 Jan 2023 18:00:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00BBFC54EBD
+	for <linux-xfs@archiver.kernel.org>; Sun,  8 Jan 2023 18:14:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230193AbjAHSAt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 8 Jan 2023 13:00:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38016 "EHLO
+        id S229822AbjAHSOt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 8 Jan 2023 13:14:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47210 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229459AbjAHSAs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jan 2023 13:00:48 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A9196165
-        for <linux-xfs@vger.kernel.org>; Sun,  8 Jan 2023 10:00:46 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 12076B80B36
-        for <linux-xfs@vger.kernel.org>; Sun,  8 Jan 2023 18:00:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD1B0C433EF;
-        Sun,  8 Jan 2023 18:00:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1673200843;
-        bh=KjGLDcbhgHb1qfY5P/rfnFgt4YO2xoV96ADvcIkPSLQ=;
-        h=Date:From:To:Cc:Subject:From;
-        b=utHBZ26i9OUwBS4/TJn7xRgDJWEkpjKmi5QgjJEaf9Kzu+1oKEgpPcPFvMaptv5Av
-         3bKVBTVHbTfdX1Lt5p0Neb+quLSTA+VZl6I1gtT13dSW/ZPZbf0Bf/NE73lxLbH5v0
-         OKKrAjYz+a2tVdrFwa8TvEddumRJsqU3B+W6sDw/vBq/c4uze3JnW0Auc4m8TANooi
-         xSMpCVnqBhHnFrhcBRnAnY5iCMap21pqkMBGKV3W5+Rkeuc1Ztnbo+ATXLqF2KgpB/
-         sCAbLeMxFaknkeMWxLF16ChsD38L718MtZqM612VfmcFZ5C+SYW9i4qu6YlDmhlP+L
-         P7A7zZV8qNKww==
-Date:   Sun, 8 Jan 2023 10:00:43 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org, torvalds@linux-foundation.org
+        with ESMTP id S233253AbjAHSOs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jan 2023 13:14:48 -0500
+Received: from mail-qt1-x833.google.com (mail-qt1-x833.google.com [IPv6:2607:f8b0:4864:20::833])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 780B82C4
+        for <linux-xfs@vger.kernel.org>; Sun,  8 Jan 2023 10:14:47 -0800 (PST)
+Received: by mail-qt1-x833.google.com with SMTP id h26so6298755qtu.2
+        for <linux-xfs@vger.kernel.org>; Sun, 08 Jan 2023 10:14:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=h51R+ZkCMi+RC7MRiEU6pABB37URB661iTnvdM9gNWA=;
+        b=EOfGUk7uclaUQpp6QDx/YJWltvUbXFGOjVmIuKaF/ZXf/62ZmCBg6CgnB577nrDV54
+         gj/Iq3dFeRkEiKYGLOH/NyvDme9xprGayZPyFPU+4uFOIYcPviDTEL6multlFLNXpR3y
+         qb5MFEhg0ds6JwN/8RYGi7ihzsZsT1PRvvMCI=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=h51R+ZkCMi+RC7MRiEU6pABB37URB661iTnvdM9gNWA=;
+        b=tbfDzud3WQHFbyiyXbUgGlivvvz/DQ/ghWN2WVC37GonlhtDoZP38rOsteAg3kmb1o
+         RWyt+Oto0f8G43te7U6QSIIJN03W4eM7+yDXZtQsVMbBA8X3YE4fOiRHAZygb/V5zUtP
+         9NWg6/LCyPg96s8ptLzIu2liI2btOwrEONZmBz5PJZ1XFhdgO7CoU4h4HrZFNp2i0yNJ
+         SL/lA3l3Jca2vK45h12H63Sfy079X5s554Q+W1XPViMGZJsXX6cmorXaeoDa7FlXGLhf
+         j5RzO5mSKIgV0atY2fAXDVx0OEIyws3s0XEjROZbIp/Z8qeBfWb23+YvPgR8xTHLAidM
+         Al7A==
+X-Gm-Message-State: AFqh2kru20/1YOEVQ29In12uS5Mbwpdy+SfVCNgzQTafR5GHe7W42zgH
+        foMY5o70DGbu98Fz+X+lnJu9mCGM0rP4WVYi
+X-Google-Smtp-Source: AMrXdXtKFYn3+04tAs25q5QtN1yfVhsvXi/4drI5GT+m8o9j0W7RVTUg2R8FRnwh4K3P68sqtNA90w==
+X-Received: by 2002:ac8:706:0:b0:3a8:199b:dcaf with SMTP id g6-20020ac80706000000b003a8199bdcafmr85498176qth.17.1673201686220;
+        Sun, 08 Jan 2023 10:14:46 -0800 (PST)
+Received: from mail-qk1-f179.google.com (mail-qk1-f179.google.com. [209.85.222.179])
+        by smtp.gmail.com with ESMTPSA id bn34-20020a05620a2ae200b006cfc7f9eea0sm4010049qkb.122.2023.01.08.10.14.45
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 08 Jan 2023 10:14:45 -0800 (PST)
+Received: by mail-qk1-f179.google.com with SMTP id k3so3116867qki.13
+        for <linux-xfs@vger.kernel.org>; Sun, 08 Jan 2023 10:14:45 -0800 (PST)
+X-Received: by 2002:a05:620a:674:b0:6ff:a7de:ce22 with SMTP id
+ a20-20020a05620a067400b006ffa7dece22mr3325069qkh.72.1673201685236; Sun, 08
+ Jan 2023 10:14:45 -0800 (PST)
+MIME-Version: 1.0
+References: <167320037778.1795566.14815059333113369420.stg-ugh@magnolia>
+In-Reply-To: <167320037778.1795566.14815059333113369420.stg-ugh@magnolia>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Sun, 8 Jan 2023 12:14:29 -0600
+X-Gmail-Original-Message-ID: <CAHk-=wiBVEPW1ns1Foj2VonD68JSt3WpNDk-OxOd3i1WsTGFJQ@mail.gmail.com>
+Message-ID: <CAHk-=wiBVEPW1ns1Foj2VonD68JSt3WpNDk-OxOd3i1WsTGFJQ@mail.gmail.com>
+Subject: Re: [GIT PULL] xfs: bug fixes for 6.2
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     david@fromorbit.com, dchinner@redhat.com,
         linux-xfs@vger.kernel.org, shiina.hironori@fujitsu.com,
         wen.gang.wang@oracle.com, wuguanghao3@huawei.com,
         zeming@nfschina.com
-Subject: [GIT PULL] xfs: bug fixes for 6.2
-Message-ID: <167320037778.1795566.14815059333113369420.stg-ugh@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+On Sun, Jan 8, 2023 at 12:00 PM Darrick J. Wong <djwong@kernel.org> wrote:
+>
+> Please pull this branch with a pile of various bug fixes.
 
-Please pull this branch with a pile of various bug fixes.
+This came in just as I was writing the rc3 announcement email, since I
+needed to get that done before I lose wifi again during travels today.
 
-As usual, I did a test-merge with the main upstream branch as of a few
-minutes ago, and didn't see any conflicts.  Please let me know if you
-encounter any problems.
+Oh well, no biggie.
 
-Speaking of problems: I'm in the process of updating my gpg key so that
-I can do ed25519 signatures, but I still suck at using gpg(1) so wish me
-luck.  The -fixes-2 tag should be signed by the same old rsa4096 key
-that I've been using.  I /think/ the -fixes-1 tag got signed with the
-new subkey, but (afaict) the new subkey hasn't yet landed in
-pgpkeys.git, so I went back to the old key so we can get the bugfixes
-landed without blocking on maintainer stupidity.  Or at least more
-stupidity than usual.
+> Speaking of problems: I'm in the process of updating my gpg key so that
+> I can do ed25519 signatures, but I still suck at using gpg(1) so wish me
+> luck.
 
---D
+Heh. Not that I'm sure why rsa4096 wouldn't be good enough, but maybe
+you know something I don't...
 
-The following changes since commit 1b929c02afd37871d5afb9d498426f83432e71c2:
+>  The -fixes-2 tag should be signed by the same old rsa4096 key
+> that I've been using.  I /think/ the -fixes-1 tag got signed with the
+> new subkey, but (afaict) the new subkey hasn't yet landed in
+> pgpkeys.git, so I went back to the old key so we can get the bugfixes
+> landed without blocking on maintainer stupidity.  Or at least more
+> stupidity than usual.
 
-Linux 6.2-rc1 (2022-12-25 13:41:39 -0800)
+It's not like the keys have to be in pgpkeys.git..
 
-are available in the Git repository at:
+You can always just sign the new key with the old key (which
+presumably y ou want to do anyway), and send me new key in email - or
+just use the key servers if they happen to work.
 
-git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.2-fixes-2
+But the old key obviously worked just fine.
 
-for you to fetch changes up to 601a27ea09a317d0fe2895df7d875381fb393041:
+Thanks,
 
-xfs: fix extent busy updating (2023-01-05 07:34:21 -0800)
-
-----------------------------------------------------------------
-Fixes for 6.2-rc1:
-
-- Remove some incorrect assertions.
-- Fix compiler warnings about variables that could be static.
-- Fix an off by one error when computing the maximum btree height that
-can cause repair failures.
-- Fix the bulkstat-single ioctl not returning the root inode when asked
-to do that.
-- Convey NOFS state to inodegc workers to avoid recursion in reclaim.
-- Fix unnecessary variable initializations.
-- Fix a bug that could result in corruption of the busy extent tree.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-
-----------------------------------------------------------------
-Darrick J. Wong (3):
-xfs: don't assert if cmap covers imap after cycling lock
-xfs: make xfs_iomap_page_ops static
-xfs: fix off-by-one error in xfs_btree_space_to_height
-
-Hironori Shiina (1):
-xfs: get root inode correctly at bulkstat
-
-Li zeming (1):
-xfs: xfs_qm: remove unnecessary ‘0’ values from error
-
-Wengang Wang (1):
-xfs: fix extent busy updating
-
-Wu Guanghao (1):
-xfs: Fix deadlock on xfs_inodegc_worker
-
-fs/xfs/libxfs/xfs_btree.c |  7 ++++++-
-fs/xfs/xfs_extent_busy.c  |  1 +
-fs/xfs/xfs_icache.c       | 10 ++++++++++
-fs/xfs/xfs_ioctl.c        |  4 ++--
-fs/xfs/xfs_iomap.c        |  2 +-
-fs/xfs/xfs_qm.c           |  2 +-
-fs/xfs/xfs_reflink.c      |  2 --
-7 files changed, 21 insertions(+), 7 deletions(-)
+      Linus
