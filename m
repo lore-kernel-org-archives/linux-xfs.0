@@ -2,56 +2,56 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 821EAC54EBE
-	for <linux-xfs@archiver.kernel.org>; Sun,  8 Jan 2023 21:33:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D60D1C54EBC
+	for <linux-xfs@archiver.kernel.org>; Sun,  8 Jan 2023 21:59:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236098AbjAHVdN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 8 Jan 2023 16:33:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41596 "EHLO
+        id S229503AbjAHV7c (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 8 Jan 2023 16:59:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49156 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235078AbjAHVdM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jan 2023 16:33:12 -0500
-Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B9EEE0EC
-        for <linux-xfs@vger.kernel.org>; Sun,  8 Jan 2023 13:33:09 -0800 (PST)
-Received: by mail-pg1-x52f.google.com with SMTP id s67so4680500pgs.3
-        for <linux-xfs@vger.kernel.org>; Sun, 08 Jan 2023 13:33:09 -0800 (PST)
+        with ESMTP id S232526AbjAHV7R (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jan 2023 16:59:17 -0500
+Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACBA3DFB6
+        for <linux-xfs@vger.kernel.org>; Sun,  8 Jan 2023 13:59:16 -0800 (PST)
+Received: by mail-pl1-x62f.google.com with SMTP id c6so7561986pls.4
+        for <linux-xfs@vger.kernel.org>; Sun, 08 Jan 2023 13:59:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=QJgOaIuyYqhKXDJUJknk+fSZ5Pa0AYwz5MAMP9q3MIE=;
-        b=I2mGiER04mQKKr/G1GEYZHSSxGAg6dDLnCDe+qVmEg1QRkSzL3EWBmZI79hAAnRDgR
-         rE6fEEuTXrTLzyhYS6u41epGG5sJztaWCr0LDjVHcxG729WJOF2xxcxIm+AqiRhANw3C
-         m+HGxBt2vRZn9t751ZjEIhuxOmNGSXzhn9VmFBw6N3+FS7E9u4rp4RkHudJiQ1KvTQDv
-         r97ijCNsjdAOt+xGMUUJ0+Bx43BrcgfjbR1+c0igVuZSNYumj7idCIPGMd+QZQsp0XRY
-         RJ5Evpls2A88+Ppm2DXkeYRXwpRKXMpzyOdY/pdGh/C2h1q0ahTRLRuCvlx7rZXdM7ek
-         36oQ==
+        bh=CRwtLPQVjsAJ21UOF2AH7QhDRVRLxvztJgAiY0hGtps=;
+        b=DsZ97qPfn+vhMdmHYEQPR03qcl9I5p3jIShJCNMi//ZMrFVxdOkuAoJXqcs+tB5RSn
+         QcB2rzxaDJsmmMHCrqxeHYghKoFZvvg7wB5mLhGYKV48tedYlwkoEzx1s/m70EOBI2w2
+         klEp7yZCwCm88twDimFpRT6cC1lu+7jbwr+H0MoQAMbdhgTr3zn/4TglQJI7SViU4JGk
+         1KCpRBlXvfMm4ES6Pvk1YmnXNDU6K9Sy6JqxdOe3BWz24QSH3ChdaqmtlBtzXkPUiJ2c
+         s3DclSILRi9x57F4Db/3FKDA4w5rvwJooG2wdUG1z3gpMr3HgweiKuBc9blESspj6yTD
+         E6kA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=QJgOaIuyYqhKXDJUJknk+fSZ5Pa0AYwz5MAMP9q3MIE=;
-        b=xavwKwKoKn3w3fhl4iaI5BuccIMCEgC0ptQpj+q5W/rrYtUX/xzKdbv8Vm5AcPsjAw
-         Xjd3hla4eBVvnzQElnIJrjjAnNSA6AcnsDImXIUlsD9J/WKkgvtfAz+awtAjO1idgaEV
-         sa8UBxkn4YqeDfmf4vs1WEAO9KuXGg126WSp0VEfYYMfp3HfqeEoLP3yZ5I2sjTMZPqv
-         h0fGeGycxduWhhZNMi0bSpd6HGsRBdYrXqVka4GI3ZctJ595IsAAKuUEXM04aOjNY7ji
-         E3UOrbxUgwj/3wJDQdoj5wdBExQtTQviFv8vAtk3s3PGmV4z7Tps3kmb5tmgDih9/R1u
-         2Wzw==
-X-Gm-Message-State: AFqh2kqPY8xvc0YOPed57poFPnUevSEDpR4/8VtIoKIS6oCopsQ6cYEc
-        DvLZJtFtxL1YXWWHX+buVhafVQ==
-X-Google-Smtp-Source: AMrXdXuy9YBsvnTXDPu6eykrHHHCfyBjyJt/L4aFAuuIaBmxWa89uFX8ht1hQVCJwiApGqsjy0ZqRg==
-X-Received: by 2002:a05:6a00:1c82:b0:587:4171:30c9 with SMTP id y2-20020a056a001c8200b00587417130c9mr3550129pfw.18.1673213589019;
-        Sun, 08 Jan 2023 13:33:09 -0800 (PST)
+        bh=CRwtLPQVjsAJ21UOF2AH7QhDRVRLxvztJgAiY0hGtps=;
+        b=uj8xO6NxtW0HmU/IsOlEJMydEjoNc2J/Isht37GPr+mIyUHEL/OwRfcvsereGYLsVl
+         jR9ATxLD1F1a0s+LQ2g0FtUMVNhh5PYXdLxn/DofFrqpQ2gDlXC9+7Kj62tBLxY+tWi5
+         kH7ILBAxcit4Iw6OG6rRii4nBRe7vzZK5hSdPWsCt3hr6kOA0HOb4TjcU8K5zB9M1pyc
+         nxnQv/T71d+9UoMm/B7a6Cfs6qzZGKTm+rBYuyu88hdK1//B3v6FkIJDjIWsIJIVby2j
+         fIzriU9xD5Vf33KQbs2z3Y/1KuLcfgHu5GJa966o9RSQgQXEkLMk9VcrLY7ywIr1Z8KU
+         vjhQ==
+X-Gm-Message-State: AFqh2krbZqGKJIgbktj/9Dx6RmBpVG8sSlc9xIAVrrSBsbSMqfz7bGSr
+        waL1Ws7PUx85xGSlbCt3JqBDKA==
+X-Google-Smtp-Source: AMrXdXsAIiWjmygk2jewqgV/cdCOSCNGl0lDa8UBdYidyZcmWqor2Pq9z7XkwyQwco4bwJjylZIz9g==
+X-Received: by 2002:a17:90a:aa92:b0:226:b425:3540 with SMTP id l18-20020a17090aaa9200b00226b4253540mr16679445pjq.36.1673215156237;
+        Sun, 08 Jan 2023 13:59:16 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-146-207.pa.vic.optusnet.com.au. [49.186.146.207])
-        by smtp.gmail.com with ESMTPSA id a13-20020aa7970d000000b00582197fa7b4sm4631425pfg.7.2023.01.08.13.33.08
+        by smtp.gmail.com with ESMTPSA id jx12-20020a17090b46cc00b00225a8024b8bsm4127825pjb.55.2023.01.08.13.59.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 08 Jan 2023 13:33:08 -0800 (PST)
+        Sun, 08 Jan 2023 13:59:15 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1pEdHt-000kZs-Cn; Mon, 09 Jan 2023 08:33:05 +1100
-Date:   Mon, 9 Jan 2023 08:33:05 +1100
+        id 1pEdh9-000l2I-TM; Mon, 09 Jan 2023 08:59:11 +1100
+Date:   Mon, 9 Jan 2023 08:59:11 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     Andreas Gruenbacher <agruenba@redhat.com>
 Cc:     Christoph Hellwig <hch@infradead.org>,
@@ -59,99 +59,72 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         Alexander Viro <viro@zeniv.linux.org.uk>,
         Matthew Wilcox <willy@infradead.org>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, cluster-devel@redhat.com,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFC v6 04/10] iomap: Add iomap_get_folio helper
-Message-ID: <20230108213305.GO1971568@dread.disaster.area>
+        linux-ext4@vger.kernel.org, cluster-devel@redhat.com
+Subject: Re: [RFC v6 08/10] iomap/xfs: Eliminate the iomap_valid handler
+Message-ID: <20230108215911.GP1971568@dread.disaster.area>
 References: <20230108194034.1444764-1-agruenba@redhat.com>
- <20230108194034.1444764-5-agruenba@redhat.com>
+ <20230108194034.1444764-9-agruenba@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230108194034.1444764-5-agruenba@redhat.com>
+In-Reply-To: <20230108194034.1444764-9-agruenba@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jan 08, 2023 at 08:40:28PM +0100, Andreas Gruenbacher wrote:
-> Add an iomap_get_folio() helper that gets a folio reference based on
-> an iomap iterator and an offset into the address space.  Use it in
-> iomap_write_begin().
+On Sun, Jan 08, 2023 at 08:40:32PM +0100, Andreas Gruenbacher wrote:
+> Eliminate the ->iomap_valid() handler by switching to a ->get_folio()
+> handler and validating the mapping there.
 > 
 > Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/iomap/buffered-io.c | 39 ++++++++++++++++++++++++++++++---------
->  include/linux/iomap.h  |  1 +
->  2 files changed, 31 insertions(+), 9 deletions(-)
-> 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index d4b444e44861..de4a8e5f721a 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -457,6 +457,33 @@ bool iomap_is_partially_uptodate(struct folio *folio, size_t from, size_t count)
->  }
->  EXPORT_SYMBOL_GPL(iomap_is_partially_uptodate);
->  
-> +/**
-> + * iomap_get_folio - get a folio reference for writing
-> + * @iter: iteration structure
-> + * @pos: start offset of write
-> + *
-> + * Returns a locked reference to the folio at @pos, or an error pointer if the
-> + * folio could not be obtained.
-> + */
-> +struct folio *iomap_get_folio(struct iomap_iter *iter, loff_t pos)
-> +{
-> +	unsigned fgp = FGP_LOCK | FGP_WRITE | FGP_CREAT | FGP_STABLE | FGP_NOFS;
-> +	struct folio *folio;
-> +
-> +	if (iter->flags & IOMAP_NOWAIT)
-> +		fgp |= FGP_NOWAIT;
-> +
-> +	folio = __filemap_get_folio(iter->inode->i_mapping, pos >> PAGE_SHIFT,
-> +			fgp, mapping_gfp_mask(iter->inode->i_mapping));
-> +	if (folio)
-> +		return folio;
-> +
-> +	if (iter->flags & IOMAP_NOWAIT)
-> +		return ERR_PTR(-EAGAIN);
-> +	return ERR_PTR(-ENOMEM);
-> +}
-> +EXPORT_SYMBOL_GPL(iomap_get_folio);
 
-Hmmmm.
+I think this is wrong.
 
-This is where things start to get complex. I have sent a patch to
-fix a problem with iomap_zero_range() failing to zero cached dirty
-pages over UNWRITTEN extents, and that requires making FGP_CREAT
-optional. This is an iomap bug, and needs to be fixed in the core
-iomap code:
+The ->iomap_valid() function handles a fundamental architectural
+issue with cached iomaps: the iomap can become stale at any time
+whilst it is in use by the iomap core code.
 
-https://lore.kernel.org/linux-xfs/20221201005214.3836105-1-david@fromorbit.com/
+The current problem it solves in the iomap_write_begin() path has to
+do with writeback and memory reclaim races over unwritten extents,
+but the general case is that we must be able to check the iomap
+at any point in time to assess it's validity.
 
-Essentially, we need to pass fgp flags to iomap_write_begin() need
-so the callers can supply a 0 or FGP_CREAT appropriately. This
-allows iomap_write_begin() to act only on pre-cached pages rather
-than always instantiating a new page if one does not exist in cache.
+Indeed, we also have this same "iomap valid check" functionality in the
+writeback code as cached iomaps can become stale due to racing
+writeback, truncated, etc. But you wouldn't know it by looking at the iomap
+writeback code - this is currently hidden by XFS by embedding
+the checks into the iomap writeback ->map_blocks function.
 
-This allows that iomap_write_begin() to return a NULL folio
-successfully, and this is perfectly OK for callers that pass in fgp
-= 0 as they are expected to handle a NULL folio return indicating
-there was no cached data over the range...
+That is, the first thing that xfs_map_blocks() does is check if the
+cached iomap is valid, and if it is valid it returns immediately and
+the iomap writeback code uses it without question.
 
-Exposing the folio allocation as an external interface makes bug
-fixes like this rather messy - it's taking a core abstraction (iomap
-hides all the folio and page cache manipulations from the
-filesystem) and punching a big hole in it by requiring filesystems
-to actually allocation page cache folios on behalf of the iomap
-core.
+The reason that this is embedded like this is that the iomap did not
+have a validity cookie field in it, and so the validity information
+was wrapped around the outside of the iomap_writepage_ctx and the
+filesystem has to decode it from that private wrapping structure.
 
-Given that I recently got major push-back for fixing an XFS-only bug
-by walking the page cache directly instead of abstracting it via the
-iomap core, punching an even bigger hole in the abstraction layer to
-fix a GFS2-only problem is just as bad....
+However, the validity information iin the structure wrapper is
+indentical to the iomap validity cookie, and so the direction I've
+been working towards is to replace this implicit, hidden cached
+iomap validity check with an explicit ->iomap_valid call and then
+only call ->map_blocks if the validity check fails (or is not
+implemented).
+
+I want to use the same code for all the iomap validity checks in all
+the iomap core code - this is an iomap issue, the conditions where
+we need to check for iomap validity are different for depending on
+the iomap context being run, and the checks are not necessarily
+dependent on first having locked a folio.
+
+Yes, the validity cookie needs to be decoded by the filesystem, but
+that does not dictate where the validity checking needs to be done
+by the iomap core.
+
+Hence I think removing ->iomap_valid is a big step backwards for the
+iomap core code - the iomap core needs to be able to formally verify
+the iomap is valid at any point in time, not just at the point in
+time a folio in the page cache has been locked...
 
 -Dave.
 -- 
