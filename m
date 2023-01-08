@@ -2,219 +2,158 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 388FAC54EBE
-	for <linux-xfs@archiver.kernel.org>; Sun,  8 Jan 2023 19:43:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 821EAC54EBE
+	for <linux-xfs@archiver.kernel.org>; Sun,  8 Jan 2023 21:33:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236129AbjAHTnm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 8 Jan 2023 14:43:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49718 "EHLO
+        id S236098AbjAHVdN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 8 Jan 2023 16:33:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41596 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233831AbjAHTnH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jan 2023 14:43:07 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF24EDF13
-        for <linux-xfs@vger.kernel.org>; Sun,  8 Jan 2023 11:41:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1673206866;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=WHGmm+6pyhfRGaoS1tmIeM5ClqKPuUJWD5zTFMeTau0=;
-        b=MHYo8a0QMIad+hT8+/DFaOg28ZED93/VwR/Blj/9eK6CI5H0A7+cVNC+T7vUeV8TnI42tH
-        irqYGDrNhZ45ILlF5IDwAkKVNNl9CtnIPPKNo3RJ95vpZ+zZklP9z3/t/jkEaBMK4H6uPc
-        VG3BIjeX0zNQ3tDbX7MeT3DEWDioNzE=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-518-KEJkthAlMJaUugpo3cwnOQ-1; Sun, 08 Jan 2023 14:41:01 -0500
-X-MC-Unique: KEJkthAlMJaUugpo3cwnOQ-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 3CF073806077;
-        Sun,  8 Jan 2023 19:41:01 +0000 (UTC)
-Received: from pasta.redhat.com (ovpn-192-3.brq.redhat.com [10.40.192.3])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id BC023492B06;
-        Sun,  8 Jan 2023 19:40:58 +0000 (UTC)
-From:   Andreas Gruenbacher <agruenba@redhat.com>
-To:     Christoph Hellwig <hch@infradead.org>,
+        with ESMTP id S235078AbjAHVdM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jan 2023 16:33:12 -0500
+Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B9EEE0EC
+        for <linux-xfs@vger.kernel.org>; Sun,  8 Jan 2023 13:33:09 -0800 (PST)
+Received: by mail-pg1-x52f.google.com with SMTP id s67so4680500pgs.3
+        for <linux-xfs@vger.kernel.org>; Sun, 08 Jan 2023 13:33:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=QJgOaIuyYqhKXDJUJknk+fSZ5Pa0AYwz5MAMP9q3MIE=;
+        b=I2mGiER04mQKKr/G1GEYZHSSxGAg6dDLnCDe+qVmEg1QRkSzL3EWBmZI79hAAnRDgR
+         rE6fEEuTXrTLzyhYS6u41epGG5sJztaWCr0LDjVHcxG729WJOF2xxcxIm+AqiRhANw3C
+         m+HGxBt2vRZn9t751ZjEIhuxOmNGSXzhn9VmFBw6N3+FS7E9u4rp4RkHudJiQ1KvTQDv
+         r97ijCNsjdAOt+xGMUUJ0+Bx43BrcgfjbR1+c0igVuZSNYumj7idCIPGMd+QZQsp0XRY
+         RJ5Evpls2A88+Ppm2DXkeYRXwpRKXMpzyOdY/pdGh/C2h1q0ahTRLRuCvlx7rZXdM7ek
+         36oQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=QJgOaIuyYqhKXDJUJknk+fSZ5Pa0AYwz5MAMP9q3MIE=;
+        b=xavwKwKoKn3w3fhl4iaI5BuccIMCEgC0ptQpj+q5W/rrYtUX/xzKdbv8Vm5AcPsjAw
+         Xjd3hla4eBVvnzQElnIJrjjAnNSA6AcnsDImXIUlsD9J/WKkgvtfAz+awtAjO1idgaEV
+         sa8UBxkn4YqeDfmf4vs1WEAO9KuXGg126WSp0VEfYYMfp3HfqeEoLP3yZ5I2sjTMZPqv
+         h0fGeGycxduWhhZNMi0bSpd6HGsRBdYrXqVka4GI3ZctJ595IsAAKuUEXM04aOjNY7ji
+         E3UOrbxUgwj/3wJDQdoj5wdBExQtTQviFv8vAtk3s3PGmV4z7Tps3kmb5tmgDih9/R1u
+         2Wzw==
+X-Gm-Message-State: AFqh2kqPY8xvc0YOPed57poFPnUevSEDpR4/8VtIoKIS6oCopsQ6cYEc
+        DvLZJtFtxL1YXWWHX+buVhafVQ==
+X-Google-Smtp-Source: AMrXdXuy9YBsvnTXDPu6eykrHHHCfyBjyJt/L4aFAuuIaBmxWa89uFX8ht1hQVCJwiApGqsjy0ZqRg==
+X-Received: by 2002:a05:6a00:1c82:b0:587:4171:30c9 with SMTP id y2-20020a056a001c8200b00587417130c9mr3550129pfw.18.1673213589019;
+        Sun, 08 Jan 2023 13:33:09 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-146-207.pa.vic.optusnet.com.au. [49.186.146.207])
+        by smtp.gmail.com with ESMTPSA id a13-20020aa7970d000000b00582197fa7b4sm4631425pfg.7.2023.01.08.13.33.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 08 Jan 2023 13:33:08 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1pEdHt-000kZs-Cn; Mon, 09 Jan 2023 08:33:05 +1100
+Date:   Mon, 9 Jan 2023 08:33:05 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Andreas Gruenbacher <agruenba@redhat.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
         "Darrick J . Wong" <djwong@kernel.org>,
         Alexander Viro <viro@zeniv.linux.org.uk>,
-        Matthew Wilcox <willy@infradead.org>
-Cc:     Andreas Gruenbacher <agruenba@redhat.com>,
+        Matthew Wilcox <willy@infradead.org>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, cluster-devel@redhat.com
-Subject: [RFC v6 08/10] iomap/xfs: Eliminate the iomap_valid handler
-Date:   Sun,  8 Jan 2023 20:40:32 +0100
-Message-Id: <20230108194034.1444764-9-agruenba@redhat.com>
-In-Reply-To: <20230108194034.1444764-1-agruenba@redhat.com>
+        linux-ext4@vger.kernel.org, cluster-devel@redhat.com,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [RFC v6 04/10] iomap: Add iomap_get_folio helper
+Message-ID: <20230108213305.GO1971568@dread.disaster.area>
 References: <20230108194034.1444764-1-agruenba@redhat.com>
+ <20230108194034.1444764-5-agruenba@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230108194034.1444764-5-agruenba@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Eliminate the ->iomap_valid() handler by switching to a ->get_folio()
-handler and validating the mapping there.
+On Sun, Jan 08, 2023 at 08:40:28PM +0100, Andreas Gruenbacher wrote:
+> Add an iomap_get_folio() helper that gets a folio reference based on
+> an iomap iterator and an offset into the address space.  Use it in
+> iomap_write_begin().
+> 
+> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/iomap/buffered-io.c | 39 ++++++++++++++++++++++++++++++---------
+>  include/linux/iomap.h  |  1 +
+>  2 files changed, 31 insertions(+), 9 deletions(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index d4b444e44861..de4a8e5f721a 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -457,6 +457,33 @@ bool iomap_is_partially_uptodate(struct folio *folio, size_t from, size_t count)
+>  }
+>  EXPORT_SYMBOL_GPL(iomap_is_partially_uptodate);
+>  
+> +/**
+> + * iomap_get_folio - get a folio reference for writing
+> + * @iter: iteration structure
+> + * @pos: start offset of write
+> + *
+> + * Returns a locked reference to the folio at @pos, or an error pointer if the
+> + * folio could not be obtained.
+> + */
+> +struct folio *iomap_get_folio(struct iomap_iter *iter, loff_t pos)
+> +{
+> +	unsigned fgp = FGP_LOCK | FGP_WRITE | FGP_CREAT | FGP_STABLE | FGP_NOFS;
+> +	struct folio *folio;
+> +
+> +	if (iter->flags & IOMAP_NOWAIT)
+> +		fgp |= FGP_NOWAIT;
+> +
+> +	folio = __filemap_get_folio(iter->inode->i_mapping, pos >> PAGE_SHIFT,
+> +			fgp, mapping_gfp_mask(iter->inode->i_mapping));
+> +	if (folio)
+> +		return folio;
+> +
+> +	if (iter->flags & IOMAP_NOWAIT)
+> +		return ERR_PTR(-EAGAIN);
+> +	return ERR_PTR(-ENOMEM);
+> +}
+> +EXPORT_SYMBOL_GPL(iomap_get_folio);
 
-Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
----
- fs/iomap/buffered-io.c | 26 +++++---------------------
- fs/xfs/xfs_iomap.c     | 37 ++++++++++++++++++++++++++-----------
- include/linux/iomap.h  | 23 ++++++-----------------
- 3 files changed, 37 insertions(+), 49 deletions(-)
+Hmmmm.
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 006ddf933948..72dfbc3cb086 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -638,10 +638,9 @@ static int iomap_write_begin_inline(const struct iomap_iter *iter,
- static int iomap_write_begin(struct iomap_iter *iter, loff_t pos,
- 		size_t len, struct folio **foliop)
- {
--	const struct iomap_page_ops *page_ops = iter->iomap.page_ops;
- 	const struct iomap *srcmap = iomap_iter_srcmap(iter);
- 	struct folio *folio;
--	int status = 0;
-+	int status;
- 
- 	BUG_ON(pos + len > iter->iomap.offset + iter->iomap.length);
- 	if (srcmap != &iter->iomap)
-@@ -654,27 +653,12 @@ static int iomap_write_begin(struct iomap_iter *iter, loff_t pos,
- 		len = min_t(size_t, len, PAGE_SIZE - offset_in_page(pos));
- 
- 	folio = __iomap_get_folio(iter, pos, len);
--	if (IS_ERR(folio))
--		return PTR_ERR(folio);
--
--	/*
--	 * Now we have a locked folio, before we do anything with it we need to
--	 * check that the iomap we have cached is not stale. The inode extent
--	 * mapping can change due to concurrent IO in flight (e.g.
--	 * IOMAP_UNWRITTEN state can change and memory reclaim could have
--	 * reclaimed a previously partially written page at this index after IO
--	 * completion before this write reaches this file offset) and hence we
--	 * could do the wrong thing here (zero a page range incorrectly or fail
--	 * to zero) and corrupt data.
--	 */
--	if (page_ops && page_ops->iomap_valid) {
--		bool iomap_valid = page_ops->iomap_valid(iter->inode,
--							&iter->iomap);
--		if (!iomap_valid) {
-+	if (IS_ERR(folio)) {
-+		if (folio == ERR_PTR(-ESTALE)) {
- 			iter->iomap.flags |= IOMAP_F_STALE;
--			status = 0;
--			goto out_unlock;
-+			return 0;
- 		}
-+		return PTR_ERR(folio);
- 	}
- 
- 	if (pos + len > folio_pos(folio) + folio_size(folio))
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 669c1bc5c3a7..d0bf99539180 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -62,29 +62,44 @@ xfs_iomap_inode_sequence(
- 	return cookie | READ_ONCE(ip->i_df.if_seq);
- }
- 
--/*
-- * Check that the iomap passed to us is still valid for the given offset and
-- * length.
-- */
--static bool
--xfs_iomap_valid(
--	struct inode		*inode,
--	const struct iomap	*iomap)
-+static struct folio *
-+xfs_get_folio(
-+	struct iomap_iter	*iter,
-+	loff_t			pos,
-+	unsigned		len)
- {
-+	struct inode		*inode = iter->inode;
-+	struct iomap		*iomap = &iter->iomap;
- 	struct xfs_inode	*ip = XFS_I(inode);
-+	struct folio		*folio;
- 
-+	folio = iomap_get_folio(iter, pos);
-+	if (IS_ERR(folio))
-+		return folio;
-+
-+	/*
-+	 * Now that we have a locked folio, we need to check that the iomap we
-+	 * have cached is not stale.  The inode extent mapping can change due to
-+	 * concurrent IO in flight (e.g., IOMAP_UNWRITTEN state can change and
-+	 * memory reclaim could have reclaimed a previously partially written
-+	 * page at this index after IO completion before this write reaches
-+	 * this file offset) and hence we could do the wrong thing here (zero a
-+	 * page range incorrectly or fail to zero) and corrupt data.
-+	 */
- 	if (iomap->validity_cookie !=
- 			xfs_iomap_inode_sequence(ip, iomap->flags)) {
- 		trace_xfs_iomap_invalid(ip, iomap);
--		return false;
-+		folio_unlock(folio);
-+		folio_put(folio);
-+		return ERR_PTR(-ESTALE);
- 	}
- 
- 	XFS_ERRORTAG_DELAY(ip->i_mount, XFS_ERRTAG_WRITE_DELAY_MS);
--	return true;
-+	return folio;
- }
- 
- const struct iomap_page_ops xfs_iomap_page_ops = {
--	.iomap_valid		= xfs_iomap_valid,
-+	.get_folio		= xfs_get_folio,
- };
- 
- int
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index da226032aedc..0ae2cddbedd6 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -134,29 +134,18 @@ static inline bool iomap_inline_data_valid(const struct iomap *iomap)
-  * When get_folio succeeds, put_folio will always be called to do any
-  * cleanup work necessary.  put_folio is responsible for unlocking and putting
-  * @folio.
-+ *
-+ * When an iomap is created, the filesystem can store internal state (e.g., a
-+ * sequence number) in iomap->validity_cookie.  The get_folio handler can use
-+ * this validity cookie to detect when the iomap needs to be refreshed because
-+ * it is no longer up to date.  In that case, the function should return
-+ * ERR_PTR(-ESTALE) to retry the operation with a fresh mapping.
-  */
- struct iomap_page_ops {
- 	struct folio *(*get_folio)(struct iomap_iter *iter, loff_t pos,
- 			unsigned len);
- 	void (*put_folio)(struct inode *inode, loff_t pos, unsigned copied,
- 			struct folio *folio);
--
--	/*
--	 * Check that the cached iomap still maps correctly to the filesystem's
--	 * internal extent map. FS internal extent maps can change while iomap
--	 * is iterating a cached iomap, so this hook allows iomap to detect that
--	 * the iomap needs to be refreshed during a long running write
--	 * operation.
--	 *
--	 * The filesystem can store internal state (e.g. a sequence number) in
--	 * iomap->validity_cookie when the iomap is first mapped to be able to
--	 * detect changes between mapping time and whenever .iomap_valid() is
--	 * called.
--	 *
--	 * This is called with the folio over the specified file position held
--	 * locked by the iomap code.
--	 */
--	bool (*iomap_valid)(struct inode *inode, const struct iomap *iomap);
- };
- 
- /*
+This is where things start to get complex. I have sent a patch to
+fix a problem with iomap_zero_range() failing to zero cached dirty
+pages over UNWRITTEN extents, and that requires making FGP_CREAT
+optional. This is an iomap bug, and needs to be fixed in the core
+iomap code:
+
+https://lore.kernel.org/linux-xfs/20221201005214.3836105-1-david@fromorbit.com/
+
+Essentially, we need to pass fgp flags to iomap_write_begin() need
+so the callers can supply a 0 or FGP_CREAT appropriately. This
+allows iomap_write_begin() to act only on pre-cached pages rather
+than always instantiating a new page if one does not exist in cache.
+
+This allows that iomap_write_begin() to return a NULL folio
+successfully, and this is perfectly OK for callers that pass in fgp
+= 0 as they are expected to handle a NULL folio return indicating
+there was no cached data over the range...
+
+Exposing the folio allocation as an external interface makes bug
+fixes like this rather messy - it's taking a core abstraction (iomap
+hides all the folio and page cache manipulations from the
+filesystem) and punching a big hole in it by requiring filesystems
+to actually allocation page cache folios on behalf of the iomap
+core.
+
+Given that I recently got major push-back for fixing an XFS-only bug
+by walking the page cache directly instead of abstracting it via the
+iomap core, punching an even bigger hole in the abstraction layer to
+fix a GFS2-only problem is just as bad....
+
+-Dave.
 -- 
-2.38.1
-
+Dave Chinner
+david@fromorbit.com
