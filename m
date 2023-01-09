@@ -2,131 +2,123 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDC71C5479D
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Jan 2023 16:35:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F266CC5479D
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Jan 2023 16:37:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229969AbjAIQfR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Jan 2023 11:35:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34144 "EHLO
+        id S232796AbjAIQh5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Jan 2023 11:37:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233106AbjAIQfR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2023 11:35:17 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEE72B81
-        for <linux-xfs@vger.kernel.org>; Mon,  9 Jan 2023 08:34:28 -0800 (PST)
+        with ESMTP id S231583AbjAIQh4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2023 11:37:56 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 390A22AE2
+        for <linux-xfs@vger.kernel.org>; Mon,  9 Jan 2023 08:37:13 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1673282068;
+        s=mimecast20190719; t=1673282232;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=QF1a5tKcYgole0jC8DNiwCqj35Xt7SSZg6oSwq6Hd2U=;
-        b=LL1vXzY7bfvEAiG5JdfHkPLXUcdZn5EXq3VbBNF3dHjxYcmz494MNq3VoDDT2gHckNcavR
-        VREjPyIdrca9ylIv8rqFCSJEbEDURjAMjqaq+H9LIO2Yo01UkfcxZGJyfSzbBv+2Z5ZFDO
-        jncxPVjRO8jusHazSi0miOO157We59g=
-Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
- [209.85.208.70]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=CaUmCofw67cYQpW+1L+v6UW3vJNvAD0zWauvjW5LLKI=;
+        b=GBllzLLdgJuSP1Pk41woHEThBW80tANZIMHckIX0TRBoPeLUl3R/ZJelNqY2A+AFEuhjtv
+        2AOhWVOP0aKmOJbQF2JvvSLPJ4rdCFTk9CwKhg3ihXHQ5uAytJw2J5nfNDfxFirY/MTp7q
+        +hfJlMTQFPdlIvLWGUmq2oZnmqtAqls=
+Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
+ [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-139-af62eW1QM4-V_uQet4iZsQ-1; Mon, 09 Jan 2023 11:34:26 -0500
-X-MC-Unique: af62eW1QM4-V_uQet4iZsQ-1
-Received: by mail-ed1-f70.google.com with SMTP id h8-20020a056402280800b0046af59e0986so5735687ede.22
-        for <linux-xfs@vger.kernel.org>; Mon, 09 Jan 2023 08:34:26 -0800 (PST)
+ us-mta-380-7DgDcHpENrSo5u3gbHWtHg-1; Mon, 09 Jan 2023 11:37:11 -0500
+X-MC-Unique: 7DgDcHpENrSo5u3gbHWtHg-1
+Received: by mail-ej1-f70.google.com with SMTP id nb4-20020a1709071c8400b0084d4712780bso2082234ejc.18
+        for <linux-xfs@vger.kernel.org>; Mon, 09 Jan 2023 08:37:10 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=QF1a5tKcYgole0jC8DNiwCqj35Xt7SSZg6oSwq6Hd2U=;
-        b=AAKShZhFFA4R8pb0tzQGRsCmnVN4f73E9DoGGhYCPY+Bz53nt07Cfbp289m63BGVsW
-         WS7pDV5TsTZH6M2AuSyjUUzyh5q9Dx+kXGaChFw3n3vIxhxYy9Wlb0ULBPJfmE7UliAK
-         40sVJbVHQa9bQnCeB5cuUzddbeKZAVaVS3dg53lH8IQweay3YiswsB562YLNjJX3Zh/d
-         ZbYeruxzBA4tNkRwGpJAoofyUrP6y4lZ50AL8Xjq6fAHgUh6LlHLfEJa5NBIoHyVF2M3
-         c0dYgc1ohlgwcN6scBx7SZnKl/FUEVzpxKtvuN8Y5MaOMjU13+firMEFwovZxUAsTZhP
-         pkGA==
-X-Gm-Message-State: AFqh2ko6n7PxhbGeK8lBHM6L4nOYxa8PtRzaXoNhH4BT8De7CnXMYiAu
-        r3h3M/SO637QLP7UrfcVmjO5WcPa+XzR5Yd7+4o5t1Fhr1EwVVNsFfCYVJ7qyZPSkNQ22AV0yhm
-        A42S/RRVOvY6Xx9/rw2c=
-X-Received: by 2002:a05:6402:6c9:b0:46c:2c94:d30b with SMTP id n9-20020a05640206c900b0046c2c94d30bmr71921201edy.33.1673282065576;
-        Mon, 09 Jan 2023 08:34:25 -0800 (PST)
-X-Google-Smtp-Source: AMrXdXtWq3XRc3T8ZfdZYEscSzO7mgFjxgNBvHYXWSEdpXL8eGnTOec2uHkncxWnZmWXlhYf4PjAmw==
-X-Received: by 2002:a05:6402:6c9:b0:46c:2c94:d30b with SMTP id n9-20020a05640206c900b0046c2c94d30bmr71921191edy.33.1673282065382;
-        Mon, 09 Jan 2023 08:34:25 -0800 (PST)
+        bh=CaUmCofw67cYQpW+1L+v6UW3vJNvAD0zWauvjW5LLKI=;
+        b=Dtg50hwdvU46Bt4Vx5P31vkHlA+36CLPRi6T7BgUZrbc5MHk1equ6/zw1dBL+3q+07
+         XJEr2hN8AzqYs4q26d7dFQYxuRkR8ET4SfCVS/RaSykaGZYsk1KS6pbsDkEPUQxTBjaw
+         03rBx7RiBgYAyupx6vW1VRBCmNv00kBDxz4LwfuCEbKrOd8uDB63LstpPrR+u7Ad/OwO
+         ZjLNXsFKxGmChWk92SWwnsWDtpwdV3BF23XPvESNMEZabodFIbX0Bq6GxPzTM7eWeK2/
+         IlrZvWcTW7gC8tX0NTsJML9DUwcmnjLK+XvLJXYgfHouR+Nl2w5jL0eTXoqeyAKoqFU1
+         IHYw==
+X-Gm-Message-State: AFqh2koP6+TdxVBE8rx83/5vF+4cPL2VmPL3ysPlsMp1/pZAs5aDqI5w
+        cpe8GY0K/Fdw6IfizW0+qh7s2OXq27jQTYMBufyN/X8wXSUzQN2nmTOHUZHtOgTF/sczCknIFfw
+        o6z8Z9awmx/prhU8rBYQ=
+X-Received: by 2002:aa7:d281:0:b0:499:1ed2:6456 with SMTP id w1-20020aa7d281000000b004991ed26456mr5206897edq.22.1673282229973;
+        Mon, 09 Jan 2023 08:37:09 -0800 (PST)
+X-Google-Smtp-Source: AMrXdXscVCOYigmRoHTWb4vV/saLzV6ZfpNcVMsmtVCVgTbBhRfilAfUqkF4N52m/GSBKWuNy7yTow==
+X-Received: by 2002:aa7:d281:0:b0:499:1ed2:6456 with SMTP id w1-20020aa7d281000000b004991ed26456mr5206889edq.22.1673282229825;
+        Mon, 09 Jan 2023 08:37:09 -0800 (PST)
 Received: from aalbersh.remote.csb ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id k26-20020a508ada000000b00487fc51c532sm4014812edk.33.2023.01.09.08.34.24
+        by smtp.gmail.com with ESMTPSA id j2-20020aa7de82000000b004972644b19fsm3706906edv.16.2023.01.09.08.37.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Jan 2023 08:34:24 -0800 (PST)
-Date:   Mon, 9 Jan 2023 17:34:23 +0100
+        Mon, 09 Jan 2023 08:37:09 -0800 (PST)
+Date:   Mon, 9 Jan 2023 17:37:07 +0100
 From:   Andrey Albershteyn <aalbersh@redhat.com>
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org,
+Cc:     Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: Re: [RFC PATCH 02/11] pagemap: add mapping_clear_large_folios()
- wrapper
-Message-ID: <20230109163423.45o5moxlh7h6yvbb@aalbersh.remote.csb>
+Subject: Re: [RFC PATCH 03/11] xfs: add attribute type for fs-verity
+Message-ID: <20230109163707.v2c5vet2c4qkqegn@aalbersh.remote.csb>
 References: <20221213172935.680971-1-aalbersh@redhat.com>
- <20221213172935.680971-3-aalbersh@redhat.com>
- <Y5i8igBLu+6OQt8H@casper.infradead.org>
- <20221213210813.GW3600936@dread.disaster.area>
+ <20221213172935.680971-4-aalbersh@redhat.com>
+ <733b882c-30fc-eea0-db01-55d25f272d92@redhat.com>
+ <20221214010356.GC3600936@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221213210813.GW3600936@dread.disaster.area>
+In-Reply-To: <20221214010356.GC3600936@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Dec 14, 2022 at 08:08:13AM +1100, Dave Chinner wrote:
-> On Tue, Dec 13, 2022 at 05:55:22PM +0000, Matthew Wilcox wrote:
-> > On Tue, Dec 13, 2022 at 06:29:26PM +0100, Andrey Albershteyn wrote:
-> > > Add wrapper to clear mapping's large folio flag. This is handy for
-> > > disabling large folios on already existing inodes (e.g. future XFS
-> > > integration of fs-verity).
+On Wed, Dec 14, 2022 at 12:03:56PM +1100, Dave Chinner wrote:
+> On Tue, Dec 13, 2022 at 11:43:42AM -0600, Eric Sandeen wrote:
+> > On 12/13/22 11:29 AM, Andrey Albershteyn wrote:
+> > > The Merkle tree pages and descriptor are stored in the extended
+> > > attributes of the inode. Add new attribute type for fs-verity
+> > > metadata. Skip fs-verity attributes for getfattr as it can not parse
+> > > binary page names.
+> > > 
+> > > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
 > > 
-> > I have two problems with this.  One is your use of __clear_bit().
-> > We can use __set_bit() because it's done as part of initialisation.
-> > As far as I can tell from your patches, mapping_clear_large_folios() is
-> > called on a live inode, so you'd have to use clear_bit() to avoid races.
+> > 
+> > >  DECLARE_EVENT_CLASS(xfs_attr_list_class,
+> > > diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+> > > index 5b57f6348d630..acbfa29d04af0 100644
+> > > --- a/fs/xfs/xfs_xattr.c
+> > > +++ b/fs/xfs/xfs_xattr.c
+> > > @@ -237,6 +237,9 @@ xfs_xattr_put_listent(
+> > >  	if (flags & XFS_ATTR_PARENT)
+> > >  		return;
+> > >  
+> > > +	if (flags & XFS_ATTR_VERITY)
+> > > +		return;
+> > > +
+> > 
+> > Just a nitpick, but now that there are already 2 cases like this, I wonder
+> > if it would be wise to #define something like an XFS_ATTR_VISIBLE_MASK
+> > (or maybe XFS_ATTR_INTERNAL_MASK) and use that to decide, rather than
+> > testing each one individually?
 > 
-> I think we can do without mapping_clear_large_folios() - we
-> already have precedence for this sort of mapping state change with
-> the DAX inode feature flag.  That is, we change the on-disk state in
-> the ioctl context, but we don't change the in-memory inode state.
-> Instead, we mark it I_DONTCACHEi to get it turfed from memory with
-> expediency. Then when it is re-instantiated, we see the on-disk
-> state and then don't enable large mappings on that inode.
-> 
-> That will work just fine here, I think.
+> Seems like a good idea to me.
 
-Thanks for the suggestion, I will try to look into this. If it won't
-work out I will stick to large folio switch, if no other objections.
-In anyway I will remove the mapping_clear_large_folios() wrapper not
-to encourage further use of such approach.
+Agreed.
 
 > 
-> > The second is that verity should obviously be enhanced to support
-> > large folios (and for that matter, block sizes smaller than PAGE_SIZE).
-> > Without that, this is just a toy or a prototype.  Disabling large folios
-> > is not an option.
+> There's also a couple of other spots that a comment about internal
+> vs externally visible xattr namespaces might be appropriate. e.g
+> xfs_attr_filter() in the ioctl code should never have internal xattr
+> namespaces added to it, and similarly a comment at the top of
+> fs/xfs/xfs_xattr.c that the interfaces implemented in the file are
+> only for exposing externally visible xattr namespaces to users.
+
+Thanks, will describe that.
+
 > 
-> Disabling large folios is very much an option. Filesystems must opt
-> in to large mapping support, so they can also choose to opt out.
-> i.e. large mappings is a filesystem policy decision, not a core
-> infrastructure decision. Hence how we disable large mappings
-> for fsverity enabled inodes is open to discussion, but saying we
-> can't opt out of an optional feature is entirely non-sensical.
-> 
-> > I'm happy to work with you to add support for large folios to verity.
-> > It hasn't been high priority for me, but I'm now working on folio support
-> > for bufferhead filesystems and this would probably fit in.
-> 
-> Yes, we need fsverity to support multipage folios, but modifying
-> fsverity is outside the scope of initially enabling fsverity support
-> on XFS.  This patch set is about sorting out the on-disk format
-> changes and interfacing with the fsverity infrastructure to enable
-> the feature to be tested and verified.
-> 
-> Stuff like large mapping support in fsverity is a future concern,
-> not a show-stopper for initial feature support. We don't need every
-> bell and whistle in the initial merge....
+> That way it becomes more obvious that we handle internal vs external
+> xattr namespaces very differently.
 > 
 > Cheers,
 > 
@@ -136,6 +128,6 @@ to encourage further use of such approach.
 > david@fromorbit.com
 > 
 
-Thanks
-Andrey
+-- 
+- Andrey
 
