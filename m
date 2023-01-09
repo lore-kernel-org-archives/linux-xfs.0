@@ -2,131 +2,234 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D60D1C54EBC
-	for <linux-xfs@archiver.kernel.org>; Sun,  8 Jan 2023 21:59:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1AA0C5479D
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Jan 2023 09:25:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229503AbjAHV7c (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 8 Jan 2023 16:59:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49156 "EHLO
+        id S233470AbjAIJZ3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Jan 2023 04:25:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232526AbjAHV7R (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Jan 2023 16:59:17 -0500
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACBA3DFB6
-        for <linux-xfs@vger.kernel.org>; Sun,  8 Jan 2023 13:59:16 -0800 (PST)
-Received: by mail-pl1-x62f.google.com with SMTP id c6so7561986pls.4
-        for <linux-xfs@vger.kernel.org>; Sun, 08 Jan 2023 13:59:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=CRwtLPQVjsAJ21UOF2AH7QhDRVRLxvztJgAiY0hGtps=;
-        b=DsZ97qPfn+vhMdmHYEQPR03qcl9I5p3jIShJCNMi//ZMrFVxdOkuAoJXqcs+tB5RSn
-         QcB2rzxaDJsmmMHCrqxeHYghKoFZvvg7wB5mLhGYKV48tedYlwkoEzx1s/m70EOBI2w2
-         klEp7yZCwCm88twDimFpRT6cC1lu+7jbwr+H0MoQAMbdhgTr3zn/4TglQJI7SViU4JGk
-         1KCpRBlXvfMm4ES6Pvk1YmnXNDU6K9Sy6JqxdOe3BWz24QSH3ChdaqmtlBtzXkPUiJ2c
-         s3DclSILRi9x57F4Db/3FKDA4w5rvwJooG2wdUG1z3gpMr3HgweiKuBc9blESspj6yTD
-         E6kA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=CRwtLPQVjsAJ21UOF2AH7QhDRVRLxvztJgAiY0hGtps=;
-        b=uj8xO6NxtW0HmU/IsOlEJMydEjoNc2J/Isht37GPr+mIyUHEL/OwRfcvsereGYLsVl
-         jR9ATxLD1F1a0s+LQ2g0FtUMVNhh5PYXdLxn/DofFrqpQ2gDlXC9+7Kj62tBLxY+tWi5
-         kH7ILBAxcit4Iw6OG6rRii4nBRe7vzZK5hSdPWsCt3hr6kOA0HOb4TjcU8K5zB9M1pyc
-         nxnQv/T71d+9UoMm/B7a6Cfs6qzZGKTm+rBYuyu88hdK1//B3v6FkIJDjIWsIJIVby2j
-         fIzriU9xD5Vf33KQbs2z3Y/1KuLcfgHu5GJa966o9RSQgQXEkLMk9VcrLY7ywIr1Z8KU
-         vjhQ==
-X-Gm-Message-State: AFqh2krbZqGKJIgbktj/9Dx6RmBpVG8sSlc9xIAVrrSBsbSMqfz7bGSr
-        waL1Ws7PUx85xGSlbCt3JqBDKA==
-X-Google-Smtp-Source: AMrXdXsAIiWjmygk2jewqgV/cdCOSCNGl0lDa8UBdYidyZcmWqor2Pq9z7XkwyQwco4bwJjylZIz9g==
-X-Received: by 2002:a17:90a:aa92:b0:226:b425:3540 with SMTP id l18-20020a17090aaa9200b00226b4253540mr16679445pjq.36.1673215156237;
-        Sun, 08 Jan 2023 13:59:16 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-146-207.pa.vic.optusnet.com.au. [49.186.146.207])
-        by smtp.gmail.com with ESMTPSA id jx12-20020a17090b46cc00b00225a8024b8bsm4127825pjb.55.2023.01.08.13.59.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 08 Jan 2023 13:59:15 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1pEdh9-000l2I-TM; Mon, 09 Jan 2023 08:59:11 +1100
-Date:   Mon, 9 Jan 2023 08:59:11 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Andreas Gruenbacher <agruenba@redhat.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, cluster-devel@redhat.com
-Subject: Re: [RFC v6 08/10] iomap/xfs: Eliminate the iomap_valid handler
-Message-ID: <20230108215911.GP1971568@dread.disaster.area>
-References: <20230108194034.1444764-1-agruenba@redhat.com>
- <20230108194034.1444764-9-agruenba@redhat.com>
+        with ESMTP id S234006AbjAIJY4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Jan 2023 04:24:56 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 661659B
+        for <linux-xfs@vger.kernel.org>; Mon,  9 Jan 2023 01:24:52 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 69C40B80B93
+        for <linux-xfs@vger.kernel.org>; Mon,  9 Jan 2023 09:24:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CDEAC433D2;
+        Mon,  9 Jan 2023 09:24:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1673256290;
+        bh=r+2nWU1pcPVT9S6cKbHRSmIU7MTrF/dw56NOO/N/k4g=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=m+3zDRZUMB8pRtrEn+B87UriQ42/8PBC9reHWL1JpiWnlTShA7zxgxrF4aUijxKSv
+         iag8E2lbSLCOVeVOSPCxpAsibAch3N8cnB4cIRVwSH9Ta19o6LnqVCU5A2z0Gu7LVj
+         Z9wOPT54r6G8TEFMX6+yQsu3IG7Rvv9HDLi9iythXdyHgFSoMKPvafzw6XSoxNNpDA
+         O6owOZByhAhKSsP3gPn5DhG2mXGY/lbJ8LteHwlIqZf39cRVSkxQ+kR2wq9qyKlM9G
+         8VoY4H9FfI6KRZInLdsSGGqD8mOmDRV4z0rp6VOiy38IpgC6/JXtgQCYvUichsdeGM
+         V8aYbDostFm4w==
+Date:   Mon, 9 Jan 2023 10:24:45 +0100
+From:   Carlos Maiolino <cem@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [ANNOUNCE] xfsprogs-6.1.0 released
+Message-ID: <20230109092445.dv3rd3fynau6627v@andromeda>
+References: <20221223104351.gwi7qyns7eww6gel@andromeda>
+ <-j7ipreoC6Ioj_OcM-n56c_u9BudLZfHGB6RkmaBwp24Ue0VLPpBob7HPoXHtGZp7ojVRD5Kh0xyFzKAZSMNCQ==@protonmail.internalid>
+ <Y7W3pLNuhWliwJf6@magnolia>
+ <20230106102719.rwbu2jio352pkgaq@andromeda>
+ <ysk6MmB22o5txpKTj-3nh3WW_kXa9yCoRSK2kXzlluFBZ2bcFfsRC8qW4J50saJ2a4i6AWuOy4BfK4NCABzkiQ==@protonmail.internalid>
+ <Y7hTL0gh9Sg52FtP@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230108194034.1444764-9-agruenba@redhat.com>
+In-Reply-To: <Y7hTL0gh9Sg52FtP@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jan 08, 2023 at 08:40:32PM +0100, Andreas Gruenbacher wrote:
-> Eliminate the ->iomap_valid() handler by switching to a ->get_folio()
-> handler and validating the mapping there.
+On Fri, Jan 06, 2023 at 08:58:23AM -0800, Darrick J. Wong wrote:
+> On Fri, Jan 06, 2023 at 11:27:19AM +0100, Carlos Maiolino wrote:
+> > On Wed, Jan 04, 2023 at 09:30:12AM -0800, Darrick J. Wong wrote:
+> > > On Fri, Dec 23, 2022 at 11:43:51AM +0100, Carlos Maiolino wrote:
+> > > > Hi folks,
+> > > >
+> > > > The xfsprogs repository at:
+> > > >
+> > > > 	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+> > > >
+> > > > has just been updated.
+> > > >
+> > > > If you were expecting your patch to be in this version, and for some reason it
+> > > > is not, please let me know.
+> > >
+> > Sorry the late reply, quite busy here these days.
+> >
+> > > Er... the debian/changelog file says 6.0.1.  It's probably not a big
+> > > deal unless the Debian folks decide to pull that in, but probably worth
+> > > fixing since nothing else has been committed to master or for-next.
+> > >
+> >
+> > Heh, Eric mentioned it to me, sorry about the fat fingers :(
+> > You mean fixing it by rebasing the tree, or adding a patch on top of it with the
+> > fix? I thought by adding a patch on top of it would fix it, but yet, outside of
+> > the 6.1.0 tag, and yet, rebasing it will be basically a re-release of 6.1 :P
 > 
-> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+> How about a 6.1.1 with the xfs_scrub build fix that was reposted
+> earlier, and a corrected debian/changelog?
+> 
 
-I think this is wrong.
+Sounds good to me, thanks for the tip, I'll work on that on this week's pull.
 
-The ->iomap_valid() function handles a fundamental architectural
-issue with cached iomaps: the iomap can become stale at any time
-whilst it is in use by the iomap core code.
+> --D
+> 
+> > > Also, would you mind updating for-next to match master?
+> >
+> > Sure, I'll do that together with the fix, however we decide to fix it.
+> >
+> >
+> > >
+> > > --D
+> > >
+> > > >
+> > > > The commit log and diffstat are described below...
+> > > >
+> > > >
+> > > > Happy Holidays everyone!
+> > > >
+> > > >
+> > > > The new head of the master branch is commit:
+> > > >
+> > > > 37e6e80a6 xfsprogs: Release v6.1.0
+> > > >
+> > > > New Commits:
+> > > >
+> > > > Allison Henderson (1):
+> > > >       [227bc97f1] xfs: increase rename inode reservation
+> > > >
+> > > > Carlos Maiolino (3):
+> > > >       [fbd9b2363] xfs_repair: Fix check_refcount() error path
+> > > >       [2dac91b3d] xfs_repair: Fix rmaps_verify_btree() error path
+> > > >       [37e6e80a6] xfsprogs: Release v6.1.0
+> > > >
+> > > > Darrick J. Wong (26):
+> > > >       [d267ac6a0] xfs: fix memcpy fortify errors in EFI log format copying
+> > > >       [4b69afdc4] xfs: refactor all the EFI/EFD log item sizeof logic
+> > > >       [2d5166b9d] xfs: make sure aglen never goes negative in xfs_refcount_adjust_extents
+> > > >       [b3f9ae08e] xfs: create a predicate to verify per-AG extents
+> > > >       [7ccbdec2b] xfs: check deferred refcount op continuation parameters
+> > > >       [bec88ec72] xfs: move _irec structs to xfs_types.h
+> > > >       [6b2f464dd] xfs: track cow/shared record domains explicitly in xfs_refcount_irec
+> > > >       [8160aeff0] xfs: report refcount domain in tracepoints
+> > > >       [cc2a3c2ad] xfs: refactor domain and refcount checking
+> > > >       [f275d70e8] xfs: remove XFS_FIND_RCEXT_SHARED and _COW
+> > > >       [817ea9f0f] xfs: check record domain when accessing refcount records
+> > > >       [8b2b27581] xfs: fix agblocks check in the cow leftover recovery function
+> > > >       [7accbcd00] xfs: fix uninitialized list head in struct xfs_refcount_recovery
+> > > >       [7257eb3ed] xfs: rename XFS_REFC_COW_START to _COWFLAG
+> > > >       [60066f61c] libxfs: consume the xfs_warn mountpoint argument
+> > > >       [b6fef47a8] misc: add static to various sourcefile-local functions
+> > > >       [a946664de] misc: add missing includes
+> > > >       [b84d0823d] xfs_db: fix octal conversion logic
+> > > >       [e9dea7eff] xfs_db: fix printing of reverse mapping record blockcounts
+> > > >       [978c3087b] xfs_repair: don't crash on unknown inode parents in dry run mode
+> > > >       [945c7341d] xfs_repair: retain superblock buffer to avoid write hook deadlock
+> > > >       [2b9d6f15b] xfs_{db,repair}: fix XFS_REFC_COW_START usage
+> > > >       [765809a0d] mkfs.xfs: add mkfs config file for the 6.1 LTS kernel
+> > > >       [f6fb1c078] xfs_io: don't display stripe alignment flags for realtime files
+> > > >       [e229a59f0] xfs_db: create separate struct and field definitions for finobts
+> > > >       [7374f58bf] xfs_db: fix dir3 block magic check
+> > > >
+> > > > Guo Xuenan (1):
+> > > >       [20798cc06] xfs: fix exception caused by unexpected illegal bestcount in leaf dir
+> > > >
+> > > > Jason A. Donenfeld (2):
+> > > >       [4947ac5b3] treewide: use prandom_u32_max() when possible, part 1
+> > > >       [11d2f5afc] treewide: use get_random_u32() when possible
+> > > >
+> > > > Long Li (1):
+> > > >       [b827e2318] xfs: fix sb write verify for lazysbcount
+> > > >
+> > > > Shida Zhang (2):
+> > > >       [04d4c27af] xfs: trim the mapp array accordingly in xfs_da_grow_inode_int
+> > > >       [1a3bfffee] xfs: rearrange the logic and remove the broken comment for xfs_dir2_isxx
+> > > >
+> > > > Srikanth C S (1):
+> > > >       [79ba1e15d] fsck.xfs: mount/umount xfs fs to replay log before running xfs_repair
+> > > >
+> > > > Zeng Heng (1):
+> > > >       [be98db856] xfs: clean up "%Ld/%Lu" which doesn't meet C standard
+> > > >
+> > > > ye xingchen (1):
+> > > >       [e8dbbca18] xfs: Remove the unneeded result variable
+> > > >
+> > > >
+> > > > Code Diffstat:
+> > > >
+> > > >  VERSION                     |   2 +-
+> > > >  configure.ac                |   2 +-
+> > > >  db/btblock.c                |  72 +++++++++++++++++-
+> > > >  db/btblock.h                |   6 ++
+> > > >  db/check.c                  |   6 +-
+> > > >  db/field.c                  |   8 ++
+> > > >  db/field.h                  |   4 +
+> > > >  db/namei.c                  |   4 +-
+> > > >  db/type.c                   |   6 +-
+> > > >  db/write.c                  |   4 +-
+> > > >  debian/changelog            |   6 ++
+> > > >  doc/CHANGES                 |  18 +++++
+> > > >  fsck/xfs_fsck.sh            |  31 +++++++-
+> > > >  include/kmem.h              |  10 +++
+> > > >  io/fsmap.c                  |   4 +-
+> > > >  io/pread.c                  |   2 +-
+> > > >  libfrog/linux.c             |   1 +
+> > > >  libxfs/libxfs_api_defs.h    |   2 +
+> > > >  libxfs/libxfs_io.h          |   1 +
+> > > >  libxfs/libxfs_priv.h        |   8 +-
+> > > >  libxfs/rdwr.c               |   8 ++
+> > > >  libxfs/util.c               |   1 +
+> > > >  libxfs/xfs_ag.h             |  15 ++++
+> > > >  libxfs/xfs_alloc.c          |   8 +-
+> > > >  libxfs/xfs_bmap.c           |   2 +-
+> > > >  libxfs/xfs_da_btree.c       |   2 +-
+> > > >  libxfs/xfs_dir2.c           |  50 ++++++++-----
+> > > >  libxfs/xfs_dir2.h           |   4 +-
+> > > >  libxfs/xfs_dir2_leaf.c      |   9 ++-
+> > > >  libxfs/xfs_dir2_sf.c        |   4 +-
+> > > >  libxfs/xfs_format.h         |  22 +-----
+> > > >  libxfs/xfs_ialloc.c         |   4 +-
+> > > >  libxfs/xfs_inode_fork.c     |   4 +-
+> > > >  libxfs/xfs_log_format.h     |  60 +++++++++++++--
+> > > >  libxfs/xfs_refcount.c       | 286
+> > > > +++++++++++++++++++++++++++++++++++++++++++++++++---------------------
+> > > >  libxfs/xfs_refcount.h       |  40 +++++++++-
+> > > >  libxfs/xfs_refcount_btree.c |  15 +++-
+> > > >  libxfs/xfs_rmap.c           |   9 +--
+> > > >  libxfs/xfs_sb.c             |   4 +-
+> > > >  libxfs/xfs_trans_resv.c     |   4 +-
+> > > >  libxfs/xfs_types.h          |  30 ++++++++
+> > > >  logprint/log_redo.c         |  12 +--
+> > > >  mkfs/Makefile               |   3 +-
+> > > >  mkfs/lts_6.1.conf           |  14 ++++
+> > > >  mkfs/xfs_mkfs.c             |   2 +-
+> > > >  repair/phase2.c             |   8 ++
+> > > >  repair/phase6.c             |  15 +++-
+> > > >  repair/protos.h             |   1 +
+> > > >  repair/rmap.c               |  61 ++++++++-------
+> > > >  repair/scan.c               |  22 ++++--
+> > > >  repair/xfs_repair.c         |  77 ++++++++++++++++---
+> > > >  scrub/inodes.c              |   2 +-
+> > > >  52 files changed, 747 insertions(+), 248 deletions(-)
+> > > >  create mode 100644 mkfs/lts_6.1.conf
+> > > >
+> > > > --
+> > > > Carlos Maiolino
+> >
+> > --
+> > Carlos Maiolino
 
-The current problem it solves in the iomap_write_begin() path has to
-do with writeback and memory reclaim races over unwritten extents,
-but the general case is that we must be able to check the iomap
-at any point in time to assess it's validity.
-
-Indeed, we also have this same "iomap valid check" functionality in the
-writeback code as cached iomaps can become stale due to racing
-writeback, truncated, etc. But you wouldn't know it by looking at the iomap
-writeback code - this is currently hidden by XFS by embedding
-the checks into the iomap writeback ->map_blocks function.
-
-That is, the first thing that xfs_map_blocks() does is check if the
-cached iomap is valid, and if it is valid it returns immediately and
-the iomap writeback code uses it without question.
-
-The reason that this is embedded like this is that the iomap did not
-have a validity cookie field in it, and so the validity information
-was wrapped around the outside of the iomap_writepage_ctx and the
-filesystem has to decode it from that private wrapping structure.
-
-However, the validity information iin the structure wrapper is
-indentical to the iomap validity cookie, and so the direction I've
-been working towards is to replace this implicit, hidden cached
-iomap validity check with an explicit ->iomap_valid call and then
-only call ->map_blocks if the validity check fails (or is not
-implemented).
-
-I want to use the same code for all the iomap validity checks in all
-the iomap core code - this is an iomap issue, the conditions where
-we need to check for iomap validity are different for depending on
-the iomap context being run, and the checks are not necessarily
-dependent on first having locked a folio.
-
-Yes, the validity cookie needs to be decoded by the filesystem, but
-that does not dictate where the validity checking needs to be done
-by the iomap core.
-
-Hence I think removing ->iomap_valid is a big step backwards for the
-iomap core code - the iomap core needs to be able to formally verify
-the iomap is valid at any point in time, not just at the point in
-time a folio in the page cache has been locked...
-
--Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Carlos Maiolino
