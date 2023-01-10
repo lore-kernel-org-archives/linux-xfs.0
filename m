@@ -2,76 +2,133 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41E2DC46467
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Jan 2023 15:25:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D65BEC46467
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Jan 2023 21:56:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238956AbjAJPZU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Jan 2023 10:25:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60982 "EHLO
+        id S233423AbjAJV4w (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Jan 2023 16:56:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55498 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238977AbjAJPYi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2023 10:24:38 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 281918D5C4;
-        Tue, 10 Jan 2023 07:24:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=oNTdMR+VSzbfWekKWcdjtSu/K0LW9KTEw3USctOnxiU=; b=zDpFs6D6/Tjb+OJyb9xHVqz5ls
-        pFBMbIHtHrX5PunG/rgPabqbdWsIp1KBDrf94nAwIf9VYD6FmA/1emyHb1r0sQyyYkWM/4hPMTuYH
-        CjuTU2l4k73L7IxJXvEelJio32ymOa/d75HhexdbaH1Pm73qL+xhGiJHI9FGLfxoavkIFYh0jEdtH
-        zdctHIHRZL2kUGScC6WtgGn7TciKAR23dSJH5DDLnVpfqgaSthQAGfeSBcaaTPNgZDREUasnqBkig
-        kdHpEzl5txPM+j1xgPLyjr9/q0Y7/aL0jYStyfxdcapJzOIxqTOST0W0pqT6rhKzv6TlZxEw/VKXv
-        9aVLJvpQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pFGUF-007Yt2-4o; Tue, 10 Jan 2023 15:24:27 +0000
-Date:   Tue, 10 Jan 2023 07:24:27 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Matthew Wilcox <willy@infradead.org>
+        with ESMTP id S232546AbjAJV4r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2023 16:56:47 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91E4011A06;
+        Tue, 10 Jan 2023 13:56:45 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1C9AB618E5;
+        Tue, 10 Jan 2023 21:56:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B15CC433D2;
+        Tue, 10 Jan 2023 21:56:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1673387804;
+        bh=QFvU724dQekZNqvjWFmNHGn15TBg7ISixIdd6G6hClc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=EVnrD/kTYdayTgwe/1H43W81w96fKOK6bErqbIdCGUr17/9dgx0KC497wMp9335mc
+         W5J4wpnTlb6R+HAusXzCQChobUBQ7cVm5GQ40CXtCd2jisaw02gGfOOVWhWVPy7GXk
+         Zxsep668qJJdYIgI1Lx4d2ceOj9mVi3kWrLSpZKeP+w9um01g1288gZ/ODcAeqLcIk
+         cg8Qegj+PzxYyptfFIx2F6KESaP9IWr9drC9irN5aJiteTLZ9ijww8GSYU1ukYALEr
+         0UAWoHEXge9BLcKTMY07FBG8kH33Eu8zCbY/E+pcjlCKAnwGM2v47UQG9Ma5VbOR8+
+         UD0RYV3d+7BpA==
+Date:   Tue, 10 Jan 2023 13:56:44 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Andreas Gruenbacher <agruenba@redhat.com>
 Cc:     Christoph Hellwig <hch@infradead.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
         Alexander Viro <viro@zeniv.linux.org.uk>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, cluster-devel@redhat.com,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFC v6 04/10] iomap: Add iomap_get_folio helper
-Message-ID: <Y72DK9XuaJfN+ecj@infradead.org>
-References: <20230108213305.GO1971568@dread.disaster.area>
- <20230108194034.1444764-1-agruenba@redhat.com>
- <20230108194034.1444764-5-agruenba@redhat.com>
- <20230109124642.1663842-1-agruenba@redhat.com>
- <Y70l9ZZXpERjPqFT@infradead.org>
- <Y71pWJ0JHwGrJ/iv@casper.infradead.org>
+        linux-ext4@vger.kernel.org, cluster-devel@redhat.com
+Subject: Re: [PATCH v5 7/9] iomap/xfs: Eliminate the iomap_valid handler
+Message-ID: <Y73fHN4aDfbo6e1z@magnolia>
+References: <20221231150919.659533-1-agruenba@redhat.com>
+ <20221231150919.659533-8-agruenba@redhat.com>
+ <Y7W9Dfub1WeTvG8G@magnolia>
+ <Y7XOoZNxZCpjCJLH@casper.infradead.org>
+ <Y7r+NkbfDqat9uHA@infradead.org>
+ <CAHc6FU40OYCpRjnitmKn6s9LOZCy4O=4XobHdcUeFc=k=x5cGg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y71pWJ0JHwGrJ/iv@casper.infradead.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <CAHc6FU40OYCpRjnitmKn6s9LOZCy4O=4XobHdcUeFc=k=x5cGg@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 10, 2023 at 01:34:16PM +0000, Matthew Wilcox wrote:
-> > Exactly.  And as I already pointed out in reply to Dave's original
-> > patch what we really should be doing is returning an ERR_PTR from
-> > __filemap_get_folio instead of reverse-engineering the expected
-> > error code.
+On Sun, Jan 08, 2023 at 07:50:01PM +0100, Andreas Gruenbacher wrote:
+> On Sun, Jan 8, 2023 at 6:32 PM Christoph Hellwig <hch@infradead.org> wrote:
+> > On Wed, Jan 04, 2023 at 07:08:17PM +0000, Matthew Wilcox wrote:
+> > > On Wed, Jan 04, 2023 at 09:53:17AM -0800, Darrick J. Wong wrote:
+> > > > I wonder if this should be reworked a bit to reduce indenting:
+> > > >
+> > > >     if (PTR_ERR(folio) == -ESTALE) {
+> > >
+> > > FYI this is a bad habit to be in.  The compiler can optimise
+> > >
+> > >       if (folio == ERR_PTR(-ESTALE))
+> > >
+> > > better than it can optimise the other way around.
+> >
+> > Yes.  I think doing the recording that Darrick suggested combined
+> > with this style would be best:
+> >
+> >         if (folio == ERR_PTR(-ESTALE)) {
+> >                 iter->iomap.flags |= IOMAP_F_STALE;
+> >                 return 0;
+> >         }
+> >         if (IS_ERR(folio))
+> >                 return PTR_ERR(folio);
 > 
-> Ouch, we have a nasty problem.
+> Again, I've implemented this as a nested if because the -ESTALE case
+> should be pretty rare, and if we unnest, we end up with an additional
+> check on the main code path. To be specific, the "before" code here on
+> my current system is this:
 > 
-> If somebody passes FGP_ENTRY, we can return a shadow entry.  And the
-> encodings for shadow entries overlap with the encodings for ERR_PTR,
-> meaning that some shadow entries will look like errors.  The way I
-> solved this in the XArray code is by shifting the error values by
-> two bits and encoding errors as XA_ERROR(-ENOMEM) (for example).
+> ------------------------------------
+>         if (IS_ERR(folio)) {
+>     22ad:       48 81 fd 00 f0 ff ff    cmp    $0xfffffffffffff000,%rbp
+>     22b4:       0f 87 bf 03 00 00       ja     2679 <iomap_write_begin+0x499>
+>                         return 0;
+>                 }
+>                 return PTR_ERR(folio);
+>         }
+> [...]
+>     2679:       89 e8                   mov    %ebp,%eax
+>                 if (folio == ERR_PTR(-ESTALE)) {
+>     267b:       48 83 fd 8c             cmp    $0xffffffffffffff8c,%rbp
+>     267f:       0f 85 b7 fc ff ff       jne    233c <iomap_write_begin+0x15c>
+>                         iter->iomap.flags |= IOMAP_F_STALE;
+>     2685:       66 81 4b 42 00 02       orw    $0x200,0x42(%rbx)
+>                         return 0;
+>     268b:       e9 aa fc ff ff          jmp    233a <iomap_write_begin+0x15a>
+> ------------------------------------
 > 
-> I don't _object_ to introducing XA_ERROR() / xa_err() into the VFS,
-> but so far we haven't, and I'd like to make that decision intentionally.
+> While the "after" code is this:
+> 
+> ------------------------------------
+>         if (folio == ERR_PTR(-ESTALE)) {
+>     22ad:       48 83 fd 8c             cmp    $0xffffffffffffff8c,%rbp
+>     22b1:       0f 84 bc 00 00 00       je     2373 <iomap_write_begin+0x193>
+>                 iter->iomap.flags |= IOMAP_F_STALE;
+>                 return 0;
+>         }
+>         if (IS_ERR(folio))
+>                 return PTR_ERR(folio);
+>     22b7:       89 e8                   mov    %ebp,%eax
+>         if (IS_ERR(folio))
+>     22b9:       48 81 fd 00 f0 ff ff    cmp    $0xfffffffffffff000,%rbp
+>     22c0:       0f 87 82 00 00 00       ja     2348 <iomap_write_begin+0x168>
+> ------------------------------------
+> 
+> The compiler isn't smart enough to re-nest the ifs by recognizing that
+> folio == ERR_PTR(-ESTALE) is a subset of IS_ERR(folio).
+> 
+> So do you still insist on that un-nesting even though it produces worse code?
 
-So what would be an alternative way to tell the callers why no folio
-was found instead of trying to reverse engineer that?  Return an errno
-and the folio by reference?  The would work, but the calling conventions
-would be awful.
+Me?  Not anymore. :)
+
+--D
+
+> Thanks,
+> Andreas
+> 
