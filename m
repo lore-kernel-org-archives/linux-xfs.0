@@ -2,185 +2,395 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7420C5479D
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Jan 2023 15:09:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCB44C46467
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Jan 2023 17:54:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232134AbjAKPJq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Jan 2023 10:09:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43952 "EHLO
+        id S231286AbjAKRyQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Jan 2023 12:54:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232663AbjAKPJp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2023 10:09:45 -0500
-Received: from mail-il1-f197.google.com (mail-il1-f197.google.com [209.85.166.197])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F0162DA
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2023 07:09:44 -0800 (PST)
-Received: by mail-il1-f197.google.com with SMTP id y5-20020a056e021be500b0030bc4f23f0aso11056830ilv.3
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2023 07:09:44 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=/spnDawV/eFkbsSyHLWzb1Chyz08v/PTLTMKtmmIo4c=;
-        b=qg+KeOZokRtCgdPQSUpPBc9WtSpcM0MR9+Ih51hzbzrH5zvTf+0rOmHe1iedmScx+5
-         jNMWQ7/BmaVIVDw7DHAyq6XVrxlnmOoTwty2hPj9Ol2ZSkKYf70bVev/HbtRRAFcd0yO
-         0fH+tzwMlnZsXNVX7CEXj2pk9PQcqT6Tt4xZMBzgQuqgP0TOnJROIW7VG9RTVtNhpFYW
-         fZ85v4Ydn21wCloTx9/d3r8YWVtmX2YdH6BcFehTweBmdX5hpuW+Wik42bbCgDTG7Yvh
-         2P5WiZCDWei0PJ5QRb15FnIcTfFLPS2FQJVB0lKMJLIpBMkPSHZGb9M62kIiZ9ib0ebI
-         sUAA==
-X-Gm-Message-State: AFqh2kq3T54oDS4USQE1aiKY1xmEe4S6Vgn+AV4DlaWkf/Kd9nlYPZjI
-        7cU4+jd8eNlW4DxUcc9Ar9NWMeuWuWJvIUEX9KcnlyyJ7gOt
-X-Google-Smtp-Source: AMrXdXs/PjCnnOai/lEXHOMu/6yI7Q9QhSPZ/UO81JhL9wY9JiEXHpPDGANGwJ/Br9yzWFfIYCM1oQHGR9Jhho3E9kcyk27IRF+r
+        with ESMTP id S232042AbjAKRyO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2023 12:54:14 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F202A469;
+        Wed, 11 Jan 2023 09:54:12 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0E76E61D98;
+        Wed, 11 Jan 2023 17:54:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62E63C433EF;
+        Wed, 11 Jan 2023 17:54:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1673459651;
+        bh=4bvncI8qdilTRyPNQlsk6bcTHlK2AIug7R45fmJ8gp0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=YY75u5iab83oByo4YBuKdlWlQNHo/Wb+N1b4wKT5oXr1M9OvY7iyk7Hjky17t+yVr
+         to6isQZfPP2oexWLEuUmwLwXe/98wDYUMsBYssXKin3I4H0jN1aQDLXObDbDT/2kvI
+         iHPaiXJE3/Rkrc4uwqZN/Q91MgeI4ZkaPvdd2es5mcXSR2EGE0+0v0aICjVdvlZgrh
+         WUEALHL+pm8KAxM9pD1+wtbnzBG6Pi02qsyYXlWRZdA8Nqf6PYhMdY0lZsxkbh8w8U
+         RkGqpyGTkFR5jZbR0MnQAns+wzLa4ueAz9BMTaO0MP1mIE79gJSMM72nevtVYTCKdG
+         KllfrX5PM3PWg==
+Date:   Wed, 11 Jan 2023 09:54:10 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, willy@infradead.org,
+        chandan.babu@oracle.com, allison.henderson@oracle.com,
+        linux-fsdevel@vger.kernel.org, hch@infradead.org,
+        catherine.hoang@oracle.com, david@fromorbit.com
+Subject: Re: [PATCH 06/14] xfs: document how online fsck deals with eventual
+ consistency
+Message-ID: <Y773ws82mdT0I9vT@magnolia>
+References: <167243825144.682859.12802259329489258661.stgit@magnolia>
+ <167243825245.682859.4827095718073568782.stgit@magnolia>
+ <CAOQ4uxgqYCXi_c3PA8d0vVaaicGU=D9kvsR5fo9eb_89L0Y6PA@mail.gmail.com>
+ <Y7cns4x+lJuAKIXj@magnolia>
+ <CAOQ4uxgEYuKqicCjf-3AijVyoCHsaCErXJghMg3=iDom=bshVA@mail.gmail.com>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:1aae:b0:30d:94b0:1138 with SMTP id
- l14-20020a056e021aae00b0030d94b01138mr1153442ilv.159.1673449783658; Wed, 11
- Jan 2023 07:09:43 -0800 (PST)
-Date:   Wed, 11 Jan 2023 07:09:43 -0800
-In-Reply-To: <0000000000004ab8ac05ef9b1578@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000e7915705f1fe6339@google.com>
-Subject: Re: [syzbot] [xfs?] KASAN: stack-out-of-bounds Read in xfs_buf_lock
-From:   syzbot <syzbot+0bc698a422b5e4ac988c@syzkaller.appspotmail.com>
-To:     djwong@kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxgEYuKqicCjf-3AijVyoCHsaCErXJghMg3=iDom=bshVA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-syzbot has found a reproducer for the following issue on:
+On Fri, Jan 06, 2023 at 05:33:00AM +0200, Amir Goldstein wrote:
+> On Thu, Jan 5, 2023 at 9:40 PM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > On Thu, Jan 05, 2023 at 11:08:51AM +0200, Amir Goldstein wrote:
+> > > On Sat, Dec 31, 2022 at 12:32 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> > > >
+> > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > >
+> > > > Writes to an XFS filesystem employ an eventual consistency update model
+> > > > to break up complex multistep metadata updates into small chained
+> > > > transactions.  This is generally good for performance and scalability
+> > > > because XFS doesn't need to prepare for enormous transactions, but it
+> > > > also means that online fsck must be careful not to attempt a fsck action
+> > > > unless it can be shown that there are no other threads processing a
+> > > > transaction chain.  This part of the design documentation covers the
+> > > > thinking behind the consistency model and how scrub deals with it.
+> > > >
+> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > ---
+> > > >  .../filesystems/xfs-online-fsck-design.rst         |  303 ++++++++++++++++++++
+> > > >  1 file changed, 303 insertions(+)
+> > > >
+> > > >
+> > > > diff --git a/Documentation/filesystems/xfs-online-fsck-design.rst b/Documentation/filesystems/xfs-online-fsck-design.rst
+> > > > index f45bf97fa9c4..419eb54ee200 100644
+> > > > --- a/Documentation/filesystems/xfs-online-fsck-design.rst
+> > > > +++ b/Documentation/filesystems/xfs-online-fsck-design.rst
+> > > > @@ -1443,3 +1443,306 @@ This step is critical for enabling system administrator to monitor the status
+> > > >  of the filesystem and the progress of any repairs.
+> > > >  For developers, it is a useful means to judge the efficacy of error detection
+> > > >  and correction in the online and offline checking tools.
+> > > > +
+> > > > +Eventual Consistency vs. Online Fsck
+> > > > +------------------------------------
+> > > > +
+> > > > +Midway through the development of online scrubbing, the fsstress tests
+> > > > +uncovered a misinteraction between online fsck and compound transaction chains
+> > > > +created by other writer threads that resulted in false reports of metadata
+> > > > +inconsistency.
+> > > > +The root cause of these reports is the eventual consistency model introduced by
+> > > > +the expansion of deferred work items and compound transaction chains when
+> > > > +reverse mapping and reflink were introduced.
+> > > > +
+> > > > +Originally, transaction chains were added to XFS to avoid deadlocks when
+> > > > +unmapping space from files.
+> > > > +Deadlock avoidance rules require that AGs only be locked in increasing order,
+> > > > +which makes it impossible (say) to use a single transaction to free a space
+> > > > +extent in AG 7 and then try to free a now superfluous block mapping btree block
+> > > > +in AG 3.
+> > > > +To avoid these kinds of deadlocks, XFS creates Extent Freeing Intent (EFI) log
+> > > > +items to commit to freeing some space in one transaction while deferring the
+> > > > +actual metadata updates to a fresh transaction.
+> > > > +The transaction sequence looks like this:
+> > > > +
+> > > > +1. The first transaction contains a physical update to the file's block mapping
+> > > > +   structures to remove the mapping from the btree blocks.
+> > > > +   It then attaches to the in-memory transaction an action item to schedule
+> > > > +   deferred freeing of space.
+> > > > +   Concretely, each transaction maintains a list of ``struct
+> > > > +   xfs_defer_pending`` objects, each of which maintains a list of ``struct
+> > > > +   xfs_extent_free_item`` objects.
+> > > > +   Returning to the example above, the action item tracks the freeing of both
+> > > > +   the unmapped space from AG 7 and the block mapping btree (BMBT) block from
+> > > > +   AG 3.
+> > > > +   Deferred frees recorded in this manner are committed in the log by creating
+> > > > +   an EFI log item from the ``struct xfs_extent_free_item`` object and
+> > > > +   attaching the log item to the transaction.
+> > > > +   When the log is persisted to disk, the EFI item is written into the ondisk
+> > > > +   transaction record.
+> > > > +   EFIs can list up to 16 extents to free, all sorted in AG order.
+> > > > +
+> > > > +2. The second transaction contains a physical update to the free space btrees
+> > > > +   of AG 3 to release the former BMBT block and a second physical update to the
+> > > > +   free space btrees of AG 7 to release the unmapped file space.
+> > > > +   Observe that the the physical updates are resequenced in the correct order
+> > > > +   when possible.
+> > > > +   Attached to the transaction is a an extent free done (EFD) log item.
+> > > > +   The EFD contains a pointer to the EFI logged in transaction #1 so that log
+> > > > +   recovery can tell if the EFI needs to be replayed.
+> > > > +
+> > > > +If the system goes down after transaction #1 is written back to the filesystem
+> > > > +but before #2 is committed, a scan of the filesystem metadata would show
+> > > > +inconsistent filesystem metadata because there would not appear to be any owner
+> > > > +of the unmapped space.
+> > > > +Happily, log recovery corrects this inconsistency for us -- when recovery finds
+> > > > +an intent log item but does not find a corresponding intent done item, it will
+> > > > +reconstruct the incore state of the intent item and finish it.
+> > > > +In the example above, the log must replay both frees described in the recovered
+> > > > +EFI to complete the recovery phase.
+> > > > +
+> > > > +There are two subtleties to XFS' transaction chaining strategy to consider.
+> > > > +The first is that log items must be added to a transaction in the correct order
+> > > > +to prevent conflicts with principal objects that are not held by the
+> > > > +transaction.
+> > > > +In other words, all per-AG metadata updates for an unmapped block must be
+> > > > +completed before the last update to free the extent, and extents should not
+> > > > +be reallocated until that last update commits to the log.
+> > > > +The second subtlety comes from the fact that AG header buffers are (usually)
+> > > > +released between each transaction in a chain.
+> > > > +This means that other threads can observe an AG in an intermediate state,
+> > > > +but as long as the first subtlety is handled, this should not affect the
+> > > > +correctness of filesystem operations.
+> > > > +Unmounting the filesystem flushes all pending work to disk, which means that
+> > > > +offline fsck never sees the temporary inconsistencies caused by deferred work
+> > > > +item processing.
+> > > > +In this manner, XFS employs a form of eventual consistency to avoid deadlocks
+> > > > +and increase parallelism.
+> > > > +
+> > > > +During the design phase of the reverse mapping and reflink features, it was
+> > > > +decided that it was impractical to cram all the reverse mapping updates for a
+> > > > +single filesystem change into a single transaction because a single file
+> > > > +mapping operation can explode into many small updates:
+> > > > +
+> > > > +* The block mapping update itself
+> > > > +* A reverse mapping update for the block mapping update
+> > > > +* Fixing the freelist
+> > > > +* A reverse mapping update for the freelist fix
+> > > > +
+> > > > +* A shape change to the block mapping btree
+> > > > +* A reverse mapping update for the btree update
+> > > > +* Fixing the freelist (again)
+> > > > +* A reverse mapping update for the freelist fix
+> > > > +
+> > > > +* An update to the reference counting information
+> > > > +* A reverse mapping update for the refcount update
+> > > > +* Fixing the freelist (a third time)
+> > > > +* A reverse mapping update for the freelist fix
+> > > > +
+> > > > +* Freeing any space that was unmapped and not owned by any other file
+> > > > +* Fixing the freelist (a fourth time)
+> > > > +* A reverse mapping update for the freelist fix
+> > > > +
+> > > > +* Freeing the space used by the block mapping btree
+> > > > +* Fixing the freelist (a fifth time)
+> > > > +* A reverse mapping update for the freelist fix
+> > > > +
+> > > > +Free list fixups are not usually needed more than once per AG per transaction
+> > > > +chain, but it is theoretically possible if space is very tight.
+> > > > +For copy-on-write updates this is even worse, because this must be done once to
+> > > > +remove the space from a staging area and again to map it into the file!
+> > > > +
+> > > > +To deal with this explosion in a calm manner, XFS expands its use of deferred
+> > > > +work items to cover most reverse mapping updates and all refcount updates.
+> > > > +This reduces the worst case size of transaction reservations by breaking the
+> > > > +work into a long chain of small updates, which increases the degree of eventual
+> > > > +consistency in the system.
+> > > > +Again, this generally isn't a problem because XFS orders its deferred work
+> > > > +items carefully to avoid resource reuse conflicts between unsuspecting threads.
+> > > > +
+> > > > +However, online fsck changes the rules -- remember that although physical
+> > > > +updates to per-AG structures are coordinated by locking the buffers for AG
+> > > > +headers, buffer locks are dropped between transactions.
+> > > > +Once scrub acquires resources and takes locks for a data structure, it must do
+> > > > +all the validation work without releasing the lock.
+> > > > +If the main lock for a space btree is an AG header buffer lock, scrub may have
+> > > > +interrupted another thread that is midway through finishing a chain.
+> > > > +For example, if a thread performing a copy-on-write has completed a reverse
+> > > > +mapping update but not the corresponding refcount update, the two AG btrees
+> > > > +will appear inconsistent to scrub and an observation of corruption will be
+> > > > +recorded.  This observation will not be correct.
+> > > > +If a repair is attempted in this state, the results will be catastrophic!
+> > > > +
+> > > > +Several solutions to this problem were evaluated upon discovery of this flaw:
+> > > > +
+> > > > +1. Add a higher level lock to allocation groups and require writer threads to
+> > > > +   acquire the higher level lock in AG order before making any changes.
+> > > > +   This would be very difficult to implement in practice because it is
+> > > > +   difficult to determine which locks need to be obtained, and in what order,
+> > > > +   without simulating the entire operation.
+> > > > +   Performing a dry run of a file operation to discover necessary locks would
+> > > > +   make the filesystem very slow.
+> > > > +
+> > > > +2. Make the deferred work coordinator code aware of consecutive intent items
+> > > > +   targeting the same AG and have it hold the AG header buffers locked across
+> > > > +   the transaction roll between updates.
+> > > > +   This would introduce a lot of complexity into the coordinator since it is
+> > > > +   only loosely coupled with the actual deferred work items.
+> > > > +   It would also fail to solve the problem because deferred work items can
+> > > > +   generate new deferred subtasks, but all subtasks must be complete before
+> > > > +   work can start on a new sibling task.
+> > > > +
+> > > > +3. Teach online fsck to walk all transactions waiting for whichever lock(s)
+> > > > +   protect the data structure being scrubbed to look for pending operations.
+> > > > +   The checking and repair operations must factor these pending operations into
+> > > > +   the evaluations being performed.
+> > > > +   This solution is a nonstarter because it is *extremely* invasive to the main
+> > > > +   filesystem.
+> > > > +
+> > > > +4. Recognize that only online fsck has this requirement of total consistency
+> > > > +   of AG metadata, and that online fsck should be relatively rare as compared
+> > > > +   to filesystem change operations.
+> > > > +   For each AG, maintain a count of intent items targetting that AG.
+> > > > +   When online fsck wants to examine an AG, it should lock the AG header
+> > > > +   buffers to quiesce all transaction chains that want to modify that AG, and
+> > > > +   only proceed with the scrub if the count is zero.
+> > > > +   In other words, scrub only proceeds if it can lock the AG header buffers and
+> > > > +   there can't possibly be any intents in progress.
+> > > > +   This may lead to fairness and starvation issues, but regular filesystem
+> > > > +   updates take precedence over online fsck activity.
+> > > > +
+> > >
+> > > Is there any guarantee that some silly real life regular filesystem workload
+> > > won't starve online fsck forever?
+> > > IOW, is forward progress of online fsck guaranteed?
+> >
+> > Nope, forward progress isn't guaranteed.
+> 
+> That sounds like a problem.
 
-HEAD commit:    7dd4b804e080 Merge tag 'nfsd-6.2-3' of git://git.kernel.or..
-git tree:       upstream
-console+strace: https://syzkaller.appspot.com/x/log.txt?x=1488d42c480000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=2b6ecad960fc703e
-dashboard link: https://syzkaller.appspot.com/bug?extid=0bc698a422b5e4ac988c
-compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=10c58bd2480000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=11cc664a480000
+So far it hasn't been.  I prefer to sacrifice performance of the
+background fsck service for the sake of foreground tasks.  The fsstress
+and fsx fstests haven't shown any particularly serious issues.  I've
+also kicked off xfs_scrub on the same VM hosts that are running the fuzz
+test suite (~52 VMs per host) and scrub can still finish the filesystem
+in a couple of hours.
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/e8f3d4c62796/disk-7dd4b804.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/eb3961bfb8a3/vmlinux-7dd4b804.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/1b3589ad06f2/bzImage-7dd4b804.xz
-mounted in repro: https://storage.googleapis.com/syzbot-assets/b6c0aa20f078/mount_0.gz
+Things get markedly worse on spinning rust with a lot of parallel
+unwritten extent conversions and allocations going on (aka the disk
+backup systems).  Normally a backup from flash to rust takes about an
+hour; with scrub and backup contending for the head actuator, it'll go
+up to about 2-3 hours, but both tasks can make (verrrry slow) forward
+progress.
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+0bc698a422b5e4ac988c@syzkaller.appspotmail.com
+That said -- the backup program spends a lot of iowait time waiting for
+file data blocks to read in or get written back, so the contention is on
+the storage hardware, not the filesystem locks.
 
-==================================================================
-BUG: KASAN: stack-out-of-bounds in instrument_atomic_read include/linux/instrumented.h:72 [inline]
-BUG: KASAN: stack-out-of-bounds in atomic_read include/linux/atomic/atomic-instrumented.h:27 [inline]
-BUG: KASAN: stack-out-of-bounds in xfs_buf_lock+0xd0/0x750 fs/xfs/xfs_buf.c:1118
-Read of size 4 at addr ffffc9000654fbec by task syz-executor824/5676
+> > The kernel checks for fatal
+> > signals every time it backs off a scrub so at least we don't end up with
+> > unkillable processes.  At one point I added a timeout field to the ioctl
+> > interface so that the kernel could time out an operation if it took too
+> > long to acquire the necessary resources.  So far, the "race fsstress and
+> > xfs_scrub" tests have not shown scrub failing to make any forward
+> > progress.
+> >
+> > That said, I have /not/ yet had a chance to try it out any of these
+> > massive 1000-core systems with an according workload.
+> >
+> 
+> Don't know if fsstress is the best way to check the worst case scenario.
+> 
+> Can you think of a workload, say several threads creating and deleting
+> temp files, with deferred parent pointer items preventing the queue from
+> ever draining?
 
-CPU: 0 PID: 5676 Comm: syz-executor824 Not tainted 6.2.0-rc3-syzkaller-00021-g7dd4b804e080 #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/26/2022
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:88 [inline]
- dump_stack_lvl+0xd1/0x138 lib/dump_stack.c:106
- print_address_description mm/kasan/report.c:306 [inline]
- print_report+0x15e/0x45d mm/kasan/report.c:417
- kasan_report+0xbf/0x1f0 mm/kasan/report.c:517
- check_region_inline mm/kasan/generic.c:183 [inline]
- kasan_check_range+0x141/0x190 mm/kasan/generic.c:189
- instrument_atomic_read include/linux/instrumented.h:72 [inline]
- atomic_read include/linux/atomic/atomic-instrumented.h:27 [inline]
- xfs_buf_lock+0xd0/0x750 fs/xfs/xfs_buf.c:1118
- xfs_buf_delwri_submit_buffers+0x131/0xae0 fs/xfs/xfs_buf.c:2165
- xfs_buf_delwri_submit+0x8a/0x260 fs/xfs/xfs_buf.c:2243
- xfs_qm_shrink_scan fs/xfs/xfs_qm.c:522 [inline]
- xfs_qm_shrink_scan+0x1a7/0x370 fs/xfs/xfs_qm.c:503
- do_shrink_slab+0x464/0xce0 mm/vmscan.c:843
- shrink_slab+0x175/0x660 mm/vmscan.c:1003
- drop_slab_node mm/vmscan.c:1031 [inline]
- drop_slab+0x13a/0x2a0 mm/vmscan.c:1049
- drop_caches_sysctl_handler+0xfa/0x110 fs/drop_caches.c:66
- proc_sys_call_handler+0x49c/0x6d0 fs/proc/proc_sysctl.c:604
- call_write_iter include/linux/fs.h:2189 [inline]
- do_iter_readv_writev+0x20b/0x3b0 fs/read_write.c:735
- do_iter_write+0x182/0x700 fs/read_write.c:861
- vfs_iter_write+0x74/0xa0 fs/read_write.c:902
- iter_file_splice_write+0x745/0xc90 fs/splice.c:686
- do_splice_from fs/splice.c:764 [inline]
- direct_splice_actor+0x114/0x180 fs/splice.c:931
- splice_direct_to_actor+0x335/0x8a0 fs/splice.c:886
- do_splice_direct+0x1ab/0x280 fs/splice.c:974
- do_sendfile+0xb19/0x1270 fs/read_write.c:1255
- __do_sys_sendfile64 fs/read_write.c:1317 [inline]
- __se_sys_sendfile64 fs/read_write.c:1309 [inline]
- __x64_sys_sendfile64+0x14d/0x210 fs/read_write.c:1309
- do_syscall_x64 arch/x86/entry/common.c:50 [inline]
- do_syscall_64+0x39/0xb0 arch/x86/entry/common.c:80
- entry_SYSCALL_64_after_hwframe+0x63/0xcd
-RIP: 0033:0x7fd74df22779
-Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 01 18 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 c0 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007ffe1c61a0e8 EFLAGS: 00000246 ORIG_RAX: 0000000000000028
-RAX: ffffffffffffffda RBX: 00000000000114e9 RCX: 00007fd74df22779
-RDX: 0000000020002080 RSI: 0000000000000004 RDI: 0000000000000005
-RBP: 0000000000000000 R08: 00007ffe1c61a110 R09: 00007ffe1c61a110
-R10: 0000000000000870 R11: 0000000000000246 R12: 00007ffe1c61a10c
-R13: 00007ffe1c61a140 R14: 00007ffe1c61a120 R15: 000000000000000b
- </TASK>
+The worst workload would be one that is entirely metadata based -- a
+giant directory tree full of empty files with all information being
+stored as extended attributes.
 
-The buggy address belongs to the virtual mapping at
- [ffffc90006548000, ffffc90006551000) created by:
- kernel_clone+0xeb/0x990 kernel/fork.c:2681
+> Considering that a "full journal" scenario is always going to be a possible
+> worst case incident, how bad would it be to block new transactions
+> instead of the possibility of starving scrub consistency checks forever?
 
-The buggy address belongs to the physical page:
-page:ffffea00008d3f00 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x234fc
-flags: 0xfff00000000000(node=0|zone=1|lastcpupid=0x7ff)
-raw: 00fff00000000000 0000000000000000 dead000000000122 0000000000000000
-raw: 0000000000000000 0000000000000000 00000001ffffffff 0000000000000000
-page dumped because: kasan: bad access detected
-page_owner tracks the page as allocated
-page last allocated via order 0, migratetype Unmovable, gfp_mask 0x2dc2(GFP_KERNEL|__GFP_HIGHMEM|__GFP_NOWARN|__GFP_ZERO), pid 2, tgid 2 (kthreadd), ts 71883428260, free_ts 70232816920
- prep_new_page mm/page_alloc.c:2531 [inline]
- get_page_from_freelist+0x119c/0x2ce0 mm/page_alloc.c:4283
- __alloc_pages+0x1cb/0x5b0 mm/page_alloc.c:5549
- alloc_pages+0x1aa/0x270 mm/mempolicy.c:2286
- vm_area_alloc_pages mm/vmalloc.c:2989 [inline]
- __vmalloc_area_node mm/vmalloc.c:3057 [inline]
- __vmalloc_node_range+0x978/0x13c0 mm/vmalloc.c:3227
- alloc_thread_stack_node kernel/fork.c:311 [inline]
- dup_task_struct kernel/fork.c:987 [inline]
- copy_process+0x12d2/0x7520 kernel/fork.c:2097
- kernel_clone+0xeb/0x990 kernel/fork.c:2681
- kernel_thread+0xb9/0xf0 kernel/fork.c:2741
- create_kthread kernel/kthread.c:399 [inline]
- kthreadd+0x4f2/0x750 kernel/kthread.c:746
- ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:308
-page last free stack trace:
- reset_page_owner include/linux/page_owner.h:24 [inline]
- free_pages_prepare mm/page_alloc.c:1446 [inline]
- free_pcp_prepare+0x65c/0xc00 mm/page_alloc.c:1496
- free_unref_page_prepare mm/page_alloc.c:3369 [inline]
- free_unref_page_list+0x176/0xcd0 mm/page_alloc.c:3510
- release_pages+0xcb1/0x1330 mm/swap.c:1076
- tlb_batch_pages_flush+0xa8/0x1a0 mm/mmu_gather.c:97
- tlb_flush_mmu_free mm/mmu_gather.c:292 [inline]
- tlb_flush_mmu mm/mmu_gather.c:299 [inline]
- tlb_finish_mmu+0x14b/0x7e0 mm/mmu_gather.c:391
- exit_mmap+0x202/0x7b0 mm/mmap.c:3096
- __mmput+0x128/0x4c0 kernel/fork.c:1207
- mmput+0x60/0x70 kernel/fork.c:1229
- exit_mm kernel/exit.c:563 [inline]
- do_exit+0x9ac/0x2950 kernel/exit.c:854
- do_group_exit+0xd4/0x2a0 kernel/exit.c:1012
- __do_sys_exit_group kernel/exit.c:1023 [inline]
- __se_sys_exit_group kernel/exit.c:1021 [inline]
- __x64_sys_exit_group+0x3e/0x50 kernel/exit.c:1021
- do_syscall_x64 arch/x86/entry/common.c:50 [inline]
- do_syscall_64+0x39/0xb0 arch/x86/entry/common.c:80
- entry_SYSCALL_64_after_hwframe+0x63/0xcd
+First of all, scrub has already allocated a transaction by the time it
+gets to the intent drain step.  There's no good way to block new
+transactions once we've reached this stage, nor should there be.
+Blocking transactions stalls xfs garbage collection and memory reclaim.
 
-Memory state around the buggy address:
- ffffc9000654fa80: 00 00 00 00 00 f1 f1 f1 f1 00 00 f3 f3 00 00 00
- ffffc9000654fb00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->ffffc9000654fb80: 00 00 00 00 00 00 00 00 00 00 00 f1 f1 f1 f1 04
-                                                          ^
- ffffc9000654fc00: f2 04 f2 00 f2 f2 f2 00 f3 f3 f3 00 00 00 00 00
- ffffc9000654fc80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-==================================================================
+> Wouldn't the consistency checks be much faster than freeing journal
+> space would be in a "full journal" situation?
 
+I haven't investigated this in depth, but yes, scrub should be faster
+than forcing the log and checkpointing the log to move the log tail
+forward to empty out the journal.
+
+> I don't know if there is a "mission statement" for online fsck, but
+> I think it would say "minimal user interference" not "no user interference".
+
+Yes.  The section about eventual consistency states that "...regular
+filesystem updates take precedence over online fsck activity".
+
+> It sounds like the interference we are trying to avoid is light years away
+> from the downtime of offline fsck, so online fsck would still be a huge win.
+> online fsck that never ends OTOH... maybe less so.
+
+Well you /can/ just kill the xfs_scrub processes if they are taking too
+much time.  One of the nastier papercuts of the background scrub is that
+the fs cannot be unmounted while it's running, and systemd doesn't have
+a good mechanism for "kill this service before stopping this mount".  Or
+maybe it does and I haven't yet found it?
+
+(The cronjob variant definitely suffers from that...)
+
+> > > Good luck with landing online fsck before the 2024 NYE deluge ;)
+> >
+> > Thank *you* for reading this chapter of the design document!! :)
+> >
+> 
+> Oh I read them all at the summer submission, but it took me so long
+> that I forgot to follow up..
+
+Yeah, that seems to be a common problem with large new features. :/
+
+> My other question was regarding memory usage control.
+> I have horrid memories from e2fsck unpredictable memory usage
+> and unpredictable runtime due to swapping.
+> 
+> xfs_repair -m was a huge improvement compared to e2fsck.
+> I don't remember reading about memory usage limits for online repair,
+> so I was concerned about unpredictable memory usage and swapping.
+> Can you say something to ease those concerns?
+
+Both e2fsck and xfs_repair have to be capable of repairing the entire
+filesystem all at once, which means that they allocate many many of
+incore objects from which all of the ondisk space metadata (ag btrees in
+the case of xfs, bitmaps for e2fsck) is regenerated.  Since the fs is
+offline, it's considered advantageous to perform *one* scan and rebuild
+everything all at once, even if the memory cost is high.
+
+xfs_scrub scans and repairs each metadata object individually, which
+means that it only needs to allocate as much (kernel/xfile) memory as
+needed to scan a single btree/inode record/quota record/bitmap.  For
+scans the memory requirements are usually minimal since it creates a
+bunch of btree cursors and cross-references records.
+
+For repairs, the memory requirements are on the order of the size of the
+new data structure that will be written out.  We scan the fs to build
+the new recordset in memory, compute the size of the new btree, allocate
+some blocks, and format the records into the blocks before committing
+the btree root.
+
+For summary data (e.g. link counts, dquots) we build a shadow copy in
+memory, so the memory requirements are on the order of the number of
+files in the fs and the number of uid/gid/projid in the filesystem,
+respectively.
+
+Most of the intermediate structures are stuffed into a tmpfs file, which
+means they can be paged out to disk.  If there's really no memory
+available, scrub can abort all the way out to userspace provided it
+hasn't committed anything to disk yet.
+
+IOWs, online fsck generally only requires enough memory to build a new
+copy of whichever objects it happens to be scanning at any given moment.
+The background service runs single-threaded to avoid consuming a lot of
+CPU or memory.
+
+--D
+
+> Thanks,
+> Amir.
