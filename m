@@ -2,120 +2,181 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0656DC678D6
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Jan 2023 11:31:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3B65C46467
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Jan 2023 14:42:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232319AbjAKLaj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Jan 2023 06:30:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57934 "EHLO
+        id S230407AbjAKOma (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Jan 2023 09:42:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229913AbjAKLad (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2023 06:30:33 -0500
-Received: from pandora.armlinux.org.uk (pandora.armlinux.org.uk [IPv6:2001:4d48:ad52:32c8:5054:ff:fe00:142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE8F29585;
-        Wed, 11 Jan 2023 03:30:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=armlinux.org.uk; s=pandora-2019; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=/B/lUwSLDdy4TKNacqRrqVdQIO2bhHf2Dz5b7u6s8PE=; b=bcql4AlYVAJfMUZcdgk78k/Yny
-        q4YxTySo08vOzZJbXrcUsvwxHEdzxgb+Ii1pvB23J18DFaDaSxWwBDTwyZecKpMjpzQSj9cSdzwmB
-        E7FeOscjYnn+NHlMhzBHTcQyUCHILWDwxB3r/wjmCpMi1dOhxzWkdzfdVZaVaLtHEn2WfhcBSiMoJ
-        xaR4xsr0iH8jHbII4QbOQBd/z6Ffk95rwXeSJqAugvrLrUzd2S6So2J6l2wpGNMPAo+GmrZbGZYy2
-        3br39DqBSOcN8JgFwxhPiVl/2Ubg9nDcfM/BSKfMobkmQa8ifVIF5567jY8IZeuTcc+4AkuGErYD7
-        D1ThFcXw==;
-Received: from shell.armlinux.org.uk ([fd8f:7570:feb6:1:5054:ff:fe00:4ec]:36052)
-        by pandora.armlinux.org.uk with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <linux@armlinux.org.uk>)
-        id 1pFZIf-00054b-0L; Wed, 11 Jan 2023 11:29:44 +0000
-Received: from linux by shell.armlinux.org.uk with local (Exim 4.94.2)
-        (envelope-from <linux@shell.armlinux.org.uk>)
-        id 1pFZIV-0001D1-VB; Wed, 11 Jan 2023 11:29:35 +0000
-Date:   Wed, 11 Jan 2023 11:29:35 +0000
-From:   "Russell King (Oracle)" <linux@armlinux.org.uk>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     Eric Van Hensbergen <ericvh@gmail.com>,
-        Latchesar Ionkov <lucho@ionkov.net>,
-        Dominique Martinet <asmadeus@codewreck.org>,
-        Christian Schoenebeck <linux_oss@crudebyte.com>,
-        David Howells <dhowells@redhat.com>,
-        Marc Dionne <marc.dionne@auristor.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Xiubo Li <xiubli@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Steve French <sfrench@samba.org>, Paulo Alcantara <pc@cjr.nz>,
-        Ronnie Sahlberg <lsahlber@redhat.com>,
-        Shyam Prasad N <sprasad@microsoft.com>,
-        Tom Talpey <tom@talpey.com>,
-        Christine Caulfield <ccaulfie@redhat.com>,
-        David Teigland <teigland@redhat.com>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Bob Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Namjae Jeon <linkinjeon@kernel.org>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Mark Fasheh <mark@fasheh.com>,
-        Joel Becker <jlbec@evilplan.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Martin Brandenburg <martin@omnibond.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christian Brauner <brauner@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Steve French <stfrench@microsoft.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        v9fs-developer@lists.sourceforge.net,
-        linux-afs@lists.infradead.org, linux-fsdevel@vger.kernel.org,
-        ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org,
-        samba-technical@lists.samba.org, cluster-devel@redhat.com,
-        linux-nfs@vger.kernel.org, ocfs2-devel@oss.oracle.com,
-        devel@lists.orangefs.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] filelock: move file locking definitions to separate
- header file
-Message-ID: <Y76dnx07NGAS2jqG@shell.armlinux.org.uk>
-References: <20230105211937.1572384-1-jlayton@kernel.org>
+        with ESMTP id S238942AbjAKOlw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2023 09:41:52 -0500
+Received: from out30-131.freemail.mail.aliyun.com (out30-131.freemail.mail.aliyun.com [115.124.30.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0A2E10D6
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2023 06:41:50 -0800 (PST)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R171e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045168;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=5;SR=0;TI=SMTPD_---0VZNZS.M_1673448104;
+Received: from 30.25.206.70(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0VZNZS.M_1673448104)
+          by smtp.aliyun-inc.com;
+          Wed, 11 Jan 2023 22:41:45 +0800
+Message-ID: <5287e7e6-adea-e865-5818-9cc34400cd0b@linux.alibaba.com>
+Date:   Wed, 11 Jan 2023 22:41:43 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230105211937.1572384-1-jlayton@kernel.org>
-Sender: Russell King (Oracle) <linux@armlinux.org.uk>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.6.1
+Subject: Re: [PATCH] xfs: don't reuse busy extents on extent trim
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Brian Foster <bfoster@redhat.com>,
+        Amir Goldstein <amir73il@gmail.com>
+References: <20210222153442.897089-1-bfoster@redhat.com>
+ <20210222182745.GA7272@magnolia> <20210223123106.GB946926@bfoster>
+ <CAOQ4uxiWajRgGG2V=dYhBmVJYiRmdD+7YgkH2DMWGz6BAOXjvg@mail.gmail.com>
+From:   Gao Xiang <hsiangkao@linux.alibaba.com>
+In-Reply-To: <CAOQ4uxiWajRgGG2V=dYhBmVJYiRmdD+7YgkH2DMWGz6BAOXjvg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 05, 2023 at 04:19:29PM -0500, Jeff Layton wrote:
-> The file locking definitions have lived in fs.h since the dawn of time,
-> but they are only used by a small subset of the source files that
-> include it.
+Hi,
+
+On 2022/5/26 19:34, Amir Goldstein wrote:
+> On Tue, Feb 23, 2021 at 2:35 PM Brian Foster <bfoster@redhat.com> wrote:
+>>
+>> On Mon, Feb 22, 2021 at 10:27:45AM -0800, Darrick J. Wong wrote:
+>>> On Mon, Feb 22, 2021 at 10:34:42AM -0500, Brian Foster wrote:
+>>>> Freed extents are marked busy from the point the freeing transaction
+>>>> commits until the associated CIL context is checkpointed to the log.
+>>>> This prevents reuse and overwrite of recently freed blocks before
+>>>> the changes are committed to disk, which can lead to corruption
+>>>> after a crash. The exception to this rule is that metadata
+>>>> allocation is allowed to reuse busy extents because metadata changes
+>>>> are also logged.
+>>>>
+>>>> As of commit 97d3ac75e5e0 ("xfs: exact busy extent tracking"), XFS
+>>>> has allowed modification or complete invalidation of outstanding
+>>>> busy extents for metadata allocations. This implementation assumes
+>>>> that use of the associated extent is imminent, which is not always
+>>>> the case. For example, the trimmed extent might not satisfy the
+>>>> minimum length of the allocation request, or the allocation
+>>>> algorithm might be involved in a search for the optimal result based
+>>>> on locality.
+>>>>
+>>>> generic/019 reproduces a corruption caused by this scenario. First,
+>>>> a metadata block (usually a bmbt or symlink block) is freed from an
+>>>> inode. A subsequent bmbt split on an unrelated inode attempts a near
+>>>> mode allocation request that invalidates the busy block during the
+>>>> search, but does not ultimately allocate it. Due to the busy state
+>>>> invalidation, the block is no longer considered busy to subsequent
+>>>> allocation. A direct I/O write request immediately allocates the
+>>>> block and writes to it.
+>>>
+
+...
+
+>>
 > 
-> Move the file locking definitions to a new header file, and add the
-> appropriate #include directives to the source files that need them. By
-> doing this we trim down fs.h a bit and limit the amount of rebuilding
-> that has to be done when we make changes to the file locking APIs.
+> Hi Brian,
 > 
-> Reviewed-by: Xiubo Li <xiubli@redhat.com>
-> Reviewed-by: Christian Brauner (Microsoft) <brauner@kernel.org>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: David Howells <dhowells@redhat.com>
-> Acked-by: Chuck Lever <chuck.lever@oracle.com>
-> Acked-by: Joseph Qi <joseph.qi@linux.alibaba.com>
-> Acked-by: Steve French <stfrench@microsoft.com>
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> ---
->  arch/arm/kernel/sys_oabi-compat.c |   1 +
+> This patch was one of my selected fixes to backport for v5.10.y.
+> It has a very scary looking commit message and the change seems
+> to be independent of any infrastructure changes(?).
+> 
+> The problem is that applying this patch to v5.10.y reliably reproduces
+> this buffer corruption assertion [*] with test xfs/076.
+> 
+> This happens on the kdevops system that is using loop devices over
+> sparse files inside qemu images. It does not reproduce on my small
+> VM at home.
+> 
+> Normally, I would just drop this patch from the stable candidates queue
+> and move on, but I thought you might be interested to investigate this
+> reliable reproducer, because maybe this system exercises an error
+> that is otherwise rare to hit.
+> 
+> It seemed weird to me that NOT reusing the extent would result in
+> data corruption, but it could indicate that reusing the extent was masking
+> the assertion and hiding another bug(?).
+> 
+> Can you think of another reason to explain the regression this fix
+> introduces to 5.10.y?
+> 
+> Do you care to investigate this failure or shall I just move on?
+> 
+> Thanks,
+> Amir.
+> 
+> [*]
+> : XFS (loop5): Internal error xfs_trans_cancel at line 954 of file
+> fs/xfs/xfs_trans.c.  Caller xfs_create+0x22f/0x590 [xfs]
+> : CPU: 3 PID: 25481 Comm: touch Kdump: loaded Tainted: G            E
+>     5.10.109-xfs-2 #8
+> : Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1
+> 04/01/2014
+> : Call Trace:
+> :  dump_stack+0x6d/0x88
+> :  xfs_trans_cancel+0x17b/0x1a0 [xfs]
+> :  xfs_create+0x22f/0x590 [xfs]
+> :  xfs_generic_create+0x245/0x310 [xfs]
+> :  ? d_splice_alias+0x13a/0x3c0
+> :  path_openat+0xe3f/0x1080
+> :  do_filp_open+0x93/0x100
+> :  ? handle_mm_fault+0x148e/0x1690
+> :  ? __check_object_size+0x162/0x180
+> :  do_sys_openat2+0x228/0x2d0
+> :  do_sys_open+0x4b/0x80
+> :  do_syscall_64+0x33/0x80
+> :  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+> : RIP: 0033:0x7f36b02eff1e
+> : Code: 25 00 00 41 00 3d 00 00 41 00 74 48 48 8d 05 e9 57 0d 00 8b 00
+> 85 c0 75 69 89 f2 b8 01 01 00 00 48 89 fe bf 9c ff ff ff 0f 05 <48> 3d
+> 00 f0 ff ff 0
+> : RSP: 002b:00007ffe7ef6ca10 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
+> : RAX: ffffffffffffffda RBX: 00000000ffffffff RCX: 00007f36b02eff1e
+> : RDX: 0000000000000941 RSI: 00007ffe7ef6ebfa RDI: 00000000ffffff9c
+> : RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000001
+> : R10: 00000000000001b6 R11: 0000000000000246 R12: 0000000000000002
+> : R13: 00007ffe7ef6ebfa R14: 0000000000000001 R15: 0000000000000001
+> : XFS (loop5): xfs_do_force_shutdown(0x8) called from line 955 of file
+> fs/xfs/xfs_trans.c. Return address = ffffffffc08f5764
+> : XFS (loop5): Corruption of in-memory data detected.  Shutting down filesystem
+> : XFS (loop5): Please unmount the filesystem and rectify the problem(s)
+> 
 
-For arm:
+(...just for the record) We also encountered this issue but without commit
+  xfs: don't reuse busy extents on extent trim
+applied in our 5.10 codebase...
 
-Reviewed-by: Russell King (Oracle) <rmk+kernel@armlinux.org.uk>
+Need to find some time to look into that...
 
-Thanks.
+[  413.283300] XFS (loop1): Internal error xfs_trans_cancel at line 950 of file fs/xfs/xfs_trans.c.  Caller xfs_create+0x219/0x590 [xfs]
+[  413.284295] CPU: 0 PID: 27484 Comm: touch Tainted: G            E     5.10.134-13.an8.x86_64 #1
+[  413.284296] Hardware name: Alibaba Cloud Alibaba Cloud ECS, BIOS 449e491 04/01/2014
+[  413.284297] Call Trace:
+[  413.284314]  dump_stack+0x57/0x6e
+[  413.284373]  xfs_trans_cancel+0xa3/0x110 [xfs]
+[  413.284412]  xfs_create+0x219/0x590 [xfs]
+[  413.284458]  xfs_generic_create+0x21f/0x2d0 [xfs]
+[  413.284462]  path_openat+0xdee/0x1020
+[  413.284464]  do_filp_open+0x80/0xd0
+[  413.284467]  ? __check_object_size+0x16a/0x180
+[  413.284469]  do_sys_openat2+0x207/0x2c0
+[  413.284471]  do_sys_open+0x3b/0x60
+[  413.284475]  do_syscall_64+0x33/0x40
+[  413.284478]  entry_SYSCALL_64_after_hwframe+0x61/0xc6
+[  413.284481] RIP: 0033:0x7fe623920252
+[  413.284482] Code: 25 00 00 41 00 3d 00 00 41 00 74 4c 48 8d 05 55 43 2a 00 8b 00 85 c0 75 6d 89 f2 b8 01 01 00 00 48 89 fe bf 9c ff ff ff 0f 05 <48> 3d 00 f0 ff ff 0f 87 a2 00 00 00 48 8b 4c 24 28 64 48 33 0c 25
+[  413.284483] RSP: 002b:00007ffd7a38ca70 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
+[  413.284485] RAX: ffffffffffffffda RBX: 00000000ffffffff RCX: 00007fe623920252
+[  413.284486] RDX: 0000000000000941 RSI: 00007ffd7a38d79d RDI: 00000000ffffff9c
+[  413.284487] RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000001
+[  413.284488] R10: 00000000000001b6 R11: 0000000000000246 R12: 0000000000000001
+[  413.284488] R13: 0000000000000001 R14: 00007ffd7a38d79d R15: 00007fe623bbf374
+[  413.289856] XFS (loop1): xfs_do_force_shutdown(0x8) called from line 951 of file fs/xfs/xfs_trans.c. Return address = 000000003fe0b8ba
+[  413.289858] XFS (loop1): Corruption of in-memory data detected.  Shutting down filesystem
+[  413.290573] XFS (loop1): Please unmount the filesystem and rectify the problem(s)
 
--- 
-RMK's Patch system: https://www.armlinux.org.uk/developer/patches/
-FTTP is here! 40Mbps down 10Mbps up. Decent connectivity at last!
+Thanks,
+Gao Xiang
