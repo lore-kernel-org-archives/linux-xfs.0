@@ -2,162 +2,146 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB25EC46467
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Jan 2023 03:14:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B84C7C5479D
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Jan 2023 04:54:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231332AbjAKDOe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Jan 2023 22:14:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57206 "EHLO
+        id S234942AbjAKEy4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Jan 2023 23:54:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44980 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231681AbjAKDOb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2023 22:14:31 -0500
-Received: from mail-oi1-x232.google.com (mail-oi1-x232.google.com [IPv6:2607:f8b0:4864:20::232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAA67DFDB
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Jan 2023 19:14:22 -0800 (PST)
-Received: by mail-oi1-x232.google.com with SMTP id h185so11787747oif.5
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Jan 2023 19:14:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=PIlhT0mLcvr3i6I9zH4G9h8dj3oxRUPYoVw78qlakek=;
-        b=EuGmXo1iZlX+ZkB4DqAEYUqUeDdL8JALTPmGQy8CEo8YgoNX2mNqXomfZ9/2O2rnxD
-         /r+CmJ7qanAF0IUyzbRdLLm51VBCWNGyWWT4BAqAROi58oirlE8amr+FDgLyIcX6xOBi
-         rZ8IV4yVRgBqtiVVxhXqGf721eHs75r30IbL29FOCF4nKAmYiVYYlNgmR6PsqD64jM26
-         tG+Eey10bK3AS38Q8J4KqyeNq9uj9qsG6MX32fYUjITsXWN9jePjnOdIefeUTVbjFIYo
-         w1UYvDbNfVpWMEEEFLfn42mdN5/QFP3Cxj6RHxff+XLYuqy681anH8EEvNZ4Q07pGXEo
-         URng==
+        with ESMTP id S231332AbjAKEyu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2023 23:54:50 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 494B82AFA
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Jan 2023 20:54:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1673412849;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=AwDGIIG2kEW7th9yR8DoIeZiikP/oVS4/IYm7KTM+N0=;
+        b=brBsQQCOn3YNpLDRSqJ0fzxkPgWTd4vbAn6G6HjRvF4ftTEjYNlIg2wBSn3tcP5h2zfNIk
+        jWqFpNqwVQdt3rHPjEQTY6pwwFqd6aMMsecCM9qO+H49BcBd/QzXarky/Q/461Wvi4a92Y
+        V+yqgBm2DJ/BldL60Ie7/m7IEX5QWqQ=
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
+ [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-446-kSPlpkIaMDiUQgd9xHMlFw-1; Tue, 10 Jan 2023 23:54:08 -0500
+X-MC-Unique: kSPlpkIaMDiUQgd9xHMlFw-1
+Received: by mail-pj1-f69.google.com with SMTP id r17-20020a17090aa09100b0021903e75f14so5761402pjp.9
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Jan 2023 20:54:08 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=PIlhT0mLcvr3i6I9zH4G9h8dj3oxRUPYoVw78qlakek=;
-        b=hoB69t5FPecsf7ba7xuc6ZTt2d9lw80/RKXx23Ne8Te+CsIB2qPpXWpVTuCIDqFm0T
-         Q/ozZn4pZ8DZK8W9jnz4EJup7W3bPAua2Ym00YQZ+1GY6+TJhKJdMPj157AopvI7zLfC
-         7iDiO3+OqeDpMeosFkBesYCRee+oj3vGADHGvuu9Lrhx4EWFGuyWFTp+TNkuKbEqcxaS
-         ThcXK08XGqO9ns7cJLyAdVOlpKBCSQ/8W/VFTa6qGj44fSjJj7SC5hdsr0kJLrIxHudP
-         f0R3QgcQkGFJgYwwS22UKrfjN8f34A7lMQd2DbEUiWbifO4OS2sWtA5hcTixHPto38fm
-         7F+g==
-X-Gm-Message-State: AFqh2ko+pFZm5ROXAwVDXfSj1am9JXLysd9ehgtH0LXHQEm2RWfqAaGt
-        6IXLHA+29kGqBP0DxqUnzSbxFGs+ZTy3wSqgFD1r9kk8tNIn9A==
-X-Google-Smtp-Source: AMrXdXudu35DUQI89C0hLFaDECWaQsP2s6dRIAs+bKW53+L1WvLmXeRDiQE9/DH45H0uMso3NIlU45BBuvS4dKNVL7w=
-X-Received: by 2002:a05:6808:c9:b0:35a:2a68:8d6a with SMTP id
- t9-20020a05680800c900b0035a2a688d6amr4487228oic.261.1673406861999; Tue, 10
- Jan 2023 19:14:21 -0800 (PST)
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=AwDGIIG2kEW7th9yR8DoIeZiikP/oVS4/IYm7KTM+N0=;
+        b=TqH280NQTZVh5EBdlBPYweyj48aSDDQLnb2KXfzuRBr7OUE7x9vkgqv+UqiBRsxObG
+         toHSTmx4OYzWOwrvNLy4bcw4abTyV9miOdf7nOlPxfvQTn7CkJvR1Yhmk80EgCOLfxO6
+         9hFSTFeez+HNROx/Gx7yq0dwuXwR/BgSDQQ1aTTZSkIzvpFRJWGwLxqk4SFBiURu+OjQ
+         v0+MQAAA4ZmbedIQJGDOvJtJ+tpw8+/BqpvGs8jk/Fo6seQ5MgUENFd6TS2ZpcyTn8uu
+         4gMfOnpGBTDHqI3Zzo3gpnvBqQLiXDfgMGnH0JONHP4M/HA32BMd2B+KzTVumNlRkRQs
+         T7nA==
+X-Gm-Message-State: AFqh2kqwdqWMR5RZ0L80XsmeUZgDXaPYBjupJc+0iiuw8Kapc4n7b2sa
+        +MidQ/AWf+BExmCc3vTkrhtyc9Sz4HrZx0e14J1ewcAY4gE/Nzzi94Lyw09fCl2jyJpyz+wjUAw
+        TBphG7e8Curg2zImWiJGk
+X-Received: by 2002:a17:903:50e:b0:189:bda4:4a39 with SMTP id jn14-20020a170903050e00b00189bda44a39mr68317509plb.49.1673412846854;
+        Tue, 10 Jan 2023 20:54:06 -0800 (PST)
+X-Google-Smtp-Source: AMrXdXs+9rrIRD+6pRvHkwnX14gh2BCpLNg+4mxFg/ySKLAFpFMrHGq/R+Lf/NnqdSw7vAx/2ZYhMg==
+X-Received: by 2002:a17:903:50e:b0:189:bda4:4a39 with SMTP id jn14-20020a170903050e00b00189bda44a39mr68317481plb.49.1673412846568;
+        Tue, 10 Jan 2023 20:54:06 -0800 (PST)
+Received: from [10.72.14.8] ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id d11-20020a170902654b00b001895d87225csm8944870pln.182.2023.01.10.20.53.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 10 Jan 2023 20:54:05 -0800 (PST)
+Message-ID: <330d1f1b-02b2-ceb1-5df5-ef6ce0061eb2@redhat.com>
+Date:   Wed, 11 Jan 2023 12:53:49 +0800
 MIME-Version: 1.0
-References: <CALg51MN+crXt0KcsLOAUF6feGa1q5SJ+bPDy=-SsfQD45nKuMA@mail.gmail.com>
- <878ria7ds8.fsf@debian-BULLSEYE-live-builder-AMD64>
-In-Reply-To: <878ria7ds8.fsf@debian-BULLSEYE-live-builder-AMD64>
-From:   Xiao Guangrong <xiaoguangrong.eric@gmail.com>
-Date:   Wed, 11 Jan 2023 11:14:11 +0800
-Message-ID: <CALg51MM2V1aLQgyYfD+MDY1GweQz-QxPJkU12Z9RaOy5_SMJHA@mail.gmail.com>
-Subject: Re: [PATCH 2/2] xfs: Prevent deadlock when allocating blocks for AGFL
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     chandanrlinux@gmail.com, david@fromorbit.com,
-        linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: [PATCH v2] filelock: move file locking definitions to separate
+ header file
+Content-Language: en-US
+To:     Jeff Layton <jlayton@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        Eric Van Hensbergen <ericvh@gmail.com>,
+        Latchesar Ionkov <lucho@ionkov.net>,
+        Dominique Martinet <asmadeus@codewreck.org>,
+        Christian Schoenebeck <linux_oss@crudebyte.com>,
+        David Howells <dhowells@redhat.com>,
+        Marc Dionne <marc.dionne@auristor.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Steve French <sfrench@samba.org>, Paulo Alcantara <pc@cjr.nz>,
+        Ronnie Sahlberg <lsahlber@redhat.com>,
+        Shyam Prasad N <sprasad@microsoft.com>,
+        Tom Talpey <tom@talpey.com>,
+        Christine Caulfield <ccaulfie@redhat.com>,
+        David Teigland <teigland@redhat.com>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Bob Peterson <rpeterso@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Namjae Jeon <linkinjeon@kernel.org>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Mark Fasheh <mark@fasheh.com>,
+        Joel Becker <jlbec@evilplan.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Mike Marshall <hubcap@omnibond.com>,
+        Martin Brandenburg <martin@omnibond.com>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christian Brauner <brauner@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Steve French <stfrench@microsoft.com>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        v9fs-developer@lists.sourceforge.net,
+        linux-afs@lists.infradead.org, linux-fsdevel@vger.kernel.org,
+        ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org,
+        samba-technical@lists.samba.org, cluster-devel@redhat.com,
+        linux-nfs@vger.kernel.org, ocfs2-devel@oss.oracle.com,
+        devel@lists.orangefs.org, linux-xfs@vger.kernel.org
+References: <20230105211937.1572384-1-jlayton@kernel.org>
+From:   Xiubo Li <xiubli@redhat.com>
+In-Reply-To: <20230105211937.1572384-1-jlayton@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Okay :)
 
-I am going to reproduce it, and will return to this thread if I get something.
+On 06/01/2023 05:19, Jeff Layton wrote:
+> The file locking definitions have lived in fs.h since the dawn of time,
+> but they are only used by a small subset of the source files that
+> include it.
+>
+> Move the file locking definitions to a new header file, and add the
+> appropriate #include directives to the source files that need them. By
+> doing this we trim down fs.h a bit and limit the amount of rebuilding
+> that has to be done when we make changes to the file locking APIs.
+>
+> Reviewed-by: Xiubo Li <xiubli@redhat.com>
+> Reviewed-by: Christian Brauner (Microsoft) <brauner@kernel.org>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: David Howells <dhowells@redhat.com>
+> Acked-by: Chuck Lever <chuck.lever@oracle.com>
+> Acked-by: Joseph Qi <joseph.qi@linux.alibaba.com>
+> Acked-by: Steve French <stfrench@microsoft.com>
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> ---
+>   arch/arm/kernel/sys_oabi-compat.c |   1 +
+>   fs/9p/vfs_file.c                  |   1 +
+>   fs/afs/internal.h                 |   1 +
+>   fs/attr.c                         |   1 +
+>   fs/ceph/locks.c                   |   1 +
 
-Thanks!
+ceph part looks good to me.
 
-On Tue, Jan 10, 2023 at 8:52 PM Chandan Babu R <chandan.babu@oracle.com> wrote:
->
-> On Tue, Jan 10, 2023 at 08:24:41 PM +0800, Xiao Guangrong wrote:
-> > On 6/17/21 12:48, Chandan Babu R wrote:
-> >
-> >>>>
-> >>>> Just because we currently do a blocking flush doesn't mean we always
-> >>>> must do a blocking flush....
-> >>>
-> >>> I will try to work out a solution.
-> >>
-> >> I believe the following should be taken into consideration to design an
-> >> "optimistic flush delay" based solution,
-> >> 1. Time consumed to perform a discard operation on a filesystem's block.
-> >> 2. The size of extents that are being discarded.
-> >> 3. Number of discard operation requests contained in a bio.
-> >>
-> >> AFAICT, The combinations resulting from the above make it impossible to
-> >> calculate a time delay during which sufficient number of busy extents are
-> >> guaranteed to have been freed so as to fill up the AGFL to the required
-> >> levels. In other words, sufficent number of busy extents may not have been
-> >> discarded even after the optimistic delay interval elapses.
-> >>
-> >> The other solution that I had thought about was to introduce a new flag for
-> >> the second argument of xfs_log_force(). The new flag will cause
-> >> xlog_state_do_iclog_callbacks() to wait on completion of all of the CIL ctxs
-> >> associated with the iclog that xfs_log_force() would be waiting on. Hence, a
-> >> call to xfs_log_force(mp, NEW_SYNC_FLAG) will return only after all the busy
-> >> extents associated with the iclog are discarded.
-> >>
-> >> However, this method is also flawed as described below.
-> >>
-> >> ----------------------------------------------------------
-> >>   Task A                        Task B
-> >> ----------------------------------------------------------
-> >>   Submit a filled up iclog
-> >>   for write operation
-> >>   (Assume that the iclog
-> >>   has non-zero number of CIL
-> >>   ctxs associated with it).
-> >>   On completion of iclog write
-> >>   operation, discard requests
-> >>   for busy extents are issued.
-> >>
-> >>   Write log records (including
-> >>   commit record) into another
-> >>   iclog.
-> >>
-> >>                                 A task which is trying
-> >>                                 to fill AGFL will now
-> >>                                 invoke xfs_log_force()
-> >>                                 with the new sync
-> >>                                 flag.
-> >>                                 Submit the 2nd iclog which
-> >>                                 was partially filled by
-> >>                                 Task A.
-> >>                                 If there are no
-> >>                                 discard requests
-> >>                                 associated this iclog,
-> >>                                 xfs_log_force() will
-> >>                                 return. As the discard
-> >>                                 requests associated with
-> >>                                 the first iclog are yet
-> >>                                 to be completed,
-> >>                                 we end up incorrectly
-> >>                                 concluding that
-> >>                                 all busy extents
-> >>                                 have been processed.
-> >> ----------------------------------------------------------
-> >>
-> >> The inconsistency indicated above could also occur when discard requests
-> >> issued against second iclog get processed before discard requests associated
-> >> with the first iclog.
-> >>
-> >> XFS_EXTENT_BUSY_IN_TRANS flag based solution is the only method that I can
-> >> think of that can solve this problem correctly. However I do agree with your
-> >> earlier observation that we should not flush busy extents unless we have
-> >> checked for presence of free extents in the btree records present on the left
-> >> side of the btree cursor.
-> >>
-> >
-> > Hi Chandan,
-> >
-> > Thanks for your great work. Do you have any update on these patches?
-> >
-> > We met the same issue on the 4.19 kernel, I am not sure if the work has already
-> > been merged in the upstream kernel.
->
-> Sorry, The machine on which the problem was created broke and I wasn't able to
-> recreate this bug on my new work setup. Hence, I didn't pursue working on this
-> bug.
->
-> --
-> chandan
+Thanks
+
+- Xiubo
+
+
