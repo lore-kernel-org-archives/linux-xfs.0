@@ -2,395 +2,584 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCB44C46467
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Jan 2023 17:54:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FE93C5479D
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Jan 2023 19:10:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231286AbjAKRyQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Jan 2023 12:54:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46126 "EHLO
+        id S234230AbjAKTKw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Jan 2023 14:10:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57664 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232042AbjAKRyO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2023 12:54:14 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F202A469;
-        Wed, 11 Jan 2023 09:54:12 -0800 (PST)
+        with ESMTP id S233869AbjAKTKr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2023 14:10:47 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C18BB867;
+        Wed, 11 Jan 2023 11:10:45 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0E76E61D98;
-        Wed, 11 Jan 2023 17:54:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62E63C433EF;
-        Wed, 11 Jan 2023 17:54:11 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1B4DA61DCE;
+        Wed, 11 Jan 2023 19:10:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65F6DC433EF;
+        Wed, 11 Jan 2023 19:10:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1673459651;
-        bh=4bvncI8qdilTRyPNQlsk6bcTHlK2AIug7R45fmJ8gp0=;
+        s=k20201202; t=1673464244;
+        bh=+7JEO8wk5M0g65GEfBpii8a+3rplcwVK86dPWFAgzjs=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=YY75u5iab83oByo4YBuKdlWlQNHo/Wb+N1b4wKT5oXr1M9OvY7iyk7Hjky17t+yVr
-         to6isQZfPP2oexWLEuUmwLwXe/98wDYUMsBYssXKin3I4H0jN1aQDLXObDbDT/2kvI
-         iHPaiXJE3/Rkrc4uwqZN/Q91MgeI4ZkaPvdd2es5mcXSR2EGE0+0v0aICjVdvlZgrh
-         WUEALHL+pm8KAxM9pD1+wtbnzBG6Pi02qsyYXlWRZdA8Nqf6PYhMdY0lZsxkbh8w8U
-         RkGqpyGTkFR5jZbR0MnQAns+wzLa4ueAz9BMTaO0MP1mIE79gJSMM72nevtVYTCKdG
-         KllfrX5PM3PWg==
-Date:   Wed, 11 Jan 2023 09:54:10 -0800
+        b=XcHDfFlTiYPHl8gB2UA6Z/iK+RQ4DFOG7Gg3KOumog2ZmsXxDbgM/xTzxBlIH9J/N
+         anvUQgVhyHCUA8GosUVwj1C9Uj27ecJbIkHaeE/DUwg52ODZgro2a6F39I9g4wxawM
+         ORlRiNzdWWmh8z6VJywMGl92etML5GluAo2Z4rU3a2I1NEo5FDDy+dwYZ3QYkiBGBJ
+         0WfNqDNBMeW5ICgRDRfaBMZTMB2eHtesUtcH8gskYurhV4qTDyIETjMwtF5M/giz0u
+         r+xcPQxidlMesXCeq3x/dLwTR6OsWPAGOzArK7CDWT2aTHu6zhZVs2BpiVJ9QfqaFN
+         c6iXJfrFyxpZQ==
+Date:   Wed, 11 Jan 2023 11:10:43 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     linux-xfs@vger.kernel.org, willy@infradead.org,
-        chandan.babu@oracle.com, allison.henderson@oracle.com,
-        linux-fsdevel@vger.kernel.org, hch@infradead.org,
-        catherine.hoang@oracle.com, david@fromorbit.com
-Subject: Re: [PATCH 06/14] xfs: document how online fsck deals with eventual
- consistency
-Message-ID: <Y773ws82mdT0I9vT@magnolia>
+To:     Allison Henderson <allison.henderson@oracle.com>
+Cc:     Catherine Hoang <catherine.hoang@oracle.com>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        Chandan Babu <chandan.babu@oracle.com>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "hch@infradead.org" <hch@infradead.org>
+Subject: Re: [PATCH 01/14] xfs: document the motivation for online fsck design
+Message-ID: <Y78Js8BP+s6xFfzm@magnolia>
 References: <167243825144.682859.12802259329489258661.stgit@magnolia>
- <167243825245.682859.4827095718073568782.stgit@magnolia>
- <CAOQ4uxgqYCXi_c3PA8d0vVaaicGU=D9kvsR5fo9eb_89L0Y6PA@mail.gmail.com>
- <Y7cns4x+lJuAKIXj@magnolia>
- <CAOQ4uxgEYuKqicCjf-3AijVyoCHsaCErXJghMg3=iDom=bshVA@mail.gmail.com>
+ <167243825174.682859.4770282034026097725.stgit@magnolia>
+ <0607e986e96def5ba17bd53ff3f7e775a99d3d94.camel@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxgEYuKqicCjf-3AijVyoCHsaCErXJghMg3=iDom=bshVA@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <0607e986e96def5ba17bd53ff3f7e775a99d3d94.camel@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 06, 2023 at 05:33:00AM +0200, Amir Goldstein wrote:
-> On Thu, Jan 5, 2023 at 9:40 PM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > On Thu, Jan 05, 2023 at 11:08:51AM +0200, Amir Goldstein wrote:
-> > > On Sat, Dec 31, 2022 at 12:32 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> > > >
-> > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > >
-> > > > Writes to an XFS filesystem employ an eventual consistency update model
-> > > > to break up complex multistep metadata updates into small chained
-> > > > transactions.  This is generally good for performance and scalability
-> > > > because XFS doesn't need to prepare for enormous transactions, but it
-> > > > also means that online fsck must be careful not to attempt a fsck action
-> > > > unless it can be shown that there are no other threads processing a
-> > > > transaction chain.  This part of the design documentation covers the
-> > > > thinking behind the consistency model and how scrub deals with it.
-> > > >
-> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > ---
-> > > >  .../filesystems/xfs-online-fsck-design.rst         |  303 ++++++++++++++++++++
-> > > >  1 file changed, 303 insertions(+)
-> > > >
-> > > >
-> > > > diff --git a/Documentation/filesystems/xfs-online-fsck-design.rst b/Documentation/filesystems/xfs-online-fsck-design.rst
-> > > > index f45bf97fa9c4..419eb54ee200 100644
-> > > > --- a/Documentation/filesystems/xfs-online-fsck-design.rst
-> > > > +++ b/Documentation/filesystems/xfs-online-fsck-design.rst
-> > > > @@ -1443,3 +1443,306 @@ This step is critical for enabling system administrator to monitor the status
-> > > >  of the filesystem and the progress of any repairs.
-> > > >  For developers, it is a useful means to judge the efficacy of error detection
-> > > >  and correction in the online and offline checking tools.
-> > > > +
-> > > > +Eventual Consistency vs. Online Fsck
-> > > > +------------------------------------
-> > > > +
-> > > > +Midway through the development of online scrubbing, the fsstress tests
-> > > > +uncovered a misinteraction between online fsck and compound transaction chains
-> > > > +created by other writer threads that resulted in false reports of metadata
-> > > > +inconsistency.
-> > > > +The root cause of these reports is the eventual consistency model introduced by
-> > > > +the expansion of deferred work items and compound transaction chains when
-> > > > +reverse mapping and reflink were introduced.
-> > > > +
-> > > > +Originally, transaction chains were added to XFS to avoid deadlocks when
-> > > > +unmapping space from files.
-> > > > +Deadlock avoidance rules require that AGs only be locked in increasing order,
-> > > > +which makes it impossible (say) to use a single transaction to free a space
-> > > > +extent in AG 7 and then try to free a now superfluous block mapping btree block
-> > > > +in AG 3.
-> > > > +To avoid these kinds of deadlocks, XFS creates Extent Freeing Intent (EFI) log
-> > > > +items to commit to freeing some space in one transaction while deferring the
-> > > > +actual metadata updates to a fresh transaction.
-> > > > +The transaction sequence looks like this:
-> > > > +
-> > > > +1. The first transaction contains a physical update to the file's block mapping
-> > > > +   structures to remove the mapping from the btree blocks.
-> > > > +   It then attaches to the in-memory transaction an action item to schedule
-> > > > +   deferred freeing of space.
-> > > > +   Concretely, each transaction maintains a list of ``struct
-> > > > +   xfs_defer_pending`` objects, each of which maintains a list of ``struct
-> > > > +   xfs_extent_free_item`` objects.
-> > > > +   Returning to the example above, the action item tracks the freeing of both
-> > > > +   the unmapped space from AG 7 and the block mapping btree (BMBT) block from
-> > > > +   AG 3.
-> > > > +   Deferred frees recorded in this manner are committed in the log by creating
-> > > > +   an EFI log item from the ``struct xfs_extent_free_item`` object and
-> > > > +   attaching the log item to the transaction.
-> > > > +   When the log is persisted to disk, the EFI item is written into the ondisk
-> > > > +   transaction record.
-> > > > +   EFIs can list up to 16 extents to free, all sorted in AG order.
-> > > > +
-> > > > +2. The second transaction contains a physical update to the free space btrees
-> > > > +   of AG 3 to release the former BMBT block and a second physical update to the
-> > > > +   free space btrees of AG 7 to release the unmapped file space.
-> > > > +   Observe that the the physical updates are resequenced in the correct order
-> > > > +   when possible.
-> > > > +   Attached to the transaction is a an extent free done (EFD) log item.
-> > > > +   The EFD contains a pointer to the EFI logged in transaction #1 so that log
-> > > > +   recovery can tell if the EFI needs to be replayed.
-> > > > +
-> > > > +If the system goes down after transaction #1 is written back to the filesystem
-> > > > +but before #2 is committed, a scan of the filesystem metadata would show
-> > > > +inconsistent filesystem metadata because there would not appear to be any owner
-> > > > +of the unmapped space.
-> > > > +Happily, log recovery corrects this inconsistency for us -- when recovery finds
-> > > > +an intent log item but does not find a corresponding intent done item, it will
-> > > > +reconstruct the incore state of the intent item and finish it.
-> > > > +In the example above, the log must replay both frees described in the recovered
-> > > > +EFI to complete the recovery phase.
-> > > > +
-> > > > +There are two subtleties to XFS' transaction chaining strategy to consider.
-> > > > +The first is that log items must be added to a transaction in the correct order
-> > > > +to prevent conflicts with principal objects that are not held by the
-> > > > +transaction.
-> > > > +In other words, all per-AG metadata updates for an unmapped block must be
-> > > > +completed before the last update to free the extent, and extents should not
-> > > > +be reallocated until that last update commits to the log.
-> > > > +The second subtlety comes from the fact that AG header buffers are (usually)
-> > > > +released between each transaction in a chain.
-> > > > +This means that other threads can observe an AG in an intermediate state,
-> > > > +but as long as the first subtlety is handled, this should not affect the
-> > > > +correctness of filesystem operations.
-> > > > +Unmounting the filesystem flushes all pending work to disk, which means that
-> > > > +offline fsck never sees the temporary inconsistencies caused by deferred work
-> > > > +item processing.
-> > > > +In this manner, XFS employs a form of eventual consistency to avoid deadlocks
-> > > > +and increase parallelism.
-> > > > +
-> > > > +During the design phase of the reverse mapping and reflink features, it was
-> > > > +decided that it was impractical to cram all the reverse mapping updates for a
-> > > > +single filesystem change into a single transaction because a single file
-> > > > +mapping operation can explode into many small updates:
-> > > > +
-> > > > +* The block mapping update itself
-> > > > +* A reverse mapping update for the block mapping update
-> > > > +* Fixing the freelist
-> > > > +* A reverse mapping update for the freelist fix
-> > > > +
-> > > > +* A shape change to the block mapping btree
-> > > > +* A reverse mapping update for the btree update
-> > > > +* Fixing the freelist (again)
-> > > > +* A reverse mapping update for the freelist fix
-> > > > +
-> > > > +* An update to the reference counting information
-> > > > +* A reverse mapping update for the refcount update
-> > > > +* Fixing the freelist (a third time)
-> > > > +* A reverse mapping update for the freelist fix
-> > > > +
-> > > > +* Freeing any space that was unmapped and not owned by any other file
-> > > > +* Fixing the freelist (a fourth time)
-> > > > +* A reverse mapping update for the freelist fix
-> > > > +
-> > > > +* Freeing the space used by the block mapping btree
-> > > > +* Fixing the freelist (a fifth time)
-> > > > +* A reverse mapping update for the freelist fix
-> > > > +
-> > > > +Free list fixups are not usually needed more than once per AG per transaction
-> > > > +chain, but it is theoretically possible if space is very tight.
-> > > > +For copy-on-write updates this is even worse, because this must be done once to
-> > > > +remove the space from a staging area and again to map it into the file!
-> > > > +
-> > > > +To deal with this explosion in a calm manner, XFS expands its use of deferred
-> > > > +work items to cover most reverse mapping updates and all refcount updates.
-> > > > +This reduces the worst case size of transaction reservations by breaking the
-> > > > +work into a long chain of small updates, which increases the degree of eventual
-> > > > +consistency in the system.
-> > > > +Again, this generally isn't a problem because XFS orders its deferred work
-> > > > +items carefully to avoid resource reuse conflicts between unsuspecting threads.
-> > > > +
-> > > > +However, online fsck changes the rules -- remember that although physical
-> > > > +updates to per-AG structures are coordinated by locking the buffers for AG
-> > > > +headers, buffer locks are dropped between transactions.
-> > > > +Once scrub acquires resources and takes locks for a data structure, it must do
-> > > > +all the validation work without releasing the lock.
-> > > > +If the main lock for a space btree is an AG header buffer lock, scrub may have
-> > > > +interrupted another thread that is midway through finishing a chain.
-> > > > +For example, if a thread performing a copy-on-write has completed a reverse
-> > > > +mapping update but not the corresponding refcount update, the two AG btrees
-> > > > +will appear inconsistent to scrub and an observation of corruption will be
-> > > > +recorded.  This observation will not be correct.
-> > > > +If a repair is attempted in this state, the results will be catastrophic!
-> > > > +
-> > > > +Several solutions to this problem were evaluated upon discovery of this flaw:
-> > > > +
-> > > > +1. Add a higher level lock to allocation groups and require writer threads to
-> > > > +   acquire the higher level lock in AG order before making any changes.
-> > > > +   This would be very difficult to implement in practice because it is
-> > > > +   difficult to determine which locks need to be obtained, and in what order,
-> > > > +   without simulating the entire operation.
-> > > > +   Performing a dry run of a file operation to discover necessary locks would
-> > > > +   make the filesystem very slow.
-> > > > +
-> > > > +2. Make the deferred work coordinator code aware of consecutive intent items
-> > > > +   targeting the same AG and have it hold the AG header buffers locked across
-> > > > +   the transaction roll between updates.
-> > > > +   This would introduce a lot of complexity into the coordinator since it is
-> > > > +   only loosely coupled with the actual deferred work items.
-> > > > +   It would also fail to solve the problem because deferred work items can
-> > > > +   generate new deferred subtasks, but all subtasks must be complete before
-> > > > +   work can start on a new sibling task.
-> > > > +
-> > > > +3. Teach online fsck to walk all transactions waiting for whichever lock(s)
-> > > > +   protect the data structure being scrubbed to look for pending operations.
-> > > > +   The checking and repair operations must factor these pending operations into
-> > > > +   the evaluations being performed.
-> > > > +   This solution is a nonstarter because it is *extremely* invasive to the main
-> > > > +   filesystem.
-> > > > +
-> > > > +4. Recognize that only online fsck has this requirement of total consistency
-> > > > +   of AG metadata, and that online fsck should be relatively rare as compared
-> > > > +   to filesystem change operations.
-> > > > +   For each AG, maintain a count of intent items targetting that AG.
-> > > > +   When online fsck wants to examine an AG, it should lock the AG header
-> > > > +   buffers to quiesce all transaction chains that want to modify that AG, and
-> > > > +   only proceed with the scrub if the count is zero.
-> > > > +   In other words, scrub only proceeds if it can lock the AG header buffers and
-> > > > +   there can't possibly be any intents in progress.
-> > > > +   This may lead to fairness and starvation issues, but regular filesystem
-> > > > +   updates take precedence over online fsck activity.
-> > > > +
-> > >
-> > > Is there any guarantee that some silly real life regular filesystem workload
-> > > won't starve online fsck forever?
-> > > IOW, is forward progress of online fsck guaranteed?
-> >
-> > Nope, forward progress isn't guaranteed.
+On Sat, Jan 07, 2023 at 05:01:54AM +0000, Allison Henderson wrote:
+> On Fri, 2022-12-30 at 14:10 -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Start the first chapter of the online fsck design documentation.
+> > This covers the motivations for creating this in the first place.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  Documentation/filesystems/index.rst                |    1 
+> >  .../filesystems/xfs-online-fsck-design.rst         |  199
+> > ++++++++++++++++++++
+> >  2 files changed, 200 insertions(+)
+> >  create mode 100644 Documentation/filesystems/xfs-online-fsck-
+> > design.rst
+> > 
+> > 
+> > diff --git a/Documentation/filesystems/index.rst
+> > b/Documentation/filesystems/index.rst
+> > index bee63d42e5ec..fbb2b5ada95b 100644
+> > --- a/Documentation/filesystems/index.rst
+> > +++ b/Documentation/filesystems/index.rst
+> > @@ -123,4 +123,5 @@ Documentation for filesystem implementations.
+> >     vfat
+> >     xfs-delayed-logging-design
+> >     xfs-self-describing-metadata
+> > +   xfs-online-fsck-design
+> >     zonefs
+> > diff --git a/Documentation/filesystems/xfs-online-fsck-design.rst
+> > b/Documentation/filesystems/xfs-online-fsck-design.rst
+> > new file mode 100644
+> > index 000000000000..25717ebb5f80
+> > --- /dev/null
+> > +++ b/Documentation/filesystems/xfs-online-fsck-design.rst
+> > @@ -0,0 +1,199 @@
+> > +.. SPDX-License-Identifier: GPL-2.0
+> > +.. _xfs_online_fsck_design:
+> > +
+> > +..
+> > +        Mapping of heading styles within this document:
+> > +        Heading 1 uses "====" above and below
+> > +        Heading 2 uses "===="
+> > +        Heading 3 uses "----"
+> > +        Heading 4 uses "````"
+> > +        Heading 5 uses "^^^^"
+> > +        Heading 6 uses "~~~~"
+> > +        Heading 7 uses "...."
+> > +
+> > +        Sections are manually numbered because apparently that's
+> > what everyone
+> > +        does in the kernel.
+> > +
+> > +======================
+> > +XFS Online Fsck Design
+> > +======================
+> > +
+> > +This document captures the design of the online filesystem check
+> > feature for
+> > +XFS.
+> > +The purpose of this document is threefold:
+> > +
+> > +- To help kernel distributors understand exactly what the XFS online
+> > fsck
+> > +  feature is, and issues about which they should be aware.
+> > +
+> > +- To help people reading the code to familiarize themselves with the
+> > relevant
+> > +  concepts and design points before they start digging into the
+> > code.
+> > +
+> > +- To help developers maintaining the system by capturing the reasons
+> > +  supporting higher level decisionmaking.
+> nit: decision making
+
+Fixed.
+
+> > +
+> > +As the online fsck code is merged, the links in this document to
+> > topic branches
+> > +will be replaced with links to code.
+> > +
+> > +This document is licensed under the terms of the GNU Public License,
+> > v2.
+> > +The primary author is Darrick J. Wong.
+> > +
+> > +This design document is split into seven parts.
+> > +Part 1 defines what fsck tools are and the motivations for writing a
+> > new one.
+> > +Parts 2 and 3 present a high level overview of how online fsck
+> > process works
+> > +and how it is tested to ensure correct functionality.
+> > +Part 4 discusses the user interface and the intended usage modes of
+> > the new
+> > +program.
+> > +Parts 5 and 6 show off the high level components and how they fit
+> > together, and
+> > +then present case studies of how each repair function actually
+> > works.
+> > +Part 7 sums up what has been discussed so far and speculates about
+> > what else
+> > +might be built atop online fsck.
+> > +
+> > +.. contents:: Table of Contents
+> > +   :local:
+> > +
 > 
-> That sounds like a problem.
-
-So far it hasn't been.  I prefer to sacrifice performance of the
-background fsck service for the sake of foreground tasks.  The fsstress
-and fsx fstests haven't shown any particularly serious issues.  I've
-also kicked off xfs_scrub on the same VM hosts that are running the fuzz
-test suite (~52 VMs per host) and scrub can still finish the filesystem
-in a couple of hours.
-
-Things get markedly worse on spinning rust with a lot of parallel
-unwritten extent conversions and allocations going on (aka the disk
-backup systems).  Normally a backup from flash to rust takes about an
-hour; with scrub and backup contending for the head actuator, it'll go
-up to about 2-3 hours, but both tasks can make (verrrry slow) forward
-progress.
-
-That said -- the backup program spends a lot of iowait time waiting for
-file data blocks to read in or get written back, so the contention is on
-the storage hardware, not the filesystem locks.
-
-> > The kernel checks for fatal
-> > signals every time it backs off a scrub so at least we don't end up with
-> > unkillable processes.  At one point I added a timeout field to the ioctl
-> > interface so that the kernel could time out an operation if it took too
-> > long to acquire the necessary resources.  So far, the "race fsstress and
-> > xfs_scrub" tests have not shown scrub failing to make any forward
-> > progress.
-> >
-> > That said, I have /not/ yet had a chance to try it out any of these
-> > massive 1000-core systems with an according workload.
-> >
+> Something that I've noticed in my training sessions is that often
+> times, less is more.  People really only absorb so much over a
+> particular duration of time, so sometimes having too much detail in the
+> context is not as helpful as you might think.  A lot of times,
+> paraphrasing excerpts to reflect the same info in a more compact format
+> will help you keep audience on track (a little longer at least). 
 > 
-> Don't know if fsstress is the best way to check the worst case scenario.
+> > +1. What is a Filesystem Check?
+> > +==============================
+> > +
+> > +A Unix filesystem has three main jobs: to provide a hierarchy of
+> > names through
+> > +which application programs can associate arbitrary blobs of data for
+> > any
+> > +length of time, to virtualize physical storage media across those
+> > names, and
+> > +to retrieve the named data blobs at any time.
+> Consider the following paraphrase:
 > 
-> Can you think of a workload, say several threads creating and deleting
-> temp files, with deferred parent pointer items preventing the queue from
-> ever draining?
+> A Unix filesystem has three main jobs:
+>  * Provide a hierarchy of names by which applications access data for a
+> length of time.
+>  * Store or retrieve that data at any time.
+>  * Virtualize physical storage media across those names
 
-The worst workload would be one that is entirely metadata based -- a
-giant directory tree full of empty files with all information being
-stored as extended attributes.
+Ooh, listifying.  I did quite a bit of that to break up the walls of
+text in earlier revisions, but apparently I missed this one.
 
-> Considering that a "full journal" scenario is always going to be a possible
-> worst case incident, how bad would it be to block new transactions
-> instead of the possibility of starving scrub consistency checks forever?
+> Also... I dont think it would be inappropriate to just skip the above,
+> and jump right into fsck.  That's a very limited view of a filesystem,
+> likely a reader seeking an fsck doc probably has some idea of what a fs
+> is otherwise supposed to be doing.  
 
-First of all, scrub has already allocated a transaction by the time it
-gets to the intent drain step.  There's no good way to block new
-transactions once we've reached this stage, nor should there be.
-Blocking transactions stalls xfs garbage collection and memory reclaim.
+This will become part of the general kernel documentation, so we can't
+assume that all readers are going to know what a fs really does.
 
-> Wouldn't the consistency checks be much faster than freeing journal
-> space would be in a "full journal" situation?
+"A Unix filesystem has four main responsibilities:
 
-I haven't investigated this in depth, but yes, scrub should be faster
-than forcing the log and checkpointing the log to move the log tail
-forward to empty out the journal.
+- Provide a hierarchy of names through which application programs can
+  associate arbitrary blobs of data for any length of time,
 
-> I don't know if there is a "mission statement" for online fsck, but
-> I think it would say "minimal user interference" not "no user interference".
+- Virtualize physical storage media across those names, and
 
-Yes.  The section about eventual consistency states that "...regular
-filesystem updates take precedence over online fsck activity".
+- Retrieve the named data blobs at any time.
 
-> It sounds like the interference we are trying to avoid is light years away
-> from the downtime of offline fsck, so online fsck would still be a huge win.
-> online fsck that never ends OTOH... maybe less so.
+- Examine resource usage.
 
-Well you /can/ just kill the xfs_scrub processes if they are taking too
-much time.  One of the nastier papercuts of the background scrub is that
-the fs cannot be unmounted while it's running, and systemd doesn't have
-a good mechanism for "kill this service before stopping this mount".  Or
-maybe it does and I haven't yet found it?
+"Metadata directly supporting these functions (e.g. files, directories,
+space mappings) are sometimes called primary metadata.
+Secondary metadata (e.g. reverse mapping and directory parent pointers)
+support operations internal to the filesystem, such as internal
+consistency checking and reorganization."
 
-(The cronjob variant definitely suffers from that...)
+(I added those last two sentences in response to a point you made
+below.)
 
-> > > Good luck with landing online fsck before the 2024 NYE deluge ;)
-> >
-> > Thank *you* for reading this chapter of the design document!! :)
-> >
+> > +The filesystem check (fsck) tool examines all the metadata in a
+> > filesystem
+> > +to look for errors.
+> > +Simple tools only check for obvious corruptions, but the more
+> > sophisticated
+> > +ones cross-reference metadata records to look for inconsistencies.
+> > +People do not like losing data, so most fsck tools also contains
+> > some ability
+> > +to deal with any problems found.
 > 
-> Oh I read them all at the summer submission, but it took me so long
-> that I forgot to follow up..
-
-Yeah, that seems to be a common problem with large new features. :/
-
-> My other question was regarding memory usage control.
-> I have horrid memories from e2fsck unpredictable memory usage
-> and unpredictable runtime due to swapping.
+> While simple tools can detect data corruptions, a filesystem check
+> (fsck) uses metadata records as a cross-reference to find and correct
+> more inconsistencies.
 > 
-> xfs_repair -m was a huge improvement compared to e2fsck.
-> I don't remember reading about memory usage limits for online repair,
-> so I was concerned about unpredictable memory usage and swapping.
-> Can you say something to ease those concerns?
+> ?
 
-Both e2fsck and xfs_repair have to be capable of repairing the entire
-filesystem all at once, which means that they allocate many many of
-incore objects from which all of the ondisk space metadata (ag btrees in
-the case of xfs, bitmaps for e2fsck) is regenerated.  Since the fs is
-offline, it's considered advantageous to perform *one* scan and rebuild
-everything all at once, even if the memory cost is high.
+Let's be careful with the term 'data corruption' here -- a lot of people
+(well ok me) will see that as *user* data corruption, whereas we're
+talking about *metadata* corruption.
 
-xfs_scrub scans and repairs each metadata object individually, which
-means that it only needs to allocate as much (kernel/xfile) memory as
-needed to scan a single btree/inode record/quota record/bitmap.  For
-scans the memory requirements are usually minimal since it creates a
-bunch of btree cursors and cross-references records.
+I think I'll rework that second sentence further:
 
-For repairs, the memory requirements are on the order of the size of the
-new data structure that will be written out.  We scan the fs to build
-the new recordset in memory, compute the size of the new btree, allocate
-some blocks, and format the records into the blocks before committing
-the btree root.
+"In addition to looking for obvious metadata corruptions, fsck also
+cross-references different types of metadata records with each other to
+look for inconsistencies."
 
-For summary data (e.g. link counts, dquots) we build a shadow copy in
-memory, so the memory requirements are on the order of the number of
-files in the fs and the number of uid/gid/projid in the filesystem,
-respectively.
+Since the really dumb fscks of the 1970s are a long ways past now.
 
-Most of the intermediate structures are stuffed into a tmpfs file, which
-means they can be paged out to disk.  If there's really no memory
-available, scrub can abort all the way out to userspace provided it
-hasn't committed anything to disk yet.
+> > +As a word of caution -- the primary goal of most Linux fsck tools is
+> > to restore
+> > +the filesystem metadata to a consistent state, not to maximize the
+> > data
+> > +recovered.
+> > +That precedent will not be challenged here.
+> > +
+> > +Filesystems of the 20th century generally lacked any redundancy in
+> > the ondisk
+> > +format, which means that fsck can only respond to errors by erasing
+> > files until
+> > +errors are no longer detected.
+> > +System administrators avoid data loss by increasing the number of
+> > separate
+> > +storage systems through the creation of backups; 
+> 
+> 
+> > and they avoid downtime by
+> > +increasing the redundancy of each storage system through the
+> > creation of RAID.
+> Mmm, raids help more for hardware failures right?  They dont really
+> have a notion of when the fs is corrupted.
 
-IOWs, online fsck generally only requires enough memory to build a new
-copy of whichever objects it happens to be scanning at any given moment.
-The background service runs single-threaded to avoid consuming a lot of
-CPU or memory.
+Right.
 
---D
+> While an fsck can help
+> navigate around a corruption possibly caused by a hardware failure, I
+> think it's really a different kind of redundancy. I think I'd probably
+> drop the last line and keep the selling point focused online repair.
 
-> Thanks,
-> Amir.
+Yes, RAIDs provide a totally different type of redundancy.  I decided to
+make this point specifically to counter the people who argue that RAID
+makes them impervious to corruption problems, etc.
+
+This attitude seemed rather prevalent in the early days of btrfs and a
+certain other filesystem that Shall Not Be Named, even though the btrfs
+developers themselves acknowledge this distinction, given the existence
+of `btrfs scrub' and `btrfs check'.
+
+However you do have a good point that this sentence doesn't add much
+where it is.  I think I'll add it as a sidebar at the end of the
+paragraph.
+
+> > +More recent filesystem designs contain enough redundancy in their
+> > metadata that
+> > +it is now possible to regenerate data structures when non-
+> > catastrophic errors
+> > +occur; 
+> 
+> 
+> > this capability aids both strategies.
+> > +Over the past few years, XFS has added a storage space reverse
+> > mapping index to
+> > +make it easy to find which files or metadata objects think they own
+> > a
+> > +particular range of storage.
+> > +Efforts are under way to develop a similar reverse mapping index for
+> > the naming
+> > +hierarchy, which will involve storing directory parent pointers in
+> > each file.
+> > +With these two pieces in place, XFS uses secondary information to
+> > perform more
+> > +sophisticated repairs.
+> This part here I think I would either let go or relocate.  The topic of
+> this section is supposed to discuss roughly what a filesystem check is.
+> Ideally so we can start talking about how ofsck is different.  It feels
+> like a bit of a jump to suddenly hop into rmap and pptrs, and for
+> "sophisticated repairs" that we havn't really gotten into the details
+> of yet.  So I think it would read easier if we saved this part until we
+> start talking about how they are used later.  
+
+Agreed.
+
+> > +
+> > +TLDR; Show Me the Code!
+> > +-----------------------
+> > +
+> > +Code is posted to the kernel.org git trees as follows:
+> > +`kernel changes
+> > <https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git
+> > /log/?h=repair-symlink>`_,
+> > +`userspace changes
+> > <https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.
+> > git/log/?h=scrub-media-scan-service>`_, and
+> > +`QA test changes
+> > <https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.
+> > git/log/?h=repair-dirs>`_.
+> > +Each kernel patchset adding an online repair function will use the
+> > same branch
+> > +name across the kernel, xfsprogs, and fstests git repos.
+> > +
+> > +Existing Tools
+> > +--------------
+> > +
+> > +The online fsck tool described here will be the third tool in the
+> > history of
+> > +XFS (on Linux) to check and repair filesystems.
+> > +Two programs precede it:
+> > +
+> > +The first program, ``xfs_check``, was created as part of the XFS
+> > debugger
+> > +(``xfs_db``) and can only be used with unmounted filesystems.
+> > +It walks all metadata in the filesystem looking for inconsistencies
+> > in the
+> > +metadata, though it lacks any ability to repair what it finds.
+> > +Due to its high memory requirements and inability to repair things,
+> > this
+> > +program is now deprecated and will not be discussed further.
+> > +
+> > +The second program, ``xfs_repair``, was created to be faster and
+> > more robust
+> > +than the first program.
+> > +Like its predecessor, it can only be used with unmounted
+> > filesystems.
+> > +It uses extent-based in-memory data structures to reduce memory
+> > consumption,
+> > +and tries to schedule readahead IO appropriately to reduce I/O
+> > waiting time
+> > +while it scans the metadata of the entire filesystem.
+> > +The most important feature of this tool is its ability to respond to
+> > +inconsistencies in file metadata and directory tree by erasing
+> > things as needed
+> > +to eliminate problems.
+> > +Space usage metadata are rebuilt from the observed file metadata.
+> > +
+> > +Problem Statement
+> > +-----------------
+> > +
+> > +The current XFS tools leave several problems unsolved:
+> > +
+> > +1. **User programs** suddenly **lose access** to information in the
+> > computer
+> > +   when unexpected shutdowns occur as a result of silent corruptions
+> > in the
+> > +   filesystem metadata.
+> > +   These occur **unpredictably** and often without warning.
+> 
+> 
+> 1. **User programs** suddenly **lose access** to the filesystem
+>    when unexpected shutdowns occur as a result of silent corruptions
+> that could have otherwise been avoided with an online repair
+> 
+> While some of these issues are not untrue, I think it makes sense to
+> limit them to the issue you plan to solve, and therefore discuss.
+
+Fair enough, it's not like one loses /all/ the data in the computer.
+
+That said, we're still in the problem definition phase, so I don't want
+to mention online repair just yet.
+
+> > +2. **Users** experience a **total loss of service** during the
+> > recovery period
+> > +   after an **unexpected shutdown** occurs.
+> > +
+> > +3. **Users** experience a **total loss of service** if the
+> > filesystem is taken
+> > +   offline to **look for problems** proactively.
+> > +
+> > +4. **Data owners** cannot **check the integrity** of their stored
+> > data without
+> > +   reading all of it.
+> 
+> > +   This may expose them to substantial billing costs when a linear
+> > media scan
+> > +   might suffice.
+> Ok, I had to re-read this one a few times, but I think this reads a
+> little cleaner:
+> 
+>     Customers that are billed for data egress may incur unnecessary
+> cost when a background media scan on the host may have sufficed
+> 
+> ?
+
+"...when a linear media scan performed by the storage system
+administrator would suffice."
+
+I was tempted to say "storage owner" instead of "storage system
+administrator" but that sounded a little too IBM.
+
+> > +5. **System administrators** cannot **schedule** a maintenance
+> > window to deal
+> > +   with corruptions if they **lack the means** to assess filesystem
+> > health
+> > +   while the filesystem is online.
+> > +
+> > +6. **Fleet monitoring tools** cannot **automate periodic checks** of
+> > filesystem
+> > +   health when doing so requires **manual intervention** and
+> > downtime.
+> > +
+> > +7. **Users** can be tricked into **doing things they do not desire**
+> > when
+> > +   malicious actors **exploit quirks of Unicode** to place
+> > misleading names
+> > +   in directories.
+> hrmm, I guess I'm not immediately extrapolating what things users are
+> being tricked into doing, or how ofsck solves this?  Otherwise I might
+> drop the last one here, I think the rest of the bullets are plenty of
+> motivation.
+
+The doc gets into this later[1], but it's possible to create two entries
+within the same directory that have different byte sequences in the name
+but render identically in file choosers.  These pathnames:
+
+/home/djwong/Downloads/rustup.sh
+/home/djwong/Downloads/rus<zero width space>tup.sh
+
+refer to different files, but a naïve file open dialog will render them
+identically as "rustup.sh".  If the first is the Rust installer and the
+second name is actually a ransomware payload, I can victimize you by
+tricking you into opening the wrong one.
+
+Firefox had a whole CVE over this in 2018:
+https://bugzilla.mozilla.org/show_bug.cgi?id=1438025
+
+xfs_scrub is (so far) the only linux filesystem fsck tool that will warn
+system administrators about this kind of thing.
+
+See generic/453 and generic/454.
+
+[1] https://djwong.org/docs/xfs-online-fsck-design/#id108
+
+> > +
+> > +Given this definition of the problems to be solved and the actors
+> > who would
+> > +benefit, the proposed solution is a third fsck tool that acts on a
+> > running
+> > +filesystem.
+> > +
+> > +This new third program has three components: an in-kernel facility
+> > to check
+> > +metadata, an in-kernel facility to repair metadata, and a userspace
+> > driver
+> > +program to drive fsck activity on a live filesystem.
+> > +``xfs_scrub`` is the name of the driver program.
+> > +The rest of this document presents the goals and use cases of the
+> > new fsck
+> > +tool, describes its major design points in connection to those
+> > goals, and
+> > +discusses the similarities and differences with existing tools.
+> > +
+> > ++-------------------------------------------------------------------
+> > -------+
+> > +|
+> > **Note**:                                                            
+> >     |
+> > ++-------------------------------------------------------------------
+> > -------+
+> > +| Throughout this document, the existing offline fsck tool can also
+> > be     |
+> > +| referred to by its current name
+> > "``xfs_repair``".                        |
+> > +| The userspace driver program for the new online fsck tool can
+> > be         |
+> > +| referred to as
+> > "``xfs_scrub``".                                          |
+> > +| The kernel portion of online fsck that validates metadata is
+> > called      |
+> > +| "online scrub", and portion of the kernel that fixes metadata is
+> > called  |
+> > +| "online
+> > repair".                                                         |
+> > ++-------------------------------------------------------------------
+> > -------+
+
+Errr ^^^^ is Evolution doing line wrapping here?
+
+> Hmm, maybe here might be a good spot to move rmap and pptrs?  It's not
+> otherwise clear to me what "secondary metadata" is.  If that is what it
+> is meant to refer to, I think the reader will more intuitively make the
+> connection if those two blurbs appear in the same context.
+
+Ooh, you found a significant gap-- nowhere in this chapter do I actually
+define what is primary metadata.  Or secondary metadata.
+
+> > +
+> > +Secondary metadata indices enable the reconstruction of parts of a
+> > damaged
+> > +primary metadata object from secondary information.
+> 
+> I would take out this blurb...
+> > +XFS filesystems shard themselves into multiple primary objects to
+> > enable better
+> > +performance on highly threaded systems and to contain the blast
+> > radius when
+> > +problems happen.
+> 
+> 
+> > +The naming hierarchy is broken up into objects known as directories
+> > and files;
+> > +and the physical space is split into pieces known as allocation
+> > groups.
+> And add here:
+> 
+> "This enables better performance on highly threaded systems and helps
+> to contain corruptions when they occur."
+> 
+> I think that reads cleaner
+
+Ok.  Mind if I reword this slightly?  The entire paragraph now reads
+like this:
+
+"The naming hierarchy is broken up into objects known as directories and
+files and the physical space is split into pieces known as allocation
+groups.  Sharding enables better performance on highly parallel systems
+and helps to contain the damage when corruptions occur.  The division of
+the filesystem into principal objects (allocation groups and inodes)
+means that there are ample opportunities to perform targeted checks and
+repairs on a subset of the filesystem."
+
+> > +The division of the filesystem into principal objects (allocation
+> > groups and
+> > +inodes) means that there are ample opportunities to perform targeted
+> > checks and
+> > +repairs on a subset of the filesystem.
+> > +While this is going on, other parts continue processing IO requests.
+> > +Even if a piece of filesystem metadata can only be regenerated by
+> > scanning the
+> > +entire system, the scan can still be done in the background while
+> > other file
+> > +operations continue.
+> > +
+> > +In summary, online fsck takes advantage of resource sharding and
+> > redundant
+> > +metadata to enable targeted checking and repair operations while the
+> > system
+> > +is running.
+> > +This capability will be coupled to automatic system management so
+> > that
+> > +autonomous self-healing of XFS maximizes service availability.
+> > 
+> 
+> Nits and paraphrases aside, I think this looks pretty good?
+
+Woot.  Thanks for digging in! :)
+
+> Allison
+> 
