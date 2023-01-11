@@ -2,146 +2,258 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B84C7C5479D
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Jan 2023 04:54:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88FEAC6379F
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Jan 2023 08:16:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234942AbjAKEy4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Jan 2023 23:54:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44980 "EHLO
+        id S231804AbjAKIQ5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Jan 2023 03:16:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231332AbjAKEyu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Jan 2023 23:54:50 -0500
+        with ESMTP id S231824AbjAKIQu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2023 03:16:50 -0500
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 494B82AFA
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Jan 2023 20:54:10 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12D473882
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2023 00:16:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1673412849;
+        s=mimecast20190719; t=1673424963;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=AwDGIIG2kEW7th9yR8DoIeZiikP/oVS4/IYm7KTM+N0=;
-        b=brBsQQCOn3YNpLDRSqJ0fzxkPgWTd4vbAn6G6HjRvF4ftTEjYNlIg2wBSn3tcP5h2zfNIk
-        jWqFpNqwVQdt3rHPjEQTY6pwwFqd6aMMsecCM9qO+H49BcBd/QzXarky/Q/461Wvi4a92Y
-        V+yqgBm2DJ/BldL60Ie7/m7IEX5QWqQ=
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
- [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
+         to:to:cc:mime-version:mime-version:content-type:content-type;
+        bh=l4a4xbHxNshVvzKdEgK1KHgGwTwt7ZuLi1B/6OWXvDs=;
+        b=WM83K5N0zGdAknnensLAgxSP2/18iBfvsm6NvZB89CA0AmZRApqdTO7KpqgMOz+JpBr12a
+        qHZEzQA/XDr13fJa9DTv1ej9r494X0N+U6LQk6S9PDdzGUz5TyyIUku+9BtDjex3lLdZLx
+        b54Hmx/AWst+LuA6HKDbfsmFT3t0Sm0=
+Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
+ [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-446-kSPlpkIaMDiUQgd9xHMlFw-1; Tue, 10 Jan 2023 23:54:08 -0500
-X-MC-Unique: kSPlpkIaMDiUQgd9xHMlFw-1
-Received: by mail-pj1-f69.google.com with SMTP id r17-20020a17090aa09100b0021903e75f14so5761402pjp.9
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Jan 2023 20:54:08 -0800 (PST)
+ us-mta-128-AjD36gGvOLCMzXgcR0QMSQ-1; Wed, 11 Jan 2023 03:16:01 -0500
+X-MC-Unique: AjD36gGvOLCMzXgcR0QMSQ-1
+Received: by mail-wr1-f70.google.com with SMTP id y5-20020adfc7c5000000b002bc02b72d2dso1799326wrg.19
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2023 00:16:01 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
+        h=content-disposition:mime-version:message-id:subject:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=AwDGIIG2kEW7th9yR8DoIeZiikP/oVS4/IYm7KTM+N0=;
-        b=TqH280NQTZVh5EBdlBPYweyj48aSDDQLnb2KXfzuRBr7OUE7x9vkgqv+UqiBRsxObG
-         toHSTmx4OYzWOwrvNLy4bcw4abTyV9miOdf7nOlPxfvQTn7CkJvR1Yhmk80EgCOLfxO6
-         9hFSTFeez+HNROx/Gx7yq0dwuXwR/BgSDQQ1aTTZSkIzvpFRJWGwLxqk4SFBiURu+OjQ
-         v0+MQAAA4ZmbedIQJGDOvJtJ+tpw8+/BqpvGs8jk/Fo6seQ5MgUENFd6TS2ZpcyTn8uu
-         4gMfOnpGBTDHqI3Zzo3gpnvBqQLiXDfgMGnH0JONHP4M/HA32BMd2B+KzTVumNlRkRQs
-         T7nA==
-X-Gm-Message-State: AFqh2kqwdqWMR5RZ0L80XsmeUZgDXaPYBjupJc+0iiuw8Kapc4n7b2sa
-        +MidQ/AWf+BExmCc3vTkrhtyc9Sz4HrZx0e14J1ewcAY4gE/Nzzi94Lyw09fCl2jyJpyz+wjUAw
-        TBphG7e8Curg2zImWiJGk
-X-Received: by 2002:a17:903:50e:b0:189:bda4:4a39 with SMTP id jn14-20020a170903050e00b00189bda44a39mr68317509plb.49.1673412846854;
-        Tue, 10 Jan 2023 20:54:06 -0800 (PST)
-X-Google-Smtp-Source: AMrXdXs+9rrIRD+6pRvHkwnX14gh2BCpLNg+4mxFg/ySKLAFpFMrHGq/R+Lf/NnqdSw7vAx/2ZYhMg==
-X-Received: by 2002:a17:903:50e:b0:189:bda4:4a39 with SMTP id jn14-20020a170903050e00b00189bda44a39mr68317481plb.49.1673412846568;
-        Tue, 10 Jan 2023 20:54:06 -0800 (PST)
-Received: from [10.72.14.8] ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id d11-20020a170902654b00b001895d87225csm8944870pln.182.2023.01.10.20.53.52
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 10 Jan 2023 20:54:05 -0800 (PST)
-Message-ID: <330d1f1b-02b2-ceb1-5df5-ef6ce0061eb2@redhat.com>
-Date:   Wed, 11 Jan 2023 12:53:49 +0800
+        bh=l4a4xbHxNshVvzKdEgK1KHgGwTwt7ZuLi1B/6OWXvDs=;
+        b=4y7mk+7XAdIG/CjSEicCve79SQfmxQ5IJGEO2Zd8+EvMqiE/gjEk/P4jai/Pcfannm
+         RkkpRvifAM8sh96ycWUBt0MTw/ycRoTmfRio4c08Ms8sP9yYflPSMhPYhMKOR/WeHRpz
+         kwhd+hz2HLCSc2szNZtKSbZc5O/eaBGA8aQblZqIKs2tPrxy/4IXpb10gMCrwZCNkKsa
+         nHVERvgTHWGyo8YdB/UjS0Cmnvl78ngo5+i6b3f998r0poLWW7l5Z5aNCKA6vNRjAPnj
+         F7k1oWPPviCPVEiefetk8tpzlKGlYuYnt6DBc8R9PaNUaoey3yA6cWsYuZk50y8Tx6JB
+         MPUg==
+X-Gm-Message-State: AFqh2krcWtbs6dIUuFq1rwCnvU9KJqfPZyVPECUFKKM4ScwcnSjvZVvd
+        ME64jUn200Imc/QjQPkF3WemcF9gQTIp3De0W47vVV0DqyMbCUSOL+/uKTpNBH3o0NVdPkE4fs2
+        ack8pTd+AvBNTmBg5w4qst+CET4xK8kwBriLLET6Am+kQsfMJYOncUbVxDBdD69QKxE0s
+X-Received: by 2002:a05:600c:18a1:b0:3d2:3ec4:7eed with SMTP id x33-20020a05600c18a100b003d23ec47eedmr54945661wmp.10.1673424959983;
+        Wed, 11 Jan 2023 00:15:59 -0800 (PST)
+X-Google-Smtp-Source: AMrXdXsNd//cKOE91MMQC8h64iBcaeXNTbCCMQKChwl/m+0dtfugY1MKx4ooeXd/aROiDuamT7mlcA==
+X-Received: by 2002:a05:600c:18a1:b0:3d2:3ec4:7eed with SMTP id x33-20020a05600c18a100b003d23ec47eedmr54945640wmp.10.1673424959635;
+        Wed, 11 Jan 2023 00:15:59 -0800 (PST)
+Received: from nixos (2A001110012830AB22DCA33598E10310.mobile.pool.telekom.hu. [2a00:1110:128:30ab:22dc:a335:98e1:310])
+        by smtp.gmail.com with ESMTPSA id n14-20020a05600c4f8e00b003c6b7f5567csm5226513wmq.0.2023.01.11.00.15.58
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 11 Jan 2023 00:15:59 -0800 (PST)
+Date:   Wed, 11 Jan 2023 09:15:57 +0100
+From:   Csaba Henk <chenk@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] xfsdocs: add epub output
+Message-ID: <20230111081557.rpmcmkkat7gagqup@nixos>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: [PATCH v2] filelock: move file locking definitions to separate
- header file
-Content-Language: en-US
-To:     Jeff Layton <jlayton@kernel.org>,
-        Russell King <linux@armlinux.org.uk>,
-        Eric Van Hensbergen <ericvh@gmail.com>,
-        Latchesar Ionkov <lucho@ionkov.net>,
-        Dominique Martinet <asmadeus@codewreck.org>,
-        Christian Schoenebeck <linux_oss@crudebyte.com>,
-        David Howells <dhowells@redhat.com>,
-        Marc Dionne <marc.dionne@auristor.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Steve French <sfrench@samba.org>, Paulo Alcantara <pc@cjr.nz>,
-        Ronnie Sahlberg <lsahlber@redhat.com>,
-        Shyam Prasad N <sprasad@microsoft.com>,
-        Tom Talpey <tom@talpey.com>,
-        Christine Caulfield <ccaulfie@redhat.com>,
-        David Teigland <teigland@redhat.com>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Bob Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Namjae Jeon <linkinjeon@kernel.org>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Mark Fasheh <mark@fasheh.com>,
-        Joel Becker <jlbec@evilplan.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Martin Brandenburg <martin@omnibond.com>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christian Brauner <brauner@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Steve French <stfrench@microsoft.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        v9fs-developer@lists.sourceforge.net,
-        linux-afs@lists.infradead.org, linux-fsdevel@vger.kernel.org,
-        ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org,
-        samba-technical@lists.samba.org, cluster-devel@redhat.com,
-        linux-nfs@vger.kernel.org, ocfs2-devel@oss.oracle.com,
-        devel@lists.orangefs.org, linux-xfs@vger.kernel.org
-References: <20230105211937.1572384-1-jlayton@kernel.org>
-From:   Xiubo Li <xiubli@redhat.com>
-In-Reply-To: <20230105211937.1572384-1-jlayton@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+---
+ .gitignore                               |  1 +
+ admin/Makefile                           | 13 +++++++++++--
+ admin/XFS_Performance_Tuning/Makefile    | 13 +++++++++++--
+ design/Makefile                          | 13 +++++++++++--
+ design/XFS_Filesystem_Structure/Makefile | 13 +++++++++++--
+ 5 files changed, 45 insertions(+), 8 deletions(-)
 
-On 06/01/2023 05:19, Jeff Layton wrote:
-> The file locking definitions have lived in fs.h since the dawn of time,
-> but they are only used by a small subset of the source files that
-> include it.
->
-> Move the file locking definitions to a new header file, and add the
-> appropriate #include directives to the source files that need them. By
-> doing this we trim down fs.h a bit and limit the amount of rebuilding
-> that has to be done when we make changes to the file locking APIs.
->
-> Reviewed-by: Xiubo Li <xiubli@redhat.com>
-> Reviewed-by: Christian Brauner (Microsoft) <brauner@kernel.org>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: David Howells <dhowells@redhat.com>
-> Acked-by: Chuck Lever <chuck.lever@oracle.com>
-> Acked-by: Joseph Qi <joseph.qi@linux.alibaba.com>
-> Acked-by: Steve French <stfrench@microsoft.com>
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> ---
->   arch/arm/kernel/sys_oabi-compat.c |   1 +
->   fs/9p/vfs_file.c                  |   1 +
->   fs/afs/internal.h                 |   1 +
->   fs/attr.c                         |   1 +
->   fs/ceph/locks.c                   |   1 +
-
-ceph part looks good to me.
-
-Thanks
-
-- Xiubo
-
+diff --git a/.gitignore b/.gitignore
+index a2e10b4..412ff1c 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,3 +1,4 @@
+ *.html
+ *.pdf
+ *.css
++*.epub
+diff --git a/admin/Makefile b/admin/Makefile
+index de27f3b..dcffc63 100644
+--- a/admin/Makefile
++++ b/admin/Makefile
+@@ -11,6 +11,7 @@ DOCFILES=$(wildcard *.asciidoc)
+ 
+ HTML_TARGETS=$(addsuffix .html, $(basename $(DOCFILES)))
+ PDF_TARGETS=$(addsuffix .pdf, $(basename $(DOCFILES)))
++EPUB_TARGETS=$(addsuffix .epub, $(basename $(DOCFILES)))
+ 
+ %.html: %.asciidoc
+ 	@echo "[html] $*"
+@@ -20,7 +21,11 @@ PDF_TARGETS=$(addsuffix .pdf, $(basename $(DOCFILES)))
+ 	@echo "[pdf] $*"
+ 	$(Q)a2x -f pdf $<
+ 
+-default: html pdf $(SUBDIRS)
++%.epub: %.asciidoc
++	@echo "[epub] $*"
++	$(Q)a2x -f epub $<
++
++default: html pdf epub $(SUBDIRS)
+ 
+ $(SUBDIRS):
+ 	@echo "Building $@"
+@@ -30,14 +35,18 @@ html: $(HTML_TARGETS)
+ 
+ pdf: $(PDF_TARGETS)
+ 
++epub: $(EPUB_TARGETS)
++
+ # manually construct build dependencies for target builds so that modification
+ # of individual files will trigger a rebuild of the document correctly.
+ $(PDF_TARGETS): $(DOCFILES)
+ 
+ $(HTML_TARGETS): $(DOCFILES)
+ 
++$(EPUB_TARGETS): $(DOCFILES)
++
+ clean: $(addsuffix -clean, $(SUBDIRS))
+-	$(Q)rm -f *.html *.pdf *.css
++	$(Q)rm -f *.html *.pdf *.css *.epub
+ 
+ %-clean:
+ 	@echo "Cleaning $*"
+diff --git a/admin/XFS_Performance_Tuning/Makefile b/admin/XFS_Performance_Tuning/Makefile
+index 06451f1..2b929a4 100644
+--- a/admin/XFS_Performance_Tuning/Makefile
++++ b/admin/XFS_Performance_Tuning/Makefile
+@@ -8,8 +8,9 @@ DOCFILES=$(wildcard *.asciidoc) \
+ 
+ HTML_TARGET=$(addsuffix .html, $(TARGET))
+ PDF_TARGET=$(addsuffix .pdf, $(TARGET))
++EPUB_TARGET=$(addsuffix .epub, $(TARGET))
+ 
+-default: html pdf
++default: html pdf epub
+ 
+ %.html: %.asciidoc
+ 	@echo "[html] $*"
+@@ -19,16 +20,24 @@ default: html pdf
+ 	@echo "[pdf] $*"
+ 	$(Q)a2x -f pdf -d book $<
+ 
++%.epub: %.asciidoc
++	@echo "[epub] $*"
++	$(Q)a2x -f epub -d book $<
++
+ html: $(HTML_TARGET)
+ 
+ pdf: $(PDF_TARGET)
+ 
++epub: $(EPUB_TARGET)
++
+ # manually construct build dependencies for target builds so that modification
+ # of individual files will trigger a rebuild of the document correctly.
+ $(PDF_TARGET): $(DOCFILES)
+ 
+ $(HTML_TARGET): $(DOCFILES)
+ 
++$(EPUB_TARGET): $(DOCFILES)
++
+ clean:
+-	$(Q)rm -f *.html *.pdf *.css
++	$(Q)rm -f *.html *.pdf *.css *.epub
+ 
+diff --git a/design/Makefile b/design/Makefile
+index 0879470..0847896 100644
+--- a/design/Makefile
++++ b/design/Makefile
+@@ -11,6 +11,7 @@ DOCFILES=$(wildcard *.asciidoc)
+ 
+ HTML_TARGETS=$(addsuffix .html, $(basename $(DOCFILES)))
+ PDF_TARGETS=$(addsuffix .pdf, $(basename $(DOCFILES)))
++EPUB_TARGETS=$(addsuffix .epub, $(basename $(DOCFILES)))
+ 
+ %.html: %.asciidoc
+ 	@echo "[html] $*"
+@@ -20,7 +21,11 @@ PDF_TARGETS=$(addsuffix .pdf, $(basename $(DOCFILES)))
+ 	@echo "[pdf] $*"
+ 	$(Q)a2x -f pdf --dblatex-opts "-P latex.output.revhistory=0" $<
+ 
+-default: html pdf $(SUBDIRS)
++%.epub: %.asciidoc
++	@echo "[epub] $*"
++	$(Q)a2x -f epub $<
++
++default: html pdf epub $(SUBDIRS)
+ 
+ $(SUBDIRS):
+ 	@echo "Building $@"
+@@ -30,14 +35,18 @@ html: $(HTML_TARGETS)
+ 
+ pdf: $(PDF_TARGETS)
+ 
++epub: $(EPUB_TARGETS)
++
+ # manually construct build dependencies for target builds so that modification
+ # of individual files will trigger a rebuild of the document correctly.
+ $(PDF_TARGETS): $(DOCFILES)
+ 
+ $(HTML_TARGETS): $(DOCFILES)
+ 
++$(EPUB_TARGETS): $(DOCFILES)
++
+ clean: $(addsuffix -clean, $(SUBDIRS))
+-	$(Q)rm -f *.html *.pdf *.css
++	$(Q)rm -f *.html *.pdf *.css *.epub
+ 
+ %-clean:
+ 	@echo "Cleaning $*"
+diff --git a/design/XFS_Filesystem_Structure/Makefile b/design/XFS_Filesystem_Structure/Makefile
+index 359dd98..be78a75 100644
+--- a/design/XFS_Filesystem_Structure/Makefile
++++ b/design/XFS_Filesystem_Structure/Makefile
+@@ -8,8 +8,9 @@ DOCFILES=$(wildcard *.asciidoc) \
+ 
+ HTML_TARGET=$(addsuffix .html, $(TARGET))
+ PDF_TARGET=$(addsuffix .pdf, $(TARGET))
++EPUB_TARGET=$(addsuffix .epub, $(TARGET))
+ 
+-default: html pdf
++default: html pdf epub
+ 
+ %.html: %.asciidoc
+ 	@echo "[html] $*"
+@@ -19,16 +20,24 @@ default: html pdf
+ 	@echo "[pdf] $*"
+ 	$(Q)a2x -f pdf -d book $<
+ 
++%.epub: %.asciidoc
++	@echo "[epub] $*"
++	$(Q)a2x -f epub -d book $<
++
+ html: $(HTML_TARGET)
+ 
+ pdf: $(PDF_TARGET)
+ 
++epub: $(EPUB_TARGET)
++
+ # manually construct build dependencies for target builds so that modification
+ # of individual files will trigger a rebuild of the document correctly.
+ $(PDF_TARGET): $(DOCFILES)
+ 
+ $(HTML_TARGET): $(DOCFILES)
+ 
++$(EPUB_TARGET): $(DOCFILES)
++
+ clean:
+-	$(Q)rm -f *.html *.pdf *.css
++	$(Q)rm -f *.html *.pdf *.css *.epub
+ 
+-- 
+2.39.0
 
