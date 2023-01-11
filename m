@@ -2,131 +2,244 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DEA2C5479D
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Jan 2023 20:52:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B9F1C5479D
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Jan 2023 21:06:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234230AbjAKUww (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Jan 2023 15:52:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54920 "EHLO
+        id S229968AbjAKVGj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Jan 2023 16:06:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234545AbjAKUws (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2023 15:52:48 -0500
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54F563E0CE
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2023 12:52:46 -0800 (PST)
-Received: by mail-pj1-x102f.google.com with SMTP id m7-20020a17090a730700b00225ebb9cd01so21328931pjk.3
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2023 12:52:46 -0800 (PST)
+        with ESMTP id S231490AbjAKVGh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2023 16:06:37 -0500
+Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBFF332EAC
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2023 13:06:36 -0800 (PST)
+Received: by mail-pl1-x62f.google.com with SMTP id 17so18139091pll.0
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2023 13:06:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=EkqhoeCZuwa+2bEMUhxCOdyrJETsu5EtKMG81jKmyM4=;
-        b=ie0gHeNUjoqz2jvtZmldqUXtiL0DZ/4lwcY++B/0ysqxzJJczfN176RleYjOTd4hNt
-         viBv7vyljweJKDNXDo8V+QO58QjYsXICTF7GJ3cO1iWDt8GCHwEhu6XCirIIS732o/HZ
-         PJh2O/V+0aPaxqTz6OkWPWLYJDrvRgPSbI5YK0s3cbmeHQTNn0uBrO990NddYB1nYTKH
-         cL2F6FJ/HhUs0DHrdDTQ5IodOt0T2WgBCLkUyco0njpGj0IWoALnmTYM3itpvVkv+k9x
-         PZBXNpWZNsE2kdlfxofFohEo0g6Y9gI2/055tReBc/ragvY+kVbl5P6W4YXvvXyy2qa1
-         3DRA==
+        bh=aGoo0MTWHMmrmkiI/NgqkHt1VQXbIWAQhKbjDnWzFDk=;
+        b=OJm1BrkZrqKJE0fl3nJAkxIIXXKFMDUJU8ESVRYS1EEnabUX1o1nx9mRhtTIcnaOu3
+         a/AfDQh526BHH7AszfcnoDFZvENAy1gpGVWHVQxzYZSZkUOPYYwf9/Gljr8V08iVAKW4
+         Ge1O6msLS+w4xJahdxKScADqMdVrYQQyeOP4oOLysF5WDUWGU8oAoacj9aLHGgBzNaFY
+         knFGVhf/wCeiD16626GFcN/11sDlxFM9A1YeiC7Pc0vd0uU1RoqvXea3o71q1p23cbHC
+         2GPWflFlrS89Ief7HrrBE8G0TP1VgcPUGfuUW/MIrnHkYHXn8KO6Eu1jpkmYw43kaWhR
+         n59Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=EkqhoeCZuwa+2bEMUhxCOdyrJETsu5EtKMG81jKmyM4=;
-        b=4W+lwctz5EV38yKlhPxU26zSeooePud3v+caCnj+1yP6rRtYQH+9QBDjhRgUCXqvfs
-         0NPtemR6yoYd83xlPzuv/ZayAynBG4hPMy9kumhFuKD/SbMbcPkJ4XaYIEuj3DnnyyZN
-         2Z7lRbMUoR0hsONZ51zlc69dAH8d4c/FUjfJjVEqKW7s7XkV6MpAH2yqSXCga/aQ8YNl
-         79I10aQbi9WKpjZOBtiEQL803RRN6j50NTkGU9pMo3kW7H9kEj5qf6cpdqt29BEW3VQ3
-         yzWgfJxN3bBXIon3QDvt7nRMu+LBfBU4LRTpdcITHUWLxapjO6/YWb4/HXlGvBlQ6Jgh
-         yUEw==
-X-Gm-Message-State: AFqh2koXVAXOGBGx2mnk9Hud14ziJ9QiZsblMxtlMecZaM+wZ5NBasyh
-        G5T19b1FGpu5mQqTuiga1E5kAQ==
-X-Google-Smtp-Source: AMrXdXvgN3R619MlFxvZvgNlbNpdfvMY7I+Ko6fk0fK9VdXQkV2T920mtD/TBJG8wFVTjldQGALEWg==
-X-Received: by 2002:a17:902:ce02:b0:18f:a5b6:54f9 with SMTP id k2-20020a170902ce0200b0018fa5b654f9mr80454345plg.11.1673470365866;
-        Wed, 11 Jan 2023 12:52:45 -0800 (PST)
+        bh=aGoo0MTWHMmrmkiI/NgqkHt1VQXbIWAQhKbjDnWzFDk=;
+        b=jGlp5QyAjWqLseiGrhuZzqU0tXEFqNQaSAEvy3yJ6tETQMfYw+kyn4Ox2w4bdC9KyO
+         MzlEYyKJHuYwS7ANdlr+CVPp3M9Li2Nmag/pFgtXczaa7CpjK08PlepbDuajnQcl63bV
+         Vof+PA4+UmbZ+OUeaSYUwNUQ8e33mDI3N/IrchHWVhPlRfWSao8eD+TU1l2rSlONj1CK
+         T8CaYmmEiXkIdbKEwmt42wgbCFCMHjujuh0wvhqH8Wt7NgaGN3QkaJF+u+NGxg8Hq2EP
+         KbBHR8kPp5VuXXTgN9Nc4EloAqNsJtQU2kFg0nhPjK0Gtgfii+vrlKqEysHWxIsGK0UL
+         CaKw==
+X-Gm-Message-State: AFqh2ko4Tl+GGM7c03KxLiuDFEZ+wrVgeic9kTYaiAsXOYN+2l3QUfCA
+        kDjUVrohuLceCo4ulAV2pVYLpg==
+X-Google-Smtp-Source: AMrXdXvtq783MF5Jxs+Gq1EegPIQEeu0MmcGWt0TUg/fGO6k3VtSOpu1tFMJqeAtCkO4jby4S8Jx5g==
+X-Received: by 2002:a17:903:41c7:b0:189:ea22:6d6a with SMTP id u7-20020a17090341c700b00189ea226d6amr102922922ple.60.1673471196330;
+        Wed, 11 Jan 2023 13:06:36 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-146-207.pa.vic.optusnet.com.au. [49.186.146.207])
-        by smtp.gmail.com with ESMTPSA id t2-20020a1709027fc200b00192f9991e51sm10459441plb.251.2023.01.11.12.52.44
+        by smtp.gmail.com with ESMTPSA id q18-20020a170902bd9200b00186b7443082sm10637837pls.195.2023.01.11.13.06.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Jan 2023 12:52:45 -0800 (PST)
+        Wed, 11 Jan 2023 13:06:35 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1pFi5R-001vGU-0W; Thu, 12 Jan 2023 07:52:41 +1100
-Date:   Thu, 12 Jan 2023 07:52:41 +1100
+        id 1pFiIq-001vbi-TQ; Thu, 12 Jan 2023 08:06:32 +1100
+Date:   Thu, 12 Jan 2023 08:06:32 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, cluster-devel@redhat.com,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFC v6 04/10] iomap: Add iomap_get_folio helper
-Message-ID: <20230111205241.GA360264@dread.disaster.area>
-References: <20230108213305.GO1971568@dread.disaster.area>
- <20230108194034.1444764-1-agruenba@redhat.com>
- <20230108194034.1444764-5-agruenba@redhat.com>
- <20230109124642.1663842-1-agruenba@redhat.com>
- <Y70l9ZZXpERjPqFT@infradead.org>
- <Y71pWJ0JHwGrJ/iv@casper.infradead.org>
- <Y72DK9XuaJfN+ecj@infradead.org>
- <Y78PunroeYbv2qgH@casper.infradead.org>
+To:     Gao Xiang <hsiangkao@linux.alibaba.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Brian Foster <bfoster@redhat.com>,
+        Amir Goldstein <amir73il@gmail.com>
+Subject: Re: [PATCH] xfs: don't reuse busy extents on extent trim
+Message-ID: <20230111210632.GB360264@dread.disaster.area>
+References: <20210222153442.897089-1-bfoster@redhat.com>
+ <20210222182745.GA7272@magnolia>
+ <20210223123106.GB946926@bfoster>
+ <CAOQ4uxiWajRgGG2V=dYhBmVJYiRmdD+7YgkH2DMWGz6BAOXjvg@mail.gmail.com>
+ <5287e7e6-adea-e865-5818-9cc34400cd0b@linux.alibaba.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y78PunroeYbv2qgH@casper.infradead.org>
+In-Reply-To: <5287e7e6-adea-e865-5818-9cc34400cd0b@linux.alibaba.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 11, 2023 at 07:36:26PM +0000, Matthew Wilcox wrote:
-> On Tue, Jan 10, 2023 at 07:24:27AM -0800, Christoph Hellwig wrote:
-> > On Tue, Jan 10, 2023 at 01:34:16PM +0000, Matthew Wilcox wrote:
-> > > > Exactly.  And as I already pointed out in reply to Dave's original
-> > > > patch what we really should be doing is returning an ERR_PTR from
-> > > > __filemap_get_folio instead of reverse-engineering the expected
-> > > > error code.
+On Wed, Jan 11, 2023 at 10:41:43PM +0800, Gao Xiang wrote:
+> Hi,
+> 
+> On 2022/5/26 19:34, Amir Goldstein wrote:
+> > On Tue, Feb 23, 2021 at 2:35 PM Brian Foster <bfoster@redhat.com> wrote:
 > > > 
-> > > Ouch, we have a nasty problem.
+> > > On Mon, Feb 22, 2021 at 10:27:45AM -0800, Darrick J. Wong wrote:
+> > > > On Mon, Feb 22, 2021 at 10:34:42AM -0500, Brian Foster wrote:
+> > > > > Freed extents are marked busy from the point the freeing transaction
+> > > > > commits until the associated CIL context is checkpointed to the log.
+> > > > > This prevents reuse and overwrite of recently freed blocks before
+> > > > > the changes are committed to disk, which can lead to corruption
+> > > > > after a crash. The exception to this rule is that metadata
+> > > > > allocation is allowed to reuse busy extents because metadata changes
+> > > > > are also logged.
+> > > > > 
+> > > > > As of commit 97d3ac75e5e0 ("xfs: exact busy extent tracking"), XFS
+> > > > > has allowed modification or complete invalidation of outstanding
+> > > > > busy extents for metadata allocations. This implementation assumes
+> > > > > that use of the associated extent is imminent, which is not always
+> > > > > the case. For example, the trimmed extent might not satisfy the
+> > > > > minimum length of the allocation request, or the allocation
+> > > > > algorithm might be involved in a search for the optimal result based
+> > > > > on locality.
+> > > > > 
+> > > > > generic/019 reproduces a corruption caused by this scenario. First,
+> > > > > a metadata block (usually a bmbt or symlink block) is freed from an
+> > > > > inode. A subsequent bmbt split on an unrelated inode attempts a near
+> > > > > mode allocation request that invalidates the busy block during the
+> > > > > search, but does not ultimately allocate it. Due to the busy state
+> > > > > invalidation, the block is no longer considered busy to subsequent
+> > > > > allocation. A direct I/O write request immediately allocates the
+> > > > > block and writes to it.
+> > > > 
+> 
+> ...
+> 
 > > > 
-> > > If somebody passes FGP_ENTRY, we can return a shadow entry.  And the
-> > > encodings for shadow entries overlap with the encodings for ERR_PTR,
-> > > meaning that some shadow entries will look like errors.  The way I
-> > > solved this in the XArray code is by shifting the error values by
-> > > two bits and encoding errors as XA_ERROR(-ENOMEM) (for example).
-> > > 
-> > > I don't _object_ to introducing XA_ERROR() / xa_err() into the VFS,
-> > > but so far we haven't, and I'd like to make that decision intentionally.
 > > 
-> > So what would be an alternative way to tell the callers why no folio
-> > was found instead of trying to reverse engineer that?  Return an errno
-> > and the folio by reference?  The would work, but the calling conventions
-> > would be awful.
+> > Hi Brian,
+> > 
+> > This patch was one of my selected fixes to backport for v5.10.y.
+> > It has a very scary looking commit message and the change seems
+> > to be independent of any infrastructure changes(?).
+> > 
+> > The problem is that applying this patch to v5.10.y reliably reproduces
+> > this buffer corruption assertion [*] with test xfs/076.
+> > 
+> > This happens on the kdevops system that is using loop devices over
+> > sparse files inside qemu images. It does not reproduce on my small
+> > VM at home.
+> > 
+> > Normally, I would just drop this patch from the stable candidates queue
+> > and move on, but I thought you might be interested to investigate this
+> > reliable reproducer, because maybe this system exercises an error
+> > that is otherwise rare to hit.
+> > 
+> > It seemed weird to me that NOT reusing the extent would result in
+> > data corruption, but it could indicate that reusing the extent was masking
+> > the assertion and hiding another bug(?).
+> > 
+> > Can you think of another reason to explain the regression this fix
+> > introduces to 5.10.y?
+> > 
+> > Do you care to investigate this failure or shall I just move on?
+> > 
+> > Thanks,
+> > Amir.
+> > 
+> > [*]
+> > : XFS (loop5): Internal error xfs_trans_cancel at line 954 of file
+> > fs/xfs/xfs_trans.c.  Caller xfs_create+0x22f/0x590 [xfs]
+> > : CPU: 3 PID: 25481 Comm: touch Kdump: loaded Tainted: G            E
+> >     5.10.109-xfs-2 #8
+> > : Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1
+> > 04/01/2014
+> > : Call Trace:
+> > :  dump_stack+0x6d/0x88
+> > :  xfs_trans_cancel+0x17b/0x1a0 [xfs]
+> > :  xfs_create+0x22f/0x590 [xfs]
+> > :  xfs_generic_create+0x245/0x310 [xfs]
+> > :  ? d_splice_alias+0x13a/0x3c0
+> > :  path_openat+0xe3f/0x1080
+> > :  do_filp_open+0x93/0x100
+> > :  ? handle_mm_fault+0x148e/0x1690
+> > :  ? __check_object_size+0x162/0x180
+> > :  do_sys_openat2+0x228/0x2d0
+> > :  do_sys_open+0x4b/0x80
+> > :  do_syscall_64+0x33/0x80
+> > :  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+> > : RIP: 0033:0x7f36b02eff1e
+> > : Code: 25 00 00 41 00 3d 00 00 41 00 74 48 48 8d 05 e9 57 0d 00 8b 00
+> > 85 c0 75 69 89 f2 b8 01 01 00 00 48 89 fe bf 9c ff ff ff 0f 05 <48> 3d
+> > 00 f0 ff ff 0
+> > : RSP: 002b:00007ffe7ef6ca10 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
+> > : RAX: ffffffffffffffda RBX: 00000000ffffffff RCX: 00007f36b02eff1e
+> > : RDX: 0000000000000941 RSI: 00007ffe7ef6ebfa RDI: 00000000ffffff9c
+> > : RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000001
+> > : R10: 00000000000001b6 R11: 0000000000000246 R12: 0000000000000002
+> > : R13: 00007ffe7ef6ebfa R14: 0000000000000001 R15: 0000000000000001
+> > : XFS (loop5): xfs_do_force_shutdown(0x8) called from line 955 of file
+> > fs/xfs/xfs_trans.c. Return address = ffffffffc08f5764
+> > : XFS (loop5): Corruption of in-memory data detected.  Shutting down filesystem
+> > : XFS (loop5): Please unmount the filesystem and rectify the problem(s)
+> > 
 > 
-> Agreed.  How about an xa_filemap_get_folio()?
+> (...just for the record) We also encountered this issue but without commit
+>  xfs: don't reuse busy extents on extent trim
+> applied in our 5.10 codebase...
 > 
-> (there are a number of things to fix here; haven't decided if XA_ERROR
-> should return void *, or whether i should use a separate 'entry' and
-> 'folio' until I know the entry is actually a folio ...)
+> Need to find some time to look into that...
+> 
+> [  413.283300] XFS (loop1): Internal error xfs_trans_cancel at line 950 of file fs/xfs/xfs_trans.c.  Caller xfs_create+0x219/0x590 [xfs]
+> [  413.284295] CPU: 0 PID: 27484 Comm: touch Tainted: G            E     5.10.134-13.an8.x86_64 #1
+> [  413.284296] Hardware name: Alibaba Cloud Alibaba Cloud ECS, BIOS 449e491 04/01/2014
+> [  413.284297] Call Trace:
+> [  413.284314]  dump_stack+0x57/0x6e
+> [  413.284373]  xfs_trans_cancel+0xa3/0x110 [xfs]
+> [  413.284412]  xfs_create+0x219/0x590 [xfs]
+> [  413.284458]  xfs_generic_create+0x21f/0x2d0 [xfs]
+> [  413.284462]  path_openat+0xdee/0x1020
+> [  413.284464]  do_filp_open+0x80/0xd0
+> [  413.284467]  ? __check_object_size+0x16a/0x180
+> [  413.284469]  do_sys_openat2+0x207/0x2c0
+> [  413.284471]  do_sys_open+0x3b/0x60
+> [  413.284475]  do_syscall_64+0x33/0x40
+> [  413.284478]  entry_SYSCALL_64_after_hwframe+0x61/0xc6
+> [  413.284481] RIP: 0033:0x7fe623920252
+> [  413.284482] Code: 25 00 00 41 00 3d 00 00 41 00 74 4c 48 8d 05 55 43 2a 00 8b 00 85 c0 75 6d 89 f2 b8 01 01 00 00 48 89 fe bf 9c ff ff ff 0f 05 <48> 3d 00 f0 ff ff 0f 87 a2 00 00 00 48 8b 4c 24 28 64 48 33 0c 25
+> [  413.284483] RSP: 002b:00007ffd7a38ca70 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
+> [  413.284485] RAX: ffffffffffffffda RBX: 00000000ffffffff RCX: 00007fe623920252
+> [  413.284486] RDX: 0000000000000941 RSI: 00007ffd7a38d79d RDI: 00000000ffffff9c
+> [  413.284487] RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000001
+> [  413.284488] R10: 00000000000001b6 R11: 0000000000000246 R12: 0000000000000001
+> [  413.284488] R13: 0000000000000001 R14: 00007ffd7a38d79d R15: 00007fe623bbf374
+> [  413.289856] XFS (loop1): xfs_do_force_shutdown(0x8) called from line 951 of file fs/xfs/xfs_trans.c. Return address = 000000003fe0b8ba
+> [  413.289858] XFS (loop1): Corruption of in-memory data detected.  Shutting down filesystem
+> [  413.290573] XFS (loop1): Please unmount the filesystem and rectify the problem(s)
 
-That's awful. Exposing internal implementation details in the API
-that is supposed to abstract away the internal implementation
-details from users doesn't seem like a great idea to me.
+This likely has nothing to do with the commit in this thread.
 
-Exactly what are we trying to fix here?  Do we really need to punch
-a hole through the abstraction layers like this just to remove half
-a dozen lines of -slow path- context specific error handling from a
-single caller?
+The shutdowns reported in this thread are *not metadata corruption*;
+this typically occurs when ENOSPC has occurred during inode
+creation after an AGF has been dirtied. i.e.
+xfs_alloc_fix_freelist() has dirtied the selected AGF and AGFL doing
+AGFL fixup, then not had enough space left to allocate the minlen
+extent being requested. The allocation then cannot find space in any
+other AG (because ENOSPC), and the inode allocation fails and the
+transaction gets cancelled.
 
-If there's half a dozen cases that need this sort of handling, then
-maybe it's the right thing to do. But for a single calling context
-that only needs to add a null return check in one specific case?
-There's absolutely no need to make generic infrastructure violate
-layering abstractions to handle that...
+Cancelling a dirty transaction is a fatal error - we cannot recover
+from it as the metadata state prior to the modification in the
+transaction cannot be easily recovered. i.e. we cannot roll back the
+changes that have been made, and hence we have to shut down the
+filesystem. The reason for the shutdown is that the in-memory state
+is not recoverable, hence it is considered corrupt. No actual
+corruption has occurred, we're just in an unrecoverable situation
+with partially modified metadata.
 
--Dave.
+IOWs, this is a symptom of a buggy "can we allocate successfully in
+this AG" check prior to attemptimg allocating and modifying
+metadata, not that there is actual filesystem corruption occurring.
 
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
