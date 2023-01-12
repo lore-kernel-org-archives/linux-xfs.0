@@ -2,95 +2,82 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C50B1C54EBC
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Jan 2023 08:43:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D64FC677F1
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Jan 2023 08:44:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233710AbjALIn4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Jan 2023 03:43:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37502 "EHLO
+        id S235699AbjALIoC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Jan 2023 03:44:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37610 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238924AbjALInU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Jan 2023 03:43:20 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B294033D74
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Jan 2023 00:40:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1673512830;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=sJ1DLzY6SS8/uPcPkUVmu/oFedCftB/N+XCnRFr9bW0=;
-        b=MXzvqRW6Z3WcToht8Y1tOHpGPhY3c51EAoDPR/2dI62BKBNK5/si5pU2P/fOkM+CAWrfmo
-        MvjSerr2Ws17VLyOtEp4+6YFdaIO70jiPS+n1daMsTUOzfB25wwL8cW2wswgE2RqPBU3ba
-        xvlzGiM9A+Bqv1vPs2H98+cqIgOf4lM=
-Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
- [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-311-xHQ_fB7NM42CMoPMbaUR9w-1; Thu, 12 Jan 2023 03:40:29 -0500
-X-MC-Unique: xHQ_fB7NM42CMoPMbaUR9w-1
-Received: by mail-ej1-f70.google.com with SMTP id jg25-20020a170907971900b007c0e98ad898so12174444ejc.15
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Jan 2023 00:40:29 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=sJ1DLzY6SS8/uPcPkUVmu/oFedCftB/N+XCnRFr9bW0=;
-        b=kYa8tmFmFOSfFm4a6F6WoUH/kQjGFwDe95U4pB1C1itB8bM598N4O9C+HYvIGdTzEk
-         5bblgnWFHEvSeuwd26RGx5LBOPMUXv9ytPD/04HEoAusxDisoGM67FYJGyqbMhBeuGBz
-         Rt44Jr3qqXNW+IQGdyWTpr0tk9JxwDT9GOc9B530SCzXBIY8lr/24mrgVKXIm5eFHeBr
-         huuReO8YtNhP0wK2fpApuikJWi9IuetdvdXRFjPSgzdw7vvbTmim0w1nn9ehpSjMT9Ip
-         utvnnMsqen5AuLhMPni7oaVBPSjHFCo7ARIysMgzk2JfEDc0Bd2/ErMuQW2npW7gcrY8
-         Cx8w==
-X-Gm-Message-State: AFqh2kpGWrQlK/H9FlO2eCgjDp226CA88JLeHwsY5haf1iLOgAz/l4IL
-        x67NojU2bdttKTKogVTlpOVtHy6z2mvRiBS/6uHVVfrYWZ3KK7ms0h8T7aX9IsQx3M0mrusrQMI
-        3NjKxNLX8SAgk7zbQ2xmu
-X-Received: by 2002:a17:906:9141:b0:7b2:757a:1411 with SMTP id y1-20020a170906914100b007b2757a1411mr72558279ejw.9.1673512828382;
-        Thu, 12 Jan 2023 00:40:28 -0800 (PST)
-X-Google-Smtp-Source: AMrXdXtkGUh3Q53qkPZ8VBrWhVNvaf84ui4sY1GVD2HHm6puqJ4nuiHdgAhWg0QMF2pdbhY5I/w3IQ==
-X-Received: by 2002:a17:906:9141:b0:7b2:757a:1411 with SMTP id y1-20020a170906914100b007b2757a1411mr72558266ejw.9.1673512828169;
-        Thu, 12 Jan 2023 00:40:28 -0800 (PST)
-Received: from nixos (2A001110012E8C7F057F4AD255C44D29.mobile.pool.telekom.hu. [2a00:1110:12e:8c7f:57f:4ad2:55c4:4d29])
-        by smtp.gmail.com with ESMTPSA id z20-20020a1709067e5400b00809e33ba33dsm7185483ejr.19.2023.01.12.00.40.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Jan 2023 00:40:27 -0800 (PST)
-Date:   Thu, 12 Jan 2023 09:40:12 +0100
-From:   Csaba Henk <chenk@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfsdocs: add epub output
-Message-ID: <20230112084012.dgpn2jfd5otvrjgs@nixos>
-References: <20230111081557.rpmcmkkat7gagqup@nixos>
- <20230111221027.GC360264@dread.disaster.area>
- <20230112014401.ifwjtqx4jzbykeep@nixos>
- <Y79oxBdLUovKkn+N@magnolia>
+        with ESMTP id S239892AbjALIng (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Jan 2023 03:43:36 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E551C3DBF7;
+        Thu, 12 Jan 2023 00:41:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=HhzoXJd8QLSlSJS1DqxUvN7zM6XlenXjXRqQOg3se84=; b=B6HF5bEx6iqEqIAEHf2KINLTzb
+        kw9Iebu5wNTWnbBag/0Id0Fod+g8oVrFealLYYHlZkdcuro4LzIyMwsxEsEgwqA64cHt6gBru07Wi
+        N5Sr26uvf7bx7QE8WLvoRr/le712HeIsmQzOEuOgkKzM18YXEwm51xjUI1tjei3SxiNxUF9Arg5aM
+        v7mkqZfg+74uPpIeA+khsFr6LUG8fYSZQJzK6dRbYkoG80/bhxy19B+J0+q3eiUXZvDyhBWZbGOna
+        ixysnyYIGf74Otb4knAoAeVYO+V1/l5hePKQmFMLEAcLIcpVIAhFbmWQkd5YR4UxIuCe8u3y32R+Z
+        sxkp/04A==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1pFt9B-00EALM-Ff; Thu, 12 Jan 2023 08:41:17 +0000
+Date:   Thu, 12 Jan 2023 00:41:17 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, cluster-devel@redhat.com,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [RFC v6 04/10] iomap: Add iomap_get_folio helper
+Message-ID: <Y7/HrZCARD9zRvEe@infradead.org>
+References: <20230108213305.GO1971568@dread.disaster.area>
+ <20230108194034.1444764-1-agruenba@redhat.com>
+ <20230108194034.1444764-5-agruenba@redhat.com>
+ <20230109124642.1663842-1-agruenba@redhat.com>
+ <Y70l9ZZXpERjPqFT@infradead.org>
+ <Y71pWJ0JHwGrJ/iv@casper.infradead.org>
+ <Y72DK9XuaJfN+ecj@infradead.org>
+ <Y78PunroeYbv2qgH@casper.infradead.org>
+ <20230111205241.GA360264@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y79oxBdLUovKkn+N@magnolia>
+In-Reply-To: <20230111205241.GA360264@dread.disaster.area>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 23-01-11 17:56:20, Darrick J. Wong wrote:
-> Does epub support add more dependencies that I have to install?
-> 
-> Not opposed, just curious.
+On Thu, Jan 12, 2023 at 07:52:41AM +1100, Dave Chinner wrote:
+> Exposing internal implementation details in the API
+> that is supposed to abstract away the internal implementation
+> details from users doesn't seem like a great idea to me.
 
-The to_epub function in a2x:
+While I somewhat agree with the concern of leaking the xarray
+internals, at least they are clearly documented and easy to find..
 
-https://github.com/asciidoc-py/asciidoc-py/blob/10.2.0/asciidoc/a2x.py#L811-L861
+> Exactly what are we trying to fix here?  Do we really need to punch
+> a hole through the abstraction layers like this just to remove half
+> a dozen lines of -slow path- context specific error handling from a
+> single caller?
 
-utilizes docbook / xslt tooling. Which tooling is already among asciidoc
-dependencies, so nothing in addition is needed.
+While the current code (which is getting worse with your fix) leaks
+completely undocumented and internal decision making.  So what this
+fixes is a real leak of internatal logic inside of __filemap_get_folio
+into the callers.
 
-Another concern that came to my mind is whether epub production will be
-supported in all environments which are likely be used to build the docs.
-I think we can be reassured fairly safely in this regard, as support for
-epub was added in 2009, by the following commit:
-
-https://github.com/asciidoc-py/asciidoc-py/commit/27749467
-
-Regards,
-Csaba
-
+So as far as I'm concerned we really do need the helper, and anyone
+using !GFP_CREATE or FGP_NOWAIT should be using it.  The only question
+to me is if exposing the xarray internals is worth it vs the
+less optimal calling conventions of needing an extra argument for
+the error code.
