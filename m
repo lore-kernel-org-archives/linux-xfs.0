@@ -2,96 +2,200 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3395C46467
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Jan 2023 01:56:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82FBCC54EBD
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Jan 2023 06:18:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232849AbjALB40 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Jan 2023 20:56:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59596 "EHLO
+        id S230285AbjALGS1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Jan 2023 01:18:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36062 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231848AbjALB4Z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2023 20:56:25 -0500
+        with ESMTP id S236376AbjALGSZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Jan 2023 01:18:25 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FE6618B14
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2023 17:56:24 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 237CF1263E
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2023 22:18:24 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C69A2B81DA2
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Jan 2023 01:56:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59DA1C433EF;
-        Thu, 12 Jan 2023 01:56:21 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id D76F8B81C0B
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Jan 2023 06:18:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C2F9C433EF;
+        Thu, 12 Jan 2023 06:18:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1673488581;
-        bh=r22x0e1UBk28JMjMyXcLsdFeUU1AWRTU7MW1/pdxjBc=;
+        s=k20201202; t=1673504301;
+        bh=0bpnJ3j+VLKxxvLogkw89OAo1vXSvRZPqYmrheN2UUg=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Evjaj0H+d+9U/VzZhbjV9sKTg9gHuJJ8hCJNRB9Yo4tg18rLBG10R0kuYXsQDGbCF
-         68Zsrrt6+s3d29t/iVQSlGCqpLk+labUOcXHGSLL7hMeH8qTA/Qjg+Rz7Z0IWOYdqf
-         WPUX2tsFiZ3vLqWAPW3t2TAn8C2tbxKao19QxcJmxaTq0CeQJlIYuo5ByCtVVSOl42
-         NG0TF38PRVHt+akjbJ7EkALCgZTn9pSwi40XdX2N4R6AuiHsxbz9R9MfOnaP23QExB
-         Q3WmcrgJGLy3SWkm645chlN1Kh6rSWE4NnWLqQ4cbkIoZhNRDEQhBRbzgGH5nkXPjP
-         Esdqmx8FT7vLA==
-Date:   Wed, 11 Jan 2023 17:56:20 -0800
+        b=QZfQbbPVUm4qMnVelWdD+puGICha6qHz15MdUydV3I3WXPbt9vUcWKwDWG1vK9ZyK
+         e2XqYjMTm/KPiHONReLCT+iduHgP0sqZLAoRkTXn28Q1lQetqB3TeQukujW0LJ3dKf
+         n2Gk2xiJm2jdPRbE1y5TXUbucV+XKyNWRE2CnFinHAUCqS/yF0VlKqoKpGMxW45Kw7
+         J86Yxe40XVDTQ07r+Chsr7+2WtxGILt3U9O0bwdHWbbLWgY7Dxyixl91QOHM3f6FA+
+         df9DwYDe5eBdSNfzWK6sEicHWtEAXqrD5RyTu8mgI/AaGLsOfudK2gitcl3zX6WgR7
+         VL2MUADaicDtQ==
+Date:   Wed, 11 Jan 2023 22:18:20 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Csaba Henk <chenk@redhat.com>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfsdocs: add epub output
-Message-ID: <Y79oxBdLUovKkn+N@magnolia>
-References: <20230111081557.rpmcmkkat7gagqup@nixos>
- <20230111221027.GC360264@dread.disaster.area>
- <20230112014401.ifwjtqx4jzbykeep@nixos>
+To:     allison.henderson@oracle.com
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v7 00/27] Parent Pointers
+Message-ID: <Y7+mLDIc+4gQy7QE@magnolia>
+References: <20221218100306.76408-1-allison.henderson@oracle.com>
+ <Y79UyH0aAKeaKLLU@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230112014401.ifwjtqx4jzbykeep@nixos>
+In-Reply-To: <Y79UyH0aAKeaKLLU@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 12, 2023 at 02:44:01AM +0100, Csaba Henk wrote:
-> On 23-01-12 09:10:27, Dave Chinner wrote:
-> > On Wed, Jan 11, 2023 at 09:15:57AM +0100, Csaba Henk wrote:
-> > > ---
-> > >  .gitignore                               |  1 +
-> > >  admin/Makefile                           | 13 +++++++++++--
-> > >  admin/XFS_Performance_Tuning/Makefile    | 13 +++++++++++--
-> > >  design/Makefile                          | 13 +++++++++++--
-> > >  design/XFS_Filesystem_Structure/Makefile | 13 +++++++++++--
-> > >  5 files changed, 45 insertions(+), 8 deletions(-)
+On Wed, Jan 11, 2023 at 04:31:04PM -0800, Darrick J. Wong wrote:
+> On Sun, Dec 18, 2022 at 03:02:39AM -0700, allison.henderson@oracle.com wrote:
+> > From: Allison Henderson <allison.henderson@oracle.com>
 > > 
-> > The change looks fine, but why do we need to build documentation in
-> > epub format? Empty commit messages are generally considered a bad
+> > Hi all,
+> > 
+> > This is the latest parent pointer attributes for xfs.
+> > The goal of this patch set is to add a parent pointer attribute to each inode.
+> > The attribute name containing the parent inode, generation, and directory
+> > offset, while the  attribute value contains the file name.  This feature will
+> > enable future optimizations for online scrub, shrink, nfs handles, verity, or
+> > any other feature that could make use of quickly deriving an inodes path from
+> > the mount point.  
+> > 
+> > This set can be viewed on github here
+> > https://github.com/allisonhenderson/xfs/tree/xfs_new_pptrsv7
+> > 
+> > And the corresponding xfsprogs code is here
+> > https://github.com/allisonhenderson/xfsprogs/tree/xfsprogs_new_pptrs_v7
+> > 
+> > This set has been tested with the below parent pointers tests
+> > https://lore.kernel.org/fstests/20221012013812.82161-1-catherine.hoang@oracle.com/T/#t
 > 
-> Well, we don't *need*; I just found we *can* (a2x spits it out in a
-> split second).
+> I pulled v7 and rebased your patches atop 6.2-rc3.  generic/476 failed
+> with quotas enabled:
 > 
-> My perception is that epub has become the de facto standard portable
-> publication format for on-screen reading. So I thought it would be
-> beneficial to make it available.
+> XFS: Assertion failed: q[j].qt_dquot->q_id > d->q_id, file: fs/xfs/xfs_dquot.c, line: 1351
+> <repeat>
 > 
-> If this is not a consensual stance, it's also a possibility to add
-> the epub target, but do not include it in default. Ie. make it
-> available on demand.
-
-Does epub support add more dependencies that I have to install?
-
-Not opposed, just curious.
-
-> > thing - the commit message should explain to us why building epub
-> > format documentation is desired, what problem it solves, what new
-> > dependencies it introduces (e.g. build tools), how we should
-> > determine that the generated documentation is good, etc so that have
-> > some basis from which to evaluate the change from.
+> I suspect this is becuase xfs_dqlockn needs to sort the dqtrx structures
+> by quotaid?
 > 
-> Sorry; I thought a mere subject suffices if it's obvious what's the
-> impact of the patch. I agree that giving context / rationale would be
-> useful. I'll add that, according to the approach we settle with (ie.
-> whether to include it in default).
+> So I turned off quotas and the kernel quieted down.  Good. :)
+> 
+> Next up was xfs_scrub, which complained about *something* in the xattr
+> structures.  I'm guessing that it probably doesn't know how to deal with
+> the new pptr namespace or the zeroes that can be present in the pptr
+> attr name?
+> 
+> Other than that, looks promising.  I'll fix up the scrub and quota
+> problems and start prototyping fsck code from there.
 
-Yes please. :)
+Second followup: two of the fstest vms are stuck spinning in unmount on
+xfs/113; and the other two are stuck trying to grab ilocks in
+generic/681 and generic/682.
 
 --D
 
-> Regards,
-> Csaba
+> --D
 > 
+> > Updates since v6:
+> > Andry had reported intermittent hangs on unmount while running stress tests.
+> > Reviewed and corrected unlocks in the case of error conditions.
+> > 
+> > xfs: parent pointer attribute creation
+> >   Fixed dp to unlock on error
+> >   
+> > xfs: Hold inode locks in xfs_ialloc
+> >   Fixed ip to unlock on create error
+> >   
+> > xfs: add parent attributes to symlink
+> >   Hold and release dp across pptr operation
+> >   
+> > Questions comments and feedback appreciated!
+> > 
+> > Thanks all!
+> > Allison
+> > 
+> > 
+> > Allison Henderson (27):
+> >   xfs: Add new name to attri/d
+> >   xfs: Increase XFS_DEFER_OPS_NR_INODES to 5
+> >   xfs: Increase XFS_QM_TRANS_MAXDQS to 5
+> >   xfs: Hold inode locks in xfs_ialloc
+> >   xfs: Hold inode locks in xfs_trans_alloc_dir
+> >   xfs: Hold inode locks in xfs_rename
+> >   xfs: Expose init_xattrs in xfs_create_tmpfile
+> >   xfs: get directory offset when adding directory name
+> >   xfs: get directory offset when removing directory name
+> >   xfs: get directory offset when replacing a directory name
+> >   xfs: add parent pointer support to attribute code
+> >   xfs: define parent pointer xattr format
+> >   xfs: Add xfs_verify_pptr
+> >   xfs: extend transaction reservations for parent attributes
+> >   xfs: parent pointer attribute creation
+> >   xfs: add parent attributes to link
+> >   xfs: add parent attributes to symlink
+> >   xfs: remove parent pointers in unlink
+> >   xfs: Indent xfs_rename
+> >   xfs: Add parent pointers to rename
+> >   xfs: Add parent pointers to xfs_cross_rename
+> >   xfs: Add the parent pointer support to the  superblock version 5.
+> >   xfs: Add helper function xfs_attr_list_context_init
+> >   xfs: Filter XFS_ATTR_PARENT for getfattr
+> >   xfs: Add parent pointer ioctl
+> >   xfs: fix unit conversion error in xfs_log_calc_max_attrsetm_res
+> >   xfs: drop compatibility minimum log size computations for reflink
+> > 
+> >  fs/xfs/Makefile                 |   2 +
+> >  fs/xfs/libxfs/xfs_attr.c        |  71 +++++-
+> >  fs/xfs/libxfs/xfs_attr.h        |  13 +-
+> >  fs/xfs/libxfs/xfs_da_btree.h    |   3 +
+> >  fs/xfs/libxfs/xfs_da_format.h   |  38 ++-
+> >  fs/xfs/libxfs/xfs_defer.c       |  28 ++-
+> >  fs/xfs/libxfs/xfs_defer.h       |   8 +-
+> >  fs/xfs/libxfs/xfs_dir2.c        |  21 +-
+> >  fs/xfs/libxfs/xfs_dir2.h        |   7 +-
+> >  fs/xfs/libxfs/xfs_dir2_block.c  |   9 +-
+> >  fs/xfs/libxfs/xfs_dir2_leaf.c   |   8 +-
+> >  fs/xfs/libxfs/xfs_dir2_node.c   |   8 +-
+> >  fs/xfs/libxfs/xfs_dir2_sf.c     |   6 +
+> >  fs/xfs/libxfs/xfs_format.h      |   4 +-
+> >  fs/xfs/libxfs/xfs_fs.h          |  75 ++++++
+> >  fs/xfs/libxfs/xfs_log_format.h  |   7 +-
+> >  fs/xfs/libxfs/xfs_log_rlimit.c  |  53 ++++
+> >  fs/xfs/libxfs/xfs_parent.c      | 207 ++++++++++++++++
+> >  fs/xfs/libxfs/xfs_parent.h      |  46 ++++
+> >  fs/xfs/libxfs/xfs_sb.c          |   4 +
+> >  fs/xfs/libxfs/xfs_trans_resv.c  | 324 ++++++++++++++++++++----
+> >  fs/xfs/libxfs/xfs_trans_space.h |   8 -
+> >  fs/xfs/scrub/attr.c             |   2 +-
+> >  fs/xfs/xfs_attr_item.c          | 142 +++++++++--
+> >  fs/xfs/xfs_attr_item.h          |   1 +
+> >  fs/xfs/xfs_attr_list.c          |  17 +-
+> >  fs/xfs/xfs_dquot.c              |  25 ++
+> >  fs/xfs/xfs_dquot.h              |   1 +
+> >  fs/xfs/xfs_file.c               |   1 +
+> >  fs/xfs/xfs_inode.c              | 427 +++++++++++++++++++++++++-------
+> >  fs/xfs/xfs_inode.h              |   3 +-
+> >  fs/xfs/xfs_ioctl.c              | 148 +++++++++--
+> >  fs/xfs/xfs_ioctl.h              |   2 +
+> >  fs/xfs/xfs_iops.c               |   3 +-
+> >  fs/xfs/xfs_ondisk.h             |   4 +
+> >  fs/xfs/xfs_parent_utils.c       | 125 ++++++++++
+> >  fs/xfs/xfs_parent_utils.h       |  11 +
+> >  fs/xfs/xfs_qm.c                 |   4 +-
+> >  fs/xfs/xfs_qm.h                 |   2 +-
+> >  fs/xfs/xfs_super.c              |   4 +
+> >  fs/xfs/xfs_symlink.c            |  58 ++++-
+> >  fs/xfs/xfs_trans.c              |   6 +-
+> >  fs/xfs/xfs_trans_dquot.c        |  15 +-
+> >  fs/xfs/xfs_xattr.c              |   5 +-
+> >  fs/xfs/xfs_xattr.h              |   1 +
+> >  45 files changed, 1712 insertions(+), 245 deletions(-)
+> >  create mode 100644 fs/xfs/libxfs/xfs_parent.c
+> >  create mode 100644 fs/xfs/libxfs/xfs_parent.h
+> >  create mode 100644 fs/xfs/xfs_parent_utils.c
+> >  create mode 100644 fs/xfs/xfs_parent_utils.h
+> > 
+> > -- 
+> > 2.25.1
+> > 
