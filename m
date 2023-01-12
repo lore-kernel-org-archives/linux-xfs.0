@@ -2,192 +2,109 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD296C46467
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Jan 2023 00:31:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF4C9C46467
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Jan 2023 01:45:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230270AbjALAbN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Jan 2023 19:31:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54202 "EHLO
+        id S234628AbjALBpC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Jan 2023 20:45:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55738 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229929AbjALAbL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2023 19:31:11 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68DA7395EB
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2023 16:31:06 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 05D4B61ED9
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Jan 2023 00:31:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56AC3C433EF;
-        Thu, 12 Jan 2023 00:31:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1673483465;
-        bh=hM8BteyFLWkL6+i8pgJTqM6R2RIF2vYXR9ylVdHW0KQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=KPbCltQItJqazcAQeJSc5XPSNanFA0Fnyzl9lMvM5yM50vjFC2JQqSOyPNFFx6+aI
-         VTgTABei5Umt1nTd5TWkhPPOPKTlBVgKfr1An1Q/luiax8TJXI/ZpLOlRPhk1gVOBG
-         Xf8WojPg1gVWf55b20omvIJecByCDaXLUlFeRT4A8SQVU58PdtrFjDcr8Iy16Lp4SA
-         EmqkORBl7YjGo7cvofJi7A03KcTz32NoT8iBljrIUF0ztgS5Wp4liNGIjZEKdyYowU
-         r0Bi+UeKxs45Rfnoce0scBgXmVi4YAI6+PBhPP3zjSp4I9Q+k/UvKhPU7BJ0A3uTRT
-         9dBxAALwvpK0g==
-Date:   Wed, 11 Jan 2023 16:31:04 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     allison.henderson@oracle.com
+        with ESMTP id S230330AbjALBpB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Jan 2023 20:45:01 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B0C537509
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2023 17:44:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1673487855;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=6oXZbX8QwsHNv2+GsJetpXD0w8CIK2eZYoWLFcYWqoo=;
+        b=cGQiqPEYn2c6IDm48xCpFw6uti4WxdjZhWIu0F2MHUxh8JL2FrZ8Xi2NnG2LWCXc5x4kTA
+        0FvMd3W7uGKjwD7rkSeUDbwbE1XaVttayjyjxmFlgOryvcOhzZaOCSfkzIN1NV2aW+skjF
+        2V0fDK386+OE1O6/Ae2JPmf7fHyBuHI=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-351-1xnceS7vM7ymhok1VsycmA-1; Wed, 11 Jan 2023 20:44:13 -0500
+X-MC-Unique: 1xnceS7vM7ymhok1VsycmA-1
+Received: by mail-wm1-f70.google.com with SMTP id j15-20020a05600c1c0f00b003d9ec0eaa74so2114681wms.1
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Jan 2023 17:44:13 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=6oXZbX8QwsHNv2+GsJetpXD0w8CIK2eZYoWLFcYWqoo=;
+        b=apYAV/Qv53N4dSJNg12TpB2GiMMTom7g6Gvw7DQa/lFjh7dVTX42hjQQ9riAtUsp3e
+         gcferKsJAwKqJ07KP4Rda5WVfK/uzpTpvpLL5mWJppS6dFU7s0DqHySS/NQRqdg/nE0H
+         GeXuc92QT7Vf4MpGzl8qItoLMGPGKdztdvKNvJv7RY53YRbbUpbw/d4Zv8chgEO9vQ7W
+         +eDI8afAWz2Uwmev1z6lbo3mgvHyJcARufQRJdw8zPmuw5t8Nj5/FpY7fab1UooKf2Ly
+         RKq5huWo7+vDyXu4hXRnIsM6CVpasgsVnqE+ifMpvltv7vgQh56nOpVOy5Yay2AnjqVH
+         DqMg==
+X-Gm-Message-State: AFqh2krExmxKHl//ePczJkWL6e+e3v3DEJ/NGSTXZjndFljfUwSZnOnK
+        LWw2AeQ/gWMLQAXuAmtHrBNR132BuuSl5dfL1p3o2nroGRXpgdMje2vwWInzLAdV0SeNeE2Psxs
+        mXCPqXIPxPDc4KNyCO46L
+X-Received: by 2002:a05:600c:1f15:b0:3cf:98e5:f72 with SMTP id bd21-20020a05600c1f1500b003cf98e50f72mr57486886wmb.3.1673487851799;
+        Wed, 11 Jan 2023 17:44:11 -0800 (PST)
+X-Google-Smtp-Source: AMrXdXvZUDhO4Z16UeEVkUdxlWpGIyH+OP6ij90zPU4LRfTf69DXsC/Q32G/Wxdhrx3RActJNZq+Mg==
+X-Received: by 2002:a05:600c:1f15:b0:3cf:98e5:f72 with SMTP id bd21-20020a05600c1f1500b003cf98e50f72mr57486876wmb.3.1673487851544;
+        Wed, 11 Jan 2023 17:44:11 -0800 (PST)
+Received: from nixos ([2a00:1110:101:7789:849d:20c:6cb1:53b8])
+        by smtp.gmail.com with ESMTPSA id f19-20020a1c6a13000000b003d9fb04f658sm6176102wmc.4.2023.01.11.17.44.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 11 Jan 2023 17:44:10 -0800 (PST)
+Date:   Thu, 12 Jan 2023 02:44:01 +0100
+From:   Csaba Henk <chenk@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v7 00/27] Parent Pointers
-Message-ID: <Y79UyH0aAKeaKLLU@magnolia>
-References: <20221218100306.76408-1-allison.henderson@oracle.com>
+Subject: Re: [PATCH] xfsdocs: add epub output
+Message-ID: <20230112014401.ifwjtqx4jzbykeep@nixos>
+References: <20230111081557.rpmcmkkat7gagqup@nixos>
+ <20230111221027.GC360264@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20221218100306.76408-1-allison.henderson@oracle.com>
+In-Reply-To: <20230111221027.GC360264@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Dec 18, 2022 at 03:02:39AM -0700, allison.henderson@oracle.com wrote:
-> From: Allison Henderson <allison.henderson@oracle.com>
+On 23-01-12 09:10:27, Dave Chinner wrote:
+> On Wed, Jan 11, 2023 at 09:15:57AM +0100, Csaba Henk wrote:
+> > ---
+> >  .gitignore                               |  1 +
+> >  admin/Makefile                           | 13 +++++++++++--
+> >  admin/XFS_Performance_Tuning/Makefile    | 13 +++++++++++--
+> >  design/Makefile                          | 13 +++++++++++--
+> >  design/XFS_Filesystem_Structure/Makefile | 13 +++++++++++--
+> >  5 files changed, 45 insertions(+), 8 deletions(-)
 > 
-> Hi all,
-> 
-> This is the latest parent pointer attributes for xfs.
-> The goal of this patch set is to add a parent pointer attribute to each inode.
-> The attribute name containing the parent inode, generation, and directory
-> offset, while the  attribute value contains the file name.  This feature will
-> enable future optimizations for online scrub, shrink, nfs handles, verity, or
-> any other feature that could make use of quickly deriving an inodes path from
-> the mount point.  
-> 
-> This set can be viewed on github here
-> https://github.com/allisonhenderson/xfs/tree/xfs_new_pptrsv7
-> 
-> And the corresponding xfsprogs code is here
-> https://github.com/allisonhenderson/xfsprogs/tree/xfsprogs_new_pptrs_v7
-> 
-> This set has been tested with the below parent pointers tests
-> https://lore.kernel.org/fstests/20221012013812.82161-1-catherine.hoang@oracle.com/T/#t
+> The change looks fine, but why do we need to build documentation in
+> epub format? Empty commit messages are generally considered a bad
 
-I pulled v7 and rebased your patches atop 6.2-rc3.  generic/476 failed
-with quotas enabled:
+Well, we don't *need*; I just found we *can* (a2x spits it out in a
+split second).
 
-XFS: Assertion failed: q[j].qt_dquot->q_id > d->q_id, file: fs/xfs/xfs_dquot.c, line: 1351
-<repeat>
+My perception is that epub has become the de facto standard portable
+publication format for on-screen reading. So I thought it would be
+beneficial to make it available.
 
-I suspect this is becuase xfs_dqlockn needs to sort the dqtrx structures
-by quotaid?
+If this is not a consensual stance, it's also a possibility to add
+the epub target, but do not include it in default. Ie. make it
+available on demand.
 
-So I turned off quotas and the kernel quieted down.  Good. :)
+> thing - the commit message should explain to us why building epub
+> format documentation is desired, what problem it solves, what new
+> dependencies it introduces (e.g. build tools), how we should
+> determine that the generated documentation is good, etc so that have
+> some basis from which to evaluate the change from.
 
-Next up was xfs_scrub, which complained about *something* in the xattr
-structures.  I'm guessing that it probably doesn't know how to deal with
-the new pptr namespace or the zeroes that can be present in the pptr
-attr name?
+Sorry; I thought a mere subject suffices if it's obvious what's the
+impact of the patch. I agree that giving context / rationale would be
+useful. I'll add that, according to the approach we settle with (ie.
+whether to include it in default).
 
-Other than that, looks promising.  I'll fix up the scrub and quota
-problems and start prototyping fsck code from there.
+Regards,
+Csaba
 
---D
-
-> Updates since v6:
-> Andry had reported intermittent hangs on unmount while running stress tests.
-> Reviewed and corrected unlocks in the case of error conditions.
-> 
-> xfs: parent pointer attribute creation
->   Fixed dp to unlock on error
->   
-> xfs: Hold inode locks in xfs_ialloc
->   Fixed ip to unlock on create error
->   
-> xfs: add parent attributes to symlink
->   Hold and release dp across pptr operation
->   
-> Questions comments and feedback appreciated!
-> 
-> Thanks all!
-> Allison
-> 
-> 
-> Allison Henderson (27):
->   xfs: Add new name to attri/d
->   xfs: Increase XFS_DEFER_OPS_NR_INODES to 5
->   xfs: Increase XFS_QM_TRANS_MAXDQS to 5
->   xfs: Hold inode locks in xfs_ialloc
->   xfs: Hold inode locks in xfs_trans_alloc_dir
->   xfs: Hold inode locks in xfs_rename
->   xfs: Expose init_xattrs in xfs_create_tmpfile
->   xfs: get directory offset when adding directory name
->   xfs: get directory offset when removing directory name
->   xfs: get directory offset when replacing a directory name
->   xfs: add parent pointer support to attribute code
->   xfs: define parent pointer xattr format
->   xfs: Add xfs_verify_pptr
->   xfs: extend transaction reservations for parent attributes
->   xfs: parent pointer attribute creation
->   xfs: add parent attributes to link
->   xfs: add parent attributes to symlink
->   xfs: remove parent pointers in unlink
->   xfs: Indent xfs_rename
->   xfs: Add parent pointers to rename
->   xfs: Add parent pointers to xfs_cross_rename
->   xfs: Add the parent pointer support to the  superblock version 5.
->   xfs: Add helper function xfs_attr_list_context_init
->   xfs: Filter XFS_ATTR_PARENT for getfattr
->   xfs: Add parent pointer ioctl
->   xfs: fix unit conversion error in xfs_log_calc_max_attrsetm_res
->   xfs: drop compatibility minimum log size computations for reflink
-> 
->  fs/xfs/Makefile                 |   2 +
->  fs/xfs/libxfs/xfs_attr.c        |  71 +++++-
->  fs/xfs/libxfs/xfs_attr.h        |  13 +-
->  fs/xfs/libxfs/xfs_da_btree.h    |   3 +
->  fs/xfs/libxfs/xfs_da_format.h   |  38 ++-
->  fs/xfs/libxfs/xfs_defer.c       |  28 ++-
->  fs/xfs/libxfs/xfs_defer.h       |   8 +-
->  fs/xfs/libxfs/xfs_dir2.c        |  21 +-
->  fs/xfs/libxfs/xfs_dir2.h        |   7 +-
->  fs/xfs/libxfs/xfs_dir2_block.c  |   9 +-
->  fs/xfs/libxfs/xfs_dir2_leaf.c   |   8 +-
->  fs/xfs/libxfs/xfs_dir2_node.c   |   8 +-
->  fs/xfs/libxfs/xfs_dir2_sf.c     |   6 +
->  fs/xfs/libxfs/xfs_format.h      |   4 +-
->  fs/xfs/libxfs/xfs_fs.h          |  75 ++++++
->  fs/xfs/libxfs/xfs_log_format.h  |   7 +-
->  fs/xfs/libxfs/xfs_log_rlimit.c  |  53 ++++
->  fs/xfs/libxfs/xfs_parent.c      | 207 ++++++++++++++++
->  fs/xfs/libxfs/xfs_parent.h      |  46 ++++
->  fs/xfs/libxfs/xfs_sb.c          |   4 +
->  fs/xfs/libxfs/xfs_trans_resv.c  | 324 ++++++++++++++++++++----
->  fs/xfs/libxfs/xfs_trans_space.h |   8 -
->  fs/xfs/scrub/attr.c             |   2 +-
->  fs/xfs/xfs_attr_item.c          | 142 +++++++++--
->  fs/xfs/xfs_attr_item.h          |   1 +
->  fs/xfs/xfs_attr_list.c          |  17 +-
->  fs/xfs/xfs_dquot.c              |  25 ++
->  fs/xfs/xfs_dquot.h              |   1 +
->  fs/xfs/xfs_file.c               |   1 +
->  fs/xfs/xfs_inode.c              | 427 +++++++++++++++++++++++++-------
->  fs/xfs/xfs_inode.h              |   3 +-
->  fs/xfs/xfs_ioctl.c              | 148 +++++++++--
->  fs/xfs/xfs_ioctl.h              |   2 +
->  fs/xfs/xfs_iops.c               |   3 +-
->  fs/xfs/xfs_ondisk.h             |   4 +
->  fs/xfs/xfs_parent_utils.c       | 125 ++++++++++
->  fs/xfs/xfs_parent_utils.h       |  11 +
->  fs/xfs/xfs_qm.c                 |   4 +-
->  fs/xfs/xfs_qm.h                 |   2 +-
->  fs/xfs/xfs_super.c              |   4 +
->  fs/xfs/xfs_symlink.c            |  58 ++++-
->  fs/xfs/xfs_trans.c              |   6 +-
->  fs/xfs/xfs_trans_dquot.c        |  15 +-
->  fs/xfs/xfs_xattr.c              |   5 +-
->  fs/xfs/xfs_xattr.h              |   1 +
->  45 files changed, 1712 insertions(+), 245 deletions(-)
->  create mode 100644 fs/xfs/libxfs/xfs_parent.c
->  create mode 100644 fs/xfs/libxfs/xfs_parent.h
->  create mode 100644 fs/xfs/xfs_parent_utils.c
->  create mode 100644 fs/xfs/xfs_parent_utils.h
-> 
-> -- 
-> 2.25.1
-> 
