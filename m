@@ -2,225 +2,262 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C845C67871
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Jan 2023 16:04:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1640AC46467
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Jan 2023 20:14:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232282AbjAPQEW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 Jan 2023 11:04:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45740 "EHLO
+        id S231364AbjAPUN7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 Jan 2023 15:13:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59606 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231987AbjAPQDn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Jan 2023 11:03:43 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1082925E14;
-        Mon, 16 Jan 2023 08:02:41 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=yWMoVbxjqe8C52IYg/jkHrGSHQbIvCeLUDAeg3xtuO0=; b=k2A2EtBHrs2Fa59e/eMYfU6dLQ
-        FcznVdepbtgmE4fr6Jh0Ugel8QiZ1EYaV9M8P80FTOJOypBrl5uVaxbrOYXlZmENBJMEuikxVKugH
-        29gRTbI5hNnb+dqqWm6FT1RR+nRGB+ZIBnjKouCfwl8MOd7N+nIeQtd8DRyjenTWg4So7dSEPaQAw
-        eK8IOpj+Mns+E65GjPTVmTJZ+3rVGQvdTPLgwjfrCdIk8P2Qb9dt4sv6+FkERph0X72zHesoTY0us
-        El1fStIhB0NdFqlfLQpwfd5qPWnvwDQsOSwPGnbEdVo5BjUFguJmLX6LRXi8aLSkpedkr59Oho2R0
-        7yyUJIKQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pHRwP-00BBry-Hb; Mon, 16 Jan 2023 16:02:33 +0000
-Date:   Mon, 16 Jan 2023 08:02:33 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, cluster-devel@redhat.com,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFC v6 04/10] iomap: Add iomap_get_folio helper
-Message-ID: <Y8V1GarEaTu0ytT0@infradead.org>
-References: <20230108194034.1444764-1-agruenba@redhat.com>
- <20230108194034.1444764-5-agruenba@redhat.com>
- <20230109124642.1663842-1-agruenba@redhat.com>
- <Y70l9ZZXpERjPqFT@infradead.org>
- <Y71pWJ0JHwGrJ/iv@casper.infradead.org>
- <Y8QxYjy+4Kjg05rB@magnolia>
- <Y8QyqlAkLyysv8Qd@magnolia>
- <Y8TkmbZfe3L/Yeky@casper.infradead.org>
- <Y8T+Al0aqRcXWzwt@infradead.org>
- <Y8VOjyLW1Q4lbQvS@casper.infradead.org>
+        with ESMTP id S231171AbjAPUN6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Jan 2023 15:13:58 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E878D23D95
+        for <linux-xfs@vger.kernel.org>; Mon, 16 Jan 2023 12:13:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1673899991;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+        bh=5xF7YGLwbuC9Apo1B8+fwnT3i5wfmG74o0bhvHar/PM=;
+        b=SMxKOZ2jb6xUTkB61zewifdDe7IxAHog1eZUKXTw4AmeG3PoP5zHVKe7DVMzxP1N0ZR3Ud
+        F9qJV74vK0RxlXSsyOt0z38L0Y0++ocG40PdqI6CpsALiq7LxNUcO82wnQMZZ1KwH/N+iy
+        Od8BKpHA/JuVlYHklvaT9ScxonoNnk4=
+Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
+ [209.85.208.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-450-pqoGR64fNXGOdBpSm0E-tA-1; Mon, 16 Jan 2023 15:13:09 -0500
+X-MC-Unique: pqoGR64fNXGOdBpSm0E-tA-1
+Received: by mail-ed1-f71.google.com with SMTP id b15-20020a056402350f00b0048477a5114bso19495923edd.2
+        for <linux-xfs@vger.kernel.org>; Mon, 16 Jan 2023 12:13:08 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=5xF7YGLwbuC9Apo1B8+fwnT3i5wfmG74o0bhvHar/PM=;
+        b=Caf7RMYNL1erkJVd7WMxkJFHQvGO/QUQxgwqXgI3yrhVw7R4VS934XATsNgjvBrpbY
+         IsCGqDJfONjNrm6QVrlw3Uq2kwvbrCWpnx7O0hFrPLwfNGj53eFhXv3RyMJtIRPPgNB/
+         mqZrDBjlE8fUdPbAPw6nf9C8X7tlbJjIZKWMO09L3QoKsIMsN4Bc7zT+wErA371x8Bf1
+         RJXxw7zhMHPpvT7E/FzD1smZDgUkBSojuPySpr95uZK6ZGcK0bSVshRB4hbDJnuHCryM
+         VcBQgq1zP416Ml04CDMYqsNX5J+ZJ5jvBH3QPdA97T+SfXg0kqMDk/5mB+axU0j6xwQ1
+         nEJg==
+X-Gm-Message-State: AFqh2kqiyYrRt83yf8aixvo84TZk69db8W+6jUOuUBmoChVDBRKPRdJO
+        zlziQ7bqaVBdYueHF+KgpE0Q8P2T6vQ0LC8+a1uMuDyDJg891g+L/N68qbU9zFmQ7KDQ2SVc+97
+        gfbqr3pGVZo53a8KCo8eTgMASic39lrI/yiOLFBdFHUuaOQgxPMBJNh95renWeIEe3Vsh
+X-Received: by 2002:a05:6402:219:b0:499:70a8:f915 with SMTP id t25-20020a056402021900b0049970a8f915mr467341edv.21.1673899987386;
+        Mon, 16 Jan 2023 12:13:07 -0800 (PST)
+X-Google-Smtp-Source: AMrXdXtd4x78A5dMMNao/td6JJSnInINwwgwltHWiUkgC2Wz2lq9uOOe5wX6eFAedCTlw5ULTbPM2Q==
+X-Received: by 2002:a05:6402:219:b0:499:70a8:f915 with SMTP id t25-20020a056402021900b0049970a8f915mr467322edv.21.1673899987074;
+        Mon, 16 Jan 2023 12:13:07 -0800 (PST)
+Received: from nixos ([2a00:1110:21c:7bf4:669c:ae15:39b5:5f4a])
+        by smtp.gmail.com with ESMTPSA id u9-20020a056402110900b00499d0d78540sm7341365edv.39.2023.01.16.12.13.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 16 Jan 2023 12:13:06 -0800 (PST)
+Date:   Mon, 16 Jan 2023 21:12:58 +0100
+From:   Csaba Henk <chenk@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Subject: [PATCH v2] xfsdocs: add epub output
+Message-ID: <20230116201258.a4debvbbbr724ilm@nixos>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <Y8VOjyLW1Q4lbQvS@casper.infradead.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jan 16, 2023 at 01:18:07PM +0000, Matthew Wilcox wrote:
-> Essentially reverting 44835d20b2a0.
+Epub is a widespread open format for standalone reflowable
+electronic documents, and it's a core feature of Asciidoc tooling
+to be able to produce it, so we can get it "for free".
+---
+ .gitignore                               |  1 +
+ admin/Makefile                           | 13 +++++++++++--
+ admin/XFS_Performance_Tuning/Makefile    | 13 +++++++++++--
+ design/Makefile                          | 13 +++++++++++--
+ design/XFS_Filesystem_Structure/Makefile | 13 +++++++++++--
+ 5 files changed, 45 insertions(+), 8 deletions(-)
 
-Yep.
-
-> Although we retain the merging of
-> the lock & get functions via the use of FGP flags.  Let me think about
-> it for a day.
-
-Yes.  But looking at the code again I wonder if even that is needed.
-Out of the users of FGP_ENTRY / __filemap_get_folio_entry:
-
- - split_huge_pages_in_file really should not be using it at all,
-   given that it checks for xa_is_value and treats that as !folio
- - one doesn't pass FGP_LOCK and could just use filemap_get_entry
- - the othr two are in shmem, so we could move the locking logic
-   there (and maybe in future optimize it in the callers)
-
-That would be something like this, although it should be split into
-two or three patches:
-
-diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index 29e1f9e76eb6dd..ecd1ff40a80621 100644
---- a/include/linux/pagemap.h
-+++ b/include/linux/pagemap.h
-@@ -504,9 +504,9 @@ pgoff_t page_cache_prev_miss(struct address_space *mapping,
- #define FGP_NOFS		0x00000010
- #define FGP_NOWAIT		0x00000020
- #define FGP_FOR_MMAP		0x00000040
--#define FGP_ENTRY		0x00000080
--#define FGP_STABLE		0x00000100
-+#define FGP_STABLE		0x00000080
+diff --git a/.gitignore b/.gitignore
+index a2e10b4..412ff1c 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,3 +1,4 @@
+ *.html
+ *.pdf
+ *.css
++*.epub
+diff --git a/admin/Makefile b/admin/Makefile
+index de27f3b..dcffc63 100644
+--- a/admin/Makefile
++++ b/admin/Makefile
+@@ -11,6 +11,7 @@ DOCFILES=$(wildcard *.asciidoc)
  
-+void *filemap_get_entry(struct address_space *mapping, pgoff_t index);
- struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
- 		int fgp_flags, gfp_t gfp);
- struct page *pagecache_get_page(struct address_space *mapping, pgoff_t index,
-diff --git a/mm/filemap.c b/mm/filemap.c
-index c4d4ace9cc7003..85bd86c44e14d2 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -1832,7 +1832,7 @@ EXPORT_SYMBOL(page_cache_prev_miss);
-  */
+ HTML_TARGETS=$(addsuffix .html, $(basename $(DOCFILES)))
+ PDF_TARGETS=$(addsuffix .pdf, $(basename $(DOCFILES)))
++EPUB_TARGETS=$(addsuffix .epub, $(basename $(DOCFILES)))
  
- /*
-- * mapping_get_entry - Get a page cache entry.
-+ * filemap_get_entry - Get a page cache entry.
-  * @mapping: the address_space to search
-  * @index: The page cache index.
-  *
-@@ -1843,7 +1843,7 @@ EXPORT_SYMBOL(page_cache_prev_miss);
-  *
-  * Return: The folio, swap or shadow entry, %NULL if nothing is found.
-  */
--static void *mapping_get_entry(struct address_space *mapping, pgoff_t index)
-+void *filemap_get_entry(struct address_space *mapping, pgoff_t index)
- {
- 	XA_STATE(xas, &mapping->i_pages, index);
- 	struct folio *folio;
-@@ -1887,8 +1887,6 @@ static void *mapping_get_entry(struct address_space *mapping, pgoff_t index)
-  *
-  * * %FGP_ACCESSED - The folio will be marked accessed.
-  * * %FGP_LOCK - The folio is returned locked.
-- * * %FGP_ENTRY - If there is a shadow / swap / DAX entry, return it
-- *   instead of allocating a new folio to replace it.
-  * * %FGP_CREAT - If no page is present then a new page is allocated using
-  *   @gfp and added to the page cache and the VM's LRU list.
-  *   The page is returned locked and with an increased refcount.
-@@ -1913,12 +1911,9 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
- 	struct folio *folio;
+ %.html: %.asciidoc
+ 	@echo "[html] $*"
+@@ -20,7 +21,11 @@ PDF_TARGETS=$(addsuffix .pdf, $(basename $(DOCFILES)))
+ 	@echo "[pdf] $*"
+ 	$(Q)a2x -f pdf $<
  
- repeat:
--	folio = mapping_get_entry(mapping, index);
--	if (xa_is_value(folio)) {
--		if (fgp_flags & FGP_ENTRY)
--			return folio;
-+	folio = filemap_get_entry(mapping, index);
-+	if (xa_is_value(folio))
- 		folio = NULL;
--	}
- 	if (!folio)
- 		goto no_page;
- 
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index abe6cfd92ffa0e..b182eb99044e9a 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -3088,11 +3088,10 @@ static int split_huge_pages_in_file(const char *file_path, pgoff_t off_start,
- 	mapping = candidate->f_mapping;
- 
- 	for (index = off_start; index < off_end; index += nr_pages) {
--		struct folio *folio = __filemap_get_folio(mapping, index,
--						FGP_ENTRY, 0);
-+		struct folio *folio = filemap_get_folio(mapping, index);
- 
- 		nr_pages = 1;
--		if (xa_is_value(folio) || !folio)
-+		if (!folio)
- 			continue;
- 
- 		if (!folio_test_large(folio))
-diff --git a/mm/shmem.c b/mm/shmem.c
-index 028675cd97d445..4650192dbcb91b 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -880,6 +880,28 @@ void shmem_unlock_mapping(struct address_space *mapping)
- 	}
- }
- 
-+static struct folio *shmem_get_entry(struct address_space *mapping,
-+		pgoff_t index)
-+{
-+	struct folio *folio;
+-default: html pdf $(SUBDIRS)
++%.epub: %.asciidoc
++	@echo "[epub] $*"
++	$(Q)a2x -f epub $<
 +
-+repeat:
-+	folio = filemap_get_entry(mapping, index);
-+	if (folio && !xa_is_value(folio)) {
-+		folio_lock(folio);
-+
-+		/* Has the page been truncated? */
-+		if (unlikely(folio->mapping != mapping)) {
-+			folio_unlock(folio);
-+			folio_put(folio);
-+			goto repeat;
-+		}
-+		VM_BUG_ON_FOLIO(!folio_contains(folio, index), folio);
-+	}
-+
-+	return folio;
-+}
-+
- static struct folio *shmem_get_partial_folio(struct inode *inode, pgoff_t index)
- {
- 	struct folio *folio;
-@@ -888,8 +910,7 @@ static struct folio *shmem_get_partial_folio(struct inode *inode, pgoff_t index)
- 	 * At first avoid shmem_get_folio(,,,SGP_READ): that fails
- 	 * beyond i_size, and reports fallocated pages as holes.
- 	 */
--	folio = __filemap_get_folio(inode->i_mapping, index,
--					FGP_ENTRY | FGP_LOCK, 0);
-+	folio = shmem_get_entry(inode->i_mapping, index);
- 	if (!xa_is_value(folio))
- 		return folio;
- 	/*
-@@ -1860,7 +1881,7 @@ static int shmem_get_folio_gfp(struct inode *inode, pgoff_t index,
- 	sbinfo = SHMEM_SB(inode->i_sb);
- 	charge_mm = vma ? vma->vm_mm : NULL;
++default: html pdf epub $(SUBDIRS)
  
--	folio = __filemap_get_folio(mapping, index, FGP_ENTRY | FGP_LOCK, 0);
-+	folio = shmem_get_entry(mapping, index);
- 	if (folio && vma && userfaultfd_minor(vma)) {
- 		if (!xa_is_value(folio)) {
- 			folio_unlock(folio);
-diff --git a/mm/swap_state.c b/mm/swap_state.c
-index 2927507b43d819..e7f2083ad7e40a 100644
---- a/mm/swap_state.c
-+++ b/mm/swap_state.c
-@@ -384,7 +384,7 @@ struct folio *filemap_get_incore_folio(struct address_space *mapping,
- {
- 	swp_entry_t swp;
- 	struct swap_info_struct *si;
--	struct folio *folio = __filemap_get_folio(mapping, index, FGP_ENTRY, 0);
-+	struct folio *folio = filemap_get_entry(mapping, index);
+ $(SUBDIRS):
+ 	@echo "Building $@"
+@@ -30,14 +35,18 @@ html: $(HTML_TARGETS)
  
- 	if (!xa_is_value(folio))
- 		goto out;
+ pdf: $(PDF_TARGETS)
+ 
++epub: $(EPUB_TARGETS)
++
+ # manually construct build dependencies for target builds so that modification
+ # of individual files will trigger a rebuild of the document correctly.
+ $(PDF_TARGETS): $(DOCFILES)
+ 
+ $(HTML_TARGETS): $(DOCFILES)
+ 
++$(EPUB_TARGETS): $(DOCFILES)
++
+ clean: $(addsuffix -clean, $(SUBDIRS))
+-	$(Q)rm -f *.html *.pdf *.css
++	$(Q)rm -f *.html *.pdf *.css *.epub
+ 
+ %-clean:
+ 	@echo "Cleaning $*"
+diff --git a/admin/XFS_Performance_Tuning/Makefile b/admin/XFS_Performance_Tuning/Makefile
+index 06451f1..2b929a4 100644
+--- a/admin/XFS_Performance_Tuning/Makefile
++++ b/admin/XFS_Performance_Tuning/Makefile
+@@ -8,8 +8,9 @@ DOCFILES=$(wildcard *.asciidoc) \
+ 
+ HTML_TARGET=$(addsuffix .html, $(TARGET))
+ PDF_TARGET=$(addsuffix .pdf, $(TARGET))
++EPUB_TARGET=$(addsuffix .epub, $(TARGET))
+ 
+-default: html pdf
++default: html pdf epub
+ 
+ %.html: %.asciidoc
+ 	@echo "[html] $*"
+@@ -19,16 +20,24 @@ default: html pdf
+ 	@echo "[pdf] $*"
+ 	$(Q)a2x -f pdf -d book $<
+ 
++%.epub: %.asciidoc
++	@echo "[epub] $*"
++	$(Q)a2x -f epub -d book $<
++
+ html: $(HTML_TARGET)
+ 
+ pdf: $(PDF_TARGET)
+ 
++epub: $(EPUB_TARGET)
++
+ # manually construct build dependencies for target builds so that modification
+ # of individual files will trigger a rebuild of the document correctly.
+ $(PDF_TARGET): $(DOCFILES)
+ 
+ $(HTML_TARGET): $(DOCFILES)
+ 
++$(EPUB_TARGET): $(DOCFILES)
++
+ clean:
+-	$(Q)rm -f *.html *.pdf *.css
++	$(Q)rm -f *.html *.pdf *.css *.epub
+ 
+diff --git a/design/Makefile b/design/Makefile
+index 0879470..0847896 100644
+--- a/design/Makefile
++++ b/design/Makefile
+@@ -11,6 +11,7 @@ DOCFILES=$(wildcard *.asciidoc)
+ 
+ HTML_TARGETS=$(addsuffix .html, $(basename $(DOCFILES)))
+ PDF_TARGETS=$(addsuffix .pdf, $(basename $(DOCFILES)))
++EPUB_TARGETS=$(addsuffix .epub, $(basename $(DOCFILES)))
+ 
+ %.html: %.asciidoc
+ 	@echo "[html] $*"
+@@ -20,7 +21,11 @@ PDF_TARGETS=$(addsuffix .pdf, $(basename $(DOCFILES)))
+ 	@echo "[pdf] $*"
+ 	$(Q)a2x -f pdf --dblatex-opts "-P latex.output.revhistory=0" $<
+ 
+-default: html pdf $(SUBDIRS)
++%.epub: %.asciidoc
++	@echo "[epub] $*"
++	$(Q)a2x -f epub $<
++
++default: html pdf epub $(SUBDIRS)
+ 
+ $(SUBDIRS):
+ 	@echo "Building $@"
+@@ -30,14 +35,18 @@ html: $(HTML_TARGETS)
+ 
+ pdf: $(PDF_TARGETS)
+ 
++epub: $(EPUB_TARGETS)
++
+ # manually construct build dependencies for target builds so that modification
+ # of individual files will trigger a rebuild of the document correctly.
+ $(PDF_TARGETS): $(DOCFILES)
+ 
+ $(HTML_TARGETS): $(DOCFILES)
+ 
++$(EPUB_TARGETS): $(DOCFILES)
++
+ clean: $(addsuffix -clean, $(SUBDIRS))
+-	$(Q)rm -f *.html *.pdf *.css
++	$(Q)rm -f *.html *.pdf *.css *.epub
+ 
+ %-clean:
+ 	@echo "Cleaning $*"
+diff --git a/design/XFS_Filesystem_Structure/Makefile b/design/XFS_Filesystem_Structure/Makefile
+index 359dd98..be78a75 100644
+--- a/design/XFS_Filesystem_Structure/Makefile
++++ b/design/XFS_Filesystem_Structure/Makefile
+@@ -8,8 +8,9 @@ DOCFILES=$(wildcard *.asciidoc) \
+ 
+ HTML_TARGET=$(addsuffix .html, $(TARGET))
+ PDF_TARGET=$(addsuffix .pdf, $(TARGET))
++EPUB_TARGET=$(addsuffix .epub, $(TARGET))
+ 
+-default: html pdf
++default: html pdf epub
+ 
+ %.html: %.asciidoc
+ 	@echo "[html] $*"
+@@ -19,16 +20,24 @@ default: html pdf
+ 	@echo "[pdf] $*"
+ 	$(Q)a2x -f pdf -d book $<
+ 
++%.epub: %.asciidoc
++	@echo "[epub] $*"
++	$(Q)a2x -f epub -d book $<
++
+ html: $(HTML_TARGET)
+ 
+ pdf: $(PDF_TARGET)
+ 
++epub: $(EPUB_TARGET)
++
+ # manually construct build dependencies for target builds so that modification
+ # of individual files will trigger a rebuild of the document correctly.
+ $(PDF_TARGET): $(DOCFILES)
+ 
+ $(HTML_TARGET): $(DOCFILES)
+ 
++$(EPUB_TARGET): $(DOCFILES)
++
+ clean:
+-	$(Q)rm -f *.html *.pdf *.css
++	$(Q)rm -f *.html *.pdf *.css *.epub
+ 
+-- 
+2.39.0
+
