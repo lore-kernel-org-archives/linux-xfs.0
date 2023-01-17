@@ -2,44 +2,68 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC52BC3DA78
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Jan 2023 16:58:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EF96C00A5A
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Jan 2023 22:54:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230401AbjAQQ6C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Jan 2023 11:58:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34726 "EHLO
+        id S230032AbjAQWyE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Jan 2023 17:54:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230503AbjAQQ6A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jan 2023 11:58:00 -0500
-Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [IPv6:2a03:a000:7:0:5054:ff:fe1c:15ff])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0996939BA3;
-        Tue, 17 Jan 2023 08:57:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=VFgrKKVDGlnjswcyDcS33CkLpy5eaqJX1Jr0XAotnhM=; b=HaeMD/ccoYcTFtebP4vLcZuH+N
-        1PT/gnYIywzUVrTYt4cocfc0srMQoa3RaxHgzKmDXLk+WfMr/253ydnKgRVwgVB+9PHUJXhpzPUfB
-        GrJhFJ6qm4fFHHP8im0tRC1NIFGojSYQTNOrTNIEDrPIVK+j0N38QZX0qN8fKMPuWOeV3rrjOa1QC
-        86fVaT2Z4Om0f03eTiiRtGZSC0pRIqKRjoga2/SSD/RCDT8H+cbeSVjfZ5e1Ks9NK4a1TeNTu6A4S
-        cCbV4DV56TzaVVKP8z+/S68D3aMy7u5RwUa2CDrDGzYvlax92Jncw+HlgnSo84fbKlgBsteU2alnF
-        u0goMv6A==;
-Received: from viro by zeniv.linux.org.uk with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1pHpHX-002OEN-2m;
-        Tue, 17 Jan 2023 16:57:56 +0000
-Date:   Tue, 17 Jan 2023 16:57:55 +0000
-From:   Al Viro <viro@zeniv.linux.org.uk>
+        with ESMTP id S229843AbjAQWxi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jan 2023 17:53:38 -0500
+Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DEE9A7338
+        for <linux-xfs@vger.kernel.org>; Tue, 17 Jan 2023 13:45:01 -0800 (PST)
+Received: by mail-pj1-x102e.google.com with SMTP id y3-20020a17090a390300b00229add7bb36so219379pjb.4
+        for <linux-xfs@vger.kernel.org>; Tue, 17 Jan 2023 13:45:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=USmZ3gy1BtrvJEjQBDI3lCph9qcXhvk22Q1eYhBS7oY=;
+        b=RzlLBPcasIN4kEzbfwMjk5cRM6RzwFCQycQzVF/x4CvKYodGJqRrS9P5q74WNvc6Im
+         sDWvEIyNad70vlaiE6T40dRq5QUvZXsqoq0NXlZB7cmswZRDhil02hlp0EswfhbYDaUk
+         pd/nv9SJeu522LsTq6VLRAhoTLIvaozFDG5jLwWqU3xOBIqEgBYVlWWKsrSzSeARYQR4
+         y78EEbm0a5Q6LDKTJy99roURs/IxG5iRb0G4vxXbkZX8afv5Jnrinw0ihUUqjURO6eUv
+         FubRf20KyCuUdR73WoBP8CQ1GMNILJs936p5zQJtUZNrm02T05XIEZDWRpoeFnX0UPQ0
+         wPAQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=USmZ3gy1BtrvJEjQBDI3lCph9qcXhvk22Q1eYhBS7oY=;
+        b=anrRSdJNc7t63F2eWFoUIlKR2S/doj1sYbcqp7ZGlFxT31oIDaFKaDV55eYluxC6UB
+         i60iXKush1EIROLwQOvjHkjayo/c672zYo/Rm+9RmEQCGLeboNHW/jqkr+HOwukWFedJ
+         22UPp1A4ior5tYAAGVWtNasfcVCAAsUnvSZTC+EUY8QORf6gLaKbtTgnAlDTnjvXf829
+         UK4KXDKrcM3qwaggkkrRjUJolB6XCArJdbQT1gWJz8cx7NcGVmLOjbX4UKHBq5WhLC77
+         lQ2RNrPolPTgtzcH73qulHdmmsdNlC4P4YgE7AlX6gs3uZ5N/mzQXUoUzrRmfFVigtOg
+         pl0w==
+X-Gm-Message-State: AFqh2kp6i6oCEykrUO2omTSOwYYZqUGmlbUpQV1BbDcchrLRq1+UaPTt
+        2azqIWKSDj0m1dEUJ/D8i3y3UA==
+X-Google-Smtp-Source: AMrXdXsjLWlijwip6i3qxiUNT6rq/EuKFl3lJ7Oc5PLOZ9TkVQf8fY86eptlCDPi8YvH3xl+tGL+uQ==
+X-Received: by 2002:a17:903:1ce:b0:193:29db:e0b7 with SMTP id e14-20020a17090301ce00b0019329dbe0b7mr6977692plh.54.1673991900952;
+        Tue, 17 Jan 2023 13:45:00 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-146-207.pa.vic.optusnet.com.au. [49.186.146.207])
+        by smtp.gmail.com with ESMTPSA id x15-20020a170902ec8f00b00189fd83eb95sm21754927plg.69.2023.01.17.13.45.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 17 Jan 2023 13:45:00 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1pHtlJ-004Ivt-MX; Wed, 18 Jan 2023 08:44:57 +1100
+Date:   Wed, 18 Jan 2023 08:44:57 +1100
+From:   Dave Chinner <david@fromorbit.com>
 To:     Jan Kara <jack@suse.cz>
-Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        Ted Tso <tytso@mit.edu>, linux-xfs@vger.kernel.org
+Cc:     Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        linux-xfs@vger.kernel.org
 Subject: Re: Locking issue with directory renames
-Message-ID: <Y8bTk1CsH9AaAnLt@ZenIV>
+Message-ID: <20230117214457.GG360264@dread.disaster.area>
 References: <20230117123735.un7wbamlbdihninm@quack3>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20230117123735.un7wbamlbdihninm@quack3>
-Sender: Al Viro <viro@ftp.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -67,22 +91,62 @@ On Tue, Jan 17, 2023 at 01:37:35PM +0100, Jan Kara wrote:
 > from packed "in-inode" format to "expanded" format as a result of
 > concurrent operation on 'dir', the filesystem gets corrupted (or crashes as
 > in case of UDF).
-> 
-> So we'd need to lock 'source' if it is a directory. Ideally this would
+
+No, xfs_rename() does not have this problem - we pass four inodes to
+the function - the source directory, source inode, destination
+directory and destination inode.
+
+In the above case, "dir/" is passed to XFs as the source inode - the
+src_dir is "foo/", the target dir is "bar/" and the target inode is
+null. src_dir != target_dir, so we set the "new_parent" flag. the
+srouce inode is a directory, so we set the src_is_directory flag,
+too.
+
+We lock all three inodes that are passed. We do various things, then
+run:
+
+        if (new_parent && src_is_directory) {
+                /*
+                 * Rewrite the ".." entry to point to the new
+                 * directory.
+                 */
+                error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
+                                        target_dp->i_ino, spaceres);
+                ASSERT(error != -EEXIST);
+                if (error)
+                        goto out_trans_cancel;
+        }
+
+which replaces the ".." entry in source inode atomically whilst it
+is locked.  Any directory format changes that occur during the
+rename are done while the ILOCK is held, so they appear atomic to
+outside observers that are trying to parse the directory structure
+(e.g. readdir).
+
+> So we'd need to lock 'source' if it is a directory.
+
+Yup, and XFS goes further by always locking the source inode in a
+rename, even if it is not a directory. This ensures the inode being
+moved cannot have it's metadata otherwise modified whilst the rename
+is in progress, even if that modification would have no impact on
+the rename. It's a pretty strict interpretation of "rename is an
+atomic operation", but it avoids accidentally missing nasty corner
+cases like the one described above...
+
+> Ideally this would
 > happen in VFS as otherwise I bet a lot of filesystems will get this wrong
 > so could vfs_rename() lock 'source' if it is a dir as well? Essentially
 > this would amount to calling lock_two_nondirectories(source, target)
 > unconditionally but that would become a serious misnomer ;). Al, any
 > thought?
 
-FWIW, I suspect that majority of filesystems that do implement rename
-do not have that problem.  Moreover, on cross-directory rename we already
-have
-	* tree topology stabilized
-	* source guaranteed not to be an ancestor of target or either of
-the parents
-so the method instance should be free to lock the source if it needs to
-do so.
+XFS just has a function that allows for an arbitrary number of
+inodes to be locked in the given order: xfs_lock_inodes(). For
+rename, the lock order is determined by xfs_sort_for_rename().
 
-Not sure, I'll need to grep around and take a look at the instances...
+Cheers,
 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
