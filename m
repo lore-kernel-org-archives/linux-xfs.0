@@ -2,69 +2,69 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF531C46467
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Jan 2023 22:48:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B7F9C38159
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Jan 2023 22:48:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229589AbjARWsO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S229507AbjARWsO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Wed, 18 Jan 2023 17:48:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45936 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230103AbjARWr5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jan 2023 17:47:57 -0500
-Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD1844A1DD
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 14:47:42 -0800 (PST)
-Received: by mail-pf1-x42e.google.com with SMTP id 127so125694pfe.4
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 14:47:42 -0800 (PST)
+        with ESMTP id S230079AbjARWr7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jan 2023 17:47:59 -0500
+Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F393654F8
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 14:47:46 -0800 (PST)
+Received: by mail-pj1-x1030.google.com with SMTP id u1-20020a17090a450100b0022936a63a21so4004403pjg.4
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 14:47:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=V4wObburgrZWXG01Q0SWeB3FM1sC8fnj6ToorhiMEJU=;
-        b=KLd84KfL5/2j377EHOMHF4SPCmsIh/zaU+wHF0ae1gncvpewu9nhOu9QEKpOe05PAe
-         GBIqD2f1mx+mQG3V63Q4SsS7TXlOMCOHoTflUb6tH4LlHeYgpRl+yA9IqitDX3WfOQLb
-         0UH9ODt3nsa9s0xRcb105d+0+pPpFIBM3iKckTvYtCEJuS/IOr/ajNz1Q2mRB5inkE4j
-         t/TUa+CkgtZBWxVRSd+i4nk1xu46gWjOcStbyyFbdvIDLTDaaf9QIK90ar4pEdtJ+vbi
-         6BWNReJXrkxCVkiQOvzK+vW+CaOzYgmdEuIKqhLjUIn/WNKvNyvTTPBlCg4xjd6WgkR8
-         GfCA==
+        bh=15eOzrsB+JxkdRA4BtFu4xZcL002FZiyOkGx7qF3I7M=;
+        b=Ndo14pvY02JXIyrECFLQkPLFLrNvlopfHzz4Ma6gOqjaIOQiN/MqozW2Y7VR4bWtfv
+         g3xePZZqawfmyAXInKI6G2QemBCqAfcMF9TZFcbaUSXXbUG6Wt/aqUqHqmRvQE2j0Ruv
+         E1RFnhJzkOJO+UYRn+iiQXMqskB1/B4mrA3ml5/l1Zc0CwKHZ3r0kqkNsf055bfvLOy1
+         tIzbywcB0cX2H82qwn3aG3LTHQuRfhbH83nTBgTjVpw2zBGeg56zez32tKTTz2moBvNE
+         zU0HATYg88LgFkx37XDavcPK4ZDlYtd0Kg6/trSrMlWgYeYXJ2zszbasty5fAUEbhodb
+         UufQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=V4wObburgrZWXG01Q0SWeB3FM1sC8fnj6ToorhiMEJU=;
-        b=gnlN067KDSI0fXmh3YToV3QrBCAelihQHy6HDhvLjuMSZ4WhC3eiFZycwC6dwDalNG
-         ynCnnLJQZWDz9XVQp1XCeeTjExnQ6g93EQM2g5zmX18roUd+EiKY5BdcoTCM1bz3hmPa
-         3R0ghFPT4yYj4FldivitOd1UdF5p0cbjh7CZaoC85C3oRSaYlsgyhhroEzijz3TAuD6b
-         ulgCfj8Dkk/MyEraJpq3VxcyZY+00iFt2vsgjvxzCiLN9HSGLd02mCloCcN34Lb70Awn
-         VC/OUpt99MpfZ+jbhfDiGwxpxa753TglPLMBa+zQGoSXPOYcCLoy4rTHuJErBbfyaboH
-         iS5A==
-X-Gm-Message-State: AFqh2krMv05MdHP/qMvDbdASGLPYkUTvfQ3eojJqz+UTkMRWvznrmpxW
-        5bJakVkgXzJTb37kXr1BMyPAtQLXKcDFTsSH
-X-Google-Smtp-Source: AMrXdXt1zkX1xFapJ3zeFz6aPhbDXwtFC7QWbQeRHjjkVkCVenUUNkzN3QKjVWm80MqYyc0FiNXPgg==
-X-Received: by 2002:a05:6a00:3390:b0:58c:6ba1:58dd with SMTP id cm16-20020a056a00339000b0058c6ba158ddmr9422895pfb.11.1674082062104;
-        Wed, 18 Jan 2023 14:47:42 -0800 (PST)
+        bh=15eOzrsB+JxkdRA4BtFu4xZcL002FZiyOkGx7qF3I7M=;
+        b=WNzTa8T3UyYpX7BZdZHYg7kEGn6J9IqITz+MHpcrEi0CTnbWlDJjPxs+k//1f9Mw7r
+         Z7LKCsO9HHscfJlyHmRZvCdCNGhddmhDfT6bqk8EXUVDDlhFrSWBH8DFmXWPurTG91Vj
+         4JfBaQmS+R5iVaAuu+5l2zoAqgrAbqivlh9StryWjrPaT6xRoSmw8gQXlAe3RuLpOCmY
+         Ta1LssS7Y48OlLQOIQcgNDeO4cT49eHNuAE0WA6nYxU9cb52gSKjoFciTNYST5IkAUvB
+         KkKcQ9tijz/Bm7VLMhZmxkf30Qg75buMl4UovUakDKcYpFjhhSFS1kfIpKThcDDrBWjL
+         HkyA==
+X-Gm-Message-State: AFqh2koLaZrP0+BqOlB8/1gqtpuop+SdYjUqcGRqNHg9GOVWyI9S6ZgA
+        id+kMRtgzbcni1mWnR5Pby82IzDYbOcc91Ab
+X-Google-Smtp-Source: AMrXdXtLDydnr1b757d9OGm+02rS5YEvHhhTu1HTt07MEsvfoCmTWab6qqJfwm4bFzcmrOV0BFq2Ow==
+X-Received: by 2002:a05:6a20:a698:b0:a9:f163:3ecf with SMTP id ba24-20020a056a20a69800b000a9f1633ecfmr10483817pzb.50.1674082065826;
+        Wed, 18 Jan 2023 14:47:45 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-146-207.pa.vic.optusnet.com.au. [49.186.146.207])
-        by smtp.gmail.com with ESMTPSA id w4-20020aa79544000000b0058db5d4b391sm5647733pfq.19.2023.01.18.14.47.41
+        by smtp.gmail.com with ESMTPSA id 129-20020a630887000000b004777c56747csm19181116pgi.11.2023.01.18.14.47.45
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Jan 2023 14:47:41 -0800 (PST)
+        Wed, 18 Jan 2023 14:47:45 -0800 (PST)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <dave@fromorbit.com>)
-        id 1pIHB9-004iXz-Jx
+        id 1pIHB9-004iXw-J2
         for linux-xfs@vger.kernel.org; Thu, 19 Jan 2023 09:45:11 +1100
 Received: from dave by devoid.disaster.area with local (Exim 4.96)
         (envelope-from <dave@devoid.disaster.area>)
-        id 1pIHB9-008FEq-20
+        id 1pIHB9-008FEl-1u
         for linux-xfs@vger.kernel.org;
         Thu, 19 Jan 2023 09:45:11 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 29/42] xfs: convert trim to use for_each_perag_range
-Date:   Thu, 19 Jan 2023 09:44:52 +1100
-Message-Id: <20230118224505.1964941-30-david@fromorbit.com>
+Subject: [PATCH 28/42] xfs: convert xfs_alloc_vextent_iterate_ags() to use perag walker
+Date:   Thu, 19 Jan 2023 09:44:51 +1100
+Message-Id: <20230118224505.1964941-29-david@fromorbit.com>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230118224505.1964941-1-david@fromorbit.com>
 References: <20230118224505.1964941-1-david@fromorbit.com>
@@ -76,172 +76,222 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-To convert it to using active perag references and hence make it
-shrink safe.
+Now that the AG iteration code in the core allocation code has been
+cleaned up, we can easily convert it to use a for_each_perag..()
+variant to use active references and skip AGs that it can't get
+active references on.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_discard.c | 50 ++++++++++++++++++++------------------------
- 1 file changed, 23 insertions(+), 27 deletions(-)
+ fs/xfs/libxfs/xfs_ag.h    | 22 ++++++---
+ fs/xfs/libxfs/xfs_alloc.c | 98 ++++++++++++++++++---------------------
+ 2 files changed, 60 insertions(+), 60 deletions(-)
 
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index bfc829c07f03..afc4c78b9eed 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -21,23 +21,20 @@
- 
- STATIC int
- xfs_trim_extents(
--	struct xfs_mount	*mp,
--	xfs_agnumber_t		agno,
-+	struct xfs_perag	*pag,
- 	xfs_daddr_t		start,
- 	xfs_daddr_t		end,
- 	xfs_daddr_t		minlen,
- 	uint64_t		*blocks_trimmed)
+diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+index 8f43b91d4cf3..5e18536dfdce 100644
+--- a/fs/xfs/libxfs/xfs_ag.h
++++ b/fs/xfs/libxfs/xfs_ag.h
+@@ -253,6 +253,7 @@ xfs_perag_next_wrap(
+ 	struct xfs_perag	*pag,
+ 	xfs_agnumber_t		*agno,
+ 	xfs_agnumber_t		stop_agno,
++	xfs_agnumber_t		restart_agno,
+ 	xfs_agnumber_t		wrap_agno)
  {
-+	struct xfs_mount	*mp = pag->pag_mount;
- 	struct block_device	*bdev = mp->m_ddev_targp->bt_bdev;
- 	struct xfs_btree_cur	*cur;
- 	struct xfs_buf		*agbp;
- 	struct xfs_agf		*agf;
--	struct xfs_perag	*pag;
- 	int			error;
- 	int			i;
+ 	struct xfs_mount	*mp = pag->pag_mount;
+@@ -260,10 +261,11 @@ xfs_perag_next_wrap(
+ 	*agno = pag->pag_agno + 1;
+ 	xfs_perag_rele(pag);
+ 	while (*agno != stop_agno) {
+-		if (*agno >= wrap_agno)
+-			*agno = 0;
+-		if (*agno == stop_agno)
+-			break;
++		if (*agno >= wrap_agno) {
++			if (restart_agno >= stop_agno)
++				break;
++			*agno = restart_agno;
++		}
  
--	pag = xfs_perag_get(mp, agno);
--
- 	/*
- 	 * Force out the log.  This means any transactions that might have freed
- 	 * space before we take the AGF buffer lock are now on disk, and the
-@@ -47,7 +44,7 @@ xfs_trim_extents(
- 
- 	error = xfs_alloc_read_agf(pag, NULL, 0, &agbp);
- 	if (error)
--		goto out_put_perag;
-+		return error;
- 	agf = agbp->b_addr;
- 
- 	cur = xfs_allocbt_init_cursor(mp, NULL, agbp, pag, XFS_BTNUM_CNT);
-@@ -71,10 +68,10 @@ xfs_trim_extents(
- 
- 		error = xfs_alloc_get_rec(cur, &fbno, &flen, &i);
- 		if (error)
--			goto out_del_cursor;
-+			break;
- 		if (XFS_IS_CORRUPT(mp, i != 1)) {
- 			error = -EFSCORRUPTED;
--			goto out_del_cursor;
-+			break;
- 		}
- 		ASSERT(flen <= be32_to_cpu(agf->agf_longest));
- 
-@@ -83,15 +80,15 @@ xfs_trim_extents(
- 		 * the format the range/len variables are supplied in by
- 		 * userspace.
- 		 */
--		dbno = XFS_AGB_TO_DADDR(mp, agno, fbno);
-+		dbno = XFS_AGB_TO_DADDR(mp, pag->pag_agno, fbno);
- 		dlen = XFS_FSB_TO_BB(mp, flen);
- 
- 		/*
- 		 * Too small?  Give up.
- 		 */
- 		if (dlen < minlen) {
--			trace_xfs_discard_toosmall(mp, agno, fbno, flen);
--			goto out_del_cursor;
-+			trace_xfs_discard_toosmall(mp, pag->pag_agno, fbno, flen);
-+			break;
- 		}
- 
- 		/*
-@@ -100,7 +97,7 @@ xfs_trim_extents(
- 		 * down partially overlapping ranges for now.
- 		 */
- 		if (dbno + dlen < start || dbno > end) {
--			trace_xfs_discard_exclude(mp, agno, fbno, flen);
-+			trace_xfs_discard_exclude(mp, pag->pag_agno, fbno, flen);
- 			goto next_extent;
- 		}
- 
-@@ -109,32 +106,30 @@ xfs_trim_extents(
- 		 * discard and try again the next time.
- 		 */
- 		if (xfs_extent_busy_search(mp, pag, fbno, flen)) {
--			trace_xfs_discard_busy(mp, agno, fbno, flen);
-+			trace_xfs_discard_busy(mp, pag->pag_agno, fbno, flen);
- 			goto next_extent;
- 		}
- 
--		trace_xfs_discard_extent(mp, agno, fbno, flen);
-+		trace_xfs_discard_extent(mp, pag->pag_agno, fbno, flen);
- 		error = blkdev_issue_discard(bdev, dbno, dlen, GFP_NOFS);
- 		if (error)
--			goto out_del_cursor;
-+			break;
- 		*blocks_trimmed += flen;
- 
- next_extent:
- 		error = xfs_btree_decrement(cur, 0, &i);
- 		if (error)
--			goto out_del_cursor;
-+			break;
- 
- 		if (fatal_signal_pending(current)) {
- 			error = -ERESTARTSYS;
--			goto out_del_cursor;
-+			break;
- 		}
- 	}
- 
- out_del_cursor:
- 	xfs_btree_del_cursor(cur, error);
- 	xfs_buf_relse(agbp);
--out_put_perag:
--	xfs_perag_put(pag);
- 	return error;
+ 		pag = xfs_perag_grab(mp, *agno);
+ 		if (pag)
+@@ -274,14 +276,20 @@ xfs_perag_next_wrap(
  }
  
-@@ -152,11 +147,12 @@ xfs_ioc_trim(
- 	struct xfs_mount		*mp,
- 	struct fstrim_range __user	*urange)
+ /*
+- * Iterate all AGs from start_agno through wrap_agno, then 0 through
++ * Iterate all AGs from start_agno through wrap_agno, then restart_agno through
+  * (start_agno - 1).
+  */
+-#define for_each_perag_wrap_at(mp, start_agno, wrap_agno, agno, pag) \
++#define for_each_perag_wrap_range(mp, start_agno, restart_agno, wrap_agno, agno, pag) \
+ 	for ((agno) = (start_agno), (pag) = xfs_perag_grab((mp), (agno)); \
+ 		(pag) != NULL; \
+ 		(pag) = xfs_perag_next_wrap((pag), &(agno), (start_agno), \
+-				(wrap_agno)))
++				(restart_agno), (wrap_agno)))
++/*
++ * Iterate all AGs from start_agno through wrap_agno, then 0 through
++ * (start_agno - 1).
++ */
++#define for_each_perag_wrap_at(mp, start_agno, wrap_agno, agno, pag) \
++	for_each_perag_wrap_range((mp), (start_agno), 0, (wrap_agno), (agno), (pag))
+ 
+ /*
+  * Iterate all AGs from start_agno through to the end of the filesystem, then 0
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 43a054002da3..39f3e76efcab 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -3156,6 +3156,7 @@ xfs_alloc_vextent_prepare_ag(
+ 	if (need_pag)
+ 		args->pag = xfs_perag_get(args->mp, args->agno);
+ 
++	args->agbp = NULL;
+ 	error = xfs_alloc_fix_freelist(args, 0);
+ 	if (error) {
+ 		trace_xfs_alloc_vextent_nofix(args);
+@@ -3255,8 +3256,8 @@ xfs_alloc_vextent_finish(
+ 	XFS_STATS_ADD(mp, xs_allocb, args->len);
+ 
+ out_drop_perag:
+-	if (drop_perag) {
+-		xfs_perag_put(args->pag);
++	if (drop_perag && args->pag) {
++		xfs_perag_rele(args->pag);
+ 		args->pag = NULL;
+ 	}
+ 	return error;
+@@ -3304,6 +3305,10 @@ xfs_alloc_vextent_this_ag(
+  * we attempt to allocation in as there is no locality optimisation possible for
+  * those allocations.
+  *
++ * On return, args->pag may be left referenced if we finish before the "all
++ * failed" return point. The allocation finish still needs the perag, and
++ * so the caller will release it once they've finished the allocation.
++ *
+  * When we wrap the AG iteration at the end of the filesystem, we have to be
+  * careful not to wrap into AGs below ones we already have locked in the
+  * transaction if we are doing a blocking iteration. This will result in an
+@@ -3318,72 +3323,59 @@ xfs_alloc_vextent_iterate_ags(
+ 	uint32_t		flags)
  {
-+	struct xfs_perag	*pag;
- 	unsigned int		granularity =
- 		bdev_discard_granularity(mp->m_ddev_targp->bt_bdev);
- 	struct fstrim_range	range;
- 	xfs_daddr_t		start, end, minlen;
--	xfs_agnumber_t		start_agno, end_agno, agno;
+ 	struct xfs_mount	*mp = args->mp;
 +	xfs_agnumber_t		agno;
- 	uint64_t		blocks_trimmed = 0;
- 	int			error, last_error = 0;
+ 	int			error = 0;
  
-@@ -193,18 +189,18 @@ xfs_ioc_trim(
- 	end = start + BTOBBT(range.len) - 1;
+-	ASSERT(start_agno >= minimum_agno);
++restart:
++	for_each_perag_wrap_range(mp, start_agno, minimum_agno,
++			mp->m_sb.sb_agcount, agno, args->pag) {
++		args->agno = agno;
++		trace_printk("sag %u minag %u agno %u pag %u, agbno %u, agcnt %u",
++			start_agno, minimum_agno, agno, args->pag->pag_agno,
++			target_agbno, mp->m_sb.sb_agcount);
  
- 	if (end > XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks) - 1)
--		end = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks)- 1;
+-	/*
+-	 * Loop over allocation groups twice; first time with
+-	 * trylock set, second time without.
+-	 */
+-	args->agno = start_agno;
+-	for (;;) {
+-		args->pag = xfs_perag_get(mp, args->agno);
+ 		error = xfs_alloc_vextent_prepare_ag(args);
+ 		if (error)
+ 			break;
 -
--	start_agno = xfs_daddr_to_agno(mp, start);
--	end_agno = xfs_daddr_to_agno(mp, end);
-+		end = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks) - 1;
- 
--	for (agno = start_agno; agno <= end_agno; agno++) {
--		error = xfs_trim_extents(mp, agno, start, end, minlen,
-+	agno = xfs_daddr_to_agno(mp, start);
-+	for_each_perag_range(mp, agno, xfs_daddr_to_agno(mp, end), pag) {
-+		error = xfs_trim_extents(pag, start, end, minlen,
- 					  &blocks_trimmed);
- 		if (error) {
- 			last_error = error;
--			if (error == -ERESTARTSYS)
-+			if (error == -ERESTARTSYS) {
-+				xfs_perag_rele(pag);
- 				break;
-+			}
+-		if (args->agbp) {
+-			/*
+-			 * Allocation is supposed to succeed now, so break out
+-			 * of the loop regardless of whether we succeed or not.
+-			 */
+-			if (args->agno == start_agno && target_agbno) {
+-				args->agbno = target_agbno;
+-				error = xfs_alloc_ag_vextent_near(args);
+-			} else {
+-				args->agbno = 0;
+-				error = xfs_alloc_ag_vextent_size(args);
+-			}
+-			break;
++		if (!args->agbp) {
++			trace_xfs_alloc_vextent_loopfailed(args);
++			continue;
  		}
+ 
+-		trace_xfs_alloc_vextent_loopfailed(args);
+-
+ 		/*
+-		 * If we are try-locking, we can't deadlock on AGF locks so we
+-		 * can wrap all the way back to the first AG. Otherwise, wrap
+-		 * back to the start AG so we can't deadlock and let the end of
+-		 * scan handler decide what to do next.
++		 * Allocation is supposed to succeed now, so break out of the
++		 * loop regardless of whether we succeed or not.
+ 		 */
+-		if (++(args->agno) == mp->m_sb.sb_agcount) {
+-			if (flags & XFS_ALLOC_FLAG_TRYLOCK)
+-				args->agno = 0;
+-			else
+-				args->agno = minimum_agno;
+-		}
+-
+-		/*
+-		 * Reached the starting a.g., must either be done
+-		 * or switch to non-trylock mode.
+-		 */
+-		if (args->agno == start_agno) {
+-			if (flags == 0) {
+-				args->agbno = NULLAGBLOCK;
+-				trace_xfs_alloc_vextent_allfailed(args);
+-				break;
+-			}
++		if (args->agno == start_agno && target_agbno) {
+ 			args->agbno = target_agbno;
+-			flags = 0;
++			error = xfs_alloc_ag_vextent_near(args);
++		} else {
++			args->agbno = 0;
++			error = xfs_alloc_ag_vextent_size(args);
+ 		}
+-		xfs_perag_put(args->pag);
++		break;
++	}
++	if (error) {
++		xfs_perag_rele(args->pag);
+ 		args->pag = NULL;
++		return error;
+ 	}
++	if (args->agbp)
++		return 0;
++
+ 	/*
+-	 * The perag is left referenced in args for the caller to clean
+-	 * up after they've finished the allocation.
++	 * We didn't find an AG we can alloation from. If we were given
++	 * constraining flags by the caller, drop them and retry the allocation
++	 * without any constraints being set.
+ 	 */
+-	return error;
++	if (flags) {
++		flags = 0;
++		goto restart;
++	}
++
++	ASSERT(args->pag == NULL);
++	trace_xfs_alloc_vextent_allfailed(args);
++	return 0;
+ }
+ 
+ /*
+@@ -3524,7 +3516,7 @@ xfs_alloc_vextent_near_bno(
  	}
  
+ 	if (needs_perag)
+-		args->pag = xfs_perag_get(mp, args->agno);
++		args->pag = xfs_perag_grab(mp, args->agno);
+ 
+ 	error = xfs_alloc_vextent_prepare_ag(args);
+ 	if (!error && args->agbp)
 -- 
 2.39.0
 
