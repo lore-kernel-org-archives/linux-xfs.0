@@ -2,106 +2,78 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0368FC004D4
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Jan 2023 10:24:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35635C004D4
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Jan 2023 10:40:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229735AbjARKYE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Jan 2023 05:24:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52758 "EHLO
+        id S229684AbjARKkO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Jan 2023 05:40:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33812 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229616AbjARKWz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jan 2023 05:22:55 -0500
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43B7DA793D;
-        Wed, 18 Jan 2023 01:28:16 -0800 (PST)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id D114C3EC2F;
-        Wed, 18 Jan 2023 09:28:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1674034094; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=EUsADbHHhbF3+iRirD38aung5TJEhF+NitEiQGxyElk=;
-        b=WtBb5x68i+kgdj5rIe9oOMm3j2eFxHYFTKUce3+sSYZ+e05OKTheZ0sYDkj5WVP4Hwe/8K
-        QAcieeizwYHpiP2a0INYRKv2PhqYrFheMTCsNFEDwdUSBYcWvQuJL/U03Xi9USxGvFRZwH
-        3KKgeJxjavOZ7ZwU7w4JczgqVqElM5I=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1674034094;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=EUsADbHHhbF3+iRirD38aung5TJEhF+NitEiQGxyElk=;
-        b=Fs8/sMuj8JJZsofEJTyRfdehftt6tZAP6OMz7klPmw9kb9C2wkDTvnpWKM+dUWaIC03mf8
-        PpZ+6ivzv8lhBhBQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 70469139D2;
-        Wed, 18 Jan 2023 09:28:14 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id jj1kG667x2MMOAAAMHmgww
-        (envelope-from <jack@suse.cz>); Wed, 18 Jan 2023 09:28:14 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 3F58DA06B2; Wed, 18 Jan 2023 10:28:12 +0100 (CET)
-Date:   Wed, 18 Jan 2023 10:28:12 +0100
-From:   Jan Kara <jack@suse.cz>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Luis Chamberlain <mcgrof@kernel.org>, hch@infradead.org,
-        song@kernel.org, rafael@kernel.org, gregkh@linuxfoundation.org,
-        viro@zeniv.linux.org.uk, jack@suse.cz, bvanassche@acm.org,
-        ebiederm@xmission.com, mchehab@kernel.org, keescook@chromium.org,
-        p.raghav@samsung.com, linux-fsdevel@vger.kernel.org,
-        kernel@tuxforce.de, kexec@lists.infradead.org,
-        linux-kernel@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [RFC v3 03/24] fs: distinguish between user initiated freeze and
- kernel initiated freeze
-Message-ID: <20230118092812.2gl3cde6mocbngli@quack3>
-References: <20230114003409.1168311-1-mcgrof@kernel.org>
- <20230114003409.1168311-4-mcgrof@kernel.org>
- <Y8dYpOyR/jOsO267@magnolia>
+        with ESMTP id S229750AbjARKjO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jan 2023 05:39:14 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E88874F85B;
+        Wed, 18 Jan 2023 01:43:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=MhCSeZxb0+ckteL2o3EcN0B0EMYZcaQYxCAND8YfTVw=; b=zb1P9ij/tKigVouQ1O/C4uCAS7
+        +JypLZQNpDNL8SKR+sx/aWG6SqmtWucbKq/npM9f01Nx4vipYaGkmRmfWPM8//WBMOWyul+joXZdf
+        kI5DelXAG5u3Mial8ZsWDnwcWoQEls3QmRsMZpx+Ma9ZXSGvSOElPAlQ+CVHpa0i0ip+rT5GjIbdg
+        S5G36phYR1i2oNyuWdEu+/jo4jmYoCDTehy+LLF2qrMRA/2CXC2tH9oCz02ukaqRRI8A/Yxuj3r11
+        ZC3nBMs5rlV1N/an3gFPLb/4i4RUC1kPq64ESJTixD6mQn5Lrv1DKGai8eyUnSX8o2BGpovyOd4r7
+        +F3UHI8g==;
+Received: from 213-147-167-250.nat.highway.webapn.at ([213.147.167.250] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1pI4yo-0009vw-M1; Wed, 18 Jan 2023 09:43:39 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Hugh Dickins <hughd@google.com>
+Cc:     linux-afs@lists.infradead.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, cluster-devel@redhat.com,
+        linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-nilfs@vger.kernel.org
+Subject: [PATCH 1/9] mm: don't look at xarray value entries in split_huge_pages_in_file
+Date:   Wed, 18 Jan 2023 10:43:21 +0100
+Message-Id: <20230118094329.9553-2-hch@lst.de>
+X-Mailer: git-send-email 2.39.0
+In-Reply-To: <20230118094329.9553-1-hch@lst.de>
+References: <20230118094329.9553-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y8dYpOyR/jOsO267@magnolia>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue 17-01-23 18:25:40, Darrick J. Wong wrote:
-> [add linux-xfs to cc on this one]
-> 
-> On Fri, Jan 13, 2023 at 04:33:48PM -0800, Luis Chamberlain wrote:
-> > Userspace can initiate a freeze call using ioctls. If the kernel decides
-> > to freeze a filesystem later it must be able to distinguish if userspace
-> > had initiated the freeze, so that it does not unfreeze it later
-> > automatically on resume.
-> 
-> Hm.  Zooming out a bit here, I want to think about how kernel freezes
-> should behave...
-> 
-> > Likewise if the kernel is initiating a freeze on its own it should *not*
-> > fail to freeze a filesystem if a user had already frozen it on our behalf.
-> 
-> ...because kernel freezes can absorb an existing userspace freeze.  Does
-> that mean that userspace should be prevented from undoing a kernel
-> freeze?  Even in that absorption case?
-> 
-> Also, should we permit multiple kernel freezes of the same fs at the
-> same time?  And if we do allow that, would they nest like freeze used to
-> do?
-> 
-> (My suggestions here are 'yes', 'yes', and '**** no'.)
+split_huge_pages_in_file never wants to do anything with the special
+value enties.  Switch to using filemap_get_folio to not even see them.
 
-Yeah, makes sense to me. So I think the mental model to make things safe
-is that there are two flags - frozen_by_user, frozen_by_kernel - and the
-superblock is kept frozen as long as either of these is set.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ mm/huge_memory.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-								Honza
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 1d6977dc6b31ba..a2830019aaa017 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -3100,11 +3100,10 @@ static int split_huge_pages_in_file(const char *file_path, pgoff_t off_start,
+ 	mapping = candidate->f_mapping;
+ 
+ 	for (index = off_start; index < off_end; index += nr_pages) {
+-		struct folio *folio = __filemap_get_folio(mapping, index,
+-						FGP_ENTRY, 0);
++		struct folio *folio = filemap_get_folio(mapping, index);
+ 
+ 		nr_pages = 1;
+-		if (xa_is_value(folio) || !folio)
++		if (!folio)
+ 			continue;
+ 
+ 		if (!folio_test_large(folio))
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.39.0
+
