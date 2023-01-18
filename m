@@ -2,44 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 792D3C38147
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Jan 2023 00:55:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BEE1C38142
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Jan 2023 00:55:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229921AbjARAzz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S229936AbjARAzz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 17 Jan 2023 19:55:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52766 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230092AbjARAzL (ORCPT
+        with ESMTP id S230091AbjARAzL (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jan 2023 19:55:11 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76B1C530CA;
-        Tue, 17 Jan 2023 16:43:05 -0800 (PST)
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE0AF521E0;
+        Tue, 17 Jan 2023 16:43:03 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B1525B81A85;
-        Wed, 18 Jan 2023 00:42:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58871C433D2;
-        Wed, 18 Jan 2023 00:42:45 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 87508615AC;
+        Wed, 18 Jan 2023 00:43:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E591BC433EF;
+        Wed, 18 Jan 2023 00:43:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1674002565;
-        bh=nuQWmBjgfsOLI56ZOT417vwv86d4VyIVOLPSiBtr8/g=;
+        s=k20201202; t=1674002581;
+        bh=Fb6oqW1tMHFVsrwKrrchD42lq9oZroRnmzUNq8BhvT0=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=m2rV3p0Ll1O3Gf2ijjDZzrUjfqfPa5jRtSKhQuzfUF2MSdoq4offxbaPHmQQYPf7h
-         4e6RJ32q4ppyqnyRiA1pceBEnOaoMB6EO9gBkaL++EFmmQra9oH+MsscTex/YX/Uk+
-         UGhapA0V33x0vBEJeP5oAW6niouARsB4PEeMzUbcxqlJaN0Zv7ync+UynMkHcplhgj
-         zYyNLycr0rwSFitHjexb0LNSxQ9IUKzurKU1AArDIzOHOgnuyJtXrO+vLqwduZlhPe
-         seY/bZ+f7xXSscj0fbM9lM8OxPCrMDB2CRvzTParLZhLpcn70rzPjMw/uXXv9Ayrog
-         AcI5C+ngSuuXg==
-Date:   Tue, 17 Jan 2023 16:42:44 -0800
-Subject: [PATCH 3/3] xfs/182: fix spurious direct write failure
+        b=eHk2GDTmG3T5alcK/kZHKRhhgqkVZye5+NhIg7IqecKpEhC7i0rW//o1K+cFSUupg
+         tNA7lXeAUXN6CuA2cdshrxO06TSIvSnDySfinN5tVa2Kc1Qysrp14H+fHie8jYieIT
+         7GJbMwratgU9N5/IBeW5miWZIkTzox9UeAJf63I0AgjGjhIqUZGlDowKdz3P1Eu9mY
+         IX4Rmg3V/zho4cCFS3gDWJzjFANYCr1nTUnRZdKLpUiD9pypg9bY3Q2VVB93B+hctg
+         5szH8lA9VWT4EUKbpwU6EsUEVWStRB2GbB7maMJ/CxmFvkwY/SRcuBgyZVO8bceLWQ
+         UYdLxctGNMQfQ==
+Date:   Tue, 17 Jan 2023 16:43:00 -0800
+Subject: [PATCH 1/3] xfs: skip fragmentation tests when alwayscow mode is
+ enabled
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, zlang@redhat.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
-        yangx.jy@fujitsu.com
-Message-ID: <167400102485.1914858.8399289411855614483.stgit@magnolia>
-In-Reply-To: <167400102444.1914858.13132645140135239531.stgit@magnolia>
-References: <167400102444.1914858.13132645140135239531.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
+Message-ID: <167400102759.1914975.16224258103457998795.stgit@magnolia>
+In-Reply-To: <167400102747.1914975.6709564559821901777.stgit@magnolia>
+References: <167400102747.1914975.6709564559821901777.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -50,72 +50,99 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-This test has some weird behavior that causes regressions when fsdax and
-reflink are enabled.  The goal of this test is to set a cow extent size
-hint, perform some random directio writes, perform a directio rewrite of
-the entire file, and make sure that the file content (and extent count)
-are sane afterwards.
-
-Most of the time, the random directio writes will never touch the
-8388609th byte, though if they do randomly select that EOF block, they'd
-end up extending the file by $real_blksz bytes and causing spurious test
-failures.
-
-Then, the rewrite does this:
-
-pwrite -S 0x63 -b $real_blksz 0 $((filesize + 1))
-
-Note that we previously set filesize=8388608, which means that we're
-asking for a series of direct writes that fill the first 8388608 bytes
-with 'c'.  The last write in the series becomes a single byte direct
-write.  For regular file access mode, this last write will fail with
-EINVAL, since block devices do not support byte granularity writes and
-XFS does not fall back to the pagecache for unaligned direct wites.
-Hence we never wrote the 8388609th byte of the file.
-
-However, fsdax *does* allow byte-granularity direct writes, which means
-that the single-byte write succeeds.  There is no EINVAL return code,
-and the 8388609th byte of the file is now 'c' instead of 'a'.  As a
-result, the md5 of file2 is different.
-
-Since fsdax+reflink is the newcomer, amend the direct writes in this
-test so that they always end at the 8388608th byte, since we were never
-really testing that last byte anyway.  This makes the test behavior
-consistent across both access modes.
+If the always_cow debugging flag is enabled, all file writes turn into
+copy writes.  This dramatically ramps up fragmentation in the filesystem
+(intentionally!) so there's no point in complaining about fragmentation.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/182     |    4 ++--
- tests/xfs/182.out |    1 -
- 2 files changed, 2 insertions(+), 3 deletions(-)
+ common/xfs    |    9 +++++++++
+ tests/xfs/182 |    1 +
+ tests/xfs/192 |    1 +
+ tests/xfs/198 |    1 +
+ tests/xfs/204 |    1 +
+ tests/xfs/211 |    1 +
+ 6 files changed, 14 insertions(+)
 
 
+diff --git a/common/xfs b/common/xfs
+index 7eee76c0ee..a00d90a4b5 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -1108,6 +1108,15 @@ _require_no_xfs_bug_on_assert()
+ 	fi
+ }
+ 
++# Require that XFS is not configured in always_cow mode.
++_require_no_xfs_always_cow()
++{
++	if [ -f /sys/fs/xfs/debug/always_cow ]; then
++		grep -q "1" /sys/fs/xfs/debug/always_cow && \
++		   _notrun "test requires XFS always_cow to be off, turn it off to run the test"
++	fi
++}
++
+ # Get a metadata field
+ # The first arg is the field name
+ # The rest of the arguments are xfs_db commands to find the metadata.
 diff --git a/tests/xfs/182 b/tests/xfs/182
-index ec3f7dc026..696b933e60 100755
+index 696b933e60..511aca6f2d 100755
 --- a/tests/xfs/182
 +++ b/tests/xfs/182
-@@ -55,9 +55,9 @@ md5sum $testdir/file2 | _filter_scratch
+@@ -24,6 +24,7 @@ _require_cp_reflink
+ _require_xfs_io_command "fiemap"
+ _require_xfs_io_command "cowextsize"
+ _require_odirect
++_require_no_xfs_always_cow	# writes have to converge to overwrites
  
- echo "CoW and unmount"
- $XFS_IO_PROG -f -c "cowextsize" $testdir/file2 >> $seqres.full
--$XFS_IO_PROG -d -f -c "pwrite -R -S 0x63 -b $real_blksz 0 $((filesize + 1))" \
-+$XFS_IO_PROG -d -f -c "pwrite -R -S 0x63 -b $real_blksz 0 $filesize" \
- 	$testdir/file2 2>&1 >> $seqres.full | _filter_xfs_io_error
--$XFS_IO_PROG -d -f -c "pwrite -S 0x63 -b $real_blksz 0 $((filesize + 1))" \
-+$XFS_IO_PROG -d -f -c "pwrite -S 0x63 -b $real_blksz 0 $filesize" \
- 	$testdir/file2 2>&1 >> $seqres.full | _filter_xfs_io_error
- _scratch_cycle_mount
+ echo "Format and mount"
+ _scratch_mkfs > $seqres.full 2>&1
+diff --git a/tests/xfs/192 b/tests/xfs/192
+index ced18fa3c1..eb577f15fc 100755
+--- a/tests/xfs/192
++++ b/tests/xfs/192
+@@ -26,6 +26,7 @@ _require_xfs_io_command "fiemap"
+ _require_xfs_io_command "cowextsize"
+ _require_xfs_io_command "funshare"
+ _require_odirect
++_require_no_xfs_always_cow	# writes have to converge to overwrites
  
-diff --git a/tests/xfs/182.out b/tests/xfs/182.out
-index 41384437ad..8821bcd5bd 100644
---- a/tests/xfs/182.out
-+++ b/tests/xfs/182.out
-@@ -5,7 +5,6 @@ Compare files
- 2909feb63a37b0e95fe5cfb7f274f7b1  SCRATCH_MNT/test-182/file1
- 2909feb63a37b0e95fe5cfb7f274f7b1  SCRATCH_MNT/test-182/file2
- CoW and unmount
--pwrite: Invalid argument
- Compare files
- 2909feb63a37b0e95fe5cfb7f274f7b1  SCRATCH_MNT/test-182/file1
- c6ba35da9f73ced20d7781a448cc11d4  SCRATCH_MNT/test-182/file2
+ echo "Format and mount"
+ _scratch_mkfs > $seqres.full 2>&1
+diff --git a/tests/xfs/198 b/tests/xfs/198
+index c61fbab70d..e5b98609de 100755
+--- a/tests/xfs/198
++++ b/tests/xfs/198
+@@ -23,6 +23,7 @@ _require_cp_reflink
+ _require_xfs_io_command "fiemap"
+ _require_xfs_io_command "cowextsize"
+ _require_odirect
++_require_no_xfs_always_cow	# writes have to converge to overwrites
+ 
+ echo "Format and mount"
+ _scratch_mkfs > $seqres.full 2>&1
+diff --git a/tests/xfs/204 b/tests/xfs/204
+index ca21dfe722..7d6b79a86d 100755
+--- a/tests/xfs/204
++++ b/tests/xfs/204
+@@ -28,6 +28,7 @@ _require_xfs_io_command "fiemap"
+ _require_xfs_io_command "cowextsize"
+ _require_xfs_io_command "funshare"
+ _require_odirect
++_require_no_xfs_always_cow	# writes have to converge to overwrites
+ 
+ echo "Format and mount"
+ _scratch_mkfs > $seqres.full 2>&1
+diff --git a/tests/xfs/211 b/tests/xfs/211
+index 96c0b85b14..3ce6496afc 100755
+--- a/tests/xfs/211
++++ b/tests/xfs/211
+@@ -24,6 +24,7 @@ _require_cp_reflink
+ _require_xfs_io_command "fiemap"
+ _require_xfs_io_command "cowextsize"
+ _require_odirect
++_require_no_xfs_always_cow	# writes have to converge to overwrites
+ 
+ echo "Format and mount"
+ _scratch_mkfs > $seqres.full 2>&1
 
