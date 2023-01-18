@@ -2,102 +2,120 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C751CC38159
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Jan 2023 19:22:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09677C46467
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Jan 2023 19:57:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229690AbjARTWU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Jan 2023 14:22:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53638 "EHLO
+        id S229651AbjART5i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Jan 2023 14:57:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43728 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229590AbjARTWT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jan 2023 14:22:19 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D316253B33;
-        Wed, 18 Jan 2023 11:22:18 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 796BAB81EC6;
-        Wed, 18 Jan 2023 19:22:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9FA9C433F0;
-        Wed, 18 Jan 2023 19:22:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1674069735;
-        bh=yjQncDbJeENGWSOLDdWMhn5Bloim0J4tjTJOQeS/9ws=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=AhWorewOTLEA1Sz+viHSXw7GmLjrwI+CHP/jGeaPWfPN1Pm+4Euiryk2E7Rls1IzP
-         AfOMutSQWdcEzk6oxAK3Ka6dK5UBH7PtWldoeS/CMkZz+9oWJFXDnQ23szfqh/PrLM
-         W9tn/88zmGT74ZrsSzb6xx7I6pYtx1X1BJjuQt3pZHQVhwF5Q4+ViEaJUrOoVgzMv2
-         Fzzs6NxaF1rLd4JM5E9dJK8Ko8fvkoZqGKMZMIqKYL0BGcW6xw5UVup3DbpLzjDp+3
-         Llfg/J37Q7Lgsh3FCkKzyRYyqMfgqMapGfc0SvqDJwogEeNAuJ2OALug7MRtT5X0vg
-         iUaenFUzGrRQw==
-Date:   Wed, 18 Jan 2023 11:22:15 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 4/4] populate: improve runtime of __populate_fill_fs
-Message-ID: <Y8hG59tdunKmATSw@magnolia>
-References: <167400103044.1915094.5935980986164675922.stgit@magnolia>
- <167400103096.1915094.8399897640768588035.stgit@magnolia>
- <20230118155403.pg7aq3gtcks2ptdz@zlang-mailbox>
+        with ESMTP id S229512AbjART5h (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jan 2023 14:57:37 -0500
+Received: from mail-qv1-xf30.google.com (mail-qv1-xf30.google.com [IPv6:2607:f8b0:4864:20::f30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C40853E7B;
+        Wed, 18 Jan 2023 11:57:36 -0800 (PST)
+Received: by mail-qv1-xf30.google.com with SMTP id p96so12425554qvp.13;
+        Wed, 18 Jan 2023 11:57:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=jE7UUdy8PLtXYkvU/lzVvfasVo94/Kknt5WCrMd4jf8=;
+        b=VcasuukNdtEloIk0KqvSta3EYTM8ZwqsTHtT/bj3ut3YYOeIS/OpCCwYsncX9MgQRw
+         QWEoc9qVZ/F1XkKxrm0SezpXexHkMc2IoDHgj92Ev1dgX/+qT8dUCDddKGE3/h3H5PaG
+         /dX/RwGKN0ssytQHtibN5gCczlEAFvoMYwmHJOqPvhB8Thwnd49IasG9B6MiWiYHTkjO
+         E47xpO/Rg1kdUQ3y4gHWLCdjC/BUwgQfQpzbXhSUl1R2fScq70HsoJL64sgpxVBMurGC
+         vUTlgCtmcTRnCy8d+lhL3ei1HpMNpreExkujXFgWArIfQ3+tzbwH9lsOVRX3jBA324Bj
+         lVPQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=jE7UUdy8PLtXYkvU/lzVvfasVo94/Kknt5WCrMd4jf8=;
+        b=D83IBz0bwpDMCxSy3os6l2GZPH7bVib+14kZ/mUQKdlc4fCe070PuCgQmStoJcmM/I
+         HOx+XxmVmdAOoznnKRfQ58cfoBaSaMeXoUelesMLgjkqHsj6s0q/ngjZYW4sA0iXmfHw
+         L45Do2IQib7kxq1agY04kGl0Hf0e5Bbt0Ew0Jj5QGMR4asJ8qN/pDVIxm5N/vt8vFBY+
+         SboUAcTvqO0qwoaQjum03RWWO5QirC+gTRw6IcQH1G1vso7WzgQzF13DfqxpCxT2imBJ
+         XRnVRMndLb09sY+Otsrbj6ThM0jqff2BhVWLHm3g1xfAAMhEXx6o/l7FX5ffC7WgRZCb
+         KHcA==
+X-Gm-Message-State: AFqh2ko3yo+3mOjowHHuyHcU8wKkDgx3mzoe+eZ0ixop0pMfkR7pX7wL
+        DQcTwe1ZRlpFNCwK1F5nwh2sMuaaP5OHz11gYXU=
+X-Google-Smtp-Source: AMrXdXve2EgHGv+2cv1pHkrPy3geUJuLfVqUa2trthVWJaRmjDPV20b7EKg3SSIV8PR21z7dow6K6rvn9Y0mMDKfOqc=
+X-Received: by 2002:a05:6214:5e05:b0:534:b3ca:8638 with SMTP id
+ li5-20020a0562145e0500b00534b3ca8638mr437696qvb.19.1674071855381; Wed, 18 Jan
+ 2023 11:57:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230118155403.pg7aq3gtcks2ptdz@zlang-mailbox>
+References: <20230108194034.1444764-1-agruenba@redhat.com> <20230108194034.1444764-9-agruenba@redhat.com>
+ <20230108215911.GP1971568@dread.disaster.area> <CAHc6FU4z1nC8zdM8NvUyMqU29_J7_oNu1pvBHuOvR+M6gq7F0Q@mail.gmail.com>
+ <20230109225453.GQ1971568@dread.disaster.area> <CAHpGcM+urV5LYpTZQWTRoK6VWaLx0sxk3mDe_kd3VznMY9woVw@mail.gmail.com>
+ <Y8Q4FmhYehpQPZ3Z@magnolia> <Y8eeAmm1Vutq3Fc9@infradead.org> <Y8hCq+fIWgHfUufe@magnolia>
+In-Reply-To: <Y8hCq+fIWgHfUufe@magnolia>
+From:   =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
+Date:   Wed, 18 Jan 2023 20:57:24 +0100
+Message-ID: <CAHpGcMJmi6gncj=a0NZrbm11AJoN5u0-F7GUnwFZRVbCL=Dpqw@mail.gmail.com>
+Subject: Re: [RFC v6 08/10] iomap/xfs: Eliminate the iomap_valid handler
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, cluster-devel@redhat.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 18, 2023 at 11:54:03PM +0800, Zorro Lang wrote:
-> On Tue, Jan 17, 2023 at 04:44:33PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Run the copy loop in parallel to reduce runtime.  If filling the
-> > populated fs is selected (which it isn't by default in xfs/349), this
-> > reduces the runtime from ~18s to ~15s, since it's only making enough
-> > copies to reduce the free space by 5%.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  common/populate |    3 ++-
-> >  1 file changed, 2 insertions(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/common/populate b/common/populate
-> > index f34551d272..1c3c28463f 100644
-> > --- a/common/populate
-> > +++ b/common/populate
-> > @@ -151,8 +151,9 @@ __populate_fill_fs() {
-> >  	echo "FILL FS"
-> >  	echo "src_sz $SRC_SZ fs_sz $FS_SZ nr $NR"
-> >  	seq 2 "${NR}" | while read nr; do
-> > -		cp -pRdu "${dir}/test/1" "${dir}/test/${nr}"
-> > +		cp -pRdu "${dir}/test/1" "${dir}/test/${nr}" &
-> >  	done
-> > +	wait
-> 
-> I'm thinking about what'll happen if we do "Ctrl+c" on a running test which
-> is waiting for these cp operations.
+Am Mi., 18. Jan. 2023 um 20:04 Uhr schrieb Darrick J. Wong <djwong@kernel.org>:
+>
+> On Tue, Jan 17, 2023 at 11:21:38PM -0800, Christoph Hellwig wrote:
+> > On Sun, Jan 15, 2023 at 09:29:58AM -0800, Darrick J. Wong wrote:
+> > > I don't have any objections to pulling everything except patches 8 and
+> > > 10 for testing this week.
+> >
+> > That would be great.  I now have a series to return the ERR_PTR
+> > from __filemap_get_folio which will cause a minor conflict, but
+> > I think that's easy enough for Linux to handle.
+>
+> Ok, done.
+>
+> > >
+> > > 1. Does zonefs need to revalidate mappings?  The mappings are 1:1 so I
+> > > don't think it does, but OTOH zone pointer management might complicate
+> > > that.
+> >
+> > Adding Damien.
+> >
+> > > 2. How about porting the writeback iomap validation to use this
+> > > mechanism?  (I suspect Dave might already be working on this...)
+> >
+> > What is "this mechanism"?  Do you mean the here removed ->iomap_valid
+> > ?   writeback calls into ->map_blocks for every block while under the
+> > folio lock, so the validation can (and for XFS currently is) done
+> > in that.  Moving it out into a separate method with extra indirect
+> > functiona call overhead and interactions between the methods seems
+> > like a retrograde step to me.
+>
+> Sorry, I should've been more specific -- can xfs writeback use the
+> validity cookie in struct iomap and thereby get rid of struct
+> xfs_writepage_ctx entirely?
 
-Hmm.  In the context of fstests running on a system with systemd, we run
-each test within a systemd scope and kill the scope when the test script
-exits.  That will tear down unclaimed background processes, but it's not
-a hard and fast guarantee that everyone has systemd.
+Already asked and answered in the same thread:
 
-As for *general* bashisms, I guess the only solution is:
+https://lore.kernel.org/linux-fsdevel/20230109225453.GQ1971568@dread.disaster.area/
 
-trap 'pkill -P $$' INT TERM QUIT EXIT
-
-To kill all the children of the test script.  Maybe we want that?  But I
-hate wrapping my brain around bash child process management, so yuck.
-
-I'll drop the parallel populate work, it's creating a lot of problems
-that I don't have time to solve while delivering only modest gains.
-
---D
-
-> >  }
-> >  
-> >  # For XFS, force on all the quota options if quota is enabled
-> > 
-> 
+> > > 2. Do we need to revalidate mappings for directio writes?  I think the
+> > > answer is no (for xfs) because the ->iomap_begin call will allocate
+> > > whatever blocks are needed and truncate/punch/reflink block on the
+> > > iolock while the directio writes are pending, so you'll never end up
+> > > with a stale mapping.
+> >
+> > Yes.
+>
+> Er... yes as in "Yes, we *do* need to revalidate directio writes", or
+> "Yes, your reasoning is correct"?
+>
+> --D
