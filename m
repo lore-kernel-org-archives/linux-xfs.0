@@ -2,122 +2,83 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AB24C32793
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Jan 2023 16:27:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7546C38147
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Jan 2023 16:32:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230258AbjARQ10 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Jan 2023 11:27:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57262 "EHLO
+        id S230231AbjARQcj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Jan 2023 11:32:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230366AbjARQ0x (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jan 2023 11:26:53 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14DF74F843
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 08:24:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1674059087;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=H4gPDbXgRwcEu9eRFB58g+gXi6AVjus+QHhs3v57+Uw=;
-        b=RFkJUvHMDuQchLyf9vNPTzTv5UVaDoKxoCJTZppqYkj2s0qUgfuEbJgv/ZmdNdzwzNxnjq
-        50CrQEY3XS1c8udSuRqqwLtRa32gFxHXyTokNsJvGaBpJQz/OVV8QgGk6gmZ2SVpbtCg9q
-        ZPTWjWKOkbiYib+xcsWK7fLLSQIxJRQ=
-Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com
- [209.85.210.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-633-8dVKQ8v9O9OtWVaCBDyO7g-1; Wed, 18 Jan 2023 11:24:45 -0500
-X-MC-Unique: 8dVKQ8v9O9OtWVaCBDyO7g-1
-Received: by mail-pf1-f199.google.com with SMTP id b196-20020a621bcd000000b0058a63dc105eso11772977pfb.6
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 08:24:45 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=H4gPDbXgRwcEu9eRFB58g+gXi6AVjus+QHhs3v57+Uw=;
-        b=NMIczTza/xsDU12Hz/NlBstf9YgBiLni/iaGpbIt9leXJz1JRAYzKyUnvUG8FQgamo
-         ELnOY/GKKj9xFNMtrrfZyLM2pBqJdM0vS0FuQhf96ryfFwBppDDzWedMy56aDf7G1HN+
-         0fqAHdG+PhROcT+DKiz87WrIDptKoy1bBuXaCDWvhc0wCStQOpn4ZO+QuLopSs5oY0OI
-         FWZTlzvZHaM0BokHyvixc41rSLJk/gzO7iTVds49Z11LRWXYbXeBSPepkwfvCXonj0py
-         fHpB0bfyUBfTvvHv8xaScJ8NQb6AQW2waKe7Rb5QW0Ztsa4Hjqodu+e1VXP3skxZHRTd
-         oJ8Q==
-X-Gm-Message-State: AFqh2kr4wchEmr9NoAwyqb+MZeCKQG5KXCSaWkm0zL/3kHhaYEtSzzM2
-        EQXWzt/QbO8pLw3PHU6ptqgldyr1OYKxZgEgAlvz1NReKLX1f4XuVLx6zSdf/6gOO9rwTIJjrLv
-        wv7nSvuq2JDgTKp8p51af1Exy2mQxDD6See12
-X-Received: by 2002:a63:5849:0:b0:478:eb77:b104 with SMTP id i9-20020a635849000000b00478eb77b104mr618316pgm.236.1674059084728;
-        Wed, 18 Jan 2023 08:24:44 -0800 (PST)
-X-Google-Smtp-Source: AMrXdXtvkaGNY8lVgDyNm0tuarLhfWyFgPfPp/0vXS/hCHoGVIWXwNRYT3XKDintDuiBfiXwyin720mSswN72fFwbPw=
-X-Received: by 2002:a63:5849:0:b0:478:eb77:b104 with SMTP id
- i9-20020a635849000000b00478eb77b104mr618307pgm.236.1674059084379; Wed, 18 Jan
- 2023 08:24:44 -0800 (PST)
+        with ESMTP id S230262AbjARQbz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jan 2023 11:31:55 -0500
+Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [IPv6:2a03:a000:7:0:5054:ff:fe1c:15ff])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E63346171;
+        Wed, 18 Jan 2023 08:30:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=79tBezyevsf2Wxt0n7eAII57Vo+xNtqmBftZsLQEsak=; b=AE1dpnZ/RyCsAhZjNATK0qKchW
+        MalbWxkYDaH7CPFLM6QjQBYvj+f8wHu/p3KYTaMnKBZcf6xFD3P0y4loZGMWsUhMgKygsP9WiMBIA
+        PMiAr1iF3KI/4jOG/7P6H9pnw78sWVIN1wqSDKT02en3TvOUvzspx4fgNv6fxrXv7YaToj+dTbxtm
+        1kXKhSFh8Co62Z4dCOPCNeGPVkwCKH+xfHFNRAfHbMZRH//pp1YSWJq0RGoDZK0AZuAJ0ZxR69F8N
+        waSdo5JVLSs0u5piImKsTtBxvqo+WxwHDC+tTfT2cvDCwHk1Bb+Py1GY8hQKR8OrxsfgrEm2BWsOo
+        6CPWQBIg==;
+Received: from viro by zeniv.linux.org.uk with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1pIBKA-002a04-0T;
+        Wed, 18 Jan 2023 16:30:06 +0000
+Date:   Wed, 18 Jan 2023 16:30:06 +0000
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        Ted Tso <tytso@mit.edu>, linux-xfs@vger.kernel.org
+Subject: Re: Locking issue with directory renames
+Message-ID: <Y8gejpDqxV6Uo/xY@ZenIV>
+References: <20230117123735.un7wbamlbdihninm@quack3>
+ <Y8bTk1CsH9AaAnLt@ZenIV>
+ <20230118091036.qqscls22q6htxscf@quack3>
 MIME-Version: 1.0
-References: <20230118094329.9553-1-hch@lst.de> <20230118094329.9553-8-hch@lst.de>
- <Y8gXodKIUneO+XQb@casper.infradead.org>
-In-Reply-To: <Y8gXodKIUneO+XQb@casper.infradead.org>
-From:   Andreas Gruenbacher <agruenba@redhat.com>
-Date:   Wed, 18 Jan 2023 17:24:32 +0100
-Message-ID: <CAHc6FU7Exz2kr+x7jvK1mi5ENOVCOXruP7qKSdPsyhSwmfMhDA@mail.gmail.com>
-Subject: Re: [Cluster-devel] [PATCH 7/9] gfs2: handle a NULL folio in gfs2_jhead_process_page
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, Hugh Dickins <hughd@google.com>,
-        cluster-devel@redhat.com, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-ext4@vger.kernel.org, linux-afs@lists.infradead.org,
-        linux-btrfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230118091036.qqscls22q6htxscf@quack3>
+Sender: Al Viro <viro@ftp.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-[Christoph's email ended up in my spam folder; I hope that was a
-one-time-only occurrence.]
+On Wed, Jan 18, 2023 at 10:10:36AM +0100, Jan Kara wrote:
 
-On Wed, Jan 18, 2023 at 5:00 PM Matthew Wilcox <willy@infradead.org> wrote:
-> On Wed, Jan 18, 2023 at 10:43:27AM +0100, Christoph Hellwig wrote:
-> > filemap_get_folio can return NULL, so exit early for that case.
->
-> I'm not sure it can return NULL in this specific case.  As I understand
-> this code, we're scanning the journal looking for the log head.  We've
-> just submitted the bio to read this page.  I suppose memory pressure
-> could theoretically push the page out, but if it does, we're doing the
-> wrong thing by just returning here; we need to retry reading the page.
->
-> Assuming we're not willing to do the work to add that case, I think I'd
-> rather see the crash in folio_wait_locked() than get data corruption
-> from failing to find the head of the log.
->
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/gfs2/lops.c | 2 ++
-> >  1 file changed, 2 insertions(+)
-> >
-> > diff --git a/fs/gfs2/lops.c b/fs/gfs2/lops.c
-> > index 1902413d5d123e..51d4b610127cdb 100644
-> > --- a/fs/gfs2/lops.c
-> > +++ b/fs/gfs2/lops.c
-> > @@ -472,6 +472,8 @@ static void gfs2_jhead_process_page(struct gfs2_jdesc *jd, unsigned long index,
-> >       struct folio *folio;
-> >
-> >       folio = filemap_get_folio(jd->jd_inode->i_mapping, index);
-> > +     if (!folio)
-> > +             return;
+> 
+> Yes, we can lock the source inode in ->rename() if we need it. The snag is
+> that if 'target' exists, it is already locked so when locking 'source' we
+> are possibly not following the VFS lock ordering of i_rwsem by inode
+> address (I don't think it can cause any real dealock but still it looks
+> suspicious). Also we'll have to lock with I_MUTEX_NONDIR2 lockdep class to
+> make lockdep happy but that's just a minor annoyance. Finally, we'll have
+> to check for RENAME_EXCHANGE because in that case, both source and target
+> will be already locked. Thus if we do the additional locking in the
+> filesystem, we will leak quite some details about rename locking into the
+> filesystem which seems undesirable to me.
 
-We're actually still holding a reference to the folio from the
-find_or_create_page() in gfs2_find_jhead() here, so we know that
-memory pressure can't push the page out and filemap_get_folio() won't
-return NULL.
+Rules for inode locks are simple:
+	* directories before non-directories
+	* ancestors before descendents
+	* for non-directories the ordering is by in-core inode address
 
-> >
-> >       folio_wait_locked(folio);
-> >       if (folio_test_error(folio))
-> > --
-> > 2.39.0
-> >
->
+So the instances that need that extra lock would do that when source is
+a directory and non RENAME_EXCHANGE is given.  Having the target already
+locked is irrelevant - if it exists, it's already checked to be a directory
+as well, and had it been a descendent of source, we would have already
+found that and failed with -ELOOP.
 
-Thanks,
-Andreas
+If A and B are both directories, there's no ordering between them unless
+one is an ancestor of another - such can be locked in any order.
+However, one of the following must be true:
+	* C is locked and both A and B had been observed to be children of C
+after the lock on C had been acquired, or
+	* ->s_vfs_rename_mutex is held for the filesystem containing both
+A and B.
 
+Note that ->s_vfs_rename_mutex is there to stabilize the tree topology and
+make "is A an ancestor of B?" possible to check for more than "A is locked,
+B is a child of A, so A will remain its ancestor until unlocked"...
