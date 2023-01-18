@@ -2,202 +2,139 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BA22C38147
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Jan 2023 14:16:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FC7CC46467
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Jan 2023 14:36:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230182AbjAROQp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Jan 2023 09:16:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44640 "EHLO
+        id S231367AbjAROgO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Jan 2023 09:36:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33816 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231528AbjAROPr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jan 2023 09:15:47 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86D7C3D937
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 05:56:07 -0800 (PST)
+        with ESMTP id S230163AbjAROfq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jan 2023 09:35:46 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0155414EBE
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 06:24:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1674050166;
+        s=mimecast20190719; t=1674051855;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=mFihkpDInrgSgklnLUMioicNGhqhAH1TgcOQOASzKX8=;
-        b=EA3k93hkqYrhPoOXHuPSuwCgI4osGpM+rMhJ0tvGvH/KpKL2FSYawrH0S+kiMa6G5ImtBI
-        nI7T6Knf6SWeBOmnYOmXQbn2ZIoA3DnDPeW84k3M4YnQLkVjlPm6MyzHDOGd7fhFekaq37
-        wzuqPIGmesB/886BdNjficcnXFMH+xo=
-Received: from mail-vs1-f69.google.com (mail-vs1-f69.google.com
- [209.85.217.69]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=lfKGMY01UOVNs2XEWd6MIP0FrCTHviiP1TvDlkdcWhM=;
+        b=ie9eR34Fd8DDLArR7RB+IDs+qVdrgTIO1S6u4Nyb55MMX2JeK2zrxETNYe87QM9idlEh33
+        NlzvsJpHpJ/EQdWDr6V+YERzmE2NgV5vZrDGkmmfzYI0xOi1yU/2ewIO1/nLcQT7DJqNpF
+        TAo7DiRM/VfSB9AVYDwh6OtZaUzScgk=
+Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
+ [209.85.218.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-564-Bu1y35ykM9yHfBnczr1KXw-1; Wed, 18 Jan 2023 08:56:04 -0500
-X-MC-Unique: Bu1y35ykM9yHfBnczr1KXw-1
-Received: by mail-vs1-f69.google.com with SMTP id p9-20020a056102200900b003d0a4ef871aso7681954vsr.6
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 05:56:04 -0800 (PST)
+ us-mta-373-NAXfrWYwP6yYe0rD3Y-Itw-1; Wed, 18 Jan 2023 09:24:14 -0500
+X-MC-Unique: NAXfrWYwP6yYe0rD3Y-Itw-1
+Received: by mail-ej1-f69.google.com with SMTP id jg2-20020a170907970200b0086ee94381fbso7105951ejc.2
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 06:24:13 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=mFihkpDInrgSgklnLUMioicNGhqhAH1TgcOQOASzKX8=;
-        b=kKPF/M2CSkWU/CeuG/ipI+nMHoCiudF8LbcSs8hd9PhdAwG9gfj4gILhnYKbKkOccC
-         rbbaYmAvr+0Ww6pIi85G4nzTUO+5CLvJ4iEUPutPCpJCq38Se/0obILQIl0RNlUgZo+f
-         FggFkbuXaOvMCPY1NujSnA0RlkSrN+8u4vnQnyxsZlBMjxEPVSJtCZitNurHXFqCwK2M
-         eeIpeQAwoNfg2yRYOEuKL1VRIbjojvAgdJobFAB70MAkFZJGEjKVZVZ7BwSyl4kToiOJ
-         jHLgz5/RXLDFFXaW2Ezes0epMtu+bbWUe2IXKLNqyRiq04EFkXBKEGhzlJIqT0kWiU/5
-         WcFw==
-X-Gm-Message-State: AFqh2kopvp3DigLRBLTd+MVfPq83LAvg1fQrAomRbgfavZ7lL0+hk6Sl
-        pKEbOlbDPEKUqPbuv574UzRgV2904d+gbavyoBvwh8e7Cd3EjeWJVYxf4L6yb4RVO1SqxgVwqfU
-        9kUf57QTyMS1JxsYkhUnO
-X-Received: by 2002:a1f:9092:0:b0:3e1:c1a9:9ed3 with SMTP id s140-20020a1f9092000000b003e1c1a99ed3mr896137vkd.9.1674050164275;
-        Wed, 18 Jan 2023 05:56:04 -0800 (PST)
-X-Google-Smtp-Source: AMrXdXsLRo7TamkDesKO8QNJFygnDW4twpsX9e35bGiyAXeGnZO0p6bdjcamDz6tCwjrwmPqirRaLA==
-X-Received: by 2002:a1f:9092:0:b0:3e1:c1a9:9ed3 with SMTP id s140-20020a1f9092000000b003e1c1a99ed3mr896109vkd.9.1674050163955;
-        Wed, 18 Jan 2023 05:56:03 -0800 (PST)
-Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
-        by smtp.gmail.com with ESMTPSA id s18-20020a05620a255200b006eeb3165565sm22368714qko.80.2023.01.18.05.56.02
+        bh=lfKGMY01UOVNs2XEWd6MIP0FrCTHviiP1TvDlkdcWhM=;
+        b=Ynvl7CDZ+MjVQO/zDi8a6Xp4yyp2sOoYJcHEn/AMWB/nn/0oeHlw3/vigkhw6WFnl8
+         D8Otwh0Lq7ZB3Nl77X7Cy61kWUNhBYpckNrBQxkVhSnt+wVL1K4oKAySd572HTDBcJt+
+         0MzMpfXHF1+MejoU87ZYWWh1W8BaQZ5ZPaQrVuf+5TGD+WCC+MLelo3o0JV/oDQs7WT0
+         qmH7AZWD8k1njNuRn6Ga3fKl4UaF8sBiemjx049C9eyfy+SXHnCsAHQ2yJkazZYHubVD
+         ny/B66n8XCcSD8gUXzZPziO9t4azs+8VQlPUVV1Uv1UNvOlHgsMqMiQkHut4F6eK7dmc
+         O6sw==
+X-Gm-Message-State: AFqh2krensT3vCV9StrT3AbVp2vK92MFCO3mh+6TEE6Z3cVxOG4WBfI5
+        TBLnuvB60PKH0iOe8cWa4T4+NQV+AY5SpQ0h2Nh4IIcyrp8Omuq0pmMkrGT464+Ty/EgZApnbJV
+        QEyu1kNB0FoSX+7wuZ9k=
+X-Received: by 2002:a50:ff08:0:b0:49b:7416:e3ff with SMTP id a8-20020a50ff08000000b0049b7416e3ffmr7155397edu.5.1674051852798;
+        Wed, 18 Jan 2023 06:24:12 -0800 (PST)
+X-Google-Smtp-Source: AMrXdXsPC+0p5G7HHxc1ucF1IJLYzkmc+VFQvWdfQlaWShUE3jzkGnkgF8A1r+9zFabWuNF8MstP6A==
+X-Received: by 2002:a50:ff08:0:b0:49b:7416:e3ff with SMTP id a8-20020a50ff08000000b0049b7416e3ffmr7155381edu.5.1674051852544;
+        Wed, 18 Jan 2023 06:24:12 -0800 (PST)
+Received: from aalbersh.remote.csb ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id j4-20020aa7c0c4000000b004847513929csm14249854edp.72.2023.01.18.06.24.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Jan 2023 05:56:03 -0800 (PST)
-Date:   Wed, 18 Jan 2023 08:57:05 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Hugh Dickins <hughd@google.com>, linux-afs@lists.infradead.org,
-        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        cluster-devel@redhat.com, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-nilfs@vger.kernel.org
-Subject: Re: [PATCH 4/9] shmem: remove shmem_get_partial_folio
-Message-ID: <Y8f6sShghKuFim5E@bfoster>
-References: <20230118094329.9553-1-hch@lst.de>
- <20230118094329.9553-5-hch@lst.de>
+        Wed, 18 Jan 2023 06:24:12 -0800 (PST)
+Date:   Wed, 18 Jan 2023 15:24:10 +0100
+From:   Andrey Albershteyn <aalbersh@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCHSET v2 0/4] fstests: filesystem population fixes
+Message-ID: <20230118142410.qxo3j64d7ebhw76j@aalbersh.remote.csb>
+References: <167400103044.1915094.5935980986164675922.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230118094329.9553-5-hch@lst.de>
+In-Reply-To: <167400103044.1915094.5935980986164675922.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 18, 2023 at 10:43:24AM +0100, Christoph Hellwig wrote:
-> Add a new SGP_FIND mode for shmem_get_partial_folio that works like
-> SGP_READ, but does not check i_size.  Use that instead of open coding
-> the page cache lookup in shmem_get_partial_folio.  Note that this is
-> a behavior change in that it reads in swap cache entries for offsets
-> outside i_size, possibly causing a little bit of extra work.
+On Tue, Jan 17, 2023 at 04:42:02PM -0800, Darrick J. Wong wrote:
+> Hi all,
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> [original patchset cover letter from Dave]
+> 
+> common/populate operations are slow. They are not coded for
+> performance, and do things in very slow ways. Mainly doing loops to
+> create/remove files and forcing a task to be created and destroy for
+> every individual operation. We can only fork a few thousand
+> processes a second, whilst we can create or remove tens of thousands
+> of files a second. Hence population speed is limited by fork/exit
+> overhead, not filesystem speed. I also changed it to run all the
+> creation steps in parallel, which means they run as fast as the
+> filesystem can handle them rather than as fast as a single CPU can
+> handle them.
+> 
+> patch 1 and patch 3 address these issues for common/populate and
+> xfs/294.  I may update a bunch of other tests that use loop { touch
+> file } to create thousands of files to speed them up as well.
+> 
+> The other patch in this series (patch 2) fixes the problem with
+> populating an Xfs btree format directory, which currently fails
+> because the removal step that creates sparse directory data also
+> causes the dabtree index to get smaller and free blocks, taking the
+> inode from btree to extent format and hence failing the populate
+> checks.
+> 
+> More details are in the commit messages for change.
+> 
+> [further changes from Darrick]
+> 
+> This series moves the FMT_BTREE creation bugfix to be first in line,
+> since it's a bug fix.  Next, I convert the directory and xattr creation
+> loops into separate programs to reduce the execve overhead.  This alone
+> is sufficient for a 10x reduction in runtime without substantially
+> altering what gets written to disk and comes out in the xfs fsck fuzz
+> tests.
+> 
+> The last patch in this series starts parallelizing things, but I've left
+> most of that out since the parallelization patches make it harder to
+> reliably generate a filesystem image where we can fuzz a two-level inobt
+> and still mount the fs to run online fsck.
+> 
+> If you're going to start using this mess, you probably ought to just
+> pull from my git trees, which are linked below.
+> 
+> This is an extraordinary way to destroy everything.  Enjoy!
+> Comments and questions are, as always, welcome.
+> 
+> --D
+> 
+> fstests git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=fix-populate-slowness
 > ---
->  include/linux/shmem_fs.h |  1 +
->  mm/shmem.c               | 46 ++++++++++++----------------------------
->  2 files changed, 15 insertions(+), 32 deletions(-)
+>  common/populate |   89 ++++++++++++++++++++++++++++++-------------------------
+>  src/popattr.py  |   62 ++++++++++++++++++++++++++++++++++++++
+>  src/popdir.pl   |   72 ++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 182 insertions(+), 41 deletions(-)
+>  create mode 100755 src/popattr.py
+>  create mode 100755 src/popdir.pl
 > 
-> diff --git a/include/linux/shmem_fs.h b/include/linux/shmem_fs.h
-> index d09d54be4ffd99..7ba160ac066e5e 100644
-> --- a/include/linux/shmem_fs.h
-> +++ b/include/linux/shmem_fs.h
-> @@ -105,6 +105,7 @@ enum sgp_type {
->  	SGP_CACHE,	/* don't exceed i_size, may allocate page */
->  	SGP_WRITE,	/* may exceed i_size, may allocate !Uptodate page */
->  	SGP_FALLOC,	/* like SGP_WRITE, but make existing page Uptodate */
-> +	SGP_FIND,	/* like SGP_READ, but also read outside i_size */
->  };
->  
->  int shmem_get_folio(struct inode *inode, pgoff_t index, struct folio **foliop,
-> diff --git a/mm/shmem.c b/mm/shmem.c
-> index 9e1015cbad29f9..e9500fea43a8dc 100644
-> --- a/mm/shmem.c
-> +++ b/mm/shmem.c
-> @@ -877,27 +877,6 @@ void shmem_unlock_mapping(struct address_space *mapping)
->  	}
->  }
->  
-> -static struct folio *shmem_get_partial_folio(struct inode *inode, pgoff_t index)
-> -{
-> -	struct folio *folio;
-> -
-> -	/*
-> -	 * At first avoid shmem_get_folio(,,,SGP_READ): that fails
-> -	 * beyond i_size, and reports fallocated pages as holes.
-> -	 */
-> -	folio = __filemap_get_folio(inode->i_mapping, index,
-> -					FGP_ENTRY | FGP_LOCK, 0);
 
-This all seems reasonable to me at a glance, FWIW, but I am a little
-curious why this wouldn't split up into two changes. I.e., switch this
-over to filemap_get_entry() to minimally remove the FGP_ENTRY dependency
-without a behavior change, then (perhaps after the next patch) introduce
-SGP_FIND in a separate patch. That makes it easier to review and
-potentially undo if it happens to pose a problem in the future. Hm?
+The patchset looks good to me:
 
-Brian
+Reviewed-by: Andrey Albershteyn <aalbersh@redhat.com>
 
-> -	if (!xa_is_value(folio))
-> -		return folio;
-> -	/*
-> -	 * But read a page back from swap if any of it is within i_size
-> -	 * (although in some cases this is just a waste of time).
-> -	 */
-> -	folio = NULL;
-> -	shmem_get_folio(inode, index, &folio, SGP_READ);
-> -	return folio;
-> -}
-> -
->  /*
->   * Remove range of pages and swap entries from page cache, and free them.
->   * If !unfalloc, truncate or punch hole; if unfalloc, undo failed fallocate.
-> @@ -957,7 +936,8 @@ static void shmem_undo_range(struct inode *inode, loff_t lstart, loff_t lend,
->  		goto whole_folios;
->  
->  	same_folio = (lstart >> PAGE_SHIFT) == (lend >> PAGE_SHIFT);
-> -	folio = shmem_get_partial_folio(inode, lstart >> PAGE_SHIFT);
-> +	folio = NULL;
-> +	shmem_get_folio(inode, lstart >> PAGE_SHIFT, &folio, SGP_FIND);
->  	if (folio) {
->  		same_folio = lend < folio_pos(folio) + folio_size(folio);
->  		folio_mark_dirty(folio);
-> @@ -971,14 +951,16 @@ static void shmem_undo_range(struct inode *inode, loff_t lstart, loff_t lend,
->  		folio = NULL;
->  	}
->  
-> -	if (!same_folio)
-> -		folio = shmem_get_partial_folio(inode, lend >> PAGE_SHIFT);
-> -	if (folio) {
-> -		folio_mark_dirty(folio);
-> -		if (!truncate_inode_partial_folio(folio, lstart, lend))
-> -			end = folio->index;
-> -		folio_unlock(folio);
-> -		folio_put(folio);
-> +	if (!same_folio) {
-> +		folio = NULL;
-> +		shmem_get_folio(inode, lend >> PAGE_SHIFT, &folio, SGP_FIND);
-> +		if (folio) {
-> +			folio_mark_dirty(folio);
-> +			if (!truncate_inode_partial_folio(folio, lstart, lend))
-> +				end = folio->index;
-> +			folio_unlock(folio);
-> +			folio_put(folio);
-> +		}
->  	}
->  
->  whole_folios:
-> @@ -1900,7 +1882,7 @@ static int shmem_get_folio_gfp(struct inode *inode, pgoff_t index,
->  		if (folio_test_uptodate(folio))
->  			goto out;
->  		/* fallocated folio */
-> -		if (sgp != SGP_READ)
-> +		if (sgp != SGP_READ && sgp != SGP_FIND)
->  			goto clear;
->  		folio_unlock(folio);
->  		folio_put(folio);
-> @@ -1911,7 +1893,7 @@ static int shmem_get_folio_gfp(struct inode *inode, pgoff_t index,
->  	 * SGP_NOALLOC: fail on hole, with NULL folio, letting caller fail.
->  	 */
->  	*foliop = NULL;
-> -	if (sgp == SGP_READ)
-> +	if (sgp == SGP_READ || sgp == SGP_FIND)
->  		return 0;
->  	if (sgp == SGP_NOALLOC)
->  		return -ENOENT;
-> -- 
-> 2.39.0
-> 
-> 
+-- 
+- Andrey
 
