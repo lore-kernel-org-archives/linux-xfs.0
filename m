@@ -2,228 +2,253 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0214DC00A5A
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Jan 2023 00:59:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 915B9C38142
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Jan 2023 00:59:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229620AbjARA7B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Jan 2023 19:59:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52678 "EHLO
+        id S229840AbjARA7P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Jan 2023 19:59:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52596 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229925AbjARA6j (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jan 2023 19:58:39 -0500
+        with ESMTP id S229522AbjARA6w (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jan 2023 19:58:52 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E42D139BAF
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Jan 2023 16:45:23 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86BC91555C
+        for <linux-xfs@vger.kernel.org>; Tue, 17 Jan 2023 16:47:07 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 4E713B8164A
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 00:45:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 074FFC433EF;
-        Wed, 18 Jan 2023 00:45:20 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 30942B81645
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 00:47:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDDAEC433D2;
+        Wed, 18 Jan 2023 00:47:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1674002721;
-        bh=MWxFknRPbmg+boAqguwpg591rn/kJtZmvZ/TuFobdL0=;
-        h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=I4n6xOo8BY7NrVZo8slBzRF8SUecNq66YM+XsvELOsnxuS8IqNsUAKYL37wb9AzSl
-         t+qHSwcvPaS9dNVPH6yGtdvabOMu57H1GW8F/2CpkBW+QHR7kjJnixlVaUXBdncAjo
-         4OCcNiPgHNSKAwyzSxXpUYktaP+n8MtpGfUlgddEvaIk2+BUPtQ+vQuMaoxnkunLP5
-         ISfnNGQOfsuLayYkm7Fr+2Xuwgoq3ONO1lsSiQou8F5MTaS3DtL+zd4ti2D5ktSf7l
-         pQcic5i9QwQVDhQRsNnpTC2tnqhs8NPxTRl/+lrurYrNuE1vx250CkogFCxRZYxB0H
-         TVJoFAcBF6D5A==
-Date:   Tue, 17 Jan 2023 16:45:20 -0800
-Subject: [PATCH 3/3] design: document extended attribute log item changes
+        s=k20201202; t=1674002824;
+        bh=B4oQvr+tfr4Pb5FPP78HRw/EyvGdq74RL/krXK2xZJ4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=jff9S6ESedfkgZACQliUbgfcZSxnMMI2KICtW0w2gZG4Qb7rjcAZNm1SBUxOExLXK
+         5iH0aopEdSCGOsjo2dDAwJomHnULAaXT7Zqr59QMGcnY9NmrJwTybDTd4Xkx+1NxXt
+         rBgsbTl7/+eDeovtDZK/ERhF+SC6SYVNfdAG1MoxOWo6bPHYXT6BkAvZw7CWGxxwmf
+         0p/o1pSLHBdzruvKieFAyBlWdtNgLoTaLdrm+o/8itG5uF4Om3ro2jcMDXkfTy3tu+
+         BrpD4VAeSJWfojl+Hqy85RD7auZU3j4mgnSmHt6ZwL+DeMy7izfWHeWf+ni9lj6bgr
+         qIpTTTkvA9tNg==
+Date:   Tue, 17 Jan 2023 16:47:04 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, chandan.babu@oracle.com,
-        allison.henderson@oracle.com
-Message-ID: <167400163318.1925795.14365139273911946287.stgit@magnolia>
-In-Reply-To: <167400163279.1925795.1487663139527842585.stgit@magnolia>
-References: <167400163279.1925795.1487663139527842585.stgit@magnolia>
-User-Agent: StGit/0.19
+To:     Csaba Henk <chenk@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3] xfsdocs: add epub output
+Message-ID: <Y8dBiHKZgqZeX+e6@magnolia>
+References: <20230118001408.mfx424iq67dfxr3t@nixos>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230118001408.mfx424iq67dfxr3t@nixos>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Jan 18, 2023 at 01:14:08AM +0100, Csaba Henk wrote:
+> Epub is a widespread open format for standalone reflowable
+> electronic documents, and it's a core feature of Asciidoc tooling
+> to be able to produce it, so we can get it "for free".
+> 
+> Signed-off-by: Csaba Henk <chenk@redhat.com>
 
-Describe the changes to the ondisk log format that are required to
-support atomic updates to extended attributes.
+Looks good, thank you for correcting that oversight!
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- .../allocation_groups.asciidoc                     |   14 ++-
- .../journaling_log.asciidoc                        |  109 ++++++++++++++++++++
- design/XFS_Filesystem_Structure/magic.asciidoc     |    2 
- 3 files changed, 122 insertions(+), 3 deletions(-)
+--D
 
-
-diff --git a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-index c64b4fad..c0ba16a8 100644
---- a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-+++ b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-@@ -461,9 +461,17 @@ space mappings allowed in data and extended attribute file forks.
- |=====
- 
- *sb_features_log_incompat*::
--Read-write incompatible feature flags for the log.  The kernel cannot read or
--write this FS log if it doesn't understand the flag.  Currently, no flags are
--defined.
-+Read-write incompatible feature flags for the log.  The kernel cannot recover
-+the FS log if it doesn't understand the flag.
-+
-+.Extended Version 5 Superblock Log incompatibility flags
-+[options="header"]
-+|=====
-+| Flag					| Description
-+| +XFS_SB_FEAT_INCOMPAT_LOG_XATTRS+	|
-+Extended attribute updates have been committed to the ondisk log.
-+
-+|=====
- 
- *sb_crc*::
- Superblock checksum.
-diff --git a/design/XFS_Filesystem_Structure/journaling_log.asciidoc b/design/XFS_Filesystem_Structure/journaling_log.asciidoc
-index ddcb87f4..f36dd352 100644
---- a/design/XFS_Filesystem_Structure/journaling_log.asciidoc
-+++ b/design/XFS_Filesystem_Structure/journaling_log.asciidoc
-@@ -215,6 +215,8 @@ magic number to distinguish themselves.  Buffer data items only appear after
- | +XFS_LI_CUD+			| 0x1243        | xref:CUD_Log_Item[Reference Count Update Done]
- | +XFS_LI_BUI+			| 0x1244        | xref:BUI_Log_Item[File Block Mapping Update Intent]
- | +XFS_LI_BUD+			| 0x1245        | xref:BUD_Log_Item[File Block Mapping Update Done]
-+| +XFS_LI_ATTRI+		| 0x1246        | xref:ATTRI_Log_Item[Extended Attribute Update Intent]
-+| +XFS_LI_ATTRD+		| 0x1247        | xref:ATTRD_Log_Item[Extended Attribute Update Done]
- |=====
- 
- Note that all log items (except for transaction headers) MUST start with
-@@ -712,6 +714,113 @@ Size of this log item.  Should be 1.
- *bud_bui_id*::
- A 64-bit number that binds the corresponding BUI log item to this BUD log item.
- 
-+[[ATTRI_Log_Item]]
-+=== Extended Attribute Update Intent
-+
-+The next two operation types work together to handle atomic extended attribute
-+updates.
-+
-+The lower byte of the +alfi_op_flags+ field is a type code indicating what sort
-+of file block mapping operation we want.
-+
-+.Extended attribute update log intent types
-+[options="header"]
-+|=====
-+| Value				| Description
-+| +XFS_ATTRI_OP_FLAGS_SET+	| Set a key/value pair.
-+| +XFS_ATTRI_OP_FLAGS_REMOVE+	| Remove a key/value pair.
-+| +XFS_ATTRI_OP_FLAGS_REPLACE+	| Replace one key/value pair with another.
-+|=====
-+
-+The ``extended attribute update intent'' operation comes first; it tells the
-+log that XFS wants to update one of a file's extended attributes.  This record
-+is crucial for correct log recovery because it enables us to spread a complex
-+metadata update across multiple transactions while ensuring that a crash midway
-+through the complex update will be replayed fully during log recovery.
-+
-+[source, c]
-+----
-+struct xfs_attri_log_format {
-+     uint16_t                  alfi_type;
-+     uint16_t                  alfi_size;
-+     uint32_t                  __pad;
-+     uint64_t                  alfi_id;
-+     uint64_t                  alfi_ino;
-+     uint32_t                  alfi_op_flags;
-+     uint32_t                  alfi_name_len;
-+     uint32_t                  alfi_value_len;
-+     uint32_t                  alfi_attr_filter;
-+};
-+----
-+
-+*alfi_type*::
-+The signature of an ATTRI operation, 0x1246.  This value is in host-endian
-+order, not big-endian like the rest of XFS.
-+
-+*alfi_size*::
-+Size of this log item.  Should be 1.
-+
-+*alfi_id*::
-+A 64-bit number that binds the corresponding ATTRD log item to this ATTRI log
-+item.
-+
-+*alfi_ino*::
-+Inode number of the file being updated.
-+
-+*alfi_op_flags*::
-+The operation being performed.  The lower byte must be one of the
-++XFS_ATTRI_OP_FLAGS_*+ flags defined above.  The upper bytes must be zero.
-+
-+*alfi_name_len*::
-+Length of the name of the extended attribute.  This must not be zero.
-+The attribute name itself is captured in the next log item.
-+
-+*alfi_value_len*::
-+Length of the value of the extended attribute.  This must be zero for remove
-+operations, and nonzero for set and replace operations.  The attribute value
-+itself is captured in the log item immediately after the item containing the
-+name.
-+
-+*alfi_attr_filter*::
-+Attribute namespace filter flags.  This must be one of +ATTR_ROOT+,
-++ATTR_SECURE+, or +ATTR_INCOMPLETE+.
-+
-+[[ATTRD_Log_Item]]
-+=== Completion of Extended Attribute Updates
-+
-+The ``extended attribute update done'' operation complements the ``extended
-+attribute update intent'' operation.  This second operation indicates that the
-+update actually happened, so that log recovery needn't replay the update.  The
-+ATTRD and the actual updates are typically found in a new transaction following
-+the transaction in which the ATTRI was logged.
-+
-+[source, c]
-+----
-+struct xfs_attrd_log_format {
-+      __uint16_t               alfd_type;
-+      __uint16_t               alfd_size;
-+      __uint32_t               __pad;
-+      __uint64_t               alfd_alf_id;
-+};
-+----
-+
-+*alfd_type*::
-+The signature of an ATTRD operation, 0x1247.  This value is in host-endian
-+order, not big-endian like the rest of XFS.
-+
-+*alfd_size*::
-+Size of this log item.  Should be 1.
-+
-+*alfd_bui_id*::
-+A 64-bit number that binds the corresponding ATTRI log item to this ATTRD log
-+item.
-+
-+=== Extended Attribute Name and Value
-+
-+These regions contain the name and value components of the extended attribute
-+being updated, as needed.  There are no magic numbers; each region contains the
-+data and nothing else.
-+
- [[Inode_Log_Item]]
- === Inode Updates
- 
-diff --git a/design/XFS_Filesystem_Structure/magic.asciidoc b/design/XFS_Filesystem_Structure/magic.asciidoc
-index 9be26f82..a343271a 100644
---- a/design/XFS_Filesystem_Structure/magic.asciidoc
-+++ b/design/XFS_Filesystem_Structure/magic.asciidoc
-@@ -71,6 +71,8 @@ are not aligned to blocks.
- | +XFS_LI_CUD+			| 0x1243        |       | xref:CUD_Log_Item[Reference Count Update Done]
- | +XFS_LI_BUI+			| 0x1244        |       | xref:BUI_Log_Item[File Block Mapping Update Intent]
- | +XFS_LI_BUD+			| 0x1245        |       | xref:BUD_Log_Item[File Block Mapping Update Done]
-+| +XFS_LI_ATTRI+		| 0x1246        |       | xref:ATTRI_Log_Item[Extended Attribute Update Intent]
-+| +XFS_LI_ATTRD+		| 0x1247        |       | xref:ATTRD_Log_Item[Extended Attribute Update Done]
- |=====
- 
- = Theoretical Limits
-
+> ---
+> Delivering SoB that was missing from v2.
+> 
+>  .gitignore                               |  1 +
+>  admin/Makefile                           | 13 +++++++++++--
+>  admin/XFS_Performance_Tuning/Makefile    | 13 +++++++++++--
+>  design/Makefile                          | 13 +++++++++++--
+>  design/XFS_Filesystem_Structure/Makefile | 13 +++++++++++--
+>  5 files changed, 45 insertions(+), 8 deletions(-)
+> 
+> diff --git a/.gitignore b/.gitignore
+> index a2e10b4..412ff1c 100644
+> --- a/.gitignore
+> +++ b/.gitignore
+> @@ -1,3 +1,4 @@
+>  *.html
+>  *.pdf
+>  *.css
+> +*.epub
+> diff --git a/admin/Makefile b/admin/Makefile
+> index de27f3b..dcffc63 100644
+> --- a/admin/Makefile
+> +++ b/admin/Makefile
+> @@ -11,6 +11,7 @@ DOCFILES=$(wildcard *.asciidoc)
+>  
+>  HTML_TARGETS=$(addsuffix .html, $(basename $(DOCFILES)))
+>  PDF_TARGETS=$(addsuffix .pdf, $(basename $(DOCFILES)))
+> +EPUB_TARGETS=$(addsuffix .epub, $(basename $(DOCFILES)))
+>  
+>  %.html: %.asciidoc
+>  	@echo "[html] $*"
+> @@ -20,7 +21,11 @@ PDF_TARGETS=$(addsuffix .pdf, $(basename $(DOCFILES)))
+>  	@echo "[pdf] $*"
+>  	$(Q)a2x -f pdf $<
+>  
+> -default: html pdf $(SUBDIRS)
+> +%.epub: %.asciidoc
+> +	@echo "[epub] $*"
+> +	$(Q)a2x -f epub $<
+> +
+> +default: html pdf epub $(SUBDIRS)
+>  
+>  $(SUBDIRS):
+>  	@echo "Building $@"
+> @@ -30,14 +35,18 @@ html: $(HTML_TARGETS)
+>  
+>  pdf: $(PDF_TARGETS)
+>  
+> +epub: $(EPUB_TARGETS)
+> +
+>  # manually construct build dependencies for target builds so that modification
+>  # of individual files will trigger a rebuild of the document correctly.
+>  $(PDF_TARGETS): $(DOCFILES)
+>  
+>  $(HTML_TARGETS): $(DOCFILES)
+>  
+> +$(EPUB_TARGETS): $(DOCFILES)
+> +
+>  clean: $(addsuffix -clean, $(SUBDIRS))
+> -	$(Q)rm -f *.html *.pdf *.css
+> +	$(Q)rm -f *.html *.pdf *.css *.epub
+>  
+>  %-clean:
+>  	@echo "Cleaning $*"
+> diff --git a/admin/XFS_Performance_Tuning/Makefile b/admin/XFS_Performance_Tuning/Makefile
+> index 06451f1..2b929a4 100644
+> --- a/admin/XFS_Performance_Tuning/Makefile
+> +++ b/admin/XFS_Performance_Tuning/Makefile
+> @@ -8,8 +8,9 @@ DOCFILES=$(wildcard *.asciidoc) \
+>  
+>  HTML_TARGET=$(addsuffix .html, $(TARGET))
+>  PDF_TARGET=$(addsuffix .pdf, $(TARGET))
+> +EPUB_TARGET=$(addsuffix .epub, $(TARGET))
+>  
+> -default: html pdf
+> +default: html pdf epub
+>  
+>  %.html: %.asciidoc
+>  	@echo "[html] $*"
+> @@ -19,16 +20,24 @@ default: html pdf
+>  	@echo "[pdf] $*"
+>  	$(Q)a2x -f pdf -d book $<
+>  
+> +%.epub: %.asciidoc
+> +	@echo "[epub] $*"
+> +	$(Q)a2x -f epub -d book $<
+> +
+>  html: $(HTML_TARGET)
+>  
+>  pdf: $(PDF_TARGET)
+>  
+> +epub: $(EPUB_TARGET)
+> +
+>  # manually construct build dependencies for target builds so that modification
+>  # of individual files will trigger a rebuild of the document correctly.
+>  $(PDF_TARGET): $(DOCFILES)
+>  
+>  $(HTML_TARGET): $(DOCFILES)
+>  
+> +$(EPUB_TARGET): $(DOCFILES)
+> +
+>  clean:
+> -	$(Q)rm -f *.html *.pdf *.css
+> +	$(Q)rm -f *.html *.pdf *.css *.epub
+>  
+> diff --git a/design/Makefile b/design/Makefile
+> index 0879470..0847896 100644
+> --- a/design/Makefile
+> +++ b/design/Makefile
+> @@ -11,6 +11,7 @@ DOCFILES=$(wildcard *.asciidoc)
+>  
+>  HTML_TARGETS=$(addsuffix .html, $(basename $(DOCFILES)))
+>  PDF_TARGETS=$(addsuffix .pdf, $(basename $(DOCFILES)))
+> +EPUB_TARGETS=$(addsuffix .epub, $(basename $(DOCFILES)))
+>  
+>  %.html: %.asciidoc
+>  	@echo "[html] $*"
+> @@ -20,7 +21,11 @@ PDF_TARGETS=$(addsuffix .pdf, $(basename $(DOCFILES)))
+>  	@echo "[pdf] $*"
+>  	$(Q)a2x -f pdf --dblatex-opts "-P latex.output.revhistory=0" $<
+>  
+> -default: html pdf $(SUBDIRS)
+> +%.epub: %.asciidoc
+> +	@echo "[epub] $*"
+> +	$(Q)a2x -f epub $<
+> +
+> +default: html pdf epub $(SUBDIRS)
+>  
+>  $(SUBDIRS):
+>  	@echo "Building $@"
+> @@ -30,14 +35,18 @@ html: $(HTML_TARGETS)
+>  
+>  pdf: $(PDF_TARGETS)
+>  
+> +epub: $(EPUB_TARGETS)
+> +
+>  # manually construct build dependencies for target builds so that modification
+>  # of individual files will trigger a rebuild of the document correctly.
+>  $(PDF_TARGETS): $(DOCFILES)
+>  
+>  $(HTML_TARGETS): $(DOCFILES)
+>  
+> +$(EPUB_TARGETS): $(DOCFILES)
+> +
+>  clean: $(addsuffix -clean, $(SUBDIRS))
+> -	$(Q)rm -f *.html *.pdf *.css
+> +	$(Q)rm -f *.html *.pdf *.css *.epub
+>  
+>  %-clean:
+>  	@echo "Cleaning $*"
+> diff --git a/design/XFS_Filesystem_Structure/Makefile b/design/XFS_Filesystem_Structure/Makefile
+> index 359dd98..be78a75 100644
+> --- a/design/XFS_Filesystem_Structure/Makefile
+> +++ b/design/XFS_Filesystem_Structure/Makefile
+> @@ -8,8 +8,9 @@ DOCFILES=$(wildcard *.asciidoc) \
+>  
+>  HTML_TARGET=$(addsuffix .html, $(TARGET))
+>  PDF_TARGET=$(addsuffix .pdf, $(TARGET))
+> +EPUB_TARGET=$(addsuffix .epub, $(TARGET))
+>  
+> -default: html pdf
+> +default: html pdf epub
+>  
+>  %.html: %.asciidoc
+>  	@echo "[html] $*"
+> @@ -19,16 +20,24 @@ default: html pdf
+>  	@echo "[pdf] $*"
+>  	$(Q)a2x -f pdf -d book $<
+>  
+> +%.epub: %.asciidoc
+> +	@echo "[epub] $*"
+> +	$(Q)a2x -f epub -d book $<
+> +
+>  html: $(HTML_TARGET)
+>  
+>  pdf: $(PDF_TARGET)
+>  
+> +epub: $(EPUB_TARGET)
+> +
+>  # manually construct build dependencies for target builds so that modification
+>  # of individual files will trigger a rebuild of the document correctly.
+>  $(PDF_TARGET): $(DOCFILES)
+>  
+>  $(HTML_TARGET): $(DOCFILES)
+>  
+> +$(EPUB_TARGET): $(DOCFILES)
+> +
+>  clean:
+> -	$(Q)rm -f *.html *.pdf *.css
+> +	$(Q)rm -f *.html *.pdf *.css *.epub
+>  
+> -- 
+> 2.39.0
+> 
