@@ -2,31 +2,31 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0385CC004D4
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Jan 2023 10:41:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69ECDC004D4
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Jan 2023 10:42:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229913AbjARKlb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Jan 2023 05:41:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34446 "EHLO
+        id S229727AbjARKlx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Jan 2023 05:41:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229893AbjARKjY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jan 2023 05:39:24 -0500
+        with ESMTP id S229783AbjARKjP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jan 2023 05:39:15 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7050166CDC;
-        Wed, 18 Jan 2023 01:43:45 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF9E04F85E;
+        Wed, 18 Jan 2023 01:43:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=OEkmrOTp9bp0MHf7fBWQdFeBfwkVijLbFt/ZuD+SID8=; b=fWwuU2mFDmXn7LwEaystbVgNKf
-        6W93ZUCVYBEuM6BrPk3yZuB09IzyaYZNsTkpzicBlyvZKyWPX0ki0J49msMlHfuxugAu1eEpI689X
-        y3CMYNJbf3x3e3glDVCfRkR2AGRlBUjvBFY2PU2onSO73vKdDz+4yihTQap94U2geZXsUIy3Nugm1
-        wwPypEDOLE1/EGs/LD+ckYeTYmWPL3OM5Ra2Ppy9xP69HNLk6e/o8aBvYgPktsz2IXYbniaEeToGZ
-        4S8+Y9JfE4TjlT4PHg3Q+l/NnOBJcLddPWjYBKnTtMY7K5Z+TnqSyyRu9ooFbBu2aIsdGxbH9f2oO
-        xXZ8yYKQ==;
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=mTpJ9cNrsuABtrc2CMMVqtRMFrq4GM5CqdliOGUWCwM=; b=m3S30bmc8TCiQ6vdoZu9c2phhY
+        jM9LuKvom42BtXPuSImJllOB2g9FN6hYD3qkqZzyuriVI70Mz/jgWDpHcwKbwDNzpQw1KBh7ThcLj
+        ercQ1HWbJ/Bs2RcC0SWVvbF3jHm0/wUfFvGp+wiapfTbhRhTXVEFkPLdSSypVawGU6DUcHfm1teNX
+        8RlCOYBwmcNQJfoh73rqnAYQ4VwJoLKjXYbmSQkz+jD8yonpmOPVBWTmYBGHOTTx/e23O9DlQZXsM
+        2zlutqfaqjVAJv6W7SYjHZrRQb3IEMt+I5xXXzGNS2FfhzqsVt4Q3cYttsw70MipKO+Ro+4OY9gvh
+        UJAYvjpQ==;
 Received: from 213-147-167-250.nat.highway.webapn.at ([213.147.167.250] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pI4yt-0009wo-CP; Wed, 18 Jan 2023 09:43:43 +0000
+        id 1pI4yk-0009uq-Jk; Wed, 18 Jan 2023 09:43:35 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Andrew Morton <akpm@linux-foundation.org>,
         Matthew Wilcox <willy@infradead.org>,
@@ -35,12 +35,10 @@ Cc:     linux-afs@lists.infradead.org, linux-btrfs@vger.kernel.org,
         linux-ext4@vger.kernel.org, cluster-devel@redhat.com,
         linux-mm@kvack.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-nilfs@vger.kernel.org
-Subject: [PATCH 2/9] mm: make mapping_get_entry available outside of filemap.c
-Date:   Wed, 18 Jan 2023 10:43:22 +0100
-Message-Id: <20230118094329.9553-3-hch@lst.de>
+Subject: return an ERR_PTR from __filemap_get_folio
+Date:   Wed, 18 Jan 2023 10:43:20 +0100
+Message-Id: <20230118094329.9553-1-hch@lst.de>
 X-Mailer: git-send-email 2.39.0
-In-Reply-To: <20230118094329.9553-1-hch@lst.de>
-References: <20230118094329.9553-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
@@ -48,58 +46,41 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-mapping_get_entry is useful for page cache API users that need to know
-about xa_value internals.  Rename it and make it available in pagemap.h.
+Hi all,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- include/linux/pagemap.h | 1 +
- mm/filemap.c            | 6 +++---
- 2 files changed, 4 insertions(+), 3 deletions(-)
+__filemap_get_folio and its wrappers can return NULL for three different
+conditions, which in some cases requires the caller to reverse engineer
+the decision making.  This is fixed by returning an ERR_PTR instead of
+NULL and thus transporting the reason for the failure.  But to make
+that work we first need to ensure that no xa_value special case is
+returned and thus return the FGP_ENTRY flag.  It turns out that flag
+is barely used and can usually be deal with in a better way.
 
-diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index 9f108168377195..24dedf6b12be49 100644
---- a/include/linux/pagemap.h
-+++ b/include/linux/pagemap.h
-@@ -507,6 +507,7 @@ pgoff_t page_cache_prev_miss(struct address_space *mapping,
- #define FGP_ENTRY		0x00000080
- #define FGP_STABLE		0x00000100
- 
-+void *filemap_get_entry(struct address_space *mapping, pgoff_t index);
- struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
- 		int fgp_flags, gfp_t gfp);
- struct page *pagecache_get_page(struct address_space *mapping, pgoff_t index,
-diff --git a/mm/filemap.c b/mm/filemap.c
-index c915ded191f03f..ed0583f9e27512 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -1834,7 +1834,7 @@ EXPORT_SYMBOL(page_cache_prev_miss);
-  */
- 
- /*
-- * mapping_get_entry - Get a page cache entry.
-+ * filemap_get_entry - Get a page cache entry.
-  * @mapping: the address_space to search
-  * @index: The page cache index.
-  *
-@@ -1845,7 +1845,7 @@ EXPORT_SYMBOL(page_cache_prev_miss);
-  *
-  * Return: The folio, swap or shadow entry, %NULL if nothing is found.
-  */
--static void *mapping_get_entry(struct address_space *mapping, pgoff_t index)
-+void *filemap_get_entry(struct address_space *mapping, pgoff_t index)
- {
- 	XA_STATE(xas, &mapping->i_pages, index);
- 	struct folio *folio;
-@@ -1915,7 +1915,7 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
- 	struct folio *folio;
- 
- repeat:
--	folio = mapping_get_entry(mapping, index);
-+	folio = filemap_get_entry(mapping, index);
- 	if (xa_is_value(folio)) {
- 		if (fgp_flags & FGP_ENTRY)
- 			return folio;
--- 
-2.39.0
+Note that the shmem patches in here are non-trivial and need some
+careful review and testing.
 
+Diffstat
+ fs/afs/dir.c             |   10 +++----
+ fs/afs/dir_edit.c        |    2 -
+ fs/afs/write.c           |    4 +-
+ fs/btrfs/disk-io.c       |    2 -
+ fs/btrfs/extent_io.c     |    2 +
+ fs/ext4/inode.c          |    2 -
+ fs/ext4/move_extent.c    |    8 ++---
+ fs/gfs2/lops.c           |    2 +
+ fs/hugetlbfs/inode.c     |    2 -
+ fs/iomap/buffered-io.c   |    6 ++--
+ fs/netfs/buffered_read.c |    4 +-
+ fs/nilfs2/page.c         |    6 ++--
+ include/linux/pagemap.h  |    4 +-
+ include/linux/shmem_fs.h |    1 
+ mm/filemap.c             |   27 ++++++++-----------
+ mm/folio-compat.c        |    4 +-
+ mm/huge_memory.c         |    5 +--
+ mm/memcontrol.c          |    2 -
+ mm/mincore.c             |    2 -
+ mm/shmem.c               |   64 +++++++++++++++++++----------------------------
+ mm/swap_state.c          |   17 ++++++------
+ mm/swapfile.c            |    4 +-
+ mm/truncate.c            |   15 +++++------
+ 23 files changed, 93 insertions(+), 102 deletions(-)
