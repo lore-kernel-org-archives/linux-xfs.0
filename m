@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB5A2C38147
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Jan 2023 00:57:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF9C6C6379F
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Jan 2023 00:57:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229947AbjARA5o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Jan 2023 19:57:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52928 "EHLO
+        id S229957AbjARA5q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Jan 2023 19:57:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52804 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229800AbjARA5Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jan 2023 19:57:16 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E00555956C;
-        Tue, 17 Jan 2023 16:44:14 -0800 (PST)
+        with ESMTP id S229840AbjARA5S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Jan 2023 19:57:18 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F2C459741;
+        Tue, 17 Jan 2023 16:44:21 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BA91D61592;
-        Wed, 18 Jan 2023 00:44:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24D20C433EF;
-        Wed, 18 Jan 2023 00:44:03 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 56EB461587;
+        Wed, 18 Jan 2023 00:44:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB11AC433EF;
+        Wed, 18 Jan 2023 00:44:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1674002643;
-        bh=xlgrdzowHa0D88KmjrXHgErPMZKHICtOq1WlCXG2X/w=;
+        s=k20201202; t=1674002658;
+        bh=/t5e4H63A0yA50yAugMJjgVV/sdWPXrKyv6xll7M8hQ=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=oNFFrpkECNRg+qoSLeCZoRd+JLTXBmTDZ0FvJrt7LPS3p9gKlPWLs2sSLcADBakjQ
-         9l9DI8BV57D0C+upwpohVT6gqkysr/xteL0B50AvuJ+UIyfuYNdOTOvcuCRXJmXFjB
-         EhPQYtB6Z/ehu51YpFz3mNKiUtrNwFPj6mad5cqKOdfZnFryz34v1xz+vS+/1FRnmN
-         FEHrjeYslf3QJ0RHM5BKuPZjWnlxvlO0xomAkBF2R1zfm+CG6wWVK6RbTRD+Z8jkJZ
-         a+8H9xsA8kkVm6WZTKcZBwacpjwcTUKJ5XOYoX4iPiOEcTtSWzDjB/YIUdcjbOT2PF
-         NyFZKDKOUmRtg==
-Date:   Tue, 17 Jan 2023 16:44:02 -0800
-Subject: [PATCH 2/4] populate: remove file creation loops that take forever
+        b=un66hR7atZVcgL/l4GKWGRb3AutOvIk8m6q04ueEDj9NPhhGely5x3CCiPBmWkchl
+         x4q/0rfySiJhI0ps9wI3mANHJIIylRl2c9CS3r9jMUtizBFwGbnQndrl+ANIGzVCA5
+         RXa8pW/3IyqL3HbPi8GqB5mEvA3ffpc9zl4AOjwSaTwfL/y4Ujro5v7uOySBOgT0RC
+         sErpWQ5FcUK08FKuVB53++/zEr1cgoak33t+vBrUF8YGwlxccKKsNxddeoZDk+LJNP
+         fEv3+vdJNjt3t3cYz7nBW/VQRNHuZGmiP97nO4gmfUpYwQwBHR0iMY2vn4NhwJG87S
+         XDS/OpmMOLN5w==
+Date:   Tue, 17 Jan 2023 16:44:18 -0800
+Subject: [PATCH 3/4] populate: improve attr creation runtime
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, zlang@redhat.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
         david@fromorbit.com
-Message-ID: <167400103070.1915094.18012675472928079868.stgit@magnolia>
+Message-ID: <167400103083.1915094.17122126052905864562.stgit@magnolia>
 In-Reply-To: <167400103044.1915094.5935980986164675922.stgit@magnolia>
 References: <167400103044.1915094.5935980986164675922.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,220 +50,129 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Replace the file creation loops with a perl script that does everything
-we want from a single process.  This reduces the runtime of
+Replace the file creation loops with a python script that does
+everything we want from a single process.  This reduces the runtime of
 _scratch_xfs_populate substantially by avoiding thousands of execve
-overhead.  On my system, this reduces the runtime of xfs/349 (with scrub
-enabled) from ~140s to ~45s.
+overhead.  This patch builds on the previous one by reducing the runtime
+of xfs/349 from ~45s to ~15s.
+
+For people who don't have python3, use setfattr's "restore" mode to bulk
+create xattrs.  This reduces runtime to about ~25s.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/populate |   61 ++++++++++++++++++-----------------------------
- src/popdir.pl   |   72 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 96 insertions(+), 37 deletions(-)
- create mode 100755 src/popdir.pl
+ common/populate |   22 +++++++++++++++++---
+ src/popattr.py  |   62 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 81 insertions(+), 3 deletions(-)
+ create mode 100755 src/popattr.py
 
 
 diff --git a/common/populate b/common/populate
-index 84f4b8e374..180540aedd 100644
+index 180540aedd..f34551d272 100644
 --- a/common/populate
 +++ b/common/populate
-@@ -11,6 +11,7 @@ _require_populate_commands() {
- 	_require_xfs_io_command "falloc"
+@@ -12,6 +12,10 @@ _require_populate_commands() {
  	_require_xfs_io_command "fpunch"
  	_require_test_program "punch-alternating"
-+	_require_test_program "popdir.pl"
+ 	_require_test_program "popdir.pl"
++	if [ -n "${PYTHON3_PROG}" ]; then
++		_require_command $PYTHON3_PROG python3
++		_require_test_program "popattr.py"
++	fi
  	case "${FSTYP}" in
  	"xfs")
  		_require_command "$XFS_DB_PROG" "xfs_db"
-@@ -54,55 +55,50 @@ __populate_fragment_file() {
+@@ -108,9 +112,21 @@ __populate_create_attr() {
+ 	missing="$3"
  
- # Create a large directory
- __populate_create_dir() {
--	name="$1"
--	nr="$2"
--	missing="$3"
-+	local name="$1"
-+	local nr="$2"
-+	local missing="$3"
-+	shift; shift; shift
- 
- 	mkdir -p "${name}"
+ 	touch "${name}"
 -	seq 0 "${nr}" | while read d; do
--		creat=mkdir
--		test "$((d % 20))" -eq 0 && creat=touch
--		$creat "${name}/$(printf "%.08d" "$d")"
+-		setfattr -n "user.$(printf "%.08d" "$d")" -v "$(printf "%.08d" "$d")" "${name}"
 -	done
-+	$here/src/popdir.pl --dir "${name}" --end "${nr}" "$@"
++
++	if [ -n "${PYTHON3_PROG}" ]; then
++		${PYTHON3_PROG} $here/src/popattr.py --file "${name}" --end "${nr}"
++
++		test -z "${missing}" && return
++		${PYTHON3_PROG} $here/src/popattr.py --file "${name}" --start 1 --incr 2 --end "${nr}" --remove
++		return
++	fi
++
++	# Simulate a getfattr dump file so we can bulk-add attrs.
++	(
++		echo "# file: ${name}";
++		seq --format "user.%08g=\"abcdefgh\"" 0 "${nr}"
++		echo
++	) | setfattr --restore -
  
  	test -z "${missing}" && return
--	seq 1 2 "${nr}" | while read d; do
--		rm -rf "${name}/$(printf "%.08d" "$d")"
--	done
-+	$here/src/popdir.pl --dir "${name}" --start 1 --incr 2 --end "${nr}" --remove "$@"
- }
- 
- # Create a large directory and ensure that it's a btree format
- __populate_xfs_create_btree_dir() {
- 	local name="$1"
- 	local isize="$2"
--	local missing="$3"
-+	local dblksz="$3"
-+	local missing="$4"
- 	local icore_size="$(_xfs_get_inode_core_bytes $SCRATCH_MNT)"
- 	# We need enough extents to guarantee that the data fork is in
- 	# btree format.  Cycling the mount to use xfs_db is too slow, so
- 	# watch for when the extent count exceeds the space after the
- 	# inode core.
- 	local max_nextents="$(((isize - icore_size) / 16))"
--	local nr=0
-+	local nr
-+	local incr
-+
-+	# Add about one block's worth of dirents before we check the data fork
-+	# format.
-+	incr=$(( (dblksz / 8) / 100 * 100 ))
- 
- 	mkdir -p "${name}"
--	while true; do
--		local creat=mkdir
--		test "$((nr % 20))" -eq 0 && creat=touch
--		$creat "${name}/$(printf "%.08d" "$nr")"
-+	for ((nr = 0; ; nr += incr)); do
-+		$here/src/popdir.pl --dir "${name}" --start "${nr}" --end "$((nr + incr - 1))"
-+
- 		# Extent count checks use data blocks only to avoid the removal
- 		# step from removing dabtree index blocks and reducing the
- 		# number of extents below the required threshold.
--		if [ "$((nr % 40))" -eq 0 ]; then
--			local nextents="$(xfs_bmap ${name} | grep -v hole | wc -l)"
--			[ "$((nextents - 1))" -gt $max_nextents ] && break
--		fi
--		nr=$((nr+1))
-+		local nextents="$(xfs_bmap ${name} | grep -v hole | wc -l)"
-+		[ "$((nextents - 1))" -gt $max_nextents ] && break
- 	done
- 
- 	test -z "${missing}" && return
--	seq 1 2 "${nr}" | while read d; do
--		rm -rf "${name}/$(printf "%.08d" "$d")"
--	done
-+	$here/src/popdir.pl --dir "${name}" --start 1 --incr 2 --end "${nr}" --remove
- }
- 
- # Add a bunch of attrs to a file
-@@ -224,9 +220,7 @@ _scratch_xfs_populate() {
- 
- 	# Fill up the root inode chunk
- 	echo "+ fill root ino chunk"
--	seq 1 64 | while read f; do
--		$XFS_IO_PROG -f -c "truncate 0" "${SCRATCH_MNT}/dummy${f}"
--	done
-+	$here/src/popdir.pl --dir "${SCRATCH_MNT}" --start 1 --end 64 --format "dummy%u" --file-mult 1
- 
- 	# Regular files
- 	# - FMT_EXTENTS
-@@ -261,7 +255,7 @@ _scratch_xfs_populate() {
- 
- 	# - BTREE
- 	echo "+ btree dir"
--	__populate_xfs_create_btree_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$isize" true
-+	__populate_xfs_create_btree_dir "${SCRATCH_MNT}/S_IFDIR.FMT_BTREE" "$isize" "$dblksz" true
- 
- 	# Symlinks
- 	# - FMT_LOCAL
-@@ -340,14 +334,7 @@ _scratch_xfs_populate() {
- 	local rec_per_btblock=16
- 	local nr="$(( 2 * (blksz / rec_per_btblock) * ino_per_rec ))"
- 	local dir="${SCRATCH_MNT}/INOBT"
--	mkdir -p "${dir}"
--	seq 0 "${nr}" | while read f; do
--		touch "${dir}/${f}"
--	done
--
--	seq 0 2 "${nr}" | while read f; do
--		rm -f "${dir}/${f}"
--	done
-+	__populate_create_dir "${dir}" "${nr}" true --file-mult 1
- 
- 	# Reverse-mapping btree
- 	is_rmapbt="$(_xfs_has_feature "$SCRATCH_MNT" rmapbt -v)"
-diff --git a/src/popdir.pl b/src/popdir.pl
+ 	seq 1 2 "${nr}" | while read d; do
+diff --git a/src/popattr.py b/src/popattr.py
 new file mode 100755
-index 0000000000..dc0c046b7d
+index 0000000000..397ced9d33
 --- /dev/null
-+++ b/src/popdir.pl
-@@ -0,0 +1,72 @@
-+#!/usr/bin/perl -w
++++ b/src/popattr.py
+@@ -0,0 +1,62 @@
++#!/usr/bin/python3
 +
 +# Copyright (c) 2023 Oracle.  All rights reserved.
 +# SPDX-License-Identifier: GPL-2.0
 +#
-+# Create a bunch of files and subdirs in a directory.
++# Create a bunch of xattrs in a file.
 +
-+use Getopt::Long;
-+use File::Basename;
++import argparse
++import sys
++import os
 +
-+$progname=$0;
-+GetOptions("start=i" => \$start,
-+	   "end=i" => \$end,
-+	   "file-mult=i" => \$file_mult,
-+	   "incr=i" => \$incr,
-+	   "format=s" => \$format,
-+	   "dir=s" => \$dir,
-+	   "remove!" => \$remove,
-+	   "help!" => \$help,
-+	   "verbose!" => \$verbose);
++parser = argparse.ArgumentParser(description = 'Mass create xattrs in a file')
++parser.add_argument(
++	'--file', required = True, type = str, help = 'manipulate this file')
++parser.add_argument(
++	'--start', type = int, default = 0,
++	help = 'create xattrs starting with this number')
++parser.add_argument(
++	'--incr', type = int, default = 1,
++	help = 'increment attr number by this much')
++parser.add_argument(
++	'--end', type = int, default = 1000,
++	help = 'stop at this attr number')
++parser.add_argument(
++	'--remove', dest = 'remove', action = 'store_true',
++	help = 'remove instead of creating')
++parser.add_argument(
++	'--format', type = str, default = '%08d',
++	help = 'printf formatting string for attr name')
++parser.add_argument(
++	'--verbose', dest = 'verbose', action = 'store_true',
++	help = 'verbose output')
 +
++args = parser.parse_args()
 +
-+# check/remove output directory, get filesystem info
-+if (defined $help) {
-+  # newline at end of die message suppresses line number
-+  print STDERR <<"EOF";
-+Usage: $progname [options]
-+Options:
-+  --dir             chdir here before starting
-+  --start=num       create names starting with this number (0)
-+  --incr=num        increment file number by this much (1)
-+  --end=num         stop at this file number (100)
-+  --file-mult       create a regular file when file number is a multiple
-+                    of this quantity (20)
-+  --remove          remove instead of creating
-+  --format=str      printf formatting string for file name ("%08d")
-+  --verbose         verbose output
-+  --help            this help screen
-+EOF
-+  exit(1) unless defined $help;
-+  # otherwise...
-+  exit(0);
-+}
++fmtstring = "user.%s" % args.format
 +
-+if (defined $dir) {
-+	chdir($dir) or die("chdir $dir");
-+}
-+$start = 0 if (!defined $start);
-+$end = 100 if (!defined $end);
-+$file_mult = 20 if (!defined $file_mult);
-+$format = "%08d" if (!defined $format);
-+$incr = 1 if (!defined $incr);
++# If we are passed a regular file, open it as a proper file descriptor and
++# pass that around for speed.  Otherwise, we pass the path.
++fp = None
++try:
++	fp = open(args.file, 'r')
++	fd = fp.fileno()
++	os.listxattr(fd)
++	if args.verbose:
++		print("using fd calls")
++except:
++	if args.verbose:
++		print("using path calls")
++	fd = args.file
 +
-+for ($i = $start; $i <= $end; $i += $incr) {
-+	$fname = sprintf($format, $i);
++for i in range(args.start, args.end + 1, args.incr):
++	fname = fmtstring % i
 +
-+	if ($remove) {
-+		$verbose && print "rm $fname\n";
-+		unlink($fname) or rmdir($fname) or die("unlink $fname");
-+	} elsif ($file_mult == 0 or ($i % $file_mult) == 0) {
-+		# create a file
-+		$verbose && print "touch $fname\n";
-+		open(DONTCARE, ">$fname") or die("touch $fname");
-+		close(DONTCARE);
-+	} else {
-+		# create a subdir
-+		$verbose && print "mkdir $fname\n";
-+		mkdir($fname, 0755) or die("mkdir $fname");
-+	}
-+}
-+
-+exit(0);
++	if args.remove:
++		if args.verbose:
++			print("removexattr %s" % fname)
++		os.removexattr(fd, fname)
++	else:
++		if args.verbose:
++			print("setxattr %s" % fname)
++		os.setxattr(fd, fname, b'abcdefgh')
 
