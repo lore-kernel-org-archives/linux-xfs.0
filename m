@@ -2,69 +2,69 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FA68C46467
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F4EEC38147
 	for <linux-xfs@archiver.kernel.org>; Wed, 18 Jan 2023 22:45:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229774AbjARWpd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Jan 2023 17:45:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43620 "EHLO
+        id S229850AbjARWpe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Jan 2023 17:45:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229863AbjARWpT (ORCPT
+        with ESMTP id S229463AbjARWpT (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jan 2023 17:45:19 -0500
-Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C91B60499
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B1A560491
         for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 14:45:18 -0800 (PST)
-Received: by mail-pj1-x1031.google.com with SMTP id v10-20020a17090abb8a00b00229c517a6eeso3992813pjr.5
+Received: by mail-pj1-x102a.google.com with SMTP id o7-20020a17090a0a0700b00226c9b82c3aso53650pjo.3
         for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 14:45:18 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=qKuAMvXfEBORE+u/OsZZ6eeRG6KY8kuRyA4fB77aCEc=;
-        b=CDg5KRlfSPpd9I/N7oGoc+MrJiA4BoAxJyNhLKYMgB6s7BeWWt9Ao2fjNBx9Xngb9+
-         KOJe7xt7exVsJ2efsua6DjJJLLouZ5It5Z2pY/I+0htigBtEprOXfb0i8FhE8/6DZP99
-         ty5+uGTlBNQUYH1oMV6LQbyBNa3p/fJHekWE1PN5/5cWQ2KMxgL4AN4VZzR3LOUrWXzx
-         2dNGniOtTCv5tln1OsVoxd03+Hhl0oQHk8VBIT9jYHFvBodJ+mIvmLDNuy9ytixXLuvq
-         dKUWlNHBs2JD280KEkqANJwOo3UNhHcfgnsUaW1p0V/M1NfUFKIUjwsWaacLeidlUjLK
-         hWyA==
+        bh=P81BaZMttsxu9qBV+N8cR5TRwjRefLeeP4Kqf5YDWIQ=;
+        b=zdJ+65g9/300ixAYDIoZNEgFZ1O6Mw3/S3LosLKcNoHQdVrE7oLa9Kss8XY8QGHAYl
+         0scBPfLiLeIHKQN24yH/wMdQx1ohCcPLorqVhaamoDTkZ1hnIxELJ73itrPQqYpD2U2m
+         nYoH5MM6zvclDJj/LHpQZYPU0GCSgJgLR+nFbpobIu1Z0u4TZUOuJCXActcllQAJ9EA7
+         m0e+0K951xe8ADjEiNAAPel+FVAAgTS0F6pDaITrQ6pxjGI1vZB3p6Kkt+I0jbb77FmP
+         9rFaMDdstGMPB8bc1LFflZwJAvL8U+mveSEuSpUfc3qlpCSRhw/Rmfh8nDZyvy/NoEJZ
+         zLnw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=qKuAMvXfEBORE+u/OsZZ6eeRG6KY8kuRyA4fB77aCEc=;
-        b=j0ZDq4nGlxHavLlJjAJ3DLr03gZu8leb9RWRm9Q0JbpZiQ28bYkvq/zjDKb9y2C9OJ
-         THnioC4qpYpRBrwOLIFfVdVtndMbczAURglDZk047HvUq0vKwE8zH1syNYmscUt49kZg
-         hCubu2H6xorNJUTVtvissHRLRaaWB2ywJUl9Due6aOGrL78bmDs6gGs8YRcrTmkVveM3
-         XuUTdOBjK8TwdILbUBbuKNsAmqzfc6k7tUcbD/Xiq8j9+NKfCTSWcHB59SAABN/kwWWd
-         q4HscvMxCZKc+zyieoMVH6RaycB//564c+PzOY4HjnHgFKtnFle2Ss51TP5wbQpzSKjd
-         33bw==
-X-Gm-Message-State: AFqh2krgMPiHAHg7afngY1aS9ueSMrSFhW3JbUxFhrW0340YIEiYcKZp
-        1XPygEy4zT3R0PiuwtMjs9hCfBCBLPOYB6t7
-X-Google-Smtp-Source: AMrXdXvD7stD/cvKJYd/yEBVOGGZkKb9B3l+ZVd7L/p1SLTSMTi/q+3wmBYiSCKHeP02Nwqr2XioPg==
-X-Received: by 2002:a05:6a20:6b91:b0:ac:21c3:2fb7 with SMTP id bu17-20020a056a206b9100b000ac21c32fb7mr26228812pzb.6.1674081917983;
+        bh=P81BaZMttsxu9qBV+N8cR5TRwjRefLeeP4Kqf5YDWIQ=;
+        b=qkOJBrX2CVTkjujClB2REEx7rvp8kSeQbVKUWdzhYdUmNcGFGRXFBx/QpvWm21TTK3
+         +59P7eVSaf9HF/t7aG+ALO3tnPwa8ArAacqS4yujltAVnD/IV13aOVDR0neIGUja/G+w
+         lO22t1nezyu4nUKlGX8v2o0ih5XQxctJx2GD61Afbje5452Y6bClGu9ZRVKR1kZ/G81L
+         3lOIoYL9NGVPX7IvlBJtUyhVgRTmkKocv+ca5I0pZYyAPklw9/cid1XbbrIpEsxYSjeJ
+         uLiss9bsnw+xeySBcv3ZfExYi9yqN9s2auFIb0FOxzW/u5sjLh0IP7+w30w8Svzrb0TJ
+         ynBA==
+X-Gm-Message-State: AFqh2krcJqu9Vd7MYo/GND5apW8zJFOFWNO6PsdrdIBrsuj4a0ea54Wc
+        9bly6dhZ1njIu6szEommN5aBFzMoMf5u8rma
+X-Google-Smtp-Source: AMrXdXvfnPwUXxLsHVK46zqEPchJeJ7WKAMJ9PhgVGUOt2lPMaXFAn0hkC+LtN+aO9WdMuAKBd2+DQ==
+X-Received: by 2002:a17:90b:4f86:b0:229:307f:65e6 with SMTP id qe6-20020a17090b4f8600b00229307f65e6mr8990647pjb.48.1674081917595;
         Wed, 18 Jan 2023 14:45:17 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-146-207.pa.vic.optusnet.com.au. [49.186.146.207])
-        by smtp.gmail.com with ESMTPSA id q9-20020a170902bd8900b001910b21fe90sm879892pls.210.2023.01.18.14.45.14
+        by smtp.gmail.com with ESMTPSA id u4-20020a17090a6a8400b0022717d8d835sm1797701pjj.16.2023.01.18.14.45.13
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Jan 2023 14:45:16 -0800 (PST)
+        Wed, 18 Jan 2023 14:45:15 -0800 (PST)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <dave@fromorbit.com>)
-        id 1pIHB9-004iYX-UB
+        id 1pIHB9-004iXu-IB
         for linux-xfs@vger.kernel.org; Thu, 19 Jan 2023 09:45:11 +1100
 Received: from dave by devoid.disaster.area with local (Exim 4.96)
         (envelope-from <dave@devoid.disaster.area>)
-        id 1pIHB9-008FFj-31
+        id 1pIHB9-008FEg-1p
         for linux-xfs@vger.kernel.org;
         Thu, 19 Jan 2023 09:45:11 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 40/42] xfs: pass perag to filestreams tracing
-Date:   Thu, 19 Jan 2023 09:45:03 +1100
-Message-Id: <20230118224505.1964941-41-david@fromorbit.com>
+Subject: [PATCH 27/42] xfs: move the minimum agno checks into xfs_alloc_vextent_check_args
+Date:   Thu, 19 Jan 2023 09:44:50 +1100
+Message-Id: <20230118224505.1964941-28-david@fromorbit.com>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230118224505.1964941-1-david@fromorbit.com>
 References: <20230118224505.1964941-1-david@fromorbit.com>
@@ -76,194 +76,214 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Pass perags instead of raw ag numbers, avoiding the need for the
-special peek function for the tracing code.
+All of the allocation functions now extract the minimum allowed AG
+from the transaction and then use it in some way. The allocation
+functions that are restricted to a single AG all check if the
+AG requested can be allocated from and return an error if so. These
+all set args->agno appropriately.
+
+All the allocation functions that iterate AGs use it to calculate
+the scan start AG. args->agno is not set until the iterator starts
+walking AGs.
+
+Hence we can easily set up a conditional check against the minimum
+AG allowed in xfs_alloc_vextent_check_args() based on whether
+args->agno contains NULLAGNUMBER or not and move all the repeated
+setup code to xfs_alloc_vextent_check_args(), further simplifying
+the allocation functions.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_filestream.c | 29 +++++------------------------
- fs/xfs/xfs_filestream.h |  1 -
- fs/xfs/xfs_trace.h      | 37 ++++++++++++++++++++-----------------
- 3 files changed, 25 insertions(+), 42 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c | 88 +++++++++++++++------------------------
+ 1 file changed, 33 insertions(+), 55 deletions(-)
 
-diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index 71fa44485a2f..81aebe3e09ba 100644
---- a/fs/xfs/xfs_filestream.c
-+++ b/fs/xfs/xfs_filestream.c
-@@ -31,25 +31,6 @@ enum xfs_fstrm_alloc {
- 	XFS_PICK_LOWSPACE = 2,
- };
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 4de9026d872f..43a054002da3 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -3089,14 +3089,18 @@ xfs_alloc_read_agf(
+ static int
+ xfs_alloc_vextent_check_args(
+ 	struct xfs_alloc_arg	*args,
+-	xfs_rfsblock_t		target)
++	xfs_rfsblock_t		target,
++	xfs_agnumber_t		*minimum_agno)
+ {
+ 	struct xfs_mount	*mp = args->mp;
+ 	xfs_agblock_t		agsize;
  
--/*
-- * Allocation group filestream associations are tracked with per-ag atomic
-- * counters.  These counters allow xfs_filestream_pick_ag() to tell whether a
-- * particular AG already has active filestreams associated with it.
-- */
--int
--xfs_filestream_peek_ag(
--	xfs_mount_t	*mp,
--	xfs_agnumber_t	agno)
--{
--	struct xfs_perag *pag;
--	int		ret;
+-	args->agbno = NULLAGBLOCK;
+ 	args->fsbno = NULLFSBLOCK;
+ 
++	*minimum_agno = 0;
++	if (args->tp->t_highest_agno != NULLAGNUMBER)
++		*minimum_agno = args->tp->t_highest_agno;
++
+ 	/*
+ 	 * Just fix this up, for the case where the last a.g. is shorter
+ 	 * (or there's only one a.g.) and the caller couldn't easily figure
+@@ -3123,11 +3127,16 @@ xfs_alloc_vextent_check_args(
+ 	    XFS_FSB_TO_AGBNO(mp, target) >= agsize ||
+ 	    args->minlen > args->maxlen || args->minlen > agsize ||
+ 	    args->mod >= args->prod) {
+-		args->fsbno = NULLFSBLOCK;
+ 		trace_xfs_alloc_vextent_badargs(args);
+ 		return -ENOSPC;
+ 	}
++
++	if (args->agno != NULLAGNUMBER && *minimum_agno > args->agno) {
++		trace_xfs_alloc_vextent_skip_deadlock(args);
++		return -ENOSPC;
++	}
+ 	return 0;
++
+ }
+ 
+ /*
+@@ -3266,28 +3275,19 @@ xfs_alloc_vextent_this_ag(
+ 	xfs_agnumber_t		agno)
+ {
+ 	struct xfs_mount	*mp = args->mp;
+-	xfs_agnumber_t		minimum_agno = 0;
++	xfs_agnumber_t		minimum_agno;
+ 	int			error;
+ 
+-	if (args->tp->t_highest_agno != NULLAGNUMBER)
+-		minimum_agno = args->tp->t_highest_agno;
 -
--	pag = xfs_perag_get(mp, agno);
--	ret = atomic_read(&pag->pagf_fstrms);
--	xfs_perag_put(pag);
--	return ret;
--}
+-	if (minimum_agno > agno) {
+-		trace_xfs_alloc_vextent_skip_deadlock(args);
+-		args->fsbno = NULLFSBLOCK;
+-		return 0;
+-	}
 -
- static void
- xfs_fstrm_free_func(
- 	void			*data,
-@@ -59,7 +40,7 @@ xfs_fstrm_free_func(
- 		container_of(mru, struct xfs_fstrm_item, mru);
- 	struct xfs_perag	*pag = item->pag;
- 
--	trace_xfs_filestream_free(pag->pag_mount, mru->key, pag->pag_agno);
-+	trace_xfs_filestream_free(pag, mru->key);
- 	atomic_dec(&pag->pagf_fstrms);
- 	xfs_perag_rele(pag);
- 
-@@ -99,7 +80,7 @@ xfs_filestream_pick_ag(
- 
- restart:
- 	for_each_perag_wrap(mp, start_agno, agno, pag) {
--		trace_xfs_filestream_scan(mp, ip->i_ino, agno);
-+		trace_xfs_filestream_scan(pag, ip->i_ino);
- 		*longest = 0;
- 		err = xfs_bmap_longest_free_extent(pag, NULL, longest);
- 		if (err) {
-@@ -169,7 +150,7 @@ xfs_filestream_pick_ag(
- 		 */
- 		if (!max_pag) {
- 			*agp = NULLAGNUMBER;
--			trace_xfs_filestream_pick(ip, *agp, free, 0);
-+			trace_xfs_filestream_pick(ip, NULL, free);
+-	error = xfs_alloc_vextent_check_args(args, XFS_AGB_TO_FSB(mp, agno, 0));
++	args->agno = agno;
++	args->agbno = 0;
++	error = xfs_alloc_vextent_check_args(args, XFS_AGB_TO_FSB(mp, agno, 0),
++			&minimum_agno);
+ 	if (error) {
+ 		if (error == -ENOSPC)
  			return 0;
- 		}
- 		pag = max_pag;
-@@ -179,7 +160,7 @@ xfs_filestream_pick_ag(
- 		xfs_perag_rele(max_pag);
+ 		return error;
  	}
  
--	trace_xfs_filestream_pick(ip, pag->pag_agno, free, 0);
-+	trace_xfs_filestream_pick(ip, pag, free);
+-	args->agno = agno;
+-	args->agbno = 0;
+-
+ 	error = xfs_alloc_vextent_prepare_ag(args);
+ 	if (!error && args->agbp)
+ 		error = xfs_alloc_ag_vextent_size(args);
+@@ -3400,16 +3400,15 @@ xfs_alloc_vextent_start_ag(
+ 	xfs_rfsblock_t		target)
+ {
+ 	struct xfs_mount	*mp = args->mp;
+-	xfs_agnumber_t		minimum_agno = 0;
++	xfs_agnumber_t		minimum_agno;
+ 	xfs_agnumber_t		start_agno;
+ 	xfs_agnumber_t		rotorstep = xfs_rotorstep;
+ 	bool			bump_rotor = false;
+ 	int			error;
  
- 	err = -ENOMEM;
- 	item = kmem_alloc(sizeof(*item), KM_MAYFAIL);
-@@ -258,7 +239,7 @@ xfs_filestream_select_ag_mru(
- 	pag = container_of(mru, struct xfs_fstrm_item, mru)->pag;
- 	xfs_mru_cache_done(mp->m_filestream);
+-	if (args->tp->t_highest_agno != NULLAGNUMBER)
+-		minimum_agno = args->tp->t_highest_agno;
+-
+-	error = xfs_alloc_vextent_check_args(args, target);
++	args->agno = NULLAGNUMBER;
++	args->agbno = NULLAGBLOCK;
++	error = xfs_alloc_vextent_check_args(args, target, &minimum_agno);
+ 	if (error) {
+ 		if (error == -ENOSPC)
+ 			return 0;
+@@ -3451,14 +3450,13 @@ xfs_alloc_vextent_first_ag(
+ 	xfs_rfsblock_t		target)
+  {
+ 	struct xfs_mount	*mp = args->mp;
+-	xfs_agnumber_t		minimum_agno = 0;
++	xfs_agnumber_t		minimum_agno;
+ 	xfs_agnumber_t		start_agno;
+ 	int			error;
  
--	trace_xfs_filestream_lookup(mp, ap->ip->i_ino, pag->pag_agno);
-+	trace_xfs_filestream_lookup(pag, ap->ip->i_ino);
+-	if (args->tp->t_highest_agno != NULLAGNUMBER)
+-		minimum_agno = args->tp->t_highest_agno;
+-
+-	error = xfs_alloc_vextent_check_args(args, target);
++	args->agno = NULLAGNUMBER;
++	args->agbno = NULLAGBLOCK;
++	error = xfs_alloc_vextent_check_args(args, target, &minimum_agno);
+ 	if (error) {
+ 		if (error == -ENOSPC)
+ 			return 0;
+@@ -3481,28 +3479,18 @@ xfs_alloc_vextent_exact_bno(
+ 	xfs_rfsblock_t		target)
+ {
+ 	struct xfs_mount	*mp = args->mp;
+-	xfs_agnumber_t		minimum_agno = 0;
++	xfs_agnumber_t		minimum_agno;
+ 	int			error;
  
- 	ap->blkno = XFS_AGB_TO_FSB(args->mp, pag->pag_agno, 0);
- 	xfs_bmap_adjacent(ap);
-diff --git a/fs/xfs/xfs_filestream.h b/fs/xfs/xfs_filestream.h
-index df9f7553e106..84149ed0e340 100644
---- a/fs/xfs/xfs_filestream.h
-+++ b/fs/xfs/xfs_filestream.h
-@@ -14,7 +14,6 @@ struct xfs_alloc_arg;
- int xfs_filestream_mount(struct xfs_mount *mp);
- void xfs_filestream_unmount(struct xfs_mount *mp);
- void xfs_filestream_deassociate(struct xfs_inode *ip);
--int xfs_filestream_peek_ag(struct xfs_mount *mp, xfs_agnumber_t agno);
- int xfs_filestream_select_ag(struct xfs_bmalloca *ap,
- 		struct xfs_alloc_arg *args, xfs_extlen_t *blen);
+-	if (args->tp->t_highest_agno != NULLAGNUMBER)
+-		minimum_agno = args->tp->t_highest_agno;
+-
+-	error = xfs_alloc_vextent_check_args(args, target);
++	args->agno = XFS_FSB_TO_AGNO(mp, target);
++	args->agbno = XFS_FSB_TO_AGBNO(mp, target);
++	error = xfs_alloc_vextent_check_args(args, target, &minimum_agno);
+ 	if (error) {
+ 		if (error == -ENOSPC)
+ 			return 0;
+ 		return error;
+ 	}
  
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 3b25b10fccc1..b5f7d225d5b4 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -74,6 +74,7 @@ struct xfs_inobt_rec_incore;
- union xfs_btree_ptr;
- struct xfs_dqtrx;
- struct xfs_icwalk;
-+struct xfs_perag;
+-	args->agno = XFS_FSB_TO_AGNO(mp, target);
+-	if (minimum_agno > args->agno) {
+-		trace_xfs_alloc_vextent_skip_deadlock(args);
+-		args->fsbno = NULLFSBLOCK;
+-		return 0;
+-	}
+-
+-	args->agbno = XFS_FSB_TO_AGBNO(mp, target);
+-
+ 	error = xfs_alloc_vextent_prepare_ag(args);
+ 	if (!error && args->agbp)
+ 		error = xfs_alloc_ag_vextent_exact(args);
+@@ -3522,32 +3510,22 @@ xfs_alloc_vextent_near_bno(
+ 	xfs_rfsblock_t		target)
+ {
+ 	struct xfs_mount	*mp = args->mp;
+-	xfs_agnumber_t		minimum_agno = 0;
++	xfs_agnumber_t		minimum_agno;
+ 	bool			needs_perag = args->pag == NULL;
+ 	int			error;
  
- #define XFS_ATTR_FILTER_FLAGS \
- 	{ XFS_ATTR_ROOT,	"ROOT" }, \
-@@ -638,8 +639,8 @@ DEFINE_BUF_ITEM_EVENT(xfs_trans_bhold_release);
- DEFINE_BUF_ITEM_EVENT(xfs_trans_binval);
+-	if (args->tp->t_highest_agno != NULLAGNUMBER)
+-		minimum_agno = args->tp->t_highest_agno;
+-
+-	error = xfs_alloc_vextent_check_args(args, target);
++	args->agno = XFS_FSB_TO_AGNO(mp, target);
++	args->agbno = XFS_FSB_TO_AGBNO(mp, target);
++	error = xfs_alloc_vextent_check_args(args, target, &minimum_agno);
+ 	if (error) {
+ 		if (error == -ENOSPC)
+ 			return 0;
+ 		return error;
+ 	}
  
- DECLARE_EVENT_CLASS(xfs_filestream_class,
--	TP_PROTO(struct xfs_mount *mp, xfs_ino_t ino, xfs_agnumber_t agno),
--	TP_ARGS(mp, ino, agno),
-+	TP_PROTO(struct xfs_perag *pag, xfs_ino_t ino),
-+	TP_ARGS(pag, ino),
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
- 		__field(xfs_ino_t, ino)
-@@ -647,10 +648,10 @@ DECLARE_EVENT_CLASS(xfs_filestream_class,
- 		__field(int, streams)
- 	),
- 	TP_fast_assign(
--		__entry->dev = mp->m_super->s_dev;
-+		__entry->dev = pag->pag_mount->m_super->s_dev;
- 		__entry->ino = ino;
--		__entry->agno = agno;
--		__entry->streams = xfs_filestream_peek_ag(mp, agno);
-+		__entry->agno = pag->pag_agno;
-+		__entry->streams = atomic_read(&pag->pagf_fstrms);
- 	),
- 	TP_printk("dev %d:%d ino 0x%llx agno 0x%x streams %d",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
-@@ -660,39 +661,41 @@ DECLARE_EVENT_CLASS(xfs_filestream_class,
- )
- #define DEFINE_FILESTREAM_EVENT(name) \
- DEFINE_EVENT(xfs_filestream_class, name, \
--	TP_PROTO(struct xfs_mount *mp, xfs_ino_t ino, xfs_agnumber_t agno), \
--	TP_ARGS(mp, ino, agno))
-+	TP_PROTO(struct xfs_perag *pag, xfs_ino_t ino), \
-+	TP_ARGS(pag, ino))
- DEFINE_FILESTREAM_EVENT(xfs_filestream_free);
- DEFINE_FILESTREAM_EVENT(xfs_filestream_lookup);
- DEFINE_FILESTREAM_EVENT(xfs_filestream_scan);
+-	args->agno = XFS_FSB_TO_AGNO(mp, target);
+-	if (minimum_agno > args->agno) {
+-		trace_xfs_alloc_vextent_skip_deadlock(args);
+-		args->fsbno = NULLFSBLOCK;
+-		return 0;
+-	}
+-
+ 	if (needs_perag)
+ 		args->pag = xfs_perag_get(mp, args->agno);
  
- TRACE_EVENT(xfs_filestream_pick,
--	TP_PROTO(struct xfs_inode *ip, xfs_agnumber_t agno,
--		 xfs_extlen_t free, int nscan),
--	TP_ARGS(ip, agno, free, nscan),
-+	TP_PROTO(struct xfs_inode *ip, struct xfs_perag *pag,
-+		 xfs_extlen_t free),
-+	TP_ARGS(ip, pag, free),
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
- 		__field(xfs_ino_t, ino)
- 		__field(xfs_agnumber_t, agno)
- 		__field(int, streams)
- 		__field(xfs_extlen_t, free)
--		__field(int, nscan)
- 	),
- 	TP_fast_assign(
- 		__entry->dev = VFS_I(ip)->i_sb->s_dev;
- 		__entry->ino = ip->i_ino;
--		__entry->agno = agno;
--		__entry->streams = xfs_filestream_peek_ag(ip->i_mount, agno);
-+		if (pag) {
-+			__entry->agno = pag->pag_agno;
-+			__entry->streams = atomic_read(&pag->pagf_fstrms);
-+		} else {
-+			__entry->agno = NULLAGNUMBER;
-+			__entry->streams = 0;
-+		}
- 		__entry->free = free;
--		__entry->nscan = nscan;
- 	),
--	TP_printk("dev %d:%d ino 0x%llx agno 0x%x streams %d free %d nscan %d",
-+	TP_printk("dev %d:%d ino 0x%llx agno 0x%x streams %d free %d",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->ino,
- 		  __entry->agno,
- 		  __entry->streams,
--		  __entry->free,
--		  __entry->nscan)
-+		  __entry->free)
- );
- 
- DECLARE_EVENT_CLASS(xfs_lock_class,
+-	args->agbno = XFS_FSB_TO_AGBNO(mp, target);
+-
+ 	error = xfs_alloc_vextent_prepare_ag(args);
+ 	if (!error && args->agbp)
+ 		error = xfs_alloc_ag_vextent_near(args);
 -- 
 2.39.0
 
