@@ -2,143 +2,219 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D262C00A5A
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Jan 2023 05:15:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA478C38142
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Jan 2023 05:15:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229540AbjASFOl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Jan 2023 00:14:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49874 "EHLO
+        id S229379AbjASFPP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Jan 2023 00:15:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50090 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230006AbjASFOE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Jan 2023 00:14:04 -0500
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81A2D1BF7
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 21:13:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1674105220; x=1705641220;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=2Zup8f9kJXZ4saeKKXXVCwsH44jxdhWnca7/TJrUBzA=;
-  b=dlwtgW0MMNZe0c1+T4tBQrtlNPUfKHUlK1mXfEYefbO5+afdFr5O9Yny
-   /9GSXt/PbiB6BAcWePBAaPEyeBA845HYeyIQGDr7ot0dvXh+qVkSeyVzO
-   rAEkeyBQWoM4r423PkjUbIfzTieQt0d3Zp9zVVQL/nxlC/lpizRA10hni
-   ByDtYChDsT/lwqxoQzbUVKID6RArDQf3G6T0rc+ua/bL+Ar/6YxARdaYt
-   jT8c31ObCU6vofu28HOHveJ30Tj1ePbSps+aaFuZl54D/AOW/0MfPE2FS
-   CDuDZ03werbJRyi/pw675AX3Qe8D5bQownLwt8eK7vCNHEAc2I22JW7q4
-   w==;
-X-IronPort-AV: E=Sophos;i="5.97,228,1669046400"; 
-   d="scan'208";a="219533487"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 19 Jan 2023 13:13:39 +0800
-IronPort-SDR: teu4hpVmpYpohtuIzQCbZZLg1NxwqSux4N74k9UfluQJDtRLL6y+vyO43u1b11wzC11S6k8KS2
- Y4gq6R66tgxIecIvTLpkqVKZoGU189IjDgymXZ+2aHAzAn3tfGqDYBO1Wbs4D8+KxcxyVGBmYj
- 6RYf+EdNqatrAocGUxaLYpbwgdUJlYYniSBAILrnI2SWmzLxyBv0x9IXWZrVgCmYWxgh2wBcZg
- WgHfEyS/bxgQhYEKC7uz3c4hZlaHDFZAd2R5D9b21RPDLD+P/sPfdK7AwTwdawpIcS6HWKWjtC
- +aI=
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 18 Jan 2023 20:25:34 -0800
-IronPort-SDR: FtxUM83M4xlpoWH5oBN3aU2wouLEIRDdpFvS29B/xxbjmTHiUbTQljtI468DmU3k1rMcLzmdos
- FLW5PCtwJt0/F7RXRoasPtNCqfsf4BRlepxKZgVUyXIGX3n/BKzGX/xHRYvEzSPkNaioXDndOt
- TyL+6ngG3u+5GS5VSa9Ch0MKC/3aDOGGPtRX9uLo5ktv8TPgr+uFfwZN+KDywlhZIk+TcHrxw1
- OgXKrk/UEWGIpkPi6eZwqbgcCtzVBalYiZzLMQ2tEOSFK+UD+9YBEIYaJeJks8HSUmzkEdU6wR
- L9c=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 18 Jan 2023 21:13:39 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Ny9l70qygz1RvTr
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 21:13:39 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1674105218; x=1676697219; bh=2Zup8f9kJXZ4saeKKXXVCwsH44jxdhWnca7
-        /TJrUBzA=; b=N4bP7ytVM2gj4+T8AvS04Ci199p778d9gRicM5q2E3ZFpzH3L7f
-        Ko3Ng9mVwh5340LKZhfZGJ6xfJob9Ee++Vzn8z/Ex4WFdAk9X2baG+QJF/W+Y9Fa
-        xq0dMCp06D3OTyfEhH2jgBIWaTDbW51iIVS8rA52zJ5UGBXvvuQ94n51V5c0tES9
-        0mUMHykZZkrfvHB4kpkOmTK5B7uuUGoGQ0dojwYLpk4TkKCCP4RL9MXtvwmHkycA
-        ubyxzegj+yTTpTksOm/DQE8ZFhCPM7JORkxfEHk3kginuzGc+etXVJKMPv1dmRbL
-        bDlu+pY1pM5bMMcCtqLXrQWXonB2Vtl7WIQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id Rs3wYdLFbSTw for <linux-xfs@vger.kernel.org>;
-        Wed, 18 Jan 2023 21:13:38 -0800 (PST)
-Received: from [10.89.84.31] (c02drav6md6t.dhcp.fujisawa.hgst.com [10.89.84.31])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Ny9l54xkMz1RvLy;
-        Wed, 18 Jan 2023 21:13:37 -0800 (PST)
-Message-ID: <29f91612-bcb7-e9a7-ec14-b89efe455b1f@opensource.wdc.com>
-Date:   Thu, 19 Jan 2023 14:13:36 +0900
+        with ESMTP id S229812AbjASFOQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Jan 2023 00:14:16 -0500
+Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18DDC172A
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 21:14:15 -0800 (PST)
+Received: by mail-pj1-x1029.google.com with SMTP id n20-20020a17090aab9400b00229ca6a4636so3890438pjq.0
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 21:14:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Kx/0/eM5Aq1g63wRRP7qndmkF3eZriN905Vl4L2Ntj0=;
+        b=K/zsRpcY8ajM/mTU/O+dTqXI+XR2tsFiTzvL3bYWpWzWQVzkiNfbdygXT2ouzbkie/
+         5B6k8UNhRG1GidOF/+UJxEihcy3wGgQG9ThQ9bdnJqndYIYnuGTtcyR5IsOd8NgUSlJ8
+         SqXSQvWMlHgPtLxWwsl20EtUvIqSEvo2q1rZiRvkKRp2NpfKiCAjYom1oe7YJJjurcav
+         s/hxVRCjsx/owyUfBWO4x7MD7a+7MY4uCb1C48XPULQ45zTYvBzx6kAui1/p/nyzB9RT
+         iglL1fkfziIcNC9ukNOlteL6aPvm2tUWigWA68pIWEGAbNX7rCvx6bzUQonUSjlmHlh9
+         oqZA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Kx/0/eM5Aq1g63wRRP7qndmkF3eZriN905Vl4L2Ntj0=;
+        b=KrU8jLhFh2i3HmbCniWJZWq7Bqaw9S8iYoTkt+aoglRKy17UYt7tSwB8UEXPTrfeIq
+         eDfdL9sjGwlrotoVDDZwmCAg8jyXRvPueoK4XodVaey81Hlml8k2yvADF3JzBAOPA2+t
+         GWI4agMB405PMP5kUbFpwIf6tznjcAo3pGkJ47ZnwCC/lSjX2SQOBguR3fibDDLnEL6P
+         HUNDwZJaZv6uPnMrj+o0wkRnj/oNwRRl25zdiXmOE0WO+WzIfYn+kJ1QUt10iyfXkLr2
+         rmhkDxx7JpeutiPkk5CKy5n9Lxm0snMxUf6UK37+Ak5v83I2RanzNPE45e2ItF5V5IB5
+         iE2A==
+X-Gm-Message-State: AFqh2kqgoM23d0RbOiiHeMky3UAMlxKdLJ8f73aOHaio/Z6kLwAviEHs
+        KBlKYRaj5RziPHB7+qEC6Foo9hP7iJEM8Ehu
+X-Google-Smtp-Source: AMrXdXvRrSlGNmocFMhYEOREOnBz9fxk2tIgJ/kp18dqr/+QxxSj1BQyZxZ0hZw5aC/yY5Qf19n58w==
+X-Received: by 2002:a17:902:7597:b0:194:afe4:3011 with SMTP id j23-20020a170902759700b00194afe43011mr7348554pll.52.1674105254552;
+        Wed, 18 Jan 2023 21:14:14 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-146-207.pa.vic.optusnet.com.au. [49.186.146.207])
+        by smtp.gmail.com with ESMTPSA id n7-20020a170902e54700b00194ab9a4febsm4111758plf.74.2023.01.18.21.14.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 18 Jan 2023 21:14:14 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1pINFb-004pAp-9o; Thu, 19 Jan 2023 16:14:11 +1100
+Date:   Thu, 19 Jan 2023 16:14:11 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: recheck appropriateness of map_shared lock
+Message-ID: <20230119051411.GJ360264@dread.disaster.area>
+References: <Y8ib6ls32e/pJezE@magnolia>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.6.1
-Subject: Re: Lockdep splat with xfs
-Content-Language: en-US
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        "Darrick J. Wong" <djwong@kernel.org>, kasan-dev@googlegroups.com,
-        Andrey Ryabinin <ryabinin.a.a@gmail.com>
-References: <f9ff999a-e170-b66b-7caf-293f2b147ac2@opensource.wdc.com>
- <20230119045253.GI360264@dread.disaster.area>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20230119045253.GI360264@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Y8ib6ls32e/pJezE@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2023/01/19 13:52, Dave Chinner wrote:
-> It's a false positive, and the allocation context it comes from
-> in XFS is documented as needing to avoid lockdep tracking because
-> this path is know to trigger false positive memory reclaim recursion
-> reports:
+On Wed, Jan 18, 2023 at 05:24:58PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
->         if (!args->value) {
->                 args->value = kvmalloc(valuelen, GFP_KERNEL | __GFP_NOLOCKDEP);
->                 if (!args->value)
->                         return -ENOMEM;
->         }
->         args->valuelen = valuelen;
+> While fuzzing the data fork extent count on a btree-format directory
+> with xfs/375, I observed the following (excerpted) splat:
 > 
+> XFS: Assertion failed: xfs_isilocked(ip, XFS_ILOCK_EXCL), file: fs/xfs/libxfs/xfs_bmap.c, line: 1208
+> ------------[ cut here ]------------
+> WARNING: CPU: 0 PID: 43192 at fs/xfs/xfs_message.c:104 assfail+0x46/0x4a [xfs]
+> Call Trace:
+>  <TASK>
+>  xfs_iread_extents+0x1af/0x210 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+>  xchk_dir_walk+0xb8/0x190 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+>  xchk_parent_count_parent_dentries+0x41/0x80 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+>  xchk_parent_validate+0x199/0x2e0 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+>  xchk_parent+0xdf/0x130 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+>  xfs_scrub_metadata+0x2b8/0x730 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+>  xfs_scrubv_metadata+0x38b/0x4d0 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+>  xfs_ioc_scrubv_metadata+0x111/0x160 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+>  xfs_file_ioctl+0x367/0xf50 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+>  __x64_sys_ioctl+0x82/0xa0
+>  do_syscall_64+0x2b/0x80
+>  entry_SYSCALL_64_after_hwframe+0x46/0xb0
 > 
-> XFS is telling the allocator not to track this allocation with
-> lockdep, and that is getting passed down through the allocator which
-> has not passed it to lockdep (correct behaviour!), but then KASAN is
-> trying to track the allocation and that needs to do a memory
-> allocation.  __stack_depot_save() is passed the gfp mask from the
-> allocation context so it has __GFP_NOLOCKDEP right there, but it
-> does:
+> The cause of this is a race condition in xfs_ilock_data_map_shared,
+> which performs an unlocked access to the data fork to guess which lock
+> mode it needs:
 > 
->         if (unlikely(can_alloc && !smp_load_acquire(&next_slab_inited))) {
->                 /*
->                  * Zero out zone modifiers, as we don't have specific zone
->                  * requirements. Keep the flags related to allocation in atomic
->                  * contexts and I/O.
->                  */
->                 alloc_flags &= ~GFP_ZONEMASK;
->>>>>>>>         alloc_flags &= (GFP_ATOMIC | GFP_KERNEL);
->                 alloc_flags |= __GFP_NOWARN;
->                 page = alloc_pages(alloc_flags, STACK_ALLOC_ORDER);
+> Thread 0                          Thread 1
 > 
-> It masks masks out anything other than GFP_ATOMIC and GFP_KERNEL
-> related flags. This drops __GFP_NOLOCKDEP on the floor, hence
-> lockdep tracks an allocation in a context we've explicitly said not
-> to track. Hence lockdep (correctly!) explodes later when the
-> false positive "lock inode in reclaim context" situation triggers.
+> xfs_need_iread_extents
+> <observe no iext tree>
+> xfs_ilock(..., ILOCK_EXCL)
+> xfs_iread_extents
+> <observe no iext tree>
+> <check ILOCK_EXCL>
+> <load bmbt extents into iext>
+> <notice iext size doesn't
+>  match nextents>
+>                                   xfs_need_iread_extents
+>                                   <observe iext tree>
+>                                   xfs_ilock(..., ILOCK_SHARED)
+> <tear down iext tree>
+> xfs_iunlock(..., ILOCK_EXCL)
+>                                   xfs_iread_extents
+>                                   <observe no iext tree>
+>                                   <check ILOCK_EXCL>
+>                                   *BOOM*
 > 
-> This is a KASAN bug. It should not be dropping __GFP_NOLOCKDEP from
-> the allocation context flags.
+> mitigate this race by having thread 1 to recheck xfs_need_iread_extents
+> after taking the shared ILOCK.  If the iext tree isn't present, then we
+> need to upgrade to the exclusive ILOCK to try to load the bmbt.
 
-OK. Thanks for the explanation !
+Yup, I see the problem - this check is failing:
 
+        if (XFS_IS_CORRUPT(mp, ir.loaded != ifp->if_nextents)) {
+                error = -EFSCORRUPTED;
+                goto out;
+        }
+
+and that results in calling xfs_iext_destroy() to tear down the
+extent tree.
+
+But we know the BMBT is corrupted and the extent list cannot be read
+until the corruption is fixed. IOWs, we can't access any data in the
+inode no matter how we lock it until the corruption is repaired.
+
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/xfs_inode.c |   29 +++++++++++++++++++++++++++++
+>  1 file changed, 29 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index d354ea2b74f9..6ce1e0e9f256 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -117,6 +117,20 @@ xfs_ilock_data_map_shared(
+>  	if (xfs_need_iread_extents(&ip->i_df))
+>  		lock_mode = XFS_ILOCK_EXCL;
+>  	xfs_ilock(ip, lock_mode);
+> +
+> +	/*
+> +	 * It's possible that the unlocked access of the data fork to determine
+> +	 * the lock mode could have raced with another thread that was failing
+> +	 * to load the bmbt but hadn't yet torn down the iext tree.  Recheck
+> +	 * the lock mode and upgrade to an exclusive lock if we need to.
+> +	 */
+> +	if (lock_mode == XFS_ILOCK_SHARED &&
+> +	    xfs_need_iread_extents(&ip->i_df)) {
+> +		xfs_iunlock(ip, lock_mode);
+> +		lock_mode = XFS_ILOCK_EXCL;
+> +		xfs_ilock(ip, lock_mode);
+> +	}
+
+.... and this makes me cringe. :/
+
+If we hit this race condition, re-reading the extent list from disk
+isn't going to fix the corruption, so I don't see much point in
+papering over the problem just by changing the locking and failing
+to read in the extent list again and returning -EFSCORRUPTED to the
+operation.
+
+So.... shouldn't we mark the inode as sick when we detect the extent
+list corruption issue? i.e. before destroying the iext tree, calling
+xfs_inode_mark_sick(XFS_SICK_INO_BMBTD) (or BMBTA, depending on the
+fork being read) so that there is a record of the BMBT being
+corrupt?
+
+That would mean that this path simply becomes:
+
+	if (ip->i_sick & XFS_SICK_INO_BMBTD) {
+		xfs_iunlock(ip, lock_mode);
+		return -EFSCORRUPTED;
+	}
+
+Which is now pretty clear that we there's no point continuing
+because we can't read in the extent list, and in doing so we've
+removed the race condition caused by temporarily filling the in-core
+extent list.
+
+> +
+>  	return lock_mode;
+>  }
+>  
+> @@ -129,6 +143,21 @@ xfs_ilock_attr_map_shared(
+>  	if (xfs_inode_has_attr_fork(ip) && xfs_need_iread_extents(&ip->i_af))
+>  		lock_mode = XFS_ILOCK_EXCL;
+>  	xfs_ilock(ip, lock_mode);
+> +
+> +	/*
+> +	 * It's possible that the unlocked access of the attr fork to determine
+> +	 * the lock mode could have raced with another thread that was failing
+> +	 * to load the bmbt but hadn't yet torn down the iext tree.  Recheck
+> +	 * the lock mode and upgrade to an exclusive lock if we need to.
+> +	 */
+> +	if (lock_mode == XFS_ILOCK_SHARED &&
+> +	    xfs_inode_has_attr_fork(ip) &&
+> +	    xfs_need_iread_extents(&ip->i_af)) {
+> +		xfs_iunlock(ip, lock_mode);
+> +		lock_mode = XFS_ILOCK_EXCL;
+> +		xfs_ilock(ip, lock_mode);
+> +	}
+
+And this can just check for XFS_SICK_INO_BMBTA instead...
+
+Cheers,
+
+Dave.
 -- 
-Damien Le Moal
-Western Digital Research
-
+Dave Chinner
+david@fromorbit.com
