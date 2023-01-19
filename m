@@ -2,177 +2,149 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89ECCC38159
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Jan 2023 01:03:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64724C677F1
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Jan 2023 01:30:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229584AbjASBDq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Jan 2023 20:03:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34424 "EHLO
+        id S229852AbjASBap (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Jan 2023 20:30:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229892AbjASBDj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jan 2023 20:03:39 -0500
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9027683E3
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 17:03:37 -0800 (PST)
-Received: by mail-pj1-x102d.google.com with SMTP id x2-20020a17090a46c200b002295ca9855aso4310645pjg.2
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 17:03:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=+6gVjkzmNjEO3nIdPd4J20Mo3oB+PB4+uPPKuNKj4Ds=;
-        b=n+I5w9PV5IIyyZTYu1FNUe3uUeb41HSPhkqkvlwyYIJcevjONW/cH9Wh886DjjuK3Q
-         7i9dxwDFb6hSlSYtY7eRg8d2YBcyxX3hXIS73dOKFeU80XWE+FE2NEGl0U4QYzXIAe/b
-         F3Dni+byT76wK9t7d+gWcgnSFbBrhw8GP6GL2JndWm5SnWg+p7yMXYav4GZh65s3pU38
-         LxV5aHBD9iV+tYINFPc2J7Y/0xD99ReYFhFNLFQjOmezqtd3A/OIivMkkBlul4BYRrsJ
-         5KGQ8w35yFQFCq8sOo6VLKOdEulzIJhDnvl4/2mE0EnNKdEAtd+VOQHTW44ejBHdUIjz
-         4KyA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=+6gVjkzmNjEO3nIdPd4J20Mo3oB+PB4+uPPKuNKj4Ds=;
-        b=xBVUWPO3lJEcYXQ74HUGGlHZYSIsAaK7hBnH28SQmnlq/VLOvvc5Viwu8gvqUG+rJF
-         lNFGALwKxHpmWSqXPM0GU7lEjhHtVlu/XYOHEkn6GEYywsSNbHpqi6+TXZvwYbAKNDJP
-         Hb5X0a6heUEByLuSpb9U14SwOyBDV59qESXhcT4cnKmKSBwiialV8qqelJD9CoeHq5rm
-         41LgT0XFhf94oxFRhiI/Pryx7pBfWyDGumak8RMR/bY6pMRBijNy2iYyJ3m4S/uScf9K
-         t75ZYTQjw2Oj9f4ijFfnd5FZe9ek5Jy52HMhoA03KOhdODvNrj4Sxs7l8bRxzShMgJl2
-         ucbQ==
-X-Gm-Message-State: AFqh2kpoSTw7HtnFQdJXrDRLbQYhFKGjHE6sqT8igU+u78fZiDM08tYX
-        njtjgcKOpUfp1ut6bFmqQ6+aYp0FztAM6RDo
-X-Google-Smtp-Source: AMrXdXui3mkm7z211Tmwy3cv8oMdK4Zx7tg7JtbDIUT80Ty3ZzPx7sam8wSa9qMLEcqU/CcOlihs9g==
-X-Received: by 2002:a17:902:cf08:b0:192:c125:ac2f with SMTP id i8-20020a170902cf0800b00192c125ac2fmr10160100plg.8.1674090217360;
-        Wed, 18 Jan 2023 17:03:37 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-146-207.pa.vic.optusnet.com.au. [49.186.146.207])
-        by smtp.gmail.com with ESMTPSA id s7-20020a170902988700b0017ec1b1bf9fsm23612279plp.217.2023.01.18.17.03.36
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Jan 2023 17:03:36 -0800 (PST)
-Received: from [192.168.253.23] (helo=devoid.disaster.area)
-        by dread.disaster.area with esmtp (Exim 4.92.3)
-        (envelope-from <dave@fromorbit.com>)
-        id 1pIJL4-004l03-BU
-        for linux-xfs@vger.kernel.org; Thu, 19 Jan 2023 12:03:34 +1100
-Received: from dave by devoid.disaster.area with local (Exim 4.96)
-        (envelope-from <dave@devoid.disaster.area>)
-        id 1pIJL4-008Jr5-0s
-        for linux-xfs@vger.kernel.org;
-        Thu, 19 Jan 2023 12:03:34 +1100
-From:   Dave Chinner <david@fromorbit.com>
+        with ESMTP id S230166AbjASB3s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Jan 2023 20:29:48 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19E186B9A6
+        for <linux-xfs@vger.kernel.org>; Wed, 18 Jan 2023 17:25:02 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C75B5B81D66
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Jan 2023 01:25:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69640C433D2;
+        Thu, 19 Jan 2023 01:24:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1674091499;
+        bh=uOBG0WaIOO57RDd8M9B5J2t71nUxGymzYuZn5q1szVQ=;
+        h=Date:From:To:Cc:Subject:From;
+        b=DJjhvXV5aO85m0rlfFKzBP3KPZPkTG+LO7whC0LdFK04714Tcs2rfo9CuMwkTFirl
+         6hBY/JlBiJzHadwhmPWn0lfo1+RnE/imWMLe1sR0/8CcFh35bKWhjVR3DBCJQIrM+D
+         KqtmB0k+OXNTyQlU3m3P0t5MqQni2CkxFPVfuIs3NUSlF3IJr40n6HjQ8ZINQRDwTO
+         AtatOnkzg984JFOwuClMEzHqbWZIXzc+lzZqn4RnHgi8LV4P+KVLjaAweIdr1iWbUZ
+         cPyDDiY9El3sV1k9txcsY+2YczjpEq4jZcOuJoOqj2MSWlDpABkhIPPHJ28mW4NTVR
+         rvnrmlAoWHbrA==
+Date:   Wed, 18 Jan 2023 17:24:58 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: don't use BMBT btree split workers for IO completion
-Date:   Thu, 19 Jan 2023 12:03:34 +1100
-Message-Id: <20230119010334.1982938-1-david@fromorbit.com>
-X-Mailer: git-send-email 2.39.0
+Cc:     Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: recheck appropriateness of map_shared lock
+Message-ID: <Y8ib6ls32e/pJezE@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-When we split a BMBT due to record insertion, we offload it to a
-worker thread because we can be deep in the stack when we try to
-allocate a new block for the BMBT. Allocation can use several
-kilobytes of stack (full memory reclaim, swap and/or IO path can
-end up on the stack during allocation) and we can already be several
-kilobytes deep in the stack when we need to split the BMBT.
+While fuzzing the data fork extent count on a btree-format directory
+with xfs/375, I observed the following (excerpted) splat:
 
-A recent workload demonstrated a deadlock in this BMBT split
-offload. It requires several things to happen at once:
+XFS: Assertion failed: xfs_isilocked(ip, XFS_ILOCK_EXCL), file: fs/xfs/libxfs/xfs_bmap.c, line: 1208
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 43192 at fs/xfs/xfs_message.c:104 assfail+0x46/0x4a [xfs]
+Call Trace:
+ <TASK>
+ xfs_iread_extents+0x1af/0x210 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+ xchk_dir_walk+0xb8/0x190 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+ xchk_parent_count_parent_dentries+0x41/0x80 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+ xchk_parent_validate+0x199/0x2e0 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+ xchk_parent+0xdf/0x130 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+ xfs_scrub_metadata+0x2b8/0x730 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+ xfs_scrubv_metadata+0x38b/0x4d0 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+ xfs_ioc_scrubv_metadata+0x111/0x160 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+ xfs_file_ioctl+0x367/0xf50 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+ __x64_sys_ioctl+0x82/0xa0
+ do_syscall_64+0x2b/0x80
+ entry_SYSCALL_64_after_hwframe+0x46/0xb0
 
-1. two inodes need a BMBT split at the same time, one must be
-unwritten extent conversion from IO completion, the other must be
-from extent allocation.
+The cause of this is a race condition in xfs_ilock_data_map_shared,
+which performs an unlocked access to the data fork to guess which lock
+mode it needs:
 
-2. there must be a no available xfs_alloc_wq worker threads
-available in the worker pool.
+Thread 0                          Thread 1
 
-3. There must be sustained severe memory shortages such that new
-kworker threads cannot be allocated to the xfs_alloc_wq pool for
-both threads that need split work to be run
+xfs_need_iread_extents
+<observe no iext tree>
+xfs_ilock(..., ILOCK_EXCL)
+xfs_iread_extents
+<observe no iext tree>
+<check ILOCK_EXCL>
+<load bmbt extents into iext>
+<notice iext size doesn't
+ match nextents>
+                                  xfs_need_iread_extents
+                                  <observe iext tree>
+                                  xfs_ilock(..., ILOCK_SHARED)
+<tear down iext tree>
+xfs_iunlock(..., ILOCK_EXCL)
+                                  xfs_iread_extents
+                                  <observe no iext tree>
+                                  <check ILOCK_EXCL>
+                                  *BOOM*
 
-4. The split work from the unwritten extent conversion must run
-first.
+mitigate this race by having thread 1 to recheck xfs_need_iread_extents
+after taking the shared ILOCK.  If the iext tree isn't present, then we
+need to upgrade to the exclusive ILOCK to try to load the bmbt.
 
-5. when the BMBT block allocation runs from the split work, it must
-loop over all AGs and not be able to either trylock an AGF
-successfully, or each AGF is is able to lock has no space available
-for a single block allocation.
-
-6. The BMBT allocation must then attempt to lock the AGF that the
-second task queued to the rescuer thread already has locked before
-it finds an AGF it can allocate from.
-
-At this point, we have an ABBA deadlock between tasks queued on the
-xfs_alloc_wq rescuer thread and a locked AGF. i.e. The queued task
-holding the AGF lock can't be run by the rescuer thread until the
-task the rescuer thread is runing gets the AGF lock....
-
-This is a highly improbably series of events, but there it is.
-
-There's a couple of ways to fix this, but the easiest way to ensure
-that we only punt tasks with a locked AGF that holds enough space
-for the BMBT block allocations to the worker thread.
-
-This works for unwritten extent conversion in IO completion (which
-doesn't have a locked AGF and space reservations) because we have
-tight control over the IO completion stack. It is typically only 6
-functions deep when xfs_btree_split() is called because we've
-already offloaded the IO completion work to a worker thread and
-hence we don't need to worry about stack overruns here.
-
-The other place we can be called for a BMBT split without a
-preceeding allocation is __xfs_bunmapi() when punching out the
-center of an existing extent. We don't remove extents in the IO
-path, so these operations don't tend to be called with a lot of
-stack consumed. Hence we don't really need to ship the split off to
-a worker thread in these cases, either.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_btree.c | 18 ++++++++++++++++--
- 1 file changed, 16 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_inode.c |   29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 35f574421670..da8c769887fd 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -2913,9 +2913,22 @@ xfs_btree_split_worker(
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index d354ea2b74f9..6ce1e0e9f256 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -117,6 +117,20 @@ xfs_ilock_data_map_shared(
+ 	if (xfs_need_iread_extents(&ip->i_df))
+ 		lock_mode = XFS_ILOCK_EXCL;
+ 	xfs_ilock(ip, lock_mode);
++
++	/*
++	 * It's possible that the unlocked access of the data fork to determine
++	 * the lock mode could have raced with another thread that was failing
++	 * to load the bmbt but hadn't yet torn down the iext tree.  Recheck
++	 * the lock mode and upgrade to an exclusive lock if we need to.
++	 */
++	if (lock_mode == XFS_ILOCK_SHARED &&
++	    xfs_need_iread_extents(&ip->i_df)) {
++		xfs_iunlock(ip, lock_mode);
++		lock_mode = XFS_ILOCK_EXCL;
++		xfs_ilock(ip, lock_mode);
++	}
++
+ 	return lock_mode;
  }
  
- /*
-- * BMBT split requests often come in with little stack to work on. Push
-+ * BMBT split requests often come in with little stack to work on so we push
-  * them off to a worker thread so there is lots of stack to use. For the other
-  * btree types, just call directly to avoid the context switch overhead here.
-+ *
-+ * Care must be taken here - the work queue rescuer thread introduces potential
-+ * AGF <> worker queue deadlocks if the BMBT block allocation has to lock new
-+ * AGFs to allocate blocks. A task being run by the rescuer could attempt to
-+ * lock an AGF that is already locked by a task queued to run by the rescuer,
-+ * resulting in an ABBA deadlock as the rescuer cannot run the lock holder to
-+ * release it until the current thread it is running gains the lock.
-+ *
-+ * To avoid this issue, we only ever queue BMBT splits that don't have an AGF
-+ * already locked to allocate from. The only place that doesn't hold an AGF
-+ * locked is unwritten extent conversion at IO completion, but that has already
-+ * been offloaded to a worker thread and hence has no stack consumption issues
-+ * we have to worry about.
-  */
- STATIC int					/* error */
- xfs_btree_split(
-@@ -2929,7 +2942,8 @@ xfs_btree_split(
- 	struct xfs_btree_split_args	args;
- 	DECLARE_COMPLETION_ONSTACK(done);
+@@ -129,6 +143,21 @@ xfs_ilock_attr_map_shared(
+ 	if (xfs_inode_has_attr_fork(ip) && xfs_need_iread_extents(&ip->i_af))
+ 		lock_mode = XFS_ILOCK_EXCL;
+ 	xfs_ilock(ip, lock_mode);
++
++	/*
++	 * It's possible that the unlocked access of the attr fork to determine
++	 * the lock mode could have raced with another thread that was failing
++	 * to load the bmbt but hadn't yet torn down the iext tree.  Recheck
++	 * the lock mode and upgrade to an exclusive lock if we need to.
++	 */
++	if (lock_mode == XFS_ILOCK_SHARED &&
++	    xfs_inode_has_attr_fork(ip) &&
++	    xfs_need_iread_extents(&ip->i_af)) {
++		xfs_iunlock(ip, lock_mode);
++		lock_mode = XFS_ILOCK_EXCL;
++		xfs_ilock(ip, lock_mode);
++	}
++
+ 	return lock_mode;
+ }
  
--	if (cur->bc_btnum != XFS_BTNUM_BMAP)
-+	if (cur->bc_btnum != XFS_BTNUM_BMAP ||
-+	    cur->bc_tp->t_firstblock == NULLFSBLOCK)
- 		return __xfs_btree_split(cur, level, ptrp, key, curp, stat);
- 
- 	args.cur = cur;
--- 
-2.39.0
-
