@@ -2,125 +2,132 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AB26C46467
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Jan 2023 05:34:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63AB6C25B4E
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Jan 2023 14:17:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231575AbjATFec (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 Jan 2023 00:34:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39896 "EHLO
+        id S230319AbjATORc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 Jan 2023 09:17:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44462 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229573AbjATFeJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Jan 2023 00:34:09 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADF9572C1C;
-        Thu, 19 Jan 2023 21:29:59 -0800 (PST)
+        with ESMTP id S230342AbjATORb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Jan 2023 09:17:31 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA7C7CB52F
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Jan 2023 06:16:48 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id F0630B825E2;
-        Thu, 19 Jan 2023 16:19:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95E34C433EF;
-        Thu, 19 Jan 2023 16:19:50 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 85C3861F87
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Jan 2023 14:15:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5231DC433EF;
+        Fri, 20 Jan 2023 14:15:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1674145190;
-        bh=c9ILNmGa9MRZfKvq8xWS1ut15XYxgjlRiyzMznhLzQU=;
+        s=k20201202; t=1674224149;
+        bh=C4XXWdrQM70M0Xs4vPgrYfbhlgqJeB8ueJgObJR4W/8=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JKmwFoB5CUKWc1NCgBSb00eMZbzwZCzztxWih3JwPArBJcZSQ46c3NVeietVa/pJo
-         uQd9qaKxtPk0wWNSmuicLCgYIV3g/FivXuy7uYvNlHZ+mkJdV6u6Adoum5c3aAfVRe
-         +ZVkp+faXhxT7unVyB/Ipub39rRIvvpSo2T0WOA9dCPpz2kHK5zqz/WdSGgyixQkMk
-         MUDF5dnpSJkeUwwRpXaJsmc6y6DV4ZkmMPZfEdl0zpUCUIEguhonRd17FRJCmTa9Mg
-         Z0v1QM/L+lhImYR2l2lcZbmt8/mUnpZzWa4PlQDrIRd5g5/evIB1e8WlCJEeZKjEBI
-         sPzwkO6aCsVAg==
-Date:   Thu, 19 Jan 2023 08:19:50 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 4/4] populate: improve runtime of __populate_fill_fs
-Message-ID: <Y8ltpg4WKZQrRMHE@magnolia>
-References: <167400103044.1915094.5935980986164675922.stgit@magnolia>
- <167400103096.1915094.8399897640768588035.stgit@magnolia>
- <20230118155403.pg7aq3gtcks2ptdz@zlang-mailbox>
- <Y8hG59tdunKmATSw@magnolia>
- <20230119050406.fqtf55c737yc35ze@zlang-mailbox>
+        b=C5KYAl6QBDjNPt7/Kx3H6Fb3eSLMsq2MeSQeYxmhwsJjHD5HN5EyDXTKzMuXJfFG5
+         zzBkxkS4iSVHPpBQoHW8WIjFSHkQpGap/4+xNZlo2SdZn1sVZZvMxYD1RCkpmHVhHs
+         UhgUVpDflU64yFyJi3Q+bmz409O1hUCbf3fepM/Hs1fJKEpTYRRRJY+6Y1a4nU6PZy
+         upQZkhVSbb3AKbhzKVTmqigK5sRGBnzLZ344eKrqhXtiG1SaGAyrI5xAA2cThjhz3o
+         b5fPQVtKHvxPQXyWXVGNFsjEBFDoN5AuikhXFjN7Y8fIeKbJzEt0vcek07Qy6mNGDm
+         Vexujwyou9q1Q==
+Date:   Fri, 20 Jan 2023 15:15:45 +0100
+From:   Carlos Maiolino <cem@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] progs: autoconf fails during debian package builds
+Message-ID: <20230120141545.em3nehpjhqqsk3bd@andromeda>
+References: <20230119233906.2055062-1-david@fromorbit.com>
+ <LVD7WtY1GVYX0dwRvdlzsiMpldYgxpHaiXJFOgsB7aR-E4DbzG7ixxuDRx_mkMZM1FWaqhuYRNnBG5K2dvCo4Q==@protonmail.internalid>
+ <20230119233906.2055062-2-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230119050406.fqtf55c737yc35ze@zlang-mailbox>
+In-Reply-To: <20230119233906.2055062-2-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 19, 2023 at 01:04:06PM +0800, Zorro Lang wrote:
-> On Wed, Jan 18, 2023 at 11:22:15AM -0800, Darrick J. Wong wrote:
-> > On Wed, Jan 18, 2023 at 11:54:03PM +0800, Zorro Lang wrote:
-> > > On Tue, Jan 17, 2023 at 04:44:33PM -0800, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > 
-> > > > Run the copy loop in parallel to reduce runtime.  If filling the
-> > > > populated fs is selected (which it isn't by default in xfs/349), this
-> > > > reduces the runtime from ~18s to ~15s, since it's only making enough
-> > > > copies to reduce the free space by 5%.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > ---
-> > > >  common/populate |    3 ++-
-> > > >  1 file changed, 2 insertions(+), 1 deletion(-)
-> > > > 
-> > > > 
-> > > > diff --git a/common/populate b/common/populate
-> > > > index f34551d272..1c3c28463f 100644
-> > > > --- a/common/populate
-> > > > +++ b/common/populate
-> > > > @@ -151,8 +151,9 @@ __populate_fill_fs() {
-> > > >  	echo "FILL FS"
-> > > >  	echo "src_sz $SRC_SZ fs_sz $FS_SZ nr $NR"
-> > > >  	seq 2 "${NR}" | while read nr; do
-> > > > -		cp -pRdu "${dir}/test/1" "${dir}/test/${nr}"
-> > > > +		cp -pRdu "${dir}/test/1" "${dir}/test/${nr}" &
-> > > >  	done
-> > > > +	wait
-> > > 
-> > > I'm thinking about what'll happen if we do "Ctrl+c" on a running test which
-> > > is waiting for these cp operations.
-> > 
-> > Hmm.  In the context of fstests running on a system with systemd, we run
-> > each test within a systemd scope and kill the scope when the test script
-> > exits.  That will tear down unclaimed background processes, but it's not
-> > a hard and fast guarantee that everyone has systemd.
-> > 
-> > As for *general* bashisms, I guess the only solution is:
-> > 
-> > trap 'pkill -P $$' INT TERM QUIT EXIT
-> > 
-> > To kill all the children of the test script.  Maybe we want that?  But I
-> > hate wrapping my brain around bash child process management, so yuck.
-> > 
-> > I'll drop the parallel populate work, it's creating a lot of problems
-> > that I don't have time to solve while delivering only modest gains.
+On Fri, Jan 20, 2023 at 10:39:05AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Yeah, that makes things become complex. So I think if above change can bring
-> in big performance improvement, we can do that (or use another way to do that,
-> e.g. an independent program which main process can deal with its children).
-> If the improvement is not obvious, I'd like not to bring in too many
-> multi-bash-processes in common helper. What do you think?
-
-It's easier to drop the multi subprocess complexity, so I'll do that. :)
-
-Most of the speedup was from algorithmic improvement, not throwing more
-CPUs at the problem.
-
---D
-
-> Thanks,
-> Zorro
+> For some reason, a current debian testing build system will fail to
+> build debian packages because the build environment is not correctly
+> detecting that libtoolize needs the "-i" parameter to copy in the
+> files needed by autoconf.
 > 
-> > 
-> > --D
-> > 
-> > > >  }
-> > > >  
-> > > >  # For XFS, force on all the quota options if quota is enabled
-> > > > 
-> > > 
-> > 
+> My build scripts run "make -j 16 realclean; make -j 16 deb", and the
+> second step is failing immediately with:
 > 
+> libtoolize -c `libtoolize -n -i >/dev/null 2>/dev/null && echo -i` -f
+> libtoolize: putting auxiliary files in AC_CONFIG_AUX_DIR, '.'.
+> libtoolize: copying file './ltmain.sh'
+> libtoolize: putting macros in AC_CONFIG_MACRO_DIRS, 'm4'.
+> libtoolize: copying file 'm4/libtool.m4'
+> libtoolize: copying file 'm4/ltoptions.m4'
+> libtoolize: copying file 'm4/ltsugar.m4'
+> libtoolize: copying file 'm4/ltversion.m4'
+> libtoolize: copying file 'm4/lt~obsolete.m4'
+> libtoolize: Consider adding '-I m4' to ACLOCAL_AMFLAGS in Makefile.am.
+> cp include/install-sh .
+> aclocal -I m4
+> autoconf
+> ./configure $LOCAL_CONFIGURE_OPTIONS
+> configure: error: cannot find required auxiliary files: config.guess config.sub
+> make: *** [Makefile:131: include/builddefs] Error 1
+> 
+> If I run 'make realclean; make deb' from the command line, the
+> package build runs to completion.  I have not been able to work out
+> why the initial build fails, but then succeeds after a 'make
+> realclean' has been run, and I don't feel like spending hours
+> running down this rabbit hole.
+> 
+> This conditional "-i" flag detection was added back in *2009* when
+> default libtoolize behaviour was changed to not copy the config
+> files into the build area, and the "-i" flag was added to provide
+> that behaviour. It is detecting that the "-i" flag is needed that is
+> now failing, but it is most definitely still needed.
+> 
+> Rather than ispending lots of time trying to understand this and
+> then making the detection more complex, just use the "-i" flag
+> unconditionally and require any userspace that this now breaks on to
+> upgrade their 15+ year old version of libtoolize something a little
+> more modern.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
+Seems fair enough.
+It's still working on debian 11 stable, I'm curious to understand what breaks
+the detection of -i argument for libtoolize, I'm gonna give it a try on testing.
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
+>  Makefile | 8 +-------
+>  1 file changed, 1 insertion(+), 7 deletions(-)
+> 
+> diff --git a/Makefile b/Makefile
+> index 0edc2700933d..c8455a9e665f 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -115,14 +115,8 @@ else
+>  clean:	# if configure hasn't run, nothing to clean
+>  endif
+> 
+> -
+> -# Recent versions of libtool require the -i option for copying auxiliary
+> -# files (config.sub, config.guess, install-sh, ltmain.sh), while older
+> -# versions will copy those files anyway, and don't understand -i.
+> -LIBTOOLIZE_INSTALL = `$(LIBTOOLIZE_BIN) -n -i >/dev/null 2>/dev/null && echo -i`
+> -
+>  configure: configure.ac
+> -	$(LIBTOOLIZE_BIN) -c $(LIBTOOLIZE_INSTALL) -f
+> +	$(LIBTOOLIZE_BIN) -c -i -f
+>  	cp include/install-sh .
+>  	aclocal -I m4
+>  	autoconf
+> --
+> 2.39.0
+> 
+
+-- 
+Carlos Maiolino
