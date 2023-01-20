@@ -2,98 +2,83 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 033F9C25B4E
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Jan 2023 14:18:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A094FC27C7C
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Jan 2023 15:45:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230421AbjATOST (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 Jan 2023 09:18:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46116 "EHLO
+        id S230061AbjATPpk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 Jan 2023 10:45:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230491AbjATOSR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Jan 2023 09:18:17 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ECF935B9
-        for <linux-xfs@vger.kernel.org>; Fri, 20 Jan 2023 06:17:38 -0800 (PST)
+        with ESMTP id S231235AbjATPpi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Jan 2023 10:45:38 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FA149764
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Jan 2023 07:45:17 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 6A400B827E6
-        for <linux-xfs@vger.kernel.org>; Fri, 20 Jan 2023 14:16:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5743DC433D2;
-        Fri, 20 Jan 2023 14:16:32 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9BA8361FC0
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Jan 2023 15:45:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81E26C433D2
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Jan 2023 15:45:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1674224193;
-        bh=8q9w7o9XU3uanTV08jBeMypXyN6tJNaSdbC1YCy52oE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=XySKrANWbOMFeslYLBVQ+e4pDEwBPakvn13dYehn75Fm1SDLJdOnvpMmK4REkw2Un
-         nx5Ugf/jFi9LZZHq4Ig8XlH3ClzQrGWS6ZMYRyPvPnSziq3RdIOeGfATTP6iNN8qxE
-         IT4xJ722FljRS9U+SBIY/dnsH0s2SMo2UTwRw5Jzg+iorNSKx6vqUzp89849ggAomV
-         +DiC4xMsMPkT3Qkc6Kgxtv661cDsbrEP+LFmXTwAdq8Cpw6TJ5bYMgX0aOC/K3H0Ff
-         FM+Qav1Qh4i55mnKsL0bW6B70vjMU16GTHhrhZGkyM2fgU9bpCmyVLp9gHbe9etmjc
-         kEIoXPl/cePEA==
-Date:   Fri, 20 Jan 2023 15:16:28 +0100
+        s=k20201202; t=1674229516;
+        bh=PgDkq2CERyF5RQpHNoMVN6+KV1wHhiBe/L2nFE6fFlE=;
+        h=Date:From:To:Subject:From;
+        b=aHPR2JdZJxOctEISaBHcQU9p3UPmpuIo1VAr1qAwVm26C3AvOQQIb7Pms5LRcxFF+
+         SmLpSTaANyQ2PALteuamEtKJQX/vSWW4V5tTk9VKhMW6pDzrR9ATlgOAMCmLx0q7G9
+         S7UhjVjSTQMUWU6TBFe0EMHjlVIcSiMZ/FC5NqZdh3YQMG1e0QGPiroqHngJZD3tT1
+         4oaSfy4F4VzKA+Os4muvY7+XCCiSKtYukNFINyh37HyENh9oP6snPUa3QAGKwvagLm
+         ouyLBiA01HCqGPXgg7jyQ3Uh6Y0rLfzExJc4Po2ETCOuy4J5ZHWKSNOwHgpf7SC96R
+         k164UmE9sG/oQ==
+Date:   Fri, 20 Jan 2023 16:45:12 +0100
 From:   Carlos Maiolino <cem@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] progs: just use libtoolize
-Message-ID: <20230120141628.ykbmgorafkigmsiw@andromeda>
-References: <20230119233906.2055062-1-david@fromorbit.com>
- <lT1v7jcVQ8SFZ7wMkXACy6fDEPyvlw802lb9M280mFy5g-cdg8BfgquznfWR1gxDzkz61aLxtQcm1Q-J9Ibn3Q==@protonmail.internalid>
- <20230119233906.2055062-3-david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfsprogs: for-next updated to d8eab7600
+Message-ID: <20230120154512.7przrtsqqyavxuw7@andromeda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230119233906.2055062-3-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 20, 2023 at 10:39:06AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> We no longer support xfsprogs on random platforms other than Linux,
-> so drop the complexity in detecting the libtoolize binary on MacOS
-> from the main makefile.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Hello.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+The xfsprogs for-next branch, located at:
 
-> ---
->  Makefile | 10 +---------
->  1 file changed, 1 insertion(+), 9 deletions(-)
-> 
-> diff --git a/Makefile b/Makefile
-> index c8455a9e665f..c12df98dbef3 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -73,14 +73,6 @@ ifneq ("$(XGETTEXT)","")
->  TOOL_SUBDIRS += po
->  endif
-> 
-> -# If we are on OS X, use glibtoolize from MacPorts, as OS X doesn't have
-> -# libtoolize binary itself.
-> -LIBTOOLIZE_TEST=$(shell libtoolize --version >/dev/null 2>&1 && echo found)
-> -LIBTOOLIZE_BIN=libtoolize
-> -ifneq ("$(LIBTOOLIZE_TEST)","found")
-> -LIBTOOLIZE_BIN=glibtoolize
-> -endif
-> -
->  # include is listed last so it is processed last in clean rules.
->  SUBDIRS = $(LIBFROG_SUBDIR) $(LIB_SUBDIRS) $(TOOL_SUBDIRS) include
-> 
-> @@ -116,7 +108,7 @@ clean:	# if configure hasn't run, nothing to clean
->  endif
-> 
->  configure: configure.ac
-> -	$(LIBTOOLIZE_BIN) -c -i -f
-> +	libtoolize -c -i -f
->  	cp include/install-sh .
->  	aclocal -I m4
->  	autoconf
-> --
-> 2.39.0
-> 
+https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/refs/?h=for-next
+
+Has just been updated.
+
+Patches often get missed, so if your outstanding patches are properly reviewed on
+the list and not included in this update, please let me know.
+
+The new head of the for-next branch is commit:
+
+d8eab7600f470fbd09013eb90cbc7c5e271da4e5
+
+4 new commits:
+
+Catherine Hoang (2):
+      [d9151538d] xfs_io: add fsuuid command
+      [e7cd89b2d] xfs_admin: get UUID of mounted filesystem
+
+Dave Chinner (2):
+      [0f1291c3b] progs: autoconf fails during debian package builds
+      [d8eab7600] progs: just use libtoolize
+
+Code Diffstat:
+
+ Makefile          | 16 +--------------
+ db/xfs_admin.sh   | 61 ++++++++++++++++++++++++++++++++++++++++++++++---------
+ io/Makefile       |  6 +++---
+ io/fsuuid.c       | 49 ++++++++++++++++++++++++++++++++++++++++++++
+ io/init.c         |  1 +
+ io/io.h           |  1 +
+ man/man8/xfs_io.8 |  3 +++
+ 7 files changed, 109 insertions(+), 28 deletions(-)
+ create mode 100644 io/fsuuid.c
 
 -- 
 Carlos Maiolino
