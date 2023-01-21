@@ -2,61 +2,79 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAE1DC38142
-	for <linux-xfs@archiver.kernel.org>; Sat, 21 Jan 2023 06:39:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC8C1C004D4
+	for <linux-xfs@archiver.kernel.org>; Sat, 21 Jan 2023 06:58:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229794AbjAUGjc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 21 Jan 2023 01:39:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36756 "EHLO
+        id S229523AbjAUG6E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 21 Jan 2023 01:58:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44046 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229450AbjAUGjb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2023 01:39:31 -0500
+        with ESMTP id S229493AbjAUG6D (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2023 01:58:03 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 320333AB1;
-        Fri, 20 Jan 2023 22:39:30 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC8BF5C0E4;
+        Fri, 20 Jan 2023 22:58:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=pbB8338ZfSvN5avLy4jRRyLgTgoL9VF2bh4jfARYSoY=; b=F+LR1CwIsyVpngzUGE2qUMd1jN
-        uj274WuuBiMxOEJ/sz8alo6NOXYTEmgDpxSqhy6+F8U/DLhKVoH7y5pF90W4oQaTeRBgyzwhm1gUu
-        JnmVwS0bYrPR09cpQVViev3nCD9OzprTksNZzrocqDTt1IOw6xnyNOG2tmZY1aX4EtX/oTR2SN+eo
-        /a5Y6I7VBXwxkAJLWa1m0egijIDvOY9XKuuY7Et6B3cmpF2fP+7ltQXRwbc4kPJixH1yjovqRuZsW
-        oTQvvuzNpFPz1GGep/Up3cpy9UoShl8qOlObgbqAMRiP/K/vPnX48uKdKsWRYFxl+4DovjWbi8vmK
-        pxe3gEqg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pJ7X9-00DQNk-ST; Sat, 21 Jan 2023 06:39:23 +0000
-Date:   Fri, 20 Jan 2023 22:39:23 -0800
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        linux-ext4@vger.kernel.org,
-        Andrey Albershteyn <aalbersh@redhat.com>,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-btrfs@vger.kernel.org
-Subject: Re: [PATCH v2 10/11] fs/buffer.c: support fsverity in
- block_read_full_folio()
-Message-ID: <Y8uImwmmprNOCnB9@infradead.org>
-References: <20221223203638.41293-1-ebiggers@kernel.org>
- <20221223203638.41293-11-ebiggers@kernel.org>
- <20230109183759.c1e469f5f2181e9988f10131@linux-foundation.org>
- <Y7zV41MQWSUGo4fw@sol.localdomain>
- <Y8rx/SPfnlYJJ8XD@sol.localdomain>
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=B8D0bWeotdFdx7oIYHTSXz6cye3hjLZS5m2/hvamHXo=; b=SDkUBU1WsXxnF7FBjrDRJ4xZZ8
+        TP3/Mu5FLI87eWKaj4CbwLn/sCwMzyOAC/rrj97FZ/LQomNPWkqgUgmWd/7kDho1tK5yhdhyfsyRQ
+        bIT6z4zRDSoyIta29wHgJFACKI7JJfa2HvSBLOuGiYOCdn0yoQrEQ/qMjGro/wX78HdLrvaIa+sn4
+        1340LweDytR9Qfhq4madCwpHeJ2oRGbLCDV5eEv/JIHKlFKiqC1gpvhXYQ6PrfYFg4gBpcUMsT9Tr
+        UJLgfO+msrUhr9nmvs+j0mVysX5SCFr897BNqOhJ+cYqiRwv4bOlm3DNEF20F9fUO/dtZoZFLisPN
+        TxKzpxzA==;
+Received: from [2001:4bb8:19a:2039:6754:cc81:9ace:36fc] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1pJ7pA-00DSMD-AR; Sat, 21 Jan 2023 06:58:00 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Hugh Dickins <hughd@google.com>
+Cc:     linux-afs@lists.infradead.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, cluster-devel@redhat.com,
+        linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-nilfs@vger.kernel.org
+Subject: [PATCH 1/7] mm: don't look at xarray value entries in split_huge_pages_in_file
+Date:   Sat, 21 Jan 2023 07:57:49 +0100
+Message-Id: <20230121065755.1140136-2-hch@lst.de>
+X-Mailer: git-send-email 2.39.0
+In-Reply-To: <20230121065755.1140136-1-hch@lst.de>
+References: <20230121065755.1140136-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y8rx/SPfnlYJJ8XD@sol.localdomain>
+Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 20, 2023 at 11:56:45AM -0800, Eric Biggers wrote:
-> Any more thoughts on this from Andrew, the ext4 maintainers, or anyone else?
+split_huge_pages_in_file never wants to do anything with the special
+value enties.  Switch to using filemap_get_folio to not even see them.
 
-As someone else:  I relaly much prefer to support common functionality
-(fsverity) in common helpers rather than copy and pasting them into
-various file systems.  The copy common helper and slightly modify it
-is a cancer infecting various file systems that makes it really hard
-to maintain the kernel.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+---
+ mm/huge_memory.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 1d6977dc6b31ba..a2830019aaa017 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -3100,11 +3100,10 @@ static int split_huge_pages_in_file(const char *file_path, pgoff_t off_start,
+ 	mapping = candidate->f_mapping;
+ 
+ 	for (index = off_start; index < off_end; index += nr_pages) {
+-		struct folio *folio = __filemap_get_folio(mapping, index,
+-						FGP_ENTRY, 0);
++		struct folio *folio = filemap_get_folio(mapping, index);
+ 
+ 		nr_pages = 1;
+-		if (xa_is_value(folio) || !folio)
++		if (!folio)
+ 			continue;
+ 
+ 		if (!folio_test_large(folio))
+-- 
+2.39.0
+
