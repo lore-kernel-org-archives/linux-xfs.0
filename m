@@ -2,73 +2,86 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA144C54E94
-	for <linux-xfs@archiver.kernel.org>; Sat, 21 Jan 2023 20:19:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9BD6C27C76
+	for <linux-xfs@archiver.kernel.org>; Sun, 22 Jan 2023 01:06:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229787AbjAUUTn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 21 Jan 2023 15:19:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47304 "EHLO
+        id S229751AbjAVBGp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 21 Jan 2023 20:06:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43266 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229523AbjAUUTm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2023 15:19:42 -0500
-Received: from mail-il1-f200.google.com (mail-il1-f200.google.com [209.85.166.200])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 112AB23653
-        for <linux-xfs@vger.kernel.org>; Sat, 21 Jan 2023 12:19:19 -0800 (PST)
-Received: by mail-il1-f200.google.com with SMTP id o10-20020a056e02102a00b003006328df7bso5937699ilj.17
-        for <linux-xfs@vger.kernel.org>; Sat, 21 Jan 2023 12:19:19 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Pe29fqGB5jw0Lc13jqigdvwWKgCeBel/2NyFQTzRKFU=;
-        b=FSGrJ9Y1Nsc4hh1yz8sxa/fo8QiMAEokjhuPYAlztA0YPHitXlBjUjHqgeAfdVusj+
-         OgaOfpI69rzt0BKBkGjv7qrGqrfvLajzbLRrfd3WHffHrFsG+x5fQw+7O9w2Y9a/BhJI
-         8DzSGjxGLHKWakOYkTwaBRC/aPrzqwV5znw6A4tQ/+H5idcEYJejqzm0BOIGoQoDs0dN
-         ZJ/urZ+tthZZLcH1R9NGDn7pGgv4v79ZycxZcsU2buW5hSDx0l5afEpzHKTuD6GEcLLX
-         GsL5zIsavfRfqg0h2O/5K3Rt2LmtqmiBxq6N4AgSLBNATVKyQhsSJllyAk9+uO0AgTyY
-         8wrQ==
-X-Gm-Message-State: AFqh2kqgXJJuKcjFplNwAG2tSXZxmchIh6Qr1f7yqppkPcVT1wSDeg7V
-        Y9HQ2yO7vrq5gbVGLAnzyIe9pb5xG0SJ3lN6Nd/uctiIs3xw
-X-Google-Smtp-Source: AMrXdXsMhd7fYTsq8AER0qV8wQz7Ln6057/YOLIm7ow9udsEXxqSp9CcJM7BO7xCaulaDj1Cf8u+Mwjm49RoRMxr6/2pXgX+5eSL
-MIME-Version: 1.0
-X-Received: by 2002:a05:6638:24c:b0:3a6:c95:e160 with SMTP id
- w12-20020a056638024c00b003a60c95e160mr1517664jaq.34.1674332359101; Sat, 21
- Jan 2023 12:19:19 -0800 (PST)
-Date:   Sat, 21 Jan 2023 12:19:19 -0800
-In-Reply-To: <0000000000004ab8ac05ef9b1578@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <0000000000008016d805f2cbe102@google.com>
-Subject: Re: [syzbot] [xfs?] KASAN: stack-out-of-bounds Read in xfs_buf_lock
-From:   syzbot <syzbot+0bc698a422b5e4ac988c@syzkaller.appspotmail.com>
-To:     akpm@linux-foundation.org, dan.j.williams@intel.com,
-        djwong@kernel.org, hch@lst.de, linux-kernel@vger.kernel.org,
-        linux-mm@kvack.org, linux-xfs@vger.kernel.org,
-        syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+        with ESMTP id S229463AbjAVBGp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Jan 2023 20:06:45 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67BF022DD0;
+        Sat, 21 Jan 2023 17:06:43 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id F3BDE60918;
+        Sun, 22 Jan 2023 01:06:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F310CC433D2;
+        Sun, 22 Jan 2023 01:06:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+        s=korg; t=1674349602;
+        bh=f++QpVWpQpCa5Y2lUzhkXb5vN7dWMnG6EbTBZMDoyqE=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=K8ITSredLjN6RsWmDw7F2N5WthD7EgH6VTWaz2+ik16Ka/pQziEgWZn04WqCXW071
+         r9erU5+Z1B/9XVDshRwPjHKsFWahHPGqUMQB+YcCLd2gj1WLD9x48LlmxmE5voLZAV
+         4SleWXBskXm0bHHmpptYnTnhCBrc4uX5NActjowk=
+Date:   Sat, 21 Jan 2023 17:06:41 -0800
+From:   Andrew Morton <akpm@linux-foundation.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        Hugh Dickins <hughd@google.com>, linux-afs@lists.infradead.org,
+        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        cluster-devel@redhat.com, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-nilfs@vger.kernel.org
+Subject: Re: return an ERR_PTR from __filemap_get_folio v2
+Message-Id: <20230121170641.121f4224a0e8304765bb4738@linux-foundation.org>
+In-Reply-To: <20230121065755.1140136-1-hch@lst.de>
+References: <20230121065755.1140136-1-hch@lst.de>
+X-Mailer: Sylpheed 3.7.0 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-syzbot has bisected this issue to:
+On Sat, 21 Jan 2023 07:57:48 +0100 Christoph Hellwig <hch@lst.de> wrote:
 
-commit 679a99495b8fda800037b25af8cd990eb7dd72c9
-Author: Christoph Hellwig <hch@lst.de>
-Date:   Mon Nov 29 10:21:41 2021 +0000
+> Hi all,
+> 
+> __filemap_get_folio and its wrappers can return NULL for three different
+> conditions, which in some cases requires the caller to reverse engineer
+> the decision making.  This is fixed by returning an ERR_PTR instead of
+> NULL and thus transporting the reason for the failure.  But to make
+> that work we first need to ensure that no xa_value special case is
+> returned and thus return the FGP_ENTRY flag.  It turns out that flag
+> is barely used and can usually be deal with in a better way.
+> 
+> Note that the shmem patches in here are non-trivial and need some
+> careful review and testing.
 
-    xfs: factor out a xfs_setup_dax_always helper
+I'll hide for a while, awaiting that review.  Plus...
 
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=17708805480000
-start commit:   7dd4b804e080 Merge tag 'nfsd-6.2-3' of git://git.kernel.or..
-git tree:       upstream
-final oops:     https://syzkaller.appspot.com/x/report.txt?x=14f08805480000
-console output: https://syzkaller.appspot.com/x/log.txt?x=10f08805480000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=2b6ecad960fc703e
-dashboard link: https://syzkaller.appspot.com/bug?extid=0bc698a422b5e4ac988c
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=10c58bd2480000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=11cc664a480000
+> Changes since v1:
+>  - drop the patches to check for errors in btrfs and gfs2
+>  - document the new calling conventions for the wrappers around
+>    __filemap_get_folio
+>  - rebased against the iomap changes in latest linux-next
 
-Reported-by: syzbot+0bc698a422b5e4ac988c@syzkaller.appspotmail.com
-Fixes: 679a99495b8f ("xfs: factor out a xfs_setup_dax_always helper")
+This patchset doesn't apply to fs/btrfs/ because linux-next contains
+this 6+ month-old commit:
 
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+commit 964688b32d9ada55a7fce2e650d85ef24188f73f                
+Author:     Matthew Wilcox (Oracle) <willy@infradead.org>
+AuthorDate: Tue May 17 18:03:27 2022 -0400
+Commit:     Matthew Wilcox (Oracle) <willy@infradead.org>
+CommitDate: Wed Jun 29 08:51:07 2022 -0400
+
+    btrfs: Use a folio in wait_dev_supers()
+
+
+Matthew, what's the story here?
