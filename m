@@ -2,87 +2,97 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7E64C38142
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Jan 2023 13:10:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56699C54EED
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Jan 2023 15:50:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229514AbjAWNK6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Jan 2023 08:10:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40428 "EHLO
+        id S231667AbjAWPuf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Jan 2023 10:50:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56186 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230224AbjAWNK6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Jan 2023 08:10:58 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 252792412D
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Jan 2023 05:10:56 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S232579AbjAWPud (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Jan 2023 10:50:33 -0500
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 827DC193FD;
+        Mon, 23 Jan 2023 07:50:30 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9022E60F08
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Jan 2023 13:10:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25DBDC433D2;
-        Mon, 23 Jan 2023 13:10:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1674479455;
-        bh=UQN3mTk58m412Wg9UNJx9Chprh3xewtJH5jjmIZaiCk=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Oa7gUQNLesDvD4fC/7/I1rgzuzsc6Y1KodhUOrlsTN9Rc1CLok/eZTkPV3LJ8MQIR
-         s6NOev/o/OKej2HBzZNWmkdUmmR2mXPU6l2aEPmoDk8fKDbQq7FV67teizbtcFnERX
-         8z3oKJeUwtQ+hL9NwoK6OM9Sk+t9TWCAc5lWlXqu1ny24r4aP1T+EZ7r3ZeUi1OHFw
-         fh4+FZs20b/HijB18wrQVeM5Wu+xwCrksdjSDC4FWFVlm1SgcVtyk8rtxmX8peBCGD
-         dG4DOWfk6ms7KIdhQnLpoVdwMQuzb7yPUiU1WtDzv9uYBfyV0YoExivisCA0ezmov1
-         Dx6L6jmBkb32Q==
-Date:   Mon, 23 Jan 2023 14:10:50 +0100
-From:   Carlos Maiolino <cem@kernel.org>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     Catherine Hoang <catherine.hoang@oracle.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [ANNOUNCE] xfsprogs: for-next updated to d8eab7600
-Message-ID: <20230123131050.qsizlly5prd5tydz@andromeda>
-References: <20230120154512.7przrtsqqyavxuw7@andromeda>
- <YCpxV7N7zijCqzEgnJXPpWgGYUrNV687hdQtYZPyEcYqGI5zrws-hZ6Znw9fOdkrEsLUfLyrBZsxXcb1iJaeYw==@protonmail.internalid>
- <323afbd0338c40d691d79138c1ab93d00074f27c.camel@oracle.com>
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 2FA6A1F749;
+        Mon, 23 Jan 2023 15:50:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1674489029;
+        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=sUGIH2I54cp4HbnMiIaY15PfXULieuiQ0sW9X9yG6Sc=;
+        b=OPXFoGuJ8BkSymKabi8S/f/rmJEkvx+fgrXVqizmYyDI3KhBbMlUuLj8YQectO2Ngl9/Sf
+        oGaVWENU63tAhnkYzTuPgH+u6QSbPi1G42bWVBQW/Fd77EpB2+8rwpOtlrkGfwdjkyAjny
+        CVCmqcffKPgt8etMatoZ+dSqDZHYXIU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1674489029;
+        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=sUGIH2I54cp4HbnMiIaY15PfXULieuiQ0sW9X9yG6Sc=;
+        b=xOcYsz+zrkERuCg65RzTgYDWspE7gLGRBq0M143VodPXwP6GO0FzliKs6WdMBcPvTtIt12
+        vGjp9a9wvCEfUZBg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D1B05134F5;
+        Mon, 23 Jan 2023 15:50:28 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id euY6MsSszmOdYgAAMHmgww
+        (envelope-from <dsterba@suse.cz>); Mon, 23 Jan 2023 15:50:28 +0000
+Date:   Mon, 23 Jan 2023 16:44:47 +0100
+From:   David Sterba <dsterba@suse.cz>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Hugh Dickins <hughd@google.com>, linux-afs@lists.infradead.org,
+        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        cluster-devel@redhat.com, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-nilfs@vger.kernel.org
+Subject: Re: [PATCH 7/7] mm: return an ERR_PTR from __filemap_get_folio
+Message-ID: <20230123154447.GP11562@twin.jikos.cz>
+Reply-To: dsterba@suse.cz
+References: <20230121065755.1140136-1-hch@lst.de>
+ <20230121065755.1140136-8-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <323afbd0338c40d691d79138c1ab93d00074f27c.camel@oracle.com>
+In-Reply-To: <20230121065755.1140136-8-hch@lst.de>
+User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jan 20, 2023 at 11:35:12PM +0000, Allison Henderson wrote:
-> On Fri, 2023-01-20 at 16:45 +0100, Carlos Maiolino wrote:
-> > Hello.
-> >
-> > The xfsprogs for-next branch, located at:
-> >
-> > https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/refs/?h=for-next
-> >
-> > Has just been updated.
-> >
-> > Patches often get missed, so if your outstanding patches are properly
-> > reviewed on
-> > the list and not included in this update, please let me know.
-> >
-> > The new head of the for-next branch is commit:
-> >
-> > d8eab7600f470fbd09013eb90cbc7c5e271da4e5
-> >
-> > 4 new commits:
-> >
-> > Catherine Hoang (2):
-> >       [d9151538d] xfs_io: add fsuuid command
-> Oops, Catherine and I noticed a bug in this patch yesterday.  Do you
-> want an updated patch, or a separate fix patch?
+On Sat, Jan 21, 2023 at 07:57:55AM +0100, Christoph Hellwig wrote:
+> Instead of returning NULL for all errors, distinguish between:
+> 
+>  - no entry found and not asked to allocated (-ENOENT)
+>  - failed to allocate memory (-ENOMEM)
+>  - would block (-EAGAIN)
+> 
+> so that callers don't have to guess the error based on the passed
+> in flags.
+> 
+> Also pass through the error through the direct callers:
+> filemap_get_folio, filemap_lock_folio filemap_grab_folio
+> and filemap_get_incore_folio.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/afs/dir.c             | 10 +++++-----
+>  fs/afs/dir_edit.c        |  2 +-
+>  fs/afs/write.c           |  4 ++--
 
-I suppose you're not talking about:
-[PATCH v1] xfs_admin: get/set label of mounted filesystem
-?
+For
 
-Anyway, feel free to send a new patch with a 'Fixes:' tag. It's gonna be better
-than rebasing for-next.
+>  fs/btrfs/disk-io.c       |  2 +-
 
-Thanks for the heads up.
-
--- 
-Carlos Maiolino
+Acked-by: David Sterba <dsterba@suse.com>
