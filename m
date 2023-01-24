@@ -2,59 +2,102 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78D7CC38142
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Jan 2023 12:56:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83EC6C54EB4
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Jan 2023 19:30:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232312AbjAXM4v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Jan 2023 07:56:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33496 "EHLO
+        id S234062AbjAXTae (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Jan 2023 14:30:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233521AbjAXM4u (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jan 2023 07:56:50 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2347630D6;
-        Tue, 24 Jan 2023 04:56:15 -0800 (PST)
+        with ESMTP id S232952AbjAXTad (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jan 2023 14:30:33 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C5614DBDC;
+        Tue, 24 Jan 2023 11:30:30 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 202CBB811C2;
-        Tue, 24 Jan 2023 12:56:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 610B1C433D2;
-        Tue, 24 Jan 2023 12:56:11 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E23866132C;
+        Tue, 24 Jan 2023 19:30:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C702C433EF;
+        Tue, 24 Jan 2023 19:30:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1674564971;
-        bh=aXc+7DU6wiR86FkbJyGCIgne5RjiAMbSraY5xIyxN/E=;
-        h=Subject:From:To:Cc:Date:From;
-        b=khv49ls4LJDMmPLiDX2Fa8CIs+yEjZ2WYe6zmCw70KtBL1uCrDqguVsDbeJVkR29U
-         1wGG3tZibVkNwC69DAPT/k9DdlWqxosjkkYyCQQdorVjjJXODjVFwRj3GiM+zsMKhj
-         6tngYqy7z6F3YIjKBVqCHFe8F4WeIsJh11jTk20GWP8pz7VAywlhjs++vZi2Ro1QIW
-         Cw89WYGkqef76miU3mqDCl8UxlQBLy0STRLdF0cbXnxwRgITrVxOx6ZnkH11VzR2Tn
-         +tXnkTNrnQ/4PGHGdgKUPyxm9SsIWvQx5UyAmwyxr5I7Pcl6O2BsM4QwU1Un0RYMfv
-         IwxtAOseKRihQ==
-Message-ID: <57c413ed362c0beab06b5d83b7fc4b930c7662c4.camel@kernel.org>
-Subject: replacement i_version counter for xfs
+        s=k20201202; t=1674588629;
+        bh=vp0vqry2/AY0zb9xuGn4mOcoj9OvZ/inpse2FNVpqBI=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Oq1fgOAvloQhlKFMsUavNC5pfqfY+THTTPrx5v8fc8B/UiuEChO4F4Ko8COr+On1Z
+         nwj3yF3nKBIIdXf8ovX6RRVvFfV3kTuyLA+rGZCxRzNiRWHpQT2Nl3Vr5MJDPw2p9B
+         vvzFgOJBXMYg7ARNBK7bvQblMMhqZHBRJKRVEg8A4unGw0qmIbSFLfyq14bYKhdaFk
+         bQqYGnaccCUoQ0dyCv0zAs8Zdbaqw41mt3wgK2mbnnY0EGhtA5D9OVcOR4Bs03VgRN
+         44MUutfnQgaDajRpEHQjS7oGw8anySs8tLBtiyUFU58t6GNz0yp2NVR9IvrMiLOo89
+         1kcsW3Ky8XpQA==
 From:   Jeff Layton <jlayton@kernel.org>
-To:     linux-xfs <linux-xfs@vger.kernel.org>
-Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Date:   Tue, 24 Jan 2023 07:56:09 -0500
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.3 (3.46.3-1.fc37) 
+To:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
+        david@fromorbit.com, trondmy@hammerspace.com, neilb@suse.de,
+        viro@zeniv.linux.org.uk, zohar@linux.ibm.com, xiubli@redhat.com,
+        chuck.lever@oracle.com, lczerner@redhat.com, jack@suse.cz,
+        bfields@fieldses.org, brauner@kernel.org, fweimer@redhat.com
+Cc:     linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: [PATCH v8 RESEND 0/8] fs: clean up internal i_version handling
+Date:   Tue, 24 Jan 2023 14:30:17 -0500
+Message-Id: <20230124193025.185781-1-jlayton@kernel.org>
+X-Mailer: git-send-email 2.39.1
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-A few months ago, I posted a patch to make xfs not bump its i_version
-counter on atime updates. Dave Chinner NAK'ed that patch, mentioning
-that xfs would need to replace it with an entirely new field as the
-existing counter is used for other purposes and its semantics are set in
-stone.
+I had inteded to send a PR for this for v6.2, but I got sidetracked
+with different issues, and didn't get it together in time. This set has
+been sitting in linux-next since October, and it seems to be behaving,
+so I intend to send a PR when the v6.3 merge window opens.
 
-Has anything been done toward that end? Should I file a bug report or
-something? It would be nice to get this going so that XFS can continue
-to be a viable filesystem for exporting via NFS.
+Though nothing has really changed since last year, I'm resending now
+in the hopes I can collect a few more Reviewed-bys (ones from Al, Trond
+and Anna would be particularly welcome).
 
-Thanks,
---=20
-Jeff Layton <jlayton@kernel.org>
+The main consumer of i_version field (knfsd) has to jump through a
+number of hoops to fetch it, depending on what sort of inode it is.
+Rather than do this, we want to offload the responsibility for
+presenting this field to the filesystem's ->getattr operation, which is
+a more natural way to deal with a field that may be implemented
+differently.
+
+The focus of this patchset is to clean up these internal interfaces.
+This should also make it simple to present this attribute to userland in
+the future, which should be possible once the semantics are a bit more
+consistent across different backing filesystems.
+
+Thanks!
+
+Jeff Layton (8):
+  fs: uninline inode_query_iversion
+  fs: clarify when the i_version counter must be updated
+  vfs: plumb i_version handling into struct kstat
+  nfs: report the inode version in getattr if requested
+  ceph: report the inode version in getattr if requested
+  nfsd: move nfsd4_change_attribute to nfsfh.c
+  nfsd: use the getattr operation to fetch i_version
+  nfsd: remove fetch_iversion export operation
+
+ fs/ceph/inode.c          | 16 +++++++----
+ fs/libfs.c               | 36 ++++++++++++++++++++++++
+ fs/nfs/export.c          |  7 -----
+ fs/nfs/inode.c           | 16 ++++++++---
+ fs/nfsd/nfs4xdr.c        |  4 ++-
+ fs/nfsd/nfsfh.c          | 42 ++++++++++++++++++++++++++++
+ fs/nfsd/nfsfh.h          | 29 +-------------------
+ fs/nfsd/vfs.h            |  7 ++++-
+ fs/stat.c                | 17 ++++++++++--
+ include/linux/exportfs.h |  1 -
+ include/linux/iversion.h | 59 ++++++++++++++--------------------------
+ include/linux/stat.h     |  9 ++++++
+ 12 files changed, 156 insertions(+), 87 deletions(-)
+
+-- 
+2.39.1
+
