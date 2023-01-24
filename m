@@ -2,119 +2,62 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74714C25B50
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Jan 2023 19:31:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3B38C54E94
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Jan 2023 22:19:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233999AbjAXTbs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Jan 2023 14:31:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34400 "EHLO
+        id S233643AbjAXWTI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Jan 2023 17:19:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50460 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233161AbjAXTbV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jan 2023 14:31:21 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97E374FCF8;
-        Tue, 24 Jan 2023 11:30:49 -0800 (PST)
+        with ESMTP id S229926AbjAXWTH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Jan 2023 17:19:07 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C960FB47A;
+        Tue, 24 Jan 2023 14:19:06 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 2E4F4B816BF;
-        Tue, 24 Jan 2023 19:30:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00593C433A0;
-        Tue, 24 Jan 2023 19:30:44 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 60A186134E;
+        Tue, 24 Jan 2023 22:19:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 885CEC433EF;
+        Tue, 24 Jan 2023 22:19:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1674588646;
-        bh=hGCv1KZZe3GeYILHnAYauWOgUNQlZo/l7V3HpJWTqjo=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iO9erBwVo9YQ5VD3CeEEIYGF4jgJVgoNTKa0Cst/fW0YKY2hXQyVceYdu1Kumc0xA
-         6eufYARO8WsmmwiZOJ19PO+P7Y6+4Uz1KOnUAFmIYFbF50NFfQsc4+3yPSLdaROGB4
-         DTF/EJxHTNmrqgo+BLEQHYrTVrLQ0sqMc88HU2HCtnHJ39x0zCSAHCmA3jB/rt6a3M
-         1XxWWaE+R0Cqs3uDxXoqgtHSQ0FemJMbNtmn8+e/wkDbTrlAt0ZNtv1ua9euyXeP8y
-         ynNcZEK5WdVwEU3QSr9u27ZPH81ELpEvaI21jt+a1HwLSpS0Ye4af/whs/Vhpc6Nx2
-         xR31eDqczLJMg==
-From:   Jeff Layton <jlayton@kernel.org>
-To:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
-        david@fromorbit.com, trondmy@hammerspace.com, neilb@suse.de,
-        viro@zeniv.linux.org.uk, zohar@linux.ibm.com, xiubli@redhat.com,
-        chuck.lever@oracle.com, lczerner@redhat.com, jack@suse.cz,
-        bfields@fieldses.org, brauner@kernel.org, fweimer@redhat.com
-Cc:     linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: [PATCH v8 RESEND 8/8] nfsd: remove fetch_iversion export operation
-Date:   Tue, 24 Jan 2023 14:30:25 -0500
-Message-Id: <20230124193025.185781-9-jlayton@kernel.org>
-X-Mailer: git-send-email 2.39.1
-In-Reply-To: <20230124193025.185781-1-jlayton@kernel.org>
-References: <20230124193025.185781-1-jlayton@kernel.org>
+        s=k20201202; t=1674598745;
+        bh=U85zQgZaGptirm1FMFBd9riQ9xroftiQcp0//6ql7pM=;
+        h=Date:From:To:Cc:Subject:From;
+        b=RJLaBl7HvSbm+MpCR+0mN3BK9lHqfNpQTw8LhfL1+E/zYND/9VH6iOA02F+whWIYT
+         MBO+1bzKu/HqapvdzmN/o/Ln0c61wWzjMwcs0hBCjpYZVFEdi0RCglOICthtf56fvx
+         gsGAdIaYeglG//fL6OR9ZLiP+CRRvY23GEKvp5OVlQ9K4MpT4du9fNVJSvKLb9QzJT
+         xZIO9mbNqRoSwh0ptq2Vu2xwAeb/qC4XIhZca9hDKFGq6g0AcyZ7pM2OuUoZ12ogTt
+         ihOYq7FR+sb7apou6uuKQ0aD6B+cxZmj5t7gxDR/cc1Y+8KeT2K3oJUYJe+FG0Q+Gt
+         YIyg4+k6E/iwQ==
+Date:   Tue, 24 Jan 2023 14:19:03 -0800
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     fsverity@lists.linux.dev
+Cc:     linux-fscrypt@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: [ANNOUNCE] New mailing list for fsverity development
+Message-ID: <Y9BZVw01GbP6T3XY@sol.localdomain>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Now that the i_version counter is reported in struct kstat, there is no
-need for this export operation.
+Hi,
 
-Acked-by: Chuck Lever <chuck.lever@oracle.com>
-Reviewed-by: NeilBrown <neilb@suse.de>
-Signed-off-by: Jeff Layton <jlayton@kernel.org>
----
- fs/nfs/export.c          | 7 -------
- fs/nfsd/nfsfh.c          | 3 ---
- include/linux/exportfs.h | 1 -
- 3 files changed, 11 deletions(-)
+fsverity development (both the kernel part and fsverity-utils) is now using the
+mailing list fsverity@lists.linux.dev instead of linux-fscrypt@vger.kernel.org.
+linux-fscrypt@vger.kernel.org is now for fscrypt only.
 
-diff --git a/fs/nfs/export.c b/fs/nfs/export.c
-index 01596f2d0a1e..1a9d5aa51dfb 100644
---- a/fs/nfs/export.c
-+++ b/fs/nfs/export.c
-@@ -145,17 +145,10 @@ nfs_get_parent(struct dentry *dentry)
- 	return parent;
- }
- 
--static u64 nfs_fetch_iversion(struct inode *inode)
--{
--	nfs_revalidate_inode(inode, NFS_INO_INVALID_CHANGE);
--	return inode_peek_iversion_raw(inode);
--}
--
- const struct export_operations nfs_export_ops = {
- 	.encode_fh = nfs_encode_fh,
- 	.fh_to_dentry = nfs_fh_to_dentry,
- 	.get_parent = nfs_get_parent,
--	.fetch_iversion = nfs_fetch_iversion,
- 	.flags = EXPORT_OP_NOWCC|EXPORT_OP_NOSUBTREECHK|
- 		EXPORT_OP_CLOSE_BEFORE_UNLINK|EXPORT_OP_REMOTE_FS|
- 		EXPORT_OP_NOATOMIC_ATTR,
-diff --git a/fs/nfsd/nfsfh.c b/fs/nfsd/nfsfh.c
-index 3a01c8601712..76ea268dc420 100644
---- a/fs/nfsd/nfsfh.c
-+++ b/fs/nfsd/nfsfh.c
-@@ -778,11 +778,8 @@ u64 nfsd4_change_attribute(struct kstat *stat, struct inode *inode)
- {
- 	u64 chattr;
- 
--	if (inode->i_sb->s_export_op->fetch_iversion)
--		return inode->i_sb->s_export_op->fetch_iversion(inode);
- 	if (stat->result_mask & STATX_CHANGE_COOKIE) {
- 		chattr = stat->change_cookie;
--
- 		if (S_ISREG(inode->i_mode) &&
- 		    !(stat->attributes & STATX_ATTR_CHANGE_MONOTONIC)) {
- 			chattr += (u64)stat->ctime.tv_sec << 30;
-diff --git a/include/linux/exportfs.h b/include/linux/exportfs.h
-index fe848901fcc3..9f4d4bcbf251 100644
---- a/include/linux/exportfs.h
-+++ b/include/linux/exportfs.h
-@@ -213,7 +213,6 @@ struct export_operations {
- 			  bool write, u32 *device_generation);
- 	int (*commit_blocks)(struct inode *inode, struct iomap *iomaps,
- 			     int nr_iomaps, struct iattr *iattr);
--	u64 (*fetch_iversion)(struct inode *);
- #define	EXPORT_OP_NOWCC			(0x1) /* don't collect v3 wcc data */
- #define	EXPORT_OP_NOSUBTREECHK		(0x2) /* no subtree checking */
- #define	EXPORT_OP_CLOSE_BEFORE_UNLINK	(0x4) /* close files before unlink */
--- 
-2.39.1
+When sending any fsverity-related patches, please always include the new list.
 
+If you're interested, please also subscribe to the new list by sending an email
+to fsverity+subscribe@lists.linux.dev.
+
+The new list is being archived at https://lore.kernel.org/fsverity/.
+
+- Eric
