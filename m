@@ -2,112 +2,213 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4149CC27C76
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Jan 2023 05:02:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99FB5C61DB3
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Jan 2023 08:40:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229621AbjAYFCi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Jan 2023 00:02:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44668 "EHLO
+        id S235492AbjAYIkt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Jan 2023 03:40:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44180 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229528AbjAYFCh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jan 2023 00:02:37 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DC0846156
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Jan 2023 21:01:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1674622909;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=bk+kl20NQ+qOwz5FT8H4jLfWY22/JQFsQdu7k7N6mbY=;
-        b=iRjq9z2vRfHY0l0UQwd593MjDMxesN9/UPmJAJkChb8gC6sElN+YQdM8IAL9D1Op6jXsHt
-        uhjeMY5O1rNEltZL4nBH+JTYfnosICL3m0qOs226Ph9Ve8iLDB+PJB2MCJ67MO3QbUzUFS
-        NLuxUaKzPiioU9IFTqhw5mUfIlVEAjY=
-Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com
- [209.85.215.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-94-WgQMTwvrOpab9WCv1qNLgw-1; Wed, 25 Jan 2023 00:01:48 -0500
-X-MC-Unique: WgQMTwvrOpab9WCv1qNLgw-1
-Received: by mail-pg1-f197.google.com with SMTP id h69-20020a638348000000b004d08330e922so7799381pge.5
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Jan 2023 21:01:47 -0800 (PST)
+        with ESMTP id S235371AbjAYIjs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jan 2023 03:39:48 -0500
+Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AED753E5B
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2023 00:39:09 -0800 (PST)
+Received: by mail-yb1-xb49.google.com with SMTP id u186-20020a2560c3000000b007c8e2cf3668so19260243ybb.14
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2023 00:39:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=ralp0YsbeintaJ1+3rV0BJxcsbdnu/jVKuNhvnt0T5Y=;
+        b=FpW3ZfeoZ58NaZWfySIfB+f4+MM7GrKuq9uCXe+gfhjrC0bvKaL2kAypJ/pJdIrezU
+         Ru0cU0KNklRfuYrJ3SKXkdPgNjMfodaxcsFUMH2z2VP+LqiGmmBZi4WNjYcaaYQLe2mC
+         v6uAPWcErh2g6vXcpQB3pwh9XmkkPfWLDi2bI5mgZlrfFBGfjeQ9Wv8iIQeddGuuYJGy
+         vGYSJIu//+24XGZjzB+Q3VYOxZ5pJZ/HCGoJ5h7l6e1K0sxINKIjiYRXApyFQ3GXR7xJ
+         ZclVjCWVjm/7Pu3pZxJbkPLxrnDwpix1sMzuU+AEqB9vICm+UZCWtOUOt5GLju8+nccL
+         rTTw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=bk+kl20NQ+qOwz5FT8H4jLfWY22/JQFsQdu7k7N6mbY=;
-        b=p04mF7KKePKjexZjPkBTDUZgTlMkBB0Uw3Nyd++/mIx6ZJfmCZ7p9mvHriNYaqTuoA
-         LdukRnU0sdJfYMIvLug35OoH20z6uMFySE2pZW//Ic8/OlvTOlXqPZSbwqCMhlzcb8W7
-         Ket3HEbY2vsnqsmkOGyi8J65ZfODsmQ3plLvKs/9K8t/0MAGNzM+3ENxLdnNWNYMeKT/
-         5em38jD89+9xD3CkkiEZvxTUiZcIn9RjtSmnYvcjLSm1/we1l7u49V0xFmOIkhF3ylMo
-         Ccju8y2fCzUyXlcWkXGHrHJkSWAx8EtT6sBVC3dnXTx6akoVTpB9aYL0SQYhthLZvSgT
-         2+Aw==
-X-Gm-Message-State: AFqh2kryo6zPZmVII5R5ryRa1VDq3xVkhwq22D1blWYjbAzXvF9s5iiE
-        g7uOfu4V/xhxyNOeSt9QUgbLEwGKkaVyk1WcnS+d0ZZ8U3mUxj5+6SonRbZ4NSpdalVNcUl52Ej
-        9cUPpkr3ur7ZvBx5H5dMbzZVlIRVjWN+yn+FwXu6/ObO//6Ew9TpXz5Vunm9I0RpHG/SJdQtz
-X-Received: by 2002:a17:903:1209:b0:189:6f76:9b61 with SMTP id l9-20020a170903120900b001896f769b61mr42370472plh.39.1674622906620;
-        Tue, 24 Jan 2023 21:01:46 -0800 (PST)
-X-Google-Smtp-Source: AMrXdXuZoiU2sKt1ipGngfud/YNX11EvNhURNC0xwJQQdRdCcCRilrjXcJZJjKOR6JRvdhmKLbsw0g==
-X-Received: by 2002:a17:903:1209:b0:189:6f76:9b61 with SMTP id l9-20020a170903120900b001896f769b61mr42370441plh.39.1674622906187;
-        Tue, 24 Jan 2023 21:01:46 -0800 (PST)
-Received: from snowcrash.redhat.com ([2001:8003:4800:1b00:4c4a:1757:c744:923])
-        by smtp.gmail.com with ESMTPSA id bf2-20020a170902b90200b00196085e1bbdsm2563221plb.161.2023.01.24.21.01.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Jan 2023 21:01:45 -0800 (PST)
-From:   Donald Douwsma <ddouwsma@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Donald Douwsma <ddouwsma@redhat.com>
-Subject: [PATCH] xfs: allow setting full range of panic tags
-Date:   Wed, 25 Jan 2023 16:01:38 +1100
-Message-Id: <20230125050138.372749-1-ddouwsma@redhat.com>
-X-Mailer: git-send-email 2.31.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ralp0YsbeintaJ1+3rV0BJxcsbdnu/jVKuNhvnt0T5Y=;
+        b=ooPPtYh6I0jA+Xp7N4laf8TQ8+kPG5GcLOdEZ8Bes5aBnJ1kkSWrNfrgQYU/p9f+Xu
+         2/jliv9zCQhEF5VvKdCsCC/tKknwviBLF7fXgYETsKfHWgR7UFSl0zBM4vTAauSTUG+w
+         uHannnm1UDdbVap8F0uKXe/yBIirWySSCTgKm8W+01589QK9fTtBK9xGrBYBtSjp1oQJ
+         TsyjZUZZcyMyvWLLHUqkddONXplYuWpTub4np3av1UizTYmTccPbbWubsr1o9L0VujBn
+         4pRhLLBK8MoPmzlyKZY5n/TNDJ3SMCt86QjJ583NFrIZYtiuxSj2U7QCetyl71bfYwb1
+         X26w==
+X-Gm-Message-State: AFqh2koateWWCNm0+9HWAlAA5deMMX+8W68Bk/at2vK9/ZASRc7QWugG
+        6yvZSTuFV55+PazJd2OxRyiISBvjoWs=
+X-Google-Smtp-Source: AK7set8/stQqnGGz4OB/vqyDOBLoBX54VTTeagu3mMK0HzymWEEvjI0ujOzPLr/zvAsu1DJMDE0YK80W9/s=
+X-Received: from surenb-desktop.mtv.corp.google.com ([2620:15c:211:200:f7b0:20e8:ce66:f98])
+ (user=surenb job=sendgmr) by 2002:a81:3e07:0:b0:506:6185:4fad with SMTP id
+ l7-20020a813e07000000b0050661854fadmr450398ywa.451.1674635938431; Wed, 25 Jan
+ 2023 00:38:58 -0800 (PST)
+Date:   Wed, 25 Jan 2023 00:38:46 -0800
+In-Reply-To: <20230125083851.27759-1-surenb@google.com>
+Mime-Version: 1.0
+References: <20230125083851.27759-1-surenb@google.com>
+X-Mailer: git-send-email 2.39.1.405.gd4c25cc71f-goog
+Message-ID: <20230125083851.27759-2-surenb@google.com>
+Subject: [PATCH v2 1/6] mm: introduce vma->vm_flags modifier functions
+From:   Suren Baghdasaryan <surenb@google.com>
+To:     akpm@linux-foundation.org
+Cc:     michel@lespinasse.org, jglisse@google.com, mhocko@suse.com,
+        vbabka@suse.cz, hannes@cmpxchg.org, mgorman@techsingularity.net,
+        dave@stgolabs.net, willy@infradead.org, liam.howlett@oracle.com,
+        peterz@infradead.org, ldufour@linux.ibm.com, paulmck@kernel.org,
+        luto@kernel.org, songliubraving@fb.com, peterx@redhat.com,
+        david@redhat.com, dhowells@redhat.com, hughd@google.com,
+        bigeasy@linutronix.de, kent.overstreet@linux.dev,
+        punit.agrawal@bytedance.com, lstoakes@gmail.com,
+        peterjung1337@gmail.com, rientjes@google.com,
+        axelrasmussen@google.com, joelaf@google.com, minchan@google.com,
+        jannh@google.com, shakeelb@google.com, tatashin@google.com,
+        edumazet@google.com, gthelen@google.com, gurua@google.com,
+        arjunroy@google.com, soheil@google.com, hughlynch@google.com,
+        leewalsh@google.com, posk@google.com, will@kernel.org,
+        aneesh.kumar@linux.ibm.com, npiggin@gmail.com,
+        chenhuacai@kernel.org, tglx@linutronix.de, mingo@redhat.com,
+        bp@alien8.de, dave.hansen@linux.intel.com, richard@nod.at,
+        anton.ivanov@cambridgegreys.com, johannes@sipsolutions.net,
+        qianweili@huawei.com, wangzhou1@hisilicon.com,
+        herbert@gondor.apana.org.au, davem@davemloft.net, vkoul@kernel.org,
+        airlied@gmail.com, daniel@ffwll.ch,
+        maarten.lankhorst@linux.intel.com, mripard@kernel.org,
+        tzimmermann@suse.de, l.stach@pengutronix.de,
+        krzysztof.kozlowski@linaro.org, patrik.r.jakobsson@gmail.com,
+        matthias.bgg@gmail.com, robdclark@gmail.com,
+        quic_abhinavk@quicinc.com, dmitry.baryshkov@linaro.org,
+        tomba@kernel.org, hjc@rock-chips.com, heiko@sntech.de,
+        ray.huang@amd.com, kraxel@redhat.com, sre@kernel.org,
+        mcoquelin.stm32@gmail.com, alexandre.torgue@foss.st.com,
+        tfiga@chromium.org, m.szyprowski@samsung.com, mchehab@kernel.org,
+        dimitri.sivanich@hpe.com, zhangfei.gao@linaro.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        dgilbert@interlog.com, hdegoede@redhat.com, mst@redhat.com,
+        jasowang@redhat.com, alex.williamson@redhat.com, deller@gmx.de,
+        jayalk@intworks.biz, viro@zeniv.linux.org.uk, nico@fluxnic.net,
+        xiang@kernel.org, chao@kernel.org, tytso@mit.edu,
+        adilger.kernel@dilger.ca, miklos@szeredi.hu,
+        mike.kravetz@oracle.com, muchun.song@linux.dev, bhe@redhat.com,
+        andrii@kernel.org, yoshfuji@linux-ipv6.org, dsahern@kernel.org,
+        kuba@kernel.org, pabeni@redhat.com, perex@perex.cz, tiwai@suse.com,
+        haojian.zhuang@gmail.com, robert.jarzmik@free.fr,
+        linux-mm@kvack.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, x86@kernel.org,
+        linux-kernel@vger.kernel.org, linux-graphics-maintainer@vmware.com,
+        linux-ia64@vger.kernel.org, linux-arch@vger.kernel.org,
+        loongarch@lists.linux.dev, kvm@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-sgx@vger.kernel.org,
+        linux-um@lists.infradead.org, linux-acpi@vger.kernel.org,
+        linux-crypto@vger.kernel.org, nvdimm@lists.linux.dev,
+        dmaengine@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, etnaviv@lists.freedesktop.org,
+        linux-samsung-soc@vger.kernel.org, intel-gfx@lists.freedesktop.org,
+        linux-mediatek@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+        freedreno@lists.freedesktop.org,
+        linux-rockchip@lists.infradead.org, linux-tegra@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-rdma@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-accelerators@lists.ozlabs.org, sparclinux@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-staging@lists.linux.dev,
+        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
+        netdev@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        linux-aio@kvack.org, linux-fsdevel@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        devel@lists.orangefs.org, kexec@lists.infradead.org,
+        linux-xfs@vger.kernel.org, bpf@vger.kernel.org,
+        linux-perf-users@vger.kernel.org, kasan-dev@googlegroups.com,
+        selinux@vger.kernel.org, alsa-devel@alsa-project.org,
+        kernel-team@android.com, surenb@google.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs will not allow combining other panic values with XFS_PTAG_VERIFIER_ERROR.
+vm_flags are among VMA attributes which affect decisions like VMA merging
+and splitting. Therefore all vm_flags modifications are performed after
+taking exclusive mmap_lock to prevent vm_flags updates racing with such
+operations. Introduce modifier functions for vm_flags to be used whenever
+flags are updated. This way we can better check and control correct
+locking behavior during these updates.
 
- sysctl fs.xfs.panic_mask=511
- sysctl: setting key "fs.xfs.panic_mask": Invalid argument
- fs.xfs.panic_mask = 511
-
-Update to the maximum value that can be set to allow the full range of masks.
-
-Fixes: d519da41e2b78 ("xfs: Introduce XFS_PTAG_VERIFIER_ERROR panic mask")
-Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
+Signed-off-by: Suren Baghdasaryan <surenb@google.com>
 ---
- Documentation/admin-guide/xfs.rst | 2 +-
- fs/xfs/xfs_globals.c              | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ include/linux/mm.h       | 37 +++++++++++++++++++++++++++++++++++++
+ include/linux/mm_types.h |  8 +++++++-
+ 2 files changed, 44 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
-index 8de008c0c5ad..e2561416391c 100644
---- a/Documentation/admin-guide/xfs.rst
-+++ b/Documentation/admin-guide/xfs.rst
-@@ -296,7 +296,7 @@ The following sysctls are available for the XFS filesystem:
- 		XFS_ERRLEVEL_LOW:       1
- 		XFS_ERRLEVEL_HIGH:      5
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index c2f62bdce134..b71f2809caac 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -627,6 +627,43 @@ static inline void vma_init(struct vm_area_struct *vma, struct mm_struct *mm)
+ 	INIT_LIST_HEAD(&vma->anon_vma_chain);
+ }
  
--  fs.xfs.panic_mask		(Min: 0  Default: 0  Max: 256)
-+  fs.xfs.panic_mask		(Min: 0  Default: 0  Max: 511)
- 	Causes certain error conditions to call BUG(). Value is a bitmask;
- 	OR together the tags which represent errors which should cause panics:
++/* Use when VMA is not part of the VMA tree and needs no locking */
++static inline void init_vm_flags(struct vm_area_struct *vma,
++				 unsigned long flags)
++{
++	vma->vm_flags = flags;
++}
++
++/* Use when VMA is part of the VMA tree and modifications need coordination */
++static inline void reset_vm_flags(struct vm_area_struct *vma,
++				  unsigned long flags)
++{
++	mmap_assert_write_locked(vma->vm_mm);
++	init_vm_flags(vma, flags);
++}
++
++static inline void set_vm_flags(struct vm_area_struct *vma,
++				unsigned long flags)
++{
++	mmap_assert_write_locked(vma->vm_mm);
++	vma->vm_flags |= flags;
++}
++
++static inline void clear_vm_flags(struct vm_area_struct *vma,
++				  unsigned long flags)
++{
++	mmap_assert_write_locked(vma->vm_mm);
++	vma->vm_flags &= ~flags;
++}
++
++static inline void mod_vm_flags(struct vm_area_struct *vma,
++				unsigned long set, unsigned long clear)
++{
++	mmap_assert_write_locked(vma->vm_mm);
++	vma->vm_flags |= set;
++	vma->vm_flags &= ~clear;
++}
++
+ static inline void vma_set_anonymous(struct vm_area_struct *vma)
+ {
+ 	vma->vm_ops = NULL;
+diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
+index 2d6d790d9bed..6c7c70bf50dd 100644
+--- a/include/linux/mm_types.h
++++ b/include/linux/mm_types.h
+@@ -491,7 +491,13 @@ struct vm_area_struct {
+ 	 * See vmf_insert_mixed_prot() for discussion.
+ 	 */
+ 	pgprot_t vm_page_prot;
+-	unsigned long vm_flags;		/* Flags, see mm.h. */
++
++	/*
++	 * Flags, see mm.h.
++	 * WARNING! Do not modify directly.
++	 * Use {init|reset|set|clear|mod}_vm_flags() functions instead.
++	 */
++	unsigned long vm_flags;
  
-diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
-index 4d0a98f920ca..e0e9494a8251 100644
---- a/fs/xfs/xfs_globals.c
-+++ b/fs/xfs/xfs_globals.c
-@@ -15,7 +15,7 @@ xfs_param_t xfs_params = {
- 			  /*	MIN		DFLT		MAX	*/
- 	.sgid_inherit	= {	0,		0,		1	},
- 	.symlink_mode	= {	0,		0,		1	},
--	.panic_mask	= {	0,		0,		256	},
-+	.panic_mask	= {	0,		0,		511	},
- 	.error_level	= {	0,		3,		11	},
- 	.syncd_timer	= {	1*100,		30*100,		7200*100},
- 	.stats_clear	= {	0,		0,		1	},
+ 	/*
+ 	 * For areas with an address space and backing store,
 -- 
-2.31.1
+2.39.1
 
