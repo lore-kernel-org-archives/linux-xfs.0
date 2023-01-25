@@ -2,109 +2,178 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EEB9C54E94
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Jan 2023 11:09:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A961C27C76
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Jan 2023 11:47:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235092AbjAYLJv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Jan 2023 06:09:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35974 "EHLO
+        id S235734AbjAYLrQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Jan 2023 06:47:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235668AbjAYLJl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jan 2023 06:09:41 -0500
-Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D02A4ED39
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2023 03:09:40 -0800 (PST)
-Received: by mail-pf1-x42a.google.com with SMTP id 200so13160393pfx.7
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2023 03:09:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=97WsFQuFDTXZ80Go3qg/RkB6NOUrVwTXg0uiEXA3yVM=;
-        b=WX99hmGB/4H2KrrBZZSb2TlgkEbWCFx0bNfXnKXVAout5DmThbTCL5BFqZV083xcOQ
-         y5NBCCoIM+xqQDTYQdXOje4venOndbvLf4637mQomSXTPiFEKTPHSEr7bCMqQFKuZvUe
-         eDqaoI5dgXwf9raYnBwGHsm1w1Z1vx2MFKWITNe/ltVtnYSfCqujaFbkXHM+eIiOm5dw
-         YEbQUlAMpt0ssV2TyLI7BR+RSZAZNKCobSXtUK7vt0vUfVZzf2/EcYm0ApWxGwnJIRx6
-         ISlibNAJMtVTUBSbIxE0D4l+TOSAivaXQqp/BUHKbjB+t2BhtdIWeeNief6f0pMqB8eS
-         WzbA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=97WsFQuFDTXZ80Go3qg/RkB6NOUrVwTXg0uiEXA3yVM=;
-        b=srGY7HmeZcLgx8wB7KN++35Bj7gF53Ehe36n9FtGKn4bWBqlEM+XVzmvDwVAIKXG30
-         9CNOQDOIooikprDOzIRcVWCKWx+oTfA6KpghCdRn4GnVy2qtngobAR10EBU178XZHdgE
-         YCAsEdObeBPmyXkhjkq2CpDB9AbY9PIrFax9pqJbEEDjyQQjyOKJAMcAhSw6xrr3a60s
-         F9dDHla+SPG4EnuR/QQcckznXsq/khIebVLYHCZj2ipWdTNyovXTvYkTCEVjjw+q5BwF
-         FEaai4mPkvmPVBkJruIqQYaTqtW+yMqhrWN8y24LFL/JjKLXCFNac1ys4PYkEPH3vq2u
-         IJjA==
-X-Gm-Message-State: AFqh2kpzGxK6G8pOcNGtGeaLQrv+YcPAmIM/4J9S6FWaDDm62IucU5Gd
-        zQI9yfBWgjzmzKnYZlrGAT3HtYkxe4NeuPglnHO83/ES3zAIJw==
-X-Google-Smtp-Source: AMrXdXuUmwl14a8jWJ4gPXsZuBo/0oC3/6km/xr+x8tszoqo1CfvPOy/OtXDjP9IU/szqfpSDqGG7TjDbnFxW0kEbtY=
-X-Received: by 2002:a62:b618:0:b0:58d:e397:67a2 with SMTP id
- j24-20020a62b618000000b0058de39767a2mr3497798pff.9.1674644979547; Wed, 25 Jan
- 2023 03:09:39 -0800 (PST)
+        with ESMTP id S230146AbjAYLrQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jan 2023 06:47:16 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17A4E7D8F;
+        Wed, 25 Jan 2023 03:47:15 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A6EC0614D6;
+        Wed, 25 Jan 2023 11:47:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE671C433EF;
+        Wed, 25 Jan 2023 11:47:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1674647234;
+        bh=oFn5r5R1GTY8odJaPAy4DaeYsTt2HlMENdTKOS7Hk94=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=FXZNipPmz9o5WyiAyGy5A/zgHJdE+AJ2j7fdTZcna9Vkvf1zMWnu/Gh1fquZhYar1
+         v2U5RV4a+HMqNedcJZaCAHnlfm7JgbVUqC7J3rFGfWipdOnr5YaqJaDcp+uztabYxo
+         VvuUdORFaK7lgIw+J1GuiETwL6F7DoCCvyYOHjxM4u0Hy8AkAKV6KAWNLz7XVrtNpD
+         CzY+Y5SD9XsYMz3LtfSy4JxBQMsdI7j/G3jPT10/1C+wTPunMy7Y5MCOLtDaJ/QQST
+         qegtNccMCA1Ey00f05EtgG9MKwzs8rc9Vp/0L/C/3BZXiOhTxy72a0bxNINu51YwZX
+         qdb9XuWm0feqg==
+Message-ID: <86f993a69a5be276164c4d3fc1951ff4bde881be.camel@kernel.org>
+Subject: Re: replacement i_version counter for xfs
+From:   Jeff Layton <jlayton@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Date:   Wed, 25 Jan 2023 06:47:12 -0500
+In-Reply-To: <20230125000227.GM360264@dread.disaster.area>
+References: <57c413ed362c0beab06b5d83b7fc4b930c7662c4.camel@kernel.org>
+         <20230125000227.GM360264@dread.disaster.area>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.46.3 (3.46.3-1.fc37) 
 MIME-Version: 1.0
-References: <CAO8sHc=t1nnLrQDL26zxFA5MwjYHNWTg16tN0Hi+5=s49m5Xxg@mail.gmail.com>
- <Y9CLq0vtmwIDUl92@magnolia>
-In-Reply-To: <Y9CLq0vtmwIDUl92@magnolia>
-From:   Daan De Meyer <daan.j.demeyer@gmail.com>
-Date:   Wed, 25 Jan 2023 12:09:28 +0100
-Message-ID: <CAO8sHckmTuVktyoB6fT42ohTt-L41Gt3=E2wGhpydBfWbrtJ0g@mail.gmail.com>
-Subject: Re: mkfs.xfs protofile and paths with spaces
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> ...
+On Wed, 2023-01-25 at 11:02 +1100, Dave Chinner wrote:
+> On Tue, Jan 24, 2023 at 07:56:09AM -0500, Jeff Layton wrote:
+> > A few months ago, I posted a patch to make xfs not bump its i_version
+> > counter on atime updates. Dave Chinner NAK'ed that patch, mentioning
+> > that xfs would need to replace it with an entirely new field as the
+> > existing counter is used for other purposes and its semantics are set i=
+n
+> > stone.
+> >=20
+> > Has anything been done toward that end?
+>=20
+> No, because we don't have official specification of the behaviour
+> the nfsd subsystem requires merged into the kernel yet.
+>=20
 
-While a "-d" switch would be great to have, it'd also be great if we
-could make the protofile format work with escaped spaces. That way we
-can just add escaping for spaces in our tooling that calls mkfs.xfs
-and we don't have to do ugly version checks on the mkfs binary version
-to figure out which option to use.
+Ok. Hopefully that will be addressed in v6.3.
 
-On Wed, 25 Jan 2023 at 02:53, Darrick J. Wong <djwong@kernel.org> wrote:
->
-> On Mon, Jan 23, 2023 at 10:13:12PM +0100, Daan De Meyer wrote:
-> > Hi,
-> >
-> > We're trying to use mkfs.xfs's "-p" protofile option for unprivileged
-> > population of XFS filesystems. However, the man page does not specify
-> > how to encode filenames with spaces in them. Spaces are used as the
-> > token delimiter so I was wondering if there's some way to escape
-> > filenames with spaces in them?
->
-> Spaces in filenames apparently weren't common when protofiles were
-> introduced in the Fourth Edition Unix in November 1973[1], so that
-> wasn't part of the specification for them:
->
->     "The prototype file contains tokens separated by spaces or new
->      lines."
->
-> The file format seems to have spread to other filesystems (minix, xenix,
-> afs, jfs, aix, etc.) without anybody adding support for spaces in
-> filenames.
->
-> One could make the argument that the protofile parsing code should
-> implicitly 's/\// /g' in the filename token since no Unix supports
-> slashes in directory entries, but that's not what people have been
-> doing for the past several decades.
->
-> At this point, 50 years later, it probably would make more sense to
-> clone the mke2fs -d functionality ("slurp up this directory tree") if
-> there's interest?  Admittedly, at this point it's so old that we ought
-> to rev the entire format.
->
-> [1] https://dspinellis.github.io/unix-v4man/v4man.pdf (page 274)
-> or https://man.cat-v.org/unix-6th/8/mkfs
->
-> --D
->
-> > Cheers,
-> >
-> > Daan De Meyer
+> > Should I file a bug report or something?
+>=20
+> There's nothing we can really do until the new specification is set
+> in stone. Filing a bug report won't change anything material.
+>=20
+> As it is, I'm guessing that you desire the behaviour to be as you
+> described in the iversion patchset you just posted. That is
+> effectively:
+>=20
+>   * The change attribute (i_version) is mandated by NFSv4 and is mostly f=
+or
+>   * knfsd, but is also used for other purposes (e.g. IMA). The i_version =
+must
+> - * appear different to observers if there was a change to the inode's da=
+ta or
+> - * metadata since it was last queried.
+> + * appear larger to observers if there was an explicit change to the ino=
+de's
+> + * data or metadata since it was last queried.
+>=20
+> i.e. the definition is changing from *any* metadata or data change
+> to *explicit* metadata/data changes, right? i.e. it should only
+> change when ctime changes?
+>=20
+
+Yes.
+
+> IIUC the rest of the justification for i_version is that ctime might
+> lack the timestamp granularity to disambiguate sub-timestamp
+> granularity changes, so i_version is needed to bridge that gap.
+>=20
+> Given that XFS has nanosecond timestamp resolution in the on-disk
+> format, both i_version and ctime changes are journalled, and
+> ctime/i_version will always change at exactly the same time in the
+> same transactions, there are no inherent sub-timestamp granularity
+> problems with ctime within XFS. Any deficiency in ctime resolution
+> comes solely from the granularity of the VFS inode timestamp
+> functions.
+>=20
+> And so if current_time() was to provide fine-grained nanosecond
+> timestamp resolution for exported XFS filesystems (i.e. use
+> ktime_get_real_ts64() conditionally), then it seems to me that the
+> nfsd i_version function becomes completely redundant.
+>=20
+> i.e. we are pretty much guaranteed that ctime on exported
+> filesystems will always be different for explicit modifications to
+> the same inode, and hence we can just use ctime as the version
+> change identifier without needing any on-disk format changes at all.
+>=20
+> And we can optimise away that overhead when the filesystem is not
+> exported by just using the coarse timestamps because there is no
+> need for sub-timer-tick disambiguation of single file
+> modifications....
+>=20
+
+Ok, so conditional on (maybe) a per fstype flag, and whether the
+filesystem is exported?
+
+It's not trivial to tell whether something is exported though. We
+typically only do that sort of checking within nfsd. That involves an
+upcall into mountd, at a minimum.
+
+I don't think you want to be plumbing calls to exportfs into xfs for
+this. It may be simpler to just add a new on-disk counter and be done
+with it.
+
+
+> Hence it appears to me that with the new i_version specification
+> that there's an avenue out of this problem entirely that is "nfsd
+> needs to use ctime, not i_version". This solution seems generic
+> enough that filesystems with existing on-disk nanosecond timestamp
+> granularity would no longer need explicit on-disk support for the
+> nfsd i_version functionality, yes?
+>=20
+
+Pretty much.
+
+My understanding has always been that it's not the on-disk format that's
+the limiting factor, but the resolution of in-kernel timestamp sources.
+If ktime_get_real_ts64 has real ns granularity, then that should be
+sufficient (at least for the moment). I'm unclear on the performance
+implications with such a change though.
+
+You had also mentioned a while back that there was some desire for
+femtosecond resolution on timestamps. Does that change the calculus here
+at all? Note that the i_version is not subject to any timestamp
+granularity issues.
+
+If you want nfsd to start using the ctime for i_version with xfs, then
+you can just turn off the SB_I_IVERSION flag. You will need to do some
+work though to keep your "special" i_version that also counts atime
+updates working once you turn that off. You'll probably want to do that
+anyway though since the semantics for xfs's version counter are
+different from everyone else's.
+
+If this is what you choose to do for xfs, then the question becomes: who
+is going to do that timestamp rework?
+
+Note that there are two other lingering issues with i_version. Neither
+of these are xfs-specific, but they may inform the changes you want to
+make there:
+
+1/ the ctime and i_version can roll backward on a crash.
+
+2/ the ctime and i_version are both currently updated before write data
+is copied to the pagecache. It would be ideal if that were done
+afterward instead. (FWIW, I have some draft patches for btrfs and ext4
+for this, but they need a lot more testing.)
+
+--=20
+Jeff Layton <jlayton@kernel.org>
