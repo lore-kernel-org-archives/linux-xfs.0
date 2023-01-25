@@ -2,46 +2,49 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCB2FC54EED
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Jan 2023 09:10:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E35EBC61D9D
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Jan 2023 09:31:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234840AbjAYJKG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Jan 2023 04:10:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34992 "EHLO
+        id S235172AbjAYJbL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Jan 2023 04:31:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47318 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233330AbjAYJKF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jan 2023 04:10:05 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 565284392A;
-        Wed, 25 Jan 2023 01:09:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=hk+0OseVD3OO+ksIzhtEU5LrZV8KXEqXC3zpbOGn/ls=; b=L8qSvLf3dSoKSiW2HygcIYLOca
-        21DCM8/DXgLnxfiohHpsT3lhw9RWtU9FTk5Q6obziletdupyk3K9yzioMkIYd3jrdHr1S7LLdHH60
-        lZs07uhtEIXDyuP/MuCEsO9tg/Dya8cSzK7mCmRjV2qBie+7+Y5IGxB0daAwFzjqMhaFzpySf6YXo
-        2vEVk+F84A4V2/U10C6G40hQA6YENiuXDX3aMgZ9vALWKqZFZvyNzBmwUbYJ2TrPobnkNV5WcsTzh
-        MlPPu5bEJs9JKwDVT1dVMYwpGrr2HHxIHWMyvY2cQrGsAsrDt+nZKoGt/dS9qSUmXOpPkxoiUPomG
-        V0Od16xg==;
-Received: from j130084.upc-j.chello.nl ([24.132.130.84] helo=noisy.programming.kicks-ass.net)
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pKbml-005neC-3H; Wed, 25 Jan 2023 09:09:39 +0000
-Received: from hirez.programming.kicks-ass.net (hirez.programming.kicks-ass.net [192.168.1.225])
+        with ESMTP id S234420AbjAYJbK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jan 2023 04:31:10 -0500
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2882353B17;
+        Wed, 25 Jan 2023 01:30:56 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits))
-        (Client did not present a certificate)
-        by noisy.programming.kicks-ass.net (Postfix) with ESMTPS id 914AC3001E7;
-        Wed, 25 Jan 2023 10:09:37 +0100 (CET)
-Received: by hirez.programming.kicks-ass.net (Postfix, from userid 1000)
-        id 673382C247607; Wed, 25 Jan 2023 10:09:37 +0100 (CET)
-Date:   Wed, 25 Jan 2023 10:09:37 +0100
-From:   Peter Zijlstra <peterz@infradead.org>
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id CB04121C83;
+        Wed, 25 Jan 2023 09:30:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1674639054; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=jognpwZWDP/caNk47/2I5pB+VrjaxgWmcyaDbH1onsg=;
+        b=Pij8ssoJlw6k6tQr48jFXJyevDWch308vx0CLomRDmV84uEdMgTC6NhqR8VCkgI74II7DW
+        anm6YuwD0GfDOi17b+9Zs5S20/ilyumOWkOAGicsthADYQDP18s2AfYp6RzP5d5hjTOUwm
+        W4uNWFQcSkUDrOF5p/6xahiK2Zzyzto=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 684E91358F;
+        Wed, 25 Jan 2023 09:30:54 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id yJRSGc720GMeHAAAMHmgww
+        (envelope-from <mhocko@suse.com>); Wed, 25 Jan 2023 09:30:54 +0000
+Date:   Wed, 25 Jan 2023 10:30:53 +0100
+From:   Michal Hocko <mhocko@suse.com>
 To:     Suren Baghdasaryan <surenb@google.com>
 Cc:     akpm@linux-foundation.org, michel@lespinasse.org,
-        jglisse@google.com, mhocko@suse.com, vbabka@suse.cz,
-        hannes@cmpxchg.org, mgorman@techsingularity.net, dave@stgolabs.net,
-        willy@infradead.org, liam.howlett@oracle.com,
+        jglisse@google.com, vbabka@suse.cz, hannes@cmpxchg.org,
+        mgorman@techsingularity.net, dave@stgolabs.net,
+        willy@infradead.org, liam.howlett@oracle.com, peterz@infradead.org,
         ldufour@linux.ibm.com, paulmck@kernel.org, luto@kernel.org,
         songliubraving@fb.com, peterx@redhat.com, david@redhat.com,
         dhowells@redhat.com, hughd@google.com, bigeasy@linutronix.de,
@@ -108,35 +111,37 @@ Cc:     akpm@linux-foundation.org, michel@lespinasse.org,
         linux-perf-users@vger.kernel.org, kasan-dev@googlegroups.com,
         selinux@vger.kernel.org, alsa-devel@alsa-project.org,
         kernel-team@android.com
-Subject: Re: [PATCH v2 1/6] mm: introduce vma->vm_flags modifier functions
-Message-ID: <Y9Dx0cPXF2yoLwww@hirez.programming.kicks-ass.net>
+Subject: Re: [PATCH v2 3/6] mm: replace vma->vm_flags direct modifications
+ with modifier calls
+Message-ID: <Y9D2zXpy+9iyZNun@dhcp22.suse.cz>
 References: <20230125083851.27759-1-surenb@google.com>
- <20230125083851.27759-2-surenb@google.com>
+ <20230125083851.27759-4-surenb@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230125083851.27759-2-surenb@google.com>
+In-Reply-To: <20230125083851.27759-4-surenb@google.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 25, 2023 at 12:38:46AM -0800, Suren Baghdasaryan wrote:
+On Wed 25-01-23 00:38:48, Suren Baghdasaryan wrote:
+> Replace direct modifications to vma->vm_flags with calls to modifier
+> functions to be able to track flag changes and to keep vma locking
+> correctness.
 
-> diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
-> index 2d6d790d9bed..6c7c70bf50dd 100644
-> --- a/include/linux/mm_types.h
-> +++ b/include/linux/mm_types.h
-> @@ -491,7 +491,13 @@ struct vm_area_struct {
->  	 * See vmf_insert_mixed_prot() for discussion.
->  	 */
->  	pgprot_t vm_page_prot;
-> -	unsigned long vm_flags;		/* Flags, see mm.h. */
-> +
-> +	/*
-> +	 * Flags, see mm.h.
-> +	 * WARNING! Do not modify directly.
-> +	 * Use {init|reset|set|clear|mod}_vm_flags() functions instead.
-> +	 */
-> +	unsigned long vm_flags;
+Is this a manual (git grep) based work or have you used Coccinele for
+the patch generation?
 
-We have __private and ACCESS_PRIVATE() to help with enforcing this.
+My potentially incomplete check
+$ git grep ">[[:space:]]*vm_flags[[:space:]]*[&|^]="
+
+shows that nothing should be left after this. There is still quite a lot
+of direct checks of the flags (more than 600). Maybe it would be good to
+make flags accessible only via accessors which would also prevent any
+future direct setting of those flags in uncontrolled way as well.
+
+Anyway
+Acked-by: Michal Hocko <mhocko@suse.com>
+-- 
+Michal Hocko
+SUSE Labs
