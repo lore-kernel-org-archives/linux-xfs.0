@@ -2,204 +2,160 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA467C27C76
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Jan 2023 16:33:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12A30C61DA3
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Jan 2023 16:50:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235253AbjAYQdC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Jan 2023 11:33:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32896 "EHLO
+        id S235836AbjAYQus (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Jan 2023 11:50:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42298 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235225AbjAYQdB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jan 2023 11:33:01 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3082BB89;
-        Wed, 25 Jan 2023 08:32:59 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6FA5060F78;
-        Wed, 25 Jan 2023 16:32:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D21F8C433D2;
-        Wed, 25 Jan 2023 16:32:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1674664378;
-        bh=kPQD0F+AbRySAe3GWkf8YSP68mkwv/mW9AHC1Kqq6pA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=M2MV7GGlujESvU3sOc4Uy1lbhBp0yjFBsj9hw2Wr1voFM/zs60qgEozj6vm2gRR8P
-         xYdQoFzXRgOcLS/A2NYg6gblymfjltxvs1HTTslmVNRvvCfwyrlYWBChnfllabrbjm
-         YVphdxl52N5i4NrAzGqDhaX8fxuxw6LyXgM8DyfCgSP+JvbSQXsevG4MYrxi0MvENj
-         d9sjDijsaqMgDPj+J7+BtgPSVxy1H5D682R3Zoc7blgAnMBNWY5yzq2gTIRim1C1z6
-         cAuHEg+xp2irE6IVjViS1V7Jl9shb1KqiDWhpXr3vZT4NgwiuAdI+wOptRckzBWc5J
-         iAxIsaIffvMpQ==
-Date:   Wed, 25 Jan 2023 08:32:58 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Re: replacement i_version counter for xfs
-Message-ID: <Y9FZupBCyPGCMFBd@magnolia>
-References: <57c413ed362c0beab06b5d83b7fc4b930c7662c4.camel@kernel.org>
- <20230125000227.GM360264@dread.disaster.area>
- <86f993a69a5be276164c4d3fc1951ff4bde881be.camel@kernel.org>
+        with ESMTP id S235844AbjAYQuQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jan 2023 11:50:16 -0500
+Received: from mail-ot1-x32f.google.com (mail-ot1-x32f.google.com [IPv6:2607:f8b0:4864:20::32f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DB3C13D78
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2023 08:50:15 -0800 (PST)
+Received: by mail-ot1-x32f.google.com with SMTP id cm26-20020a056830651a00b00684e5c0108dso11453330otb.9
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2023 08:50:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=9oBkpwDuDP6Raat/HRHsNpx8MqzIjjZSJojQEumXoyE=;
+        b=telMSbMEB1I/JdT8E+AOlYPkvLPDxj1UCnywL1f/zz+GxB6zyzUgN+Q3Q48l8AYc8X
+         qS5rmRFlzboD9JIVNM4srPZju+Dc0OvfYTnyPjpp4sHdEutwmKfLXtqzcN+4YmFBRVgu
+         A3oTpxaFO/E/7LaM1iu3pe6Iv0CmRV+MC10+sbVUAqr2eeBPD17IhS27buTMH3bCJoMu
+         fEQq5XzvwDAqtF1fp8r2H4g3vh98tijISo+CkjBRkXWvZWGfdkjpWZzF8VgIKtCc5sLs
+         +bZFNae0CmrxcmnBVuga8Dg0CQRlWnW+6m8p+riuFjzQ8BSrHATHKU3+MoO2RS3dWuby
+         cPfQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=9oBkpwDuDP6Raat/HRHsNpx8MqzIjjZSJojQEumXoyE=;
+        b=HopowR5+r95U15U2JUJCJkwMjhDQ9Ebwz1gXEIQoui5uKNIto6bOMi8340GPSwGn2H
+         O/3hSnH240Lrh4/1tWAGlvpJZD5HRQETvehBW7uAaHC4EAx+S6gUVwgDA6O1WHxUp+CR
+         euACGAVbup7LMucYlrO8fmYnIj86uLdBkMPnXIEbIXg90hYamjE9qz7TKyhS4ZFROK8Q
+         QDHKr/KuLWI9yYmtNNWBVuJPgZxUXXMa2V3P5LmvH6jfeY0nt6jovbLvqDNkEPcd6zSW
+         Q5iwDp+ZCLJ6ZcdtYFKMlvWp48X5eBMcSjl9WJq5AbAs6iGkDLSXnVTBOrRrHb90puKP
+         gU3A==
+X-Gm-Message-State: AFqh2krbpUNke2pIychCipmkkRhjltP4+ggRDF/gWsnEV2PYYr9cumsS
+        dZE5Qqx+XMksJxVD6RUMY56Ym6Bg1dZGK+T2cbXSYSfTAOCucsEKIUY=
+X-Google-Smtp-Source: AMrXdXsah5c2WKVW38d6ZSr7pPop+n/mEJC53KDRGLQOXrHcU20AK6F0ktCN8HrtzVAtxjIN7wyafP19A/nGyLOtNU8=
+X-Received: by 2002:a81:1d2:0:b0:433:f1c0:3f1c with SMTP id
+ 201-20020a8101d2000000b00433f1c03f1cmr4401576ywb.438.1674665403087; Wed, 25
+ Jan 2023 08:50:03 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <86f993a69a5be276164c4d3fc1951ff4bde881be.camel@kernel.org>
+References: <20230125083851.27759-1-surenb@google.com> <20230125083851.27759-2-surenb@google.com>
+ <Y9Dx0cPXF2yoLwww@hirez.programming.kicks-ass.net>
+In-Reply-To: <Y9Dx0cPXF2yoLwww@hirez.programming.kicks-ass.net>
+From:   Suren Baghdasaryan <surenb@google.com>
+Date:   Wed, 25 Jan 2023 08:49:50 -0800
+Message-ID: <CAJuCfpEcVCZaCGzc-Wim25eaV5e6YG1YJAAdKwZ6JHViB0z8aw@mail.gmail.com>
+Subject: Re: [PATCH v2 1/6] mm: introduce vma->vm_flags modifier functions
+To:     Peter Zijlstra <peterz@infradead.org>
+Cc:     akpm@linux-foundation.org, michel@lespinasse.org,
+        jglisse@google.com, mhocko@suse.com, vbabka@suse.cz,
+        hannes@cmpxchg.org, mgorman@techsingularity.net, dave@stgolabs.net,
+        willy@infradead.org, liam.howlett@oracle.com,
+        ldufour@linux.ibm.com, paulmck@kernel.org, luto@kernel.org,
+        songliubraving@fb.com, peterx@redhat.com, david@redhat.com,
+        dhowells@redhat.com, hughd@google.com, bigeasy@linutronix.de,
+        kent.overstreet@linux.dev, punit.agrawal@bytedance.com,
+        lstoakes@gmail.com, peterjung1337@gmail.com, rientjes@google.com,
+        axelrasmussen@google.com, joelaf@google.com, minchan@google.com,
+        jannh@google.com, shakeelb@google.com, tatashin@google.com,
+        edumazet@google.com, gthelen@google.com, gurua@google.com,
+        arjunroy@google.com, soheil@google.com, hughlynch@google.com,
+        leewalsh@google.com, posk@google.com, will@kernel.org,
+        aneesh.kumar@linux.ibm.com, npiggin@gmail.com,
+        chenhuacai@kernel.org, tglx@linutronix.de, mingo@redhat.com,
+        bp@alien8.de, dave.hansen@linux.intel.com, richard@nod.at,
+        anton.ivanov@cambridgegreys.com, johannes@sipsolutions.net,
+        qianweili@huawei.com, wangzhou1@hisilicon.com,
+        herbert@gondor.apana.org.au, davem@davemloft.net, vkoul@kernel.org,
+        airlied@gmail.com, daniel@ffwll.ch,
+        maarten.lankhorst@linux.intel.com, mripard@kernel.org,
+        tzimmermann@suse.de, l.stach@pengutronix.de,
+        krzysztof.kozlowski@linaro.org, patrik.r.jakobsson@gmail.com,
+        matthias.bgg@gmail.com, robdclark@gmail.com,
+        quic_abhinavk@quicinc.com, dmitry.baryshkov@linaro.org,
+        tomba@kernel.org, hjc@rock-chips.com, heiko@sntech.de,
+        ray.huang@amd.com, kraxel@redhat.com, sre@kernel.org,
+        mcoquelin.stm32@gmail.com, alexandre.torgue@foss.st.com,
+        tfiga@chromium.org, m.szyprowski@samsung.com, mchehab@kernel.org,
+        dimitri.sivanich@hpe.com, zhangfei.gao@linaro.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        dgilbert@interlog.com, hdegoede@redhat.com, mst@redhat.com,
+        jasowang@redhat.com, alex.williamson@redhat.com, deller@gmx.de,
+        jayalk@intworks.biz, viro@zeniv.linux.org.uk, nico@fluxnic.net,
+        xiang@kernel.org, chao@kernel.org, tytso@mit.edu,
+        adilger.kernel@dilger.ca, miklos@szeredi.hu,
+        mike.kravetz@oracle.com, muchun.song@linux.dev, bhe@redhat.com,
+        andrii@kernel.org, yoshfuji@linux-ipv6.org, dsahern@kernel.org,
+        kuba@kernel.org, pabeni@redhat.com, perex@perex.cz, tiwai@suse.com,
+        haojian.zhuang@gmail.com, robert.jarzmik@free.fr,
+        linux-mm@kvack.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, x86@kernel.org,
+        linux-kernel@vger.kernel.org, linux-graphics-maintainer@vmware.com,
+        linux-ia64@vger.kernel.org, linux-arch@vger.kernel.org,
+        loongarch@lists.linux.dev, kvm@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-sgx@vger.kernel.org,
+        linux-um@lists.infradead.org, linux-acpi@vger.kernel.org,
+        linux-crypto@vger.kernel.org, nvdimm@lists.linux.dev,
+        dmaengine@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, etnaviv@lists.freedesktop.org,
+        linux-samsung-soc@vger.kernel.org, intel-gfx@lists.freedesktop.org,
+        linux-mediatek@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+        freedreno@lists.freedesktop.org,
+        linux-rockchip@lists.infradead.org, linux-tegra@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-rdma@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-accelerators@lists.ozlabs.org, sparclinux@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-staging@lists.linux.dev,
+        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
+        netdev@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        linux-aio@kvack.org, linux-fsdevel@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        devel@lists.orangefs.org, kexec@lists.infradead.org,
+        linux-xfs@vger.kernel.org, bpf@vger.kernel.org,
+        linux-perf-users@vger.kernel.org, kasan-dev@googlegroups.com,
+        selinux@vger.kernel.org, alsa-devel@alsa-project.org,
+        kernel-team@android.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 25, 2023 at 06:47:12AM -0500, Jeff Layton wrote:
-> On Wed, 2023-01-25 at 11:02 +1100, Dave Chinner wrote:
-> > On Tue, Jan 24, 2023 at 07:56:09AM -0500, Jeff Layton wrote:
-> > > A few months ago, I posted a patch to make xfs not bump its i_version
-> > > counter on atime updates. Dave Chinner NAK'ed that patch, mentioning
-> > > that xfs would need to replace it with an entirely new field as the
-> > > existing counter is used for other purposes and its semantics are set in
-> > > stone.
-> > > 
-> > > Has anything been done toward that end?
-> > 
-> > No, because we don't have official specification of the behaviour
-> > the nfsd subsystem requires merged into the kernel yet.
-> > 
-> 
-> Ok. Hopefully that will be addressed in v6.3.
-> 
-> > > Should I file a bug report or something?
-> > 
-> > There's nothing we can really do until the new specification is set
-> > in stone. Filing a bug report won't change anything material.
-> > 
-> > As it is, I'm guessing that you desire the behaviour to be as you
-> > described in the iversion patchset you just posted. That is
-> > effectively:
-> > 
-> >   * The change attribute (i_version) is mandated by NFSv4 and is mostly for
-> >   * knfsd, but is also used for other purposes (e.g. IMA). The i_version must
-> > - * appear different to observers if there was a change to the inode's data or
-> > - * metadata since it was last queried.
-> > + * appear larger to observers if there was an explicit change to the inode's
-> > + * data or metadata since it was last queried.
-> > 
-> > i.e. the definition is changing from *any* metadata or data change
-> > to *explicit* metadata/data changes, right? i.e. it should only
-> > change when ctime changes?
-> > 
-> 
-> Yes.
-> 
-> > IIUC the rest of the justification for i_version is that ctime might
-> > lack the timestamp granularity to disambiguate sub-timestamp
-> > granularity changes, so i_version is needed to bridge that gap.
-> > 
-> > Given that XFS has nanosecond timestamp resolution in the on-disk
-> > format, both i_version and ctime changes are journalled, and
-> > ctime/i_version will always change at exactly the same time in the
-> > same transactions, there are no inherent sub-timestamp granularity
-> > problems with ctime within XFS. Any deficiency in ctime resolution
-> > comes solely from the granularity of the VFS inode timestamp
-> > functions.
-> > 
-> > And so if current_time() was to provide fine-grained nanosecond
-> > timestamp resolution for exported XFS filesystems (i.e. use
-> > ktime_get_real_ts64() conditionally), then it seems to me that the
-> > nfsd i_version function becomes completely redundant.
-> > 
-> > i.e. we are pretty much guaranteed that ctime on exported
-> > filesystems will always be different for explicit modifications to
-> > the same inode, and hence we can just use ctime as the version
-> > change identifier without needing any on-disk format changes at all.
-> > 
-> > And we can optimise away that overhead when the filesystem is not
-> > exported by just using the coarse timestamps because there is no
-> > need for sub-timer-tick disambiguation of single file
-> > modifications....
-> > 
-> 
-> Ok, so conditional on (maybe) a per fstype flag, and whether the
-> filesystem is exported?
-> 
-> It's not trivial to tell whether something is exported though. We
-> typically only do that sort of checking within nfsd. That involves an
-> upcall into mountd, at a minimum.
-> 
-> I don't think you want to be plumbing calls to exportfs into xfs for
-> this. It may be simpler to just add a new on-disk counter and be done
-> with it.
+On Wed, Jan 25, 2023 at 1:10 AM Peter Zijlstra <peterz@infradead.org> wrote:
+>
+> On Wed, Jan 25, 2023 at 12:38:46AM -0800, Suren Baghdasaryan wrote:
+>
+> > diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
+> > index 2d6d790d9bed..6c7c70bf50dd 100644
+> > --- a/include/linux/mm_types.h
+> > +++ b/include/linux/mm_types.h
+> > @@ -491,7 +491,13 @@ struct vm_area_struct {
+> >        * See vmf_insert_mixed_prot() for discussion.
+> >        */
+> >       pgprot_t vm_page_prot;
+> > -     unsigned long vm_flags;         /* Flags, see mm.h. */
+> > +
+> > +     /*
+> > +      * Flags, see mm.h.
+> > +      * WARNING! Do not modify directly.
+> > +      * Use {init|reset|set|clear|mod}_vm_flags() functions instead.
+> > +      */
+> > +     unsigned long vm_flags;
+>
+> We have __private and ACCESS_PRIVATE() to help with enforcing this.
 
-Simpler for you, maybe.  Ondisk format changes are a PITA to evaluate
-and come with a long support burden.  We'd also have to write
-xfs-specific testcases to ensure that the counter updates according to
-specification.
+Thanks for pointing this out, Peter! I guess for that I'll need to
+convert all read accesses and provide get_vm_flags() too? That will
+cause some additional churt (a quick search shows 801 hits over 248
+files) but maybe it's worth it? I think Michal suggested that too in
+another patch. Should I do that while we are at it?
 
-Poking the kernel to provide sub-jiffies timestamp granularity when
-required stays within the existing ondisk format, can be added to any
-filesystem with sufficient timestamp granularity, and can be the subject
-of a generic/ vfs test.
-
-I also wonder if it's even necessary to use ktime_get_real_ts64 in all
-cases -- can we sample the coarse granularity timestamp, and only go for
-the higher resolution one if the first matches the ctime?
-
-> > Hence it appears to me that with the new i_version specification
-> > that there's an avenue out of this problem entirely that is "nfsd
-> > needs to use ctime, not i_version". This solution seems generic
-> > enough that filesystems with existing on-disk nanosecond timestamp
-> > granularity would no longer need explicit on-disk support for the
-> > nfsd i_version functionality, yes?
-> > 
-> 
-> Pretty much.
-> 
-> My understanding has always been that it's not the on-disk format that's
-> the limiting factor, but the resolution of in-kernel timestamp sources.
-> If ktime_get_real_ts64 has real ns granularity, then that should be
-> sufficient (at least for the moment). I'm unclear on the performance
-> implications with such a change though.
-
-I bet you can find some arm board or something with a terrible
-clocksource that will take forever to produce high resolution timestamps
-and get it wrong.
-
-> You had also mentioned a while back that there was some desire for
-> femtosecond resolution on timestamps. Does that change the calculus here
-> at all? Note that the i_version is not subject to any timestamp
-> granularity issues.
-
-I personally don't care to go enlarge xfs timestamps even further to
-support sub-ns resolution, but I see the theoretical argument for
-needing them on an 8GHz Intel i9-13900KS(paceheater)...
-
-> If you want nfsd to start using the ctime for i_version with xfs, then
-> you can just turn off the SB_I_IVERSION flag. You will need to do some
-> work though to keep your "special" i_version that also counts atime
-> updates working once you turn that off. You'll probably want to do that
-> anyway though since the semantics for xfs's version counter are
-> different from everyone else's.
-> 
-> If this is what you choose to do for xfs, then the question becomes: who
-> is going to do that timestamp rework?
-> 
-> Note that there are two other lingering issues with i_version. Neither
-> of these are xfs-specific, but they may inform the changes you want to
-> make there:
-> 
-> 1/ the ctime and i_version can roll backward on a crash.
-> 
-> 2/ the ctime and i_version are both currently updated before write data
-> is copied to the pagecache. It would be ideal if that were done
-> afterward instead. (FWIW, I have some draft patches for btrfs and ext4
-> for this, but they need a lot more testing.)
-
-You might also want some means for xfs to tell the vfs that it already
-did the timestamp update (because, say, we had to allocate blocks).
-I wonder what people will say when we have to run a transaction before
-the write to peel off suid bits and another one after to update ctime.
-
---D
-
-> 
-> -- 
-> Jeff Layton <jlayton@kernel.org>
+>
