@@ -2,183 +2,146 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35C6CC05027
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Jan 2023 12:02:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EBC2C61DA4
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Jan 2023 14:49:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237246AbjAZMCi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 Jan 2023 07:02:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60286 "EHLO
+        id S232307AbjAZOtB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Jan 2023 09:49:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233130AbjAZMCh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Jan 2023 07:02:37 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF2FA62263;
-        Thu, 26 Jan 2023 04:02:35 -0800 (PST)
+        with ESMTP id S229473AbjAZOsz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Jan 2023 09:48:55 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 606A94489;
+        Thu, 26 Jan 2023 06:48:53 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 75DEF617AD;
-        Thu, 26 Jan 2023 12:02:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8E8FC433EF;
-        Thu, 26 Jan 2023 12:02:32 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id EE0DA61856;
+        Thu, 26 Jan 2023 14:48:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05241C4339B;
+        Thu, 26 Jan 2023 14:48:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1674734554;
-        bh=83fTWvpaEiAzVDaeYFz2GUb2OOww4EG+o2MOVi11zGU=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=lnaSaz9xP7pd9evixsmXaWhTU8ZegXDyqUAlmc8ci4N4ldJSkHKUm/LDiv76C+wI/
-         VAZcsfEFGwsZ7vEiZl7uaRPzO4iAwPwrHIZbX/B7SQmFvkXiIJHI2aFoAgPKXhYVOV
-         vbNYMAKf938rfJ8pPRRdumhaz4o+o8XZXZSRdgSokJWNywdMWrSlJLCRLlbyTT9MiJ
-         MR4EaTs+0pGmTGeZniK12fbJ9Pdob1oQpmaAtdAsEskRxnKSAxlng8HJjseWLnEsGY
-         gfh2g5MSiUQvE/W+va/0RqGUOImd7/r/EVeGwOSNHaNTcJFAUmBSiNg++yhOB+WonH
-         uT5l6ovxjVpeA==
-Message-ID: <5f27d8b64ad64905ada344e299cf00e55b8ac895.camel@kernel.org>
-Subject: Re: [PATCH v8 RESEND 2/8] fs: clarify when the i_version counter
- must be updated
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Jan Kara <jack@suse.cz>
-Cc:     tytso@mit.edu, adilger.kernel@dilger.ca, djwong@kernel.org,
-        david@fromorbit.com, trondmy@hammerspace.com, neilb@suse.de,
-        viro@zeniv.linux.org.uk, zohar@linux.ibm.com, xiubli@redhat.com,
-        chuck.lever@oracle.com, lczerner@redhat.com, bfields@fieldses.org,
-        brauner@kernel.org, fweimer@redhat.com,
-        linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-xfs@vger.kernel.org, Colin Walters <walters@verbum.org>
-Date:   Thu, 26 Jan 2023 07:02:31 -0500
-In-Reply-To: <20230126113642.eenghs2wvfrlnlak@quack3>
-References: <20230124193025.185781-1-jlayton@kernel.org>
-         <20230124193025.185781-3-jlayton@kernel.org>
-         <20230125160625.zenzybjgie224jf6@quack3>
-         <3c5cf7c7f9e206a3d7c4253de52015dda97ef41e.camel@kernel.org>
-         <20230126113642.eenghs2wvfrlnlak@quack3>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.3 (3.46.3-1.fc37) 
+        s=k20201202; t=1674744532;
+        bh=WNohoknU9nLfbwIXeO77neZ4yMyv64MASZK2UIAfOfc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=OyaVsT5ePzTFS76R1FH5KLxOUgzscan6sLv55lgf+totKkalpj5P4hTJ0CFzpg2nB
+         FjnAcEI6WBL0tfwF/TTw8b+wwY6a9pfQDEoFaNDhDzv4Bx4E//TKL2HIis05iqFTqA
+         6cWnwUhcKJagQmydnhE9MWdKN98RZA7QH0/g2op6Qc+WX5kkWc6P8AxP1IQok4d4Iv
+         rC+rDq5bfpCpp87TX2zmlNbavkxhh4pjEZT5VQ1/5GQQQR5j3P3SiDxYUla0TLmDmY
+         tHoanGw9DWG+oAt/RnrhsxsQ7gltrsJN75kvWssUX4MOKayClNcjWM9UluK5fqquNs
+         P9OGQuC06AeFQ==
+Date:   Thu, 26 Jan 2023 16:48:04 +0200
+From:   Mike Rapoport <rppt@kernel.org>
+To:     Suren Baghdasaryan <surenb@google.com>
+Cc:     akpm@linux-foundation.org, michel@lespinasse.org,
+        jglisse@google.com, mhocko@suse.com, vbabka@suse.cz,
+        hannes@cmpxchg.org, mgorman@techsingularity.net, dave@stgolabs.net,
+        willy@infradead.org, liam.howlett@oracle.com, peterz@infradead.org,
+        ldufour@linux.ibm.com, paulmck@kernel.org, luto@kernel.org,
+        songliubraving@fb.com, peterx@redhat.com, david@redhat.com,
+        dhowells@redhat.com, hughd@google.com, bigeasy@linutronix.de,
+        kent.overstreet@linux.dev, punit.agrawal@bytedance.com,
+        lstoakes@gmail.com, peterjung1337@gmail.com, rientjes@google.com,
+        axelrasmussen@google.com, joelaf@google.com, minchan@google.com,
+        jannh@google.com, shakeelb@google.com, tatashin@google.com,
+        edumazet@google.com, gthelen@google.com, gurua@google.com,
+        arjunroy@google.com, soheil@google.com, hughlynch@google.com,
+        leewalsh@google.com, posk@google.com, will@kernel.org,
+        aneesh.kumar@linux.ibm.com, npiggin@gmail.com,
+        chenhuacai@kernel.org, tglx@linutronix.de, mingo@redhat.com,
+        bp@alien8.de, dave.hansen@linux.intel.com, richard@nod.at,
+        anton.ivanov@cambridgegreys.com, johannes@sipsolutions.net,
+        qianweili@huawei.com, wangzhou1@hisilicon.com,
+        herbert@gondor.apana.org.au, davem@davemloft.net, vkoul@kernel.org,
+        airlied@gmail.com, daniel@ffwll.ch,
+        maarten.lankhorst@linux.intel.com, mripard@kernel.org,
+        tzimmermann@suse.de, l.stach@pengutronix.de,
+        krzysztof.kozlowski@linaro.org, patrik.r.jakobsson@gmail.com,
+        matthias.bgg@gmail.com, robdclark@gmail.com,
+        quic_abhinavk@quicinc.com, dmitry.baryshkov@linaro.org,
+        tomba@kernel.org, hjc@rock-chips.com, heiko@sntech.de,
+        ray.huang@amd.com, kraxel@redhat.com, sre@kernel.org,
+        mcoquelin.stm32@gmail.com, alexandre.torgue@foss.st.com,
+        tfiga@chromium.org, m.szyprowski@samsung.com, mchehab@kernel.org,
+        dimitri.sivanich@hpe.com, zhangfei.gao@linaro.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        dgilbert@interlog.com, hdegoede@redhat.com, mst@redhat.com,
+        jasowang@redhat.com, alex.williamson@redhat.com, deller@gmx.de,
+        jayalk@intworks.biz, viro@zeniv.linux.org.uk, nico@fluxnic.net,
+        xiang@kernel.org, chao@kernel.org, tytso@mit.edu,
+        adilger.kernel@dilger.ca, miklos@szeredi.hu,
+        mike.kravetz@oracle.com, muchun.song@linux.dev, bhe@redhat.com,
+        andrii@kernel.org, yoshfuji@linux-ipv6.org, dsahern@kernel.org,
+        kuba@kernel.org, pabeni@redhat.com, perex@perex.cz, tiwai@suse.com,
+        haojian.zhuang@gmail.com, robert.jarzmik@free.fr,
+        linux-mm@kvack.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, x86@kernel.org,
+        linux-kernel@vger.kernel.org, linux-graphics-maintainer@vmware.com,
+        linux-ia64@vger.kernel.org, linux-arch@vger.kernel.org,
+        loongarch@lists.linux.dev, kvm@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-sgx@vger.kernel.org,
+        linux-um@lists.infradead.org, linux-acpi@vger.kernel.org,
+        linux-crypto@vger.kernel.org, nvdimm@lists.linux.dev,
+        dmaengine@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, etnaviv@lists.freedesktop.org,
+        linux-samsung-soc@vger.kernel.org, intel-gfx@lists.freedesktop.org,
+        linux-mediatek@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+        freedreno@lists.freedesktop.org,
+        linux-rockchip@lists.infradead.org, linux-tegra@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-rdma@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-accelerators@lists.ozlabs.org, sparclinux@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-staging@lists.linux.dev,
+        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
+        netdev@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        linux-aio@kvack.org, linux-fsdevel@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        devel@lists.orangefs.org, kexec@lists.infradead.org,
+        linux-xfs@vger.kernel.org, bpf@vger.kernel.org,
+        linux-perf-users@vger.kernel.org, kasan-dev@googlegroups.com,
+        selinux@vger.kernel.org, alsa-devel@alsa-project.org,
+        kernel-team@android.com
+Subject: Re: [PATCH v2 6/6] mm: export dump_mm()
+Message-ID: <Y9KSpNJ4y0GMwkrW@kernel.org>
+References: <20230125083851.27759-1-surenb@google.com>
+ <20230125083851.27759-7-surenb@google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230125083851.27759-7-surenb@google.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, 2023-01-26 at 12:36 +0100, Jan Kara wrote:
-> On Thu 26-01-23 05:54:16, Jeff Layton wrote:
-> > On Wed, 2023-01-25 at 17:06 +0100, Jan Kara wrote:
-> > > On Tue 24-01-23 14:30:19, Jeff Layton wrote:
-> > > > The i_version field in the kernel has had different semantics over
-> > > > the decades, but NFSv4 has certain expectations. Update the comment=
-s
-> > > > in iversion.h to describe when the i_version must change.
-> > > >=20
-> > > > Cc: Colin Walters <walters@verbum.org>
-> > > > Cc: NeilBrown <neilb@suse.de>
-> > > > Cc: Trond Myklebust <trondmy@hammerspace.com>
-> > > > Cc: Dave Chinner <david@fromorbit.com>
-> > > > Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> > >=20
-> > > Looks good to me. But one note below:
-> > >=20
-> > > > diff --git a/include/linux/iversion.h b/include/linux/iversion.h
-> > > > index 6755d8b4f20b..fced8115a5f4 100644
-> > > > --- a/include/linux/iversion.h
-> > > > +++ b/include/linux/iversion.h
-> > > > @@ -9,8 +9,25 @@
-> > > >   * ---------------------------
-> > > >   * The change attribute (i_version) is mandated by NFSv4 and is mo=
-stly for
-> > > >   * knfsd, but is also used for other purposes (e.g. IMA). The i_ve=
-rsion must
-> > > > - * appear different to observers if there was a change to the inod=
-e's data or
-> > > > - * metadata since it was last queried.
-> > > > + * appear larger to observers if there was an explicit change to t=
-he inode's
-> > > > + * data or metadata since it was last queried.
-> > > > + *
-> > > > + * An explicit change is one that would ordinarily result in a cha=
-nge to the
-> > > > + * inode status change time (aka ctime). i_version must appear to =
-change, even
-> > > > + * if the ctime does not (since the whole point is to avoid missin=
-g updates due
-> > > > + * to timestamp granularity). If POSIX or other relevant spec mand=
-ates that the
-> > > > + * ctime must change due to an operation, then the i_version count=
-er must be
-> > > > + * incremented as well.
-> > > > + *
-> > > > + * Making the i_version update completely atomic with the operatio=
-n itself would
-> > > > + * be prohibitively expensive. Traditionally the kernel has update=
-d the times on
-> > > > + * directories after an operation that changes its contents. For r=
-egular files,
-> > > > + * the ctime is usually updated before the data is copied into the=
- cache for a
-> > > > + * write. This means that there is a window of time when an observ=
-er can
-> > > > + * associate a new timestamp with old file contents. Since the pur=
-pose of the
-> > > > + * i_version is to allow for better cache coherency, the i_version=
- must always
-> > > > + * be updated after the results of the operation are visible. Upda=
-ting it before
-> > > > + * and after a change is also permitted.
-> > >=20
-> > > This sounds good but it is not the case for any of the current filesy=
-stems, is
-> > > it? Perhaps the documentation should mention this so that people are =
-not
-> > > confused?
-> >=20
-> > Correct. Currently, all filesystems change the times and version before
-> > a write instead of after. I'm hoping that situation will change soon
-> > though, as I've been working on a patchset to fix this for tmpfs, ext4
-> > and btrfs.
->=20
-> That is good but we'll see how long it takes to get merged. AFAIR it is n=
-ot
-> a complete nobrainer ;)
->=20
-> > If you still want to see something for this though, what would you
-> > suggest for verbiage?
->=20
-> Sure:
->=20
-> ... the i_version must a be updated after the results of the operation ar=
-e
-> visible (note that none of the filesystems currently do this, it is a wor=
-k
-> in progress to fix this).
->=20
-> And once your patches are merged, you can also delete this note :).
->=20
-> 								Honza
+On Wed, Jan 25, 2023 at 12:38:51AM -0800, Suren Baghdasaryan wrote:
+> mmap_assert_write_locked() is used in vm_flags modifiers. Because
+> mmap_assert_write_locked() uses dump_mm() and vm_flags are sometimes
+> modified from from inside a module, it's necessary to export
+> dump_mm() function.
+> 
+> Signed-off-by: Suren Baghdasaryan <surenb@google.com>
 
-Sounds good, I folded something similar to that into the patch and
-pushed it into the branch I'm feeding into linux-next.=A0I won't bother
-re-posting for just that though:
+Acked-by: Mike Rapoport (IBM) <rppt@kernel.org>
 
-diff --git a/include/linux/iversion.h b/include/linux/iversion.h
-index fced8115a5f4..f174ff1b59ee 100644
---- a/include/linux/iversion.h
-+++ b/include/linux/iversion.h
-@@ -27,7 +27,8 @@
-  * associate a new timestamp with old file contents. Since the purpose of =
-the
-  * i_version is to allow for better cache coherency, the i_version must al=
-ways
-  * be updated after the results of the operation are visible. Updating it =
-before
-- * and after a change is also permitted.
-+ * and after a change is also permitted. (Note that no filesystems current=
-ly do
-+ * this. Fixing that is a work-in-progress).
-  *
-  * Observers see the i_version as a 64-bit number that never decreases. If=
- it
-  * remains the same since it was last checked, then nothing has changed in=
- the
-
-Thanks!
---=20
-Jeff Layton <jlayton@kernel.org>
+> ---
+>  mm/debug.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/mm/debug.c b/mm/debug.c
+> index 9d3d893dc7f4..96d594e16292 100644
+> --- a/mm/debug.c
+> +++ b/mm/debug.c
+> @@ -215,6 +215,7 @@ void dump_mm(const struct mm_struct *mm)
+>  		mm->def_flags, &mm->def_flags
+>  	);
+>  }
+> +EXPORT_SYMBOL(dump_mm);
+>  
+>  static bool page_init_poisoning __read_mostly = true;
+>  
+> -- 
+> 2.39.1
+> 
