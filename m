@@ -2,145 +2,154 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38ADBC27C76
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Jan 2023 03:28:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65184C05027
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Jan 2023 05:30:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229481AbjAZD2k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Jan 2023 22:28:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57790 "EHLO
+        id S229539AbjAZFaN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Jan 2023 00:30:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54882 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229475AbjAZD2j (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Jan 2023 22:28:39 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B0E7469D
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2023 19:27:57 -0800 (PST)
+        with ESMTP id S229483AbjAZFaM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Jan 2023 00:30:12 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD66D49973
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2023 21:29:25 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1674703676;
+        s=mimecast20190719; t=1674710965;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=lfyMAdwdPoNeG0rn/jUqa2cEVofY9+B2Qvz2SoqM+8E=;
-        b=WCMZRYriB/Mo8gTTzXaBSQ/W+JukAlIRGe23v1vZiMXYlzpEDnGmXfsqApkmaGssnCuXeh
-        ABUlwaoT+Vnd9tCsXroPRMdNkywK9w8Ajcot8e7Q0Ma6NhqVV1DDRWhE+/cA7h7DN6VBN/
-        jBT9QoOjskoh5a9yL2RpFATj5/vBWOY=
-Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com
- [209.85.210.199]) by relay.mimecast.com with ESMTP with STARTTLS
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=zeRhhjHIoh2C6rE9+EFkfB8fkRYuFLagzy5chfELj8g=;
+        b=aygwNHxonboJPw76C7ka6YlzJOr4NXbzx1WMpn+03DRYNBmMvKGULpHF5sfbHhfsIGBb3r
+        k2qs/LyVlM9kv3BEa6FVkLzJeU6jIxZnX7lrxEzR1n1UDbUSouNYmAthrrddp3fHglN4T4
+        gazZL9rjdIoRXbl2Pps2CqD914cAsm8=
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com
+ [209.85.215.200]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-223-LL2FNLbrOm2Nl-Gnlg7Xlg-1; Wed, 25 Jan 2023 22:27:54 -0500
-X-MC-Unique: LL2FNLbrOm2Nl-Gnlg7Xlg-1
-Received: by mail-pf1-f199.google.com with SMTP id s4-20020a056a00194400b0058d9b9fecb6so318488pfk.1
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2023 19:27:54 -0800 (PST)
+ us-mta-624-6bH-Wrj7N9OMEFKz79PvOg-1; Thu, 26 Jan 2023 00:29:24 -0500
+X-MC-Unique: 6bH-Wrj7N9OMEFKz79PvOg-1
+Received: by mail-pg1-f200.google.com with SMTP id r126-20020a632b84000000b004393806c06eso402644pgr.4
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Jan 2023 21:29:23 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=lfyMAdwdPoNeG0rn/jUqa2cEVofY9+B2Qvz2SoqM+8E=;
-        b=OsHPUk8YZHBaZWx+hrumI6kT+OYUVWfrEO9Q/X30XPTBhfDf639Uk99ahCuId5qLep
-         B5HXkryXSqeKdADS5lFSqtqrQXlDpQPOpo6rdyayq9hUP1GHTzT7ic3TT26sXSCY64Ey
-         STvS9h03cOZHCFCYsqQqo+FNQgUA07JOAJDmW5if6cZc7vEMq/nn4MZlj8a/IEjyf68T
-         Gn5EATl0djp6e6+H2yeP4gcfjkNBeBOe3HYXlGvpqCdvD4ACspRXqKJ/SNnSxjMAWOYE
-         CSZz+Q+6z3kGxS+G+OUpd5Ifdr5nePOhtZPf1pfehv2CZzm9lNpHrsJ6BMBLealKQRYH
-         Ng6w==
-X-Gm-Message-State: AFqh2koC6vHeBq7771NZO66vyKRotbMw4/0pphXjnuP5m9s7c2GzFcRL
-        E/mRZzF7RbloxtYA0t4tlPrmjh2PEmGmD8nbdJ604EtTJhAIR7N4kYRfLX1xMdveQ0/fxro1VoC
-        YWDUzMtt4k8ShA+qcSGC1
-X-Received: by 2002:a05:6a21:170d:b0:b6:3a0:6ec1 with SMTP id nv13-20020a056a21170d00b000b603a06ec1mr32240798pzb.25.1674703673534;
-        Wed, 25 Jan 2023 19:27:53 -0800 (PST)
-X-Google-Smtp-Source: AMrXdXudEsyqy5yGkt+YuN320jxkT5ezlGlK+9FyhfYDQYnaQ2601/Zv/CgsfhKS2UhUZHXGtz/rlg==
-X-Received: by 2002:a05:6a21:170d:b0:b6:3a0:6ec1 with SMTP id nv13-20020a056a21170d00b000b603a06ec1mr32240777pzb.25.1674703673150;
-        Wed, 25 Jan 2023 19:27:53 -0800 (PST)
-Received: from ?IPV6:2001:8003:4800:1b00:4c4a:1757:c744:923? ([2001:8003:4800:1b00:4c4a:1757:c744:923])
-        by smtp.gmail.com with ESMTPSA id k66-20020a633d45000000b00476d1385265sm3959721pga.25.2023.01.25.19.27.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 25 Jan 2023 19:27:52 -0800 (PST)
-Message-ID: <c8c9f731-a125-0c42-e814-da5eb3d219ca@redhat.com>
-Date:   Thu, 26 Jan 2023 14:27:49 +1100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.0
-Subject: Re: [PATCH] xfs: allow setting full range of panic tags
-Content-Language: en-AU, en-HK
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-References: <20230125050138.372749-1-ddouwsma@redhat.com>
- <Y9FVKelYL38Ka2mY@magnolia>
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=zeRhhjHIoh2C6rE9+EFkfB8fkRYuFLagzy5chfELj8g=;
+        b=tNreRGS8vBgQveRTdQFuAtzK3ifkUg1HARWuwL3C1aXjaQAvltjF6RJEmvll2xx9Pe
+         CxTpYVAGOKpAi0OeaLmQ9Kjtsmgtstpy/vqTotAct+Obsk/YRw6rUMu38O0SMzzrPkJ/
+         3B6g5Z3QiCgh3Q4p54p7qJgYddxtjCtBOvixt/9/WNIUWr29j8UHgFr7up4KEpz18DrY
+         9PAsZE9FnUP3YzJfvQuKRzM5hgmTGOpmr8kYzccMqnqQYL/EaLABDyD9hMC4qCJ4f7KZ
+         h7N4bS+OMNPAcqPOfWkJ4T+jzUSQBz28d8lV42gEhI0PUzlJBFmoNgvQW2w16A5wHYZR
+         RitQ==
+X-Gm-Message-State: AFqh2koRprrAtBQGEQl8sV5PcA2f4o38hPae5v/ZiVPNVqpU9PYhmfSz
+        NlHyYXBHv7zDSg3K1rNudnAxJvNw1VTjp1lAwBM6PYok1MiJ/syn2UyCkpdyFILREJaWfh8mnyc
+        6rmSoT3bWKnedqsVNLtO/W3yEzGekGXsu+uJ67B95e3OLKwGaOemxdkQhbJz/X0M2rGMY5nvN
+X-Received: by 2002:a17:902:b60e:b0:192:8b0e:98e1 with SMTP id b14-20020a170902b60e00b001928b0e98e1mr30764225pls.54.1674710962284;
+        Wed, 25 Jan 2023 21:29:22 -0800 (PST)
+X-Google-Smtp-Source: AMrXdXt1sBeU6vrAynQalIx5Lh1R9g7cMUECBRpRs1n7S4SbHTIuEsxpqxyU/fjtyoufMlrZshIKtA==
+X-Received: by 2002:a17:902:b60e:b0:192:8b0e:98e1 with SMTP id b14-20020a170902b60e00b001928b0e98e1mr30764203pls.54.1674710961843;
+        Wed, 25 Jan 2023 21:29:21 -0800 (PST)
+Received: from snowcrash.redhat.com ([2001:8003:4800:1b00:4c4a:1757:c744:923])
+        by smtp.gmail.com with ESMTPSA id 5-20020a170902ee4500b00194b006b9aesm276981plo.242.2023.01.25.21.29.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Jan 2023 21:29:21 -0800 (PST)
 From:   Donald Douwsma <ddouwsma@redhat.com>
-In-Reply-To: <Y9FVKelYL38Ka2mY@magnolia>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     linux-xfs@vger.kernel.org
+Cc:     Donald Douwsma <ddouwsma@redhat.com>
+Subject: [PATCH v2] xfs: allow setting full range of panic tags
+Date:   Thu, 26 Jan 2023 16:29:10 +1100
+Message-Id: <20230126052910.588098-1-ddouwsma@redhat.com>
+X-Mailer: git-send-email 2.31.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+xfs will not allow combining other panic masks with
+XFS_PTAG_VERIFIER_ERROR.
 
+ sysctl fs.xfs.panic_mask=511
+ sysctl: setting key "fs.xfs.panic_mask": Invalid argument
+ fs.xfs.panic_mask = 511
 
-On 26/01/2023 03:13, Darrick J. Wong wrote:
-> On Wed, Jan 25, 2023 at 04:01:38PM +1100, Donald Douwsma wrote:
->> xfs will not allow combining other panic values with XFS_PTAG_VERIFIER_ERROR.
->>
->>   sysctl fs.xfs.panic_mask=511
->>   sysctl: setting key "fs.xfs.panic_mask": Invalid argument
->>   fs.xfs.panic_mask = 511
->>
->> Update to the maximum value that can be set to allow the full range of masks.
->>
->> Fixes: d519da41e2b78 ("xfs: Introduce XFS_PTAG_VERIFIER_ERROR panic mask")
->> Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
->> ---
->>   Documentation/admin-guide/xfs.rst | 2 +-
->>   fs/xfs/xfs_globals.c              | 2 +-
->>   2 files changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
->> index 8de008c0c5ad..e2561416391c 100644
->> --- a/Documentation/admin-guide/xfs.rst
->> +++ b/Documentation/admin-guide/xfs.rst
->> @@ -296,7 +296,7 @@ The following sysctls are available for the XFS filesystem:
->>   		XFS_ERRLEVEL_LOW:       1
->>   		XFS_ERRLEVEL_HIGH:      5
->>   
->> -  fs.xfs.panic_mask		(Min: 0  Default: 0  Max: 256)
->> +  fs.xfs.panic_mask		(Min: 0  Default: 0  Max: 511)
->>   	Causes certain error conditions to call BUG(). Value is a bitmask;
->>   	OR together the tags which represent errors which should cause panics:
->>   
->> diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
->> index 4d0a98f920ca..e0e9494a8251 100644
->> --- a/fs/xfs/xfs_globals.c
->> +++ b/fs/xfs/xfs_globals.c
->> @@ -15,7 +15,7 @@ xfs_param_t xfs_params = {
->>   			  /*	MIN		DFLT		MAX	*/
->>   	.sgid_inherit	= {	0,		0,		1	},
->>   	.symlink_mode	= {	0,		0,		1	},
->> -	.panic_mask	= {	0,		0,		256	},
->> +	.panic_mask	= {	0,		0,		511	},
-> 
-> Why not fix this by defining an XFS_PTAG_ALL_MASK that combines all
-> valid flags and use that here?  That way we eliminate this class of bug.
+Update to the maximum value that can be set to allow the full range of
+masks.
 
-Sure, perhaps XFS_MAX_PTAG to fit with its use in xfs_params?
+Fixes: d519da41e2b7 ("xfs: Introduce XFS_PTAG_VERIFIER_ERROR panic mask")
+Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
+---
+ Documentation/admin-guide/xfs.rst |  2 +-
+ fs/xfs/xfs_error.h                | 13 ++++++++++++-
+ fs/xfs/xfs_globals.c              |  3 ++-
+ 3 files changed, 15 insertions(+), 3 deletions(-)
 
-> 
-> Looking at d519da41e2b78, the maintainers suck at noticing these kinds
-> of mistakes.
-
-The interface is problematic in the field too, folks were using 256 to
-mean all, and wondered why they weren't hitting anything, including
-XFS_PTAG_SHUTDOWN_CORRUPT. I'll OR together the masks to be clear
-with respect to the documentation.
-
-Don
-
-> 
-> --D
-> 
->>   	.error_level	= {	0,		3,		11	},
->>   	.syncd_timer	= {	1*100,		30*100,		7200*100},
->>   	.stats_clear	= {	0,		0,		1	},
->> -- 
->> 2.31.1
->>
-> 
+diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
+index 8de008c0c5ad..e2561416391c 100644
+--- a/Documentation/admin-guide/xfs.rst
++++ b/Documentation/admin-guide/xfs.rst
+@@ -296,7 +296,7 @@ The following sysctls are available for the XFS filesystem:
+ 		XFS_ERRLEVEL_LOW:       1
+ 		XFS_ERRLEVEL_HIGH:      5
+ 
+-  fs.xfs.panic_mask		(Min: 0  Default: 0  Max: 256)
++  fs.xfs.panic_mask		(Min: 0  Default: 0  Max: 511)
+ 	Causes certain error conditions to call BUG(). Value is a bitmask;
+ 	OR together the tags which represent errors which should cause panics:
+ 
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index dbe6c37dc697..a015f7b370dc 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -75,7 +75,7 @@ extern int xfs_errortag_clearall(struct xfs_mount *mp);
+ 
+ /*
+  * XFS panic tags -- allow a call to xfs_alert_tag() be turned into
+- *			a panic by setting xfs_panic_mask in a sysctl.
++ *			a panic by setting fs.xfs.panic_mask in a sysctl.
+  */
+ #define		XFS_NO_PTAG			0u
+ #define		XFS_PTAG_IFLUSH			(1u << 0)
+@@ -88,6 +88,17 @@ extern int xfs_errortag_clearall(struct xfs_mount *mp);
+ #define		XFS_PTAG_FSBLOCK_ZERO		(1u << 7)
+ #define		XFS_PTAG_VERIFIER_ERROR		(1u << 8)
+ 
++#define		XFS_MAX_PTAG ( \
++			XFS_PTAG_IFLUSH | \
++			XFS_PTAG_LOGRES | \
++			XFS_PTAG_AILDELETE | \
++			XFS_PTAG_ERROR_REPORT | \
++			XFS_PTAG_SHUTDOWN_CORRUPT | \
++			XFS_PTAG_SHUTDOWN_IOERROR | \
++			XFS_PTAG_SHUTDOWN_LOGERROR | \
++			XFS_PTAG_FSBLOCK_ZERO | \
++			XFS_PTAG_VERIFIER_ERROR)
++
+ #define XFS_PTAG_STRINGS \
+ 	{ XFS_NO_PTAG,			"none" }, \
+ 	{ XFS_PTAG_IFLUSH,		"iflush" }, \
+diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
+index 4d0a98f920ca..ff129acce8e6 100644
+--- a/fs/xfs/xfs_globals.c
++++ b/fs/xfs/xfs_globals.c
+@@ -4,6 +4,7 @@
+  * All Rights Reserved.
+  */
+ #include "xfs.h"
++#include "xfs_error.h"
+ 
+ /*
+  * Tunable XFS parameters.  xfs_params is required even when CONFIG_SYSCTL=n,
+@@ -15,7 +16,7 @@ xfs_param_t xfs_params = {
+ 			  /*	MIN		DFLT		MAX	*/
+ 	.sgid_inherit	= {	0,		0,		1	},
+ 	.symlink_mode	= {	0,		0,		1	},
+-	.panic_mask	= {	0,		0,		256	},
++	.panic_mask	= {	0,		0,		XFS_MAX_PTAG},
+ 	.error_level	= {	0,		3,		11	},
+ 	.syncd_timer	= {	1*100,		30*100,		7200*100},
+ 	.stats_clear	= {	0,		0,		1	},
+-- 
+2.31.1
 
