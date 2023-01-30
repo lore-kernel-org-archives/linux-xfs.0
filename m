@@ -2,138 +2,154 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E032CC05027
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 Jan 2023 02:05:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED0A3C54EAA
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Jan 2023 10:57:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235413AbjA3CFc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 29 Jan 2023 21:05:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38446 "EHLO
+        id S236542AbjA3K5a (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 30 Jan 2023 05:57:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45016 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235408AbjA3CFb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 Jan 2023 21:05:31 -0500
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 966909035
-        for <linux-xfs@vger.kernel.org>; Sun, 29 Jan 2023 18:05:30 -0800 (PST)
-Received: by mail-pj1-x102d.google.com with SMTP id z1-20020a17090a66c100b00226f05b9595so9747986pjl.0
-        for <linux-xfs@vger.kernel.org>; Sun, 29 Jan 2023 18:05:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=G8Vxv8OwX133tUnuBdZdWAa7RTYGIr+O4AQ5K3l55Uo=;
-        b=hL4YsroKWCH+QTT0BcGay1mkBwk8QVdd6Vvb9oDR84q0WNQMZMia0uIGGWuMlWhPYM
-         lp2HxmxYgxwj3Aq53H9ZfhjpdxIYsfmQIDtjq+LCCqO4pH3xR5hJjQDs1dgmgqZMxPMC
-         1Ls6tMXpMz2KAAarWRBUPd+KCWZLWd8GzZqmCgOf6z19kAZQiqdM2daJnYMmhxbWsZa9
-         +xrYRBABNzbfCrCgNVrbsxLB5vyfHiOrcsfY64kGHMNgY335gHdhgqVJKelGCm2UUYJF
-         py2w0LrLNczvkK2TZMgtqQFaTGGqAoYzO9n7fk3c0otDAWQDofAaAnqy5cFCy2jbK1st
-         YDKA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=G8Vxv8OwX133tUnuBdZdWAa7RTYGIr+O4AQ5K3l55Uo=;
-        b=wTr8jeHnBsSU7Ln2Srt5a4QJerONs+JzohZyHVW0d7cg+68k8ThWYdQcwIZc7fJa/G
-         nfGtK+fGSiCmC8m1y9h/5qkvauVCpU5bQavjsSgQQXrx5wFWeFKhjio4RSxwPp/6SFiA
-         3Gi8Y7eAuvK+vJhPQ/O5zMNPjIG39DRIPq47fsaBQ17wNkfFci6pKOeZPd5za5khQt/Y
-         QtnJelR0pUJE++jJdAQ1KS9TvopFFYsUBe+NIczjwmPBE9MQLyGbvwd5Rtw13gAKx6em
-         BuUHinSenrBaL3dujZp0rRXxAws9FAPgmZawxJtPrrM4VoYl86pWiq6pyrxyZ3fmE3iV
-         p4QA==
-X-Gm-Message-State: AO0yUKVHPDjgBbB93+SHYKbGQNd4ScW8JoZyMsN2FPCXMilXbVUTQ/Q9
-        akVMqIC6ypcYWc0r4hKCkkFuP6lLvVdMEjIv
-X-Google-Smtp-Source: AK7set+7nc+BfHsHoknZNPdu57MjuepFskScFxlhyNvQ21RAxAUsJVNqWT5MTSLtNpRpNNUMG5M3Ew==
-X-Received: by 2002:a05:6a20:a015:b0:bc:57a3:e6e4 with SMTP id p21-20020a056a20a01500b000bc57a3e6e4mr10978611pzj.34.1675044330092;
-        Sun, 29 Jan 2023 18:05:30 -0800 (PST)
-Received: from dread.disaster.area (pa49-181-52-44.pa.nsw.optusnet.com.au. [49.181.52.44])
-        by smtp.gmail.com with ESMTPSA id bs132-20020a63288a000000b004a3510effa5sm5587382pgb.65.2023.01.29.18.05.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 29 Jan 2023 18:05:29 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1pMJXx-009798-JH; Mon, 30 Jan 2023 13:05:25 +1100
-Date:   Mon, 30 Jan 2023 13:05:25 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Re: replacement i_version counter for xfs
-Message-ID: <20230130020525.GO360264@dread.disaster.area>
-References: <57c413ed362c0beab06b5d83b7fc4b930c7662c4.camel@kernel.org>
- <20230125000227.GM360264@dread.disaster.area>
- <86f993a69a5be276164c4d3fc1951ff4bde881be.camel@kernel.org>
- <Y9FZupBCyPGCMFBd@magnolia>
- <4d16f9f9eb678f893d4de695bd7cbff6409c3c5a.camel@kernel.org>
+        with ESMTP id S236261AbjA3K5M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jan 2023 05:57:12 -0500
+Received: from EUR04-VI1-obe.outbound.protection.outlook.com (mail-vi1eur04on2131.outbound.protection.outlook.com [40.107.8.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8C5E3251B
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Jan 2023 02:57:06 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Rk6GjLG+V+PrZsvloO6okkejdpKeN/Qu6a0XOMkpZXfK53PB0oyfIjtpnDJ0W+NzdfFkGysLePUkYZK1r8EgH/kF+U6QlBPIk8scbKL/SUdvLzFrbzuM5fZXYjCBrmfz8vwEfeXWtdOpLV1VjLP84h8V90lZo97bkdGCD5JQaaLbXIX16VqfPvDYNylXnYBk5NnYAY5+yA/Xbc8y2rgRiT/dCV3istPTGjIfKnTscXmiyJsjxg18sZVDzdzDBlhFUZb67f5mwkEIviQ5xk1VATn2kd95nYmfCvym7wT6HYdCCDDvFBVz/tqoKiIOc1t42YTmDTgg+LI21Z9Qf1AsBQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=UMtWkx9839RwhEMDN6itkBfJ7XziIXFNuXZMZdDVp74=;
+ b=SR69NF9rx1ce7m42o/kbVWJeAeZcMEUCqJ0xr3gsOJpL9K/UAMy2ikH8xk20xZV1DrNM5GmcdwT9d6Ws+3uQNUpFFvkBJD11OUuDKd7RuBfDj1qVnO5Fd0jtatcx+37J2Dnm2fmEKZzw9UCI4i+st1gczkGSw7IN79spI5NUIsoecSUdtZn/PfoeH7Wx49/NqE4jGEDTbCGzd5HNuba08ZiF/lAVQjaWnSMoowT7cDG5h/74GP3Wt9p0TXwAMdHXLBUkskrEQh2Ty4IUxpVNWFGOl6wT9qPLEnsv2MZd+qptAdj9apFB4S0RwYiIqMLQFMUbJqGokQqf/JJwwDoDKA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=bcom.cz; dmarc=pass action=none header.from=bcom.cz; dkim=pass
+ header.d=bcom.cz; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bcom.cz; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=UMtWkx9839RwhEMDN6itkBfJ7XziIXFNuXZMZdDVp74=;
+ b=h4tvTdU7ocE/Ru88FWPEQrWBygsp/yoFXpoLVVLxigmouHHNXvbtKlmD+YQfmbTT9UG0/vMPKXJogPpHVX+Y2hcoqfaG//ZNMZjANKV1XhQqMx2L95yY0r2cWvWASj79imHoAWXUPpYhfPk4ODFTJw7oVbSOy3RoPR1p50IITj0=
+Received: from PAXPR03MB7856.eurprd03.prod.outlook.com (2603:10a6:102:213::23)
+ by AS8PR03MB8665.eurprd03.prod.outlook.com (2603:10a6:20b:54b::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6043.33; Mon, 30 Jan
+ 2023 10:57:03 +0000
+Received: from PAXPR03MB7856.eurprd03.prod.outlook.com
+ ([fe80::c18b:6bb0:4121:6758]) by PAXPR03MB7856.eurprd03.prod.outlook.com
+ ([fe80::c18b:6bb0:4121:6758%8]) with mapi id 15.20.6043.022; Mon, 30 Jan 2023
+ 10:57:02 +0000
+From:   =?iso-8859-2?Q?Libor_Klep=E1=E8?= <libor.klepac@bcom.cz>
+To:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: xfs_repair on filesystem stuck in "rebuild AG headers and trees"?
+Thread-Topic: xfs_repair on filesystem stuck in "rebuild AG headers and
+ trees"?
+Thread-Index: AQHZMXJ4TCclsvSXT0mdskAJxnfhqa62z5DT
+Date:   Mon, 30 Jan 2023 10:57:02 +0000
+Message-ID: <PAXPR03MB7856BFBFC10B60C0C92372878AD39@PAXPR03MB7856.eurprd03.prod.outlook.com>
+References: <PAXPR03MB7856BE8E2D589B6A5FA2B84A8ACF9@PAXPR03MB7856.eurprd03.prod.outlook.com>
+In-Reply-To: <PAXPR03MB7856BE8E2D589B6A5FA2B84A8ACF9@PAXPR03MB7856.eurprd03.prod.outlook.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+msip_labels: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=bcom.cz;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PAXPR03MB7856:EE_|AS8PR03MB8665:EE_
+x-ms-office365-filtering-correlation-id: fc818c03-12c5-45c5-0f0e-08db02b0b818
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 7gg1/5yO1EPsfsTnJpW0j9LH2BINOwooacNjhVCXJBZJpYnp/ZjFDFUeMKJ+CXC3I8iBK6m7j/B69KKTCxjuIZ5AoHog7CDBRTnnGm5mlkU3uIKNcCSIXtH//otSjijss8qgBwt4RsjH35U8bJ64IrAVnTM6WlWbgCrSPs6fCl+czuxfYpA9lkN53q9A98NfMFbioW8X+wcFrkIChZB0SX1M0UsCtYEEbzoNs8lVNCWxNlaJKbqZDsBPjoN6kDGXmdmC4m5OVzzxhfJPuyQY17za7mtIE1PwuOOZ2hE9DF/7hxUl0/Qf+KunXvTCaPpO6WG+oehFnKaPBg1edAzgFwE6HaxljaJwO3Va4y1A1mZPPcXm+nYOhj4SCFYENEa8oN4YBoqDNb7LT4XGZ2gUNuIIGOXQGLXAWhHD0i8aYlvhKkFEWWJpEl0O3547OFHJLTLprMXMHqx5sqbIqQX6kdhZIPQ5t1PPbo8mUgM7LV61TvpP8oehpHXs0jHrQN64GtOlGZfZj6c2KWQ5Vstvx2KUljGfwNnETXh4DUY8CFCkKiPv9It1+GDXh0FalCDh6EBtZZ4818eNdCFuDhfkmaJK/TvCDq25zECp4fkP20SOmXgScIRu7zJMPcFIXYe7/HXiy1AdOJwq0t+fqbN1HXHmONPKRGNhbi6KykkaSFEC177cm0Jj0C1bez+oOK2Iy68eNgX/Y2PMACuUnYzT96BPhtZtyt7zkUlwZPLUHR4=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAXPR03MB7856.eurprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(396003)(39850400004)(366004)(136003)(376002)(346002)(451199018)(41300700001)(2906002)(122000001)(478600001)(966005)(71200400001)(7696005)(86362001)(38100700002)(38070700005)(33656002)(53546011)(66574015)(6506007)(66476007)(76116006)(6916009)(66946007)(316002)(8676002)(91956017)(8936002)(55016003)(5660300002)(66446008)(64756008)(52536014)(66556008)(186003)(9686003)(83380400001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?iso-8859-2?Q?y/8xAj4E5/x3UG0NHAMXh0KPYX6cnMCwc0DU2gYQ+C6cX9HEbxsqhFSakT?=
+ =?iso-8859-2?Q?F5aY4rB0ELsNIn/bq+mN1sNOn9qp6CRpmM7Y/3cDVz4DAOwM0CdCb/rRJx?=
+ =?iso-8859-2?Q?iIYU79OKoJ8XuULFmPkRkliSPKMpEWBGuu5eJL4Vun0N/lBU/SCaJWVtQS?=
+ =?iso-8859-2?Q?wFnmo0WlaAITDqv4dPtV5XWa/CLEveI4macDvVrWiryPr093Xy7PqkfYVy?=
+ =?iso-8859-2?Q?/LzQbSCtBEJquMdBQM2kjQ8g0aTLTOnmDHqAFRat7PWXl8cbYdLVng1P9E?=
+ =?iso-8859-2?Q?K1EEKGiAXdcjKF60Llp96Pt7QEgoCmwDLNvjcL4QOlbKFIw1SMjkRglYrt?=
+ =?iso-8859-2?Q?U85jWiqUIrZ3uwqauatZUitTylxOab3imWWLBTa8syknVdq1e8EwO1z1Jz?=
+ =?iso-8859-2?Q?ZeMek9uX2jfouS9dNcyGLyHFYv8wiPP8eo8uVZhtZbAZfvK/6ocLcmu4y+?=
+ =?iso-8859-2?Q?+R1nznpc51pE+y0aaFMNpP252oKm3Iz7Ps3xPhXCcgH09M9rBLmYcSZpGW?=
+ =?iso-8859-2?Q?rgxAtG4uRe0dtFam42KGydYft9hti4Gj/mUe1EnjT5DB+0n7yX1VZKCpXV?=
+ =?iso-8859-2?Q?VgPwT3nxS0W1BFlO5mbX7O/jOaHLPS9QNGwzIM3WFFmirXo5gtSBJg+jHH?=
+ =?iso-8859-2?Q?P38OMUtLDdpblVWIvSYVk3LpLh8KYCO2ICbT3+QDC/4RRQCyGjTQMmXf9X?=
+ =?iso-8859-2?Q?L+g9zADxiZGeJJdCk5nzkcOXpa4sVjy5YKQF2B3CWPR3H0LM9BgOdD9+Cy?=
+ =?iso-8859-2?Q?+hjC1vDGjV0XMKsxWpOmD7j9Hn3RqMRcGfWpKw48S+VlBlYhLBomswELEK?=
+ =?iso-8859-2?Q?jISlFxtBAcuwpP55Ml2B/QrnfnvQPKldvwjPVTLhaDAus6ZBIPfmv0gLdx?=
+ =?iso-8859-2?Q?29mCIP1oDWl6aWcC41zzhWjc0WjroJQsa5ByXLKLpxt9GylHqtIOPFZugV?=
+ =?iso-8859-2?Q?AK8jAqVjWtOp5jl4a6aR6v8+fJdQj/iqz3dpRfSvU5MSjhNVF1EtrXs1Gi?=
+ =?iso-8859-2?Q?1GoqaS2QBzIKvleH5HYr7/MDxJ8aVUTIMOCAQc5voOtGIKUFD0LoCLBN8+?=
+ =?iso-8859-2?Q?DjETZPRlaUI8IRbjSfKjA723lfKHT+9zjbNKLxz9nlPje94THhh20EHMHu?=
+ =?iso-8859-2?Q?ZuonIMBBcceY9nvCJNORAj9HmnyUKcoBYehUrjb64jGrPBXdyzqzlgioyu?=
+ =?iso-8859-2?Q?oMtMSvBNgz7HP4g45898DK+q0jV8RLXV+4Vryf+cDnmCEO/x7mp/E/3od8?=
+ =?iso-8859-2?Q?CV2lwaGu+xTqwr3rjMRZXCvynZuaJobJvoXPT9p71uBQDPG2T3SqugfC/s?=
+ =?iso-8859-2?Q?HEGxadqzSR1Ki/K0Cv4jOcqCSWScZ3wd6iTZ3UjguSweVHaiNPuENEmwcB?=
+ =?iso-8859-2?Q?l1I3hVjBCVI/TMRXDupa1q/M2XWQ7qLyQNhO0D9NO9jJ9QTo4Lg5giWMBN?=
+ =?iso-8859-2?Q?h8PWGuwYfZt6uVbSwAbdqQ7cTcZZgWWLVsCKyeY9ecIOZSNzQF6wROokEa?=
+ =?iso-8859-2?Q?Tuh7m3k4WubzWaQ/9BmaCYTB02YwsnznGUJrnM/wNdQLhp6Cf//D6jDN7Z?=
+ =?iso-8859-2?Q?pGIN5Pup7+W3F+rD7zXQ6bUuhWwXVah67lrNRbtt9FOVuC+IeMExGATQcu?=
+ =?iso-8859-2?Q?mxE2IXVpxnNWVYmHqXZHBBvvIxj4R/WFPT9fdon7BXyJV9OX19JEi13bzJ?=
+ =?iso-8859-2?Q?ZO+193H7uQUgf2zdhgs=3D?=
+Content-Type: text/plain; charset="iso-8859-2"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4d16f9f9eb678f893d4de695bd7cbff6409c3c5a.camel@kernel.org>
+X-OriginatorOrg: bcom.cz
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PAXPR03MB7856.eurprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: fc818c03-12c5-45c5-0f0e-08db02b0b818
+X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Jan 2023 10:57:02.8516
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 86024d20-efe6-4f7c-a3f3-90e802ed8ce7
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: cl9b0tYLexllg4QbZ7rPzY7aZ+hNPy+FmpXkNmy83Py4e4evztuk81Prjvdl7aoJgaddStHjo/9/R/wuxqzAuA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS8PR03MB8665
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 25, 2023 at 12:58:08PM -0500, Jeff Layton wrote:
-> On Wed, 2023-01-25 at 08:32 -0800, Darrick J. Wong wrote:
-> > On Wed, Jan 25, 2023 at 06:47:12AM -0500, Jeff Layton wrote:
-> > > Note that there are two other lingering issues with i_version. Neither
-> > > of these are xfs-specific, but they may inform the changes you want to
-> > > make there:
-> > > 
-> > > 1/ the ctime and i_version can roll backward on a crash.
-> > > 
-> > > 2/ the ctime and i_version are both currently updated before write data
-> > > is copied to the pagecache. It would be ideal if that were done
-> > > afterward instead. (FWIW, I have some draft patches for btrfs and ext4
-> > > for this, but they need a lot more testing.)
-> > 
-> > You might also want some means for xfs to tell the vfs that it already
-> > did the timestamp update (because, say, we had to allocate blocks).
-> > I wonder what people will say when we have to run a transaction before
-> > the write to peel off suid bits and another one after to update ctime.
-> > 
-> 
-> That's a great question! There is a related one too once I started
-> looking at this in more detail:
-> 
-> Most filesystems end up updating the timestamp via a the call to
-> file_update_time in __generic_file_write_iter. Today, that's called very
-> early in the function and if it fails, the write fails without changing
-> anything.
-> 
-> What do we do now if the write succeeds, but update_time fails? We don't
-
-On XFS, the timestamp update will either succeed or cause the
-filesystem to shutdown as a failure with a dirty transaction is a
-fatal, unrecoverable error.
-
-> want to return an error on the write() since the data did get copied in.
-> Ignoring it seems wrong too though. There could even be some way to
-> exploit that by changing the contents while holding the timestamp and
-> version constant.
-
-If the filesystem has shut down, it doesn't matter that the data got
-copied into the kernel - it's never going to make it to disk and
-attempts to read it back will also fail. There's nothing that can be
-exploited by such a failure on XFS - it's game over for everyone
-once the fs has shut down....
-
-> At this point I'm leaning toward leaving the ctime and i_version to be
-> updated before the write, and just bumping the i_version a second time
-> after. In most cases the second bump will end up being a no-op, unless
-> an i_version query races in between.
-
-Why not also bump ctime at write completion if a query races with
-the write()? Wouldn't that put ns-granularity ctime based change
-detection on a par with i_version?
-
-Userspace isn't going to notice the difference - the ctime they
-observe indicates that it was changed during the syscall. So
-who/what is going to care if we bump ctime twice in the syscall
-instead of just once in this rare corner case?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Hi,=0A=
+i breaked xfs_repair and lauched it again.=0A=
+On beginning of phase 6 i have=0A=
+failed to create prefetch thread: Resource temporarily unavailable=0A=
+https://download.bcom.cz/xfs/Screenshot_20230130_114707.jpeg=0A=
+=0A=
+Also, there is dmesg, when it was trying to mount it and it was stuck=0A=
+https://download.bcom.cz/xfs/dmesg.txt=0A=
+=0A=
+Libor=0A=
+=0A=
+=0A=
+From: Libor Klep=E1=E8 <libor.klepac@bcom.cz>=0A=
+Sent: Thursday, January 26, 2023 11:46=0A=
+To: linux-xfs@vger.kernel.org <linux-xfs@vger.kernel.org>=0A=
+Subject: xfs_repair on filesystem stuck in "rebuild AG headers and trees"? =
+=0A=
+=A0=0A=
+Hi,=0A=
+we have virtual machine with 8TB data disk with around 5TB of data in few l=
+arge files (backup repository of nakivo backup solution - it contains snaps=
+hots of vmware machines - one file per snapshot).=0A=
+=0A=
+We have recently upgraded VM from ubuntu 20.04 to ubuntu 22.04 and after re=
+boot, mount of this filesystem took ages.=0A=
+=0A=
+I started xfs_repair on it and now it spits line=0A=
+rebuild AG headers and trees - 16417 of 16417 allocation groups done=0A=
+=0A=
+in 15 minutes interval for last two days.=0A=
+Is it in loop?=0A=
+Can i break it? =0A=
+Data on disk is just remote copy of backup, so it can be lost, it will just=
+ take some time to transfer it again.=0A=
+=0A=
+Kernel is probably from package 5.15.0-58.64=A0 - sorry i don't know real v=
+ersion, cannot get it from ubuntu package.=0A=
+xfsprogs should be 5.13.0-1ubuntu2=0A=
+=0A=
+Thanks for any info,=0A=
+=0A=
+with regards,=0A=
+Libor=
