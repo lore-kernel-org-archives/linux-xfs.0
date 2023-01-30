@@ -2,106 +2,147 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 619C7C636CD
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 Jan 2023 21:01:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F075C54EAA
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Jan 2023 21:56:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229608AbjA3VBU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 30 Jan 2023 16:01:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55794 "EHLO
+        id S229591AbjA3V4c (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 30 Jan 2023 16:56:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44492 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229468AbjA3VBT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jan 2023 16:01:19 -0500
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0451146148;
-        Mon, 30 Jan 2023 13:01:18 -0800 (PST)
-Received: by mail-pj1-x102d.google.com with SMTP id mi9so3134845pjb.4;
-        Mon, 30 Jan 2023 13:01:17 -0800 (PST)
+        with ESMTP id S230523AbjA3V4c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Jan 2023 16:56:32 -0500
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C1CE49438
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Jan 2023 13:56:28 -0800 (PST)
+Received: by mail-pl1-x636.google.com with SMTP id 5so13128316plo.3
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Jan 2023 13:56:28 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=WgaU3PyU9V/rnheQiNO438CyYuOMtd/iZANffKMTbLA=;
-        b=bwFOvqHoh7o5sr6095EUEjgd0hLeXMnuhFxhy5S8f2WjMfxN5reo0UpRvJyblxjoHa
-         awo4yTFcvo6bHl1e4exDW8DJRb+5eseg/T5IaGpyssl7s5UFUglmTqHeEs1QlJ9jG9KA
-         dcvGIIyNWEPIzh7aurUCd66RrlfpbWaMtU/27Wr/van33wpfhgPJOWt6XcYqHl20aR2x
-         2Rha6LJ47+cLNceSQLTpbzo9ZbnIpuq9mL+3hslwBz1EiDErLWTOxZ7seSZ1eNg8pbb/
-         m3WUXgIpP43nIjW7rvO8jmy7NVHizuGeKnVeTRNzG1wq9uL70UsrFU4zvSSMURjCC6s6
-         owyQ==
+        bh=Tl8P3w0rE5L7Ogt46rcei8jC6qEP/DfTlUbSmYUyd+o=;
+        b=Rj/ipKzMFUSVabRiLICivz9oGG2syse+qmUy3spxZI3tDU7f35SwBiLmTsuq6tJEO4
+         DJDsX0nAbIXQEpbBQcG72B7Cjn/hC4uWCghy3O9bAXnyrNeBsTsHSxPCnpDfxD5XWYGp
+         uSEy11Ufdgo5U5p55gx6Xt8EgJxHVu5Km0N6FR9++7S3jHJ0c3SZXm8snEth7XN6RGRq
+         Eu4ZaAyv6VCBFcvbq8AzYYe1zmp7sDySu02bZigVLINqxVsRyN+4XK9wWh+CUEvp7GaG
+         Aw9wMuOlIgO+nz65uAZinAHWiB2tzop6SNQpQ2ndtBqNTZq1w7WfZBU4BFlUiCB8q+Em
+         DS+g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=WgaU3PyU9V/rnheQiNO438CyYuOMtd/iZANffKMTbLA=;
-        b=xheVSZA8LxyOcx5QW/z+lw/vv3NnqquKsa+2ry6bLMg5exKHKEhOc/ZQ2IrpPoJ+wk
-         bKsqR1NnHP3uCGwfE/kGGprXtzNVftqaZknbvylrOXohRAEfnFwnpghYgS+TJqsRsoTq
-         3dWY02ACbVmXmvuJ9MFp17sEhHh/rN/Ckdf+dCCG5JZtsE+fFiS5gGnlBVTK1vVJU33G
-         fe4FnJVmsGaQfmEa611wxd5Y3AcSTbG+0+GpzbLQFRj0khHSo2v8xxSKx1bgDGnNWeWn
-         55vKYqtQlaUZWxAbYF/UvWp4Wea7T7k4VIePcdBaTKGSjddSntpaoyU5ttwwXNXy6Mi8
-         kIdA==
-X-Gm-Message-State: AO0yUKW4AMZUHKAVGRh9JP6icab9IPT8wkiqIUmMPDxuHBI6SWN9dXoy
-        LG9pZGiPu6xEpmrf/LZc6Rw=
-X-Google-Smtp-Source: AK7set9qh142u6/TNcf5UedgvTLEq/dCcUOs4EIPNMoawLafI34/pZPbb4ChftcKILW4gx7FSvEukA==
-X-Received: by 2002:a17:90b:33ce:b0:22b:ec81:c36c with SMTP id lk14-20020a17090b33ce00b0022bec81c36cmr26723309pjb.45.1675112477514;
-        Mon, 30 Jan 2023 13:01:17 -0800 (PST)
-Received: from localhost ([2406:7400:63:1fd8:5041:db86:706c:f96b])
-        by smtp.gmail.com with ESMTPSA id z92-20020a17090a6d6500b0022c2e29cadbsm7336471pjj.45.2023.01.30.13.01.16
+        bh=Tl8P3w0rE5L7Ogt46rcei8jC6qEP/DfTlUbSmYUyd+o=;
+        b=3YAwBGXAaORl2QF4TXiYatZdUYbZaJiIT2QmYYSaJBEGk/XD6zoBu+V1iEi4bK+x5p
+         CuTGGlGlK/CKsQZshaLm9zbJDaGNXEzsABwqzr8ALHvCLMO5rcOBX1gwPacjwEQIAZSg
+         vzjVQyjArE7oR9U5+xZpVNpxZ9IARLL/OHXWDMIdtPRFXL51jLJD8dfw8IBKReGxfWY0
+         mGBB9uXLDSLh+EPYxzq6WLAVIfjjQFBa/ljTVqa4wHDJGOV6DDSzF9iwROt/bvXfhaaQ
+         ejXjGp9MzigN6KR+6EpzJT8qIaOSEon4fO1kLyDPzBgRrfUJj8EO3oy5UP32gtS/NCDn
+         vjQQ==
+X-Gm-Message-State: AO0yUKWY74rcqHeL7NPSPzDFfgQfj7Jp+i0OtyTyRJegmOcd4QTQLNGb
+        7+KAyLbjqA+chUZ9h/pzgOKsNlytoqW8bb5N
+X-Google-Smtp-Source: AK7set/wT57T3wzCWhkpohNLzTc34k9SJ1xcCWt6vb934DhonVvIxLQnQ/8m9zSWLO5kxOba8QbNIQ==
+X-Received: by 2002:a17:902:d2ce:b0:194:ce30:1a94 with SMTP id n14-20020a170902d2ce00b00194ce301a94mr11704452plc.1.1675115787657;
+        Mon, 30 Jan 2023 13:56:27 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-4-128.pa.nsw.optusnet.com.au. [49.181.4.128])
+        by smtp.gmail.com with ESMTPSA id h15-20020a170902f54f00b00194bf875ed8sm2295910plf.139.2023.01.30.13.56.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 30 Jan 2023 13:01:17 -0800 (PST)
-Date:   Tue, 31 Jan 2023 02:31:13 +0530
-From:   "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-To:     Matthew Wilcox <willy@infradead.org>
+        Mon, 30 Jan 2023 13:56:27 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1pMc8V-009Ra6-50; Tue, 31 Jan 2023 08:56:23 +1100
+Date:   Tue, 31 Jan 2023 08:56:23 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Aravinda Herle <araherle@in.ibm.com>
-Subject: Re: [RFCv2 0/3] iomap: Add support for subpage dirty state tracking
- to improve write performance
-Message-ID: <20230130210113.opdvyliooizicrsk@rh-tp>
+Subject: Re: [RFCv2 2/3] iomap: Change uptodate variable name to state
+Message-ID: <20230130215623.GP360264@dread.disaster.area>
 References: <cover.1675093524.git.ritesh.list@gmail.com>
- <Y9gIAKOVAsM2tTZ5@casper.infradead.org>
+ <bf30b7bfb03ef368e6e744b3c63af3dbfa11304d.1675093524.git.ritesh.list@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y9gIAKOVAsM2tTZ5@casper.infradead.org>
+In-Reply-To: <bf30b7bfb03ef368e6e744b3c63af3dbfa11304d.1675093524.git.ritesh.list@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 23/01/30 06:10PM, Matthew Wilcox wrote:
-> On Mon, Jan 30, 2023 at 09:44:10PM +0530, Ritesh Harjani (IBM) wrote:
-> > TODOs
-> > ======
-> > 1. I still need to work on macros which we could declare and use for easy
-> >    reference to uptodate/dirty bits in iop->state[] bitmap (based on previous
-> >    review comments).
->
-> I'm not sure it was worth posting this series without doing this, tbh.
+On Mon, Jan 30, 2023 at 09:44:12PM +0530, Ritesh Harjani (IBM) wrote:
+> This patch just changes the struct iomap_page uptodate & uptodate_lock
+> member names to state and state_lock to better reflect their purpose for
+> the upcoming patch.
+> 
+> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> ---
+>  fs/iomap/buffered-io.c | 30 +++++++++++++++---------------
+>  1 file changed, 15 insertions(+), 15 deletions(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index e9c85fcf7a1f..faee2852db8f 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -25,13 +25,13 @@
+>  
+>  /*
+>   * Structure allocated for each folio when block size < folio size
+> - * to track sub-folio uptodate status and I/O completions.
+> + * to track sub-folio uptodate state and I/O completions.
+>   */
+>  struct iomap_page {
+>  	atomic_t		read_bytes_pending;
+>  	atomic_t		write_bytes_pending;
+> -	spinlock_t		uptodate_lock;
+> -	unsigned long		uptodate[];
+> +	spinlock_t		state_lock;
+> +	unsigned long		state[];
 
-Really sorry about that. Since there was a functionality changes in
-this patches which were earlier missing from the last series that you pointed
-out i.e. marking the bits dirty when the folio is marked dirty, along with one
-other change which I mentioned in cover letter. So I thought of pushing these
-changes to get some early review.
+I don't realy like this change, nor the followup in the next patch
+that puts two different state bits somewhere inside a single bitmap.
 
-Sure, I will definitely work on it and will push out the next rev with these
-changes included.
+>  };
+>  
+>  static inline struct iomap_page *to_iomap_page(struct folio *folio)
+> @@ -58,12 +58,12 @@ iomap_page_create(struct inode *inode, struct folio *folio, unsigned int flags)
+>  	else
+>  		gfp = GFP_NOFS | __GFP_NOFAIL;
+>  
+> -	iop = kzalloc(struct_size(iop, uptodate, BITS_TO_LONGS(nr_blocks)),
+> +	iop = kzalloc(struct_size(iop, state, BITS_TO_LONGS(nr_blocks)),
+>  		      gfp);
+>  	if (iop) {
+> -		spin_lock_init(&iop->uptodate_lock);
+> +		spin_lock_init(&iop->state_lock);
+>  		if (folio_test_uptodate(folio))
+> -			bitmap_fill(iop->uptodate, nr_blocks);
+> +			bitmap_fill(iop->state, nr_blocks);
 
->
-> > 5. To address one of the other review comments like what happens with a large
-> >    folio. Can we limit the size of bitmaps if the folio is too large e.g. > 2MB.
-> >
-> >    [RH] - I can start looking into this area too, if we think these patches
-> >    are looking good. My preference would be to work on todos 1-4 as part of this
-> >    patch series and take up bitmap optimization as a follow-up work for next
-> >    part. Please do let me know your thoughts and suggestions on this.
->
-> I was hoping to push you towards investigating a better data structure
-> than a bitmap. I know a bitmap solves your immediate problem since
-> there are only 16 4kB blocks in a 64kB page, but in a linear-read
-> scenario, XFS is going to create large folios on POWER machines, all
-> the way up to 16MB IIUC.  Whatever your PMD page size is.  So you're
-> going to be exposed to this in some scenarios, even if you're not seeing
-> them in your current testing.
+This is the reason I don't like it - we lose the self-documenting
+aspect of the code. bitmap_fill(iop->uptodate, nr_blocks) is
+obviously correct, the new version isn't because "state" has no
+obvious meaning, and it only gets worse in the next patch where
+state is changed to have a magic "2 * nr_blocks" length and multiple
+state bits per block.
 
-Got it!! Let me come back on this after giving some more thoughts.
+Having an obvious setup where there are two bitmaps, one for dirty
+and one for uptodate, and the same bit in each bitmap corresponds to
+the state for that sub-block region, it is easy to see that the code
+is operating on the correct bit, to look at the bitmap and see what
+bits are set, to compare uptodate and dirty bitmaps side by side,
+etc. It's a much easier setup to read, code correctly, analyse and
+debug than putting multiple state bits in the same bitmap array at
+different indexes.
 
--ritesh
+If you are trying to keep this down to a single allocation by using
+a single bitmap of undefined length, then change the declaration and
+the structure size calculation away from using array notation and
+instead just use pointers to the individual bitmap regions within
+the allocated region.
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
