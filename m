@@ -2,152 +2,128 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB0F3C38142
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Jan 2023 18:05:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD944C38142
+	for <linux-xfs@archiver.kernel.org>; Tue, 31 Jan 2023 18:37:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231513AbjAaSFf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Jan 2023 13:05:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35460 "EHLO
+        id S230303AbjAaShc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Jan 2023 13:37:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34738 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229608AbjAaSFf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2023 13:05:35 -0500
-Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EB6B3C2E;
-        Tue, 31 Jan 2023 10:05:34 -0800 (PST)
-Received: by mail-pg1-x532.google.com with SMTP id q9so10649712pgq.5;
-        Tue, 31 Jan 2023 10:05:34 -0800 (PST)
+        with ESMTP id S230189AbjAaShb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2023 13:37:31 -0500
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E11913E;
+        Tue, 31 Jan 2023 10:37:30 -0800 (PST)
+Received: by mail-pj1-x102a.google.com with SMTP id e10-20020a17090a630a00b0022bedd66e6dso20048194pjj.1;
+        Tue, 31 Jan 2023 10:37:30 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ayhmt1bjcyH34Hbp3VAqnSdphdGsktgey7tJdOS13fw=;
-        b=H5M7kmoOc8yHgw0JZ/4hZItw3ZpWyIkm8ED+KkuvGgnpEmiDhZH2gIjsCeAF4FUDPj
-         XlsI1iXF50eHxVgcfBFsRKIP98zffx6mEyhBZeDdtK79EEYaZwqn9guiY38pnOjCGpXH
-         Hb4El+CZ8noDFBIJf1Zy00c4udlp+PpIQ4Gv+i1JeoZEk4HU2M1kHPxpzKxYCW8Q55Pv
-         hPMiQMH8Brk0JibS6ivtabkfvvNzUpcMEC0RlAFToSO955hMnRHMuJpsdlwax75exRmG
-         0MFeMuYRkGkuxtd0UY6smQESYZDRV7WESu7jRGeKtket0PVg3JWl3zcaY8bKDP946cmi
-         qYzw==
+        bh=wve+migYBKDWcs0pRJx6zwJwUe+DYTPKtb9wePfpNco=;
+        b=GkcbEkl3vPlEWDbkZ+V4oSymOFgFVrCrhvIqpQ05V7TPrE7VnUjuw5lK063vprP4EY
+         pXFN7O6ERxjVyZOcv9P7Q/SpfqM082T29qMbhzn6yXc0FUZLCbcNItKdNngMEhiuHHiu
+         Ku1gVmYBQI2E0wB/lHbbKrvXWVJ07o+NvMVyDvT7S9yH/qinJZDDR5fpJIAx912zZwdX
+         NdD+MOkqKMnh+njsetaNKjKUXd/KRv4yIXw10VCl2/hexazHJjS6Yh+ve4O33vAce1EX
+         /A0rfxKJA87mU5TzM3JUVoEpwNUEcDAo+EhiZcJSAQQWrS4Xq3Png+FcOcLEQLvF14kv
+         C8+g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ayhmt1bjcyH34Hbp3VAqnSdphdGsktgey7tJdOS13fw=;
-        b=und4/TKmgstATezlrpeLriqE5WnOB/uq/hY2r631HHoC+TYtkprrpSZKO6q+AQd9Ii
-         5TDZnQNB7coftCcVLvw98z7nScfCXNh8GNt0AU1bS+IumLB0+Keb3PZlhXArqnLHYdL9
-         wPDoF4o4STwyA+8cAvcwlb/v2UETkUH2yjo3DfHzfAQjUtt5nsTFM4PyI/5ew4X08bIS
-         C5iGfTu6sk+YvpUU1+ymU26+115wJ55ZmCoBwee+VKwEbTd9mucDBI6q2hdEAXrFRoxX
-         vZIle+STX0aGpKtSznC8yO4klQaNsHisf56jv5ZhQaC0vvHHJ3rFDQd07BYhTJbI86nX
-         jvmw==
-X-Gm-Message-State: AO0yUKWuUfMyxZW6Cz4xGUV130eJv11vef4BJJWERG6zKQJtxgJ3iWFO
-        7o6eqgqy3aEHzOZnoC40cXY=
-X-Google-Smtp-Source: AK7set9UX0lHFbyPF5sSXW+BrBRTkRU6JrZBOIMtMKm5RAktPd2katgZp9ftOT2wWhotDMHwyNRmlQ==
-X-Received: by 2002:aa7:8f16:0:b0:593:b491:40b8 with SMTP id x22-20020aa78f16000000b00593b49140b8mr8961504pfr.4.1675188333369;
-        Tue, 31 Jan 2023 10:05:33 -0800 (PST)
+        bh=wve+migYBKDWcs0pRJx6zwJwUe+DYTPKtb9wePfpNco=;
+        b=dABCzHEl6W/jl8NF2dKO6wLHtnZzCvr4X2YNOjXVrU0brlegnLHJQlRSCxJyZAKqpW
+         bidesF3xfveh8LHJyD+5R0+v4yeYWRvEjMedtct6ulsTWRAz0j8+2Z+bA3T4SO9Gh1XJ
+         09xBWm9JAKQvVjamq+aljAu6LdiavLwpKF4lA7CHmkBYb5oxREXvXn3MOqtA/6WJsvUF
+         zSABFmpLilwRcAoN5XuDFtu32TXS8JjCCBDaFGjJSnz1C0KPDtuLJtqm+aqXVhktkwiw
+         k2AjKiJ3wAKdwUi+3kmaHgKcx6/Egh6oJVfwtCP3IkBSm5Dkhrwsgit3tTc36M9OwR6z
+         sQdw==
+X-Gm-Message-State: AO0yUKUjxWwluLQSGi6lCsU8gQ2/NRIDrfAPC4QXGw5PGVDlv0SyOd3w
+        PUTS00DscCndy+NB/YUzjddlFDnnPy8=
+X-Google-Smtp-Source: AK7set8joXtAGgYSflWwrANTasoKHBiG3mhf3qVb9kQ2WjE3AeJyZdgop32rktmvDFKIkz2oDB4j8A==
+X-Received: by 2002:a17:90b:1d91:b0:22b:ed4a:c46e with SMTP id pf17-20020a17090b1d9100b0022bed4ac46emr30684524pjb.30.1675190249423;
+        Tue, 31 Jan 2023 10:37:29 -0800 (PST)
 Received: from localhost ([2406:7400:63:1fd8:5041:db86:706c:f96b])
-        by smtp.gmail.com with ESMTPSA id c7-20020aa78c07000000b00576259507c0sm9786743pfd.100.2023.01.31.10.05.32
+        by smtp.gmail.com with ESMTPSA id g8-20020a17090a708800b00213202d77d9sm8786557pjk.43.2023.01.31.10.37.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 31 Jan 2023 10:05:32 -0800 (PST)
-Date:   Tue, 31 Jan 2023 23:35:29 +0530
+        Tue, 31 Jan 2023 10:37:28 -0800 (PST)
+Date:   Wed, 1 Feb 2023 00:07:25 +0530
 From:   "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, Aravinda Herle <araherle@in.ibm.com>
-Subject: Re: [RFCv2 2/3] iomap: Change uptodate variable name to state
-Message-ID: <20230131180529.ioujrstxxkurpcti@rh-tp>
+Subject: Re: [RFCv2 1/3] iomap: Move creation of iomap_page early in
+ __iomap_write_begin
+Message-ID: <20230131183725.m7yoh7st5pplilvq@rh-tp>
 References: <cover.1675093524.git.ritesh.list@gmail.com>
- <bf30b7bfb03ef368e6e744b3c63af3dbfa11304d.1675093524.git.ritesh.list@gmail.com>
- <20230130215623.GP360264@dread.disaster.area>
- <Y9hDu8hVBa3qJTNw@casper.infradead.org>
- <Y9kulWxXxcYye09a@infradead.org>
+ <d879704250b5f890a755873aefe3171cbd193ae9.1675093524.git.ritesh.list@gmail.com>
+ <Y9f4MFzpFEi73E6P@infradead.org>
+ <20230130202150.pfohy5yg6dtu64ce@rh-tp>
+ <Y9gv0YV9V6gR9l3F@casper.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y9kulWxXxcYye09a@infradead.org>
+In-Reply-To: <Y9gv0YV9V6gR9l3F@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 23/01/31 07:07AM, Christoph Hellwig wrote:
-> On Mon, Jan 30, 2023 at 10:24:59PM +0000, Matthew Wilcox wrote:
-> > > a single bitmap of undefined length, then change the declaration and
-> > > the structure size calculation away from using array notation and
-> > > instead just use pointers to the individual bitmap regions within
-> > > the allocated region.
+On 23/01/30 09:00PM, Matthew Wilcox wrote:
+> On Tue, Jan 31, 2023 at 01:51:50AM +0530, Ritesh Harjani (IBM) wrote:
+> > > > Thus the iop structure will only gets allocated at the time of writeback
+> > > > in iomap_writepage_map(). This I think, was a not problem till now since
+> > > > we anyway only track uptodate status in iop (no support of tracking
+> > > > dirty bitmap status which later patches will add), and we also end up
+> > > > setting all the bits in iomap_page_create(), if the page is uptodate.
+> > >
+> > > delayed iop allocation is a feature and not a bug.  We might have to
+> > > refine the criteria for sub-page dirty tracking, but in general having
+> > > the iop allocates is a memory and performance overhead and should be
+> > > avoided as much as possible.  In fact I still have some unfinished
+> > > work to allocate it even more lazily.
 > >
-> > Hard to stomach that solution when the bitmap is usually 2 bytes long
-> > (in Ritesh's case).  Let's see a version of this patchset with
-> > accessors before rendering judgement.
+> > So, what I meant here was that the commit[1] chaged the behavior/functionality
+> > without indenting to. I agree it's not a bug.
 >
-> Yes.  I think what we need is proper helpers that are self-documenting
-> for every bitmap update as I already suggsted last round.  That keeps
-> the efficient allocation, and keeps all the users self-documenting.
-> It just adds a bit of boilerplate for all these helpers, but that
-> should be worth having the clarity and performance benefits.
+> It didn't change the behaviour or functionality.  It broke your patches,
+> but it certainly doesn't deserve its own commit reverting it -- because
+> it's not wrong.
+>
+> > But when I added dirty bitmap tracking support, I couldn't understand for
+> > sometime on why were we allocating iop only at the time of writeback.
+> > And it was due to a small line change which somehow slipped into this commit [1].
+> > Hence I made this as a seperate patch so that it doesn't slip through again w/o
+> > getting noticed/review.
+>
+> It didn't "slip through".  It was intended.
+>
+> > Thanks for the info on the lazy allocation work. Yes, though it is not a bug, but
+> > with subpage dirty tracking in iop->state[], if we end up allocating iop only
+> > at the time of writeback, than that might cause some performance degradation
+> > compared to, if we allocat iop at ->write_begin() and mark the required dirty
+> > bit ranges in ->write_end(). Like how we do in this patch series.
+> > (Ofcourse it is true only for bs < ps use case).
+> >
+> > [1]: https://lore.kernel.org/all/20220623175157.1715274-5-shr@fb.com/
+>
+> You absolutely can allocate it in iomap_write_begin, but you can avoid
+> allocating it until writeback time if (pos, len) entirely overlap the
+> folio.  ie:
+>
+> 	if (pos > folio_pos(folio) ||
+> 	    pos + len < folio_pos(folio) + folio_size(folio))
+> 		iop = iomap_page_create(iter->inode, folio, iter->flags, false);
 
-Are these accessor apis looking good to be part of fs/iomap/buffered-io.c
-The rest of the changes will then be just using this to set/clear/test the
-uptodate/dirty bits of iop->state bitmap.
-I think, after these apis, there shouldn't be any place where we need to
-directly manipulate iop->state bitmap. These APIs are all what I think are
-required for current changeset.
-
-Please let me know your thoughts/suggestions on these.
-If it looks good, then I can fold these in, in different patches which
-implements uptodate/dirty functionality and send rfcv3 along with other
-review comments addressed.
-
-/*
- * Accessor functions for setting/clearing/checking uptodate and
- * dirty bits in iop->state bitmap.
- * nrblocks is i_blocks_per_folio() which is passed in every
- * function as the last argument for API consistency.
- */
-static inline void iop_set_range_uptodate(struct iomap_page *iop,
-                                unsigned int start, unsigned int len,
-                                unsigned int nrblocks)
-{
-        bitmap_set(iop->state, start, len);
-}
-
-static inline void iop_clear_range_uptodate(struct iomap_page *iop,
-                                unsigned int start, unsigned int len,
-                                unsigned int nrblocks)
-{
-        bitmap_clear(iop->state, start, len);
-}
-
-static inline bool iop_test_uptodate(struct iomap_page *iop, unsigned int pos,
-                                unsigned int nrblocks)
-{
-        return test_bit(pos, iop->state);
-}
-
-static inline bool iop_full_uptodate(struct iomap_page *iop,
-                                unsigned int nrblocks)
-{
-        return bitmap_full(iop->state, nrblocks);
-}
-
-static inline void iop_set_range_dirty(struct iomap_page *iop,
-                                unsigned int start, unsigned int len,
-                                unsigned int nrblocks)
-{
-        bitmap_set(iop->state, start + nrblocks, len);
-}
-
-static inline void iop_clear_range_dirty(struct iomap_page *iop,
-                                unsigned int start, unsigned int len,
-                                unsigned int nrblocks)
-{
-        bitmap_clear(iop->state, start + nrblocks, len);
-}
-
-static inline bool iop_test_dirty(struct iomap_page *iop, unsigned int pos,
-                             unsigned int nrblocks)
-{
-        return test_bit(pos + nrblocks, iop->state);
-}
+Thanks for the suggestion. However do you think it will be better if this is
+introduced along with lazy allocation changes which Christoph was mentioning
+about?
+Why I am thinking that is because, with above approach we delay the allocation
+of iop until writeback, for entire folio overlap case. But then later
+in __iomap_write_begin(), we require iop if folio is not uptodate.
+Hence we again will have to do some checks to see if the iop is not allocated
+then allocate it (which is for entire folio overlap case).
+That somehow looked like an overkill for a very little gain in the context of
+this patch series. Kindly let me know your thoughts on this.
 
 -ritesh
