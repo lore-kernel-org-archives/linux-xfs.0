@@ -2,121 +2,127 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A72F2C636CD
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Jan 2023 18:49:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B335C636CC
+	for <linux-xfs@archiver.kernel.org>; Tue, 31 Jan 2023 19:28:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231795AbjAaStL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Jan 2023 13:49:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39842 "EHLO
+        id S231634AbjAaT2O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Jan 2023 14:28:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230320AbjAaStF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2023 13:49:05 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59EE3AD0E;
-        Tue, 31 Jan 2023 10:48:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=bp1srOOlc5HEApehtt7EJwx+t0Jni/2mYYi7TJa5tYw=; b=dUHpHXITsZ77ywOGjiYY+l+jlD
-        N69XtD/wQfHxdcor7ruO5SUbDimd4gSGGrH+c1WEhAO6tkCcTa7eLQczzJ2pVAx6V8adxZHACqfTv
-        cnVnyIuOxsA+Y7EDoUdeSDOlrtRmeQUbiTvHn0Cr3qdBrA5Jaw5tTiYJpbyuVAlzR+N8Un67LOAW6
-        DG/+XP0ZP26f6j7YK1ixztNOlmd246bduFJupLKvnaGFQaUHL4wQicfyNYeB33sRlfXd6TGaF5RGp
-        0et6ldylkFWWu9cCXXrEnNa4ixQhfl9YsZosTEmNpc+NvKI/Il0bsxQsfdSof5z75lbZpl/zIKH5j
-        qNGwU1hw==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pMvgM-00BZTO-6N; Tue, 31 Jan 2023 18:48:38 +0000
-Date:   Tue, 31 Jan 2023 18:48:38 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, Aravinda Herle <araherle@in.ibm.com>
-Subject: Re: [RFCv2 1/3] iomap: Move creation of iomap_page early in
- __iomap_write_begin
-Message-ID: <Y9lihmePkCHWHrlI@casper.infradead.org>
-References: <cover.1675093524.git.ritesh.list@gmail.com>
- <d879704250b5f890a755873aefe3171cbd193ae9.1675093524.git.ritesh.list@gmail.com>
- <Y9f4MFzpFEi73E6P@infradead.org>
- <20230130202150.pfohy5yg6dtu64ce@rh-tp>
- <Y9gv0YV9V6gR9l3F@casper.infradead.org>
- <20230131183725.m7yoh7st5pplilvq@rh-tp>
+        with ESMTP id S230344AbjAaT2N (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2023 14:28:13 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F792CA3C
+        for <linux-xfs@vger.kernel.org>; Tue, 31 Jan 2023 11:28:12 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C5D7CB81D3E
+        for <linux-xfs@vger.kernel.org>; Tue, 31 Jan 2023 19:28:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7361EC433EF;
+        Tue, 31 Jan 2023 19:28:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1675193289;
+        bh=QFC5KceuPEILmVfXD8S77RXj/BHMLCliSBaCmcgZrac=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=uDUdQRxHu3lRy4sMjZzWqn+bfCcbCfjYqFlZ9es2J57O98eSjhjg4jojZONgf/LxB
+         rAd5qvnoi8OxOlzJ77TeJ2meafTI3/76OGpXsgimHGN3d0B5248mOzb8C7AdicjHuV
+         zySbZPfoGgYH720qTIbKxXR+84yvm3xI7K6UU0B2n1smz3/0maxvqWgbD8KT9Pb/nK
+         uhbO+lHIyrqP2cBu78nOL8mupfvvIdFprs1e5Bf+oAOeAvEYnzvc4KmV/zqXMWDO8z
+         5r6JzYEJDNCFjtvh9x11qspIn8yLKC5fuEnCRWl5aMaLFylDoEUZk6/C6hq5h0DfSc
+         szzVIaarYMkWg==
+Date:   Tue, 31 Jan 2023 11:28:08 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Donald Douwsma <ddouwsma@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: allow setting full range of panic tags
+Message-ID: <Y9lryDchO2EWw4Nj@magnolia>
+References: <20230126052910.588098-1-ddouwsma@redhat.com>
+ <Y9P7X6GnLA/iJuIa@magnolia>
+ <25c4d75a-ef1a-c8a5-6c9c-0549ebd0edc2@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230131183725.m7yoh7st5pplilvq@rh-tp>
+In-Reply-To: <25c4d75a-ef1a-c8a5-6c9c-0549ebd0edc2@sandeen.net>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 01, 2023 at 12:07:25AM +0530, Ritesh Harjani (IBM) wrote:
-> On 23/01/30 09:00PM, Matthew Wilcox wrote:
-> > On Tue, Jan 31, 2023 at 01:51:50AM +0530, Ritesh Harjani (IBM) wrote:
-> > > > > Thus the iop structure will only gets allocated at the time of writeback
-> > > > > in iomap_writepage_map(). This I think, was a not problem till now since
-> > > > > we anyway only track uptodate status in iop (no support of tracking
-> > > > > dirty bitmap status which later patches will add), and we also end up
-> > > > > setting all the bits in iomap_page_create(), if the page is uptodate.
-> > > >
-> > > > delayed iop allocation is a feature and not a bug.  We might have to
-> > > > refine the criteria for sub-page dirty tracking, but in general having
-> > > > the iop allocates is a memory and performance overhead and should be
-> > > > avoided as much as possible.  In fact I still have some unfinished
-> > > > work to allocate it even more lazily.
-> > >
-> > > So, what I meant here was that the commit[1] chaged the behavior/functionality
-> > > without indenting to. I agree it's not a bug.
-> >
-> > It didn't change the behaviour or functionality.  It broke your patches,
-> > but it certainly doesn't deserve its own commit reverting it -- because
-> > it's not wrong.
-> >
-> > > But when I added dirty bitmap tracking support, I couldn't understand for
-> > > sometime on why were we allocating iop only at the time of writeback.
-> > > And it was due to a small line change which somehow slipped into this commit [1].
-> > > Hence I made this as a seperate patch so that it doesn't slip through again w/o
-> > > getting noticed/review.
-> >
-> > It didn't "slip through".  It was intended.
-> >
-> > > Thanks for the info on the lazy allocation work. Yes, though it is not a bug, but
-> > > with subpage dirty tracking in iop->state[], if we end up allocating iop only
-> > > at the time of writeback, than that might cause some performance degradation
-> > > compared to, if we allocat iop at ->write_begin() and mark the required dirty
-> > > bit ranges in ->write_end(). Like how we do in this patch series.
-> > > (Ofcourse it is true only for bs < ps use case).
-> > >
-> > > [1]: https://lore.kernel.org/all/20220623175157.1715274-5-shr@fb.com/
-> >
-> > You absolutely can allocate it in iomap_write_begin, but you can avoid
-> > allocating it until writeback time if (pos, len) entirely overlap the
-> > folio.  ie:
-> >
-> > 	if (pos > folio_pos(folio) ||
-> > 	    pos + len < folio_pos(folio) + folio_size(folio))
-> > 		iop = iomap_page_create(iter->inode, folio, iter->flags, false);
+On Mon, Jan 30, 2023 at 04:20:00PM -0600, Eric Sandeen wrote:
+> On 1/27/23 10:27 AM, Darrick J. Wong wrote:
+> > On Thu, Jan 26, 2023 at 04:29:10PM +1100, Donald Douwsma wrote:
+> >> xfs will not allow combining other panic masks with
+> >> XFS_PTAG_VERIFIER_ERROR.
+> >>
+> >>  sysctl fs.xfs.panic_mask=511
+> >>  sysctl: setting key "fs.xfs.panic_mask": Invalid argument
+> >>  fs.xfs.panic_mask = 511
+> >>
+> >> Update to the maximum value that can be set to allow the full range of
+> >> masks.
+> >>
+> >> Fixes: d519da41e2b7 ("xfs: Introduce XFS_PTAG_VERIFIER_ERROR panic mask")
 > 
-> Thanks for the suggestion. However do you think it will be better if this is
-> introduced along with lazy allocation changes which Christoph was mentioning
-> about?
-> Why I am thinking that is because, with above approach we delay the allocation
-> of iop until writeback, for entire folio overlap case. But then later
-> in __iomap_write_begin(), we require iop if folio is not uptodate.
-> Hence we again will have to do some checks to see if the iop is not allocated
-> then allocate it (which is for entire folio overlap case).
-> That somehow looked like an overkill for a very little gain in the context of
-> this patch series. Kindly let me know your thoughts on this.
+> whoops :)
+> 
+> I wonder ...
+> 
+> >> Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
+> 
+> ...
+> 
+> > The ptag values are a bitmask, not a continuous integer range, so the
+> > name should have "MASK" in it, e.g.
+> > 
+> > #define			XFS_PTAG_MASK	(XFS_PTAG_IFLUSH | \
+> > 					 XFS_PTAG_LOGRES | \
+> > 					...
+> > 
+> > and follow the customary style where the macro definition lines are
+> > indented from the name.
+> > 
+> > Otherwise this looks fine.
+> > 
+> > --D
+> > 
+> >> +#define		XFS_MAX_PTAG ( \
+> >> +			XFS_PTAG_IFLUSH | \
+> >> +			XFS_PTAG_LOGRES | \
+> >> +			XFS_PTAG_AILDELETE | \
+> >> +			XFS_PTAG_ERROR_REPORT | \
+> >> +			XFS_PTAG_SHUTDOWN_CORRUPT | \
+> >> +			XFS_PTAG_SHUTDOWN_IOERROR | \
+> >> +			XFS_PTAG_SHUTDOWN_LOGERROR | \
+> >> +			XFS_PTAG_FSBLOCK_ZERO | \
+> >> +			XFS_PTAG_VERIFIER_ERROR)
+> >> +
+> 
+> ...
+> 
+> >> +	.panic_mask	= {	0,		0,		XFS_MAX_PTAG},
+> >>  	.error_level	= {	0,		3,		11	},
+> >>  	.syncd_timer	= {	1*100,		30*100,		7200*100},
+> >>  	.stats_clear	= {	0,		0,		1	},
+> 
+> Do we really gain anything by carefully crafting the max bit that can be set here?
+> Nothing stops someone from forgetting to update XFS_MAX_PTAG (or whatever it
+> may be named) in the future,
 
-Look at *why* __iomap_write_begin() allocates an iop.  It's to read in the
-blocks which are going to be partially-overwritten by the write.  If the
-write overlaps the entire folio, there are no parts which need to be read
-in, and we can simply return.  Maybe we should make that more obvious:
+That's true, but every other _ALL and _MASK define in the xfs codebase
+also have that problem.  *Most* of the time people remember to update
+it.
 
-	if (folio_test_uptodate(folio))
-		return 0;
-	if (pos <= folio_pos(folio) &&
-	    pos + len >= folio_pos(folio) + folio_size(folio))
-		return 0;
-	folio_clear_error(folio);
+> and I think nothing bad happens if you try to turn
+> on a PTAG that doesn't exist. Should we just set it to LONG_MAX and be done with
+> it?
 
-(I think pos must always be >= folio_pos(), so that <= could be ==, but
-it doesn't hurt anything to use <=)
+That would break the existing input validation:
+
+# echo 1023 > /proc/sys/fs/xfs/panic_mask
+-bash: echo: write error: Invalid argument
+
+--D
+
+> (I guess it's maybe nice to tell the user that they're out of range, but it is
+> a debug knob after all. Just a thought, I'm ot super picky about this.)
+> -Eric
