@@ -2,139 +2,64 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6048C636D3
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Jan 2023 12:03:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18C11C38142
+	for <linux-xfs@archiver.kernel.org>; Tue, 31 Jan 2023 15:10:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229634AbjAaMDG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Jan 2023 07:03:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57322 "EHLO
+        id S232502AbjAaPKs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Jan 2023 10:10:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44682 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229716AbjAaMDE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2023 07:03:04 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6BAEA26A;
-        Tue, 31 Jan 2023 04:02:59 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 158D2614DA;
-        Tue, 31 Jan 2023 12:02:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2EA8C433EF;
-        Tue, 31 Jan 2023 12:02:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1675166578;
-        bh=O4jn1ROgjCGd5cTUgGaKd96V0XhiaJ98M03oi8hs864=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=qKbCElccjpVmjq9BfXw7OAEY5lDFIIzbwSuxpAtO5UlDJ7NQaX5a6nXwCawBoqlVc
-         5UP+Jz0dhrjCPLXlSp57eIU3TXXtLpNJnn2kRPYhwskRYIQLKXNRhyUfdUMtYxqY/o
-         zb5HXA7l7OmTb+IdW5YZpD7etGJ+jjTcRhlh7g1xD8Y44582exD6lfwCtu3b/m5jWv
-         lJQ+Hr0t8NwUX8iGw7zHQK+Bdoh4egysD2OlcdlmuSlk2Z2z3ynzY0WJ9oqdRDpTwT
-         uQdTsiKUNS4aGQLHCJfkrmVq6kDD4EjoP4jM5GNb4Btneg8KBd2qxAqhNFmLMNpPCz
-         HGHb6OtyAtGow==
-Message-ID: <619f0cd76d739ade3249ea4433943264d1737ab2.camel@kernel.org>
-Subject: Re: replacement i_version counter for xfs
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Date:   Tue, 31 Jan 2023 07:02:56 -0500
-In-Reply-To: <20230130020525.GO360264@dread.disaster.area>
-References: <57c413ed362c0beab06b5d83b7fc4b930c7662c4.camel@kernel.org>
-         <20230125000227.GM360264@dread.disaster.area>
-         <86f993a69a5be276164c4d3fc1951ff4bde881be.camel@kernel.org>
-         <Y9FZupBCyPGCMFBd@magnolia>
-         <4d16f9f9eb678f893d4de695bd7cbff6409c3c5a.camel@kernel.org>
-         <20230130020525.GO360264@dread.disaster.area>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.3 (3.46.3-1.fc37) 
+        with ESMTP id S233386AbjAaPKM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2023 10:10:12 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74EB41EFC8;
+        Tue, 31 Jan 2023 07:07:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=nnISUeD7Myml+nomxC97ujFe7tLxq4ETjq8I3WolSKc=; b=poi+M+FmKuNkElvagkC9xZC+es
+        /lhFW1SI+9FfH4lFdcDIfXOTqZSd4LKnl4sq4+TOlLx50RVMaME14KWog5ULIUZ7xEDwdwP/lfkoG
+        pvQggsCBbMLCz8+evhmJdgkRB9fhhGNYWKnzn6pieAuQb79gPYTCZgA4eKqkvpAONi14WjN8v+6Au
+        vPnaIwwk57x+QuvnhFbjBr5lTZlbtLBml+UXw2tPxBdK+7ZCqESSfcUyZqBGl0ssUv+4EywbONDXA
+        wVoutOqorSAxwY/5SgTIK3hYjraDkIkXQLqn5f5FRFDg4aV0iV5YM/0LHflJRWkYkbpSk1HD6iAq5
+        blCR7Elw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1pMsDt-008QMi-QF; Tue, 31 Jan 2023 15:07:01 +0000
+Date:   Tue, 31 Jan 2023 07:07:01 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Aravinda Herle <araherle@in.ibm.com>
+Subject: Re: [RFCv2 2/3] iomap: Change uptodate variable name to state
+Message-ID: <Y9kulWxXxcYye09a@infradead.org>
+References: <cover.1675093524.git.ritesh.list@gmail.com>
+ <bf30b7bfb03ef368e6e744b3c63af3dbfa11304d.1675093524.git.ritesh.list@gmail.com>
+ <20230130215623.GP360264@dread.disaster.area>
+ <Y9hDu8hVBa3qJTNw@casper.infradead.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Y9hDu8hVBa3qJTNw@casper.infradead.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, 2023-01-30 at 13:05 +1100, Dave Chinner wrote:
-> On Wed, Jan 25, 2023 at 12:58:08PM -0500, Jeff Layton wrote:
-> > On Wed, 2023-01-25 at 08:32 -0800, Darrick J. Wong wrote:
-> > > On Wed, Jan 25, 2023 at 06:47:12AM -0500, Jeff Layton wrote:
-> > > > Note that there are two other lingering issues with i_version. Neit=
-her
-> > > > of these are xfs-specific, but they may inform the changes you want=
- to
-> > > > make there:
-> > > >=20
-> > > > 1/ the ctime and i_version can roll backward on a crash.
-> > > >=20
-> > > > 2/ the ctime and i_version are both currently updated before write =
-data
-> > > > is copied to the pagecache. It would be ideal if that were done
-> > > > afterward instead. (FWIW, I have some draft patches for btrfs and e=
-xt4
-> > > > for this, but they need a lot more testing.)
-> > >=20
-> > > You might also want some means for xfs to tell the vfs that it alread=
-y
-> > > did the timestamp update (because, say, we had to allocate blocks).
-> > > I wonder what people will say when we have to run a transaction befor=
-e
-> > > the write to peel off suid bits and another one after to update ctime=
-.
-> > >=20
-> >=20
-> > That's a great question! There is a related one too once I started
-> > looking at this in more detail:
-> >=20
-> > Most filesystems end up updating the timestamp via a the call to
-> > file_update_time in __generic_file_write_iter. Today, that's called ver=
-y
-> > early in the function and if it fails, the write fails without changing
-> > anything.
-> >=20
-> > What do we do now if the write succeeds, but update_time fails? We don'=
-t
->=20
-> On XFS, the timestamp update will either succeed or cause the
-> filesystem to shutdown as a failure with a dirty transaction is a
-> fatal, unrecoverable error.
->=20
+On Mon, Jan 30, 2023 at 10:24:59PM +0000, Matthew Wilcox wrote:
+> > a single bitmap of undefined length, then change the declaration and
+> > the structure size calculation away from using array notation and
+> > instead just use pointers to the individual bitmap regions within
+> > the allocated region.
+> 
+> Hard to stomach that solution when the bitmap is usually 2 bytes long
+> (in Ritesh's case).  Let's see a version of this patchset with
+> accessors before rendering judgement.
 
-Ok. So for xfs, we could move all of this to be afterward. Clearing
-setuid bits is quite rare, so that would only rarely require a
-transaction (in principle).
-
-> > want to return an error on the write() since the data did get copied in=
-.
-> > Ignoring it seems wrong too though. There could even be some way to
-> > exploit that by changing the contents while holding the timestamp and
-> > version constant.
->=20
-> If the filesystem has shut down, it doesn't matter that the data got
-> copied into the kernel - it's never going to make it to disk and
-> attempts to read it back will also fail. There's nothing that can be
-> exploited by such a failure on XFS - it's game over for everyone
-> once the fs has shut down....
->=20
-> > At this point I'm leaning toward leaving the ctime and i_version to be
-> > updated before the write, and just bumping the i_version a second time
-> > after. In most cases the second bump will end up being a no-op, unless
-> > an i_version query races in between.
->=20
-> Why not also bump ctime at write completion if a query races with
-> the write()? Wouldn't that put ns-granularity ctime based change
-> detection on a par with i_version?
->=20
-> Userspace isn't going to notice the difference - the ctime they
-> observe indicates that it was changed during the syscall. So
-> who/what is going to care if we bump ctime twice in the syscall
-> instead of just once in this rare corner case?
->=20
-
-We could bump the ctime too in this situation, but it would be more
-costly. In most cases the i_version bump will be a no-op. The only
-exception would be when a query of i_version races in between the two
-bumps. That wouldn't be the case with the ctime, which would almost
-always require a second transaction.
-
---=20
-Jeff Layton <jlayton@kernel.org>
+Yes.  I think what we need is proper helpers that are self-documenting
+for every bitmap update as I already suggsted last round.  That keeps
+the efficient allocation, and keeps all the users self-documenting.
+It just adds a bit of boilerplate for all these helpers, but that
+should be worth having the clarity and performance benefits.
