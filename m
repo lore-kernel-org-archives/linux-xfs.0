@@ -2,174 +2,322 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15BEBC38142
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Feb 2023 19:19:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EACDC05027
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Feb 2023 19:28:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231886AbjBATTI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Feb 2023 14:19:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41158 "EHLO
+        id S231594AbjBAT26 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Feb 2023 14:28:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231893AbjBATTH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Feb 2023 14:19:07 -0500
+        with ESMTP id S230169AbjBAT26 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Feb 2023 14:28:58 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EA83820F8;
-        Wed,  1 Feb 2023 11:19:04 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1BA4820D5
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Feb 2023 11:28:56 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0B2CE61926;
-        Wed,  1 Feb 2023 19:19:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5763C43442;
-        Wed,  1 Feb 2023 19:19:02 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6FBC46192C
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Feb 2023 19:28:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C85ADC433EF;
+        Wed,  1 Feb 2023 19:28:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1675279143;
-        bh=jKRc5Zq71KzYEnKrs9tsf+c7DuNTErUEdqtV8oGSFp4=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=t7EzVYmoeakMCz7I0lw2+MYS1isAQl7bh0uU6qWNrwQaftNjS8xF1n246QxxtmRAv
-         o4VRKq1LSp7ue1Oo5e51Q4C7MaXtdQGLxubdo0VPqsBDsYkLLAQTvUXUy1+JT05XT5
-         Ucg3JyCLILS7bPPLBl87b9jcTPiXirWM2xHtT3mQVrvDYFvFs/7UdSQMU7ajgEEM1S
-         Qzcz6zzbsnQa1PodzbmRiV+Olim0KwLVlvyXeNufqnrtN+/qm+Wm1dKcHTZMMcplpg
-         4zEg7G3y+cTzUnNq+PhK3Und1tdeL44vZ2oE31oIw8KMqEqidsD0FwQ7gu43mY7wb+
-         VbPqJiHr4ZkKg==
-Message-ID: <545a181c7855dde8c71a4e4b98a1107bd85e24e6.camel@kernel.org>
-Subject: Re: replacement i_version counter for xfs
-From:   Jeff Layton <jlayton@kernel.org>
+        s=k20201202; t=1675279735;
+        bh=lUf+BNuXiQr9WynIJuaMVm0Aq5FSCpBETM0UpS27uAw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=gNtUPozgyNC1Vrje4iaNRQSP+BRLxMmECOp0akjA6GY4VZYYsA9ClVlD7mnuBc5aM
+         dPr5MGkpNg4SZSrJleVQ8wz3x9jHOzDwsims9/4Mzblz0p8X2FGUamT9X2Lglmx9ja
+         uwX58hG9kQi6H143sVji6eGvQBVlN7ECqGvUIuHjTBnAtRzhpyoPTSj6WvuB7VFRZk
+         ldKX9opaKM70GZOs7zfrf+2LPtZN8C+BuUqQmAvy2poOvwaaAq6cOCYNLY9D07pYSn
+         FjugJ3ouuca/WnxznVyPsPc8zywUR5OizCkYMHmGZo8OGRrlxwUHkCKyM2i+ZlML3B
+         Q/m5dCuP5l5Jw==
+Date:   Wed, 1 Feb 2023 11:28:55 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Date:   Wed, 01 Feb 2023 14:19:01 -0500
-In-Reply-To: <20230131233120.GR360264@dread.disaster.area>
-References: <57c413ed362c0beab06b5d83b7fc4b930c7662c4.camel@kernel.org>
-         <20230125000227.GM360264@dread.disaster.area>
-         <86f993a69a5be276164c4d3fc1951ff4bde881be.camel@kernel.org>
-         <Y9FZupBCyPGCMFBd@magnolia>
-         <4d16f9f9eb678f893d4de695bd7cbff6409c3c5a.camel@kernel.org>
-         <20230130020525.GO360264@dread.disaster.area>
-         <619f0cd76d739ade3249ea4433943264d1737ab2.camel@kernel.org>
-         <20230131233120.GR360264@dread.disaster.area>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.3 (3.46.3-1.fc37) 
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 14/42] xfs: introduce xfs_for_each_perag_wrap()
+Message-ID: <Y9q9dynRpYDmN4sK@magnolia>
+References: <20230118224505.1964941-1-david@fromorbit.com>
+ <20230118224505.1964941-15-david@fromorbit.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230118224505.1964941-15-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 2023-02-01 at 10:31 +1100, Dave Chinner wrote:
-> On Tue, Jan 31, 2023 at 07:02:56AM -0500, Jeff Layton wrote:
-> > On Mon, 2023-01-30 at 13:05 +1100, Dave Chinner wrote:
-> > > On Wed, Jan 25, 2023 at 12:58:08PM -0500, Jeff Layton wrote:
-> > > > On Wed, 2023-01-25 at 08:32 -0800, Darrick J. Wong wrote:
-> > > > > On Wed, Jan 25, 2023 at 06:47:12AM -0500, Jeff Layton wrote:
-> > > > > > Note that there are two other lingering issues with i_version. =
-Neither
-> > > > > > of these are xfs-specific, but they may inform the changes you =
-want to
-> > > > > > make there:
-> > > > > >=20
-> > > > > > 1/ the ctime and i_version can roll backward on a crash.
-> > > > > >=20
-> > > > > > 2/ the ctime and i_version are both currently updated before wr=
-ite data
-> > > > > > is copied to the pagecache. It would be ideal if that were done
-> > > > > > afterward instead. (FWIW, I have some draft patches for btrfs a=
-nd ext4
-> > > > > > for this, but they need a lot more testing.)
-> > > > >=20
-> > > > > You might also want some means for xfs to tell the vfs that it al=
-ready
-> > > > > did the timestamp update (because, say, we had to allocate blocks=
-).
-> > > > > I wonder what people will say when we have to run a transaction b=
-efore
-> > > > > the write to peel off suid bits and another one after to update c=
-time.
-> > > > >=20
-> > > >=20
-> > > > That's a great question! There is a related one too once I started
-> > > > looking at this in more detail:
-> > > >=20
-> > > > Most filesystems end up updating the timestamp via a the call to
-> > > > file_update_time in __generic_file_write_iter. Today, that's called=
- very
-> > > > early in the function and if it fails, the write fails without chan=
-ging
-> > > > anything.
-> > > >=20
-> > > > What do we do now if the write succeeds, but update_time fails? We =
-don't
-> > >=20
-> > > On XFS, the timestamp update will either succeed or cause the
-> > > filesystem to shutdown as a failure with a dirty transaction is a
-> > > fatal, unrecoverable error.
-> > >=20
-> >=20
-> > Ok. So for xfs, we could move all of this to be afterward. Clearing
-> > setuid bits is quite rare, so that would only rarely require a
-> > transaction (in principle).
->=20
-> See my response in the other email about XFS and atomic buffered
-> write IO. We don't need to do an update after the write because
-> reads cannot race between the data copy and the ctime/i_version
-> update. Hence we only need one update, and it doesn't matter if it
-> is before or after the data copy into the page cache.
->=20
+On Thu, Jan 19, 2023 at 09:44:37AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> In several places we iterate every AG from a specific start agno and
+> wrap back to the first AG when we reach the end of the filesystem to
+> continue searching. We don't have a primitive for this iteration
+> yet, so add one for conversion of these algorithms to per-ag based
+> iteration.
+> 
+> The filestream AG select code is a mess, and this initially makes it
+> worse. The per-ag selection needs to be driven completely into the
+> filestream code to clean this up and it will be done in a future
+> patch that makes the filestream allocator use active per-ag
+> references correctly.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_ag.h     | 45 +++++++++++++++++++++-
+>  fs/xfs/libxfs/xfs_bmap.c   | 76 ++++++++++++++++++++++----------------
+>  fs/xfs/libxfs/xfs_ialloc.c | 32 ++++++++--------
+>  3 files changed, 104 insertions(+), 49 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+> index 187d30d9bb13..8f43b91d4cf3 100644
+> --- a/fs/xfs/libxfs/xfs_ag.h
+> +++ b/fs/xfs/libxfs/xfs_ag.h
+> @@ -237,7 +237,6 @@ xfs_perag_next(
+>  #define for_each_perag_from(mp, agno, pag) \
+>  	for_each_perag_range((mp), (agno), (mp)->m_sb.sb_agcount - 1, (pag))
+>  
+> -
+>  #define for_each_perag(mp, agno, pag) \
+>  	(agno) = 0; \
+>  	for_each_perag_from((mp), (agno), (pag))
+> @@ -249,6 +248,50 @@ xfs_perag_next(
+>  		xfs_perag_rele(pag), \
+>  		(pag) = xfs_perag_grab_tag((mp), (agno), (tag)))
+>  
+> +static inline struct xfs_perag *
+> +xfs_perag_next_wrap(
+> +	struct xfs_perag	*pag,
+> +	xfs_agnumber_t		*agno,
+> +	xfs_agnumber_t		stop_agno,
+> +	xfs_agnumber_t		wrap_agno)
+> +{
+> +	struct xfs_mount	*mp = pag->pag_mount;
+> +
+> +	*agno = pag->pag_agno + 1;
+> +	xfs_perag_rele(pag);
+> +	while (*agno != stop_agno) {
+> +		if (*agno >= wrap_agno)
+> +			*agno = 0;
+> +		if (*agno == stop_agno)
+> +			break;
+> +
+> +		pag = xfs_perag_grab(mp, *agno);
+> +		if (pag)
+> +			return pag;
+> +		(*agno)++;
+> +	}
+> +	return NULL;
+> +}
+> +
+> +/*
+> + * Iterate all AGs from start_agno through wrap_agno, then 0 through
+> + * (start_agno - 1).
+> + */
+> +#define for_each_perag_wrap_at(mp, start_agno, wrap_agno, agno, pag) \
+> +	for ((agno) = (start_agno), (pag) = xfs_perag_grab((mp), (agno)); \
+> +		(pag) != NULL; \
+> +		(pag) = xfs_perag_next_wrap((pag), &(agno), (start_agno), \
+> +				(wrap_agno)))
+> +
+> +/*
+> + * Iterate all AGs from start_agno through to the end of the filesystem, then 0
+> + * through (start_agno - 1).
+> + */
+> +#define for_each_perag_wrap(mp, start_agno, agno, pag) \
+> +	for_each_perag_wrap_at((mp), (start_agno), (mp)->m_sb.sb_agcount, \
+> +				(agno), (pag))
 
-Yep, I just saw that. Makes sense. It sounds like we won't need to do
-anything extra for that for XFS at all.
+This seems like a useful new iterator.  I like that the opencoded loops
+finally got cleaned up.
 
-> > > > want to return an error on the write() since the data did get copie=
-d in.
-> > > > Ignoring it seems wrong too though. There could even be some way to
-> > > > exploit that by changing the contents while holding the timestamp a=
-nd
-> > > > version constant.
-> > >=20
-> > > If the filesystem has shut down, it doesn't matter that the data got
-> > > copied into the kernel - it's never going to make it to disk and
-> > > attempts to read it back will also fail. There's nothing that can be
-> > > exploited by such a failure on XFS - it's game over for everyone
-> > > once the fs has shut down....
-> > >=20
-> > > > At this point I'm leaning toward leaving the ctime and i_version to=
- be
-> > > > updated before the write, and just bumping the i_version a second t=
-ime
-> > > > after. In most cases the second bump will end up being a no-op, unl=
-ess
-> > > > an i_version query races in between.
-> > >=20
-> > > Why not also bump ctime at write completion if a query races with
-> > > the write()? Wouldn't that put ns-granularity ctime based change
-> > > detection on a par with i_version?
-> > >=20
-> > > Userspace isn't going to notice the difference - the ctime they
-> > > observe indicates that it was changed during the syscall. So
-> > > who/what is going to care if we bump ctime twice in the syscall
-> > > instead of just once in this rare corner case?
-> > >=20
-> >=20
-> > We could bump the ctime too in this situation, but it would be more
-> > costly. In most cases the i_version bump will be a no-op. The only
-> > exception would be when a query of i_version races in between the two
-> > bumps. That wouldn't be the case with the ctime, which would almost
-> > always require a second transaction.
->=20
-> You've missed the part where I suggested lifting the "nfsd sampled
-> i_version" state into an inode state flag rather than hiding it in
-> the i_version field. At that point, we could optimise away the
-> secondary ctime updates just like you are proposing we do with the
-> i_version updates.  Further, we could also use that state it to
-> decide whether we need to use high resolution timestamps when
-> recording ctime updates - if the nfsd has not sampled the
-> ctime/i_version, we don't need high res timestamps to be recorded
-> for ctime....
+> +
+> +
+>  struct aghdr_init_data {
+>  	/* per ag data */
+>  	xfs_agblock_t		agno;		/* ag to init */
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 6aad0ea5e606..e5519abbfa0d 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
 
-Once you move the flag out of the word, we can no longer do this with
-atomic operations and will need to move to locking (probably a
-spinlock). Is it worth it? I'm not sure.
+<snip>
 
-It's an interesting proposal, regardless...
---=20
-Jeff Layton <jlayton@kernel.org>
+> @@ -3218,21 +3214,21 @@ xfs_bmap_btalloc_select_lengths(
+>  	}
+>  
+>  	args->total = ap->total;
+> -	startag = ag = XFS_FSB_TO_AGNO(mp, args->fsbno);
+> +	startag = XFS_FSB_TO_AGNO(mp, args->fsbno);
+>  	if (startag == NULLAGNUMBER)
+> -		startag = ag = 0;
+> +		startag = 0;
+>  
+> -	while (*blen < args->maxlen) {
+> -		error = xfs_bmap_longest_free_extent(args->tp, ag, blen,
+> +	*blen = 0;
+> +	for_each_perag_wrap(mp, startag, agno, pag) {
+> +		error = xfs_bmap_longest_free_extent(pag, args->tp, blen,
+>  						     &notinit);
+>  		if (error)
+> -			return error;
+> -
+> -		if (++ag == mp->m_sb.sb_agcount)
+> -			ag = 0;
+> -		if (ag == startag)
+> +			break;
+> +		if (*blen >= args->maxlen)
+>  			break;
+>  	}
+> +	if (pag)
+> +		xfs_perag_rele(pag);
+>  
+>  	xfs_bmap_select_minlen(ap, args, blen, notinit);
+>  	return 0;
+
+Same question as Allison -- if xfs_bmap_longest_free_extent returned a
+non-EAGAIN error code, don't we want to return that to the caller?
+
+--D
+
+> @@ -3245,7 +3241,8 @@ xfs_bmap_btalloc_filestreams(
+>  	xfs_extlen_t		*blen)
+>  {
+>  	struct xfs_mount	*mp = ap->ip->i_mount;
+> -	xfs_agnumber_t		ag;
+> +	struct xfs_perag	*pag;
+> +	xfs_agnumber_t		start_agno;
+>  	int			notinit = 0;
+>  	int			error;
+>  
+> @@ -3259,33 +3256,50 @@ xfs_bmap_btalloc_filestreams(
+>  	args->type = XFS_ALLOCTYPE_NEAR_BNO;
+>  	args->total = ap->total;
+>  
+> -	ag = XFS_FSB_TO_AGNO(mp, args->fsbno);
+> -	if (ag == NULLAGNUMBER)
+> -		ag = 0;
+> +	start_agno = XFS_FSB_TO_AGNO(mp, args->fsbno);
+> +	if (start_agno == NULLAGNUMBER)
+> +		start_agno = 0;
+>  
+> -	error = xfs_bmap_longest_free_extent(args->tp, ag, blen, &notinit);
+> -	if (error)
+> -		return error;
+> +	pag = xfs_perag_grab(mp, start_agno);
+> +	if (pag) {
+> +		error = xfs_bmap_longest_free_extent(pag, args->tp, blen,
+> +				&notinit);
+> +		xfs_perag_rele(pag);
+> +		if (error)
+> +			return error;
+> +	}
+>  
+>  	if (*blen < args->maxlen) {
+> -		error = xfs_filestream_new_ag(ap, &ag);
+> +		xfs_agnumber_t	agno = start_agno;
+> +
+> +		error = xfs_filestream_new_ag(ap, &agno);
+>  		if (error)
+>  			return error;
+> +		if (agno == NULLAGNUMBER)
+> +			goto out_select;
+>  
+> -		error = xfs_bmap_longest_free_extent(args->tp, ag, blen,
+> -						     &notinit);
+> +		pag = xfs_perag_grab(mp, agno);
+> +		if (!pag)
+> +			goto out_select;
+> +
+> +		error = xfs_bmap_longest_free_extent(pag, args->tp,
+> +				blen, &notinit);
+> +		xfs_perag_rele(pag);
+>  		if (error)
+>  			return error;
+>  
+> +		start_agno = agno;
+> +
+>  	}
+>  
+> +out_select:
+>  	xfs_bmap_select_minlen(ap, args, blen, notinit);
+>  
+>  	/*
+>  	 * Set the failure fallback case to look in the selected AG as stream
+>  	 * may have moved.
+>  	 */
+> -	ap->blkno = args->fsbno = XFS_AGB_TO_FSB(mp, ag, 0);
+> +	ap->blkno = args->fsbno = XFS_AGB_TO_FSB(mp, start_agno, 0);
+>  	return 0;
+>  }
+>  
+> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> index 2a323ffa5ba9..50fef3f5af51 100644
+> --- a/fs/xfs/libxfs/xfs_ialloc.c
+> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> @@ -1725,7 +1725,7 @@ xfs_dialloc(
+>  	bool			ok_alloc = true;
+>  	bool			low_space = false;
+>  	int			flags;
+> -	xfs_ino_t		ino;
+> +	xfs_ino_t		ino = NULLFSINO;
+>  
+>  	/*
+>  	 * Directories, symlinks, and regular files frequently allocate at least
+> @@ -1773,39 +1773,37 @@ xfs_dialloc(
+>  	 * or in which we can allocate some inodes.  Iterate through the
+>  	 * allocation groups upward, wrapping at the end.
+>  	 */
+> -	agno = start_agno;
+>  	flags = XFS_ALLOC_FLAG_TRYLOCK;
+> -	for (;;) {
+> -		pag = xfs_perag_grab(mp, agno);
+> +retry:
+> +	for_each_perag_wrap_at(mp, start_agno, mp->m_maxagi, agno, pag) {
+>  		if (xfs_dialloc_good_ag(pag, *tpp, mode, flags, ok_alloc)) {
+>  			error = xfs_dialloc_try_ag(pag, tpp, parent,
+>  					&ino, ok_alloc);
+>  			if (error != -EAGAIN)
+>  				break;
+> +			error = 0;
+>  		}
+>  
+>  		if (xfs_is_shutdown(mp)) {
+>  			error = -EFSCORRUPTED;
+>  			break;
+>  		}
+> -		if (++agno == mp->m_maxagi)
+> -			agno = 0;
+> -		if (agno == start_agno) {
+> -			if (!flags) {
+> -				error = -ENOSPC;
+> -				break;
+> -			}
+> +	}
+> +	if (pag)
+> +		xfs_perag_rele(pag);
+> +	if (error)
+> +		return error;
+> +	if (ino == NULLFSINO) {
+> +		if (flags) {
+>  			flags = 0;
+>  			if (low_space)
+>  				ok_alloc = true;
+> +			goto retry;
+>  		}
+> -		xfs_perag_rele(pag);
+> +		return -ENOSPC;
+>  	}
+> -
+> -	if (!error)
+> -		*new_ino = ino;
+> -	xfs_perag_rele(pag);
+> -	return error;
+> +	*new_ino = ino;
+> +	return 0;
+>  }
+>  
+>  /*
+> -- 
+> 2.39.0
+> 
