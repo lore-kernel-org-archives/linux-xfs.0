@@ -2,352 +2,309 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DA0CC636CC
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Feb 2023 01:12:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9504C636D3
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Feb 2023 03:21:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229946AbjBABMH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Jan 2023 20:12:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47808 "EHLO
+        id S230189AbjBADVw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Jan 2023 22:21:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229686AbjBABMH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2023 20:12:07 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CF7453549
-        for <linux-xfs@vger.kernel.org>; Tue, 31 Jan 2023 17:12:05 -0800 (PST)
+        with ESMTP id S230054AbjBADVv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2023 22:21:51 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20C6D1E9F0
+        for <linux-xfs@vger.kernel.org>; Tue, 31 Jan 2023 19:21:41 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C7CD8609E9
-        for <linux-xfs@vger.kernel.org>; Wed,  1 Feb 2023 01:12:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 291CDC433EF;
-        Wed,  1 Feb 2023 01:12:04 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B193160B5E
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Feb 2023 03:21:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D657C433EF;
+        Wed,  1 Feb 2023 03:21:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1675213924;
-        bh=dBoUv19r/khXV1VX2Sc2dQFs9xTY4GzoRgbw/zlz4bI=;
+        s=k20201202; t=1675221700;
+        bh=k79qGo9Rdk0ucy9qOdN7u8TseWqMWGQ89oLlTWaB9W0=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=tp/q3QCfbfvJdccp7qvQfeBmg5it0X7rv2bE+WBVh6yHKHftxWwCEUYnIC76Hrtfk
-         kv33rZUl1nN+fjbp8qN0yJC5Ld3guXPDiq8ciCNvppfKX9SdpANU2Rn4CYuvZU/3kB
-         UhEkUoFePTLmRGJb6WWdGWICF7y858jbru5bvKe51iXzHZC7Hj/+8BHaJulB9q+bwn
-         09YOiYjR9KxyQF1bSFNWERt4aI1fke/E/Qs0SjsUOmr7dU6Nrv/F7RIBCeNyk433w/
-         mgpwCmFPrxkyBTHEDKZ+wC/7T4ejT0Cx/4xDrObsZwEYIswYwJ8EhwH5wnOG1xTpUo
-         8GkHf1htyPpIg==
-Date:   Tue, 31 Jan 2023 17:12:03 -0800
+        b=KZc+8JEGwjXTKSmedQHc3iEqKwAEPvkt1epmgvWVAJlhQNkUP6zZ9wEyB9FZP2NXW
+         vOeJVi36P08uBM9Focl/BA4CmbLFGsd3AIhpSg+c6+ezVRZmaDKcYXm1sLY3W8rY8+
+         TqaDz9aCGBYV09brpulLWMqe24pmQk0Mobu/WVJD/z8vsP+TMSgoEqqeYAhD1N8ih2
+         VFOJeHNA/mfEUug48pBtb7Ud+T90jwDZ7SizVQLof0vso1GIOLdusWu6NDCaDW616y
+         /kK/5+stfjO+oE56E7VTPJg0TUe/h4iQixtiCO1Nt6HFsXGKRxGTtG7QKFMoB6RyVV
+         cUkj6EShhV+lg==
+Date:   Tue, 31 Jan 2023 19:21:39 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v8 00/27] Parent Pointers
-Message-ID: <Y9m8YwiuyleeIVv+@magnolia>
-References: <20230124013620.1089319-1-allison.henderson@oracle.com>
- <Y89g0uSTIMpP4yGB@magnolia>
- <82afbd55a23019e6dd29862a17f813d7ef35788d.camel@oracle.com>
- <Y9CCrQ7IL1/R3ECD@magnolia>
- <Y9FifTUeIW+Mj1+B@magnolia>
- <051142f8296c0ede594effd3a96e3ea474476775.camel@oracle.com>
+To:     Long Li <leo.lilong@huawei.com>
+Cc:     david@fromorbit.com, linux-xfs@vger.kernel.org, houtao1@huawei.com,
+        yi.zhang@huawei.com, guoxuenan@huawei.com
+Subject: Re: [PATCH] xfs: fix hung when transaction commit fail in
+ xfs_inactive_ifree
+Message-ID: <Y9naw/OkLIvm1kd4@magnolia>
+References: <20221209110519.GA3741914@ceph-admin>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <051142f8296c0ede594effd3a96e3ea474476775.camel@oracle.com>
+In-Reply-To: <20221209110519.GA3741914@ceph-admin>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jan 25, 2023 at 08:54:43PM +0000, Allison Henderson wrote:
-> On Wed, 2023-01-25 at 09:10 -0800, Darrick J. Wong wrote:
-> > On Tue, Jan 24, 2023 at 05:15:25PM -0800, Darrick J. Wong wrote:
-> > > On Tue, Jan 24, 2023 at 07:38:57AM +0000, Allison Henderson wrote:
-> > > > On Mon, 2023-01-23 at 20:38 -0800, Darrick J. Wong wrote:
-> > > > > On Mon, Jan 23, 2023 at 06:35:53PM -0700,
-> > > > > allison.henderson@oracle.com wrote:
-> > > > > > From: Allison Henderson <allison.henderson@oracle.com>
-> > > > > > 
-> > > > > > Hi all,
-> > > > > > 
-> > > > > > This is the latest parent pointer attributes for xfs.
-> > > > > > The goal of this patch set is to add a parent pointer
-> > > > > > attribute to
-> > > > > > each inode.
-> > > > > > The attribute name containing the parent inode, generation,
-> > > > > > and
-> > > > > > directory
-> > > > > > offset, while the  attribute value contains the file name. 
-> > > > > > This
-> > > > > > feature will
-> > > > > > enable future optimizations for online scrub, shrink, nfs
-> > > > > > handles,
-> > > > > > verity, or
-> > > > > > any other feature that could make use of quickly deriving an
-> > > > > > inodes
-> > > > > > path from
-> > > > > > the mount point.  
-> > > > > > 
-> > > > > > This set can be viewed on github here
-> > > > > > https://urldefense.com/v3/__https://github.com/allisonhenderson/xfs/tree/xfs_new_pptrsv8_r1__;!!ACWV5N9M2RV99hQ!N2nNiERMG5LB2c5JRplSXXpgpp6yVFE8n22VEStqjIgbSm7yY0m92DEvfpPkD7XfwguuE49Sclb-8uSz6Ss5$
-> > > > > >  
-> > > > > 
-> > > > > I ran the kernel v8r1 branch through fstests and it came up
-> > > > > with
-> > > > > this:
-> > > > > https://urldefense.com/v3/__https://djwong.org/fstests/output/.e2ecf3cd98a7b55bfe8b9d7f33d2ef9549ccb6526765421fd929cf6b1fa82265/.238f7848578c98c24e6347e59963548102fe83037127e44802014e48281a8ccc/?C=M;O=A__;!!ACWV5N9M2RV99hQ!N2nNiERMG5LB2c5JRplSXXpgpp6yVFE8n22VEStqjIgbSm7yY0m92DEvfpPkD7XfwguuE49Sclb-8vEH_S-U$
-> > > > 
-> > > > Alrighty, I'll take a look, I had run it through a night or so
-> > > > ago, and
-> > > > hadnt noticed the same failures you list here.  Some of these
-> > > > fail out
-> > > > of the box for me, so I didnt think them associated with pptr
-> > > > changes.
-> > > 
-> > > <nod> Some of those are just problems resulting from hardcoding
-> > > xfs_db
-> > > and mkfs output.
-> > > 
-> > > I noticed that the shutdowns are a result of reservationless
-> > > link/rename
-> > > operations; it's easier just to get rid of that nonfeature.
-> > > 
-> > > Also, there's a huge memory leak of xfs_parent_defer objects.
-> > > 
-> > > That's at least what I've found so far.  Will send the whole mess
-> > > through fstests tonight.
-> > 
-> > No disasters reported, which means that the rest of the test failures
-> > are (I think) either the result of mkfs failures (x/306) or different
-> > xattrs (x/021).  I don't know why generic/050 fails, and ignore the
-> > xfs/060 failure because the xfsdump tests fail randomly and nobody
-> > knows
-> > why.
-> > 
-> > https://urldefense.com/v3/__https://djwong.org/fstests/output/.e2ecf3cd98a7b55bfe8b9d7f33d2ef9549ccb6526765421fd929cf6b1fa82265/.27de2687d36a762c08d51a0f4a90e89b8ec852e883834bea47edffbfb03428eb/?C=M;O=A__;!!ACWV5N9M2RV99hQ!OcZtPlljmYqvnoHdHzjtuvE_g97qocvSSOV2FuwqeUXaprNX-2n6gdnTsMQHvuzhgMKOH7GCxAjDUCmbKBcG$
-> >  
-> > 
-> > I've attached a tarball of the patches I applied to your kernel,
-> > xfsprogs, and fstests trees to generate the fstests results.  Most of
-> > the problems I found were a result of turning on KASAN, kmemcheck, or
-> > lockdep.  It's up to you if you want to rebase the patch changes into
-> > your branch or simply tack them on the end.
+On Fri, Dec 09, 2022 at 07:05:19PM +0800, Long Li wrote:
+> After running unplug disk test and unmount filesystem, the umount thread
+> hung all the time.
 > 
-> Alrighty, I will go through what you have in here and find the
-> appropriate patches to put them in, I think that's cleaner than adding
-> more patches on top of the set.  I'll note in the cover letter which
-> patches are updated.  Thanks!
+>  crash> dmesg
+>  sd 0:0:0:0: rejecting I/O to offline device
+>  XFS (sda): log I/O error -5
+>  XFS (sda): Corruption of in-memory data (0x8) detected at xfs_defer_finish_noroll+0x12e0/0x1cf0
+> 	(fs/xfs/libxfs/xfs_defer.c:504).  Shutting down filesystem.
+>  XFS (sda): Please unmount the filesystem and rectify the problem(s)
+>  XFS (sda): xfs_inactive_ifree: xfs_trans_commit returned error -5
+>  XFS (sda): Unmounting Filesystem
+> 
+>  crash> bt 3368
+>  PID: 3368   TASK: ffff88801bcd8040  CPU: 3   COMMAND: "umount"
+>   #0 [ffffc900086a7ae0] __schedule at ffffffff83d3fd25
+>   #1 [ffffc900086a7be8] schedule at ffffffff83d414dd
+>   #2 [ffffc900086a7c10] xfs_ail_push_all_sync at ffffffff8256db24
+>   #3 [ffffc900086a7d18] xfs_unmount_flush_inodes at ffffffff824ee7e2
+>   #4 [ffffc900086a7d28] xfs_unmountfs at ffffffff824f2eff
+>   #5 [ffffc900086a7da8] xfs_fs_put_super at ffffffff82503e69
+>   #6 [ffffc900086a7de8] generic_shutdown_super at ffffffff81aeb8cd
+>   #7 [ffffc900086a7e10] kill_block_super at ffffffff81aefcfa
+>   #8 [ffffc900086a7e30] deactivate_locked_super at ffffffff81aeb2da
+>   #9 [ffffc900086a7e48] deactivate_super at ffffffff81aeb639
+>  #10 [ffffc900086a7e68] cleanup_mnt at ffffffff81b6ddd5
+>  #11 [ffffc900086a7ea0] __cleanup_mnt at ffffffff81b6dfdf
+>  #12 [ffffc900086a7eb0] task_work_run at ffffffff8126e5cf
+>  #13 [ffffc900086a7ef8] exit_to_user_mode_prepare at ffffffff813fa136
+>  #14 [ffffc900086a7f28] syscall_exit_to_user_mode at ffffffff83d25dbb
+>  #15 [ffffc900086a7f40] do_syscall_64 at ffffffff83d1f8d9
+>  #16 [ffffc900086a7f50] entry_SYSCALL_64_after_hwframe at ffffffff83e00085
+> 
+> When we free a cluster buffer from xfs_ifree_cluster, all the inodes in
+> cache are marked XFS_ISTALE. On journal commit dirty stale inodes as are
+> handled by both buffer and inode log items, inodes marked as XFS_ISTALE
+> in AIL will be removed from the AIL because the buffer log item will clean
+> it. If the transaction commit fails in the xfs_inactive_ifree(), inodes
+> marked as XFS_ISTALE will be left in AIL due to buf log item is not
+> committed, this will cause the unmount thread above to be blocked all the
+> time. Error handling in xfs_inactive_ifree() is not enough, the above
+> exception needs to be considered.
+> 
+> Signed-off-by: Long Li <leo.lilong@huawei.com>
+> ---
+>  fs/xfs/xfs_inode.c | 114 +++++++++++++++++++++++++++++++++++++++++----
+>  fs/xfs/xfs_inode.h |   1 -
+>  2 files changed, 105 insertions(+), 10 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index d354ea2b74f9..b6808c0a2868 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -49,6 +49,9 @@ struct kmem_cache *xfs_inode_cache;
+>  STATIC int xfs_iunlink(struct xfs_trans *, struct xfs_inode *);
+>  STATIC int xfs_iunlink_remove(struct xfs_trans *tp, struct xfs_perag *pag,
+>  	struct xfs_inode *);
+> +STATIC int xfs_ifree(struct xfs_trans *tp, struct xfs_inode *ip,
+> +		struct xfs_icluster *xic);
+> +STATIC void xfs_ifree_abort(struct xfs_inode *ip, struct xfs_icluster *xic);
+>  
+>  /*
+>   * helper function to extract extent size hint from inode
+> @@ -1544,6 +1547,7 @@ xfs_inactive_ifree(
+>  {
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	struct xfs_trans	*tp;
+> +	struct xfs_icluster     xic = { 0 };
+>  	int			error;
+>  
+>  	/*
+> @@ -1598,7 +1602,7 @@ xfs_inactive_ifree(
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+>  
+> -	error = xfs_ifree(tp, ip);
+> +	error = xfs_ifree(tp, ip, &xic);
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+>  	if (error) {
+>  		/*
+> @@ -1612,7 +1616,7 @@ xfs_inactive_ifree(
+>  			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
+>  		}
+>  		xfs_trans_cancel(tp);
+> -		return error;
+> +		goto out_error;
+>  	}
+>  
+>  	/*
+> @@ -1625,11 +1629,19 @@ xfs_inactive_ifree(
+>  	 * to try to keep going. Make sure it's not a silent error.
+>  	 */
+>  	error = xfs_trans_commit(tp);
+> -	if (error)
+> +	if (error) {
+>  		xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
+>  			__func__, error);
+> +		goto out_error;
+> +	}
+>  
+>  	return 0;
+> +
+> +out_error:
+> +	if (xic.deleted)
+> +		xfs_ifree_abort(ip, &xic);
+> +
+> +	return error;
+>  }
+>  
+>  /*
+> @@ -2259,14 +2271,14 @@ xfs_ifree_cluster(
+>   * inodes in the AGI. We need to remove the inode from that list atomically with
+>   * respect to freeing it here.
+>   */
+> -int
+> +STATIC int
+>  xfs_ifree(
+>  	struct xfs_trans	*tp,
+> -	struct xfs_inode	*ip)
+> +	struct xfs_inode	*ip,
+> +	struct xfs_icluster     *xic)
+>  {
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	struct xfs_perag	*pag;
+> -	struct xfs_icluster	xic = { 0 };
+>  	struct xfs_inode_log_item *iip = ip->i_itemp;
+>  	int			error;
+>  
+> @@ -2284,7 +2296,7 @@ xfs_ifree(
+>  	 * makes the AGI lock -> unlinked list modification order the same as
+>  	 * used in O_TMPFILE creation.
+>  	 */
+> -	error = xfs_difree(tp, pag, ip->i_ino, &xic);
+> +	error = xfs_difree(tp, pag, ip->i_ino, xic);
+>  	if (error)
+>  		goto out;
+>  
+> @@ -2323,13 +2335,97 @@ xfs_ifree(
+>  	VFS_I(ip)->i_generation++;
+>  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+>  
+> -	if (xic.deleted)
+> -		error = xfs_ifree_cluster(tp, pag, ip, &xic);
+> +	if (xic->deleted)
+> +		error = xfs_ifree_cluster(tp, pag, ip, xic);
+>  out:
+>  	xfs_perag_put(pag);
+>  	return error;
+>  }
+>  
+> +static void
+> +xfs_ifree_abort_inode_stale(
+> +	struct xfs_perag	*pag,
+> +	xfs_ino_t		inum)
+> +{
+> +	struct xfs_mount        *mp = pag->pag_mount;
+> +	struct xfs_inode_log_item *iip;
+> +	struct xfs_inode	*ip;
+> +
+> +retry:
+> +	rcu_read_lock();
+> +	ip = radix_tree_lookup(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, inum));
+> +
+> +	/* Inode not in memory, nothing to do */
+> +	if (!ip) {
+> +		rcu_read_unlock();
+> +		return;
+> +	}
+> +
+> +	/* Skip invalid or not stale inode */
+> +	if (ip->i_ino != inum || !xfs_iflags_test(ip, XFS_ISTALE)) {
+> +		rcu_read_unlock();
+> +		return;
+> +	}
+> +
+> +	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
+> +		rcu_read_unlock();
+> +		delay(1);
+> +		goto retry;
+> +	}
+> +
+> +	iip = ip->i_itemp;
+> +	if (!iip || list_empty(&iip->ili_item.li_bio_list))
+> +		goto out_iunlock;
+> +
+> +	if (test_bit(XFS_LI_IN_AIL, &iip->ili_item.li_flags))
+> +		xfs_iflush_abort(ip);
+> +	else
+> +		xfs_iflags_clear(ip, XFS_IFLUSHING);
 
-All right.  I've been working closely with the v8r1 parent pointers
-series for the past couple of weeks to clear out all the bugs I could
-find and to implement fsck (online and offline) for the new feature.
+Er... why is the ifree code tearing into the inode log item state ?
 
-Kernel:
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=pptrs-online-dir-check
-
-Userspace:
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=pptrs-repair
-
-Testing:
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/log/?h=pptrs
-
-There's a fair amount of bugfixes in the first two branches, and those
-should probably get folded into v9 or whatever comes next.  Some of them
-I've already quietly sent to Allison.
-
-(I have just barely managed to get it to pass fstests on the fast
-machines.  Tonight I'll send it out to the cloud for the more intense
-stuff.)
-
-Two bugs (that I know of) remain -- I've noticed that generic/388 and
-generic/475 consistently trip over xfs_repair complaining about symbolic
-links that should be local format links but are instead extents format
-links.  I suspect this is due to parent pointers but it's not clear if
-this is a real bug somewhere in the logging/recovery code or merely a
-latent defect in xfs_repair, since I don't have an easy way to create a
-non-pptr filesystem with symlinks with large xattrs.  Curiously, the
-reported inodes have zero link count.  Will have to triage this more.
-
-The fsck functionality borrows heavily from online fsck part 1, so I
-think it's about time for us to figure out how to deal with the
-necessary parent pointer updates after the fact.  My next effort will be
-to experiment with changing the diroffset to a hash of the dirent name
-per willy's suggestion.
+Shouldn't this be getting done from the buffer log item when we release
+it and find that it's aborted?
 
 --D
 
-> Allison
-> 
-> > 
-> > --D
-> > 
-> > > > >  
-> > > > > 
-> > > > > Looks better than v7, though I haven't tracked down why the fs
-> > > > > goes
-> > > > > down
-> > > > > in generic/083 yet.  I think it's the same "rename doesn't
-> > > > > reserve
-> > > > > enough blocks" problem I was muttering about last time.  I
-> > > > > think I
-> > > > > need
-> > > > > to look through the block reservation calculations again.
-> > > > > 
-> > > > > That said, I *did* finally write the code that scans the parent
-> > > > > pointers
-> > > > > to generate new directories.  It works for simple stupid cases
-> > > > > where
-> > > > > fsstress isn't running, but the live hooks part doesn't work
-> > > > > because
-> > > > > I
-> > > > > haven't though through the locking model yet! :)
-> > > > > 
-> > > > > > And the corresponding xfsprogs code is here
-> > > > > > https://urldefense.com/v3/__https://github.com/allisonhenderson/xfsprogs/tree/xfsprogs_new_pptrs_v8_r1__;!!ACWV5N9M2RV99hQ!N2nNiERMG5LB2c5JRplSXXpgpp6yVFE8n22VEStqjIgbSm7yY0m92DEvfpPkD7XfwguuE49Sclb-8nOCLP-H$
-> > > > > >  
-> > > > > 
-> > > > > Will rebase xfsprogs against v8r1 tomorrow.
-> > > > I think you had a scrub patch for this I forgot to add.  will do
-> > > > that...  Aside from that, not much change there tho
-> > > 
-> > > <nod>
-> > > 
-> > > > > 
-> > > > > > This set has been tested with the below parent pointers tests
-> > > > > > https://urldefense.com/v3/__https://lore.kernel.org/fstests/20221012013812.82161-1-catherine.hoang@oracle.com/T/*t__;Iw!!ACWV5N9M2RV99hQ!N2nNiERMG5LB2c5JRplSXXpgpp6yVFE8n22VEStqjIgbSm7yY0m92DEvfpPkD7XfwguuE49Sclb-8ilcWlei$
-> > > > > >  
-> > > > > 
-> > > > > And fix fstests after that.
-> > > > The testcase i had saved as something Catherine could work on,
-> > > > but
-> > > > there's no rush on it.  The testcase tends to get tossed around
-> > > > any
-> > > > time there are api changes so it made sense to land at least
-> > > > kernel
-> > > > side first, though hopefully things should be decently firm at
-> > > > this
-> > > > point.
-> > > 
-> > > <nod> I'll not pay too much attention to xfs/018 then.
-> > > 
-> > > --D
-> > > 
-> > > > Allison
-> > > > 
-> > > > > 
-> > > > > --D
-> > > > > 
-> > > > > > Updates since v7:
-> > > > > > 
-> > > > > > xfs: Increase XFS_QM_TRANS_MAXDQS to 5
-> > > > > >   Modified xfs_dqlockn to sort dquotes before locking
-> > > > > >   
-> > > > > > xfs: Hold inode locks in xfs_trans_alloc_dir
-> > > > > >    Modified xfs_trans_alloc_dir to release locks before
-> > > > > > retrying
-> > > > > > trans allocation
-> > > > > >    
-> > > > > > xfs: Hold inode locks in xfs_rename
-> > > > > >    Modified xfs_rename to release locks before retrying trans
-> > > > > > allocation
-> > > > > > 
-> > > > > > xfs: Expose init_xattrs in xfs_create_tmpfile
-> > > > > >    Fixed xfs_generic_create to init attr tree
-> > > > > > 
-> > > > > > xfs: add parent pointer support to attribute code
-> > > > > >    Updated xchk_xattr_rec with new XFS_ATTR_PARENT flag
-> > > > > >   
-> > > > > > xfs: Add parent pointer ioctl
-> > > > > >    Include xfs_parent_utils.h in xfs_parent_utils.c to quiet
-> > > > > > compiler warnings 
-> > > > > >    
-> > > > > > Questions comments and feedback appreciated!
-> > > > > > 
-> > > > > > Thanks all!
-> > > > > > Allison
-> > > > > > 
-> > > > > > Allison Henderson (27):
-> > > > > >   xfs: Add new name to attri/d
-> > > > > >   xfs: Increase XFS_DEFER_OPS_NR_INODES to 5
-> > > > > >   xfs: Increase XFS_QM_TRANS_MAXDQS to 5
-> > > > > >   xfs: Hold inode locks in xfs_ialloc
-> > > > > >   xfs: Hold inode locks in xfs_trans_alloc_dir
-> > > > > >   xfs: Hold inode locks in xfs_rename
-> > > > > >   xfs: Expose init_xattrs in xfs_create_tmpfile
-> > > > > >   xfs: get directory offset when adding directory name
-> > > > > >   xfs: get directory offset when removing directory name
-> > > > > >   xfs: get directory offset when replacing a directory name
-> > > > > >   xfs: add parent pointer support to attribute code
-> > > > > >   xfs: define parent pointer xattr format
-> > > > > >   xfs: Add xfs_verify_pptr
-> > > > > >   xfs: extend transaction reservations for parent attributes
-> > > > > >   xfs: parent pointer attribute creation
-> > > > > >   xfs: add parent attributes to link
-> > > > > >   xfs: add parent attributes to symlink
-> > > > > >   xfs: remove parent pointers in unlink
-> > > > > >   xfs: Indent xfs_rename
-> > > > > >   xfs: Add parent pointers to rename
-> > > > > >   xfs: Add parent pointers to xfs_cross_rename
-> > > > > >   xfs: Add the parent pointer support to the  superblock
-> > > > > > version 5.
-> > > > > >   xfs: Add helper function xfs_attr_list_context_init
-> > > > > >   xfs: Filter XFS_ATTR_PARENT for getfattr
-> > > > > >   xfs: Add parent pointer ioctl
-> > > > > >   xfs: fix unit conversion error in
-> > > > > > xfs_log_calc_max_attrsetm_res
-> > > > > >   xfs: drop compatibility minimum log size computations for
-> > > > > > reflink
-> > > > > > 
-> > > > > >  fs/xfs/Makefile                 |   2 +
-> > > > > >  fs/xfs/libxfs/xfs_attr.c        |  71 +++++-
-> > > > > >  fs/xfs/libxfs/xfs_attr.h        |  13 +-
-> > > > > >  fs/xfs/libxfs/xfs_da_btree.h    |   3 +
-> > > > > >  fs/xfs/libxfs/xfs_da_format.h   |  38 ++-
-> > > > > >  fs/xfs/libxfs/xfs_defer.c       |  28 ++-
-> > > > > >  fs/xfs/libxfs/xfs_defer.h       |   8 +-
-> > > > > >  fs/xfs/libxfs/xfs_dir2.c        |  21 +-
-> > > > > >  fs/xfs/libxfs/xfs_dir2.h        |   7 +-
-> > > > > >  fs/xfs/libxfs/xfs_dir2_block.c  |   9 +-
-> > > > > >  fs/xfs/libxfs/xfs_dir2_leaf.c   |   8 +-
-> > > > > >  fs/xfs/libxfs/xfs_dir2_node.c   |   8 +-
-> > > > > >  fs/xfs/libxfs/xfs_dir2_sf.c     |   6 +
-> > > > > >  fs/xfs/libxfs/xfs_format.h      |   4 +-
-> > > > > >  fs/xfs/libxfs/xfs_fs.h          |  75 ++++++
-> > > > > >  fs/xfs/libxfs/xfs_log_format.h  |   7 +-
-> > > > > >  fs/xfs/libxfs/xfs_log_rlimit.c  |  53 ++++
-> > > > > >  fs/xfs/libxfs/xfs_parent.c      | 207 +++++++++++++++
-> > > > > >  fs/xfs/libxfs/xfs_parent.h      |  46 ++++
-> > > > > >  fs/xfs/libxfs/xfs_sb.c          |   4 +
-> > > > > >  fs/xfs/libxfs/xfs_trans_resv.c  | 324 ++++++++++++++++++++--
-> > > > > > --
-> > > > > >  fs/xfs/libxfs/xfs_trans_space.h |   8 -
-> > > > > >  fs/xfs/scrub/attr.c             |   4 +-
-> > > > > >  fs/xfs/xfs_attr_item.c          | 142 +++++++++--
-> > > > > >  fs/xfs/xfs_attr_item.h          |   1 +
-> > > > > >  fs/xfs/xfs_attr_list.c          |  17 +-
-> > > > > >  fs/xfs/xfs_dquot.c              |  38 +++
-> > > > > >  fs/xfs/xfs_dquot.h              |   1 +
-> > > > > >  fs/xfs/xfs_file.c               |   1 +
-> > > > > >  fs/xfs/xfs_inode.c              | 428
-> > > > > > +++++++++++++++++++++++++---
-> > > > > > ----
-> > > > > >  fs/xfs/xfs_inode.h              |   3 +-
-> > > > > >  fs/xfs/xfs_ioctl.c              | 148 +++++++++--
-> > > > > >  fs/xfs/xfs_ioctl.h              |   2 +
-> > > > > >  fs/xfs/xfs_iops.c               |   3 +-
-> > > > > >  fs/xfs/xfs_ondisk.h             |   4 +
-> > > > > >  fs/xfs/xfs_parent_utils.c       | 126 ++++++++++
-> > > > > >  fs/xfs/xfs_parent_utils.h       |  11 +
-> > > > > >  fs/xfs/xfs_qm.c                 |   4 +-
-> > > > > >  fs/xfs/xfs_qm.h                 |   2 +-
-> > > > > >  fs/xfs/xfs_super.c              |   4 +
-> > > > > >  fs/xfs/xfs_symlink.c            |  58 ++++-
-> > > > > >  fs/xfs/xfs_trans.c              |   9 +-
-> > > > > >  fs/xfs/xfs_trans_dquot.c        |  15 +-
-> > > > > >  fs/xfs/xfs_xattr.c              |   5 +-
-> > > > > >  fs/xfs/xfs_xattr.h              |   1 +
-> > > > > >  45 files changed, 1731 insertions(+), 246 deletions(-)
-> > > > > >  create mode 100644 fs/xfs/libxfs/xfs_parent.c
-> > > > > >  create mode 100644 fs/xfs/libxfs/xfs_parent.h
-> > > > > >  create mode 100644 fs/xfs/xfs_parent_utils.c
-> > > > > >  create mode 100644 fs/xfs/xfs_parent_utils.h
-> > > > > > 
-> > > > > > -- 
-> > > > > > 2.25.1
-> > > > > > 
-> > > > 
+> +
+> +out_iunlock:
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +	rcu_read_unlock();
+> +}
+> +
+> +/*
+> + * This is called to clean up inodes marked as stale in xfs_ifree
+> + */
+> +STATIC void
+> +xfs_ifree_abort(
+> +	struct xfs_inode	*ip,
+> +	struct xfs_icluster	*xic)
+> +{
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_perag        *pag;
+> +	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
+> +	xfs_ino_t		inum = xic->first_ino;
+> +	int			nbufs;
+> +	int			i, j;
+> +	int			ioffset;
+> +
+> +	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+> +
+> +	nbufs = igeo->ialloc_blks / igeo->blocks_per_cluster;
+> +
+> +	for (j = 0; j < nbufs; j++, inum += igeo->inodes_per_cluster) {
+> +		/*
+> +		 * The allocation bitmap tells us which inodes of the chunk were
+> +		 * physically allocated. Skip the cluster if an inode falls into
+> +		 * a sparse region.
+> +		 */
+> +		ioffset = inum - xic->first_ino;
+> +		if ((xic->alloc & XFS_INOBT_MASK(ioffset)) == 0) {
+> +			ASSERT(ioffset % igeo->inodes_per_cluster == 0);
+> +			continue;
+> +		}
+> +
+> +		for (i = 0; i < igeo->inodes_per_cluster; i++)
+> +			xfs_ifree_abort_inode_stale(pag, inum + i);
+> +
+> +	}
+> +	xfs_perag_put(pag);
+> +}
+> +
+>  /*
+>   * This is called to unpin an inode.  The caller must have the inode locked
+>   * in at least shared mode so that the buffer cannot be subsequently pinned
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index fa780f08dc89..423542bf6af1 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -499,7 +499,6 @@ uint		xfs_ilock_data_map_shared(struct xfs_inode *);
+>  uint		xfs_ilock_attr_map_shared(struct xfs_inode *);
+>  
+>  uint		xfs_ip2xflags(struct xfs_inode *);
+> -int		xfs_ifree(struct xfs_trans *, struct xfs_inode *);
+>  int		xfs_itruncate_extents_flags(struct xfs_trans **,
+>  				struct xfs_inode *, int, xfs_fsize_t, int);
+>  void		xfs_iext_realloc(xfs_inode_t *, int, int);
+> -- 
+> 2.31.1
 > 
