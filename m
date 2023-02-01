@@ -2,168 +2,73 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79D6FC38142
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Jan 2023 23:31:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34FFFC636CC
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Feb 2023 00:51:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231543AbjAaXba (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Jan 2023 18:31:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33548 "EHLO
+        id S231211AbjBAAvh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Jan 2023 19:51:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231220AbjAaXb2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2023 18:31:28 -0500
-Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A24CC4ABC6
-        for <linux-xfs@vger.kernel.org>; Tue, 31 Jan 2023 15:31:24 -0800 (PST)
-Received: by mail-pj1-x1029.google.com with SMTP id ha3-20020a17090af3c300b00230222051a6so237853pjb.2
-        for <linux-xfs@vger.kernel.org>; Tue, 31 Jan 2023 15:31:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=+8MB56q9vfvlJA565WpCyEkeIG1X8rQRlw2aoYs4F/4=;
-        b=71r/HeZwPXQZTQevtJlDWtDC0L1YLubXfPRI4A9QxH6b5yi2FlwwZTUTReRs3J1tls
-         cMhwi80p4USqlY5DlRBBMhktY4GC6GlA01jnr3t1y9JsDCzTi8RivxP+JMTB/SfVcA8i
-         HdlrncMs1UjrPoKAwDb4wRUrUD0p3JIb44ug/n0Wbay89qfcbiDj3xeptiJoAYSg8rG4
-         +LESP7lyQsrWexmXkl6m5UDOkXFSk/0FFlXUR68P838cgaJQu6SCLfd3DNqkuKBZfoXH
-         1hOKVARo9CU/GZsxLMb1IlMLDt7LmKCAzHaGrCr99Tc4xMLxxKp3cRr98HjtzADbkSyv
-         tIQA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=+8MB56q9vfvlJA565WpCyEkeIG1X8rQRlw2aoYs4F/4=;
-        b=3XBcB6CiPGqir3h0lf4J20MvvxljIry0U1DuVUEqwCp+2ffA7VKwcH3ymhSCemJmgz
-         TXigKzMgpZNmUYXrEAKKlNDB3osHU/goHI7IL1YCz8TfgKZQdSnR0irqiliCC0IDd0Jm
-         txIon3BRBCmympCOQFLIqSG8RxVmy5Uc/P7dXKV7bfsEnIL5Caj8nSZRUKtaTQ5QOwdy
-         ugUHk7/3A2v/116OoX/WT3rEqJbKwD/Dt54x4BqyuONv2vX0/dkDS0y0GcKWeEzM64RU
-         VeN1wLGPPmlE4Oaq1EBu9VQbzjUrGDmxjDIZL0ptkAsbOkhbE0xyAvQwSq2YJBRABioM
-         tbfA==
-X-Gm-Message-State: AO0yUKVr+ofl9qIVOJGzI8pJ0u9VaDGXDBPKe5G8fLlv7gJ75ya20AhO
-        wWdPKat2aVWkym71ekcYv57rPg==
-X-Google-Smtp-Source: AK7set9T8Da2vtUKw8moywVro/lMA7YXIriPTZdEe2MxtY/ftvC98Bdi2cm4LEygyrCh/P/qYliKAQ==
-X-Received: by 2002:a17:90b:17c3:b0:22c:46a2:ab0b with SMTP id me3-20020a17090b17c300b0022c46a2ab0bmr18928578pjb.43.1675207884115;
-        Tue, 31 Jan 2023 15:31:24 -0800 (PST)
-Received: from dread.disaster.area (pa49-181-4-128.pa.nsw.optusnet.com.au. [49.181.4.128])
-        by smtp.gmail.com with ESMTPSA id p6-20020a17090a680600b0022c35f1c576sm8160905pjj.57.2023.01.31.15.31.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 31 Jan 2023 15:31:23 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1pN05w-009rls-4w; Wed, 01 Feb 2023 10:31:20 +1100
-Date:   Wed, 1 Feb 2023 10:31:20 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: Re: replacement i_version counter for xfs
-Message-ID: <20230131233120.GR360264@dread.disaster.area>
-References: <57c413ed362c0beab06b5d83b7fc4b930c7662c4.camel@kernel.org>
- <20230125000227.GM360264@dread.disaster.area>
- <86f993a69a5be276164c4d3fc1951ff4bde881be.camel@kernel.org>
- <Y9FZupBCyPGCMFBd@magnolia>
- <4d16f9f9eb678f893d4de695bd7cbff6409c3c5a.camel@kernel.org>
- <20230130020525.GO360264@dread.disaster.area>
- <619f0cd76d739ade3249ea4433943264d1737ab2.camel@kernel.org>
+        with ESMTP id S231360AbjBAAvg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Jan 2023 19:51:36 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7717530F9;
+        Tue, 31 Jan 2023 16:51:32 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 5C6DBB81FDA;
+        Wed,  1 Feb 2023 00:51:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF4EBC433D2;
+        Wed,  1 Feb 2023 00:51:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1675212690;
+        bh=Pnl6Yv5kzVgRaaej5mR6pT0R6QnX8G8BHj8HMuVuxIs=;
+        h=Subject:From:To:Cc:Date:From;
+        b=pXUVWDuBjrzE+8cmhLXy4yVk1O5AMtz1kwuIk7sOIfrLleoRJYeZUAStVQYolpRpJ
+         lilGuo4pkZ9fSvLsqHOfJQuTbUNWQ7b3bttDL0L/lXOVb9j0pPOMmaMivchmxVA/Zo
+         Ri9MNH4euRvPUVJdGyy0AQR3ukfaMk7zLox2yMz9XeHCqIN6Zq3P6Bpa/oe/VXQ7Uq
+         ihgXCqP0vSRb6ahweVfkj3Qj0kMnemC1d0R82rrT5R2ae7gHWo59IF4g7l+FYFYIoV
+         pW9RUluICuTRVDEFgFbrcLz/LE1j5J2z1xYZ0Ug3ZGE+cf1pNLlN9t1Zt+bXyhsq2R
+         bGikn6s9uP1dQ==
+Subject: [PATCHSET 0/2] fstests: random fixes for v2023.01.22
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     zlang@redhat.com, djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
+Date:   Tue, 31 Jan 2023 16:51:29 -0800
+Message-ID: <167521268927.2382722.13701066927653225895.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <619f0cd76d739ade3249ea4433943264d1737ab2.camel@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jan 31, 2023 at 07:02:56AM -0500, Jeff Layton wrote:
-> On Mon, 2023-01-30 at 13:05 +1100, Dave Chinner wrote:
-> > On Wed, Jan 25, 2023 at 12:58:08PM -0500, Jeff Layton wrote:
-> > > On Wed, 2023-01-25 at 08:32 -0800, Darrick J. Wong wrote:
-> > > > On Wed, Jan 25, 2023 at 06:47:12AM -0500, Jeff Layton wrote:
-> > > > > Note that there are two other lingering issues with i_version. Neither
-> > > > > of these are xfs-specific, but they may inform the changes you want to
-> > > > > make there:
-> > > > > 
-> > > > > 1/ the ctime and i_version can roll backward on a crash.
-> > > > > 
-> > > > > 2/ the ctime and i_version are both currently updated before write data
-> > > > > is copied to the pagecache. It would be ideal if that were done
-> > > > > afterward instead. (FWIW, I have some draft patches for btrfs and ext4
-> > > > > for this, but they need a lot more testing.)
-> > > > 
-> > > > You might also want some means for xfs to tell the vfs that it already
-> > > > did the timestamp update (because, say, we had to allocate blocks).
-> > > > I wonder what people will say when we have to run a transaction before
-> > > > the write to peel off suid bits and another one after to update ctime.
-> > > > 
-> > > 
-> > > That's a great question! There is a related one too once I started
-> > > looking at this in more detail:
-> > > 
-> > > Most filesystems end up updating the timestamp via a the call to
-> > > file_update_time in __generic_file_write_iter. Today, that's called very
-> > > early in the function and if it fails, the write fails without changing
-> > > anything.
-> > > 
-> > > What do we do now if the write succeeds, but update_time fails? We don't
-> > 
-> > On XFS, the timestamp update will either succeed or cause the
-> > filesystem to shutdown as a failure with a dirty transaction is a
-> > fatal, unrecoverable error.
-> > 
-> 
-> Ok. So for xfs, we could move all of this to be afterward. Clearing
-> setuid bits is quite rare, so that would only rarely require a
-> transaction (in principle).
+Hi all,
 
-See my response in the other email about XFS and atomic buffered
-write IO. We don't need to do an update after the write because
-reads cannot race between the data copy and the ctime/i_version
-update. Hence we only need one update, and it doesn't matter if it
-is before or after the data copy into the page cache.
+Here's the usual odd fixes for fstests.
 
-> > > want to return an error on the write() since the data did get copied in.
-> > > Ignoring it seems wrong too though. There could even be some way to
-> > > exploit that by changing the contents while holding the timestamp and
-> > > version constant.
-> > 
-> > If the filesystem has shut down, it doesn't matter that the data got
-> > copied into the kernel - it's never going to make it to disk and
-> > attempts to read it back will also fail. There's nothing that can be
-> > exploited by such a failure on XFS - it's game over for everyone
-> > once the fs has shut down....
-> > 
-> > > At this point I'm leaning toward leaving the ctime and i_version to be
-> > > updated before the write, and just bumping the i_version a second time
-> > > after. In most cases the second bump will end up being a no-op, unless
-> > > an i_version query races in between.
-> > 
-> > Why not also bump ctime at write completion if a query races with
-> > the write()? Wouldn't that put ns-granularity ctime based change
-> > detection on a par with i_version?
-> > 
-> > Userspace isn't going to notice the difference - the ctime they
-> > observe indicates that it was changed during the syscall. So
-> > who/what is going to care if we bump ctime twice in the syscall
-> > instead of just once in this rare corner case?
-> > 
-> 
-> We could bump the ctime too in this situation, but it would be more
-> costly. In most cases the i_version bump will be a no-op. The only
-> exception would be when a query of i_version races in between the two
-> bumps. That wouldn't be the case with the ctime, which would almost
-> always require a second transaction.
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-You've missed the part where I suggested lifting the "nfsd sampled
-i_version" state into an inode state flag rather than hiding it in
-the i_version field. At that point, we could optimise away the
-secondary ctime updates just like you are proposing we do with the
-i_version updates.  Further, we could also use that state it to
-decide whether we need to use high resolution timestamps when
-recording ctime updates - if the nfsd has not sampled the
-ctime/i_version, we don't need high res timestamps to be recorded
-for ctime....
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+---
+ common/dmthin     |    7 ++++-
+ common/rc         |   80 +++++++++++++++++++++++++++--------------------------
+ tests/generic/038 |    6 ++++
+ tests/generic/500 |    3 +-
+ 4 files changed, 54 insertions(+), 42 deletions(-)
+
