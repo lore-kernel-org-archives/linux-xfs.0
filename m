@@ -2,82 +2,166 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 504BDC636D3
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Feb 2023 13:18:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98C2FC05027
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Feb 2023 17:24:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231479AbjBANSR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Feb 2023 08:18:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46574 "EHLO
+        id S230432AbjBARYV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Feb 2023 12:24:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230043AbjBANSR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Feb 2023 08:18:17 -0500
-X-Greylist: delayed 1369 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 01 Feb 2023 05:18:07 PST
-Received: from mailgate.ics.forth.gr (mailgate.ics.forth.gr [139.91.1.2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AAAB1E1DC
-        for <linux-xfs@vger.kernel.org>; Wed,  1 Feb 2023 05:18:06 -0800 (PST)
-Received: from av3.ics.forth.gr (av3in.ics.forth.gr [139.91.1.77])
-        by mailgate.ics.forth.gr (8.15.2/ICS-FORTH/V10-1.8-GATE) with ESMTP id 311Ct8pb029890
-        for <linux-xfs@vger.kernel.org>; Wed, 1 Feb 2023 14:55:13 +0200 (EET)
-DKIM-Signature: v=1; a=rsa-sha256; d=ics.forth.gr; s=av; c=relaxed/simple;
-        q=dns/txt; i=@ics.forth.gr; t=1675256113; x=1677848113;
-        h=From:Sender:Reply-To:Subject:Date:Message-ID:To:Cc:MIME-Version:Content-Type:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=my9OmN2yJ7v8zwxuMeTu/SlcSHdGlYXyO1fke0XHdVU=;
-        b=ZHZkMtO+NDE9jO8K7Q7A/iGO673ug0LcQrw0siItNF4d+EuzeL8uVlbdECP9a5lH
-        lbVzhdT/mEArp+wfX7duxs3jRf4sCWRZKEEnFAMNIfWIJ5amj2cTNLYf8i/LEfB1
-        085WQmJZDUxsq9CA2CEGW/uPKEAj7ntt4nnVyFt6188bvQ71tKZpXBDOvfcng5FU
-        S0jZanPnUZpxMYj22L/0+9duXEoBOZDLE0r7Ec6EWLBs3hW9GbNOVuPd9crzvx+Y
-        CNUwZxtQis5+cBEZ0prkZOorvFA1HWWTwzHekS5z7FfvF/tjDttObQCZaaR2YqiM
-        9FaE0Zjy6GLxPALPGBs9nA==;
-X-AuditID: 8b5b014d-a02eb700000025c1-70-63da6131e204
-Received: from enigma.ics.forth.gr (enigma.ics.forth.gr [139.91.151.35])
-        by av3.ics.forth.gr (Symantec Messaging Gateway) with SMTP id CC.B9.09665.1316AD36; Wed,  1 Feb 2023 14:55:13 +0200 (EET)
-X-ICS-AUTH-INFO: Authenticated user: papadako at ics.forth.gr
-MIME-Version: 1.0
-Date:   Wed, 01 Feb 2023 14:55:12 +0200
-From:   Panagiotis Papadakos <papadako@ics.forth.gr>
+        with ESMTP id S230204AbjBARYV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Feb 2023 12:24:21 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE8E021294
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Feb 2023 09:23:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1675272219;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=gl8JtfbCPD2oMnWYpQohdsm3TqMEk2HyWlZ4bh0XKeM=;
+        b=Un4LTzxT6Qfr4b/KdF2tTuJelFhuDil6lkCfbNHbHsM8uDOrxE0d/jdAJBlE9I7xE7rsTT
+        2kl+A92Pa4jeagTYC0TAdSkmRSxapVNbYt0X1lcfFCT+SuwlO74/s5BSNOEtIybiHSLMi5
+        MuZvNtceW8a8QoJWbrtSGbT86ka0Io4=
+Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
+ [209.85.208.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-620-W9U6W2MfP9yO98cBk3jPew-1; Wed, 01 Feb 2023 12:23:37 -0500
+X-MC-Unique: W9U6W2MfP9yO98cBk3jPew-1
+Received: by mail-ed1-f71.google.com with SMTP id f11-20020a056402354b00b0049e18f0076dso13216893edd.15
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Feb 2023 09:23:37 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=gl8JtfbCPD2oMnWYpQohdsm3TqMEk2HyWlZ4bh0XKeM=;
+        b=8BRzab9i3xK0TfnTuB3Lq6xXJDWPiXMEpQs22G+jemkoIIbu+szgccdsIil/ehxSK4
+         ERxnW27fTMcVTZhHTA73qw7d0v9qJJIPd6Bpyo2qZSYf82Lo8PJLWGzXPjUv1u18bwwM
+         uwZEqnHXSaPL4YRwupQBm8ixF0MPr0fXgqCtBYbk57pLZS+AyPrN70fkWl7U7NXNG/p8
+         uNwUVyN5BPxzTeRK28tvAToo4e9d2ZWBakJeFuQl8lavwWZ708Oh0dWriUmbu1J7n5yb
+         rIRqH3MhTXIr9oAfdS1oC1kyWnJvtBUE6UiB2bX51ny3qdew2s4EUy+9dCpKXvUHevBS
+         4ILw==
+X-Gm-Message-State: AO0yUKXLhj6jNDe9kwFRDwdDRKJ9vfneRsFpwfMo8MXKrVioGDtO1n5D
+        9RiY2tkisr1NnqED2Fzts7GKnn/igg+c1ZkXIE9hW812hx6BJeGq93LdlWs8QSx88jHWrZye0tU
+        Hx8413A/HuJ6L3rL/YOyh/2o0u0ES0dWco2RGVzHHYaC0UHI7C9F4OquMdYRgPSY3qpfbtZE=
+X-Received: by 2002:a17:907:8a04:b0:872:27cb:9430 with SMTP id sc4-20020a1709078a0400b0087227cb9430mr3606515ejc.74.1675272216199;
+        Wed, 01 Feb 2023 09:23:36 -0800 (PST)
+X-Google-Smtp-Source: AK7set92X57ejg5ZnAeSbNWw4AQKfsPu8ktqCbcjeWWVYSKXL+hsiG8X86Udi4u0wxFKzVuOfl1ENA==
+X-Received: by 2002:a17:907:8a04:b0:872:27cb:9430 with SMTP id sc4-20020a1709078a0400b0087227cb9430mr3606494ejc.74.1675272215940;
+        Wed, 01 Feb 2023 09:23:35 -0800 (PST)
+Received: from aalbersh.remote.csb ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id f19-20020a170906391300b0088452ca0666sm6805554eje.196.2023.02.01.09.23.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 01 Feb 2023 09:23:35 -0800 (PST)
+From:   Andrey Albershteyn <aalbersh@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: xfs_repair: fatal error -- couldn't map inode 13199169, err = 117
-Message-ID: <86696f1f1b39a175e99f43128f09a722@mailhost.ics.forth.gr>
-X-Sender: papadako@mailhost.ics.forth.gr
-Organization: FORTH-ICS
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrPJMWRmVeSWpSXmKPExsXSHT1dWdcw8VayQV+/uMWuPzvYHRg9Pm+S
-        C2CM4rJJSc3JLEst0rdL4MqYf2U1S0ErS8XTw+dZGhinMncxcnJICJhIvL+8lA3EFhI4wihx
-        9EguRNxWomn9I7A4r4CgxMmZT1hAbBYBVYmp3y+xg9hsAkYSO+ZdYASxRQRkJSatPAVmCwt4
-        STxaf4EZotdF4vnkJqYuRg6gmRoSV64VgIT5BcQl5rTfZwUJMwtYS7TvMQAJMwvIS2x/O4d5
-        AiPvLCSLZyFUzUJStYCReRWjQGKZsV5mcrFeWn5RSYZeetEmRnCYMPruYLy9+a3eIUYmDsZD
-        jBIczEoivIpcN5OFeFMSK6tSi/Lji0pzUosPMUpzsCiJ856wXZAsJJCeWJKanZpakFoEk2Xi
-        4JRqYFLX/xdR4jDT1yUtVrBtmeicFT5Wpy7Xps+deWnKpSW5XgH8/OpyeVYcIh5cIrd7N62O
-        trX0KrILmBq0iVtmYt/qr5WqO1ZHKf/Nblvy3PH+D73G04bB59SeWXD5dmhGv96xWdsv5SbL
-        /47jp4+e57j59HryD4ljkqVPG+9nnpF+/D02uG0xL1/Rkr7ZKy1Fw2RPH+/oXvaZe86cd3bO
-        13Yd3VzpkF7lvk322o+jCb8nvfnwyWfPwmZr66DD7Du26vqGaDdusdvmFFXwXqxqffvZiRPZ
-        PCLyHvKl/0+d2HBdxfqN/oyAp+IiPP3hcbt27JwV5uzw6Kadi8fK3zsPnfOY8Gb/WtWf5kqb
-        njyw6FdiKc5INNRiLipOBADPWwbLggIAAA==
+Cc:     cem@kernel.org, Andrey Albershteyn <aalbersh@redhat.com>
+Subject: [PATCH] xfs_db: make flist_find_ftyp() to check for field existance on disk
+Date:   Wed,  1 Feb 2023 18:21:47 +0100
+Message-Id: <20230201172146.1874205-1-aalbersh@redhat.com>
+X-Mailer: git-send-email 2.31.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Dear all,
+flist_find_ftyp() searches for the field of the requested type. The
+first found field/path is returned. However, this doesn't work when
+there are multiple fields of the same type. For example, attr3 type
+have a few CRC fields. Leaf block (xfs_attr_leaf_hdr ->
+xfs_da3_blkinfo) and remote value block (xfs_attr3_rmt_hdr) both
+have CRC but goes under attr3 type. This causes 'crc' command to be
+unable to find CRC field when we are at remote attribute block as it
+tries to use leaf block CRC path:
 
-I am using XFS on an ICY-BOX 4-bay USB RAID enclosure which 
-unfortunately has been corrupted (probably due to some power-down).
+	$ dd if=/dev/zero bs=4k count=10 | tr '\000' '1' > test.img
+	$ touch test.file
+	$ setfattr -n user.bigattr -v "$(cat test.img)" test.file
 
-I have used xfs_repair -L, which after a huge number of messages about 
-free inode references, bad hash tables, etc, fails with the following 
-error:
+	$ # CRC of the leaf block
+	$ xfs_db -r -x /dev/sda5 -c 'inode 132' -c 'ablock 0' -c 'crc'
+	Verifying CRC:
+	hdr.info.crc = 0x102b5cbf (correct)
 
-fatal error -- couldn't map inode 13199169, err = 117
+	$ # CRC of the remote value block
+	$ xfs_db -r -x /dev/sda5 -c 'inode 132' -c 'ablock 1' -c 'crc'
+	field info not found
+	parsing error
 
-Is there anything I can do or should I consider my data lost?
+Solve this by making flist_find_ftyp() to also check that field in
+question have non-zero count (exist at the current block).
 
-xfs_repair version 6.0.0
-kernel: 6.1.0-rc5
+Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+---
+ db/crc.c   |  2 +-
+ db/flist.c | 13 ++++++++++---
+ db/flist.h |  3 ++-
+ 3 files changed, 13 insertions(+), 5 deletions(-)
 
-Best regards
+diff --git a/db/crc.c b/db/crc.c
+index 7428b916..1c73f980 100644
+--- a/db/crc.c
++++ b/db/crc.c
+@@ -114,7 +114,7 @@ crc_f(
+ 	}
+ 
+ 	/* Search for a CRC field */
+-	fl = flist_find_ftyp(fields, FLDT_CRC);
++	fl = flist_find_ftyp(fields, FLDT_CRC, iocur_top->data, 0);
+ 	if (!fl) {
+ 		dbprintf(_("No CRC field found for type %s\n"), cur_typ->name);
+ 		return 0;
+diff --git a/db/flist.c b/db/flist.c
+index 0bb6474c..d275abfe 100644
+--- a/db/flist.c
++++ b/db/flist.c
+@@ -408,11 +408,14 @@ flist_split(
+  */
+ flist_t *
+ flist_find_ftyp(
+-	const field_t *fields,
+-	fldt_t	type)
++	const field_t	*fields,
++	fldt_t		type,
++	void		*obj,
++	int		startoff)
+ {
+ 	flist_t	*fl;
+ 	const field_t	*f;
++	int		count;
+ 	const ftattr_t  *fa;
+ 
+ 	for (f = fields; f->name; f++) {
+@@ -420,11 +423,15 @@ flist_find_ftyp(
+ 		fl->fld = f;
+ 		if (f->ftyp == type)
+ 			return fl;
++		count = fcount(f, obj, startoff);
++		if (!count) {
++			continue;
++		}
+ 		fa = &ftattrtab[f->ftyp];
+ 		if (fa->subfld) {
+ 			flist_t *nfl;
+ 
+-			nfl = flist_find_ftyp(fa->subfld, type);
++			nfl = flist_find_ftyp(fa->subfld, type, obj, startoff);
+ 			if (nfl) {
+ 				fl->child = nfl;
+ 				return fl;
+diff --git a/db/flist.h b/db/flist.h
+index f0772378..e327a360 100644
+--- a/db/flist.h
++++ b/db/flist.h
+@@ -38,4 +38,5 @@ extern int	flist_parse(const struct field *fields, flist_t *fl, void *obj,
+ 			    int startoff);
+ extern void	flist_print(flist_t *fl);
+ extern flist_t	*flist_scan(char *name);
+-extern flist_t	*flist_find_ftyp(const field_t *fields, fldt_t  type);
++extern flist_t	*flist_find_ftyp(const field_t *fields, fldt_t  type, void *obj,
++		int startoff);
+-- 
+2.31.1
 
-Panagiotis, a novice XFS user
