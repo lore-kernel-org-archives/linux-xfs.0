@@ -2,464 +2,197 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DF8DC636D3
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Feb 2023 00:08:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9324C636D3
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Feb 2023 00:14:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229711AbjBBAIy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Feb 2023 19:08:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37176 "EHLO
+        id S229660AbjBBAO2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Feb 2023 19:14:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229451AbjBBAIx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Feb 2023 19:08:53 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E25869B34
-        for <linux-xfs@vger.kernel.org>; Wed,  1 Feb 2023 16:08:52 -0800 (PST)
+        with ESMTP id S229451AbjBBAO1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Feb 2023 19:14:27 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA4B8B47A
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Feb 2023 16:14:25 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 8243AB8221F
-        for <linux-xfs@vger.kernel.org>; Thu,  2 Feb 2023 00:08:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22508C433D2;
-        Thu,  2 Feb 2023 00:08:49 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id BBBF0CE25B2
+        for <linux-xfs@vger.kernel.org>; Thu,  2 Feb 2023 00:14:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAFE8C433EF;
+        Thu,  2 Feb 2023 00:14:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1675296529;
-        bh=CNkMi63vgIRGhtSWHOcdA4JPVrwYEoz/y9/UyyupAeA=;
+        s=k20201202; t=1675296861;
+        bh=tMRwnAtwE9b7tSqVwxip3bdcdAQulobjK46+1Tn3LO4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=e+Zwqcat2mqhjeby4Po0fbQBQWatdxn3CaLi3VgOuTfFpy+EHRKnA/BjPxbLFAyi1
-         i13GZO3VpQZTmDQm32HVIgUq06DWOB0ouDGh1Ff6hr4dLayr3VofOUvkR/vOClLaRj
-         DSkNBmhKFnqWF2WWqKcdhnLSRXSo53ouVZGsYaiprRU5x0AyEuoWGU7aNZ0exaXrv/
-         iOL969UcN8At2hM9lNOIQEZtQjX8oLyV7GZgN3HbbMp5HRTpd6Pp4puaxn1Yxg2zzO
-         s/skXQNETo8w0rgn1nI3C+lge1FlmBIeA9GZjr5vt9tJ/8EQhkifqrbx5FKelcT7CP
-         f4LW5wSdeMz0g==
-Date:   Wed, 1 Feb 2023 16:08:48 -0800
+        b=cgmsXjGQ61HVTss29CXngBm3SKj7V+7zo3G9/8ju3KVUlPaagVsgIEfDXTkb422Dx
+         RXYQk9z/Ypkd9c+wVGX25t0MeZhHMA0Cqjt5C1212tIUmyjxk6CGkNsEbVyYms9svu
+         a/dGpAl3m9aoXC0ngtqWjI8HGJRMV+Y+sFVPBo0rZk4Uvkw+Demt1KrQm+K1mCPyPC
+         SzVb+s48z6ki8EMmhPcOWer15LnCQqmxsTc6pcvfvBVUAZqERL5G7mxiRCwB9xywEA
+         HtMlXIKA1RXV+rVLw5841VdhiR/5uHgueyuUn5/x84PSzvIYDV9nht+wSP/JCoAnWO
+         EibqmXiN/afyw==
+Date:   Wed, 1 Feb 2023 16:14:21 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 42/42] xfs: refactor the filestreams allocator pick
- functions
-Message-ID: <Y9r/ELba/fu2dFuG@magnolia>
+Subject: Re: [PATCH 00/42] xfs: per-ag centric allocation alogrithms
+Message-ID: <Y9sAXRqdBESTHMSC@magnolia>
 References: <20230118224505.1964941-1-david@fromorbit.com>
- <20230118224505.1964941-43-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230118224505.1964941-43-david@fromorbit.com>
+In-Reply-To: <20230118224505.1964941-1-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 19, 2023 at 09:45:05AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Thu, Jan 19, 2023 at 09:44:23AM +1100, Dave Chinner wrote:
+> This series continues the work towards making shrinking a filesystem
+> possible.  We need to be able to stop operations from taking place
+> on AGs that need to be removed by a shrink, so before shrink can be
+> implemented we need to have the infrastructure in place to prevent
+> incursion into AGs that are going to be, or are in the process, of
+> being removed from active duty.
 > 
-> Now that the filestreams allocator is largely rewritten,
-> restructure the main entry point and pick function to seperate out
-> the different operations cleanly. The MRU lookup function should not
-> handle the start AG selection on MRU lookup failure, and nor should
-> the pick function handle building the association that is inserted
-> into the MRU.
+> The focus of this is making operations that depend on access to AGs
+> use the perag to access and pin the AG in active use, thereby
+> creating a barrier we can use to delay shrink until all active uses
+> of an AG have been drained and new uses are prevented.
 > 
-> This leaves the filestreams allocator fairly clean and easy to
-> understand, returning to the caller with an active perag reference
-> and a target block to allocate at.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_filestream.c | 247 +++++++++++++++++++++-------------------
->  fs/xfs/xfs_trace.h      |   9 +-
->  2 files changed, 132 insertions(+), 124 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-> index 523a3b8b5754..0a1d316ebdba 100644
-> --- a/fs/xfs/xfs_filestream.c
-> +++ b/fs/xfs/xfs_filestream.c
-> @@ -48,19 +48,19 @@ xfs_fstrm_free_func(
->  }
->  
->  /*
-> - * Scan the AGs starting at startag looking for an AG that isn't in use and has
-> - * at least minlen blocks free.
-> + * Scan the AGs starting at start_agno looking for an AG that isn't in use and
-> + * has at least minlen blocks free. If no AG is found to match the allocation
-> + * requirements, pick the AG with the most free space in it.
->   */
->  static int
->  xfs_filestream_pick_ag(
->  	struct xfs_alloc_arg	*args,
-> -	struct xfs_inode	*ip,
-> +	xfs_ino_t		pino,
->  	xfs_agnumber_t		start_agno,
->  	int			flags,
->  	xfs_extlen_t		*longest)
->  {
-> -	struct xfs_mount	*mp = ip->i_mount;
-> -	struct xfs_fstrm_item	*item;
-> +	struct xfs_mount	*mp = args->mp;
->  	struct xfs_perag	*pag;
->  	struct xfs_perag	*max_pag = NULL;
->  	xfs_extlen_t		minlen = *longest;
-> @@ -68,8 +68,6 @@ xfs_filestream_pick_ag(
->  	xfs_agnumber_t		agno;
->  	int			err, trylock;
+> This series starts by fixing some existing issues that are exposed
+> by changes later in the series. They stand alone, so can be picked
+> up independently of the rest of this patchset.
 
-Who consumes trylock?  Is this supposed to get passed through to
-xfs_bmap_longest_free_extent, or is the goal here merely to run the
-for_each_perag_wrap loop twice before going for the most free or any old
-perag?
+Hmm if I had to pick up only the bugfixes, which patches are those?
+Patches 1-3 look like bug fixes, 4-6 might be but might not be?
+
+> The most complex of these fixes is cleaning up the mess that is the
+> AGF deadlock avoidance algorithm. This algorithm stores the first
+> block that is allocated in a transaction in tp->t_firstblock, then
+> uses this to try to limit future allocations within the transaction
+> to AGs at or higher than the filesystem block stored in
+> tp->t_firstblock. This depends on one of the initial bug fixes in
+> the series to move the deadlock avoidance checks to
+> xfs_alloc_vextent(), and then builds on it to relax the constraints
+> of the avoidance algorithm to only be active when a deadlock is
+> possible.
+> 
+> We also update the algorithm to record allocations from higher AGs
+> that are allocated from, because we when we need to lock more than
+> two AGs we still have to ensure lock order is correct. Therefore we
+> can't lock AGs in the order 1, 3, 2, even though tp->t_firstblock
+> indicates that we've allocated from AG 1 and so AG is valid to lock.
+> It's not valid, because we already hold AG 3 locked, and so
+> tp->t-first_block should actually point at AG 3, not AG 1 in this
+> situation.
+> 
+> It should now be obvious that the deadlock avoidance algorithm
+> should record AGs, not filesystem blocks. So the series then changes
+> the transaction to store the highest AG we've allocated in rather
+> than a filesystem block we allocated.  This makes it obvious what
+> the constraints are, and trivial to update as we lock and allocate
+> from various AGs.
+> 
+> With all the bug fixes out of the way, the series then starts
+> converting the code to use active references. Active reference
+> counts are used by high level code that needs to prevent the AG from
+> being taken out from under it by a shrink operation. The high level
+> code needs to be able to handle not getting an active reference
+> gracefully, and the shrink code will need to wait for active
+> references to drain before continuing.
+> 
+> Active references are implemented just as reference counts right now
+> - an active reference is taken at perag init during mount, and all
+> other active references are dependent on the active reference count
+> being greater than zero. This gives us an initial method of stopping
+> new active references without needing other infrastructure; just
+> drop the reference taken at filesystem mount time and when the
+> refcount then falls to zero no new references can be taken.
+> 
+> In future, this will need to take into account AG control state
+> (e.g. offline, no alloc, etc) as well as the reference count, but
+> right now we can implement a basic barrier for shrink with just
+> reference count manipulations. As such, patches to convert the perag
+> state to atomic opstate fields similar to the xfs_mount and xlog
+> opstate fields follow the initial active perag reference counting
+> patches.
+> 
+> The first target for active reference conversion is the
+> for_each_perag*() iterators. This captures a lot of high level code
+> that should skip offline AGs, and introduces the ability to
+> differentiate between a lookup that didn't have an online AG and the
+> end of the AG iteration range.
+> 
+> From there, the inode allocation AG selection is converted to active
+> references, and the perag is driven deeper into the inode allocation
+> and btree code to replace the xfs_mount. Most of the inode
+> allocation code operates on a single AG once it is selected, hence
+> it should pass the perag as the primary referenced object around for
+> allocation, not the xfs_mount. There is a bit of churn here, but it
+> emphasises that inode allocation is inherently an allocation group
+> based operation.
+> 
+> Next the bmap/alloc interface undergoes a major untangling,
+> reworking xfs_bmap_btalloc() into separate allocation operations for
+> different contexts and failure handling behaviours. This then allows
+> us to completely remove the xfs_alloc_vextent() layer via
+> restructuring the xfs_alloc_vextent/xfs_alloc_ag_vextent() into a
+> set of realtively simple helper function that describe the
+> allocation that they are doing. e.g.  xfs_alloc_vextent_exact_bno().
+> 
+> This allows the requirements for accessing AGs to be allocation
+> context dependent. The allocations that require operation on a
+> single AG generally can't tolerate failure after the allocation
+> method and AG has been decided on, and hence the caller needs to
+> manage the active references to ensure the allocation does not race
+> with shrink removing the selected AG for the duration of the
+> operation that requires access to that allocation group.
+> 
+> Other allocations iterate AGs and so the first AG is just a hint -
+> these do not need to pin a perag first as they can tolerate not
+> being able to access an AG by simply skipping over it. These require
+> new perag iteration functions that can start at arbitrary AGs and
+> wrap around at arbitrary AGs, hence a new set for
+> for_each_perag_wrap*() helpers to do this.
+> 
+> Next is the rework of the filestreams allocator. This doesn't change
+> any functionality, but gets rid of the unnecessary multi-pass
+> selection algorithm when the selected AG is not available. It
+> currently does a lookup pass which might iterate all AGs to select
+> an AG, then checks if the AG is acceptible and if not does a "new
+> AG" pass that is essentially identical to the lookup pass. Both of
+> these scans also do the same "longest extent in AG" check before
+> selecting an AG as is done after the AG is selected.
+> 
+> IOWs, the filestreams algorithm can be greatly simplified into a
+> single new AG selection pass if the there is no current association
+> or the currently associated AG doesn't have enough contiguous free
+> space for the allocation to proceed.  With this simplification of
+> the filestreams allocator, it's then trivial to convert it to use
+> for_each_perag_wrap() for the AG scan algorithm.
+> 
+> This series passes auto group fstests with rmapbt=1 on both 1kB and
+> 4kB block size configurations without functional or performance
+> regressions. In some cases ENOSPC behaviour is improved, but fstests
+> does not capture those improvements as it only tests for regressions
+> in behaviour.
+> 
+
+For all the patches that I have not sent replies to,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+IIRC that's patches 1-6, 8, 10-13, 16, 18-19, 24-27, and 30-40.
 
 --D
 
-> -	ASSERT(S_ISDIR(VFS_I(ip)->i_mode));
-> -
->  	/* 2% of an AG's blocks must be free for it to be chosen. */
->  	minfree = mp->m_sb.sb_agblocks / 50;
->  
-> @@ -78,7 +76,7 @@ xfs_filestream_pick_ag(
->  
->  restart:
->  	for_each_perag_wrap(mp, start_agno, agno, pag) {
-> -		trace_xfs_filestream_scan(pag, ip->i_ino);
-> +		trace_xfs_filestream_scan(pag, pino);
->  		*longest = 0;
->  		err = xfs_bmap_longest_free_extent(pag, NULL, longest);
->  		if (err) {
-> @@ -148,9 +146,9 @@ xfs_filestream_pick_ag(
->  		 * grab.
->  		 */
->  		if (!max_pag) {
-> -			for_each_perag_wrap(mp, start_agno, agno, pag)
-> +			for_each_perag_wrap(args->mp, 0, start_agno, args->pag)
->  				break;
-> -			atomic_inc(&pag->pagf_fstrms);
-> +			atomic_inc(&args->pag->pagf_fstrms);
->  			*longest = 0;
->  		} else {
->  			pag = max_pag;
-> @@ -161,44 +159,10 @@ xfs_filestream_pick_ag(
->  		xfs_perag_rele(max_pag);
->  	}
->  
-> -	trace_xfs_filestream_pick(ip, pag, free);
-> -
-> -	err = -ENOMEM;
-> -	item = kmem_alloc(sizeof(*item), KM_MAYFAIL);
-> -	if (!item)
-> -		goto out_put_ag;
-> -
-> -
-> -	/*
-> -	 * We are going to use this perag now, so take another ref to it for the
-> -	 * allocation context returned to the caller. If we raced to create and
-> -	 * insert the filestreams item into the MRU (-EEXIST), then we still
-> -	 * keep this reference but free the item reference we gained above. On
-> -	 * any other failure, we have to drop both.
-> -	 */
-> -	atomic_inc(&pag->pag_active_ref);
-> -	item->pag = pag;
-> +	trace_xfs_filestream_pick(pag, pino, free);
->  	args->pag = pag;
-> -
-> -	err = xfs_mru_cache_insert(mp->m_filestream, ip->i_ino, &item->mru);
-> -	if (err) {
-> -		if (err == -EEXIST) {
-> -			err = 0;
-> -		} else {
-> -			xfs_perag_rele(args->pag);
-> -			args->pag = NULL;
-> -		}
-> -		goto out_free_item;
-> -	}
-> -
->  	return 0;
->  
-> -out_free_item:
-> -	kmem_free(item);
-> -out_put_ag:
-> -	atomic_dec(&pag->pagf_fstrms);
-> -	xfs_perag_rele(pag);
-> -	return err;
->  }
->  
->  static struct xfs_inode *
-> @@ -227,29 +191,29 @@ xfs_filestream_get_parent(
->  
->  /*
->   * Lookup the mru cache for an existing association. If one exists and we can
-> - * use it, return with the agno and blen indicating that the allocation will
-> - * proceed with that association.
-> + * use it, return with an active perag reference indicating that the allocation
-> + * will proceed with that association.
->   *
->   * If we have no association, or we cannot use the current one and have to
-> - * destroy it, return with blen = 0 and agno pointing at the next agno to try.
-> + * destroy it, return with longest = 0 to tell the caller to create a new
-> + * association.
->   */
-> -int
-> -xfs_filestream_select_ag_mru(
-> +static int
-> +xfs_filestream_lookup_association(
->  	struct xfs_bmalloca	*ap,
->  	struct xfs_alloc_arg	*args,
-> -	struct xfs_inode	*pip,
-> -	xfs_agnumber_t		*agno,
-> -	xfs_extlen_t		*blen)
-> +	xfs_ino_t		pino,
-> +	xfs_extlen_t		*longest)
->  {
-> -	struct xfs_mount	*mp = ap->ip->i_mount;
-> +	struct xfs_mount	*mp = args->mp;
->  	struct xfs_perag	*pag;
->  	struct xfs_mru_cache_elem *mru;
-> -	int			error;
-> +	int			error = 0;
->  
-> -	mru = xfs_mru_cache_lookup(mp->m_filestream, pip->i_ino);
-> +	*longest = 0;
-> +	mru = xfs_mru_cache_lookup(mp->m_filestream, pino);
->  	if (!mru)
-> -		goto out_default_agno;
-> -
-> +		return 0;
->  	/*
->  	 * Grab the pag and take an extra active reference for the caller whilst
->  	 * the mru item cannot go away. This means we'll pin the perag with
-> @@ -265,103 +229,148 @@ xfs_filestream_select_ag_mru(
->  	ap->blkno = XFS_AGB_TO_FSB(args->mp, pag->pag_agno, 0);
->  	xfs_bmap_adjacent(ap);
->  
-> -	error = xfs_bmap_longest_free_extent(pag, args->tp, blen);
-> -	if (error) {
-> -		/* We aren't going to use this perag */
-> -		xfs_perag_rele(pag);
-> -		if (error != -EAGAIN)
-> -			return error;
-> -		*blen = 0;
-> -	}
-> -
->  	/*
-> -	 * We are done if there's still enough contiguous free space to succeed.
->  	 * If there is very little free space before we start a filestreams
-> -	 * allocation, we're almost guaranteed to fail to find a better AG with
-> -	 * larger free space available so we don't even try.
-> +	 * allocation, we're almost guaranteed to fail to find a large enough
-> +	 * free space available so just use the cached AG.
->  	 */
-> -	*agno = pag->pag_agno;
-> -	if (*blen >= args->maxlen || (ap->tp->t_flags & XFS_TRANS_LOWMODE)) {
-> -		args->pag = pag;
-> -		return 0;
-> +	if (ap->tp->t_flags & XFS_TRANS_LOWMODE) {
-> +		*longest = 1;
-> +		goto out_done;
->  	}
->  
-> +	error = xfs_bmap_longest_free_extent(pag, args->tp, longest);
-> +	if (error == -EAGAIN)
-> +		error = 0;
-> +	if (error || *longest < args->maxlen) {
-> +		/* We aren't going to use this perag */
-> +		*longest = 0;
-> +		xfs_perag_rele(pag);
-> +		return error;
-> +	}
-> +
-> +out_done:
-> +	args->pag = pag;
-> +	return 0;
-> +}
-> +
-> +static int
-> +xfs_filestream_create_association(
-> +	struct xfs_bmalloca	*ap,
-> +	struct xfs_alloc_arg	*args,
-> +	xfs_ino_t		pino,
-> +	xfs_extlen_t		*longest)
-> +{
-> +	struct xfs_mount	*mp = args->mp;
-> +	struct xfs_mru_cache_elem *mru;
-> +	struct xfs_fstrm_item	*item;
-> +	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, pino);
-> +	int			flags = 0;
-> +	int			error;
-> +
->  	/* Changing parent AG association now, so remove the existing one. */
-> -	xfs_perag_rele(pag);
-> -	mru = xfs_mru_cache_remove(mp->m_filestream, pip->i_ino);
-> +	mru = xfs_mru_cache_remove(mp->m_filestream, pino);
->  	if (mru) {
->  		struct xfs_fstrm_item *item =
->  			container_of(mru, struct xfs_fstrm_item, mru);
-> -		*agno = (item->pag->pag_agno + 1) % mp->m_sb.sb_agcount;
-> -		xfs_fstrm_free_func(mp, mru);
-> -		return 0;
-> -	}
->  
-> -out_default_agno:
-> -	if (xfs_is_inode32(mp)) {
-> +		agno = (item->pag->pag_agno + 1) % mp->m_sb.sb_agcount;
-> +		xfs_fstrm_free_func(mp, mru);
-> +	} else if (xfs_is_inode32(mp)) {
->  		xfs_agnumber_t	 rotorstep = xfs_rotorstep;
-> -		*agno = (mp->m_agfrotor / rotorstep) %
-> -				mp->m_sb.sb_agcount;
-> +
-> +		agno = (mp->m_agfrotor / rotorstep) % mp->m_sb.sb_agcount;
->  		mp->m_agfrotor = (mp->m_agfrotor + 1) %
->  				 (mp->m_sb.sb_agcount * rotorstep);
-> -		return 0;
->  	}
-> -	*agno = XFS_INO_TO_AGNO(mp, pip->i_ino);
-> +
-> +	ap->blkno = XFS_AGB_TO_FSB(args->mp, agno, 0);
-> +	xfs_bmap_adjacent(ap);
-> +
-> +	if (ap->datatype & XFS_ALLOC_USERDATA)
-> +		flags |= XFS_PICK_USERDATA;
-> +	if (ap->tp->t_flags & XFS_TRANS_LOWMODE)
-> +		flags |= XFS_PICK_LOWSPACE;
-> +
-> +	*longest = ap->length;
-> +	error = xfs_filestream_pick_ag(args, pino, agno, flags, longest);
-> +	if (error)
-> +		return error;
-> +
-> +	/*
-> +	 * We are going to use this perag now, so create an assoication for it.
-> +	 * xfs_filestream_pick_ag() has already bumped the perag fstrms counter
-> +	 * for us, so all we need to do here is take another active reference to
-> +	 * the perag for the cached association.
-> +	 *
-> +	 * If we fail to store the association, we need to drop the fstrms
-> +	 * counter as well as drop the perag reference we take here for the
-> +	 * item. We do not need to return an error for this failure - as long as
-> +	 * we return a referenced AG, the allocation can still go ahead just
-> +	 * fine.
-> +	 */
-> +	item = kmem_alloc(sizeof(*item), KM_MAYFAIL);
-> +	if (!item)
-> +		goto out_put_fstrms;
-> +
-> +	atomic_inc(&args->pag->pag_active_ref);
-> +	item->pag = args->pag;
-> +	error = xfs_mru_cache_insert(mp->m_filestream, pino, &item->mru);
-> +	if (error)
-> +		goto out_free_item;
->  	return 0;
->  
-> +out_free_item:
-> +	xfs_perag_rele(item->pag);
-> +	kmem_free(item);
-> +out_put_fstrms:
-> +	atomic_dec(&args->pag->pagf_fstrms);
-> +	return 0;
->  }
->  
->  /*
->   * Search for an allocation group with a single extent large enough for
-> - * the request.  If one isn't found, then adjust the minimum allocation
-> - * size to the largest space found.
-> + * the request. First we look for an existing association and use that if it
-> + * is found. Otherwise, we create a new association by selecting an AG that fits
-> + * the allocation criteria.
-> + *
-> + * We return with a referenced perag in args->pag to indicate which AG we are
-> + * allocating into or an error with no references held.
->   */
->  int
->  xfs_filestream_select_ag(
->  	struct xfs_bmalloca	*ap,
->  	struct xfs_alloc_arg	*args,
-> -	xfs_extlen_t		*blen)
-> +	xfs_extlen_t		*longest)
->  {
-> -	struct xfs_mount	*mp = ap->ip->i_mount;
-> -	struct xfs_inode	*pip = NULL;
-> -	xfs_agnumber_t		agno;
-> -	int			flags = 0;
-> +	struct xfs_mount	*mp = args->mp;
-> +	struct xfs_inode	*pip;
-> +	xfs_ino_t		ino = 0;
->  	int			error = 0;
->  
-> +	*longest = 0;
->  	args->total = ap->total;
-> -	*blen = 0;
-> -
->  	pip = xfs_filestream_get_parent(ap->ip);
-> -	if (!pip) {
-> -		ap->blkno = XFS_AGB_TO_FSB(mp, 0, 0);
-> -		return 0;
-> +	if (pip) {
-> +		ino = pip->i_ino;
-> +		error = xfs_filestream_lookup_association(ap, args, ino,
-> +				longest);
-> +		xfs_irele(pip);
-> +		if (error)
-> +			return error;
-> +		if (*longest >= args->maxlen)
-> +			goto out_select;
-> +		if (ap->tp->t_flags & XFS_TRANS_LOWMODE)
-> +			goto out_select;
->  	}
->  
-> -	error = xfs_filestream_select_ag_mru(ap, args, pip, &agno, blen);
-> +	error = xfs_filestream_create_association(ap, args, ino, longest);
->  	if (error)
-> -		goto out_rele;
-> -	if (*blen >= args->maxlen)
-> -		goto out_select;
-> -	if (ap->tp->t_flags & XFS_TRANS_LOWMODE)
-> -		goto out_select;
-> -
-> -	ap->blkno = XFS_AGB_TO_FSB(args->mp, agno, 0);
-> -	xfs_bmap_adjacent(ap);
-> -	*blen = ap->length;
-> -	if (ap->datatype & XFS_ALLOC_USERDATA)
-> -		flags |= XFS_PICK_USERDATA;
-> -	if (ap->tp->t_flags & XFS_TRANS_LOWMODE)
-> -		flags |= XFS_PICK_LOWSPACE;
-> +		return error;
->  
-> -	error = xfs_filestream_pick_ag(args, pip, agno, flags, blen);
-> -	if (error)
-> -		goto out_rele;
->  out_select:
->  	ap->blkno = XFS_AGB_TO_FSB(mp, args->pag->pag_agno, 0);
-> -out_rele:
-> -	xfs_irele(pip);
-> -	return error;
-> -
-> +	return 0;
->  }
->  
->  void
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index b5f7d225d5b4..1d3569c0d2fe 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -668,9 +668,8 @@ DEFINE_FILESTREAM_EVENT(xfs_filestream_lookup);
->  DEFINE_FILESTREAM_EVENT(xfs_filestream_scan);
->  
->  TRACE_EVENT(xfs_filestream_pick,
-> -	TP_PROTO(struct xfs_inode *ip, struct xfs_perag *pag,
-> -		 xfs_extlen_t free),
-> -	TP_ARGS(ip, pag, free),
-> +	TP_PROTO(struct xfs_perag *pag, xfs_ino_t ino, xfs_extlen_t free),
-> +	TP_ARGS(pag, ino, free),
->  	TP_STRUCT__entry(
->  		__field(dev_t, dev)
->  		__field(xfs_ino_t, ino)
-> @@ -679,8 +678,8 @@ TRACE_EVENT(xfs_filestream_pick,
->  		__field(xfs_extlen_t, free)
->  	),
->  	TP_fast_assign(
-> -		__entry->dev = VFS_I(ip)->i_sb->s_dev;
-> -		__entry->ino = ip->i_ino;
-> +		__entry->dev = pag->pag_mount->m_super->s_dev;
-> +		__entry->ino = ino;
->  		if (pag) {
->  			__entry->agno = pag->pag_agno;
->  			__entry->streams = atomic_read(&pag->pagf_fstrms);
-> -- 
-> 2.39.0
+> Version 2:
+> - AGI, AGF and AGFL access conversion patches removed due to being
+>   merged.
+> - AG geometry conversion patches removed due to being merged
+> - Rebase on 6.2-rc4
+> - fixed "firstblock" AGF deadlock avoidance algorithm
+> - lots of cleanups and bug fixes.
+> 
+> Version 1 [RFC]:
+> - https://lore.kernel.org/linux-xfs/20220611012659.3418072-1-david@fromorbit.com/
 > 
