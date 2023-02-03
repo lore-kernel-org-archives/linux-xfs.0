@@ -2,181 +2,121 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 162D9C61DA4
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Feb 2023 16:32:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D84CC05027
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Feb 2023 17:54:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233119AbjBCQcl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Feb 2023 11:32:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56050 "EHLO
+        id S232198AbjBCRyD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Feb 2023 12:54:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232502AbjBCQck (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Feb 2023 11:32:40 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 805F7A7ED7;
-        Fri,  3 Feb 2023 08:32:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=3ddZAzIET46Nbdp8vQRl9znK05A4TQe9F99zS1NWc1w=; b=FFCHCThC2wNQvzyxOzoaJqUHO2
-        0dxdb56iUJDu/xYbkreGJmL7a3WzCRAGlZORGpGSG/Ve0gyjl74W+ai0++2zpCTQaQLFvXw+OIzTv
-        ara8XYKASGJrZe9zZS0xYKvoiJQSMaf3QVNTEXY4dZe8sZw+lOmLeFseePBfVEQBC8nOMZzRNDI0S
-        pOFyl9QEEagU8C/fqDJJknOThBuKZJ9MHzcQNxIQV86ljEDrnAV+b/zMJ9hVXlEiQAzzZmsLkr0r4
-        biHPusHxrhQU3EWxOSpSvWr1So4tBnySbc+uVsSjVy7B8cdqo8RPSTZW1sZHlMwZUld9m0LV+Fp3Y
-        7FZZ9XKw==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pNyz9-00ESgw-00; Fri, 03 Feb 2023 16:32:23 +0000
-Date:   Fri, 3 Feb 2023 16:32:22 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     syzbot <syzbot+401145a9a237779feb26@syzkaller.appspotmail.com>,
-        almaz.alexandrovich@paragon-software.com, clm@fb.com,
-        djwong@kernel.org, dsterba@suse.com, josef@toxicpanda.com,
-        linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        ntfs3@lists.linux.dev, syzkaller-bugs@googlegroups.com,
-        linux-ext4@vger.kernel.org
-Subject: Re: [syzbot] [ntfs3?] [btrfs?] BUG: unable to handle kernel paging
- request in clear_user_rep_good
-Message-ID: <Y903FgC6EVnWLE7x@casper.infradead.org>
-References: <000000000000de34bd05f3c6fe19@google.com>
- <Y901fMtPYrWXYINI@infradead.org>
+        with ESMTP id S231216AbjBCRyC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Feb 2023 12:54:02 -0500
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0312633455
+        for <linux-xfs@vger.kernel.org>; Fri,  3 Feb 2023 09:54:01 -0800 (PST)
+Received: by mail-pl1-x62c.google.com with SMTP id n13so5984261plf.11
+        for <linux-xfs@vger.kernel.org>; Fri, 03 Feb 2023 09:54:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=in-reply-to:content-disposition:mime-version:references:subject:cc
+         :to:from:date:message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=9RKTKl/Bb3c4duHC9Bqed53UuuEJJvB8k+GUCNePruY=;
+        b=HQ0vQysX1kKI8O+PparDZ35dBYNpcFDWtsPkazH7LUJi2OaBa11iyQ9FQsErdO66dx
+         1UzzputCQRuAr/bCctGzAZwa0d+aDQ1lgiTzHsFutD6VgNmqAwFcIqJ3F8Tcxz5a8QLk
+         /pYo5xZE+h1m4VZPPnBgpQttdWfm3JlDR1S2M=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:subject:cc
+         :to:from:date:message-id:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=9RKTKl/Bb3c4duHC9Bqed53UuuEJJvB8k+GUCNePruY=;
+        b=V5W1Zk4x5qjoAkYpRYQbRVC+0uX3tVs6qU45CCdjjd1J27FnqUo2xE/Cbx3vfFtvvO
+         dwXKKjlXt9B3gpt7eiBN5hoETvPZzf0vF5gpuyuOYFpAAk1jk7kC6CFfizbxEvepWRD3
+         X2Uay+iJq90H+wc6dus6eqOjC6OkC45Q1voUu2EPF3a5JtdHErWxIgaxx2GNq53C98y3
+         GDDwnpVZHw6aHG9h43EmdgfLkGJ4dqMqqezhqDEj0Hljc9bqIy4iTy9GvOYVH8r7RTTO
+         26mBcJet3oi8qm+4Tc+aYFEkul//LqDdyuilGGJAKAKtyCNjN1gZWVVzFZJJof4qSmoa
+         X4iA==
+X-Gm-Message-State: AO0yUKWuCekSg42Qw7qFQohIxa0ZQc9bUX4o/6bZuHuZUYwS2dY0z++h
+        IwkCjjrIkU3KiVSALEJ79wwv2v9m1ku6oLAq
+X-Google-Smtp-Source: AK7set/EmLEgIMfPrEdynvHAK1GlETqG/9g9kQULpuLqRZcPGdmTTgRxZ2UAdRqjHzv/ZYrfp0Ow/w==
+X-Received: by 2002:a05:6a20:8420:b0:bc:246c:9be4 with SMTP id c32-20020a056a20842000b000bc246c9be4mr15305808pzd.45.1675446840510;
+        Fri, 03 Feb 2023 09:54:00 -0800 (PST)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id t5-20020a637805000000b004c974bb9a4esm1737998pgc.83.2023.02.03.09.53.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 03 Feb 2023 09:53:59 -0800 (PST)
+Message-ID: <63dd4a37.630a0220.e4652.35de@mx.google.com>
+X-Google-Original-Message-ID: <202302031752.@keescook>
+Date:   Fri, 3 Feb 2023 17:53:59 +0000
+From:   Kees Cook <keescook@chromium.org>
+To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH][next] xfs: Replace one-element arrays with
+ flexible-array members
+References: <Y9xiYmVLRIKdpJcC@work>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y901fMtPYrWXYINI@infradead.org>
+In-Reply-To: <Y9xiYmVLRIKdpJcC@work>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 03, 2023 at 08:25:32AM -0800, Christoph Hellwig wrote:
-> Where are the ntfs3 and btrfs tags coming from?  This seems to clearly
-> be about ext4 in the call stack.
+On Thu, Feb 02, 2023 at 07:24:50PM -0600, Gustavo A. R. Silva wrote:
+> One-element arrays are deprecated, and we are replacing them with flexible
+> array members instead. So, replace one-element arrays with flexible-array
+> members in structures xfs_attr_leaf_name_local and
+> xfs_attr_leaf_name_remote.
+> 
+> The only binary differences reported after the changes are all like
+> these:
+> 
+> fs/xfs/libxfs/xfs_attr_leaf.o
+> _@@ -435,7 +435,7 @@
+>       3b8:      movzbl 0x2(%rbx),%eax
+>       3bc:      rol    $0x8,%bp
+>       3c0:      movzwl %bp,%ebp
+> -     3c3:      lea    0x2(%rax,%rbp,1),%ebx
+> +     3c3:      lea    0x3(%rax,%rbp,1),%ebx
+>       3c7:      call   3cc <xfs_attr_leaf_entsize+0x8c>
+>                         3c8: R_X86_64_PLT32     __tsan_func_exit-0x4
+>       3cc:      or     $0x3,%ebx
+> _@@ -454,7 +454,7 @@
+>       3ea:      movzbl 0x8(%rbx),%ebx
+>       3ee:      call   3f3 <xfs_attr_leaf_entsize+0xb3>
+>                         3ef: R_X86_64_PLT32     __tsan_func_exit-0x4
+> -     3f3:      add    $0xa,%ebx
+> +     3f3:      add    $0xb,%ebx
+>       3f6:      or     $0x3,%ebx
+>       3f9:      add    $0x1,%ebx
+>       3fc:      mov    %ebx,%eax
+> 
+> similar changes in fs/xfs/scrub/attr.o and fs/xfs/xfs.o object files.
 
-I believe if you look at the reproducer, ext4 is the target of the DIO,
-but the source is a mmaped file on a corrupted ntfs3 image.  Or maybe
-btrfs; it's created two images.
+I usually turn off the sanitizers for the A/B build comparisons to make
+it easier to read the results. It looks like it _grew_ in size here,
+though?
 
-> On Thu, Feb 02, 2023 at 11:54:48PM -0800, syzbot wrote:
-> > Hello,
-> > 
-> > syzbot found the following issue on:
-> > 
-> > HEAD commit:    ab072681eabe Merge tag 'irq_urgent_for_v6.2_rc6' of git://..
-> > git tree:       upstream
-> > console output: https://syzkaller.appspot.com/x/log.txt?x=15933749480000
-> > kernel config:  https://syzkaller.appspot.com/x/.config?x=23330449ad10b66f
-> > dashboard link: https://syzkaller.appspot.com/bug?extid=401145a9a237779feb26
-> > compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
-> > syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=13b3ba9e480000
-> > 
-> > Downloadable assets:
-> > disk image: https://storage.googleapis.com/syzbot-assets/a43bbc272cf3/disk-ab072681.raw.xz
-> > vmlinux: https://storage.googleapis.com/syzbot-assets/fec05f5bcfa7/vmlinux-ab072681.xz
-> > kernel image: https://storage.googleapis.com/syzbot-assets/00b9b0dd9801/bzImage-ab072681.xz
-> > mounted in repro #1: https://storage.googleapis.com/syzbot-assets/f7ef8856a9ce/mount_0.gz
-> > mounted in repro #2: https://storage.googleapis.com/syzbot-assets/79f8035a08dd/mount_4.gz
-> > 
-> > IMPORTANT: if you fix the issue, please add the following tag to the commit:
-> > Reported-by: syzbot+401145a9a237779feb26@syzkaller.appspotmail.com
-> > 
-> > BUG: unable to handle page fault for address: 0000000020081000
-> > #PF: supervisor write access in kernel mode
-> > #PF: error_code(0x0002) - not-present page
-> > PGD 1c9cc067 P4D 1c9cc067 PUD 280e9067 PMD 2a76b067 PTE 0
-> > Oops: 0002 [#1] PREEMPT SMP KASAN
-> > CPU: 0 PID: 5441 Comm: syz-executor.1 Not tainted 6.2.0-rc5-syzkaller-00221-gab072681eabe #0
-> > Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/12/2023
-> > RIP: 0010:clear_user_rep_good+0x1c/0x30 arch/x86/lib/clear_page_64.S:147
-> > Code: 66 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 00 f3 0f 1e fa 48 83 f9 40 72 a6 89 ca 48 c1 e9 03 74 03 f3 48 ab 83 e2 07 74 04 89 d1 <f3> aa 31 c0 c3 48 c1 e1 03 83 e2 07 48 01 d1 eb f1 0f 1f 00 f3 0f
-> > RSP: 0018:ffffc900056f76d8 EFLAGS: 00050202
-> > RAX: 0000000000000000 RBX: 0000000000081002 RCX: 0000000000000002
-> > RDX: 0000000000000002 RSI: ffffffff84098c49 RDI: 0000000020081000
-> > RBP: 0000000000081002 R08: 0000000000000000 R09: 0000000000000000
-> > R10: 0000000000000001 R11: 0000000000094001 R12: ffffc900056f7d70
-> > R13: 0000000020000000 R14: 000000007ffff000 R15: 0000000000000000
-> > FS:  00007fc1837f1700(0000) GS:ffff8880b9800000(0000) knlGS:0000000000000000
-> > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > CR2: 0000000020081000 CR3: 000000002b26e000 CR4: 0000000000350ef0
-> > Call Trace:
-> >  <TASK>
-> >  __clear_user arch/x86/include/asm/uaccess_64.h:103 [inline]
-> >  clear_user arch/x86/include/asm/uaccess_64.h:124 [inline]
-> >  iov_iter_zero+0x709/0x1290 lib/iov_iter.c:800
-> >  iomap_dio_hole_iter fs/iomap/direct-io.c:389 [inline]
-> >  iomap_dio_iter fs/iomap/direct-io.c:440 [inline]
-> >  __iomap_dio_rw+0xe3d/0x1cd0 fs/iomap/direct-io.c:601
-> >  iomap_dio_rw+0x40/0xa0 fs/iomap/direct-io.c:689
-> >  ext4_dio_read_iter fs/ext4/file.c:94 [inline]
-> >  ext4_file_read_iter+0x4be/0x690 fs/ext4/file.c:145
-> >  call_read_iter include/linux/fs.h:2183 [inline]
-> >  do_iter_readv_writev+0x2e0/0x3b0 fs/read_write.c:733
-> >  do_iter_read+0x2f2/0x750 fs/read_write.c:796
-> >  vfs_readv+0xe5/0x150 fs/read_write.c:916
-> >  do_preadv+0x1b6/0x270 fs/read_write.c:1008
-> >  __do_sys_preadv2 fs/read_write.c:1070 [inline]
-> >  __se_sys_preadv2 fs/read_write.c:1061 [inline]
-> >  __x64_sys_preadv2+0xef/0x150 fs/read_write.c:1061
-> >  do_syscall_x64 arch/x86/entry/common.c:50 [inline]
-> >  do_syscall_64+0x39/0xb0 arch/x86/entry/common.c:80
-> >  entry_SYSCALL_64_after_hwframe+0x63/0xcd
-> > RIP: 0033:0x7fc182a8c0c9
-> > Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 f1 19 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b8 ff ff ff f7 d8 64 89 01 48
-> > RSP: 002b:00007fc1837f1168 EFLAGS: 00000246 ORIG_RAX: 0000000000000147
-> > RAX: ffffffffffffffda RBX: 00007fc182babf80 RCX: 00007fc182a8c0c9
-> > RDX: 0000000000000001 RSI: 0000000020000100 RDI: 0000000000000003
-> > RBP: 00007fc182ae7ae9 R08: 0000000000000000 R09: 0000000000000000
-> > R10: 000000000007fffe R11: 0000000000000246 R12: 0000000000000000
-> > R13: 00007ffefd64d1ef R14: 00007fc1837f1300 R15: 0000000000022000
-> >  </TASK>
-> > Modules linked in:
-> > CR2: 0000000020081000
-> > ---[ end trace 0000000000000000 ]---
-> > RIP: 0010:clear_user_rep_good+0x1c/0x30 arch/x86/lib/clear_page_64.S:147
-> > Code: 66 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 00 f3 0f 1e fa 48 83 f9 40 72 a6 89 ca 48 c1 e9 03 74 03 f3 48 ab 83 e2 07 74 04 89 d1 <f3> aa 31 c0 c3 48 c1 e1 03 83 e2 07 48 01 d1 eb f1 0f 1f 00 f3 0f
-> > RSP: 0018:ffffc900056f76d8 EFLAGS: 00050202
-> > RAX: 0000000000000000 RBX: 0000000000081002 RCX: 0000000000000002
-> > RDX: 0000000000000002 RSI: ffffffff84098c49 RDI: 0000000020081000
-> > RBP: 0000000000081002 R08: 0000000000000000 R09: 0000000000000000
-> > R10: 0000000000000001 R11: 0000000000094001 R12: ffffc900056f7d70
-> > R13: 0000000020000000 R14: 000000007ffff000 R15: 0000000000000000
-> > FS:  00007fc1837f1700(0000) GS:ffff8880b9800000(0000) knlGS:0000000000000000
-> > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > CR2: 00007f8294a2a000 CR3: 000000002b26e000 CR4: 0000000000350ef0
-> > ----------------
-> > Code disassembly (best guess):
-> >    0:	66 66 2e 0f 1f 84 00 	data16 nopw %cs:0x0(%rax,%rax,1)
-> >    7:	00 00 00 00
-> >    b:	0f 1f 00             	nopl   (%rax)
-> >    e:	f3 0f 1e fa          	endbr64
-> >   12:	48 83 f9 40          	cmp    $0x40,%rcx
-> >   16:	72 a6                	jb     0xffffffbe
-> >   18:	89 ca                	mov    %ecx,%edx
-> >   1a:	48 c1 e9 03          	shr    $0x3,%rcx
-> >   1e:	74 03                	je     0x23
-> >   20:	f3 48 ab             	rep stos %rax,%es:(%rdi)
-> >   23:	83 e2 07             	and    $0x7,%edx
-> >   26:	74 04                	je     0x2c
-> >   28:	89 d1                	mov    %edx,%ecx
-> > * 2a:	f3 aa                	rep stos %al,%es:(%rdi) <-- trapping instruction
-> >   2c:	31 c0                	xor    %eax,%eax
-> >   2e:	c3                   	retq
-> >   2f:	48 c1 e1 03          	shl    $0x3,%rcx
-> >   33:	83 e2 07             	and    $0x7,%edx
-> >   36:	48 01 d1             	add    %rdx,%rcx
-> >   39:	eb f1                	jmp    0x2c
-> >   3b:	0f 1f 00             	nopl   (%rax)
-> >   3e:	f3                   	repz
-> >   3f:	0f                   	.byte 0xf
-> > 
-> > 
-> > ---
-> > This report is generated by a bot. It may contain errors.
-> > See https://goo.gl/tpsmEJ for more information about syzbot.
-> > syzbot engineers can be reached at syzkaller@googlegroups.com.
-> > 
-> > syzbot will keep track of this issue. See:
-> > https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-> > syzbot can test patches for this issue, for details see:
-> > https://goo.gl/tpsmEJ#testing-patches
-> ---end quoted text---
+> And the reason for this is because of the round_up() macro called in
+> functions xfs_attr_leaf_entsize_remote() and xfs_attr_leaf_entsize_local(),
+> which is compensanting for the one-byte reduction in size (due to the
+> flex-array transformation) of structures xfs_attr_leaf_name_remote and
+> xfs_attr_leaf_name_local. So, sizes remain the same before and after
+> changes.
+> 
+> This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
+> routines on memcpy() and help us make progress towards globally
+> enabling -fstrict-flex-arrays=3 [1].
+> 
+> Link: https://github.com/KSPP/linux/issues/79
+> Link: https://github.com/KSPP/linux/issues/251
+> Link: https://gcc.gnu.org/pipermail/gcc-patches/2022-October/602902.html [1]
+> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+
+If xfstests pass, this seems good to me. Thanks!
+
+Reviewed-by: Kees Cook <keescook@chromium.org>
+
+-- 
+Kees Cook
