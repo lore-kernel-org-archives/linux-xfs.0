@@ -2,58 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D84CC05027
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Feb 2023 17:54:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C8BAC61DA4
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Feb 2023 21:32:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232198AbjBCRyD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Feb 2023 12:54:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60440 "EHLO
+        id S232568AbjBCVcT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Feb 2023 16:32:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231216AbjBCRyC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Feb 2023 12:54:02 -0500
-Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0312633455
-        for <linux-xfs@vger.kernel.org>; Fri,  3 Feb 2023 09:54:01 -0800 (PST)
-Received: by mail-pl1-x62c.google.com with SMTP id n13so5984261plf.11
-        for <linux-xfs@vger.kernel.org>; Fri, 03 Feb 2023 09:54:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=in-reply-to:content-disposition:mime-version:references:subject:cc
-         :to:from:date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=9RKTKl/Bb3c4duHC9Bqed53UuuEJJvB8k+GUCNePruY=;
-        b=HQ0vQysX1kKI8O+PparDZ35dBYNpcFDWtsPkazH7LUJi2OaBa11iyQ9FQsErdO66dx
-         1UzzputCQRuAr/bCctGzAZwa0d+aDQ1lgiTzHsFutD6VgNmqAwFcIqJ3F8Tcxz5a8QLk
-         /pYo5xZE+h1m4VZPPnBgpQttdWfm3JlDR1S2M=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:subject:cc
-         :to:from:date:message-id:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=9RKTKl/Bb3c4duHC9Bqed53UuuEJJvB8k+GUCNePruY=;
-        b=V5W1Zk4x5qjoAkYpRYQbRVC+0uX3tVs6qU45CCdjjd1J27FnqUo2xE/Cbx3vfFtvvO
-         dwXKKjlXt9B3gpt7eiBN5hoETvPZzf0vF5gpuyuOYFpAAk1jk7kC6CFfizbxEvepWRD3
-         X2Uay+iJq90H+wc6dus6eqOjC6OkC45Q1voUu2EPF3a5JtdHErWxIgaxx2GNq53C98y3
-         GDDwnpVZHw6aHG9h43EmdgfLkGJ4dqMqqezhqDEj0Hljc9bqIy4iTy9GvOYVH8r7RTTO
-         26mBcJet3oi8qm+4Tc+aYFEkul//LqDdyuilGGJAKAKtyCNjN1gZWVVzFZJJof4qSmoa
-         X4iA==
-X-Gm-Message-State: AO0yUKWuCekSg42Qw7qFQohIxa0ZQc9bUX4o/6bZuHuZUYwS2dY0z++h
-        IwkCjjrIkU3KiVSALEJ79wwv2v9m1ku6oLAq
-X-Google-Smtp-Source: AK7set/EmLEgIMfPrEdynvHAK1GlETqG/9g9kQULpuLqRZcPGdmTTgRxZ2UAdRqjHzv/ZYrfp0Ow/w==
-X-Received: by 2002:a05:6a20:8420:b0:bc:246c:9be4 with SMTP id c32-20020a056a20842000b000bc246c9be4mr15305808pzd.45.1675446840510;
-        Fri, 03 Feb 2023 09:54:00 -0800 (PST)
-Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id t5-20020a637805000000b004c974bb9a4esm1737998pgc.83.2023.02.03.09.53.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 03 Feb 2023 09:53:59 -0800 (PST)
-Message-ID: <63dd4a37.630a0220.e4652.35de@mx.google.com>
-X-Google-Original-Message-ID: <202302031752.@keescook>
-Date:   Fri, 3 Feb 2023 17:53:59 +0000
-From:   Kees Cook <keescook@chromium.org>
+        with ESMTP id S231755AbjBCVcS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Feb 2023 16:32:18 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C89B9B704;
+        Fri,  3 Feb 2023 13:32:18 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BBB8F61FD7;
+        Fri,  3 Feb 2023 21:32:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F531C433EF;
+        Fri,  3 Feb 2023 21:32:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1675459937;
+        bh=+3/BTONRD3iwOv0A33zqtDpDWdHnR/8jcN4XSfuZenA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=qV8BftRDYCk7cTCDfLXp6InMJJKPCMK8tHHD94rbCikCNNs2OqN+mbT78HAqgbnvU
+         pM7TmxM4emEJvcU61hlgtOOsLNWMrX+Oe3uxWfBkdksTduvYMHnJy/Tfm5zls6K/75
+         OI8g5hnnt2MCLwj17/UYnQiw9HOgtZ6wdHqJ9+kBV0UK7FBktoShkZPiEZGlDRhF8u
+         IS40I25gQMoJeNuTZ4WgUAiiSfUH8zTPpVzc5Y0BZ44FHMFtvyczdOy8DxBZwv+Q6F
+         xc45jaoDchSMW72ga+QYhrKad/4C8S2f1Ai9DDNvxly4LDEmNaKE4r7aVlKQUNdvP5
+         JREffywxfG12Q==
+Date:   Fri, 3 Feb 2023 13:32:16 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org
 Subject: Re: [PATCH][next] xfs: Replace one-element arrays with
  flexible-array members
+Message-ID: <Y919YPKebVjQWwTM@magnolia>
 References: <Y9xiYmVLRIKdpJcC@work>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -93,11 +78,7 @@ On Thu, Feb 02, 2023 at 07:24:50PM -0600, Gustavo A. R. Silva wrote:
 >       3fc:      mov    %ebx,%eax
 > 
 > similar changes in fs/xfs/scrub/attr.o and fs/xfs/xfs.o object files.
-
-I usually turn off the sanitizers for the A/B build comparisons to make
-it easier to read the results. It looks like it _grew_ in size here,
-though?
-
+> 
 > And the reason for this is because of the round_up() macro called in
 > functions xfs_attr_leaf_entsize_remote() and xfs_attr_leaf_entsize_local(),
 > which is compensanting for the one-byte reduction in size (due to the
@@ -113,10 +94,53 @@ though?
 > Link: https://github.com/KSPP/linux/issues/251
 > Link: https://gcc.gnu.org/pipermail/gcc-patches/2022-October/602902.html [1]
 > Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_da_format.h | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+> index 25e2841084e1..e1e62ebb0c44 100644
+> --- a/fs/xfs/libxfs/xfs_da_format.h
+> +++ b/fs/xfs/libxfs/xfs_da_format.h
+> @@ -620,14 +620,14 @@ typedef struct xfs_attr_leaf_entry {	/* sorted on key, not name */
+>  typedef struct xfs_attr_leaf_name_local {
+>  	__be16	valuelen;		/* number of bytes in value */
+>  	__u8	namelen;		/* length of name bytes */
+> -	__u8	nameval[1];		/* name/value bytes */
+> +	__u8	nameval[];		/* name/value bytes */
+>  } xfs_attr_leaf_name_local_t;
+>  
+>  typedef struct xfs_attr_leaf_name_remote {
+>  	__be32	valueblk;		/* block number of value bytes */
+>  	__be32	valuelen;		/* number of bytes in value */
+>  	__u8	namelen;		/* length of name bytes */
+> -	__u8	name[1];		/* name bytes */
+> +	__u8	name[];			/* name bytes */
 
-If xfstests pass, this seems good to me. Thanks!
+Does the large comment about m68k problems in xfs_ondisk.h need updating
+here?
 
-Reviewed-by: Kees Cook <keescook@chromium.org>
+--D
 
--- 
-Kees Cook
+>  } xfs_attr_leaf_name_remote_t;
+>  
+>  typedef struct xfs_attr_leafblock {
+> @@ -747,13 +747,13 @@ xfs_attr3_leaf_name_local(xfs_attr_leafblock_t *leafp, int idx)
+>   */
+>  static inline int xfs_attr_leaf_entsize_remote(int nlen)
+>  {
+> -	return round_up(sizeof(struct xfs_attr_leaf_name_remote) - 1 +
+> +	return round_up(sizeof(struct xfs_attr_leaf_name_remote) +
+>  			nlen, XFS_ATTR_LEAF_NAME_ALIGN);
+>  }
+>  
+>  static inline int xfs_attr_leaf_entsize_local(int nlen, int vlen)
+>  {
+> -	return round_up(sizeof(struct xfs_attr_leaf_name_local) - 1 +
+> +	return round_up(sizeof(struct xfs_attr_leaf_name_local) +
+>  			nlen + vlen, XFS_ATTR_LEAF_NAME_ALIGN);
+>  }
+>  
+> -- 
+> 2.34.1
+> 
