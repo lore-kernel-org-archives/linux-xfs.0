@@ -2,137 +2,110 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBF86C636D4
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Feb 2023 01:24:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C0B1C636D3
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Feb 2023 01:48:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231546AbjBCBYo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Feb 2023 20:24:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52012 "EHLO
+        id S231956AbjBCBs4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Feb 2023 20:48:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36616 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231598AbjBCBYm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2023 20:24:42 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BED0B84B64;
-        Thu,  2 Feb 2023 17:24:36 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S230021AbjBCBsz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2023 20:48:55 -0500
+Received: from mail1.bemta34.messagelabs.com (mail1.bemta34.messagelabs.com [195.245.231.4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0B7E889B4;
+        Thu,  2 Feb 2023 17:48:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
+        s=170520fj; t=1675388929; i=@fujitsu.com;
+        bh=XZoeibMLSMbZpYYv82E34P+KgYpreBj0SgHdJOuWtXI=;
+        h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type;
+        b=MTudVFxK8fPxcdtmtj/8A9ienGdzabwYGy/uC14BQqJWrAn/Pvtd/tp2U95b29JFL
+         a0bNsbzOGBi/rOfpf3Sx4QsXqvkNCgT1gsL/bhgefehDcVf0c624URKXaMs+lNKM0H
+         MeQmOv2Shaw5iKKpEGey/42YxRRC4uFGo9JQ59AQ/DtIxTszCbBQGBjRrM7QEehjcB
+         7X8WoiB91vA17f3QuiO5YQ7nLdbAGvUukvHD15iUmJWaohJi+7/TX4sD7zf5c/ae5W
+         DYUUsuiUeinAAffrU/2OTE7jbP/gqTd2OhEeTBmEqC4R18zkPtnADLF5PpUzTpcN4t
+         aUkeS8lO4OfIg==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrFIsWRWlGSWpSXmKPExsViZ8ORpPsj/U6
+  ywYmlGhZz1q9hs5g+9QKjxZZj9xgtLj/hs9iz9ySLxa4/O9gtVv74w2rx+8ccNgcOj1OLJDw2
+  r9DyWLznJZPHplWdbB4nZvxm8XixeSajx+dNcgHsUayZeUn5FQmsGTcfvmIqOMxa8XryUuYGx
+  rMsXYxcHEICGxklrt/pY4NwljJJtJ/8CeXsZZS4ePsKUBknB5uAjsSFBX9ZQWwRgWiJNw8nsI
+  PYzAKzGCX+LxMEsYUFvCT6zuwDi7MIqEj0Xp8OZvMKuEicXXOQCcSWEFCQmPLwPTNEXFDi5Mw
+  nLBBzJCQOvngBFOcAqlGSmNkdD1FeKdH64RcLhK0mcfXcJuYJjPyzkHTPQtK9gJFpFaNpcWpR
+  WWqRrrleUlFmekZJbmJmjl5ilW6iXmqpbnlqcYmukV5iebFeanGxXnFlbnJOil5easkmRmAUp
+  BQrz9zBuKzvr94hRkkOJiVRXmOmO8lCfEn5KZUZicUZ8UWlOanFhxhlODiUJHg3JwPlBItS01
+  Mr0jJzgBEJk5bg4FES4VUESfMWFyTmFmemQ6ROMSpKifNyA+NYSAAkkVGaB9cGSwKXGGWlhHk
+  ZGRgYhHgKUotyM0tQ5V8xinMwKgnzLosGmsKTmVcCN/0V0GImoMV3rW+CLC5JREhJNTAZZU9c
+  VbHa9v2p9293sJwSZglunlAqLn7OsUn0d7dy3jnnEobJl42213Qt9fwcdbU/s764aOvVbVeU1
+  1ftmPLN4NgdEYFCfo5Dhy5W9aVnvTat2tzgsODCtcWM+UUtCy94cRk2XLA6sO+Ib01q/c2ejr
+  iCM/6Bf2Unek5wWsLloN9jqOhUKP3o2BThwpuv/Nr/1h0+7nitvv9PaT/XxQL1KVFMMX7dKSu
+  TUji9ks5H23vFdpYa6uqsWe2VcGbRtXORwfPOHPrqVLrFubu6x3HW1vpLj3X0FZUL5/zPSjq9
+  fcnRA/OqxQKmRLySL7xxPjPy7zPGXfO8f294UmIWdjNp7eTpgera0SEtG5+XFiixFGckGmoxF
+  xUnAgDpXNDNfQMAAA==
+X-Env-Sender: ruansy.fnst@fujitsu.com
+X-Msg-Ref: server-6.tower-571.messagelabs.com!1675388920!66159!1
+X-Originating-IP: [62.60.8.98]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.102.2; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 21994 invoked from network); 3 Feb 2023 01:48:40 -0000
+Received: from unknown (HELO n03ukasimr03.n03.fujitsu.local) (62.60.8.98)
+  by server-6.tower-571.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 3 Feb 2023 01:48:40 -0000
+Received: from n03ukasimr03.n03.fujitsu.local (localhost [127.0.0.1])
+        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTP id 5613F1AD;
+        Fri,  3 Feb 2023 01:48:40 +0000 (GMT)
+Received: from R01UKEXCASM223.r01.fujitsu.local (R01UKEXCASM223 [10.182.185.121])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 6FBA3B810EE;
-        Fri,  3 Feb 2023 01:24:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D815C433EF;
-        Fri,  3 Feb 2023 01:24:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1675387474;
-        bh=IscsXZpj+h2AU0j+vLsryYQTUgOMPPGd5Jv1285ZrJk=;
-        h=Date:From:To:Cc:Subject:From;
-        b=QHKJhVUiPYk/zx3KeJ5KOmbtERStOiApOlVI2w8X9mB474wJY93F25VmERJ1N2mjC
-         IzzAx4B80n6Joo+E9878meSE+QVA3miCcbWn9baxFmZQyXEOLwtB8MCmgKcm7JOHmT
-         ZkjIuQ2cuM9hMe+6ZNZu1zAUV/jdwHi8/2ZtzJkccYEc8LHpseYYo2BcwGQxGK6SHF
-         OBxC8TwD1aQgYpLmDx07lyS9jSZJFYnvW06gYJs8AJLh9PQMxbiEoibGRwgIxFJEtn
-         UIn8n2KUQiBfNqadGk62a9bWHOV9ZeydUEA2VYnEdCBr0PKCV0fhnKHyAURdnez9xy
-         mZ/TyOnl8yEYA==
-Date:   Thu, 2 Feb 2023 19:24:50 -0600
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-hardening@vger.kernel.org
-Subject: [PATCH][next] xfs: Replace one-element arrays with flexible-array
- members
-Message-ID: <Y9xiYmVLRIKdpJcC@work>
+        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTPS id 4A3C01AC;
+        Fri,  3 Feb 2023 01:48:40 +0000 (GMT)
+Received: from localhost.localdomain (10.167.225.141) by
+ R01UKEXCASM223.r01.fujitsu.local (10.182.185.121) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.42; Fri, 3 Feb 2023 01:48:36 +0000
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+To:     <linux-xfs@vger.kernel.org>, <nvdimm@lists.linux.dev>,
+        <linux-fsdevel@vger.kernel.org>
+CC:     <djwong@kernel.org>, <david@fromorbit.com>,
+        <dan.j.williams@intel.com>, <akpm@linux-foundation.org>,
+        <willy@infradead.org>, <ruansy.fnst@fujitsu.com>
+Subject: [PATCH v2] fsdax: dax_unshare_iter() should return a valid length
+Date:   Fri, 3 Feb 2023 01:48:26 +0000
+Message-ID: <1675388906-50-1-git-send-email-ruansy.fnst@fujitsu.com>
+X-Mailer: git-send-email 1.8.3.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain
+X-Originating-IP: [10.167.225.141]
+X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
+ R01UKEXCASM223.r01.fujitsu.local (10.182.185.121)
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-One-element arrays are deprecated, and we are replacing them with flexible
-array members instead. So, replace one-element arrays with flexible-array
-members in structures xfs_attr_leaf_name_local and
-xfs_attr_leaf_name_remote.
+The copy_mc_to_kernel() will return 0 if it executed successfully.
+Then the return value should be set to the length it copied.
 
-The only binary differences reported after the changes are all like
-these:
-
-fs/xfs/libxfs/xfs_attr_leaf.o
-_@@ -435,7 +435,7 @@
-      3b8:      movzbl 0x2(%rbx),%eax
-      3bc:      rol    $0x8,%bp
-      3c0:      movzwl %bp,%ebp
--     3c3:      lea    0x2(%rax,%rbp,1),%ebx
-+     3c3:      lea    0x3(%rax,%rbp,1),%ebx
-      3c7:      call   3cc <xfs_attr_leaf_entsize+0x8c>
-                        3c8: R_X86_64_PLT32     __tsan_func_exit-0x4
-      3cc:      or     $0x3,%ebx
-_@@ -454,7 +454,7 @@
-      3ea:      movzbl 0x8(%rbx),%ebx
-      3ee:      call   3f3 <xfs_attr_leaf_entsize+0xb3>
-                        3ef: R_X86_64_PLT32     __tsan_func_exit-0x4
--     3f3:      add    $0xa,%ebx
-+     3f3:      add    $0xb,%ebx
-      3f6:      or     $0x3,%ebx
-      3f9:      add    $0x1,%ebx
-      3fc:      mov    %ebx,%eax
-
-similar changes in fs/xfs/scrub/attr.o and fs/xfs/xfs.o object files.
-
-And the reason for this is because of the round_up() macro called in
-functions xfs_attr_leaf_entsize_remote() and xfs_attr_leaf_entsize_local(),
-which is compensanting for the one-byte reduction in size (due to the
-flex-array transformation) of structures xfs_attr_leaf_name_remote and
-xfs_attr_leaf_name_local. So, sizes remain the same before and after
-changes.
-
-This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
-routines on memcpy() and help us make progress towards globally
-enabling -fstrict-flex-arrays=3 [1].
-
-Link: https://github.com/KSPP/linux/issues/79
-Link: https://github.com/KSPP/linux/issues/251
-Link: https://gcc.gnu.org/pipermail/gcc-patches/2022-October/602902.html [1]
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+Fixes: d984648e428b ("fsdax,xfs: port unshare to fsdax")
+Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
 ---
- fs/xfs/libxfs/xfs_da_format.h | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ fs/dax.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index 25e2841084e1..e1e62ebb0c44 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -620,14 +620,14 @@ typedef struct xfs_attr_leaf_entry {	/* sorted on key, not name */
- typedef struct xfs_attr_leaf_name_local {
- 	__be16	valuelen;		/* number of bytes in value */
- 	__u8	namelen;		/* length of name bytes */
--	__u8	nameval[1];		/* name/value bytes */
-+	__u8	nameval[];		/* name/value bytes */
- } xfs_attr_leaf_name_local_t;
+diff --git a/fs/dax.c b/fs/dax.c
+index c48a3a93ab29..3e457a16c7d1 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1271,8 +1271,9 @@ static s64 dax_unshare_iter(struct iomap_iter *iter)
+ 	if (ret < 0)
+ 		goto out_unlock;
  
- typedef struct xfs_attr_leaf_name_remote {
- 	__be32	valueblk;		/* block number of value bytes */
- 	__be32	valuelen;		/* number of bytes in value */
- 	__u8	namelen;		/* length of name bytes */
--	__u8	name[1];		/* name bytes */
-+	__u8	name[];			/* name bytes */
- } xfs_attr_leaf_name_remote_t;
+-	ret = copy_mc_to_kernel(daddr, saddr, length);
+-	if (ret)
++	if (copy_mc_to_kernel(daddr, saddr, length) == 0)
++		ret = length;
++	else
+ 		ret = -EIO;
  
- typedef struct xfs_attr_leafblock {
-@@ -747,13 +747,13 @@ xfs_attr3_leaf_name_local(xfs_attr_leafblock_t *leafp, int idx)
-  */
- static inline int xfs_attr_leaf_entsize_remote(int nlen)
- {
--	return round_up(sizeof(struct xfs_attr_leaf_name_remote) - 1 +
-+	return round_up(sizeof(struct xfs_attr_leaf_name_remote) +
- 			nlen, XFS_ATTR_LEAF_NAME_ALIGN);
- }
- 
- static inline int xfs_attr_leaf_entsize_local(int nlen, int vlen)
- {
--	return round_up(sizeof(struct xfs_attr_leaf_name_local) - 1 +
-+	return round_up(sizeof(struct xfs_attr_leaf_name_local) +
- 			nlen + vlen, XFS_ATTR_LEAF_NAME_ALIGN);
- }
- 
+ out_unlock:
 -- 
-2.34.1
+2.39.1
 
