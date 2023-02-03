@@ -2,58 +2,57 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC88EC61DA4
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Feb 2023 00:01:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C5C3C63797
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Feb 2023 00:18:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232353AbjBCABR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Feb 2023 19:01:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39850 "EHLO
+        id S232479AbjBCASA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Feb 2023 19:18:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233378AbjBCABP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2023 19:01:15 -0500
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF0C284971
-        for <linux-xfs@vger.kernel.org>; Thu,  2 Feb 2023 16:01:00 -0800 (PST)
-Received: by mail-pj1-x1034.google.com with SMTP id nm12-20020a17090b19cc00b0022c2155cc0bso3393399pjb.4
-        for <linux-xfs@vger.kernel.org>; Thu, 02 Feb 2023 16:01:00 -0800 (PST)
+        with ESMTP id S232318AbjBCAR6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Feb 2023 19:17:58 -0500
+Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABD0E71644
+        for <linux-xfs@vger.kernel.org>; Thu,  2 Feb 2023 16:17:56 -0800 (PST)
+Received: by mail-ej1-x636.google.com with SMTP id p26so10886743ejx.13
+        for <linux-xfs@vger.kernel.org>; Thu, 02 Feb 2023 16:17:56 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=87LqBY1cmxJIDzlBwcArixEGRBUdoaZyq1gL8jLOlBo=;
-        b=DLV66Jzr/7xWnW/DB5gYUzwmub8DiPYt26/ICu8uqaIhyj/Y69zetvYZjUSTNA7JP4
-         oVFIW77wI167XlBLdmGFDdBQltemXKC02tY+062ITt7Fz7d2TNa4f42A+jhli5StHy08
-         4llhwpGMDi0YoGL3ASI82cb0n+Jneqd4L8TQs/k8Bl7K34gebF7CtuiqCdXKrXEMHzWG
-         +78I7Fd6vJv9IAIj+P8oUAjNdRi92lx+gwfIj1aM6vDJk7BZXhxx+xsLu76rYXE4iMux
-         BKyGx4MS/N9hjYr2+vYpvxDJcYByMMdDkUAB25zywwQdmKUb4WsI5MtyEeLjFgjw4eg+
-         aFbw==
+        d=google.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=Gvjb/kvo7fCoN85bw+5nzURWfMKdctybB/MUXhN2Mx4=;
+        b=FW+10UD/mNjFijhIrv0EkmQs9t0hjFKFhdZc6O870pN25h6ox7G+kkL0QpkifSnHBl
+         rRfqCchBWnoCfiHoct9Vgxwnn89wAdAk9xQ048/Ibct8oEE8bUkzkE7WV5SASO75kF5Q
+         yJYaQBGCOu4jP1jSIkcou016sSn+RHGbPKAj9z6ZSWmyxRExoXXiqdFhkdvRqSiBvX+s
+         5vQaERznDOiU3TAMjy+0TMFX2aqhizASnZpLkO5alA5pD3rmjsCVO/Lw/9Nrd3Sn0Jd/
+         FgGlTaiVEb/h3t0u38yW9Rr3nGYMbaPXm5iUj4SiuusluaoS89lauwHZs2Bd/vf0/RM/
+         TdeA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=87LqBY1cmxJIDzlBwcArixEGRBUdoaZyq1gL8jLOlBo=;
-        b=xdNs14qzVqHdyTOZeEwXM7gYA62p7PqwGeHRHEG0SGVIoR/UBdnvlff9DciJK87Zci
-         PTA7CkF+VZ7raHVtl0txnJaFWb4EbrhIHsmFZFn2SabV8X+WQ3sILPKh17mECyTD6dVw
-         QN8igUmumu7YlipchucXgbLLHiNGDyKpmxy+agdmLfr4NV8i2WlFYWuVHCJFblPZl253
-         /8u+b1jseJeyz2PH4LLvrX7k0/TiXIKDp0Mbix6hqjFpNaN3MZs1+s0Dy+ar8rHcwIQS
-         QMiI9jJx5eNA8TVLzhxiNPXu+X6pcXRNdB5nITQtGiZ7rGUKTthkoJO9/5FKGfY9vxWR
-         ++pg==
-X-Gm-Message-State: AO0yUKUCo0MIO7Mwc+NajNc/ys4DZuoWRJB0e+WvtLrFyMAGBZoK15c0
-        AVQU2pqn905Ri63yYHTF9WUSDA==
-X-Google-Smtp-Source: AK7set9JaCKtnriracbwmug7u2ZHT3TTrBbzfIKwL1tiM1SyRqwMx3ca50uMJGBzPDJ4jy/LfeFDhg==
-X-Received: by 2002:a17:902:f0d1:b0:198:dec0:c926 with SMTP id v17-20020a170902f0d100b00198dec0c926mr231076pla.21.1675382460437;
-        Thu, 02 Feb 2023 16:01:00 -0800 (PST)
-Received: from dread.disaster.area (pa49-181-4-128.pa.nsw.optusnet.com.au. [49.181.4.128])
-        by smtp.gmail.com with ESMTPSA id x190-20020a6263c7000000b00593a1f7c3dbsm292980pfb.10.2023.02.02.16.00.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 02 Feb 2023 16:00:59 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1pNjVh-00AfBG-Cq; Fri, 03 Feb 2023 11:00:57 +1100
-Date:   Fri, 3 Feb 2023 11:00:57 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Yosry Ahmed <yosryahmed@google.com>
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Gvjb/kvo7fCoN85bw+5nzURWfMKdctybB/MUXhN2Mx4=;
+        b=C92YxVn/lB4tBiGOuMBm1jb8++tRCDk7lhA1l5NZLAB++xmHHeSy8DyZ3tUrNS6VGk
+         6tAteHFCIUp3/WfYNOsM/9WQHc4ZI9iuR8ciEw4iLSJZEE4yG8jDAeflh1t6WjByqKW3
+         mJOongmwy+WKzGqfi+VDCAokOs7+pKxPaprebHk1m746cpfwBC4EERO+gg+bH9Cw0nQh
+         qXE5h0Q39s4eLK2ofCsmzAKqDFxshNl6H5nKHAzgEK9bMTESCnff0nwbZPfDSBjwX3Re
+         zDq7p4tXq4lghVVY6oetI2oVjsxPp5aCwWOR/ZRcxVbAzEC56WNVSErN5ToQMcR/Sc9d
+         lezA==
+X-Gm-Message-State: AO0yUKXxeUcC3ig2NVUAmWs7wBX/llP3oanI3T/LvVGDjXTGcRBWoRvh
+        QljMQZE9hUM0it2kOHr5GTGIdN/8X2piqUZ5uz+tNg==
+X-Google-Smtp-Source: AK7set8m225eOYBxc0zjAdcFvUV/434ojhFbR0va4I5VIxpiH5PfOIbwh8kHwusjTHne2sUt2DV1VaEXpcy7xKXbS8I=
+X-Received: by 2002:a17:906:c319:b0:878:7bc7:958a with SMTP id
+ s25-20020a170906c31900b008787bc7958amr2432774ejz.220.1675383475017; Thu, 02
+ Feb 2023 16:17:55 -0800 (PST)
+MIME-Version: 1.0
+References: <20230202233229.3895713-1-yosryahmed@google.com> <20230203000057.GS360264@dread.disaster.area>
+In-Reply-To: <20230203000057.GS360264@dread.disaster.area>
+From:   Yosry Ahmed <yosryahmed@google.com>
+Date:   Thu, 2 Feb 2023 16:17:18 -0800
+Message-ID: <CAJD7tkazLFO8sc1Ly7+2_SGTxDq2XuPnvxxTnpQyXQELmq+m4A@mail.gmail.com>
+Subject: Re: [RFC PATCH v1 0/2] Ignore non-LRU-based reclaim in memcg reclaim
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
         "Darrick J. Wong" <djwong@kernel.org>,
         Christoph Lameter <cl@linux.com>,
@@ -71,68 +70,98 @@ Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
         Michal Hocko <mhocko@kernel.org>,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [RFC PATCH v1 0/2] Ignore non-LRU-based reclaim in memcg reclaim
-Message-ID: <20230203000057.GS360264@dread.disaster.area>
-References: <20230202233229.3895713-1-yosryahmed@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230202233229.3895713-1-yosryahmed@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 02, 2023 at 11:32:27PM +0000, Yosry Ahmed wrote:
-> Reclaimed pages through other means than LRU-based reclaim are tracked
-> through reclaim_state in struct scan_control, which is stashed in
-> current task_struct. These pages are added to the number of reclaimed
-> pages through LRUs. For memcg reclaim, these pages generally cannot be
-> linked to the memcg under reclaim and can cause an overestimated count
-> of reclaimed pages. This short series tries to address that.
+On Thu, Feb 2, 2023 at 4:01 PM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Thu, Feb 02, 2023 at 11:32:27PM +0000, Yosry Ahmed wrote:
+> > Reclaimed pages through other means than LRU-based reclaim are tracked
+> > through reclaim_state in struct scan_control, which is stashed in
+> > current task_struct. These pages are added to the number of reclaimed
+> > pages through LRUs. For memcg reclaim, these pages generally cannot be
+> > linked to the memcg under reclaim and can cause an overestimated count
+> > of reclaimed pages. This short series tries to address that.
+>
+> Can you explain why memcg specific reclaim is calling shrinkers that
+> are not marked with SHRINKER_MEMCG_AWARE?
+>
+> i.e. only objects that are directly associated with memcg aware
+> shrinkers should be accounted to the memcg, right? If the cache is
+> global (e.g the xfs buffer cache) then they aren't marked with
+> SHRINKER_MEMCG_AWARE and so should only be called for root memcg
+> (i.e. global) reclaim contexts.
+>
+> So if you are having accounting problems caused by memcg specific
+> reclaim on global caches freeing non-memcg accounted memory, isn't
+> the problem the way the shrinkers are being called?
 
-Can you explain why memcg specific reclaim is calling shrinkers that
-are not marked with SHRINKER_MEMCG_AWARE?
+Not necessarily, according to my understanding.
 
-i.e. only objects that are directly associated with memcg aware
-shrinkers should be accounted to the memcg, right? If the cache is
-global (e.g the xfs buffer cache) then they aren't marked with
-SHRINKER_MEMCG_AWARE and so should only be called for root memcg
-(i.e. global) reclaim contexts.
+My understanding is that we will only free slab objects accounted to
+the memcg under reclaim (or one of its descendants), because we call
+memcg aware shrinkers, as you pointed out. The point here is slab page
+sharing. Ever since we started doing per-object accounting, a slab
+page may have objects accounted to different memcgs. IIUC, if we free
+a slab object charged to the memcg under reclaim, and this object
+happened to be the last object on the page, we will free the slab
+page, and count the entire page as reclaimed memory for the purpose of
+memcg reclaim, which is where the inaccuracy is coming from.
 
-So if you are having accounting problems caused by memcg specific
-reclaim on global caches freeing non-memcg accounted memory, isn't
-the problem the way the shrinkers are being called?
+Please correct me if I am wrong.
 
-> Patch 1 is just refactoring updating reclaim_state into a helper
-> function, and renames reclaimed_slab to just reclaimed, with a comment
-> describing its true purpose.
-> 
-> Patch 2 ignores pages reclaimed outside of LRU reclaim in memcg reclaim.
-> 
-> The original draft was a little bit different. It also kept track of
-> uncharged objcg pages, and reported them only in memcg reclaim and only
-> if the uncharged memcg is in the subtree of the memcg under reclaim.
-> This was an attempt to make reporting of memcg reclaim even more
-> accurate, but was dropped due to questionable complexity vs benefit
-> tradeoff. It can be revived if there is interest.
-> 
-> Yosry Ahmed (2):
->   mm: vmscan: refactor updating reclaimed pages in reclaim_state
->   mm: vmscan: ignore non-LRU-based reclaim in memcg reclaim
-> 
->  fs/inode.c           |  3 +--
+>
+> > Patch 1 is just refactoring updating reclaim_state into a helper
+> > function, and renames reclaimed_slab to just reclaimed, with a comment
+> > describing its true purpose.
+> >
+> > Patch 2 ignores pages reclaimed outside of LRU reclaim in memcg reclaim.
+> >
+> > The original draft was a little bit different. It also kept track of
+> > uncharged objcg pages, and reported them only in memcg reclaim and only
+> > if the uncharged memcg is in the subtree of the memcg under reclaim.
+> > This was an attempt to make reporting of memcg reclaim even more
+> > accurate, but was dropped due to questionable complexity vs benefit
+> > tradeoff. It can be revived if there is interest.
+> >
+> > Yosry Ahmed (2):
+> >   mm: vmscan: refactor updating reclaimed pages in reclaim_state
+> >   mm: vmscan: ignore non-LRU-based reclaim in memcg reclaim
+> >
+> >  fs/inode.c           |  3 +--
+>
+> Inodes and inode mapping pages are directly charged to the memcg
+> that allocated them and the shrinker is correctly marked as
+> SHRINKER_MEMCG_AWARE. Freeing the pages attached to the inode will
+> account them correctly to the related memcg, regardless of which
+> memcg is triggering the reclaim.  Hence I'm not sure that skipping
+> the accounting of the reclaimed memory is even correct in this case;
 
-Inodes and inode mapping pages are directly charged to the memcg
-that allocated them and the shrinker is correctly marked as
-SHRINKER_MEMCG_AWARE. Freeing the pages attached to the inode will
-account them correctly to the related memcg, regardless of which
-memcg is triggering the reclaim.  Hence I'm not sure that skipping
-the accounting of the reclaimed memory is even correct in this case;
-I think the code should still be accounting for all pages that
-belong to the memcg being scanned that are reclaimed, not ignoring
-them altogether...
+Please note that we are not skipping any accounting here. The pages
+are still uncharged from the memcgs they are charged to (the allocator
+memcgs as you pointed out). We just do not report them in the return
+value of try_to_free_mem_cgroup_pages(), to avoid over-reporting.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> I think the code should still be accounting for all pages that
+> belong to the memcg being scanned that are reclaimed, not ignoring
+> them altogether...
+
+100% agree. Ideally I would want to:
+- For pruned inodes: report all freed pages for global reclaim, and
+only report pages charged to the memcg under reclaim for memcg
+reclaim.
+- For slab: report all freed pages for global reclaim, and only report
+uncharged objcg pages from the memcg under reclaim for memcg reclaim.
+
+The only problem is that I thought people would think this is too much
+complexity and not worth it. If people agree this should be the
+approach to follow, I can prepare patches for this. I originally
+implemented this for slab pages, but held off on sending it.
+
+>
+> -Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
