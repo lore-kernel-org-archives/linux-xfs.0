@@ -2,82 +2,84 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE994C61DA4
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Feb 2023 12:38:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AA20C61DA4
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Feb 2023 12:44:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231855AbjBCMit (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Feb 2023 07:38:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49368 "EHLO
+        id S231871AbjBCMoh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Feb 2023 07:44:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229782AbjBCMis (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Feb 2023 07:38:48 -0500
+        with ESMTP id S231495AbjBCMof (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Feb 2023 07:44:35 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4340A9AFE5
-        for <linux-xfs@vger.kernel.org>; Fri,  3 Feb 2023 04:38:48 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FD4E9AFEA
+        for <linux-xfs@vger.kernel.org>; Fri,  3 Feb 2023 04:44:34 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D2A5361F19
-        for <linux-xfs@vger.kernel.org>; Fri,  3 Feb 2023 12:38:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72E44C433D2;
-        Fri,  3 Feb 2023 12:38:46 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2B8AF61F1A
+        for <linux-xfs@vger.kernel.org>; Fri,  3 Feb 2023 12:44:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2477C4339B;
+        Fri,  3 Feb 2023 12:44:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1675427927;
-        bh=bV2A7e3MoJZkbH3BThlALrK6HwGFKBwW9jELmjAqqSM=;
+        s=k20201202; t=1675428273;
+        bh=zGUzCJPL+Evp5Vo/taiagXYEGUV060cCVxSXN6W14Bs=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=sgcGZMbx7daSWJBw0itK266fNo+evP4AcC1YEWkxQwtRsZFtMhLq+Jgq0uaAlmaTC
-         R62pVTmyVksN9Ouf9wb8mQh+4EkzeGqbJyWFs2VCiIJxdpyAIfwGv9A64+vkEs8jeO
-         ib3zxn7wOxFb+lGhhKvY4VplrshXxhaPbqAxxwJ+OKSnFp8XrwxHZ2IGWGiDFxubn7
-         dYuDFd6M9mGxM1ZQXmQJbI8TbFyWeYtobHuEkyKpi6mYHLZCmhgExgWUBbJnK8Kiec
-         lQ5qDZ8bcMTW4IMg0t/g+EVX41+qgxnUqHZt572H+VlR4bg9Ss84phmpG8Wk/ZPrNy
-         8BO4DE0RD3BeQ==
-Date:   Fri, 3 Feb 2023 13:38:43 +0100
+        b=pHNGashRrNgF0w64Ad02s/fAZtPw0QVc5182ilYTi1cQtAKOJkrobpOF08zcju0+R
+         m84dbm0KG+kr5Uo8cvo8RwiZ0EWMXrAXEOiMInAFdeo73ziaV3mUkd5wKnteisIWKF
+         JCwL+nIFUVxHSAJPVE4AsCUYnkC61Mqu5tsAIEPQ5xUFJfYsQWHKB/48ClelVUYQww
+         IZXuQW8Cwsjhp9L36Z/vbzQhw+7DVL8QWbCqKyzvEBXJ+nm7arfUoXX1GEmouP3Rev
+         /ZynMfblCYGGnIZ3oK5e5EYfNcwYeG6JLYOQS2CrDyOSZpgLff88yIyfDdmhoVBH5L
+         f1mnFuNG+F9jw==
+Date:   Fri, 3 Feb 2023 13:44:29 +0100
 From:   Carlos Maiolino <cem@kernel.org>
-To:     Panagiotis Papadakos <papadako@ics.forth.gr>
+To:     Catherine Hoang <catherine.hoang@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: xfs_repair: fatal error -- couldn't map inode 13199169, err = 117
-Message-ID: <20230203123843.oq2nobgyoxau67b5@andromeda>
-References: <EHyZekx1O-pqePkGfRDKAjIdo4T1Oc5ZgucxgVcs4zwc5d7uPmA6F9sPBM9gjh7xw8hXbfVfy_kg7NtvmvBU8A==@protonmail.internalid>
- <86696f1f1b39a175e99f43128f09a722@mailhost.ics.forth.gr>
+Subject: Re: [PATCH v2 1/2] xfs_admin: correctly parse IO_OPTS parameters
+Message-ID: <20230203124429.nzinzylbrorrj7nx@andromeda>
+References: <20230126003311.7736-1-catherine.hoang@oracle.com>
+ <QyBbOMOz_fVic4M9qi-bl4mjMCiYt-qLR7OtOgDzsaqdPtRy0SezgLV2hIe3gN4GyzE25yvzSqFoEQMkrJVUoA==@protonmail.internalid>
+ <20230126003311.7736-2-catherine.hoang@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <86696f1f1b39a175e99f43128f09a722@mailhost.ics.forth.gr>
+In-Reply-To: <20230126003311.7736-2-catherine.hoang@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 01, 2023 at 02:55:12PM +0200, Panagiotis Papadakos wrote:
-> Dear all,
+On Wed, Jan 25, 2023 at 04:33:10PM -0800, Catherine Hoang wrote:
+> Change exec to eval so that the IO_OPTS parameters are parsed correctly
+> when the parameters contain quotations.
 > 
-> I am using XFS on an ICY-BOX 4-bay USB RAID enclosure which
-> unfortunately has been corrupted (probably due to some power-down).
+> Fixes: e7cd89b2da72 ("xfs_admin: get UUID of mounted filesystem")
+> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
 
-XFS filesystem shouldn't be corrupted due to a power failure at the first place,
-that's the main reason behind journaling filesystems.
+Looks good, thanks Catherine..
 
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+> ---
+>  db/xfs_admin.sh | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> I have used xfs_repair -L,
-
-
-This is what I'd expect after a power failure, a dirty log which should be
-replayed *before* attempting to repair the filesystem, why did you discard
-the journal? Have you tried to mount/umount the filesystem before running
-xfs_repair -L?
-
-> which after a huge number of messages about
-> free inode references, bad hash tables, etc, fails with the following
-> error:
+> diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
+> index b73fb3ad..3a7f44ea 100755
+> --- a/db/xfs_admin.sh
+> +++ b/db/xfs_admin.sh
+> @@ -69,7 +69,8 @@ case $# in
+>  			fi
 > 
-> fatal error -- couldn't map inode 13199169, err = 117
-
-Always send the full output :)
-
-> Is there anything I can do or should I consider my data lost?
-
-The fact you discarded the journal in the first place, you've already lost some
-data, how much, depends on how much information was in the journal waiting to be
-replayed :(
+>  			if [ -n "$IO_OPTS" ]; then
+> -				exec xfs_io -p xfs_admin $IO_OPTS "$mntpt"
+> +				eval xfs_io -p xfs_admin $IO_OPTS "$mntpt"
+> +				exit $?
+>  			fi
+>  		fi
+> 
+> --
+> 2.34.1
+> 
 
 -- 
 Carlos Maiolino
