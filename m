@@ -2,317 +2,113 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD7F3C636CC
-	for <linux-xfs@archiver.kernel.org>; Sat,  4 Feb 2023 00:26:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CD8DC636CC
+	for <linux-xfs@archiver.kernel.org>; Sat,  4 Feb 2023 14:59:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232601AbjBDA0T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Feb 2023 19:26:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32786 "EHLO
+        id S232576AbjBDO7M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 4 Feb 2023 09:59:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230042AbjBDA0S (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Feb 2023 19:26:18 -0500
-Received: from mail-yw1-x114a.google.com (mail-yw1-x114a.google.com [IPv6:2607:f8b0:4864:20::114a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 666458E698
-        for <linux-xfs@vger.kernel.org>; Fri,  3 Feb 2023 16:26:16 -0800 (PST)
-Received: by mail-yw1-x114a.google.com with SMTP id 00721157ae682-4fa63c84621so66621727b3.20
-        for <linux-xfs@vger.kernel.org>; Fri, 03 Feb 2023 16:26:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=YIcPLTJXUSQxI1A4pL/V2b6Q9BN8Fk+8wa9H/4PEokU=;
-        b=L4dWu2NPGiRQ+SxmAlADu6aP3M7eG10ImnR/uquy95c6/xZZCMA34VDM4B333FzvXx
-         k9cMuO1PorgGUIezeCHT54jEKU4p7Dt/nyhirWyrfg1w7E7v/5x8CIo066rPv29UGAdG
-         nzMFp4BVBWweKZo5kzd35nHPDWgNQ3Jd7U2JFkfBROmXELttWjCVzQ8+sG9WxcC7gvMR
-         y0RBDyDwx8VoSvuZONbJWLByGHLKOmy6JF0NNo+bc2VNPB6+mY0+E4hhxCFhwWsiwZFR
-         JF6n3TnpFNEn8ibOMsXICGlpuk9jCDKh/DkDkAbVVUfXjx8Dk7qpNsDlMKoALWaFn3r1
-         3Z4Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=YIcPLTJXUSQxI1A4pL/V2b6Q9BN8Fk+8wa9H/4PEokU=;
-        b=07JJ7SUkoCPg8v6z+9zNS+ocoZyq0hDeu6SFBSy8TliU89HBMaskzTcMm0b5dHNL6K
-         U/MLwA2t2ISPApdekG3sx98TDRKpzq2/BpwBKTrrG1HFs1ueXFktA4CmLGJiPTnnERdy
-         Uyj06vBAuQ7dtZhMne7+mmJeRdzF11w0muFI1OxnOcHHeW2ftGAoGMfs+3M8e20O1U5l
-         WB0KH5drs0Nj1xf3yFBwGCl52mmYUoTlsRy1G6lEW+F92ZJ7n6dmkGpruD1KMNy5zbKE
-         /kDMOn9TCsCKxSFbSQ34eF9eIfHJNO9UglbkRnjBpS7UfeNlW/L5kWvysF783iJuxw55
-         NiYg==
-X-Gm-Message-State: AO0yUKWCu/n81RvVgruQ/8mgCv3yfL0LlP8WPXv0gpzPLsUeprprB4Bd
-        FZZE03L716EbwJREAS92Ag1gjKL4dydvXw==
-X-Google-Smtp-Source: AK7set/2OtzJesiIW5C91Xyq9qdtlKp4fyRJ5d2agaAL0ngPKBXru2DD13PJ848goucY0XFPcqpa0shTmX5DYQ==
-X-Received: from shakeelb.c.googlers.com ([fda3:e722:ac3:cc00:7f:e700:c0a8:262e])
- (user=shakeelb job=sendgmr) by 2002:a81:aa4c:0:b0:506:5e35:e3bc with SMTP id
- z12-20020a81aa4c000000b005065e35e3bcmr1640502ywk.139.1675470375588; Fri, 03
- Feb 2023 16:26:15 -0800 (PST)
-Date:   Sat, 4 Feb 2023 00:26:13 +0000
-In-Reply-To: <CAJD7tkZ7H-fGa3x3kbbdKgvzDDRZrGGZ6oazTA-7aNUQ7X1Pmg@mail.gmail.com>
-Mime-Version: 1.0
-References: <20230202233229.3895713-1-yosryahmed@google.com>
- <20230203000057.GS360264@dread.disaster.area> <CAJD7tkazLFO8sc1Ly7+2_SGTxDq2XuPnvxxTnpQyXQELmq+m4A@mail.gmail.com>
- <Y90kK5jnxBbE9tV4@cmpxchg.org> <CAJD7tkZ7H-fGa3x3kbbdKgvzDDRZrGGZ6oazTA-7aNUQ7X1Pmg@mail.gmail.com>
-Message-ID: <20230204002613.f3ao52cpqf6wwxar@google.com>
-Subject: Re: [RFC PATCH v1 0/2] Ignore non-LRU-based reclaim in memcg reclaim
-From:   Shakeel Butt <shakeelb@google.com>
-To:     Yosry Ahmed <yosryahmed@google.com>
-Cc:     Johannes Weiner <hannes@cmpxchg.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Lameter <cl@linux.com>,
-        David Rientjes <rientjes@google.com>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Roman Gushchin <roman.gushchin@linux.dev>,
-        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Miaohe Lin <linmiaohe@huawei.com>,
-        David Hildenbrand <david@redhat.com>,
-        Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
-        Michal Hocko <mhocko@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Content-Type: text/plain; charset="us-ascii"
+        with ESMTP id S231654AbjBDO7L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 4 Feb 2023 09:59:11 -0500
+Received: from mail1.bemta34.messagelabs.com (mail1.bemta34.messagelabs.com [195.245.231.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3442235244;
+        Sat,  4 Feb 2023 06:59:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
+        s=170520fj; t=1675522742; i=@fujitsu.com;
+        bh=Y6556VUSt0g6C9g9VUOGSPdcCC4oR7BzWPz7nW90/xI=;
+        h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type;
+        b=vuB9Dkq/CcCu6kUL9IGhoRjSHTuDyqt/LgQw4M3XYGQeXGNDdQTHT5rvZF+9aCLQG
+         O8Agu3z8w6ml0kJNoKNzepUVnlqbwYWPqMeskN7XoFmZb93wDlnZUGxhphfwWVRqvH
+         cnQu6wK9ZRbWtZcQAgVaz9bIMy8MnvrHTUj/4/i/8cD+JJPuRYWEVgSibh/BHO84mq
+         CItCZIj09wI7ejzDVYsgTuUkJTgQYKjU6Cs+peVOSXrm3XMTEv9UArs+NCBz/fpYSk
+         IOEJ9uyLPAhNYKyPXFkaJE4jfnxlGsrk8y8dvh2VeGI7myquRMBhAUsXyjXXgpa6hv
+         kf9K4jxeKseuA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmphleJIrShJLcpLzFFi42Kxs+HYrLup6F6
+  ywdfpfBbTp15gtNhy7B6jxeUnfBanJyxistj9+iabxZ69J1ksLu+aw2Zxb81/Votdf3awW6z8
+  8YfVgcvj1CIJj80rtDwW73nJ5LFpVSebx6ZPk9g9Xmyeyejx8ektFo/Pm+QCOKJYM/OS8isSW
+  DNmv33CWrCIs2Jr00rWBsZd7F2MXBxCAhsZJdrblrNCOEuYJO7Om8TcxcgJ5OxllGiaVAFisw
+  noSFxY8BesSERgEqPEsRs3wYqYBcol9m+8wQZiCwsESBzfe4UFxGYRUJHoaPrM1MXIwcEr4CI
+  xf68USFhCQEFiysP3YK28AoISJ2c+YYEYIyFx8MULZpByCQEliZnd8RDllRKtH36xQNhqElfP
+  bWKewMg/C0n3LCTdCxiZVjGaFqcWlaUW6RrrJRVlpmeU5CZm5uglVukm6qWW6panFpfoGukll
+  hfrpRYX6xVX5ibnpOjlpZZsYgRGSEqxmvAOxi+9f/UOMUpyMCmJ8vb7300W4kvKT6nMSCzOiC
+  8qzUktPsQow8GhJMF7veBespBgUWp6akVaZg4wWmHSEhw8SiK8v0HSvMUFibnFmekQqVOMuhx
+  rGw7sZRZiycvPS5US520tBCoSACnKKM2DGwFLHJcYZaWEeRkZGBiEeApSi3IzS1DlXzGKczAq
+  CfPeAlnFk5lXArfpFdARTEBHdBvcBTmiJBEhJdXAlOvF0z2nYL5DxTfNReqf6yM4Zqw8qjqrp
+  qtfPPnoU2nztu53e19cTk2bdDRt/Qahjpsz+bxzLz6PrPjEfJFxma1qiUPPV79G/9O/NbjXMi
+  z//kz48fL9edWmuQfatKQ3iDAo7WhRbXqx1ou3mffJy2UP1n468/zi7VbzOKNPzz47JF3dciX
+  I7/vB/Fky4rmRIgEKkmt3/Vu8us/g9EeztKJXD+XdRM9kOWz6mKlSm67cv1DXxtIyz3XNNuMk
+  r0LDjPU/Ix45PduTUHbY/yCXe6xOXvAmm849Sc6Zhzg2Lmgy36/FVXDz2Fzx20WLLTcrP29p5
+  7yuefzFefXE4guSDCtjXm/wCLNY8+bFO48wJZbijERDLeai4kQAxJmK9JcDAAA=
+X-Env-Sender: ruansy.fnst@fujitsu.com
+X-Msg-Ref: server-15.tower-548.messagelabs.com!1675522738!73849!1
+X-Originating-IP: [62.60.8.179]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.102.2; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 28624 invoked from network); 4 Feb 2023 14:58:58 -0000
+Received: from unknown (HELO n03ukasimr04.n03.fujitsu.local) (62.60.8.179)
+  by server-15.tower-548.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 4 Feb 2023 14:58:58 -0000
+Received: from n03ukasimr04.n03.fujitsu.local (localhost [127.0.0.1])
+        by n03ukasimr04.n03.fujitsu.local (Postfix) with ESMTP id DB0FD150;
+        Sat,  4 Feb 2023 14:58:57 +0000 (GMT)
+Received: from R01UKEXCASM223.r01.fujitsu.local (R01UKEXCASM223 [10.182.185.121])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by n03ukasimr04.n03.fujitsu.local (Postfix) with ESMTPS id CEB6E7B;
+        Sat,  4 Feb 2023 14:58:57 +0000 (GMT)
+Received: from localhost.localdomain (10.167.225.141) by
+ R01UKEXCASM223.r01.fujitsu.local (10.182.185.121) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.42; Sat, 4 Feb 2023 14:58:53 +0000
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
+        <linux-fsdevel@vger.kernel.org>
+CC:     <djwong@kernel.org>, <dan.j.williams@intel.com>,
+        <david@fromorbit.com>, <hch@infradead.org>, <jane.chu@oracle.com>
+Subject: [RESEND PATCH v9 0/3] mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
+Date:   Sat, 4 Feb 2023 14:58:35 +0000
+Message-ID: <1675522718-88-1-git-send-email-ruansy.fnst@fujitsu.com>
+X-Mailer: git-send-email 1.8.3.1
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [10.167.225.141]
+X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
+ R01UKEXCASM223.r01.fujitsu.local (10.182.185.121)
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 03, 2023 at 07:28:49AM -0800, Yosry Ahmed wrote:
-> On Fri, Feb 3, 2023 at 7:11 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
-> >
-> > On Thu, Feb 02, 2023 at 04:17:18PM -0800, Yosry Ahmed wrote:
-> > > On Thu, Feb 2, 2023 at 4:01 PM Dave Chinner <david@fromorbit.com> wrote:
-> > > > > Patch 1 is just refactoring updating reclaim_state into a helper
-> > > > > function, and renames reclaimed_slab to just reclaimed, with a comment
-> > > > > describing its true purpose.
-> > > > >
-> > > > > Patch 2 ignores pages reclaimed outside of LRU reclaim in memcg reclaim.
-> > > > >
-> > > > > The original draft was a little bit different. It also kept track of
-> > > > > uncharged objcg pages, and reported them only in memcg reclaim and only
-> > > > > if the uncharged memcg is in the subtree of the memcg under reclaim.
-> > > > > This was an attempt to make reporting of memcg reclaim even more
-> > > > > accurate, but was dropped due to questionable complexity vs benefit
-> > > > > tradeoff. It can be revived if there is interest.
-> > > > >
-> > > > > Yosry Ahmed (2):
-> > > > >   mm: vmscan: refactor updating reclaimed pages in reclaim_state
-> > > > >   mm: vmscan: ignore non-LRU-based reclaim in memcg reclaim
-> > > > >
-> > > > >  fs/inode.c           |  3 +--
-> > > >
-> > > > Inodes and inode mapping pages are directly charged to the memcg
-> > > > that allocated them and the shrinker is correctly marked as
-> > > > SHRINKER_MEMCG_AWARE. Freeing the pages attached to the inode will
-> > > > account them correctly to the related memcg, regardless of which
-> > > > memcg is triggering the reclaim.  Hence I'm not sure that skipping
-> > > > the accounting of the reclaimed memory is even correct in this case;
-> > >
-> > > Please note that we are not skipping any accounting here. The pages
-> > > are still uncharged from the memcgs they are charged to (the allocator
-> > > memcgs as you pointed out). We just do not report them in the return
-> > > value of try_to_free_mem_cgroup_pages(), to avoid over-reporting.
-> >
-> > I was wondering the same thing as Dave, reading through this. But
-> > you're right, we'll catch the accounting during uncharge. Can you
-> > please add a comment on the !cgroup_reclaim() explaining this?
-> 
-> Sure! If we settle on this implementation I will send another version
-> with a comment and fix the build problem in patch 2.
-> 
-> >
-> > There is one wrinkle with this, though. We have the following
-> > (simplified) sequence during charging:
-> >
-> >         nr_reclaimed = try_to_free_mem_cgroup_pages(mem_over_limit, nr_pages,
-> >                                                     gfp_mask, reclaim_options);
-> >
-> >         if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
-> >                 goto retry;
-> >
-> >         /*
-> >          * Even though the limit is exceeded at this point, reclaim
-> >          * may have been able to free some pages.  Retry the charge
-> >          * before killing the task.
-> >          *
-> >          * Only for regular pages, though: huge pages are rather
-> >          * unlikely to succeed so close to the limit, and we fall back
-> >          * to regular pages anyway in case of failure.
-> >          */
-> >         if (nr_reclaimed && nr_pages <= (1 << PAGE_ALLOC_COSTLY_ORDER))
-> >                 goto retry;
-> >
-> > So in the unlikely scenario where the first call doesn't make the
-> > necessary headroom, and the shrinkers are the only thing that made
-> > forward progress, we would OOM prematurely.
-> >
-> > Not that an OOM would seem that far away in that scenario, anyway. But I
-> > remember long discussions with DavidR on probabilistic OOM regressions ;)
-> >
-> 
-> Above the if (nr_reclaimed...) check we have:
-> 
-> if (gfp_mask & __GFP_NORETRY)
->     goto nomem;
-> 
-> , and below it we have:
-> 
-> if (nr_retries--)
->     goto retry;
-> 
-> So IIUC we only prematurely OOM if we either have __GFP_NORETRY and
-> cannot reclaim any LRU pages in the first try, or if the scenario
-> where only shrinkers were successful to reclaim happens in the last
-> retry. Right?
-> 
+Changes since v9:
+  1. Rebase on 6.2-rc6
 
-We don't call oom-killer for __GFP_NORETRY. Also note that the retry
-(from nr_retries) after the reclaim includes page_counter_try_charge().
-So, even if try_to_free_mem_cgroup_pages() have returned 0 after
-reclaiming the slab memory of the memcg, the page_counter_try_charge()
-should succeed if the reclaimed slab objects have created enough margin.
+Changes since v8:
+  1. P2: rename drop_pagecache_sb() to super_drop_pagecache().
+  2. P2: let super_drop_pagecache() accept invalidate method.
+  3. P3: invalidate all dax mappings by invalidate_inode_pages2().
+  4. P3: shutdown the filesystem when it is to be removed.
+  5. Rebase on 6.0-rc6 + Darrick's patch[1] + Dan's patch[2].
 
-> > > > I think the code should still be accounting for all pages that
-> > > > belong to the memcg being scanned that are reclaimed, not ignoring
-> > > > them altogether...
-> > >
-> > > 100% agree. Ideally I would want to:
-> > > - For pruned inodes: report all freed pages for global reclaim, and
-> > > only report pages charged to the memcg under reclaim for memcg
-> > > reclaim.
-> >
-> > This only happens on highmem systems at this point, as elsewhere
-> > populated inodes aren't on the shrinker LRUs anymore. We'd probably be
-> > ok with a comment noting the inaccuracy in the proactive reclaim stats
-> > for the time being, until somebody actually cares about that combination.
-> 
-> Interesting, I did not realize this. I guess in this case we may get
-> away with just ignoring non-LRU reclaimed pages in memcg reclaim
-> completely, or go an extra bit and report uncharged objcg pages in
-> memcg reclaim. See below.
-> 
-> >
-> > > - For slab: report all freed pages for global reclaim, and only report
-> > > uncharged objcg pages from the memcg under reclaim for memcg reclaim.
-> > >
-> > > The only problem is that I thought people would think this is too much
-> > > complexity and not worth it. If people agree this should be the
-> > > approach to follow, I can prepare patches for this. I originally
-> > > implemented this for slab pages, but held off on sending it.
-> >
-> > I'd be curious to see the code!
-> 
-> I think it is small enough to paste here. Basically instead of just
-> ignoring reclaim_state->reclaimed completely in patch 2, I counted
-> uncharged objcg pages only in memcg reclaim instead of freed slab
-> pages, and ignored pruned inode pages in memcg reclaim. So I guess we
-> can go with either:
-> - Just ignore freed slab pages and pages from pruned inodes in memcg
-> reclaim (current RFC).
-> - Ignore pruned inodes in memcg reclaim (as you explain above), and
-> use the following diff instead of patch 2 for slab.
-> - Use the following diff for slab AND properly report freed pages from
-> pruned inodes if they are relevant to the memcg under reclaim.
-> 
-> Let me know what you think is best.
-> 
+[1]: https://lore.kernel.org/linux-xfs/Yv5wIa2crHioYeRr@magnolia/
+[2]: https://lore.kernel.org/linux-xfs/166153426798.2758201.15108211981034512993.stgit@dwillia2-xfh.jf.intel.com/
 
-I would prefer the currect RFC instead of the other two options. Those
-options are slowing down (and adding complexity) to the uncharge code
-path for the accuracy which no one really need or should care about.
+Shiyang Ruan (3):
+  xfs: fix the calculation of length and end
+  fs: move drop_pagecache_sb() for others to use
+  mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
 
-> diff --git a/include/linux/swap.h b/include/linux/swap.h
-> index bc1d8b326453..37f799901dfb 100644
-> --- a/include/linux/swap.h
-> +++ b/include/linux/swap.h
-> @@ -162,6 +162,7 @@ struct reclaim_state {
->  };
-> 
->  void report_freed_pages(unsigned long pages);
-> +bool report_uncharged_pages(unsigned long pages, struct mem_cgroup *memcg);
-> 
->  #ifdef __KERNEL__
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index ab457f0394ab..a886ace70648 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -3080,6 +3080,13 @@ static void obj_cgroup_uncharge_pages(struct
-> obj_cgroup *objcg,
->         memcg_account_kmem(memcg, -nr_pages);
->         refill_stock(memcg, nr_pages);
-> 
-> +       /*
-> +        * If undergoing memcg reclaim, report uncharged pages and drain local
-> +        * stock to update the memcg usage.
-> +        */
-> +       if (report_uncharged_pages(nr_pages, memcg))
-> +               drain_local_stock(NULL);
-> +
->         css_put(&memcg->css);
->  }
-> 
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 207998b16e5f..d4eced2b884b 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -204,17 +204,54 @@ static void set_task_reclaim_state(struct
-> task_struct *task,
->         task->reclaim_state = rs;
->  }
-> 
-> +static bool cgroup_reclaim(struct scan_control *sc);
-> +
->  /*
->   * reclaim_report_freed_pages: report pages freed outside of LRU-based reclaim
->   * @pages: number of pages freed
->   *
-> - * If the current process is undergoing a reclaim operation,
-> + * If the current process is undergoing a non-cgroup reclaim operation,
->   * increment the number of reclaimed pages by @pages.
->   */
->  void report_freed_pages(unsigned long pages)
->  {
-> -       if (current->reclaim_state)
-> -               current->reclaim_state->reclaimed += pages;
-> +       struct reclaim_state *rs = current->reclaim_state;
-> +       struct scan_control *sc;
-> +
-> +       if (!rs)
-> +               return;
-> +
-> +       sc = container_of(rs, struct scan_control, reclaim_state);
-> +       if (!cgroup_reclaim(sc))
-> +               rs->reclaimed += pages;
-> +}
-> +
-> +/*
-> + * report_uncharged_pages: report pages uncharged outside of LRU-based reclaim
-> + * @pages: number of pages uncharged
-> + * @memcg: memcg pages were uncharged from
-> + *
-> + * If the current process is undergoing a cgroup reclaim operation, increment
-> + * the number of reclaimed pages by @pages, if the memcg under
-> reclaim is @memcg
-> + * or an ancestor of it.
-> + *
-> + * Returns true if an update was made.
-> + */
-> +bool report_uncharged_pages(unsigned long pages, struct mem_cgroup *memcg)
-> +{
-> +       struct reclaim_state *rs = current->reclaim_state;
-> +       struct scan_control *sc;
-> +
-> +       if (!rs)
-> +               return false;
-> +
-> +       sc = container_of(rs, struct scan_control, reclaim_state);
-> +       if (cgroup_reclaim(sc) &&
-> +           mem_cgroup_is_descendant(memcg, sc->target_mem_cgroup)) {
-> +               rs->reclaimed += pages;
-> +               return true;
-> +       }
-> +       return false;
->  }
-> 
->  LIST_HEAD(shrinker_list);
+ drivers/dax/super.c         |  3 ++-
+ fs/drop_caches.c            | 35 ++----------------------------
+ fs/super.c                  | 43 +++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_notify_failure.c | 36 ++++++++++++++++++++++++++-----
+ include/linux/fs.h          |  1 +
+ include/linux/mm.h          |  1 +
+ include/linux/pagemap.h     |  1 +
+ mm/truncate.c               | 20 +++++++++++++++--
+ 8 files changed, 99 insertions(+), 41 deletions(-)
+
+-- 
+2.39.1
+
