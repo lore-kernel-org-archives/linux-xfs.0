@@ -2,123 +2,138 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87506C05027
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Feb 2023 06:46:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92C3BC05027
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Feb 2023 19:18:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229536AbjBFGqQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Feb 2023 01:46:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44272 "EHLO
+        id S230358AbjBFTSh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Feb 2023 14:18:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229511AbjBFGqP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Feb 2023 01:46:15 -0500
-Received: from mail3.bemta32.messagelabs.com (mail3.bemta32.messagelabs.com [195.245.230.18])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89B5E12F3E;
-        Sun,  5 Feb 2023 22:46:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
-        s=170520fj; t=1675665972; i=@fujitsu.com;
-        bh=8tDYHNWMpUBfn2W8rtNUEQrr/Lx/KtmFpqOm7bf5zQI=;
-        h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-         In-Reply-To:Content-Type:Content-Transfer-Encoding;
-        b=x/XU+I3vkY/snNMoCAM/Q/te6FSxTJEf60Xnb/zrFJUUov70ue0p8e8wke8j4UX/s
-         I6AT7V8sLv+JvrsjvpmMjJ895YeTQH1WjKo13SltqC/C4oY2+HqJsDVjZiZiuNUVEi
-         5Tmrk/9cWpNqCZ5Zc8XfeuMeaizZwi4kh54eoQEkU759+tqQ04D+yaItl+JMdgHfSG
-         WqoyWHzlLgCmdn0OIhhRVYZ4NJLTL9pnwWdm9KLG9NHjiJUKA8pEMYBfdDAaD/Z/Ao
-         4iTpnSnDMaMZUCsPfJ+DBXYcrFL/2efiwCAJpqfhIxVItcNut4/dirdG69CiOdVd1v
-         Lji+JGr0wwiUQ==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrAKsWRWlGSWpSXmKPExsViZ8ORqKuz6EG
-  ywemHFhbTp15gtNhy7B6jxeUnfBanJyxistj9+iabxZ69J1ksLu+aw2Zxb81/Votdf3awW6z8
-  8YfV4vePOWwO3B6nFkl4bF6h5bF4z0smj02rOtk8Nn2axO7xYvNMRo+PT2+xeHzeJBfAEcWam
-  ZeUX5HAmvHywxrmgg1sFa09v5gaGC+xdDFycQgJbGGUeHnqOzuEs4JJYt6/g1DONkaJi19+sH
-  YxcnLwCthJ/Jr1hA3EZhFQkehq6WWEiAtKnJz5hAXEFhVIljh2vhWsRljATaJh5x0gm4NDREB
-  D4s0WI5CZzAIdTBJ712xkhFiwnFGiY/ZLZpAGNgEdiQsL/oIt4xQwkfi49wU7iM0sYCGx+M1B
-  KFteonnrbGaQoRICShIzu+NBwhIClRKtH36xQNhqElfPbWKewCg0C8l5s5BMmoVk0gJG5lWMZ
-  sWpRWWpRbqGZnpJRZnpGSW5iZk5eolVuol6qaW65anFJbqGeonlxXqpxcV6xZW5yTkpenmpJZ
-  sYgRGZUsz8cgfjib6/eocYJTmYlER5+/3vJgvxJeWnVGYkFmfEF5XmpBYfYpTh4FCS4A2Y8yB
-  ZSLAoNT21Ii0zB5gcYNISHDxKIryXpwOleYsLEnOLM9MhUqcYFaXEeYMXAiUEQBIZpXlwbbCE
-  dIlRVkqYl5GBgUGIpyC1KDezBFX+FaM4B6OSMK/oPKApPJl5JXDTXwEtZgJa3G1wF2RxSSJCS
-  qqBSXCR5j0pid67FqWLbqzXV/yWLZOa47+8+Lvp5YhWqwkHGOf7NZ+f9+HP5Ou75VdP4Vtiln
-  jIQX3alssRHoyyzu92mayYsKLx89Ok5y8FdIXM98yZvsCBXy9RYEKbhlzx7qtKv5enHDSbnCO
-  yeHFAUc7LEE/dV/fKbi86XjXDp+TysUrZC88OFFZ/2Nm2rn+G59W26lt398WrqWwoDTpfVetq
-  127/gV3z0/HEA3+23DSvyjI26rGtc6rcvNw+ZbNF9U+pFpO1J4L3eq94f917SdKEVfWWpa4lf
-  q+SGxke2xp5nX37e11s3KmDz9lbC9/O+bWH8QtzrqmmfdsfeebHUWUn+TjDtji9PuPocUEtUY
-  mlOCPRUIu5qDgRAPjkbkDDAwAA
-X-Env-Sender: ruansy.fnst@fujitsu.com
-X-Msg-Ref: server-23.tower-585.messagelabs.com!1675665964!299649!1
-X-Originating-IP: [62.60.8.97]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.102.2; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 2381 invoked from network); 6 Feb 2023 06:46:04 -0000
-Received: from unknown (HELO n03ukasimr01.n03.fujitsu.local) (62.60.8.97)
-  by server-23.tower-585.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 6 Feb 2023 06:46:04 -0000
-Received: from n03ukasimr01.n03.fujitsu.local (localhost [127.0.0.1])
-        by n03ukasimr01.n03.fujitsu.local (Postfix) with ESMTP id 77186100188;
-        Mon,  6 Feb 2023 06:46:04 +0000 (GMT)
-Received: from R01UKEXCASM223.r01.fujitsu.local (R01UKEXCASM223 [10.182.185.121])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by n03ukasimr01.n03.fujitsu.local (Postfix) with ESMTPS id 6A116100182;
-        Mon,  6 Feb 2023 06:46:04 +0000 (GMT)
-Received: from [192.168.50.5] (10.167.225.141) by
- R01UKEXCASM223.r01.fujitsu.local (10.182.185.121) with Microsoft SMTP Server
- (TLS) id 15.0.1497.42; Mon, 6 Feb 2023 06:46:00 +0000
-Message-ID: <0b8551a2-1d46-8ac8-5073-5b094507975a@fujitsu.com>
-Date:   Mon, 6 Feb 2023 14:45:53 +0800
+        with ESMTP id S230319AbjBFTSd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Feb 2023 14:18:33 -0500
+X-Greylist: delayed 90 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 06 Feb 2023 11:18:27 PST
+Received: from omta37.uswest2.a.cloudfilter.net (omta37.uswest2.a.cloudfilter.net [35.89.44.36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2CDB10DE
+        for <linux-xfs@vger.kernel.org>; Mon,  6 Feb 2023 11:18:26 -0800 (PST)
+Received: from eig-obgw-6002a.ext.cloudfilter.net ([10.0.30.222])
+        by cmsmtp with ESMTP
+        id OszLp5z31YHR1P6z1pSP9Z; Mon, 06 Feb 2023 19:16:55 +0000
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with ESMTP
+        id P6z0p4zd3ZdoJP6z1paJsQ; Mon, 06 Feb 2023 19:16:55 +0000
+X-Authority-Analysis: v=2.4 cv=P8YpOwMu c=1 sm=1 tr=0 ts=63e15227
+ a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=wTog8WU66it3cfrESHnF4A==:17
+ a=dLZJa+xiwSxG16/P+YVxDGlgEgI=:19 a=IkcTkHD0fZMA:10 a=m04uMKEZRckA:10
+ a=wYkD_t78qR0A:10 a=UlVX6gWz2MDTxooHeI4A:9 a=QEXdDO2ut3YA:10
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=1ObxFuiXqXpyZXTg1dGdS/FIxrV/Q7eEElLE6od08UE=; b=udDrHuHpv7MF7SH93SgyDTv2xC
+        jBTuMCI22NGTAOGSsjc1k8SLVfZiYWEt6kinXuB8N4+MaPcqPVDN+WNtdCYRdDKCBcIny7wV2jT2Z
+        uzBKdTnKPz0ptRsEMRfRHrQM2o7b+9vUjDWDOSfoqFXj/TSamsA+mwGp2sJBdQllFao+vMfgPrten
+        oe/eQOKO2kaueD1bkH5xtPDEJQUSGuq8hkvDFiFO6ciQN+WHomDq7AShpPSNIzMRtm0PjCxBrujl3
+        IkikvflaRyjVUmndcV0ebPXvZmjnuNgGSTtu3HSeS/GjlgDHpRSBh6BBEAk2krgt8JBcBPnCuCs7k
+        nitx9XfA==;
+Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:58048 helo=[192.168.15.7])
+        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.95)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1pP6z0-0015W0-Bv;
+        Mon, 06 Feb 2023 13:16:54 -0600
+Message-ID: <f6bec0de-3d6d-6d59-5ef3-2903f40451d3@embeddedor.com>
+Date:   Mon, 6 Feb 2023 13:17:14 -0600
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH v9 1/3] xfs: fix the calculation of length and end
-To:     Matthew Wilcox <willy@infradead.org>
-CC:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        <nvdimm@lists.linux.dev>, <linux-mm@kvack.org>,
-        <linux-fsdevel@vger.kernel.org>, <djwong@kernel.org>,
-        <dan.j.williams@intel.com>, <david@fromorbit.com>,
-        <hch@infradead.org>, <jane.chu@oracle.com>
-References: <1675522718-88-1-git-send-email-ruansy.fnst@fujitsu.com>
- <1675522718-88-2-git-send-email-ruansy.fnst@fujitsu.com>
- <Y9+WHXyA2GufLWpw@casper.infradead.org>
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-In-Reply-To: <Y9+WHXyA2GufLWpw@casper.infradead.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.167.225.141]
-X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
- R01UKEXCASM223.r01.fujitsu.local (10.182.185.121)
-X-Virus-Scanned: ClamAV using ClamSMTP
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.2
+Subject: Re: [PATCH][next] xfs: Replace one-element arrays with flexible-array
+ members
+Content-Language: en-US
+To:     Kees Cook <keescook@chromium.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org,
+        Dave Chinner <david@fromorbit.com>
+References: <Y9xiYmVLRIKdpJcC@work>
+ <63dd4a37.630a0220.e4652.35de@mx.google.com>
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+In-Reply-To: <63dd4a37.630a0220.e4652.35de@mx.google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 187.162.31.110
+X-Source-L: No
+X-Exim-ID: 1pP6z0-0015W0-Bv
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.7]) [187.162.31.110]:58048
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 4
+X-Org:  HG=hgshared;ORG=hostgator;
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
+X-CMAE-Envelope: MS4xfDG1+/8Fmi+oepXVMvvIrhjtkLkDz3ENGoz/aYwkDfkUxZ4WDIBxxV5yHYs4ooXqB/+1MiJo4VUZeRoQmZrpVy3IahBkTHU1a8R6nhhm6noZoLCT/GZK
+ swvqjdpNwa04/tJz4Psy56ADfZRDYH6ti6t6/nDM9mG6MOJcS6ZBrd23G6vW/6S3mdjbHmQmFJDCaNRLKqG/dKj6YP3Le71RE7Q=
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 
 
-在 2023/2/5 19:42, Matthew Wilcox 写道:
-> On Sat, Feb 04, 2023 at 02:58:36PM +0000, Shiyang Ruan wrote:
->> @@ -222,8 +222,8 @@ xfs_dax_notify_failure(
->>   		len -= ddev_start - offset;
->>   		offset = 0;
->>   	}
->> -	if (offset + len > ddev_end)
->> -		len -= ddev_end - offset;
->> +	if (offset + len - 1 > ddev_end)
->> +		len -= offset + len - 1 - ddev_end;
+On 2/3/23 11:53, Kees Cook wrote:
+> On Thu, Feb 02, 2023 at 07:24:50PM -0600, Gustavo A. R. Silva wrote:
+>> One-element arrays are deprecated, and we are replacing them with flexible
+>> array members instead. So, replace one-element arrays with flexible-array
+>> members in structures xfs_attr_leaf_name_local and
+>> xfs_attr_leaf_name_remote.
+>>
+>> The only binary differences reported after the changes are all like
+>> these:
+>>
+>> fs/xfs/libxfs/xfs_attr_leaf.o
+>> _@@ -435,7 +435,7 @@
+>>        3b8:      movzbl 0x2(%rbx),%eax
+>>        3bc:      rol    $0x8,%bp
+>>        3c0:      movzwl %bp,%ebp
+>> -     3c3:      lea    0x2(%rax,%rbp,1),%ebx
+>> +     3c3:      lea    0x3(%rax,%rbp,1),%ebx
+>>        3c7:      call   3cc <xfs_attr_leaf_entsize+0x8c>
+>>                          3c8: R_X86_64_PLT32     __tsan_func_exit-0x4
+>>        3cc:      or     $0x3,%ebx
+>> _@@ -454,7 +454,7 @@
+>>        3ea:      movzbl 0x8(%rbx),%ebx
+>>        3ee:      call   3f3 <xfs_attr_leaf_entsize+0xb3>
+>>                          3ef: R_X86_64_PLT32     __tsan_func_exit-0x4
+>> -     3f3:      add    $0xa,%ebx
+>> +     3f3:      add    $0xb,%ebx
+>>        3f6:      or     $0x3,%ebx
+>>        3f9:      add    $0x1,%ebx
+>>        3fc:      mov    %ebx,%eax
+>>
+>> similar changes in fs/xfs/scrub/attr.o and fs/xfs/xfs.o object files.
 > 
-> This _looks_ wrong.  Are you sure it shouldn't be:
-> 
-> 		len = ddev_end - offset + 1;
-> 
+> I usually turn off the sanitizers for the A/B build comparisons to make
 
-It is to make sure the range won't beyond the end of device.
+Oh yes! that's a good point. I'll see that they are turned off next time. :)
 
-But actually, both of us are rgiht.
-   Mine: len -= offset + len - 1 - ddev_end;
-      => len = len - (offset + len - 1 - ddev_end);
-      => len = len - offset - len + 1 + ddev_end;
-      => len = ddev_end - offset + 1;          --> Yours
+> it easier to read the results. It looks like it _grew_ in size here,
+> though?
 
-I forgot to simplify it.  Will fix.
+Yep; I'm sorry I got it wrong. :/ I had it right in the beginning, then after
+reading the code once again just before sending out a version of this patch
+with only the flex-array transformations, I noticed the entsize functions and
+the "sizeof(struct-with-one-element-array) - 1" and I forgot about the padding,
+removed the "- 1" and got a bit confused with my build-tests.
 
+I'll send v2 with my original changes... the flex-array transformations, only.
 
 --
-Thanks,
-Ruan.
+Gustavo
