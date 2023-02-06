@@ -2,138 +2,200 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92C3BC05027
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Feb 2023 19:18:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73C97C61DA4
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Feb 2023 22:56:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230358AbjBFTSh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Feb 2023 14:18:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49086 "EHLO
+        id S229574AbjBFW4Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Feb 2023 17:56:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230319AbjBFTSd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Feb 2023 14:18:33 -0500
-X-Greylist: delayed 90 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 06 Feb 2023 11:18:27 PST
-Received: from omta37.uswest2.a.cloudfilter.net (omta37.uswest2.a.cloudfilter.net [35.89.44.36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2CDB10DE
-        for <linux-xfs@vger.kernel.org>; Mon,  6 Feb 2023 11:18:26 -0800 (PST)
-Received: from eig-obgw-6002a.ext.cloudfilter.net ([10.0.30.222])
-        by cmsmtp with ESMTP
-        id OszLp5z31YHR1P6z1pSP9Z; Mon, 06 Feb 2023 19:16:55 +0000
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with ESMTP
-        id P6z0p4zd3ZdoJP6z1paJsQ; Mon, 06 Feb 2023 19:16:55 +0000
-X-Authority-Analysis: v=2.4 cv=P8YpOwMu c=1 sm=1 tr=0 ts=63e15227
- a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=wTog8WU66it3cfrESHnF4A==:17
- a=dLZJa+xiwSxG16/P+YVxDGlgEgI=:19 a=IkcTkHD0fZMA:10 a=m04uMKEZRckA:10
- a=wYkD_t78qR0A:10 a=UlVX6gWz2MDTxooHeI4A:9 a=QEXdDO2ut3YA:10
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=1ObxFuiXqXpyZXTg1dGdS/FIxrV/Q7eEElLE6od08UE=; b=udDrHuHpv7MF7SH93SgyDTv2xC
-        jBTuMCI22NGTAOGSsjc1k8SLVfZiYWEt6kinXuB8N4+MaPcqPVDN+WNtdCYRdDKCBcIny7wV2jT2Z
-        uzBKdTnKPz0ptRsEMRfRHrQM2o7b+9vUjDWDOSfoqFXj/TSamsA+mwGp2sJBdQllFao+vMfgPrten
-        oe/eQOKO2kaueD1bkH5xtPDEJQUSGuq8hkvDFiFO6ciQN+WHomDq7AShpPSNIzMRtm0PjCxBrujl3
-        IkikvflaRyjVUmndcV0ebPXvZmjnuNgGSTtu3HSeS/GjlgDHpRSBh6BBEAk2krgt8JBcBPnCuCs7k
-        nitx9XfA==;
-Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:58048 helo=[192.168.15.7])
-        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.95)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1pP6z0-0015W0-Bv;
-        Mon, 06 Feb 2023 13:16:54 -0600
-Message-ID: <f6bec0de-3d6d-6d59-5ef3-2903f40451d3@embeddedor.com>
-Date:   Mon, 6 Feb 2023 13:17:14 -0600
+        with ESMTP id S229479AbjBFW4X (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Feb 2023 17:56:23 -0500
+Received: from mail-pg1-x536.google.com (mail-pg1-x536.google.com [IPv6:2607:f8b0:4864:20::536])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75AE228201
+        for <linux-xfs@vger.kernel.org>; Mon,  6 Feb 2023 14:56:21 -0800 (PST)
+Received: by mail-pg1-x536.google.com with SMTP id u75so2669940pgc.10
+        for <linux-xfs@vger.kernel.org>; Mon, 06 Feb 2023 14:56:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=FqeHaS5K9COcgGAPisE/CGKYz3PNQIPyKi7KnPUAn1o=;
+        b=3I24GlpN/jiX2plDE6mbqwdJhVKem4kkM1NKwLbIR7qKpjjukTCAeB+oXxcZ3vNU9P
+         JNdYGqtcHG+G69cykJv/BRKAWR/VIqt7WvJLEg0AOdP2kK+gWkFQ4kMdj87oLbPfdeZ/
+         kDxs99xRE9pnk5n5OZ/QYKcpg4ywRwba8JYJxKom0M9E+onyFqb6xZXpEZq19ELqg5+S
+         1Y7b46RhZ1K171Gm7ccuLQvJ2PrgL+FAiQbr4NPolcOXK42AHG+Cyhy+1BcoDKVeCITv
+         oEksRAXYb5nHJl6bvM6EM/5vEXSTBaXpLv2KKCmmCaWLEUQdt9DsvMg2BxUvKnVb06Zx
+         /ahg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=FqeHaS5K9COcgGAPisE/CGKYz3PNQIPyKi7KnPUAn1o=;
+        b=5eODN5Xr3GnAltQQ5XetiG8LWDRIao5uQv/QB+NG1V/oT2RAFK+3azVpcKRGhMI8QW
+         EThh/Yx3NYtCwztE8a7qT72sffGA2VgZY0vFzTG7AFbmrJjTpqTCC23CyRPU38NYv/tq
+         n6Z/DMgm1/UA24N9D1zKRQqrpHiCP2Mp6zRLPnUz62QEFzWecGbUYp1LkFQDagZ93TI7
+         LeVerjmO18f7d4PPHfIg8o8B0YDwOMdg+KjIoUuVHlCu3nSBwJH1jvpujfl6/GUYT9/9
+         sYHfJZWaTPNvclnJENVMvekNTKsYUYR+Aoo0SD/vYM3TiIHtehGDufBlnLhUWCfbL3Ni
+         dUjg==
+X-Gm-Message-State: AO0yUKWmVNLFFzB4I1zLIHMY+86FRytbimuT6mWlZKscBGqNakRxJo01
+        UClu0qgVtcgmHQY8LkOkX/G4UA==
+X-Google-Smtp-Source: AK7set/mwmIxTeZhQInbphm7zb7iEcQmYcYxUQXSbb1tJnEN78aqD/F/I1vMreSlQjmdiVnwY/jlSw==
+X-Received: by 2002:a62:1709:0:b0:593:b115:e2ca with SMTP id 9-20020a621709000000b00593b115e2camr878708pfx.9.1675724180935;
+        Mon, 06 Feb 2023 14:56:20 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-4-128.pa.nsw.optusnet.com.au. [49.181.4.128])
+        by smtp.gmail.com with ESMTPSA id m12-20020a056a00080c00b005931a44a239sm7635459pfk.112.2023.02.06.14.56.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 06 Feb 2023 14:56:20 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1pPAPJ-00CDio-6N; Tue, 07 Feb 2023 09:56:17 +1100
+Date:   Tue, 7 Feb 2023 09:56:17 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 07/42] xfs: active perag reference counting
+Message-ID: <20230206225617.GV360264@dread.disaster.area>
+References: <20230118224505.1964941-1-david@fromorbit.com>
+ <20230118224505.1964941-8-david@fromorbit.com>
+ <Y9q4xeAzQ7gxO68M@magnolia>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.2
-Subject: Re: [PATCH][next] xfs: Replace one-element arrays with flexible-array
- members
-Content-Language: en-US
-To:     Kees Cook <keescook@chromium.org>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org,
-        Dave Chinner <david@fromorbit.com>
-References: <Y9xiYmVLRIKdpJcC@work>
- <63dd4a37.630a0220.e4652.35de@mx.google.com>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-In-Reply-To: <63dd4a37.630a0220.e4652.35de@mx.google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 187.162.31.110
-X-Source-L: No
-X-Exim-ID: 1pP6z0-0015W0-Bv
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.7]) [187.162.31.110]:58048
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 4
-X-Org:  HG=hgshared;ORG=hostgator;
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
-X-CMAE-Envelope: MS4xfDG1+/8Fmi+oepXVMvvIrhjtkLkDz3ENGoz/aYwkDfkUxZ4WDIBxxV5yHYs4ooXqB/+1MiJo4VUZeRoQmZrpVy3IahBkTHU1a8R6nhhm6noZoLCT/GZK
- swvqjdpNwa04/tJz4Psy56ADfZRDYH6ti6t6/nDM9mG6MOJcS6ZBrd23G6vW/6S3mdjbHmQmFJDCaNRLKqG/dKj6YP3Le71RE7Q=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Y9q4xeAzQ7gxO68M@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 2/3/23 11:53, Kees Cook wrote:
-> On Thu, Feb 02, 2023 at 07:24:50PM -0600, Gustavo A. R. Silva wrote:
->> One-element arrays are deprecated, and we are replacing them with flexible
->> array members instead. So, replace one-element arrays with flexible-array
->> members in structures xfs_attr_leaf_name_local and
->> xfs_attr_leaf_name_remote.
->>
->> The only binary differences reported after the changes are all like
->> these:
->>
->> fs/xfs/libxfs/xfs_attr_leaf.o
->> _@@ -435,7 +435,7 @@
->>        3b8:      movzbl 0x2(%rbx),%eax
->>        3bc:      rol    $0x8,%bp
->>        3c0:      movzwl %bp,%ebp
->> -     3c3:      lea    0x2(%rax,%rbp,1),%ebx
->> +     3c3:      lea    0x3(%rax,%rbp,1),%ebx
->>        3c7:      call   3cc <xfs_attr_leaf_entsize+0x8c>
->>                          3c8: R_X86_64_PLT32     __tsan_func_exit-0x4
->>        3cc:      or     $0x3,%ebx
->> _@@ -454,7 +454,7 @@
->>        3ea:      movzbl 0x8(%rbx),%ebx
->>        3ee:      call   3f3 <xfs_attr_leaf_entsize+0xb3>
->>                          3ef: R_X86_64_PLT32     __tsan_func_exit-0x4
->> -     3f3:      add    $0xa,%ebx
->> +     3f3:      add    $0xb,%ebx
->>        3f6:      or     $0x3,%ebx
->>        3f9:      add    $0x1,%ebx
->>        3fc:      mov    %ebx,%eax
->>
->> similar changes in fs/xfs/scrub/attr.o and fs/xfs/xfs.o object files.
+On Wed, Feb 01, 2023 at 11:08:53AM -0800, Darrick J. Wong wrote:
+> On Thu, Jan 19, 2023 at 09:44:30AM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > We need to be able to dynamically remove instantiated AGs from
+> > memory safely, either for shrinking the filesystem or paging AG
+> > state in and out of memory (e.g. supporting millions of AGs). This
+> > means we need to be able to safely exclude operations from accessing
+> > perags while dynamic removal is in progress.
+> > 
+> > To do this, introduce the concept of active and passive references.
+> > Active references are required for high level operations that make
+> > use of an AG for a given operation (e.g. allocation) and pin the
+> > perag in memory for the duration of the operation that is operating
+> > on the perag (e.g. transaction scope). This means we can fail to get
+> > an active reference to an AG, hence callers of the new active
+> > reference API must be able to handle lookup failure gracefully.
+> > 
+> > Passive references are used in low level code, where we might need
+> > to access the perag structure for the purposes of completing high
+> > level operations. For example, buffers need to use passive
+> > references because:
+> > - we need to be able to do metadata IO during operations like grow
+> >   and shrink transactions where high level active references to the
+> >   AG have already been blocked
+> > - buffers need to pin the perag until they are reclaimed from
+> >   memory, something that high level code has no direct control over.
+> > - unused cached buffers should not prevent a shrink from being
+> >   started.
+> > 
+> > Hence we have active references that will form exclusion barriers
+> > for operations to be performed on an AG, and passive references that
+> > will prevent reclaim of the perag until all objects with passive
+> > references have been reclaimed themselves.
 > 
-> I usually turn off the sanitizers for the A/B build comparisons to make
+> This is going to be fun to rebase the online fsck series on top of. :)
+> 
+> If I'm understanding correctly, active perag refs are for high level
+> code that wants to call down into an AG to do some operation
+> (allocating, freeing, scanning, whatever)?  So I think online fsck
+> uniformly wants xfs_perag_grab/rele, right?
 
-Oh yes! that's a good point. I'll see that they are turned off next time. :)
+That depends. For scrubbing, yes, active references are probably
+going to be needed. For repair of AG structures where the AG needs
+to be taken offline, we will likely have to take the AG offline to
+prevent allocation from being attempted in them. Yes, we currently
+use the AGF/AGI lock to prevent that, but this results in blocking
+user applications during allocation until repair is done with the
+AG. We really want application allocation to naturally skip AGs
+under repair, not block until the repair is done....
 
-> it easier to read the results. It looks like it _grew_ in size here,
-> though?
+As such, I think the answer is scrub should use active references as
+it scans, but repair needs to use passive references once the AG has
+had it's state changed to "offline" as active references will only
+be available on "fully online" AGs.
 
-Yep; I'm sorry I got it wrong. :/ I had it right in the beginning, then after
-reading the code once again just before sending out a version of this patch
-with only the flex-array transformations, I noticed the entsize functions and
-the "sizeof(struct-with-one-element-array) - 1" and I forgot about the padding,
-removed the "- 1" and got a bit confused with my build-tests.
+> Passive refs are (I think) for lower level code that's wants to call up
+> into an AG to finish off something that was already started? 
 
-I'll send v2 with my original changes... the flex-array transformations, only.
+Yes, like buffers carrying a passive reference to pin the perag
+while there are cached buffers indexed by the perag buffer hash.
+Here we only care about the existence of the perag structure, as we
+need to do IO to the AG metadata regardless of whether the perag is
+active or not.
 
---
-Gustavo
+> And
+> probably by upper level code?  So the amount of code that actually wants
+> a passive reference is pretty small?
+
+I don't think it's "small" - all the back end code that uses the
+perag as the root of indexing structures will likely need passive
+references.
+
+The mental model I'm using is that active references are for
+tracking user-facing and user-data operations that require perag
+access.  That's things like inode allocation, data extent
+allocation, etc which will need to skip over AGs that aren't
+available for storing new user data/metadata at the current time.
+
+Anything that is internal (e.g. metadata buffers, inode cache walks
+for reclaim) that needs to run regardless of user operation just
+needs an existence guarantee over the life of the object. This is
+what passive references provide - the perag cannot be freed from
+memory while there are still passive references to it.
+
+Hence I'm looking at active references as a mechanism that can
+provide an access barrier/drain for serialising per-ag operational
+state changes, not to provide per-ag existence guarantees. Passive
+references provide low level existence guarantees, active references
+allow online/offline/no-alloc/shrinking/etc operational state
+changes to be made safely.
+
+> > This patch introduce xfs_perag_grab()/xfs_perag_rele() as the API
+> > for active AG reference functionality. We also need to convert the
+> > for_each_perag*() iterators to use active references, which will
+> > start the process of converting high level code over to using active
+> > references. Conversion of non-iterator based code to active
+> > references will be done in followup patches.
+> 
+> Is there any code that iterates perag structures via passive references?
+> I think the answer to this is 'no'?
+
+I think the answer is yes - inode cache walking is a good example of
+this. That will (eventually) have to grab a passive reference to the
+perag and check the return - if it fails the perag has just been
+torn down so we need to skip it. If it succeeds then we have a
+reference that pins the perag in memory and we can safely walk the
+inode cache structures in that perag.
+
+Some of the operations that the inode cache walks perform (e.g.
+block trimming) might need active references to per-ags to perform
+their work (e.g. because a different AG is offline being repaired
+and so we cannot free the post-eof blocks without blocking on that
+offline AG). However, we don't want to skip inode cache walks just
+because an AG is not allowing new allocations to be made in it....
+
+> The code changes look all right.  If the answers to the above questions
+> are "yes", "yes", "yes", and "no", then:
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+The answers are a whole lot more nuanced than that, unfortunately.
+Which means that some of the repair infrastructure will need to be
+done differently as the state changes for shrink are introduced. I
+don't think there's any show-stoppers here, though.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
