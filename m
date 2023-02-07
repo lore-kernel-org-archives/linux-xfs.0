@@ -2,103 +2,155 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7921C636CD
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Feb 2023 06:16:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07D7BC636CC
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Feb 2023 06:23:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229698AbjBGGQZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Feb 2023 01:16:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40866 "EHLO
+        id S229640AbjBGGXP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Feb 2023 01:23:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42874 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229535AbjBGGQY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Feb 2023 01:16:24 -0500
-X-Greylist: delayed 1814 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 06 Feb 2023 22:16:19 PST
-Received: from m126.mail.126.com (m126.mail.126.com [220.181.12.26])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0BDCF303F6
-        for <linux-xfs@vger.kernel.org>; Mon,  6 Feb 2023 22:16:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=BZ+Jr
-        9tv+HR7qNDEghVYNw3vpcV5TunO3qpwai82R48=; b=YNnHtZrgo8WrfrGKCpmyr
-        SPl3MCU413CYlIACAcm4gKRxEYxzIwypcJrf5pL5PwaPFinRtDw6MyI17uq9r/bz
-        kv50TMbwiv18TnwlMlv7/RKQiIiFXFtwD8HzCkv/4dUPR7gi91/bkzcb5ULfznNv
-        fgS/YTB2799xZpkIxpUVtY=
-Received: from localhost.localdomain (unknown [116.128.244.169])
-        by zwqz-smtp-mta-g4-1 (Coremail) with SMTP id _____wDHz7Fx5eFjaNW4Ag--.36973S2;
-        Tue, 07 Feb 2023 13:45:32 +0800 (CST)
-From:   Xiaole He <hexiaole1994@126.com>
+        with ESMTP id S229462AbjBGGXN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Feb 2023 01:23:13 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E05510276
+        for <linux-xfs@vger.kernel.org>; Mon,  6 Feb 2023 22:22:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1675750939;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=+3Peyg9V5aMrEBqE8o9iVN99L97bYBB9HTgYW8stFQk=;
+        b=Z0lJ5JSJQ53R1ku89QfWRcToFJp7y8FFjhlK1RzgugxQwyec5+qK0k572mAUJquuCfKF6Y
+        QKcbykU7JM6G+JootbPfz7xYooeBrEcxMrdggyAngAg4uO5bMyCWKlY75MGVA8kauAxaGK
+        aviDS39ew/94ShVHDTymFjrJPOR10uc=
+Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com
+ [209.85.210.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-617-iXiRytfvM2Wc910HYAh5_g-1; Tue, 07 Feb 2023 01:22:19 -0500
+X-MC-Unique: iXiRytfvM2Wc910HYAh5_g-1
+Received: by mail-pf1-f197.google.com with SMTP id u18-20020a62ed12000000b00593cc641da4so7576456pfh.0
+        for <linux-xfs@vger.kernel.org>; Mon, 06 Feb 2023 22:22:18 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=+3Peyg9V5aMrEBqE8o9iVN99L97bYBB9HTgYW8stFQk=;
+        b=34s3vktWvPCLDQAkt/EiO581c7Da27rveF4JL51/Oh+lJRI1Lb0jT2CR3QVUaZcWqs
+         Mfa8gfHkDCAqSWMtEbdjqkj2Jx8DFvJA7qrcbuG9tjLiqylg4kYmg0aVL1+LR7V/iyAI
+         3h7qympcpj4PkqbC6OrCc2HG3OVso1brko75JriBRiPX/f3p+wvXXPchQ68cJZMPFiwc
+         IqxokMjbtfxXkiMlaqfONZmZjsWMIYJZJpZjDnNumKtnXKYCv5UVsS2cAmefk8AvCKAj
+         ccreWlhejP22clF/JRHlr1tiunYPV7FOczEIHL5scXB+v0JOGjwdjIEqqGDx2JkU/SvT
+         DDVg==
+X-Gm-Message-State: AO0yUKVhXc7QOwSYX+pzZtLscH/vYZf0v7RqEyRD+nT7ETt5BP/vS36w
+        B9LP1d1Tx9mxZfrdXaVLC2XSyELPNtEbAaCM1oNlVatJincEVIztppRJCeWl8HKv2ALyp5QJF3z
+        5OC1AkKQ56qX+4mayMKEtp5W0SmzwvVPks6np8I1oYEdDUbQHOUjjoNqTcaQOIQM37jIaVbi78M
+        i8Bw==
+X-Received: by 2002:a17:90b:4a8e:b0:22b:f780:d346 with SMTP id lp14-20020a17090b4a8e00b0022bf780d346mr2765206pjb.1.1675750937485;
+        Mon, 06 Feb 2023 22:22:17 -0800 (PST)
+X-Google-Smtp-Source: AK7set/dIKt0FIe34TW17PLsLtUAqFdsqH1983hEbikPLzi8djGyNMqzNVuEEQgAdoDrHYppxBVNJw==
+X-Received: by 2002:a17:90b:4a8e:b0:22b:f780:d346 with SMTP id lp14-20020a17090b4a8e00b0022bf780d346mr2765182pjb.1.1675750937000;
+        Mon, 06 Feb 2023 22:22:17 -0800 (PST)
+Received: from snowcrash.redhat.com ([2001:8003:4800:1b00:4c4a:1757:c744:923])
+        by smtp.gmail.com with ESMTPSA id u12-20020a17090a1d4c00b0022c90b7e3efsm10434865pju.50.2023.02.06.22.22.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 06 Feb 2023 22:22:16 -0800 (PST)
+From:   Donald Douwsma <ddouwsma@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Cc:     djwong@kernel.org, dchinner@redhat.com, chandan.babu@oracle.com,
-        zhangshida@kylinos.cn, Xiaole He <hexiaole1994@126.com>,
-        Xiaole He <hexiaole@kylinos.cn>
-Subject: [PATCH v1] libxfs: fix reservation space for removing transaction
-Date:   Mon,  6 Feb 2023 21:09:49 +0800
-Message-Id: <20230206130949.12947-1-hexiaole1994@126.com>
-X-Mailer: git-send-email 2.27.0
+Cc:     Donald Douwsma <ddouwsma@redhat.com>
+Subject: [PATCH v3] xfs: allow setting full range of panic tags
+Date:   Tue,  7 Feb 2023 17:22:09 +1100
+Message-Id: <20230207062209.1806104-1-ddouwsma@redhat.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _____wDHz7Fx5eFjaNW4Ag--.36973S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7tw4xJryUur15Ar4ktFyrJFb_yoW8ZrW3pr
-        n7Cr4Skrn8JryFyFn7Jr1qqryYya9Ykw429r48Zrn3Zw1DJFnFyry09w1Y9Fyjqr4fZr1U
-        ZryUCw17Za1IvaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zExR6-UUUUU=
-X-Originating-IP: [116.128.244.169]
-X-CM-SenderInfo: 5kh0xt5rohimizu6ij2wof0z/1tbikAMPBlpEC5WxkwAAs4
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In libxfs/xfs_trans_resv.c:
+xfs will not allow combining other panic masks with
+XFS_PTAG_VERIFIER_ERROR.
 
-/* libxfs/xfs_trans_resv.c begin */
- 1 /*
- 2  * For removing a directory entry we can modify:
- 3  *    the parent directory inode: inode size
- 4  *    the removed inode: inode size
- 5  *    the directory btree could join: (max depth + v2) * dir block size
- 6  *    the directory bmap btree could join or split: (max depth + v2) * blocksize
- 7  * And the bmap_finish transaction can free the dir and bmap blocks giving:
- 8  *    the agf for the ag in which the blocks live: 2 * sector size
- 9  *    the agfl for the ag in which the blocks live: 2 * sector size
-10  *    the superblock for the free block count: sector size
-11  ...
-12  */
-13 STATIC uint
-14 xfs_calc_remove_reservation(
-15      struct xfs_mount        *mp)
-16 {
-17      return XFS_DQUOT_LOGRES(mp) +
-18              xfs_calc_iunlink_add_reservation(mp) +
-19              max((xfs_calc_inode_res(mp, 1) +
-20                   xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
-21                                    XFS_FSB_TO_B(mp, 1))),
-22                  (xfs_calc_buf_res(4, mp->m_sb.sb_sectsize) +
-23      ...
-24 }
-/* libxfs/xfs_trans_resv.c end */
+ # sysctl fs.xfs.panic_mask=511
+ sysctl: setting key "fs.xfs.panic_mask": Invalid argument
+ fs.xfs.panic_mask = 511
 
-Above lines 8-10 indicates there has 5 sector size of space to be
-reserved, but the above line 22 only reserve 4 sector size of space,
-this patch fix the problem and sorry for not notice this problem at
-Commit d3e53ab7cdc7fabb8c94137e335634e0ed4691e8 ("xfs: fix inode
-reservation space for removing transaction").
+Update to the maximum value that can be set to allow the full range of
+masks. Do this using a mask of possible values to prevent this happening
+again as suggested by Darrick.
 
-Signed-off-by: Xiaole He <hexiaole@kylinos.cn>
+Fixes: d519da41e2b7 ("xfs: Introduce XFS_PTAG_VERIFIER_ERROR panic mask")
+Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
 ---
- libxfs/xfs_trans_resv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ Documentation/admin-guide/xfs.rst |  2 +-
+ fs/xfs/xfs_error.h                | 12 +++++++++++-
+ fs/xfs/xfs_globals.c              |  3 ++-
+ 3 files changed, 14 insertions(+), 3 deletions(-)
 
-diff --git a/libxfs/xfs_trans_resv.c b/libxfs/xfs_trans_resv.c
-index 04c44480..3d106c77 100644
---- a/libxfs/xfs_trans_resv.c
-+++ b/libxfs/xfs_trans_resv.c
-@@ -517,7 +517,7 @@ xfs_calc_remove_reservation(
- 		max((xfs_calc_inode_res(mp, 2) +
- 		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
- 				      XFS_FSB_TO_B(mp, 1))),
--		    (xfs_calc_buf_res(4, mp->m_sb.sb_sectsize) +
-+		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
- 		     xfs_calc_buf_res(xfs_allocfree_block_count(mp, 2),
- 				      XFS_FSB_TO_B(mp, 1))));
- }
+diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
+index 8de008c0c5ad..e2561416391c 100644
+--- a/Documentation/admin-guide/xfs.rst
++++ b/Documentation/admin-guide/xfs.rst
+@@ -296,7 +296,7 @@ The following sysctls are available for the XFS filesystem:
+ 		XFS_ERRLEVEL_LOW:       1
+ 		XFS_ERRLEVEL_HIGH:      5
+ 
+-  fs.xfs.panic_mask		(Min: 0  Default: 0  Max: 256)
++  fs.xfs.panic_mask		(Min: 0  Default: 0  Max: 511)
+ 	Causes certain error conditions to call BUG(). Value is a bitmask;
+ 	OR together the tags which represent errors which should cause panics:
+ 
+diff --git a/fs/xfs/xfs_error.h b/fs/xfs/xfs_error.h
+index dbe6c37dc697..0b9c5ba8a598 100644
+--- a/fs/xfs/xfs_error.h
++++ b/fs/xfs/xfs_error.h
+@@ -75,7 +75,7 @@ extern int xfs_errortag_clearall(struct xfs_mount *mp);
+ 
+ /*
+  * XFS panic tags -- allow a call to xfs_alert_tag() be turned into
+- *			a panic by setting xfs_panic_mask in a sysctl.
++ *			a panic by setting fs.xfs.panic_mask in a sysctl.
+  */
+ #define		XFS_NO_PTAG			0u
+ #define		XFS_PTAG_IFLUSH			(1u << 0)
+@@ -88,6 +88,16 @@ extern int xfs_errortag_clearall(struct xfs_mount *mp);
+ #define		XFS_PTAG_FSBLOCK_ZERO		(1u << 7)
+ #define		XFS_PTAG_VERIFIER_ERROR		(1u << 8)
+ 
++#define		XFS_PTAG_MASK	(XFS_PTAG_IFLUSH | \
++				 XFS_PTAG_LOGRES | \
++				 XFS_PTAG_AILDELETE | \
++				 XFS_PTAG_ERROR_REPORT | \
++				 XFS_PTAG_SHUTDOWN_CORRUPT | \
++				 XFS_PTAG_SHUTDOWN_IOERROR | \
++				 XFS_PTAG_SHUTDOWN_LOGERROR | \
++				 XFS_PTAG_FSBLOCK_ZERO | \
++				 XFS_PTAG_VERIFIER_ERROR)
++
+ #define XFS_PTAG_STRINGS \
+ 	{ XFS_NO_PTAG,			"none" }, \
+ 	{ XFS_PTAG_IFLUSH,		"iflush" }, \
+diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
+index 4d0a98f920ca..9edc1f2bc939 100644
+--- a/fs/xfs/xfs_globals.c
++++ b/fs/xfs/xfs_globals.c
+@@ -4,6 +4,7 @@
+  * All Rights Reserved.
+  */
+ #include "xfs.h"
++#include "xfs_error.h"
+ 
+ /*
+  * Tunable XFS parameters.  xfs_params is required even when CONFIG_SYSCTL=n,
+@@ -15,7 +16,7 @@ xfs_param_t xfs_params = {
+ 			  /*	MIN		DFLT		MAX	*/
+ 	.sgid_inherit	= {	0,		0,		1	},
+ 	.symlink_mode	= {	0,		0,		1	},
+-	.panic_mask	= {	0,		0,		256	},
++	.panic_mask	= {	0,		0,		XFS_PTAG_MASK},
+ 	.error_level	= {	0,		3,		11	},
+ 	.syncd_timer	= {	1*100,		30*100,		7200*100},
+ 	.stats_clear	= {	0,		0,		1	},
 -- 
-2.27.0
+2.31.1
 
