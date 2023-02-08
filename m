@@ -2,159 +2,164 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BBF4C636D3
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Feb 2023 17:52:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79966C05027
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Feb 2023 19:03:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229509AbjBHRwx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Feb 2023 12:52:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60146 "EHLO
+        id S231447AbjBHTDw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Feb 2023 14:03:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56706 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229663AbjBHRww (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Feb 2023 12:52:52 -0500
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EA5C5278
-        for <linux-xfs@vger.kernel.org>; Wed,  8 Feb 2023 09:52:51 -0800 (PST)
-Received: by mail-pj1-x102d.google.com with SMTP id bx22so16242146pjb.3
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Feb 2023 09:52:51 -0800 (PST)
+        with ESMTP id S231520AbjBHTDv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Feb 2023 14:03:51 -0500
+Received: from mail-vs1-xe35.google.com (mail-vs1-xe35.google.com [IPv6:2607:f8b0:4864:20::e35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4143F58281
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Feb 2023 11:03:16 -0800 (PST)
+Received: by mail-vs1-xe35.google.com with SMTP id l8so3183668vsi.12
+        for <linux-xfs@vger.kernel.org>; Wed, 08 Feb 2023 11:03:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=SorP1JhlIcCEY/LuSUdYfh3iN08Qb7cjYiI47fg8YOw=;
-        b=VPQO49Ed0XX+A7bcTOgjfBEF7PteVpjkaKCtOlusdZdSBk+R+5Jn5qUYS8TsRmlT5H
-         mTdYCQ/KP2MEU0fuQRJBwH9YPHSXTY06WQuXMAxnhxvboRhPVMjwrqnK2HdVYrYEPNX7
-         +IDjdmZQZgqYIQsrZr6KhkDmc4HD5WmK/7kauHhUbDpUh8cJLc8AF1J7qzs3Cr2w4yrb
-         v7uxI5FJ/C+e1GxjTd6oRxNZ93YJNPGIRghQ3Ry04mhrJrokWqglRO1ZPWEqIrrFY//Q
-         +htNccxyfMR1SxROhj/9AmWdDP0qISYfO+Qh/p5xAwHRugwWXZ4wTqFcgerx02Zsy8jD
-         MaEg==
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=jqH3xjdeQYKVsFoL0KfPb0aszj0oKE5i0CjwM3o8lDw=;
+        b=VLA0rvWZydnEi6nPNXYTo5FCt66HqM79pfH3kC9jiJGncaJbZmWNZYK9R4l/0Egaq8
+         rBPTzoEcKCZs6tDwQiuuuyZys3Pk8ZpXSkdwp3pYB9GoYFNwc78q6nalf9W4kbBz498r
+         7p/n/UTE6hDfoo6mDpunG4FtHUtTkzxV0bUujlXspyhiaeqYXeIbmtUQRwMsRJ/aMwKM
+         f9bfsvuhXSE1u+B98POWMUFJTMeetsUBtlFbOGDPUClbdU0wB64Wng/HTnK6/u3YCBqp
+         mCnrX7BecKJfNWIXOuLIo3lmIfCWgwlYMueU6EMHAqcizHLBaR8+aMRFeEIdCDYAA/kO
+         d4tA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=SorP1JhlIcCEY/LuSUdYfh3iN08Qb7cjYiI47fg8YOw=;
-        b=WWtTneTM0+aNrMXdPFXSZOFHZ8b6kHriYc0wSca7R4ebn1fLyqehj0DwbhnWsZyFco
-         nZGflyo+k1vL+IhGXlM0VUFm2E5wZE7Q9YYKaamFdQjMmveKu4yQxrCDunFMiZBLjvwV
-         ihIm4zLD8gCCBlQXwrMY3jAriIrI6+pZcjJpLibUbjsVRn4r7buQedlyr+OFI5NoblGc
-         0fVVMQt87aptZmrypVl3oaeYJ846x9f+5ud07jWOZpca0/a4seE3igNSokKGcsvDbBap
-         kBwZw6Ex0MWTPdoca7lMSKwabdqlN+pGzXiB0Jz4t+ve+b9jlVNGS0UlHd82zKEjqAtJ
-         VLcQ==
-X-Gm-Message-State: AO0yUKWVgDbbwDLImhJyp9peLsxDLISecKhIeldR9FzMFZexqGMpjb4p
-        NuEhznC2MakXtWqwvuNNZUwwz5tIL+oL5w==
-X-Google-Smtp-Source: AK7set9FrqWqayJkx8EprojrPF9LFkf0U5CfFGn+fWjDJ8WEKL+VG28GHJbHsmDGYuW0I0s75F1wtg==
-X-Received: by 2002:a17:902:da8b:b0:199:bd4:9fbb with SMTP id j11-20020a170902da8b00b001990bd49fbbmr9599157plx.43.1675878770995;
-        Wed, 08 Feb 2023 09:52:50 -0800 (PST)
-Received: from lrumancik.svl.corp.google.com ([2620:15c:2d4:203:726:5e6d:fcde:4245])
-        by smtp.gmail.com with ESMTPSA id y17-20020a170902d65100b00198e397994bsm10911452plh.136.2023.02.08.09.52.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Feb 2023 09:52:50 -0800 (PST)
-From:   Leah Rumancik <leah.rumancik@gmail.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     amir73il@gmail.com, chandan.babu@oracle.com,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Dave Chinner <dchinner@redhat.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 5.15 CANDIDATE 10/10] xfs: don't leak btree cursor when insrec fails after a split
-Date:   Wed,  8 Feb 2023 09:52:28 -0800
-Message-Id: <20230208175228.2226263-11-leah.rumancik@gmail.com>
-X-Mailer: git-send-email 2.39.1.519.gcb327c4b5f-goog
-In-Reply-To: <20230208175228.2226263-1-leah.rumancik@gmail.com>
-References: <20230208175228.2226263-1-leah.rumancik@gmail.com>
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=jqH3xjdeQYKVsFoL0KfPb0aszj0oKE5i0CjwM3o8lDw=;
+        b=kHBEAv8mXGGGSVMnLjaZ0e9+7cruO1ErRV1yyEvH0neZ1fnQXdXBCex9Wo0enDBuyj
+         1zBPD+iO9pvEPVl10lTbZdutc2UPDFnA7ntbOqC79ZMrv1OEx3s6vGHtpQZig/JZX5pE
+         4fipxHk+4PcIOYpWLEo6u9XmqN1n/dQQPq6w1NAzlplz2KCEF0db31GaT+ld44UiKYjK
+         D5aNZZMacA1TkR1byJVjpM0EMG13qapFLY+n4cItBPalRIvrtKY7mum50VDMYXcURKVb
+         uoY7QrT4Pi6oRjhOWilDF/y1IGK5fBHq5MIf+rgfBMsHAH0qOakeRwGU1eSJDLDqouCR
+         o+2Q==
+X-Gm-Message-State: AO0yUKVoK3Dnine/VU9VZfGF0592eiUwQeqaqUd2DaPoUkaZVxwRPzf/
+        VZG14avlGE3wegRWbjAyA3LFUga+hKZdAZTrHdU=
+X-Google-Smtp-Source: AK7set/pEZ1EBeRUG7zrFLvviUKNj8C9tsGau52EaQqJPdldPvZdjR9LK+iNHkzp0LgjlbA/2mKQOzN+sPSIewFzSCs=
+X-Received: by 2002:a05:6102:390:b0:411:a54a:de01 with SMTP id
+ m16-20020a056102039000b00411a54ade01mr1665335vsq.2.1675882989619; Wed, 08 Feb
+ 2023 11:03:09 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20230208175228.2226263-1-leah.rumancik@gmail.com>
+In-Reply-To: <20230208175228.2226263-1-leah.rumancik@gmail.com>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Wed, 8 Feb 2023 21:02:58 +0200
+Message-ID: <CAOQ4uxgmHzWcxBDrzRb19ByCnNoayhha_MZ_eYN0YMC=RGTeMw@mail.gmail.com>
+Subject: Re: [PATCH 5.15 CANDIDATE 00/10] more xfs fixes for 5.15
+To:     Leah Rumancik <leah.rumancik@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, chandan.babu@oracle.com,
+        Christian Brauner <brauner@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+On Wed, Feb 8, 2023 at 7:52 PM Leah Rumancik <leah.rumancik@gmail.com> wrote:
+>
+> Hello again,
+>
+> Here is the next batch of backports for 5.15.y. Testing included
+> 25 runs of auto group on 12 xfs configs. No regressions were seen.
+> I checked xfs/538 was run without issue as this test was mentioned
+> in 56486f307100. Also, from 86d40f1e49e9, I ran ran xfs/117 with
+> XFS compiled as a module and TEST_FS_MODULE_REOLOAD set, but I was
+> unable to reproduce the issue.
 
-[ Upstream commit a54f78def73d847cb060b18c4e4a3d1d26c9ca6d ]
+Did you find any tests that started to pass or whose failure rate reduced?
 
-The recent patch to improve btree cycle checking caused a regression
-when I rebased the in-memory btree branch atop the 5.19 for-next branch,
-because in-memory short-pointer btrees do not have AG numbers.  This
-produced the following complaint from kmemleak:
+There are very few Fixes: annotations in these commits so it is hard for
+me to assess if any of them are relevant/important/worth the effort/risk
+to backport to 5.10.
 
-unreferenced object 0xffff88803d47dde8 (size 264):
-  comm "xfs_io", pid 4889, jiffies 4294906764 (age 24.072s)
-  hex dump (first 32 bytes):
-    90 4d 0b 0f 80 88 ff ff 00 a0 bd 05 80 88 ff ff  .M..............
-    e0 44 3a a0 ff ff ff ff 00 df 08 06 80 88 ff ff  .D:.............
-  backtrace:
-    [<ffffffffa0388059>] xfbtree_dup_cursor+0x49/0xc0 [xfs]
-    [<ffffffffa029887b>] xfs_btree_dup_cursor+0x3b/0x200 [xfs]
-    [<ffffffffa029af5d>] __xfs_btree_split+0x6ad/0x820 [xfs]
-    [<ffffffffa029b130>] xfs_btree_split+0x60/0x110 [xfs]
-    [<ffffffffa029f6da>] xfs_btree_make_block_unfull+0x19a/0x1f0 [xfs]
-    [<ffffffffa029fada>] xfs_btree_insrec+0x3aa/0x810 [xfs]
-    [<ffffffffa029fff3>] xfs_btree_insert+0xb3/0x240 [xfs]
-    [<ffffffffa02cb729>] xfs_rmap_insert+0x99/0x200 [xfs]
-    [<ffffffffa02cf142>] xfs_rmap_map_shared+0x192/0x5f0 [xfs]
-    [<ffffffffa02cf60b>] xfs_rmap_map_raw+0x6b/0x90 [xfs]
-    [<ffffffffa0384a85>] xrep_rmap_stash+0xd5/0x1d0 [xfs]
-    [<ffffffffa0384dc0>] xrep_rmap_visit_bmbt+0xa0/0xf0 [xfs]
-    [<ffffffffa0384fb6>] xrep_rmap_scan_iext+0x56/0xa0 [xfs]
-    [<ffffffffa03850d8>] xrep_rmap_scan_ifork+0xd8/0x160 [xfs]
-    [<ffffffffa0385195>] xrep_rmap_scan_inode+0x35/0x80 [xfs]
-    [<ffffffffa03852ee>] xrep_rmap_find_rmaps+0x10e/0x270 [xfs]
+Unless I know of reproducible bugs in 5.10, I don't think I will invest
+in backporting this series to 5.10.
+Chandan, if you find any of these fixes relevant and important for 5.4
+let me know and I will make the effort to consider them for 5.10.
 
-I noticed that xfs_btree_insrec has a bunch of debug code that return
-out of the function immediately, without freeing the "new" btree cursor
-that can be returned when _make_block_unfull calls xfs_btree_split.  Fix
-the error return in this function to free the btree cursor.
+Leah, please consider working on the SGID bug fixes for the next 5.15
+update, because my 5.10 SGID fixes series [1] has been blocked for
+months and because there are several reproducible test cases in xfstest.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
----
- fs/xfs/libxfs/xfs_btree.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+I did not push on that until now because SGID test expectations were
+a moving target, but since xfstests commit 81e6f628 ("generic: update
+setgid tests") in this week's xfstests release, I think that tests should be
+stable and we can finally start backporting all relevant SGID fixes to
+align the SGID behavior of LTS kernels with that of upstream.
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 482a4ccc6568..dffe4ca58493 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -3266,7 +3266,7 @@ xfs_btree_insrec(
- 	struct xfs_btree_block	*block;	/* btree block */
- 	struct xfs_buf		*bp;	/* buffer for block */
- 	union xfs_btree_ptr	nptr;	/* new block ptr */
--	struct xfs_btree_cur	*ncur;	/* new btree cursor */
-+	struct xfs_btree_cur	*ncur = NULL;	/* new btree cursor */
- 	union xfs_btree_key	nkey;	/* new block key */
- 	union xfs_btree_key	*lkey;
- 	int			optr;	/* old key/record index */
-@@ -3346,7 +3346,7 @@ xfs_btree_insrec(
- #ifdef DEBUG
- 	error = xfs_btree_check_block(cur, block, level, bp);
- 	if (error)
--		return error;
-+		goto error0;
- #endif
- 
- 	/*
-@@ -3366,7 +3366,7 @@ xfs_btree_insrec(
- 		for (i = numrecs - ptr; i >= 0; i--) {
- 			error = xfs_btree_debug_check_ptr(cur, pp, i, level);
- 			if (error)
--				return error;
-+				goto error0;
- 		}
- 
- 		xfs_btree_shift_keys(cur, kp, 1, numrecs - ptr + 1);
-@@ -3451,6 +3451,8 @@ xfs_btree_insrec(
- 	return 0;
- 
- error0:
-+	if (ncur)
-+		xfs_btree_del_cursor(ncur, error);
- 	return error;
- }
- 
--- 
-2.39.1.519.gcb327c4b5f-goog
+Thanks,
+Amir.
 
+[1] https://github.com/amir73il/linux/commits/xfs-5.10.y-sgid-fixes
+
+>
+> Below I've outlined which series the backports came from:
+>
+> series "xfs: intent whiteouts" (1):
+> [01/10] cb512c921639613ce03f87e62c5e93ed9fe8c84d
+>     xfs: zero inode fork buffer at allocation
+> [02/10] c230a4a85bcdbfc1a7415deec6caf04e8fca1301
+>     xfs: fix potential log item leak
+>
+> series "xfs: fix random format verification issues" (2):
+> [1/4] dc04db2aa7c9307e740d6d0e173085301c173b1a
+>     xfs: detect self referencing btree sibling pointers
+> [2/4] 1eb70f54c445fcbb25817841e774adb3d912f3e8 -> already in 5.15.y
+>     xfs: validate inode fork size against fork format
+> [3/4] dd0d2f9755191690541b09e6385d0f8cd8bc9d8f
+>     xfs: set XFS_FEAT_NLINK correctly
+> [4/4] f0f5f658065a5af09126ec892e4c383540a1c77f
+>     xfs: validate v5 feature fields
+>
+> series "xfs: small fixes for 5.19 cycle" (3):
+> [1/3] 5672225e8f2a872a22b0cecedba7a6644af1fb84
+>     xfs: avoid unnecessary runtime sibling pointer endian conversions
+> [2/3] 5b55cbc2d72632e874e50d2e36bce608e55aaaea
+>     fs: don't assert fail on perag references on teardown
+> [2/3] 56486f307100e8fc66efa2ebd8a71941fa10bf6f
+>     xfs: assert in xfs_btree_del_cursor should take into account error
+>
+> series "xfs: random fixes for 5.19" (4):
+> [1/2] 86d40f1e49e9a909d25c35ba01bea80dbcd758cb
+>     xfs: purge dquots after inode walk fails during quotacheck
+> [2/2] a54f78def73d847cb060b18c4e4a3d1d26c9ca6d
+>     xfs: don't leak btree cursor when insrec fails after a split
+>
+> (1) https://lore.kernel.org/all/20220503221728.185449-1-david@fromorbit.com/
+> (2) https://lore.kernel.org/all/20220502082018.1076561-1-david@fromorbit.com/
+> (3) https://lore.kernel.org/all/20220524022158.1849458-1-david@fromorbit.com/
+> (4) https://lore.kernel.org/all/165337056527.993079.1232300816023906959.stgit@magnolia/
+>
+> Darrick J. Wong (2):
+>   xfs: purge dquots after inode walk fails during quotacheck
+>   xfs: don't leak btree cursor when insrec fails after a split
+>
+> Dave Chinner (8):
+>   xfs: zero inode fork buffer at allocation
+>   xfs: fix potential log item leak
+>   xfs: detect self referencing btree sibling pointers
+>   xfs: set XFS_FEAT_NLINK correctly
+>   xfs: validate v5 feature fields
+>   xfs: avoid unnecessary runtime sibling pointer endian conversions
+>   xfs: don't assert fail on perag references on teardown
+>   xfs: assert in xfs_btree_del_cursor should take into account error
+>
+>  fs/xfs/libxfs/xfs_ag.c         |   3 +-
+>  fs/xfs/libxfs/xfs_btree.c      | 175 +++++++++++++++++++++++++--------
+>  fs/xfs/libxfs/xfs_inode_fork.c |  12 ++-
+>  fs/xfs/libxfs/xfs_sb.c         |  70 +++++++++++--
+>  fs/xfs/xfs_bmap_item.c         |   2 +
+>  fs/xfs/xfs_icreate_item.c      |   1 +
+>  fs/xfs/xfs_qm.c                |   9 +-
+>  fs/xfs/xfs_refcount_item.c     |   2 +
+>  fs/xfs/xfs_rmap_item.c         |   2 +
+>  9 files changed, 221 insertions(+), 55 deletions(-)
+>
+> --
+> 2.39.1.519.gcb327c4b5f-goog
+>
