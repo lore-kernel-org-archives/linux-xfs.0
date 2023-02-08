@@ -2,37 +2,37 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6E3AC636D4
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Feb 2023 14:53:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 683F9C636D7
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Feb 2023 14:53:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231562AbjBHOxt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Feb 2023 09:53:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60650 "EHLO
+        id S231573AbjBHOxw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Feb 2023 09:53:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60674 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231573AbjBHOxr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Feb 2023 09:53:47 -0500
+        with ESMTP id S231566AbjBHOxv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Feb 2023 09:53:51 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D04FAEFBE;
-        Wed,  8 Feb 2023 06:53:46 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0A0872BD;
+        Wed,  8 Feb 2023 06:53:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=5twZFLWxkhGrNUYEW65e76d9+Wc/N4CV9H47V5oY874=; b=jhLXZ5eOcYzyv9Lg+xvTxRJyod
-        htyi0O7wkyJihprDroJwDFHYs9W2CcWo4Bs4BJHOjW9nuD0JUNpaFK5Wa61HKdQkPMSQCLgqkyg/M
-        DV0Dnzg3tzPaqy0lbr+4FLoiA+i5arMxHxV8SW9J5hc9kLAkar0MCXj/KCk2QIbirelqMTDrVme0R
-        A3URQMf7LwUPHnghYb3mTGC17gS+DN/dNrYNpJq8NeBmPVZYYyIzaz6Pz0nQ9H1PKke7jbWoVWrvx
-        J4o/VqVfhlKIA+0WzL9koVRa5NLxuH5MvC09KZRtCGqBVSbjjKgZHfaSSwR5LK124VOts++i7+9Hw
-        H0agG0oA==;
+        bh=HdngZPvdXKZlg8aWQlwaqgB89GRwI5fL2TphFM1bPZg=; b=mIOoo7xcGsiBchVCgVhbLA4GaO
+        maepzfffPhFBJh1ZKAHeGTvMELGTvkEl1c5Pd5Ozj2+WhTRZx5zJhWSjhMJuicBsK3oVsqPUYMhir
+        uhf0TZjF4cHNOgF+dXtJ10FaVGNsWhu0m47+EYSn3La4I863Krw849ee81FyoWUx3PJAUiIHGTEx4
+        t3Jhl1tgNZhpQvFDRvqar4cn/H8ZeaFrvvVzrNlGj97rXB3vggM1iZ+jaPHHIv5QuHYkSemgA2mQN
+        SGpnygNsMm2kdC4RlP/rI5FyFdlvpYKAB2nQNKgD9zG2/T9PP+JHqyc7/ih3F9IQX2KMX6ueG+rhe
+        QO25gZLw==;
 Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pPlpK-001HwR-SC; Wed, 08 Feb 2023 14:53:38 +0000
+        id 1pPlpL-001HwV-1L; Wed, 08 Feb 2023 14:53:39 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     linux-xfs@vger.kernel.org, linux-afs@lists.infradead.org,
         linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Subject: [PATCH 1/3] xfs: Remove xfs_filemap_map_pages() wrapper
-Date:   Wed,  8 Feb 2023 14:53:33 +0000
-Message-Id: <20230208145335.307287-2-willy@infradead.org>
+Subject: [PATCH 3/3] mm: Hold the RCU read lock over calls to ->map_pages
+Date:   Wed,  8 Feb 2023 14:53:35 +0000
+Message-Id: <20230208145335.307287-4-willy@infradead.org>
 X-Mailer: git-send-email 2.37.1
 In-Reply-To: <20230208145335.307287-1-willy@infradead.org>
 References: <20230208145335.307287-1-willy@infradead.org>
@@ -42,46 +42,63 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-XFS doesn't actually need to be holding the XFS_MMAPLOCK_SHARED
-to do this, any more than it needs the XFS_MMAPLOCK_SHARED for a
-read() that hits in the page cache.
+Prevent filesystems from doing things which sleep in their map_pages
+method.  This is in preparation for a pagefault path protected only
+by RCU.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- fs/xfs/xfs_file.c | 17 +----------------
- 1 file changed, 1 insertion(+), 16 deletions(-)
+ Documentation/filesystems/locking.rst | 4 ++--
+ mm/memory.c                           | 7 ++++++-
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 705250f9f90a..528fc538b6b9 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1388,25 +1388,10 @@ xfs_filemap_pfn_mkwrite(
- 	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
+diff --git a/Documentation/filesystems/locking.rst b/Documentation/filesystems/locking.rst
+index 922886fefb7f..8a80390446ba 100644
+--- a/Documentation/filesystems/locking.rst
++++ b/Documentation/filesystems/locking.rst
+@@ -645,7 +645,7 @@ ops		mmap_lock	PageLocked(page)
+ open:		yes
+ close:		yes
+ fault:		yes		can return with page locked
+-map_pages:	yes
++map_pages:	read
+ page_mkwrite:	yes		can return with page locked
+ pfn_mkwrite:	yes
+ access:		yes
+@@ -661,7 +661,7 @@ locked. The VM will unlock the page.
+ 
+ ->map_pages() is called when VM asks to map easy accessible pages.
+ Filesystem should find and map pages associated with offsets from "start_pgoff"
+-till "end_pgoff". ->map_pages() is called with page table locked and must
++till "end_pgoff". ->map_pages() is called with the RCU lock held and must
+ not block.  If it's not possible to reach a page without blocking,
+ filesystem should skip it. Filesystem should use set_pte_range() to setup
+ page table entry. Pointer to entry associated with the page is passed in
+diff --git a/mm/memory.c b/mm/memory.c
+index f1cf47b7e3bb..77577a1d09ac 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -4442,6 +4442,7 @@ static vm_fault_t do_fault_around(struct vm_fault *vmf)
+ 	unsigned long address = vmf->address, nr_pages, mask;
+ 	pgoff_t start_pgoff = vmf->pgoff;
+ 	pgoff_t end_pgoff;
++	vm_fault_t ret;
+ 	int off;
+ 
+ 	nr_pages = READ_ONCE(fault_around_bytes) >> PAGE_SHIFT;
+@@ -4467,7 +4468,11 @@ static vm_fault_t do_fault_around(struct vm_fault *vmf)
+ 			return VM_FAULT_OOM;
+ 	}
+ 
+-	return vmf->vma->vm_ops->map_pages(vmf, start_pgoff, end_pgoff);
++	rcu_read_lock();
++	ret = vmf->vma->vm_ops->map_pages(vmf, start_pgoff, end_pgoff);
++	rcu_read_unlock();
++
++	return ret;
  }
  
--static vm_fault_t
--xfs_filemap_map_pages(
--	struct vm_fault		*vmf,
--	pgoff_t			start_pgoff,
--	pgoff_t			end_pgoff)
--{
--	struct inode		*inode = file_inode(vmf->vma->vm_file);
--	vm_fault_t ret;
--
--	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--	ret = filemap_map_pages(vmf, start_pgoff, end_pgoff);
--	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
--	return ret;
--}
--
- static const struct vm_operations_struct xfs_file_vm_ops = {
- 	.fault		= xfs_filemap_fault,
- 	.huge_fault	= xfs_filemap_huge_fault,
--	.map_pages	= xfs_filemap_map_pages,
-+	.map_pages	= filemap_map_pages,
- 	.page_mkwrite	= xfs_filemap_page_mkwrite,
- 	.pfn_mkwrite	= xfs_filemap_pfn_mkwrite,
- };
+ /* Return true if we should do read fault-around, false otherwise */
 -- 
 2.35.1
 
