@@ -2,204 +2,195 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6544C05027
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Feb 2023 19:41:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BF8DC636D3
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Feb 2023 21:53:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231134AbjBHTlF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Feb 2023 14:41:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49292 "EHLO
+        id S231807AbjBHVxS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Feb 2023 16:53:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229632AbjBHTlE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Feb 2023 14:41:04 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 369884C6F9
-        for <linux-xfs@vger.kernel.org>; Wed,  8 Feb 2023 11:41:03 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id AE96FB81F26
-        for <linux-xfs@vger.kernel.org>; Wed,  8 Feb 2023 19:41:01 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 520F0C433EF;
-        Wed,  8 Feb 2023 19:41:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1675885260;
-        bh=Lb7tQdks6HDiMN1x4sSbLkSXzXRsdUoztkshy47WEI0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=g4+lNTLWcNGN03HtsbSubSt/zKjgTqWHj1VtaCDKX4c1rdVJY14kaIE0Lvz5ncIUU
-         51E3pDMwKKKrrvjVI8K7VnxjPpVZ76OP3r02BXVhji7I6d8npTBBEMoY4ERZ3yOrgd
-         P8MVGErFiiFl/4g9hR0MFuTzcOhFMG/el6oWSsF3J2V/laohCr2nisMHROuwxa79w5
-         q924UjydsmzFV0I2pKwE+YR7ojfZ7fV4IoTvSH9Z0fbd1rS7NCoE3tfmV5NtmQ+AmU
-         0d3j9HHNd4ClGpvdwYLdOGQo/VZa9zgZmBV4qu1dolrXDWmqpUTMxyFrbibCDcC10a
-         9qKfMlBMDqKMg==
-Date:   Wed, 8 Feb 2023 11:40:59 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Leah Rumancik <leah.rumancik@gmail.com>, linux-xfs@vger.kernel.org,
-        chandan.babu@oracle.com, Christian Brauner <brauner@kernel.org>
-Subject: Re: [PATCH 5.15 CANDIDATE 00/10] more xfs fixes for 5.15
-Message-ID: <Y+P6y81Wmf4L66LC@magnolia>
-References: <20230208175228.2226263-1-leah.rumancik@gmail.com>
- <CAOQ4uxgmHzWcxBDrzRb19ByCnNoayhha_MZ_eYN0YMC=RGTeMw@mail.gmail.com>
+        with ESMTP id S231220AbjBHVxR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Feb 2023 16:53:17 -0500
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1917924C9D
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Feb 2023 13:53:16 -0800 (PST)
+Received: by mail-pj1-x102b.google.com with SMTP id s89-20020a17090a2f6200b0023125ebb4b1so248077pjd.3
+        for <linux-xfs@vger.kernel.org>; Wed, 08 Feb 2023 13:53:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=lEc4WtzG2izsxvPJxTEOSaWfcx0k//3sSxBoy6fqoR8=;
+        b=Z/o0f8KGkeSoxV2jrwGuzBOTcXg/r6KzETgO1lNtTYp+XV73lw2e2eqA87U76bWG1o
+         MgSh5YHBIYm420h6g+rt6HmTnd+EUAVlANx5sbZxQxVMs0H/Z9XwRxX3h1WCgdvUc+1i
+         iynzxGCpPFTbqv4cu4v9RngJ6C8Vlqc8MGncX/oBBYHhHOZ9ExRenVpVcZ/pLvrP/j0A
+         /XMc+Y5hE6uscE6eTF/MqahMO5lQBPCrWfpQ6Rk1r5hjyWgThhF12n9lwO5pkYQT2n+l
+         fzAdSWx6qdI3lmTwjdDuvUGQCDnH45+3bZCuPIDcmM15zIRn5sB2ZzPGoDFpzdDx9Vbu
+         1ByQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=lEc4WtzG2izsxvPJxTEOSaWfcx0k//3sSxBoy6fqoR8=;
+        b=FhTyv1o6dpYSbTgaNRsoixkrQ6jzGaCphIgeRgJmPpS38e+6n2kdgtjGLG8fzPGmHj
+         uPOfO+XRdPKYC3ANeRz1JImELxbmmpUR9sGHJduo2GBGlyJVDk5CEeKiqjMnvDvWZprE
+         PCgDdM7iHqJpwShx/kfhHJjjI5PbMS/2Pu9PDhaNISXCjWaWgSJ8sa59aQMPm3tNfAAy
+         eyIbl2GdnkbfSDGwDd/keLVuDew1X7JnP5nypNYAUVxtmCv8XSduBNUom6wzP0xYZ+bh
+         CM3VRyVCUgIGQCSRlVUcWLq+72S9hVuL3YByDeCvE7xMh9zWC4IX9y6whWuB/6PbYbZ7
+         ba7w==
+X-Gm-Message-State: AO0yUKWE52TNNxkLmo3Gj2te40IuKLNkNeMcoYPTr1vYrpwuCS/+vXiW
+        xXdCcAgqutpUBYFJPz30Z9VGqA==
+X-Google-Smtp-Source: AK7set9zLElKzUyjZxsY/yzrMl5lduU+qrXZAqdtTQv/EKh4wET5wsSOkIu9NbvqGQ4cxgViQ6cMyA==
+X-Received: by 2002:a17:902:c950:b0:196:58ac:6593 with SMTP id i16-20020a170902c95000b0019658ac6593mr10819888pla.61.1675893195448;
+        Wed, 08 Feb 2023 13:53:15 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-4-128.pa.nsw.optusnet.com.au. [49.181.4.128])
+        by smtp.gmail.com with ESMTPSA id a4-20020a1709027e4400b0019942377f0bsm2168861pln.91.2023.02.08.13.53.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 08 Feb 2023 13:53:14 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1pPsNL-00CzS6-Kn; Thu, 09 Feb 2023 08:53:11 +1100
+Date:   Thu, 9 Feb 2023 08:53:11 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-afs@lists.infradead.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH 1/3] xfs: Remove xfs_filemap_map_pages() wrapper
+Message-ID: <20230208215311.GC360264@dread.disaster.area>
+References: <20230208145335.307287-1-willy@infradead.org>
+ <20230208145335.307287-2-willy@infradead.org>
+ <Y+PQN8cLdOXST20D@magnolia>
+ <Y+PX5tPyOP2KQqoD@casper.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxgmHzWcxBDrzRb19ByCnNoayhha_MZ_eYN0YMC=RGTeMw@mail.gmail.com>
+In-Reply-To: <Y+PX5tPyOP2KQqoD@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 08, 2023 at 09:02:58PM +0200, Amir Goldstein wrote:
-> On Wed, Feb 8, 2023 at 7:52 PM Leah Rumancik <leah.rumancik@gmail.com> wrote:
-> >
-> > Hello again,
-> >
-> > Here is the next batch of backports for 5.15.y. Testing included
-> > 25 runs of auto group on 12 xfs configs. No regressions were seen.
-> > I checked xfs/538 was run without issue as this test was mentioned
-> > in 56486f307100. Also, from 86d40f1e49e9, I ran ran xfs/117 with
-> > XFS compiled as a module and TEST_FS_MODULE_REOLOAD set, but I was
-> > unable to reproduce the issue.
+On Wed, Feb 08, 2023 at 05:12:06PM +0000, Matthew Wilcox wrote:
+> On Wed, Feb 08, 2023 at 08:39:19AM -0800, Darrick J. Wong wrote:
+> > On Wed, Feb 08, 2023 at 02:53:33PM +0000, Matthew Wilcox (Oracle) wrote:
+> > > XFS doesn't actually need to be holding the XFS_MMAPLOCK_SHARED
+> > > to do this, any more than it needs the XFS_MMAPLOCK_SHARED for a
+> > > read() that hits in the page cache.
+> > 
+> > Hmm.  From commit cd647d5651c0 ("xfs: use MMAPLOCK around
+> > filemap_map_pages()"):
+> > 
+> >     The page faultround path ->map_pages is implemented in XFS via
+> >     filemap_map_pages(). This function checks that pages found in page
+> >     cache lookups have not raced with truncate based invalidation by
+> >     checking page->mapping is correct and page->index is within EOF.
+> > 
+> >     However, we've known for a long time that this is not sufficient to
+> >     protect against races with invalidations done by operations that do
+> >     not change EOF. e.g. hole punching and other fallocate() based
+> >     direct extent manipulations. The way we protect against these
+> >     races is we wrap the page fault operations in a XFS_MMAPLOCK_SHARED
+> >     lock so they serialise against fallocate and truncate before calling
+> >     into the filemap function that processes the fault.
+> > 
+> >     Do the same for XFS's ->map_pages implementation to close this
+> >     potential data corruption issue.
+> > 
+> > How do we prevent faultaround from racing with fallocate and reflink
+> > calls that operate below EOF?
 > 
-> Did you find any tests that started to pass or whose failure rate reduced?
+> I don't understand the commit message.  It'd be nice to have an example
+> of what's insufficient about the protection.
 
-I wish Leah had, but there basically aren't any tests for the problems
-fixed in this set for her to find. :(
+When this change was made, "insufficient protection" was a reference
+to the rather well known fact we'd been bugging MM developers about
+for well over a decade (i.e. since before ->page_mkwrite existed)
+that the unlocked page invalidation detection hack used everywhere
+in the page cache code was broken for page invalidation within EOF.
+i.e.  that cannot be correctly detected by (page->mapping == NULL &&
+page->index > EOF) checks. This was a long standing problem, so
+after a decade of being ignored, the MMAPLOCK was added to XFS to
+serialise invalidation against page fault based operations.
 
-The first two patches I think were from when Dave was working on log
-intent whiteouts, turned on KASAN to diagnose some other problem he had,
-and began pulling on the ball of string (as it were) as he noticed other
-things in the codebase.  We don't usually bother with regression tests
-for kernel memory leaks, since they're not so easy to reproduce.
+At the time page faults could instantiate page cache pages whilst
+invalidation operations like truncate_pagecache_range() were running
+and hence page faults could be instantiating and mapping pages over
+the range we are trying to invalidate. We were also finding niche
+syscalls that caused data corruption due to invalidation races (e.g.
+see xfs_file_fadvise() to avoid readahead vs hole punch races from
+fadvise(WILLNEED) and readahead() syscalls), so I did an audit to
+look for any potential interfaces that could race with invalidation.
+->map_pages() being called from within the page fault code and
+having a broken page->index based check for invalidation looked
+suspect and potentially broken.  Hence I slapped the MMAPLOCK around
+it to stop it from running while a XFS driven page cache
+invalidation operation was in progress.
 
-Patches 3-6 are fixes for a rash of fuzzer reports that someone in China
-posted last May:
-https://bugzilla.kernel.org/show_bug.cgi?id=215927
+We work on the principle that when it comes to data corruption
+vectors, it is far better to err on the side of safety than it is to
+play fast and loose. fault-around is a perf optimisation, and taking
+a rwsem in shared mode is not a major increase in overhead for that
+path, so there was little risk of regressions in adding
+serialisation just in case there was an as-yet-unknown data
+corruption vector from that path.
 
-(There are more than just that one)
+Keep in mind this was written before the mm code handled page cache
+instantiation serialisation sanely via the
+mapping->invalidation_lock. The mapping->invalidation_lock solves
+the same issues in a slightly different way, and it may well be that
+the different implementation means that we don't need to use it in
+all the places we place the MMAPLOCK in XFS originally.
 
-As usual, the submitter didn't bother to help triage and just dumped a
-ton of work in our laps.  They didn't follow up with any regression
-tests, because few fuzz kiddiez ever do.  At the time, I was too burned
-out to deal with it, so Dave posted fixes.
-
-Patches 7-8 would manifest themselves as test VMs halting on ASSERTs if
-you configure your kernel to panic.  Not strictly needed since most LTS
-kernels probably don't even have XFS_DEBUG=y, but it makes the lives of
-recoveryloop runners easier if they do.
-
-Patch 9 trips xfs/434 and xfs/436, but they only run if you have slab
-debugging enabled and build XFS as a module.  I don't know why very few
-people do this.
-
-Patch 10 is a memory leak if you have XFS_DEBUG=y.  No need for a
-separate test for this one, since kmemleak catches it.  If you turn it
-on.
-
-(IOWs, LGTM for the whole set.)
-
-> There are very few Fixes: annotations in these commits so it is hard for
-> me to assess if any of them are relevant/important/worth the effort/risk
-> to backport to 5.10.
-
-<nod> Dave's fixpatches rarely have Fixes tags attached.  It's difficult
-to get him to do that because he has so much bad history with AUTOSEL.
-I've tried to get him to add them in the past, but if I'm already
-stressed out and Dave doesn't reply then I tend to merge the fix and
-move on.
-
-> Unless I know of reproducible bugs in 5.10, I don't think I will invest
-> in backporting this series to 5.10.
-> Chandan, if you find any of these fixes relevant and important for 5.4
-> let me know and I will make the effort to consider them for 5.10.
+> If XFS really needs it,
+> it can trylock the semaphore and return 0 if it fails, falling back to
+> the ->fault path.  But I don't think XFS actually needs it.
+>
+> The ->map_pages path trylocks the folio, checks the folio->mapping,
+> checks uptodate, then checks beyond EOF (not relevant to hole punch).
+> Then it takes the page table lock and puts the page(s) into the page
+> tables, unlocks the folio and moves on to the next folio.
 > 
-> Leah, please consider working on the SGID bug fixes for the next 5.15
-> update, because my 5.10 SGID fixes series [1] has been blocked for
-> months and because there are several reproducible test cases in xfstest.
-
-Whenever y'all get to 6.0, beware of commit 2ed5b09b3e8f ("xfs: make
-inode attribute forks a permanent part of struct xfs_inode"), which is a
-KASAN UAF that we fixed by eliminating the 'F'.  Do not pull on the
-devilstring ("...the file capabilities code calls getxattr with and
-without i_rwsem held...") if you can avoid it.
-
-> I did not push on that until now because SGID test expectations were
-> a moving target, but since xfstests commit 81e6f628 ("generic: update
-> setgid tests") in this week's xfstests release, I think that tests should be
-> stable and we can finally start backporting all relevant SGID fixes to
-> align the SGID behavior of LTS kernels with that of upstream.
-
-Oh good, I've been (gently) waiting on that one too. :)
-
---D
-
-> Thanks,
-> Amir.
+> The hole-punch path, like the truncate path, takes the folio lock,
+> unmaps the folio (which will take the page table lock) and removes
+> it from the page cache.
 > 
-> [1] https://github.com/amir73il/linux/commits/xfs-5.10.y-sgid-fixes
-> 
-> >
-> > Below I've outlined which series the backports came from:
-> >
-> > series "xfs: intent whiteouts" (1):
-> > [01/10] cb512c921639613ce03f87e62c5e93ed9fe8c84d
-> >     xfs: zero inode fork buffer at allocation
-> > [02/10] c230a4a85bcdbfc1a7415deec6caf04e8fca1301
-> >     xfs: fix potential log item leak
-> >
-> > series "xfs: fix random format verification issues" (2):
-> > [1/4] dc04db2aa7c9307e740d6d0e173085301c173b1a
-> >     xfs: detect self referencing btree sibling pointers
-> > [2/4] 1eb70f54c445fcbb25817841e774adb3d912f3e8 -> already in 5.15.y
-> >     xfs: validate inode fork size against fork format
-> > [3/4] dd0d2f9755191690541b09e6385d0f8cd8bc9d8f
-> >     xfs: set XFS_FEAT_NLINK correctly
-> > [4/4] f0f5f658065a5af09126ec892e4c383540a1c77f
-> >     xfs: validate v5 feature fields
-> >
-> > series "xfs: small fixes for 5.19 cycle" (3):
-> > [1/3] 5672225e8f2a872a22b0cecedba7a6644af1fb84
-> >     xfs: avoid unnecessary runtime sibling pointer endian conversions
-> > [2/3] 5b55cbc2d72632e874e50d2e36bce608e55aaaea
-> >     fs: don't assert fail on perag references on teardown
-> > [2/3] 56486f307100e8fc66efa2ebd8a71941fa10bf6f
-> >     xfs: assert in xfs_btree_del_cursor should take into account error
-> >
-> > series "xfs: random fixes for 5.19" (4):
-> > [1/2] 86d40f1e49e9a909d25c35ba01bea80dbcd758cb
-> >     xfs: purge dquots after inode walk fails during quotacheck
-> > [2/2] a54f78def73d847cb060b18c4e4a3d1d26c9ca6d
-> >     xfs: don't leak btree cursor when insrec fails after a split
-> >
-> > (1) https://lore.kernel.org/all/20220503221728.185449-1-david@fromorbit.com/
-> > (2) https://lore.kernel.org/all/20220502082018.1076561-1-david@fromorbit.com/
-> > (3) https://lore.kernel.org/all/20220524022158.1849458-1-david@fromorbit.com/
-> > (4) https://lore.kernel.org/all/165337056527.993079.1232300816023906959.stgit@magnolia/
-> >
-> > Darrick J. Wong (2):
-> >   xfs: purge dquots after inode walk fails during quotacheck
-> >   xfs: don't leak btree cursor when insrec fails after a split
-> >
-> > Dave Chinner (8):
-> >   xfs: zero inode fork buffer at allocation
-> >   xfs: fix potential log item leak
-> >   xfs: detect self referencing btree sibling pointers
-> >   xfs: set XFS_FEAT_NLINK correctly
-> >   xfs: validate v5 feature fields
-> >   xfs: avoid unnecessary runtime sibling pointer endian conversions
-> >   xfs: don't assert fail on perag references on teardown
-> >   xfs: assert in xfs_btree_del_cursor should take into account error
-> >
-> >  fs/xfs/libxfs/xfs_ag.c         |   3 +-
-> >  fs/xfs/libxfs/xfs_btree.c      | 175 +++++++++++++++++++++++++--------
-> >  fs/xfs/libxfs/xfs_inode_fork.c |  12 ++-
-> >  fs/xfs/libxfs/xfs_sb.c         |  70 +++++++++++--
-> >  fs/xfs/xfs_bmap_item.c         |   2 +
-> >  fs/xfs/xfs_icreate_item.c      |   1 +
-> >  fs/xfs/xfs_qm.c                |   9 +-
-> >  fs/xfs/xfs_refcount_item.c     |   2 +
-> >  fs/xfs/xfs_rmap_item.c         |   2 +
-> >  9 files changed, 221 insertions(+), 55 deletions(-)
-> >
-> > --
-> > 2.39.1.519.gcb327c4b5f-goog
-> >
+> So what's the race?
+
+Hole punch is a multi-folio operation, so while we are operating on
+invalidating one folio, another folio in the range we've already
+invalidated could be instantiated and mapped, leaving mapped
+up-to-date pages over a range we *require* the page cache to empty.
+
+The original MMAPLOCK could not prevent the instantiation of new
+page cache pages while an invalidation was running, hence we had to
+block any operation from page faults that instantiated pages into
+the page cache or operated on the page cache in any way while an
+invalidation was being run.
+
+The mapping->invalidation_lock solved this specific aspect of the
+problem, so it's entirely possible that we don't have to care about
+using MMAPLOCK for filemap_map_pages() any more. But I don't know
+that for certain, I haven't had any time to investigate it in any
+detail, and when it comes to data corruption vectors I'm not going
+to change serialisation mechanisms without a decent amount of
+investigation.
+
+I couldn't ever convince myself there wasn't a problem hence the
+comment in the commit:
+
+"Do the same for XFS's ->map_pages implementation to close this
+ potential data corruption issue."
+
+Hence if you can explain to me how filemap_map_pages() cannot race
+against invalidation without holding the mapping->invalidation_lock
+without potentially leaving stale data in the page cache over the
+invalidated range (this isn't an XFS specific issue!), then I don't
+see a problem with removing the MMAPLOCK from this path.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
