@@ -2,162 +2,121 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDD1AC636CC
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Feb 2023 00:22:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69239C05027
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Feb 2023 09:44:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229570AbjBHAWD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Feb 2023 19:22:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51452 "EHLO
+        id S230171AbjBHJoj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Feb 2023 04:44:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35422 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229460AbjBHAWC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Feb 2023 19:22:02 -0500
-Received: from mail-il1-f199.google.com (mail-il1-f199.google.com [209.85.166.199])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E02D11027B
-        for <linux-xfs@vger.kernel.org>; Tue,  7 Feb 2023 16:21:58 -0800 (PST)
-Received: by mail-il1-f199.google.com with SMTP id d2-20020a056e021c4200b00313bdffad9aso6233006ilg.1
-        for <linux-xfs@vger.kernel.org>; Tue, 07 Feb 2023 16:21:58 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=OxLYic0BDZ9IraDnBU1xwnuc80rQL3cz5kVMZkz8uuE=;
-        b=UPnQpcwpz7XqEAHp6ByY2Dc1gGIjqQbvkCn+dLMWOIZmbxRwvLYVGgmRejmAuM2rfj
-         rlvbIUyn/Yb8aSWIeYDQr06VXRlLbh+uu0X2mrclN6xXM3QATb9ykJHWvk/cH8T+xgZ7
-         Dpb5Ly5iTMY9WJ+SnfqnQ6z+/E0kMsblXSWQJIaUVrXmqE52WtQacEWSe0ErfW9saHr5
-         51Wchw9Kk+/TbmBpIUYK0SKU10Qs7NEveJj9JArdZ6rKNSCdOTMh+fYEREtHrMnLixEb
-         KSZnEy0HzHKjz9Iw9g9IyW8GbLcvJWmVrfTJrwlxsD9hW8aIV/2Z43eYHr571IsVCmQs
-         SkzA==
-X-Gm-Message-State: AO0yUKXXS89HeFhviG8XA6oSQKdZiJjazHjN7Ks00pXWBXyvMX+FxSmQ
-        7m9E1msvsqdMfQqR+MS/BE0kyijNBEVYsN43JiwzSwP7Z4Ab
-X-Google-Smtp-Source: AK7set+oO5hy66du0UrS3qGtCPu4blh+Uqk1ZOoAh6DKIzsCMWUaVQ5eNLgTlht6TV5RMN2jzK7Uuxxm9JX3nHh3GUFxXr8n8iG9
+        with ESMTP id S230135AbjBHJoi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Feb 2023 04:44:38 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D66AE10F3
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Feb 2023 01:43:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1675849433;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=yEKdacVqLsrzVLEOLPr8AuentFYTZisPsMxq8Mf+/Ac=;
+        b=ZsUyxTooOe9TMmA1Ujl4LZJB5FJS2GUfX4rzPL9tbN0ZvTvO3g69w3ZxJdHDTxiCcrX6wG
+        p9LW+kG9bw7TcXJobV9OwEpXNKjPTA4oeA6wmdVbyqweq0M0T4Kv568LILQOjgknP8txKq
+        pPAw1zkRluP0hxX171bXBzM0gFj2v68=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-56-Cvs6eQFmOoWTVk2nI5gPvA-1; Wed, 08 Feb 2023 04:43:51 -0500
+X-MC-Unique: Cvs6eQFmOoWTVk2nI5gPvA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 595E1101A52E
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Feb 2023 09:43:51 +0000 (UTC)
+Received: from x1carbon.redhat.com (ovpn-194-160.brq.redhat.com [10.40.194.160])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 82C79175A2;
+        Wed,  8 Feb 2023 09:43:50 +0000 (UTC)
+From:   Arjun Shankar <arjun@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Arjun Shankar <arjun@redhat.com>
+Subject: [PATCH] Remove several implicit function declarations
+Date:   Wed,  8 Feb 2023 10:43:33 +0100
+Message-Id: <20230208094333.364705-1-arjun@redhat.com>
 MIME-Version: 1.0
-X-Received: by 2002:a02:bb12:0:b0:39d:234a:8f18 with SMTP id
- y18-20020a02bb12000000b0039d234a8f18mr3535423jan.123.1675815718138; Tue, 07
- Feb 2023 16:21:58 -0800 (PST)
-Date:   Tue, 07 Feb 2023 16:21:58 -0800
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <00000000000096b80c05f4254067@google.com>
-Subject: [syzbot] general protection fault in iomap_dio_bio_iter
-From:   syzbot <syzbot+a4f579527ea6394140a5@syzkaller.appspotmail.com>
-To:     djwong@kernel.org, hch@infradead.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.5
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
+During configure, several ioctl checks omit the correspondig include
+and a pwritev2 check uses the wrong feature test macro.  Also,
+scrub/unicrash.c omits the appropriate include for u_init/u_cleanup.
+All of the above lead to implicit function declarations at build time.
+This commit fixes the same.
 
-syzbot found the following issue on:
-
-HEAD commit:    4fafd96910ad Add linux-next specific files for 20230203
-git tree:       linux-next
-console+strace: https://syzkaller.appspot.com/x/log.txt?x=148cef45480000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=1d2fba7d42502ca4
-dashboard link: https://syzkaller.appspot.com/bug?extid=a4f579527ea6394140a5
-compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1245a3c3480000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=132bfad9480000
-
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/348cc2da441a/disk-4fafd969.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/e2dedc500f12/vmlinux-4fafd969.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/fae710d9ebd8/bzImage-4fafd969.xz
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+a4f579527ea6394140a5@syzkaller.appspotmail.com
-
-general protection fault, probably for non-canonical address 0xdffffc0000000002: 0000 [#1] PREEMPT SMP KASAN
-KASAN: null-ptr-deref in range [0x0000000000000010-0x0000000000000017]
-CPU: 0 PID: 5141 Comm: syz-executor393 Not tainted 6.2.0-rc6-next-20230203-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/12/2023
-RIP: 0010:iov_iter_reexpand include/linux/uio.h:299 [inline]
-RIP: 0010:iomap_dio_bio_iter+0xa44/0x1440 fs/iomap/direct-io.c:373
-Code: 6c 24 38 48 c1 ea 03 80 3c 02 00 0f 85 5b 08 00 00 48 b8 00 00 00 00 00 fc ff df 49 8b 5d 40 48 8d 7b 10 48 89 fa 48 c1 ea 03 <80> 3c 02 00 0f 85 f9 07 00 00 4c 8b 7c 24 38 31 ff 48 89 6b 10 4c
-RSP: 0018:ffffc90003eaf638 EFLAGS: 00010202
-RAX: dffffc0000000000 RBX: 0000000000000000 RCX: 0000000000000000
-RDX: 0000000000000002 RSI: ffffffff820211f4 RDI: 0000000000000010
-RBP: 000000000000ee00 R08: 0000000000000005 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000000 R12: ffff88801ccc0640
-R13: ffff888029cea000 R14: ffffc90003eaf828 R15: ffffc90003eaf828
-FS:  00007f0424eb1700(0000) GS:ffff8880b9800000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f0424e90718 CR3: 000000007ab39000 CR4: 00000000003506f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- <TASK>
- iomap_dio_iter fs/iomap/direct-io.c:436 [inline]
- __iomap_dio_rw+0xd81/0x1d80 fs/iomap/direct-io.c:594
- iomap_dio_rw+0x40/0xa0 fs/iomap/direct-io.c:682
- ext4_dio_read_iter fs/ext4/file.c:94 [inline]
- ext4_file_read_iter+0x4be/0x690 fs/ext4/file.c:145
- call_read_iter include/linux/fs.h:1845 [inline]
- generic_file_splice_read+0x182/0x4b0 fs/splice.c:309
- do_splice_to+0x1b9/0x240 fs/splice.c:793
- splice_direct_to_actor+0x2ab/0x8a0 fs/splice.c:865
- do_splice_direct+0x1ab/0x280 fs/splice.c:974
- do_sendfile+0xb19/0x12c0 fs/read_write.c:1255
- __do_sys_sendfile64 fs/read_write.c:1323 [inline]
- __se_sys_sendfile64 fs/read_write.c:1309 [inline]
- __x64_sys_sendfile64+0x1d0/0x210 fs/read_write.c:1309
- do_syscall_x64 arch/x86/entry/common.c:50 [inline]
- do_syscall_64+0x39/0xb0 arch/x86/entry/common.c:80
- entry_SYSCALL_64_after_hwframe+0x63/0xcd
-RIP: 0033:0x7f0424f212a9
-Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 41 15 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007f0424eb12f8 EFLAGS: 00000246 ORIG_RAX: 0000000000000028
-RAX: ffffffffffffffda RBX: 00007f0424faa4d0 RCX: 00007f0424f212a9
-RDX: 0000000000000000 RSI: 0000000000000003 RDI: 0000000000000005
-RBP: 00007f0424f7727c R08: 0000000000000000 R09: 0000000000000000
-R10: 00000000ffffff04 R11: 0000000000000246 R12: 0030656c69662f2e
-R13: 00007f0424f77078 R14: 0000000020000600 R15: 00007f0424faa4d8
- </TASK>
-Modules linked in:
----[ end trace 0000000000000000 ]---
-RIP: 0010:iov_iter_reexpand include/linux/uio.h:299 [inline]
-RIP: 0010:iomap_dio_bio_iter+0xa44/0x1440 fs/iomap/direct-io.c:373
-Code: 6c 24 38 48 c1 ea 03 80 3c 02 00 0f 85 5b 08 00 00 48 b8 00 00 00 00 00 fc ff df 49 8b 5d 40 48 8d 7b 10 48 89 fa 48 c1 ea 03 <80> 3c 02 00 0f 85 f9 07 00 00 4c 8b 7c 24 38 31 ff 48 89 6b 10 4c
-RSP: 0018:ffffc90003eaf638 EFLAGS: 00010202
-RAX: dffffc0000000000 RBX: 0000000000000000 RCX: 0000000000000000
-RDX: 0000000000000002 RSI: ffffffff820211f4 RDI: 0000000000000010
-RBP: 000000000000ee00 R08: 0000000000000005 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000000 R12: ffff88801ccc0640
-R13: ffff888029cea000 R14: ffffc90003eaf828 R15: ffffc90003eaf828
-FS:  00007f0424eb1700(0000) GS:ffff8880b9800000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f0424f46d30 CR3: 000000007ab39000 CR4: 00000000003506f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-----------------
-Code disassembly (best guess):
-   0:	6c                   	insb   (%dx),%es:(%rdi)
-   1:	24 38                	and    $0x38,%al
-   3:	48 c1 ea 03          	shr    $0x3,%rdx
-   7:	80 3c 02 00          	cmpb   $0x0,(%rdx,%rax,1)
-   b:	0f 85 5b 08 00 00    	jne    0x86c
-  11:	48 b8 00 00 00 00 00 	movabs $0xdffffc0000000000,%rax
-  18:	fc ff df
-  1b:	49 8b 5d 40          	mov    0x40(%r13),%rbx
-  1f:	48 8d 7b 10          	lea    0x10(%rbx),%rdi
-  23:	48 89 fa             	mov    %rdi,%rdx
-  26:	48 c1 ea 03          	shr    $0x3,%rdx
-* 2a:	80 3c 02 00          	cmpb   $0x0,(%rdx,%rax,1) <-- trapping instruction
-  2e:	0f 85 f9 07 00 00    	jne    0x82d
-  34:	4c 8b 7c 24 38       	mov    0x38(%rsp),%r15
-  39:	31 ff                	xor    %edi,%edi
-  3b:	48 89 6b 10          	mov    %rbp,0x10(%rbx)
-  3f:	4c                   	rex.WR
-
-
+Signed-off-by: Arjun Shankar <arjun@redhat.com>
 ---
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+We ran into these when trying to port Fedora to modern C:
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-syzbot can test patches for this issue, for details see:
-https://goo.gl/tpsmEJ#testing-patches
+https://fedoraproject.org/wiki/Changes/PortingToModernC
+https://fedoraproject.org/wiki/Toolchain/PortingToModernC
+---
+ m4/package_libcdev.m4 | 7 +++++--
+ scrub/unicrash.c      | 1 +
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index bb1ab49c..f987aa4a 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -117,6 +117,7 @@ AC_DEFUN([AC_HAVE_FIEMAP],
+ #define _GNU_SOURCE
+ #include <linux/fs.h>
+ #include <linux/fiemap.h>
++#include <sys/ioctl.h>
+ 	]], [[
+ struct fiemap *fiemap;
+ ioctl(0, FS_IOC_FIEMAP, (unsigned long)fiemap);
+@@ -153,7 +154,7 @@ AC_DEFUN([AC_HAVE_PWRITEV2],
+   [ AC_MSG_CHECKING([for pwritev2])
+     AC_LINK_IFELSE(
+     [	AC_LANG_PROGRAM([[
+-#define _BSD_SOURCE
++#define _GNU_SOURCE
+ #include <sys/uio.h>
+ 	]], [[
+ pwritev2(0, 0, 0, 0, 0);
+@@ -454,6 +455,7 @@ AC_DEFUN([AC_HAVE_SG_IO],
+     AC_COMPILE_IFELSE(
+     [	AC_LANG_PROGRAM([[
+ #include <scsi/sg.h>
++#include <sys/ioctl.h>
+ 	]], [[
+ struct sg_io_hdr hdr;
+ ioctl(0, SG_IO, &hdr);
+@@ -471,7 +473,8 @@ AC_DEFUN([AC_HAVE_HDIO_GETGEO],
+   [ AC_MSG_CHECKING([for struct hd_geometry ])
+     AC_COMPILE_IFELSE(
+     [	AC_LANG_PROGRAM([[
+-#include <linux/hdreg.h>,
++#include <linux/hdreg.h>
++#include <sys/ioctl.h>
+ 	]], [[
+ struct hd_geometry hdr;
+ ioctl(0, HDIO_GETGEO, &hdr);
+diff --git a/scrub/unicrash.c b/scrub/unicrash.c
+index 24d4ea58..c645fc73 100644
+--- a/scrub/unicrash.c
++++ b/scrub/unicrash.c
+@@ -14,6 +14,7 @@
+ #include <unicode/ustring.h>
+ #include <unicode/unorm2.h>
+ #include <unicode/uspoof.h>
++#include <unicode/uclean.h>
+ #include "libfrog/paths.h"
+ #include "xfs_scrub.h"
+ #include "common.h"
+-- 
+2.38.1
+
