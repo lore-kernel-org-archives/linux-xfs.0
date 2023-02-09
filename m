@@ -2,129 +2,129 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D6C3C636D4
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Feb 2023 08:02:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C83F5C61DA4
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Feb 2023 08:02:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229550AbjBIICC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Feb 2023 03:02:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58456 "EHLO
+        id S229611AbjBIICG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Feb 2023 03:02:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229577AbjBIICA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Feb 2023 03:02:00 -0500
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5571313531
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2023 00:01:56 -0800 (PST)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3197PjsK011365
-        for <linux-xfs@vger.kernel.org>; Thu, 9 Feb 2023 08:01:56 GMT
+        with ESMTP id S229602AbjBIICF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Feb 2023 03:02:05 -0500
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D13051351B
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2023 00:02:03 -0800 (PST)
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3197QHS5023505
+        for <linux-xfs@vger.kernel.org>; Thu, 9 Feb 2023 08:02:03 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references : content-transfer-encoding :
  content-type : mime-version; s=corp-2022-7-12;
- bh=Z/gy7ED2uc3DAI5xAdPVy6QP4ZkCdVt2xfjOsudSWUw=;
- b=xyXRzyNyCHw3+Rnz6xgH+ABGv7O/Y8VwANDwb8tsltLFRheq5fTZa3j3Vzs6ZsJsGBb6
- XJdGyovaU0PZC45N95Kyglm70wOqywZ5cTSanz2BZALZPifquqTTVujP3iU8BD499muz
- T4+rF54UWPZlPI5R7vorC2V1ihGyjUC5E4/VJ2OpBqWycAY6oHbjsXaklSLYYp98ybvH
- aT+6q0wFikPbocGliKw8ZA3gZmgBPhZmE4TpOJRBHtUov763y2XtzoTRlE1lgY0DuZjg
- j1BhopHAQYEw275D3+So9ebYbTt6ZrWDkMM6Z12hs0oJifIOJYnW/HKTdYn5ZEwEs7LB rA== 
+ bh=dQvLZOogNQQ17Eu9k8jhxLtyxVP8S0cseb4hxja3+38=;
+ b=X2TLNMmcgHx3DktE4FpQ7SST08LDMCifKlmETxKasiDelg7T9aovjnjRZ5Q0dyr10zps
+ M3Kb8tOjY0lqXY7Ryvy7XW1/gUca0euXapq2o8Ok2ewc1bbnKK8GltohEECPGuU7TSdE
+ igmEtqW3if4QM5xkfDAPFk9z7Z2QyT+sxswZx6+FDucaTKuRiK8ZCy353OmHMGX0LQS2
+ PhwWOQ3h19Z755RemAGJxbPCJ5Py9ZiHem8N8NhFarnMNfOYFFIfVo9EsdBAby9RkV3K
+ +a8YMO291LQJxLwyZGdUx+3lE2FtkhP3cQInEsKQT18UtdpyACxC5KX/LI2fhTfGy7XF dQ== 
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3nhdy1a75j-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3nhfdcj6ch-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Feb 2023 08:01:55 +0000
+        for <linux-xfs@vger.kernel.org>; Thu, 09 Feb 2023 08:02:02 +0000
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 3196sthE021402
-        for <linux-xfs@vger.kernel.org>; Thu, 9 Feb 2023 08:01:55 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2044.outbound.protection.outlook.com [104.47.66.44])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3nhdt8dusk-1
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 3196ZHTU021288
+        for <linux-xfs@vger.kernel.org>; Thu, 9 Feb 2023 08:02:02 GMT
+Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2101.outbound.protection.outlook.com [104.47.70.101])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3nhdt8duya-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Feb 2023 08:01:55 +0000
+        for <linux-xfs@vger.kernel.org>; Thu, 09 Feb 2023 08:02:01 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=LjfolOVo1YIZYCU4rRcWQedU6Tfz4RtKTsFdMnRFTfLt1oca7IHENVVm66ZGt8LBCSPUOUg+NdtjPAnjRb9VizwVavYvgkU8SkZWvgooSbQSMircQ8KKw00GSP+hekojzlpL9Vh4PDIoSuxu311bSyQlvjD1GyH2bzowv80k9U71SURNiZNsEbxXcgbceR81C3mjTm5zcpbikJVEEPUjtDbTcxdmCTuXL6XnrXxS5zsrPPBJfiJsP03GMQRGuZGOzm4nbkVsBuhq8yb6oeONasDtO8LTmDY14ZRl7T93vPRwn2Xz9Qcsv1jIysiZ93tCfCk5PQS+ZsycKtkBxESW6g==
+ b=EQpTPXShvAk5dU9WEI9d5+ZM0knFu7i8lMLHaceSLo6DxSkv75V7VgFqDFyYYkcMTON/hhJ083Y6goGhriIj/W5KhEb0HpkLwyARHPvxzyi/XTm+9b9FP37LwowVaWxCckTOT1EwAFRHQKltRLoL10+F2ggoxo6VRb7kHgc21OoXkD4Hs8Wzl6ss0t5a238Pudh7PgZXGXq/e6XIPicWhBQkiTP1MK1ENx+aPjtbDEJvUT2iMv4QqsRVj5HU8i4fURQQ6g1w72hLqTXZlQiYiuaOYFFHdsdnmOCwu3w7LC6UXRCpxOHZYQnxtp3tTPqCWdYYjytI68O/r6pVVXjuGA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Z/gy7ED2uc3DAI5xAdPVy6QP4ZkCdVt2xfjOsudSWUw=;
- b=a+2bNzlAqAzCW5L0b3s95GedaM11DC3SLmt7xuZ4NoGii1kFqjWC5cjpgezQVPE0DvIPruKrrllJinrVmqSKS3E7Vn1oB4ZNiLSUrE4PArCQ6m0tMmLmYSCezDWA1PCXvuG0uIUxlPm2NhBc8/SMs4w9cFHaoy0KyRvrA3tq/Q3x/0oCJA/dJ90E0OPF8KShDvn+OX+JIvsI/tOLjat0Bou2TcU5Vnqmf96xvZJ0f5/Eem98sbfQN14XQags3a59cehfJuK43jFN9FIyHsY1bnIvGP2jMuOET80DsTNJd4pE21SZKCL5i3wPS6+sHVbxVWwxLlP2IM/MNx5JQk3DLA==
+ bh=dQvLZOogNQQ17Eu9k8jhxLtyxVP8S0cseb4hxja3+38=;
+ b=OJ3tNrOc+PIvI1qCYlUgKRsVofUtMiER9J1U2uWc1upJJOOrV8cGP93jhNUHgespOHbBbv64q+Q427E64ZRhO6EDr5IJDshzA/alJRWR6fQIGSaGQ0ZXDKAD/dBqUM48UBGTbguj+cAckuPEUCA3DN0Lnsm1N8vlseYQg1baBuOnHO5CdFmxlnIG5CHqArLpQIgmNvif4MZrgaECVTEWpgkhq8C9AxCV/ySsF/fYKDIdBXKIT3lhMmnaTS1UvxGUeVt5JU6yPQF6BSVrEx1StGGHtnBeF2/hHZod4mzJNDDec3zv/LqmmZbkfm7FkAtKTOUv+52IeXSQqlScxtc16A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Z/gy7ED2uc3DAI5xAdPVy6QP4ZkCdVt2xfjOsudSWUw=;
- b=q5Eg/Y3Ot47LiIpMw353Goq28eWMKea6Et7ZGHUbUumVcgyNExtc2bHXuxh331bZO2SyW3IDkbR6IxZtbALt3eA3imkrcpiQh/wwKgf1qkznLRXkuXVIdsv8uSxJy/5FqIO7JkUyU87f1cifEYmu8HjD8of7su9W/BxnijItXh8=
+ bh=dQvLZOogNQQ17Eu9k8jhxLtyxVP8S0cseb4hxja3+38=;
+ b=ik579Bnse2ON+Ssma7DDmOJUU/g9fgOzvv/5XkyUaXPdHLYj28y9BYSiVnG5K2UH/GdER/YhNxH2Hvit1M2YRPowgQKF3K1Jn7pHCc18Fe51n5a4d/3ZuGIBcgBtHzFPe1T6/hDDcl6Kju2oAcHNG8bXOf+L4Q1c5VFMpQC/X6s=
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
- by SJ0PR10MB5787.namprd10.prod.outlook.com (2603:10b6:a03:3dd::6) with
+ by SA3PR10MB7070.namprd10.prod.outlook.com (2603:10b6:806:311::6) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6086.17; Thu, 9 Feb
- 2023 08:01:53 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6086.14; Thu, 9 Feb
+ 2023 08:01:59 +0000
 Received: from BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::eaff:9f55:4641:db38]) by BY5PR10MB4306.namprd10.prod.outlook.com
  ([fe80::eaff:9f55:4641:db38%4]) with mapi id 15.20.6086.011; Thu, 9 Feb 2023
- 08:01:53 +0000
+ 08:01:59 +0000
 From:   allison.henderson@oracle.com
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v9 03/28] xfs: Increase XFS_QM_TRANS_MAXDQS to 5
-Date:   Thu,  9 Feb 2023 01:01:21 -0700
-Message-Id: <20230209080146.378973-4-allison.henderson@oracle.com>
+Subject: [PATCH v9 06/28] xfs: Hold inode locks in xfs_rename
+Date:   Thu,  9 Feb 2023 01:01:24 -0700
+Message-Id: <20230209080146.378973-7-allison.henderson@oracle.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230209080146.378973-1-allison.henderson@oracle.com>
 References: <20230209080146.378973-1-allison.henderson@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: SJ0PR03CA0378.namprd03.prod.outlook.com
- (2603:10b6:a03:3a1::23) To BY5PR10MB4306.namprd10.prod.outlook.com
+X-ClientProxiedBy: SJ0PR03CA0375.namprd03.prod.outlook.com
+ (2603:10b6:a03:3a1::20) To BY5PR10MB4306.namprd10.prod.outlook.com
  (2603:10b6:a03:211::7)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BY5PR10MB4306:EE_|SJ0PR10MB5787:EE_
-X-MS-Office365-Filtering-Correlation-Id: f2c2aad9-ad29-4134-c0f6-08db0a73e810
+X-MS-TrafficTypeDiagnostic: BY5PR10MB4306:EE_|SA3PR10MB7070:EE_
+X-MS-Office365-Filtering-Correlation-Id: fbc5be99-4770-4bf5-4cdc-08db0a73eb5f
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: b5luzu0N7kIhpktIylJzGXzA4kx3CSNmPvZ9ZmhhkZBQqt0xCtxcuPYKRV4lk2PMDklGmymjJrc43pIJI12Js8Y8BYD3SG0ZOOP7mSXnGRGYZpDrhDE9RP3QIgTee5YxIiEdkeOlT2aPVPsvkx0h1VAdcP0cMyxFSYt9IyknRmJKgZnTBZw7DOnFYw2nuTF8kJpQrGE+hFnMMMs8i2ww2p70OP/gCbwb8pDb/MfcaBoo+FcTk1B794aAiHdcL+IVUwInKqVPP3SDXXX8ZotedrwpTEV9k59+TaM+J1FTevJG2QuuIBW5sAUseMz+c9h3vFL/JeK5N4GD6U7zuftGC2qGIcpGCeTZ83IGoVDkEGNjGHVk4h+z+wqf4M/CguygJpfz8Y9pMqvdvVbc6u7rWag8fqb1EHk0SZyzER5jGGWlyXqCk8NZyBp4atA/YBILd6P5SzDWbMe064yFe1AXdX5+/K8RkyCXfDgfoUAL7Sc0WnmN6NYLzrb0t4GPsCY1QRCa4BtY6RjKyMuwfObNEdKvTkE/NdmR0X4i79Ilm2Z3qIw3ivnNN21/9zZx25TDyzaWJzymfjVUofLJH+V+SKE9JZ1WhZBGv0Oe2iFJq4mkVm3A5vzbBf7SaUPcjN2Cz2FWjOxVESXuwNZBrG3sYA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(39860400002)(376002)(366004)(136003)(396003)(346002)(451199018)(478600001)(186003)(6512007)(26005)(6666004)(9686003)(6486002)(316002)(83380400001)(2616005)(1076003)(6506007)(66556008)(66946007)(6916009)(41300700001)(5660300002)(38100700002)(8936002)(66476007)(8676002)(86362001)(2906002)(36756003);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: c2hgBxskdSnM/zAFW6Aq+o1HDyShhNOClH04ZKTJN+glOTfLQ+jYyKKTKOWQXUODE2DyeQiVJ8TRjwaorA2D4v3oo3gum5zCKp05H89LS98VzUOJHIpybmRvHAeYnt/fmnuTZtQjMpn7veFeCikqK8aBJCyvBRA6lxOjXqq2E/HDQeidx/X0lTpDYhHpq4iA+zgJcxt7ifJtcFTfYtioQodxDjJSuvjU6i1jZ4ePHjjxZNo3fqpSC8AMgQTizRHUlezIQ1XbNHVHnAo6Rv+UGovA/FyqGB5Fl2PHgsO0dpeiqRr7AnZiuyLmaEWjs/pquuAbLWQWoNopqPQYPkUqqs5GK90GwfmDO99r6YKn5JFol9+UxofuDkY7vLGRaTWUaMHPpb8iHY+J31eHhEyCJocmT9W4w8LDQDIPA1NSqmQvJuCZ+BCa6Pql5qRmLSWVHyiPPuJFtwJQ2f6PoWDykth1qWOcZW8O0nYQn6RK76FTqytaQJ3OmAukua4PiNfHU3TLXHI20+XzjS9WxJnHSQAfvQM+h88kRszSZQDcMEaLClBQaHV9MN+dgltQ3fDFUAu/LAsoTnMIqpdxcEHDkRNaAvlUqBrws0LIzdIyn4DgY68Fw3SEyZDCUUdr8H7PbEpEVg/SuAf+EAyKz8qSSA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(366004)(376002)(346002)(39860400002)(396003)(136003)(451199018)(478600001)(6486002)(8676002)(83380400001)(6916009)(66476007)(66556008)(5660300002)(8936002)(6506007)(1076003)(66946007)(6666004)(2616005)(9686003)(186003)(6512007)(26005)(36756003)(316002)(41300700001)(38100700002)(86362001)(2906002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?S7LXF9EHL676PdjOrrxqE4L6i5+71f8EC6KAtTnra797jvewh+X6Zinzy/8j?=
- =?us-ascii?Q?URbZkzCTMk3vfnZC9No0G1UAaXWX/xhpE9WPpFEPA5f45wwFupIEiIvNTjqg?=
- =?us-ascii?Q?HA/gSJV+0rPduAheYP8qT8mRycFRM15lpjq6ii3dosA3H9EHnXCPVnr/vFRN?=
- =?us-ascii?Q?NSss9TbfwBfeEZiwGjCEdmHWNL+sbFam1h5Ych6jOxjr9eF1YhnytE0AhB6C?=
- =?us-ascii?Q?mmqBodnREJ50wfyZ14E6QaPeToBW8UShBCWWpC8TtxJBI7XiQ3FsjoN/zc0z?=
- =?us-ascii?Q?VqCNTX2N2OERVJpS05YvvCz9fFijwofliuHvprONEAiXUZ2Cn1Pijz2uebos?=
- =?us-ascii?Q?myHnwqzCTUQexCTLHBAlTtNMXV7oo+V18CYr0X1ynH7jo7XInS85D928RT8q?=
- =?us-ascii?Q?AdpB6ZDfT5br6hNp+32J/tc4tnk3ReHJaH/GXDA4/Huzw1ocSwmv4bMUCg05?=
- =?us-ascii?Q?UcM1niypPgZC3tYH8rju83GWWP51DnimFzl3bSuocaNMzCNBM7l8Cc6lI/ae?=
- =?us-ascii?Q?n5sMrL2I4R6rMj2LYqXNKcdOv1V4W8TWgzb0jPFj1Z8mcNhTD+Pv+FRQz3uV?=
- =?us-ascii?Q?g5UVrZCTbrwm+B33rkXWnmr3Bo0pv81IpaAe/elSIgGcF5ox8B/4btwZHRBP?=
- =?us-ascii?Q?8Fjvpq9Nb/kZ4KaTEC07kJAobWeimRYEYQCkggosfRqwaY943+anQRrxzYKG?=
- =?us-ascii?Q?cO/Rhe6uLfYmDst6MBtzjIp4OY8uAuFwrPI6DwOt1+QYdKaHCo5ENGE+Y6OX?=
- =?us-ascii?Q?+YEvRroJPPMpUAvNTj6a+Pob/P2ZRvcybhVGDg7BWUJ/lwL6tF4S2y4gfsGQ?=
- =?us-ascii?Q?HftsVRXPoCIeYqMmM0tbO3snlpEMOUYy4Di5H39vtibXgFnnZE21YIwVLSRo?=
- =?us-ascii?Q?pOJL/PSvjNvrvEkCXVZAfFcEFElvMSwQsZA/INmnfI0xgrrD4Ehfeh5/Mw01?=
- =?us-ascii?Q?wVQOsJZQtY+lLiCb9Hm2wzbX8rdMG09cO3DGB6l2q5rJ1bb6GN2qIK1YnLdS?=
- =?us-ascii?Q?vn/NjpCKoUJ5etxrYmMFI4NB69cQ9LpvuYAX5ykkDZEboSutoGT2VMZ14UAj?=
- =?us-ascii?Q?lf+32HxbMAWabcj/yz/535nJ0OWFYSj9PRyy+XBJ67GIKpkap0Dbg2VFn5ba?=
- =?us-ascii?Q?wfA17LJ8l/pQvkujmwTlXj+DYsHZUVHLox7ZG3ku9hpf3bnt28wArl7AkN1d?=
- =?us-ascii?Q?mFuXE955pVhc87oixLGMTuFJ5N3Zzae67qG8MoYz3Fmkp9wfEijuni4xq7t7?=
- =?us-ascii?Q?P6m8ZH8tPQkZJJzLAuJRdUENYY9w8oBSvan1AejGZgiZSwKC6iBuPAotcM8w?=
- =?us-ascii?Q?mbfqaWC5F1sh/DAnuPzWevKRtAHb8q6HNZe/WAHzf9SAwP3d6ldxMwOzHOsE?=
- =?us-ascii?Q?IcY9N9UPQf0ZqmAyf3XXfQ/t3/0njMlrMZOzVo3ldw5/UXqbDj+EmFFzexAv?=
- =?us-ascii?Q?R3rzDqxcNcNT/vmNZfYTCw8lT1vFocgUuPg1YO0gpjnm3YKrC0tHhYAYfcLQ?=
- =?us-ascii?Q?nvKGbNSZIEObs8cdNgN1D0cpnL4L2HdlwR3EiQlrflFuR/kBj92b2BU7wQ98?=
- =?us-ascii?Q?aS58TIDUHCKgHiOTMpTL9HOtP4gCeca250paDYTbTUPijNSuiTJ4IT3sbZ4X?=
- =?us-ascii?Q?gg=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?RX1c8TIJmO06DzwB2laZG5tCV1SmBEJYLXGHFXzBdevjDfWTn+hbM4q4kggU?=
+ =?us-ascii?Q?gMZp7oGRhTnETMquL0nYXrNk3Kh/0kyxCm+7j5w61LwM/S64+dBDdU6aZ+FP?=
+ =?us-ascii?Q?zk22lLkrcsZf7ATvWzW6n3oIhAAO+x4klNZKnzPeZtuNp+JzSlyeCEaN+ylM?=
+ =?us-ascii?Q?ZMeliYs9iavs45Dg+9lexyDh1t9+lpNHGEA+zp1Gga6+ZSVoGvzrwGXNIYZl?=
+ =?us-ascii?Q?fMzPeurdVYMjW0ZJCM9D6LZVK3JiZOK7Ls5N0fOAKwbrUyGrMtH/dAFbUSQN?=
+ =?us-ascii?Q?ZEQRV+Pt1U8aVTilmlhHniHKBqUv4hl0TbUUzXbG57nN12MFzhL5ghaJHiDU?=
+ =?us-ascii?Q?zQwXlJ3jGt/vDhrnSZtCDq5FJ7Aq3fLoW94kKwQ7LH57C6tjZdfN4nrPXhEf?=
+ =?us-ascii?Q?Fz1HDSHPYbFyEocCwpHAttvBIzTrQc6LFwt9fLrV2sTC3Ci7wAKbxg7bv7uB?=
+ =?us-ascii?Q?/JSx7qpa61gXLzIaXB7V7HyGSL0hUzcsC7DsZdY7Rf1flUT7d/esZ1LSwYpX?=
+ =?us-ascii?Q?2fw7a+g3rJ/t5QQGnYNkawaTYIP7KGQiDQ+t/vgtgbjwgtrT+1FUcC9T/FX1?=
+ =?us-ascii?Q?9qMT3xFYlEq1o9krbeJc4qLQFn0s1SLYPDV19zbovWiYLt3FkLXS/cP6ylb6?=
+ =?us-ascii?Q?GcYNS+ryVZwSUIQ+es8+34JzbVEJxtWknxtm2V+G9pij9Jj8vmxrZXY3O/Zy?=
+ =?us-ascii?Q?ufPL4kzkIMkf2OjDCb124VvmOWzSsaNFR14IwZ+mBf0WQ7fCvID3BSflFZ6b?=
+ =?us-ascii?Q?yY6UifTnj99OSF3VnI5dBXcHDU1SxsuJtnbsbz66yqms+2b0lsiKZR1zGHf8?=
+ =?us-ascii?Q?QruHihK0u88/Q2Cpi3JtLf0KUGzy0e3/xJ2vrez9MDzl0fktDsz+Yn9Zh7zI?=
+ =?us-ascii?Q?acBjhShP32ZsCfTLDFPWSvGo2QXOP1tL8TXANLZOmux0HXwKZc2vUbDU/TN2?=
+ =?us-ascii?Q?z1cW7RadIHbnN7Fxs6kMnMObI6IrWUKXd1mU6BWpg0xBOK5NHBNI2WXtY5fl?=
+ =?us-ascii?Q?ZmcmC+zd1lSLCqRPGi1960OJbHURjqMEAsCfCL86/NdBDIiJPWk4kTYo6ZTv?=
+ =?us-ascii?Q?6RSwq505R+fousj1+vmwo4EexD62oK56EzesEuaxAgeatzjPPxxc9SFr5qjF?=
+ =?us-ascii?Q?KPua9Bz62bvU8P5E0klViWb8E6M8tw9IeOThyJSqj+Cl8PyX0gZ8l/pX6Q9Q?=
+ =?us-ascii?Q?W6c3SwrwGiu43qzmzl+bN3EOKAg0LbGZsWAYZ2zyCO+tVpHlIqwWyBKKM170?=
+ =?us-ascii?Q?X4r46vJ+FK0PFLGJDtRgzLs0aQgRJc8JPh1CizRI7+b+DZNQBNaicyIYFLQa?=
+ =?us-ascii?Q?l1D0ZvHwkGgkueBuEF1lrZ8JQkcCIFyNDTeZbM/BvKKD7Wu2IWTLdWYY8yaB?=
+ =?us-ascii?Q?dyzPjjndRADCGaDfUhJsU4lS+mKDdysVROGttZvQikwJ9mK0QpxrZPjXG8sD?=
+ =?us-ascii?Q?mQznZhH6sPHink/HHxrRcC5/QuD1gMUg4xySfCdy42/9r0Mh8LLTTKxiGRmo?=
+ =?us-ascii?Q?riKrIcrYWw+5niIsrb7XFrXVekKh3Ii9z/CV+jkLfDxITkPqhZJfvkMUe4W+?=
+ =?us-ascii?Q?Jne4chOLePPfcMyKQ0ZGrTiMGr7NV5hMkHtK1QH6KBKxxbDi4WEJi2cX2qXf?=
+ =?us-ascii?Q?Og=3D=3D?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 7R0BlT5+BSK7fbCBh9UAuB5iXKQwir1E5P9q3sia3T0HTpeDMrdTfP/+JELfMhtCdip/weTLoyyJbWMFaXvWbAkgDYDRW5O/gSy8mvFg68uLkfa8l3bAKLrfXS7YQa7hFHzoAvoox/OT/CmuC4RvoqrAigIC/xKw3VwPTCCXmziOzzRbcapHSMzEbiG4z1JMlfwvGATPiPkxMs3zDVSLSVJlFo1Jv1FO8okSkjEYV/lM81B6R9ss5pLFF0w1A16WM0wF+/L2e4wtNArtnTq9uJ+uui0d2wm+T3TTTiyjOG8Kq+rgrfjPJ7X1cu/PsqmEiQbKwEvd/onlkCghty+iU6HLuq6V/Onkac/WT/8YdeHfMaevznGaybnhV6FbbmEwDdhzeuVqZH3PDW7hHZEpp2zLJYFVjKI3PVYaIazm6HHsE6ThNoKSu5pAwZ+lEKgGidXn3rmC0bhl0N8+HORp+Ka5CaHlB/tQQEPanEjgU5DF5sot5h3vCbk0s2BfhtCXnMk737Tc9tVbmi6gdDMafkxrcDdLuPN/2SbZejZnCt59efafylExmKBqZqKdJRjSl2gqXMRLRLao5VxOItZoIVEBnxeubEeC0+0hdgtf/nDmlLdRBa3hWXAx6StV5pE2k8RT3hjQb0LIDrG8ZlYkIZSDkq9HYhJGN9K+dNVIQSewyWz0yjJpstg5/Tr5Kt02G2iO2ge3rmVpV8jHjQgZHlZtDGorLv1esF04jBZcGuPdSO7+d6TOsUf9tXun21QA
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: um613xylkV9tFgej09J2Rpnh2z3XAwevkSGPD2E9a0Wy7r0cFm/Y6eHnrEsCY4nAowAYLKWqaDjdMqBaf6UttqmfG1T04ahnscFcGAgSy6eP1CQWcqOFYshXmiuhsPOelcuZ3K3qKTcBIU/mzPJpHwUV3SvoeppjnVfgn53GjFsIvEtSrXU3wCOJq9rDGYtPEr4zrLBxCagst7BC0c9mxh7dkcWAa+ssWRfOmLWzeRTDWD4zmnDfqtk8PWLXWyw2hM4ihEUkMGTpgsmiD8m+eYrzpnFYkcsbx0hBqJh2zu5OZ26YYaDrwgunCkIBScuyMnVQ8aHnIIUOXNDf5O5MuqDQGGuI3eJtAFET5qrUhRHRfdkzHVdpRkvS99C/WqfoKZO10DbQo4gJblj7zTKF92moU9nSgSDibl/NituaTp0CX9MVggWFckIjNdVz6HwUT7SEE0lGnEgcnRI2LhhHMHyFjLkVem1lY0bT3TAuI38UEL1uvB3iVfvLp/VQPvuV69vjQlYU7QrUiJ86o2l0MqEgh4AcdqDoaBtb6IsT7KCZjrpAOMfBKQKuO6+Hnu96d8pSkqg3YsUdOYvIfykaB8iyYFIy/4Ux5PlDyRdOdR6Vpf0FKCfQn2ASuBnm5rwK+a+6gItLrR4jZ3Kc7BDR5ocJiDBH9UvIBukHyew0KJtzr1B67i8WUiQRhFUUhdd/pnOcjCipJllkDu8PTP0D7Wa/6mPuKNbt5yB9ZwpN/fV+pMq6s5Jq+5tzGdj21MNo
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f2c2aad9-ad29-4134-c0f6-08db0a73e810
+X-MS-Exchange-CrossTenant-Network-Message-Id: fbc5be99-4770-4bf5-4cdc-08db0a73eb5f
 X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Feb 2023 08:01:53.6329
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Feb 2023 08:01:59.4776
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: LI+SPJMM/3ycVc8Fy09jbUwvTvD+7Uztz7DWk0me1r0zFo8whsay1XJwQkxIjK5U9VoHRWt1x2SGzfIe6dkoe47gKrECxIjvW0m2ND0mRKA=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB5787
+X-MS-Exchange-CrossTenant-UserPrincipalName: 52yv6dRqTFeZ8fXYHmaHzYzMAhUN4nOPwOOfGLUWNFvz/g6+9u1W4R1IusAva2AQLNDUyuQlVzatnuh3Ip7+UGi65kqd2QehUQFZqidkQKM=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA3PR10MB7070
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.122.1
  definitions=2023-02-09_05,2023-02-08_02,2022-06-22_01
@@ -132,141 +132,115 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 bu
  malwarescore=0 mlxscore=0 mlxlogscore=999 adultscore=0 spamscore=0
  phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2212070000 definitions=main-2302090075
-X-Proofpoint-GUID: HsaxICTiXpeGxkY5p_9Lp2cJSvCPVmvj
-X-Proofpoint-ORIG-GUID: HsaxICTiXpeGxkY5p_9Lp2cJSvCPVmvj
+X-Proofpoint-GUID: lI8P0wDMh3iLCppzYdTPQMbbumjfAxp9
+X-Proofpoint-ORIG-GUID: lI8P0wDMh3iLCppzYdTPQMbbumjfAxp9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Allison Henderson <allison.henderson@oracle.com>
 
-With parent pointers enabled, a rename operation can update up to 5
-inodes: src_dp, target_dp, src_ip, target_ip and wip.  This causes
-their dquots to a be attached to the transaction chain, so we need
-to increase XFS_QM_TRANS_MAXDQS.  This patch also add a helper
-function xfs_dqlockn to lock an arbitrary number of dquots.
+Modify xfs_rename to hold all inode locks across a rename operation
+We will need this later when we add parent pointers
 
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Catherine Hoang <catherine.hoang@oracle.com>
 ---
- fs/xfs/xfs_dquot.c       | 38 ++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_dquot.h       |  1 +
- fs/xfs/xfs_qm.h          |  2 +-
- fs/xfs/xfs_trans_dquot.c | 15 ++++++++++-----
- 4 files changed, 50 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_inode.c | 43 ++++++++++++++++++++++++++++++-------------
+ 1 file changed, 30 insertions(+), 13 deletions(-)
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 8fb90da89787..9f311729c4c8 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -1333,6 +1333,44 @@ xfs_dqlock2(
- 	}
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index e292688ee608..131abf84ea87 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2541,6 +2541,21 @@ xfs_remove(
+ 	return error;
  }
  
-+static int
-+xfs_dqtrx_cmp(
-+	const void		*a,
-+	const void		*b)
++static inline void
++xfs_iunlock_rename(
++	struct xfs_inode	**i_tab,
++	int			num_inodes)
 +{
-+	const struct xfs_dqtrx	*qa = a;
-+	const struct xfs_dqtrx	*qb = b;
++	int			i;
 +
-+	if (qa->qt_dquot->q_id > qb->qt_dquot->q_id)
-+		return 1;
-+	if (qa->qt_dquot->q_id < qb->qt_dquot->q_id)
-+		return -1;
-+	return 0;
-+}
-+
-+void
-+xfs_dqlockn(
-+	struct xfs_dqtrx	*q)
-+{
-+	unsigned int		i;
-+
-+	/* Sort in order of dquot id, do not allow duplicates */
-+	for (i = 0; i < XFS_QM_TRANS_MAXDQS && q[i].qt_dquot != NULL; i++) {
-+		unsigned int	j;
-+
-+		for (j = 0; j < i; j++)
-+			ASSERT(q[i].qt_dquot != q[j].qt_dquot);
++	for (i = num_inodes - 1; i >= 0; i--) {
++		/* Skip duplicate inodes if src and target dps are the same */
++		if (!i_tab[i] || (i > 0 && i_tab[i] == i_tab[i - 1]))
++			continue;
++		xfs_iunlock(i_tab[i], XFS_ILOCK_EXCL);
 +	}
-+	if (i == 0)
-+		return;
-+
-+	sort(q, i, sizeof(struct xfs_dqtrx), xfs_dqtrx_cmp, NULL);
-+
-+	mutex_lock(&q[0].qt_dquot->q_qlock);
-+	for (i = 1; i < XFS_QM_TRANS_MAXDQS && q[i].qt_dquot != NULL; i++)
-+		mutex_lock_nested(&q[i].qt_dquot->q_qlock, XFS_QLOCK_NESTED);
 +}
 +
- int __init
- xfs_qm_init(void)
- {
-diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-index 80c8f851a2f3..dc7d0226242b 100644
---- a/fs/xfs/xfs_dquot.h
-+++ b/fs/xfs/xfs_dquot.h
-@@ -223,6 +223,7 @@ int		xfs_qm_dqget_uncached(struct xfs_mount *mp,
- void		xfs_qm_dqput(struct xfs_dquot *dqp);
- 
- void		xfs_dqlock2(struct xfs_dquot *, struct xfs_dquot *);
-+void		xfs_dqlockn(struct xfs_dqtrx *q);
- 
- void		xfs_dquot_set_prealloc_limits(struct xfs_dquot *);
- 
-diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
-index 9683f0457d19..c6ec88779356 100644
---- a/fs/xfs/xfs_qm.h
-+++ b/fs/xfs/xfs_qm.h
-@@ -120,7 +120,7 @@ enum {
- 	XFS_QM_TRANS_PRJ,
- 	XFS_QM_TRANS_DQTYPES
- };
--#define XFS_QM_TRANS_MAXDQS		2
-+#define XFS_QM_TRANS_MAXDQS		5
- struct xfs_dquot_acct {
- 	struct xfs_dqtrx	dqs[XFS_QM_TRANS_DQTYPES][XFS_QM_TRANS_MAXDQS];
- };
-diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index aa00cf67ad72..8a48175ea3a7 100644
---- a/fs/xfs/xfs_trans_dquot.c
-+++ b/fs/xfs/xfs_trans_dquot.c
-@@ -268,24 +268,29 @@ xfs_trans_mod_dquot(
- 
  /*
-  * Given an array of dqtrx structures, lock all the dquots associated and join
-- * them to the transaction, provided they have been modified.  We know that the
-- * highest number of dquots of one type - usr, grp and prj - involved in a
-- * transaction is 3 so we don't need to make this very generic.
-+ * them to the transaction, provided they have been modified.
+  * Enter all inodes for a rename transaction into a sorted array.
   */
- STATIC void
- xfs_trans_dqlockedjoin(
- 	struct xfs_trans	*tp,
- 	struct xfs_dqtrx	*q)
- {
-+	unsigned int		i;
- 	ASSERT(q[0].qt_dquot != NULL);
- 	if (q[1].qt_dquot == NULL) {
- 		xfs_dqlock(q[0].qt_dquot);
- 		xfs_trans_dqjoin(tp, q[0].qt_dquot);
--	} else {
--		ASSERT(XFS_QM_TRANS_MAXDQS == 2);
-+	} else if (q[2].qt_dquot == NULL) {
- 		xfs_dqlock2(q[0].qt_dquot, q[1].qt_dquot);
- 		xfs_trans_dqjoin(tp, q[0].qt_dquot);
- 		xfs_trans_dqjoin(tp, q[1].qt_dquot);
-+	} else {
-+		xfs_dqlockn(q);
-+		for (i = 0; i < XFS_QM_TRANS_MAXDQS; i++) {
-+			if (q[i].qt_dquot == NULL)
-+				break;
-+			xfs_trans_dqjoin(tp, q[i].qt_dquot);
-+		}
- 	}
- }
+@@ -2839,18 +2854,16 @@ xfs_rename(
+ 	xfs_lock_inodes(inodes, num_inodes, XFS_ILOCK_EXCL);
  
+ 	/*
+-	 * Join all the inodes to the transaction. From this point on,
+-	 * we can rely on either trans_commit or trans_cancel to unlock
+-	 * them.
++	 * Join all the inodes to the transaction.
+ 	 */
+-	xfs_trans_ijoin(tp, src_dp, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, src_dp, 0);
+ 	if (new_parent)
+-		xfs_trans_ijoin(tp, target_dp, XFS_ILOCK_EXCL);
+-	xfs_trans_ijoin(tp, src_ip, XFS_ILOCK_EXCL);
++		xfs_trans_ijoin(tp, target_dp, 0);
++	xfs_trans_ijoin(tp, src_ip, 0);
+ 	if (target_ip)
+-		xfs_trans_ijoin(tp, target_ip, XFS_ILOCK_EXCL);
++		xfs_trans_ijoin(tp, target_ip, 0);
+ 	if (wip)
+-		xfs_trans_ijoin(tp, wip, XFS_ILOCK_EXCL);
++		xfs_trans_ijoin(tp, wip, 0);
+ 
+ 	/*
+ 	 * If we are using project inheritance, we only allow renames
+@@ -2864,10 +2877,12 @@ xfs_rename(
+ 	}
+ 
+ 	/* RENAME_EXCHANGE is unique from here on. */
+-	if (flags & RENAME_EXCHANGE)
+-		return xfs_cross_rename(tp, src_dp, src_name, src_ip,
++	if (flags & RENAME_EXCHANGE) {
++		error = xfs_cross_rename(tp, src_dp, src_name, src_ip,
+ 					target_dp, target_name, target_ip,
+ 					spaceres);
++		goto out_unlock;
++	}
+ 
+ 	/*
+ 	 * Try to reserve quota to handle an expansion of the target directory.
+@@ -2881,6 +2896,7 @@ xfs_rename(
+ 		if (error == -EDQUOT || error == -ENOSPC) {
+ 			if (!retried) {
+ 				xfs_trans_cancel(tp);
++				xfs_iunlock_rename(inodes, num_inodes);
+ 				xfs_blockgc_free_quota(target_dp, 0);
+ 				retried = true;
+ 				goto retry;
+@@ -3092,12 +3108,13 @@ xfs_rename(
+ 		xfs_trans_log_inode(tp, target_dp, XFS_ILOG_CORE);
+ 
+ 	error = xfs_finish_rename(tp);
+-	if (wip)
+-		xfs_irele(wip);
+-	return error;
++
++	goto out_unlock;
+ 
+ out_trans_cancel:
+ 	xfs_trans_cancel(tp);
++out_unlock:
++	xfs_iunlock_rename(inodes, num_inodes);
+ out_release_wip:
+ 	if (wip)
+ 		xfs_irele(wip);
 -- 
 2.25.1
 
