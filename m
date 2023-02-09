@@ -2,69 +2,69 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 790CEC61DA4
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Feb 2023 22:18:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C42B0C636D3
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Feb 2023 22:18:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230357AbjBIWSk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Feb 2023 17:18:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54638 "EHLO
+        id S230362AbjBIWSm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Feb 2023 17:18:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54640 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230307AbjBIWSh (ORCPT
+        with ESMTP id S230327AbjBIWSh (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Feb 2023 17:18:37 -0500
-Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D89BA28D11
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2023 14:18:33 -0800 (PST)
-Received: by mail-pj1-x1036.google.com with SMTP id on9-20020a17090b1d0900b002300a96b358so3732337pjb.1
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Feb 2023 14:18:33 -0800 (PST)
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69CE169537
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2023 14:18:34 -0800 (PST)
+Received: by mail-pl1-x62c.google.com with SMTP id k13so4591906plg.0
+        for <linux-xfs@vger.kernel.org>; Thu, 09 Feb 2023 14:18:34 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=dbB1rbTnaWrcSzZ3zBIabywB7zRjNiS7DfAARS5ZEmQ=;
-        b=EQfWMA7v0WBGxB4Xxieu10KmIGv4BYGB4dgi0kXGQM73dd2IiKixJEuR4OCNIeOGJk
-         xgzKaPDmULJe62xPUOCaWUCIQl0MJIV2Wqc6evUTXhWIVv237hqyehVjQjb3ajvGWtC5
-         cfNPr1iSOzT3MqRBL1KYcB/YBJb4yve9kKljXw3OBPyeOVRpgEUvkidlr9EVSA6U2iIs
-         pmuVqloLVwozJGmbpCzYG4SEdD+6cz+japOeJeZs64UQ9rlLZ6sX0IFpl2MOZb5k+Ztj
-         e+SyQLtdOdVk9gGIRHkkPfDT+/u+UEzlEgjZ1quG585/06fh/lbtg+yqTmkQw2wk7vys
-         ws2Q==
+        bh=xin3lhPINgxQ/vw661cQaP/j5HNHxYnfWw/wAiiKWBU=;
+        b=Mv8Go6jsYihhqngiNo6s7k2YTS2RicjtYIueI54D29axcch+Gp/TLaE9+g4SqZ7H4/
+         Y7tYao04UpMPpuTlttMuFM7KMZvWoaFkoNCjJ9MVrv8rR/cX9QGossqmsu810RNVl1sE
+         RbJcEN6jBiKrzIywBudmAscD/zh6k5oeHNJWnK3sVs4QicKzBl7FCj/tAxuftGyQ3GTB
+         AssM6gNfwgfpodmZtoAEC2vny170pDflSkKuuhJAgpaFHs2jSImP1pwciiq4l6KDpw7l
+         V7Y3yrmpwkqm/bodKyV2mcv5jXOTsq/km9Nx8ZtB1iuFtfUaIiWH9N3eSO1+1YY6w3QS
+         91hw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=dbB1rbTnaWrcSzZ3zBIabywB7zRjNiS7DfAARS5ZEmQ=;
-        b=ic1VMBRgMI8ITaokiFEeTmJaGbI61w7BuDZRiXwu6OsDE9E4VfRImHZpwWWQ9lAiUb
-         tJRuKcA0CUyyPM5BIPz+gFLMHCmp1rCGmzGaLlFOcFTjhODlprpigINIZ2SY7BUQtMWG
-         KJRW1oCdO09/akrChic8+hzK6/9E7o3oNSnaWKdGVD0WSz1B4u16Xf9QwtzjOpGsIost
-         5u7zAvKrMmNHWRBUOYTF6+V8FWd/r07Kevrf1Sh6OYZkjCTnGhj4YiINsqOZCwVLrqtG
-         dyEf8elwoFLGg+f4kzQOFolFKiCuzGGLFh1ekJlOwmOcwT9H52IgvDVV86ILPZRvpmjr
-         xOMw==
-X-Gm-Message-State: AO0yUKWkT38NJJTXlHD8Ma6M28WdVBAFv9SyRWBaOD8NQ+FvIXk5XO0V
-        RLeDM7E+BFmIh1+u12slUyccf/ldc2TSJoci
-X-Google-Smtp-Source: AK7set/gUMlwIFeNaj8cL53m46C32PohRXOangB3bWlCYB79ymjbYg3moHlzIgkGEAQmAvcVJG/4uA==
-X-Received: by 2002:a17:902:ced1:b0:19a:593c:f385 with SMTP id d17-20020a170902ced100b0019a593cf385mr4639293plg.25.1675981113137;
+        bh=xin3lhPINgxQ/vw661cQaP/j5HNHxYnfWw/wAiiKWBU=;
+        b=auv+BeiZF643vO5Mo7GHmFzpVnGveIKlqo1ocPAIPF7e64k4AAgrTpV94ZPggldbdW
+         sIu2nO16qEMw+M2esbDHKnodM1AfxoTv04hM9yp1k4GRv6DDptzIEIrN5KoH8RB7Rv0q
+         NWAxI6npb2mjaNHobbYtG1BybC+wJtAGEoCJahhW1gZEqqs4T848eS1ziARniOFAdNnP
+         2y6qpWeSF2jlwRtgluzJCSyVr0HJkWr01lpDOrV8G9IWU3YT5QEMzqcchhRyibjev6mH
+         UroTfbVuz7f3ECn+pAlDim46dNb7WLupN6GMZ4ELh68J+m+Pc9b/FcnZ4r7f5m/0chJT
+         8CSw==
+X-Gm-Message-State: AO0yUKUacTOQIoGSSOUFzWT52v80zTgC2y7F0NRddNlPVNyU6mYglawR
+        2kFQ1qdn64eBUkSwh5jM3v1uo46JKfiiisei
+X-Google-Smtp-Source: AK7set/22Bk2f8O7uDRyqdbSA3rbYZpAQQN6feIqzJyX0wcp+0o0X/PTnznuFEmWamCy6I/bWJkvVQ==
+X-Received: by 2002:a17:903:12d7:b0:198:adc4:22a4 with SMTP id io23-20020a17090312d700b00198adc422a4mr5616290plb.31.1675981113720;
         Thu, 09 Feb 2023 14:18:33 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-4-128.pa.nsw.optusnet.com.au. [49.181.4.128])
-        by smtp.gmail.com with ESMTPSA id io16-20020a17090312d000b001960706141fsm2005164plb.149.2023.02.09.14.18.30
+        by smtp.gmail.com with ESMTPSA id a7-20020a1709027e4700b001943d58268csm2011010pln.55.2023.02.09.14.18.30
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Thu, 09 Feb 2023 14:18:31 -0800 (PST)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <dave@fromorbit.com>)
-        id 1pQFFL-00DOUs-VF
-        for linux-xfs@vger.kernel.org; Fri, 10 Feb 2023 09:18:27 +1100
+        id 1pQFFM-00DOV2-1s
+        for linux-xfs@vger.kernel.org; Fri, 10 Feb 2023 09:18:28 +1100
 Received: from dave by devoid.disaster.area with local (Exim 4.96)
         (envelope-from <dave@devoid.disaster.area>)
-        id 1pQFFL-00FcMG-36
+        id 1pQFFM-00FcMS-08
         for linux-xfs@vger.kernel.org;
-        Fri, 10 Feb 2023 09:18:27 +1100
+        Fri, 10 Feb 2023 09:18:28 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 05/42] xfs: t_firstblock is tracking AGs not blocks
-Date:   Fri, 10 Feb 2023 09:17:48 +1100
-Message-Id: <20230209221825.3722244-6-david@fromorbit.com>
+Subject: [PATCH 08/42] xfs: rework the perag trace points to be perag centric
+Date:   Fri, 10 Feb 2023 09:17:51 +1100
+Message-Id: <20230209221825.3722244-9-david@fromorbit.com>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230209221825.3722244-1-david@fromorbit.com>
 References: <20230209221825.3722244-1-david@fromorbit.com>
@@ -76,231 +76,183 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The tp->t_firstblock field is now raelly tracking the highest AG we
-have locked, not the block number of the highest allocation we've
-made. It's purpose is to prevent AGF locking deadlocks, so rename it
-to "highest AG" and simplify the implementation to just track the
-agno rather than a fsbno.
+So that they all output the same information in the traces to make
+debugging refcount issues easier.
+
+This means that all the lookup/drop functions no longer need to use
+the full memory barrier atomic operations (atomic*_return()) so
+will have less overhead when tracing is off. The set/clear tag
+tracepoints no longer abuse the reference count to pass the tag -
+the tag being cleared is obvious from the _RET_IP_ that is recorded
+in the trace point.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_alloc.c      | 12 +++++-------
- fs/xfs/libxfs/xfs_bmap.c       |  4 ++--
- fs/xfs/libxfs/xfs_bmap_btree.c |  6 +++---
- fs/xfs/libxfs/xfs_btree.c      |  2 +-
- fs/xfs/xfs_bmap_util.c         |  2 +-
- fs/xfs/xfs_inode.c             |  2 +-
- fs/xfs/xfs_reflink.c           |  2 +-
- fs/xfs/xfs_trace.h             |  8 ++++----
- fs/xfs/xfs_trans.c             |  4 ++--
- fs/xfs/xfs_trans.h             |  2 +-
- 10 files changed, 21 insertions(+), 23 deletions(-)
+ fs/xfs/libxfs/xfs_ag.c | 25 +++++++++----------------
+ fs/xfs/xfs_icache.c    |  4 ++--
+ fs/xfs/xfs_trace.h     | 21 +++++++++++----------
+ 3 files changed, 22 insertions(+), 28 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index ffe6345bfafc..974b23abca60 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -3169,8 +3169,8 @@ xfs_alloc_vextent(
- 	mp = args->mp;
- 	type = args->otype = args->type;
- 	args->agbno = NULLAGBLOCK;
--	if (args->tp->t_firstblock != NULLFSBLOCK)
--		minimum_agno = XFS_FSB_TO_AGNO(mp, args->tp->t_firstblock);
-+	if (args->tp->t_highest_agno != NULLAGNUMBER)
-+		minimum_agno = args->tp->t_highest_agno;
- 	/*
- 	 * Just fix this up, for the case where the last a.g. is shorter
- 	 * (or there's only one a.g.) and the caller couldn't easily figure
-@@ -3375,11 +3375,9 @@ xfs_alloc_vextent(
- 	 * deadlocks.
- 	 */
- 	if (args->agbp &&
--	    (args->tp->t_firstblock == NULLFSBLOCK ||
--	     args->pag->pag_agno > minimum_agno)) {
--		args->tp->t_firstblock = XFS_AGB_TO_FSB(mp,
--					args->pag->pag_agno, 0);
--	}
-+	    (args->tp->t_highest_agno == NULLAGNUMBER ||
-+	     args->pag->pag_agno > minimum_agno))
-+		args->tp->t_highest_agno = args->pag->pag_agno;
- 	xfs_perag_put(args->pag);
- 	return 0;
- error0:
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 31a0738d017e..504fd69fe2c6 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4192,7 +4192,7 @@ xfs_bmapi_minleft(
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index 46e25c682bf4..7cff61875340 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -44,16 +44,15 @@ xfs_perag_get(
+ 	xfs_agnumber_t		agno)
  {
- 	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, fork);
+ 	struct xfs_perag	*pag;
+-	int			ref = 0;
  
--	if (tp && tp->t_firstblock != NULLFSBLOCK)
-+	if (tp && tp->t_highest_agno != NULLAGNUMBER)
- 		return 0;
- 	if (ifp->if_format != XFS_DINODE_FMT_BTREE)
- 		return 1;
-@@ -6079,7 +6079,7 @@ xfs_bmap_finish_one(
- 	struct xfs_bmbt_irec		*bmap = &bi->bi_bmap;
- 	int				error = 0;
- 
--	ASSERT(tp->t_firstblock == NULLFSBLOCK);
-+	ASSERT(tp->t_highest_agno == NULLAGNUMBER);
- 
- 	trace_xfs_bmap_deferred(tp->t_mountp,
- 			XFS_FSB_TO_AGNO(tp->t_mountp, bmap->br_startblock),
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index 76a0f0d260a4..afd9b2d962a3 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -184,11 +184,11 @@ xfs_bmbt_update_cursor(
- 	struct xfs_btree_cur	*src,
- 	struct xfs_btree_cur	*dst)
- {
--	ASSERT((dst->bc_tp->t_firstblock != NULLFSBLOCK) ||
-+	ASSERT((dst->bc_tp->t_highest_agno != NULLAGNUMBER) ||
- 	       (dst->bc_ino.ip->i_diflags & XFS_DIFLAG_REALTIME));
- 
- 	dst->bc_ino.allocated += src->bc_ino.allocated;
--	dst->bc_tp->t_firstblock = src->bc_tp->t_firstblock;
-+	dst->bc_tp->t_highest_agno = src->bc_tp->t_highest_agno;
- 
- 	src->bc_ino.allocated = 0;
+ 	rcu_read_lock();
+ 	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
+ 	if (pag) {
++		trace_xfs_perag_get(pag, _RET_IP_);
+ 		ASSERT(atomic_read(&pag->pag_ref) >= 0);
+-		ref = atomic_inc_return(&pag->pag_ref);
++		atomic_inc(&pag->pag_ref);
+ 	}
+ 	rcu_read_unlock();
+-	trace_xfs_perag_get(mp, agno, ref, _RET_IP_);
+ 	return pag;
  }
-@@ -218,7 +218,7 @@ xfs_bmbt_alloc_block(
- 	 * we have to ensure that we attempt to locate the entire set of bmbt
- 	 * allocations in the same AG, as xfs_bmapi_write() would have reserved.
- 	 */
--	if (cur->bc_tp->t_firstblock == NULLFSBLOCK)
-+	if (cur->bc_tp->t_highest_agno == NULLAGNUMBER)
- 		args.minleft = xfs_bmapi_minleft(cur->bc_tp, cur->bc_ino.ip,
- 					cur->bc_ino.whichfork);
  
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index da8c769887fd..c4649cc624e1 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -2943,7 +2943,7 @@ xfs_btree_split(
- 	DECLARE_COMPLETION_ONSTACK(done);
+@@ -68,7 +67,6 @@ xfs_perag_get_tag(
+ {
+ 	struct xfs_perag	*pag;
+ 	int			found;
+-	int			ref;
  
- 	if (cur->bc_btnum != XFS_BTNUM_BMAP ||
--	    cur->bc_tp->t_firstblock == NULLFSBLOCK)
-+	    cur->bc_tp->t_highest_agno == NULLAGNUMBER)
- 		return __xfs_btree_split(cur, level, ptrp, key, curp, stat);
+ 	rcu_read_lock();
+ 	found = radix_tree_gang_lookup_tag(&mp->m_perag_tree,
+@@ -77,9 +75,9 @@ xfs_perag_get_tag(
+ 		rcu_read_unlock();
+ 		return NULL;
+ 	}
+-	ref = atomic_inc_return(&pag->pag_ref);
++	trace_xfs_perag_get_tag(pag, _RET_IP_);
++	atomic_inc(&pag->pag_ref);
+ 	rcu_read_unlock();
+-	trace_xfs_perag_get_tag(mp, pag->pag_agno, ref, _RET_IP_);
+ 	return pag;
+ }
  
- 	args.cur = cur;
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 867645b74d88..a09dd2606479 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1410,7 +1410,7 @@ xfs_swap_extent_rmap(
+@@ -87,11 +85,9 @@ void
+ xfs_perag_put(
+ 	struct xfs_perag	*pag)
+ {
+-	int	ref;
+-
++	trace_xfs_perag_put(pag, _RET_IP_);
+ 	ASSERT(atomic_read(&pag->pag_ref) > 0);
+-	ref = atomic_dec_return(&pag->pag_ref);
+-	trace_xfs_perag_put(pag->pag_mount, pag->pag_agno, ref, _RET_IP_);
++	atomic_dec(&pag->pag_ref);
+ }
  
- 		/* Unmap the old blocks in the source file. */
- 		while (tirec.br_blockcount) {
--			ASSERT(tp->t_firstblock == NULLFSBLOCK);
-+			ASSERT(tp->t_highest_agno == NULLAGNUMBER);
- 			trace_xfs_swap_extent_rmap_remap_piece(tip, &tirec);
+ /*
+@@ -110,8 +106,7 @@ xfs_perag_grab(
+ 	rcu_read_lock();
+ 	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
+ 	if (pag) {
+-		trace_xfs_perag_grab(mp, pag->pag_agno,
+-				atomic_read(&pag->pag_active_ref), _RET_IP_);
++		trace_xfs_perag_grab(pag, _RET_IP_);
+ 		if (!atomic_inc_not_zero(&pag->pag_active_ref))
+ 			pag = NULL;
+ 	}
+@@ -138,8 +133,7 @@ xfs_perag_grab_tag(
+ 		rcu_read_unlock();
+ 		return NULL;
+ 	}
+-	trace_xfs_perag_grab_tag(mp, pag->pag_agno,
+-			atomic_read(&pag->pag_active_ref), _RET_IP_);
++	trace_xfs_perag_grab_tag(pag, _RET_IP_);
+ 	if (!atomic_inc_not_zero(&pag->pag_active_ref))
+ 		pag = NULL;
+ 	rcu_read_unlock();
+@@ -150,8 +144,7 @@ void
+ xfs_perag_rele(
+ 	struct xfs_perag	*pag)
+ {
+-	trace_xfs_perag_rele(pag->pag_mount, pag->pag_agno,
+-			atomic_read(&pag->pag_active_ref), _RET_IP_);
++	trace_xfs_perag_rele(pag, _RET_IP_);
+ 	if (atomic_dec_and_test(&pag->pag_active_ref))
+ 		wake_up(&pag->pag_active_wq);
+ }
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 0f4a014dded3..8b2823d85a68 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -255,7 +255,7 @@ xfs_perag_set_inode_tag(
+ 		break;
+ 	}
  
- 			/* Read extent from the source file */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index d354ea2b74f9..dbe274b8065d 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1367,7 +1367,7 @@ xfs_itruncate_extents_flags(
+-	trace_xfs_perag_set_inode_tag(mp, pag->pag_agno, tag, _RET_IP_);
++	trace_xfs_perag_set_inode_tag(pag, _RET_IP_);
+ }
  
- 	unmap_len = XFS_MAX_FILEOFF - first_unmap_block + 1;
- 	while (unmap_len > 0) {
--		ASSERT(tp->t_firstblock == NULLFSBLOCK);
-+		ASSERT(tp->t_highest_agno == NULLAGNUMBER);
- 		error = __xfs_bunmapi(tp, ip, first_unmap_block, &unmap_len,
- 				flags, XFS_ITRUNC_MAX_EXTENTS);
- 		if (error)
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 5535778a98f9..57bf59ff4854 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -610,7 +610,7 @@ xfs_reflink_cancel_cow_blocks(
- 			if (error)
- 				break;
- 		} else if (del.br_state == XFS_EXT_UNWRITTEN || cancel_real) {
--			ASSERT((*tpp)->t_firstblock == NULLFSBLOCK);
-+			ASSERT((*tpp)->t_highest_agno == NULLAGNUMBER);
+ /* Clear a tag on both the AG incore inode tree and the AG radix tree. */
+@@ -289,7 +289,7 @@ xfs_perag_clear_inode_tag(
+ 	radix_tree_tag_clear(&mp->m_perag_tree, pag->pag_agno, tag);
+ 	spin_unlock(&mp->m_perag_lock);
  
- 			/* Free the CoW orphan record. */
- 			xfs_refcount_free_cow_extent(*tpp, del.br_startblock,
+-	trace_xfs_perag_clear_inode_tag(mp, pag->pag_agno, tag, _RET_IP_);
++	trace_xfs_perag_clear_inode_tag(pag, _RET_IP_);
+ }
+ 
+ /*
 diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index adddaeb44a56..2ac98d8ddbfd 100644
+index eb5e49d44f13..1d99c30f66f0 100644
 --- a/fs/xfs/xfs_trace.h
 +++ b/fs/xfs/xfs_trace.h
-@@ -1801,7 +1801,7 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
- 		__field(char, wasfromfl)
- 		__field(int, resv)
- 		__field(int, datatype)
--		__field(xfs_fsblock_t, firstblock)
-+		__field(xfs_agnumber_t, highest_agno)
+@@ -159,33 +159,34 @@ TRACE_EVENT(xlog_intent_recovery_failed,
+ );
+ 
+ DECLARE_EVENT_CLASS(xfs_perag_class,
+-	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int refcount,
+-		 unsigned long caller_ip),
+-	TP_ARGS(mp, agno, refcount, caller_ip),
++	TP_PROTO(struct xfs_perag *pag, unsigned long caller_ip),
++	TP_ARGS(pag, caller_ip),
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(xfs_agnumber_t, agno)
+ 		__field(int, refcount)
++		__field(int, active_refcount)
+ 		__field(unsigned long, caller_ip)
  	),
  	TP_fast_assign(
- 		__entry->dev = args->mp->m_super->s_dev;
-@@ -1822,12 +1822,12 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
- 		__entry->wasfromfl = args->wasfromfl;
- 		__entry->resv = args->resv;
- 		__entry->datatype = args->datatype;
--		__entry->firstblock = args->tp->t_firstblock;
-+		__entry->highest_agno = args->tp->t_highest_agno;
+-		__entry->dev = mp->m_super->s_dev;
+-		__entry->agno = agno;
+-		__entry->refcount = refcount;
++		__entry->dev = pag->pag_mount->m_super->s_dev;
++		__entry->agno = pag->pag_agno;
++		__entry->refcount = atomic_read(&pag->pag_ref);
++		__entry->active_refcount = atomic_read(&pag->pag_active_ref);
+ 		__entry->caller_ip = caller_ip;
  	),
- 	TP_printk("dev %d:%d agno 0x%x agbno 0x%x minlen %u maxlen %u mod %u "
- 		  "prod %u minleft %u total %u alignment %u minalignslop %u "
- 		  "len %u type %s otype %s wasdel %d wasfromfl %d resv %d "
--		  "datatype 0x%x firstblock 0x%llx",
-+		  "datatype 0x%x highest_agno 0x%x",
+-	TP_printk("dev %d:%d agno 0x%x refcount %d caller %pS",
++	TP_printk("dev %d:%d agno 0x%x passive refs %d active refs %d caller %pS",
  		  MAJOR(__entry->dev), MINOR(__entry->dev),
  		  __entry->agno,
- 		  __entry->agbno,
-@@ -1846,7 +1846,7 @@ DECLARE_EVENT_CLASS(xfs_alloc_class,
- 		  __entry->wasfromfl,
- 		  __entry->resv,
- 		  __entry->datatype,
--		  (unsigned long long)__entry->firstblock)
-+		  __entry->highest_agno)
- )
+ 		  __entry->refcount,
++		  __entry->active_refcount,
+ 		  (char *)__entry->caller_ip)
+ );
  
- #define DEFINE_ALLOC_EVENT(name) \
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 7bd16fbff534..53ab544e4c2c 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -102,7 +102,7 @@ xfs_trans_dup(
- 	INIT_LIST_HEAD(&ntp->t_items);
- 	INIT_LIST_HEAD(&ntp->t_busy);
- 	INIT_LIST_HEAD(&ntp->t_dfops);
--	ntp->t_firstblock = NULLFSBLOCK;
-+	ntp->t_highest_agno = NULLAGNUMBER;
- 
- 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
- 	ASSERT(tp->t_ticket != NULL);
-@@ -278,7 +278,7 @@ xfs_trans_alloc(
- 	INIT_LIST_HEAD(&tp->t_items);
- 	INIT_LIST_HEAD(&tp->t_busy);
- 	INIT_LIST_HEAD(&tp->t_dfops);
--	tp->t_firstblock = NULLFSBLOCK;
-+	tp->t_highest_agno = NULLAGNUMBER;
- 
- 	error = xfs_trans_reserve(tp, resp, blocks, rtextents);
- 	if (error == -ENOSPC && want_retry) {
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 55819785941c..6e3646d524ce 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -132,7 +132,7 @@ typedef struct xfs_trans {
- 	unsigned int		t_rtx_res;	/* # of rt extents resvd */
- 	unsigned int		t_rtx_res_used;	/* # of resvd rt extents used */
- 	unsigned int		t_flags;	/* misc flags */
--	xfs_fsblock_t		t_firstblock;	/* first block allocated */
-+	xfs_agnumber_t		t_highest_agno;	/* highest AGF locked */
- 	struct xlog_ticket	*t_ticket;	/* log mgr ticket */
- 	struct xfs_mount	*t_mountp;	/* ptr to fs mount struct */
- 	struct xfs_dquot_acct   *t_dqinfo;	/* acctg info for dquots */
+ #define DEFINE_PERAG_REF_EVENT(name)	\
+ DEFINE_EVENT(xfs_perag_class, name,	\
+-	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int refcount,	\
+-		 unsigned long caller_ip),					\
+-	TP_ARGS(mp, agno, refcount, caller_ip))
++	TP_PROTO(struct xfs_perag *pag, unsigned long caller_ip), \
++	TP_ARGS(pag, caller_ip))
+ DEFINE_PERAG_REF_EVENT(xfs_perag_get);
+ DEFINE_PERAG_REF_EVENT(xfs_perag_get_tag);
+ DEFINE_PERAG_REF_EVENT(xfs_perag_put);
 -- 
 2.39.0
 
