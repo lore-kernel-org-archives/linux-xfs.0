@@ -2,155 +2,181 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A619C61DA4
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Feb 2023 08:08:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4328EC61DA4
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Feb 2023 08:43:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229508AbjBIIIt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Feb 2023 03:08:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33384 "EHLO
+        id S229632AbjBIInV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Feb 2023 03:43:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229606AbjBIIIr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Feb 2023 03:08:47 -0500
-Received: from mail-vs1-xe35.google.com (mail-vs1-xe35.google.com [IPv6:2607:f8b0:4864:20::e35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB057367D3
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2023 00:08:46 -0800 (PST)
-Received: by mail-vs1-xe35.google.com with SMTP id g8so1298688vso.3
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Feb 2023 00:08:46 -0800 (PST)
+        with ESMTP id S229473AbjBIInT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Feb 2023 03:43:19 -0500
+Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9F462C666
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2023 00:43:14 -0800 (PST)
+Received: by mail-wr1-x429.google.com with SMTP id m14so953879wrg.13
+        for <linux-xfs@vger.kernel.org>; Thu, 09 Feb 2023 00:43:14 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZvL2n30ySJLnc8Kp2HLwV2t15TMMiuonS4EFOHrak3g=;
-        b=fOICeDyIfGpTUyJ8cYPewTPA+ES3j1uRmFpXlWkgiT3glUApgtJqx3evOGXq2B9Ukp
-         OQDRBgLMogFS7hPv1oPwnjK0G5Q9wCtnDqDIF6wPW2VcxSdys9cJmEWI0r80Y1/JxdFs
-         wg845t/Wy4PxfQiydbmM1uVnvnKifvgRwFG0G2dGwp0Vyh8T9U5T+pFlSw/4rqcCBzeJ
-         /3EFeFygZuEJhVqYBIJmCo3os9yg4iJQs8ygHwMM2JgWonYTnZTdmVCn4HpFmuymoPk2
-         JtcNdnhoY8d7zACuBIfsPtXz2Ra0/PKRfbN+Wn8uN+3b7JS9fuBXUvNLbcsU84F1kydw
-         CQIA==
+        d=scylladb.com; s=google;
+        h=mime-version:user-agent:content-transfer-encoding:date:to:from
+         :subject:message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=5WqRsXshMpg+HOoaI0zSoNdrCFquvJqvv+7JBk33T74=;
+        b=tbnwC1vZQBffybVxzm6jiQfDIhsQYqBSY9Gr4eSIpDDN/SgnNu85iLmGLJZA5Ij4j+
+         M1SovKb+evuWyGgpYItcTTIBaPDjbSsirXD2dZ3uxDIhTNEC8+gvK0NmXVoAedSCg5Po
+         ND66EzE+MCyvqqghnXWrajjlYF6BCsZHqfmBjYPcfscD7DeQJQ8ty/0PXYg3ZjS36Sc+
+         GB8U133/E25vefecDb/2FLOYWe8zxbgklyMp20gEJehG7b+OuZeO6B7No8hNwcV0uaeO
+         mRgaD0PqfjaYuY7pQ9i7Ko3DCC9AIFtJTKlzTdHgntFv+rR3bRvH4RW8Smln67Truen2
+         Jp6w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ZvL2n30ySJLnc8Kp2HLwV2t15TMMiuonS4EFOHrak3g=;
-        b=nmMWLupNYWhvIPpV8pNsSpVXuX0A8oEAr6HDnH+aFHx+EEvDqk1JgSiClnlhVXtaRO
-         SzRM4LeUemoDLQBjEFqULI9wjzoPlgNbsVyozYtGWG7tkfcaTKp1n5+jtVojIhLpoKM6
-         qzHX7u+HQRcpnpTd2j8cxf3EdsLgg0iIXGtG+zt/IR4i3ZA8k8wBmm5J8DHJDO4lrcN5
-         Z1rJdJF9Mx+ij/CZzZhzLNh9B/EGl2N66/vBnxQ4ESHQV0Kif03JlDXW3rkvqcPiSC4f
-         EBFr78PDcypx5eTA3KjKaLxK16d13dQLJ5Oxgl4RM+Pc/oHJdzF0aNlblzHZdkkV1C6m
-         GFkA==
-X-Gm-Message-State: AO0yUKXr6Se05wVpFwcBJIzKaW5E0R1A3IjfyeA7IxeAS2jsrCn9lVxC
-        J/elNaG/F96uh/XYBd/WImWQd1ko9i4Zdwy7gw2mfUjG2Xg=
-X-Google-Smtp-Source: AK7set9hGlAEjIBwUDGYS0k9Z1oOu7F5+8d5uli6/9CMfYtMd1pCO/0Tuk5SZiqTT8Dmpeo1QjRlpCUYL2Cro8ZcG4o=
-X-Received: by 2002:a05:6102:27c5:b0:3ea:a853:97c4 with SMTP id
- t5-20020a05610227c500b003eaa85397c4mr2054465vsu.36.1675930125783; Thu, 09 Feb
- 2023 00:08:45 -0800 (PST)
-MIME-Version: 1.0
-References: <20230208175228.2226263-1-leah.rumancik@gmail.com>
- <CAOQ4uxgmHzWcxBDrzRb19ByCnNoayhha_MZ_eYN0YMC=RGTeMw@mail.gmail.com>
- <Y+P6y81Wmf4L66LC@magnolia> <20230208222104.GD360264@dread.disaster.area>
-In-Reply-To: <20230208222104.GD360264@dread.disaster.area>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Thu, 9 Feb 2023 10:08:34 +0200
-Message-ID: <CAOQ4uxizYHfrbsim6jpfND1L9g=4wjQzODz7448xC=vhCN1-uQ@mail.gmail.com>
-Subject: Re: [PATCH 5.15 CANDIDATE 00/10] more xfs fixes for 5.15
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Leah Rumancik <leah.rumancik@gmail.com>,
-        linux-xfs@vger.kernel.org, chandan.babu@oracle.com,
-        Christian Brauner <brauner@kernel.org>
+        h=mime-version:user-agent:content-transfer-encoding:date:to:from
+         :subject:message-id:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5WqRsXshMpg+HOoaI0zSoNdrCFquvJqvv+7JBk33T74=;
+        b=Xgl3Dh+xlDudiT6ezlSpb947cbdfBsh1lk5oNwsKVk8jYRIqHrLXIl8p8OBMHsLySO
+         sC+BlXsiWlvRolIphkygNvBKJK66KyBSizdeRr8VTz5tORW8AnavUCxruU98JdG1R6VN
+         4LPFIThDtUehpOsPp0HF17hNbDuIe+uO3QyhB/v60PGsAsj1SDB14wdjP5f24fTbAifD
+         g52KxNan9Pxi1Wf4vOc2OtEgHW1aWDZ6u0I0whiF0W2B+N2HYuHnARteVBEosCyxOx84
+         wN0M72oIsAOgbkol8EVcVCAhp78zKDNSZBFdM7Y9tu5Qy4v0hiUYxq9jz4OqzJy2Y8TL
+         wvRw==
+X-Gm-Message-State: AO0yUKWnOu5KZRdW1FhaW0Tm4aZQWD7L6tWgX72iH4iTcvPou1O+wuJi
+        RUj3jvWJynakAA/T+a/ApJct3ny5wYKGE/4Yfq5C09n2ka3/E6eFo5mj56jdp58vCu/YeB0HKdi
+        5ueadr62KXZdr0DDng5+jufjvkVleqVKY0QdqkDWryp9pY7liDbfL97UZP3e0XeAXltDd9ue/BX
+        JG/BbL30eKHgiGwI3wC9N0er5hXWg8mV3baBdYpZ+PAaqXYohZ2XHT
+X-Google-Smtp-Source: AK7set+rnKITKUu+e9SuOQ+5H6JtjLfsrNOmt1mNxcIxXzICrHl8yEhVX67q2BJU5mmDz9Va+yoSzQ==
+X-Received: by 2002:adf:df83:0:b0:2bf:f027:3c30 with SMTP id z3-20020adfdf83000000b002bff0273c30mr9874541wrl.56.1675932192827;
+        Thu, 09 Feb 2023 00:43:12 -0800 (PST)
+Received: from [10.0.0.6] (bzq-79-181-202-158.red.bezeqint.net. [79.181.202.158])
+        by smtp.gmail.com with ESMTPSA id o16-20020adfe810000000b002c3e698d7a4sm701332wrm.24.2023.02.09.00.43.11
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 09 Feb 2023 00:43:12 -0800 (PST)
+Message-ID: <412ef57499e8ad13c815516f11cd00479a35587a.camel@scylladb.com>
+Subject: BUG: kernel NULL pointer dereference, address: 0000000000000042
+From:   Avi Kivity <avi@scylladb.com>
+To:     linux-xfs@vger.kernel.org
+Date:   Thu, 09 Feb 2023 10:43:10 +0200
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.46.3 (3.46.3-1.fc37) 
+MIME-Version: 1.0
+X-CLOUD-SEC-AV-Sent: true
+X-CLOUD-SEC-AV-Info: scylladb,google_mail,monitor
+X-Gm-Spam: 0
+X-Gm-Phishy: 0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 9, 2023 at 12:21 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Wed, Feb 08, 2023 at 11:40:59AM -0800, Darrick J. Wong wrote:
-> > On Wed, Feb 08, 2023 at 09:02:58PM +0200, Amir Goldstein wrote:
-> > > On Wed, Feb 8, 2023 at 7:52 PM Leah Rumancik <leah.rumancik@gmail.com> wrote:
-> > > >
-> > > > Hello again,
-> > > >
-> > > > Here is the next batch of backports for 5.15.y. Testing included
-> > > > 25 runs of auto group on 12 xfs configs. No regressions were seen.
-> > > > I checked xfs/538 was run without issue as this test was mentioned
-> > > > in 56486f307100. Also, from 86d40f1e49e9, I ran ran xfs/117 with
-> > > > XFS compiled as a module and TEST_FS_MODULE_REOLOAD set, but I was
-> > > > unable to reproduce the issue.
-> > >
-> > > Did you find any tests that started to pass or whose failure rate reduced?
-> >
-> > I wish Leah had, but there basically aren't any tests for the problems
-> > fixed in this set for her to find. :(
-> .....
-> > > There are very few Fixes: annotations in these commits so it is hard for
-> > > me to assess if any of them are relevant/important/worth the effort/risk
-> > > to backport to 5.10.
-> >
-> > <nod> Dave's fixpatches rarely have Fixes tags attached.  It's difficult
-> > to get him to do that because he has so much bad history with AUTOSEL.
-> > I've tried to get him to add them in the past, but if I'm already
-> > stressed out and Dave doesn't reply then I tend to merge the fix and
-> > move on.
->
-> In my defense, all the "fixes" from me in this series (except for
-> the one with a fixes tag on it) date back so long ago it was
-> difficult to identify what commit actually introduced the issue.
-> Once we're talking about "it's been there for at least a decade" -
-> espcially for fuzzer issues - identifying the exact commit is time
-> consuming and often not possible, nor really useful for anything.
->
+Workload: compilation and running unit tests. The task that crashed is
+a unit test.
 
-I wouldn't want anyone to spend more time on fuzzer issues and
-I myself have given those very little attention.
-My expectation is to always have a Fixes tag when a developer
-knows they are fixing a regression and best effort when it is easy
-for the developer to determine when the buggy code was merged.
+Kernel: 6.1.8-200.fc37.x86_64
 
-It doesn't even have to be in the form of a Fixes tag.
-If the cover letter says "fixes to the $FEATURE from v5.18"
-that is good enough for me.
+Previously known stable on 5.8.9-200.fc32.x86_64. Two crashes seen so
+far.
 
-As a stable maintainer, if a commit has no Fixes tag and no hint
-in the cover letter about relevant kernel versions, I will assume
-it is relevant to the LTS kernel and spend time on the manual triage.
-If a developer adds a Fixes tag where relevant, that can save my
-time by eliminating commits irrelevant for e.g. 5.10.y.
-This wasn't the case in this series I guess.
 
-> I'm also not going to tag a patch with "fixes commit xyz" when
-> commit xyz isn't actually the cause of the problem just so that
-> someone can blindly use that as a "it's got a fixes tag on it, we
-> should back port it" trigger.
->
-> That's the whole problem with AUTOSEL - blindly applying anything
-> with a fixes tag on it that merges cleanly into an older kernel -
-> and the whole point of having a human actually manage the stable
-> kernel backports.
->
-> The stable XFS kernel maintainer is supposed to be actively looking
-> at the commits that go into the upstream kernel to determine if they
-> are relevant or not to the given stable kernel, regardless of
-> whether they address fstests failures, have fixes/stable tags on
-> them, etc. If all we needed stable maintainers to do is turn a crank
-> handle, then we'd be perfectly OK with AUTOSEL and the upstream
-> stable kernel process....
->
-
-Yes. The reason I did not pick any of the commits in this series for 5.10
-is not because lack of Fixes/tests, but because I read the cover letters
-(thanks for the links Leah!) and commit messages and conclude that
-the risk/effort does not make the cut.
-
-But this conclusion was based very much on my own intuition and my
-own interpretation of the cover letters. This is why I asked Chandan to
-take another look.
-
-I encourage any developer who writes a cover letter to share their
-own opinion about the relevancy and risks associated with backporting
-their patch set to LTS kernels - make it as vague statement as you
-wish, anything that can help a human LTS maintainer do their job better.
-
-Thanks,
-Amir.
+Feb  7 17:19:33 localhost kernel: BUG: kernel NULL pointer dereference,
+address: 0000000000000042
+Feb  7 17:19:33 localhost kernel: #PF: supervisor read access in kernel
+mode
+Feb  7 17:19:33 localhost kernel: #PF: error_code(0x0000) - not-present
+page
+Feb  7 17:19:33 localhost kernel: PGD 80000001cbb1f067 P4D
+80000001cbb1f067 PUD 9cbb75067 PMD 0=20
+Feb  7 17:19:33 localhost kernel: Oops: 0000 [#1] PREEMPT SMP PTI
+Feb  7 17:19:33 localhost kernel: CPU: 24 PID: 3718328 Comm:
+transport_test Tainted: G S                 6.1.8-200.fc37.x86_64 #1
+Feb  7 17:19:33 localhost kernel: Hardware name: Dell Inc. PowerEdge
+R730/0599V5, BIOS 2.9.1 12/04/2018
+Feb  7 17:19:33 localhost kernel: RIP:
+0010:next_uptodate_page+0x46/0x200
+Feb  7 17:19:33 localhost kernel: Code: 0f 84 3f 01 00 00 48 81 ff 06
+04 00 00 0f 84 b3 00 00 00 48 81 ff 02 04 00 00 0f 84 37 01 00 00 40 f6
+c7 01 0f 85 9c 00 00 00 <48> 8b 07 a8 01 0f 85 91 00 00 00 8b 47 34 85
+c0 0f 84 86 00 00 00
+Feb  7 17:19:33 localhost kernel: RSP: 0000:ffffa83e4ed67cc8 EFLAGS:
+00010246
+Feb  7 17:19:33 localhost kernel: RAX: 0000000000000042 RBX:
+ffffa83e4ed67e00 RCX: 000000000000146e
+Feb  7 17:19:33 localhost kernel: RDX: ffffa83e4ed67d20 RSI:
+ffff94a9046316b0 RDI: 0000000000000042
+Feb  7 17:19:33 localhost kernel: RBP: ffffa83e4ed67d20 R08:
+000000000000146e R09: 0000000000dfd000
+Feb  7 17:19:33 localhost kernel: R10: 000000000000145f R11:
+ffff94978b85960c R12: ffff94a9046316b0
+Feb  7 17:19:33 localhost kernel: R13: 000000000000146e R14:
+ffff94a9046316b0 R15: ffff948f8bb1f000
+Feb  7 17:19:33 localhost kernel: FS:  00007fd68fcb9d40(0000)
+GS:ffff949dffd00000(0000) knlGS:0000000000000000
+Feb  7 17:19:33 localhost kernel: CS:  0010 DS: 0000 ES: 0000 CR0:
+0000000080050033
+Feb  7 17:19:33 localhost kernel: CR2: 0000000000000042 CR3:
+00000001dc1be005 CR4: 00000000001706e0
+Feb  7 17:19:33 localhost kernel: Call Trace:
+Feb  7 17:19:33 localhost kernel: <TASK>
+Feb  7 17:19:33 localhost kernel: filemap_map_pages+0x9f/0x7b0
+Feb  7 17:19:33 localhost kernel: xfs_filemap_map_pages+0x41/0x60 [xfs]
+Feb  7 17:19:33 localhost kernel: do_fault+0x1bf/0x430
+Feb  7 17:19:33 localhost kernel: __handle_mm_fault+0x63d/0xe40
+Feb  7 17:19:33 localhost kernel: ? do_sigaction+0x11a/0x240
+Feb  7 17:19:33 localhost kernel: handle_mm_fault+0xdb/0x2d0
+Feb  7 17:19:33 localhost kernel: do_user_addr_fault+0x1cd/0x690
+Feb  7 17:19:33 localhost kernel: exc_page_fault+0x70/0x170
+Feb  7 17:19:33 localhost kernel: asm_exc_page_fault+0x22/0x30
+Feb  7 17:19:33 localhost kernel: RIP: 0033:0x1666350
+Feb  7 17:19:33 localhost kernel: Code: Unable to access opcode bytes
+at 0x1666326.
+Feb  7 17:19:33 localhost kernel: RSP: 002b:00007ffde7fa86d8 EFLAGS:
+00010212
+Feb  7 17:19:33 localhost kernel: RAX: 0000000000000000 RBX:
+00007ffde7fa8748 RCX: 0000000002ed4468
+Feb  7 17:19:33 localhost kernel: RDX: 00006000000c4f50 RSI:
+00007ffde7fa8748 RDI: 0000000000000012
+Feb  7 17:19:33 localhost kernel: RBP: 0000000000000012 R08:
+0000000000000001 R09: 0000000002f46860
+Feb  7 17:19:33 localhost kernel: R10: 00007fd69219cac0 R11:
+00007fd69224e670 R12: 0000000000000000
+Feb  7 17:19:33 localhost kernel: R13: 00006000000c4f50 R14:
+0000000002ed4470 R15: 00007fd693be0000
+Feb  7 17:19:33 localhost kernel: </TASK>
+Feb  7 17:19:33 localhost kernel: Modules linked in: xsk_diag veth tls
+xt_conntrack xt_MASQUERADE nf_conntrack_netlink xt_addrtype nft_compat
+br_netfilter bridge stp llc intel_rapl_msr dell_wmi iTCO_wdt
+dell_smbios intel_pmc_bxt iTCO_vendor_support dell_wmi_descriptor
+ledtrig_audio sparse_keymap video dcdbas intel_rapl_common sb_edac
+x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm ipmi_ssif
+irqbypass rapl intel_cstate intel_uncore ipmi_si ipmi_devintf
+ipmi_msghandler nft_fib_inet nft_fib_ipv4 nft_fib_ipv6 nft_fib
+nft_reject_inet nf_reject_ipv4 nf_reject_ipv6 nft_reject nft_ct
+nft_chain_nat nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 rfkill
+overlay ip_set nf_tables nfnetlink qrtr acpi_power_meter mxm_wmi mei_me
+mei lpc_ich auth_rpcgss ip6_tables ip_tables sunrpc zram xfs
+crct10dif_pclmul crc32_pclmul nvme crc32c_intel polyval_clmulni
+polyval_generic ixgbe ghash_clmulni_intel nvme_core sha512_ssse3
+megaraid_sas tg3 mgag200 mdio nvme_common dca wmi scsi_dh_rdac
+scsi_dh_emc scsi_dh_alua
+Feb  7 17:19:33 localhost kernel: dm_multipath fuse
+Feb  7 17:19:33 localhost kernel: CR2: 0000000000000042
+Feb  7 17:19:33 localhost kernel: ---[ end trace 0000000000000000 ]---
+Feb  7 17:19:33 localhost kernel: RIP:
+0010:next_uptodate_page+0x46/0x200
+Feb  7 17:19:33 localhost kernel: Code: 0f 84 3f 01 00 00 48 81 ff 06
+04 00 00 0f 84 b3 00 00 00 48 81 ff 02 04 00 00 0f 84 37 01 00 00 40 f6
+c7 01 0f 85 9c 00 00 00 <48> 8b 07 a8 01 0f 85 91 00 00 00 8b 47 34 85
+c0 0f 84 86 00 00 00
+Feb  7 17:19:33 localhost kernel: RSP: 0000:ffffa83e4ed67cc8 EFLAGS:
+00010246
+Feb  7 17:19:33 localhost kernel: RAX: 0000000000000042 RBX:
+ffffa83e4ed67e00 RCX: 000000000000146e
+Feb  7 17:19:33 localhost kernel: RDX: ffffa83e4ed67d20 RSI:
+ffff94a9046316b0 RDI: 0000000000000042
+Feb  7 17:19:33 localhost kernel: RBP: ffffa83e4ed67d20 R08:
+000000000000146e R09: 0000000000dfd000
+Feb  7 17:19:33 localhost kernel: R10: 000000000000145f R11:
+ffff94978b85960c R12: ffff94a9046316b0
+Feb  7 17:19:33 localhost kernel: R13: 000000000000146e R14:
+ffff94a9046316b0 R15: ffff948f8bb1f000
+Feb  7 17:19:33 localhost kernel: FS:  00007fd68fcb9d40(0000)
+GS:ffff949dffd00000(0000) knlGS:0000000000000000
