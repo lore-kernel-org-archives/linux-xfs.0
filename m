@@ -2,69 +2,69 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B39EC05027
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Feb 2023 22:26:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60A52C61DA4
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Feb 2023 22:26:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229862AbjBIW0e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Feb 2023 17:26:34 -0500
+        id S229944AbjBIW0g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Feb 2023 17:26:36 -0500
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230032AbjBIW0c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Feb 2023 17:26:32 -0500
-Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE2AB6BAA6
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2023 14:26:20 -0800 (PST)
-Received: by mail-pl1-x633.google.com with SMTP id o8so2179696pls.11
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Feb 2023 14:26:20 -0800 (PST)
+        with ESMTP id S230032AbjBIW0e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Feb 2023 17:26:34 -0500
+Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2895568AE3
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2023 14:26:30 -0800 (PST)
+Received: by mail-pj1-x1032.google.com with SMTP id a8-20020a17090a6d8800b002336b48f653so1764413pjk.3
+        for <linux-xfs@vger.kernel.org>; Thu, 09 Feb 2023 14:26:30 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=+2mSyV8N3Jc1mBFCst0iX1czR7TTrbjWy8i3qYXVZcA=;
-        b=DbGhhj4wR+glCYp/d1yczv8sn+ZZ8bDrPf/Ai4CmgWsZuhm7B6EHcaXlIw0QlpcZWb
-         +JJRUbtKChpZkEnF14mWFDwTA+siLtu/SlseKjoshEE71gFSj7XYQwmC3B+Sin9bCtPZ
-         8dvFx5Yo5C/Sz9qwhO6ccEfi+zxEXtHMgeEoyOv1bJksEDghHxG+DWu7xsxWRISkQiVD
-         vPO125oyh7cx9t1kRVK+sZFlw6i15YAAKn8sXtEcTpzUaTrI/KVOgwV8z0GC+blj8z9U
-         kEujbtfvyruMItsvVIrdKsX9cJwnujI2GhejBXVoAJwseFXql37Ac0O34i9gYwTbXbAa
-         OtZw==
+        bh=I9lbwCZzIysHgaPLJ3pbh8BwWz1zuriXycaeBoxT4K0=;
+        b=LZQJ8Q8qvGw/qttyvbCaQ4W1mBeMhth7RVHmMqiyAFRE8jX+qsSOPtxCOzCNbeRKjy
+         6xh23N91GkYFlam/tZXzIeTBIyHC+pRTaE+v1pE2+fQTI4Do4FOS/m/pmv4dZwvBBhZd
+         ABX5fIluX7IoMddZPiQktq/TpyYh60lVFdw2/rbDKgALltAPmvFGzH3RY2TxQp01DKgX
+         XTCNoYcyovhETi+D5Yz/1kC/M28yF4SXBeHd+rsVzWjLN+sjvAZnSl5G0EoQ4ovpH7D+
+         eetqh7igCs1Bdh3JozP+NidUXQF18/SZ2qyuGXNMW8a825nXhgQDsC9IJfIn2Hxji9Jf
+         RvBw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=+2mSyV8N3Jc1mBFCst0iX1czR7TTrbjWy8i3qYXVZcA=;
-        b=y4Ih7MDhDE2P+3zSEsYxPl68i0XSzpoaV1UeCeDMMRQPZIuDzq9xFG4T/vrKoe5Lxv
-         b2GQ+j2PkXcqIYZnq33NA5ywSwQTJ9QZBVyAIdQ0c4OBxFICU/FD9H7b78E7oqARI8zW
-         FMsck/5FmBp4AVAqjmQSvvY/OOh4YHTismjYz20vgGkvSl0baLsoFN5p0lRoyhI2HaZr
-         w4jrezTIThtAS4MvGNs8/R1zQyxf+DTNNDR2MSSxnRu9sIcvdU1wZeyUCPbLOPBrwjRm
-         +IvGjxeGJ5OCoovmgFWx1BI5lTGMduVR9mmZCxwSiCxiXp0wfUIajJYvC13xx8VToY54
-         bzEA==
-X-Gm-Message-State: AO0yUKWRNeDy/1jGaF9dgRHkVH0tHHxMznfr999iriDKhaG1oBAJ/kdm
-        RPpy50Crfa3XWFI3yYSzQiNz0TWIdDMrVtC/
-X-Google-Smtp-Source: AK7set8sY8gWWWloWIALMqNg2SzAG2051txTCta8VXvHC6q88LrURnrcHP5tkk2g/dFlHiRWH+v++A==
-X-Received: by 2002:a17:903:1206:b0:191:1729:d7e7 with SMTP id l6-20020a170903120600b001911729d7e7mr14102528plh.67.1675981580376;
-        Thu, 09 Feb 2023 14:26:20 -0800 (PST)
+        bh=I9lbwCZzIysHgaPLJ3pbh8BwWz1zuriXycaeBoxT4K0=;
+        b=WEpG2HoILutQxg/Bp757FEzLv74A4tMFZ2xMjy4nsi8SWqrKSoHHFY46X2jFiAeDOl
+         yVCmXR/+IxXBu3Zli2epeQEf+fFUGjmqjTQk0wtdfQhlSa8GlQTn8QbL+Awo92dxfdK/
+         AGWIpt00W+AKI+PEPdfz7aOyuTpsCEwrSaiknt2YW0naxFRgOVCYAWt3IYUVu5TEgOCI
+         TnitYKFSoRq1UQcZ0WEAEyJ52yuTZewrJLEn53CnqURS3FKY0tS4zr2CdOdwBdqfS7Dy
+         uIhGbLEycQ2r7xmxAiCbd4dKOYVUcW4a4IGfWJwIZgkusFEYsMhWpd/1U3kZEjcgNu6H
+         q2uQ==
+X-Gm-Message-State: AO0yUKUFYJMdTid9C6gC1+c2D8oAMep+tuOFAi9CN0VI0318YjH9Gj33
+        2CdH2dWFLiZ9LPiFlvNazVje4aAt7L05yl/P
+X-Google-Smtp-Source: AK7set+ylRqSUDYhIbbfK8dNUTFmM5wSpjwZJ7o3avZNkDWLc5XToMOuOKitz1QwYgmYfhfOFwxslw==
+X-Received: by 2002:a17:90b:17c2:b0:22c:69b6:2be8 with SMTP id me2-20020a17090b17c200b0022c69b62be8mr14298413pjb.8.1675981589619;
+        Thu, 09 Feb 2023 14:26:29 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-4-128.pa.nsw.optusnet.com.au. [49.181.4.128])
-        by smtp.gmail.com with ESMTPSA id 17-20020a170902c15100b0019a70a85e8fsm133206plj.220.2023.02.09.14.26.19
+        by smtp.gmail.com with ESMTPSA id y19-20020a637d13000000b004dfacb4804bsm1787161pgc.21.2023.02.09.14.26.29
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Feb 2023 14:26:20 -0800 (PST)
+        Thu, 09 Feb 2023 14:26:29 -0800 (PST)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <dave@fromorbit.com>)
-        id 1pQFFM-00DOW4-MA
+        id 1pQFFM-00DOVA-5Y
         for linux-xfs@vger.kernel.org; Fri, 10 Feb 2023 09:18:28 +1100
 Received: from dave by devoid.disaster.area with local (Exim 4.96)
         (envelope-from <dave@devoid.disaster.area>)
-        id 1pQFFM-00FcOK-2B
+        id 1pQFFM-00FcMs-0W
         for linux-xfs@vger.kernel.org;
         Fri, 10 Feb 2023 09:18:28 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 30/42] xfs: factor out filestreams from xfs_bmap_btalloc_nullfb
-Date:   Fri, 10 Feb 2023 09:18:13 +1100
-Message-Id: <20230209221825.3722244-31-david@fromorbit.com>
+Subject: [PATCH 12/42] xfs: convert xfs_ialloc_next_ag() to an atomic
+Date:   Fri, 10 Feb 2023 09:17:55 +1100
+Message-Id: <20230209221825.3722244-13-david@fromorbit.com>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230209221825.3722244-1-david@fromorbit.com>
 References: <20230209221825.3722244-1-david@fromorbit.com>
@@ -76,243 +76,97 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-There's many if (filestreams) {} else {} branches in this function.
-Split it out into a filestreams specific function so that we can
-then work directly on cleaning up the filestreams code without
-impacting the rest of the allocation algorithms.
+This is currently a spinlock lock protected rotor which can be
+implemented with a single atomic operation. Change it to be more
+efficient and get rid of the m_agirotor_lock. Noticed while
+converting the inode allocation AG selection loop to active perag
+references.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 173 ++++++++++++++++++++++-----------------
- 1 file changed, 99 insertions(+), 74 deletions(-)
+ fs/xfs/libxfs/xfs_ialloc.c | 17 +----------------
+ fs/xfs/libxfs/xfs_sb.c     |  3 ++-
+ fs/xfs/xfs_mount.h         |  3 +--
+ fs/xfs/xfs_super.c         |  1 -
+ 4 files changed, 4 insertions(+), 20 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index ee402ac8c551..187200488ac0 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3234,8 +3234,8 @@ xfs_bmap_btalloc_select_lengths(
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index c8b31c06a95d..86b7adc355e6 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -1576,21 +1576,6 @@ xfs_dialloc_roll(
  	return error;
  }
  
--STATIC int
--xfs_bmap_btalloc_filestreams(
-+static int
-+xfs_bmap_btalloc_filestreams_select_lengths(
- 	struct xfs_bmalloca	*ap,
- 	struct xfs_alloc_arg	*args,
- 	xfs_extlen_t		*blen)
-@@ -3576,32 +3576,101 @@ xfs_bmap_btalloc_at_eof(
- 	return 0;
- }
- 
-+/*
-+ * We have failed multiple allocation attempts so now are in a low space
-+ * allocation situation. Try a locality first full filesystem minimum length
-+ * allocation whilst still maintaining necessary total block reservation
-+ * requirements.
-+ *
-+ * If that fails, we are now critically low on space, so perform a last resort
-+ * allocation attempt: no reserve, no locality, blocking, minimum length, full
-+ * filesystem free space scan. We also indicate to future allocations in this
-+ * transaction that we are critically low on space so they don't waste time on
-+ * allocation modes that are unlikely to succeed.
-+ */
-+static int
-+xfs_bmap_btalloc_low_space(
-+	struct xfs_bmalloca	*ap,
-+	struct xfs_alloc_arg	*args)
-+{
-+	int			error;
-+
-+	if (args->minlen > ap->minlen) {
-+		args->minlen = ap->minlen;
-+		error = xfs_alloc_vextent_start_ag(args, ap->blkno);
-+		if (error || args->fsbno != NULLFSBLOCK)
-+			return error;
-+	}
-+
-+	/* Last ditch attempt before failure is declared. */
-+	args->total = ap->minlen;
-+	error = xfs_alloc_vextent_first_ag(args, 0);
-+	if (error)
-+		return error;
-+	ap->tp->t_flags |= XFS_TRANS_LOWMODE;
-+	return 0;
-+}
-+
-+static int
-+xfs_bmap_btalloc_filestreams(
-+	struct xfs_bmalloca	*ap,
-+	struct xfs_alloc_arg	*args,
-+	int			stripe_align)
-+{
-+	xfs_agnumber_t		agno = xfs_filestream_lookup_ag(ap->ip);
-+	xfs_extlen_t		blen = 0;
-+	int			error;
-+
-+	/* Determine the initial block number we will target for allocation. */
-+	if (agno == NULLAGNUMBER)
-+		agno = 0;
-+	ap->blkno = XFS_AGB_TO_FSB(args->mp, agno, 0);
-+	xfs_bmap_adjacent(ap);
-+
-+	/*
-+	 * If there is very little free space before we start a
-+	 * filestreams allocation, we're almost guaranteed to fail to
-+	 * find an AG with enough contiguous free space to succeed, so
-+	 * just go straight to the low space algorithm.
-+	 */
-+	if (ap->tp->t_flags & XFS_TRANS_LOWMODE) {
-+		args->minlen = ap->minlen;
-+		return xfs_bmap_btalloc_low_space(ap, args);
-+	}
-+
-+	/*
-+	 * Search for an allocation group with a single extent large enough for
-+	 * the request.  If one isn't found, then adjust the minimum allocation
-+	 * size to the largest space found.
-+	 */
-+	error = xfs_bmap_btalloc_filestreams_select_lengths(ap, args, &blen);
-+	if (error)
-+		return error;
-+
-+	if (ap->aeof) {
-+		error = xfs_bmap_btalloc_at_eof(ap, args, blen, stripe_align,
-+				true);
-+		if (error || args->fsbno != NULLFSBLOCK)
-+			return error;
-+	}
-+
-+	error = xfs_alloc_vextent_near_bno(args, ap->blkno);
-+	if (error || args->fsbno != NULLFSBLOCK)
-+		return error;
-+
-+	return xfs_bmap_btalloc_low_space(ap, args);
-+}
-+
- static int
- xfs_bmap_btalloc_best_length(
- 	struct xfs_bmalloca	*ap,
- 	struct xfs_alloc_arg	*args,
- 	int			stripe_align)
+-static xfs_agnumber_t
+-xfs_ialloc_next_ag(
+-	xfs_mount_t	*mp)
+-{
+-	xfs_agnumber_t	agno;
+-
+-	spin_lock(&mp->m_agirotor_lock);
+-	agno = mp->m_agirotor;
+-	if (++mp->m_agirotor >= mp->m_maxagi)
+-		mp->m_agirotor = 0;
+-	spin_unlock(&mp->m_agirotor_lock);
+-
+-	return agno;
+-}
+-
+ static bool
+ xfs_dialloc_good_ag(
+ 	struct xfs_perag	*pag,
+@@ -1748,7 +1733,7 @@ xfs_dialloc(
+ 	 * an AG has enough space for file creation.
+ 	 */
+ 	if (S_ISDIR(mode))
+-		start_agno = xfs_ialloc_next_ag(mp);
++		start_agno = atomic_inc_return(&mp->m_agirotor) % mp->m_maxagi;
+ 	else {
+ 		start_agno = XFS_INO_TO_AGNO(mp, parent);
+ 		if (start_agno >= mp->m_maxagi)
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 1eeecf2eb2a7..99cc03a298e2 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -909,7 +909,8 @@ xfs_sb_mount_common(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_sb		*sbp)
  {
--	struct xfs_mount	*mp = args->mp;
- 	xfs_extlen_t		blen = 0;
--	bool			is_filestream = false;
- 	int			error;
+-	mp->m_agfrotor = mp->m_agirotor = 0;
++	mp->m_agfrotor = 0;
++	atomic_set(&mp->m_agirotor, 0);
+ 	mp->m_maxagi = mp->m_sb.sb_agcount;
+ 	mp->m_blkbit_log = sbp->sb_blocklog + XFS_NBBYLOG;
+ 	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 8aca2cc173ac..f3269c0626f0 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -210,8 +210,7 @@ typedef struct xfs_mount {
+ 	struct xfs_error_cfg	m_error_cfg[XFS_ERR_CLASS_MAX][XFS_ERR_ERRNO_MAX];
+ 	struct xstats		m_stats;	/* per-fs stats */
+ 	xfs_agnumber_t		m_agfrotor;	/* last ag where space found */
+-	xfs_agnumber_t		m_agirotor;	/* last ag dir inode alloced */
+-	spinlock_t		m_agirotor_lock;/* .. and lock protecting it */
++	atomic_t		m_agirotor;	/* last ag dir inode alloced */
  
--	if ((ap->datatype & XFS_ALLOC_USERDATA) &&
--	    xfs_inode_is_filestream(ap->ip))
--		is_filestream = true;
--
--	/*
--	 * Determine the initial block number we will target for allocation.
--	 */
--	if (is_filestream) {
--		xfs_agnumber_t	agno = xfs_filestream_lookup_ag(ap->ip);
--		if (agno == NULLAGNUMBER)
--			agno = 0;
--		ap->blkno = XFS_AGB_TO_FSB(mp, agno, 0);
--	} else {
--		ap->blkno = XFS_INO_TO_FSB(mp, ap->ip->i_ino);
--	}
-+	ap->blkno = XFS_INO_TO_FSB(args->mp, ap->ip->i_ino);
- 	xfs_bmap_adjacent(ap);
+ 	/* Memory shrinker to throttle and reprioritize inodegc */
+ 	struct shrinker		m_inodegc_shrinker;
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 0c4b73e9b29d..96375b5622fd 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1922,7 +1922,6 @@ static int xfs_init_fs_context(
+ 		return -ENOMEM;
  
- 	/*
-@@ -3609,21 +3678,7 @@ xfs_bmap_btalloc_best_length(
- 	 * the request.  If one isn't found, then adjust the minimum allocation
- 	 * size to the largest space found.
- 	 */
--	if (is_filestream) {
--		/*
--		 * If there is very little free space before we start a
--		 * filestreams allocation, we're almost guaranteed to fail to
--		 * find an AG with enough contiguous free space to succeed, so
--		 * just go straight to the low space algorithm.
--		 */
--		if (ap->tp->t_flags & XFS_TRANS_LOWMODE) {
--			args->minlen = ap->minlen;
--			goto critically_low_space;
--		}
--		error = xfs_bmap_btalloc_filestreams(ap, args, &blen);
--	} else {
--		error = xfs_bmap_btalloc_select_lengths(ap, args, &blen);
--	}
-+	error = xfs_bmap_btalloc_select_lengths(ap, args, &blen);
- 	if (error)
- 		return error;
- 
-@@ -3635,50 +3690,16 @@ xfs_bmap_btalloc_best_length(
- 	 */
- 	if (ap->aeof && !(ap->tp->t_flags & XFS_TRANS_LOWMODE)) {
- 		error = xfs_bmap_btalloc_at_eof(ap, args, blen, stripe_align,
--				is_filestream);
--		if (error)
-+				false);
-+		if (error || args->fsbno != NULLFSBLOCK)
- 			return error;
--		if (args->fsbno != NULLFSBLOCK)
--			return 0;
- 	}
- 
--	if (is_filestream)
--		error = xfs_alloc_vextent_near_bno(args, ap->blkno);
--	else
--		error = xfs_alloc_vextent_start_ag(args, ap->blkno);
--	if (error)
-+	error = xfs_alloc_vextent_start_ag(args, ap->blkno);
-+	if (error || args->fsbno != NULLFSBLOCK)
- 		return error;
--	if (args->fsbno != NULLFSBLOCK)
--		return 0;
- 
--	/*
--	 * Try a locality first full filesystem minimum length allocation whilst
--	 * still maintaining necessary total block reservation requirements.
--	 */
--	if (args->minlen > ap->minlen) {
--		args->minlen = ap->minlen;
--		error = xfs_alloc_vextent_start_ag(args, ap->blkno);
--		if (error)
--			return error;
--	}
--	if (args->fsbno != NULLFSBLOCK)
--		return 0;
--
--	/*
--	 * We are now critically low on space, so this is a last resort
--	 * allocation attempt: no reserve, no locality, blocking, minimum
--	 * length, full filesystem free space scan. We also indicate to future
--	 * allocations in this transaction that we are critically low on space
--	 * so they don't waste time on allocation modes that are unlikely to
--	 * succeed.
--	 */
--critically_low_space:
--	args->total = ap->minlen;
--	error = xfs_alloc_vextent_first_ag(args, 0);
--	if (error)
--		return error;
--	ap->tp->t_flags |= XFS_TRANS_LOWMODE;
--	return 0;
-+	return xfs_bmap_btalloc_low_space(ap, args);
- }
- 
- static int
-@@ -3712,7 +3733,11 @@ xfs_bmap_btalloc(
- 	/* Trim the allocation back to the maximum an AG can fit. */
- 	args.maxlen = min(ap->length, mp->m_ag_max_usable);
- 
--	error = xfs_bmap_btalloc_best_length(ap, &args, stripe_align);
-+	if ((ap->datatype & XFS_ALLOC_USERDATA) &&
-+	    xfs_inode_is_filestream(ap->ip))
-+		error = xfs_bmap_btalloc_filestreams(ap, &args, stripe_align);
-+	else
-+		error = xfs_bmap_btalloc_best_length(ap, &args, stripe_align);
- 	if (error)
- 		return error;
- 
+ 	spin_lock_init(&mp->m_sb_lock);
+-	spin_lock_init(&mp->m_agirotor_lock);
+ 	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
+ 	spin_lock_init(&mp->m_perag_lock);
+ 	mutex_init(&mp->m_growlock);
 -- 
 2.39.0
 
