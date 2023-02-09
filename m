@@ -2,69 +2,69 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C42B0C636D3
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Feb 2023 22:18:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69686C05027
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Feb 2023 22:18:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230362AbjBIWSm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Feb 2023 17:18:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54640 "EHLO
+        id S230307AbjBIWSn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Feb 2023 17:18:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54644 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230327AbjBIWSh (ORCPT
+        with ESMTP id S230326AbjBIWSh (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Feb 2023 17:18:37 -0500
-Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69CE169537
+Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A29B6BA8D
         for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2023 14:18:34 -0800 (PST)
-Received: by mail-pl1-x62c.google.com with SMTP id k13so4591906plg.0
+Received: by mail-pj1-x102d.google.com with SMTP id d13-20020a17090ad3cd00b0023127b2d602so3734153pjw.2
         for <linux-xfs@vger.kernel.org>; Thu, 09 Feb 2023 14:18:34 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=xin3lhPINgxQ/vw661cQaP/j5HNHxYnfWw/wAiiKWBU=;
-        b=Mv8Go6jsYihhqngiNo6s7k2YTS2RicjtYIueI54D29axcch+Gp/TLaE9+g4SqZ7H4/
-         Y7tYao04UpMPpuTlttMuFM7KMZvWoaFkoNCjJ9MVrv8rR/cX9QGossqmsu810RNVl1sE
-         RbJcEN6jBiKrzIywBudmAscD/zh6k5oeHNJWnK3sVs4QicKzBl7FCj/tAxuftGyQ3GTB
-         AssM6gNfwgfpodmZtoAEC2vny170pDflSkKuuhJAgpaFHs2jSImP1pwciiq4l6KDpw7l
-         V7Y3yrmpwkqm/bodKyV2mcv5jXOTsq/km9Nx8ZtB1iuFtfUaIiWH9N3eSO1+1YY6w3QS
-         91hw==
+        bh=HtlEUWGPzRjZ58wut1VIzchUTJD6sp0sZyLGTKMQzBM=;
+        b=t54g3Z66fbUcj4zCb2DJ7/QuArvGXqAZJCaNIYnCgosIdr6GDtxAyodUU33pIJExUy
+         +qCd2LipPv95mS2IPI1OoHzjxMBSMQPvLvjigTU23VOWqvRnamhpB1TmfEpzYaFi3t+W
+         E55vLXpCyFipNPRmG8JVBp3ZyuW2aA4RVlc/bs06ARiouiSf3IP8o27WsK7QIIyD93WM
+         OyBC1PYfT1+f7WI19qaIEwxcjdDDO4XxLPVnfuhGqweVHsuFhT4Yo1C5joYE298M7JkQ
+         AuDDuQpJSA0dpI4eNVJICGlgc7AwyJRt/Ks220X7TGuL7aAEUledAYEbcB65JVSh3pMQ
+         jgbQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=xin3lhPINgxQ/vw661cQaP/j5HNHxYnfWw/wAiiKWBU=;
-        b=auv+BeiZF643vO5Mo7GHmFzpVnGveIKlqo1ocPAIPF7e64k4AAgrTpV94ZPggldbdW
-         sIu2nO16qEMw+M2esbDHKnodM1AfxoTv04hM9yp1k4GRv6DDptzIEIrN5KoH8RB7Rv0q
-         NWAxI6npb2mjaNHobbYtG1BybC+wJtAGEoCJahhW1gZEqqs4T848eS1ziARniOFAdNnP
-         2y6qpWeSF2jlwRtgluzJCSyVr0HJkWr01lpDOrV8G9IWU3YT5QEMzqcchhRyibjev6mH
-         UroTfbVuz7f3ECn+pAlDim46dNb7WLupN6GMZ4ELh68J+m+Pc9b/FcnZ4r7f5m/0chJT
-         8CSw==
-X-Gm-Message-State: AO0yUKUacTOQIoGSSOUFzWT52v80zTgC2y7F0NRddNlPVNyU6mYglawR
-        2kFQ1qdn64eBUkSwh5jM3v1uo46JKfiiisei
-X-Google-Smtp-Source: AK7set/22Bk2f8O7uDRyqdbSA3rbYZpAQQN6feIqzJyX0wcp+0o0X/PTnznuFEmWamCy6I/bWJkvVQ==
-X-Received: by 2002:a17:903:12d7:b0:198:adc4:22a4 with SMTP id io23-20020a17090312d700b00198adc422a4mr5616290plb.31.1675981113720;
+        bh=HtlEUWGPzRjZ58wut1VIzchUTJD6sp0sZyLGTKMQzBM=;
+        b=pnq0h+vKZGBilFw+DWRUDY2dUr/zJ57FcphI8d8crHE9KhsgCxYo8UUvkNxd6wRtEh
+         B2YZBoHX43EgeVZuNLCsS8BHGN1dEzUC5CtbCGp7WIacDpEfhLUJf0QsdQX0r46XetA5
+         VXuyJlN93Rvf91283ZXb8ijRVqcTu7+ul+H1J56qbJH1RH29LsWyU1i5CE2zSwHgYgg5
+         mrLI3+WDmD+AMjptVJGeUl4xdZpe/GfsxPAv8zAKhJ4wfwXDyawe1v06sSkvunQ5K54q
+         7iDVNnOX6I6W6S1Vw8lxARwMzxhP9ZcGAY2fnqAHNpjuc01DUnkI8vnavM8WZl1E8266
+         RbEA==
+X-Gm-Message-State: AO0yUKVc0r+suVtWhzCVBJiUVjKuOCoHANIuSLP3bY/oUE4qS4kUodHs
+        HxRi65yYugu1KjBBV43CYPTxqT6USyLW67Rz
+X-Google-Smtp-Source: AK7set+9ZDP+qOazEZfsjiI9dGOUlwyefnUvQgZK2n187Ox3BqLOgdZQnD7tMUK4iG5cWDpTyZCwiQ==
+X-Received: by 2002:a17:902:ebd0:b0:193:1f24:a042 with SMTP id p16-20020a170902ebd000b001931f24a042mr10922273plg.29.1675981113406;
         Thu, 09 Feb 2023 14:18:33 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-4-128.pa.nsw.optusnet.com.au. [49.181.4.128])
-        by smtp.gmail.com with ESMTPSA id a7-20020a1709027e4700b001943d58268csm2011010pln.55.2023.02.09.14.18.30
+        by smtp.gmail.com with ESMTPSA id e21-20020a170902ed9500b00198ef76ce8dsm2014070plj.72.2023.02.09.14.18.30
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Thu, 09 Feb 2023 14:18:31 -0800 (PST)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <dave@fromorbit.com>)
-        id 1pQFFM-00DOV2-1s
-        for linux-xfs@vger.kernel.org; Fri, 10 Feb 2023 09:18:28 +1100
+        id 1pQFFL-00DOUo-Sq
+        for linux-xfs@vger.kernel.org; Fri, 10 Feb 2023 09:18:27 +1100
 Received: from dave by devoid.disaster.area with local (Exim 4.96)
         (envelope-from <dave@devoid.disaster.area>)
-        id 1pQFFM-00FcMS-08
+        id 1pQFFL-00FcM0-2m
         for linux-xfs@vger.kernel.org;
-        Fri, 10 Feb 2023 09:18:28 +1100
+        Fri, 10 Feb 2023 09:18:27 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 08/42] xfs: rework the perag trace points to be perag centric
-Date:   Fri, 10 Feb 2023 09:17:51 +1100
-Message-Id: <20230209221825.3722244-9-david@fromorbit.com>
+Subject: [PATCH 01/42] xfs: fix low space alloc deadlock
+Date:   Fri, 10 Feb 2023 09:17:44 +1100
+Message-Id: <20230209221825.3722244-2-david@fromorbit.com>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230209221825.3722244-1-david@fromorbit.com>
 References: <20230209221825.3722244-1-david@fromorbit.com>
@@ -76,183 +76,237 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-So that they all output the same information in the traces to make
-debugging refcount issues easier.
+I've recently encountered an ABBA deadlock with g/476. The upcoming
+changes seem to make this much easier to hit, but the underlying
+problem is a pre-existing one.
 
-This means that all the lookup/drop functions no longer need to use
-the full memory barrier atomic operations (atomic*_return()) so
-will have less overhead when tracing is off. The set/clear tag
-tracepoints no longer abuse the reference count to pass the tag -
-the tag being cleared is obvious from the _RET_IP_ that is recorded
-in the trace point.
+Essentially, if we select an AG for allocation, then lock the AGF
+and then fail to allocate for some reason (e.g. minimum length
+requirements cannot be satisfied), then we drop out of the
+allocation with the AGF still locked.
+
+The caller then modifies the allocation constraints - usually
+loosening them up - and tries again. This can result in trying to
+access AGFs that are lower than the AGF we already have locked from
+the failed attempt. e.g. the failed attempt skipped several AGs
+before failing, so we have locks an AG higher than the start AG.
+Retrying the allocation from the start AG then causes us to violate
+AGF lock ordering and this can lead to deadlocks.
+
+The deadlock exists even if allocation succeeds - we can do a
+followup allocations in the same transaction for BMBT blocks that
+aren't guaranteed to be in the same AG as the original, and can move
+into higher AGs. Hence we really need to move the tp->t_firstblock
+tracking down into xfs_alloc_vextent() where it can be set when we
+exit with a locked AG.
+
+xfs_alloc_vextent() can also check there if the requested
+allocation falls within the allow range of AGs set by
+tp->t_firstblock. If we can't allocate within the range set, we have
+to fail the allocation. If we are allowed to to non-blocking AGF
+locking, we can ignore the AG locking order limitations as we can
+use try-locks for the first iteration over requested AG range.
+
+This invalidates a set of post allocation asserts that check that
+the allocation is always above tp->t_firstblock if it is set.
+Because we can use try-locks to avoid the deadlock in some
+circumstances, having a pre-existing locked AGF doesn't always
+prevent allocation from lower order AGFs. Hence those ASSERTs need
+to be removed.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_ag.c | 25 +++++++++----------------
- fs/xfs/xfs_icache.c    |  4 ++--
- fs/xfs/xfs_trace.h     | 21 +++++++++++----------
- 3 files changed, 22 insertions(+), 28 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c | 69 ++++++++++++++++++++++++++++++++-------
+ fs/xfs/libxfs/xfs_bmap.c  | 14 --------
+ fs/xfs/xfs_trace.h        |  1 +
+ 3 files changed, 58 insertions(+), 26 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-index 46e25c682bf4..7cff61875340 100644
---- a/fs/xfs/libxfs/xfs_ag.c
-+++ b/fs/xfs/libxfs/xfs_ag.c
-@@ -44,16 +44,15 @@ xfs_perag_get(
- 	xfs_agnumber_t		agno)
- {
- 	struct xfs_perag	*pag;
--	int			ref = 0;
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index f8ff81c3de76..ffe6345bfafc 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -3164,10 +3164,13 @@ xfs_alloc_vextent(
+ 	xfs_alloctype_t		type;	/* input allocation type */
+ 	int			bump_rotor = 0;
+ 	xfs_agnumber_t		rotorstep = xfs_rotorstep; /* inode32 agf stepper */
++	xfs_agnumber_t		minimum_agno = 0;
  
- 	rcu_read_lock();
- 	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
- 	if (pag) {
-+		trace_xfs_perag_get(pag, _RET_IP_);
- 		ASSERT(atomic_read(&pag->pag_ref) >= 0);
--		ref = atomic_inc_return(&pag->pag_ref);
-+		atomic_inc(&pag->pag_ref);
+ 	mp = args->mp;
+ 	type = args->otype = args->type;
+ 	args->agbno = NULLAGBLOCK;
++	if (args->tp->t_firstblock != NULLFSBLOCK)
++		minimum_agno = XFS_FSB_TO_AGNO(mp, args->tp->t_firstblock);
+ 	/*
+ 	 * Just fix this up, for the case where the last a.g. is shorter
+ 	 * (or there's only one a.g.) and the caller couldn't easily figure
+@@ -3201,6 +3204,13 @@ xfs_alloc_vextent(
+ 		 */
+ 		args->agno = XFS_FSB_TO_AGNO(mp, args->fsbno);
+ 		args->pag = xfs_perag_get(mp, args->agno);
++
++		if (minimum_agno > args->agno) {
++			trace_xfs_alloc_vextent_skip_deadlock(args);
++			error = 0;
++			break;
++		}
++
+ 		error = xfs_alloc_fix_freelist(args, 0);
+ 		if (error) {
+ 			trace_xfs_alloc_vextent_nofix(args);
+@@ -3232,6 +3242,8 @@ xfs_alloc_vextent(
+ 	case XFS_ALLOCTYPE_FIRST_AG:
+ 		/*
+ 		 * Rotate through the allocation groups looking for a winner.
++		 * If we are blocking, we must obey minimum_agno contraints for
++		 * avoiding ABBA deadlocks on AGF locking.
+ 		 */
+ 		if (type == XFS_ALLOCTYPE_FIRST_AG) {
+ 			/*
+@@ -3239,7 +3251,7 @@ xfs_alloc_vextent(
+ 			 */
+ 			args->agno = XFS_FSB_TO_AGNO(mp, args->fsbno);
+ 			args->type = XFS_ALLOCTYPE_THIS_AG;
+-			sagno = 0;
++			sagno = minimum_agno;
+ 			flags = 0;
+ 		} else {
+ 			/*
+@@ -3248,6 +3260,7 @@ xfs_alloc_vextent(
+ 			args->agno = sagno = XFS_FSB_TO_AGNO(mp, args->fsbno);
+ 			flags = XFS_ALLOC_FLAG_TRYLOCK;
+ 		}
++
+ 		/*
+ 		 * Loop over allocation groups twice; first time with
+ 		 * trylock set, second time without.
+@@ -3276,19 +3289,21 @@ xfs_alloc_vextent(
+ 			if (args->agno == sagno &&
+ 			    type == XFS_ALLOCTYPE_START_BNO)
+ 				args->type = XFS_ALLOCTYPE_THIS_AG;
++
+ 			/*
+-			* For the first allocation, we can try any AG to get
+-			* space.  However, if we already have allocated a
+-			* block, we don't want to try AGs whose number is below
+-			* sagno. Otherwise, we may end up with out-of-order
+-			* locking of AGF, which might cause deadlock.
+-			*/
++			 * If we are try-locking, we can't deadlock on AGF
++			 * locks, so we can wrap all the way back to the first
++			 * AG. Otherwise, wrap back to the start AG so we can't
++			 * deadlock, and let the end of scan handler decide what
++			 * to do next.
++			 */
+ 			if (++(args->agno) == mp->m_sb.sb_agcount) {
+-				if (args->tp->t_firstblock != NULLFSBLOCK)
+-					args->agno = sagno;
+-				else
++				if (flags & XFS_ALLOC_FLAG_TRYLOCK)
+ 					args->agno = 0;
++				else
++					args->agno = sagno;
+ 			}
++
+ 			/*
+ 			 * Reached the starting a.g., must either be done
+ 			 * or switch to non-trylock mode.
+@@ -3300,7 +3315,14 @@ xfs_alloc_vextent(
+ 					break;
+ 				}
+ 
++				/*
++				 * Blocking pass next, so we must obey minimum
++				 * agno constraints to avoid ABBA AGF deadlocks.
++				 */
+ 				flags = 0;
++				if (minimum_agno > sagno)
++					sagno = minimum_agno;
++
+ 				if (type == XFS_ALLOCTYPE_START_BNO) {
+ 					args->agbno = XFS_FSB_TO_AGBNO(mp,
+ 						args->fsbno);
+@@ -3322,9 +3344,9 @@ xfs_alloc_vextent(
+ 		ASSERT(0);
+ 		/* NOTREACHED */
  	}
- 	rcu_read_unlock();
--	trace_xfs_perag_get(mp, agno, ref, _RET_IP_);
- 	return pag;
- }
+-	if (args->agbno == NULLAGBLOCK)
++	if (args->agbno == NULLAGBLOCK) {
+ 		args->fsbno = NULLFSBLOCK;
+-	else {
++	} else {
+ 		args->fsbno = XFS_AGB_TO_FSB(mp, args->agno, args->agbno);
+ #ifdef DEBUG
+ 		ASSERT(args->len >= args->minlen);
+@@ -3335,6 +3357,29 @@ xfs_alloc_vextent(
+ #endif
  
-@@ -68,7 +67,6 @@ xfs_perag_get_tag(
- {
- 	struct xfs_perag	*pag;
- 	int			found;
--	int			ref;
- 
- 	rcu_read_lock();
- 	found = radix_tree_gang_lookup_tag(&mp->m_perag_tree,
-@@ -77,9 +75,9 @@ xfs_perag_get_tag(
- 		rcu_read_unlock();
- 		return NULL;
  	}
--	ref = atomic_inc_return(&pag->pag_ref);
-+	trace_xfs_perag_get_tag(pag, _RET_IP_);
-+	atomic_inc(&pag->pag_ref);
- 	rcu_read_unlock();
--	trace_xfs_perag_get_tag(mp, pag->pag_agno, ref, _RET_IP_);
- 	return pag;
- }
- 
-@@ -87,11 +85,9 @@ void
- xfs_perag_put(
- 	struct xfs_perag	*pag)
++
++	/*
++	 * We end up here with a locked AGF. If we failed, the caller is likely
++	 * going to try to allocate again with different parameters, and that
++	 * can widen the AGs that are searched for free space. If we have to do
++	 * BMBT block allocation, we have to do a new allocation.
++	 *
++	 * Hence leaving this function with the AGF locked opens up potential
++	 * ABBA AGF deadlocks because a future allocation attempt in this
++	 * transaction may attempt to lock a lower number AGF.
++	 *
++	 * We can't release the AGF until the transaction is commited, so at
++	 * this point we must update the "firstblock" tracker to point at this
++	 * AG if the tracker is empty or points to a lower AG. This allows the
++	 * next allocation attempt to be modified appropriately to avoid
++	 * deadlocks.
++	 */
++	if (args->agbp &&
++	    (args->tp->t_firstblock == NULLFSBLOCK ||
++	     args->pag->pag_agno > minimum_agno)) {
++		args->tp->t_firstblock = XFS_AGB_TO_FSB(mp,
++					args->pag->pag_agno, 0);
++	}
+ 	xfs_perag_put(args->pag);
+ 	return 0;
+ error0:
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index c8c65387136c..de6d585c00f1 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3413,21 +3413,7 @@ xfs_bmap_process_allocated_extent(
+ 	xfs_fileoff_t		orig_offset,
+ 	xfs_extlen_t		orig_length)
  {
--	int	ref;
+-	int			nullfb;
 -
-+	trace_xfs_perag_put(pag, _RET_IP_);
- 	ASSERT(atomic_read(&pag->pag_ref) > 0);
--	ref = atomic_dec_return(&pag->pag_ref);
--	trace_xfs_perag_put(pag->pag_mount, pag->pag_agno, ref, _RET_IP_);
-+	atomic_dec(&pag->pag_ref);
- }
- 
- /*
-@@ -110,8 +106,7 @@ xfs_perag_grab(
- 	rcu_read_lock();
- 	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
- 	if (pag) {
--		trace_xfs_perag_grab(mp, pag->pag_agno,
--				atomic_read(&pag->pag_active_ref), _RET_IP_);
-+		trace_xfs_perag_grab(pag, _RET_IP_);
- 		if (!atomic_inc_not_zero(&pag->pag_active_ref))
- 			pag = NULL;
- 	}
-@@ -138,8 +133,7 @@ xfs_perag_grab_tag(
- 		rcu_read_unlock();
- 		return NULL;
- 	}
--	trace_xfs_perag_grab_tag(mp, pag->pag_agno,
--			atomic_read(&pag->pag_active_ref), _RET_IP_);
-+	trace_xfs_perag_grab_tag(pag, _RET_IP_);
- 	if (!atomic_inc_not_zero(&pag->pag_active_ref))
- 		pag = NULL;
- 	rcu_read_unlock();
-@@ -150,8 +144,7 @@ void
- xfs_perag_rele(
- 	struct xfs_perag	*pag)
- {
--	trace_xfs_perag_rele(pag->pag_mount, pag->pag_agno,
--			atomic_read(&pag->pag_active_ref), _RET_IP_);
-+	trace_xfs_perag_rele(pag, _RET_IP_);
- 	if (atomic_dec_and_test(&pag->pag_active_ref))
- 		wake_up(&pag->pag_active_wq);
- }
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 0f4a014dded3..8b2823d85a68 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -255,7 +255,7 @@ xfs_perag_set_inode_tag(
- 		break;
- 	}
- 
--	trace_xfs_perag_set_inode_tag(mp, pag->pag_agno, tag, _RET_IP_);
-+	trace_xfs_perag_set_inode_tag(pag, _RET_IP_);
- }
- 
- /* Clear a tag on both the AG incore inode tree and the AG radix tree. */
-@@ -289,7 +289,7 @@ xfs_perag_clear_inode_tag(
- 	radix_tree_tag_clear(&mp->m_perag_tree, pag->pag_agno, tag);
- 	spin_unlock(&mp->m_perag_lock);
- 
--	trace_xfs_perag_clear_inode_tag(mp, pag->pag_agno, tag, _RET_IP_);
-+	trace_xfs_perag_clear_inode_tag(pag, _RET_IP_);
- }
- 
- /*
+-	nullfb = ap->tp->t_firstblock == NULLFSBLOCK;
+-
+-	/*
+-	 * check the allocation happened at the same or higher AG than
+-	 * the first block that was allocated.
+-	 */
+-	ASSERT(nullfb ||
+-		XFS_FSB_TO_AGNO(args->mp, ap->tp->t_firstblock) <=
+-		XFS_FSB_TO_AGNO(args->mp, args->fsbno));
+-
+ 	ap->blkno = args->fsbno;
+-	if (nullfb)
+-		ap->tp->t_firstblock = args->fsbno;
+ 	ap->length = args->len;
+ 	/*
+ 	 * If the extent size hint is active, we tried to round the
 diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index eb5e49d44f13..1d99c30f66f0 100644
+index 6b0e9ae7c513..adddaeb44a56 100644
 --- a/fs/xfs/xfs_trace.h
 +++ b/fs/xfs/xfs_trace.h
-@@ -159,33 +159,34 @@ TRACE_EVENT(xlog_intent_recovery_failed,
- );
- 
- DECLARE_EVENT_CLASS(xfs_perag_class,
--	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int refcount,
--		 unsigned long caller_ip),
--	TP_ARGS(mp, agno, refcount, caller_ip),
-+	TP_PROTO(struct xfs_perag *pag, unsigned long caller_ip),
-+	TP_ARGS(pag, caller_ip),
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
- 		__field(xfs_agnumber_t, agno)
- 		__field(int, refcount)
-+		__field(int, active_refcount)
- 		__field(unsigned long, caller_ip)
- 	),
- 	TP_fast_assign(
--		__entry->dev = mp->m_super->s_dev;
--		__entry->agno = agno;
--		__entry->refcount = refcount;
-+		__entry->dev = pag->pag_mount->m_super->s_dev;
-+		__entry->agno = pag->pag_agno;
-+		__entry->refcount = atomic_read(&pag->pag_ref);
-+		__entry->active_refcount = atomic_read(&pag->pag_active_ref);
- 		__entry->caller_ip = caller_ip;
- 	),
--	TP_printk("dev %d:%d agno 0x%x refcount %d caller %pS",
-+	TP_printk("dev %d:%d agno 0x%x passive refs %d active refs %d caller %pS",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->agno,
- 		  __entry->refcount,
-+		  __entry->active_refcount,
- 		  (char *)__entry->caller_ip)
- );
- 
- #define DEFINE_PERAG_REF_EVENT(name)	\
- DEFINE_EVENT(xfs_perag_class, name,	\
--	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, int refcount,	\
--		 unsigned long caller_ip),					\
--	TP_ARGS(mp, agno, refcount, caller_ip))
-+	TP_PROTO(struct xfs_perag *pag, unsigned long caller_ip), \
-+	TP_ARGS(pag, caller_ip))
- DEFINE_PERAG_REF_EVENT(xfs_perag_get);
- DEFINE_PERAG_REF_EVENT(xfs_perag_get_tag);
- DEFINE_PERAG_REF_EVENT(xfs_perag_put);
+@@ -1877,6 +1877,7 @@ DEFINE_ALLOC_EVENT(xfs_alloc_small_notenough);
+ DEFINE_ALLOC_EVENT(xfs_alloc_small_done);
+ DEFINE_ALLOC_EVENT(xfs_alloc_small_error);
+ DEFINE_ALLOC_EVENT(xfs_alloc_vextent_badargs);
++DEFINE_ALLOC_EVENT(xfs_alloc_vextent_skip_deadlock);
+ DEFINE_ALLOC_EVENT(xfs_alloc_vextent_nofix);
+ DEFINE_ALLOC_EVENT(xfs_alloc_vextent_noagbp);
+ DEFINE_ALLOC_EVENT(xfs_alloc_vextent_loopfailed);
 -- 
 2.39.0
 
