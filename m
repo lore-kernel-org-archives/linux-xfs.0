@@ -2,73 +2,166 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD123C05027
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Feb 2023 02:48:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 961C4C05027
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Feb 2023 03:17:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232204AbjBICsh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Feb 2023 21:48:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36520 "EHLO
+        id S229743AbjBIDQ7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Feb 2023 22:16:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55956 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232211AbjBICrt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Feb 2023 21:47:49 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C863EB5E;
-        Wed,  8 Feb 2023 18:44:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=VBRf3kzezRGAcEqaQ6FqqxXIsPA/O+8ixt4Mt6EZ1iE=; b=Tr2Y/7RFlxGZWNQeZTUv4kN+Wb
-        /Fg0Wmke6hO89KsqNkjQgdkSCyzYuXQzbJ6N3A+Wl8Q4GSlr+S8uujRVcWZaoZiyxRC+bP2rGC6hW
-        VqsD2KZONdU6/BHyHQvgePlgXveJmGJkekvQueBRszL67cAr7dxW6vJKExw+NKQAxdIhuDh5UKXfI
-        mQQaQpz04gMPZerXq9H0bl+t18EDrgTskDBdThVYBCDSW1CeGr+tO4Zf+oJ3o9362h6MLs3SYsZRE
-        boyRUfBpDGh8BtFU+ZmGdxX3jsYwQ7UwplcmKo0F2cWMG/G5gTIpFvhbRZyC4SrjFPmtvpory64EX
-        hyhYTQCw==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pPwv6-001kY4-Av; Thu, 09 Feb 2023 02:44:20 +0000
-Date:   Thu, 9 Feb 2023 02:44:20 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-afs@lists.infradead.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH 1/3] xfs: Remove xfs_filemap_map_pages() wrapper
-Message-ID: <Y+ReBH8DFxf+Iab4@casper.infradead.org>
-References: <20230208145335.307287-1-willy@infradead.org>
- <20230208145335.307287-2-willy@infradead.org>
- <Y+PQN8cLdOXST20D@magnolia>
- <Y+PX5tPyOP2KQqoD@casper.infradead.org>
- <20230208215311.GC360264@dread.disaster.area>
+        with ESMTP id S230183AbjBIDQ6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Feb 2023 22:16:58 -0500
+Received: from todd.t-8ch.de (todd.t-8ch.de [159.69.126.157])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 697AB30FA;
+        Wed,  8 Feb 2023 19:16:51 -0800 (PST)
+From:   =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=weissschuh.net;
+        s=mail; t=1675912608;
+        bh=EOSpu9ACEWSLjzcgspy1Q7fHgmu8nL5pVF1WC0t9ApM=;
+        h=From:Date:Subject:To:Cc:From;
+        b=XulfDUaYGO1YH/QW0L/fgM3IeTbryEjLV1El1GQ6HX3kFmwS0x+KFoI36WlT9ZE//
+         EYXGGXzaObEAEy1gLEiAdO8SN3fk/Ubzol2coysRgQMiayHCI1MHu90USuo0jN/Jo9
+         O/ou/OLvK5vZoSje31gRF/Vv9jwJxsTLPukMumII=
+Date:   Thu, 09 Feb 2023 03:16:43 +0000
+Subject: [PATCH] xfs: make kobj_type structures constant
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230208215311.GC360264@dread.disaster.area>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Message-Id: <20230209-kobj_type-xfs-v1-1-9d3bd77715f3@weissschuh.net>
+X-B4-Tracking: v=1; b=H4sIAJpl5GMC/x2N0QqDMAwAf0XyvECt4NRfkSFtjTNTqjSbKOK/G
+ /Z4B8edIJSYBJrshEQbCy9RIX9kEEYX34TcK4M1tjDW1Dgt/tN9j5VwHwRDXj6NrWpPVQnaeCe
+ EPrkYRq3ib55VrokG3v+T9nVdN7XE78l0AAAA
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
+X-Mailer: b4 0.12.1
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1675912606; l=3892;
+ i=linux@weissschuh.net; s=20221212; h=from:subject:message-id;
+ bh=EOSpu9ACEWSLjzcgspy1Q7fHgmu8nL5pVF1WC0t9ApM=;
+ b=Nu+mT3ub4RRZpfrMde3mYv2OIXDG7VUqPN/5dvg/rzW/rLx73m4lg0yipfcWNwfH7vb5QhIJn
+ i2D/+dq16gqBV1+1uYcscdVqaKL5HrntPFx70/gXznayrRy9rB9OcRJ
+X-Developer-Key: i=linux@weissschuh.net; a=ed25519;
+ pk=KcycQgFPX2wGR5azS7RhpBqedglOZVgRPfdFSPB1LNw=
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 09, 2023 at 08:53:11AM +1100, Dave Chinner wrote:
-> > If XFS really needs it,
-> > it can trylock the semaphore and return 0 if it fails, falling back to
-> > the ->fault path.  But I don't think XFS actually needs it.
-> >
-> > The ->map_pages path trylocks the folio, checks the folio->mapping,
-> > checks uptodate, then checks beyond EOF (not relevant to hole punch).
-> > Then it takes the page table lock and puts the page(s) into the page
-> > tables, unlocks the folio and moves on to the next folio.
-> > 
-> > The hole-punch path, like the truncate path, takes the folio lock,
-> > unmaps the folio (which will take the page table lock) and removes
-> > it from the page cache.
-> > 
-> > So what's the race?
-> 
-> Hole punch is a multi-folio operation, so while we are operating on
-> invalidating one folio, another folio in the range we've already
-> invalidated could be instantiated and mapped, leaving mapped
-> up-to-date pages over a range we *require* the page cache to empty.
+Since commit ee6d3dd4ed48 ("driver core: make kobj_type constant.")
+the driver core allows the usage of const struct kobj_type.
 
-Nope.  ->map_pages is defined to _not_ instantiate new pages.
-If there are uptodate pages in the page cache, they can be mapped, but
-missing pages will be skipped, and left to ->fault to bring in.
+Take advantage of this to constify the structure definitions to prevent
+modification at runtime.
+
+Signed-off-by: Thomas Weißschuh <linux@weissschuh.net>
+---
+ fs/xfs/xfs_error.c |  2 +-
+ fs/xfs/xfs_sysfs.c | 12 ++++++------
+ fs/xfs/xfs_sysfs.h | 10 +++++-----
+ 3 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index ae082808cfed..b2cbbba3e15a 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -228,7 +228,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+ };
+ ATTRIBUTE_GROUPS(xfs_errortag);
+ 
+-static struct kobj_type xfs_errortag_ktype = {
++static const struct kobj_type xfs_errortag_ktype = {
+ 	.release = xfs_sysfs_release,
+ 	.sysfs_ops = &xfs_errortag_sysfs_ops,
+ 	.default_groups = xfs_errortag_groups,
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index f7faf6e70d7f..a3c6b1548723 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -69,7 +69,7 @@ static struct attribute *xfs_mp_attrs[] = {
+ };
+ ATTRIBUTE_GROUPS(xfs_mp);
+ 
+-struct kobj_type xfs_mp_ktype = {
++const struct kobj_type xfs_mp_ktype = {
+ 	.release = xfs_sysfs_release,
+ 	.sysfs_ops = &xfs_sysfs_ops,
+ 	.default_groups = xfs_mp_groups,
+@@ -266,7 +266,7 @@ static struct attribute *xfs_dbg_attrs[] = {
+ };
+ ATTRIBUTE_GROUPS(xfs_dbg);
+ 
+-struct kobj_type xfs_dbg_ktype = {
++const struct kobj_type xfs_dbg_ktype = {
+ 	.release = xfs_sysfs_release,
+ 	.sysfs_ops = &xfs_sysfs_ops,
+ 	.default_groups = xfs_dbg_groups,
+@@ -324,7 +324,7 @@ static struct attribute *xfs_stats_attrs[] = {
+ };
+ ATTRIBUTE_GROUPS(xfs_stats);
+ 
+-struct kobj_type xfs_stats_ktype = {
++const struct kobj_type xfs_stats_ktype = {
+ 	.release = xfs_sysfs_release,
+ 	.sysfs_ops = &xfs_sysfs_ops,
+ 	.default_groups = xfs_stats_groups,
+@@ -410,7 +410,7 @@ static struct attribute *xfs_log_attrs[] = {
+ };
+ ATTRIBUTE_GROUPS(xfs_log);
+ 
+-struct kobj_type xfs_log_ktype = {
++const struct kobj_type xfs_log_ktype = {
+ 	.release = xfs_sysfs_release,
+ 	.sysfs_ops = &xfs_sysfs_ops,
+ 	.default_groups = xfs_log_groups,
+@@ -564,13 +564,13 @@ static struct attribute *xfs_error_attrs[] = {
+ };
+ ATTRIBUTE_GROUPS(xfs_error);
+ 
+-static struct kobj_type xfs_error_cfg_ktype = {
++static const struct kobj_type xfs_error_cfg_ktype = {
+ 	.release = xfs_sysfs_release,
+ 	.sysfs_ops = &xfs_sysfs_ops,
+ 	.default_groups = xfs_error_groups,
+ };
+ 
+-static struct kobj_type xfs_error_ktype = {
++static const struct kobj_type xfs_error_ktype = {
+ 	.release = xfs_sysfs_release,
+ 	.sysfs_ops = &xfs_sysfs_ops,
+ };
+diff --git a/fs/xfs/xfs_sysfs.h b/fs/xfs/xfs_sysfs.h
+index 513095e353a5..148893ebfdef 100644
+--- a/fs/xfs/xfs_sysfs.h
++++ b/fs/xfs/xfs_sysfs.h
+@@ -7,10 +7,10 @@
+ #ifndef __XFS_SYSFS_H__
+ #define __XFS_SYSFS_H__
+ 
+-extern struct kobj_type xfs_mp_ktype;	/* xfs_mount */
+-extern struct kobj_type xfs_dbg_ktype;	/* debug */
+-extern struct kobj_type xfs_log_ktype;	/* xlog */
+-extern struct kobj_type xfs_stats_ktype;	/* stats */
++extern const struct kobj_type xfs_mp_ktype;	/* xfs_mount */
++extern const struct kobj_type xfs_dbg_ktype;	/* debug */
++extern const struct kobj_type xfs_log_ktype;	/* xlog */
++extern const struct kobj_type xfs_stats_ktype;	/* stats */
+ 
+ static inline struct xfs_kobj *
+ to_kobj(struct kobject *kobject)
+@@ -28,7 +28,7 @@ xfs_sysfs_release(struct kobject *kobject)
+ static inline int
+ xfs_sysfs_init(
+ 	struct xfs_kobj		*kobj,
+-	struct kobj_type	*ktype,
++	const struct kobj_type	*ktype,
+ 	struct xfs_kobj		*parent_kobj,
+ 	const char		*name)
+ {
+
+---
+base-commit: 0983f6bf2bfc0789b51ddf7315f644ff4da50acb
+change-id: 20230209-kobj_type-xfs-c1670289be86
+
+Best regards,
+-- 
+Thomas Weißschuh <linux@weissschuh.net>
 
