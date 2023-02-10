@@ -2,116 +2,69 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6FF9C05027
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Feb 2023 17:13:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5575C05027
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Feb 2023 17:14:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232163AbjBJRNL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Feb 2023 12:13:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56504 "EHLO
+        id S232516AbjBJROL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 10 Feb 2023 12:14:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57436 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232661AbjBJRNK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Feb 2023 12:13:10 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A47CF7A7E1;
-        Fri, 10 Feb 2023 09:12:31 -0800 (PST)
+        with ESMTP id S232604AbjBJROJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Feb 2023 12:14:09 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6038F27994
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Feb 2023 09:13:52 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id EDA9BB825AB;
-        Fri, 10 Feb 2023 17:12:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91CA4C433EF;
-        Fri, 10 Feb 2023 17:12:28 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id E504DB8256F
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Feb 2023 17:13:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83D05C433D2
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Feb 2023 17:13:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676049148;
-        bh=dSrYgfvAVtR0ZuT/0xfZYM/PLUJUYwO3aMXAgAkHBtg=;
-        h=Date:From:To:Cc:Subject:From;
-        b=uY+Ry98xhdMGnIUrnxErFsxBVYY6/6AMQw6IjWUtfmwlnh578+20eNilQs74fqd75
-         HVQim0R1enSJN5KYSGTIHe6G91ArtsMAqAzFppmS5/dy7na94H/IDdbC2Fl/8zqIqk
-         rE3R68d++mTw/rF1byjkSQyKnxkql0Db8KHnwivlr0n+tIV2cT9l6eUSBPzeYOCG2m
-         A36OlZr2LmKRBKChwLQ1o6rBXUaxztqc2qq8r9F/E+enEfZ7awPitJ+3w6WZsiBGQ0
-         pckhrOjje/NqqmqbHi2mblb3bV17npkGXwVW8gIn5lia4YTAOgcSIoVM2JOJ7Fjfbw
-         9HNBAbzTu1hPQ==
-Date:   Fri, 10 Feb 2023 09:12:28 -0800
+        s=k20201202; t=1676049229;
+        bh=HLMQkC9NWI+bIgJJsRIWdGXhwUieaIEElfaSvUy7I2k=;
+        h=Date:From:To:Subject:From;
+        b=WFRVRMG5PREhyVW1DQ3hJupLW7TAVddtNqX+PvzVLawF4N7LyI0k5+v1xpQvHNaba
+         Y3ktar4Z9ngoNEEUyfsb630kVzAth6Ovm1LDD1w3jRGwWOeE0K+vaAiIOy/gwAaYAi
+         o4MWQtlUfq+0m/jD6bomW9wACAvbssbpDPMsMt/5rSjkMYX/oxNaR7XuyOoWopQ3Pn
+         tgR5FLVSW1drfoIzI5eob+c3yRSW7l7qShtvSI0KUzr0kG84eZCJCasksN5KiHeaUw
+         VZxIkTOobTgnyfvpp3vcxxpsS1ghwuMpVAxcbVfHcxdgsS6byZ6Xtwdb1276VcZ4Gj
+         CMiz0RSRi/SfA==
+Date:   Fri, 10 Feb 2023 09:13:49 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     dchinner@redhat.com, ddouwsma@redhat.com,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux@weissschuh.net,
-        syzbot+898115bc6d7140437215@syzkaller.appspotmail.com,
-        xu.panda@zte.com.cn, yang.yang29@zte.com.cn
-Subject: [ANNOUNCE] xfs-linux: for-next updated to dd07bb8b6baf
-Message-ID: <167604902064.3012541.14843121291940068102.stg-ugh@magnolia>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs: fix uninitialized variable access
+Message-ID: <Y+Z7TZ9o+KgXLcV8@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+From: Darrick J. Wong <djwong@kernel.org>
 
-The for-next branch of the xfs-linux repository at:
+If the end position of a GETFSMAP query overlaps an allocated space and
+we're using the free space info to generate fsmap info, the akeys
+information gets fed into the fsmap formatter with bad results.
+Zero-init the space.
 
-git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+Reported-by: syzbot+090ae72d552e6bd93cfe@syzkaller.appspotmail.com
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/xfs_fsmap.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  This push adds a couple of patches that have trickled
-in, and reverts the broken strscpy thing.  I'll think about Dave's
-lengthy allocator rework next week after fstestscloud finishes with it.
-
-The new head of the for-next branch is commit:
-
-dd07bb8b6baf xfs: revert commit 8954c44ff477
-
-13 new commits:
-
-Darrick J. Wong (9):
-[ddccb81b26ec] xfs: pass the xfs_bmbt_irec directly through the log intent code
-[f3ebac4c94c1] xfs: fix confusing variable names in xfs_bmap_item.c
-[72ba455599ad] xfs: pass xfs_extent_free_item directly through the log intent code
-[578c714b215d] xfs: fix confusing xfs_extent_item variable names
-[1534328bb427] xfs: pass rmap space mapping directly through the log intent code
-[ffaa196f6221] xfs: fix confusing variable names in xfs_rmap_item.c
-[0b11553ec54a] xfs: pass refcount intent directly through the log intent code
-[01a3af226b7d] xfs: fix confusing variable names in xfs_refcount_item.c
-[dd07bb8b6baf] xfs: revert commit 8954c44ff477
-
-Dave Chinner (1):
-[c85007e2e394] xfs: don't use BMBT btree split workers for IO completion
-
-Donald Douwsma (1):
-[167ce4cbfa37] xfs: allow setting full range of panic tags
-
-Thomas Weißschuh (1):
-[2ee833352985] xfs: make kobj_type structures constant
-
-Xu Panda (1):
-[8954c44ff477] xfs: use strscpy() to instead of strncpy()
-
-Code Diffstat:
-
-Documentation/admin-guide/xfs.rst |   2 +-
-fs/xfs/libxfs/xfs_alloc.c         |  32 ++++-----
-fs/xfs/libxfs/xfs_bmap.c          |  32 ++++-----
-fs/xfs/libxfs/xfs_bmap.h          |   5 +-
-fs/xfs/libxfs/xfs_btree.c         |  18 ++++-
-fs/xfs/libxfs/xfs_refcount.c      |  96 ++++++++++++--------------
-fs/xfs/libxfs/xfs_refcount.h      |   4 +-
-fs/xfs/libxfs/xfs_rmap.c          |  52 +++++++-------
-fs/xfs/libxfs/xfs_rmap.h          |   6 +-
-fs/xfs/xfs_bmap_item.c            | 137 ++++++++++++++++--------------------
-fs/xfs/xfs_error.c                |   2 +-
-fs/xfs/xfs_error.h                |  12 +++-
-fs/xfs/xfs_extfree_item.c         |  99 +++++++++++++-------------
-fs/xfs/xfs_globals.c              |   3 +-
-fs/xfs/xfs_refcount_item.c        | 110 ++++++++++++++---------------
-fs/xfs/xfs_rmap_item.c            | 142 ++++++++++++++++++--------------------
-fs/xfs/xfs_sysfs.c                |  12 ++--
-fs/xfs/xfs_sysfs.h                |  10 +--
-fs/xfs/xfs_trace.h                |  15 ++--
-19 files changed, 377 insertions(+), 412 deletions(-)
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index 88a88506ffff..92ca2017eded 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -761,6 +761,7 @@ xfs_getfsmap_datadev_bnobt(
+ {
+ 	struct xfs_alloc_rec_incore	akeys[2];
+ 
++	memset(akeys, 0, sizeof(akeys));
+ 	info->missing_owner = XFS_FMR_OWN_UNKNOWN;
+ 	return __xfs_getfsmap_datadev(tp, keys, info,
+ 			xfs_getfsmap_datadev_bnobt_query, &akeys[0]);
