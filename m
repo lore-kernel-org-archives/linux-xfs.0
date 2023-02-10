@@ -2,140 +2,116 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 142C0C636CD
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Feb 2023 14:32:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6FF9C05027
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Feb 2023 17:13:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232285AbjBJOcD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Feb 2023 09:32:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34784 "EHLO
+        id S232163AbjBJRNL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 10 Feb 2023 12:13:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56504 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231775AbjBJOcC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Feb 2023 09:32:02 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEB6B73592
-        for <linux-xfs@vger.kernel.org>; Fri, 10 Feb 2023 06:31:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1676039479;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=CxCZdlgisbJF+70cUuNF+5Uw7zIaXlckpzFKUdliauo=;
-        b=Ts4dhcV21EYL7PW4RuLWuKJo3NyO8h5zNKiHOo/6EBNH2PW48ZiNP32gE2cHbiJrWrI81E
-        IxpIX37RQZXTISF887aVVci3TUHNHTjFhaSbclJhp8KG2UsDDPBFrJxdt41YPUW8TrM81V
-        XdS5yGeNV6o+TDWW7f6Su/ga5ffsUV4=
-Received: from mail-oa1-f71.google.com (mail-oa1-f71.google.com
- [209.85.160.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-202-ceqjT5wyNOKC-1sf85JSQQ-1; Fri, 10 Feb 2023 09:31:17 -0500
-X-MC-Unique: ceqjT5wyNOKC-1sf85JSQQ-1
-Received: by mail-oa1-f71.google.com with SMTP id 586e51a60fabf-16a0bd03b41so2805293fac.21
-        for <linux-xfs@vger.kernel.org>; Fri, 10 Feb 2023 06:31:16 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=CxCZdlgisbJF+70cUuNF+5Uw7zIaXlckpzFKUdliauo=;
-        b=mvIBA++lyUP80YYUzB9IMBUVHDg9IrVCCWkONO4EZHjVLVGa/SLeP5SiIni3DrHKpa
-         ItVCJrth76rWFdFjaIMOOHTAKYTQGWzTiPxFpM2goRL2xPIg9V2XdO3/UkQXm/OgjNy+
-         DQod8tD8qmPsPFVccQdirBGtgjEqf0CzwrpAK9wPG5IxwvSA/5gn453ITHGEDnkIy6pr
-         SPTG+yyRoh3qf13qiuXs4w+0mT2aEEZBqbMM5djZT7DgzudRpMnFNXJzv2fSGbxXgfLV
-         6b7U+Z3OzqE7QYTdsUd+9IYdrjeTXYmOugYG3LwKfSsdL1A0y9OzuPKX49YNyXOPFhrc
-         7csw==
-X-Gm-Message-State: AO0yUKXn2L+3WxazMbFBAfZpuDJd4E5OmPQkAkZQcaADONOkXHAtX95a
-        KnADm7C/x3zqtJxRwewqj3AnstrRkbj9LLo4jKdmz+GFWbvsakvUpoa36QTqj3s7Wqfk59ospFl
-        VHiUWMLzLma6OJJ35vP5moIJd8QogxpCyDCsB
-X-Received: by 2002:aca:2306:0:b0:378:3a69:fb63 with SMTP id e6-20020aca2306000000b003783a69fb63mr935659oie.290.1676039475665;
-        Fri, 10 Feb 2023 06:31:15 -0800 (PST)
-X-Google-Smtp-Source: AK7set85yUFXBU+9Mls6G16gOAHBd8KtZA87AooKVYyX11r0gffDjcKA5VQwnqejYOW84bLp4pozg7Y1SbyyHeURiUU=
-X-Received: by 2002:aca:2306:0:b0:378:3a69:fb63 with SMTP id
- e6-20020aca2306000000b003783a69fb63mr935656oie.290.1676039475383; Fri, 10 Feb
- 2023 06:31:15 -0800 (PST)
+        with ESMTP id S232661AbjBJRNK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Feb 2023 12:13:10 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A47CF7A7E1;
+        Fri, 10 Feb 2023 09:12:31 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id EDA9BB825AB;
+        Fri, 10 Feb 2023 17:12:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91CA4C433EF;
+        Fri, 10 Feb 2023 17:12:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1676049148;
+        bh=dSrYgfvAVtR0ZuT/0xfZYM/PLUJUYwO3aMXAgAkHBtg=;
+        h=Date:From:To:Cc:Subject:From;
+        b=uY+Ry98xhdMGnIUrnxErFsxBVYY6/6AMQw6IjWUtfmwlnh578+20eNilQs74fqd75
+         HVQim0R1enSJN5KYSGTIHe6G91ArtsMAqAzFppmS5/dy7na94H/IDdbC2Fl/8zqIqk
+         rE3R68d++mTw/rF1byjkSQyKnxkql0Db8KHnwivlr0n+tIV2cT9l6eUSBPzeYOCG2m
+         A36OlZr2LmKRBKChwLQ1o6rBXUaxztqc2qq8r9F/E+enEfZ7awPitJ+3w6WZsiBGQ0
+         pckhrOjje/NqqmqbHi2mblb3bV17npkGXwVW8gIn5lia4YTAOgcSIoVM2JOJ7Fjfbw
+         9HNBAbzTu1hPQ==
+Date:   Fri, 10 Feb 2023 09:12:28 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org
+Cc:     dchinner@redhat.com, ddouwsma@redhat.com,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux@weissschuh.net,
+        syzbot+898115bc6d7140437215@syzkaller.appspotmail.com,
+        xu.panda@zte.com.cn, yang.yang29@zte.com.cn
+Subject: [ANNOUNCE] xfs-linux: for-next updated to dd07bb8b6baf
+Message-ID: <167604902064.3012541.14843121291940068102.stg-ugh@magnolia>
 MIME-Version: 1.0
-References: <20230208143416.425941-1-arjun@redhat.com> <Y+PPKBlzv6+DNfBf@magnolia>
-In-Reply-To: <Y+PPKBlzv6+DNfBf@magnolia>
-From:   Arjun Shankar <arjun@redhat.com>
-Date:   Fri, 10 Feb 2023 15:31:04 +0100
-Message-ID: <CAG_osaZ2xhdW=6S8fDXr7VQ6WMpyr_bT--LcwCSXCwvXQ1OV4A@mail.gmail.com>
-Subject: Re: [PATCH v2] Remove several implicit function declarations
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 8, 2023 at 5:43 PM Darrick J. Wong <djwong@kernel.org> wrote:
->
-> On Wed, Feb 08, 2023 at 03:34:16PM +0100, Arjun Shankar wrote:
-> > During configure, several ioctl checks omit the corresponding include
-> > and a pwritev2 check uses the wrong feature test macro.
-> > This commit fixes the same.
-> >
-> > Signed-off-by: Arjun Shankar <arjun@redhat.com>
-> > ---
-> > We ran into these when trying to port Fedora to modern C:
-> >
-> > https://fedoraproject.org/wiki/Changes/PortingToModernC
-> > https://fedoraproject.org/wiki/Toolchain/PortingToModernC
-> >
-> > v2 notes: Removed the changes to unicrash.c;
-> >           it was already fixed by 5ead2de386d879
-> > ---
-> >  m4/package_libcdev.m4 | 7 +++++--
-> >  1 file changed, 5 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-> > index bb1ab49c..f987aa4a 100644
-> > --- a/m4/package_libcdev.m4
-> > +++ b/m4/package_libcdev.m4
-> > @@ -117,6 +117,7 @@ AC_DEFUN([AC_HAVE_FIEMAP],
-> >  #define _GNU_SOURCE
-> >  #include <linux/fs.h>
-> >  #include <linux/fiemap.h>
-> > +#include <sys/ioctl.h>
-> >       ]], [[
-> >  struct fiemap *fiemap;
-> >  ioctl(0, FS_IOC_FIEMAP, (unsigned long)fiemap);
-> > @@ -153,7 +154,7 @@ AC_DEFUN([AC_HAVE_PWRITEV2],
-> >    [ AC_MSG_CHECKING([for pwritev2])
-> >      AC_LINK_IFELSE(
-> >      [        AC_LANG_PROGRAM([[
-> > -#define _BSD_SOURCE
-> > +#define _GNU_SOURCE
->
-> Could you update the pwritev2 manpage to document that _GNU_SOURCE is
-> the feature test macro for pwritev2?
+Hi folks,
 
-Thanks for pointing this out. I'm making a note to get this done. In
-addition, there's a chance that pwritev2 might be made available under
-_DEFAULT_SOURCE in future versions of glibc. Either way, current
-versions of glibc do make this function available under _GNU_SOURCE
-and that needs to be documented.
+The for-next branch of the xfs-linux repository at:
 
-> >  #include <sys/uio.h>
-> >       ]], [[
-> >  pwritev2(0, 0, 0, 0, 0);
-> > @@ -454,6 +455,7 @@ AC_DEFUN([AC_HAVE_SG_IO],
-> >      AC_COMPILE_IFELSE(
-> >      [        AC_LANG_PROGRAM([[
-> >  #include <scsi/sg.h>
-> > +#include <sys/ioctl.h>
-> >       ]], [[
-> >  struct sg_io_hdr hdr;
-> >  ioctl(0, SG_IO, &hdr);
-> > @@ -471,7 +473,8 @@ AC_DEFUN([AC_HAVE_HDIO_GETGEO],
-> >    [ AC_MSG_CHECKING([for struct hd_geometry ])
-> >      AC_COMPILE_IFELSE(
-> >      [        AC_LANG_PROGRAM([[
-> > -#include <linux/hdreg.h>,
->
-> Gosh, how did that ever work with the trailing comma??
+git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-That surprised me as well. cpp seems to complain about it but is fine
-with it for some reason.
+has just been updated.
 
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  This push adds a couple of patches that have trickled
+in, and reverts the broken strscpy thing.  I'll think about Dave's
+lengthy allocator rework next week after fstestscloud finishes with it.
 
-Thanks for the review!
+The new head of the for-next branch is commit:
 
+dd07bb8b6baf xfs: revert commit 8954c44ff477
+
+13 new commits:
+
+Darrick J. Wong (9):
+[ddccb81b26ec] xfs: pass the xfs_bmbt_irec directly through the log intent code
+[f3ebac4c94c1] xfs: fix confusing variable names in xfs_bmap_item.c
+[72ba455599ad] xfs: pass xfs_extent_free_item directly through the log intent code
+[578c714b215d] xfs: fix confusing xfs_extent_item variable names
+[1534328bb427] xfs: pass rmap space mapping directly through the log intent code
+[ffaa196f6221] xfs: fix confusing variable names in xfs_rmap_item.c
+[0b11553ec54a] xfs: pass refcount intent directly through the log intent code
+[01a3af226b7d] xfs: fix confusing variable names in xfs_refcount_item.c
+[dd07bb8b6baf] xfs: revert commit 8954c44ff477
+
+Dave Chinner (1):
+[c85007e2e394] xfs: don't use BMBT btree split workers for IO completion
+
+Donald Douwsma (1):
+[167ce4cbfa37] xfs: allow setting full range of panic tags
+
+Thomas Weiﬂschuh (1):
+[2ee833352985] xfs: make kobj_type structures constant
+
+Xu Panda (1):
+[8954c44ff477] xfs: use strscpy() to instead of strncpy()
+
+Code Diffstat:
+
+Documentation/admin-guide/xfs.rst |   2 +-
+fs/xfs/libxfs/xfs_alloc.c         |  32 ++++-----
+fs/xfs/libxfs/xfs_bmap.c          |  32 ++++-----
+fs/xfs/libxfs/xfs_bmap.h          |   5 +-
+fs/xfs/libxfs/xfs_btree.c         |  18 ++++-
+fs/xfs/libxfs/xfs_refcount.c      |  96 ++++++++++++--------------
+fs/xfs/libxfs/xfs_refcount.h      |   4 +-
+fs/xfs/libxfs/xfs_rmap.c          |  52 +++++++-------
+fs/xfs/libxfs/xfs_rmap.h          |   6 +-
+fs/xfs/xfs_bmap_item.c            | 137 ++++++++++++++++--------------------
+fs/xfs/xfs_error.c                |   2 +-
+fs/xfs/xfs_error.h                |  12 +++-
+fs/xfs/xfs_extfree_item.c         |  99 +++++++++++++-------------
+fs/xfs/xfs_globals.c              |   3 +-
+fs/xfs/xfs_refcount_item.c        | 110 ++++++++++++++---------------
+fs/xfs/xfs_rmap_item.c            | 142 ++++++++++++++++++--------------------
+fs/xfs/xfs_sysfs.c                |  12 ++--
+fs/xfs/xfs_sysfs.h                |  10 +--
+fs/xfs/xfs_trace.h                |  15 ++--
+19 files changed, 377 insertions(+), 412 deletions(-)
