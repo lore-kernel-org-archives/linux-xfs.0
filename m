@@ -2,145 +2,231 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93064C05027
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Feb 2023 05:00:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C5C7C05027
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Feb 2023 06:29:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230140AbjBJFAh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Feb 2023 00:00:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46716 "EHLO
+        id S231138AbjBJG3p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 10 Feb 2023 01:29:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52846 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229455AbjBJFAh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Feb 2023 00:00:37 -0500
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB5FC2F783
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2023 21:00:35 -0800 (PST)
-Received: by mail-pl1-x629.google.com with SMTP id k13so5398040plg.0
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Feb 2023 21:00:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=hitAlID6562LDoIZ1YNYsn79YgxXdUizQO6bFZ5reA4=;
-        b=hoteTnSk94Aoqe90vfEhTNq6/embqALzZxowgIGKoxZTBD7yppUftJnEml6HdiiI6Q
-         A7ckauf2HASwPDr6zuN04ohQ/VyyjPI+th47gPYEKy5VPLj4IQKMHGZT3hKAW9jDQcpR
-         syyYjq2ljxX3U1HdW64GYmqov+uoWwnH4hYBR1ESV7Cwr1Euw/HD76nuuPZ7V+FYmEX4
-         QplfY8wmzFc3TzRdtICM1mJZIyjZhmgaxh7y6M7tKsrth5xBMPnfI+kQHd1f9B8tvdXp
-         OGYLB6QHGRl0ioLbB5tDrSZPf091kSENLhhoG2bMFlrJ0ZURmCW7fNsA2kukfJMCyhdP
-         ntwQ==
+        with ESMTP id S230285AbjBJG3o (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Feb 2023 01:29:44 -0500
+Received: from mail-il1-f206.google.com (mail-il1-f206.google.com [209.85.166.206])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4A852ED6D
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2023 22:29:42 -0800 (PST)
+Received: by mail-il1-f206.google.com with SMTP id b4-20020a92c564000000b00313942dcd86so3482584ilj.12
+        for <linux-xfs@vger.kernel.org>; Thu, 09 Feb 2023 22:29:42 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=hitAlID6562LDoIZ1YNYsn79YgxXdUizQO6bFZ5reA4=;
-        b=RiRnYRt/VRnD/dCvKvI5msfc3O4/ViJ7EJn5SNZoJ9LtZKiX8SjjM/aKhR/6yIYg8f
-         kVj9xg6/C2HpSHX/HMR4GZzN4MFpTF1S4i06k2yFY9fSMIsfg6zPwNhC6z4QPjUVjt+l
-         Lf+5xf6n5Um/z72/pzZEaY/p+Ki1gurQgVGBh/FLfX+XHajkC1K4HAejaAFi9keuR3dw
-         MU/84phKgJHqaoWxbpUtiDcMLqiuyhlteMoHckO3d7pCZEqBbbdFp80OprIA11HamRVS
-         BGEgwPRUWrqP7ONPcNSJl459XDpZCmbtd55rE8O6IxXC8adAydI6IQO8p+LmFPm5uRNd
-         QUrg==
-X-Gm-Message-State: AO0yUKWL7PT2pRMiOtvp9/PhEipJPU65TrzUfap5peYKMTK2l4zHvzja
-        bMZCHCKuL/Qz/LT62rYiDF1ujA==
-X-Google-Smtp-Source: AK7set8D4XN8XtH68mATe5QPqoiLpl6Orhbn9nKhpF6Zn/mGfhzZikQSBVnY/PZxaqBqJmLCwSxJtw==
-X-Received: by 2002:a17:902:db10:b0:199:2e77:fe16 with SMTP id m16-20020a170902db1000b001992e77fe16mr15922527plx.58.1676005235123;
-        Thu, 09 Feb 2023 21:00:35 -0800 (PST)
-Received: from dread.disaster.area (pa49-181-4-128.pa.nsw.optusnet.com.au. [49.181.4.128])
-        by smtp.gmail.com with ESMTPSA id a11-20020a1709027e4b00b00189b2b8dbedsm2342218pln.228.2023.02.09.21.00.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Feb 2023 21:00:34 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1pQLWR-00DVX8-7l; Fri, 10 Feb 2023 16:00:31 +1100
-Date:   Fri, 10 Feb 2023 16:00:31 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 00/42] xfs: per-ag centric allocation alogrithms
-Message-ID: <20230210050031.GJ360264@dread.disaster.area>
-References: <20230209221825.3722244-1-david@fromorbit.com>
- <Y+W1hDsoWiaCVqlB@magnolia>
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=8ZhHR6JAdhWWGxJjk3O0j2pj+zKTc9dlG5NWCTkMEpI=;
+        b=XtrfQYBFej9un8uCS6UyhouPedTT6gRQaWU481uwwsaDMYtcw0LuJDr2isQ6UiG6ZW
+         0TRVjuyrdY+4+L91H2aeCxb+KMdyEALX19BmfN2Up1/WWrSWFu1WGHZ9BZMeD1ep1kSq
+         rUkOgEMJ/qeOTsQX+g/mCQcTc7Q/9W7D+hPBPQrs0PPoFm0+htziE9o32mhQbErEFxGv
+         FyDWPdhxXe6ZlC+h1CllOGNzZCzvgw+OTLhAb9AKQK2tqkPK57jAgYWVUGqAogcAZYQA
+         lPL0pzM1byu0jAIOa4eHIzxtgTx5t5kL5wVjpK1B1+aPilcnxvD247l3vCY4+08PPecV
+         nfVQ==
+X-Gm-Message-State: AO0yUKWDd0Tq23wZSisuVgImZ3f97kMMZgPlSZEFGSgtSf0iXH+OKN+X
+        tQyRxhCyFsdplvDYKxH0rjdndaeDn16XOuKz5oipdc4ctEKi
+X-Google-Smtp-Source: AK7set9O96CdMvCjLMq41uuwH0p9Kx9xObUCK1hftIsFEQwcOMzmZx9SsllFqcjI0D44tok4S5UYtm6HxOt1Pu93btMA/uDuP+QY
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y+W1hDsoWiaCVqlB@magnolia>
+X-Received: by 2002:a92:7d0c:0:b0:30f:5220:d4e4 with SMTP id
+ y12-20020a927d0c000000b0030f5220d4e4mr8390615ilc.55.1676010582284; Thu, 09
+ Feb 2023 22:29:42 -0800 (PST)
+Date:   Thu, 09 Feb 2023 22:29:42 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <00000000000065a46a05f4529f59@google.com>
+Subject: [syzbot] [xfs?] KASAN: slab-out-of-bounds Read in __xfs_xattr_put_listent
+From:   syzbot <syzbot+898115bc6d7140437215@syzkaller.appspotmail.com>
+To:     chandan.babu@oracle.com, dchinner@redhat.com, djwong@kernel.org,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 09, 2023 at 07:09:56PM -0800, Darrick J. Wong wrote:
-> On Fri, Feb 10, 2023 at 09:17:43AM +1100, Dave Chinner wrote:
-> > This series continues the work towards making shrinking a filesystem possible.
-> > We need to be able to stop operations from taking place on AGs that need to be
-> > removed by a shrink, so before shrink can be implemented we need to have the
-> > infrastructure in place to prevent incursion into AGs that are going to be, or
-> > are in the process, of being removed from active duty.
-> 
-> From a quick glance, it looks like all the random things I had comments
-> about were fixed, so for patches 14, 20-23, 28, and 42:
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> 
-> I'm leaving off patch #7 until tomorrow so that I can think about it
-> with a non-tired brain.  I didn't see anything obviously wrong in the
-> diff itself -- but I still need to adjust my mental model per what Dave
-> said in his previously reply (active perag refs are for user-facing
-> online operations, passive refs are for internal operations) and
-> (re)examine how that relates to scrub and repair.
-> 
-> Mostly I tripped over "but repair needs to use passive references once
-> the AG has had it's state changed to "offline" -- currently, repair uses
-> the same perag reference that scrub _gets.  If scrub now gets an
-> "active" reference and something needs repair, do we mark the AG offline
-> and keep the active reference?  Or downgrade it to a passive reference?
+Hello,
 
-So one of the things I was trying to explain and didn't do a very
-good job of is that active references are references that prevent AG
-operational state changes.
+syzbot found the following issue on:
 
-That is, if we want to take an AG offline, or just prevent new
-allocations in an AG, we have to wait for all the active references
-to drain before we can change the operational state.
+HEAD commit:    129af7708234 Add linux-next specific files for 20230206
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=15255097480000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=be0a3ae20dd54621
+dashboard link: https://syzkaller.appspot.com/bug?extid=898115bc6d7140437215
+compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
 
-This does not prevent an active reference from being taken when an
-AG is offline - all an active reference in an offline state does is
-prevent the AG from being put back online whilst that active
-reference to the offline AG persists.
+Unfortunately, I don't have any reproducer for this issue yet.
 
-e.g. repair can drain all the active references on an online AG,
-then mark it offline, then take a new active reference to pin the AG
-in the offline state while it does the repair work on that AG.
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/52d26f2badb0/disk-129af770.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/567a88b6ad33/vmlinux-129af770.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/14942fd7430d/bzImage-129af770.xz
 
-Similarly, shrink can pin an AG in a "being shrunk" operational
-state that allows inodes and extents to be freed, but no new
-allocations to be made by draining the active references, changing
-the state and then pinning by taking a new reference. Then the
-shrink process can move all the user data and metadata out of the AG
-without needing special tricks to avoid allocating in that AG. If it
-fails to move everything or is aborted, it can drop it's active
-reference and put the AG back online...
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+898115bc6d7140437215@syzkaller.appspotmail.com
 
-This means that the new allocation code that now takes active
-references will be morphing further to be "grab active reference,
-check AG opstate allows allocation, if not drop active reference and
-skip AG".
+XFS (loop0): Ending clean mount
+==================================================================
+BUG: KASAN: slab-out-of-bounds in strscpy+0x23b/0x2a0 lib/string.c:174
+Read of size 1 at addr ffff88801d145eb6 by task syz-executor.0/13785
 
-Once an AG is ready to be removed, grabbing an active reference
-will fail so at that point the AG is skipped without even getting to
-state checks. Once all the passive references then drain, the perag
-can be RCU freed.
+CPU: 1 PID: 13785 Comm: syz-executor.0 Not tainted 6.2.0-rc7-next-20230206-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/12/2023
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:88 [inline]
+ dump_stack_lvl+0xd9/0x150 lib/dump_stack.c:106
+ print_address_description.constprop.0+0x2c/0x3c0 mm/kasan/report.c:319
+ print_report mm/kasan/report.c:430 [inline]
+ kasan_report+0x11c/0x130 mm/kasan/report.c:536
+ strscpy+0x23b/0x2a0 lib/string.c:174
+ strscpy include/linux/fortify-string.h:328 [inline]
+ __xfs_xattr_put_listent+0x161/0x220 fs/xfs/xfs_xattr.c:215
+ xfs_xattr_put_listent+0xed/0x1b0 fs/xfs/xfs_xattr.c:273
+ xfs_attr_shortform_list fs/xfs/xfs_attr_list.c:182 [inline]
+ xfs_attr_list_ilocked+0x129d/0x1940 fs/xfs/xfs_attr_list.c:516
+ xfs_attr_list+0x1fb/0x2c0 fs/xfs/xfs_attr_list.c:536
+ xfs_vn_listxattr+0xec/0x180 fs/xfs/xfs_xattr.c:299
+ vfs_listxattr+0x109/0x190 fs/xattr.c:473
+ listxattr+0x70/0x180 fs/xattr.c:820
+ path_listxattr+0xae/0x140 fs/xattr.c:844
+ do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+ do_syscall_64+0x39/0xb0 arch/x86/entry/common.c:80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f929808c0c9
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 f1 19 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f9298d70168 EFLAGS: 00000246 ORIG_RAX: 00000000000000c2
+RAX: ffffffffffffffda RBX: 00007f92981abf80 RCX: 00007f929808c0c9
+RDX: 0000000000000106 RSI: 0000000020000180 RDI: 0000000020000040
+RBP: 00007f92980e7ae9 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 00007fff011b791f R14: 00007f9298d70300 R15: 0000000000022000
+ </TASK>
 
-> I've (tried to) design scrub & repair as if they were just another pile
-> of higher level code that uses libxfs to manipulate metadata, just like
-> fallocate and reflink and all those types of things.  But then, I was
-> designing for a world where there's only one type of AG reference. :)
+Allocated by task 13821:
+ kasan_save_stack+0x22/0x40 mm/kasan/common.c:45
+ kasan_set_track+0x25/0x30 mm/kasan/common.c:52
+ ____kasan_kmalloc mm/kasan/common.c:374 [inline]
+ ____kasan_kmalloc mm/kasan/common.c:333 [inline]
+ __kasan_krealloc+0x142/0x180 mm/kasan/common.c:442
+ kasan_krealloc include/linux/kasan.h:216 [inline]
+ __do_krealloc mm/slab_common.c:1360 [inline]
+ krealloc+0xa8/0x100 mm/slab_common.c:1397
+ xfs_idata_realloc+0xcc/0x280 fs/xfs/libxfs/xfs_inode_fork.c:503
+ xfs_attr_shortform_add+0x23b/0x930 fs/xfs/libxfs/xfs_attr_leaf.c:775
+ xfs_attr_shortform_addname+0x3bf/0x610 fs/xfs/libxfs/xfs_attr.c:1158
+ xfs_attr_try_sf_addname+0x6b/0x240 fs/xfs/libxfs/xfs_attr.c:358
+ xfs_attr_sf_addname fs/xfs/libxfs/xfs_attr.c:383 [inline]
+ xfs_attr_set_iter+0x17dd/0x3930 fs/xfs/libxfs/xfs_attr.c:719
+ xfs_xattri_finish_update+0x3c/0x140 fs/xfs/xfs_attr_item.c:332
+ xfs_attr_finish_item+0x6d/0x280 fs/xfs/xfs_attr_item.c:463
+ xfs_defer_finish_one fs/xfs/libxfs/xfs_defer.c:479 [inline]
+ xfs_defer_finish_noroll+0xac5/0x2430 fs/xfs/libxfs/xfs_defer.c:563
+ __xfs_trans_commit+0x82b/0x1100 fs/xfs/xfs_trans.c:970
+ xfs_attr_set+0x13ac/0x2650 fs/xfs/libxfs/xfs_attr.c:1083
+ xfs_attr_change fs/xfs/xfs_xattr.c:106 [inline]
+ xfs_xattr_set+0xf2/0x1c0 fs/xfs/xfs_xattr.c:151
+ __vfs_setxattr+0x173/0x1e0 fs/xattr.c:203
+ __vfs_setxattr_noperm+0x129/0x5f0 fs/xattr.c:237
+ __vfs_setxattr_locked+0x1d3/0x260 fs/xattr.c:298
+ vfs_setxattr+0x143/0x340 fs/xattr.c:324
+ do_setxattr+0x147/0x190 fs/xattr.c:609
+ setxattr+0x146/0x160 fs/xattr.c:632
+ path_setxattr+0x197/0x1c0 fs/xattr.c:651
+ __do_sys_setxattr fs/xattr.c:667 [inline]
+ __se_sys_setxattr fs/xattr.c:663 [inline]
+ __x64_sys_setxattr+0xc4/0x160 fs/xattr.c:663
+ do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+ do_syscall_64+0x39/0xb0 arch/x86/entry/common.c:80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
 
-For the moment, everything in scrub/repair will work just fine with
-passive references. It's only once we start using AG opstate to
-control allocator, caching and scanning behaviour that they might
-want to start using active references...
+The buggy address belongs to the object at ffff88801d145e00
+ which belongs to the cache kmalloc-192 of size 192
+The buggy address is located 0 bytes to the right of
+ allocated 182-byte region [ffff88801d145e00, ffff88801d145eb6)
 
-Cheers,
+The buggy address belongs to the physical page:
+page:ffffea0000745140 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x1d145
+flags: 0xfff00000000200(slab|node=0|zone=1|lastcpupid=0x7ff)
+raw: 00fff00000000200 ffff888012441a00 ffffea0000891a00 dead000000000004
+raw: 0000000000000000 0000000080100010 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 0, migratetype Unmovable, gfp_mask 0x112c40(GFP_NOFS|__GFP_NOWARN|__GFP_NORETRY|__GFP_HARDWALL), pid 13038, tgid 13035 (syz-executor.2), ts 248534795000, free_ts 248133886182
+ prep_new_page mm/page_alloc.c:2552 [inline]
+ get_page_from_freelist+0x11bb/0x2d50 mm/page_alloc.c:4339
+ __alloc_pages+0x1cb/0x5c0 mm/page_alloc.c:5605
+ __alloc_pages_node include/linux/gfp.h:237 [inline]
+ alloc_slab_page mm/slub.c:1853 [inline]
+ allocate_slab+0xa7/0x380 mm/slub.c:1998
+ new_slab mm/slub.c:2051 [inline]
+ ___slab_alloc+0xa91/0x1400 mm/slub.c:3193
+ __slab_alloc.constprop.0+0x56/0xa0 mm/slub.c:3292
+ __slab_alloc_node mm/slub.c:3345 [inline]
+ slab_alloc_node mm/slub.c:3442 [inline]
+ __kmem_cache_alloc_node+0x136/0x330 mm/slub.c:3491
+ __do_kmalloc_node mm/slab_common.c:966 [inline]
+ __kmalloc_node+0x4d/0xd0 mm/slab_common.c:974
+ kmalloc_array_node include/linux/slab.h:697 [inline]
+ kcalloc_node include/linux/slab.h:702 [inline]
+ memcg_alloc_slab_cgroups+0x8f/0x150 mm/memcontrol.c:2893
+ memcg_slab_post_alloc_hook+0xa9/0x390 mm/slab.h:546
+ slab_post_alloc_hook mm/slab.h:777 [inline]
+ slab_alloc_node mm/slub.c:3452 [inline]
+ slab_alloc mm/slub.c:3460 [inline]
+ __kmem_cache_alloc_lru mm/slub.c:3467 [inline]
+ kmem_cache_alloc+0x1a7/0x320 mm/slub.c:3476
+ kmem_cache_zalloc include/linux/slab.h:710 [inline]
+ alloc_buffer_head+0x24/0x150 fs/buffer.c:2947
+ alloc_page_buffers+0x284/0x790 fs/buffer.c:872
+ create_empty_buffers+0x30/0xf30 fs/buffer.c:1586
+ ext4_block_write_begin+0x10aa/0x1780 fs/ext4/inode.c:1079
+ ext4_da_write_begin+0x450/0xb70 fs/ext4/inode.c:3081
+ generic_perform_write+0x256/0x570 mm/filemap.c:3770
+page last free stack trace:
+ reset_page_owner include/linux/page_owner.h:24 [inline]
+ free_pages_prepare mm/page_alloc.c:1453 [inline]
+ free_pcp_prepare+0x4d0/0x910 mm/page_alloc.c:1503
+ free_unref_page_prepare mm/page_alloc.c:3401 [inline]
+ free_unref_page_list+0x176/0xcd0 mm/page_alloc.c:3542
+ release_pages+0xcb1/0x1330 mm/swap.c:1072
+ tlb_batch_pages_flush+0xa8/0x1a0 mm/mmu_gather.c:97
+ tlb_flush_mmu_free mm/mmu_gather.c:292 [inline]
+ tlb_flush_mmu mm/mmu_gather.c:299 [inline]
+ tlb_finish_mmu+0x14b/0x7e0 mm/mmu_gather.c:391
+ exit_mmap+0x205/0x7d0 mm/mmap.c:3047
+ __mmput+0x128/0x4c0 kernel/fork.c:1209
+ mmput+0x60/0x70 kernel/fork.c:1231
+ exit_mm kernel/exit.c:563 [inline]
+ do_exit+0x9d7/0x2b60 kernel/exit.c:856
+ do_group_exit+0xd4/0x2a0 kernel/exit.c:1019
+ get_signal+0x2321/0x25b0 kernel/signal.c:2859
+ arch_do_signal_or_restart+0x79/0x5c0 arch/x86/kernel/signal.c:306
+ exit_to_user_mode_loop kernel/entry/common.c:168 [inline]
+ exit_to_user_mode_prepare+0x11f/0x240 kernel/entry/common.c:204
+ __syscall_exit_to_user_mode_work kernel/entry/common.c:286 [inline]
+ syscall_exit_to_user_mode+0x1d/0x50 kernel/entry/common.c:297
+ do_syscall_64+0x46/0xb0 arch/x86/entry/common.c:86
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Memory state around the buggy address:
+ ffff88801d145d80: 00 fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+ ffff88801d145e00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>ffff88801d145e80: 00 00 00 00 00 00 06 fc fc fc fc fc fc fc fc fc
+                                     ^
+ ffff88801d145f00: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff88801d145f80: fb fb fb fb fb fb fb fb fc fc fc fc fc fc fc fc
+==================================================================
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
