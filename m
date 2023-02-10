@@ -2,127 +2,172 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16F1EC05027
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Feb 2023 07:42:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82DBEC636CD
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Feb 2023 13:39:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231269AbjBJHm4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Feb 2023 02:42:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35662 "EHLO
+        id S231814AbjBJNjZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 10 Feb 2023 08:39:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55494 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231219AbjBJHmu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Feb 2023 02:42:50 -0500
-Received: from mail-il1-f206.google.com (mail-il1-f206.google.com [209.85.166.206])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F2953644A
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Feb 2023 23:42:49 -0800 (PST)
-Received: by mail-il1-f206.google.com with SMTP id j25-20020a056e02219900b0031398da82efso3566484ila.21
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Feb 2023 23:42:49 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ynKzp7M2iniu/ZO3+psH340wl9RCB3nYdijLmARScgw=;
-        b=jjKSBUViEjuIT0OcqBdX39LswE/WSGhJukD6Wfocw9QkddhjupWPmnD94jL+nRE0Dk
-         9pF0o5WUJrV7VvSUqe+fK8P2MAifHjnx+A4cFVTbjzVtNftWpu4imtLbTWEdO/tHfuXo
-         4UdzkB84HT5hxGlVHTNd+xkDFWzY0fdE3ubashNa0YyYueIRWpxnpZbTaWNBg7O8frMf
-         uwlx5MZvpHIFLPnuFdSzN0tFtHPhCzmDX6QDjpS27Zud5ajhrp5TggN7S9RwGli0ASBs
-         eeeWi2AKpoHs1GvL2Oi8j/e0OpwDPxwngzXOKI7t92nuZNiVbD4tZb1Itsc73FSKAFec
-         sMzw==
-X-Gm-Message-State: AO0yUKXgI7MznC11FDsbEy8LDRaB1LwHdgK3S8a/qVUCuke+UWCfhkIE
-        bMkc2LGyn0WLY1ov6jNqIGLE3bjBYLPwRSzWmQX57xdf4OBV
-X-Google-Smtp-Source: AK7set9YTzz38QnjyCksWeRrCUcyEjpXFF3YcJyzeRY9gbU+Sq4JgBqzPEiR8NYhkniEQIS+BceEu9kBz5jpsIOqxZzLeZw/BvbM
+        with ESMTP id S231668AbjBJNjY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Feb 2023 08:39:24 -0500
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C18231555F;
+        Fri, 10 Feb 2023 05:39:23 -0800 (PST)
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31AAnaxh009134;
+        Fri, 10 Feb 2023 13:39:20 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2022-7-12;
+ bh=PuA7Jfi3Db8nM1WhYvwml0G0MHCLdz4wVkN72xxriOA=;
+ b=qx4UTW0xZYuarHUwrJ8n7qNIomjyhs0KBf75kHl75HwRk79ZHmCICcy4fr5AeF2IJy42
+ Bi+t3YUZK4iiPazhh5h8Mo+SeLLV283aQE393LtfpsAC+02ds07C0XGZn2ro71sKmvtQ
+ 3hWK/m17RUoQAZ5nYr0oeGViIUaQncwYce5PITgyA6V0MCCclYWdwte0aO3bpzNS8iUh
+ 4m4M2B9cBdUr0r8DbWL5PhCshQQLLh6fWhpPXOvL4y3VQbIf/zhSDVbkN7OvmYCPCv8b
+ GdhX/cTlsaTnMLu7d1cRrhNLhRnuvw1VpGDCPpFCYQ50/0oSuPPMGLd7rX5VQ4HNQRJ0 Yg== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3nheyu5aac-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 10 Feb 2023 13:39:20 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 31ABWHaW036112;
+        Fri, 10 Feb 2023 13:39:19 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2169.outbound.protection.outlook.com [104.47.58.169])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3nhdtgkkwd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 10 Feb 2023 13:39:19 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=en7Aow6bKHvOvIv4NUitmRo/ak1LeY1kml26pn/yKWiQhIC/PxapVC4KVvMzxZm4i0vzQVRG3nGKklXrpozMIFyXqm7PMjKB8ppvV4xb1XbwVD7e3WWa4nv8NrNyNazN0y11VWtEVD+hLjjaC67iW2E+M+erIjRqwJGpBEIsi80gmAUsExwtn5XJlpqqmJm8oLAFhn4S9DlEhbf8XmnV8008f94DgRlRQjNYzcsaV35dY40cLs38NluretB14Z2NgzmnSuC4djYvb7i1r/h/7lKq8KPUVCf+SpSSEndaYuxFm09eETfCiPvyqV13C8bP/DnOLJXShMFN96sG4SrIHw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=PuA7Jfi3Db8nM1WhYvwml0G0MHCLdz4wVkN72xxriOA=;
+ b=KoC8UvKMI6KUG+KOz2bw8mXLAkFJW98y4Hskm3MGgTSHtEMGbGI7zYAmSSXK/miKwVI3nmcj8qMqdamtYoNCBLb13yeORstuK2/FPeP1hT+yHblhLdOgqILa09HJ64XhtSu6jiDpoiYZDEEilHrNRbMfVWI+kjTRL2aT7Vh0JiK6VjMT4WJPtuCJ5EW5Fn6I6p0lTuJXc2qfxqcFrpiGqHdThadEhb105T1y1FdubzSf+leAHSkyEXJO/VubHeHwvzyUbMEPKlbZbwI9NgeLRIIi/Pn4L6afYzL2DmHevag+t3yWTVRWQN4jxeSr3i5gFgpp4Xz3YaadYSO8HzrEDw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=PuA7Jfi3Db8nM1WhYvwml0G0MHCLdz4wVkN72xxriOA=;
+ b=X+DxTHyR9ptCJIx2gi/2BzxPrxyKdxmJj1u8seeVfqkEVl72A3LAw28YoJmB7abBV5AQBlEkmW2tfsynsnRJqL7oGAFDjdVI8Kktgb9iiWq23XKak/adBTbaTmR+8wI1AbZlS3ayHpE0Ucbg8XpuAhvxrT3xz3RNP42TQ6lRwus=
+Received: from PH0PR10MB5706.namprd10.prod.outlook.com (2603:10b6:510:148::10)
+ by DM4PR10MB6087.namprd10.prod.outlook.com (2603:10b6:8:bf::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6111.7; Fri, 10 Feb
+ 2023 13:39:18 +0000
+Received: from PH0PR10MB5706.namprd10.prod.outlook.com
+ ([fe80::560e:9c52:a6bd:4036]) by PH0PR10MB5706.namprd10.prod.outlook.com
+ ([fe80::560e:9c52:a6bd:4036%9]) with mapi id 15.20.6086.011; Fri, 10 Feb 2023
+ 13:39:17 +0000
+Message-ID: <27b36b04-44a0-6a62-8a8c-109ac7058499@oracle.com>
+Date:   Fri, 10 Feb 2023 21:39:10 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.2
+Subject: Re: run more tests in the auto group
+To:     Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org
+Cc:     linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+References: <20230209051355.358942-1-hch@lst.de>
+From:   Anand Jain <anand.jain@oracle.com>
+In-Reply-To: <20230209051355.358942-1-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SI2PR01CA0051.apcprd01.prod.exchangelabs.com
+ (2603:1096:4:193::6) To PH0PR10MB5706.namprd10.prod.outlook.com
+ (2603:10b6:510:148::10)
 MIME-Version: 1.0
-X-Received: by 2002:a5d:8f8e:0:b0:71a:5a1f:544c with SMTP id
- l14-20020a5d8f8e000000b0071a5a1f544cmr8338986iol.5.1676014968689; Thu, 09 Feb
- 2023 23:42:48 -0800 (PST)
-Date:   Thu, 09 Feb 2023 23:42:48 -0800
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000d8d95805f453a4f3@google.com>
-Subject: [syzbot] [xfs?] KMSAN: uninit-value in xfs_getfsmap_helper
-From:   syzbot <syzbot+090ae72d552e6bd93cfe@syzkaller.appspotmail.com>
-To:     djwong@kernel.org, glider@google.com, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR10MB5706:EE_|DM4PR10MB6087:EE_
+X-MS-Office365-Filtering-Correlation-Id: adaa38da-5891-4a0b-9678-08db0b6c34ab
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 8VN3KtkAUAQ0ArfJvQ/TDKmJZlFggZgrDQU414sHxj6hFOmlGR1xpF1iVK/m2tNTKHJAkc9qH85Y5XMZXaU1ABEMjbCXMRbm5nQX/c6337mle/UcePki9vZJVIBWZwPyDKoylPBQC6Mi3Hnq0bwNpDABFIiU7/R2/H6V1LT3VDdzt51GsMQrbtT5gaYKQTTSxXEBl3WtQ3wdaTavxjdYZVl69cyjjr8/oRCoZMXbfxniUCt9KE1lQK7a6ybGQoDEafAAnj+SftlQbd1q33pOJOxLnVryx0HPJuBkfo1Y8NYsG/mW2HO8W01gwW9/gUDVAJ8UejjhD+t7a1Ia0nXmHFlzwgBCoK5BQi2ZWn12+PDQSKn2TSTfWik2XOEnSy1+AGOhvhxkIHmBo8Mn/2ECCnxCrpwFGeNjbiEo8TSNt3idmtr1ViFVLxtKnSZXn8Weat/nL2KIr4qp/SqPz34S20JkFG/mTUIo3QogIU1bEo2p8Fu/i6ushnmGGqXzrzzN1XPuMn6u7rykcOdrq3DlR+rZ30QHN0VSbgYyaBzSTn42CP9hxq+VN21mh4NU9zDy5DjsVQ/SyJKWo9yp7RZJJJkH64KdL2daJjK19zIu8UhLtZi0xwcl97X56rx3EWn7CQ7UUElkV8UcdNP1xG3+XISDYQ5QaEpWPTqWLlSfk9zNSr6R3z5HnYRVo8h7oXHXGOLzLQ0AwSXkrwGCAMaD/JZbNGGkGYFBeYbemy4X8Ag=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB5706.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(346002)(396003)(376002)(366004)(39860400002)(136003)(451199018)(31696002)(86362001)(36756003)(38100700002)(4326008)(26005)(186003)(8676002)(66476007)(66556008)(66946007)(6506007)(6512007)(4744005)(8936002)(5660300002)(41300700001)(6666004)(44832011)(478600001)(6486002)(316002)(2906002)(53546011)(2616005)(31686004)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?cit1RDhMSVk0ajhhNHZSOWliY3laZ0o1TTVUN25KcmNIZC9DeTZMT05Bc1Nk?=
+ =?utf-8?B?M0d5RFlrMEZFYWt1U1MvM1F1NlVKbEhZczNSajJxVUZzOGJOT3poeVRvUnFC?=
+ =?utf-8?B?Njh6SXhqZWVzVHRIYVlhRnFqNDZtNm1xYXVIblBxemp2MWp2NWRZUVVxM3li?=
+ =?utf-8?B?bUlDRXlUVkUwVXk5bGczUnFobzNiSEpHa0IzTjdrWkhudDJWMktJNjdpbFJn?=
+ =?utf-8?B?WmV2bkVPZDhWUStqM1F2aFp5djVYZVdka0I4WUphdWdsUlNyZzd5NVJzQ0o0?=
+ =?utf-8?B?M2NQb1MvVHRRUkNKbFp6Uk8vTTEyUVptdmgzaDNkOUtDRC82VldPSWN5eGE3?=
+ =?utf-8?B?SUxKVk5PaXFMY3V1bnZlbVdWYjJSekZpbG1laGQyZUkrNzdZOHA5RFBFaDdj?=
+ =?utf-8?B?U1kxOHc0UGhsa2Vld00rOE5TdCtvVDhuSGNXNVdISjlGL0NGVXk2Wml2KzJQ?=
+ =?utf-8?B?MEhtZHkybWZhdmcrTEZsOHlicno5cjg0alFjNWVvUk1xWDFyZElxd3pNSW43?=
+ =?utf-8?B?OHNFeG9ucTVHdS9OTjZiNk9KZ1pnK3BuZ1N3clQybTJnZHp1RHVuVXFtYTlx?=
+ =?utf-8?B?VmFXYm5nSkpJN2JhaFYxOWNYODZRVmRxYXBSR1Exd1ZoZGVUdGhWM1Z3dmFT?=
+ =?utf-8?B?OXI1RzJNdThERG5nZlNHLzlmR3dxS1hWTVh1SDl5K3d5YXhzV1RBTUc0em96?=
+ =?utf-8?B?ZllCMGRUTVNsdjVXY0NUK3pzRUZ2UWRnMTI2SlBmZVRQTnlrdWlYMUw5RTZZ?=
+ =?utf-8?B?cHdVaUhwNEZUTFQ0TXN1ZEx6eGpITDJVWFE4S3VMRTl1L1Bxc0YrSUxKZVlv?=
+ =?utf-8?B?Tkt0T1p5azJyTnJGYWtPcVBGQkRySzF1L3ltZXFYYXE2Nm5qd1Iwd0dCYVpZ?=
+ =?utf-8?B?UUhSSFBPZlF6azFsSjZYa2pnc3Nwc1dpQnh6VkVsb3JPa2kydkRobGxjMjEx?=
+ =?utf-8?B?eVRRSHZGWkhwRXZ2cVZJY2xLK2JHZkphdkNjNkpCL3BqYVd3cUZXT3VFRmVB?=
+ =?utf-8?B?dVR6UHlNSk55VVBjdERyNXFTd0tYWnVnc01xUVNiSGEzdFRHVFZFeDU4azZ4?=
+ =?utf-8?B?N1c0TjhNVWZDRVFXVWczYlZDTmxUZmg1bFVHNXgrdU5rcHBkOXQwZldMNkIr?=
+ =?utf-8?B?ejJBWngzQzlTaHNmNm9kcmtZUmtPMVV5TzBrZXZ6NTZQWEgxajhXWUdvK3BC?=
+ =?utf-8?B?elIwYzlOeFBwR0RXdi82UHduQW9rcXFYcTRSbjg3cEdDMHFnNEVGR0R0RzhK?=
+ =?utf-8?B?NWhxWlFaMDJZT3Y4TURlMjZmWEhWSzBHOWVRSnFpRkxxZDFmZzVvSGxOUHND?=
+ =?utf-8?B?MEdla25sdzRCaWZJNGdtN0lOU0JxbllHZ3lOdFM2SFBaQ1l4dHF1ZFhuT2oy?=
+ =?utf-8?B?M0JtV000bUtOazBRNXp0SElna01QamhNb0VCUDBOamdWZWw2V3VXemh1Z2hs?=
+ =?utf-8?B?UDI5ZVZ0aUE1OENxRm1hUzR3K3hVYzhUbGpIc3N3UTZhWHcvbktVSU5zWGRT?=
+ =?utf-8?B?UGgwYjJKZkwvRDZPbVI4QjVqb1o1aVF6VTRxQXM1cUdwUHo0SDE2ZVhpOUlI?=
+ =?utf-8?B?bzA1RHhMVGs2M3dmNE5EdmNnQkVCaTFKTW5IRjNaanBNNitmS3BWOFQrUklz?=
+ =?utf-8?B?RVMwWGxzbXZBcnh2WHFaMjBQYWlTWkcrOCsrUHlSZmdWaEl3S0hGeXArRTJ3?=
+ =?utf-8?B?WTBnOXRUbEtKRjkwUWo3clppTnRIRFBVdlZkejNBMHcreDlSNXBYMXAyOGls?=
+ =?utf-8?B?WDg5MG05eWp0ekY5VXdQN1QvQWUzUUROek5DdnMrS3JRdUc5UGNaeS9ZRDk5?=
+ =?utf-8?B?ZlJicFV4dCt1MGRoOUM4VGdEb01zQmxpMmpUdlhRa2I5bHMreFo4TTZZckM3?=
+ =?utf-8?B?UGh6RWJhVVlGbTR0UGs0dkVBUGc2Rzc3SWJZaHRBRm0rWm02TnFXRXJpRUx0?=
+ =?utf-8?B?NGU1UnFJR3lCbktBbkNXeS9zYTYwN0hjY09HdmxUUnNYSFNscWMwdmQ2VzlF?=
+ =?utf-8?B?NDdXZlNaWml6R1Bab1RVNFBCNENKWmpWNmRNZlVPdFRzb3NsNE1NWFBaUzZj?=
+ =?utf-8?B?MnUyMThnN1NldytvWmVFRUliZGFNYkdmd2FXWDdKTmFFUUQzUHpjWUlodVJR?=
+ =?utf-8?B?cDBhbmE2ZTU4NTA4YUh6LzR2N1pNRkhKcW5kMXdLS3JnYTdBNWE5VmFXa0hp?=
+ =?utf-8?B?bnc9PQ==?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: SDW0h6BjnIYvjB51/wa7YTHbavS86AUKPqpP33beFMq9ONYpW0uHKFGLoCiiabTGDvFuRpal8vnyQYRmuD5IJqiaymt1HULZdLpWl7MLW6rcjCS/fO9VqmxaLxka4fhTh+unXz9DWJ1m2EQvOUN+vu9nB/xMc5hEk2XT79Tb/1N2mZLwlSXz1qcc/pQ/Ht8bWq9t0ojMornyw/3zM+FN14uPNa19Q31gBXWelKgF4YpTVcrbN7UhEvcVpTjUQEwKV+lrr1P6bhcQkyqiBvbUkLh0duHfjxjgPkwVOPsOMJcElxIOmMGwffY0BjJGi9WNQdCXdzaPvZxiV3sPE1e8AM0XzKx5C5gPzDm5vrmCyEdAWhxnynNeuJ8FAty+rADseXbCla2kzOP1O6QOHl/WUUOvGWVpITTJIqQ0WxO72yh0Ty5qDJzc2BLOheEZqGj4f8KjujAWXnrk33f2p304Py9ukdIrDaNE6ppAwTznkmlF/G9JiZZfAU/BmS4QTKDa/tpndEQNewO03Bqt1fO2179CUpPNzYaXGCG8+kRmF9zGb4+6UqAdCovCTYM7Nrr6d9hGqKw2xNENLADEfZ/BcNd8sDkxbFFn8O3PGdRaGKNz1k9eY4k7mc1QBlqXvvY3nIZoWVyqyU4lwndeA0eBcKb1p1GeYhE199c8mN00T+CPuxdqhgsj5TGNP60sX5eXz/691wKvv9PIWvzXWPVDDPFw2jIRLR5xY4TPFKgQTf7sHz5yEiGQJlnIabQrretF1WebgojSsRI/G4Hmy1TWlQ==
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: adaa38da-5891-4a0b-9678-08db0b6c34ab
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB5706.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Feb 2023 13:39:17.6258
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: CoR8UTVDpD1iswQsoCUOOYAf0yrA+KIkb1s71tyjX6FQELcy1AelXrPxUMf2Hhl8YUJc8xU4PYRr7oI9lm08BA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR10MB6087
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.170.22
+ definitions=2023-02-10_08,2023-02-09_03,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0 adultscore=0
+ malwarescore=0 mlxscore=0 phishscore=0 spamscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
+ definitions=main-2302100112
+X-Proofpoint-GUID: b0DL8jxFZPmQwEqxeP8YHnSm5XS366r2
+X-Proofpoint-ORIG-GUID: b0DL8jxFZPmQwEqxeP8YHnSm5XS366r2
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
+On 09/02/2023 13:13, Christoph Hellwig wrote:
+> Hi all,
+> 
+> this series adds a more tests to the auto and quick groups so that they
+> are run as part of the usual regressions tests.
 
-syzbot found the following issue on:
+For patches 1-4
 
-HEAD commit:    eda666ff2276 kmsan: silence -Wmissing-prototypes warnings
-git tree:       https://github.com/google/kmsan.git master
-console output: https://syzkaller.appspot.com/x/log.txt?x=10edfcbd480000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=f27365aeb365b358
-dashboard link: https://syzkaller.appspot.com/bug?extid=090ae72d552e6bd93cfe
-compiler:       clang version 15.0.0 (https://github.com/llvm/llvm-project.git 610139d2d9ce6746b3c617fb3e2f7886272d26ff), GNU ld (GNU Binutils for Debian) 2.35.2
-userspace arch: i386
-
-Unfortunately, I don't have any reproducer for this issue yet.
-
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/fc16035efde4/disk-eda666ff.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/084efc06a321/vmlinux-eda666ff.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/35c07fcfcbf2/bzImage-eda666ff.xz
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+090ae72d552e6bd93cfe@syzkaller.appspotmail.com
-
-loop4: detected capacity change from 0 to 32768
-XFS (loop4): Mounting V5 Filesystem c496e05e-540d-4c72-b591-04d79d8b4eeb
-XFS (loop4): Ending clean mount
-=====================================================
-BUG: KMSAN: uninit-value in xfs_getfsmap_helper+0xbd5/0x1b20 fs/xfs/xfs_fsmap.c:341
- xfs_getfsmap_helper+0xbd5/0x1b20 fs/xfs/xfs_fsmap.c:341
- xfs_getfsmap_datadev_bnobt_helper+0x225/0x2d0 fs/xfs/xfs_fsmap.c:385
- xfs_getfsmap_datadev_bnobt_query+0xad/0x2e0 fs/xfs/xfs_fsmap.c:744
- __xfs_getfsmap_datadev+0x13e8/0x1f70 fs/xfs/xfs_fsmap.c:676
- xfs_getfsmap_datadev_bnobt+0x8a/0xd0 fs/xfs/xfs_fsmap.c:765
- xfs_getfsmap+0x1690/0x18d0 fs/xfs/xfs_fsmap.c:962
- xfs_ioc_getfsmap+0x5e6/0x1080 fs/xfs/xfs_ioctl.c:1558
- xfs_file_ioctl+0x1c5/0x27a0 fs/xfs/xfs_ioctl.c:1952
- xfs_file_compat_ioctl+0x334/0xbb0
- __do_compat_sys_ioctl fs/ioctl.c:968 [inline]
- __se_compat_sys_ioctl+0x781/0xfa0 fs/ioctl.c:910
- __ia32_compat_sys_ioctl+0x8f/0xd0 fs/ioctl.c:910
- do_syscall_32_irqs_on arch/x86/entry/common.c:112 [inline]
- __do_fast_syscall_32+0xa2/0x100 arch/x86/entry/common.c:178
- do_fast_syscall_32+0x33/0x70 arch/x86/entry/common.c:203
- do_SYSENTER_32+0x1b/0x20 arch/x86/entry/common.c:246
- entry_SYSENTER_compat_after_hwframe+0x70/0x82
-
-Uninit was stored to memory at:
- xfs_getfsmap_datadev_bnobt_helper+0x29b/0x2d0 fs/xfs/xfs_fsmap.c:380
- xfs_getfsmap_datadev_bnobt_query+0xad/0x2e0 fs/xfs/xfs_fsmap.c:744
- __xfs_getfsmap_datadev+0x13e8/0x1f70 fs/xfs/xfs_fsmap.c:676
- xfs_getfsmap_datadev_bnobt+0x8a/0xd0 fs/xfs/xfs_fsmap.c:765
- xfs_getfsmap+0x1690/0x18d0 fs/xfs/xfs_fsmap.c:962
- xfs_ioc_getfsmap+0x5e6/0x1080 fs/xfs/xfs_ioctl.c:1558
- xfs_file_ioctl+0x1c5/0x27a0 fs/xfs/xfs_ioctl.c:1952
- xfs_file_compat_ioctl+0x334/0xbb0
- __do_compat_sys_ioctl fs/ioctl.c:968 [inline]
- __se_compat_sys_ioctl+0x781/0xfa0 fs/ioctl.c:910
- __ia32_compat_sys_ioctl+0x8f/0xd0 fs/ioctl.c:910
- do_syscall_32_irqs_on arch/x86/entry/common.c:112 [inline]
- __do_fast_syscall_32+0xa2/0x100 arch/x86/entry/common.c:178
- do_fast_syscall_32+0x33/0x70 arch/x86/entry/common.c:203
- do_SYSENTER_32+0x1b/0x20 arch/x86/entry/common.c:246
- entry_SYSENTER_compat_after_hwframe+0x70/0x82
-
-Local variable akeys created at:
- xfs_getfsmap_datadev_bnobt+0x50/0xd0 fs/xfs/xfs_fsmap.c:762
- xfs_getfsmap+0x1690/0x18d0 fs/xfs/xfs_fsmap.c:962
-
-CPU: 1 PID: 7205 Comm: syz-executor.4 Not tainted 6.2.0-rc6-syzkaller-80422-geda666ff2276 #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/12/2023
-=====================================================
+      Reviewed-by: Anand Jain <anand.jain@oracle.com>
 
 
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+They also need the _fixed_by_kernel_commit attribute, which the 
+(upcoming) series [1] fixes.
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+     [1] [PATCH 0/3] fstests: btrfs- add _fixed_by for new tests in the 
+auto group
+
+However, for btrfs/125, it is most likely that there isn't a single
+patch that made it work.
+
+Thanks, Anand
+
