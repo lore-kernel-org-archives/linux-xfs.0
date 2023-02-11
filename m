@@ -2,114 +2,308 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95E82C636CC
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Feb 2023 08:33:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDC39C636CC
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Feb 2023 11:23:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229473AbjBKIdr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 11 Feb 2023 03:33:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34018 "EHLO
+        id S230040AbjBKLXQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 11 Feb 2023 06:23:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44560 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229447AbjBKIdq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 Feb 2023 03:33:46 -0500
-Received: from mail-vs1-xe2d.google.com (mail-vs1-xe2d.google.com [IPv6:2607:f8b0:4864:20::e2d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE642EC41
-        for <linux-xfs@vger.kernel.org>; Sat, 11 Feb 2023 00:33:44 -0800 (PST)
-Received: by mail-vs1-xe2d.google.com with SMTP id x8so8100654vso.2
-        for <linux-xfs@vger.kernel.org>; Sat, 11 Feb 2023 00:33:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1676104424;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=vjAjqBnr5IOMCawSVpFZ3ZojUDyVjWBPSNMSuH1xnHY=;
-        b=B3IkCwzuBSXd9WQqWKV2/cA6+kJZ12pu3qQjntgzZ1Uo95KXUO0Ds2tevx3hKnUpzz
-         m0d0pC3LrMXo6btxlibemZOZPe4APMyfX9CPc/aOb2CvUQaIib9eIK1qNHTCRA12jYJX
-         hJhfhs41TFGa1pN2VRPoLoNrBZFjucT/T/Ou+I9Hp80SrhGYb3Be/+/xo/YOtQpRA2SJ
-         nXPImKjlp9E66F3M84SBBDcc65xCWx7kek9K7XXeSubT0WHDQXJNGK12RunrJqrjwh0o
-         9x5LSg7Y8dACNDh5NpM2A716TxqLMB4POZmUm52V30vUYaJ31osAMN7Oz0pHA6xYNqci
-         JHiA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1676104424;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=vjAjqBnr5IOMCawSVpFZ3ZojUDyVjWBPSNMSuH1xnHY=;
-        b=L1dtJMXnpO1Ak7Hi2gF+10IGEKYCROL9up803Bdh13VCswYgh0XhcMKZH3P6qnT7xq
-         +LmQ92hRKToVOutr/iCMsLlfvSsU1IOjqKizcWQNLOdHRXdlxSPYUtxeSXcThHYLorgY
-         nce5HprmrXvgf9Ga8foCApnQ1GVBtWOHSS/u41BvA1/PIUjlg9f5uV9ZiKSuwb2wC/VD
-         0bVX4bKuiqMMk8cyVi70p43gSnPOBzrnw2Uu8EZpzeZ/XzsbItxgqaJW5hxqrAlggCze
-         hJ04iR2IhEiDNzAxXdaHw2MyJiWgkmmuTxcJBUyU7EyAnf24x5y2MZs5oHS6EwvjQ8/f
-         U26w==
-X-Gm-Message-State: AO0yUKXe1HlUHIxaKVg4m01liMctnC7Kkxj3YrfaZN9Rn7UY8nDYqWdD
-        ZWBx/rTwjEu9k2ksFI+CxzZ9SpzjJ93OEICTRN81vuoon7U=
-X-Google-Smtp-Source: AK7set8ruG3GmbBq0OWJUHnY232rxaD9PjIXl6uFvWR5DGNly9IWAOBXUcTJ573Sji1mJtbpfXr8qvTJP2vb5GB3QEQ=
-X-Received: by 2002:a67:b84a:0:b0:3f1:196c:5ca8 with SMTP id
- o10-20020a67b84a000000b003f1196c5ca8mr3272523vsh.56.1676104423780; Sat, 11
- Feb 2023 00:33:43 -0800 (PST)
+        with ESMTP id S229695AbjBKLXP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 Feb 2023 06:23:15 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED3C59ED4
+        for <linux-xfs@vger.kernel.org>; Sat, 11 Feb 2023 03:23:11 -0800 (PST)
+Received: from kwepemi500009.china.huawei.com (unknown [172.30.72.55])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4PDSrS4XKqzdb9v;
+        Sat, 11 Feb 2023 19:22:48 +0800 (CST)
+Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
+ (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.34; Sat, 11 Feb
+ 2023 19:23:08 +0800
+Date:   Sat, 11 Feb 2023 19:46:53 +0800
+From:   Long Li <leo.lilong@huawei.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+CC:     <david@fromorbit.com>, <linux-xfs@vger.kernel.org>,
+        <houtao1@huawei.com>, <yi.zhang@huawei.com>, <guoxuenan@huawei.com>
+Subject: Re: [PATCH] xfs: fix hung when transaction commit fail in
+ xfs_inactive_ifree
+Message-ID: <20230211114653.GA953501@ceph-admin>
+References: <20221209110519.GA3741914@ceph-admin>
+ <Y9naw/OkLIvm1kd4@magnolia>
 MIME-Version: 1.0
-References: <20230208175228.2226263-1-leah.rumancik@gmail.com>
- <CAOQ4uxgmHzWcxBDrzRb19ByCnNoayhha_MZ_eYN0YMC=RGTeMw@mail.gmail.com>
- <Y+P6y81Wmf4L66LC@magnolia> <Y+agJxHM3zPR8Qd3@google.com>
-In-Reply-To: <Y+agJxHM3zPR8Qd3@google.com>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Sat, 11 Feb 2023 10:33:32 +0200
-Message-ID: <CAOQ4uxjd6ZxZiomehLfzFczyMVJzkXdzDZBf2GhvoCV9O9ZhNQ@mail.gmail.com>
-Subject: Re: [PATCH 5.15 CANDIDATE 00/10] more xfs fixes for 5.15
-To:     Leah Rumancik <leah.rumancik@gmail.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        chandan.babu@oracle.com, Christian Brauner <brauner@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+In-Reply-To: <Y9naw/OkLIvm1kd4@magnolia>
+X-Originating-IP: [10.175.127.227]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ kwepemi500009.china.huawei.com (7.221.188.199)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 10, 2023 at 9:51 PM Leah Rumancik <leah.rumancik@gmail.com> wrote:
->
-[...]
-> > > I did not push on that until now because SGID test expectations were
-> > > a moving target, but since xfstests commit 81e6f628 ("generic: update
-> > > setgid tests") in this week's xfstests release, I think that tests should be
-> > > stable and we can finally start backporting all relevant SGID fixes to
-> > > align the SGID behavior of LTS kernels with that of upstream.
->
-> Ooo goody, ok, will do this next.
->
-> The following patches are on my radar to look into for this set. I have
-> yet to look into dependencies, so the set may grow. If the sgid tests
-> still fail after these ptaches, I will continue hunting for more fixes
-> to include in this set.
->
->   e014f37db1a2 xfs: use setattr_copy to set vfs inode attributes
->   472c6e46f589 xfs: remove XFS_PREALLOC_SYNC
->   fbe7e5200365 xfs: fallocate() should call file_modified()
->   0b02c8c0d75a xfs: set prealloc flag in xfs_alloc_file_space()
->   2b3416ceff5e fs: add mode_strip_sgid() helper
->   1639a49ccdce fs: move S_ISGID stripping into the vfs_*() helpers
->   ed5a7047d201 attr: use consistent sgid stripping checks
->   8d84e39d76bd fs: use consistent setgid checks in is_sxid()
->
-> In addition to the normal regression testing, I will specifically look
-> at the following tests for the sgid changes:
->
->   generic/673
->   generic/68[3-7]
->   generic/69[6-7]
->
-> I will also do some extra runs on the entire perms group.
->
-> Let me know if you think something should be dropped or added.
->
+On Tue, Jan 31, 2023 at 07:21:39PM -0800, Darrick J. Wong wrote:
+> On Fri, Dec 09, 2022 at 07:05:19PM +0800, Long Li wrote:
+> > After running unplug disk test and unmount filesystem, the umount thread
+> > hung all the time.
+> > 
+> >  crash> dmesg
+> >  sd 0:0:0:0: rejecting I/O to offline device
+> >  XFS (sda): log I/O error -5
+> >  XFS (sda): Corruption of in-memory data (0x8) detected at xfs_defer_finish_noroll+0x12e0/0x1cf0
+> > 	(fs/xfs/libxfs/xfs_defer.c:504).  Shutting down filesystem.
+> >  XFS (sda): Please unmount the filesystem and rectify the problem(s)
+> >  XFS (sda): xfs_inactive_ifree: xfs_trans_commit returned error -5
+> >  XFS (sda): Unmounting Filesystem
+> > 
+> >  crash> bt 3368
+> >  PID: 3368   TASK: ffff88801bcd8040  CPU: 3   COMMAND: "umount"
+> >   #0 [ffffc900086a7ae0] __schedule at ffffffff83d3fd25
+> >   #1 [ffffc900086a7be8] schedule at ffffffff83d414dd
+> >   #2 [ffffc900086a7c10] xfs_ail_push_all_sync at ffffffff8256db24
+> >   #3 [ffffc900086a7d18] xfs_unmount_flush_inodes at ffffffff824ee7e2
+> >   #4 [ffffc900086a7d28] xfs_unmountfs at ffffffff824f2eff
+> >   #5 [ffffc900086a7da8] xfs_fs_put_super at ffffffff82503e69
+> >   #6 [ffffc900086a7de8] generic_shutdown_super at ffffffff81aeb8cd
+> >   #7 [ffffc900086a7e10] kill_block_super at ffffffff81aefcfa
+> >   #8 [ffffc900086a7e30] deactivate_locked_super at ffffffff81aeb2da
+> >   #9 [ffffc900086a7e48] deactivate_super at ffffffff81aeb639
+> >  #10 [ffffc900086a7e68] cleanup_mnt at ffffffff81b6ddd5
+> >  #11 [ffffc900086a7ea0] __cleanup_mnt at ffffffff81b6dfdf
+> >  #12 [ffffc900086a7eb0] task_work_run at ffffffff8126e5cf
+> >  #13 [ffffc900086a7ef8] exit_to_user_mode_prepare at ffffffff813fa136
+> >  #14 [ffffc900086a7f28] syscall_exit_to_user_mode at ffffffff83d25dbb
+> >  #15 [ffffc900086a7f40] do_syscall_64 at ffffffff83d1f8d9
+> >  #16 [ffffc900086a7f50] entry_SYSCALL_64_after_hwframe at ffffffff83e00085
+> > 
+> > When we free a cluster buffer from xfs_ifree_cluster, all the inodes in
+> > cache are marked XFS_ISTALE. On journal commit dirty stale inodes as are
+> > handled by both buffer and inode log items, inodes marked as XFS_ISTALE
+> > in AIL will be removed from the AIL because the buffer log item will clean
+> > it. If the transaction commit fails in the xfs_inactive_ifree(), inodes
+> > marked as XFS_ISTALE will be left in AIL due to buf log item is not
+> > committed, this will cause the unmount thread above to be blocked all the
+> > time. Error handling in xfs_inactive_ifree() is not enough, the above
+> > exception needs to be considered.
+> > 
+> > Signed-off-by: Long Li <leo.lilong@huawei.com>
+> > ---
+> >  fs/xfs/xfs_inode.c | 114 +++++++++++++++++++++++++++++++++++++++++----
+> >  fs/xfs/xfs_inode.h |   1 -
+> >  2 files changed, 105 insertions(+), 10 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index d354ea2b74f9..b6808c0a2868 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -49,6 +49,9 @@ struct kmem_cache *xfs_inode_cache;
+> >  STATIC int xfs_iunlink(struct xfs_trans *, struct xfs_inode *);
+> >  STATIC int xfs_iunlink_remove(struct xfs_trans *tp, struct xfs_perag *pag,
+> >  	struct xfs_inode *);
+> > +STATIC int xfs_ifree(struct xfs_trans *tp, struct xfs_inode *ip,
+> > +		struct xfs_icluster *xic);
+> > +STATIC void xfs_ifree_abort(struct xfs_inode *ip, struct xfs_icluster *xic);
+> >  
+> >  /*
+> >   * helper function to extract extent size hint from inode
+> > @@ -1544,6 +1547,7 @@ xfs_inactive_ifree(
+> >  {
+> >  	struct xfs_mount	*mp = ip->i_mount;
+> >  	struct xfs_trans	*tp;
+> > +	struct xfs_icluster     xic = { 0 };
+> >  	int			error;
+> >  
+> >  	/*
+> > @@ -1598,7 +1602,7 @@ xfs_inactive_ifree(
+> >  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> >  	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+> >  
+> > -	error = xfs_ifree(tp, ip);
+> > +	error = xfs_ifree(tp, ip, &xic);
+> >  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> >  	if (error) {
+> >  		/*
+> > @@ -1612,7 +1616,7 @@ xfs_inactive_ifree(
+> >  			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
+> >  		}
+> >  		xfs_trans_cancel(tp);
+> > -		return error;
+> > +		goto out_error;
+> >  	}
+> >  
+> >  	/*
+> > @@ -1625,11 +1629,19 @@ xfs_inactive_ifree(
+> >  	 * to try to keep going. Make sure it's not a silent error.
+> >  	 */
+> >  	error = xfs_trans_commit(tp);
+> > -	if (error)
+> > +	if (error) {
+> >  		xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
+> >  			__func__, error);
+> > +		goto out_error;
+> > +	}
+> >  
+> >  	return 0;
+> > +
+> > +out_error:
+> > +	if (xic.deleted)
+> > +		xfs_ifree_abort(ip, &xic);
+> > +
+> > +	return error;
+> >  }
+> >  
+> >  /*
+> > @@ -2259,14 +2271,14 @@ xfs_ifree_cluster(
+> >   * inodes in the AGI. We need to remove the inode from that list atomically with
+> >   * respect to freeing it here.
+> >   */
+> > -int
+> > +STATIC int
+> >  xfs_ifree(
+> >  	struct xfs_trans	*tp,
+> > -	struct xfs_inode	*ip)
+> > +	struct xfs_inode	*ip,
+> > +	struct xfs_icluster     *xic)
+> >  {
+> >  	struct xfs_mount	*mp = ip->i_mount;
+> >  	struct xfs_perag	*pag;
+> > -	struct xfs_icluster	xic = { 0 };
+> >  	struct xfs_inode_log_item *iip = ip->i_itemp;
+> >  	int			error;
+> >  
+> > @@ -2284,7 +2296,7 @@ xfs_ifree(
+> >  	 * makes the AGI lock -> unlinked list modification order the same as
+> >  	 * used in O_TMPFILE creation.
+> >  	 */
+> > -	error = xfs_difree(tp, pag, ip->i_ino, &xic);
+> > +	error = xfs_difree(tp, pag, ip->i_ino, xic);
+> >  	if (error)
+> >  		goto out;
+> >  
+> > @@ -2323,13 +2335,97 @@ xfs_ifree(
+> >  	VFS_I(ip)->i_generation++;
+> >  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+> >  
+> > -	if (xic.deleted)
+> > -		error = xfs_ifree_cluster(tp, pag, ip, &xic);
+> > +	if (xic->deleted)
+> > +		error = xfs_ifree_cluster(tp, pag, ip, xic);
+> >  out:
+> >  	xfs_perag_put(pag);
+> >  	return error;
+> >  }
+> >  
+> > +static void
+> > +xfs_ifree_abort_inode_stale(
+> > +	struct xfs_perag	*pag,
+> > +	xfs_ino_t		inum)
+> > +{
+> > +	struct xfs_mount        *mp = pag->pag_mount;
+> > +	struct xfs_inode_log_item *iip;
+> > +	struct xfs_inode	*ip;
+> > +
+> > +retry:
+> > +	rcu_read_lock();
+> > +	ip = radix_tree_lookup(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, inum));
+> > +
+> > +	/* Inode not in memory, nothing to do */
+> > +	if (!ip) {
+> > +		rcu_read_unlock();
+> > +		return;
+> > +	}
+> > +
+> > +	/* Skip invalid or not stale inode */
+> > +	if (ip->i_ino != inum || !xfs_iflags_test(ip, XFS_ISTALE)) {
+> > +		rcu_read_unlock();
+> > +		return;
+> > +	}
+> > +
+> > +	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
+> > +		rcu_read_unlock();
+> > +		delay(1);
+> > +		goto retry;
+> > +	}
+> > +
+> > +	iip = ip->i_itemp;
+> > +	if (!iip || list_empty(&iip->ili_item.li_bio_list))
+> > +		goto out_iunlock;
+> > +
+> > +	if (test_bit(XFS_LI_IN_AIL, &iip->ili_item.li_flags))
+> > +		xfs_iflush_abort(ip);
+> > +	else
+> > +		xfs_iflags_clear(ip, XFS_IFLUSHING);
+> 
+> Er... why is the ifree code tearing into the inode log item state ?
+> 
+> Shouldn't this be getting done from the buffer log item when we release
+> it and find that it's aborted?
+> 
+> --D
 
-I reckon you will need those dependency prep commits from
-Christian's PR [1]:
-
-11c2a8700cdc attr: add in_group_or_capable()
-e243e3f94c80 fs: move should_remove_suid()
-72ae017c5451 attr: add setattr_should_drop_sgid()
-
-FYI, the ovl commits from this PR are independent fixes that were
-already applied to 5.15.y.
-
-Thanks,
-Amir.
-
-[1] https://lore.kernel.org/linux-fsdevel/20221212112053.99208-1-brauner@kernel.org/
+Yes, it doesn't looks good here, traverse buffer's b_li_list and abort xfs_inode
+marked as XFS_ISTALE could be better.
+> 
+> > +
+> > +out_iunlock:
+> > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > +	rcu_read_unlock();
+> > +}
+> > +
+> > +/*
+> > + * This is called to clean up inodes marked as stale in xfs_ifree
+> > + */
+> > +STATIC void
+> > +xfs_ifree_abort(
+> > +	struct xfs_inode	*ip,
+> > +	struct xfs_icluster	*xic)
+> > +{
+> > +	struct xfs_mount	*mp = ip->i_mount;
+> > +	struct xfs_perag        *pag;
+> > +	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
+> > +	xfs_ino_t		inum = xic->first_ino;
+> > +	int			nbufs;
+> > +	int			i, j;
+> > +	int			ioffset;
+> > +
+> > +	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+> > +
+> > +	nbufs = igeo->ialloc_blks / igeo->blocks_per_cluster;
+> > +
+> > +	for (j = 0; j < nbufs; j++, inum += igeo->inodes_per_cluster) {
+> > +		/*
+> > +		 * The allocation bitmap tells us which inodes of the chunk were
+> > +		 * physically allocated. Skip the cluster if an inode falls into
+> > +		 * a sparse region.
+> > +		 */
+> > +		ioffset = inum - xic->first_ino;
+> > +		if ((xic->alloc & XFS_INOBT_MASK(ioffset)) == 0) {
+> > +			ASSERT(ioffset % igeo->inodes_per_cluster == 0);
+> > +			continue;
+> > +		}
+> > +
+> > +		for (i = 0; i < igeo->inodes_per_cluster; i++)
+> > +			xfs_ifree_abort_inode_stale(pag, inum + i);
+> > +
+> > +	}
+> > +	xfs_perag_put(pag);
+> > +}
+> > +
+> >  /*
+> >   * This is called to unpin an inode.  The caller must have the inode locked
+> >   * in at least shared mode so that the buffer cannot be subsequently pinned
+> > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> > index fa780f08dc89..423542bf6af1 100644
+> > --- a/fs/xfs/xfs_inode.h
+> > +++ b/fs/xfs/xfs_inode.h
+> > @@ -499,7 +499,6 @@ uint		xfs_ilock_data_map_shared(struct xfs_inode *);
+> >  uint		xfs_ilock_attr_map_shared(struct xfs_inode *);
+> >  
+> >  uint		xfs_ip2xflags(struct xfs_inode *);
+> > -int		xfs_ifree(struct xfs_trans *, struct xfs_inode *);
+> >  int		xfs_itruncate_extents_flags(struct xfs_trans **,
+> >  				struct xfs_inode *, int, xfs_fsize_t, int);
+> >  void		xfs_iext_realloc(xfs_inode_t *, int, int);
+> > -- 
+> > 2.31.1
+> > 
