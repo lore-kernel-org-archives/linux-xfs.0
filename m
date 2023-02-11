@@ -2,234 +2,421 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4072C636CC
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Feb 2023 04:05:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25218C61DA4
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Feb 2023 04:06:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229498AbjBKEFv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Feb 2023 23:05:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33750 "EHLO
+        id S229454AbjBKEGY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 10 Feb 2023 23:06:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33770 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229447AbjBKEFu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Feb 2023 23:05:50 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E661D7BFC7
-        for <linux-xfs@vger.kernel.org>; Fri, 10 Feb 2023 20:05:48 -0800 (PST)
+        with ESMTP id S229447AbjBKEGX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Feb 2023 23:06:23 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89E077BFC7
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Feb 2023 20:06:21 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 30A07CE2961
-        for <linux-xfs@vger.kernel.org>; Sat, 11 Feb 2023 04:05:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4300DC433EF;
-        Sat, 11 Feb 2023 04:05:41 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 16B51B825E0
+        for <linux-xfs@vger.kernel.org>; Sat, 11 Feb 2023 04:06:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B169DC433EF;
+        Sat, 11 Feb 2023 04:06:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676088341;
-        bh=6G2DtU4BRydFVQ2a0h3Uf7f6oarqTqkjzMBLLTVM17E=;
+        s=k20201202; t=1676088378;
+        bh=W7gjFsQ8nBaHg1KgV/zZGGOAxWbR3mH7X7ii0Gqm7tk=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=YqxvoRFqNFV7FrRLvQuoU5NV+es7sx0guPt4wlLCET/OO8i2vJ3IgcRuaeVtBfEvV
-         Uma/QEFW1G5SZJiNHAU+SQMENiYy13U0Ycija8IW6OgCEma+4JBipshrWEaPMPNmJl
-         GAhuk1wMUxT5QrE37gI9ngIY7L8yoNrvpXLCOT9eOLVB0UG7vJDi+RchfVUtYf1o2n
-         fE2gQQtwuVbfQEAWGRB3RLputFAsw9dvkesho2PH3kpRZB+/9MbsZBo7i4v3KUzs4x
-         1bTZwCMB+fAK4tTtflrPczVswbmYP5LZBBza/ur9L7CVtud4f0pVVUn5esTjaBQRie
-         9vvuJZHWyA7ew==
-Date:   Fri, 10 Feb 2023 20:05:40 -0800
+        b=F072iFCd2UdshKGb/d1SdMLzRqBuIVarH46K7HDoWKFBlCsET9A2WQn4ySkWgNJI4
+         T6eNZtlnNVD/xhT2A7At48uV+K7uzs960QI0z+5f7W1tianZLpSKEtLOTPvbJnnLiF
+         sn4BB5ZrMu1HycQd7XGUzROuN51OwT82A+VDfyjhekqWM+fvz+YPPU5vkxZ1tq6YWO
+         pb67fZC9h766WKAcFtv0zokE6Ng9K/eKb7grf2kOexPDS3PMp8x0MucSiGOnVkSZAv
+         wdTz+qGZ4eD55LiqKP8GPwWBuimXgPtgE7e4znYsU4m8jKo3P0ZgbmutY4jaPwT/uw
+         ZvIgeIMZWVjTg==
+Date:   Fri, 10 Feb 2023 20:06:18 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Leah Rumancik <leah.rumancik@gmail.com>
-Cc:     Amir Goldstein <amir73il@gmail.com>, linux-xfs@vger.kernel.org,
-        chandan.babu@oracle.com, Christian Brauner <brauner@kernel.org>
-Subject: Re: [PATCH 5.15 CANDIDATE 00/10] more xfs fixes for 5.15
-Message-ID: <Y+cUFJSpczoUN/5A@magnolia>
-References: <20230208175228.2226263-1-leah.rumancik@gmail.com>
- <CAOQ4uxgmHzWcxBDrzRb19ByCnNoayhha_MZ_eYN0YMC=RGTeMw@mail.gmail.com>
- <Y+P6y81Wmf4L66LC@magnolia>
- <Y+agJxHM3zPR8Qd3@google.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 07/42] xfs: active perag reference counting
+Message-ID: <Y+cUOrkf4USlrErj@magnolia>
+References: <20230209221825.3722244-1-david@fromorbit.com>
+ <20230209221825.3722244-8-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y+agJxHM3zPR8Qd3@google.com>
+In-Reply-To: <20230209221825.3722244-8-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 10, 2023 at 11:51:03AM -0800, Leah Rumancik wrote:
-> On Wed, Feb 08, 2023 at 11:40:59AM -0800, Darrick J. Wong wrote:
-> > On Wed, Feb 08, 2023 at 09:02:58PM +0200, Amir Goldstein wrote:
-> > > On Wed, Feb 8, 2023 at 7:52 PM Leah Rumancik <leah.rumancik@gmail.com> wrote:
-> > > >
-> > > > Hello again,
-> > > >
-> > > > Here is the next batch of backports for 5.15.y. Testing included
-> > > > 25 runs of auto group on 12 xfs configs. No regressions were seen.
-> > > > I checked xfs/538 was run without issue as this test was mentioned
-> > > > in 56486f307100. Also, from 86d40f1e49e9, I ran ran xfs/117 with
-> > > > XFS compiled as a module and TEST_FS_MODULE_REOLOAD set, but I was
-> > > > unable to reproduce the issue.
-> > > 
-> > > Did you find any tests that started to pass or whose failure rate reduced?
-> > 
-> > I wish Leah had, but there basically aren't any tests for the problems
-> > fixed in this set for her to find. :(
-> > 
-> > The first two patches I think were from when Dave was working on log
-> > intent whiteouts, turned on KASAN to diagnose some other problem he had,
-> > and began pulling on the ball of string (as it were) as he noticed other
-> > things in the codebase.  We don't usually bother with regression tests
-> > for kernel memory leaks, since they're not so easy to reproduce.
-> > 
-> > Patches 3-6 are fixes for a rash of fuzzer reports that someone in China
-> > posted last May:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=215927
-> > 
-> > (There are more than just that one)
-> > 
-> > As usual, the submitter didn't bother to help triage and just dumped a
-> > ton of work in our laps.  They didn't follow up with any regression
-> > tests, because few fuzz kiddiez ever do.  At the time, I was too burned
-> > out to deal with it, so Dave posted fixes.
-> > 
-> > Patches 7-8 would manifest themselves as test VMs halting on ASSERTs if
-> > you configure your kernel to panic.  Not strictly needed since most LTS
-> > kernels probably don't even have XFS_DEBUG=y, but it makes the lives of
-> > recoveryloop runners easier if they do.
-> > 
-> > Patch 9 trips xfs/434 and xfs/436, but they only run if you have slab
-> > debugging enabled and build XFS as a module.  I don't know why very few
-> > people do this.
-> > 
-> > Patch 10 is a memory leak if you have XFS_DEBUG=y.  No need for a
-> > separate test for this one, since kmemleak catches it.  If you turn it
-> > on.
-> > 
-> > (IOWs, LGTM for the whole set.)
+On Fri, Feb 10, 2023 at 09:17:50AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Good to add Ack tag?
+> We need to be able to dynamically remove instantiated AGs from
+> memory safely, either for shrinking the filesystem or paging AG
+> state in and out of memory (e.g. supporting millions of AGs). This
+> means we need to be able to safely exclude operations from accessing
+> perags while dynamic removal is in progress.
+> 
+> To do this, introduce the concept of active and passive references.
+> Active references are required for high level operations that make
+> use of an AG for a given operation (e.g. allocation) and pin the
+> perag in memory for the duration of the operation that is operating
+> on the perag (e.g. transaction scope). This means we can fail to get
+> an active reference to an AG, hence callers of the new active
+> reference API must be able to handle lookup failure gracefully.
+> 
+> Passive references are used in low level code, where we might need
+> to access the perag structure for the purposes of completing high
+> level operations. For example, buffers need to use passive
+> references because:
+> - we need to be able to do metadata IO during operations like grow
+>   and shrink transactions where high level active references to the
+>   AG have already been blocked
+> - buffers need to pin the perag until they are reclaimed from
+>   memory, something that high level code has no direct control over.
+> - unused cached buffers should not prevent a shrink from being
+>   started.
+> 
+> Hence we have active references that will form exclusion barriers
+> for operations to be performed on an AG, and passive references that
+> will prevent reclaim of the perag until all objects with passive
+> references have been reclaimed themselves.
+> 
+> This patch introduce xfs_perag_grab()/xfs_perag_rele() as the API
+> for active AG reference functionality. We also need to convert the
+> for_each_perag*() iterators to use active references, which will
+> start the process of converting high level code over to using active
+> references. Conversion of non-iterator based code to active
+> references will be done in followup patches.
+> 
+> Note that the implementation using reference counting is really just
+> a development vehicle for the API to ensure we don't have any leaks
+> in the callers. Once we need to remove perag structures from memory
+> dyanmically, we will need a much more robust per-ag state transition
+> mechanism for preventing new references from being taken while we
+> wait for existing references to drain before removal from memory can
+> occur....
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 
-Oh, yes, sorry, I forgot about the formal tagging bit:
+It'll be interesting to see how the perag reference changes play out
+over the next year...
 
-Acked-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-
-> > 
-> > > 
-> > > Leah, please consider working on the SGID bug fixes for the next 5.15
-> > > update, because my 5.10 SGID fixes series [1] has been blocked for
-> > > months and because there are several reproducible test cases in xfstest.
-> > 
-> > Whenever y'all get to 6.0, beware of commit 2ed5b09b3e8f ("xfs: make
-> > inode attribute forks a permanent part of struct xfs_inode"), which is a
-> > KASAN UAF that we fixed by eliminating the 'F'.  Do not pull on the
-> > devilstring ("...the file capabilities code calls getxattr with and
-> > without i_rwsem held...") if you can avoid it.
-> > 
-> > > I did not push on that until now because SGID test expectations were
-> > > a moving target, but since xfstests commit 81e6f628 ("generic: update
-> > > setgid tests") in this week's xfstests release, I think that tests should be
-> > > stable and we can finally start backporting all relevant SGID fixes to
-> > > align the SGID behavior of LTS kernels with that of upstream.
+> ---
+>  fs/xfs/libxfs/xfs_ag.c    | 70 +++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_ag.h    | 31 ++++++++++++-----
+>  fs/xfs/scrub/bmap.c       |  2 +-
+>  fs/xfs/scrub/fscounters.c |  4 +--
+>  fs/xfs/xfs_fsmap.c        |  4 +--
+>  fs/xfs/xfs_icache.c       |  2 +-
+>  fs/xfs/xfs_iwalk.c        |  6 ++--
+>  fs/xfs/xfs_reflink.c      |  2 +-
+>  fs/xfs/xfs_trace.h        |  3 ++
+>  9 files changed, 105 insertions(+), 19 deletions(-)
 > 
-> Ooo goody, ok, will do this next.
+> diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+> index bb0c700afe3c..46e25c682bf4 100644
+> --- a/fs/xfs/libxfs/xfs_ag.c
+> +++ b/fs/xfs/libxfs/xfs_ag.c
+> @@ -94,6 +94,68 @@ xfs_perag_put(
+>  	trace_xfs_perag_put(pag->pag_mount, pag->pag_agno, ref, _RET_IP_);
+>  }
+>  
+> +/*
+> + * Active references for perag structures. This is for short term access to the
+> + * per ag structures for walking trees or accessing state. If an AG is being
+> + * shrunk or is offline, then this will fail to find that AG and return NULL
+> + * instead.
+> + */
+> +struct xfs_perag *
+> +xfs_perag_grab(
+> +	struct xfs_mount	*mp,
+> +	xfs_agnumber_t		agno)
+> +{
+> +	struct xfs_perag	*pag;
+> +
+> +	rcu_read_lock();
+> +	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
+> +	if (pag) {
+> +		trace_xfs_perag_grab(mp, pag->pag_agno,
+> +				atomic_read(&pag->pag_active_ref), _RET_IP_);
+> +		if (!atomic_inc_not_zero(&pag->pag_active_ref))
+> +			pag = NULL;
+> +	}
+> +	rcu_read_unlock();
+> +	return pag;
+> +}
+> +
+> +/*
+> + * search from @first to find the next perag with the given tag set.
+> + */
+> +struct xfs_perag *
+> +xfs_perag_grab_tag(
+> +	struct xfs_mount	*mp,
+> +	xfs_agnumber_t		first,
+> +	int			tag)
+> +{
+> +	struct xfs_perag	*pag;
+> +	int			found;
+> +
+> +	rcu_read_lock();
+> +	found = radix_tree_gang_lookup_tag(&mp->m_perag_tree,
+> +					(void **)&pag, first, 1, tag);
+> +	if (found <= 0) {
+> +		rcu_read_unlock();
+> +		return NULL;
+> +	}
+> +	trace_xfs_perag_grab_tag(mp, pag->pag_agno,
+> +			atomic_read(&pag->pag_active_ref), _RET_IP_);
+> +	if (!atomic_inc_not_zero(&pag->pag_active_ref))
+> +		pag = NULL;
+> +	rcu_read_unlock();
+> +	return pag;
+> +}
+> +
+> +void
+> +xfs_perag_rele(
+> +	struct xfs_perag	*pag)
+> +{
+> +	trace_xfs_perag_rele(pag->pag_mount, pag->pag_agno,
+> +			atomic_read(&pag->pag_active_ref), _RET_IP_);
+> +	if (atomic_dec_and_test(&pag->pag_active_ref))
+> +		wake_up(&pag->pag_active_wq);
+> +}
+> +
+>  /*
+>   * xfs_initialize_perag_data
+>   *
+> @@ -196,6 +258,10 @@ xfs_free_perag(
+>  		cancel_delayed_work_sync(&pag->pag_blockgc_work);
+>  		xfs_buf_hash_destroy(pag);
+>  
+> +		/* drop the mount's active reference */
+> +		xfs_perag_rele(pag);
+> +		XFS_IS_CORRUPT(pag->pag_mount,
+> +				atomic_read(&pag->pag_active_ref) != 0);
+>  		call_rcu(&pag->rcu_head, __xfs_free_perag);
+>  	}
+>  }
+> @@ -314,6 +380,7 @@ xfs_initialize_perag(
+>  		INIT_DELAYED_WORK(&pag->pag_blockgc_work, xfs_blockgc_worker);
+>  		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
+>  		init_waitqueue_head(&pag->pagb_wait);
+> +		init_waitqueue_head(&pag->pag_active_wq);
+>  		pag->pagb_count = 0;
+>  		pag->pagb_tree = RB_ROOT;
+>  #endif /* __KERNEL__ */
+> @@ -322,6 +389,9 @@ xfs_initialize_perag(
+>  		if (error)
+>  			goto out_remove_pag;
+>  
+> +		/* Active ref owned by mount indicates AG is online. */
+> +		atomic_set(&pag->pag_active_ref, 1);
+> +
+>  		/* first new pag is fully initialized */
+>  		if (first_initialised == NULLAGNUMBER)
+>  			first_initialised = index;
+> diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
+> index 191b22b9a35b..aeb21c8df201 100644
+> --- a/fs/xfs/libxfs/xfs_ag.h
+> +++ b/fs/xfs/libxfs/xfs_ag.h
+> @@ -32,7 +32,9 @@ struct xfs_ag_resv {
+>  struct xfs_perag {
+>  	struct xfs_mount *pag_mount;	/* owner filesystem */
+>  	xfs_agnumber_t	pag_agno;	/* AG this structure belongs to */
+> -	atomic_t	pag_ref;	/* perag reference count */
+> +	atomic_t	pag_ref;	/* passive reference count */
+> +	atomic_t	pag_active_ref;	/* active reference count */
+> +	wait_queue_head_t pag_active_wq;/* woken active_ref falls to zero */
+>  	char		pagf_init;	/* this agf's entry is initialized */
+>  	char		pagi_init;	/* this agi's entry is initialized */
+>  	char		pagf_metadata;	/* the agf is preferred to be metadata */
+> @@ -111,11 +113,18 @@ int xfs_initialize_perag(struct xfs_mount *mp, xfs_agnumber_t agcount,
+>  int xfs_initialize_perag_data(struct xfs_mount *mp, xfs_agnumber_t agno);
+>  void xfs_free_perag(struct xfs_mount *mp);
+>  
+> +/* Passive AG references */
+>  struct xfs_perag *xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno);
+>  struct xfs_perag *xfs_perag_get_tag(struct xfs_mount *mp, xfs_agnumber_t agno,
+>  		unsigned int tag);
+>  void xfs_perag_put(struct xfs_perag *pag);
+>  
+> +/* Active AG references */
+> +struct xfs_perag *xfs_perag_grab(struct xfs_mount *, xfs_agnumber_t);
+> +struct xfs_perag *xfs_perag_grab_tag(struct xfs_mount *, xfs_agnumber_t,
+> +				   int tag);
+> +void xfs_perag_rele(struct xfs_perag *pag);
+> +
+>  /*
+>   * Per-ag geometry infomation and validation
+>   */
+> @@ -193,14 +202,18 @@ xfs_perag_next(
+>  	struct xfs_mount	*mp = pag->pag_mount;
+>  
+>  	*agno = pag->pag_agno + 1;
+> -	xfs_perag_put(pag);
+> -	if (*agno > end_agno)
+> -		return NULL;
+> -	return xfs_perag_get(mp, *agno);
+> +	xfs_perag_rele(pag);
+> +	while (*agno <= end_agno) {
+> +		pag = xfs_perag_grab(mp, *agno);
+> +		if (pag)
+> +			return pag;
+> +		(*agno)++;
+> +	}
+> +	return NULL;
+>  }
+>  
+>  #define for_each_perag_range(mp, agno, end_agno, pag) \
+> -	for ((pag) = xfs_perag_get((mp), (agno)); \
+> +	for ((pag) = xfs_perag_grab((mp), (agno)); \
+>  		(pag) != NULL; \
+>  		(pag) = xfs_perag_next((pag), &(agno), (end_agno)))
+>  
+> @@ -213,11 +226,11 @@ xfs_perag_next(
+>  	for_each_perag_from((mp), (agno), (pag))
+>  
+>  #define for_each_perag_tag(mp, agno, pag, tag) \
+> -	for ((agno) = 0, (pag) = xfs_perag_get_tag((mp), 0, (tag)); \
+> +	for ((agno) = 0, (pag) = xfs_perag_grab_tag((mp), 0, (tag)); \
+>  		(pag) != NULL; \
+>  		(agno) = (pag)->pag_agno + 1, \
+> -		xfs_perag_put(pag), \
+> -		(pag) = xfs_perag_get_tag((mp), (agno), (tag)))
+> +		xfs_perag_rele(pag), \
+> +		(pag) = xfs_perag_grab_tag((mp), (agno), (tag)))
+>  
+>  struct aghdr_init_data {
+>  	/* per ag data */
+> diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+> index d50d0eab196a..dbbc7037074c 100644
+> --- a/fs/xfs/scrub/bmap.c
+> +++ b/fs/xfs/scrub/bmap.c
+> @@ -662,7 +662,7 @@ xchk_bmap_check_rmaps(
+>  		error = xchk_bmap_check_ag_rmaps(sc, whichfork, pag);
+>  		if (error ||
+>  		    (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)) {
+> -			xfs_perag_put(pag);
+> +			xfs_perag_rele(pag);
+>  			return error;
+>  		}
+>  	}
+> diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
+> index 4777e7b89fdc..ef97670970c3 100644
+> --- a/fs/xfs/scrub/fscounters.c
+> +++ b/fs/xfs/scrub/fscounters.c
+> @@ -117,7 +117,7 @@ xchk_fscount_warmup(
+>  	if (agi_bp)
+>  		xfs_buf_relse(agi_bp);
+>  	if (pag)
+> -		xfs_perag_put(pag);
+> +		xfs_perag_rele(pag);
+>  	return error;
+>  }
+>  
+> @@ -249,7 +249,7 @@ xchk_fscount_aggregate_agcounts(
+>  
+>  	}
+>  	if (pag)
+> -		xfs_perag_put(pag);
+> +		xfs_perag_rele(pag);
+>  	if (error) {
+>  		xchk_set_incomplete(sc);
+>  		return error;
+> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+> index 88a88506ffff..120d284a03fe 100644
+> --- a/fs/xfs/xfs_fsmap.c
+> +++ b/fs/xfs/xfs_fsmap.c
+> @@ -688,11 +688,11 @@ __xfs_getfsmap_datadev(
+>  		info->agf_bp = NULL;
+>  	}
+>  	if (info->pag) {
+> -		xfs_perag_put(info->pag);
+> +		xfs_perag_rele(info->pag);
+>  		info->pag = NULL;
+>  	} else if (pag) {
+>  		/* loop termination case */
+> -		xfs_perag_put(pag);
+> +		xfs_perag_rele(pag);
+>  	}
+>  
+>  	return error;
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index ddeaccc04aec..0f4a014dded3 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -1767,7 +1767,7 @@ xfs_icwalk(
+>  		if (error) {
+>  			last_error = error;
+>  			if (error == -EFSCORRUPTED) {
+> -				xfs_perag_put(pag);
+> +				xfs_perag_rele(pag);
+>  				break;
+>  			}
+>  		}
+> diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
+> index 7558486f4937..c31857d903a4 100644
+> --- a/fs/xfs/xfs_iwalk.c
+> +++ b/fs/xfs/xfs_iwalk.c
+> @@ -591,7 +591,7 @@ xfs_iwalk(
+>  	}
+>  
+>  	if (iwag.pag)
+> -		xfs_perag_put(pag);
+> +		xfs_perag_rele(pag);
+>  	xfs_iwalk_free(&iwag);
+>  	return error;
+>  }
+> @@ -683,7 +683,7 @@ xfs_iwalk_threaded(
+>  			break;
+>  	}
+>  	if (pag)
+> -		xfs_perag_put(pag);
+> +		xfs_perag_rele(pag);
+>  	if (polled)
+>  		xfs_pwork_poll(&pctl);
+>  	return xfs_pwork_destroy(&pctl);
+> @@ -776,7 +776,7 @@ xfs_inobt_walk(
+>  	}
+>  
+>  	if (iwag.pag)
+> -		xfs_perag_put(pag);
+> +		xfs_perag_rele(pag);
+>  	xfs_iwalk_free(&iwag);
+>  	return error;
+>  }
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 57bf59ff4854..f5dc46ce9803 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -927,7 +927,7 @@ xfs_reflink_recover_cow(
+>  	for_each_perag(mp, agno, pag) {
+>  		error = xfs_refcount_recover_cow_leftovers(mp, pag);
+>  		if (error) {
+> -			xfs_perag_put(pag);
+> +			xfs_perag_rele(pag);
+>  			break;
+>  		}
+>  	}
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 2ac98d8ddbfd..eb5e49d44f13 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -189,6 +189,9 @@ DEFINE_EVENT(xfs_perag_class, name,	\
+>  DEFINE_PERAG_REF_EVENT(xfs_perag_get);
+>  DEFINE_PERAG_REF_EVENT(xfs_perag_get_tag);
+>  DEFINE_PERAG_REF_EVENT(xfs_perag_put);
+> +DEFINE_PERAG_REF_EVENT(xfs_perag_grab);
+> +DEFINE_PERAG_REF_EVENT(xfs_perag_grab_tag);
+> +DEFINE_PERAG_REF_EVENT(xfs_perag_rele);
+>  DEFINE_PERAG_REF_EVENT(xfs_perag_set_inode_tag);
+>  DEFINE_PERAG_REF_EVENT(xfs_perag_clear_inode_tag);
+>  
+> -- 
+> 2.39.0
 > 
-> The following patches are on my radar to look into for this set. I have
-> yet to look into dependencies, so the set may grow. If the sgid tests
-> still fail after these ptaches, I will continue hunting for more fixes
-> to include in this set.
-> 
->   e014f37db1a2 xfs: use setattr_copy to set vfs inode attributes
->   472c6e46f589 xfs: remove XFS_PREALLOC_SYNC
->   fbe7e5200365 xfs: fallocate() should call file_modified()
->   0b02c8c0d75a xfs: set prealloc flag in xfs_alloc_file_space()
->   2b3416ceff5e fs: add mode_strip_sgid() helper
->   1639a49ccdce fs: move S_ISGID stripping into the vfs_*() helpers
->   ed5a7047d201 attr: use consistent sgid stripping checks
->   8d84e39d76bd fs: use consistent setgid checks in is_sxid()
-> 
-> In addition to the normal regression testing, I will specifically look
-> at the following tests for the sgid changes:
-> 
->   generic/673
->   generic/68[3-7]
->   generic/69[6-7]
-> 
-> I will also do some extra runs on the entire perms group.
-> 
-> Let me know if you think something should be dropped or added.
-> 
-> - Leah
-> 
-> > 
-> > Oh good, I've been (gently) waiting on that one too. :)
-> > 
-> > --D
-> > 
-> > > Thanks,
-> > > Amir.
-> > > 
-> > > [1] https://github.com/amir73il/linux/commits/xfs-5.10.y-sgid-fixes
-> > > 
-> > > >
-> > > > Below I've outlined which series the backports came from:
-> > > >
-> > > > series "xfs: intent whiteouts" (1):
-> > > > [01/10] cb512c921639613ce03f87e62c5e93ed9fe8c84d
-> > > >     xfs: zero inode fork buffer at allocation
-> > > > [02/10] c230a4a85bcdbfc1a7415deec6caf04e8fca1301
-> > > >     xfs: fix potential log item leak
-> > > >
-> > > > series "xfs: fix random format verification issues" (2):
-> > > > [1/4] dc04db2aa7c9307e740d6d0e173085301c173b1a
-> > > >     xfs: detect self referencing btree sibling pointers
-> > > > [2/4] 1eb70f54c445fcbb25817841e774adb3d912f3e8 -> already in 5.15.y
-> > > >     xfs: validate inode fork size against fork format
-> > > > [3/4] dd0d2f9755191690541b09e6385d0f8cd8bc9d8f
-> > > >     xfs: set XFS_FEAT_NLINK correctly
-> > > > [4/4] f0f5f658065a5af09126ec892e4c383540a1c77f
-> > > >     xfs: validate v5 feature fields
-> > > >
-> > > > series "xfs: small fixes for 5.19 cycle" (3):
-> > > > [1/3] 5672225e8f2a872a22b0cecedba7a6644af1fb84
-> > > >     xfs: avoid unnecessary runtime sibling pointer endian conversions
-> > > > [2/3] 5b55cbc2d72632e874e50d2e36bce608e55aaaea
-> > > >     fs: don't assert fail on perag references on teardown
-> > > > [2/3] 56486f307100e8fc66efa2ebd8a71941fa10bf6f
-> > > >     xfs: assert in xfs_btree_del_cursor should take into account error
-> > > >
-> > > > series "xfs: random fixes for 5.19" (4):
-> > > > [1/2] 86d40f1e49e9a909d25c35ba01bea80dbcd758cb
-> > > >     xfs: purge dquots after inode walk fails during quotacheck
-> > > > [2/2] a54f78def73d847cb060b18c4e4a3d1d26c9ca6d
-> > > >     xfs: don't leak btree cursor when insrec fails after a split
-> > > >
-> > > > (1) https://lore.kernel.org/all/20220503221728.185449-1-david@fromorbit.com/
-> > > > (2) https://lore.kernel.org/all/20220502082018.1076561-1-david@fromorbit.com/
-> > > > (3) https://lore.kernel.org/all/20220524022158.1849458-1-david@fromorbit.com/
-> > > > (4) https://lore.kernel.org/all/165337056527.993079.1232300816023906959.stgit@magnolia/
-> > > >
-> > > > Darrick J. Wong (2):
-> > > >   xfs: purge dquots after inode walk fails during quotacheck
-> > > >   xfs: don't leak btree cursor when insrec fails after a split
-> > > >
-> > > > Dave Chinner (8):
-> > > >   xfs: zero inode fork buffer at allocation
-> > > >   xfs: fix potential log item leak
-> > > >   xfs: detect self referencing btree sibling pointers
-> > > >   xfs: set XFS_FEAT_NLINK correctly
-> > > >   xfs: validate v5 feature fields
-> > > >   xfs: avoid unnecessary runtime sibling pointer endian conversions
-> > > >   xfs: don't assert fail on perag references on teardown
-> > > >   xfs: assert in xfs_btree_del_cursor should take into account error
-> > > >
-> > > >  fs/xfs/libxfs/xfs_ag.c         |   3 +-
-> > > >  fs/xfs/libxfs/xfs_btree.c      | 175 +++++++++++++++++++++++++--------
-> > > >  fs/xfs/libxfs/xfs_inode_fork.c |  12 ++-
-> > > >  fs/xfs/libxfs/xfs_sb.c         |  70 +++++++++++--
-> > > >  fs/xfs/xfs_bmap_item.c         |   2 +
-> > > >  fs/xfs/xfs_icreate_item.c      |   1 +
-> > > >  fs/xfs/xfs_qm.c                |   9 +-
-> > > >  fs/xfs/xfs_refcount_item.c     |   2 +
-> > > >  fs/xfs/xfs_rmap_item.c         |   2 +
-> > > >  9 files changed, 221 insertions(+), 55 deletions(-)
-> > > >
-> > > > --
-> > > > 2.39.1.519.gcb327c4b5f-goog
-> > > >
