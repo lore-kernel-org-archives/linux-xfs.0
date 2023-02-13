@@ -2,273 +2,158 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0604C636D7
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Feb 2023 04:07:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B589C636CC
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Feb 2023 04:07:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229599AbjBMEHP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 12 Feb 2023 23:07:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33626 "EHLO
+        id S229558AbjBMEHZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 12 Feb 2023 23:07:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33660 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229597AbjBMEHO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 12 Feb 2023 23:07:14 -0500
+        with ESMTP id S229484AbjBMEHY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 12 Feb 2023 23:07:24 -0500
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50D97EC57
-        for <linux-xfs@vger.kernel.org>; Sun, 12 Feb 2023 20:07:12 -0800 (PST)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31D1ipdM026534;
-        Mon, 13 Feb 2023 04:07:09 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A93B3EC58
+        for <linux-xfs@vger.kernel.org>; Sun, 12 Feb 2023 20:07:21 -0800 (PST)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31D1iPAJ012119;
+        Mon, 13 Feb 2023 04:07:17 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version; s=corp-2022-7-12;
- bh=JfYCvhRw5M7kfNVVfhxoZ3n3xeLGPVu/dk6zQd3jrEE=;
- b=qt1K4mMYO9w+TZyL/iiQ9V/qWyzwOgs4THddLKnuQgRFUImL3Mw4ztGB4gVghwyxWbla
- 1rtcSaQDhUUKRAuBsi+2n0OODFRP92FTZh3kujfAgcsmJPROJmYHMIeu37UNfTGF74L0
- 6OyeBGDEWH7eJTTYacbo+FyMNM0u5KaOMHdkVMZ1WB9+9B90k0eGf5V+MnTLSct8CGa2
- 7wqZMw80Sp0jU26qqxFRBaXJj5dDJfL2D0JpUvN3nXO1/2Z/+EMXlOLd7eDE7XjufrQg
- e6p3IJTX7rVKQi/njgOHO25PVbmT3V1yKJz6iSrnScYNkRwGfdHu7hZJERklBOUDc72E Hg== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3np1ed9w2m-1
+ bh=0zBZ6uOY6n7+yAPcdjOtUIqvNSNqoH3VZIRIGBp137Q=;
+ b=npBbvTnotjOZ2c0VBW5a9VviMTV/sr1pRGb6xfLaRWsEzffVRUmqp4JkoeVf+LESZoMB
+ mbWO/Q0kIYcP3EX/ntB3b0A1jw0WCoacBpb+eCLF1Nf2eSaa5WLTW3+dPf7J+HNFldYV
+ 2b86R+RujvXsRApQOH3wQ10710YKKQ2Xtym7sk6oq2tiOBDlArzeiE/m2fiyV92sVHWt
+ b3RM/gVTnjPM0wHu6SwcKyr7xYIxfNJsH85tX8UU4RgRd0798dknDRCDp58/CHWxUQdU
+ u+xtOeMf13ppIrfQCXjIj8Ng8hR62nEsbWaaZCgsE3QtYRkN3Q+eX84Txj1Fz8EZ4TfT hg== 
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3np1t39v6g-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 13 Feb 2023 04:07:08 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 31D2UNRX011581;
-        Mon, 13 Feb 2023 04:07:08 GMT
-Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2169.outbound.protection.outlook.com [104.47.58.169])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3np1f3k1by-1
+        Mon, 13 Feb 2023 04:07:17 +0000
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 31D38RIB028887;
+        Mon, 13 Feb 2023 04:07:16 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2170.outbound.protection.outlook.com [104.47.56.170])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3np1f3aaag-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 13 Feb 2023 04:07:08 +0000
+        Mon, 13 Feb 2023 04:07:16 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=S+gtmyOiLfyY5VgbL2wg6/bOkxCJ9u88Iqxq/eT2ydaSGedEaQM6ATObooDAepviS1uEIWWVBdEy4dGJ0vkMNTC3bOj5NXTaXP1VrRCjGLvRzBkQ+kiEyPfUQu5XDam6ljCPl0wFY+btlOgoUegefpmrp0/AXIsGEjHtrGrZiQiK+gPg0aOgWhMiwaOjkN3gHYfHAZWrQZzE06XHS2krnoVtmI771JtTTFzPcgOrct2j6lU725QXYOSZxxxGaT9pISXPyld8Mt1mjBf8bgFqCieBUWoqaZDRTubTivk8d21sHW01HLfGLNyAZbGtw2kklVZCWACzsGaEc3Vd0pltpg==
+ b=V39Oqxt9iPKW0D3re/t0BAmU8vXA2XQpwEvv0eLrmOc1KcG1gHeXljc3qsQ8pI6+AtKA+zdoc1mE7qJFlJIdahyPPQ/UyKUCWvDObwtLjgiJZNoXpix8UBk2Os2qkxnCCQZCElNzwIXL0gO343ccTD394WTivo8xRlWc4zcH6jPsacwdAvcven0RopYQojdWkoDviyQwoiMQoDwqfucpSTYv/9ZU81y/sEL0dVivEtKEIxBrYbpCl9V/nHKbpb1KotG5iitftRyqZMBSeLMRXxATchwipbZ2w/E1OGqYq1WrTkHTUZsCJlF/YEm6vMI2uPROIvIPYko24/XF6Wiq5w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=JfYCvhRw5M7kfNVVfhxoZ3n3xeLGPVu/dk6zQd3jrEE=;
- b=MCenpDbgvYcuevGvNFK6N5j9MLIWX8LoRMkwmVKTrB0IQk+Yy5v2coczyRpfHAkpBdY106k4pVU5xJvtq5kOnTef2zwf3NTWQYmK10y5i5BVyZnV+j7HxgafNJgoxE5jVoXCzr8JYhvh+yNJFm7sdd27h8SoO9Igydpbgqla/gWHhz/x3wNfJLnNnExYtKkHV2MqetxUAPS92aod2zmr6HWUYd5o/2fTtVBjv9g8s7Bg56BuSmO10/lWl12SG9fwudJAJbHWSLZX0lMA3X00ctyCYpabvkwGt3nit/NaLoF/Uyg4OjJkwbGw+9gS4u8jMqpVGd40XrEIqMBi2jKufw==
+ bh=0zBZ6uOY6n7+yAPcdjOtUIqvNSNqoH3VZIRIGBp137Q=;
+ b=UiBWJG+FWDkQIgBpmAT9hQHaIR003KQvFG1z61B9Wz+LL2Lcn+527XyIZDEludO0mU1uK7wYh0AkethYi9qbTlOj+RyTj/hTg6i1XNwRi72M7I+5owau6Q3I9WBsAcDPuVedokQnH6nnfBGLqzWMQkNOl5mrj3xR7dJ8dUWTAaRucZ19ZaLbRXBk6/vV5Us0Ge5VNQTVLsdgaHvteUnQBDRmgjCMEABQbBPKFsxnMyegVTL6PM9EatDzBw61DEiIZst5xBa9DhlgwddoUW+JzZKt93UBOH7sYcTmVG1hHHC2dZEybE0sryjtXq0Dbr1FQdNWgsi7moFw1FF74j5Fpg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JfYCvhRw5M7kfNVVfhxoZ3n3xeLGPVu/dk6zQd3jrEE=;
- b=lcf40b6Qgtl66Gx0aWKBiOagBK1CNuU/Z4m/rkq/wxGHtEXpJ2rsPbnheOgYdPqdgwfdHuAt2J1h/jiS+ZusaxD9+YbqDnsGYqeFaYXKcVWfSqj/cg056xI5MXnecnIj8H1Lglb8VVLDFEBY269r/Z+rUThc3jIPU7AvKLXG7gM=
+ bh=0zBZ6uOY6n7+yAPcdjOtUIqvNSNqoH3VZIRIGBp137Q=;
+ b=nyoih0H8G8P7v0cmgLhrYOT8dj2jm4siEG8ABP0/d4VZLOgvDIFtjnLxQ5KbnMkN1VFd8BkzONCvi5Qnrw+PXxiqnxek0yGAA18Ix5bkXDRqVrg37yNheNNtbT6OxwKlNiZmgPN0qkhS+LBN9o7AzNL8DCx6CqC4eujU9eoz5Ao=
 Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:22b::9)
  by CH0PR10MB5225.namprd10.prod.outlook.com (2603:10b6:610:c5::15) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6111.10; Mon, 13 Feb
- 2023 04:07:06 +0000
+ 2023 04:07:14 +0000
 Received: from SA1PR10MB5867.namprd10.prod.outlook.com
  ([fe80::6d82:720d:3596:839c]) by SA1PR10MB5867.namprd10.prod.outlook.com
  ([fe80::6d82:720d:3596:839c%3]) with mapi id 15.20.6111.009; Mon, 13 Feb 2023
- 04:07:06 +0000
+ 04:07:13 +0000
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     djwong@kernel.org
 Cc:     chandan.babu@oracle.com, linux-xfs@vger.kernel.org,
         amir73il@gmail.com, leah.rumancik@gmail.com
-Subject: [PATCH 5.4 CANDIDATE 17/25] xfs: change the order in which child and parent defer ops are finished
-Date:   Mon, 13 Feb 2023 09:34:37 +0530
-Message-Id: <20230213040445.192946-18-chandan.babu@oracle.com>
+Subject: [PATCH 5.4 CANDIDATE 18/25] xfs: periodically relog deferred intent items
+Date:   Mon, 13 Feb 2023 09:34:38 +0530
+Message-Id: <20230213040445.192946-19-chandan.babu@oracle.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20230213040445.192946-1-chandan.babu@oracle.com>
 References: <20230213040445.192946-1-chandan.babu@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: SI2PR01CA0006.apcprd01.prod.exchangelabs.com
- (2603:1096:4:191::14) To SA1PR10MB5867.namprd10.prod.outlook.com
+X-ClientProxiedBy: SI2P153CA0003.APCP153.PROD.OUTLOOK.COM
+ (2603:1096:4:140::20) To SA1PR10MB5867.namprd10.prod.outlook.com
  (2603:10b6:806:22b::9)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|CH0PR10MB5225:EE_
-X-MS-Office365-Filtering-Correlation-Id: fbbab0d6-9e8b-4614-3f68-08db0d77c536
+X-MS-Office365-Filtering-Correlation-Id: 3da945cc-155b-4259-cfdb-08db0d77c983
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: bFWfJWvA/25iEpghwHJx38nHQ06uNisaVAJgCMl3dsON/8fjQ0/gQ4ftMk5KRG6Cmm9EJcdXRBKz/q2WBJcFV7O6gRDfuBrKkQqOUMvwuIPNqtCm7rSleBSxbvxU2CX4Ak3hhI26BPnJS8gJytXTtkxGK6GYUUtv8esDHSQpcIcLgktqXazEno7bo64LNS0yG1ERrkCJAMH3dUyQsHG7expAv/l/xUo8X7v/3peK88iJwLqEXwyfjE2T1HeHadxZbxZCrTx1YAxeVA1XzPCi6aN/hgSn6PJ4aeVXGf0OTpWJtKCb5+Wbk6s9Cj2z1tQLUftmSIPT38O6XIx/T2oKZHoh7kxU9hAAe8lEYo4mHsojkbRKKi5NXlXbncACB6NXiPB2f0UyuWcsw89JRGq+vsUskazl+3NIglq5v3re2ZOQORnJlbz1DKXR23i3q23j03ygxVBqklb3eA1aZ9Zv4snUXETwaFj9Mv0/TLbCRhpka9m2R9GSriYpsuQagvbxiNGEKmf8usJ0Z/eyfP/aTBL+HUA5iXJTyshjDEqlSmgZBuqKphMKhgHgu9RPlY1Iu73OAn6LFpj+uO4GkHw+w1D2O1wds7wWbf+wTK2SZY3SHgjccnRhQ1e3yXvMP/BFOVPYCwvepVC1dq2oMN4R0A==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(396003)(366004)(346002)(376002)(39860400002)(136003)(451199018)(2906002)(8936002)(36756003)(5660300002)(66574015)(86362001)(2616005)(83380400001)(6916009)(4326008)(316002)(38100700002)(66556008)(66946007)(66476007)(41300700001)(8676002)(6486002)(478600001)(6666004)(6512007)(1076003)(6506007)(186003)(26005);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: LusEPWysLd+rQdWw6jDWbwVhD1ShxFmkROuSsWpJxMKS+jE9LBJWcph4TCI1tHGIhbEkd2OXEAyZBoGSxSrDclHWZoQPAUw5GKcDL0yBF4mHMRfLnJUtG5yFOPFV5hRSi/4kF15cZLrIuUue/T99KNJ6FuD14qStElhM7ORGxE9UxZonfZ5FYSAqAXVxP4T0yI1HvjixsEL2KQ1EHA/pkujq9n8lw3P00Z1wh7HGuKfWbmjrTRss1jXZ9w78M7SHHx52YguYg/G/BHZqmnO8hWrhvHBrE8FkO09bQAPOaxkEbhyf9D8SY84YIZ5yoqjAYAzs5rzFPdkciYy284AKEuAJ472BuGXKGaq3Nobt6JroCUixAJaxyGrspqfyH5eQoNTR9jizMoT7jVYLYOC6wCmyqBQ8AIHpEu1HDH1XQHlVIQAkA5Liq+OZNNJslbHLfVzJfqJq41rQDoX9J4myrgSBsBfk9yWhFWV/rQ9UY/3D7SNivNz66rF+ZMuQxK1IscdS4mszn6mYBEpxyeVOICFNhmBAxS+J74uOyG6ap+0WHODVDZC2IlcWOtj937fQA7odVbefR+UVAF6aa53SX7d0v8rS808sog4nbUAce+ArtWDggaYEO4HzAVwEaMpMHd5AJuCQguWJNrxoyuphyA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(396003)(366004)(346002)(376002)(39860400002)(136003)(451199018)(2906002)(8936002)(36756003)(30864003)(5660300002)(86362001)(2616005)(83380400001)(6916009)(4326008)(316002)(38100700002)(66556008)(66946007)(66476007)(41300700001)(8676002)(6486002)(478600001)(6666004)(6512007)(1076003)(6506007)(186003)(26005);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?ku3sqQpmdkPWqcLCcOXMORXcJixno2p+u8Ntgu7O4F76RGJebnv5shAG6f9t?=
- =?us-ascii?Q?S75PuR6x5i86OFF2xMjBojl6DTjoajyjLGee273lMv8VpZ6pXIksSwSrr9YT?=
- =?us-ascii?Q?cTP4QQDriTD4MRwnjYBjukZ1mHzuDM7PYwO4fy98yohw1pMQvXlQK064vgWv?=
- =?us-ascii?Q?26qCww/E/xHm2pv+TAEWRquzzvmHYM9OWVCjHHzJNoNKzp2Iz/o0IZrs7u6b?=
- =?us-ascii?Q?g9wIzPl9ABAO/jT1poBAc/1oYIdgN48dsZBNNiQ4pU/i3k42SVeR+MXLzesT?=
- =?us-ascii?Q?dBNgxJ1iDRGh7wDXf8zdjF/eb4Nhrbr7Q/LW/kBmsn0seOPN9BfivgD2Idci?=
- =?us-ascii?Q?kwl5QGLf3C/8PUt0ztXaewcF/pq2vSq2vMGYz9rR+sbWsruPz/NxZRnSKds8?=
- =?us-ascii?Q?IhPRgKHYdaNyd8V1fzx00/BfWFsKU5sIhK0IYTT40uWnxDT3HMxOLPUxZMNo?=
- =?us-ascii?Q?hWhuItNnDert3yRYB2UVd+rk+Hcs6RZRN1b3ePAAvI/U2sVmus/qNYJH4tca?=
- =?us-ascii?Q?8LN5mj7aGMUNAIZp6GpHV6G3cRnU/Gc9Y/kNhACUmICq7DPsPDu7UA2FXH3q?=
- =?us-ascii?Q?+YPecfzeEuwESueU0872ZMpU1gf8SRc+OSjmDL2PDUpo8SfVqJ6OUmqZZBkZ?=
- =?us-ascii?Q?WRaKIqaT61aWss+rv7fU4BJf1zXSaum1N1wK8sZHo+ShSZMbxKB+81tRPne0?=
- =?us-ascii?Q?el/1qNEpSruK410SfUiKWSJXVZ28AQGfjhyTRa1IFnvPG4r27w5MQSvtBLKe?=
- =?us-ascii?Q?T4bfKQynbZonfXSchH4O11SAHYuVt57l0zP7DXYuJubaAq33T1ZCah1mU/XI?=
- =?us-ascii?Q?Hk5a6BvRfC2bj3rBTrcG5gdLQHi/5PuC8aqmLBuYbyAq67LTdMygK/fxZ6Rp?=
- =?us-ascii?Q?p5QRlqqL3Dy+AC2X4wVsVgomyA5WCeHBsQAH5xycNIlGfOJmAQRCRAQ2Mklp?=
- =?us-ascii?Q?NM+UKn0/oN7hdMgo/U4+k+wt3OS9e0gIL/xD63vWyVpI6JHeysZckLK4iett?=
- =?us-ascii?Q?lvZYQp84xIBVuY1BqRW+vJhCEqoZxA0pYfdZHd1gtUWiCf8vmeK6SPmy4j83?=
- =?us-ascii?Q?dArGTMp7XdUkPPkFezD2Qys3Fg/vaHzk0VEIkbBtnxriuVbu7SRzumwIVMlG?=
- =?us-ascii?Q?+rejNZ7NHznhnXeSVDjIcrNWo+1ayXbV0fNWMDEVFjopWHLY2JeUyKq0G9xN?=
- =?us-ascii?Q?uAGA4I8vnJXfGQQKIQcLE8+p7t+b5/q6u8t3/X9rLiYvg24u9vAPee8iOtXs?=
- =?us-ascii?Q?1sHVhxgh0pgGv14NsIJTUJN/5MCQeWioz02a7UC8TTcMgWAbsJ/x4nkOxy1O?=
- =?us-ascii?Q?Y+gWf3fh8iKJMGsjCwbvF8IqD2J/L9KPd30a6JEQM3AJLxLm2aYv7R02jUiz?=
- =?us-ascii?Q?a3rsBNzoXn6yDcNFwJRyXfClsjycan+v0LLfSLfQg8p+3I6r3SuH3DrdYMbS?=
- =?us-ascii?Q?eNKV1ERswEsUoBAMcfgTYKHk/OXa4iZfH51jt51/7h80gQaV+Nc2fhsDVJ2R?=
- =?us-ascii?Q?sz2wdLCYLsyTqhvmgCsnef3wZOLUxKud+QjywkAzfC1+jkgAnAqq/6Z34lb/?=
- =?us-ascii?Q?18p70wazC29mwIapfMurX0vlr/ZP65rMrtrnD7Oq7vG6muTc3i6S35bMrEwv?=
- =?us-ascii?Q?4w=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?u9GvW0bI2MEW0uqqS1Sur+yW96qUWU6UcqsY3/Zt+4AQC7qlc6gilOs3ZVmR?=
+ =?us-ascii?Q?abThpmv98ZBLLTbuvsn466qDDZxD+A9LzPJyI5F2ULsfKz7xAKnT4vcah21E?=
+ =?us-ascii?Q?39k04y+keCq1toma96OZVz/3MPEhgagh0E0gTSk4ZrudqBSCH4slS5jf9BIS?=
+ =?us-ascii?Q?5Y/eIFKJnISUaJPr+TaCyb6aY7jwKcoBLhq29vMymdD1YPOhrKflXZ0siGUs?=
+ =?us-ascii?Q?B/f06kW4Saz4mZ5THj1fwJLzyKhB+hOBBoEtr5R5xAQpaUT4al7G0v8mrua6?=
+ =?us-ascii?Q?jgpwY9kftuHWTb3Fq/TCUXexiznerwujuQdOCSKICYPZDn00rzQBCdlJDsyM?=
+ =?us-ascii?Q?u+cbPd4J2cU2Fs1x7CDJVNqbJplbmYkvAQAYqo1e3VGKPzQHK8J9cmZOCSxm?=
+ =?us-ascii?Q?QbFILzQL1v1s4rWdpWIQkaYLbvXfvWU4RDJmFLdYH9hTrvWDk0jdw3yP4fI2?=
+ =?us-ascii?Q?p3ETlIW3iYCvIZjtX9nxmFn2ZpzIIn65lMlAxTn9WlIApdmAKxP8VnDCO4NE?=
+ =?us-ascii?Q?5KbV98cSARMx5+BFmJ+vNJkA8/6gB6+nbs/g1XOCdzWoT2BQuBAde93eJz9I?=
+ =?us-ascii?Q?F9GqHyBRoPPuZDPdEC+Kfk6aM45cN4o0N//2cNRQQwl1s04zMA0udNRiHoly?=
+ =?us-ascii?Q?syes2nn93QCuVpJcU7KP584PE9aiQzFH57BOl4+sHEj53LCCnp1llQCXR39U?=
+ =?us-ascii?Q?86ecEM+KBG0amVg98Ik8Z5I6S0/Wk6VkYwnTSyA24vhM2Xsua4sUYzpLPAiP?=
+ =?us-ascii?Q?XxXVFYan7eTxQC9QnLyhyldpjOc/6XOibZn0FMAoKfwYFVcEbqsDa3breHJ9?=
+ =?us-ascii?Q?ePI82jtisdBpPF4Wje4uvHK06TT+HaATitmfoStx1gopBuLUlv9cf+2BR2N+?=
+ =?us-ascii?Q?8FXwmUZ+gr1SeTzfwDLNI2DKtaG5zci0Gp5w3+aV+vYvq+mJOt8aXw6ZHCCk?=
+ =?us-ascii?Q?kh25ZOzOEhoUIJZhyJ03CrK+107CYGEcuehK00SxAk1RcnEaqfgdZvuUFHLM?=
+ =?us-ascii?Q?GEyV6Mx5k4My/PDx8XhM33h5K8lK5y8u0sM4CxsMEeKNr0JzliNy4pOC3bZ9?=
+ =?us-ascii?Q?/NYMONcXN42axJ6vcS22ZTHZPGlOaWBrDtSgDIKnyOyJPJ5iPd4wnQyBSsQs?=
+ =?us-ascii?Q?25eXfYxXfilpAH/5DXcCx6LomT1k/RLAkRzWChW+FppVbZckhi6LMu25BeXr?=
+ =?us-ascii?Q?WZj7sk4Eou32chxGWeS7vip1pJTvQNVMtmT4oT4VCBQ59jkQnXlYsxYCz6+q?=
+ =?us-ascii?Q?bQAb+rVJHwt7krKfnJCShPGdkwuufznOCg17GETqpHirRnHm+LTcuoe//BFj?=
+ =?us-ascii?Q?rxEdo6rkUVKRtKTSWbx58rRynZv6nuB9bjB1MfGlLof6dmMfrQHhAwmMCC/C?=
+ =?us-ascii?Q?tY3gaB8rKY11ZcdyPfiRBvqVyuisIbpJHHnWVdYL5Rur2s8vT1xDdaTeTOvc?=
+ =?us-ascii?Q?tdla5Bk5SUXL4AJkQkK7W5c0Acn92Ac3jXvDFrf+XB9xkvTquKXkvpfK/A9X?=
+ =?us-ascii?Q?dMpMpPWaAx/8ev09JuL4MLr+z2hSfDfU9pjvKrVU/r+kyrL1pbrZTShIaEQe?=
+ =?us-ascii?Q?evYV3NTsCutHfeSAds/wX8aGVcEybCko08iSDXFwufgwfoi/+qkFZyNOZYWg?=
+ =?us-ascii?Q?eA=3D=3D?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: SLgNnrYHDQdPtr1vzUT+A8eyUpamE4X7dCpZJ9kbqFJuK/htPsnL+K5Tl+Kc8vYvmdRkYNrrsXkH9YoA6n+0eWj0c30dOyxMPP+OFrFQS2gwbfzyBYZK02vKgvkXqPN2JoiC0gZN4HQP+3F0bFy0J2AnP7QOs46cAVKZgG8pasP01eQnalnLlLB8R6As6LwfXkifX/+EuG6/5VhNcftsx7jvWQv6JXzqKypLUyoaIe9/Vp3SQjANMVKePg0v9+MVhhyVaolbTZfMf54QVRks5aRy3KrGHXWX4nIEQ6HxJTLNuvIq361vevl7iFQvGfkSuKu46BVkbSqGeyoVpvSubCFgmpYyjA+0mDRT0MLI6QhdSOfgQ6Y942guxVS1ddmcJbJ/vOjZ5ACESy8n8+XWSoiW/gM+jwr6irXnYDptTnvAJs5d0h1JbmYK7Y8Iykm5sprHcPv5qRDCJuoXghb1cORlnsn38JWkUl5LkpZNMPVR/AKeTP4W9lRhaHsd2jC2n3XW7z5N7IIkbL7e65yPNXZwlhTZ65MI5nmc+U6WFTcUrbW14lciV/IyJuzT1wqCH3bAtTYy9M3FOlrU6OP2Z6gfb5b7xuKYapLcJ6mAxv+kbrgC/mJbtd29bzNFSXYTryiObCtD5FGcHBEWLZde6yFqLuZF5fOthk9Dey0urLZ8bM9V5Lk7Ct77nOEEu0Tc00n/wM7gWl9Xl6au005nNO+KFvlst7piFznJMd0q+AlqABn70T6QzUceO1d/gbcIHVvlSL87pc10SHVhZ4fxNqyccmjw9zfJa5JUitZ8mGp8bBJpyHmo+josDiYaTnn0
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: ll0QmXbgMU5PhkFQDcJIS6JzJr6nMPknM8CCrtPSDSVyONP71K9SV68Nz38HnZQOPCD4OxVNX9okGge2/FsRhb3BFXEriLIJFULZd8nn8eo1G8jp0HDI+e2+OYL36LWL1/8AW4swiEuWXHc+SYutneXdB3JxFK4qG1arU170yMbJqpcNQm5Y04SRoFyEbSIiSYKWhc3gxD/zUe8iCQ1dRhFKhJY4CnhjPkriY0iyf2GR3HIdB8FORT0X4gtXWZwFBZo/Au0LzcKMjZlyE/q3QmI82J73oTRFKTtw/3mtxyi5w8QHBgTbzxUzop0fKT8X3A04ZsvzU8hAeetsTeSvnNmQCK9qopr6naklZhArNftiiYScvV44KBzePbZyBija9I1QLpxhlcWebh1tJ1L2w6vBT3s8mbq1V4NSip9jmPnxExQ/NSkPCdpq64z43A2oH4312K6t9+tEWVTlOjSuTilEzBzI53K4mTtq5xTwZy/DXdV30zrD8hKuFbjUnrUBuY/yVJx7mZCiXFAW0KbG2vAEJ0wBqyUt0uwIngTe0uDPFMy1OEMcwRVSYCN/qYp+6OELCVuaVC7poXw7nJ9H6UMNT5Ndnzc2gTrHyKUKjDiyxsliTUOGPJfbMXSPANtL0L1oMoRnb6BOsuAhVNAuczRLOKEWkFQebEEzTcInKJnUtxIU7Y4wkIeLXDMoLsIa3vHF0pa4lNHjz9DEtozTLhFnVlGK3S5dP3esnHEXovaXpN2C7SrUusAoaHdoYh7Gscz3uPGfENWKS7LRW9x7a3q1ZYJssPxYnY1mYzmbuRmYkmOusZOjK/0zPRWHiYRK
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fbbab0d6-9e8b-4614-3f68-08db0d77c536
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3da945cc-155b-4259-cfdb-08db0d77c983
 X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Feb 2023 04:07:06.5399
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Feb 2023 04:07:13.8997
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: GP+2mFF7qUZPN087sabVaTrmAV3ba+NI3vzp27dD/RC9BTPXq1HLchZ/eMEu8+WKbhCh33UAME3yDPLUOqewKQ==
+X-MS-Exchange-CrossTenant-UserPrincipalName: D8QLgNDy9xL5lvuuSqnc3cEHDCkmD767xWpVZW9cxq3JvUYrAbbza7ufcPnEr7/aSqil0XLQWjplamQ4YOxFLA==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR10MB5225
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.170.22
  definitions=2023-02-12_12,2023-02-09_03,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0
- suspectscore=0 mlxscore=0 spamscore=0 mlxlogscore=999 adultscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=0
+ phishscore=0 spamscore=0 bulkscore=0 mlxlogscore=999 malwarescore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2212070000 definitions=main-2302130036
-X-Proofpoint-GUID: Zxg5O8_L_IeUHI5P2dJxHTfp3qHtJrgn
-X-Proofpoint-ORIG-GUID: Zxg5O8_L_IeUHI5P2dJxHTfp3qHtJrgn
+X-Proofpoint-GUID: VMXpaXPdtg1tEQTNH51JB6Z7pfh_35U5
+X-Proofpoint-ORIG-GUID: VMXpaXPdtg1tEQTNH51JB6Z7pfh_35U5
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 27dada070d59c28a441f1907d2cec891b17dcb26 upstream.
+commit 4e919af7827a6adfc28e82cd6c4ffcfcc3dd6118 upstream.
 
-The defer ops code has been finishing items in the wrong order -- if a
-top level defer op creates items A and B, and finishing item A creates
-more defer ops A1 and A2, we'll put the new items on the end of the
-chain and process them in the order A B A1 A2.  This is kind of weird,
-since it's convenient for programmers to be able to think of A and B as
-an ordered sequence where all the sub-tasks for A must finish before we
-move on to B, e.g. A A1 A2 D.
+[ Modify xfs_{bmap|extfree|refcount|rmap}_item.c to fix merge conflicts ]
 
-Right now, our log intent items are not so complex that this matters,
-but this will become important for the atomic extent swapping patchset.
-In order to maintain correct reference counting of extents, we have to
-unmap and remap extents in that order, and we want to complete that work
-before moving on to the next range that the user wants to swap.  This
-patch fixes defer ops to satsify that requirement.
+There's a subtle design flaw in the deferred log item code that can lead
+to pinning the log tail.  Taking up the defer ops chain examples from
+the previous commit, we can get trapped in sequences like this:
 
-The primary symptom of the incorrect order was noticed in an early
-performance analysis of the atomic extent swap code.  An astonishingly
-large number of deferred work items accumulated when userspace requested
-an atomic update of two very fragmented files.  The cause of this was
-traced to the same ordering bug in the inner loop of
-xfs_defer_finish_noroll.
-
-If the ->finish_item method of a deferred operation queues new deferred
-operations, those new deferred ops are appended to the tail of the
-pending work list.  To illustrate, say that a caller creates a
-transaction t0 with four deferred operations D0-D3.  The first thing
-defer ops does is roll the transaction to t1, leaving us with:
+Caller hands us a transaction t0 with D0-D3 attached.  The defer ops
+chain will look like the following if the transaction rolls succeed:
 
 t1: D0(t0), D1(t0), D2(t0), D3(t0)
-
-Let's say that finishing each of D0-D3 will create two new deferred ops.
-After finish D0 and roll, we'll have the following chain:
-
-t2: D1(t0), D2(t0), D3(t0), d4(t1), d5(t1)
-
-d4 and d5 were logged to t1.  Notice that while we're about to start
-work on D1, we haven't actually completed all the work implied by D0
-being finished.  So far we've been careful (or lucky) to structure the
-dfops callers such that D1 doesn't depend on d4 or d5 being finished,
-but this is a potential logic bomb.
-
-There's a second problem lurking.  Let's see what happens as we finish
-D1-D3:
-
-t3: D2(t0), D3(t0), d4(t1), d5(t1), d6(t2), d7(t2)
-t4: D3(t0), d4(t1), d5(t1), d6(t2), d7(t2), d8(t3), d9(t3)
-t5: d4(t1), d5(t1), d6(t2), d7(t2), d8(t3), d9(t3), d10(t4), d11(t4)
-
-Let's say that d4-d11 are simple work items that don't queue any other
-operations, which means that we can complete each d4 and roll to t6:
-
-t6: d5(t1), d6(t2), d7(t2), d8(t3), d9(t3), d10(t4), d11(t4)
-t7: d6(t2), d7(t2), d8(t3), d9(t3), d10(t4), d11(t4)
-...
-t11: d10(t4), d11(t4)
-t12: d11(t4)
-<done>
-
-When we try to roll to transaction #12, we're holding defer op d11,
-which we logged way back in t4.  This means that the tail of the log is
-pinned at t4.  If the log is very small or there are a lot of other
-threads updating metadata, this means that we might have wrapped the log
-and cannot get roll to t11 because there isn't enough space left before
-we'd run into t4.
-
-Let's shift back to the original failure.  I mentioned before that I
-discovered this flaw while developing the atomic file update code.  In
-that scenario, we have a defer op (D0) that finds a range of file blocks
-to remap, creates a handful of new defer ops to do that, and then asks
-to be continued with however much work remains.
-
-So, D0 is the original swapext deferred op.  The first thing defer ops
-does is rolls to t1:
-
-t1: D0(t0)
-
-We try to finish D0, logging d1 and d2 in the process, but can't get all
-the work done.  We log a done item and a new intent item for the work
-that D0 still has to do, and roll to t2:
-
-t2: D0'(t1), d1(t1), d2(t1)
-
-We roll and try to finish D0', but still can't get all the work done, so
-we log a done item and a new intent item for it, requeue D0 a second
-time, and roll to t3:
-
-t3: D0''(t2), d1(t1), d2(t1), d3(t2), d4(t2)
-
-If it takes 48 more rolls to complete D0, then we'll finally dispense
-with D0 in t50:
-
-t50: D<fifty primes>(t49), d1(t1), ..., d102(t50)
-
-We then try to roll again to get a chain like this:
-
-t51: d1(t1), d2(t1), ..., d101(t50), d102(t50)
-...
-t152: d102(t50)
-<done>
-
-Notice that in rolling to transaction #51, we're holding on to a log
-intent item for d1 that was logged in transaction #1.  This means that
-the tail of the log is pinned at t1.  If the log is very small or there
-are a lot of other threads updating metadata, this means that we might
-have wrapped the log and cannot roll to t51 because there isn't enough
-space left before we'd run into t1.  This is of course problem #2 again.
-
-But notice the third problem with this scenario: we have 102 defer ops
-tied to this transaction!  Each of these items are backed by pinned
-kernel memory, which means that we risk OOM if the chains get too long.
-
-Yikes.  Problem #1 is a subtle logic bomb that could hit someone in the
-future; problem #2 applies (rarely) to the current upstream, and problem
-
-This is not how incremental deferred operations were supposed to work.
-The dfops design of logging in the same transaction an intent-done item
-and a new intent item for the work remaining was to make it so that we
-only have to juggle enough deferred work items to finish that one small
-piece of work.  Deferred log item recovery will find that first
-unfinished work item and restart it, no matter how many other intent
-items might follow it in the log.  Therefore, it's ok to put the new
-intents at the start of the dfops chain.
-
-For the first example, the chains look like this:
-
 t2: d4(t1), d5(t1), D1(t0), D2(t0), D3(t0)
 t3: d5(t1), D1(t0), D2(t0), D3(t0)
 ...
@@ -277,77 +162,620 @@ t10: D3(t0)
 t11: d10(t10), d11(t10)
 t12: d11(t10)
 
-For the second example, the chains look like this:
+In transaction 9, we finish d9 and try to roll to t10 while holding onto
+an intent item for D3 that we logged in t0.
 
-t1: D0(t0)
-t2: d1(t1), d2(t1), D0'(t1)
-t3: d2(t1), D0'(t1)
-t4: D0'(t1)
-t5: d1(t4), d2(t4), D0''(t4)
-...
-t148: D0<50 primes>(t147)
-t149: d101(t148), d102(t148)
-t150: d102(t148)
-<done>
+The previous commit changed the order in which we place new defer ops in
+the defer ops processing chain to reduce the maximum chain length.  Now
+make xfs_defer_finish_noroll capable of relogging the entire chain
+periodically so that we can always move the log tail forward.  Most
+chains will never get relogged, except for operations that generate very
+long chains (large extents containing many blocks with different sharing
+levels) or are on filesystems with small logs and a lot of ongoing
+metadata updates.
 
-This actually sucks more for pinning the log tail (we try to roll to t10
-while holding an intent item that was logged in t1) but we've solved
-problem #1.  We've also reduced the maximum chain length from:
+Callers are now required to ensure that the transaction reservation is
+large enough to handle logging done items and new intent items for the
+maximum possible chain length.  Most callers are careful to keep the
+chain lengths low, so the overhead should be minimal.
 
-    sum(all the new items) + nr_original_items
-
-to:
-
-    max(new items that each original item creates) + nr_original_items
-
-This solves problem #3 by sharply reducing the number of defer ops that
-can be attached to a transaction at any given time.  The change makes
-the problem of log tail pinning worse, but is improvement we need to
-solve problem #2.  Actually solving #2, however, is left to the next
-patch.
-
-Note that a subsequent analysis of some hard-to-trigger reflink and COW
-livelocks on extremely fragmented filesystems (or systems running a lot
-of IO threads) showed the same symptoms -- uncomfortably large numbers
-of incore deferred work items and occasional stalls in the transaction
-grant code while waiting for log reservations.  I think this patch and
-the next one will also solve these problems.
-
-As originally written, the code used list_splice_tail_init instead of
-list_splice_init, so change that, and leave a short comment explaining
-our actions.
+The decision to relog an intent item is made based on whether the intent
+was logged in a previous checkpoint, since there's no point in relogging
+an intent into the same checkpoint.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 ---
- fs/xfs/libxfs/xfs_defer.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_defer.c  |  42 +++++++++++++++
+ fs/xfs/xfs_bmap_item.c     |  83 +++++++++++++++++++----------
+ fs/xfs/xfs_extfree_item.c  | 104 +++++++++++++++++++++++--------------
+ fs/xfs/xfs_refcount_item.c |  95 +++++++++++++++++++++------------
+ fs/xfs/xfs_rmap_item.c     |  93 +++++++++++++++++++++------------
+ fs/xfs/xfs_stats.c         |   4 ++
+ fs/xfs/xfs_stats.h         |   1 +
+ fs/xfs/xfs_trace.h         |   1 +
+ fs/xfs/xfs_trans.h         |  10 ++++
+ 9 files changed, 300 insertions(+), 133 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 714756931317..c817b8924f9a 100644
+index c817b8924f9a..b0b382323413 100644
 --- a/fs/xfs/libxfs/xfs_defer.c
 +++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -431,8 +431,17 @@ xfs_defer_finish_noroll(
+@@ -17,6 +17,7 @@
+ #include "xfs_inode_item.h"
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
++#include "xfs_log.h"
  
- 	/* Until we run out of pending work to finish... */
- 	while (!list_empty(&dop_pending) || !list_empty(&(*tp)->t_dfops)) {
+ /*
+  * Deferred Operations in XFS
+@@ -361,6 +362,42 @@ xfs_defer_cancel_list(
+ 	}
+ }
+ 
++/*
++ * Prevent a log intent item from pinning the tail of the log by logging a
++ * done item to release the intent item; and then log a new intent item.
++ * The caller should provide a fresh transaction and roll it after we're done.
++ */
++static int
++xfs_defer_relog(
++	struct xfs_trans		**tpp,
++	struct list_head		*dfops)
++{
++	struct xfs_defer_pending	*dfp;
++
++	ASSERT((*tpp)->t_flags & XFS_TRANS_PERM_LOG_RES);
++
++	list_for_each_entry(dfp, dfops, dfp_list) {
 +		/*
-+		 * Deferred items that are created in the process of finishing
-+		 * other deferred work items should be queued at the head of
-+		 * the pending list, which puts them ahead of the deferred work
-+		 * that was created by the caller.  This keeps the number of
-+		 * pending work items to a minimum, which decreases the amount
-+		 * of time that any one intent item can stick around in memory,
-+		 * pinning the log tail.
++		 * If the log intent item for this deferred op is not a part of
++		 * the current log checkpoint, relog the intent item to keep
++		 * the log tail moving forward.  We're ok with this being racy
++		 * because an incorrect decision means we'll be a little slower
++		 * at pushing the tail.
 +		 */
- 		xfs_defer_create_intents(*tp);
--		list_splice_tail_init(&(*tp)->t_dfops, &dop_pending);
-+		list_splice_init(&(*tp)->t_dfops, &dop_pending);
- 
- 		error = xfs_defer_trans_roll(tp);
++		if (dfp->dfp_intent == NULL ||
++		    xfs_log_item_in_current_chkpt(dfp->dfp_intent))
++			continue;
++
++		trace_xfs_defer_relog_intent((*tpp)->t_mountp, dfp);
++		XFS_STATS_INC((*tpp)->t_mountp, defer_relog);
++		dfp->dfp_intent = xfs_trans_item_relog(dfp->dfp_intent, *tpp);
++	}
++
++	if ((*tpp)->t_flags & XFS_TRANS_DIRTY)
++		return xfs_defer_trans_roll(tpp);
++	return 0;
++}
++
+ /*
+  * Log an intent-done item for the first pending intent, and finish the work
+  * items.
+@@ -447,6 +484,11 @@ xfs_defer_finish_noroll(
  		if (error)
+ 			goto out_shutdown;
+ 
++		/* Possibly relog intent items to keep the log moving. */
++		error = xfs_defer_relog(tp, &dop_pending);
++		if (error)
++			goto out_shutdown;
++
+ 		dfp = list_first_entry(&dop_pending, struct xfs_defer_pending,
+ 				       dfp_list);
+ 		error = xfs_defer_finish_one(*tp, dfp);
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index 888449ac8b75..7b0c4d9679d9 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -125,34 +125,6 @@ xfs_bui_item_release(
+ 	xfs_bui_release(BUI_ITEM(lip));
+ }
+ 
+-static const struct xfs_item_ops xfs_bui_item_ops = {
+-	.iop_size	= xfs_bui_item_size,
+-	.iop_format	= xfs_bui_item_format,
+-	.iop_unpin	= xfs_bui_item_unpin,
+-	.iop_release	= xfs_bui_item_release,
+-};
+-
+-/*
+- * Allocate and initialize an bui item with the given number of extents.
+- */
+-struct xfs_bui_log_item *
+-xfs_bui_init(
+-	struct xfs_mount		*mp)
+-
+-{
+-	struct xfs_bui_log_item		*buip;
+-
+-	buip = kmem_zone_zalloc(xfs_bui_zone, 0);
+-
+-	xfs_log_item_init(mp, &buip->bui_item, XFS_LI_BUI, &xfs_bui_item_ops);
+-	buip->bui_format.bui_nextents = XFS_BUI_MAX_FAST_EXTENTS;
+-	buip->bui_format.bui_id = (uintptr_t)(void *)buip;
+-	atomic_set(&buip->bui_next_extent, 0);
+-	atomic_set(&buip->bui_refcount, 2);
+-
+-	return buip;
+-}
+-
+ static inline struct xfs_bud_log_item *BUD_ITEM(struct xfs_log_item *lip)
+ {
+ 	return container_of(lip, struct xfs_bud_log_item, bud_item);
+@@ -548,3 +520,58 @@ xfs_bui_recover(
+ 	xfs_irele(ip);
+ 	return error;
+ }
++
++/* Relog an intent item to push the log tail forward. */
++static struct xfs_log_item *
++xfs_bui_item_relog(
++	struct xfs_log_item		*intent,
++	struct xfs_trans		*tp)
++{
++	struct xfs_bud_log_item		*budp;
++	struct xfs_bui_log_item		*buip;
++	struct xfs_map_extent		*extp;
++	unsigned int			count;
++
++	count = BUI_ITEM(intent)->bui_format.bui_nextents;
++	extp = BUI_ITEM(intent)->bui_format.bui_extents;
++
++	tp->t_flags |= XFS_TRANS_DIRTY;
++	budp = xfs_trans_get_bud(tp, BUI_ITEM(intent));
++	set_bit(XFS_LI_DIRTY, &budp->bud_item.li_flags);
++
++	buip = xfs_bui_init(tp->t_mountp);
++	memcpy(buip->bui_format.bui_extents, extp, count * sizeof(*extp));
++	atomic_set(&buip->bui_next_extent, count);
++	xfs_trans_add_item(tp, &buip->bui_item);
++	set_bit(XFS_LI_DIRTY, &buip->bui_item.li_flags);
++	return &buip->bui_item;
++}
++
++static const struct xfs_item_ops xfs_bui_item_ops = {
++	.iop_size	= xfs_bui_item_size,
++	.iop_format	= xfs_bui_item_format,
++	.iop_unpin	= xfs_bui_item_unpin,
++	.iop_release	= xfs_bui_item_release,
++	.iop_relog	= xfs_bui_item_relog,
++};
++
++/*
++ * Allocate and initialize an bui item with the given number of extents.
++ */
++struct xfs_bui_log_item *
++xfs_bui_init(
++	struct xfs_mount		*mp)
++
++{
++	struct xfs_bui_log_item		*buip;
++
++	buip = kmem_zone_zalloc(xfs_bui_zone, 0);
++
++	xfs_log_item_init(mp, &buip->bui_item, XFS_LI_BUI, &xfs_bui_item_ops);
++	buip->bui_format.bui_nextents = XFS_BUI_MAX_FAST_EXTENTS;
++	buip->bui_format.bui_id = (uintptr_t)(void *)buip;
++	atomic_set(&buip->bui_next_extent, 0);
++	atomic_set(&buip->bui_refcount, 2);
++
++	return buip;
++}
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index 0333b20afafd..de3cdce892fd 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -139,44 +139,6 @@ xfs_efi_item_release(
+ 	xfs_efi_release(EFI_ITEM(lip));
+ }
+ 
+-static const struct xfs_item_ops xfs_efi_item_ops = {
+-	.iop_size	= xfs_efi_item_size,
+-	.iop_format	= xfs_efi_item_format,
+-	.iop_unpin	= xfs_efi_item_unpin,
+-	.iop_release	= xfs_efi_item_release,
+-};
+-
+-
+-/*
+- * Allocate and initialize an efi item with the given number of extents.
+- */
+-struct xfs_efi_log_item *
+-xfs_efi_init(
+-	struct xfs_mount	*mp,
+-	uint			nextents)
+-
+-{
+-	struct xfs_efi_log_item	*efip;
+-	uint			size;
+-
+-	ASSERT(nextents > 0);
+-	if (nextents > XFS_EFI_MAX_FAST_EXTENTS) {
+-		size = (uint)(sizeof(struct xfs_efi_log_item) +
+-			((nextents - 1) * sizeof(xfs_extent_t)));
+-		efip = kmem_zalloc(size, 0);
+-	} else {
+-		efip = kmem_zone_zalloc(xfs_efi_zone, 0);
+-	}
+-
+-	xfs_log_item_init(mp, &efip->efi_item, XFS_LI_EFI, &xfs_efi_item_ops);
+-	efip->efi_format.efi_nextents = nextents;
+-	efip->efi_format.efi_id = (uintptr_t)(void *)efip;
+-	atomic_set(&efip->efi_next_extent, 0);
+-	atomic_set(&efip->efi_refcount, 2);
+-
+-	return efip;
+-}
+-
+ /*
+  * Copy an EFI format buffer from the given buf, and into the destination
+  * EFI format structure.
+@@ -645,3 +607,69 @@ xfs_efi_recover(
+ 	xfs_trans_cancel(tp);
+ 	return error;
+ }
++
++/* Relog an intent item to push the log tail forward. */
++static struct xfs_log_item *
++xfs_efi_item_relog(
++	struct xfs_log_item		*intent,
++	struct xfs_trans		*tp)
++{
++	struct xfs_efd_log_item		*efdp;
++	struct xfs_efi_log_item		*efip;
++	struct xfs_extent		*extp;
++	unsigned int			count;
++
++	count = EFI_ITEM(intent)->efi_format.efi_nextents;
++	extp = EFI_ITEM(intent)->efi_format.efi_extents;
++
++	tp->t_flags |= XFS_TRANS_DIRTY;
++	efdp = xfs_trans_get_efd(tp, EFI_ITEM(intent), count);
++	efdp->efd_next_extent = count;
++	memcpy(efdp->efd_format.efd_extents, extp, count * sizeof(*extp));
++	set_bit(XFS_LI_DIRTY, &efdp->efd_item.li_flags);
++
++	efip = xfs_efi_init(tp->t_mountp, count);
++	memcpy(efip->efi_format.efi_extents, extp, count * sizeof(*extp));
++	atomic_set(&efip->efi_next_extent, count);
++	xfs_trans_add_item(tp, &efip->efi_item);
++	set_bit(XFS_LI_DIRTY, &efip->efi_item.li_flags);
++	return &efip->efi_item;
++}
++
++static const struct xfs_item_ops xfs_efi_item_ops = {
++	.iop_size	= xfs_efi_item_size,
++	.iop_format	= xfs_efi_item_format,
++	.iop_unpin	= xfs_efi_item_unpin,
++	.iop_release	= xfs_efi_item_release,
++	.iop_relog	= xfs_efi_item_relog,
++};
++
++/*
++ * Allocate and initialize an efi item with the given number of extents.
++ */
++struct xfs_efi_log_item *
++xfs_efi_init(
++	struct xfs_mount	*mp,
++	uint			nextents)
++
++{
++	struct xfs_efi_log_item	*efip;
++	uint			size;
++
++	ASSERT(nextents > 0);
++	if (nextents > XFS_EFI_MAX_FAST_EXTENTS) {
++		size = (uint)(sizeof(struct xfs_efi_log_item) +
++			((nextents - 1) * sizeof(xfs_extent_t)));
++		efip = kmem_zalloc(size, 0);
++	} else {
++		efip = kmem_zone_zalloc(xfs_efi_zone, 0);
++	}
++
++	xfs_log_item_init(mp, &efip->efi_item, XFS_LI_EFI, &xfs_efi_item_ops);
++	efip->efi_format.efi_nextents = nextents;
++	efip->efi_format.efi_id = (uintptr_t)(void *)efip;
++	atomic_set(&efip->efi_next_extent, 0);
++	atomic_set(&efip->efi_refcount, 2);
++
++	return efip;
++}
+diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
+index 98f67dd64ce8..fa1018a6e677 100644
+--- a/fs/xfs/xfs_refcount_item.c
++++ b/fs/xfs/xfs_refcount_item.c
+@@ -123,40 +123,6 @@ xfs_cui_item_release(
+ 	xfs_cui_release(CUI_ITEM(lip));
+ }
+ 
+-static const struct xfs_item_ops xfs_cui_item_ops = {
+-	.iop_size	= xfs_cui_item_size,
+-	.iop_format	= xfs_cui_item_format,
+-	.iop_unpin	= xfs_cui_item_unpin,
+-	.iop_release	= xfs_cui_item_release,
+-};
+-
+-/*
+- * Allocate and initialize an cui item with the given number of extents.
+- */
+-struct xfs_cui_log_item *
+-xfs_cui_init(
+-	struct xfs_mount		*mp,
+-	uint				nextents)
+-
+-{
+-	struct xfs_cui_log_item		*cuip;
+-
+-	ASSERT(nextents > 0);
+-	if (nextents > XFS_CUI_MAX_FAST_EXTENTS)
+-		cuip = kmem_zalloc(xfs_cui_log_item_sizeof(nextents),
+-				0);
+-	else
+-		cuip = kmem_zone_zalloc(xfs_cui_zone, 0);
+-
+-	xfs_log_item_init(mp, &cuip->cui_item, XFS_LI_CUI, &xfs_cui_item_ops);
+-	cuip->cui_format.cui_nextents = nextents;
+-	cuip->cui_format.cui_id = (uintptr_t)(void *)cuip;
+-	atomic_set(&cuip->cui_next_extent, 0);
+-	atomic_set(&cuip->cui_refcount, 2);
+-
+-	return cuip;
+-}
+-
+ static inline struct xfs_cud_log_item *CUD_ITEM(struct xfs_log_item *lip)
+ {
+ 	return container_of(lip, struct xfs_cud_log_item, cud_item);
+@@ -576,3 +542,64 @@ xfs_cui_recover(
+ 	xfs_trans_cancel(tp);
+ 	return error;
+ }
++
++/* Relog an intent item to push the log tail forward. */
++static struct xfs_log_item *
++xfs_cui_item_relog(
++	struct xfs_log_item		*intent,
++	struct xfs_trans		*tp)
++{
++	struct xfs_cud_log_item		*cudp;
++	struct xfs_cui_log_item		*cuip;
++	struct xfs_phys_extent		*extp;
++	unsigned int			count;
++
++	count = CUI_ITEM(intent)->cui_format.cui_nextents;
++	extp = CUI_ITEM(intent)->cui_format.cui_extents;
++
++	tp->t_flags |= XFS_TRANS_DIRTY;
++	cudp = xfs_trans_get_cud(tp, CUI_ITEM(intent));
++	set_bit(XFS_LI_DIRTY, &cudp->cud_item.li_flags);
++
++	cuip = xfs_cui_init(tp->t_mountp, count);
++	memcpy(cuip->cui_format.cui_extents, extp, count * sizeof(*extp));
++	atomic_set(&cuip->cui_next_extent, count);
++	xfs_trans_add_item(tp, &cuip->cui_item);
++	set_bit(XFS_LI_DIRTY, &cuip->cui_item.li_flags);
++	return &cuip->cui_item;
++}
++
++static const struct xfs_item_ops xfs_cui_item_ops = {
++	.iop_size	= xfs_cui_item_size,
++	.iop_format	= xfs_cui_item_format,
++	.iop_unpin	= xfs_cui_item_unpin,
++	.iop_release	= xfs_cui_item_release,
++	.iop_relog	= xfs_cui_item_relog,
++};
++
++/*
++ * Allocate and initialize an cui item with the given number of extents.
++ */
++struct xfs_cui_log_item *
++xfs_cui_init(
++	struct xfs_mount		*mp,
++	uint				nextents)
++
++{
++	struct xfs_cui_log_item		*cuip;
++
++	ASSERT(nextents > 0);
++	if (nextents > XFS_CUI_MAX_FAST_EXTENTS)
++		cuip = kmem_zalloc(xfs_cui_log_item_sizeof(nextents),
++				0);
++	else
++		cuip = kmem_zone_zalloc(xfs_cui_zone, 0);
++
++	xfs_log_item_init(mp, &cuip->cui_item, XFS_LI_CUI, &xfs_cui_item_ops);
++	cuip->cui_format.cui_nextents = nextents;
++	cuip->cui_format.cui_id = (uintptr_t)(void *)cuip;
++	atomic_set(&cuip->cui_next_extent, 0);
++	atomic_set(&cuip->cui_refcount, 2);
++
++	return cuip;
++}
+diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+index 32f580fa1877..ba1dbb6c4063 100644
+--- a/fs/xfs/xfs_rmap_item.c
++++ b/fs/xfs/xfs_rmap_item.c
+@@ -122,39 +122,6 @@ xfs_rui_item_release(
+ 	xfs_rui_release(RUI_ITEM(lip));
+ }
+ 
+-static const struct xfs_item_ops xfs_rui_item_ops = {
+-	.iop_size	= xfs_rui_item_size,
+-	.iop_format	= xfs_rui_item_format,
+-	.iop_unpin	= xfs_rui_item_unpin,
+-	.iop_release	= xfs_rui_item_release,
+-};
+-
+-/*
+- * Allocate and initialize an rui item with the given number of extents.
+- */
+-struct xfs_rui_log_item *
+-xfs_rui_init(
+-	struct xfs_mount		*mp,
+-	uint				nextents)
+-
+-{
+-	struct xfs_rui_log_item		*ruip;
+-
+-	ASSERT(nextents > 0);
+-	if (nextents > XFS_RUI_MAX_FAST_EXTENTS)
+-		ruip = kmem_zalloc(xfs_rui_log_item_sizeof(nextents), 0);
+-	else
+-		ruip = kmem_zone_zalloc(xfs_rui_zone, 0);
+-
+-	xfs_log_item_init(mp, &ruip->rui_item, XFS_LI_RUI, &xfs_rui_item_ops);
+-	ruip->rui_format.rui_nextents = nextents;
+-	ruip->rui_format.rui_id = (uintptr_t)(void *)ruip;
+-	atomic_set(&ruip->rui_next_extent, 0);
+-	atomic_set(&ruip->rui_refcount, 2);
+-
+-	return ruip;
+-}
+-
+ /*
+  * Copy an RUI format buffer from the given buf, and into the destination
+  * RUI format structure.  The RUI/RUD items were designed not to need any
+@@ -600,3 +567,63 @@ xfs_rui_recover(
+ 	xfs_trans_cancel(tp);
+ 	return error;
+ }
++
++/* Relog an intent item to push the log tail forward. */
++static struct xfs_log_item *
++xfs_rui_item_relog(
++	struct xfs_log_item		*intent,
++	struct xfs_trans		*tp)
++{
++	struct xfs_rud_log_item		*rudp;
++	struct xfs_rui_log_item		*ruip;
++	struct xfs_map_extent		*extp;
++	unsigned int			count;
++
++	count = RUI_ITEM(intent)->rui_format.rui_nextents;
++	extp = RUI_ITEM(intent)->rui_format.rui_extents;
++
++	tp->t_flags |= XFS_TRANS_DIRTY;
++	rudp = xfs_trans_get_rud(tp, RUI_ITEM(intent));
++	set_bit(XFS_LI_DIRTY, &rudp->rud_item.li_flags);
++
++	ruip = xfs_rui_init(tp->t_mountp, count);
++	memcpy(ruip->rui_format.rui_extents, extp, count * sizeof(*extp));
++	atomic_set(&ruip->rui_next_extent, count);
++	xfs_trans_add_item(tp, &ruip->rui_item);
++	set_bit(XFS_LI_DIRTY, &ruip->rui_item.li_flags);
++	return &ruip->rui_item;
++}
++
++static const struct xfs_item_ops xfs_rui_item_ops = {
++	.iop_size	= xfs_rui_item_size,
++	.iop_format	= xfs_rui_item_format,
++	.iop_unpin	= xfs_rui_item_unpin,
++	.iop_release	= xfs_rui_item_release,
++	.iop_relog	= xfs_rui_item_relog,
++};
++
++/*
++ * Allocate and initialize an rui item with the given number of extents.
++ */
++struct xfs_rui_log_item *
++xfs_rui_init(
++	struct xfs_mount		*mp,
++	uint				nextents)
++
++{
++	struct xfs_rui_log_item		*ruip;
++
++	ASSERT(nextents > 0);
++	if (nextents > XFS_RUI_MAX_FAST_EXTENTS)
++		ruip = kmem_zalloc(xfs_rui_log_item_sizeof(nextents), 0);
++	else
++		ruip = kmem_zone_zalloc(xfs_rui_zone, 0);
++
++	xfs_log_item_init(mp, &ruip->rui_item, XFS_LI_RUI, &xfs_rui_item_ops);
++	ruip->rui_format.rui_nextents = nextents;
++	ruip->rui_format.rui_id = (uintptr_t)(void *)ruip;
++	atomic_set(&ruip->rui_next_extent, 0);
++	atomic_set(&ruip->rui_refcount, 2);
++
++	return ruip;
++}
+diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
+index f70f1255220b..20e0534a772c 100644
+--- a/fs/xfs/xfs_stats.c
++++ b/fs/xfs/xfs_stats.c
+@@ -23,6 +23,7 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
+ 	uint64_t	xs_xstrat_bytes = 0;
+ 	uint64_t	xs_write_bytes = 0;
+ 	uint64_t	xs_read_bytes = 0;
++	uint64_t	defer_relog = 0;
+ 
+ 	static const struct xstats_entry {
+ 		char	*desc;
+@@ -70,10 +71,13 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
+ 		xs_xstrat_bytes += per_cpu_ptr(stats, i)->s.xs_xstrat_bytes;
+ 		xs_write_bytes += per_cpu_ptr(stats, i)->s.xs_write_bytes;
+ 		xs_read_bytes += per_cpu_ptr(stats, i)->s.xs_read_bytes;
++		defer_relog += per_cpu_ptr(stats, i)->s.defer_relog;
+ 	}
+ 
+ 	len += scnprintf(buf + len, PATH_MAX-len, "xpc %Lu %Lu %Lu\n",
+ 			xs_xstrat_bytes, xs_write_bytes, xs_read_bytes);
++	len += scnprintf(buf + len, PATH_MAX-len, "defer_relog %llu\n",
++			defer_relog);
+ 	len += scnprintf(buf + len, PATH_MAX-len, "debug %u\n",
+ #if defined(DEBUG)
+ 		1);
+diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
+index 34d704f703d2..43ffba74f045 100644
+--- a/fs/xfs/xfs_stats.h
++++ b/fs/xfs/xfs_stats.h
+@@ -137,6 +137,7 @@ struct __xfsstats {
+ 	uint64_t		xs_xstrat_bytes;
+ 	uint64_t		xs_write_bytes;
+ 	uint64_t		xs_read_bytes;
++	uint64_t		defer_relog;
+ };
+ 
+ #define	xfsstats_offset(f)	(offsetof(struct __xfsstats, f)/sizeof(uint32_t))
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index f94908125e8f..4b5818395406 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -2418,6 +2418,7 @@ DEFINE_DEFER_PENDING_EVENT(xfs_defer_create_intent);
+ DEFINE_DEFER_PENDING_EVENT(xfs_defer_cancel_list);
+ DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_finish);
+ DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_abort);
++DEFINE_DEFER_PENDING_EVENT(xfs_defer_relog_intent);
+ 
+ #define DEFINE_BMAP_FREE_DEFERRED_EVENT DEFINE_PHYS_EXTENT_DEFERRED_EVENT
+ DEFINE_BMAP_FREE_DEFERRED_EVENT(xfs_bmap_free_defer);
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 64d7f171ebd3..941647027f00 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -77,6 +77,8 @@ struct xfs_item_ops {
+ 	void (*iop_release)(struct xfs_log_item *);
+ 	xfs_lsn_t (*iop_committed)(struct xfs_log_item *, xfs_lsn_t);
+ 	void (*iop_error)(struct xfs_log_item *, xfs_buf_t *);
++	struct xfs_log_item *(*iop_relog)(struct xfs_log_item *intent,
++			struct xfs_trans *tp);
+ };
+ 
+ /*
+@@ -244,4 +246,12 @@ void		xfs_trans_buf_copy_type(struct xfs_buf *dst_bp,
+ 
+ extern kmem_zone_t	*xfs_trans_zone;
+ 
++static inline struct xfs_log_item *
++xfs_trans_item_relog(
++	struct xfs_log_item	*lip,
++	struct xfs_trans	*tp)
++{
++	return lip->li_ops->iop_relog(lip, tp);
++}
++
+ #endif	/* __XFS_TRANS_H__ */
 -- 
 2.35.1
 
