@@ -2,71 +2,72 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD89CC636D4
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Feb 2023 23:02:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68922C636CC
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Feb 2023 23:02:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229574AbjBMXCA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Feb 2023 18:02:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55590 "EHLO
+        id S229648AbjBMXCC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Feb 2023 18:02:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55596 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229558AbjBMXB7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Feb 2023 18:01:59 -0500
-Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1F11BDCD
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Feb 2023 15:01:55 -0800 (PST)
-Received: by mail-pj1-x102e.google.com with SMTP id rm7-20020a17090b3ec700b0022c05558d22so13712432pjb.5
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Feb 2023 15:01:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=D0QqrO3Hqfh1G0VIqg5fMxX1ssy20FZd2hCy6NGrHIc=;
-        b=B3NAkimGt/+4kpbzFSh0SkbqqAQ6e/wkzjSYpNV0njjLTpWBP0SPBew/Lcb/EVLT0Z
-         47tw/g7mEM8Pl+jfv1DGZQ/ei8Jasjsnnl3Pm1RVXrBhqIa0lqAJfzd5Gq5ABbPkyQ7W
-         vzdmM4tTKejprMRQeig5oKMMomCAuNq4TbELWcC5lAX6KUJz6bzXhsYu7nCgJU4j+b5Y
-         q4ocsi1/mGtCvmlavSep/VPcdvT6KyUvBTqLu0LY+veOIAIQ5MEmyhn43utX3hj/Ee6o
-         eMLy10JtXIJWsnVjH+GCJLL9zq/awizMGAjrL09F7+vxGSzTzkneL3tfmxodR4uy2EsP
-         sOZg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=D0QqrO3Hqfh1G0VIqg5fMxX1ssy20FZd2hCy6NGrHIc=;
-        b=s+aQqLHBWrX+1O/F2qseC1UWXlcL5DLldNYsyrr+779goyIpwKK6+VOWYZPjWKeKcG
-         jbbhS5GWFcZuKEMyYKa7AErcdXgPvbUjJO3AB+BksCubq3AJp401TIXHp67musQyGdar
-         PrgkfuEnLTmDS8SJSKYka8aCmiltr3GrktLCIyVCNv4JhNDnTuytJZn2unyY/t9ZuWOq
-         sv7xuC2KO4Yq6EOSqqfCuvVrWh/hXcnisYU2ojVQeirrHkS7RB4dEbQmbFE7WGtf5ET/
-         BUrLUR4GI8WjWdRCi4eYACf+UOI60oEv9YVLklERK86ggit8zLYYEhKTchrVdD2QUuNx
-         ESKg==
-X-Gm-Message-State: AO0yUKUWzJRL2lUXqT0QkViVpIN0Rqugh5SuN4cA15P7Z/keuhLQhZNS
-        cx3kyB1diVKkIcAjrhLE1WiJux2E2A42zmgu
-X-Google-Smtp-Source: AK7set8/byqvyWQZrMpx42cmjTUdknuLSHyD2vE37aJy/2HF00W7IaqRwu3TbjAy+nbMN0nqAHrlNw==
-X-Received: by 2002:a17:902:f686:b0:19a:7f25:4d90 with SMTP id l6-20020a170902f68600b0019a7f254d90mr676858plg.33.1676329315143;
-        Mon, 13 Feb 2023 15:01:55 -0800 (PST)
-Received: from dread.disaster.area (pa49-181-4-128.pa.nsw.optusnet.com.au. [49.181.4.128])
-        by smtp.gmail.com with ESMTPSA id 13-20020a170902c20d00b0019aaba5c90bsm1429196pll.84.2023.02.13.15.01.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Feb 2023 15:01:54 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1pRhpX-00EzCg-Gt; Tue, 14 Feb 2023 10:01:51 +1100
-Date:   Tue, 14 Feb 2023 10:01:51 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     bugzilla-daemon@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [Bug 217030] New: [Syzkaller & bisect] There is
+        with ESMTP id S229558AbjBMXCC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Feb 2023 18:02:02 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61CA6BDCD
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Feb 2023 15:02:00 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id F2F5F6131C
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Feb 2023 23:01:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 6244DC433A1
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Feb 2023 23:01:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1676329319;
+        bh=z++6rm+oHKjwdlqtM6zgSPmLoEWy/kCKygDAXFvvsFA=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=hcYqJ9YQMPLzgw6ErqwNwbKZKSQBJwe2sKRdi9ku6z7Pik5DWh3dc9BmMUcgN+Z88
+         d4AwbtY4x3DEmaBbSQ6jOwf6UQu49oNQ5G2f2X4j7lWLo1jMUqCO08eVniJJLMaRRX
+         FIOtqGCjs55OeZhNlU4uHvQpEKFa7npQ4vOZIIc2RSVEtla/OZwe/h/j3VClxaiQSl
+         rlQPo7cZcWeMKQcUX4zCpHqZ1QI9O7G1s5lKUP5428UILGIBSfmlTMS8Z+frNSQQzm
+         zqE7kUsqH9gRNx7YdRMrOZ8+mhmmpak/I9htC+y9Pkv04zOcyCI5/kbYGuwPZQfIAf
+         890ZPJ8vep4Mw==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 4F085C072A6; Mon, 13 Feb 2023 23:01:59 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 217030] [Syzkaller & bisect] There is
  "xfs_bmapi_convert_delalloc" WARNING in v6.2-rc7 kernel
-Message-ID: <20230213230151.GK360264@dread.disaster.area>
-References: <bug-217030-201763@https.bugzilla.kernel.org/>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Date:   Mon, 13 Feb 2023 23:01:58 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: david@fromorbit.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-217030-201763-Ag2vUBEXrD@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-217030-201763@https.bugzilla.kernel.org/>
+References: <bug-217030-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217030
+
+--- Comment #1 from Dave Chinner (david@fromorbit.com) ---
 On Mon, Feb 13, 2023 at 10:57:31AM +0000, bugzilla-daemon@kernel.org wrote:
 > Bisected and found the first bad commit is:
 > 7348b322332d8602a4133f0b861334ea021b134a
@@ -123,25 +124,25 @@ Author: Darrick J. Wong <djwong@kernel.org>
 Date:   Mon May 16 15:27:38 2022 -0700
 
     iomap: don't invalidate folios after writeback errors
-    
+
     XFS has the unique behavior (as compared to the other Linux filesystems)
     that on writeback errors it will completely invalidate the affected
     folio and force the page cache to reread the contents from disk.  All
     other filesystems leave the page mapped and up to date.
-    
+
     This is a rude awakening for user programs, since (in the case where
     write fails but reread doesn't) file contents will appear to revert to
     old disk contents with no notification other than an EIO on fsync.  This
     might have been annoying back in the days when iomap dealt with one page
     at a time, but with multipage folios, we can now throw away *megabytes*
     worth of data for a single write error.
-    
+
     On *most* Linux filesystems, a program can respond to an EIO on write by
     redirtying the entire file and scheduling it for writeback.  This isn't
     foolproof, since the page that failed writeback is no longer dirty and
     could be evicted, but programs that want to recover properly *also*
     have to detect XFS and regenerate every write they've made to the file.
-    
+
     When running xfs/314 on arm64, I noticed a UAF when xfs_discard_folio
     invalidates multipage folios that could be undergoing writeback.  If,
     say, we have a 256K folio caching a mix of written and unwritten
@@ -150,11 +151,11 @@ Date:   Mon May 16 15:27:38 2022 -0700
     then free the iop attached to the folio, which is really bad because
     writeback completion on the first 64k will trip over the "blocks per
     folio > 1 && !iop" assertion.
-    
+
     This can't be fixed by only invalidating the folio if writeback fails at
     the start of the folio, since the folio is marked !uptodate, which trips
     other assertions elsewhere.  Get rid of the whole behavior entirely.
-    
+
     Signed-off-by: Darrick J. Wong <djwong@kernel.org>
     Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
     Reviewed-by: Jeff Layton <jlayton@kernel.org>
@@ -195,6 +196,9 @@ Ok, the simple solution trips over other assumptions.  More
 investigation required....
 
 -Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
