@@ -2,67 +2,67 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27C62C6379F
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Feb 2023 05:51:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F256C05027
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Feb 2023 05:51:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230162AbjBNFv3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Feb 2023 00:51:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35632 "EHLO
+        id S231358AbjBNFva (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Feb 2023 00:51:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35636 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231368AbjBNFvW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2023 00:51:22 -0500
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CA261C310
+        with ESMTP id S231384AbjBNFvX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2023 00:51:23 -0500
+Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 847A01C7F2
         for <linux-xfs@vger.kernel.org>; Mon, 13 Feb 2023 21:51:21 -0800 (PST)
-Received: by mail-pj1-x102a.google.com with SMTP id n20-20020a17090aab9400b00229ca6a4636so19250425pjq.0
+Received: by mail-pj1-x102e.google.com with SMTP id bx22so14077627pjb.3
         for <linux-xfs@vger.kernel.org>; Mon, 13 Feb 2023 21:51:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=TK940ZS4dQ7a5dcso1AWnb6vTLXAyj79WDr1//fHpwE=;
-        b=YPwI9txs4eqzx6wit5o7zsvXfrMfVFcvzV3EG0Qtv8rvxrS/SH4sKLmzeiyps2gTwY
-         0DDF1TAJx+qxTYxCmPEJWIfRzkaIL2vRAi7pj2NNJWeZnuXhJdCSS8NN631KpcC1Ybp6
-         aAurl1LXw6kr432neS+Q6GP2nDXeQ2DYUj2O4esppS4KkGbBDShAsZjECdDqwrKxTBlT
-         G9t2j+6v5c2QARQsKld3gKmtfuE3NaweJeaz56aYD2CEtqKIyy3nkhEJOJIz1HdymlDU
-         ieGWw8MFrROqrBaFlaDZwWuDoEn3hgGDsMD/QU5b6LCcRfOZ9Qt0QJJDmA2Olx3mBk2a
-         vIGQ==
+        bh=KZLwifksZSXnUDr5sO0tJjBAlgxcCepDWDdg2HoH0Tc=;
+        b=eWD+x8mUOWS6qVzotZ3V+2qMmWYNRfLyD8v3WUNYQjnHcx5ichpbF5wX3qeDNGjYYr
+         ZJdDhEQ4s1GLHpjQAYqwZ5K4DiZa0ZLm0o3PImpFKw4W6FAfAJle41EQ817TYEAqTz8/
+         7kmQMMwYviCuiBce5aCS7gWbXtigR+MPDvG1DME+w+VxGxteI3WDp2MV5ZslDt2ajxue
+         MXzGUZmJfJ0rs1smmJLqOgEP5vXfti2TmoPrM2fOYXNbBs+elbCBmAxn1USi3UJWTRaQ
+         xCyhEjzALhiDjmeA4R4npp6Fe+uLrMX+951kZpNCttfHJQGFWi2RaZlmZR5DcQPapoA9
+         2rtA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=TK940ZS4dQ7a5dcso1AWnb6vTLXAyj79WDr1//fHpwE=;
-        b=JcgCQZT8UqYUhZ5whyDqQhsIHqZX2ZkabmppAF3c3sOoTTMM8d0+hS2wdPhPFFKSNh
-         zK39PUwIfdwgHVz0Qk8A8b3QkKhGS82WlKMbZbrIMPhA6HYYq/Ckb5DBMakkGXIWrb8H
-         9J37r/+Pamv7w6LpERqlqn5XWOYNhD1RoUFHdEUORDbEPi932XPFsu/kSBLD9JMtGVf7
-         CKYGKgKCVif22E2kSC9NMDRT3ru2S0aEAQStmyBLjPicRv9llef2JCbQe2PCPC0AheRY
-         7wiBjOaH0i4/Z+FkBDWADXyJWknVINu2hBJgG9QsODuBIGlxw4uSC/NP/fo5pwSKUT73
-         AGuQ==
-X-Gm-Message-State: AO0yUKWvJsBHCEZI91C96wsA/f1CEVreT21eLXhss/XF133hPbXqKY5l
-        /vnXk5vrUFzu+Md5WjqcRAQP4XFs/6xsuXj9
-X-Google-Smtp-Source: AK7set+EBCzS+QSPEy728cyy8HzRfIOgZAFBiRXSvsxgXNVaDrS8y6BdsXU+ECoZvlEcuLY71CILGQ==
-X-Received: by 2002:a17:902:e191:b0:19a:723a:81ce with SMTP id y17-20020a170902e19100b0019a723a81cemr1148670pla.19.1676353880603;
+        bh=KZLwifksZSXnUDr5sO0tJjBAlgxcCepDWDdg2HoH0Tc=;
+        b=n2bfCaQUNzh+kZ1hok2TeMSryhTRVvoWYSrMKlTnEgqCSRn0S5d1le/rI1X2cIW0GN
+         9G6Z4rjYS0JzFvuCMTIXnmiPuYMW4ZXvPw5nnXICTrmDhYsNa/KrWNpKL+w3WlvgG53/
+         NLzceX40hHtuMnbH8pJpgh0OD3tu4dWARm0/ipTMxNfLvdEAou3jYDzIf9cSyfFHRvfD
+         IOQViJuNBdhOMiL7uh1u63okilHuFn1UirvmgeSQ55i/ec+VoitSPerQ4tsOQLCjpucM
+         4JvayJVIV6O3lyh8S3HJF7btlUWfeWVCx9U/cE/pm9FQeIJ9+zVJlL1HUnTiUSGhesS8
+         gbkw==
+X-Gm-Message-State: AO0yUKWoS3WFOodXUnjuHgDtLLYxrhPR8Qd4/00379he7EoySlqrsQho
+        duxZgwxKBLuIzRs8nRWeYeYoRYZ1y8wM2vR9
+X-Google-Smtp-Source: AK7set86mEk5hlWyjNXTo7wKqcQxv+VXxCD+25L7rSon37f+5Qr9gTHbXjaACmngsmqJVj70K7J7EQ==
+X-Received: by 2002:a05:6a20:4421:b0:bc:74c3:9499 with SMTP id ce33-20020a056a20442100b000bc74c39499mr1503901pzb.24.1676353880892;
         Mon, 13 Feb 2023 21:51:20 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-4-128.pa.nsw.optusnet.com.au. [49.181.4.128])
-        by smtp.gmail.com with ESMTPSA id jo13-20020a170903054d00b00198b01b412csm50178plb.303.2023.02.13.21.51.19
+        by smtp.gmail.com with ESMTPSA id s3-20020a637703000000b004e8f7f23c4bsm3407280pgc.76.2023.02.13.21.51.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Mon, 13 Feb 2023 21:51:19 -0800 (PST)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <dave@fromorbit.com>)
-        id 1pRoDk-00F5yI-Gn; Tue, 14 Feb 2023 16:51:16 +1100
+        id 1pRoDk-00F5yL-JA; Tue, 14 Feb 2023 16:51:16 +1100
 Received: from dave by devoid.disaster.area with local (Exim 4.96)
         (envelope-from <dave@devoid.disaster.area>)
-        id 1pRoDk-00HNdJ-1Z;
+        id 1pRoDk-00HNdR-1q;
         Tue, 14 Feb 2023 16:51:16 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     linux-fsdevel@vger.kernel.org
-Subject: [PATCH 1/3] xfs: report block map corruption errors to the health tracking system
-Date:   Tue, 14 Feb 2023 16:51:12 +1100
-Message-Id: <20230214055114.4141947-2-david@fromorbit.com>
+Subject: [PATCH 3/3] xfs, iomap: ->discard_folio() is broken so remove it
+Date:   Tue, 14 Feb 2023 16:51:14 +1100
+Message-Id: <20230214055114.4141947-4-david@fromorbit.com>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230214055114.4141947-1-david@fromorbit.com>
 References: <20230214055114.4141947-1-david@fromorbit.com>
@@ -72,322 +72,196 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+From: Dave Chinner <dchinner@redhat.com>
 
-Whenever we encounter a corrupt block mapping, we should report that to
-the health monitoring system for later reporting.
+Ever since commit e9c3a8e820ed ("iomap: don't invalidate folios
+after writeback errors") XFS and iomap have been retaining dirty
+folios in memory after a writeback error. XFS no longer invalidates
+the folio, and iomap no longer clears the folio uptodate state.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-[dgc: open coded xfs_metadata_is_sick() macro]
+However, iomap is still been calling ->discard_folio on error, and
+XFS is still punching the delayed allocation range backing the dirty
+folio.
+
+This is incorrect behaviour. The folio remains dirty and up to date,
+meaning that another writeback will be attempted in the near future.
+THis means that XFS is still going to have to allocate space for it
+during writeback, and that means it still needs to have a delayed
+allocation reservation and extent backing the dirty folio.
+
+Failure to retain the delalloc extent (because xfs_discard_folio()
+punched it out) means that the next writeback attempt does not find
+an extent over the range of the write in ->map_blocks(), and
+xfs_map_blocks() triggers a WARN_ON() because it should never land
+in a hole for a data fork writeback request. This looks like:
+
+[  647.356969] ------------[ cut here ]------------
+[  647.359277] WARNING: CPU: 14 PID: 21913 at fs/xfs/libxfs/xfs_bmap.c:4510 xfs_bmapi_convert_delalloc+0x221/0x4e0
+[  647.364551] Modules linked in:
+[  647.366294] CPU: 14 PID: 21913 Comm: test_delalloc_c Not tainted 6.2.0-rc7-dgc+ #1754
+[  647.370356] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.0-debian-1.16.0-5 04/01/2014
+[  647.374781] RIP: 0010:xfs_bmapi_convert_delalloc+0x221/0x4e0
+[  647.377807] Code: e9 7d fe ff ff 80 bf 54 01 00 00 00 0f 84 68 fe ff ff 48 8d 47 70 48 89 04 24 e9 63 fe ff ff 83 fd 02 41 be f5 ff ff ff 74 a5 <0f> 0b eb a0
+[  647.387242] RSP: 0018:ffffc9000aa677a8 EFLAGS: 00010293
+[  647.389837] RAX: 0000000000000000 RBX: ffff88825bc4da00 RCX: 0000000000000000
+[  647.393371] RDX: 0000000000000000 RSI: 0000000000000004 RDI: ffff88825bc4da40
+[  647.396546] RBP: 0000000000000000 R08: ffffc9000aa67810 R09: ffffc9000aa67850
+[  647.400186] R10: ffff88825bc4da00 R11: ffff888800a9aaac R12: ffff888101707000
+[  647.403484] R13: ffffc9000aa677e0 R14: 00000000fffffff5 R15: 0000000000000004
+[  647.406251] FS:  00007ff35ec24640(0000) GS:ffff88883ed00000(0000) knlGS:0000000000000000
+[  647.410089] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  647.413225] CR2: 00007f7292cbc5d0 CR3: 0000000807d0e004 CR4: 0000000000060ee0
+[  647.416917] Call Trace:
+[  647.418080]  <TASK>
+[  647.419291]  ? _raw_spin_unlock_irqrestore+0xe/0x30
+[  647.421400]  xfs_map_blocks+0x1b7/0x590
+[  647.422951]  iomap_do_writepage+0x1f1/0x7d0
+[  647.424607]  ? __mod_lruvec_page_state+0x93/0x140
+[  647.426419]  write_cache_pages+0x17b/0x4f0
+[  647.428079]  ? iomap_read_end_io+0x2c0/0x2c0
+[  647.429839]  iomap_writepages+0x1c/0x40
+[  647.431377]  xfs_vm_writepages+0x79/0xb0
+[  647.432826]  do_writepages+0xbd/0x1a0
+[  647.434207]  ? obj_cgroup_release+0x73/0xb0
+[  647.435769]  ? drain_obj_stock+0x130/0x290
+[  647.437273]  ? avc_has_perm+0x8a/0x1a0
+[  647.438746]  ? avc_has_perm_noaudit+0x8c/0x100
+[  647.440223]  __filemap_fdatawrite_range+0x8e/0xa0
+[  647.441960]  filemap_write_and_wait_range+0x3d/0xa0
+[  647.444258]  __iomap_dio_rw+0x181/0x790
+[  647.445960]  ? __schedule+0x385/0xa20
+[  647.447829]  iomap_dio_rw+0xe/0x30
+[  647.449284]  xfs_file_dio_write_aligned+0x97/0x150
+[  647.451332]  ? selinux_file_permission+0x107/0x150
+[  647.453299]  xfs_file_write_iter+0xd2/0x120
+[  647.455238]  vfs_write+0x20d/0x3d0
+[  647.456768]  ksys_write+0x69/0xf0
+[  647.458067]  do_syscall_64+0x34/0x80
+[  647.459488]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+[  647.461529] RIP: 0033:0x7ff3651406e9
+[  647.463119] Code: 48 8d 3d 2a a1 0c 00 0f 05 eb a5 66 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f8
+[  647.470563] RSP: 002b:00007ff35ec23df8 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+[  647.473465] RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007ff3651406e9
+[  647.476278] RDX: 0000000000001400 RSI: 0000000020000000 RDI: 0000000000000005
+[  647.478895] RBP: 00007ff35ec23e20 R08: 0000000000000005 R09: 0000000000000000
+[  647.481568] R10: 0000000000000000 R11: 0000000000000246 R12: 00007ffe533d8d4e
+[  647.483751] R13: 00007ffe533d8d4f R14: 0000000000000000 R15: 00007ff35ec24640
+[  647.486168]  </TASK>
+[  647.487142] ---[ end trace 0000000000000000 ]---
+
+Punching delalloc extents out from under dirty cached pages is wrong
+and broken. We can't remove the delalloc extent until the page is
+either removed from memory (i.e. invaliated) or writeback succeeds
+in converting the delalloc extent to a real extent and writeback can
+clean the page.
+
+Hence we remove xfs_discard_folio() because it is only punching
+delalloc blocks from under dirty pages now. With that removal,
+nothing else uses ->discard_folio(), so we remove that from the
+iomap infrastructure as well.
+
+Reported-by: pengfei.xu@intel.com
+Fixes: e9c3a8e820ed ("iomap: don't invalidate folios after writeback errors")
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c   | 35 +++++++++++++++++++++++++++++------
- fs/xfs/libxfs/xfs_health.h |  1 +
- fs/xfs/xfs_health.c        | 26 ++++++++++++++++++++++++++
- fs/xfs/xfs_iomap.c         | 15 ++++++++++++---
- fs/xfs/xfs_reflink.c       |  6 +++++-
- 5 files changed, 73 insertions(+), 10 deletions(-)
+ fs/iomap/buffered-io.c | 16 +++-------------
+ fs/xfs/xfs_aops.c      | 35 -----------------------------------
+ include/linux/iomap.h  |  6 ------
+ 3 files changed, 3 insertions(+), 54 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index c8c65387136c..958e4bb2e51e 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -36,6 +36,7 @@
- #include "xfs_refcount.h"
- #include "xfs_icache.h"
- #include "xfs_iomap.h"
-+#include "xfs_health.h"
- 
- struct kmem_cache		*xfs_bmap_intent_cache;
- 
-@@ -971,6 +972,7 @@ xfs_bmap_add_attrfork_local(
- 
- 	/* should only be called for types that support local format data */
- 	ASSERT(0);
-+	xfs_bmap_mark_sick(ip, XFS_ATTR_FORK);
- 	return -EFSCORRUPTED;
- }
- 
-@@ -1126,6 +1128,7 @@ xfs_iread_bmbt_block(
- 				(unsigned long long)ip->i_ino);
- 		xfs_inode_verifier_error(ip, -EFSCORRUPTED, __func__, block,
- 				sizeof(*block), __this_address);
-+		xfs_bmap_mark_sick(ip, whichfork);
- 		return -EFSCORRUPTED;
- 	}
- 
-@@ -1141,6 +1144,7 @@ xfs_iread_bmbt_block(
- 			xfs_inode_verifier_error(ip, -EFSCORRUPTED,
- 					"xfs_iread_extents(2)", frp,
- 					sizeof(*frp), fa);
-+			xfs_bmap_mark_sick(ip, whichfork);
- 			return -EFSCORRUPTED;
- 		}
- 		xfs_iext_insert(ip, &ir->icur, &new,
-@@ -1189,6 +1193,8 @@ xfs_iread_extents(
- 	ASSERT(ir.loaded == xfs_iext_count(ifp));
- 	return 0;
- out:
-+	if ((error == -EFSCORRUPTED) || (error == -EFSBADCRC))
-+		xfs_bmap_mark_sick(ip, whichfork);
- 	xfs_iext_destroy(ifp);
- 	return error;
- }
-@@ -1268,6 +1274,7 @@ xfs_bmap_last_before(
- 		break;
- 	default:
- 		ASSERT(0);
-+		xfs_bmap_mark_sick(ip, whichfork);
- 		return -EFSCORRUPTED;
- 	}
- 
-@@ -3879,12 +3886,16 @@ xfs_bmapi_read(
- 	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK | XFS_BMAPI_ENTIRE)));
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED|XFS_ILOCK_EXCL));
- 
--	if (WARN_ON_ONCE(!ifp))
-+	if (WARN_ON_ONCE(!ifp)) {
-+		xfs_bmap_mark_sick(ip, whichfork);
- 		return -EFSCORRUPTED;
-+	}
- 
- 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(ifp)) ||
--	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT))
-+	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
-+		xfs_bmap_mark_sick(ip, whichfork);
- 		return -EFSCORRUPTED;
-+	}
- 
- 	if (xfs_is_shutdown(mp))
- 		return -EIO;
-@@ -4365,6 +4376,7 @@ xfs_bmapi_write(
- 
- 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(ifp)) ||
- 	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
-+		xfs_bmap_mark_sick(ip, whichfork);
- 		return -EFSCORRUPTED;
- 	}
- 
-@@ -4592,9 +4604,11 @@ xfs_bmapi_convert_delalloc(
- 	error = -ENOSPC;
- 	if (WARN_ON_ONCE(bma.blkno == NULLFSBLOCK))
- 		goto out_finish;
--	error = -EFSCORRUPTED;
--	if (WARN_ON_ONCE(!xfs_valid_startblock(ip, bma.got.br_startblock)))
-+	if (WARN_ON_ONCE(!xfs_valid_startblock(ip, bma.got.br_startblock))) {
-+		xfs_bmap_mark_sick(ip, whichfork);
-+		error = -EFSCORRUPTED;
- 		goto out_finish;
-+	}
- 
- 	XFS_STATS_ADD(mp, xs_xstrat_bytes, XFS_FSB_TO_B(mp, bma.length));
- 	XFS_STATS_INC(mp, xs_xstrat_quick);
-@@ -4653,6 +4667,7 @@ xfs_bmapi_remap(
- 
- 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(ifp)) ||
- 	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
-+		xfs_bmap_mark_sick(ip, whichfork);
- 		return -EFSCORRUPTED;
- 	}
- 
-@@ -5291,8 +5306,10 @@ __xfs_bunmapi(
- 	whichfork = xfs_bmapi_whichfork(flags);
- 	ASSERT(whichfork != XFS_COW_FORK);
- 	ifp = xfs_ifork_ptr(ip, whichfork);
--	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(ifp)))
-+	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(ifp))) {
-+		xfs_bmap_mark_sick(ip, whichfork);
- 		return -EFSCORRUPTED;
-+	}
- 	if (xfs_is_shutdown(mp))
- 		return -EIO;
- 
-@@ -5762,6 +5779,7 @@ xfs_bmap_collapse_extents(
- 
- 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(ifp)) ||
- 	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
-+		xfs_bmap_mark_sick(ip, whichfork);
- 		return -EFSCORRUPTED;
- 	}
- 
-@@ -5877,6 +5895,7 @@ xfs_bmap_insert_extents(
- 
- 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(ifp)) ||
- 	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
-+		xfs_bmap_mark_sick(ip, whichfork);
- 		return -EFSCORRUPTED;
- 	}
- 
-@@ -5980,6 +5999,7 @@ xfs_bmap_split_extent(
- 
- 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(ifp)) ||
- 	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
-+		xfs_bmap_mark_sick(ip, whichfork);
- 		return -EFSCORRUPTED;
- 	}
- 
-@@ -6161,8 +6181,10 @@ xfs_bmap_finish_one(
- 			bmap->br_startoff, bmap->br_blockcount,
- 			bmap->br_state);
- 
--	if (WARN_ON_ONCE(bi->bi_whichfork != XFS_DATA_FORK))
-+	if (WARN_ON_ONCE(bi->bi_whichfork != XFS_DATA_FORK)) {
-+		xfs_bmap_mark_sick(bi->bi_owner, bi->bi_whichfork);
- 		return -EFSCORRUPTED;
-+	}
- 
- 	if (XFS_TEST_ERROR(false, tp->t_mountp,
- 			XFS_ERRTAG_BMAP_FINISH_ONE))
-@@ -6180,6 +6202,7 @@ xfs_bmap_finish_one(
- 		break;
- 	default:
- 		ASSERT(0);
-+		xfs_bmap_mark_sick(bi->bi_owner, bi->bi_whichfork);
- 		error = -EFSCORRUPTED;
- 	}
- 
-diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
-index 99e796256c5d..b6bfa3b17b1e 100644
---- a/fs/xfs/libxfs/xfs_health.h
-+++ b/fs/xfs/libxfs/xfs_health.h
-@@ -120,6 +120,7 @@ void xfs_inode_measure_sickness(struct xfs_inode *ip, unsigned int *sick,
- 		unsigned int *checked);
- 
- void xfs_health_unmount(struct xfs_mount *mp);
-+void xfs_bmap_mark_sick(struct xfs_inode *ip, int whichfork);
- 
- /* Now some helpers. */
- 
-diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
-index 72a075bb2c10..9887fb3b9b0f 100644
---- a/fs/xfs/xfs_health.c
-+++ b/fs/xfs/xfs_health.c
-@@ -393,3 +393,29 @@ xfs_bulkstat_health(
- 			bs->bs_sick |= m->ioctl_mask;
- 	}
- }
-+
-+/* Mark a block mapping sick. */
-+void
-+xfs_bmap_mark_sick(
-+	struct xfs_inode	*ip,
-+	int			whichfork)
-+{
-+	unsigned int		mask;
-+
-+	switch (whichfork) {
-+	case XFS_DATA_FORK:
-+		mask = XFS_SICK_INO_BMBTD;
-+		break;
-+	case XFS_ATTR_FORK:
-+		mask = XFS_SICK_INO_BMBTA;
-+		break;
-+	case XFS_COW_FORK:
-+		mask = XFS_SICK_INO_BMBTC;
-+		break;
-+	default:
-+		ASSERT(0);
-+		return;
-+	}
-+
-+	xfs_inode_mark_sick(ip, mask);
-+}
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index fc1946f80a4a..c2ba03281daf 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -27,6 +27,7 @@
- #include "xfs_dquot_item.h"
- #include "xfs_dquot.h"
- #include "xfs_reflink.h"
-+#include "xfs_health.h"
- 
- #define XFS_ALLOC_ALIGN(mp, off) \
- 	(((off) >> mp->m_allocsize_log) << mp->m_allocsize_log)
-@@ -45,6 +46,7 @@ xfs_alert_fsblock_zero(
- 		(unsigned long long)imap->br_startoff,
- 		(unsigned long long)imap->br_blockcount,
- 		imap->br_state);
-+	xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
- 	return -EFSCORRUPTED;
- }
- 
-@@ -99,8 +101,10 @@ xfs_bmbt_to_iomap(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
- 
--	if (unlikely(!xfs_valid_startblock(ip, imap->br_startblock)))
-+	if (unlikely(!xfs_valid_startblock(ip, imap->br_startblock))) {
-+		xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
- 		return xfs_alert_fsblock_zero(ip, imap);
-+	}
- 
- 	if (imap->br_startblock == HOLESTARTBLOCK) {
- 		iomap->addr = IOMAP_NULL_ADDR;
-@@ -325,8 +329,10 @@ xfs_iomap_write_direct(
- 		goto out_unlock;
- 	}
- 
--	if (unlikely(!xfs_valid_startblock(ip, imap->br_startblock)))
-+	if (unlikely(!xfs_valid_startblock(ip, imap->br_startblock))) {
-+		xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
- 		error = xfs_alert_fsblock_zero(ip, imap);
-+	}
- 
- out_unlock:
- 	*seq = xfs_iomap_inode_sequence(ip, 0);
-@@ -639,8 +645,10 @@ xfs_iomap_write_unwritten(
- 		if (error)
- 			return error;
- 
--		if (unlikely(!xfs_valid_startblock(ip, imap.br_startblock)))
-+		if (unlikely(!xfs_valid_startblock(ip, imap.br_startblock))) {
-+			xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
- 			return xfs_alert_fsblock_zero(ip, &imap);
-+		}
- 
- 		if ((numblks_fsb = imap.br_blockcount) == 0) {
- 			/*
-@@ -986,6 +994,7 @@ xfs_buffered_write_iomap_begin(
- 
- 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(&ip->i_df)) ||
- 	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
-+		xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
- 		error = -EFSCORRUPTED;
- 		goto out_unlock;
- 	}
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 5535778a98f9..55604bbd25a4 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -29,6 +29,7 @@
- #include "xfs_iomap.h"
- #include "xfs_ag.h"
- #include "xfs_ag_resv.h"
-+#include "xfs_health.h"
- 
- /*
-  * Copy on Write of Shared Blocks
-@@ -1223,8 +1224,10 @@ xfs_reflink_remap_extent(
- 	 * extent if they're both holes or both the same physical extent.
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 356193e44cf0..502fa2d41097 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1635,19 +1635,9 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+ 	 * completion to mark the error state of the pages under writeback
+ 	 * appropriately.
  	 */
- 	if (dmap->br_startblock == smap.br_startblock) {
--		if (dmap->br_state != smap.br_state)
-+		if (dmap->br_state != smap.br_state) {
-+			xfs_bmap_mark_sick(ip, XFS_DATA_FORK);
- 			error = -EFSCORRUPTED;
-+		}
- 		goto out_cancel;
+-	if (unlikely(error)) {
+-		/*
+-		 * Let the filesystem know what portion of the current page
+-		 * failed to map. If the page hasn't been added to ioend, it
+-		 * won't be affected by I/O completion and we must unlock it
+-		 * now.
+-		 */
+-		if (wpc->ops->discard_folio)
+-			wpc->ops->discard_folio(folio, pos);
+-		if (!count) {
+-			folio_unlock(folio);
+-			goto done;
+-		}
++	if (unlikely(error && !count)) {
++		folio_unlock(folio);
++		goto done;
  	}
  
-@@ -1387,6 +1390,7 @@ xfs_reflink_remap_blocks(
- 		ASSERT(nimaps == 1 && imap.br_startoff == srcoff);
- 		if (imap.br_startblock == DELAYSTARTBLOCK) {
- 			ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
-+			xfs_bmap_mark_sick(src, XFS_DATA_FORK);
- 			error = -EFSCORRUPTED;
- 			break;
- 		}
+ 	folio_start_writeback(folio);
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 41734202796f..3f0dae5ca9c2 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -448,44 +448,9 @@ xfs_prepare_ioend(
+ 	return status;
+ }
+ 
+-/*
+- * If the page has delalloc blocks on it, we need to punch them out before we
+- * invalidate the page.  If we don't, we leave a stale delalloc mapping on the
+- * inode that can trip up a later direct I/O read operation on the same region.
+- *
+- * We prevent this by truncating away the delalloc regions on the page.  Because
+- * they are delalloc, we can do this without needing a transaction. Indeed - if
+- * we get ENOSPC errors, we have to be able to do this truncation without a
+- * transaction as there is no space left for block reservation (typically why we
+- * see a ENOSPC in writeback).
+- */
+-static void
+-xfs_discard_folio(
+-	struct folio		*folio,
+-	loff_t			pos)
+-{
+-	struct xfs_inode	*ip = XFS_I(folio->mapping->host);
+-	struct xfs_mount	*mp = ip->i_mount;
+-	int			error;
+-
+-	if (xfs_is_shutdown(mp))
+-		return;
+-
+-	xfs_alert_ratelimited(mp,
+-		"page discard on page "PTR_FMT", inode 0x%llx, pos %llu.",
+-			folio, ip->i_ino, pos);
+-
+-	error = xfs_bmap_punch_delalloc_range(ip, pos,
+-			round_up(pos, folio_size(folio)));
+-
+-	if (error && !xfs_is_shutdown(mp))
+-		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
+-}
+-
+ static const struct iomap_writeback_ops xfs_writeback_ops = {
+ 	.map_blocks		= xfs_map_blocks,
+ 	.prepare_ioend		= xfs_prepare_ioend,
+-	.discard_folio		= xfs_discard_folio,
+ };
+ 
+ STATIC int
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 0983dfc9a203..681e26a86791 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -310,12 +310,6 @@ struct iomap_writeback_ops {
+ 	 * conversions.
+ 	 */
+ 	int (*prepare_ioend)(struct iomap_ioend *ioend, int status);
+-
+-	/*
+-	 * Optional, allows the file system to discard state on a page where
+-	 * we failed to submit any I/O.
+-	 */
+-	void (*discard_folio)(struct folio *folio, loff_t pos);
+ };
+ 
+ struct iomap_writepage_ctx {
 -- 
 2.39.0
 
