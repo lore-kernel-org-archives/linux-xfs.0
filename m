@@ -2,131 +2,140 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2D18C61DA4
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Feb 2023 18:59:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBE70C64EC7
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Feb 2023 21:27:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229608AbjBNS7m (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Feb 2023 13:59:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51822 "EHLO
+        id S231687AbjBNV1H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Feb 2023 16:27:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229516AbjBNS7l (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2023 13:59:41 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 526952594B;
-        Tue, 14 Feb 2023 10:59:40 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CC4A6617AC;
-        Tue, 14 Feb 2023 18:59:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CB5FC433EF;
-        Tue, 14 Feb 2023 18:59:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676401179;
-        bh=5I7TsrG6JCZFB1DlFrjYR+q/9zlHWDxE63YiINAgnPs=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=s3xSMG7xe07gqvEOUhmOnBhRnXs0W5Rg6OaTWWdApqC937vRv6KuiuK+ya2tir0P5
-         3XXbQKN5sZo2kp3trs+eQ+nkSPP8/u6jOdBFe9Fee4t7obgfUP5HHLkViB4Z9xKmk5
-         vGMsmM+txPwbkpT9E8UzFxueuo+xWxzMAaVcfLmQi1VZkR++Y0i53WH89zX2dQlP2O
-         BMF7a+Tl+Rbbwv3VBBcWmbZ7USnMnKP2UYUHMnk2p+QGNT72PsGmXGkhmWt9Pt0aVn
-         P/pwz6bJjRPh16cnXCqi04/x4aN9NN2scCFhRXPAmPJl2y0/oPr7xYa800xMyBlBHq
-         yLRrFHsFjZLlQ==
-Date:   Tue, 14 Feb 2023 10:59:38 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Theodore Ts'o <tytso@mit.edu>
-Cc:     zlang@redhat.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me, leah.rumancik@gmail.com,
-        quwenruo.btrfs@gmx.com
-Subject: Re: [PATCH 6/8] report: collect basic information about a test run
-Message-ID: <Y+vaGoCosvF5JH3n@magnolia>
-References: <167149446381.332657.9402608531757557463.stgit@magnolia>
- <167149449737.332657.1308561091226926848.stgit@magnolia>
- <Y6EsNkIcA7bd9aHR@mit.edu>
+        with ESMTP id S232679AbjBNV1E (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2023 16:27:04 -0500
+Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC37430283;
+        Tue, 14 Feb 2023 13:26:25 -0800 (PST)
+Received: by mail-pl1-x630.google.com with SMTP id h4so10518638pll.9;
+        Tue, 14 Feb 2023 13:26:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=d8+bOJaJ1DMCI2ipzGuFesKUVSe+97WR5t+OxKErTbo=;
+        b=nZkRKMTENJwU53EZ/h21deD7+pDHjmj+Ht+P77lDrgx6zZ7CZWtXOtaQyEPGO+qYu3
+         aGpTploV3eohWgNdFvY0NEnWD0eCya8UwtHiHeRa66WzCRw6Hcp2D5dsDBth8AK144AN
+         RU1poNdFbN0VPVh7IEAKeoCR9G60/M3ihiaJ0FAvibbxTJY4n+jytQOZ8M0jtnnkquKq
+         RI6H5e/Oi+fvIw0p8Gsao6+tDVHCkkpPb3B5pQ6vQ0wgsHT8pg0ne4ARl+CacSM70QLq
+         y5mEHuidZ74A/ti1+mi2SdbZyVY3pmaIMig8NNPDXKE4HQF++mkrnr/rVf/vOJ9qZmIv
+         z6YQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=d8+bOJaJ1DMCI2ipzGuFesKUVSe+97WR5t+OxKErTbo=;
+        b=pEwKKHz9jycRvNJ9dJUpaM8LFganGBXOye357AQpyebn+a8hsMKIledExIx30Z8zPz
+         YjCj+xwrXiCaK6x5tgcfaGAQNhCLUwHh6RuQiP+4FV0BGRDPanpMJB4FBD9SlPu0FLLv
+         PQU3yC/gEv5L9ChoGfBbXVr2VR7UB+vVqY3cllZSKmF+gRP+zkznLRn6q4QISz5CU2aq
+         iw7zo4EDpGeYVOFUor/WXnxL4rhRffekY1zl1Z3JbatqGqxWAZct31N8imxWv5ZYuJj4
+         Gdjt7beJtP1+k5xBjK1u3R1WBDeNNDWVZXykQGHPTod+tNL/oIREtedgYMN6LuzQS5ns
+         x/Zw==
+X-Gm-Message-State: AO0yUKU8S8Kp8uIx2vtUb60sgbU5AqX8/P8zrpK+lbDka81OxbOqf+p5
+        vAF+n9+90O8+g+gH52vP4JGcojsCZvc=
+X-Google-Smtp-Source: AK7set/liYi0fNFvSnxWTbdsGPCeE9Jk/4A/dmJRmpVuqLrXj5yPMhEQzOE7A+7X1XS2RdI9d3DbTA==
+X-Received: by 2002:a17:902:d4d2:b0:198:9bf8:298e with SMTP id o18-20020a170902d4d200b001989bf8298emr20200plg.60.1676409964569;
+        Tue, 14 Feb 2023 13:26:04 -0800 (PST)
+Received: from lrumancik.svl.corp.google.com ([2620:15c:2d4:203:cf14:3756:2b5e:fb87])
+        by smtp.gmail.com with ESMTPSA id d14-20020a170902654e00b00195f0fb0c18sm6692569pln.31.2023.02.14.13.26.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Feb 2023 13:26:04 -0800 (PST)
+From:   Leah Rumancik <leah.rumancik@gmail.com>
+To:     stable@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org, amir73il@gmail.com,
+        chandan.babu@oracle.com, Leah Rumancik <leah.rumancik@gmail.com>
+Subject: [PATCH 5.15 00/10] xfs backports for 5.15.y
+Date:   Tue, 14 Feb 2023 13:25:24 -0800
+Message-Id: <20230214212534.1420323-1-leah.rumancik@gmail.com>
+X-Mailer: git-send-email 2.39.1.581.gbfd45094c4-goog
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y6EsNkIcA7bd9aHR@mit.edu>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Dec 19, 2022 at 10:29:58PM -0500, Theodore Ts'o wrote:
-> On Mon, Dec 19, 2022 at 04:01:37PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Record various generic information about an fstests run when generating
-> > a junit xml report.  This includes the cpu architecture, the kernel
-> > revision, the CPU, memory, and numa node counts, and some information
-> > about the block devices passed in.
-> 
-> It would be nice if there was a way that the test runner could pass
-> information that would be added to the xunit properties.  As I
-> mentioned in another e-mail, I currently do this via a post-processing
-> step which adds the properties to the junit xml file via a python
-> script.  And there are a number of additional properties that are used
-> by my report generator[1] which takes the junit xml file as input, and
-> generates a summary report which is convenient for humans.
-> 
-> [1] https://github.com/tytso/xfstests-bld/blob/master/test-appliance/files/usr/local/bin/gen_results_summary
-> 
-> Some of these properties include the version of xfstests, xfsprogs,
-> and other key software components (for example, I've had test failures
-> traced to bugs in fio, so knowing the version of fio that is used is
-> super-handy).
-> 
-> So maybe we could pass in a properties file, either via a command-line
-> option or an environment variable?  My script[2] uses a colon
-> separated format, but I'm not wedded to that delimiter.
-> 
-> CMDLINE: "-c f2fs/default -g auto"
-> FSTESTIMG: gce-xfstests/xfstests-amd64-202212131454
-> FSTESTPRJ: gce-xfstests
-> KERNEL: kernel	6.1.0-xfstests #2 SMP PREEMPT_DYNAMIC Mon Dec 12 16:09:40 EST 2022 x86_64
-> FSTESTVER: blktests	068bd2a (Fri, 18 Nov 2022 08:38:35 +0900)
-> FSTESTVER: fio		fio-3.31 (Tue, 9 Aug 2022 14:41:25 -0600)
-> FSTESTVER: fsverity	v1.5 (Sun, 6 Feb 2022 10:59:13 -0800)
-> FSTESTVER: ima-evm-utils	v1.3.2 (Wed, 28 Oct 2020 13:18:08 -0400)
-> FSTESTVER: nvme-cli	v1.16 (Thu, 11 Nov 2021 13:09:06 -0800)
-> FSTESTVER: quota		v4.05-52-gf7e24ee (Tue, 1 Nov 2022 11:45:06 +0100)
-> FSTESTVER: util-linux	v2.38.1 (Thu, 4 Aug 2022 11:06:21 +0200)
-> FSTESTVER: xfsprogs	v6.0.0 (Mon, 14 Nov 2022 12:06:23 +0100)
-> FSTESTVER: xfstests-bld	65edab38 (Wed, 30 Nov 2022 12:11:57 -0500)
-> FSTESTVER: xfstests	v2022.11.27-8-g3c178050c (Wed, 30 Nov 2022 10:25:39 -0500)
+Hello,
 
-Do you want the version numbers of each dependency to have a unique
-name attribute here?
+Here is the next batch of backports for 5.15.y. These patches have
+already been ACK'd on the xfs mailing list. Testing included
+25 runs of auto group on 12 xfs configs. No regressions were seen.
+I checked xfs/538 was run without issue as this test was mentioned
+in 56486f307100. Also, from 86d40f1e49e9, I ran ran xfs/117 with
+XFS compiled as a module and TEST_FS_MODULE_REOLOAD set, but I was
+unable to reproduce the issue.
 
-<property name="FSTESTVER: xfstests" value="v2022.11.27-8-g3c178050c..."/>
+Below I've outlined which series the backports came from:
 
-Though ... technically speaking, the @name attributes aren't required to
-be unique, so this is valid:
+series "xfs: intent whiteouts" (1):
+[01/10] cb512c921639613ce03f87e62c5e93ed9fe8c84d
+    xfs: zero inode fork buffer at allocation
+[02/10] c230a4a85bcdbfc1a7415deec6caf04e8fca1301
+    xfs: fix potential log item leak
 
-<property name="FSTESTVER" value="xfstests-bld 65edab38..."/>
-<property name="FSTESTVER" value="xfstests v2022.11.27-8-g3c178050c..."/>
+series "xfs: fix random format verification issues" (2):
+[1/4] dc04db2aa7c9307e740d6d0e173085301c173b1a
+    xfs: detect self referencing btree sibling pointers
+[2/4] 1eb70f54c445fcbb25817841e774adb3d912f3e8 -> already in 5.15.y
+    xfs: validate inode fork size against fork format
+[3/4] dd0d2f9755191690541b09e6385d0f8cd8bc9d8f
+    xfs: set XFS_FEAT_NLINK correctly
+[4/4] f0f5f658065a5af09126ec892e4c383540a1c77f
+    xfs: validate v5 feature fields
 
-Or I could go with what I've been rambling about on the ext4 concall for
-some time now:  set EXTRA_REPORT_VARS to a path to a file containing
-"name: value" strings, one per line, split on the colon.  You all can
-translate this into such a format however you like. :)
+series "xfs: small fixes for 5.19 cycle" (3):
+[1/3] 5672225e8f2a872a22b0cecedba7a6644af1fb84
+    xfs: avoid unnecessary runtime sibling pointer endian conversions
+[2/3] 5b55cbc2d72632e874e50d2e36bce608e55aaaea
+    fs: don't assert fail on perag references on teardown
+[2/3] 56486f307100e8fc66efa2ebd8a71941fa10bf6f
+    xfs: assert in xfs_btree_del_cursor should take into account error
 
---D
+series "xfs: random fixes for 5.19" (4):
+[1/2] 86d40f1e49e9a909d25c35ba01bea80dbcd758cb
+    xfs: purge dquots after inode walk fails during quotacheck
+[2/2] a54f78def73d847cb060b18c4e4a3d1d26c9ca6d
+    xfs: don't leak btree cursor when insrec fails after a split
 
-> FSTESTVER: zz_build-distro	bullseye
-> FSTESTCFG: "f2fs/default"
-> FSTESTSET: "-g auto"
-> FSTESTEXC: ""
-> FSTESTOPT: "aex"
-> MNTOPTS: ""
-> CPUS: "2"
-> MEM: "7680"
-> DMI_MEM: 8 GB (Max capacity)
-> PARAM_MEM: 7680 (restricted by cmdline)
-> GCE ID: "3198461547210171740"
-> MACHINE TYPE: "e2-standard-2"
-> TESTRUNID: tytso-20221213150813
-> 
-> [2] https://github.com/tytso/xfstests-bld/blob/master/test-appliance/files/usr/local/bin/update_properties_xunit
-> 
-> Cheers,
-> 
-> 					- Ted
+(1) https://lore.kernel.org/all/20220503221728.185449-1-david@fromorbit.com/
+(2) https://lore.kernel.org/all/20220502082018.1076561-1-david@fromorbit.com/
+(3) https://lore.kernel.org/all/20220524022158.1849458-1-david@fromorbit.com/
+(4) https://lore.kernel.org/all/165337056527.993079.1232300816023906959.stgit@magnolia/
+
+- Leah
+
+Darrick J. Wong (2):
+  xfs: purge dquots after inode walk fails during quotacheck
+  xfs: don't leak btree cursor when insrec fails after a split
+
+Dave Chinner (8):
+  xfs: zero inode fork buffer at allocation
+  xfs: fix potential log item leak
+  xfs: detect self referencing btree sibling pointers
+  xfs: set XFS_FEAT_NLINK correctly
+  xfs: validate v5 feature fields
+  xfs: avoid unnecessary runtime sibling pointer endian conversions
+  xfs: don't assert fail on perag references on teardown
+  xfs: assert in xfs_btree_del_cursor should take into account error
+
+ fs/xfs/libxfs/xfs_ag.c         |   3 +-
+ fs/xfs/libxfs/xfs_btree.c      | 175 +++++++++++++++++++++++++--------
+ fs/xfs/libxfs/xfs_inode_fork.c |  12 ++-
+ fs/xfs/libxfs/xfs_sb.c         |  70 +++++++++++--
+ fs/xfs/xfs_bmap_item.c         |   2 +
+ fs/xfs/xfs_icreate_item.c      |   1 +
+ fs/xfs/xfs_qm.c                |   9 +-
+ fs/xfs/xfs_refcount_item.c     |   2 +
+ fs/xfs/xfs_rmap_item.c         |   2 +
+ 9 files changed, 221 insertions(+), 55 deletions(-)
+
+-- 
+2.39.1.581.gbfd45094c4-goog
+
