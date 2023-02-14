@@ -2,171 +2,131 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC850C05027
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Feb 2023 18:54:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2D18C61DA4
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Feb 2023 18:59:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233468AbjBNSyK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Feb 2023 13:54:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48808 "EHLO
+        id S229608AbjBNS7m (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Feb 2023 13:59:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233331AbjBNSyH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2023 13:54:07 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E46828D15;
-        Tue, 14 Feb 2023 10:54:04 -0800 (PST)
+        with ESMTP id S229516AbjBNS7l (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2023 13:59:41 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 526952594B;
+        Tue, 14 Feb 2023 10:59:40 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AEA99617F0;
-        Tue, 14 Feb 2023 18:54:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 199DDC433D2;
-        Tue, 14 Feb 2023 18:54:03 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CC4A6617AC;
+        Tue, 14 Feb 2023 18:59:39 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CB5FC433EF;
+        Tue, 14 Feb 2023 18:59:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676400843;
-        bh=K2DDIHEiIyne4n1DgOFX3CVGxS4L/67qUnBeSuoWC9o=;
+        s=k20201202; t=1676401179;
+        bh=5I7TsrG6JCZFB1DlFrjYR+q/9zlHWDxE63YiINAgnPs=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=flAJOO+G/IMnpPhenuhH5rBYqGg6AHrK/TPe7yFdvsFXu04RTPQZbJ0fNCJqIogF5
-         kPNKG2S4EpQRgZmmxk4jTWZCcVOnemf8aVpNzFsN2dNm3Q5G/UVHRdKLG8CLzZDq0q
-         5bzK1veEJ1+RaydmZ95VoPjvUcUw+qMSLKSE8D8ux2JFAcOdahGVui/WKyLfRVgx1J
-         oodkT8DI8nW/FEI5PKBHZlxTVOTJMFmTZyvwgpqYDKMRS0pmyXhAO2GQx1xpdgDvA2
-         n6KSjyRDk3pQJ6VIGhZWb8i2ofSLcpTfQWCnAujmg4MP41407xBz3Fjo90dg4Xx3Dn
-         y2oOtkKLsqi7g==
-Date:   Tue, 14 Feb 2023 10:54:02 -0800
+        b=s3xSMG7xe07gqvEOUhmOnBhRnXs0W5Rg6OaTWWdApqC937vRv6KuiuK+ya2tir0P5
+         3XXbQKN5sZo2kp3trs+eQ+nkSPP8/u6jOdBFe9Fee4t7obgfUP5HHLkViB4Z9xKmk5
+         vGMsmM+txPwbkpT9E8UzFxueuo+xWxzMAaVcfLmQi1VZkR++Y0i53WH89zX2dQlP2O
+         BMF7a+Tl+Rbbwv3VBBcWmbZ7USnMnKP2UYUHMnk2p+QGNT72PsGmXGkhmWt9Pt0aVn
+         P/pwz6bJjRPh16cnXCqi04/x4aN9NN2scCFhRXPAmPJl2y0/oPr7xYa800xMyBlBHq
+         yLRrFHsFjZLlQ==
+Date:   Tue, 14 Feb 2023 10:59:38 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Qu Wenruo <quwenruo.btrfs@gmx.com>
+To:     Theodore Ts'o <tytso@mit.edu>
 Cc:     zlang@redhat.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me, leah.rumancik@gmail.com
-Subject: Re: [PATCH 2/8] report: derive an xml schema for the xunit report
-Message-ID: <Y+vYymqHVaPXUsra@magnolia>
+        fstests@vger.kernel.org, guan@eryu.me, leah.rumancik@gmail.com,
+        quwenruo.btrfs@gmx.com
+Subject: Re: [PATCH 6/8] report: collect basic information about a test run
+Message-ID: <Y+vaGoCosvF5JH3n@magnolia>
 References: <167149446381.332657.9402608531757557463.stgit@magnolia>
- <167149447509.332657.12495196329565215003.stgit@magnolia>
- <fc3f7649-162d-c149-74eb-ac38699bcb85@gmx.com>
+ <167149449737.332657.1308561091226926848.stgit@magnolia>
+ <Y6EsNkIcA7bd9aHR@mit.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <fc3f7649-162d-c149-74eb-ac38699bcb85@gmx.com>
+In-Reply-To: <Y6EsNkIcA7bd9aHR@mit.edu>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Dec 20, 2022 at 10:18:18AM +0800, Qu Wenruo wrote:
-> 
-> 
-> On 2022/12/20 08:01, Darrick J. Wong wrote:
+On Mon, Dec 19, 2022 at 10:29:58PM -0500, Theodore Ts'o wrote:
+> On Mon, Dec 19, 2022 at 04:01:37PM -0800, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > The "xunit" report format emits an XML document that more or less
-> > follows the junit xml schema.  However, there are two major exceptions:
-> > 
-> > 1. fstests does not emit an @errors attribute on the testsuite element
-> > because we don't have the concept of unanticipated errors such as
-> > "unchecked throwables".
-> > 
-> > 2. The system-out/system-err elements sound like they belong under the
-> > testcase element, though the schema itself imprecisely says "while the
-> > test was executed".  The schema puts them under the top-level testsuite
-> > element, but we put them under the testcase element.
-> > 
-> > Define an xml schema for the xunit report format, and update the xml
-> > headers to link to the schema file.  This enables consumers of the
-> > reports to check mechanically that the incoming document follows the
-> > format.
+> > Record various generic information about an fstests run when generating
+> > a junit xml report.  This includes the cpu architecture, the kernel
+> > revision, the CPU, memory, and numa node counts, and some information
+> > about the block devices passed in.
 > 
-> One thing is, does the official XMLs use tabs as indents?
+> It would be nice if there was a way that the test runner could pass
+> information that would be added to the xunit properties.  As I
+> mentioned in another e-mail, I currently do this via a post-processing
+> step which adds the properties to the junit xml file via a python
+> script.  And there are a number of additional properties that are used
+> by my report generator[1] which takes the junit xml file as input, and
+> generates a summary report which is convenient for humans.
+> 
+> [1] https://github.com/tytso/xfstests-bld/blob/master/test-appliance/files/usr/local/bin/gen_results_summary
+> 
+> Some of these properties include the version of xfstests, xfsprogs,
+> and other key software components (for example, I've had test failures
+> traced to bugs in fio, so knowing the version of fio that is used is
+> super-handy).
+> 
+> So maybe we could pass in a properties file, either via a command-line
+> option or an environment variable?  My script[2] uses a colon
+> separated format, but I'm not wedded to that delimiter.
+> 
+> CMDLINE: "-c f2fs/default -g auto"
+> FSTESTIMG: gce-xfstests/xfstests-amd64-202212131454
+> FSTESTPRJ: gce-xfstests
+> KERNEL: kernel	6.1.0-xfstests #2 SMP PREEMPT_DYNAMIC Mon Dec 12 16:09:40 EST 2022 x86_64
+> FSTESTVER: blktests	068bd2a (Fri, 18 Nov 2022 08:38:35 +0900)
+> FSTESTVER: fio		fio-3.31 (Tue, 9 Aug 2022 14:41:25 -0600)
+> FSTESTVER: fsverity	v1.5 (Sun, 6 Feb 2022 10:59:13 -0800)
+> FSTESTVER: ima-evm-utils	v1.3.2 (Wed, 28 Oct 2020 13:18:08 -0400)
+> FSTESTVER: nvme-cli	v1.16 (Thu, 11 Nov 2021 13:09:06 -0800)
+> FSTESTVER: quota		v4.05-52-gf7e24ee (Tue, 1 Nov 2022 11:45:06 +0100)
+> FSTESTVER: util-linux	v2.38.1 (Thu, 4 Aug 2022 11:06:21 +0200)
+> FSTESTVER: xfsprogs	v6.0.0 (Mon, 14 Nov 2022 12:06:23 +0100)
+> FSTESTVER: xfstests-bld	65edab38 (Wed, 30 Nov 2022 12:11:57 -0500)
+> FSTESTVER: xfstests	v2022.11.27-8-g3c178050c (Wed, 30 Nov 2022 10:25:39 -0500)
 
-XML doesn't care one way or another:
-https://www.w3.org/TR/xml/#sec-white-space
+Do you want the version numbers of each dependency to have a unique
+name attribute here?
 
-> We got some lines definitely too long for human to read.
-> Any way to make them a little better?
+<property name="FSTESTVER: xfstests" value="v2022.11.27-8-g3c178050c..."/>
 
-Eh, I guess I could change them to two spaces, given the indentyness of
-the schema.
+Though ... technically speaking, the @name attributes aren't required to
+be unique, so this is valid:
 
-> But overall, it really defines a good standard for us to follow.
-> This is definitely a good start.
+<property name="FSTESTVER" value="xfstests-bld 65edab38..."/>
+<property name="FSTESTVER" value="xfstests v2022.11.27-8-g3c178050c..."/>
 
-<nod>
-
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> [...]
-> > +						<xs:choice minOccurs="0" maxOccurs="2">
-> 
-> For this, I prefer maxOccurs to be at least 3.
-> 
-> We have 3 different possible outputs:
-> 
-> - $seqnum.out.bad
-> - $seqnum.full
-> - $seqnum.dmesg
-> 
-> [...]
-> 
-> > +								</xs:annotation>
-> > +								<xs:simpleType>
-> > +									<xs:restriction base="pre-string">
-> > +										<xs:whiteSpace value="preserve"/>
-> > +									</xs:restriction>
-> > +								</xs:simpleType>
-> > +							</xs:element>
-> > +							<xs:element name="system-err" minOccurs="0" maxOccurs="1">
-> > +								<xs:annotation>
-> > +									<xs:documentation xml:lang="en">Data that was written to standard error while the test was executed</xs:documentation>
-> 
-> We don't use stderr, but $seqnum.full and $seqnum.dmesg.
-> 
-> Or can we just rename the "system-out" and "system-err" to something fstests
-> specific? E.g.
-> 
-> - system-output
-> - system-full
-> - system-dmesg
-> 
-> Or the system-err/out thing is mostly to keep the compatibility?
-> If so, I'd prefer some properties to make it explicit which output
-> represents which fstests specific output.
-
-I'll change those, since that's one of the major divergences from the
-upstream junit xml schema.  junit says system-out should capture the
-stdout of the whole testsuite, not an individual testcase.
-
-> 
-> > +								</xs:annotation>
-> > +								<xs:simpleType>
-> > +									<xs:restriction base="pre-string">
-> > +										<xs:whiteSpace value="preserve"/>
-> > +									</xs:restriction>
-> > +								</xs:simpleType>
-> > +							</xs:element>
-> > +						</xs:choice>
-> > +					</xs:sequence>
-> > +					<xs:attribute name="name" type="xs:token" use="required">
-> > +						<xs:annotation>
-> > +							<xs:documentation xml:lang="en">Name of the test method</xs:documentation>
-> 
-> Can we update the description to something more fstests specific, better
-> with an example?
-> Like "test case number, e.g. generic/001".
-> 
-> This can apply to most description copied from the JUnit doc.
-
-Ok.
-
-> [...]
-> > +		<xs:attribute name="timestamp" type="ISO8601_DATETIME_PATTERN" use="required">
-> > +			<xs:annotation>
-> > +				<xs:documentation xml:lang="en">when the test was executed. Timezone may not be specified.</xs:documentation>
-> > +			</xs:annotation>
-> 
-> This means the start time, thus all our existing timestamp is not following
-> the spec already.
-
-I wrote my comments about this part in the thread about patch 1, so
-let's leave the discussion there.
+Or I could go with what I've been rambling about on the ext4 concall for
+some time now:  set EXTRA_REPORT_VARS to a path to a file containing
+"name: value" strings, one per line, split on the colon.  You all can
+translate this into such a format however you like. :)
 
 --D
 
-> Thanks,
-> Qu
+> FSTESTVER: zz_build-distro	bullseye
+> FSTESTCFG: "f2fs/default"
+> FSTESTSET: "-g auto"
+> FSTESTEXC: ""
+> FSTESTOPT: "aex"
+> MNTOPTS: ""
+> CPUS: "2"
+> MEM: "7680"
+> DMI_MEM: 8 GB (Max capacity)
+> PARAM_MEM: 7680 (restricted by cmdline)
+> GCE ID: "3198461547210171740"
+> MACHINE TYPE: "e2-standard-2"
+> TESTRUNID: tytso-20221213150813
+> 
+> [2] https://github.com/tytso/xfstests-bld/blob/master/test-appliance/files/usr/local/bin/update_properties_xunit
+> 
+> Cheers,
+> 
+> 					- Ted
