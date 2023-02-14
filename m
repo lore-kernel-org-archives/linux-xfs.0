@@ -2,188 +2,161 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 520D7C64ED6
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Feb 2023 21:27:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D10B2C6379F
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Feb 2023 22:20:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232341AbjBNV1T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Feb 2023 16:27:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51010 "EHLO
+        id S229765AbjBNWUH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Feb 2023 17:20:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38716 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232918AbjBNV1Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2023 16:27:16 -0500
-Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4B69303F7;
-        Tue, 14 Feb 2023 13:26:39 -0800 (PST)
-Received: by mail-pl1-x636.google.com with SMTP id v23so18378693plo.1;
-        Tue, 14 Feb 2023 13:26:39 -0800 (PST)
+        with ESMTP id S229597AbjBNWUG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2023 17:20:06 -0500
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 757852684
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Feb 2023 14:20:04 -0800 (PST)
+Received: by mail-pj1-x1033.google.com with SMTP id z14-20020a17090abd8e00b00233bb9d6bdcso168233pjr.4
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Feb 2023 14:20:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=hWHvXlH6c22+sRRcZ28NH0kxoU0BU+g37g3tI50FneA=;
-        b=bHlXfqemrhwGLJt6S8eMf7MPu2BSL3eSlo/Np0wqlDZd+DunMUlQnoPUYX91zy89kU
-         xfw23yawGwJsWwQFzCgOdJhJhuOv7tGc8F4rmJJ+AXYth2c72NTIkJFigILc9LGsRoFE
-         j0UBY6Tmlr2snou5oyHYwjWPzj1FVfycREHYuyZ8ji6NYWA1IHVFzXFH8NYEW90YuSxp
-         XB/GoTXjP/ah+ZekK6Uq2uxliIyL2znCdsslrcQT+ORLjgc7CjBTbg1ET3rISFvZRNrp
-         jYxvjLaeTyMWI4ppjmnqLWQFdlSxxTHoOOU9crD+5lteL79iI4NqxGl0AJNvIhL1yWlM
-         coFA==
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=f4GF0yPrnR6GTAKmA93IjzKA1dA8iyePWIJbKTTcKCM=;
+        b=C0vLkXK828SkA5AiDWRza2lsbfr+eRSBdqaEMQpAERe18d4DnABbC0Zbz3RkTuiFKf
+         hn4rq2rwUbllic80MzVkdeIEiEqETyXUcfmriwOaUs6wcHxJVbhzAwI9SFCR/e2DDgCh
+         O4+6psf6B6U4l/Q0hGIWbG86nCcqoaLBYi+sKZSLzRsbzTnaPcJtDF/4ouJjSwl6epuQ
+         MYllmNi5mmbzFUSHM4EGwI4mJuteynQ4temEuX8sop/kCvz21Fl0cV7E5pNioHRNhkwz
+         wse1/QFIQXawc0f6IEnng5R3zcRa3MnIYnMRvYcpVwM0Ao2Qjcez2r042MePR/HkAVu8
+         4B0g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=hWHvXlH6c22+sRRcZ28NH0kxoU0BU+g37g3tI50FneA=;
-        b=poZhkrrwvsVx1szYxIEdBEdSqtzOvzxjBqVSGG7j6cGT36ns3AVeoiJBEl6Eez5CEd
-         GgUo+fPiCMibX2fms8UB8NQKDJCW+B5K3784RjAUvjOVCsQFm04yvSETO6FR7tpZ/imz
-         COTwGiFg4//ttWg1ScfO5mSdjqi/Mm42XvM0gUazL1yFSjaSMu7IWY9NszK8EksLZZ+D
-         khbr15pkh3gVfVuynvEcvVubWZn62+OFrsJE7J12/kVOslMyxzhdfo64tuBtTLnXT0a8
-         I92jLihnrdt3i3zJ98wjF4bdweDL7MtzzPZ6taEjxCH4IdMt1vmd8ujRzAt/ml7nDcCq
-         uoGA==
-X-Gm-Message-State: AO0yUKW4lf7MkThC2PoIjOGOzSQFRbGL4Un0fi9aCuGxATmhP3GCtm6P
-        sQm/713GLnSkn7Fh81eXxOP4ZbZdh3XK0w==
-X-Google-Smtp-Source: AK7set8xiNQeJvsI6KnYpjlOMHSZu2Y/MJueMbFL6v/qXPPX/CEaCWtFl1ypvNFCZc8axcDZOh0jAA==
-X-Received: by 2002:a17:902:ecc6:b0:19a:b4a9:9df7 with SMTP id a6-20020a170902ecc600b0019ab4a99df7mr35446plh.53.1676409975684;
-        Tue, 14 Feb 2023 13:26:15 -0800 (PST)
-Received: from lrumancik.svl.corp.google.com ([2620:15c:2d4:203:cf14:3756:2b5e:fb87])
-        by smtp.gmail.com with ESMTPSA id d14-20020a170902654e00b00195f0fb0c18sm6692569pln.31.2023.02.14.13.26.14
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=f4GF0yPrnR6GTAKmA93IjzKA1dA8iyePWIJbKTTcKCM=;
+        b=zOOE8A3K4cz0pekGHLTYqN6miWrAW9sVz4EGQP5eexpskMQZdsoGvHEXKVYWtgSE3r
+         1kZtuRWVvVOO2IwpBCF+q4+XNvcFzbIw+QGy6rZpsz4tHuqkQIE7T0w5b/Uf5pxZavrh
+         O5dZv7naLXt4VAxYxZKAU36z198hgQyInP0vHfOQsHBUZ5hJw/TY52jh0MA7RGbqnc3N
+         rQcJPJrM8HuSpdSZYY72RXrMZYH8zWrYwoUcIWV9IWp4n9XTG++AxlkBWNxEoEyjxCGT
+         EfpOM+2s62Jz3qU3KJXJtKJiZpjCY0oft1si6SDlSMB4RD6V8ZAEFb5Ru/8uhpNeidsy
+         CO0Q==
+X-Gm-Message-State: AO0yUKXbgj4cSJW+mlYvRY9ECwlPLW++rMJ4mrlk7CHedaH55hOmDfSC
+        iFV3L+u7Fes2gIXIhz3jBBco8A==
+X-Google-Smtp-Source: AK7set9cvs7WBLhrrRXxE9EhupXKVe+X2BeTcsjfLl393Ul0WgaaXhG1Hasx8EoqwHJsx/NleZJyzQ==
+X-Received: by 2002:a17:902:e803:b0:19a:972a:7cb3 with SMTP id u3-20020a170902e80300b0019a972a7cb3mr156543plg.60.1676413203864;
+        Tue, 14 Feb 2023 14:20:03 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-4-128.pa.nsw.optusnet.com.au. [49.181.4.128])
+        by smtp.gmail.com with ESMTPSA id jk21-20020a170903331500b00199563fff0fsm5509698plb.190.2023.02.14.14.20.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Feb 2023 13:26:15 -0800 (PST)
-From:   Leah Rumancik <leah.rumancik@gmail.com>
-To:     stable@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org, amir73il@gmail.com,
-        chandan.babu@oracle.com, "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Dave Chinner <dchinner@redhat.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 5.15 09/10] xfs: purge dquots after inode walk fails during quotacheck
-Date:   Tue, 14 Feb 2023 13:25:33 -0800
-Message-Id: <20230214212534.1420323-10-leah.rumancik@gmail.com>
-X-Mailer: git-send-email 2.39.1.581.gbfd45094c4-goog
-In-Reply-To: <20230214212534.1420323-1-leah.rumancik@gmail.com>
-References: <20230214212534.1420323-1-leah.rumancik@gmail.com>
+        Tue, 14 Feb 2023 14:20:03 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1pS3ea-00FMqi-Kp; Wed, 15 Feb 2023 09:20:00 +1100
+Date:   Wed, 15 Feb 2023 09:20:00 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 3/3] xfs, iomap: ->discard_folio() is broken so remove it
+Message-ID: <20230214222000.GL360264@dread.disaster.area>
+References: <20230214055114.4141947-1-david@fromorbit.com>
+ <20230214055114.4141947-4-david@fromorbit.com>
+ <Y+vOfaxIWX1c/yy9@bfoster>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Y+vOfaxIWX1c/yy9@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+On Tue, Feb 14, 2023 at 01:10:05PM -0500, Brian Foster wrote:
+> On Tue, Feb 14, 2023 at 04:51:14PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Ever since commit e9c3a8e820ed ("iomap: don't invalidate folios
+> > after writeback errors") XFS and iomap have been retaining dirty
+> > folios in memory after a writeback error. XFS no longer invalidates
+> > the folio, and iomap no longer clears the folio uptodate state.
+> > 
+> > However, iomap is still been calling ->discard_folio on error, and
+> > XFS is still punching the delayed allocation range backing the dirty
+> > folio.
+> > 
+> > This is incorrect behaviour. The folio remains dirty and up to date,
+> > meaning that another writeback will be attempted in the near future.
+> > THis means that XFS is still going to have to allocate space for it
+> > during writeback, and that means it still needs to have a delayed
+> > allocation reservation and extent backing the dirty folio.
+> > 
+> 
+> Hmm.. I don't think that is correct. It looks like the previous patch
+> removes the invalidation, but writeback clears the dirty bit before
+> calling into the fs and we're not doing anything to redirty the folio,
+> so there's no guarantee of subsequent writeback.
 
-[ Upstream commit 86d40f1e49e9a909d25c35ba01bea80dbcd758cb ]
+Ah, right, I got confused with iomap_do_writepage() which redirties
+folios it performs no action on. The case that is being tripped here
+is "count == 0" which means no action has actually been taken on the
+folio and it is not submitted for writeback. We don't mark the folio
+with an error on submission failure like we do for errors reported
+to IO completion, so the folio is just left in it's current state
+in the cache.
 
-xfs/434 and xfs/436 have been reporting occasional memory leaks of
-xfs_dquot objects.  These tests themselves were the messenger, not the
-culprit, since they unload the xfs module, which trips the slub
-debugging code while tearing down all the xfs slab caches:
+> Regardless, I can see how this prevents this sort of error in the
+> scenario where writeback fails due to corruption, but I don't see how it
+> doesn't just break error handling of writeback failures not associated
+> with corruption.
 
-=============================================================================
-BUG xfs_dquot (Tainted: G        W        ): Objects remaining in xfs_dquot on __kmem_cache_shutdown()
------------------------------------------------------------------------------
+What other cases in XFS do we have that cause mapping failure? We
+can't get ENOSPC here because of delalloc reservations. We can't get
+ENOMEM because all the memory allocations are blocking. That just
+leaves IO errors reading metadata, or structure corruption when
+parsing and modifying on-disk metadata.  I can't think (off the top
+of my head) of any other type of error we can get returned from
+allocation - what sort of non-corruption errors were you thinking
+of here?
 
-Slab 0xffffea000606de00 objects=30 used=5 fp=0xffff888181b78a78 flags=0x17ff80000010200(slab|head|node=0|zone=2|lastcpupid=0xfff)
-CPU: 0 PID: 3953166 Comm: modprobe Tainted: G        W         5.18.0-rc6-djwx #rc6 d5824be9e46a2393677bda868f9b154d917ca6a7
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20171121_152543-x86-ol7-builder-01.us.oracle.com-4.el7.1 04/01/2014
+> fails due to some random/transient error, delalloc is left around on a
+> !dirty page (i.e. stale), and reclaim eventually comes around and
+> results in the usual block accounting corruption associated with stale
+> delalloc blocks.
 
-Since we don't generally rmmod the xfs module between fstests, this
-means that xfs/434 is really just the canary in the coal mine --
-something leaked a dquot, but we don't know who.  After days of pounding
-on fstests with kmemleak enabled, I finally got it to spit this out:
+The first patches in the series fix those issues. If we get stray
+delalloc extents on a healthy inode, then it will still trigger all
+the warnings/asserts that we have now. But if the inode has been
+marked sick by a corruption based allocation failure, it will clean
+up in reclaim without leaking anything or throwing any new warnings.
 
-unreferenced object 0xffff8880465654c0 (size 536):
-  comm "u10:4", pid 88, jiffies 4294935810 (age 29.512s)
-  hex dump (first 32 bytes):
-    60 4a 56 46 80 88 ff ff 58 ea e4 5c 80 88 ff ff  `JVF....X..\....
-    00 e0 52 49 80 88 ff ff 01 00 01 00 00 00 00 00  ..RI............
-  backtrace:
-    [<ffffffffa0740f6c>] xfs_dquot_alloc+0x2c/0x530 [xfs]
-    [<ffffffffa07443df>] xfs_qm_dqread+0x6f/0x330 [xfs]
-    [<ffffffffa07462a2>] xfs_qm_dqget+0x132/0x4e0 [xfs]
-    [<ffffffffa0756bb0>] xfs_qm_quotacheck_dqadjust+0xa0/0x3e0 [xfs]
-    [<ffffffffa075724d>] xfs_qm_dqusage_adjust+0x35d/0x4f0 [xfs]
-    [<ffffffffa06c9068>] xfs_iwalk_ag_recs+0x348/0x5d0 [xfs]
-    [<ffffffffa06c95d3>] xfs_iwalk_run_callbacks+0x273/0x540 [xfs]
-    [<ffffffffa06c9e8d>] xfs_iwalk_ag+0x5ed/0x890 [xfs]
-    [<ffffffffa06ca22f>] xfs_iwalk_ag_work+0xff/0x170 [xfs]
-    [<ffffffffa06d22c9>] xfs_pwork_work+0x79/0x130 [xfs]
-    [<ffffffff81170bb2>] process_one_work+0x672/0x1040
-    [<ffffffff81171b1b>] worker_thread+0x59b/0xec0
-    [<ffffffff8118711e>] kthread+0x29e/0x340
-    [<ffffffff810032bf>] ret_from_fork+0x1f/0x30
+> This is easy enough to test/reproduce (just tried it
+> via error injection to delalloc conversion) that I'm kind of surprised
+> fstests doesn't uncover it. :/
 
-Now we know that quotacheck is at fault, but even this report was
-canaryish -- it was triggered by xfs/494, which doesn't actually mount
-any filesystems.  (kmemleak can be a little slow to notice leaks, even
-with fstests repeatedly whacking it to look for them.)  Looking at the
-*previous* fstest, however, showed that the test run before xfs/494 was
-xfs/117.  The tipoff to the problem is in this excerpt from dmesg:
+> > Failure to retain the delalloc extent (because xfs_discard_folio()
+> > punched it out) means that the next writeback attempt does not find
+> > an extent over the range of the write in ->map_blocks(), and
+> > xfs_map_blocks() triggers a WARN_ON() because it should never land
+> > in a hole for a data fork writeback request. This looks like:
+> > 
+> 
+> I'm not sure this warning makes a lot of sense either given most of this
+> should occur around the folio lock. Looking back at the code and the
+> error report for this, the same error injection used above on a 5k write
+> to a bsize=1k fs actually shows the punch remove fsb offsets 0-5 on a
+> writeback failure, so it does appear to be punching too much out.  The
+> cause appears to be that the end offset is calculated in
+> xfs_discard_folio() by rounding up the start offset to 4k (folio size).
+> If pos == 0, this results in passing end_fsb == 0 to the punch code,
+> which xfs_iext_lookup_extent_before() then changes to fsb == 5 because
+> that's the last block of the delalloc extent that covers fsb 0.
 
-XFS (sda4): Quotacheck needed: Please wait.
-XFS (sda4): Metadata corruption detected at xfs_dinode_verify.part.0+0xdb/0x7b0 [xfs], inode 0x119 dinode
-XFS (sda4): Unmount and run xfs_repair
-XFS (sda4): First 128 bytes of corrupted metadata buffer:
-00000000: 49 4e 81 a4 03 02 00 00 00 00 00 00 00 00 00 00  IN..............
-00000010: 00 00 00 01 00 00 00 00 00 90 57 54 54 1a 4c 68  ..........WTT.Lh
-00000020: 81 f9 7d e1 6d ee 16 00 34 bd 7d e1 6d ee 16 00  ..}.m...4.}.m...
-00000030: 34 bd 7d e1 6d ee 16 00 00 00 00 00 00 00 00 00  4.}.m...........
-00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-00000050: 00 00 00 02 00 00 00 00 00 00 00 00 96 80 f3 ab  ................
-00000060: ff ff ff ff da 57 7b 11 00 00 00 00 00 00 00 03  .....W{.........
-00000070: 00 00 00 01 00 00 00 10 00 00 00 00 00 00 00 08  ................
-XFS (sda4): Quotacheck: Unsuccessful (Error -117): Disabling quotas.
+And that is the bug I could not see in commit 7348b322332d ("xfs:
+xfs_bmap_punch_delalloc_range() should take a byte range") which is
+what this warning was bisected down to. Thank you for identifying
+the reason the bisect landed on that commit. Have you written a
+fix to test out you reasoning that you can post?
 
-The dinode verifier decided that the inode was corrupt, which causes
-iget to return with EFSCORRUPTED.  Since this happened during
-quotacheck, it is obvious that the kernel aborted the inode walk on
-account of the corruption error and disabled quotas.  Unfortunately, we
-neglect to purge the dquot cache before doing that, which is how the
-dquots leaked.
+Cheers,
 
-The problems started 10 years ago in commit b84a3a, when the dquot lists
-were converted to a radix tree, but the error handling behavior was not
-correctly preserved -- in that commit, if the bulkstat failed and
-usrquota was enabled, the bulkstat failure code would be overwritten by
-the result of flushing all the dquots to disk.  As long as that
-succeeds, we'd continue the quota mount as if everything were ok, but
-instead we're now operating with a corrupt inode and incorrect quota
-usage counts.  I didn't notice this bug in 2019 when I wrote commit
-ebd126a, which changed quotacheck to skip the dqflush when the scan
-doesn't complete due to inode walk failures.
-
-Introduced-by: b84a3a96751f ("xfs: remove the per-filesystem list of dquots")
-Fixes: ebd126a651f8 ("xfs: convert quotacheck to use the new iwalk functions")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
-Acked-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_qm.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 5608066d6e53..623244650a2f 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1317,8 +1317,15 @@ xfs_qm_quotacheck(
- 
- 	error = xfs_iwalk_threaded(mp, 0, 0, xfs_qm_dqusage_adjust, 0, true,
- 			NULL);
--	if (error)
-+	if (error) {
-+		/*
-+		 * The inode walk may have partially populated the dquot
-+		 * caches.  We must purge them before disabling quota and
-+		 * tearing down the quotainfo, or else the dquots will leak.
-+		 */
-+		xfs_qm_dqpurge_all(mp);
- 		goto error_return;
-+	}
- 
- 	/*
- 	 * We've made all the changes that we need to make incore.  Flush them
+Dave.
 -- 
-2.39.1.581.gbfd45094c4-goog
-
+Dave Chinner
+david@fromorbit.com
