@@ -2,151 +2,154 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B380C6379F
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Feb 2023 18:18:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FDF0C05027
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Feb 2023 18:47:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232458AbjBNSSX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Feb 2023 13:18:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49854 "EHLO
+        id S233438AbjBNSrR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Feb 2023 13:47:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40368 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231845AbjBNSSW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2023 13:18:22 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DBAF252B7;
-        Tue, 14 Feb 2023 10:18:21 -0800 (PST)
+        with ESMTP id S233468AbjBNSrG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2023 13:47:06 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1436E2F78C;
+        Tue, 14 Feb 2023 10:46:45 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 39898617E2;
-        Tue, 14 Feb 2023 18:18:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9586BC433EF;
-        Tue, 14 Feb 2023 18:18:20 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C2967617F0;
+        Tue, 14 Feb 2023 18:46:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F77EC433EF;
+        Tue, 14 Feb 2023 18:46:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676398700;
-        bh=dLgxrWC2HtfAH4idGlLXbcOHJqbEqig4BIq9X4s9uaI=;
+        s=k20201202; t=1676400403;
+        bh=5zLMb5SAQKmnDz8LNTdkwuFko4Duzsjb8oJVRYQGgo8=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Bey9NEbAGdaoDBDjGAbQFQ4pd1JcWduVqePmn84kvnSM1c9XIzLweoJRpMwWg5d2a
-         8BrKa6cOtiJU9OgH5RrI0FXHHQd2Zr0K3tFWl/XzFxHm6Zbk28Z957NPDKqSKtCuUP
-         FJOTgeJleif6KWPldAOt7aqVbnMMdJ/sIwXCl2U6W7nFpVIiIZYHwVYzfb3u1f3IxW
-         nv4WkvCAYtN5mUebqlYQvbmhChsVp/fNNKcQhC8CYEQCic3jJqxmoHYyAZwi0KRV2S
-         jMJx/KsPgn3TAxUjtZl0OYBO9l+wcGZ05XrMN2vBn18/m/ctOi4eNN6oIrPhu1qeiz
-         8iSrMTt2nScjg==
-Date:   Tue, 14 Feb 2023 10:18:20 -0800
+        b=R4J/0ZqXhww9sv9GHcml6gzXLWJrTLqLeqxJTrGrURvBtn6Vm0hDOsIVSzMJPdeg8
+         wKFtgvTCcszheSosEs/TNRdRyXItLJOSLWty4CqUDnLZngXdmSU4fhSrFPr5UFuY85
+         IAZc8jhNQwuSimfZNoszarwC3+Tg1cscJm+hvPI60XzGfSEIowLFuMBn78jvkUZbGL
+         fsRTa7n31F23+QxLPAKKa61uQWVKAoBEaLjoVK1OLEzr7yQ9LUQj4+NNk7ucO1zvo6
+         +Sm4Klinf7brq007OSZi2sQOeIjhhQm0nPFsikPKfBqYw39O2LWbJVaR/jLdUtrlrt
+         PLxybAbgxRLOw==
+Date:   Tue, 14 Feb 2023 10:46:42 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 1/1] fuzzy: use FORCE_REBUILD over injecting force_repair
-Message-ID: <Y+vQbNSkDoxsxU1i@magnolia>
-References: <167243874952.722591.1496636246267309523.stgit@magnolia>
- <167243874964.722591.9199494099572054329.stgit@magnolia>
- <20230214080007.i7m5hzlcmthd6ka3@zlang-mailbox>
+To:     Qu Wenruo <quwenruo.btrfs@gmx.com>
+Cc:     zlang@redhat.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me, leah.rumancik@gmail.com
+Subject: Re: [PATCH 1/8] check: generate section reports between tests
+Message-ID: <Y+vXEjKI08PXe95J@magnolia>
+References: <167149446381.332657.9402608531757557463.stgit@magnolia>
+ <167149446946.332657.17186597494532662986.stgit@magnolia>
+ <f447b1ab-ce5d-a736-6427-d1a3f33d20cf@gmx.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230214080007.i7m5hzlcmthd6ka3@zlang-mailbox>
+In-Reply-To: <f447b1ab-ce5d-a736-6427-d1a3f33d20cf@gmx.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 14, 2023 at 04:00:07PM +0800, Zorro Lang wrote:
-> On Fri, Dec 30, 2022 at 02:19:09PM -0800, Darrick J. Wong wrote:
+On Tue, Dec 20, 2022 at 09:14:07AM +0800, Qu Wenruo wrote:
+> 
+> 
+> On 2022/12/20 08:01, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > For stress testing online repair, try to use the FORCE_REBUILD ioctl
-> > flag over the error injection knobs whenever possible because the knobs
-> > are very noisy and are not always available.
+> > Generate the section report between tests so that the summary report
+> > always reflects the outcome of the most recent test.  Two usecases are
+> > envisioned here -- if a cluster-based test runner anticipates that the
+> > testrun could crash the VM, they can set REPORT_DIR to (say) an NFS
+> > mount to preserve the intermediate results.  If the VM does indeed
+> > crash, the scheduler can examine the state of the crashed VM and move
+> > the tests to another VM.  The second usecase is a reporting agent that
+> > runs in the VM to upload live results to a test dashboard.
 > > 
 > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > ---
-> >  common/fuzzy |   34 +++++++++++++++++++++++++++++++---
-> >  1 file changed, 31 insertions(+), 3 deletions(-)
+> >   check |   10 ++++++++++
+> >   1 file changed, 10 insertions(+)
 > > 
 > > 
-> > diff --git a/common/fuzzy b/common/fuzzy
-> > index f7f660bc31..14f7fdf03c 100644
-> > --- a/common/fuzzy
-> > +++ b/common/fuzzy
-> > @@ -398,6 +398,9 @@ __stress_one_scrub_loop() {
-> >  
-> >  	local xfs_io_args=()
-> >  	for arg in "$@"; do
-> > +		if [ -n "$SCRUBSTRESS_USE_FORCE_REBUILD" ]; then
-> > +			arg="$(echo "$arg" | sed -e 's/^repair/repair -R/g')"
+> > diff --git a/check b/check
+> > index 1ff0f44af1..70a0b537b1 100755
+> > --- a/check
+> > +++ b/check
+> > @@ -842,6 +842,16 @@ function run_section()
+> >   		fi
+> >   		seqres="$REPORT_DIR/$seqnum"
+> > +		# Generate the entire section report with whatever test results
+> > +		# we have so far.  Leave the $sect_time parameter empty so that
+> > +		# it's a little more obvious that this test run is incomplete.
+> > +		if $do_report; then
+> > +			local sect_now=`_wallclock`
+> > +			_make_section_report "$section" "${#try[*]}" \
+> > +					     "${#bad[*]}" "${#notrun[*]}" \
+> > +					     "" &> /dev/null
 > > +		fi
-> >  		if echo "$arg" | grep -q -w '%agno%'; then
-> >  			# Substitute the AG number
-> >  			for ((agno = 0; agno < agcount; agno++)); do
-> > @@ -695,13 +698,21 @@ _require_xfs_stress_scrub() {
-> >  		_notrun 'xfs scrub stress test requires common/filter'
-> >  }
-> >  
-> > +# Make sure that we can force repairs either by error injection or passing
-> > +# FORCE_REBUILD via ioctl.
-> > +__require_xfs_stress_force_rebuild() {
-> > +	local output="$($XFS_IO_PROG -x -c 'repair -R probe' $SCRATCH_MNT 2>&1)"
-> > +	test -z "$output" && return
-> > +	_require_xfs_io_error_injection "force_repair"
-> > +}
 > > +
-> >  # Make sure we have everything we need to run stress and online repair
-> >  _require_xfs_stress_online_repair() {
-> >  	_require_xfs_stress_scrub
-> >  	_require_xfs_io_command "repair"
-> >  	command -v _require_xfs_io_error_injection &>/dev/null || \
-> >  		_notrun 'xfs repair stress test requires common/inject'
-> > -	_require_xfs_io_error_injection "force_repair"
-> > +	__require_xfs_stress_force_rebuild
-> >  	_require_freeze
-> >  }
-> >  
-> > @@ -783,7 +794,11 @@ __stress_scrub_check_commands() {
-> >  	esac
-> >  
-> >  	for arg in "$@"; do
-> > -		local cooked_arg="$(echo "$arg" | sed -e "s/%agno%/0/g")"
-> > +		local cooked_arg="$arg"
-> > +		if [ -n "$SCRUBSTRESS_USE_FORCE_REBUILD" ]; then
-> > +			cooked_arg="$(echo "$cooked_arg" | sed -e 's/^repair/repair -R/g')"
-> > +		fi
-> > +		cooked_arg="$(echo "$cooked_arg" | sed -e "s/%agno%/0/g")"
-> >  		testio=`$XFS_IO_PROG -x -c "$cooked_arg" "$cooked_tgt" 2>&1`
-> >  		echo $testio | grep -q "Unknown type" && \
-> >  			_notrun "xfs_io scrub subcommand support is missing"
-> > @@ -943,10 +958,23 @@ _scratch_xfs_stress_scrub() {
-> >  	echo "Loop finished at $(date)" >> $seqres.full
-> >  }
-> >  
-> > +# Decide if we're going to force repairs either by error injection or passing
-> > +# FORCE_REBUILD via ioctl.
-> > +__scratch_xfs_stress_setup_force_rebuild() {
-> > +	local output="$($XFS_IO_PROG -x -c 'repair -R probe' $SCRATCH_MNT 2>&1)"
-> > +
-> > +	if [ -z "$output" ]; then
-> > +		export SCRUBSTRESS_USE_FORCE_REBUILD=1
 > 
-> Do you need to use this parameter ^^ in another child process? Is the "export"
-> necessary?
+> In fact that's exactly what I just wanted to do next...
+> 
+> However one problem I can't work around is the timestamp.
+> 
+> Currently our timestamp is the finish time, with this change our timestamp
+> is the start time.
 
-Nope, it's not required.
+Er... what do you mean exactly by start and finish time?  The most
+recent test?  The entire run?
+
+From check:
+
+	if [ -w /dev/kmsg ]; then
+		export date_time=`date +"%F %T"`
+		echo "run fstests $seqnum at $date_time" > /dev/kmsg
+		...
+	fi
+
+From common/report:
+
+	if [ -z "$date_time" ]; then
+		date_time=$(date +"%F %T")
+	fi
+
+	...timestamp="${date_time/ /T}">
+
+The "date_time" variable can be set by ./check just prior to starting
+each test, but only if /dev/kmsg is a writable file.  If it's set, then
+the timestamp in the xml file reflects the start time of the most recent
+test.
+
+If date_time is not set, then the timestamp in the xml file records the
+point in time when the report is generated... which I suppose is a good
+enough estimate if we failed to record date_time when the test was
+started.
+
+> I'm not sure if there is any strong definition on the timestamp, but
+> personally speaking, timestamp for the start time makes more sense to me.
+> But there may be some users relying on the timestamp to be the ending time?
+
+The junit xml schema says that the timestamp should be "when the test
+was executed".  I think ./check ought to be setting date_time regardless
+of /dev/kmsg.  ATM my test dashboard computes the difference between now
+and the timestamp= attribute of the last report received to decide if it
+should flag a test VM as possibly stalled.
+
+Though to undercut everything I just wrote, the junit xml schema defines
+testsuite and testcase as distinct entities and then refers to "the
+test".
+
+Given that fstests doesn't strictly follow that schema anyway, I guess
+we can define the timestamp as we want, or add more timestamp
+attributes?
+
+<testsuite suite_timestamp="..." timestamp="..." report_timestamp="..."...>
 
 --D
 
 > Thanks,
-> Zorro
+> Qu
 > 
-> > +		return
-> > +	fi
-> > +
-> > +	$XFS_IO_PROG -x -c 'inject force_repair' $SCRATCH_MNT
-> > +}
-> > +
-> >  # Start online repair, freeze, and fsstress in background looping processes,
-> >  # and wait for 30*TIME_FACTOR seconds to see if the filesystem goes down.
-> >  # Same requirements and arguments as _scratch_xfs_stress_scrub.
-> >  _scratch_xfs_stress_online_repair() {
-> > -	$XFS_IO_PROG -x -c 'inject force_repair' $SCRATCH_MNT
-> > +	__scratch_xfs_stress_setup_force_rebuild
-> >  	XFS_SCRUB_FORCE_REPAIR=1 _scratch_xfs_stress_scrub "$@"
-> >  }
+> >   		mkdir -p $RESULT_DIR
+> >   		rm -f ${RESULT_DIR}/require_scratch*
+> >   		rm -f ${RESULT_DIR}/require_test*
 > > 
-> 
