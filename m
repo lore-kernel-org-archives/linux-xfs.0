@@ -2,181 +2,85 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DDB2C05027
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Feb 2023 01:26:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3794EC61DA4
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Feb 2023 01:45:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233588AbjBOB0o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Feb 2023 20:26:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50710 "EHLO
+        id S230379AbjBOBpo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Feb 2023 20:45:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233599AbjBOB0m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2023 20:26:42 -0500
-Received: from mail-pg1-x536.google.com (mail-pg1-x536.google.com [IPv6:2607:f8b0:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72D5D35277
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Feb 2023 17:26:16 -0800 (PST)
-Received: by mail-pg1-x536.google.com with SMTP id 24so11474168pgt.7
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Feb 2023 17:26:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=LDrdQ2Xe20rCSkHl5+p5pSWzmP0oHlxz9S7NwWjyk8I=;
-        b=8KQ0tq1oZemkYqZLXQTk07cdTAkiScJp0+GGzfHt+OeIqQTxXQ2vjcRc19ZwfOXtk8
-         PcX8k8GKiN1PJEmROtd7FaFtpjjmEIl9gvWRVFBlJPCytQAh4LNfm9RvKmDWG+h+68b2
-         JTqKFrx/KHN1Dw34mnFxPRSbflPZv/nHIVTa1PdaGdmp3IOcZw/1xzZxEexNrbEc9vSw
-         RN7aRVp7sjlK5tHXtJjU8OwRWhyBoRR8Tzs8pDzVIF9GqAhgj7P9GPeihTqXfUqbAyvw
-         eBoFFMpVl6GrLuZbqd7euDjSrIDinZSCn09HRfeTiNeyyfk/t3U7jdJiTbEl0IhELHpC
-         pcGg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=LDrdQ2Xe20rCSkHl5+p5pSWzmP0oHlxz9S7NwWjyk8I=;
-        b=mYiPF/jOt1nAlh451IEhs+shcT3OrZCGPp2YxAC378kZ9e5TJ3kRBqVVgm1GHsixoU
-         0OYy9COmkRxTuBM8RwoHBjSKiJvIDS//KY7Dj/04TOKnxapJ53VMZPBrpfQ28WSuZMHt
-         hu3eIJ4IRjdlaDQKLG/SP+A8x0rM7LCo4XdB/yh3HPztflDPv7JQMg1CouDqbILQ4HSN
-         OzXqg+qkjMQrR/Ih2Yy4TxMYUDm/jlUH8JyhMcqA1hf0lAOAYW6H1HnDFR0q1+MXHQLW
-         K40XjaIetSSqV3L5C1tPMjAvicHEYV+Jwbj7iSYv6rnr3vGk7VJsIrEXmpZTqnRrLjso
-         JMPg==
-X-Gm-Message-State: AO0yUKXOzE+nxExFqCDA4NCFKoCAqVeJOdbbrhxAEf+MO/YglmVj42BL
-        zXO4TheewxwNCqaW7sHuRpoioq8AFjGZODU8
-X-Google-Smtp-Source: AK7set+njk6NILwpCp1aNK3/X4otcqXEiyFqVur6lwcwGauDsJIsHd4F8UhHhpKV8f1HGFNOMhSjVQ==
-X-Received: by 2002:a62:1bd1:0:b0:5a8:aa04:364a with SMTP id b200-20020a621bd1000000b005a8aa04364amr132393pfb.23.1676424375783;
-        Tue, 14 Feb 2023 17:26:15 -0800 (PST)
-Received: from dread.disaster.area (pa49-181-4-128.pa.nsw.optusnet.com.au. [49.181.4.128])
-        by smtp.gmail.com with ESMTPSA id f18-20020aa78b12000000b0059312530b54sm10342820pfd.180.2023.02.14.17.26.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Feb 2023 17:26:15 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1pS6Ym-00FQBU-Lt; Wed, 15 Feb 2023 12:26:12 +1100
-Date:   Wed, 15 Feb 2023 12:26:12 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs, iomap: ->discard_folio() is broken so remove it
-Message-ID: <20230215012612.GE2825702@dread.disaster.area>
-References: <20230214055114.4141947-1-david@fromorbit.com>
- <20230214055114.4141947-4-david@fromorbit.com>
- <Y+vOfaxIWX1c/yy9@bfoster>
- <20230214222000.GL360264@dread.disaster.area>
+        with ESMTP id S229949AbjBOBpn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Feb 2023 20:45:43 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37B2D3344E;
+        Tue, 14 Feb 2023 17:45:42 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id BCFB1B81F80;
+        Wed, 15 Feb 2023 01:45:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58E2AC433D2;
+        Wed, 15 Feb 2023 01:45:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1676425539;
+        bh=rrKsDdhYLteWwUyeZrY2ndBfO2M07qB9mUlzyVu4PLM=;
+        h=Subject:From:To:Cc:Date:From;
+        b=ElP9pn4yhMnGkiuJSjq+oS04XE9T8wzggKCj65RHZAloFUpqWaY+2vlChz77HP0nx
+         u0MEmpJR0dacjbB5MYyrgiXt86Q6D+tPQnyCaa7cKY84PmCGcJb3mN1JMQ2H/7GWUf
+         nnaShrDkbKFCi7LmvefJStzBjZD3yZi03T1cZNdfI0I+4/kFgkCYQuPV8KZHyVqI6u
+         21iCbUeD8yWJX+8Km16HruEHyFE8UER1JHmXbLGy1CSMTeeiLGyq1QKQvSvVbDXt8C
+         hAQ0oqZYB2eFEEQOnHUIDkEAmPvT6kGtmd6idgGXnQxQSB8mU4IoNBH7vVzSCW6vjE
+         KaFLUaDaTOCyw==
+Subject: [PATCHSET v2 00/14] fstests: improve junit xml reporting
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org, zlang@redhat.com
+Cc:     Qu Wenruo <wqu@suse.com>, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me, leah.rumancik@gmail.com,
+        quwenruo.btrfs@gmx.com, tytso@mit.edu
+Date:   Tue, 14 Feb 2023 17:45:38 -0800
+Message-ID: <167642553879.2118945.15448815976865210889.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230214222000.GL360264@dread.disaster.area>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 15, 2023 at 09:20:00AM +1100, Dave Chinner wrote:
-> On Tue, Feb 14, 2023 at 01:10:05PM -0500, Brian Foster wrote:
-> > On Tue, Feb 14, 2023 at 04:51:14PM +1100, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > Ever since commit e9c3a8e820ed ("iomap: don't invalidate folios
-> > > after writeback errors") XFS and iomap have been retaining dirty
-> > > folios in memory after a writeback error. XFS no longer invalidates
-> > > the folio, and iomap no longer clears the folio uptodate state.
-> > > 
-> > > However, iomap is still been calling ->discard_folio on error, and
-> > > XFS is still punching the delayed allocation range backing the dirty
-> > > folio.
-> > > 
-> > > This is incorrect behaviour. The folio remains dirty and up to date,
-> > > meaning that another writeback will be attempted in the near future.
-> > > THis means that XFS is still going to have to allocate space for it
-> > > during writeback, and that means it still needs to have a delayed
-> > > allocation reservation and extent backing the dirty folio.
-> > > 
-> > 
-> > Hmm.. I don't think that is correct. It looks like the previous patch
-> > removes the invalidation, but writeback clears the dirty bit before
-> > calling into the fs and we're not doing anything to redirty the folio,
-> > so there's no guarantee of subsequent writeback.
-> 
-> Ah, right, I got confused with iomap_do_writepage() which redirties
-> folios it performs no action on. The case that is being tripped here
-> is "count == 0" which means no action has actually been taken on the
-> folio and it is not submitted for writeback. We don't mark the folio
-> with an error on submission failure like we do for errors reported
-> to IO completion, so the folio is just left in it's current state
-> in the cache.
+Hi all,
 
-OK, so after thinking on this for a little while, and then asking
-the question on #xfs:
+This series improves the fstests reporting code in several ways.  First,
+change the ./check code to generate the report after every test, so that
+a cluster-based fstest scheduler can reschedule tests after a VM crash.
+Personally, I was using it to get live status on my tests dashboard.
 
-[15/2/23 09:39] <dchinner> so, if we don't start writeback on a page
-on mapping failure, should we be redirtying it?
+The bulk of the patches in here improve the junit xml reporting so that
+we (a) actually declare which xml schema we're trying to emit and (b)
+capture a lot more information about what was being tested.
 
-I think the direction this patchset is heading towards is the
-correct direction. The discussion that followed pretty much leads to
-needing to redirty the folio on any submission failure so that the
-VFS infrastructure will try to write the data again in future. I've
-included the full log of the discussion below so there is a record
-of in the lore archives.
+v2: shorten indenting in the schema file, record .dmesg files as a
+separate kernel-log tag, clarify what the timestamp attribute means,
+record the test suite start time and report generation time as separate
+attributes, make it possible to pass in a list of report variables,
+encode cdata correctly
 
-I also think that redirtying the page is the right thing to do when
-we consider that we are going to be trying to fix corruptions
-online, without users even needing to know a corruption was
-encountered. In this case, we need to keep the folio dirty so that
-once we've repaired the metadata corruption the user data will be
-written back.
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-This also points out another aspect where health status should be
-taken into account. When we select an AG for allocation, we should
-check first that it is healthy before trying to allocate from it.
-This would allow writeback to fail the first time because the AG
-selected was corrupt, but on the second VFS attempt to write it back
-it won't select the AG we already know is corrupt and hence may well
-succeed in allocating the space needed to perform writeback.
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-It's these sorts of conditions that lead me to think that this
-patchset is going in the right direction for XFS - we just need to
-ensure that the folio we failed to submit bios for (even on mixed
-folio writeback submission success/failure) is redirtied so that
-future writeback attempts will be made.
+--D
 
-Hence I think all this patchset needs is an additional patch that
-adds a call to folio_redirty_for_writeback() when mapping failures
-occur. We may need some additional fixes to ensure these dirty pages
-are discarded at unmount if they are persistent/unrecoverable
-failures, but this seems to be the right approach for the failure
-handling behaviour we are trying to acheive now and into the
-future...
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=xunit-reporting-improvements
+---
+ README        |    3 +
+ check         |   11 +++
+ common/ext4   |    5 +
+ common/report |  119 +++++++++++++++++++++++-----
+ common/xfs    |   10 ++
+ doc/xunit.xsd |  246 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 374 insertions(+), 20 deletions(-)
+ create mode 100644 doc/xunit.xsd
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-[15/2/23 09:39] <dchinner> so, if we don't start writeback on a page on mapping failure, should we be redirtying it?
-[15/2/23 09:43] <willy> i think so.  otherwise we're pretending to the pagecache that we wrote it
-[15/2/23 09:54] <djwong> (this was the subject a UEK5 bug 3 months ago)
-[15/2/23 09:54] <djwong> (albeit with buffer heads mixed in for insanity maximization)
-[15/2/23 10:20] <dchinner> willy: ok, so what happens if we have multiple blocks per page, and we map some blocks to a bio bio before we get a mapping failure?
-[15/2/23 10:20] <dchinner> we currently mark the folio and under writeback and submit the folio
-[15/2/23 10:20] <dchinner> *submit the bio
-[15/2/23 10:21] <dchinner> so after the IO the folio ends up clean even though there is some data on it that was not written back
-[15/2/23 10:21] <willy> i think you still need to redirty it because some of it hasn't been written back
-[15/2/23 10:23] <dchinner> ok, so we'd need to do teh redirtying before we set the page for writeback?
-[15/2/23 10:23] <dchinner> *folio
-[15/2/23 10:24] <dchinner> because folio_start_writeback() will clear the PAGECACHE_TAG_DIRTY if the folio is clean when it is moved to writeback state?
-[15/2/23 10:24] <willy> i don't think so.  the folio can be both dirty and writeback at the same time, and i think you want that, because you don't want to restart the writeback until the bio you submitted has finished
-[15/2/23 10:25] <dchinner> write_cache_pages() handles trying to write pages currently under writeback
-[15/2/23 10:26] <dchinner> (it either waits on it or skips it depending on wbc->sync_mode)
-[15/2/23 10:26] <willy> makes sense
-[15/2/23 10:27] <willy> yes, you should call folio_redirty_for_writepage, no matter whether you've called folio_start_writeback() or not
-[15/2/23 10:29] <dchinner> ok
-[15/2/23 10:30] <dchinner> that then means we really do need to get rid of ->discard_folio, because we need to keep the delalloc mappings behind the folio so that the next attempt to write the page will still have space reserved for it
-[15/2/23 10:30] <willy> I'm pretty sure I would agree with you if I understood XFS well enough to have an opinion
-[15/2/23 10:31] <dchinner> heh
-[15/2/23 10:38] <djwong> uhhh :)
-[15/2/23 10:38] <djwong> if we're going to redirty the folios, then yes, i generally think we should leave the delalloc extents
-[15/2/23 10:39] <djwong> this redirtying -- this is only for the case that getting writeback mappings to construct bios fails, right?
-[15/2/23 10:39] <willy> if we _don't_ redirty the folios, then the VM thinks they're clean and will drop them under memory pressure instead of trying to write them out again
-[15/2/23 10:39] <djwong> or is it for handling the bios coming back with errors set?
-[15/2/23 10:39] <willy> this is submission path errors
-[15/2/23 10:54] <dchinner> submission path (iomap_writepage_map())
