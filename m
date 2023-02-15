@@ -2,183 +2,132 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2834C636CC
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Feb 2023 16:22:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BE8FC636CC
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Feb 2023 16:24:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229592AbjBOQWD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Feb 2023 11:22:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32986 "EHLO
+        id S229619AbjBOQY6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Feb 2023 11:24:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229513AbjBOQWC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Feb 2023 11:22:02 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A147B3B0F9
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Feb 2023 08:21:39 -0800 (PST)
+        with ESMTP id S229468AbjBOQY5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Feb 2023 11:24:57 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E41E53A864;
+        Wed, 15 Feb 2023 08:24:55 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C8FC961CA5
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Feb 2023 16:21:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A910C4339B;
-        Wed, 15 Feb 2023 16:21:09 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 68FD0B82278;
+        Wed, 15 Feb 2023 16:24:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3A3BC433EF;
+        Wed, 15 Feb 2023 16:24:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676478069;
-        bh=72WQuebEO3nOrchOcrIt9HU7PU6bQw+/bPCAiN4cfD0=;
+        s=k20201202; t=1676478293;
+        bh=JgwgyrTOZ5qy1XAEMyhB/UhliaDHRv8s569lBZJgikQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=S+hZQD3aCTNkGd84NhxbA3GuqP2kgvgynT46KJlmNt317lV+l3TVEbQJaS1FkOnCb
-         g5XjlUxmt1cts6k8Ezg763H1RPNhB9JVZYWhCUY7tkd8+A4ZJKVB3SW86FuG0oUEob
-         hGoNLqk+CAoC5G3SK0mpU6k7RdCtoPvL9EC9VeJK42OCLfw/d8S221ILvudvS9tBH9
-         jcq3g52UsGSMTcutSqFLDE/08o7K3Onci3OgRozVd2BmQ39aEiY+rGRTUcMnPQ8QF1
-         B3Evn4V4U+a3gJoNWStePyaFKqUYArPxYHWtk9Gq0b/xbHk7hQ3LuveYV2d0F4by1G
-         ZUEa4t5xNvQIg==
-Date:   Wed, 15 Feb 2023 08:21:08 -0800
+        b=OYbC0HzKqiybKcoZkHh6mEcHIztl11XhlgmPL9G9wiVmVGdOZD2kxLW0OofD0/QqD
+         4KTD/qA1yo1AU0YoqS6TWohjzodYbypjNZBaH0d9ZhQaQmDK46uIQOcu4d1D8YFwIF
+         PMP8O9iU6jTzMKKW31zeWn9Yrx59nYFs1nBVH1r5da6SoR1yRuU5Rwey4ogFaFBsiu
+         s0Zd9UtqkFV/iUSr8sxSccZqQMTRj2UsoZUB9lLgbdjw/OHvO4XNytBlg6nZ8oXOM8
+         g9yV9iU1Yfm7nBgo363ADgzLnuBOXbsM8xCXZ6epB9+7fxx7YIaFRWtwwdREYNuuB8
+         TATl2hHS6gpDA==
+Date:   Wed, 15 Feb 2023 08:24:52 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, amir73il@gmail.com,
-        leah.rumancik@gmail.com
-Subject: Re: [PATCH 5.4 CANDIDATE 00/25] xfs stable candidate patches for
- 5.4.y (from v5.10)
-Message-ID: <Y+0GdP44fa800VIA@magnolia>
-References: <20230213040445.192946-1-chandan.babu@oracle.com>
+To:     Leah Rumancik <leah.rumancik@gmail.com>
+Cc:     stable@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amir73il@gmail.com, chandan.babu@oracle.com
+Subject: Re: [PATCH 5.15 00/10] xfs backports for 5.15.y
+Message-ID: <Y+0HVLgoXMWCAtYX@magnolia>
+References: <20230214212534.1420323-1-leah.rumancik@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230213040445.192946-1-chandan.babu@oracle.com>
+In-Reply-To: <20230214212534.1420323-1-leah.rumancik@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 13, 2023 at 09:34:20AM +0530, Chandan Babu R wrote:
-> Hi Darrick,
+On Tue, Feb 14, 2023 at 01:25:24PM -0800, Leah Rumancik wrote:
+> Hello,
 > 
-> This 5.4.y backport series contains fixes from v5.10 release.
+> Here is the next batch of backports for 5.15.y. These patches have
+> already been ACK'd on the xfs mailing list. Testing included
+> 25 runs of auto group on 12 xfs configs. No regressions were seen.
+> I checked xfs/538 was run without issue as this test was mentioned
+> in 56486f307100. Also, from 86d40f1e49e9, I ran ran xfs/117 with
+> XFS compiled as a module and TEST_FS_MODULE_REOLOAD set, but I was
+> unable to reproduce the issue.
 > 
-> This patchset has been tested by executing fstests (via kdevops) using
-> the following XFS configurations,
+> Below I've outlined which series the backports came from:
 > 
-> 1. No CRC (with 512 and 4k block size).
-> 2. Reflink/Rmapbt (1k and 4k block size).
-> 3. Reflink without Rmapbt.
-> 4. External log device.
+> series "xfs: intent whiteouts" (1):
+> [01/10] cb512c921639613ce03f87e62c5e93ed9fe8c84d
+>     xfs: zero inode fork buffer at allocation
+> [02/10] c230a4a85bcdbfc1a7415deec6caf04e8fca1301
+>     xfs: fix potential log item leak
 > 
-> The following is the list of commits along with corresponding
-> dependent commits.
+> series "xfs: fix random format verification issues" (2):
+> [1/4] dc04db2aa7c9307e740d6d0e173085301c173b1a
+>     xfs: detect self referencing btree sibling pointers
+> [2/4] 1eb70f54c445fcbb25817841e774adb3d912f3e8 -> already in 5.15.y
+>     xfs: validate inode fork size against fork format
+> [3/4] dd0d2f9755191690541b09e6385d0f8cd8bc9d8f
+>     xfs: set XFS_FEAT_NLINK correctly
+> [4/4] f0f5f658065a5af09126ec892e4c383540a1c77f
+>     xfs: validate v5 feature fields
 > 
-> 1. xfs: log new intent items created as part of finishing recovered intent
->    items
->    Dependent commits
->    1. xfs: remove the xfs_efi_log_item_t typedef
->    2. xfs: remove the xfs_efd_log_item_t typedef
->    3. xfs: remove the xfs_inode_log_item_t typedef
->    4. xfs: factor out a xfs_defer_create_intent helper
->    5. xfs: merge the ->log_item defer op into ->create_intent
->    6. xfs: merge the ->diff_items defer op into ->create_intent
->    7. xfs: turn dfp_intent into a xfs_log_item
->    8. xfs: refactor xfs_defer_finish_noroll
+> series "xfs: small fixes for 5.19 cycle" (3):
+> [1/3] 5672225e8f2a872a22b0cecedba7a6644af1fb84
+>     xfs: avoid unnecessary runtime sibling pointer endian conversions
+> [2/3] 5b55cbc2d72632e874e50d2e36bce608e55aaaea
+>     fs: don't assert fail on perag references on teardown
+> [2/3] 56486f307100e8fc66efa2ebd8a71941fa10bf6f
+>     xfs: assert in xfs_btree_del_cursor should take into account error
 > 
-> 2. xfs: fix finobt btree block recovery ordering
-> 3. xfs: proper replay of deferred ops queued during log recovery
-> 4. xfs: xfs_defer_capture should absorb remaining block reservations
-> 5  xfs: xfs_defer_capture should absorb remaining transaction reservation
-> 
-> 6. xfs: fix an incore inode UAF in xfs_bui_recover
->    Dependent commits
->    1. xfs: clean up bmap intent item recovery checking
->    2. xfs: clean up xfs_bui_item_recover iget/trans_alloc/ilock ordering
-> 
-> 7. xfs: change the order in which child and parent defer ops are finished
-> 
-> 8. xfs: periodically relog deferred intent items
->    Dependent commits
->    1. xfs: prevent UAF in xfs_log_item_in_current_chkpt
-> 
-> 9. xfs: only relog deferred intent items if free space in the log gets low
->    Dependent commits
->    1. xfs: expose the log push threshold
-> 
-> 10. xfs: fix missing CoW blocks writeback conversion retry
-> 
-> 11. xfs: ensure inobt record walks always make forward progress
->     Dependent commits
->     1. xfs: fix the forward progress assertion in xfs_iwalk_run_callbacks
-> 
-> 12. xfs: sync lazy sb accounting on quiesce of read-only mounts
-> 
-> The last commit was picked from v5.12 since failure rate of recovery loop
-> tests would increase drastically for some xfs configurations without applying
-> it.
+> series "xfs: random fixes for 5.19" (4):
+> [1/2] 86d40f1e49e9a909d25c35ba01bea80dbcd758cb
+>     xfs: purge dquots after inode walk fails during quotacheck
+> [2/2] a54f78def73d847cb060b18c4e4a3d1d26c9ca6d
+>     xfs: don't leak btree cursor when insrec fails after a split
 
-Looks good to me; thanks for putting this together!
+Looks good!
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > 
-> Brian Foster (1):
->   xfs: sync lazy sb accounting on quiesce of read-only mounts
+> (1) https://lore.kernel.org/all/20220503221728.185449-1-david@fromorbit.com/
+> (2) https://lore.kernel.org/all/20220502082018.1076561-1-david@fromorbit.com/
+> (3) https://lore.kernel.org/all/20220524022158.1849458-1-david@fromorbit.com/
+> (4) https://lore.kernel.org/all/165337056527.993079.1232300816023906959.stgit@magnolia/
 > 
-> Christoph Hellwig (8):
->   xfs: remove the xfs_efi_log_item_t typedef
->   xfs: remove the xfs_efd_log_item_t typedef
->   xfs: remove the xfs_inode_log_item_t typedef
->   xfs: factor out a xfs_defer_create_intent helper
->   xfs: merge the ->log_item defer op into ->create_intent
->   xfs: merge the ->diff_items defer op into ->create_intent
->   xfs: turn dfp_intent into a xfs_log_item
->   xfs: refactor xfs_defer_finish_noroll
+> - Leah
 > 
-> Darrick J. Wong (15):
->   xfs: log new intent items created as part of finishing recovered
->     intent items
->   xfs: proper replay of deferred ops queued during log recovery
->   xfs: xfs_defer_capture should absorb remaining block reservations
->   xfs: xfs_defer_capture should absorb remaining transaction reservation
->   xfs: clean up bmap intent item recovery checking
->   xfs: clean up xfs_bui_item_recover iget/trans_alloc/ilock ordering
->   xfs: fix an incore inode UAF in xfs_bui_recover
->   xfs: change the order in which child and parent defer ops are finished
->   xfs: periodically relog deferred intent items
->   xfs: expose the log push threshold
->   xfs: only relog deferred intent items if free space in the log gets
->     low
->   xfs: fix missing CoW blocks writeback conversion retry
->   xfs: ensure inobt record walks always make forward progress
->   xfs: fix the forward progress assertion in xfs_iwalk_run_callbacks
->   xfs: prevent UAF in xfs_log_item_in_current_chkpt
+> Darrick J. Wong (2):
+>   xfs: purge dquots after inode walk fails during quotacheck
+>   xfs: don't leak btree cursor when insrec fails after a split
 > 
-> Dave Chinner (1):
->   xfs: fix finobt btree block recovery ordering
+> Dave Chinner (8):
+>   xfs: zero inode fork buffer at allocation
+>   xfs: fix potential log item leak
+>   xfs: detect self referencing btree sibling pointers
+>   xfs: set XFS_FEAT_NLINK correctly
+>   xfs: validate v5 feature fields
+>   xfs: avoid unnecessary runtime sibling pointer endian conversions
+>   xfs: don't assert fail on perag references on teardown
+>   xfs: assert in xfs_btree_del_cursor should take into account error
 > 
->  fs/xfs/libxfs/xfs_defer.c       | 358 ++++++++++++++++++++++++--------
->  fs/xfs/libxfs/xfs_defer.h       |  49 ++++-
->  fs/xfs/libxfs/xfs_inode_fork.c  |   2 +-
->  fs/xfs/libxfs/xfs_trans_inode.c |   2 +-
->  fs/xfs/xfs_aops.c               |   4 +-
->  fs/xfs/xfs_bmap_item.c          | 238 +++++++++++----------
->  fs/xfs/xfs_bmap_item.h          |   3 +-
->  fs/xfs/xfs_extfree_item.c       | 175 +++++++++-------
->  fs/xfs/xfs_extfree_item.h       |  18 +-
->  fs/xfs/xfs_icreate_item.c       |   1 +
->  fs/xfs/xfs_inode.c              |   4 +-
->  fs/xfs/xfs_inode_item.c         |   2 +-
->  fs/xfs/xfs_inode_item.h         |   4 +-
->  fs/xfs/xfs_iwalk.c              |  27 ++-
->  fs/xfs/xfs_log.c                |  68 ++++--
->  fs/xfs/xfs_log.h                |   3 +
->  fs/xfs/xfs_log_cil.c            |   8 +-
->  fs/xfs/xfs_log_recover.c        | 160 ++++++++------
->  fs/xfs/xfs_mount.c              |   3 +-
->  fs/xfs/xfs_refcount_item.c      | 173 ++++++++-------
->  fs/xfs/xfs_refcount_item.h      |   3 +-
->  fs/xfs/xfs_rmap_item.c          | 161 +++++++-------
->  fs/xfs/xfs_rmap_item.h          |   3 +-
->  fs/xfs/xfs_stats.c              |   4 +
->  fs/xfs/xfs_stats.h              |   1 +
->  fs/xfs/xfs_super.c              |   8 +-
->  fs/xfs/xfs_trace.h              |   1 +
->  fs/xfs/xfs_trans.h              |  10 +
->  28 files changed, 946 insertions(+), 547 deletions(-)
+>  fs/xfs/libxfs/xfs_ag.c         |   3 +-
+>  fs/xfs/libxfs/xfs_btree.c      | 175 +++++++++++++++++++++++++--------
+>  fs/xfs/libxfs/xfs_inode_fork.c |  12 ++-
+>  fs/xfs/libxfs/xfs_sb.c         |  70 +++++++++++--
+>  fs/xfs/xfs_bmap_item.c         |   2 +
+>  fs/xfs/xfs_icreate_item.c      |   1 +
+>  fs/xfs/xfs_qm.c                |   9 +-
+>  fs/xfs/xfs_refcount_item.c     |   2 +
+>  fs/xfs/xfs_rmap_item.c         |   2 +
+>  9 files changed, 221 insertions(+), 55 deletions(-)
 > 
 > -- 
-> 2.35.1
+> 2.39.1.581.gbfd45094c4-goog
 > 
