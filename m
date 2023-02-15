@@ -2,175 +2,240 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D921DC636D4
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Feb 2023 23:04:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA0D0C636D4
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Feb 2023 23:55:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229973AbjBOXEE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Feb 2023 18:04:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57528 "EHLO
+        id S229596AbjBOXzT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Feb 2023 18:55:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48344 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229991AbjBOXEC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Feb 2023 18:04:02 -0500
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9475C8A7D
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Feb 2023 15:03:50 -0800 (PST)
-Received: by mail-pf1-x431.google.com with SMTP id r17so290827pff.9
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Feb 2023 15:03:50 -0800 (PST)
+        with ESMTP id S229593AbjBOXzS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Feb 2023 18:55:18 -0500
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C00382004E
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Feb 2023 15:55:17 -0800 (PST)
+Received: by mail-pf1-x42f.google.com with SMTP id r3so368947pfh.4
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Feb 2023 15:55:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=xVtTvqbwAg88jCPwlTtCkUIS1OKpRNgVadlt8olh1Ew=;
-        b=tQHptBT9539hpEgNxe7kkJVAXGkCIikNA+YWUw+gcNPb5YH9urjiPJ90V0f4FjHKNP
-         qCAHkUfi+Y7A+wEl8Kdcb8VSQCMVkHJnUXjVEe661H6NFbCq81FPD8PNTKromHQzHu5j
-         FiPR2Roxw+8T3jZRn/cBJBmINYcyJhZvdNT62mMxi0Nde8LR2EcbDU2Xk/Fsdvh9OtDG
-         eAgwTVZi/HcGgGkn2pFSpAqHfJgDW54ZydEQrFnyc+3nb9AjmSkIlcAoKIKlH+1W7Mi1
-         EcNaocuk6+XIhEuNKRv+ClfuCD/dqL3JZcLTpkWGhbcvAiVlSH8hvUZrhyJ+v8rXO74b
-         dSUQ==
+        bh=MTOEmDwNwZ4WVjGKtbstZvUi7WCVvXebpsHRCTPmkno=;
+        b=A31Fma5BvPo8aGGthf75ceyJznNkxinszqJYBqEYjPBV+23DLx4NzFzSCMqfIHEnyH
+         siLNX+yVew1TmXaC2P9DwwmItJRLL2WWV0Q2POyDWCSghmpMGx393psBkuboTwlKVO/z
+         tT7PtLd2idv/h0/qmoMJ7vDwKn0oZYp+LKsUY6n784qubamEzAZNCUtVaClEevytQ5Ts
+         brmhW6HL9BXgpyZhmoIkMX7sRkWeA9dBkyJWXq/SbYoIcZ/KZ7gVbpZJxwfW+VbFq2b6
+         mBjSfsy8vHgpTx9gRie4ymRTzoDTSGPjEpjsx+f18m7BJMzJV5WedKrClkU+4ltVbhMS
+         dF6Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=xVtTvqbwAg88jCPwlTtCkUIS1OKpRNgVadlt8olh1Ew=;
-        b=fQOU6gMt/fCGo0Vm5Job2UK+lrvD8bqrcgnwYD6mgmwRNra+i6Pxj3j3oe1lMhSUGu
-         MzWrzXSLqucRcqu+IrfBVwrUVa+F2uqV0l3zVr1FUOTCVDjM41HzjS0cg+/1ukT40N+n
-         phaZ8VtNRMuJVMZ0dYHd6NVoMPmaz/KcMdUCj7M9KsaoBTZkbrpYM+JiF/B0bSonnpBi
-         SapqXTgMpI9imuU1zDEE4aiwHFxPwaPFRSjT/cg4zH4gnlIQ0Bdu6sn6liHNZav65r5x
-         AeCJVoRFDA/JipEUdQkk8W69Oin8puU9KLVt+IrKdbCkUBfSoS6f1B+BCWspoubFBWDj
-         HQ8w==
-X-Gm-Message-State: AO0yUKWA3uM289hKloiD5KGtjjUYD+Qjdm7tdjj3sH3hi4jUVFcKEJxW
-        v/b13+eBH89KOiEAUOaTGljyyA==
-X-Google-Smtp-Source: AK7set9d8E5pGgNEE3LtNcri62eLHazlgRov06Iy+BzhVVUs8sewOhIFm4hOEWkO2f2Kga811oNCsg==
-X-Received: by 2002:a62:5fc5:0:b0:593:2289:f01c with SMTP id t188-20020a625fc5000000b005932289f01cmr2834667pfb.25.1676502229667;
-        Wed, 15 Feb 2023 15:03:49 -0800 (PST)
+        bh=MTOEmDwNwZ4WVjGKtbstZvUi7WCVvXebpsHRCTPmkno=;
+        b=FK6ixtZVHY9z9ABytFP+JnTKOs97y481Xos8QC4gTI8c6mu45Vb2ibskHG1sBIgChM
+         Z6xi5ptwMfY6JOx8V9lVLP3dYugqoqrkZNzbqzRt7qX4PjiLyr374lGPXOv5U4+M5Mn9
+         HyCnyYKhSkVya5/cZ8Mhwqz4akAQ3sFkG4XbHBYJuiIRhEMs1nYtlSAY+KTyqSxWoPVQ
+         gHv9IvCRV7ESeHPapgQVALewDNEaef0qECMXrUJBHWcLTZkuG0KP0GfWiJ1ktdeut4ZV
+         3xPd0a98mO5SYMIY0794rAlbBku1PelcR7u3vRRcPk/jNgaF5y7DJPGABZL3s3gR7rjE
+         8vTg==
+X-Gm-Message-State: AO0yUKXTSrRP813WiOWSW3fLAbvEDlY8MifYANVj6phMvf8+eIvNDb5x
+        pFdRNkm2g56lDQmvsEzlfzSfIoyM7u2I5xbf
+X-Google-Smtp-Source: AK7set9sRANZecDpXSAUtpShaGwQk70BMDZBP3RXQ+WLfEcAj+TXkn+naiAjHhJShlqCG5r/ZDdJqQ==
+X-Received: by 2002:a62:17c5:0:b0:5a8:aa1d:30e9 with SMTP id 188-20020a6217c5000000b005a8aa1d30e9mr2875085pfx.18.1676505317184;
+        Wed, 15 Feb 2023 15:55:17 -0800 (PST)
 Received: from dread.disaster.area (pa49-181-4-128.pa.nsw.optusnet.com.au. [49.181.4.128])
-        by smtp.gmail.com with ESMTPSA id 15-20020aa7924f000000b0059435689e36sm12582215pfp.170.2023.02.15.15.03.49
+        by smtp.gmail.com with ESMTPSA id i20-20020aa78b54000000b00580e3917af7sm12235920pfd.117.2023.02.15.15.55.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Feb 2023 15:03:49 -0800 (PST)
+        Wed, 15 Feb 2023 15:55:16 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1pSQoU-00FmEl-Ht; Thu, 16 Feb 2023 10:03:46 +1100
-Date:   Thu, 16 Feb 2023 10:03:46 +1100
+        id 1pSRcH-00Fn8h-VR; Thu, 16 Feb 2023 10:55:13 +1100
+Date:   Thu, 16 Feb 2023 10:55:13 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs, iomap: ->discard_folio() is broken so remove it
-Message-ID: <20230215230346.GP360264@dread.disaster.area>
-References: <20230214055114.4141947-1-david@fromorbit.com>
- <20230214055114.4141947-4-david@fromorbit.com>
- <Y+vOfaxIWX1c/yy9@bfoster>
- <20230214222000.GL360264@dread.disaster.area>
- <Y+z5d5QBeRg3dHVL@bfoster>
+To:     Long Li <leo.lilong@huawei.com>
+Cc:     djwong@kernel.org, linux-xfs@vger.kernel.org, houtao1@huawei.com,
+        yi.zhang@huawei.com, guoxuenan@huawei.com
+Subject: Re: [PATCH] xfs: fix a UAF when inode item push
+Message-ID: <20230215235513.GQ360264@dread.disaster.area>
+References: <20230211022941.GA1515023@ceph-admin>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Y+z5d5QBeRg3dHVL@bfoster>
+In-Reply-To: <20230211022941.GA1515023@ceph-admin>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Feb 15, 2023 at 10:25:43AM -0500, Brian Foster wrote:
-> On Wed, Feb 15, 2023 at 09:20:00AM +1100, Dave Chinner wrote:
-> > On Tue, Feb 14, 2023 at 01:10:05PM -0500, Brian Foster wrote:
-> > > On Tue, Feb 14, 2023 at 04:51:14PM +1100, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > Ever since commit e9c3a8e820ed ("iomap: don't invalidate folios
-> > > > after writeback errors") XFS and iomap have been retaining dirty
-> > > > folios in memory after a writeback error. XFS no longer invalidates
-> > > > the folio, and iomap no longer clears the folio uptodate state.
-> > > > 
-> > > > However, iomap is still been calling ->discard_folio on error, and
-> > > > XFS is still punching the delayed allocation range backing the dirty
-> > > > folio.
-> > > > 
-> > > > This is incorrect behaviour. The folio remains dirty and up to date,
-> > > > meaning that another writeback will be attempted in the near future.
-> > > > THis means that XFS is still going to have to allocate space for it
-> > > > during writeback, and that means it still needs to have a delayed
-> > > > allocation reservation and extent backing the dirty folio.
-> > > > 
-> > > 
-> > > Hmm.. I don't think that is correct. It looks like the previous patch
-> > > removes the invalidation, but writeback clears the dirty bit before
-> > > calling into the fs and we're not doing anything to redirty the folio,
-> > > so there's no guarantee of subsequent writeback.
-> > 
-> > Ah, right, I got confused with iomap_do_writepage() which redirties
-> > folios it performs no action on. The case that is being tripped here
-> > is "count == 0" which means no action has actually been taken on the
-> > folio and it is not submitted for writeback. We don't mark the folio
-> > with an error on submission failure like we do for errors reported
-> > to IO completion, so the folio is just left in it's current state
-> > in the cache.
-> > 
-> > > Regardless, I can see how this prevents this sort of error in the
-> > > scenario where writeback fails due to corruption, but I don't see how it
-> > > doesn't just break error handling of writeback failures not associated
-> > > with corruption.
-> > 
-> > What other cases in XFS do we have that cause mapping failure? We
-> > can't get ENOSPC here because of delalloc reservations. We can't get
-> > ENOMEM because all the memory allocations are blocking. That just
-> > leaves IO errors reading metadata, or structure corruption when
-> > parsing and modifying on-disk metadata.  I can't think (off the top
-> > of my head) of any other type of error we can get returned from
-> > allocation - what sort of non-corruption errors were you thinking
-> > of here?
-> > 
-> > > fails due to some random/transient error, delalloc is left around on a
-> > > !dirty page (i.e. stale), and reclaim eventually comes around and
-> > > results in the usual block accounting corruption associated with stale
-> > > delalloc blocks.
-> > 
-> > The first patches in the series fix those issues. If we get stray
-> > delalloc extents on a healthy inode, then it will still trigger all
-> > the warnings/asserts that we have now. But if the inode has been
-> > marked sick by a corruption based allocation failure, it will clean
-> > up in reclaim without leaking anything or throwing any new warnings.
-> > 
+On Sat, Feb 11, 2023 at 10:29:41AM +0800, Long Li wrote:
+> KASAN reported a UAF bug while fault injection test:
 > 
-> Those warnings/asserts that exist now indicate something is wrong and
-> that free space accounting is likely about to become corrupted, because
-> an otherwise clean inode is being reclaimed with stale delalloc blocks.
-
-Well, yes.
-
-> I see there's an error injection knob (XFS_ERRTAG_REDUCE_MAX_IEXTENTS)
-> tied to the max extent count checking stuff in the delalloc conversion
-> path. You should be able to add some (10+) extents to a file and then
-> turn that thing all the way up to induce a (delalloc conversion)
-> writeback failure and see exactly what I'm talking about [1].
+>   ==================================================================
+>   BUG: KASAN: use-after-free in xfs_inode_item_push+0x2db/0x2f0
+>   Read of size 8 at addr ffff888022f74788 by task xfsaild/sda/479
 > 
-> Brian
+>   CPU: 0 PID: 479 Comm: xfsaild/sda Not tainted 6.2.0-rc7-00003-ga8a43e2eb5f6 #89
+>   Call Trace:
+>    <TASK>
+>    dump_stack_lvl+0x51/0x6a
+>    print_report+0x171/0x4a6
+>    kasan_report+0xb7/0x130
+>    xfs_inode_item_push+0x2db/0x2f0
+>    xfsaild+0x729/0x1f70
+>    kthread+0x290/0x340
+>    ret_from_fork+0x1f/0x30
+>    </TASK>
 > 
-> [1] The following occurs with this patch, but not on mainline because the
-> purpose of ->discard_folio() is to prevent it.
+>   Allocated by task 494:
+>    kasan_save_stack+0x22/0x40
+>    kasan_set_track+0x25/0x30
+>    __kasan_slab_alloc+0x58/0x70
+>    kmem_cache_alloc+0x197/0x5d0
+>    xfs_inode_item_init+0x62/0x170
+>    xfs_trans_ijoin+0x15e/0x240
+>    xfs_init_new_inode+0x573/0x1820
+>    xfs_create+0x6a1/0x1020
+>    xfs_generic_create+0x544/0x5d0
+>    vfs_mkdir+0x5d0/0x980
+>    do_mkdirat+0x14e/0x220
+>    __x64_sys_mkdir+0x6a/0x80
+>    do_syscall_64+0x39/0x80
+>    entry_SYSCALL_64_after_hwframe+0x63/0xcd
+> 
+>   Freed by task 14:
+>    kasan_save_stack+0x22/0x40
+>    kasan_set_track+0x25/0x30
+>    kasan_save_free_info+0x2e/0x40
+>    __kasan_slab_free+0x114/0x1b0
+>    kmem_cache_free+0xee/0x4e0
+>    xfs_inode_free_callback+0x187/0x2a0
+>    rcu_do_batch+0x317/0xce0
+>    rcu_core+0x686/0xa90
+>    __do_softirq+0x1b6/0x626
+> 
+>   The buggy address belongs to the object at ffff888022f74758
+>    which belongs to the cache xfs_ili of size 200
+>   The buggy address is located 48 bytes inside of
+>    200-byte region [ffff888022f74758, ffff888022f74820)
+> 
+>   The buggy address belongs to the physical page:
+>   page:ffffea00008bdd00 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x22f74
+>   head:ffffea00008bdd00 order:1 compound_mapcount:0 subpages_mapcount:0 compound_pincount:0
+>   flags: 0x1fffff80010200(slab|head|node=0|zone=1|lastcpupid=0x1fffff)
+>   raw: 001fffff80010200 ffff888010ed4040 ffffea00008b2510 ffffea00008bde10
+>   raw: 0000000000000000 00000000001a001a 00000001ffffffff 0000000000000000
+>   page dumped because: kasan: bad access detected
+> 
+>   Memory state around the buggy address:
+>    ffff888022f74680: 00 00 00 00 00 00 00 00 00 00 00 00 00 fc fc fc
+>    ffff888022f74700: fc fc fc fc fc fc fc fc fc fc fc fa fb fb fb fb
+>   >ffff888022f74780: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+>                         ^
+>    ffff888022f74800: fb fb fb fb fc fc fc fc fc fc fc fc fc fc fc fc
+>    ffff888022f74880: fc fc 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>   ==================================================================
+> 
+> When reclaim inodes, it will race with inode item push if log is shutdown.
+> Consider the following call graph, xfs_inode and xfs_inode_log_item may
+> be freed after release bp, threefore, the lip cannot be accessed after this.
+> 
+>   CPU0					CPU1
+>   xfs_inode_item_push			xfs_reclaim_inode
+>   -------------------			-----------------
+>   xfs_buf_trylock(bp)
+>   spin_unlock(&lip->li_ailp->ail_lock)
+>   xfs_buf_relse(bp)
+>   					xfs_buf_lock(bp)
+>   					spin_lock(&ailp->ail_lock)
+>   					spin_unlock(&ailp->ail_lock)
+>   					xfs_buf_relse(bp)
+> 					__xfs_inode_free(ip)
+>   spin_lock(&lip->li_ailp->ail_lock)
 
-A non-corruption related writeback error has resulted in those debug
-checks triggering correctly. This demonstrates the debug checks are
-still working as intended. :)
+This is really hard to work out the actual path here and it's much
+more complex than this description implies. It took me some time to
+work it out (my notes are below). In future, can you please include
+the full stack context in the race descriptions?
 
-Hence this isn't an argument against removing ->discard_folio(), this is
-merely a demonstration that the current patch series needs more work.
+		<log item is in AIL>
 
-Indeed, if the folio gets redirtied here instead of left clean as
-we've already talked about, a future writeback may, in fact, succeed
-and this specific problem goes away. We know how this retry
-mechanism works - it's exactly what we do with metadata write
-failures. Further, changing the behaviour of failure handling here
-is exactly what we have the configurable error handling
-infrastructure for. It's also why the "fail on unmount"
-functionality exists, too.
+spin_lock(&ailp->ail_lock)
+xfs_inode_item_push(lip)
+  xfs_buf_trylock(bp)
+  spin_unlock(&lip->li_ailp->ail_lock)
+  xfs_iflush_cluster(bp)
+    if (xfs_is_shutdown())
+      skip inode
+    if (no inodes flushed)
+      return -EAGAIN
+  if (-EAGAIN)
+    xfs_buf_relse(bp)
+<gets pre-empted>
+					xfs_reclaim_inode(ip)
+					if (shutdown)
+					  xfs_iflush_shutdown_abort(ip)
+					    xfs_buf_lock(bp)
+					    xfs_iflush_abort(ip)
+					      xfs_trans_ail_delete(ip)
+					        spin_lock(&ailp->ail_lock)
+					        spin_unlock(&ailp->ail_lock)
+		<log item removed from AIL>
+					      xfs_iflush_abort_clean(ip)
+					    xfs_buf_relse(bp)
+				         __xfs_inode_free(ip)
+					   call_rcu(ip, xfs_inode_free_callback)
+		......
+		<rcu grace period expires>
+		<rcu free callbacks run somewhere>
+		  xfs_inode_free_callback(ip)
+		    kmem_cache_free(ip->i_itemp)
+		.....
 
-That is, if we get to the point that "fail on unmount" triggers for
-metadata we cannot write back due to persistent errors, we should
-also perform the same trigger for data we cannot write back due to
-persistent writeback allocation failures. In which case, any
-allocation error should mark the inode sick and the unconverted
-delalloc extents get cleaned up correctly by the final inode reclaim
-pass.
+<starts running again>
+spin_lock(&lip->li_ailp->ail_lock)
+  <UAF on log item>
+
+This is a lot more complex than explained, and looks to me like
+it requires at least CONFIG_PREEMPT=y and xfs_inode_item_push()
+to be pre-empted across a RCU grace period expiry so that the log
+item can be freed before the ail lock is obtained through the log
+item.
+
+> Fixes: 90c60e164012 ("xfs: xfs_iflush() is no longer necessary")
+> Signed-off-by: Long Li <leo.lilong@huawei.com>
+> ---
+>  fs/xfs/xfs_inode_item.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index ca2941ab6cbc..52895e51fac5 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -545,6 +545,7 @@ xfs_inode_item_push(
+>  	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
+>  	struct xfs_inode	*ip = iip->ili_inode;
+>  	struct xfs_buf		*bp = lip->li_buf;
+> +	struct xfs_ail		*ailp = lip->li_ailp;
+>  	uint			rval = XFS_ITEM_SUCCESS;
+>  	int			error;
+>  
+> @@ -567,7 +568,7 @@ xfs_inode_item_push(
+>  	if (!xfs_buf_trylock(bp))
+>  		return XFS_ITEM_LOCKED;
+>  
+> -	spin_unlock(&lip->li_ailp->ail_lock);
+> +	spin_unlock(&ailp->ail_lock);
+
+Changing this also requires the sparse locking annotations at the
+head of the function to be updated.
+
+>  	/*
+>  	 * We need to hold a reference for flushing the cluster buffer as it may
+
+This comment also needs updating to indicate that after the buffer
+is released, it is unsafe to reference the inode log item because
+we can race with inode reclaim freeing the inode log item in
+shutdown conditions.
 
 Cheers,
 
