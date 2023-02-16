@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D03FCC61DA4
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 21:10:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 466CEC636CC
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 21:10:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230141AbjBPVKB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Feb 2023 16:10:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43120 "EHLO
+        id S230144AbjBPVKP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Feb 2023 16:10:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43144 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230127AbjBPVKA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 16:10:00 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 097423B23C
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 13:09:59 -0800 (PST)
+        with ESMTP id S230127AbjBPVKO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 16:10:14 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1ECE73B233
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 13:10:13 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B8BA9B826BA
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 21:09:57 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70ECDC4339C;
-        Thu, 16 Feb 2023 21:09:56 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id AC69D60BFE
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 21:10:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1074BC433D2;
+        Thu, 16 Feb 2023 21:10:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676581796;
-        bh=zCFzbFJnogEByhUNcN/M+j232qS8x0E8wwoI7cMHtdw=;
+        s=k20201202; t=1676581812;
+        bh=K6uNE8ZVEc72klVqDQ8zki64Zg6/lXZCxNKm/eF4hgE=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=qH93aydrpHnZZG8BjqtooPX/VjVBHLRKpQjcTTYqN8A0WRYJlKuwezWs+8ScZiAFP
-         ihH8j1m+QgCacmi05+q6pG9GL4E0zWRMeDF/esJH1PHaEylnVMf8cxGJq02YZDrDo4
-         i/BWfpr1L+AFQ5bbmubY/pDpzx3JLayB+Bm4qvUHZk+/4nYlytujzTYooN1DwDl+Ri
-         KvZPsk0cvlplxP7XhOF3WNbDnNV4YxGGHG2ZZW/P84TuNd64mrwLXT0fZ4vBEeDxY3
-         tuv/ZTvDOkEdBcsKR6TrAYXVdC6Dg1gbopGiR/MgptnvAgbou0ehGjeGsESOjkOczu
-         g7SbTQLfsZWlg==
-Date:   Thu, 16 Feb 2023 13:09:55 -0800
-Subject: [PATCH 6/8] xfs_repair: move the global dirent name store to a
- separate object
+        b=pY2R4V7ME9uJPBTgZSuD8YJtdhy4Fqs4VpGa1iHStBf6FZZkiopKlOvt96PDH9ar+
+         CiE8tzpPDV3WVGRJD95/pjyBstQhs8WiDOgPDMWS5oa95Wxsrjqq6qvVcFeTIkeqcK
+         n6Cp5mCE3myEKlUcTM+umHALZvxRO841HXElxFBy4VX5T8i3NXUBcAf8yfBmcSFaqC
+         kXLRNvXC3vb2p8z6jWrqk7pzTG7bxF1W+DYle3GL/8zifB2V2e7oxGPixID4Pxa1gW
+         PuOFCGMpzJUfoTZhiHkPNBKHETVZH69CLN2TujxLMzLODjjEZUP4E7Vx8Oymr0dKKB
+         eCgfOB6mI9i9Q==
+Date:   Thu, 16 Feb 2023 13:10:11 -0800
+Subject: [PATCH 7/8] xfs_repair: deduplicate strings stored in string blob
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167657882044.3477807.12305464936599915965.stgit@magnolia>
+Message-ID: <167657882057.3477807.13885221277476227815.stgit@magnolia>
 In-Reply-To: <167657881963.3477807.5005383731904631094.stgit@magnolia>
 References: <167657881963.3477807.5005383731904631094.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,217 +49,251 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Abstract the main parent pointer dirent names xfblob object into a
-separate data structure to hide implementation details.  This is the
-first step towards deduplicating the names.
+Reduce the memory requirements of the string blob structure by
+deduplicating the strings stored within.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/Makefile   |    2 +
- repair/pptr.c     |   13 +++++----
- repair/strblobs.c |   80 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- repair/strblobs.h |   20 +++++++++++++
- 4 files changed, 109 insertions(+), 6 deletions(-)
- create mode 100644 repair/strblobs.c
- create mode 100644 repair/strblobs.h
+ repair/pptr.c     |    5 ++
+ repair/strblobs.c |  141 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ repair/strblobs.h |    4 +-
+ 3 files changed, 145 insertions(+), 5 deletions(-)
 
 
-diff --git a/repair/Makefile b/repair/Makefile
-index 925864c2..48ddcdd1 100644
---- a/repair/Makefile
-+++ b/repair/Makefile
-@@ -33,6 +33,7 @@ HFILES = \
- 	rt.h \
- 	scan.h \
- 	slab.h \
-+	strblobs.h \
- 	threads.h \
- 	versions.h
- 
-@@ -71,6 +72,7 @@ CFILES = \
- 	sb.c \
- 	scan.c \
- 	slab.c \
-+	strblobs.c \
- 	threads.c \
- 	versions.c \
- 	xfs_repair.c
 diff --git a/repair/pptr.c b/repair/pptr.c
-index b1f5fb4e..20d66884 100644
+index 20d66884..c1cd9060 100644
 --- a/repair/pptr.c
 +++ b/repair/pptr.c
-@@ -14,6 +14,7 @@
- #include "repair/threads.h"
- #include "repair/incore.h"
- #include "repair/pptr.h"
-+#include "repair/strblobs.h"
+@@ -269,13 +269,16 @@ void
+ parent_ptr_init(
+ 	struct xfs_mount	*mp)
+ {
++	uint64_t		iused;
+ 	xfs_agnumber_t		agno;
+ 	int			error;
  
- #undef PPTR_DEBUG
- 
-@@ -194,7 +195,7 @@ struct garbage_xattr {
- };
- 
- /* Global names storage file. */
--static struct xfblob	*names;
-+static struct strblobs	*nameblobs;
- static pthread_mutex_t	names_mutex = PTHREAD_MUTEX_INITIALIZER;
- static struct ag_pptrs	*fs_pptrs;
- 
-@@ -261,7 +262,7 @@ parent_ptr_free(
- 	free(fs_pptrs);
- 	fs_pptrs = NULL;
- 
--	xfblob_destroy(names);
-+	strblobs_destroy(&nameblobs);
- }
- 
- void
-@@ -274,7 +275,7 @@ parent_ptr_init(
  	if (!xfs_has_parent(mp))
  		return;
  
--	error = -xfblob_create(mp, "parent pointer names", &names);
-+	error = strblobs_init(mp, "parent pointer names", &nameblobs);
+-	error = strblobs_init(mp, "parent pointer names", &nameblobs);
++	/* One hash bucket per inode, up to about 8M of memory on 64-bit. */
++	iused = min(mp->m_sb.sb_icount - mp->m_sb.sb_ifree, 1048573);
++	error = strblobs_init(mp, "parent pointer names", iused, &nameblobs);
  	if (error)
  		do_error(_("init parent pointer names failed: %s\n"),
  				strerror(error));
-@@ -325,7 +326,7 @@ add_parent_ptr(
- 		return;
- 
- 	pthread_mutex_lock(&names_mutex);
--	error = -xfblob_store(names, &ag_pptr.name_cookie, fname,
-+	error = strblobs_store(nameblobs, &ag_pptr.name_cookie, fname,
- 			ag_pptr.namelen);
- 	pthread_mutex_unlock(&names_mutex);
- 	if (error)
-@@ -613,7 +614,7 @@ add_missing_parent_ptr(
- 	unsigned char		name[MAXNAMELEN];
- 	int			error;
- 
--	error = -xfblob_load(names, ag_pptr->name_cookie, name,
-+	error = strblobs_load(nameblobs, ag_pptr->name_cookie, name,
- 			ag_pptr->namelen);
- 	if (error)
- 		do_error(
-@@ -714,7 +715,7 @@ compare_parent_pointers(
- 	unsigned char		name2[MAXNAMELEN] = { };
- 	int			error;
- 
--	error = -xfblob_load(names, ag_pptr->name_cookie, name1,
-+	error = strblobs_load(nameblobs, ag_pptr->name_cookie, name1,
- 			ag_pptr->namelen);
- 	if (error)
- 		do_error(
 diff --git a/repair/strblobs.c b/repair/strblobs.c
-new file mode 100644
-index 00000000..2b7a7a5e
---- /dev/null
+index 2b7a7a5e..fb5929e9 100644
+--- a/repair/strblobs.c
 +++ b/repair/strblobs.c
-@@ -0,0 +1,80 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2023 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#include "libxfs.h"
-+#include "libxfs/xfile.h"
-+#include "libxfs/xfblob.h"
-+#include "repair/strblobs.h"
+@@ -13,23 +13,43 @@
+  * =====================
+  *
+  * This data structure wraps the storage of strings with explicit length in an
+- * xfblob structure.
++ * xfblob structure.  It stores a hashtable of string checksums to provide
++ * fast(ish) lookups of existing strings to enable deduplication of the strings
++ * contained within.
+  */
++struct strblob_hashent {
++	struct strblob_hashent	*next;
 +
-+/*
-+ * String Blob Structure
-+ * =====================
-+ *
-+ * This data structure wraps the storage of strings with explicit length in an
-+ * xfblob structure.
-+ */
-+struct strblobs {
-+	struct xfblob		*strings;
++	xfblob_cookie		str_cookie;
++	unsigned int		str_len;
++	xfs_dahash_t		str_hash;
 +};
 +
-+/* Initialize a string blob structure. */
-+int
-+strblobs_init(
-+	struct xfs_mount	*mp,
-+	const char		*descr,
-+	struct strblobs		**sblobs)
+ struct strblobs {
+ 	struct xfblob		*strings;
++	unsigned int		nr_buckets;
++
++	struct strblob_hashent	*buckets[];
+ };
+ 
++static inline size_t strblobs_sizeof(unsigned int nr_buckets)
 +{
-+	struct strblobs		*sb;
++	return sizeof(struct strblobs) +
++			(nr_buckets * sizeof(struct strblobs_hashent *));
++}
++
+ /* Initialize a string blob structure. */
+ int
+ strblobs_init(
+ 	struct xfs_mount	*mp,
+ 	const char		*descr,
++	unsigned int		hash_buckets,
+ 	struct strblobs		**sblobs)
+ {
+ 	struct strblobs		*sb;
+ 	int			error;
+ 
+-	sb = malloc(sizeof(struct strblobs));
++	sb = calloc(strblobs_sizeof(hash_buckets), 1);
+ 	if (!sb)
+ 		return ENOMEM;
+ 
+@@ -37,6 +57,7 @@ strblobs_init(
+ 	if (error)
+ 		goto out_free;
+ 
++	sb->nr_buckets = hash_buckets;
+ 	*sblobs = sb;
+ 	return 0;
+ 
+@@ -51,12 +72,114 @@ strblobs_destroy(
+ 	struct strblobs		**sblobs)
+ {
+ 	struct strblobs		*sb = *sblobs;
++	struct strblob_hashent	*ent, *ent_next;
++	unsigned int		bucket;
++
++	for (bucket = 0; bucket < sb->nr_buckets; bucket++) {
++		ent = sb->buckets[bucket];
++		while (ent != NULL) {
++			ent_next = ent->next;
++			free(ent);
++			ent = ent_next;
++		}
++	}
+ 
+ 	xfblob_destroy(sb->strings);
+ 	free(sb);
+ 	*sblobs = NULL;
+ }
+ 
++/*
++ * Search the string hashtable for a matching entry.  Sets sets the cookie and
++ * returns 0 if one is found; ENOENT if there is no match; or a positive errno.
++ */
++static int
++__strblobs_lookup(
++	struct strblobs		*sblobs,
++	xfblob_cookie		*str_cookie,
++	const unsigned char	*str,
++	unsigned int		str_len,
++	xfs_dahash_t		str_hash)
++{
++	struct strblob_hashent	*ent;
++	char			*buf = NULL;
++	unsigned int		bucket;
 +	int			error;
 +
-+	sb = malloc(sizeof(struct strblobs));
-+	if (!sb)
-+		return ENOMEM;
++	bucket = str_hash % sblobs->nr_buckets;
++	ent = sblobs->buckets[bucket];
 +
-+	error = -xfblob_create(mp, descr, &sb->strings);
-+	if (error)
-+		goto out_free;
++	for (ent = sblobs->buckets[bucket]; ent != NULL; ent = ent->next) {
++		if (ent->str_len != str_len || ent->str_hash != str_hash)
++			continue;
 +
-+	*sblobs = sb;
-+	return 0;
++		if (!buf) {
++			buf = malloc(str_len);
++			if (!buf)
++				return ENOMEM;
++		}
 +
-+out_free:
-+	free(sb);
++		error = strblobs_load(sblobs, ent->str_cookie, buf, str_len);
++		if (error)
++			goto out;
++
++		if (memcmp(str, buf, str_len))
++			continue;
++
++		*str_cookie = ent->str_cookie;
++		goto out;
++	}
++	error = ENOENT;
++
++out:
++	free(buf);
 +	return error;
 +}
 +
-+/* Deconstruct a string blob structure. */
-+void
-+strblobs_destroy(
-+	struct strblobs		**sblobs)
-+{
-+	struct strblobs		*sb = *sblobs;
-+
-+	xfblob_destroy(sb->strings);
-+	free(sb);
-+	*sblobs = NULL;
-+}
-+
-+/* Store a string and return a cookie for its retrieval. */
++/*
++ * Search the string hashtable for a matching entry.  Sets sets the cookie and
++ * returns 0 if one is found; ENOENT if there is no match; or a positive errno.
++ */
 +int
-+strblobs_store(
++strblobs_lookup(
 +	struct strblobs		*sblobs,
 +	xfblob_cookie		*str_cookie,
 +	const unsigned char	*str,
 +	unsigned int		str_len)
 +{
-+	return -xfblob_store(sblobs->strings, str_cookie, str, str_len);
++	xfs_dahash_t		str_hash;
++
++	str_hash = libxfs_da_hashname(str, str_len);
++	return __strblobs_lookup(sblobs, str_cookie, str, str_len, str_hash);
 +}
 +
-+/* Retrieve a previously stored string. */
-+int
-+strblobs_load(
++/* Remember a string in the hashtable. */
++static int
++strblobs_hash(
 +	struct strblobs		*sblobs,
 +	xfblob_cookie		str_cookie,
-+	unsigned char		*str,
-+	unsigned int		str_len)
++	const unsigned char	*str,
++	unsigned int		str_len,
++	xfs_dahash_t		str_hash)
 +{
-+	return -xfblob_load(sblobs->strings, str_cookie, str, str_len);
++	struct strblob_hashent	*ent;
++	unsigned int		bucket;
++
++	bucket = str_hash % sblobs->nr_buckets;
++
++	ent = malloc(sizeof(struct strblob_hashent));
++	if (!ent)
++		return ENOMEM;
++
++	ent->str_cookie = str_cookie;
++	ent->str_len = str_len;
++	ent->str_hash = str_hash;
++	ent->next = sblobs->buckets[bucket];
++
++	sblobs->buckets[bucket] = ent;
++	return 0;
 +}
++
+ /* Store a string and return a cookie for its retrieval. */
+ int
+ strblobs_store(
+@@ -65,7 +188,19 @@ strblobs_store(
+ 	const unsigned char	*str,
+ 	unsigned int		str_len)
+ {
+-	return -xfblob_store(sblobs->strings, str_cookie, str, str_len);
++	int			error;
++	xfs_dahash_t		str_hash;
++
++	str_hash = libxfs_da_hashname(str, str_len);
++	error = __strblobs_lookup(sblobs, str_cookie, str, str_len, str_hash);
++	if (error != ENOENT)
++		return error;
++
++	error = -xfblob_store(sblobs->strings, str_cookie, str, str_len);
++	if (error)
++		return error;
++
++	return strblobs_hash(sblobs, *str_cookie, str, str_len, str_hash);
+ }
+ 
+ /* Retrieve a previously stored string. */
 diff --git a/repair/strblobs.h b/repair/strblobs.h
-new file mode 100644
-index 00000000..f5680175
---- /dev/null
+index f5680175..b8b059e2 100644
+--- a/repair/strblobs.h
 +++ b/repair/strblobs.h
-@@ -0,0 +1,20 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later */
-+/*
-+ * Copyright (C) 2023 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#ifndef __REPAIR_STRBLOBS_H__
-+#define __REPAIR_STRBLOBS_H__
-+
-+struct strblobs;
-+
-+int strblobs_init(struct xfs_mount *mp, const char *descr,
-+		struct strblobs **sblobs);
-+void strblobs_destroy(struct strblobs **sblobs);
-+
-+int strblobs_store(struct strblobs *sblobs, xfblob_cookie *str_cookie,
+@@ -9,12 +9,14 @@
+ struct strblobs;
+ 
+ int strblobs_init(struct xfs_mount *mp, const char *descr,
+-		struct strblobs **sblobs);
++		unsigned int hash_buckets, struct strblobs **sblobs);
+ void strblobs_destroy(struct strblobs **sblobs);
+ 
+ int strblobs_store(struct strblobs *sblobs, xfblob_cookie *str_cookie,
+ 		const unsigned char *str, unsigned int str_len);
+ int strblobs_load(struct strblobs *sblobs, xfblob_cookie str_cookie,
+ 		unsigned char *str, unsigned int str_len);
++int strblobs_lookup(struct strblobs *sblobs, xfblob_cookie *str_cookie,
 +		const unsigned char *str, unsigned int str_len);
-+int strblobs_load(struct strblobs *sblobs, xfblob_cookie str_cookie,
-+		unsigned char *str, unsigned int str_len);
-+
-+#endif /* __REPAIR_STRBLOBS_H__ */
+ 
+ #endif /* __REPAIR_STRBLOBS_H__ */
 
