@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 082B9C636D6
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 21:14:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B16DC636D6
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 21:15:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229834AbjBPVO6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Feb 2023 16:14:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47048 "EHLO
+        id S229627AbjBPVPN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Feb 2023 16:15:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47098 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229642AbjBPVO4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 16:14:56 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCE2148E22;
-        Thu, 16 Feb 2023 13:14:55 -0800 (PST)
+        with ESMTP id S229490AbjBPVPN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 16:15:13 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E52448E22;
+        Thu, 16 Feb 2023 13:15:12 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 94CE1B82760;
-        Thu, 16 Feb 2023 21:14:54 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36A8BC433D2;
-        Thu, 16 Feb 2023 21:14:53 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 8B2D5CE2D0F;
+        Thu, 16 Feb 2023 21:15:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8442C433EF;
+        Thu, 16 Feb 2023 21:15:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676582093;
-        bh=jcMPAitEdlmtQO6luu6/YtNbQLTOBOSD+2V5MPg8xLk=;
+        s=k20201202; t=1676582108;
+        bh=5ojAQWLRuwMuldWRkPKiK/uQHSX78DhaKxe/Ap7vFKw=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=tOQHNSuG3WoQS+ZdwmCXJWDLqjzmNywPFTyCs4mUosPlt7u9ygTaV4M2xhx/AGcFk
-         6GpuX3LTkWFDTRNaG/hmr5P0Qim+yCIHJRUEkz/50EfRG6ourJdBBIb38DbY6tKLyr
-         FIjE6Uiv2MY52hWdHNwIZ+eCDjy2kYzngtpLvuTWcjvFTLvE53UjpfGAKRbmaDv5pr
-         zgVUWuk38aFRMT982CB2QLVZ3+v0hO0sByGxSkhrOzTHsTqVPe4V3rU3bTAcB6HJVS
-         RyWISlOYQGuKExvz2TZ+QYFJh39zOll/Yuzmqfvp1bhVFlEVgHzFA7qzZUhFS0aJ/O
-         CZ3wkvO9O1ePw==
-Date:   Thu, 16 Feb 2023 13:14:52 -0800
-Subject: [PATCH 05/14] xfs/018: disable parent pointers for this test
+        b=IL096qX44RFD45v/aczOSsfyHv4Rn04TzX3pwRB6s8FT8i7xr+Q6UNd7ctAPR3S2Y
+         bMFbmxYu7fJKFygjZIKrad/O3mnwEYi9Iz1hid5XG4hCAttGfaEsYG5KCEY/mcvpL5
+         s4SLYklGQT+yIHqUtQ9XxbltdCu1Te5S6ojQdXQPzYWkCq1zXngwAMbTIKjQL4odqa
+         5XIuERmjV2+qjHcx6HTWDTnEJq0QWXH2wbodl7hUgW5J55SsUlvz1xYy3uxOSoS75P
+         Q+Ix6e+BNLNXnlTtbuEKlv7mOVK5vAAlxdMPqxWqOSuLOrcd5pSveeR2kefiXmvRKU
+         MtBczF1w0agrQ==
+Date:   Thu, 16 Feb 2023 13:15:08 -0800
+Subject: [PATCH 06/14] xfs/306: fix formatting failures with parent pointers
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, zlang@redhat.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Message-ID: <167657884552.3481377.4320827336847794985.stgit@magnolia>
+Message-ID: <167657884566.3481377.2303088177888217916.stgit@magnolia>
 In-Reply-To: <167657884480.3481377.14824439551809919632.stgit@magnolia>
 References: <167657884480.3481377.14824439551809919632.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,70 +49,58 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-This test depends heavily on the xattr formats created for new files.
-Parent pointers break those assumptions, so force parent pointers off.
+The parent pointers feature isn't supported on tiny 20MB filesystems
+because the larger directory transactions result in larger minimum log
+sizes, particularly with nrext64 enabled:
+
+** mkfs failed with extra mkfs options added to " -m rmapbt=0, -i nrext64=1, -n parent=1," by test 306 **
+** attempting to mkfs using only test 306 options: -d size=20m -n size=64k **
+max log size 5108 smaller than min log size 5310, filesystem is too small
+
+We don't support 20M filesystems anymore, so bump the filesystem size up
+to 100M and skip this test if we can't actually format the filesystem.
+Convert the open-coded punch-alternating logic into a call to that
+program to reduce execve overhead, which more than makes up having to
+write 5x as much data to fragment the free space.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/018 |    7 ++++++-
- tests/xfs/191 |    7 ++++++-
- tests/xfs/288 |    7 ++++++-
- 3 files changed, 18 insertions(+), 3 deletions(-)
+ tests/xfs/306 |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
 
-diff --git a/tests/xfs/018 b/tests/xfs/018
-index 1ef51a2e61..34b6e91579 100755
---- a/tests/xfs/018
-+++ b/tests/xfs/018
-@@ -100,7 +100,12 @@ attr32l="X$attr32k"
- attr64k="$attr32k$attr32k"
+diff --git a/tests/xfs/306 b/tests/xfs/306
+index b57bf4c0a9..152971cfc3 100755
+--- a/tests/xfs/306
++++ b/tests/xfs/306
+@@ -23,6 +23,7 @@ _supported_fs xfs
+ _require_scratch_nocheck	# check complains about single AG fs
+ _require_xfs_io_command "fpunch"
+ _require_command $UUIDGEN_PROG uuidgen
++_require_test_program "punch-alternating"
  
- echo "*** mkfs"
--_scratch_mkfs >/dev/null
-+
-+# Parent pointers change the xattr formats sufficiently to break this test.
-+# Disable parent pointers if mkfs supports it.
-+mkfs_args=()
-+$MKFS_XFS_PROG 2>&1 | grep -q parent=0 && mkfs_args+=(-n parent=0)
-+_scratch_mkfs "${mkfs_args[@]}" >/dev/null
+ # Disable the scratch rt device to avoid test failures relating to the rt
+ # bitmap consuming all the free space in our small data device.
+@@ -30,7 +31,8 @@ unset SCRATCH_RTDEV
  
- blk_sz=$(_scratch_xfs_get_sb_field blocksize)
- err_inj_attr_sz=$(( blk_sz / 3 - 50 ))
-diff --git a/tests/xfs/191 b/tests/xfs/191
-index 7a02f1be21..0a6c20dad7 100755
---- a/tests/xfs/191
-+++ b/tests/xfs/191
-@@ -33,7 +33,12 @@ _fixed_by_kernel_commit 7be3bd8856fb "xfs: empty xattr leaf header blocks are no
- _fixed_by_kernel_commit e87021a2bc10 "xfs: use larger in-core attr firstused field and detect overflow"
- _fixed_by_git_commit xfsprogs f50d3462c654 "xfs_repair: ignore empty xattr leaf blocks"
- 
--_scratch_mkfs_xfs | _filter_mkfs >$seqres.full 2>$tmp.mkfs
-+# Parent pointers change the xattr formats sufficiently to break this test.
-+# Disable parent pointers if mkfs supports it.
-+mkfs_args=()
-+$MKFS_XFS_PROG 2>&1 | grep -q parent=0 && mkfs_args+=(-n parent=0)
-+
-+_scratch_mkfs_xfs "${mkfs_args[@]}" | _filter_mkfs >$seqres.full 2>$tmp.mkfs
- cat $tmp.mkfs >> $seqres.full
- source $tmp.mkfs
+ # Create a small fs with a large directory block size. We want to fill up the fs
+ # quickly and then create multi-fsb dirblocks over fragmented free space.
+-_scratch_mkfs_xfs -d size=20m -n size=64k >> $seqres.full 2>&1
++_scratch_mkfs_xfs -d size=100m -n size=64k >> $seqres.full 2>&1 || \
++	_notrun 'could not format tiny scratch fs'
  _scratch_mount
-diff --git a/tests/xfs/288 b/tests/xfs/288
-index aa664a266e..6bfc9ac0c8 100755
---- a/tests/xfs/288
-+++ b/tests/xfs/288
-@@ -19,8 +19,13 @@ _supported_fs xfs
- _require_scratch
- _require_attrs
  
-+# Parent pointers change the xattr formats sufficiently to break this test.
-+# Disable parent pointers if mkfs supports it.
-+mkfs_args=()
-+$MKFS_XFS_PROG 2>&1 | grep -q parent=0 && mkfs_args+=(-n parent=0)
-+
- # get block size ($dbsize) from the mkfs output
--_scratch_mkfs_xfs 2>/dev/null | _filter_mkfs 2>$tmp.mkfs >/dev/null
-+_scratch_mkfs_xfs "${mkfs_args[@]}" 2>/dev/null | _filter_mkfs 2>$tmp.mkfs >/dev/null
- . $tmp.mkfs
+ # Fill a source directory with many largish-named files. 1k uuid-named entries
+@@ -49,10 +51,7 @@ done
+ $XFS_IO_PROG -xc "resblks 16" $SCRATCH_MNT >> $seqres.full 2>&1
+ dd if=/dev/zero of=$SCRATCH_MNT/file bs=4k >> $seqres.full 2>&1
+ $XFS_IO_PROG -c "fsync" $SCRATCH_MNT/file >> $seqres.full 2>&1
+-size=`_get_filesize $SCRATCH_MNT/file`
+-for i in $(seq 0 8192 $size); do
+-	$XFS_IO_PROG -c "fpunch $i 4k" $SCRATCH_MNT/file >> $seqres.full 2>&1
+-done
++$here/src/punch-alternating $SCRATCH_MNT/file
  
- _scratch_mount
+ # Replicate the src dir several times into fragmented free space. After one or
+ # two dirs, we should have nothing but non-contiguous directory blocks.
 
