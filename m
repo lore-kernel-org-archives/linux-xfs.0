@@ -2,44 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8382EC636CC
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:40:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01823C61DA4
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:40:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229489AbjBPUj7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Feb 2023 15:39:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53418 "EHLO
+        id S229475AbjBPUkQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Feb 2023 15:40:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53504 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229475AbjBPUj7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:39:59 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1AC6CC0D
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:39:58 -0800 (PST)
+        with ESMTP id S229492AbjBPUkP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:40:15 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 440161ADE1
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:40:14 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4D47360AB9
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:39:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B073CC433EF;
-        Thu, 16 Feb 2023 20:39:57 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D3D5B60A65
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:40:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43E53C433EF;
+        Thu, 16 Feb 2023 20:40:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676579997;
-        bh=AyxI8j1KARAxJx4RfXjzej0s22wRKl+/oAxqaGBPahI=;
+        s=k20201202; t=1676580013;
+        bh=xlH/6AtMMhy+NbcyAHu+BhDPGi0MOcdzdlgyIvQduQk=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=PT8rkyKlOlF8Z9SoY/NV5i8OGObYmdWZc1TXYctUwZd+zGVBSGGcIFmrgJvqhDHJi
-         J5CX2jkswZKezNzVuwfSlqz2DIgfa0+CuTvaMdNdL58DBuK4lWQLDQJjf/UQXr6KqG
-         4AIlQU1nl1KioiXtBsJ7EiItrKGGnm7+ATuQi4cZ0PiwPijVToTB3HqpDZGap1GyDh
-         MDdE8IEFeQPMALGFPwhTxMAaolQDjgzlXgLoFn6XrrSGYb5Uduc+8IlvmDNuqfYmLa
-         rEg9frfbHB6J8mX3OjaNYGqHGZVEFe9G5ftWVjisqNv+dl9oVF841jX5fWQSuAydC5
-         5DBVi2+e5BlJw==
-Date:   Thu, 16 Feb 2023 12:39:57 -0800
-Subject: [PATCH 28/28] xfs: add xfs_trans_mod_sb tracing
+        b=EU9aIRojgiuBRpJ6ktkjCWCQnZi2oO+0L+qwGIk7bO1E7FyW761fMy6++XdZrpEUw
+         smMRp6yJrfs7mcxtOqDWK63xlqwovaIubVfnnXw4s18JQxHU7g8Rc/LZTxdRv88nAZ
+         0fJTAaZKFaR1N9nO/fd11dR5cydzBj8k2Nn+c4NTya9yUXHoIPEZ61iyGJpRLcz+H6
+         nTfxK1MtMXnrOrtNN4cWjPM+eIiKygsvo+Vu5RS9U3O12vp0mvylinaK/6idTjI630
+         L0+laN29SNYz0V7mkCMysujt84BfIkR4iioVhUOkv0ONFeFVPy1NbpZcjjINbIhhp2
+         T49b9DfyWtJ1Q==
+Date:   Thu, 16 Feb 2023 12:40:12 -0800
+Subject: [PATCH 1/3] xfs: directory lookups should return diroffsets too
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     Allison Henderson <allison.henderson@oracle.com>,
-        allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167657872789.3473407.18173047314099746828.stgit@magnolia>
-In-Reply-To: <167657872335.3473407.14628732092515467392.stgit@magnolia>
-References: <167657872335.3473407.14628732092515467392.stgit@magnolia>
+Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
+Message-ID: <167657873107.3474076.14790811015593279205.stgit@magnolia>
+In-Reply-To: <167657873091.3474076.6801004934386808232.stgit@magnolia>
+References: <167657873091.3474076.6801004934386808232.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -48,33 +47,87 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Allison Henderson <allison.henderson@oracle.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Reservationless operations are not allowed with parent pointers because
-the attr expansion may cause a shutdown if  an operation is retried without
-reservation and succeeds without enough space for the parent pointer.  Add
-tracing to detect if this shutdown occurs.
+Teach the directory lookup functions to return the dir offset of the
+dirent that it finds.  Online fsck will use this when checking and
+repairing filesystems.
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_trans.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_dir2_block.c |    2 ++
+ fs/xfs/libxfs/xfs_dir2_leaf.c  |    2 ++
+ fs/xfs/libxfs/xfs_dir2_node.c  |    2 ++
+ fs/xfs/libxfs/xfs_dir2_sf.c    |    4 ++++
+ 4 files changed, 10 insertions(+)
 
 
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 43f4b0943f49..bfb7e87e7794 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -375,8 +375,10 @@ xfs_trans_mod_sb(
- 		 */
- 		if (delta < 0) {
- 			tp->t_blk_res_used += (uint)-delta;
--			if (tp->t_blk_res_used > tp->t_blk_res)
-+			if (tp->t_blk_res_used > tp->t_blk_res) {
-+				xfs_err(mp, "URK blkres 0x%x used 0x%x", tp->t_blk_res, tp->t_blk_res_used);
- 				xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-+			}
- 		} else if (delta > 0 && (tp->t_flags & XFS_TRANS_RES_FDBLKS)) {
- 			int64_t	blkres_delta;
- 
+diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+index 0f3a03e87278..24467e1a0d6f 100644
+--- a/fs/xfs/libxfs/xfs_dir2_block.c
++++ b/fs/xfs/libxfs/xfs_dir2_block.c
+@@ -749,6 +749,8 @@ xfs_dir2_block_lookup_int(
+ 		cmp = xfs_dir2_compname(args, dep->name, dep->namelen);
+ 		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
+ 			args->cmpresult = cmp;
++			args->offset = xfs_dir2_byte_to_dataptr(
++					(char *)dep - (char *)hdr);
+ 			*bpp = bp;
+ 			*entno = mid;
+ 			if (cmp == XFS_CMP_EXACT)
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index fe75ffadace9..b7ea73b4f592 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -1300,6 +1300,8 @@ xfs_dir2_leaf_lookup_int(
+ 		cmp = xfs_dir2_compname(args, dep->name, dep->namelen);
+ 		if (cmp != XFS_CMP_DIFFERENT && cmp != args->cmpresult) {
+ 			args->cmpresult = cmp;
++			args->offset = xfs_dir2_db_off_to_dataptr(args->geo,
++					newdb, (char *)dep - (char *)dbp->b_addr);
+ 			*indexp = index;
+ 			/* case exact match: return the current buffer. */
+ 			if (cmp == XFS_CMP_EXACT) {
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index 53cd0d5d94f7..f8c01e8d885c 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -887,6 +887,8 @@ xfs_dir2_leafn_lookup_for_entry(
+ 			args->cmpresult = cmp;
+ 			args->inumber = be64_to_cpu(dep->inumber);
+ 			args->filetype = xfs_dir2_data_get_ftype(mp, dep);
++			args->offset = xfs_dir2_db_off_to_dataptr(args->geo,
+++					newdb, (char *)dep - (char *)curbp->b_addr);
+ 			*indexp = index;
+ 			state->extravalid = 1;
+ 			state->extrablk.bp = curbp;
+diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+index 032c65804610..f8670c56c7a6 100644
+--- a/fs/xfs/libxfs/xfs_dir2_sf.c
++++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+@@ -889,6 +889,7 @@ xfs_dir2_sf_lookup(
+ 		args->inumber = dp->i_ino;
+ 		args->cmpresult = XFS_CMP_EXACT;
+ 		args->filetype = XFS_DIR3_FT_DIR;
++		args->offset = 1;
+ 		return -EEXIST;
+ 	}
+ 	/*
+@@ -899,6 +900,7 @@ xfs_dir2_sf_lookup(
+ 		args->inumber = xfs_dir2_sf_get_parent_ino(sfp);
+ 		args->cmpresult = XFS_CMP_EXACT;
+ 		args->filetype = XFS_DIR3_FT_DIR;
++		args->offset = 2;
+ 		return -EEXIST;
+ 	}
+ 	/*
+@@ -917,6 +919,8 @@ xfs_dir2_sf_lookup(
+ 			args->cmpresult = cmp;
+ 			args->inumber = xfs_dir2_sf_get_ino(mp, sfp, sfep);
+ 			args->filetype = xfs_dir2_sf_get_ftype(mp, sfep);
++			args->offset = xfs_dir2_byte_to_dataptr(
++						xfs_dir2_sf_get_offset(sfep));
+ 			if (cmp == XFS_CMP_EXACT)
+ 				return -EEXIST;
+ 			ci_sfep = sfep;
 
