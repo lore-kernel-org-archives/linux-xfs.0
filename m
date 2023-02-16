@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5EF5C61DA4
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 21:17:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C955BC61DA4
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 21:17:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229741AbjBPVRB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Feb 2023 16:17:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48152 "EHLO
+        id S229926AbjBPVRR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Feb 2023 16:17:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48220 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229637AbjBPVRA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 16:17:00 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BB5048E22;
-        Thu, 16 Feb 2023 13:16:59 -0800 (PST)
+        with ESMTP id S229637AbjBPVRR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 16:17:17 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D13C48E22;
+        Thu, 16 Feb 2023 13:17:16 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DBC3360C1A;
-        Thu, 16 Feb 2023 21:16:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B18DC433EF;
-        Thu, 16 Feb 2023 21:16:58 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 40AEFB8295B;
+        Thu, 16 Feb 2023 21:17:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8270C433D2;
+        Thu, 16 Feb 2023 21:17:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676582218;
-        bh=kh85dL/qqZbuVSzMbEPCcfYMMB4l1wBbf8L6umKwQEk=;
+        s=k20201202; t=1676582234;
+        bh=UIZczfgKMoAbondSMQ3yRYrjcrJZ+bWoTggKD3FCZdc=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=XMEI2mzaQVrYD5j4OQzjV4QlsIm2xXB6DSImcX78rEdAY72/CQoss7yRgRWRI/NVA
-         qkoTZiwDGQhEMLZRj3qFxvA19DbVtFD4NnfEjBG9/36sitbEtdlpagolDylGTokjWu
-         B1sId6UmQWpPKrCtjBaZn6BzsRhKLU9rkhViLYxPbAo+6AtCUFrQbUFzVjNfM0i75j
-         rouJDiOaOSJSj9Rw4dcCghIRO5LWjx2/L2gsdoAf/AyTtO7m3BlUFvH15HTD/1mzHw
-         2ABWokRJOrKyESdQ0LRi5wa28BrAMiYLSVTaMgkAH9yNUgKbaki6bFHoK57SEx31pQ
-         A1lFowWIXz/7A==
-Date:   Thu, 16 Feb 2023 13:16:57 -0800
-Subject: [PATCH 13/14] common/parent: check xfs_io parent command paths
+        b=p+2MPgYq7LkT/9uRFtDSVItR7ePGiHSZf9fyw2UMGM61v3ffch8Q4wbpBKQa2109G
+         erelQakxVqa/I8CMbT5V9vRrX2uHJMb/C794cqtV+gDjP/Wjzr0y2VfUKo7bsDLUu7
+         plwYnKPQSew9v1lg6KfMRvJiz2QOTdZ9HjJFyTt2bD3bAEFliCoYgYtgm9SpwByw4b
+         AJd5dM0q/m1NdzGkuDS3WC6QudgHcnx/tafaw49fHtjegtai7bsbmc5dBw63D3MkBL
+         Zz0SBfIslI9O110KV24mGcjfM68hO0Ngpe6Gtcb32HTvO4Vsl0ZmPtm7sRl6WYPq1l
+         omFchqvqQ1ZXQ==
+Date:   Thu, 16 Feb 2023 13:17:13 -0800
+Subject: [PATCH 14/14] xfs/851: test xfs_io parent -p too
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, zlang@redhat.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Message-ID: <167657884661.3481377.17754411294910000961.stgit@magnolia>
+Message-ID: <167657884674.3481377.15890437959517236282.stgit@magnolia>
 In-Reply-To: <167657884480.3481377.14824439551809919632.stgit@magnolia>
 References: <167657884480.3481377.14824439551809919632.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,32 +49,64 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make sure that the paths returned by the xfs_io parent command actually
-point to the same file.
+Test the -p argument to the xfs_io parent command too.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/parent |    8 ++++++++
- 1 file changed, 8 insertions(+)
+ tests/xfs/851     |   15 +++++++++++++++
+ tests/xfs/851.out |   10 ++++++++++
+ 2 files changed, 25 insertions(+)
 
 
-diff --git a/common/parent b/common/parent
-index 7e63765d56..96547727d9 100644
---- a/common/parent
-+++ b/common/parent
-@@ -155,6 +155,14 @@ _verify_parent()
- 			"but should be $cino"
- 	fi
+diff --git a/tests/xfs/851 b/tests/xfs/851
+index 27870ec05a..8233c1563c 100755
+--- a/tests/xfs/851
++++ b/tests/xfs/851
+@@ -12,6 +12,7 @@ _begin_fstest auto quick parent
  
-+	# Make sure path printing works by checking that the paths returned
-+	# all point to the same inode.
-+	local tgt="$SCRATCH_MNT/$child_path"
-+	$XFS_IO_PROG -x -c 'parent -p' "$tgt" | while read pptr_path; do
-+		test "$tgt" -ef "$pptr_path" || \
-+			echo "$tgt parent pointer $pptr_path should be the same file"
-+	done
+ # get standard environment, filters and checks
+ . ./common/parent
++. ./common/filter
+ 
+ # Modify as appropriate
+ _supported_fs xfs
+@@ -96,6 +97,20 @@ ino="$(stat -c '%i' $SCRATCH_MNT/$testfolder2/$file3)"
+ mv -f $SCRATCH_MNT/$testfolder2/$file3 $SCRATCH_MNT/$testfolder1/$file2
+ _verify_parent "$testfolder1" "$file2" "$testfolder1/$file2"
+ 
++# Make sure that parent -p filtering works
++mkdir -p $SCRATCH_MNT/dira/ $SCRATCH_MNT/dirb/
++dira_inum=$(stat -c '%i' $SCRATCH_MNT/dira)
++dirb_inum=$(stat -c '%i' $SCRATCH_MNT/dirb)
++touch $SCRATCH_MNT/gorn
++ln $SCRATCH_MNT/gorn $SCRATCH_MNT/dira/file1
++ln $SCRATCH_MNT/gorn $SCRATCH_MNT/dirb/file1
++echo look for both
++$XFS_IO_PROG -c 'parent -p' $SCRATCH_MNT/gorn | _filter_scratch
++echo look for dira
++$XFS_IO_PROG -c 'parent -p -n dira' -c "parent -p -i $dira_inum" $SCRATCH_MNT/gorn | _filter_scratch
++echo look for dirb
++$XFS_IO_PROG -c 'parent -p -n dirb' -c "parent -p -i $dirb_inum" $SCRATCH_MNT/gorn | _filter_scratch
 +
- 	echo "*** Verified parent pointer:"\
- 			"name:$PPNAME, namelen:$PPNAME_LEN"
- 	echo "*** Parent pointer OK for child $child_path"
+ # success, all done
+ status=0
+ exit
+diff --git a/tests/xfs/851.out b/tests/xfs/851.out
+index c375ba5f00..f44d3e5d4f 100644
+--- a/tests/xfs/851.out
++++ b/tests/xfs/851.out
+@@ -57,3 +57,13 @@ QA output created by 851
+ *** testfolder1/file2 OK
+ *** Verified parent pointer: name:file2, namelen:5
+ *** Parent pointer OK for child testfolder1/file2
++look for both
++SCRATCH_MNT/gorn
++SCRATCH_MNT/dira/file1
++SCRATCH_MNT/dirb/file1
++look for dira
++SCRATCH_MNT/dira/file1
++SCRATCH_MNT/dira/file1
++look for dirb
++SCRATCH_MNT/dirb/file1
++SCRATCH_MNT/dirb/file1
 
