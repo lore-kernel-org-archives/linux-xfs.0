@@ -2,44 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5771BC61DA4
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:40:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34D61C636CC
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:41:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229492AbjBPUkr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Feb 2023 15:40:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53728 "EHLO
+        id S229538AbjBPUlE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Feb 2023 15:41:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53780 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229508AbjBPUkq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:40:46 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F31D1ADE1
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:40:45 -0800 (PST)
+        with ESMTP id S229508AbjBPUlD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:41:03 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C910DCC0D
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:41:02 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1C63960C1A
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:40:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78AB2C433EF;
-        Thu, 16 Feb 2023 20:40:44 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 81C69B826BA
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:41:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24B08C433EF;
+        Thu, 16 Feb 2023 20:41:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676580044;
-        bh=PrfV13CNEaBOsdBwLC5kZh+ukLsf81WYNp57jNOYIYo=;
+        s=k20201202; t=1676580060;
+        bh=O45aUgjcyJvR8ANe/boWduJFWooMpjvMJgNEDJaeDr4=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=M2CPQ9YfQXZtiZ83AU91bMhYHdOhOutH3n92ZFvvl12vAEzFFaD9ByROA4O3GDGI6
-         V5I9MVb25dR+LdZQT4YA8nqnNdDDd7EW7Rq1pN/u1UMXye5/mKQeh/JORiR9+2ur3A
-         peKfikG18bHbhuGvJ/QG3RBtRV8GbWoQLc/ONnV9IDOP34KrwxH2bjmJOuVz1fun7c
-         8FXKLaSXqQWM5NBhfobC09dudexHGJwIHQ7SiDbxKv2IIk5p/gFybG+i6DpqE2SZCT
-         yqSofNlBEiSVfcWPiNSWB+JUzDj1PPdNK1k9ly6nNL9OKfeHnYXZl8g5mWfF/7airl
-         2g4KTZufzXIbQ==
-Date:   Thu, 16 Feb 2023 12:40:44 -0800
-Subject: [PATCH 3/3] xfs: don't remove the attr fork when parent pointers are
- enabled
+        b=t/ZecVV2cYsOTo8EVVU9RMWh/x6vO1iXK7fmOnAabO8S6/mI2RB3nCX9PSnQ91VTH
+         v4eGUKvbhuufSGgRh34u0NSYlJ3lltAW7+Tk5+dsqJJrSUEmrRHmWE4C7bcvhiZ8SY
+         8/NB2is8O5tJxy/dR+Ta69YrQwSgB52KOVJLc/L/VFh8P9IJrhhZKa+Q+gYMEk1PnH
+         3A2ezCRJFbR3t2wFI7yhLuu9H7T4U4tPjn+uvkXM2QQOSOjvq0Dy/fd3iuBWQ05Ope
+         JPuSzKgMWFlwOYJh7hbyC3gfmqCLmZVBp24cDVLTIcAEUqDUm48hD6FzRbLZsyIFbC
+         dV/IbxEF1EWWg==
+Date:   Thu, 16 Feb 2023 12:40:59 -0800
+Subject: [PATCH 1/4] xfs: fix multiple problems when doing getparents by
+ handle
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167657873134.3474076.16426437706062736205.stgit@magnolia>
-In-Reply-To: <167657873091.3474076.6801004934386808232.stgit@magnolia>
-References: <167657873091.3474076.6801004934386808232.stgit@magnolia>
+Message-ID: <167657873450.3474196.13907588460831548393.stgit@magnolia>
+In-Reply-To: <167657873432.3474196.15004300376430244372.stgit@magnolia>
+References: <167657873432.3474196.15004300376430244372.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -50,101 +50,82 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When running generic/388, I observed the following .out.bad output:
-
-_check_xfs_filesystem: filesystem on /dev/sda4 is inconsistent (r)
-*** xfs_repair -n output ***
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-        - zero log...
-        - scan filesystem freespace and inode maps...
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan (but don't clear) agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-        - agno = 1
-mismatch between format (2) and size (276) in symlink ino 37223730
-bad data fork in symlink 37223730
-would have cleared inode 37223730
-        - agno = 2
-        - agno = 3
-mismatch between format (2) and size (276) in symlink ino 102725435
-bad data fork in symlink 102725435
-would have cleared inode 102725435
-        - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-        - setting up duplicate extent list...
-unknown block state, ag 1, blocks 458655-458655
-unknown block state, ag 3, blocks 257772-257772
-        - check for inodes claiming duplicate blocks...
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - agno = 0
-mismatch between format (2) and size (276) in symlink ino 102725435
-bad data fork in symlink 102725435
-would have cleared inode 102725435
-mismatch between format (2) and size (276) in symlink ino 37223730
-bad data fork in symlink 37223730
-would have cleared inode 37223730
-No modify flag set, skipping phase 5
-Phase 6 - check inode connectivity...
-        - traversing filesystem ...
-        - traversal finished ...
-        - moving disconnected inodes to lost+found ...
-Phase 7 - verify link counts...
-user quota id 0 has bcount 1140448, expected 1140446
-user quota id 0 has icount 39892, expected 39890
-No modify flag set, skipping filesystem flush and exiting.
-
-Inode 37223730 is an unlinked remote-format symlink with no xattr fork.
-According to the inode verifier and xfs_repair, this symlink ought to
-have a local format data fork, since 276 bytes is small enough to fit in
-the immediate area.
-
-How did we get here?  fsstress removed the symlink, which removed the
-last parent pointer xattr.  There were no other xattrs, so that removal
-also removed the attr fork.  This transaction got flushed to the log,
-but the system went down before we could inactivate the symlink.  Log
-recovery tried to inactivate this inode (since it is on the unlinked
-list) but the verifier tripped over the remote value and leaked it.
-
-Hence we ended up with a file in this odd state on a "clean" mount.  The
-"obvious" fix is to prohibit erasure of the attr fork to avoid tripping
-over the verifiers when pptrs are enabled.
-
-I wonder this could be reproduced with normal xattrs and (say) a
-directory?  Maybe this fix should target /any/ symlink or directory?
+Fix a few problems in the file handle processing part of GETPARENTS.
+First, we need to validate that the fsid of the handle matches the
+filesystem that we're talking to.  Second, we can skip the iget if the
+inode number matches the open file.  Third, if we are going to do the
+iget file, we need to use an UNTRUSTED lookup to guard against crap.
+Finally, we mustn't leak any inodes that we iget.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_attr_leaf.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_ioctl.c |   30 +++++++++++++++++++++---------
+ 1 file changed, 21 insertions(+), 9 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index beee51ad75ce..e6c4c8b52a55 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -854,7 +854,8 @@ xfs_attr_sf_removename(
- 	totsize -= size;
- 	if (totsize == sizeof(xfs_attr_sf_hdr_t) && xfs_has_attr2(mp) &&
- 	    (dp->i_df.if_format != XFS_DINODE_FMT_BTREE) &&
--	    !(args->op_flags & (XFS_DA_OP_ADDNAME | XFS_DA_OP_REPLACE))) {
-+	    !(args->op_flags & (XFS_DA_OP_ADDNAME | XFS_DA_OP_REPLACE)) &&
-+	    !xfs_has_parent(mp)) {
- 		xfs_attr_fork_remove(dp, args->trans);
- 	} else {
- 		xfs_idata_realloc(dp, -size, XFS_ATTR_FORK);
-@@ -863,7 +864,8 @@ xfs_attr_sf_removename(
- 		ASSERT(totsize > sizeof(xfs_attr_sf_hdr_t) ||
- 				(args->op_flags & XFS_DA_OP_ADDNAME) ||
- 				!xfs_has_attr2(mp) ||
--				dp->i_df.if_format == XFS_DINODE_FMT_BTREE);
-+				dp->i_df.if_format == XFS_DINODE_FMT_BTREE ||
-+				xfs_has_parent(mp));
- 		xfs_trans_log_inode(args->trans, dp,
- 					XFS_ILOG_CORE | XFS_ILOG_ADATA);
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index df5a45b97f8f..a1929b08c539 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1694,8 +1694,9 @@ xfs_ioc_get_parent_pointer(
+ {
+ 	struct xfs_pptr_info		*ppi = NULL;
+ 	int				error = 0;
+-	struct xfs_inode		*ip = XFS_I(file_inode(filp));
+-	struct xfs_mount		*mp = ip->i_mount;
++	struct xfs_inode		*file_ip = XFS_I(file_inode(filp));
++	struct xfs_inode		*call_ip = file_ip;
++	struct xfs_mount		*mp = file_ip->i_mount;
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
+@@ -1733,23 +1734,32 @@ xfs_ioc_get_parent_pointer(
+ 		return -ENOMEM;
+ 
+ 	if (ppi->pi_flags & XFS_PPTR_IFLAG_HANDLE) {
+-		error = xfs_iget(mp, NULL, ppi->pi_handle.ha_fid.fid_ino,
+-				0, 0, &ip);
+-		if (error)
++		struct xfs_handle	*hanp = &ppi->pi_handle;
++
++		if (memcmp(&hanp->ha_fsid, mp->m_fixedfsid,
++							sizeof(xfs_fsid_t))) {
++			error = -EINVAL;
+ 			goto out;
++		}
+ 
+-		if (VFS_I(ip)->i_generation != ppi->pi_handle.ha_fid.fid_gen) {
++		if (hanp->ha_fid.fid_ino != file_ip->i_ino) {
++			error = xfs_iget(mp, NULL, hanp->ha_fid.fid_ino,
++					XFS_IGET_UNTRUSTED, 0, &call_ip);
++			if (error)
++				goto out;
++		}
++
++		if (VFS_I(call_ip)->i_generation != hanp->ha_fid.fid_gen) {
+ 			error = -EINVAL;
+ 			goto out;
+ 		}
  	}
+ 
+-	if (ip->i_ino == mp->m_sb.sb_rootino)
++	if (call_ip->i_ino == mp->m_sb.sb_rootino)
+ 		ppi->pi_flags |= XFS_PPTR_OFLAG_ROOT;
+ 
+ 	/* Get the parent pointers */
+-	error = xfs_attr_get_parent_pointer(ip, ppi);
+-
++	error = xfs_attr_get_parent_pointer(call_ip, ppi);
+ 	if (error)
+ 		goto out;
+ 
+@@ -1762,6 +1772,8 @@ xfs_ioc_get_parent_pointer(
+ 	}
+ 
+ out:
++	if (call_ip != file_ip)
++		xfs_irele(call_ip);
+ 	kmem_free(ppi);
+ 	return error;
+ }
 
