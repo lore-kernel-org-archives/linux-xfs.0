@@ -2,43 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC3CCC61DA4
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 21:01:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B64DC636CC
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 21:01:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230046AbjBPVBk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Feb 2023 16:01:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38112 "EHLO
+        id S230074AbjBPVBx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Feb 2023 16:01:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230044AbjBPVBj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 16:01:39 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8061505D9
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 13:01:37 -0800 (PST)
+        with ESMTP id S230063AbjBPVBw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 16:01:52 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFCB7528B7
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 13:01:51 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 9F634B82958
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 21:01:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B581C433D2;
-        Thu, 16 Feb 2023 21:01:35 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7D4DB60C69
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 21:01:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFC00C433EF;
+        Thu, 16 Feb 2023 21:01:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676581295;
-        bh=FRpWoOGlwtyuHn9xLVJUWZAVUxFwEa9C2ffU4OobmZY=;
+        s=k20201202; t=1676581310;
+        bh=SDCH4xNH1104nGicDC3U5cXSbbaLc3IomO7ExFQX2MA=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=q/ovwizL9VdQei/jpO+AWk+xGXjhoJCoIINaw1u+t1BTWgQenSJUkMTO4U1VQ5iky
-         4pONwOiZh/+feo7clDjmo64kKYfdDBKkAOkKRkDDbsSDYhfdgCiyM2Aood749fxFv7
-         D0QdDN9vK/8zG1wJTUjKbiohj2Pdytu583X5gRjOkCbO98svjrdErjD7HTVEpA+NAj
-         EmtovKRQ9qDG4W9s5Xe71TCt0YtKzJiWsxOZ834a336pFyipLdZu6WT5J1YdP1Gp+u
-         HP81g5uekq0+czcQqxtXWf96lA/f1ipdQr5p8wFN6MY82r5r9mvQtGwUpAJe8xuuCI
-         r5Zf8fTojC+Ig==
-Date:   Thu, 16 Feb 2023 13:01:34 -0800
-Subject: [PATCH 6/6] xfs: replace the XFS_IOC_GETPARENTS backend
+        b=HG0+Gy8kwgP3xahu6IoNdcmVB2sAMsFKcVamtTBGeQc93jLzKOtVUwk/0YUsqjDdk
+         DeIY7oN9fJFwE/0Q/IFGjdg4OMtylwuccoW4pz4UCSctunXAK+Pei/BbFEpNobzWww
+         ipznyfR1pGvqPitK8f1l4DqkCANpZyGRZm6l8Qu/XEMwKC5HwnLlAdgRF7qGM0RoaY
+         hQvERpF1a1cdYfSA6jpz6k3knUM0Eo0S5cMWRlfO0KOJmq3Xp8fPTnIrRiMpmkfdeK
+         r0mINxG3ASe9CdHNsPZE4jtHhZdpP25LS91MYnHfhpU0ichXSpjnSsiAFdyCgd9tgE
+         Bov4Uy269fL6A==
+Date:   Thu, 16 Feb 2023 13:01:50 -0800
+Subject: [PATCH 1/6] xfs_scrub: don't report media errors for space with
+ unknowable owner
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167657879613.3476725.13548814793158748741.stgit@magnolia>
-In-Reply-To: <167657879533.3476725.4672667573997149436.stgit@magnolia>
-References: <167657879533.3476725.4672667573997149436.stgit@magnolia>
+Message-ID: <167657879909.3476911.18047241575255398541.stgit@magnolia>
+In-Reply-To: <167657879895.3476911.2211427543938389071.stgit@magnolia>
+References: <167657879895.3476911.2211427543938389071.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,115 +50,47 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that xfs_attr_list can pass local xattr values to the put_listent
-function, build a new version of the GETPARENTS backend that supplies a
-custom put_listent function to format parent pointer info directly into
-the caller's buffer.  This uses a lot less memory and obviates the
-iterate list and then grab the values logic, since parent pointers
-aren't supposed to have remote values anyway.
+On filesystems that don't have the reverse mapping feature enabled, the
+GETFSMAP call cannot tell us much about the owner of a space extent --
+we're limited to static fs metadata, free space, or "unknown".  In this
+case, nothing is corrupt, so str_corrupt is not an appropriate logging
+function.  Relax this to str_info so that the user sees a notice that
+media errors have been found so that the user knows something bad
+happened even if the directory tree walker cannot find the file owning
+the space where the media error was found.
+
+Filesystems with rmap enabled are never supposed to return OWN_UNKNOWN
+from a GETFSMAP report, so continue to report that as a corruption.
+This fixes regressions reported by xfs/556.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_parent.c |   40 ++++++++++++++++++++++++++++++----------
- libxfs/xfs_parent.h |   21 +++++++++++++++++++--
- 2 files changed, 49 insertions(+), 12 deletions(-)
+ scrub/phase6.c |   13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
 
-diff --git a/libxfs/xfs_parent.c b/libxfs/xfs_parent.c
-index 654eaec7..74c7f1f7 100644
---- a/libxfs/xfs_parent.c
-+++ b/libxfs/xfs_parent.c
-@@ -30,16 +30,6 @@
+diff --git a/scrub/phase6.c b/scrub/phase6.c
+index afdb16b6..1a2643bd 100644
+--- a/scrub/phase6.c
++++ b/scrub/phase6.c
+@@ -397,7 +397,18 @@ report_ioerr_fsmap(
+ 		snprintf(buf, DESCR_BUFSZ, _("disk offset %"PRIu64),
+ 				(uint64_t)map->fmr_physical + err_off);
+ 		type = decode_special_owner(map->fmr_owner);
+-		str_corrupt(ctx, buf, _("media error in %s."), type);
++		/*
++		 * On filesystems that don't store reverse mappings, the
++		 * GETFSMAP call returns OWNER_UNKNOWN for allocated space.
++		 * We'll have to let the directory tree walker find the file
++		 * that lost data.
++		 */
++		if (!(ctx->mnt.fsgeom.flags & XFS_FSOP_GEOM_FLAGS_RMAPBT) &&
++		    map->fmr_owner == XFS_FMR_OWN_UNKNOWN) {
++			str_info(ctx, buf, _("media error detected."));
++		} else {
++			str_corrupt(ctx, buf, _("media error in %s."), type);
++		}
+ 	}
  
- struct kmem_cache		*xfs_parent_intent_cache;
- 
--/* Initializes a xfs_parent_ptr from an xfs_parent_name_rec */
--void
--xfs_init_parent_ptr(struct xfs_parent_ptr		*xpp,
--		    const struct xfs_parent_name_rec	*rec)
--{
--	xpp->xpp_ino = be64_to_cpu(rec->p_ino);
--	xpp->xpp_gen = be32_to_cpu(rec->p_gen);
--	xpp->xpp_diroffset = be32_to_cpu(rec->p_diroffset);
--}
--
- /*
-  * Parent pointer attribute handling.
-  *
-@@ -116,6 +106,36 @@ xfs_init_parent_name_rec(
- 	rec->p_diroffset = cpu_to_be32(p_diroffset);
- }
- 
-+/*
-+ * Convert an ondisk parent_name xattr to its incore format.  If @value is
-+ * NULL, set @irec->p_namelen to zero and leave @irec->p_name untouched.
-+ */
-+void
-+xfs_parent_irec_from_disk(
-+	struct xfs_parent_name_irec	*irec,
-+	const struct xfs_parent_name_rec *rec,
-+	const void			*value,
-+	int				valuelen)
-+{
-+	irec->p_ino = be64_to_cpu(rec->p_ino);
-+	irec->p_gen = be32_to_cpu(rec->p_gen);
-+	irec->p_diroffset = be32_to_cpu(rec->p_diroffset);
-+
-+	if (!value) {
-+		irec->p_namelen = 0;
-+		return;
-+	}
-+
-+	ASSERT(valuelen > 0);
-+	ASSERT(valuelen < MAXNAMELEN);
-+
-+	valuelen = min(valuelen, MAXNAMELEN);
-+
-+	irec->p_namelen = valuelen;
-+	memcpy(irec->p_name, value, valuelen);
-+	memset(&irec->p_name[valuelen], 0, sizeof(irec->p_name) - valuelen);
-+}
-+
- int
- __xfs_parent_init(
- 	struct xfs_mount		*mp,
-diff --git a/libxfs/xfs_parent.h b/libxfs/xfs_parent.h
-index 4ffcb81d..f4f5887d 100644
---- a/libxfs/xfs_parent.h
-+++ b/libxfs/xfs_parent.h
-@@ -15,6 +15,25 @@ bool xfs_parent_namecheck(struct xfs_mount *mp,
- bool xfs_parent_valuecheck(struct xfs_mount *mp, const void *value,
- 		size_t valuelen);
- 
-+/*
-+ * Incore version of a parent pointer, also contains dirent name so callers
-+ * can pass/obtain all the parent pointer information in a single structure
-+ */
-+struct xfs_parent_name_irec {
-+	/* Key fields for looking up a particular parent pointer. */
-+	xfs_ino_t		p_ino;
-+	uint32_t		p_gen;
-+	xfs_dir2_dataptr_t	p_diroffset;
-+
-+	/* Attributes of a parent pointer. */
-+	uint8_t			p_namelen;
-+	unsigned char		p_name[MAXNAMELEN];
-+};
-+
-+void xfs_parent_irec_from_disk(struct xfs_parent_name_irec *irec,
-+		const struct xfs_parent_name_rec *rec,
-+		const void *value, int valuelen);
-+
- /*
-  * Dynamically allocd structure used to wrap the needed data to pass around
-  * the defer ops machinery
-@@ -32,8 +51,6 @@ struct xfs_parent_defer {
- void xfs_init_parent_name_rec(struct xfs_parent_name_rec *rec,
- 			      struct xfs_inode *ip,
- 			      uint32_t p_diroffset);
--void xfs_init_parent_ptr(struct xfs_parent_ptr *xpp,
--			 const struct xfs_parent_name_rec *rec);
- int __xfs_parent_init(struct xfs_mount *mp, bool grab_log,
- 		struct xfs_parent_defer **parentp);
- 
+ 	/* Report extent maps */
 
