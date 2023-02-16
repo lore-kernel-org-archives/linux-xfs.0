@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECF54C636CC
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:47:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30961C636CC
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:47:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229571AbjBPUrU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Feb 2023 15:47:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56802 "EHLO
+        id S229670AbjBPUrf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Feb 2023 15:47:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229640AbjBPUrT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:47:19 -0500
+        with ESMTP id S229640AbjBPUre (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:47:34 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D87F54ECF1
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:47:17 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED44E4ECEF
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:47:33 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7338B60C1A
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:47:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1075C433EF;
-        Thu, 16 Feb 2023 20:47:16 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 039FC60C1A
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:47:33 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6382EC433EF;
+        Thu, 16 Feb 2023 20:47:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676580436;
-        bh=/6NPo8lGi/hnV1eVi2f97U7kf1s0I63qe2ah5LMcKmU=;
+        s=k20201202; t=1676580452;
+        bh=9Q8eqe8649jyuuJUksexyKA5wzMbLXc8DASXXVCjFeM=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=jjhyRKLYszEf91dplQnLL/+j+NmXP+tWXz++fnU+B7lcBPXgw0PYF7NgB7jljSwR6
-         9zYGdl2v3As/fDJkZJVD8zFlfJIIHyJVC8MU7fn4jz46mtJCOUFKlIJM0IuucrJF05
-         k7ccYJOlfQ3aMzOk3vO6jElR7HvWYad8gk1GQGgsOdeRMH3y5foR++wjhZvTblzTl3
-         d/DG4m3VXG78106XvCs/AbV1o0ty/nOUeTZPqmdPtkzMLC1ywxwBaPxtXBKpN/48py
-         v0hmIDnbX8dUdBI4+etT3BzB3qzdx+sn+sHIgSB3baukxn0eZNCrwMpC1D5Aju1z7o
-         x6sxwxCJfFOCA==
-Date:   Thu, 16 Feb 2023 12:47:14 -0800
-Subject: [PATCH 21/23] xfs: repair extended attributes
+        b=AekK+1QN96h8g0yxs43MTUw/viNQS+S3igqNe5Wqk+351dC48lPcmtMe15COOJi01
+         04r04nHrWzyUMSBK73mgl9Cog+upz00Rmb4ZggNiBZVSLtQeQ8zRNlnfXwAi0eXvGm
+         lcCkYxobJYtqyopsDYwS+fzJ9kli7Q8zH1MWLNPLVsTYAmqIydBNbiDEc9L8OlgPJe
+         udZQ2bFl4d1MB/76ANrAmmwVJa9S50Jod0zR07b30KBct3k3mLToOKgFDQaGzjca6e
+         KPwKxFI7buvxyUBnylXKutxsn8pOvCcjfbr5PTXkZxCn8hESa0JHbVZaCs3gaFImzb
+         aVQ6+D9xSzGNA==
+Date:   Thu, 16 Feb 2023 12:47:31 -0800
+Subject: [PATCH 22/23] xfs: online repair of directories
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167657874135.3474338.12445265558220558646.stgit@magnolia>
+Message-ID: <167657874149.3474338.16720636979922274112.stgit@magnolia>
 In-Reply-To: <167657873813.3474338.3118516275923112371.stgit@magnolia>
 References: <167657873813.3474338.3118516275923112371.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,107 +49,57 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If the extended attributes look bad, try to sift through the rubble to
-find whatever keys/values we can, stage a new attribute structure in a
+If a directory looks like it's in bad shape, try to sift through the
+rubble to find whatever directory entries we can, scan the directory
+tree for the parent (if needed), stage the new directory contents in a
 temporary file and use the atomic extent swapping mechanism to commit
-the results in bulk.
+the results in bulk.  As a side effect of this patch, directory
+inactivation will be able to purge any leftover dir blocks.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/xfarray.c |   24 ++++++++++++++++++++++++
- fs/xfs/scrub/xfarray.h |    2 ++
- fs/xfs/scrub/xfblob.c  |   24 ++++++++++++++++++++++++
- fs/xfs/scrub/xfblob.h  |    2 ++
- 4 files changed, 52 insertions(+)
+ fs/xfs/scrub/tempfile.c |   13 +++++++++++++
+ fs/xfs/scrub/tempfile.h |    2 ++
+ 2 files changed, 15 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/xfarray.c b/fs/xfs/scrub/xfarray.c
-index 8fdd7dd40193..fccb3a3d9199 100644
---- a/fs/xfs/scrub/xfarray.c
-+++ b/fs/xfs/scrub/xfarray.c
-@@ -368,3 +368,27 @@ xfarray_load_next(
- 	*idx = cur;
- 	return 0;
+diff --git a/fs/xfs/scrub/tempfile.c b/fs/xfs/scrub/tempfile.c
+index 8f80f1c2555c..91875d4bb67f 100644
+--- a/fs/xfs/scrub/tempfile.c
++++ b/fs/xfs/scrub/tempfile.c
+@@ -228,3 +228,16 @@ xrep_tempfile_rele(
+ 	xchk_irele(sc, sc->tempip);
+ 	sc->tempip = NULL;
  }
 +
-+/* How many bytes is this array consuming? */
-+long long
-+xfarray_bytes(
-+	struct xfarray		*array)
++/* Decide if a given XFS inode is a temporary file for a repair. */
++bool
++xrep_is_tempfile(
++	const struct xfs_inode	*ip)
 +{
-+	struct xfile_stat	statbuf;
-+	int			error;
++	const struct inode	*inode = &ip->i_vnode;
 +
-+	error = xfile_stat(array->xfile, &statbuf);
-+	if (error)
-+		return error;
++	if (IS_PRIVATE(inode) && !(inode->i_opflags & IOP_XATTR))
++		return true;
 +
-+	return statbuf.bytes;
++	return false;
 +}
-+
-+/* Empty the entire array. */
-+void
-+xfarray_truncate(
-+	struct xfarray	*array)
-+{
-+	xfile_discard(array->xfile, 0, MAX_LFS_FILESIZE);
-+	array->nr = 0;
-+}
-diff --git a/fs/xfs/scrub/xfarray.h b/fs/xfs/scrub/xfarray.h
-index 26e2b594f121..8a3af0cecc3e 100644
---- a/fs/xfs/scrub/xfarray.h
-+++ b/fs/xfs/scrub/xfarray.h
-@@ -45,6 +45,8 @@ int xfarray_unset(struct xfarray *array, xfarray_idx_t idx);
- int xfarray_store(struct xfarray *array, xfarray_idx_t idx, const void *ptr);
- int xfarray_store_anywhere(struct xfarray *array, const void *ptr);
- bool xfarray_element_is_null(struct xfarray *array, const void *ptr);
-+void xfarray_truncate(struct xfarray *array);
-+long long xfarray_bytes(struct xfarray *array);
- 
- /* Append an element to the array. */
- static inline int xfarray_append(struct xfarray *array, const void *ptr)
-diff --git a/fs/xfs/scrub/xfblob.c b/fs/xfs/scrub/xfblob.c
-index 1f89d7d13c59..2f89617a2db8 100644
---- a/fs/xfs/scrub/xfblob.c
-+++ b/fs/xfs/scrub/xfblob.c
-@@ -150,3 +150,27 @@ xfblob_free(
- 	xfile_discard(blob->xfile, cookie, sizeof(key) + key.xb_size);
- 	return 0;
+diff --git a/fs/xfs/scrub/tempfile.h b/fs/xfs/scrub/tempfile.h
+index f00a9ce43a32..e2f493b5d3d9 100644
+--- a/fs/xfs/scrub/tempfile.h
++++ b/fs/xfs/scrub/tempfile.h
+@@ -16,11 +16,13 @@ void xrep_tempfile_iounlock(struct xfs_scrub *sc);
+ void xrep_tempfile_ilock(struct xfs_scrub *sc);
+ bool xrep_tempfile_ilock_nowait(struct xfs_scrub *sc);
+ void xrep_tempfile_iunlock(struct xfs_scrub *sc);
++bool xrep_is_tempfile(const struct xfs_inode *ip);
+ #else
+ static inline void xrep_tempfile_iolock_both(struct xfs_scrub *sc)
+ {
+ 	xchk_ilock(sc, XFS_IOLOCK_EXCL);
  }
-+
-+/* How many bytes is this blob storage object consuming? */
-+long long
-+xfblob_bytes(
-+	struct xfblob		*blob)
-+{
-+	struct xfile_stat	statbuf;
-+	int			error;
-+
-+	error = xfile_stat(blob->xfile, &statbuf);
-+	if (error)
-+		return error;
-+
-+	return statbuf.bytes;
-+}
-+
-+/* Drop all the blobs. */
-+void
-+xfblob_truncate(
-+	struct xfblob	*blob)
-+{
-+	xfile_discard(blob->xfile, 0, MAX_LFS_FILESIZE);
-+	blob->last_offset = 0;
-+}
-diff --git a/fs/xfs/scrub/xfblob.h b/fs/xfs/scrub/xfblob.h
-index d1282810bb1d..8a5738e1d568 100644
---- a/fs/xfs/scrub/xfblob.h
-+++ b/fs/xfs/scrub/xfblob.h
-@@ -21,5 +21,7 @@ int xfblob_load(struct xfblob *blob, xfblob_cookie cookie, void *ptr,
- int xfblob_store(struct xfblob *blob, xfblob_cookie *cookie, const void *ptr,
- 		uint32_t size);
- int xfblob_free(struct xfblob *blob, xfblob_cookie cookie);
-+long long xfblob_bytes(struct xfblob *blob);
-+void xfblob_truncate(struct xfblob *blob);
++# define xrep_is_tempfile(ip)		(false)
+ # define xrep_tempfile_rele(sc)
+ #endif /* CONFIG_XFS_ONLINE_REPAIR */
  
- #endif /* __XFS_SCRUB_XFBLOB_H__ */
 
