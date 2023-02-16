@@ -2,43 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B646BC636CC
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:58:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ED4DC61DA4
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:58:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229986AbjBPU6f (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Feb 2023 15:58:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36120 "EHLO
+        id S229991AbjBPU6z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Feb 2023 15:58:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36332 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229991AbjBPU6f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:58:35 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A38452894
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:58:30 -0800 (PST)
+        with ESMTP id S229934AbjBPU6y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:58:54 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E86DC50AC3
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:58:46 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 33791B82962
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:58:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBD56C433D2;
-        Thu, 16 Feb 2023 20:58:27 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 43619CE2D89
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:58:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8831BC433EF;
+        Thu, 16 Feb 2023 20:58:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676581108;
-        bh=QjCPbFO9hWHc2w+9tZvZDkdWlFLPtNvu2yd7XprUtYA=;
+        s=k20201202; t=1676581123;
+        bh=mv8q5PFfnZZbISyBF+xSWQceC8/biyNP2lI1hdbjZac=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=ntZyC7jwYAfPFWCw0Q+FUeCqUJndTHDZa9MWXPjQI5HgpqzTqZXJuWVEDaJoNUsAW
-         rS2wvuJYcosxH5GoxLafuLceI7xyQ/OX8inlRH83O/7gnkl+iTMHf5qsIcR+ZGcxUf
-         ocszAdesVIqV1ESP1fbH6pqePbBGktMYg1KtJnGv35KnltF2Q2uDYfVOR/PpBbuQuE
-         wxl4ENH8ahT+wYfTKcYPZ5a2cBsltv8jp5Y/+gjvVeIcHd9yt6LGCBEL0YH/GvtC1n
-         mGujmDzgbvIg/vzjaAPJ6VsA3XF4ju28g32wDkp9QQSpm1dTN8BU271mbAgp3GJpz7
-         47+5HdXq4Y/eg==
-Date:   Thu, 16 Feb 2023 12:58:27 -0800
-Subject: [PATCH 19/25] xfsprogs: drop compatibility minimum log size
- computations for reflink
+        b=EJCgzlW8gzrAGyv/qt3x4URmOstN45+8MBGdinbTkQVVlm4ErWCbctlzoKeNtMmEC
+         QVmYU3NuOoS5TbvR68wuQ6W10tGIBNuqbpnBp70/JZwFVf2KUfdcipfylkoUwgV+fU
+         hDg95ZLTMbF5rwUVcyokZKX0Oh2OenOA4kgWmL1OnP8mmCvYnFGByyRitXCqb/otzG
+         OfRzINSJj3E5kKHsHiw+ch1srUeQmk4R5RWNPW/R5FHui5GBw6HhZ1cEukmCME6qBS
+         7c0c0yPZHbbAh4uVTHxzKBKM1qmEFzQOJdaBVYx5TTPPcC8jVPBg0IB3W3wNs+L97q
+         vsbkXxXeyS+/A==
+Date:   Thu, 16 Feb 2023 12:58:43 -0800
+Subject: [PATCH 20/25] xfsprogs: Add parent pointer flag to cmd
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     Allison Henderson <allison.henderson@oracle.com>,
         allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167657879161.3476112.12858146976098748353.stgit@magnolia>
+Message-ID: <167657879174.3476112.13283595059308677022.stgit@magnolia>
 In-Reply-To: <167657878885.3476112.11949206434283274332.stgit@magnolia>
 References: <167657878885.3476112.11949206434283274332.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -51,39 +50,102 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Allison Henderson <allison.henderson@oracle.com>
 
-Source kernel commit: c14b8c08a1dff8019bc4cd1674c5d5bd4248a1e5
+mkfs: enable formatting with parent pointers. Enable parent pointer support in mkfs
+via the '-n parent' parameter.
 
-Having established that we can reduce the minimum log size computation
-for filesystems with parent pointers or any newer feature, we should
-also drop the compat minlogsize code that we added when we reduced the
-transaction reservation size for rmap and reflink.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- libxfs/xfs_log_rlimit.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+ mkfs/xfs_mkfs.c |   29 ++++++++++++++++++++++++++---
+ 1 file changed, 26 insertions(+), 3 deletions(-)
 
 
-diff --git a/libxfs/xfs_log_rlimit.c b/libxfs/xfs_log_rlimit.c
-index 6ecb9ad5..59605f0d 100644
---- a/libxfs/xfs_log_rlimit.c
-+++ b/libxfs/xfs_log_rlimit.c
-@@ -91,6 +91,16 @@ xfs_log_calc_trans_resv_for_minlogblocks(
- {
- 	unsigned int		rmap_maxlevels = mp->m_rmap_maxlevels;
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index d95394a5..dffee9e2 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -110,6 +110,7 @@ enum {
+ 	N_SIZE = 0,
+ 	N_VERSION,
+ 	N_FTYPE,
++	N_PARENT,
+ 	N_MAX_OPTS,
+ };
  
-+	/*
-+	 * Starting with the parent pointer feature, every new fs feature
-+	 * drops the oversized minimum log size computation introduced by the
-+	 * original reflink code.
-+	 */
-+	if (xfs_has_parent_or_newer_feature(mp)) {
-+		xfs_trans_resv_calc(mp, resv);
-+		return;
+@@ -615,6 +616,7 @@ static struct opt_params nopts = {
+ 		[N_SIZE] = "size",
+ 		[N_VERSION] = "version",
+ 		[N_FTYPE] = "ftype",
++		[N_PARENT] = "parent",
+ 		[N_MAX_OPTS] = NULL,
+ 	},
+ 	.subopt_params = {
+@@ -638,6 +640,14 @@ static struct opt_params nopts = {
+ 		  .maxval = 1,
+ 		  .defaultval = 1,
+ 		},
++		{ .index = N_PARENT,
++		  .conflicts = { { NULL, LAST_CONFLICT } },
++		  .minval = 0,
++		  .maxval = 1,
++		  .defaultval = 1,
++		},
++
++
+ 	},
+ };
+ 
+@@ -970,7 +980,7 @@ usage( void )
+ /* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx,version=n\n\
+ 			    sunit=value|su=num,sectsize=num,lazy-count=0|1]\n\
+ /* label */		[-L label (maximum 12 characters)]\n\
+-/* naming */		[-n size=num,version=2|ci,ftype=0|1]\n\
++/* naming */		[-n size=num,version=2|ci,ftype=0|1,parent=0|1]]\n\
+ /* no-op info only */	[-N]\n\
+ /* prototype file */	[-p fname]\n\
+ /* quiet */		[-q]\n\
+@@ -1744,6 +1754,9 @@ naming_opts_parser(
+ 	case N_FTYPE:
+ 		cli->sb_feat.dirftype = getnum(value, opts, subopt);
+ 		break;
++	case N_PARENT:
++		cli->sb_feat.parent_pointers = getnum(value, &nopts, N_PARENT);
++		break;
+ 	default:
+ 		return -EINVAL;
+ 	}
+@@ -2225,6 +2238,14 @@ _("inode btree counters not supported without finobt support\n"));
+ 		cli->sb_feat.inobtcnt = false;
+ 	}
+ 
++	if ((cli->sb_feat.parent_pointers) &&
++	    cli->sb_feat.dir_version == 4) {
++		fprintf(stderr,
++_("parent pointers not supported on v4 filesystems\n"));
++		usage();
++		cli->sb_feat.parent_pointers = false;
 +	}
 +
+ 	if (cli->xi->rtname) {
+ 		if (cli->sb_feat.reflink && cli_opt_set(&mopts, M_REFLINK)) {
+ 			fprintf(stderr,
+@@ -3224,8 +3245,6 @@ sb_set_features(
+ 		sbp->sb_features2 |= XFS_SB_VERSION2_LAZYSBCOUNTBIT;
+ 	if (fp->projid32bit)
+ 		sbp->sb_features2 |= XFS_SB_VERSION2_PROJID32BIT;
+-	if (fp->parent_pointers)
+-		sbp->sb_features2 |= XFS_SB_VERSION2_PARENTBIT;
+ 	if (fp->crcs_enabled)
+ 		sbp->sb_features2 |= XFS_SB_VERSION2_CRCBIT;
+ 	if (fp->attr_version == 2)
+@@ -3266,6 +3285,10 @@ sb_set_features(
+ 		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_INOBTCNT;
+ 	if (fp->bigtime)
+ 		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_BIGTIME;
++	if (fp->parent_pointers) {
++		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_PARENT;
++		sbp->sb_versionnum |= XFS_SB_VERSION_ATTRBIT;
++	}
+ 
  	/*
- 	 * In the early days of rmap+reflink, we always set the rmap maxlevels
- 	 * to 9 even if the AG was small enough that it would never grow to
+ 	 * Sparse inode chunk support has two main inode alignment requirements.
 
