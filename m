@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57737C61DA4
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:45:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C11FC61DA4
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:46:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229516AbjBPUpp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Feb 2023 15:45:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55904 "EHLO
+        id S229460AbjBPUqC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Feb 2023 15:46:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55940 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229460AbjBPUpo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:45:44 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 487EA4ECFE
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:45:42 -0800 (PST)
+        with ESMTP id S229538AbjBPUqB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:46:01 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E7F64B53D
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:45:59 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C000460C1A
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:45:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25A6AC433EF;
-        Thu, 16 Feb 2023 20:45:41 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 05F03B826BA
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:45:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1AB7C433EF;
+        Thu, 16 Feb 2023 20:45:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676580341;
-        bh=d8frBAA8n9sTaxROaoCRCAj/HT5dvp2H0npX0Nlg61U=;
+        s=k20201202; t=1676580356;
+        bh=hW6notKlRnWG3aSNHH4cucWq2VW3/Z3pkO6qkYj+7yU=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=Hs0xLgl17DINjcEm4f2k+iAnJusoR9+4R98TL9SBnLCIOPPb1uBWeUc0nRNgECUrs
-         wvX6lCB+jIU/WOPMm8v51DEr8Bvk37n7AS9soOkcX7pgJakKdRjyMyr3xLT9NQvwVL
-         d+5P12mCxhShX8f9CPppb875g2NiLi5MAt+9OmDdVIzdQ1cQqA7ncke+1b78KuHrxV
-         cBjs31MQebYmjonktevjemnIxskqcJ0bSJjmkJgpZiZQUJFxSfwJS+kzupibKO0XmV
-         TEMytLALjzcz5EuDDkG6iAO7iF732qPqLLEC8hFKrGdEbRua0bxmxo4cG2hr0ptuwF
-         7pqco98syWm2Q==
-Date:   Thu, 16 Feb 2023 12:45:40 -0800
-Subject: [PATCH 15/23] xfs: streamline the directory iteration code for scrub
+        b=PSQynJFhjreweQbUWI3wj8mcFp+RsGsEdn9E8K7n/3NI0XphMy4tFUxtrASnrdrrk
+         xUmId+JX8T4QsRKSeSn5CcLjkseP9Qy87mdgn5Sv/5GX7O8xlqNpTNGSUVcRFunyik
+         YdpnibkRiMq2ejL24Cl3ndW0RXs7FPFrMSi+r1yH53dqA43ciEWB85pyXjwJJ/xawR
+         XB9Kzzqyc9k2Gxz+4A1G5lyQmzoW0Iu59eG0JphFo+37f66SXYlfHgJES5ss6jp3yn
+         PGZAhXmi9cJD2cN+8EFYSMGuCJgA8E+FaJe/vsv7dUroS3bS7uUG7UxEXfsemi+Ban
+         o5dnE7vjoH3VA==
+Date:   Thu, 16 Feb 2023 12:45:56 -0800
+Subject: [PATCH 16/23] xfs: track file link count updates during live nlinks
+ fsck
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167657874049.3474338.15187547152154902579.stgit@magnolia>
+Message-ID: <167657874063.3474338.19044636154750907.stgit@magnolia>
 In-Reply-To: <167657873813.3474338.3118516275923112371.stgit@magnolia>
 References: <167657873813.3474338.3118516275923112371.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,883 +50,559 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Currently, online scrub reuses the xfs_readdir code to walk every entry
-in a directory.  This isn't awesome for performance, since we end up
-cycling the directory ILOCK needlessly and coding around the particular
-quirks of the VFS dir_context interface.
-
-Create a streamlined version of readdir that keeps the ILOCK (since the
-walk function isn't going to copy stuff to userspace), skips a whole lot
-of directory walk cursor checks (since we start at 0 and walk to the
-end) and has a sane way to return error codes.
+Create the necessary hooks in the file create/unlink/rename code so that
+our live nlink scrub code can stay up to date with the rest of the
+filesystem.  This will be the means to keep our shadow link count
+information up to date while the scan runs in real time.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/Makefile        |    1 
- fs/xfs/scrub/dir.c     |  173 +++++++---------------
- fs/xfs/scrub/parent.c  |   90 +++---------
- fs/xfs/scrub/readdir.c |  375 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/readdir.h |   19 ++
- 5 files changed, 473 insertions(+), 185 deletions(-)
- create mode 100644 fs/xfs/scrub/readdir.c
- create mode 100644 fs/xfs/scrub/readdir.h
+ fs/xfs/libxfs/xfs_dir2.c |    6 +
+ fs/xfs/libxfs/xfs_dir2.h |    1 
+ fs/xfs/scrub/common.c    |   20 ++++
+ fs/xfs/scrub/common.h    |    2 
+ fs/xfs/scrub/scrub.c     |   17 +++
+ fs/xfs/scrub/scrub.h     |    3 +
+ fs/xfs/scrub/trace.h     |   42 +++++++++
+ fs/xfs/xfs_inode.c       |  226 ++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_inode.h       |   35 +++++++
+ fs/xfs/xfs_mount.h       |    2 
+ fs/xfs/xfs_super.c       |    2 
+ fs/xfs/xfs_symlink.c     |    1 
+ 12 files changed, 357 insertions(+)
 
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 64a3cc396e16..9a6ef1f7c27b 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -161,6 +161,7 @@ xfs-y				+= $(addprefix scrub/, \
- 				   inode.o \
- 				   iscan.o \
- 				   parent.o \
-+				   readdir.o \
- 				   refcount.o \
- 				   rmap.o \
- 				   scrub.o \
-diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-index 2a3107cc8ccb..46080134b408 100644
---- a/fs/xfs/scrub/dir.c
-+++ b/fs/xfs/scrub/dir.c
-@@ -18,6 +18,7 @@
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/dabtree.h"
-+#include "scrub/readdir.h"
- 
- /* Set us up to scrub directories. */
- int
-@@ -31,115 +32,88 @@ xchk_setup_directory(
- 
- /* Scrub a directory entry. */
- 
--struct xchk_dir_ctx {
--	/* VFS fill-directory iterator */
--	struct dir_context	dir_iter;
--
--	struct xfs_scrub	*sc;
--};
--
--/* Check that an inode's mode matches a given DT_ type. */
-+/* Check that an inode's mode matches a given XFS_DIR3_FT_* type. */
- STATIC void
- xchk_dir_check_ftype(
--	struct xchk_dir_ctx	*sdc,
-+	struct xfs_scrub	*sc,
- 	xfs_fileoff_t		offset,
- 	struct xfs_inode	*ip,
--	int			dtype)
-+	int			ftype)
- {
--	struct xfs_mount	*mp = sdc->sc->mp;
--	int			ino_dtype;
-+	struct xfs_mount	*mp = sc->mp;
- 
- 	if (!xfs_has_ftype(mp)) {
--		if (dtype != DT_UNKNOWN && dtype != DT_DIR)
--			xchk_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK,
--					offset);
-+		if (ftype != XFS_DIR3_FT_UNKNOWN && ftype != XFS_DIR3_FT_DIR)
-+			xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
- 		return;
- 	}
- 
--	/* Convert mode to the DT_* values that dir_emit uses. */
--	ino_dtype = xfs_dir3_get_dtype(mp,
--			xfs_mode_to_ftype(VFS_I(ip)->i_mode));
--	if (ino_dtype != dtype)
--		xchk_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK, offset);
-+	if (xfs_mode_to_ftype(VFS_I(ip)->i_mode) != ftype)
-+		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
- }
- 
- /*
-  * Scrub a single directory entry.
-  *
-- * We use the VFS directory iterator (i.e. readdir) to call this
-- * function for every directory entry in a directory.  Once we're here,
-- * we check the inode number to make sure it's sane, then we check that
-- * we can look up this filename.  Finally, we check the ftype.
-+ * Check the inode number to make sure it's sane, then we check that we can
-+ * look up this filename.  Finally, we check the ftype.
-  */
--STATIC bool
-+STATIC int
- xchk_dir_actor(
--	struct dir_context	*dir_iter,
--	const char		*name,
--	int			namelen,
--	loff_t			pos,
--	u64			ino,
--	unsigned		type)
-+	struct xfs_scrub	*sc,
-+	struct xfs_inode	*dp,
-+	xfs_dir2_dataptr_t	dapos,
-+	const struct xfs_name	*name,
-+	xfs_ino_t		ino,
-+	void			*priv)
- {
--	struct xfs_mount	*mp;
--	struct xfs_inode	*dp;
-+	struct xfs_mount	*mp = dp->i_mount;
- 	struct xfs_inode	*ip;
--	struct xchk_dir_ctx	*sdc;
--	struct xfs_name		xname;
- 	xfs_ino_t		lookup_ino;
- 	xfs_dablk_t		offset;
- 	int			error = 0;
- 
--	sdc = container_of(dir_iter, struct xchk_dir_ctx, dir_iter);
--	dp = sdc->sc->ip;
--	mp = dp->i_mount;
- 	offset = xfs_dir2_db_to_da(mp->m_dir_geo,
--			xfs_dir2_dataptr_to_db(mp->m_dir_geo, pos));
-+			xfs_dir2_dataptr_to_db(mp->m_dir_geo, dapos));
- 
--	if (xchk_should_terminate(sdc->sc, &error))
--		return !error;
-+	if (xchk_should_terminate(sc, &error))
-+		return error;
- 
- 	/* Does this inode number make sense? */
- 	if (!xfs_verify_dir_ino(mp, ino)) {
--		xchk_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK, offset);
--		goto out;
-+		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
-+		return -ECANCELED;
- 	}
- 
- 	/* Does this name make sense? */
--	if (!xfs_dir2_namecheck(name, namelen)) {
--		xchk_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK, offset);
--		goto out;
-+	if (!xfs_dir2_namecheck(name->name, name->len)) {
-+		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
-+		return -ECANCELED;
- 	}
- 
--	if (!strncmp(".", name, namelen)) {
-+	if (!strncmp(".", name->name, name->len)) {
- 		/* If this is "." then check that the inum matches the dir. */
- 		if (ino != dp->i_ino)
--			xchk_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK,
--					offset);
--	} else if (!strncmp("..", name, namelen)) {
-+			xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
-+	} else if (!strncmp("..", name->name, name->len)) {
- 		/*
- 		 * If this is ".." in the root inode, check that the inum
- 		 * matches this dir.
- 		 */
- 		if (dp->i_ino == mp->m_sb.sb_rootino && ino != dp->i_ino)
--			xchk_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK,
--					offset);
-+			xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
- 	}
- 
- 	/* Verify that we can look up this name by hash. */
--	xname.name = name;
--	xname.len = namelen;
--	xname.type = XFS_DIR3_FT_UNKNOWN;
--
--	error = xfs_dir_lookup(sdc->sc->tp, dp, &xname, &lookup_ino, NULL);
-+	error = xchk_dir_lookup(sc, dp, name, &lookup_ino);
- 	/* ENOENT means the hash lookup failed and the dir is corrupt */
- 	if (error == -ENOENT)
- 		error = -EFSCORRUPTED;
--	if (!xchk_fblock_process_error(sdc->sc, XFS_DATA_FORK, offset,
--			&error))
-+	if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, offset, &error))
- 		goto out;
- 	if (lookup_ino != ino) {
--		xchk_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK, offset);
--		goto out;
-+		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
-+		return -ECANCELED;
- 	}
- 
- 	/*
-@@ -151,27 +125,21 @@ xchk_dir_actor(
- 	 * -EFSCORRUPTED or -EFSBADCRC then the child is corrupt which is a
- 	 *  cross referencing error.  Any other error is an operational error.
- 	 */
--	error = xchk_iget(sdc->sc, ino, &ip);
-+	error = xchk_iget(sc, ino, &ip);
- 	if (error == -EINVAL || error == -ENOENT) {
- 		error = -EFSCORRUPTED;
--		xchk_fblock_process_error(sdc->sc, XFS_DATA_FORK, 0, &error);
-+		xchk_fblock_process_error(sc, XFS_DATA_FORK, 0, &error);
- 		goto out;
- 	}
--	if (!xchk_fblock_xref_process_error(sdc->sc, XFS_DATA_FORK, offset,
--			&error))
-+	if (!xchk_fblock_xref_process_error(sc, XFS_DATA_FORK, offset, &error))
- 		goto out;
- 
--	xchk_dir_check_ftype(sdc, offset, ip, type);
--	xchk_irele(sdc->sc, ip);
-+	xchk_dir_check_ftype(sc, offset, ip, name->type);
-+	xchk_irele(sc, ip);
- out:
--	/*
--	 * A negative error code returned here is supposed to cause the
--	 * dir_emit caller (xfs_readdir) to abort the directory iteration
--	 * and return zero to xchk_directory.
--	 */
--	if (error == 0 && sdc->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
--		return false;
--	return !error;
-+	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+		return -ECANCELED;
-+	return error;
- }
- 
- /* Scrub a directory btree record. */
-@@ -782,14 +750,7 @@ int
- xchk_directory(
- 	struct xfs_scrub	*sc)
- {
--	struct xchk_dir_ctx	sdc = {
--		.dir_iter.actor = xchk_dir_actor,
--		.dir_iter.pos = 0,
--		.sc = sc,
--	};
--	size_t			bufsize;
--	loff_t			oldpos;
--	int			error = 0;
-+	int			error;
- 
- 	if (!S_ISDIR(VFS_I(sc->ip)->i_mode))
- 		return -ENOENT;
-@@ -797,7 +758,7 @@ xchk_directory(
- 	/* Plausible size? */
- 	if (sc->ip->i_disk_size < xfs_dir2_sf_hdr_size(0)) {
- 		xchk_ino_set_corrupt(sc, sc->ip->i_ino);
--		goto out;
-+		return 0;
- 	}
- 
- 	/* Check directory tree structure */
-@@ -806,7 +767,7 @@ xchk_directory(
- 		return error;
- 
- 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
--		return error;
-+		return 0;
- 
- 	/* Check the freespace. */
- 	error = xchk_directory_blocks(sc);
-@@ -814,43 +775,11 @@ xchk_directory(
- 		return error;
- 
- 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
--		return error;
-+		return 0;
- 
--	/*
--	 * Check that every dirent we see can also be looked up by hash.
--	 * Userspace usually asks for a 32k buffer, so we will too.
--	 */
--	bufsize = (size_t)min_t(loff_t, XFS_READDIR_BUFSIZE,
--			sc->ip->i_disk_size);
--
--	/*
--	 * Look up every name in this directory by hash.
--	 *
--	 * Use the xfs_readdir function to call xchk_dir_actor on
--	 * every directory entry in this directory.  In _actor, we check
--	 * the name, inode number, and ftype (if applicable) of the
--	 * entry.  xfs_readdir uses the VFS filldir functions to provide
--	 * iteration context.
--	 *
--	 * The VFS grabs a read or write lock via i_rwsem before it reads
--	 * or writes to a directory.  If we've gotten this far we've
--	 * already obtained IOLOCK_EXCL, which (since 4.10) is the same as
--	 * getting a write lock on i_rwsem.  Therefore, it is safe for us
--	 * to drop the ILOCK here in order to reuse the _readdir and
--	 * _dir_lookup routines, which do their own ILOCK locking.
--	 */
--	oldpos = 0;
--	xchk_iunlock(sc, XFS_ILOCK_EXCL);
--	while (true) {
--		error = xfs_readdir(sc->tp, sc->ip, &sdc.dir_iter, bufsize);
--		if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, 0,
--				&error))
--			goto out;
--		if (oldpos == sdc.dir_iter.pos)
--			break;
--		oldpos = sdc.dir_iter.pos;
--	}
--
--out:
-+	/* Look up every name in this directory by hash. */
-+	error = xchk_dir_walk(sc, sc->ip, xchk_dir_actor, NULL);
-+	if (error == -ECANCELED)
-+		error = 0;
- 	return error;
- }
-diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
-index 8581a21bfbfd..d59184a59671 100644
---- a/fs/xfs/scrub/parent.c
-+++ b/fs/xfs/scrub/parent.c
-@@ -16,6 +16,7 @@
- #include "xfs_dir2_priv.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-+#include "scrub/readdir.h"
- 
- /* Set us up to scrub parents. */
- int
-@@ -30,39 +31,37 @@ xchk_setup_parent(
- /* Look for an entry in a parent pointing to this inode. */
- 
- struct xchk_parent_ctx {
--	struct dir_context	dc;
- 	struct xfs_scrub	*sc;
- 	xfs_ino_t		ino;
- 	xfs_nlink_t		nlink;
--	bool			cancelled;
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index c1a9394d7478..27e408d20d18 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -25,6 +25,12 @@ const struct xfs_name xfs_name_dotdot = {
+ 	.type	= XFS_DIR3_FT_DIR,
  };
  
- /* Look for a single entry in a directory pointing to an inode. */
--STATIC bool
-+STATIC int
- xchk_parent_actor(
--	struct dir_context	*dc,
--	const char		*name,
--	int			namelen,
--	loff_t			pos,
--	u64			ino,
--	unsigned		type)
-+	struct xfs_scrub	*sc,
-+	struct xfs_inode	*dp,
-+	xfs_dir2_dataptr_t	dapos,
-+	const struct xfs_name	*name,
-+	xfs_ino_t		ino,
-+	void			*priv)
- {
--	struct xchk_parent_ctx	*spc;
-+	struct xchk_parent_ctx	*spc = priv;
- 	int			error = 0;
- 
--	spc = container_of(dc, struct xchk_parent_ctx, dc);
-+	/* Does this name make sense? */
-+	if (!xfs_dir2_namecheck(name->name, name->len))
-+		error = -EFSCORRUPTED;
-+	if (!xchk_fblock_xref_process_error(sc, XFS_DATA_FORK, 0, &error))
-+		return error;
++const struct xfs_name xfs_name_dot = {
++	.name	= (const unsigned char *)".",
++	.len	= 1,
++	.type	= XFS_DIR3_FT_DIR,
++};
 +
- 	if (spc->ino == ino)
- 		spc->nlink++;
+ /*
+  * Convert inode mode to directory entry filetype
+  */
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index ff59f009d1fd..ac360c0b2fe7 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -22,6 +22,7 @@ struct xfs_dir3_icfree_hdr;
+ struct xfs_dir3_icleaf_hdr;
  
--	/*
--	 * If we're facing a fatal signal, bail out.  Store the cancellation
--	 * status separately because the VFS readdir code squashes error codes
--	 * into short directory reads.
--	 */
- 	if (xchk_should_terminate(spc->sc, &error))
--		spc->cancelled = true;
-+		return error;
+ extern const struct xfs_name	xfs_name_dotdot;
++extern const struct xfs_name	xfs_name_dot;
  
--	return !error;
-+	return 0;
+ /*
+  * Convert inode mode to directory entry filetype
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index dc78e28a9447..a4cfe5653880 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -961,3 +961,23 @@ xchk_start_reaping(
+ 	}
+ 	sc->flags &= ~XCHK_REAPING_DISABLED;
  }
++
++/*
++ * Enable filesystem hooks (i.e. runtime code patching) before starting a scrub
++ * operation.  Callers must not hold any locks that intersect with the CPU
++ * hotplug lock (e.g. writeback locks) because code patching must halt the CPUs
++ * to change kernel code.
++ */
++void
++xchk_fshooks_enable(
++	struct xfs_scrub	*sc,
++	unsigned int		scrub_fshooks)
++{
++	ASSERT(!(scrub_fshooks & ~XCHK_FSHOOKS_ALL));
++	ASSERT(!(sc->flags & scrub_fshooks));
++
++	if (scrub_fshooks & XCHK_FSHOOKS_DIRENTS)
++		xfs_dirent_hook_enable();
++
++	sc->flags |= scrub_fshooks;
++}
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index 5286c263ff60..423a98c39fb6 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -157,4 +157,6 @@ int xchk_metadata_inode_forks(struct xfs_scrub *sc);
+ void xchk_stop_reaping(struct xfs_scrub *sc);
+ void xchk_start_reaping(struct xfs_scrub *sc);
  
- /* Count the number of dentries in the parent dir that point to this inode. */
-@@ -70,53 +69,14 @@ STATIC int
- xchk_parent_count_parent_dentries(
- 	struct xfs_scrub	*sc,
- 	struct xfs_inode	*parent,
--	xfs_nlink_t		*nlink)
-+	struct xchk_parent_ctx	*spc)
- {
--	struct xchk_parent_ctx	spc = {
--		.dc.actor	= xchk_parent_actor,
--		.ino		= sc->ip->i_ino,
--		.sc		= sc,
--	};
--	size_t			bufsize;
--	loff_t			oldpos;
- 	uint			lock_mode;
--	int			error = 0;
-+	int			error;
++void xchk_fshooks_enable(struct xfs_scrub *sc, unsigned int scrub_fshooks);
++
+ #endif	/* __XFS_SCRUB_COMMON_H__ */
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 6aedce9b67fc..871a72e22a8a 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -145,6 +145,21 @@ xchk_probe(
  
--	/*
--	 * If there are any blocks, read-ahead block 0 as we're almost
--	 * certain to have the next operation be a read there.  This is
--	 * how we guarantee that the parent's extent map has been loaded,
--	 * if there is one.
--	 */
- 	lock_mode = xfs_ilock_data_map_shared(parent);
--	if (parent->i_df.if_nextents > 0)
--		error = xfs_dir3_data_readahead(parent, 0, 0);
-+	error = xchk_dir_walk(sc, parent, xchk_parent_actor, spc);
- 	xfs_iunlock(parent, lock_mode);
--	if (error)
--		return error;
--
--	/*
--	 * Iterate the parent dir to confirm that there is
--	 * exactly one entry pointing back to the inode being
--	 * scanned.
--	 */
--	bufsize = (size_t)min_t(loff_t, XFS_READDIR_BUFSIZE,
--			parent->i_disk_size);
--	oldpos = 0;
--	while (true) {
--		error = xfs_readdir(sc->tp, parent, &spc.dc, bufsize);
--		if (error)
--			goto out;
--		if (spc.cancelled) {
--			error = -EAGAIN;
--			goto out;
--		}
--		if (oldpos == spc.dc.pos)
--			break;
--		oldpos = spc.dc.pos;
--	}
--	*nlink = spc.nlink;
--out:
+ /* Scrub setup and teardown */
+ 
++static inline void
++xchk_fshooks_disable(
++	struct xfs_scrub	*sc)
++{
++	if (!(sc->flags & XCHK_FSHOOKS_ALL))
++		return;
++
++	//trace_xchk_fshooks_disable(sc, sc->flags & XCHK_FSHOOKS_ALL);
++
++	if (sc->flags & XCHK_FSHOOKS_DIRENTS)
++		xfs_dirent_hook_disable();
++
++	sc->flags &= ~XCHK_FSHOOKS_ALL;
++}
++
+ /* Free all the resources and finish the transactions. */
+ STATIC int
+ xchk_teardown(
+@@ -177,6 +192,8 @@ xchk_teardown(
+ 		kvfree(sc->buf);
+ 		sc->buf = NULL;
+ 	}
++
++	xchk_fshooks_disable(sc);
  	return error;
  }
  
-@@ -169,9 +129,13 @@ xchk_parent_validate(
- 	struct xfs_scrub	*sc,
- 	xfs_ino_t		parent_ino)
- {
-+	struct xchk_parent_ctx	spc = {
-+		.sc		= sc,
-+		.ino		= sc->ip->i_ino,
-+		.nlink		= 0,
-+	};
- 	struct xfs_inode	*dp = NULL;
- 	xfs_nlink_t		expected_nlink;
--	xfs_nlink_t		nlink;
- 	int			error = 0;
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index b4d391b4c938..484e5fb7fe7a 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -97,8 +97,11 @@ struct xfs_scrub {
+ /* XCHK state flags grow up from zero, XREP state flags grown down from 2^31 */
+ #define XCHK_TRY_HARDER		(1 << 0)  /* can't get resources, try again */
+ #define XCHK_REAPING_DISABLED	(1 << 2)  /* background block reaping paused */
++#define XCHK_FSHOOKS_DIRENTS	(1 << 5)  /* link count live update enabled */
+ #define XREP_ALREADY_FIXED	(1 << 31) /* checking our repair work */
  
- 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-@@ -249,7 +213,7 @@ xchk_parent_validate(
++#define XCHK_FSHOOKS_ALL	(XCHK_FSHOOKS_DIRENTS)
++
+ /* Metadata scrubbers */
+ int xchk_tester(struct xfs_scrub *sc);
+ int xchk_superblock(struct xfs_scrub *sc);
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index d97c9a40186a..979ee2789668 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -853,6 +853,48 @@ TRACE_EVENT(xchk_iscan_iget_retry_wait,
+ 		  __entry->retry_delay)
+ );
+ 
++TRACE_DEFINE_ENUM(XFS_DIRENT_CHILD_DELTA);
++TRACE_DEFINE_ENUM(XFS_DIRENT_BACKREF_DELTA);
++TRACE_DEFINE_ENUM(XFS_DIRENT_SELF_DELTA);
++
++#define XFS_NLINK_DELTA_STRINGS \
++	{ XFS_DIRENT_CHILD_DELTA,	"->" }, \
++	{ XFS_DIRENT_BACKREF_DELTA,	"<-" }, \
++	{ XFS_DIRENT_SELF_DELTA,		"<>" }
++
++TRACE_EVENT(xchk_nlinks_live_update,
++	TP_PROTO(struct xfs_mount *mp, const struct xfs_inode *dp,
++		 int action, xfs_ino_t ino, int delta,
++		 const char *name, unsigned int namelen),
++	TP_ARGS(mp, dp, action, ino, delta, name, namelen),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, dir)
++		__field(int, action)
++		__field(xfs_ino_t, ino)
++		__field(int, delta)
++		__field(unsigned int, namelen)
++		__dynamic_array(char, name, namelen)
++	),
++	TP_fast_assign(
++		__entry->dev = mp->m_super->s_dev;
++		__entry->dir = dp ? dp->i_ino : NULLFSINO;
++		__entry->action = action;
++		__entry->ino = ino;
++		__entry->delta = delta;
++		__entry->namelen = namelen;
++		memcpy(__get_str(name), name, namelen);
++	),
++	TP_printk("dev %d:%d dir 0x%llx %s ino 0x%llx nlink_delta %d name '%.*s'",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->dir,
++		  __print_symbolic(__entry->action, XFS_NLINK_DELTA_STRINGS),
++		  __entry->ino,
++		  __entry->delta,
++		  __entry->namelen,
++		  __get_str(name))
++);
++
+ /* repair tracepoints */
+ #if IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR)
+ 
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 6626aa7486f1..b17e4ba3622b 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -970,6 +970,117 @@ xfs_mkdir_space_res(
+ 	return xfs_create_space_res(mp, namelen);
+ }
+ 
++#ifdef CONFIG_XFS_LIVE_HOOKS
++/*
++ * Use a static key here to reduce the overhead of directory live update hooks.
++ * If the compiler supports jump labels, the static branch will be replaced by
++ * a nop sled when there are no hook users.  Online fsck is currently the only
++ * caller, so this is a reasonable tradeoff.
++ *
++ * Note: Patching the kernel code requires taking the cpu hotplug lock.  Other
++ * parts of the kernel allocate memory with that lock held, which means that
++ * XFS callers cannot hold any locks that might be used by memory reclaim or
++ * writeback when calling the static_branch_{inc,dec} functions.
++ */
++DEFINE_STATIC_XFS_HOOK_SWITCH(xfs_dirents_hooks_switch);
++
++void
++xfs_dirent_hook_disable(void)
++{
++	xfs_hooks_switch_off(&xfs_dirents_hooks_switch);
++}
++
++void
++xfs_dirent_hook_enable(void)
++{
++	xfs_hooks_switch_on(&xfs_dirents_hooks_switch);
++}
++
++/* Call hooks for a directory update relating to a dot dirent update. */
++static inline void
++xfs_dirent_self_delta(
++	struct xfs_inode		*dp,
++	int				delta)
++{
++	if (xfs_hooks_switched_on(&xfs_dirents_hooks_switch)) {
++		struct xfs_dirent_update_params	p = {
++			.dp		= dp,
++			.ip		= dp,
++			.delta		= delta,
++			.name		= &xfs_name_dot,
++		};
++		struct xfs_mount	*mp = dp->i_mount;
++
++		xfs_hooks_call(&mp->m_dirent_update_hooks,
++				XFS_DIRENT_SELF_DELTA, &p);
++	}
++}
++
++/* Call hooks for a directory update relating to a dotdot dirent update. */
++static inline void
++xfs_dirent_backref_delta(
++	struct xfs_inode		*dp,
++	struct xfs_inode		*ip,
++	int				delta)
++{
++	if (xfs_hooks_switched_on(&xfs_dirents_hooks_switch)) {
++		struct xfs_dirent_update_params	p = {
++			.dp		= dp,
++			.ip		= ip,
++			.delta		= delta,
++			.name		= &xfs_name_dotdot,
++		};
++		struct xfs_mount	*mp = ip->i_mount;
++
++		xfs_hooks_call(&mp->m_dirent_update_hooks,
++				XFS_DIRENT_BACKREF_DELTA, &p);
++	}
++}
++
++/* Call hooks for a directory update relating to a dirent update. */
++void
++xfs_dirent_child_delta(
++	struct xfs_inode		*dp,
++	struct xfs_inode		*ip,
++	int				delta,
++	struct xfs_name			*name)
++{
++	if (xfs_hooks_switched_on(&xfs_dirents_hooks_switch)) {
++		struct xfs_dirent_update_params	p = {
++			.dp		= dp,
++			.ip		= ip,
++			.delta		= delta,
++			.name		= name,
++		};
++		struct xfs_mount	*mp = ip->i_mount;
++
++		xfs_hooks_call(&mp->m_dirent_update_hooks,
++				XFS_DIRENT_CHILD_DELTA, &p);
++	}
++}
++
++/* Call the specified function during a directory update. */
++int
++xfs_dirent_hook_add(
++	struct xfs_mount	*mp,
++	struct xfs_dirent_hook	*hook)
++{
++	return xfs_hooks_add(&mp->m_dirent_update_hooks, &hook->delta_hook);
++}
++
++/* Stop calling the specified function during a directory update. */
++void
++xfs_dirent_hook_del(
++	struct xfs_mount	*mp,
++	struct xfs_dirent_hook	*hook)
++{
++	xfs_hooks_del(&mp->m_dirent_update_hooks, &hook->delta_hook);
++}
++#else
++# define xfs_dirent_self_delta(dp, delta)		((void)0)
++# define xfs_dirent_backref_delta(dp, ip, delta)	((void)0)
++#endif /* CONFIG_XFS_LIVE_HOOKS */
++
+ int
+ xfs_create(
+ 	struct user_namespace	*mnt_userns,
+@@ -1096,6 +1207,16 @@ xfs_create(
+ 			goto out_trans_cancel;
  	}
  
- 	/* Look for a directory entry in the parent pointing to the child. */
--	error = xchk_parent_count_parent_dentries(sc, dp, &nlink);
-+	error = xchk_parent_count_parent_dentries(sc, dp, &spc);
- 	if (!xchk_fblock_xref_process_error(sc, XFS_DATA_FORK, 0, &error))
- 		goto out_unlock;
++	/*
++	 * Create ip with a reference from dp, and add '.' and '..' references
++	 * if it's a directory.
++	 */
++	xfs_dirent_child_delta(dp, ip, 1, name);
++	if (is_dir) {
++		xfs_dirent_self_delta(ip, 1);
++		xfs_dirent_backref_delta(dp, ip, 1);
++	}
++
+ 	/*
+ 	 * If this is a synchronous mount, make sure that the
+ 	 * create transaction goes to disk before returning to
+@@ -1361,6 +1482,8 @@ xfs_link(
+ 			goto error_return;
+ 	}
  
-@@ -257,7 +221,7 @@ xchk_parent_validate(
- 	 * Ensure that the parent has as many links to the child as the child
- 	 * thinks it has to the parent.
- 	 */
--	if (nlink != expected_nlink)
-+	if (spc.nlink != expected_nlink)
- 		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
++	xfs_dirent_child_delta(tdp, sip, 1, target_name);
++
+ 	/*
+ 	 * If this is a synchronous mount, make sure that the
+ 	 * link transaction goes to disk before returning to
+@@ -2631,6 +2754,16 @@ xfs_remove(
+ 			goto out_trans_cancel;
+ 	}
  
- out_unlock:
-diff --git a/fs/xfs/scrub/readdir.c b/fs/xfs/scrub/readdir.c
-new file mode 100644
-index 000000000000..7d1695e98cc6
---- /dev/null
-+++ b/fs/xfs/scrub/readdir.c
-@@ -0,0 +1,375 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
++	/*
++	 * Drop the link from dp to ip, and if ip was a directory, remove the
++	 * '.' and '..' references since we freed the directory.
++	 */
++	xfs_dirent_child_delta(dp, ip, -1, name);
++	if (S_ISDIR(VFS_I(ip)->i_mode)) {
++		xfs_dirent_backref_delta(dp, ip, -1);
++		xfs_dirent_self_delta(ip, -1);
++	}
++
+ 	/*
+ 	 * If this is a synchronous mount, make sure that the
+ 	 * remove transaction goes to disk before returning to
+@@ -2728,6 +2861,92 @@ xfs_sort_for_rename(
+ 	}
+ }
+ 
++#ifdef CONFIG_XFS_LIVE_HOOKS
 +/*
-+ * Copyright (C) 2022 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
++ * Directory entry live update hooks are called with ILOCK_EXCL held on all
++ * inodes after we've committed to making all the directory updates.  Hence we
++ * do not have to call the hooks in *exactly* the same order as the rename and
++ * exchange code make the actual updates.  This is fortunate because we can
++ * simplify things quite a bit, as long as we're careful to delete old dirents
++ * before creating new ones.
 + */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_inode.h"
-+#include "xfs_dir2.h"
-+#include "xfs_dir2_priv.h"
-+#include "xfs_trace.h"
-+#include "xfs_bmap.h"
-+#include "xfs_trans.h"
-+#include "xfs_error.h"
-+#include "scrub/scrub.h"
-+#include "scrub/readdir.h"
-+
-+/* Call a function for every entry in a shortform directory. */
-+STATIC int
-+xchk_dir_walk_sf(
-+	struct xfs_scrub	*sc,
-+	struct xfs_inode	*dp,
-+	xchk_dirent_fn		dirent_fn,
-+	void			*priv)
++static inline void
++xfs_exchange_call_nlink_hooks(
++	struct xfs_inode	*src_dp,
++	struct xfs_name		*src_name,
++	struct xfs_inode	*src_ip,
++	struct xfs_inode	*target_dp,
++	struct xfs_name		*target_name,
++	struct xfs_inode	*target_ip)
 +{
-+	struct xfs_name		name = {
-+		.name		= ".",
-+		.len		= 1,
-+		.type		= XFS_DIR3_FT_DIR,
-+	};
-+	struct xfs_mount	*mp = dp->i_mount;
-+	struct xfs_da_geometry	*geo = mp->m_dir_geo;
-+	struct xfs_dir2_sf_entry *sfep;
-+	struct xfs_dir2_sf_hdr	*sfp;
-+	xfs_ino_t		ino;
-+	xfs_dir2_dataptr_t	dapos;
-+	unsigned int		i;
-+	int			error;
++	/* Exchange files in the source directory. */
++	xfs_dirent_child_delta(src_dp, src_ip, -1, src_name);
++	xfs_dirent_child_delta(src_dp, target_ip, 1, src_name);
 +
-+	ASSERT(dp->i_df.if_bytes == dp->i_disk_size);
-+	ASSERT(dp->i_df.if_u1.if_data != NULL);
++	/* Exchange files in the target directory. */
++	xfs_dirent_child_delta(target_dp, target_ip, -1, target_name);
++	xfs_dirent_child_delta(target_dp, src_ip, 1, target_name);
 +
-+	sfp = (struct xfs_dir2_sf_hdr *)dp->i_df.if_u1.if_data;
-+
-+	/* dot entry */
-+	dapos = xfs_dir2_db_off_to_dataptr(geo, geo->datablk,
-+			geo->data_entry_offset);
-+
-+	error = dirent_fn(sc, dp, dapos, &name, dp->i_ino, priv);
-+	if (error)
-+		return error;
-+
-+	/* dotdot entry */
-+	dapos = xfs_dir2_db_off_to_dataptr(geo, geo->datablk,
-+			geo->data_entry_offset +
-+			xfs_dir2_data_entsize(mp, sizeof(".") - 1));
-+	ino = xfs_dir2_sf_get_parent_ino(sfp);
-+	name.name = "..";
-+	name.len = 2;
-+
-+	error = dirent_fn(sc, dp, dapos, &name, ino, priv);
-+	if (error)
-+		return error;
-+
-+	/* iterate everything else */
-+	sfep = xfs_dir2_sf_firstentry(sfp);
-+	for (i = 0; i < sfp->count; i++) {
-+		dapos = xfs_dir2_db_off_to_dataptr(geo, geo->datablk,
-+				xfs_dir2_sf_get_offset(sfep));
-+		ino = xfs_dir2_sf_get_ino(mp, sfp, sfep);
-+		name.name = sfep->name;
-+		name.len = sfep->namelen;
-+		name.type = xfs_dir2_sf_get_ftype(mp, sfep);
-+
-+		error = dirent_fn(sc, dp, dapos, &name, ino, priv);
-+		if (error)
-+			return error;
-+
-+		sfep = xfs_dir2_sf_nextentry(mp, sfp, sfep);
++	/* If the source file is a dir, update its dotdot entry. */
++	if (S_ISDIR(VFS_I(src_ip)->i_mode)) {
++		xfs_dirent_backref_delta(src_dp, src_ip, -1);
++		xfs_dirent_backref_delta(target_dp, src_ip, 1);
 +	}
 +
-+	return 0;
-+}
-+
-+/* Call a function for every entry in a block directory. */
-+STATIC int
-+xchk_dir_walk_block(
-+	struct xfs_scrub	*sc,
-+	struct xfs_inode	*dp,
-+	xchk_dirent_fn		dirent_fn,
-+	void			*priv)
-+{
-+	struct xfs_mount	*mp = dp->i_mount;
-+	struct xfs_da_geometry	*geo = mp->m_dir_geo;
-+	struct xfs_buf		*bp;
-+	unsigned int		off, next_off, end;
-+	int			error;
-+
-+	error = xfs_dir3_block_read(sc->tp, dp, &bp);
-+	if (error)
-+		return error;
-+
-+	/* Walk each directory entry. */
-+	end = xfs_dir3_data_end_offset(geo, bp->b_addr);
-+	for (off = geo->data_entry_offset; off < end; off = next_off) {
-+		struct xfs_name			name = { };
-+		struct xfs_dir2_data_unused	*dup = bp->b_addr + off;
-+		struct xfs_dir2_data_entry	*dep = bp->b_addr + off;
-+		xfs_ino_t			ino;
-+		xfs_dir2_dataptr_t		dapos;
-+
-+		/* Skip an empty entry. */
-+		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
-+			next_off = off + be16_to_cpu(dup->length);
-+			continue;
-+		}
-+
-+		/* Otherwise, find the next entry and report it. */
-+		next_off = off + xfs_dir2_data_entsize(mp, dep->namelen);
-+		if (next_off > end)
-+			break;
-+
-+		dapos = xfs_dir2_db_off_to_dataptr(geo, geo->datablk, off);
-+		ino = be64_to_cpu(dep->inumber);
-+		name.name = dep->name;
-+		name.len = dep->namelen;
-+		name.type = xfs_dir2_data_get_ftype(mp, dep);
-+
-+		error = dirent_fn(sc, dp, dapos, &name, ino, priv);
-+		if (error)
-+			break;
++	/* If the target file is a dir, update its dotdot entry. */
++	if (S_ISDIR(VFS_I(target_ip)->i_mode)) {
++		xfs_dirent_backref_delta(target_dp, target_ip, -1);
++		xfs_dirent_backref_delta(src_dp, target_ip, 1);
 +	}
-+
-+	xfs_trans_brelse(sc->tp, bp);
-+	return error;
 +}
 +
-+/* Read a leaf-format directory buffer. */
-+STATIC int
-+xchk_read_leaf_dir_buf(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*dp,
-+	struct xfs_da_geometry	*geo,
-+	xfs_dir2_off_t		*curoff,
-+	struct xfs_buf		**bpp)
++static inline void
++xfs_rename_call_nlink_hooks(
++	struct xfs_inode	*src_dp,
++	struct xfs_name		*src_name,
++	struct xfs_inode	*src_ip,
++	struct xfs_inode	*target_dp,
++	struct xfs_name		*target_name,
++	struct xfs_inode	*target_ip,
++	struct xfs_inode	*wip)
 +{
-+	struct xfs_iext_cursor	icur;
-+	struct xfs_bmbt_irec	map;
-+	struct xfs_ifork	*ifp = xfs_ifork_ptr(dp, XFS_DATA_FORK);
-+	xfs_dablk_t		last_da;
-+	xfs_dablk_t		map_off;
-+	xfs_dir2_off_t		new_off;
-+
-+	*bpp = NULL;
++	/*
++	 * If there's a target file, remove it from the target directory and
++	 * move the source file to the target directory.
++	 */
++	if (target_ip)
++		xfs_dirent_child_delta(target_dp, target_ip, -1, target_name);
++	xfs_dirent_child_delta(target_dp, src_ip, 1, target_name);
 +
 +	/*
-+	 * Look for mapped directory blocks at or above the current offset.
-+	 * Truncate down to the nearest directory block to start the scanning
-+	 * operation.
++	 * Remove the source file from the source directory, and possibly move
++	 * the whiteout file into its place.
 +	 */
-+	last_da = xfs_dir2_byte_to_da(geo, XFS_DIR2_LEAF_OFFSET);
-+	map_off = xfs_dir2_db_to_da(geo, xfs_dir2_byte_to_db(geo, *curoff));
++	xfs_dirent_child_delta(src_dp, src_ip, -1, src_name);
++	if (wip)
++		xfs_dirent_child_delta(src_dp, wip, 1, src_name);
 +
-+	if (!xfs_iext_lookup_extent(dp, ifp, map_off, &icur, &map))
-+		return 0;
-+	if (map.br_startoff >= last_da)
-+		return 0;
-+	xfs_trim_extent(&map, map_off, last_da - map_off);
-+
-+	/* Read the directory block of that first mapping. */
-+	new_off = xfs_dir2_da_to_byte(geo, map.br_startoff);
-+	if (new_off > *curoff)
-+		*curoff = new_off;
-+
-+	return xfs_dir3_data_read(tp, dp, map.br_startoff, 0, bpp);
-+}
-+
-+/* Call a function for every entry in a leaf directory. */
-+STATIC int
-+xchk_dir_walk_leaf(
-+	struct xfs_scrub	*sc,
-+	struct xfs_inode	*dp,
-+	xchk_dirent_fn		dirent_fn,
-+	void			*priv)
-+{
-+	struct xfs_mount	*mp = dp->i_mount;
-+	struct xfs_da_geometry	*geo = mp->m_dir_geo;
-+	struct xfs_buf		*bp = NULL;
-+	xfs_dir2_off_t		curoff = 0;
-+	unsigned int		offset = 0;
-+	int			error;
-+
-+	/* Iterate every directory offset in this directory. */
-+	while (curoff < XFS_DIR2_LEAF_OFFSET) {
-+		struct xfs_name			name = { };
-+		struct xfs_dir2_data_unused	*dup;
-+		struct xfs_dir2_data_entry	*dep;
-+		xfs_ino_t			ino;
-+		unsigned int			length;
-+		xfs_dir2_dataptr_t		dapos;
-+
-+		/*
-+		 * If we have no buffer, or we're off the end of the
-+		 * current buffer, need to get another one.
-+		 */
-+		if (!bp || offset >= geo->blksize) {
-+			if (bp) {
-+				xfs_trans_brelse(sc->tp, bp);
-+				bp = NULL;
-+			}
-+
-+			error = xchk_read_leaf_dir_buf(sc->tp, dp, geo, &curoff,
-+					&bp);
-+			if (error || !bp)
-+				break;
-+
-+			/*
-+			 * Find our position in the block.
-+			 */
-+			offset = geo->data_entry_offset;
-+			curoff += geo->data_entry_offset;
-+		}
-+
-+		/* Skip an empty entry. */
-+		dup = bp->b_addr + offset;
-+		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
-+			length = be16_to_cpu(dup->length);
-+			offset += length;
-+			curoff += length;
-+			continue;
-+		}
-+
-+		/* Otherwise, find the next entry and report it. */
-+		dep = bp->b_addr + offset;
-+		length = xfs_dir2_data_entsize(mp, dep->namelen);
-+
-+		dapos = xfs_dir2_byte_to_dataptr(curoff) & 0x7fffffff;
-+		ino = be64_to_cpu(dep->inumber);
-+		name.name = dep->name;
-+		name.len = dep->namelen;
-+		name.type = xfs_dir2_data_get_ftype(mp, dep);
-+
-+		error = dirent_fn(sc, dp, dapos, &name, ino, priv);
-+		if (error)
-+			break;
-+
-+		/* Advance to the next entry. */
-+		offset += length;
-+		curoff += length;
++	/* If the source file is a dir, update its dotdot entry. */
++	if (S_ISDIR(VFS_I(src_ip)->i_mode)) {
++		xfs_dirent_backref_delta(src_dp, src_ip, -1);
++		xfs_dirent_backref_delta(target_dp, src_ip, 1);
 +	}
 +
-+	if (bp)
-+		xfs_trans_brelse(sc->tp, bp);
-+	return error;
++	/*
++	 * If the target file is a dir, drop the dot and dotdot entries because
++	 * we've dropped the last reference.
++	 */
++	if (target_ip && S_ISDIR(VFS_I(target_ip)->i_mode)) {
++		ASSERT(VFS_I(target_ip)->i_nlink == 0);
++		xfs_dirent_self_delta(target_ip, -1);
++		xfs_dirent_backref_delta(target_dp, target_ip, -1);
++	}
 +}
++#else
++# define xfs_exchange_call_nlink_hooks(...)	((void)0)
++# define xfs_rename_call_nlink_hooks(...)	((void)0)
++#endif /* CONFIG_XFS_LIVE_HOOKS */
 +
+ static int
+ xfs_finish_rename(
+ 	struct xfs_trans	*tp)
+@@ -2861,6 +3080,9 @@ xfs_cross_rename(
+ 	xfs_trans_ichgtime(tp, dp1, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+ 	xfs_trans_log_inode(tp, dp1, XFS_ILOG_CORE);
+ 
++	if (xfs_hooks_switched_on(&xfs_dirents_hooks_switch))
++		xfs_exchange_call_nlink_hooks(dp1, name1, ip1, dp2, name2, ip2);
++
+ 	return xfs_finish_rename(tp);
+ 
+ out_trans_abort:
+@@ -3338,6 +3560,10 @@ xfs_rename(
+ 	if (new_parent)
+ 		xfs_trans_log_inode(tp, target_dp, XFS_ILOG_CORE);
+ 
++	if (xfs_hooks_switched_on(&xfs_dirents_hooks_switch))
++		xfs_rename_call_nlink_hooks(src_dp, src_name, src_ip,
++				target_dp, target_name, target_ip, wip);
++
+ 	error = xfs_finish_rename(tp);
+ 
+ 	goto out_unlock;
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 5735de32beeb..b7a16642a8c3 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -576,4 +576,39 @@ int xfs_ilock2_io_mmap(struct xfs_inode *ip1, struct xfs_inode *ip2);
+ void xfs_iunlock2_io_mmap(struct xfs_inode *ip1, struct xfs_inode *ip2);
+ void xfs_lock_inodes(struct xfs_inode **ips, int inodes, uint lock_mode);
+ 
 +/*
-+ * Call a function for every entry in a directory.
-+ *
-+ * Callers must hold the ILOCK.  File types are XFS_DIR3_FT_*.
++ * Parameters for tracking bumplink and droplink operations.  The hook
++ * function arg parameter is one of these.
 + */
-+int
-+xchk_dir_walk(
-+	struct xfs_scrub	*sc,
-+	struct xfs_inode	*dp,
-+	xchk_dirent_fn		dirent_fn,
-+	void			*priv)
-+{
-+	struct xfs_da_args	args = {
-+		.dp		= dp,
-+		.geo		= dp->i_mount->m_dir_geo,
-+		.trans		= sc->tp,
-+	};
-+	bool			isblock;
-+	int			error;
++enum xfs_dirent_update_type {
++	XFS_DIRENT_CHILD_DELTA,		/* parent pointing to child */
++	XFS_DIRENT_BACKREF_DELTA,		/* dotdot entries */
++	XFS_DIRENT_SELF_DELTA,		/* dot entries */
++};
 +
-+	if (xfs_is_shutdown(dp->i_mount))
-+		return -EIO;
++struct xfs_dirent_update_params {
++	const struct xfs_inode	*dp;
++	const struct xfs_inode	*ip;
++	const struct xfs_name	*name;
++	int			delta;
++};
 +
-+	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
-+	ASSERT(xfs_isilocked(dp, XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
++#ifdef CONFIG_XFS_LIVE_HOOKS
++void xfs_dirent_child_delta(struct xfs_inode *dp, struct xfs_inode *ip,
++		int delta, struct xfs_name *name);
 +
-+	if (dp->i_df.if_format == XFS_DINODE_FMT_LOCAL)
-+		return xchk_dir_walk_sf(sc, dp, dirent_fn, priv);
++struct xfs_dirent_hook {
++	struct xfs_hook		delta_hook;
++};
 +
-+	/* dir2 functions require that the data fork is loaded */
-+	error = xfs_iread_extents(sc->tp, dp, XFS_DATA_FORK);
-+	if (error)
-+		return error;
++void xfs_dirent_hook_disable(void);
++void xfs_dirent_hook_enable(void);
 +
-+	error = xfs_dir2_isblock(&args, &isblock);
-+	if (error)
-+		return error;
++int xfs_dirent_hook_add(struct xfs_mount *mp, struct xfs_dirent_hook *hook);
++void xfs_dirent_hook_del(struct xfs_mount *mp, struct xfs_dirent_hook *hook);
 +
-+	if (isblock)
-+		return xchk_dir_walk_block(sc, dp, dirent_fn, priv);
++#else
++# define xfs_dirent_child_delta(dp, ip, delta, name)	((void)0)
++#endif /* CONFIG_XFS_LIVE_HOOKS */
 +
-+	return xchk_dir_walk_leaf(sc, dp, dirent_fn, priv);
-+}
+ #endif	/* __XFS_INODE_H__ */
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 8aca2cc173ac..c08f55cc4f36 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -242,6 +242,8 @@ typedef struct xfs_mount {
+ 	unsigned int		*m_errortag;
+ 	struct xfs_kobj		m_errortag_kobj;
+ #endif
++	/* Hook to feed file directory updates to an active online repair. */
++	struct xfs_hooks	m_dirent_update_hooks;
+ } xfs_mount_t;
+ 
+ #define M_IGEO(mp)		(&(mp)->m_ino_geo)
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 0ac55d191f1f..0432a4a096e8 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1949,6 +1949,8 @@ static int xfs_init_fs_context(
+ 	mp->m_logbsize = -1;
+ 	mp->m_allocsize_log = 16; /* 64k */
+ 
++	xfs_hooks_init(&mp->m_dirent_update_hooks);
 +
-+/*
-+ * Look up the inode number for an exact name in a directory.
-+ *
-+ * Callers must hold the ILOCK.  File types are XFS_DIR3_FT_*.  Names are not
-+ * checked for correctness.
-+ */
-+int
-+xchk_dir_lookup(
-+	struct xfs_scrub	*sc,
-+	struct xfs_inode	*dp,
-+	const struct xfs_name	*name,
-+	xfs_ino_t		*ino)
-+{
-+	struct xfs_da_args	args = {
-+		.dp		= dp,
-+		.geo		= dp->i_mount->m_dir_geo,
-+		.trans		= sc->tp,
-+		.name		= name->name,
-+		.namelen	= name->len,
-+		.filetype	= name->type,
-+		.hashval	= xfs_dir2_hashname(dp->i_mount, name),
-+		.whichfork	= XFS_DATA_FORK,
-+		.op_flags	= XFS_DA_OP_OKNOENT,
-+	};
-+	bool			isblock, isleaf;
-+	int			error;
-+
-+	if (xfs_is_shutdown(dp->i_mount))
-+		return -EIO;
-+
-+	ASSERT(S_ISDIR(VFS_I(dp)->i_mode));
-+	ASSERT(xfs_isilocked(dp, XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
-+
-+	if (dp->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
-+		error = xfs_dir2_sf_lookup(&args);
-+		goto out_check_rval;
-+	}
-+
-+	/* dir2 functions require that the data fork is loaded */
-+	error = xfs_iread_extents(sc->tp, dp, XFS_DATA_FORK);
-+	if (error)
-+		return error;
-+
-+	error = xfs_dir2_isblock(&args, &isblock);
-+	if (error)
-+		return error;
-+
-+	if (isblock) {
-+		error = xfs_dir2_block_lookup(&args);
-+		goto out_check_rval;
-+	}
-+
-+	error = xfs_dir2_isleaf(&args, &isleaf);
-+	if (error)
-+		return error;
-+
-+	if (isleaf) {
-+		error = xfs_dir2_leaf_lookup(&args);
-+		goto out_check_rval;
-+	}
-+
-+	error = xfs_dir2_node_lookup(&args);
-+
-+out_check_rval:
-+	if (error == -EEXIST)
-+		error = 0;
-+	if (!error)
-+		*ino = args.inumber;
-+	return error;
-+}
-diff --git a/fs/xfs/scrub/readdir.h b/fs/xfs/scrub/readdir.h
-new file mode 100644
-index 000000000000..7272f3bd28b4
---- /dev/null
-+++ b/fs/xfs/scrub/readdir.h
-@@ -0,0 +1,19 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later */
-+/*
-+ * Copyright (C) 2022 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#ifndef __XFS_SCRUB_READDIR_H__
-+#define __XFS_SCRUB_READDIR_H__
-+
-+typedef int (*xchk_dirent_fn)(struct xfs_scrub *sc, struct xfs_inode *dp,
-+		xfs_dir2_dataptr_t dapos, const struct xfs_name *name,
-+		xfs_ino_t ino, void *priv);
-+
-+int xchk_dir_walk(struct xfs_scrub *sc, struct xfs_inode *dp,
-+		xchk_dirent_fn dirent_fn, void *priv);
-+
-+int xchk_dir_lookup(struct xfs_scrub *sc, struct xfs_inode *dp,
-+		const struct xfs_name *name, xfs_ino_t *ino);
-+
-+#endif /* __XFS_SCRUB_READDIR_H__ */
+ 	/*
+ 	 * Copy binary VFS mount flags we are interested in.
+ 	 */
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index f305226109f0..77427a50a760 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -354,6 +354,7 @@ xfs_symlink(
+ 			goto out_trans_cancel;
+ 	}
+ 
++	xfs_dirent_child_delta(dp, ip, 1, link_name);
+ 
+ 	/*
+ 	 * If this is a synchronous mount, make sure that the
 
