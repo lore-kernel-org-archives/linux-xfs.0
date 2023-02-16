@@ -2,43 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 688CDC61DA4
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:47:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49838C61DA4
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:48:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229640AbjBPUrw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Feb 2023 15:47:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57530 "EHLO
+        id S229547AbjBPUsG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Feb 2023 15:48:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229738AbjBPUrv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:47:51 -0500
+        with ESMTP id S229738AbjBPUsG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:48:06 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D4E130D8
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:47:49 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D2ABEC
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:48:04 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 81B2760C1A
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:47:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1798C433EF;
-        Thu, 16 Feb 2023 20:47:47 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2966660C1A
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:48:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88B38C433D2;
+        Thu, 16 Feb 2023 20:48:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676580467;
-        bh=RnfOfp+hOQa5m14Ip/aDbVcURNOTxVrGomcSqDyv018=;
+        s=k20201202; t=1676580483;
+        bh=16ARWnkDXfjc7l6xgvmPkKzT+e7sXnVKcxOQM8flfQo=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=LSeWjJZ1SM1dAj+LeO6C/kg+WMUelI4WzVm0NxYyXvCR/ss2E1OD02lch3RpDZXrQ
-         cvCARvAMN/aIYs4mYlSmyeCj+jIaxoQ/LnLuRq/rLeiQRm59o37rOEHFbB2l4dvQJV
-         KTSru5O6f9walP1uW3NkWk5ahwyXTelPh5lbpATC2rkWh6ixLed7/hw5FhJWB66Ezj
-         UFU2ALJORO5QKZsx43fqCxbbm5KH+W1RpoDk9x3rPKz/DwgmhnQtTycAb5NQzRFKEM
-         hbHRPmkC1XLRQu4TpSJNNTYr3S3gqeiAg7WFc6K3Hyc6bfZ5LJyUz9HX7TTqKLA27f
-         gqmFrY17Nq2WQ==
-Date:   Thu, 16 Feb 2023 12:47:47 -0800
-Subject: [PATCH 23/23] xfs: create an xattr iteration function for scrub
+        b=GiMIAiIHM94HcgXhb9WituaMcpIzyMRR0KD9/G0wKCtrhS9LHZpRgJW6nhn5OcfXD
+         d2njgHykaqqqedO/Wx8oCfk6Nj741xjEL1SCcYXvZ3CDc8IrqMz7FI2amnrrDGItyi
+         o1UV9Rntzfu9EOdQYil5aYuE4oYD3wJXalzj1vRCXCvFRGSSk7dEA0G+jklE0UuiD8
+         0JYbiIkVsDPzRnp8r1eNhIMftLQzH5vXkNnsvHwxgIJKFbPldjSZiZSOyUAkIyF4oq
+         AjlgbYwdusOXt08VNnuXhLw1Qnt173MXxi+hU978OjPCJl9e5QWFRyI3Ssy+Z9TnyD
+         4obgAqhf7cLsw==
+Date:   Thu, 16 Feb 2023 12:48:03 -0800
+Subject: [PATCH 1/7] xfs: pass directory offsets as part of the dirent hook
+ data
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167657874163.3474338.15582091868253799271.stgit@magnolia>
-In-Reply-To: <167657873813.3474338.3118516275923112371.stgit@magnolia>
-References: <167657873813.3474338.3118516275923112371.stgit@magnolia>
+Message-ID: <167657874482.3474898.1437280787820551301.stgit@magnolia>
+In-Reply-To: <167657874461.3474898.12919390014293805981.stgit@magnolia>
+References: <167657874461.3474898.12919390014293805981.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,372 +50,188 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a streamlined function to walk a file's xattrs, without all the
-cursor management stuff in the regular listxattr.
+When we're calling the dirent hooks about a directory entry update, be
+sure to pass the diroffset associated with the change.  We're going to
+need this in the next patch.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/Makefile          |    1 
- fs/xfs/scrub/listxattr.c |  314 ++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/listxattr.h |   17 ++
- 3 files changed, 332 insertions(+)
- create mode 100644 fs/xfs/scrub/listxattr.c
- create mode 100644 fs/xfs/scrub/listxattr.h
+ fs/xfs/xfs_inode.c   |   40 +++++++++++++++++++++++++---------------
+ fs/xfs/xfs_inode.h   |    5 +++--
+ fs/xfs/xfs_symlink.c |    2 +-
+ 3 files changed, 29 insertions(+), 18 deletions(-)
 
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index f2f3ab589c04..6a30b145491d 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -160,6 +160,7 @@ xfs-y				+= $(addprefix scrub/, \
- 				   ialloc.o \
- 				   inode.o \
- 				   iscan.o \
-+				   listxattr.o \
- 				   parent.o \
- 				   readdir.o \
- 				   refcount.o \
-diff --git a/fs/xfs/scrub/listxattr.c b/fs/xfs/scrub/listxattr.c
-new file mode 100644
-index 000000000000..94a76dee8a0a
---- /dev/null
-+++ b/fs/xfs/scrub/listxattr.c
-@@ -0,0 +1,314 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2022 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_inode.h"
-+#include "xfs_da_format.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_attr.h"
-+#include "xfs_attr_leaf.h"
-+#include "xfs_attr_sf.h"
-+#include "xfs_trans.h"
-+#include "scrub/scrub.h"
-+#include "scrub/bitmap.h"
-+#include "scrub/listxattr.h"
-+
-+/* Call a function for every entry in a shortform xattr structure. */
-+STATIC int
-+xchk_xattr_walk_sf(
-+	struct xfs_scrub		*sc,
-+	struct xfs_inode		*ip,
-+	xchk_xattr_fn			attr_fn,
-+	void				*priv)
-+{
-+	struct xfs_attr_shortform	*sf;
-+	struct xfs_attr_sf_entry	*sfe;
-+	unsigned int			i;
-+	int				error;
-+
-+	sf = (struct xfs_attr_shortform *)ip->i_af.if_u1.if_data;
-+	for (i = 0, sfe = &sf->list[0]; i < sf->hdr.count; i++) {
-+		error = attr_fn(sc, ip, sfe->flags, sfe->nameval, sfe->namelen,
-+				&sfe->nameval[sfe->namelen], sfe->valuelen,
-+				priv);
-+		if (error)
-+			return error;
-+
-+		sfe = xfs_attr_sf_nextentry(sfe);
-+	}
-+
-+	return 0;
-+}
-+
-+/* Call a function for every entry in this xattr leaf block. */
-+STATIC int
-+xchk_xattr_walk_leaf_entries(
-+	struct xfs_scrub		*sc,
-+	struct xfs_inode		*ip,
-+	xchk_xattr_fn			attr_fn,
-+	struct xfs_buf			*bp,
-+	void				*priv)
-+{
-+	struct xfs_attr3_icleaf_hdr	ichdr;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_attr_leafblock	*leaf = bp->b_addr;
-+	struct xfs_attr_leaf_entry	*entry;
-+	unsigned int			i;
-+	int				error;
-+
-+	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
-+	entry = xfs_attr3_leaf_entryp(leaf);
-+
-+	for (i = 0; i < ichdr.count; entry++, i++) {
-+		void			*value;
-+		unsigned char		*name;
-+		unsigned int		namelen, valuelen;
-+
-+		if (entry->flags & XFS_ATTR_LOCAL) {
-+			struct xfs_attr_leaf_name_local		*name_loc;
-+
-+			name_loc = xfs_attr3_leaf_name_local(leaf, i);
-+			name = name_loc->nameval;
-+			namelen = name_loc->namelen;
-+			value = &name_loc->nameval[name_loc->namelen];
-+			valuelen = be16_to_cpu(name_loc->valuelen);
-+		} else {
-+			struct xfs_attr_leaf_name_remote	*name_rmt;
-+
-+			name_rmt = xfs_attr3_leaf_name_remote(leaf, i);
-+			name = name_rmt->name;
-+			namelen = name_rmt->namelen;
-+			value = NULL;
-+			valuelen = be32_to_cpu(name_rmt->valuelen);
-+		}
-+
-+		error = attr_fn(sc, ip, entry->flags, name, namelen, value,
-+				valuelen, priv);
-+		if (error)
-+			return error;
-+
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * Call a function for every entry in a leaf-format xattr structure.  Avoid
-+ * memory allocations for the loop detector since there's only one block.
-+ */
-+STATIC int
-+xchk_xattr_walk_leaf(
-+	struct xfs_scrub		*sc,
-+	struct xfs_inode		*ip,
-+	xchk_xattr_fn			attr_fn,
-+	void				*priv)
-+{
-+	struct xfs_buf			*leaf_bp;
-+	int				error;
-+
-+	error = xfs_attr3_leaf_read(sc->tp, ip, 0, &leaf_bp);
-+	if (error)
-+		return error;
-+
-+	error = xchk_xattr_walk_leaf_entries(sc, ip, attr_fn, leaf_bp, priv);
-+	xfs_trans_brelse(sc->tp, leaf_bp);
-+	return error;
-+}
-+
-+/* Find the leftmost leaf in the xattr dabtree. */
-+STATIC int
-+xchk_xattr_find_leftmost_leaf(
-+	struct xfs_scrub		*sc,
-+	struct xfs_inode		*ip,
-+	struct xbitmap			*seen_blocks,
-+	struct xfs_buf			**leaf_bpp)
-+{
-+	struct xfs_da3_icnode_hdr	nodehdr;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_trans		*tp = sc->tp;
-+	struct xfs_da_intnode		*node;
-+	struct xfs_da_node_entry	*btree;
-+	struct xfs_buf			*bp;
-+	//xfs_failaddr_t			fa;
-+	xfs_dablk_t			blkno = 0;
-+	unsigned int			expected_level = 0;
-+	int				error;
-+
-+	for (;;) {
-+		uint64_t		len;
-+		uint16_t		magic;
-+
-+		error = xfs_da3_node_read(tp, ip, blkno, &bp, XFS_ATTR_FORK);
-+		if (error)
-+			return error;
-+
-+		node = bp->b_addr;
-+		magic = be16_to_cpu(node->hdr.info.magic);
-+		if (magic == XFS_ATTR_LEAF_MAGIC ||
-+		    magic == XFS_ATTR3_LEAF_MAGIC)
-+			break;
-+
-+		error = -EFSCORRUPTED;
-+		if (magic != XFS_DA_NODE_MAGIC &&
-+		    magic != XFS_DA3_NODE_MAGIC)
-+			goto out_buf;
-+
-+#if 0
-+		fa = xfs_da3_node_header_check(bp, ip->i_ino);
-+		if (fa)
-+			goto out_buf;
-+#endif
-+
-+		xfs_da3_node_hdr_from_disk(mp, &nodehdr, node);
-+
-+		if (nodehdr.count == 0 || nodehdr.level >= XFS_DA_NODE_MAXDEPTH)
-+			goto out_buf;
-+
-+		/* Check the level from the root node. */
-+		if (blkno == 0)
-+			expected_level = nodehdr.level - 1;
-+		else if (expected_level != nodehdr.level)
-+			goto out_buf;
-+		else
-+			expected_level--;
-+
-+		/* Remember that we've seen this node. */
-+		error = xbitmap_set(seen_blocks, blkno, 1);
-+		if (error)
-+			goto out_buf;
-+
-+		/* Find the next level towards the leaves of the dabtree. */
-+		btree = nodehdr.btree;
-+		blkno = be32_to_cpu(btree->before);
-+		xfs_trans_brelse(tp, bp);
-+
-+		/* Make sure we haven't seen this new block already. */
-+		len = 1;
-+		if (xbitmap_test(seen_blocks, blkno, &len))
-+			return -EFSCORRUPTED;
-+	}
-+
-+	error = -EFSCORRUPTED;
-+#if 0
-+	fa = xfs_attr3_leaf_header_check(bp, ip->i_ino);
-+	if (fa)
-+		goto out_buf;
-+#endif
-+
-+	if (expected_level != 0)
-+		goto out_buf;
-+
-+	/* Remember that we've seen this leaf. */
-+	error = xbitmap_set(seen_blocks, blkno, 1);
-+	if (error)
-+		goto out_buf;
-+
-+	*leaf_bpp = bp;
-+	return 0;
-+
-+out_buf:
-+	xfs_trans_brelse(tp, bp);
-+	return error;
-+}
-+
-+/* Call a function for every entry in a node-format xattr structure. */
-+STATIC int
-+xchk_xattr_walk_node(
-+	struct xfs_scrub		*sc,
-+	struct xfs_inode		*ip,
-+	xchk_xattr_fn			attr_fn,
-+	void				*priv)
-+{
-+	struct xfs_attr3_icleaf_hdr	leafhdr;
-+	struct xbitmap			seen_blocks;
-+	struct xfs_mount		*mp = sc->mp;
-+	struct xfs_attr_leafblock	*leaf;
-+	struct xfs_buf			*leaf_bp;
-+	int				error;
-+
-+	xbitmap_init(&seen_blocks);
-+
-+	error = xchk_xattr_find_leftmost_leaf(sc, ip, &seen_blocks, &leaf_bp);
-+	if (error)
-+		goto out_bitmap;
-+
-+	for (;;) {
-+		uint64_t	len;
-+
-+		error = xchk_xattr_walk_leaf_entries(sc, ip, attr_fn, leaf_bp,
-+				priv);
-+		if (error)
-+			goto out_leaf;
-+
-+		/* Find the right sibling of this leaf block. */
-+		leaf = leaf_bp->b_addr;
-+		xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
-+		if (leafhdr.forw == 0)
-+			goto out_leaf;
-+
-+		xfs_trans_brelse(sc->tp, leaf_bp);
-+
-+		/* Make sure we haven't seen this new leaf already. */
-+		len = 1;
-+		if (xbitmap_test(&seen_blocks, leafhdr.forw, &len))
-+			goto out_bitmap;
-+
-+		error = xfs_attr3_leaf_read(sc->tp, ip,
-+				leafhdr.forw, &leaf_bp);
-+		if (error)
-+			goto out_bitmap;
-+
-+		/* Remember that we've seen this new leaf. */
-+		error = xbitmap_set(&seen_blocks, leafhdr.forw, 1);
-+		if (error)
-+			goto out_leaf;
-+	}
-+
-+out_leaf:
-+	xfs_trans_brelse(sc->tp, leaf_bp);
-+out_bitmap:
-+	xbitmap_destroy(&seen_blocks);
-+	return error;
-+}
-+
-+/*
-+ * Call a function for every extended attribute in a file.
-+ *
-+ * Callers must hold the ILOCK.  No validation or cursor restarts allowed.
-+ * Returns -EFSCORRUPTED on any problem, including loops in the dabtree.
-+ */
-+int
-+xchk_xattr_walk(
-+	struct xfs_scrub	*sc,
-+	struct xfs_inode	*ip,
-+	xchk_xattr_fn		attr_fn,
-+	void			*priv)
-+{
-+	int			error;
-+
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
-+
-+	if (!xfs_inode_hasattr(ip))
-+		return 0;
-+
-+	if (ip->i_af.if_format == XFS_DINODE_FMT_LOCAL)
-+		return xchk_xattr_walk_sf(sc, ip, attr_fn, priv);
-+
-+	/* attr functions require that the attr fork is loaded */
-+	error = xfs_iread_extents(sc->tp, ip, XFS_ATTR_FORK);
-+	if (error)
-+		return error;
-+
-+	if (xfs_attr_is_leaf(ip))
-+		return xchk_xattr_walk_leaf(sc, ip, attr_fn, priv);
-+
-+	return xchk_xattr_walk_node(sc, ip, attr_fn, priv);
-+}
-diff --git a/fs/xfs/scrub/listxattr.h b/fs/xfs/scrub/listxattr.h
-new file mode 100644
-index 000000000000..97af8ca23324
---- /dev/null
-+++ b/fs/xfs/scrub/listxattr.h
-@@ -0,0 +1,17 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later */
-+/*
-+ * Copyright (C) 2022 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#ifndef __XFS_SCRUB_LISTXATTR_H__
-+#define __XFS_SCRUB_LISTXATTR_H__
-+
-+typedef int (*xchk_xattr_fn)(struct xfs_scrub *sc, struct xfs_inode *ip,
-+		unsigned int attr_flags, const unsigned char *name,
-+		unsigned int namelen, const void *value, unsigned int valuelen,
-+		void *priv);
-+
-+int xchk_xattr_walk(struct xfs_scrub *sc, struct xfs_inode *ip,
-+		xchk_xattr_fn attr_fn, void *priv);
-+
-+#endif /* __XFS_SCRUB_LISTXATTR_H__ */
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 8ad646beee75..ce1f6d03c3a9 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1042,7 +1042,8 @@ xfs_dirent_child_delta(
+ 	struct xfs_inode		*dp,
+ 	struct xfs_inode		*ip,
+ 	int				delta,
+-	struct xfs_name			*name)
++	struct xfs_name			*name,
++	unsigned int			diroffset)
+ {
+ 	if (xfs_hooks_switched_on(&xfs_dirents_hooks_switch)) {
+ 		struct xfs_dirent_update_params	p = {
+@@ -1050,6 +1051,7 @@ xfs_dirent_child_delta(
+ 			.ip		= ip,
+ 			.delta		= delta,
+ 			.name		= name,
++			.diroffset	= diroffset,
+ 		};
+ 		struct xfs_mount	*mp = ip->i_mount;
+ 
+@@ -1210,7 +1212,7 @@ xfs_create(
+ 	 * Create ip with a reference from dp, and add '.' and '..' references
+ 	 * if it's a directory.
+ 	 */
+-	xfs_dirent_child_delta(dp, ip, 1, name);
++	xfs_dirent_child_delta(dp, ip, 1, name, diroffset);
+ 	if (is_dir) {
+ 		xfs_dirent_self_delta(ip, 1);
+ 		xfs_dirent_backref_delta(dp, ip, 1);
+@@ -1481,7 +1483,7 @@ xfs_link(
+ 			goto error_return;
+ 	}
+ 
+-	xfs_dirent_child_delta(tdp, sip, 1, target_name);
++	xfs_dirent_child_delta(tdp, sip, 1, target_name, diroffset);
+ 
+ 	/*
+ 	 * If this is a synchronous mount, make sure that the
+@@ -2757,7 +2759,7 @@ xfs_remove(
+ 	 * Drop the link from dp to ip, and if ip was a directory, remove the
+ 	 * '.' and '..' references since we freed the directory.
+ 	 */
+-	xfs_dirent_child_delta(dp, ip, -1, name);
++	xfs_dirent_child_delta(dp, ip, -1, name, dir_offset);
+ 	if (S_ISDIR(VFS_I(ip)->i_mode)) {
+ 		xfs_dirent_backref_delta(dp, ip, -1);
+ 		xfs_dirent_self_delta(ip, -1);
+@@ -2873,18 +2875,22 @@ static inline void
+ xfs_exchange_call_nlink_hooks(
+ 	struct xfs_inode	*src_dp,
+ 	struct xfs_name		*src_name,
++	xfs_dir2_dataptr_t	src_diroffset,
+ 	struct xfs_inode	*src_ip,
+ 	struct xfs_inode	*target_dp,
+ 	struct xfs_name		*target_name,
++	xfs_dir2_dataptr_t	target_diroffset,
+ 	struct xfs_inode	*target_ip)
+ {
+ 	/* Exchange files in the source directory. */
+-	xfs_dirent_child_delta(src_dp, src_ip, -1, src_name);
+-	xfs_dirent_child_delta(src_dp, target_ip, 1, src_name);
++	xfs_dirent_child_delta(src_dp, src_ip, -1, src_name, src_diroffset);
++	xfs_dirent_child_delta(src_dp, target_ip, 1, src_name, src_diroffset);
+ 
+ 	/* Exchange files in the target directory. */
+-	xfs_dirent_child_delta(target_dp, target_ip, -1, target_name);
+-	xfs_dirent_child_delta(target_dp, src_ip, 1, target_name);
++	xfs_dirent_child_delta(target_dp, target_ip, -1, target_name,
++			target_diroffset);
++	xfs_dirent_child_delta(target_dp, src_ip, 1, target_name,
++			target_diroffset);
+ 
+ 	/* If the source file is a dir, update its dotdot entry. */
+ 	if (S_ISDIR(VFS_I(src_ip)->i_mode)) {
+@@ -2903,9 +2909,11 @@ static inline void
+ xfs_rename_call_nlink_hooks(
+ 	struct xfs_inode	*src_dp,
+ 	struct xfs_name		*src_name,
++	xfs_dir2_dataptr_t	src_diroffset,
+ 	struct xfs_inode	*src_ip,
+ 	struct xfs_inode	*target_dp,
+ 	struct xfs_name		*target_name,
++	xfs_dir2_dataptr_t	target_diroffset,
+ 	struct xfs_inode	*target_ip,
+ 	struct xfs_inode	*wip)
+ {
+@@ -2914,16 +2922,16 @@ xfs_rename_call_nlink_hooks(
+ 	 * move the source file to the target directory.
+ 	 */
+ 	if (target_ip)
+-		xfs_dirent_child_delta(target_dp, target_ip, -1, target_name);
+-	xfs_dirent_child_delta(target_dp, src_ip, 1, target_name);
++		xfs_dirent_child_delta(target_dp, target_ip, -1, target_name, target_diroffset);
++	xfs_dirent_child_delta(target_dp, src_ip, 1, target_name, target_diroffset);
+ 
+ 	/*
+ 	 * Remove the source file from the source directory, and possibly move
+ 	 * the whiteout file into its place.
+ 	 */
+-	xfs_dirent_child_delta(src_dp, src_ip, -1, src_name);
++	xfs_dirent_child_delta(src_dp, src_ip, -1, src_name, src_diroffset);
+ 	if (wip)
+-		xfs_dirent_child_delta(src_dp, wip, 1, src_name);
++		xfs_dirent_child_delta(src_dp, wip, 1, src_name, src_diroffset);
+ 
+ 	/* If the source file is a dir, update its dotdot entry. */
+ 	if (S_ISDIR(VFS_I(src_ip)->i_mode)) {
+@@ -3080,7 +3088,8 @@ xfs_cross_rename(
+ 	xfs_trans_log_inode(tp, dp1, XFS_ILOG_CORE);
+ 
+ 	if (xfs_hooks_switched_on(&xfs_dirents_hooks_switch))
+-		xfs_exchange_call_nlink_hooks(dp1, name1, ip1, dp2, name2, ip2);
++		xfs_exchange_call_nlink_hooks(dp1, name1, old_diroffset, ip1,
++				dp2, name2, new_diroffset, ip2);
+ 
+ 	return xfs_finish_rename(tp);
+ 
+@@ -3560,8 +3569,9 @@ xfs_rename(
+ 		xfs_trans_log_inode(tp, target_dp, XFS_ILOG_CORE);
+ 
+ 	if (xfs_hooks_switched_on(&xfs_dirents_hooks_switch))
+-		xfs_rename_call_nlink_hooks(src_dp, src_name, src_ip,
+-				target_dp, target_name, target_ip, wip);
++		xfs_rename_call_nlink_hooks(src_dp, src_name, old_diroffset,
++				src_ip, target_dp, target_name, new_diroffset,
++				target_ip, wip);
+ 
+ 	error = xfs_finish_rename(tp);
+ 
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 94a1490fb7b0..403b0f4cb5c0 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -592,12 +592,13 @@ struct xfs_dirent_update_params {
+ 	const struct xfs_inode	*dp;
+ 	const struct xfs_inode	*ip;
+ 	const struct xfs_name	*name;
++	unsigned int		diroffset;
+ 	int			delta;
+ };
+ 
+ #ifdef CONFIG_XFS_LIVE_HOOKS
+ void xfs_dirent_child_delta(struct xfs_inode *dp, struct xfs_inode *ip,
+-		int delta, struct xfs_name *name);
++		int delta, struct xfs_name *name, unsigned int diroffset);
+ 
+ struct xfs_dirent_hook {
+ 	struct xfs_hook		delta_hook;
+@@ -610,7 +611,7 @@ int xfs_dirent_hook_add(struct xfs_mount *mp, struct xfs_dirent_hook *hook);
+ void xfs_dirent_hook_del(struct xfs_mount *mp, struct xfs_dirent_hook *hook);
+ 
+ #else
+-# define xfs_dirent_child_delta(dp, ip, delta, name)	((void)0)
++# define xfs_dirent_child_delta(dp, ip, delta, name, doff)	((void)0)
+ #endif /* CONFIG_XFS_LIVE_HOOKS */
+ 
+ #endif	/* __XFS_INODE_H__ */
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index 77427a50a760..fdfaab466f5d 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -354,7 +354,7 @@ xfs_symlink(
+ 			goto out_trans_cancel;
+ 	}
+ 
+-	xfs_dirent_child_delta(dp, ip, 1, link_name);
++	xfs_dirent_child_delta(dp, ip, 1, link_name, diroffset);
+ 
+ 	/*
+ 	 * If this is a synchronous mount, make sure that the
 
