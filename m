@@ -2,44 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 776A6C636CC
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 21:06:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91D84C636D6
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 21:07:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230078AbjBPVGx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Feb 2023 16:06:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40678 "EHLO
+        id S230101AbjBPVHH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Feb 2023 16:07:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230100AbjBPVGx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 16:06:53 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D8972B632
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 13:06:52 -0800 (PST)
+        with ESMTP id S230100AbjBPVHH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 16:07:07 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3142D2B632
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 13:07:06 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B1418B8217A
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 21:06:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 714FBC433D2;
-        Thu, 16 Feb 2023 21:06:49 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C37B960BFE
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 21:07:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28E52C433EF;
+        Thu, 16 Feb 2023 21:07:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676581609;
-        bh=rlZY2hureLjwd7HVSepenAKow1b7C3bQF03fZOGtYsc=;
+        s=k20201202; t=1676581625;
+        bh=AiM0WqRVjRuNiWrv9EzqUofUanAeU1/gOoxJJEzkT8Y=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=FYx6iCD92sLNCLz5/r2Lr7DCvls9JQJhE0V/Zifvj7OuTlZyMFGGSeXR69E4TmYso
-         k4otDzTYBhIDaRMpkmd8WcoeavLYTOsMBGhTpKVUQ/ZNtgHoxJDhv9AwSIhnPQa1kj
-         djGToWXy4w9XrR5VOkxjEJ7jvJpjQsd0Kgt1IFuzEApx+RDXr0abVK3uNvqoqpn/BU
-         vHX73usJjLiwldbKeXjInTFWR+oayXDEvz46Prep5YPrZ1MBAnDkA1HsI/I/HB+29c
-         /uwIip0sxSZaW8ngMvP13CduAmB3nSSzFRYtvNiQgsSCGTbblXb9dnavSIfviCwYS0
-         h0e11LJ+9NpNA==
-Date:   Thu, 16 Feb 2023 13:06:48 -0800
-Subject: [PATCH 4/4] libxfs: export attr3_leaf_hdr_from_disk via
- libxfs_api_defs.h
+        b=Rc8fwVW/NvTxjiV+V0Wf2ws32F4YYwuFsAgWq6orxepwbEBaPXdxuIToy3pxaLvXv
+         lt3kLxBSBOjglv9Nf/CsuNiJOPW36uI58q826gYUj1fHEv29MgzRbNXlwLyVjP8J58
+         wi5OuuS71utAczBF2T+w9wB6NraJ7BKoRm2v9LAOTffrEZ3ikrH75432A+P2h32APM
+         BO7e8VhDe2giopkdGy8SyrU/UQFO3ORn7MHJxvUH0v8noiEMDdZAmJZzOvD2sAvfAd
+         boo38A1vvj7BXKgRqMW1pZ2+XMSrfRsOoIfuNYw0T+qugUdmQDxMz7Po9mUr1GnjfV
+         zcarSdAOM/k0w==
+Date:   Thu, 16 Feb 2023 13:07:04 -0800
+Subject: [PATCH 1/3] xfs: shorten parent pointer function names
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167657880733.3477371.14571769745474857902.stgit@magnolia>
-In-Reply-To: <167657880680.3477371.18364607478868446486.stgit@magnolia>
-References: <167657880680.3477371.18364607478868446486.stgit@magnolia>
+Message-ID: <167657881038.3477513.11767684665536808344.stgit@magnolia>
+In-Reply-To: <167657881025.3477513.15490690754847111370.stgit@magnolia>
+References: <167657881025.3477513.15490690754847111370.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -50,85 +49,170 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Do the xfs -> libxfs switcheroo and cleanups separately so the next
-patch doesn't become an even larger mess.
+Shorten the function names and add brief comments to each, outlining
+what they're supposed to be doing.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/attr.c                |    2 +-
- db/metadump.c            |    2 +-
- libxfs/libxfs_api_defs.h |    1 +
- repair/attr_repair.c     |    6 +++---
- 4 files changed, 6 insertions(+), 5 deletions(-)
+ libxfs/libxfs_api_defs.h |    2 +-
+ libxfs/xfs_parent.c      |   18 ++++++++++++------
+ libxfs/xfs_parent.h      |   24 ++++++++++++------------
+ mkfs/proto.c             |   12 ++++++------
+ 4 files changed, 31 insertions(+), 25 deletions(-)
 
 
-diff --git a/db/attr.c b/db/attr.c
-index db7cf54b..8ea7b36e 100644
---- a/db/attr.c
-+++ b/db/attr.c
-@@ -253,7 +253,7 @@ attr_leaf_entry_walk(
- 		return 0;
- 
- 	off = byteize(startoff);
--	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
-+	libxfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
- 	entries = xfs_attr3_leaf_entryp(leaf);
- 
- 	for (i = 0; i < leafhdr.count; i++) {
-diff --git a/db/metadump.c b/db/metadump.c
-index bb441fbb..4be23993 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -1757,7 +1757,7 @@ process_attr_block(
- 	}
- 
- 	/* Ok, it's a leaf - get header; accounts for crc & non-crc */
--	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &hdr, leaf);
-+	libxfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &hdr, leaf);
- 
- 	nentries = hdr.count;
- 	if (nentries == 0 ||
 diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 055d2862..6d045867 100644
+index 6d045867..a5045d2e 100644
 --- a/libxfs/libxfs_api_defs.h
 +++ b/libxfs/libxfs_api_defs.h
-@@ -33,6 +33,7 @@
- #define xfs_alloc_read_agf		libxfs_alloc_read_agf
- #define xfs_alloc_vextent		libxfs_alloc_vextent
+@@ -141,7 +141,7 @@
+ #define xfs_log_get_max_trans_res	libxfs_log_get_max_trans_res
+ #define xfs_log_sb			libxfs_log_sb
+ #define xfs_mode_to_ftype		libxfs_mode_to_ftype
+-#define xfs_parent_defer_add		libxfs_parent_defer_add
++#define xfs_parent_add			libxfs_parent_add
+ #define xfs_parent_finish		libxfs_parent_finish
+ #define xfs_parent_start		libxfs_parent_start
+ #define xfs_perag_get			libxfs_perag_get
+diff --git a/libxfs/xfs_parent.c b/libxfs/xfs_parent.c
+index 74c7f1f7..89eb531f 100644
+--- a/libxfs/xfs_parent.c
++++ b/libxfs/xfs_parent.c
+@@ -136,6 +136,10 @@ xfs_parent_irec_from_disk(
+ 	memset(&irec->p_name[valuelen], 0, sizeof(irec->p_name) - valuelen);
+ }
  
-+#define xfs_attr3_leaf_hdr_from_disk	libxfs_attr3_leaf_hdr_from_disk
- #define xfs_attr_get			libxfs_attr_get
- #define xfs_attr_leaf_newentsize	libxfs_attr_leaf_newentsize
- #define xfs_attr_namecheck		libxfs_attr_namecheck
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index afe8073c..d3fd7a47 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -579,7 +579,7 @@ process_leaf_attr_block(
- 	da_freemap_t *attr_freemap;
- 	struct xfs_attr3_icleaf_hdr leafhdr;
++/*
++ * Allocate memory to control a logged parent pointer update as part of a
++ * dirent operation.
++ */
+ int
+ __xfs_parent_init(
+ 	struct xfs_mount		*mp,
+@@ -171,12 +175,13 @@ __xfs_parent_init(
+ 	return 0;
+ }
  
--	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
-+	libxfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
- 	clearit = usedbs = 0;
- 	firstb = mp->m_sb.sb_blocksize;
- 	stop = xfs_attr3_leaf_hdr_size(leaf);
-@@ -802,7 +802,7 @@ process_leaf_attr_level(xfs_mount_t	*mp,
- 		}
++/* Add a parent pointer to reflect a dirent addition. */
+ int
+-xfs_parent_defer_add(
++xfs_parent_add(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_parent_defer	*parent,
+ 	struct xfs_inode	*dp,
+-	struct xfs_name		*parent_name,
++	const struct xfs_name	*parent_name,
+ 	xfs_dir2_dataptr_t	diroffset,
+ 	struct xfs_inode	*child)
+ {
+@@ -195,8 +200,9 @@ xfs_parent_defer_add(
+ 	return xfs_attr_defer_add(args);
+ }
  
- 		leaf = bp->b_addr;
--		xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
-+		libxfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
++/* Remove a parent pointer to reflect a dirent removal. */
+ int
+-xfs_parent_defer_remove(
++xfs_parent_remove(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_inode	*dp,
+ 	struct xfs_parent_defer	*parent,
+@@ -212,14 +218,14 @@ xfs_parent_defer_remove(
+ 	return xfs_attr_defer_remove(args);
+ }
  
- 		/* check magic number for leaf directory btree block */
- 		if (!(leafhdr.magic == XFS_ATTR_LEAF_MAGIC ||
-@@ -1000,7 +1000,7 @@ process_longform_leaf_root(
- 	 * check sibling pointers in leaf block or root block 0 before
- 	 * we have to release the btree block
- 	 */
--	xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, bp->b_addr);
-+	libxfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, bp->b_addr);
- 	if (leafhdr.forw != 0 || leafhdr.back != 0)  {
- 		if (!no_modify)  {
- 			do_warn(
+-
++/* Replace one parent pointer with another to reflect a rename. */
+ int
+-xfs_parent_defer_replace(
++xfs_parent_replace(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_parent_defer	*new_parent,
+ 	struct xfs_inode	*old_dp,
+ 	xfs_dir2_dataptr_t	old_diroffset,
+-	struct xfs_name		*parent_name,
++	const struct xfs_name	*parent_name,
+ 	struct xfs_inode	*new_dp,
+ 	xfs_dir2_dataptr_t	new_diroffset,
+ 	struct xfs_inode	*child)
+diff --git a/libxfs/xfs_parent.h b/libxfs/xfs_parent.h
+index f4f5887d..35854e96 100644
+--- a/libxfs/xfs_parent.h
++++ b/libxfs/xfs_parent.h
+@@ -49,8 +49,9 @@ struct xfs_parent_defer {
+  * Parent pointer attribute prototypes
+  */
+ void xfs_init_parent_name_rec(struct xfs_parent_name_rec *rec,
+-			      struct xfs_inode *ip,
+-			      uint32_t p_diroffset);
++		struct xfs_inode *ip, uint32_t p_diroffset);
++void xfs_init_parent_name_irec(struct xfs_parent_name_irec *irec,
++			       struct xfs_parent_name_rec *rec);
+ int __xfs_parent_init(struct xfs_mount *mp, bool grab_log,
+ 		struct xfs_parent_defer **parentp);
+ 
+@@ -78,18 +79,17 @@ xfs_parent_start_locked(
+ 	return 0;
+ }
+ 
+-int xfs_parent_defer_add(struct xfs_trans *tp, struct xfs_parent_defer *parent,
+-			 struct xfs_inode *dp, struct xfs_name *parent_name,
+-			 xfs_dir2_dataptr_t diroffset, struct xfs_inode *child);
+-int xfs_parent_defer_replace(struct xfs_trans *tp,
++int xfs_parent_add(struct xfs_trans *tp, struct xfs_parent_defer *parent,
++		struct xfs_inode *dp, const struct xfs_name *parent_name,
++		xfs_dir2_dataptr_t diroffset, struct xfs_inode *child);
++int xfs_parent_replace(struct xfs_trans *tp,
+ 		struct xfs_parent_defer *new_parent, struct xfs_inode *old_dp,
+-		xfs_dir2_dataptr_t old_diroffset, struct xfs_name *parent_name,
+-		struct xfs_inode *new_ip, xfs_dir2_dataptr_t new_diroffset,
++		xfs_dir2_dataptr_t old_diroffset,
++		const struct xfs_name *parent_name, struct xfs_inode *new_ip,
++		xfs_dir2_dataptr_t new_diroffset, struct xfs_inode *child);
++int xfs_parent_remove(struct xfs_trans *tp, struct xfs_inode *dp,
++		struct xfs_parent_defer *parent, xfs_dir2_dataptr_t diroffset,
+ 		struct xfs_inode *child);
+-int xfs_parent_defer_remove(struct xfs_trans *tp, struct xfs_inode *dp,
+-			    struct xfs_parent_defer *parent,
+-			    xfs_dir2_dataptr_t diroffset,
+-			    struct xfs_inode *child);
+ 
+ void __xfs_parent_cancel(struct xfs_mount *mp, struct xfs_parent_defer *parent);
+ 
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index e0131df5..b8d7ac96 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -508,8 +508,8 @@ parseproto(
+ 		newdirent(mp, tp, pip, &xname, ip->i_ino, &offset);
+ 		libxfs_trans_log_inode(tp, ip, flags);
+ 		if (parent) {
+-			error = -libxfs_parent_defer_add(tp, parent, pip,
+-					&xname, offset, ip);
++			error = -libxfs_parent_add(tp, parent, pip, &xname,
++					offset, ip);
+ 			if (error)
+ 				fail(_("committing parent pointers failed."),
+ 						error);
+@@ -601,8 +601,8 @@ parseproto(
+ 		newdirectory(mp, tp, ip, pip);
+ 		libxfs_trans_log_inode(tp, ip, flags);
+ 		if (parent) {
+-			error = -libxfs_parent_defer_add(tp, parent, pip,
+-					&xname, offset, ip);
++			error = -libxfs_parent_add(tp, parent, pip, &xname,
++					offset, ip);
+ 			if (error)
+ 				fail(_("committing parent pointers failed."),
+ 						error);
+@@ -636,8 +636,8 @@ parseproto(
+ 	}
+ 	libxfs_trans_log_inode(tp, ip, flags);
+ 	if (parent) {
+-		error = -libxfs_parent_defer_add(tp, parent, pip, &xname,
+-				offset, ip);
++		error = -libxfs_parent_add(tp, parent, pip, &xname, offset,
++				ip);
+ 		if (error)
+ 			fail(_("committing parent pointers failed."), error);
+ 	}
 
