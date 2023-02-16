@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D4B0C636CC
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 21:05:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A036EC61DA4
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 21:05:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230083AbjBPVFF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Feb 2023 16:05:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40032 "EHLO
+        id S230079AbjBPVFT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Feb 2023 16:05:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40098 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230079AbjBPVFE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 16:05:04 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B285F505D3
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 13:05:03 -0800 (PST)
+        with ESMTP id S230084AbjBPVFT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 16:05:19 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E010505D3
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 13:05:18 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 11D2ACE2D78
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 21:05:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E5ABC433EF;
-        Thu, 16 Feb 2023 21:05:00 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 1815EB826BA
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 21:05:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9DBEC433D2;
+        Thu, 16 Feb 2023 21:05:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676581500;
-        bh=QV1IyaaqkGuQNVpfSet+j6EQKRL8H/mVL5G1Nw79xXk=;
+        s=k20201202; t=1676581515;
+        bh=V3qfY/0jz7ZA+ArWQMcJJ5mQocu4dVWeZwdjE0/qRac=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=aT+m7HTnn1ei7JL1/DOSQvzD0TKXIXFG9/NsAKRJRcs9ubcdfq/Mxez7JC7Nqy/V7
-         7UuoDVR2fUOiSk2sktteADp0jLxUVfE3Wp45oSrWhLe6QaTrclmGPLiPsVpvFxaJVV
-         ZGR3h6EmRmijcwe45whMxvAa4pGSXzU4J4x5yko5Rva/HEkT4hD78uHTpJMpC4Z4kg
-         hnQxxMPIgTvX+Khs/YyW+dyWEF1CATRWJfkLPhXW52VOzazkCNNL6mOjebrND7bhTc
-         +ksR8j0nfmNvKs06ablExcrWHmnNPdKFOEUBiGleGJ+bH1eMJSb1tT1sDZtWb6weju
-         27h7mddoaEHjw==
-Date:   Thu, 16 Feb 2023 13:04:59 -0800
-Subject: [PATCH 07/10] libfrog: only walk one parent pointer at a time in
- handle_walk_parent_path_ptr
+        b=ifks/CDY2Vk2iaEX1amG96iC827vhFzV/7Y7Vh2jZBXeSttPYXM1+TGlzlGzT1tRU
+         U2ddno0qu7QaTawiwzGfAXgxSW+rc/cJpgdeedJmUrGQNVYgdwm40agn3oGsZ2GnSq
+         LwotZ3Gam93sjNHpexLNNfBqETChtq7WurPOElG1RcOS6O2oQXCuvrc2CEJs8RCzeF
+         qFeNhfX7zugXThefrryF2Tf+tKiVLAa40CNtF9fehXxfHCG3dYaHcJaojJgiB2kTGH
+         11IZNojDz5rf/TXMw/HYpoNLnYVg7oijsIaaQAhSABiqGkMObvtxwgvjIeE2mzn+li
+         GVp4kx8BD9s8w==
+Date:   Thu, 16 Feb 2023 13:05:15 -0800
+Subject: [PATCH 08/10] libfrog: trim trailing slashes when printing pptr paths
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167657880350.3477097.7538603843264282258.stgit@magnolia>
+Message-ID: <167657880363.3477097.15991358215180868688.stgit@magnolia>
 In-Reply-To: <167657880257.3477097.11495108667073036392.stgit@magnolia>
 References: <167657880257.3477097.11495108667073036392.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,54 +49,63 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-handle_walk_parents already walks each returned parent pointer record,
-so we don't need a loop in handle_walk_parent_path_ptr.
+Trim the trailing slashes in the mountpoint string when we're printing
+parent pointer paths.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libfrog/pptrs.c |   24 ++++++++++--------------
- 1 file changed, 10 insertions(+), 14 deletions(-)
+ io/parent.c     |    9 +++++++--
+ libfrog/pptrs.c |    9 +++++++--
+ 2 files changed, 14 insertions(+), 4 deletions(-)
 
 
+diff --git a/io/parent.c b/io/parent.c
+index 25d835a3..694c0839 100644
+--- a/io/parent.c
++++ b/io/parent.c
+@@ -97,6 +97,7 @@ path_print(
+ 	struct pptr_args	*args = arg;
+ 	char			buf[PATH_MAX];
+ 	size_t			len = PATH_MAX;
++	int			mntpt_len = strlen(mntpt);
+ 	int			ret;
+ 
+ 	if (args->filter_ino || args->filter_name) {
+@@ -105,8 +106,12 @@ path_print(
+ 			return 0;
+ 	}
+ 
+-	ret = snprintf(buf, len, "%s", mntpt);
+-	if (ret != strlen(mntpt))
++	/* Trim trailing slashes from the mountpoint */
++	while (mntpt_len > 0 && mntpt[mntpt_len - 1] == '/')
++		mntpt_len--;
++
++	ret = snprintf(buf, len, "%.*s", mntpt_len, mntpt);
++	if (ret != mntpt_len)
+ 		return ENAMETOOLONG;
+ 
+ 	ret = path_list_to_string(path, buf + ret, len - ret);
 diff --git a/libfrog/pptrs.c b/libfrog/pptrs.c
-index ef91a919..8d9e62a2 100644
+index 8d9e62a2..61fd1fb9 100644
 --- a/libfrog/pptrs.c
 +++ b/libfrog/pptrs.c
-@@ -134,26 +134,22 @@ handle_walk_parent_path_ptr(
+@@ -268,10 +268,15 @@ handle_to_path_walk(
+ 	void			*arg)
  {
- 	struct walk_ppath_level_info	*wpli = arg;
- 	struct walk_ppaths_info		*wpi = wpli->wpi;
--	unsigned int			i;
- 	int				ret = 0;
+ 	struct path_walk_info	*pwi = arg;
++	int			mntpt_len = strlen(mntpt);
+ 	int			ret;
  
- 	if (pi->pi_flags & XFS_PPTR_OFLAG_ROOT)
- 		return wpi->fn(wpi->mntpt, wpi->path, wpi->arg);
- 
--	for (i = 0; i < pi->pi_ptrs_used; i++) {
--		p = xfs_ppinfo_to_pp(pi, i);
--		ret = path_component_change(wpli->pc, p->xpp_name,
-+	ret = path_component_change(wpli->pc, p->xpp_name,
- 				strlen((char *)p->xpp_name), p->xpp_ino);
--		if (ret)
--			break;
--		wpli->newhandle.ha_fid.fid_ino = p->xpp_ino;
--		wpli->newhandle.ha_fid.fid_gen = p->xpp_gen;
--		path_list_add_parent_component(wpi->path, wpli->pc);
--		ret = handle_walk_parent_paths(wpi, &wpli->newhandle);
--		path_list_del_component(wpi->path, wpli->pc);
--		if (ret)
--			break;
--	}
-+	if (ret)
-+		return ret;
+-	ret = snprintf(pwi->buf, pwi->len, "%s", mntpt);
+-	if (ret != strlen(mntpt))
++	/* Trim trailing slashes from the mountpoint */
++	while (mntpt_len > 0 && mntpt[mntpt_len - 1] == '/')
++		mntpt_len--;
 +
-+	wpli->newhandle.ha_fid.fid_ino = p->xpp_ino;
-+	wpli->newhandle.ha_fid.fid_gen = p->xpp_gen;
-+
-+	path_list_add_parent_component(wpi->path, wpli->pc);
-+	ret = handle_walk_parent_paths(wpi, &wpli->newhandle);
-+	path_list_del_component(wpi->path, wpli->pc);
++	ret = snprintf(pwi->buf, pwi->len, "%.*s", mntpt_len, mntpt);
++	if (ret != mntpt_len)
+ 		return ENAMETOOLONG;
  
- 	return ret;
- }
+ 	ret = path_list_to_string(path, pwi->buf + ret, pwi->len - ret);
 
