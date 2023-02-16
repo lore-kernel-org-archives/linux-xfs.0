@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4831C61DA4
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:42:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F3EAC61DA4
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:43:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229556AbjBPUmx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Feb 2023 15:42:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54346 "EHLO
+        id S229605AbjBPUnI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Feb 2023 15:43:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54870 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229505AbjBPUmw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:42:52 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 815795FE8
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:42:50 -0800 (PST)
+        with ESMTP id S229505AbjBPUnH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:43:07 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 262271A4A0
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:43:06 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1CDE660C1D
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:42:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7405FC433EF;
-        Thu, 16 Feb 2023 20:42:49 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B6B0060C1A
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:43:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E843C433D2;
+        Thu, 16 Feb 2023 20:43:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676580169;
-        bh=4yPBPg1noB1xAfgGQAL12kRrTE4RjiRSjMgD0Ko4lkY=;
+        s=k20201202; t=1676580185;
+        bh=QQ5X3OySd4u7uObkY7U5P6tikOTpxzv04H9pBqaB6pk=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=ANuX5tDkvt/qUJTS9w8rqUBzqNtAA9sRPwaw3iV+frmpvBWq8+dvHiKw/7ng6d/G/
-         ZeH1UeI1I+Ka0vCyqy8AlfiIXQOuVXZ9zk6ldgjEQwlH8cdA3ZSyaYEKoKjGiOpN07
-         2q4LLD/WSHn3YXUTzuJPPTkKjugOB12Rhe89yfSEQLJANMU8gvbQ4cfgQef52+KBw9
-         KJWfsKHwur7G6Fi0XnAx6N4OW3E086mqA8z2yH1o7eHUeR+uDP942ktmUlPGluBl1z
-         +oeDW5wvRa3p40xEH29h1O2iCj4q0b4CoMm1P4OybQbbHCA3ZryOb4/tsDBZDIqLbl
-         nbPnpwmgSsSdA==
-Date:   Thu, 16 Feb 2023 12:42:49 -0800
-Subject: [PATCH 04/23] xfs: always check the existence of a dirent's child
- inode
+        b=OEYkZxhkb4znCHyPSv/EyT6rhz7ueeUsgWYvoulKcwJqOoA+0ru/tSs1fwY8tHlkS
+         CUyl7SXh3bVDoTcxhoYqHYriooNPC6rHmtKb5NIK/i5kDVH44gAHafxBel0tllxEP7
+         AMp/Cs6X9MwwAenHxDEMKk0KxX9QuiXXTgD890pjZUzPPIfR/wMMOAStw9muQuBlvL
+         F1E+3o6O+A0prBAS5gU5mZIe34kATCJfYGJLJDNsRphYIdq20pIF9JSP/FbvbLDFb4
+         YpCJMajzNLJg7URN/55CEYWpSyeJPYERMAZLyPetZkftNdrWOQbD2TEzuY/+55kJ4f
+         gXfbytURFsUvQ==
+Date:   Thu, 16 Feb 2023 12:43:04 -0800
+Subject: [PATCH 05/23] xfs: remove the for_each_xbitmap_ helpers
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167657873894.3474338.5618759389061202160.stgit@magnolia>
+Message-ID: <167657873908.3474338.7260701089205383597.stgit@magnolia>
 In-Reply-To: <167657873813.3474338.3118516275923112371.stgit@magnolia>
 References: <167657873813.3474338.3118516275923112371.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,167 +49,447 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When we're scrubbing directory entries, we always need to iget the child
-inode to make sure that the inode pointer points to a valid inode.  The
-original directory scrub code (commit a5c4) only set us up to do this
-for ftype=1 filesystems, which is not sufficient; and then commit 4b80
-made it worse by exempting the dot and dotdot entries.
+Remove the for_each_xbitmap_ macros in favor of proper iterator
+functions.  We'll soon be switching this data structure over to an
+interval tree implementation, which means that we can't allow callers to
+modify the bitmap during iteration without telling us.
 
-Sorta-fixes: a5c46e5e8912 ("xfs: scrub directory metadata")
-Sorta-fixes: 4b80ac64450f ("xfs: scrub should mark a directory corrupt if any entries cannot be iget'd")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/dir.c |   75 ++++++++++++++++++++--------------------------------
- 1 file changed, 29 insertions(+), 46 deletions(-)
+ fs/xfs/scrub/agheader_repair.c |   89 ++++++++++++++++++++---------------
+ fs/xfs/scrub/bitmap.c          |   59 +++++++++++++++++++++++
+ fs/xfs/scrub/bitmap.h          |   22 ++++++---
+ fs/xfs/scrub/repair.c          |  102 ++++++++++++++++++++++------------------
+ 4 files changed, 179 insertions(+), 93 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-index ec0c73e0eb0c..8076e7620734 100644
---- a/fs/xfs/scrub/dir.c
-+++ b/fs/xfs/scrub/dir.c
-@@ -39,52 +39,28 @@ struct xchk_dir_ctx {
- };
- 
- /* Check that an inode's mode matches a given DT_ type. */
--STATIC int
-+STATIC void
- xchk_dir_check_ftype(
- 	struct xchk_dir_ctx	*sdc,
- 	xfs_fileoff_t		offset,
--	xfs_ino_t		inum,
-+	struct xfs_inode	*ip,
- 	int			dtype)
+diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+index d75d82151eeb..26bce2f12b09 100644
+--- a/fs/xfs/scrub/agheader_repair.c
++++ b/fs/xfs/scrub/agheader_repair.c
+@@ -486,10 +486,11 @@ xrep_agfl_walk_rmap(
+ /* Strike out the blocks that are cross-linked according to the rmapbt. */
+ STATIC int
+ xrep_agfl_check_extent(
+-	struct xrep_agfl	*ra,
+ 	uint64_t		start,
+-	uint64_t		len)
++	uint64_t		len,
++	void			*priv)
  {
- 	struct xfs_mount	*mp = sdc->sc->mp;
--	struct xfs_inode	*ip;
- 	int			ino_dtype;
--	int			error = 0;
++	struct xrep_agfl	*ra = priv;
+ 	xfs_agblock_t		agbno = XFS_FSB_TO_AGBNO(ra->sc->mp, start);
+ 	xfs_agblock_t		last_agbno = agbno + len - 1;
+ 	int			error;
+@@ -537,7 +538,6 @@ xrep_agfl_collect_blocks(
+ 	struct xrep_agfl	ra;
+ 	struct xfs_mount	*mp = sc->mp;
+ 	struct xfs_btree_cur	*cur;
+-	struct xbitmap_range	*br, *n;
+ 	int			error;
  
- 	if (!xfs_has_ftype(mp)) {
- 		if (dtype != DT_UNKNOWN && dtype != DT_DIR)
- 			xchk_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK,
- 					offset);
--		goto out;
-+		return;
- 	}
+ 	ra.sc = sc;
+@@ -578,11 +578,7 @@ xrep_agfl_collect_blocks(
  
--	/*
--	 * Grab the inode pointed to by the dirent.  Use UNTRUSTED here to
--	 * check the allocation status of the inode in the inode btrees.
--	 *
--	 * If _iget returns -EINVAL or -ENOENT then the child inode number is
--	 * garbage and the directory is corrupt.  If the _iget returns
--	 * -EFSCORRUPTED or -EFSBADCRC then the child is corrupt which is a
--	 *  cross referencing error.  Any other error is an operational error.
--	 */
--	error = xchk_iget(sdc->sc, inum, &ip);
--	if (error == -EINVAL || error == -ENOENT) {
--		error = -EFSCORRUPTED;
--		xchk_fblock_process_error(sdc->sc, XFS_DATA_FORK, 0, &error);
--		goto out;
+ 	/* Strike out the blocks that are cross-linked. */
+ 	ra.rmap_cur = xfs_rmapbt_init_cursor(mp, sc->tp, agf_bp, sc->sa.pag);
+-	for_each_xbitmap_extent(br, n, agfl_extents) {
+-		error = xrep_agfl_check_extent(&ra, br->start, br->len);
+-		if (error)
+-			break;
 -	}
--	if (!xchk_fblock_xref_process_error(sdc->sc, XFS_DATA_FORK, offset,
--			&error))
--		goto out;
++	error = xbitmap_walk(agfl_extents, xrep_agfl_check_extent, &ra);
+ 	xfs_btree_del_cursor(ra.rmap_cur, error);
+ 	if (error)
+ 		goto out_bmp;
+@@ -628,6 +624,43 @@ xrep_agfl_update_agf(
+ 			XFS_AGF_FLFIRST | XFS_AGF_FLLAST | XFS_AGF_FLCOUNT);
+ }
+ 
++struct xrep_agfl_fill {
++	struct xbitmap		used_extents;
++	struct xfs_scrub	*sc;
++	__be32			*agfl_bno;
++	xfs_agblock_t		flcount;
++	unsigned int		fl_off;
++};
++
++/* Fill the AGFL with whatever blocks are in this extent. */
++static int
++xrep_agfl_fill(
++	uint64_t		start,
++	uint64_t		len,
++	void			*priv)
++{
++	struct xrep_agfl_fill	*af = priv;
++	struct xfs_scrub	*sc = af->sc;
++	xfs_fsblock_t		fsbno = start;
++	int			error;
++
++	while (fsbno < start + len && af->fl_off < af->flcount)
++		af->agfl_bno[af->fl_off++] =
++				cpu_to_be32(XFS_FSB_TO_AGBNO(sc->mp, fsbno++));
++
++	trace_xrep_agfl_insert(sc->mp, sc->sa.pag->pag_agno,
++			XFS_FSB_TO_AGBNO(sc->mp, start), len);
++
++	error = xbitmap_set(&af->used_extents, start, fsbno - 1);
++	if (error)
++		return error;
++
++	if (af->fl_off == af->flcount)
++		return -ECANCELED;
++
++	return 0;
++}
++
+ /* Write out a totally new AGFL. */
+ STATIC void
+ xrep_agfl_init_header(
+@@ -636,13 +669,12 @@ xrep_agfl_init_header(
+ 	struct xbitmap		*agfl_extents,
+ 	xfs_agblock_t		flcount)
+ {
++	struct xrep_agfl_fill	af = {
++		.sc		= sc,
++		.flcount	= flcount,
++	};
+ 	struct xfs_mount	*mp = sc->mp;
+-	__be32			*agfl_bno;
+-	struct xbitmap_range	*br;
+-	struct xbitmap_range	*n;
+ 	struct xfs_agfl		*agfl;
+-	xfs_agblock_t		agbno;
+-	unsigned int		fl_off;
+ 
+ 	ASSERT(flcount <= xfs_agfl_size(mp));
+ 
+@@ -661,36 +693,15 @@ xrep_agfl_init_header(
+ 	 * blocks than fit in the AGFL, they will be freed in a subsequent
+ 	 * step.
+ 	 */
+-	fl_off = 0;
+-	agfl_bno = xfs_buf_to_agfl_bno(agfl_bp);
+-	for_each_xbitmap_extent(br, n, agfl_extents) {
+-		agbno = XFS_FSB_TO_AGBNO(mp, br->start);
 -
- 	/* Convert mode to the DT_* values that dir_emit uses. */
- 	ino_dtype = xfs_dir3_get_dtype(mp,
- 			xfs_mode_to_ftype(VFS_I(ip)->i_mode));
- 	if (ino_dtype != dtype)
- 		xchk_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK, offset);
--	xchk_irele(sdc->sc, ip);
--out:
+-		trace_xrep_agfl_insert(mp, sc->sa.pag->pag_agno, agbno,
+-				br->len);
+-
+-		while (br->len > 0 && fl_off < flcount) {
+-			agfl_bno[fl_off] = cpu_to_be32(agbno);
+-			fl_off++;
+-			agbno++;
+-
+-			/*
+-			 * We've now used br->start by putting it in the AGFL,
+-			 * so bump br so that we don't reap the block later.
+-			 */
+-			br->start++;
+-			br->len--;
+-		}
+-
+-		if (br->len)
+-			break;
+-		list_del(&br->list);
+-		kfree(br);
+-	}
++	xbitmap_init(&af.used_extents);
++	af.agfl_bno = xfs_buf_to_agfl_bno(agfl_bp),
++	xbitmap_walk(agfl_extents, xrep_agfl_fill, &af);
++	xbitmap_disunion(agfl_extents, &af.used_extents);
+ 
+ 	/* Write new AGFL to disk. */
+ 	xfs_trans_buf_set_type(sc->tp, agfl_bp, XFS_BLFT_AGFL_BUF);
+ 	xfs_trans_log_buf(sc->tp, agfl_bp, 0, BBTOB(agfl_bp->b_length) - 1);
++	xbitmap_destroy(&af.used_extents);
+ }
+ 
+ /* Repair the AGFL. */
+diff --git a/fs/xfs/scrub/bitmap.c b/fs/xfs/scrub/bitmap.c
+index a255f09e9f0a..d32ded56da90 100644
+--- a/fs/xfs/scrub/bitmap.c
++++ b/fs/xfs/scrub/bitmap.c
+@@ -13,6 +13,9 @@
+ #include "scrub/scrub.h"
+ #include "scrub/bitmap.h"
+ 
++#define for_each_xbitmap_extent(bex, n, bitmap) \
++	list_for_each_entry_safe((bex), (n), &(bitmap)->list, list)
++
+ /*
+  * Set a range of this bitmap.  Caller must ensure the range is not set.
+  *
+@@ -313,3 +316,59 @@ xbitmap_hweight(
+ 
+ 	return ret;
+ }
++
++/* Call a function for every run of set bits in this bitmap. */
++int
++xbitmap_walk(
++	struct xbitmap		*bitmap,
++	xbitmap_walk_fn	fn,
++	void			*priv)
++{
++	struct xbitmap_range	*bex, *n;
++	int			error = 0;
++
++	for_each_xbitmap_extent(bex, n, bitmap) {
++		error = fn(bex->start, bex->len, priv);
++		if (error)
++			break;
++	}
++
++	return error;
++}
++
++struct xbitmap_walk_bits {
++	xbitmap_walk_bits_fn	fn;
++	void			*priv;
++};
++
++/* Walk all the bits in a run. */
++static int
++xbitmap_walk_bits_in_run(
++	uint64_t			start,
++	uint64_t			len,
++	void				*priv)
++{
++	struct xbitmap_walk_bits	*wb = priv;
++	uint64_t			i;
++	int				error = 0;
++
++	for (i = start; i < start + len; i++) {
++		error = wb->fn(i, wb->priv);
++		if (error)
++			break;
++	}
++
++	return error;
++}
++
++/* Call a function for every set bit in this bitmap. */
++int
++xbitmap_walk_bits(
++	struct xbitmap			*bitmap,
++	xbitmap_walk_bits_fn		fn,
++	void				*priv)
++{
++	struct xbitmap_walk_bits	wb = {.fn = fn, .priv = priv};
++
++	return xbitmap_walk(bitmap, xbitmap_walk_bits_in_run, &wb);
++}
+diff --git a/fs/xfs/scrub/bitmap.h b/fs/xfs/scrub/bitmap.h
+index 900646b72de1..53601d281ffb 100644
+--- a/fs/xfs/scrub/bitmap.h
++++ b/fs/xfs/scrub/bitmap.h
+@@ -19,13 +19,6 @@ struct xbitmap {
+ void xbitmap_init(struct xbitmap *bitmap);
+ void xbitmap_destroy(struct xbitmap *bitmap);
+ 
+-#define for_each_xbitmap_extent(bex, n, bitmap) \
+-	list_for_each_entry_safe((bex), (n), &(bitmap)->list, list)
+-
+-#define for_each_xbitmap_block(b, bex, n, bitmap) \
+-	list_for_each_entry_safe((bex), (n), &(bitmap)->list, list) \
+-		for ((b) = (bex)->start; (b) < (bex)->start + (bex)->len; (b)++)
+-
+ int xbitmap_set(struct xbitmap *bitmap, uint64_t start, uint64_t len);
+ int xbitmap_disunion(struct xbitmap *bitmap, struct xbitmap *sub);
+ int xbitmap_set_btcur_path(struct xbitmap *bitmap,
+@@ -34,4 +27,19 @@ int xbitmap_set_btblocks(struct xbitmap *bitmap,
+ 		struct xfs_btree_cur *cur);
+ uint64_t xbitmap_hweight(struct xbitmap *bitmap);
+ 
++/*
++ * Return codes for the bitmap iterator functions are 0 to continue iterating,
++ * and non-zero to stop iterating.  Any non-zero value will be passed up to the
++ * iteration caller.  The special value -ECANCELED can be used to stop
++ * iteration, because neither bitmap iterator ever generates that error code on
++ * its own.  Callers must not modify the bitmap while walking it.
++ */
++typedef int (*xbitmap_walk_fn)(uint64_t start, uint64_t len, void *priv);
++int xbitmap_walk(struct xbitmap *bitmap, xbitmap_walk_fn fn,
++		void *priv);
++
++typedef int (*xbitmap_walk_bits_fn)(uint64_t bit, void *priv);
++int xbitmap_walk_bits(struct xbitmap *bitmap, xbitmap_walk_bits_fn fn,
++		void *priv);
++
+ #endif	/* __XFS_SCRUB_BITMAP_H__ */
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index 4b92f9253ccd..e117ae06e438 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -443,6 +443,30 @@ xrep_init_btblock(
+  * buffers associated with @bitmap.
+  */
+ 
++static int
++xrep_invalidate_block(
++	uint64_t		fsbno,
++	void			*priv)
++{
++	struct xfs_scrub	*sc = priv;
++	struct xfs_buf		*bp;
++	int			error;
++
++	/* Skip AG headers and post-EOFS blocks */
++	if (!xfs_verify_fsbno(sc->mp, fsbno))
++		return 0;
++
++	error = xfs_buf_incore(sc->mp->m_ddev_targp,
++			XFS_FSB_TO_DADDR(sc->mp, fsbno),
++			XFS_FSB_TO_BB(sc->mp, 1), XBF_TRYLOCK, &bp);
++	if (error)
++		return 0;
++
++	xfs_trans_bjoin(sc->tp, bp);
++	xfs_trans_binval(sc->tp, bp);
++	return 0;
++}
++
+ /*
+  * Invalidate buffers for per-AG btree blocks we're dumping.  This function
+  * is not intended for use with file data repairs; we have bunmapi for that.
+@@ -452,11 +476,6 @@ xrep_invalidate_blocks(
+ 	struct xfs_scrub	*sc,
+ 	struct xbitmap		*bitmap)
+ {
+-	struct xbitmap_range	*bmr;
+-	struct xbitmap_range	*n;
+-	struct xfs_buf		*bp;
+-	xfs_fsblock_t		fsbno;
+-
+ 	/*
+ 	 * For each block in each extent, see if there's an incore buffer for
+ 	 * exactly that block; if so, invalidate it.  The buffer cache only
+@@ -465,23 +484,7 @@ xrep_invalidate_blocks(
+ 	 * because we never own those; and if we can't TRYLOCK the buffer we
+ 	 * assume it's owned by someone else.
+ 	 */
+-	for_each_xbitmap_block(fsbno, bmr, n, bitmap) {
+-		int		error;
+-
+-		/* Skip AG headers and post-EOFS blocks */
+-		if (!xfs_verify_fsbno(sc->mp, fsbno))
+-			continue;
+-		error = xfs_buf_incore(sc->mp->m_ddev_targp,
+-				XFS_FSB_TO_DADDR(sc->mp, fsbno),
+-				XFS_FSB_TO_BB(sc->mp, 1), XBF_TRYLOCK, &bp);
+-		if (error)
+-			continue;
+-
+-		xfs_trans_bjoin(sc->tp, bp);
+-		xfs_trans_binval(sc->tp, bp);
+-	}
+-
+-	return 0;
++	return xbitmap_walk_bits(bitmap, xrep_invalidate_block, sc);
+ }
+ 
+ /* Ensure the freelist is the correct size. */
+@@ -502,6 +505,15 @@ xrep_fix_freelist(
+ 			can_shrink ? 0 : XFS_ALLOC_FLAG_NOSHRINK);
+ }
+ 
++/* Information about reaping extents after a repair. */
++struct xrep_reap_state {
++	struct xfs_scrub		*sc;
++
++	/* Reverse mapping owner and metadata reservation type. */
++	const struct xfs_owner_info	*oinfo;
++	enum xfs_ag_resv_type		resv;
++};
++
+ /*
+  * Put a block back on the AGFL.
+  */
+@@ -546,17 +558,23 @@ xrep_put_freelist(
+ /* Dispose of a single block. */
+ STATIC int
+ xrep_reap_block(
+-	struct xfs_scrub		*sc,
+-	xfs_fsblock_t			fsbno,
+-	const struct xfs_owner_info	*oinfo,
+-	enum xfs_ag_resv_type		resv)
++	uint64_t			fsbno,
++	void				*priv)
+ {
++	struct xrep_reap_state		*rs = priv;
++	struct xfs_scrub		*sc = rs->sc;
+ 	struct xfs_btree_cur		*cur;
+ 	struct xfs_buf			*agf_bp = NULL;
+ 	xfs_agblock_t			agbno;
+ 	bool				has_other_rmap;
+ 	int				error;
+ 
++	ASSERT(sc->ip != NULL ||
++	       XFS_FSB_TO_AGNO(sc->mp, fsbno) == sc->sa.pag->pag_agno);
++	trace_xrep_dispose_btree_extent(sc->mp,
++			XFS_FSB_TO_AGNO(sc->mp, fsbno),
++			XFS_FSB_TO_AGBNO(sc->mp, fsbno), 1);
++
+ 	agbno = XFS_FSB_TO_AGBNO(sc->mp, fsbno);
+ 	ASSERT(XFS_FSB_TO_AGNO(sc->mp, fsbno) == sc->sa.pag->pag_agno);
+ 
+@@ -575,7 +593,8 @@ xrep_reap_block(
+ 	cur = xfs_rmapbt_init_cursor(sc->mp, sc->tp, agf_bp, sc->sa.pag);
+ 
+ 	/* Can we find any other rmappings? */
+-	error = xfs_rmap_has_other_keys(cur, agbno, 1, oinfo, &has_other_rmap);
++	error = xfs_rmap_has_other_keys(cur, agbno, 1, rs->oinfo,
++			&has_other_rmap);
+ 	xfs_btree_del_cursor(cur, error);
+ 	if (error)
+ 		goto out_free;
+@@ -595,11 +614,11 @@ xrep_reap_block(
+ 	 */
+ 	if (has_other_rmap)
+ 		error = xfs_rmap_free(sc->tp, agf_bp, sc->sa.pag, agbno,
+-					1, oinfo);
+-	else if (resv == XFS_AG_RESV_AGFL)
++					1, rs->oinfo);
++	else if (rs->resv == XFS_AG_RESV_AGFL)
+ 		error = xrep_put_freelist(sc, agbno);
+ 	else
+-		error = xfs_free_extent(sc->tp, fsbno, 1, oinfo, resv);
++		error = xfs_free_extent(sc->tp, fsbno, 1, rs->oinfo, rs->resv);
+ 	if (agf_bp != sc->sa.agf_bp)
+ 		xfs_trans_brelse(sc->tp, agf_bp);
+ 	if (error)
+@@ -623,26 +642,15 @@ xrep_reap_extents(
+ 	const struct xfs_owner_info	*oinfo,
+ 	enum xfs_ag_resv_type		type)
+ {
+-	struct xbitmap_range		*bmr;
+-	struct xbitmap_range		*n;
+-	xfs_fsblock_t			fsbno;
+-	int				error = 0;
++	struct xrep_reap_state		rs = {
++		.sc			= sc,
++		.oinfo			= oinfo,
++		.resv			= type,
++	};
+ 
+ 	ASSERT(xfs_has_rmapbt(sc->mp));
+ 
+-	for_each_xbitmap_block(fsbno, bmr, n, bitmap) {
+-		ASSERT(sc->ip != NULL ||
+-		       XFS_FSB_TO_AGNO(sc->mp, fsbno) == sc->sa.pag->pag_agno);
+-		trace_xrep_dispose_btree_extent(sc->mp,
+-				XFS_FSB_TO_AGNO(sc->mp, fsbno),
+-				XFS_FSB_TO_AGBNO(sc->mp, fsbno), 1);
+-
+-		error = xrep_reap_block(sc, fsbno, oinfo, type);
+-		if (error)
+-			break;
+-	}
+-
 -	return error;
++	return xbitmap_walk_bits(bitmap, xrep_reap_block, &rs);
  }
  
  /*
-@@ -105,17 +81,17 @@ xchk_dir_actor(
- 	unsigned		type)
- {
- 	struct xfs_mount	*mp;
-+	struct xfs_inode	*dp;
- 	struct xfs_inode	*ip;
- 	struct xchk_dir_ctx	*sdc;
- 	struct xfs_name		xname;
- 	xfs_ino_t		lookup_ino;
- 	xfs_dablk_t		offset;
--	bool			checked_ftype = false;
- 	int			error = 0;
- 
- 	sdc = container_of(dir_iter, struct xchk_dir_ctx, dir_iter);
--	ip = sdc->sc->ip;
--	mp = ip->i_mount;
-+	dp = sdc->sc->ip;
-+	mp = dp->i_mount;
- 	offset = xfs_dir2_db_to_da(mp->m_dir_geo,
- 			xfs_dir2_dataptr_to_db(mp->m_dir_geo, pos));
- 
-@@ -136,11 +112,7 @@ xchk_dir_actor(
- 
- 	if (!strncmp(".", name, namelen)) {
- 		/* If this is "." then check that the inum matches the dir. */
--		if (xfs_has_ftype(mp) && type != DT_DIR)
--			xchk_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK,
--					offset);
--		checked_ftype = true;
--		if (ino != ip->i_ino)
-+		if (ino != dp->i_ino)
- 			xchk_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK,
- 					offset);
- 	} else if (!strncmp("..", name, namelen)) {
-@@ -148,11 +120,7 @@ xchk_dir_actor(
- 		 * If this is ".." in the root inode, check that the inum
- 		 * matches this dir.
- 		 */
--		if (xfs_has_ftype(mp) && type != DT_DIR)
--			xchk_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK,
--					offset);
--		checked_ftype = true;
--		if (ip->i_ino == mp->m_sb.sb_rootino && ino != ip->i_ino)
-+		if (dp->i_ino == mp->m_sb.sb_rootino && ino != dp->i_ino)
- 			xchk_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK,
- 					offset);
- 	}
-@@ -162,7 +130,7 @@ xchk_dir_actor(
- 	xname.len = namelen;
- 	xname.type = XFS_DIR3_FT_UNKNOWN;
- 
--	error = xfs_dir_lookup(sdc->sc->tp, ip, &xname, &lookup_ino, NULL);
-+	error = xfs_dir_lookup(sdc->sc->tp, dp, &xname, &lookup_ino, NULL);
- 	/* ENOENT means the hash lookup failed and the dir is corrupt */
- 	if (error == -ENOENT)
- 		error = -EFSCORRUPTED;
-@@ -174,12 +142,27 @@ xchk_dir_actor(
- 		goto out;
- 	}
- 
--	/* Verify the file type.  This function absorbs error codes. */
--	if (!checked_ftype) {
--		error = xchk_dir_check_ftype(sdc, offset, lookup_ino, type);
--		if (error)
--			goto out;
-+	/*
-+	 * Grab the inode pointed to by the dirent.  Use UNTRUSTED here to
-+	 * check the allocation status of the inode in the inode btrees.
-+	 *
-+	 * If _iget returns -EINVAL or -ENOENT then the child inode number is
-+	 * garbage and the directory is corrupt.  If the _iget returns
-+	 * -EFSCORRUPTED or -EFSBADCRC then the child is corrupt which is a
-+	 *  cross referencing error.  Any other error is an operational error.
-+	 */
-+	error = xchk_iget(sdc->sc, ino, &ip);
-+	if (error == -EINVAL || error == -ENOENT) {
-+		error = -EFSCORRUPTED;
-+		xchk_fblock_process_error(sdc->sc, XFS_DATA_FORK, 0, &error);
-+		goto out;
- 	}
-+	if (!xchk_fblock_xref_process_error(sdc->sc, XFS_DATA_FORK, offset,
-+			&error))
-+		goto out;
-+
-+	xchk_dir_check_ftype(sdc, offset, ip, type);
-+	xchk_irele(sdc->sc, ip);
- out:
- 	/*
- 	 * A negative error code returned here is supposed to cause the
 
