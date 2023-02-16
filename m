@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D77EC636CC
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 21:04:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CE55C61DA4
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 21:04:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230076AbjBPVEO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Feb 2023 16:04:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39828 "EHLO
+        id S230022AbjBPVEb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Feb 2023 16:04:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230077AbjBPVEN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 16:04:13 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60CF5505D3
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 13:04:12 -0800 (PST)
+        with ESMTP id S230079AbjBPVEb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 16:04:31 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C663505E5
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 13:04:30 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id F057460C1A
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 21:04:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5AF08C433D2;
-        Thu, 16 Feb 2023 21:04:11 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B1ED560C48
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 21:04:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C0FDC433D2;
+        Thu, 16 Feb 2023 21:04:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676581451;
-        bh=Yk7tXYVf86isRM7zlOUZZLrhWjaowRzxvfQxZCH0EQY=;
+        s=k20201202; t=1676581469;
+        bh=5SWiYleLjl/Ndx+8NVKipwN9A6CL7ESRIEpDgJu0MX8=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=iFkRDMHiWcfMXywq/vE2Gor3lMRRbRe3t5zRdz1e4h3PO8/GxLUW/UgvpvWZpnfJ4
-         Wyh09EyXG9rgndt4Jg4fxMGB6tXuPZZ8COeffhjeC6XHjdT6wu18agFXs6yWkpkZkv
-         ToFS0L9Wt6DAY+dWVrJNAi0PkP5N9euVCQdRBYK9VOmdxxrgI0O0R4gHtBDdggUq35
-         sqNua8jVxDrNN8CxtuY4FZmzoYoD+gDZx8dVUIGuC+PbJ3jS+dyIXlTaJGh0a5RIP9
-         djn8g6O1uRA7nhvxL1IjRDA/d0FOS6NcDGpC1wwkUWuMbqaAkKkbzkWqHawaXdTok8
-         z3Y+dhgA//7iA==
-Date:   Thu, 16 Feb 2023 13:04:10 -0800
-Subject: [PATCH 04/10] libfrog: remove all the parent pointer code from
- libhandle
+        b=QmmYQjs3jR86CRQ5EaLt9nFsQ5PEpkI++pAOjvM2hDEr/OIqyaGwuOvxQEwbJOzmQ
+         flAsUPRc//C3Ubgc/eMTt5ds9a4VtH97TGTLnmTiBpGq69y4cBebZFCE83wxfKJ9AC
+         H1CIIyLqAngOg2K3vyf8vVv893QuSLS0sYC/4sGU3m1d2p4sJh55KjrVIsQEAsyYre
+         of6BqPwojYaOSZuWMnBWe2pEPI3S1QGdjjU5OhHt9mN6XAnu/80IE7pG8sTpDf4Hk7
+         14+ULCTGcdzGnWoZdOYWexR1ViiFFZjLuarsOt8NAS3eaFxiKGfriunAutUtyBLUH+
+         3WsjRWsczEVig==
+Date:   Thu, 16 Feb 2023 13:04:26 -0800
+Subject: [PATCH 05/10] libfrog: fix indenting errors in xfss_pptr_alloc
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167657880311.3477097.14103004780435007800.stgit@magnolia>
+Message-ID: <167657880324.3477097.4962218122860520315.stgit@magnolia>
 In-Reply-To: <167657880257.3477097.11495108667073036392.stgit@magnolia>
 References: <167657880257.3477097.11495108667073036392.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,167 +49,52 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Move this code out of libhandle and into libfrog.  We don't want to
-expose this stuff to a userspace library until customers actually demand
-it.  While we're here, fix the copyright statements and licensing tags.
+Fix some indenting problems, and get rid of the xfs_ prefix.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- include/parent.h   |   18 ------------------
- io/parent.c        |    1 +
- libfrog/Makefile   |    2 ++
- libfrog/pptrs.c    |   22 ++++------------------
- libfrog/pptrs.h    |   27 +++++++++++++++++++++++++++
- libhandle/Makefile |    2 +-
- 6 files changed, 35 insertions(+), 37 deletions(-)
- rename libhandle/parent.c => libfrog/pptrs.c (87%)
- create mode 100644 libfrog/pptrs.h
+ libfrog/pptrs.c |   20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
 
-diff --git a/include/parent.h b/include/parent.h
-index fb900041..4d3ad51b 100644
---- a/include/parent.h
-+++ b/include/parent.h
-@@ -17,22 +17,4 @@ typedef struct parent_cursor {
- 	__u32	opaque[4];      /* an opaque cookie */
- } parent_cursor_t;
- 
--struct path_list;
--
--typedef int (*walk_pptr_fn)(struct xfs_pptr_info *pi, struct xfs_parent_ptr *pptr,
--		void *arg);
--typedef int (*walk_ppath_fn)(const char *mntpt, struct path_list *path,
--		void *arg);
--
--#define WALK_PPTRS_ABORT	1
--int fd_walk_pptrs(int fd, walk_pptr_fn fn, void *arg);
--int handle_walk_pptrs(void *hanp, size_t hanlen, walk_pptr_fn fn, void *arg);
--
--#define WALK_PPATHS_ABORT	1
--int fd_walk_ppaths(int fd, walk_ppath_fn fn, void *arg);
--int handle_walk_ppaths(void *hanp, size_t hanlen, walk_ppath_fn fn, void *arg);
--
--int fd_to_path(int fd, char *path, size_t pathlen);
--int handle_to_path(void *hanp, size_t hlen, char *path, size_t pathlen);
--
- #endif
-diff --git a/io/parent.c b/io/parent.c
-index 66bb0fae..ceb62a43 100644
---- a/io/parent.c
-+++ b/io/parent.c
-@@ -8,6 +8,7 @@
- #include "input.h"
- #include "libfrog/paths.h"
- #include "parent.h"
-+#include "libfrog/pptrs.h"
- #include "handle.h"
- #include "init.h"
- #include "io.h"
-diff --git a/libfrog/Makefile b/libfrog/Makefile
-index 01107082..5622ab9b 100644
---- a/libfrog/Makefile
-+++ b/libfrog/Makefile
-@@ -23,6 +23,7 @@ list_sort.c \
- linux.c \
- logging.c \
- paths.c \
-+pptrs.c \
- projects.c \
- ptvar.c \
- radix-tree.c \
-@@ -42,6 +43,7 @@ crc32table.h \
- fsgeom.h \
- logging.h \
- paths.h \
-+pptrs.h \
- projects.h \
- ptvar.h \
- radix-tree.h \
-diff --git a/libhandle/parent.c b/libfrog/pptrs.c
-similarity index 87%
-rename from libhandle/parent.c
-rename to libfrog/pptrs.c
-index c10a55ac..66a34246 100644
---- a/libhandle/parent.c
+diff --git a/libfrog/pptrs.c b/libfrog/pptrs.c
+index 66a34246..5a3a7e2b 100644
+--- a/libfrog/pptrs.c
 +++ b/libfrog/pptrs.c
-@@ -1,21 +1,7 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
- /*
-- * Copyright (C) 2017 Oracle.  All Rights Reserved.
-- *
-- * Author: Darrick J. Wong <darrick.wong@oracle.com>
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * as published by the Free Software Foundation; either version 2
-- * of the License, or (at your option) any later version.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
-+ * Copyright (C) 2023 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-  */
- #include "platform_defs.h"
- #include "xfs.h"
-@@ -23,7 +9,7 @@
- #include "list.h"
- #include "libfrog/paths.h"
- #include "handle.h"
--#include "parent.h"
-+#include "libfrog/pptrs.h"
+@@ -13,17 +13,17 @@
  
  /* Allocate a buffer large enough for some parent pointer records. */
  static inline struct xfs_pptr_info *
-diff --git a/libfrog/pptrs.h b/libfrog/pptrs.h
-new file mode 100644
-index 00000000..d174aa2a
---- /dev/null
-+++ b/libfrog/pptrs.h
-@@ -0,0 +1,27 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2023 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#ifndef __LIBFROG_PPTRS_H_
-+#define	__LIBFROG_PPTRS_H_
-+
-+struct path_list;
-+
-+typedef int (*walk_pptr_fn)(struct xfs_pptr_info *pi, struct xfs_parent_ptr *pptr,
-+		void *arg);
-+typedef int (*walk_ppath_fn)(const char *mntpt, struct path_list *path,
-+		void *arg);
-+
-+#define WALK_PPTRS_ABORT	1
-+int fd_walk_pptrs(int fd, walk_pptr_fn fn, void *arg);
-+int handle_walk_pptrs(void *hanp, size_t hanlen, walk_pptr_fn fn, void *arg);
-+
-+#define WALK_PPATHS_ABORT	1
-+int fd_walk_ppaths(int fd, walk_ppath_fn fn, void *arg);
-+int handle_walk_ppaths(void *hanp, size_t hanlen, walk_ppath_fn fn, void *arg);
-+
-+int fd_to_path(int fd, char *path, size_t pathlen);
-+int handle_to_path(void *hanp, size_t hlen, char *path, size_t pathlen);
-+
-+#endif /* __LIBFROG_PPTRS_H_ */
-diff --git a/libhandle/Makefile b/libhandle/Makefile
-index cf7df67c..f297a59e 100644
---- a/libhandle/Makefile
-+++ b/libhandle/Makefile
-@@ -12,7 +12,7 @@ LT_AGE = 0
+-xfs_pptr_alloc(
+-      size_t                  nr_ptrs)
++alloc_pptr_buf(
++	size_t			nr_ptrs)
+ {
+-      struct xfs_pptr_info    *pi;
++	struct xfs_pptr_info	*pi;
  
- LTLDFLAGS += -Wl,--version-script,libhandle.sym
+-      pi = malloc(xfs_pptr_info_sizeof(nr_ptrs));
+-      if (!pi)
+-              return NULL;
+-      memset(pi, 0, sizeof(struct xfs_pptr_info));
+-      pi->pi_ptrs_size = nr_ptrs;
+-      return pi;
++	pi = malloc(xfs_pptr_info_sizeof(nr_ptrs));
++	if (!pi)
++		return NULL;
++	memset(pi, 0, sizeof(struct xfs_pptr_info));
++	pi->pi_ptrs_size = nr_ptrs;
++	return pi;
+ }
  
--CFILES = handle.c jdm.c parent.c
-+CFILES = handle.c jdm.c
- LSRCFILES = libhandle.sym
+ /* Walk all parents of the given file handle. */
+@@ -39,7 +39,7 @@ handle_walk_parents(
+ 	unsigned int		i;
+ 	ssize_t			ret = -1;
  
- default: ltdepend $(LTLIBRARY)
+-	pi = xfs_pptr_alloc(4);
++	pi = alloc_pptr_buf(4);
+ 	if (!pi)
+ 		return -1;
+ 
 
