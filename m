@@ -2,42 +2,46 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D21C4C636D7
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:57:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 627D6C61DA4
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:57:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229658AbjBPU5a (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Feb 2023 15:57:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34836 "EHLO
+        id S229760AbjBPU5p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Feb 2023 15:57:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229715AbjBPU53 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:57:29 -0500
+        with ESMTP id S229715AbjBPU5p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:57:45 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FDF850348
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:57:28 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E84674D606
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:57:43 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E633CB82958
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:57:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A827EC433EF;
-        Thu, 16 Feb 2023 20:57:25 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 91192B82962
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:57:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BB0EC433D2;
+        Thu, 16 Feb 2023 20:57:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676581045;
-        bh=+m0D2ZL7wlIhJ6e7oP7v1yDjOx/fw4Tavc8rO8O//Y0=;
+        s=k20201202; t=1676581061;
+        bh=xCdmQNGFfqXPHZIMNZgz937VJMuXEEHSkOx7Xk8VZCc=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=tKyy5/0tjZNcGOY7nw29xhjy/AWj4s+ErwMPu2KjNymufd9JsMdyT7ZnZ7678cHB+
-         MiKAo9ov86PGCQUG1uJEGIh2ApfRWBchi/me+m1r0fsFyli2oPbtqZ1AkQPQimml9j
-         EowxrnyMAXD2dNNTa5BDegMMonKtwLsQzmblVdbCPFzaF2/FUAynSqOUbmrXm5bIIf
-         s6iNlZjQrOH9/ZBQtQ7OdRlxQWzZL94acYmbdrIuYZef5RZm5wj+c1nyTklJgIOilH
-         u6e5wzUmlfKbIVEkL8nKT0Fq6nweASsimiZaeZDYO9kIPOixxm0D7B+EKwh8R7L44f
-         0ang4LWSh72iQ==
-Date:   Thu, 16 Feb 2023 12:57:25 -0800
-Subject: [PATCH 15/25] xfsprogs: Add parent pointers to rename
+        b=GWDpaOjqp/fqY1AjwQ3RrZme9bHQv/dxLWaqJUhy6DJrNjxMntY+ArVrczHp7Lv/A
+         iEEOUMsh6ZthAIhHelWkfzxQ7YAnvXBtgFhUGJS3Lr0QDoat5ejXCMqhFNUDM7X/q4
+         qoY2OhcrDd8Kit6iq6LGsyo4ErAby1byfrOkpev6ylvcJqCBQx+TJM0xJEwDdKKVb6
+         SyULXSXSnioEbLRsCqpscHTXk6ovataRFHQ3WmGgD576rKh3i9yX+qWIgdD+G3Y8wb
+         0tu7cuhhRvsSeyeuGyZlxWCNbOXAfuZxGzbzFkVciRE6nuGbYKB5ia/Sspdgk2bPQ5
+         Xz8aILCPfwb9g==
+Date:   Thu, 16 Feb 2023 12:57:40 -0800
+Subject: [PATCH 16/25] xfsprogs: Add the parent pointer support to the
+ superblock version 5.
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     Allison Henderson <allison.henderson@oracle.com>,
+Cc:     Mark Tinguely <tinguely@sgi.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
         allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167657879108.3476112.8331830884740886775.stgit@magnolia>
+Message-ID: <167657879123.3476112.18429672769647602745.stgit@magnolia>
 In-Reply-To: <167657878885.3476112.11949206434283274332.stgit@magnolia>
 References: <167657878885.3476112.11949206434283274332.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,200 +54,108 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Allison Henderson <allison.henderson@oracle.com>
 
-This patch removes the old parent pointer attribute during the rename
-operation, and re-adds the updated parent pointer.  In the case of
-xfs_cross_rename, we modify the routine not to roll the transaction just
-yet.  We will do this after the parent pointer is added in the calling
-xfs_rename function.
+Source kernel commit: 724321b7f1c737ce880ea0e6fa4422ad13c4d440
 
-Source kernel commit: d00721b30fd1923f6e9e9c1ca6f2a74cfc4ed5d3
-
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-[djwong: fix indent with kernel]
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_attr.c        |    2 +-
- libxfs/xfs_attr.h        |    1 +
- libxfs/xfs_parent.c      |   47 +++++++++++++++++++++++++++++++++++++++++-----
- libxfs/xfs_parent.h      |   24 ++++++++++++++++++++++-
- libxfs/xfs_trans_space.h |    2 --
- 5 files changed, 66 insertions(+), 10 deletions(-)
+ libfrog/fsgeom.c    |    4 ++++
+ libxfs/xfs_format.h |    4 +++-
+ libxfs/xfs_fs.h     |    1 +
+ libxfs/xfs_sb.c     |    4 ++++
+ 4 files changed, 12 insertions(+), 1 deletion(-)
 
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 04cafc5f..0cb76f8f 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -921,7 +921,7 @@ xfs_attr_defer_add(
- }
+diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
+index 3e7f0797..3bb753ac 100644
+--- a/libfrog/fsgeom.c
++++ b/libfrog/fsgeom.c
+@@ -31,6 +31,7 @@ xfs_report_geom(
+ 	int			bigtime_enabled;
+ 	int			inobtcount;
+ 	int			nrext64;
++	int			parent;
  
- /* Sets an attribute for an inode as a deferred operation */
--static int
-+int
- xfs_attr_defer_replace(
- 	struct xfs_da_args	*args)
- {
-diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-index 03300554..98576126 100644
---- a/libxfs/xfs_attr.h
-+++ b/libxfs/xfs_attr.h
-@@ -546,6 +546,7 @@ int xfs_attr_get_ilocked(struct xfs_da_args *args);
- int xfs_attr_get(struct xfs_da_args *args);
- int xfs_attr_defer_add(struct xfs_da_args *args);
- int xfs_attr_defer_remove(struct xfs_da_args *args);
-+int xfs_attr_defer_replace(struct xfs_da_args *args);
- int xfs_attr_set(struct xfs_da_args *args);
- int xfs_attr_set_iter(struct xfs_attr_intent *attr);
- int xfs_attr_remove_iter(struct xfs_attr_intent *attr);
-diff --git a/libxfs/xfs_parent.c b/libxfs/xfs_parent.c
-index b137cfda..3f02271f 100644
---- a/libxfs/xfs_parent.c
-+++ b/libxfs/xfs_parent.c
-@@ -65,22 +65,27 @@ xfs_init_parent_name_rec(
- int
- __xfs_parent_init(
- 	struct xfs_mount		*mp,
-+	bool				grab_log,
- 	struct xfs_parent_defer		**parentp)
- {
- 	struct xfs_parent_defer		*parent;
- 	int				error;
+ 	isint = geo->logstart > 0;
+ 	lazycount = geo->flags & XFS_FSOP_GEOM_FLAGS_LAZYSB ? 1 : 0;
+@@ -49,12 +50,14 @@ xfs_report_geom(
+ 	bigtime_enabled = geo->flags & XFS_FSOP_GEOM_FLAGS_BIGTIME ? 1 : 0;
+ 	inobtcount = geo->flags & XFS_FSOP_GEOM_FLAGS_INOBTCNT ? 1 : 0;
+ 	nrext64 = geo->flags & XFS_FSOP_GEOM_FLAGS_NREXT64 ? 1 : 0;
++	parent = geo->flags & XFS_FSOP_GEOM_FLAGS_PARENT ? 1 : 0;
  
--	error = xfs_attr_grab_log_assist(mp);
--	if (error)
--		return error;
-+	if (grab_log) {
-+		error = xfs_attr_grab_log_assist(mp);
-+		if (error)
-+			return error;
-+	}
+ 	printf(_(
+ "meta-data=%-22s isize=%-6d agcount=%u, agsize=%u blks\n"
+ "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
+ "         =%-22s crc=%-8u finobt=%u, sparse=%u, rmapbt=%u\n"
+ "         =%-22s reflink=%-4u bigtime=%u inobtcount=%u nrext64=%u\n"
++"         =%-22s parent=%d\n"
+ "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
+ "         =%-22s sunit=%-6u swidth=%u blks\n"
+ "naming   =version %-14u bsize=%-6u ascii-ci=%d, ftype=%d\n"
+@@ -65,6 +68,7 @@ xfs_report_geom(
+ 		"", geo->sectsize, attrversion, projid32bit,
+ 		"", crcs_enabled, finobt_enabled, spinodes, rmapbt_enabled,
+ 		"", reflink_enabled, bigtime_enabled, inobtcount, nrext64,
++		"", parent,
+ 		"", geo->blocksize, (unsigned long long)geo->datablocks,
+ 			geo->imaxpct,
+ 		"", geo->sunit, geo->swidth,
+diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
+index 371dc072..f413819b 100644
+--- a/libxfs/xfs_format.h
++++ b/libxfs/xfs_format.h
+@@ -373,13 +373,15 @@ xfs_sb_has_ro_compat_feature(
+ #define XFS_SB_FEAT_INCOMPAT_BIGTIME	(1 << 3)	/* large timestamps */
+ #define XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR (1 << 4)	/* needs xfs_repair */
+ #define XFS_SB_FEAT_INCOMPAT_NREXT64	(1 << 5)	/* large extent counters */
++#define XFS_SB_FEAT_INCOMPAT_PARENT	(1 << 6)	/* parent pointers */
+ #define XFS_SB_FEAT_INCOMPAT_ALL \
+ 		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
+ 		 XFS_SB_FEAT_INCOMPAT_SPINODES|	\
+ 		 XFS_SB_FEAT_INCOMPAT_META_UUID| \
+ 		 XFS_SB_FEAT_INCOMPAT_BIGTIME| \
+ 		 XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR| \
+-		 XFS_SB_FEAT_INCOMPAT_NREXT64)
++		 XFS_SB_FEAT_INCOMPAT_NREXT64| \
++		 XFS_SB_FEAT_INCOMPAT_PARENT)
  
- 	parent = kmem_cache_zalloc(xfs_parent_intent_cache, GFP_KERNEL);
- 	if (!parent) {
--		xfs_attr_rele_log_assist(mp);
-+		if (grab_log)
-+			xfs_attr_rele_log_assist(mp);
- 		return -ENOMEM;
- 	}
- 
- 	/* init parent da_args */
-+	parent->have_log = grab_log;
- 	parent->args.geo = mp->m_attr_geo;
- 	parent->args.whichfork = XFS_ATTR_FORK;
- 	parent->args.attr_filter = XFS_ATTR_PARENT;
-@@ -133,12 +138,44 @@ xfs_parent_defer_remove(
- 	return xfs_attr_defer_remove(args);
- }
- 
-+
-+int
-+xfs_parent_defer_replace(
-+	struct xfs_trans	*tp,
-+	struct xfs_parent_defer	*new_parent,
-+	struct xfs_inode	*old_dp,
-+	xfs_dir2_dataptr_t	old_diroffset,
-+	struct xfs_name		*parent_name,
-+	struct xfs_inode	*new_dp,
-+	xfs_dir2_dataptr_t	new_diroffset,
-+	struct xfs_inode	*child)
-+{
-+	struct xfs_da_args	*args = &new_parent->args;
-+
-+	xfs_init_parent_name_rec(&new_parent->old_rec, old_dp, old_diroffset);
-+	xfs_init_parent_name_rec(&new_parent->rec, new_dp, new_diroffset);
-+	new_parent->args.name = (const uint8_t *)&new_parent->old_rec;
-+	new_parent->args.namelen = sizeof(struct xfs_parent_name_rec);
-+	new_parent->args.new_name = (const uint8_t *)&new_parent->rec;
-+	new_parent->args.new_namelen = sizeof(struct xfs_parent_name_rec);
-+	args->trans = tp;
-+	args->dp = child;
-+
-+	ASSERT(parent_name != NULL);
-+	new_parent->args.value = (void *)parent_name->name;
-+	new_parent->args.valuelen = parent_name->len;
-+
-+	args->hashval = xfs_da_hashname(args->name, args->namelen);
-+	return xfs_attr_defer_replace(args);
-+}
-+
- void
- __xfs_parent_cancel(
- 	xfs_mount_t		*mp,
- 	struct xfs_parent_defer *parent)
- {
--	xlog_drop_incompat_feat(mp->m_log);
-+	if (parent->have_log)
-+		xlog_drop_incompat_feat(mp->m_log);
- 	kmem_cache_free(xfs_parent_intent_cache, parent);
- }
- 
-diff --git a/libxfs/xfs_parent.h b/libxfs/xfs_parent.h
-index 0f39d033..03900588 100644
---- a/libxfs/xfs_parent.h
-+++ b/libxfs/xfs_parent.h
-@@ -14,7 +14,9 @@ extern struct kmem_cache	*xfs_parent_intent_cache;
-  */
- struct xfs_parent_defer {
- 	struct xfs_parent_name_rec	rec;
-+	struct xfs_parent_name_rec	old_rec;
- 	struct xfs_da_args		args;
-+	bool				have_log;
- };
+ #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
+ static inline bool
+diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+index 1cfd5bc6..b0b4d7a3 100644
+--- a/libxfs/xfs_fs.h
++++ b/libxfs/xfs_fs.h
+@@ -237,6 +237,7 @@ typedef struct xfs_fsop_resblks {
+ #define XFS_FSOP_GEOM_FLAGS_BIGTIME	(1 << 21) /* 64-bit nsec timestamps */
+ #define XFS_FSOP_GEOM_FLAGS_INOBTCNT	(1 << 22) /* inobt btree counter */
+ #define XFS_FSOP_GEOM_FLAGS_NREXT64	(1 << 23) /* large extent counters */
++#define XFS_FSOP_GEOM_FLAGS_PARENT	(1 << 24) /* parent pointers 	    */
  
  /*
-@@ -23,7 +25,8 @@ struct xfs_parent_defer {
- void xfs_init_parent_name_rec(struct xfs_parent_name_rec *rec,
- 			      struct xfs_inode *ip,
- 			      uint32_t p_diroffset);
--int __xfs_parent_init(struct xfs_mount *mp, struct xfs_parent_defer **parentp);
-+int __xfs_parent_init(struct xfs_mount *mp, bool grab_log,
-+		struct xfs_parent_defer **parentp);
+  * Minimum and maximum sizes need for growth checks.
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
+index d05f0e6e..2ce2ba75 100644
+--- a/libxfs/xfs_sb.c
++++ b/libxfs/xfs_sb.c
+@@ -171,6 +171,8 @@ xfs_sb_version_to_features(
+ 		features |= XFS_FEAT_NEEDSREPAIR;
+ 	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_NREXT64)
+ 		features |= XFS_FEAT_NREXT64;
++	if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_PARENT)
++		features |= XFS_FEAT_PARENT;
  
- static inline int
- xfs_parent_start(
-@@ -33,13 +36,30 @@ xfs_parent_start(
- 	*pp = NULL;
- 
- 	if (xfs_has_parent(mp))
--		return __xfs_parent_init(mp, pp);
-+		return __xfs_parent_init(mp, true, pp);
-+	return 0;
-+}
-+
-+static inline int
-+xfs_parent_start_locked(
-+	struct xfs_mount	*mp,
-+	struct xfs_parent_defer	**pp)
-+{
-+	*pp = NULL;
-+
-+	if (xfs_has_parent(mp))
-+		return __xfs_parent_init(mp, false, pp);
- 	return 0;
+ 	return features;
  }
- 
- int xfs_parent_defer_add(struct xfs_trans *tp, struct xfs_parent_defer *parent,
- 			 struct xfs_inode *dp, struct xfs_name *parent_name,
- 			 xfs_dir2_dataptr_t diroffset, struct xfs_inode *child);
-+int xfs_parent_defer_replace(struct xfs_trans *tp,
-+		struct xfs_parent_defer *new_parent, struct xfs_inode *old_dp,
-+		xfs_dir2_dataptr_t old_diroffset, struct xfs_name *parent_name,
-+		struct xfs_inode *new_ip, xfs_dir2_dataptr_t new_diroffset,
-+		struct xfs_inode *child);
- int xfs_parent_defer_remove(struct xfs_trans *tp, struct xfs_inode *dp,
- 			    struct xfs_parent_defer *parent,
- 			    xfs_dir2_dataptr_t diroffset,
-diff --git a/libxfs/xfs_trans_space.h b/libxfs/xfs_trans_space.h
-index b5ab6701..810610a1 100644
---- a/libxfs/xfs_trans_space.h
-+++ b/libxfs/xfs_trans_space.h
-@@ -91,8 +91,6 @@
- 	 XFS_DQUOT_CLUSTER_SIZE_FSB)
- #define	XFS_QM_QINOCREATE_SPACE_RES(mp)	\
- 	XFS_IALLOC_SPACE_RES(mp)
--#define	XFS_RENAME_SPACE_RES(mp,nl)	\
--	(XFS_DIRREMOVE_SPACE_RES(mp) + XFS_DIRENTER_SPACE_RES(mp,nl))
- #define XFS_IFREE_SPACE_RES(mp)		\
- 	(xfs_has_finobt(mp) ? M_IGEO(mp)->inobt_maxlevels : 0)
- 
+@@ -1187,6 +1189,8 @@ xfs_fs_geometry(
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_BIGTIME;
+ 	if (xfs_has_inobtcounts(mp))
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_INOBTCNT;
++	if (xfs_has_parent(mp))
++		geo->flags |= XFS_FSOP_GEOM_FLAGS_PARENT;
+ 	if (xfs_has_sector(mp)) {
+ 		geo->flags |= XFS_FSOP_GEOM_FLAGS_SECTOR;
+ 		geo->logsectsize = sbp->sb_logsectsize;
 
