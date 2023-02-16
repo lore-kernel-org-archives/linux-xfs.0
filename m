@@ -2,43 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0355FC61DA4
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:51:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D808BC636CC
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:51:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229783AbjBPUvb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Feb 2023 15:51:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58968 "EHLO
+        id S229784AbjBPUvr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Feb 2023 15:51:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58994 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229768AbjBPUva (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:51:30 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F8C84C3C3
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:51:29 -0800 (PST)
+        with ESMTP id S229768AbjBPUvp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:51:45 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A43DB4BEA8
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:51:44 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E2D10B82962
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:51:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EFBBC433D2;
-        Thu, 16 Feb 2023 20:51:26 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 60438B82958
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:51:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22478C433D2;
+        Thu, 16 Feb 2023 20:51:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676580686;
-        bh=b/SqUFqjr3F2BfGlfHFu0X0sVMyqsSboDTNa+uPT0bk=;
+        s=k20201202; t=1676580702;
+        bh=NmdTBs5yThDdU56H4M0ZQXhwNN9h6w6Lt03FP2T4/5k=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=ryuBj97LxLBGoIU0Tlp61p0LtuEVdgCpv8AI0wcD9Ht1ARcJ289UtNN3/KDBEsHXa
-         l77v4b5L2kJybIoaNgFCpnag9nxbGhkcoV/ZDeakZbV0h4jzkX6VF0KUdhUP5+xNNx
-         gPpy3PdglbQ7oJgeAkl50A3Ih3SWWaijDS0xE+6Yz5jpEQU2CjuMHybYLHphwQGBJP
-         8aFejpb4VBxF5i9CBXKYqLfcO3VurkGvUrOGjEnyCyeM85+YdnUCJThxxxr2CPXh/U
-         3AsZGfgX/j0Om6WIt7xQvyhYhc9xJD4XQtIcQzz0DBCq0mD0TyVpwR8fiOE+OtyQQq
-         dS/97lvuuLafA==
-Date:   Thu, 16 Feb 2023 12:51:26 -0800
-Subject: [PATCH 2/2] xfs: deferred scrub of dirents
+        b=i2EHVDhj7QGbaJ5kj805wjyqY4eg2m2Ur/R3ID/R0OVoSIeQVSeld8LVP6Vc0h1ft
+         Izh8fVVbAVwsGGoh3iadkqNc/Gd6UqwnWpaGHT3HSdQ8W8IEOrkf1Gukst7lUWRUSw
+         TwLYkppqJL41g1HSXhUlFf86GIMQ4Cc8e1C0vdfTEjxTjsST0fgSmxg/OWO5LhplJK
+         M6YoEGGzh5Mw1UM2wCI7RqkdaB60h7nLolzxI26BEs8ZhjNOifWNe43hRo6qh0CM2Z
+         +C029CCRubFpO8dn6RA0TZ76PozjnooDjCwliDgxb2VvTYARHhQ9UC37ZyQUIS4O4M
+         48WSWnroQdvNA==
+Date:   Thu, 16 Feb 2023 12:51:41 -0800
+Subject: [PATCH 1/5] xfs: load secure hash algorithm for parent pointers
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167657875560.3475324.7202386445865446029.stgit@magnolia>
-In-Reply-To: <167657875530.3475324.17245553975507455352.stgit@magnolia>
-References: <167657875530.3475324.17245553975507455352.stgit@magnolia>
+Message-ID: <167657875880.3475422.10684205315154918672.stgit@magnolia>
+In-Reply-To: <167657875861.3475422.10929602650869169128.stgit@magnolia>
+References: <167657875861.3475422.10929602650869169128.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,316 +49,102 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If the trylock-based parent pointer check fails, retain those dirents
-and check them at the end.  This may involve dropping the locks on the
-file being scanned, so yay.
+We're about to start replacing the diroffset field of parent pointers
+with a collision-resistant hash of the directory entry name.  Start by
+attaching the sha512 crypto implementation if parent pointers are
+attached.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/dir.c   |  237 ++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/trace.h |    2 
- 2 files changed, 237 insertions(+), 2 deletions(-)
+ fs/xfs/Kconfig     |    1 +
+ fs/xfs/xfs_linux.h |    1 +
+ fs/xfs/xfs_mount.c |   13 +++++++++++++
+ fs/xfs/xfs_mount.h |    3 +++
+ fs/xfs/xfs_super.c |    3 +++
+ 5 files changed, 21 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-index 39ae59eb4f40..3f3223e563ae 100644
---- a/fs/xfs/scrub/dir.c
-+++ b/fs/xfs/scrub/dir.c
-@@ -22,6 +22,10 @@
- #include "scrub/dabtree.h"
- #include "scrub/readdir.h"
- #include "scrub/repair.h"
-+#include "scrub/trace.h"
-+#include "scrub/xfile.h"
-+#include "scrub/xfarray.h"
-+#include "scrub/xfblob.h"
+diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+index 4798a147fd9e..6422daaf8914 100644
+--- a/fs/xfs/Kconfig
++++ b/fs/xfs/Kconfig
+@@ -5,6 +5,7 @@ config XFS_FS
+ 	select EXPORTFS
+ 	select LIBCRC32C
+ 	select FS_IOMAP
++	select CRYPTO_SHA512
+ 	help
+ 	  XFS is a high performance journaling filesystem which originated
+ 	  on the SGI IRIX platform.  It is completely multi-threaded, can
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index c05f7e309c3e..3f93a742b896 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -62,6 +62,7 @@ typedef __u32			xfs_nlink_t;
+ #include <linux/rhashtable.h>
+ #include <linux/xattr.h>
+ #include <linux/mnt_idmapping.h>
++#include <crypto/hash.h>
  
- /* Set us up to scrub directories. */
- int
-@@ -41,6 +45,21 @@ xchk_setup_directory(
- 
- /* Directories */
- 
-+/* Deferred directory entry that we saved for later. */
-+struct xchk_dirent {
-+	/* Cookie for retrieval of the dirent name. */
-+	xfblob_cookie			name_cookie;
-+
-+	/* Child inode number. */
-+	xfs_ino_t			ino;
-+
-+	/* Directory offset. */
-+	xfs_dir2_dataptr_t		diroffset;
-+
-+	/* Length of the pptr name. */
-+	uint8_t				namelen;
-+};
-+
- struct xchk_dir {
- 	struct xfs_scrub	*sc;
- 
-@@ -50,6 +69,15 @@ struct xchk_dir {
- 	/* xattr key and da args for parent pointer validation. */
- 	struct xfs_parent_scratch pptr_scratch;
- 
-+	/* Fixed-size array of xchk_dirent structures. */
-+	struct xfarray		*dir_entries;
-+
-+	/* Blobs containing dirent names. */
-+	struct xfblob		*dir_names;
-+
-+	/* If we've cycled the ILOCK, we must revalidate deferred dirents. */
-+	bool			need_revalidate;
-+
- 	/* Name buffer for pptr validation and dirent revalidation. */
- 	uint8_t			namebuf[MAXNAMELEN];
- 
-@@ -167,8 +195,25 @@ xchk_dir_check_pptr_fast(
- 	/* Try to lock the inode. */
- 	lockmode = xchk_dir_lock_child(sc, ip);
- 	if (!lockmode) {
--		xchk_set_incomplete(sc);
--		return -ECANCELED;
-+		struct xchk_dirent	save_de = {
-+			.namelen	= name->len,
-+			.ino		= ip->i_ino,
-+			.diroffset	= dapos,
-+		};
-+
-+		/* Couldn't lock the inode, so save the dirent for later. */
-+		trace_xchk_dir_defer(sc->ip, name->name, name->len, ip->i_ino);
-+
-+		error = xfblob_store(sd->dir_names, &save_de.name_cookie,
-+				name->name, name->len);
-+		if (xchk_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
-+			return error;
-+
-+		error = xfarray_append(sd->dir_entries, &save_de);
-+		if (xchk_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
-+			return error;
-+
-+		return 0;
+ #include <asm/page.h>
+ #include <asm/div64.h>
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index fb87ffb48f7f..a5f3dce658e9 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -983,6 +983,19 @@ xfs_mountfs(
+ 			goto out_agresv;
  	}
  
- 	error = xchk_dir_parent_pointer(sd, dapos, name, ip);
-@@ -878,6 +923,164 @@ xchk_directory_blocks(
- 	return error;
- }
- 
-+/*
-+ * Revalidate a dirent that we collected in the past but couldn't check because
-+ * of lock contention.  Returns 0 if the dirent is still valid, -ENOENT if it
-+ * has gone away on us, or a negative errno.
-+ */
-+STATIC int
-+xchk_dir_revalidate_dirent(
-+	struct xchk_dir		*sd,
-+	const struct xfs_name	*xname,
-+	xfs_ino_t		ino,
-+	xfs_dir2_dataptr_t	diroffset)
-+{
-+	struct xfs_scrub	*sc = sd->sc;
-+	xfs_ino_t		child_ino;
-+	xfs_dir2_dataptr_t	child_diroffset = XFS_DIR2_NULL_DATAPTR;
-+	int			error;
++	if (xfs_has_parent(mp)) {
++		struct crypto_shash	*tfm;
 +
-+	error = xchk_dir_lookup(sc, sc->ip, xname, &child_ino,
-+			&child_diroffset);
-+	if (error == -ENOENT) {
-+		/* Directory entry went away, nothing to revalidate. */
-+		return -ENOENT;
-+	}
-+	if (error)
-+		return error;
-+
-+	/* The inode number changed, nothing to revalidate. */
-+	if (ino != child_ino)
-+		return -ENOENT;
-+
-+	/* The directory offset changed, nothing to revalidate. */
-+	if (diroffset != child_diroffset)
-+		return -ENOENT;
-+
-+	return 0;
-+}
-+
-+/*
-+ * Check a directory entry's parent pointers the slow way, which means we cycle
-+ * locks a bunch and put up with revalidation until we get it done.
-+ */
-+STATIC int
-+xchk_dir_slow_dirent(
-+	struct xchk_dir		*sd,
-+	struct xchk_dirent	*dirent)
-+{
-+	struct xfs_name		xname = {
-+		.name		= sd->namebuf,
-+		.len		= dirent->namelen,
-+	};
-+	struct xfs_scrub	*sc = sd->sc;
-+	struct xfs_inode	*ip;
-+	unsigned int		lockmode;
-+	int			error;
-+
-+	/* Check that the deferred dirent still exists. */
-+	if (sd->need_revalidate) {
-+		error = xchk_dir_revalidate_dirent(sd, &xname, dirent->ino,
-+				dirent->diroffset);
-+		if (error == -ENOENT)
-+			return 0;
-+		if (!xchk_fblock_xref_process_error(sc, XFS_DATA_FORK, 0,
-+					&error))
-+			return error;
-+	}
-+
-+	error = xchk_iget(sc, dirent->ino, &ip);
-+	if (error == -EINVAL || error == -ENOENT) {
-+		xchk_fblock_set_corrupt(sc, XFS_ATTR_FORK, 0);
-+		return 0;
-+	}
-+	if (!xchk_fblock_xref_process_error(sc, XFS_ATTR_FORK, 0, &error))
-+		return error;
-+
-+	/*
-+	 * If we can grab both IOLOCK and ILOCK of the alleged child, we can
-+	 * proceed with the validation.
-+	 */
-+	lockmode = xchk_dir_lock_child(sc, ip);
-+	if (lockmode)
-+		goto check_pptr;
-+
-+	/*
-+	 * We couldn't lock the child file.  Drop all the locks and try to
-+	 * get them again, one at a time.
-+	 */
-+	xchk_iunlock(sc, sc->ilock_flags);
-+	sd->need_revalidate = true;
-+
-+	trace_xchk_dir_slowpath(sc->ip, xname.name, xname.len, ip->i_ino);
-+
-+	while (true) {
-+		xchk_ilock(sc, XFS_IOLOCK_EXCL);
-+		if (xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED)) {
-+			xchk_ilock(sc, XFS_ILOCK_EXCL);
-+			if (xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
-+				break;
-+			}
-+			xchk_iunlock(sc, XFS_ILOCK_EXCL);
++		tfm = crypto_alloc_shash("sha512", 0, 0);
++		if (IS_ERR(tfm)) {
++			error = PTR_ERR(tfm);
++			goto out_agresv;
 +		}
-+		xchk_iunlock(sc, XFS_IOLOCK_EXCL);
-+
-+		if (xchk_should_terminate(sc, &error))
-+			goto out_rele;
-+
-+		delay(1);
-+	}
-+	lockmode = XFS_IOLOCK_SHARED | XFS_ILOCK_EXCL;
-+
-+	/* Revalidate, since we just cycled the locks. */
-+	error = xchk_dir_revalidate_dirent(sd, &xname, dirent->ino,
-+			dirent->diroffset);
-+	if (error == -ENOENT)
-+		goto out_unlock;
-+	if (!xchk_fblock_xref_process_error(sc, XFS_DATA_FORK, 0, &error))
-+		goto out_unlock;
-+
-+check_pptr:
-+	error = xchk_dir_parent_pointer(sd, dirent->diroffset, &xname, ip);
-+out_unlock:
-+	xfs_iunlock(ip, lockmode);
-+out_rele:
-+	xchk_irele(sc, ip);
-+	return error;
-+}
-+
-+/* Check all the dirents that we deferred the first time around. */
-+STATIC int
-+xchk_dir_finish_slow_dirents(
-+	struct xchk_dir		*sd)
-+{
-+	xfarray_idx_t		array_cur;
-+	int			error;
-+
-+	foreach_xfarray_idx(sd->dir_entries, array_cur) {
-+		struct xchk_dirent	dirent;
-+
-+		if (sd->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+			return 0;
-+
-+		error = xfarray_load(sd->dir_entries, array_cur, &dirent);
-+		if (error)
-+			return error;
-+
-+		error = xfblob_load(sd->dir_names, dirent.name_cookie,
-+				sd->namebuf, dirent.namelen);
-+		if (error)
-+			return error;
-+		sd->namebuf[MAXNAMELEN - 1] = 0;
-+
-+		error = xchk_dir_slow_dirent(sd, &dirent);
-+		if (error)
-+			return error;
++		xfs_info(mp, "parent pointer hash %s",
++				crypto_shash_driver_name(tfm));
++		mp->m_sha512 = tfm;
 +	}
 +
-+	return 0;
-+}
-+
- /* Scrub a whole directory. */
- int
- xchk_directory(
-@@ -916,11 +1119,41 @@ xchk_directory(
- 		return -ENOMEM;
- 	sd->sc = sc;
+ 	return 0;
  
-+	if (xfs_has_parent(sc->mp)) {
-+		/*
-+		 * Set up some staging memory for dirents that we can't check
-+		 * due to locking contention.
-+		 */
-+		error = xfarray_create(sc->mp, "directory entries", 0,
-+				sizeof(struct xchk_dirent), &sd->dir_entries);
-+		if (error)
-+			goto out_sd;
+  out_agresv:
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index c08f55cc4f36..7c8e15e84cd6 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -244,6 +244,9 @@ typedef struct xfs_mount {
+ #endif
+ 	/* Hook to feed file directory updates to an active online repair. */
+ 	struct xfs_hooks	m_dirent_update_hooks;
 +
-+		error = xfblob_create(sc->mp, "dirent names", &sd->dir_names);
-+		if (error)
-+			goto out_entries;
-+	}
-+
- 	/* Look up every name in this directory by hash. */
- 	error = xchk_dir_walk(sc, sc->ip, xchk_dir_actor, sd);
- 	if (error == -ECANCELED)
- 		error = 0;
-+	if (error)
-+		goto out_names;
++	/* sha512 engine, if needed */
++	struct crypto_shash	*m_sha512;
+ } xfs_mount_t;
  
-+	if (xfs_has_parent(sc->mp)) {
-+		error = xchk_dir_finish_slow_dirents(sd);
-+		if (error)
-+			goto out_names;
-+	}
-+
-+out_names:
-+	if (sd->dir_names)
-+		xfblob_destroy(sd->dir_names);
-+out_entries:
-+	if (sd->dir_entries)
-+		xfarray_destroy(sd->dir_entries);
-+out_sd:
- 	kvfree(sd);
- 	return error;
+ #define M_IGEO(mp)		(&(mp)->m_ino_geo)
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 0432a4a096e8..610d72353f39 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -738,6 +738,8 @@ xfs_mount_free(
+ {
+ 	kfree(mp->m_rtname);
+ 	kfree(mp->m_logname);
++	if (mp->m_sha512)
++		crypto_free_shash(mp->m_sha512);
+ 	kmem_free(mp);
  }
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index e536d070f9c7..911d947db787 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -962,6 +962,8 @@ DEFINE_EVENT(xchk_pptr_class, name, \
- 	TP_ARGS(ip, name, namelen, parent_ino))
- DEFINE_XCHK_PPTR_CLASS(xchk_parent_defer);
- DEFINE_XCHK_PPTR_CLASS(xchk_parent_slowpath);
-+DEFINE_XCHK_PPTR_CLASS(xchk_dir_defer);
-+DEFINE_XCHK_PPTR_CLASS(xchk_dir_slowpath);
  
- /* repair tracepoints */
- #if IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR)
+@@ -1961,6 +1963,7 @@ static int xfs_init_fs_context(
+ 	if (fc->sb_flags & SB_SYNCHRONOUS)
+ 		mp->m_features |= XFS_FEAT_WSYNC;
+ 
++	mp->m_sha512 = NULL;
+ 	fc->s_fs_info = mp;
+ 	fc->ops = &xfs_context_ops;
+ 
 
