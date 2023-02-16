@@ -2,42 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D51C8C636CC
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:58:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F366C636CC
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:58:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229965AbjBPU6C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Feb 2023 15:58:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35650 "EHLO
+        id S229715AbjBPU6O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Feb 2023 15:58:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35750 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229715AbjBPU6B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:58:01 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61E5631E31
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:57:59 -0800 (PST)
+        with ESMTP id S229879AbjBPU6O (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:58:14 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65E3731E31
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:58:13 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 16C69B82958
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:57:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2F60C433D2;
-        Thu, 16 Feb 2023 20:57:56 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0310A60A55
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:58:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63D31C433EF;
+        Thu, 16 Feb 2023 20:58:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676581076;
-        bh=ILMdEUeBruRY9kokNbKbmhhPLObrAUPJKa1EWWbVpEQ=;
+        s=k20201202; t=1676581092;
+        bh=syZ3adEdQ9Ecpdm0c7DVLlMxe7J+Yodf2LVTmLSdqnw=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=pIKLDUhZltNKNe9ny0YuofIKBgZKEHo3J9q5CKXoYbdVc7pIcla+RH2NX2WE6TcrA
-         jxtjavq0q4lrJX8VgOAMkmT/+CaIC6Ebv40UEfniQ5l4DJmoki+bQlMfbJxPUohdxN
-         bDxS3SO4qifgEQ4StrfRgaHxUt5VQwu+v817+H6fJZeOncAJmOUZhi6+Sy5gI5hFNn
-         68RBPEzZrsowQ/y/RV1pJipEl8a/S8PCY3/gF62ZO9W9q8wGMBC69+E+8+9NfBjhce
-         Zj2dW/McGMopu0ddrUPVo6kUKTQmLB8v4kIsioTJHLnr3t/V3kXqUeZkVXGA5a6CdA
-         Iuj671DN5W21g==
-Date:   Thu, 16 Feb 2023 12:57:56 -0800
-Subject: [PATCH 17/25] xfsprogs: Add parent pointer ioctl
+        b=J9/FvLW8HyhfMtnX/thIwcB2d2p54oa8TT873m57US34qVA06GYR1EBxihAvUhTyk
+         IArDPnQ1Z2FOFZri0AjgqzGp4W/1Yrkyp8LaLmCnkUYEXmBTOOa4ALO+SuDc+yRHAM
+         zrYerf3QE8I8axwSgGQ7EOW2TM97fSeAEx5QKCIa3Xp7V4s8qF0yJiypJCB1Mr2Lwu
+         L2k+EXY4hUm1uQi/GQqTjZVY9FTQLiuhxLEbaQSo6h3Nhbenr6Xmpg/njqcigz13YL
+         YVQhL8ICkeJsRgvLlfThloziPNTLO0u4OBHJZqjZZKqumKDlX0w76msm8uC/7Z3eA7
+         lZVsj5xNL2whw==
+Date:   Thu, 16 Feb 2023 12:58:12 -0800
+Subject: [PATCH 18/25] xfsprogs: fix unit conversion error in
+ xfs_log_calc_max_attrsetm_res
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     Allison Henderson <allison.henderson@oracle.com>,
         allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167657879137.3476112.1273779539233633833.stgit@magnolia>
+Message-ID: <167657879149.3476112.7688659824978464579.stgit@magnolia>
 In-Reply-To: <167657878885.3476112.11949206434283274332.stgit@magnolia>
 References: <167657878885.3476112.11949206434283274332.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,210 +51,97 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Allison Henderson <allison.henderson@oracle.com>
 
-Source kernel commit: 5e5cdd593342c5ff8aeef9daaa93293f63079b4b
+Source kernel commit: 46f34ae75a2ef5ca24104377a10a57f9d4151e1d
 
-This patch adds a new file ioctl to retrieve the parent pointer of a
-given inode
+Dave and I were discussing some recent test regressions as a result of
+me turning on nrext64=1 on realtime filesystems, when we noticed that
+the minimum log size of a 32M filesystem jumped from 954 blocks to 4287
+blocks.
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Digging through xfs_log_calc_max_attrsetm_res, Dave noticed that @size
+contains the maximum estimated amount of space needed for a local format
+xattr, in bytes, but we feed this quantity to XFS_NEXTENTADD_SPACE_RES,
+which requires units of blocks.  This has resulted in an overestimation
+of the minimum log size over the years.
+
+We should nominally correct this, but there's a backwards compatibility
+problem -- if we enable it now, the minimum log size will decrease.  If
+a corrected mkfs formats a filesystem with this new smaller log size, a
+user will encounter mount failures on an uncorrected kernel due to the
+larger minimum log size computations there.
+
+However, the large extent counters feature is still EXPERIMENTAL, so we
+can gate the correction on that feature (or any features that get added
+after that) being enabled.  Any filesystem with nrext64 or any of the
+as-yet-undefined feature bits turned on will be rejected by old
+uncorrected kernels, so this should be safe even in the upgrade case.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- libxfs/xfs_fs.h     |   74 +++++++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_parent.c |   10 +++++++
- libxfs/xfs_parent.h |    2 +
- man/man3/xfsctl.3   |   55 ++++++++++++++++++++++++++++++++++++++
- 4 files changed, 141 insertions(+)
+ libxfs/xfs_log_rlimit.c |   43 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 43 insertions(+)
 
 
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index b0b4d7a3..9e59a1fd 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -752,6 +752,79 @@ struct xfs_scrub_metadata {
- 				 XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED)
- #define XFS_SCRUB_FLAGS_ALL	(XFS_SCRUB_FLAGS_IN | XFS_SCRUB_FLAGS_OUT)
+diff --git a/libxfs/xfs_log_rlimit.c b/libxfs/xfs_log_rlimit.c
+index cba24493..6ecb9ad5 100644
+--- a/libxfs/xfs_log_rlimit.c
++++ b/libxfs/xfs_log_rlimit.c
+@@ -16,6 +16,39 @@
+ #include "xfs_bmap_btree.h"
+ #include "xfs_trace.h"
  
-+#define XFS_PPTR_MAXNAMELEN				256
++/*
++ * Decide if the filesystem has the parent pointer feature or any feature
++ * added after that.
++ */
++static inline bool
++xfs_has_parent_or_newer_feature(
++	struct xfs_mount	*mp)
++{
++	if (!xfs_sb_is_v5(&mp->m_sb))
++		return false;
 +
-+/* return parents of the handle, not the open fd */
-+#define XFS_PPTR_IFLAG_HANDLE  (1U << 0)
++	if (xfs_sb_has_compat_feature(&mp->m_sb, ~0))
++		return true;
 +
-+/* target was the root directory */
-+#define XFS_PPTR_OFLAG_ROOT    (1U << 1)
++	if (xfs_sb_has_ro_compat_feature(&mp->m_sb,
++				~(XFS_SB_FEAT_RO_COMPAT_FINOBT |
++				 XFS_SB_FEAT_RO_COMPAT_RMAPBT |
++				 XFS_SB_FEAT_RO_COMPAT_REFLINK |
++				 XFS_SB_FEAT_RO_COMPAT_INOBTCNT)))
++		return true;
 +
-+/* Cursor is done iterating pptrs */
-+#define XFS_PPTR_OFLAG_DONE    (1U << 2)
++	if (xfs_sb_has_incompat_feature(&mp->m_sb,
++				~(XFS_SB_FEAT_INCOMPAT_FTYPE |
++				 XFS_SB_FEAT_INCOMPAT_SPINODES |
++				 XFS_SB_FEAT_INCOMPAT_META_UUID |
++				 XFS_SB_FEAT_INCOMPAT_BIGTIME |
++				 XFS_SB_FEAT_INCOMPAT_NEEDSREPAIR |
++				 XFS_SB_FEAT_INCOMPAT_NREXT64)))
++		return true;
 +
-+ #define XFS_PPTR_FLAG_ALL     (XFS_PPTR_IFLAG_HANDLE | XFS_PPTR_OFLAG_ROOT | \
-+				XFS_PPTR_OFLAG_DONE)
++	return false;
++}
 +
-+/* Get an inode parent pointer through ioctl */
-+struct xfs_parent_ptr {
-+	__u64		xpp_ino;			/* Inode */
-+	__u32		xpp_gen;			/* Inode generation */
-+	__u32		xpp_diroffset;			/* Directory offset */
-+	__u64		xpp_rsvd;			/* Reserved */
-+	__u8		xpp_name[XFS_PPTR_MAXNAMELEN];	/* File name */
-+};
-+
-+/* Iterate through an inodes parent pointers */
-+struct xfs_pptr_info {
-+	/* File handle, if XFS_PPTR_IFLAG_HANDLE is set */
-+	struct xfs_handle		pi_handle;
+ /*
+  * Calculate the maximum length in bytes that would be required for a local
+  * attribute value as large attributes out of line are not logged.
+@@ -31,6 +64,16 @@ xfs_log_calc_max_attrsetm_res(
+ 	       MAXNAMELEN - 1;
+ 	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
+ 	nblks += XFS_B_TO_FSB(mp, size);
 +
 +	/*
-+	 * Structure to track progress in iterating the parent pointers.
-+	 * Must be initialized to zeroes before the first ioctl call, and
-+	 * not touched by callers after that.
++	 * Starting with the parent pointer feature, every new fs feature
++	 * corrects a unit conversion error in the xattr transaction
++	 * reservation code that resulted in oversized minimum log size
++	 * computations.
 +	 */
-+	struct xfs_attrlist_cursor	pi_cursor;
++	if (xfs_has_parent_or_newer_feature(mp))
++		size = XFS_B_TO_FSB(mp, size);
 +
-+	/* Operational flags: XFS_PPTR_*FLAG* */
-+	__u32				pi_flags;
-+
-+	/* Must be set to zero */
-+	__u32				pi_reserved;
-+
-+	/* # of entries in array */
-+	__u32				pi_ptrs_size;
-+
-+	/* # of entries filled in (output) */
-+	__u32				pi_ptrs_used;
-+
-+	/* Must be set to zero */
-+	__u64				pi_reserved2[6];
-+
-+	/*
-+	 * An array of struct xfs_parent_ptr follows the header
-+	 * information. Use xfs_ppinfo_to_pp() to access the
-+	 * parent pointer array entries.
-+	 */
-+	struct xfs_parent_ptr		pi_parents[];
-+};
-+
-+static inline size_t
-+xfs_pptr_info_sizeof(int nr_ptrs)
-+{
-+	return sizeof(struct xfs_pptr_info) +
-+	       (nr_ptrs * sizeof(struct xfs_parent_ptr));
-+}
-+
-+static inline struct xfs_parent_ptr*
-+xfs_ppinfo_to_pp(
-+	struct xfs_pptr_info	*info,
-+	int			idx)
-+{
-+	return &info->pi_parents[idx];
-+}
-+
- /*
-  * ioctl limits
-  */
-@@ -797,6 +870,7 @@ struct xfs_scrub_metadata {
- /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
- #define XFS_IOC_SCRUB_METADATA	_IOWR('X', 60, struct xfs_scrub_metadata)
- #define XFS_IOC_AG_GEOMETRY	_IOWR('X', 61, struct xfs_ag_geometry)
-+#define XFS_IOC_GETPARENTS	_IOWR('X', 62, struct xfs_parent_ptr)
+ 	nblks += XFS_NEXTENTADD_SPACE_RES(mp, size, XFS_ATTR_FORK);
  
- /*
-  * ioctl commands that replace IRIX syssgi()'s
-diff --git a/libxfs/xfs_parent.c b/libxfs/xfs_parent.c
-index 3f02271f..47ea6b89 100644
---- a/libxfs/xfs_parent.c
-+++ b/libxfs/xfs_parent.c
-@@ -30,6 +30,16 @@
- 
- struct kmem_cache		*xfs_parent_intent_cache;
- 
-+/* Initializes a xfs_parent_ptr from an xfs_parent_name_rec */
-+void
-+xfs_init_parent_ptr(struct xfs_parent_ptr		*xpp,
-+		    const struct xfs_parent_name_rec	*rec)
-+{
-+	xpp->xpp_ino = be64_to_cpu(rec->p_ino);
-+	xpp->xpp_gen = be32_to_cpu(rec->p_gen);
-+	xpp->xpp_diroffset = be32_to_cpu(rec->p_diroffset);
-+}
-+
- /*
-  * Parent pointer attribute handling.
-  *
-diff --git a/libxfs/xfs_parent.h b/libxfs/xfs_parent.h
-index 03900588..13040b9d 100644
---- a/libxfs/xfs_parent.h
-+++ b/libxfs/xfs_parent.h
-@@ -25,6 +25,8 @@ struct xfs_parent_defer {
- void xfs_init_parent_name_rec(struct xfs_parent_name_rec *rec,
- 			      struct xfs_inode *ip,
- 			      uint32_t p_diroffset);
-+void xfs_init_parent_ptr(struct xfs_parent_ptr *xpp,
-+			 const struct xfs_parent_name_rec *rec);
- int __xfs_parent_init(struct xfs_mount *mp, bool grab_log,
- 		struct xfs_parent_defer **parentp);
- 
-diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
-index 4a0d4d08..7cc97499 100644
---- a/man/man3/xfsctl.3
-+++ b/man/man3/xfsctl.3
-@@ -321,6 +321,61 @@ They are all subject to change and should not be called directly
- by applications.
- XFS_IOC_FSSETDM_BY_HANDLE is not supported as of Linux 5.5.
- 
-+.PP
-+.TP
-+.B XFS_IOC_GETPARENTS
-+This command is used to get a files parent pointers.  Parent pointers are
-+file attributes used to store meta data information about an inodes parent.
-+This command takes a xfs_pptr_info structure with trailing array of
-+struct xfs_parent_ptr as an input to store an inodes parents. The
-+xfs_pptr_info_sizeof() and xfs_ppinfo_to_pp() routines are provided to
-+create and iterate through these structures.  The number of pointers stored
-+in the array is indicated by the xfs_pptr_info.used field, and the
-+XFS_PPTR_OFLAG_DONE flag will be set in xfs_pptr_info.flags when there are
-+no more parent pointers to be read.  The below code is an example
-+of XFS_IOC_GETPARENTS usage:
-+
-+.nf
-+#include<stdio.h>
-+#include<string.h>
-+#include<errno.h>
-+#include<xfs/linux.h>
-+#include<xfs/xfs.h>
-+#include<xfs/xfs_types.h>
-+#include<xfs/xfs_fs.h>
-+
-+int main() {
-+	struct xfs_pptr_info	*pi;
-+	struct xfs_parent_ptr	*p;
-+	int			i, error, fd, nr_ptrs = 4;
-+
-+	unsigned char buffer[xfs_pptr_info_sizeof(nr_ptrs)];
-+	memset(buffer, 0, sizeof(buffer));
-+	pi = (struct xfs_pptr_info *)&buffer;
-+	pi->pi_ptrs_size = nr_ptrs;
-+
-+	fd = open("/mnt/test/foo.txt", O_RDONLY | O_CREAT);
-+	if (fd  == -1)
-+		return errno;
-+
-+	do {
-+		error = ioctl(fd, XFS_IOC_GETPARENTS, pi);
-+		if (error)
-+			return error;
-+
-+		for (i = 0; i < pi->pi_ptrs_used; i++) {
-+			p = xfs_ppinfo_to_pp(pi, i);
-+			printf("inode		= %llu\\n", (unsigned long long)p->xpp_ino);
-+			printf("generation	= %u\\n", (unsigned int)p->xpp_gen);
-+			printf("diroffset	= %u\\n", (unsigned int)p->xpp_diroffset);
-+			printf("name		= \\"%s\\"\\n\\n", (char *)p->xpp_name);
-+		}
-+	} while (!pi->pi_flags & XFS_PPTR_OFLAG_DONE);
-+
-+	return 0;
-+}
-+.fi
-+
- .SS Filesystem Operations
- In order to effect one of the following operations, the pathname
- and descriptor arguments passed to
+ 	return  M_RES(mp)->tr_attrsetm.tr_logres +
 
