@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33D95C61DA4
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:42:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FA39C636CC
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:42:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229637AbjBPUmH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Feb 2023 15:42:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53972 "EHLO
+        id S229520AbjBPUmX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Feb 2023 15:42:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54034 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229508AbjBPUmG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:42:06 -0500
+        with ESMTP id S229508AbjBPUmW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:42:22 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3122ACC0D
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:42:05 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D71A7CC0D
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:42:20 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id DA4F5B82958
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:42:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 856D4C433EF;
-        Thu, 16 Feb 2023 20:42:02 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 6B554B826BA
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:42:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31075C433D2;
+        Thu, 16 Feb 2023 20:42:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676580122;
-        bh=D8gOghGKJy9CwErxcRZNhX3UcVXEDuVxXDDve6qeyJo=;
+        s=k20201202; t=1676580138;
+        bh=vR7G3MbgQYqyage9TqWpp8H2nN2PvIRPlu5d7MsUIe0=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=RCisw/QeaQZQyxSYZSvbuBqE9QdidkFjGWCto6q1Qh5Dp1BzoHYepnAYY2ZVEm9PF
-         AQC50hMmek9RNEZ1wRBGtBHcEgoPGEAH61RqY/FrUsuStZly52JTdOlKzuuV9tm4kS
-         AZjGqg/ZWn/e2Bu8MllKH7htl7WJHt+R00CeWX2/f8xKl0LHj/0kHTVHV/rrIViuoW
-         fc/CxHiHKYYs7eeLfJm8nhUR7nkWuKdnoVaTGy42/rOnbv11phWc0mcDZWlD+mldaV
-         /prxx2QEF2L1LU7VEkvOQDQUE0kQcLZJM+GJ1bsBfT0KmJCGieTZW8RAtoXXDU+3J7
-         BiGQJunZ5g9nw==
-Date:   Thu, 16 Feb 2023 12:42:02 -0800
-Subject: [PATCH 01/23] xfs: manage inode DONTCACHE status at irele time
+        b=iD7M7ErxZ4u7DGgbSA3mpk8HITL2X3/ULSRO8zK6frl9My96EdQiO/UnZTXP6GvlC
+         m346BoH28gyZLsE60QA4tiJAVe/rszqsPz+hhLLw6b5AZSSBZoJnD5x5h/5KHoE5cA
+         oTC189pyMxJvBucroTb1wSC5phvRkw9427DwJNDVaTo/bjKknOWjIi5QK1MnR+U+QF
+         3j8knPtdEBUbl8dL60IT0/J6ZpISwtfDBxuuAfTYwmDVNGICaf0hDHqCvChqBaOW7h
+         V0h9avwxOySzY52BjlUUUTVBSGE7iIkemlB4UJyeYxuHwj1EBneRjG8IEih2sY0DfV
+         pk2YytaJX2oZQ==
+Date:   Thu, 16 Feb 2023 12:42:17 -0800
+Subject: [PATCH 02/23] xfs: make checking directory dotdot entries more
+ reliable
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167657873852.3474338.12853538936212255286.stgit@magnolia>
+Message-ID: <167657873866.3474338.5805504003002783438.stgit@magnolia>
 In-Reply-To: <167657873813.3474338.3118516275923112371.stgit@magnolia>
 References: <167657873813.3474338.3118516275923112371.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,216 +50,378 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Right now, there are statements scattered all over the online fsck
-codebase about how we can't use XFS_IGET_DONTCACHE because of concerns
-about scrub's unusual practice of releasing inodes with transactions
-held.
+The current directory parent scrubbing code could be tighter in its
+execution -- instead of bailing out to userspace after a couple of
+seconds of waiting for the (alleged) parent directory's IOLOCK while
+refusing to release the child directory's IOLOCK, we could just cycle
+both locks until we get both or the child process absorbs a fatal
+signal.
 
-However, iget is the wrong place to handle this -- the DONTCACHE state
-doesn't matter at all until we try to *release* the inode, and here we
-get things wrong in multiple ways:
+Note that because the usual sequence is to take IOLOCKs before grabbing
+a transaction, we have to use the _nowait variants on both inodes to
+avoid an ABBA deadlock.  Since parent pointer checking is the only place
+in scrub that needs this kind of functionality, move it to parent.c as a
+private function.
 
-First, if we /do/ have a transaction, we must NOT drop the inode,
-because the inode could have dirty pages, dropping the inode will
-trigger writeback, and writeback can trigger a nested transaction.
+Furthermore, if the child directory's parent changes during the lock
+cycling, we know that the new parent has stamped the correct parent into
+the dotdot entry, so we can conclude that the parent entry is correct.
 
-Second, if the inode already had an active reference and the DONTCACHE
-flag set, the icache hit when scrub grabs another ref will not clear
-DONTCACHE.  This is sort of by design, since DONTCACHE is now used to
-initiate cache drops so that sysadmins can change a file's access mode
-between pagecache and DAX.
-
-Third, if we do actually have the last active reference to the inode, we
-can set DONTCACHE to avoid polluting the cache.  This is the /one/ case
-where we actually want that flag.
-
-Create an xchk_irele helper to encode all that logic and switch the
-online fsck code to use it.  Since this now means that nearly all
-scrubbers use the same xfs_iget flags, we can wrap them too.
+This eliminates an entire source of -EDEADLOCK-based "retry harder"
+scrub executions.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/common.c |   52 +++++++++++++++++++++++++++++++++++++++++++++----
- fs/xfs/scrub/common.h |    3 +++
- fs/xfs/scrub/dir.c    |    2 +-
- fs/xfs/scrub/parent.c |    9 ++++----
- fs/xfs/scrub/scrub.c  |    2 +-
- 5 files changed, 57 insertions(+), 11 deletions(-)
+ fs/xfs/scrub/common.c |   22 -----
+ fs/xfs/scrub/common.h |    1 
+ fs/xfs/scrub/parent.c |  203 +++++++++++++++++++++++--------------------------
+ 3 files changed, 97 insertions(+), 129 deletions(-)
 
 
 diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 613260b04a3d..03039d4ade16 100644
+index 03039d4ade16..d523cbb2c90b 100644
 --- a/fs/xfs/scrub/common.c
 +++ b/fs/xfs/scrub/common.c
-@@ -625,6 +625,16 @@ xchk_checkpoint_log(
+@@ -908,28 +908,6 @@ xchk_metadata_inode_forks(
  	return 0;
  }
  
-+/* Verify that an inode is allocated ondisk, then return its cached inode. */
-+int
-+xchk_iget(
-+	struct xfs_scrub	*sc,
-+	xfs_ino_t		inum,
-+	struct xfs_inode	**ipp)
-+{
-+	return xfs_iget(sc->mp, sc->tp, inum, XFS_IGET_UNTRUSTED, 0, ipp);
-+}
-+
- /*
-  * Given an inode and the scrub control structure, grab either the
-  * inode referenced in the control structure or the inode passed in.
-@@ -649,8 +659,7 @@ xchk_get_inode(
- 	/* Look up the inode, see if the generation number matches. */
- 	if (xfs_internal_inum(mp, sc->sm->sm_ino))
- 		return -ENOENT;
--	error = xfs_iget(mp, NULL, sc->sm->sm_ino,
--			XFS_IGET_UNTRUSTED | XFS_IGET_DONTCACHE, 0, &ip);
-+	error = xchk_iget(sc, sc->sm->sm_ino, &ip);
- 	switch (error) {
- 	case -ENOENT:
- 		/* Inode doesn't exist, just bail out. */
-@@ -672,7 +681,7 @@ xchk_get_inode(
- 		 * that it no longer exists.
- 		 */
- 		error = xfs_imap(sc->mp, sc->tp, sc->sm->sm_ino, &imap,
--				XFS_IGET_UNTRUSTED | XFS_IGET_DONTCACHE);
-+				XFS_IGET_UNTRUSTED);
- 		if (error)
- 			return -ENOENT;
- 		error = -EFSCORRUPTED;
-@@ -685,7 +694,7 @@ xchk_get_inode(
- 		return error;
- 	}
- 	if (VFS_I(ip)->i_generation != sc->sm->sm_gen) {
--		xfs_irele(ip);
-+		xchk_irele(sc, ip);
- 		return -ENOENT;
- 	}
- 
-@@ -693,6 +702,41 @@ xchk_get_inode(
- 	return 0;
- }
- 
-+/* Release an inode, possibly dropping it in the process. */
-+void
-+xchk_irele(
-+	struct xfs_scrub	*sc,
-+	struct xfs_inode	*ip)
-+{
-+	if (current->journal_info != NULL) {
-+		ASSERT(current->journal_info == sc->tp);
-+
-+		/*
-+		 * If we are in a transaction, we /cannot/ drop the inode
-+		 * ourselves, because the VFS will trigger writeback, which
-+		 * can require a transaction.  Clear DONTCACHE to force the
-+		 * inode to the LRU, where someone else can take care of
-+		 * dropping it.
-+		 *
-+		 * Note that when we grabbed our reference to the inode, it
-+		 * could have had an active ref and DONTCACHE set if a sysadmin
-+		 * is trying to coerce a change in file access mode.  icache
-+		 * hits do not clear DONTCACHE, so we must do it here.
-+		 */
-+		spin_lock(&VFS_I(ip)->i_lock);
-+		VFS_I(ip)->i_state &= ~I_DONTCACHE;
-+		spin_unlock(&VFS_I(ip)->i_lock);
-+	} else if (atomic_read(&VFS_I(ip)->i_count) == 1) {
-+		/*
-+		 * If this is the last reference to the inode and the caller
-+		 * permits it, set DONTCACHE to avoid thrashing.
-+		 */
-+		d_mark_dontcache(VFS_I(ip));
-+	}
-+
-+	xfs_irele(ip);
-+}
-+
- /* Set us up to scrub a file's contents. */
- int
- xchk_setup_inode_contents(
+-/*
+- * Try to lock an inode in violation of the usual locking order rules.  For
+- * example, trying to get the IOLOCK while in transaction context, or just
+- * plain breaking AG-order or inode-order inode locking rules.  Either way,
+- * the only way to avoid an ABBA deadlock is to use trylock and back off if
+- * we can't.
+- */
+-int
+-xchk_ilock_inverted(
+-	struct xfs_inode	*ip,
+-	uint			lock_mode)
+-{
+-	int			i;
+-
+-	for (i = 0; i < 20; i++) {
+-		if (xfs_ilock_nowait(ip, lock_mode))
+-			return 0;
+-		delay(1);
+-	}
+-	return -EDEADLOCK;
+-}
+-
+ /* Pause background reaping of resources. */
+ void
+ xchk_stop_reaping(
 diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index b73648d81d23..1c4525d97939 100644
+index 1c4525d97939..367f754c5cef 100644
 --- a/fs/xfs/scrub/common.h
 +++ b/fs/xfs/scrub/common.h
-@@ -136,6 +136,9 @@ int xchk_get_inode(struct xfs_scrub *sc);
- int xchk_setup_inode_contents(struct xfs_scrub *sc, unsigned int resblks);
- void xchk_buffer_recheck(struct xfs_scrub *sc, struct xfs_buf *bp);
- 
-+int xchk_iget(struct xfs_scrub *sc, xfs_ino_t inum, struct xfs_inode **ipp);
-+void xchk_irele(struct xfs_scrub *sc, struct xfs_inode *ip);
-+
- /*
-  * Don't bother cross-referencing if we already found corruption or cross
-  * referencing discrepancies.
-diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-index d1b0f23c2c59..677b21c3c865 100644
---- a/fs/xfs/scrub/dir.c
-+++ b/fs/xfs/scrub/dir.c
-@@ -86,7 +86,7 @@ xchk_dir_check_ftype(
- 			xfs_mode_to_ftype(VFS_I(ip)->i_mode));
- 	if (ino_dtype != dtype)
- 		xchk_fblock_set_corrupt(sdc->sc, XFS_DATA_FORK, offset);
--	xfs_irele(ip);
-+	xchk_irele(sdc->sc, ip);
- out:
- 	return error;
+@@ -150,7 +150,6 @@ static inline bool xchk_skip_xref(struct xfs_scrub_metadata *sm)
  }
+ 
+ int xchk_metadata_inode_forks(struct xfs_scrub *sc);
+-int xchk_ilock_inverted(struct xfs_inode *ip, uint lock_mode);
+ void xchk_stop_reaping(struct xfs_scrub *sc);
+ void xchk_start_reaping(struct xfs_scrub *sc);
+ 
 diff --git a/fs/xfs/scrub/parent.c b/fs/xfs/scrub/parent.c
-index d8dff3fd8053..2696bb49324a 100644
+index 2696bb49324a..0c23fd49716b 100644
 --- a/fs/xfs/scrub/parent.c
 +++ b/fs/xfs/scrub/parent.c
-@@ -131,7 +131,6 @@ xchk_parent_validate(
- 	xfs_ino_t		dnum,
- 	bool			*try_again)
+@@ -120,6 +120,48 @@ xchk_parent_count_parent_dentries(
+ 	return error;
+ }
+ 
++/*
++ * Try to iolock the parent dir @dp in shared mode and the child dir @sc->ip
++ * exclusively.
++ */
++STATIC int
++xchk_parent_lock_two_dirs(
++	struct xfs_scrub	*sc,
++	struct xfs_inode	*dp)
++{
++	int			error = 0;
++
++	/* Callers shouldn't do this, but protect ourselves anyway. */
++	if (dp == sc->ip) {
++		ASSERT(dp != sc->ip);
++		return -EINVAL;
++	}
++
++	xfs_iunlock(sc->ip, sc->ilock_flags);
++	sc->ilock_flags = 0;
++	while (true) {
++		if (xchk_should_terminate(sc, &error))
++			return error;
++
++		/*
++		 * Normal XFS takes the IOLOCK before grabbing a transaction.
++		 * Scrub holds a transaction, which means that we can't block
++		 * on either IOLOCK.
++		 */
++		if (xfs_ilock_nowait(dp, XFS_IOLOCK_SHARED)) {
++			if (xfs_ilock_nowait(sc->ip, XFS_IOLOCK_EXCL)) {
++				sc->ilock_flags = XFS_IOLOCK_EXCL;
++				break;
++			}
++			xfs_iunlock(dp, XFS_IOLOCK_SHARED);
++		}
++
++		delay(1);
++	}
++
++	return 0;
++}
++
+ /*
+  * Given the inode number of the alleged parent of the inode being
+  * scrubbed, try to validate that the parent has exactly one directory
+@@ -128,23 +170,20 @@ xchk_parent_count_parent_dentries(
+ STATIC int
+ xchk_parent_validate(
+ 	struct xfs_scrub	*sc,
+-	xfs_ino_t		dnum,
+-	bool			*try_again)
++	xfs_ino_t		parent_ino)
  {
--	struct xfs_mount	*mp = sc->mp;
  	struct xfs_inode	*dp = NULL;
  	xfs_nlink_t		expected_nlink;
  	xfs_nlink_t		nlink;
-@@ -168,7 +167,7 @@ xchk_parent_validate(
+ 	int			error = 0;
+ 
+-	*try_again = false;
+-
+ 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+-		goto out;
++		return 0;
+ 
+ 	/* '..' must not point to ourselves. */
+-	if (sc->ip->i_ino == dnum) {
++	if (sc->ip->i_ino == parent_ino) {
+ 		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
+-		goto out;
++		return 0;
+ 	}
+ 
+ 	/*
+@@ -154,106 +193,80 @@ xchk_parent_validate(
+ 	expected_nlink = VFS_I(sc->ip)->i_nlink == 0 ? 0 : 1;
+ 
+ 	/*
+-	 * Grab this parent inode.  We release the inode before we
+-	 * cancel the scrub transaction.  Since we're don't know a
+-	 * priori that releasing the inode won't trigger eofblocks
+-	 * cleanup (which allocates what would be a nested transaction)
+-	 * if the parent pointer erroneously points to a file, we
+-	 * can't use DONTCACHE here because DONTCACHE inodes can trigger
+-	 * immediate inactive cleanup of the inode.
++	 * Grab the parent directory inode.  This must be released before we
++	 * cancel the scrub transaction.
+ 	 *
+ 	 * If _iget returns -EINVAL or -ENOENT then the parent inode number is
+ 	 * garbage and the directory is corrupt.  If the _iget returns
  	 * -EFSCORRUPTED or -EFSBADCRC then the parent is corrupt which is a
  	 *  cross referencing error.  Any other error is an operational error.
  	 */
--	error = xfs_iget(mp, sc->tp, dnum, XFS_IGET_UNTRUSTED, 0, &dp);
-+	error = xchk_iget(sc, dnum, &dp);
+-	error = xchk_iget(sc, dnum, &dp);
++	error = xchk_iget(sc, parent_ino, &dp);
  	if (error == -EINVAL || error == -ENOENT) {
  		error = -EFSCORRUPTED;
  		xchk_fblock_process_error(sc, XFS_DATA_FORK, 0, &error);
-@@ -236,11 +235,11 @@ xchk_parent_validate(
- 
- 	/* Drat, parent changed.  Try again! */
- 	if (dnum != dp->i_ino) {
--		xfs_irele(dp);
-+		xchk_irele(sc, dp);
- 		*try_again = true;
- 		return 0;
+-		goto out;
++		return error;
  	}
--	xfs_irele(dp);
-+	xchk_irele(sc, dp);
+ 	if (!xchk_fblock_xref_process_error(sc, XFS_DATA_FORK, 0, &error))
+-		goto out;
++		return error;
+ 	if (dp == sc->ip || !S_ISDIR(VFS_I(dp)->i_mode)) {
+ 		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
+ 		goto out_rele;
+ 	}
  
  	/*
- 	 * '..' didn't change, so check that there was only one entry
-@@ -253,7 +252,7 @@ xchk_parent_validate(
+-	 * We prefer to keep the inode locked while we lock and search
+-	 * its alleged parent for a forward reference.  If we can grab
+-	 * the iolock, validate the pointers and we're done.  We must
+-	 * use nowait here to avoid an ABBA deadlock on the parent and
+-	 * the child inodes.
++	 * We prefer to keep the inode locked while we lock and search its
++	 * alleged parent for a forward reference.  If we can grab the iolock
++	 * of the alleged parent, then we can move ahead to counting dirents
++	 * and checking nlinks.
++	 *
++	 * However, if we fail to iolock the alleged parent while holding the
++	 * child iolock, we have no way to tell if a blocking lock() would
++	 * result in an ABBA deadlock.  Release the lock on the child, then
++	 * try to lock the alleged parent and trylock the child.
+ 	 */
+-	if (xfs_ilock_nowait(dp, XFS_IOLOCK_SHARED)) {
+-		error = xchk_parent_count_parent_dentries(sc, dp, &nlink);
+-		if (!xchk_fblock_xref_process_error(sc, XFS_DATA_FORK, 0,
+-				&error))
++	if (!xfs_ilock_nowait(dp, XFS_IOLOCK_SHARED)) {
++		error = xchk_parent_lock_two_dirs(sc, dp);
++		if (error)
++			goto out_rele;
++
++		/*
++		 * Now that we've locked out updates to the child directory,
++		 * re-sample the expected nlink and the '..' dirent.
++		 */
++		expected_nlink = VFS_I(sc->ip)->i_nlink == 0 ? 0 : 1;
++
++		error = xfs_dir_lookup(sc->tp, sc->ip, &xfs_name_dotdot,
++				&parent_ino, NULL);
++		if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
++			goto out_unlock;
++
++		/*
++		 * After relocking the child directory, the '..' entry points
++		 * to a different parent than before.  This means someone moved
++		 * the child elsewhere in the directory tree, which means that
++		 * the parent link is now correct and we're done.
++		 */
++		if (parent_ino != dp->i_ino)
+ 			goto out_unlock;
+-		if (nlink != expected_nlink)
+-			xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
+-		goto out_unlock;
+ 	}
+ 
+-	/*
+-	 * The game changes if we get here.  We failed to lock the parent,
+-	 * so we're going to try to verify both pointers while only holding
+-	 * one lock so as to avoid deadlocking with something that's actually
+-	 * trying to traverse down the directory tree.
+-	 */
+-	xfs_iunlock(sc->ip, sc->ilock_flags);
+-	sc->ilock_flags = 0;
+-	error = xchk_ilock_inverted(dp, XFS_IOLOCK_SHARED);
+-	if (error)
+-		goto out_rele;
+-
+-	/* Go looking for our dentry. */
++	/* Look for a directory entry in the parent pointing to the child. */
+ 	error = xchk_parent_count_parent_dentries(sc, dp, &nlink);
+ 	if (!xchk_fblock_xref_process_error(sc, XFS_DATA_FORK, 0, &error))
+ 		goto out_unlock;
+ 
+-	/* Drop the parent lock, relock this inode. */
+-	xfs_iunlock(dp, XFS_IOLOCK_SHARED);
+-	error = xchk_ilock_inverted(sc->ip, XFS_IOLOCK_EXCL);
+-	if (error)
+-		goto out_rele;
+-	sc->ilock_flags = XFS_IOLOCK_EXCL;
+-
+ 	/*
+-	 * If we're an unlinked directory, the parent /won't/ have a link
+-	 * to us.  Otherwise, it should have one link.  We have to re-set
+-	 * it here because we dropped the lock on sc->ip.
+-	 */
+-	expected_nlink = VFS_I(sc->ip)->i_nlink == 0 ? 0 : 1;
+-
+-	/* Look up '..' to see if the inode changed. */
+-	error = xfs_dir_lookup(sc->tp, sc->ip, &xfs_name_dotdot, &dnum, NULL);
+-	if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
+-		goto out_rele;
+-
+-	/* Drat, parent changed.  Try again! */
+-	if (dnum != dp->i_ino) {
+-		xchk_irele(sc, dp);
+-		*try_again = true;
+-		return 0;
+-	}
+-	xchk_irele(sc, dp);
+-
+-	/*
+-	 * '..' didn't change, so check that there was only one entry
+-	 * for us in the parent.
++	 * Ensure that the parent has as many links to the child as the child
++	 * thinks it has to the parent.
+ 	 */
+ 	if (nlink != expected_nlink)
+ 		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
+-	return error;
+ 
  out_unlock:
  	xfs_iunlock(dp, XFS_IOLOCK_SHARED);
  out_rele:
--	xfs_irele(dp);
-+	xchk_irele(sc, dp);
- out:
+ 	xchk_irele(sc, dp);
+-out:
  	return error;
  }
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 07a7a75f987f..752cb4fbd26f 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -166,7 +166,7 @@ xchk_teardown(
- 			xfs_iunlock(sc->ip, sc->ilock_flags);
- 		if (sc->ip != ip_in &&
- 		    !xfs_internal_inum(sc->mp, sc->ip->i_ino))
--			xfs_irele(sc->ip);
-+			xchk_irele(sc, sc->ip);
- 		sc->ip = NULL;
+ 
+@@ -263,10 +276,8 @@ xchk_parent(
+ 	struct xfs_scrub	*sc)
+ {
+ 	struct xfs_mount	*mp = sc->mp;
+-	xfs_ino_t		dnum;
+-	bool			try_again;
+-	int			tries = 0;
+-	int			error = 0;
++	xfs_ino_t		parent_ino;
++	int			error;
+ 
+ 	/*
+ 	 * If we're a directory, check that the '..' link points up to
+@@ -278,7 +289,7 @@ xchk_parent(
+ 	/* We're not a special inode, are we? */
+ 	if (!xfs_verify_dir_ino(mp, sc->ip->i_ino)) {
+ 		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
+-		goto out;
++		return 0;
  	}
- 	if (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
+ 
+ 	/*
+@@ -292,42 +303,22 @@ xchk_parent(
+ 	xfs_iunlock(sc->ip, XFS_ILOCK_EXCL | XFS_MMAPLOCK_EXCL);
+ 
+ 	/* Look up '..' */
+-	error = xfs_dir_lookup(sc->tp, sc->ip, &xfs_name_dotdot, &dnum, NULL);
++	error = xfs_dir_lookup(sc->tp, sc->ip, &xfs_name_dotdot, &parent_ino,
++			NULL);
+ 	if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, 0, &error))
+-		goto out;
+-	if (!xfs_verify_dir_ino(mp, dnum)) {
++		return error;
++	if (!xfs_verify_dir_ino(mp, parent_ino)) {
+ 		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
+-		goto out;
++		return 0;
+ 	}
+ 
+ 	/* Is this the root dir?  Then '..' must point to itself. */
+ 	if (sc->ip == mp->m_rootip) {
+ 		if (sc->ip->i_ino != mp->m_sb.sb_rootino ||
+-		    sc->ip->i_ino != dnum)
++		    sc->ip->i_ino != parent_ino)
+ 			xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
+-		goto out;
++		return 0;
+ 	}
+ 
+-	do {
+-		error = xchk_parent_validate(sc, dnum, &try_again);
+-		if (error)
+-			goto out;
+-	} while (try_again && ++tries < 20);
+-
+-	/*
+-	 * We gave it our best shot but failed, so mark this scrub
+-	 * incomplete.  Userspace can decide if it wants to try again.
+-	 */
+-	if (try_again && tries == 20)
+-		xchk_set_incomplete(sc);
+-out:
+-	/*
+-	 * If we failed to lock the parent inode even after a retry, just mark
+-	 * this scrub incomplete and return.
+-	 */
+-	if ((sc->flags & XCHK_TRY_HARDER) && error == -EDEADLOCK) {
+-		error = 0;
+-		xchk_set_incomplete(sc);
+-	}
+-	return error;
++	return xchk_parent_validate(sc, parent_ino);
+ }
 
