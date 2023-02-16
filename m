@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2D5DC636CC
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:46:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7795C61DA4
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 20:47:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229651AbjBPUqq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Feb 2023 15:46:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56300 "EHLO
+        id S229678AbjBPUrI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Feb 2023 15:47:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56702 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229653AbjBPUqp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:46:45 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9427D52880
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:46:44 -0800 (PST)
+        with ESMTP id S229679AbjBPUrI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 15:47:08 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C36805037D
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 12:47:01 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 30F6660C1D
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:46:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92720C433EF;
-        Thu, 16 Feb 2023 20:46:43 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 7C814B82958
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Feb 2023 20:47:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BF42C433EF;
+        Thu, 16 Feb 2023 20:46:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676580403;
-        bh=Tw1OOxAo7nJQMaKlmNsNQ19tYLpxPxp7XKcecp+T0Gg=;
+        s=k20201202; t=1676580419;
+        bh=M95xK10OS5QCi9oe4ugJvsw7dwEPYArlnNZrbcayrKE=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=s8ysTirZkWFyfI9amkI6uMn8Gtt3z62wMbZ2OOoLdpwS5qx4XrfUTUGLrv62c8I/T
-         i8E5pXX2DJj5OxOj9J+6P+yz9VqYayWPU9bH4DlippLTVbCWZLqNwEMJkKuKPU8dhf
-         53FreYMGQ/710n4DtUYxkDYWQPcDdkvhDaB4Q1WekaN0WWthoKIXdQ7V8l5Om8ZGj0
-         5BbIhgYfV+AlHGS0Z5evKVm3JX1Zj8i6/sMt4hGiZC2VXKw4bUZNasvNgsKtZaY4FZ
-         j8VN1L6VdmrtKVSpRdpyHggPSQYgRLe4XIGSq6dP32RLu9Ze17NM9aSzSRZBhj9uRf
-         EhmVb+m8n0RPg==
-Date:   Thu, 16 Feb 2023 12:46:43 -0800
-Subject: [PATCH 19/23] xfs: hide private inodes from bulkstat and handle
- functions
+        b=j1Hd4BLK8vwtjUMrfy4sDP6u3O4DAo3/sp25Ml6deUDDXZ13f3ekKmLhG7NnsiYNG
+         mop+IbseXgeWOPEkqmQ2VCk+7xdPkQAL00XHvdnHtzxYN09KrfPRVlDWon7isnBFLf
+         tK6O9NBA8gyjQNclMVPqNkm1OFbY6tC76cTMHfdo/zuuSY4crurPL5vUj5XW5cKyNB
+         FZ+vhsLDqF7MzZ6ijbdCob+kG+x8bFcZKFCaJtGaMrj3nTftnpHc2I09RNQPxhtYC/
+         BKRrJeHhELIe46G8blp6boWGrHmVYEpuX+Bh/ULqACs4Gs/cMImMZpTwdewOHcbOmU
+         hMlVRTUx0IUkQ==
+Date:   Thu, 16 Feb 2023 12:46:58 -0800
+Subject: [PATCH 20/23] xfs: create a blob array data structure
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167657874106.3474338.13565241052273372080.stgit@magnolia>
+Message-ID: <167657874121.3474338.7317600993031729741.stgit@magnolia>
 In-Reply-To: <167657873813.3474338.3118516275923112371.stgit@magnolia>
 References: <167657873813.3474338.3118516275923112371.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -50,50 +49,222 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-We're about to start adding functionality that uses internal inodes that
-are private to XFS.  What this means is that userspace should never be
-able to access any information about these files, and should not be able
-to open these files by handle.  Callers are not allowed to link these
-files into the directory tree, which should suffice to make these
-private inodes actually private.
+Create a simple 'blob array' data structure for storage of arbitrarily
+sized metadata objects that will be used to reconstruct metadata.  For
+the intended usage (temporarily storing extended attribute names and
+values) we only have to support storing objects and retrieving them.
+Use the xfile abstraction to store the attribute information in memory
+that can be swapped out.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_export.c |    2 +-
- fs/xfs/xfs_itable.c |    8 ++++++++
- 2 files changed, 9 insertions(+), 1 deletion(-)
+ fs/xfs/Makefile       |    1 
+ fs/xfs/scrub/xfblob.c |  152 +++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/xfblob.h |   25 ++++++++
+ 3 files changed, 178 insertions(+)
+ create mode 100644 fs/xfs/scrub/xfblob.c
+ create mode 100644 fs/xfs/scrub/xfblob.h
 
 
-diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
-index 1064c2342876..b6ba96e0dd75 100644
---- a/fs/xfs/xfs_export.c
-+++ b/fs/xfs/xfs_export.c
-@@ -146,7 +146,7 @@ xfs_nfs_get_inode(
- 		return ERR_PTR(error);
- 	}
- 
--	if (VFS_I(ip)->i_generation != generation) {
-+	if (VFS_I(ip)->i_generation != generation || IS_PRIVATE(VFS_I(ip))) {
- 		xfs_irele(ip);
- 		return ERR_PTR(-ESTALE);
- 	}
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index a1c2bcf65d37..7a967cc78010 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -86,6 +86,14 @@ xfs_bulkstat_one_int(
- 	vfsuid = i_uid_into_vfsuid(mnt_userns, inode);
- 	vfsgid = i_gid_into_vfsgid(mnt_userns, inode);
- 
-+	/* If this is a private inode, don't leak its details to userspace. */
-+	if (IS_PRIVATE(inode)) {
-+		xfs_iunlock(ip, XFS_ILOCK_SHARED);
-+		xfs_irele(ip);
-+		error = -EINVAL;
-+		goto out_advance;
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 2562c852db7f..f2f3ab589c04 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -179,6 +179,7 @@ xfs-y				+= $(addprefix scrub/, \
+ 				   agheader_repair.o \
+ 				   repair.o \
+ 				   tempfile.o \
++				   xfblob.o \
+ 				   )
+ endif
+ endif
+diff --git a/fs/xfs/scrub/xfblob.c b/fs/xfs/scrub/xfblob.c
+new file mode 100644
+index 000000000000..1f89d7d13c59
+--- /dev/null
++++ b/fs/xfs/scrub/xfblob.c
+@@ -0,0 +1,152 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (C) 2022 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "scrub/scrub.h"
++#include "scrub/xfile.h"
++#include "scrub/xfarray.h"
++#include "scrub/xfblob.h"
++
++/*
++ * XFS Blob Storage
++ * ================
++ * Stores and retrieves blobs using an xfile.  Objects are appended to the file
++ * and the offset is returned as a magic cookie for retrieval.
++ */
++
++#define XB_KEY_MAGIC	0xABAADDAD
++struct xb_key {
++	uint32_t		xb_magic;  /* XB_KEY_MAGIC */
++	uint32_t		xb_size;   /* size of the blob, in bytes */
++	loff_t			xb_offset; /* byte offset of this key */
++	/* blob comes after here */
++} __packed;
++
++/* Initialize a blob storage object. */
++int
++xfblob_create(
++	struct xfs_mount	*mp,
++	const char		*description,
++	struct xfblob		**blobp)
++{
++	struct xfblob		*blob;
++	struct xfile		*xfile;
++	int			error;
++
++	error = xfile_create(mp, description, 0, &xfile);
++	if (error)
++		return error;
++
++	blob = kmalloc(sizeof(struct xfblob), XCHK_GFP_FLAGS);
++	if (!blob) {
++		error = -ENOMEM;
++		goto out_xfile;
 +	}
 +
- 	/* xfs_iget returns the following without needing
- 	 * further change.
- 	 */
++	blob->xfile = xfile;
++	blob->last_offset = PAGE_SIZE;
++
++	*blobp = blob;
++	return 0;
++
++out_xfile:
++	xfile_destroy(xfile);
++	return error;
++}
++
++/* Destroy a blob storage object. */
++void
++xfblob_destroy(
++	struct xfblob	*blob)
++{
++	xfile_destroy(blob->xfile);
++	kfree(blob);
++}
++
++/* Retrieve a blob. */
++int
++xfblob_load(
++	struct xfblob	*blob,
++	xfblob_cookie	cookie,
++	void		*ptr,
++	uint32_t	size)
++{
++	struct xb_key	key;
++	int		error;
++
++	error = xfile_obj_load(blob->xfile, &key, sizeof(key), cookie);
++	if (error)
++		return error;
++
++	if (key.xb_magic != XB_KEY_MAGIC || key.xb_offset != cookie) {
++		ASSERT(0);
++		return -ENODATA;
++	}
++	if (size < key.xb_size) {
++		ASSERT(0);
++		return -EFBIG;
++	}
++
++	return xfile_obj_load(blob->xfile, ptr, key.xb_size,
++			cookie + sizeof(key));
++}
++
++/* Store a blob. */
++int
++xfblob_store(
++	struct xfblob	*blob,
++	xfblob_cookie	*cookie,
++	const void	*ptr,
++	uint32_t	size)
++{
++	struct xb_key	key = {
++		.xb_offset = blob->last_offset,
++		.xb_magic = XB_KEY_MAGIC,
++		.xb_size = size,
++	};
++	loff_t		pos = blob->last_offset;
++	int		error;
++
++	error = xfile_obj_store(blob->xfile, &key, sizeof(key), pos);
++	if (error)
++		return error;
++
++	pos += sizeof(key);
++	error = xfile_obj_store(blob->xfile, ptr, size, pos);
++	if (error)
++		goto out_err;
++
++	*cookie = blob->last_offset;
++	blob->last_offset += sizeof(key) + size;
++	return 0;
++out_err:
++	xfile_discard(blob->xfile, blob->last_offset, sizeof(key));
++	return error;
++}
++
++/* Free a blob. */
++int
++xfblob_free(
++	struct xfblob	*blob,
++	xfblob_cookie	cookie)
++{
++	struct xb_key	key;
++	int		error;
++
++	error = xfile_obj_load(blob->xfile, &key, sizeof(key), cookie);
++	if (error)
++		return error;
++
++	if (key.xb_magic != XB_KEY_MAGIC || key.xb_offset != cookie) {
++		ASSERT(0);
++		return -ENODATA;
++	}
++
++	xfile_discard(blob->xfile, cookie, sizeof(key) + key.xb_size);
++	return 0;
++}
+diff --git a/fs/xfs/scrub/xfblob.h b/fs/xfs/scrub/xfblob.h
+new file mode 100644
+index 000000000000..d1282810bb1d
+--- /dev/null
++++ b/fs/xfs/scrub/xfblob.h
+@@ -0,0 +1,25 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/*
++ * Copyright (C) 2022 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#ifndef __XFS_SCRUB_XFBLOB_H__
++#define __XFS_SCRUB_XFBLOB_H__
++
++struct xfblob {
++	struct xfile	*xfile;
++	loff_t		last_offset;
++};
++
++typedef loff_t		xfblob_cookie;
++
++int xfblob_create(struct xfs_mount *mp, const char *descr,
++		struct xfblob **blobp);
++void xfblob_destroy(struct xfblob *blob);
++int xfblob_load(struct xfblob *blob, xfblob_cookie cookie, void *ptr,
++		uint32_t size);
++int xfblob_store(struct xfblob *blob, xfblob_cookie *cookie, const void *ptr,
++		uint32_t size);
++int xfblob_free(struct xfblob *blob, xfblob_cookie cookie);
++
++#endif /* __XFS_SCRUB_XFBLOB_H__ */
 
