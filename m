@@ -2,269 +2,268 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE08AC05027
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Feb 2023 16:53:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7059AC05027
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Feb 2023 20:02:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229689AbjBQQxl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Feb 2023 11:53:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39202 "EHLO
+        id S229482AbjBQUCp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Feb 2023 15:02:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229923AbjBQQxl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Feb 2023 11:53:41 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA5805EC94
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Feb 2023 08:53:36 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id F0D01CE2FF9
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Feb 2023 16:53:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A601C433EF;
-        Fri, 17 Feb 2023 16:53:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676652813;
-        bh=2xC7TC47A4ReJkKz99iWXLBwBfeibzk/Vnl0U/OGjaM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=bv5tnVif7Ao0KZfmbsq8jrsyNbpO8WE0+HkHH8P62JRqtRf4UD/c0NcJzSr9LyCWi
-         X6htxGT6OLx2e6CDMoBe46ggDfC1TqKPDS5cq4s/eOA00tziH72ggH1VwCQthwSL2F
-         6WU7loe2sYSFAtWyxrymksi0rcaYSHSzKaWp1Kt1al79QZrasGVqg4rnZslONG5U6V
-         u2RnCKZ3bvRbj799+S8wkcxm3KWh90z8BV3A5Q0/rtEzTyRS6YnoFjQTLfR9iaqnt/
-         WeU/JOEoo0t/IiPZWshCj+Sse1+uRZPvBuR1oRzH/sdU9Ep56IxYS8rsh30AwR81sW
-         83z6LGaicJYmQ==
-Date:   Fri, 17 Feb 2023 08:53:32 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     shrikanth hegde <sshegde@linux.vnet.ibm.com>
-Cc:     dchinner@redhat.com, linux-xfs@vger.kernel.org,
-        Srikar Dronamraju <srikar@linux.vnet.ibm.com>,
-        ojaswin@linux.ibm.com
-Subject: Re: xfs: system fails to boot up due to Internal error
- xfs_trans_cancel
-Message-ID: <Y++xDBwXDgkaFUi9@magnolia>
-References: <e5004868-4a03-93e5-5077-e7ed0e533996@linux.vnet.ibm.com>
+        with ESMTP id S229445AbjBQUCo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Feb 2023 15:02:44 -0500
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB97C5ECA0
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Feb 2023 12:02:41 -0800 (PST)
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31HGNpCk032039;
+        Fri, 17 Feb 2023 20:02:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=corp-2022-7-12;
+ bh=bjeN/DWsHeGgZY6uOK4Cg1X2BSjtuAOtjbEDXOybalY=;
+ b=dhqFsvbo4wlfh/Bi/hp0z1bXbo4nGKAbYiPHzyHTkJBt0dhtZLdKXJy2EtK8ro6RPbqX
+ GEH/L0s/DrR55kahDJ7AYqlIkEmoh1BZhDTCOfXgglo7hnwupX4ej0sqaimqrrNcd97x
+ 6GuqGXDtN86r0cfCURa89LGqoBfgQnGZzft8rD2pp2lKJLalYirBAbAx//ciy64S+qto
+ aaa6VlIf8khgajl9bFXAy2RqJsuCIkdFA47PESSPwPh0Z7JfkZ7QXjm7mEqzCDUjYbm8
+ MVMF3o9F696WRpEjgOphCH1WZn0rlannjj3TMw/kAbm3XQ5IsfHu1n09c+6ew4q7ct+G lQ== 
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3np2mtptyw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 17 Feb 2023 20:02:34 +0000
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 31HIZWQ9019910;
+        Fri, 17 Feb 2023 20:02:33 GMT
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2102.outbound.protection.outlook.com [104.47.55.102])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3np1fb2ttm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 17 Feb 2023 20:02:33 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=m9lJqyrjce/NLQBmGya0acGekuya1Qx5fTvL9yxMYZ9YheGWez/LL1QjqV1RNjLidEcO1NzFg/nh0ZGQd1NFQaUqAl/eMyg4+gSy9lXDgy4CsEBLlnJvXHixg5H9AjrBWQFVBSK4tVd1VGnJfYCjq+W4viT+nov0lox7A57PAPe4qafQElkcmtDR/uYMVMGnj6cAlMOjf8Rr8xamWgyvQmkX8eLJ5+dmfpGLrQZw6IHUKP2nD56HPIES/hcXx2dDVwlinBxp/kBpYho1OfOW+/23pBHdkJwTTb2mUGCBTxd8DTRROm7xd+PlsotjtwXxFQpcE/v3cS7xKuduVZT6ng==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=bjeN/DWsHeGgZY6uOK4Cg1X2BSjtuAOtjbEDXOybalY=;
+ b=T8Td6q6se3PA6pQ4cya3GT8gA8tWgpLRF7BBFWvrJuu3/H47kEsVY7xUow+b0CjISfvvwozay36NmPw1necWhnzrf7v9WhgPm9DKX9p1q3fv8GTzcNTRGYOYzGdzjzR6nyC76yiSAz7k1UPy+dIIq8rjbLv36ZNBnFEUzwJB4e8bS46f4Drl0Xct8AhNOZMtXd77/wd6b3suXaPh7hsKHGR1OwONDdNW65Pc5W92Lp560HB6lKiXD2LaRwrHr9TdP0fw08kHuJC1/mCunKy6V18u66NsFiIkllL9byUGsnkANVO7M7ETkvjJaudqo26Jn8AhrgU9o1QYVtPTI7TJLQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=bjeN/DWsHeGgZY6uOK4Cg1X2BSjtuAOtjbEDXOybalY=;
+ b=ZY2WKamclmPL0Mrbx337L5v6nu/sjhkvVNCwniWlewdsP1lJPm5/Tqaqz7NYIpcF+JcdXsoZ7B13blPocXOeP/SA2Q6ntSX9AIYs2IeBNAXvY3V/18JwrHRwhOMTKX6cq4PaAU4dCV9IlZmQ8H3yMfCI2R7WkViX0HJPuJmRhtY=
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
+ by BN0PR10MB5381.namprd10.prod.outlook.com (2603:10b6:408:128::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6134.6; Fri, 17 Feb
+ 2023 20:02:29 +0000
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::2a7c:497e:b785:dc06]) by BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::2a7c:497e:b785:dc06%8]) with mapi id 15.20.6134.006; Fri, 17 Feb 2023
+ 20:02:29 +0000
+From:   Allison Henderson <allison.henderson@oracle.com>
+To:     "djwong@kernel.org" <djwong@kernel.org>
+CC:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [RFC DELUGE v9r2d1] xfs: Parent Pointers
+Thread-Topic: [RFC DELUGE v9r2d1] xfs: Parent Pointers
+Thread-Index: AQHZQkItZlHBBP1ZGkWf8BFT+JAjD67TkQEA
+Date:   Fri, 17 Feb 2023 20:02:29 +0000
+Message-ID: <8a65fba38b8a8f9167f27f2a2d6151c8d84bfa61.camel@oracle.com>
+References: <Y+6MxEgswrJMUNOI@magnolia>
+In-Reply-To: <Y+6MxEgswrJMUNOI@magnolia>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Evolution 3.44.4-0ubuntu1 
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: BY5PR10MB4306:EE_|BN0PR10MB5381:EE_
+x-ms-office365-filtering-correlation-id: 2dbc5e96-f272-4a36-1b8c-08db1121e60d
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: iRFGWnC0qj3L/Ys4gS78K4S9WhE687LZ4mV8CnbBbmppuufRzKfBjb6d/ykN9c+LOGkCNfUdz8cfXNP+OFrrAxDxFG2kcLUYcG8vuJ95DIuEfL1oVeYiPvzUQjHFqaQvMMiNzew5zRsL3LCKTFbA0X5XF59MohE+G76VGvNJbCdpy1ezrK8K2ZKIvqntG3EAChhKp71avo25OLi27ywi69U2Gi9IBKztB5OF7uI7+Eeyl/hz+BARFhP+9YmuAD7WdqmaEUvdCimEiqtuIqBIdJHB9dB8Ge7jCLUzdf9o5XMX4vjys8cWEluQUEvqHBp9q0HKEzElgmPQzgXXIc5+usfhDJl5AMDLlg7yf8rAFzQyL9GEa2Gqu4HJLRyynjW2DQL0JX3hN5E2D5GAutyvQ+wMgftHHM8tH2yIdaAQwBZCmrMz9QT4OZ9NCmPo78Gb3Xr+n/QvCidYbwrlBI+H/XgiVA7Clmn2ZQ0P4Wrrfjmhr0J1ZEQveil/rD09m7BeeudCcC1kGjOBMnQEPGVRBxVVxbY+tIWdP4WQAw/scShm5RMkHYEgYQOZCxce3WkiOF2vUCTipWv/9C+r+cs7smdzD+7MgS75scgR3gqDqTxQV8FU+foi2w9v1irORH1xT36nEOIBjQpbsiM7JHvny1DHOSfQXwvaWEYFCnVM4doXkNwi8kxaHjkZW1Li9aXsAhhgVDTyRM7WT9P2zprBPQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(136003)(396003)(39860400002)(346002)(366004)(376002)(451199018)(2906002)(316002)(8936002)(44832011)(5660300002)(38070700005)(76116006)(66946007)(66446008)(64756008)(66556008)(66476007)(6916009)(8676002)(41300700001)(2616005)(4326008)(86362001)(38100700002)(36756003)(83380400001)(6486002)(122000001)(66899018)(478600001)(186003)(6506007)(71200400001)(6512007)(26005);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?aVJIV0NyWkZmelE1eE4zb0s2aEJWMW56V093TklGQXN6bFFtYTdOZ0hTcy8v?=
+ =?utf-8?B?RnpmWnFLY01kYTNFV1B4VTdxUHFHZ2pPaVhORGlUN2hpS1ZHT0pKNkRFQzVG?=
+ =?utf-8?B?cjgxZFZuMXJhOGxwQUpkQzI3Njg2SlpHRDlBeHU2L0hFUEhxT1F3MEJPVitY?=
+ =?utf-8?B?YWNrNG1TWlh5VDNmS3Z4eVV1bS9TSDFqMkVra2hXTVNzNHBCTlcyY2VHU3hp?=
+ =?utf-8?B?SjRQRVhVOVVHS3lvcUFNdno2emhqTXN6bFpXeHBiNVdJdFhPY1QwcmpuM3Y1?=
+ =?utf-8?B?MDZjenpsUXJRcDhualNBWUxhcUNNbHBOTUFnTVNKYVc2TGV6b2REZm1kQW84?=
+ =?utf-8?B?RHVsTTFESnBTNE1EUWRiV0ZWcmwzd1psRnZ1Y2dGd0hoMVNmTGE1SjFZM1NU?=
+ =?utf-8?B?UCsxN1ZCUVYxRk9QSjVjS214dlJkaG8rMUVUOFE1TXBtcEY5SWJDTlJvdkZH?=
+ =?utf-8?B?dThuOTJTYWRpYUI3RUwrTCtKb0Y3R2RxTXRVK3lXeFpJeTJnOUl5enRoblFB?=
+ =?utf-8?B?aDQ4SFhiQVBRb3ZVeUhQQUF0NzQvZ2h5dFZFY3FYY1kvQlpMMHE1NUIwREtr?=
+ =?utf-8?B?Zy93SGdFVWQ3UytQeFVqdnJKY0NPczc2YUJ0UVBhcTVUUDhtYkVMQ2hZK3My?=
+ =?utf-8?B?c3BZZUM1MGQxVGZiRTdyL2hrRWhIaitZZmYxVE5peUtkWGVNNlJ4R2xWb2FT?=
+ =?utf-8?B?M2Jrb3JrcTBnbTNoVjE3aUxHUld2bnJGa0tNbDBpNnlPVGZUQ1ovZG5EalBm?=
+ =?utf-8?B?aW95NEpqY212UVNRMGZlNEZFUnBXcWk5bWw0UitENUc5c0MyWG4yelpUMXVj?=
+ =?utf-8?B?LzYrVnZ2TkNXa3BVRXgydGx5bkYxeXlGQVVZKzYyT0lnQnIrT0diMEhrUzU5?=
+ =?utf-8?B?SHR0REpoc3A5cEowWE1CdTVodFVNNnVXWnNxSDBJM1JxbHdxVHAzdzhEMXlj?=
+ =?utf-8?B?ckxHdEQyWUZlSTlBU2R5dXQ0OU52alhPcXFDRUtldnUwUmtza0ZaWjdRUms0?=
+ =?utf-8?B?dnF1Y1Yya1JmYUk2WnVvT2grMW5ndldKS0RoQ0hzU1A1dW5HRnozcC81VHZx?=
+ =?utf-8?B?M1BsdWwyWmxFZkV1UkNFM0FjM3BQQ01kTlNtSUZFMFhHYWFVMzJuZWZaSXFC?=
+ =?utf-8?B?ZlRHUU9JelR3S3BPajU3aFpKMGo0VThxTjd3WmY3V0dhS3dSeEtEQzJiZ2Fq?=
+ =?utf-8?B?eGgrVzl3ckhQNVZnNW9NSGpiaE5NZ2VsKzFRMVdNUEZ2SDdRUW14a1A2TGpm?=
+ =?utf-8?B?UU4rZXRFdFVQTk5ibm8vZlhRd3A4S3ZvUzI5d3F3emFzS2hvd2VMdHJiZHpu?=
+ =?utf-8?B?REJjdkczYkxBdDBXUEg3K3c0eXdZRUZBbSs0T01KUHA4cDhoUWVsQ0xWVW5O?=
+ =?utf-8?B?SU80U0Fra2lFTGpsbUhiRHlHZGxJS3J4OVZPYnFqWU9zM3FJLzBxa3IyQTZi?=
+ =?utf-8?B?a2x5aDRVNUxoQUQ5c2c5RGxibytSaGVzS1l1QnBWc1c4MjYxWUdXQTRkSTN5?=
+ =?utf-8?B?bUZZN2J3RFRRSWwwNUR0a3FLNlFMMnBlNjlmWVkybjJGRDhBTmxhZTRiS0ZV?=
+ =?utf-8?B?UlZQcjRPR2ZRU0h4RzBtRmFta0YyODBVUnRUaEVTVUNZMUtmK0dyQldTQ3Bi?=
+ =?utf-8?B?MjJRUklJaERkS0tNQXpXaWR4ZWVUVXpoQnVMV0pwakR3dndlY2tmQUFMZXc5?=
+ =?utf-8?B?LzFyaTQ5bEN3KzFMV1F1MXdNakprTTFlaVBoS042QVJPWmYvS2U0aUJJVyt1?=
+ =?utf-8?B?OEV5bktFU2kxWDN0T3NmUTdiVFFteHluRWY0ZU1WNEN3U0VmbWo5cHQxb1hN?=
+ =?utf-8?B?NDd1N0d6UG8vcjdXWTlvVTFiT2xKT3R6NmMvYjBudkQ1OWdUaER5dFZtYXN2?=
+ =?utf-8?B?NGx3ck9DVWF0TGpocGcvVjJUQlNFOXhGdCttb0ptZ1BuQ2l5dU5CSlluaTkx?=
+ =?utf-8?B?cjNNQWc5OTVkYVFBdGxkK29vM25hOEpldXVDRTlRUEtaaVJWWC8xZnFtc2xi?=
+ =?utf-8?B?L1V0K2E3T1ZSVzVMbVROK0Q4UHNRT3cxNU94K21XbkU3by9INDNwL2w4Nko4?=
+ =?utf-8?B?cmxGZlMvNHMxUnZHTGxLRjFnSXJHZWpOKzc5K3hMY2tkZ3dXczU0bTRGMG1w?=
+ =?utf-8?B?UUQ0ZU9tcEErWS9vb2RkUHhydG5lOFRVVWx1dXlrRURTcThxdGVBdUdXYnRG?=
+ =?utf-8?Q?V4indGlbt/3jF5YKF+a8c1o=3D?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <9591E0DE78B695478444936E84A7E7A6@namprd10.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e5004868-4a03-93e5-5077-e7ed0e533996@linux.vnet.ibm.com>
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: ZyyBPHD+xhSTi5q3c+hSax0rlDiCZKar7bYETqi8u5s1hauzm9TGIHJYV7U90PIkoBHhgD5RyM7V9Pb30mRZoEUGfdOkmcmBrQ9RgyN4r3o/S2wGKl5x0zGrW2dfmgUoJTnz/tOkF+G16L/4+aEPNGnbVB+PNjXa7H4Y6pCwAuI4x/f0koPWUo6HXF9Z/boePmChAduUgWtvXuvGkZH3g5jiqFRH3TF+X26ajoSL31tMCMHW0dBpwVOy4JNN5cJXlkXsCnFTfcQCJjY4q+n96JYAHkNYYEmiDHJNbhcUSUkSnQM1dIPZqpGFxuNN5PaE7xvXo6janDi3Dk+LuuL0pPE7htovHzRygC0zv49IiShrvdcqiRZOsjhhY8/9E7ltiVMU39wtFQAA6oULlOUv+FBZYpbnolewP2EKtAo2jakqvPAb7skk3LTfPsjUV+F0bxLZA/q/7MAxyMsqYimwr9PnIU5qOLnSqAfx6uXwPnA+zWUMf/b6c53hsis2xqS0Oc209mYAUQog0tIewZmOB8xoKPe7siDSXYnDAETPH3I/Q1KfMUPIRS8i6fdAa4IYDIg5NEriD/+jemp7LSniOxb1uthZua6ORp/353KrgNmRKdCiVUmyTXpt/OW4lIx6Wh+zQZ8/2af6Bed/NaEvs3yaokoh4PbPyRzP53YGWvNHNpGJrU9i7Dj+mseGaoDeg3rAa4qLd4eX/jLcQoqqDZBiudSPMCuRl/LVdQIVMhUfIfeWjG6bjfoLpnsDbVa5M12Db3IQ6oM2WlJh6i2g2tlAJSKQua2cQVUD/+NlzTc=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2dbc5e96-f272-4a36-1b8c-08db1121e60d
+X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Feb 2023 20:02:29.3956
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: C0dffEm2KzsmdvflUu8n4sUeCVFb/eyQd8m3Y/yS7JiQGcooN0TxE6whN4nxLj7uA5E2X670pD23qXtXok5BORiYvBqawLOnYwSkVgB9eAo=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN0PR10MB5381
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.170.22
+ definitions=2023-02-17_14,2023-02-17_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 mlxscore=0 adultscore=0
+ malwarescore=0 phishscore=0 bulkscore=0 spamscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
+ definitions=main-2302170176
+X-Proofpoint-GUID: VVKoDo1onkjX8vwmAeXn5vg2ZX83xqdR
+X-Proofpoint-ORIG-GUID: VVKoDo1onkjX8vwmAeXn5vg2ZX83xqdR
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 17, 2023 at 04:45:12PM +0530, shrikanth hegde wrote:
-> We are observing panic on boot upon loading the latest stable tree(v6.2-rc4) in 
-> one of our systems. System fails to come up. System was booting well 
-> with v5.17, v5.19 kernel. We started seeing this issue when loading v6.0 kernel.
-> 
-> Panic Log is below.
-> [  333.390539] ------------[ cut here ]------------
-> [  333.390552] WARNING: CPU: 56 PID: 12450 at fs/xfs/xfs_inode.c:1839 xfs_iunlink_lookup+0x58/0x80 [xfs]
-
-Hmm, ok, so this is the same if (WARN_ON_ONCE(!ip || !ip->i_ino)) line
-in xfs_iunlink_lookup that I've been bonking my head on the past
-several days.  333 seconds uptime, so I guess this is a pretty recent
-mount.  You didn't post a full dmesg, so I can only assume there weren't
-any *other* obvious complaints from XFS when the fs was mounted...
-
-> [  333.390615] Modules linked in: nft_fib_inet nft_fib_ipv4 nft_fib_ipv6 nft_fib nft_reject_inet nf_reject_ipv4 nf_reject_ipv6 nft_reject nft_ct nft_chain_nat nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 ip_set nf_tables nfnetlink rfkill sunrpc pseries_rng xts vmx_crypto xfs libcrc32c sd_mod sg ibmvscsi ibmveth scsi_transport_srp nvme nvme_core t10_pi crc64_rocksoft crc64 dm_mirror dm_region_hash dm_log dm_mod
-> [  333.390645] CPU: 56 PID: 12450 Comm: rm Not tainted 6.2.0-rc4ssh+ #4
-> [  333.390649] Hardware name: IBM,9080-HEX POWER10 (raw) 0x800200 0xf000006 of:IBM,FW1010.22 (NH1010_122) hv:phyp pSeries
-> [  333.390652] NIP:  c0080000004bfa80 LR: c0080000004bfa4c CTR: c000000000ea28d0
-> [  333.390655] REGS: c0000000442bb8c0 TRAP: 0700   Not tainted  (6.2.0-rc4ssh+)
-> [  333.390658] MSR:  8000000000029033 <SF,EE,ME,IR,DR,RI,LE>  CR: 24002842  XER: 00000000
-> [  333.390666] CFAR: c0080000004bfa54 IRQMASK: 0
-> [  333.390666] GPR00: c00000003b69c0c8 c0000000442bbb60 c008000000568300 0000000000000000
-> [  333.390666] GPR04: 00000000002ec44d 0000000000000000 0000000000000000 c000000004b27d78
-> [  333.390666] GPR08: 0000000000000000 c000000004b27e28 0000000000000000 fffffffffffffffd
-> [  333.390666] GPR12: 0000000000000040 c000004afecc5880 0000000106620918 0000000000000001
-> [  333.390666] GPR16: 000000010bd36e10 0000000106620dc8 0000000106620e58 0000000106620e90
-> [  333.390666] GPR20: 0000000106620e30 c0000000880ba938 0000000000200000 00000000002ec44d
-> [  333.390666] GPR24: 000000000008170d 000000000000000d c0000000519f4800 00000000002ec44d
-> [  333.390666] GPR28: c0000000880ba800 c00000003b69c000 c0000000833edd20 000000000008170d
-> [  333.390702] NIP [c0080000004bfa80] xfs_iunlink_lookup+0x58/0x80 [xfs]
-> [  333.390756] LR [c0080000004bfa4c] xfs_iunlink_lookup+0x24/0x80 [xfs]
-> [  333.390810] Call Trace:
-> [  333.390811] [c0000000442bbb60] [c0000000833edd20] 0xc0000000833edd20 (unreliable)
-> [  333.390816] [c0000000442bbb80] [c0080000004c0094] xfs_iunlink+0x1bc/0x280 [xfs]
-> [  333.390869] [c0000000442bbc00] [c0080000004c3f84] xfs_remove+0x1dc/0x310 [xfs]
-> [  333.390922] [c0000000442bbc70] [c0080000004be180] xfs_vn_unlink+0x68/0xf0 [xfs]
-> [  333.390975] [c0000000442bbcd0] [c000000000576b24] vfs_unlink+0x1b4/0x3d0
-
-...that trips when rm tries to remove a file, which means that the call
-stack is
-
-xfs_remove -> xfs_iunlink -> xfs_iunlink_insert_inode ->
-xfs_iunlink_update_backref -> xfs_iunlink_lookup <kaboom>
-
-It looks as though "rm foo" unlinked foo from the directory and was
-trying to insert it at the head of one of the unlinked lists in the AGI
-buffer.  The AGI claims that the list points to an ondisk inode, so the
-iunlink code tries to find the incore inode to update the incore list,
-fails to find an incore inode, and this is the result...
-
-> [  333.390981] [c0000000442bbd20] [c00000000057e5d8] do_unlinkat+0x2b8/0x390
-> [  333.390985] [c0000000442bbde0] [c00000000057e708] sys_unlinkat+0x58/0xb0
-> [  333.390989] [c0000000442bbe10] [c0000000000335d0] system_call_exception+0x150/0x3b0
-> [  333.390994] [c0000000442bbe50] [c00000000000c554] system_call_common+0xf4/0x258
-> [  333.390999] --- interrupt: c00 at 0x7fffa47230a0
-> [  333.391001] NIP:  00007fffa47230a0 LR: 00000001066138ac CTR: 0000000000000000
-> [  333.391004] REGS: c0000000442bbe80 TRAP: 0c00   Not tainted  (6.2.0-rc4ssh+)
-> [  333.391007] MSR:  800000000280f033 <SF,VEC,VSX,EE,PR,FP,ME,IR,DR,RI,LE>  CR: 22002202  XER: 00000000
-> [  333.391016] IRQMASK: 0
-> [  333.391016] GPR00: 0000000000000124 00007fffdb9330b0 00007fffa4807300 0000000000000008
-> [  333.391016] GPR04: 000000010bd36f18 0000000000000000 0000000000000000 0000000000000003
-> [  333.391016] GPR08: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
-> [  333.391016] GPR12: 0000000000000000 00007fffa48ba340 0000000106620918 0000000000000001
-> [  333.391016] GPR16: 000000010bd36e10 0000000106620dc8 0000000106620e58 0000000106620e90
-> [  333.391016] GPR20: 0000000106620e30 0000000106620e00 0000000106620c40 0000000000000002
-> [  333.391016] GPR24: 0000000106620c38 00000001066208d8 0000000000000000 0000000106620d20
-> [  333.391016] GPR28: 00007fffdb933408 000000010bd24cec 00007fffdb933408 000000010bd36e10
-> [  333.391050] NIP [00007fffa47230a0] 0x7fffa47230a0
-> [  333.391052] LR [00000001066138ac] 0x1066138ac
-> [  333.391054] --- interrupt: c00
-> [  333.391056] Code: 2c230000 4182002c e9230020 2fa90000 419e0020 38210020 e8010010 7c0803a6 4e800020 60000000 60000000 60000000 <0fe00000> 60000000 60000000 60000000
-> [  333.391069] ---[ end trace 0000000000000000 ]---
-> [  333.391072] XFS (dm-0): Internal error xfs_trans_cancel at line 1097 of file fs/xfs/xfs_trans.c.  Caller xfs_remove+0x1a0/0x310 [xfs]
-> [  333.391128] CPU: 56 PID: 12450 Comm: rm Tainted: G        W          6.2.0-rc4ssh+ #4
-> [  333.391131] Hardware name: IBM,9080-HEX POWER10 (raw) 0x800200 0xf000006 of:IBM,FW1010.22 (NH1010_122) hv:phyp pSeries
-> [  333.391135] Call Trace:
-> [  333.391136] [c0000000442bbb10] [c000000000e84f4c] dump_stack_lvl+0x70/0xa4 (unreliable)
-> [  333.391142] [c0000000442bbb50] [c0080000004a6a84] xfs_error_report+0x5c/0x80 [xfs]
-> [  333.391194] [c0000000442bbbb0] [c0080000004d67b0] xfs_trans_cancel+0x178/0x1b0 [xfs]
-> [  333.391249] [c0000000442bbc00] [c0080000004c3f48] xfs_remove+0x1a0/0x310 [xfs]
-> [  333.391302] [c0000000442bbc70] [c0080000004be180] xfs_vn_unlink+0x68/0xf0 [xfs]
-> [  333.391355] [c0000000442bbcd0] [c000000000576b24] vfs_unlink+0x1b4/0x3d0
-> [  333.391359] [c0000000442bbd20] [c00000000057e5d8] do_unlinkat+0x2b8/0x390
-> [  333.391363] [c0000000442bbde0] [c00000000057e708] sys_unlinkat+0x58/0xb0
-> [  333.391367] [c0000000442bbe10] [c0000000000335d0] system_call_exception+0x150/0x3b0
-> [  333.391371] [c0000000442bbe50] [c00000000000c554] system_call_common+0xf4/0x258
-> [  333.391376] --- interrupt: c00 at 0x7fffa47230a0
-> [  333.391378] NIP:  00007fffa47230a0 LR: 00000001066138ac CTR: 0000000000000000
-> [  333.391381] REGS: c0000000442bbe80 TRAP: 0c00   Tainted: G        W           (6.2.0-rc4ssh+)
-> [  333.391385] MSR:  800000000280f033 <SF,VEC,VSX,EE,PR,FP,ME,IR,DR,RI,LE>  CR: 22002202  XER: 00000000
-> [  333.391393] IRQMASK: 0
-> [  333.391393] GPR00: 0000000000000124 00007fffdb9330b0 00007fffa4807300 0000000000000008
-> [  333.391393] GPR04: 000000010bd36f18 0000000000000000 0000000000000000 0000000000000003
-> [  333.391393] GPR08: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
-> [  333.391393] GPR12: 0000000000000000 00007fffa48ba340 0000000106620918 0000000000000001
-> [  333.391393] GPR16: 000000010bd36e10 0000000106620dc8 0000000106620e58 0000000106620e90
-> [  333.391393] GPR20: 0000000106620e30 0000000106620e00 0000000106620c40 0000000000000002
-> [  333.391393] GPR24: 0000000106620c38 00000001066208d8 0000000000000000 0000000106620d20
-> [  333.391393] GPR28: 00007fffdb933408 000000010bd24cec 00007fffdb933408 000000010bd36e10
-> [  333.391427] NIP [00007fffa47230a0] 0x7fffa47230a0
-> [  333.391429] LR [00000001066138ac] 0x1066138ac
-> [  333.391431] --- interrupt: c00
-> [  333.394067] XFS (dm-0): Corruption of in-memory data (0x8) detected at xfs_trans_cancel+0x190/0x1b0 [xfs] (fs/xfs/xfs_trans.c:1098).  Shutting down filesystem.
-> [  333.394125] XFS (dm-0): Please unmount the filesystem and rectify the problem(s)
-> 
-> 
-> 
-> we did a git bisect between 5.17 and 6.0. Bisect points to commit 04755d2e5821 
-> as the bad commit.
-> Short description of commit:
-> commit 04755d2e5821b3afbaadd09fe5df58d04de36484 (refs/bisect/bad)
-> Author: Dave Chinner <dchinner@redhat.com>
-> Date:   Thu Jul 14 11:42:39 2022 +1000
-> 
->     xfs: refactor xlog_recover_process_iunlinks()
-
-...which was in the middle of the series that reworked thev mount time
-iunlink clearing.  Oddly, I don't spot any obvious errors in /that/
-patch that didn't already exist.  But this does make me wonder, does
-xfs_repair -n have anything to say about unlinked or orphaned inodes?
-
-The runtime code expects that every ondisk inode in an iunlink chain has
-an incore inode that is linked (via i_{next,prev}_unlinked) to the other
-incore inodes in that same chain.  If this requirement is not met, then
-the WARNings you see will trip, and the fs shuts down.
-
-My hypothesis here is that one of the AGs has an unprocessed unlinked
-list.  At mount time, the ondisk log was clean, so mount time log
-recovery didn't invoke xlog_recover_process_iunlinks, and the list was
-not cleared.  The mount code does not construct the incore unlinked list
-from an existing ondisk iunlink list, hence the WARNing.  Prior to 5.17,
-we only manipulated the ondisk unlink list, and the code never noticed
-or cared if there were mystery inodes in the list that never went away.
-
-(Obviously, if something blew up earlier in dmesg, that would be
-relevant here.)
-
-It's possible that we could end up in this situation (clean log,
-unlinked inodes) if a previous log recovery was only partially
-successful at clearing the unlinked list, since all that code ignores
-errors.  If that happens, we ... succeed at mounting and clean the log.
-
-If you're willing to patch your kernels, it would be interesting
-to printk if the xfs_read_agi or the xlog_recover_iunlink_bucket calls
-in xlog_recover_iunlink_ag returns an error code.  It might be too late
-to capture that, hence my suggestion of seeing if xfs_repair -n will
-tell us anything else.
-
-I've long thought that the iunlink recovery ought to complain loudly and
-fail the mount if it can't clear all the unlinked files.  Given the new
-iunlink design, I think it's pretty much required now.  The uglier piece
-is that now we either (a) have to clear iunlinks at mount time
-unconditionally as Eric has been saying for years; or (b) construct the
-incore list at a convenient time so that the incore list always exists.
-
-Thanks for the detailed report!
-
---D
-
-> 
-> Git bisect log:
-> git bisect start
-> # good: [26291c54e111ff6ba87a164d85d4a4e134b7315c] Linux 5.17-rc2
-> git bisect good 26291c54e111ff6ba87a164d85d4a4e134b7315c
-> # bad: [4fe89d07dcc2804c8b562f6c7896a45643d34b2f] Linux 6.0
-> git bisect bad 4fe89d07dcc2804c8b562f6c7896a45643d34b2f
-> # good: [d7227785e384d4422b3ca189aa5bf19f462337cc] Merge tag 'sound-5.19-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/tiwai/sound
-> git bisect good d7227785e384d4422b3ca189aa5bf19f462337cc
-> # good: [526942b8134cc34d25d27f95dfff98b8ce2f6fcd] Merge tag 'ata-5.20-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata
-> git bisect good 526942b8134cc34d25d27f95dfff98b8ce2f6fcd
-> # good: [328141e51e6fc79d21168bfd4e356dddc2ec7491] Merge tag 'mmc-v5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/ulfh/mmc
-> git bisect good 328141e51e6fc79d21168bfd4e356dddc2ec7491
-> # bad: [eb555cb5b794f4e12a9897f3d46d5a72104cd4a7] Merge tag '5.20-rc-ksmbd-server-fixes' of git://git.samba.org/ksmbd
-> git bisect bad eb555cb5b794f4e12a9897f3d46d5a72104cd4a7
-> # bad: [f20c95b46b8fa3ad34b3ea2e134337f88591468b] Merge tag 'tpmdd-next-v5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/jarkko/linux-tpmdd
-> git bisect bad f20c95b46b8fa3ad34b3ea2e134337f88591468b
-> # bad: [fad235ed4338749a66ddf32971d4042b9ef47f44] Merge tag 'arm-late-6.0' of git://git.kernel.org/pub/scm/linux/kernel/git/soc/soc
-> git bisect bad fad235ed4338749a66ddf32971d4042b9ef47f44
-> # good: [e495274793ea602415d050452088a496abcd9e6c] Merge tag 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/rdma/rdma
-> git bisect good e495274793ea602415d050452088a496abcd9e6c
-> # good: [9daee913dc8d15eb65e0ff560803ab1c28bb480b] Merge tag 'ext4_for_linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4
-> git bisect good 9daee913dc8d15eb65e0ff560803ab1c28bb480b
-> # bad: [29b1d469f3f6842ee4115f0b21f018fc44176468] Merge tag 'trace-rtla-v5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/rostedt/linux-trace
-> git bisect bad 29b1d469f3f6842ee4115f0b21f018fc44176468
-> # good: [932b42c66cb5d0ca9800b128415b4ad6b1952b3e] xfs: replace XFS_IFORK_Q with a proper predicate function
-> git bisect good 932b42c66cb5d0ca9800b128415b4ad6b1952b3e
-> # bad: [35c5a09f5346e690df7ff2c9075853e340ee10b3] Merge tag 'xfs-buf-lockless-lookup-5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.20-mergeB
-> git bisect bad 35c5a09f5346e690df7ff2c9075853e340ee10b3
-> # bad: [fad743d7cd8bd92d03c09e71f29eace860f50415] xfs: add log item precommit operation
-> git bisect bad fad743d7cd8bd92d03c09e71f29eace860f50415
-> # bad: [04755d2e5821b3afbaadd09fe5df58d04de36484] xfs: refactor xlog_recover_process_iunlinks()
-> git bisect bad 04755d2e5821b3afbaadd09fe5df58d04de36484
-> # good: [a4454cd69c66bf3e3bbda352b049732f836fc6b2] xfs: factor the xfs_iunlink functions
-> git bisect good a4454cd69c66bf3e3bbda352b049732f836fc6b2
-> Bisecting: 0 revisions left to test after this (roughly 0 steps)
-> [4fcc94d653270fcc7800dbaf3b11f78cb462b293] xfs: track the iunlink list pointer in the xfs_inode
-> 
-> 
-> Please reach out, in case any more details are needed. sent with very limited
-> knowledge of xfs system. these logs are from 5.19 kernel.
-> 
-> # xfs_info /home
-> meta-data=/dev/nvme0n1p1         isize=512    agcount=4, agsize=13107200 blks
->          =                       sectsz=4096  attr=2, projid32bit=1
->          =                       crc=1        finobt=1, sparse=1, rmapbt=0
->          =                       reflink=1    bigtime=0 inobtcount=0
-> data     =                       bsize=4096   blocks=52428800, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> log      =internal log           bsize=4096   blocks=25600, version=2
->          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> 
-> # xfs_info -V
-> xfs_info version 5.0.0
-> 
-> # uname -a
-> 5.19.0-rc2
+T24gVGh1LCAyMDIzLTAyLTE2IGF0IDEyOjA2IC0wODAwLCBEYXJyaWNrIEouIFdvbmcgd3JvdGU6
+DQo+IEhpIGV2ZXJ5b25lLA0KPiANCj4gVGhpcyBkZWx1Z2UgY29udGFpbnMgYWxsIG9mIHRoZSBh
+ZGRpdGlvbnMgdG8gdGhlIHBhcmVudCBwb2ludGVycw0KPiBwYXRjaHNldCB0aGF0IEkndmUgYmVl
+biB3b3JraW5nIG9uIGZvciB0aGUgcGFzdCBtb250aC7CoCBUaGUga2VybmVsDQo+IGFuZA0KPiB4
+ZnNwcm9ncyBwYXRjaHNldHMgYXJlIGJhc2VkIG9uIEFsbGlzb24ncyB2OXIyIHRhZyBmcm9tIGxh
+c3Qgd2VlazsNCj4gdGhlIGZzdGVzdHMgcGF0Y2hlcyBhcmUgbWVyZWx5IGEgcGFydCBvZiBteSBk
+ZXZlbG9wbWVudCB0cmVlLsKgIFRvDQo+IHJlY2FwDQo+IEFsbGlzb24ncyBjb3ZlciBsZXR0ZXI6
+DQo+IA0KPiAiVGhlIGdvYWwgb2YgdGhpcyBwYXRjaCBzZXQgaXMgdG8gYWRkIGEgcGFyZW50IHBv
+aW50ZXIgYXR0cmlidXRlIHRvDQo+IGVhY2gNCj4gaW5vZGUuwqAgVGhlIGF0dHJpYnV0ZSBuYW1l
+IGNvbnRhaW5pbmcgdGhlIHBhcmVudCBpbm9kZSwgZ2VuZXJhdGlvbiwNCj4gYW5kDQo+IGRpcmVj
+dG9yeSBvZmZzZXQsIHdoaWxlIHRoZcKgIGF0dHJpYnV0ZSB2YWx1ZSBjb250YWlucyB0aGUgZmls
+ZSBuYW1lLg0KPiBUaGlzIGZlYXR1cmUgd2lsbCBlbmFibGUgZnV0dXJlIG9wdGltaXphdGlvbnMg
+Zm9yIG9ubGluZSBzY3J1YiwNCj4gc2hyaW5rLA0KPiBuZnMgaGFuZGxlcywgdmVyaXR5LCBvciBh
+bnkgb3RoZXIgZmVhdHVyZSB0aGF0IGNvdWxkIG1ha2UgdXNlIG9mDQo+IHF1aWNrbHkNCj4gZGVy
+aXZpbmcgYW4gaW5vZGVzIHBhdGggZnJvbSB0aGUgbW91bnQgcG9pbnQuIg0KPiANCj4gVGhlIGtl
+cm5lbCBicmFuY2hlcyBzdGFydCB3aXRoIGEgbnVtYmVyIG9mIGJ1ZiBmaXhlcyB0aGF0IEkgbmVl
+ZCB0bw0KPiBnZXQNCj4gZnN0ZXN0cyB0byBwYXNzLsKgIEkgYWxzbyByZXN0cnVjdHVyZWQgdGhl
+IGtlcm5lbCBpbXBsZW1lbnRhdGlvbiBvZg0KPiBHRVRQQVJFTlRTIHRvIGN1dCB0aGUgbWVtb3J5
+IHVzYWdlIGNvbnNpZGVyYWJseS4NCj4gDQo+IEZvciB1c2Vyc3BhY2UsIEkgY2xlYW5lZCB1cCB0
+aGUgeGZzcHJvZ3MgcGF0Y2hlcyBzbyB0aGF0IGxpYnhmcy1kaWZmDQo+IHNob3dzIG5vIGRpc2Ny
+ZXBhbmNpZXMgd2l0aCB0aGUga2VybmVsIGFuZCBjbGVhbmVkIHVwIHRoZSBwYXJlbnQNCj4gcG9p
+bnRlcg0KPiB1c2FnZSBjb2RlIHRoYXQgSSBwcm90b3R5cGVkIGluIDIwMTcgc28gdGhhdCBpdCdz
+IGxlc3MgYnVnZ3kgYW5kDQo+IG1vbGR5Lg0KPiBJIGFsc28gcmV3aXJlZCB4ZnNfc2NydWIgdG8g
+dXNlIEdFVFBBUkVOVFMgdG8gcmVwb3J0IGZpbGUgcGF0aHMgb2YNCj4gY29ycnVwdCBmaWxlcyBp
+bnN0ZWFkIG9mIGlub2RlIG51bWJlcnMsIHNpbmNlIHRoYXQgcGFydCBoYWQgYml0cm90dGVkDQo+
+IGJhZGx5Lg0KPiANCj4gV2l0aCB0aGF0IG91dCBvZiB0aGUgd2F5LCBJIGltcGxlbWVudGVkIGEg
+cHJvdG90eXBlIG9mIG9ubGluZSByZXBhaXJzDQo+IGZvciBkaXJlY3RvcmllcyBhbmQgcGFyZW50
+IHBvaW50ZXJzLsKgIFRoaXMgaXMgb25seSBhIHByb29mIG9mDQo+IGNvbmNlcHQsDQo+IGJlY2F1
+c2UgSSBoYWQgYWxyZWFkeSBiYWNrcG9ydGVkIG1hbnkgbWFueSBwYXRjaGVzIGZyb20gcGFydCAx
+IG9mDQo+IG9ubGluZQ0KPiByZXBhaXIsIGFuZCBkaWRuJ3QgZmVlbCBsaWtlIHBvcnRpbmcgdGhl
+IHBhcnRzIG5lZWRlZCB0byBjb21taXQgbmV3DQo+IHN0cnVjdHVyZXMgYXRvbWljYWxseSBhbmQg
+cmVhcCB0aGUgb2xkIGRpci94YXR0ciBibG9ja3MuwqAgSU9XcywgdGhlDQo+IHByb3RvdHlwZSBz
+Y2FucyB0aGUgZmlsZXN5c3RlbSB0byBidWlsZCBhIHBhcmFsbGVsIGRpcmVjdG9yeSBvciB4YXR0
+cg0KPiBzdHJ1Y3R1cmUsIGFuZCB0aGVuIHJlcG9ydHMgb24gYW55IGRpc2NyZXBhbmNpZXMgYmV0
+d2VlbiB0aGUgdHdvDQo+IHZlcnNpb25zLsKgIE9idmlvdXNseSB0aGlzIHdvbid0IGZpeCBhIGNv
+cnJ1cHQgZGlyZWN0b3J5IHRyZWUsIGJ1dCBpdA0KPiBlbmFibGVzIHVzIHRvIHRlc3QgdGhlIHJl
+cGFpciBjb2RlIG9uIGEgY29uc2lzdGVudCBmaWxlc3lzdGVtIHRvDQo+IGRlbW9uc3RyYXRlIHRo
+YXQgaXQgd29ya3MuDQo+IA0KPiBOZXh0LCBJIGltcGxlbWVudGVkIGZ1bGx5IGZ1bmN0aW9uYWwg
+cGFyZW50IHBvaW50ZXIgY2hlY2tpbmcgYW5kDQo+IHJlcGFpcg0KPiBmb3IgeGZzX3JlcGFpci7C
+oCBUaGlzIHdhcyBsZXNzIGhhcmQgdGhhbiBJIGd1ZXNzZWQgaXQgd291bGQgYmUNCj4gYmVjYXVz
+ZQ0KPiB0aGUgY3VycmVudCBkZXNpZ24gb2YgcGhhc2UgNiBpbmNsdWRlcyBhIHdhbGsgb2YgYWxs
+IGRpcmVjdG9yaWVzLsKgDQo+IEZyb20NCj4gdGhlIGRpcmVudCBkYXRhLCB3ZSBjYW4gYnVpbGQg
+YSBwZXItQUcgaW5kZXggb2YgYWxsIHRoZSBwYXJlbnQNCj4gcG9pbnRlcnMNCj4gZm9yIGFsbCB0
+aGUgaW5vZGVzIGluIHRoYXQgQUcsIHRoZW4gd2FsayBhbGwgdGhlIGlub2RlcyBpbiB0aGF0IEFH
+IHRvDQo+IGNvbXBhcmUgdGhlIGxpc3RzLsKgIEFzIHlvdSBtaWdodCBndWVzcywgdGhpcyBlYXRz
+IGEgZmFpciBhbW91bnQgb2YNCj4gbWVtb3J5LCBldmVuIHdpdGggYSBydWRpbWVudGFyeSBkaXJl
+bnQgbmFtZSBkZWR1cGxpY2F0aW9uIHRhYmxlIHRvDQo+IGN1dA0KPiBkb3duIG9uIG1lbW9yeSB1
+c2FnZS4NCj4gDQo+IEFmdGVyIHRoYXQsIEkgbW92ZWQgb24gdG8gc29sdmluZyB0aGUgbWFqb3Ig
+cHJvYmxlbSB0aGF0IEkndmUgYmVlbg0KPiBoYXZpbmcgd2l0aCB0aGUgZGlyZWN0b3J5IHJlcGFp
+ciBjb2RlLCBhbmQgdGhhdCBpcyB0aGUgcHJvYmxlbSBvZg0KPiByZWNvbnN0cnVjdGluZyBkaXJl
+bnRzIGF0IHRoZSBvZmZzZXRzIHNwZWNpZmllZCBieSB0aGUgcGFyZW50DQo+IHBvaW50ZXJzLg0K
+PiBUaGUgZGV0YWlscyBvZiB0aGUgcHJvYmxlbSBhbmQgaG93IEkgZGVhbHQgd2l0aCBpdCBhcmUg
+Y2FwdHVyZWQgaW4NCj4gdGhlDQo+IGNvdmVyIGxldHRlciBmb3IgdGhvc2UgcGF0Y2hlcy7CoCBT
+dWZmaWNlIHRvIHNheSwgd2Ugbm93IGVuY29kZSB0aGUNCj4gZGlyZW50IG5hbWUgaW4gdGhlIHBh
+cmVudCBwb2ludGVyIGF0dHJuYW1lIChvciBhIGNvbGxpc2lvbiByZXNpc3RhbnQNCj4gaGFzaCBp
+ZiBpdCBkb2Vzbid0IGZpdCksIHdoaWNoIG1ha2VzIGl0IHBvc3NpYmxlIHRvIGNvbW1pdCBuZXcN
+Cj4gZGlyZWN0b3JpZXMgYXRvbWljYWxseS4NCj4gDQo+IFRoZSBsYXN0IHBhcnQgb2YgdGhpcyBw
+YXRjaHNldCByZW9yZ2FuaXplcyB0aGUgWEZTX0lPQ19HRVRQQVJFTlRTDQo+IGlvY3RsDQo+IHRv
+IGVuY29kZSB2YXJpYWJsZSBsZW5ndGggcGFyZW50IHBvaW50ZXIgcmVjb3JkcyBpbiB0aGUgY2Fs
+bGVyJ3MNCj4gYnVmZmVyLg0KPiBUaGUgZGVuc2VyIGVuY29kaW5ncyBtZWFuIHRoYXQgd2UgY2Fu
+IGV4dHJhY3QgdGhlIHBhcmVudCBsaXN0IHdpdGgNCj4gZmV3ZXINCj4ga2VybmVsIGNhbGxzLg0K
+PiANCj4gLS1EDQoNCg0KRXJtZXJnZXJzaCwgdGhhdHMgYSBsb3QhICBUaGFua3MgZm9yIGFsbCB0
+aGUgaGFyZCB3b3JrLiAgSSBmZWVsIGxpa2UgaWYNCndlIGRvbid0IGNvbWUgdXAgd2l0aCBhIHBs
+YW4gZm9yIHJldmlldyB0aG91Z2gsIHBlb3BsZSBtYXkgbm90IGtub3cNCndoZXJlIHRvIHN0YXJ0
+IGZvciB0aGVzZSBkZWx1Z2VzISAgTGV0cyBzZWUuLi4gaWYgd2UgaGFkIHRvIGJyZWFrIHRoaXMN
+CmRvd24sIEkgdGhpbmsgd291bGQgZGl2aWRlIGl0IHVwIGJldHdlZW4gdGhlIGV4aXN0aW5nIHBh
+cmVudCBwb2ludGVycw0KYW5kIHRoZSBuZXcgcHB0ciBwcm9wb3NpdGlvbnMgZm9yIG9mc2NrLiAg
+VGhlbiBmdXJ0aGVyIGRpdmlkZSBpdCBhbW9uZw0Ka2VybmVsIHNwYWNlLCB1c2VyIHNwYWNlIGFu
+ZCB0ZXN0IGNhc2UuICBJZiBJIGhhZCB0byBwaWNrIG9ubHkgb25lIG9mDQp0aGVzZSB0byBmb2N1
+cyBhdHRlbnRpb24gb24sIHByb2JhYmx5IGl0IHNob3VsZCBiZSBuZXcgb2ZzY2sgY2hhbmdlcyBp
+bg0KdGhlIGtlcm5lbCBzcGFjZSwgc2luY2UgdGhlIHJlc3Qgb2YgdGhlIGRlbHVnZSBpcyByZWFs
+bHkgY29udGluZ2VudCBvbg0KaXQuIA0KDQpTbyBub3cgd2UndmUgbmFycm93ZWQgdGhpcyBkb3du
+IHRvIGEgZmV3IHN1YnNldHM6DQoNCltQQVRDSFNFVCB2OXIyZDEgMC8zXSB4ZnM6IGJ1ZyBmaXhl
+cyBmb3IgcGFyZW50IHBvaW50ZXJzDQpbUEFUQ0hTRVQgdjlyMmQxIDAvNF0geGZzOiByZXdvcmsg
+dGhlIEdFVFBBUkVOVFMgaW9jdGwsDQpbUEFUQ0hTRVQgdjlyMmQxIDAwLzIzXSB4ZnM6IG9ubGlu
+ZSBmc2NrIHN1cHBvcnQgcGF0Y2hlcw0KW1BBVENIU0VUIHY5cjJkMSAwLzddIHhmczogb25saW5l
+IHJlcGFpciBvZiBkaXJlY3Rvcmllcw0KW1BBVENIU0VUIHY5cjJkMSAwLzJdIHhmczogb25saW5l
+IGNoZWNraW5nIG9mIHBhcmVudCBwb2ludGVycw0KW1BBVENIU0VUIHY5cjJkMSAwLzNdIHhmczog
+b25saW5lIGNoZWNraW5nIG9mIHBhcmVudCBwb2ludGVycw0KW1BBVENIU0VUIHY5cjJkMSAwLzJd
+IHhmczogb25saW5lIGNoZWNraW5nIG9mIGRpcmVjdG9yaWVzDQpbUEFUQ0hTRVQgdjlyMmQxIDAv
+NV0geGZzOiBlbmNvZGUgcGFyZW50IHBvaW50ZXIgbmFtZSBpbiB4YXR0ciBrZXkNCltQQVRDSFNF
+VCB2OXIyZDEgMC8zXSB4ZnM6IHVzZSBmbGV4IGFycmF5cyBmb3IgWEZTX0lPQ19HRVRQQVJFTlRT
+LA0KDQpPZiB0aG9zZSwgSSB0aGluayAieGZzOiBlbmNvZGUgcGFyZW50IHBvaW50ZXIgbmFtZSBp
+biB4YXR0ciBrZXkiIGlzIHRoZQ0Kb25seSBvbmUgdGhhdCBtaWdodCBpbXBhY3Qgb3RoZXIgZmVh
+dHVyZXMgc2luY2UgaXQncyBjaGFuZ2VpbmcgdGhlDQpvbmRpc2sgZm9ybWF0IGZyb20gd2hlbiB3
+ZSBmaXJzdCBzdGFydGVkIHRoZSBlZmZvcnQgeWVhcnMgYWdvLiAgU28NCnByb2JhYmx5IHRoYXQg
+bWlnaHQgYmUgdGhlIGJlc3QgcGxhY2UgZm9yIHBlb3BsZSB0byBzdGFydCBzaW5jZSBpZiB0aGlz
+DQpuZWVkcyB0byBjaGFuZ2UgaXQgbWlnaHQgaW1wYWN0IHNvbWUgb2YgdGhlIG90aGVyIHN1YnNl
+dHMgaW4gdGhlDQpkZWx1Z2UsIG9yIGV2ZW4gZmVhdHVyZXMgdGhleSBhcmUgd29ya2luZyBvbiBp
+ZiB0aGV5J3ZlIGJhc2VkIGFueXRoaW5nDQpvbiB0aGUgZXhpc3RpbmcgcHB0ciBzZXQuDQoNCkkg
+ZmVlbCBsaWtlIGEgNSBwYXRjaCBzdWJzZXQgaXMgYSB2ZXJ5IHJlYXNvbmFibGUgdGhpbmcgdG8g
+YXNrIHBlb3BsZQ0KdG8gZ2l2ZSB0aGVpciBhdHRlbnRpb24gdG8uICBUaGF0IHdheSB0aGV5IGRv
+bnQgZ2V0IGxvc3QgaW4gdGhpbmdzIGxpa2UNCm5pdHMgZm9yIG9wdGltaXphdGlvbnMgdGhhdCBt
+aWdodCBub3QgZXZlbiBtYXR0ZXIgaWYgc29tZXRoaW5nIGl0DQpkZXBlbmRzIG9uIGNoYW5nZXMu
+DQoNCkZvciB0aGUgbW9zdCBwYXJ0IEkgYW0gb2sgd2l0aCBjaGFuZ2VpbmcgdGhlIGZvcm1hdCBh
+cyBsb25nIGFzIGV2ZXJ5b25lDQppcyBhd2FyZSBhbmQgaW4gYWdyZWVtZW50IHNvIHRoYXQgd2Ug
+ZG9udCBnZXQgY2F1Z2h0IHVwIHJlLWNvZGluZw0KZWZmb3J0cyB0aGF0IHNlZW0gdG8gaGF2ZSBz
+dHVnZ2xlZCB3aXRoIGRpc2FncmVlbWVudHMgbm93IG9uIHRoZSBzY2FsZQ0Kb2YgZGVjYWRlcy4g
+IFNvbWUgb2YgdGhlc2UgcGF0Y2hlcyB3ZXJlIGFscmVhZHkgdmVyeSBvbGQgYnkgdGhlIHRpbWUg
+SQ0KZ290IHRoZW0hDQoNCk9uIGEgc2lkZSBub3RlLCB0aGVyZSBhcmUgc29tZSBwcmVsaW1pbmFy
+eSBwYXRjaGVzIG9mIGtlcm5lbCBzaWRlDQpwYXJlbnQgcG9pbnRlcnMgdGhhdCBhcmUgZWl0aGVy
+IGxhcnAgZml4ZXMgb3IgcmVmYWN0b3Jpbmcgbm90IHNlbnNpdGl2ZQ0KdG8gdGhlIHByb3Bvc2Vk
+IG9mc2NrIGNoYW5nZXMuICBUaGVzZSBwYXRjaGVzIGEgaGF2ZSBiZWVuIGZsb2F0aW5nDQphcm91
+bmQgZm9yIGEgd2hpbGUgbm93LCBzbyBpZiBubyBvbmUgaGFzIGFueSBncmlwZXMsIEkgdGhpbmsg
+anVzdA0KbWVyZ2luZyB0aG9zZSB3b3VsZCBoZWxwIGN1dCBkb3duIHRoZSBhbW91bnQgb2YgcmVi
+YXNlaW5nLCB1c2VyIHNwYWNlDQpwb3J0aW5nIGFuZCBwYXRjaCByZXZpZXdpbmcgdGhhdCBnb2Vz
+IG9uIGZvciBldmVyeSB2ZXJzaW9uLiAgKG1heWJlIHRoZQ0KZmlyc3QgMSB0aG91Z2ggNyBvZiB0
+aGUgMjggcGF0Y2ggc2V0LCBpZiBmb2xrcyBhcmUgb2sgd2l0aCB0aGF0KQ0KDQpJIHRoaW5rIHRo
+ZSBzaGVhciBzaXplIG9mIHNvbWUgb2YgdGhlc2Ugc2V0cyB0ZW5kIHRvIHdvcmsgYWdhaW5zdCB0
+aGVtLA0KYXMgcGVvcGxlIGxpa2VseSBjYW5ub3QgYWZmb3JkIHRoZSB0aW1lIGJsb2NrIHRoZXkg
+cHJlc2VudCBvbiB0aGUNCnN1cmZhY2UuICBTbyBJIHRoaW5rIHdlIHdvdWxkIGRvIHdlbGwgdG8g
+ZmluZCBhIHdheSB0byBpbnRyb2R1Y2UgdGhlbQ0KYXQgYSByZWFzb25hYmxlIHBhY2UgYW5kIGtl
+ZXAgYXR0ZW50aW9uIGZvY3VzZWQgb24gdGhlIHN1YnNlY3Rpb25zIHRoYXQNCnNob3VsZCByZXF1
+aXJlIG1vcmUgdGhhbiBvdGhlcnMsIGFuZCBob3BlZnVsbHkga2VlcCB0aGluZyBtb3ZpbmcgaW4g
+YQ0KcHJvZ3Jlc3NpdmUgZGlyZWN0aW9uLg0KDQpUaHghDQpBbGxpc29uDQoNCg==
