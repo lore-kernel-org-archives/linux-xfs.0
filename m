@@ -2,360 +2,242 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E4E8C636CC
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Feb 2023 23:05:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95D3BC636D4
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Feb 2023 11:15:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229627AbjBPXFm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Feb 2023 18:05:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54656 "EHLO
+        id S229923AbjBQLPy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Feb 2023 06:15:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59272 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229448AbjBPXFl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Feb 2023 18:05:41 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FF144CC82;
-        Thu, 16 Feb 2023 15:05:39 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D4191B829D5;
-        Thu, 16 Feb 2023 23:05:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79577C433EF;
-        Thu, 16 Feb 2023 23:05:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676588736;
-        bh=tWzvmCqJPOnr45OGjkzXmZBnFUvhmuGwVG9tIKTRbxY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=qoLhVyQ91w3roWKHZetCB/zdG7WBBnqspOpBr3qPbJlP0vzCtOsaQK1nncUeHdYcJ
-         l43Tlf4hJfL+gwwRud5eHbkUkugTqyHKtLlTm12Sz3ICIrLg+640OPCJu8FN7G+a4Y
-         HRtpEMd8MFWcZFxi2tWzU9erqsrUWDyqbGlWXOhfZ9gUkObLLA3S0iCkPVE6YpMmrx
-         foruTRv+K4seG2uRzZulb0OB/IaShtCaLxoE4hacE5c4k4yysy1lBlO6HconYNxMdC
-         nCXQxzaeKasHq6zlvQJyBDL64Pi2f3xLvKDYesEfcdYbrqeyrv2uRgyF7y1QjcBMHS
-         HKtSNcNL/MzEg==
-Date:   Thu, 16 Feb 2023 15:05:35 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     Catherine Hoang <catherine.hoang@oracle.com>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "willy@infradead.org" <willy@infradead.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        Chandan Babu <chandan.babu@oracle.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "hch@infradead.org" <hch@infradead.org>
-Subject: Re: [PATCH 09/14] xfs: document online file metadata repair code
-Message-ID: <Y+62v5kfhv5lr/R8@magnolia>
-References: <166473478338.1082796.8807888906305023929.stgit@magnolia>
- <166473478486.1082796.11670617428892270355.stgit@magnolia>
- <addbcebf5cc6b59d5910df8cce80d47f445eb891.camel@oracle.com>
+        with ESMTP id S229976AbjBQLPs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Feb 2023 06:15:48 -0500
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF0DB627E3
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Feb 2023 03:15:26 -0800 (PST)
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31HAnAP5001873;
+        Fri, 17 Feb 2023 11:15:20 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date : to :
+ cc : from : subject : content-type : content-transfer-encoding :
+ mime-version; s=pp1; bh=S7G/cyIxUoiDCgoqYIyeQiOOEi+6zn5VwhVQ/8N87VU=;
+ b=FIIHqJw5DzBa8GnYkzkm85zi/H0e12o7kjHP4gNl1jJ92R5oR7VnMS+eyaFtci2VXrBS
+ 9ZQ3BSKYFGQtj2a22unA/pq/os5TwV/kixAF81O/+iebyMvfRA2bERwo9ISsmkiTLkKV
+ j/m93m/Gv6ZHBxjg3ya1R77kSazNlgwXdDqFYFYid7B9KxdZ303FsE9plJrCkBMaDUep
+ hkW22N4DplYf3Sn/9mY2XsMVw/F5ugcc1hlXGR24p91erKMJ0LMcvO4qIiLEyhZGn5dT
+ ai8SpZ2HoMOgrY+BcfiamWUkAGOAIGed1NoVSMpR2cOGfH+2EVOKhqM7GJZagHe4wigH xw== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3nt0a1atv5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 17 Feb 2023 11:15:19 +0000
+Received: from m0098417.ppops.net (m0098417.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 31HApFB8032407;
+        Fri, 17 Feb 2023 11:15:19 GMT
+Received: from ppma04dal.us.ibm.com (7a.29.35a9.ip4.static.sl-reverse.com [169.53.41.122])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3nt0a1atuw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 17 Feb 2023 11:15:19 +0000
+Received: from pps.filterd (ppma04dal.us.ibm.com [127.0.0.1])
+        by ppma04dal.us.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 31H9V0c1000993;
+        Fri, 17 Feb 2023 11:15:18 GMT
+Received: from smtprelay03.dal12v.mail.ibm.com ([9.208.130.98])
+        by ppma04dal.us.ibm.com (PPS) with ESMTPS id 3np2n7y5y1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 17 Feb 2023 11:15:18 +0000
+Received: from smtpav03.wdc07v.mail.ibm.com (smtpav03.wdc07v.mail.ibm.com [10.39.53.230])
+        by smtprelay03.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 31HBFHfm1442312
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 17 Feb 2023 11:15:17 GMT
+Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 1435758064;
+        Fri, 17 Feb 2023 11:15:17 +0000 (GMT)
+Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id EF60458062;
+        Fri, 17 Feb 2023 11:15:13 +0000 (GMT)
+Received: from [9.43.51.161] (unknown [9.43.51.161])
+        by smtpav03.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+        Fri, 17 Feb 2023 11:15:13 +0000 (GMT)
+Message-ID: <e5004868-4a03-93e5-5077-e7ed0e533996@linux.vnet.ibm.com>
+Date:   Fri, 17 Feb 2023 16:45:12 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.2
+Content-Language: en-US
+To:     djwong@kernel.org, dchinner@redhat.com
+Cc:     linux-xfs@vger.kernel.org,
+        Srikar Dronamraju <srikar@linux.vnet.ibm.com>,
+        ojaswin@linux.ibm.com, shrikanth hegde <sshegde@linux.vnet.ibm.com>
+From:   shrikanth hegde <sshegde@linux.vnet.ibm.com>
+Subject: xfs: system fails to boot up due to Internal error xfs_trans_cancel
+Content-Type: text/plain; charset=UTF-8
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: A3Pv8rroMG8n3qhiu98YI0txv9hfuTgO
+X-Proofpoint-ORIG-GUID: Kb-nXtXqrWbux-Rk8JPvmE0KtxKFRlin
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <addbcebf5cc6b59d5910df8cce80d47f445eb891.camel@oracle.com>
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.170.22
+ definitions=2023-02-17_06,2023-02-17_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011
+ priorityscore=1501 mlxscore=0 malwarescore=0 adultscore=0 phishscore=0
+ bulkscore=0 spamscore=0 lowpriorityscore=0 mlxlogscore=999 suspectscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2302170101
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Feb 16, 2023 at 03:46:30PM +0000, Allison Henderson wrote:
-> On Sun, 2022-10-02 at 11:19 -0700, Darrick J. Wong wrote:
+We are observing panic on boot upon loading the latest stable tree(v6.2-rc4) in 
+one of our systems. System fails to come up. System was booting well 
+with v5.17, v5.19 kernel. We started seeing this issue when loading v6.0 kernel.
 
-Not sure why this reply is to the earlier submission of the design doc,
-but oh well, it didn't change much between October and December of 2022.
+Panic Log is below.
+[  333.390539] ------------[ cut here ]------------
+[  333.390552] WARNING: CPU: 56 PID: 12450 at fs/xfs/xfs_inode.c:1839 xfs_iunlink_lookup+0x58/0x80 [xfs]
+[  333.390615] Modules linked in: nft_fib_inet nft_fib_ipv4 nft_fib_ipv6 nft_fib nft_reject_inet nf_reject_ipv4 nf_reject_ipv6 nft_reject nft_ct nft_chain_nat nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 ip_set nf_tables nfnetlink rfkill sunrpc pseries_rng xts vmx_crypto xfs libcrc32c sd_mod sg ibmvscsi ibmveth scsi_transport_srp nvme nvme_core t10_pi crc64_rocksoft crc64 dm_mirror dm_region_hash dm_log dm_mod
+[  333.390645] CPU: 56 PID: 12450 Comm: rm Not tainted 6.2.0-rc4ssh+ #4
+[  333.390649] Hardware name: IBM,9080-HEX POWER10 (raw) 0x800200 0xf000006 of:IBM,FW1010.22 (NH1010_122) hv:phyp pSeries
+[  333.390652] NIP:  c0080000004bfa80 LR: c0080000004bfa4c CTR: c000000000ea28d0
+[  333.390655] REGS: c0000000442bb8c0 TRAP: 0700   Not tainted  (6.2.0-rc4ssh+)
+[  333.390658] MSR:  8000000000029033 <SF,EE,ME,IR,DR,RI,LE>  CR: 24002842  XER: 00000000
+[  333.390666] CFAR: c0080000004bfa54 IRQMASK: 0
+[  333.390666] GPR00: c00000003b69c0c8 c0000000442bbb60 c008000000568300 0000000000000000
+[  333.390666] GPR04: 00000000002ec44d 0000000000000000 0000000000000000 c000000004b27d78
+[  333.390666] GPR08: 0000000000000000 c000000004b27e28 0000000000000000 fffffffffffffffd
+[  333.390666] GPR12: 0000000000000040 c000004afecc5880 0000000106620918 0000000000000001
+[  333.390666] GPR16: 000000010bd36e10 0000000106620dc8 0000000106620e58 0000000106620e90
+[  333.390666] GPR20: 0000000106620e30 c0000000880ba938 0000000000200000 00000000002ec44d
+[  333.390666] GPR24: 000000000008170d 000000000000000d c0000000519f4800 00000000002ec44d
+[  333.390666] GPR28: c0000000880ba800 c00000003b69c000 c0000000833edd20 000000000008170d
+[  333.390702] NIP [c0080000004bfa80] xfs_iunlink_lookup+0x58/0x80 [xfs]
+[  333.390756] LR [c0080000004bfa4c] xfs_iunlink_lookup+0x24/0x80 [xfs]
+[  333.390810] Call Trace:
+[  333.390811] [c0000000442bbb60] [c0000000833edd20] 0xc0000000833edd20 (unreliable)
+[  333.390816] [c0000000442bbb80] [c0080000004c0094] xfs_iunlink+0x1bc/0x280 [xfs]
+[  333.390869] [c0000000442bbc00] [c0080000004c3f84] xfs_remove+0x1dc/0x310 [xfs]
+[  333.390922] [c0000000442bbc70] [c0080000004be180] xfs_vn_unlink+0x68/0xf0 [xfs]
+[  333.390975] [c0000000442bbcd0] [c000000000576b24] vfs_unlink+0x1b4/0x3d0
+[  333.390981] [c0000000442bbd20] [c00000000057e5d8] do_unlinkat+0x2b8/0x390
+[  333.390985] [c0000000442bbde0] [c00000000057e708] sys_unlinkat+0x58/0xb0
+[  333.390989] [c0000000442bbe10] [c0000000000335d0] system_call_exception+0x150/0x3b0
+[  333.390994] [c0000000442bbe50] [c00000000000c554] system_call_common+0xf4/0x258
+[  333.390999] --- interrupt: c00 at 0x7fffa47230a0
+[  333.391001] NIP:  00007fffa47230a0 LR: 00000001066138ac CTR: 0000000000000000
+[  333.391004] REGS: c0000000442bbe80 TRAP: 0c00   Not tainted  (6.2.0-rc4ssh+)
+[  333.391007] MSR:  800000000280f033 <SF,VEC,VSX,EE,PR,FP,ME,IR,DR,RI,LE>  CR: 22002202  XER: 00000000
+[  333.391016] IRQMASK: 0
+[  333.391016] GPR00: 0000000000000124 00007fffdb9330b0 00007fffa4807300 0000000000000008
+[  333.391016] GPR04: 000000010bd36f18 0000000000000000 0000000000000000 0000000000000003
+[  333.391016] GPR08: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
+[  333.391016] GPR12: 0000000000000000 00007fffa48ba340 0000000106620918 0000000000000001
+[  333.391016] GPR16: 000000010bd36e10 0000000106620dc8 0000000106620e58 0000000106620e90
+[  333.391016] GPR20: 0000000106620e30 0000000106620e00 0000000106620c40 0000000000000002
+[  333.391016] GPR24: 0000000106620c38 00000001066208d8 0000000000000000 0000000106620d20
+[  333.391016] GPR28: 00007fffdb933408 000000010bd24cec 00007fffdb933408 000000010bd36e10
+[  333.391050] NIP [00007fffa47230a0] 0x7fffa47230a0
+[  333.391052] LR [00000001066138ac] 0x1066138ac
+[  333.391054] --- interrupt: c00
+[  333.391056] Code: 2c230000 4182002c e9230020 2fa90000 419e0020 38210020 e8010010 7c0803a6 4e800020 60000000 60000000 60000000 <0fe00000> 60000000 60000000 60000000
+[  333.391069] ---[ end trace 0000000000000000 ]---
+[  333.391072] XFS (dm-0): Internal error xfs_trans_cancel at line 1097 of file fs/xfs/xfs_trans.c.  Caller xfs_remove+0x1a0/0x310 [xfs]
+[  333.391128] CPU: 56 PID: 12450 Comm: rm Tainted: G        W          6.2.0-rc4ssh+ #4
+[  333.391131] Hardware name: IBM,9080-HEX POWER10 (raw) 0x800200 0xf000006 of:IBM,FW1010.22 (NH1010_122) hv:phyp pSeries
+[  333.391135] Call Trace:
+[  333.391136] [c0000000442bbb10] [c000000000e84f4c] dump_stack_lvl+0x70/0xa4 (unreliable)
+[  333.391142] [c0000000442bbb50] [c0080000004a6a84] xfs_error_report+0x5c/0x80 [xfs]
+[  333.391194] [c0000000442bbbb0] [c0080000004d67b0] xfs_trans_cancel+0x178/0x1b0 [xfs]
+[  333.391249] [c0000000442bbc00] [c0080000004c3f48] xfs_remove+0x1a0/0x310 [xfs]
+[  333.391302] [c0000000442bbc70] [c0080000004be180] xfs_vn_unlink+0x68/0xf0 [xfs]
+[  333.391355] [c0000000442bbcd0] [c000000000576b24] vfs_unlink+0x1b4/0x3d0
+[  333.391359] [c0000000442bbd20] [c00000000057e5d8] do_unlinkat+0x2b8/0x390
+[  333.391363] [c0000000442bbde0] [c00000000057e708] sys_unlinkat+0x58/0xb0
+[  333.391367] [c0000000442bbe10] [c0000000000335d0] system_call_exception+0x150/0x3b0
+[  333.391371] [c0000000442bbe50] [c00000000000c554] system_call_common+0xf4/0x258
+[  333.391376] --- interrupt: c00 at 0x7fffa47230a0
+[  333.391378] NIP:  00007fffa47230a0 LR: 00000001066138ac CTR: 0000000000000000
+[  333.391381] REGS: c0000000442bbe80 TRAP: 0c00   Tainted: G        W           (6.2.0-rc4ssh+)
+[  333.391385] MSR:  800000000280f033 <SF,VEC,VSX,EE,PR,FP,ME,IR,DR,RI,LE>  CR: 22002202  XER: 00000000
+[  333.391393] IRQMASK: 0
+[  333.391393] GPR00: 0000000000000124 00007fffdb9330b0 00007fffa4807300 0000000000000008
+[  333.391393] GPR04: 000000010bd36f18 0000000000000000 0000000000000000 0000000000000003
+[  333.391393] GPR08: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
+[  333.391393] GPR12: 0000000000000000 00007fffa48ba340 0000000106620918 0000000000000001
+[  333.391393] GPR16: 000000010bd36e10 0000000106620dc8 0000000106620e58 0000000106620e90
+[  333.391393] GPR20: 0000000106620e30 0000000106620e00 0000000106620c40 0000000000000002
+[  333.391393] GPR24: 0000000106620c38 00000001066208d8 0000000000000000 0000000106620d20
+[  333.391393] GPR28: 00007fffdb933408 000000010bd24cec 00007fffdb933408 000000010bd36e10
+[  333.391427] NIP [00007fffa47230a0] 0x7fffa47230a0
+[  333.391429] LR [00000001066138ac] 0x1066138ac
+[  333.391431] --- interrupt: c00
+[  333.394067] XFS (dm-0): Corruption of in-memory data (0x8) detected at xfs_trans_cancel+0x190/0x1b0 [xfs] (fs/xfs/xfs_trans.c:1098).  Shutting down filesystem.
+[  333.394125] XFS (dm-0): Please unmount the filesystem and rectify the problem(s)
 
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Add to the fifth chapter of the online fsck design documentation,
-> > where
-> > we discuss the details of the data structures and algorithms used by
-> > the
-> > kernel to repair file metadata.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  .../filesystems/xfs-online-fsck-design.rst         |  150
-> > ++++++++++++++++++++
-> >  1 file changed, 150 insertions(+)
-> > 
-> > 
-> > diff --git a/Documentation/filesystems/xfs-online-fsck-design.rst
-> > b/Documentation/filesystems/xfs-online-fsck-design.rst
-> > index c41f089549a0..10709dc74dcb 100644
-> > --- a/Documentation/filesystems/xfs-online-fsck-design.rst
-> > +++ b/Documentation/filesystems/xfs-online-fsck-design.rst
-> > @@ -2872,3 +2872,153 @@ The allocation group free block list (AGFL)
-> > is repaired as follows:
-> >  4. Once the AGFL is full, reap any blocks leftover.
-> >  
-> >  5. The next operation to fix the freelist will right-size the list.
-> > +
-> > +Inode Record Repairs
-> > +--------------------
-> > +
-> > +Inode records must be handled carefully, because they have both
-> > ondisk records
-> > +("dinodes") and an in-memory ("cached") representation.
-> > +There is a very high potential for cache coherency issues if online
-> > fsck is not
-> > +careful to access the ondisk metadata *only* when the ondisk
-> > metadata is so
-> > +badly damaged that the filesystem cannot load the in-memory
-> > representation.
-> > +When online fsck wants to open a damaged file for scrubbing, it must
-> > use
-> > +specialized resource acquisition functions that return either the
-> > in-memory
-> > +representation *or* a lock on whichever object is necessary to
-> > prevent any
-> > +update to the ondisk location.
-> > +
-> > +The only repairs that should be made to the ondisk inode buffers are
-> > whatever
-> > +is necessary to get the in-core structure loaded.
-> > +This means fixing whatever is caught by the inode cluster buffer and
-> > inode fork
-> > +verifiers, and retrying the ``iget`` operation.
-> > +If the second ``iget`` fails, the repair has failed.
-> > +
-> > +Once the in-memory representation is loaded, repair can lock the
-> > inode and can
-> > +subject it to comprehensive checks, repairs, and optimizations.
-> > +Most inode attributes are easy to check and constrain, or are user-
-> > controlled
-> > +arbitrary bit patterns; these are both easy to fix.
-> > +Dealing with the data and attr fork extent counts and the file block
-> > counts is
-> > +more complicated, because computing the correct value requires
-> > traversing the
-> > +forks, or if that fails, leaving the fields invalid and waiting for
-> > the fork
-> > +fsck functions to run.
-> > +
-> > +The proposed patchset is the
-> > +`inode
-> > +<
-> > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/
-> > log/?h=repair-inodes>`_
-> > +repair series.
-> > +
-> > +Quota Record Repairs
-> > +--------------------
-> > +
-> > +Similar to inodes, quota records ("dquots") also have both ondisk
-> > records and
-> > +an in-memory representation, and hence are subject to the same cache
-> > coherency
-> > +issues.
-> > +Somewhat confusingly, both are known as dquots in the XFS codebase.
-> > +
-> > +The only repairs that should be made to the ondisk quota record
-> > buffers are
-> > +whatever is necessary to get the in-core structure loaded.
-> > +Once the in-memory representation is loaded, the only attributes
-> > needing
-> > +checking are obviously bad limits and timer values.
-> > +
-> > +Quota usage counters are checked, repaired, and discussed separately
-> > in the
-> > +section about :ref:`live quotacheck <quotacheck>`.
-> > +
-> > +The proposed patchset is the
-> > +`quota
-> > +<
-> > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/
-> > log/?h=repair-quota>`_
-> > +repair series.
-> > +
-> > +.. _fscounters:
-> > +
-> > +Freezing to Fix Summary Counters
-> > +--------------------------------
-> > +
-> > +Filesystem summary counters track availability of filesystem
-> > resources such
-> > +as free blocks, free inodes, and allocated inodes.
-> > +This information could be compiled by walking the free space and
-> > inode indexes,
-> > +but this is a slow process, so XFS maintains a copy in the ondisk
-> > superblock
-> > +that should reflect the ondisk metadata, at least when the
-> > filesystem has been
-> > +unmounted cleanly.
-> > +For performance reasons, XFS also maintains incore copies of those
-> > counters,
-> > +which are key to enabling resource reservations for active
-> > transactions.
-> > +Writer threads reserve the worst-case quantities of resources from
-> > the
-> > +incore counter and give back whatever they don't use at commit time.
-> > +It is therefore only necessary to serialize on the superblock when
-> > the
-> > +superblock is being committed to disk.
-> > +
-> > +The lazy superblock counter feature introduced in XFS v5 took this
-> > even further
-> > +by training log recovery to recompute the summary counters from the
-> > AG headers,
-> > +which eliminated the need for most transactions even to touch the
-> > superblock.
-> > +The only time XFS commits the summary counters is at filesystem
-> > unmount.
-> > +To reduce contention even further, the incore counter is implemented
-> > as a
-> > +percpu counter, which means that each CPU is allocated a batch of
-> > blocks from a
-> > +global incore counter and can satisfy small allocations from the
-> > local batch.
-> > +
-> > +The high-performance nature of the summary counters makes it
-> > difficult for
-> > +online fsck to check them, since there is no way to quiesce a percpu
-> > counter
-> > +while the system is running.
-> > +Although online fsck can read the filesystem metadata to compute the
-> > correct
-> > +values of the summary counters, there's no way to hold the value of
-> > a percpu
-> > +counter stable, so it's quite possible that the counter will be out
-> > of date by
-> > +the time the walk is complete.
-> > +Earlier versions of online scrub would return to userspace with an
-> > incomplete
-> > +scan flag, but this is not a satisfying outcome for a system
-> > administrator.
-> > +For repairs, the in-memory counters must be stabilize while walking
-> > the
-> nit: stablilized
 
-Fixed, thank you.
 
-> > +filesystem metadata to get an accurate reading and install it in the
-> > percpu
-> > +counter.
-> > +
-> > +To satisfy this requirement, online fsck must prevent other programs
-> > in the
-> > +system from initiating new writes to the filesystem, it must disable
-> > background
-> > +garbage collection threads, and it must wait for existing writer
-> > programs to
-> > +exit the kernel.
-> > +Once that has been established, scrub can walk the AG free space
-> > indexes, the
-> > +inode btrees, and the realtime bitmap to compute the correct value
-> > of all
-> > +four summary counters.
-> > +This is very similar to a filesystem freeze.
-> > +
-> > +The initial implementation used the actual VFS filesystem freeze
-> > mechanism to
-> > +quiesce filesystem activity.
-> 
-> 
-> > +With the filesystem frozen, it is possible to resolve the counter
-> > values with
-> > +exact precision, but there are many problems with calling the VFS
-> > methods
-> > +directly:
-> > +
-> > +- Other programs can unfreeze the filesystem without our knowledge.
-> > +  This leads to incorrect scan results and incorrect repairs.
-> > +
-> > +- Adding an extra lock to prevent others from thawing the filesystem
-> > required
-> > +  the addition of a ``->freeze_super`` function to wrap
-> > ``freeze_fs()``.
-> > +  This in turn caused other subtle problems because it turns out
-> > that the VFS
-> > +  ``freeze_super`` and ``thaw_super`` functions can drop the last
-> > reference to
-> > +  the VFS superblock, and any subsequent access becomes a UAF bug!
-> > +  This can happen if the filesystem is unmounted while the
-> > underlying block
-> > +  device has frozen the filesystem.
-> > +  This problem could be solved by grabbing extra references to the
-> > superblock,
-> > +  but it felt suboptimal given the other inadequacies of this
-> > approach:
-> > +
-> > +- The log need not be quiesced to check the summary counters, but a
-> > VFS freeze
-> > +  initiates one anyway.
-> > +  This adds unnecessary runtime to live fscounter fsck operations.
-> > +
-> > +- Quiescing the log means that XFS flushes the (possibly incorrect)
-> > counters to
-> > +  disk as part of cleaning the log.
-> > +
-> > +- A bug in the VFS meant that freeze could complete even when
-> > sync_filesystem
-> > +  fails to flush the filesystem and returns an error.
-> > +  This bug was fixed in Linux 5.17.
-> > +
-> > +The author 
-> 
-> I think the above is a candidate for culling or maybe the side bar if
-> you really feel the need to keep it.
+we did a git bisect between 5.17 and 6.0. Bisect points to commit 04755d2e5821 
+as the bad commit.
+Short description of commit:
+commit 04755d2e5821b3afbaadd09fe5df58d04de36484 (refs/bisect/bad)
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Thu Jul 14 11:42:39 2022 +1000
 
-I'll turn it into a sidebar, since it took me a while to figure all that
-out, and maybe some day I'll need to refer to what amounts to historic
-notes.
+    xfs: refactor xlog_recover_process_iunlinks()
 
-> Aside from the fact that it was
-> simply bug prone, it makes sense to avoid an entire freeze if we can
-> help it.  I think it would be fine to just pop into the current
-> proposition:
-> 
-> "However, this approach was found to be both costly and unstable. 
-> Later optimizations of ofsck established ..."
 
-How about:
+Git bisect log:
+git bisect start
+# good: [26291c54e111ff6ba87a164d85d4a4e134b7315c] Linux 5.17-rc2
+git bisect good 26291c54e111ff6ba87a164d85d4a4e134b7315c
+# bad: [4fe89d07dcc2804c8b562f6c7896a45643d34b2f] Linux 6.0
+git bisect bad 4fe89d07dcc2804c8b562f6c7896a45643d34b2f
+# good: [d7227785e384d4422b3ca189aa5bf19f462337cc] Merge tag 'sound-5.19-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/tiwai/sound
+git bisect good d7227785e384d4422b3ca189aa5bf19f462337cc
+# good: [526942b8134cc34d25d27f95dfff98b8ce2f6fcd] Merge tag 'ata-5.20-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata
+git bisect good 526942b8134cc34d25d27f95dfff98b8ce2f6fcd
+# good: [328141e51e6fc79d21168bfd4e356dddc2ec7491] Merge tag 'mmc-v5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/ulfh/mmc
+git bisect good 328141e51e6fc79d21168bfd4e356dddc2ec7491
+# bad: [eb555cb5b794f4e12a9897f3d46d5a72104cd4a7] Merge tag '5.20-rc-ksmbd-server-fixes' of git://git.samba.org/ksmbd
+git bisect bad eb555cb5b794f4e12a9897f3d46d5a72104cd4a7
+# bad: [f20c95b46b8fa3ad34b3ea2e134337f88591468b] Merge tag 'tpmdd-next-v5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/jarkko/linux-tpmdd
+git bisect bad f20c95b46b8fa3ad34b3ea2e134337f88591468b
+# bad: [fad235ed4338749a66ddf32971d4042b9ef47f44] Merge tag 'arm-late-6.0' of git://git.kernel.org/pub/scm/linux/kernel/git/soc/soc
+git bisect bad fad235ed4338749a66ddf32971d4042b9ef47f44
+# good: [e495274793ea602415d050452088a496abcd9e6c] Merge tag 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/rdma/rdma
+git bisect good e495274793ea602415d050452088a496abcd9e6c
+# good: [9daee913dc8d15eb65e0ff560803ab1c28bb480b] Merge tag 'ext4_for_linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4
+git bisect good 9daee913dc8d15eb65e0ff560803ab1c28bb480b
+# bad: [29b1d469f3f6842ee4115f0b21f018fc44176468] Merge tag 'trace-rtla-v5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/rostedt/linux-trace
+git bisect bad 29b1d469f3f6842ee4115f0b21f018fc44176468
+# good: [932b42c66cb5d0ca9800b128415b4ad6b1952b3e] xfs: replace XFS_IFORK_Q with a proper predicate function
+git bisect good 932b42c66cb5d0ca9800b128415b4ad6b1952b3e
+# bad: [35c5a09f5346e690df7ff2c9075853e340ee10b3] Merge tag 'xfs-buf-lockless-lookup-5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.20-mergeB
+git bisect bad 35c5a09f5346e690df7ff2c9075853e340ee10b3
+# bad: [fad743d7cd8bd92d03c09e71f29eace860f50415] xfs: add log item precommit operation
+git bisect bad fad743d7cd8bd92d03c09e71f29eace860f50415
+# bad: [04755d2e5821b3afbaadd09fe5df58d04de36484] xfs: refactor xlog_recover_process_iunlinks()
+git bisect bad 04755d2e5821b3afbaadd09fe5df58d04de36484
+# good: [a4454cd69c66bf3e3bbda352b049732f836fc6b2] xfs: factor the xfs_iunlink functions
+git bisect good a4454cd69c66bf3e3bbda352b049732f836fc6b2
+Bisecting: 0 revisions left to test after this (roughly 0 steps)
+[4fcc94d653270fcc7800dbaf3b11f78cb462b293] xfs: track the iunlink list pointer in the xfs_inode
 
-"...Once that has been established, scrub can walk the AG free space
-indexes, the inode btrees, and the realtime bitmap to compute the
-correct value of all four summary counters.  This is very similar to a
-filesystem freeze, though not all of the pieces are necessary:
 
-- "The final freeze state is set one higher than ``SB_FREEZE_COMPLETE``
-  to prevent other threads from thawing the filesystem, or other scrub
-  threads from initiating another fscounters freeze.
+Please reach out, in case any more details are needed. sent with very limited
+knowledge of xfs system. these logs are from 5.19 kernel.
 
-- IIt does not quiesce the log.
+# xfs_info /home
+meta-data=/dev/nvme0n1p1         isize=512    agcount=4, agsize=13107200 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1    bigtime=0 inobtcount=0
+data     =                       bsize=4096   blocks=52428800, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=25600, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-"With this code in place, it is now possible to pause the filesystem for
-just long enough to check and correct the summary counters."
+# xfs_info -V
+xfs_info version 5.0.0
 
-<giant historic sidebar here>
-
-?
-
-> > established that the only component of online fsck that requires the
-> > +ability to freeze the filesystem is the fscounter scrubber, so the
-> > code for
-> > +this could be localized to that source file.
-> > +fscounter freeze behaves the same as the VFS freeze method, except:
-> > +
-> > +- The final freeze state is set one higher than
-> > ``SB_FREEZE_COMPLETE`` to
-> > +  prevent other threads from thawing the filesystem.
-> > +
-> > +- It does not quiesce the log.
-> > +
-> > +With this code in place, it is now possible to pause the filesystem
-> > for just
-> > +long enough to check and correct the summary counters.
-> > +
-> > +The proposed patchset is the
-> > +`summary counter cleanup
-> > +<
-> > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/
-> > log/?h=repair-fscounters>`_
-> > +series.
-> > 
-> 
-> Otherwise looks good.  :-)
-
-Thanks!
-
---D
-
-> Allison
-> 
+# uname -a
+5.19.0-rc2
