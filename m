@@ -2,135 +2,138 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAB16C636D6
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Feb 2023 01:17:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7A08C636D7
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Feb 2023 06:07:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229622AbjBRBRD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Feb 2023 20:17:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33340 "EHLO
+        id S229441AbjBRGHH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 18 Feb 2023 01:07:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59304 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229616AbjBRBRC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Feb 2023 20:17:02 -0500
-Received: from mail1.bemta34.messagelabs.com (mail1.bemta34.messagelabs.com [195.245.231.3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9370E36699;
-        Fri, 17 Feb 2023 17:17:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
-        s=170520fj; t=1676683019; i=@fujitsu.com;
-        bh=EarUJXJHeKc/uIrwmeqmpWyHrRMI7AcdO5uvPtkXwtM=;
-        h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-         In-Reply-To:Content-Type:Content-Transfer-Encoding;
-        b=AJbD5xnirMYHgnmv0bUZg1KcyvYCo5v0rLrglNS6oAO51KHq1o2OX+7+ah/9TfemF
-         zA1GTjy216Vn0FHe8tpCx0iy8B3CrpDi0323ZNSu6WhkmRFnMSJqiiPvt+JCg+94fp
-         2ZcY9pCNQuTj7swZmRYyQqx4b8sps6uBdiGDcVsWsW4QpLT0aghj6I4z/TvP3A3UkN
-         xg/Zm5JW+q0XhBXu/jE0uxRuBHTHbOaeUtWWlHIAGtGRF2IEzoiedGZIqVK4Tysi6p
-         E+hcAaO1Eq608yqzoZTN2xL6IDx13WuuPOfM3DGWT3L8uSo8DyUdVlQD8qIwburBal
-         syL72CUr8mm2g==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrKKsWRWlGSWpSXmKPExsViZ8ORpMuh/iH
-  Z4MEDVos569ewWUyfeoHRYsuxe4wWl5/wWZyesIjJYvfrm2wWe/aeZLG4t+Y/q8WuPzvYLVb+
-  +MNq8fvHHDYHbo9TiyQ8Nq/Q8li85yWTx6ZVnWwemz5NYvc4MeM3i8eLzTMZPT4+vcXi8XmTX
-  ABnFGtmXlJ+RQJrRuvmqcwF/VwV1598YWxgPMvRxcjFISSwkVHi4dWFjBDOUiaJC3c+MkM4Wx
-  klbn4+DJTh5OAVsJN4dGUhE4jNIqAqsff2J6i4oMTJmU9YQGxRgWSJY+db2UBsYQFHiV3H2li
-  7GDk4RAQ0JN5sMQKZySzQwiRxfNIHqG3LGSWufr4ENpRNQEfiwoK/rCA2p4CJxN6Hv8AGMQtY
-  SCx+c5AdwpaXaN46mxnElhBQkLgxaRULhF0p0frhF5StJnH13CbmCYxCs5DcNwvJqFlIRi1gZ
-  F7FaFqcWlSWWqRrrJdUlJmeUZKbmJmjl1ilm6iXWqpbnlpcomukl1herJdaXKxXXJmbnJOil5
-  dasokRGJspxWrCOxi/9P7VO8QoycGkJMr7edv7ZCG+pPyUyozE4oz4otKc1OJDjDIcHEoSvPc
-  UPyQLCRalpqdWpGXmANMETFqCg0dJhHe5DFCat7ggMbc4Mx0idYpRUUqcV0wNKCEAksgozYNr
-  g6WmS4yyUsK8jAwMDEI8BalFuZklqPKvGMU5GJWEeaOUgabwZOaVwE1/BbSYCWjxAua3IItLE
-  hFSUg1MobfmRjtl6ss5zLo9Nyc0cu633adu3+GYHGJUwTq5f/65e9IyihYMD9h9VGKM/gUr1J
-  U8aj34IXzyqyjDvwYOi2bf1j9zmaNP7scqxYeRLAWFIR4/0vN9luXEmTVO//7QL+TsjV2rrps
-  +uX/80uzzEr8kBU7cWa054XT1/NC6Wdf+8Ly1ts3dzS9456HtrI5TQl/eP1pypPiSFkvpM61S
-  0Yq359inztoSzfaozU5mX2fxoezd/w4sZNuvvN35D+/bmJueWs5JBV57zxRmBNktvsUU1xRdf
-  aPu//aiWBkTO2sriairP++Xv3jhq/Wx9dmXeWf/3c2cMbn3x7Yt2zMfXt6y41irmqRV4MPd7y
-  acFFRiKc5INNRiLipOBAC6nf7+yAMAAA==
-X-Env-Sender: ruansy.fnst@fujitsu.com
-X-Msg-Ref: server-6.tower-565.messagelabs.com!1676683015!365172!1
-X-Originating-IP: [62.60.8.98]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.102.2; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 21012 invoked from network); 18 Feb 2023 01:16:56 -0000
-Received: from unknown (HELO n03ukasimr03.n03.fujitsu.local) (62.60.8.98)
-  by server-6.tower-565.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 18 Feb 2023 01:16:56 -0000
-Received: from n03ukasimr03.n03.fujitsu.local (localhost [127.0.0.1])
-        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTP id B8BF01B1;
-        Sat, 18 Feb 2023 01:16:55 +0000 (GMT)
-Received: from R01UKEXCASM223.r01.fujitsu.local (R01UKEXCASM223 [10.182.185.121])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTPS id AA0611AC;
-        Sat, 18 Feb 2023 01:16:55 +0000 (GMT)
-Received: from [10.167.201.2] (10.167.201.2) by
- R01UKEXCASM223.r01.fujitsu.local (10.182.185.121) with Microsoft SMTP Server
- (TLS) id 15.0.1497.42; Sat, 18 Feb 2023 01:16:50 +0000
-Message-ID: <d5e5c50f-6d16-5a52-e79d-3578acdc1d92@fujitsu.com>
-Date:   Sat, 18 Feb 2023 09:16:43 +0800
+        with ESMTP id S229520AbjBRGHH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Feb 2023 01:07:07 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEFA14FA80
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Feb 2023 22:06:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1676700379;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=YKCDoO1J8rceT8LcUANcINEiZmLpI49PkyoGsZGsFGI=;
+        b=HrzOi5YD+gEzbvCu+0aAo7ovpvyN+GWfLcP72eefD5gKKD5g2DFtmn18M2qwbJ7wcGCdti
+        QPAj7Yi+eLrbPbSI3oB2wtc6kuNsnWiYFiT4weTcABE4lVQtui0ihWZjKzcCWGdg6XEsUn
+        6xfTCOku1DVbPZhOR+GNjIyChfWNewo=
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
+ [209.85.215.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-390-N5DBYueBMSuOCKor3CKJhw-1; Sat, 18 Feb 2023 01:06:17 -0500
+X-MC-Unique: N5DBYueBMSuOCKor3CKJhw-1
+Received: by mail-pg1-f199.google.com with SMTP id e5-20020a63ee05000000b004fb4f0424f3so119329pgi.14
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Feb 2023 22:06:17 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=YKCDoO1J8rceT8LcUANcINEiZmLpI49PkyoGsZGsFGI=;
+        b=Nh7n9FEz55ZOKS5IzdbeUOi/JjBLW25uFDv1CHrXVa1H9hGYyApkPhi5NMwTpRHKHD
+         u9AUmOJxlgWwuZGmwTrKzDM9YTqICcr0FFAwnEN5WXIf3+0TP6HzkIHJEU/HrSHQHa8I
+         fmGAl36/AjG1A8HI6YA6eNhye8HPwvrlfcN0sdWpMoDVXHhvfvL6esy82eKqLdLMLoZF
+         e25EVsfmYEAF4ibsNKKPKm2olV/E8iKi6DDfowf0nIz55/7tYmARkrf0at8+VF14i+Bw
+         sTpF6suvNCeJmhtzla36I5OLGRxq9k/kN2ypRLu/JNxlW7xz+x7ckqgo6GMSDBBf6a/g
+         PlsQ==
+X-Gm-Message-State: AO0yUKV3r9NN+bbf8gEJGNFL/8d9e80CbBEuFKCefGc31bTbbPizmPY5
+        lW6eZziqcj1HhF+j/NyqNKUw46cE6+oFcwRLys9aRA+0+owplzMiA9g8uyPKkMTUUzn3luQ1Toh
+        OTDNHgL7XQ6tWtf5lCVOPjgmLJgEV
+X-Received: by 2002:a62:1413:0:b0:5aa:7f17:5907 with SMTP id 19-20020a621413000000b005aa7f175907mr4081861pfu.30.1676700376064;
+        Fri, 17 Feb 2023 22:06:16 -0800 (PST)
+X-Google-Smtp-Source: AK7set9JSqTxklDHteoQyD6sou5dq8rgX9TBgs4dkIIJyeqsDZGNFsibgZu4N1XuobWWqM4KXJg8vw==
+X-Received: by 2002:a62:1413:0:b0:5aa:7f17:5907 with SMTP id 19-20020a621413000000b005aa7f175907mr4081853pfu.30.1676700375673;
+        Fri, 17 Feb 2023 22:06:15 -0800 (PST)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id x13-20020aa793ad000000b00582f222f088sm3955936pff.47.2023.02.17.22.06.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Feb 2023 22:06:15 -0800 (PST)
+Date:   Sat, 18 Feb 2023 14:06:11 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCHSET v24.0 0/2] fstests: online repair of AG btrees
+Message-ID: <20230218060611.cffnemaplf7esr35@zlang-mailbox>
+References: <Y69Unb7KRM5awJoV@magnolia>
+ <167243875241.723308.1395808663517469875.stgit@magnolia>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.7.1
-Subject: Re: [PATCH v10 2/3] fs: introduce super_drop_pagecache()
-To:     Matthew Wilcox <willy@infradead.org>
-CC:     <linux-xfs@vger.kernel.org>, <nvdimm@lists.linux.dev>,
-        <linux-fsdevel@vger.kernel.org>, <linux-mm@kvack.org>,
-        <djwong@kernel.org>, <david@fromorbit.com>,
-        <dan.j.williams@intel.com>, <hch@infradead.org>,
-        <jane.chu@oracle.com>, <akpm@linux-foundation.org>
-References: <1676645312-13-1-git-send-email-ruansy.fnst@fujitsu.com>
- <1676645312-13-3-git-send-email-ruansy.fnst@fujitsu.com>
- <Y++n53dzkCsH1qeK@casper.infradead.org>
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-In-Reply-To: <Y++n53dzkCsH1qeK@casper.infradead.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.167.201.2]
-X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
- R01UKEXCASM223.r01.fujitsu.local (10.182.185.121)
-X-Virus-Scanned: ClamAV using ClamSMTP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <167243875241.723308.1395808663517469875.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-在 2023/2/18 0:14, Matthew Wilcox 写道:
-> On Fri, Feb 17, 2023 at 02:48:31PM +0000, Shiyang Ruan wrote:
->> -		invalidate_mapping_pages(inode->i_mapping, 0, -1);
->> -		iput(toput_inode);
->> -		toput_inode = inode;
->> -
->> -		cond_resched();
->> -		spin_lock(&sb->s_inode_list_lock);
->> -	}
->> -	spin_unlock(&sb->s_inode_list_lock);
->> -	iput(toput_inode);
->> +	super_drop_pagecache(sb, invalidate_inode_pages);
+On Fri, Dec 30, 2022 at 02:19:12PM -0800, Darrick J. Wong wrote:
+> Hi all,
 > 
-> I thought I explained last time that you can do this with
-> invalidate_mapping_pages() / invalidate_inode_pages2_range() ?
-> Then you don't need to introduce invalidate_inode_pages().
+> Now that we've spent a lot of time reworking common code in online fsck,
+> we're ready to start rebuilding the AG space btrees.  This series
+> implements repair functions for the free space, inode, and refcount
+> btrees.  Rebuilding the reverse mapping btree is much more intense and
+> is left for a subsequent patchset.  The fstests counterpart of this
+> patchset implements stress testing of repair.
 > 
->> +void super_drop_pagecache(struct super_block *sb,
->> +	int (*invalidator)(struct address_space *))
+> If you're going to start using this mess, you probably ought to just
+> pull from my git trees, which are linked below.
 > 
-> void super_drop_pagecache(struct super_block *sb,
-> 		int (*invalidate)(struct address_space *, pgoff_t, pgoff_t))
+> This is an extraordinary way to destroy everything.  Enjoy!
+> Comments and questions are, as always, welcome.
 > 
->> +		invalidator(inode->i_mapping);
+> --D
+
+LGTM,
+
+Reviewed-by: Zorro Lang <zlang@redhat.com>
+
 > 
-> 		invalidate(inode->i_mapping, 0, -1)
+> kernel git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-ag-btrees
 > 
-> ... then all the changes to mm/truncate.c and filemap.h go away.
+> xfsprogs git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-ag-btrees
+> 
+> fstests git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=repair-ag-btrees
+> ---
+>  README            |    3 ++
+>  common/fuzzy      |   39 +++++++++++++++++++--------
+>  common/rc         |    2 +
+>  common/xfs        |   77 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/725     |   37 +++++++++++++++++++++++++
+>  tests/xfs/725.out |    2 +
+>  tests/xfs/726     |   37 +++++++++++++++++++++++++
+>  tests/xfs/726.out |    2 +
+>  tests/xfs/727     |   38 ++++++++++++++++++++++++++
+>  tests/xfs/727.out |    2 +
+>  tests/xfs/728     |   37 +++++++++++++++++++++++++
+>  tests/xfs/728.out |    2 +
+>  tests/xfs/729     |   37 +++++++++++++++++++++++++
+>  tests/xfs/729.out |    2 +
+>  tests/xfs/730     |   37 +++++++++++++++++++++++++
+>  tests/xfs/730.out |    2 +
+>  tests/xfs/731     |   37 +++++++++++++++++++++++++
+>  tests/xfs/731.out |    2 +
+>  18 files changed, 382 insertions(+), 13 deletions(-)
+>  create mode 100755 tests/xfs/725
+>  create mode 100644 tests/xfs/725.out
+>  create mode 100755 tests/xfs/726
+>  create mode 100644 tests/xfs/726.out
+>  create mode 100755 tests/xfs/727
+>  create mode 100644 tests/xfs/727.out
+>  create mode 100755 tests/xfs/728
+>  create mode 100644 tests/xfs/728.out
+>  create mode 100755 tests/xfs/729
+>  create mode 100644 tests/xfs/729.out
+>  create mode 100755 tests/xfs/730
+>  create mode 100644 tests/xfs/730.out
+>  create mode 100755 tests/xfs/731
+>  create mode 100644 tests/xfs/731.out
+> 
 
-Yes, I tried as you suggested, but I found that they don't have same 
-type of return value.
-
-int invalidate_inode_pages2_range(struct address_space *mapping,
-				  pgoff_t start, pgoff_t end);
-
-unsigned long invalidate_mapping_pages(struct address_space *mapping,
-		pgoff_t start, pgoff_t end);
-
-
---
-Thanks,
-Ruan.
