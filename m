@@ -2,204 +2,135 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8317BC636D6
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Feb 2023 20:26:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAB16C636D6
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Feb 2023 01:17:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229635AbjBQU0K (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Feb 2023 15:26:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54218 "EHLO
+        id S229622AbjBRBRD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Feb 2023 20:17:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229489AbjBQU0I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Feb 2023 15:26:08 -0500
-Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 087C8193E7
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Feb 2023 12:25:42 -0800 (PST)
-Received: by mail-pf1-x42a.google.com with SMTP id x8so1342039pfh.3
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Feb 2023 12:25:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=VN0HOfLmJcyYqEBS6eki1osL0U7pbkMbM5Ww97Y1n1k=;
-        b=Pehwsm3NXu3gIfwxOn2+dcMuQbjkc06EdpNpqiRP64PbbiDxJskXqp9qathjltZ2GI
-         hwzPJR7ynsq9pkzejp0L+gdutWzl9Hg53AyhjpcOIfyM8W+2mSbhy4WMb9bcZG3TBqaL
-         YX6qNHLtzD84FxfcJ0dBKQVd3FAUJ5YQY5k5y/p9Y1XBIdYxRPIYOHiRZ7G+54kzTzKa
-         gUDtkXLVb9TXhW3En0Iz2UPstbVW3/DZ27XC3K1WQeij8RS8cG63Fv+vYGt3F8kQ8ubT
-         4nZa2PpY+2w03NnkCstkMy7Z+Jz47KMAtQixX2dYH/KBuiYLcCXCqC+jlCEtX+UFPBMo
-         85IA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=VN0HOfLmJcyYqEBS6eki1osL0U7pbkMbM5Ww97Y1n1k=;
-        b=D/ykFFSHeKEsv9TxKfb9LtIS4oD31w3uYY70c9wYE97oS64Fy71saIoNFZ9snn9+sf
-         7Zzbfcxi3MvE6JgwaJY8j6uai2v15en3fxo2uzb2BZvj17x8W6/qifRjmTY42AZWJrqn
-         rseJO65tg9gGHgz6ovsv+NcXPx1G1voGDoxLU2N0axXJJehGpTWDSRGA+ynXuVWAxX9Z
-         QvMY+clSK16QuEkDCynXx00IFgnlxRD2fQL0tkBzZG8ByJhtWUNcfdI/qctFYXI5qI3v
-         Fo1oDi1MeMVuuMsKqQkVITE+FYJ5hxmsUN7hKiT4XN1Z29ruh0m3x/RcG5p6hfJd8lnI
-         vdUw==
-X-Gm-Message-State: AO0yUKW4GgXHcSuKv/CWX/ZI8JP5KzZ1r79kqpGOdykQSisBa5+7otlK
-        JxNo0EM2kIm5QFy2LMCG7X6vpQ==
-X-Google-Smtp-Source: AK7set+OGHwoldbCtRSLX1ms+b95r5Eosbzs87CSTAJTTHRysARJJaeJnSYjIS2H4fIeqB4hQrIizw==
-X-Received: by 2002:a62:1581:0:b0:5a9:c942:7294 with SMTP id 123-20020a621581000000b005a9c9427294mr3942327pfv.34.1676665539621;
-        Fri, 17 Feb 2023 12:25:39 -0800 (PST)
-Received: from dread.disaster.area (pa49-181-4-128.pa.nsw.optusnet.com.au. [49.181.4.128])
-        by smtp.gmail.com with ESMTPSA id g20-20020aa78754000000b005a9bf65b591sm2392401pfo.135.2023.02.17.12.25.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Feb 2023 12:25:39 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1pT7IV-00GWl0-Sh; Sat, 18 Feb 2023 07:25:35 +1100
-Date:   Sat, 18 Feb 2023 07:25:35 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     shrikanth hegde <sshegde@linux.vnet.ibm.com>, dchinner@redhat.com,
-        linux-xfs@vger.kernel.org,
-        Srikar Dronamraju <srikar@linux.vnet.ibm.com>,
-        ojaswin@linux.ibm.com
-Subject: Re: xfs: system fails to boot up due to Internal error
- xfs_trans_cancel
-Message-ID: <20230217202535.GR360264@dread.disaster.area>
-References: <e5004868-4a03-93e5-5077-e7ed0e533996@linux.vnet.ibm.com>
- <Y++xDBwXDgkaFUi9@magnolia>
+        with ESMTP id S229616AbjBRBRC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Feb 2023 20:17:02 -0500
+Received: from mail1.bemta34.messagelabs.com (mail1.bemta34.messagelabs.com [195.245.231.3])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9370E36699;
+        Fri, 17 Feb 2023 17:17:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
+        s=170520fj; t=1676683019; i=@fujitsu.com;
+        bh=EarUJXJHeKc/uIrwmeqmpWyHrRMI7AcdO5uvPtkXwtM=;
+        h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+         In-Reply-To:Content-Type:Content-Transfer-Encoding;
+        b=AJbD5xnirMYHgnmv0bUZg1KcyvYCo5v0rLrglNS6oAO51KHq1o2OX+7+ah/9TfemF
+         zA1GTjy216Vn0FHe8tpCx0iy8B3CrpDi0323ZNSu6WhkmRFnMSJqiiPvt+JCg+94fp
+         2ZcY9pCNQuTj7swZmRYyQqx4b8sps6uBdiGDcVsWsW4QpLT0aghj6I4z/TvP3A3UkN
+         xg/Zm5JW+q0XhBXu/jE0uxRuBHTHbOaeUtWWlHIAGtGRF2IEzoiedGZIqVK4Tysi6p
+         E+hcAaO1Eq608yqzoZTN2xL6IDx13WuuPOfM3DGWT3L8uSo8DyUdVlQD8qIwburBal
+         syL72CUr8mm2g==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrKKsWRWlGSWpSXmKPExsViZ8ORpMuh/iH
+  Z4MEDVos569ewWUyfeoHRYsuxe4wWl5/wWZyesIjJYvfrm2wWe/aeZLG4t+Y/q8WuPzvYLVb+
+  +MNq8fvHHDYHbo9TiyQ8Nq/Q8li85yWTx6ZVnWwemz5NYvc4MeM3i8eLzTMZPT4+vcXi8XmTX
+  ABnFGtmXlJ+RQJrRuvmqcwF/VwV1598YWxgPMvRxcjFISSwkVHi4dWFjBDOUiaJC3c+MkM4Wx
+  klbn4+DJTh5OAVsJN4dGUhE4jNIqAqsff2J6i4oMTJmU9YQGxRgWSJY+db2UBsYQFHiV3H2li
+  7GDk4RAQ0JN5sMQKZySzQwiRxfNIHqG3LGSWufr4ENpRNQEfiwoK/rCA2p4CJxN6Hv8AGMQtY
+  SCx+c5AdwpaXaN46mxnElhBQkLgxaRULhF0p0frhF5StJnH13CbmCYxCs5DcNwvJqFlIRi1gZ
+  F7FaFqcWlSWWqRrrJdUlJmeUZKbmJmjl1ilm6iXWqpbnlpcomukl1herJdaXKxXXJmbnJOil5
+  dasokRGJspxWrCOxi/9P7VO8QoycGkJMr7edv7ZCG+pPyUyozE4oz4otKc1OJDjDIcHEoSvPc
+  UPyQLCRalpqdWpGXmANMETFqCg0dJhHe5DFCat7ggMbc4Mx0idYpRUUqcV0wNKCEAksgozYNr
+  g6WmS4yyUsK8jAwMDEI8BalFuZklqPKvGMU5GJWEeaOUgabwZOaVwE1/BbSYCWjxAua3IItLE
+  hFSUg1MobfmRjtl6ss5zLo9Nyc0cu633adu3+GYHGJUwTq5f/65e9IyihYMD9h9VGKM/gUr1J
+  U8aj34IXzyqyjDvwYOi2bf1j9zmaNP7scqxYeRLAWFIR4/0vN9luXEmTVO//7QL+TsjV2rrps
+  +uX/80uzzEr8kBU7cWa054XT1/NC6Wdf+8Ly1ts3dzS9456HtrI5TQl/eP1pypPiSFkvpM61S
+  0Yq359inztoSzfaozU5mX2fxoezd/w4sZNuvvN35D+/bmJueWs5JBV57zxRmBNktvsUU1xRdf
+  aPu//aiWBkTO2sriairP++Xv3jhq/Wx9dmXeWf/3c2cMbn3x7Yt2zMfXt6y41irmqRV4MPd7y
+  acFFRiKc5INNRiLipOBAC6nf7+yAMAAA==
+X-Env-Sender: ruansy.fnst@fujitsu.com
+X-Msg-Ref: server-6.tower-565.messagelabs.com!1676683015!365172!1
+X-Originating-IP: [62.60.8.98]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.102.2; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 21012 invoked from network); 18 Feb 2023 01:16:56 -0000
+Received: from unknown (HELO n03ukasimr03.n03.fujitsu.local) (62.60.8.98)
+  by server-6.tower-565.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 18 Feb 2023 01:16:56 -0000
+Received: from n03ukasimr03.n03.fujitsu.local (localhost [127.0.0.1])
+        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTP id B8BF01B1;
+        Sat, 18 Feb 2023 01:16:55 +0000 (GMT)
+Received: from R01UKEXCASM223.r01.fujitsu.local (R01UKEXCASM223 [10.182.185.121])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTPS id AA0611AC;
+        Sat, 18 Feb 2023 01:16:55 +0000 (GMT)
+Received: from [10.167.201.2] (10.167.201.2) by
+ R01UKEXCASM223.r01.fujitsu.local (10.182.185.121) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.42; Sat, 18 Feb 2023 01:16:50 +0000
+Message-ID: <d5e5c50f-6d16-5a52-e79d-3578acdc1d92@fujitsu.com>
+Date:   Sat, 18 Feb 2023 09:16:43 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y++xDBwXDgkaFUi9@magnolia>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
+Subject: Re: [PATCH v10 2/3] fs: introduce super_drop_pagecache()
+To:     Matthew Wilcox <willy@infradead.org>
+CC:     <linux-xfs@vger.kernel.org>, <nvdimm@lists.linux.dev>,
+        <linux-fsdevel@vger.kernel.org>, <linux-mm@kvack.org>,
+        <djwong@kernel.org>, <david@fromorbit.com>,
+        <dan.j.williams@intel.com>, <hch@infradead.org>,
+        <jane.chu@oracle.com>, <akpm@linux-foundation.org>
+References: <1676645312-13-1-git-send-email-ruansy.fnst@fujitsu.com>
+ <1676645312-13-3-git-send-email-ruansy.fnst@fujitsu.com>
+ <Y++n53dzkCsH1qeK@casper.infradead.org>
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+In-Reply-To: <Y++n53dzkCsH1qeK@casper.infradead.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.167.201.2]
+X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
+ R01UKEXCASM223.r01.fujitsu.local (10.182.185.121)
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 17, 2023 at 08:53:32AM -0800, Darrick J. Wong wrote:
-> On Fri, Feb 17, 2023 at 04:45:12PM +0530, shrikanth hegde wrote:
-> > We are observing panic on boot upon loading the latest stable tree(v6.2-rc4) in 
-> > one of our systems. System fails to come up. System was booting well 
-> > with v5.17, v5.19 kernel. We started seeing this issue when loading v6.0 kernel.
-> > 
-> > Panic Log is below.
-> > [  333.390539] ------------[ cut here ]------------
-> > [  333.390552] WARNING: CPU: 56 PID: 12450 at fs/xfs/xfs_inode.c:1839 xfs_iunlink_lookup+0x58/0x80 [xfs]
-> 
-> Hmm, ok, so this is the same if (WARN_ON_ONCE(!ip || !ip->i_ino)) line
-> in xfs_iunlink_lookup that I've been bonking my head on the past
-> several days.  333 seconds uptime, so I guess this is a pretty recent
-> mount.  You didn't post a full dmesg, so I can only assume there weren't
-> any *other* obvious complaints from XFS when the fs was mounted...
-> 
-> > [  333.390615] Modules linked in: nft_fib_inet nft_fib_ipv4 nft_fib_ipv6 nft_fib nft_reject_inet nf_reject_ipv4 nf_reject_ipv6 nft_reject nft_ct nft_chain_nat nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 ip_set nf_tables nfnetlink rfkill sunrpc pseries_rng xts vmx_crypto xfs libcrc32c sd_mod sg ibmvscsi ibmveth scsi_transport_srp nvme nvme_core t10_pi crc64_rocksoft crc64 dm_mirror dm_region_hash dm_log dm_mod
-> > [  333.390645] CPU: 56 PID: 12450 Comm: rm Not tainted 6.2.0-rc4ssh+ #4
-> > [  333.390649] Hardware name: IBM,9080-HEX POWER10 (raw) 0x800200 0xf000006 of:IBM,FW1010.22 (NH1010_122) hv:phyp pSeries
-> > [  333.390652] NIP:  c0080000004bfa80 LR: c0080000004bfa4c CTR: c000000000ea28d0
-> > [  333.390655] REGS: c0000000442bb8c0 TRAP: 0700   Not tainted  (6.2.0-rc4ssh+)
-> > [  333.390658] MSR:  8000000000029033 <SF,EE,ME,IR,DR,RI,LE>  CR: 24002842  XER: 00000000
-> > [  333.390666] CFAR: c0080000004bfa54 IRQMASK: 0
-> > [  333.390666] GPR00: c00000003b69c0c8 c0000000442bbb60 c008000000568300 0000000000000000
-> > [  333.390666] GPR04: 00000000002ec44d 0000000000000000 0000000000000000 c000000004b27d78
-> > [  333.390666] GPR08: 0000000000000000 c000000004b27e28 0000000000000000 fffffffffffffffd
-> > [  333.390666] GPR12: 0000000000000040 c000004afecc5880 0000000106620918 0000000000000001
-> > [  333.390666] GPR16: 000000010bd36e10 0000000106620dc8 0000000106620e58 0000000106620e90
-> > [  333.390666] GPR20: 0000000106620e30 c0000000880ba938 0000000000200000 00000000002ec44d
-> > [  333.390666] GPR24: 000000000008170d 000000000000000d c0000000519f4800 00000000002ec44d
-> > [  333.390666] GPR28: c0000000880ba800 c00000003b69c000 c0000000833edd20 000000000008170d
-> > [  333.390702] NIP [c0080000004bfa80] xfs_iunlink_lookup+0x58/0x80 [xfs]
-> > [  333.390756] LR [c0080000004bfa4c] xfs_iunlink_lookup+0x24/0x80 [xfs]
-> > [  333.390810] Call Trace:
-> > [  333.390811] [c0000000442bbb60] [c0000000833edd20] 0xc0000000833edd20 (unreliable)
-> > [  333.390816] [c0000000442bbb80] [c0080000004c0094] xfs_iunlink+0x1bc/0x280 [xfs]
-> > [  333.390869] [c0000000442bbc00] [c0080000004c3f84] xfs_remove+0x1dc/0x310 [xfs]
-> > [  333.390922] [c0000000442bbc70] [c0080000004be180] xfs_vn_unlink+0x68/0xf0 [xfs]
-> > [  333.390975] [c0000000442bbcd0] [c000000000576b24] vfs_unlink+0x1b4/0x3d0
-> 
-> ...that trips when rm tries to remove a file, which means that the call
-> stack is
-> 
-> xfs_remove -> xfs_iunlink -> xfs_iunlink_insert_inode ->
-> xfs_iunlink_update_backref -> xfs_iunlink_lookup <kaboom>
-> 
-> It looks as though "rm foo" unlinked foo from the directory and was
-> trying to insert it at the head of one of the unlinked lists in the AGI
-> buffer.  The AGI claims that the list points to an ondisk inode, so the
-> iunlink code tries to find the incore inode to update the incore list,
-> fails to find an incore inode, and this is the result...
 
-This implies that unlinked inode recovery failed for some reason,
-and we didn't clear the unlinked list from the AGI properly.
 
-> > we did a git bisect between 5.17 and 6.0. Bisect points to commit 04755d2e5821 
-> > as the bad commit.
-> > Short description of commit:
-> > commit 04755d2e5821b3afbaadd09fe5df58d04de36484 (refs/bisect/bad)
-> > Author: Dave Chinner <dchinner@redhat.com>
-> > Date:   Thu Jul 14 11:42:39 2022 +1000
-> > 
-> >     xfs: refactor xlog_recover_process_iunlinks()
+在 2023/2/18 0:14, Matthew Wilcox 写道:
+> On Fri, Feb 17, 2023 at 02:48:31PM +0000, Shiyang Ruan wrote:
+>> -		invalidate_mapping_pages(inode->i_mapping, 0, -1);
+>> -		iput(toput_inode);
+>> -		toput_inode = inode;
+>> -
+>> -		cond_resched();
+>> -		spin_lock(&sb->s_inode_list_lock);
+>> -	}
+>> -	spin_unlock(&sb->s_inode_list_lock);
+>> -	iput(toput_inode);
+>> +	super_drop_pagecache(sb, invalidate_inode_pages);
 > 
-> ...which was in the middle of the series that reworked thev mount time
-> iunlink clearing.  Oddly, I don't spot any obvious errors in /that/
-> patch that didn't already exist.  But this does make me wonder, does
-> xfs_repair -n have anything to say about unlinked or orphaned inodes?
+> I thought I explained last time that you can do this with
+> invalidate_mapping_pages() / invalidate_inode_pages2_range() ?
+> Then you don't need to introduce invalidate_inode_pages().
 > 
-> The runtime code expects that every ondisk inode in an iunlink chain has
-> an incore inode that is linked (via i_{next,prev}_unlinked) to the other
-> incore inodes in that same chain.  If this requirement is not met, then
-> the WARNings you see will trip, and the fs shuts down.
+>> +void super_drop_pagecache(struct super_block *sb,
+>> +	int (*invalidator)(struct address_space *))
 > 
-> My hypothesis here is that one of the AGs has an unprocessed unlinked
-> list.  At mount time, the ondisk log was clean, so mount time log
-> recovery didn't invoke xlog_recover_process_iunlinks, and the list was
-> not cleared.  The mount code does not construct the incore unlinked list
-> from an existing ondisk iunlink list, hence the WARNing.  Prior to 5.17,
-> we only manipulated the ondisk unlink list, and the code never noticed
-> or cared if there were mystery inodes in the list that never went away.
-
-Yup, that's what I'm thinking.
-
-But, hmmm, why is xlog_recover_clear_agi_bucket() not actually
-clearing the bucket head at that point?
-
-Oh, because we don't (and never have) capture errors from inode
-inactivation?  Or maybe the filesystem has shut down due to the
-unlink failure?
-
-I'd love to know how the filesystem got to this state in the first
-place, but at the moment I'll settle for a metadata of a broken
-filesystem....
-
-> (Obviously, if something blew up earlier in dmesg, that would be
-> relevant here.)
+> void super_drop_pagecache(struct super_block *sb,
+> 		int (*invalidate)(struct address_space *, pgoff_t, pgoff_t))
 > 
-> It's possible that we could end up in this situation (clean log,
-> unlinked inodes) if a previous log recovery was only partially
-> successful at clearing the unlinked list, since all that code ignores
-> errors.  If that happens, we ... succeed at mounting and clean the log.
+>> +		invalidator(inode->i_mapping);
 > 
-> If you're willing to patch your kernels, it would be interesting
-> to printk if the xfs_read_agi or the xlog_recover_iunlink_bucket calls
-> in xlog_recover_iunlink_ag returns an error code.  It might be too late
-> to capture that, hence my suggestion of seeing if xfs_repair -n will
-> tell us anything else.
+> 		invalidate(inode->i_mapping, 0, -1)
 > 
-> I've long thought that the iunlink recovery ought to complain loudly and
-> fail the mount if it can't clear all the unlinked files.  Given the new
-> iunlink design, I think it's pretty much required now.  The uglier piece
-> is that now we either (a) have to clear iunlinks at mount time
-> unconditionally as Eric has been saying for years; or (b) construct the
-> incore list at a convenient time so that the incore list always exists.
+> ... then all the changes to mm/truncate.c and filemap.h go away.
 
-Recovery does actually construct the incore list sufficient to
-unlink it (i.e. that's what the next/prev reference looping does).
-We could walk the entire list first and bring it into memory,
-but the problem there, I think, is that we have to hold references
-to all the inodes we bring into memory during recovery otherwise
-they are immediately reclaimed once we drop the reference.
+Yes, I tried as you suggested, but I found that they don't have same 
+type of return value.
 
-I suspect we need to work out why xlog_recover_clear_agi_bucket() is
-not triggering and clearing the bucket on error, because that is
-supposed to avoid this exact "could not process all unlinked inodes"
-and it warns loudly when it triggers....
+int invalidate_inode_pages2_range(struct address_space *mapping,
+				  pgoff_t start, pgoff_t end);
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+unsigned long invalidate_mapping_pages(struct address_space *mapping,
+		pgoff_t start, pgoff_t end);
+
+
+--
+Thanks,
+Ruan.
