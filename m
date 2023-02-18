@@ -2,198 +2,124 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3D8FC64ED6
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Feb 2023 06:14:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F32A8C636D7
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Feb 2023 06:14:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229630AbjBRGOR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 18 Feb 2023 01:14:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33596 "EHLO
+        id S229536AbjBRGO5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 18 Feb 2023 01:14:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229520AbjBRGOQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Feb 2023 01:14:16 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C730E56EC2
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Feb 2023 22:13:32 -0800 (PST)
+        with ESMTP id S229509AbjBRGO4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Feb 2023 01:14:56 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 005155B2E2
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Feb 2023 22:14:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1676700812;
+        s=mimecast20190719; t=1676700855;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=Bsr+sO51R/lQSQ21dm/CQGaMy59u8vOfATe3UnBS+i8=;
-        b=G7n7dYaes8Hg8LoadqQC0d2P39r+dqfG0DQhGq0UGmE5UM4yi3FHhh3CiaDSrvmG4cWS/I
-        mCPaiPBESSmIEu/5ef8ZI6i4zM4KGpjiwpy9D+DO1dFWVAOnZ5xz3GexuQ0zG/PX4I8h5G
-        mwkGMJWHf9f8C+yAtVDaTn66mL0+a8g=
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
- [209.85.214.197]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=RfbpN2uhmVnkyGZQIB0VqKn/zYaayC1Zq6AMrPa+tLY=;
+        b=ReriiLCaDRTcPmwRk/SMfL1eY9Q+SBMZiDEeAfuGuXpYGT3o8xEAVBU2b0y/e1Ymf8RC29
+        t/6rCLvbyQhjvKtPd659zDupJr8dMk35kqoV7BBOe9uNcZoYvIob7cUdovAKTZMtMtnvx5
+        NbWS259R2pt1EScS6pAJA5v+jPf3O8g=
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
+ [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-648-Qti1t1_KPp23jWmnw_VZXw-1; Sat, 18 Feb 2023 01:13:30 -0500
-X-MC-Unique: Qti1t1_KPp23jWmnw_VZXw-1
-Received: by mail-pl1-f197.google.com with SMTP id d18-20020a170902729200b0019ac5d9fdb3so110388pll.9
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Feb 2023 22:13:30 -0800 (PST)
+ us-mta-319-aJsIl9SWMkGhDKW1wABgQw-1; Sat, 18 Feb 2023 01:14:13 -0500
+X-MC-Unique: aJsIl9SWMkGhDKW1wABgQw-1
+Received: by mail-pj1-f69.google.com with SMTP id z13-20020a17090a540d00b002356c612574so667531pjh.2
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Feb 2023 22:14:12 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Bsr+sO51R/lQSQ21dm/CQGaMy59u8vOfATe3UnBS+i8=;
-        b=irduvty4UhNcWVsVDjsEu+s5Ai5hEma3xMkpgIToIqkbSiofB1hUm6m7hcOQSsJo2E
-         pogurUTzokrO+fEGFoAyMiUxwBfUcGAoGK0kwkCMRq/kA7Vb6w9HS1oTowmOS06E7nkB
-         miPz0ZgEwTeUpqs5gBxBqUO40U10BAscpqeaSMGNSwcax+F075l3B4myiN7f+KK5TUu+
-         pMspr+pxsXbNg500reExN6XfKMRiqmBJTbRaAOQzRCwkM4h4ItPf1YK6YVqcUQ/HVzE1
-         DSIwKO7hUItRTY2OymstuO/mr1UOwKDnsSvowDXID8vDqPiJTrEm2mWxxRU2XNGcvnLh
-         4Ywg==
-X-Gm-Message-State: AO0yUKU+jfK/s6JWJ86Y/ixgA3URvO867dIu1lv0c7Q3j1rZFL1RuPJ5
-        IyAMbT4WWBbtnCNUJLmbQ9twUGY+FVE1Nm3NSJIvMJ11NblXMWy7FhCPRk2+qcNV6DBlXJqP+3u
-        WT1agIk9InC0AZW5zCrgS
-X-Received: by 2002:a17:902:e492:b0:19b:3549:1eb with SMTP id i18-20020a170902e49200b0019b354901ebmr4698847ple.48.1676700809529;
-        Fri, 17 Feb 2023 22:13:29 -0800 (PST)
-X-Google-Smtp-Source: AK7set++zuzSIeW6nOfPJo7T5sEz0ZInytQKfHBzoP31XtUYsWp9td0aRZpdxEnJj4Lfzvde5PxeqA==
-X-Received: by 2002:a17:902:e492:b0:19b:3549:1eb with SMTP id i18-20020a170902e49200b0019b354901ebmr4698836ple.48.1676700809167;
-        Fri, 17 Feb 2023 22:13:29 -0800 (PST)
+        bh=RfbpN2uhmVnkyGZQIB0VqKn/zYaayC1Zq6AMrPa+tLY=;
+        b=EszpW2I9Lz9fzWLByERJa/vN1DK6ivV4V2kqoAYVyUiKe2n9pU3ez4CuqqdtOhFu9z
+         kQH1TkIhVG86SfGyHhJnMb3DjjLtPCw8H/goxoD/c5q1smg+RnPqD3cQM44gDwKAUPaR
+         s/JEB6mhxEBFwbiQwaQB5n8HNcy76rBhPCbMOpSfKfkCP++jK+czF3LybS+8i37Mb2dV
+         fUTQ/G1swJyDWZp4VrNOU9ZgURWWPYmeDrSEOZPKuNID5uVFmUAD4ACKZ57H8M8H/n8V
+         uHHTKbv9n32+cEY2xj/iTMQRYKZJjcW+UgqWQ8s9tndjy/tA/AmaMKR+vgZ5YUN6zON5
+         JTRQ==
+X-Gm-Message-State: AO0yUKVBm5oxSbz1rwGVyCL6gQGVcH9KLSliG7wUWwIEugXDnsxckbSV
+        qam0Iye4VHKa2eAtGQuZSr2JzPdrVTC54Kk04iHq7XE/qzvdrlIN11SscsjkbMqI2bhkRgupE0/
+        N49TM5HTt+AyJ+2E9t6yq
+X-Received: by 2002:a17:903:2803:b0:19a:b869:f2ef with SMTP id kp3-20020a170903280300b0019ab869f2efmr1243202plb.15.1676700852063;
+        Fri, 17 Feb 2023 22:14:12 -0800 (PST)
+X-Google-Smtp-Source: AK7set8rG+SaUVIP9aSmv+ho24Lao1X7SlVgSwVctTOotsZx0zXmlu/I89GoZ29OJZ3AvIu66W8mgg==
+X-Received: by 2002:a17:903:2803:b0:19a:b869:f2ef with SMTP id kp3-20020a170903280300b0019ab869f2efmr1243189plb.15.1676700851739;
+        Fri, 17 Feb 2023 22:14:11 -0800 (PST)
 Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id f2-20020a170902ff0200b0019a7f493151sm4007165plj.212.2023.02.17.22.13.27
+        by smtp.gmail.com with ESMTPSA id h22-20020a170902ac9600b001963a178dfcsm4021606plr.244.2023.02.17.22.14.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Feb 2023 22:13:28 -0800 (PST)
-Date:   Sat, 18 Feb 2023 14:13:25 +0800
+        Fri, 17 Feb 2023 22:14:11 -0800 (PST)
+Date:   Sat, 18 Feb 2023 14:14:07 +0800
 From:   Zorro Lang <zlang@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs: race fsstress with inode link count check and
- repair
-Message-ID: <20230218061325.3pl6vpzr53bht2t4@zlang-mailbox>
-References: <167243876754.727436.356658000575058711.stgit@magnolia>
- <167243876766.727436.7268075677833351349.stgit@magnolia>
+Subject: Re: [PATCHSET v24.0 0/2] fstests: online repair for fs summary
+ counters
+Message-ID: <20230218061407.lr2df4hhaowunalr@zlang-mailbox>
+References: <Y69Unb7KRM5awJoV@magnolia>
+ <167243877039.727863.13765266441029212988.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <167243876766.727436.7268075677833351349.stgit@magnolia>
+In-Reply-To: <167243877039.727863.13765266441029212988.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Dec 30, 2022 at 02:19:27PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Dec 30, 2022 at 02:19:30PM -0800, Darrick J. Wong wrote:
+> Hi all,
 > 
-> Race fsstress with inode link count checking and repair.
+> A longstanding deficiency in the online fs summary counter scrubbing
+> code is that it hasn't any means to quiesce the incore percpu counters
+> while it's running.  There is no way to coordinate with other threads
+> are reserving or freeing free space simultaneously, which leads to false
+> error reports.  Right now, if the discrepancy is large, we just sort of
+> shrug and bail out with an incomplete flag, but this is lame.
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
+> For repair activity, we actually /do/ need to stabilize the counters to
+> get an accurate reading and install it in the percpu counter.  To
+> improve the former and enable the latter, allow the fscounters online
+> fsck code to perform an exclusive mini-freeze on the filesystem.  The
+> exclusivity prevents userspace from thawing while we're running, and the
+> mini-freeze means that we don't wait for the log to quiesce, which will
+> make both speedier.
+> 
+> If you're going to start using this mess, you probably ought to just
+> pull from my git trees, which are linked below.
+> 
+> This is an extraordinary way to destroy everything.  Enjoy!
+> Comments and questions are, as always, welcome.
+> 
+> --D
+
+This patchset looks good to me,
 
 Reviewed-by: Zorro Lang <zlang@redhat.com>
 
->  tests/xfs/772     |   38 ++++++++++++++++++++++++++++++++++++++
->  tests/xfs/772.out |    2 ++
->  tests/xfs/820     |   37 +++++++++++++++++++++++++++++++++++++
->  tests/xfs/820.out |    2 ++
->  4 files changed, 79 insertions(+)
->  create mode 100755 tests/xfs/772
->  create mode 100644 tests/xfs/772.out
->  create mode 100755 tests/xfs/820
->  create mode 100644 tests/xfs/820.out
 > 
+> kernel git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-fscounters
 > 
-> diff --git a/tests/xfs/772 b/tests/xfs/772
-> new file mode 100755
-> index 0000000000..a00c2796c5
-> --- /dev/null
-> +++ b/tests/xfs/772
-> @@ -0,0 +1,38 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0-or-later
-> +# Copyright (c) 2022 Oracle.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 772
-> +#
-> +# Race fsstress and inode link count repair for a while to see if we crash or
-> +# livelock.
-> +#
-> +. ./common/preamble
-> +_begin_fstest online_repair dangerous_fsstress_repair
-> +
-> +_cleanup() {
-> +	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-> +	cd /
-> +	rm -r -f $tmp.*
-> +}
-> +_register_cleanup "_cleanup" BUS
-> +
-> +# Import common functions.
-> +. ./common/filter
-> +. ./common/fuzzy
-> +. ./common/inject
-> +. ./common/xfs
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_require_scratch
-> +_require_xfs_stress_online_repair
-> +
-> +_scratch_mkfs > "$seqres.full" 2>&1
-> +_scratch_mount
-> +_scratch_xfs_stress_online_repair -x "dir" -s "repair nlinks"
-> +
-> +# success, all done
-> +echo Silence is golden
-> +status=0
-> +exit
-> diff --git a/tests/xfs/772.out b/tests/xfs/772.out
-> new file mode 100644
-> index 0000000000..98c1396896
-> --- /dev/null
-> +++ b/tests/xfs/772.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 772
-> +Silence is golden
-> diff --git a/tests/xfs/820 b/tests/xfs/820
-> new file mode 100755
-> index 0000000000..58a5d4cc91
-> --- /dev/null
-> +++ b/tests/xfs/820
-> @@ -0,0 +1,37 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0-or-later
-> +# Copyright (c) 2022 Oracle.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 820
-> +#
-> +# Race fsstress and nlinks scrub for a while to see if we crash or livelock.
-> +#
-> +. ./common/preamble
-> +_begin_fstest scrub dangerous_fsstress_scrub
-> +
-> +_cleanup() {
-> +	_scratch_xfs_stress_scrub_cleanup &> /dev/null
-> +	cd /
-> +	rm -r -f $tmp.*
-> +}
-> +_register_cleanup "_cleanup" BUS
-> +
-> +# Import common functions.
-> +. ./common/filter
-> +. ./common/fuzzy
-> +. ./common/inject
-> +. ./common/xfs
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_require_scratch
-> +_require_xfs_stress_scrub
-> +
-> +_scratch_mkfs > "$seqres.full" 2>&1
-> +_scratch_mount
-> +_scratch_xfs_stress_scrub -x "dir" -s "scrub nlinks"
-> +
-> +# success, all done
-> +echo Silence is golden
-> +status=0
-> +exit
-> diff --git a/tests/xfs/820.out b/tests/xfs/820.out
-> new file mode 100644
-> index 0000000000..29ab2e2d8c
-> --- /dev/null
-> +++ b/tests/xfs/820.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 820
-> +Silence is golden
+> fstests git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=repair-fscounters
+> ---
+>  tests/xfs/713     |   36 ++++++++++++++++++++++++++++++++++++
+>  tests/xfs/713.out |    4 ++++
+>  tests/xfs/714     |   41 +++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/714.out |    2 ++
+>  tests/xfs/762     |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/762.out |    2 ++
+>  6 files changed, 131 insertions(+)
+>  create mode 100755 tests/xfs/713
+>  create mode 100644 tests/xfs/713.out
+>  create mode 100755 tests/xfs/714
+>  create mode 100644 tests/xfs/714.out
+>  create mode 100755 tests/xfs/762
+>  create mode 100644 tests/xfs/762.out
 > 
 
