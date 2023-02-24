@@ -2,218 +2,176 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFEA6C64ED6
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Feb 2023 02:52:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4692FC61DA4
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Feb 2023 02:58:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229681AbjBXCwD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Feb 2023 21:52:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34688 "EHLO
+        id S229470AbjBXC62 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Feb 2023 21:58:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229470AbjBXCwC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Feb 2023 21:52:02 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0961C5EED4
-        for <linux-xfs@vger.kernel.org>; Thu, 23 Feb 2023 18:52:00 -0800 (PST)
+        with ESMTP id S229446AbjBXC62 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Feb 2023 21:58:28 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF1F4158A6
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Feb 2023 18:58:26 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6E85161804
-        for <linux-xfs@vger.kernel.org>; Fri, 24 Feb 2023 02:52:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1F10C433EF;
-        Fri, 24 Feb 2023 02:51:59 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 5F730B81B29
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Feb 2023 02:58:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 174A0C433EF;
+        Fri, 24 Feb 2023 02:58:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677207119;
-        bh=jKuJqxNjU1eJsgxORLXIgu7wFodmORekn/IH+8HdPdw=;
+        s=k20201202; t=1677207504;
+        bh=qEgT3hBvVKU+LIIS8cJFJdrqC8r0RiZaYTx0hGYgV5M=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=n99KdrRA7kvf8dyAi5Kk14Ep/yB/ZGk+qBlhIqHPqvr1BUOAbG9F0ebIlWAuDJt6Q
-         78NDpNApGZF4LT3lt7+673UK0Hf6Q9THOPh7xDNBygg1yHPNj9PdTz3lK17pbKbu6j
-         /GI6CTooBCWeovSxyLpukEtz5qYkbH3+eg2SPg/OCArJyPri6ndqKitIyKnMd3KUk0
-         LSBWeFCJJa1SIVtr8M4E/Z0cFcAmG2ZIN1Dith/i2YgRntSXEq+peVUeyJHoA6h3D3
-         nIUN/1hKfvHGGDhdk1/7RvQHXrY3Q+SpX9XN40ppFo9m9hku6hRekyz0zuJN/MLvoT
-         thVQgi5iTTbOg==
-Date:   Thu, 23 Feb 2023 18:51:59 -0800
+        b=C7lHL+d2JftsLpjO/0uC4bAW6XVK0PxrmtT7DIcamL4vsk3mb+9yPAm39k45mCuNn
+         hu/WwnDY/vzuUqUfa1+xHQv8hwo+gJUr+1jS941XU9iN46zycHGQ3b0CLnuslWHN+R
+         pMg/sZrUzjWDbWqLFJa7JPG+JkkAD+cZAOB2g7i9/CsmvqE3MhIHpOujKwrL18D9JZ
+         tBpg/yRIGfHhog0yXJm9KAcrjOy6S2tGfwnGrU8ePenYrpbcI5T/67nLyQLefx6tg3
+         6q6TMsFL9VKXIHzvBzy1mmzGNeO7mzcB7xESCNHAo1LD9DlB+b1U4spz9XhZYfBHe8
+         MDqUYw3syBmgw==
+Date:   Thu, 23 Feb 2023 18:58:23 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [RFC DELUGE v9r2d1] xfs: Parent Pointers
-Message-ID: <Y/gmTwva2hW0ydCb@magnolia>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCHSET v9r2d1 0/5] xfs: encode parent pointer name in xattr
+ key
+Message-ID: <Y/gnz4BvHee3xcYg@magnolia>
 References: <Y+6MxEgswrJMUNOI@magnolia>
- <8a65fba38b8a8f9167f27f2a2d6151c8d84bfa61.camel@oracle.com>
+ <167657875861.3475422.10929602650869169128.stgit@magnolia>
+ <CAOQ4uxgH=npBRBtKZ3TsuLBfpTbDg0hM-DY=8j11+DiRnE0Rig@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <8a65fba38b8a8f9167f27f2a2d6151c8d84bfa61.camel@oracle.com>
+In-Reply-To: <CAOQ4uxgH=npBRBtKZ3TsuLBfpTbDg0hM-DY=8j11+DiRnE0Rig@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 17, 2023 at 08:02:29PM +0000, Allison Henderson wrote:
-> On Thu, 2023-02-16 at 12:06 -0800, Darrick J. Wong wrote:
-> > Hi everyone,
-> > 
-> > This deluge contains all of the additions to the parent pointers
-> > patchset that I've been working on for the past month.  The kernel
-> > and
-> > xfsprogs patchsets are based on Allison's v9r2 tag from last week;
-> > the fstests patches are merely a part of my development tree.  To
-> > recap
-
-<snip>
-
-> Ermergersh, thats a lot!  Thanks for all the hard work.  I feel like if
-> we don't come up with a plan for review though, people may not know
-> where to start for these deluges!  Lets see... if we had to break this
-> down, I think would divide it up between the existing parent pointers
-> and the new pptr propositions for ofsck.
-
-That's a good place to cleave.
-
-> Then further divide it among
-> kernel space, user space and test case.  If I had to pick only one of
-> these to focus attention on, probably it should be new ofsck changes in
-> the kernel space, since the rest of the deluge is really contingent on
-> it. 
-
-Yup.  Though you ought to read through the offline fsck patches too.
-Those take a very different approach to resolving parent pointers.  So
-much of repair is based on nuking directories that I don't know there's
-a good way to rebuild them from parent pointers.
-
-A thought I had was that when we decide to zap a directory due to
-problems in the directory blocks themselves, we could them initiate a
-scan of the parent pointers to try to find all the dirents we can.  I
-ran into problems with that approach because libxfs_iget allocates fresh
-xfs_inode objects (instead of caching and sharing them like the kernel
-does) and that made it really hard to scan things in a coherent manner.
-
-> So now we've narrowed this down to a few subsets:
+On Sat, Feb 18, 2023 at 10:12:05AM +0200, Amir Goldstein wrote:
+> On Thu, Feb 16, 2023 at 10:33 PM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > Hi all,
+> >
+> > As I've mentioned in past comments on the parent pointers patchset, the
+> > proposed ondisk parent pointer format presents a major difficulty for
+> > online directory repair.  This difficulty derives from encoding the
+> > directory offset of the dirent that the parent pointer is mirroring.
+> > Recall that parent pointers are stored in extended attributes:
+> >
+> >     (parent_ino, parent_gen, diroffset) -> (dirent_name)
+> >
+> > If the directory is rebuilt, the offsets of the new directory entries
+> > must match the diroffset encoded in the parent pointer, or the
+> > filesystem becomes inconsistent.  There are a few ways to solve this
+> > problem.
+> >
+> > One approach would be to augment the directory addname function to take
+> > a diroffset and try to create the new entry at that offset.  This will
+> > not work if the original directory became corrupt and the parent
+> > pointers were written out with impossible diroffsets (e.g. overlapping).
+> > Requiring matching diroffsets also prevents reorganization and
+> > compaction of directories.
+> >
+> > This could be remedied by recording the parent pointer diroffset updates
+> > necessary to retain consistency, and using the logged parent pointer
+> > replace function to rewrite parent pointers as necessary.  This is a
+> > poor choice from a performance perspective because the logged xattr
+> > updates must be committed in the same transaction that commits the new
+> > directory structure.  If there are a large number of diroffset updates,
+> > then the directory commit could take an even longer time.
+> >
+> > Worse yet, if the logged xattr updates fill up the transaction, repair
+> > will have no choice but to roll to a fresh transaction to continue
+> > logging.  This breaks repair's policy that repairs should commit
+> > atomically.  It may break the filesystem as well, since all files
+> > involved are pinned until the delayed pptr xattr processing completes.
+> > This is a completely bad engineering choice.
+> >
+> > Note that the diroffset information is not used anywhere in the
+> > directory lookup code.  Observe that the only information that we
+> > require for a parent pointer is the inverse of an pre-ftype dirent,
+> > since this is all we need to reconstruct a directory entry:
+> >
+> >     (parent_ino, dirent_name) -> NULL
+> >
+> > The xattr code supports xattrs with zero-length values, surprisingly.
+> > The parent_gen field makes it easy to export parent handle information,
+> > so it can be retained:
+> >
+> >     (parent_ino, parent_gen, dirent_name) -> NULL
+> >
+> > Moving the ondisk format to this format is very advantageous for repair
+> > code.  Unfortunately, there is one hitch: xattr names cannot exceed 255
+> > bytes due to ondisk format limitations.  We don't want to constrain the
+> > length of dirent names, so instead we could use collision resistant
+> > hashes to handle dirents with very long names:
+> >
+> >     (parent_ino, parent_gen, sha512(dirent_name)) -> (dirent_name)
+> >
+> > The first two patches implement this schema.  However, this encoding is
+> > not maximally efficient, since many directory names are shorter than the
+> > length of a sha512 hash.  The last three patches in the series bifurcate
+> > the parent pointer ondisk format depending on context:
+> >
+> > For dirent names shorter than 243 bytes:
+> >
+> >     (parent_ino, parent_gen, dirent_name) -> NULL
+> >
+> > For dirent names longer than 243 bytes:
+> >
+> >     (parent_ino, parent_gen, dirent_name[0:178],
+> >      sha512(child_gen, dirent_name)) -> (dirent_name[179:255])
+> >
+> > The child file's generation number is mixed into the sha512 computation
+> > to make it a little more difficult for unprivileged userspace to attempt
+> > collisions.
+> >
 > 
-> [PATCHSET v9r2d1 0/3] xfs: bug fixes for parent pointers
-> [PATCHSET v9r2d1 0/4] xfs: rework the GETPARENTS ioctl,
+> Naive question:
+> 
+> Obviously, the spec of stradard xattrs does not allow duplicate keys,
+> but dabtree does allow duplicate keys, does it not?
 
-If you read through these two patchsets and think they're ok, then
-either fold the fixes into the main series or tack them on the end,
-whichever is easier.  If you tack them on the end, please add your
-own SOB tags.
+The dabtree allows duplicate hashes for a given name, yes.  It doesn't
+allow for duplicate names, though.
 
-> [PATCHSET v9r2d1 00/23] xfs: online fsck support patches
-> [PATCHSET v9r2d1 0/7] xfs: online repair of directories
-> [PATCHSET v9r2d1 0/2] xfs: online checking of parent pointers
-> [PATCHSET v9r2d1 0/3] xfs: online checking of parent pointers
-> [PATCHSET v9r2d1 0/2] xfs: online checking of directories
+(Also note that small xattr structures skip the dabtree and hashing.)
 
-The fsck functionality exists to prove the point that directory repair
-is /very/ awkward if we have to update p_diroffset.  As such, they
-focused on getting the main parts right ... but with the obvious
-problem of making pptrs dependent on online fsck part 1 getting merged.
+> So if you were to allow duplicate parent pointer records, e.g.:
+> 
+> (parent_ino, parent_gen) -> dirent_name1
+> (parent_ino, parent_gen) -> dirent_name2
+> 
+> Or to optimize performance for the case of large number of sibling hardlinks
+> of the same parent (if that case is worth optimizing):
+> 
+> (parent_ino, parent_gen, dirent_name[0:178]) -> (dirent_name1[179:255])
+> (parent_ino, parent_gen, dirent_name[0:178]) -> (dirent_name2[179:255])
+> 
+> Then pptr code should have no problem walking all the matching
+> parent pointer records to find the unique parent->child record that it
+> needs to operate on?
 
-Speaking of which -- can we merge online fsck for 6.4?  Please? :)
+Theoretically, yes, the parent pointer code could walk all the xattrs
+that have the same attr name looking for the one with matching value.
+But keep in mind that there could be min(2^32, 2^(8+76)) potential
+matches.
 
-> [PATCHSET v9r2d1 0/5] xfs: encode parent pointer name in xattr key
+The other difficulty is that the xattr lookup and removal code don't
+have a means to return the dastate to callers or for callers to provide
+a dastate to go back into the xattr code.  You'd need that to identify
+the specific parent pointer xattr you want to operate on.
 
-Resolving the questions presented by this series is critical to nailing
-down the ondisk format and merging the feature.  But we'll get to that
-below.
+> I am sure it would be more complicated than how I depicted it,
+> but having to deal with even remote possibility of hash collisions sounds
+> like a massive headache - having to maintain code that is really hard to
+> test and rarely exercised is not a recipe for peace of mind...
 
-> [PATCHSET v9r2d1 0/3] xfs: use flex arrays for XFS_IOC_GETPARENTS,
-
-I'd like to know what you think about converting the ioctl definition to
-flex arrays instead of the fixed size structs.  I'm not sure where to
-put this series, though.  If you decide that you want 'em, then ideally
-they'd be in xfs_fs.h from the introduction of XFS_IOC_GETPARENTS, but
-I don't see any point in backporting them around "xfs: rework the
-GETPARENTS ioctl".
-
-(I would be ok if you rolled all of it into patch 25 from the original
-v9 set.)
-
-> Of those, I think "xfs: encode parent pointer name in xattr key" is the
-> only one that might impact other features since it's changeing the
-> ondisk format from when we first started the effort years ago.  So
-> probably that might be the best place for people to start since if this
-> needs to change it might impact some of the other subsets in the
-> deluge, or even features they are working on if they've based anything
-> on the existing pptr set.
-
-Bingo!
-
-The biggest question about the format change is (IMHO) whether we're ok
-with using a hash function for parent pointer names that don't fit in
-the attr key space, and which hash?
-
-The sha2 family was designed to be collision resistant, but I don't
-anticipate that will last forever.  The hash is computed from (the full
-name and the child generation number) when the dirent name is longer
-than 243 bytes.  The first 179 bytes of the dirent name are still
-written in the parent pointer attr name.  An attacker would have to find
-a collision that only changes the last 76 bytes of the dirent name, and
-they'd have to know the generation number at runtime.
-
-(Note: dirent names shorter than 243 bytes are written directly into the
-parent pointer xattr name, no hashing required.)
-
-I /think/ that's good enough, but I'm no cryptanalyst.  The alternative
-would be to change the xattr format so that the namelen field in the
-leaf structure to encode *only* the name component of the parent
-pointer.  This would lead to a lot of special cased xattr code and
-probably a lot of bugs and other stupid problems, which is why I didn't
-take that route.
-
-Thoughts?
-
-> I feel like a 5 patch subset is a very reasonable thing to ask people
-> to give their attention to.  That way they dont get lost in things like
-> nits for optimizations that might not even matter if something it
-> depends on changes.
->
-> For the most part I am ok with changeing the format as long as everyone
-> is aware and in agreement so that we dont get caught up re-coding
-> efforts that seem to have stuggled with disagreements now on the scale
-> of decades.  Some of these patches were already very old by the time I
-> got them!
-
-Hheehhe.  Same here -- rmap was pretty old by the time I started pushing
-that for reals. :)
-
-> On a side note, there are some preliminary patches of kernel side
-> parent pointers that are either larp fixes or refactoring not sensitive
-> to the proposed ofsck changes.  These patches a have been floating
-> around for a while now, so if no one has any gripes, I think just
-> merging those would help cut down the amount of rebaseing, user space
-> porting and patch reviewing that goes on for every version.  (maybe the
-> first 1 though 7 of the 28 patch set, if folks are ok with that)
-
-I thought about doing that for 6.3, but I found enough bugs in the
-locking stuff (recall the first bugfix series) that I held back.  I'm
-not sure about the two "Increase <blah>" patches -- they'll bloat kernel
-structures without a real user for them.
-
-<shrug>
-
-> I think the shear size of some of these sets tend to work against them,
-> as people likely cannot afford the time block they present on the
-> surface.
-
-Agreed.  At this point, I've worked through enough of the parent
-pointers code to understand what's going on that I'm ok with merging it
-once we settle the above question.
-
-FWIW the whole series (kernel+xfsprogs+fstests) has been passing my
-nightly QA farm for a couple of weeks now despite my constant hammering
-on it, so I think the implementation is ready.
-
-> So I think we would do well to find a way to introduce them
-> at a reasonable pace and keep attention focused on the subsections that
-> should require more than others, and hopefully keep thing moving in a
-> progressive direction.
-
-I disagree -- I want to merge online fsck part 1 so I can get that out
-of my dev trees.  Then I want to focus on getting this over the finish
-line and merged.  But then I'm not known for incrementalism. :P
+Yep.  Hash functions are definitely finger-crossing headhurting.
 
 --D
 
-> Thx!
-> Allison
-> 
+> Thanks,
+> Amir.
