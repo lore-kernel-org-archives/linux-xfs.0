@@ -2,352 +2,394 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5414CC64EC7
-	for <linux-xfs@archiver.kernel.org>; Sat, 25 Feb 2023 07:34:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0022C7EE23
+	for <linux-xfs@archiver.kernel.org>; Sat, 25 Feb 2023 19:58:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229663AbjBYHeX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 25 Feb 2023 02:34:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36136 "EHLO
+        id S229820AbjBYT6k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 25 Feb 2023 14:58:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229636AbjBYHeW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Feb 2023 02:34:22 -0500
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2CF1EB76
-        for <linux-xfs@vger.kernel.org>; Fri, 24 Feb 2023 23:34:20 -0800 (PST)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 31P4Uq1N018109;
-        Sat, 25 Feb 2023 07:34:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-id : content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=ULugd1lw79aWywPMdmQ3T3bw/x8TwlHwy1q+dbYz2OI=;
- b=lfnlTp0+AUq4fK4l/iwgz/HESA6qN+NPh9P35Kq1DgYbnNXeBHF7P/4BGr1+jyBs4eKz
- bWiJC+s7/xrY3J5j0YmzE4Z72PVpAgoYEV3r8KUJE+nPioHulS95FZFbd1sROQSrMoTq
- qvlKNxsedHjZGEIWnhHfskLSctYmZ/wKiL8+uX2d/3/8eISns0whOcwW0xWK+a7wnc+s
- PpyyUBZnhHShBSR1dhydrir3IAp7u3E7bA2fEjFJpCKU6gnsRCzMcqD0A8e0cR7Lxx9l
- N7O+gPqPDqY9FWcdT/FN2aTGhBbmrKXf6IdpaPb0PhA4fyRtkmK02843XyNKPzhvVEMc DQ== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3nybb283ay-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 25 Feb 2023 07:34:17 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 31P6Fcx3013884;
-        Sat, 25 Feb 2023 07:34:17 GMT
-Received: from nam04-bn8-obe.outbound.protection.outlook.com (mail-bn8nam04lp2046.outbound.protection.outlook.com [104.47.74.46])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3ny8s2xcpk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 25 Feb 2023 07:34:17 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=faecoWsBBiovVeykcTVxOk3EYfRHUifrFvaBNKepVnyitPWwzE4Wrv5j4XMtGBVLB6UrwVaYXrHBrprDM0+7Du+Pe9O5/BmIfntUyVazq7f0OGC0Bj19NdE1sq7V57EqcPEqClfLio//1AysK0h61kvZV3Shr2WAO/V98K17hZKLKVW2GI6Why+Dlxzh3Gn8D1YM98lurQDXz5rqqDN2WQNHLL38xL2P7y7btF8HX7AzZQWLNwiIcHBQJ7k1PJLCZOZVgYAriPkvGk05lsspm4ONNNqmchucVSXuVeBWl6kCZFsDTnvfRGkfuqffDRSi5qE2lVOoCCyPFu+8558dBQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ULugd1lw79aWywPMdmQ3T3bw/x8TwlHwy1q+dbYz2OI=;
- b=Mrc4mzjH2AgPNryNkJ36Y/Zln+RomMBdX39ROgFYc99V/wc2jt+2slHk3NMrh5WduYGyW+DeedkXnhCF33WooOvi/JaZCsZVyyaK9f5zJ0Z1taZqEMqaMs+YkCBSfEbXXH/2e4TWRegPCF241IfxHeUbosiXqe82jkCN35keAk50ox2vHL1Hfhw3OSbndELPTJKcG+LTYCy/e5aHFK+/1bdG+PyYgxm6JphBHE3bdvfCPzlWIu/bId/M4smeT0DxJsDlM1FIpMHAPR+o8Ix8WFrS4jJF3rB3oPgUwXP2cHLqVHYxVcZdrwOwLlDas9+Ita+B7HTIoHmy7dx5e4AJIA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ULugd1lw79aWywPMdmQ3T3bw/x8TwlHwy1q+dbYz2OI=;
- b=GbYI4LZUnn2PvU2ff+o3J9jBQomEj2HqPiRADHHe8rk5pgmOBHAt6qbc3kURNgiwqxUUwJiSVkwcp+3P9y2y7EnfmCAOUye4r5LbUXMB3u993GJaz26RN3ijiNNp+kneiwy2Gf3iaHT8KC+1Be27B62yI5hLcZkNmcVZlz71vsg=
-Received: from CH2PR10MB4312.namprd10.prod.outlook.com (2603:10b6:610:7b::9)
- by IA1PR10MB7360.namprd10.prod.outlook.com (2603:10b6:208:3d8::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6156.11; Sat, 25 Feb
- 2023 07:34:14 +0000
-Received: from CH2PR10MB4312.namprd10.prod.outlook.com
- ([fe80::2b08:15c4:ba38:6b44]) by CH2PR10MB4312.namprd10.prod.outlook.com
- ([fe80::2b08:15c4:ba38:6b44%9]) with mapi id 15.20.6156.011; Sat, 25 Feb 2023
- 07:34:14 +0000
-From:   Allison Henderson <allison.henderson@oracle.com>
-To:     "djwong@kernel.org" <djwong@kernel.org>
-CC:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [RFC DELUGE v9r2d1] xfs: Parent Pointers
-Thread-Topic: [RFC DELUGE v9r2d1] xfs: Parent Pointers
-Thread-Index: AQHZQkItZlHBBP1ZGkWf8BFT+JAjD67TkQEAgAngZ4CAAeEwgA==
-Date:   Sat, 25 Feb 2023 07:34:14 +0000
-Message-ID: <839f853f7c7c6ac5b92ceca8afaf68589ac15d2c.camel@oracle.com>
-References: <Y+6MxEgswrJMUNOI@magnolia>
-         <8a65fba38b8a8f9167f27f2a2d6151c8d84bfa61.camel@oracle.com>
-         <Y/gmTwva2hW0ydCb@magnolia>
-In-Reply-To: <Y/gmTwva2hW0ydCb@magnolia>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Evolution 3.44.4-0ubuntu1 
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: CH2PR10MB4312:EE_|IA1PR10MB7360:EE_
-x-ms-office365-filtering-correlation-id: 78991162-2c44-4335-d25e-08db1702b1ed
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: hh0rl1vXo1RWomUiD4HJT0jZgerkshKaxQkpC8X6SkVPt49IZoXhMLN49Vr8P3vlVsl4XlU7JU4qdD3PvtQUIl1cR9RhQotk32DKOEtMcEK09I4ENqlUTbKZJ0kL3SRjgpc0kysZGAP85v6MYKCZDd9agzm5MWNo6mrM9J5WqZy5Fka3G9LdUCztqp5Jab0kvm1SvupM7ohA1PbDEWpseHVOD7uA9gpJJiRdTHrv5nWTVQCjxY8g3l6n0JkZSqZbSgJjyqM4WxHsSZXMVliocdrt+H7J4KcW7oWZYNk0G9cbuFWvQmaG0PAqDqoKL7BUiJUfvtk/1mwBey0eqBYfszGeu/WKYfA60RtrZgFIhfb8Gs0DmcnUeDHzF7RB11n/rbitjFMkaIjAxqN5AeZkHWX7HrWDkImFDjdqop26vD0LNwK8/iucO6FdyDfe8lEs+MWWuuprU8uqlk5R4+NIahrtPZc5O5fvFkenxo9R+GKbyt7JLjOWBtgao/8SY0ckZW4ZRQRFuOPqAAoy6/CRK5USizq6v0+my6zhk9979BrLpO3InamcYTNP/d0Ohuxs32sEtFz3ozfy5kCGN59O9qlhqQkKDAGlAKGGU334pYW93/i9VPwLFEScFDYg4cbOtkKIJpHY1win3zWma4iRoUuOMBXfScFrpydRDSIIiuBPxuSDWM0m5A5EUPTEzl+tkTYvfia3S1O/o03I4q0PPA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR10MB4312.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(366004)(376002)(39860400002)(346002)(136003)(396003)(451199018)(66899018)(2616005)(86362001)(83380400001)(2906002)(71200400001)(6486002)(478600001)(26005)(186003)(6506007)(6512007)(38070700005)(122000001)(38100700002)(44832011)(5660300002)(41300700001)(8936002)(30864003)(36756003)(91956017)(66556008)(66476007)(66946007)(76116006)(4326008)(316002)(6916009)(8676002)(66446008)(64756008);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?aWhqRVdkTEN6NUNMY1ZKQ0NtZm5SWGVBS2pheTR3d2FsdXlJSFA2Ty9peFNU?=
- =?utf-8?B?Umt2WHhRMzU0WVpHMERXZjV1Q2dIbDdza3BGSnA4ZHZTOTNjNlQzUHNBZ2xk?=
- =?utf-8?B?SkpxVitGU1E4dW9XdUcxc2hQc3FBY2ZZaEhlakhVVFpObHZMK2V4NTFaWnJh?=
- =?utf-8?B?VTZ3WXF0RFY1VENsdVB1d01DbGhmYnVrdXVibml3RlVBTkRNSjVveVE0bmpD?=
- =?utf-8?B?ckcyazhmUEU0N2hiR2pmL2V3blVaUDRkc21CMHcrM3VGeFZNV3NiK2puZFpu?=
- =?utf-8?B?RjlOMURybDZsY2ptMXFncmoxbXpMcERLT3hkU3kxMVJlc1RFNFZscVQ5bTIw?=
- =?utf-8?B?dUpBeUF6RFJtRnlHL0FFWUIrbUh0RUJhekNBaWFDeHhuM2twTzV3WFUweEpT?=
- =?utf-8?B?cGpMM1BZQVVTN1A4RXF6UVY4QTIrSktIWXJ1a2xqb3Fuek00KzAwd1Q0UXh1?=
- =?utf-8?B?djB0VW5oMk53L2U4di9QRHJvUDhKc2dXdUU4aFE5UHpuK0M1cmdxVzZzYW5U?=
- =?utf-8?B?YlZsSjJpQmpxU3lUS21WNW5ldzlETlg0Vyt3WSt4K0dERk96dHJuM2pCdUZ2?=
- =?utf-8?B?NjVwRHphT3RCZERNUjUrWloxQW9qdVZyVllOY3pEemVnbWVYTWhtaFFrZnpZ?=
- =?utf-8?B?c05nejBBaitROVhVMDJtVlNFZnhLYnZXRVFXRHE0VVB5TVZ1aHVnVlBBc0JK?=
- =?utf-8?B?cWV4ZFN2Unl5ZkgvcndvRnJDUTN5Z3BhNUtIeWZKQThVQWhLMmJ6NXIvNmR3?=
- =?utf-8?B?RGxHanBYMllnK0FsVVdvVC94VXlRWmVQS0pETDlXai9XYkpKai8wcWNyQkJw?=
- =?utf-8?B?QVE1c1Z5MDN1Z011aWFZL3RaSTdPNTJNanA2cktxRFNnVGdSTnlsN2RLYUND?=
- =?utf-8?B?L092d3VnZWVmZXFhNXhwZnFvd1ZacVIyYU4zazhSSnB2QlM4MlVOMmhVbEZr?=
- =?utf-8?B?azlvZWMyUjhvdlJ6VTRLTUFpQnA0U1hPYjFXM3dvVnVoalNQd3dwRUZRNTdj?=
- =?utf-8?B?bDRSSzBnN0NtcWVod3EzVzZHUEprbFhnRUs3bGkxWnpIZFVBVHR3dmFFbUNL?=
- =?utf-8?B?VUxpdnRBUHYvMExoekljQ28valpObHdicmh4bi9KY1U0TmJneUNUSTdxL2Vx?=
- =?utf-8?B?RCtxMkxkMnRwY1lpaDZRa2lUelNtQ09XKzZlV25hL09TZ1JLZkU3N0ZxaEhZ?=
- =?utf-8?B?VVVFanJIYkZDcFAzYnR4U3NCb1pUZmpiY3BRSEVCMnhuTTcxb2c5aXJqVkJ5?=
- =?utf-8?B?YTRCejE3TlRLbDVIaTRxK3ltdWxiSFB1TFVJS2k2VGI5cXNxcllwTThYWURR?=
- =?utf-8?B?VUtoZWNDcWNhMWNLL1JjZkVVZUgwdlUvSkhJWkNWZ3ZSRzQ2UEhLR3VMRC9H?=
- =?utf-8?B?NGdrUk01QVYwenRHTlNEclJ1cEtVb1hUa1JHTmNnbHp6SkkrY1E0N0VWMXh3?=
- =?utf-8?B?MzEvdG83UVlReDF2aWpSRHpUcmJMamVsdEVnVW9OQmdGak5YL1BjRXgxUnZs?=
- =?utf-8?B?N20xM0pGajlXODdoM2trbVBGK290SXNhcWNCeWVuVTI3eTVrWURHUkZUYmpn?=
- =?utf-8?B?aEpBdXBsaHQ2bDhtWFl4dWVZNUhQYmNCZUMzbUhHQzZBVHZSUU5xWndkL2dt?=
- =?utf-8?B?ZWl6YUxsVi9kZTZjMDNvWFhDOEJ0Ni83cEdBTHdpeWxhTklPbFVCNmc1M3pG?=
- =?utf-8?B?L1QzaTdaWU1aRTFKQ1hrNlBGZmdFMVIyQ1FjTGNrMSt3Wk5CTXNJVVRwWFRo?=
- =?utf-8?B?ODJKNVJDbUtRdTdsVmtoR2grNkNlVGZjUG1uSWZ4OEFZTXZyVkg0VWZodzNt?=
- =?utf-8?B?UFpjNEdUakwyeVFPSTBPZUhzcnhUQ0hRZFE2N3pkM3huMjVGdXc5T2dlbStJ?=
- =?utf-8?B?OXdwOEpzT2NBdWhkaHp0QVQwNVRDNmJZNE9QU2grU2M5UUhpOFIrTWZwVnU5?=
- =?utf-8?B?VVFmQ1FZVkkyOG41aFlaRlR1ajRtYjU0SSsvS093Y2YrOFZmQVpYUFpzdVVX?=
- =?utf-8?B?eVczTTVpK1dUNk55VkNWblBnalVGUXRXWERSR0ltL1I4TWRqVklXMU1TS3ph?=
- =?utf-8?B?Wk5mR3QzT2syRHRSNUwvQ2Uyam9jUEIxRnpPS2lHNTVJM0N0cm0rcHRxVDRj?=
- =?utf-8?B?cHFVaDRwVmxWMXI5OUxYN3VuandOQzkwK3Z2TXZaUENocE9NSmNDZ0lhalhl?=
- =?utf-8?Q?5Cz4X6bPYNRg7SqwAoevGpk=3D?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <2ABAAAC46BC2734696C8BF7772E7BCAC@namprd10.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        with ESMTP id S229822AbjBYT6j (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Feb 2023 14:58:39 -0500
+Received: from mout.gmx.net (mout.gmx.net [212.227.17.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26F7216AEB;
+        Sat, 25 Feb 2023 11:58:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.de; s=s31663417;
+        t=1677355106; i=deller@gmx.de;
+        bh=YkYucz17GSZWPtoOISSnGu7cJxGHlyciXBkecwBVDcA=;
+        h=X-UI-Sender-Class:Date:Subject:To:Cc:References:From:In-Reply-To;
+        b=E9VgtiTycyLXcYbKCF91Nf4pk8k0gXJ8Zt2lKrwABCGKq+SCIG/SLjE2r6nxHSJzG
+         YM9sljoX+aDW74+FA3ncZZG1DUow6GtgJ+ZHz6bJdVtt9bb3aH16tZBZA6/GorlRyu
+         S+3SDai9r1fKn+vzokz+dZ1ubNR5X5koMuwfYynAp97x1NB30E+UgT2rlZkdlPb/9s
+         Ap9/WQalBlkgZzkR2jCv0bXayjs1cQZflWAMpeEnaJWtYvVjZAoE1nw0BKrx+fq+mJ
+         3WrJFg4BkXnWydjJ4ZStDpbLksi6CP/EFu12vfbSHaD16oM3h9Pbb6G/IyR8//Npq1
+         1/DYydxDWx2uQ==
+X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
+Received: from [192.168.20.60] ([92.116.139.251]) by mail.gmx.net (mrgmx104
+ [212.227.17.168]) with ESMTPSA (Nemesis) id 1M59C8-1pX79K2xHA-0016fK; Sat, 25
+ Feb 2023 20:58:26 +0100
+Message-ID: <a39d97c1-2ced-d159-f742-e5c6008f79ee@gmx.de>
+Date:   Sat, 25 Feb 2023 20:58:25 +0100
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: YUQEko3ZVWVtzFxE1y95C6oM/B2pdUqf9Ncj2g9QQ9kjFLaC0ubDd3CBF+SirPqcuwa70IOPwHMZ60cJj1wuBgf7Oz6kbl+rSAm4Tg5ntLoBoeEEJoOCJcg6xWsm4zQh962s0uSyE4n99Hskm+kyV17tL8JOY0pCwIKflOWbQdHBgrDLgRP70d3rb9/Q9gYwSFqRuLpwnp56eG+ME7WCwvz0t8er4XB6ZPHbVxe9/F5jh7tzcPbCErAtmL3sbCs6g8Oyudh5TOiapBhfElHJWS21C6f7aTMDggCLZRB49FmjpHgD/IFOaqAdpx8mN1JBW49oEPbW6g4Okmrmb4/rW7eFofkTKoPKJAAAuHAiXlj6RCx7zVNmKcCG/5rSdNzV/gFdnxyjDsf0TMzpw5wwRV0CQk1CAMZjri0x03W9WwBekHzwGIrhFK42RJjQkZtKM2VjzANbDd/VPs57YHK4TwXqmpjvElBJ2ZMJjjyBr+p04udzmD99A2unCkdSknMHXfBIA/kES5b43suMgmYKcS+7js7nBHGcV4A5oPVDfNDfmjZwIZu27sUdFOs2gf5wfQVbQtIvcVXLiftE0MsnHljMdjEa8ZO+Ct0Z9Al205A0OpRyPkPSzLzq2Gu1T/t7xYvwamD4B+zkzs6c8CdMLh1qpcqnm6UTuhKKRxtAXJTR5ImZNp4Af/A42ZiVP3hcpaQHZeeAw/VjgRWYGq0xowARaxHnnui2KGjoFT2w8FLlvMlCqpurEQ2wmekjvzNHEjZ8hvUur6fAz1oRRCUSnL0IePGMGyvs7P/LpaqsHZQ=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: CH2PR10MB4312.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 78991162-2c44-4335-d25e-08db1702b1ed
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Feb 2023 07:34:14.4958
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: GvhdN81dd46XMVv1bsfoSoUe4q+uucygSqTl7G6xeOTnF79E3L4ZTjzF+31faUQK41KPEG/J93z9OOC4l3sBZjZmjOkJcpmMsOIF5k3Oo3w=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR10MB7360
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.219,Aquarius:18.0.930,Hydra:6.0.562,FMLib:17.11.170.22
- definitions=2023-02-25_04,2023-02-24_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0 spamscore=0
- mlxscore=0 phishscore=0 suspectscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
- definitions=main-2302250059
-X-Proofpoint-GUID: Gz3OYn8k5NuH_qF0CbZWiP9Q-u0GeLnG
-X-Proofpoint-ORIG-GUID: Gz3OYn8k5NuH_qF0CbZWiP9Q-u0GeLnG
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [Syzkaller & bisect] There is "xfs_dquot_alloc" related BUG in
+ v6.2 in guest
+Content-Language: en-US
+To:     Pengfei Xu <pengfei.xu@intel.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Cc:     asml.silence@gmail.com, geert@linux-m68k.org,
+        linux-kernel@vger.kernel.org, heng.su@intel.com
+References: <Y/g/femUL7jZ9gF3@xpf.sh.intel.com>
+From:   Helge Deller <deller@gmx.de>
+In-Reply-To: <Y/g/femUL7jZ9gF3@xpf.sh.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:zFjy7zM7kQgttKY7AdWK8QOY5DW1tVcCEpTXA0dbG7T//w0QzNU
+ eer9q9Bo+uuvKAfVpPa0nvQopZ/y6WwOi/IW3Wa55ObgEQ58DOsQupahKlhakpVti6sAwwk
+ gcJrA5RItyMENdr3/2aryxWzckxJ6VvDH+xOcDEqZxgvqmv/+9zSyUvUJJgpWk1lNcsUPnX
+ v9+7uI0zgBOgUvXzWZPUQ==
+UI-OutboundReport: notjunk:1;M01:P0:RNtvFinAGmA=;qw8tztkx3MF9T7OOrv9vmimDcF+
+ btlNY2+0piR5r5MubSqmuEj9elfIM9wLFSaJrMqlLt0nSV343XjTyoMjR6E9i57ZHWg5ZxkDO
+ 0Ou6EhxlsSypUtEtrVo24WwvqIaLwAuwZVo6ndmxsWgvy4ZaQeit/C/YDFlcGhIWNLTt2FSRZ
+ AmkDv6OwZWfZNtlOcIsyfKRxShPMmbrYEUhTHVBeS1Aes0Ba8CcaphTgoWL3arL/BgmrrdcsC
+ pVdJG22PMTk60XLEGJshSt6pg8W9+X2UggEkwcZxxn275OikDpB2nExWWDn7o6YjVVFIwtKY0
+ 4lTJKz9Igb3MVZ8D7/25wRk2q5CkIGmlYRKKdGA9Pl/+yJv8Xp+s8dCEaCQGujgxx5z/4v6d7
+ 4eDivoG9ShSqVbsR18P1Ssu/IBZnAQMu0gMoEvTklqb+NULl+t104hl9fQgbYIuQvbFjUphNK
+ obZ/QJfCXTAiIShLTEnzOiiSqYJqhXucWAwauU0zjlwwnsz1HksTeIKgZtssskhTiieoJUFcl
+ nhK+8Hf+BYo+xwtfsosC5Ah3dLb0+mHxN5xCFQfSjZr6i6kydsElb9SEsUeXw7HSzsq6XJZug
+ AXRTSvrDj+Eq7bJro775rExRp0A2ZpVygIMQf2XZJ9C4RO9hFka82Qj2501P3qbh/6nx5r1ZD
+ GFUwg91zFnUPdJcxxXyeqR7KxC370JK/uYj9XnBjJSPSolVFPEHZImM/tR2mBM22GldReKJpB
+ V6C5dizJw8gsYzoBKq1uyaRDaooDktz2VBTC5kh2phYNKSwI/47RcsTnUGuyfrHghoc0zFOhy
+ isvaAOMk/ooo6HrEUlnln5wf3jFfDVqtxMDxEgGQFBy1Gc04S61vdjvzNzEjWGoY2uX3L7P0y
+ sIy72nusidrXmT8BRERKs+KLIGlSTQmJ3dnFQ5I/iiZ5Z2Iq4OF9yAORsoaq2L4vDI48POsgU
+ 7K/M+YypCN8luUxSj2PN/OFVUss=
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-T24gVGh1LCAyMDIzLTAyLTIzIGF0IDE4OjUxIC0wODAwLCBEYXJyaWNrIEouIFdvbmcgd3JvdGU6
-DQo+IE9uIEZyaSwgRmViIDE3LCAyMDIzIGF0IDA4OjAyOjI5UE0gKzAwMDAsIEFsbGlzb24gSGVu
-ZGVyc29uIHdyb3RlOg0KPiA+IE9uIFRodSwgMjAyMy0wMi0xNiBhdCAxMjowNiAtMDgwMCwgRGFy
-cmljayBKLiBXb25nIHdyb3RlOg0KPiA+ID4gSGkgZXZlcnlvbmUsDQo+ID4gPiANCj4gPiA+IFRo
-aXMgZGVsdWdlIGNvbnRhaW5zIGFsbCBvZiB0aGUgYWRkaXRpb25zIHRvIHRoZSBwYXJlbnQgcG9p
-bnRlcnMNCj4gPiA+IHBhdGNoc2V0IHRoYXQgSSd2ZSBiZWVuIHdvcmtpbmcgb24gZm9yIHRoZSBw
-YXN0IG1vbnRoLsKgIFRoZQ0KPiA+ID4ga2VybmVsDQo+ID4gPiBhbmQNCj4gPiA+IHhmc3Byb2dz
-IHBhdGNoc2V0cyBhcmUgYmFzZWQgb24gQWxsaXNvbidzIHY5cjIgdGFnIGZyb20gbGFzdA0KPiA+
-ID4gd2VlazsNCj4gPiA+IHRoZSBmc3Rlc3RzIHBhdGNoZXMgYXJlIG1lcmVseSBhIHBhcnQgb2Yg
-bXkgZGV2ZWxvcG1lbnQgdHJlZS7CoCBUbw0KPiA+ID4gcmVjYXANCj4gDQo+IDxzbmlwPg0KPiAN
-Cj4gPiBFcm1lcmdlcnNoLCB0aGF0cyBhIGxvdCHCoCBUaGFua3MgZm9yIGFsbCB0aGUgaGFyZCB3
-b3JrLsKgIEkgZmVlbA0KPiA+IGxpa2UgaWYNCj4gPiB3ZSBkb24ndCBjb21lIHVwIHdpdGggYSBw
-bGFuIGZvciByZXZpZXcgdGhvdWdoLCBwZW9wbGUgbWF5IG5vdCBrbm93DQo+ID4gd2hlcmUgdG8g
-c3RhcnQgZm9yIHRoZXNlIGRlbHVnZXMhwqAgTGV0cyBzZWUuLi4gaWYgd2UgaGFkIHRvIGJyZWFr
-DQo+ID4gdGhpcw0KPiA+IGRvd24sIEkgdGhpbmsgd291bGQgZGl2aWRlIGl0IHVwIGJldHdlZW4g
-dGhlIGV4aXN0aW5nIHBhcmVudA0KPiA+IHBvaW50ZXJzDQo+ID4gYW5kIHRoZSBuZXcgcHB0ciBw
-cm9wb3NpdGlvbnMgZm9yIG9mc2NrLg0KPiANCj4gVGhhdCdzIGEgZ29vZCBwbGFjZSB0byBjbGVh
-dmUuDQo+IA0KPiA+IFRoZW4gZnVydGhlciBkaXZpZGUgaXQgYW1vbmcNCj4gPiBrZXJuZWwgc3Bh
-Y2UsIHVzZXIgc3BhY2UgYW5kIHRlc3QgY2FzZS7CoCBJZiBJIGhhZCB0byBwaWNrIG9ubHkgb25l
-DQo+ID4gb2YNCj4gPiB0aGVzZSB0byBmb2N1cyBhdHRlbnRpb24gb24sIHByb2JhYmx5IGl0IHNo
-b3VsZCBiZSBuZXcgb2ZzY2sNCj4gPiBjaGFuZ2VzIGluDQo+ID4gdGhlIGtlcm5lbCBzcGFjZSwg
-c2luY2UgdGhlIHJlc3Qgb2YgdGhlIGRlbHVnZSBpcyByZWFsbHkgY29udGluZ2VudA0KPiA+IG9u
-DQo+ID4gaXQuIA0KPiANCj4gWXVwLsKgIFRob3VnaCB5b3Ugb3VnaHQgdG8gcmVhZCB0aHJvdWdo
-IHRoZSBvZmZsaW5lIGZzY2sgcGF0Y2hlcyB0b28uDQo+IFRob3NlIHRha2UgYSB2ZXJ5IGRpZmZl
-cmVudCBhcHByb2FjaCB0byByZXNvbHZpbmcgcGFyZW50IHBvaW50ZXJzLsKgDQo+IFNvDQo+IG11
-Y2ggb2YgcmVwYWlyIGlzIGJhc2VkIG9uIG51a2luZyBkaXJlY3RvcmllcyB0aGF0IEkgZG9uJ3Qg
-a25vdw0KPiB0aGVyZSdzDQo+IGEgZ29vZCB3YXkgdG8gcmVidWlsZCB0aGVtIGZyb20gcGFyZW50
-IHBvaW50ZXJzLg0KT2ssIHdpbGwgdGFrZSBhIGxvb2sNCg0KPiANCj4gQSB0aG91Z2h0IEkgaGFk
-IHdhcyB0aGF0IHdoZW4gd2UgZGVjaWRlIHRvIHphcCBhIGRpcmVjdG9yeSBkdWUgdG8NCj4gcHJv
-YmxlbXMgaW4gdGhlIGRpcmVjdG9yeSBibG9ja3MgdGhlbXNlbHZlcywgd2UgY291bGQgdGhlbSBp
-bml0aWF0ZSBhDQo+IHNjYW4gb2YgdGhlIHBhcmVudCBwb2ludGVycyB0byB0cnkgdG8gZmluZCBh
-bGwgdGhlIGRpcmVudHMgd2UgY2FuLsKgIEkNCj4gcmFuIGludG8gcHJvYmxlbXMgd2l0aCB0aGF0
-IGFwcHJvYWNoIGJlY2F1c2UgbGlieGZzX2lnZXQgYWxsb2NhdGVzDQo+IGZyZXNoDQo+IHhmc19p
-bm9kZSBvYmplY3RzIChpbnN0ZWFkIG9mIGNhY2hpbmcgYW5kIHNoYXJpbmcgdGhlbSBsaWtlIHRo
-ZQ0KPiBrZXJuZWwNCj4gZG9lcykgYW5kIHRoYXQgbWFkZSBpdCByZWFsbHkgaGFyZCB0byBzY2Fu
-IHRoaW5ncyBpbiBhIGNvaGVyZW50DQo+IG1hbm5lci4NCj4gDQo+ID4gU28gbm93IHdlJ3ZlIG5h
-cnJvd2VkIHRoaXMgZG93biB0byBhIGZldyBzdWJzZXRzOg0KPiA+IA0KPiA+IFtQQVRDSFNFVCB2
-OXIyZDEgMC8zXSB4ZnM6IGJ1ZyBmaXhlcyBmb3IgcGFyZW50IHBvaW50ZXJzDQo+ID4gW1BBVENI
-U0VUIHY5cjJkMSAwLzRdIHhmczogcmV3b3JrIHRoZSBHRVRQQVJFTlRTIGlvY3RsLA0KPiANCj4g
-SWYgeW91IHJlYWQgdGhyb3VnaCB0aGVzZSB0d28gcGF0Y2hzZXRzIGFuZCB0aGluayB0aGV5J3Jl
-IG9rLCB0aGVuDQo+IGVpdGhlciBmb2xkIHRoZSBmaXhlcyBpbnRvIHRoZSBtYWluIHNlcmllcyBv
-ciB0YWNrIHRoZW0gb24gdGhlIGVuZCwNCj4gd2hpY2hldmVyIGlzIGVhc2llci7CoMKgDQpvaywg
-SSdsbCB0YWtlIGEgbG9vaywgSSdsbCBwcm9iYWJseSB0YWNrIHRoZSBmaXJzdCAyIGZpeGVzIHNp
-bmNlIHRoZXkNCmRvbnQgc2VhdCBpbnRvIGFuIGV4aXN0aW5nIHBhdGNoIGluIHRoZSBzZXQuDQoN
-Cj4gSWYgeW91IHRhY2sgdGhlbSBvbiB0aGUgZW5kLCBwbGVhc2UgYWRkIHlvdXINCj4gb3duIFNP
-QiB0YWdzLg0KDQpTdXJlPyAgSSBTT0InZCB0aGUgbGFzdCAyIHBhdGNoZXMgb2YgdGhlIHNldCBp
-biB2MywgYW5kIHRoZW4geW91IHNhaWQNCnRvIG1ha2UgaXQgYW4gUlZCDQoNCj4gDQo+ID4gW1BB
-VENIU0VUIHY5cjJkMSAwMC8yM10geGZzOiBvbmxpbmUgZnNjayBzdXBwb3J0IHBhdGNoZXMNCj4g
-PiBbUEFUQ0hTRVQgdjlyMmQxIDAvN10geGZzOiBvbmxpbmUgcmVwYWlyIG9mIGRpcmVjdG9yaWVz
-DQo+ID4gW1BBVENIU0VUIHY5cjJkMSAwLzJdIHhmczogb25saW5lIGNoZWNraW5nIG9mIHBhcmVu
-dCBwb2ludGVycw0KPiA+IFtQQVRDSFNFVCB2OXIyZDEgMC8zXSB4ZnM6IG9ubGluZSBjaGVja2lu
-ZyBvZiBwYXJlbnQgcG9pbnRlcnMNCj4gPiBbUEFUQ0hTRVQgdjlyMmQxIDAvMl0geGZzOiBvbmxp
-bmUgY2hlY2tpbmcgb2YgZGlyZWN0b3JpZXMNCj4gDQo+IFRoZSBmc2NrIGZ1bmN0aW9uYWxpdHkg
-ZXhpc3RzIHRvIHByb3ZlIHRoZSBwb2ludCB0aGF0IGRpcmVjdG9yeQ0KPiByZXBhaXINCj4gaXMg
-L3ZlcnkvIGF3a3dhcmQgaWYgd2UgaGF2ZSB0byB1cGRhdGUgcF9kaXJvZmZzZXQuwqAgQXMgc3Vj
-aCwgdGhleQ0KPiBmb2N1c2VkIG9uIGdldHRpbmcgdGhlIG1haW4gcGFydHMgcmlnaHQgLi4uIGJ1
-dCB3aXRoIHRoZSBvYnZpb3VzDQo+IHByb2JsZW0gb2YgbWFraW5nIHBwdHJzIGRlcGVuZGVudCBv
-biBvbmxpbmUgZnNjayBwYXJ0IDEgZ2V0dGluZw0KPiBtZXJnZWQuDQo+IA0KPiBTcGVha2luZyBv
-ZiB3aGljaCAtLSBjYW4gd2UgbWVyZ2Ugb25saW5lIGZzY2sgZm9yIDYuND/CoCBQbGVhc2U/IDop
-DQpJJ20gZmluZSB3aXRoIGl0IGFzIGxvbmcgYXMgZXZlcnlvbmUgZWxzZSBpcz8gIEknbSBub3Qg
-c3VyZSB3aG8gdGhpcyBpcw0KZGlyZWN0ZWQgdG8uIEkgYWRtaXR0ZWRseSBoYXZlbid0IGJlZW4g
-YWJsZSB0byB3b3JrIHRocm91Z2ggYWxsIG9mIGl0LA0KYnV0IEkgZG9uJ3QgdGhpbmsgYW55b25l
-IGhhcy4gIEkgZG9uJ3Qga25vdyB0aGF0IGV4aGF1c3RpdmUgcmV2aWV3aW5nDQphcyBhIHdob2xl
-IGlzIHBhcnRpY3VsYXJseSBlZmZlY3RpdmUgdGhvdWdoLiAgQmFjayB3aGVuIHRoZSBjb21iaW5l
-ZA0Kc2V0IG9mICJhdHRyIHJlZmFjdG9yaW5nIiArICJsYXJwIiArICJwYXJlbnQgcG9pbnRlcnMi
-IHdhcyBwYXJ0aWN1bGFybHkNCmxhcmdlLCBJIHVzZWQgdG8ganVzdCBzZW5kIG91dCBzdWJzZXRz
-IHRoYXQgSSB0aG91Z2h0IHdlcmUgbW9yZQ0KcmVhc29uYWJsZSBmb3IgcGVvcGxlIGRpZ2VzdC4g
-IFRoYXQgd2F5IHBlb3BsZSBjYW4gbG9vayBhdCB0aGUgZ2lhbnQNCm1lZ2Etc2V0IGlmIHRoZXkg
-cmVhbGx5IGdvdHRhIHNlZSBpdCwgYnV0IGl0IGtlcHQgdGhlIHJldmlld3MgbW9yZQ0KZm9jdXNl
-ZCBvbiBhIHNvcnQgb2Ygc21hbGxlciBuZXh0IHN0ZXAuDQoNCj4gDQo+ID4gW1BBVENIU0VUIHY5
-cjJkMSAwLzVdIHhmczogZW5jb2RlIHBhcmVudCBwb2ludGVyIG5hbWUgaW4geGF0dHIga2V5DQo+
-IA0KPiBSZXNvbHZpbmcgdGhlIHF1ZXN0aW9ucyBwcmVzZW50ZWQgYnkgdGhpcyBzZXJpZXMgaXMg
-Y3JpdGljYWwgdG8NCj4gbmFpbGluZw0KPiBkb3duIHRoZSBvbmRpc2sgZm9ybWF0IGFuZCBtZXJn
-aW5nIHRoZSBmZWF0dXJlLsKgIEJ1dCB3ZSdsbCBnZXQgdG8NCj4gdGhhdA0KPiBiZWxvdy4NCj4g
-DQo+ID4gW1BBVENIU0VUIHY5cjJkMSAwLzNdIHhmczogdXNlIGZsZXggYXJyYXlzIGZvciBYRlNf
-SU9DX0dFVFBBUkVOVFMsDQo+IA0KPiBJJ2QgbGlrZSB0byBrbm93IHdoYXQgeW91IHRoaW5rIGFi
-b3V0IGNvbnZlcnRpbmcgdGhlIGlvY3RsIGRlZmluaXRpb24NCj4gdG8NCj4gZmxleCBhcnJheXMg
-aW5zdGVhZCBvZiB0aGUgZml4ZWQgc2l6ZSBzdHJ1Y3RzLsKgIEknbSBub3Qgc3VyZSB3aGVyZSB0
-bw0KPiBwdXQgdGhpcyBzZXJpZXMsIHRob3VnaC7CoCBJZiB5b3UgZGVjaWRlIHRoYXQgeW91IHdh
-bnQgJ2VtLCB0aGVuDQo+IGlkZWFsbHkNCj4gdGhleSdkIGJlIGluIHhmc19mcy5oIGZyb20gdGhl
-IGludHJvZHVjdGlvbiBvZiBYRlNfSU9DX0dFVFBBUkVOVFMsDQo+IGJ1dA0KPiBJIGRvbid0IHNl
-ZSBhbnkgcG9pbnQgaW4gYmFja3BvcnRpbmcgdGhlbSBhcm91bmQgInhmczogcmV3b3JrIHRoZQ0K
-PiBHRVRQQVJFTlRTIGlvY3RsIi4NCj4gDQo+IChJIHdvdWxkIGJlIG9rIGlmIHlvdSByb2xsZWQg
-YWxsIG9mIGl0IGludG8gcGF0Y2ggMjUgZnJvbSB0aGUNCj4gb3JpZ2luYWwNCj4gdjkgc2V0LikN
-CkknbGwgdGFrZSBhIGxvb2sgYXQgaXQsIEkgZGlkbnQgcHV0IGEgd2hvbGUgbG90IG9mIGZvY3Vz
-IG9uIHRoZSBpb2N0bA0KaW5pdGlhbGx5IGJlY2F1c2UgdGhlIG9ubHkgdGhpbmcgdGhhdCB3YXMg
-dXNpbmcgaXQgYXQgdGhlIHRpbWUgd2FzIHRoZQ0KdGVzdCBjYXNlLCBhbmQgSSB3YW50ZWQgdG8g
-a2VlcCBhdHRlbnRpb24gbW9yZSBvbiB0aGUgaW5mcmFzdHJ1Y3R1cmUuDQo+IA0KPiA+IE9mIHRo
-b3NlLCBJIHRoaW5rICJ4ZnM6IGVuY29kZSBwYXJlbnQgcG9pbnRlciBuYW1lIGluIHhhdHRyIGtl
-eSIgaXMNCj4gPiB0aGUNCj4gPiBvbmx5IG9uZSB0aGF0IG1pZ2h0IGltcGFjdCBvdGhlciBmZWF0
-dXJlcyBzaW5jZSBpdCdzIGNoYW5nZWluZyB0aGUNCj4gPiBvbmRpc2sgZm9ybWF0IGZyb20gd2hl
-biB3ZSBmaXJzdCBzdGFydGVkIHRoZSBlZmZvcnQgeWVhcnMgYWdvLsKgIFNvDQo+ID4gcHJvYmFi
-bHkgdGhhdCBtaWdodCBiZSB0aGUgYmVzdCBwbGFjZSBmb3IgcGVvcGxlIHRvIHN0YXJ0IHNpbmNl
-IGlmDQo+ID4gdGhpcw0KPiA+IG5lZWRzIHRvIGNoYW5nZSBpdCBtaWdodCBpbXBhY3Qgc29tZSBv
-ZiB0aGUgb3RoZXIgc3Vic2V0cyBpbiB0aGUNCj4gPiBkZWx1Z2UsIG9yIGV2ZW4gZmVhdHVyZXMg
-dGhleSBhcmUgd29ya2luZyBvbiBpZiB0aGV5J3ZlIGJhc2VkDQo+ID4gYW55dGhpbmcNCj4gPiBv
-biB0aGUgZXhpc3RpbmcgcHB0ciBzZXQuDQo+IA0KPiBCaW5nbyENCj4gDQo+IFRoZSBiaWdnZXN0
-IHF1ZXN0aW9uIGFib3V0IHRoZSBmb3JtYXQgY2hhbmdlIGlzIChJTUhPKSB3aGV0aGVyIHdlJ3Jl
-DQo+IG9rDQo+IHdpdGggdXNpbmcgYSBoYXNoIGZ1bmN0aW9uIGZvciBwYXJlbnQgcG9pbnRlciBu
-YW1lcyB0aGF0IGRvbid0IGZpdCBpbg0KPiB0aGUgYXR0ciBrZXkgc3BhY2UsIGFuZCB3aGljaCBo
-YXNoPw0KPiANCj4gVGhlIHNoYTIgZmFtaWx5IHdhcyBkZXNpZ25lZCB0byBiZSBjb2xsaXNpb24g
-cmVzaXN0YW50LCBidXQgSSBkb24ndA0KPiBhbnRpY2lwYXRlIHRoYXQgd2lsbCBsYXN0IGZvcmV2
-ZXIuwqAgVGhlIGhhc2ggaXMgY29tcHV0ZWQgZnJvbSAodGhlDQo+IGZ1bGwNCj4gbmFtZSBhbmQg
-dGhlIGNoaWxkIGdlbmVyYXRpb24gbnVtYmVyKSB3aGVuIHRoZSBkaXJlbnQgbmFtZSBpcyBsb25n
-ZXINCj4gdGhhbiAyNDMgYnl0ZXMuwqAgVGhlIGZpcnN0IDE3OSBieXRlcyBvZiB0aGUgZGlyZW50
-IG5hbWUgYXJlIHN0aWxsDQo+IHdyaXR0ZW4gaW4gdGhlIHBhcmVudCBwb2ludGVyIGF0dHIgbmFt
-ZS7CoCBBbiBhdHRhY2tlciB3b3VsZCBoYXZlIHRvDQo+IGZpbmQNCj4gYSBjb2xsaXNpb24gdGhh
-dCBvbmx5IGNoYW5nZXMgdGhlIGxhc3QgNzYgYnl0ZXMgb2YgdGhlIGRpcmVudCBuYW1lLA0KPiBh
-bmQNCj4gdGhleSdkIGhhdmUgdG8ga25vdyB0aGUgZ2VuZXJhdGlvbiBudW1iZXIgYXQgcnVudGlt
-ZS4NCj4gDQo+IChOb3RlOiBkaXJlbnQgbmFtZXMgc2hvcnRlciB0aGFuIDI0MyBieXRlcyBhcmUg
-d3JpdHRlbiBkaXJlY3RseSBpbnRvDQo+IHRoZQ0KPiBwYXJlbnQgcG9pbnRlciB4YXR0ciBuYW1l
-LCBubyBoYXNoaW5nIHJlcXVpcmVkLikNCj4gDQo+IEkgL3RoaW5rLyB0aGF0J3MgZ29vZCBlbm91
-Z2gsIGJ1dCBJJ20gbm8gY3J5cHRhbmFseXN0LsKgIFRoZQ0KPiBhbHRlcm5hdGl2ZQ0KPiB3b3Vs
-ZCBiZSB0byBjaGFuZ2UgdGhlIHhhdHRyIGZvcm1hdCBzbyB0aGF0IHRoZSBuYW1lbGVuIGZpZWxk
-IGluIHRoZQ0KPiBsZWFmIHN0cnVjdHVyZSB0byBlbmNvZGUgKm9ubHkqIHRoZSBuYW1lIGNvbXBv
-bmVudCBvZiB0aGUgcGFyZW50DQo+IHBvaW50ZXIuwqAgVGhpcyB3b3VsZCBsZWFkIHRvIGEgbG90
-IG9mIHNwZWNpYWwgY2FzZWQgeGF0dHIgY29kZSBhbmQNCj4gcHJvYmFibHkgYSBsb3Qgb2YgYnVn
-cyBhbmQgb3RoZXIgc3R1cGlkIHByb2JsZW1zLCB3aGljaCBpcyB3aHkgSQ0KPiBkaWRuJ3QNCj4g
-dGFrZSB0aGF0IHJvdXRlLg0KPiANCj4gVGhvdWdodHM/DQoNCkhtbSwgd2VsbCwgaXQgc291bmRz
-IGxpa2UgYSByaXNrIHRvIGJlIHdlaWdoZWQuICBJdCB3b3VsZG4ndCBoYXBwZW4NCnZlcnkgb2Z0
-ZW4uICBJdCBzZWVtcyBsaWtlIGl0IHdvdWxkIGJlIGV4dHJlbWVseSByYXJlLiAgQnV0IHdoZW4g
-aXQNCmRvZXMgaXQgd2lsbCBsaWtlbHkgYmUgcXVpdGUgdW5wbGVhc2FudC4gIA0KDQpJIHRoaW5r
-IGFub3RoZXIgcXVlc3Rpb24gdG8gYXNrIHdvdWxkIGJlIGhvdyBvZnRlbiBkb2VzIHRoZSBwYXJl
-bnQNCnBvaW50ZXIgcmVhbGx5IG5lZWQgdG8gYmUgdXBkYXRlZCBpbiBhIHJlcGFpcj8gIEluIG1v
-c3QgY2FzZXMsIGFuDQpvcnBoYW5lZCBpbm9kZSB3aWxsIGxpa2VseSBiZSBhYmxlIHRvIHJldHVy
-biB0byB0aGUgZGlyb2ZzZXQgZnJvbQ0Kd2hlbmNlIGl0IGNhbWUuICBTbyBhbiB1cGRhdGUgbWF5
-IGJlIHVubGlrZWx5LiAgRXZlbiBtb3JlIHNvIHdvdWxkIGJlDQp0aGUgd29yc3QgY2FzZSBvZiBu
-ZWVkaW5nIHRvIHVwZGF0ZSBjcmF6eSBhbW91bnRzIG9mIHBhcmVudCBwb2ludGVycy4gDQpTbyAg
-YW5vdGhlciBvcHRpb24gaXMgdG8gc2ltcGx5IHBpY2sgYSBjYXAgYW5kIGVycm9yIG91dCBpZiB0
-aGUgZGVtYW5kDQppcyB0b28gbXVjaC4gIExpa2VseSBpZiB0aGlzIGNvbmRpdGlvbiBkb2VzIGFy
-aXNlLCB0aGVyZSdzIHByb2JhYmx5DQpiaWdnZXIgaXNzdWVzIGdvaW5nIG9uLg0KDQpXaGlsZSBv
-cHRpb24gQSBpcyBzdWJzdGFudGlhbGx5IG1vcmUgcmFyZSB0aGFuIG9wdGlvbiBCLCB5b3UgY291
-bGQNCnByb2JhYmx5IHBpY2sgZWl0aGVyIG9uZSBhbmQgcmFyZWx5IGVuY291bnRlciB0aGUgZXJy
-b3IgcGF0aC4gIFdoaWxlDQpvcHRpb24gQSBkb2VzIGhhdmUgdGhlIGFkdmFudGFnZSBvZiBiZWlu
-ZyBtb3JlIG1lbW9yeSBjb25zZXJ2YXRpdmUsIGl0DQpoYXMgdGhlIGRpc2FkdmFudGFnZSBvZiBw
-b3NzaWJseSBiZWluZyBhIHJlYWxseSB1Z2x5IHNsZWVwaW5nIGJ1Zy4gDQpXaGlsZSBvcHRpb24g
-QiBtaWdodCBlcnJvciBvdXQgd2hlbiBvcHRpb24gQSB3b3VsZCBoYXZlIG5vdCwgaXQgd291bGQN
-CmF0IGxlYXN0IGJlIGNsZWFyIGFzIHRvIHdoeSBpdCBkaWQsIGFuZCBwcm9iYWJseSBlbHVkZSB0
-byB0aGUgcHJlc2VuY2UNCm9mIGJpZ2dlciBwcm9ibGVtcywgc3VjaCBhcyBhbiBpbnRlcm5hbCBi
-dWcgdGhhdCB3ZSBzaG91bGQgcHJvYmFibHkgZ28NCmNhdGNoLCBvciBwZXJoYXBzIHNvbWV0aGlu
-ZyBleHRlcm5hbCBjb3JydXB0aW5nIHRoZSBmcyBpbWFnZSwgd2hpY2gNCm9mc2NrIG1heSBub3Qg
-YmUgYWJsZSB0byBzb2x2ZSBhbnl3YXkuICANCg0KRldJVyBJIHNlZW0gdG8gcmVjYWxsIHJ1bm5p
-bmcgYWNyb3NzIHRoZSBpZGVhIG9mIHVzaW5nIGhhc2hlcyBhcyBrZXlzDQppbiBvdGhlciBwcm9q
-ZWN0cyBJJ3ZlIGJlZW4gb24sIGFuZCBtb3N0IG9mIHRoZSB0aW1lIHRoZSByYXJpdHkgb2YgdGhl
-DQpjb2xsaXNpb24gd2FzIGNvbnNpZGVyZWQgYW4gYWNjZXB0YWJsZSByaXNrLCB0aG91Z2ggaXQn
-cyByZWFsbHkgYWJvdXQNCndoaWNoIHJpc2sgcmVhbGx5IGJvdGhlcnMgeW91IG1vcmUuDQoNCj4g
-DQo+ID4gSSBmZWVsIGxpa2UgYSA1IHBhdGNoIHN1YnNldCBpcyBhIHZlcnkgcmVhc29uYWJsZSB0
-aGluZyB0byBhc2sNCj4gPiBwZW9wbGUNCj4gPiB0byBnaXZlIHRoZWlyIGF0dGVudGlvbiB0by7C
-oCBUaGF0IHdheSB0aGV5IGRvbnQgZ2V0IGxvc3QgaW4gdGhpbmdzDQo+ID4gbGlrZQ0KPiA+IG5p
-dHMgZm9yIG9wdGltaXphdGlvbnMgdGhhdCBtaWdodCBub3QgZXZlbiBtYXR0ZXIgaWYgc29tZXRo
-aW5nIGl0DQo+ID4gZGVwZW5kcyBvbiBjaGFuZ2VzLg0KPiA+IA0KPiA+IEZvciB0aGUgbW9zdCBw
-YXJ0IEkgYW0gb2sgd2l0aCBjaGFuZ2VpbmcgdGhlIGZvcm1hdCBhcyBsb25nIGFzDQo+ID4gZXZl
-cnlvbmUNCj4gPiBpcyBhd2FyZSBhbmQgaW4gYWdyZWVtZW50IHNvIHRoYXQgd2UgZG9udCBnZXQg
-Y2F1Z2h0IHVwIHJlLWNvZGluZw0KPiA+IGVmZm9ydHMgdGhhdCBzZWVtIHRvIGhhdmUgc3R1Z2ds
-ZWQgd2l0aCBkaXNhZ3JlZW1lbnRzIG5vdyBvbiB0aGUNCj4gPiBzY2FsZQ0KPiA+IG9mIGRlY2Fk
-ZXMuwqAgU29tZSBvZiB0aGVzZSBwYXRjaGVzIHdlcmUgYWxyZWFkeSB2ZXJ5IG9sZCBieSB0aGUN
-Cj4gPiB0aW1lIEkNCj4gPiBnb3QgdGhlbSENCj4gDQo+IEhoZWVoaGUuwqAgU2FtZSBoZXJlIC0t
-IHJtYXAgd2FzIHByZXR0eSBvbGQgYnkgdGhlIHRpbWUgSSBzdGFydGVkDQo+IHB1c2hpbmcNCj4g
-dGhhdCBmb3IgcmVhbHMuIDopDQo+IA0KPiA+IE9uIGEgc2lkZSBub3RlLCB0aGVyZSBhcmUgc29t
-ZSBwcmVsaW1pbmFyeSBwYXRjaGVzIG9mIGtlcm5lbCBzaWRlDQo+ID4gcGFyZW50IHBvaW50ZXJz
-IHRoYXQgYXJlIGVpdGhlciBsYXJwIGZpeGVzIG9yIHJlZmFjdG9yaW5nIG5vdA0KPiA+IHNlbnNp
-dGl2ZQ0KPiA+IHRvIHRoZSBwcm9wb3NlZCBvZnNjayBjaGFuZ2VzLsKgIFRoZXNlIHBhdGNoZXMg
-YSBoYXZlIGJlZW4gZmxvYXRpbmcNCj4gPiBhcm91bmQgZm9yIGEgd2hpbGUgbm93LCBzbyBpZiBu
-byBvbmUgaGFzIGFueSBncmlwZXMsIEkgdGhpbmsganVzdA0KPiA+IG1lcmdpbmcgdGhvc2Ugd291
-bGQgaGVscCBjdXQgZG93biB0aGUgYW1vdW50IG9mIHJlYmFzZWluZywgdXNlcg0KPiA+IHNwYWNl
-DQo+ID4gcG9ydGluZyBhbmQgcGF0Y2ggcmV2aWV3aW5nIHRoYXQgZ29lcyBvbiBmb3IgZXZlcnkg
-dmVyc2lvbi7CoCAobWF5YmUNCj4gPiB0aGUNCj4gPiBmaXJzdCAxIHRob3VnaCA3IG9mIHRoZSAy
-OCBwYXRjaCBzZXQsIGlmIGZvbGtzIGFyZSBvayB3aXRoIHRoYXQpDQo+IA0KPiBJIHRob3VnaHQg
-YWJvdXQgZG9pbmcgdGhhdCBmb3IgNi4zLCBidXQgSSBmb3VuZCBlbm91Z2ggYnVncyBpbiB0aGUN
-Cj4gbG9ja2luZyBzdHVmZiAocmVjYWxsIHRoZSBmaXJzdCBidWdmaXggc2VyaWVzKSB0aGF0IEkg
-aGVsZCBiYWNrLsKgIEknbQ0KPiBub3Qgc3VyZSBhYm91dCB0aGUgdHdvICJJbmNyZWFzZSA8Ymxh
-aD4iIHBhdGNoZXMgLS0gdGhleSdsbCBibG9hdA0KPiBrZXJuZWwNCj4gc3RydWN0dXJlcyB3aXRo
-b3V0IGEgcmVhbCB1c2VyIGZvciB0aGVtLg0KDQpJIGRvbid0IHRoaW5rIHRoZSBmaXJzdCA3IGFy
-ZSBvcmRlciBzZW5zaXRpdmUsIHdlIHNob3VsZCBiZSBhYmxlIHRvIGRvDQpqdXN0IDEsIDQsIDUs
-IDYgYW5kIDcuDQoNCj4gDQo+IDxzaHJ1Zz4NCj4gDQo+ID4gSSB0aGluayB0aGUgc2hlYXIgc2l6
-ZSBvZiBzb21lIG9mIHRoZXNlIHNldHMgdGVuZCB0byB3b3JrIGFnYWluc3QNCj4gPiB0aGVtLA0K
-PiA+IGFzIHBlb3BsZSBsaWtlbHkgY2Fubm90IGFmZm9yZCB0aGUgdGltZSBibG9jayB0aGV5IHBy
-ZXNlbnQgb24gdGhlDQo+ID4gc3VyZmFjZS4NCj4gDQo+IEFncmVlZC7CoCBBdCB0aGlzIHBvaW50
-LCBJJ3ZlIHdvcmtlZCB0aHJvdWdoIGVub3VnaCBvZiB0aGUgcGFyZW50DQo+IHBvaW50ZXJzIGNv
-ZGUgdG8gdW5kZXJzdGFuZCB3aGF0J3MgZ29pbmcgb24gdGhhdCBJJ20gb2sgd2l0aCBtZXJnaW5n
-DQo+IGl0DQo+IG9uY2Ugd2Ugc2V0dGxlIHRoZSBhYm92ZSBxdWVzdGlvbi4NCj4gDQo+IEZXSVcg
-dGhlIHdob2xlIHNlcmllcyAoa2VybmVsK3hmc3Byb2dzK2ZzdGVzdHMpIGhhcyBiZWVuIHBhc3Np
-bmcgbXkNCj4gbmlnaHRseSBRQSBmYXJtIGZvciBhIGNvdXBsZSBvZiB3ZWVrcyBub3cgZGVzcGl0
-ZSBteSBjb25zdGFudA0KPiBoYW1tZXJpbmcNCj4gb24gaXQsIHNvIEkgdGhpbmsgdGhlIGltcGxl
-bWVudGF0aW9uIGlzIHJlYWR5Lg0KPiANCj4gPiBTbyBJIHRoaW5rIHdlIHdvdWxkIGRvIHdlbGwg
-dG8gZmluZCBhIHdheSB0byBpbnRyb2R1Y2UgdGhlbQ0KPiA+IGF0IGEgcmVhc29uYWJsZSBwYWNl
-IGFuZCBrZWVwIGF0dGVudGlvbiBmb2N1c2VkIG9uIHRoZSBzdWJzZWN0aW9ucw0KPiA+IHRoYXQN
-Cj4gPiBzaG91bGQgcmVxdWlyZSBtb3JlIHRoYW4gb3RoZXJzLCBhbmQgaG9wZWZ1bGx5IGtlZXAg
-dGhpbmcgbW92aW5nIGluDQo+ID4gYQ0KPiA+IHByb2dyZXNzaXZlIGRpcmVjdGlvbi4NCj4gDQo+
-IEkgZGlzYWdyZWUgLS0gSSB3YW50IHRvIG1lcmdlIG9ubGluZSBmc2NrIHBhcnQgMSBzbyBJIGNh
-biBnZXQgdGhhdA0KPiBvdXQNCj4gb2YgbXkgZGV2IHRyZWVzLsKgIFRoZW4gSSB3YW50IHRvIGZv
-Y3VzIG9uIGdldHRpbmcgdGhpcyBvdmVyIHRoZQ0KPiBmaW5pc2gNCj4gbGluZSBhbmQgbWVyZ2Vk
-LsKgIEJ1dCB0aGVuIEknbSBub3Qga25vd24gZm9yIGluY3JlbWVudGFsaXNtLiA6UA0KV2VsbCwg
-SSBub3RpY2UgcGVvcGxlIHJlc3BvbmQgYmV0dGVyIHRvIHN1YnNldHMgaW4gc21hbGxlciBkb3Nl
-cw0KdGhvdWdoLiAgQW5kIHRoZW4gaXQgZ2l2ZXMgdGhlIHByZWxpbWluYXJ5IHBhdGNoZXMgdGlt
-ZSB0byBzdGFiaWxpemUgaWYNCnBlb3BsZSBkbyBmaW5kIGFuIGlzc3VlLg0KDQo+IA0KPiAtLUQN
-Cj4gDQo+ID4gVGh4IQ0KPiA+IEFsbGlzb24NCj4gPiANCg0K
+Looping in xfs mailing list as this seems to be a XFS problem...
+
+On 2/24/23 05:39, Pengfei Xu wrote:
+> Hi Helge Deller,
+>
+> Greeting!
+>
+> Reproduced code: https://github.com/xupengfe/syzkaller_logs/blob/main/23=
+0222_152458_xfs_dquot_alloc_bug/repro.c
+> Kconfig: https://github.com/xupengfe/syzkaller_logs/blob/main/230222_152=
+458_xfs_dquot_alloc_bug/kconfig_origin
+> Issue dmesg: https://github.com/xupengfe/syzkaller_logs/blob/main/230222=
+_152458_xfs_dquot_alloc_bug/v6.2_c9c3395d5e3dcc6daee66c6908354d47bf98cb0c_=
+dmesg.log
+> Bisect info(Might not be correct this time, but just gave some clues to =
+the problem)
+> https://github.com/xupengfe/syzkaller_logs/blob/main/230222_152458_xfs_d=
+quot_alloc_bug/bisect_info.log
+>
+> All detailed info: https://github.com/xupengfe/syzkaller_logs/tree/main/=
+230222_152458_xfs_dquot_alloc_bug
+>
+> Platform: ADL-S, and it could be reproduced on x86 platform in guest.
+> There is "xfs_dquot_alloc" related BUG in v6.2:
+>
+> [   71.149963] xfs filesystem being mounted at /root/syzkaller.6TPmw0/0/=
+file0 supports timestamps until 2038 (0x7fffffff)
+> [   71.150653] 00000000: 58 41 47 49 00 00 00 01 00 00 00 00 00 00 80 00=
+  XAGI............
+> [   71.151006] 00000010: 00 00 00 40 00 00 00 06 00 00 00 01 00 00 00 37=
+  ...@...........7
+> [   71.151321] 00000020: 00 00 00 20 ff ff ff ff ff ff ff ff ff ff ff ff=
+  ... ............
+> [   71.151633] 00000030: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
+  ................
+> [   71.151946] 00000040: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
+  ................
+> [   71.152259] 00000050: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
+  ................
+> [   71.152570] 00000060: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
+  ................
+> [   71.152881] 00000070: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
+  ................
+> [   71.153193] 00000080: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
+  ................
+> [   71.153607] 00000090: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
+  ................
+> [   71.153921] 000000a0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
+  ................
+> [   71.154237] 000000b0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
+  ................
+> [   71.154549] 000000c0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
+  ................
+> [   71.154865] 000000d0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
+  ................
+> [   71.155180] 000000e0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
+  ................
+> [   71.155494] 000000f0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
+  ................
+> [   71.155807] 00000100: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
+  ................
+> [   71.156119] 00000110: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
+  ................
+> [   71.156433] 00000120: ff ff ff ff ff ff ff ff 00 00 00 00 00 00 00 00=
+  ................
+> [   71.156747] 00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00=
+  ................
+> [   71.157059] 00000140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00=
+  ................
+> [   71.157382] 00000150: 00 00 00 00 00 00 00 00                        =
+  ........
+> [   71.157671] XFS (loop3): Internal error xfs_iunlink_remove_inode at l=
+ine 2013 of file fs/xfs/xfs_inode.c.  Caller xfs_ifree+0xed/0x9e0
+> [   71.158154] CPU: 1 PID: 137 Comm: kworker/1:3 Not tainted 6.2.0-c9c33=
+95d5e3d #1
+> [   71.158447] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BI=
+OS rel-1.16.0-0-gd239552ce722-prebuilt.qemu.org 04/01/2014
+> [   71.158890] Workqueue: xfs-inodegc/loop3 xfs_inodegc_worker
+> [   71.159117] Call Trace:
+> [   71.159220]  <TASK>
+> [   71.159313]  dump_stack_lvl+0xa7/0xdb
+> [   71.159478]  dump_stack+0x19/0x1f
+> [   71.159621]  xfs_corruption_error+0xd7/0xe0
+> [   71.159805]  ? xfs_ifree+0xed/0x9e0
+> [   71.159957]  xfs_iunlink_remove+0x32e/0x590
+> [   71.160136]  ? xfs_ifree+0xed/0x9e0
+> [   71.160290]  xfs_ifree+0xed/0x9e0
+> [   71.160432]  ? write_comp_data+0x2f/0x90
+> [   71.160600]  ? xfs_trans_ijoin+0x47/0x70
+> [   71.160768]  ? __sanitizer_cov_trace_pc+0x25/0x60
+> [   71.160964]  ? xfs_trans_add_item+0x79/0x1c0
+> [   71.161151]  xfs_inactive_ifree+0xf8/0x2a0
+> [   71.161324]  xfs_inactive+0x226/0x340
+> [   71.161482]  xfs_inodegc_worker+0xd3/0x430
+> [   71.161657]  process_one_work+0x3b1/0x960
+> [   71.161837]  worker_thread+0x52/0x660
+> [   71.161999]  ? __pfx_worker_thread+0x10/0x10
+> [   71.162184]  kthread+0x161/0x1a0
+> [   71.162331]  ? __pfx_kthread+0x10/0x10
+> [   71.162498]  ret_from_fork+0x29/0x50
+> [   71.162670]  </TASK>
+> [   71.162773] XFS (loop3): Corruption detected. Unmount and run xfs_rep=
+air
+> [   71.163039] XFS (loop3): xfs_inactive_ifree: xfs_ifree returned error=
+ -117
+> [   71.163869] repro: attempt to access beyond end of device
+> [   71.163869] loop3: rw=3D432129, sector=3D65535, nr_sectors =3D 16 lim=
+it=3D65536
+> [   71.164410] XFS (loop3): log I/O error -5
+> [   71.166002] XFS (loop3): Metadata I/O Error (0x1) detected at xfs_ina=
+ctive_ifree+0x232/0x2a0 (fs/xfs/xfs_inode.c:1612).  Shutting down filesyst=
+em.
+> [   71.166541] XFS (loop3): Please unmount the filesystem and rectify th=
+e problem(s)
+> [   71.167188] XFS (loop1): DAX unsupported by block device. Turning off=
+ DAX.
+> [   71.167530] XFS (loop7): DAX unsupported by block device. Turning off=
+ DAX.
+> [   71.167859] XFS (loop6): DAX unsupported by block device. Turning off=
+ DAX.
+> [   71.168188] XFS (loop4): DAX unsupported by block device. Turning off=
+ DAX.
+> [   71.168554] XFS (loop1): Mounting V4 Filesystem 86ecfda0-089a-461f-b0=
+78-1b43afedebc1
+> [   71.168995] XFS (loop7): Mounting V4 Filesystem 86ecfda0-089a-461f-b0=
+78-1b43afedebc1
+> [   71.169595] XFS (loop2): Unmounting Filesystem 86ecfda0-089a-461f-b07=
+8-1b43afedebc1
+> [   71.169614] XFS (loop6): Mounting V4 Filesystem 86ecfda0-089a-461f-b0=
+78-1b43afedebc1
+> [   71.170444] XFS (loop4): Mounting V4 Filesystem 86ecfda0-089a-461f-b0=
+78-1b43afedebc1
+> [   71.172161] XFS (loop3): Quotacheck: Unsuccessful (Error -5): Disabli=
+ng quotas.
+> [   71.172510] xfs filesystem being mounted at /root/syzkaller.mc3H24/0/=
+file0 supports timestamps until 2038 (0x7fffffff)
+> [   71.174633] XFS (loop3): Unmounting Filesystem 86ecfda0-089a-461f-b07=
+8-1b43afedebc1
+> [   71.175936] XFS (loop5): DAX unsupported by block device. Turning off=
+ DAX.
+> [   71.176303] XFS (loop5): Mounting V4 Filesystem 86ecfda0-089a-461f-b0=
+78-1b43afedebc1
+> [   71.178679] XFS (loop4): totally zeroed log
+> [   71.179069] XFS (loop4): Ending clean mount
+> [   71.179442] XFS (loop4): Quotacheck needed: Please wait.
+> [   71.183738] XFS (loop6): totally zeroed log
+> [   71.184537] repro: attempt to access beyond end of device
+> [   71.184537] loop4: rw=3D432129, sector=3D65535, nr_sectors =3D 16 lim=
+it=3D65536
+> [   71.184637] XFS (loop6): Ending clean mount
+> [   71.185052] XFS (loop4): log I/O error -5
+> [   71.185339] XFS (loop6): Quotacheck needed: Please wait.
+> [   71.185404] XFS (loop4): Filesystem has been shut down due to log err=
+or (0x2).
+> [   71.185883] XFS (loop4): Please unmount the filesystem and rectify th=
+e problem(s).
+> [   71.186372] XFS (loop4): Quotacheck: Unsuccessful (Error -5): Disabli=
+ng quotas.
+> [   71.186705] xfs filesystem being mounted at /root/syzkaller.uq7iOt/0/=
+file0 supports timestamps until 2038 (0x7fffffff)
+> [   71.187608] repro: attempt to access beyond end of device
+> [   71.187608] loop6: rw=3D432129, sector=3D65535, nr_sectors =3D 16 lim=
+it=3D65536
+> [   71.188127] XFS (loop6): log I/O error -5
+> [   71.188317] XFS (loop6): Filesystem has been shut down due to log err=
+or (0x2).
+> [   71.188599] XFS (loop6): Please unmount the filesystem and rectify th=
+e problem(s).
+> [   71.188998] XFS (loop6): Quotacheck: Unsuccessful (Error -5): Disabli=
+ng quotas.
+> [   71.189324] xfs filesystem being mounted at /root/syzkaller.OjSrkA/0/=
+file0 supports timestamps until 2038 (0x7fffffff)
+> [   71.191782] XFS (loop4): Unmounting Filesystem 86ecfda0-089a-461f-b07=
+8-1b43afedebc1
+> [   71.193911] XFS (loop6): Unmounting Filesystem 86ecfda0-089a-461f-b07=
+8-1b43afedebc1
+> [   71.207573] XFS (loop1): totally zeroed log
+> [   71.207813] XFS (loop7): totally zeroed log
+> [   71.208396] XFS (loop7): Ending clean mount
+> [   71.208664] XFS (loop1): Ending clean mount
+> [   71.209093] XFS (loop1): Quotacheck needed: Please wait.
+> [   71.210841] XFS (loop7): Quotacheck needed: Please wait.
+> [   71.216659] repro: attempt to access beyond end of device
+> [   71.216659] loop7: rw=3D432129, sector=3D65535, nr_sectors =3D 16 lim=
+it=3D65536
+> [   71.217165] XFS (loop7): log I/O error -5
+> [   71.217375] XFS (loop7): Filesystem has been shut down due to log err=
+or (0x2).
+> [   71.217674] XFS (loop7): Please unmount the filesystem and rectify th=
+e problem(s).
+> [   71.218071] XFS (loop7): Quotacheck: Unsuccessful (Error -5): Disabli=
+ng quotas.
+> [   71.218402] xfs filesystem being mounted at /root/syzkaller.Q5dMMG/0/=
+file0 supports timestamps until 2038 (0x7fffffff)
+> [   71.219906] XFS (loop7): Unmounting Filesystem 86ecfda0-089a-461f-b07=
+8-1b43afedebc1
+> [   71.224443] repro: attempt to access beyond end of device
+> [   71.224443] loop1: rw=3D432129, sector=3D65535, nr_sectors =3D 16 lim=
+it=3D65536
+> [   71.224960] XFS (loop1): log I/O error -5
+> [   71.225151] XFS (loop1): Filesystem has been shut down due to log err=
+or (0x2).
+> [   71.225543] XFS (loop1): Please unmount the filesystem and rectify th=
+e problem(s).
+> [   71.225966] XFS (loop1): Quotacheck: Unsuccessful (Error -5): Disabli=
+ng quotas.
+> [   71.226310] xfs filesystem being mounted at /root/syzkaller.qCVHXV/0/=
+file0 supports timestamps until 2038 (0x7fffffff)
+> [   71.227591] BUG: kernel NULL pointer dereference, address: 0000000000=
+0002a8
+> [   71.227873] #PF: supervisor read access in kernel mode
+> [   71.228077] #PF: error_code(0x0000) - not-present page
+> [   71.228280] PGD c313067 P4D c313067 PUD c1fe067 PMD 0
+> [   71.228494] Oops: 0000 [#1] PREEMPT SMP NOPTI
+> [   71.228673] CPU: 0 PID: 161 Comm: kworker/0:4 Not tainted 6.2.0-c9c33=
+95d5e3d #1
+> [   71.228961] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BI=
+OS rel-1.16.0-0-gd239552ce722-prebuilt.qemu.org 04/01/2014
+> [   71.229400] Workqueue: xfs-inodegc/loop1 xfs_inodegc_worker
+> [   71.229626] RIP: 0010:xfs_dquot_alloc+0x95/0x1e0
+> [   71.229820] Code: 80 15 ad 85 48 c7 c6 7c 6b 92 83 e8 75 0f 6b ff 49 =
+8b 8d 60 01 00 00 44 89 e0 31 d2 48 c7 c6 18 ae 8f 83 48 8d bb 18 02 00 00=
+ <f7> b1 a8 02 2
+> [   71.230528] RSP: 0018:ffffc90000babc20 EFLAGS: 00010246
+> [   71.230737] RAX: 0000000000000009 RBX: ffff8880093c98c0 RCX: 00000000=
+00000000
+> [   71.231014] RDX: 0000000000000000 RSI: ffffffff838fae18 RDI: ffff8880=
+093c9ad8
+> [   71.231292] RBP: ffffc90000babc48 R08: 0000000000000002 R09: 00000000=
+00000000
+> [   71.231570] R10: ffffc90000baba80 R11: ffff88800af08d98 R12: 00000000=
+00000009
+> [   71.231850] R13: ffff88800c4bc000 R14: ffff88800c4bc000 R15: 00000000=
+00000004
+> [   71.232129] FS:  0000000000000000(0000) GS:ffff88807dc00000(0000) knl=
+GS:0000000000000000
+> [   71.232441] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [   71.232668] CR2: 00000000000002a8 CR3: 000000000a1d2002 CR4: 00000000=
+00770ef0
+> [   71.232949] PKRU: 55555554
+> [   71.233061] Call Trace:
+> [   71.233162]  <TASK>
+> [   71.233254]  xfs_qm_dqread+0x46/0x440
+> [   71.233410]  ? xfs_qm_dqget_inode+0x13e/0x500
+> [   71.233596]  xfs_qm_dqget_inode+0x154/0x500
+> [   71.233774]  xfs_qm_dqattach_one+0x142/0x3c0
+> [   71.233961]  xfs_qm_dqattach_locked+0x14a/0x170
+> [   71.234149]  xfs_qm_dqattach+0x52/0x80
+> [   71.234307]  xfs_inactive+0x186/0x340
+> [   71.234461]  xfs_inodegc_worker+0xd3/0x430
+> [   71.234630]  process_one_work+0x3b1/0x960
+> [   71.234802]  worker_thread+0x52/0x660
+> [   71.234957]  ? __pfx_worker_thread+0x10/0x10
+> [   71.235136]  kthread+0x161/0x1a0
+> [   71.235279]  ? __pfx_kthread+0x10/0x10
+> [   71.235442]  ret_from_fork+0x29/0x50
+> [   71.235602]  </TASK>
+> [   71.235696] Modules linked in:
+> [   71.235826] CR2: 00000000000002a8
+> [   71.235964] ---[ end trace 0000000000000000 ]---
+>
+> Reporting the above issue and providing a reproduced way seems valuable.
+>
+> But not sure report to who in kernel community.
+> So used RIP: "xfs_dquot_alloc" key word to bisect between v6.2 and v5.11=
+.
+> I know there is BUG also but with some other RIP info.
+>
+> Related commit:
+> 29837019d5ebb80a5f180af3107a0645c731a770
+> Merge tag 'io_uring-5.19-2022-07-08' of git://git.kernel.dk/linux-block
+>
+> This might not be the right point of suspicion.
+> Could you help to take a look or add the correct developer for this issu=
+e?
+> Thanks a lot!
+>
+> ---
+>
+> If you don't need an environment to reproduce the problem or if you alre=
+ady
+> have one, please ignore the following information.
+>
+> How to reproduce:
+> git clone https://gitlab.com/xupengfe/repro_vm_env.git
+> cd repro_vm_env
+> tar -xvf repro_vm_env.tar.gz
+> cd repro_vm_env; ./start3.sh  // it needs qemu-system-x86_64 and I used =
+v7.1.0
+>     // start3.sh will load bzImage_2241ab53cbb5cdb08a6b2d4688feb13971058=
+f65 v6.2-rc5 kernel
+>     // You could change the bzImage_xxx as you want
+> In vm and login with root,  there is no password for root.
+>
+> After login vm successfully, you could transfer reproduced binary to the=
+ VM by below way, and reproduce the problem:
+> gcc -pthread -o repro repro.c
+> scp -P 10023 repro root@localhost:/root/
+>
+> Get the bzImage for target kernel:
+> Please use target kconfig and copy it to kernel_src/.config
+> make olddefconfig
+> make -jx bzImage           //x should equal or less than cpu num your pc=
+ has
+>
+> Fill the bzImage file into above start3.sh to load the target kernel vm.
+>
+>
+> Tips:
+> If you already have qemu-system-x86_64, please ignore below info.
+> If you want to install qemu v7.1.0 version:
+> git clone https://github.com/qemu/qemu.git
+> cd qemu
+> git checkout -f v7.1.0
+> mkdir build
+> cd build
+> yum install -y ninja-build.x86_64
+> ../configure --target-list=3Dx86_64-softmmu --enable-kvm --enable-vnc --=
+enable-gtk --enable-sdl
+> make
+> make install
+>
+> Thanks!
+> BR.
+
