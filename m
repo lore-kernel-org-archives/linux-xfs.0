@@ -2,196 +2,148 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6C89C64ED8
-	for <linux-xfs@archiver.kernel.org>; Sat, 25 Feb 2023 01:58:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CBB6C6FA8E
+	for <linux-xfs@archiver.kernel.org>; Sat, 25 Feb 2023 03:47:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229476AbjBYB6Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Feb 2023 20:58:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56472 "EHLO
+        id S229486AbjBYDrB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Feb 2023 22:47:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57458 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229461AbjBYB6P (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Feb 2023 20:58:15 -0500
+        with ESMTP id S229476AbjBYDq7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Feb 2023 22:46:59 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 182E911171
-        for <linux-xfs@vger.kernel.org>; Fri, 24 Feb 2023 17:58:14 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6E8112BD6;
+        Fri, 24 Feb 2023 19:46:58 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9731461820
-        for <linux-xfs@vger.kernel.org>; Sat, 25 Feb 2023 01:58:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3A49C433EF;
-        Sat, 25 Feb 2023 01:58:12 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 73EFE619D0;
+        Sat, 25 Feb 2023 03:46:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D33A4C433EF;
+        Sat, 25 Feb 2023 03:46:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677290293;
-        bh=TTJpKHrWp1GxnJ657+zHTEAPPvwv2SHWZo9VHfm7doA=;
+        s=k20201202; t=1677296817;
+        bh=CUHOybQU38pk0lNS1OZNmiGplH+lI7kqezGUA4FWD44=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=qs7mioPZPNbGg04ZQ5sa63pARyfpcVTom+WOr8pDKGZFLFqhLqNIlqQSRYGyX7Upf
-         gdbjYpdiMPAWX5TktHqj4PHnddSL6P3U9rEgO9rM6Z31mHwX0sg0KyOIJWJia3Gmth
-         i9i1mmNAM6xr4+h7nXL3eFLnQAIpFkcZ2ltaBoW90YrgX18h2lsu/nTlrTIc9xUSvW
-         NcuiGVRzWOY2r4QTO0aQzYXoLeJm4ByFAbLcK8dOiaSAsSBYwtmPXjd7Rr4H+4b5N/
-         yTXOH+eerg/i0eVKOaZUw+Yt1uwFSpoAKTV0rnCbMT3bgMq7yjPfTWX3paKmstacPy
-         tiWwL7WgXc7GQ==
-Date:   Fri, 24 Feb 2023 17:58:12 -0800
+        b=aUnd0xkcZ4zE/zSa1D2LrQsj1v0rqfUOJcyLeDyW6L4WLOep84Fi0/am3pRPOCp2D
+         Bn6+RNVHOFt/hqOI1CZijtGewRSzOopWFr1PY6tU40p09CpEawyLczZmlfm9vNBH8p
+         O7iDcX4bRXZbHgIat80L51Z7UaAKLf3z8fFbfZ7wnNmJdljJzbpqy1UznLGMFzaWA2
+         cAgowGRQgbn7FN7LB5lF4boFR58Ss+21FkqcBvK8wYY+pA5j0LRu7QvBaIt9/m0dzN
+         tVhd3+Q2k4MnWVcUv8aGv2wNoTyGTP3dRC2QaYndUFhUl3Fj9ysXWRwu/vDQRxJNuB
+         +LmLQ58smySAg==
+Date:   Fri, 24 Feb 2023 19:46:57 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Allison Henderson <allison.henderson@oracle.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [RFC DELUGE v9r2d1] xfs: Parent Pointers
-Message-ID: <Y/lrNIkBZsSjjkCm@magnolia>
-References: <Y+6MxEgswrJMUNOI@magnolia>
- <8a65fba38b8a8f9167f27f2a2d6151c8d84bfa61.camel@oracle.com>
- <Y/gmTwva2hW0ydCb@magnolia>
- <CAOQ4uxi9FQebjznZbTcBa36pbChz+A94+BeykovCDx0S6Ygoxw@mail.gmail.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Jan Kara <jack@suse.cz>, Al Viro <viro@zeniv.linux.org.uk>,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        Ted Tso <tytso@mit.edu>, linux-xfs@vger.kernel.org
+Subject: Re: Locking issue with directory renames
+Message-ID: <Y/mEsfyhNCs8orCY@magnolia>
+References: <20230117123735.un7wbamlbdihninm@quack3>
+ <20230117214457.GG360264@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxi9FQebjznZbTcBa36pbChz+A94+BeykovCDx0S6Ygoxw@mail.gmail.com>
+In-Reply-To: <20230117214457.GG360264@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 24, 2023 at 09:24:48AM +0200, Amir Goldstein wrote:
-> On Fri, Feb 24, 2023 at 5:09 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > On Fri, Feb 17, 2023 at 08:02:29PM +0000, Allison Henderson wrote:
-> > > On Thu, 2023-02-16 at 12:06 -0800, Darrick J. Wong wrote:
-> > > > Hi everyone,
-> > > >
-> > > > This deluge contains all of the additions to the parent pointers
-> > > > patchset that I've been working on for the past month.  The kernel
-> > > > and
-> > > > xfsprogs patchsets are based on Allison's v9r2 tag from last week;
-> > > > the fstests patches are merely a part of my development tree.  To
-> > > > recap
-> >
-> > <snip>
-> >
-> > > Ermergersh, thats a lot!  Thanks for all the hard work.  I feel like if
-> > > we don't come up with a plan for review though, people may not know
-> > > where to start for these deluges!  Lets see... if we had to break this
-> > > down, I think would divide it up between the existing parent pointers
-> > > and the new pptr propositions for ofsck.
-> >
-> > That's a good place to cleave.
-> >
-> > > Then further divide it among
-> > > kernel space, user space and test case.  If I had to pick only one of
-> > > these to focus attention on, probably it should be new ofsck changes in
-> > > the kernel space, since the rest of the deluge is really contingent on
-> > > it.
-> >
-> > Yup.  Though you ought to read through the offline fsck patches too.
-> > Those take a very different approach to resolving parent pointers.  So
-> > much of repair is based on nuking directories that I don't know there's
-> > a good way to rebuild them from parent pointers.
-> >
-> > A thought I had was that when we decide to zap a directory due to
-> > problems in the directory blocks themselves, we could them initiate a
-> > scan of the parent pointers to try to find all the dirents we can.  I
-> > ran into problems with that approach because libxfs_iget allocates fresh
-> > xfs_inode objects (instead of caching and sharing them like the kernel
-> > does) and that made it really hard to scan things in a coherent manner.
-> >
-> > > So now we've narrowed this down to a few subsets:
-> > >
-> > > [PATCHSET v9r2d1 0/3] xfs: bug fixes for parent pointers
-> > > [PATCHSET v9r2d1 0/4] xfs: rework the GETPARENTS ioctl,
-> >
-> > If you read through these two patchsets and think they're ok, then
-> > either fold the fixes into the main series or tack them on the end,
-> > whichever is easier.  If you tack them on the end, please add your
-> > own SOB tags.
-> >
-> > > [PATCHSET v9r2d1 00/23] xfs: online fsck support patches
-> > > [PATCHSET v9r2d1 0/7] xfs: online repair of directories
-> > > [PATCHSET v9r2d1 0/2] xfs: online checking of parent pointers
-> > > [PATCHSET v9r2d1 0/3] xfs: online checking of parent pointers
-> > > [PATCHSET v9r2d1 0/2] xfs: online checking of directories
-> >
-> > The fsck functionality exists to prove the point that directory repair
-> > is /very/ awkward if we have to update p_diroffset.  As such, they
-> > focused on getting the main parts right ... but with the obvious
-> > problem of making pptrs dependent on online fsck part 1 getting merged.
-> >
-> > Speaking of which -- can we merge online fsck for 6.4?  Please? :)
-> >
-> > > [PATCHSET v9r2d1 0/5] xfs: encode parent pointer name in xattr key
-> >
-> > Resolving the questions presented by this series is critical to nailing
-> > down the ondisk format and merging the feature.  But we'll get to that
-> > below.
-> >
-> > > [PATCHSET v9r2d1 0/3] xfs: use flex arrays for XFS_IOC_GETPARENTS,
-> >
-> > I'd like to know what you think about converting the ioctl definition to
-> > flex arrays instead of the fixed size structs.  I'm not sure where to
-> > put this series, though.  If you decide that you want 'em, then ideally
-> > they'd be in xfs_fs.h from the introduction of XFS_IOC_GETPARENTS, but
-> > I don't see any point in backporting them around "xfs: rework the
-> > GETPARENTS ioctl".
-> >
-> > (I would be ok if you rolled all of it into patch 25 from the original
-> > v9 set.)
-> >
-> > > Of those, I think "xfs: encode parent pointer name in xattr key" is the
-> > > only one that might impact other features since it's changeing the
-> > > ondisk format from when we first started the effort years ago.  So
-> > > probably that might be the best place for people to start since if this
-> > > needs to change it might impact some of the other subsets in the
-> > > deluge, or even features they are working on if they've based anything
-> > > on the existing pptr set.
-> >
-> > Bingo!
-> >
-> > The biggest question about the format change is (IMHO) whether we're ok
-> > with using a hash function for parent pointer names that don't fit in
-> > the attr key space, and which hash?
-> >
-> > The sha2 family was designed to be collision resistant, but I don't
-> > anticipate that will last forever.  The hash is computed from (the full
-> > name and the child generation number) when the dirent name is longer
-> > than 243 bytes.  The first 179 bytes of the dirent name are still
-> > written in the parent pointer attr name.  An attacker would have to find
-> > a collision that only changes the last 76 bytes of the dirent name, and
-> > they'd have to know the generation number at runtime.
-> >
-> > (Note: dirent names shorter than 243 bytes are written directly into the
-> > parent pointer xattr name, no hashing required.)
-> >
-> > I /think/ that's good enough, but I'm no cryptanalyst.  The alternative
-> > would be to change the xattr format so that the namelen field in the
-> > leaf structure to encode *only* the name component of the parent
-> > pointer.  This would lead to a lot of special cased xattr code and
-> > probably a lot of bugs and other stupid problems, which is why I didn't
-> > take that route.
-> >
-> > Thoughts?
+On Wed, Jan 18, 2023 at 08:44:57AM +1100, Dave Chinner wrote:
+> On Tue, Jan 17, 2023 at 01:37:35PM +0100, Jan Kara wrote:
+> > Hello!
+> > 
+> > I've some across an interesting issue that was spotted by syzbot [1]. The
+> > report is against UDF but AFAICS the problem exists for ext4 as well and
+> > possibly other filesystems. The problem is the following: When we are
+> > renaming directory 'dir' say rename("foo/dir", "bar/") we lock 'foo' and
+> > 'bar' but 'dir' is unlocked because the locking done by vfs_rename() is
+> > 
+> >         if (!is_dir || (flags & RENAME_EXCHANGE))
+> >                 lock_two_nondirectories(source, target);
+> >         else if (target)
+> >                 inode_lock(target);
+> > 
+> > However some filesystems (e.g. UDF but ext4 as well, I suspect XFS may be
+> > hurt by this as well because it converts among multiple dir formats) need
+> > to update parent pointer in 'dir' and nothing protects this update against
+> > a race with someone else modifying 'dir'. Now this is mostly harmless
+> > because the parent pointer (".." directory entry) is at the beginning of
+> > the directory and stable however if for example the directory is converted
+> > from packed "in-inode" format to "expanded" format as a result of
+> > concurrent operation on 'dir', the filesystem gets corrupted (or crashes as
+> > in case of UDF).
 > 
-> Is there an intention to allow enabling parent pointers on existing systems
-> and run online repair to add the pptr xattrs?
+> No, xfs_rename() does not have this problem - we pass four inodes to
+> the function - the source directory, source inode, destination
+> directory and destination inode.
 
-That's going to be difficult because we don't know how much space the
-parent pointers are going to need ahead of time.  I'd guess probably
-not.
+Um, I think it does have this problem.  xfs_readdir thinks it can parse
+a shortform inode without taking the ILOCK:
 
-> If not, then you could avoid the entire complexity with
-> statp->f_namelen = XFS_MAX_PPTR_NAMELEN;
-> for pptr formatted fs.
-> 
-> Are those 12 bytes of namelen really going to be missed?
+	if (dp->i_df.if_format == XFS_DINODE_FMT_LOCAL)
+		return xfs_dir2_sf_getdents(&args, ctx);
 
-I dislike having to lower MAXNAMELEN; that seems like it would result in
-user complaints.
+	lock_mode = xfs_ilock_data_map_shared(dp);
+	error = xfs_dir2_isblock(&args, &isblock);
 
-> This limitation does not need to last forever.
-> It can be lifted later by special casing pptr namelen as you suggested
-> after a separate risk vs. benefit discussion.
-
-Deferring the discussion in that manner will require us to burn another
-incompat feature bit to prevent older kernels that don't understand the
-hashing from mounting a filesystem where the hashes are in use.
+So xfs_dir2_sf_replace can rewrite the shortform structure (or even
+convert it to block format!) while readdir is accessing it.  Or am I
+mising something?
 
 --D
 
-> Thanks,
-> Amir.
+> In the above case, "dir/" is passed to XFs as the source inode - the
+> src_dir is "foo/", the target dir is "bar/" and the target inode is
+> null. src_dir != target_dir, so we set the "new_parent" flag. the
+> srouce inode is a directory, so we set the src_is_directory flag,
+> too.
+> 
+> We lock all three inodes that are passed. We do various things, then
+> run:
+> 
+>         if (new_parent && src_is_directory) {
+>                 /*
+>                  * Rewrite the ".." entry to point to the new
+>                  * directory.
+>                  */
+>                 error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
+>                                         target_dp->i_ino, spaceres);
+>                 ASSERT(error != -EEXIST);
+>                 if (error)
+>                         goto out_trans_cancel;
+>         }
+> 
+> which replaces the ".." entry in source inode atomically whilst it
+> is locked.  Any directory format changes that occur during the
+> rename are done while the ILOCK is held, so they appear atomic to
+> outside observers that are trying to parse the directory structure
+> (e.g. readdir).
+> 
+> > So we'd need to lock 'source' if it is a directory.
+> 
+> Yup, and XFS goes further by always locking the source inode in a
+> rename, even if it is not a directory. This ensures the inode being
+> moved cannot have it's metadata otherwise modified whilst the rename
+> is in progress, even if that modification would have no impact on
+> the rename. It's a pretty strict interpretation of "rename is an
+> atomic operation", but it avoids accidentally missing nasty corner
+> cases like the one described above...
+> 
+> > Ideally this would
+> > happen in VFS as otherwise I bet a lot of filesystems will get this wrong
+> > so could vfs_rename() lock 'source' if it is a dir as well? Essentially
+> > this would amount to calling lock_two_nondirectories(source, target)
+> > unconditionally but that would become a serious misnomer ;). Al, any
+> > thought?
+> 
+> XFS just has a function that allows for an arbitrary number of
+> inodes to be locked in the given order: xfs_lock_inodes(). For
+> rename, the lock order is determined by xfs_sort_for_rename().
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
