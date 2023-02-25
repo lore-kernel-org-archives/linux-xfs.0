@@ -2,222 +2,196 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E38BC64ED8
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Feb 2023 21:19:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6C89C64ED8
+	for <linux-xfs@archiver.kernel.org>; Sat, 25 Feb 2023 01:58:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229724AbjBXVTT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Feb 2023 16:19:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41472 "EHLO
+        id S229476AbjBYB6Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Feb 2023 20:58:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56472 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229708AbjBXVTS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Feb 2023 16:19:18 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C2592BEC5
-        for <linux-xfs@vger.kernel.org>; Fri, 24 Feb 2023 13:18:45 -0800 (PST)
+        with ESMTP id S229461AbjBYB6P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Feb 2023 20:58:15 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 182E911171
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Feb 2023 17:58:14 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3B6CFB81CF7
-        for <linux-xfs@vger.kernel.org>; Fri, 24 Feb 2023 21:18:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8463C433EF;
-        Fri, 24 Feb 2023 21:18:42 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9731461820
+        for <linux-xfs@vger.kernel.org>; Sat, 25 Feb 2023 01:58:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3A49C433EF;
+        Sat, 25 Feb 2023 01:58:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677273523;
-        bh=sP1XYLXJ6FXwZEqeAe6JXsT1j2wk83A7gCPbbnySJPU=;
+        s=k20201202; t=1677290293;
+        bh=TTJpKHrWp1GxnJ657+zHTEAPPvwv2SHWZo9VHfm7doA=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=UFtdHMdrg+LhxDga5IJ6wSpQnxUkPlwxnlzx20VbQfaxTXsKhvU8NOGpFPz7cu2l/
-         AQwBdiQK1qXzFAnSjDpe7hxVLBsC8QAdcQ6bad1dpGTAR9QPuD8i4jASqOBVWAzuUD
-         Vnz5qGSL6Ur5Y1mKAZZo6JHpnwoBqHlZbUXt32lNvHe51jH8qN3S+T8DbaS6qqOKGr
-         tX8GSMkfyrwas12dmPIBYo3UG4taSuprUEDQfyREq5GNqWQXLWtcX70qq18bDkGP4M
-         b5Zf5yP4FOR/dcsm4tor3VXyHeK8FIUqdMGNiM4eql1nucfBWbpZpgewYl+aqINfhr
-         a5hIyiptxx3fw==
-Date:   Fri, 24 Feb 2023 13:18:42 -0800
+        b=qs7mioPZPNbGg04ZQ5sa63pARyfpcVTom+WOr8pDKGZFLFqhLqNIlqQSRYGyX7Upf
+         gdbjYpdiMPAWX5TktHqj4PHnddSL6P3U9rEgO9rM6Z31mHwX0sg0KyOIJWJia3Gmth
+         i9i1mmNAM6xr4+h7nXL3eFLnQAIpFkcZ2ltaBoW90YrgX18h2lsu/nTlrTIc9xUSvW
+         NcuiGVRzWOY2r4QTO0aQzYXoLeJm4ByFAbLcK8dOiaSAsSBYwtmPXjd7Rr4H+4b5N/
+         yTXOH+eerg/i0eVKOaZUw+Yt1uwFSpoAKTV0rnCbMT3bgMq7yjPfTWX3paKmstacPy
+         tiWwL7WgXc7GQ==
+Date:   Fri, 24 Feb 2023 17:58:12 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     shrikanth hegde <sshegde@linux.vnet.ibm.com>
-Cc:     dchinner@redhat.com, linux-xfs@vger.kernel.org,
-        Srikar Dronamraju <srikar@linux.vnet.ibm.com>,
-        ojaswin@linux.ibm.com
-Subject: Re: xfs: system fails to boot up due to Internal error
- xfs_trans_cancel
-Message-ID: <Y/kpspsP4gbddpGb@magnolia>
-References: <e5004868-4a03-93e5-5077-e7ed0e533996@linux.vnet.ibm.com>
- <Y++xDBwXDgkaFUi9@magnolia>
- <828a1562-3bf4-c1d8-d943-188ee6c3d4fa@linux.vnet.ibm.com>
- <Y/ZFtEbLTX38pReY@magnolia>
- <d6530c9b-219c-1d37-6331-b2989506102c@linux.vnet.ibm.com>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Allison Henderson <allison.henderson@oracle.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [RFC DELUGE v9r2d1] xfs: Parent Pointers
+Message-ID: <Y/lrNIkBZsSjjkCm@magnolia>
+References: <Y+6MxEgswrJMUNOI@magnolia>
+ <8a65fba38b8a8f9167f27f2a2d6151c8d84bfa61.camel@oracle.com>
+ <Y/gmTwva2hW0ydCb@magnolia>
+ <CAOQ4uxi9FQebjznZbTcBa36pbChz+A94+BeykovCDx0S6Ygoxw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <d6530c9b-219c-1d37-6331-b2989506102c@linux.vnet.ibm.com>
+In-Reply-To: <CAOQ4uxi9FQebjznZbTcBa36pbChz+A94+BeykovCDx0S6Ygoxw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Feb 24, 2023 at 01:34:01PM +0530, shrikanth hegde wrote:
+On Fri, Feb 24, 2023 at 09:24:48AM +0200, Amir Goldstein wrote:
+> On Fri, Feb 24, 2023 at 5:09 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > On Fri, Feb 17, 2023 at 08:02:29PM +0000, Allison Henderson wrote:
+> > > On Thu, 2023-02-16 at 12:06 -0800, Darrick J. Wong wrote:
+> > > > Hi everyone,
+> > > >
+> > > > This deluge contains all of the additions to the parent pointers
+> > > > patchset that I've been working on for the past month.  The kernel
+> > > > and
+> > > > xfsprogs patchsets are based on Allison's v9r2 tag from last week;
+> > > > the fstests patches are merely a part of my development tree.  To
+> > > > recap
+> >
+> > <snip>
+> >
+> > > Ermergersh, thats a lot!  Thanks for all the hard work.  I feel like if
+> > > we don't come up with a plan for review though, people may not know
+> > > where to start for these deluges!  Lets see... if we had to break this
+> > > down, I think would divide it up between the existing parent pointers
+> > > and the new pptr propositions for ofsck.
+> >
+> > That's a good place to cleave.
+> >
+> > > Then further divide it among
+> > > kernel space, user space and test case.  If I had to pick only one of
+> > > these to focus attention on, probably it should be new ofsck changes in
+> > > the kernel space, since the rest of the deluge is really contingent on
+> > > it.
+> >
+> > Yup.  Though you ought to read through the offline fsck patches too.
+> > Those take a very different approach to resolving parent pointers.  So
+> > much of repair is based on nuking directories that I don't know there's
+> > a good way to rebuild them from parent pointers.
+> >
+> > A thought I had was that when we decide to zap a directory due to
+> > problems in the directory blocks themselves, we could them initiate a
+> > scan of the parent pointers to try to find all the dirents we can.  I
+> > ran into problems with that approach because libxfs_iget allocates fresh
+> > xfs_inode objects (instead of caching and sharing them like the kernel
+> > does) and that made it really hard to scan things in a coherent manner.
+> >
+> > > So now we've narrowed this down to a few subsets:
+> > >
+> > > [PATCHSET v9r2d1 0/3] xfs: bug fixes for parent pointers
+> > > [PATCHSET v9r2d1 0/4] xfs: rework the GETPARENTS ioctl,
+> >
+> > If you read through these two patchsets and think they're ok, then
+> > either fold the fixes into the main series or tack them on the end,
+> > whichever is easier.  If you tack them on the end, please add your
+> > own SOB tags.
+> >
+> > > [PATCHSET v9r2d1 00/23] xfs: online fsck support patches
+> > > [PATCHSET v9r2d1 0/7] xfs: online repair of directories
+> > > [PATCHSET v9r2d1 0/2] xfs: online checking of parent pointers
+> > > [PATCHSET v9r2d1 0/3] xfs: online checking of parent pointers
+> > > [PATCHSET v9r2d1 0/2] xfs: online checking of directories
+> >
+> > The fsck functionality exists to prove the point that directory repair
+> > is /very/ awkward if we have to update p_diroffset.  As such, they
+> > focused on getting the main parts right ... but with the obvious
+> > problem of making pptrs dependent on online fsck part 1 getting merged.
+> >
+> > Speaking of which -- can we merge online fsck for 6.4?  Please? :)
+> >
+> > > [PATCHSET v9r2d1 0/5] xfs: encode parent pointer name in xattr key
+> >
+> > Resolving the questions presented by this series is critical to nailing
+> > down the ondisk format and merging the feature.  But we'll get to that
+> > below.
+> >
+> > > [PATCHSET v9r2d1 0/3] xfs: use flex arrays for XFS_IOC_GETPARENTS,
+> >
+> > I'd like to know what you think about converting the ioctl definition to
+> > flex arrays instead of the fixed size structs.  I'm not sure where to
+> > put this series, though.  If you decide that you want 'em, then ideally
+> > they'd be in xfs_fs.h from the introduction of XFS_IOC_GETPARENTS, but
+> > I don't see any point in backporting them around "xfs: rework the
+> > GETPARENTS ioctl".
+> >
+> > (I would be ok if you rolled all of it into patch 25 from the original
+> > v9 set.)
+> >
+> > > Of those, I think "xfs: encode parent pointer name in xattr key" is the
+> > > only one that might impact other features since it's changeing the
+> > > ondisk format from when we first started the effort years ago.  So
+> > > probably that might be the best place for people to start since if this
+> > > needs to change it might impact some of the other subsets in the
+> > > deluge, or even features they are working on if they've based anything
+> > > on the existing pptr set.
+> >
+> > Bingo!
+> >
+> > The biggest question about the format change is (IMHO) whether we're ok
+> > with using a hash function for parent pointer names that don't fit in
+> > the attr key space, and which hash?
+> >
+> > The sha2 family was designed to be collision resistant, but I don't
+> > anticipate that will last forever.  The hash is computed from (the full
+> > name and the child generation number) when the dirent name is longer
+> > than 243 bytes.  The first 179 bytes of the dirent name are still
+> > written in the parent pointer attr name.  An attacker would have to find
+> > a collision that only changes the last 76 bytes of the dirent name, and
+> > they'd have to know the generation number at runtime.
+> >
+> > (Note: dirent names shorter than 243 bytes are written directly into the
+> > parent pointer xattr name, no hashing required.)
+> >
+> > I /think/ that's good enough, but I'm no cryptanalyst.  The alternative
+> > would be to change the xattr format so that the namelen field in the
+> > leaf structure to encode *only* the name component of the parent
+> > pointer.  This would lead to a lot of special cased xattr code and
+> > probably a lot of bugs and other stupid problems, which is why I didn't
+> > take that route.
+> >
+> > Thoughts?
 > 
-> >>> ...that trips when rm tries to remove a file, which means that the call
-> >>> stack is
-> >>>
-> >>> xfs_remove -> xfs_iunlink -> xfs_iunlink_insert_inode ->
-> >>> xfs_iunlink_update_backref -> xfs_iunlink_lookup <kaboom>
-> >>>
-> >>> It looks as though "rm foo" unlinked foo from the directory and was
-> >>> trying to insert it at the head of one of the unlinked lists in the AGI
-> >>> buffer.  The AGI claims that the list points to an ondisk inode, so the
-> >>> iunlink code tries to find the incore inode to update the incore list,
-> >>> fails to find an incore inode, and this is the result...
-> >>
-> >> This seems to happen for rename as well. i.e xfs_rename. 
-> >> Does  rename path calls rm first, and then create?
-> > 
-> > Effectively, yes.  A "mv a b" will unlink b, and that calls the same
-> > internal unlink code as an unlink syscall.
-> > 
-> >>>>
-> >>>>
-> >>>> we did a git bisect between 5.17 and 6.0. Bisect points to commit 04755d2e5821 
-> >>>> as the bad commit.
-> >>>> Short description of commit:
-> >>>> commit 04755d2e5821b3afbaadd09fe5df58d04de36484 (refs/bisect/bad)
-> >>>> Author: Dave Chinner <dchinner@redhat.com>
-> >>>> Date:   Thu Jul 14 11:42:39 2022 +1000
-> >>>>
-> >>>>     xfs: refactor xlog_recover_process_iunlinks()
-> >>>
-> >>> ...which was in the middle of the series that reworked thev mount time
-> >>> iunlink clearing.  Oddly, I don't spot any obvious errors in /that/
-> >>> patch that didn't already exist.  But this does make me wonder, does
-> >>> xfs_repair -n have anything to say about unlinked or orphaned inodes?
-> >>>
-> >>> The runtime code expects that every ondisk inode in an iunlink chain has
-> >>> an incore inode that is linked (via i_{next,prev}_unlinked) to the other
-> >>> incore inodes in that same chain.  If this requirement is not met, then
-> >>> the WARNings you see will trip, and the fs shuts down.
-> >>>
-> >>> My hypothesis here is that one of the AGs has an unprocessed unlinked
-> >>> list.  At mount time, the ondisk log was clean, so mount time log
-> >>> recovery didn't invoke xlog_recover_process_iunlinks, and the list was
-> >>> not cleared.  The mount code does not construct the incore unlinked list
-> >>> from an existing ondisk iunlink list, hence the WARNing.  Prior to 5.17,
-> >>> we only manipulated the ondisk unlink list, and the code never noticed
-> >>> or cared if there were mystery inodes in the list that never went away.
-> >>>
-> >>> (Obviously, if something blew up earlier in dmesg, that would be
-> >>> relevant here.)
-> >>>
-> >>> It's possible that we could end up in this situation (clean log,
-> >>> unlinked inodes) if a previous log recovery was only partially
-> >>> successful at clearing the unlinked list, since all that code ignores
-> >>> errors.  If that happens, we ... succeed at mounting and clean the log.
-> >>>
-> >>> If you're willing to patch your kernels, it would be interesting
-> >>> to printk if the xfs_read_agi or the xlog_recover_iunlink_bucket calls
-> >>> in xlog_recover_iunlink_ag returns an error code.  It might be too late
-> >>
-> >> We can try. Please provide the Patch. 
-> >>
-> >>> to capture that, hence my suggestion of seeing if xfs_repair -n will
-> >>> tell us anything else.
-> >>>
-> >>
-> >> Could you please clarify? We should run xfs_repair -n from 5.17-rc2 kernel? 
-> > 
-> > Whatever xfs_repair is installed on the system should suffice to report
-> > an unlinked inode list and any other errors on the filesystem.  That
-> > evidence will guide us towards a kernel patch.
-> > 
-> > --D
-> > 
-> 
-> # xfs_info /
-> meta-data=/dev/mapper/rhel_ltc--lp1-root isize=512    agcount=4, agsize=4183040 blks
->          =                       sectsz=512   attr=2, projid32bit=1
->          =                       crc=1        finobt=1, sparse=1, rmapbt=0
->          =                       reflink=1    bigtime=0 inobtcount=0
-> data     =                       bsize=4096   blocks=16732160, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> log      =internal log           bsize=4096   blocks=8170, version=2
->          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> # 
-> # 
-> # xfs_repair -n /
-> xfs_repair: can't determine device size
+> Is there an intention to allow enabling parent pointers on existing systems
+> and run online repair to add the pptr xattrs?
 
-xfs_repair takes a path to a block device.
+That's going to be difficult because we don't know how much space the
+parent pointers are going to need ahead of time.  I'd guess probably
+not.
+
+> If not, then you could avoid the entire complexity with
+> statp->f_namelen = XFS_MAX_PPTR_NAMELEN;
+> for pptr formatted fs.
+> 
+> Are those 12 bytes of namelen really going to be missed?
+
+I dislike having to lower MAXNAMELEN; that seems like it would result in
+user complaints.
+
+> This limitation does not need to last forever.
+> It can be lifted later by special casing pptr namelen as you suggested
+> after a separate risk vs. benefit discussion.
+
+Deferring the discussion in that manner will require us to burn another
+incompat feature bit to prevent older kernels that don't understand the
+hashing from mounting a filesystem where the hashes are in use.
 
 --D
 
-> 
-> >>
-> >>> I've long thought that the iunlink recovery ought to complain loudly and
-> >>> fail the mount if it can't clear all the unlinked files.  Given the new
-> >>> iunlink design, I think it's pretty much required now.  The uglier piece
-> >>> is that now we either (a) have to clear iunlinks at mount time
-> >>> unconditionally as Eric has been saying for years; or (b) construct the
-> >>> incore list at a convenient time so that the incore list always exists.
-> >>>
-> >>> Thanks for the detailed report!
-> >>>
-> >>> --D
-> >>>
-> >>>>
-> >>>> Git bisect log:
-> >>>> git bisect start
-> >>>> # good: [26291c54e111ff6ba87a164d85d4a4e134b7315c] Linux 5.17-rc2
-> >>>> git bisect good 26291c54e111ff6ba87a164d85d4a4e134b7315c
-> >>>> # bad: [4fe89d07dcc2804c8b562f6c7896a45643d34b2f] Linux 6.0
-> >>>> git bisect bad 4fe89d07dcc2804c8b562f6c7896a45643d34b2f
-> >>>> # good: [d7227785e384d4422b3ca189aa5bf19f462337cc] Merge tag 'sound-5.19-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/tiwai/sound
-> >>>> git bisect good d7227785e384d4422b3ca189aa5bf19f462337cc
-> >>>> # good: [526942b8134cc34d25d27f95dfff98b8ce2f6fcd] Merge tag 'ata-5.20-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata
-> >>>> git bisect good 526942b8134cc34d25d27f95dfff98b8ce2f6fcd
-> >>>> # good: [328141e51e6fc79d21168bfd4e356dddc2ec7491] Merge tag 'mmc-v5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/ulfh/mmc
-> >>>> git bisect good 328141e51e6fc79d21168bfd4e356dddc2ec7491
-> >>>> # bad: [eb555cb5b794f4e12a9897f3d46d5a72104cd4a7] Merge tag '5.20-rc-ksmbd-server-fixes' of git://git.samba.org/ksmbd
-> >>>> git bisect bad eb555cb5b794f4e12a9897f3d46d5a72104cd4a7
-> >>>> # bad: [f20c95b46b8fa3ad34b3ea2e134337f88591468b] Merge tag 'tpmdd-next-v5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/jarkko/linux-tpmdd
-> >>>> git bisect bad f20c95b46b8fa3ad34b3ea2e134337f88591468b
-> >>>> # bad: [fad235ed4338749a66ddf32971d4042b9ef47f44] Merge tag 'arm-late-6.0' of git://git.kernel.org/pub/scm/linux/kernel/git/soc/soc
-> >>>> git bisect bad fad235ed4338749a66ddf32971d4042b9ef47f44
-> >>>> # good: [e495274793ea602415d050452088a496abcd9e6c] Merge tag 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/rdma/rdma
-> >>>> git bisect good e495274793ea602415d050452088a496abcd9e6c
-> >>>> # good: [9daee913dc8d15eb65e0ff560803ab1c28bb480b] Merge tag 'ext4_for_linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4
-> >>>> git bisect good 9daee913dc8d15eb65e0ff560803ab1c28bb480b
-> >>>> # bad: [29b1d469f3f6842ee4115f0b21f018fc44176468] Merge tag 'trace-rtla-v5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/rostedt/linux-trace
-> >>>> git bisect bad 29b1d469f3f6842ee4115f0b21f018fc44176468
-> >>>> # good: [932b42c66cb5d0ca9800b128415b4ad6b1952b3e] xfs: replace XFS_IFORK_Q with a proper predicate function
-> >>>> git bisect good 932b42c66cb5d0ca9800b128415b4ad6b1952b3e
-> >>>> # bad: [35c5a09f5346e690df7ff2c9075853e340ee10b3] Merge tag 'xfs-buf-lockless-lookup-5.20' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-5.20-mergeB
-> >>>> git bisect bad 35c5a09f5346e690df7ff2c9075853e340ee10b3
-> >>>> # bad: [fad743d7cd8bd92d03c09e71f29eace860f50415] xfs: add log item precommit operation
-> >>>> git bisect bad fad743d7cd8bd92d03c09e71f29eace860f50415
-> >>>> # bad: [04755d2e5821b3afbaadd09fe5df58d04de36484] xfs: refactor xlog_recover_process_iunlinks()
-> >>>> git bisect bad 04755d2e5821b3afbaadd09fe5df58d04de36484
-> >>>> # good: [a4454cd69c66bf3e3bbda352b049732f836fc6b2] xfs: factor the xfs_iunlink functions
-> >>>> git bisect good a4454cd69c66bf3e3bbda352b049732f836fc6b2
-> >>>> Bisecting: 0 revisions left to test after this (roughly 0 steps)
-> >>>> [4fcc94d653270fcc7800dbaf3b11f78cb462b293] xfs: track the iunlink list pointer in the xfs_inode
-> >>>>
-> >>>>
-> >>>> Please reach out, in case any more details are needed. sent with very limited
-> >>>> knowledge of xfs system. these logs are from 5.19 kernel.
-> >>>>
-> >>>> # xfs_info /home
-> >>>> meta-data=/dev/nvme0n1p1         isize=512    agcount=4, agsize=13107200 blks
-> >>>>          =                       sectsz=4096  attr=2, projid32bit=1
-> >>>>          =                       crc=1        finobt=1, sparse=1, rmapbt=0
-> >>>>          =                       reflink=1    bigtime=0 inobtcount=0
-> >>>> data     =                       bsize=4096   blocks=52428800, imaxpct=25
-> >>>>          =                       sunit=0      swidth=0 blks
-> >>>> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-> >>>> log      =internal log           bsize=4096   blocks=25600, version=2
-> >>>>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> >>>> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> >>>>
-> >>>> # xfs_info -V
-> >>>> xfs_info version 5.0.0
-> >>>>
-> >>>> # uname -a
-> >>>> 5.19.0-rc2
+> Thanks,
+> Amir.
