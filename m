@@ -2,394 +2,192 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0022C7EE23
-	for <linux-xfs@archiver.kernel.org>; Sat, 25 Feb 2023 19:58:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EBD2C64ED6
+	for <linux-xfs@archiver.kernel.org>; Sun, 26 Feb 2023 19:43:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229820AbjBYT6k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 25 Feb 2023 14:58:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55326 "EHLO
+        id S229627AbjBZTnt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 26 Feb 2023 14:43:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43364 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229822AbjBYT6j (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Feb 2023 14:58:39 -0500
-Received: from mout.gmx.net (mout.gmx.net [212.227.17.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26F7216AEB;
-        Sat, 25 Feb 2023 11:58:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.de; s=s31663417;
-        t=1677355106; i=deller@gmx.de;
-        bh=YkYucz17GSZWPtoOISSnGu7cJxGHlyciXBkecwBVDcA=;
-        h=X-UI-Sender-Class:Date:Subject:To:Cc:References:From:In-Reply-To;
-        b=E9VgtiTycyLXcYbKCF91Nf4pk8k0gXJ8Zt2lKrwABCGKq+SCIG/SLjE2r6nxHSJzG
-         YM9sljoX+aDW74+FA3ncZZG1DUow6GtgJ+ZHz6bJdVtt9bb3aH16tZBZA6/GorlRyu
-         S+3SDai9r1fKn+vzokz+dZ1ubNR5X5koMuwfYynAp97x1NB30E+UgT2rlZkdlPb/9s
-         Ap9/WQalBlkgZzkR2jCv0bXayjs1cQZflWAMpeEnaJWtYvVjZAoE1nw0BKrx+fq+mJ
-         3WrJFg4BkXnWydjJ4ZStDpbLksi6CP/EFu12vfbSHaD16oM3h9Pbb6G/IyR8//Npq1
-         1/DYydxDWx2uQ==
-X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
-Received: from [192.168.20.60] ([92.116.139.251]) by mail.gmx.net (mrgmx104
- [212.227.17.168]) with ESMTPSA (Nemesis) id 1M59C8-1pX79K2xHA-0016fK; Sat, 25
- Feb 2023 20:58:26 +0100
-Message-ID: <a39d97c1-2ced-d159-f742-e5c6008f79ee@gmx.de>
-Date:   Sat, 25 Feb 2023 20:58:25 +0100
+        with ESMTP id S229540AbjBZTns (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Feb 2023 14:43:48 -0500
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36E93EFA0;
+        Sun, 26 Feb 2023 11:43:46 -0800 (PST)
+Received: by mail-pl1-x636.google.com with SMTP id c1so4679073plg.4;
+        Sun, 26 Feb 2023 11:43:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=EVjH0NZ96EeUmRRq/WHOpNN2cvDRagcV7ziMp/14lIg=;
+        b=cx/ED6KyKh7BY6KTBowZ3dQH5QWCw3c1CSFTxWuCAQ9NYXs0urNJx36pHETq7bZijg
+         mF1SWu4hZx6jHdC+m9H08zYFFTxYmUlzKdt+sDC6Y458n3gtzEaVsLufJSbDbv7rGuT0
+         pW8Q1TN/FL1gRmZKLF7PeWIBEdclFyPRMiTGQhxizMyadJnsohfsKX5wtqP2eiI7P+tl
+         FSSof0JDyhVz559XAppddK2rfmRYnrDk3ceZY0S6q5jji2RaMl0AT9ANsfX6QXHCsaIC
+         oqCHRdQm/JuxBRZnsGNvVvZDG1pOqLmVFuDqO2r7AkQZPNjdbYVaqRIbGsN1ai2RU73R
+         86Vg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=EVjH0NZ96EeUmRRq/WHOpNN2cvDRagcV7ziMp/14lIg=;
+        b=TJwuKC6ZyB3GNChlUkfBkpuwgDHsvMn0EbImO62hK2i6kHTHptrPv2PIgGSGS+fUSR
+         YutsUVdDKz8fAnYXf1aiohvGSnhtZX9It/fQA6eImodBkJe+zJ28QBV1/0P5ab9hunbf
+         EwuhZXU+8/26quQXYyjro8ozXCBY1WXFmBbRihQac3ZgZ4r09NNF32IoN/UCopuCAxym
+         vwpk7PT6bTvrIj4jqFEIVz4XZcKqLVv/2zdDwNwZNI/8FlXh7OSeey+6xM4/ojB+aeob
+         VqVeSK4twfclC+D+rhOmGhhXSTiRkiAaZTDVpmL1Rsec9yoer9Q1aJ38v8t7BP90ms6p
+         oe8A==
+X-Gm-Message-State: AO0yUKXxb3wCbn6rVHCtDMxCD1jfFiLulObGxxp8+LjKWiEFOQhHCF1S
+        nKWsoq7D1TBVRWl4y0+zmB7ERl2HX4E=
+X-Google-Smtp-Source: AK7set/nJosP2QoTsIgIXW+RemutQPtgo8QoxHmV2onuu+45KZzMY8FhESV7QMqdheHzXLn2qjIu0Q==
+X-Received: by 2002:a05:6a20:3c90:b0:cb:a0e3:4598 with SMTP id b16-20020a056a203c9000b000cba0e34598mr22437130pzj.43.1677440625336;
+        Sun, 26 Feb 2023 11:43:45 -0800 (PST)
+Received: from rh-tp.. ([2406:7400:63:469f:eb50:3ffb:dc1b:2d55])
+        by smtp.gmail.com with ESMTPSA id r15-20020a62e40f000000b00582f222f088sm2815606pfh.47.2023.02.26.11.43.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 26 Feb 2023 11:43:44 -0800 (PST)
+From:   "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc:     Ritesh Harjani <ritesh.list@gmail.com>
+Subject: [RFCv3 0/3] iomap: Add support for subpage dirty state tracking to improve write performance
+Date:   Mon, 27 Feb 2023 01:13:29 +0530
+Message-Id: <cover.1677428794.git.ritesh.list@gmail.com>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [Syzkaller & bisect] There is "xfs_dquot_alloc" related BUG in
- v6.2 in guest
-Content-Language: en-US
-To:     Pengfei Xu <pengfei.xu@intel.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Cc:     asml.silence@gmail.com, geert@linux-m68k.org,
-        linux-kernel@vger.kernel.org, heng.su@intel.com
-References: <Y/g/femUL7jZ9gF3@xpf.sh.intel.com>
-From:   Helge Deller <deller@gmx.de>
-In-Reply-To: <Y/g/femUL7jZ9gF3@xpf.sh.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:zFjy7zM7kQgttKY7AdWK8QOY5DW1tVcCEpTXA0dbG7T//w0QzNU
- eer9q9Bo+uuvKAfVpPa0nvQopZ/y6WwOi/IW3Wa55ObgEQ58DOsQupahKlhakpVti6sAwwk
- gcJrA5RItyMENdr3/2aryxWzckxJ6VvDH+xOcDEqZxgvqmv/+9zSyUvUJJgpWk1lNcsUPnX
- v9+7uI0zgBOgUvXzWZPUQ==
-UI-OutboundReport: notjunk:1;M01:P0:RNtvFinAGmA=;qw8tztkx3MF9T7OOrv9vmimDcF+
- btlNY2+0piR5r5MubSqmuEj9elfIM9wLFSaJrMqlLt0nSV343XjTyoMjR6E9i57ZHWg5ZxkDO
- 0Ou6EhxlsSypUtEtrVo24WwvqIaLwAuwZVo6ndmxsWgvy4ZaQeit/C/YDFlcGhIWNLTt2FSRZ
- AmkDv6OwZWfZNtlOcIsyfKRxShPMmbrYEUhTHVBeS1Aes0Ba8CcaphTgoWL3arL/BgmrrdcsC
- pVdJG22PMTk60XLEGJshSt6pg8W9+X2UggEkwcZxxn275OikDpB2nExWWDn7o6YjVVFIwtKY0
- 4lTJKz9Igb3MVZ8D7/25wRk2q5CkIGmlYRKKdGA9Pl/+yJv8Xp+s8dCEaCQGujgxx5z/4v6d7
- 4eDivoG9ShSqVbsR18P1Ssu/IBZnAQMu0gMoEvTklqb+NULl+t104hl9fQgbYIuQvbFjUphNK
- obZ/QJfCXTAiIShLTEnzOiiSqYJqhXucWAwauU0zjlwwnsz1HksTeIKgZtssskhTiieoJUFcl
- nhK+8Hf+BYo+xwtfsosC5Ah3dLb0+mHxN5xCFQfSjZr6i6kydsElb9SEsUeXw7HSzsq6XJZug
- AXRTSvrDj+Eq7bJro775rExRp0A2ZpVygIMQf2XZJ9C4RO9hFka82Qj2501P3qbh/6nx5r1ZD
- GFUwg91zFnUPdJcxxXyeqR7KxC370JK/uYj9XnBjJSPSolVFPEHZImM/tR2mBM22GldReKJpB
- V6C5dizJw8gsYzoBKq1uyaRDaooDktz2VBTC5kh2phYNKSwI/47RcsTnUGuyfrHghoc0zFOhy
- isvaAOMk/ooo6HrEUlnln5wf3jFfDVqtxMDxEgGQFBy1Gc04S61vdjvzNzEjWGoY2uX3L7P0y
- sIy72nusidrXmT8BRERKs+KLIGlSTQmJ3dnFQ5I/iiZ5Z2Iq4OF9yAORsoaq2L4vDI48POsgU
- 7K/M+YypCN8luUxSj2PN/OFVUss=
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Looping in xfs mailing list as this seems to be a XFS problem...
+Hello All,
 
-On 2/24/23 05:39, Pengfei Xu wrote:
-> Hi Helge Deller,
->
-> Greeting!
->
-> Reproduced code: https://github.com/xupengfe/syzkaller_logs/blob/main/23=
-0222_152458_xfs_dquot_alloc_bug/repro.c
-> Kconfig: https://github.com/xupengfe/syzkaller_logs/blob/main/230222_152=
-458_xfs_dquot_alloc_bug/kconfig_origin
-> Issue dmesg: https://github.com/xupengfe/syzkaller_logs/blob/main/230222=
-_152458_xfs_dquot_alloc_bug/v6.2_c9c3395d5e3dcc6daee66c6908354d47bf98cb0c_=
-dmesg.log
-> Bisect info(Might not be correct this time, but just gave some clues to =
-the problem)
-> https://github.com/xupengfe/syzkaller_logs/blob/main/230222_152458_xfs_d=
-quot_alloc_bug/bisect_info.log
->
-> All detailed info: https://github.com/xupengfe/syzkaller_logs/tree/main/=
-230222_152458_xfs_dquot_alloc_bug
->
-> Platform: ADL-S, and it could be reproduced on x86 platform in guest.
-> There is "xfs_dquot_alloc" related BUG in v6.2:
->
-> [   71.149963] xfs filesystem being mounted at /root/syzkaller.6TPmw0/0/=
-file0 supports timestamps until 2038 (0x7fffffff)
-> [   71.150653] 00000000: 58 41 47 49 00 00 00 01 00 00 00 00 00 00 80 00=
-  XAGI............
-> [   71.151006] 00000010: 00 00 00 40 00 00 00 06 00 00 00 01 00 00 00 37=
-  ...@...........7
-> [   71.151321] 00000020: 00 00 00 20 ff ff ff ff ff ff ff ff ff ff ff ff=
-  ... ............
-> [   71.151633] 00000030: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
-  ................
-> [   71.151946] 00000040: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
-  ................
-> [   71.152259] 00000050: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
-  ................
-> [   71.152570] 00000060: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
-  ................
-> [   71.152881] 00000070: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
-  ................
-> [   71.153193] 00000080: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
-  ................
-> [   71.153607] 00000090: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
-  ................
-> [   71.153921] 000000a0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
-  ................
-> [   71.154237] 000000b0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
-  ................
-> [   71.154549] 000000c0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
-  ................
-> [   71.154865] 000000d0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
-  ................
-> [   71.155180] 000000e0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
-  ................
-> [   71.155494] 000000f0: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
-  ................
-> [   71.155807] 00000100: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
-  ................
-> [   71.156119] 00000110: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff=
-  ................
-> [   71.156433] 00000120: ff ff ff ff ff ff ff ff 00 00 00 00 00 00 00 00=
-  ................
-> [   71.156747] 00000130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00=
-  ................
-> [   71.157059] 00000140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00=
-  ................
-> [   71.157382] 00000150: 00 00 00 00 00 00 00 00                        =
-  ........
-> [   71.157671] XFS (loop3): Internal error xfs_iunlink_remove_inode at l=
-ine 2013 of file fs/xfs/xfs_inode.c.  Caller xfs_ifree+0xed/0x9e0
-> [   71.158154] CPU: 1 PID: 137 Comm: kworker/1:3 Not tainted 6.2.0-c9c33=
-95d5e3d #1
-> [   71.158447] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BI=
-OS rel-1.16.0-0-gd239552ce722-prebuilt.qemu.org 04/01/2014
-> [   71.158890] Workqueue: xfs-inodegc/loop3 xfs_inodegc_worker
-> [   71.159117] Call Trace:
-> [   71.159220]  <TASK>
-> [   71.159313]  dump_stack_lvl+0xa7/0xdb
-> [   71.159478]  dump_stack+0x19/0x1f
-> [   71.159621]  xfs_corruption_error+0xd7/0xe0
-> [   71.159805]  ? xfs_ifree+0xed/0x9e0
-> [   71.159957]  xfs_iunlink_remove+0x32e/0x590
-> [   71.160136]  ? xfs_ifree+0xed/0x9e0
-> [   71.160290]  xfs_ifree+0xed/0x9e0
-> [   71.160432]  ? write_comp_data+0x2f/0x90
-> [   71.160600]  ? xfs_trans_ijoin+0x47/0x70
-> [   71.160768]  ? __sanitizer_cov_trace_pc+0x25/0x60
-> [   71.160964]  ? xfs_trans_add_item+0x79/0x1c0
-> [   71.161151]  xfs_inactive_ifree+0xf8/0x2a0
-> [   71.161324]  xfs_inactive+0x226/0x340
-> [   71.161482]  xfs_inodegc_worker+0xd3/0x430
-> [   71.161657]  process_one_work+0x3b1/0x960
-> [   71.161837]  worker_thread+0x52/0x660
-> [   71.161999]  ? __pfx_worker_thread+0x10/0x10
-> [   71.162184]  kthread+0x161/0x1a0
-> [   71.162331]  ? __pfx_kthread+0x10/0x10
-> [   71.162498]  ret_from_fork+0x29/0x50
-> [   71.162670]  </TASK>
-> [   71.162773] XFS (loop3): Corruption detected. Unmount and run xfs_rep=
-air
-> [   71.163039] XFS (loop3): xfs_inactive_ifree: xfs_ifree returned error=
- -117
-> [   71.163869] repro: attempt to access beyond end of device
-> [   71.163869] loop3: rw=3D432129, sector=3D65535, nr_sectors =3D 16 lim=
-it=3D65536
-> [   71.164410] XFS (loop3): log I/O error -5
-> [   71.166002] XFS (loop3): Metadata I/O Error (0x1) detected at xfs_ina=
-ctive_ifree+0x232/0x2a0 (fs/xfs/xfs_inode.c:1612).  Shutting down filesyst=
-em.
-> [   71.166541] XFS (loop3): Please unmount the filesystem and rectify th=
-e problem(s)
-> [   71.167188] XFS (loop1): DAX unsupported by block device. Turning off=
- DAX.
-> [   71.167530] XFS (loop7): DAX unsupported by block device. Turning off=
- DAX.
-> [   71.167859] XFS (loop6): DAX unsupported by block device. Turning off=
- DAX.
-> [   71.168188] XFS (loop4): DAX unsupported by block device. Turning off=
- DAX.
-> [   71.168554] XFS (loop1): Mounting V4 Filesystem 86ecfda0-089a-461f-b0=
-78-1b43afedebc1
-> [   71.168995] XFS (loop7): Mounting V4 Filesystem 86ecfda0-089a-461f-b0=
-78-1b43afedebc1
-> [   71.169595] XFS (loop2): Unmounting Filesystem 86ecfda0-089a-461f-b07=
-8-1b43afedebc1
-> [   71.169614] XFS (loop6): Mounting V4 Filesystem 86ecfda0-089a-461f-b0=
-78-1b43afedebc1
-> [   71.170444] XFS (loop4): Mounting V4 Filesystem 86ecfda0-089a-461f-b0=
-78-1b43afedebc1
-> [   71.172161] XFS (loop3): Quotacheck: Unsuccessful (Error -5): Disabli=
-ng quotas.
-> [   71.172510] xfs filesystem being mounted at /root/syzkaller.mc3H24/0/=
-file0 supports timestamps until 2038 (0x7fffffff)
-> [   71.174633] XFS (loop3): Unmounting Filesystem 86ecfda0-089a-461f-b07=
-8-1b43afedebc1
-> [   71.175936] XFS (loop5): DAX unsupported by block device. Turning off=
- DAX.
-> [   71.176303] XFS (loop5): Mounting V4 Filesystem 86ecfda0-089a-461f-b0=
-78-1b43afedebc1
-> [   71.178679] XFS (loop4): totally zeroed log
-> [   71.179069] XFS (loop4): Ending clean mount
-> [   71.179442] XFS (loop4): Quotacheck needed: Please wait.
-> [   71.183738] XFS (loop6): totally zeroed log
-> [   71.184537] repro: attempt to access beyond end of device
-> [   71.184537] loop4: rw=3D432129, sector=3D65535, nr_sectors =3D 16 lim=
-it=3D65536
-> [   71.184637] XFS (loop6): Ending clean mount
-> [   71.185052] XFS (loop4): log I/O error -5
-> [   71.185339] XFS (loop6): Quotacheck needed: Please wait.
-> [   71.185404] XFS (loop4): Filesystem has been shut down due to log err=
-or (0x2).
-> [   71.185883] XFS (loop4): Please unmount the filesystem and rectify th=
-e problem(s).
-> [   71.186372] XFS (loop4): Quotacheck: Unsuccessful (Error -5): Disabli=
-ng quotas.
-> [   71.186705] xfs filesystem being mounted at /root/syzkaller.uq7iOt/0/=
-file0 supports timestamps until 2038 (0x7fffffff)
-> [   71.187608] repro: attempt to access beyond end of device
-> [   71.187608] loop6: rw=3D432129, sector=3D65535, nr_sectors =3D 16 lim=
-it=3D65536
-> [   71.188127] XFS (loop6): log I/O error -5
-> [   71.188317] XFS (loop6): Filesystem has been shut down due to log err=
-or (0x2).
-> [   71.188599] XFS (loop6): Please unmount the filesystem and rectify th=
-e problem(s).
-> [   71.188998] XFS (loop6): Quotacheck: Unsuccessful (Error -5): Disabli=
-ng quotas.
-> [   71.189324] xfs filesystem being mounted at /root/syzkaller.OjSrkA/0/=
-file0 supports timestamps until 2038 (0x7fffffff)
-> [   71.191782] XFS (loop4): Unmounting Filesystem 86ecfda0-089a-461f-b07=
-8-1b43afedebc1
-> [   71.193911] XFS (loop6): Unmounting Filesystem 86ecfda0-089a-461f-b07=
-8-1b43afedebc1
-> [   71.207573] XFS (loop1): totally zeroed log
-> [   71.207813] XFS (loop7): totally zeroed log
-> [   71.208396] XFS (loop7): Ending clean mount
-> [   71.208664] XFS (loop1): Ending clean mount
-> [   71.209093] XFS (loop1): Quotacheck needed: Please wait.
-> [   71.210841] XFS (loop7): Quotacheck needed: Please wait.
-> [   71.216659] repro: attempt to access beyond end of device
-> [   71.216659] loop7: rw=3D432129, sector=3D65535, nr_sectors =3D 16 lim=
-it=3D65536
-> [   71.217165] XFS (loop7): log I/O error -5
-> [   71.217375] XFS (loop7): Filesystem has been shut down due to log err=
-or (0x2).
-> [   71.217674] XFS (loop7): Please unmount the filesystem and rectify th=
-e problem(s).
-> [   71.218071] XFS (loop7): Quotacheck: Unsuccessful (Error -5): Disabli=
-ng quotas.
-> [   71.218402] xfs filesystem being mounted at /root/syzkaller.Q5dMMG/0/=
-file0 supports timestamps until 2038 (0x7fffffff)
-> [   71.219906] XFS (loop7): Unmounting Filesystem 86ecfda0-089a-461f-b07=
-8-1b43afedebc1
-> [   71.224443] repro: attempt to access beyond end of device
-> [   71.224443] loop1: rw=3D432129, sector=3D65535, nr_sectors =3D 16 lim=
-it=3D65536
-> [   71.224960] XFS (loop1): log I/O error -5
-> [   71.225151] XFS (loop1): Filesystem has been shut down due to log err=
-or (0x2).
-> [   71.225543] XFS (loop1): Please unmount the filesystem and rectify th=
-e problem(s).
-> [   71.225966] XFS (loop1): Quotacheck: Unsuccessful (Error -5): Disabli=
-ng quotas.
-> [   71.226310] xfs filesystem being mounted at /root/syzkaller.qCVHXV/0/=
-file0 supports timestamps until 2038 (0x7fffffff)
-> [   71.227591] BUG: kernel NULL pointer dereference, address: 0000000000=
-0002a8
-> [   71.227873] #PF: supervisor read access in kernel mode
-> [   71.228077] #PF: error_code(0x0000) - not-present page
-> [   71.228280] PGD c313067 P4D c313067 PUD c1fe067 PMD 0
-> [   71.228494] Oops: 0000 [#1] PREEMPT SMP NOPTI
-> [   71.228673] CPU: 0 PID: 161 Comm: kworker/0:4 Not tainted 6.2.0-c9c33=
-95d5e3d #1
-> [   71.228961] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BI=
-OS rel-1.16.0-0-gd239552ce722-prebuilt.qemu.org 04/01/2014
-> [   71.229400] Workqueue: xfs-inodegc/loop1 xfs_inodegc_worker
-> [   71.229626] RIP: 0010:xfs_dquot_alloc+0x95/0x1e0
-> [   71.229820] Code: 80 15 ad 85 48 c7 c6 7c 6b 92 83 e8 75 0f 6b ff 49 =
-8b 8d 60 01 00 00 44 89 e0 31 d2 48 c7 c6 18 ae 8f 83 48 8d bb 18 02 00 00=
- <f7> b1 a8 02 2
-> [   71.230528] RSP: 0018:ffffc90000babc20 EFLAGS: 00010246
-> [   71.230737] RAX: 0000000000000009 RBX: ffff8880093c98c0 RCX: 00000000=
-00000000
-> [   71.231014] RDX: 0000000000000000 RSI: ffffffff838fae18 RDI: ffff8880=
-093c9ad8
-> [   71.231292] RBP: ffffc90000babc48 R08: 0000000000000002 R09: 00000000=
-00000000
-> [   71.231570] R10: ffffc90000baba80 R11: ffff88800af08d98 R12: 00000000=
-00000009
-> [   71.231850] R13: ffff88800c4bc000 R14: ffff88800c4bc000 R15: 00000000=
-00000004
-> [   71.232129] FS:  0000000000000000(0000) GS:ffff88807dc00000(0000) knl=
-GS:0000000000000000
-> [   71.232441] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [   71.232668] CR2: 00000000000002a8 CR3: 000000000a1d2002 CR4: 00000000=
-00770ef0
-> [   71.232949] PKRU: 55555554
-> [   71.233061] Call Trace:
-> [   71.233162]  <TASK>
-> [   71.233254]  xfs_qm_dqread+0x46/0x440
-> [   71.233410]  ? xfs_qm_dqget_inode+0x13e/0x500
-> [   71.233596]  xfs_qm_dqget_inode+0x154/0x500
-> [   71.233774]  xfs_qm_dqattach_one+0x142/0x3c0
-> [   71.233961]  xfs_qm_dqattach_locked+0x14a/0x170
-> [   71.234149]  xfs_qm_dqattach+0x52/0x80
-> [   71.234307]  xfs_inactive+0x186/0x340
-> [   71.234461]  xfs_inodegc_worker+0xd3/0x430
-> [   71.234630]  process_one_work+0x3b1/0x960
-> [   71.234802]  worker_thread+0x52/0x660
-> [   71.234957]  ? __pfx_worker_thread+0x10/0x10
-> [   71.235136]  kthread+0x161/0x1a0
-> [   71.235279]  ? __pfx_kthread+0x10/0x10
-> [   71.235442]  ret_from_fork+0x29/0x50
-> [   71.235602]  </TASK>
-> [   71.235696] Modules linked in:
-> [   71.235826] CR2: 00000000000002a8
-> [   71.235964] ---[ end trace 0000000000000000 ]---
->
-> Reporting the above issue and providing a reproduced way seems valuable.
->
-> But not sure report to who in kernel community.
-> So used RIP: "xfs_dquot_alloc" key word to bisect between v6.2 and v5.11=
-.
-> I know there is BUG also but with some other RIP info.
->
-> Related commit:
-> 29837019d5ebb80a5f180af3107a0645c731a770
-> Merge tag 'io_uring-5.19-2022-07-08' of git://git.kernel.dk/linux-block
->
-> This might not be the right point of suspicion.
-> Could you help to take a look or add the correct developer for this issu=
-e?
-> Thanks a lot!
->
-> ---
->
-> If you don't need an environment to reproduce the problem or if you alre=
-ady
-> have one, please ignore the following information.
->
-> How to reproduce:
-> git clone https://gitlab.com/xupengfe/repro_vm_env.git
-> cd repro_vm_env
-> tar -xvf repro_vm_env.tar.gz
-> cd repro_vm_env; ./start3.sh  // it needs qemu-system-x86_64 and I used =
-v7.1.0
->     // start3.sh will load bzImage_2241ab53cbb5cdb08a6b2d4688feb13971058=
-f65 v6.2-rc5 kernel
->     // You could change the bzImage_xxx as you want
-> In vm and login with root,  there is no password for root.
->
-> After login vm successfully, you could transfer reproduced binary to the=
- VM by below way, and reproduce the problem:
-> gcc -pthread -o repro repro.c
-> scp -P 10023 repro root@localhost:/root/
->
-> Get the bzImage for target kernel:
-> Please use target kconfig and copy it to kernel_src/.config
-> make olddefconfig
-> make -jx bzImage           //x should equal or less than cpu num your pc=
- has
->
-> Fill the bzImage file into above start3.sh to load the target kernel vm.
->
->
-> Tips:
-> If you already have qemu-system-x86_64, please ignore below info.
-> If you want to install qemu v7.1.0 version:
-> git clone https://github.com/qemu/qemu.git
-> cd qemu
-> git checkout -f v7.1.0
-> mkdir build
-> cd build
-> yum install -y ninja-build.x86_64
-> ../configure --target-list=3Dx86_64-softmmu --enable-kvm --enable-vnc --=
-enable-gtk --enable-sdl
-> make
-> make install
->
-> Thanks!
-> BR.
+Please find the RFCv3 patchset which adds support for iomap subpage dirty state
+tracking which improves write performance and should reduce the write
+amplification problem on platforms with smaller filesystem blocksize compared
+to pagesize.
+E.g. On Power with 64k default pagesize and with 4k filesystem blocksize.
+
+RFCv2 -> RFCv3
+===============
+1. Addressed review comments on adding accessor APIs for both uptodate and dirty
+   iop bitmap. (todo-1 of rfcv2).
+   Addressed few other review comments from Christoph & Matthew.
+2. Performance testing of these patches reveal the same performance improvement
+   i.e. the given fio workload shows 16x perf improvement on nvme drive.
+   (completed todo-3 of rfcv2)
+3. Addressed todo-4 of rfcv2
+
+Few TODOs
+===========
+1. Test gfs2 and zonefs with these changes (todo-2 of rfcv2)
+2. Look into todo-5 of rfcv2
+
+xfstests testing with default options and 1k blocksize on x86 reveals no new
+issues. Also didn't observe any surprises on Power with 4k blocksize.
+(Please do suggest if there are any specific xfstests config options (for
+xfs) which are good to get it tested for this patch series?)
+
+
+Copy-Paste Cover letter of RFCv2
+================================
+
+RFC -> RFCv2
+=============
+1. One of the key fix in v2 is that earlier when the folio gets marked as dirty,
+   we were never marking the bits dirty in iop bitmap.
+   This patch adds support for iomap_dirty_folio() as new ->dirty_folio() aops
+   callback, which sets the dirty bitmap in iop and later call filemap_dirty_folio().
+   This was one of the review comment that was discussed in RFC.
+
+2. One of the other key fix identified in testing was that iop structure could
+   get allocated at the time of the writeback if the folio is uptodate.
+   (since it can get freed during memory pressure or during
+   truncate_inode_partial_folio() in case of large folio). This could then cause
+   nothing to get written if we have not marked the necessary bits as dirty in
+   iop->state[]. Patch-1 & Patch-3 takes care of that.
+
+TODOs
+======
+1. I still need to work on macros which we could declare and use for easy
+   reference to uptodate/dirty bits in iop->state[] bitmap (based on previous
+   review comments).
+
+2. Test xfstests on other filesystems which are using the iomap buffered write
+   path (gfs2, zonefs).
+
+3. Latest performance testing with this patch series (I am not expecting any
+   surprises here. The perf improvements should be more or less similar to rfc).
+
+4. To address one of the todo in Patch-3. I think I missed to address it and
+   noticed it only now before sending. But it should be easily addressable.
+   I can address it in the next revision along with others.
+
+5. To address one of the other review comments like what happens with a large
+   folio. Can we limit the size of bitmaps if the folio is too large e.g. > 2MB.
+
+   [RH] - I can start looking into this area too, if we think these patches
+   are looking good. My preference would be to work on todos 1-4 as part of this
+   patch series and take up bitmap optimization as a follow-up work for next
+   part. Please do let me know your thoughts and suggestions on this.
+
+Note: I have done a 4k bs test with auto group on Power with 64k pagesize and
+I haven't found any surprises. I am also running a full bench of all tests with
+x86 and 1k blocksize, but it still hasn't completed. I can update the results
+once it completes.
+
+Also as we discussed, all the dirty and uptodate bitmap tracking code for
+iomap_page's state[] bitmap, is still contained within iomap buffered-io.c file.
+
+I would appreciate any review comments/feedback and help on this work i.e.
+adding subpage size dirty tracking to reduce write amplification problem and
+improve buffered write performance. Kindly note that w/o these patches,
+below type of workload gets severly impacted.
+
+
+Performance Results from RFC [1]:
+=================================
+1. Performance testing of below fio workload reveals ~16x performance
+improvement on nvme with XFS (4k blocksize) on Power (64K pagesize)
+FIO reported write bw scores, improved from ~28 MBps to ~452 MBps.
+
+<test_randwrite.fio>
+[global]
+	ioengine=psync
+	rw=randwrite
+	overwrite=1
+	pre_read=1
+	direct=0
+	bs=4k
+	size=1G
+	dir=./
+	numjobs=8
+	fdatasync=1
+	runtime=60
+	iodepth=64
+	group_reporting=1
+
+[fio-run]
+
+2. Also our internal performance team reported that this patch improves there
+   database workload performance by around ~83% (with XFS on Power)
+
+[1]: https://lore.kernel.org/linux-xfs/cover.1666928993.git.ritesh.list@gmail.com/
+
+
+Ritesh Harjani (IBM) (3):
+  iomap: Allocate iop in ->write_begin() early
+  iomap: Change uptodate variable name to state
+  iomap: Support subpage size dirty tracking to improve write performance
+
+ fs/gfs2/aops.c         |   2 +-
+ fs/iomap/buffered-io.c | 166 ++++++++++++++++++++++++++++++++++++-----
+ fs/xfs/xfs_aops.c      |   2 +-
+ fs/zonefs/super.c      |   2 +-
+ include/linux/iomap.h  |   1 +
+ 5 files changed, 150 insertions(+), 23 deletions(-)
+
+--
+2.39.2
 
