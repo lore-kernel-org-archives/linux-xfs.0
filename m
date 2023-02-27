@@ -2,80 +2,98 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8849C64ED8
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Feb 2023 14:50:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E89A3C64ED8
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Feb 2023 17:09:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229515AbjB0OuH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Feb 2023 09:50:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58550 "EHLO
+        id S229861AbjB0RJj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Feb 2023 12:09:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229486AbjB0OuG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Feb 2023 09:50:06 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 132B6199DF
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Feb 2023 06:49:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1677509351;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=x/ElBBPK8UgayfxVszWmis2Rs7vMYtKDO6N6XgXO/FE=;
-        b=NEz+rIk3oxtYJgfNljZWJDGSlaP3zNLXabALbo2DZcMygJT5zLaWZLxGODhVWV4iWEdtTe
-        k2X8y1P49juj10NIYR9nTciMpQsJSLUXHu7feVlkKup/Md9JXvyC05oYZ5oHjz1jymWaZp
-        Rd9n8ZzpJTDoZIKJzhFTGrZiOEAGsnY=
-Received: from mail-oi1-f199.google.com (mail-oi1-f199.google.com
- [209.85.167.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-533-adb6WVmZO1Cuh1jCq2S2Rg-1; Mon, 27 Feb 2023 09:49:09 -0500
-X-MC-Unique: adb6WVmZO1Cuh1jCq2S2Rg-1
-Received: by mail-oi1-f199.google.com with SMTP id bh14-20020a056808180e00b00364c7610c6aso1684325oib.6
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Feb 2023 06:49:09 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=x/ElBBPK8UgayfxVszWmis2Rs7vMYtKDO6N6XgXO/FE=;
-        b=TW5iwrPG5VFsYETjLudfQLGvwEq1Gy9Zm+qlQvgU5NyZLCP5R+MplAo4HKvddMF5rs
-         s5dM/VgO7VmIZ4/tbBMOsAGNYS4dy0h+eliJl08ucsRgJf/TOB9DFr3wvTj89Ao7ikPf
-         9y/cE7hr0gph8Z+/H1s2ojwjfS9gRteeE1m6Tqe0BS11LdCapN/zbZWyAaAUhl72u3Gl
-         C9VCtYYmtT4+RPZthjh+45ReWLWEBwZFSyqwpHc1wBgHEpCksJXYfNW+SUlQwy9S2ILy
-         BTOzApg6byzIHoP7hXPOGqR51NSslD8FjL0Aa3fe18ZZGZms1GFEIyZIDd9NTGSCi1V3
-         NYPw==
-X-Gm-Message-State: AO0yUKXz3KplRBw4mSqeV7sacPqEosNfql1RkwhKsHKgSFREc4Upu7R3
-        K7+9nhgRR/WWj4Tr1x8ni6b6+NfvNZFabfkd1F3Zj2Z1ggQ4oJpz9MsA2C6zPWRq8jn0Y0FFVIN
-        fOd8ZfoPoFMyl2SJLU+9S422H90AC6D84SKDbwuqA9zez
-X-Received: by 2002:a54:458f:0:b0:384:118f:f9c8 with SMTP id z15-20020a54458f000000b00384118ff9c8mr2407661oib.7.1677509348817;
-        Mon, 27 Feb 2023 06:49:08 -0800 (PST)
-X-Google-Smtp-Source: AK7set9V/VQAYRRW+RNlMQ2Iyote9tJX8parcl0bidZVGDj2BvmlzSTAH41uVNut4gwBVIQHSrAfAR+yQ4Bzw/GT34Q=
-X-Received: by 2002:a54:458f:0:b0:384:118f:f9c8 with SMTP id
- z15-20020a54458f000000b00384118ff9c8mr2407655oib.7.1677509348429; Mon, 27 Feb
- 2023 06:49:08 -0800 (PST)
+        with ESMTP id S229527AbjB0RJi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Feb 2023 12:09:38 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0BCB1EBD7
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Feb 2023 09:09:37 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 36AC660EC4
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Feb 2023 17:09:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DE21C433D2;
+        Mon, 27 Feb 2023 17:09:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1677517776;
+        bh=E4P+iVIi1COIgq/2R2oXlBDTofQqjyLYbkK7qxUk4Ho=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Qih87W4boBv2yIWiItvFjwS3JD940FXjzMHICTuIJyZkPC2Wipl3gs8p1OjKiSfv9
+         k4XFO0Uw52gOxt7PElbVtKio8aLR8NxTIkTgFMDedtndSsutyrt5E7jPGNSsjF2aY0
+         vj/HbMl1DnnVuJ30QtPdDkdsMesXUiBn61p2iEZGAg3fAJCTXNYUDA+3k2aGQqsL80
+         wPMaKWoUR4tLC7hyHTViZ/88l7NbH4LWI95grPE7cxifUI5CVB7Lrbv2T5AgMAQ1Rz
+         IXoxh0pAcQYK7QfUlCUgTKBcG/SWRduG3pAh2vQyrA9uny2aJ+t5ZbI7UZb4RO3cc5
+         B4DNSkxjcMA9w==
+Date:   Mon, 27 Feb 2023 09:09:35 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: restore old agirotor behavior
+Message-ID: <Y/zjzx/4mQIYh6BC@magnolia>
+References: <Y/WoHLYbp82Xj7H8@magnolia>
+ <20230226220201.GT360264@dread.disaster.area>
 MIME-Version: 1.0
-References: <20230227131722.2091617-1-arjun@redhat.com>
-In-Reply-To: <20230227131722.2091617-1-arjun@redhat.com>
-From:   Arjun Shankar <arjun@redhat.com>
-Date:   Mon, 27 Feb 2023 15:48:57 +0100
-Message-ID: <CAG_osaZLSZ0VG4-oj2jRttYm0YRsaoZQPbTAW0UHwh+ODW=GsQ@mail.gmail.com>
-Subject: Re: [PATCH v2 RESEND] Remove several implicit function declarations
-To:     linux-xfs@vger.kernel.org
-Cc:     Carlos Maiolino <cem@kernel.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230226220201.GT360264@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> During configure, several ioctl checks omit the corresponding include
-> and a pwritev2 check uses the wrong feature test macro.
-> This commit fixes the same.
->
-> Signed-off-by: Arjun Shankar <arjun@redhat.com>
->
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+On Mon, Feb 27, 2023 at 09:02:01AM +1100, Dave Chinner wrote:
+> On Tue, Feb 21, 2023 at 09:29:00PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Prior to the removal of xfs_ialloc_next_ag, we would increment the agi
+> > rotor and return the *old* value.  atomic_inc_return returns the new
+> > value, which causes mkfs to allocate the root directory in AG 1.  Put
+> > back the old behavior (at least for mkfs) by subtracting 1 here.
+> > 
+> > Fixes: 20a5eab49d35 ("xfs: convert xfs_ialloc_next_ag() to an atomic")
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  fs/xfs/libxfs/xfs_ialloc.c |    2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> > index 65832c74e86c..550c6351e9b6 100644
+> > --- a/fs/xfs/libxfs/xfs_ialloc.c
+> > +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> > @@ -1729,7 +1729,7 @@ xfs_dialloc(
+> >  	 * an AG has enough space for file creation.
+> >  	 */
+> >  	if (S_ISDIR(mode))
+> > -		start_agno = atomic_inc_return(&mp->m_agirotor) % mp->m_maxagi;
+> > +		start_agno = (atomic_inc_return(&mp->m_agirotor) - 1) % mp->m_maxagi;
+> >  	else {
+> >  		start_agno = XFS_INO_TO_AGNO(mp, parent);
+> >  		if (start_agno >= mp->m_maxagi)
+> 
+> Change is fine, but it pushes the code to 85 columns. If you clean
+> it up to:
+> 
+> 	if (S_ISDIR(mode)) {
+> 		start_agno = (atomic_inc_return(&mp->m_agirotor) - 1) %
+> 				mp->m_maxagi;
+> 	} else {
+> 		....
+> 
+> Then you can add:
+> 
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Please disregard this RESEND. Looks like this has already been pushed
-to the for-next branch.
+Thanks, merged with tweaks!
 
+--D
+
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
