@@ -2,134 +2,339 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E946C64ED6
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Feb 2023 06:07:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA8ABC64ED6
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Feb 2023 07:28:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229776AbjB0GHC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Feb 2023 01:07:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52584 "EHLO
+        id S229673AbjB0H2E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Feb 2023 02:28:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229910AbjB0GGw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Feb 2023 01:06:52 -0500
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49066F758
-        for <linux-xfs@vger.kernel.org>; Sun, 26 Feb 2023 22:06:32 -0800 (PST)
-Received: from kwepemi500009.china.huawei.com (unknown [172.30.72.54])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4PQ93N2pW9zrS2G;
-        Mon, 27 Feb 2023 14:05:52 +0800 (CST)
-Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
- (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.21; Mon, 27 Feb
- 2023 14:06:28 +0800
-Date:   Mon, 27 Feb 2023 14:29:52 +0800
-From:   Long Li <leo.lilong@huawei.com>
-To:     <djwong@kernel.org>
-CC:     <david@fromorbit.com>, <linux-xfs@vger.kernel.org>,
-        <houtao1@huawei.com>, <yi.zhang@huawei.com>, <guoxuenan@huawei.com>
-Subject: [PATCH v2] xfs: fix hung when transaction commit fail in
- xfs_inactive_ifree
-Message-ID: <20230227062952.GA53788@ceph-admin>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        with ESMTP id S229451AbjB0H2D (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Feb 2023 02:28:03 -0500
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85B1E6E8A;
+        Sun, 26 Feb 2023 23:28:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1677482881; x=1709018881;
+  h=date:from:to:cc:subject:message-id:references:
+   in-reply-to:mime-version;
+  bh=dJWZ//FcO4lkim/WrqXFfkwjqNpt/VhC6bXM2OSlJL8=;
+  b=e1+7dRBbcPf2NUnMTCQzo00n5mmRi/xxcwMR3jHhLEYK1g20MrEEQzQY
+   nzHes+XtjqzGWQJw9Wp1NW9dx/9F8v3P00yDsj2j0D3a3yBDWX6QgxW3N
+   Yvwp5D7baj++X9Gi+YGEJOsdo5jjdyI/ZdvjWhz9fce22mcXkI/J1uvUW
+   HSWBD95bLpnWzLI7GnNz1maFp492IAmK3kT3usQEGtJMPOhFGQQaofUFI
+   BkB3AHeTSIiMFouhyxOFGfhycHqml70LuVXa+WOTi8t6fKJucmnxRTuTc
+   l7igfsTaQe4BRmo0cL95MVyWcZzYSi4FPOpi0HOFuiIAGnfbqHsccdRsU
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10633"; a="335279934"
+X-IronPort-AV: E=Sophos;i="5.97,331,1669104000"; 
+   d="scan'208";a="335279934"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Feb 2023 23:28:01 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10633"; a="742409895"
+X-IronPort-AV: E=Sophos;i="5.97,331,1669104000"; 
+   d="scan'208";a="742409895"
+Received: from orsmsx601.amr.corp.intel.com ([10.22.229.14])
+  by fmsmga004.fm.intel.com with ESMTP; 26 Feb 2023 23:28:00 -0800
+Received: from orsmsx601.amr.corp.intel.com (10.22.229.14) by
+ ORSMSX601.amr.corp.intel.com (10.22.229.14) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.16; Sun, 26 Feb 2023 23:28:00 -0800
+Received: from ORSEDG602.ED.cps.intel.com (10.7.248.7) by
+ orsmsx601.amr.corp.intel.com (10.22.229.14) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.16 via Frontend Transport; Sun, 26 Feb 2023 23:28:00 -0800
+Received: from NAM12-DM6-obe.outbound.protection.outlook.com (104.47.59.172)
+ by edgegateway.intel.com (134.134.137.103) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.16; Sun, 26 Feb 2023 23:28:00 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Ihy0CS6F8BuUBm8DnVUEbCWyqKV4dVlcVJK4nZA/PaARGLOyUmZskwEmU6vCXM+yUBEIu3NFF2NK0wNO7N4g3HOtN8v4qUuyHJhVfBaFgfv8m1tReWCsK/d3RS3BCHph36CBhhyJMQx1iRFUoNC6Yi7ll2fK+5YazyZjQ+RWMeSanuDF0Nw4Fubuk+5UwqgFIq5pDh9qDQl6amxOspo/meO4IqDvOsBkXZhZ2HBlmfedvao8VvCThqkimgZzeZuPuU1MFOwtgMhip9poHav6Q/CtVXafrKGGLQjIm9KPjJiQYDR9d7ggqzzpCqQDEPofDUE4sX8EF+TAZVmLRM39GA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ilpfzDCmQXuPpT4Sb4iWasSCCUhHSnzzn0vKI5A06Fw=;
+ b=aNruXQLAFXg2YD3Wx/Z1+PzQKMNJVHUMHG8iaDkBvtSVA9VS5lZVErV9MWIsTVp0/32WkGhQvcPa9nFtx28572DLemlLW796zpYo9SoOCbly9eEBFFg54BPwxdpwDIaTRFb8TDwXt0YsY/7Ve1Ou0fW2+sPtUqaX4PzuMxo6+Es8IokZ9Yy3DgeCrDLzlrM5tKGM6i1w19SyJ0G0yJdrZYBk8FuPy3esKMFZKfjJQgsV2r55W65cL5ZGSAVnVmLt5l9/TSETzMmEk0KmjELKba2vJnfCsLlzQsjy/1QIoSBlrIZ9uYoBKch5YOl0OQMFinlAjXQOrhV7soh6NzY0rQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from PH0PR11MB4839.namprd11.prod.outlook.com (2603:10b6:510:42::18)
+ by SN7PR11MB6653.namprd11.prod.outlook.com (2603:10b6:806:26f::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6134.29; Mon, 27 Feb
+ 2023 07:27:58 +0000
+Received: from PH0PR11MB4839.namprd11.prod.outlook.com
+ ([fe80::e28f:b27b:4b9d:2154]) by PH0PR11MB4839.namprd11.prod.outlook.com
+ ([fe80::e28f:b27b:4b9d:2154%9]) with mapi id 15.20.6134.029; Mon, 27 Feb 2023
+ 07:27:58 +0000
+Date:   Mon, 27 Feb 2023 15:29:12 +0800
+From:   Pengfei Xu <pengfei.xu@intel.com>
+To:     Dave Chinner <david@fromorbit.com>
+CC:     Helge Deller <deller@gmx.de>,
+        linux-xfs <linux-xfs@vger.kernel.org>, <asml.silence@gmail.com>,
+        <geert@linux-m68k.org>, <linux-kernel@vger.kernel.org>,
+        <heng.su@intel.com>
+Subject: Re: [Syzkaller & bisect] There is "xfs_dquot_alloc" related BUG in
+ v6.2 in guest
+Message-ID: <Y/xbyABFGZEeKduv@xpf.sh.intel.com>
+References: <Y/g/femUL7jZ9gF3@xpf.sh.intel.com>
+ <a39d97c1-2ced-d159-f742-e5c6008f79ee@gmx.de>
+ <20230226223403.GU360264@dread.disaster.area>
+Content-Type: text/plain; charset="us-ascii"
 Content-Disposition: inline
-X-Originating-IP: [10.175.127.227]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- kwepemi500009.china.huawei.com (7.221.188.199)
-X-CFilter-Loop: Reflected
+In-Reply-To: <20230226223403.GU360264@dread.disaster.area>
+X-ClientProxiedBy: SG2PR04CA0207.apcprd04.prod.outlook.com
+ (2603:1096:4:187::9) To PH0PR11MB4839.namprd11.prod.outlook.com
+ (2603:10b6:510:42::18)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR11MB4839:EE_|SN7PR11MB6653:EE_
+X-MS-Office365-Filtering-Correlation-Id: 764fcebb-cbf8-4fa3-bbc8-08db1894262a
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: bFjHiY+c4OzIcOANiozMF+TBuMT2Nma97lfvO7brdfiQYAyAaWx+w518XNdg8vOyZ2c/ivE1dBfW6ni1xp+BHL6dN7tbZMqfXCAUtLFuyylaSTIeJWXD3n0X0T+F6+nJ0lGBTq9fnOYFKOIQKhkGgHwnOEesx1qUTyDa2Ipey0C63cAOcDVSt0xziwdsKU6f4MsJ7x2eHkTtu9APnLumvmqrB2q8zeK8rMuvNQCkzLZkJHJm18SIqi6bUzZS9bkrBMTfYGYAWxnB8aKYTCM+2pHxcAx2/txudEli1nRwE5T4Zd9GVBoD+qst3C5GDOsj/ASSLJOKC5d+GPmo4T3/AIOatks+lw/hguiY/pk9Y+QHxcY19KdcqvRStL1S9yqasb3FZ/w6UhCW0Rqud5x/N7ciXpCe2v1TXcQReB8oq/5rQuWURsE3CZdrD4AdMkyXsp/FuN6EFgKr3rxDniWPIcOpU4SDSqNS9BtehgBDUs6KVD5OaCkO2JDVzUQUNfP+OYFxKzRt0inKQqkn0NtNYq2yKboJX4tPypBP238cqZi+g9yvUdZ3uboGzHGppxiTFeAad8OX8umtcFz9mch+AwfqmyjuJKhIvChnhRVSf8OVKvpEbYxYXXSgi2NvYbholkpTNOcsPddZ1M5ZlzVxBmcgAouKuOidQwjF3HqIaRM=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR11MB4839.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(376002)(396003)(136003)(346002)(366004)(39860400002)(451199018)(54906003)(316002)(86362001)(38100700002)(82960400001)(6666004)(107886003)(6506007)(53546011)(83380400001)(186003)(26005)(6512007)(5660300002)(45080400002)(8936002)(2906002)(966005)(6486002)(478600001)(6916009)(4326008)(41300700001)(8676002)(44832011)(66476007)(66946007)(66556008);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?+JXVZ29dqhUWsF7AKd/i1qllhEz4Ub2fDSEJbk33SvWgE07bLsLAJvZAHMY5?=
+ =?us-ascii?Q?eWbkG4WjP/f6bSfphiSg7bpZLAqqhXO66UQBwrhl2Jodl+5r758buEmqMIm2?=
+ =?us-ascii?Q?wUi3/2WPnaN16Ch8fm/oW19Z080/JNRdpRxXXSszPe/9K6L2q8blXpgNSDg8?=
+ =?us-ascii?Q?Xvp92lhBeiPuDRVIZGJbMYRNBbzjG4/WPwB0Nz0tdsWq8c4iEfnCgCvfj5Ck?=
+ =?us-ascii?Q?gXGIL+Ps3pe1mIpmGHekBnDp1FmznLjSSozCskCwsTFCiXjvtM2PGfZyRh7C?=
+ =?us-ascii?Q?Pdsq8vRXR8Bce2hJTyUnP2TMDPfYYTVs8WWUthWucKpHKuVMJRL2IFR4llCW?=
+ =?us-ascii?Q?oO/lBVL2m0VD5WGl0EzvWBKqUF87tqKKk8c9mr1n6QoIt2+CnWgJECU6GyuH?=
+ =?us-ascii?Q?zjGG1O04SYRPn9SlAXEvi/c2EKSjio7gRFEIkbFELPfxaw+vPExuzo907JGN?=
+ =?us-ascii?Q?f18znjoTn8uvt0x4vWUCGnlbMXfgQprPeCGtRWYFbXCeTqyxPK/EQc8bAm7Y?=
+ =?us-ascii?Q?JdhDTKGKFXnrNvsUaqBWsoflrE+b819d78BjtSMpS/UWNGJr0YHPJMnFO+VP?=
+ =?us-ascii?Q?gwrWWG++phL61QPAlXdT5+w/VKcvAnbOQcF45YYc9zA8mDVlwQFWStxp5CoR?=
+ =?us-ascii?Q?vqpOSMAaVyckNpVD86TL/Pi7t9TrghRzUvV1bGEaZqR8ZUt1vV7T3p2gyjpT?=
+ =?us-ascii?Q?PyhyXrasC7B2x//ENqvkDEZriGK1KdoJBhfmMtCF/V9YNEOazUz/Bw71JlqG?=
+ =?us-ascii?Q?IA5H7L05gR3WpkQ7CbqWfbo7GReNBgW2CbCJH5Kc32rzKQ1OSqcd71xnwS/H?=
+ =?us-ascii?Q?zk1R68FcX568V5eHsxtHKfU8FvD6VjmimQrQPSz9jI4Pviqyvqn7kL2jQlxO?=
+ =?us-ascii?Q?VdBm3zIDNrdKlpf3ZxE04ChCKhM/W7rxAS04WpNf3fT6Iwtg289pnR8OO9vU?=
+ =?us-ascii?Q?AwJKo0KguElIGMNyRFUkkRCGsyqMAUQNUrnv4WCfkBTZRfsz9W9NwaXeiM2C?=
+ =?us-ascii?Q?koevjcXvSsEwYyR3FybkQ6vVnXghNWPP4v+6jD/9ALuGKEvYw3OtOfT8qDxc?=
+ =?us-ascii?Q?lzMsmtR/maha9S4eyPZxouzjaQ+rdAi2O1/LCNUo07y1PLkmx3OoFFGOBjqm?=
+ =?us-ascii?Q?mHovmb5ZB1rRpS/ZCzbB+AsCjMc9DOKg5dg7/oGr/R+1x33tsKb33VluUSEz?=
+ =?us-ascii?Q?4UuoPpaWxSaZ3kQHkOzFymyr7rYQYQJed0UexxXVCzdS71L89vmn3Vyg9CfY?=
+ =?us-ascii?Q?8XOytuigWnfiuQ+XjXHo+OnsIC6GAKsKw9pWyOIjcCCH6pBF4M/4xZ7gyU5Z?=
+ =?us-ascii?Q?DzjEqyfiPP0oe4CvrWIKiH0Gg245WNh77tcbHSf38GiV2WzlgS4cRYrAKEgA?=
+ =?us-ascii?Q?6nmdwJmddqIrgnMGVA7YeeqTbUB2Y89rb51RpGFINGGi6+TGx5heQcgoxUBY?=
+ =?us-ascii?Q?IaIHxMRRojd/nI1jc7NZPtFa0fuvmQzuT1v4xJ8thvde4lnWiXWKZvnGM0cb?=
+ =?us-ascii?Q?zaQOKs98Lu6+mmASQxjPl3hAWQXmefCUjwGYixcxlVJkV6pUNnP6/CBS3wEV?=
+ =?us-ascii?Q?WkZKvWHi5Y3JodjNl7CYVSnOA5+ph2no0tOAL+/QynfYEYviKxJ5Phcw+x5f?=
+ =?us-ascii?Q?cA=3D=3D?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 764fcebb-cbf8-4fa3-bbc8-08db1894262a
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR11MB4839.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Feb 2023 07:27:58.1680
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 1Ga2AlrUozMpr8jKUOagRlOjIQN84Kdnv8J+nLHPsQZLY0yiF6BvpnK28evTymEMrpkk9Jd2zqapcu/ZxWvBGQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR11MB6653
+X-OriginatorOrg: intel.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-After running unplug disk test and unmount filesystem, the umount thread
-hung all the time.
+Hi Dave and Helge Deller,
 
- crash> dmesg
- sd 0:0:0:0: rejecting I/O to offline device
- XFS (sda): log I/O error -5
- XFS (sda): Corruption of in-memory data (0x8) detected at xfs_defer_finish_noroll+0x12e0/0x1cf0
-	(fs/xfs/libxfs/xfs_defer.c:504).  Shutting down filesystem.
- XFS (sda): Please unmount the filesystem and rectify the problem(s)
- XFS (sda): xfs_inactive_ifree: xfs_trans_commit returned error -5
- XFS (sda): Unmounting Filesystem
+Thanks Helge Deller to add the xfs mailing list!
 
- crash> bt 3368
- PID: 3368   TASK: ffff88801bcd8040  CPU: 3   COMMAND: "umount"
-  #0 [ffffc900086a7ae0] __schedule at ffffffff83d3fd25
-  #1 [ffffc900086a7be8] schedule at ffffffff83d414dd
-  #2 [ffffc900086a7c10] xfs_ail_push_all_sync at ffffffff8256db24
-  #3 [ffffc900086a7d18] xfs_unmount_flush_inodes at ffffffff824ee7e2
-  #4 [ffffc900086a7d28] xfs_unmountfs at ffffffff824f2eff
-  #5 [ffffc900086a7da8] xfs_fs_put_super at ffffffff82503e69
-  #6 [ffffc900086a7de8] generic_shutdown_super at ffffffff81aeb8cd
-  #7 [ffffc900086a7e10] kill_block_super at ffffffff81aefcfa
-  #8 [ffffc900086a7e30] deactivate_locked_super at ffffffff81aeb2da
-  #9 [ffffc900086a7e48] deactivate_super at ffffffff81aeb639
- #10 [ffffc900086a7e68] cleanup_mnt at ffffffff81b6ddd5
- #11 [ffffc900086a7ea0] __cleanup_mnt at ffffffff81b6dfdf
- #12 [ffffc900086a7eb0] task_work_run at ffffffff8126e5cf
- #13 [ffffc900086a7ef8] exit_to_user_mode_prepare at ffffffff813fa136
- #14 [ffffc900086a7f28] syscall_exit_to_user_mode at ffffffff83d25dbb
- #15 [ffffc900086a7f40] do_syscall_64 at ffffffff83d1f8d9
- #16 [ffffc900086a7f50] entry_SYSCALL_64_after_hwframe at ffffffff83e00085
+On 2023-02-27 at 09:34:03 +1100, Dave Chinner wrote:
+> On Sat, Feb 25, 2023 at 08:58:25PM +0100, Helge Deller wrote:
+> > Looping in xfs mailing list as this seems to be a XFS problem...
+> > On 2/24/23 05:39, Pengfei Xu wrote:
+> > > [   71.225966] XFS (loop1): Quotacheck: Unsuccessful (Error -5): Disabling quotas.
+> > > [   71.226310] xfs filesystem being mounted at /root/syzkaller.qCVHXV/0/file0 supports timestamps until 2038 (0x7fffffff)
+> > > [   71.227591] BUG: kernel NULL pointer dereference, address: 00000000000002a8
+> > > [   71.227873] #PF: supervisor read access in kernel mode
+> > > [   71.228077] #PF: error_code(0x0000) - not-present page
+> > > [   71.228280] PGD c313067 P4D c313067 PUD c1fe067 PMD 0
+> > > [   71.228494] Oops: 0000 [#1] PREEMPT SMP NOPTI
+> > > [   71.228673] CPU: 0 PID: 161 Comm: kworker/0:4 Not tainted 6.2.0-c9c3395d5e3d #1
+> > > [   71.228961] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.0-0-gd239552ce722-prebuilt.qemu.org 04/01/2014
+> > > [   71.229400] Workqueue: xfs-inodegc/loop1 xfs_inodegc_worker
+> > > [   71.229626] RIP: 0010:xfs_dquot_alloc+0x95/0x1e0
+> > > [   71.229820] Code: 80 15 ad 85 48 c7 c6 7c 6b 92 83 e8 75 0f 6b ff 49 8b 8d 60 01 00 00 44 89 e0 31 d2 48 c7 c6 18 ae 8f 83 48 8d bb 18 02 00 00 <f7> b1 a8 02 2
+> > > [   71.230528] RSP: 0018:ffffc90000babc20 EFLAGS: 00010246
+> > > [   71.230737] RAX: 0000000000000009 RBX: ffff8880093c98c0 RCX: 0000000000000000
+> > > [   71.231014] RDX: 0000000000000000 RSI: ffffffff838fae18 RDI: ffff8880093c9ad8
+> > > [   71.231292] RBP: ffffc90000babc48 R08: 0000000000000002 R09: 0000000000000000
+> > > [   71.231570] R10: ffffc90000baba80 R11: ffff88800af08d98 R12: 0000000000000009
+> > > [   71.231850] R13: ffff88800c4bc000 R14: ffff88800c4bc000 R15: 0000000000000004
+> > > [   71.232129] FS:  0000000000000000(0000) GS:ffff88807dc00000(0000) knlGS:0000000000000000
+> > > [   71.232441] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > > [   71.232668] CR2: 00000000000002a8 CR3: 000000000a1d2002 CR4: 0000000000770ef0
+> > > [   71.232949] PKRU: 55555554
+> > > [   71.233061] Call Trace:
+> > > [   71.233162]  <TASK>
+> > > [   71.233254]  xfs_qm_dqread+0x46/0x440
+> > > [   71.233410]  ? xfs_qm_dqget_inode+0x13e/0x500
+> > > [   71.233596]  xfs_qm_dqget_inode+0x154/0x500
+> > > [   71.233774]  xfs_qm_dqattach_one+0x142/0x3c0
+> > > [   71.233961]  xfs_qm_dqattach_locked+0x14a/0x170
+> > > [   71.234149]  xfs_qm_dqattach+0x52/0x80
+> > > [   71.234307]  xfs_inactive+0x186/0x340
+> > > [   71.234461]  xfs_inodegc_worker+0xd3/0x430
+> > > [   71.234630]  process_one_work+0x3b1/0x960
+> > > [   71.234802]  worker_thread+0x52/0x660
+> > > [   71.234957]  ? __pfx_worker_thread+0x10/0x10
+> > > [   71.235136]  kthread+0x161/0x1a0
+> > > [   71.235279]  ? __pfx_kthread+0x10/0x10
+> > > [   71.235442]  ret_from_fork+0x29/0x50
+> > > [   71.235602]  </TASK>
+> > > [   71.235696] Modules linked in:
+> > > [   71.235826] CR2: 00000000000002a8
+> > > [   71.235964] ---[ end trace 0000000000000000 ]---
+> 
+> Looks like a quota disable race with background inode inactivation
+> reading in dquots.
+> 
+> Can you test the patch below?
+> 
+Thanks for your fixed patch in short time!
+I installed below patch on top of v6.2 kernel.
+And there was no any BUG dmesg anyway, so the fixed patch worked.
 
-When we free a cluster buffer from xfs_ifree_cluster, all the inodes in
-cache are marked XFS_ISTALE. On journal commit dirty stale inodes as are
-handled by both buffer and inode log items, inodes marked as XFS_ISTALE
-in AIL will be removed from the AIL because the buffer log item will clean
-it. If the transaction commit fails in the xfs_inactive_ifree(), inodes
-marked as XFS_ISTALE will be left in AIL due to buf log item is not
-committed, this will cause the unmount thread above to be blocked all the
-time. Abort inodes flushing associated with the buffer that is stale when
-buf item release, prevent inode item left in AIL and can not being pushed.
+And left some "Internal error xfs_iunlink_remove_inode" related Call Trace.
+I'm new to xfs, could you help to check if it is some other issue or we
+could ignore it.
 
-Signed-off-by: Long Li <leo.lilong@huawei.com>
----
- fs/xfs/xfs_buf_item.c | 19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
+I put the dmesg in bugzilla attachment as follow:
+https://bugzilla.kernel.org/show_bug.cgi?id=217078 ->
+https://bugzilla.kernel.org/attachment.cgi?id=303793
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index df7322ed73fa..825e638d1088 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -659,14 +659,16 @@ xfs_buf_item_release(
- {
- 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
- 	struct xfs_buf		*bp = bip->bli_buf;
-+	struct xfs_inode_log_item *iip;
-+	struct xfs_log_item     *lp, *n;
- 	bool			released;
- 	bool			hold = bip->bli_flags & XFS_BLI_HOLD;
- 	bool			stale = bip->bli_flags & XFS_BLI_STALE;
-+	bool			aborted = test_bit(XFS_LI_ABORTED,
-+						   &lip->li_flags);
- #if defined(DEBUG) || defined(XFS_WARN)
- 	bool			ordered = bip->bli_flags & XFS_BLI_ORDERED;
- 	bool			dirty = bip->bli_flags & XFS_BLI_DIRTY;
--	bool			aborted = test_bit(XFS_LI_ABORTED,
--						   &lip->li_flags);
- #endif
- 
- 	trace_xfs_buf_item_release(bip);
-@@ -679,6 +681,19 @@ xfs_buf_item_release(
- 	       (ordered && dirty && !xfs_buf_item_dirty_format(bip)));
- 	ASSERT(!stale || (bip->__bli_format.blf_flags & XFS_BLF_CANCEL));
- 
-+	/*
-+	 * If it is an inode buffer and item marked as stale, abort flushing
-+	 * inodes associated with the buf, prevent inode item left in AIL.
-+	 */
-+	if (aborted && (bip->bli_flags & XFS_BLI_STALE_INODE)) {
-+		list_for_each_entry_safe(lp, n, &bp->b_li_list, li_bio_list) {
-+			iip = (struct xfs_inode_log_item *)lp;
-+
-+			if (xfs_iflags_test(iip->ili_inode, XFS_ISTALE))
-+				xfs_iflush_abort(iip->ili_inode);
-+		}
-+	}
-+
- 	/*
- 	 * Clear the buffer's association with this transaction and
- 	 * per-transaction state from the bli, which has been copied above.
--- 
-2.31.1
+Thanks!
+BR.
+-Pengfei.
 
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> 
+> xfs: quotacheck failure can race with background inode inactivation
+> 
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> The background inode inactivation can attached dquots to inodes, but
+> this can race with a foreground quotacheck failure that leads to
+> disabling quotas and freeing the mp->m_quotainfo structure. The
+> background inode inactivation then tries to allocate a quota, tries
+> to dereference mp->m_quotainfo, and crashes like so:
+> 
+> XFS (loop1): Quotacheck: Unsuccessful (Error -5): Disabling quotas.
+> xfs filesystem being mounted at /root/syzkaller.qCVHXV/0/file0 supports timestamps until 2038 (0x7fffffff)
+> BUG: kernel NULL pointer dereference, address: 00000000000002a8
+> ....
+> CPU: 0 PID: 161 Comm: kworker/0:4 Not tainted 6.2.0-c9c3395d5e3d #1
+> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.0-0-gd239552ce722-prebuilt.qemu.org 04/01/2014
+> Workqueue: xfs-inodegc/loop1 xfs_inodegc_worker   
+> RIP: 0010:xfs_dquot_alloc+0x95/0x1e0
+> ....
+> Call Trace:
+>  <TASK>
+>  xfs_qm_dqread+0x46/0x440
+>  xfs_qm_dqget_inode+0x154/0x500
+>  xfs_qm_dqattach_one+0x142/0x3c0
+>  xfs_qm_dqattach_locked+0x14a/0x170
+>  xfs_qm_dqattach+0x52/0x80
+>  xfs_inactive+0x186/0x340
+>  xfs_inodegc_worker+0xd3/0x430
+>  process_one_work+0x3b1/0x960
+>  worker_thread+0x52/0x660
+>  kthread+0x161/0x1a0
+>  ret_from_fork+0x29/0x50
+>  </TASK>
+> ....
+> 
+> Prevent this race by flushing all the queued background inode
+> inactivations pending before purging all the cached dquots when
+> quotacheck fails.
+> 
+> Reported-by: Pengfei Xu <pengfei.xu@intel.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_qm.c | 40 ++++++++++++++++++++++++++--------------
+>  1 file changed, 26 insertions(+), 14 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index e2c542f6dcd4..78ca52e55f03 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -1321,15 +1321,14 @@ xfs_qm_quotacheck(
+>  
+>  	error = xfs_iwalk_threaded(mp, 0, 0, xfs_qm_dqusage_adjust, 0, true,
+>  			NULL);
+> -	if (error) {
+> -		/*
+> -		 * The inode walk may have partially populated the dquot
+> -		 * caches.  We must purge them before disabling quota and
+> -		 * tearing down the quotainfo, or else the dquots will leak.
+> -		 */
+> -		xfs_qm_dqpurge_all(mp);
+> -		goto error_return;
+> -	}
+> +
+> +	/*
+> +	 * On error, the inode walk may have partially populated the dquot
+> +	 * caches.  We must purge them before disabling quota and tearing down
+> +	 * the quotainfo, or else the dquots will leak.
+> +	 */
+> +	if (error)
+> +		goto error_purge;
+>  
+>  	/*
+>  	 * We've made all the changes that we need to make incore.  Flush them
+> @@ -1363,10 +1362,8 @@ xfs_qm_quotacheck(
+>  	 * and turn quotaoff. The dquots won't be attached to any of the inodes
+>  	 * at this point (because we intentionally didn't in dqget_noattach).
+>  	 */
+> -	if (error) {
+> -		xfs_qm_dqpurge_all(mp);
+> -		goto error_return;
+> -	}
+> +	if (error)
+> +		goto error_purge;
+>  
+>  	/*
+>  	 * If one type of quotas is off, then it will lose its
+> @@ -1376,7 +1373,7 @@ xfs_qm_quotacheck(
+>  	mp->m_qflags &= ~XFS_ALL_QUOTA_CHKD;
+>  	mp->m_qflags |= flags;
+>  
+> - error_return:
+> +error_return:
+>  	xfs_buf_delwri_cancel(&buffer_list);
+>  
+>  	if (error) {
+> @@ -1395,6 +1392,21 @@ xfs_qm_quotacheck(
+>  	} else
+>  		xfs_notice(mp, "Quotacheck: Done.");
+>  	return error;
+> +
+> +error_purge:
+> +	/*
+> +	 * On error, we may have inodes queued for inactivation. This may try
+> +	 * to attach dquots to the inode before running cleanup operations on
+> +	 * the inode and this can race with the xfs_qm_destroy_quotainfo() call
+> +	 * below that frees mp->m_quotainfo. To avoid this race, flush all the
+> +	 * pending inodegc operations before we purge the dquots from memory,
+> +	 * ensuring that background inactivation is idle whilst we turn off
+> +	 * quotas.
+> +	 */
+> +	xfs_inodegc_flush(mp);
+> +	xfs_qm_dqpurge_all(mp);
+> +	goto error_return;
+> +
+>  }
+>  
+>  /*
