@@ -2,87 +2,246 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 495BEC64ED6
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Feb 2023 18:38:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CC80C64EC7
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Feb 2023 20:08:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229794AbjB1SiP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Feb 2023 13:38:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39844 "EHLO
+        id S229520AbjB1UI2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Feb 2023 15:08:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229486AbjB1SiP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2023 13:38:15 -0500
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15E205FDF;
-        Tue, 28 Feb 2023 10:38:14 -0800 (PST)
-Received: by mail-pj1-x102d.google.com with SMTP id y15-20020a17090aa40f00b00237ad8ee3a0so10536572pjp.2;
-        Tue, 28 Feb 2023 10:38:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=Wmsoon14vl3q0w+HRQHUkmOdkXkAsQ8VnTRgpMmtBaw=;
-        b=EsRTCDIfVr4BCBhblR3U6WySyTH2wBFfbmZVw8+7dUrRHe6viLsuCUMM5hTP/qFhXd
-         noP1TtHtq+a4e61XajhaI0pr+hL0UQ9VkA0SM3xNm7+yGw6DamDr5SD7NoiiHpmPogRl
-         oAMuvfuN/KBoKgI0d467fbfIkuuCsGCncjiqce9cdMeImX0mNROTAavlBaAwh1SpCAxd
-         fOFPa6AO1Rs2LbXhI47vlPVVA1HUWUieRDFGRiamCwQ3ntqKuiFou78F4QUGGCdLptad
-         JGoHV9dmDH7tUskS0Ff+aFZVMVYTaj3Xv8hE/CDBuy+2dFbFEMus+cvavBQG0YF43dBf
-         Pjhg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Wmsoon14vl3q0w+HRQHUkmOdkXkAsQ8VnTRgpMmtBaw=;
-        b=fgxjJMkNAWLAlaRRqIpk+NvU1a6IwLwnTHJ8zIPGOoNsIVTRwFxre9surjvo9MELNa
-         CFVrhcLKXtiq9N7NFPGfjcqjTvZoIc2r9Wyhcg+4O6ORcVXgkLns9rdGlSE4IP37am5D
-         tuNXQ3PME8F8DKD/NYSLy5nJZ+hS69+7UuComMxX0GEU7njxwMNHVbqO1So1mXcFIJWr
-         TwHLsV2EQhT/jtGKpQww4uNMc1Gv+TD1CveG+C1+90irI76rjNGuubv2CmyllaUYlq3S
-         sSoUATiVl1sNSDH6p9dzW6CkK5kDOrHtiLZoI436dpb+9a0FuWmd2yvQRNhGxka1StBJ
-         VHXA==
-X-Gm-Message-State: AO0yUKX50UJbx2nRYk0qdOyojp6TvUBd73VnD1GrvtTJ+dkJomcLc1bY
-        POrsGCWbuHMbCVI1TwmL0Z4xZpOph/6bGg==
-X-Google-Smtp-Source: AK7set+NN5twdpBlrBqcroOMuFj7gKlrwjPaSWBe5yC3qZJTdX1oI7ln9bgVQdhHk+IlpS5kHNNvXg==
-X-Received: by 2002:a05:6a20:7d88:b0:cd:91bc:a9af with SMTP id v8-20020a056a207d8800b000cd91bca9afmr5262273pzj.58.1677609493212;
-        Tue, 28 Feb 2023 10:38:13 -0800 (PST)
-Received: from rh-tp ([2406:7400:63:469f:eb50:3ffb:dc1b:2d55])
-        by smtp.gmail.com with ESMTPSA id g17-20020aa78751000000b0058837da69edsm6358450pfo.128.2023.02.28.10.38.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Feb 2023 10:38:12 -0800 (PST)
-Date:   Wed, 01 Mar 2023 00:08:07 +0530
-Message-Id: <874jr53ab4.fsf@doe.com>
-From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [RFCv3 2/3] iomap: Change uptodate variable name to state
-In-Reply-To: <Y/vp36n3n3MNUjqD@casper.infradead.org>
+        with ESMTP id S229482AbjB1UI1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2023 15:08:27 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6C9B1ADFA
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Feb 2023 12:08:23 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 32721B80E1C
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Feb 2023 20:08:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB1E2C433D2;
+        Tue, 28 Feb 2023 20:08:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1677614900;
+        bh=8qrBArx3jvbR826aEsghr74+vxo6c84egUO0zvxV3gg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=DDhDCKAGTaBXeihMWcqtr8/eSFjSHOZQW9+QQefNPTmo0KfvpJBJE2TpVjfk7k0Gu
+         VqIZntmi82Aa6axTEPGtf39oIWTvICyV5WNtyNA14RXjZ8mvmL4hFpeQNAWfImCiDh
+         ZoIp8GB8DEv8hOthadAxb/XTdo2Rf91nCsdNK2hBgUzF8btELM/8Gs03X+o/j6zkb9
+         D91OnZ9glCwARCXCwo+DPqlTm7jYdck58ByD44Rfj10YcLirBXTENus7VtELAr3zUR
+         ZN243WxS7KT+SvoigAxjhgbVM4v9UZzeSPMx/EQWD5AUmndgNhniJ6ZSt0BCuzyUc2
+         GYTqm7GtgQdQg==
+Date:   Tue, 28 Feb 2023 12:08:20 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: recheck appropriateness of map_shared lock
+Message-ID: <Y/5fNHhdMgv21R3l@magnolia>
+References: <Y8ib6ls32e/pJezE@magnolia>
+ <20230119051411.GJ360264@dread.disaster.area>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230119051411.GJ360264@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Matthew Wilcox <willy@infradead.org> writes:
+On Thu, Jan 19, 2023 at 04:14:11PM +1100, Dave Chinner wrote:
+> On Wed, Jan 18, 2023 at 05:24:58PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > While fuzzing the data fork extent count on a btree-format directory
+> > with xfs/375, I observed the following (excerpted) splat:
+> > 
+> > XFS: Assertion failed: xfs_isilocked(ip, XFS_ILOCK_EXCL), file: fs/xfs/libxfs/xfs_bmap.c, line: 1208
+> > ------------[ cut here ]------------
+> > WARNING: CPU: 0 PID: 43192 at fs/xfs/xfs_message.c:104 assfail+0x46/0x4a [xfs]
+> > Call Trace:
+> >  <TASK>
+> >  xfs_iread_extents+0x1af/0x210 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+> >  xchk_dir_walk+0xb8/0x190 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+> >  xchk_parent_count_parent_dentries+0x41/0x80 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+> >  xchk_parent_validate+0x199/0x2e0 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+> >  xchk_parent+0xdf/0x130 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+> >  xfs_scrub_metadata+0x2b8/0x730 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+> >  xfs_scrubv_metadata+0x38b/0x4d0 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+> >  xfs_ioc_scrubv_metadata+0x111/0x160 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+> >  xfs_file_ioctl+0x367/0xf50 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+> >  __x64_sys_ioctl+0x82/0xa0
+> >  do_syscall_64+0x2b/0x80
+> >  entry_SYSCALL_64_after_hwframe+0x46/0xb0
+> > 
+> > The cause of this is a race condition in xfs_ilock_data_map_shared,
+> > which performs an unlocked access to the data fork to guess which lock
+> > mode it needs:
+> > 
+> > Thread 0                          Thread 1
+> > 
+> > xfs_need_iread_extents
+> > <observe no iext tree>
+> > xfs_ilock(..., ILOCK_EXCL)
+> > xfs_iread_extents
+> > <observe no iext tree>
+> > <check ILOCK_EXCL>
+> > <load bmbt extents into iext>
+> > <notice iext size doesn't
+> >  match nextents>
+> >                                   xfs_need_iread_extents
+> >                                   <observe iext tree>
+> >                                   xfs_ilock(..., ILOCK_SHARED)
+> > <tear down iext tree>
+> > xfs_iunlock(..., ILOCK_EXCL)
+> >                                   xfs_iread_extents
+> >                                   <observe no iext tree>
+> >                                   <check ILOCK_EXCL>
+> >                                   *BOOM*
+> > 
+> > mitigate this race by having thread 1 to recheck xfs_need_iread_extents
+> > after taking the shared ILOCK.  If the iext tree isn't present, then we
+> > need to upgrade to the exclusive ILOCK to try to load the bmbt.
+> 
+> Yup, I see the problem - this check is failing:
+> 
+>         if (XFS_IS_CORRUPT(mp, ir.loaded != ifp->if_nextents)) {
+>                 error = -EFSCORRUPTED;
+>                 goto out;
+>         }
+> 
+> and that results in calling xfs_iext_destroy() to tear down the
+> extent tree.
+> 
+> But we know the BMBT is corrupted and the extent list cannot be read
+> until the corruption is fixed. IOWs, we can't access any data in the
+> inode no matter how we lock it until the corruption is repaired.
+> 
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  fs/xfs/xfs_inode.c |   29 +++++++++++++++++++++++++++++
+> >  1 file changed, 29 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index d354ea2b74f9..6ce1e0e9f256 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -117,6 +117,20 @@ xfs_ilock_data_map_shared(
+> >  	if (xfs_need_iread_extents(&ip->i_df))
+> >  		lock_mode = XFS_ILOCK_EXCL;
+> >  	xfs_ilock(ip, lock_mode);
+> > +
+> > +	/*
+> > +	 * It's possible that the unlocked access of the data fork to determine
+> > +	 * the lock mode could have raced with another thread that was failing
+> > +	 * to load the bmbt but hadn't yet torn down the iext tree.  Recheck
+> > +	 * the lock mode and upgrade to an exclusive lock if we need to.
+> > +	 */
+> > +	if (lock_mode == XFS_ILOCK_SHARED &&
+> > +	    xfs_need_iread_extents(&ip->i_df)) {
+> > +		xfs_iunlock(ip, lock_mode);
+> > +		lock_mode = XFS_ILOCK_EXCL;
+> > +		xfs_ilock(ip, lock_mode);
+> > +	}
+> 
+> .... and this makes me cringe. :/
+> 
+> If we hit this race condition, re-reading the extent list from disk
+> isn't going to fix the corruption, so I don't see much point in
+> papering over the problem just by changing the locking and failing
+> to read in the extent list again and returning -EFSCORRUPTED to the
+> operation.
 
-> On Mon, Feb 27, 2023 at 01:13:31AM +0530, Ritesh Harjani (IBM) wrote:
->> +static inline bool iop_test_uptodate(struct iomap_page *iop, unsigned int pos,
->> +				unsigned int nrblocks)
->> +{
->> +	return test_bit(pos, iop->state);
->> +}
->
-> 'pos' is usually position within file, not within the folio.  That
-> should be called 'block' or 'start' like the other accessors.
+Doing it this (suboptimal way) means that we can backport the race fix
+to older kernels without having to push the API change as well.  Threads
+will continue to (pointlessly) try to load the iext tree from the
+corrupt btree, but at least they won't be doing it while holding
+ILOCK_SHARED.
 
-Agreed. Will make the change in next rev.
+> So.... shouldn't we mark the inode as sick when we detect the extent
+> list corruption issue? i.e. before destroying the iext tree, calling
+> xfs_inode_mark_sick(XFS_SICK_INO_BMBTD) (or BMBTA, depending on the
+> fork being read) so that there is a record of the BMBT being
+> corrupt?
 
->
->> +static inline bool iop_full_uptodate(struct iomap_page *iop,
->> +				unsigned int nrblocks)
->> +{
->> +	return bitmap_full(iop->state, nrblocks);
->> +}
->
-> Not sure I like iop_full_uptodate() as a name.  iop_entirely_uptodate()?
-> iop_folio_uptodate()?  iop_all_uptodate()?
+Yes, we should, but the codebase is not yet ready to use
+XFS_SICK_INO_BMBTD to detect bmbt corruption.  Notice this other
+function call in xfs_iread_extents:
 
-I can settle for iop_all_uptodate(). But would you rather prefer
-iop_uptodate_full() like bitmap_full()?
+	error = xfs_btree_visit_blocks(cur, xfs_iread_bmbt_block,
+			XFS_BTREE_VISIT_RECORDS, &ir);
 
--ritesh
+Corruption errors in the btree code also trigger the xfs_iext_destroy
+call, but the generic btree code hasn't yet been outfitted with the
+appropriate _mark_sick calls to set the XFS_SICK state.
+
+Patches to add that have been out for review since November 2019.  In
+the past 39 months, only one reviewer (Brian) came forth:
+
+https://lore.kernel.org/linux-xfs/157375555426.3692735.1357467392517392169.stgit@magnolia/
+
+That review ended on the suggestion that callers of xfs_buf_read should
+push the necessary context information through struct xfs_buf so that
+verifiers themselves can trigger the health state updates.
+
+In other words, Brian wanted me to explore capturing local variables
+from the caller's state and passing the captured information to a
+caller-supplied callback function.  Many other languages provide this in
+the form of closures and lambda functions, but C is not one of them.  I
+concluded that this approach was not feasible and moved on.
+
+Since then, the patchset has been reposted for review in December 2019,
+December 2020, December 2021, and December 2022.  Nobody has reviewed
+it:
+
+https://lore.kernel.org/linux-xfs/?q=report+corruption+to+the+health+trackers
+
+*After* we merge online repair, it should be possible to base our
+behavior off of XFS_SICK_INO_BMBTD.  However, this race affects current
+kernels, which is why I sent it separately as a bug fix, keyed off of a
+second call to _need_iread_extents.
+
+--D
+
+> That would mean that this path simply becomes:
+> 
+> 	if (ip->i_sick & XFS_SICK_INO_BMBTD) {
+> 		xfs_iunlock(ip, lock_mode);
+> 		return -EFSCORRUPTED;
+> 	}
+> 
+> Which is now pretty clear that we there's no point continuing
+> because we can't read in the extent list, and in doing so we've
+> removed the race condition caused by temporarily filling the in-core
+> extent list.
+> 
+> > +
+> >  	return lock_mode;
+> >  }
+> >  
+> > @@ -129,6 +143,21 @@ xfs_ilock_attr_map_shared(
+> >  	if (xfs_inode_has_attr_fork(ip) && xfs_need_iread_extents(&ip->i_af))
+> >  		lock_mode = XFS_ILOCK_EXCL;
+> >  	xfs_ilock(ip, lock_mode);
+> > +
+> > +	/*
+> > +	 * It's possible that the unlocked access of the attr fork to determine
+> > +	 * the lock mode could have raced with another thread that was failing
+> > +	 * to load the bmbt but hadn't yet torn down the iext tree.  Recheck
+> > +	 * the lock mode and upgrade to an exclusive lock if we need to.
+> > +	 */
+> > +	if (lock_mode == XFS_ILOCK_SHARED &&
+> > +	    xfs_inode_has_attr_fork(ip) &&
+> > +	    xfs_need_iread_extents(&ip->i_af)) {
+> > +		xfs_iunlock(ip, lock_mode);
+> > +		lock_mode = XFS_ILOCK_EXCL;
+> > +		xfs_ilock(ip, lock_mode);
+> > +	}
+> 
+> And this can just check for XFS_SICK_INO_BMBTA instead...
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
