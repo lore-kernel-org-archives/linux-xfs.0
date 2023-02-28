@@ -2,246 +2,132 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CC80C64EC7
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Feb 2023 20:08:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C83BC64EC7
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Feb 2023 20:49:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229520AbjB1UI2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Feb 2023 15:08:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60914 "EHLO
+        id S229833AbjB1UtO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Feb 2023 15:49:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38812 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229482AbjB1UI1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2023 15:08:27 -0500
+        with ESMTP id S229579AbjB1UtN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2023 15:49:13 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6C9B1ADFA
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Feb 2023 12:08:23 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF8C0CA18;
+        Tue, 28 Feb 2023 12:49:06 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 32721B80E1C
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Feb 2023 20:08:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB1E2C433D2;
-        Tue, 28 Feb 2023 20:08:20 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 555DCB80E4D;
+        Tue, 28 Feb 2023 20:49:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B22CC433EF;
+        Tue, 28 Feb 2023 20:49:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677614900;
-        bh=8qrBArx3jvbR826aEsghr74+vxo6c84egUO0zvxV3gg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=DDhDCKAGTaBXeihMWcqtr8/eSFjSHOZQW9+QQefNPTmo0KfvpJBJE2TpVjfk7k0Gu
-         VqIZntmi82Aa6axTEPGtf39oIWTvICyV5WNtyNA14RXjZ8mvmL4hFpeQNAWfImCiDh
-         ZoIp8GB8DEv8hOthadAxb/XTdo2Rf91nCsdNK2hBgUzF8btELM/8Gs03X+o/j6zkb9
-         D91OnZ9glCwARCXCwo+DPqlTm7jYdck58ByD44Rfj10YcLirBXTENus7VtELAr3zUR
-         ZN243WxS7KT+SvoigAxjhgbVM4v9UZzeSPMx/EQWD5AUmndgNhniJ6ZSt0BCuzyUc2
-         GYTqm7GtgQdQg==
-Date:   Tue, 28 Feb 2023 12:08:20 -0800
+        s=k20201202; t=1677617344;
+        bh=exxFF2JJICCNFK4dOi3fq/MWs7vdRA0W94WXLIxiaMA=;
+        h=Date:From:To:Cc:Subject:From;
+        b=NZLHVaPnPIL+PcCxdhDP46plItvfQj7yFr8kk5jUnG8tfTZnLRiCE2atNh2jEO1mC
+         hwKWANLAyuemrRVo40f3+hH8lnnO6oONMjMIQBb0pcGFlwCQ38+IqNOy2Ynfiq0wE/
+         ZWyIkNSaNqv+00IJ7pr9TNvZFvBhAjRTiyqOay+tiXGcyspYSh/YTlOemBJ6vhF60U
+         KF+AG0r44DFOPaZWwTkj+Vz00gYzN3fLS0B8IbciRpvneN4MQsMVw1ienOXR6jvH64
+         Sl7yx9dV4/k+4P6NkgYMEdnpbjA4I/6JtJlFYt6xB1whghPS3Wick9MirMW+h3aiFr
+         GB6rdk5692G2Q==
+Date:   Tue, 28 Feb 2023 12:49:03 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: recheck appropriateness of map_shared lock
-Message-ID: <Y/5fNHhdMgv21R3l@magnolia>
-References: <Y8ib6ls32e/pJezE@magnolia>
- <20230119051411.GJ360264@dread.disaster.area>
+To:     lsf-pc@lists.linux-foundation.org
+Cc:     linux-fsdevel@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        linux-btrfs <linux-btrfs@vger.kernel.org>
+Subject: [LSF TOPIC] online repair of filesystems: what next?
+Message-ID: <Y/5ovz6HI2Z47jbk@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230119051411.GJ360264@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jan 19, 2023 at 04:14:11PM +1100, Dave Chinner wrote:
-> On Wed, Jan 18, 2023 at 05:24:58PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > While fuzzing the data fork extent count on a btree-format directory
-> > with xfs/375, I observed the following (excerpted) splat:
-> > 
-> > XFS: Assertion failed: xfs_isilocked(ip, XFS_ILOCK_EXCL), file: fs/xfs/libxfs/xfs_bmap.c, line: 1208
-> > ------------[ cut here ]------------
-> > WARNING: CPU: 0 PID: 43192 at fs/xfs/xfs_message.c:104 assfail+0x46/0x4a [xfs]
-> > Call Trace:
-> >  <TASK>
-> >  xfs_iread_extents+0x1af/0x210 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
-> >  xchk_dir_walk+0xb8/0x190 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
-> >  xchk_parent_count_parent_dentries+0x41/0x80 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
-> >  xchk_parent_validate+0x199/0x2e0 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
-> >  xchk_parent+0xdf/0x130 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
-> >  xfs_scrub_metadata+0x2b8/0x730 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
-> >  xfs_scrubv_metadata+0x38b/0x4d0 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
-> >  xfs_ioc_scrubv_metadata+0x111/0x160 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
-> >  xfs_file_ioctl+0x367/0xf50 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
-> >  __x64_sys_ioctl+0x82/0xa0
-> >  do_syscall_64+0x2b/0x80
-> >  entry_SYSCALL_64_after_hwframe+0x46/0xb0
-> > 
-> > The cause of this is a race condition in xfs_ilock_data_map_shared,
-> > which performs an unlocked access to the data fork to guess which lock
-> > mode it needs:
-> > 
-> > Thread 0                          Thread 1
-> > 
-> > xfs_need_iread_extents
-> > <observe no iext tree>
-> > xfs_ilock(..., ILOCK_EXCL)
-> > xfs_iread_extents
-> > <observe no iext tree>
-> > <check ILOCK_EXCL>
-> > <load bmbt extents into iext>
-> > <notice iext size doesn't
-> >  match nextents>
-> >                                   xfs_need_iread_extents
-> >                                   <observe iext tree>
-> >                                   xfs_ilock(..., ILOCK_SHARED)
-> > <tear down iext tree>
-> > xfs_iunlock(..., ILOCK_EXCL)
-> >                                   xfs_iread_extents
-> >                                   <observe no iext tree>
-> >                                   <check ILOCK_EXCL>
-> >                                   *BOOM*
-> > 
-> > mitigate this race by having thread 1 to recheck xfs_need_iread_extents
-> > after taking the shared ILOCK.  If the iext tree isn't present, then we
-> > need to upgrade to the exclusive ILOCK to try to load the bmbt.
-> 
-> Yup, I see the problem - this check is failing:
-> 
->         if (XFS_IS_CORRUPT(mp, ir.loaded != ifp->if_nextents)) {
->                 error = -EFSCORRUPTED;
->                 goto out;
->         }
-> 
-> and that results in calling xfs_iext_destroy() to tear down the
-> extent tree.
-> 
-> But we know the BMBT is corrupted and the extent list cannot be read
-> until the corruption is fixed. IOWs, we can't access any data in the
-> inode no matter how we lock it until the corruption is repaired.
-> 
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  fs/xfs/xfs_inode.c |   29 +++++++++++++++++++++++++++++
-> >  1 file changed, 29 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index d354ea2b74f9..6ce1e0e9f256 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> > @@ -117,6 +117,20 @@ xfs_ilock_data_map_shared(
-> >  	if (xfs_need_iread_extents(&ip->i_df))
-> >  		lock_mode = XFS_ILOCK_EXCL;
-> >  	xfs_ilock(ip, lock_mode);
-> > +
-> > +	/*
-> > +	 * It's possible that the unlocked access of the data fork to determine
-> > +	 * the lock mode could have raced with another thread that was failing
-> > +	 * to load the bmbt but hadn't yet torn down the iext tree.  Recheck
-> > +	 * the lock mode and upgrade to an exclusive lock if we need to.
-> > +	 */
-> > +	if (lock_mode == XFS_ILOCK_SHARED &&
-> > +	    xfs_need_iread_extents(&ip->i_df)) {
-> > +		xfs_iunlock(ip, lock_mode);
-> > +		lock_mode = XFS_ILOCK_EXCL;
-> > +		xfs_ilock(ip, lock_mode);
-> > +	}
-> 
-> .... and this makes me cringe. :/
-> 
-> If we hit this race condition, re-reading the extent list from disk
-> isn't going to fix the corruption, so I don't see much point in
-> papering over the problem just by changing the locking and failing
-> to read in the extent list again and returning -EFSCORRUPTED to the
-> operation.
+Hello fsdevel people,
 
-Doing it this (suboptimal way) means that we can backport the race fix
-to older kernels without having to push the API change as well.  Threads
-will continue to (pointlessly) try to load the iext tree from the
-corrupt btree, but at least they won't be doing it while holding
-ILOCK_SHARED.
+Five years ago[0], we started a conversation about cross-filesystem
+userspace tooling for online fsck.  I think enough time has passed for
+us to have another one, since a few things have happened since then:
 
-> So.... shouldn't we mark the inode as sick when we detect the extent
-> list corruption issue? i.e. before destroying the iext tree, calling
-> xfs_inode_mark_sick(XFS_SICK_INO_BMBTD) (or BMBTA, depending on the
-> fork being read) so that there is a record of the BMBT being
-> corrupt?
+1. ext4 has gained the ability to send corruption reports to a userspace
+   monitoring program via fsnotify.  Thanks, Collabora!
 
-Yes, we should, but the codebase is not yet ready to use
-XFS_SICK_INO_BMBTD to detect bmbt corruption.  Notice this other
-function call in xfs_iread_extents:
+2. XFS now tracks successful scrubs and corruptions seen during runtime
+   and during scrubs.  Userspace can query this information.
 
-	error = xfs_btree_visit_blocks(cur, xfs_iread_bmbt_block,
-			XFS_BTREE_VISIT_RECORDS, &ir);
+3. Directory parent pointers, which enable online repair of the
+   directory tree, is nearing completion.
 
-Corruption errors in the btree code also trigger the xfs_iext_destroy
-call, but the generic btree code hasn't yet been outfitted with the
-appropriate _mark_sick calls to set the XFS_SICK state.
+4. Dave and I are working on merging online repair of space metadata for
+   XFS.  Online repair of directory trees is feature complete, but we
+   still have one or two unresolved questions in the parent pointer
+   code.
 
-Patches to add that have been out for review since November 2019.  In
-the past 39 months, only one reviewer (Brian) came forth:
+5. I've gotten a bit better[1] at writing systemd service descriptions
+   for scheduling and performing background online fsck.
 
-https://lore.kernel.org/linux-xfs/157375555426.3692735.1357467392517392169.stgit@magnolia/
+Now that fsnotify_sb_error exists as a result of (1), I think we
+should figure out how to plumb calls into the readahead and writeback
+code so that IO failures can be reported to the fsnotify monitor.  I
+suspect there may be a few difficulties here since fsnotify (iirc)
+allocates memory and takes locks.
 
-That review ended on the suggestion that callers of xfs_buf_read should
-push the necessary context information through struct xfs_buf so that
-verifiers themselves can trigger the health state updates.
+As a result of (2), XFS now retains quite a bit of incore state about
+its own health.  The structure that fsnotify gives to userspace is very
+generic (superblock, inode, errno, errno count).  How might XFS export
+a greater amount of information via this interface?  We can provide
+details at finer granularity -- for example, a specific data structure
+under an allocation group or an inode, or specific quota records.
 
-In other words, Brian wanted me to explore capturing local variables
-from the caller's state and passing the captured information to a
-caller-supplied callback function.  Many other languages provide this in
-the form of closures and lambda functions, but C is not one of them.  I
-concluded that this approach was not feasible and moved on.
+With (4) on the way, I can envision wanting a system service that would
+watch for these fsnotify events, and transform the error reports into
+targeted repair calls in the kernel.  This of course would be very
+filesystem specific, but I would also like to hear from anyone pondering
+other usecases for fsnotify filesystem error monitors.
 
-Since then, the patchset has been reposted for review in December 2019,
-December 2020, December 2021, and December 2022.  Nobody has reviewed
-it:
+Once (3) lands, XFS gains the ability to translate a block device IO
+error to an inode number and file offset, and then the inode number to a
+path.  In other words, your file breaks and now we can tell applications
+which file it was so they can failover or redownload it or whatever.
+Ric Wheeler mentioned this in 2018's session.
 
-https://lore.kernel.org/linux-xfs/?q=report+corruption+to+the+health+trackers
+The final topic from that 2018 session concerned generic wrappers for
+fsscrub.  I haven't pushed hard on that topic because XFS hasn't had
+much to show for that.  Now that I'm better versed in systemd services,
+I envision three ways to interact with online fsck:
 
-*After* we merge online repair, it should be possible to base our
-behavior off of XFS_SICK_INO_BMBTD.  However, this race affects current
-kernels, which is why I sent it separately as a bug fix, keyed off of a
-second call to _need_iread_extents.
+- A CLI program that can be run by anyone.
+
+- Background systemd services that fire up periodically.
+
+- A dbus service that programs can bind to and request a fsck.
+
+I still think there's an opportunity to standardize the naming to make
+it easier to use a variety of filesystems.  I propose for the CLI:
+
+/usr/sbin/fsscrub $mnt that calls /usr/sbin/fsscrub.$FSTYP $mnt
+
+For systemd services, I propose "fsscrub@<escaped mountpoint>".  I
+suspect we want a separate background service that itself runs
+periodically and invokes the fsscrub@$mnt services.  xfsprogs already
+has a xfs_scrub_all service that does that.  The services are nifty
+because it's really easy to restrict privileges, implement resource
+usage controls, and use private name/mountspaces to isolate the process
+from the rest of the system.
+
+dbus is a bit trickier, since there's no precedent at all.  I guess
+we'd have to define an interface for filesystem "object".  Then we could
+write a service that establishes a well-known bus name and maintains
+object paths for each mounted filesystem.  Each of those objects would
+export the filesystem interface, and that's how programs would call
+online fsck as a service.
+
+Ok, that's enough for a single session topic.  Thoughts? :)
 
 --D
 
-> That would mean that this path simply becomes:
-> 
-> 	if (ip->i_sick & XFS_SICK_INO_BMBTD) {
-> 		xfs_iunlock(ip, lock_mode);
-> 		return -EFSCORRUPTED;
-> 	}
-> 
-> Which is now pretty clear that we there's no point continuing
-> because we can't read in the extent list, and in doing so we've
-> removed the race condition caused by temporarily filling the in-core
-> extent list.
-> 
-> > +
-> >  	return lock_mode;
-> >  }
-> >  
-> > @@ -129,6 +143,21 @@ xfs_ilock_attr_map_shared(
-> >  	if (xfs_inode_has_attr_fork(ip) && xfs_need_iread_extents(&ip->i_af))
-> >  		lock_mode = XFS_ILOCK_EXCL;
-> >  	xfs_ilock(ip, lock_mode);
-> > +
-> > +	/*
-> > +	 * It's possible that the unlocked access of the attr fork to determine
-> > +	 * the lock mode could have raced with another thread that was failing
-> > +	 * to load the bmbt but hadn't yet torn down the iext tree.  Recheck
-> > +	 * the lock mode and upgrade to an exclusive lock if we need to.
-> > +	 */
-> > +	if (lock_mode == XFS_ILOCK_SHARED &&
-> > +	    xfs_inode_has_attr_fork(ip) &&
-> > +	    xfs_need_iread_extents(&ip->i_af)) {
-> > +		xfs_iunlock(ip, lock_mode);
-> > +		lock_mode = XFS_ILOCK_EXCL;
-> > +		xfs_ilock(ip, lock_mode);
-> > +	}
-> 
-> And this can just check for XFS_SICK_INO_BMBTA instead...
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+[0] https://lwn.net/Articles/754504/
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-optimize-by-default
