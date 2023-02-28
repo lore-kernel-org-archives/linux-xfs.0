@@ -2,164 +2,108 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95C8EC6FA8E
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Feb 2023 17:25:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A38AC64ED6
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Feb 2023 17:55:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229580AbjB1RZ3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Feb 2023 12:25:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48006 "EHLO
+        id S229493AbjB1Rzh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Feb 2023 12:55:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41006 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229470AbjB1RZ2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2023 12:25:28 -0500
-Received: from mail-ed1-x52b.google.com (mail-ed1-x52b.google.com [IPv6:2a00:1450:4864:20::52b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 181002310A
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Feb 2023 09:25:27 -0800 (PST)
-Received: by mail-ed1-x52b.google.com with SMTP id ec43so43089195edb.8
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Feb 2023 09:25:27 -0800 (PST)
+        with ESMTP id S229671AbjB1Rzh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2023 12:55:37 -0500
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D21C32533;
+        Tue, 28 Feb 2023 09:55:28 -0800 (PST)
+Received: by mail-pl1-x62c.google.com with SMTP id y11so7155262plg.1;
+        Tue, 28 Feb 2023 09:55:28 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1677605125;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=Js8P2faLxkFZtl684W9+Zk/L7hGMmiDb7uE5Xjb5HZY=;
-        b=Xuo/b4eFLa7291if5RahoTmOJm57ffiz2Q3EHeFQHrLaAahb4ojKQhlUzrUugcXRHu
-         c/85qk4NaAU5OAa4A/IBNZy+kAWmp6eo4mEDvwn4thCf4XWWZ0KMP9R2kPxIJPK/uWCw
-         K3fdIRBMeRA/QRgjro1B6JDyvgwwZGwU33tFH3pR7MYf0vAY33NDr8L3w//fTCiajhJ1
-         ijy2zwJ3qtBE2IaabSdZdzuao8YfsqK7JTOkmsmd6yLXmrjv7AN7PQpvdIvGUQjRWMGt
-         mw/T7bDvD9hW8pa2argxIPZqUv+ypCRHYTWCZXNsEY+AWYdmOVOuNWKElh+ZnwXNuOwf
-         IjRA==
+        d=gmail.com; s=20210112;
+        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=XTC6bQyuSs549RjQT6+OsOQFKTFLzjpX9Xd6nTGaLvk=;
+        b=b9SY4p+5vh9iiYLx70tJUCwPIijpYr8oVPhdl5nvFOVD4kBXE5VhOlP2QGCWjQxGex
+         8eJq14Pw8Urjqgcf+tkImekcCwMzgrqV5iX3r3rEYSS/0mRXHuQ4aOflUjNi01qfN6FP
+         880gCk84oqPmdG2GuTBNiYkwFdrLdZiBLqmZckI44JLovSlbgHCpVzkXyVBAcZNLRtTg
+         n5croYlx6+puZfCnaa8OtpOl2FhHC2vVdRGB/ulrByMKe0x10kKepYRMOdcEOY959XdZ
+         S8SScPTQcBh2kwX5iVNdP5xEPMDU7tAKNT3R/L+h4EZfm85BGztqqYPtVtTk4edJtWzM
+         Ouvg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1677605125;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Js8P2faLxkFZtl684W9+Zk/L7hGMmiDb7uE5Xjb5HZY=;
-        b=Hddv6WRHn3otCvDsNnkYhh5BjssUwIDVKMr+mcBbNoPhxs6MeIAdbbPyCAOwdpByyP
-         MPvO9Hbfp06Zq+IZAJSFE2U0IQMildZ5KVPLRT1ZabpvEcCVNArPg/haefH4Szf/z7zN
-         buqFcu3kWTEL2C8rUUWO+sXQhzUV1G+DVugwNnaRPysXMgwiIBzIvRc+H6cGzYo/mgTs
-         tZM7fUdDYFtDYEv8zbSoeasIlo3P1gjgvTqjKWBdCkJDRMJHxfZ5H6iYZWp9/XVD0wcZ
-         exyHU1sKRpaCP0rdrowtydIyEEiJkUyzTAbbMLXjWQtrT6qVjq7BXC4s+XccbPOvwleK
-         crjQ==
-X-Gm-Message-State: AO0yUKVn/iPVDHZ73tF3sXJMWhn0xquQky3Em9nqIzPfJfObWCqTmgGW
-        ftfaDj0xSVAv1elIJt8qcE3qU2OhaS2k5cQbcAyclQ==
-X-Google-Smtp-Source: AK7set+ALE9w3m9k0Xwps06/TqXDJjpaj7VbkFBHyWsJrsnH/clUz5tJf15W4k7SYWbxIxuzR6ck6POh0rYNZ90PJAY=
-X-Received: by 2002:a17:907:c004:b0:8af:2ad8:3453 with SMTP id
- ss4-20020a170907c00400b008af2ad83453mr8800069ejc.6.1677605125419; Tue, 28 Feb
- 2023 09:25:25 -0800 (PST)
-MIME-Version: 1.0
-References: <20230228085002.2592473-3-yosryahmed@google.com>
- <202302281933.vU1PHuZr-lkp@intel.com> <CAJD7tkZxwuR6JoVo9RnepXA3Kg7HVMLyzTfTdRvLg27OihECiw@mail.gmail.com>
-In-Reply-To: <CAJD7tkZxwuR6JoVo9RnepXA3Kg7HVMLyzTfTdRvLg27OihECiw@mail.gmail.com>
-From:   Yosry Ahmed <yosryahmed@google.com>
-Date:   Tue, 28 Feb 2023 09:24:48 -0800
-Message-ID: <CAJD7tkZH-rJFQhfWNLbSoKhHzTQmLf0TaAJbL-XtvatbMeuVKQ@mail.gmail.com>
-Subject: Re: [PATCH v1 2/2] mm: vmscan: ignore non-LRU-based reclaim in memcg reclaim
-To:     kernel test robot <lkp@intel.com>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Lameter <cl@linux-foundation.org>,
-        David Rientjes <rientjes@google.com>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Roman Gushchin <roman.gushchin@linux.dev>,
-        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Miaohe Lin <linmiaohe@huawei.com>,
-        David Hildenbrand <david@redhat.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
-        Shakeel Butt <shakeelb@google.com>,
-        Michal Hocko <mhocko@kernel.org>, llvm@lists.linux.dev,
-        oe-kbuild-all@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-mm@kvack.org
-Content-Type: text/plain; charset="UTF-8"
+        d=1e100.net; s=20210112;
+        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=XTC6bQyuSs549RjQT6+OsOQFKTFLzjpX9Xd6nTGaLvk=;
+        b=Lm2TGNvjE/KP61nFXT3R18Oz4UBUSJjCdWE6VdzsfPBZLocu8lnJXR2zQtWLRxb+nt
+         aXvRpSORzX4z/tFjmagdWLdyOMiwbLADV+uIgxirs2PJnLTXejvmOere0Gs8J9WICGYB
+         giBt2YUINJg34axp6dVcTzpfYCK0scqrkwgzdHM0wVxeufPUUKURzD9ZpOLnPzh4AXT3
+         DfhQ3ElM6+A0JJP299QC9BZtlofEkHIoaj3AnPeChxZp6v7UNglkaCvPtwf1ajMYcn7/
+         zmSHHTlQO4ZsNLpg+mAoPgRQ4PU2mZwuNQU7abSy4qgr7D90Ke+4YXNOiOySlyyoRdPE
+         K3Rg==
+X-Gm-Message-State: AO0yUKWqJRz+Fx1iF39VKNnMG8+E17I2WqKmBcfRXYvvClIY/U3zS4NA
+        XRFHH+PDjLXQw6hFppsWALnZsGihBZcyfg==
+X-Google-Smtp-Source: AK7set90ojxiyHnRnB8DjYepFYJgnV6Y7NsHFuGbPdFMVyMF4NFRp8uCuLW1VDs9nA9FXEFGj4c6ww==
+X-Received: by 2002:a17:90a:194a:b0:237:50b6:9838 with SMTP id 10-20020a17090a194a00b0023750b69838mr4025833pjh.45.1677606927253;
+        Tue, 28 Feb 2023 09:55:27 -0800 (PST)
+Received: from rh-tp ([2406:7400:63:469f:eb50:3ffb:dc1b:2d55])
+        by smtp.gmail.com with ESMTPSA id j8-20020a17090a588800b0022bf4d0f912sm8284135pji.22.2023.02.28.09.55.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 28 Feb 2023 09:55:26 -0800 (PST)
+Date:   Tue, 28 Feb 2023 23:25:09 +0530
+Message-Id: <87o7pdoete.fsf@doe.com>
+From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [RFCv3 1/3] iomap: Allocate iop in ->write_begin() early
+In-Reply-To: <20230226224124.GV360264@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 28, 2023 at 9:18 AM Yosry Ahmed <yosryahmed@google.com> wrote:
->
-> On Tue, Feb 28, 2023 at 3:56 AM kernel test robot <lkp@intel.com> wrote:
-> >
-> > Hi Yosry,
-> >
-> > Thank you for the patch! Yet something to improve:
-> >
-> > [auto build test ERROR on akpm-mm/mm-everything]
-> > [also build test ERROR on linus/master next-20230228]
-> > [cannot apply to vbabka-slab/for-next xfs-linux/for-next v6.2]
-> > [If your patch is applied to the wrong git tree, kindly drop us a note.
-> > And when submitting patch, we suggest to use '--base' as documented in
-> > https://git-scm.com/docs/git-format-patch#_base_tree_information]
-> >
-> > url:    https://github.com/intel-lab-lkp/linux/commits/Yosry-Ahmed/mm-vmscan-refactor-updating-reclaimed-pages-in-reclaim_state/20230228-165214
-> > base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
-> > patch link:    https://lore.kernel.org/r/20230228085002.2592473-3-yosryahmed%40google.com
-> > patch subject: [PATCH v1 2/2] mm: vmscan: ignore non-LRU-based reclaim in memcg reclaim
-> > config: i386-randconfig-a002-20230227 (https://download.01.org/0day-ci/archive/20230228/202302281933.vU1PHuZr-lkp@intel.com/config)
-> > compiler: clang version 14.0.6 (https://github.com/llvm/llvm-project f28c006a5895fc0e329fe15fead81e37457cb1d1)
-> > reproduce (this is a W=1 build):
-> >         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-> >         chmod +x ~/bin/make.cross
-> >         # https://github.com/intel-lab-lkp/linux/commit/f6d2b849f186a927925a29e289d60895048550f5
-> >         git remote add linux-review https://github.com/intel-lab-lkp/linux
-> >         git fetch --no-tags linux-review Yosry-Ahmed/mm-vmscan-refactor-updating-reclaimed-pages-in-reclaim_state/20230228-165214
-> >         git checkout f6d2b849f186a927925a29e289d60895048550f5
-> >         # save the config file
-> >         mkdir build_dir && cp config build_dir/.config
-> >         COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=i386 olddefconfig
-> >         COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=i386 SHELL=/bin/bash
-> >
-> > If you fix the issue, kindly add following tag where applicable
-> > | Reported-by: kernel test robot <lkp@intel.com>
-> > | Link: https://lore.kernel.org/oe-kbuild-all/202302281933.vU1PHuZr-lkp@intel.com/
-> >
-> > All errors (new ones prefixed by >>):
-> >
-> > >> mm/vmscan.c:549:13: error: redefinition of 'cgroup_reclaim'
-> >    static bool cgroup_reclaim(struct scan_control *sc)
-> >                ^
-> >    mm/vmscan.c:191:13: note: previous definition is here
-> >    static bool cgroup_reclaim(struct scan_control *sc)
-> >                ^
-> > >> mm/vmscan.c:554:13: error: redefinition of 'global_reclaim'
-> >    static bool global_reclaim(struct scan_control *sc)
-> >                ^
-> >    mm/vmscan.c:196:13: note: previous definition is here
-> >    static bool global_reclaim(struct scan_control *sc)
-> >                ^
-> >    2 errors generated.
->
-> Ugh yeah I didn't realize I am moving the definitions from within an
-> #ifdef CONFIG_MEMCG. I will just leave the definitions as-is and add a
-> forward declaration before the definition of
-> add_non_vmscan_reclaimed(), should also reduce the churn in the diff.
-> Will wait for a bit before re-spinning to gather some feedback on the
-> current version first.
+Dave Chinner <david@fromorbit.com> writes:
 
-I can also just move all the reclaim state functions
-(set_task_reclaim_state(), report_freed_pages(),
-add_non_vmscan_reclaimed()) below that #ifdef CONFIG_MEMCG.
-Might also name them more consistently.
-
-
+> On Mon, Feb 27, 2023 at 01:13:30AM +0530, Ritesh Harjani (IBM) wrote:
+>> Earlier when the folio is uptodate, we only allocate iop at writeback
+>> time (in iomap_writepage_map()). This is ok until now, but when we are
+>> going to add support for subpage size dirty bitmap tracking in iop, this
+>> could cause some performance degradation. The reason is that if we don't
+>> allocate iop during ->write_begin(), then we will never mark the
+>> necessary dirty bits in ->write_end() call. And we will have to mark all
+>> the bits as dirty at the writeback time, that could cause the same write
+>> amplification and performance problems as it is now (w/o subpage dirty
+>> bitmap tracking in iop).
+>>
+>> However, for all the writes with (pos, len) which completely overlaps
+>> the given folio, there is no need to allocate an iop during
+>> ->write_begin(). So skip those cases.
+>>
+>> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+>> ---
+>>  fs/iomap/buffered-io.c | 7 ++++++-
+>>  1 file changed, 6 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+>> index 356193e44cf0..c5b51ab1184e 100644
+>> --- a/fs/iomap/buffered-io.c
+>> +++ b/fs/iomap/buffered-io.c
+>> @@ -535,11 +535,16 @@ static int __iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
+>>  	size_t from = offset_in_folio(folio, pos), to = from + len;
+>>  	size_t poff, plen;
+>>
+>> +	if (pos <= folio_pos(folio) &&
+>> +	    pos + len >= folio_pos(folio) + folio_size(folio))
+>> +		return 0;
 >
-> >
-> >
-> > vim +/cgroup_reclaim +549 mm/vmscan.c
-> >
-> > 86750830468506 Yang Shi        2021-05-04  548
-> > b5ead35e7e1d34 Johannes Weiner 2019-11-30 @549  static bool cgroup_reclaim(struct scan_control *sc)
-> > 89b5fae5368f6a Johannes Weiner 2012-01-12  550  {
-> > b5ead35e7e1d34 Johannes Weiner 2019-11-30  551          return false;
-> > 89b5fae5368f6a Johannes Weiner 2012-01-12  552  }
-> > 97c9341f727105 Tejun Heo       2015-05-22  553
-> > a579086c99ed70 Yu Zhao         2022-12-21 @554  static bool global_reclaim(struct scan_control *sc)
-> > a579086c99ed70 Yu Zhao         2022-12-21  555  {
-> > a579086c99ed70 Yu Zhao         2022-12-21  556          return true;
-> > a579086c99ed70 Yu Zhao         2022-12-21  557  }
-> > a579086c99ed70 Yu Zhao         2022-12-21  558
-> >
-> > --
-> > 0-DAY CI Kernel Test Service
-> > https://github.com/intel/lkp-tests
+> This is magic without a comment explaining why it exists. You have
+> that explanation in the commit message, but that doesn't help anyone
+> looking at the code:
+>
+> 	/*
+> 	 * If the write completely overlaps the current folio, then
+> 	 * entire folio will be dirtied so there is no need for
+> 	 * sub-folio state tracking structures to be attached to this folio.
+> 	 */
+
+Sure, got it. I will add a comment which explains this in the code as
+well.
+
+Thanks for the review!
+-ritesh
