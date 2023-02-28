@@ -2,112 +2,189 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CA03C64EC7
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Feb 2023 03:53:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEEE9C64EC7
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Feb 2023 05:12:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229712AbjB1DxH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Feb 2023 22:53:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55232 "EHLO
+        id S229510AbjB1FM4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Feb 2023 00:12:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41306 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229486AbjB1DxG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Feb 2023 22:53:06 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B168B44A;
-        Mon, 27 Feb 2023 19:53:05 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E847FB80CA7;
-        Tue, 28 Feb 2023 03:53:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 302CFC433D2;
-        Tue, 28 Feb 2023 03:53:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677556382;
-        bh=u8P31QxD6VV0jVGuvboxfDzZUtsbvH8OqzD+6Goz13Q=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=e2ZMcf24XxXbmCDzekB/T7YgJd/1GyrFRUrcuJfG9m4ayef66+7XXgKFql4BMYnLI
-         p3ky/n0i1OnZR19uWIXn1JvY16gg4xY0q+gyTYsqXUGGVBpkRbqy7K11DH7OLx5oQg
-         f7COZR8BF+TRB8PPa6/um00w3t3VQDwhMNyrVXQIwYLR235/Uw3h1WX6XJZ1dYtcV/
-         qHMFfpCP07a6FXcHhw/nYLLJkaStaw6d1+MUfdsMtT8+tPcRNOb2D9Qoa/StZ1rRjT
-         HIYWGv7xoXxJxIRin1Ui40Le9yyuYE2MfFWwbjN5W1hvaCdmsqgZbuZscnkHj1knk4
-         zPMU2QcVCsdSw==
-Date:   Mon, 27 Feb 2023 19:53:00 -0800
-From:   Jaegeuk Kim <jaegeuk@kernel.org>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     patchwork-bot+f2fs@kernel.org, linux-fscrypt@vger.kernel.org,
-        aalbersh@redhat.com, linux-f2fs-devel@lists.sourceforge.net,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
-Subject: Re: [PATCH v2 00/11] fsverity: support for non-4K pages
-Message-ID: <Y/16nEs4stc/0qmb@google.com>
-References: <20221223203638.41293-1-ebiggers@kernel.org>
- <167754611492.27916.393758892204411776.git-patchwork-notify@kernel.org>
- <Y/1ZP9pc1Zw9xh/L@gmail.com>
+        with ESMTP id S229437AbjB1FM4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2023 00:12:56 -0500
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F48F1713
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Feb 2023 21:12:54 -0800 (PST)
+Received: by mail-pl1-x636.google.com with SMTP id n6so7816526plf.5
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Feb 2023 21:12:54 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=QZWDz+SbPERUqTv/9yk+IIa/0hPRblTGjYg5NgdoKK8=;
+        b=tPUAlQWpmMpSOiySo7SiXBiJw2oHzh/r2FvyIDjXOe3WxIrr5MbNNpP8/qDdVo5kPe
+         UErbtFxQZgghcogw8fSPM9XFdIb0JwY42Tb8U8xrqeZrjRywIo7H8qlfh4eCjP2sJtGN
+         tNpYxqqRoIvGYI2raALQU7wQoZ+WrGPUVNPwzFHTscxBqMde1+JtNQZOvpyRGDfdQn3a
+         RWVuAWGsuaubKoAtuCNDtLC5WY4c2e79akuCfk9OxRCqy8MD4LIv1EAJkROXgTgZDCS3
+         /xVgSpz3dOPD0y/NGiqCY8nVW6kynjM2hPlSYHYauH/gsnuW9lNWq1xwbqBctGipELpk
+         WjyA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=QZWDz+SbPERUqTv/9yk+IIa/0hPRblTGjYg5NgdoKK8=;
+        b=SWiqcJAuvIBpAdLpvbWJy3awpiHUIkLHQQtj2NElvyuymNoyj9Hb+ibzK4SWVO9CEm
+         ydSmvOajqAvWo6Wni7M9K4e46E3yksNWxmnXdGeV5nS+UWSxMcDRL7UytE2Qk+iMzbZD
+         /xcUt4mblR3pYysFoxPh00oSi455JU57Dwx/6cGTkgs/9+us6gxmg94SqJpTtIEIrDV8
+         hG4BT/jxNcJlGd/+RekYzO/E19Rzfu9FSVph8Dc42Eg3z+UI5j71bldOlHY6ClLgmyr3
+         LKfZ2CDjG47vz0njfeQgfARQO2WMg8xkK1GiI3uQRHQEQXzYQ1fBA/DvnWxMWUp5tfYB
+         tAxw==
+X-Gm-Message-State: AO0yUKVTvS9qN9bJdUIWqYI90Ra94JzlTi56QFwgdmaZYatcgLb0cwbe
+        Qc9jNoALS7YMOPe315jwvvNgwuGq2mffLCyE
+X-Google-Smtp-Source: AK7set9KLwuvVC8Q6+M99u+CLUSYkkYGj7jEBS+Gyrw6a74P636suFdhqq63DjqB+Gv++Hrip3yoKQ==
+X-Received: by 2002:a17:903:2810:b0:19c:dbce:dce0 with SMTP id kp16-20020a170903281000b0019cdbcedce0mr1200473plb.69.1677561173631;
+        Mon, 27 Feb 2023 21:12:53 -0800 (PST)
+Received: from dread.disaster.area (pa49-186-4-237.pa.vic.optusnet.com.au. [49.186.4.237])
+        by smtp.gmail.com with ESMTPSA id c4-20020a170902c1c400b0019a96a6543esm5397279plc.184.2023.02.27.21.12.52
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Feb 2023 21:12:53 -0800 (PST)
+Received: from [192.168.253.23] (helo=devoid.disaster.area)
+        by dread.disaster.area with esmtp (Exim 4.92.3)
+        (envelope-from <dave@fromorbit.com>)
+        id 1pWsIE-0030bI-8M
+        for linux-xfs@vger.kernel.org; Tue, 28 Feb 2023 16:12:50 +1100
+Received: from dave by devoid.disaster.area with local (Exim 4.96)
+        (envelope-from <dave@devoid.disaster.area>)
+        id 1pWsIE-005C9e-0X
+        for linux-xfs@vger.kernel.org;
+        Tue, 28 Feb 2023 16:12:50 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: quotacheck failure can race with background inode inactivation
+Date:   Tue, 28 Feb 2023 16:12:50 +1100
+Message-Id: <20230228051250.1238353-1-david@fromorbit.com>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y/1ZP9pc1Zw9xh/L@gmail.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 02/28, Eric Biggers wrote:
-> On Tue, Feb 28, 2023 at 01:01:54AM +0000, patchwork-bot+f2fs@kernel.org wrote:
-> > Hello:
-> > 
-> > This series was applied to jaegeuk/f2fs.git (dev)
-> > by Eric Biggers <ebiggers@google.com>:
-> > 
-> > On Fri, 23 Dec 2022 12:36:27 -0800 you wrote:
-> > > [This patchset applies to mainline + some fsverity cleanups I sent out
-> > >  recently.  You can get everything from tag "fsverity-non4k-v2" of
-> > >  https://git.kernel.org/pub/scm/fs/fscrypt/fscrypt.git ]
-> > > 
-> > > Currently, filesystems (ext4, f2fs, and btrfs) only support fsverity
-> > > when the Merkle tree block size, filesystem block size, and page size
-> > > are all the same.  In practice that means 4K, since increasing the page
-> > > size, e.g. to 16K, forces the Merkle tree block size and filesystem
-> > > block size to be increased accordingly.  That can be impractical; for
-> > > one, users want the same file signatures to work on all systems.
-> > > 
-> > > [...]
-> > 
-> > Here is the summary with links:
-> >   - [f2fs-dev,v2,01/11] fsverity: use unsigned long for level_start
-> >     https://git.kernel.org/jaegeuk/f2fs/c/284d5db5f99e
-> >   - [f2fs-dev,v2,02/11] fsverity: simplify Merkle tree readahead size calculation
-> >     https://git.kernel.org/jaegeuk/f2fs/c/9098f36b739d
-> >   - [f2fs-dev,v2,03/11] fsverity: store log2(digest_size) precomputed
-> >     https://git.kernel.org/jaegeuk/f2fs/c/579a12f78d88
-> >   - [f2fs-dev,v2,04/11] fsverity: use EFBIG for file too large to enable verity
-> >     https://git.kernel.org/jaegeuk/f2fs/c/55eed69cc8fd
-> >   - [f2fs-dev,v2,05/11] fsverity: replace fsverity_hash_page() with fsverity_hash_block()
-> >     https://git.kernel.org/jaegeuk/f2fs/c/f45555bf23cf
-> >   - [f2fs-dev,v2,06/11] fsverity: support verification with tree block size < PAGE_SIZE
-> >     https://git.kernel.org/jaegeuk/f2fs/c/5306892a50bf
-> >   - [f2fs-dev,v2,07/11] fsverity: support enabling with tree block size < PAGE_SIZE
-> >     https://git.kernel.org/jaegeuk/f2fs/c/56124d6c87fd
-> >   - [f2fs-dev,v2,08/11] ext4: simplify ext4_readpage_limit()
-> >     https://git.kernel.org/jaegeuk/f2fs/c/5e122148a3d5
-> >   - [f2fs-dev,v2,09/11] f2fs: simplify f2fs_readpage_limit()
-> >     https://git.kernel.org/jaegeuk/f2fs/c/feb0576a361a
-> >   - [f2fs-dev,v2,10/11] fs/buffer.c: support fsverity in block_read_full_folio()
-> >     https://git.kernel.org/jaegeuk/f2fs/c/4fa512ce7051
-> >   - [f2fs-dev,v2,11/11] ext4: allow verity with fs block size < PAGE_SIZE
-> >     https://git.kernel.org/jaegeuk/f2fs/c/db85d14dc5c5
-> > 
-> > You are awesome, thank you!
-> > -- 
-> > Deet-doot-dot, I am a bot.
-> > https://korg.docs.kernel.org/patchwork/pwbot.html
-> > 
-> 
-> These commits reached the f2fs tree through mainline, not through being applied
-> to the f2fs tree.  So this email shouldn't have been sent.  Jaegeuk, can you
-> look into fixing the configuration of the f2fs patchwork bot to prevent this?
+From: Dave Chinner <dchinner@redhat.com>
 
-Hmm, not sure how to fix that, since it seems patchwork bot reports this, once
-I pulled mainline into f2fs/dev branch.
+The background inode inactivation can attached dquots to inodes, but
+this can race with a foreground quotacheck failure that leads to
+disabling quotas and freeing the mp->m_quotainfo structure. The
+background inode inactivation then tries to allocate a quota, tries
+to dereference mp->m_quotainfo, and crashes like so:
 
-> 
-> - Eric
+XFS (loop1): Quotacheck: Unsuccessful (Error -5): Disabling quotas.
+xfs filesystem being mounted at /root/syzkaller.qCVHXV/0/file0 supports timestamps until 2038 (0x7fffffff)
+BUG: kernel NULL pointer dereference, address: 00000000000002a8
+....
+CPU: 0 PID: 161 Comm: kworker/0:4 Not tainted 6.2.0-c9c3395d5e3d #1
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.0-0-gd239552ce722-prebuilt.qemu.org 04/01/2014
+Workqueue: xfs-inodegc/loop1 xfs_inodegc_worker
+RIP: 0010:xfs_dquot_alloc+0x95/0x1e0
+....
+Call Trace:
+ <TASK>
+ xfs_qm_dqread+0x46/0x440
+ xfs_qm_dqget_inode+0x154/0x500
+ xfs_qm_dqattach_one+0x142/0x3c0
+ xfs_qm_dqattach_locked+0x14a/0x170
+ xfs_qm_dqattach+0x52/0x80
+ xfs_inactive+0x186/0x340
+ xfs_inodegc_worker+0xd3/0x430
+ process_one_work+0x3b1/0x960
+ worker_thread+0x52/0x660
+ kthread+0x161/0x1a0
+ ret_from_fork+0x29/0x50
+ </TASK>
+....
+
+Prevent this race by flushing all the queued background inode
+inactivations pending before purging all the cached dquots when
+quotacheck fails.
+
+Reported-by: Pengfei Xu <pengfei.xu@intel.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_qm.c | 40 ++++++++++++++++++++++++++--------------
+ 1 file changed, 26 insertions(+), 14 deletions(-)
+
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index e2c542f6dcd4..78ca52e55f03 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1321,15 +1321,14 @@ xfs_qm_quotacheck(
+ 
+ 	error = xfs_iwalk_threaded(mp, 0, 0, xfs_qm_dqusage_adjust, 0, true,
+ 			NULL);
+-	if (error) {
+-		/*
+-		 * The inode walk may have partially populated the dquot
+-		 * caches.  We must purge them before disabling quota and
+-		 * tearing down the quotainfo, or else the dquots will leak.
+-		 */
+-		xfs_qm_dqpurge_all(mp);
+-		goto error_return;
+-	}
++
++	/*
++	 * On error, the inode walk may have partially populated the dquot
++	 * caches.  We must purge them before disabling quota and tearing down
++	 * the quotainfo, or else the dquots will leak.
++	 */
++	if (error)
++		goto error_purge;
+ 
+ 	/*
+ 	 * We've made all the changes that we need to make incore.  Flush them
+@@ -1363,10 +1362,8 @@ xfs_qm_quotacheck(
+ 	 * and turn quotaoff. The dquots won't be attached to any of the inodes
+ 	 * at this point (because we intentionally didn't in dqget_noattach).
+ 	 */
+-	if (error) {
+-		xfs_qm_dqpurge_all(mp);
+-		goto error_return;
+-	}
++	if (error)
++		goto error_purge;
+ 
+ 	/*
+ 	 * If one type of quotas is off, then it will lose its
+@@ -1376,7 +1373,7 @@ xfs_qm_quotacheck(
+ 	mp->m_qflags &= ~XFS_ALL_QUOTA_CHKD;
+ 	mp->m_qflags |= flags;
+ 
+- error_return:
++error_return:
+ 	xfs_buf_delwri_cancel(&buffer_list);
+ 
+ 	if (error) {
+@@ -1395,6 +1392,21 @@ xfs_qm_quotacheck(
+ 	} else
+ 		xfs_notice(mp, "Quotacheck: Done.");
+ 	return error;
++
++error_purge:
++	/*
++	 * On error, we may have inodes queued for inactivation. This may try
++	 * to attach dquots to the inode before running cleanup operations on
++	 * the inode and this can race with the xfs_qm_destroy_quotainfo() call
++	 * below that frees mp->m_quotainfo. To avoid this race, flush all the
++	 * pending inodegc operations before we purge the dquots from memory,
++	 * ensuring that background inactivation is idle whilst we turn off
++	 * quotas.
++	 */
++	xfs_inodegc_flush(mp);
++	xfs_qm_dqpurge_all(mp);
++	goto error_return;
++
+ }
+ 
+ /*
+-- 
+2.39.2
+
