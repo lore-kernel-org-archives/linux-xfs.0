@@ -2,175 +2,186 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0AA2C64EC7
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Feb 2023 22:11:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 037ADC64EC4
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Feb 2023 23:47:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229702AbjB1WLN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Feb 2023 17:11:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60820 "EHLO
+        id S229697AbjB1Xq7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Feb 2023 18:46:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229486AbjB1WLN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2023 17:11:13 -0500
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D23F21A3F
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Feb 2023 14:11:11 -0800 (PST)
-Received: by mail-pl1-x62f.google.com with SMTP id p20so10786529plw.13
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Feb 2023 14:11:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=oK0R6uzsJwHHotrDE5yxMN7yczxtEm7If2jkjBsqnnM=;
-        b=d5RZQIeJVdrSg81wAnTaq6vURlWF1WSn4JCtD+C8xy6vbaCISN1Gz5GH0SUY1iApd/
-         vfe8qezhYYhHKUhW5BLksbV9BufwDC59wjEuoYGXIoKYgYPK8xSx0+9NU+66nE2wn2ZC
-         rPo4FUGcOQh6GePRKk1WUTKq5fyCqBMgyHaR5Ram0VhsOn0WMtrVG8K3xLoChkyHk1NH
-         OGSCElgKxF4EWo1MAbK+gbLLLQQRelvw93nrKOYg53GJ8t4LGD435gWsuKH/7bsUIwCU
-         Uozu8r/FMu0dwFVjBHAwr/x9oRFguOgqsF38ELXsWkZnFJqhO86YmtD7cmbP443ki+9R
-         X2Gg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=oK0R6uzsJwHHotrDE5yxMN7yczxtEm7If2jkjBsqnnM=;
-        b=1g0VmGFE+nkZ7gNkJnI4L/8Y/DH3JYFKLXSQR1Lq1EO9P/vczw2IBVdnvkUECVtavq
-         XX2ycdxKopTHAuHRGO/xFNnDBYP3iQ2fcS/GrZ4kVkhqAw2tklDtNdAtiw62+c449mDs
-         MMhhqAQAfLklgCGAKJxbVPtg3hYzVQZuzf0RKDJffE8j+4yeg3V2T9pFn9OEoxql93Tt
-         6zuE+HmQrLf2oWcS0j8OAgb5tSrgG2RG7VmGkczEmaddiR5sLqr0YiXNQj1GqsHsZHli
-         ieNHOmpVioTffwY8JYgrNe5L06Jcgv1dAy8ntEqpy/vOAWGGjYTXgBnS8xXwcljf6fR2
-         o68A==
-X-Gm-Message-State: AO0yUKXfLFrYajJZEDg+uQaH36bCuaErSs/S1RnuunVppKK+rItyqwUN
-        azTLFh3B6r4dGkvy4JHpLZx65zNT67nDgVrB
-X-Google-Smtp-Source: AK7set8H/pEwYE4aQRt7YimFDMtG7LUYCz88QANCklRSJDow0akDQOujkLKZfD7p301pkJmWFjHdzg==
-X-Received: by 2002:a17:90b:224f:b0:236:9eef:e280 with SMTP id hk15-20020a17090b224f00b002369eefe280mr4798820pjb.46.1677622271032;
-        Tue, 28 Feb 2023 14:11:11 -0800 (PST)
-Received: from dread.disaster.area (pa49-186-4-237.pa.vic.optusnet.com.au. [49.186.4.237])
-        by smtp.gmail.com with ESMTPSA id p5-20020a170902780500b001992521f23esm6976979pll.100.2023.02.28.14.11.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Feb 2023 14:11:10 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1pX8Bf-003Hy6-FP; Wed, 01 Mar 2023 09:11:07 +1100
-Date:   Wed, 1 Mar 2023 09:11:07 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     kernel test robot <yujie.liu@intel.com>
-Cc:     Dave Chinner <dchinner@redhat.com>, oe-lkp@lists.linux.dev,
-        lkp@intel.com, linux-kernel@vger.kernel.org,
-        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [linus:master] [xfs] 304a68b9c6:
- WARNING:at_fs/iomap/buffered-io.c:#iomap_write_delalloc_release
-Message-ID: <20230228221107.GD360264@dread.disaster.area>
-References: <202302281653.51938721-yujie.liu@intel.com>
+        with ESMTP id S229471AbjB1Xq6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2023 18:46:58 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E07E37739;
+        Tue, 28 Feb 2023 15:46:57 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id E1174B80ED6;
+        Tue, 28 Feb 2023 23:46:55 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87626C433D2;
+        Tue, 28 Feb 2023 23:46:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1677628014;
+        bh=hxTo2gEbH0ASBG49Qu72JbFUOmGIgyr21x50j6Ryzhk=;
+        h=Date:From:To:Cc:Subject:From;
+        b=NmlwZdi6fDzF6wqE99dkVbGFAq540GTlvXoEz/KBUpdKM1Tky5lNCSmvvJZsZZRpF
+         bCExuQh0iqPSG2zDpxaZlAQgRufxRQx2rIu4v612yaFOd04vZCBeEGgagDbZ6pyZZu
+         BhiXclrR57RDRIFcnfXLwOfbEX+EIHOkrp4qksaDl+Axf55u2Z5nw0+F+Xq9s8HHQz
+         ttIZFY24MbtEeR5HxIVU3f/wTBrRGvc9uawqlup4/R9AQjW7QSL4bm/GP+tnGlx1yg
+         8c+G10OK5hhx4SDGsyelFCr80licoOYxekPHQ4DsPBHVPPFa1YlAlJVgvlLG7kcO4I
+         /r/ZKHOgZK5rg==
+Date:   Tue, 28 Feb 2023 15:46:53 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org, torvalds@linux-foundation.org
+Cc:     allison.henderson@oracle.com, dchinner@redhat.com,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        syzbot+090ae72d552e6bd93cfe@syzkaller.appspotmail.com
+Subject: [GIT PULL] xfs: moar new code for 6.3
+Message-ID: <167762780388.3622158.16184008545274432486.stg-ugh@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <202302281653.51938721-yujie.liu@intel.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 28, 2023 at 04:40:01PM +0800, kernel test robot wrote:
-> Greeting,
-> 
-> FYI, we noticed WARNING:at_fs/iomap/buffered-io.c:#iomap_write_delalloc_release due to commit (built with gcc-11):
-> 
-> commit: 304a68b9c63bbfc1f6e159d68e8892fc54a06067 ("xfs: use iomap_valid method to detect stale cached iomaps")
-> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git master
-> 
-> [test failed on linux-next/master 058f4df42121baadbb8a980c06011e912784dbd2]
-> in testcase: xfstests
-> version: xfstests-i386-5a5e419-1_20220926
-> with following parameters:
-> 
-> 	disk: 4HDD
-> 	fs: xfs
-> 	test: generic-group-32
+Hi Linus,
 
-Which fstest was running at the time this warning was thrown?
+Please pull this branch with changes for xfs for 6.3-rc1.  This second
+pull request contains a fix for a deadlock in the allocator.  It
+continues the slow march towards being able to offline AGs, and it
+refactors the interface to the xfs allocator to be less indirection
+happy.
 
-> 
-> test-description: xfstests is a regression test suite for xfs and other files ystems.
-> test-url: git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
-> 
-> on test machine: 8 threads Intel(R) Core(TM) i7-6700 CPU @ 3.40GHz (Skylake) with 28G memory
-> 
-> caused below changes (please refer to attached dmesg/kmsg for entire log/backtrace):
-> 
-> 
-> [   78.565703][   T59] ------------[ cut here ]------------
-> [ 78.570983][ T59] WARNING: CPU: 4 PID: 59 at fs/iomap/buffered-io.c:984 iomap_write_delalloc_release (buffered-io.c:?) 
+As usual, I did a test-merge with the main upstream branch as of a few
+minutes ago, and didn't see any conflicts.  Please let me know if you
+encounter any problems.
 
-Well, that's useless without the function offset or line number to
-tell us what warning in that function triggered.
+--D
 
-> [   78.581265][   T59] Modules linked in: loop(E) dm_flakey(E) xfs(E) dm_mod(E) intel_rapl_msr(E) intel_rapl_common(E) btrfs(E) blake2b_generic(E) xor(E) raid6_pq(E) zstd_compress(E) x86_pkg_temp_thermal(E) libcrc32c(E) intel_powerclamp(E) crc32c_generic(E) coretemp(E) sd_mod(E) t10_pi(E) ipmi_devintf(E) kvm_intel(E) ipmi_msghandler(E) i915(E) crc64_rocksoft_generic(E) kvm(E) irqbypass(E) crc64_rocksoft(E) crc64(E) drm_buddy(E) crc32_pclmul(E) crc32c_intel(E) aesni_intel(E) crypto_simd(E) drm_display_helper(E) cryptd(E) cec(E) mei_wdt(E) wmi_bmof(E) rapl(E) ahci(E) evdev(E) ttm(E) xhci_pci(E) intel_cstate(E) xhci_hcd(E) libahci(E) i2c_i801(E) mei_me(E) drm_kms_helper(E) syscopyarea(E) intel_uncore(E) usbcore(E) i2c_smbus(E) sysfillrect(E) libata(E) mei(E) sysimgblt(E) intel_pch_thermal(E) fb_sys_fops(E) usb_common(E) video(E) fan(E) thermal(E) wmi(E) acpi_pad(E) button(E) fuse(E) drm(E) configfs(E) autofs4(E)
-> [   78.661092][   T59] CPU: 4 PID: 59 Comm: kworker/u16:2 Tainted: G            E      6.1.0-rc4-00008-g304a68b9c63b #1
+The following changes since commit dd07bb8b6baf2389caff221f043d9188ce6bab8c:
 
-This looks like a broken kernel install. Why are all the modules
-tainted?
+xfs: revert commit 8954c44ff477 (2023-02-10 09:06:06 -0800)
 
-> [   78.671542][   T59] Hardware name: Dell Inc. OptiPlex 7040/0Y7WYT, BIOS 1.2.8 01/26/2016
-> [   78.679578][   T59] Workqueue: loop0 loop_rootcg_workfn [loop]
-> [ 78.685393][ T59] EIP: iomap_write_delalloc_release (buffered-io.c:?) 
-> [ 78.691449][ T59] Code: e8 cf 94 ed ff f0 ff 4b 1c 74 45 8b 45 e0 8b 40 20 83 c0 10 e8 ab 93 d8 ff 8d 65 f4 89 f0 5b 5e 5f 5d c3 0f 0b e9 f9 fd ff ff <0f> 0b e9 e0 fd ff ff 0f 0b 8b 45 cc 8b 4d f0 8b 55 d0 39 c8 89 d0
-> All code
-> ========
->    0:	e8 cf 94 ed ff       	callq  0xffffffffffed94d4
->    5:	f0 ff 4b 1c          	lock decl 0x1c(%rbx)
->    9:	74 45                	je     0x50
->    b:	8b 45 e0             	mov    -0x20(%rbp),%eax
->    e:	8b 40 20             	mov    0x20(%rax),%eax
->   11:	83 c0 10             	add    $0x10,%eax
->   14:	e8 ab 93 d8 ff       	callq  0xffffffffffd893c4
->   19:	8d 65 f4             	lea    -0xc(%rbp),%esp
->   1c:	89 f0                	mov    %esi,%eax
->   1e:	5b                   	pop    %rbx
->   1f:	5e                   	pop    %rsi
->   20:	5f                   	pop    %rdi
->   21:	5d                   	pop    %rbp
->   22:	c3                   	retq   
->   23:	0f 0b                	ud2    
->   25:	e9 f9 fd ff ff       	jmpq   0xfffffffffffffe23
->   2a:*	0f 0b                	ud2    		<-- trapping instruction
->   2c:	e9 e0 fd ff ff       	jmpq   0xfffffffffffffe11
->   31:	0f 0b                	ud2    
->   33:	8b 45 cc             	mov    -0x34(%rbp),%eax
->   36:	8b 4d f0             	mov    -0x10(%rbp),%ecx
->   39:	8b 55 d0             	mov    -0x30(%rbp),%edx
->   3c:	39 c8                	cmp    %ecx,%eax
->   3e:	89 d0                	mov    %edx,%eax
-> 
-> Code starting with the faulting instruction
-> ===========================================
->    0:	0f 0b                	ud2    
->    2:	e9 e0 fd ff ff       	jmpq   0xfffffffffffffde7
->    7:	0f 0b                	ud2    
->    9:	8b 45 cc             	mov    -0x34(%rbp),%eax
->    c:	8b 4d f0             	mov    -0x10(%rbp),%ecx
->    f:	8b 55 d0             	mov    -0x30(%rbp),%edx
->   12:	39 c8                	cmp    %ecx,%eax
->   14:	89 d0                	mov    %edx,%eax
-> [   78.710792][   T59] EAX: 2335a000 EBX: 00000004 ECX: fffffffc EDX: 00000004
-> [   78.717707][   T59] ESI: 2335b000 EDI: 00000000 EBP: c3187c24 ESP: c3187bf0
-> [   78.724624][   T59] DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068 EFLAGS: 00010297
-> [   78.732056][   T59] CR0: 80050033 CR2: b7da00b0 CR3: 02350000 CR4: 003506f0
-> [   78.738971][   T59] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
-> [   78.745887][   T59] DR6: fffe0ff0 DR7: 00000400
-> [   78.750389][   T59] Call Trace:
-> [ 78.753508][ T59] iomap_file_buffered_write_punch_delalloc (??:?) 
-> [ 78.760183][ T59] ? xfs_buffered_write_iomap_end (xfs_iomap.c:?) xfs
-> [ 78.766541][ T59] xfs_buffered_write_iomap_end (xfs_iomap.c:?) xfs
+are available in the Git repository at:
 
-What's with all the broken/missing function offsets and
-file/line numbers in the stack trace?
+git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.3-merge-4
 
-Please fix your tooling - this report isn't useful with all the
-offset/line number information being broken like this
+for you to fetch changes up to 6e2985c938e8b765b3de299c561d87f98330c546:
 
-Cheers,
+xfs: restore old agirotor behavior (2023-02-27 08:53:45 -0800)
 
-Dave.
+----------------------------------------------------------------
+New code for 6.3-rc1, part 2:
 
--- 
-Dave Chinner
-david@fromorbit.com
+* Fix a deadlock in the free space allocator due to the AG-walking
+algorithm forgetting to follow AG-order locking rules.
+* Make the inode allocator prefer existing free inodes instead of
+failing to allocate new inode chunks when free space is low.
+* Set minleft correctly when setting allocator parameters for bmap
+changes.
+* Fix uninitialized variable access in the getfsmap code.
+* Make a distinction between active and passive per-AG structure
+references.  For now, active references are taken to perform some
+work in an AG on behalf of a high level operation; passive references
+are used by lower level code to finish operations started by other
+threads.  Eventually this will become part of online shrink.
+* Split out all the different allocator strategies into separate
+functions to move us away from design antipattern of filling out a
+huge structure for various differentish things and issuing a single
+function multiplexing call.
+* Various cleanups in the filestreams allocator code, which we might
+very well want to deprecate instead of continuing.
+* Fix a bug with the agi rotor code that was introduced earlier in this
+series.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+
+----------------------------------------------------------------
+Darrick J. Wong (3):
+Merge tag 'xfs-alloc-perag-conversion' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-6.3-merge-A
+xfs: fix uninitialized variable access
+xfs: restore old agirotor behavior
+
+Dave Chinner (42):
+xfs: fix low space alloc deadlock
+xfs: prefer free inodes at ENOSPC over chunk allocation
+xfs: block reservation too large for minleft allocation
+xfs: drop firstblock constraints from allocation setup
+xfs: t_firstblock is tracking AGs not blocks
+xfs: don't assert fail on transaction cancel with deferred ops
+xfs: active perag reference counting
+xfs: rework the perag trace points to be perag centric
+xfs: convert xfs_imap() to take a perag
+xfs: use active perag references for inode allocation
+xfs: inobt can use perags in many more places than it does
+xfs: convert xfs_ialloc_next_ag() to an atomic
+xfs: perags need atomic operational state
+xfs: introduce xfs_for_each_perag_wrap()
+xfs: rework xfs_alloc_vextent()
+xfs: factor xfs_alloc_vextent_this_ag() for  _iterate_ags()
+xfs: combine __xfs_alloc_vextent_this_ag and  xfs_alloc_ag_vextent
+xfs: use xfs_alloc_vextent_this_ag() where appropriate
+xfs: factor xfs_bmap_btalloc()
+xfs: use xfs_alloc_vextent_first_ag() where appropriate
+xfs: use xfs_alloc_vextent_start_bno() where appropriate
+xfs: introduce xfs_alloc_vextent_near_bno()
+xfs: introduce xfs_alloc_vextent_exact_bno()
+xfs: introduce xfs_alloc_vextent_prepare()
+xfs: move allocation accounting to xfs_alloc_vextent_set_fsbno()
+xfs: fold xfs_alloc_ag_vextent() into callers
+xfs: move the minimum agno checks into xfs_alloc_vextent_check_args
+xfs: convert xfs_alloc_vextent_iterate_ags() to use perag walker
+xfs: convert trim to use for_each_perag_range
+xfs: factor out filestreams from xfs_bmap_btalloc_nullfb
+xfs: get rid of notinit from xfs_bmap_longest_free_extent
+xfs: use xfs_bmap_longest_free_extent() in filestreams
+xfs: move xfs_bmap_btalloc_filestreams() to xfs_filestreams.c
+xfs: merge filestream AG lookup into xfs_filestream_select_ag()
+xfs: merge new filestream AG selection into xfs_filestream_select_ag()
+xfs: remove xfs_filestream_select_ag() longest extent check
+xfs: factor out MRU hit case in xfs_filestream_select_ag
+xfs: track an active perag reference in filestreams
+xfs: use for_each_perag_wrap in xfs_filestream_pick_ag
+xfs: pass perag to filestreams tracing
+xfs: return a referenced perag from filestreams allocator
+xfs: refactor the filestreams allocator pick functions
+
+fs/xfs/libxfs/xfs_ag.c             |  93 ++++-
+fs/xfs/libxfs/xfs_ag.h             | 111 +++++-
+fs/xfs/libxfs/xfs_ag_resv.c        |   2 +-
+fs/xfs/libxfs/xfs_alloc.c          | 685 +++++++++++++++++++++++--------------
+fs/xfs/libxfs/xfs_alloc.h          |  61 ++--
+fs/xfs/libxfs/xfs_alloc_btree.c    |   2 +-
+fs/xfs/libxfs/xfs_bmap.c           | 672 +++++++++++++++++-------------------
+fs/xfs/libxfs/xfs_bmap.h           |   7 +
+fs/xfs/libxfs/xfs_bmap_btree.c     |  64 ++--
+fs/xfs/libxfs/xfs_btree.c          |   2 +-
+fs/xfs/libxfs/xfs_ialloc.c         | 242 ++++++-------
+fs/xfs/libxfs/xfs_ialloc.h         |   5 +-
+fs/xfs/libxfs/xfs_ialloc_btree.c   |  47 ++-
+fs/xfs/libxfs/xfs_ialloc_btree.h   |  20 +-
+fs/xfs/libxfs/xfs_refcount_btree.c |  10 +-
+fs/xfs/libxfs/xfs_rmap_btree.c     |   2 +-
+fs/xfs/libxfs/xfs_sb.c             |   3 +-
+fs/xfs/scrub/agheader_repair.c     |  35 +-
+fs/xfs/scrub/bmap.c                |   2 +-
+fs/xfs/scrub/common.c              |  21 +-
+fs/xfs/scrub/fscounters.c          |  13 +-
+fs/xfs/scrub/repair.c              |   7 +-
+fs/xfs/xfs_bmap_util.c             |   2 +-
+fs/xfs/xfs_discard.c               |  50 ++-
+fs/xfs/xfs_filestream.c            | 455 ++++++++++++------------
+fs/xfs/xfs_filestream.h            |   6 +-
+fs/xfs/xfs_fsmap.c                 |   5 +-
+fs/xfs/xfs_icache.c                |   8 +-
+fs/xfs/xfs_inode.c                 |   2 +-
+fs/xfs/xfs_iwalk.c                 |  10 +-
+fs/xfs/xfs_mount.h                 |   3 +-
+fs/xfs/xfs_reflink.c               |   4 +-
+fs/xfs/xfs_super.c                 |  47 ++-
+fs/xfs/xfs_trace.h                 |  81 ++---
+fs/xfs/xfs_trans.c                 |   8 +-
+fs/xfs/xfs_trans.h                 |   2 +-
+36 files changed, 1541 insertions(+), 1248 deletions(-)
