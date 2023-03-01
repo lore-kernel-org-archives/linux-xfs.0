@@ -2,173 +2,122 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF425C64EC7
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Mar 2023 00:39:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FD28C64EC7
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Mar 2023 00:47:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229451AbjCAAjG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Feb 2023 19:39:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42920 "EHLO
+        id S229681AbjCAArF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Feb 2023 19:47:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48670 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229768AbjCAAjE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2023 19:39:04 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 922F9C17D
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Feb 2023 16:39:03 -0800 (PST)
+        with ESMTP id S229510AbjCAArE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Feb 2023 19:47:04 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90F98CA0D
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Feb 2023 16:47:03 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 5F051B80E95
-        for <linux-xfs@vger.kernel.org>; Wed,  1 Mar 2023 00:39:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A7C8C433EF;
-        Wed,  1 Mar 2023 00:39:01 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2949560FD9
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Mar 2023 00:47:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F91AC433EF;
+        Wed,  1 Mar 2023 00:47:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677631141;
-        bh=H+GofQ9iJygh3yjGPcQyY2LfGnunEbIp8xhGx57CMZ8=;
+        s=k20201202; t=1677631622;
+        bh=RApj/CrdEjmck6ZEKoQ0YWrOzdvbkH1MNqdsXvu7t4o=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=N3vAJgbpP2Sk+9udg82W96Ppp46ABrI4IE7nGH7kS+6RxaFibTZcU4LgcoA+vLo2T
-         veIQWu5CLF5mb6YVzdZ2XfSTMbtMlvdUK0Q338RCKr1xxe9eiXdSx6KTk8mbmONgPK
-         b7ryFk2Tq4H325N6fQUlh1PjS4FhHG+JH9ogIInWBNFNxSmWWaQOcPRRDj6ro1pZF0
-         96osdvWqoO4DN7rPZvFca2hYVfwwSlIUEQ9aXYNdmHDfp3n+OEs2sQ99QZwA6wGMT/
-         a4QF3eAaHkosjmn70bSUk2uMuRII1s62WERDy5srKWZ2900h0NrSsogVVj5rsTRyFo
-         qP297u+NB7cNA==
-Date:   Tue, 28 Feb 2023 16:39:00 -0800
+        b=g05DiMjKxtzyPC5K8p2hCEnpSzCHLSYiWJjHoe47YTSNYLEemmHUobL3qadmEuwrY
+         7surWnT7QxxHyRjLM+QpPNw/N7L8vMfH4SbWe66mjLpIde+yPKVY2OC8+61tCMxSy/
+         Oi3bKsiI6S23e20U+y5tuNFCbFi6Qnhbf3qdIfNOdZjt2JG7iBf6wzZN4Szrbg76mA
+         V0m/YU8r5Yp/y8UiM8wJT3i+XWYgXdgiw3ilI9RKDAzopu6W/FRtrLppJ2Gu3V1JHF
+         gmtAvKDjqjV4JkRwktByEemVQ01P5lHXjOlE6not2xjshyj8dQLzyDvmZ014ufRpIu
+         dr5nSXYBa5DUA==
+Date:   Tue, 28 Feb 2023 16:47:01 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: quotacheck failure can race with background inode
- inactivation
-Message-ID: <Y/6epIzi5Y23w69v@magnolia>
-References: <20230228051250.1238353-1-david@fromorbit.com>
+Subject: Re: [PATCH] xfs: fix off-by-one-block in xfs_discard_folio()
+Message-ID: <Y/6ghfyWXLuCefkn@magnolia>
+References: <20230301001706.1315973-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230228051250.1238353-1-david@fromorbit.com>
+In-Reply-To: <20230301001706.1315973-1-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 28, 2023 at 04:12:50PM +1100, Dave Chinner wrote:
+On Wed, Mar 01, 2023 at 11:17:06AM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> The background inode inactivation can attached dquots to inodes, but
-> this can race with a foreground quotacheck failure that leads to
-> disabling quotas and freeing the mp->m_quotainfo structure. The
-> background inode inactivation then tries to allocate a quota, tries
-> to dereference mp->m_quotainfo, and crashes like so:
+> The recent writeback corruption fixes changed the code in
+> xfs_discard_folio() to calculate a byte range to for punching
+> delalloc extents. A mistake was made in using round_up(pos) for the
+> end offset, because when pos points at the first byte of a block, it
+> does not get rounded up to point to the end byte of the block. hence
+> the punch range is short, and this leads to unexpected behaviour in
+> certain cases in xfs_bmap_punch_delalloc_range.
 > 
-> XFS (loop1): Quotacheck: Unsuccessful (Error -5): Disabling quotas.
-> xfs filesystem being mounted at /root/syzkaller.qCVHXV/0/file0 supports timestamps until 2038 (0x7fffffff)
-> BUG: kernel NULL pointer dereference, address: 00000000000002a8
-> ....
-> CPU: 0 PID: 161 Comm: kworker/0:4 Not tainted 6.2.0-c9c3395d5e3d #1
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.0-0-gd239552ce722-prebuilt.qemu.org 04/01/2014
-> Workqueue: xfs-inodegc/loop1 xfs_inodegc_worker
-> RIP: 0010:xfs_dquot_alloc+0x95/0x1e0
-> ....
-> Call Trace:
->  <TASK>
->  xfs_qm_dqread+0x46/0x440
->  xfs_qm_dqget_inode+0x154/0x500
->  xfs_qm_dqattach_one+0x142/0x3c0
->  xfs_qm_dqattach_locked+0x14a/0x170
->  xfs_qm_dqattach+0x52/0x80
->  xfs_inactive+0x186/0x340
->  xfs_inodegc_worker+0xd3/0x430
->  process_one_work+0x3b1/0x960
->  worker_thread+0x52/0x660
->  kthread+0x161/0x1a0
->  ret_from_fork+0x29/0x50
->  </TASK>
-> ....
+> e.g. pos = 0 means we call xfs_bmap_punch_delalloc_range(0,0), so
+> there is no previous extent and it rounds up the punch to the end of
+> the delalloc extent it found at offset 0, not the end of the range
+> given to xfs_bmap_punch_delalloc_range().
 > 
-> Prevent this race by flushing all the queued background inode
-> inactivations pending before purging all the cached dquots when
-> quotacheck fails.
+> Fix this by handling the zero block offset case correctly.
 > 
+> Fixes: 7348b322332d ("xfs: xfs_bmap_punch_delalloc_range() should take a byte range")
 > Reported-by: Pengfei Xu <pengfei.xu@intel.com>
+> Found-by: Brian Foster <bfoster@redhat.com>
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_aops.c | 14 ++++++++++++--
+>  1 file changed, 12 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 41734202796f..429f63cfd7d4 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -466,6 +466,7 @@ xfs_discard_folio(
+>  {
+>  	struct xfs_inode	*ip = XFS_I(folio->mapping->host);
+>  	struct xfs_mount	*mp = ip->i_mount;
+> +	xfs_off_t		end_off;
+>  	int			error;
+>  
+>  	if (xfs_is_shutdown(mp))
+> @@ -475,8 +476,17 @@ xfs_discard_folio(
+>  		"page discard on page "PTR_FMT", inode 0x%llx, pos %llu.",
+>  			folio, ip->i_ino, pos);
+>  
+> -	error = xfs_bmap_punch_delalloc_range(ip, pos,
+> -			round_up(pos, folio_size(folio)));
+> +	/*
+> +	 * Need to be careful with the case where the pos passed in points to
+> +	 * the first byte of the folio - rounding up won't change the value,
+> +	 * but in all cases here we need to end offset to point to the start
+> +	 * of the next folio.
+> +	 */
+> +	if (pos == folio_pos(folio))
+> +		end_off = pos + folio_size(folio);
+> +	else
+> +		end_off = round_up(pos, folio_size(folio));
 
-Makes sense,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Can this construct be simplified to:
+
+	end_off = round_up(pos + 1, folio_size(folio));
+
+If pos is the first byte of the folio, it'll round end_off to the start
+of the next folio.  If pos is (somehow) the last byte of the folio, the
+first argument to round_up is already the first byte of the next folio,
+and rounding won't change it.
+
+I'll run this through fstests since it's getting late already.
 
 --D
 
-> ---
->  fs/xfs/xfs_qm.c | 40 ++++++++++++++++++++++++++--------------
->  1 file changed, 26 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index e2c542f6dcd4..78ca52e55f03 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -1321,15 +1321,14 @@ xfs_qm_quotacheck(
+> +	error = xfs_bmap_punch_delalloc_range(ip, pos, end_off);
 >  
->  	error = xfs_iwalk_threaded(mp, 0, 0, xfs_qm_dqusage_adjust, 0, true,
->  			NULL);
-> -	if (error) {
-> -		/*
-> -		 * The inode walk may have partially populated the dquot
-> -		 * caches.  We must purge them before disabling quota and
-> -		 * tearing down the quotainfo, or else the dquots will leak.
-> -		 */
-> -		xfs_qm_dqpurge_all(mp);
-> -		goto error_return;
-> -	}
-> +
-> +	/*
-> +	 * On error, the inode walk may have partially populated the dquot
-> +	 * caches.  We must purge them before disabling quota and tearing down
-> +	 * the quotainfo, or else the dquots will leak.
-> +	 */
-> +	if (error)
-> +		goto error_purge;
->  
->  	/*
->  	 * We've made all the changes that we need to make incore.  Flush them
-> @@ -1363,10 +1362,8 @@ xfs_qm_quotacheck(
->  	 * and turn quotaoff. The dquots won't be attached to any of the inodes
->  	 * at this point (because we intentionally didn't in dqget_noattach).
->  	 */
-> -	if (error) {
-> -		xfs_qm_dqpurge_all(mp);
-> -		goto error_return;
-> -	}
-> +	if (error)
-> +		goto error_purge;
->  
->  	/*
->  	 * If one type of quotas is off, then it will lose its
-> @@ -1376,7 +1373,7 @@ xfs_qm_quotacheck(
->  	mp->m_qflags &= ~XFS_ALL_QUOTA_CHKD;
->  	mp->m_qflags |= flags;
->  
-> - error_return:
-> +error_return:
->  	xfs_buf_delwri_cancel(&buffer_list);
->  
->  	if (error) {
-> @@ -1395,6 +1392,21 @@ xfs_qm_quotacheck(
->  	} else
->  		xfs_notice(mp, "Quotacheck: Done.");
->  	return error;
-> +
-> +error_purge:
-> +	/*
-> +	 * On error, we may have inodes queued for inactivation. This may try
-> +	 * to attach dquots to the inode before running cleanup operations on
-> +	 * the inode and this can race with the xfs_qm_destroy_quotainfo() call
-> +	 * below that frees mp->m_quotainfo. To avoid this race, flush all the
-> +	 * pending inodegc operations before we purge the dquots from memory,
-> +	 * ensuring that background inactivation is idle whilst we turn off
-> +	 * quotas.
-> +	 */
-> +	xfs_inodegc_flush(mp);
-> +	xfs_qm_dqpurge_all(mp);
-> +	goto error_return;
-> +
->  }
->  
->  /*
+>  	if (error && !xfs_is_shutdown(mp))
+>  		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
 > -- 
 > 2.39.2
 > 
