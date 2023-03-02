@@ -2,167 +2,293 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBE2EC678D4
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Mar 2023 09:22:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2D6BC678D4
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Mar 2023 09:43:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229746AbjCBJWV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Mar 2023 04:22:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55446 "EHLO
+        id S229851AbjCBJnX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Mar 2023 04:43:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229560AbjCBJWE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Mar 2023 04:22:04 -0500
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3766C3B0D6;
-        Thu,  2 Mar 2023 01:21:47 -0800 (PST)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id C93541FE69;
-        Thu,  2 Mar 2023 09:21:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1677748905; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+        with ESMTP id S230042AbjCBJnO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Mar 2023 04:43:14 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0134541098
+        for <linux-xfs@vger.kernel.org>; Thu,  2 Mar 2023 01:42:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1677750135;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=BmgYg0lYZnPfzsZd5pOf8kH3AqGBx1K6viQGIXslEbc=;
-        b=jirM/3F5jSyGv52N/7YH83A1F36L76BW3FbxQrYB8JBSQo8vzyQ/xM+Xv/1JOIoy/nDRBb
-        1umE/dkOeI0KkR2bFmT5kTeYQaOQqX7rJ9JNMhsTXTMjjM9sCZkTFEqj/u5bieUhkflr5a
-        0qQnxnFhoPvXBZwT/tHH7Oj+BZ8bnVw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1677748905;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=BmgYg0lYZnPfzsZd5pOf8kH3AqGBx1K6viQGIXslEbc=;
-        b=oMvbV1Jcc6pOtQJ5RFJm1BC7mfV9Cp4Ia0/Ik+xJpTR0j/aYC8T2sfFpZaqMac90lGo9If
-        1DJLIk829UIf8kAg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id AA3EF13A63;
-        Thu,  2 Mar 2023 09:21:45 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id Pv2DKalqAGQnNAAAMHmgww
-        (envelope-from <jack@suse.cz>); Thu, 02 Mar 2023 09:21:45 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 06033A06E5; Thu,  2 Mar 2023 10:21:45 +0100 (CET)
-Date:   Thu, 2 Mar 2023 10:21:44 +0100
-From:   Jan Kara <jack@suse.cz>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Jan Kara <jack@suse.cz>, "Darrick J. Wong" <djwong@kernel.org>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        Ted Tso <tytso@mit.edu>, linux-xfs@vger.kernel.org
-Subject: Re: Locking issue with directory renames
-Message-ID: <20230302092144.yvj5rcxnbe57nqie@quack3>
-References: <20230117123735.un7wbamlbdihninm@quack3>
- <20230117214457.GG360264@dread.disaster.area>
- <Y/mEsfyhNCs8orCY@magnolia>
- <20230228015807.GC360264@dread.disaster.area>
- <20230301123628.4jghcm4wqci6spii@quack3>
- <20230302003050.GI360264@dread.disaster.area>
+        bh=o27jNhWWQ2yDbTFcPf4F9ELrfV/g1jYai+FNis861Jk=;
+        b=fz/1Il2LVI9z+OJ9bTQWeYfx4oOwByBZ9ylbge72OGFWXU7JPTXnQnmuFUZMA1F0Buqeej
+        eKEhHejRQAHbq7hWf9VgULqZKuuvp4GOyyRATnZU1apTiQrq4muRSztWTUPy0ze/TYGoRW
+        93NGOz8RaYoMDOJz2N4UV8vvKnC24c8=
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
+ [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-670-VNEZyQjhPHqcYEvvknk-jw-1; Thu, 02 Mar 2023 04:42:13 -0500
+X-MC-Unique: VNEZyQjhPHqcYEvvknk-jw-1
+Received: by mail-pj1-f71.google.com with SMTP id gf7-20020a17090ac7c700b00237cfdb33d7so2013102pjb.0
+        for <linux-xfs@vger.kernel.org>; Thu, 02 Mar 2023 01:42:12 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1677750132;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=o27jNhWWQ2yDbTFcPf4F9ELrfV/g1jYai+FNis861Jk=;
+        b=Dg5dmuJYfLYKjWvVKEyXkLOQqWUk4BHoGDTzypp/9K5BLSRVLxvQ0JAvl6GB32GlCT
+         WkJ9xrMMXwU5zwe2247Q5HQSxHUbctURLhK0FrFlMW2RObweE0296b/4J8nSfwAiPeh3
+         MUXjUvRR+RuA63US4jZj9yZiJTkj9WTHFmmrF3SXeQfWJSzX7dfDa4lOxg1WfaQTt0IV
+         HGF5qIreOs0OJd6ZoWOb3zkIAO+mETMTdyHxL7EFqh9c8DQTDG1Y83nBsViqeM1B/5cC
+         VO4W1fraNXxK/Dk1MxJrS4bjpwKRxEoQ2zMiaMSsCEdE4uaBsWn9ouIqEzKymXZ7Y3Ir
+         C71Q==
+X-Gm-Message-State: AO0yUKVPYuN/pG12+d8/OTufNcgLtw49WpaCpTHdyMkBgjQiJPhsfZaT
+        1aLOJ0hRXmUWlkdoACWCwKBEkfBcB/Qjd0fIhsRAOq6nZMzSUnto4lNAwJtv+tGIsvyi2x9xAwc
+        lGFbX0avuC/JSQeVxquiG
+X-Received: by 2002:a17:902:cec8:b0:19d:74c:78e5 with SMTP id d8-20020a170902cec800b0019d074c78e5mr11285798plg.50.1677750131969;
+        Thu, 02 Mar 2023 01:42:11 -0800 (PST)
+X-Google-Smtp-Source: AK7set9K500yuY3hLqshKYn0GDUx+o/z+64xHtca82DvVmvrBnsno4A7GmzO40TrfyJ1SURei+onEg==
+X-Received: by 2002:a17:902:cec8:b0:19d:74c:78e5 with SMTP id d8-20020a170902cec800b0019d074c78e5mr11285775plg.50.1677750131488;
+        Thu, 02 Mar 2023 01:42:11 -0800 (PST)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id jg15-20020a17090326cf00b0019adbef6a63sm9946635plb.235.2023.03.02.01.42.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 02 Mar 2023 01:42:10 -0800 (PST)
+Date:   Thu, 2 Mar 2023 17:42:06 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 7/7] fsstress: update for FIEXCHANGE_RANGE
+Message-ID: <20230302094206.k4aerwldv2squ667@zlang-mailbox>
+References: <167763954409.3796922.11086772690906428270.stgit@magnolia>
+ <167763958362.3796922.2350291536547146358.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230302003050.GI360264@dread.disaster.area>
+In-Reply-To: <167763958362.3796922.2350291536547146358.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu 02-03-23 11:30:50, Dave Chinner wrote:
-> On Wed, Mar 01, 2023 at 01:36:28PM +0100, Jan Kara wrote:
-> > On Tue 28-02-23 12:58:07, Dave Chinner wrote:
-> > > On Fri, Feb 24, 2023 at 07:46:57PM -0800, Darrick J. Wong wrote:
-> > > > So xfs_dir2_sf_replace can rewrite the shortform structure (or even
-> > > > convert it to block format!) while readdir is accessing it.  Or am I
-> > > > mising something?
-> > > 
-> > > True, I missed that.
-> > > 
-> > > Hmmmm. ISTR that holding ILOCK over filldir callbacks causes
-> > > problems with lock ordering{1], and that's why we removed the ILOCK
-> > > from the getdents path in the first place and instead relied on the
-> > > IOLOCK being held by the VFS across readdir for exclusion against
-> > > concurrent modification from the VFS.
-> > > 
-> > > Yup, the current code only holds the ILOCK for the extent lookup and
-> > > buffer read process, it drops it while it is walking the locked
-> > > buffer and calling the filldir callback. Which is why we don't hold
-> > > it for xfs_dir2_sf_getdents() - the VFS is supposed to be holding
-> > > i_rwsem in exclusive mode for any operation that modifies a
-> > > directory entry. We should only need the ILOCK for serialising the
-> > > extent tree loading, not for serialising access vs modification to
-> > > the directory.
-> > > 
-> > > So, yeah, I think you're right, Darrick. And the fix is that the VFS
-> > > needs to hold the i_rwsem correctly for allo inodes that may be
-> > > modified during rename...
-> > 
-> > But Al Viro didn't want to lock the inode in the VFS (as some filesystems
-> > don't need the lock)
+On Tue, Feb 28, 2023 at 06:59:43PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Was any reason given?
-
-Kind of what I wrote above. See:
-
-https://lore.kernel.org/all/Y8bTk1CsH9AaAnLt@ZenIV
- 
-> We know we have to modify the ".." entry of the child directory
-> being moved, so I'd really like to understand why the locking rule
-> of "directory i_rwsem must be held exclusively over modifications"
-> so that we can use shared access for read operations has been waived
-> for this specific case.
-
-Well, not every filesystem has physical ".." directory entry but I share
-your sentiment that avoiding grabbing the directory lock in this particular
-case is not worth the maintenance burden of trying to track down all the
-filesystems that may need it. So I'm still all for grabbing it in VFS and
-maybe Al is willing to reconsider given XFS was found to be prone to the
-race as well. Al?
-
-> Apart from exposing multiple filesystems to modifications racing
-> with operations that hold the i_rwsem shared to *prevent concurrent
-> directory modifications*, what performance or scalability benefit is
-> seen as a result of eliding this inode lock from the VFS rename
-> setup?
+> Teach this stress tool to be able to use the file content exchange
+> ioctl.
 > 
-> This looks like a straight forward VFS level directory
-> locking violation, and now we are playing whack-a-mole to fix it in
-> each filesystem we discover that requires the child directory inode
-> to be locked...
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  ltp/fsstress.c |  168 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 168 insertions(+)
 > 
-> > so in ext4 we ended up grabbing the lock in
-> > ext4_rename() like:
-> > 
-> > +               /*
-> > +                * We need to protect against old.inode directory getting
-> > +                * converted from inline directory format into a normal one.
-> > +                */
-> > +               inode_lock_nested(old.inode, I_MUTEX_NONDIR2);
 > 
-> Why are you using the I_MUTEX_NONDIR2 annotation when locking a
-> directory inode? That doesn't seem right.
+> diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+> index 10608fb554..0fba3d92a0 100644
+> --- a/ltp/fsstress.c
+> +++ b/ltp/fsstress.c
+> @@ -143,6 +143,7 @@ typedef enum {
+>  	OP_URING_WRITE,
+>  	OP_WRITE,
+>  	OP_WRITEV,
+> +	OP_XCHGRANGE,
+>  	OP_LAST
+>  } opty_t;
+>  
+> @@ -272,6 +273,8 @@ void	uring_read_f(opnum_t, long);
+>  void	uring_write_f(opnum_t, long);
+>  void	write_f(opnum_t, long);
+>  void	writev_f(opnum_t, long);
+> +void	xchgrange_f(opnum_t, long);
+> +
+>  char	*xattr_flag_to_string(int);
+>  
+>  struct opdesc	ops[OP_LAST]	= {
+> @@ -340,6 +343,7 @@ struct opdesc	ops[OP_LAST]	= {
+>  	[OP_URING_WRITE]   = {"uring_write",   uring_write_f,	1, 1 },
+>  	[OP_WRITE]	   = {"write",	       write_f,		4, 1 },
+>  	[OP_WRITEV]	   = {"writev",	       writev_f,	4, 1 },
+> +	[OP_XCHGRANGE]	   = {"xchgrange",     xchgrange_f,	4, 1 },
 
-Because that's the only locking subclass left unused during rename and it
-happens to have the right ordering for ext4 purposes wrt other i_rwsem
-subclasses. In other words it is a hack to fix the race and silence lockdep
-;). If we are going to lift this to VFS, we should probably add
-I_MUTEX_MOVED_DIR subclass, possibly as an alias to I_MUTEX_NONDIR2. 
+Do you think this is a common operation which should use same frequency (4)
+with read/write operations? I'd like to reduce the default freq=4 to 2 or 1
+when I merge it. what do you think?
 
-> Further, how do we guarantee correct i_rwsem lock ordering against
-> the all the other inodes that the VFS has already locked and/or
-> other multi-inode i_rwsem locking primitives in the VFS?
+Thanks,
+Zorro
 
-Well, cross directory renames are all serialized by sb->s_vfs_rename_mutex
-so we don't have to be afraid of two renames racing against each other.
-Also directories are locked in topological order by all operations so
-grabbing moved directory lock last is the safe thing to do (because rename
-is the only operation that can lock two topologically incomparable
-directories).
+>  }, *ops_end;
+>  
+>  flist_t	flist[FT_nft] = {
+> @@ -2494,6 +2498,170 @@ chown_f(opnum_t opno, long r)
+>  	free_pathname(&f);
+>  }
+>  
+> +/* exchange some arbitrary range of f1 to f2...fn. */
+> +void
+> +xchgrange_f(
+> +	opnum_t			opno,
+> +	long			r)
+> +{
+> +#ifdef FIEXCHANGE_RANGE
+> +	struct file_xchg_range	fxr = { 0 };
+> +	static __u64		swap_flags = 0;
+> +	struct pathname		fpath1;
+> +	struct pathname		fpath2;
+> +	struct stat64		stat1;
+> +	struct stat64		stat2;
+> +	char			inoinfo1[1024];
+> +	char			inoinfo2[1024];
+> +	off64_t			lr;
+> +	off64_t			off1;
+> +	off64_t			off2;
+> +	off64_t			max_off2;
+> +	size_t			len;
+> +	int			v1;
+> +	int			v2;
+> +	int			fd1;
+> +	int			fd2;
+> +	int			ret;
+> +	int			tries = 0;
+> +	int			e;
+> +
+> +	/* Load paths */
+> +	init_pathname(&fpath1);
+> +	if (!get_fname(FT_REGm, r, &fpath1, NULL, NULL, &v1)) {
+> +		if (v1)
+> +			printf("%d/%lld: xchgrange read - no filename\n",
+> +				procid, opno);
+> +		goto out_fpath1;
+> +	}
+> +
+> +	init_pathname(&fpath2);
+> +	if (!get_fname(FT_REGm, random(), &fpath2, NULL, NULL, &v2)) {
+> +		if (v2)
+> +			printf("%d/%lld: xchgrange write - no filename\n",
+> +				procid, opno);
+> +		goto out_fpath2;
+> +	}
+> +
+> +	/* Open files */
+> +	fd1 = open_path(&fpath1, O_RDONLY);
+> +	e = fd1 < 0 ? errno : 0;
+> +	check_cwd();
+> +	if (fd1 < 0) {
+> +		if (v1)
+> +			printf("%d/%lld: xchgrange read - open %s failed %d\n",
+> +				procid, opno, fpath1.path, e);
+> +		goto out_fpath2;
+> +	}
+> +
+> +	fd2 = open_path(&fpath2, O_WRONLY);
+> +	e = fd2 < 0 ? errno : 0;
+> +	check_cwd();
+> +	if (fd2 < 0) {
+> +		if (v2)
+> +			printf("%d/%lld: xchgrange write - open %s failed %d\n",
+> +				procid, opno, fpath2.path, e);
+> +		goto out_fd1;
+> +	}
+> +
+> +	/* Get file stats */
+> +	if (fstat64(fd1, &stat1) < 0) {
+> +		if (v1)
+> +			printf("%d/%lld: xchgrange read - fstat64 %s failed %d\n",
+> +				procid, opno, fpath1.path, errno);
+> +		goto out_fd2;
+> +	}
+> +	inode_info(inoinfo1, sizeof(inoinfo1), &stat1, v1);
+> +
+> +	if (fstat64(fd2, &stat2) < 0) {
+> +		if (v2)
+> +			printf("%d/%lld: xchgrange write - fstat64 %s failed %d\n",
+> +				procid, opno, fpath2.path, errno);
+> +		goto out_fd2;
+> +	}
+> +	inode_info(inoinfo2, sizeof(inoinfo2), &stat2, v2);
+> +
+> +	if (stat1.st_size < (stat1.st_blksize * 2) ||
+> +	    stat2.st_size < (stat2.st_blksize * 2)) {
+> +		if (v2)
+> +			printf("%d/%lld: xchgrange - files are too small\n",
+> +				procid, opno);
+> +		goto out_fd2;
+> +	}
+> +
+> +	/* Never let us swap more than 1/4 of the files. */
+> +	len = (random() % FILELEN_MAX) + 1;
+> +	if (len > stat1.st_size / 4)
+> +		len = stat1.st_size / 4;
+> +	if (len > stat2.st_size / 4)
+> +		len = stat2.st_size / 4;
+> +	len = rounddown_64(len, stat1.st_blksize);
+> +	if (len == 0)
+> +		len = stat1.st_blksize;
+> +
+> +	/* Calculate offsets */
+> +	lr = ((int64_t)random() << 32) + random();
+> +	if (stat1.st_size == len)
+> +		off1 = 0;
+> +	else
+> +		off1 = (off64_t)(lr % MIN(stat1.st_size - len, MAXFSIZE));
+> +	off1 %= maxfsize;
+> +	off1 = rounddown_64(off1, stat1.st_blksize);
+> +
+> +	/*
+> +	 * If srcfile == destfile, randomly generate destination ranges
+> +	 * until we find one that doesn't overlap the source range.
+> +	 */
+> +	max_off2 = MIN(stat2.st_size  - len, MAXFSIZE);
+> +	do {
+> +		lr = ((int64_t)random() << 32) + random();
+> +		if (stat2.st_size == len)
+> +			off2 = 0;
+> +		else
+> +			off2 = (off64_t)(lr % max_off2);
+> +		off2 %= maxfsize;
+> +		off2 = rounddown_64(off2, stat2.st_blksize);
+> +	} while (stat1.st_ino == stat2.st_ino &&
+> +		 llabs(off2 - off1) < len &&
+> +		 tries++ < 10);
+> +
+> +	/* Swap data blocks */
+> +	fxr.file1_fd = fd1;
+> +	fxr.file1_offset = off1;
+> +	fxr.length = len;
+> +	fxr.file2_offset = off2;
+> +	fxr.flags = swap_flags;
+> +
+> +retry:
+> +	ret = ioctl(fd2, FIEXCHANGE_RANGE, &fxr);
+> +	e = ret < 0 ? errno : 0;
+> +	if (e == EOPNOTSUPP && !(swap_flags & FILE_XCHG_RANGE_NONATOMIC)) {
+> +		swap_flags = FILE_XCHG_RANGE_NONATOMIC;
+> +		fxr.flags |= swap_flags;
+> +		goto retry;
+> +	}
+> +	if (v1 || v2) {
+> +		printf("%d/%lld: xchgrange %s%s [%lld,%lld] -> %s%s [%lld,%lld]",
+> +			procid, opno,
+> +			fpath1.path, inoinfo1, (long long)off1, (long long)len,
+> +			fpath2.path, inoinfo2, (long long)off2, (long long)len);
+> +
+> +		if (ret < 0)
+> +			printf(" error %d", e);
+> +		printf("\n");
+> +	}
+> +
+> +out_fd2:
+> +	close(fd2);
+> +out_fd1:
+> +	close(fd1);
+> +out_fpath2:
+> +	free_pathname(&fpath2);
+> +out_fpath1:
+> +	free_pathname(&fpath1);
+> +#endif
+> +}
+> +
+>  /* reflink some arbitrary range of f1 to f2. */
+>  void
+>  clonerange_f(
+> 
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
