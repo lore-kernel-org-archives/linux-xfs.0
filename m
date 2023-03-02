@@ -2,179 +2,140 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE0F0C678D4
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Mar 2023 22:21:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 220DEC6FA8E
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Mar 2023 23:11:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229766AbjCBWVb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Mar 2023 17:21:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37176 "EHLO
+        id S229634AbjCBXL4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Mar 2023 18:11:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229959AbjCBWV3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Mar 2023 17:21:29 -0500
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07FD03D086
-        for <linux-xfs@vger.kernel.org>; Thu,  2 Mar 2023 14:21:27 -0800 (PST)
-Received: by mail-pj1-x1034.google.com with SMTP id ce8-20020a17090aff0800b0023a61cff2c6so955919pjb.0
-        for <linux-xfs@vger.kernel.org>; Thu, 02 Mar 2023 14:21:27 -0800 (PST)
+        with ESMTP id S229694AbjCBXLz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Mar 2023 18:11:55 -0500
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52B8B4DE23
+        for <linux-xfs@vger.kernel.org>; Thu,  2 Mar 2023 15:11:54 -0800 (PST)
+Received: by mail-pl1-x636.google.com with SMTP id i5so930687pla.2
+        for <linux-xfs@vger.kernel.org>; Thu, 02 Mar 2023 15:11:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1677795686;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=sqaDMJkfZlaBf387zIPkPPqYIp4w31qGTsCwBc2LaNg=;
-        b=U9jW3W/0nX/tB3yQS15Ol1Hnwe3FYIzbnIGT6VLdTeHw+lT9orFaoGAnK0gsQpz+vM
-         pItPNyJZRQQ93kJPSdTXCKMYZnTANtsEyfrWZDmS+30OFBSVnR5xzyjT0duLbvqGzKiM
-         GI0+TnGwAUUkVOvdwFsqB6LwVWrF2tht+UIw9gUQxz75GjIcDKwjeaBJfQSNjY1LTf5A
-         ooiodduLz2hB4+6QRKJYfi0qFnIYJf8F7eDeaN9P581KUzjXYk/o38vQ1Vemk+urI7Hs
-         Jgsob17owkjIei+veogh6M7N9foYAAIzyqtJUNwmV1gJZzQvGLW2t24NQmPrQ6vsLPYl
-         at+A==
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1677798714;
+        h=content-disposition:mime-version:message-id:subject:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=xTxeiT7xT2Qrf0Dkpul9ZQi+TSSZXmrtixTQFazYnW0=;
+        b=3BN0fgOMIdzqbTAxAYlAZO/4Pz5DxErAfyJZu0e8YZXaILwL3YmjeLv2bsiMGK1LFT
+         CC02XMn8XdlypSfuQ8e8/h6AwedJPXYgvyp3KFjAm9yVB7DIKygJp70p3BuBTbsl2j/F
+         BFDEo2uHWEGP3QpclpVb8o7GA+e4/uAgVgtCFWQnLmTUiQS16WV+8Vm6Mnf7/XvH/7MR
+         LuNnGEBb2D/FK/l4xzrQhCvK4I2YOaPvBYFBhZQvufDFx137A2LpAOQnEuT8qxeulNjF
+         R7XNSAXO1FENMeOVPyMUnhF8TRhocf67LWkP7VJ0GEw5cCuN8WsLSxp+WXsOAeT2o85/
+         0ITA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1677795686;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=sqaDMJkfZlaBf387zIPkPPqYIp4w31qGTsCwBc2LaNg=;
-        b=y4mH5Y9oJv/Tl+dWPzUy9hzmdHNbzPs3D9cVBW0coGaVyUR4/l2WaDV6fcmKcbCv6W
-         E+FoF0a84mugqF5lZdwJ7ueuTKC47YulRP6K6cWPxzqtvGSu+PWGy+XMAGnD6IiIvgQn
-         MLaaB7tCKDyt1SE8KKfLf0TBsiFEP203AIKtJMtMz14Dz3vrjjNU6Sa7V0xBdN+lYbKR
-         FuS86nr5QQhvC9Sc11em1H+huLCY7rVX8cLTFITX2kdiE9cKqNv1jtXJa4UwJp7hD/Of
-         EUIPo1048MkLH0L+pOp1RyQPOT4Z5BeSOOKsDRR69PrScb+zecZso5XO8fSM4931p21k
-         ryRg==
-X-Gm-Message-State: AO0yUKVA6V9qSgiuo0fzIkzwjCdjiuXpgI9N2eZqm8FWe9hQbDrZbDBM
-        7YDJPdYDGpe+rPUEoxuv1mloLA==
-X-Google-Smtp-Source: AK7set/EODVNSi77M77LXutCMLGRhE693lonQd3jU3ZAa0dwaxpiAt6d0Ub1+0xiBAQiQ6Kag/wlbA==
-X-Received: by 2002:a05:6a20:1609:b0:cc:d44a:bec2 with SMTP id l9-20020a056a20160900b000ccd44abec2mr84229pzj.1.1677795686414;
-        Thu, 02 Mar 2023 14:21:26 -0800 (PST)
+        d=1e100.net; s=20210112; t=1677798714;
+        h=content-disposition:mime-version:message-id:subject:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=xTxeiT7xT2Qrf0Dkpul9ZQi+TSSZXmrtixTQFazYnW0=;
+        b=FZbJXfB07ZN7kuz9Nm9ZLEcM8fDurAdmom3Wg9DV8gaMhVjxcOrDEJHT1aDxp7voMr
+         uZseAkFbuJmijoydlvG5ImZvdlNPOZ9zx+WjSL4cifqOUZLR57PvWYrLb830k1ha4aiD
+         CfynF014l66njtpNiJbsABEc4VkZEhYR2NL94u7VGvfsU93wJDnoQVBew0m84yXRfmZK
+         ovlGP4VeApKU5fOCJehiSXZIqJqUA+jJbhjKExeXeFgsbPJmVVg5Gm+iMOo719gK8GTC
+         ibxSvlPofbbxzDNvvPUUiWTH4FpSufrYCyo4gCsApRmlI5pLB82HdEABaA1MTKjKKujQ
+         OpOg==
+X-Gm-Message-State: AO0yUKVbfd8vExKtQ+4ECwT0is0mng7dH3aQLlHXTzHk+FbTTHgDTAPR
+        jlMzvGXebbRduSACh+uoEeS64F7fa9FgesjQ
+X-Google-Smtp-Source: AK7set8E2X7b1y+MyHXRxLjGDX5OCaurMiJgj5jASe9WkmJ1jWoHu9SCtLyN1zKAACT54tA2l8AE0w==
+X-Received: by 2002:a17:90a:1d1:b0:230:a1ce:f673 with SMTP id 17-20020a17090a01d100b00230a1cef673mr13780212pjd.4.1677798713750;
+        Thu, 02 Mar 2023 15:11:53 -0800 (PST)
 Received: from dread.disaster.area (pa49-186-4-237.pa.vic.optusnet.com.au. [49.186.4.237])
-        by smtp.gmail.com with ESMTPSA id u21-20020a63ef15000000b004eecc3080f8sm168123pgh.29.2023.03.02.14.21.25
+        by smtp.gmail.com with ESMTPSA id it6-20020a17090afb0600b00234899c65e7sm263336pjb.28.2023.03.02.15.11.53
+        for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 02 Mar 2023 14:21:25 -0800 (PST)
+        Thu, 02 Mar 2023 15:11:53 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1pXrIg-00455X-Jw; Fri, 03 Mar 2023 09:21:22 +1100
-Date:   Fri, 3 Mar 2023 09:21:22 +1100
+        id 1pXs5W-004613-Ha
+        for linux-xfs@vger.kernel.org; Fri, 03 Mar 2023 10:11:50 +1100
+Date:   Fri, 3 Mar 2023 10:11:50 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Yujie Liu <yujie.liu@intel.com>
-Cc:     Dave Chinner <dchinner@redhat.com>, oe-lkp@lists.linux.dev,
-        lkp@intel.com, linux-kernel@vger.kernel.org,
-        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [linus:master] [xfs] 304a68b9c6:
- WARNING:at_fs/iomap/buffered-io.c:#iomap_write_delalloc_release
-Message-ID: <20230302222122.GJ360264@dread.disaster.area>
-References: <202302281653.51938721-yujie.liu@intel.com>
- <20230228221107.GD360264@dread.disaster.area>
- <ZABgp1uBzcE49EG9@yujie-X299>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH V2] xfs: fix off-by-one-block in xfs_discard_folio()
+Message-ID: <20230302231150.GK360264@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZABgp1uBzcE49EG9@yujie-X299>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 02, 2023 at 04:39:03PM +0800, Yujie Liu wrote:
-> On Wed, Mar 01, 2023 at 09:11:07AM +1100, Dave Chinner wrote:
-> > On Tue, Feb 28, 2023 at 04:40:01PM +0800, kernel test robot wrote:
-> > > Greeting,
-> > > 
-> > > FYI, we noticed WARNING:at_fs/iomap/buffered-io.c:#iomap_write_delalloc_release due to commit (built with gcc-11):
-> > > 
-> > > commit: 304a68b9c63bbfc1f6e159d68e8892fc54a06067 ("xfs: use iomap_valid method to detect stale cached iomaps")
-> > > https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git master
-> > > 
-> > > [test failed on linux-next/master 058f4df42121baadbb8a980c06011e912784dbd2]
-> > > in testcase: xfstests
-> > > version: xfstests-i386-5a5e419-1_20220926
-> > > with following parameters:
-> > > 
-> > > 	disk: 4HDD
-> > > 	fs: xfs
-> > > 	test: generic-group-32
-> > 
-> > Which fstest was running at the time this warning was thrown?
-> 
-> It is fstests generic/648 running at that time.
+From: Dave Chinner <dchinner@redhat.com>
 
-Ok.
+The recent writeback corruption fixes changed the code in
+xfs_discard_folio() to calculate a byte range to for punching
+delalloc extents. A mistake was made in using round_up(pos) for the
+end offset, because when pos points at the first byte of a block, it
+does not get rounded up to point to the end byte of the block. hence
+the punch range is short, and this leads to unexpected behaviour in
+certain cases in xfs_bmap_punch_delalloc_range.
 
-Can you add this patch and see if it fixes the problem?
+e.g. pos = 0 means we call xfs_bmap_punch_delalloc_range(0,0), so
+there is no previous extent and it rounds up the punch to the end of
+the delalloc extent it found at offset 0, not the end of the range
+given to xfs_bmap_punch_delalloc_range().
 
-https://lore.kernel.org/linux-xfs/20230301221227.GH360264@dread.disaster.area/
+Fix this by handling the zero block offset case correctly.
 
-> [ 70.647665][ T1431] run fstests generic/648 at 2023-02-28 01:01:42
-> [ 71.823863][ T6673] XFS (sda4): Mounting V5 Filesystem
-> [ 71.883835][ T6673] XFS (sda4): Ending clean mount
-> [ 71.889345][ T6673] xfs filesystem being mounted at /fs/scratch supports timestamps until 2038 (0x7fffffff)
-> [ 71.942655][ T6686] XFS (sda4): Unmounting Filesystem
-> [ 72.055909][ T6718] loop: module verification failed: signature and/or required key missing - tainting kernel
-> [ 72.066111][ T6718] calling loop_init+0x0/0x1000 [ loop] @ 6718
-> [ 72.073700][ T6718] loop: module loaded
-> [ 72.077534][ T6718] initcall loop_init+0x0/0x1000 [ loop] returned 0 after 5536 usecs
-> [ 73.097330][ T6767] XFS (dm-0): Mounting V5 Filesystem
-> [ 73.261204][ T6767] XFS (dm-0): Ending clean mount
-> [ 73.267558][ T6767] xfs filesystem being mounted at /fs/scratch supports timestamps until 2038 (0x7fffffff)
-> [ 73.335169][ T6801] loop0: detected capacity change from 0 to 138745493
-> [ 73.374666][ T6801] XFS (loop0): Mounting V5 Filesystem
-> [ 73.382659][ T6801] XFS (loop0): Ending clean mount
-> [ 73.387588][ T6801] xfs filesystem being mounted at /tmp/6480.mount supports timestamps until 2038 (0x7fffffff)
-> [ 74.446227][ T3540] Buffer I/O error on dev dm-1, logical block 52428784, async page read
-> [ 74.457497][ T66] dm-0: writeback error on inode 131, offset 131072, sector 78144
-> [ 74.457500][ T66] dm-0: writeback error on inode 131, offset 262144, sector 74928
-> [ 74.459752][ T3540] Buffer I/O error on dev dm-0, logical block 52428784, async page read
-> [ 74.465109][ T66] dm-0: writeback error on inode 131, offset 2228224, sector 78400
-> [ 74.480852][ T66] dm-0: writeback error on inode 131, offset 3969024, sector 78504
-> [ 74.488596][ T66] dm-0: writeback error on inode 131, offset 4005888, sector 78576
-> [ 74.496292][ T66] dm-0: writeback error on inode 131, offset 4063232, sector 192
-> [ 74.496418][ C3] I/O error, dev loop0, sector 69373014 op 0x1:(WRITE) flags 0x9800 phys_seg 1 prio class 2
-> [ 74.521346][ T144] XFS (loop0): log I/O error -5
-> [ 74.526022][ T144] XFS (loop0): Filesystem has been shut down due to log error (0x2).
-> [ 74.533882][ T144] XFS (loop0): Please unmount the filesystem and rectify the problem(s).
-> [ 74.542294][ T67] dm-0: writeback error on inode 131, offset 53279154176, sector 78688
-> [ 74.542299][ C3] I/O error, dev loop0, sector 0 op 0x1:(WRITE) flags 0x800 phys_seg 0 prio class 2
-> [ 75.364416][ T6868] XFS (loop0): Unmounting Filesystem
-> [ 75.370061][ T164] XFS (dm-0): log I/O error -5
-> [ 75.374652][ T164] XFS (dm-0): Filesystem has been shut down due to log error (0x2).
-> [ 75.382433][ T164] XFS (dm-0): Please unmount the filesystem and rectify the problem(s).
-> [ 75.390581][ C6] I/O error, dev loop0, sector 0 op 0x1:(WRITE) flags 0x800 phys_seg 0 prio class 2
-> [ 76.403161][ T6876] XFS (dm-0): Unmounting Filesystem
-> [ 76.554265][ T6888] XFS (dm-0): Mounting V5 Filesystem
-> [ 76.602707][ T6888] XFS (dm-0): Starting recovery (logdev: internal)
-> [ 76.678261][ T6888] XFS (dm-0): Ending recovery (logdev: internal)
-> [ 76.705011][ T6888] xfs filesystem being mounted at /fs/scratch supports timestamps until 2038 (0x7fffffff)
-> [ 76.720823][ T6905] loop0: detected capacity change from 0 to 138745493
-> [ 76.765868][ T6905] XFS (loop0): Mounting V5 Filesystem
-> [ 76.811151][ T6905] XFS (loop0): Starting recovery (logdev: internal)
-> [ 76.820611][ T6905] XFS (loop0): Ending recovery (logdev: internal)
-> [ 76.826950][ T6905] xfs filesystem being mounted at /tmp/6480.mount supports timestamps until 2038 (0x7fffffff)
-> [ 78.565703][ T59] ------------[ cut here ]------------
-> [ 78.570983][ T59] WARNING: CPU: 4 PID: 59 at fs/iomap/buffered-io.c:984 iomap_write_delalloc_release (fs/iomap/buffered-io.c:984 (discriminator 1))
+Fixes: 7348b322332d ("xfs: xfs_bmap_punch_delalloc_range() should take a byte range")
+Reported-by: Pengfei Xu <pengfei.xu@intel.com>
+Found-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
 
-Ok, that is:
+Version 2
+- update xfs_discard_folio() comment to reflect reality
+- simplify the end offset calculation and comment to reflect the
+  fact the punch range always ends at the end of the supplied folio
+  regardless of the position we start the punch from.
 
-	WARN_ON_ONCE(start_byte < punch_start_byte);
+ fs/xfs/xfs_aops.c | 21 ++++++++++++++-------
+ 1 file changed, 14 insertions(+), 7 deletions(-)
 
-Which I can't immediately see how that happens. This is a 32-bit
-i386 kernel which we largely don't test or support, so maybe there's
-32/64 bit variable size change problem somewhere in the code path
-being executed.
-
-> [ 78.671542][ T59] Hardware name: Dell Inc. OptiPlex 7040/0Y7WYT, BIOS 1.2.8 01/26/2016
-> [ 78.679578][ T59] Workqueue: loop0 loop_rootcg_workfn [ loop]
-
-Ok, so this is happening while writing to the loopback image file
-which is racing with cloning and removing the clone of the image
-file.
-
-Looking at the rest of the trace, IO to the entire loopback file
-hung, but this warning doesn't explain that happening either.
-
-I'll try to reproduce it, but I don't actually have an i386 test
-environment here (I haven't tested i386 at all the last 5-6
-years!) so it might be a while before I can get to testing this
-specific environment.
-
-Do you see it reproduce on any other architecture, of just this one?
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 41734202796f..2ef78aa1d3f6 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -449,15 +449,17 @@ xfs_prepare_ioend(
+ }
+ 
+ /*
+- * If the page has delalloc blocks on it, we need to punch them out before we
+- * invalidate the page.  If we don't, we leave a stale delalloc mapping on the
+- * inode that can trip up a later direct I/O read operation on the same region.
++ * If the folio has delalloc blocks on it, the caller is asking us to punch them
++ * out. If we don't, we can leave a stale delalloc mapping covered by a clean
++ * page that needs to be dirtied again before the delalloc mapping can be
++ * converted. This stale delalloc mapping can trip up a later direct I/O read
++ * operation on the same region.
+  *
+- * We prevent this by truncating away the delalloc regions on the page.  Because
++ * We prevent this by truncating away the delalloc regions on the folio. Because
+  * they are delalloc, we can do this without needing a transaction. Indeed - if
+  * we get ENOSPC errors, we have to be able to do this truncation without a
+- * transaction as there is no space left for block reservation (typically why we
+- * see a ENOSPC in writeback).
++ * transaction as there is no space left for block reservation (typically why
++ * we see a ENOSPC in writeback).
+  */
+ static void
+ xfs_discard_folio(
+@@ -475,8 +477,13 @@ xfs_discard_folio(
+ 		"page discard on page "PTR_FMT", inode 0x%llx, pos %llu.",
+ 			folio, ip->i_ino, pos);
+ 
++	/*
++	 * The end of the punch range is always the offset of the the first
++	 * byte of the next folio. Hence the end offset is only dependent on the
++	 * folio itself and not the start offset that is passed in.
++	 */
+ 	error = xfs_bmap_punch_delalloc_range(ip, pos,
+-			round_up(pos, folio_size(folio)));
++				folio_pos(folio) + folio_size(folio));
+ 
+ 	if (error && !xfs_is_shutdown(mp))
+ 		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
