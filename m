@@ -2,276 +2,102 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D559C678D4
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Mar 2023 15:36:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CAB4C678D4
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Mar 2023 18:59:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229529AbjCBPgO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Mar 2023 10:36:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37132 "EHLO
+        id S229608AbjCBS7f (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Mar 2023 13:59:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49284 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229955AbjCBPgM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Mar 2023 10:36:12 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F7E42FCCD;
-        Thu,  2 Mar 2023 07:36:09 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B04D1615C5;
-        Thu,  2 Mar 2023 15:36:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B200C433D2;
-        Thu,  2 Mar 2023 15:36:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677771368;
-        bh=vJjQOGiCTMVBSF/kIjB0P8kduISdTcD2TmsZ72jDPsE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=uSDkeQC94Rxgb0n2FyYwyVV9QzePaqEk/iK5P/ib6SbsfFxFfLmu2/+9ROPRdMhZ3
-         NQnEzKMbhN+ft/rY0hjHaQgrimnznuInHK8Uionov0vr4hdCViVJDkipNCiB1jzIQi
-         cb0b91c/LKPc2QgGGKCRrbQFTWzT2gcwwv3qi4/VbbDO3kwqygrxg+te5xhKewK/d+
-         9ZyMZ2BluC62f7gG7J7jgKoleZhJVQfd3StwD24zZIybnOcLTRFTOneGM8AL9Nu3b1
-         XP5oAuP4rxgg89QBvcrpSZHjM1ZQ31xnKhYOTgCMTM0hmxSMDfx2dB+sAhqB0v5DZ0
-         0LjD4Fj8hRaBA==
-Date:   Thu, 2 Mar 2023 07:36:07 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 7/7] fsstress: update for FIEXCHANGE_RANGE
-Message-ID: <ZADCZ6MiQGYgGMnS@magnolia>
-References: <167763954409.3796922.11086772690906428270.stgit@magnolia>
- <167763958362.3796922.2350291536547146358.stgit@magnolia>
- <20230302094206.k4aerwldv2squ667@zlang-mailbox>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230302094206.k4aerwldv2squ667@zlang-mailbox>
+        with ESMTP id S229520AbjCBS7e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Mar 2023 13:59:34 -0500
+Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F24B13D72;
+        Thu,  2 Mar 2023 10:59:33 -0800 (PST)
+Received: by mail-pl1-x62a.google.com with SMTP id u5so273807plq.7;
+        Thu, 02 Mar 2023 10:59:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=gB2HUq7BqZ9YE5Jdj4A7pEijY65clFvt/4yvZ8jHPnA=;
+        b=ctoOOVTs2qJZKuApqbKVDht7z3QHErqz0+Mwy9oj99d80efA79IBLI5jt11rKV4PBq
+         Un1DJ8OWpedoFC+v79LCkrPmSgQrDfKhgO9gFf7chHqG6P8yxCRIqVq/EMhcn6pcjnIp
+         +On+ZkiLwNgiXPCrlQgHYs5JyaeLyV390VnE25xfRp7JGk/ij8Kt10URI1yia1PqhVoo
+         5nvEjKnqrEuR3f3nMv68a/CQYZTlK+Jb/t3Qidspe0pHPzM6mwph+gN1mHC8dksOk6hZ
+         PFwvjEiCZUPlVy9CWIWAKhWWJa04YCVDplaylAYdBhM05HAmLH3KM1UIpovzbo1VWQoQ
+         u0PQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=gB2HUq7BqZ9YE5Jdj4A7pEijY65clFvt/4yvZ8jHPnA=;
+        b=f3BKW2hPgBB18Yh4EmLXf7UvnY+vKEcFTbH/758Iic8fY8AQKbuAG71W8FZrAkImCM
+         kufyGpWYZzG8AIi2N1Z+uxLQ1hjhIOT4vKHA60ZyXxNT7E1OrhHuijGitCpBMMUgR8h2
+         7KTBC6JGOBZmJJnoDLASukIw/nAQnNLZiSk3X7az9bzwSDvSCDq8SRzDbAiFUiysuGE/
+         loFpNZzq5dhoGRb8u58Me8VsNIUF0OSTVzFXpCoXzMiGNVQ1xyAoqIZmPO8aeBDBwMaH
+         ocyCOJpbkxiOQymYIaIr6OWSpPjaCMrkVyhLCRcIFosvXkPiMJAepZMVmtkhewgMrYAB
+         8seQ==
+X-Gm-Message-State: AO0yUKVJdocZZfeaS8sJLanlUnXGtSINdwZ+KlxWD3TydrpamBzJASC1
+        88X4D+HelqXsW4Hdkd5hyVirjN00bqrLsw==
+X-Google-Smtp-Source: AK7set/ksNl7Jzc+pfuBBpVrz4NHC/5lbtvgGlz8T80xiBtwr3j5Dw4kVMBI6ThbNKQOKdrg/faMvQ==
+X-Received: by 2002:a05:6a20:3d83:b0:cc:8266:9951 with SMTP id s3-20020a056a203d8300b000cc82669951mr14028766pzi.56.1677783572375;
+        Thu, 02 Mar 2023 10:59:32 -0800 (PST)
+Received: from rh-tp ([2406:7400:63:469f:eb50:3ffb:dc1b:2d55])
+        by smtp.gmail.com with ESMTPSA id x52-20020a056a000bf400b005a7bd10bb2asm46481pfu.79.2023.03.02.10.59.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 02 Mar 2023 10:59:31 -0800 (PST)
+Date:   Fri, 03 Mar 2023 00:29:07 +0530
+Message-Id: <87pm9rm138.fsf@doe.com>
+From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [RFCv3 1/3] iomap: Allocate iop in ->write_begin() early
+In-Reply-To: <Y/5Jttk0j4m6dep8@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 02, 2023 at 05:42:06PM +0800, Zorro Lang wrote:
-> On Tue, Feb 28, 2023 at 06:59:43PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Teach this stress tool to be able to use the file content exchange
-> > ioctl.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  ltp/fsstress.c |  168 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 168 insertions(+)
-> > 
-> > 
-> > diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-> > index 10608fb554..0fba3d92a0 100644
-> > --- a/ltp/fsstress.c
-> > +++ b/ltp/fsstress.c
-> > @@ -143,6 +143,7 @@ typedef enum {
-> >  	OP_URING_WRITE,
-> >  	OP_WRITE,
-> >  	OP_WRITEV,
-> > +	OP_XCHGRANGE,
-> >  	OP_LAST
-> >  } opty_t;
-> >  
-> > @@ -272,6 +273,8 @@ void	uring_read_f(opnum_t, long);
-> >  void	uring_write_f(opnum_t, long);
-> >  void	write_f(opnum_t, long);
-> >  void	writev_f(opnum_t, long);
-> > +void	xchgrange_f(opnum_t, long);
-> > +
-> >  char	*xattr_flag_to_string(int);
-> >  
-> >  struct opdesc	ops[OP_LAST]	= {
-> > @@ -340,6 +343,7 @@ struct opdesc	ops[OP_LAST]	= {
-> >  	[OP_URING_WRITE]   = {"uring_write",   uring_write_f,	1, 1 },
-> >  	[OP_WRITE]	   = {"write",	       write_f,		4, 1 },
-> >  	[OP_WRITEV]	   = {"writev",	       writev_f,	4, 1 },
-> > +	[OP_XCHGRANGE]	   = {"xchgrange",     xchgrange_f,	4, 1 },
-> 
-> Do you think this is a common operation which should use same frequency (4)
-> with read/write operations? I'd like to reduce the default freq=4 to 2 or 1
-> when I merge it. what do you think?
+Matthew Wilcox <willy@infradead.org> writes:
 
-Sounds fine to me, I copy-pasted the 4 from the line above.  :)
+> On Wed, Mar 01, 2023 at 12:03:48AM +0530, Ritesh Harjani wrote:
+>> Matthew Wilcox <willy@infradead.org> writes:
+>>
+>> > On Mon, Feb 27, 2023 at 01:13:30AM +0530, Ritesh Harjani (IBM) wrote:
+>> >> +++ b/fs/iomap/buffered-io.c
+>> >> @@ -535,11 +535,16 @@ static int __iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
+>> >>  	size_t from = offset_in_folio(folio, pos), to = from + len;
+>> >>  	size_t poff, plen;
+>> >>
+>> >> +	if (pos <= folio_pos(folio) &&
+>> >> +	    pos + len >= folio_pos(folio) + folio_size(folio))
+>> >> +		return 0;
+>> >> +
+>> >> +	iop = iomap_page_create(iter->inode, folio, iter->flags);
+>> >> +
+>> >>  	if (folio_test_uptodate(folio))
+>> >>  		return 0;
+>> >>  	folio_clear_error(folio);
+>> >>
+>> >> -	iop = iomap_page_create(iter->inode, folio, iter->flags);
+>> >>  	if ((iter->flags & IOMAP_NOWAIT) && !iop && nr_blocks > 1)
+>> >>  		return -EAGAIN;
+>> >
+>> > Don't you want to move the -EAGAIN check up too?  Otherwise an
+>> > io_uring write will dirty the entire folio rather than a block.
+>>
+>> I am not entirely convinced whether we should move this check up
+>> (to put it just after the iop allocation). The reason is if the folio is
+>> uptodate then it is ok to return 0 rather than -EAGAIN, because we are
+>> anyway not going to read the folio from disk (given it is completely
+>> uptodate).
+>>
+>> Thoughts? Or am I missing anything here.
+>
+> But then we won't have an iop, so a write will dirty the entire folio
+> instead of just the blocks you want to dirty.
 
---D
+Ok, I got what you are saying. Make sense. I will give it a try.
 
-> Thanks,
-> Zorro
-> 
-> >  }, *ops_end;
-> >  
-> >  flist_t	flist[FT_nft] = {
-> > @@ -2494,6 +2498,170 @@ chown_f(opnum_t opno, long r)
-> >  	free_pathname(&f);
-> >  }
-> >  
-> > +/* exchange some arbitrary range of f1 to f2...fn. */
-> > +void
-> > +xchgrange_f(
-> > +	opnum_t			opno,
-> > +	long			r)
-> > +{
-> > +#ifdef FIEXCHANGE_RANGE
-> > +	struct file_xchg_range	fxr = { 0 };
-> > +	static __u64		swap_flags = 0;
-> > +	struct pathname		fpath1;
-> > +	struct pathname		fpath2;
-> > +	struct stat64		stat1;
-> > +	struct stat64		stat2;
-> > +	char			inoinfo1[1024];
-> > +	char			inoinfo2[1024];
-> > +	off64_t			lr;
-> > +	off64_t			off1;
-> > +	off64_t			off2;
-> > +	off64_t			max_off2;
-> > +	size_t			len;
-> > +	int			v1;
-> > +	int			v2;
-> > +	int			fd1;
-> > +	int			fd2;
-> > +	int			ret;
-> > +	int			tries = 0;
-> > +	int			e;
-> > +
-> > +	/* Load paths */
-> > +	init_pathname(&fpath1);
-> > +	if (!get_fname(FT_REGm, r, &fpath1, NULL, NULL, &v1)) {
-> > +		if (v1)
-> > +			printf("%d/%lld: xchgrange read - no filename\n",
-> > +				procid, opno);
-> > +		goto out_fpath1;
-> > +	}
-> > +
-> > +	init_pathname(&fpath2);
-> > +	if (!get_fname(FT_REGm, random(), &fpath2, NULL, NULL, &v2)) {
-> > +		if (v2)
-> > +			printf("%d/%lld: xchgrange write - no filename\n",
-> > +				procid, opno);
-> > +		goto out_fpath2;
-> > +	}
-> > +
-> > +	/* Open files */
-> > +	fd1 = open_path(&fpath1, O_RDONLY);
-> > +	e = fd1 < 0 ? errno : 0;
-> > +	check_cwd();
-> > +	if (fd1 < 0) {
-> > +		if (v1)
-> > +			printf("%d/%lld: xchgrange read - open %s failed %d\n",
-> > +				procid, opno, fpath1.path, e);
-> > +		goto out_fpath2;
-> > +	}
-> > +
-> > +	fd2 = open_path(&fpath2, O_WRONLY);
-> > +	e = fd2 < 0 ? errno : 0;
-> > +	check_cwd();
-> > +	if (fd2 < 0) {
-> > +		if (v2)
-> > +			printf("%d/%lld: xchgrange write - open %s failed %d\n",
-> > +				procid, opno, fpath2.path, e);
-> > +		goto out_fd1;
-> > +	}
-> > +
-> > +	/* Get file stats */
-> > +	if (fstat64(fd1, &stat1) < 0) {
-> > +		if (v1)
-> > +			printf("%d/%lld: xchgrange read - fstat64 %s failed %d\n",
-> > +				procid, opno, fpath1.path, errno);
-> > +		goto out_fd2;
-> > +	}
-> > +	inode_info(inoinfo1, sizeof(inoinfo1), &stat1, v1);
-> > +
-> > +	if (fstat64(fd2, &stat2) < 0) {
-> > +		if (v2)
-> > +			printf("%d/%lld: xchgrange write - fstat64 %s failed %d\n",
-> > +				procid, opno, fpath2.path, errno);
-> > +		goto out_fd2;
-> > +	}
-> > +	inode_info(inoinfo2, sizeof(inoinfo2), &stat2, v2);
-> > +
-> > +	if (stat1.st_size < (stat1.st_blksize * 2) ||
-> > +	    stat2.st_size < (stat2.st_blksize * 2)) {
-> > +		if (v2)
-> > +			printf("%d/%lld: xchgrange - files are too small\n",
-> > +				procid, opno);
-> > +		goto out_fd2;
-> > +	}
-> > +
-> > +	/* Never let us swap more than 1/4 of the files. */
-> > +	len = (random() % FILELEN_MAX) + 1;
-> > +	if (len > stat1.st_size / 4)
-> > +		len = stat1.st_size / 4;
-> > +	if (len > stat2.st_size / 4)
-> > +		len = stat2.st_size / 4;
-> > +	len = rounddown_64(len, stat1.st_blksize);
-> > +	if (len == 0)
-> > +		len = stat1.st_blksize;
-> > +
-> > +	/* Calculate offsets */
-> > +	lr = ((int64_t)random() << 32) + random();
-> > +	if (stat1.st_size == len)
-> > +		off1 = 0;
-> > +	else
-> > +		off1 = (off64_t)(lr % MIN(stat1.st_size - len, MAXFSIZE));
-> > +	off1 %= maxfsize;
-> > +	off1 = rounddown_64(off1, stat1.st_blksize);
-> > +
-> > +	/*
-> > +	 * If srcfile == destfile, randomly generate destination ranges
-> > +	 * until we find one that doesn't overlap the source range.
-> > +	 */
-> > +	max_off2 = MIN(stat2.st_size  - len, MAXFSIZE);
-> > +	do {
-> > +		lr = ((int64_t)random() << 32) + random();
-> > +		if (stat2.st_size == len)
-> > +			off2 = 0;
-> > +		else
-> > +			off2 = (off64_t)(lr % max_off2);
-> > +		off2 %= maxfsize;
-> > +		off2 = rounddown_64(off2, stat2.st_blksize);
-> > +	} while (stat1.st_ino == stat2.st_ino &&
-> > +		 llabs(off2 - off1) < len &&
-> > +		 tries++ < 10);
-> > +
-> > +	/* Swap data blocks */
-> > +	fxr.file1_fd = fd1;
-> > +	fxr.file1_offset = off1;
-> > +	fxr.length = len;
-> > +	fxr.file2_offset = off2;
-> > +	fxr.flags = swap_flags;
-> > +
-> > +retry:
-> > +	ret = ioctl(fd2, FIEXCHANGE_RANGE, &fxr);
-> > +	e = ret < 0 ? errno : 0;
-> > +	if (e == EOPNOTSUPP && !(swap_flags & FILE_XCHG_RANGE_NONATOMIC)) {
-> > +		swap_flags = FILE_XCHG_RANGE_NONATOMIC;
-> > +		fxr.flags |= swap_flags;
-> > +		goto retry;
-> > +	}
-> > +	if (v1 || v2) {
-> > +		printf("%d/%lld: xchgrange %s%s [%lld,%lld] -> %s%s [%lld,%lld]",
-> > +			procid, opno,
-> > +			fpath1.path, inoinfo1, (long long)off1, (long long)len,
-> > +			fpath2.path, inoinfo2, (long long)off2, (long long)len);
-> > +
-> > +		if (ret < 0)
-> > +			printf(" error %d", e);
-> > +		printf("\n");
-> > +	}
-> > +
-> > +out_fd2:
-> > +	close(fd2);
-> > +out_fd1:
-> > +	close(fd1);
-> > +out_fpath2:
-> > +	free_pathname(&fpath2);
-> > +out_fpath1:
-> > +	free_pathname(&fpath1);
-> > +#endif
-> > +}
-> > +
-> >  /* reflink some arbitrary range of f1 to f2. */
-> >  void
-> >  clonerange_f(
-> > 
-> 
+Thanks
+-ritesh
