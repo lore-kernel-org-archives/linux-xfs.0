@@ -2,201 +2,276 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83765C6FA8E
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Mar 2023 14:06:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D559C678D4
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Mar 2023 15:36:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229747AbjCBOGg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Mar 2023 09:06:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59154 "EHLO
+        id S229529AbjCBPgO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Mar 2023 10:36:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37132 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229471AbjCBOGf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Mar 2023 09:06:35 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A00A317146
-        for <linux-xfs@vger.kernel.org>; Thu,  2 Mar 2023 06:05:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1677765948;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=mzxqT/82eghJHi/A12/GzK4yJegSBl5g7iy38wvVo6c=;
-        b=ZMZNkLk2xkP1ckSTZFc0HpWixyRcnugfJPQDJtd0YOuvjXkte9jB6UIwMu5JbFrvi/4PXd
-        kKFE6Q7gcbtc+JxA6rzI6M4kSOSXVlX/xZsR7Q8k3kzOWkwv11O2vYeTq8GjE7oSCm/Muu
-        qUJMO1YeTIxeL5wHgJSWpTVq1IWzl/c=
-Received: from mail-oa1-f69.google.com (mail-oa1-f69.google.com
- [209.85.160.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-538-30BCzfheN7WN2PkXeOhqMw-1; Thu, 02 Mar 2023 09:05:47 -0500
-X-MC-Unique: 30BCzfheN7WN2PkXeOhqMw-1
-Received: by mail-oa1-f69.google.com with SMTP id 586e51a60fabf-1728f81744fso9064985fac.15
-        for <linux-xfs@vger.kernel.org>; Thu, 02 Mar 2023 06:05:47 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1677765645;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=mzxqT/82eghJHi/A12/GzK4yJegSBl5g7iy38wvVo6c=;
-        b=icMliQLkwe3swz27rZHA9EcLJ6E395QyyzEto8fSusDV09S67CAHj1wW80qI1L5s9t
-         r+0fu+h2WGjArlS/THXgd0CQXcVhtj3E0mz3dcwV8DviN7TtE8tecP0pWrWTQG4R9/TK
-         rTgI9bQp8Fm893yRgHhfocDM05LlbIrxmvgo5oMxr2zNw30aMbpFnv+uKhtMiP4OQJwH
-         JE48hvDL1NOhABa2FB7J/mzrOg6orKtYyg8YT2m+cHNGigmC4EowbYMK25T4j6zswn1p
-         P+3qZlVkNny5l5QVENJIDdLrN+TCSuhlAlHliKhGCBitIMvRGwggC013Q5EWfJVMC74q
-         hCkg==
-X-Gm-Message-State: AO0yUKXuUOM3Gzon4GjxarrL9ePr7gA6+ZjinYwYoEmaffZ0V/6P6+CK
-        I7Xg76G1ZR0dKduPD2DAAD7f9BbE/fWZ9U6k6Tow3M+TQyNOgd18P9wx2gWsL2d9tKbBDz0+UYq
-        lk5ouWC4FKCfiPYVRGq36
-X-Received: by 2002:a05:6870:3322:b0:171:a571:2116 with SMTP id x34-20020a056870332200b00171a5712116mr6094381oae.9.1677765645659;
-        Thu, 02 Mar 2023 06:00:45 -0800 (PST)
-X-Google-Smtp-Source: AK7set+XXo0XybOq0+lg8x3/be2IvSuOu3oOvihizc9upCOP4ziqItFr1Ht0JiuPi0OpiNiAYGtv5Q==
-X-Received: by 2002:a05:6870:3322:b0:171:a571:2116 with SMTP id x34-20020a056870332200b00171a5712116mr6094341oae.9.1677765644888;
-        Thu, 02 Mar 2023 06:00:44 -0800 (PST)
-Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
-        by smtp.gmail.com with ESMTPSA id q11-20020a37430b000000b00742a252ba06sm8744805qka.135.2023.03.02.06.00.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 02 Mar 2023 06:00:44 -0800 (PST)
-Date:   Thu, 2 Mar 2023 09:02:24 -0500
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Aravinda Herle <araherle@in.ibm.com>
-Subject: Re: [RFCv3 3/3] iomap: Support subpage size dirty tracking to
- improve write performance
-Message-ID: <ZACscHnzmywRaXvu@bfoster>
-References: <cover.1677428794.git.ritesh.list@gmail.com>
- <9650ef88e09c6227b99bb5793eef2b8e47994c7d.1677428795.git.ritesh.list@gmail.com>
+        with ESMTP id S229955AbjCBPgM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Mar 2023 10:36:12 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F7E42FCCD;
+        Thu,  2 Mar 2023 07:36:09 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B04D1615C5;
+        Thu,  2 Mar 2023 15:36:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B200C433D2;
+        Thu,  2 Mar 2023 15:36:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1677771368;
+        bh=vJjQOGiCTMVBSF/kIjB0P8kduISdTcD2TmsZ72jDPsE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=uSDkeQC94Rxgb0n2FyYwyVV9QzePaqEk/iK5P/ib6SbsfFxFfLmu2/+9ROPRdMhZ3
+         NQnEzKMbhN+ft/rY0hjHaQgrimnznuInHK8Uionov0vr4hdCViVJDkipNCiB1jzIQi
+         cb0b91c/LKPc2QgGGKCRrbQFTWzT2gcwwv3qi4/VbbDO3kwqygrxg+te5xhKewK/d+
+         9ZyMZ2BluC62f7gG7J7jgKoleZhJVQfd3StwD24zZIybnOcLTRFTOneGM8AL9Nu3b1
+         XP5oAuP4rxgg89QBvcrpSZHjM1ZQ31xnKhYOTgCMTM0hmxSMDfx2dB+sAhqB0v5DZ0
+         0LjD4Fj8hRaBA==
+Date:   Thu, 2 Mar 2023 07:36:07 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 7/7] fsstress: update for FIEXCHANGE_RANGE
+Message-ID: <ZADCZ6MiQGYgGMnS@magnolia>
+References: <167763954409.3796922.11086772690906428270.stgit@magnolia>
+ <167763958362.3796922.2350291536547146358.stgit@magnolia>
+ <20230302094206.k4aerwldv2squ667@zlang-mailbox>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <9650ef88e09c6227b99bb5793eef2b8e47994c7d.1677428795.git.ritesh.list@gmail.com>
+In-Reply-To: <20230302094206.k4aerwldv2squ667@zlang-mailbox>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Feb 27, 2023 at 01:13:32AM +0530, Ritesh Harjani (IBM) wrote:
-> On a 64k pagesize platforms (specially Power and/or aarch64) with 4k
-> filesystem blocksize, this patch should improve the performance by doing
-> only the subpage dirty data write.
+On Thu, Mar 02, 2023 at 05:42:06PM +0800, Zorro Lang wrote:
+> On Tue, Feb 28, 2023 at 06:59:43PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Teach this stress tool to be able to use the file content exchange
+> > ioctl.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  ltp/fsstress.c |  168 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 168 insertions(+)
+> > 
+> > 
+> > diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+> > index 10608fb554..0fba3d92a0 100644
+> > --- a/ltp/fsstress.c
+> > +++ b/ltp/fsstress.c
+> > @@ -143,6 +143,7 @@ typedef enum {
+> >  	OP_URING_WRITE,
+> >  	OP_WRITE,
+> >  	OP_WRITEV,
+> > +	OP_XCHGRANGE,
+> >  	OP_LAST
+> >  } opty_t;
+> >  
+> > @@ -272,6 +273,8 @@ void	uring_read_f(opnum_t, long);
+> >  void	uring_write_f(opnum_t, long);
+> >  void	write_f(opnum_t, long);
+> >  void	writev_f(opnum_t, long);
+> > +void	xchgrange_f(opnum_t, long);
+> > +
+> >  char	*xattr_flag_to_string(int);
+> >  
+> >  struct opdesc	ops[OP_LAST]	= {
+> > @@ -340,6 +343,7 @@ struct opdesc	ops[OP_LAST]	= {
+> >  	[OP_URING_WRITE]   = {"uring_write",   uring_write_f,	1, 1 },
+> >  	[OP_WRITE]	   = {"write",	       write_f,		4, 1 },
+> >  	[OP_WRITEV]	   = {"writev",	       writev_f,	4, 1 },
+> > +	[OP_XCHGRANGE]	   = {"xchgrange",     xchgrange_f,	4, 1 },
 > 
-> This should also reduce the write amplification since we can now track
-> subpage dirty status within state bitmaps. Earlier we had to
-> write the entire 64k page even if only a part of it (e.g. 4k) was
-> updated.
+> Do you think this is a common operation which should use same frequency (4)
+> with read/write operations? I'd like to reduce the default freq=4 to 2 or 1
+> when I merge it. what do you think?
+
+Sounds fine to me, I copy-pasted the 4 from the line above.  :)
+
+--D
+
+> Thanks,
+> Zorro
 > 
-> Performance testing of below fio workload reveals ~16x performance
-> improvement on nvme with XFS (4k blocksize) on Power (64K pagesize)
-> FIO reported write bw scores improved from around ~28 MBps to ~452 MBps.
+> >  }, *ops_end;
+> >  
+> >  flist_t	flist[FT_nft] = {
+> > @@ -2494,6 +2498,170 @@ chown_f(opnum_t opno, long r)
+> >  	free_pathname(&f);
+> >  }
+> >  
+> > +/* exchange some arbitrary range of f1 to f2...fn. */
+> > +void
+> > +xchgrange_f(
+> > +	opnum_t			opno,
+> > +	long			r)
+> > +{
+> > +#ifdef FIEXCHANGE_RANGE
+> > +	struct file_xchg_range	fxr = { 0 };
+> > +	static __u64		swap_flags = 0;
+> > +	struct pathname		fpath1;
+> > +	struct pathname		fpath2;
+> > +	struct stat64		stat1;
+> > +	struct stat64		stat2;
+> > +	char			inoinfo1[1024];
+> > +	char			inoinfo2[1024];
+> > +	off64_t			lr;
+> > +	off64_t			off1;
+> > +	off64_t			off2;
+> > +	off64_t			max_off2;
+> > +	size_t			len;
+> > +	int			v1;
+> > +	int			v2;
+> > +	int			fd1;
+> > +	int			fd2;
+> > +	int			ret;
+> > +	int			tries = 0;
+> > +	int			e;
+> > +
+> > +	/* Load paths */
+> > +	init_pathname(&fpath1);
+> > +	if (!get_fname(FT_REGm, r, &fpath1, NULL, NULL, &v1)) {
+> > +		if (v1)
+> > +			printf("%d/%lld: xchgrange read - no filename\n",
+> > +				procid, opno);
+> > +		goto out_fpath1;
+> > +	}
+> > +
+> > +	init_pathname(&fpath2);
+> > +	if (!get_fname(FT_REGm, random(), &fpath2, NULL, NULL, &v2)) {
+> > +		if (v2)
+> > +			printf("%d/%lld: xchgrange write - no filename\n",
+> > +				procid, opno);
+> > +		goto out_fpath2;
+> > +	}
+> > +
+> > +	/* Open files */
+> > +	fd1 = open_path(&fpath1, O_RDONLY);
+> > +	e = fd1 < 0 ? errno : 0;
+> > +	check_cwd();
+> > +	if (fd1 < 0) {
+> > +		if (v1)
+> > +			printf("%d/%lld: xchgrange read - open %s failed %d\n",
+> > +				procid, opno, fpath1.path, e);
+> > +		goto out_fpath2;
+> > +	}
+> > +
+> > +	fd2 = open_path(&fpath2, O_WRONLY);
+> > +	e = fd2 < 0 ? errno : 0;
+> > +	check_cwd();
+> > +	if (fd2 < 0) {
+> > +		if (v2)
+> > +			printf("%d/%lld: xchgrange write - open %s failed %d\n",
+> > +				procid, opno, fpath2.path, e);
+> > +		goto out_fd1;
+> > +	}
+> > +
+> > +	/* Get file stats */
+> > +	if (fstat64(fd1, &stat1) < 0) {
+> > +		if (v1)
+> > +			printf("%d/%lld: xchgrange read - fstat64 %s failed %d\n",
+> > +				procid, opno, fpath1.path, errno);
+> > +		goto out_fd2;
+> > +	}
+> > +	inode_info(inoinfo1, sizeof(inoinfo1), &stat1, v1);
+> > +
+> > +	if (fstat64(fd2, &stat2) < 0) {
+> > +		if (v2)
+> > +			printf("%d/%lld: xchgrange write - fstat64 %s failed %d\n",
+> > +				procid, opno, fpath2.path, errno);
+> > +		goto out_fd2;
+> > +	}
+> > +	inode_info(inoinfo2, sizeof(inoinfo2), &stat2, v2);
+> > +
+> > +	if (stat1.st_size < (stat1.st_blksize * 2) ||
+> > +	    stat2.st_size < (stat2.st_blksize * 2)) {
+> > +		if (v2)
+> > +			printf("%d/%lld: xchgrange - files are too small\n",
+> > +				procid, opno);
+> > +		goto out_fd2;
+> > +	}
+> > +
+> > +	/* Never let us swap more than 1/4 of the files. */
+> > +	len = (random() % FILELEN_MAX) + 1;
+> > +	if (len > stat1.st_size / 4)
+> > +		len = stat1.st_size / 4;
+> > +	if (len > stat2.st_size / 4)
+> > +		len = stat2.st_size / 4;
+> > +	len = rounddown_64(len, stat1.st_blksize);
+> > +	if (len == 0)
+> > +		len = stat1.st_blksize;
+> > +
+> > +	/* Calculate offsets */
+> > +	lr = ((int64_t)random() << 32) + random();
+> > +	if (stat1.st_size == len)
+> > +		off1 = 0;
+> > +	else
+> > +		off1 = (off64_t)(lr % MIN(stat1.st_size - len, MAXFSIZE));
+> > +	off1 %= maxfsize;
+> > +	off1 = rounddown_64(off1, stat1.st_blksize);
+> > +
+> > +	/*
+> > +	 * If srcfile == destfile, randomly generate destination ranges
+> > +	 * until we find one that doesn't overlap the source range.
+> > +	 */
+> > +	max_off2 = MIN(stat2.st_size  - len, MAXFSIZE);
+> > +	do {
+> > +		lr = ((int64_t)random() << 32) + random();
+> > +		if (stat2.st_size == len)
+> > +			off2 = 0;
+> > +		else
+> > +			off2 = (off64_t)(lr % max_off2);
+> > +		off2 %= maxfsize;
+> > +		off2 = rounddown_64(off2, stat2.st_blksize);
+> > +	} while (stat1.st_ino == stat2.st_ino &&
+> > +		 llabs(off2 - off1) < len &&
+> > +		 tries++ < 10);
+> > +
+> > +	/* Swap data blocks */
+> > +	fxr.file1_fd = fd1;
+> > +	fxr.file1_offset = off1;
+> > +	fxr.length = len;
+> > +	fxr.file2_offset = off2;
+> > +	fxr.flags = swap_flags;
+> > +
+> > +retry:
+> > +	ret = ioctl(fd2, FIEXCHANGE_RANGE, &fxr);
+> > +	e = ret < 0 ? errno : 0;
+> > +	if (e == EOPNOTSUPP && !(swap_flags & FILE_XCHG_RANGE_NONATOMIC)) {
+> > +		swap_flags = FILE_XCHG_RANGE_NONATOMIC;
+> > +		fxr.flags |= swap_flags;
+> > +		goto retry;
+> > +	}
+> > +	if (v1 || v2) {
+> > +		printf("%d/%lld: xchgrange %s%s [%lld,%lld] -> %s%s [%lld,%lld]",
+> > +			procid, opno,
+> > +			fpath1.path, inoinfo1, (long long)off1, (long long)len,
+> > +			fpath2.path, inoinfo2, (long long)off2, (long long)len);
+> > +
+> > +		if (ret < 0)
+> > +			printf(" error %d", e);
+> > +		printf("\n");
+> > +	}
+> > +
+> > +out_fd2:
+> > +	close(fd2);
+> > +out_fd1:
+> > +	close(fd1);
+> > +out_fpath2:
+> > +	free_pathname(&fpath2);
+> > +out_fpath1:
+> > +	free_pathname(&fpath1);
+> > +#endif
+> > +}
+> > +
+> >  /* reflink some arbitrary range of f1 to f2. */
+> >  void
+> >  clonerange_f(
+> > 
 > 
-> 1. <test_randwrite.fio>
-> [global]
-> 	ioengine=psync
-> 	rw=randwrite
-> 	overwrite=1
-> 	pre_read=1
-> 	direct=0
-> 	bs=4k
-> 	size=1G
-> 	dir=./
-> 	numjobs=8
-> 	fdatasync=1
-> 	runtime=60
-> 	iodepth=64
-> 	group_reporting=1
-> 
-> [fio-run]
-> 
-> 2. Also our internal performance team reported that this patch improves there
->    database workload performance by around ~83% (with XFS on Power)
-> 
-> Reported-by: Aravinda Herle <araherle@in.ibm.com>
-> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-> ---
->  fs/gfs2/aops.c         |   2 +-
->  fs/iomap/buffered-io.c | 104 +++++++++++++++++++++++++++++++++++++----
->  fs/xfs/xfs_aops.c      |   2 +-
->  fs/zonefs/super.c      |   2 +-
->  include/linux/iomap.h  |   1 +
->  5 files changed, 99 insertions(+), 12 deletions(-)
-> 
-...
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index e0b0be16278e..fb55183c547f 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-...
-> @@ -1630,7 +1715,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
->  		struct writeback_control *wbc, struct inode *inode,
->  		struct folio *folio, u64 end_pos)
->  {
-> -	struct iomap_page *iop = iomap_page_create(inode, folio, 0);
-> +	struct iomap_page *iop = iomap_page_create(inode, folio, 0, true);
->  	struct iomap_ioend *ioend, *next;
->  	unsigned len = i_blocksize(inode);
->  	unsigned nblocks = i_blocks_per_folio(inode, folio);
-> @@ -1646,7 +1731,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
->  	 * invalid, grab a new one.
->  	 */
->  	for (i = 0; i < nblocks && pos < end_pos; i++, pos += len) {
-> -		if (iop && !iop_test_uptodate(iop, i, nblocks))
-> +		if (iop && !iop_test_dirty(iop, i, nblocks))
->  			continue;
-> 
->  		error = wpc->ops->map_blocks(wpc, inode, pos);
-
-Hi Ritesh,
-
-I'm not sure if you followed any of the discussion on the imap
-revalidation series that landed in the last cycle or so, but the
-associated delalloc punch error handling code has a subtle dependency on
-current writeback behavior and thus left a bit of a landmine for this
-work. For reference, more detailed discussion starts around here [1].
-The context is basically that the use of mapping seek hole/data relies
-on uptodate status, which means in certain error cases the filesystem
-might allocate a delalloc block for a write, but not punch it out of the
-associated write happens to fail and the underlying portion of the folio
-was uptodate.
-
-This doesn't cause a problem in current mainline because writeback maps
-every uptodate block in a dirty folio, and so the delalloc block will
-convert at writeback time even though it wasn't written. This no longer
-occurs with the change above, which means there's a vector for a stale
-delalloc block to be left around in the inode. This is a free space
-accounting corruption issue on XFS. Here's a quick example [2] on a 1k
-FSB XFS filesystem to show exactly what I mean:
-
-# xfs_io -fc "truncate 4k" -c "mmap 0 4k" -c "mread 0 4k" -c "pwrite 0 1" -c "pwrite -f 2k 1" -c fsync /mnt/file
-# xfs_io -c "fiemap -v" /mnt/file 
-/mnt/file:
- EXT: FILE-OFFSET      BLOCK-RANGE      TOTAL FLAGS
-...
-   2: [4..5]:          0..1                 2   0x7
-...
-(the above shows delalloc after an fsync)
-# umount /mnt
-  kernel:XFS: Assertion failed: xfs_is_shutdown(mp) || percpu_counter_sum(&mp->m_delalloc_blks) == 0, file: fs/xfs/xfs_super.c, line: 1068
-# xfs_repair -n /dev/vdb2 
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-...
-sb_fdblocks 20960187, counted 20960195
-...
-#
-
-I suspect this means either the error handling code needs to be updated
-to consider dirty state (i.e. punch delalloc if the block is !dirty), or
-otherwise this needs to depend on a broader change in XFS to reclaim
-delalloc blocks before inode eviction (along the lines of Dave's recent
-proposal to do something like that for corrupted inodes). Of course the
-caveat with the latter is that doesn't help for any other filesystems
-(?) that might have similar expectations for delayed allocation and want
-to use iomap.
-
-Brian
-
-[1] https://lore.kernel.org/linux-fsdevel/Y3TsPzd0XzXXIzQv@bfoster/
-
-[2] This test case depends on a local xfs_io hack to co-opt the -f flag
-into inducing a write failure. A POC patch for that is available here,
-if you wanted to replicate:
-
-https://lore.kernel.org/linux-xfs/20221123181322.3710820-1-bfoster@redhat.com/
-
