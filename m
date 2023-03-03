@@ -2,105 +2,89 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA7E1C64EC4
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Mar 2023 16:51:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48D0BC7EE2F
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Mar 2023 16:54:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230304AbjCCQv0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Mar 2023 11:51:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33060 "EHLO
+        id S231397AbjCCQyn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Mar 2023 11:54:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38196 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230118AbjCCQv0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2023 11:51:26 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C5C555B4
-        for <linux-xfs@vger.kernel.org>; Fri,  3 Mar 2023 08:51:03 -0800 (PST)
+        with ESMTP id S230157AbjCCQym (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2023 11:54:42 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06F521164E;
+        Fri,  3 Mar 2023 08:54:07 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 041AB6187A
-        for <linux-xfs@vger.kernel.org>; Fri,  3 Mar 2023 16:51:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60112C433D2;
-        Fri,  3 Mar 2023 16:51:02 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 51605B81902;
+        Fri,  3 Mar 2023 16:53:02 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EAF03C433EF;
+        Fri,  3 Mar 2023 16:53:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677862262;
-        bh=p9iiBL3b3or8ncGz7o2RRP4HzSqL4lLyEWc2j29tWH0=;
+        s=k20201202; t=1677862381;
+        bh=2/MxGsA+UeJoeA0qwShKf6lp6y22SPH559LMbaOGOUc=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=OamBWYlW/x9nNfe3/ktcSbypzzAgzbx05FHIjHFHV4tz8fDALQ7bDZOPBD0h9fXra
-         L+7tzeVfhEilsHwcOQPCuaxtEz7M8EPhL7XaPHe9Lli1xuf1+9rPco0hkGa4JEDHn3
-         ymsMpUR3lnRcA1Bn5KUhLvpYseaQjreGA4rIKp/9MncArWpJ5vAI4VNu0Qr2f9ANcO
-         6gZlx3wxsOgIdZSQZlMAaXNavfNlu4Be9zUGENgwll3F74IzjGY+npwM4mUlwJdKct
-         61BQim/RFjIkZ2QfF9xJEci65cA6GgNoLgiZFJecbzFSSx5JfzAqYZ9NniFocab58Z
-         0fPAvTpWKXcAw==
-Date:   Fri, 3 Mar 2023 08:51:01 -0800
+        b=Fy8mUh8ElUxKUrQu+GRfoNvC6ZR30x5Qv1MpnJHepd3jPizO5xu0Av5rz58V1z2c1
+         wSGjGASRIwKn7tYhJUGFdludgRmW7l4z7zUljb+qMLenmvY/HLlhjciprzRwsw0Xx6
+         KT05LR8AGH5lNYPhT6xuVBXLBVbi/vAMWIFb91Wi+TfsASsGP+3aTQKA2e+P8ped8N
+         KULknt2iIyjBpzgHFg/ReRS34jeBtxky9u4iTD3M/T2XoZNNRFBCveAqlK4pB5GbFf
+         E0RBumj48mLkl4U2UhehD1j75tWcTryyJOHJJ11UL30aj4gn/ObA/d+jErlQxW5eJs
+         nALyEce2ffbbA==
+Date:   Fri, 3 Mar 2023 08:53:00 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Leah Rumancik <leah.rumancik@gmail.com>
-Cc:     linux-xfs@vger.kernel.org, amir73il@gmail.com,
-        chandan.babu@oracle.com
-Subject: Re: [PATCH 5.15 CANDIDATE 00/11] 5.15.y sgid fixes
-Message-ID: <ZAIldWNxBWIazAuP@magnolia>
-References: <20230302203504.2998773-1-leah.rumancik@gmail.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Stefan Roesch <shr@fb.com>, io-uring@vger.kernel.org,
+        kernel-team@fb.com, linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, david@fromorbit.com, jack@suse.cz,
+        hch@infradead.org, axboe@kernel.dk, Christoph Hellwig <hch@lst.de>
+Subject: Re: [RESEND PATCH v9 04/14] iomap: Add flags parameter to
+ iomap_page_create()
+Message-ID: <ZAIl7JfPXivtN8qm@magnolia>
+References: <20220623175157.1715274-1-shr@fb.com>
+ <20220623175157.1715274-5-shr@fb.com>
+ <ZAF8vk6Jns/40bc0@casper.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230302203504.2998773-1-leah.rumancik@gmail.com>
+In-Reply-To: <ZAF8vk6Jns/40bc0@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 02, 2023 at 12:34:53PM -0800, Leah Rumancik wrote:
-> Hello,
+On Fri, Mar 03, 2023 at 04:51:10AM +0000, Matthew Wilcox wrote:
+> On Thu, Jun 23, 2022 at 10:51:47AM -0700, Stefan Roesch wrote:
+> > Add the kiocb flags parameter to the function iomap_page_create().
+> > Depending on the value of the flags parameter it enables different gfp
+> > flags.
+> > 
+> > No intended functional changes in this patch.
 > 
-> I finished testing the sgid fixes which Amir graciously backported to
-> 5.15. This series fixes the previously failing generic/673 and
-> generic/68[3-7]. No regressions were seen in the 25 runs of the auto
-> group x 8 configs. I also did some extra runs on the perms group and
-> no regressions there either. The corresponding fixes are already in
-> 6.1.y.
+> [...]
+> 
+> > @@ -226,7 +234,7 @@ static int iomap_read_inline_data(const struct iomap_iter *iter,
+> >  	if (WARN_ON_ONCE(size > iomap->length))
+> >  		return -EIO;
+> >  	if (offset > 0)
+> > -		iop = iomap_page_create(iter->inode, folio);
+> > +		iop = iomap_page_create(iter->inode, folio, iter->flags);
+> >  	else
+> >  		iop = to_iomap_page(folio);
+> 
+> I really don't like what this change has done to this file.  I'm
+> modifying this function, and I start thinking "Well, hang on, if
+> flags has IOMAP_NOWAIT set, then GFP_NOWAIT can fail, and iop
+> will be NULL, so we'll end up marking the entire folio uptodate
+> when really we should only be marking some blocks uptodate, so
+> we should really be failing the entire read if the allocation
+> failed, but maybe it's OK because IOMAP_NOWAIT is never set in
+> this path".
+> 
+> I don't know how we fix this.  Maybe return ERR_PTR(-ENOMEM) or
+> -EAGAIN if the memory allocation fails (leaving the NULL return
+> for "we don't need an iop").  Thoughts?
 
-If Christian is ok with backporting all the setgid changes to 5.15,
-
-Acked-by: Darrick J. Wong <djwong@kernel.org>
+I don't see any problem with that, aside from being pre-coffee and on
+vacation for the rest of today. ;)
 
 --D
-
-> 
-> - Leah
-> 
-> Christian Brauner (5):
->   attr: add in_group_or_capable()
->   fs: move should_remove_suid()
->   attr: add setattr_should_drop_sgid()
->   attr: use consistent sgid stripping checks
->   fs: use consistent setgid checks in is_sxid()
-> 
-> Darrick J. Wong (1):
->   xfs: use setattr_copy to set vfs inode attributes
-> 
-> Dave Chinner (3):
->   xfs: remove XFS_PREALLOC_SYNC
->   xfs: fallocate() should call file_modified()
->   xfs: set prealloc flag in xfs_alloc_file_space()
-> 
-> Yang Xu (2):
->   fs: add mode_strip_sgid() helper
->   fs: move S_ISGID stripping into the vfs_*() helpers
-> 
->  Documentation/trace/ftrace.rst |  2 +-
->  fs/attr.c                      | 72 +++++++++++++++++++++++++--
->  fs/fuse/file.c                 |  2 +-
->  fs/inode.c                     | 90 ++++++++++++++++++++--------------
->  fs/internal.h                  | 10 +++-
->  fs/namei.c                     | 82 ++++++++++++++++++++++++++-----
->  fs/ocfs2/file.c                |  4 +-
->  fs/ocfs2/namei.c               |  1 +
->  fs/open.c                      |  8 +--
->  fs/xfs/xfs_bmap_util.c         |  9 ++--
->  fs/xfs/xfs_file.c              | 24 +++++----
->  fs/xfs/xfs_iops.c              | 56 ++-------------------
->  fs/xfs/xfs_pnfs.c              |  9 ++--
->  include/linux/fs.h             |  6 ++-
->  14 files changed, 235 insertions(+), 140 deletions(-)
-> 
-> -- 
-> 2.40.0.rc0.216.gc4246ad0f0-goog
-> 
