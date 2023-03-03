@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B7E0C64EC4
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Mar 2023 17:11:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A25AC7EE2F
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Mar 2023 17:11:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230381AbjCCRL0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Mar 2023 12:11:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58504 "EHLO
+        id S230407AbjCCRLc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Mar 2023 12:11:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58562 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229974AbjCCRL0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2023 12:11:26 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 831651EFD5
-        for <linux-xfs@vger.kernel.org>; Fri,  3 Mar 2023 09:11:25 -0800 (PST)
+        with ESMTP id S229726AbjCCRLc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2023 12:11:32 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39F771EFD5
+        for <linux-xfs@vger.kernel.org>; Fri,  3 Mar 2023 09:11:31 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 240D46182C
-        for <linux-xfs@vger.kernel.org>; Fri,  3 Mar 2023 17:11:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80536C433A1;
-        Fri,  3 Mar 2023 17:11:24 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C89C8618A6
+        for <linux-xfs@vger.kernel.org>; Fri,  3 Mar 2023 17:11:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34BB3C433D2;
+        Fri,  3 Mar 2023 17:11:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677863484;
-        bh=5PCIZT1EQB1EqvLBdFvGVjEZHWpOPtUxuybz0t+9ojI=;
+        s=k20201202; t=1677863490;
+        bh=KFpT2qnjF/Ux5m3WRTPqeCFTIXWDEy2tfUqdHI/3bxY=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=aZmLuGuMGBMLiApXy+MVW9zpLtU2Us+R6f9D12TnL1cv6O8mBDKypet2zLQXj4MaU
-         haV42SOBjrjL1wI5Zpqzl1iDvnd86q0XEeRW2Entcov3xJ/UNHnk+65BjSWPz9XChH
-         W76ZkuV4wUxZqgN+74h/mIT/8IHcQ+RdhwPGQBLIA9ScJG2p0EhWCqIsf+YK7O70nr
-         njMgmQdam0VKS+pNqGc+dnqoBqlYjvzP1EjSuKZJOtJ6xOKMcV8Lv+BYR4HJR5mxdS
-         NzqdGdIJnhYhYzqMETg0quIqj3zxd0FyA5wzSxAbdpqsjYZ/a5k051ix9n434/98fT
-         ACneW1Aen0+bg==
-Subject: [PATCH 01/13] xfs: make xfs_attr_set require XFS_DA_OP_REMOVE
+        b=APlU850h8EJ4ug+uwyjmR4Q1KnZOXr1Mch+elxRZ3EW1Zb6CoYyxnA+fMronykHfW
+         iEk/SQ3G4zsIg+Ae19y1uSCpbFHKnbydYXk6M7dv+BuGi3WbW/LFUi4a/1FHBFEJUx
+         RocLsaNjsFUNLNJ6cRWPjoB19N07QT/D+xldN5OtQyi2bG0M0Cu9ToA6cFZac/OjLp
+         mBx7cwQx2gagR0VPcbKvjquipev+6N9gOdKHuJXOy/jgLjogOIthO4EWQRSZVZLH4n
+         0QR8PGe1sKxKzHXmXIDs7PSrEeMtOASsuRalS17DzLILzLkkmrQWzdhF10RwWWq9F6
+         VIolvu9HMZXFw==
+Subject: [PATCH 02/13] xfs: allow xattr matching on value for local/sf attrs
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Date:   Fri, 03 Mar 2023 09:11:24 -0800
-Message-ID: <167786348406.1543331.16739128076405218565.stgit@magnolia>
+Date:   Fri, 03 Mar 2023 09:11:29 -0800
+Message-ID: <167786348969.1543331.17889734281722303103.stgit@magnolia>
 In-Reply-To: <167786347827.1543331.2803518928321606576.stgit@magnolia>
 References: <167786347827.1543331.2803518928321606576.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,93 +49,133 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In the next patch we're going to add the ability to look up local/sf
-xattrs based on the attr name and value matching.  As a result, we need
-callers of xfs_attr_set to declare explicitly that they want to remove
-an xattr.  Passing in NULL value will no longer suffice.
-
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_attr.c   |    9 +++++----
- fs/xfs/libxfs/xfs_parent.c |    1 +
- fs/xfs/xfs_xattr.c         |    5 +++++
- 3 files changed, 11 insertions(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_attr_leaf.c |   41 +++++++++++++++++++++++++++++++++++------
+ fs/xfs/libxfs/xfs_da_btree.h  |    4 +++-
+ 2 files changed, 38 insertions(+), 7 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 3065dd622102..756d93526075 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -977,6 +977,7 @@ xfs_attr_set(
- 	struct xfs_inode	*dp = args->dp;
- 	struct xfs_mount	*mp = dp->i_mount;
- 	struct xfs_trans_res	tres;
-+	bool			is_remove = args->op_flags & XFS_DA_OP_REMOVE;
- 	bool			rsvd;
- 	int			error, local;
- 	int			rmt_blks = 0;
-@@ -1004,7 +1005,7 @@ xfs_attr_set(
- 	args->op_flags = XFS_DA_OP_OKNOENT |
- 					(args->op_flags & XFS_DA_OP_LOGGED);
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index e6c4c8b52a55..d05f2c5cc0cc 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -473,10 +473,12 @@ xfs_attr3_leaf_read(
+  */
+ static bool
+ xfs_attr_match(
+-	struct xfs_da_args	*args,
+-	uint8_t			namelen,
+-	unsigned char		*name,
+-	int			flags)
++	const struct xfs_da_args	*args,
++	uint8_t				namelen,
++	const unsigned char		*name,
++	unsigned int			valuelen,
++	const void			*value,
++	int				flags)
+ {
  
--	if (args->value) {
-+	if (!is_remove) {
- 		XFS_STATS_INC(mp, xs_attr_set);
- 		args->total = xfs_attr_calc_size(args, &local);
+ 	if (args->namelen != namelen)
+@@ -484,6 +486,23 @@ xfs_attr_match(
+ 	if (memcmp(args->name, name, namelen) != 0)
+ 		return false;
  
-@@ -1038,7 +1039,7 @@ xfs_attr_set(
- 	if (error)
- 		return error;
- 
--	if (args->value || xfs_inode_hasattr(dp)) {
-+	if (!is_remove || xfs_inode_hasattr(dp)) {
- 		error = xfs_iext_count_may_overflow(dp, XFS_ATTR_FORK,
- 				XFS_IEXT_ATTR_MANIP_CNT(rmt_blks));
- 		if (error == -EFBIG)
-@@ -1052,7 +1053,7 @@ xfs_attr_set(
- 	switch (error) {
- 	case -EEXIST:
- 		/* if no value, we are performing a remove operation */
--		if (!args->value) {
-+		if (is_remove) {
- 			error = xfs_attr_defer_remove(args);
- 			break;
- 		}
-@@ -1064,7 +1065,7 @@ xfs_attr_set(
- 		break;
- 	case -ENOATTR:
- 		/* Can't remove what isn't there. */
--		if (!args->value)
-+		if (is_remove)
- 			goto out_trans_cancel;
- 
- 		/* Pure replace fails if no existing attr to replace. */
-diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
-index f7fecee93894..387f3c65287f 100644
---- a/fs/xfs/libxfs/xfs_parent.c
-+++ b/fs/xfs/libxfs/xfs_parent.c
-@@ -460,6 +460,7 @@ xfs_parent_unset(
- 	scr->args.geo		= ip->i_mount->m_attr_geo;
- 	scr->args.name		= (const unsigned char *)&scr->rec;
- 	scr->args.namelen	= reclen;
-+	scr->args.op_flags	= XFS_DA_OP_REMOVE;
- 	scr->args.whichfork	= XFS_ATTR_FORK;
- 
- 	return xfs_attr_set(&scr->args);
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index 85edd7e05fde..8f8aa13bf7eb 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -103,6 +103,11 @@ xfs_attr_change(
- 		use_logging = true;
- 	}
- 
-+	if (args->value)
-+		args->op_flags &= ~XFS_DA_OP_REMOVE;
-+	else
-+		args->op_flags |= XFS_DA_OP_REMOVE;
++	if (args->op_flags & XFS_DA_OP_VLOOKUP) {
++		if (args->valuelen != valuelen)
++			return false;
++		if (args->valuelen && !value) {
++			/* not implemented for remote values */
++			ASSERT(0);
++			return false;
++		}
++		if (valuelen && !args->value) {
++			/* caller gave us valuelen > 0 but no value?? */
++			ASSERT(0);
++			return false;
++		}
++		if (valuelen > 0 && memcmp(args->value, value, valuelen) != 0)
++			return false;
++	}
 +
- 	error = xfs_attr_set(args);
+ 	/* Recovery ignores the INCOMPLETE flag. */
+ 	if ((args->op_flags & XFS_DA_OP_RECOVERY) &&
+ 	    args->attr_filter == (flags & XFS_ATTR_NSP_ONDISK_MASK))
+@@ -502,6 +521,10 @@ xfs_attr_copy_value(
+ 	unsigned char		*value,
+ 	int			valuelen)
+ {
++	/* vlookups already supplied the attr value; don't copy anything */
++	if (args->op_flags & XFS_DA_OP_VLOOKUP)
++		return 0;
++
+ 	/*
+ 	 * No copy if all we have to do is get the length
+ 	 */
+@@ -726,6 +749,7 @@ xfs_attr_sf_findname(
+ 			     base += size, i++) {
+ 		size = xfs_attr_sf_entsize(sfe);
+ 		if (!xfs_attr_match(args, sfe->namelen, sfe->nameval,
++				    sfe->valuelen, &sfe->nameval[sfe->namelen],
+ 				    sfe->flags))
+ 			continue;
+ 		break;
+@@ -896,6 +920,7 @@ xfs_attr_shortform_lookup(xfs_da_args_t *args)
+ 	for (i = 0; i < sf->hdr.count;
+ 				sfe = xfs_attr_sf_nextentry(sfe), i++) {
+ 		if (xfs_attr_match(args, sfe->namelen, sfe->nameval,
++				sfe->valuelen, &sfe->nameval[sfe->namelen],
+ 				sfe->flags))
+ 			return -EEXIST;
+ 	}
+@@ -923,6 +948,7 @@ xfs_attr_shortform_getvalue(
+ 	for (i = 0; i < sf->hdr.count;
+ 				sfe = xfs_attr_sf_nextentry(sfe), i++) {
+ 		if (xfs_attr_match(args, sfe->namelen, sfe->nameval,
++				sfe->valuelen, &sfe->nameval[sfe->namelen],
+ 				sfe->flags))
+ 			return xfs_attr_copy_value(args,
+ 				&sfe->nameval[args->namelen], sfe->valuelen);
+@@ -2484,14 +2510,17 @@ xfs_attr3_leaf_lookup_int(
+ 		if (entry->flags & XFS_ATTR_LOCAL) {
+ 			name_loc = xfs_attr3_leaf_name_local(leaf, probe);
+ 			if (!xfs_attr_match(args, name_loc->namelen,
+-					name_loc->nameval, entry->flags))
++					name_loc->nameval,
++					be16_to_cpu(name_loc->valuelen),
++					&name_loc->nameval[name_loc->namelen],
++					entry->flags))
+ 				continue;
+ 			args->index = probe;
+ 			return -EEXIST;
+ 		} else {
+ 			name_rmt = xfs_attr3_leaf_name_remote(leaf, probe);
+ 			if (!xfs_attr_match(args, name_rmt->namelen,
+-					name_rmt->name, entry->flags))
++					name_rmt->name, 0, NULL, entry->flags))
+ 				continue;
+ 			args->index = probe;
+ 			args->rmtvaluelen = be32_to_cpu(name_rmt->valuelen);
+diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+index 90b86d00258f..0ef32f629e1b 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.h
++++ b/fs/xfs/libxfs/xfs_da_btree.h
+@@ -96,6 +96,7 @@ typedef struct xfs_da_args {
+ #define XFS_DA_OP_REMOVE	(1u << 6) /* this is a remove operation */
+ #define XFS_DA_OP_RECOVERY	(1u << 7) /* Log recovery operation */
+ #define XFS_DA_OP_LOGGED	(1u << 8) /* Use intent items to track op */
++#define XFS_DA_OP_VLOOKUP	(1u << 9) /* Compare attr value during lookup */
  
- 	if (use_logging)
+ #define XFS_DA_OP_FLAGS \
+ 	{ XFS_DA_OP_JUSTCHECK,	"JUSTCHECK" }, \
+@@ -106,7 +107,8 @@ typedef struct xfs_da_args {
+ 	{ XFS_DA_OP_NOTIME,	"NOTIME" }, \
+ 	{ XFS_DA_OP_REMOVE,	"REMOVE" }, \
+ 	{ XFS_DA_OP_RECOVERY,	"RECOVERY" }, \
+-	{ XFS_DA_OP_LOGGED,	"LOGGED" }
++	{ XFS_DA_OP_LOGGED,	"LOGGED" }, \
++	{ XFS_DA_OP_VLOOKUP,	"VLOOKUP" }
+ 
+ /*
+  * Storage for holding state during Btree searches and split/join ops.
 
