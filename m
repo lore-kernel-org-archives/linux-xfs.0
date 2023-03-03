@@ -2,242 +2,187 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C47DC678D4
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Mar 2023 11:32:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D1A9C678D4
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Mar 2023 12:06:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229541AbjCCLcl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Mar 2023 06:32:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48220 "EHLO
+        id S230097AbjCCMGT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Mar 2023 07:06:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55148 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229580AbjCCLck (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2023 06:32:40 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B248DD325
-        for <linux-xfs@vger.kernel.org>; Fri,  3 Mar 2023 03:32:11 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5D7D4617DF
-        for <linux-xfs@vger.kernel.org>; Fri,  3 Mar 2023 11:31:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9925C433EF;
-        Fri,  3 Mar 2023 11:31:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677843092;
-        bh=erPZhXocNjj5ieUDYLVDYhIY+nbcDpQo9ITJ1gSAlgg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=AoYowHtyux2QGheGBULKtovBa01gId4dmaPB03d/7h0fEKRJB0B8tHM5pZAMHyVF9
-         MbEQ+YaIpQvN8qCD/bXY02rM9PV0qKwpVlDQ3oxCS4SmC6GHcbZQ9HVdbId1O600FU
-         h7oE4Wx86S9zMTrfRdYQClVpUY/2KnUk4Ysaj21Rl7aJ86Pck3EzEOqLYwTH1vkDbZ
-         6+0mCzhFeKLX9v3xQMQDJqtgnkETB8+43rUY3DTGE53YycetDq195nLEG+sGkbLbrp
-         hvx4GCMkEMYUWbX+l2S7P9wcwNqmQUAdWAWwLxJO4KHb8y63KdOVzPmisdxa86aHKx
-         G4omZivSgOqvw==
-Date:   Fri, 3 Mar 2023 12:31:28 +0100
-From:   Carlos Maiolino <cem@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, daan.j.demeyer@gmail.com
-Subject: Re: [PATCH 3/3] mkfs: substitute slashes with spaces in protofiles
-Message-ID: <20230303113128.vwmlfppxai2yw6gd@andromeda>
-References: <167768672841.4130726.1758921319115777334.stgit@magnolia>
- <XeT92-lvrSnBKf-PqcSh1wLj6AiwbiI4QExkl0F-RD2vca2i7gpuQMFTNULQHbsCL7vDnClBLW6CjBZpsYz1Uw==@protonmail.internalid>
- <167768674540.4130726.6736563945489484289.stgit@magnolia>
+        with ESMTP id S229471AbjCCMGS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2023 07:06:18 -0500
+Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E1AA1ACD1;
+        Fri,  3 Mar 2023 04:06:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1677845177; x=1709381177;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=1ZhnkZvUx6/qDxwOmfHWY1TW6Ezr2JMQifRPtpqWpl8=;
+  b=Pv9c1kKM3LFOwOG9CR3aJ1aGUqPbHCN/MXr6d4YG1e56DKOE9CSQaaL+
+   louuYHBJ+IcRm6tv4Jsz8fnET/W3C6FmoCllNVP2pEn08kpyKTRdHYujt
+   +TUug1K3IwzW3By+jmRlel1ai/W9k0uStlmpQxRZNsC8mWx/QNuc+x7vh
+   S8cNuf1GLPtnSwwWseK2FCgxTB2fERL8RnvX+4M4UAq2/vM0xCVPUekU1
+   xbRRfYP6sWzlOtakJZ+mG8qLV6V1EoiYyEo9rzaWmtLYJSW+SQxjNgBSl
+   FZxvmuMQwVIMxGoIbj+RP/Jt15sPucyU2/Opjosr8j8/m1xTUOvW9XujV
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10637"; a="397618378"
+X-IronPort-AV: E=Sophos;i="5.98,230,1673942400"; 
+   d="scan'208";a="397618378"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2023 04:06:16 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10637"; a="849438018"
+X-IronPort-AV: E=Sophos;i="5.98,230,1673942400"; 
+   d="scan'208";a="849438018"
+Received: from lkp-server01.sh.intel.com (HELO 776573491cc5) ([10.239.97.150])
+  by orsmga005.jf.intel.com with ESMTP; 03 Mar 2023 04:06:14 -0800
+Received: from kbuild by 776573491cc5 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1pY4Av-0001Qe-0k;
+        Fri, 03 Mar 2023 12:06:13 +0000
+Date:   Fri, 3 Mar 2023 20:05:22 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>
+Cc:     llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Gao Xiang <xiang@kernel.org>
+Subject: Re: [PATCH 1/2] filemap: Add folio_copy_tail()
+Message-ID: <202303031911.we6DjYXd-lkp@intel.com>
+References: <20230303064315.701090-2-willy@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <167768674540.4130726.6736563945489484289.stgit@magnolia>
+In-Reply-To: <20230303064315.701090-2-willy@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Mar 01, 2023 at 08:05:45AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> A user requested the ability to specify directory entry names in a
-> protofile that have spaces in them.  The protofile format itself does
-> not allow spaces (yay 1973-era protofiles!) but it does allow slashes.
-> Slashes aren't allowed in directory entry names, so we'll permit this
-> one gross hack.  After this, the protofile:
-> 
-> /
-> 0 0
-> d--775 1000 1000
-> : Descending path /code/t/fstests
->  get/isk.sh   ---775 1000 1000 /code/t/fstests/getdisk.sh
-> $
-> 
-> Will produce "get isk.h" in the root directory when used thusly:
-> 
-> # mkfs.xfs -p slashes_are_spaces=1,/tmp/protofile -f /dev/sda
-> 
-> Requested-by: Daan De Meyer <daan.j.demeyer@gmail.com>
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Hi Matthew,
 
-Thanks a lot for having made this change.
+I love your patch! Perhaps something to improve:
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  man/man8/mkfs.xfs.8.in |    6 ++++++
->  mkfs/proto.c           |   31 +++++++++++++++++++++++++++++--
->  mkfs/proto.h           |    3 ++-
->  mkfs/xfs_mkfs.c        |   14 +++++++++++++-
->  4 files changed, 50 insertions(+), 4 deletions(-)
-> 
-> 
-> diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
-> index e1ca40e5da6..49e64d47ae4 100644
-> --- a/man/man8/mkfs.xfs.8.in
-> +++ b/man/man8/mkfs.xfs.8.in
-> @@ -996,6 +996,12 @@ in the directory. A scan of the protofile is
->  always terminated with the dollar (
->  .B $
->  ) token.
-> +.TP
-> +.BI slashes_are_spaces= value
-> +If set to 1, slashes ("/") in the first token of each line of the protofile
-> +are converted to spaces.
-> +This enables the creation of a filesystem containing filenames with spaces.
-> +By default, this is set to 0.
->  .RE
->  .TP
->  .B \-q
-> diff --git a/mkfs/proto.c b/mkfs/proto.c
-> index 7e3fc1b8134..ea31cfe5cfc 100644
-> --- a/mkfs/proto.c
-> +++ b/mkfs/proto.c
-> @@ -21,6 +21,7 @@ static int newfile(xfs_trans_t *tp, xfs_inode_t *ip, int symlink, int logit,
->  static char *newregfile(char **pp, int *len);
->  static void rtinit(xfs_mount_t *mp);
->  static long filesize(int fd);
-> +static int slashes_are_spaces;
-> 
->  /*
->   * Use this for block reservations needed for mkfs's conditions
-> @@ -171,6 +172,30 @@ getstr(
->  	return NULL;
->  }
-> 
-> +/* Extract directory entry name from a protofile. */
-> +static char *
-> +getdirentname(
-> +	char	**pp)
-> +{
-> +	char	*p = getstr(pp);
-> +	char	*c = p;
-> +
-> +	if (!p)
-> +		return NULL;
-> +
-> +	if (!slashes_are_spaces)
-> +		return p;
-> +
-> +	/* Replace slash with space because slashes aren't allowed. */
-> +	while (*c) {
-> +		if (*c == '/')
-> +			*c = ' ';
-> +		c++;
-> +	}
-> +
-> +	return p;
-> +}
-> +
->  static void
->  rsvfile(
->  	xfs_mount_t	*mp,
-> @@ -586,7 +611,7 @@ parseproto(
->  			rtinit(mp);
->  		tp = NULL;
->  		for (;;) {
-> -			name = getstr(pp);
-> +			name = getdirentname(pp);
->  			if (!name)
->  				break;
->  			if (strcmp(name, "$") == 0)
-> @@ -612,8 +637,10 @@ void
->  parse_proto(
->  	xfs_mount_t	*mp,
->  	struct fsxattr	*fsx,
-> -	char		**pp)
-> +	char		**pp,
-> +	int		proto_slashes_are_spaces)
->  {
-> +	slashes_are_spaces = proto_slashes_are_spaces;
->  	parseproto(mp, NULL, fsx, pp, NULL);
->  }
-> 
-> diff --git a/mkfs/proto.h b/mkfs/proto.h
-> index 3c4010afd19..be1ceb45421 100644
-> --- a/mkfs/proto.h
-> +++ b/mkfs/proto.h
-> @@ -7,7 +7,8 @@
->  #define MKFS_PROTO_H_
-> 
->  char *setup_proto(char *fname);
-> -void parse_proto(struct xfs_mount *mp, struct fsxattr *fsx, char **pp);
-> +void parse_proto(struct xfs_mount *mp, struct fsxattr *fsx, char **pp,
-> +		int proto_slashes_are_spaces);
->  void res_failed(int err);
-> 
->  #endif /* MKFS_PROTO_H_ */
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 4248e6ec344..4399bf3792f 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -115,6 +115,7 @@ enum {
-> 
->  enum {
->  	P_FILE = 0,
-> +	P_SLASHES,
->  	P_MAX_OPTS,
->  };
-> 
-> @@ -651,6 +652,7 @@ static struct opt_params popts = {
->  	.ini_section = "proto",
->  	.subopts = {
->  		[P_FILE] = "file",
-> +		[P_SLASHES] = "slashes_are_spaces",
->  		[P_MAX_OPTS] = NULL,
->  	},
->  	.subopt_params = {
-> @@ -658,6 +660,12 @@ static struct opt_params popts = {
->  		  .conflicts = { { NULL, LAST_CONFLICT } },
->  		  .defaultval = SUBOPT_NEEDS_VAL,
->  		},
-> +		{ .index = P_SLASHES,
-> +		  .conflicts = { { NULL, LAST_CONFLICT } },
-> +		  .minval = 0,
-> +		  .maxval = 1,
-> +		  .defaultval = 1,
-> +		},
->  	},
->  };
-> 
-> @@ -881,6 +889,7 @@ struct cli_params {
->  	int	loginternal;
->  	int	lsunit;
->  	int	is_supported;
-> +	int	proto_slashes_are_spaces;
-> 
->  	/* parameters where 0 is not a valid value */
->  	int64_t	agcount;
-> @@ -1779,6 +1788,9 @@ proto_opts_parser(
->  	struct cli_params	*cli)
->  {
->  	switch (subopt) {
-> +	case P_SLASHES:
-> +		cli->proto_slashes_are_spaces = getnum(value, opts, subopt);
-> +		break;
->  	case P_FILE:
->  		fallthrough;
->  	default:
-> @@ -4368,7 +4380,7 @@ main(
->  	/*
->  	 * Allocate the root inode and anything else in the proto file.
->  	 */
-> -	parse_proto(mp, &cli.fsx, &protostring);
-> +	parse_proto(mp, &cli.fsx, &protostring, cli.proto_slashes_are_spaces);
-> 
->  	/*
->  	 * Protect ourselves against possible stupidity
-> 
+[auto build test WARNING on akpm-mm/mm-everything]
+[also build test WARNING on linus/master next-20230303]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Matthew-Wilcox-Oracle/filemap-Add-folio_copy_tail/20230303-144359
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
+patch link:    https://lore.kernel.org/r/20230303064315.701090-2-willy%40infradead.org
+patch subject: [PATCH 1/2] filemap: Add folio_copy_tail()
+config: arm-randconfig-r006-20230302 (https://download.01.org/0day-ci/archive/20230303/202303031911.we6DjYXd-lkp@intel.com/config)
+compiler: clang version 17.0.0 (https://github.com/llvm/llvm-project 67409911353323ca5edf2049ef0df54132fa1ca7)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # install arm cross compiling tool for clang build
+        # apt-get install binutils-arm-linux-gnueabi
+        # https://github.com/intel-lab-lkp/linux/commit/a4ee841f30215e4f7c5dda2ab82007f590a6a62b
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Matthew-Wilcox-Oracle/filemap-Add-folio_copy_tail/20230303-144359
+        git checkout a4ee841f30215e4f7c5dda2ab82007f590a6a62b
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=arm olddefconfig
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=arm SHELL=/bin/bash
+
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+| Link: https://lore.kernel.org/oe-kbuild-all/202303031911.we6DjYXd-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> mm/filemap.c:4160:17: warning: comparison of distinct pointer types ('typeof (poff + len) *' (aka 'unsigned int *') and 'typeof (((1UL) << 12)) *' (aka 'unsigned long *')) [-Wcompare-distinct-pointer-types]
+                   size_t plen = min(poff + len, PAGE_SIZE) - poff;
+                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/minmax.h:67:19: note: expanded from macro 'min'
+   #define min(x, y)       __careful_cmp(x, y, <)
+                           ^~~~~~~~~~~~~~~~~~~~~~
+   include/linux/minmax.h:36:24: note: expanded from macro '__careful_cmp'
+           __builtin_choose_expr(__safe_cmp(x, y), \
+                                 ^~~~~~~~~~~~~~~~
+   include/linux/minmax.h:26:4: note: expanded from macro '__safe_cmp'
+                   (__typecheck(x, y) && __no_side_effects(x, y))
+                    ^~~~~~~~~~~~~~~~~
+   include/linux/minmax.h:20:28: note: expanded from macro '__typecheck'
+           (!!(sizeof((typeof(x) *)1 == (typeof(y) *)1)))
+                      ~~~~~~~~~~~~~~ ^  ~~~~~~~~~~~~~~
+>> mm/filemap.c:4172:11: warning: comparison of distinct pointer types ('typeof (len) *' (aka 'unsigned int *') and 'typeof (((1UL) << 12)) *' (aka 'unsigned long *')) [-Wcompare-distinct-pointer-types]
+                           plen = min(len, PAGE_SIZE);
+                                  ^~~~~~~~~~~~~~~~~~~
+   include/linux/minmax.h:67:19: note: expanded from macro 'min'
+   #define min(x, y)       __careful_cmp(x, y, <)
+                           ^~~~~~~~~~~~~~~~~~~~~~
+   include/linux/minmax.h:36:24: note: expanded from macro '__careful_cmp'
+           __builtin_choose_expr(__safe_cmp(x, y), \
+                                 ^~~~~~~~~~~~~~~~
+   include/linux/minmax.h:26:4: note: expanded from macro '__safe_cmp'
+                   (__typecheck(x, y) && __no_side_effects(x, y))
+                    ^~~~~~~~~~~~~~~~~
+   include/linux/minmax.h:20:28: note: expanded from macro '__typecheck'
+           (!!(sizeof((typeof(x) *)1 == (typeof(y) *)1)))
+                      ~~~~~~~~~~~~~~ ^  ~~~~~~~~~~~~~~
+   2 warnings generated.
+
+
+vim +4160 mm/filemap.c
+
+  4125	
+  4126	/**
+  4127	 * folio_copy_tail - Copy an in-memory file tail into a page cache folio.
+  4128	 * @folio: The folio to copy into.
+  4129	 * @pos: The file position of the first byte of data in the tail.
+  4130	 * @src: The address of the tail data.
+  4131	 * @max: The size of the buffer used for the tail data.
+  4132	 *
+  4133	 * Supports file tails starting at @pos that are a maximum of @max
+  4134	 * bytes in size.  Zeroes the remainder of the folio.
+  4135	 */
+  4136	void folio_copy_tail(struct folio *folio, loff_t pos, void *src, size_t max)
+  4137	{
+  4138		loff_t isize = i_size_read(folio->mapping->host);
+  4139		size_t offset, len = isize - pos;
+  4140		char *dst;
+  4141	
+  4142		if (folio_pos(folio) > isize) {
+  4143			len = 0;
+  4144		} else if (folio_pos(folio) > pos) {
+  4145			len -= folio_pos(folio) - pos;
+  4146			src += folio_pos(folio) - pos;
+  4147			max -= folio_pos(folio) - pos;
+  4148			pos = folio_pos(folio);
+  4149		}
+  4150		/*
+  4151		 * i_size is larger than the number of bytes stored in the tail?
+  4152		 * Assume the remainder is zero-padded.
+  4153		 */
+  4154		if (WARN_ON_ONCE(len > max))
+  4155			len = max;
+  4156		offset = offset_in_folio(folio, pos);
+  4157		dst = kmap_local_folio(folio, offset);
+  4158		if (folio_test_highmem(folio) && folio_test_large(folio)) {
+  4159			size_t poff = offset_in_page(offset);
+> 4160			size_t plen = min(poff + len, PAGE_SIZE) - poff;
+  4161	
+  4162			for (;;) {
+  4163				memcpy(dst, src, plen);
+  4164				memset(dst + plen, 0, PAGE_SIZE - poff - plen);
+  4165				offset += PAGE_SIZE - poff;
+  4166				if (offset == folio_size(folio))
+  4167					break;
+  4168				kunmap_local(dst);
+  4169				dst = kmap_local_folio(folio, offset);
+  4170				len -= plen;
+  4171				poff = 0;
+> 4172				plen = min(len, PAGE_SIZE);
 
 -- 
-Carlos Maiolino
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
