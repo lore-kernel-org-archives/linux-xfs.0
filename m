@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA944C7EE2D
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Mar 2023 17:12:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76C0CC7EE2F
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Mar 2023 17:12:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231514AbjCCRMZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Mar 2023 12:12:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59496 "EHLO
+        id S231523AbjCCRM3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Mar 2023 12:12:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59566 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231202AbjCCRMZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2023 12:12:25 -0500
+        with ESMTP id S231527AbjCCRM2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2023 12:12:28 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9153130EB9
-        for <linux-xfs@vger.kernel.org>; Fri,  3 Mar 2023 09:12:12 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEF792DE55
+        for <linux-xfs@vger.kernel.org>; Fri,  3 Mar 2023 09:12:17 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0764DB8191E
-        for <linux-xfs@vger.kernel.org>; Fri,  3 Mar 2023 17:12:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3158C433D2;
-        Fri,  3 Mar 2023 17:12:09 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 9BAEDB8191F
+        for <linux-xfs@vger.kernel.org>; Fri,  3 Mar 2023 17:12:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54F9BC433D2;
+        Fri,  3 Mar 2023 17:12:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677863529;
-        bh=hdXbtNyhTki/Q/3JZtvqohwmVFXl8UFL0szbD+fA0WQ=;
+        s=k20201202; t=1677863535;
+        bh=lsNdcMBG80ShdVkJ+qHiu1JG8vhkxpYd5Ooadbw1mkc=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Rri0zgtwXsUldC6gK8eH2daPJWc8swvoykUdGRCVZvAhGVCxTKKnikKzZWgjW2aR0
-         4GRZhsWWfghsAQGGN3lUcMm5z12KFMWKXvKBJmdmyZRErd4ymUxVIAJeymnus2EsRV
-         7MbVrNrfupbRtPxP5TKKNwPFqxKKmSjDIax/InBIVBoACv5w+5okro8RvduLkwichh
-         S9ZWMfdXt+dhblzzsFG2pmGf4XWlC5yuO/tIbuWUHZPCred373K2qnaC2+oo4QgnvM
-         E7S4pcRgrkcgy3OWs+LXEuzbKo3a8PKFaBNaZ5WyfVhQHwZ+HquQjgrppO/dmb2t+Z
-         R4GFFWe8WCYYA==
-Subject: [PATCH 09/13] xfs: log VLOOKUP xattr nvreplace operations
+        b=pcNoZ9BDBlTTjIlNKRPgfGKrJIAjYKpZd7ivuhAJZI6L1iOTq9JNkq74ACYa7Mwy5
+         NBIim9EH84eTnNIjgO3H/jAbknHxut++2pBNPftH1T/ABBmWcUG/U+Z1lqcYazdlxk
+         nJE6n7yzfTJwWIT0YP1W8VSuVNNFMzrnkl180pQ/0s7cUP9+rfJ2qIy+rjLNK5jQFn
+         gXJJOGBI9X1OSfkqBunBpBKTytQMU77xGDTKLo9k9Co0fQYhN8XIZ3Eqi5sfYUi7KU
+         T5BuR8uWIOget3VzoHwQxkaQhmXAHu7PeC/2QZ/OAmjgg0opCpNWmN6G6rs+Z/OFbC
+         1LewCFz7GAMqw==
+Subject: [PATCH 10/13] xfs: log old xattr values for NVREPLACEXXX operations
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Date:   Fri, 03 Mar 2023 09:12:09 -0800
-Message-ID: <167786352923.1543331.16240053109176341528.stgit@magnolia>
+Date:   Fri, 03 Mar 2023 09:12:14 -0800
+Message-ID: <167786353490.1543331.6210511448533901672.stgit@magnolia>
 In-Reply-To: <167786347827.1543331.2803518928321606576.stgit@magnolia>
 References: <167786347827.1543331.2803518928321606576.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -49,116 +49,318 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If high level code wants to do a deferred xattr nvreplace operation with
-the VLOOKUP flag set, we need to push this through the log.  To avoid
-breaking the parent pointer code, we'll temporarily create a new
-NVREPLACEXXX flag that connects to the VLOOKUP flag.
+For NVREPLACEXXX operations, make it possible to log the old and new
+attr values, since this variant does VLOOKUP operations.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_attr.c       |   15 +++++++++++----
- fs/xfs/libxfs/xfs_log_format.h |    1 +
- fs/xfs/xfs_attr_item.c         |   13 +++++++++++--
- 3 files changed, 23 insertions(+), 6 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c       |    2 +
+ fs/xfs/libxfs/xfs_da_btree.h   |    2 +
+ fs/xfs/libxfs/xfs_log_format.h |   14 +++++---
+ fs/xfs/xfs_attr_item.c         |   74 +++++++++++++++++++++++++++++++++++-----
+ fs/xfs/xfs_attr_item.h         |    3 +-
+ 5 files changed, 80 insertions(+), 15 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index ba8ad232b306..b9178c4efdeb 100644
+index b9178c4efdeb..d807692b259c 100644
 --- a/fs/xfs/libxfs/xfs_attr.c
 +++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -424,7 +424,12 @@ xfs_attr_complete_op(
- 	args->op_flags &= ~XFS_DA_OP_REPLACE;
- 	if (do_replace) {
- 		args->attr_filter &= ~XFS_ATTR_INCOMPLETE;
--		if (args->new_namelen > 0) {
-+		if (args->op_flags & XFS_DA_OP_VLOOKUP) {
-+			args->name = args->new_name;
-+			args->namelen = args->new_namelen;
-+			args->hashval = xfs_da_hashname(args->name,
-+							args->namelen);
-+		} else if (args->new_namelen > 0) {
- 			args->name = args->new_name;
+@@ -429,6 +429,8 @@ xfs_attr_complete_op(
  			args->namelen = args->new_namelen;
  			args->hashval = xfs_da_hashname(args->name,
-@@ -933,11 +938,13 @@ xfs_attr_defer_replace(
- 	struct xfs_da_args	*args)
- {
- 	struct xfs_attr_intent	*new;
--	int			op_flag;
-+	int			op_flag = XFS_ATTRI_OP_FLAGS_REPLACE;
- 	int			error = 0;
- 
--	op_flag = args->new_namelen == 0 ? XFS_ATTRI_OP_FLAGS_REPLACE :
--		  XFS_ATTRI_OP_FLAGS_NVREPLACE;
-+	if (args->op_flags & XFS_DA_OP_VLOOKUP)
-+		op_flag = XFS_ATTRI_OP_FLAGS_NVREPLACEXXX;
-+	else if (args->new_namelen > 0)
-+		op_flag = XFS_ATTRI_OP_FLAGS_NVREPLACE;
- 
- 	error = xfs_attr_intent_init(args, op_flag, &new);
- 	if (error)
+ 							args->namelen);
++			args->value = args->new_value;
++			args->valuelen = args->new_valuelen;
+ 		} else if (args->new_namelen > 0) {
+ 			args->name = args->new_name;
+ 			args->namelen = args->new_namelen;
+diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+index 0ef32f629e1b..cbea5233159c 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.h
++++ b/fs/xfs/libxfs/xfs_da_btree.h
+@@ -60,7 +60,9 @@ typedef struct xfs_da_args {
+ 	int		new_namelen;	/* new attr name len */
+ 	uint8_t		filetype;	/* filetype of inode for directories */
+ 	void		*value;		/* set of bytes (maybe contain NULLs) */
++	void		*new_value;	/* new xattr value (may contain NULLs) */
+ 	int		valuelen;	/* length of value */
++	int		new_valuelen;	/* length of new value */
+ 	unsigned int	attr_filter;	/* XFS_ATTR_{ROOT,SECURE,INCOMPLETE} */
+ 	unsigned int	attr_flags;	/* XATTR_{CREATE,REPLACE} */
+ 	xfs_dahash_t	hashval;	/* hash value of name */
 diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index 8b16ae27c2fd..a1581dc6f131 100644
+index a1581dc6f131..ed406738847d 100644
 --- a/fs/xfs/libxfs/xfs_log_format.h
 +++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -961,6 +961,7 @@ struct xfs_icreate_log {
- #define XFS_ATTRI_OP_FLAGS_NVREPLACE	4	/* Replace attr name and val */
- #define XFS_ATTRI_OP_FLAGS_NVREMOVE	5	/* Remove attr w/ vlookup */
- #define XFS_ATTRI_OP_FLAGS_NVSET	6	/* Set attr with w/ vlookup */
-+#define XFS_ATTRI_OP_FLAGS_NVREPLACEXXX	7	/* Replace attr name and val */
- #define XFS_ATTRI_OP_FLAGS_TYPE_MASK	0xFF	/* Flags type mask */
+@@ -115,11 +115,11 @@ struct xfs_unmount_log_format {
+ #define XLOG_REG_TYPE_BUD_FORMAT	26
+ #define XLOG_REG_TYPE_ATTRI_FORMAT	27
+ #define XLOG_REG_TYPE_ATTRD_FORMAT	28
+-#define XLOG_REG_TYPE_ATTR_NAME	29
++#define XLOG_REG_TYPE_ATTR_NAME		29
+ #define XLOG_REG_TYPE_ATTR_VALUE	30
+ #define XLOG_REG_TYPE_ATTR_NEWNAME	31
+-#define XLOG_REG_TYPE_MAX		31
+-
++#define XLOG_REG_TYPE_ATTR_NEWVALUE	32
++#define XLOG_REG_TYPE_MAX		32
  
  /*
+  * Flags to log operation header
+@@ -980,7 +980,13 @@ struct xfs_icreate_log {
+ struct xfs_attri_log_format {
+ 	uint16_t	alfi_type;	/* attri log item type */
+ 	uint16_t	alfi_size;	/* size of this item */
+-	uint32_t	__pad;		/* pad to 64 bit aligned */
++
++	/*
++	 * For NVREPLACE, this is the length of the new xattr value.
++	 * alfi_value_len contains the length of the old xattr value.
++	 */
++	uint32_t	alfi_newvalue_len;
++
+ 	uint64_t	alfi_id;	/* attri identifier */
+ 	uint64_t	alfi_ino;	/* the inode for this attr operation */
+ 	uint32_t	alfi_op_flags;	/* marks the op as a set or remove */
 diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index 83e83aa05f94..0dd49c5f235a 100644
+index 0dd49c5f235a..57cc426b1e22 100644
 --- a/fs/xfs/xfs_attr_item.c
 +++ b/fs/xfs/xfs_attr_item.c
-@@ -403,7 +403,10 @@ xfs_attr_log_item(
- 	attrp->alfi_op_flags = attr->xattri_op_flags;
- 	attrp->alfi_value_len = attr->xattri_nameval->value.i_len;
+@@ -78,7 +78,9 @@ xfs_attri_log_nameval_alloc(
+ 	const void			*newname,
+ 	unsigned int			newname_len,
+ 	const void			*value,
+-	unsigned int			value_len)
++	unsigned int			value_len,
++	const void			*newvalue,
++	unsigned int			newvalue_len)
+ {
+ 	struct xfs_attri_log_nameval	*nv;
  
--	if (xfs_attr_log_item_op(attrp) == XFS_ATTRI_OP_FLAGS_NVREPLACE) {
-+	if (xfs_attr_log_item_op(attrp) == XFS_ATTRI_OP_FLAGS_NVREPLACEXXX) {
-+		attrp->alfi_oldname_len = attr->xattri_nameval->name.i_len;
-+		attrp->alfi_newname_len = attr->xattri_nameval->newname.i_len;
-+	} else if (xfs_attr_log_item_op(attrp) == XFS_ATTRI_OP_FLAGS_NVREPLACE) {
+@@ -87,7 +89,8 @@ xfs_attri_log_nameval_alloc(
+ 	 * this. But kvmalloc() utterly sucks, so we use our own version.
+ 	 */
+ 	nv = xlog_kvmalloc(sizeof(struct xfs_attri_log_nameval) +
+-					name_len + newname_len + value_len);
++					name_len + newname_len + value_len +
++					newvalue_len);
+ 
+ 	nv->name.i_addr = nv + 1;
+ 	nv->name.i_len = name_len;
+@@ -114,6 +117,17 @@ xfs_attri_log_nameval_alloc(
+ 	}
+ 	nv->value.i_type = XLOG_REG_TYPE_ATTR_VALUE;
+ 
++	if (newvalue_len) {
++		nv->newvalue.i_addr = nv->name.i_addr + newname_len +
++							name_len + value_len;
++		nv->newvalue.i_len = newvalue_len;
++		memcpy(nv->newvalue.i_addr, newvalue, newvalue_len);
++	} else {
++		nv->newvalue.i_addr = NULL;
++		nv->newvalue.i_len = 0;
++	}
++	nv->newvalue.i_type = XLOG_REG_TYPE_ATTR_NEWVALUE;
++
+ 	refcount_set(&nv->refcount, 1);
+ 	return nv;
+ }
+@@ -168,6 +182,11 @@ xfs_attri_item_size(
+ 		*nvecs += 1;
+ 		*nbytes += xlog_calc_iovec_len(nv->value.i_len);
+ 	}
++
++	if (nv->newvalue.i_len) {
++		*nvecs += 1;
++		*nbytes += xlog_calc_iovec_len(nv->newvalue.i_len);
++	}
+ }
+ 
+ /*
+@@ -203,6 +222,9 @@ xfs_attri_item_format(
+ 	if (nv->value.i_len > 0)
+ 		attrip->attri_format.alfi_size++;
+ 
++	if (nv->newvalue.i_len > 0)
++		attrip->attri_format.alfi_size++;
++
+ 	xlog_copy_iovec(lv, &vecp, XLOG_REG_TYPE_ATTRI_FORMAT,
+ 			&attrip->attri_format,
+ 			sizeof(struct xfs_attri_log_format));
+@@ -213,6 +235,9 @@ xfs_attri_item_format(
+ 
+ 	if (nv->value.i_len > 0)
+ 		xlog_copy_from_iovec(lv, &vecp, &nv->value);
++
++	if (nv->newvalue.i_len > 0)
++		xlog_copy_from_iovec(lv, &vecp, &nv->newvalue);
+ }
+ 
+ /*
+@@ -406,6 +431,7 @@ xfs_attr_log_item(
+ 	if (xfs_attr_log_item_op(attrp) == XFS_ATTRI_OP_FLAGS_NVREPLACEXXX) {
  		attrp->alfi_oldname_len = attr->xattri_nameval->name.i_len;
  		attrp->alfi_newname_len = attr->xattri_nameval->newname.i_len;
- 	} else {
-@@ -564,6 +567,7 @@ xfs_attri_validate(
++		attrp->alfi_newvalue_len = attr->xattri_nameval->newvalue.i_len;
+ 	} else if (xfs_attr_log_item_op(attrp) == XFS_ATTRI_OP_FLAGS_NVREPLACE) {
+ 		attrp->alfi_oldname_len = attr->xattri_nameval->name.i_len;
+ 		attrp->alfi_newname_len = attr->xattri_nameval->newname.i_len;
+@@ -455,7 +481,8 @@ xfs_attr_create_intent(
+ 		 */
+ 		attr->xattri_nameval = xfs_attri_log_nameval_alloc(args->name,
+ 				args->namelen, args->new_name,
+-				args->new_namelen, args->value, args->valuelen);
++				args->new_namelen, args->value, args->valuelen,
++				args->new_value, args->new_valuelen);
+ 	}
+ 
+ 	attrip = xfs_attri_init(mp, attr->xattri_nameval);
+@@ -556,6 +583,8 @@ xfs_attri_validate(
+ 		if (attrp->alfi_name_len == 0 ||
+ 		    attrp->alfi_name_len > XATTR_NAME_MAX)
+ 			return false;
++		if (attrp->alfi_newvalue_len != 0)
++			return false;
+ 		break;
+ 	case XFS_ATTRI_OP_FLAGS_SET:
+ 	case XFS_ATTRI_OP_FLAGS_REPLACE:
+@@ -566,6 +595,8 @@ xfs_attri_validate(
+ 			return false;
  		if (attrp->alfi_value_len > XATTR_SIZE_MAX)
  			return false;
++		if (attrp->alfi_newvalue_len != 0)
++			return false;
  		break;
-+	case XFS_ATTRI_OP_FLAGS_NVREPLACEXXX:
+ 	case XFS_ATTRI_OP_FLAGS_NVREPLACEXXX:
  	case XFS_ATTRI_OP_FLAGS_NVREPLACE:
- 		if (attrp->alfi_oldname_len == 0 ||
- 		    attrp->alfi_oldname_len > XATTR_NAME_MAX)
-@@ -649,6 +653,7 @@ xfs_attri_item_recover(
+@@ -577,6 +608,8 @@ xfs_attri_validate(
+ 			return false;
+ 		if (attrp->alfi_value_len > XATTR_SIZE_MAX)
+ 			return false;
++		if (attrp->alfi_newvalue_len > XATTR_SIZE_MAX)
++			return false;
+ 		break;
+ 	default:
+ 		return false;
+@@ -652,8 +685,11 @@ xfs_attri_item_recover(
+ 	ASSERT(xfs_sb_version_haslogxattrs(&mp->m_sb));
  
  	switch (attr->xattri_op_flags) {
- 	case XFS_ATTRI_OP_FLAGS_NVSET:
-+	case XFS_ATTRI_OP_FLAGS_NVREPLACEXXX:
+-	case XFS_ATTRI_OP_FLAGS_NVSET:
+ 	case XFS_ATTRI_OP_FLAGS_NVREPLACEXXX:
++		args->new_value = nv->newvalue.i_addr;
++		args->new_valuelen = nv->newvalue.i_len;
++		fallthrough;
++	case XFS_ATTRI_OP_FLAGS_NVSET:
  		args->op_flags |= XFS_DA_OP_VLOOKUP;
  		fallthrough;
  	case XFS_ATTRI_OP_FLAGS_SET:
-@@ -747,7 +752,10 @@ xfs_attri_item_relog(
- 	new_attrp->alfi_ino = old_attrp->alfi_ino;
- 	new_attrp->alfi_op_flags = old_attrp->alfi_op_flags;
- 	new_attrp->alfi_value_len = old_attrp->alfi_value_len;
--	if (xfs_attr_log_item_op(old_attrp) == XFS_ATTRI_OP_FLAGS_NVREPLACE) {
-+	if (xfs_attr_log_item_op(old_attrp) == XFS_ATTRI_OP_FLAGS_NVREPLACEXXX) {
-+		new_attrp->alfi_newname_len = old_attrp->alfi_newname_len;
-+		new_attrp->alfi_oldname_len = old_attrp->alfi_oldname_len;
-+	} else if (xfs_attr_log_item_op(old_attrp) == XFS_ATTRI_OP_FLAGS_NVREPLACE) {
+@@ -755,6 +791,7 @@ xfs_attri_item_relog(
+ 	if (xfs_attr_log_item_op(old_attrp) == XFS_ATTRI_OP_FLAGS_NVREPLACEXXX) {
  		new_attrp->alfi_newname_len = old_attrp->alfi_newname_len;
  		new_attrp->alfi_oldname_len = old_attrp->alfi_oldname_len;
- 	} else {
-@@ -815,6 +823,7 @@ xlog_recover_attri_commit_pass2(
++		new_attrp->alfi_newvalue_len = old_attrp->alfi_newvalue_len;
+ 	} else if (xfs_attr_log_item_op(old_attrp) == XFS_ATTRI_OP_FLAGS_NVREPLACE) {
+ 		new_attrp->alfi_newname_len = old_attrp->alfi_newname_len;
+ 		new_attrp->alfi_oldname_len = old_attrp->alfi_oldname_len;
+@@ -781,10 +818,12 @@ xlog_recover_attri_commit_pass2(
+ 	struct xfs_attri_log_format     *attri_formatp;
+ 	struct xfs_attri_log_nameval	*nv;
+ 	const void			*attr_value = NULL;
++	const void			*attr_newvalue = NULL;
+ 	const void			*attr_name;
+ 	size_t				len;
+ 	const void			*attr_newname = NULL;
+ 	unsigned int			name_len = 0, newname_len = 0;
++	unsigned int			value_len = 0, newvalue_len = 0;
+ 	int				op, i = 0;
+ 
+ 	/* Validate xfs_attri_log_format before the large memory allocation */
+@@ -814,6 +853,7 @@ xlog_recover_attri_commit_pass2(
+ 			return -EFSCORRUPTED;
  		}
  		name_len = attri_formatp->alfi_name_len;
++		value_len = attri_formatp->alfi_value_len;
  		break;
-+	case XFS_ATTRI_OP_FLAGS_NVREPLACEXXX:
+ 	case XFS_ATTRI_OP_FLAGS_REMOVE:
+ 		if (item->ri_total != 2) {
+@@ -822,16 +862,19 @@ xlog_recover_attri_commit_pass2(
+ 			return -EFSCORRUPTED;
+ 		}
+ 		name_len = attri_formatp->alfi_name_len;
++		value_len = attri_formatp->alfi_value_len;
+ 		break;
+ 	case XFS_ATTRI_OP_FLAGS_NVREPLACEXXX:
  	case XFS_ATTRI_OP_FLAGS_NVREPLACE:
- 		if (item->ri_total != 3 && item->ri_total != 4) {
+-		if (item->ri_total != 3 && item->ri_total != 4) {
++		if (item->ri_total < 3 || item->ri_total > 5) {
  			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+ 					     attri_formatp, len);
+ 			return -EFSCORRUPTED;
+ 		}
+ 		name_len = attri_formatp->alfi_oldname_len;
+ 		newname_len = attri_formatp->alfi_newname_len;
++		value_len = attri_formatp->alfi_value_len;
++		newvalue_len = attri_formatp->alfi_newvalue_len;
+ 		break;
+ 	default:
+ 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+@@ -876,16 +919,27 @@ xlog_recover_attri_commit_pass2(
+ 		i++;
+ 	}
+ 
+-
+ 	/* Validate the attr value, if present */
+-	if (attri_formatp->alfi_value_len != 0) {
+-		if (item->ri_buf[i].i_len != xlog_calc_iovec_len(attri_formatp->alfi_value_len)) {
++	if (value_len > 0) {
++		if (item->ri_buf[i].i_len != xlog_calc_iovec_len(value_len)) {
+ 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+ 					attri_formatp, len);
+ 			return -EFSCORRUPTED;
+ 		}
+ 
+ 		attr_value = item->ri_buf[i].i_addr;
++		i++;
++	}
++
++	/* Validate the old attr value, if present */
++	if (newvalue_len > 0) {
++		if (item->ri_buf[i].i_len != xlog_calc_iovec_len(newvalue_len)) {
++			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
++					attri_formatp, len);
++			return -EFSCORRUPTED;
++		}
++
++		attr_newvalue = item->ri_buf[i].i_addr;
+ 	}
+ 
+ 	/*
+@@ -894,8 +948,8 @@ xlog_recover_attri_commit_pass2(
+ 	 * reference.
+ 	 */
+ 	nv = xfs_attri_log_nameval_alloc(attr_name, name_len, attr_newname,
+-			newname_len, attr_value,
+-			attri_formatp->alfi_value_len);
++			newname_len, attr_value, attri_formatp->alfi_value_len,
++			attr_newvalue, newvalue_len);
+ 
+ 	attrip = xfs_attri_init(mp, nv);
+ 	memcpy(&attrip->attri_format, attri_formatp, len);
+diff --git a/fs/xfs/xfs_attr_item.h b/fs/xfs/xfs_attr_item.h
+index e374712ba06b..d15fe4b1ce28 100644
+--- a/fs/xfs/xfs_attr_item.h
++++ b/fs/xfs/xfs_attr_item.h
+@@ -13,8 +13,9 @@ struct kmem_zone;
+ 
+ struct xfs_attri_log_nameval {
+ 	struct xfs_log_iovec	name;
+-	struct xfs_log_iovec	newname;
++	struct xfs_log_iovec	newname;	/* NVREPLACE only */
+ 	struct xfs_log_iovec	value;
++	struct xfs_log_iovec	newvalue;	/* NVREPLACE only */
+ 	refcount_t		refcount;
+ 
+ 	/* name and value follow the end of this struct */
 
