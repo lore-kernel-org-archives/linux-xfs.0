@@ -2,30 +2,30 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04601C64EC4
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Mar 2023 06:43:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40D18C7EE2F
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Mar 2023 06:43:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229596AbjCCGnc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Mar 2023 01:43:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55364 "EHLO
+        id S229617AbjCCGnd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Mar 2023 01:43:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229591AbjCCGn1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2023 01:43:27 -0500
+        with ESMTP id S229486AbjCCGn3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2023 01:43:29 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9727DEB7A;
-        Thu,  2 Mar 2023 22:43:21 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8D2C43456;
+        Thu,  2 Mar 2023 22:43:23 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=EikGI9w+uPXjJ4dtrLFAW51qvClSS07G2CZElAuAwUM=; b=pFoSD5j/ApLVQvdntttTFaO3z9
-        SlGGg8n7vFMOzmPPCx5rPn16IOZV3SJwQtp9wXcBXGqCZJwNV2wV5vzC9viHEy3TdZ8pNCeSuEUjy
-        XoaaO7ffk9b9Bypr53t5V0V8bTwS6FWe5zmKt2UUCEMOxayIon/Z7fA77xqjkjn/vUjZfntfDULDL
-        uYwnbeDNu5SJN4CR2mmBHsgwYwzjpnFJqFtnbC9TaPaVMT6Gqbq68fB/KUZUI29kRlAFwYZtTh/ku
-        pNSfMwOVs+ptQcPIXkFyeF28R5iSGybOkAXxSjIOKFQM43Uf2/ovmjpZQXuXxwpJEodwy4sqnfPyr
-        SyIPkIKg==;
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=qukgUsnL0HeweA+cvebxOaoYEWplxTmUTdjr+sGSOeg=; b=l3W1QHi1OdaKVKRklBDMjjhQbY
+        HmzPnhRtHxtr+dIyEARLwn/wqx7vxTmOm0BVToG+i7PUA9u6R05Euae9CEcZtgobqoktJc9hNzF2R
+        0UGE2x1nZFmtpjUjTCja1QsIsE+SrwxoemZESUUrnDgkiDpaNSmVuSVsAjDC16BfzGXmatB7fZwe/
+        ehUkIIeiCOXZxKKORYJbuGnAj7Jm3iTXk1f/Qe0zUb31gj1pw61Ssq6sEZ8jfX2QNyC3bsSB1hQyp
+        WizaJv+FkCqfzr5lQWATM27B2Cw4C+f1nqXP/+8xyWyRggqde9OHuq8gaRXhnsQYIwIL4lfGwD7RV
+        wTjwN9Hg==;
 Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pXz8P-002wO8-KJ; Fri, 03 Mar 2023 06:43:17 +0000
+        id 1pXz8P-002wO4-A5; Fri, 03 Mar 2023 06:43:17 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     Christoph Hellwig <hch@infradead.org>,
         "Darrick J . Wong" <djwong@kernel.org>
@@ -33,68 +33,39 @@ Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Andreas Gruenbacher <agruenba@redhat.com>,
         Gao Xiang <xiang@kernel.org>
-Subject: [PATCH 2/2] iomap: Use folio_copy_tail()
-Date:   Fri,  3 Mar 2023 06:43:15 +0000
-Message-Id: <20230303064315.701090-3-willy@infradead.org>
+Subject: [PATCH 0/2] folio_copy_tail
+Date:   Fri,  3 Mar 2023 06:43:13 +0000
+Message-Id: <20230303064315.701090-1-willy@infradead.org>
 X-Mailer: git-send-email 2.37.1
-In-Reply-To: <20230303064315.701090-1-willy@infradead.org>
-References: <20230303064315.701090-1-willy@infradead.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The iomap handling of tails doesn't support multi-page folios, so
-convert it to call folio_copy_tail(), which does.
+I'm trying to make it easy & efficient for a filesystem to read its file
+tails into a folio.  iomap's implementation was pretty good, but had
+some limitations (eg tails couldn't cross a page boundary).
 
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
----
- fs/iomap/buffered-io.c | 23 ++++++-----------------
- 1 file changed, 6 insertions(+), 17 deletions(-)
+This should be an all-singing, all-dancing implementation which copies
+the correct part of the buffer into the correct part of the folio and
+zeroes the remainder of the folio.  It should work with highmem, but
+the calculations are a bit tricky and I may have got something wrong.
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 10a203515583..d08edf2de19c 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -215,31 +215,20 @@ static int iomap_read_inline_data(const struct iomap_iter *iter,
- {
- 	struct iomap_page *iop;
- 	const struct iomap *iomap = iomap_iter_srcmap(iter);
--	size_t size = i_size_read(iter->inode) - iomap->offset;
--	size_t poff = offset_in_page(iomap->offset);
--	size_t offset = offset_in_folio(folio, iomap->offset);
--	void *addr;
-+	loff_t pos = iomap->offset;
- 
- 	if (folio_test_uptodate(folio))
- 		return 0;
- 
--	if (WARN_ON_ONCE(size > PAGE_SIZE - poff))
--		return -EIO;
--	if (WARN_ON_ONCE(size > PAGE_SIZE -
--			 offset_in_page(iomap->inline_data)))
--		return -EIO;
--	if (WARN_ON_ONCE(size > iomap->length))
--		return -EIO;
--	if (offset > 0)
-+	if (pos > folio_pos(folio))
- 		iop = iomap_page_create(iter->inode, folio, iter->flags);
- 	else
- 		iop = to_iomap_page(folio);
- 
--	addr = kmap_local_folio(folio, offset);
--	memcpy(addr, iomap->inline_data, size);
--	memset(addr + size, 0, PAGE_SIZE - poff - size);
--	kunmap_local(addr);
--	iomap_set_range_uptodate(folio, iop, offset, PAGE_SIZE - poff);
-+	folio_copy_tail(folio, pos, iomap->inline_data,
-+			iomap->length);
-+	iomap_set_range_uptodate(folio, iop, pos - folio_pos(folio),
-+			folio_size(folio) - offset_in_folio(folio, pos));
- 	return 0;
- }
- 
+For some reason I'm currently running an XFS test against it, even
+though I know XFS doesn't support inline data.  If there's good feedback,
+I'll take a look at converting udf_adinicb_readpage() and other similar
+functions.
+
+Matthew Wilcox (Oracle) (2):
+  filemap: Add folio_copy_tail()
+  iomap: Use folio_copy_tail()
+
+ fs/iomap/buffered-io.c  | 23 +++++------------
+ include/linux/pagemap.h |  1 +
+ mm/filemap.c            | 56 +++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 63 insertions(+), 17 deletions(-)
+
 -- 
 2.39.1
 
