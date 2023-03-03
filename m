@@ -2,89 +2,90 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48D0BC7EE2F
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Mar 2023 16:54:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A0F2C7EE2D
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Mar 2023 17:11:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231397AbjCCQyn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Mar 2023 11:54:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38196 "EHLO
+        id S230244AbjCCRLX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Mar 2023 12:11:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58464 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230157AbjCCQym (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2023 11:54:42 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06F521164E;
-        Fri,  3 Mar 2023 08:54:07 -0800 (PST)
+        with ESMTP id S229974AbjCCRLW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Mar 2023 12:11:22 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A458A1C33E
+        for <linux-xfs@vger.kernel.org>; Fri,  3 Mar 2023 09:11:21 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 51605B81902;
-        Fri,  3 Mar 2023 16:53:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EAF03C433EF;
-        Fri,  3 Mar 2023 16:53:00 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 46D70B81907
+        for <linux-xfs@vger.kernel.org>; Fri,  3 Mar 2023 17:11:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E03EDC433EF;
+        Fri,  3 Mar 2023 17:11:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677862381;
-        bh=2/MxGsA+UeJoeA0qwShKf6lp6y22SPH559LMbaOGOUc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Fy8mUh8ElUxKUrQu+GRfoNvC6ZR30x5Qv1MpnJHepd3jPizO5xu0Av5rz58V1z2c1
-         wSGjGASRIwKn7tYhJUGFdludgRmW7l4z7zUljb+qMLenmvY/HLlhjciprzRwsw0Xx6
-         KT05LR8AGH5lNYPhT6xuVBXLBVbi/vAMWIFb91Wi+TfsASsGP+3aTQKA2e+P8ped8N
-         KULknt2iIyjBpzgHFg/ReRS34jeBtxky9u4iTD3M/T2XoZNNRFBCveAqlK4pB5GbFf
-         E0RBumj48mLkl4U2UhehD1j75tWcTryyJOHJJ11UL30aj4gn/ObA/d+jErlQxW5eJs
-         nALyEce2ffbbA==
-Date:   Fri, 3 Mar 2023 08:53:00 -0800
+        s=k20201202; t=1677863478;
+        bh=NvWpO+h/eXlqE+iGY/HgaJ5alEyWdW9h26PLoG8SOZ8=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=MMxBbOz8fQJC0yQppYf8mx0VFwV27WjF+wjMdO4hYS9BtjrK1SoSq2LlNGt/dFYAg
+         jzSQt7wN4Mf0KtOC4gILgtXu6S8TfKoGOm9mUxSdCtdYTV4vY1bFCT20ty5nF4Hxhg
+         yDnQH8rSxZnq74u67reZnnCvsh833VaaYcSAwUcYBpmvGYa1QuP2q0u9CDiOcqHlrI
+         DQOGsel4P/HIHHlPq5fcoTsaQiTEr8mZyiAl4dM5nHyKad4LVftfWz3fzG57Icawxt
+         o1e60h51zvz5YTlaVhlS83e4jZhtDmBv/0yTWQtz+TiKkRVGF+7vjhuUD/fmYaib0c
+         ajIzPEkPdR7tw==
+Subject: [PATCHSET v9r2d1.1 00/13] xfs: remove parent pointer hashing
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Stefan Roesch <shr@fb.com>, io-uring@vger.kernel.org,
-        kernel-team@fb.com, linux-mm@kvack.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, david@fromorbit.com, jack@suse.cz,
-        hch@infradead.org, axboe@kernel.dk, Christoph Hellwig <hch@lst.de>
-Subject: Re: [RESEND PATCH v9 04/14] iomap: Add flags parameter to
- iomap_page_create()
-Message-ID: <ZAIl7JfPXivtN8qm@magnolia>
-References: <20220623175157.1715274-1-shr@fb.com>
- <20220623175157.1715274-5-shr@fb.com>
- <ZAF8vk6Jns/40bc0@casper.infradead.org>
+To:     djwong@kernel.org
+Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
+Date:   Fri, 03 Mar 2023 09:11:18 -0800
+Message-ID: <167786347827.1543331.2803518928321606576.stgit@magnolia>
+In-Reply-To: <167657875861.3475422.10929602650869169128.stgit@magnolia>
+References: <167657875861.3475422.10929602650869169128.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZAF8vk6Jns/40bc0@casper.infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Mar 03, 2023 at 04:51:10AM +0000, Matthew Wilcox wrote:
-> On Thu, Jun 23, 2022 at 10:51:47AM -0700, Stefan Roesch wrote:
-> > Add the kiocb flags parameter to the function iomap_page_create().
-> > Depending on the value of the flags parameter it enables different gfp
-> > flags.
-> > 
-> > No intended functional changes in this patch.
-> 
-> [...]
-> 
-> > @@ -226,7 +234,7 @@ static int iomap_read_inline_data(const struct iomap_iter *iter,
-> >  	if (WARN_ON_ONCE(size > iomap->length))
-> >  		return -EIO;
-> >  	if (offset > 0)
-> > -		iop = iomap_page_create(iter->inode, folio);
-> > +		iop = iomap_page_create(iter->inode, folio, iter->flags);
-> >  	else
-> >  		iop = to_iomap_page(folio);
-> 
-> I really don't like what this change has done to this file.  I'm
-> modifying this function, and I start thinking "Well, hang on, if
-> flags has IOMAP_NOWAIT set, then GFP_NOWAIT can fail, and iop
-> will be NULL, so we'll end up marking the entire folio uptodate
-> when really we should only be marking some blocks uptodate, so
-> we should really be failing the entire read if the allocation
-> failed, but maybe it's OK because IOMAP_NOWAIT is never set in
-> this path".
-> 
-> I don't know how we fix this.  Maybe return ERR_PTR(-ENOMEM) or
-> -EAGAIN if the memory allocation fails (leaving the NULL return
-> for "we don't need an iop").  Thoughts?
+Hi all,
 
-I don't see any problem with that, aside from being pre-coffee and on
-vacation for the rest of today. ;)
+Dave Chinner pointed out (a bit too subtly) that hashing the dirent name
+to try to squash it into the parent pointer xattr name is unnecessary
+because we could simply make the xattr matching predicate compare names.
+Do that instead and drop the hashing.
 
---D
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=pptrs-vlookup
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=pptrs-vlookup
+---
+ fs/xfs/Kconfig                 |    1 
+ fs/xfs/libxfs/xfs_attr.c       |   39 +++--
+ fs/xfs/libxfs/xfs_attr_leaf.c  |   41 +++++
+ fs/xfs/libxfs/xfs_da_btree.h   |    6 +
+ fs/xfs/libxfs/xfs_da_format.h  |   34 ++---
+ fs/xfs/libxfs/xfs_log_format.h |   30 +++-
+ fs/xfs/libxfs/xfs_parent.c     |  302 +++++++++++++---------------------------
+ fs/xfs/libxfs/xfs_parent.h     |   16 --
+ fs/xfs/libxfs/xfs_trans_resv.c |    1 
+ fs/xfs/scrub/dir.c             |   38 +----
+ fs/xfs/scrub/parent.c          |   61 +-------
+ fs/xfs/scrub/parent_repair.c   |   34 +----
+ fs/xfs/xfs_attr_item.c         |  217 ++++++++++++++++++++---------
+ fs/xfs/xfs_attr_item.h         |    3 
+ fs/xfs/xfs_linux.h             |    1 
+ fs/xfs/xfs_mount.c             |   13 --
+ fs/xfs/xfs_mount.h             |    3 
+ fs/xfs/xfs_ondisk.h            |    3 
+ fs/xfs/xfs_sha512.h            |   42 ------
+ fs/xfs/xfs_super.c             |    3 
+ fs/xfs/xfs_xattr.c             |    5 +
+ 21 files changed, 383 insertions(+), 510 deletions(-)
+ delete mode 100644 fs/xfs/xfs_sha512.h
+
