@@ -2,44 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5E5BC61DA4
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Mar 2023 01:32:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 686A5C61DA4
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Mar 2023 01:32:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229812AbjCGBcS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Mar 2023 20:32:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59238 "EHLO
+        id S229968AbjCGBct (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Mar 2023 20:32:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59350 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229806AbjCGBcM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2023 20:32:12 -0500
+        with ESMTP id S229917AbjCGBcR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Mar 2023 20:32:17 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09031637CB;
-        Mon,  6 Mar 2023 17:31:30 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3DEA570BF;
+        Mon,  6 Mar 2023 17:31:46 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 89630611B3;
-        Tue,  7 Mar 2023 01:31:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2BE7C433EF;
-        Tue,  7 Mar 2023 01:31:28 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 61F4460F52;
+        Tue,  7 Mar 2023 01:31:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7239C4339B;
+        Tue,  7 Mar 2023 01:31:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678152689;
-        bh=+DJ2l186OwWVqyaoqJJDL4Cqj5GAmOsrAt20qhbHXUs=;
+        s=k20201202; t=1678152705;
+        bh=BA+eGfJHBTr9xKaR9bgroVLxc1fWUQvHxp/+tX9zysA=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=El6xT5EYYxz3rkvIJA8n3I5gIkKVTTzYcExqZFRiXvMmE/7+XBgGuVy+5AUIvbEhr
-         W5PChz2VnomHdYOYfvSVG8QiHal9Hd/3b2J28Z60W3uhfvUd3aeQwDdQL8E7E7aSPe
-         ORzdZAm8472hf0VdHSzyeh0hAOZGW8Ad2d2HrioRaw37LcmlpyDERdcATuyaXEk1JU
-         RkrqSJt9dDIlvwfbQzxcg8zzZlWQ9Li49amr6tsppbNwY9a4uoQOh58rW/RhlKQRPP
-         IzCHCeAM/XVHun4OIPO1pWJLwF2OQUu01F+cLW+0pVxeqPQqCB0H+FSFhQLUEvpXRb
-         xp2tN+wXju0KQ==
-Subject: [PATCH 07/14] xfs: document pageable kernel memory
+        b=TvuR8MDDxmt+w9OfwVwZyWnrhsxjrsWPIzl63gWXMcJ6PfRo8jfWQXB4Y4baGr035
+         rHshcYi74iJQXCHzo0xqqZ2X/VsXsCBLdsy8bufjn7i9gYjbBtXdnpjzXBMjTKURpS
+         EvyRNRAmw9RXZLkEvHxpKNNL2pflRlup/375MHBInnUNAurUx9Cfoj6CZHKlo0UqQE
+         MAd6Jm4sjFGjRTHAeERtRKYsaQGhMMEczdBkNGYiIaLgab15odQIdNOyGZ2nbjoNgZ
+         8M6isMGi6+ksH+Un57l4Lda8Hfj4RukQkSR2yGIVz6JeZpINzC6TkAaNdRrzksmW+q
+         6EZ75U/bNLwFQ==
+Subject: [PATCH 10/14] xfs: document full filesystem scans for online fsck
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, willy@infradead.org,
         chandan.babu@oracle.com, allison.henderson@oracle.com,
         linux-fsdevel@vger.kernel.org, hch@infradead.org,
         catherine.hoang@oracle.com, david@fromorbit.com
-Date:   Mon, 06 Mar 2023 17:31:28 -0800
-Message-ID: <167815268848.3750278.17454613426313755372.stgit@magnolia>
+Date:   Mon, 06 Mar 2023 17:31:45 -0800
+Message-ID: <167815270532.3750278.5999569049341632960.stgit@magnolia>
 In-Reply-To: <167815264897.3750278.15092544376893521026.stgit@magnolia>
 References: <167815264897.3750278.15092544376893521026.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -52,529 +52,706 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add a discussion of pageable kernel memory, since online fsck needs
-quite a bit more memory than most other parts of the filesystem to stage
-records and other information.
+Certain parts of the online fsck code need to scan every file in the
+entire filesystem.  It is not acceptable to block the entire filesystem
+while this happens, which means that we need to be clever in allowing
+scans to coordinate with ongoing filesystem updates.  We also need to
+hook the filesystem so that regular updates propagate to the staging
+records.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- .../filesystems/xfs-online-fsck-design.rst         |  500 ++++++++++++++++++++
- 1 file changed, 500 insertions(+)
+ .../filesystems/xfs-online-fsck-design.rst         |  681 ++++++++++++++++++++
+ 1 file changed, 681 insertions(+)
 
 
 diff --git a/Documentation/filesystems/xfs-online-fsck-design.rst b/Documentation/filesystems/xfs-online-fsck-design.rst
-index e095264b591e..21f0638ab69d 100644
+index 83602fac7c5a..ef19b4debc62 100644
 --- a/Documentation/filesystems/xfs-online-fsck-design.rst
 +++ b/Documentation/filesystems/xfs-online-fsck-design.rst
-@@ -413,6 +413,8 @@ Algorithms") of Srinivasan.
- However, any data structure builder that maintains a resource lock for the
- duration of the repair is *always* an offline algorithm.
- 
-+.. _secondary_metadata:
-+
- Secondary Metadata
- ``````````````````
- 
-@@ -1832,3 +1834,501 @@ Scrub teardown disables all static keys obtained by ``xchk_fsgates_enable``.
- 
- For more information, please see the kernel documentation of
- Documentation/staging/static-keys.rst.
-+
-+.. _xfile:
-+
-+Pageable Kernel Memory
-+----------------------
-+
-+Some online checking functions work by scanning the filesystem to build a
-+shadow copy of an ondisk metadata structure in memory and comparing the two
-+copies.
-+For online repair to rebuild a metadata structure, it must compute the record
-+set that will be stored in the new structure before it can persist that new
-+structure to disk.
-+Ideally, repairs complete with a single atomic commit that introduces
-+a new data structure.
-+To meet these goals, the kernel needs to collect a large amount of information
-+in a place that doesn't require the correct operation of the filesystem.
-+
-+Kernel memory isn't suitable because:
-+
-+* Allocating a contiguous region of memory to create a C array is very
-+  difficult, especially on 32-bit systems.
-+
-+* Linked lists of records introduce double pointer overhead which is very high
-+  and eliminate the possibility of indexed lookups.
-+
-+* Kernel memory is pinned, which can drive the system into OOM conditions.
-+
-+* The system might not have sufficient memory to stage all the information.
-+
-+At any given time, online fsck does not need to keep the entire record set in
-+memory, which means that individual records can be paged out if necessary.
-+Continued development of online fsck demonstrated that the ability to perform
-+indexed data storage would also be very useful.
-+Fortunately, the Linux kernel already has a facility for byte-addressable and
-+pageable storage: tmpfs.
-+In-kernel graphics drivers (most notably i915) take advantage of tmpfs files
-+to store intermediate data that doesn't need to be in memory at all times, so
-+that usage precedent is already established.
-+Hence, the ``xfile`` was born!
-+
-++--------------------------------------------------------------------------+
-+| **Historical Sidebar**:                                                  |
-++--------------------------------------------------------------------------+
-+| The first edition of online repair inserted records into a new btree as  |
-+| it found them, which failed because filesystem could shut down with a    |
-+| built data structure, which would be live after recovery finished.       |
-+|                                                                          |
-+| The second edition solved the half-rebuilt structure problem by storing  |
-+| everything in memory, but frequently ran the system out of memory.       |
-+|                                                                          |
-+| The third edition solved the OOM problem by using linked lists, but the  |
-+| memory overhead of the list pointers was extreme.                        |
-++--------------------------------------------------------------------------+
-+
-+xfile Access Models
-+```````````````````
-+
-+A survey of the intended uses of xfiles suggested these use cases:
-+
-+1. Arrays of fixed-sized records (space management btrees, directory and
-+   extended attribute entries)
-+
-+2. Sparse arrays of fixed-sized records (quotas and link counts)
-+
-+3. Large binary objects (BLOBs) of variable sizes (directory and extended
-+   attribute names and values)
-+
-+4. Staging btrees in memory (reverse mapping btrees)
-+
-+5. Arbitrary contents (realtime space management)
-+
-+To support the first four use cases, high level data structures wrap the xfile
-+to share functionality between online fsck functions.
-+The rest of this section discusses the interfaces that the xfile presents to
-+four of those five higher level data structures.
-+The fifth use case is discussed in the :ref:`realtime summary <rtsummary>` case
-+study.
-+
-+The most general storage interface supported by the xfile enables the reading
-+and writing of arbitrary quantities of data at arbitrary offsets in the xfile.
-+This capability is provided by ``xfile_pread`` and ``xfile_pwrite`` functions,
-+which behave similarly to their userspace counterparts.
-+XFS is very record-based, which suggests that the ability to load and store
-+complete records is important.
-+To support these cases, a pair of ``xfile_obj_load`` and ``xfile_obj_store``
-+functions are provided to read and persist objects into an xfile.
-+They are internally the same as pread and pwrite, except that they treat any
-+error as an out of memory error.
-+For online repair, squashing error conditions in this manner is an acceptable
-+behavior because the only reaction is to abort the operation back to userspace.
-+All five xfile usecases can be serviced by these four functions.
-+
-+However, no discussion of file access idioms is complete without answering the
-+question, "But what about mmap?"
-+It is convenient to access storage directly with pointers, just like userspace
-+code does with regular memory.
-+Online fsck must not drive the system into OOM conditions, which means that
-+xfiles must be responsive to memory reclamation.
-+tmpfs can only push a pagecache folio to the swap cache if the folio is neither
-+pinned nor locked, which means the xfile must not pin too many folios.
-+
-+Short term direct access to xfile contents is done by locking the pagecache
-+folio and mapping it into kernel address space.
-+Programmatic access (e.g. pread and pwrite) uses this mechanism.
-+Folio locks are not supposed to be held for long periods of time, so long
-+term direct access to xfile contents is done by bumping the folio refcount,
-+mapping it into kernel address space, and dropping the folio lock.
-+These long term users *must* be responsive to memory reclaim by hooking into
-+the shrinker infrastructure to know when to release folios.
-+
-+The ``xfile_get_page`` and ``xfile_put_page`` functions are provided to
-+retrieve the (locked) folio that backs part of an xfile and to release it.
-+The only code to use these folio lease functions are the xfarray
-+:ref:`sorting<xfarray_sort>` algorithms and the :ref:`in-memory
-+btrees<xfbtree>`.
-+
-+xfile Access Coordination
-+`````````````````````````
-+
-+For security reasons, xfiles must be owned privately by the kernel.
-+They are marked ``S_PRIVATE`` to prevent interference from the security system,
-+must never be mapped into process file descriptor tables, and their pages must
-+never be mapped into userspace processes.
-+
-+To avoid locking recursion issues with the VFS, all accesses to the shmfs file
-+are performed by manipulating the page cache directly.
-+xfile writers call the ``->write_begin`` and ``->write_end`` functions of the
-+xfile's address space to grab writable pages, copy the caller's buffer into the
-+page, and release the pages.
-+xfile readers call ``shmem_read_mapping_page_gfp`` to grab pages directly
-+before copying the contents into the caller's buffer.
-+In other words, xfiles ignore the VFS read and write code paths to avoid
-+having to create a dummy ``struct kiocb`` and to avoid taking inode and
-+freeze locks.
-+tmpfs cannot be frozen, and xfiles must not be exposed to userspace.
-+
-+If an xfile is shared between threads to stage repairs, the caller must provide
-+its own locks to coordinate access.
-+For example, if a scrub function stores scan results in an xfile and needs
-+other threads to provide updates to the scanned data, the scrub function must
-+provide a lock for all threads to share.
-+
-+.. _xfarray:
-+
-+Arrays of Fixed-Sized Records
-+`````````````````````````````
-+
-+In XFS, each type of indexed space metadata (free space, inodes, reference
-+counts, file fork space, and reverse mappings) consists of a set of fixed-size
-+records indexed with a classic B+ tree.
-+Directories have a set of fixed-size dirent records that point to the names,
-+and extended attributes have a set of fixed-size attribute keys that point to
-+names and values.
-+Quota counters and file link counters index records with numbers.
-+During a repair, scrub needs to stage new records during the gathering step and
-+retrieve them during the btree building step.
-+
-+Although this requirement can be satisfied by calling the read and write
-+methods of the xfile directly, it is simpler for callers for there to be a
-+higher level abstraction to take care of computing array offsets, to provide
-+iterator functions, and to deal with sparse records and sorting.
-+The ``xfarray`` abstraction presents a linear array for fixed-size records atop
-+the byte-accessible xfile.
-+
-+.. _xfarray_access_patterns:
-+
-+Array Access Patterns
-+^^^^^^^^^^^^^^^^^^^^^
-+
-+Array access patterns in online fsck tend to fall into three categories.
-+Iteration of records is assumed to be necessary for all cases and will be
-+covered in the next section.
-+
-+The first type of caller handles records that are indexed by position.
-+Gaps may exist between records, and a record may be updated multiple times
-+during the collection step.
-+In other words, these callers want a sparse linearly addressed table file.
-+The typical use case are quota records or file link count records.
-+Access to array elements is performed programmatically via ``xfarray_load`` and
-+``xfarray_store`` functions, which wrap the similarly-named xfile functions to
-+provide loading and storing of array elements at arbitrary array indices.
-+Gaps are defined to be null records, and null records are defined to be a
-+sequence of all zero bytes.
-+Null records are detected by calling ``xfarray_element_is_null``.
-+They are created either by calling ``xfarray_unset`` to null out an existing
-+record or by never storing anything to an array index.
-+
-+The second type of caller handles records that are not indexed by position
-+and do not require multiple updates to a record.
-+The typical use case here is rebuilding space btrees and key/value btrees.
-+These callers can add records to the array without caring about array indices
-+via the ``xfarray_append`` function, which stores a record at the end of the
-+array.
-+For callers that require records to be presentable in a specific order (e.g.
-+rebuilding btree data), the ``xfarray_sort`` function can arrange the sorted
-+records; this function will be covered later.
-+
-+The third type of caller is a bag, which is useful for counting records.
-+The typical use case here is constructing space extent reference counts from
-+reverse mapping information.
-+Records can be put in the bag in any order, they can be removed from the bag
-+at any time, and uniqueness of records is left to callers.
-+The ``xfarray_store_anywhere`` function is used to insert a record in any
-+null record slot in the bag; and the ``xfarray_unset`` function removes a
-+record from the bag.
-+
-+The proposed patchset is the
-+`big in-memory array
-+<https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=big-array>`_.
-+
-+Iterating Array Elements
-+^^^^^^^^^^^^^^^^^^^^^^^^
-+
-+Most users of the xfarray require the ability to iterate the records stored in
-+the array.
-+Callers can probe every possible array index with the following:
-+
-+.. code-block:: c
-+
-+	xfarray_idx_t i;
-+	foreach_xfarray_idx(array, i) {
-+	    xfarray_load(array, i, &rec);
-+
-+	    /* do something with rec */
-+	}
-+
-+All users of this idiom must be prepared to handle null records or must already
-+know that there aren't any.
-+
-+For xfarray users that want to iterate a sparse array, the ``xfarray_iter``
-+function ignores indices in the xfarray that have never been written to by
-+calling ``xfile_seek_data`` (which internally uses ``SEEK_DATA``) to skip areas
-+of the array that are not populated with memory pages.
-+Once it finds a page, it will skip the zeroed areas of the page.
-+
-+.. code-block:: c
-+
-+	xfarray_idx_t i = XFARRAY_CURSOR_INIT;
-+	while ((ret = xfarray_iter(array, &i, &rec)) == 1) {
-+	    /* do something with rec */
-+	}
-+
-+.. _xfarray_sort:
-+
-+Sorting Array Elements
-+^^^^^^^^^^^^^^^^^^^^^^
-+
-+During the fourth demonstration of online repair, a community reviewer remarked
-+that for performance reasons, online repair ought to load batches of records
-+into btree record blocks instead of inserting records into a new btree one at a
-+time.
-+The btree insertion code in XFS is responsible for maintaining correct ordering
-+of the records, so naturally the xfarray must also support sorting the record
-+set prior to bulk loading.
-+
-+Case Study: Sorting xfarrays
-+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+
-+The sorting algorithm used in the xfarray is actually a combination of adaptive
-+quicksort and a heapsort subalgorithm in the spirit of
-+`Sedgewick <https://algs4.cs.princeton.edu/23quicksort/>`_ and
-+`pdqsort <https://github.com/orlp/pdqsort>`_, with customizations for the Linux
-+kernel.
-+To sort records in a reasonably short amount of time, ``xfarray`` takes
-+advantage of the binary subpartitioning offered by quicksort, but it also uses
-+heapsort to hedge aginst performance collapse if the chosen quicksort pivots
-+are poor.
-+Both algorithms are (in general) O(n * lg(n)), but there is a wide performance
-+gulf between the two implementations.
-+
-+The Linux kernel already contains a reasonably fast implementation of heapsort.
-+It only operates on regular C arrays, which limits the scope of its usefulness.
-+There are two key places where the xfarray uses it:
-+
-+* Sorting any record subset backed by a single xfile page.
-+
-+* Loading a small number of xfarray records from potentially disparate parts
-+  of the xfarray into a memory buffer, and sorting the buffer.
-+
-+In other words, ``xfarray`` uses heapsort to constrain the nested recursion of
-+quicksort, thereby mitigating quicksort's worst runtime behavior.
-+
-+Choosing a quicksort pivot is a tricky business.
-+A good pivot splits the set to sort in half, leading to the divide and conquer
-+behavior that is crucial to  O(n * lg(n)) performance.
-+A poor pivot barely splits the subset at all, leading to O(n\ :sup:`2`)
-+runtime.
-+The xfarray sort routine tries to avoid picking a bad pivot by sampling nine
-+records into a memory buffer and using the kernel heapsort to identify the
-+median of the nine.
-+
-+Most modern quicksort implementations employ Tukey's "ninther" to select a
-+pivot from a classic C array.
-+Typical ninther implementations pick three unique triads of records, sort each
-+of the triads, and then sort the middle value of each triad to determine the
-+ninther value.
-+As stated previously, however, xfile accesses are not entirely cheap.
-+It turned out to be much more performant to read the nine elements into a
-+memory buffer, run the kernel's in-memory heapsort on the buffer, and choose
-+the 4th element of that buffer as the pivot.
-+Tukey's ninthers are described in J. W. Tukey, `The ninther, a technique for
-+low-effort robust (resistant) location in large samples`, in *Contributions to
-+Survey Sampling and Applied Statistics*, edited by H. David, (Academic Press,
-+1978), pp. 251–257.
-+
-+The partitioning of quicksort is fairly textbook -- rearrange the record
-+subset around the pivot, then set up the current and next stack frames to
-+sort with the larger and the smaller halves of the pivot, respectively.
-+This keeps the stack space requirements to log2(record count).
-+
-+As a final performance optimization, the hi and lo scanning phase of quicksort
-+keeps examined xfile pages mapped in the kernel for as long as possible to
-+reduce map/unmap cycles.
-+Surprisingly, this reduces overall sort runtime by nearly half again after
-+accounting for the application of heapsort directly onto xfile pages.
-+
-+Blob Storage
-+````````````
-+
-+Extended attributes and directories add an additional requirement for staging
-+records: arbitrary byte sequences of finite length.
-+Each directory entry record needs to store entry name,
-+and each extended attribute needs to store both the attribute name and value.
-+The names, keys, and values can consume a large amount of memory, so the
-+``xfblob`` abstraction was created to simplify management of these blobs
-+atop an xfile.
-+
-+Blob arrays provide ``xfblob_load`` and ``xfblob_store`` functions to retrieve
-+and persist objects.
-+The store function returns a magic cookie for every object that it persists.
-+Later, callers provide this cookie to the ``xblob_load`` to recall the object.
-+The ``xfblob_free`` function frees a specific blob, and the ``xfblob_truncate``
-+function frees them all because compaction is not needed.
-+
-+The details of repairing directories and extended attributes will be discussed
-+in a subsequent section about atomic extent swapping.
-+However, it should be noted that these repair functions only use blob storage
-+to cache a small number of entries before adding them to a temporary ondisk
-+file, which is why compaction is not required.
-+
-+The proposed patchset is at the start of the
-+`extended attribute repair
-+<https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-xattrs>`_ series.
-+
-+.. _xfbtree:
-+
-+In-Memory B+Trees
-+`````````````````
-+
-+The chapter about :ref:`secondary metadata<secondary_metadata>` mentioned that
-+checking and repairing of secondary metadata commonly requires coordination
-+between a live metadata scan of the filesystem and writer threads that are
-+updating that metadata.
-+Keeping the scan data up to date requires requires the ability to propagate
-+metadata updates from the filesystem into the data being collected by the scan.
-+This *can* be done by appending concurrent updates into a separate log file and
-+applying them before writing the new metadata to disk, but this leads to
-+unbounded memory consumption if the rest of the system is very busy.
-+Another option is to skip the side-log and commit live updates from the
-+filesystem directly into the scan data, which trades more overhead for a lower
-+maximum memory requirement.
-+In both cases, the data structure holding the scan results must support indexed
-+access to perform well.
-+
-+Given that indexed lookups of scan data is required for both strategies, online
-+fsck employs the second strategy of committing live updates directly into
-+scan data.
-+Because xfarrays are not indexed and do not enforce record ordering, they
-+are not suitable for this task.
-+Conveniently, however, XFS has a library to create and maintain ordered reverse
-+mapping records: the existing rmap btree code!
-+If only there was a means to create one in memory.
-+
-+Recall that the :ref:`xfile <xfile>` abstraction represents memory pages as a
-+regular file, which means that the kernel can create byte or block addressable
-+virtual address spaces at will.
-+The XFS buffer cache specializes in abstracting IO to block-oriented  address
-+spaces, which means that adaptation of the buffer cache to interface with
-+xfiles enables reuse of the entire btree library.
-+Btrees built atop an xfile are collectively known as ``xfbtrees``.
-+The next few sections describe how they actually work.
-+
-+The proposed patchset is the
-+`in-memory btree
-+<https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=in-memory-btrees>`_
+@@ -3151,3 +3151,684 @@ The proposed patchset is the
+ `summary counter cleanup
+ <https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-fscounters>`_
+ series.
++
++Full Filesystem Scans
++---------------------
++
++Certain types of metadata can only be checked by walking every file in the
++entire filesystem to record observations and comparing the observations against
++what's recorded on disk.
++Like every other type of online repair, repairs are made by writing those
++observations to disk in a replacement structure and committing it atomically.
++However, it is not practical to shut down the entire filesystem to examine
++hundreds of billions of files because the downtime would be excessive.
++Therefore, online fsck must build the infrastructure to manage a live scan of
++all the files in the filesystem.
++There are two questions that need to be solved to perform a live walk:
++
++- How does scrub manage the scan while it is collecting data?
++
++- How does the scan keep abreast of changes being made to the system by other
++  threads?
++
++.. _iscan:
++
++Coordinated Inode Scans
++```````````````````````
++
++In the original Unix filesystems of the 1970s, each directory entry contained
++an index number (*inumber*) which was used as an index into on ondisk array
++(*itable*) of fixed-size records (*inodes*) describing a file's attributes and
++its data block mapping.
++This system is described by J. Lions, `"inode (5659)"
++<http://www.lemis.com/grog/Documentation/Lions/>`_ in *Lions' Commentary on
++UNIX, 6th Edition*, (Dept. of Computer Science, the University of New South
++Wales, November 1977), pp. 18-2; and later by D. Ritchie and K. Thompson,
++`"Implementation of the File System"
++<https://archive.org/details/bstj57-6-1905/page/n8/mode/1up>`_, from *The UNIX
++Time-Sharing System*, (The Bell System Technical Journal, July 1978), pp.
++1913-4.
++
++XFS retains most of this design, except now inumbers are search keys over all
++the space in the data section filesystem.
++They form a continuous keyspace that can be expressed as a 64-bit integer,
++though the inodes themselves are sparsely distributed within the keyspace.
++Scans proceed in a linear fashion across the inumber keyspace, starting from
++``0x0`` and ending at ``0xFFFFFFFFFFFFFFFF``.
++Naturally, a scan through a keyspace requires a scan cursor object to track the
++scan progress.
++Because this keyspace is sparse, this cursor contains two parts.
++The first part of this scan cursor object tracks the inode that will be
++examined next; call this the examination cursor.
++Somewhat less obviously, the scan cursor object must also track which parts of
++the keyspace have already been visited, which is critical for deciding if a
++concurrent filesystem update needs to be incorporated into the scan data.
++Call this the visited inode cursor.
++
++Advancing the scan cursor is a multi-step process encapsulated in
++``xchk_iscan_iter``:
++
++1. Lock the AGI buffer of the AG containing the inode pointed to by the visited
++   inode cursor.
++   This guarantee that inodes in this AG cannot be allocated or freed while
++   advancing the cursor.
++
++2. Use the per-AG inode btree to look up the next inumber after the one that
++   was just visited, since it may not be keyspace adjacent.
++
++3. If there are no more inodes left in this AG:
++
++   a. Move the examination cursor to the point of the inumber keyspace that
++      corresponds to the start of the next AG.
++
++   b. Adjust the visited inode cursor to indicate that it has "visited" the
++      last possible inode in the current AG's inode keyspace.
++      XFS inumbers are segmented, so the cursor needs to be marked as having
++      visited the entire keyspace up to just before the start of the next AG's
++      inode keyspace.
++
++   c. Unlock the AGI and return to step 1 if there are unexamined AGs in the
++      filesystem.
++
++   d. If there are no more AGs to examine, set both cursors to the end of the
++      inumber keyspace.
++      The scan is now complete.
++
++4. Otherwise, there is at least one more inode to scan in this AG:
++
++   a. Move the examination cursor ahead to the next inode marked as allocated
++      by the inode btree.
++
++   b. Adjust the visited inode cursor to point to the inode just prior to where
++      the examination cursor is now.
++      Because the scanner holds the AGI buffer lock, no inodes could have been
++      created in the part of the inode keyspace that the visited inode cursor
++      just advanced.
++
++5. Get the incore inode for the inumber of the examination cursor.
++   By maintaining the AGI buffer lock until this point, the scanner knows that
++   it was safe to advance the examination cursor across the entire keyspace,
++   and that it has stabilized this next inode so that it cannot disappear from
++   the filesystem until the scan releases the incore inode.
++
++6. Drop the AGI lock and return the incore inode to the caller.
++
++Online fsck functions scan all files in the filesystem as follows:
++
++1. Start a scan by calling ``xchk_iscan_start``.
++
++2. Advance the scan cursor (``xchk_iscan_iter``) to get the next inode.
++   If one is provided:
++
++   a. Lock the inode to prevent updates during the scan.
++
++   b. Scan the inode.
++
++   c. While still holding the inode lock, adjust the visited inode cursor
++      (``xchk_iscan_mark_visited``) to point to this inode.
++
++   d. Unlock and release the inode.
++
++8. Call ``xchk_iscan_teardown`` to complete the scan.
++
++There are subtleties with the inode cache that complicate grabbing the incore
++inode for the caller.
++Obviously, it is an absolute requirement that the inode metadata be consistent
++enough to load it into the inode cache.
++Second, if the incore inode is stuck in some intermediate state, the scan
++coordinator must release the AGI and push the main filesystem to get the inode
++back into a loadable state.
++
++The proposed patches are the
++`inode scanner
++<https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=scrub-iscan>`_
++series.
++The first user of the new functionality is the
++`online quotacheck
++<https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-quotacheck>`_
 +series.
 +
-+Using xfiles as a Buffer Cache Target
-+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++Inode Management
++````````````````
 +
-+Two modifications are necessary to support xfiles as a buffer cache target.
-+The first is to make it possible for the ``struct xfs_buftarg`` structure to
-+host the ``struct xfs_buf`` rhashtable, because normally those are held by a
-+per-AG structure.
-+The second change is to modify the buffer ``ioapply`` function to "read" cached
-+pages from the xfile and "write" cached pages back to the xfile.
-+Multiple access to individual buffers is controlled by the ``xfs_buf`` lock,
-+since the xfile does not provide any locking on its own.
-+With this adaptation in place, users of the xfile-backed buffer cache use
-+exactly the same APIs as users of the disk-backed buffer cache.
-+The separation between xfile and buffer cache implies higher memory usage since
-+they do not share pages, but this property could some day enable transactional
-+updates to an in-memory btree.
-+Today, however, it simply eliminates the need for new code.
++In regular filesystem code, references to allocated XFS incore inodes are
++always obtained (``xfs_iget``) outside of transaction context because the
++creation of the incore context for an existing file does not require metadata
++updates.
++However, it is important to note that references to incore inodes obtained as
++part of file creation must be performed in transaction context because the
++filesystem must ensure the atomicity of the ondisk inode btree index updates
++and the initialization of the actual ondisk inode.
 +
-+Space Management with an xfbtree
-+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++References to incore inodes are always released (``xfs_irele``) outside of
++transaction context because there are a handful of activities that might
++require ondisk updates:
 +
-+Space management for an xfile is very simple -- each btree block is one memory
-+page in size.
-+These blocks use the same header format as an on-disk btree, but the in-memory
-+block verifiers ignore the checksums, assuming that xfile memory is no more
-+corruption-prone than regular DRAM.
-+Reusing existing code here is more important than absolute memory efficiency.
++- The VFS may decide to kick off writeback as part of a ``DONTCACHE`` inode
++  release.
 +
-+The very first block of an xfile backing an xfbtree contains a header block.
-+The header describes the owner, height, and the block number of the root
-+xfbtree block.
++- Speculative preallocations need to be unreserved.
 +
-+To allocate a btree block, use ``xfile_seek_data`` to find a gap in the file.
-+If there are no gaps, create one by extending the length of the xfile.
-+Preallocate space for the block with ``xfile_prealloc``, and hand back the
-+location.
-+To free an xfbtree block, use ``xfile_discard`` (which internally uses
-+``FALLOC_FL_PUNCH_HOLE``) to remove the memory page from the xfile.
++- An unlinked file may have lost its last reference, in which case the entire
++  file must be inactivated, which involves releasing all of its resources in
++  the ondisk metadata and freeing the inode.
 +
-+Populating an xfbtree
-+^^^^^^^^^^^^^^^^^^^^^
++These activities are collectively called inode inactivation.
++Inactivation has two parts -- the VFS part, which initiates writeback on all
++dirty file pages, and the XFS part, which cleans up XFS-specific information
++and frees the inode if it was unlinked.
++If the inode is unlinked (or unconnected after a file handle operation), the
++kernel drops the inode into the inactivation machinery immediately.
 +
-+An online fsck function that wants to create an xfbtree should proceed as
-+follows:
++During normal operation, resource acquisition for an update follows this order
++to avoid deadlocks:
 +
-+1. Call ``xfile_create`` to create an xfile.
++1. Inode reference (``iget``).
 +
-+2. Call ``xfs_alloc_memory_buftarg`` to create a buffer cache target structure
-+   pointing to the xfile.
++2. Filesystem freeze protection, if repairing (``mnt_want_write_file``).
 +
-+3. Pass the buffer cache target, buffer ops, and other information to
-+   ``xfbtree_create`` to write an initial tree header and root block to the
-+   xfile.
-+   Each btree type should define a wrapper that passes necessary arguments to
-+   the creation function.
-+   For example, rmap btrees define ``xfs_rmapbt_mem_create`` to take care of
-+   all the necessary details for callers.
-+   A ``struct xfbtree`` object will be returned.
++3. Inode ``IOLOCK`` (VFS ``i_rwsem``) lock to control file IO.
 +
-+4. Pass the xfbtree object to the btree cursor creation function for the
-+   btree type.
-+   Following the example above, ``xfs_rmapbt_mem_cursor`` takes care of this
-+   for callers.
++4. Inode ``MMAPLOCK`` (page cache ``invalidate_lock``) lock for operations that
++   can update page cache mappings.
 +
-+5. Pass the btree cursor to the regular btree functions to make queries against
-+   and to update the in-memory btree.
-+   For example, a btree cursor for an rmap xfbtree can be passed to the
-+   ``xfs_rmap_*`` functions just like any other btree cursor.
-+   See the :ref:`next section<xfbtree_commit>` for information on dealing with
-+   xfbtree updates that are logged to a transaction.
++5. Log feature enablement.
 +
-+6. When finished, delete the btree cursor, destroy the xfbtree object, free the
-+   buffer target, and the destroy the xfile to release all resources.
++6. Transaction log space grant.
 +
-+.. _xfbtree_commit:
++7. Space on the data and realtime devices for the transaction.
 +
-+Committing Logged xfbtree Buffers
-+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++8. Incore dquot references, if a file is being repaired.
++   Note that they are not locked, merely acquired.
 +
-+Although it is a clever hack to reuse the rmap btree code to handle the staging
-+structure, the ephemeral nature of the in-memory btree block storage presents
-+some challenges of its own.
-+The XFS transaction manager must not commit buffer log items for buffers backed
-+by an xfile because the log format does not understand updates for devices
-+other than the data device.
-+An ephemeral xfbtree probably will not exist by the time the AIL checkpoints
-+log transactions back into the filesystem, and certainly won't exist during
-+log recovery.
-+For these reasons, any code updating an xfbtree in transaction context must
-+remove the buffer log items from the transaction and write the updates into the
-+backing xfile before committing or cancelling the transaction.
++9. Inode ``ILOCK`` for file metadata updates.
 +
-+The ``xfbtree_trans_commit`` and ``xfbtree_trans_cancel`` functions implement
-+this functionality as follows:
++10. AG header buffer locks / Realtime metadata inode ILOCK.
 +
-+1. Find each buffer log item whose buffer targets the xfile.
++11. Realtime metadata buffer locks, if applicable.
 +
-+2. Record the dirty/ordered status of the log item.
++12. Extent mapping btree blocks, if applicable.
 +
-+3. Detach the log item from the buffer.
++Resources are often released in the reverse order, though this is not required.
++However, online fsck differs from regular XFS operations because it may examine
++an object that normally is acquired in a later stage of the locking order, and
++then decide to cross-reference the object with an object that is acquired
++earlier in the order.
++The next few sections detail the specific ways in which online fsck takes care
++to avoid deadlocks.
 +
-+4. Queue the buffer to a special delwri list.
++iget and irele During a Scrub
++^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 +
-+5. Clear the transaction dirty flag if the only dirty log items were the ones
-+   that were detached in step 3.
++An inode scan performed on behalf of a scrub operation runs in transaction
++context, and possibly with resources already locked and bound to it.
++This isn't much of a problem for ``iget`` since it can operate in the context
++of an existing transaction, as long as all of the bound resources are acquired
++before the inode reference in the regular filesystem.
 +
-+6. Submit the delwri list to commit the changes to the xfile, if the updates
-+   are being committed.
++When the VFS ``iput`` function is given a linked inode with no other
++references, it normally puts the inode on an LRU list in the hope that it can
++save time if another process re-opens the file before the system runs out
++of memory and frees it.
++Filesystem callers can short-circuit the LRU process by setting a ``DONTCACHE``
++flag on the inode to cause the kernel to try to drop the inode into the
++inactivation machinery immediately.
 +
-+After removing xfile logged buffers from the transaction in this manner, the
-+transaction can be committed or cancelled.
++In the past, inactivation was always done from the process that dropped the
++inode, which was a problem for scrub because scrub may already hold a
++transaction, and XFS does not support nesting transactions.
++On the other hand, if there is no scrub transaction, it is desirable to drop
++otherwise unused inodes immediately to avoid polluting caches.
++To capture these nuances, the online fsck code has a separate ``xchk_irele``
++function to set or clear the ``DONTCACHE`` flag to get the required release
++behavior.
++
++Proposed patchsets include fixing
++`scrub iget usage
++<https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=scrub-iget-fixes>`_ and
++`dir iget usage
++<https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=scrub-dir-iget-fixes>`_.
++
++Locking Inodes
++^^^^^^^^^^^^^^
++
++In regular filesystem code, the VFS and XFS will acquire multiple IOLOCK locks
++in a well-known order: parent → child when updating the directory tree, and
++in numerical order of the addresses of their ``struct inode`` object otherwise.
++For regular files, the MMAPLOCK can be acquired after the IOLOCK to stop page
++faults.
++If two MMAPLOCKs must be acquired, they are acquired in numerical order of
++the addresses of their ``struct address_space`` objects.
++Due to the structure of existing filesystem code, IOLOCKs and MMAPLOCKs must be
++acquired before transactions are allocated.
++If two ILOCKs must be acquired, they are acquired in inumber order.
++
++Inode lock acquisition must be done carefully during a coordinated inode scan.
++Online fsck cannot abide these conventions, because for a directory tree
++scanner, the scrub process holds the IOLOCK of the file being scanned and it
++needs to take the IOLOCK of the file at the other end of the directory link.
++If the directory tree is corrupt because it contains a cycle, ``xfs_scrub``
++cannot use the regular inode locking functions and avoid becoming trapped in an
++ABBA deadlock.
++
++Solving both of these problems is straightforward -- any time online fsck
++needs to take a second lock of the same class, it uses trylock to avoid an ABBA
++deadlock.
++If the trylock fails, scrub drops all inode locks and use trylock loops to
++(re)acquire all necessary resources.
++Trylock loops enable scrub to check for pending fatal signals, which is how
++scrub avoids deadlocking the filesystem or becoming an unresponsive process.
++However, trylock loops means that online fsck must be prepared to measure the
++resource being scrubbed before and after the lock cycle to detect changes and
++react accordingly.
++
++.. _dirparent:
++
++Case Study: Finding a Directory Parent
++^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++
++Consider the directory parent pointer repair code as an example.
++Online fsck must verify that the dotdot dirent of a directory points up to a
++parent directory, and that the parent directory contains exactly one dirent
++pointing down to the child directory.
++Fully validating this relationship (and repairing it if possible) requires a
++walk of every directory on the filesystem while holding the child locked, and
++while updates to the directory tree are being made.
++The coordinated inode scan provides a way to walk the filesystem without the
++possibility of missing an inode.
++The child directory is kept locked to prevent updates to the dotdot dirent, but
++if the scanner fails to lock a parent, it can drop and relock both the child
++and the prospective parent.
++If the dotdot entry changes while the directory is unlocked, then a move or
++rename operation must have changed the child's parentage, and the scan can
++exit early.
++
++The proposed patchset is the
++`directory repair
++<https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-dirs>`_
++series.
++
++.. _fshooks:
++
++Filesystem Hooks
++`````````````````
++
++The second piece of support that online fsck functions need during a full
++filesystem scan is the ability to stay informed about updates being made by
++other threads in the filesystem, since comparisons against the past are useless
++in a dynamic environment.
++Two pieces of Linux kernel infrastructure enable online fsck to monitor regular
++filesystem operations: filesystem hooks and :ref:`static keys<jump_labels>`.
++
++Filesystem hooks convey information about an ongoing filesystem operation to
++a downstream consumer.
++In this case, the downstream consumer is always an online fsck function.
++Because multiple fsck functions can run in parallel, online fsck uses the Linux
++notifier call chain facility to dispatch updates to any number of interested
++fsck processes.
++Call chains are a dynamic list, which means that they can be configured at
++run time.
++Because these hooks are private to the XFS module, the information passed along
++contains exactly what the checking function needs to update its observations.
++
++The current implementation of XFS hooks uses SRCU notifier chains to reduce the
++impact to highly threaded workloads.
++Regular blocking notifier chains use a rwsem and seem to have a much lower
++overhead for single-threaded applications.
++However, it may turn out that the combination of blocking chains and static
++keys are a more performant combination; more study is needed here.
++
++The following pieces are necessary to hook a certain point in the filesystem:
++
++- A ``struct xfs_hooks`` object must be embedded in a convenient place such as
++  a well-known incore filesystem object.
++
++- Each hook must define an action code and a structure containing more context
++  about the action.
++
++- Hook providers should provide appropriate wrapper functions and structs
++  around the ``xfs_hooks`` and ``xfs_hook`` objects to take advantage of type
++  checking to ensure correct usage.
++
++- A callsite in the regular filesystem code must be chosen to call
++  ``xfs_hooks_call`` with the action code and data structure.
++  This place should be adjacent to (and not earlier than) the place where
++  the filesystem update is committed to the transaction.
++  In general, when the filesystem calls a hook chain, it should be able to
++  handle sleeping and should not be vulnerable to memory reclaim or locking
++  recursion.
++  However, the exact requirements are very dependent on the context of the hook
++  caller and the callee.
++
++- The online fsck function should define a structure to hold scan data, a lock
++  to coordinate access to the scan data, and a ``struct xfs_hook`` object.
++  The scanner function and the regular filesystem code must acquire resources
++  in the same order; see the next section for details.
++
++- The online fsck code must contain a C function to catch the hook action code
++  and data structure.
++  If the object being updated has already been visited by the scan, then the
++  hook information must be applied to the scan data.
++
++- Prior to unlocking inodes to start the scan, online fsck must call
++  ``xfs_hooks_setup`` to initialize the ``struct xfs_hook``, and
++  ``xfs_hooks_add`` to enable the hook.
++
++- Online fsck must call ``xfs_hooks_del`` to disable the hook once the scan is
++  complete.
++
++The number of hooks should be kept to a minimum to reduce complexity.
++Static keys are used to reduce the overhead of filesystem hooks to nearly
++zero when online fsck is not running.
++
++.. _liveupdate:
++
++Live Updates During a Scan
++``````````````````````````
++
++The code paths of the online fsck scanning code and the :ref:`hooked<fshooks>`
++filesystem code look like this::
++
++            other program
++                  ↓
++            inode lock ←────────────────────┐
++                  ↓                         │
++            AG header lock                  │
++                  ↓                         │
++            filesystem function             │
++                  ↓                         │
++            notifier call chain             │    same
++                  ↓                         ├─── inode
++            scrub hook function             │    lock
++                  ↓                         │
++            scan data mutex ←──┐    same    │
++                  ↓            ├─── scan    │
++            update scan data   │    lock    │
++                  ↑            │            │
++            scan data mutex ←──┘            │
++                  ↑                         │
++            inode lock ←────────────────────┘
++                  ↑
++            scrub function
++                  ↑
++            inode scanner
++                  ↑
++            xfs_scrub
++
++These rules must be followed to ensure correct interactions between the
++checking code and the code making an update to the filesystem:
++
++- Prior to invoking the notifier call chain, the filesystem function being
++  hooked must acquire the same lock that the scrub scanning function acquires
++  to scan the inode.
++
++- The scanning function and the scrub hook function must coordinate access to
++  the scan data by acquiring a lock on the scan data.
++
++- Scrub hook function must not add the live update information to the scan
++  observations unless the inode being updated has already been scanned.
++  The scan coordinator has a helper predicate (``xchk_iscan_want_live_update``)
++  for this.
++
++- Scrub hook functions must not change the caller's state, including the
++  transaction that it is running.
++  They must not acquire any resources that might conflict with the filesystem
++  function being hooked.
++
++- The hook function can abort the inode scan to avoid breaking the other rules.
++
++The inode scan APIs are pretty simple:
++
++- ``xchk_iscan_start`` starts a scan
++
++- ``xchk_iscan_iter`` grabs a reference to the next inode in the scan or
++  returns zero if there is nothing left to scan
++
++- ``xchk_iscan_want_live_update`` to decide if an inode has already been
++  visited in the scan.
++  This is critical for hook functions to decide if they need to update the
++  in-memory scan information.
++
++- ``xchk_iscan_mark_visited`` to mark an inode as having been visited in the
++  scan
++
++- ``xchk_iscan_teardown`` to finish the scan
++
++This functionality is also a part of the
++`inode scanner
++<https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=scrub-iscan>`_
++series.
++
++.. _quotacheck:
++
++Case Study: Quota Counter Checking
++^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++
++It is useful to compare the mount time quotacheck code to the online repair
++quotacheck code.
++Mount time quotacheck does not have to contend with concurrent operations, so
++it does the following:
++
++1. Make sure the ondisk dquots are in good enough shape that all the incore
++   dquots will actually load, and zero the resource usage counters in the
++   ondisk buffer.
++
++2. Walk every inode in the filesystem.
++   Add each file's resource usage to the incore dquot.
++
++3. Walk each incore dquot.
++   If the incore dquot is not being flushed, add the ondisk buffer backing the
++   incore dquot to a delayed write (delwri) list.
++
++4. Write the buffer list to disk.
++
++Like most online fsck functions, online quotacheck can't write to regular
++filesystem objects until the newly collected metadata reflect all filesystem
++state.
++Therefore, online quotacheck records file resource usage to a shadow dquot
++index implemented with a sparse ``xfarray``, and only writes to the real dquots
++once the scan is complete.
++Handling transactional updates is tricky because quota resource usage updates
++are handled in phases to minimize contention on dquots:
++
++1. The inodes involved are joined and locked to a transaction.
++
++2. For each dquot attached to the file:
++
++   a. The dquot is locked.
++
++   b. A quota reservation is added to the dquot's resource usage.
++      The reservation is recorded in the transaction.
++
++   c. The dquot is unlocked.
++
++3. Changes in actual quota usage are tracked in the transaction.
++
++4. At transaction commit time, each dquot is examined again:
++
++   a. The dquot is locked again.
++
++   b. Quota usage changes are logged and unused reservation is given back to
++      the dquot.
++
++   c. The dquot is unlocked.
++
++For online quotacheck, hooks are placed in steps 2 and 4.
++The step 2 hook creates a shadow version of the transaction dquot context
++(``dqtrx``) that operates in a similar manner to the regular code.
++The step 4 hook commits the shadow ``dqtrx`` changes to the shadow dquots.
++Notice that both hooks are called with the inode locked, which is how the
++live update coordinates with the inode scanner.
++
++The quotacheck scan looks like this:
++
++1. Set up a coordinated inode scan.
++
++2. For each inode returned by the inode scan iterator:
++
++   a. Grab and lock the inode.
++
++   b. Determine that inode's resource usage (data blocks, inode counts,
++      realtime blocks) and add that to the shadow dquots for the user, group,
++      and project ids associated with the inode.
++
++   c. Unlock and release the inode.
++
++3. For each dquot in the system:
++
++   a. Grab and lock the dquot.
++
++   b. Check the dquot against the shadow dquots created by the scan and updated
++      by the live hooks.
++
++Live updates are key to being able to walk every quota record without
++needing to hold any locks for a long duration.
++If repairs are desired, the real and shadow dquots are locked and their
++resource counts are set to the values in the shadow dquot.
++
++The proposed patchset is the
++`online quotacheck
++<https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-quotacheck>`_
++series.
++
++.. _nlinks:
++
++Case Study: File Link Count Checking
++^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++
++File link count checking also uses live update hooks.
++The coordinated inode scanner is used to visit all directories on the
++filesystem, and per-file link count records are stored in a sparse ``xfarray``
++indexed by inumber.
++During the scanning phase, each entry in a directory generates observation
++data as follows:
++
++1. If the entry is a dotdot (``'..'``) entry of the root directory, the
++   directory's parent link count is bumped because the root directory's dotdot
++   entry is self referential.
++
++2. If the entry is a dotdot entry of a subdirectory, the parent's backref
++   count is bumped.
++
++3. If the entry is neither a dot nor a dotdot entry, the target file's parent
++   count is bumped.
++
++4. If the target is a subdirectory, the parent's child link count is bumped.
++
++A crucial point to understand about how the link count inode scanner interacts
++with the live update hooks is that the scan cursor tracks which *parent*
++directories have been scanned.
++In other words, the live updates ignore any update about ``A → B`` when A has
++not been scanned, even if B has been scanned.
++Furthermore, a subdirectory A with a dotdot entry pointing back to B is
++accounted as a backref counter in the shadow data for A, since child dotdot
++entries affect the parent's link count.
++Live update hooks are carefully placed in all parts of the filesystem that
++create, change, or remove directory entries, since those operations involve
++bumplink and droplink.
++
++For any file, the correct link count is the number of parents plus the number
++of child subdirectories.
++Non-directories never have children of any kind.
++The backref information is used to detect inconsistencies in the number of
++links pointing to child subdirectories and the number of dotdot entries
++pointing back.
++
++After the scan completes, the link count of each file can be checked by locking
++both the inode and the shadow data, and comparing the link counts.
++A second coordinated inode scan cursor is used for comparisons.
++Live updates are key to being able to walk every inode without needing to hold
++any locks between inodes.
++If repairs are desired, the inode's link count is set to the value in the
++shadow information.
++If no parents are found, the file must be :ref:`reparented <orphanage>` to the
++orphanage to prevent the file from being lost forever.
++
++The proposed patchset is the
++`file link count repair
++<https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=scrub-nlinks>`_
++series.
++
++.. _rmap_repair:
++
++Case Study: Rebuilding Reverse Mapping Records
++^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
++
++Most repair functions follow the same pattern: lock filesystem resources,
++walk the surviving ondisk metadata looking for replacement metadata records,
++and use an :ref:`in-memory array <xfarray>` to store the gathered observations.
++The primary advantage of this approach is the simplicity and modularity of the
++repair code -- code and data are entirely contained within the scrub module,
++do not require hooks in the main filesystem, and are usually the most efficient
++in memory use.
++A secondary advantage of this repair approach is atomicity -- once the kernel
++decides a structure is corrupt, no other threads can access the metadata until
++the kernel finishes repairing and revalidating the metadata.
++
++For repairs going on within a shard of the filesystem, these advantages
++outweigh the delays inherent in locking the shard while repairing parts of the
++shard.
++Unfortunately, repairs to the reverse mapping btree cannot use the "standard"
++btree repair strategy because it must scan every space mapping of every fork of
++every file in the filesystem, and the filesystem cannot stop.
++Therefore, rmap repair foregoes atomicity between scrub and repair.
++It combines a :ref:`coordinated inode scanner <iscan>`, :ref:`live update hooks
++<liveupdate>`, and an :ref:`in-memory rmap btree <xfbtree>` to complete the
++scan for reverse mapping records.
++
++1. Set up an xfbtree to stage rmap records.
++
++2. While holding the locks on the AGI and AGF buffers acquired during the
++   scrub, generate reverse mappings for all AG metadata: inodes, btrees, CoW
++   staging extents, and the internal log.
++
++3. Set up an inode scanner.
++
++4. Hook into rmap updates for the AG being repaired so that the live scan data
++   can receive updates to the rmap btree from the rest of the filesystem during
++   the file scan.
++
++5. For each space mapping found in either fork of each file scanned,
++   decide if the mapping matches the AG of interest.
++   If so:
++
++   a. Create a btree cursor for the in-memory btree.
++
++   b. Use the rmap code to add the record to the in-memory btree.
++
++   c. Use the :ref:`special commit function <xfbtree_commit>` to write the
++      xfbtree changes to the xfile.
++
++6. For each live update received via the hook, decide if the owner has already
++   been scanned.
++   If so, apply the live update into the scan data:
++
++   a. Create a btree cursor for the in-memory btree.
++
++   b. Replay the operation into the in-memory btree.
++
++   c. Use the :ref:`special commit function <xfbtree_commit>` to write the
++      xfbtree changes to the xfile.
++      This is performed with an empty transaction to avoid changing the
++      caller's state.
++
++7. When the inode scan finishes, create a new scrub transaction and relock the
++   two AG headers.
++
++8. Compute the new btree geometry using the number of rmap records in the
++   shadow btree, like all other btree rebuilding functions.
++
++9. Allocate the number of blocks computed in the previous step.
++
++10. Perform the usual btree bulk loading and commit to install the new rmap
++    btree.
++
++11. Reap the old rmap btree blocks as discussed in the case study about how
++    to :ref:`reap after rmap btree repair <rmap_reap>`.
++
++12. Free the xfbtree now that it not needed.
++
++The proposed patchset is the
++`rmap repair
++<https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-rmap-btree>`_
++series.
 
