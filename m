@@ -2,107 +2,112 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87AA0C6FD1E
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Mar 2023 17:25:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2315C678D4
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Mar 2023 19:16:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230348AbjCGRZo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Mar 2023 12:25:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50116 "EHLO
+        id S233959AbjCGTQg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Mar 2023 14:16:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231422AbjCGRZV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Mar 2023 12:25:21 -0500
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AF779887A
-        for <linux-xfs@vger.kernel.org>; Tue,  7 Mar 2023 09:20:24 -0800 (PST)
-Received: by mail-pl1-x634.google.com with SMTP id x11so10342940pln.12
-        for <linux-xfs@vger.kernel.org>; Tue, 07 Mar 2023 09:20:24 -0800 (PST)
+        with ESMTP id S233452AbjCGTP5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Mar 2023 14:15:57 -0500
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99296CD67A;
+        Tue,  7 Mar 2023 10:59:27 -0800 (PST)
+Received: by mail-pj1-x102f.google.com with SMTP id m8-20020a17090a4d8800b002377bced051so17562530pjh.0;
+        Tue, 07 Mar 2023 10:59:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112; t=1678209624;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=QGzn8Jh8ZKEAR+XabpvsJcqmOPwNEpOpb9eL39TjD2s=;
-        b=1eyM8I2j7WCg36Foo4+Sc4CeRGDLUDGUnMpyF0UHm72mQxc9kfH5fw6ttfD/K+QHd9
-         h3eWq0JPdOhMjwMXDPsIbow0slc2h5ls9s1vUuFSIYTjxvxZyRccZrT3E1ShYIlNDFB6
-         g3Fghio8gD0sp07Pc/8uU6Z/ieb0E9t8rO35xhbkzpF6NlEqcvgLx1GTP+FUAtloSqA2
-         QtCz9pvFzkX17VUJhs9AhXIWA/nO3FxZmX6Kkf36Tct4+tPQDxb8z2YynfrOR9qBNaGb
-         l0FTaW0myw0bMaxU0sXWOGq4RyGUkF25IPN04mrn8Dds2qV0wdODxinb9v1PcC9+YL+/
-         Yd5w==
+        d=gmail.com; s=20210112; t=1678215567;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=jpC6qvm3z4xmjpkmYnEYFXhm0ukZhZ7VSpBo9i5esAs=;
+        b=md4MT1gSu5H7VzD0w18AuWc22nlYpe0Swfgh8hhpoPW7YfBpLewTEoeSdmam9RhP8o
+         bOW0ztRve1XTeMBtYoSW9rruXcwM8+QYDGJ4L69c1mNmQlBnQNklZ0THemA0K9ljFvTV
+         V7mvDTlggTJILk+WMNaVc/iDhlKnXazHOtkF9zHJHbjWgdO1BbbRkASwdil5ZTanfAfY
+         e/QolYi1M5nOB0sMtbnjj2tLBzJWrH5C1uFAg6V92ofDPxrXNaVZ5Wr5MVEoayRhdD7z
+         Y/Gyna6Sp89wRFyyOTaNKcGQB037tBmBxJEKIBNL/eKof1RV0xdnZOF6PJPHRqZQqYKK
+         ACNQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678209624;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=QGzn8Jh8ZKEAR+XabpvsJcqmOPwNEpOpb9eL39TjD2s=;
-        b=42qHitaIN+fImDM5aXwP9faHLqpF3Rbg3tuksHxS57OsHbc652HXRA5Bty4Y27gx9x
-         uEWRGOMw6+I22yPcjYTCJYDlyGEMw+LH3Ea/yn5YnfCfLtr05D9HNN/du3ZptwQa6T7V
-         4gDKyhGHzfwko/4RCF5/wcPzbcVyUAJlPdI20Z13UpaNEoVUlkyaz++/VIQcqotBMx7H
-         lMQ5uzk2FnMK3/UIUkSiEGpwk+GfzmFB0JNegxqoI5zRlSJ5Md1a46O0gMoLOQ8e16bk
-         zx0IHWNKw9CCtJJF9rTVydqocSLGXjQBItaUWHXHUp9yiIOYfGz9lndkQQHRfS4temqT
-         qGrg==
-X-Gm-Message-State: AO0yUKXumFjTcCoOjA55RbeozKANqFDl+pUUV/PBT4VluMclrhELmDx5
-        LJdaVOto19PqMAeOvEJwAjMfHx/nTGY6ZoUSInY=
-X-Google-Smtp-Source: AK7set+yJzNNfb3gCkbf0SKS9XnejUmfExgD0rV7zoPrtcvqqHLIbcOfeAPkLbbCmPVNcx079Pp+yQ==
-X-Received: by 2002:a17:902:ecc7:b0:19e:b5d3:1710 with SMTP id a7-20020a170902ecc700b0019eb5d31710mr9904245plh.2.1678209623665;
-        Tue, 07 Mar 2023 09:20:23 -0800 (PST)
-Received: from localhost.localdomain ([50.233.106.125])
-        by smtp.gmail.com with ESMTPSA id c17-20020a170903235100b0019e76a99cdbsm8651390plh.243.2023.03.07.09.20.22
+        d=1e100.net; s=20210112; t=1678215567;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=jpC6qvm3z4xmjpkmYnEYFXhm0ukZhZ7VSpBo9i5esAs=;
+        b=ksPjUGU3tFNvACxbnYknQ5niL3QUyHTMjdAKjorePmYqT2YKnI7Z9leAuTPqEjl3Iu
+         Cs0+Skt+Q7PTX1R/n6ECgAiXm0qkT2JLNV6OkjWQp/rE/69HIewmQsZpFEtupXXI83md
+         h/8PVlfDCoDiNeSgbsA/Q4Qc+jKXm1nyJuSI7/4nIdHR8UioG/xl7SCl6ecCKcKmIzME
+         kgaN29/e84tkKi+wWzxnbEIzbWUdj+1Gq+y3GKkHwluSLL7mk2rcvRFdD3ia/NyTk1U3
+         eahSOYM+CAqE1kY4su4UCxjXqvRPWaIvODiCgShbsJheImtIkCw+KtJv0RPE0l3MU/s7
+         EJWg==
+X-Gm-Message-State: AO0yUKWnbk5bTBhgiyn6qbUhepu40tTEMDZFyEXeeoFOXLSEc67dXtn9
+        p2CALQ7xaGvk6xW9H/tAAO8ktUkN5Yk=
+X-Google-Smtp-Source: AK7set8lftx0fyFIwyZkKnkfsOtQeqzv2Blv3ch/zVX05l4syJ9Utsv/rXc/p2NfY6rXkFo47JzP5g==
+X-Received: by 2002:a17:902:aa4a:b0:19e:3922:b7d8 with SMTP id c10-20020a170902aa4a00b0019e3922b7d8mr13001883plr.12.1678215566817;
+        Tue, 07 Mar 2023 10:59:26 -0800 (PST)
+Received: from lrumancik.svl.corp.google.com ([2620:15c:2d4:203:6f2b:1857:847c:366c])
+        by smtp.gmail.com with ESMTPSA id ku4-20020a170903288400b001943d58268csm8745658plb.55.2023.03.07.10.59.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Mar 2023 09:20:23 -0800 (PST)
-From:   Jens Axboe <axboe@kernel.dk>
-To:     io-uring@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
-Cc:     Jens Axboe <axboe@kernel.dk>
-Subject: [PATCH 2/2] io_uring: avoid hashing O_DIRECT writes if the filesystem doesn't need it
-Date:   Tue,  7 Mar 2023 10:20:15 -0700
-Message-Id: <20230307172015.54911-3-axboe@kernel.dk>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230307172015.54911-1-axboe@kernel.dk>
-References: <20230307172015.54911-1-axboe@kernel.dk>
+        Tue, 07 Mar 2023 10:59:26 -0800 (PST)
+From:   Leah Rumancik <leah.rumancik@gmail.com>
+To:     stable@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org, amir73il@gmail.com,
+        chandan.babu@oracle.com, Leah Rumancik <leah.rumancik@gmail.com>
+Subject: [PATCH 5.15 00/11] sgid fixes for 5.15.y
+Date:   Tue,  7 Mar 2023 10:59:11 -0800
+Message-Id: <20230307185922.125907-1-leah.rumancik@gmail.com>
+X-Mailer: git-send-email 2.40.0.rc0.216.gc4246ad0f0-goog
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-io_uring hashes writes to a given file/inode so that it can serialize
-them. This is useful if the file system needs exclusive access to the
-file to perform the write, as otherwise we end up with a ton of io-wq
-threads trying to lock the inode at the same time. This can cause
-excessive system time.
+Hello,
 
-But if the file system has flagged that it supports parallel O_DIRECT
-writes, then there's no need to serialize the writes. Check for that
-through FMODE_DIO_PARALLEL_WRITE and don't hash it if we don't need to.
+I finished testing the sgid fixes which Amir graciously backported to
+5.15. This series fixes the previously failing generic/673 and
+generic/68[3-7]. No regressions were seen in the 25 runs of the auto
+group x 8 configs. I also did some extra runs on the perms group and
+no regressions there either. The corresponding fixes are already in
+6.1.y.
 
-In a basic test of 8 threads writing to a file on XFS on a gen2 Optane,
-with each thread writing in 4k chunks, it improves performance from
-~1350K IOPS (or ~5290MiB/sec) to ~1410K IOPS (or ~5500MiB/sec).
+- Leah
 
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
----
- io_uring/io_uring.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+Christian Brauner (5):
+  attr: add in_group_or_capable()
+  fs: move should_remove_suid()
+  attr: add setattr_should_drop_sgid()
+  attr: use consistent sgid stripping checks
+  fs: use consistent setgid checks in is_sxid()
 
-diff --git a/io_uring/io_uring.c b/io_uring/io_uring.c
-index fd9ba840c4a2..93cc1ff5e9cd 100644
---- a/io_uring/io_uring.c
-+++ b/io_uring/io_uring.c
-@@ -429,7 +429,13 @@ static void io_prep_async_work(struct io_kiocb *req)
- 	}
- 
- 	if (req->flags & REQ_F_ISREG) {
--		if (def->hash_reg_file || (ctx->flags & IORING_SETUP_IOPOLL))
-+		bool should_hash = def->hash_reg_file;
-+
-+		/* don't serialize this request if the fs doesn't need it */
-+		if (should_hash && (req->file->f_flags & O_DIRECT) &&
-+		    (req->file->f_mode & FMODE_DIO_PARALLEL_WRITE))
-+			should_hash = false;
-+		if (should_hash || (ctx->flags & IORING_SETUP_IOPOLL))
- 			io_wq_hash_work(&req->work, file_inode(req->file));
- 	} else if (!req->file || !S_ISBLK(file_inode(req->file)->i_mode)) {
- 		if (def->unbound_nonreg_file)
+Darrick J. Wong (1):
+  xfs: use setattr_copy to set vfs inode attributes
+
+Dave Chinner (3):
+  xfs: remove XFS_PREALLOC_SYNC
+  xfs: fallocate() should call file_modified()
+  xfs: set prealloc flag in xfs_alloc_file_space()
+
+Yang Xu (2):
+  fs: add mode_strip_sgid() helper
+  fs: move S_ISGID stripping into the vfs_*() helpers
+
+ Documentation/trace/ftrace.rst |  2 +-
+ fs/attr.c                      | 72 +++++++++++++++++++++++++--
+ fs/fuse/file.c                 |  2 +-
+ fs/inode.c                     | 90 ++++++++++++++++++++--------------
+ fs/internal.h                  | 10 +++-
+ fs/namei.c                     | 82 ++++++++++++++++++++++++++-----
+ fs/ocfs2/file.c                |  4 +-
+ fs/ocfs2/namei.c               |  1 +
+ fs/open.c                      |  8 +--
+ fs/xfs/xfs_bmap_util.c         |  9 ++--
+ fs/xfs/xfs_file.c              | 24 +++++----
+ fs/xfs/xfs_iops.c              | 56 ++-------------------
+ fs/xfs/xfs_pnfs.c              |  9 ++--
+ include/linux/fs.h             |  6 ++-
+ 14 files changed, 235 insertions(+), 140 deletions(-)
+
 -- 
-2.39.2
+2.40.0.rc0.216.gc4246ad0f0-goog
 
