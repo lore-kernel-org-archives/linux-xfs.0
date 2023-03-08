@@ -2,110 +2,144 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57F6AC64EC4
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Mar 2023 16:03:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19C37C64EC4
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Mar 2023 17:12:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232299AbjCHQDK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Mar 2023 11:03:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47522 "EHLO
+        id S229940AbjCHRMQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Mar 2023 12:12:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53048 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232462AbjCHQCu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Mar 2023 11:02:50 -0500
-Received: from mail-qt1-x834.google.com (mail-qt1-x834.google.com [IPv6:2607:f8b0:4864:20::834])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53C4DC9A6A
-        for <linux-xfs@vger.kernel.org>; Wed,  8 Mar 2023 08:01:04 -0800 (PST)
-Received: by mail-qt1-x834.google.com with SMTP id r5so18561094qtp.4
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Mar 2023 08:01:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112; t=1678291257;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=h3hZwpKMg+vlHtotr98nmh9kQ0sI9K4sYDzfoR8/Nkw=;
-        b=VKR9kxxOdfwLKRX+OUxi0CqO3qdzQviWy2G5KfY1OlbX5P2Zjs7o+pnTrBmcgdPn/3
-         3mcJ510vjumwGzDhiWCOfmNnwbgE1xGHD/3UPa5tx6sWp0j1xRGvNagDAeIJvEyJqMmY
-         E2nu6YPt8YzGd84SVtsL7clnfqTYJf9TROwXIfd1yPVrGs7P4BS3ZZRyCNAU28hjP7I0
-         iglsK76350p0U/4VE1Mvd237L0HvzuoKM+uyEaqw58KBNXFQ+xVXxJHJV4vSiuA0zCYF
-         ooBfwRMknXntUcS7NSqpef0p62PactO8oozTc50D7gqWgBk6/NceCWvU3Q7eLccrbNBa
-         VWuw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678291257;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=h3hZwpKMg+vlHtotr98nmh9kQ0sI9K4sYDzfoR8/Nkw=;
-        b=dWWHFl8TkP+TAED1KJ+MirvvIWmaFLgdSib/1L8GKlrKRDGzF86DQBvITk0tr2UEPF
-         mnmSC1kKsPtxTwaK6VfbwzrG0o7fac5MC1GTkkWdt+gpJdFtQjJ2sS9UYJVIqc4dWOYs
-         fTn/MCmqrkJz1JMpsrVkyE5B3NI8R/BkUFReDh7DzCnmluvTISWDEOuRxTigwggiIvBQ
-         lGQijhxuzY9Qgsk/JfDNP5tBI/OS1V4kU3rDTimGiK1edPnt4xauNUB53OtKuLvMtnES
-         gshW+UDx+qNGJFAyRHmeMoIrLNBMvMO2GfX6FV88JNQmdvJ+nWaL1ZmNADfmNZwoGy9/
-         EfHg==
-X-Gm-Message-State: AO0yUKWrozGfV9llGj63IjBVjbsewN8MSNiqP9xQCWZBq74t6Tjo31OW
-        b7wuN5h+qnc222hrKLZnTjX3Kg==
-X-Google-Smtp-Source: AK7set8VHTOzJ1mGxBCJIKeE5Y/M6Q5A34bQK9WHzEHfDvqAd4z/Xd8BRHp+AwjZqV34Y2Q19xl+tQ==
-X-Received: by 2002:a05:622a:303:b0:3bf:a08d:b265 with SMTP id q3-20020a05622a030300b003bfa08db265mr37829235qtw.24.1678291257174;
-        Wed, 08 Mar 2023 08:00:57 -0800 (PST)
-Received: from localhost (2603-7000-0c01-2716-8f57-5681-ccd3-4a2e.res6.spectrum.com. [2603:7000:c01:2716:8f57:5681:ccd3:4a2e])
-        by smtp.gmail.com with ESMTPSA id a191-20020ae9e8c8000000b00742743dba2asm11578051qkg.39.2023.03.08.08.00.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Mar 2023 08:00:56 -0800 (PST)
-Date:   Wed, 8 Mar 2023 11:00:56 -0500
-From:   Johannes Weiner <hannes@cmpxchg.org>
-To:     Yosry Ahmed <yosryahmed@google.com>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Lameter <cl@linux.com>,
-        David Rientjes <rientjes@google.com>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Roman Gushchin <roman.gushchin@linux.dev>,
-        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Miaohe Lin <linmiaohe@huawei.com>,
-        David Hildenbrand <david@redhat.com>,
-        Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
-        Shakeel Butt <shakeelb@google.com>,
-        Michal Hocko <mhocko@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH v1 0/2] Ignore non-LRU-based reclaim in memcg reclaim
-Message-ID: <20230308160056.GA414058@cmpxchg.org>
-References: <20230228085002.2592473-1-yosryahmed@google.com>
+        with ESMTP id S229971AbjCHRMO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Mar 2023 12:12:14 -0500
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D5E5C4E85;
+        Wed,  8 Mar 2023 09:12:08 -0800 (PST)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 86C1F21A6D;
+        Wed,  8 Mar 2023 17:12:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1678295527; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=VoLUBOTj+2wOOT9gojYTnc048S/CpdP8U6xaXJdOoRQ=;
+        b=WQcIeXgIxvKvCqlDniZcyPtNPc890uHl1Hh9sXCyHvKMZhnnNFwzzB9AQm/Oprw+a3xRNi
+        j19CmkhXCuMhfOAvv6S+2Ms+Pv20PfgKNTaBIFQKC5ZI6FbfsXiWk3rgUF/VPaZLt/sGuX
+        KMwVnQow5m4C4PXk1/FuUQp3+Y3QGl0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1678295527;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=VoLUBOTj+2wOOT9gojYTnc048S/CpdP8U6xaXJdOoRQ=;
+        b=bJPv7LW87gduXY6cx5LZcqwoJ1/uNwUZbRE2FgXAFrMeyW3CGfmozcQNCtIlrxs1DnGdPB
+        q50siObtpTEkGUAg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7889F1348D;
+        Wed,  8 Mar 2023 17:12:07 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id Q2ZjHefBCGQFTAAAMHmgww
+        (envelope-from <jack@suse.cz>); Wed, 08 Mar 2023 17:12:07 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 00A45A06FF; Wed,  8 Mar 2023 18:12:06 +0100 (CET)
+Date:   Wed, 8 Mar 2023 18:12:06 +0100
+From:   Jan Kara <jack@suse.cz>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
+        xfs <linux-xfs@vger.kernel.org>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        linux-btrfs <linux-btrfs@vger.kernel.org>
+Subject: Re: [LSF TOPIC] online repair of filesystems: what next?
+Message-ID: <20230308171206.zuci3wdd3yg7amw5@quack3>
+References: <Y/5ovz6HI2Z47jbk@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230228085002.2592473-1-yosryahmed@google.com>
+In-Reply-To: <Y/5ovz6HI2Z47jbk@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello Yosry,
+Hi!
 
-On Tue, Feb 28, 2023 at 08:50:00AM +0000, Yosry Ahmed wrote:
-> Reclaimed pages through other means than LRU-based reclaim are tracked
-> through reclaim_state in struct scan_control, which is stashed in
-> current task_struct. These pages are added to the number of reclaimed
-> pages through LRUs. For memcg reclaim, these pages generally cannot be
-> linked to the memcg under reclaim and can cause an overestimated count
-> of reclaimed pages. This short series tries to address that.
+I'm interested in this topic. Some comments below.
 
-Could you please add more details on how this manifests as a problem
-with real workloads?
+On Tue 28-02-23 12:49:03, Darrick J. Wong wrote:
+> Five years ago[0], we started a conversation about cross-filesystem
+> userspace tooling for online fsck.  I think enough time has passed for
+> us to have another one, since a few things have happened since then:
+> 
+> 1. ext4 has gained the ability to send corruption reports to a userspace
+>    monitoring program via fsnotify.  Thanks, Collabora!
+> 
+> 2. XFS now tracks successful scrubs and corruptions seen during runtime
+>    and during scrubs.  Userspace can query this information.
+> 
+> 3. Directory parent pointers, which enable online repair of the
+>    directory tree, is nearing completion.
+> 
+> 4. Dave and I are working on merging online repair of space metadata for
+>    XFS.  Online repair of directory trees is feature complete, but we
+>    still have one or two unresolved questions in the parent pointer
+>    code.
+> 
+> 5. I've gotten a bit better[1] at writing systemd service descriptions
+>    for scheduling and performing background online fsck.
+> 
+> Now that fsnotify_sb_error exists as a result of (1), I think we
+> should figure out how to plumb calls into the readahead and writeback
+> code so that IO failures can be reported to the fsnotify monitor.  I
+> suspect there may be a few difficulties here since fsnotify (iirc)
+> allocates memory and takes locks.
 
-> Patch 1 is just refactoring updating reclaim_state into a helper
-> function, and renames reclaimed_slab to just reclaimed, with a comment
-> describing its true purpose.
+Well, if you want to generate fsnotify events from an interrupt handler,
+you're going to have a hard time, I don't have a good answer for that. But
+offloading of error event generation to a workqueue should be doable (and
+event delivery is async anyway so from userspace POV there's no
+difference). Otherwise locking shouldn't be a problem AFAICT. WRT memory
+allocation, we currently preallocate the error events to avoid the loss of
+event due to ENOMEM. With current usecases (filesystem catastrophical error
+reporting) we have settled on a mempool with 32 preallocated events (note
+that preallocated event gets used only if normal kmalloc fails) for
+simplicity. If the error reporting mechanism is going to be used
+significantly more, we may need to reconsider this but it should be doable.
+And frankly if you have a storm of fs errors *and* the system is going
+ENOMEM at the same time, I have my doubts loosing some error report is
+going to do any more harm ;).
 
-Looking through the code again, I don't think these helpers add value.
+> As a result of (2), XFS now retains quite a bit of incore state about
+> its own health.  The structure that fsnotify gives to userspace is very
+> generic (superblock, inode, errno, errno count).  How might XFS export
+> a greater amount of information via this interface?  We can provide
+> details at finer granularity -- for example, a specific data structure
+> under an allocation group or an inode, or specific quota records.
 
-report_freed_pages() is fairly vague. Report to who? It abstracts only
-two lines of code, and those two lines are more descriptive of what's
-happening than the helper is. Just leave them open-coded.
+Fsnotify (fanotify in fact) interface is fairly flexible in what can be
+passed through it. So if you need to pass some (reasonably short) binary
+blob to userspace which knows how to decode it, fanotify can handle that
+(with some wrapping). Obviously there's a tradeoff to make how much of the
+event is generic (as that is then easier to process by tools common for all
+filesystems) and how much is fs specific (which allows to pass more
+detailed information). But I guess we need to have concrete examples of
+events to discuss this.
 
-add_non_vmanscan_reclaimed() may or may not add anything. But let's
-take a step back. It only has two callsites because lrugen duplicates
-the entire reclaim implementation, including the call to shrink_slab()
-and the transfer of reclaim_state to sc->nr_reclaimed.
+> With (4) on the way, I can envision wanting a system service that would
+> watch for these fsnotify events, and transform the error reports into
+> targeted repair calls in the kernel.  This of course would be very
+> filesystem specific, but I would also like to hear from anyone pondering
+> other usecases for fsnotify filesystem error monitors.
 
-IMO the resulting code would overall be simpler, less duplicative and
-easier to follow if you added a common shrink_slab_reclaim() that
-takes sc, handles the transfer, and documents the memcg exception.
+I think when we do report IO errors (or ENOSPC, EDQUOT errors for that
+matter) through fsnotify, there would be some interesting system-health
+monitoring usecases. But I don't know about anybody working on this.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
