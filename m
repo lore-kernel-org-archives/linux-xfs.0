@@ -2,58 +2,56 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18905C64EC4
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Mar 2023 06:55:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57F6AC64EC4
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Mar 2023 16:03:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229484AbjCHGz1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Mar 2023 01:55:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42114 "EHLO
+        id S232299AbjCHQDK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Mar 2023 11:03:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47522 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229736AbjCHGzY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Mar 2023 01:55:24 -0500
-Received: from mail-ed1-x52a.google.com (mail-ed1-x52a.google.com [IPv6:2a00:1450:4864:20::52a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E5079BE3C
-        for <linux-xfs@vger.kernel.org>; Tue,  7 Mar 2023 22:55:22 -0800 (PST)
-Received: by mail-ed1-x52a.google.com with SMTP id cy23so61579968edb.12
-        for <linux-xfs@vger.kernel.org>; Tue, 07 Mar 2023 22:55:22 -0800 (PST)
+        with ESMTP id S232462AbjCHQCu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Mar 2023 11:02:50 -0500
+Received: from mail-qt1-x834.google.com (mail-qt1-x834.google.com [IPv6:2607:f8b0:4864:20::834])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53C4DC9A6A
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Mar 2023 08:01:04 -0800 (PST)
+Received: by mail-qt1-x834.google.com with SMTP id r5so18561094qtp.4
+        for <linux-xfs@vger.kernel.org>; Wed, 08 Mar 2023 08:01:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1678258520;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=t70odTwmK6O77z83bIqLAvXxKp0qE+ApIEsl/k0TwRg=;
-        b=SvJRYpGbYBjKv59H4HCKsI7FHXUk8wNeT5ln9OF9p4Yo/DzY3x+JBriHlUCsLHkbLx
-         uHAd7HHnZs0HddC1hWysXar5oL4ukgo/NxGJ1wHVSC6czBH1euLkijk1EOW7+Sww2Z8D
-         cUoOFf5GHkzBlSvQ04vt5G4UBXvzz0wyCHSZTsrPaUV8ptoJoHjnZwVBZuVm8Q9gnRVj
-         wrRPSR0xKEskGh/0nSPNtRDNdYx0vvgjbeyLF8NumIBinb2rdsXWQKYiG8dIcOQLYSf7
-         t1D/nGvITRdRK8fmju2RQ7t6cDKNmxR2RdOKMy/7/Qy3fhn2/EdDNb3dgGy7vU2RY/OE
-         0qEQ==
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112; t=1678291257;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=h3hZwpKMg+vlHtotr98nmh9kQ0sI9K4sYDzfoR8/Nkw=;
+        b=VKR9kxxOdfwLKRX+OUxi0CqO3qdzQviWy2G5KfY1OlbX5P2Zjs7o+pnTrBmcgdPn/3
+         3mcJ510vjumwGzDhiWCOfmNnwbgE1xGHD/3UPa5tx6sWp0j1xRGvNagDAeIJvEyJqMmY
+         E2nu6YPt8YzGd84SVtsL7clnfqTYJf9TROwXIfd1yPVrGs7P4BS3ZZRyCNAU28hjP7I0
+         iglsK76350p0U/4VE1Mvd237L0HvzuoKM+uyEaqw58KBNXFQ+xVXxJHJV4vSiuA0zCYF
+         ooBfwRMknXntUcS7NSqpef0p62PactO8oozTc50D7gqWgBk6/NceCWvU3Q7eLccrbNBa
+         VWuw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678258520;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=t70odTwmK6O77z83bIqLAvXxKp0qE+ApIEsl/k0TwRg=;
-        b=bCUjZAaNzgZgPPUoEn//bsDmXE1i5jIjxzJyO2Aec38ev913wClAsJgKFl/vtI1B+4
-         /gstLK7/vRWC/uBhIwNn/F4HrRmfzZJBnW+bL0m8OFR6S08jnH1QPlFuwdMlf+fZRw6m
-         K28qYB8hkTuMDjpvoqKUjINvI3YnYJIIsbfphBR9cSAP/LdDvPKnMzpWcpc13PgpmggM
-         4RqgIeItrEvljRCubUU67MfFJJ7+6Q6ApmO4uyQOSkgNtsWGUKTu0FvOO3dGB1jXMIVb
-         Z9tI+euudVx875AzXiIOUASfigoy/IKybSLhsE7LY/dF2aD5RJvZ1OnMlB71pK6pNQEC
-         kfhA==
-X-Gm-Message-State: AO0yUKXFTDVczZEg11FjI0aSzUa8EULBNtlJUmB5O3Av4Y0pyGZLx3j2
-        66tq3MCqYfC6Z5U31B+lXqhDzYLfZtYgN3gg/UGJXg==
-X-Google-Smtp-Source: AK7set84EqwKbbWtBzLqoI2WBaXzcxS36AWRY3R571B29UifEtRwl/Oaa3UiGOLEMSR+VMGnJ9LPtwdL8OLwQH7/Z6w=
-X-Received: by 2002:a50:8750:0:b0:4c2:ed2:1196 with SMTP id
- 16-20020a508750000000b004c20ed21196mr9453336edv.5.1678258520463; Tue, 07 Mar
- 2023 22:55:20 -0800 (PST)
-MIME-Version: 1.0
-References: <20230228085002.2592473-1-yosryahmed@google.com>
-In-Reply-To: <20230228085002.2592473-1-yosryahmed@google.com>
-From:   Yosry Ahmed <yosryahmed@google.com>
-Date:   Tue, 7 Mar 2023 22:54:44 -0800
-Message-ID: <CAJD7tkbjidNgKi1RLOyVks-RR34mXh+QkKf_BZY_ZcMrjfP0TQ@mail.gmail.com>
-Subject: Re: [PATCH v1 0/2] Ignore non-LRU-based reclaim in memcg reclaim
-To:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        d=1e100.net; s=20210112; t=1678291257;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=h3hZwpKMg+vlHtotr98nmh9kQ0sI9K4sYDzfoR8/Nkw=;
+        b=dWWHFl8TkP+TAED1KJ+MirvvIWmaFLgdSib/1L8GKlrKRDGzF86DQBvITk0tr2UEPF
+         mnmSC1kKsPtxTwaK6VfbwzrG0o7fac5MC1GTkkWdt+gpJdFtQjJ2sS9UYJVIqc4dWOYs
+         fTn/MCmqrkJz1JMpsrVkyE5B3NI8R/BkUFReDh7DzCnmluvTISWDEOuRxTigwggiIvBQ
+         lGQijhxuzY9Qgsk/JfDNP5tBI/OS1V4kU3rDTimGiK1edPnt4xauNUB53OtKuLvMtnES
+         gshW+UDx+qNGJFAyRHmeMoIrLNBMvMO2GfX6FV88JNQmdvJ+nWaL1ZmNADfmNZwoGy9/
+         EfHg==
+X-Gm-Message-State: AO0yUKWrozGfV9llGj63IjBVjbsewN8MSNiqP9xQCWZBq74t6Tjo31OW
+        b7wuN5h+qnc222hrKLZnTjX3Kg==
+X-Google-Smtp-Source: AK7set8VHTOzJ1mGxBCJIKeE5Y/M6Q5A34bQK9WHzEHfDvqAd4z/Xd8BRHp+AwjZqV34Y2Q19xl+tQ==
+X-Received: by 2002:a05:622a:303:b0:3bf:a08d:b265 with SMTP id q3-20020a05622a030300b003bfa08db265mr37829235qtw.24.1678291257174;
+        Wed, 08 Mar 2023 08:00:57 -0800 (PST)
+Received: from localhost (2603-7000-0c01-2716-8f57-5681-ccd3-4a2e.res6.spectrum.com. [2603:7000:c01:2716:8f57:5681:ccd3:4a2e])
+        by smtp.gmail.com with ESMTPSA id a191-20020ae9e8c8000000b00742743dba2asm11578051qkg.39.2023.03.08.08.00.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 08 Mar 2023 08:00:56 -0800 (PST)
+Date:   Wed, 8 Mar 2023 11:00:56 -0500
+From:   Johannes Weiner <hannes@cmpxchg.org>
+To:     Yosry Ahmed <yosryahmed@google.com>
+Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
         "Darrick J. Wong" <djwong@kernel.org>,
         Christoph Lameter <cl@linux.com>,
         David Rientjes <rientjes@google.com>,
@@ -64,64 +62,50 @@ To:     Alexander Viro <viro@zeniv.linux.org.uk>,
         "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         Miaohe Lin <linmiaohe@huawei.com>,
         David Hildenbrand <david@redhat.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
         Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
         Shakeel Butt <shakeelb@google.com>,
-        Michal Hocko <mhocko@kernel.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Michal Hocko <mhocko@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v1 0/2] Ignore non-LRU-based reclaim in memcg reclaim
+Message-ID: <20230308160056.GA414058@cmpxchg.org>
+References: <20230228085002.2592473-1-yosryahmed@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230228085002.2592473-1-yosryahmed@google.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Feb 28, 2023 at 12:50=E2=80=AFAM Yosry Ahmed <yosryahmed@google.com=
-> wrote:
->
+Hello Yosry,
+
+On Tue, Feb 28, 2023 at 08:50:00AM +0000, Yosry Ahmed wrote:
 > Reclaimed pages through other means than LRU-based reclaim are tracked
 > through reclaim_state in struct scan_control, which is stashed in
 > current task_struct. These pages are added to the number of reclaimed
 > pages through LRUs. For memcg reclaim, these pages generally cannot be
 > linked to the memcg under reclaim and can cause an overestimated count
 > of reclaimed pages. This short series tries to address that.
->
+
+Could you please add more details on how this manifests as a problem
+with real workloads?
+
 > Patch 1 is just refactoring updating reclaim_state into a helper
 > function, and renames reclaimed_slab to just reclaimed, with a comment
 > describing its true purpose.
->
-> Patch 2 ignores pages reclaimed outside of LRU reclaim in memcg reclaim.
-> The pages are uncharged anyway, so even if we end up under-reporting
-> reclaimed pages we will still succeed in making progress during
-> charging.
->
-> Do not let the diff stat trick you, patch 2 is a one-line change. All
-> the rest is moving a couple of functions around and a huge comment :)
->
-> RFC -> v1:
-> - Exported report_freed_pages in case XFS is built as a module (Matthew
->   Wilcox).
-> - Renamed reclaimed_slab to reclaim in previously missed MGLRU code.
-> - Refactored using reclaim_state to update sc->nr_reclaimed into a
->   helper and added an XL comment explaining why we ignore
->   reclaim_state->reclaimed in memcg reclaim (Johannes Weiner).
->
-> Yosry Ahmed (2):
->   mm: vmscan: refactor updating reclaimed pages in reclaim_state
->   mm: vmscan: ignore non-LRU-based reclaim in memcg reclaim
->
->  fs/inode.c           |  3 +-
->  fs/xfs/xfs_buf.c     |  3 +-
->  include/linux/swap.h |  5 ++-
->  mm/slab.c            |  3 +-
->  mm/slob.c            |  6 ++--
->  mm/slub.c            |  5 ++-
->  mm/vmscan.c          | 79 +++++++++++++++++++++++++++++++++++---------
->  7 files changed, 74 insertions(+), 30 deletions(-)
->
-> --
-> 2.39.2.722.g9855ee24e9-goog
->
 
-Friendly ping on this series, any comments or thoughts -- especially
-on the memcg side?
+Looking through the code again, I don't think these helpers add value.
+
+report_freed_pages() is fairly vague. Report to who? It abstracts only
+two lines of code, and those two lines are more descriptive of what's
+happening than the helper is. Just leave them open-coded.
+
+add_non_vmanscan_reclaimed() may or may not add anything. But let's
+take a step back. It only has two callsites because lrugen duplicates
+the entire reclaim implementation, including the call to shrink_slab()
+and the transfer of reclaim_state to sc->nr_reclaimed.
+
+IMO the resulting code would overall be simpler, less duplicative and
+easier to follow if you added a common shrink_slab_reclaim() that
+takes sc, handles the transfer, and documents the memcg exception.
