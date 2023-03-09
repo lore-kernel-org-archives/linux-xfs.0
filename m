@@ -2,311 +2,195 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99652C6FD1F
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Mar 2023 09:39:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CA8CC6FD1F
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Mar 2023 13:47:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229746AbjCIJjo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Mar 2023 04:39:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56424 "EHLO
+        id S230037AbjCINrf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Mar 2023 08:47:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230387AbjCIJjn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Mar 2023 04:39:43 -0500
-Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 722BDDF272
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Mar 2023 01:39:40 -0800 (PST)
-Received: by mail-ed1-x52d.google.com with SMTP id a25so4668113edb.0
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Mar 2023 01:39:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1678354779;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=WGNuRvZ8lS7XESHNCrOlWjPsv1FnRrcTXW2fRVQu+M8=;
-        b=MK2v7qt9neRMXXISpAiAvnjRTzv8Mx0W015Pd0IwUbcVGmAGFtQ83Oxeu06anLRDFP
-         duMgUJmvzIKuuPMLOLy0RmL6j3O3JguC/ztcuZhHSArgzzWcUEetTcuBoTyLXDxyw7Nj
-         9fDWoURoX5ylkK0CY9QFIxIuhEw1izEg+zCTZvnhU4g9gPJgINKQakpSw5gpYk6+o3WE
-         ttWgPWn+G2Qdakb23BBYMti0QTYW43AVm2zAUMA0deh+DJWbY3KBgKMjcU16R3nGlIPK
-         9I+cD5rOwLmRm7x1+MN+VLPqf2IUUKkl6GuSxrrp0tC45yvBXvcPkUk3t/XJo2jqFV9b
-         U7Qw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678354779;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=WGNuRvZ8lS7XESHNCrOlWjPsv1FnRrcTXW2fRVQu+M8=;
-        b=PnT87OKloqQV38XV05kTDCfhE5C4SEf5SGxEotGx5XNUqLVDVZDwxpADzpqooOLGJx
-         JEnLx+/vk6MhkM2stAM1bWbudpfdSQWCRjC1vMXg4bM16tJk+LPZz1iVfb/zOSoyrXJA
-         oIJRdUM6hxu72sYSNXx1/cy6KrT5WM1Tekym6q7vOAaKa8eJpFWLS0uL1kjvAahzmShM
-         gqP7OE/POvdDN61ugH57UjKtnfeH1lAmK5U1sY+BqrPPzXw/Zjp4tO4uH2kApHasi/vM
-         3aCRNsH/RsiSKIHz4jGzkuyu+Ek4zIPl/M6YtACoWpuBGQ6/C+yJNkopuWl5aFxdDjCZ
-         QOAA==
-X-Gm-Message-State: AO0yUKWos+/nMkj0Cqju364Y0cCswAK3079wvrQCJkoYnnhR+kfaNY29
-        v77Sz9aG13lX3abl3cMfKI9qOjJlcv8afOicECTe8w==
-X-Google-Smtp-Source: AK7set8tO9nTFdrettltT4IWxh61gXrBDwA9xWU3+9eSg2d2Nv5R0J3ff1LnsWVtXQOFaVzGy3B8ezQvaqTi7wu9WJQ=
-X-Received: by 2002:a17:906:1ec6:b0:8b0:7e1d:f6fa with SMTP id
- m6-20020a1709061ec600b008b07e1df6famr10187131ejj.15.1678354778760; Thu, 09
- Mar 2023 01:39:38 -0800 (PST)
+        with ESMTP id S229794AbjCINrZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Mar 2023 08:47:25 -0500
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40BB4DB4AC
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Mar 2023 05:47:23 -0800 (PST)
+Received: from kwepemi500009.china.huawei.com (unknown [172.30.72.54])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4PXVlf67C6zSkMs;
+        Thu,  9 Mar 2023 21:44:14 +0800 (CST)
+Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
+ (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.21; Thu, 9 Mar
+ 2023 21:47:20 +0800
+Date:   Thu, 9 Mar 2023 22:10:30 +0800
+From:   Long Li <leo.lilong@huawei.com>
+To:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <djwong@kernel.org>
+CC:     <linux-xfs@vger.kernel.org>, <houtao1@huawei.com>,
+        <yi.zhang@huawei.com>, <guoxuenan@huawei.com>
+Subject: Re: [PATCH v2] xfs: fix hung when transaction commit fail in
+ xfs_inactive_ifree
+Message-ID: <20230309141030.GA2546427@ceph-admin>
+References: <20230227062952.GA53788@ceph-admin>
+ <Y/6k1kmxtLqKwq8o@magnolia>
+ <20230301050135.GG360264@dread.disaster.area>
 MIME-Version: 1.0
-References: <20230309093109.3039327-1-yosryahmed@google.com> <20230309093109.3039327-3-yosryahmed@google.com>
-In-Reply-To: <20230309093109.3039327-3-yosryahmed@google.com>
-From:   Yosry Ahmed <yosryahmed@google.com>
-Date:   Thu, 9 Mar 2023 01:39:02 -0800
-Message-ID: <CAJD7tkYJ=xKvRxGKm3bsXy9_yO+fz1wYZcBO-XiAJjRacJsdQg@mail.gmail.com>
-Subject: Re: [PATCH v2 2/3] mm: vmscan: refactor updating reclaimed pages in reclaim_state
-To:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Lameter <cl@linux.com>,
-        David Rientjes <rientjes@google.com>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Roman Gushchin <roman.gushchin@linux.dev>,
-        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Miaohe Lin <linmiaohe@huawei.com>,
-        David Hildenbrand <david@redhat.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
-        Shakeel Butt <shakeelb@google.com>,
-        Michal Hocko <mhocko@kernel.org>, Yu Zhao <yuzhao@google.com>
-Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+In-Reply-To: <20230301050135.GG360264@dread.disaster.area>
+X-Originating-IP: [10.175.127.227]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ kwepemi500009.china.huawei.com (7.221.188.199)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 9, 2023 at 1:31=E2=80=AFAM Yosry Ahmed <yosryahmed@google.com> =
-wrote:
->
-> During reclaim, we keep track of pages reclaimed from other means than
-> LRU-based reclaim through scan_control->reclaim_state->reclaimed_slab,
-> which we stash a pointer to in current task_struct.
->
-> However, we keep track of more than just reclaimed slab pages through
-> this. We also use it for clean file pages dropped through pruned inodes,
-> and xfs buffer pages freed. Rename reclaimed_slab to reclaimed, and add
-> a helper function that wraps updating it through current, so that future
-> changes to this logic are contained within mm/vmscan.c.
->
-> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-> ---
->  fs/inode.c           |  3 +--
->  fs/xfs/xfs_buf.c     |  3 +--
->  include/linux/swap.h |  5 ++++-
->  mm/slab.c            |  3 +--
->  mm/slob.c            |  6 ++----
->  mm/slub.c            |  5 ++---
->  mm/vmscan.c          | 36 ++++++++++++++++++++++++++++++------
->  7 files changed, 41 insertions(+), 20 deletions(-)
->
-> diff --git a/fs/inode.c b/fs/inode.c
-> index 4558dc2f1355..e60fcc41faf1 100644
-> --- a/fs/inode.c
-> +++ b/fs/inode.c
-> @@ -864,8 +864,7 @@ static enum lru_status inode_lru_isolate(struct list_=
-head *item,
->                                 __count_vm_events(KSWAPD_INODESTEAL, reap=
-);
->                         else
->                                 __count_vm_events(PGINODESTEAL, reap);
-> -                       if (current->reclaim_state)
-> -                               current->reclaim_state->reclaimed_slab +=
-=3D reap;
-> +                       mm_account_reclaimed_pages(reap);
+On Wed, Mar 01, 2023 at 04:01:35PM +1100, Dave Chinner wrote:
+> On Tue, Feb 28, 2023 at 05:05:26PM -0800, Darrick J. Wong wrote:
+> > On Mon, Feb 27, 2023 at 02:29:52PM +0800, Long Li wrote:
+> > > After running unplug disk test and unmount filesystem, the umount thread
+> > > hung all the time.
+> > > 
+> > >  crash> dmesg
+> > >  sd 0:0:0:0: rejecting I/O to offline device
+> > >  XFS (sda): log I/O error -5
+> > >  XFS (sda): Corruption of in-memory data (0x8) detected at xfs_defer_finish_noroll+0x12e0/0x1cf0
+> > > 	(fs/xfs/libxfs/xfs_defer.c:504).  Shutting down filesystem.
+> > >  XFS (sda): Please unmount the filesystem and rectify the problem(s)
+> > >  XFS (sda): xfs_inactive_ifree: xfs_trans_commit returned error -5
+> > >  XFS (sda): Unmounting Filesystem
+> > > 
+> > >  crash> bt 3368
+> > >  PID: 3368   TASK: ffff88801bcd8040  CPU: 3   COMMAND: "umount"
+> > >   #0 [ffffc900086a7ae0] __schedule at ffffffff83d3fd25
+> > >   #1 [ffffc900086a7be8] schedule at ffffffff83d414dd
+> > >   #2 [ffffc900086a7c10] xfs_ail_push_all_sync at ffffffff8256db24
+> > >   #3 [ffffc900086a7d18] xfs_unmount_flush_inodes at ffffffff824ee7e2
+> > >   #4 [ffffc900086a7d28] xfs_unmountfs at ffffffff824f2eff
+> > >   #5 [ffffc900086a7da8] xfs_fs_put_super at ffffffff82503e69
+> > >   #6 [ffffc900086a7de8] generic_shutdown_super at ffffffff81aeb8cd
+> > >   #7 [ffffc900086a7e10] kill_block_super at ffffffff81aefcfa
+> > >   #8 [ffffc900086a7e30] deactivate_locked_super at ffffffff81aeb2da
+> > >   #9 [ffffc900086a7e48] deactivate_super at ffffffff81aeb639
+> > >  #10 [ffffc900086a7e68] cleanup_mnt at ffffffff81b6ddd5
+> > >  #11 [ffffc900086a7ea0] __cleanup_mnt at ffffffff81b6dfdf
+> > >  #12 [ffffc900086a7eb0] task_work_run at ffffffff8126e5cf
+> > >  #13 [ffffc900086a7ef8] exit_to_user_mode_prepare at ffffffff813fa136
+> > >  #14 [ffffc900086a7f28] syscall_exit_to_user_mode at ffffffff83d25dbb
+> > >  #15 [ffffc900086a7f40] do_syscall_64 at ffffffff83d1f8d9
+> > >  #16 [ffffc900086a7f50] entry_SYSCALL_64_after_hwframe at ffffffff83e00085
+> > > 
+> > > When we free a cluster buffer from xfs_ifree_cluster, all the inodes in
+> > > cache are marked XFS_ISTALE. On journal commit dirty stale inodes as are
+> > > handled by both buffer and inode log items, inodes marked as XFS_ISTALE
+> > > in AIL will be removed from the AIL because the buffer log item will clean
+> > > it. If the transaction commit fails in the xfs_inactive_ifree(), inodes
+> > > marked as XFS_ISTALE will be left in AIL due to buf log item is not
+> > > committed,
+> > 
+> > Ah.  So the inode log items *are* in the AIL, but the buffer log item
+> > for the inode cluster buffer is /not/ in the AIL?
+> 
+> Which is the rare case, and I think can only happen if an unlinked
+> file is held open until the unlinked list mods that last logged the
+> buffer have been written to disk. We can keep modifying the inode
+> and having it logged while the buffer is clean and has no active log
+> item...
+> 
+
+Yes, buffer log item may be in the AIL, but it could be delete from AIL by
+xfs_buf_item_release when transaction commit fail.
+> 
+> > Is it possible for neither inode nor cluster buffer are in the AIL?
+> > I think the answer is no because freeing the inode will put it in the
+> > AIL?
+> 
+> I think the answer is yes, because after an unlink the buffer log
+> item should be in the AIL at the same LSN as the inode log item when
+> the unlink transaction updated both of them. Pushing a dirty inode
+> flush all the dirty inodes and so both the inode and buffer items
+> get cleaned and removed from the AIL in the same IO completion.
+> 
+> Hence if the unlinked inode has been held open long enough for
+> metadata writeback to complete, close() can trigger inactivation on
+> both a clean inode cluster buffer and clean inode log item. i.e.
+> neither are in the AIL at the time the inactivation and inode chunk
+> freeing starts, and the commit has to insert both.
+> 
+> 
+> > > @@ -679,6 +681,19 @@ xfs_buf_item_release(
+> > >  	       (ordered && dirty && !xfs_buf_item_dirty_format(bip)));
+> > >  	ASSERT(!stale || (bip->__bli_format.blf_flags & XFS_BLF_CANCEL));
+> > >  
+> > > +	/*
+> > > +	 * If it is an inode buffer and item marked as stale, abort flushing
+> > > +	 * inodes associated with the buf, prevent inode item left in AIL.
+> > > +	 */
+> > > +	if (aborted && (bip->bli_flags & XFS_BLI_STALE_INODE)) {
+> > > +		list_for_each_entry_safe(lp, n, &bp->b_li_list, li_bio_list) {
+> > > +			iip = (struct xfs_inode_log_item *)lp;
+> > 
+> > Use container_of(), not raw casting.
+> > 
+> > > +
+> > > +			if (xfs_iflags_test(iip->ili_inode, XFS_ISTALE))
+> > > +				xfs_iflush_abort(iip->ili_inode);
+> > > +		}
+> > > +	}
+> > > +
+> 
+> This is closer to the sort of fix that is needed, but this should
+> not be done until the last reference to the buf log item goes away.
+> i.e. in xfs_buf_item_put().
+> 
+Agree with you, Take a look at the other code, aborting stale inodes are
+after last reference to the buf log item.
+
+> But then I look at the same conditions in xfs_buf_item_unpin(),
+> which is the normal path that runs this stale inode cleanup, it does
+> this for stale buffers if it drops the last reference to the buf log
+> item.
+> 
+>                 /*
+>                  * If we get called here because of an IO error, we may or may
+>                  * not have the item on the AIL. xfs_trans_ail_delete() will
+>                  * take care of that situation. xfs_trans_ail_delete() drops
+>                  * the AIL lock.
+>                  */
+>                 if (bip->bli_flags & XFS_BLI_STALE_INODE) {
+>                         xfs_buf_item_done(bp);
+>                         xfs_buf_inode_iodone(bp);
+>                         ASSERT(list_empty(&bp->b_li_list));
+>                 } else {
+>                         xfs_trans_ail_delete(lip, SHUTDOWN_LOG_IO_ERROR);
+>                         xfs_buf_item_relse(bp);
+>                         ASSERT(bp->b_log_item == NULL);
 >                 }
->                 iput(inode);
->                 spin_lock(lru_lock);
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 54c774af6e1c..060079f1e966 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -286,8 +286,7 @@ xfs_buf_free_pages(
->                 if (bp->b_pages[i])
->                         __free_page(bp->b_pages[i]);
->         }
-> -       if (current->reclaim_state)
-> -               current->reclaim_state->reclaimed_slab +=3D bp->b_page_co=
-unt;
-> +       report_freed_pages(bp->b_page_count);
+> 		xfs_buf_relse(bp);
+> 
+> And if the buffer is not stale, then it runs it through
+> xfs_buf_ioend_fail() to actually mark the attached log items as
+> failed.
+> 
+> So it seems to me that the cleanup needed here is more complex than
+> unconditionally aborting stale inodes, but I haven't had a chance to
+> think it through fully yet. This is one of the more complex corners
+> of the buffer/inode item life cycles, and it's been a source of
+> shutdown issues for a long time....
+> 
+Sorry I replied so late, I tried to think a little clearer. The normal path
+that runs stale inode cleanup in xfs_buf_item_unpin() just release buf log
+item and aborting stale inodes, three will be no non-stale inode in the buf
+b_li_list list because of buf lock, so I think it is enougth aborting stale
+inodes. There may be something I haven't thought through, thanks for pointing
+it out.
 
+As you said, it is a complex corners of the buffer/inode item life cycles.
+The problem [1] about inode log item UAF that I tried to solve previously,
+it can't be solved simply due to inode log item life cycles, and I don't 
+have a new solution yet.
 
-Ugh I missed updating this one to mm_account_reclaimed_page().
+[1] https://patchwork.kernel.org/project/xfs/patch/20230211022941.GA1515023@ceph-admin/
 
-This fixup needs to be squashed here. I will include it in v3 if a
-respin is needed, otherwise I hope Andrew can squash it in.
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 060079f1e966..15d1e5a7c2d3 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -286,7 +286,7 @@ xfs_buf_free_pages(
-                if (bp->b_pages[i])
-                        __free_page(bp->b_pages[i]);
-        }
--       report_freed_pages(bp->b_page_count);
-+       mm_account_reclaimed_pages(bp->b_page_count);
-
-        if (bp->b_pages !=3D bp->b_page_array)
-                kmem_free(bp->b_pages);
-
->
->
->         if (bp->b_pages !=3D bp->b_page_array)
->                 kmem_free(bp->b_pages);
-> diff --git a/include/linux/swap.h b/include/linux/swap.h
-> index 209a425739a9..589ea2731931 100644
-> --- a/include/linux/swap.h
-> +++ b/include/linux/swap.h
-> @@ -153,13 +153,16 @@ union swap_header {
->   * memory reclaim
->   */
->  struct reclaim_state {
-> -       unsigned long reclaimed_slab;
-> +       /* pages reclaimed outside of LRU-based reclaim */
-> +       unsigned long reclaimed;
->  #ifdef CONFIG_LRU_GEN
->         /* per-thread mm walk data */
->         struct lru_gen_mm_walk *mm_walk;
->  #endif
->  };
->
-> +void mm_account_reclaimed_pages(unsigned long pages);
-> +
->  #ifdef __KERNEL__
->
->  struct address_space;
-> diff --git a/mm/slab.c b/mm/slab.c
-> index dabc2a671fc6..64bf1de817b2 100644
-> --- a/mm/slab.c
-> +++ b/mm/slab.c
-> @@ -1392,8 +1392,7 @@ static void kmem_freepages(struct kmem_cache *cache=
-p, struct slab *slab)
->         smp_wmb();
->         __folio_clear_slab(folio);
->
-> -       if (current->reclaim_state)
-> -               current->reclaim_state->reclaimed_slab +=3D 1 << order;
-> +       mm_account_reclaimed_pages(1 << order);
->         unaccount_slab(slab, order, cachep);
->         __free_pages(&folio->page, order);
->  }
-> diff --git a/mm/slob.c b/mm/slob.c
-> index fe567fcfa3a3..79cc8680c973 100644
-> --- a/mm/slob.c
-> +++ b/mm/slob.c
-> @@ -61,7 +61,7 @@
->  #include <linux/slab.h>
->
->  #include <linux/mm.h>
-> -#include <linux/swap.h> /* struct reclaim_state */
-> +#include <linux/swap.h> /* mm_account_reclaimed_pages() */
->  #include <linux/cache.h>
->  #include <linux/init.h>
->  #include <linux/export.h>
-> @@ -211,9 +211,7 @@ static void slob_free_pages(void *b, int order)
->  {
->         struct page *sp =3D virt_to_page(b);
->
-> -       if (current->reclaim_state)
-> -               current->reclaim_state->reclaimed_slab +=3D 1 << order;
-> -
-> +       mm_account_reclaimed_pages(1 << order);
->         mod_node_page_state(page_pgdat(sp), NR_SLAB_UNRECLAIMABLE_B,
->                             -(PAGE_SIZE << order));
->         __free_pages(sp, order);
-> diff --git a/mm/slub.c b/mm/slub.c
-> index 39327e98fce3..7aa30eef8235 100644
-> --- a/mm/slub.c
-> +++ b/mm/slub.c
-> @@ -11,7 +11,7 @@
->   */
->
->  #include <linux/mm.h>
-> -#include <linux/swap.h> /* struct reclaim_state */
-> +#include <linux/swap.h> /* mm_account_reclaimed_pages() */
->  #include <linux/module.h>
->  #include <linux/bit_spinlock.h>
->  #include <linux/interrupt.h>
-> @@ -2063,8 +2063,7 @@ static void __free_slab(struct kmem_cache *s, struc=
-t slab *slab)
->         /* Make the mapping reset visible before clearing the flag */
->         smp_wmb();
->         __folio_clear_slab(folio);
-> -       if (current->reclaim_state)
-> -               current->reclaim_state->reclaimed_slab +=3D pages;
-> +       mm_account_reclaimed_pages(pages);
->         unaccount_slab(slab, order, s);
->         __free_pages(&folio->page, order);
->  }
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index fef7d1c0f82b..a3e38851b34a 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -511,6 +511,34 @@ static void set_task_reclaim_state(struct task_struc=
-t *task,
->         task->reclaim_state =3D rs;
->  }
->
-> +/*
-> + * mm_account_reclaimed_pages(): account reclaimed pages outside of LRU-=
-based
-> + * reclaim
-> + * @pages: number of pages reclaimed
-> + *
-> + * If the current process is undergoing a reclaim operation, increment t=
-he
-> + * number of reclaimed pages by @pages.
-> + */
-> +void mm_account_reclaimed_pages(unsigned long pages)
-> +{
-> +       if (current->reclaim_state)
-> +               current->reclaim_state->reclaimed +=3D pages;
-> +}
-> +EXPORT_SYMBOL(mm_account_reclaimed_pages);
-> +
-> +/*
-> + * flush_reclaim_state(): add pages reclaimed outside of LRU-based recla=
-im to
-> + * scan_control->nr_reclaimed.
-> + */
-> +static void flush_reclaim_state(struct scan_control *sc,
-> +                               struct reclaim_state *rs)
-> +{
-> +       if (rs) {
-> +               sc->nr_reclaimed +=3D rs->reclaimed;
-> +               rs->reclaimed =3D 0;
-> +       }
-> +}
-> +
->  static long xchg_nr_deferred(struct shrinker *shrinker,
->                              struct shrink_control *sc)
->  {
-> @@ -5346,8 +5374,7 @@ static int shrink_one(struct lruvec *lruvec, struct=
- scan_control *sc)
->                 vmpressure(sc->gfp_mask, memcg, false, sc->nr_scanned - s=
-canned,
->                            sc->nr_reclaimed - reclaimed);
->
-> -       sc->nr_reclaimed +=3D current->reclaim_state->reclaimed_slab;
-> -       current->reclaim_state->reclaimed_slab =3D 0;
-> +       flush_reclaim_state(sc, current->reclaim_state);
->
->         return success ? MEMCG_LRU_YOUNG : 0;
->  }
-> @@ -6472,10 +6499,7 @@ static void shrink_node(pg_data_t *pgdat, struct s=
-can_control *sc)
->
->         shrink_node_memcgs(pgdat, sc);
->
-> -       if (reclaim_state) {
-> -               sc->nr_reclaimed +=3D reclaim_state->reclaimed_slab;
-> -               reclaim_state->reclaimed_slab =3D 0;
-> -       }
-> +       flush_reclaim_state(sc, reclaim_state);
->
->         /* Record the subtree's reclaim efficiency */
->         if (!sc->proactive)
-> --
-> 2.40.0.rc0.216.gc4246ad0f0-goog
->
+Thanks
+Long Li
