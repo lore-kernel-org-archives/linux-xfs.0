@@ -2,154 +2,139 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73698C64EC4
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Mar 2023 02:38:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46B94C6FD19
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Mar 2023 04:40:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230057AbjCJCiG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Mar 2023 21:38:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48338 "EHLO
+        id S229668AbjCJEk0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Mar 2023 23:40:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48060 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230061AbjCJCiD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Mar 2023 21:38:03 -0500
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EB5F30E6;
-        Thu,  9 Mar 2023 18:37:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1678415876; x=1709951876;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=a49MuUqY9uTekKka3fjSfGx7KEeZta0jUytQypcPsz4=;
-  b=NBMWznDdDXBUP28JrQIKgX39GTrDDLvDhmA2XxM3FfnD2y0m8LUX0SLW
-   yZH5e4cLS8HYxGq8neMC0Qi0I0nVKQHKJcUVUg/5kF1n5CEcwfypTIJ+I
-   dNOcexVjFX/17BTWuTJsZhpcyD34tyYR7d6k8hftlwvemjrP7LuU0dZii
-   k4wIwS7u+VzL98MgYKlOiwt+4De8E6r8cg+Lafu3kgsvr0BdYk05SFjOk
-   CVV8enYhTDZpeEZ6Qu2Y2nQ9uotNFahLL300I86s64HFJUML62Y0yiL24
-   yjrp54NT3C85teApsyJ8qXLMsglEEBHMbR/HjH6G9WzWVnGNH+hgW69XK
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10644"; a="335325555"
-X-IronPort-AV: E=Sophos;i="5.98,248,1673942400"; 
-   d="scan'208";a="335325555"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2023 18:37:55 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10644"; a="801413998"
-X-IronPort-AV: E=Sophos;i="5.98,248,1673942400"; 
-   d="scan'208";a="801413998"
-Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
-  by orsmga004.jf.intel.com with ESMTP; 09 Mar 2023 18:37:50 -0800
-Received: from kbuild by b613635ddfff with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1paSdh-0003OJ-03;
-        Fri, 10 Mar 2023 02:37:49 +0000
-Date:   Fri, 10 Mar 2023 10:37:25 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Yosry Ahmed <yosryahmed@google.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Lameter <cl@linux-foundation.org>,
-        David Rientjes <rientjes@google.com>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Roman Gushchin <roman.gushchin@linux.dev>,
-        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Miaohe Lin <linmiaohe@huawei.com>,
-        David Hildenbrand <david@redhat.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
-        Shakeel Butt <shakeelb@google.com>,
-        Michal Hocko <mhocko@kernel.org>, Yu Zhao <yuzhao@google.com>
-Cc:     llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH v2 2/3] mm: vmscan: refactor updating reclaimed pages in
- reclaim_state
-Message-ID: <202303101037.13QFIjZH-lkp@intel.com>
-References: <20230309093109.3039327-3-yosryahmed@google.com>
+        with ESMTP id S229637AbjCJEkX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Mar 2023 23:40:23 -0500
+X-Greylist: delayed 511 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 09 Mar 2023 20:40:20 PST
+Received: from out-11.mta0.migadu.com (out-11.mta0.migadu.com [91.218.175.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B784102843
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Mar 2023 20:40:19 -0800 (PST)
+Date:   Fri, 10 Mar 2023 13:31:37 +0900
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1678422707;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=G2zysOwE/XmHnnQEWgReghgqR+PBhnvLsAHfZMM+Qa4=;
+        b=tXFG+Jg9Cc+ASjSJb5f85Sn4QAmHr6OdtNasQoTS54YtoTxYQ1Z22ditujRLuWd2l4u5lZ
+        hhEIISbpKiqFnvfInaEB3IpkHkOukm7qn3P/hUDGs6JVWgnuT6Qmhh+Ns7l2owcwEv1bx9
+        NJYxympOP5WD50/Duuq+OnQ5JhmDAsw=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Naoya Horiguchi <naoya.horiguchi@linux.dev>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Hugh Dickins <hughd@google.com>, linux-afs@lists.infradead.org,
+        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        cluster-devel@redhat.com, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, naoya.horiguchi@nec.com
+Subject: Re: [PATCH 7/7] mm: return an ERR_PTR from __filemap_get_folio
+Message-ID: <20230310043137.GA1624890@u2004>
+References: <20230121065755.1140136-1-hch@lst.de>
+ <20230121065755.1140136-8-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230309093109.3039327-3-yosryahmed@google.com>
+In-Reply-To: <20230121065755.1140136-8-hch@lst.de>
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Yosry,
+On Sat, Jan 21, 2023 at 07:57:55AM +0100, Christoph Hellwig wrote:
+> Instead of returning NULL for all errors, distinguish between:
+> 
+>  - no entry found and not asked to allocated (-ENOENT)
+>  - failed to allocate memory (-ENOMEM)
+>  - would block (-EAGAIN)
+> 
+> so that callers don't have to guess the error based on the passed
+> in flags.
+> 
+> Also pass through the error through the direct callers:
+> filemap_get_folio, filemap_lock_folio filemap_grab_folio
+> and filemap_get_incore_folio.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Thank you for the patch! Yet something to improve:
+Hello,
 
-[auto build test ERROR on xfs-linux/for-next]
-[also build test ERROR on linus/master v6.3-rc1 next-20230309]
-[cannot apply to akpm-mm/mm-everything vbabka-slab/for-next]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+I found a NULL pointer dereference issue related to this patch,
+so let me share it.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Yosry-Ahmed/mm-vmscan-move-set_task_reclaim_state-after-cgroup_reclaim/20230309-173354
-base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
-patch link:    https://lore.kernel.org/r/20230309093109.3039327-3-yosryahmed%40google.com
-patch subject: [PATCH v2 2/3] mm: vmscan: refactor updating reclaimed pages in reclaim_state
-config: powerpc-g5_defconfig (https://download.01.org/0day-ci/archive/20230310/202303101037.13QFIjZH-lkp@intel.com/config)
-compiler: clang version 17.0.0 (https://github.com/llvm/llvm-project 67409911353323ca5edf2049ef0df54132fa1ca7)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # install powerpc cross compiling tool for clang build
-        # apt-get install binutils-powerpc-linux-gnu
-        # https://github.com/intel-lab-lkp/linux/commit/63df60b27250f3f7a2892f99f27258b60a6e8e13
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Yosry-Ahmed/mm-vmscan-move-set_task_reclaim_state-after-cgroup_reclaim/20230309-173354
-        git checkout 63df60b27250f3f7a2892f99f27258b60a6e8e13
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=powerpc olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=powerpc SHELL=/bin/bash arch/powerpc/kernel/ drivers/net/usb/ fs/xfs/
+Here is the bug message (I used akpm/mm-unstable on Mar 9):
 
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-| Link: https://lore.kernel.org/oe-kbuild-all/202303101037.13QFIjZH-lkp@intel.com/
+[ 2871.648659] BUG: kernel NULL pointer dereference, address: 0000000000000000
+[ 2871.651286] #PF: supervisor read access in kernel mode
+[ 2871.653231] #PF: error_code(0x0000) - not-present page
+[ 2871.655170] PGD 80000001517dd067 P4D 80000001517dd067 PUD 1491d1067 PMD 0
+[ 2871.657739] Oops: 0000 [#1] PREEMPT SMP PTI
+[ 2871.659329] CPU: 4 PID: 1599 Comm: page-types Tainted: G            E    N 6.3.0-rc1-v6.3-rc1-230309-1629-189-ga71a7+ #36
+[ 2871.663362] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.1-2.fc37 04/01/2014
+[ 2871.666507] RIP: 0010:mincore_page+0x19/0x90
+[ 2871.668086] Code: cc 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 0f 1f 44 00 00 41 54 55 53 e8 92 2b 03 00 48 3d 00 f0 ff ff 77 54 48 89 c3 <48> 8b 00 48 c1 e8 02 89 c5 83 e5 01 75 21 8b 43 34 85 c0 74 47 f0
+[ 2871.678313] RSP: 0018:ffffbe57c203fd00 EFLAGS: 00010207
+[ 2871.681422] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
+[ 2871.685609] RDX: 0000000000000000 RSI: ffff9f59ca1506d8 RDI: ffff9f59ce7c2880
+[ 2871.689599] RBP: 0000000000000000 R08: 00007f9f14200000 R09: ffff9f59c9078508
+[ 2871.693295] R10: 00007f9ed4400000 R11: 0000000000000000 R12: 0000000000000200
+[ 2871.695969] R13: 0000000000000001 R14: ffff9f59c9ef4450 R15: ffff9f59c4ac9000
+[ 2871.699927] FS:  00007f9ed47ee740(0000) GS:ffff9f5abbc00000(0000) knlGS:0000000000000000
+[ 2871.703969] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 2871.706689] CR2: 0000000000000000 CR3: 0000000149ffe006 CR4: 0000000000170ee0
+[ 2871.709923] DR0: ffffffff91531760 DR1: ffffffff91531761 DR2: ffffffff91531762
+[ 2871.713424] DR3: ffffffff91531763 DR6: 00000000ffff0ff0 DR7: 0000000000000600
+[ 2871.716758] Call Trace:
+[ 2871.717998]  <TASK>
+[ 2871.719008]  __mincore_unmapped_range+0x6e/0xd0
+[ 2871.721220]  mincore_unmapped_range+0x16/0x30
+[ 2871.723288]  walk_pgd_range+0x485/0x9e0
+[ 2871.725128]  __walk_page_range+0x195/0x1b0
+[ 2871.727224]  walk_page_range+0x151/0x180
+[ 2871.728883]  __do_sys_mincore+0xec/0x2b0
+[ 2871.730707]  do_syscall_64+0x3a/0x90
+[ 2871.732179]  entry_SYSCALL_64_after_hwframe+0x72/0xdc
+[ 2871.734148] RIP: 0033:0x7f9ed443f4ab
+[ 2871.735548] Code: 73 01 c3 48 8b 0d 75 99 1b 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa b8 1b 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 45 99 1b 00 f7 d8 64 89 01 48
+[ 2871.742194] RSP: 002b:00007ffe924d72b8 EFLAGS: 00000206 ORIG_RAX: 000000000000001b
+[ 2871.744787] RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007f9ed443f4ab
+[ 2871.747186] RDX: 00007ffe92557300 RSI: 0000000000200000 RDI: 00007f9ed4200000
+[ 2871.749404] RBP: 00007ffe92567330 R08: 0000000000000005 R09: 0000000000000000
+[ 2871.751683] R10: 00007f9ed4405d68 R11: 0000000000000206 R12: 00007ffe925674b8
+[ 2871.753925] R13: 0000000000404af1 R14: 000000000040ad78 R15: 00007f9ed4833000
+[ 2871.756493]  </TASK>
 
-All errors (new ones prefixed by >>):
+The precedure to reproduce this is (1) punch hole some page in a shmem
+file, then (2) call mincore() over the punch-holed address range. 
 
->> fs/xfs/xfs_buf.c:289:2: error: call to undeclared function 'report_freed_pages'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-           report_freed_pages(bp->b_page_count);
-           ^
-   fs/xfs/xfs_buf.c:289:2: note: did you mean 'mempool_free_pages'?
-   include/linux/mempool.h:102:6: note: 'mempool_free_pages' declared here
-   void mempool_free_pages(void *element, void *pool_data);
-        ^
-   1 error generated.
+I confirmed that filemap_get_incore_folio() (actually filemap_get_entry()
+inside it) returns NULL in that case, so we unexpectedly enter the following
+if-block for the "not found" case.
 
+> diff --git a/mm/mincore.c b/mm/mincore.c
+> index cd69b9db008126..5437e584b208bf 100644
+> --- a/mm/mincore.c
+> +++ b/mm/mincore.c
+> @@ -61,7 +61,7 @@ static unsigned char mincore_page(struct address_space *mapping, pgoff_t index)
+>  	 * tmpfs's .fault). So swapped out tmpfs mappings are tested here.
+>  	 */
+>  	folio = filemap_get_incore_folio(mapping, index);
+> -	if (folio) {
+> +	if (!IS_ERR(folio)) {
+>  		present = folio_test_uptodate(folio);
+>  		folio_put(folio);
+>  	}
 
-vim +/report_freed_pages +289 fs/xfs/xfs_buf.c
+I guess that this patch intends to make filemap_get_incore_folio() return
+non-NULL error code, so replacing the check with "if (!IS_ERR_OR_NULL(folio))"
+cannot be a solution. But I have no idea about the fix, so could you help me?
 
-   273	
-   274	static void
-   275	xfs_buf_free_pages(
-   276		struct xfs_buf	*bp)
-   277	{
-   278		uint		i;
-   279	
-   280		ASSERT(bp->b_flags & _XBF_PAGES);
-   281	
-   282		if (xfs_buf_is_vmapped(bp))
-   283			vm_unmap_ram(bp->b_addr, bp->b_page_count);
-   284	
-   285		for (i = 0; i < bp->b_page_count; i++) {
-   286			if (bp->b_pages[i])
-   287				__free_page(bp->b_pages[i]);
-   288		}
- > 289		report_freed_pages(bp->b_page_count);
-   290	
-   291		if (bp->b_pages != bp->b_page_array)
-   292			kmem_free(bp->b_pages);
-   293		bp->b_pages = NULL;
-   294		bp->b_flags &= ~_XBF_PAGES;
-   295	}
-   296	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+Thanks,
+Naoya Horiguchi
