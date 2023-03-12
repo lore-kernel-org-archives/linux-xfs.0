@@ -2,98 +2,86 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9EA1C6FA99
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Mar 2023 23:02:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21E95C6FD19
+	for <linux-xfs@archiver.kernel.org>; Sun, 12 Mar 2023 16:44:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231404AbjCJXCW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Mar 2023 18:02:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49654 "EHLO
+        id S230308AbjCLQoO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 12 Mar 2023 12:44:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230293AbjCJXCV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Mar 2023 18:02:21 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56D11147838;
-        Fri, 10 Mar 2023 15:02:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Reply-To:Content-Type:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=eet2vNHP9SJyRytQAXeN8dV9MlcbH4NW2iBs2IrmZDA=; b=D0P+yBFRbDD6Jw9Y3fJhnTPsrq
-        l88RCpE421CMXqcRp/zu8zhyDXD+kJD0SPKKMr5xdj+r+PBL4rWOKzpmL4ADiku7It8+dicSWA+bw
-        5nSv3/FhwMiiZ8Qs3BCO6P8jWlSmByf6ebJTBPwM8+cdpQH34xs5/HsfavYDfFD5FCTCdYMvpHvb9
-        ouAorx54GfC33pUF+eihyGd+4yFtUGNGOEJQMv6wZ44zglX7yyWeEPuJsBiZHS2ax8cVE0U6BJ5pf
-        LZXiMI6IuRVZdUi5aHTL0FzKAnkhTIRa0NDDo0ybW8KUsYg13a1d12EQ91jREbJATq+Z2UUTZ7Tv9
-        9M0tob/w==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1palkh-00GZGm-Vp; Fri, 10 Mar 2023 23:02:20 +0000
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, keescook@chromium.org,
-        yzaikin@google.com, j.granados@samsung.com,
-        patches@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH] xfs: simplify two-level sysctl registration for xfs_table
-Date:   Fri, 10 Mar 2023 15:02:19 -0800
-Message-Id: <20230310230219.3948819-1-mcgrof@kernel.org>
-X-Mailer: git-send-email 2.37.1
+        with ESMTP id S230511AbjCLQoM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 12 Mar 2023 12:44:12 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 413A31CAD2
+        for <linux-xfs@vger.kernel.org>; Sun, 12 Mar 2023 09:44:12 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C873B60F58
+        for <linux-xfs@vger.kernel.org>; Sun, 12 Mar 2023 16:44:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 349B1C433EF;
+        Sun, 12 Mar 2023 16:44:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1678639451;
+        bh=E5FAMT0emE/ma57+eJ3vsszpPhI5+1Ocbe6SJE3KX7Q=;
+        h=Date:From:To:Cc:Subject:From;
+        b=X/EeTBwMBvnQ7HWj7CW1EHWaUSrObocflml0cm8oAjmRqHQ7RCLLt4Fvr4KBAOvAU
+         jREVZDZq8jCOzFCByRyXX5GHEvI0ldmt/SzBtsBGvxpH3nO6O0vwsu8/wkYrcg6fPa
+         kxtP1nQMFAJZZRZ52O1Ybxc0zl+TWQD/U8dFPGndq9A1Wt/jOcnsm6EHN8fEypnfs3
+         PmhYx9TxYbtBvakOtGZOs4echKMAm7TvbQGHDmpl3/rmpxWQiZzX5w2CW6xAQepWJt
+         k/LgSUARMlkQ9VqS1cb2b7OJx9Pj/4OG7Lrf94GPI9IumIysdyq/zUaRw/EJ3GKMMS
+         P2mXGulHjk/SQ==
+Date:   Sun, 12 Mar 2023 09:44:10 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org, torvalds@linux-foundation.org
+Cc:     david@fromorbit.com, dchinner@redhat.com,
+        linux-xfs@vger.kernel.org, pengfei.xu@intel.com
+Subject: [GIT PULL] xfs: bug fixes for 6.3
+Message-ID: <167863926526.335292.4073445070513678525.stg-ugh@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-There is no need to declare two tables to just create directories,
-this can be easily be done with a prefix path with register_sysctl().
+Hi Linus,
 
-Simplify this registration.
+Please pull this branch with a couple of bug fixes.
 
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
----
+As usual, I did a test-merge with the main upstream branch as of a few
+minutes ago, and didn't see any conflicts.  Please let me know if you
+encounter any problems.
 
-This is not clear to some so I've updated the docs for the sysctl
-registration here:
+--D
 
-https://lore.kernel.org/all/20230310223947.3917711-1-mcgrof@kernel.org/T/#u     
+The following changes since commit fe15c26ee26efa11741a7b632e9f23b01aca4cc6:
 
- fs/xfs/xfs_sysctl.c | 20 +-------------------
- 1 file changed, 1 insertion(+), 19 deletions(-)
+Linux 6.3-rc1 (2023-03-05 14:52:03 -0800)
 
-diff --git a/fs/xfs/xfs_sysctl.c b/fs/xfs/xfs_sysctl.c
-index 546a6cd96729..fade33735393 100644
---- a/fs/xfs/xfs_sysctl.c
-+++ b/fs/xfs/xfs_sysctl.c
-@@ -210,28 +210,10 @@ static struct ctl_table xfs_table[] = {
- 	{}
- };
- 
--static struct ctl_table xfs_dir_table[] = {
--	{
--		.procname	= "xfs",
--		.mode		= 0555,
--		.child		= xfs_table
--	},
--	{}
--};
--
--static struct ctl_table xfs_root_table[] = {
--	{
--		.procname	= "fs",
--		.mode		= 0555,
--		.child		= xfs_dir_table
--	},
--	{}
--};
--
- int
- xfs_sysctl_register(void)
- {
--	xfs_table_header = register_sysctl_table(xfs_root_table);
-+	xfs_table_header = register_sysctl("fs/xfs", xfs_table);
- 	if (!xfs_table_header)
- 		return -ENOMEM;
- 	return 0;
--- 
-2.39.1
+are available in the Git repository at:
 
+git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.3-fixes-1
+
+for you to fetch changes up to 8ac5b996bf5199f15b7687ceae989f8b2a410dda:
+
+xfs: fix off-by-one-block in xfs_discard_folio() (2023-03-05 15:13:23 -0800)
+
+----------------------------------------------------------------
+Fixes for 6.3-rc1:
+
+* Fix a crash if mount time quotacheck fails when there are inodes
+queued for garbage collection.
+* Fix an off by one error when discarding folios after writeback
+failure.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+
+----------------------------------------------------------------
+Dave Chinner (2):
+xfs: quotacheck failure can race with background inode inactivation
+xfs: fix off-by-one-block in xfs_discard_folio()
+
+fs/xfs/xfs_aops.c | 21 ++++++++++++++-------
+fs/xfs/xfs_qm.c   | 40 ++++++++++++++++++++++++++--------------
+2 files changed, 40 insertions(+), 21 deletions(-)
