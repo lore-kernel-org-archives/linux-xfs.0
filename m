@@ -2,63 +2,121 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15AE9C61DA4
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Mar 2023 02:17:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EE78C7618D
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Mar 2023 02:19:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229493AbjCNCRE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Mar 2023 22:17:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35832 "EHLO
+        id S229992AbjCNCTg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Mar 2023 22:19:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229535AbjCNCRD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Mar 2023 22:17:03 -0400
+        with ESMTP id S229755AbjCNCTf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Mar 2023 22:19:35 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 810F474DF3;
-        Mon, 13 Mar 2023 19:17:02 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDC131B541;
+        Mon, 13 Mar 2023 19:19:33 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0D30D61568;
-        Tue, 14 Mar 2023 02:17:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39BE4C433EF;
-        Tue, 14 Mar 2023 02:17:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678760221;
-        bh=UtMc2HIRW2sA6QVojclDoqMIDC0pR/NtSuo5jT/W5RQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=I56P5kEladRF1DyG9KSRoi3ET602Ygnwtk8p5HxSotXuN/YMXyfaOh6zPHNn+qjo1
-         gbJc+AxoLaAkxZsCt/b3HWpZDuvk75elNBbAuT0xiGEmeDbG65pKCH1rUFRcO7f+Kq
-         A9SVwy4t+D27Je4QQfePB1ZO9QADSbsNbnfagamOGWR5tXPHhs846VeYjluegcleIm
-         QM5wBJ8wzaTrVItJe0mGIJqhGrV378iVj3xulvK4zBFo+H1gWf5e+2/qOARq0Yi8B7
-         LCNl+4Er5y1YdO909+X9NoIiX8FOzPGcxdqD4XaT2JnxOkpqAVs90wKQMvJNhGsgE4
-         M99zJ+VLaE2ZA==
-Date:   Mon, 13 Mar 2023 22:16:59 -0400
-From:   Sasha Levin <sashal@kernel.org>
-To:     Leah Rumancik <leah.rumancik@gmail.com>
-Cc:     stable@vger.kernel.org, linux-xfs@vger.kernel.org,
-        amir73il@gmail.com, chandan.babu@oracle.com
-Subject: Re: [PATCH 5.15 00/11] sgid fixes for 5.15.y
-Message-ID: <ZA/ZGzTO5BPKs9Rc@sashalap>
-References: <20230307185922.125907-1-leah.rumancik@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <20230307185922.125907-1-leah.rumancik@gmail.com>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 88C8B61572;
+        Tue, 14 Mar 2023 02:19:33 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DFDAC4339C;
+        Tue, 14 Mar 2023 02:19:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+        s=korg; t=1678760373;
+        bh=jQhD/M7Ani+bWf3eE9KwDDKZgpO+n2YjiyMZ49M+DVU=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=TEy2LQY75YaxuMZ9i9d0txb/bAPwVksXWhiZdQy+Gp0ocrEuwRrFo+5Wh7rqlFeNe
+         1LlrirqETNh2b1bMxwBWU+ClRS3UtSm156sFelxG38ph5FucwHNDR7Wyqo4Eq0iphr
+         BLQ4sFlz8R2QZTg6FkeByENg0z1522RLRjMbOHgw=
+Date:   Mon, 13 Mar 2023 19:19:31 -0700
+From:   Andrew Morton <akpm@linux-foundation.org>
+To:     kernel test robot <yujie.liu@intel.com>
+Cc:     Christoph Hellwig <hch@lst.de>, <oe-lkp@lists.linux.dev>,
+        <lkp@intel.com>, Linux Memory Management List <linux-mm@kvack.org>,
+        "Andreas Gruenbacher" <agruenba@redhat.com>,
+        Hugh Dickins <hughd@google.com>,
+        "Matthew Wilcox" <willy@infradead.org>,
+        <linux-afs@lists.infradead.org>, <linux-ext4@vger.kernel.org>,
+        <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <linux-nfs@vger.kernel.org>, <linux-nilfs@vger.kernel.org>,
+        <cgroups@vger.kernel.org>
+Subject: Re: [linux-next:master] [mm] 480c454ff6:
+ BUG:kernel_NULL_pointer_dereference
+Message-Id: <20230313191931.f84776cb09dc8c4b50673a76@linux-foundation.org>
+In-Reply-To: <202303140916.5e8e96b2-yujie.liu@intel.com>
+References: <202303140916.5e8e96b2-yujie.liu@intel.com>
+X-Mailer: Sylpheed 3.7.0 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 07, 2023 at 10:59:11AM -0800, Leah Rumancik wrote:
->Hello,
->
->I finished testing the sgid fixes which Amir graciously backported to
->5.15. This series fixes the previously failing generic/673 and
->generic/68[3-7]. No regressions were seen in the 25 runs of the auto
->group x 8 configs. I also did some extra runs on the perms group and
->no regressions there either. The corresponding fixes are already in
->6.1.y.
+On Tue, 14 Mar 2023 10:10:42 +0800 kernel test robot <yujie.liu@intel.com> wrote:
 
-Queued up, thanks!
+> Greeting,
+> 
+> Previous report:
+> https://lore.kernel.org/oe-lkp/202303100947.9b421b1c-yujie.liu@intel.com
+> 
+> FYI, we noticed BUG:kernel_NULL_pointer_dereference,address due to commit (built with gcc-11):
+> 
+> commit: 480c454ff64b734a35677ee4b239e32143a4235c ("mm: return an ERR_PTR from __filemap_get_folio")
+> https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git master
+> 
+> [test failed on linux-next/master 24469a0e5052ba01a35a15f104717a82b7a4798b]
+> 
+> in testcase: trinity
+> version: trinity-x86_64-e63e4843-1_20220913
+> with following parameters:
+> 
+> 	runtime: 300s
+> 	group: group-04
+> 
+> test-description: Trinity is a linux system call fuzz tester.
+> test-url: http://codemonkey.org.uk/projects/trinity/
+> 
+> on test machine: qemu-system-x86_64 -enable-kvm -cpu SandyBridge -smp 2 -m 16G
+> 
+> caused below changes (please refer to attached dmesg/kmsg for entire log/backtrace):
+> 
+> 
+> [   29.300153][ T6430] BUG: kernel NULL pointer dereference, address: 0000000000000000
 
--- 
-Thanks,
-Sasha
+Thanks, I expect this is fixed by
+
+commit 151dff099e8e6d9c8efcc75ad0ad3b8eead58704
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Fri Mar 10 08:00:23 2023 +0100
+
+    mm-return-an-err_ptr-from-__filemap_get_folio-fix
+    
+    fix null-pointer deref
+    
+    Link: https://lkml.kernel.org/r/20230310070023.GA13563@lst.de
+    Signed-off-by: Christoph Hellwig <hch@lst.de>
+    Reported-by: Naoya Horiguchi <naoya.horiguchi@linux.dev>
+      Link: https://lkml.kernel.org/r/20230310043137.GA1624890@u2004
+    Cc: Andreas Gruenbacher <agruenba@redhat.com>
+    Cc: Hugh Dickins <hughd@google.com>
+    Cc: Matthew Wilcox (Oracle) <willy@infradead.org>
+    Cc: Ryusuke Konishi <konishi.ryusuke@gmail.com>
+    Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+
+diff --git a/mm/swap_state.c b/mm/swap_state.c
+index c7160070b9da..b76a65ac28b3 100644
+--- a/mm/swap_state.c
++++ b/mm/swap_state.c
+@@ -390,6 +390,8 @@ struct folio *filemap_get_incore_folio(struct address_space *mapping,
+ 	struct swap_info_struct *si;
+ 	struct folio *folio = filemap_get_entry(mapping, index);
+ 
++	if (!folio)
++		return ERR_PTR(-ENOENT);
+ 	if (!xa_is_value(folio))
+ 		return folio;
+ 	if (!shmem_mapping(mapping))
+
+
+
