@@ -2,111 +2,102 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9ED5C74A44
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Mar 2023 05:51:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A91E6C74A44
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Mar 2023 06:00:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229622AbjCNFvK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Mar 2023 01:51:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48542 "EHLO
+        id S229665AbjCNGAf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Mar 2023 02:00:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229473AbjCNFvI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Mar 2023 01:51:08 -0400
-Received: from mail-vs1-xe2d.google.com (mail-vs1-xe2d.google.com [IPv6:2607:f8b0:4864:20::e2d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A370518B2D;
-        Mon, 13 Mar 2023 22:51:07 -0700 (PDT)
-Received: by mail-vs1-xe2d.google.com with SMTP id u16so2456378vso.1;
-        Mon, 13 Mar 2023 22:51:07 -0700 (PDT)
+        with ESMTP id S229483AbjCNGAe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Mar 2023 02:00:34 -0400
+Received: from mail-vs1-xe30.google.com (mail-vs1-xe30.google.com [IPv6:2607:f8b0:4864:20::e30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A39AD50F99
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Mar 2023 23:00:33 -0700 (PDT)
+Received: by mail-vs1-xe30.google.com with SMTP id a3so13137691vsi.0
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Mar 2023 23:00:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1678773066;
+        d=gmail.com; s=20210112; t=1678773632;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=nkELbpHMWnIvY0KDDq1ZWS8/EaM606iOo5TghU491kA=;
-        b=T+/T5q8DzR6UXJGAt4lEVfGCadU4yGdX0Z+bGRL2FhlE9GuZsqhFVfzKjbmDaTlkvN
-         +OTX6HHRauuX/ELDDUbCDcFQ3tEB8g10igLEmU+2CqqbCVnAgo8o3dCRfciyW9nrIUWH
-         mKvRiBV1dTLzsJqqEfCN3mvdoGOm+ObzBTXKAxHHRs9k9NABvUbpnXkPtujfm9oUfzH7
-         SqDvHcStHwey4msWaZF8KBeo/NmTdNpb2yVjF6IjOxPACtenGqOHCqEbHR7+1sdrix/F
-         bFJClpaF8okpBnkRtc/TGBVCXAxNWNG/lcfFosbd8r7dBa0q5nk3xrjvA3cqsHWP1uO3
-         MQDQ==
+        bh=kP3Av7PNq5YG3n+WqZ0X/vq7UDnO3zRjOV0vIaZuv6Y=;
+        b=Cp3dVhJLa1BtuxlxxlH18hFgQAEbEZXkAAZn2bOxFQXYCqtdU+D00d7dxp8wZAT7mL
+         /8OY/+m8dMIMHcrLg6JiDDYUdZIpoj+XKw8Gz2FOrUHg0avDq7VSxphohLfdaSRqgT1D
+         y4LYZrKBcxEMrEg2LmveIr9BOl7HohCJ9b5xYwCBth6lCrsh2h/YQ/uY5sNIfj7obNTj
+         pgXHihTm2DofD70eDRBOYm0dsl3Tq2mFR6OsbkrA6G2nDS4EvtkB6a7nWUpmU+agJZf5
+         lwdzg+2pAWZxDTgrCs4RR1SPrLwB1ZvVqccbAr8FAHvZV9n3RcvRmQJYmsM0pp0UCVAd
+         cC/w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678773066;
+        d=1e100.net; s=20210112; t=1678773632;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=nkELbpHMWnIvY0KDDq1ZWS8/EaM606iOo5TghU491kA=;
-        b=a0cvHTUk4SwnfBe2Z35EhhmOpBwTKyCRGSe6FJOJ6IenD8mozLWSDj+Phhck+ep0cj
-         sc5NIp6fj6qWz93RngcirdxK0idUCOBF7WSnYEziUHBiC+dun8XtoA25CspNTJwZycWm
-         4txIa8CNWgZTsaU5NP1iBV3Di2Fwu4fNeGTTASyISRUjatpkgTzRiuwU4wPiIirc2yR1
-         UQQ+hDg7Px0pKRtjJGure1TN6/P6MsP5tCTlFHKg+p0nTQlDfj9drBxDqNXBqSnN0iIO
-         vBo6ElXqjZmlDX8WGVFn6v/s7jbvnUvI1Hty2N8P1Lsn/qCxJ13s9DAECPH47W+W/Azb
-         45Gg==
-X-Gm-Message-State: AO0yUKWWC9JjPMxogkUFAfMZz+uWESsfJrRVtlVM1S1n73e8UzHe5rup
-        uVaBREr9Z2bSi5vH0uGJyBRgi+TZ0Zl4SxKZEcRayIp0Kx4=
-X-Google-Smtp-Source: AK7set/ZX6QQLTH3WtDU4dZhg+6KVBiIQpyrel5QVbBkzj+MkkvxnGOUDVBVgn11yKGk9ecRtuuCL++W816mNECa2D8=
-X-Received: by 2002:a05:6102:10c:b0:425:aec3:694 with SMTP id
- z12-20020a056102010c00b00425aec30694mr171131vsq.0.1678773066424; Mon, 13 Mar
- 2023 22:51:06 -0700 (PDT)
+        bh=kP3Av7PNq5YG3n+WqZ0X/vq7UDnO3zRjOV0vIaZuv6Y=;
+        b=2Gcf7NqbKeqFO2bbK8gwEI2o9PZ7SaY70/3eYlmrlFLqRyx21CBVSjTJWSsF1IfNu/
+         BKuGpX+ghl8EFr/1KUF/D+8agEYS2pZzpji//RdFTLwennTsmaYUid89SrfThILAppX6
+         60yVtQDi2/miLiz261Hch09U2nKC74qi4PzBaQl/8Piq9pDXDVpoaXaLEL1xdDs4e5PH
+         5c+3zcXyMgYOvXs+jMAcbsOCtwWk7P1A1uMwMW3KrEXYkNAk7NCLQJdsTVUtotDMn6sc
+         r8Jui/l7AM7uwQNWocTp8sfFl4PmCD1ascvTlXtIa+MqwLFhso2QfJ0qXUt4C6eftrwC
+         xPYg==
+X-Gm-Message-State: AO0yUKW+4+g6FQ4Fjc9OwrcBQWZcKqlDhoOPkj++bswcNaVmbl+2feD2
+        /ciNfnSkAIYu0dfA8TstHyuso6J61AE2OaZESqdIX+junmA=
+X-Google-Smtp-Source: AK7set+0U3jARLrBK3JLB4ch84N2wz+MAB+1T6/bR8qJ4rho+Qcee9DshupRCBnjq/pmTwDv2y+IsfhmU+X286POq+k=
+X-Received: by 2002:a05:6102:3196:b0:423:e7a3:aedf with SMTP id
+ c22-20020a056102319600b00423e7a3aedfmr4736064vsh.0.1678773632600; Mon, 13 Mar
+ 2023 23:00:32 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230314042109.82161-1-catherine.hoang@oracle.com> <20230314042109.82161-4-catherine.hoang@oracle.com>
-In-Reply-To: <20230314042109.82161-4-catherine.hoang@oracle.com>
+References: <20230314042109.82161-1-catherine.hoang@oracle.com>
+ <20230314042109.82161-3-catherine.hoang@oracle.com> <CAOQ4uxhKEhQ4X+rE4AYq70iEWKfqwQOZu47w_n1dbXd-wOeHTw@mail.gmail.com>
+ <20230314052502.GB11376@frogsfrogsfrogs>
+In-Reply-To: <20230314052502.GB11376@frogsfrogsfrogs>
 From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Tue, 14 Mar 2023 07:50:55 +0200
-Message-ID: <CAOQ4uxiYVpF9gjt-kTVpnoVYboOFG-Fpfw=KMrM=-aEHod4vXw@mail.gmail.com>
-Subject: Re: [PATCH v1 3/4] xfs: add XFS_IOC_SETFSUUID ioctl
-To:     Catherine Hoang <catherine.hoang@oracle.com>
-Cc:     linux-xfs@vger.kernel.org,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Theodore Tso <tytso@mit.edu>
+Date:   Tue, 14 Mar 2023 08:00:21 +0200
+Message-ID: <CAOQ4uxgeHcSOnZxKV4rGXa_gj4-hwicu7=VVvofrQGwcDSdt0w@mail.gmail.com>
+Subject: Re: [PATCH v1 2/4] xfs: implement custom freeze/thaw functions
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Catherine Hoang <catherine.hoang@oracle.com>,
+        linux-xfs@vger.kernel.org, Jan Kara <jack@suse.cz>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 14, 2023 at 6:27=E2=80=AFAM Catherine Hoang
-<catherine.hoang@oracle.com> wrote:
+On Tue, Mar 14, 2023 at 7:25=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
+ wrote:
 >
-> Add a new ioctl to set the uuid of a mounted filesystem.
+> On Tue, Mar 14, 2023 at 07:11:56AM +0200, Amir Goldstein wrote:
+> > On Tue, Mar 14, 2023 at 6:25=E2=80=AFAM Catherine Hoang
+> > <catherine.hoang@oracle.com> wrote:
+> > >
+> > > Implement internal freeze/thaw functions and prevent other threads fr=
+om changing
+> > > the freeze level by adding a new SB_FREEZE_ECLUSIVE level. This is re=
+quired to
+> >
+> > This looks troubling in several ways:
+> > - Layering violation
+> > - Duplication of subtle vfs code
+> >
+> > > prevent concurrent transactions while we are updating the uuid.
+> > >
+> >
+> > Wouldn't it be easier to hold s_umount while updating the uuid?
 >
-> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_fs.h |   1 +
->  fs/xfs/xfs_ioctl.c     | 107 +++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_log.c       |  19 ++++++++
->  fs/xfs/xfs_log.h       |   2 +
->  4 files changed, 129 insertions(+)
->
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index 1cfd5bc6520a..a350966cce99 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -831,6 +831,7 @@ struct xfs_scrub_metadata {
->  #define XFS_IOC_FSGEOMETRY          _IOR ('X', 126, struct xfs_fsop_geom=
-)
->  #define XFS_IOC_BULKSTAT            _IOR ('X', 127, struct xfs_bulkstat_=
-req)
->  #define XFS_IOC_INUMBERS            _IOR ('X', 128, struct xfs_inumbers_=
-req)
-> +#define XFS_IOC_SETFSUUID           _IOR ('X', 129, uuid_t)
+> Why?  Userspace holds an open file descriptor, the fs won't get
+> unmounted.
 
-Should be _IOW.
+"Implement internal freeze/thaw functions and prevent other threads
+from changing
+the freeze level..."
 
-Would you consider defining that as FS_IOC_SETFSUUID in fs.h,
-so that other fs could implement it later on, instead of hoisting it later?
+holding s_umount prevents changing freeze levels.
 
-It would be easy to add support for FS_IOC_SETFSUUID to ext4
-by generalizing ext4_ioctl_setuuid().
-
-Alternatively, we could hoist EXT4_IOC_SETFSUUID and struct fsuuid
-to fs.h and use that ioctl also for xfs.
-
-Using an extensible struct with flags for that ioctl may turn out to be use=
-ful,
-for example, to verify that the new uuid is unique, despite the fact
-that xfs was
-mounted with -onouuid (useful IMO) or to explicitly request a restore of ol=
-d
-uuid that would fail if new_uuid !=3D meta uuid.
+The special thing about the frozen state is that userspace is allowed
+to leave the fs frozen without holding any open fd, but because there
+is no such requirement from SET_FSUUID I don't understand the need
+for a new freeze level.
 
 Thanks,
 Amir.
