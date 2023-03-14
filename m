@@ -2,140 +2,94 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B652FC6FD1F
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Mar 2023 06:28:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C477AC7618A
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Mar 2023 08:05:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229675AbjCNG24 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Mar 2023 02:28:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40450 "EHLO
+        id S230489AbjCNIFq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Mar 2023 04:05:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229805AbjCNG2x (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Mar 2023 02:28:53 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B1DF6C184
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Mar 2023 23:28:51 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id v21so5393945ple.9
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Mar 2023 23:28:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1678775331;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=xUpzCIkz2FblEEncIDppVD2W8EIPWnx8ZdAJN/1P3P4=;
-        b=Pn1yxFxq/i2u6Y3mGCXQSxmtXhNSbMGZVLrgnPHSWp4jY6xEyvN5Aew3JW8mxHQWtD
-         dBRljS9AH0aBw82mgYYa9tEStlXwLQwk3310wyQhY43XDmpJeVl4Wb8YA5bQ9mvgAX0x
-         SYPDXnIybogu0jciAMx8LVTk8qUBoYgaxPp5vxj2nwKY3BRdf2i9MZT9DVNBQnn9ZWj3
-         djqvZPW2nkWv1j54Y7Qqsnei8Xy1o7etnNXf8FiRfoi8av8g7+rEXItqnurrEQR2rrbp
-         FxkeJjso/N1wmIU4B5anzMP/aNOZDDEmgf4IKdFNQMghH7ZRthGNq0egGu32mBhrAIm/
-         dTEw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678775331;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xUpzCIkz2FblEEncIDppVD2W8EIPWnx8ZdAJN/1P3P4=;
-        b=uJcj+Nvxz4enMS6pYnFqAfWeq6mNui/p/drsFqAhFjw8WvA/V3gOKXekGIfv+CLCef
-         B68aU0+JO8v3uw7wZESirIKwnn0Tk9qGYGbjxP5SL8KyYZeXz4nzzwn8zZuhovRffSox
-         DY2s6bhSnoLmtNTjqYrvqiIMe8a9ZkiviZhkDZl/C0Rfhnry4KulbN05qDE5HhUqX1Wi
-         1pY6oAd6LXnYFDJ1bA8lyosFQQRGJ6Pz7m8g/fWxqxGT8r69Jt9LLg6vk9CyBcN1I8gq
-         MkEQh1dJrYd8pkF+0ECMXgzTl2RQt2hT1umWupJltrAkuka9++z+mqet6rplSy4DujIL
-         6XoQ==
-X-Gm-Message-State: AO0yUKXpdXazcsnx7AZY3Ckl50/H0LX3U//ofLJNaXpc0641OatlvjvJ
-        PIwzvaz/+ryC8rpzZhM1UnSiYg==
-X-Google-Smtp-Source: AK7set/FJaQZjfFJIOLv81AW6E88dFB4kkoS6/rq7uNHA7RY1T/Zetvb+NHl8ySrifpmj5PPUK/FTg==
-X-Received: by 2002:a17:902:e842:b0:19a:b4a9:9ddb with SMTP id t2-20020a170902e84200b0019ab4a99ddbmr45078019plg.49.1678775330828;
-        Mon, 13 Mar 2023 23:28:50 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-4-237.pa.vic.optusnet.com.au. [49.186.4.237])
-        by smtp.gmail.com with ESMTPSA id e1-20020a170902744100b0019c91d3bdb4sm851838plt.304.2023.03.13.23.28.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Mar 2023 23:28:50 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1pby9P-008YmK-3F; Tue, 14 Mar 2023 17:28:47 +1100
-Date:   Tue, 14 Mar 2023 17:28:47 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Catherine Hoang <catherine.hoang@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v1 0/4] setting uuid of online filesystems
-Message-ID: <20230314062847.GQ360264@dread.disaster.area>
-References: <20230314042109.82161-1-catherine.hoang@oracle.com>
+        with ESMTP id S230421AbjCNIF0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Mar 2023 04:05:26 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91CEE80936;
+        Tue, 14 Mar 2023 01:05:15 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 269001FE20;
+        Tue, 14 Mar 2023 08:05:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1678781114; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=TqIJDRVcUYmUlbVn0Al2s2TH5Ea7U61xcXfPnxRC8bk=;
+        b=JuuPkRge9DaAsKPAnSsr3J3o2B1c45g4WDsJTAypBCaOTG/+k2YtwugJotj+5umoepDq5L
+        TuUVPHm4eFg+d2esuhVpCZd6V3STHgLDJx9hJDyNjPYs0q2y13F3+6WIXihGzreIdcwUbu
+        lO+u7taEJcnju7keWQH7NrYiQQWglyE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1678781114;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=TqIJDRVcUYmUlbVn0Al2s2TH5Ea7U61xcXfPnxRC8bk=;
+        b=lFATKKuMWsr+cewxUEmgvU2RGt38Txqkod0y1aDc5gwWv25hEcpjSi72g6lfcJ97SCxl5W
+        v+xphcCSgLf76gAg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E80C113A26;
+        Tue, 14 Mar 2023 08:05:13 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id PMfcN7kqEGSmNQAAMHmgww
+        (envelope-from <vbabka@suse.cz>); Tue, 14 Mar 2023 08:05:13 +0000
+Message-ID: <4b9fc9c6-b48c-198f-5f80-811a44737e5f@suse.cz>
+Date:   Tue, 14 Mar 2023 09:05:13 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230314042109.82161-1-catherine.hoang@oracle.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+From:   Vlastimil Babka <vbabka@suse.cz>
+Subject: [LSF/MM/BPF TOPIC] SLOB+SLAB allocators removal and future SLUB
+ improvements
+To:     lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org, linux-block@vger.kernel.org,
+        bpf@vger.kernel.org, linux-xfs@vger.kernel.org
+Content-Language: en-US
+Cc:     David Rientjes <rientjes@google.com>,
+        Christoph Lameter <cl@linux.com>,
+        Pekka Enberg <penberg@kernel.org>,
+        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
+        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
+        Roman Gushchin <roman.gushchin@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 13, 2023 at 09:21:05PM -0700, Catherine Hoang wrote:
-> Hi all,
-> 
-> This series of patches implements a new ioctl to set the uuid of mounted
-> filesystems. Eventually this will be used by the 'xfs_io fsuuid' command
-> to allow userspace to update the uuid.
-> 
-> Comments and feedback appreciated!
+As you're probably aware, my plan is to get rid of SLOB and SLAB, leaving
+only SLUB going forward. The removal of SLOB seems to be going well, there
+were no objections to the deprecation and I've posted v1 of the removal
+itself [1] so it could be in -next soon.
 
-What's the use case for this?
+The immediate benefit of that is that we can allow kfree() (and kfree_rcu())
+to free objects from kmem_cache_alloc() - something that IIRC at least xfs
+people wanted in the past, and SLOB was incompatible with that.
 
-What are the pro's and cons of the implementation?
+For SLAB removal I haven't yet heard any objections (but also didn't
+deprecate it yet) but if there are any users due to particular workloads
+doing better with SLAB than SLUB, we can discuss why those would regress and
+what can be done about that in SLUB.
 
-Some problems I see:
+Once we have just one slab allocator in the kernel, we can take a closer
+look at what the users are missing from it that forces them to create own
+allocators (e.g. BPF), and could be considered to be added as a generic
+implementation to SLUB.
 
-* How does this interact with pNFS exports (i.e.
-CONFIG_EXPORTFS_BLOCK_OPS). XFS hands the sb_uuid directly to pNFS
-server (and remote clients, I think) so that incoming mapping
-requests can be directed to the correct block device hosting the XFS
-filesystem the mapping information is for. IIRC, the pNFS data path
-is just given a byte offset into the device where the UUID in the
-superblock lives, and if it matches it allows the remote IO to go
-ahead - it doesn't actually know that there is a filesystem on that
-device at all...
+Thanks,
+Vlastimil
 
-* IIRC, the nfsd export table can also use the filesystem uuid to
-identify the filesystem being exported, and IIRC that gets encoded
-in the filehandle. Does changing the filesystem UUID then cause
-problems with export indentification and/or file handle
-creation/resolution?
-
-* Is the VFS prepared for sb->s_uuid changing underneath running
-operations on mounted filesystems? I can see that this might cause
-problems with any sort of fscrypt implementation as it may encode
-the s_uuid into encryption keys held in xattrs, similarly IMA and
-EVM integrity protection keys.
-
-* Should the VFS superblock sb->s_uuid use the XFS
-sb->sb_meta_uuid value and never change because we can encode it
-into other objects stored in the active filesystem? What does that
-mean for tools that identify block devices or filesystems by the VFS
-uuid rather than the filesystem uuid?
-
-There's a whole can-o-worms here - the ability to dynamically change
-the UUID of a filesystem while it is mounted mean we need to think
-about these things - it's no longer as simple as "can only do it
-offline" which is typically only used to relabel a writeable
-snapshot of a golden image file during new VM deployment
-preparation.....
-
-> 
-> Catherine
-> 
-> Catherine Hoang (4):
->   xfs: refactor xfs_uuid_mount and xfs_uuid_unmount
->   xfs: implement custom freeze/thaw functions
-
-The "custom" parts that XFS requires need to be added to the VFS
-level freeze/thaw functions, not duplicate the VFS functionality
-within XFS and then slight modify it for this additional feature.
-Doing this results in unmaintainable code over the long term.
-
->   xfs: add XFS_IOC_SETFSUUID ioctl
->   xfs: export meta uuid via xfs_fsop_geom
-
-For what purpose does userspace ever need to know the sb_meta_uuid?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+[1] https://lore.kernel.org/all/20230310103210.22372-1-vbabka@suse.cz/
