@@ -2,118 +2,117 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93CD3C6FD1C
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Mar 2023 09:07:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6CC0C7618B
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Mar 2023 13:26:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229472AbjCNJHk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Mar 2023 05:07:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37766 "EHLO
+        id S232366AbjCNN0G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Mar 2023 09:26:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229700AbjCNJHj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Mar 2023 05:07:39 -0400
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 456452915E;
-        Tue, 14 Mar 2023 02:07:38 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.169])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4PbSN525JLz4f3mVc;
-        Tue, 14 Mar 2023 17:07:33 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.127.227])
-        by APP3 (Coremail) with SMTP id _Ch0CgDX0R9VORBk1nWZEw--.18813S4;
-        Tue, 14 Mar 2023 17:07:35 +0800 (CST)
-From:   Ye Bin <yebin@huaweicloud.com>
-To:     djwong@kernel.org, linux-xfs@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, Ye Bin <yebin10@huawei.com>
-Subject: [PATCH] xfs: fix possible assert failed in xfs_fs_put_super() when do cpu offline
-Date:   Tue, 14 Mar 2023 17:06:49 +0800
-Message-Id: <20230314090649.326642-1-yebin@huaweicloud.com>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S232376AbjCNNZr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Mar 2023 09:25:47 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF90996616;
+        Tue, 14 Mar 2023 06:23:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=CyA6aX3LWF3S0LPq2B7KDIy9+tGtAg2Aqm4KsZBo8Hk=; b=IjN16Nr/j4WtYjF4MKbc6hAh/E
+        r1bkPgb4/YGLPSO+ZHwaIHrCj6AYOllQjfgCiURKiKyBq/kCQXyJstxnIGpP0Vp2YeHco2JAHOzMx
+        fSXXBplsiWXjS1M9T8XQcAljcKIllA2fXBIzNlruoPlmC8WzJ+VS9zhbX79ayTGui8Q4CwDm0kTmu
+        Jhcre75eo3MY1gtiyS20cX/f7Sdv32876LgD2fKZ45TJf/GjH/ZYl4xy5PxXk9sg9M46M1hQWZq7B
+        X+GRLXQN4L6C2qX9h4igSgw7kW9G0VopqYa1C22FUfitHAIXtVRczeFUkUdA8DPHR+A9X2P7rg78c
+        pS15A3pw==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1pc4MQ-00CvDN-HJ; Tue, 14 Mar 2023 13:06:38 +0000
+Date:   Tue, 14 Mar 2023 13:06:38 +0000
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Vlastimil Babka <vbabka@suse.cz>
+Cc:     lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org, linux-block@vger.kernel.org,
+        bpf@vger.kernel.org, linux-xfs@vger.kernel.org,
+        David Rientjes <rientjes@google.com>,
+        Christoph Lameter <cl@linux.com>,
+        Pekka Enberg <penberg@kernel.org>,
+        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
+        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
+        Roman Gushchin <roman.gushchin@linux.dev>
+Subject: Re: [LSF/MM/BPF TOPIC] SLOB+SLAB allocators removal and future SLUB
+ improvements
+Message-ID: <ZBBxXhvL/oS3uu5/@casper.infradead.org>
+References: <4b9fc9c6-b48c-198f-5f80-811a44737e5f@suse.cz>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: _Ch0CgDX0R9VORBk1nWZEw--.18813S4
-X-Coremail-Antispam: 1UD129KBjvJXoWxZr4kAr4fGr45Ww4rZr4UXFb_yoW5GrWDpr
-        ZxCr4UGr4kAr9rAw43Ar4DtFy8Xa1DAFW5Cw1xJFy2yFn8Gw1Yv34IkFW7JFy7Wr4fXr12
-        qry5X3yIg3s5taUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUgKb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-        6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-        Cjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCj
-        c4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4
-        CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1x
-        MIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJV
-        Cq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBI
-        daVFxhVjvjDU0xZFpf9x07UE-erUUUUU=
-X-CM-SenderInfo: p1hex046kxt4xhlfz01xgou0bp/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4b9fc9c6-b48c-198f-5f80-811a44737e5f@suse.cz>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Ye Bin <yebin10@huawei.com>
+On Tue, Mar 14, 2023 at 09:05:13AM +0100, Vlastimil Babka wrote:
+> The immediate benefit of that is that we can allow kfree() (and kfree_rcu())
+> to free objects from kmem_cache_alloc() - something that IIRC at least xfs
+> people wanted in the past, and SLOB was incompatible with that.
+> 
+> For SLAB removal I haven't yet heard any objections (but also didn't
+> deprecate it yet) but if there are any users due to particular workloads
+> doing better with SLAB than SLUB, we can discuss why those would regress and
+> what can be done about that in SLUB.
+> 
+> Once we have just one slab allocator in the kernel, we can take a closer
+> look at what the users are missing from it that forces them to create own
+> allocators (e.g. BPF), and could be considered to be added as a generic
+> implementation to SLUB.
 
-There's a issue when do cpu offline test:
-CPU: 48 PID: 1168152 Comm: umount Kdump: loaded Tainted: G L
-pstate: 60000005 (nZCv daif -PAN -UAO -TCO BTYPE=--)
-pc : assfail+0x8c/0xb4
-lr : assfail+0x38/0xb4
-sp : ffffa00033ce7c40
-x29: ffffa00033ce7c40 x28: ffffa00014794f30
-x27: ffffa00014f6ca20 x26: 1fffe0120b2e2030
-x25: ffff009059710188 x24: ffff00886c0a4650
-x23: 1fffe0110d8148ca x22: ffff009059710180
-x21: ffffa00015155680 x20: ffff00886c0a4000
-x19: 0000000000000001 x18: 0000000000000000
-x17: 0000000000000000 x16: 0000000000000000
-x15: 0000000000000007 x14: 1fffe00304cef265
-x13: ffff00182642b200 x12: ffff8012d37757bf
-x11: 1fffe012d37757be x10: ffff8012d37757be
-x9 : ffffa00010603a0c x8 : 0000000041b58ab3
-x7 : ffff94000679cf44 x6 : 00000000ffffffc0
-x5 : 0000000000000021 x4 : 00000000ffffffca
-x3 : 1ffff40002a27ee1 x2 : 0000000000000004
-x1 : 0000000000000000 x0 : ffffa0001513f000
-Call trace:
- assfail+0x8c/0xb4
- xfs_destroy_percpu_counters+0x98/0xa4
- xfs_fs_put_super+0x1a0/0x2a4
- generic_shutdown_super+0x104/0x2c0
- kill_block_super+0x8c/0xf4
- deactivate_locked_super+0xa4/0x164
- deactivate_super+0xb0/0xdc
- cleanup_mnt+0x29c/0x3ec
- __cleanup_mnt+0x1c/0x30
- task_work_run+0xe0/0x200
- do_notify_resume+0x244/0x320
- work_pending+0xc/0xa0
+With kfree() now working on kmem_cache_alloc(), I'd like to re-propose
+the introduction of a generic free() function which can free any
+allocated object.  It starts out looking a lot like kvfree(), but
+can be enhanced to cover other things ... here's a version I did from
+2018 before giving up on it when I realised slob made it impossible:
 
-We analyzed the data in vmcore is correct. But triggered above issue.
-As f689054aace2 ("percpu_counter: add percpu_counter_sum_all interface")
-commit describes there is a small race window between the online CPUs traversal
-of percpu_counter_sum and the CPU offline callback. This means percpu_counter_sum()
-may return incorrect result during cpu offline.
-To solve above issue use percpu_counter_sum_all() interface to make sure
-result is correct to prevent false triggering of assertions.
++/**
++ * free() - Free memory
++ * @ptr: Pointer to memory
++ *
++ * This function can free almost any type of memory.  It can safely be
++ * called on:
++ * * NULL pointers.
++ * * Pointers to read-only data (will do nothing).
++ * * Pointers to memory allocated from kmalloc().
++ * * Pointers to memory allocated from kmem_cache_alloc().
++ * * Pointers to memory allocated from vmalloc().
++ * * Pointers to memory allocated from alloc_percpu().
++ * * Pointers to memory allocated from __get_free_pages().
++ * * Pointers to memory allocated from page_frag_alloc().
++ *
++ * It cannot free memory allocated by dma_pool_alloc() or dma_alloc_coherent().
++ */
++void free(const void *ptr)
++{
++       struct page *page;
++
++       if (unlikely(ZERO_OR_NULL_PTR(ptr)))
++               return;
++       if (is_kernel_rodata((unsigned long)ptr))
++               return;
++
++       page = virt_to_head_page(ptr);
++       if (likely(PageSlab(page)))
++               return kmem_cache_free(page->slab_cache, (void *)ptr);
++
++       if (is_vmalloc_addr(ptr))
++               return vfree(ptr);
++       if (is_kernel_percpu_address((unsigned long)ptr))
++               free_percpu((void __percpu *)ptr);
++       if (put_page_testzero(page))
++               __put_page(page);
++}
++EXPORT_SYMBOL(free);
 
-Signed-off-by: Ye Bin <yebin10@huawei.com>
----
- fs/xfs/xfs_super.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Looking at it now, I'd also include a test for stack memory (and do
+nothing if it is)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 2479b5cbd75e..c0ce66f966ee 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1076,7 +1076,7 @@ xfs_destroy_percpu_counters(
- 	percpu_counter_destroy(&mp->m_ifree);
- 	percpu_counter_destroy(&mp->m_fdblocks);
- 	ASSERT(xfs_is_shutdown(mp) ||
--	       percpu_counter_sum(&mp->m_delalloc_blks) == 0);
-+	       percpu_counter_sum_all(&mp->m_delalloc_blks) == 0);
- 	percpu_counter_destroy(&mp->m_delalloc_blks);
- 	percpu_counter_destroy(&mp->m_frextents);
- }
--- 
-2.31.1
-
+There are some prep patches that I'm not including here to clear out
+the use of 'free' as a function name (some conflicting identifiers named
+'free') and a fun one to set a SLAB_PAGE_DTOR on compound pages.
