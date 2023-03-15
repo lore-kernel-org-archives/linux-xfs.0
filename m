@@ -2,241 +2,106 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35C33C61DA4
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Mar 2023 03:46:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49C40C61DA4
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Mar 2023 08:49:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230463AbjCODqN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Mar 2023 23:46:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60488 "EHLO
+        id S231495AbjCOIt4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Mar 2023 04:49:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55368 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230266AbjCODqE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Mar 2023 23:46:04 -0400
-Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8047C5D477;
-        Tue, 14 Mar 2023 20:46:02 -0700 (PDT)
-Received: by mail-pl1-x633.google.com with SMTP id v21so8585998ple.9;
-        Tue, 14 Mar 2023 20:46:02 -0700 (PDT)
+        with ESMTP id S231782AbjCOIty (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Mar 2023 04:49:54 -0400
+Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 814555CEFD
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2023 01:49:52 -0700 (PDT)
+Received: by mail-pl1-x632.google.com with SMTP id ix20so12762036plb.3
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2023 01:49:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1678851961;
-        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=zNTZbUHs9m3PDBCxYGKW4W3t6ueZnu/4qICIH+dErok=;
-        b=nXp7N8oGpW7MRX5Whx46iM2jTFGMG1W1jahu+ESUdjeMOU/oFAoQEzjgcoFDWwFjOs
-         TfYmVzA3mosNqK7WVeySYFJSJ4ubPVpmGD20hOGlCVc1mqEITF4cn4p16WzdAZBr0n3a
-         fVkd3ESuU17gLC5R6zwQGUBL0yGeg95/m5YYw2mVDC+Acu7orkVhSFGBdcoKjPxWJv4t
-         37dMwdj3U+YgMf6aaMSk7vV2MKdqrlqsSz3NjjS6xHvkXbK4nJePAXG8WJ2sQ+B08b1A
-         OJhHajmtkO3hg+WC+zwNLdMQlm8kRMeBQp3eTjid2yhwdlE9+WH7mnvijYumDemMqb42
-         2Dng==
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1678870192;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=3PiH3qSD87Gy2R0sEveTfXmyJns2RRHbdlIcrLyx7vY=;
+        b=dGXEAZWGtw3hjf4evG9X6AHe1yTsnbPEjFBkPoP86wCPr8QN6TVnbPOULBMveWDVoT
+         jiIftWXhqKYSzp0qmhThWBeyCKsD4Tm6Xp+7PMte7cJF7wgzVLSiYssGL15uSOr3lvfV
+         rQd66fF+t9UQq3jhdoFYBw6GCsPIQuVOxn5UolXc0160hrbGsy9zlV4+B/qhV9yCDS7F
+         H/CMxjUw1Z+tGw+1u0CeYT7yhOpK5oiWVK6GvR3bPJpgJzz75iWIvVxMm4iFmXRulZ4+
+         jvTJP5PpwGUCDBuh+DdFDKIgLX1jwAvPcxNGWCCVoZa7qwZqgDG/cKCvCt3mmTsN4n4r
+         PO9Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678851961;
-        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=zNTZbUHs9m3PDBCxYGKW4W3t6ueZnu/4qICIH+dErok=;
-        b=FoBCgSGYwz5uXVGuw6qCKbmyosJG2whBp0nFF8t7NEF4flY46faqUXrSypzRSc5C7T
-         v25DNXPeQ8vuJFFla2oIF0TX3QtHZMKVHicStdbq+Ix71d5UQbgOze/i15g4e65ZeKZs
-         l6vJL1p6Vyrh+kEaLheIwMOGWLs9mQwnqj2MZOrbREvvrNsvwnWWKrIMkSA4T/BqSqx4
-         kYSX+GJfaj6OeljuDyF3TDu2Lx4vKVDIs/apbNb77dliwbJ17/Mlu+2RSRLnYgLA/dPU
-         xZtHnzaS8jnmLhCqN88UFAecbOnoFquP8ovX2WDHepHIUgn1yXIB+QHa5gFh3zFyJ6S9
-         67cA==
-X-Gm-Message-State: AO0yUKWsU8G/udgE5hOOMhPntcOOfODV6GUTo3MaQjVAaStraqlPpjxi
-        b4N8PpjFhMV49EVTVCVOOhU381U/hlDcBg==
-X-Google-Smtp-Source: AK7set/a1OLj7woeGvfn1zMx52QaFjfIZL2ePRlug1XQeIqqpbXTdBVBj/WnYLOT5IXpy0+lP4qeqg==
-X-Received: by 2002:a17:90b:1916:b0:23c:fea5:74ca with SMTP id mp22-20020a17090b191600b0023cfea574camr8545879pjb.23.1678851961510;
-        Tue, 14 Mar 2023 20:46:01 -0700 (PDT)
-Received: from rh-tp ([2406:7400:63:469f:eb50:3ffb:dc1b:2d55])
-        by smtp.gmail.com with ESMTPSA id x62-20020a636341000000b0050bd4bb900csm1131287pgb.71.2023.03.14.20.45.58
+        d=1e100.net; s=20210112; t=1678870192;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=3PiH3qSD87Gy2R0sEveTfXmyJns2RRHbdlIcrLyx7vY=;
+        b=5PSNA1FARPs9q2xmswkdZ/WwGcUpAmGoaupu7bn1Pa0SjeUk06Ppi1C9B+AnofgYM5
+         24gUZZzjqs9DZFsG3agYP+1QMRHb6V6v16xCa1+Sf8MCHKoKTlrKRcjlVn4Py4RAJP60
+         1bZlIqIAbFobZC3GgVDS0iuzlP2RLv+M3YeGc1Ue01RPepJZAzSLtVImkXsVLo1i0wDE
+         iTOEZfnkCsnussNolresavxyfqujbIL82C0YLq6cDww2h02yUaq8uglCdwE3cS5YGCbe
+         l6XrqwiXtaLdfvzx9DZiKYC4WUV3c3Egoxr5up4YH+/RnGLLPIiCazAdVjX/PcygNjTc
+         2Xvw==
+X-Gm-Message-State: AO0yUKUiYRra3adhA2+Nc4OWTghL6WSe7qcT1zcSzGwdr+aco+N82el/
+        JjhhpFWTeqwTW3NLZq0H/KH/4kEvB5ekG+nYAU8=
+X-Google-Smtp-Source: AK7set/d5shADEggOumzehf9o4A4WvFVUPs23yylPGUIObnfMjjp0YKBaZtfOr+A8wcBYihNDIQpPQ==
+X-Received: by 2002:a17:902:e541:b0:19a:70f9:affb with SMTP id n1-20020a170902e54100b0019a70f9affbmr2478057plf.2.1678870191825;
+        Wed, 15 Mar 2023 01:49:51 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-4-237.pa.vic.optusnet.com.au. [49.186.4.237])
+        by smtp.gmail.com with ESMTPSA id kk5-20020a170903070500b0019a928a8982sm3096849plb.118.2023.03.15.01.49.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Mar 2023 20:46:01 -0700 (PDT)
-Date:   Wed, 15 Mar 2023 09:15:44 +0530
-Message-Id: <87r0tqznh3.fsf@doe.com>
-From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>,
-        lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
-        xfs <linux-xfs@vger.kernel.org>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        linux-btrfs <linux-btrfs@vger.kernel.org>
-Subject: Re: [LSF TOPIC] online repair of filesystems: what next?
-In-Reply-To: <20230314021422.GE11394@frogsfrogsfrogs>
+        Wed, 15 Mar 2023 01:49:51 -0700 (PDT)
+Received: from [192.168.253.23] (helo=devoid.disaster.area)
+        by dread.disaster.area with esmtp (Exim 4.92.3)
+        (envelope-from <dave@fromorbit.com>)
+        id 1pcMpQ-008zeU-45; Wed, 15 Mar 2023 19:49:48 +1100
+Received: from dave by devoid.disaster.area with local (Exim 4.96)
+        (envelope-from <dave@devoid.disaster.area>)
+        id 1pcMpQ-00Ag6T-0N;
+        Wed, 15 Mar 2023 19:49:48 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc:     linux-mm@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        yebin10@huawei.com
+Subject: [PATCH 3/4] fork: remove use of percpu_counter_sum_all
+Date:   Wed, 15 Mar 2023 19:49:37 +1100
+Message-Id: <20230315084938.2544737-4-david@fromorbit.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230315084938.2544737-1-david@fromorbit.com>
+References: <20230315084938.2544737-1-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-"Darrick J. Wong" <djwong@kernel.org> writes:
+From: Dave Chinner <dchinner@redhat.com>
 
-> On Thu, Mar 09, 2023 at 11:56:57PM +0530, Ritesh Harjani wrote:
->> "Darrick J. Wong" <djwong@kernel.org> writes:
->>
->> > On Thu, Mar 09, 2023 at 08:54:39AM +1100, Dave Chinner wrote:
->> >> On Wed, Mar 08, 2023 at 06:12:06PM +0100, Jan Kara wrote:
->> >> > Hi!
->> >> >
->> >> > I'm interested in this topic. Some comments below.
->> >> >
->> >> > On Tue 28-02-23 12:49:03, Darrick J. Wong wrote:
->> >> > > Five years ago[0], we started a conversation about cross-filesystem
->> >> > > userspace tooling for online fsck.  I think enough time has passed for
->> >> > > us to have another one, since a few things have happened since then:
->> >> > >
->> >> > > 1. ext4 has gained the ability to send corruption reports to a userspace
->> >> > >    monitoring program via fsnotify.  Thanks, Collabora!
->> >> > >
->> >> > > 2. XFS now tracks successful scrubs and corruptions seen during runtime
->> >> > >    and during scrubs.  Userspace can query this information.
->> >> > >
->> >> > > 3. Directory parent pointers, which enable online repair of the
->> >> > >    directory tree, is nearing completion.
->> >> > >
->> >> > > 4. Dave and I are working on merging online repair of space metadata for
->> >> > >    XFS.  Online repair of directory trees is feature complete, but we
->> >> > >    still have one or two unresolved questions in the parent pointer
->> >> > >    code.
->> >> > >
->> >> > > 5. I've gotten a bit better[1] at writing systemd service descriptions
->> >> > >    for scheduling and performing background online fsck.
->> >> > >
->> >> > > Now that fsnotify_sb_error exists as a result of (1), I think we
->> >> > > should figure out how to plumb calls into the readahead and writeback
->> >> > > code so that IO failures can be reported to the fsnotify monitor.  I
->> >> > > suspect there may be a few difficulties here since fsnotify (iirc)
->> >> > > allocates memory and takes locks.
->> >> >
->> >> > Well, if you want to generate fsnotify events from an interrupt handler,
->> >> > you're going to have a hard time, I don't have a good answer for that.
->> >>
->> >> I don't think we ever do that, or need to do that. IO completions
->> >> that can throw corruption errors are already running in workqueue
->> >> contexts in XFS.
->> >>
->> >> Worst case, we throw all bios that have IO errors flagged to the
->> >> same IO completion workqueues, and the problem of memory allocation,
->> >> locks, etc in interrupt context goes away entire.
->> >
->> > Indeed.  For XFS I think the only time we might need to fsnotify about
->> > errors from interrupt context is writeback completions for a pure
->> > overwrite?  We could punt those to a workqueue as Dave says.  Or figure
->> > out a way for whoever's initiating writeback to send it for us?
->> >
->> > I think this is a general issue for the pagecache, not XFS.  I'll
->> > brainstorm with willy the next time I encounter him.
->> >
->> >> > But
->> >> > offloading of error event generation to a workqueue should be doable (and
->> >> > event delivery is async anyway so from userspace POV there's no
->> >> > difference).
->> >>
->> >> Unless I'm misunderstanding you (possible!), that requires a memory
->> >> allocation to offload the error information to the work queue to
->> >> allow the fsnotify error message to be generated in an async manner.
->> >> That doesn't seem to solve anything.
->> >>
->> >> > Otherwise locking shouldn't be a problem AFAICT. WRT memory
->> >> > allocation, we currently preallocate the error events to avoid the loss of
->> >> > event due to ENOMEM. With current usecases (filesystem catastrophical error
->> >> > reporting) we have settled on a mempool with 32 preallocated events (note
->> >> > that preallocated event gets used only if normal kmalloc fails) for
->> >> > simplicity. If the error reporting mechanism is going to be used
->> >> > significantly more, we may need to reconsider this but it should be doable.
->> >> > And frankly if you have a storm of fs errors *and* the system is going
->> >> > ENOMEM at the same time, I have my doubts loosing some error report is
->> >> > going to do any more harm ;).
->> >>
->> >> Once the filesystem is shut down, it will need to turn off
->> >> individual sickness notifications because everything is sick at this
->> >> point.
->> >
->> > I was thinking that the existing fsnotify error set should adopt a 'YOUR
->> > FS IS DEAD' notification.  Then when the fs goes down due to errors or
->> > the shutdown ioctl, we can broadcast that as the final last gasp of the
->> > filesystem.
->> >
->> >> > > As a result of (2), XFS now retains quite a bit of incore state about
->> >> > > its own health.  The structure that fsnotify gives to userspace is very
->> >> > > generic (superblock, inode, errno, errno count).  How might XFS export
->> >> > > a greater amount of information via this interface?  We can provide
->> >> > > details at finer granularity -- for example, a specific data structure
->> >> > > under an allocation group or an inode, or specific quota records.
->> >> >
->> >> > Fsnotify (fanotify in fact) interface is fairly flexible in what can be
->> >> > passed through it. So if you need to pass some (reasonably short) binary
->> >> > blob to userspace which knows how to decode it, fanotify can handle that
->> >> > (with some wrapping). Obviously there's a tradeoff to make how much of the
->> >> > event is generic (as that is then easier to process by tools common for all
->> >> > filesystems) and how much is fs specific (which allows to pass more
->> >> > detailed information). But I guess we need to have concrete examples of
->> >> > events to discuss this.
->> >>
->> >> Fine grained health information will always be filesystem specific -
->> >> IMO it's not worth trying to make it generic when there is only one
->> >> filesystem that tracking and exporting fine-grained health
->> >> information. Once (if) we get multiple filesystems tracking fine
->> >> grained health information, then we'll have the information we need
->> >> to implement a useful generic set of notifications, but until then I
->> >> don't think we should try.
->> >
->> > Same here.  XFS might want to send the generic notifications and follow
->> > them up with more specific information?
->> >
->> >> We should just export the notifications the filesystem utilities
->> >> need to do their work for the moment.  When management applications
->> >> (e.g Stratis) get to the point where they can report/manage
->> >> filesystem health and need that information from multiple
->> >> filesystems types, then we can work out a useful common subset of
->> >> fine grained events across those filesystems that the applications
->> >> can listen for.
->> >
->> > If someone wants to write xfs_scrubd that listens for events and issues
->> > XFS_IOC_SCRUB_METADATA calls I'd be all ears. :)
->> >
->>
->> Does it make sense to have more generic FS specific application daemon
->> which can listen on such events from fanotify and take admin actions
->> based on that.
->> For e.g. If any FS corruption is encountered causing FS shutdown and/or
->> ro mount.
->
-> If we ever wire up generic notifications for the pagecache and iomap
-> then I guess we /could/ at least build a generic service to do things
-> like blast the user's session notifier/sysadmin's monitoring service
-> when things go wrong.
->
+This effectively reverts the change made in commit f689054aace2
+("percpu_counter: add percpu_counter_sum_all interface") as the
+race condition percpu_counter_sum_all() was invented to avoid is
+now handled directly in percpu_counter_sum() and nobody needs to
+care about summing racing with cpu unplug anymore.
 
-right.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ kernel/fork.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
->> 1. then taking a xfs metadump which can later be used for analysis
->> of what went wrong (ofcourse this will need more thinking on how and
->> where to store it).
->> 2. Initiating xfs_scrub with XFS_IOC_SCRUB_METATA call.
->
-> These things are all /very/ filesystem specific.  For things like
-> metadump and auto-scrubbing I think we'd need something in xfsprogs, not
-> a generic tool.
->
+diff --git a/kernel/fork.c b/kernel/fork.c
+index d8cda4c6de6c..c0257cbee093 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -755,11 +755,6 @@ static void check_mm(struct mm_struct *mm)
+ 	for (i = 0; i < NR_MM_COUNTERS; i++) {
+ 		long x = percpu_counter_sum(&mm->rss_stat[i]);
+ 
+-		if (likely(!x))
+-			continue;
+-
+-		/* Making sure this is not due to race with CPU offlining. */
+-		x = percpu_counter_sum_all(&mm->rss_stat[i]);
+ 		if (unlikely(x))
+ 			pr_alert("BUG: Bad rss-counter state mm:%p type:%s val:%ld\n",
+ 				 mm, resident_page_types[i], x);
+-- 
+2.39.2
 
-I meant a generic fsadmin tool with plugins for each filesystem to take FS
-specific actions when anything gets reported.
-It could use tools from xfsprogs to take FS specific action like
-capturing xfs metadump.
-
-
->> 3. What else?
->>
->> Ofcourse in production workloads the metadump can be collected by
->> obfuscating file/directory names ;)
->
-> That said... it would be pretty useful if there was *some* ability to
-> automate capture of metadata dumps for ext4 and xfs.  Once the fs goes
-> offline it's probably safe to capture the dump since (presumably) the fs
-> will not be writing to the block device any more.
->
-> The hard part is having a place to dump that much information.  Do we
-> still trust the running system enough to handle it, or would we be
-> better off deferring that to a kdump payload?
-
-I agree kdump is a better place. We don't know the state of the system.
-
-
->
-> --D
->
->> -ritesh
