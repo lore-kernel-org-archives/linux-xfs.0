@@ -2,68 +2,68 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D325C6FD1D
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Mar 2023 08:49:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47371C76195
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Mar 2023 08:50:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231590AbjCOIt5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Mar 2023 04:49:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55358 "EHLO
+        id S231788AbjCOIt6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Mar 2023 04:49:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55410 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231792AbjCOIty (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Mar 2023 04:49:54 -0400
-Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F6F25B5FA
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2023 01:49:52 -0700 (PDT)
-Received: by mail-pl1-x62a.google.com with SMTP id k2so11392693pll.8
+        with ESMTP id S231585AbjCOIt5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Mar 2023 04:49:57 -0400
+Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8ECD97EDD
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2023 01:49:53 -0700 (PDT)
+Received: by mail-pf1-x429.google.com with SMTP id c10so11209286pfv.13
         for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2023 01:49:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1678870191;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1678870192;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=DnnMb4Et7WhpEe76RPSGsI6qWidW0Ymzw0QUU6G4yao=;
-        b=MldnmFi+QRjEcfycD9KY0bZvSKUHkvSL3UtA0U/PWvEzo8AB2GYhsOMJ9Yna93phsr
-         3pmBXGrj79AYyoeIfCO7JsUKNVP8tmqlS8mY/FTf5EtAxhPN1xd1Fm9/pzGq/ZdxfhQz
-         eU2tuyfglF9o3N9mm4hhAzPHlUfBjcvnSq9Nb2s84Jjh61ufX2fH3XB7ShgyRL4j80Ax
-         QyS9p698XnwvyGRgs0e4BrNF4ilCCsUmxrRDQcMuw618JIheaRe7R9Qmg/xhef7MwYkb
-         GmW1c4Xe7Xs5vN1n3/NKD+0FvXsYvic5EsCMGBEC3z5N+9iBqt2u48HdxYZQHcZIPME0
-         idug==
+        bh=YkxChdLDa4UFijk1Jheg8QY/La3zPetPy6md4h64POE=;
+        b=QjRMzeMPM7bEXlB6ydwS837/NFUyQ8FTlay7FyNeoNs0VDwU6tSXowOh5PEijcS3y8
+         sD6nxAC6h4K1cRCQD9qu0IFALoN8EolNk7Bid2nRlhUXSKUTeDvUpAvWMnwt+HPHUQx/
+         KyyxJcLdPcRikCzCFdYvFjT+Mqx43i8pHeTDS+TQTsjpdDOaSGXHR1WhZ00ymwBzz/6L
+         oUBDFOeHVrVNwCUzNaMl/ntSSHv31y6BC2N0XzgLSBSKpat6+edLAyQmzHqhhsxZ7a1M
+         lj1RUSkyW5Ia0Sp/kwGQHE1me5OM6WQIgiCDHeaI+wyfJ3J//4uGOBLUlhHOul1FoJei
+         V5fQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678870191;
+        d=1e100.net; s=20210112; t=1678870192;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=DnnMb4Et7WhpEe76RPSGsI6qWidW0Ymzw0QUU6G4yao=;
-        b=j/yuyO/z8vn+oX2mVv6bjuVfzK+7ZANETxFsPn5SEdLa9dqPav5F/M3kh1ZwQZO2kt
-         oQZ6417w/Jed6yv+kwI2zKdXxykzRTM828Q4OvUnDNxtMHxwgUpIznzfmyNItobbU/es
-         3xB/vy2jT26glxTCiop+scO17l2Xy9ZNI4fna+uejVTKseC9gYZBNx+bTRHuMs8wJ0Af
-         rYB6spafBINT6TjJ3fDJByv4KFbKJb8XL7ULxasTIAvd2FHDoHjIIiyQZhunGBpyMdah
-         he8BaojrEXBTi3VKIJ4OlsTOrZwRNdyOmVp6WN/y1XeBIg7epmDwKalwJWjOQ7z3sL1B
-         hkHQ==
-X-Gm-Message-State: AO0yUKW1h9i5zeQmhWg7Bp1zzTzlc3SMkmoGCdau2DuOd7tg82GosQID
-        UsiNjC586R/iFSrjDUAWT7anxw==
-X-Google-Smtp-Source: AK7set8ONEq6R2DicXybExxV1KAqb5LJDX736BB8nt9+Drt0g4Wcxf32rD3Zg0NHbWPaIIoqz/KYqA==
-X-Received: by 2002:a05:6a20:7d88:b0:cc:32a8:323d with SMTP id v8-20020a056a207d8800b000cc32a8323dmr15446982pzj.28.1678870191517;
+        bh=YkxChdLDa4UFijk1Jheg8QY/La3zPetPy6md4h64POE=;
+        b=nqvbLJi9atnQzr76i1yBleWu2yWabO8bw/k9G4DHrdFSNkwZJxPYyBipM2iwFBC5nZ
+         1QHWIsOryhV3s24DkoAHe0t3vJIGyu4fAdjsHc3wkhxDTA+ZD3nUSBhpzr8E4I2JGUzz
+         m6AcdgNSXuQTvT82cLWm1VyQ1eDzKm2+8L4RIa/eGMWcmDQfvI5NBsDl8i2VZjFIjWB0
+         YaFkmEsVHN284zl4/0mLNevoSMJUyQ4vgnrgD2dCiGQHmvWcXmk7RDi3HR3wI2hqfL2A
+         xJOjWLFViAdYZu9ej/jDRksXpOpQ/n9QkhqEItxHYgb9zsnNEhJSaBGv6DNXUFN91nIk
+         CFuw==
+X-Gm-Message-State: AO0yUKV84WozbSKuKn+4tb4XR0hbWzTCxGSgMEjgPUqjLAtidU97fXay
+        e7VIv4M63txrQlBPBJ4yqa7LWw==
+X-Google-Smtp-Source: AK7set+PAG3sniqSn+uEJTES+NuHK2ZCXd+V9ulDUeNZd08I0VS+GAnsdTPkVoBU/h/tKlRjkhWWSg==
+X-Received: by 2002:aa7:8ec1:0:b0:625:8217:15b9 with SMTP id b1-20020aa78ec1000000b00625821715b9mr3081112pfr.2.1678870191951;
         Wed, 15 Mar 2023 01:49:51 -0700 (PDT)
 Received: from dread.disaster.area (pa49-186-4-237.pa.vic.optusnet.com.au. [49.186.4.237])
-        by smtp.gmail.com with ESMTPSA id e29-20020a63501d000000b0050be183459bsm593527pgb.34.2023.03.15.01.49.50
+        by smtp.gmail.com with ESMTPSA id i17-20020aa787d1000000b0058d9058fe8asm2966024pfo.103.2023.03.15.01.49.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Wed, 15 Mar 2023 01:49:51 -0700 (PDT)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <dave@fromorbit.com>)
-        id 1pcMpQ-008zeV-50; Wed, 15 Mar 2023 19:49:48 +1100
+        id 1pcMpQ-008zeS-2N; Wed, 15 Mar 2023 19:49:48 +1100
 Received: from dave by devoid.disaster.area with local (Exim 4.96)
         (envelope-from <dave@devoid.disaster.area>)
-        id 1pcMpQ-00Ag6X-0S;
+        id 1pcMpQ-00Ag6L-0D;
         Wed, 15 Mar 2023 19:49:48 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
 Cc:     linux-mm@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         yebin10@huawei.com
-Subject: [PATCH 4/4] pcpcntr: remove percpu_counter_sum_all()
-Date:   Wed, 15 Mar 2023 19:49:38 +1100
-Message-Id: <20230315084938.2544737-5-david@fromorbit.com>
+Subject: [PATCH 1/4] cpumask: introduce for_each_cpu_or
+Date:   Wed, 15 Mar 2023 19:49:35 +1100
+Message-Id: <20230315084938.2544737-2-david@fromorbit.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230315084938.2544737-1-david@fromorbit.com>
 References: <20230315084938.2544737-1-david@fromorbit.com>
@@ -75,110 +75,126 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-percpu_counter_sum_all() is now redundant as the race condition it
-was invented to handle is now dealt with by percpu_counter_sum()
-directly and all users of percpu_counter_sum_all() have been
-removed.
-
-Remove it.
-
-This effectively reverts the changes made in f689054aace2
-("percpu_counter: add percpu_counter_sum_all interface") except for
-the cpumask iteration that fixes percpu_counter_sum() made earlier
-in this series.
+Equivalent of for_each_cpu_and, except it ORs the two masks together
+so it iterates all the CPUs present in either mask.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/linux/percpu_counter.h |  6 -----
- lib/percpu_counter.c           | 40 ++++++++++------------------------
- 2 files changed, 11 insertions(+), 35 deletions(-)
+ include/linux/cpumask.h | 17 +++++++++++++++++
+ include/linux/find.h    | 37 +++++++++++++++++++++++++++++++++++++
+ lib/find_bit.c          |  9 +++++++++
+ 3 files changed, 63 insertions(+)
 
-diff --git a/include/linux/percpu_counter.h b/include/linux/percpu_counter.h
-index 521a733e21a9..75b73c83bc9d 100644
---- a/include/linux/percpu_counter.h
-+++ b/include/linux/percpu_counter.h
-@@ -45,7 +45,6 @@ void percpu_counter_set(struct percpu_counter *fbc, s64 amount);
- void percpu_counter_add_batch(struct percpu_counter *fbc, s64 amount,
- 			      s32 batch);
- s64 __percpu_counter_sum(struct percpu_counter *fbc);
--s64 percpu_counter_sum_all(struct percpu_counter *fbc);
- int __percpu_counter_compare(struct percpu_counter *fbc, s64 rhs, s32 batch);
- void percpu_counter_sync(struct percpu_counter *fbc);
+diff --git a/include/linux/cpumask.h b/include/linux/cpumask.h
+index d4901ca8883c..ca736b05ec7b 100644
+--- a/include/linux/cpumask.h
++++ b/include/linux/cpumask.h
+@@ -350,6 +350,23 @@ unsigned int __pure cpumask_next_wrap(int n, const struct cpumask *mask, int sta
+ #define for_each_cpu_andnot(cpu, mask1, mask2)				\
+ 	for_each_andnot_bit(cpu, cpumask_bits(mask1), cpumask_bits(mask2), small_cpumask_bits)
  
-@@ -196,11 +195,6 @@ static inline s64 percpu_counter_sum(struct percpu_counter *fbc)
- 	return percpu_counter_read(fbc);
++/**
++ * for_each_cpu_or - iterate over every cpu present in either mask
++ * @cpu: the (optionally unsigned) integer iterator
++ * @mask1: the first cpumask pointer
++ * @mask2: the second cpumask pointer
++ *
++ * This saves a temporary CPU mask in many places.  It is equivalent to:
++ *	struct cpumask tmp;
++ *	cpumask_or(&tmp, &mask1, &mask2);
++ *	for_each_cpu(cpu, &tmp)
++ *		...
++ *
++ * After the loop, cpu is >= nr_cpu_ids.
++ */
++#define for_each_cpu_or(cpu, mask1, mask2)				\
++	for_each_or_bit(cpu, cpumask_bits(mask1), cpumask_bits(mask2), small_cpumask_bits)
++
+ /**
+  * cpumask_any_but - return a "random" in a cpumask, but not this one.
+  * @mask: the cpumask to search
+diff --git a/include/linux/find.h b/include/linux/find.h
+index 4647864a5ffd..5e4f39ef2e72 100644
+--- a/include/linux/find.h
++++ b/include/linux/find.h
+@@ -14,6 +14,8 @@ unsigned long _find_next_and_bit(const unsigned long *addr1, const unsigned long
+ 					unsigned long nbits, unsigned long start);
+ unsigned long _find_next_andnot_bit(const unsigned long *addr1, const unsigned long *addr2,
+ 					unsigned long nbits, unsigned long start);
++unsigned long _find_next_or_bit(const unsigned long *addr1, const unsigned long *addr2,
++					unsigned long nbits, unsigned long start);
+ unsigned long _find_next_zero_bit(const unsigned long *addr, unsigned long nbits,
+ 					 unsigned long start);
+ extern unsigned long _find_first_bit(const unsigned long *addr, unsigned long size);
+@@ -127,6 +129,36 @@ unsigned long find_next_andnot_bit(const unsigned long *addr1,
  }
+ #endif
  
--static inline s64 percpu_counter_sum_all(struct percpu_counter *fbc)
--{
--	return percpu_counter_read(fbc);
--}
--
- static inline bool percpu_counter_initialized(struct percpu_counter *fbc)
- {
- 	return true;
-diff --git a/lib/percpu_counter.c b/lib/percpu_counter.c
-index 0e096311e0c0..5004463c4f9f 100644
---- a/lib/percpu_counter.c
-+++ b/lib/percpu_counter.c
-@@ -122,23 +122,6 @@ void percpu_counter_sync(struct percpu_counter *fbc)
- }
- EXPORT_SYMBOL(percpu_counter_sync);
- 
--static s64 __percpu_counter_sum_mask(struct percpu_counter *fbc,
--			      const struct cpumask *cpu_mask)
--{
--	s64 ret;
--	int cpu;
--	unsigned long flags;
--
--	raw_spin_lock_irqsave(&fbc->lock, flags);
--	ret = fbc->count;
--	for_each_cpu_or(cpu, cpu_online_mask, cpu_mask) {
--		s32 *pcount = per_cpu_ptr(fbc->counters, cpu);
--		ret += *pcount;
--	}
--	raw_spin_unlock_irqrestore(&fbc->lock, flags);
--	return ret;
--}
--
- /*
-  * Add up all the per-cpu counts, return the result.  This is a more accurate
-  * but much slower version of percpu_counter_read_positive().
-@@ -153,22 +136,21 @@ static s64 __percpu_counter_sum_mask(struct percpu_counter *fbc,
-  */
- s64 __percpu_counter_sum(struct percpu_counter *fbc)
- {
-+	s64 ret;
-+	int cpu;
-+	unsigned long flags;
- 
--	return __percpu_counter_sum_mask(fbc, cpu_dying_mask);
-+	raw_spin_lock_irqsave(&fbc->lock, flags);
-+	ret = fbc->count;
-+	for_each_cpu_or(cpu, cpu_online_mask, cpu_dying_mask) {
-+		s32 *pcount = per_cpu_ptr(fbc->counters, cpu);
-+		ret += *pcount;
++#ifndef find_next_or_bit
++/**
++ * find_next_or_bit - find the next set bit in either memory regions
++ * @addr1: The first address to base the search on
++ * @addr2: The second address to base the search on
++ * @size: The bitmap size in bits
++ * @offset: The bitnumber to start searching at
++ *
++ * Returns the bit number for the next set bit
++ * If no bits are set, returns @size.
++ */
++static inline
++unsigned long find_next_or_bit(const unsigned long *addr1,
++		const unsigned long *addr2, unsigned long size,
++		unsigned long offset)
++{
++	if (small_const_nbits(size)) {
++		unsigned long val;
++
++		if (unlikely(offset >= size))
++			return size;
++
++		val = (*addr1 | *addr2) & GENMASK(size - 1, offset);
++		return val ? __ffs(val) : size;
 +	}
-+	raw_spin_unlock_irqrestore(&fbc->lock, flags);
-+	return ret;
- }
- EXPORT_SYMBOL(__percpu_counter_sum);
++
++	return _find_next_or_bit(addr1, addr2, size, offset);
++}
++#endif
++
+ #ifndef find_next_zero_bit
+ /**
+  * find_next_zero_bit - find the next cleared bit in a memory region
+@@ -536,6 +568,11 @@ unsigned long find_next_bit_le(const void *addr, unsigned
+ 	     (bit) = find_next_andnot_bit((addr1), (addr2), (size), (bit)), (bit) < (size);\
+ 	     (bit)++)
  
--/*
-- * This is slower version of percpu_counter_sum as it traverses all possible
-- * cpus. Use this only in the cases where accurate data is needed in the
-- * presense of CPUs getting offlined.
-- */
--s64 percpu_counter_sum_all(struct percpu_counter *fbc)
--{
--	return __percpu_counter_sum_mask(fbc, cpu_possible_mask);
--}
--EXPORT_SYMBOL(percpu_counter_sum_all);
--
- int __percpu_counter_init(struct percpu_counter *fbc, s64 amount, gfp_t gfp,
- 			  struct lock_class_key *key)
- {
++#define for_each_or_bit(bit, addr1, addr2, size) \
++	for ((bit) = 0;									\
++	     (bit) = find_next_or_bit((addr1), (addr2), (size), (bit)), (bit) < (size);\
++	     (bit)++)
++
+ /* same as for_each_set_bit() but use bit as value to start with */
+ #define for_each_set_bit_from(bit, addr, size) \
+ 	for (; (bit) = find_next_bit((addr), (size), (bit)), (bit) < (size); (bit)++)
+diff --git a/lib/find_bit.c b/lib/find_bit.c
+index c10920e66788..32f99e9a670e 100644
+--- a/lib/find_bit.c
++++ b/lib/find_bit.c
+@@ -182,6 +182,15 @@ unsigned long _find_next_andnot_bit(const unsigned long *addr1, const unsigned l
+ EXPORT_SYMBOL(_find_next_andnot_bit);
+ #endif
+ 
++#ifndef find_next_or_bit
++unsigned long _find_next_or_bit(const unsigned long *addr1, const unsigned long *addr2,
++					unsigned long nbits, unsigned long start)
++{
++	return FIND_NEXT_BIT(addr1[idx] | addr2[idx], /* nop */, nbits, start);
++}
++EXPORT_SYMBOL(_find_next_or_bit);
++#endif
++
+ #ifndef find_next_zero_bit
+ unsigned long _find_next_zero_bit(const unsigned long *addr, unsigned long nbits,
+ 					 unsigned long start)
 -- 
 2.39.2
 
