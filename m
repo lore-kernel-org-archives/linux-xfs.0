@@ -2,86 +2,275 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97252C7618D
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Mar 2023 17:40:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4EE4C6FD1D
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Mar 2023 18:03:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229602AbjCORkH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Mar 2023 13:40:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48274 "EHLO
+        id S231180AbjCOSDP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Mar 2023 14:03:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58018 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231701AbjCORkG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Mar 2023 13:40:06 -0400
-Received: from mail-il1-x12c.google.com (mail-il1-x12c.google.com [IPv6:2607:f8b0:4864:20::12c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7F434D2B1
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2023 10:40:03 -0700 (PDT)
-Received: by mail-il1-x12c.google.com with SMTP id r4so10780364ila.2
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2023 10:40:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112; t=1678902003; x=1681494003;
-        h=content-transfer-encoding:in-reply-to:references:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=/5df0VVcQalC1bXRcr/ZzFE9DW4g6pmup34uWUxk2BE=;
-        b=zwxQprHXlzq84Q96JdMBQaXVvSCHCBcJxqwLAdS2/M6P2PZf8X+QBMdh444n639VR4
-         9WawyHfreN9zeFpPIMhQsN7v7r0TWD5dW79rcxlqjdiRYD9CKeuHkVzP5OWvsI8S+cvb
-         GDC4tEZKH/QFkrr8nDLOkHeZriSUz/RbHofPkaXRLz6fCHLG90K7wPEWbwpuibh0EhcR
-         33COVEz8u5PDhku1P4VHqFjFgejAw7CwBqNz45vHuiNQSzxFc3uFKrVQz8nlcFD8nJwq
-         dMtxuCBUyahbswuu6YxFGozBwSWkHygIp6T2Q+IOaD+QgWYfWWa0Sr2JJEOOVVm6dXWr
-         6wqg==
+        with ESMTP id S231452AbjCOSDN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Mar 2023 14:03:13 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89A2793E0F
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2023 11:02:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1678903341;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=RYcleJbx/TxT/BCnM0j9HwAoearFxmWLIJsZNmjV93M=;
+        b=UHNBtsnhG+XiOcNihQOi16jOd48AT72CiH07+X3UAFN76lfMKdf8OJUnFnQ/TEX9nGaYlz
+        MHvKJBZVjtUgh/ZvAfdq+MwQL19Izw6hmLDlqrATKlSysA5S5fwYn+Ookdxrjba2f0KfTh
+        1J0tn/b/hA2+9iFVjF1qN1y+3azhKYo=
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
+ [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-139-73M2OZ8qOBas0QRsQevfmA-1; Wed, 15 Mar 2023 14:02:15 -0400
+X-MC-Unique: 73M2OZ8qOBas0QRsQevfmA-1
+Received: by mail-pj1-f69.google.com with SMTP id f1-20020a17090aa78100b00239fd9e3e17so8156350pjq.5
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2023 11:02:12 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678902003; x=1681494003;
-        h=content-transfer-encoding:in-reply-to:references:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=/5df0VVcQalC1bXRcr/ZzFE9DW4g6pmup34uWUxk2BE=;
-        b=5wLtTixpJVLZkc7Km34HI4ZefPHiZj0RnOky733A8qZggihnyoMRejPAzMJO1X6mmx
-         HsOkSCOjXhao7p5F6zaP8IMnAvdAp1V+Xu9gKkQuYDi1KuW9ze1EvFykLu8tb20qlbwe
-         m9VXjWIzoY4+729lQXdyvDIIQLxEkCP9kQ3Mn2BXfSxxuPF7pT5C9GL+205eyueU86GS
-         ukXaaL1bO9s0Ef2OCtJ/Apa7W2+LmNVSLMVTqwidYWzcdxJAMF41DU2KfIhZVSRLPG4c
-         bfH47CLHUT30+rvBWOUYa/y7832+BiUnTP916ljQpCQbtEHWBspGCpwFgnEjxSU0GyEG
-         isCg==
-X-Gm-Message-State: AO0yUKXIk/2RyF6dz/B4e2mNW+ilDOoHUUB/ct9UBatb+ZRkKOhEaz8c
-        jFdzwy5kpeuPwjR0LCgrtMn96w==
-X-Google-Smtp-Source: AK7set8OzK+A6f5D0yNLMn24/3DUQDhPAXFB5nnrO48ARbTVMVcy3wWxXjFNd9A785kMM5Plifl11g==
-X-Received: by 2002:a05:6e02:dd3:b0:317:2f8d:528f with SMTP id l19-20020a056e020dd300b003172f8d528fmr62272ilj.2.1678902003223;
-        Wed, 15 Mar 2023 10:40:03 -0700 (PDT)
-Received: from [192.168.1.94] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id y17-20020a056e02119100b0031798b87a14sm1786576ili.19.2023.03.15.10.40.02
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 15 Mar 2023 10:40:02 -0700 (PDT)
-Message-ID: <b11d27d5-8e83-7144-cdc8-3966abf42db5@kernel.dk>
-Date:   Wed, 15 Mar 2023 11:40:02 -0600
+        d=1e100.net; s=20210112; t=1678903332;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=RYcleJbx/TxT/BCnM0j9HwAoearFxmWLIJsZNmjV93M=;
+        b=FtV09LZx77nt8uzMpSt5nP/lqkcAokl/OLMU0Y9tns5AvSqGacagbW6rS+RZMCIy0F
+         k4VhVATSIwv7/Err4GW9mV7c29IlM3abBtIL+GQjaehdozrAqHNqix0J9x0f8d7Zewic
+         3uEiKwU+6F1eV08vbXv/NHTbepWL5Y1OorY7f5WNYDirpJc5YAZtXg6HE7NEiWTLO6ZZ
+         dnXRcwh1cHR5Rhlj8mYRRlrlj54qHbrBjl+3hxJ7eCkBKw9FNszFGD5Y73CDrLKTJRln
+         P8qclIh0m7JZvZYDrvC1eSSzoAoVf2DmCoiAth6s53UzLbjh6uKkJRHnxmgdJvpSecmn
+         MUKg==
+X-Gm-Message-State: AO0yUKW/oM5Wf6ppHPtunn+zceGagBu7tJpwZgsuT1xChhG5KVHpZwSz
+        Oa62X3GPM0Jr/0743LWQeLb/VidCyUfzkneNJB0psuN8VlpYUfiR6QdpkBlVlkezxf/57w5xi6o
+        gxMHUQYXaeeNhj/QUGv+o8TsnDBE6X8g=
+X-Received: by 2002:a17:90b:3889:b0:23d:2b11:b39b with SMTP id mu9-20020a17090b388900b0023d2b11b39bmr595881pjb.31.1678903331598;
+        Wed, 15 Mar 2023 11:02:11 -0700 (PDT)
+X-Google-Smtp-Source: AK7set+qxovw7oxJ1xjb3TmzmOCoseBKgF3zpx2nBEgj1vGgQkj9pltF0Y76inZslSvyzNKehW+4PA==
+X-Received: by 2002:a17:90b:3889:b0:23d:2b11:b39b with SMTP id mu9-20020a17090b388900b0023d2b11b39bmr595850pjb.31.1678903331188;
+        Wed, 15 Mar 2023 11:02:11 -0700 (PDT)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id h14-20020a17090a9c0e00b0023d270929bbsm1659901pjp.49.2023.03.15.11.02.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 15 Mar 2023 11:02:10 -0700 (PDT)
+Date:   Thu, 16 Mar 2023 02:02:06 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH] xfs: stress test cycling parent pointers with online
+ repair
+Message-ID: <20230315180206.3zqiiooqepiyg35c@zlang-mailbox>
+References: <20230315005817.GA11360@frogsfrogsfrogs>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCHSET for-next 0/2] Flag file systems as supporting parallel
- dio writes
-Content-Language: en-US
-From:   Jens Axboe <axboe@kernel.dk>
-To:     io-uring@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
-References: <20230307172015.54911-1-axboe@kernel.dk>
-In-Reply-To: <20230307172015.54911-1-axboe@kernel.dk>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230315005817.GA11360@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 3/7/23 10:20 AM, Jens Axboe wrote:
-> Hi,
+On Tue, Mar 14, 2023 at 05:58:17PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> This has been on my TODO list for a while, and now that ext4 supports
-> parallel dio writes as well, time to dust it off and send it out... This
-> adds an FMODE flag to inform users that a given file supports parallel
-> dio writes. io_uring can use this to avoid serializing dio writes
-> upfront, in case it isn't needed. A few details in patch #2, patch 1 does
-> nothing by itself.
+> Add a couple of new tests to exercise directory and parent pointer
+> repair against rename() calls moving child subdirectories from one
+> parent to another.  This is a useful test because it turns out that the
+> VFS doesn't lock the child subdirectory (it does lock the parents), so
+> repair must be more careful.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
 
-I'm assuming silence is consent here and folks are fine with this
-change?
+This patchset looks good to me.
 
--- 
-Jens Axboe
+Two questions before acking this patch:
+1) The 2nd case fails [1] on mainline linux and xfsprogs, but test passed on
+your djwong linux and xfsprogs repo. Is this expected? Is it a known issue
+you've fixed in your repo?
 
+2) I remember there was a patchset [1] (from your team too) about parent pointer
+test half years ago. I've reviewed its 3rd version, but no more response anymore.
+Just curious, do you drop that patchset ? Or you hope to send it again after
+xfsprogs and kernel support that feature? If dropped, I'll remove it from my
+pending list :)
+
+Thanks,
+Zorro
+
+[1]
+xfs/855 33s ... _check_xfs_filesystem: filesystem on /dev/sda3 failed health check
+(see /root/git/xfstests/results//simpledev/xfs/855.full for details)
+- output mismatch (see /root/git/xfstests/results//simpledev/xfs/855.out.bad)
+    --- tests/xfs/855.out       2023-03-16 00:47:28.256187590 +0800
+    +++ /root/git/xfstests/results//simpledev/xfs/855.out.bad   2023-03-16 01:42:25.764902276 +0800
+    @@ -1,2 +1,37 @@
+     QA output created by 855
+    +xfs_scrub reports uncorrected errors:
+    +Corruption: inode 100663424 (12/128) parent pointer: Repairs are required. (scrub.c line 190)
+    +Corruption: inode 125829312 (15/192) parent pointer: Repairs are required. (scrub.c line 190)
+    +xfs_scrub reports uncorrected errors:
+    +Corruption: inode 117440647 (14/135) parent pointer: Repairs are required. (scrub.c line 190)
+    +xfs_scrub reports uncorrected errors:
+    ...
+    (Run 'diff -u /root/git/xfstests/tests/xfs/855.out /root/git/xfstests/results//simpledev/xfs/855.out.bad'  to see the entire diff)
+Ran: xfs/854 xfs/855
+Failures: xfs/855
+Failed 1 of 2 tests
+
+[2]
+[PATCH v3 0/4] xfstests: add parent pointer tests
+https://lore.kernel.org/fstests/20221028215605.17973-1-catherine.hoang@oracle.com/
+
+
+
+>  common/fuzzy      |   15 +++++++++++++++
+>  tests/xfs/854     |   38 ++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/854.out |    2 ++
+>  tests/xfs/855     |   38 ++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/855.out |    2 ++
+>  5 files changed, 95 insertions(+)
+>  create mode 100755 tests/xfs/854
+>  create mode 100644 tests/xfs/854.out
+>  create mode 100755 tests/xfs/855
+>  create mode 100644 tests/xfs/855.out
+> 
+> diff --git a/common/fuzzy b/common/fuzzy
+> index 4609df4434..744d9ed65d 100644
+> --- a/common/fuzzy
+> +++ b/common/fuzzy
+> @@ -995,6 +995,20 @@ __stress_scrub_fsstress_loop() {
+>  	local focus=()
+>  
+>  	case "$stress_tgt" in
+> +	"parent")
+> +		focus+=('-z')
+> +
+> +		# Create a directory tree very gradually
+> +		for op in creat link mkdir; do
+> +			focus+=('-f' "${op}=2")
+> +		done
+> +		focus+=('-f' 'unlink=1' '-f' 'rmdir=1')
+> +
+> +		# But do a lot of renames to cycle parent pointers
+> +		for op in rename rnoreplace rexchange; do
+> +			focus+=('-f' "${op}=40")
+> +		done
+> +		;;
+>  	"dir")
+>  		focus+=('-z')
+>  
+> @@ -1285,6 +1299,7 @@ __stress_scrub_check_commands() {
+>  #       'writeonly': Only perform fs updates, no reads.
+>  #       'symlink': Only create symbolic links.
+>  #       'mknod': Only create special files.
+> +#       'parent': Focus on updating parent pointers
+>  #
+>  #       The default is 'default' unless XFS_SCRUB_STRESS_TARGET is set.
+>  # -X	Run this program to exercise the filesystem.  Currently supported
+> diff --git a/tests/xfs/854 b/tests/xfs/854
+> new file mode 100755
+> index 0000000000..0aa2c2ee4f
+> --- /dev/null
+> +++ b/tests/xfs/854
+> @@ -0,0 +1,38 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2023 Oracle, Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 854
+> +#
+> +# Race fsstress doing mostly renames and xfs_scrub in force-repair mode for a
+> +# while to see if we crash or livelock.
+> +#
+> +. ./common/preamble
+> +_begin_fstest online_repair dangerous_fsstress_repair
+> +
+> +_cleanup() {
+> +	cd /
+> +	_scratch_xfs_stress_scrub_cleanup &> /dev/null
+> +	rm -r -f $tmp.*
+> +}
+> +_register_cleanup "_cleanup" BUS
+> +
+> +# Import common functions.
+> +. ./common/filter
+> +. ./common/fuzzy
+> +. ./common/inject
+> +. ./common/xfs
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_require_scratch
+> +_require_xfs_stress_online_repair
+> +
+> +_scratch_mkfs > "$seqres.full" 2>&1
+> +_scratch_mount
+> +_scratch_xfs_stress_online_repair -S '-k' -x 'parent'
+> +
+> +# success, all done
+> +echo Silence is golden
+> +status=0
+> +exit
+> diff --git a/tests/xfs/854.out b/tests/xfs/854.out
+> new file mode 100644
+> index 0000000000..f8d9e27958
+> --- /dev/null
+> +++ b/tests/xfs/854.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 854
+> +Silence is golden
+> diff --git a/tests/xfs/855 b/tests/xfs/855
+> new file mode 100755
+> index 0000000000..6daff05995
+> --- /dev/null
+> +++ b/tests/xfs/855
+> @@ -0,0 +1,38 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2023 Oracle, Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 855
+> +#
+> +# Race fsstress doing mostly renames and xfs_scrub in read-only mode for a
+> +# while to see if we crash or livelock.
+> +#
+> +. ./common/preamble
+> +_begin_fstest scrub dangerous_fsstress_scrub
+> +
+> +_cleanup() {
+> +	cd /
+> +	_scratch_xfs_stress_scrub_cleanup &> /dev/null
+> +	rm -r -f $tmp.*
+> +}
+> +_register_cleanup "_cleanup" BUS
+> +
+> +# Import common functions.
+> +. ./common/filter
+> +. ./common/fuzzy
+> +. ./common/inject
+> +. ./common/xfs
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_require_scratch
+> +_require_xfs_stress_scrub
+> +
+> +_scratch_mkfs > "$seqres.full" 2>&1
+> +_scratch_mount
+> +_scratch_xfs_stress_scrub -S '-n' -x 'parent'
+> +
+> +# success, all done
+> +echo Silence is golden
+> +status=0
+> +exit
+> diff --git a/tests/xfs/855.out b/tests/xfs/855.out
+> new file mode 100644
+> index 0000000000..fa60f65432
+> --- /dev/null
+> +++ b/tests/xfs/855.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 855
+> +Silence is golden
+> 
 
