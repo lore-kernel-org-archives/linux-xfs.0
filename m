@@ -2,170 +2,87 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1527BC761A6
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Mar 2023 22:15:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25CD8C7618A
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Mar 2023 00:52:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231226AbjCNWPT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Mar 2023 18:15:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48486 "EHLO
+        id S229787AbjCOAwp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Mar 2023 20:52:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58808 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231517AbjCNWOr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Mar 2023 18:14:47 -0400
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B86454AFF9
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Mar 2023 15:14:05 -0700 (PDT)
-Received: by mail-pl1-x634.google.com with SMTP id p6so18172046plf.0
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Mar 2023 15:14:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1678831989;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=4XnYZAxxhA6tqO/+QU5FPwVQ3ZTboYKzwGys5pyLjfs=;
-        b=b7ShfFvuy7/o7jT+od5bs68UIhkWiIumdXAa4ZVHBOYlHxKgsdtGeciMG3yc+3OMwF
-         J5CnaXgDiyaC+uU4oAjYtr9vhWdZc7LCGFCKf0TF/zr9LX0+GQ0/nOZiU0t+fDNkVtum
-         8qPQ9kfuLzhlK7yFiriIS5hITNG9bBlET0eOYM+Z5zKC6+9Cfk76oGLXI/vxYgBaSamZ
-         D0xKNV8z29qhg39hERv/HfyOy0AvRwG7Wfp17yOLGuMHDQb1Gnsc/G/XplXJp0ZbGodY
-         MuXAZE/WIGr1d56EEQsK5jSQFOs2TPdYfrqy+t4G+naWryM62SSfOessvIy6PpmtLvUs
-         RqvA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678831989;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4XnYZAxxhA6tqO/+QU5FPwVQ3ZTboYKzwGys5pyLjfs=;
-        b=fGmv+dNs/q4uwuGArH5vVUNajyNUrPeEHzhQqGd000pEGY+bYfKWCiQrjzZAKMOu0E
-         9X5zZEeFeKCpYq3ILO6MGl/LJGQEwotyqCHt+AoXxUjg6bwDI1pbEFTahOkcGgy6A7Xg
-         f5gZJvBzVOhgA3H055QheqA/Q7Ogr72Jky6HV9nnCuN0snS+yjE+3qFo1i5s8m+DNgFo
-         Jv3+z3eN6rXnGKR8T4UZipcc4IHkVm6TdcsbUVPT6XFk8AI+QtQudktBdHuD/zp7IGCM
-         SKxon6/MFzRV52xO3j4AcL9lHIxZ+75jQLXsd7rTriYBgw+x+s9NaBSefm+gJVZlMPzg
-         /QyQ==
-X-Gm-Message-State: AO0yUKVIswnOfrIy2Nno4C+HBt76BZkAQELZnY1ZAeXXBMAphv1Ddb6i
-        zBSxZqvG907GNpD8R/gffRNo9w==
-X-Google-Smtp-Source: AK7set+tgmW5AlsxN5YmxxUFdS6mgDkKSypzJ8ZUWx8IcwYjP6AdyXEX3kxwDueMMeBxIsXOKiTafg==
-X-Received: by 2002:a17:902:e38a:b0:19f:1e3e:a84d with SMTP id g10-20020a170902e38a00b0019f1e3ea84dmr355485ple.64.1678831988927;
-        Tue, 14 Mar 2023 15:13:08 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-4-237.pa.vic.optusnet.com.au. [49.186.4.237])
-        by smtp.gmail.com with ESMTPSA id ka16-20020a170903335000b0019e21d2ed2esm2240881plb.88.2023.03.14.15.13.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Mar 2023 15:13:08 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1pcCtF-008oq2-ND; Wed, 15 Mar 2023 09:13:05 +1100
-Date:   Wed, 15 Mar 2023 09:13:05 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Ye Bin <yebin@huaweicloud.com>, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Ye Bin <yebin10@huawei.com>
-Subject: Re: [PATCH] xfs: fix possible assert failed in xfs_fs_put_super()
- when do cpu offline
-Message-ID: <20230314221305.GR360264@dread.disaster.area>
-References: <20230314090649.326642-1-yebin@huaweicloud.com>
- <20230314163100.GC11376@frogsfrogsfrogs>
+        with ESMTP id S230063AbjCOAwl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Mar 2023 20:52:41 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 675905BDB4;
+        Tue, 14 Mar 2023 17:52:32 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 012C861A87;
+        Wed, 15 Mar 2023 00:52:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43470C433EF;
+        Wed, 15 Mar 2023 00:52:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1678841551;
+        bh=G4DsRQrsabLKjrEKBtTj/JCJhbH3juucnRlkL2IbMv4=;
+        h=Subject:From:To:Cc:Date:From;
+        b=QiorGGzaFpAsiMFIVOC0vPE3JzHxMp1jDlkFDzkFjGFnxkA92lXzx5j26oWgASEJR
+         nSRbzHANMj5MUdzYnMpYU97kaIrU34sBODe3RMNfJc0yaNt1A6EfaUGHNGjKkROym4
+         qEQih2eulvPpBdvAXxrK5uwksZsTuLTTJAuQqfY/dQ+PpifWM4pJSqqQcw4ueB7io6
+         af9ZLQ2kcMt+jH1Ej0AXGGyHR0cuG0iO18SzRreTf1aEnBc6b94+JCToaijZfBaOJl
+         Hs9b/gxx3Qv2HRj7MuCjvMLI3fOdY9TWXCqgW0RP0mqB1pgLmVFD59L5HPoXfNAXU+
+         a0fh06TZlR6oA==
+Subject: [PATCHSET v3 00/15] fstests: improve junit xml reporting
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     zlang@redhat.com, djwong@kernel.org
+Cc:     Qu Wenruo <wqu@suse.com>, Leah Rumancik <leah.rumancik@gmail.com>,
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
+        leah.rumancik@gmail.com, quwenruo.btrfs@gmx.com, tytso@mit.edu
+Date:   Tue, 14 Mar 2023 17:52:30 -0700
+Message-ID: <167884155064.2482843.4310780034948240980.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230314163100.GC11376@frogsfrogsfrogs>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 14, 2023 at 09:31:00AM -0700, Darrick J. Wong wrote:
-> On Tue, Mar 14, 2023 at 05:06:49PM +0800, Ye Bin wrote:
-> > From: Ye Bin <yebin10@huawei.com>
-> > 
-> > There's a issue when do cpu offline test:
-> > CPU: 48 PID: 1168152 Comm: umount Kdump: loaded Tainted: G L
-> > pstate: 60000005 (nZCv daif -PAN -UAO -TCO BTYPE=--)
-> > pc : assfail+0x8c/0xb4
-> > lr : assfail+0x38/0xb4
-> > sp : ffffa00033ce7c40
-> > x29: ffffa00033ce7c40 x28: ffffa00014794f30
-> > x27: ffffa00014f6ca20 x26: 1fffe0120b2e2030
-> > x25: ffff009059710188 x24: ffff00886c0a4650
-> > x23: 1fffe0110d8148ca x22: ffff009059710180
-> > x21: ffffa00015155680 x20: ffff00886c0a4000
-> > x19: 0000000000000001 x18: 0000000000000000
-> > x17: 0000000000000000 x16: 0000000000000000
-> > x15: 0000000000000007 x14: 1fffe00304cef265
-> > x13: ffff00182642b200 x12: ffff8012d37757bf
-> > x11: 1fffe012d37757be x10: ffff8012d37757be
-> > x9 : ffffa00010603a0c x8 : 0000000041b58ab3
-> > x7 : ffff94000679cf44 x6 : 00000000ffffffc0
-> > x5 : 0000000000000021 x4 : 00000000ffffffca
-> > x3 : 1ffff40002a27ee1 x2 : 0000000000000004
-> > x1 : 0000000000000000 x0 : ffffa0001513f000
-> > Call trace:
-> >  assfail+0x8c/0xb4
-> >  xfs_destroy_percpu_counters+0x98/0xa4
-> >  xfs_fs_put_super+0x1a0/0x2a4
-> >  generic_shutdown_super+0x104/0x2c0
-> >  kill_block_super+0x8c/0xf4
-> >  deactivate_locked_super+0xa4/0x164
-> >  deactivate_super+0xb0/0xdc
-> >  cleanup_mnt+0x29c/0x3ec
-> >  __cleanup_mnt+0x1c/0x30
-> >  task_work_run+0xe0/0x200
-> >  do_notify_resume+0x244/0x320
-> >  work_pending+0xc/0xa0
-> > 
-> > We analyzed the data in vmcore is correct. But triggered above issue.
-> > As f689054aace2 ("percpu_counter: add percpu_counter_sum_all interface")
-> > commit describes there is a small race window between the online CPUs traversal
-> > of percpu_counter_sum and the CPU offline callback. This means percpu_counter_sum()
-> > may return incorrect result during cpu offline.
-> > To solve above issue use percpu_counter_sum_all() interface to make sure
-> > result is correct to prevent false triggering of assertions.
-> 
-> How about the other percpu_counter_sum callsites inside XFS?  Some of
-> them are involved in writing ondisk metadata (xfs_log_sb) or doing
-> correctness checks (fs/xfs/scrub/*); shouldn't those also be using the
-> _all variant?
+Hi all,
 
-Ugh. I kinda wish that the percpu_counter_sum_all() patch had been
-cc'd to lists for subsystems that use percpu_counter_sum()
-extensively, or just to people who have modified that code in the
-past.
+This series improves the fstests reporting code in several ways.  First,
+change the ./check code to generate the report after every test, so that
+a cluster-based fstest scheduler can reschedule tests after a VM crash.
+Personally, I was using it to get live status on my tests dashboard.
 
-The problem is that it uses cpu_possible_mask, which means it
-walks all possible CPUs that can be added to the system even if the
-CPUs aren't physically present. That can be a lot in the case of
-systems that can have cpu-capable nodes hotplugged into them, and
-that makes percpu_counter_sum_all() excitingly expensive for no good
-reason.
+The bulk of the patches in here improve the junit xml reporting so that
+we (a) actually declare which xml schema we're trying to emit and (b)
+capture a lot more information about what was being tested.
 
-AFAICT, if we are trying to close a race condition between iterating
-online CPUs not summing dying CPUs and the cpu dead notification
-updating the sum, then shouldn't we be using
-cpu_mask_or(cpu_online_mask, cpu_dying_mask) for summing iteration
-rather than just cpu_online_mask?
+v2: shorten indenting in the schema file, record .dmesg files as a
+separate kernel-log tag, clarify what the timestamp attribute means,
+record the test suite start time and report generation time as separate
+attributes, make it possible to pass in a list of report variables,
+encode cdata correctly
 
-i.e. when a CPU is being taken down, it gets added to the
-cpu_dying_mask, then removed from the cpu_online_mask, then the
-offline notifications are run (i.e. the percpu counter dead
-callback), and when the CPU reaches the CPUHP_TEARDOWN_CPU state,
-it is removed from the cpu_dying_mask because it is now dead and all
-the "cpu dying" callbacks have been run.
+v3: Reviewed-and-tested-by: Leah Rumancik <leah.rumancik@gmail.com>
 
-Except when a hotplug event is being processed, cpu_dying_mask will
-be empty, hence there is little change in summing overhead. But it
-will close the summing race condition when a CPU is being
-offlined...
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-That, I think, is the solution we want for XFS. Having the percpu
-counters just do the right thing is far better than always having to
-wonder if summation interface we are using is correct in the face of
-CPU hotplug. I'll put a patchset together to do:
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-1. fix percpu_counter_sum() to include the dying mask in it's
-iteration. This should fix the XFS issue.
-2. change the only user of percpu_counter_sum_all() to only use
-percpu_counter_sum() because percpu_counter_sum_all() is now
-redundant.
-3. remove percpu_counter_sum_all() because it is unused.
+--D
 
-Cheers,
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=xunit-reporting-improvements
+---
+ README        |    3 +
+ check         |   11 +++
+ common/ext4   |    5 +
+ common/report |  130 +++++++++++++++++++++++++-----
+ common/xfs    |   11 +++
+ doc/xunit.xsd |  246 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 386 insertions(+), 20 deletions(-)
+ create mode 100644 doc/xunit.xsd
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
