@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 962D9C6FD1F
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Mar 2023 01:01:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 480E6C6FD1D
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Mar 2023 01:02:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230179AbjCOBBP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Mar 2023 21:01:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40058 "EHLO
+        id S229532AbjCOBCC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Mar 2023 21:02:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40602 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229532AbjCOBBP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Mar 2023 21:01:15 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36E514E5F6
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Mar 2023 18:01:14 -0700 (PDT)
+        with ESMTP id S230281AbjCOBCA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Mar 2023 21:02:00 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFD5A5AB74
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Mar 2023 18:01:57 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id CF759B81C38
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2023 01:01:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B77AC433EF;
-        Wed, 15 Mar 2023 01:01:11 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C126A6187A
+        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2023 01:01:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29B08C433D2;
+        Wed, 15 Mar 2023 01:01:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678842071;
-        bh=M4p/jIpwrKwFINpDy7Q3qy2niLDJTQLkpJW8q9PFVG8=;
+        s=k20201202; t=1678842116;
+        bh=qh7ajGKnKBEQvqAbDlj1KdRFLStOZWkOhtaMorhxI70=;
         h=Date:From:To:Cc:Subject:From;
-        b=Kz4FufHrTyuyry8cfQ11s7qp5A/eczkAKilemet76c10bXKNCkotUK9Y8eTByUfum
-         91braBKxkj6iM1U9rrPXOkYtVeriFRYZY5tewLauBaf/lhs7ly+cfgLppCarQwfoB0
-         gpWFtAH4TcfYcF/ON4BNGU2N+TSXugO1n88NJZDcxfbV2pKJbsdSx1KQCDgAMUWx2c
-         naGPQxKsmBJSDUYsQQuaJGQ73oMuugQUpncvwjZXTFsaihx2VEJGX/0iJkr11/zjze
-         T+7n5l6/Rm2OGiiDR0YNlPQVjdsKFxGZoW6G3TIqMNqDYsb4jTpI3Ua9Fh8M8mv7Pr
-         XV8/4lx+7nwNA==
-Date:   Tue, 14 Mar 2023 18:01:10 -0700
+        b=OFCjuLGmNVl0hDtMDTnvZFw+GWCGUWvpY3kJ0wvUWP7EhVdCMSf6RPaQEoQXbFzyM
+         jq1K63cP9wZjdBqYi3413r4z5RVC0uFv2UnwKQfEPKD1S1T9Z5noMZJsNkBuw2caTo
+         1YqogkPdR9WUhFzLZqLhRmgGYLeiGx7XlvWnfIf0A8+Bm7Z3R8mMhHezO/mCLJJFcM
+         mzAI9P1szZ65kVVd3MdtvsvPY8gVY9BTj6135oA1tAQ1UOqvNPNKWZRBj7wItYNidc
+         /5jBWZ0lSTdIzLQtNcisJOJneyzUEg8sIEi99xLePTxUj/EXCVhxy9p17GNWqPfc7b
+         uawbOeW5P7U8w==
+Date:   Tue, 14 Mar 2023 18:01:55 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs_db: fix complaints about unsigned char casting
-Message-ID: <20230315010110.GD11376@frogsfrogsfrogs>
+Subject: [PATCH] xfs_repair: fix incorrect dabtree hashval comparison
+Message-ID: <20230315010155.GE11376@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -46,33 +46,29 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make the warnings about signed/unsigned char pointer casting go away.
-For printing dirent names it doesn't matter at all.
+If an xattr structure contains enough names with the same hash value to
+fill multiple xattr leaf blocks with names all hashing to the same
+value, then the dabtree nodes will contain consecutive entries with the
+same hash value.
+
+This causes false corruption reports in xfs_repair because it's not
+expecting such a huge same-hashing structure.  Fix that.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/namei.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ repair/da_util.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/db/namei.c b/db/namei.c
-index 00e8c8dc6d5..063721ca98f 100644
---- a/db/namei.c
-+++ b/db/namei.c
-@@ -98,7 +98,7 @@ path_navigate(
- 
- 	for (i = 0; i < dirpath->depth; i++) {
- 		struct xfs_name	xname = {
--			.name	= dirpath->path[i],
-+			.name	= (unsigned char *)dirpath->path[i],
- 			.len	= strlen(dirpath->path[i]),
- 		};
- 
-@@ -250,7 +250,7 @@ dir_emit(
- 	uint8_t			dtype)
- {
- 	char			*display_name;
--	struct xfs_name		xname = { .name = name };
-+	struct xfs_name		xname = { .name = (unsigned char *)name };
- 	const char		*dstr = get_dstr(mp, dtype);
- 	xfs_dahash_t		hash;
- 	bool			good;
+diff --git a/repair/da_util.c b/repair/da_util.c
+index 7239c2e2c64..b229422c81e 100644
+--- a/repair/da_util.c
++++ b/repair/da_util.c
+@@ -330,7 +330,7 @@ _("%s block used/count inconsistency - %d/%hu\n"),
+ 	/*
+ 	 * hash values monotonically increasing ???
+ 	 */
+-	if (cursor->level[this_level].hashval >=
++	if (cursor->level[this_level].hashval >
+ 				be32_to_cpu(nodehdr.btree[entry].hashval)) {
+ 		do_warn(
+ _("%s block hashvalue inconsistency, expected > %u / saw %u\n"),
