@@ -2,150 +2,275 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80CA5C61DA4
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Mar 2023 20:56:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A817C6FD1D
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Mar 2023 21:18:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230106AbjCOU4A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Mar 2023 16:56:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53820 "EHLO
+        id S230036AbjCOVSU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Mar 2023 17:18:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35846 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229459AbjCOUz7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Mar 2023 16:55:59 -0400
-Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39F678C0E0
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2023 13:55:55 -0700 (PDT)
-Received: by mail-pf1-x42c.google.com with SMTP id ay18so12548976pfb.2
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Mar 2023 13:55:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1678913754;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=imHwkZmtdo+G134HfW8QY38rrBjXWKOKW5gZ2oqTMOo=;
-        b=2DEuKMxEcucR8xRm9szIy8+Xb1gbAp2c6IGg+rD17Ly6BfsFupQILKWw+ykZpsku33
-         5mQ6bMNCECBn29e7TFsdmwSGFGJBqCNCu95Ii4fTD8fCy0XW9SCx9a5IMf7x7tVoEYyI
-         B5vuS06JWS4rm0giy0vAGIdJiq3oCmqtdXU67tFegwAcZltwhiXqhNVnald6I4yM/iwV
-         4RxuXGCoie8WLfgOu+ywzJ6hk3QjAqC09W/E/ratfzKVhfH4XJYb/hsaFZEUKAJC2Vz6
-         e1Hbw16zn7+n+vE71oe+s5rHmxqhYHHbL1lLiJh2sD1kBczzYJSXVJqVi1KIfkmewks+
-         4izA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678913754;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=imHwkZmtdo+G134HfW8QY38rrBjXWKOKW5gZ2oqTMOo=;
-        b=p795820lfMLoAMRMzvA0xKKnfFA/d4d4q5fFSHJYw94eg4owtK5//aLkcLOiv2YV+l
-         xTLi1mGp2ORvdzMMPzL53gphM83DJVNMxhkNULb0G4y0ChKEk5hFlJRm6BE3201eWUJd
-         58Izb/vd2Z8sacGiJnkjf3/Bk58S2OBixmL5R0Hc5ffbXGEri1Exwll5bshzRq1WlZbP
-         AUbUsYIhmB7PQRZJLmm5uoeqpE7oaDpgSLXxP0ZCKdsjO6JnHNM4unofQNUGIWWQkwv1
-         kJRSe2eAVjatCTWzrxOvJSWQTOq1wORAoWQRuKqK6qAVJDnUIyfqYuTAXo5elWvXu9SU
-         LnTA==
-X-Gm-Message-State: AO0yUKU2SWNVmWaKxaKdZxUvmX9fmBRfkMnjv3qkmGDIXP1jQpL58N8m
-        ES58OP3h5iH6YZZiBVXLm90QZg==
-X-Google-Smtp-Source: AK7set+eU6Dd3+B8Lg5NkIP+nmrpJkcMcp/O2LFm6PFmwU+7nTVpYZWQ2rQLS1P1G5i3dYAUVnMzRg==
-X-Received: by 2002:aa7:9813:0:b0:625:d630:4e1b with SMTP id e19-20020aa79813000000b00625d6304e1bmr774222pfl.31.1678913754626;
-        Wed, 15 Mar 2023 13:55:54 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-91-157.pa.nsw.optusnet.com.au. [49.181.91.157])
-        by smtp.gmail.com with ESMTPSA id n3-20020aa78a43000000b00625d5635617sm627735pfa.67.2023.03.15.13.55.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Mar 2023 13:55:54 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1pcYA2-009CD4-Cw; Thu, 16 Mar 2023 07:55:50 +1100
-Date:   Thu, 16 Mar 2023 07:55:50 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     kernel test robot <lkp@intel.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        oe-kbuild-all@lists.linux.dev, linux-mm@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, yebin10@huawei.com
-Subject: Re: [PATCH 4/4] pcpcntr: remove percpu_counter_sum_all()
-Message-ID: <20230315205550.GS360264@dread.disaster.area>
-References: <20230315084938.2544737-5-david@fromorbit.com>
- <202303160333.XqIRz3JU-lkp@intel.com>
+        with ESMTP id S231803AbjCOVSS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Mar 2023 17:18:18 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2AFE494A6F;
+        Wed, 15 Mar 2023 14:17:42 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4C99A61E7D;
+        Wed, 15 Mar 2023 21:17:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DFA7C433D2;
+        Wed, 15 Mar 2023 21:17:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1678915050;
+        bh=Re9teXNNdyFgP6UCaW0Hpj7VLYwrUXfbYOR7SQUFpDA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=gvc4cI1Ia1nuqV3VkVpfMZhj/TxmP3IaXv4RJxzvnVNkXc7YeGRRabuE8giFJNtHr
+         hCLR+X/3rglA0z2bMlrnxEeMvKNO8nKTC4FISNq2I23nLhsL5krlG0kjc3hs6+MCnN
+         1VnsXnW6z1Fal2IqMDoZe11bwpEktMf+3Cu9h1Z6P6tH7FLebN2q95yx2yjKjQBwL5
+         K+dBjPAEU1vDNg1DJhKrMQ9fL8p6z/ysAvpGraUaEaItqv8ATDLoxP1Qv/kwRahHnC
+         JRRjiiAZjPDYn9mH7yva3PR99Z93NlLJ9nFiOEE7S8DFI9VtFFJ5cd1ajL52ccvFkr
+         /tNFTd7pSiuHw==
+Date:   Wed, 15 Mar 2023 14:17:30 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH] xfs: stress test cycling parent pointers with online
+ repair
+Message-ID: <20230315211730.GG11376@frogsfrogsfrogs>
+References: <20230315005817.GA11360@frogsfrogsfrogs>
+ <20230315180206.3zqiiooqepiyg35c@zlang-mailbox>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <202303160333.XqIRz3JU-lkp@intel.com>
+In-Reply-To: <20230315180206.3zqiiooqepiyg35c@zlang-mailbox>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 16, 2023 at 03:22:31AM +0800, kernel test robot wrote:
-> Hi Dave,
+On Thu, Mar 16, 2023 at 02:02:06AM +0800, Zorro Lang wrote:
+> On Tue, Mar 14, 2023 at 05:58:17PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Add a couple of new tests to exercise directory and parent pointer
+> > repair against rename() calls moving child subdirectories from one
+> > parent to another.  This is a useful test because it turns out that the
+> > VFS doesn't lock the child subdirectory (it does lock the parents), so
+> > repair must be more careful.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
 > 
-> Thank you for the patch! Yet something to improve:
+> This patchset looks good to me.
+> 
+> Two questions before acking this patch:
+> 1) The 2nd case fails [1] on mainline linux and xfsprogs, but test passed on
+> your djwong linux and xfsprogs repo. Is this expected? Is it a known issue
+> you've fixed in your repo?
 
-No, ithere is nothing wrong with my patch series, this is something
-for _you_ to improve.
+Yes.  These two new 854/855 tests are a result of Jan Kara pointing out
+that if you do this:
 
-> [auto build test ERROR on linus/master]
-> [also build test ERROR on v6.3-rc2 next-20230315]
-> [cannot apply to dennis-percpu/for-next]
-> [If your patch is applied to the wrong git tree, kindly drop us a note.
-> And when submitting patch, we suggest to use '--base' as documented in
-> https://git-scm.com/docs/git-format-patch#_base_tree_information]
-> 
-> url:    https://github.com/intel-lab-lkp/linux/commits/Dave-Chinner/cpumask-introduce-for_each_cpu_or/20230315-165202
-> patch link:    https://lore.kernel.org/r/20230315084938.2544737-5-david%40fromorbit.com
-> patch subject: [PATCH 4/4] pcpcntr: remove percpu_counter_sum_all()
-> config: i386-randconfig-a005 (https://download.01.org/0day-ci/archive/20230316/202303160333.XqIRz3JU-lkp@intel.com/config)
-> compiler: gcc-11 (Debian 11.3.0-8) 11.3.0
-> reproduce (this is a W=1 build):
->         # https://github.com/intel-lab-lkp/linux/commit/8360dcb55f1eb08fe7a1f457f3b99bef8e306c8b
->         git remote add linux-review https://github.com/intel-lab-lkp/linux
->         git fetch --no-tags linux-review Dave-Chinner/cpumask-introduce-for_each_cpu_or/20230315-165202
->         git checkout 8360dcb55f1eb08fe7a1f457f3b99bef8e306c8b
->         # save the config file
->         mkdir build_dir && cp config build_dir/.config
->         make W=1 O=build_dir ARCH=i386 olddefconfig
->         make W=1 O=build_dir ARCH=i386 SHELL=/bin/bash drivers/hwmon/ fs/xfs/
-> 
-> If you fix the issue, kindly add following tag where applicable
-> | Reported-by: kernel test robot <lkp@intel.com>
-> | Link: https://lore.kernel.org/oe-kbuild-all/202303160333.XqIRz3JU-lkp@intel.com/
-> 
-> All errors (new ones prefixed by >>):
-> 
->    In file included from include/linux/string.h:5,
->                     from include/linux/uuid.h:11,
->                     from fs/xfs/xfs_linux.h:10,
->                     from fs/xfs/xfs.h:22,
->                     from fs/xfs/xfs_super.c:7:
->    fs/xfs/xfs_super.c: In function 'xfs_destroy_percpu_counters':
-> >> fs/xfs/xfs_super.c:1079:16: error: implicit declaration of function 'percpu_counter_sum_all'; did you mean 'percpu_counter_sum'? [-Werror=implicit-function-declaration]
->     1079 |                percpu_counter_sum_all(&mp->m_delalloc_blks) == 0);
->          |                ^~~~~~~~~~~~~~~~~~~~~~
->    include/linux/compiler.h:77:45: note: in definition of macro 'likely'
->       77 | # define likely(x)      __builtin_expect(!!(x), 1)
->          |                                             ^
->    fs/xfs/xfs_super.c:1078:9: note: in expansion of macro 'ASSERT'
->     1078 |         ASSERT(xfs_is_shutdown(mp) ||
->          |         ^~~~~~
->    cc1: some warnings being treated as errors
-> 
-> 
-> vim +1079 fs/xfs/xfs_super.c
-> 
-> 8757c38f2cf6e5 Ian Kent        2019-11-04  1070  
-> 8757c38f2cf6e5 Ian Kent        2019-11-04  1071  static void
-> 8757c38f2cf6e5 Ian Kent        2019-11-04  1072  xfs_destroy_percpu_counters(
-> 8757c38f2cf6e5 Ian Kent        2019-11-04  1073  	struct xfs_mount	*mp)
-> 8757c38f2cf6e5 Ian Kent        2019-11-04  1074  {
-> 8757c38f2cf6e5 Ian Kent        2019-11-04  1075  	percpu_counter_destroy(&mp->m_icount);
-> 8757c38f2cf6e5 Ian Kent        2019-11-04  1076  	percpu_counter_destroy(&mp->m_ifree);
-> 8757c38f2cf6e5 Ian Kent        2019-11-04  1077  	percpu_counter_destroy(&mp->m_fdblocks);
-> 75c8c50fa16a23 Dave Chinner    2021-08-18  1078  	ASSERT(xfs_is_shutdown(mp) ||
-> c35278f526edf1 Ye Bin          2023-03-14 @1079  	       percpu_counter_sum_all(&mp->m_delalloc_blks) == 0);
+mkdir -p /tmp/a
+mv /tmp/a /mnt/
 
-This change has not been committed to any tree that I am aware of.
-It was only posted to the XFS list yesterday, and I effectively
-NACK'd it and wrote this patchset instead to fix the issue.
+The VFS won't lock /tmp/a while it does the rename.  The upstream parent
+pointer checking code (which is really a dotdot checker) assumes that
+holding *only* i_rwsem is sufficient to prevent directory updates, which
+isn't true, and so the parent pointer checker emits false corruption
+reports.
 
-IOWs, if -anyone- has actually committed this change to add
-percpu_counter_sum_all() to XFS, they've done the wrong thing.
-Hence this build failure is a robot issue, not a problem with my
-patch series.
+All of that is fixed in djwong-dev.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 2) I remember there was a patchset [1] (from your team too) about parent pointer
+> test half years ago. I've reviewed its 3rd version, but no more response anymore.
+> Just curious, do you drop that patchset ? Or you hope to send it again after
+> xfsprogs and kernel support that feature? If dropped, I'll remove it from my
+> pending list :)
+
+It'll be back (soonish, I hope) once we finish nailing down the ondisk
+format and fixing up all the minor problems.
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/log/?h=pptrs-ioctl-flexarray
+
+--D
+
+> Thanks,
+> Zorro
+> 
+> [1]
+> xfs/855 33s ... _check_xfs_filesystem: filesystem on /dev/sda3 failed health check
+> (see /root/git/xfstests/results//simpledev/xfs/855.full for details)
+> - output mismatch (see /root/git/xfstests/results//simpledev/xfs/855.out.bad)
+>     --- tests/xfs/855.out       2023-03-16 00:47:28.256187590 +0800
+>     +++ /root/git/xfstests/results//simpledev/xfs/855.out.bad   2023-03-16 01:42:25.764902276 +0800
+>     @@ -1,2 +1,37 @@
+>      QA output created by 855
+>     +xfs_scrub reports uncorrected errors:
+>     +Corruption: inode 100663424 (12/128) parent pointer: Repairs are required. (scrub.c line 190)
+>     +Corruption: inode 125829312 (15/192) parent pointer: Repairs are required. (scrub.c line 190)
+>     +xfs_scrub reports uncorrected errors:
+>     +Corruption: inode 117440647 (14/135) parent pointer: Repairs are required. (scrub.c line 190)
+>     +xfs_scrub reports uncorrected errors:
+>     ...
+>     (Run 'diff -u /root/git/xfstests/tests/xfs/855.out /root/git/xfstests/results//simpledev/xfs/855.out.bad'  to see the entire diff)
+> Ran: xfs/854 xfs/855
+> Failures: xfs/855
+> Failed 1 of 2 tests
+> 
+> [2]
+> [PATCH v3 0/4] xfstests: add parent pointer tests
+> https://lore.kernel.org/fstests/20221028215605.17973-1-catherine.hoang@oracle.com/
+> 
+> 
+> 
+> >  common/fuzzy      |   15 +++++++++++++++
+> >  tests/xfs/854     |   38 ++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/854.out |    2 ++
+> >  tests/xfs/855     |   38 ++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/855.out |    2 ++
+> >  5 files changed, 95 insertions(+)
+> >  create mode 100755 tests/xfs/854
+> >  create mode 100644 tests/xfs/854.out
+> >  create mode 100755 tests/xfs/855
+> >  create mode 100644 tests/xfs/855.out
+> > 
+> > diff --git a/common/fuzzy b/common/fuzzy
+> > index 4609df4434..744d9ed65d 100644
+> > --- a/common/fuzzy
+> > +++ b/common/fuzzy
+> > @@ -995,6 +995,20 @@ __stress_scrub_fsstress_loop() {
+> >  	local focus=()
+> >  
+> >  	case "$stress_tgt" in
+> > +	"parent")
+> > +		focus+=('-z')
+> > +
+> > +		# Create a directory tree very gradually
+> > +		for op in creat link mkdir; do
+> > +			focus+=('-f' "${op}=2")
+> > +		done
+> > +		focus+=('-f' 'unlink=1' '-f' 'rmdir=1')
+> > +
+> > +		# But do a lot of renames to cycle parent pointers
+> > +		for op in rename rnoreplace rexchange; do
+> > +			focus+=('-f' "${op}=40")
+> > +		done
+> > +		;;
+> >  	"dir")
+> >  		focus+=('-z')
+> >  
+> > @@ -1285,6 +1299,7 @@ __stress_scrub_check_commands() {
+> >  #       'writeonly': Only perform fs updates, no reads.
+> >  #       'symlink': Only create symbolic links.
+> >  #       'mknod': Only create special files.
+> > +#       'parent': Focus on updating parent pointers
+> >  #
+> >  #       The default is 'default' unless XFS_SCRUB_STRESS_TARGET is set.
+> >  # -X	Run this program to exercise the filesystem.  Currently supported
+> > diff --git a/tests/xfs/854 b/tests/xfs/854
+> > new file mode 100755
+> > index 0000000000..0aa2c2ee4f
+> > --- /dev/null
+> > +++ b/tests/xfs/854
+> > @@ -0,0 +1,38 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2023 Oracle, Inc.  All Rights Reserved.
+> > +#
+> > +# FS QA Test No. 854
+> > +#
+> > +# Race fsstress doing mostly renames and xfs_scrub in force-repair mode for a
+> > +# while to see if we crash or livelock.
+> > +#
+> > +. ./common/preamble
+> > +_begin_fstest online_repair dangerous_fsstress_repair
+> > +
+> > +_cleanup() {
+> > +	cd /
+> > +	_scratch_xfs_stress_scrub_cleanup &> /dev/null
+> > +	rm -r -f $tmp.*
+> > +}
+> > +_register_cleanup "_cleanup" BUS
+> > +
+> > +# Import common functions.
+> > +. ./common/filter
+> > +. ./common/fuzzy
+> > +. ./common/inject
+> > +. ./common/xfs
+> > +
+> > +# real QA test starts here
+> > +_supported_fs xfs
+> > +_require_scratch
+> > +_require_xfs_stress_online_repair
+> > +
+> > +_scratch_mkfs > "$seqres.full" 2>&1
+> > +_scratch_mount
+> > +_scratch_xfs_stress_online_repair -S '-k' -x 'parent'
+> > +
+> > +# success, all done
+> > +echo Silence is golden
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/854.out b/tests/xfs/854.out
+> > new file mode 100644
+> > index 0000000000..f8d9e27958
+> > --- /dev/null
+> > +++ b/tests/xfs/854.out
+> > @@ -0,0 +1,2 @@
+> > +QA output created by 854
+> > +Silence is golden
+> > diff --git a/tests/xfs/855 b/tests/xfs/855
+> > new file mode 100755
+> > index 0000000000..6daff05995
+> > --- /dev/null
+> > +++ b/tests/xfs/855
+> > @@ -0,0 +1,38 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2023 Oracle, Inc.  All Rights Reserved.
+> > +#
+> > +# FS QA Test No. 855
+> > +#
+> > +# Race fsstress doing mostly renames and xfs_scrub in read-only mode for a
+> > +# while to see if we crash or livelock.
+> > +#
+> > +. ./common/preamble
+> > +_begin_fstest scrub dangerous_fsstress_scrub
+> > +
+> > +_cleanup() {
+> > +	cd /
+> > +	_scratch_xfs_stress_scrub_cleanup &> /dev/null
+> > +	rm -r -f $tmp.*
+> > +}
+> > +_register_cleanup "_cleanup" BUS
+> > +
+> > +# Import common functions.
+> > +. ./common/filter
+> > +. ./common/fuzzy
+> > +. ./common/inject
+> > +. ./common/xfs
+> > +
+> > +# real QA test starts here
+> > +_supported_fs xfs
+> > +_require_scratch
+> > +_require_xfs_stress_scrub
+> > +
+> > +_scratch_mkfs > "$seqres.full" 2>&1
+> > +_scratch_mount
+> > +_scratch_xfs_stress_scrub -S '-n' -x 'parent'
+> > +
+> > +# success, all done
+> > +echo Silence is golden
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/855.out b/tests/xfs/855.out
+> > new file mode 100644
+> > index 0000000000..fa60f65432
+> > --- /dev/null
+> > +++ b/tests/xfs/855.out
+> > @@ -0,0 +1,2 @@
+> > +QA output created by 855
+> > +Silence is golden
+> > 
+> 
