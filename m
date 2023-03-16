@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41E21C6FD19
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Mar 2023 19:31:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BB52C6FD1F
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Mar 2023 19:31:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230025AbjCPTbZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Mar 2023 15:31:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59664 "EHLO
+        id S230100AbjCPTbm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Mar 2023 15:31:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59926 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229716AbjCPTbY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Mar 2023 15:31:24 -0400
+        with ESMTP id S229539AbjCPTbl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Mar 2023 15:31:41 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A541EB3E3A
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 12:31:23 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33E2D900A9
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 12:31:39 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3DC69620F8
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 19:31:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 934BFC433EF;
-        Thu, 16 Mar 2023 19:31:22 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B7E9C620FA
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 19:31:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24569C433D2;
+        Thu, 16 Mar 2023 19:31:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678995082;
-        bh=rQ2skfWQBCNwwUPwW0lTkIssnchqJMQY6M+uxdRejes=;
+        s=k20201202; t=1678995098;
+        bh=VrdicHCajWg1lJ4NE8/atBNzSHuOAl+WGWg64klUn3c=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=jleYuF2ROYAoZQH/iCv/c79JTbCjV8gyyYDdEXxBGRhEDQVoeIqGXY3uzq4IBX57v
-         wirR5R38qaauWQaebF0+cXNi5T3BZF27JEpUHlZm66vDYMirdTqLp1PqREd1QghjZN
-         9qxZBbPOwyEvYWcJQwGRK6OdGgRQ5OOqr3QJM6jK2eqF2KvZcut9LebKQ9I84ROjrn
-         apG9AweG6qkOdkfL5NiSj+e9zP6SKP15YqDWABPwkTbLiLbbPljVJT7CgH5s034zdq
-         lTfKicJs8+JhZH+eY0Ou8M0cCkkmkCj0SVaa9Z9QNe6dbGmjzgwZhE8f39u9uw6RyB
-         tLOUdjFQPvtxw==
-Date:   Thu, 16 Mar 2023 12:31:22 -0700
-Subject: [PATCH 3/5] xfs: fix GETPARENTS ioctl
+        b=jmts1Yu/EHHik7gFNSNt4HKEDqyUQfP2te+uLs5QoxhC1Wk8iEJsKQW8bfqZSkpr9
+         7FdBL22Evua4Fy2b0lmIf8r2pA2zWo+sczlWNElJ9BYNbMMktcau8ZGOyBeIiKT/+W
+         52cm07+LYdG/knNcdLwED63Al3HGDv8MaBvsQmKp099+SmmrQFkgjgbY66B18hP7yX
+         oYUi944bQy1Kouscd7ifKBjMbWduxAJ0fYaIZ3sRloRsarkbmCnZuPKbj1dwiR7wGQ
+         hXo06uzzecUMRhUivOSKRYe0+zRctChSTZjSe0LzSHHuk7bufxwnDy0dshUYArFGcO
+         nAaP/Oxdlx3Ag==
+Date:   Thu, 16 Mar 2023 12:31:37 -0700
+Subject: [PATCH 4/5] xfs: shorten parent pointer function names
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167899416496.16836.5795337536304426306.stgit@frogsfrogsfrogs>
+Message-ID: <167899416509.16836.13895050286463481698.stgit@frogsfrogsfrogs>
 In-Reply-To: <167899416457.16836.2981078472584318439.stgit@frogsfrogsfrogs>
 References: <167899416457.16836.2981078472584318439.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,115 +49,170 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Fix a few remaining issues with this ioctl:
-
-The ioctl encodes the size of the parent rec, not the parent head.
-
-The parent rec should say that it returns a null terminated filename.
-
-The parent head encodes the buffer size, not the size of the parent
-record array, but the field name and documentation doesn't make this
-clear.
-
-The getparents sizeof function is pointless and wrong.
-
-Get rid of the last vestiges of the non-flex-array definitions.
-
-The rec address should take an unsigned argument
-
-Whitespace damage
+Shorten the function names and add brief comments to each, outlining
+what they're supposed to be doing.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libfrog/pptrs.c |    2 +-
- libxfs/xfs_fs.h |   30 +++++++++++-------------------
- 2 files changed, 12 insertions(+), 20 deletions(-)
+ libxfs/libxfs_api_defs.h |    2 +-
+ libxfs/xfs_parent.c      |   18 ++++++++++++------
+ libxfs/xfs_parent.h      |   24 ++++++++++++------------
+ mkfs/proto.c             |   12 ++++++------
+ 4 files changed, 31 insertions(+), 25 deletions(-)
 
 
-diff --git a/libfrog/pptrs.c b/libfrog/pptrs.c
-index eff994df8..f3465941d 100644
---- a/libfrog/pptrs.c
-+++ b/libfrog/pptrs.c
-@@ -21,7 +21,7 @@ alloc_pptr_buf(
- 	pi = calloc(bufsize, 1);
- 	if (!pi)
- 		return NULL;
--	pi->gp_ptrs_size = bufsize;
-+	pi->gp_bufsize = bufsize;
- 	return pi;
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 055d2862a..132e2aca0 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -140,7 +140,7 @@
+ #define xfs_log_get_max_trans_res	libxfs_log_get_max_trans_res
+ #define xfs_log_sb			libxfs_log_sb
+ #define xfs_mode_to_ftype		libxfs_mode_to_ftype
+-#define xfs_parent_defer_add		libxfs_parent_defer_add
++#define xfs_parent_add			libxfs_parent_add
+ #define xfs_parent_finish		libxfs_parent_finish
+ #define xfs_parent_start		libxfs_parent_start
+ #define xfs_perag_get			libxfs_perag_get
+diff --git a/libxfs/xfs_parent.c b/libxfs/xfs_parent.c
+index 74c7f1f7d..89eb531ff 100644
+--- a/libxfs/xfs_parent.c
++++ b/libxfs/xfs_parent.c
+@@ -136,6 +136,10 @@ xfs_parent_irec_from_disk(
+ 	memset(&irec->p_name[valuelen], 0, sizeof(irec->p_name) - valuelen);
  }
  
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index c8edc7c09..d7e061089 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -752,8 +752,6 @@ struct xfs_scrub_metadata {
- 				 XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED)
- #define XFS_SCRUB_FLAGS_ALL	(XFS_SCRUB_FLAGS_IN | XFS_SCRUB_FLAGS_OUT)
++/*
++ * Allocate memory to control a logged parent pointer update as part of a
++ * dirent operation.
++ */
+ int
+ __xfs_parent_init(
+ 	struct xfs_mount		*mp,
+@@ -171,12 +175,13 @@ __xfs_parent_init(
+ 	return 0;
+ }
  
--#define XFS_GETPARENTS_MAXNAMELEN	256
--
- /* return parents of the handle, not the open fd */
- #define XFS_GETPARENTS_IFLAG_HANDLE	(1U << 0)
- 
-@@ -769,11 +767,11 @@ struct xfs_scrub_metadata {
- 
- /* Get an inode parent pointer through ioctl */
- struct xfs_getparents_rec {
--	__u64		gpr_ino;			/* Inode */
--	__u32		gpr_gen;			/* Inode generation */
--	__u32		gpr_diroffset;			/* Directory offset */
--	__u64		gpr_rsvd;			/* Reserved */
--	__u8		gpr_name[];			/* File name */
-+	__u64		gpr_ino;	/* Inode number */
-+	__u32		gpr_gen;	/* Inode generation */
-+	__u32		gpr_diroffset;	/* Directory offset */
-+	__u64		gpr_rsvd;	/* Reserved */
-+	__u8		gpr_name[];	/* File name and null terminator */
- };
- 
- /* Iterate through an inodes parent pointers */
-@@ -794,8 +792,8 @@ struct xfs_getparents {
- 	/* Must be set to zero */
- 	__u32				gp_reserved;
- 
--	/* size of the trailing buffer in bytes */
--	__u32				gp_ptrs_size;
-+	/* Size of the buffer in bytes, including this header */
-+	__u32				gp_bufsize;
- 
- 	/* # of entries filled in (output) */
- 	__u32				gp_count;
-@@ -807,19 +805,13 @@ struct xfs_getparents {
- 	__u32				gp_offsets[];
- };
- 
--static inline size_t
--xfs_getparents_sizeof(int nr_ptrs)
--{
--	return sizeof(struct xfs_getparents) +
--	       (nr_ptrs * sizeof(struct xfs_getparents_rec));
--}
--
- static inline struct xfs_getparents_rec*
- xfs_getparents_rec(
- 	struct xfs_getparents	*info,
--	int			idx)
-+	unsigned int		idx)
++/* Add a parent pointer to reflect a dirent addition. */
+ int
+-xfs_parent_defer_add(
++xfs_parent_add(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_parent_defer	*parent,
+ 	struct xfs_inode	*dp,
+-	struct xfs_name		*parent_name,
++	const struct xfs_name	*parent_name,
+ 	xfs_dir2_dataptr_t	diroffset,
+ 	struct xfs_inode	*child)
  {
--	return (struct xfs_getparents_rec *)((char *)info + info->gp_offsets[idx]);
-+	return (struct xfs_getparents_rec *)((char *)info +
-+					     info->gp_offsets[idx]);
+@@ -195,8 +200,9 @@ xfs_parent_defer_add(
+ 	return xfs_attr_defer_add(args);
  }
  
- /*
-@@ -867,7 +859,7 @@ xfs_getparents_rec(
- /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
- #define XFS_IOC_SCRUB_METADATA	_IOWR('X', 60, struct xfs_scrub_metadata)
- #define XFS_IOC_AG_GEOMETRY	_IOWR('X', 61, struct xfs_ag_geometry)
--#define XFS_IOC_GETPARENTS	_IOWR('X', 62, struct xfs_getparents_rec)
-+#define XFS_IOC_GETPARENTS	_IOWR('X', 62, struct xfs_getparents)
++/* Remove a parent pointer to reflect a dirent removal. */
+ int
+-xfs_parent_defer_remove(
++xfs_parent_remove(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_inode	*dp,
+ 	struct xfs_parent_defer	*parent,
+@@ -212,14 +218,14 @@ xfs_parent_defer_remove(
+ 	return xfs_attr_defer_remove(args);
+ }
  
- /*
-  * ioctl commands that replace IRIX syssgi()'s
+-
++/* Replace one parent pointer with another to reflect a rename. */
+ int
+-xfs_parent_defer_replace(
++xfs_parent_replace(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_parent_defer	*new_parent,
+ 	struct xfs_inode	*old_dp,
+ 	xfs_dir2_dataptr_t	old_diroffset,
+-	struct xfs_name		*parent_name,
++	const struct xfs_name	*parent_name,
+ 	struct xfs_inode	*new_dp,
+ 	xfs_dir2_dataptr_t	new_diroffset,
+ 	struct xfs_inode	*child)
+diff --git a/libxfs/xfs_parent.h b/libxfs/xfs_parent.h
+index f4f5887d1..35854e968 100644
+--- a/libxfs/xfs_parent.h
++++ b/libxfs/xfs_parent.h
+@@ -49,8 +49,9 @@ struct xfs_parent_defer {
+  * Parent pointer attribute prototypes
+  */
+ void xfs_init_parent_name_rec(struct xfs_parent_name_rec *rec,
+-			      struct xfs_inode *ip,
+-			      uint32_t p_diroffset);
++		struct xfs_inode *ip, uint32_t p_diroffset);
++void xfs_init_parent_name_irec(struct xfs_parent_name_irec *irec,
++			       struct xfs_parent_name_rec *rec);
+ int __xfs_parent_init(struct xfs_mount *mp, bool grab_log,
+ 		struct xfs_parent_defer **parentp);
+ 
+@@ -78,18 +79,17 @@ xfs_parent_start_locked(
+ 	return 0;
+ }
+ 
+-int xfs_parent_defer_add(struct xfs_trans *tp, struct xfs_parent_defer *parent,
+-			 struct xfs_inode *dp, struct xfs_name *parent_name,
+-			 xfs_dir2_dataptr_t diroffset, struct xfs_inode *child);
+-int xfs_parent_defer_replace(struct xfs_trans *tp,
++int xfs_parent_add(struct xfs_trans *tp, struct xfs_parent_defer *parent,
++		struct xfs_inode *dp, const struct xfs_name *parent_name,
++		xfs_dir2_dataptr_t diroffset, struct xfs_inode *child);
++int xfs_parent_replace(struct xfs_trans *tp,
+ 		struct xfs_parent_defer *new_parent, struct xfs_inode *old_dp,
+-		xfs_dir2_dataptr_t old_diroffset, struct xfs_name *parent_name,
+-		struct xfs_inode *new_ip, xfs_dir2_dataptr_t new_diroffset,
++		xfs_dir2_dataptr_t old_diroffset,
++		const struct xfs_name *parent_name, struct xfs_inode *new_ip,
++		xfs_dir2_dataptr_t new_diroffset, struct xfs_inode *child);
++int xfs_parent_remove(struct xfs_trans *tp, struct xfs_inode *dp,
++		struct xfs_parent_defer *parent, xfs_dir2_dataptr_t diroffset,
+ 		struct xfs_inode *child);
+-int xfs_parent_defer_remove(struct xfs_trans *tp, struct xfs_inode *dp,
+-			    struct xfs_parent_defer *parent,
+-			    xfs_dir2_dataptr_t diroffset,
+-			    struct xfs_inode *child);
+ 
+ void __xfs_parent_cancel(struct xfs_mount *mp, struct xfs_parent_defer *parent);
+ 
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index e0131df50..b8d7ac968 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -508,8 +508,8 @@ parseproto(
+ 		newdirent(mp, tp, pip, &xname, ip->i_ino, &offset);
+ 		libxfs_trans_log_inode(tp, ip, flags);
+ 		if (parent) {
+-			error = -libxfs_parent_defer_add(tp, parent, pip,
+-					&xname, offset, ip);
++			error = -libxfs_parent_add(tp, parent, pip, &xname,
++					offset, ip);
+ 			if (error)
+ 				fail(_("committing parent pointers failed."),
+ 						error);
+@@ -601,8 +601,8 @@ parseproto(
+ 		newdirectory(mp, tp, ip, pip);
+ 		libxfs_trans_log_inode(tp, ip, flags);
+ 		if (parent) {
+-			error = -libxfs_parent_defer_add(tp, parent, pip,
+-					&xname, offset, ip);
++			error = -libxfs_parent_add(tp, parent, pip, &xname,
++					offset, ip);
+ 			if (error)
+ 				fail(_("committing parent pointers failed."),
+ 						error);
+@@ -636,8 +636,8 @@ parseproto(
+ 	}
+ 	libxfs_trans_log_inode(tp, ip, flags);
+ 	if (parent) {
+-		error = -libxfs_parent_defer_add(tp, parent, pip, &xname,
+-				offset, ip);
++		error = -libxfs_parent_add(tp, parent, pip, &xname, offset,
++				ip);
+ 		if (error)
+ 			fail(_("committing parent pointers failed."), error);
+ 	}
 
