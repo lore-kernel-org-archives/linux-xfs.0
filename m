@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED6C3C6FD1F
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Mar 2023 19:26:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F6CAC6FD19
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Mar 2023 19:26:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229644AbjCPT0O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Mar 2023 15:26:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53322 "EHLO
+        id S229918AbjCPT03 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Mar 2023 15:26:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53500 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229720AbjCPT0N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Mar 2023 15:26:13 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2FAABDD22
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 12:26:11 -0700 (PDT)
+        with ESMTP id S229720AbjCPT02 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Mar 2023 15:26:28 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4385F4393E
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 12:26:27 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 37761620F9
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 19:26:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92A53C433D2;
-        Thu, 16 Mar 2023 19:26:10 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CEFC6620F5
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 19:26:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34FD9C433EF;
+        Thu, 16 Mar 2023 19:26:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678994770;
-        bh=kh8noAaNt2RzSwuZOW2CBf/JKZXoFZdjWaPXA2gWetI=;
+        s=k20201202; t=1678994786;
+        bh=AmApFvqePLIKF4FAie0JOquoAlMKO/Af0U4G6HlmnZU=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=Rjpt/BptgIISVBXlNIabSEOdTE+k3q7pdOGvE5LRC4jI7+oVNj9UseE9dEcCCpAc1
-         uI+ez8WmTtB+11kRpUBv+HuvdDXWlgHsr4umTPeGNBv+Ba/AI/mZvB+CDkJ1KLqOX4
-         7WnRK10yK3r8VwdkMJUYwRZHM+4YQpdZ3uU/8TCKWj3yqZTF7I8fCp9zs8LQh7KUBV
-         3EyJLew4sb1qByTUuXyLlY/f0BjCBs0HnATTBOf/OpAnRHD9NQpssi+JqX7yKGTko7
-         rDwY+c0wDVbbdREhilmyr3F5yYvXu/IGmDYz55ak+TbtKTwbgphqjybozSOb0TzFSb
-         DYyhvFzfXaCaQ==
-Date:   Thu, 16 Mar 2023 12:26:10 -0700
-Subject: [PATCH 1/9] libxfs: initialize the slab cache for parent defer items
+        b=o/A0vRXkukkNzxG8OcQUKZbEfv/1K8GKH5XvNjTjXOMX9H1ZUfZfqI5+mr6NVIKvl
+         aKIlfChhg8BNSmmKAeoC8GfR8MbRFDCJ5DLxmnu+QKpapsIAUk1WWMAYqJWNoENyiY
+         oKkQaIQBSV6ST7s/eoXtH390uiu7Ys2bRCWH6Kbv1bUZd5xwjZp1olLOvKja+b90Eu
+         /gujJIdgyb8dkStRQX2yWt/C6AdGRp+8Z9BtLHdsaXKPAW6qPCNMAHQVt9EmyaNCFa
+         zMRxo4PYtTOaO8YeNG9F9bgiGa7g50j75jrRB992btNBJO+TWCFTiiXTHkcRE0Yl43
+         BaaBvE6p6S0+g==
+Date:   Thu, 16 Mar 2023 12:26:25 -0700
+Subject: [PATCH 2/9] mkfs: fix libxfs api misuse
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167899415390.16278.7244343000757925685.stgit@frogsfrogsfrogs>
+Message-ID: <167899415403.16278.8241552212949054742.stgit@frogsfrogsfrogs>
 In-Reply-To: <167899415375.16278.9528475200288521209.stgit@frogsfrogsfrogs>
 References: <167899415375.16278.9528475200288521209.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,47 +49,40 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Initialize the slab cache for parent defer items.  We'll need this in an
-upcoming patch.
+Fix libxfs usage problems as pointed out by xfs/437.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- include/libxfs.h |    1 +
- libxfs/init.c    |    3 +++
- 2 files changed, 4 insertions(+)
+ libxfs/libxfs_api_defs.h |    1 +
+ mkfs/proto.c             |    4 ++--
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
 
-diff --git a/include/libxfs.h b/include/libxfs.h
-index b28781d19..cc57e8887 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -78,6 +78,7 @@ struct iomap;
- #include "xfs_refcount_btree.h"
- #include "xfs_refcount.h"
- #include "xfs_btree_staging.h"
-+#include "xfs_parent.h"
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index f8efcce77..e44b0b29e 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -124,6 +124,7 @@
+ #define xfs_initialize_perag		libxfs_initialize_perag
+ #define xfs_initialize_perag_data	libxfs_initialize_perag_data
+ #define xfs_init_local_fork		libxfs_init_local_fork
++#define xfs_init_parent_name_rec	libxfs_init_parent_name_rec
  
- #ifndef ARRAY_SIZE
- #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-diff --git a/libxfs/init.c b/libxfs/init.c
-index fda36ba0f..59cd547d6 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -258,6 +258,8 @@ init_caches(void)
- 			"xfs_extfree_item");
- 	xfs_trans_cache = kmem_cache_init(
- 			sizeof(struct xfs_trans), "xfs_trans");
-+	xfs_parent_intent_cache = kmem_cache_init(
-+			sizeof(struct xfs_parent_defer), "xfs_parent_defer");
- }
- 
- static int
-@@ -275,6 +277,7 @@ destroy_caches(void)
- 	xfs_btree_destroy_cur_caches();
- 	leaked += kmem_cache_destroy(xfs_extfree_item_cache);
- 	leaked += kmem_cache_destroy(xfs_trans_cache);
-+	leaked += kmem_cache_destroy(xfs_parent_intent_cache);
- 
- 	return leaked;
- }
+ #define xfs_inobt_maxrecs		libxfs_inobt_maxrecs
+ #define xfs_inobt_stage_cursor		libxfs_inobt_stage_cursor
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index 36d8cde21..ac7ffbe9d 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -613,8 +613,8 @@ parseproto(
+ 			.value = (void *)xname.name,
+ 			.valuelen = xname.len,
+ 		};
+-		xfs_init_parent_name_rec(&rec, pip, offset);
+-		error = xfs_attr_set(&args);
++		libxfs_init_parent_name_rec(&rec, pip, offset);
++		error = -libxfs_attr_set(&args);
+ 		if (error)
+ 			fail(_("Error creating parent pointer"), error);
+ 	}
 
