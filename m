@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D3EAC6FD1F
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Mar 2023 19:27:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AB15C6FD19
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Mar 2023 19:27:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229549AbjCPT1S (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Mar 2023 15:27:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54104 "EHLO
+        id S229692AbjCPT1b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Mar 2023 15:27:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229494AbjCPT1R (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Mar 2023 15:27:17 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC40DCD66C
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 12:27:15 -0700 (PDT)
+        with ESMTP id S229494AbjCPT1a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Mar 2023 15:27:30 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91108D7C00
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 12:27:29 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 5C40AB82302
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 19:27:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0B55C433EF;
-        Thu, 16 Mar 2023 19:27:12 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2BE22620EB
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 19:27:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F83FC4339B;
+        Thu, 16 Mar 2023 19:27:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678994833;
-        bh=Ju9MdpdeEQUlgZK2fVnT5yTcHmdA4LE9JQlaKk7P/1s=;
+        s=k20201202; t=1678994848;
+        bh=i7CXCh4FAtKDbIKENXZhNTHLf9zTdYGD7SEWRZnoTpA=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=XsdVQ2LdLoOOaCuEeVm8Ms5ji01a2DHHd4PEgNKEXZGGpEu1PT40dBZEaqGxGT0aB
-         2Qvm0oMFdsSQwV/GwHoXVBXzvk1huhdcVSLLrSd9yTm2EDrvRJl2lA61zPeaBhD4jZ
-         y/gh2FUIt6y506wcBV/K7/XHy2xzDiML9K6lCBUJRblxoAbdq8aJ0QPFYRmADjuZ6u
-         eJBSUdOwRUsplMQX73r0nlGC1gPU0PljVaOkjgOkKYCxR+VgN0DX8+WjYQiP0WCSZZ
-         0vTSk4iwYmll0bBWFTeZTCx6bqbxwMunaWId/41mVzbhplay8hloHJ54ToN+IaYyV8
-         ChP9PWQ+SJofA==
-Date:   Thu, 16 Mar 2023 12:27:12 -0700
-Subject: [PATCH 5/9] xfs_db: report parent pointer keys
+        b=JDC1ywIXjRPn0VaL7s8wB7p0AXdK3wWD0XXrWOaeIRktar/7MhV58CVXeu7uagtDp
+         sxJjjZYVWDpIprBGM1sp5KuJEmL65J9Yehx0eEiMbNTnuxrC3U9nArcsmsEOWEfe0/
+         uEkRMuU5Dw7NaBpWKXD9bOh+wTpai/QEFWWtIiFGwlF98sxs6uEIVstICbmSgOisK5
+         k6Z3wQHHUiLmyAZM2tlGkJECEuRI4xpwTyJ13D6YmJbXqxTufgnJlp99k65w+piwND
+         5dR5jbgv79XZRbZ8JGBQV/McE1vyv4ueWYBJoJz84S1++V6gbo32F0pkATQdk6G5Nq
+         V5xlwP/0S3G8w==
+Date:   Thu, 16 Mar 2023 12:27:28 -0700
+Subject: [PATCH 6/9] xfs_db: obfuscate dirent and pptr names consistently
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167899415442.16278.1927282731092038026.stgit@frogsfrogsfrogs>
+Message-ID: <167899415455.16278.13189026677929037459.stgit@frogsfrogsfrogs>
 In-Reply-To: <167899415375.16278.9528475200288521209.stgit@frogsfrogsfrogs>
 References: <167899415375.16278.9528475200288521209.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,145 +49,123 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Decode the parent pointer inode, generation, and diroffset fields.
+When someone wants to perform an obfuscated metadump of a filesystem
+where parent pointers are enabled, we have to use the *exact* same
+obfuscated name for both the directory entry and the parent pointer.
+Instead of using an RNG to influence the obfuscated name, use the dirent
+inode number to start the obfuscated name.  This makes them consistent,
+though the resulting names aren't quite so full of control characters.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/attr.c      |   31 +++++++++++++++++++++++++++++++
- db/attrshort.c |   25 +++++++++++++++++++++++++
- 2 files changed, 56 insertions(+)
+ db/metadump.c |   34 ++++++++++++++++++++++++----------
+ 1 file changed, 24 insertions(+), 10 deletions(-)
 
 
-diff --git a/db/attr.c b/db/attr.c
-index f29e4a544..db7cf54b5 100644
---- a/db/attr.c
-+++ b/db/attr.c
-@@ -19,6 +19,7 @@ static int	attr_leaf_entries_count(void *obj, int startoff);
- static int	attr_leaf_hdr_count(void *obj, int startoff);
- static int	attr_leaf_name_local_count(void *obj, int startoff);
- static int	attr_leaf_name_local_name_count(void *obj, int startoff);
-+static int	attr_leaf_name_pptr_count(void *obj, int startoff);
- static int	attr_leaf_name_local_value_count(void *obj, int startoff);
- static int	attr_leaf_name_local_value_offset(void *obj, int startoff,
- 						  int idx);
-@@ -111,6 +112,8 @@ const field_t	attr_leaf_map_flds[] = {
+diff --git a/db/metadump.c b/db/metadump.c
+index 27d1df432..bb441fbbb 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -740,12 +740,14 @@ nametable_add(xfs_dahash_t hash, int namelen, unsigned char *name)
+ #define rol32(x,y)		(((x) << (y)) | ((x) >> (32 - (y))))
  
- #define	LNOFF(f)	bitize(offsetof(xfs_attr_leaf_name_local_t, f))
- #define	LVOFF(f)	bitize(offsetof(xfs_attr_leaf_name_remote_t, f))
-+#define	PPOFF(f)	bitize(offsetof(xfs_attr_leaf_name_local_t, nameval) + \
-+			       offsetof(struct xfs_parent_name_rec, f))
- const field_t	attr_leaf_name_flds[] = {
- 	{ "valuelen", FLDT_UINT16D, OI(LNOFF(valuelen)),
- 	  attr_leaf_name_local_count, FLD_COUNT, TYP_NONE },
-@@ -118,6 +121,12 @@ const field_t	attr_leaf_name_flds[] = {
- 	  attr_leaf_name_local_count, FLD_COUNT, TYP_NONE },
- 	{ "name", FLDT_CHARNS, OI(LNOFF(nameval)),
- 	  attr_leaf_name_local_name_count, FLD_COUNT, TYP_NONE },
-+	{ "parent_ino", FLDT_INO, OI(PPOFF(p_ino)),
-+	  attr_leaf_name_pptr_count, FLD_COUNT, TYP_INODE },
-+	{ "parent_gen", FLDT_UINT32D, OI(PPOFF(p_gen)),
-+	  attr_leaf_name_pptr_count, FLD_COUNT, TYP_NONE },
-+	{ "parent_diroffset", FLDT_UINT32D, OI(PPOFF(p_diroffset)),
-+	  attr_leaf_name_pptr_count, FLD_COUNT, TYP_NONE },
- 	{ "value", FLDT_CHARNS, attr_leaf_name_local_value_offset,
- 	  attr_leaf_name_local_value_count, FLD_COUNT|FLD_OFFSET, TYP_NONE },
- 	{ "valueblk", FLDT_UINT32X, OI(LVOFF(valueblk)),
-@@ -273,6 +282,26 @@ attr_leaf_name_local_count(
- 				    __attr_leaf_name_local_count);
+ static inline unsigned char
+-random_filename_char(void)
++random_filename_char(xfs_ino_t	ino)
+ {
+ 	static unsigned char filename_alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+ 						"abcdefghijklmnopqrstuvwxyz"
+ 						"0123456789-_";
+ 
++	if (ino)
++		return filename_alphabet[ino % (sizeof filename_alphabet - 1)];
+ 	return filename_alphabet[random() % (sizeof filename_alphabet - 1)];
  }
  
-+static int
-+__attr_leaf_name_pptr_count(
-+	struct xfs_attr_leafblock	*leaf,
-+	struct xfs_attr_leaf_entry      *e,
-+	int				i)
-+{
-+	if (e->flags & XFS_ATTR_PARENT)
-+		return 1;
-+	return 0;
-+}
-+
-+static int
-+attr_leaf_name_pptr_count(
-+	void				*obj,
-+	int				startoff)
-+{
-+	return attr_leaf_entry_walk(obj, startoff,
-+			__attr_leaf_name_pptr_count);
-+}
-+
- static int
- __attr_leaf_name_local_name_count(
- 	struct xfs_attr_leafblock	*leaf,
-@@ -283,6 +312,8 @@ __attr_leaf_name_local_name_count(
+@@ -815,6 +817,7 @@ in_lost_found(
+  */
+ static void
+ obfuscate_name(
++	xfs_ino_t	ino,
+ 	xfs_dahash_t	hash,
+ 	size_t		name_len,
+ 	unsigned char	*name)
+@@ -842,7 +845,7 @@ obfuscate_name(
+ 	 * Accumulate its new hash value as we go.
+ 	 */
+ 	for (i = 0; i < name_len - 5; i++) {
+-		*newp = random_filename_char();
++		*newp = random_filename_char(ino);
+ 		new_hash = *newp ^ rol32(new_hash, 7);
+ 		newp++;
+ 	}
+@@ -1207,7 +1210,10 @@ generate_obfuscated_name(
+ 	/* Obfuscate the name (if possible) */
  
- 	if (!(e->flags & XFS_ATTR_LOCAL))
- 		return 0;
-+	if (e->flags & XFS_ATTR_PARENT)
-+		return 0;
+ 	hash = libxfs_da_hashname(name, namelen);
+-	obfuscate_name(hash, namelen, name);
++	if (xfs_has_parent(mp))
++		obfuscate_name(ino, hash, namelen, name);
++	else
++		obfuscate_name(0, hash, namelen, name);
  
- 	l = xfs_attr3_leaf_name_local(leaf, i);
- 	return l->namelen;
-diff --git a/db/attrshort.c b/db/attrshort.c
-index 872d771d5..7c8ac485d 100644
---- a/db/attrshort.c
-+++ b/db/attrshort.c
-@@ -13,6 +13,7 @@
- #include "attrshort.h"
+ 	/*
+ 	 * Make sure the name is not something already seen.  If we
+@@ -1320,7 +1326,7 @@ obfuscate_path_components(
+ 			/* last (or single) component */
+ 			namelen = strnlen((char *)comp, len);
+ 			hash = libxfs_da_hashname(comp, namelen);
+-			obfuscate_name(hash, namelen, comp);
++			obfuscate_name(0, hash, namelen, comp);
+ 			break;
+ 		}
+ 		namelen = slash - (char *)comp;
+@@ -1331,7 +1337,7 @@ obfuscate_path_components(
+ 			continue;
+ 		}
+ 		hash = libxfs_da_hashname(comp, namelen);
+-		obfuscate_name(hash, namelen, comp);
++		obfuscate_name(0, hash, namelen, comp);
+ 		comp += namelen + 1;
+ 		len -= namelen + 1;
+ 	}
+@@ -1407,10 +1413,15 @@ process_sf_attr(
+ 		}
  
- static int	attr_sf_entry_name_count(void *obj, int startoff);
-+static int	attr_sf_entry_pptr_count(void *obj, int startoff);
- static int	attr_sf_entry_value_count(void *obj, int startoff);
- static int	attr_sf_entry_value_offset(void *obj, int startoff, int idx);
- static int	attr_shortform_list_count(void *obj, int startoff);
-@@ -34,6 +35,8 @@ const field_t	attr_sf_hdr_flds[] = {
- };
+ 		if (obfuscate) {
+-			generate_obfuscated_name(0, asfep->namelen,
+-						 &asfep->nameval[0]);
+-			memset(&asfep->nameval[asfep->namelen], 'v',
+-			       asfep->valuelen);
++			if (asfep->flags & XFS_ATTR_PARENT) {
++				generate_obfuscated_name(cur_ino, asfep->valuelen,
++					 &asfep->nameval[asfep->namelen]);
++			} else {
++				generate_obfuscated_name(0, asfep->namelen,
++							 &asfep->nameval[0]);
++				memset(&asfep->nameval[asfep->namelen], 'v',
++				       asfep->valuelen);
++			}
+ 		}
  
- #define	EOFF(f)	bitize(offsetof(struct xfs_attr_sf_entry, f))
-+#define	PPOFF(f) bitize(offsetof(struct xfs_attr_sf_entry, nameval) + \
-+			offsetof(struct xfs_parent_name_rec, f))
- const field_t	attr_sf_entry_flds[] = {
- 	{ "namelen", FLDT_UINT8D, OI(EOFF(namelen)), C1, 0, TYP_NONE },
- 	{ "valuelen", FLDT_UINT8D, OI(EOFF(valuelen)), C1, 0, TYP_NONE },
-@@ -49,11 +52,31 @@ const field_t	attr_sf_entry_flds[] = {
- 	  TYP_NONE },
- 	{ "name", FLDT_CHARNS, OI(EOFF(nameval)), attr_sf_entry_name_count,
- 	  FLD_COUNT, TYP_NONE },
-+	{ "parent_ino", FLDT_INO, OI(PPOFF(p_ino)), attr_sf_entry_pptr_count,
-+	  FLD_COUNT, TYP_INODE },
-+	{ "parent_gen", FLDT_UINT32D, OI(PPOFF(p_gen)), attr_sf_entry_pptr_count,
-+	  FLD_COUNT, TYP_NONE },
-+	{ "parent_diroffset", FLDT_UINT32D, OI(PPOFF(p_diroffset)),
-+	   attr_sf_entry_pptr_count, FLD_COUNT, TYP_NONE },
- 	{ "value", FLDT_CHARNS, attr_sf_entry_value_offset,
- 	  attr_sf_entry_value_count, FLD_COUNT|FLD_OFFSET, TYP_NONE },
- 	{ NULL }
- };
- 
-+static int
-+attr_sf_entry_pptr_count(
-+	void				*obj,
-+	int				startoff)
-+{
-+	struct xfs_attr_sf_entry	*e;
-+
-+	ASSERT(bitoffs(startoff) == 0);
-+	e = (struct xfs_attr_sf_entry *)((char *)obj + byteize(startoff));
-+	if (e->flags & XFS_ATTR_PARENT)
-+		return 1;
-+	return 0;
-+}
-+
- static int
- attr_sf_entry_name_count(
- 	void				*obj,
-@@ -63,6 +86,8 @@ attr_sf_entry_name_count(
- 
- 	ASSERT(bitoffs(startoff) == 0);
- 	e = (struct xfs_attr_sf_entry *)((char *)obj + byteize(startoff));
-+	if (e->flags & XFS_ATTR_PARENT)
-+		return 0;
- 	return e->namelen;
- }
- 
+ 		asfep = (struct xfs_attr_sf_entry *)((char *)asfep +
+@@ -1785,7 +1796,7 @@ process_attr_block(
+ 						(long long)cur_ino);
+ 				break;
+ 			}
+-			if (obfuscate) {
++			if (obfuscate && !(entry->flags & XFS_ATTR_PARENT)) {
+ 				generate_obfuscated_name(0, local->namelen,
+ 					&local->nameval[0]);
+ 				memset(&local->nameval[local->namelen], 'v',
+@@ -1797,6 +1808,9 @@ process_attr_block(
+ 			zlen = xfs_attr_leaf_entsize_local(nlen, vlen) -
+ 				(sizeof(xfs_attr_leaf_name_local_t) - 1 +
+ 				 nlen + vlen);
++			if (obfuscate && (entry->flags & XFS_ATTR_PARENT))
++				generate_obfuscated_name(cur_ino, vlen,
++						&local->nameval[nlen]);
+ 			if (zero_stale_data)
+ 				memset(&local->nameval[nlen + vlen], 0, zlen);
+ 		} else {
 
