@@ -2,71 +2,84 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5AD8C6FD19
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Mar 2023 17:18:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3685C6FD1F
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Mar 2023 18:30:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229807AbjCPRS4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Mar 2023 13:18:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59194 "EHLO
+        id S229589AbjCPSaX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Mar 2023 14:30:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229708AbjCPRSv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Mar 2023 13:18:51 -0400
+        with ESMTP id S229577AbjCPSaW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Mar 2023 14:30:22 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A08F59D4
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 10:18:46 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75F5C1B54D
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 11:30:21 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C3487620A6
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 17:18:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22A61C433D2;
-        Thu, 16 Mar 2023 17:18:45 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 11720620E0
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 18:30:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 6A5B1C433AA
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 18:30:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678987125;
-        bh=LZ8q9WpHTEj92FXepK8KrSgSG6uE4eV36CiiSbZxaYw=;
-        h=Date:From:To:Cc:Subject:From;
-        b=Jcmiu9KbFuLYkuEdmmaU3K4BpQmqB2hT6VulIeidV+hDesfVcOatUMNPEAwRjRaNy
-         D2mj2R3Oi81VE20z10hyieBWNrYBHiT1jziI568rjHvPldMWz0o0YgneJ4bgkf2Xkw
-         6IFCwAnYiC/56COLzBP7EbZS0tizCoEC7NXFxCZypPcsmP6wZg55IRMC2l7G8BhfuF
-         +B13JJk/6bFzwhqPR8mJse5UtG4UrZ3nXMiHZ+6U0RXNpw2WsXVBfn1PwV4Qd6ULZx
-         9841kT6t129IVX6HOpXXRW9dPhEQ2M/rAMq//f+pqvAZkAruUIUU41HWmDUmUdcE/I
-         gODpBkn2t0YSA==
-Date:   Thu, 16 Mar 2023 10:18:44 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     david@fromorbit.com, dchinner@redhat.com, linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 6de4b1ab470f
-Message-ID: <167898709210.4066220.16318379148286823888.stg-ugh@magnolia>
+        s=k20201202; t=1678991420;
+        bh=P2AATFUTxBcggF5jq9XwBK08dyGmHcSH6ublRNb1h4o=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=cu2aL6ZvBN0bTb9f88peZA8NpmXpVdaS+Q6fpKtd5AWNR6ylzRx6UY0NBZqGHvLV6
+         7HIcu9hV5ejkAsVoaGlgIAyCLAWaEkD+YGroS2GTGacfnIb7qVxNqS2AvefFxVKstx
+         ZqE0h1OCFrn1HRhq/5WHeGuszyD/V78fUwxioZOoFj57IcMx6o3dolBJwhNSdukVR9
+         nqGcWNI/WmA/hlFrvfJhGcUhExT2tR64q9wCK1Cgt/dMPKzlgfJ8Z1dIroPhohmGd6
+         3yABvifqb5S+rpIvL/lcpGtxe139BKl5TWj3yqltWpqQiGgdABXyaumD3UdMIuvM0g
+         taEox158oe/oQ==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 51E3BC43142; Thu, 16 Mar 2023 18:30:20 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 207053] fsfreeze deadlock on XFS (the FIFREEZE ioctl and
+ subsequent FITHAW hang indefinitely)
+Date:   Thu, 16 Mar 2023 18:30:19 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: bobbysmith013@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-207053-201763-kNZdM59lt4@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-207053-201763@https.bugzilla.kernel.org/>
+References: <bug-207053-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+https://bugzilla.kernel.org/show_bug.cgi?id=3D207053
 
-The for-next branch of the xfs-linux repository at:
+bobbysmith013@gmail.com changed:
 
-git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |bobbysmith013@gmail.com
 
-has just been updated.
+--- Comment #11 from bobbysmith013@gmail.com ---
+I'm trying to figure out which kernel version this bug is fixed in. I see
+references to a patch above, but am having trouble tracking down when it was
+added into the baseline.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+--=20
+You may reply to this email to add a comment.
 
-The new head of the for-next branch is commit:
-
-6de4b1ab470f xfs: try to idiot-proof the allocators
-
-1 new commit:
-
-Darrick J. Wong (1):
-[6de4b1ab470f] xfs: try to idiot-proof the allocators
-
-Code Diffstat:
-
-fs/xfs/libxfs/xfs_alloc.c | 13 +++++++++++++
-1 file changed, 13 insertions(+)
+You are receiving this mail because:
+You are watching the assignee of the bug.=
