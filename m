@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2A58C6FD19
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Mar 2023 19:34:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D6DCC6FD1F
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Mar 2023 19:34:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230301AbjCPTeF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Mar 2023 15:34:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36068 "EHLO
+        id S230310AbjCPTeU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Mar 2023 15:34:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230290AbjCPTeE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Mar 2023 15:34:04 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F021359F3;
-        Thu, 16 Mar 2023 12:34:00 -0700 (PDT)
+        with ESMTP id S229951AbjCPTeS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Mar 2023 15:34:18 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38DC01C7E0;
+        Thu, 16 Mar 2023 12:34:17 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A3C32B82338;
-        Thu, 16 Mar 2023 19:33:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D0E3C433EF;
-        Thu, 16 Mar 2023 19:33:58 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 963FDCE1E65;
+        Thu, 16 Mar 2023 19:34:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A058C433D2;
+        Thu, 16 Mar 2023 19:34:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678995238;
-        bh=K3BpCPcw5QcolF6/fvOmKqU6PzJ39+BNrWoE9SK8owM=;
+        s=k20201202; t=1678995254;
+        bh=jcMPAitEdlmtQO6luu6/YtNbQLTOBOSD+2V5MPg8xLk=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=q4p/+LvPLbFJzwcfmEPHGY570b+XaATJlvr8ED4dmxDmiX/xwAb60TZm7bmP8xNpy
-         6RHpPFDcgJAtM9ov5TfCkaMPx/3mkYHIja0LK6Tz+YtrtuldPK7gixubID5tFwn5eY
-         WDRGTUdLFhF8e4QB0x8N55JHDQHuHabaKM/zDPsz7NtQmfBuXbveknTBxW0TwsW/Ka
-         O2Kf1TLiq8zEFYb6dpV6qZ9ufjZyTq68XgLI5TcSCaZb8OPsIWdEqVq7RRGSmHbt30
-         XJEG5zuQgAgFkhFLTydg/RxgiKrsoZP5VsFLaCsHMV98ZZUZhvBGx2HAqaJ1Q0HM8s
-         DrS+aUt9ith/Q==
-Date:   Thu, 16 Mar 2023 12:33:58 -0700
-Subject: [PATCH 04/14] generic/050: adapt for parent pointers
+        b=g4rLsAQBaPnKRl+G2x5vdPTUaqZFchYF1wp27RwIrlJbdKQvKmGHmr+xjmj2HL+w6
+         qeyyVtAWOGWR/e1k6gT/NTLQs/UuPqN4W0GXnpN1wCS4Y5qbtGeR6TonqxPgfJ73Nr
+         fEw+hSrjlPTaRLlwH7sPWlyholf4/j+p0dosEeX5Ts+CIm9PceKvkn9/wRdRQHG+BJ
+         gKsSOSaNsam+jGAxJ4lHw8fiCDhp6yu8Yu9mK8fRaku0HNO3KcvKux3S/3fd8sxh+o
+         vgrO1G61t8fpvwUnPuzvqMN8WmnF++2JcksRtjgNTaauxIrVochh7IYX/d7gESRBAD
+         EnN7mkCLIFxsw==
+Date:   Thu, 16 Mar 2023 12:34:13 -0700
+Subject: [PATCH 05/14] xfs/018: disable parent pointers for this test
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     zlang@redhat.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Message-ID: <167899417707.17926.6232799207230898323.stgit@frogsfrogsfrogs>
+Message-ID: <167899417721.17926.3530090921775489965.stgit@frogsfrogsfrogs>
 In-Reply-To: <167899417650.17926.7405859750613330339.stgit@frogsfrogsfrogs>
 References: <167899417650.17926.7405859750613330339.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,73 +49,70 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Fix this test when quotas and parent pointers are enabled.
+This test depends heavily on the xattr formats created for new files.
+Parent pointers break those assumptions, so force parent pointers off.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/generic/050                    |   10 ++++++++++
- tests/generic/050.cfg                |    1 +
- tests/generic/050.out.xfsquotaparent |   23 +++++++++++++++++++++++
- 3 files changed, 34 insertions(+)
- create mode 100644 tests/generic/050.out.xfsquotaparent
+ tests/xfs/018 |    7 ++++++-
+ tests/xfs/191 |    7 ++++++-
+ tests/xfs/288 |    7 ++++++-
+ 3 files changed, 18 insertions(+), 3 deletions(-)
 
 
-diff --git a/tests/generic/050 b/tests/generic/050
-index 0664f8c0e4..b38401b9fc 100755
---- a/tests/generic/050
-+++ b/tests/generic/050
-@@ -36,6 +36,16 @@ elif [ "$FSTYP" = "xfs" ] && echo "$MOUNT_OPTIONS" | grep -q quota ; then
- 	# Mounting with quota on XFS requires a writable fs, which means
- 	# we expect to fail the ro blockdev test with with EPERM.
- 	features="xfsquota"
-+
-+	if _xfs_has_feature $SCRATCH_DEV parent && \
-+	   ! _xfs_has_feature $SCRATCH_DEV realtime; then
-+		# If we have quotas and parent pointers enabled, the primary
-+		# superblock will be written out with the quota flags set when
-+		# the logged xattrs log_incompat feature is set.  Hence the
-+		# norecovery mount won't fail due to quota rejecting the
-+		# mismatch between the mount qflags and the ondisk ones.
-+		features="xfsquotaparent"
-+	fi
- fi
- _link_out_file "$features"
+diff --git a/tests/xfs/018 b/tests/xfs/018
+index 1ef51a2e61..34b6e91579 100755
+--- a/tests/xfs/018
++++ b/tests/xfs/018
+@@ -100,7 +100,12 @@ attr32l="X$attr32k"
+ attr64k="$attr32k$attr32k"
  
-diff --git a/tests/generic/050.cfg b/tests/generic/050.cfg
-index 1d9d60bc69..85924d117d 100644
---- a/tests/generic/050.cfg
-+++ b/tests/generic/050.cfg
-@@ -1,2 +1,3 @@
- nojournal: nojournal
- xfsquota: xfsquota
-+xfsquotaparent: xfsquotaparent
-diff --git a/tests/generic/050.out.xfsquotaparent b/tests/generic/050.out.xfsquotaparent
-new file mode 100644
-index 0000000000..b341aca5be
---- /dev/null
-+++ b/tests/generic/050.out.xfsquotaparent
-@@ -0,0 +1,23 @@
-+QA output created by 050
-+setting device read-only
-+mounting read-only block device:
-+mount: SCRATCH_MNT: permission denied
-+unmounting read-only filesystem
-+umount: SCRATCH_DEV: not mounted
-+setting device read-write
-+mounting read-write block device:
-+touch files
-+going down:
-+unmounting shutdown filesystem:
-+setting device read-only
-+mounting filesystem that needs recovery on a read-only device:
-+mount: device write-protected, mounting read-only
-+mount: cannot mount device read-only
-+unmounting read-only filesystem
-+umount: SCRATCH_DEV: not mounted
-+mounting filesystem with -o norecovery on a read-only device:
-+mount: device write-protected, mounting read-only
-+unmounting read-only filesystem
-+setting device read-write
-+mounting filesystem that needs recovery with -o ro:
-+*** done
+ echo "*** mkfs"
+-_scratch_mkfs >/dev/null
++
++# Parent pointers change the xattr formats sufficiently to break this test.
++# Disable parent pointers if mkfs supports it.
++mkfs_args=()
++$MKFS_XFS_PROG 2>&1 | grep -q parent=0 && mkfs_args+=(-n parent=0)
++_scratch_mkfs "${mkfs_args[@]}" >/dev/null
+ 
+ blk_sz=$(_scratch_xfs_get_sb_field blocksize)
+ err_inj_attr_sz=$(( blk_sz / 3 - 50 ))
+diff --git a/tests/xfs/191 b/tests/xfs/191
+index 7a02f1be21..0a6c20dad7 100755
+--- a/tests/xfs/191
++++ b/tests/xfs/191
+@@ -33,7 +33,12 @@ _fixed_by_kernel_commit 7be3bd8856fb "xfs: empty xattr leaf header blocks are no
+ _fixed_by_kernel_commit e87021a2bc10 "xfs: use larger in-core attr firstused field and detect overflow"
+ _fixed_by_git_commit xfsprogs f50d3462c654 "xfs_repair: ignore empty xattr leaf blocks"
+ 
+-_scratch_mkfs_xfs | _filter_mkfs >$seqres.full 2>$tmp.mkfs
++# Parent pointers change the xattr formats sufficiently to break this test.
++# Disable parent pointers if mkfs supports it.
++mkfs_args=()
++$MKFS_XFS_PROG 2>&1 | grep -q parent=0 && mkfs_args+=(-n parent=0)
++
++_scratch_mkfs_xfs "${mkfs_args[@]}" | _filter_mkfs >$seqres.full 2>$tmp.mkfs
+ cat $tmp.mkfs >> $seqres.full
+ source $tmp.mkfs
+ _scratch_mount
+diff --git a/tests/xfs/288 b/tests/xfs/288
+index aa664a266e..6bfc9ac0c8 100755
+--- a/tests/xfs/288
++++ b/tests/xfs/288
+@@ -19,8 +19,13 @@ _supported_fs xfs
+ _require_scratch
+ _require_attrs
+ 
++# Parent pointers change the xattr formats sufficiently to break this test.
++# Disable parent pointers if mkfs supports it.
++mkfs_args=()
++$MKFS_XFS_PROG 2>&1 | grep -q parent=0 && mkfs_args+=(-n parent=0)
++
+ # get block size ($dbsize) from the mkfs output
+-_scratch_mkfs_xfs 2>/dev/null | _filter_mkfs 2>$tmp.mkfs >/dev/null
++_scratch_mkfs_xfs "${mkfs_args[@]}" 2>/dev/null | _filter_mkfs 2>$tmp.mkfs >/dev/null
+ . $tmp.mkfs
+ 
+ _scratch_mount
 
