@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28364C6FD1F
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Mar 2023 19:27:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D3EAC6FD1F
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Mar 2023 19:27:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229516AbjCPT1C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Mar 2023 15:27:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53860 "EHLO
+        id S229549AbjCPT1S (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Mar 2023 15:27:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229720AbjCPT1B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Mar 2023 15:27:01 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8132C8888
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 12:26:59 -0700 (PDT)
+        with ESMTP id S229494AbjCPT1R (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Mar 2023 15:27:17 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC40DCD66C
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 12:27:15 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 9E695B82302
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 19:26:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52B67C433D2;
-        Thu, 16 Mar 2023 19:26:57 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 5C40AB82302
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Mar 2023 19:27:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0B55C433EF;
+        Thu, 16 Mar 2023 19:27:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678994817;
-        bh=Ok2jL3S8Vqn4hmBKjtxLAMT7WDu6JiaR443/ItGyegY=;
+        s=k20201202; t=1678994833;
+        bh=Ju9MdpdeEQUlgZK2fVnT5yTcHmdA4LE9JQlaKk7P/1s=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=euv2/iqKUrDxoK57IcXjzBys6uUTlNwPcRSzcIdpKxjvSTIINhASgQdV5L/BgZuxr
-         eTEChVJQqYB99HjiLfsllOEWcrHSYxh9IDqt64Rv6jTRtZ5fkHttJBkRMkOx62vMmy
-         hRxTRwQfaoKgy366Vrl8phhciVpqzzMJxOGtwnsp+tL3FWO4d6jLRs64zDyE8Ke76u
-         X/X5AzciXpDmah+LxSM0mnlgMP9Q0ZmMCdD98J0oBo3E/cfwx8UiMDAWa+91t7kVvu
-         BIwkMMmt1TOWjwHmAEq1KcWNlvUMEo6W0YAHeljT+I8R+1jmQnPcyumroGmR3QN4iA
-         x+DbmUxLIY14g==
-Date:   Thu, 16 Mar 2023 12:26:56 -0700
-Subject: [PATCH 4/9] mkfs: fix subdir parent pointer creation
+        b=XsdVQ2LdLoOOaCuEeVm8Ms5ji01a2DHHd4PEgNKEXZGGpEu1PT40dBZEaqGxGT0aB
+         2Qvm0oMFdsSQwV/GwHoXVBXzvk1huhdcVSLLrSd9yTm2EDrvRJl2lA61zPeaBhD4jZ
+         y/gh2FUIt6y506wcBV/K7/XHy2xzDiML9K6lCBUJRblxoAbdq8aJ0QPFYRmADjuZ6u
+         eJBSUdOwRUsplMQX73r0nlGC1gPU0PljVaOkjgOkKYCxR+VgN0DX8+WjYQiP0WCSZZ
+         0vTSk4iwYmll0bBWFTeZTCx6bqbxwMunaWId/41mVzbhplay8hloHJ54ToN+IaYyV8
+         ChP9PWQ+SJofA==
+Date:   Thu, 16 Mar 2023 12:27:12 -0700
+Subject: [PATCH 5/9] xfs_db: report parent pointer keys
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <167899415429.16278.5259298733491430583.stgit@frogsfrogsfrogs>
+Message-ID: <167899415442.16278.1927282731092038026.stgit@frogsfrogsfrogs>
 In-Reply-To: <167899415375.16278.9528475200288521209.stgit@frogsfrogsfrogs>
 References: <167899415375.16278.9528475200288521209.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,201 +49,145 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Rework the protofile code so that it uses the same deferred parent
-pointer ops that the kernel uses to create parent pointers.  While we're
-at it, make it so that subdirs of the root directory and reserved files
-also get parent pointers.  Found by xfs/019.
+Decode the parent pointer inode, generation, and diroffset fields.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/libxfs_api_defs.h |    3 ++
- mkfs/proto.c             |   65 +++++++++++++++++++++++++++++++++-------------
- 2 files changed, 50 insertions(+), 18 deletions(-)
+ db/attr.c      |   31 +++++++++++++++++++++++++++++++
+ db/attrshort.c |   25 +++++++++++++++++++++++++
+ 2 files changed, 56 insertions(+)
 
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index e44b0b29e..055d2862a 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -140,6 +140,9 @@
- #define xfs_log_get_max_trans_res	libxfs_log_get_max_trans_res
- #define xfs_log_sb			libxfs_log_sb
- #define xfs_mode_to_ftype		libxfs_mode_to_ftype
-+#define xfs_parent_defer_add		libxfs_parent_defer_add
-+#define xfs_parent_finish		libxfs_parent_finish
-+#define xfs_parent_start		libxfs_parent_start
- #define xfs_perag_get			libxfs_perag_get
- #define xfs_perag_put			libxfs_perag_put
- #define xfs_prealloc_blocks		libxfs_prealloc_blocks
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index ac7ffbe9d..e0131df50 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -8,7 +8,6 @@
- #include <sys/stat.h>
- #include "libfrog/convert.h"
- #include "proto.h"
--#include "xfs_parent.h"
+diff --git a/db/attr.c b/db/attr.c
+index f29e4a544..db7cf54b5 100644
+--- a/db/attr.c
++++ b/db/attr.c
+@@ -19,6 +19,7 @@ static int	attr_leaf_entries_count(void *obj, int startoff);
+ static int	attr_leaf_hdr_count(void *obj, int startoff);
+ static int	attr_leaf_name_local_count(void *obj, int startoff);
+ static int	attr_leaf_name_local_name_count(void *obj, int startoff);
++static int	attr_leaf_name_pptr_count(void *obj, int startoff);
+ static int	attr_leaf_name_local_value_count(void *obj, int startoff);
+ static int	attr_leaf_name_local_value_offset(void *obj, int startoff,
+ 						  int idx);
+@@ -111,6 +112,8 @@ const field_t	attr_leaf_map_flds[] = {
  
- /*
-  * Prototypes for internal functions.
-@@ -349,6 +348,20 @@ newdirectory(
- 		fail(_("directory create error"), error);
+ #define	LNOFF(f)	bitize(offsetof(xfs_attr_leaf_name_local_t, f))
+ #define	LVOFF(f)	bitize(offsetof(xfs_attr_leaf_name_remote_t, f))
++#define	PPOFF(f)	bitize(offsetof(xfs_attr_leaf_name_local_t, nameval) + \
++			       offsetof(struct xfs_parent_name_rec, f))
+ const field_t	attr_leaf_name_flds[] = {
+ 	{ "valuelen", FLDT_UINT16D, OI(LNOFF(valuelen)),
+ 	  attr_leaf_name_local_count, FLD_COUNT, TYP_NONE },
+@@ -118,6 +121,12 @@ const field_t	attr_leaf_name_flds[] = {
+ 	  attr_leaf_name_local_count, FLD_COUNT, TYP_NONE },
+ 	{ "name", FLDT_CHARNS, OI(LNOFF(nameval)),
+ 	  attr_leaf_name_local_name_count, FLD_COUNT, TYP_NONE },
++	{ "parent_ino", FLDT_INO, OI(PPOFF(p_ino)),
++	  attr_leaf_name_pptr_count, FLD_COUNT, TYP_INODE },
++	{ "parent_gen", FLDT_UINT32D, OI(PPOFF(p_gen)),
++	  attr_leaf_name_pptr_count, FLD_COUNT, TYP_NONE },
++	{ "parent_diroffset", FLDT_UINT32D, OI(PPOFF(p_diroffset)),
++	  attr_leaf_name_pptr_count, FLD_COUNT, TYP_NONE },
+ 	{ "value", FLDT_CHARNS, attr_leaf_name_local_value_offset,
+ 	  attr_leaf_name_local_value_count, FLD_COUNT|FLD_OFFSET, TYP_NONE },
+ 	{ "valueblk", FLDT_UINT32X, OI(LVOFF(valueblk)),
+@@ -273,6 +282,26 @@ attr_leaf_name_local_count(
+ 				    __attr_leaf_name_local_count);
  }
  
-+static struct xfs_parent_defer *
-+newpptr(
-+	struct xfs_mount	*mp)
++static int
++__attr_leaf_name_pptr_count(
++	struct xfs_attr_leafblock	*leaf,
++	struct xfs_attr_leaf_entry      *e,
++	int				i)
 +{
-+	struct xfs_parent_defer	*ret;
-+	int			error;
-+
-+	error = -libxfs_parent_start(mp, &ret);
-+	if (error)
-+		fail(_("initializing parent pointer"), error);
-+
-+	return ret;
++	if (e->flags & XFS_ATTR_PARENT)
++		return 1;
++	return 0;
 +}
 +
- static void
- parseproto(
- 	xfs_mount_t	*mp,
-@@ -384,6 +397,7 @@ parseproto(
- 	char		*value;
- 	struct xfs_name	xname;
- 	xfs_dir2_dataptr_t offset;
-+	struct xfs_parent_defer *parent = NULL;
- 
- 	memset(&creds, 0, sizeof(creds));
- 	mstr = getstr(pp);
-@@ -458,6 +472,7 @@ parseproto(
- 	case IF_REGULAR:
- 		buf = newregfile(pp, &len);
- 		tp = getres(mp, XFS_B_TO_FSB(mp, len));
-+		parent = newpptr(mp);
- 		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFREG, 1, 0,
- 					   &creds, fsxp, &ip);
- 		if (error)
-@@ -481,7 +496,7 @@ parseproto(
- 			exit(1);
- 		}
- 		tp = getres(mp, XFS_B_TO_FSB(mp, llen));
--
-+		parent = newpptr(mp);
- 		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFREG, 1, 0,
- 					  &creds, fsxp, &ip);
- 		if (error)
-@@ -492,15 +507,24 @@ parseproto(
- 		xname.type = XFS_DIR3_FT_REG_FILE;
- 		newdirent(mp, tp, pip, &xname, ip->i_ino, &offset);
- 		libxfs_trans_log_inode(tp, ip, flags);
-+		if (parent) {
-+			error = -libxfs_parent_defer_add(tp, parent, pip,
-+					&xname, offset, ip);
-+			if (error)
-+				fail(_("committing parent pointers failed."),
-+						error);
-+		}
- 		error = -libxfs_trans_commit(tp);
- 		if (error)
- 			fail(_("Space preallocation failed."), error);
-+		libxfs_parent_finish(mp, parent);
- 		rsvfile(mp, ip, llen);
- 		libxfs_irele(ip);
- 		return;
- 
- 	case IF_BLOCK:
- 		tp = getres(mp, 0);
-+		parent = newpptr(mp);
- 		majdev = getnum(getstr(pp), 0, 0, false);
- 		mindev = getnum(getstr(pp), 0, 0, false);
- 		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFBLK, 1,
-@@ -516,6 +540,7 @@ parseproto(
- 
- 	case IF_CHAR:
- 		tp = getres(mp, 0);
-+		parent = newpptr(mp);
- 		majdev = getnum(getstr(pp), 0, 0, false);
- 		mindev = getnum(getstr(pp), 0, 0, false);
- 		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFCHR, 1,
-@@ -530,6 +555,7 @@ parseproto(
- 
- 	case IF_FIFO:
- 		tp = getres(mp, 0);
-+		parent = newpptr(mp);
- 		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFIFO, 1, 0,
- 				&creds, fsxp, &ip);
- 		if (error)
-@@ -542,6 +568,7 @@ parseproto(
- 		buf = getstr(pp);
- 		len = (int)strlen(buf);
- 		tp = getres(mp, XFS_B_TO_FSB(mp, len));
-+		parent = newpptr(mp);
- 		error = -libxfs_dir_ialloc(&tp, pip, mode|S_IFLNK, 1, 0,
- 				&creds, fsxp, &ip);
- 		if (error)
-@@ -564,6 +591,7 @@ parseproto(
- 			libxfs_log_sb(tp);
- 			isroot = 1;
- 		} else {
-+			parent = newpptr(mp);
- 			libxfs_trans_ijoin(tp, pip, 0);
- 			xname.type = XFS_DIR3_FT_DIR;
- 			newdirent(mp, tp, pip, &xname, ip->i_ino, &offset);
-@@ -572,9 +600,19 @@ parseproto(
- 		}
- 		newdirectory(mp, tp, ip, pip);
- 		libxfs_trans_log_inode(tp, ip, flags);
-+		if (parent) {
-+			error = -libxfs_parent_defer_add(tp, parent, pip,
-+					&xname, offset, ip);
-+			if (error)
-+				fail(_("committing parent pointers failed."),
-+						error);
-+		}
- 		error = -libxfs_trans_commit(tp);
- 		if (error)
- 			fail(_("Directory inode allocation failed."), error);
++static int
++attr_leaf_name_pptr_count(
++	void				*obj,
++	int				startoff)
++{
++	return attr_leaf_entry_walk(obj, startoff,
++			__attr_leaf_name_pptr_count);
++}
 +
-+		libxfs_parent_finish(mp, parent);
-+
- 		/*
- 		 * RT initialization.  Do this here to ensure that
- 		 * the RT inodes get placed after the root inode.
-@@ -597,28 +635,19 @@ parseproto(
- 		fail(_("Unknown format"), EINVAL);
- 	}
- 	libxfs_trans_log_inode(tp, ip, flags);
-+	if (parent) {
-+		error = -libxfs_parent_defer_add(tp, parent, pip, &xname,
-+				offset, ip);
-+		if (error)
-+			fail(_("committing parent pointers failed."), error);
-+	}
- 	error = -libxfs_trans_commit(tp);
- 	if (error) {
- 		fail(_("Error encountered creating file from prototype file"),
- 			error);
- 	}
+ static int
+ __attr_leaf_name_local_name_count(
+ 	struct xfs_attr_leafblock	*leaf,
+@@ -283,6 +312,8 @@ __attr_leaf_name_local_name_count(
  
--	if (xfs_has_parent(mp)) {
--		struct xfs_parent_name_rec      rec;
--		struct xfs_da_args		args = {
--			.dp = ip,
--			.name = (const unsigned char *)&rec,
--			.namelen = sizeof(rec),
--			.attr_filter = XFS_ATTR_PARENT,
--			.value = (void *)xname.name,
--			.valuelen = xname.len,
--		};
--		libxfs_init_parent_name_rec(&rec, pip, offset);
--		error = -libxfs_attr_set(&args);
--		if (error)
--			fail(_("Error creating parent pointer"), error);
--	}
--
-+	libxfs_parent_finish(mp, parent);
- 	libxfs_irele(ip);
+ 	if (!(e->flags & XFS_ATTR_LOCAL))
+ 		return 0;
++	if (e->flags & XFS_ATTR_PARENT)
++		return 0;
+ 
+ 	l = xfs_attr3_leaf_name_local(leaf, i);
+ 	return l->namelen;
+diff --git a/db/attrshort.c b/db/attrshort.c
+index 872d771d5..7c8ac485d 100644
+--- a/db/attrshort.c
++++ b/db/attrshort.c
+@@ -13,6 +13,7 @@
+ #include "attrshort.h"
+ 
+ static int	attr_sf_entry_name_count(void *obj, int startoff);
++static int	attr_sf_entry_pptr_count(void *obj, int startoff);
+ static int	attr_sf_entry_value_count(void *obj, int startoff);
+ static int	attr_sf_entry_value_offset(void *obj, int startoff, int idx);
+ static int	attr_shortform_list_count(void *obj, int startoff);
+@@ -34,6 +35,8 @@ const field_t	attr_sf_hdr_flds[] = {
+ };
+ 
+ #define	EOFF(f)	bitize(offsetof(struct xfs_attr_sf_entry, f))
++#define	PPOFF(f) bitize(offsetof(struct xfs_attr_sf_entry, nameval) + \
++			offsetof(struct xfs_parent_name_rec, f))
+ const field_t	attr_sf_entry_flds[] = {
+ 	{ "namelen", FLDT_UINT8D, OI(EOFF(namelen)), C1, 0, TYP_NONE },
+ 	{ "valuelen", FLDT_UINT8D, OI(EOFF(valuelen)), C1, 0, TYP_NONE },
+@@ -49,11 +52,31 @@ const field_t	attr_sf_entry_flds[] = {
+ 	  TYP_NONE },
+ 	{ "name", FLDT_CHARNS, OI(EOFF(nameval)), attr_sf_entry_name_count,
+ 	  FLD_COUNT, TYP_NONE },
++	{ "parent_ino", FLDT_INO, OI(PPOFF(p_ino)), attr_sf_entry_pptr_count,
++	  FLD_COUNT, TYP_INODE },
++	{ "parent_gen", FLDT_UINT32D, OI(PPOFF(p_gen)), attr_sf_entry_pptr_count,
++	  FLD_COUNT, TYP_NONE },
++	{ "parent_diroffset", FLDT_UINT32D, OI(PPOFF(p_diroffset)),
++	   attr_sf_entry_pptr_count, FLD_COUNT, TYP_NONE },
+ 	{ "value", FLDT_CHARNS, attr_sf_entry_value_offset,
+ 	  attr_sf_entry_value_count, FLD_COUNT|FLD_OFFSET, TYP_NONE },
+ 	{ NULL }
+ };
+ 
++static int
++attr_sf_entry_pptr_count(
++	void				*obj,
++	int				startoff)
++{
++	struct xfs_attr_sf_entry	*e;
++
++	ASSERT(bitoffs(startoff) == 0);
++	e = (struct xfs_attr_sf_entry *)((char *)obj + byteize(startoff));
++	if (e->flags & XFS_ATTR_PARENT)
++		return 1;
++	return 0;
++}
++
+ static int
+ attr_sf_entry_name_count(
+ 	void				*obj,
+@@ -63,6 +86,8 @@ attr_sf_entry_name_count(
+ 
+ 	ASSERT(bitoffs(startoff) == 0);
+ 	e = (struct xfs_attr_sf_entry *)((char *)obj + byteize(startoff));
++	if (e->flags & XFS_ATTR_PARENT)
++		return 0;
+ 	return e->namelen;
  }
  
 
