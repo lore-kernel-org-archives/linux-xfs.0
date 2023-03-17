@@ -2,111 +2,134 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BECDC74A5B
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Mar 2023 10:53:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF4DEC6FD1D
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Mar 2023 11:08:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229604AbjCQKxh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Mar 2023 06:53:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49136 "EHLO
+        id S229678AbjCQLI2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Mar 2023 07:08:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40602 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229603AbjCQKxf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2023 06:53:35 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9456AD00
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2023 03:53:34 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4E03062274
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2023 10:53:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37FC8C433D2
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2023 10:53:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679050413;
-        bh=uY1Y4WKHaNRYpSi0x78GIL/6TpKPELiDugd0i5fehqA=;
-        h=Date:From:To:Subject:From;
-        b=JIenCJUYHdMlSeo8hH8+kv3w1RWVbHLILnuJQ8j+qhJjXS6JgBVy1LfzZkiJfH5Jk
-         kSgslbead1diZjHvI4+HQ95ANflWbG/VjfhH3iOoYwaW1B7WomF2JMYiqS4VYsA5Bc
-         HglYLqApyQzwUs0Tf7lKExLGPMPzMQTg59PfCvGPe4EaOfD7ChzD2NuIcOCJ0fLiBs
-         As+gJE4fGUnGp+dHqUGUgJXeNsxHhxNQpf+L0T5Q0GQnCA+kkdfZFbUhbzLb36Q8Db
-         FqArwoapDd972PWCsGd4KLIMAChAcPReza9ssATNh5XwXdwSYS8sfCmwpLHW5bOi72
-         gy9SWo8k5LidQ==
-Date:   Fri, 17 Mar 2023 11:53:29 +0100
-From:   Carlos Maiolino <cem@kernel.org>
-To:     linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfsprogs: for-next updated to a68dabd45
-Message-ID: <20230317105329.cp3r7tjquk3svkwx@andromeda>
+        with ESMTP id S229669AbjCQLI1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2023 07:08:27 -0400
+Received: from mail-wm1-x331.google.com (mail-wm1-x331.google.com [IPv6:2a00:1450:4864:20::331])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64A5424733
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2023 04:08:25 -0700 (PDT)
+Received: by mail-wm1-x331.google.com with SMTP id l15-20020a05600c4f0f00b003ed58a9a15eso3036003wmq.5
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2023 04:08:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1679051304;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=YJKY1uYO1JL18tYFOMwLyaZ9VknxqKhB3PqioTyOcmQ=;
+        b=iQRjkhj++QzM0THD0TVkkbdM9lokZ+xzgXnlFno8PO26zTZWynvIJmg99vqQstd28A
+         8RDEvP7L2IGHu5ubRrROuQ0Gy2eTAoC5h6Gdk1m6U5ULrwniu78GLAAJWTRWV1PgtsIv
+         tpGvQdP2no983pQC2/eLMbvshH8Dd6iZBTlcA+pR8+oaoh6lK8sC6YF5lD1lQLFQ9nvE
+         jfCWMCq0b9mPVERY3qwUDEnYIH8Ge5AAQ5AIIDCcXydFccuUM8LkGdQZV5D7GsxTFQR9
+         lvjqJq0s0NQgEk8icLlv2rD0NsvBwpkMa7D8CVnPHko3fqTA6MW7uKf+fpRZBbeHzV1V
+         8sZA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679051304;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=YJKY1uYO1JL18tYFOMwLyaZ9VknxqKhB3PqioTyOcmQ=;
+        b=kqX/JRbXpbKA5VdKUK5thKI19gb7FWhOqqqHuzf6NtBngX2407MeFOXsFzpVTfGIUS
+         pY3yogdjX9LL+ACItLE7HCAHuBUj9KGOCRi7SmuBQXVn3AAvRg+GQmcSBWEjxvE/c0TQ
+         P6d5IeeCkodfNujYxOWHIxddNG4kCzeNpTBqyRrHktkl1DhAkJwvpFbHt5etkdnuXvk7
+         kMP8LtFzwTBop3ii0RoTX//l9o93AHbkoSMX7l5ToM3hYv3jklfALtZN6BWTyiyHNc7s
+         iotCgIQJh75E2TVEu0RcqrhAKhwyblCKr4xHpOhiwIMDvJ7MrwemXtfQjkuWXkmsC8sT
+         lpVw==
+X-Gm-Message-State: AO0yUKW0Lja1njXkfFTES1cvQAwIfnPAxa1ax6oHmElVUaD/MwvR0vD1
+        TGM3Y1ISzx7246rYPO0bgLU=
+X-Google-Smtp-Source: AK7set/bqacGXsj5DkqqPhhVPvjnEiUkHSz9TsXh15CSfC6ddWlPG77bVk+YdvEeDa7aoyqXR/+G7g==
+X-Received: by 2002:a05:600c:5408:b0:3ea:ecc2:daab with SMTP id he8-20020a05600c540800b003eaecc2daabmr26898336wmb.3.1679051303743;
+        Fri, 17 Mar 2023 04:08:23 -0700 (PDT)
+Received: from amir-ThinkPad-T480.lan ([5.29.249.86])
+        by smtp.gmail.com with ESMTPSA id t14-20020a1c770e000000b003daf7721bb3sm7551100wmi.12.2023.03.17.04.08.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Mar 2023 04:08:23 -0700 (PDT)
+From:   Amir Goldstein <amir73il@gmail.com>
+To:     "Darrick J . Wong" <djwong@kernel.org>
+Cc:     Leah Rumancik <leah.rumancik@gmail.com>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        Christian Brauner <brauner@kernel.org>,
+        linux-xfs@vger.kernel.org
+Subject: [PATCH 5.10 CANDIDATE 00/15] xfs backports for 5.10.y (from v5.15.103)
+Date:   Fri, 17 Mar 2023 13:08:02 +0200
+Message-Id: <20230317110817.1226324-1-amir73il@gmail.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello.
+Darrick,
 
-The xfsprogs for-next branch, located at:
+Following backports catch up with recent 5.15.y backports.
 
-https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/refs/?h=for-next
+Patches 1-3 are the backports from the previous 5.15 round
+that Chandan requested for 5.4 [1].
 
-Has just been updated.
+Patches 4-14 are the SGID fixes that I collaborated with Leah [2].
+Christian has reviewed the backports of his vfs patches to 5.10.
 
-This contains a libxfs-sync with Linux 6.2.
+Patch 15 is a fix for a build warning caused by one of the SGID fixes.
 
-This should become xfsprogs-6.2 which I plan to release next week, unless
-something critical come along.
+This series has gone through the usual kdevops testing routine.
 
-Patches often get missed, so if your outstanding patches are properly reviewed on
-the list and not included in this update, or you have any other question, please
-let me know.
+Thanks,
+Amir.
 
-The new head of the for-next branch is commit:
+[1] https://lore.kernel.org/linux-xfs/874jrtzlgp.fsf@debian-BULLSEYE-live-builder-AMD64/
+[2] https://lore.kernel.org/linux-xfs/20230307185922.125907-1-leah.rumancik@gmail.com/
 
-a68dabd45f3591456ecf7e35f6a6077db79f6bc6
+Amir Goldstein (4):
+  attr: add in_group_or_capable()
+  fs: move should_remove_suid()
+  attr: add setattr_should_drop_sgid()
+  attr: use consistent sgid stripping checks
 
-15 new commits:
+Christian Brauner (1):
+  fs: use consistent setgid checks in is_sxid()
 
-Darrick J. Wong (11):
-      [c3fce4f9b] mkfs: check dirent names when reading protofile
-      [fb22e1b1b] mkfs: use suboption processing for -p
-      [e0aeb0581] mkfs: substitute slashes with spaces in protofiles
-      [b7b81f336] xfs_repair: fix incorrect dabtree hashval comparison
-      [4f82f9218] xfs_db: fix complaints about unsigned char casting
-      [9061d756b] xfs: add debug knob to slow down writeback for fun
-      [fb084f350] xfs: add debug knob to slow down write for fun
-      [d1dca9f6b] xfs: hoist refcount record merge predicates
-      [b445624f0] xfs: estimate post-merge refcounts correctly
-      [88765eda1] xfs: invalidate xfs_bufs when allocating cow extents
-      [a68dabd45] xfs: fix off-by-one error in xfs_btree_space_to_height
+Darrick J. Wong (3):
+  xfs: purge dquots after inode walk fails during quotacheck
+  xfs: don't leak btree cursor when insrec fails after a split
+  xfs: use setattr_copy to set vfs inode attributes
 
-Dave Chinner (2):
-      [1dcdf5051] xfs: use iomap_valid method to detect stale cached iomaps
-      [d712be6a9] xfs: drop write error injection is unfixable, remove it
+Dave Chinner (4):
+  xfs: don't assert fail on perag references on teardown
+  xfs: remove XFS_PREALLOC_SYNC
+  xfs: fallocate() should call file_modified()
+  xfs: set prealloc flag in xfs_alloc_file_space()
 
-Guo Xuenan (1):
-      [f5ef81288] xfs: get rid of assert from xfs_btree_islastblock
+Gaosheng Cui (1):
+  xfs: remove xfs_setattr_time() declaration
 
-Jason A. Donenfeld (1):
-      [9a046f967] treewide: use get_random_u32_below() instead of deprecated function
+Yang Xu (2):
+  fs: add mode_strip_sgid() helper
+  fs: move S_ISGID stripping into the vfs_*() helpers
 
-Code Diffstat:
-
- db/namei.c             |   4 +-
- io/inject.c            |   2 +
- libxfs/libxfs_priv.h   |   2 +-
- libxfs/xfs_alloc.c     |   2 +-
- libxfs/xfs_bmap.c      |   8 ++-
- libxfs/xfs_btree.c     |   7 ++-
- libxfs/xfs_btree.h     |   1 -
- libxfs/xfs_errortag.h  |  18 +++---
- libxfs/xfs_ialloc.c    |   2 +-
- libxfs/xfs_refcount.c  | 146 +++++++++++++++++++++++++++++++++++++++++++------
- man/man8/mkfs.xfs.8.in |  32 +++++++++--
- mkfs/proto.c           |  37 ++++++++++++-
- mkfs/proto.h           |   3 +-
- mkfs/xfs_mkfs.c        |  72 +++++++++++++++++++++---
- repair/da_util.c       |   2 +-
- 15 files changed, 288 insertions(+), 50 deletions(-)
+ Documentation/trace/ftrace.rst |  2 +-
+ fs/attr.c                      | 70 ++++++++++++++++++++++++++---
+ fs/inode.c                     | 80 +++++++++++++++++++---------------
+ fs/internal.h                  |  6 +++
+ fs/namei.c                     | 80 ++++++++++++++++++++++++++++------
+ fs/ocfs2/file.c                |  4 +-
+ fs/ocfs2/namei.c               |  1 +
+ fs/open.c                      |  6 +--
+ fs/xfs/libxfs/xfs_btree.c      |  8 ++--
+ fs/xfs/xfs_bmap_util.c         |  9 ++--
+ fs/xfs/xfs_file.c              | 24 +++++-----
+ fs/xfs/xfs_iops.c              | 56 ++----------------------
+ fs/xfs/xfs_iops.h              |  1 -
+ fs/xfs/xfs_mount.c             |  3 +-
+ fs/xfs/xfs_pnfs.c              |  9 ++--
+ fs/xfs/xfs_qm.c                |  9 +++-
+ include/linux/fs.h             |  5 ++-
+ 17 files changed, 229 insertions(+), 144 deletions(-)
 
 -- 
-Carlos Maiolino
+2.34.1
+
