@@ -2,209 +2,89 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06026C6FD1D
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Mar 2023 04:00:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6E12C74A5B
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Mar 2023 10:26:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229982AbjCQEAc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Mar 2023 00:00:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41134 "EHLO
+        id S230215AbjCQK0b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Mar 2023 06:26:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39630 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229962AbjCQEA1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2023 00:00:27 -0400
-Received: from mail1.bemta34.messagelabs.com (mail1.bemta34.messagelabs.com [195.245.231.4])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 294E516310;
-        Thu, 16 Mar 2023 21:00:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
-        s=170520fj; t=1679025619; i=@fujitsu.com;
-        bh=Czxs+/bMZGsmcQcPN4CLVE+4lrV1LC+Umu+epj/Q7n8=;
-        h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type;
-        b=rIZzy86+ND2FSlnp/Rs9zhv0yOo3NUBsVQs2EKUGegW91I9fbeVT+6XrqXAEKB6jY
-         yb1J3HrXr21j9CNHKYXRlrVuHK1d02n0Bj02RMANK9Urr6DeurB3szkvfmM8gWCAqc
-         ZF9aDkngZnu3yht6nTqwSVVsZEvdPNGPw13PH2TZJPdKjtjj2JYDE+JFZtKSZ+hzkv
-         gwI4GkHZVOojKEAOxngsNnx4WcHDies10pB/820jE2T+ebOvD7p6J029H/LlCIy6lU
-         3abSRKRiFQ52Qbv/jzrHDEZNJwtTrO+yZLm87NGm5LC7JghWn387YXjWRUExfu2kv9
-         3n/IMI1C5S35g==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrOIsWRWlGSWpSXmKPExsViZ8OxWffSU+E
-  Ug8k31SzmrF/DZjF96gVGiy3H7jFaXH7CZ7Fn70kWi8u75rBZ7Pqzg91i5Y8/rA4cHqcWSXgs
-  3vOSyWPTqk42jxMzfrN4vNg8k9Hj8ya5ALYo1sy8pPyKBNaMrSuXsxe8UqrYeec8UwPjDNkuR
-  i4OIYGNjBK7zj5lgXCWMEncnL2XDcLZyyix88lu9i5GTg42AR2JCwv+soLYIgLVErevbmMDsZ
-  kFMiSOX/nDDGILC0RJ7H31DijOwcEioCrxeW4ZSJhXwEWiY+c+FhBbQkBBYsrD98wQcUGJkzO
-  fsECMkZA4+OIFM0irhICSxMzueIjyConG6YeYIGw1iavnNjFPYOSfhaR7FpLuBYxMqxhNi1OL
-  ylKLdE31kooy0zNKchMzc/QSq3QT9VJLdctTi0t0jfQSy4v1UouL9Yorc5NzUvTyUks2MQJDP
-  6VYbdcOxgl9f/UOMUpyMCmJ8sZuFE4R4kvKT6nMSCzOiC8qzUktPsQow8GhJMGb/RgoJ1iUmp
-  5akZaZA4xDmLQEB4+SCK/LPaA0b3FBYm5xZjpE6hSjMcfahgN7mTk+/rm4l1mIJS8/L1VKnNf
-  zCVCpAEhpRmke3CBYerjEKCslzMvIwMAgxFOQWpSbWYIq/4pRnINRSZjX6wHQFJ7MvBK4fa+A
-  TmECOoV3ngDIKSWJCCmpBiZxhTUF7vzb47lsMx5lPpSflMJweu2RWqvPHyaIa0V8UTVpy6lQt
-  /Rrn3vJx8LxQUDM+ozi3MSlZQU7rnQv07xSvNmn65iCkth+mb/H+1hb60MNmkuc86Ke+Wxfp6
-  rFPIdNr6H6s+vB81Ozul2S1+ZP+vdHuCvap9HOJ+LkrKn6PMl7F/34H1z1oSTogGngsgj2xqd
-  t8XFqrl3Jn0q6d/D0VX699aZMsCxy4mxHXhnRAyfu2qa7VEwS+95f5J5lbPP8t/Ge6jeylz6H
-  lun98GLekqvdp7MrOudUYztXldN9FSfVjbccVPa/8J5fdXuTuLbmjtLTi10ms55Z8mLSwm9Gg
-  pn+McFC6ltfHddSYinOSDTUYi4qTgQAw/rCsIoDAAA=
-X-Env-Sender: ruansy.fnst@fujitsu.com
-X-Msg-Ref: server-13.tower-571.messagelabs.com!1679025618!299922!1
-X-Originating-IP: [62.60.8.179]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.104.1; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 2250 invoked from network); 17 Mar 2023 04:00:18 -0000
-Received: from unknown (HELO n03ukasimr04.n03.fujitsu.local) (62.60.8.179)
-  by server-13.tower-571.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 17 Mar 2023 04:00:18 -0000
-Received: from n03ukasimr04.n03.fujitsu.local (localhost [127.0.0.1])
-        by n03ukasimr04.n03.fujitsu.local (Postfix) with ESMTP id 44543152;
-        Fri, 17 Mar 2023 04:00:18 +0000 (GMT)
-Received: from R01UKEXCASM121.r01.fujitsu.local (R01UKEXCASM121 [10.183.43.173])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        with ESMTP id S229703AbjCQK0W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2023 06:26:22 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE922E6DBB
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2023 03:26:05 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by n03ukasimr04.n03.fujitsu.local (Postfix) with ESMTPS id 3757C150;
-        Fri, 17 Mar 2023 04:00:18 +0000 (GMT)
-Received: from localhost.localdomain (10.167.225.141) by
- R01UKEXCASM121.r01.fujitsu.local (10.183.43.173) with Microsoft SMTP Server
- (TLS) id 15.0.1497.42; Fri, 17 Mar 2023 04:00:14 +0000
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-To:     <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-        <nvdimm@lists.linux.dev>, <linux-kernel@vger.kernel.org>
-CC:     <djwong@kernel.org>, <david@fromorbit.com>,
-        <dan.j.williams@intel.com>, <akpm@linux-foundation.org>
-Subject: [RFC PATCH] xfs: check shared state of when CoW, update reflink flag when io ends
-Date:   Fri, 17 Mar 2023 03:59:48 +0000
-Message-ID: <1679025588-21-1-git-send-email-ruansy.fnst@fujitsu.com>
-X-Mailer: git-send-email 1.8.3.1
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D14AA62268
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2023 10:26:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EAFDC433EF;
+        Fri, 17 Mar 2023 10:26:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1679048763;
+        bh=5kqjIvvv+ujERhdiNwxx6hYmRgO1sssa8lGKLgI7JIA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=RTaSkqed5EyiSBRjVhNvNM+uH+jDMRNhRzsGyAZoKkMHb9Nkss7MxRmGTOpLmBdNk
+         OnSfpj3K9kgtQrWgrKPhC0wb4abfLoR3rGBX/invgIsxcf5rXKeSToU9ibDGOYKaaw
+         +ir2MpGtcwBvvvSpmLqYGQKPsaTmK1fCVxswD19wyRDPVaigf5JW++q7HHRLAo1C0I
+         oF+gOq49X+YRVqMI9LjGB6MSJ9DwYs9fA2VrperznHCKCVDB977JjqsZOdR0zBM8RF
+         k/pB3sRasTrJegVoogWF+81ZA3QemXpP5b619PFG9c8bMCktwoDP5s5A5cTXUKxpAQ
+         ZsYD6a29Z55GA==
+Date:   Fri, 17 Mar 2023 11:25:59 +0100
+From:   Carlos Maiolino <cem@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs_db: fix complaints about unsigned char casting
+Message-ID: <20230317102559.agpsaa2fmgd32mc6@andromeda>
+References: <yd5KB_VD7Oe2M-1JTpW8yKsKQ7SaQV9hnFIguCvPI-CuHqrQHOECUVh2Ar9oGpOi5jLK1LKpQ0D_NqN-kz5eyw==@protonmail.internalid>
+ <20230315010110.GD11376@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.167.225.141]
-X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
- R01UKEXCASM121.r01.fujitsu.local (10.183.43.173)
-X-Virus-Scanned: ClamAV using ClamSMTP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230315010110.GD11376@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-As is mentioned[1] before, the generic/388 will randomly fail with dmesg
-warning.  This case uses fsstress with a lot of random operations.  It is hard
-to  reproduce.  Finally I found a 100% reproduce condition, which is setting
-the seed to 1677104360.  So I changed the generic/388 code: removed the loop
-and used the code below instad:
-```
-($FSSTRESS_PROG $FSSTRESS_AVOID -d $SCRATCH_MNT -v -s 1677104360 -n 221 -p 1 >> $seqres.full) > /dev/null 2>&1
-($FSSTRESS_PROG $FSSTRESS_AVOID -d $SCRATCH_MNT -v -s 1677104360 -n 221 -p 1 >> $seqres.full) > /dev/null 2>&1
-_check_dmesg_for dax_insert_entry
-```
+On Tue, Mar 14, 2023 at 06:01:10PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Make the warnings about signed/unsigned char pointer casting go away.
+> For printing dirent names it doesn't matter at all.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-According to the operations log, and kernel debug log I added, I found that
-the reflink flag of one inode won't be unset even if there's no more shared
-extents any more.
-  Then write to this file again.  Because of the reflink flag, xfs thinks it
-    needs cow, and extent(called it extA) will be CoWed to a new
-    extent(called it extB) incorrectly.  And extA is not used any more,
-    but didn't be unmapped (didn't do dax_disassociate_entry()).
-  The next time we mapwrite to another file, xfs will allocate extA for it,
-    page fault handler do dax_associate_entry().  BUT bucause the extA didn't
-    be unmapped, it still stores old file's info in page->mapping,->index.
-    Then, It reports dmesg warning when it try to sotre the new file's info.
+Looks good, will test.
 
-So, I think:
-  1. reflink flag should be updated after CoW operations.
-  2. xfs_reflink_allocate_cow() should add "if extent is shared" to determine
-     xfs do CoW or not.
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-I made the fix patch, it can resolve the fail of generic/388.  But it causes
-other cases fail: generic/127, generic/263, generic/616, xfs/315 xfs/421. I'm
-not sure if the fix is right, or I have missed something somewhere.  Please
-give me some advice.
+> ---
+>  db/namei.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/db/namei.c b/db/namei.c
+> index 00e8c8dc6d5..063721ca98f 100644
+> --- a/db/namei.c
+> +++ b/db/namei.c
+> @@ -98,7 +98,7 @@ path_navigate(
+> 
+>  	for (i = 0; i < dirpath->depth; i++) {
+>  		struct xfs_name	xname = {
+> -			.name	= dirpath->path[i],
+> +			.name	= (unsigned char *)dirpath->path[i],
+>  			.len	= strlen(dirpath->path[i]),
+>  		};
+> 
+> @@ -250,7 +250,7 @@ dir_emit(
+>  	uint8_t			dtype)
+>  {
+>  	char			*display_name;
+> -	struct xfs_name		xname = { .name = name };
+> +	struct xfs_name		xname = { .name = (unsigned char *)name };
+>  	const char		*dstr = get_dstr(mp, dtype);
+>  	xfs_dahash_t		hash;
+>  	bool			good;
 
-Thank you very much!!
-
-[1]: https://lore.kernel.org/linux-xfs/1669908538-55-1-git-send-email-ruansy.fnst@fujitsu.com/
-
-Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
----
- fs/xfs/xfs_reflink.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_reflink.h |  2 ++
- 2 files changed, 46 insertions(+)
-
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index f5dc46ce9803..a6b07f5c1db2 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -154,6 +154,40 @@ xfs_reflink_find_shared(
- 	return error;
- }
- 
-+int xfs_reflink_extent_is_shared(
-+	struct xfs_inode	*ip,
-+	struct xfs_bmbt_irec	*irec,
-+	bool			*shared)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_perag	*pag;
-+	xfs_agblock_t		agbno;
-+	xfs_extlen_t		aglen;
-+	xfs_agblock_t		fbno;
-+	xfs_extlen_t		flen;
-+	int			error = 0;
-+
-+	*shared = false;
-+
-+	/* Holes, unwritten, and delalloc extents cannot be shared */
-+	if (!xfs_bmap_is_written_extent(irec))
-+		return 0;
-+
-+	pag = xfs_perag_get(mp, XFS_FSB_TO_AGNO(mp, irec->br_startblock));
-+	agbno = XFS_FSB_TO_AGBNO(mp, irec->br_startblock);
-+	aglen = irec->br_blockcount;
-+	error = xfs_reflink_find_shared(pag, NULL, agbno, aglen, &fbno, &flen,
-+			true);
-+	xfs_perag_put(pag);
-+	if (error)
-+		return error;
-+
-+	if (fbno != NULLAGBLOCK)
-+		*shared = true;
-+
-+	return 0;
-+}
-+
- /*
-  * Trim the mapping to the next block where there's a change in the
-  * shared/unshared status.  More specifically, this means that we
-@@ -533,6 +567,12 @@ xfs_reflink_allocate_cow(
- 		xfs_ifork_init_cow(ip);
- 	}
- 
-+	error = xfs_reflink_extent_is_shared(ip, imap, shared);
-+	if (error)
-+		return error;
-+	if (!*shared)
-+		return 0;
-+
- 	error = xfs_find_trim_cow_extent(ip, imap, cmap, shared, &found);
- 	if (error || !*shared)
- 		return error;
-@@ -834,6 +874,10 @@ xfs_reflink_end_cow_extent(
- 	/* Remove the mapping from the CoW fork. */
- 	xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
- 
-+	error = xfs_reflink_clear_inode_flag(ip, &tp);
-+	if (error)
-+		goto out_cancel;
-+
- 	error = xfs_trans_commit(tp);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	if (error)
-diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-index 65c5dfe17ecf..d5835814bce6 100644
---- a/fs/xfs/xfs_reflink.h
-+++ b/fs/xfs/xfs_reflink.h
-@@ -16,6 +16,8 @@ static inline bool xfs_is_cow_inode(struct xfs_inode *ip)
- 	return xfs_is_reflink_inode(ip) || xfs_is_always_cow_inode(ip);
- }
- 
-+int xfs_reflink_extent_is_shared(struct xfs_inode *ip,
-+		struct xfs_bmbt_irec *irec, bool *shared);
- extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
- 		struct xfs_bmbt_irec *irec, bool *shared);
- int xfs_bmap_trim_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *imap,
 -- 
-2.39.2
-
+Carlos Maiolino
