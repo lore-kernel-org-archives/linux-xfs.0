@@ -2,53 +2,53 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A027AC76195
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Mar 2023 10:16:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3373BC761AF
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Mar 2023 10:16:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229991AbjCRKQM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 18 Mar 2023 06:16:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55242 "EHLO
+        id S229959AbjCRKQO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 18 Mar 2023 06:16:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229963AbjCRKQA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Mar 2023 06:16:00 -0400
-Received: from mail-wm1-x331.google.com (mail-wm1-x331.google.com [IPv6:2a00:1450:4864:20::331])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D40F828233;
-        Sat, 18 Mar 2023 03:15:55 -0700 (PDT)
-Received: by mail-wm1-x331.google.com with SMTP id p13-20020a05600c358d00b003ed346d4522so4726867wmq.2;
-        Sat, 18 Mar 2023 03:15:55 -0700 (PDT)
+        with ESMTP id S229940AbjCRKQB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Mar 2023 06:16:01 -0400
+Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C562392B6;
+        Sat, 18 Mar 2023 03:15:59 -0700 (PDT)
+Received: by mail-wm1-x32e.google.com with SMTP id c8-20020a05600c0ac800b003ed2f97a63eso6419992wmr.3;
+        Sat, 18 Mar 2023 03:15:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1679134555;
+        d=gmail.com; s=20210112; t=1679134558;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Zs1zoKvdKc411P0VlWS94lq85UVPmglODGE22wnBLL0=;
-        b=KtnFG4veDCHg3Voz4u1iXxnj+pdvMXjIOaIy8bBbOw8vrHe0trW/RziV4WsqcO+4f2
-         OTY8AQq3unLJ5JLieWF4N+kM9VfsYUPGHrX+QhUZzWak7QRVjTct+PiJwynnLdrfvXaq
-         fhwYiabRq0yLH15yi9yieJUJTehEPxPYj3q2vSOBS5Q13jTG8q25YzOHuWevlLvDrEZk
-         x7xe6o0mf/ijTn4Z0clckC7qvsoZoIaAhtpBpIAbeTpsoaRNg5XGaSo5HvL4+L63oAFw
-         1O7PxBiDk+NbBhsuvpVS3/4fDfuir5y4JwrqK/XRVdSnft7fNEP7VG8qyAulG7THj4Lt
-         vIcw==
+        bh=fHjSWW/YZEGEGz44nnM9t/++2Yb+yS/AmGPiI8kwmpU=;
+        b=l8Ua+bKX5fGvv0MYSPpTTcyP8HkXfmSEgfep+W5+19RyD7IsF+RZF/oHC6GtXz7g1L
+         Nx82ja9W/XG0zztQgCynC5FBzxIZ7pAufeop9pg9QRvpYGv0wt97Qc6Tm46CbArbOKx+
+         McGbJR/Vd9ranrh5vssV/EC1jeCvwAYRrwOn51A9Tp93nxDpIRjVl9x/dpP2cDgPxEZw
+         jkPZvUKv28H3BL0S35Y0UTCej2uVenT+ej+ilLXrhg1qg47jyl6IEQn7yK4OewMRf3d5
+         MWqsPL80mvKNhm5Xb6hfUMwHlJITljehsGcxc+zyPL/7QfaETLOB9wBLc0tL1yQb9isa
+         37Pw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679134555;
+        d=1e100.net; s=20210112; t=1679134558;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=Zs1zoKvdKc411P0VlWS94lq85UVPmglODGE22wnBLL0=;
-        b=ICI/scQcTxCQSk1PlDuPAnL9zbjtAtvs96orkR0chDmNfFSoIEw5hj0V4eGB647qvs
-         ocIsoVcMuF7OuYBQX8jByhdJt1vW5J9/RZC3q+qKQnPsz0QeKPOgCe4ybSrKP1If/KEH
-         rBT57uF2NOU12KKaQ46P3n+NzPo2b4czS4+S5BJ/aYrrrs/Ki6GJzOl8ZcrQ7SMcKPXC
-         ZY1zs2VS6yHnz7lxoEUZDbH5o986kWVayxDVB6NQEgySQcy+nq9a0EBUK9XM892h1SbR
-         LhgPRusz2c1aawNvfd8hq2ofbNHeB+nUHcC2Zf8IDGFfO1suu9U1AJvTBS0hegqbhxEy
-         fALg==
-X-Gm-Message-State: AO0yUKV1mTEZ3GMa+PjPzaNKBn+IjjlELiCNpCHhxoDLmvqFiBhPfBke
-        9gAGs/8MXxb2vNYp3YgRIZc=
-X-Google-Smtp-Source: AK7set8dNJLI8k5rlP0DqIkQFV5x8exo3w8ajCaQVWtYzDUNTDw9Cc5hS7ZuuSze3NukIP4Q0OwDwg==
-X-Received: by 2002:a05:600c:548b:b0:3e2:6ec:61ea with SMTP id iv11-20020a05600c548b00b003e206ec61eamr27912401wmb.28.1679134555474;
-        Sat, 18 Mar 2023 03:15:55 -0700 (PDT)
+        bh=fHjSWW/YZEGEGz44nnM9t/++2Yb+yS/AmGPiI8kwmpU=;
+        b=Y8FZsWQr2twNMr/LFSytaf/dH230FGv4BSzxN2dXPM4ys1wYRXcse9PjND3jGIaw/T
+         IaCCN7x0uYIKQwVd7eQA0JWzIDzBXqBFDcQnvbXWEsYzK5K3KE0HyqI7DuMJmZ0SoOTX
+         zXNbZoyAYuGoYFSD+xOpfZeQcSN4a7shhofFPpnIg74BB3My0mhPMI/ttoAP4eOLOHKy
+         2cJn8Rhd8CxGyvgpkg2m3pCuhRsX3Em3qIbIN+uHSYJIkuZUhDjcp02WpH130RnXrine
+         cOSf0i526m+g85+sIJGKdo5JqK/cTULNGMvZGNT24EA3INEHJOqKVrmI5xs/ZFUMrudY
+         xe2w==
+X-Gm-Message-State: AO0yUKVNXYvoTsYwEi4caBg6lK/Nbg0e1dFDVCFx3ML7WD70CP+poc/z
+        x03hEJiGgdLAlnQYW258EQoDlsEwUU4=
+X-Google-Smtp-Source: AK7set/8cGeWnyT/kjwQEnZZrYLFcw5MaspMjNHWhsV5r485by8ve6ax7iyRNb9YE5SGrcK1K7PS7Q==
+X-Received: by 2002:a05:600c:548d:b0:3eb:2da5:e19 with SMTP id iv13-20020a05600c548d00b003eb2da50e19mr27182285wmb.27.1679134558462;
+        Sat, 18 Mar 2023 03:15:58 -0700 (PDT)
 Received: from amir-ThinkPad-T480.lan ([5.29.249.86])
-        by smtp.gmail.com with ESMTPSA id v26-20020a05600c215a00b003eafc47eb09sm4333965wml.43.2023.03.18.03.15.54
+        by smtp.gmail.com with ESMTPSA id v26-20020a05600c215a00b003eafc47eb09sm4333965wml.43.2023.03.18.03.15.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 18 Mar 2023 03:15:55 -0700 (PDT)
+        Sat, 18 Mar 2023 03:15:58 -0700 (PDT)
 From:   Amir Goldstein <amir73il@gmail.com>
 To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Cc:     Sasha Levin <sashal@kernel.org>,
@@ -57,10 +57,10 @@ Cc:     Sasha Levin <sashal@kernel.org>,
         Chandan Babu R <chandan.babu@oracle.com>,
         Christian Brauner <brauner@kernel.org>,
         linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: [PATCH 5.10 12/15] attr: add setattr_should_drop_sgid()
-Date:   Sat, 18 Mar 2023 12:15:26 +0200
-Message-Id: <20230318101529.1361673-13-amir73il@gmail.com>
+        stable@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>
+Subject: [PATCH 5.10 14/15] fs: use consistent setgid checks in is_sxid()
+Date:   Sat, 18 Mar 2023 12:15:28 +0200
+Message-Id: <20230318101529.1361673-15-amir73il@gmail.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230318101529.1361673-1-amir73il@gmail.com>
 References: <20230318101529.1361673-1-amir73il@gmail.com>
@@ -70,78 +70,41 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-commit 72ae017c5451860443a16fb2a8c243bff3e396b8 upstream.
+From: Christian Brauner <brauner@kernel.org>
 
-[backported to 5.10.y, prior to idmapped mounts]
+commit 8d84e39d76bd83474b26cb44f4b338635676e7e8 upstream.
 
-The current setgid stripping logic during write and ownership change
-operations is inconsistent and strewn over multiple places. In order to
-consolidate it and make more consistent we'll add a new helper
-setattr_should_drop_sgid(). The function retains the old behavior where
-we remove the S_ISGID bit unconditionally when S_IXGRP is set but also
-when it isn't set and the caller is neither in the group of the inode
-nor privileged over the inode.
+Now that we made the VFS setgid checking consistent an inode can't be
+marked security irrelevant even if the setgid bit is still set. Make
+this function consistent with all other helpers.
 
-We will use this helper both in write operation permission removal such
-as file_remove_privs() as well as in ownership change operations.
+Note that enforcing consistent setgid stripping checks for file
+modification and mode- and ownership changes will cause the setgid bit
+to be lost in more cases than useed to be the case. If an unprivileged
+user wrote to a non-executable setgid file that they don't have
+privilege over the setgid bit will be dropped. This will lead to
+temporary failures in some xfstests until they have been updated.
 
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+Reported-by: Miklos Szeredi <miklos@szeredi.hu>
 Signed-off-by: Christian Brauner (Microsoft) <brauner@kernel.org>
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/attr.c     | 25 +++++++++++++++++++++++++
- fs/internal.h |  5 +++++
- 2 files changed, 30 insertions(+)
+ include/linux/fs.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/attr.c b/fs/attr.c
-index 666489157978..c8049ae34a2e 100644
---- a/fs/attr.c
-+++ b/fs/attr.c
-@@ -20,6 +20,31 @@
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 57afa4fa5e7b..8ce9e5c61ede 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -3408,7 +3408,7 @@ int __init get_filesystem_list(char *buf);
  
- #include "internal.h"
+ static inline bool is_sxid(umode_t mode)
+ {
+-	return (mode & S_ISUID) || ((mode & S_ISGID) && (mode & S_IXGRP));
++	return mode & (S_ISUID | S_ISGID);
+ }
  
-+/**
-+ * setattr_should_drop_sgid - determine whether the setgid bit needs to be
-+ *                            removed
-+ * @inode:	inode to check
-+ *
-+ * This function determines whether the setgid bit needs to be removed.
-+ * We retain backwards compatibility and require setgid bit to be removed
-+ * unconditionally if S_IXGRP is set. Otherwise we have the exact same
-+ * requirements as setattr_prepare() and setattr_copy().
-+ *
-+ * Return: ATTR_KILL_SGID if setgid bit needs to be removed, 0 otherwise.
-+ */
-+int setattr_should_drop_sgid(const struct inode *inode)
-+{
-+	umode_t mode = inode->i_mode;
-+
-+	if (!(mode & S_ISGID))
-+		return 0;
-+	if (mode & S_IXGRP)
-+		return ATTR_KILL_SGID;
-+	if (!in_group_or_capable(inode, inode->i_gid))
-+		return ATTR_KILL_SGID;
-+	return 0;
-+}
-+
- /*
-  * The logic we want is
-  *
-diff --git a/fs/internal.h b/fs/internal.h
-index 0fe920d9f393..d5d9fcdae10c 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -197,3 +197,8 @@ int sb_init_dio_done_wq(struct super_block *sb);
-  */
- int do_statx(int dfd, const char __user *filename, unsigned flags,
- 	     unsigned int mask, struct statx __user *buffer);
-+
-+/*
-+ * fs/attr.c
-+ */
-+int setattr_should_drop_sgid(const struct inode *inode);
+ static inline int check_sticky(struct inode *dir, struct inode *inode)
 -- 
 2.34.1
 
