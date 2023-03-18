@@ -2,246 +2,91 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C238C74A5B
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Mar 2023 00:39:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61340C74A5B
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Mar 2023 00:39:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229850AbjCRAjQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Mar 2023 20:39:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40038 "EHLO
+        id S229599AbjCRAjW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Mar 2023 20:39:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229639AbjCRAjP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2023 20:39:15 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBC52136D1;
-        Fri, 17 Mar 2023 17:39:12 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 54E2EB82748;
-        Sat, 18 Mar 2023 00:39:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCA4DC433D2;
-        Sat, 18 Mar 2023 00:39:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679099949;
-        bh=3RaGi3gu+EUiIuxXokzaBDwA3iuBlxoWQJXU4R68shY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=V1IraCsd3vUb1IaxLDUYtj8EeMzEgY6RBGMzQWknFkM2z4rYlH6/iXjkoqo/CFp06
-         nkCQTePXU627Dcaz3iSGomvDj7ukgVDlTy9e08SBrTqWs4Aztvle9py+7meegJ+vKn
-         nAJkQvBEDmrH0cxUnpXqV4FIFk5UqDFx2M0FOcQTqr51qyZBpagGWnbZ8ykCXaBwCD
-         Vti4U0cTDToOF2fvhXK4M+oH/KkR0Ej/tjhZ/3/9SQDEWOGf+42DwW9l/f2jO16moh
-         sKLcXfuIdjcnPDCAkfIyS2CZVWklKasTktB8OvaI8X/THYFNDuw2+fKZcffJZkbWXt
-         PBVdh9Yyjzksw==
-Date:   Fri, 17 Mar 2023 17:39:09 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Catherine Hoang <catherine.hoang@oracle.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Theodore Tso <tytso@mit.edu>,
-        Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v1 3/4] xfs: add XFS_IOC_SETFSUUID ioctl
-Message-ID: <20230318003909.GT11376@frogsfrogsfrogs>
-References: <20230314042109.82161-1-catherine.hoang@oracle.com>
- <20230314042109.82161-4-catherine.hoang@oracle.com>
- <CAOQ4uxiYVpF9gjt-kTVpnoVYboOFG-Fpfw=KMrM=-aEHod4vXw@mail.gmail.com>
- <FC1BD250-7179-470B-854E-649E52147219@oracle.com>
- <CAOQ4uxg6hR8R9XC8qSkxQG8=tkwKZi=2Ofq_-LgZEwwPqbFQjA@mail.gmail.com>
+        with ESMTP id S229590AbjCRAjS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2023 20:39:18 -0400
+Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B48882A163
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2023 17:39:17 -0700 (PDT)
+Received: by mail-pl1-x633.google.com with SMTP id v21so7042378ple.9
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2023 17:39:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1679099957;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Dju/kwwr7M4zq7eXK8lZTVPjnEr7TjDzQbkU3XtGdRU=;
+        b=Ppsd6BrrNEjHuMSByKAJHneflCABARPDK6cM6Qo692hcwnEgbISzob8uK3KSDDgQV1
+         dgdJlE9u5AeJkTg8HkYk3bZpmiuA48MRqhB3cWaE6ATTDa53XECkDMtRgA5TJPrwLLgv
+         Tmlgop+oKnTXBHCzjUpssLQwVX6/3uZIHor3Vbjkl2XaE8v0GbPwfMtkYezi+wi1l719
+         QXFzOA4EHbMur4ZGs236WOriKhX1sEJhd8CyfHxLn9ZD1i8FZJqxdt67yjpVFnr74zrF
+         YN8omzR5SxtgdAyCMSbTqwu1Wj/R+kk2qEGT9INeH1F2NJOKAwCJWWPsLZttbr2G3r82
+         l6jw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679099957;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Dju/kwwr7M4zq7eXK8lZTVPjnEr7TjDzQbkU3XtGdRU=;
+        b=GxJm1bvHwvXrBmEI0qZjHB7HmMO6hDfT0ITqxjGrmQyBlSKeCsvgaxiZR+1P/aiTsw
+         8UxOXnzdmJlt7U9A8vv6xVbseCJhPOe2D6GuEsragXySdVMixURZOZMxKuvWccYTpx2g
+         sUWg4ymtXsH9v+zpgYpvFSuPLhmM9gEuCG+E29nNo4C9QhX4NgDtVw14zeqmhozxZuCs
+         9v0I1XgaFIXn2wPy92Y8q3SbiQcrgfYrD47QA4WlaP2ubSpL8Km1qQKNe9BpJClNPoWO
+         V1v9G+EqCcn1kPIzKTZ9/wm/vCOmDTBFSoNGxMX6cMS9iIUr8pDIcjNyaE8jQ8lPExdg
+         MkzA==
+X-Gm-Message-State: AO0yUKWx8faPNsPfVJoCn+oiK8/2SPDPrStzPbCshuP4e91uiZ/f0nGR
+        3TJ9U4D1dcguSAnu+BnQlQgm/A==
+X-Google-Smtp-Source: AK7set+S/elGuOJOsq63eoE1wLBLBKxEXQXFUuSsAePPep1svyJqdsNHIgRH2UcZQJ0mIkkIv8QIvQ==
+X-Received: by 2002:a17:902:ce87:b0:19a:9434:af30 with SMTP id f7-20020a170902ce8700b0019a9434af30mr10117856plg.18.1679099957158;
+        Fri, 17 Mar 2023 17:39:17 -0700 (PDT)
+Received: from destitution (pa49-196-94-140.pa.vic.optusnet.com.au. [49.196.94.140])
+        by smtp.gmail.com with ESMTPSA id x8-20020a170902820800b0019a7ef5e9a8sm2124109pln.82.2023.03.17.17.39.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Mar 2023 17:39:16 -0700 (PDT)
+Received: from dave by destitution with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1pdKbK-000J8m-0L;
+        Sat, 18 Mar 2023 11:39:14 +1100
+Date:   Sat, 18 Mar 2023 11:39:14 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: add tracepoints for each of the externally visible
+ allocators
+Message-ID: <ZBUIMllXvBrvP9md@destitution>
+References: <20230316164743.GL11376@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAOQ4uxg6hR8R9XC8qSkxQG8=tkwKZi=2Ofq_-LgZEwwPqbFQjA@mail.gmail.com>
+In-Reply-To: <20230316164743.GL11376@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 16, 2023 at 10:09:56AM +0200, Amir Goldstein wrote:
-> On Thu, Mar 16, 2023 at 1:13 AM Catherine Hoang
-> <catherine.hoang@oracle.com> wrote:
-> >
-> > > On Mar 13, 2023, at 10:50 PM, Amir Goldstein <amir73il@gmail.com> wrote:
-> > >
-> > > On Tue, Mar 14, 2023 at 6:27 AM Catherine Hoang
-> > > <catherine.hoang@oracle.com> wrote:
-> > >>
-> > >> Add a new ioctl to set the uuid of a mounted filesystem.
-> > >>
-> > >> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
-> > >> ---
-> > >> fs/xfs/libxfs/xfs_fs.h |   1 +
-> > >> fs/xfs/xfs_ioctl.c     | 107 +++++++++++++++++++++++++++++++++++++++++
-> > >> fs/xfs/xfs_log.c       |  19 ++++++++
-> > >> fs/xfs/xfs_log.h       |   2 +
-> > >> 4 files changed, 129 insertions(+)
-> > >>
-> > >> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > >> index 1cfd5bc6520a..a350966cce99 100644
-> > >> --- a/fs/xfs/libxfs/xfs_fs.h
-> > >> +++ b/fs/xfs/libxfs/xfs_fs.h
-> > >> @@ -831,6 +831,7 @@ struct xfs_scrub_metadata {
-> > >> #define XFS_IOC_FSGEOMETRY          _IOR ('X', 126, struct xfs_fsop_geom)
-> > >> #define XFS_IOC_BULKSTAT            _IOR ('X', 127, struct xfs_bulkstat_req)
-> > >> #define XFS_IOC_INUMBERS            _IOR ('X', 128, struct xfs_inumbers_req)
-> > >> +#define XFS_IOC_SETFSUUID           _IOR ('X', 129, uuid_t)
-> > >
-> > > Should be _IOW.
-> >
-> > Ok, will fix that.
-> > >
-> > > Would you consider defining that as FS_IOC_SETFSUUID in fs.h,
-> > > so that other fs could implement it later on, instead of hoisting it later?
-> > >
-> > > It would be easy to add support for FS_IOC_SETFSUUID to ext4
-> > > by generalizing ext4_ioctl_setuuid().
-> > >
-> > > Alternatively, we could hoist EXT4_IOC_SETFSUUID and struct fsuuid
-> > > to fs.h and use that ioctl also for xfs.
-> >
-> > I actually did try to hoist the ext4 ioctls previously, but we weren’t able to come
-> > to a consensus on the implementation.
-> >
-> > https://lore.kernel.org/linux-xfs/20221118211408.72796-2-catherine.hoang@oracle.com/
-> >
-> > I would prefer to keep this defined as an xfs specific ioctl to avoid all of the
-> > fsdevel bikeshedding.
+On Thu, Mar 16, 2023 at 09:47:43AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> For the greater good, please do try to have this bikeshedding, before giving up.
-> The discussion you pointed to wasn't so far from consensus IMO except
-> fsdevel was not CCed.
+> There are now five separate space allocator interfaces exposed to the
+> rest of XFS for five different strategies to find space.  Add
+> tracepoints for each of them so that I can tell from a trace dump
+> exactly which ones got called and what happened underneath them.  Add a
+> sixth so it's more obvious if an allocation actually happened.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c |   17 +++++++++++++++++
+>  fs/xfs/xfs_trace.h        |    7 +++++++
+>  2 files changed, 24 insertions(+)
 
-Why?  fsdevel bikeshedding is a pointless waste of time.  Jeremy ran
-four rounds of proposing the new api on linux-api, linux-fsdevel, and
-linux-ext4.  Matthew Wilcox and I sent in our comments, including adding
-some flexibility for shorter or longer uuids, so he updated the proposal
-and it got merged:
+Makes sense.
 
-https://lore.kernel.org/linux-api/?q=Bongio
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-The instant Catherine started talking about using this new API, Dave
-came in and said no, flex arrays for uuids are stupid, and told
-Catherine she ought to "fix" the landmines by changing the structure
-definition:
-
-https://lore.kernel.org/linux-xfs/20221121211437.GK3600936@dread.disaster.area/ 
-
-Never mind that changing the struct size causes the output of _IOR to
-change, which means a new ioctl command number, which is effectively a
-new interface.  I think we'll just put new ioctls in xfs_fs_staging.h,
-merge the code, let people kick the tires for a few months, and only
-then make it permanent.
-
-Though really, that's the least of the problems, especially since Dave
-had a pretty good list of questions elsewhere in this thread.
-
---D
-
-> > >
-> > > Using an extensible struct with flags for that ioctl may turn out to be useful,
-> > > for example, to verify that the new uuid is unique, despite the fact
-> > > that xfs was
-> > > mounted with -onouuid (useful IMO) or to explicitly request a restore of old
-> > > uuid that would fail if new_uuid != meta uuid.
-> >
-> > I think using a struct is probably a good idea, I can add that in the next version.
-> 
-> Well, if you agree about a struct and agree about flags then the only thing
-> left is Dave's concern about variable size arrays in ioctl and that could be
-> addressed in a way that is compatible with ext4.
-> 
-> See untested patch below.
-> 
-> Thanks,
-> Amir.
-> 
-> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-> index b7b56871029c..143a4735486e 100644
-> --- a/include/uapi/linux/fs.h
-> +++ b/include/uapi/linux/fs.h
-> @@ -215,6 +215,17 @@ struct fsxattr {
->  #define FS_IOC_FSSETXATTR              _IOW('X', 32, struct fsxattr)
->  #define FS_IOC_GETFSLABEL              _IOR(0x94, 49, char[FSLABEL_MAX])
->  #define FS_IOC_SETFSLABEL              _IOW(0x94, 50, char[FSLABEL_MAX])
-> +#define FS_IOC_GETFSUUID               _IOR('v', 44, struct fsuuid)
-> +#define FS_IOC_SETFSUUID               _IOW('v', 44, struct fsuuid)
-> +
-> +/*
-> + * Structure for FS_IOC_GETFSUUID/FS_IOC_SETFSUUID
-> + */
-> +struct fsuuid {
-> +       __u32   fsu_len; /* for backward compat has to be 16 */
-> +       __u32   fsu_flags;
-> +       __u8    fsu_uuid[16];
-
-Um, these two ioctls have different namespace /and/ different structure
-sizes.  This is literally defining a new interface.
-
-> +};
-> 
-> diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-> index 140e1eb300d1..c4ded5d5e421 100644
-> --- a/fs/ext4/ext4.h
-> +++ b/fs/ext4/ext4.h
-> @@ -722,8 +722,8 @@ enum {
->  #define EXT4_IOC_GETSTATE              _IOW('f', 41, __u32)
->  #define EXT4_IOC_GET_ES_CACHE          _IOWR('f', 42, struct fiemap)
->  #define EXT4_IOC_CHECKPOINT            _IOW('f', 43, __u32)
-> -#define EXT4_IOC_GETFSUUID             _IOR('f', 44, struct fsuuid)
-> -#define EXT4_IOC_SETFSUUID             _IOW('f', 44, struct fsuuid)
-> +#define EXT4_IOC_GETFSUUID             _IOR('f', 44, struct fsuuid_bdr)
-> +#define EXT4_IOC_SETFSUUID             _IOW('f', 44, struct fsuuid_hdr)
-> 
->  #define EXT4_IOC_SHUTDOWN _IOR ('X', 125, __u32)
-> 
-> @@ -756,7 +756,7 @@ enum {
->  /*
->   * Structure for EXT4_IOC_GETFSUUID/EXT4_IOC_SETFSUUID
->   */
-> -struct fsuuid {
-> +struct fsuuid_hdr {
->         __u32       fsu_len;
->         __u32       fsu_flags;
->         __u8        fsu_uuid[];
-> 
-> diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
-> index 8067ccda34e4..fc744231ad24 100644
-> --- a/fs/ext4/ioctl.c
-> +++ b/fs/ext4/ioctl.c
-> @@ -1149,7 +1149,7 @@ static int ext4_ioctl_getuuid(struct ext4_sb_info *sbi,
->         struct fsuuid fsuuid;
->         __u8 uuid[UUID_SIZE];
-> 
-> -       if (copy_from_user(&fsuuid, ufsuuid, sizeof(fsuuid)))
-> +       if (copy_from_user(&fsuuid, ufsuuid, offsetof(fsuuid, fsu_uuid)))
->                 return -EFAULT;
-> 
->         if (fsuuid.fsu_len == 0) {
-> @@ -1168,7 +1168,7 @@ static int ext4_ioctl_getuuid(struct ext4_sb_info *sbi,
->         unlock_buffer(sbi->s_sbh);
-> 
->         fsuuid.fsu_len = UUID_SIZE;
-> -       if (copy_to_user(ufsuuid, &fsuuid, sizeof(fsuuid)) ||
-> +       if (copy_to_user(ufsuuid, &fsuuid, offsetof(fsuuid, fsu_uuid)) ||
->             copy_to_user(&ufsuuid->fsu_uuid[0], uuid, UUID_SIZE))
->                 return -EFAULT;
->         return 0;
-> @@ -1194,7 +1194,7 @@ static int ext4_ioctl_setuuid(struct file *filp,
->                 || ext4_has_feature_stable_inodes(sb))
->                 return -EOPNOTSUPP;
-> 
-> -       if (copy_from_user(&fsuuid, ufsuuid, sizeof(fsuuid)))
-> +       if (copy_from_user(&fsuuid, ufsuuid, offsetof(fsuuid, fsu_uuid)))
->                 return -EFAULT;
-> 
->         if (fsuuid.fsu_len != UUID_SIZE || fsuuid.fsu_flags != 0)
-> @@ -1596,8 +1596,10 @@ static long __ext4_ioctl(struct file *filp,
-> unsigned int cmd, unsigned long arg)
->                 return ext4_ioctl_setlabel(filp,
->                                            (const void __user *)arg);
-> 
-> +       case FS_IOC_GETFSUUID:
->         case EXT4_IOC_GETFSUUID:
->                 return ext4_ioctl_getuuid(EXT4_SB(sb), (void __user *)arg);
-> +       case FS_IOC_SETFSUUID:
->         case EXT4_IOC_SETFSUUID:
->                 return ext4_ioctl_setuuid(filp, (const void __user *)arg);
->         default:
+-- 
+Dave Chinner
+david@fromorbit.com
