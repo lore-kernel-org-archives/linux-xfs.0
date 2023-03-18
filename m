@@ -2,91 +2,172 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61340C74A5B
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Mar 2023 00:39:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE42AC6FD1D
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Mar 2023 00:41:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229599AbjCRAjW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Mar 2023 20:39:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40198 "EHLO
+        id S229639AbjCRAlf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Mar 2023 20:41:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229590AbjCRAjS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2023 20:39:18 -0400
-Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B48882A163
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2023 17:39:17 -0700 (PDT)
-Received: by mail-pl1-x633.google.com with SMTP id v21so7042378ple.9
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2023 17:39:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1679099957;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Dju/kwwr7M4zq7eXK8lZTVPjnEr7TjDzQbkU3XtGdRU=;
-        b=Ppsd6BrrNEjHuMSByKAJHneflCABARPDK6cM6Qo692hcwnEgbISzob8uK3KSDDgQV1
-         dgdJlE9u5AeJkTg8HkYk3bZpmiuA48MRqhB3cWaE6ATTDa53XECkDMtRgA5TJPrwLLgv
-         Tmlgop+oKnTXBHCzjUpssLQwVX6/3uZIHor3Vbjkl2XaE8v0GbPwfMtkYezi+wi1l719
-         QXFzOA4EHbMur4ZGs236WOriKhX1sEJhd8CyfHxLn9ZD1i8FZJqxdt67yjpVFnr74zrF
-         YN8omzR5SxtgdAyCMSbTqwu1Wj/R+kk2qEGT9INeH1F2NJOKAwCJWWPsLZttbr2G3r82
-         l6jw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679099957;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Dju/kwwr7M4zq7eXK8lZTVPjnEr7TjDzQbkU3XtGdRU=;
-        b=GxJm1bvHwvXrBmEI0qZjHB7HmMO6hDfT0ITqxjGrmQyBlSKeCsvgaxiZR+1P/aiTsw
-         8UxOXnzdmJlt7U9A8vv6xVbseCJhPOe2D6GuEsragXySdVMixURZOZMxKuvWccYTpx2g
-         sUWg4ymtXsH9v+zpgYpvFSuPLhmM9gEuCG+E29nNo4C9QhX4NgDtVw14zeqmhozxZuCs
-         9v0I1XgaFIXn2wPy92Y8q3SbiQcrgfYrD47QA4WlaP2ubSpL8Km1qQKNe9BpJClNPoWO
-         V1v9G+EqCcn1kPIzKTZ9/wm/vCOmDTBFSoNGxMX6cMS9iIUr8pDIcjNyaE8jQ8lPExdg
-         MkzA==
-X-Gm-Message-State: AO0yUKWx8faPNsPfVJoCn+oiK8/2SPDPrStzPbCshuP4e91uiZ/f0nGR
-        3TJ9U4D1dcguSAnu+BnQlQgm/A==
-X-Google-Smtp-Source: AK7set+S/elGuOJOsq63eoE1wLBLBKxEXQXFUuSsAePPep1svyJqdsNHIgRH2UcZQJ0mIkkIv8QIvQ==
-X-Received: by 2002:a17:902:ce87:b0:19a:9434:af30 with SMTP id f7-20020a170902ce8700b0019a9434af30mr10117856plg.18.1679099957158;
-        Fri, 17 Mar 2023 17:39:17 -0700 (PDT)
-Received: from destitution (pa49-196-94-140.pa.vic.optusnet.com.au. [49.196.94.140])
-        by smtp.gmail.com with ESMTPSA id x8-20020a170902820800b0019a7ef5e9a8sm2124109pln.82.2023.03.17.17.39.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Mar 2023 17:39:16 -0700 (PDT)
-Received: from dave by destitution with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1pdKbK-000J8m-0L;
-        Sat, 18 Mar 2023 11:39:14 +1100
-Date:   Sat, 18 Mar 2023 11:39:14 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: add tracepoints for each of the externally visible
- allocators
-Message-ID: <ZBUIMllXvBrvP9md@destitution>
-References: <20230316164743.GL11376@frogsfrogsfrogs>
+        with ESMTP id S229533AbjCRAle (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2023 20:41:34 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C64D3D09D;
+        Fri, 17 Mar 2023 17:41:33 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id EA60CB82749;
+        Sat, 18 Mar 2023 00:41:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A835FC433EF;
+        Sat, 18 Mar 2023 00:41:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1679100090;
+        bh=thnG4UAyNln1QXaTgB/6+jHAEK0Y5sQuA5qja+wqgz0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=D1VeViBZhpnEgalhGa/F1x5LTPiiL7OO+0utJdMl1d6na/b04TI3ADjBzDQJRYRiB
+         PH7508B7ybejcIEfphCkdGQgX+NQdmqEHm6iC9lV+szG1IKYC+PdSXdSdD7mIka+TE
+         2bGKSGd/zOWM+cgFz0k2oKb52R34wRSf6AY6qQkBUNWvBLS8WRdEam1qWdetJEIw7j
+         YL5+r3FaF439zd+zRIlKfdk37p8AEgxr+5utfZUaLu5ik6kc09/LxDJbCfxDx88rfI
+         acmk5qPMxCzK5bht7fVIx6x7tG87OaaHEnlPfY94+LMeWbE74K6wJDvfwmofnF0n4r
+         kX1sHzMiedo/A==
+Date:   Fri, 17 Mar 2023 17:41:30 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-mm@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        yebin10@huawei.com
+Subject: Re: [PATCH 0/4] pcpctr: fix percpu_counter_sum vs cpu offline race
+Message-ID: <20230318004130.GU11376@frogsfrogsfrogs>
+References: <20230315084938.2544737-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230316164743.GL11376@frogsfrogsfrogs>
+In-Reply-To: <20230315084938.2544737-1-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 16, 2023 at 09:47:43AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Mar 15, 2023 at 07:49:34PM +1100, Dave Chinner wrote:
+> Ye Bin reported an XFS assert failure when testing CPU hotplug
+> recently. During unmount, XFs was asserting that a percpu counter
+> value should be zero because at that point in time a non-zero value
+> indicates a space accounting leak which is a bug. The details of
+> that failure can be found here:
 > 
-> There are now five separate space allocator interfaces exposed to the
-> rest of XFS for five different strategies to find space.  Add
-> tracepoints for each of them so that I can tell from a trace dump
-> exactly which ones got called and what happened underneath them.  Add a
-> sixth so it's more obvious if an allocation actually happened.
+> https://lore.kernel.org/linux-kernel/20230314090649.326642-1-yebin@huaweicloud.com/
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/libxfs/xfs_alloc.c |   17 +++++++++++++++++
->  fs/xfs/xfs_trace.h        |    7 +++++++
->  2 files changed, 24 insertions(+)
+> Ye Bin then proposed changing the XFS code to use
+> percpu_counter_sum_all(), which surprised me because I didn't know
+> that function existed at all. Indeed, it was only merged in the
+> recent 6.3-rc1 merge window because someone else had noticed a
+> pcpctr sum race with hotplug.
+> 
+> commit f689054aace2 ("percpu_counter: add percpu_counter_sum_all
+> interface") was introduced via the mm tree. Nobody outside that
+> scope knew about this, because who bothers to even try to read LKML
+> these days? There was little list discussion, and I don't see
+> anything other than a cursory review done on the patch.
+> 
+> At minimum, linux-fsdevel should have been cc'd because multiple
+> filesystems use percpu counters for both threshold and ENOSPC
+> accounting in filesystems.  Hence if there is a problem with
+> percpu_counter_sum() leaking, filesystem developers kinda need to
+> know about it because leaks like this (as per the XFS bug report)
+> can actually result in on-disk corruption occurring.
+> 
+> So, now I know that there is an accuracy problem with
+> percpu_counter_sum(), I will assert that we need to fix it properly
+> rathern than hack around it by adding a new variant. Leaving people
+> who know nothing about cpu hotplug to try to work out if they have a
+> hotplug related issue with their use of percpu_counter_sum() is just
+> bad code; percpu_counter_sum() should just Do The Right Thing.
+> 
+> Use of the cpu_dying_mask should effectively close this race
+> condition.  That is, when we take a CPU offline we effectively do:
+> 
+> 	mark cpu dying
+> 	clear cpu from cpu_online_mask
+> 	run cpu dead callbacks
+> 	  ....
+> 	  <lock counter>
+> 	  fold pcp count into fbc->count
+> 	  clear pcp count
+> 	  <unlock counter>
+> 	  ...
+> 	mark CPU dead
+> 	clear cpu dying
+> 
+> The race condition occurs because we can run a _sum operation
+> between the "clear cpu online" mask update and the "pcpctr cpu dead"
+> notification runs and fold the pcp counter values back into the
+> global count.  The sum sees that the CPU is not online, so it skips
+> that CPU even though the count is not zero and hasn't been folded by
+> the CPU dead notifier. Hence it skips something that it shouldn't.
+> 
+> However, that race condition doesn't exist if we take cpu_dying_mask
+> into account during the sum.  i.e. percpu_counter_sum() should
+> iterate every CPU set in either the cpu_online_mask and the
+> cpu_dying_mask to capture CPUs that are being taken offline.
+> 
+> If the cpu is not set in the dying mask, then the online or offline
+> state of the CPU is correct an there is no notifier pending over
+> running and we will skip/sum it correctly.
+> 
+> If the CPU is set in the dying mask, then we need to sum it
+> regardless of the online mask state or even whether the cpu dead
+> notifier has run.  If the sum wins the race to the pcp counter on
+> the dying CPU, it is included in the local sum from the pcp
+> variable. If the notifier wins the race, it gets folded back into
+> the global count and zeroed before the sum runs. Then the sum
+> includes the count in the local sum from the global counter sum
+> rather than the percpu counter.
+> 
+> Either way, we get the same correct sum value from
+> percpu_counter_sum() regardless of how it races with a CPU being
+> removed from the system. And there is no need for
+> percpu_count_sum_all() anymore.
+> 
+> This series introduces bitmap operations for finding bits set in
+> either of two bitmasks and adds the for_each_cpu_or() wrapper to
+> iterate CPUs set in either of the two supplied cpu masks. It then
+> converts __percpu_counter_sum_mask() to use this, and have
+> __percpu_counter_sum() pass the cpu_dying_mask as the second mask.
+> This fixes the race condition with CPUs dying.
+> 
+> It then converts the only user of percpu_counter_sum_all() to use
+> percpu_counter_sum() as percpu_counter_sum_all() is now redundant,
+> then it removes percpu_counter_sum_all() and recombines
+> __percpu_counter_sum_mask() and __percpu_counter_sum().
+> 
+> This effectively undoes all the changes in commit f689054aace2
+> except for the small change to use for_each_cpu_or() to fold in the
+> cpu_dying_mask made in this patch set to avoid the problematic race
+> condition. Hence the cpu unplug race condition is now correctly
+> handled by percpu_counter_sum(), and people can go back to being
+> blissfully ignorant of how pcpctrs interact with CPU hotplug (which
+> is how it should be!).
+> 
+> This has spent the last siz hours running generic/650 on XFS on a
+> couple of VMs (on 4p, the other 16p) which stresses the filesystem
+> by running a multi-process fsstress invocation whilst randomly
+> onlining and offlining CPUs. Hence it's exercising all the percpu
+> counter cpu dead paths whilst the filesystem is randomly modifying,
+> reading and summing summing the critical counters that XFS needs for
+> accurate accounting of resource consumption within the filesystem.
+> 
+> Thoughts, comments and testing welcome!
 
-Makes sense.
+I've been testing this since I saw it, and AFAICT it looks good to me.
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+That said -- do any of the people who know percpu counters better than
+me have any thoughts?  The justification and the code changes make sense
+to me, but keeping up with xfs metadata is enough for me.
 
--- 
-Dave Chinner
-david@fromorbit.com
+--D
+
+
+> 
+> -Dave.
+> 
