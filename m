@@ -2,91 +2,122 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0DB7C6FD1D
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Mar 2023 00:47:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 129D0C74A5B
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Mar 2023 00:47:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229488AbjCRAr0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Mar 2023 20:47:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48344 "EHLO
+        id S229489AbjCRArh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Mar 2023 20:47:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48432 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229473AbjCRArZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2023 20:47:25 -0400
-Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 282FC591E0
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2023 17:47:25 -0700 (PDT)
-Received: by mail-pj1-x102c.google.com with SMTP id p3-20020a17090a74c300b0023f69bc7a68so2529373pjl.4
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2023 17:47:25 -0700 (PDT)
+        with ESMTP id S229473AbjCRArf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2023 20:47:35 -0400
+Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74F6E5A1AC
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2023 17:47:34 -0700 (PDT)
+Received: by mail-pf1-x430.google.com with SMTP id s8so3994107pfk.5
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2023 17:47:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1679100444;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1679100454;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZCdRonvarZ4/izkZ6g3tPA0G9wzPNuz5GM0cFWXAnPE=;
-        b=t8YA6gl82Qb3M0qpsa9W5cmO2lGLfRwiiY/BQhjG3XzEm/UX1iNyuclYksTST6SC3I
-         Sbb7PbBbSMMkGyaVX/rylvVvUi+IwYo4TmULFXqKPUw/m7vawGrVQL7Ivjpyf7ADZXKM
-         y1C9dI49Z+E/Wxl8+tkg7j02LF2300u0MaVYonpBJ4yIvhbOTqz+RltPo2n8N2HWVofm
-         WgsjZdbLGU78snOceg5/WoYGPaHBomQMR5/giNRj/E6Texyb/5erCgZonhMNb4wT+dL5
-         GkY9C09XHKJWT5p1DQ19Dre9FNY+MguoSLbd1hHzEj8L767chv9mFTFrSRhGNI3DgnRI
-         r2jg==
+        bh=UsvbKD5bbwmTBy0LtqLFfOsIqdjnfMecFg11M+FIZjU=;
+        b=fARxdYWPbfC7R9Rzx/+y/Ns/R6D79PD8ogKLtFzmF1aBvkya50USwF6kbaj1iDYudP
+         FfreAUS7sr1eNwItz0laXrRb8RNMwBcKTRTwZwpOpgn4eSxL/u6DyfZaSkropauhZlsJ
+         FYdZ/I+hs/3jQI2xKhoL0rOjz/MKFZIbMWewLVG5DWD8ihUREPt819TcTWWcc3AdQ5qY
+         CLeF9gJzLkg1CloQuJaEcCH67C5cz4l+NRp+6HKKcF+rptlgG+kN6Wcsoa7qOuH5z4xm
+         pfFIv4Z4aawWOCzs8r4B+E6SnKUb5Vmj5IZ1zz5u3aYDiEJxTk9zDw94e498/roq8DkB
+         mbzQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679100444;
+        d=1e100.net; s=20210112; t=1679100454;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ZCdRonvarZ4/izkZ6g3tPA0G9wzPNuz5GM0cFWXAnPE=;
-        b=G1Sk3WebBkW8gRP3dyqutLGC9+OKSJczpg46achSO1ac4TH1H397pM0WWFw3hiceKQ
-         Ujsa9hrJPoyFg+cJSOp95L5V35F1h5ftp6UVa2Pz+8ZxI98gnArbqZbz6q3qQIz+DqLQ
-         AJJOwMf+5IEnF2esmJb+s5VKi7ClHQGSVuJ58q/lCa7L4xm3abCNWEDzXABxzv5Z2mP9
-         aVqYFxmDb/bvPW+RuxYoKFcJzKyEzE+KJnNsDDKFag+QYJNlAFEAdRQb2mt3T4SxV3D3
-         2YY+Bsy1JPYMs0Gium2vBt1rsHd9WN3vcNqDRjZbjwNr3o5Azpor4KqdfADG7U8sILU0
-         6yTA==
-X-Gm-Message-State: AO0yUKVLX695RbMy3m310evKYhdwAgq+Qinh60RvZFTXAjW7PvafHEEM
-        NtoLKaH0c9wSeUEtipkVuRY8cg==
-X-Google-Smtp-Source: AK7set+gg5hC3bVuzKy87tRmY1VsaKtkG5A+aCgUsGUtD04zYFCvtkP0OLdRGVsitdCfKfOHXOOQDQ==
-X-Received: by 2002:a17:90b:1b4e:b0:23f:7770:9e75 with SMTP id nv14-20020a17090b1b4e00b0023f77709e75mr893268pjb.47.1679100444652;
-        Fri, 17 Mar 2023 17:47:24 -0700 (PDT)
+        bh=UsvbKD5bbwmTBy0LtqLFfOsIqdjnfMecFg11M+FIZjU=;
+        b=oXXMmaEH6G3pUnqge3SdFg1vKzgn6bcwoT8avqaVPcm5vcH/IneZSWFDMDk+AqiF1q
+         UcDA4+Tr3j7O9bOsrwL/IOmbcMcyV9xan/XAepkoUPH/8CqKr8ZFzZptUqKie2ghnDNn
+         NMjPyKYgLTc0OdID1edSeG7nweY+VBWmaAPLapdTncFblSEvbaAir3PJp+PM1KbIAMeo
+         jthKJJtWjKZ6kbXf9V798je+Ldcyqf2JK4+nv+a4+QTM4+eydPHCRqXw1E7Xwzqpn4qm
+         VeC1XKoxBLela/bA4l9eHUY16eW0sj1Dc0v7DSw0E/GOWsawYv0Aiau9JqOMzSNhhi2w
+         vefQ==
+X-Gm-Message-State: AO0yUKVPJPJx3UrgnTTFuOu9SswFr6ac6czoW83v9yRoaVI/Ej/OJEgf
+        UAQBoWLCJLDDYXbyqtRItU2oPA==
+X-Google-Smtp-Source: AK7set/e2smWJ1pgQjg4XmOriqAQQbTb8nzks7/AnXKxxhPYycGcFvtnb7J+U8AI8wqdmqwxQBooyw==
+X-Received: by 2002:a62:3803:0:b0:625:ce06:e58 with SMTP id f3-20020a623803000000b00625ce060e58mr7937808pfa.17.1679100453997;
+        Fri, 17 Mar 2023 17:47:33 -0700 (PDT)
 Received: from destitution (pa49-196-94-140.pa.vic.optusnet.com.au. [49.196.94.140])
-        by smtp.gmail.com with ESMTPSA id gt17-20020a17090af2d100b0023f355a0bb5sm2005373pjb.14.2023.03.17.17.47.24
+        by smtp.gmail.com with ESMTPSA id v15-20020a62a50f000000b00592eb6f239fsm2103152pfm.40.2023.03.17.17.47.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Mar 2023 17:47:24 -0700 (PDT)
+        Fri, 17 Mar 2023 17:47:33 -0700 (PDT)
 Received: from dave by destitution with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1pdKiv-000JL6-30;
-        Sat, 18 Mar 2023 11:47:05 +1100
-Date:   Sat, 18 Mar 2023 11:47:05 +1100
+        id 1pdKjK-000JLH-2h;
+        Sat, 18 Mar 2023 11:47:30 +1100
+Date:   Sat, 18 Mar 2023 11:47:30 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     Carlos Maiolino <cem@kernel.org>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 1/2] libfrog: move crc32c selftest buffer into a separate
- file
-Message-ID: <ZBUKCRR7xvIqPrpX@destitution>
+Subject: Re: [PATCH 2/2] misc: test the dir/attr hash before formatting or
+ repairing fs
+Message-ID: <ZBUKIjpwiPMzLp2s@destitution>
 References: <20230316165101.GN11376@frogsfrogsfrogs>
+ <20230316165246.GO11376@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230316165101.GN11376@frogsfrogsfrogs>
+In-Reply-To: <20230316165246.GO11376@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 16, 2023 at 09:51:01AM -0700, Darrick J. Wong wrote:
+On Thu, Mar 16, 2023 at 09:52:46AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Move the random buffer used for selftests into a separate file so that
-> we can link to it from multiple places.
+> Back in the 6.2-rc1 days, Eric Whitney reported a fstests regression in
+> ext4 against generic/454.  The cause of this test failure was the
+> unfortunate combination of setting an xattr name containing UTF8 encoded
+> emoji, an xattr hash function that accepted a char pointer with no
+> explicit signedness, signed type extension of those chars to an int, and
+> the 6.2 build tools maintainers deciding to mandate -funsigned-char
+> across the board.  As a result, the ondisk extended attribute structure
+> written out by 6.1 and 6.2 were not the same.
 > 
+> This discrepancy, in fact, had been noticeable if a filesystem with such
+> an xattr were moved between any two architectures that don't employ the
+> same signedness of a raw "char" declaration.  The only reason anyone
+> noticed is that x86 gcc defaults to signed, and no such -funsigned-char
+> update was made to e2fsprogs, so e2fsck immediately started reporting
+> data corruption.
+> 
+> After a day and a half of discussing how to handle this use case (xattrs
+> with bit 7 set anywhere in the name) without breaking existing users,
+> Linus merged his own patch and didn't tell the mailing list.  None of
+> the developers noticed until AUTOSEL made an announcement.
+> 
+> In the end, this problem could have been detected much earlier if there
+> had been any useful tests of hash function(s) in use inside ext4 to make
+> sure that they always produce the same outputs given the same inputs.
+> 
+> The XFS dirent/xattr name hash takes a uint8_t*, so I don't think it's
+> vulnerable to this problem.  However, let's avoid all this drama by
+> adding our own self test to check that the da hash produces the same
+> outputs for a static pile of inputs on various platforms.  This
+> corresponds to the similar patch for the kernel.
+> 
+> Link: https://lore.kernel.org/linux-ext4/Y8bpkm3jA3bDm3eL@debian-BULLSEYE-live-builder-AMD64/
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  libfrog/Makefile         |    6 -
->  libfrog/crc32cselftest.h |  526 +---------------------------------------------
->  libfrog/randbytes.c      |  527 ++++++++++++++++++++++++++++++++++++++++++++++
->  libfrog/randbytes.h      |   11 +
->  4 files changed, 548 insertions(+), 522 deletions(-)
->  create mode 100644 libfrog/randbytes.c
->  create mode 100644 libfrog/randbytes.h
+>  libfrog/Makefile         |    1 
+>  libfrog/crc32cselftest.h |   17 ++---
+>  libfrog/dahashselftest.h |  172 ++++++++++++++++++++++++++++++++++++++++++++++
+>  mkfs/xfs_mkfs.c          |    8 ++
+>  repair/init.c            |    5 +
+>  5 files changed, 195 insertions(+), 8 deletions(-)
+>  create mode 100644 libfrog/dahashselftest.h
 
-looks fine.
+Looks good.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
 -- 
 Dave Chinner
 david@fromorbit.com
