@@ -2,163 +2,208 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B4BDC61DA4
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Mar 2023 09:04:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2A8BC61DA4
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Mar 2023 09:31:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229746AbjCRJEf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 18 Mar 2023 05:04:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41830 "EHLO
+        id S229648AbjCRJb1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 18 Mar 2023 05:31:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229488AbjCRJEe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Mar 2023 05:04:34 -0400
-Received: from mail-ua1-x92e.google.com (mail-ua1-x92e.google.com [IPv6:2607:f8b0:4864:20::92e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F025B50985
-        for <linux-xfs@vger.kernel.org>; Sat, 18 Mar 2023 02:04:14 -0700 (PDT)
-Received: by mail-ua1-x92e.google.com with SMTP id x33so4809724uaf.12
-        for <linux-xfs@vger.kernel.org>; Sat, 18 Mar 2023 02:04:14 -0700 (PDT)
+        with ESMTP id S229602AbjCRJb0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Mar 2023 05:31:26 -0400
+Received: from mail-ua1-x929.google.com (mail-ua1-x929.google.com [IPv6:2607:f8b0:4864:20::929])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECF55497FC;
+        Sat, 18 Mar 2023 02:31:24 -0700 (PDT)
+Received: by mail-ua1-x929.google.com with SMTP id p2so4871110uap.1;
+        Sat, 18 Mar 2023 02:31:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1679130253;
+        d=gmail.com; s=20210112; t=1679131884;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=46YE2zZsbRZvVS3GTHikh2mmcF7QF9nXPt3CyA6L148=;
-        b=ckR7wcDwdnsH+rFWuwbFeaRq2PbsXtyhOISjRziF/Xz22DtLB6s0vPeB/iEn4an2tD
-         wXFVjseiPFXvraXx9VGA9LUkLv9Qngf9h7dZCD54+21amVL8REswdJeZBuyr0Kl5iqFe
-         Be2syiqwFFcIqRaUPCa9sYDdAxxqdTD5lGiGAZ095GLBjWz6Heeky2c+3zc5BTq7q4V6
-         b1Rt6UudisxSZcoXw14QYoh9bhIgm4KoFzvvwoR1hMPiK1gi70Mhzc54q9U+Epnd1abE
-         A/a8bXsTWO2dtLlM1GK1ABalYi0UFa6Zdv3Wkz0enRlKWscIyxQjJtxJumbxCbIjH6Rb
-         GiwA==
+        bh=2/njdtvI7IlGVs0QAnOWrmN+l8Oq4hWVaKlgRxI6bCQ=;
+        b=jmxZXl7h2VqrTO4Hc0nYE17zKOr0OckVtsdGIQMfcU7CqopnxOEonkmI1RA/Y2/Vr7
+         P+QXEQn9h7lSf7cwGNMk7CUZHWAEXKuIbwAgZLldigO+DiXd4alB01c/3rhlyfnSWiOL
+         tuNvnoqNNJEXO1jlmiM6zAVEp9ZPAaleRcnf5m5PYwKOu0Qsal0PIqxIXgmKp2/UksJW
+         4DCw+TFGDFFIeeIeaVK1/PqThpuq9TVbIbDsPidxoPPgP5NN9x5hs/Ws3Jzlw1+P0q1F
+         7K5ZYfaN+U5xca8lB5W4SBLV5d4UTBqNqnknvZ0S7e4eHjRmJK/CwKhPq2qi/aX8NsK3
+         JDcg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679130253;
+        d=1e100.net; s=20210112; t=1679131884;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=46YE2zZsbRZvVS3GTHikh2mmcF7QF9nXPt3CyA6L148=;
-        b=IA1bRH7UnaynrfA7Zt3zXJhOu8N4doLomqzMqg8fWquYoRuucNA2gK0Upb/XVVgi+v
-         COyBFo+rsub3p8mWqjVeBFspAYw8dp3GxtO4oTF2RUs/QaAuAWh7vO5PfEOYwxtlrPVn
-         nBnZexQyc/y6Ajm1OAdVk8BSp26/HUxSaFU6e3aI0OsusZWdkBWqUjHmc+vyH+QN7pHg
-         DHSGImdNyPV9r/+BwjUlllLGrwSBpuSsfI7YeteSGTQqD6HQQ/Ko7aURSpJVykuooZKe
-         Hwdqq0O00jxVMcGpmHeKhfxpEbR0VebeTFQ/VlhVDkflU4UQubJLh5iW6kEAuWtY481m
-         pDvg==
-X-Gm-Message-State: AO0yUKVhZYwKa7NjxIce1HJebFNyz9WdHWLgPwo4KDsGdSaj/pSRx5Ul
-        0oBYIbseJ8x+x8nwfJ3jd2SvDODpDpV4BYf9No0=
-X-Google-Smtp-Source: AK7set8Wbz0M+Z84K54uYMK5BLxVGQczveY06Sz2cgTDfY8AaCP7sMdMEw4DNxUcqGt3pRl5RDNDK5Bp+BBxbGffZjA=
-X-Received: by 2002:a05:6130:42c:b0:68a:a9d:13f5 with SMTP id
- ba44-20020a056130042c00b0068a0a9d13f5mr713180uab.1.1679130253202; Sat, 18 Mar
- 2023 02:04:13 -0700 (PDT)
+        bh=2/njdtvI7IlGVs0QAnOWrmN+l8Oq4hWVaKlgRxI6bCQ=;
+        b=xhQ6Eg3hRU52hpXdmSWv19DNcH24eJBR0x4Zptrdr+Fjtoxv62aWuc3z85dxUiHZew
+         LO2DZeaEYXK2aYxUcNWY/UQAADKLzkgTYz68w/2Nw6hcRhsJXTFkKyRBcxxWHbwjwVev
+         0d4sGY9uqY4Btw83FPmST3HbXj14hFrjTxIl1unDTjIJm/6vNb70UkJ4QNa3twC9syyF
+         RBn87rMOnnsK5ngKSkhuH38mVii7sdAlBKH+6CR7dGFj/5ikM0GmsTRWLAkBcp2k7CGp
+         pPSY/AJVIIU+66j0tOYSIOYdGl15mEgna8pranDYxrrF4BauVTRc4N0p0urBu/nf851V
+         sdgA==
+X-Gm-Message-State: AO0yUKUiT2s7NvNrdovKPUQBcnTZnkgrFac1X9LvbE0Vefe3PIUf+cEO
+        vwD0XlXe9CvEyeOnSDURQkrn0KNajNgAzDE9OA0=
+X-Google-Smtp-Source: AK7set92/hm+b2+kV51D7e5nVbVpI5Mgxs7ypndEm/is2YQ7jxcYQ6qP9tdTjyTIsriq20Iy2IgOISWshuc0yn1VJh8=
+X-Received: by 2002:a1f:ab01:0:b0:435:b6ce:23e7 with SMTP id
+ u1-20020a1fab01000000b00435b6ce23e7mr751698vke.0.1679131883847; Sat, 18 Mar
+ 2023 02:31:23 -0700 (PDT)
 MIME-Version: 1.0
 References: <20230314042109.82161-1-catherine.hoang@oracle.com>
- <20230314062847.GQ360264@dread.disaster.area> <20230318001143.GS11376@frogsfrogsfrogs>
-In-Reply-To: <20230318001143.GS11376@frogsfrogsfrogs>
+ <20230314042109.82161-4-catherine.hoang@oracle.com> <CAOQ4uxiYVpF9gjt-kTVpnoVYboOFG-Fpfw=KMrM=-aEHod4vXw@mail.gmail.com>
+ <FC1BD250-7179-470B-854E-649E52147219@oracle.com> <CAOQ4uxg6hR8R9XC8qSkxQG8=tkwKZi=2Ofq_-LgZEwwPqbFQjA@mail.gmail.com>
+ <20230318003909.GT11376@frogsfrogsfrogs>
+In-Reply-To: <20230318003909.GT11376@frogsfrogsfrogs>
 From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Sat, 18 Mar 2023 11:04:02 +0200
-Message-ID: <CAOQ4uxjQZQMW1ovEf_KjMS-uEfX90Q+PYyCvwP5_=X9OnG_FZw@mail.gmail.com>
-Subject: Re: [PATCH v1 0/4] setting uuid of online filesystems
+Date:   Sat, 18 Mar 2023 11:31:12 +0200
+Message-ID: <CAOQ4uxicWciaHGkk-y7zB4pBi-6tuNeR6nppDo0gS+KwhdtaVA@mail.gmail.com>
+Subject: Re: [PATCH v1 3/4] xfs: add XFS_IOC_SETFSUUID ioctl
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Catherine Hoang <catherine.hoang@oracle.com>,
-        linux-xfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>
+Cc:     Catherine Hoang <catherine.hoang@oracle.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Theodore Tso <tytso@mit.edu>,
+        Dave Chinner <david@fromorbit.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Linux API <linux-api@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Mar 18, 2023 at 2:24=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
+On Sat, Mar 18, 2023 at 2:39=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
  wrote:
 >
-> On Tue, Mar 14, 2023 at 05:28:47PM +1100, Dave Chinner wrote:
-> > On Mon, Mar 13, 2023 at 09:21:05PM -0700, Catherine Hoang wrote:
-> > > Hi all,
+> On Thu, Mar 16, 2023 at 10:09:56AM +0200, Amir Goldstein wrote:
+> > On Thu, Mar 16, 2023 at 1:13=E2=80=AFAM Catherine Hoang
+> > <catherine.hoang@oracle.com> wrote:
 > > >
-> > > This series of patches implements a new ioctl to set the uuid of moun=
-ted
-> > > filesystems. Eventually this will be used by the 'xfs_io fsuuid' comm=
-and
-> > > to allow userspace to update the uuid.
+> > > > On Mar 13, 2023, at 10:50 PM, Amir Goldstein <amir73il@gmail.com> w=
+rote:
+> > > >
+> > > > On Tue, Mar 14, 2023 at 6:27=E2=80=AFAM Catherine Hoang
+> > > > <catherine.hoang@oracle.com> wrote:
+> > > >>
+> > > >> Add a new ioctl to set the uuid of a mounted filesystem.
+> > > >>
+> > > >> Signed-off-by: Catherine Hoang <catherine.hoang@oracle.com>
+> > > >> ---
+> > > >> fs/xfs/libxfs/xfs_fs.h |   1 +
+> > > >> fs/xfs/xfs_ioctl.c     | 107 +++++++++++++++++++++++++++++++++++++=
+++++
+> > > >> fs/xfs/xfs_log.c       |  19 ++++++++
+> > > >> fs/xfs/xfs_log.h       |   2 +
+> > > >> 4 files changed, 129 insertions(+)
+> > > >>
+> > > >> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> > > >> index 1cfd5bc6520a..a350966cce99 100644
+> > > >> --- a/fs/xfs/libxfs/xfs_fs.h
+> > > >> +++ b/fs/xfs/libxfs/xfs_fs.h
+> > > >> @@ -831,6 +831,7 @@ struct xfs_scrub_metadata {
+> > > >> #define XFS_IOC_FSGEOMETRY          _IOR ('X', 126, struct xfs_fso=
+p_geom)
+> > > >> #define XFS_IOC_BULKSTAT            _IOR ('X', 127, struct xfs_bul=
+kstat_req)
+> > > >> #define XFS_IOC_INUMBERS            _IOR ('X', 128, struct xfs_inu=
+mbers_req)
+> > > >> +#define XFS_IOC_SETFSUUID           _IOR ('X', 129, uuid_t)
+> > > >
+> > > > Should be _IOW.
 > > >
-> > > Comments and feedback appreciated!
+> > > Ok, will fix that.
+> > > >
+> > > > Would you consider defining that as FS_IOC_SETFSUUID in fs.h,
+> > > > so that other fs could implement it later on, instead of hoisting i=
+t later?
+> > > >
+> > > > It would be easy to add support for FS_IOC_SETFSUUID to ext4
+> > > > by generalizing ext4_ioctl_setuuid().
+> > > >
+> > > > Alternatively, we could hoist EXT4_IOC_SETFSUUID and struct fsuuid
+> > > > to fs.h and use that ioctl also for xfs.
+> > >
+> > > I actually did try to hoist the ext4 ioctls previously, but we weren=
+=E2=80=99t able to come
+> > > to a consensus on the implementation.
+> > >
+> > > https://lore.kernel.org/linux-xfs/20221118211408.72796-2-catherine.ho=
+ang@oracle.com/
+> > >
+> > > I would prefer to keep this defined as an xfs specific ioctl to avoid=
+ all of the
+> > > fsdevel bikeshedding.
 > >
-> > What's the use case for this?
-> >
-> > What are the pro's and cons of the implementation?
-> >
-> > Some problems I see:
-> >
-> > * How does this interact with pNFS exports (i.e.
-> > CONFIG_EXPORTFS_BLOCK_OPS). XFS hands the sb_uuid directly to pNFS
-> > server (and remote clients, I think) so that incoming mapping
-> > requests can be directed to the correct block device hosting the XFS
-> > filesystem the mapping information is for. IIRC, the pNFS data path
-> > is just given a byte offset into the device where the UUID in the
-> > superblock lives, and if it matches it allows the remote IO to go
-> > ahead - it doesn't actually know that there is a filesystem on that
-> > device at all...
+> > For the greater good, please do try to have this bikeshedding, before g=
+iving up.
+> > The discussion you pointed to wasn't so far from consensus IMO except
+> > fsdevel was not CCed.
 >
-> I think we're going to have to detect the presence of pNFS exports and
-> EAGAIN if there are any active.  That probably involves incrementing a
-> counter during ->map_blocks and decreasing it during ->commit blocks.
->
-> That might still invite races between someone setting the fsuuid and
-> exporting via NFS.
->
-> > * IIRC, the nfsd export table can also use the filesystem uuid to
-> > identify the filesystem being exported, and IIRC that gets encoded
-> > in the filehandle. Does changing the filesystem UUID then cause
-> > problems with export indentification and/or file handle
-> > creation/resolution?
->
-> I thought NFS (when not being used for block layouts and pnfs stuff)
-> still used the fsid that's also in the superblock?  Presumably we'd
-> leave the old m_fixedfsid unchanged while the fs is still mounted, and
-> document the caveat that handles will not work after a remount.
->
-> On some level, we might simply have to document that changing the
-> user-visible uuid will break file handles and pnfs exports, so sysadmins
-> had better get that done early.
->
-> OTOH that is an argument for leaving the xfs_db-based version that we
-> have now.
->
-> > * Is the VFS prepared for sb->s_uuid changing underneath running
-> > operations on mounted filesystems? I can see that this might cause
-> > problems with any sort of fscrypt implementation as it may encode
-> > the s_uuid into encryption keys held in xattrs, similarly IMA and
-> > EVM integrity protection keys.
->
-> I would hope it's not so hard to detect that EVM/fscrypt are active on a
-> given xfs mount.  EVM seems pretty hard to detect since it operates
-> above the fs.
->
-> fscrypt might not be so difficult, since we likely need to add support
-> in the ondisk metadata, which means xfs will know.
->
-> IMA seems to be using it for rule matching, so I'd say that if the
-> sysadmin changes the fsuuid, they had better update the IMA rulebook
-> too.
->
-> Come to think of it, perhaps reading a filesystem's uuid (whether via
-> handle export, direct read of s_uuid, nfs, evm, ima, or fscrypt) should
-> set a superblock flag that someone has accessed it; and only if nobody's
-> yet accessed it do we allow the fsuuid update?
->
-> > * Should the VFS superblock sb->s_uuid use the XFS
-> > sb->sb_meta_uuid value and never change because we can encode it
-> > into other objects stored in the active filesystem? What does that
-> > mean for tools that identify block devices or filesystems by the VFS
-> > uuid rather than the filesystem uuid?
->
-> I don't know of any other than the ones you found.
+> Why?  fsdevel bikeshedding is a pointless waste of time.  Jeremy ran
 
-FWIW, overlayfs also uses s_uuid in a similar manner to nfsd
-as a persistent reference to the origin lower file after copy up.
+[+ linux-api]
 
-Like nfsd, the overlayfs persistent origin handle (fsuuid+filehandle) will =
-break
-when changing lower fs uuid offline, but I don't see much difference from
-changing s_uuid online - worse case that I can think of is that an overlayf=
-s
-inode will change its st_ino after evict/lookup on a mounted overlayfs.
+I do not think that it was a waste of time at all...
+
+> four rounds of proposing the new api on linux-api, linux-fsdevel, and
+> linux-ext4.  Matthew Wilcox and I sent in our comments, including adding
+> some flexibility for shorter or longer uuids, so he updated the proposal
+> and it got merged:
+>
+> https://lore.kernel.org/linux-api/?q=3DBongio
+>
+> The instant Catherine started talking about using this new API, Dave
+> came in and said no, flex arrays for uuids are stupid, and told
+> Catherine she ought to "fix" the landmines by changing the structure
+> definition:
+>
+> https://lore.kernel.org/linux-xfs/20221121211437.GK3600936@dread.disaster=
+.area/
+>
+> Never mind that changing the struct size causes the output of _IOR to
+> change, which means a new ioctl command number, which is effectively a
+> new interface.  I think we'll just put new ioctls in xfs_fs_staging.h,
+> merge the code, let people kick the tires for a few months, and only
+> then make it permanent.
+>
+
+What you perceive as a waste of time, I perceive as a healthy process.
+This is what I see when reading the threads:
+
+- Serious and responsible API discussion with several important review
+  inputs incorporated.
+- New API was added as "staging" in ext4 only
+- Less than 1 year later, another fs wants to use the new API
+- Dave (who may have missed the original API discussion?) points out a prob=
+lem
+- In my understanding, in the original discussion there was a consensus
+  that uuid size is limited to 16 bytes [1] so the fact that fsu_uuid[]
+  ended up as a variable array is just a human mistake?
+
+[1] https://lore.kernel.org/linux-api/YthI9qp+VeNbFQP3@casper.infradead.org=
+/
+
+So we had a design discussion, we had a staging API and we found a problem
+in the staging API. This is what I call a healthy process.
+
+When that happens it is not too late to fix the API problem.
+and the fix is simple - increase the size of the struct to maximal uuid siz=
+e
+and change the ioctl numbers.
+
+Yes, ext4 tools and kernel driver have to pay the penalty of backward compa=
+t
+support for the V1 API, but as I showed in the sketch patch, that will be
+quite easy to do and that is the price that one has to pay for being a
+pioneer ;)
+
+So for a workplan, Catherine can use the extended fsuuid struct and add it =
+to
+staging in xfs as you proposed, with the intention of hoisting it to
+fs.h later on.
+And that plan should be published to linux-api and linux-fsdevel.
+
+Assuming that ext4 developers are fine with this plan, they could already
+adjust ext4 and e2fsprogs to the V2 API before being hoisted, because the
+adjustments are pretty simple.
 
 Thanks,
 Amir.
