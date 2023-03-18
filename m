@@ -2,170 +2,130 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AF60C6FD1D
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Mar 2023 00:11:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A259C74A5B
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Mar 2023 00:37:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229489AbjCRALw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Mar 2023 20:11:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38404 "EHLO
+        id S229967AbjCRAhp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Mar 2023 20:37:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229951AbjCRALv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2023 20:11:51 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7263CC1BC6
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2023 17:11:45 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7D71360EF2
-        for <linux-xfs@vger.kernel.org>; Sat, 18 Mar 2023 00:11:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D086FC433EF;
-        Sat, 18 Mar 2023 00:11:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679098303;
-        bh=28AqN6Yq+80YlCLHwZhwyFe2FT1gQYeo6mlgyeOOLB0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ijBcXsoNwM0LKq9mtwfjmIISRLtytCKgVSHOVNd8wVDQQnHNoH2aOX3d/XARTSbS6
-         bgJTy6GybYId5BAM4bMb6V0X/qGMI0lJt8/XmK1/Lyv2a/4X9kPyUld5JSx5to1UU1
-         HdZa0cNZ5i/GcI6alm6QDCfBBvcvSITsDRWDlBYUItCTW+Jhr8OrXnZOQuqHwSbt1J
-         Z94q3P415oltWu5Ac1kY8SdKRkDpCaagdAg6jtz4pVDXt8QbeLjBFnuTo98X/0db8P
-         B6C+mWdmpslJbzIpc9eYlpRqUGIxDTM2FIsIJogTdMHiwKfSkfeVbaix8LB3hJwj9C
-         AsGkh8fJC6uiQ==
-Date:   Fri, 17 Mar 2023 17:11:43 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Catherine Hoang <catherine.hoang@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v1 0/4] setting uuid of online filesystems
-Message-ID: <20230318001143.GS11376@frogsfrogsfrogs>
-References: <20230314042109.82161-1-catherine.hoang@oracle.com>
- <20230314062847.GQ360264@dread.disaster.area>
+        with ESMTP id S229794AbjCRAho (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Mar 2023 20:37:44 -0400
+Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 980D12BEEC
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2023 17:37:33 -0700 (PDT)
+Received: by mail-pj1-x1032.google.com with SMTP id a16so2707908pjs.4
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Mar 2023 17:37:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1679099853;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=zsqJ2FThmy4OXzq7vzmkyG0P9MJhsLVw+x1g28a4sdc=;
+        b=1ukzmtXDsFNUp6jp1ICIw6l8dmlw9Px31lUTYNtTqcIbFmX8pKl7qpIpkGLDsRClpf
+         +bqD1TPWFbteH4ZapgH5v5B5svVVcWDytzU4LmyhbsSfirRlC5zkNOPBCpcyROe7suvw
+         sVyNg9WtfNVAfKG7dIMZ0PERv8PsZtb2Z0H4UJZ9LsHqGWYeddFLrCej5d6heJrOarJY
+         Os0UQ//K+5YP9ASLl7bOlPIVCqhkuSgaor+8ySeJelGVGAd6lJQv8GeKlXwUvby5Ms87
+         mktosNumzdUFD7JJSV9il2FaYEIiPovv0U8sWRSHc2MASRakuMNlO6MQx3kSnDQKfrC+
+         /pRw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679099853;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=zsqJ2FThmy4OXzq7vzmkyG0P9MJhsLVw+x1g28a4sdc=;
+        b=EMhKYYGgGSTwPYh+usxFqGH7mzeyNIIHnBO8SKFelbO3RTLylzIiGKEZR6FfIIhaN4
+         YCCEBu0l05igq8Uybe2ODnF9X65Ty+6UNfxve9s48YkC7hAcOch+AIs03m4ETShXO0Qa
+         T0Rrte6B3SYtmBdAaaj4wm7wT8wmv3EFPloKbA4DqfPK7TkeVmNX1lrecsezNSjsQarv
+         yetm/BTw0eJi0wmWUrOpKHj1/IohF8k/DNXd581w28Wp93KSHm9/rZB1MXXN40ov7ahl
+         c0FGvUvhXP3Wef9ctfmNhh233/pDJYGnANw1FHCrV2xEP1HkRufNf3y/7l2b5lKFeUmV
+         lfpA==
+X-Gm-Message-State: AO0yUKWQfE3plMe+XXFlEK3Q+K1ZqQc9YRChdygewrOXW7X8qvN8LMIh
+        nV1hlujx/HoSbMucNc770l/5fg==
+X-Google-Smtp-Source: AK7set/w/LZITNrsIWBwTVDruoNlaZ6AOU0yoW+i7jGUPAAcgmf/dJ5TXtlveacg9491eSTNP2vX2w==
+X-Received: by 2002:a17:90a:8988:b0:237:401c:9bd5 with SMTP id v8-20020a17090a898800b00237401c9bd5mr9829412pjn.46.1679099853021;
+        Fri, 17 Mar 2023 17:37:33 -0700 (PDT)
+Received: from destitution (pa49-196-94-140.pa.vic.optusnet.com.au. [49.196.94.140])
+        by smtp.gmail.com with ESMTPSA id l18-20020a17090add9200b0023530b1e4a0sm2062252pjv.2.2023.03.17.17.37.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Mar 2023 17:37:32 -0700 (PDT)
+Received: from dave by destitution with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1pdKZd-000J7B-1A;
+        Sat, 18 Mar 2023 11:37:29 +1100
+Date:   Sat, 18 Mar 2023 11:37:29 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Hillf Danton <hdanton@sina.com>
+Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-mm@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        yebin10@huawei.com
+Subject: Re: [PATCH 2/4] pcpcntrs: fix dying cpu summation race
+Message-ID: <ZBUHyXkdzViG2VmT@destitution>
+References: <20230315084938.2544737-1-david@fromorbit.com>
+ <20230315233618.2168-1-hdanton@sina.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230314062847.GQ360264@dread.disaster.area>
+In-Reply-To: <20230315233618.2168-1-hdanton@sina.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 14, 2023 at 05:28:47PM +1100, Dave Chinner wrote:
-> On Mon, Mar 13, 2023 at 09:21:05PM -0700, Catherine Hoang wrote:
-> > Hi all,
-> > 
-> > This series of patches implements a new ioctl to set the uuid of mounted
-> > filesystems. Eventually this will be used by the 'xfs_io fsuuid' command
-> > to allow userspace to update the uuid.
-> > 
-> > Comments and feedback appreciated!
+On Thu, Mar 16, 2023 at 07:36:18AM +0800, Hillf Danton wrote:
+> On 15 Mar 2023 19:49:36 +1100 Dave Chinner <dchinner@redhat.com>
+> > @@ -141,11 +141,20 @@ static s64 __percpu_counter_sum_mask(struct percpu_counter *fbc,
+> >  
+> >  /*
+> >   * Add up all the per-cpu counts, return the result.  This is a more accurate
+> > - * but much slower version of percpu_counter_read_positive()
+> > + * but much slower version of percpu_counter_read_positive().
+> > + *
+> > + * We use the cpu mask of (cpu_online_mask | cpu_dying_mask) to capture sums
+> > + * from CPUs that are in the process of being taken offline. Dying cpus have
+> > + * been removed from the online mask, but may not have had the hotplug dead
+> > + * notifier called to fold the percpu count back into the global counter sum.
+> > + * By including dying CPUs in the iteration mask, we avoid this race condition
+> > + * so __percpu_counter_sum() just does the right thing when CPUs are being taken
+> > + * offline.
+> >   */
+> >  s64 __percpu_counter_sum(struct percpu_counter *fbc)
+> >  {
+> > -	return __percpu_counter_sum_mask(fbc, cpu_online_mask);
+> > +
+> > +	return __percpu_counter_sum_mask(fbc, cpu_dying_mask);
+> >  }
+> >  EXPORT_SYMBOL(__percpu_counter_sum);
+> >  
+> > -- 
+> > 2.39.2
 > 
-> What's the use case for this?
+> Hm... the window of the race between a dying cpu and the sum of percpu counter
+> spotted in commit f689054aace2 is stil open after a text-book log message.
 > 
-> What are the pro's and cons of the implementation?
+> 	cpu 0			cpu 2
+> 	---			---
+> 	percpu_counter_sum() 	percpu_counter_cpu_dead()
 > 
-> Some problems I see:
+> 	raw_spin_lock_irqsave(&fbc->lock, flags);
+> 	ret = fbc->count;
+> 	for_each_cpu_or(cpu, cpu_online_mask, cpu_dying_mask) {
+> 		s32 *pcount = per_cpu_ptr(fbc->counters, cpu);
+> 		ret += *pcount;
+> 	}
+> 	raw_spin_unlock_irqrestore(&fbc->lock, flags);
 > 
-> * How does this interact with pNFS exports (i.e.
-> CONFIG_EXPORTFS_BLOCK_OPS). XFS hands the sb_uuid directly to pNFS
-> server (and remote clients, I think) so that incoming mapping
-> requests can be directed to the correct block device hosting the XFS
-> filesystem the mapping information is for. IIRC, the pNFS data path
-> is just given a byte offset into the device where the UUID in the
-> superblock lives, and if it matches it allows the remote IO to go
-> ahead - it doesn't actually know that there is a filesystem on that
-> device at all...
+> 				raw_spin_lock(&fbc->lock);
+> 				pcount = per_cpu_ptr(fbc->counters, cpu);
+> 				fbc->count += *pcount;
+> 				*pcount = 0;
+> 				raw_spin_unlock(&fbc->lock);
 
-I think we're going to have to detect the presence of pNFS exports and
-EAGAIN if there are any active.  That probably involves incrementing a
-counter during ->map_blocks and decreasing it during ->commit blocks.
+Their is no race condition updating fbc->count here - I explained
+this in the cover letter. i.e. the sum in percpu_counter_sum() is to
+a private counter and does not change fbc->count. Therefore we only
+need/want to fold the dying cpu percpu count into fbc->count in the
+CPU_DEAD callback.
 
-That might still invite races between someone setting the fsuuid and
-exporting via NFS.  
-
-> * IIRC, the nfsd export table can also use the filesystem uuid to
-> identify the filesystem being exported, and IIRC that gets encoded
-> in the filehandle. Does changing the filesystem UUID then cause
-> problems with export indentification and/or file handle
-> creation/resolution?
-
-I thought NFS (when not being used for block layouts and pnfs stuff)
-still used the fsid that's also in the superblock?  Presumably we'd
-leave the old m_fixedfsid unchanged while the fs is still mounted, and
-document the caveat that handles will not work after a remount.
-
-On some level, we might simply have to document that changing the
-user-visible uuid will break file handles and pnfs exports, so sysadmins
-had better get that done early.
-
-OTOH that is an argument for leaving the xfs_db-based version that we
-have now.
-
-> * Is the VFS prepared for sb->s_uuid changing underneath running
-> operations on mounted filesystems? I can see that this might cause
-> problems with any sort of fscrypt implementation as it may encode
-> the s_uuid into encryption keys held in xattrs, similarly IMA and
-> EVM integrity protection keys.
-
-I would hope it's not so hard to detect that EVM/fscrypt are active on a
-given xfs mount.  EVM seems pretty hard to detect since it operates
-above the fs.
-
-fscrypt might not be so difficult, since we likely need to add support
-in the ondisk metadata, which means xfs will know.
-
-IMA seems to be using it for rule matching, so I'd say that if the
-sysadmin changes the fsuuid, they had better update the IMA rulebook
-too.
-
-Come to think of it, perhaps reading a filesystem's uuid (whether via
-handle export, direct read of s_uuid, nfs, evm, ima, or fscrypt) should
-set a superblock flag that someone has accessed it; and only if nobody's
-yet accessed it do we allow the fsuuid update?
-
-> * Should the VFS superblock sb->s_uuid use the XFS
-> sb->sb_meta_uuid value and never change because we can encode it
-> into other objects stored in the active filesystem? What does that
-> mean for tools that identify block devices or filesystems by the VFS
-> uuid rather than the filesystem uuid?
-
-I don't know of any other than the ones you found.
-
-> There's a whole can-o-worms here - the ability to dynamically change
-> the UUID of a filesystem while it is mounted mean we need to think
-> about these things - it's no longer as simple as "can only do it
-> offline" which is typically only used to relabel a writeable
-> snapshot of a golden image file during new VM deployment
-> preparation.....
-
-Agreed.
-
-> > 
-> > Catherine
-> > 
-> > Catherine Hoang (4):
-> >   xfs: refactor xfs_uuid_mount and xfs_uuid_unmount
-> >   xfs: implement custom freeze/thaw functions
-> 
-> The "custom" parts that XFS requires need to be added to the VFS
-> level freeze/thaw functions, not duplicate the VFS functionality
-> within XFS and then slight modify it for this additional feature.
-> Doing this results in unmaintainable code over the long term.
-
-Yeah, I think for the next iteration we ought to try to pull in Luis's
-kernel-initiated-exclusive-freeze patch.
-
-> >   xfs: add XFS_IOC_SETFSUUID ioctl
-> >   xfs: export meta uuid via xfs_fsop_geom
-> 
-> For what purpose does userspace ever need to know the sb_meta_uuid?
-
-(No idea; once someone sets a fsuuid they usually don't want to go
-back.)
-
---D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
