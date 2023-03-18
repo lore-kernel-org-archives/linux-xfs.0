@@ -2,53 +2,53 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 425A8C74A5B
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Mar 2023 10:16:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2F8FC761AF
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Mar 2023 10:16:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229945AbjCRKQH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 18 Mar 2023 06:16:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55194 "EHLO
+        id S229943AbjCRKQJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 18 Mar 2023 06:16:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55208 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229845AbjCRKP5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Mar 2023 06:15:57 -0400
-Received: from mail-wm1-x32a.google.com (mail-wm1-x32a.google.com [IPv6:2a00:1450:4864:20::32a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB5353CE1E;
-        Sat, 18 Mar 2023 03:15:50 -0700 (PDT)
-Received: by mail-wm1-x32a.google.com with SMTP id r19-20020a05600c459300b003eb3e2a5e7bso4731490wmo.0;
-        Sat, 18 Mar 2023 03:15:50 -0700 (PDT)
+        with ESMTP id S229948AbjCRKP6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Mar 2023 06:15:58 -0400
+Received: from mail-wm1-x332.google.com (mail-wm1-x332.google.com [IPv6:2a00:1450:4864:20::332])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C028F25979;
+        Sat, 18 Mar 2023 03:15:53 -0700 (PDT)
+Received: by mail-wm1-x332.google.com with SMTP id ay8so4684204wmb.1;
+        Sat, 18 Mar 2023 03:15:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1679134549;
+        d=gmail.com; s=20210112; t=1679134552;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=iF1mN6zvABPJFTbU5QEGrkBoU8KKs2uGJMLFx2CtOkE=;
-        b=heAivPpDbsDpsG3pYYLVPIP3jNFjWdOgWWUPJGZTaugqG3XvhxV1H2RO4iZR9y7EOD
-         gdqnFcUC0qluSkvfNP1oGY7GkFEKAxrhDzidFZENmq48zQ2rY5lC8ZwhuOk2E03RwYKp
-         ADPOB9ZBqpZmAvXLMjomfb1Hs5ut+Oxnx4j10BOO/CgAzBz42sOvhBUrt+DMfvmfkUiK
-         d7nRR8rxFeoj7fmobR/uxgdctnW9ZAVetAubOKuWCRfQcHDBAIaKBTrk89iE+bdjibtg
-         YVrcO+TuzabSgk+yU/q9+pu1KyscLa5CQE9yvNUbR07FFa2hFO+BqvBg2v6ay/zJyRWO
-         maxQ==
+        bh=eatdB0z21nbZqAoMxbWVck3KnIwW4SpkowjlzDGzwpw=;
+        b=cw/GL07s5GJ7LGkZwE5KnszWaWwlfGC5OQ4vWbU0UNdAN3QGMf9VZ1CPqfrJhXmjYh
+         VXZSYAtSbtPxeUu7p8yLW4MHAZHwSyvn/QOvzAde7eO/+ajdYzDkPBXXlrfl1uy/tMeI
+         FIkU5qrtHwtKXk1BAiZllGxAwIWD8oVNtqSh8BnMmQKzb/vqVht0orBBbfg8J/IlpKMn
+         i35be5oEb/vXfi3Cvcrzp9kA/2qDj7eJeyCsxg3F18p/IJVqwHvjtCbQ2RddKcJVioPA
+         CYFaqsmwWo8wgnQOMC07utcAWWvbMO8eIipAAhM1hANIwh05VS5H9ygV4lAGRa0Gxsz0
+         xFmw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679134549;
+        d=1e100.net; s=20210112; t=1679134552;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=iF1mN6zvABPJFTbU5QEGrkBoU8KKs2uGJMLFx2CtOkE=;
-        b=NB0ubepkuHDXKgJxkwi2y31obZ8aCBpJIM4RSrgyXtej/NWwcILjRI01Ku/iCFg0JT
-         WeGHVbmfWlAkq4nwjOf9KOD6Uz9n1sYc3oFaQIeW4QWu+d0wUGa1Dps88lNTdfRNOF7z
-         6iCa5JBU7s5UC6U2N3RNMk0RG3Dpfx6CA1kHnLxAEgiPWddRw1cgRRO7x2qOKpjBFQKR
-         1eTYlalBoRlDPMTT5dPVJz7TEX1Cfw9NuFaw0MebrR3qDrpqLemNklJxn+dRSP2UoBdG
-         RL6Qh3z/V3gd4/tGiyQ5pKe6mXBcTu6i2AbTonsJ7ion+2q/uVU1v7sjlt/Hiv65V1Wc
-         r4oA==
-X-Gm-Message-State: AO0yUKVh2ahNhc6XFEFqY1pH4aq3HoQcG6VY+Es1b8HOGGrHpL733Q8D
-        4y7HnphDkSt6Z8bHf/o8c7s=
-X-Google-Smtp-Source: AK7set/L2wQAz3z1r+j/ukF8WJ3qi+NCSFrwZhS1ouaaZJTRQieKNOFbI0mH/A6XJ+4NWCAzPYbf/A==
-X-Received: by 2002:a05:600c:28c:b0:3ed:5d41:f964 with SMTP id 12-20020a05600c028c00b003ed5d41f964mr4159853wmk.1.1679134548955;
-        Sat, 18 Mar 2023 03:15:48 -0700 (PDT)
+        bh=eatdB0z21nbZqAoMxbWVck3KnIwW4SpkowjlzDGzwpw=;
+        b=msUhMErN4kZv5u2vfQ9maPhofhjFM/XchCfORjMtIoUyKr3nx0pfCCljUc802+Bu6N
+         ihMa2wJjCj+MVqTFr+/aybk/Bb7d91m27C/O38JCBjOTbaBiMBAKu5qm9VpTDOiw9KMh
+         cF9FPoF1nVo98Bc7L2E5fsbrnwdkKFRBiovVxIbu+/YQ9RQOkCYzK6hZ1z+D8e6u6M7U
+         ra2poxlpCzS1TW283PJBYHxbQ4t7Cc+b84SpCgOeH9E/Etuc48mPPHfXOyvfSfvxt+QD
+         issDBhtL+SwbtLmZgeEHROABSbB/CUS3NGuDU/hGmfNv3jR6DixAuOsa5Ucb+VoGxgGk
+         VDlA==
+X-Gm-Message-State: AO0yUKXQO1BTex2z3sn9SWqgw5ySnQgLQihbk7eKETtwFEi/pU8AS3Bu
+        amSxv4Om7Z6p8RK5p5sFURE=
+X-Google-Smtp-Source: AK7set+nDV4tJfhxDK+u/YypvydP13hNKDyvgfWE7uzwncRytdDK4nvoGnNow6eSvdvT3ckEk2oDFA==
+X-Received: by 2002:a05:600c:3b14:b0:3ed:29f8:3ff2 with SMTP id m20-20020a05600c3b1400b003ed29f83ff2mr4511089wms.6.1679134552376;
+        Sat, 18 Mar 2023 03:15:52 -0700 (PDT)
 Received: from amir-ThinkPad-T480.lan ([5.29.249.86])
-        by smtp.gmail.com with ESMTPSA id v26-20020a05600c215a00b003eafc47eb09sm4333965wml.43.2023.03.18.03.15.47
+        by smtp.gmail.com with ESMTPSA id v26-20020a05600c215a00b003eafc47eb09sm4333965wml.43.2023.03.18.03.15.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 18 Mar 2023 03:15:48 -0700 (PDT)
+        Sat, 18 Mar 2023 03:15:52 -0700 (PDT)
 From:   Amir Goldstein <amir73il@gmail.com>
 To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Cc:     Sasha Levin <sashal@kernel.org>,
@@ -57,11 +57,10 @@ Cc:     Sasha Levin <sashal@kernel.org>,
         Chandan Babu R <chandan.babu@oracle.com>,
         Christian Brauner <brauner@kernel.org>,
         linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        stable@vger.kernel.org, Yang Xu <xuyang2018.jy@fujitsu.com>,
-        Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH 5.10 08/15] fs: add mode_strip_sgid() helper
-Date:   Sat, 18 Mar 2023 12:15:22 +0200
-Message-Id: <20230318101529.1361673-9-amir73il@gmail.com>
+        stable@vger.kernel.org
+Subject: [PATCH 5.10 10/15] attr: add in_group_or_capable()
+Date:   Sat, 18 Mar 2023 12:15:24 +0200
+Message-Id: <20230318101529.1361673-11-amir73il@gmail.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230318101529.1361673-1-amir73il@gmail.com>
 References: <20230318101529.1361673-1-amir73il@gmail.com>
@@ -71,98 +70,117 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Yang Xu <xuyang2018.jy@fujitsu.com>
+commit 11c2a8700cdcabf9b639b7204a1e38e2a0b6798e upstream.
 
-commit 2b3416ceff5e6bd4922f6d1c61fb68113dd82302 upstream.
+[backported to 5.10.y, prior to idmapped mounts]
 
-[remove userns argument of helper for 5.10.y backport]
+In setattr_{copy,prepare}() we need to perform the same permission
+checks to determine whether we need to drop the setgid bit or not.
+Instead of open-coding it twice add a simple helper the encapsulates the
+logic. We will reuse this helpers to make dropping the setgid bit during
+write operations more consistent in a follow up patch.
 
-Add a dedicated helper to handle the setgid bit when creating a new file
-in a setgid directory. This is a preparatory patch for moving setgid
-stripping into the vfs. The patch contains no functional changes.
-
-Currently the setgid stripping logic is open-coded directly in
-inode_init_owner() and the individual filesystems are responsible for
-handling setgid inheritance. Since this has proven to be brittle as
-evidenced by old issues we uncovered over the last months (see [1] to
-[3] below) we will try to move this logic into the vfs.
-
-Link: e014f37db1a2 ("xfs: use setattr_copy to set vfs inode attributes") [1]
-Link: 01ea173e103e ("xfs: fix up non-directory creation in SGID directories") [2]
-Link: fd84bfdddd16 ("ceph: fix up non-directory creation in SGID directories") [3]
-Link: https://lore.kernel.org/r/1657779088-2242-1-git-send-email-xuyang2018.jy@fujitsu.com
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christian Brauner (Microsoft) <brauner@kernel.org>
-Reviewed-and-Tested-by: Jeff Layton <jlayton@kernel.org>
-Signed-off-by: Yang Xu <xuyang2018.jy@fujitsu.com>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 Signed-off-by: Christian Brauner (Microsoft) <brauner@kernel.org>
 Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/inode.c         | 34 ++++++++++++++++++++++++++++++----
- include/linux/fs.h |  1 +
- 2 files changed, 31 insertions(+), 4 deletions(-)
+ fs/attr.c     | 11 +++++------
+ fs/inode.c    | 25 +++++++++++++++++++++----
+ fs/internal.h |  1 +
+ 3 files changed, 27 insertions(+), 10 deletions(-)
 
+diff --git a/fs/attr.c b/fs/attr.c
+index 848ffe6e3c24..300ba5153868 100644
+--- a/fs/attr.c
++++ b/fs/attr.c
+@@ -18,6 +18,8 @@
+ #include <linux/evm.h>
+ #include <linux/ima.h>
+ 
++#include "internal.h"
++
+ static bool chown_ok(const struct inode *inode, kuid_t uid)
+ {
+ 	if (uid_eq(current_fsuid(), inode->i_uid) &&
+@@ -90,9 +92,8 @@ int setattr_prepare(struct dentry *dentry, struct iattr *attr)
+ 		if (!inode_owner_or_capable(inode))
+ 			return -EPERM;
+ 		/* Also check the setgid bit! */
+-		if (!in_group_p((ia_valid & ATTR_GID) ? attr->ia_gid :
+-				inode->i_gid) &&
+-		    !capable_wrt_inode_uidgid(inode, CAP_FSETID))
++		if (!in_group_or_capable(inode, (ia_valid & ATTR_GID) ?
++						attr->ia_gid : inode->i_gid))
+ 			attr->ia_mode &= ~S_ISGID;
+ 	}
+ 
+@@ -193,9 +194,7 @@ void setattr_copy(struct inode *inode, const struct iattr *attr)
+ 		inode->i_ctime = attr->ia_ctime;
+ 	if (ia_valid & ATTR_MODE) {
+ 		umode_t mode = attr->ia_mode;
+-
+-		if (!in_group_p(inode->i_gid) &&
+-		    !capable_wrt_inode_uidgid(inode, CAP_FSETID))
++		if (!in_group_or_capable(inode, inode->i_gid))
+ 			mode &= ~S_ISGID;
+ 		inode->i_mode = mode;
+ 	}
 diff --git a/fs/inode.c b/fs/inode.c
-index 9f49e0bdc2f7..23d03abcb0ff 100644
+index 52f834b6a3ad..63f86aeda7fd 100644
 --- a/fs/inode.c
 +++ b/fs/inode.c
-@@ -2147,10 +2147,8 @@ void inode_init_owner(struct inode *inode, const struct inode *dir,
- 		/* Directories are special, and always inherit S_ISGID */
- 		if (S_ISDIR(mode))
- 			mode |= S_ISGID;
--		else if ((mode & (S_ISGID | S_IXGRP)) == (S_ISGID | S_IXGRP) &&
--			 !in_group_p(inode->i_gid) &&
--			 !capable_wrt_inode_uidgid(dir, CAP_FSETID))
--			mode &= ~S_ISGID;
-+		else
-+			mode = mode_strip_sgid(dir, mode);
- 	} else
- 		inode->i_gid = current_fsgid();
- 	inode->i_mode = mode;
-@@ -2382,3 +2380,31 @@ int vfs_ioc_fssetxattr_check(struct inode *inode, const struct fsxattr *old_fa,
- 	return 0;
+@@ -2379,6 +2379,26 @@ int vfs_ioc_fssetxattr_check(struct inode *inode, const struct fsxattr *old_fa,
  }
  EXPORT_SYMBOL(vfs_ioc_fssetxattr_check);
-+
+ 
 +/**
-+ * mode_strip_sgid - handle the sgid bit for non-directories
-+ * @dir: parent directory inode
-+ * @mode: mode of the file to be created in @dir
++ * in_group_or_capable - check whether caller is CAP_FSETID privileged
++ * @inode:	inode to check
++ * @gid:	the new/current gid of @inode
 + *
-+ * If the @mode of the new file has both the S_ISGID and S_IXGRP bit
-+ * raised and @dir has the S_ISGID bit raised ensure that the caller is
-+ * either in the group of the parent directory or they have CAP_FSETID
-+ * in their user namespace and are privileged over the parent directory.
-+ * In all other cases, strip the S_ISGID bit from @mode.
++ * Check wether @gid is in the caller's group list or if the caller is
++ * privileged with CAP_FSETID over @inode. This can be used to determine
++ * whether the setgid bit can be kept or must be dropped.
 + *
-+ * Return: the new mode to use for the file
++ * Return: true if the caller is sufficiently privileged, false if not.
 + */
-+umode_t mode_strip_sgid(const struct inode *dir, umode_t mode)
++bool in_group_or_capable(const struct inode *inode, kgid_t gid)
 +{
-+	if ((mode & (S_ISGID | S_IXGRP)) != (S_ISGID | S_IXGRP))
-+		return mode;
-+	if (S_ISDIR(mode) || !dir || !(dir->i_mode & S_ISGID))
-+		return mode;
-+	if (in_group_p(dir->i_gid))
-+		return mode;
-+	if (capable_wrt_inode_uidgid(dir, CAP_FSETID))
-+		return mode;
-+
-+	return mode & ~S_ISGID;
++	if (in_group_p(gid))
++		return true;
++	if (capable_wrt_inode_uidgid(inode, CAP_FSETID))
++		return true;
++	return false;
 +}
-+EXPORT_SYMBOL(mode_strip_sgid);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 74e19bccbf73..527791e4860b 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1768,6 +1768,7 @@ extern long compat_ptr_ioctl(struct file *file, unsigned int cmd,
- extern void inode_init_owner(struct inode *inode, const struct inode *dir,
- 			umode_t mode);
- extern bool may_open_dev(const struct path *path);
-+umode_t mode_strip_sgid(const struct inode *dir, umode_t mode);
++
+ /**
+  * mode_strip_sgid - handle the sgid bit for non-directories
+  * @dir: parent directory inode
+@@ -2398,11 +2418,8 @@ umode_t mode_strip_sgid(const struct inode *dir, umode_t mode)
+ 		return mode;
+ 	if (S_ISDIR(mode) || !dir || !(dir->i_mode & S_ISGID))
+ 		return mode;
+-	if (in_group_p(dir->i_gid))
+-		return mode;
+-	if (capable_wrt_inode_uidgid(dir, CAP_FSETID))
++	if (in_group_or_capable(dir, dir->i_gid))
+ 		return mode;
+-
+ 	return mode & ~S_ISGID;
+ }
+ EXPORT_SYMBOL(mode_strip_sgid);
+diff --git a/fs/internal.h b/fs/internal.h
+index 06d313b9beec..0fe920d9f393 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -149,6 +149,7 @@ extern int vfs_open(const struct path *, struct file *);
+ extern long prune_icache_sb(struct super_block *sb, struct shrink_control *sc);
+ extern void inode_add_lru(struct inode *inode);
+ extern int dentry_needs_remove_privs(struct dentry *dentry);
++bool in_group_or_capable(const struct inode *inode, kgid_t gid);
  
  /*
-  * This is the "filldir" function type, used by readdir() to let
+  * fs-writeback.c
 -- 
 2.34.1
 
