@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEAE3C6FD1F
-	for <linux-xfs@archiver.kernel.org>; Sun, 19 Mar 2023 16:55:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 269A8C6FD1F
+	for <linux-xfs@archiver.kernel.org>; Sun, 19 Mar 2023 17:07:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230507AbjCSQzJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 19 Mar 2023 12:55:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38024 "EHLO
+        id S229504AbjCSRHe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 19 Mar 2023 13:07:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50350 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229496AbjCSQyo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 19 Mar 2023 12:54:44 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEFAB13D61
-        for <linux-xfs@vger.kernel.org>; Sun, 19 Mar 2023 09:54:42 -0700 (PDT)
+        with ESMTP id S229490AbjCSRHd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 19 Mar 2023 13:07:33 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3844019C7C
+        for <linux-xfs@vger.kernel.org>; Sun, 19 Mar 2023 10:07:32 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 35B34B80C87
-        for <linux-xfs@vger.kernel.org>; Sun, 19 Mar 2023 16:54:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD0D9C433D2;
-        Sun, 19 Mar 2023 16:54:39 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 98D75CE0F7F
+        for <linux-xfs@vger.kernel.org>; Sun, 19 Mar 2023 17:07:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEDCFC433EF;
+        Sun, 19 Mar 2023 17:07:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679244879;
-        bh=ph/PFUKzBv1P4mMVelz53lI7DqqnoelIze3LtQh7WmY=;
+        s=k20201202; t=1679245648;
+        bh=EjfrcAuhRMlXueLMrJaLeqEjVnpPs+z9BixEYoOLLvE=;
         h=Date:From:To:Cc:Subject:From;
-        b=JOFbcHUwHfz8xAFF/9MtVVBFBRR7RVQH5lcnH4pm44hhEDcm09WoYY/qU9pLrAVu5
-         ZprctX7/2FSD76q0kUn7FuazMr2F3LgIZ1aH7s+UQkqLj1OfkWI76msd8OIvWONLEQ
-         KBNbdg0TAP/HI9a0vwKgphA9/j7y21RrM433l9N8vO2kXybziBB/1ShDzo+op7nSI0
-         tLbV7Xq7sB8xv6fZ9XeTYpQZFYCVOPYusEc8U9gOS+ZmD0hSFtnlLY8QonKZ8fMHFN
-         Qd1IpFZC/HMO9CxkKQPUznsDoOZ05zQPRikk0ooJqLJZC74NhUrvXX1Ny8jl4ViiMy
-         lHH+/y/tinErQ==
-Date:   Sun, 19 Mar 2023 09:54:39 -0700
+        b=rdu+UNIUqlARlOK4WPJWPs8aikRcOrbHieBh+gmXu71eAzqiEeHagUIqAqZBXvVMv
+         pP3Qyuub89o6UrLTDRX5H7QM09MRgzzPO39TRVdN3RwyJ6rc+nReHV5DeSDBkIdhNJ
+         vQFNoVmPG13E9QGCRaxSSfBYuSc2XTZqbBe91IwzM0+w6X1psWQIRx8DVJ1MXFigCt
+         drk5pfW6y2ExrT+cjTlWXPzhs3W4AZjtTUpT/vNgsrWOiyOVR5KCxDTOa4ki13Hrke
+         mr2VbpXES69YKmRtIw+3MyrAUuXi37Eeej9KdF9t8dCuyiCqbXwEjMk85rT0iQTCI7
+         /KPJ4ML5bgrUQ==
+Date:   Sun, 19 Mar 2023 10:07:28 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs: pass the correct cursor to xfs_iomap_prealloc_size
-Message-ID: <20230319165439.GY11376@frogsfrogsfrogs>
+To:     djwong@kernel.org
+Cc:     david@fromorbit.com, dchinner@redhat.com, linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to e9b60c7f9713
+Message-ID: <167924555847.1683122.927802546974563473.stg-ugh@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -44,65 +44,54 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi folks,
 
-In xfs_buffered_write_iomap_begin, @icur is the iext cursor for the data
-fork and @ccur is the cursor for the cow fork.  Pass in whichever cursor
-corresponds to allocfork, because otherwise the xfs_iext_prev_extent
-call can use the data fork cursor to walk off the end of the cow fork
-structure.  Best case it returns the wrong results, worst case it does
-this:
+The for-next branch of the xfs-linux repository at:
 
-stack segment: 0000 [#1] PREEMPT SMP
-CPU: 2 PID: 3141909 Comm: fsstress Tainted: G        W          6.3.0-rc2-xfsx #6.3.0-rc2 7bf5cc2e98997627cae5c930d890aba3aeec65dd
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20171121_152543-x86-ol7-builder-01.us.oracle.com-4.el7.1 04/01/2014
-RIP: 0010:xfs_iext_prev+0x71/0x150 [xfs]
-RSP: 0018:ffffc90002233aa8 EFLAGS: 00010297
-RAX: 000000000000000f RBX: 000000000000000e RCX: 000000000000000c
-RDX: 0000000000000002 RSI: 000000000000000e RDI: ffff8883d0019ba0
-RBP: 989642409af8a7a7 R08: ffffea0000000001 R09: 0000000000000002
-R10: 0000000000000000 R11: 000000000000000c R12: ffffc90002233b00
-R13: ffff8883d0019ba0 R14: 989642409af8a6bf R15: 000ffffffffe0000
-FS:  00007fdf8115f740(0000) GS:ffff88843fd00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007fdf8115e000 CR3: 0000000357256000 CR4: 00000000003506e0
-Call Trace:
- <TASK>
- xfs_iomap_prealloc_size.constprop.0.isra.0+0x1a6/0x410 [xfs 619a268fb2406d68bd34e007a816b27e70abc22c]
- xfs_buffered_write_iomap_begin+0xa87/0xc60 [xfs 619a268fb2406d68bd34e007a816b27e70abc22c]
- iomap_iter+0x132/0x2f0
- iomap_file_buffered_write+0x92/0x330
- xfs_file_buffered_write+0xb1/0x330 [xfs 619a268fb2406d68bd34e007a816b27e70abc22c]
- vfs_write+0x2eb/0x410
- ksys_write+0x65/0xe0
- do_syscall_64+0x2b/0x80
- entry_SYSCALL_64_after_hwframe+0x46/0xb0
+git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-Found by xfs/538 in alwayscow mode, but this doesn't seem particular to
-that test.
+has just been updated.
 
-Fixes: 590b16516ef3 ("xfs: refactor xfs_iomap_prealloc_size")
-Actually-Fixes: 66ae56a53f0e ("xfs: introduce an always_cow mode")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_iomap.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  Most of this push are simple(ish) bugfixes, with one
+big caveat: I've merged a patch to selftest the dir/xattr name hash
+function so that we might catch any platforms that are miscompiling it
+and hence writing out bad xattr/directory trees.
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 69dbe7814128..285885c308bd 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -1090,9 +1090,12 @@ xfs_buffered_write_iomap_begin(
- 		 */
- 		if (xfs_has_allocsize(mp))
- 			prealloc_blocks = mp->m_allocsize_blocks;
--		else
-+		else if (allocfork == XFS_DATA_FORK)
- 			prealloc_blocks = xfs_iomap_prealloc_size(ip, allocfork,
- 						offset, count, &icur);
-+		else
-+			prealloc_blocks = xfs_iomap_prealloc_size(ip, allocfork,
-+						offset, count, &ccur);
- 		if (prealloc_blocks) {
- 			xfs_extlen_t	align;
- 			xfs_off_t	end_offset;
+The new head of the for-next branch is commit:
+
+e9b60c7f9713 pcpcntr: remove percpu_counter_sum_all()
+
+8 new commits:
+
+Darrick J. Wong (4):
+[6de4b1ab470f] xfs: try to idiot-proof the allocators
+[9eb775968b68] xfs: walk all AGs if TRYLOCK passed to xfs_alloc_vextent_iterate_ags
+[e6fbb7167ed0] xfs: add tracepoints for each of the externally visible allocators
+[3cfb9290da3d] xfs: test dir/attr hash when loading module
+
+Dave Chinner (4):
+[1470afefc3c4] cpumask: introduce for_each_cpu_or
+[8b57b11cca88] pcpcntrs: fix dying cpu summation race
+[7ba85fba47bd] fork: remove use of percpu_counter_sum_all
+[e9b60c7f9713] pcpcntr: remove percpu_counter_sum_all()
+
+Code Diffstat:
+
+fs/xfs/Makefile                |   1 +
+fs/xfs/libxfs/xfs_alloc.c      |  36 ++-
+fs/xfs/xfs_dahash_test.c       | 662 +++++++++++++++++++++++++++++++++++++++++
+fs/xfs/xfs_dahash_test.h       |  12 +
+fs/xfs/xfs_super.c             |   5 +
+fs/xfs/xfs_trace.h             |   7 +
+include/linux/cpumask.h        |  17 ++
+include/linux/find.h           |  37 +++
+include/linux/percpu_counter.h |   6 -
+kernel/fork.c                  |   5 -
+lib/find_bit.c                 |   9 +
+lib/percpu_counter.c           |  37 +--
+12 files changed, 799 insertions(+), 35 deletions(-)
+create mode 100644 fs/xfs/xfs_dahash_test.c
+create mode 100644 fs/xfs/xfs_dahash_test.h
