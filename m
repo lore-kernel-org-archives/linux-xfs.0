@@ -2,238 +2,112 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D56A4C74A5B
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Mar 2023 19:21:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7300AC7618A
+	for <linux-xfs@archiver.kernel.org>; Sun, 19 Mar 2023 00:19:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229488AbjCRTVI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 18 Mar 2023 15:21:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33130 "EHLO
+        id S229753AbjCSATg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 18 Mar 2023 20:19:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37548 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229541AbjCRTVH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Mar 2023 15:21:07 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D71E7687
-        for <linux-xfs@vger.kernel.org>; Sat, 18 Mar 2023 12:21:02 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D9A4CB80861
-        for <linux-xfs@vger.kernel.org>; Sat, 18 Mar 2023 19:21:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A37AC4339B;
-        Sat, 18 Mar 2023 19:20:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679167259;
-        bh=k3idzc2zTJ7xaAXIZqiGQPAgSsww4xkZPrUIQ2tOA+w=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Xlw9cOXvJV373/1T8RYD3UHc4oYOH3nKF8geogAcghF7VR23mZb+KuTpuv+w936Qp
-         YCozRuxUNKnVnwegb+n8+8pfHIiEyMVoiowPaP4akdb87+PCC6qM4CD7FMVcPuT8pf
-         gedGfBqLWRriWXHypXoll1VEywcDHfabpuCPsjZzfCvtvJr0rWctiedN16FwZ9xrt5
-         TebAyh/yP2lpKGbfc8sYohmm8p/ZHUNsruVCFHzfHc4D4vQC8ilwJnj1Q+jGLNh/Nw
-         aMc0ctYmeT6mvhtaCj1o1/B1nP3UZcqNI18zkmdcjBpKGqKA6aQxHgyc10/6wBcIYc
-         sCcUzMpz0WRiA==
-Date:   Sat, 18 Mar 2023 12:20:59 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Ritesh Harjani <ritesh.list@gmail.com>
-Cc:     shrikanth hegde <sshegde@linux.vnet.ibm.com>, dchinner@redhat.com,
-        linux-xfs@vger.kernel.org,
-        Srikar Dronamraju <srikar@linux.vnet.ibm.com>,
-        ojaswin@linux.ibm.com
-Subject: Re: xfs: system fails to boot up due to Internal error
- xfs_trans_cancel
-Message-ID: <20230318192059.GX11376@frogsfrogsfrogs>
-References: <20230317204418.GQ11376@frogsfrogsfrogs>
- <87pm969f6z.fsf@doe.com>
+        with ESMTP id S230078AbjCSAS5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Mar 2023 20:18:57 -0400
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CF9829417
+        for <linux-xfs@vger.kernel.org>; Sat, 18 Mar 2023 17:17:37 -0700 (PDT)
+Received: by mail-pf1-x434.google.com with SMTP id s8so4930466pfk.5
+        for <linux-xfs@vger.kernel.org>; Sat, 18 Mar 2023 17:17:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1679185027;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=hTG6T8IcrIzhOp1QcdN1+8G5gk6n0VecZcaFVMzA4MY=;
+        b=Z9tgles+3+yRiOSWI8ds0mVhFkpfsbifpWwkeFgpjJ2YrILYby5xSKJlDV6pUlo7Vk
+         4yNytS/VZlI7KopNJsrCn8WQ8tludsaZF57+hA3FdmOY9qlIEamhEYHJPmFh8pTeQYD+
+         xexRChu4rGYxAWR7uhkzlZfd1WZ6FRpgj2IqjE0PgQBGsEGWFtJxcHyzLXxSBNJMjkk8
+         YwZtU8rwfIBDOnMSGvOzUiRlZxn8ZZ1m7CwJo3m4tq4n+6I1DBFCGH7SU5dH3U64R70j
+         vfXfmO4/Ta18bytoKLjB2c3DjA4BUh++hkgtaDB3XHvQjt8gaH2VwdpT+qZBTI7QYU47
+         +hsg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679185027;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=hTG6T8IcrIzhOp1QcdN1+8G5gk6n0VecZcaFVMzA4MY=;
+        b=Q75gxxDli6ERWEQcIewl8XQsxlT5MMDUIF55k/3guUNi3hbyoh9EZtIwIJXzHZuvx5
+         56kaB1PfIqQ1cKBTAfbgGJ68GhcnpcvsY7uA1WKHM947YSKoyPJNqWqhHV/oFT5Xe2hD
+         s10SlLJkGVmYEu5J8xJtKTnx6gUEWvvG96uG1brKRr2AJQ1BinWr/VqemvfBVd00cQfr
+         fpcUvrZUrSxTEdcGHh9wxTs2O5X2W2H96tfb5uf+pcnye7rMIkUM9F+LNvQuscTobGef
+         D1iH2JgwqNOeK8hLPpz75ZkXuimK0nJ/OaW3Ur1DdVpjw/+138+TZidzPiz2Qqwnzc89
+         nAdA==
+X-Gm-Message-State: AO0yUKWz5bNUU0MNPBD569LNkp7dzdBkRfVfYLfQv6uluDzK7qwntLa5
+        Y7Min7nQd69Nm+rwfvmdccVzBtFWNkQDH+knJWs=
+X-Google-Smtp-Source: AK7set8P+EWiLSkoBC4FBP9N8TINYIl8LOkTuhskteqeAtpbdejvTVoUtTO8aNLOV3r8Ph7PN6olyQ==
+X-Received: by 2002:aa7:968f:0:b0:625:6e00:210d with SMTP id f15-20020aa7968f000000b006256e00210dmr10602202pfk.21.1679185027226;
+        Sat, 18 Mar 2023 17:17:07 -0700 (PDT)
+Received: from destitution (pa49-196-94-140.pa.vic.optusnet.com.au. [49.196.94.140])
+        by smtp.gmail.com with ESMTPSA id y5-20020aa78045000000b0062606b4ecb3sm3698448pfm.108.2023.03.18.17.17.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 18 Mar 2023 17:17:06 -0700 (PDT)
+Received: from dave by destitution with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1pdgjA-000NK4-0J;
+        Sun, 19 Mar 2023 11:16:48 +1100
+Date:   Sun, 19 Mar 2023 11:16:48 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Catherine Hoang <catherine.hoang@oracle.com>
+Cc:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH v1 0/4] setting uuid of online filesystems
+Message-ID: <ZBZUcGLcTSgKVXa5@destitution>
+References: <20230314042109.82161-1-catherine.hoang@oracle.com>
+ <20230314062847.GQ360264@dread.disaster.area>
+ <953CAB5C-E645-4BB2-88E2-E992C5CC565D@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87pm969f6z.fsf@doe.com>
+In-Reply-To: <953CAB5C-E645-4BB2-88E2-E992C5CC565D@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Mar 18, 2023 at 10:20:28PM +0530, Ritesh Harjani wrote:
-> "Darrick J. Wong" <djwong@kernel.org> writes:
-> 
-> > On Wed, Mar 15, 2023 at 10:20:37PM -0700, Darrick J. Wong wrote:
-> >> On Thu, Mar 16, 2023 at 10:16:02AM +0530, Ritesh Harjani wrote:
-> >> > "Darrick J. Wong" <djwong@kernel.org> writes:
-> >> > 
-> >> > Hi Darrick,
-> >> > 
-> >> > Thanks for your analysis and quick help on this.
-> >> > 
-> >> > >>
-> >> > >> Hi Darrick,
-> >> > >>
-> >> > >> Please find the information collected from the system. We added some
-> >> > >> debug logs and looks like it is exactly what is happening which you
-> >> > >> pointed out.
-> >> > >>
-> >> > >> We added a debug kernel patch to get more info from the system which
-> >> > >> you had requested [1]
-> >> > >>
-> >> > >> 1. We first breaked into emergency shell where root fs is first getting
-> >> > >> mounted on /sysroot as "ro" filesystem. Here are the logs.
-> >> > >>
-> >> > >> [  OK  ] Started File System Check on /dev/mapper/rhel_ltcden3--lp1-root.
-> >> > >>          Mounting /sysroot...
-> >> > >> [    7.203990] SGI XFS with ACLs, security attributes, quota, no debug enabled
-> >> > >> [    7.205835] XFS (dm-0): Mounting V5 Filesystem 7b801289-75a7-4d39-8cd3-24526e9e9da7
-> >> > >> [   ***] A start job is running for /sysroot (15s / 1min 35s)[   17.439377] XFS (dm-0): Starting recovery (logdev: internal)
-> >> > >> [  *** ] A start job is running for /sysroot (16s / 1min 35s)[   17.771158] xfs_log_mount_finish: Recovery needed is set
-> >> > >> [   17.771172] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:0
-> >> > >> [   17.771179] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:1
-> >> > >> [   17.771184] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:2
-> >> > >> [   17.771190] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:3
-> >> > >> [   17.771196] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:4
-> >> > >> [   17.771201] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:5
-> >> > >> [   17.801033] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:6
-> >> > >> [   17.801041] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:7
-> >> > >> [   17.801046] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:8
-> >> > >> [   17.801052] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:9
-> >> > >> [   17.801057] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:10
-> >> > >> [   17.801063] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:11
-> >> > >> [   17.801068] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:12
-> >> > >> [   17.801272] xlog_recover_iunlink_bucket: bucket: 13, agino: 3064909, ino: 3064909, iget ret: 0, previno:18446744073709551615, prev_agino:4294967295
-> >> > >>
-> >> > >> <previno, prev_agino> is just <-1 %ull and -1 %u> in above. That's why
-> >> > >> the huge value.
-> >> > >
-> >> > > Ok, so log recovery finds 3064909 and clears it...
-> >> > >
-> >> > >> [   17.801281] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:13
-> >> > >> [   17.801287] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:14
-> >> > >
-> >> > > <snip the rest of these...>
-> >> > >
-> >> > >> [   17.844910] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:3, bucket:62
-> >> > >> [   17.844916] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:3, bucket:63
-> >> > >> [   17.886079] XFS (dm-0): Ending recovery (logdev: internal)
-> >> > >> [  OK  ] Mounted /sysroot.
-> >> > >> [  OK  ] Reached target Initrd Root File System.
-> >> > >>
-> >> > >>
-> >> > >> 2. Then these are the logs from xfs_repair -n /dev/dm-0
-> >> > >> Here you will notice the same agi 3064909 in bucket 13 (from phase-2) which got also
-> >> > >> printed in above xlog_recover_iunlink_ag() function.
-> >> > >>
-> >> > >> switch_root:/# xfs_repair -n /dev/dm-0
-> >> > >> Phase 1 - find and verify superblock...
-> >> > >> Phase 2 - using internal log
-> >> > >>         - zero log...
-> >> > >>         - scan filesystem freespace and inode maps...
-> >> > >> agi unlinked bucket 13 is 3064909 in ag 0 (inode=3064909)
-> >> > >
-> >> > > ...yet here we find that 3064909 is still on the unlinked list?
-> >> > >
-> >> > > Just to confirm -- you ran xfs_repair -n after the successful recovery
-> >> > > above, right?
-> >> > >
-> >> > Yes, that's right.
-> >> > 
-> >> > >>         - found root inode chunk
-> >> > >> Phase 3 - for each AG...
-> >> > >>         - scan (but don't clear) agi unlinked lists...
-> >> > >>         - process known inodes and perform inode discovery...
-> >> > >>         - agno = 0
-> >> > >>         - agno = 1
-> >> > >>         - agno = 2
-> >> > >>         - agno = 3
-> >> > >>         - process newly discovered inodes...
-> >> > >> Phase 4 - check for duplicate blocks...
-> >> > >>         - setting up duplicate extent list...
-> >> > >>         - check for inodes claiming duplicate blocks...
-> >> > >>         - agno = 0
-> >> > >>         - agno = 2
-> >> > >>         - agno = 1
-> >> > >>         - agno = 3
-> >> > >> No modify flag set, skipping phase 5
-> >> > >> Phase 6 - check inode connectivity...
-> >> > >>         - traversing filesystem ...
-> >> > >>         - traversal finished ...
-> >> > >>         - moving disconnected inodes to lost+found ...
-> >> > >> Phase 7 - verify link counts...
-> >> > >> would have reset inode 3064909 nlinks from 4294967291 to 2
-> >> > >
-> >> > > Oh now that's interesting.  Inode on unlinked list with grossly nonzero
-> >> > > (but probably underflowed) link count.  That might explain why iunlink
-> >> > > recovery ignores the inode.  Is inode 3064909 reachable via the
-> >> > > directory tree?
-> >> > >
-> >> > > Would you mind sending me a metadump to play with?  metadump -ago would
-> >> > > be best, if filenames/xattrnames aren't sensitive customer data.
-> >> > 
-> >> > Sorry about the delay.
-> >> > I am checking for any permissions part internally.
-> >> > Meanwhile - I can help out if you would like me to try anything.
+On Thu, Mar 16, 2023 at 08:41:14PM +0000, Catherine Hoang wrote:
+> > On Mar 13, 2023, at 11:28 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > 
+> > On Mon, Mar 13, 2023 at 09:21:05PM -0700, Catherine Hoang wrote:
+> >> Hi all,
 > >> 
-> >> Ok.  I'll try creating a filesystem with a weirdly high refcount
-> >> unlinked inode and I guess you can try it to see if you get the same
-> >> symptoms.  I've finished with my parent pointers work for the time
-> >> being, so I might have some time tomorrow (after I kick the tires on
-> >> SETFSUUID) to simulate this and see if I can adapt the AGI repair code
-> >> to deal with this.
-> >
-> > If you uncompress and mdrestore the attached file to a blockdev, mount
-> > it, and run some creat() exerciser, do you get the same symptoms?  I've
-> > figured out how to make online fsck deal with it. :)
-> >
-> > A possible solution for runtime would be to make it so that
-> > xfs_iunlink_lookup could iget the inode if it's not in cache at all.
-> >
+> >> This series of patches implements a new ioctl to set the uuid of mounted
+> >> filesystems. Eventually this will be used by the 'xfs_io fsuuid' command
+> >> to allow userspace to update the uuid.
+> >> 
+> >> Comments and feedback appreciated!
+> > 
+> > What's the use case for this?
 > 
-> Hello Darrick, 
-> 
-> I did xfs_mdrestore the metadump you provided on a loop mounted
-> blockdev. I ran fsstress on the root dir of the mounted filesystem,
-> but I was unable to hit the issue.
-> 
-> I tried the same with the original FS metadump as well and I am unable
-> to hit the issue while running fsstress on the filesystem. 
-> 
-> I am thinking of identifying which file unlink operation was in progress
-> when we see the issue during mounting. Maybe that will help in
-> recreating the issue.
+> We want to be able to change the uuid on newly mounted clone vm images
+> so that each deployed system has a different uuid. We need to do this the
+> first time the system boots, but after the root fs is mounted so that fsuuid
+> can run in parallel with other service startup to minimize deployment times.
 
-Yeah, creating a bunch of O_TMPFILE files will exercise the unlinked
-lists, possibly enough to trip over the affected agi bucket.  See
-t_open_tmpfiles.c in the fstests repo.
+Why can't you do it offline immediately after the offline clone of
+the golden image? I mean, cloning images and setting up their
+contents is something the external orchestration software does
+and will always have to do, so i don't really understand why UUID
+needs to be modified at first mount vs at clone time. Can you
+describe why it actually needs to be done after first mount?
 
---D
+> >>  xfs: add XFS_IOC_SETFSUUID ioctl
+> >>  xfs: export meta uuid via xfs_fsop_geom
+> > 
+> > For what purpose does userspace ever need to know the sb_meta_uuid?
+> 
+> Userspace would need to know the meta uuid if we want to restore
+> the original uuid after it has been changed.
 
-> Although the xfs_repair -n does show a similar log of unlinked inode
-> with the metadump you provided.
-> 
-> root@ubuntu:~# xfs_repair -n -o force_geometry /dev/loop7
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - zero log...
->         - scan filesystem freespace and inode maps...
-> agi unlinked bucket 3 is 6979 in ag 0 (inode=6979)
-> agi unlinked bucket 4 is 6980 in ag 0 (inode=6980)
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan (but don't clear) agi unlinked lists...
->         - process known inodes and perform inode discovery...
->         - agno = 0
->         - process newly discovered inodes...
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
->         - check for inodes claiming duplicate blocks...
->         - agno = 0
-> No modify flag set, skipping phase 5
-> Phase 6 - check inode connectivity...
->         - traversing filesystem ...
->         - traversal finished ...
->         - moving disconnected inodes to lost+found ...
-> disconnected inode 6979, would move to lost+found
-> disconnected inode 6980, would move to lost+found
-> Phase 7 - verify link counts...
-> would have reset inode 6979 nlinks from 5555 to 1
-> would have reset inode 6980 nlinks from 0 to 1
-> No modify flag set, skipping filesystem flush and exiting.
-> 
-> Thanks again for the help. Once I have more info I will update the
-> thread!
-> 
-> -ritesh
+I don't understand why you'd want to restore the original UUID given
+the use case you've describe. Can you explain the situation where
+you want to return a cloned image to the original golden image UUID?
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
