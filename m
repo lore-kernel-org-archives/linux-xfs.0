@@ -2,69 +2,83 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9F1EC6FD1D
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Mar 2023 14:14:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7E47C6FD1D
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Mar 2023 15:02:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231691AbjCTOOz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Mar 2023 10:14:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40666 "EHLO
+        id S231623AbjCTPCV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Mar 2023 11:02:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46150 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231627AbjCTOOn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Mar 2023 10:14:43 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0610210427;
-        Mon, 20 Mar 2023 07:14:42 -0700 (PDT)
+        with ESMTP id S231630AbjCTPBp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Mar 2023 11:01:45 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65B0E3C25;
+        Mon, 20 Mar 2023 07:58:25 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 4F140B80E96;
-        Mon, 20 Mar 2023 14:14:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B1FAC433D2;
-        Mon, 20 Mar 2023 14:14:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1679321679;
-        bh=IjDIoQRDKocMSpfFmpafEm600G0Xo6VJNX8CNConEtU=;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 451CD61582;
+        Mon, 20 Mar 2023 14:58:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91810C433D2;
+        Mon, 20 Mar 2023 14:58:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1679324304;
+        bh=9NBq/XA6M1Wf/4O3DnQ3RUmHZrzWtpFs7WveRpHGKh8=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=cOLj7rPhAYJA34rdQZ8O0jOT8wY0u7o1nN3VEqXmC/rSnLikC97ZN+MV0jygudP8y
-         OsAQlKSxzk8kSDLg2fecK864vFvu0E0JxzI2RNliWgLn7IlSHk5aXModpk8lXjcl6k
-         lefi4zU9ZB1NRLnH+gKjZg/eeDGUAbQV4DZoMq4E=
-Date:   Mon, 20 Mar 2023 15:13:47 +0100
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Sasha Levin <sashal@kernel.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Leah Rumancik <leah.rumancik@gmail.com>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        Christian Brauner <brauner@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: Re: [PATCH 5.10 00/15] xfs backports for 5.10.y (from v5.15.103)
-Message-ID: <ZBhqG3pAbPZR++ae@kroah.com>
-References: <20230318101529.1361673-1-amir73il@gmail.com>
+        b=WuY/xnYIk2oPVsMR6H7VEiU00Me7r/Ic6JxUQVEt5F6VKPyDmfWwGQRn+oB4CIIdX
+         MtLEJEbeEzGlPevscuS4+n+w5847wrreEaUMkfI2Ly/2zLohF77h6c8wTA91xLmR/Y
+         97pfSZYY/kBltknpTcaIQxiwWOoq0FdmNnK0oFH+jDEoGox+N+bo8mhDpwQqppUwqB
+         wlKMwuVnP8g/QAcLsnFTUQhmYTWAqle+cVjIr5Sj+HrHJNhlUQ8Ul9U9j4slYClgsB
+         xnXgVU8ZGlhOP/NMt2wnZLcC5pkPsAreX4MqJBmOqM0SrIgtofF+dZYJ3F2nuK3h1R
+         ERwc9h2+5T50A==
+Date:   Mon, 20 Mar 2023 07:58:24 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Yangtao Li <frank.li@vivo.com>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2, RESEND 07/10] xfs: convert to kobject_del_and_put()
+Message-ID: <20230320145824.GZ11376@frogsfrogsfrogs>
+References: <20230319092641.41917-1-frank.li@vivo.com>
+ <20230319092641.41917-7-frank.li@vivo.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230318101529.1361673-1-amir73il@gmail.com>
+In-Reply-To: <20230319092641.41917-7-frank.li@vivo.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Mar 18, 2023 at 12:15:14PM +0200, Amir Goldstein wrote:
-> Greg,
+On Sun, Mar 19, 2023 at 05:26:38PM +0800, Yangtao Li wrote:
+> Use kobject_del_and_put() to simplify code.
 > 
-> Following backports catch up with recent 5.15.y xfs backports.
-> 
-> Patches 1-3 are the backports from the previous 5.15 xfs backports
-> round that Chandan requested for 5.4 [1].
-> 
-> Patches 4-14 are the SGID fixes that I collaborated with Leah [2].
-> Christian has reviewed the backports of his vfs patches to 5.10.
-> 
-> Patch 15 is a fix for a build warning caused by one of the SGID fixes
-> that you applied to 5.15.y.
-> 
-> This series has gone through the usual xfs test/review routine.
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: "Rafael J. Wysocki" <rafael@kernel.org>
+> Signed-off-by: Yangtao Li <frank.li@vivo.com>
 
-All now queued up, thanks.
+Looks good to me,
+Acked-by: Darrick J. Wong <djwong@kernel.org>
 
-greg k-h
+--D
+
+> ---
+>  fs/xfs/xfs_sysfs.h | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_sysfs.h b/fs/xfs/xfs_sysfs.h
+> index 148893ebfdef..e2ff063e2c29 100644
+> --- a/fs/xfs/xfs_sysfs.h
+> +++ b/fs/xfs/xfs_sysfs.h
+> @@ -48,8 +48,7 @@ static inline void
+>  xfs_sysfs_del(
+>  	struct xfs_kobj	*kobj)
+>  {
+> -	kobject_del(&kobj->kobject);
+> -	kobject_put(&kobj->kobject);
+> +	kobject_del_and_put(&kobj->kobject);
+>  	wait_for_completion(&kobj->complete);
+>  }
+>  
+> -- 
+> 2.35.1
+> 
