@@ -2,137 +2,172 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57A38C6FD1D
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Mar 2023 18:57:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B2ACC6FD1C
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Mar 2023 21:43:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230347AbjCTS5N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Mar 2023 14:57:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45890 "EHLO
+        id S229523AbjCTVnd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Mar 2023 17:43:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229837AbjCTS4k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Mar 2023 14:56:40 -0400
-Received: from APC01-PSA-obe.outbound.protection.outlook.com (mail-psaapc01on2091.outbound.protection.outlook.com [40.107.255.91])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E48443402B;
-        Mon, 20 Mar 2023 11:49:13 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=hG9EyKuYVXK2FEq5RZeydidXEWFSsxMjwVgkpWwVc1o35AsRX1LIXe19vJ9J3pQIZqj52RGqw46Og4IgQ6VVJQHT1o/uryQ1aMJ42ExT4obWWH0jjjW0UT0O4QqzvwR6LSFB3e8AvyZpk66qzc2uEQ+xpaLpN1fOkVaM2E3/nuOsRbLPUakbYk2hZAEfV3VFFGwjbA5J0M4mdA+eoSPdIWme9xxNNMyfc8uZ0Z1/8oTc/P/cexdikBvn34ImpamSv6JyB0/SV5kb2eM5o/FkB1HgxIUfSdoyWHpusKMtQ8KB97zRuKom1+IXSjhXcKiHFzerg46ipQmEQwrRR6Sw1w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=WV8vWGKFQ2SpsYCXDRkcEes8uHuerA+1iOZq5yPEi9w=;
- b=GQX1Ts4npaLJt5gqRsKm7gaKCbH/lxAkZWt2OlIV8e4srd0lz1s1dVDiAF3WB04DNEouS80va+uEvho85uDWyXX8VB/G/pL5jgSBSbBLo7K97Io5mULnmM2xLHPQ7AZUfjYlFWxGxMU6SbHDETct9f0V6PkD275gAaXKFJdE5TXgUH4wyHj3bHKAgbSjBBqO8P7Y0Ogp92/e8JE77dY4f+3kryxd4vFwwBQzU0mS9t1Ru1xxGnBX0tTLq0R9vKdYZ76JD4pjx3RSBGvtux4BhseTTPH4RWHo0k6F1i2tiAHti6I7KSE8lcq9FQBVArzN/bEzJ15BFY63AgM/sda0mw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
- dkim=pass header.d=vivo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WV8vWGKFQ2SpsYCXDRkcEes8uHuerA+1iOZq5yPEi9w=;
- b=WOrVJArZDb8AJP2kssBj+BelX5HEigC3oWWGcHLHLBMlaXI79Ps40P1lVBP5b2e7Wz9h9n1nQOTrcruYZ06Gj/A7ODm2lqnlnSuMxxcgxVrH9TfMjtH6qZ8Ikb/ENQl3YwsmFCR19L3W2ocYCgSZ0Ss5nFeen026ou2opyH7focFS4kVIEufNSVV29cbabMxcHob0O4VavxoHLgMWpXpI7dTWXdiMxvEJF4vJova1ynFMdGeuTBnTaHHVcbEc8Rn2AiKoD6lEC2ZEoDCyGvkaoaJSgE03VafKUihgNoxTaQ19B4ZqYiNRhxCZQiKz4EVbVS2e+eukarQ5+zIYVuSCg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=vivo.com;
-Received: from SEZPR06MB5269.apcprd06.prod.outlook.com (2603:1096:101:78::6)
- by SI2PR06MB4121.apcprd06.prod.outlook.com (2603:1096:4:fe::9) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6178.37; Mon, 20 Mar 2023 18:47:58 +0000
-Received: from SEZPR06MB5269.apcprd06.prod.outlook.com
- ([fe80::daf6:5ebb:a93f:1869]) by SEZPR06MB5269.apcprd06.prod.outlook.com
- ([fe80::daf6:5ebb:a93f:1869%9]) with mapi id 15.20.6178.037; Mon, 20 Mar 2023
- 18:47:58 +0000
-From:   Yangtao Li <frank.li@vivo.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Yangtao Li <frank.li@vivo.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [RESEND,PATCH v2 07/10] xfs: convert to kobject_del_and_put()
-Date:   Tue, 21 Mar 2023 02:47:26 +0800
-Message-Id: <20230320184730.56475-6-frank.li@vivo.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20230320184730.56475-1-frank.li@vivo.com>
-References: <20230320184730.56475-1-frank.li@vivo.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SG2PR06CA0215.apcprd06.prod.outlook.com
- (2603:1096:4:68::23) To SEZPR06MB5269.apcprd06.prod.outlook.com
- (2603:1096:101:78::6)
+        with ESMTP id S229799AbjCTVnb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Mar 2023 17:43:31 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7C7210410
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Mar 2023 14:43:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1679348583; x=1710884583;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=bxVzq8suDNih9SH1Ok62kaz7FvxQWlE5bz197aYsbjU=;
+  b=GAi8OfHK5iK3yFew3kRfVThA/7TKHAReN+FNHQj8/pAPIA0eA7juGCDR
+   dmZKWVI8KsHV0Ln7LqULjtjIg9/wAIUk1MHal8FN1UMxGPru0NRGBQA2+
+   tk7DgpjpSFfBVRVW7q0SjOBGxHIA808g7eKAR0fx1pkDDH8iHYcG7LxgM
+   TAQPjOXvM69lCFpOPfwKrTSr4Qej73zNAvk8i2FCvotS5Uy2piQp395Xe
+   tL0vdLVJ4rY54autdgfSK0xGhI8X8RpWA37Qnok3noMPiIh4U21rLrl3d
+   Rm8ET6C8AHxcTnYrK3w/fLSWdmdtqQ90pUMOwCrNZMoU3LityGXiCwyK3
+   A==;
+X-IronPort-AV: E=Sophos;i="5.98,276,1673884800"; 
+   d="scan'208";a="231047320"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 21 Mar 2023 05:39:07 +0800
+IronPort-SDR: eJoowxaZszifzcRx5ZZXeSnEYtgAgMPSjs2sQ+hNurVMXDxXE8AftN5zbVT26YeVAO+lwfk80H
+ ji08/fxTdGOULi405IKBPNEc0kDc6l53G0f0miI//7hoes5xPf66a8+JmY28qA4fqmObEXtpHw
+ owJjsMFOzJwt6eVDZBdRAILGnF+frH99dm/xmSVKE5JmgsBrNIZFIJGoXiGZy84V7PI5yOHDms
+ i8APDEZ6RM3ikypYfEg8ikxMPcI7ZU0aoQD/mArcXmM4OUUn+49byhgE7XBuSbp+iUax/o09Wg
+ 8kg=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Mar 2023 13:49:46 -0700
+IronPort-SDR: B2WMyQpVgE0B6LQMXQJnUXsm4fBRE9PoDU8og1ZUT5RiWs9vjf4JSHCVdNDHxAul0ZFrxhNJL3
+ 0yZrh1Xjm7cfOmedEFJFd8Tn0hKgsPMmJmWaLgzAmqJRGSZfnUBUwPgAQm8HMZVFPTFLVwbT2f
+ rskFwJUtLYQeooyCFYS8G4luwiaV2lLc2CTS5caHt09fjbqn398BzvBOLa1PlCSt4N0xY+M54g
+ E+N665kprNTzjxlsdFLqHsUNJmcqhGBxqAcE5Vb3AmyJ4jhkaS4XgMP1yqmMRwV+WD1KCmyxQS
+ EDE=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 20 Mar 2023 14:39:07 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4PgSmW1Tnfz1RtW4
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Mar 2023 14:39:07 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1679348345; x=1681940346; bh=bxVzq8suDNih9SH1Ok62kaz7FvxQWlE5bz1
+        97aYsbjU=; b=EKxs8rpUot/qFRHAvND09IIAv6cqU/2Lev47PpifnoY6Vn42PvZ
+        bLqMSLk5W+AyQuqTGKwodJfY4iDfhinl9cyIK7N2mtXEWEbGsMTiKxFf0DCuYwfv
+        U7tD4WDxe1pbv3HNUfmVAdcHrTAMKvexZTU0GM1jYO4oNPGmPiD77lxKs2Zw8Hzb
+        PwIdTneUr52J5sAiu9A7XMDGoEBHZesZf8Ek4BS/umk2gVFaA1nuC+gmt+D5Qto6
+        f5pqaIAayhxw2wlTZV+cAvKH6KJ3w/adruI7wi3ZwobRCy9apzq/Jd2TLBhGAwdK
+        dxo6IBbJ/jukaj9W89Dx0kqPLMgyapwzAcw==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 2FpxnDDvMRs3 for <linux-xfs@vger.kernel.org>;
+        Mon, 20 Mar 2023 14:39:05 -0700 (PDT)
+Received: from [10.225.163.91] (unknown [10.225.163.91])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4PgSmM4CNrz1RtVm;
+        Mon, 20 Mar 2023 14:38:59 -0700 (PDT)
+Message-ID: <2229e074-d78e-3bd5-bf06-a53e9ad57d02@opensource.wdc.com>
+Date:   Tue, 21 Mar 2023 06:38:58 +0900
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SEZPR06MB5269:EE_|SI2PR06MB4121:EE_
-X-MS-Office365-Filtering-Correlation-Id: a7977c57-0b4e-4d86-ddef-08db29739f8d
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: UnnyBwBRBrmtfPVb5KhtGQvPGc/t5LsUDmQjNcT3YK7UuJHeG+bVkAcHzE+qDt6lZQel9R95cAZInHf4qs/2x/11aKPxVJK9wqG0R+jBdQcm6APxqg1QIQ4yS3P8pGJEycaXJ7mxcqNSqebgPhBHJ0SSwMc0vlPJXjzCGj0LylcQDIvY8mMXbqeqP66fWDH1CYIvXTs+yEd5ZzmdGZ3ubI4eEilO6Yv4p4QzQd1tQDjbthzXkpsgot0G3rreannNeoCAOFmsfjRJR9/AoCG2i8jCT5Nr92ZvmhzhX3TorzAAS+k6T8zSe8dMVZBfX5H6ohpCOu531S1jVKHN/iQ7Q00vfZqzxPU73/kRqDx4yGlCd/U6jkv+XvALGpmnJHywYiN+e6XWnUHNPJ7OtMcZJLKIdmW9RqQO4YSWEE3Mh+WdjE2pUihEUq0Z8tA5duYs9W5pOiz0fyn5R0ON8Om2EbmSaFvDM2ObJ5DLZ7mMvrIGRH9K4rE8FcmYPRTUNgRSYeRF5tnd0bw6DzeTj3ECfgzQZWJzFqCx7Ujw/JXih7fUZcCwmzmDmIJaT7MIL6fJ9PdcawnHMT8HaoAEUjT90aagQifDtHQtJjeHeY+E11ylKofVc9OtG5o0h9hsaJp35ITp4x2hRs1fpe/ptcb59u7kYvAc3/kk0f5n0zbEC7Y+hzs78bnC2WUz+UA++UJSGnKutTLFUXXwKJ4Q7/UXCA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SEZPR06MB5269.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(4636009)(376002)(136003)(396003)(39860400002)(366004)(346002)(451199018)(86362001)(36756003)(52116002)(316002)(4326008)(83380400001)(6916009)(66946007)(478600001)(66556008)(54906003)(8676002)(186003)(66476007)(6486002)(26005)(6506007)(6512007)(2616005)(6666004)(1076003)(38350700002)(38100700002)(5660300002)(4744005)(8936002)(41300700001)(2906002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?iVHrZ4jDDFrrQRlRGVQJFw0N1anWlP8+Lva3JBIgzMbMIWRP6EMYtVwh0JhC?=
- =?us-ascii?Q?I6YHXAo5JjvnsYMrXzhMcg/hkMiittw9Zk31vFWV6/E+Xiv/gtrKo68BZ19x?=
- =?us-ascii?Q?pRjxVle+yKRAQjsf6fA08NA1GEVJlLdt2X+HDBjtpdLo9um9OBYK52iV3cpe?=
- =?us-ascii?Q?dMFGyvL4KlFEwC2FGpf3bpLwQ1b4SvOQQXmpRD5Dz3s4X5KTCVL8khv4XeGx?=
- =?us-ascii?Q?NfDSDoOmUKWtXQreKS3yYaN3sFvjGCmt3n0aC9NF10aUW/Td9R1SLqyhMmla?=
- =?us-ascii?Q?RFFFfjXASgBy9aVo78o8IkqXQUbuCL672b++43bzRXjlUM/F9KZiGmHRFl80?=
- =?us-ascii?Q?h5zaTGsuopJvmFDBjoojd7y8FkjhOni8r314X4HgT4rbLWz+jfUPRorpMLIK?=
- =?us-ascii?Q?OXnz4p1/D6kjucFRILtjy02OY3lI/7+o3kJP/RW3ypHt+6VqMfqcCAKEODFT?=
- =?us-ascii?Q?UkS3A/RJV8SWb3nwn3o39QKS7XIlbr3gU66XOJ6VgfxV+7VLGNev7E9h1r8a?=
- =?us-ascii?Q?CDQrW+LXNEDs029vLmwHsWgEj/0ktxKUFYUpR7dxkuWUyqk2HkMiK0QoETI5?=
- =?us-ascii?Q?Of9yfdPtPuVro5U+jcbcZkC3Qh95mSFAoHyC6bTwyWEvE7xeUp+kTGyXVfqG?=
- =?us-ascii?Q?mwyjOG9sR4MOzPsC3F7gRaEPb9v1bfoEaDucAmu3UJPkWWinvxnlLEAMG4+y?=
- =?us-ascii?Q?RAuzSxEofF0euBDgCTE+bGwZ5F99frsPEo2dJUCQ3Up0GM6a0DiYateTduHj?=
- =?us-ascii?Q?PBiNAD3tUYLzqCOP3hlHGaoqc4x4O4N4GYLsIr1duXcSZJhPeHkcXCnuEaCu?=
- =?us-ascii?Q?csf5DjLQEudII+JkgESnBMGZZDSOFXm75to74ozLIUAC5IDhga9kEyl9veFg?=
- =?us-ascii?Q?WmZfjy0acnz4mKcwbgh8K70eRhEKPycvlbX5Zg1pX6X0IQR0Hi5HdSIQz6OR?=
- =?us-ascii?Q?wYLEqQBE8dWahlP8WVqMiPQdTRzZwzbdPPt7Iaq/NCtMLkBumyZDK9P/USqH?=
- =?us-ascii?Q?yERVz+VBLvEMvoUceteaHqLPv4GHCrw1p8R6MYlIt3pI5TrE+RnTQKQphU3e?=
- =?us-ascii?Q?mMFl+tCUObEMxvGyB1PPaIoUpF/LerUWyUXn1N6bvqo9YkBXtngy8/Lb2LQ+?=
- =?us-ascii?Q?cvFFgDqYmUT9Z9KxQcOlgLDyZjpm1AvxksFiGf1sC8DyZNaghfgEFayswU9W?=
- =?us-ascii?Q?o2EpcHK5gai/7rfHVODq8q0BPULDwsjrFJc1ByxSjCuetGnoluvUlQL9pcZQ?=
- =?us-ascii?Q?KYjFB3eIgnVm10e7D/gZu/LMShkrI5gD6AbB+NZ7t6g3QAmAEgoxEYiczQHG?=
- =?us-ascii?Q?RpRP5MO8tfrmlXJ1gyLSo1rsInj+vUTmzE46wghoSDYBvM/KUyO76rk18Ywn?=
- =?us-ascii?Q?Em2bYr8halxDGMWgyMcFsh25YL9CgOqE3anTqzJyq5CaChvcOaldkUVyWWQm?=
- =?us-ascii?Q?UCzszQlK62gRnA8lQpR1qMEG6RDqnaioQBec0Vn9jBV1tTcbMRPr5ILwVNEo?=
- =?us-ascii?Q?XOAjjs1RIJLWjZ6rR9/0XRzvbJwl5+71/EoTJ2tu6FhVgVYNALvbNApi0e/Z?=
- =?us-ascii?Q?xmz7JrWgAIxrGKgw+BK+IxI5YXXMv+3TmXA40MlI?=
-X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a7977c57-0b4e-4d86-ddef-08db29739f8d
-X-MS-Exchange-CrossTenant-AuthSource: SEZPR06MB5269.apcprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Mar 2023 18:47:57.9940
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: wkvaLXGdjGQtLAUJ7Kctn/piOU5FWdyXcCl/rcwUon4Dn2gUIURsRPeDla6TlUuR6RhNYYD7xNtT+NPrP+woPg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SI2PR06MB4121
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.0
+Subject: Re: [RESEND,PATCH v2 01/10] kobject: introduce kobject_del_and_put()
+Content-Language: en-US
+To:     Yangtao Li <frank.li@vivo.com>, clm@fb.com, josef@toxicpanda.com,
+        dsterba@suse.com, xiang@kernel.org, chao@kernel.org,
+        huyue2@coolpad.com, jefflexu@linux.alibaba.com, jaegeuk@kernel.org,
+        trond.myklebust@hammerspace.com, anna@kernel.org,
+        konishi.ryusuke@gmail.com, mark@fasheh.com, jlbec@evilplan.org,
+        joseph.qi@linux.alibaba.com, richard@nod.at, djwong@kernel.org,
+        naohiro.aota@wdc.com, jth@kernel.org, gregkh@linuxfoundation.org,
+        rafael@kernel.org
+Cc:     linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, ocfs2-devel@oss.oracle.com,
+        linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+References: <20230320184657.56198-1-frank.li@vivo.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20230320184657.56198-1-frank.li@vivo.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Use kobject_del_and_put() to simplify code.
+On 3/21/23 03:46, Yangtao Li wrote:
+> There are plenty of using kobject_del() and kobject_put() together
+> in the kernel tree. This patch wraps these two calls in a single helper.
+> 
+> Signed-off-by: Yangtao Li <frank.li@vivo.com>
+> ---
+> v2:
+> -add kobject_del_and_put() users
+> resend patchset to gregkh, Rafael and Damien
+>  include/linux/kobject.h |  1 +
+>  lib/kobject.c           | 17 +++++++++++++++--
+>  2 files changed, 16 insertions(+), 2 deletions(-)
+> 
+> diff --git a/include/linux/kobject.h b/include/linux/kobject.h
+> index bdab370a24f4..782d4bd119f8 100644
+> --- a/include/linux/kobject.h
+> +++ b/include/linux/kobject.h
+> @@ -111,6 +111,7 @@ extern struct kobject *kobject_get(struct kobject *kobj);
+>  extern struct kobject * __must_check kobject_get_unless_zero(
+>  						struct kobject *kobj);
+>  extern void kobject_put(struct kobject *kobj);
+> +extern void kobject_del_and_put(struct kobject *kobj);
+>  
+>  extern const void *kobject_namespace(const struct kobject *kobj);
+>  extern void kobject_get_ownership(const struct kobject *kobj,
+> diff --git a/lib/kobject.c b/lib/kobject.c
+> index 6e2f0bee3560..8c0293e37214 100644
+> --- a/lib/kobject.c
+> +++ b/lib/kobject.c
+> @@ -731,6 +731,20 @@ void kobject_put(struct kobject *kobj)
+>  }
+>  EXPORT_SYMBOL(kobject_put);
+>  
+> +/**
+> + * kobject_del_and_put() - Delete kobject.
+> + * @kobj: object.
+> + *
+> + * Unlink kobject from hierarchy and decrement the refcount.
+> + * If refcount is 0, call kobject_cleanup().
+> + */
+> +void kobject_del_and_put(struct kobject *kobj)
+> +{
+> +	kobject_del(kobj);
+> +	kobject_put(kobj);
+> +}
+> +EXPORT_SYMBOL_GPL(kobject_del_and_put);
 
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Signed-off-by: Yangtao Li <frank.li@vivo.com>
-Acked-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_sysfs.h | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Why not make this an inline helper defined in include/linux/kobject.h instead of
+a new symbol ?
 
-diff --git a/fs/xfs/xfs_sysfs.h b/fs/xfs/xfs_sysfs.h
-index 148893ebfdef..e2ff063e2c29 100644
---- a/fs/xfs/xfs_sysfs.h
-+++ b/fs/xfs/xfs_sysfs.h
-@@ -48,8 +48,7 @@ static inline void
- xfs_sysfs_del(
- 	struct xfs_kobj	*kobj)
- {
--	kobject_del(&kobj->kobject);
--	kobject_put(&kobj->kobject);
-+	kobject_del_and_put(&kobj->kobject);
- 	wait_for_completion(&kobj->complete);
- }
- 
+> +
+>  static void dynamic_kobj_release(struct kobject *kobj)
+>  {
+>  	pr_debug("kobject: (%p): %s\n", kobj, __func__);
+> @@ -874,8 +888,7 @@ void kset_unregister(struct kset *k)
+>  {
+>  	if (!k)
+>  		return;
+> -	kobject_del(&k->kobj);
+> -	kobject_put(&k->kobj);
+> +	kobject_del_and_put(&k->kobj);
+>  }
+>  EXPORT_SYMBOL(kset_unregister);
+>  
+
 -- 
-2.35.1
+Damien Le Moal
+Western Digital Research
 
