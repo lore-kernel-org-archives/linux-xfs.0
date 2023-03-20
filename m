@@ -2,71 +2,69 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63CFDC7618A
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Mar 2023 13:59:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9F1EC6FD1D
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Mar 2023 14:14:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230327AbjCTN67 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Mar 2023 09:58:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45184 "EHLO
+        id S231691AbjCTOOz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Mar 2023 10:14:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40666 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231433AbjCTN6o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Mar 2023 09:58:44 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A9807DAC;
-        Mon, 20 Mar 2023 06:58:42 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id DC1B868AFE; Mon, 20 Mar 2023 14:58:38 +0100 (CET)
-Date:   Mon, 20 Mar 2023 14:58:38 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Hugh Dickins <hughd@google.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-afs@lists.infradead.org, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, cluster-devel@redhat.com,
-        linux-mm@kvack.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nilfs@vger.kernel.org
-Subject: Re: [PATCH 4/7] shmem: remove shmem_get_partial_folio
-Message-ID: <20230320135838.GA16060@lst.de>
-References: <20230307143410.28031-1-hch@lst.de> <20230307143410.28031-5-hch@lst.de> <9d1aaa4-1337-fb81-6f37-74ebc96f9ef@google.com>
+        with ESMTP id S231627AbjCTOOn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Mar 2023 10:14:43 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0610210427;
+        Mon, 20 Mar 2023 07:14:42 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 4F140B80E96;
+        Mon, 20 Mar 2023 14:14:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B1FAC433D2;
+        Mon, 20 Mar 2023 14:14:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1679321679;
+        bh=IjDIoQRDKocMSpfFmpafEm600G0Xo6VJNX8CNConEtU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=cOLj7rPhAYJA34rdQZ8O0jOT8wY0u7o1nN3VEqXmC/rSnLikC97ZN+MV0jygudP8y
+         OsAQlKSxzk8kSDLg2fecK864vFvu0E0JxzI2RNliWgLn7IlSHk5aXModpk8lXjcl6k
+         lefi4zU9ZB1NRLnH+gKjZg/eeDGUAbQV4DZoMq4E=
+Date:   Mon, 20 Mar 2023 15:13:47 +0100
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Sasha Levin <sashal@kernel.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Leah Rumancik <leah.rumancik@gmail.com>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        Christian Brauner <brauner@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: Re: [PATCH 5.10 00/15] xfs backports for 5.10.y (from v5.15.103)
+Message-ID: <ZBhqG3pAbPZR++ae@kroah.com>
+References: <20230318101529.1361673-1-amir73il@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <9d1aaa4-1337-fb81-6f37-74ebc96f9ef@google.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20230318101529.1361673-1-amir73il@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Mar 19, 2023 at 10:19:21PM -0700, Hugh Dickins wrote:
-> I thought this was fine at first, and of course it's good for all the
-> usual cases; but not for shmem_get_partial_folio()'s awkward cases.
+On Sat, Mar 18, 2023 at 12:15:14PM +0200, Amir Goldstein wrote:
+> Greg,
 > 
-> Two issues with it.
+> Following backports catch up with recent 5.15.y xfs backports.
 > 
-> One, as you highlight above, the possibility of reading more swap
-> unnecessarily.  I do not mind if partial truncation entails reading
-> a little unnecessary swap; but I don't like the common case of
-> truncation to 0 to entail that; even less eviction; even less
-> unmounting, when eviction of all risks reading lots of swap.
-> The old code behaved well at i_size 0, the new code not so much.
+> Patches 1-3 are the backports from the previous 5.15 xfs backports
+> round that Chandan requested for 5.4 [1].
+> 
+> Patches 4-14 are the SGID fixes that I collaborated with Leah [2].
+> Christian has reviewed the backports of his vfs patches to 5.10.
+> 
+> Patch 15 is a fix for a build warning caused by one of the SGID fixes
+> that you applied to 5.15.y.
+> 
+> This series has gone through the usual xfs test/review routine.
 
-True.  We could restore that by doing the i_size check for SGP_FIND,
-though.
+All now queued up, thanks.
 
-> Replacing shmem_get_partial_folio() by SGP_FIND was a good direction
-> to try, but it hasn't worked out.  I tried to get SGPs to work right
-> for it before, when shmem_get_partial_page() was introduced; but I
-> did not manage to do so.  I think we have to go back to how this was.
-
-Hmm, would be sad to lose this entirely.  One thing I though about
-but didn't manage to do, is to rework how the SGP_* flags works.
-Right now they are used as en enum, and we actually do numerical
-comparisms on them, which is highly confusing.  To be it seems like
-having actual flags that can be combined and have useful names
-would seem much better.  But I did run out patience for finding good
-names and figuring out what would be granular enough behavior
-for such flags.
-
-e.g. one would be for limiting to i_size, one for allocating new
-folios if none was found, etc.
+greg k-h
