@@ -2,286 +2,253 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9D03C6FD1D
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Mar 2023 15:14:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFD49C7619A
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Mar 2023 17:04:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231418AbjCUPOJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Mar 2023 11:14:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60070 "EHLO
+        id S230325AbjCUREC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Mar 2023 13:04:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56566 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230308AbjCUPOB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Mar 2023 11:14:01 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 027FC5261;
-        Tue, 21 Mar 2023 08:13:42 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 03F23B817C0;
-        Tue, 21 Mar 2023 15:13:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B76D0C433EF;
-        Tue, 21 Mar 2023 15:13:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679411619;
-        bh=0Iwy/vDqt7mXeicFOYkbKbYVA6PpicVIbc2RJjP5C5w=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=rm/TBm5HfiLwVKpaRdbApnoyQi0uEg1tvjLbR8fem1lrcwqoV0KgXzlHJE9DF9qgh
-         wzBnqOSpqVNuzvv9D7V9Q6wVn0XxcR+OiNAW5TcjY6RgNT7N8+EKJuZC/DLA9qJ+tZ
-         MSfKWYF6rTg7Uxq6TfskE0PBdlPZAtSzIUdkFyqmO/lQvm4paaYkBrm6jQNptyVK4H
-         vLNWpAoy4BLqD6c7UzDOaXfoYg3YfwLcx13mh7yPjxHivxA2quoeM0XTTtnivd/0v2
-         S63Td/76u69FidkhYG1QTCMWsJ6coSyVU8AqtYN7/GK78lBdizegA9EJKnfWXnmZFB
-         aY1GpR1uFXh+Q==
-Date:   Tue, 21 Mar 2023 08:13:39 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        nvdimm@lists.linux.dev, linux-kernel@vger.kernel.org,
-        david@fromorbit.com, dan.j.williams@intel.com,
-        akpm@linux-foundation.org
-Subject: Re: [RFC PATCH] xfs: check shared state of when CoW, update reflink
- flag when io ends
-Message-ID: <20230321151339.GA11376@frogsfrogsfrogs>
-References: <1679025588-21-1-git-send-email-ruansy.fnst@fujitsu.com>
- <20230317203505.GK11394@frogsfrogsfrogs>
- <011cd163-4e6b-40b9-beeb-7fbc55b3a369@fujitsu.com>
+        with ESMTP id S230302AbjCUREB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Mar 2023 13:04:01 -0400
+Received: from mail-io1-f71.google.com (mail-io1-f71.google.com [209.85.166.71])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08E5B1EFDE
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Mar 2023 10:03:55 -0700 (PDT)
+Received: by mail-io1-f71.google.com with SMTP id y195-20020a6bc8cc000000b007537a59961dso7466097iof.17
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Mar 2023 10:03:55 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679418235;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=2QB/JLyschWN1RNDfVkDwwNUTUpPwkV1rFd89UbZI9k=;
+        b=uTn8mzVliVmkgauD7AvvQjoYXpUCfKN22OEMQUErcgQwHJ7f2RolmGrhvzXIoXjX4z
+         KnMII1Xo1BZ8NOiT6Tvh4IerpU1soOxGlDRpsk78OPdXm8VxxeeHcL9YnKQ5TxFxELm5
+         HGCJzlgSy93bFtnWzGYM5pjLQZ30mGC92wpKzlRw9Kdwjgh239wgizm4E6qbNMkZl+GC
+         q25xqru0ZUORCM/N2HS9JdSmrPUh+dtB2O1N+iGzGw+C+ySFKGM/MbB5fSu2bfUe4xKx
+         rS2uSPrTgaNm/vjkyck9vB/GEhnVEipEwUGho4Wn62KBEZcAgVEX5N8tIK0m+UCJ2IDQ
+         GG+Q==
+X-Gm-Message-State: AO0yUKUbGdxlFqbdksVbDyTAJjpnovbGAy4iwXQoMvO/GO7NN42ZEik2
+        QdK2LoGuoTVYcOgOzdb1CELLuQYbkFXd98czgWIHoX/XUsnF
+X-Google-Smtp-Source: AK7set8ERmiGsq22zEnIE8/ZlKHEtIrVFT7xEnDOhRZRRE4uIH9terhS/8dY+3IyTKw/a2RfW3g+4Mqxc7X2R5cH8rJmm3A4M9jy
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <011cd163-4e6b-40b9-beeb-7fbc55b3a369@fujitsu.com>
+X-Received: by 2002:a05:6e02:c74:b0:317:9096:e80f with SMTP id
+ f20-20020a056e020c7400b003179096e80fmr1314698ilj.4.1679418235206; Tue, 21 Mar
+ 2023 10:03:55 -0700 (PDT)
+Date:   Tue, 21 Mar 2023 10:03:55 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <00000000000056cdc905f76c0733@google.com>
+Subject: [syzbot] [xfs?] BUG: sleeping function called from invalid context in vm_map_ram
+From:   syzbot <syzbot+6d9043ea38ed2b9ef000@syzkaller.appspotmail.com>
+To:     akpm@linux-foundation.org, djwong@kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, lstoakes@gmail.com,
+        syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 20, 2023 at 06:02:05PM +0800, Shiyang Ruan wrote:
-> 
-> 
-> 在 2023/3/18 4:35, Darrick J. Wong 写道:
-> > On Fri, Mar 17, 2023 at 03:59:48AM +0000, Shiyang Ruan wrote:
-> > > As is mentioned[1] before, the generic/388 will randomly fail with dmesg
-> > > warning.  This case uses fsstress with a lot of random operations.  It is hard
-> > > to  reproduce.  Finally I found a 100% reproduce condition, which is setting
-> > > the seed to 1677104360.  So I changed the generic/388 code: removed the loop
-> > > and used the code below instad:
-> > > ```
-> > > ($FSSTRESS_PROG $FSSTRESS_AVOID -d $SCRATCH_MNT -v -s 1677104360 -n 221 -p 1 >> $seqres.full) > /dev/null 2>&1
-> > > ($FSSTRESS_PROG $FSSTRESS_AVOID -d $SCRATCH_MNT -v -s 1677104360 -n 221 -p 1 >> $seqres.full) > /dev/null 2>&1
-> > > _check_dmesg_for dax_insert_entry
-> > > ```
-> > > 
-> > > According to the operations log, and kernel debug log I added, I found that
-> > > the reflink flag of one inode won't be unset even if there's no more shared
-> > > extents any more.
-> > >    Then write to this file again.  Because of the reflink flag, xfs thinks it
-> > >      needs cow, and extent(called it extA) will be CoWed to a new
-> > >      extent(called it extB) incorrectly.  And extA is not used any more,
-> > >      but didn't be unmapped (didn't do dax_disassociate_entry()).
-> > 
-> > IOWs, dax_iomap_copy_around (or something very near it) should be
-> > calling dax_disassociate_entry on the source range after copying extA's
-> > contents to extB to drop its page->shared count?
-> 
-> If extA is a shared extent, its pages will be disassociated correctly by
-> invalidate_inode_pages2_range() in dax_iomap_iter().
-> 
-> But the problem is that extA is not shared but now be CoWed,
+Hello,
 
-Aha!  Ok, I hadn't realized that extA is not shared...
+syzbot found the following issue on:
 
-> invalidate_inode_pages2_range() is also called but it can't disassociate the
-> old page (because the page is marked dirty, can't be invalidated)
+HEAD commit:    73f2c2a7e1d2 Add linux-next specific files for 20230320
+git tree:       linux-next
+console+strace: https://syzkaller.appspot.com/x/log.txt?x=11ad6e1cc80000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=f22105589e896af1
+dashboard link: https://syzkaller.appspot.com/bug?extid=6d9043ea38ed2b9ef000
+compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=17d199bac80000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=159c7281c80000
 
-...so what marked the old page dirty?   Was it the case that the
-unshared extA got marked dirty, then later someone created a cow
-reservation (extB, I guess) that covered the already dirty extA?
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/2e4e105e18cf/disk-73f2c2a7.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/08d761112297/vmlinux-73f2c2a7.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/4b39e3e871ce/bzImage-73f2c2a7.xz
+mounted in repro: https://storage.googleapis.com/syzbot-assets/662e0db5efdd/mount_0.gz
 
-Should we be transferring the dirty state from A to B here before the
-invalidate_inode_pages2_range ?
+The issue was bisected to:
 
-> Is the behavior to do CoW on a non-shared extent allowed?
+commit 8f4977bdd77ee3dce8af81488231e7535695f889
+Author: Lorenzo Stoakes <lstoakes@gmail.com>
+Date:   Sun Mar 19 07:09:31 2023 +0000
 
-In general, yes, XFS allows COW on non-shared extents.  The (cow) extent
-size hint provides for cowing the unshared blocks adjacent to a shared
-block to try to combat fragmentation.
+    mm: vmalloc: use rwsem, mutex for vmap_area_lock and vmap_block->lock
 
-> > 
-> > >    The next time we mapwrite to another file, xfs will allocate extA for it,
-> > >      page fault handler do dax_associate_entry().  BUT bucause the extA didn't
-> > >      be unmapped, it still stores old file's info in page->mapping,->index.
-> > >      Then, It reports dmesg warning when it try to sotre the new file's info.
-> > > 
-> > > So, I think:
-> > >    1. reflink flag should be updated after CoW operations.
-> > >    2. xfs_reflink_allocate_cow() should add "if extent is shared" to determine
-> > >       xfs do CoW or not.
-> > > 
-> > > I made the fix patch, it can resolve the fail of generic/388.  But it causes
-> > > other cases fail: generic/127, generic/263, generic/616, xfs/315 xfs/421. I'm
-> > > not sure if the fix is right, or I have missed something somewhere.  Please
-> > > give me some advice.
-> > > 
-> > > Thank you very much!!
-> > > 
-> > > [1]: https://lore.kernel.org/linux-xfs/1669908538-55-1-git-send-email-ruansy.fnst@fujitsu.com/
-> > > 
-> > > Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> > > ---
-> > >   fs/xfs/xfs_reflink.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
-> > >   fs/xfs/xfs_reflink.h |  2 ++
-> > >   2 files changed, 46 insertions(+)
-> > > 
-> > > diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> > > index f5dc46ce9803..a6b07f5c1db2 100644
-> > > --- a/fs/xfs/xfs_reflink.c
-> > > +++ b/fs/xfs/xfs_reflink.c
-> > > @@ -154,6 +154,40 @@ xfs_reflink_find_shared(
-> > >   	return error;
-> > >   }
-> > > +int xfs_reflink_extent_is_shared(
-> > > +	struct xfs_inode	*ip,
-> > > +	struct xfs_bmbt_irec	*irec,
-> > > +	bool			*shared)
-> > > +{
-> > > +	struct xfs_mount	*mp = ip->i_mount;
-> > > +	struct xfs_perag	*pag;
-> > > +	xfs_agblock_t		agbno;
-> > > +	xfs_extlen_t		aglen;
-> > > +	xfs_agblock_t		fbno;
-> > > +	xfs_extlen_t		flen;
-> > > +	int			error = 0;
-> > > +
-> > > +	*shared = false;
-> > > +
-> > > +	/* Holes, unwritten, and delalloc extents cannot be shared */
-> > > +	if (!xfs_bmap_is_written_extent(irec))
-> > > +		return 0;
-> > > +
-> > > +	pag = xfs_perag_get(mp, XFS_FSB_TO_AGNO(mp, irec->br_startblock));
-> > > +	agbno = XFS_FSB_TO_AGBNO(mp, irec->br_startblock);
-> > > +	aglen = irec->br_blockcount;
-> > > +	error = xfs_reflink_find_shared(pag, NULL, agbno, aglen, &fbno, &flen,
-> > > +			true);
-> > > +	xfs_perag_put(pag);
-> > > +	if (error)
-> > > +		return error;
-> > > +
-> > > +	if (fbno != NULLAGBLOCK)
-> > > +		*shared = true;
-> > > +
-> > > +	return 0;
-> > > +}
-> > > +
-> > >   /*
-> > >    * Trim the mapping to the next block where there's a change in the
-> > >    * shared/unshared status.  More specifically, this means that we
-> > > @@ -533,6 +567,12 @@ xfs_reflink_allocate_cow(
-> > >   		xfs_ifork_init_cow(ip);
-> > >   	}
-> > > +	error = xfs_reflink_extent_is_shared(ip, imap, shared);
-> > > +	if (error)
-> > > +		return error;
-> > > +	if (!*shared)
-> > > +		return 0;
-> > > +
-> > >   	error = xfs_find_trim_cow_extent(ip, imap, cmap, shared, &found);
-> > >   	if (error || !*shared)
-> > >   		return error;
-> > > @@ -834,6 +874,10 @@ xfs_reflink_end_cow_extent(
-> > >   	/* Remove the mapping from the CoW fork. */
-> > >   	xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
-> > > +	error = xfs_reflink_clear_inode_flag(ip, &tp);
-> > 
-> > This will disable COW on /all/ blocks in the entire file, including the
-> > shared ones.  At a bare minimum you'd have to scan the entire data fork
-> > to ensure there are no shared extents.  That's probably why doing this
-> > causes so many new regressions.
-> 
-> This function will search for shared extent before actually clearing the
-> flag.  If no shared extent found, the flag won't be cleared.  The name of
-> this function is not very accurate.
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=16c9956ec80000
+final oops:     https://syzkaller.appspot.com/x/report.txt?x=15c9956ec80000
+console output: https://syzkaller.appspot.com/x/log.txt?x=11c9956ec80000
 
-Oh, right.  I forgot that _reflink_clear_inode_flag walks the entire
-data fork looking for shared extents, and only clears the flag if it
-doesn't find any.
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+6d9043ea38ed2b9ef000@syzkaller.appspotmail.com
+Fixes: 8f4977bdd77e ("mm: vmalloc: use rwsem, mutex for vmap_area_lock and vmap_block->lock")
 
-That said, if (say) this is a large sparse file with 300 million extent
-records and extent 299,999,999 is shared, this is going to make write
-completions realllllly slow, as each completion now has to perform its
-own walk...
+BUG: sleeping function called from invalid context at kernel/locking/mutex.c:580
+in_atomic(): 0, irqs_disabled(): 0, non_block: 0, pid: 41, name: kworker/u4:2
+preempt_count: 0, expected: 0
+RCU nest depth: 1, expected: 0
+3 locks held by kworker/u4:2/41:
+ #0: ffff8880234fc938 ((wq_completion)xfs_iwalk-5100){+.+.}-{0:0}, at: arch_atomic64_set arch/x86/include/asm/atomic64_64.h:34 [inline]
+ #0: ffff8880234fc938 ((wq_completion)xfs_iwalk-5100){+.+.}-{0:0}, at: arch_atomic_long_set include/linux/atomic/atomic-long.h:41 [inline]
+ #0: ffff8880234fc938 ((wq_completion)xfs_iwalk-5100){+.+.}-{0:0}, at: atomic_long_set include/linux/atomic/atomic-instrumented.h:1280 [inline]
+ #0: ffff8880234fc938 ((wq_completion)xfs_iwalk-5100){+.+.}-{0:0}, at: set_work_data kernel/workqueue.c:643 [inline]
+ #0: ffff8880234fc938 ((wq_completion)xfs_iwalk-5100){+.+.}-{0:0}, at: set_work_pool_and_clear_pending kernel/workqueue.c:670 [inline]
+ #0: ffff8880234fc938 ((wq_completion)xfs_iwalk-5100){+.+.}-{0:0}, at: process_one_work+0x883/0x15e0 kernel/workqueue.c:2376
+ #1: ffffc90000b27db0 ((work_completion)(&pwork->work)){+.+.}-{0:0}, at: process_one_work+0x8b7/0x15e0 kernel/workqueue.c:2380
+ #2: ffffffff8c796440 (rcu_read_lock){....}-{1:2}, at: vb_alloc mm/vmalloc.c:2090 [inline]
+ #2: ffffffff8c796440 (rcu_read_lock){....}-{1:2}, at: vm_map_ram+0x7a/0xcf0 mm/vmalloc.c:2290
+CPU: 0 PID: 41 Comm: kworker/u4:2 Not tainted 6.3.0-rc3-next-20230320-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/02/2023
+Workqueue: xfs_iwalk-5100 xfs_pwork_work
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:88 [inline]
+ dump_stack_lvl+0x136/0x150 lib/dump_stack.c:106
+ __might_resched+0x358/0x580 kernel/sched/core.c:10059
+ __mutex_lock_common kernel/locking/mutex.c:580 [inline]
+ __mutex_lock+0x9f/0x1350 kernel/locking/mutex.c:747
+ vb_alloc mm/vmalloc.c:2105 [inline]
+ vm_map_ram+0x13d/0xcf0 mm/vmalloc.c:2290
+ _xfs_buf_map_pages+0x158/0x3a0 fs/xfs/xfs_buf.c:441
+ xfs_buf_get_map+0x1cb8/0x2fd0 fs/xfs/xfs_buf.c:719
+ xfs_buf_read_map+0xce/0xb10 fs/xfs/xfs_buf.c:811
+ xfs_buf_readahead_map+0x8c/0xc0 fs/xfs/xfs_buf.c:889
+ xfs_buf_readahead fs/xfs/xfs_buf.h:262 [inline]
+ xfs_btree_reada_bufs+0x170/0x1e0 fs/xfs/libxfs/xfs_btree.c:926
+ xfs_iwalk_ichunk_ra+0x2a1/0x3e0 fs/xfs/xfs_iwalk.c:114
+ xfs_iwalk_ag+0x607/0x930 fs/xfs/xfs_iwalk.c:455
+ xfs_iwalk_ag_work+0x14a/0x1c0 fs/xfs/xfs_iwalk.c:624
+ xfs_pwork_work+0x7f/0x160 fs/xfs/xfs_pwork.c:47
+ process_one_work+0x99a/0x15e0 kernel/workqueue.c:2405
+ worker_thread+0x67d/0x10c0 kernel/workqueue.c:2552
+ kthread+0x33e/0x440 kernel/kthread.c:379
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:308
+ </TASK>
 
-> BTW, in my thought, the reflink flag is to indicate if a file is now
-> containing any shared extents or not.  So, it should be cleared immediately
-> if no extents shared any more.  Is this right?
+=============================
+[ BUG: Invalid wait context ]
+6.3.0-rc3-next-20230320-syzkaller #0 Tainted: G        W         
+-----------------------------
+kworker/u4:2/41 is trying to lock:
+ffff88801d967468 (&vb->lock){+.+.}-{3:3}, at: vb_alloc mm/vmalloc.c:2105 [inline]
+ffff88801d967468 (&vb->lock){+.+.}-{3:3}, at: vm_map_ram+0x13d/0xcf0 mm/vmalloc.c:2290
+other info that might help us debug this:
+context-{4:4}
+3 locks held by kworker/u4:2/41:
+ #0: ffff8880234fc938 ((wq_completion)xfs_iwalk-5100){+.+.}-{0:0}, at: arch_atomic64_set arch/x86/include/asm/atomic64_64.h:34 [inline]
+ #0: ffff8880234fc938 ((wq_completion)xfs_iwalk-5100){+.+.}-{0:0}, at: arch_atomic_long_set include/linux/atomic/atomic-long.h:41 [inline]
+ #0: ffff8880234fc938 ((wq_completion)xfs_iwalk-5100){+.+.}-{0:0}, at: atomic_long_set include/linux/atomic/atomic-instrumented.h:1280 [inline]
+ #0: ffff8880234fc938 ((wq_completion)xfs_iwalk-5100){+.+.}-{0:0}, at: set_work_data kernel/workqueue.c:643 [inline]
+ #0: ffff8880234fc938 ((wq_completion)xfs_iwalk-5100){+.+.}-{0:0}, at: set_work_pool_and_clear_pending kernel/workqueue.c:670 [inline]
+ #0: ffff8880234fc938 ((wq_completion)xfs_iwalk-5100){+.+.}-{0:0}, at: process_one_work+0x883/0x15e0 kernel/workqueue.c:2376
+ #1: ffffc90000b27db0 ((work_completion)(&pwork->work)){+.+.}-{0:0}, at: process_one_work+0x8b7/0x15e0 kernel/workqueue.c:2380
+ #2: ffffffff8c796440 (rcu_read_lock){....}-{1:2}, at: vb_alloc mm/vmalloc.c:2090 [inline]
+ #2: ffffffff8c796440 (rcu_read_lock){....}-{1:2}, at: vm_map_ram+0x7a/0xcf0 mm/vmalloc.c:2290
+stack backtrace:
+CPU: 0 PID: 41 Comm: kworker/u4:2 Tainted: G        W          6.3.0-rc3-next-20230320-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/02/2023
+Workqueue: xfs_iwalk-5100 xfs_pwork_work
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:88 [inline]
+ dump_stack_lvl+0xd9/0x150 lib/dump_stack.c:106
+ print_lock_invalid_wait_context kernel/locking/lockdep.c:4724 [inline]
+ check_wait_context kernel/locking/lockdep.c:4785 [inline]
+ __lock_acquire+0x159e/0x5df0 kernel/locking/lockdep.c:5024
+ lock_acquire.part.0+0x11c/0x370 kernel/locking/lockdep.c:5691
+ __mutex_lock_common kernel/locking/mutex.c:603 [inline]
+ __mutex_lock+0x12f/0x1350 kernel/locking/mutex.c:747
+ vb_alloc mm/vmalloc.c:2105 [inline]
+ vm_map_ram+0x13d/0xcf0 mm/vmalloc.c:2290
+ _xfs_buf_map_pages+0x158/0x3a0 fs/xfs/xfs_buf.c:441
+ xfs_buf_get_map+0x1cb8/0x2fd0 fs/xfs/xfs_buf.c:719
+ xfs_buf_read_map+0xce/0xb10 fs/xfs/xfs_buf.c:811
+ xfs_buf_readahead_map+0x8c/0xc0 fs/xfs/xfs_buf.c:889
+ xfs_buf_readahead fs/xfs/xfs_buf.h:262 [inline]
+ xfs_btree_reada_bufs+0x170/0x1e0 fs/xfs/libxfs/xfs_btree.c:926
+ xfs_iwalk_ichunk_ra+0x2a1/0x3e0 fs/xfs/xfs_iwalk.c:114
+ xfs_iwalk_ag+0x607/0x930 fs/xfs/xfs_iwalk.c:455
+ xfs_iwalk_ag_work+0x14a/0x1c0 fs/xfs/xfs_iwalk.c:624
+ xfs_pwork_work+0x7f/0x160 fs/xfs/xfs_pwork.c:47
+ process_one_work+0x99a/0x15e0 kernel/workqueue.c:2405
+ worker_thread+0x67d/0x10c0 kernel/workqueue.c:2552
+ kthread+0x33e/0x440 kernel/kthread.c:379
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:308
+ </TASK>
+BUG: sleeping function called from invalid context at kernel/locking/mutex.c:580
+in_atomic(): 0, irqs_disabled(): 0, non_block: 0, pid: 41, name: kworker/u4:2
+preempt_count: 0, expected: 0
+RCU nest depth: 1, expected: 0
+INFO: lockdep is turned off.
+CPU: 1 PID: 41 Comm: kworker/u4:2 Tainted: G        W          6.3.0-rc3-next-20230320-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/02/2023
+Workqueue: xfs_iwalk-5163 xfs_pwork_work
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:88 [inline]
+ dump_stack_lvl+0x136/0x150 lib/dump_stack.c:106
+ __might_resched+0x358/0x580 kernel/sched/core.c:10059
+ __mutex_lock_common kernel/locking/mutex.c:580 [inline]
+ __mutex_lock+0x9f/0x1350 kernel/locking/mutex.c:747
+ vb_alloc mm/vmalloc.c:2105 [inline]
+ vm_map_ram+0x13d/0xcf0 mm/vmalloc.c:2290
+ _xfs_buf_map_pages+0x158/0x3a0 fs/xfs/xfs_buf.c:441
+ xfs_buf_get_map+0x1cb8/0x2fd0 fs/xfs/xfs_buf.c:719
+ xfs_buf_read_map+0xce/0xb10 fs/xfs/xfs_buf.c:811
+ xfs_buf_readahead_map+0x8c/0xc0 fs/xfs/xfs_buf.c:889
+ xfs_buf_readahead fs/xfs/xfs_buf.h:262 [inline]
+ xfs_btree_reada_bufs+0x170/0x1e0 fs/xfs/libxfs/xfs_btree.c:926
+ xfs_iwalk_ichunk_ra+0x2a1/0x3e0 fs/xfs/xfs_iwalk.c:114
+ xfs_iwalk_ag+0x607/0x930 fs/xfs/xfs_iwalk.c:455
+ xfs_iwalk_ag_work+0x14a/0x1c0 fs/xfs/xfs_iwalk.c:624
+ xfs_pwork_work+0x7f/0x160 fs/xfs/xfs_pwork.c:47
+ process_one_work+0x99a/0x15e0 kernel/workqueue.c:2405
+ worker_thread+0x67d/0x10c0 kernel/workqueue.c:2552
+ kthread+0x33e/0x440 kernel/kthread.c:379
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:308
+ </TASK>
+BUG: sleeping function called from invalid context at kernel/locking/mutex.c:580
+in_atomic(): 0, irqs_disabled(): 0, non_block: 0, pid: 41, name: kworker/u4:2
+preempt_count: 0, expected: 0
+RCU nest depth: 1, expected: 0
+INFO: lockdep is turned off.
+CPU: 1 PID: 41 Comm: kworker/u4:2 Tainted: G        W          6.3.0-rc3-next-20230320-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/02/2023
+Workqueue: xfs_iwalk-5298 xfs_pwork_work
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:88 [inline]
+ dump_stack_lvl+0x136/0x150 lib/dump_stack.c:106
+ __might_resched+0x358/0x580 kernel/sched/core.c:10059
+ __mutex_lock_common kernel/locking/mutex.c:580 [inline]
+ __mutex_lock+0x9f/0x1350 kernel/locking/mutex.c:747
+ vb_alloc mm/vmalloc.c:2105 [inline]
+ vm_map_ram+0x13d/0xcf0 mm/vmalloc.c:2290
+ _xfs_buf_map_pages+0x158/0x3a0 fs/xfs/xfs_buf.c:441
+ xfs_buf_get_map+0x1cb8/0x2fd0 fs/xfs/xfs_buf.c:719
+ xfs_buf_read_map+0xce/0xb10 fs/xfs/xfs_buf.c:811
+ xfs_buf_readahead_map+0x8c/0xc0 fs/xfs/xfs_buf.c:889
+ xfs_buf_readahead fs/xfs/xfs_buf.h:262 [inline]
+ xfs_btree_reada_bufs+0x170/0x1e0 fs/xfs/libxfs/xfs_btree.c:926
+ xfs_iwalk_ichunk_ra+0x2a1/0x3e0 fs/xfs/xfs_iwalk.c:114
+ xfs_iwalk_ag+0x607/0x930 fs/xfs/xfs_iwalk.c:455
+ xfs_iwalk_ag_work+0x14a/0x1c0 fs/xfs/xfs_iwalk.c:624
+ xfs_pwork_work+0x7f/0x160 fs/xfs/xfs_pwork.c:47
+ process_one_work+0x99a/0x15e0 kernel/workqueue.c:2405
+ worker_thread+0x67d/0x10c0 kernel/workqueue.c:2552
+ kthread+0x33e/0x440 kernel/kthread.c:379
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:308
+ </TASK>
 
-...which is why we don't clear the flag immediately.  Or ever.  Only
-repairs take the time to do that.
 
---D
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-> 
-> 
-> --
-> Thanks,
-> Ruan.
-> 
-> PS: Let me paste the log of failed tests:
-> generic/127, generic/263, generic/616 are fsx tests.  Their fail message are
-> meaningless.  I am looking into their difference between good/bad results.
-> 
-> xfs/315 0s ... - output mismatch (see
-> /root/xts/results//dax_reflink/xfs/315.out.bad)
->     --- tests/xfs/315.out       2022-08-03 10:56:02.696212673 +0800
->     +++ /root/xts/results//dax_reflink/xfs/315.out.bad  2023-03-20
-> 17:48:01.780369739 +0800
->     @@ -7,7 +7,6 @@
->      Inject error
->      CoW a few blocks
->      FS should be shut down, touch will fail
->     -touch: cannot touch 'SCRATCH_MNT/badfs': Input/output error
->      Remount to replay log
->      FS should be online, touch should succeed
->      Check files again
->     ...
->     (Run 'diff -u /root/xts/tests/xfs/315.out
-> /root/xts/results//dax_reflink/xfs/315.out.bad'  to see the entire diff)
-> xfs/421 1s ... - output mismatch (see
-> /root/xts/results//dax_reflink/xfs/421.out.bad)
->     --- tests/xfs/421.out       2022-08-03 10:56:02.706212718 +0800
->     +++ /root/xts/results//dax_reflink/xfs/421.out.bad  2023-03-20
-> 17:48:02.222369739 +0800
->     @@ -14,8 +14,6 @@
->      Whence     Result
->      DATA       0
->      HOLE       131072
->     -DATA       196608
->     -HOLE       262144
->      Compare files
->      c2803804acc9936eef8aab42c119bfac  SCRATCH_MNT/test-421/file1
->     ...
->     (Run 'diff -u /root/xts/tests/xfs/421.out
-> /root/xts/results//dax_reflink/xfs/421.out.bad'  to see the entire diff)
-> 
-> > 
-> > --D
-> > 
-> > > +	if (error)
-> > > +		goto out_cancel;
-> > > +
-> > >   	error = xfs_trans_commit(tp);
-> > >   	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > >   	if (error)
-> > > diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> > > index 65c5dfe17ecf..d5835814bce6 100644
-> > > --- a/fs/xfs/xfs_reflink.h
-> > > +++ b/fs/xfs/xfs_reflink.h
-> > > @@ -16,6 +16,8 @@ static inline bool xfs_is_cow_inode(struct xfs_inode *ip)
-> > >   	return xfs_is_reflink_inode(ip) || xfs_is_always_cow_inode(ip);
-> > >   }
-> > > +int xfs_reflink_extent_is_shared(struct xfs_inode *ip,
-> > > +		struct xfs_bmbt_irec *irec, bool *shared);
-> > >   extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
-> > >   		struct xfs_bmbt_irec *irec, bool *shared);
-> > >   int xfs_bmap_trim_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *imap,
-> > > -- 
-> > > 2.39.2
-> > > 
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+syzbot can test patches for this issue, for details see:
+https://goo.gl/tpsmEJ#testing-patches
