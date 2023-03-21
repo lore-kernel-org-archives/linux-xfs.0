@@ -2,262 +2,251 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A349BC6FD20
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Mar 2023 20:47:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B49E8C6FD20
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Mar 2023 21:14:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229671AbjCUUrO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Mar 2023 16:47:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42216 "EHLO
+        id S229682AbjCUVOt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Mar 2023 17:14:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55144 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229913AbjCUUrK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Mar 2023 16:47:10 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD166457F9
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Mar 2023 13:46:46 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id C177BCE1AF2
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Mar 2023 20:46:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC957C433D2;
-        Tue, 21 Mar 2023 20:46:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679431598;
-        bh=pORt6lweCFvNdTMbQY2waGAbFIhO0iyzXS9gdZHQCm8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=QiGkP7eqMBfLg/9/utDmzzlFp/AHvw6WuVaJy2yyHkcOsXzfRgFV+XXWHuYQn+aIk
-         6M+TFrxbXQ7pd9gG2LKNxVnRQgCDe+TVN/ltVMr1AiLD01T+UU/aoSb+oCAt91ZnAG
-         FFbBtzfqQ39yJxMi9CKsgbGnb0klw+dStBQmGBmdSYO80Cm8zWdbj6hzVZrFw+GKxt
-         OWzq6sHWhmX9z0THm+JxqDfIiKFsuHRVbcPeNC5WAybBtpzlgnd+rkdsHLGVXoD6YR
-         T1G5AANw3xts+TAu1wXgr2yXh8zyZmuuzlYr075ljFjpPHxb9NmvuJC7sHRPWOqhfJ
-         v1qaUb6Piq5PQ==
-Date:   Tue, 21 Mar 2023 13:46:38 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Pengfei Xu <pengfei.xu@intel.com>
-Cc:     dchinner@redhat.com, bfoster@redhat.com, heng.su@intel.com,
-        linux-xfs@vger.kernel.org, lkp@intel.com
-Subject: Re: [Syzkaller & bisect] There is BUG: unable to handle kernel NULL
- pointer dereference in xfs_filestream_select_ag in v6.3-rc3
-Message-ID: <20230321204638.GB11376@frogsfrogsfrogs>
-References: <ZBgCH/8EguhJkwPI@xpf.sh.intel.com>
+        with ESMTP id S229819AbjCUVOs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Mar 2023 17:14:48 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F72833445;
+        Tue, 21 Mar 2023 14:14:47 -0700 (PDT)
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32LKxrVT011944;
+        Tue, 21 Mar 2023 21:14:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=corp-2022-7-12;
+ bh=FW2DGEUlpBFed7ZKaHQKpaqUZa+sNSU4jlAWL7u8wqA=;
+ b=gl55p9qdlUv8L1ZGNgjvTmdZxG5BTHSZ+0uX8K7x+cNE48eEIBpj772e6aVKMc5iZOiG
+ Jl7tHJEb5zgBEKkTQrADgTk28MrofSz5uHM6Whxa0xMYD97yTCEdcL4CYvu40nUNjLNq
+ nRtaPgfpDJ7OB1NPqXOqVVgFlSdxC5dwM/F1qw1N9/ISDYEZCb6F4cH6BI8kmjXUzgnK
+ sU9hDTtJxl8EOQt8eqdfnnvjgxca3g11DHEO8SPm3oLcEr50rgJgotFrb+1oew16KGqc
+ TfF+SJrEekNvxpPJmA88dzUcTueRh3zVaWMg5xx0SsnzNa+HW0vWg0p9XMxfGuzONtZo Jw== 
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3pd5bcfj05-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 21 Mar 2023 21:14:43 +0000
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.5/8.17.1.5) with ESMTP id 32LKreB0029648;
+        Tue, 21 Mar 2023 21:14:42 GMT
+Received: from nam04-mw2-obe.outbound.protection.outlook.com (mail-mw2nam04lp2168.outbound.protection.outlook.com [104.47.73.168])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3pfm130rqj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 21 Mar 2023 21:14:42 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=mSy30U1VSO6CE3H7hlXzjLBZal5KZsDyd6JfmzdNbugHV7TqaaQW+pVg0upaS45ChM0EkaYmBqxYl67kUcBMfDk+1yLFN9JgvVuZOGATz8AQ2lgxAGvTGPSpB669c2L72b1AB7InwcYANnrDfvsHPynLOJKXZxYPX0D2aYdzNnr6OPquGW+YGvpGdpEylywyYf9o7Lv9F5FhKkqAciWeY1n93X9Cyz68vsdtLGe/c5jw81Z80+w7YwccTaK8Pp7GpcV5qiD1hAUmoQ5up4xZqrjrwb5qB7QBWIee0aIreISfzZfM1N+a+43pc7tZNRB5C+OBl+5fstOQ6wxmzRW7dA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=FW2DGEUlpBFed7ZKaHQKpaqUZa+sNSU4jlAWL7u8wqA=;
+ b=iOYNhjoTV4C3yMCyc27xcImhTsrekZ0/5GNG6SYC3x1VtjYhO27GSfiH7QW6PekD/h5sn7mcfHKX8j3wRrckKDMZcMCJ/1OB50TxsKDuFPqs20pBp1p/cO6o0CYrgxwIGtviBnSPfdFc0eMJhF0t7caQ1WXC60yatGV3A2YszcSMtqlt+LdRFKtE70rmPk2k8JKCvztTigKE7AU/UWkPvBsAU6qgbf5EVTbXPrrZjdXvwWzUaOguCczeHlaqU2Q6lbx4hKCd07q8MnWM26t5bMMXg+uixP8HjTAje0uA/Ye/utHojlncV22Dwx21p0ymJgUFpnpIFn/hYmlLRO4Twg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=FW2DGEUlpBFed7ZKaHQKpaqUZa+sNSU4jlAWL7u8wqA=;
+ b=QO6J68//VOG86YhwLbbxBaB598SoDGe3S4pNBZGX2Pa3RXFJCt6CG9XfdECzFiRzwUEaxZh4m6UBJCt+9NRwHUPNifCZk5gy7vhjJaRFj9l/SBmeUD4xjMBSKDmqxdqGKOB7X8BBHyTAgS8Cj9F56VbB3HNoBQ5hlTMCbw/4C+I=
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com (2603:10b6:a03:211::7)
+ by DS7PR10MB5101.namprd10.prod.outlook.com (2603:10b6:5:3b0::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.37; Tue, 21 Mar
+ 2023 21:14:40 +0000
+Received: from BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::2a7c:497e:b785:dc06]) by BY5PR10MB4306.namprd10.prod.outlook.com
+ ([fe80::2a7c:497e:b785:dc06%7]) with mapi id 15.20.6178.037; Tue, 21 Mar 2023
+ 21:14:40 +0000
+From:   Allison Henderson <allison.henderson@oracle.com>
+To:     "djwong@kernel.org" <djwong@kernel.org>
+CC:     "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [RFC DELUGE v10r1d2] xfs: Parent Pointers
+Thread-Topic: [RFC DELUGE v10r1d2] xfs: Parent Pointers
+Thread-Index: AQHZWDi40PleEnagskq+ctjQXWYsi67/VpsAgABOFICABh8qgA==
+Date:   Tue, 21 Mar 2023 21:14:39 +0000
+Message-ID: <f571048601445a05043a79ac502261618945376b.camel@oracle.com>
+References: <20230316185414.GH11394@frogsfrogsfrogs>
+         <776987d7caf645996bea6cdb43ac1530f76c91d1.camel@oracle.com>
+         <20230317234533.GR11376@frogsfrogsfrogs>
+In-Reply-To: <20230317234533.GR11376@frogsfrogsfrogs>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Evolution 3.44.4-0ubuntu1 
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: BY5PR10MB4306:EE_|DS7PR10MB5101:EE_
+x-ms-office365-filtering-correlation-id: 99a969a9-1207-41e7-143c-08db2a514882
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: pYlMt0UlPBJr4429qjUv0Y1/Wcka1z2rIzG0Z1ddkFxXHW6Is09wzgnKecneoTKzDqaM8JIhJM5kzTvfiziC8oqayA5sZBCiz48RN+kmklHhQ9KVCsw3p9Lbu6Lt/zKEEnwGok+oSm0QuXiYU20yY3jNekxgxlgKE0Qs5/VRuVxjllcSdpBcgy0oXv0CqrTz1l9cHwLOX7CJyEg1Q24IISP4/QGZ9QKVVRlPAc70up1NYnmOoAbhBRIQerjs8ZPYzwo+Va7l0Sqot0JhYmjOk4TSXkpZxA3rgTZa641d9Q1hNCoT/2arllwPp22zSJtxuSKZA91AYCIkxJYR6V3qhg48wDxwFnAje4fUMR3lFIsTOFE9styv1sBFA3TaDWytueA2NlyzMD5ouAJzS1fkJTiGZk+huXwhaZhMnZka4ZmeHyZxgRFy6GpG4AmStxv7yGkH/1HmIHizJ4eHS/mqbpVlbiYWmji7Gnz9kX2PN1CKk82HgBSIQb39W8b9jgA0+PxWX3WKB4lJHuWo0/k0C5dCOgwWGiuoyNBTv+QU9+ZNVl53wZxAm3HD0jPquc9nW3yzWo1OE1XQkIqAIa4DnxzS8PG/p4TvBMhK1BDqmfnSJWf4Uh3FXN6E6GeuSkmapCLFD++QrZaArT8d1GaT32BYXkrdkKfJB+CZ7BrelkcXJ6u9utU3Skh8Kwn/oDDYoS2kCZLNlYDV5xHSm9PZHOsmMiLYfamIDleeczAdkSOwJx/FTE8Xese9gkz/dmfaVcq95IDqplgKByGckZ1IVg==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY5PR10MB4306.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(136003)(396003)(366004)(346002)(39860400002)(376002)(451199018)(66899018)(2616005)(83380400001)(6512007)(71200400001)(54906003)(478600001)(26005)(5660300002)(966005)(6486002)(186003)(6506007)(316002)(122000001)(86362001)(38100700002)(38070700005)(66946007)(41300700001)(76116006)(44832011)(8936002)(64756008)(2906002)(36756003)(66476007)(6916009)(66556008)(66446008)(8676002)(4326008)(130860200001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?V0hkQXh6bW4wbm9nRGNvaXpLOGpUVW5nWE10eEhPOVIwa3k4RHhVRy9XR3BB?=
+ =?utf-8?B?M0Z4R2ZXYVo4MVhWMjJXMnRBc3ZOTmNhN0pVQUpQVGZIZVdOb1lDODVOMWgz?=
+ =?utf-8?B?S2xDL3J2YkY1YjNVOEV3M1FrZlZzMWJJZ3pUZUxPeU1hd2wreEFhVEJYb281?=
+ =?utf-8?B?NURsQXhHTDhzQ2pPVXY5NktrRzlJM2k0bnRKa09PU1FraVV3TW1aNTZncGJj?=
+ =?utf-8?B?eVRDNVcveHBkVXZnNytsYnE4cUhaYWZ2aFBxUE9hdW9NbGh3OHlKRncwQko3?=
+ =?utf-8?B?N1lxQ1ZPVmRBWjNoZVRWZTF5SXpzS1F6UTFraEp4SFg2Rnh6cTBsUlBqY3ls?=
+ =?utf-8?B?TjcyOXdaTEZpWTQ0bXkrUWFVSkVXMVp3Tzh4d1U0SHpQYS9vVW1LZWkrbGFH?=
+ =?utf-8?B?UE1OUlNRVnJSMTJZQitJa3ZDbmVzNGUvanMvTkp0cThXQldxRVcxUkdZUmV5?=
+ =?utf-8?B?dExCSUVUMXN0Y3N4RVpHVmVQYTk4MlN6RVIrK1ByT0xrKzNVUWhnV3UrWG9P?=
+ =?utf-8?B?ZmF0SEE5c1N4bFFVOUhYMzBDZk1CNUxFdU5UeUZkWG4ra2lobHl4b0UwaExj?=
+ =?utf-8?B?bXd3RGFDVUxuU2hSZ1hDL0wrbFpQem53aU5TNUozL245eXFFeWNaMUpseGtw?=
+ =?utf-8?B?U2trRm1VUGVsTDNKdVNzWS9VWGFXQk0zeTRVeXdDWlFuYm5VMG53dGNTd09P?=
+ =?utf-8?B?SUE4OEt0OStkL0cwZWFoMXRyV0VhRFptcHY0WFNLaWZ2REFrb2t2MmdZa0ox?=
+ =?utf-8?B?RlRhNUxLRXhZZ0RWSGlpajVWeGpEd2NEbm1aQUxabkJKOGdVZjVNTFhOYkdx?=
+ =?utf-8?B?RU5oOUFSbnVIYkhtUzZWMVZoUllDYURpOGR3N3U0R2U4RmNBeDI1eTM4Vm55?=
+ =?utf-8?B?eHBmVEI2a2NMTyt4dmdPMFVkSS93TERvYXNlNFV4c2lzRzhuOHdEUHZUVmxn?=
+ =?utf-8?B?YzVqMlRyYTRFTVlkL2ZUNERSTS9qRExNM3BMV041WnJDR2RielMwa2IwUGpT?=
+ =?utf-8?B?RlNTWi9CK0xmaklucWdpbG0xcUJjc0oxb1hNVSt5RFlOQzhQM3RyMmE0WFY5?=
+ =?utf-8?B?bDExZWJPdGJGUkEzKytVRDZKU2hZY2VkU3hUSTQzT29nZ3EyOFFxTXVoM3lQ?=
+ =?utf-8?B?cjlPc1VSZFlTZk9ndXZQWHVaWHhXSzdoMDBxMDR0ajVaN2IvU29pMTVGTDhB?=
+ =?utf-8?B?Sk51K0VjZkNScWIzZ0pVTFlocUVmZ2hKZEVKeDd4aUU2MjdhelR5eXNYMFhk?=
+ =?utf-8?B?Q0xSYnF4d3loWE1TZENSUmxBb2hpNCtWTEc3QXZzbjNlU09iK2EzOUhHSERr?=
+ =?utf-8?B?MDRoaGlpdWRBaDJ3ODdyY1phYzRieGNKNzF2ZE5KTDd1VUhpMmNBQWgrMXVj?=
+ =?utf-8?B?LytUS2puR1k3WWhSMmx1L0JaRGxWN29RbUtrVFExeGdmNG43Z2hrMTY2L2Rj?=
+ =?utf-8?B?cG03Z254V1NGT3JnODRFN1pLWmJoU0pZUU1PbUUwcWJObUhUMjZpVURVbHFJ?=
+ =?utf-8?B?TTNaekJROHluTGVnYWRlMkdUdFR5aEtaMlZ3R0diNVJlUFU3VmtQZm1mRWs2?=
+ =?utf-8?B?SlRGNktwQXAzSmM5c0lnL3dXc0RtbkQrS1JjRmJ2V1BCdXRlRUR5THMyQTNp?=
+ =?utf-8?B?c3k4VUNOMS81SXFrZCtPRW1JYUFramNvWTNrSkxJaTNURWVmeDZCZkdSelpV?=
+ =?utf-8?B?eHQ3Ulo1TkliZ051Z2tNdUpqeEQyM0RndDdDMGI5RDBOZFR4TXl4OWtDNVln?=
+ =?utf-8?B?K0ZwenN4K1c2OXk0TWVKellBTmxWampNQytSall3QXQwUTl3QlpoeTMxcWNu?=
+ =?utf-8?B?c1BOVXZXVWlYMW1uaWE5N0tXN2dmSnlZam03cGtrNG0rd3dZWEl1MCtSckFL?=
+ =?utf-8?B?UGVBZW1YU0dHdTNINDR2aCtDckJWSHFlZEg2SVpxdDU3RHBGdmg1eFZhaHpt?=
+ =?utf-8?B?OGJnei9zbmJtUDBpNnpTQ2NCdW92dzMzTkNKYnlLa0w5TUFITVBNMHlzT2xM?=
+ =?utf-8?B?VjBpcU5xeXBJaWpkZHd1amtCYVhJOFFSRW9Ud2xQc1BUY3dQUWhtRUIrSzYv?=
+ =?utf-8?B?UTE2TE04Zkp2cTBZVW4rSnBHV2M5c0VTREluN1B2M0pCZTQrTFd1R3NkRzRC?=
+ =?utf-8?B?N3c3WWdja0lBZUFsMjMwY29JdkhXeXdGblJwVjFkK1JodTRCYUx2SnFoWVg0?=
+ =?utf-8?Q?Yc6Yzb86O4l1OMb9opaNrIY=3D?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <E5051F9D493DE547AB3808EFF84B445C@namprd10.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZBgCH/8EguhJkwPI@xpf.sh.intel.com>
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: Isx5AubUHtlIQi+z4YlP4tnwSKKZ1GHO5Vjo8tROfLbXeZidvucXh20btUTUeYUxPpOCsKIgiM2++SAY05pedpidGxqtidco9Opo8MJZ/Ad/EXotKVwub0Q4zUEq0aBo3BEJMIosWJwa6qfQ8KFkIrlwzFDjQlOnPqu4UGsSy2XsS+VC6UIwcn0Nm+h19HZ71cDuJi9GUh+m1iGgpFL3JvFv6HBLTks3WBvYmmeLCz6wNqECUPcsLwAHbSR9UIVPKryYq5LOVpUpMpk4WHkKpWO8AlOXzXQkTpU++H3JhqpIZN2hRSLeRWatonYPvwvp8dNyuMoJTPmBMgmkTrxJadXCn/e9XYW5XqejBOfks5wMbbd4D6ik+en9XBPNcyJhezwoWkwimHzmpubbVy3b+LPI+B3Y7Lr1JTUYJAafGTW1xPkj7SWHfzxOXiNCvdoPJC7Hj6KkWGTnbnKi92cw5Q2PrgU946PPZEBbGMIaAmAtWk7QvrhPI9+Spc/5iUGf3lc3CKjejZEAL0JA2z6FpdpphENtISrP8r0OvYDS86kXB5dB2ztK0hGC8S61Hd9ekibPQdTrXS0IRjHsuWift0Vgm4/IpbVdR6rIdXbQT1vud/LE9Wmk6ecfjO4+afyg4+dEJXg0kU04FMzVkeV7xy5ZiuvD5AYTz1ivLI+oYQhuZ26HpkuHZz3SCClsRc1cWIJ7RU3WVWdOK+aYhps7BhtjY4XNIJpydQpR6dq0gO2KEF/05rKaGaMPIExE/D4c1y+anUG8DBW/67uZeS4PPLI48F8GnDDmastGX2FFj44=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BY5PR10MB4306.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 99a969a9-1207-41e7-143c-08db2a514882
+X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Mar 2023 21:14:39.9633
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: mZlpsaVNYHQLIq3J5mB80BwTVEJSPCWGGliXh+CQkL/zqmuvGjDeWCnQK84L41XWajtGKvJLI561YboLboHXXF9YxGyzHj6ObhSPNoB9tVU=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB5101
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-21_11,2023-03-21_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 adultscore=0
+ bulkscore=0 suspectscore=0 mlxlogscore=999 phishscore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303150002
+ definitions=main-2303210168
+X-Proofpoint-ORIG-GUID: buBhPPt6dwiSRYaspusTPaNaSCOW7NAF
+X-Proofpoint-GUID: buBhPPt6dwiSRYaspusTPaNaSCOW7NAF
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Mar 20, 2023 at 02:50:07PM +0800, Pengfei Xu wrote:
-> Hi Dave Chinner and xfs experts,
-> 
-> Greeting!
-> 
-> There is BUG: unable to handle kernel NULL pointer dereference in
-> xfs_filestream_select_ag in v6.3-rc3:
-> 
-> All detailed info: https://github.com/xupengfe/syzkaller_logs/tree/main/230319_210525_xfs_filestream_select_ag
-> Reproduced code: https://github.com/xupengfe/syzkaller_logs/blob/main/230319_210525_xfs_filestream_select_ag/repro.c
-
-How the hell am I supposed to extract the fuzzed disk image for
-analysis?
-
-Current Google syzbot provides a lot more information for analysis.  Why
-don't you go triage some of their reports instead of spraying more crap
-at the XFS list?
-
-> Kconfig: https://github.com/xupengfe/syzkaller_logs/blob/main/230319_210525_xfs_filestream_select_ag/kconfig_origin
-> v6.3-rc3 issue dmesg: https://github.com/xupengfe/syzkaller_logs/blob/main/230319_210525_xfs_filestream_select_ag/v6.3-rc3_issue_dmesg.log
-> Bisect info: https://github.com/xupengfe/syzkaller_logs/blob/main/230319_210525_xfs_filestream_select_ag/bisect_info.log
-> 
-> Bisected between v6.3-rc2 and v5.11 and found the bad commit:
-> "
-> 8ac5b996bf5199f15b7687ceae989f8b2a410dda
-> xfs: fix off-by-one-block in xfs_discard_folio()
-
-How does *fixing* an off by one error in the page cache produce a crash
-in the filestreams allocator?
-
-> Reverted the commit on top of v6.3-rc2 kernel, at least the BUG dmesg was gone.
-> 
-> And this issue could be reproduced in v6.3-rc3 kernel also.
-> Is it possible that the above commit involves a new issue?
-> 
-> "
-> [   62.318653] loop0: detected capacity change from 0 to 65536
-> [   62.320459] XFS (loop0): Mounting V5 Filesystem d6f69dbd-8c5d-46be-b88e-92c0ae88ceb2
-> [   62.325152] XFS (loop0): Ending clean mount
-> [   62.326049] XFS (loop0): Quotacheck needed: Please wait.
-> [   62.328884] XFS (loop0): Quotacheck: Done.
-> [   62.363656] XFS (loop0): Metadata CRC error detected at xfs_agf_read_verify+0x10e/0x140, xfs_agf block 0x8001 
-> [   62.364489] XFS (loop0): Unmount and run xfs_repair
-> [   62.364881] XFS (loop0): First 128 bytes of corrupted metadata buffer:
-> [   62.365398] 00000000: 58 41 47 46 00 00 00 01 00 00 00 01 00 00 40 00  XAGF..........@.
-> [   62.366026] 00000010: 00 00 00 02 00 00 00 03 00 00 00 00 00 00 00 01  ................
-> [   62.366657] 00000020: 00 00 00 01 00 00 00 00 00 00 00 01 00 00 00 04  ................
-> [   62.367285] 00000030: 00 00 00 04 00 00 3b 5f 00 00 3b 5c 00 00 00 00  ......;_..;\....
-> [   62.367927] 00000040: d6 f6 9d bd 8c 5d 46 be b8 8e 92 c0 ae 88 ce b2  .....]F.........
-> [   62.368554] 00000050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> [   62.369180] 00000060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> [   62.369806] 00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> [   62.370471] XFS (loop0): metadata I/O error in "xfs_read_agf+0xd0/0x200" at daddr 0x8001 len 1 error 74
-> [   62.371312] XFS (loop0): page discard on page 00000000a6a1237b, inode 0x46, pos 0.
-> [   62.385968] BUG: kernel NULL pointer dereference, address: 0000000000000010
-> [   62.386541] #PF: supervisor write access in kernel mode
-> [   62.386960] #PF: error_code(0x0002) - not-present page
-> [   62.387370] PGD 0 P4D 0 
-> [   62.387588] Oops: 0002 [#1] PREEMPT SMP NOPTI
-> [   62.387945] CPU: 1 PID: 74 Comm: kworker/u4:3 Not tainted 6.3.0-rc3-kvm-e8d018dd #1
-> [   62.388545] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.0-0-gd239552ce722-prebuilt.qemu.org 04/01/2014
-> [   62.389426] Workqueue: writeback wb_workfn (flush-7:0)
-> [   62.389845] RIP: 0010:xfs_filestream_select_ag+0x5d5/0xac0
-
-What source line and/or instruction does %rip point to?
-Considering that this is a null pointer deference, you ought to be able
-to identify which pointer access did this.
-
-If you are going to run some scripted tool to randomly corrupt the
-filesystem to find failures, then you have an ethical and moral
-responsibility to do some of the work to narrow down and identify the
-cause of the failure, not just throw them at someone to do all the work.
-
---D
-
-> [   62.390285] Code: 83 ff 49 89 5d 18 be 08 00 00 00 bf 20 00 00 00 e8 20 94 03 00 48 89 c3 48 85 c0 0f 84 57 04 00 00 e8 2f 30 83 ff 49 8b 45 18 <f0> ff 40 10 49 8b 45 18 48 8b 75 b8 48 89 da 48 89 43 18 48 8b 45
-> [   62.391712] RSP: 0018:ffffc9000092f4c0 EFLAGS: 00010246
-> [   62.392128] RAX: 0000000000000000 RBX: ffff88800b858940 RCX: 0000000000006cc0
-> [   62.392688] RDX: 0000000000000000 RSI: ffff88800a02a340 RDI: 0000000000000002
-> [   62.393246] RBP: ffffc9000092f548 R08: ffffc9000092f400 R09: 0000000000000000
-> [   62.393805] R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000001
-> [   62.394363] R13: ffffc9000092f588 R14: 0000000000000001 R15: ffffc9000092f708
-> [   62.394924] FS:  0000000000000000(0000) GS:ffff88807dd00000(0000) knlGS:0000000000000000
-> [   62.395553] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [   62.396008] CR2: 0000000000000010 CR3: 000000000ad7c003 CR4: 0000000000770ee0
-> [   62.396569] PKRU: 55555554
-> [   62.396793] Call Trace:
-> [   62.396996]  <TASK>
-> [   62.397179]  xfs_bmap_btalloc+0x706/0xb90
-> [   62.397512]  xfs_bmapi_allocate+0x25b/0x5e0
-> [   62.397850]  ? __sanitizer_cov_trace_pc+0x25/0x60
-> [   62.398239]  xfs_bmapi_convert_delalloc+0x335/0x6c0
-> [   62.398649]  xfs_map_blocks+0x2ff/0x740
-> [   62.398971]  ? __sanitizer_cov_trace_pc+0x25/0x60
-> [   62.399362]  iomap_do_writepage+0x43f/0xf10
-> [   62.399709]  write_cache_pages+0x2b8/0x7e0
-> [   62.400047]  ? __pfx_iomap_do_writepage+0x10/0x10
-> [   62.400438]  iomap_writepages+0x3e/0x80
-> [   62.400757]  xfs_vm_writepages+0x97/0xe0
-> [   62.401088]  ? __pfx_xfs_vm_writepages+0x10/0x10
-> [   62.401470]  do_writepages+0x10f/0x240
-> [   62.401783]  ? write_comp_data+0x2f/0x90
-> [   62.402112]  __writeback_single_inode+0x9f/0x780
-> [   62.402492]  ? write_comp_data+0x2f/0x90
-> [   62.402823]  writeback_sb_inodes+0x301/0x800
-> [   62.403184]  wb_writeback+0x18b/0x580
-> [   62.403495]  wb_workfn+0xca/0x880
-> [   62.403778]  ? __this_cpu_preempt_check+0x20/0x30
-> [   62.404171]  ? lock_acquire+0xe6/0x2b0
-> [   62.404484]  ? __this_cpu_preempt_check+0x20/0x30
-> [   62.404872]  ? write_comp_data+0x2f/0x90
-> [   62.405202]  process_one_work+0x3b1/0x860
-> [   62.405538]  worker_thread+0x52/0x660
-> [   62.405846]  ? __pfx_worker_thread+0x10/0x10
-> [   62.406202]  kthread+0x161/0x1a0
-> [   62.406475]  ? __pfx_kthread+0x10/0x10
-> [   62.406787]  ret_from_fork+0x29/0x50
-> [   62.407094]  </TASK>
-> [   62.407281] Modules linked in:
-> [   62.407535] CR2: 0000000000000010
-> [   62.407808] ---[ end trace 0000000000000000 ]---
-> [   62.408178] RIP: 0010:xfs_filestream_select_ag+0x5d5/0xac0
-> [   62.408619] Code: 83 ff 49 89 5d 18 be 08 00 00 00 bf 20 00 00 00 e8 20 94 03 00 48 89 c3 48 85 c0 0f 84 57 04 00 00 e8 2f 30 83 ff 49 8b 45 18 <f0> ff 40 10 49 8b 45 18 48 8b 75 b8 48 89 da 48 89 43 18 48 8b 45
-> [   62.410052] RSP: 0018:ffffc9000092f4c0 EFLAGS: 00010246
-> [   62.410469] RAX: 0000000000000000 RBX: ffff88800b858940 RCX: 0000000000006cc0
-> [   62.411032] RDX: 0000000000000000 RSI: ffff88800a02a340 RDI: 0000000000000002
-> [   62.411594] RBP: ffffc9000092f548 R08: ffffc9000092f400 R09: 0000000000000000
-> [   62.412155] R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000001
-> [   62.412716] R13: ffffc9000092f588 R14: 0000000000000001 R15: ffffc9000092f708
-> [   62.413278] FS:  0000000000000000(0000) GS:ffff88807dd00000(0000) knlGS:0000000000000000
-> [   62.413909] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [   62.414368] CR2: 0000000000000010 CR3: 000000000ad7c003 CR4: 0000000000770ee0
-> [   62.414934] PKRU: 55555554
-> [   62.415159] note: kworker/u4:3[74] exited with irqs disabled
-> [   62.415642] ------------[ cut here ]------------
-> [   62.416012] WARNING: CPU: 1 PID: 74 at kernel/exit.c:814 do_exit+0xe8a/0x12b0
-> [   62.416580] Modules linked in:
-> [   62.416833] CPU: 1 PID: 74 Comm: kworker/u4:3 Tainted: G      D            6.3.0-rc3-kvm-e8d018dd #1
-> [   62.417546] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.0-0-gd239552ce722-prebuilt.qemu.org 04/01/2014
-> [   62.418432] Workqueue: writeback wb_workfn (flush-7:0)
-> [   62.418861] RIP: 0010:do_exit+0xe8a/0x12b0
-> [   62.419197] Code: 00 65 01 05 b4 ba f0 7e e9 f4 fd ff ff e8 be 1e 1b 00 48 8b bb 98 09 00 00 31 f6 e8 30 b0 ff ff e9 74 fb ff ff e8 a6 1e 1b 00 <0f> 0b e9 3e f2 ff ff e8 9a 1e 1b 00 4c 89 ee bf 05 06 00 00 e8 bd
-> [   62.420652] RSP: 0018:ffffc9000092feb0 EFLAGS: 00010246
-> [   62.421072] RAX: 0000000000000000 RBX: ffff88800a02a340 RCX: 0000000000000001
-> [   62.421635] RDX: 0000000000000000 RSI: ffff88800a02a340 RDI: 0000000000000002
-> [   62.422195] RBP: ffffc9000092ff18 R08: 0000000000000000 R09: 0000000000000000
-> [   62.422758] R10: 34752f72656b726f R11: 776b203a65746f6e R12: 0000000000000000
-> [   62.423323] R13: 0000000000000009 R14: ffff88800a009900 R15: ffff8880093a1180
-> [   62.423902] FS:  0000000000000000(0000) GS:ffff88807dd00000(0000) knlGS:0000000000000000
-> [   62.424539] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [   62.425000] CR2: 0000000000000010 CR3: 000000000ad7c003 CR4: 0000000000770ee0
-> [   62.425568] PKRU: 55555554
-> [   62.425794] Call Trace:
-> [   62.426000]  <TASK>
-> [   62.426183]  ? write_comp_data+0x2f/0x90
-> [   62.426513]  make_task_dead+0x100/0x290
-> [   62.426832]  rewind_stack_and_make_dead+0x17/0x20
-> [   62.427227]  </TASK>
-> [   62.427414] irq event stamp: 122544
-> [   62.427715] hardirqs last  enabled at (122543): [<ffffffff821395dd>] get_random_u32+0x1dd/0x360
-> [   62.428409] hardirqs last disabled at (122544): [<ffffffff82f8d76e>] exc_page_fault+0x4e/0x3b0
-> [   62.429094] softirqs last  enabled at (114870): [<ffffffff82fb01a9>] __do_softirq+0x2d9/0x3c3
-> [   62.429771] softirqs last disabled at (114849): [<ffffffff81126724>] irq_exit_rcu+0xc4/0x100
-> [   62.430443] ---[ end trace 0000000000000000 ]---
-> "
-> 
-> I hope it's helpful.
-> 
-> Thanks!
-> 
-> ---
-> 
-> If you don't need the following environment to reproduce the problem or if you
-> already have one, please ignore the following information.
-> 
-> How to reproduce:
-> git clone https://gitlab.com/xupengfe/repro_vm_env.git
-> cd repro_vm_env
-> tar -xvf repro_vm_env.tar.gz
-> cd repro_vm_env; ./start3.sh  // it needs qemu-system-x86_64 and I used v7.1.0
->    // start3.sh will load bzImage_2241ab53cbb5cdb08a6b2d4688feb13971058f65 v6.2-rc5 kernel
->    // You could change the bzImage_xxx as you want
-> You could use below command to log in, there is no password for root.
-> ssh -p 10023 root@localhost
-> 
-> After login vm(virtual machine) successfully, you could transfer reproduced
-> binary to the vm by below way, and reproduce the problem in vm:
-> gcc -pthread -o repro repro.c
-> scp -P 10023 repro root@localhost:/root/
-> 
-> Get the bzImage for target kernel:
-> Please use target kconfig and copy it to kernel_src/.config
-> make olddefconfig
-> make -jx bzImage           //x should equal or less than cpu num your pc has
-> 
-> Fill the bzImage file into above start3.sh to load the target kernel in vm.
-> 
-> 
-> Tips:
-> If you already have qemu-system-x86_64, please ignore below info.
-> If you want to install qemu v7.1.0 version:
-> git clone https://github.com/qemu/qemu.git
-> cd qemu
-> git checkout -f v7.1.0
-> mkdir build
-> cd build
-> yum install -y ninja-build.x86_64
-> ../configure --target-list=x86_64-softmmu --enable-kvm --enable-vnc --enable-gtk --enable-sdl
-> make
-> make install
-> 
-> Thanks!
-> BR.
+T24gRnJpLCAyMDIzLTAzLTE3IGF0IDE2OjQ1IC0wNzAwLCBEYXJyaWNrIEouIFdvbmcgd3JvdGU6
+DQo+IE9uIEZyaSwgTWFyIDE3LCAyMDIzIGF0IDA3OjA2OjA3UE0gKzAwMDAsIEFsbGlzb24gSGVu
+ZGVyc29uIHdyb3RlOg0KPiA+IE9uIFRodSwgMjAyMy0wMy0xNiBhdCAxMTo1NCAtMDcwMCwgRGFy
+cmljayBKLiBXb25nIHdyb3RlOg0KPiA+ID4gSGkgZXZlcnlvbmUsDQo+ID4gPiANCj4gPiA+IFRo
+aXMgZGVsdWdlIGNvbnRhaW5zIGFsbCBvZiB0aGUgYWRkaXRpb25zIHRvIHRoZSBwYXJlbnQgcG9p
+bnRlcnMNCj4gPiA+IHBhdGNoc2V0IHRoYXQgSSd2ZSBiZWVuIHdvcmtpbmcgc2luY2UgbGFzdCBt
+b250aCdzIGRlbHVnZS7CoCBUaGUNCj4gPiA+IGtlcm5lbA0KPiA+ID4gYW5kIHhmc3Byb2dzIHBh
+dGNoc2V0cyBhcmUgYmFzZWQgb24gQWxsaXNvbidzIHYxMCB0YWcgZnJvbSBsYXN0DQo+ID4gPiB3
+ZWVrOw0KPiA+ID4gdGhlIGZzdGVzdHMgcGF0Y2hlcyBhcmUgbWVyZWx5IGEgcGFydCBvZiBteSBk
+ZXZlbG9wbWVudCB0cmVlLsKgIFRvDQo+ID4gPiByZWNhcA0KPiA+ID4gQWxsaXNvbidzIGNvdmVy
+IGxldHRlcjoNCj4gPiA+IA0KPiA+ID4gIlRoZSBnb2FsIG9mIHRoaXMgcGF0Y2ggc2V0IGlzIHRv
+IGFkZCBhIHBhcmVudCBwb2ludGVyIGF0dHJpYnV0ZQ0KPiA+ID4gdG8NCj4gPiA+IGVhY2gNCj4g
+PiA+IGlub2RlLsKgIFRoZSBhdHRyaWJ1dGUgbmFtZSBjb250YWluaW5nIHRoZSBwYXJlbnQgaW5v
+ZGUsDQo+ID4gPiBnZW5lcmF0aW9uLA0KPiA+ID4gYW5kDQo+ID4gPiBkaXJlY3Rvcnkgb2Zmc2V0
+LCB3aGlsZSB0aGXCoCBhdHRyaWJ1dGUgdmFsdWUgY29udGFpbnMgdGhlIGZpbGUNCj4gPiA+IG5h
+bWUuDQo+ID4gPiBUaGlzIGZlYXR1cmUgd2lsbCBlbmFibGUgZnV0dXJlIG9wdGltaXphdGlvbnMg
+Zm9yIG9ubGluZSBzY3J1YiwNCj4gPiA+IHNocmluaywNCj4gPiA+IG5mcyBoYW5kbGVzLCB2ZXJp
+dHksIG9yIGFueSBvdGhlciBmZWF0dXJlIHRoYXQgY291bGQgbWFrZSB1c2Ugb2YNCj4gPiA+IHF1
+aWNrbHkNCj4gPiA+IGRlcml2aW5nIGFuIGlub2RlcyBwYXRoIGZyb20gdGhlIG1vdW50IHBvaW50
+LiINCj4gPiA+IA0KPiA+ID4gdjEwcjFkMiByZWJhc2VzIGV2ZXJ5dGhpbmcgYWdhaW5zdCA2LjMt
+cmMyLsKgIEkgc3RpbGwgd2FudCB0bw0KPiA+ID4gcmVtb3ZlDQo+ID4gPiB0aGUNCj4gPiA+IGRp
+cm9mZnNldCBmcm9tIHRoZSBvbmRpc2sgcGFyZW50IHBvaW50ZXIsIGJ1dCBmb3IgdjEwIEkndmUN
+Cj4gPiA+IHJlcGxhY2VkDQo+ID4gPiB0aGUNCj4gPiA+IHNoYTUxMiBoYXNoaW5nIGNvZGUgd2l0
+aCBtb2RpZmljYXRpb25zIHRvIHRoZSB4YXR0ciBjb2RlIHRvDQo+ID4gPiBzdXBwb3J0DQo+ID4g
+PiBsb29rdXBzIGJhc2VkIG9uIG5hbWUgKmFuZCogdmFsdWUuwqAgV2l0aCB0aGF0IHdvcmtpbmcs
+IHdlIGNhbg0KPiA+ID4gZW5jb2RlDQo+ID4gPiBwYXJlbnQgcG9pbnRlcnMgbGlrZSB0aGlzOg0K
+PiA+ID4gDQo+ID4gPiDCoMKgwqDCoMKgwqDCoMKgKHBhcmVudF9pbm8sIHBhcmVudF9nZW4sIG5h
+bWVbXSkNCj4gPiA+IA0KPiA+ID4geGF0dHIgbG9va3VwcyBzdGlsbCB3b3JrIGNvcnJlY3RseSwg
+YW5kIHJlcGFpciBkb2Vzbid0IGhhdmUgdG8NCj4gPiA+IGRlYWwNCj4gPiA+IHdpdGgNCj4gPiA+
+IGtlZXBpbmcgdGhlIGRpcm9mZnNldHMgaW4gc3luYyBpZiB0aGUgZGlyZWN0b3J5IGdldHMgcmVi
+dWlsdC7CoA0KPiA+ID4gV2l0aA0KPiA+ID4gdGhpcw0KPiA+ID4gY2hhbmdlIGFwcGxpZWQsIEkn
+bSByZWFkeSB0byB3ZWF2ZSBteSBuZXcgY2hhbmdlcyBpbnRvIEFsbGlzb24ncw0KPiA+ID4gdjEw
+DQo+ID4gPiBhbmQNCj4gPiA+IGNhbGwgcGFyZW50IHBvaW50ZXJzIGRvbmUuIDopDQo+ID4gPiAN
+Cj4gPiA+IFRoZSBvbmxpbmUgZGlyZWN0b3J5IGFuZCBwYXJlbnQgcG9pbnRlciBjb2RlIGFyZSBl
+eGFjdGx5IHRoZSBzYW1lDQo+ID4gPiBhcw0KPiA+ID4gdGhlDQo+ID4gPiB2OXIyZDEgcmVsZWFz
+ZSwgc28gSSdtIGVsaWRpbmcgdGhhdCBhbmQgZXZlcnl0aGluZyB0aGF0IHdhcyBpbg0KPiA+ID4g
+QWxsaXNvbidzDQo+ID4gPiByZWNlbnQgdjEwIHBhdGNoc2V0LsKgIElPV3MsIHRoaXMgZGVsdWdl
+IGluY2x1ZGVzIG9ubHkgdGhlIGJ1Zw0KPiA+ID4gZml4ZXMNCj4gPiA+IEkndmUNCj4gPiA+IG1h
+ZGUgdG8gcGFyZW50IHBvaW50ZXJzLCB0aGUgdXBkYXRlcyBJJ3ZlIG1hZGUgdG8gdGhlIG9uZGlz
+aw0KPiA+ID4gZm9ybWF0LA0KPiA+ID4gYW5kDQo+ID4gPiB0aGUgbmVjZXNzYXJ5IGNoYW5nZXMg
+dG8gZnN0ZXN0cyB0byBnZXQgZXZlcnl0aGluZyB0byBwYXNzLg0KPiA+ID4gDQo+ID4gPiBJZiB5
+b3Ugd2FudCB0byBwdWxsIHRoZSB3aG9sZSB0aGluZywgdXNlIHRoZXNlIGxpbmtzOg0KPiA+ID4g
+aHR0cHM6Ly91cmxkZWZlbnNlLmNvbS92My9fX2h0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3Nj
+bS9saW51eC9rZXJuZWwvZ2l0L2Rqd29uZy94ZnMtbGludXguZ2l0L2xvZy8/aD1wcHRycy1kcm9w
+LXVubmVjZXNzYXJ5X187ISFBQ1dWNU45TTJSVjk5aFEhTW5rQmJ5REtFZGdRaVhMZm1YWjg3dVRf
+al9UQXRRSEhBMVVyYVBmMDFvcDZ3TnBSWmtrMnRnNUNYcnU0ZUw2LXB6SnlVbC11SkFabFNyR1d3
+REZwJA0KPiA+ID4gwqANCj4gPiA+IGh0dHBzOi8vdXJsZGVmZW5zZS5jb20vdjMvX19odHRwczov
+L2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9kandvbmcveGZzcHJvZ3Mt
+ZGV2LmdpdC9sb2cvP2g9cHB0cnMtZHJvcC11bm5lY2Vzc2FyeV9fOyEhQUNXVjVOOU0yUlY5OWhR
+IU1ua0JieURLRWRnUWlYTGZtWFo4N3VUX2pfVEF0UUhIQTFVcmFQZjAxb3A2d05wUlprazJ0ZzVD
+WHJ1NGVMNi1wekp5VWwtdUpBWmxTbWpPaDZYNyQNCj4gPiA+IMKgDQo+ID4gPiBodHRwczovL3Vy
+bGRlZmVuc2UuY29tL3YzL19faHR0cHM6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tl
+cm5lbC9naXQvZGp3b25nL3hmc3Rlc3RzLWRldi5naXQvbG9nLz9oPXBwdHJzLW5hbWUtaW4tYXR0
+ci1rZXlfXzshIUFDV1Y1TjlNMlJWOTloUSFNbmtCYnlES0VkZ1FpWExmbVhaODd1VF9qX1RBdFFI
+SEExVXJhUGYwMW9wNndOcFJaa2sydGc1Q1hydTRlTDYtcHpKeVVsLXVKQVpsU2x1bE9odUokDQo+
+ID4gPiDCoA0KPiA+ID4gDQo+ID4gPiBBbGxpc29uOiBDb3VsZCB5b3UgcGxlYXNlIHJlc3luYyBs
+aWJ4ZnMgaW4gdGhlIGZvbGxvd2luZyBwYXRjaGVzDQo+ID4gPiB1bmRlcg0KPiA+ID4gaHR0cHM6
+Ly91cmxkZWZlbnNlLmNvbS92My9fX2h0dHBzOi8vZ2l0aHViLmNvbS9hbGxpc29uaGVuZGVyc29u
+L3hmc3Byb2dzL2NvbW1pdHMveGZzcHJvZ3NfbmV3X3BwdHJzX3YxMF9fOyEhQUNXVjVOOU0yUlY5
+OWhRIU1ua0JieURLRWRnUWlYTGZtWFo4N3VUX2pfVEF0UUhIQTFVcmFQZjAxb3A2d05wUlprazJ0
+ZzVDWHJ1NGVMNi1wekp5VWwtdUpBWmxTcWlYYTN4TiQNCj4gPiA+IMKgDQo+ID4gPiBwbGVhc2U/
+DQo+ID4gPiANCj4gPiA+IHhmc3Byb2dzOiBhZGQgcGFyZW50IHBvaW50ZXIgc3VwcG9ydCB0byBh
+dHRyaWJ1dGUgY29kZQ0KPiA+ID4geGZzcHJvZ3M6IGV4dGVuZCB0cmFuc2FjdGlvbiByZXNlcnZh
+dGlvbnMgZm9yIHBhcmVudCBhdHRyaWJ1dGVzDQo+ID4gPiB4ZnNwcm9nczogcGFyZW50IHBvaW50
+ZXIgYXR0cmlidXRlIGNyZWF0aW9uDQo+ID4gPiB4ZnNwcm9nczogcmVtb3ZlIHBhcmVudCBwb2lu
+dGVycyBpbiB1bmxpbmsNCj4gPiA+IHhmc3Byb2dzOiBBZGQgcGFyZW50IHBvaW50ZXJzIHRvIHJl
+bmFtZQ0KPiA+ID4geGZzcHJvZ3M6IG1vdmUvYWRkIHBhcmVudCBwb2ludGVyIHZhbGlkYXRvcnMg
+dG8geGZzX3BhcmVudA0KPiA+ID4gDQo+ID4gPiBUaGVyZSBhcmUgZGlzY3JlcGFuY2llcyBiZXR3
+ZWVuIHRoZSB0d28sIHdoaWNoIG1ha2VzDQo+ID4gPiAuL3Rvb2xzL2xpYnhmcy0NCj4gPiA+IGRp
+ZmYNCj4gPiA+IHVuaGFwcHkuwqAgT3IsIGlmIHlvdSB3YW50IG1lIHRvIG1lcmdlIG15IG9uZGlz
+ayBmb3JtYXQgY2hhbmdlcw0KPiA+ID4gaW50bw0KPiA+ID4gbXkNCj4gPiA+IGJyYW5jaGVzLCBJ
+J2xsIHB1dCBvdXQgdjExIHdpdGggZXZlcnl0aGluZyB0YWtlbiBjYXJlIG9mLg0KPiA+IFN1cmUs
+IHdpbGwgcmVzeW5jLCBhcyBJIHJlY2FsbCBzb21lIG9mIHRoZW0gaGFkIHRvIGRldmlhdGUgYSBs
+aXR0bGUNCj4gPiBiaXQNCj4gPiBiZWNhdXNlIHRoZSBjb3JyZXNwb25kaW5nIGNvZGUgYXBwZWFy
+cyBpbiBkaWZmZXJlbnQgcGxhY2VzLCBvcg0KPiA+IG5lZWRlZA0KPiA+IHNwZWNpYWwgaGFuZGxp
+bmcuDQo+IA0KPiBPaywgdGhhbmsgeW91LsKgIEl0J3MgZWFzaWVyIHRvIGRldmVsb3AgeGZzcHJv
+Z3MgY29kZSB3aGVuIGxpYnhmcyBjYW4NCj4gYmUNCj4ga2VwdCBpbiBzeW5jIGVhc2lseS4NCg0K
+SGVyZSBpcyBhIHJlc3luYywgc29tZSBvZiB0aGVtIHN0aWxsIG5lZWRlZCBoYW5kIHBvcnRpbmcs
+IGJ1dCBpdCBsb29rcw0KbGlrZSBpdCBzeW5jJ2QgdXAgYSBsb3Qgb2Ygd2hpdGUgc3BhY2Ugc28g
+bGV0IG1lIGtub3cgaWYgdGhpcyBjbGVhcnMgdXANCnRoaW5ncyBmb3IgeW91DQpodHRwczovL2dp
+dGh1Yi5jb20vYWxsaXNvbmhlbmRlcnNvbi94ZnNwcm9ncy90cmVlL3hmc3Byb2dzX25ld19wcHRy
+c192MTByMQ0KDQpBbGxpc29uDQoNCj4gDQo+ID4gT3JpZ2luYWxseSBteSBpbnRlbnQgd2FzIGp1
+c3QgdG8gZ2V0IHRoZSBrZXJuZWwgc2lkZSBvZiB0aGluZ3MNCj4gPiBzZXR0bGVkDQo+ID4gYW5k
+IGxhbmRlZCBmaXJzdCwgYW5kIHRoZW4gZ3JpbmQgdGhyb3VnaCB0aGUgb3RoZXIgc3BhY2VzIHNp
+bmNlDQo+ID4gdXNlcg0KPiA+IHNwYWNlIGlzIG1vc3RseSBhIHBvcnQuwqAgSSB3YXMgdHJ5aW5n
+IHRvIGF2b2lkIHNlbmRpbmcgb3V0IGdpYW50DQo+ID4gZGVsdWdlcyBzaW5jZSBwZW9wbGUgc2Vl
+bWVkIHRvIGdldCBodW5nIHVwIGVub3VnaCBpbiBqdXN0IGtlcm5lbA0KPiA+IHNwYWNlDQo+ID4g
+cmV2aWV3cy4NCj4gDQo+IFllYWgsICd0aXMgdHJ1ZSB0aGF0IHNlbmRpbmcgeGZzcHJvZ3MgbGli
+eGZzIHBhdGNoZXMgcHJlbWF0dXJlbHkgaXMNCj4ganVzdA0KPiBub2lzZSBvbiB0aGUgbGlzdC4g
+Oi8NCj4gDQo+IFRoYXQgc2FpZCwgdGhlIGNsb3NlciBhIHBhdGNoc2V0IGdldHMgdG8gZmluYWwg
+cmV2aWV3LCB0aGUgdGlkaWVyIHRoZQ0KPiB4ZnNwcm9ncyBwYXJ0IG91Z2h0IHRvIGJlLsKgIEkn
+dmUgYWRkZWQgc3VwcG9ydCBpbiByZXBhaXIgYW5kIHRoZQ0KPiBkZWJ1Z2dlciwgd2hpY2ggbWVh
+bnMgdGhpcyBpcyAvdmVyeS8gY2xvc2UgdG8gaXRzIGZpbmFsIHJldmlldy4NCj4gDQo+IC0tRA0K
+PiANCj4gPiBUaGFua3MgZm9yIGFsbCB0aGUgaGVscCB0aG8uDQo+ID4gDQo+ID4gQWxsaXNvbg0K
+PiA+IA0KPiA+ID4gDQo+ID4gPiAtLUQNCj4gPiANCg0K
