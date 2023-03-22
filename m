@@ -2,59 +2,45 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00929C6FD1C
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Mar 2023 05:41:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF1ECC6FD1F
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Mar 2023 08:34:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229896AbjCVFlt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Mar 2023 01:41:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56676 "EHLO
+        id S230253AbjCVIeu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Mar 2023 04:34:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229912AbjCVFlt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Mar 2023 01:41:49 -0400
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5330D3FBBF;
-        Tue, 21 Mar 2023 22:41:46 -0700 (PDT)
-Received: by mail-pf1-x430.google.com with SMTP id c4so10439242pfl.0;
-        Tue, 21 Mar 2023 22:41:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1679463706;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=q4AvIXzvw3CsklYuLdsWfKiwZldi09EF5IbRCiC4jps=;
-        b=W53WgOijzJdl9bNR6Y5U3IeV+x7LsP7b5DM7BqVukp+H9lsvLycVb8gMuirAKiMQv8
-         8WkPNdUvCCW2lk7SyFGv1kllOHKbBQ+x1JGDLWtJyi9o339XR+ldbOG4EijMlOYPu7rY
-         qrezg49ISozTc/b/zCxrFfhHnrbCVzBKnSK4q4sPT7KNJbwRfdqjwuAHbSWBvKw+FcfD
-         ly6psFiOj7HX/YhkhUTFFACsnaHhu+jvSf88m76P6fedkICdUDVS/gMd7ryOP4Wbcbjy
-         dBFwW2jfSlIrFbtE9JWNNkePvUWX+ctfJmyK7frAOpE8ONsy7Bd+s3d/G1slIM+kj6uN
-         cEsw==
+        with ESMTP id S230161AbjCVIer (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Mar 2023 04:34:47 -0400
+Received: from mail-il1-f197.google.com (mail-il1-f197.google.com [209.85.166.197])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 842B513D6D
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Mar 2023 01:34:38 -0700 (PDT)
+Received: by mail-il1-f197.google.com with SMTP id d3-20020a056e02050300b00317999dcfb1so9382713ils.4
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Mar 2023 01:34:38 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679463706;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=q4AvIXzvw3CsklYuLdsWfKiwZldi09EF5IbRCiC4jps=;
-        b=QuPkFVqSOko8JIXUkvQViEoaYxhjxw5ss4WPg7qLsJGNRTL5jA4UFLJxM/F3yADXWJ
-         7HX0mpMz3etsim8nwdE8d15QFzRDYV7l7JD32CUbto4IRSzL+pwKLVdPiO1/ldOVaYii
-         UVmPY1+0TQCY7rkTu6V0HjStVQcbiSZH6PoKvIU36TXVE86v+FQo/gMp4Kfx7tzNZ+8E
-         HQIJoCEMZABLesc0RlYdssPtY+/tJC7aw+/VGdymOCI41W1oJQId7vc0cgxIns+VHjS3
-         8EcZTAeIUHh7zLqrMGEMmk+7r4TiHRqPrLbWqs/WdxzlsKHJRHwjcCTMDzbHb6FsCf7m
-         Emog==
-X-Gm-Message-State: AO0yUKV8g9w5wYEMQqTuw4URMhRGWV3uVSSLEkGPJJcE4MPZaJUwirmY
-        7tLBjxm8uffNMMUCZRq2bRYRF66sCSfZDFirAHc=
-X-Google-Smtp-Source: AK7set9sjy9O1ZU4ulXRaSJ2vkwJpdnlLEUIA+hL7pQ8pbtoxWVAkmgK7pGt2P70e8sjiZQP7aO6FCNgLqa6US4uCfc=
-X-Received: by 2002:a05:6a00:2d10:b0:625:ccea:1627 with SMTP id
- fa16-20020a056a002d1000b00625ccea1627mr1196919pfb.5.1679463705542; Tue, 21
- Mar 2023 22:41:45 -0700 (PDT)
+        d=1e100.net; s=20210112; t=1679474078;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=wRMzSlulrwzbuSJ2HiNXW+2IVvehimYVDd96RcKYNA0=;
+        b=dSZVP+5VmNV3NMXu5QzoWd0skdC+6+KT1taa0MWnhnG28i0w7V2stbTnNi0vETGAxS
+         8+MeSMb817wNvv5331T6KV++vC6P27SLWr9gJxQoQSLXArouOyiVHFxdli5TPTB5AjmR
+         9ge/ughMqCMt1yFkrnKzZWdrGZ4C/hqeX+9XfYmZTOoA+E4VyK/jJZ7n1DKBUbtVo/Ay
+         gGKxXMPU2fL4TTTpe3RXdjlc/2N5mrBtAbSDOwWgNpcbm62Yml5fxY/87Y+Uj2kMke9d
+         lGsJL5huxvMPGlp/NoNAB4l2l/qTZakwjYXvP/Z2/DhqDrIaNYlZry2kj9RjwGjXxfw2
+         0ztw==
+X-Gm-Message-State: AO0yUKXYHkf+JOzEkCs37KZgs+lV0+CP6YWk2rfa1KVObGuEaP5G54z4
+        wgvEfSE+qGv5ILYw9tb8DBRw0RFMsPqBQBWRGOb6pce/gugZ
+X-Google-Smtp-Source: AK7set+tI2Y78k2+QDv4uXZRXjvDYAAv/HXX/9DmxwQd3c4SXLSXWsPSHfIbrXd+kuOZLZabV9dj97JlmKi8efueuIpj31O3HlIj
 MIME-Version: 1.0
-References: <00000000000056cdc905f76c0733@google.com>
-In-Reply-To: <00000000000056cdc905f76c0733@google.com>
-From:   Lorenzo Stoakes <lstoakes@gmail.com>
-Date:   Wed, 22 Mar 2023 05:41:34 +0000
-Message-ID: <CAA5enKbNWqTp13a6dgkbm+aDY-PBr24x=aGXz6=JUxc0OM1UPg@mail.gmail.com>
-Subject: Re: [syzbot] [xfs?] BUG: sleeping function called from invalid
- context in vm_map_ram
-To:     syzbot <syzbot+6d9043ea38ed2b9ef000@syzkaller.appspotmail.com>
-Cc:     akpm@linux-foundation.org, djwong@kernel.org,
+X-Received: by 2002:a6b:701a:0:b0:745:c41a:8f0f with SMTP id
+ l26-20020a6b701a000000b00745c41a8f0fmr2405904ioc.2.1679474077859; Wed, 22 Mar
+ 2023 01:34:37 -0700 (PDT)
+Date:   Wed, 22 Mar 2023 01:34:37 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000d207ef05f7790759@google.com>
+Subject: [syzbot] [xfs?] KASAN: null-ptr-deref Write in xfs_filestream_select_ag
+From:   syzbot <syzbot+87466712bb342796810a@syzkaller.appspotmail.com>
+To:     dchinner@redhat.com, djwong@kernel.org,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
 Content-Type: text/plain; charset="UTF-8"
@@ -62,42 +48,98 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 21 Mar 2023 at 17:03, syzbot
-<syzbot+6d9043ea38ed2b9ef000@syzkaller.appspotmail.com> wrote:
->
-> Hello,
->
-> syzbot found the following issue on:
->
-> HEAD commit:    73f2c2a7e1d2 Add linux-next specific files for 20230320
-> git tree:       linux-next
-> console+strace: https://syzkaller.appspot.com/x/log.txt?x=11ad6e1cc80000
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=f22105589e896af1
-> dashboard link: https://syzkaller.appspot.com/bug?extid=6d9043ea38ed2b9ef000
-> compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
-> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=17d199bac80000
-> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=159c7281c80000
->
-> Downloadable assets:
-> disk image: https://storage.googleapis.com/syzbot-assets/2e4e105e18cf/disk-73f2c2a7.raw.xz
-> vmlinux: https://storage.googleapis.com/syzbot-assets/08d761112297/vmlinux-73f2c2a7.xz
-> kernel image: https://storage.googleapis.com/syzbot-assets/4b39e3e871ce/bzImage-73f2c2a7.xz
-> mounted in repro: https://storage.googleapis.com/syzbot-assets/662e0db5efdd/mount_0.gz
->
-> The issue was bisected to:
->
-> commit 8f4977bdd77ee3dce8af81488231e7535695f889
-> Author: Lorenzo Stoakes <lstoakes@gmail.com>
-> Date:   Sun Mar 19 07:09:31 2023 +0000
->
->     mm: vmalloc: use rwsem, mutex for vmap_area_lock and vmap_block->lock
+Hello,
 
-This patch has already been dropped in mm-unstable which will
-eventually reach linux-next. The current revision of this patch set
-retains the spinlocks.
+syzbot found the following issue on:
 
-[snip]
+HEAD commit:    17214b70a159 Merge tag 'fsverity-for-linus' of git://git.k..
+git tree:       upstream
+console+strace: https://syzkaller.appspot.com/x/log.txt?x=17938109c80000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=d40f6d44826f6cf7
+dashboard link: https://syzkaller.appspot.com/bug?extid=87466712bb342796810a
+compiler:       Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1492946ac80000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=12e45ad6c80000
 
--- 
-Lorenzo Stoakes
-https://ljs.io
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/d166fda7fbbd/disk-17214b70.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/0c16461022b9/vmlinux-17214b70.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/53e9e40da8bb/bzImage-17214b70.xz
+mounted in repro: https://storage.googleapis.com/syzbot-assets/52081e4a3707/mount_0.gz
+
+The issue was bisected to:
+
+commit 3e43877a9dac13771ac722462c87bea0bdc50759
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Sun Feb 12 22:14:55 2023 +0000
+
+    xfs: remove xfs_filestream_select_ag() longest extent check
+
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=13cee69ac80000
+final oops:     https://syzkaller.appspot.com/x/report.txt?x=102ee69ac80000
+console output: https://syzkaller.appspot.com/x/log.txt?x=17cee69ac80000
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+87466712bb342796810a@syzkaller.appspotmail.com
+Fixes: 3e43877a9dac ("xfs: remove xfs_filestream_select_ag() longest extent check")
+
+XFS (loop0): metadata I/O error in "xfs_read_agf+0x2c9/0x600" at daddr 0x1 len 1 error 117
+XFS (loop0): page discard on page ffffea0001c573c0, inode 0x2a, pos 0.
+==================================================================
+BUG: KASAN: null-ptr-deref in instrument_atomic_read_write include/linux/instrumented.h:102 [inline]
+BUG: KASAN: null-ptr-deref in atomic_inc include/linux/atomic/atomic-instrumented.h:190 [inline]
+BUG: KASAN: null-ptr-deref in xfs_filestream_pick_ag fs/xfs/xfs_filestream.c:156 [inline]
+BUG: KASAN: null-ptr-deref in xfs_filestream_create_association fs/xfs/xfs_filestream.c:301 [inline]
+BUG: KASAN: null-ptr-deref in xfs_filestream_select_ag+0x14e5/0x1ca0 fs/xfs/xfs_filestream.c:372
+Write of size 4 at addr 00000000000001c0 by task kworker/u4:3/47
+
+CPU: 0 PID: 47 Comm: kworker/u4:3 Not tainted 6.3.0-rc3-syzkaller-00012-g17214b70a159 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/02/2023
+Workqueue: writeback wb_workfn (flush-7:0)
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:88 [inline]
+ dump_stack_lvl+0x1e7/0x2d0 lib/dump_stack.c:106
+ print_report+0xe6/0x540 mm/kasan/report.c:433
+ kasan_report+0x176/0x1b0 mm/kasan/report.c:536
+ kasan_check_range+0x283/0x290 mm/kasan/generic.c:187
+ instrument_atomic_read_write include/linux/instrumented.h:102 [inline]
+ atomic_inc include/linux/atomic/atomic-instrumented.h:190 [inline]
+ xfs_filestream_pick_ag fs/xfs/xfs_filestream.c:156 [inline]
+ xfs_filestream_create_association fs/xfs/xfs_filestream.c:301 [inline]
+ xfs_filestream_select_ag+0x14e5/0x1ca0 fs/xfs/xfs_filestream.c:372
+ xfs_bmap_btalloc_filestreams fs/xfs/libxfs/xfs_bmap.c:3558 [inline]
+ xfs_bmap_btalloc+0xffa/0x28a0 fs/xfs/libxfs/xfs_bmap.c:3672
+ xfs_bmapi_allocate+0x647/0xf30
+ xfs_bmapi_convert_delalloc+0x98f/0x1310 fs/xfs/libxfs/xfs_bmap.c:4554
+ xfs_convert_blocks fs/xfs/xfs_aops.c:266 [inline]
+ xfs_map_blocks+0x780/0x1090 fs/xfs/xfs_aops.c:389
+ iomap_writepage_map fs/iomap/buffered-io.c:1641 [inline]
+ iomap_do_writepage+0x941/0x2ee0 fs/iomap/buffered-io.c:1803
+ write_cache_pages+0x89e/0x12c0 mm/page-writeback.c:2473
+ iomap_writepages+0x68/0x240 fs/iomap/buffered-io.c:1820
+ xfs_vm_writepages+0x139/0x1a0 fs/xfs/xfs_aops.c:513
+ do_writepages+0x3a6/0x670 mm/page-writeback.c:2551
+ __writeback_single_inode+0x155/0xfb0 fs/fs-writeback.c:1600
+ writeback_sb_inodes+0x8ef/0x11d0 fs/fs-writeback.c:1891
+ wb_writeback+0x458/0xc70 fs/fs-writeback.c:2065
+ wb_do_writeback fs/fs-writeback.c:2208 [inline]
+ wb_workfn+0x400/0xff0 fs/fs-writeback.c:2248
+ process_one_work+0x8a0/0x10e0 kernel/workqueue.c:2390
+ worker_thread+0xa63/0x1210 kernel/workqueue.c:2537
+ kthread+0x270/0x300 kernel/kthread.c:376
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:308
+ </TASK>
+==================================================================
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+syzbot can test patches for this issue, for details see:
+https://goo.gl/tpsmEJ#testing-patches
