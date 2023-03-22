@@ -2,144 +2,342 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF1ECC6FD1F
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Mar 2023 08:34:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EB94C6FD1F
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Mar 2023 10:24:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230253AbjCVIeu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Mar 2023 04:34:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36574 "EHLO
+        id S229635AbjCVKYs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Mar 2023 06:24:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230161AbjCVIer (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Mar 2023 04:34:47 -0400
-Received: from mail-il1-f197.google.com (mail-il1-f197.google.com [209.85.166.197])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 842B513D6D
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Mar 2023 01:34:38 -0700 (PDT)
-Received: by mail-il1-f197.google.com with SMTP id d3-20020a056e02050300b00317999dcfb1so9382713ils.4
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Mar 2023 01:34:38 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679474078;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=wRMzSlulrwzbuSJ2HiNXW+2IVvehimYVDd96RcKYNA0=;
-        b=dSZVP+5VmNV3NMXu5QzoWd0skdC+6+KT1taa0MWnhnG28i0w7V2stbTnNi0vETGAxS
-         8+MeSMb817wNvv5331T6KV++vC6P27SLWr9gJxQoQSLXArouOyiVHFxdli5TPTB5AjmR
-         9ge/ughMqCMt1yFkrnKzZWdrGZ4C/hqeX+9XfYmZTOoA+E4VyK/jJZ7n1DKBUbtVo/Ay
-         gGKxXMPU2fL4TTTpe3RXdjlc/2N5mrBtAbSDOwWgNpcbm62Yml5fxY/87Y+Uj2kMke9d
-         lGsJL5huxvMPGlp/NoNAB4l2l/qTZakwjYXvP/Z2/DhqDrIaNYlZry2kj9RjwGjXxfw2
-         0ztw==
-X-Gm-Message-State: AO0yUKXYHkf+JOzEkCs37KZgs+lV0+CP6YWk2rfa1KVObGuEaP5G54z4
-        wgvEfSE+qGv5ILYw9tb8DBRw0RFMsPqBQBWRGOb6pce/gugZ
-X-Google-Smtp-Source: AK7set+tI2Y78k2+QDv4uXZRXjvDYAAv/HXX/9DmxwQd3c4SXLSXWsPSHfIbrXd+kuOZLZabV9dj97JlmKi8efueuIpj31O3HlIj
+        with ESMTP id S229459AbjCVKYq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Mar 2023 06:24:46 -0400
+Received: from mail3.bemta32.messagelabs.com (mail3.bemta32.messagelabs.com [195.245.230.17])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD3B64345B;
+        Wed, 22 Mar 2023 03:24:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
+        s=170520fj; t=1679480682; i=@fujitsu.com;
+        bh=Nhz8yw4hujGQqI1pQHVR8h0qElshoZ06SFGPRu/sOIo=;
+        h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+         In-Reply-To:Content-Type:Content-Transfer-Encoding;
+        b=ZrLJlMAkxqoS6JjpsdoJXSSca1u1VzV/9OkaMrcFoiIWPUQzvPMV1DU9xJygmQ1J/
+         h0yO0M+0gqWWy7ZOm8BFgF3Y9pJXAbT0msTJ9wveJJ4x+2tsDAgi2gBxRlLgD4sdSJ
+         77kknEidYsvdLBmbt5aEKV2sE80lMUFDBf4hokbgoqla3kU68e1jKjiZktE6SWqDz+
+         fRYBvy5sdk9olLfe4jKmAAFA6RAZpaPek6qNUxJNc0HvmokG02hVswbzg2lVJeos5O
+         zwmFaIPk0SYXsgqPK6BdXEiP569ESQesDNCZu9m2KuHy4EhQi21vyI5DBK6GZtPnTY
+         oo2ikNjEANong==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrFKsWRWlGSWpSXmKPExsViZ8MxSTfzulS
+  KwfKl8hZz1q9hs5g+9QKjxZZj9xgtLj/hs9iz9ySLxeVdc9gsdv3ZwW6x8scfVgcOj1OLJDwW
+  73nJ5LFpVSebx4kZv1k8XmyeyejxeZNcAFsUa2ZeUn5FAmvG5+//2AvOelcsPziXqYFxvm0XI
+  xeHkMAWRonGHe9ZIJzlTBJ/7nYwQzjbGCW6DzazdTFycvAK2Ems2buMEcRmEVCV2PN7MRNEXF
+  Di5MwnLCC2qECyxLHzrUD1HBzCAvESrw+Zg4RFBDQljny7xgQyk1ngLKPE0c2HmCAWnGGUWH1
+  mFztIFZuAjsSFBX9ZQWxOAVOJFYvPgMWZBSwkFr85CGXLSzRvnc0MYksIKElc/HqHFcKukGic
+  fogJwlaTuHpuE/MERqFZSO6bhWTULCSjFjAyr2I0LU4tKkst0rXQSyrKTM8oyU3MzNFLrNJN1
+  Est1S1PLS7RNdRLLC/WSy0u1iuuzE3OSdHLSy3ZxAiMsJRi1jc7GLf1/dU7xCjJwaQkyvv7gl
+  SKEF9SfkplRmJxRnxRaU5q8SFGGQ4OJQneCZeAcoJFqempFWmZOcBoh0lLcPAoifDeBGnlLS5
+  IzC3OTIdInWI05ljbcGAvM8fHPxf3Mgux5OXnpUqJ8ypfAyoVACnNKM2DGwRLQpcYZaWEeRkZ
+  GBiEeApSi3IzS1DlXzGKczAqCfMKgNzDk5lXArfvFdApTECnxM2QADmlJBEhJdXAFH18QmLf/
+  f6/laIlQX0qd5a+mcj6rD/M9YuuHa+VTLXPcos74heD3gW2GpdvVpSofKkofmRPil/R9pyWZY
+  5fbZ42SKtzW204lW219e/MGidF0QcFTYcPc2reC6xwyn9iPl9QeHqS8alkk+NMoZaHOCVUdpR
+  87Jivf/ZBd9P3MM65j1auYVJdlvPNuurAP5G8t23ns5bNPe7k+zrm1rmA4D0XXuzY9/IPw+e8
+  YwL8a7y5VnC5mM44XlK0b46L/YbCRlGZoPqzvT+YFnFFffiWqCx6npFjr7/aFgYnA1uVtZPXX
+  52bztOkf941MW/TRplfTDobWXLsuiO5Hq2OPVQ5keX3Tp7PdUxz3r7WeHhLiaU4I9FQi7moOB
+  EA4flwAb0DAAA=
+X-Env-Sender: ruansy.fnst@fujitsu.com
+X-Msg-Ref: server-15.tower-585.messagelabs.com!1679480681!103712!1
+X-Originating-IP: [62.60.8.146]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.104.1; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 21402 invoked from network); 22 Mar 2023 10:24:41 -0000
+Received: from unknown (HELO n03ukasimr02.n03.fujitsu.local) (62.60.8.146)
+  by server-15.tower-585.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 22 Mar 2023 10:24:41 -0000
+Received: from n03ukasimr02.n03.fujitsu.local (localhost [127.0.0.1])
+        by n03ukasimr02.n03.fujitsu.local (Postfix) with ESMTP id 1033B1000DC;
+        Wed, 22 Mar 2023 10:24:41 +0000 (GMT)
+Received: from R01UKEXCASM121.r01.fujitsu.local (R01UKEXCASM121 [10.183.43.173])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by n03ukasimr02.n03.fujitsu.local (Postfix) with ESMTPS id 027D01000DB;
+        Wed, 22 Mar 2023 10:24:41 +0000 (GMT)
+Received: from [192.168.50.5] (10.167.234.230) by
+ R01UKEXCASM121.r01.fujitsu.local (10.183.43.173) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.42; Wed, 22 Mar 2023 10:24:37 +0000
+Message-ID: <32c14f43-0d70-9ede-2710-b6cb4a3e7298@fujitsu.com>
+Date:   Wed, 22 Mar 2023 18:24:31 +0800
 MIME-Version: 1.0
-X-Received: by 2002:a6b:701a:0:b0:745:c41a:8f0f with SMTP id
- l26-20020a6b701a000000b00745c41a8f0fmr2405904ioc.2.1679474077859; Wed, 22 Mar
- 2023 01:34:37 -0700 (PDT)
-Date:   Wed, 22 Mar 2023 01:34:37 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000d207ef05f7790759@google.com>
-Subject: [syzbot] [xfs?] KASAN: null-ptr-deref Write in xfs_filestream_select_ag
-From:   syzbot <syzbot+87466712bb342796810a@syzkaller.appspotmail.com>
-To:     dchinner@redhat.com, djwong@kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.1
+Subject: Re: [RFC PATCH] xfs: check shared state of when CoW, update reflink
+ flag when io ends
+To:     "Darrick J. Wong" <djwong@kernel.org>
+CC:     <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <nvdimm@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
+        <david@fromorbit.com>, <dan.j.williams@intel.com>,
+        <akpm@linux-foundation.org>
+References: <1679025588-21-1-git-send-email-ruansy.fnst@fujitsu.com>
+ <20230317203505.GK11394@frogsfrogsfrogs>
+ <011cd163-4e6b-40b9-beeb-7fbc55b3a369@fujitsu.com>
+ <20230321151339.GA11376@frogsfrogsfrogs>
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+In-Reply-To: <20230321151339.GA11376@frogsfrogsfrogs>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.167.234.230]
+X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
+ R01UKEXCASM121.r01.fujitsu.local (10.183.43.173)
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
-
-syzbot found the following issue on:
-
-HEAD commit:    17214b70a159 Merge tag 'fsverity-for-linus' of git://git.k..
-git tree:       upstream
-console+strace: https://syzkaller.appspot.com/x/log.txt?x=17938109c80000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=d40f6d44826f6cf7
-dashboard link: https://syzkaller.appspot.com/bug?extid=87466712bb342796810a
-compiler:       Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1492946ac80000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=12e45ad6c80000
-
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/d166fda7fbbd/disk-17214b70.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/0c16461022b9/vmlinux-17214b70.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/53e9e40da8bb/bzImage-17214b70.xz
-mounted in repro: https://storage.googleapis.com/syzbot-assets/52081e4a3707/mount_0.gz
-
-The issue was bisected to:
-
-commit 3e43877a9dac13771ac722462c87bea0bdc50759
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Sun Feb 12 22:14:55 2023 +0000
-
-    xfs: remove xfs_filestream_select_ag() longest extent check
-
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=13cee69ac80000
-final oops:     https://syzkaller.appspot.com/x/report.txt?x=102ee69ac80000
-console output: https://syzkaller.appspot.com/x/log.txt?x=17cee69ac80000
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+87466712bb342796810a@syzkaller.appspotmail.com
-Fixes: 3e43877a9dac ("xfs: remove xfs_filestream_select_ag() longest extent check")
-
-XFS (loop0): metadata I/O error in "xfs_read_agf+0x2c9/0x600" at daddr 0x1 len 1 error 117
-XFS (loop0): page discard on page ffffea0001c573c0, inode 0x2a, pos 0.
-==================================================================
-BUG: KASAN: null-ptr-deref in instrument_atomic_read_write include/linux/instrumented.h:102 [inline]
-BUG: KASAN: null-ptr-deref in atomic_inc include/linux/atomic/atomic-instrumented.h:190 [inline]
-BUG: KASAN: null-ptr-deref in xfs_filestream_pick_ag fs/xfs/xfs_filestream.c:156 [inline]
-BUG: KASAN: null-ptr-deref in xfs_filestream_create_association fs/xfs/xfs_filestream.c:301 [inline]
-BUG: KASAN: null-ptr-deref in xfs_filestream_select_ag+0x14e5/0x1ca0 fs/xfs/xfs_filestream.c:372
-Write of size 4 at addr 00000000000001c0 by task kworker/u4:3/47
-
-CPU: 0 PID: 47 Comm: kworker/u4:3 Not tainted 6.3.0-rc3-syzkaller-00012-g17214b70a159 #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/02/2023
-Workqueue: writeback wb_workfn (flush-7:0)
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:88 [inline]
- dump_stack_lvl+0x1e7/0x2d0 lib/dump_stack.c:106
- print_report+0xe6/0x540 mm/kasan/report.c:433
- kasan_report+0x176/0x1b0 mm/kasan/report.c:536
- kasan_check_range+0x283/0x290 mm/kasan/generic.c:187
- instrument_atomic_read_write include/linux/instrumented.h:102 [inline]
- atomic_inc include/linux/atomic/atomic-instrumented.h:190 [inline]
- xfs_filestream_pick_ag fs/xfs/xfs_filestream.c:156 [inline]
- xfs_filestream_create_association fs/xfs/xfs_filestream.c:301 [inline]
- xfs_filestream_select_ag+0x14e5/0x1ca0 fs/xfs/xfs_filestream.c:372
- xfs_bmap_btalloc_filestreams fs/xfs/libxfs/xfs_bmap.c:3558 [inline]
- xfs_bmap_btalloc+0xffa/0x28a0 fs/xfs/libxfs/xfs_bmap.c:3672
- xfs_bmapi_allocate+0x647/0xf30
- xfs_bmapi_convert_delalloc+0x98f/0x1310 fs/xfs/libxfs/xfs_bmap.c:4554
- xfs_convert_blocks fs/xfs/xfs_aops.c:266 [inline]
- xfs_map_blocks+0x780/0x1090 fs/xfs/xfs_aops.c:389
- iomap_writepage_map fs/iomap/buffered-io.c:1641 [inline]
- iomap_do_writepage+0x941/0x2ee0 fs/iomap/buffered-io.c:1803
- write_cache_pages+0x89e/0x12c0 mm/page-writeback.c:2473
- iomap_writepages+0x68/0x240 fs/iomap/buffered-io.c:1820
- xfs_vm_writepages+0x139/0x1a0 fs/xfs/xfs_aops.c:513
- do_writepages+0x3a6/0x670 mm/page-writeback.c:2551
- __writeback_single_inode+0x155/0xfb0 fs/fs-writeback.c:1600
- writeback_sb_inodes+0x8ef/0x11d0 fs/fs-writeback.c:1891
- wb_writeback+0x458/0xc70 fs/fs-writeback.c:2065
- wb_do_writeback fs/fs-writeback.c:2208 [inline]
- wb_workfn+0x400/0xff0 fs/fs-writeback.c:2248
- process_one_work+0x8a0/0x10e0 kernel/workqueue.c:2390
- worker_thread+0xa63/0x1210 kernel/workqueue.c:2537
- kthread+0x270/0x300 kernel/kthread.c:376
- ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:308
- </TASK>
-==================================================================
 
 
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+在 2023/3/21 23:13, Darrick J. Wong 写道:
+> On Mon, Mar 20, 2023 at 06:02:05PM +0800, Shiyang Ruan wrote:
+>>
+>>
+>> 在 2023/3/18 4:35, Darrick J. Wong 写道:
+>>> On Fri, Mar 17, 2023 at 03:59:48AM +0000, Shiyang Ruan wrote:
+>>>> As is mentioned[1] before, the generic/388 will randomly fail with dmesg
+>>>> warning.  This case uses fsstress with a lot of random operations.  It is hard
+>>>> to  reproduce.  Finally I found a 100% reproduce condition, which is setting
+>>>> the seed to 1677104360.  So I changed the generic/388 code: removed the loop
+>>>> and used the code below instad:
+>>>> ```
+>>>> ($FSSTRESS_PROG $FSSTRESS_AVOID -d $SCRATCH_MNT -v -s 1677104360 -n 221 -p 1 >> $seqres.full) > /dev/null 2>&1
+>>>> ($FSSTRESS_PROG $FSSTRESS_AVOID -d $SCRATCH_MNT -v -s 1677104360 -n 221 -p 1 >> $seqres.full) > /dev/null 2>&1
+>>>> _check_dmesg_for dax_insert_entry
+>>>> ```
+>>>>
+>>>> According to the operations log, and kernel debug log I added, I found that
+>>>> the reflink flag of one inode won't be unset even if there's no more shared
+>>>> extents any more.
+>>>>     Then write to this file again.  Because of the reflink flag, xfs thinks it
+>>>>       needs cow, and extent(called it extA) will be CoWed to a new
+>>>>       extent(called it extB) incorrectly.  And extA is not used any more,
+>>>>       but didn't be unmapped (didn't do dax_disassociate_entry()).
+>>>
+>>> IOWs, dax_iomap_copy_around (or something very near it) should be
+>>> calling dax_disassociate_entry on the source range after copying extA's
+>>> contents to extB to drop its page->shared count?
+>>
+>> If extA is a shared extent, its pages will be disassociated correctly by
+>> invalidate_inode_pages2_range() in dax_iomap_iter().
+>>
+>> But the problem is that extA is not shared but now be CoWed,
+> 
+> Aha!  Ok, I hadn't realized that extA is not shared...
+> 
+>> invalidate_inode_pages2_range() is also called but it can't disassociate the
+>> old page (because the page is marked dirty, can't be invalidated)
+> 
+> ...so what marked the old page dirty?   Was it the case that the
+> unshared extA got marked dirty, then later someone created a cow
+> reservation (extB, I guess) that covered the already dirty extA?
+> 
+> Should we be transferring the dirty state from A to B here before the
+> invalidate_inode_pages2_range ?
+> 
+>> Is the behavior to do CoW on a non-shared extent allowed?
+> 
+> In general, yes, XFS allows COW on non-shared extents.  The (cow) extent
+> size hint provides for cowing the unshared blocks adjacent to a shared
+> block to try to combat fragmentation.
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
-syzbot can test patches for this issue, for details see:
-https://goo.gl/tpsmEJ#testing-patches
+Ok, I did't realize its benifit.  Thanks a lot.
+
+Now I've fixed it based on your suggestion and it works.  The failed 
+cases all passed.  Now I'm running the generic/388 for many and many 
+times to make sure it doesn't fail again.  I'll send the patch if the 
+generic/388 is passed.
+
+> 
+>>>
+>>>>     The next time we mapwrite to another file, xfs will allocate extA for it,
+>>>>       page fault handler do dax_associate_entry().  BUT bucause the extA didn't
+>>>>       be unmapped, it still stores old file's info in page->mapping,->index.
+>>>>       Then, It reports dmesg warning when it try to sotre the new file's info.
+>>>>
+>>>> So, I think:
+>>>>     1. reflink flag should be updated after CoW operations.
+>>>>     2. xfs_reflink_allocate_cow() should add "if extent is shared" to determine
+>>>>        xfs do CoW or not.
+>>>>
+>>>> I made the fix patch, it can resolve the fail of generic/388.  But it causes
+>>>> other cases fail: generic/127, generic/263, generic/616, xfs/315 xfs/421. I'm
+>>>> not sure if the fix is right, or I have missed something somewhere.  Please
+>>>> give me some advice.
+>>>>
+>>>> Thank you very much!!
+>>>>
+>>>> [1]: https://lore.kernel.org/linux-xfs/1669908538-55-1-git-send-email-ruansy.fnst@fujitsu.com/
+>>>>
+>>>> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+>>>> ---
+>>>>    fs/xfs/xfs_reflink.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
+>>>>    fs/xfs/xfs_reflink.h |  2 ++
+>>>>    2 files changed, 46 insertions(+)
+>>>>
+>>>> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+>>>> index f5dc46ce9803..a6b07f5c1db2 100644
+>>>> --- a/fs/xfs/xfs_reflink.c
+>>>> +++ b/fs/xfs/xfs_reflink.c
+>>>> @@ -154,6 +154,40 @@ xfs_reflink_find_shared(
+>>>>    	return error;
+>>>>    }
+>>>> +int xfs_reflink_extent_is_shared(
+>>>> +	struct xfs_inode	*ip,
+>>>> +	struct xfs_bmbt_irec	*irec,
+>>>> +	bool			*shared)
+>>>> +{
+>>>> +	struct xfs_mount	*mp = ip->i_mount;
+>>>> +	struct xfs_perag	*pag;
+>>>> +	xfs_agblock_t		agbno;
+>>>> +	xfs_extlen_t		aglen;
+>>>> +	xfs_agblock_t		fbno;
+>>>> +	xfs_extlen_t		flen;
+>>>> +	int			error = 0;
+>>>> +
+>>>> +	*shared = false;
+>>>> +
+>>>> +	/* Holes, unwritten, and delalloc extents cannot be shared */
+>>>> +	if (!xfs_bmap_is_written_extent(irec))
+>>>> +		return 0;
+>>>> +
+>>>> +	pag = xfs_perag_get(mp, XFS_FSB_TO_AGNO(mp, irec->br_startblock));
+>>>> +	agbno = XFS_FSB_TO_AGBNO(mp, irec->br_startblock);
+>>>> +	aglen = irec->br_blockcount;
+>>>> +	error = xfs_reflink_find_shared(pag, NULL, agbno, aglen, &fbno, &flen,
+>>>> +			true);
+>>>> +	xfs_perag_put(pag);
+>>>> +	if (error)
+>>>> +		return error;
+>>>> +
+>>>> +	if (fbno != NULLAGBLOCK)
+>>>> +		*shared = true;
+>>>> +
+>>>> +	return 0;
+>>>> +}
+>>>> +
+>>>>    /*
+>>>>     * Trim the mapping to the next block where there's a change in the
+>>>>     * shared/unshared status.  More specifically, this means that we
+>>>> @@ -533,6 +567,12 @@ xfs_reflink_allocate_cow(
+>>>>    		xfs_ifork_init_cow(ip);
+>>>>    	}
+>>>> +	error = xfs_reflink_extent_is_shared(ip, imap, shared);
+>>>> +	if (error)
+>>>> +		return error;
+>>>> +	if (!*shared)
+>>>> +		return 0;
+>>>> +
+>>>>    	error = xfs_find_trim_cow_extent(ip, imap, cmap, shared, &found);
+>>>>    	if (error || !*shared)
+>>>>    		return error;
+>>>> @@ -834,6 +874,10 @@ xfs_reflink_end_cow_extent(
+>>>>    	/* Remove the mapping from the CoW fork. */
+>>>>    	xfs_bmap_del_extent_cow(ip, &icur, &got, &del);
+>>>> +	error = xfs_reflink_clear_inode_flag(ip, &tp);
+>>>
+>>> This will disable COW on /all/ blocks in the entire file, including the
+>>> shared ones.  At a bare minimum you'd have to scan the entire data fork
+>>> to ensure there are no shared extents.  That's probably why doing this
+>>> causes so many new regressions.
+>>
+>> This function will search for shared extent before actually clearing the
+>> flag.  If no shared extent found, the flag won't be cleared.  The name of
+>> this function is not very accurate.
+> 
+> Oh, right.  I forgot that _reflink_clear_inode_flag walks the entire
+> data fork looking for shared extents, and only clears the flag if it
+> doesn't find any.
+> 
+> That said, if (say) this is a large sparse file with 300 million extent
+> records and extent 299,999,999 is shared, this is going to make write
+> completions realllllly slow, as each completion now has to perform its
+> own walk...
+> 
+>> BTW, in my thought, the reflink flag is to indicate if a file is now
+>> containing any shared extents or not.  So, it should be cleared immediately
+>> if no extents shared any more.  Is this right?
+> 
+> ...which is why we don't clear the flag immediately.  Or ever.  Only
+> repairs take the time to do that.
+
+Got it.  Thank you very much!
+
+
+--
+Ruan.
+
+> 
+> --D
+> 
+>>
+>>
+>> --
+>> Thanks,
+>> Ruan.
+>>
+>> PS: Let me paste the log of failed tests:
+>> generic/127, generic/263, generic/616 are fsx tests.  Their fail message are
+>> meaningless.  I am looking into their difference between good/bad results.
+>>
+>> xfs/315 0s ... - output mismatch (see
+>> /root/xts/results//dax_reflink/xfs/315.out.bad)
+>>      --- tests/xfs/315.out       2022-08-03 10:56:02.696212673 +0800
+>>      +++ /root/xts/results//dax_reflink/xfs/315.out.bad  2023-03-20
+>> 17:48:01.780369739 +0800
+>>      @@ -7,7 +7,6 @@
+>>       Inject error
+>>       CoW a few blocks
+>>       FS should be shut down, touch will fail
+>>      -touch: cannot touch 'SCRATCH_MNT/badfs': Input/output error
+>>       Remount to replay log
+>>       FS should be online, touch should succeed
+>>       Check files again
+>>      ...
+>>      (Run 'diff -u /root/xts/tests/xfs/315.out
+>> /root/xts/results//dax_reflink/xfs/315.out.bad'  to see the entire diff)
+>> xfs/421 1s ... - output mismatch (see
+>> /root/xts/results//dax_reflink/xfs/421.out.bad)
+>>      --- tests/xfs/421.out       2022-08-03 10:56:02.706212718 +0800
+>>      +++ /root/xts/results//dax_reflink/xfs/421.out.bad  2023-03-20
+>> 17:48:02.222369739 +0800
+>>      @@ -14,8 +14,6 @@
+>>       Whence     Result
+>>       DATA       0
+>>       HOLE       131072
+>>      -DATA       196608
+>>      -HOLE       262144
+>>       Compare files
+>>       c2803804acc9936eef8aab42c119bfac  SCRATCH_MNT/test-421/file1
+>>      ...
+>>      (Run 'diff -u /root/xts/tests/xfs/421.out
+>> /root/xts/results//dax_reflink/xfs/421.out.bad'  to see the entire diff)
+>>
+>>>
+>>> --D
+>>>
+>>>> +	if (error)
+>>>> +		goto out_cancel;
+>>>> +
+>>>>    	error = xfs_trans_commit(tp);
+>>>>    	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>>>>    	if (error)
+>>>> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
+>>>> index 65c5dfe17ecf..d5835814bce6 100644
+>>>> --- a/fs/xfs/xfs_reflink.h
+>>>> +++ b/fs/xfs/xfs_reflink.h
+>>>> @@ -16,6 +16,8 @@ static inline bool xfs_is_cow_inode(struct xfs_inode *ip)
+>>>>    	return xfs_is_reflink_inode(ip) || xfs_is_always_cow_inode(ip);
+>>>>    }
+>>>> +int xfs_reflink_extent_is_shared(struct xfs_inode *ip,
+>>>> +		struct xfs_bmbt_irec *irec, bool *shared);
+>>>>    extern int xfs_reflink_trim_around_shared(struct xfs_inode *ip,
+>>>>    		struct xfs_bmbt_irec *irec, bool *shared);
+>>>>    int xfs_bmap_trim_cow(struct xfs_inode *ip, struct xfs_bmbt_irec *imap,
+>>>> -- 
+>>>> 2.39.2
+>>>>
