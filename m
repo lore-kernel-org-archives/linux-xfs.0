@@ -2,109 +2,83 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03F4CC6FD1C
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Mar 2023 05:17:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E59B4C6FD1C
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Mar 2023 10:48:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229644AbjCWFRn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Mar 2023 01:17:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44232 "EHLO
+        id S230486AbjCWKsE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Mar 2023 06:48:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46748 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230200AbjCWFRh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Mar 2023 01:17:37 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B3781816C
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Mar 2023 22:16:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1679548609;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=HoUzTMO8R5MhPq7S8OoMssryl9/6eR6zluDti49MEro=;
-        b=C96ibbiIuzN3zlyh6zyQ8Fswhj48p5IeO4UJvpUfhLHTHmPNbleUia9lT07XxvEa/+V+ul
-        QR/9MGJy2B5pbNLGBdLVZfxlyWj528TB+X8tjDaHPxybajNXKBd5TFMLn176WfPkydQZK4
-        /v71z2/MFv13R9PdHMp7qvSOAmEpfCg=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-179-KY9zo7YzPqyCZhglvOgcqw-1; Thu, 23 Mar 2023 01:16:43 -0400
-X-MC-Unique: KY9zo7YzPqyCZhglvOgcqw-1
-Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 362258828C2;
-        Thu, 23 Mar 2023 05:16:41 +0000 (UTC)
-Received: from ovpn-8-16.pek2.redhat.com (ovpn-8-16.pek2.redhat.com [10.72.8.16])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6D3854021B1;
-        Thu, 23 Mar 2023 05:16:24 +0000 (UTC)
-Date:   Thu, 23 Mar 2023 13:16:20 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Yangtao Li <frank.li@vivo.com>
-Cc:     clm@fb.com, josef@toxicpanda.com, dsterba@suse.com,
-        xiang@kernel.org, chao@kernel.org, huyue2@coolpad.com,
-        jefflexu@linux.alibaba.com, jaegeuk@kernel.org,
-        trond.myklebust@hammerspace.com, anna@kernel.org,
-        konishi.ryusuke@gmail.com, mark@fasheh.com, jlbec@evilplan.org,
-        joseph.qi@linux.alibaba.com, richard@nod.at, djwong@kernel.org,
-        damien.lemoal@opensource.wdc.com, naohiro.aota@wdc.com,
-        jth@kernel.org, gregkh@linuxfoundation.org, rafael@kernel.org,
-        linux-btrfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, ocfs2-devel@oss.oracle.com,
-        linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, ming.lei@redhat.com
-Subject: Re: [PATCH v3 01/10] kobject: introduce kobject_del_and_put()
-Message-ID: <ZBvgpBzEuFuyOD/c@ovpn-8-16.pek2.redhat.com>
-References: <20230322165830.55071-1-frank.li@vivo.com>
+        with ESMTP id S231433AbjCWKrl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Mar 2023 06:47:41 -0400
+Received: from mail-0301.mail-europe.com (mail-0301.mail-europe.com [188.165.51.139])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1350D37544
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Mar 2023 03:45:31 -0700 (PDT)
+Date:   Thu, 23 Mar 2023 10:45:18 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
+        s=protonmail3; t=1679568328; x=1679827528;
+        bh=P9Z4n+MQybwJNcEVN1zVCLpNSqklPSwIEb4GHrhcifM=;
+        h=Date:To:From:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+         Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+        b=GHj6fPzZ9XJwfRU+COW1AsdDNcBeEh6cuhkONDpV/9jNnd3MPHzoEWyrWTiWHgopi
+         8PjMd6YlcGMJe3xm/xahJxD09tSk485wzqhhwOdx91vYoG9IjOBI/jCGAYXWoFMTmg
+         dX3xpmMoEMyHHv3NGHT0z0/Gjg+CJ+UQ1T4YMC3Xmo0GP+O6qV4D1tr82rpyoDufat
+         av0pGEY3eLCIy/8xCpmj0x71t9cxYYlmANICJ3XHlWuCMfxFCAkr2dsu6BVaAcnsU1
+         wktvxrdvxQPg8c/sjQDfDNnZARdcHpbm7PAJUMT4PvDT7FM2smTwOr050utAj+dxqW
+         unO4Uycex0waw==
+To:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+From:   Johnatan Hallman <johnatan-ftm@protonmail.com>
+Subject: FS (dm-0): device supports 4096 byte sectors (not 512)
+Message-ID: <EgkSUvPep_zPazvY0jpnimG82K4wOeYfiPz0Ly_34-TMN9DZKWNNQDxGFJPyq622ZaKee6RU3aFT34Yy-i00rjdT7hWFzS6HSGRe74z1F5o=@protonmail.com>
+Feedback-ID: 44492887:user:proton
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230322165830.55071-1-frank.li@vivo.com>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.10
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 23, 2023 at 12:58:30AM +0800, Yangtao Li wrote:
-> There are plenty of using kobject_del() and kobject_put() together
-> in the kernel tree. This patch wraps these two calls in a single helper.
-> 
-> Signed-off-by: Yangtao Li <frank.li@vivo.com>
-> ---
-> v3:
-> -convert to inline helper
-> v2:
-> -add kobject_del_and_put() users
->  include/linux/kobject.h | 13 +++++++++++++
->  lib/kobject.c           |  3 +--
->  2 files changed, 14 insertions(+), 2 deletions(-)
-> 
-> diff --git a/include/linux/kobject.h b/include/linux/kobject.h
-> index bdab370a24f4..e21b7c22e355 100644
-> --- a/include/linux/kobject.h
-> +++ b/include/linux/kobject.h
-> @@ -112,6 +112,19 @@ extern struct kobject * __must_check kobject_get_unless_zero(
->  						struct kobject *kobj);
->  extern void kobject_put(struct kobject *kobj);
->  
-> +/**
-> + * kobject_del_and_put() - Delete kobject.
-> + * @kobj: object.
-> + *
-> + * Unlink kobject from hierarchy and decrement the refcount.
-> + * If refcount is 0, call kobject_cleanup().
-> + */
-> +static inline void kobject_del_and_put(struct kobject *kobj)
-> +{
-> +	kobject_del(kobj);
-> +	kobject_put(kobj);
-> +}
+Hello List,
 
-kobject_put() actually covers kobject removal automatically, which is
-single stage removal. So if you see the two called together, it is
-safe to kill kobject_del() directly.
+I get this error when I try to mount an XFS partition.
+Fortunately there is no critical data on it as it is just a backup but I wo=
+uld still like to mount it if it's possible.
+
+I have tried with various Linux distros with kernels ranging from 5.6 to 6.=
+1 it's the same result.
+
+xfs_info /dev/mapper/test
+meta-data=3D/dev/mapper/test =C2=A0 =C2=A0 =C2=A0 isize=3D256 =C2=A0 =C2=
+=A0agcount=3D32, agsize=3D30523559 blks
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=3D =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 sectsz=3D512 =C2=A0 attr=3D2, pro=
+jid32bit=3D0
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=3D =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 crc=3D0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0finobt=3D0, sparse=3D0, rmapbt=3D0
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=3D =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 reflink=3D0 =C2=A0 =C2=A0bigtime=
+=3D0 inobtcount=3D0 nrext64=3D0
+data =C2=A0 =C2=A0 =3D =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 bsize=3D4096 =C2=A0 blocks=3D976753869, imaxpct=
+=3D5
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=3D =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 sunit=3D0 =C2=A0 =C2=A0 =C2=A0swi=
+dth=3D0 blks
+naming =C2=A0 =3Dversion 2 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0bsize=3D4096 =C2=A0 ascii-ci=3D0, ftype=3D0
+log =C2=A0 =C2=A0 =C2=A0=3Dinternal log =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 bsize=3D4096 =C2=A0 blocks=3D476930, version=3D2
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=3D =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 sectsz=3D512 =C2=A0 sunit=3D0 blk=
+s, lazy-count=3D1
+realtime =3Dnone =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 extsz=3D4096 =C2=A0 blocks=3D0, rtextents=3D0
+
+mount -t xfs -o ro /dev/mapper/test =C2=A0/mnt/
+mount: /mnt: mount(2) system call failed: Function not implemented.
+=C2=A0 =C2=A0 =C2=A0 =C2=A0dmesg(1) may have more information after failed =
+mount system call.
 
 
-thanks,
-Ming
 
