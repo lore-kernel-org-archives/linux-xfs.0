@@ -2,110 +2,151 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0793DC6FD1C
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Mar 2023 23:36:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C90A0C76196
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Mar 2023 04:06:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230035AbjCVXgJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Mar 2023 19:36:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50964 "EHLO
+        id S229639AbjCWEG0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Mar 2023 00:06:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45124 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230018AbjCVXgI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Mar 2023 19:36:08 -0400
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C07B2366A
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Mar 2023 16:36:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1679528159; x=1711064159;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=AwL0lpa0BGrmVgQeZv6ZCbP7r3t5dc6HGVJ71kVO95k=;
-  b=WV4yVqlPIQxhfKAUI8Sk12SKz9jrs5agQnYeLRTGc1FKU0jOk1K8KZxg
-   XDGXE1iFODmQLktT7flaPN7+RsA5LiAU60C/TGe009BOjBPVkexQ+sXyD
-   i6Fie0giIEOb8AQ9QNs9M2rxko3ZhxT6NRjdpzR7zI2IuLH1lTwAcRthx
-   1CExNpZ917TISYJxw/XA+UhKJlh2Sl70AaHDYg60TvSvd4+Vi84JhK4Fl
-   JByx+QgjuHJ1XtNOttiNp9Gg8CX3RqRZUdwPzXiJA2W4eFSd75tGVJvET
-   RFPeAaRW/fRwxnuNJyl07K/dU32Ch8zdOKLCjzpq5QzFFYNwkGDcDYtQM
-   w==;
-X-IronPort-AV: E=Sophos;i="5.98,283,1673884800"; 
-   d="scan'208";a="224559474"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 23 Mar 2023 07:35:59 +0800
-IronPort-SDR: HOdAAQ8kj1SgKTG7aXngaXYqsuHlQoBzHupqZH69JIhuvhvJi5VbEjMf4tPyfrlmis0xLHJWvx
- pDTim11cHI7k/1JChJ7Y6ziO0eUOy93m5beLnus1pZ/YGkHKPpCL4doZjpfOjpODsJ8vWP2YBH
- +pOpWsUa6PXYQ0B69anyGu1/msFHY02qfedU3CZHlP8N2YNPYhi0qxU9ekgVnW7l3DayylU0BK
- C/QxCWqGC03+1pFsLNOoISWz3wnPYptb4skvOJBuvt1qPaEqQe6dDZ+shBzbtp60GX8bi3i4V8
- 90A=
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Mar 2023 15:52:16 -0700
-IronPort-SDR: p76RleVWywCwxHmrJf4yUuCMegCgK4vuJB7NsHcAvJ2obLmNxLazdBL+i2DNirv09UU+u8e0ZX
- wxd90H0ABFpOTZOdmcs9mmwU85rrccXeufnIVSPCAJ5YJHjQwMnkgPSo/tpcxDivIvNYVDqPyk
- VaN/sQAGilxsn3in1HwF8B9kD85clihEmHiD2jAP3gP5EAn7esgh9cVDcWAqCxUaOQrx/T7dfw
- NzRj/FNrrpUpFrzRC88mtcFpT5HI1qN5fs56A430drBU9CpjWgugOKiEskDp5VDb0++4LVPkZC
- 2r0=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 22 Mar 2023 16:35:59 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4PhlGR35ghz1RtVn
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Mar 2023 16:35:59 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1679528159; x=1682120160; bh=AwL0lpa0BGrmVgQeZv6ZCbP7r3t5dc6HGVJ
-        71kVO95k=; b=Lr67VrgbhC3s4IgaiuiL0vs8D/Ua4kh5dhomRxE+jz5XkgQxabc
-        WENMxVoUqNTX0w5G5TnD5ksMVtSvckj6Xp2NL5E0XVFJG2SOBtgYIwHbOFX4K+vQ
-        +NoOq6kwFqV0/4S7uKo6hs/sFauEla4COXtc0fSND2ZiM8mhMykGj/l5cBcqqRj+
-        Q/CEYai6sh8Jw2JMTtDQ1+OSMXDahFrlybdMVOH7jZNj8ECG2T1jHpoBMIeW55Dg
-        ++dhr630HKnph5txVv+d84WopPGJdXB93mQWoLh+SkKyW8EVXa7U8QfWBdPI8Yyt
-        ozti80ANiztAyiZ+otUmXm0VIb5s7AC3Zlg==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id XMv2Bs_0AYrg for <linux-xfs@vger.kernel.org>;
-        Wed, 22 Mar 2023 16:35:59 -0700 (PDT)
-Received: from [10.225.163.96] (unknown [10.225.163.96])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4PhlGQ1Zpyz1RtVm;
-        Wed, 22 Mar 2023 16:35:58 -0700 (PDT)
-Message-ID: <26051414-f4b2-a212-8cc2-f9559c51bbfe@opensource.wdc.com>
-Date:   Thu, 23 Mar 2023 08:35:57 +0900
+        with ESMTP id S229508AbjCWEGZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Mar 2023 00:06:25 -0400
+Received: from mail-ed1-x529.google.com (mail-ed1-x529.google.com [IPv6:2a00:1450:4864:20::529])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FA031F90B
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Mar 2023 21:06:23 -0700 (PDT)
+Received: by mail-ed1-x529.google.com with SMTP id o12so81315277edb.9
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Mar 2023 21:06:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112; t=1679544381;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=wZdX0zzJKzWZ5XKjbLc+5SlxbkCswtENUW050E1wjGk=;
+        b=YNVfINBm00Zd995dBeW0DDRzCfNhhwl3o+PiaTu4txCBPHZK4brFWKhX4BF6It/Wsb
+         EPmopGFmlzfTAKS0dL++bEqFLsD4ToXQ44j6Wiv7sYiYv4Hy9/oxcmuOQK9AswHVWWpf
+         rj4gX/+U0Onw1Qy4W6+3hbQAaD8Ch74ehfibMziF7Ti3W4x5svk5HFhyO8xyukr6OzmW
+         Yav3yfqQKDe5KvKW5D5Ke2cfLkMwF0rG8SPKOfcygshjyGBWOBvW+cuSnZNJtsKcY+e1
+         /+Q2LwJu+2BsdXDdc2MlqSoJx+rapqg+0IbXcrAi7lnd5x8c6xqrSXzG1jdKw8q8RhUQ
+         Cg/w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679544381;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=wZdX0zzJKzWZ5XKjbLc+5SlxbkCswtENUW050E1wjGk=;
+        b=yZsTHxRWJVmogjTzRxUua+A9PjD9r8Y5tqW73A4dowas5a4DSsNcScs/CFjylhbU9v
+         lAFOLv3x0FrXOwWPgPKywPUPr03mU2+H0ZP5zgH3DTmD0lTiqqW2lg6OZjtG+s/a7Jj9
+         XpcnMrE5K50ENfoek+/nQsVN9sTiWe1aKZdDqvIR/IWCOxdvOI9ibcwQIe+NnfzZkEho
+         NVbNrPFIP390KNuv7dj33YTpVCrS3ZsOzHJE0DNfCXgwXqMkkbr84jPXkBNUY2PH5om1
+         WUIUG9oBFmg+A+xEhAk6259q52OSWftgqoWCfkHq8Jkol6D9B0zVftc6DeBFkbMnJRSK
+         87IA==
+X-Gm-Message-State: AO0yUKUu3uk++hU4Znu1RiPZeYTKavkiUfOCza7J8qHOhwxw3Ufo0dKQ
+        Z256K0B+Fs2qj5XxFu8QIunYdFSJ7bkX/x+yx3aLTg==
+X-Google-Smtp-Source: AK7set/x0L6xL2vwQegBkGdVFVaSfGgafJFSRErVoiwJ/47Q3xkJsCVmfJEwHU4RiRF1MtOBxUxN57yV/jIPR3Fyiwc=
+X-Received: by 2002:a50:cc9b:0:b0:4fa:d8aa:74ad with SMTP id
+ q27-20020a50cc9b000000b004fad8aa74admr4544724edi.8.1679544381396; Wed, 22 Mar
+ 2023 21:06:21 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Subject: Re: [PATCH v3 07/10] xfs: convert to kobject_del_and_put()
-Content-Language: en-US
-To:     Yangtao Li <frank.li@vivo.com>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20230322165905.55389-1-frank.li@vivo.com>
- <20230322165905.55389-6-frank.li@vivo.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20230322165905.55389-6-frank.li@vivo.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20230309093109.3039327-1-yosryahmed@google.com>
+In-Reply-To: <20230309093109.3039327-1-yosryahmed@google.com>
+From:   Yosry Ahmed <yosryahmed@google.com>
+Date:   Wed, 22 Mar 2023 21:05:45 -0700
+Message-ID: <CAJD7tkY-S-v117nYuQN7=3cte+kv0QgMa2B-NgOf6bH8bm1XbQ@mail.gmail.com>
+Subject: Re: [PATCH v2 0/3] Ignore non-LRU-based reclaim in memcg reclaim
+To:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Lameter <cl@linux.com>,
+        David Rientjes <rientjes@google.com>,
+        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
+        Vlastimil Babka <vbabka@suse.cz>,
+        Roman Gushchin <roman.gushchin@linux.dev>,
+        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
+        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        Miaohe Lin <linmiaohe@huawei.com>,
+        David Hildenbrand <david@redhat.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
+        Shakeel Butt <shakeelb@google.com>,
+        Michal Hocko <mhocko@kernel.org>, Yu Zhao <yuzhao@google.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 3/23/23 01:59, Yangtao Li wrote:
-> Use kobject_del_and_put() to simplify code.
-> 
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: "Rafael J. Wysocki" <rafael@kernel.org>
-> Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Signed-off-by: Yangtao Li <frank.li@vivo.com>
-> Acked-by: Darrick J. Wong <djwong@kernel.org>
+Any thoughts on this respin?
 
-Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-
--- 
-Damien Le Moal
-Western Digital Research
-
+On Thu, Mar 9, 2023 at 1:31=E2=80=AFAM Yosry Ahmed <yosryahmed@google.com> =
+wrote:
+>
+> Upon running some proactive reclaim tests using memory.reclaim, we
+> noticed some tests flaking where writing to memory.reclaim would be
+> successful even though we did not reclaim the requested amount fully.
+> Looking further into it, I discovered that *sometimes* we over-report
+> the number of reclaimed pages in memcg reclaim.
+>
+> Reclaimed pages through other means than LRU-based reclaim are tracked
+> through reclaim_state in struct scan_control, which is stashed in
+> current task_struct. These pages are added to the number of reclaimed
+> pages through LRUs. For memcg reclaim, these pages generally cannot be
+> linked to the memcg under reclaim and can cause an overestimated count
+> of reclaimed pages. This short series tries to address that.
+>
+> Patches 1-2 are just refactoring, they add helpers that wrap some
+> operations on current->reclaim_state, and rename
+> reclaim_state->reclaimed_slab to reclaim_state->reclaimed.
+>
+> Patch 3 ignores pages reclaimed outside of LRU reclaim in memcg reclaim.
+> The pages are uncharged anyway, so even if we end up under-reporting
+> reclaimed pages we will still succeed in making progress during
+> charging.
+>
+> Do not let the diff stat deceive you, the core of this series is patch 3,
+> which has one line of code change. All the rest is refactoring and one
+> huge comment.
+>
+> v1 -> v2:
+> - Renamed report_freed_pages() to mm_account_reclaimed_pages(), as
+>   suggested by Dave Chinner. There were discussions about leaving
+>   updating current->reclaim_state open-coded as it's not worth hiding
+>   the current dereferencing to remove one line, but I'd rather have the
+>   logic contained with mm/vmscan.c so that the next person that changes
+>   this logic doesn't have to change 7 different files.
+> - Renamed add_non_vmscan_reclaimed() to flush_reclaim_state() (Johannes
+>   Weiner).
+> - Added more context about how this problem was found in the cover
+>   letter (Johannes Weiner).
+> - Added a patch to move set_task_reclaim_state() below the definition of
+>   cgroup_reclaim(), and added additional helpers in the same position.
+>   This way all the helpers for reclaim_state live together, and there is
+>   no need to declare cgroup_reclaim() early or move its definition
+>   around to call it from flush_reclaim_state(). This should also fix the
+>   build error reported by the bot in !CONFIG_MEMCG.
+>
+> RFC -> v1:
+> - Exported report_freed_pages() in case XFS is built as a module (Matthew
+>   Wilcox).
+> - Renamed reclaimed_slab to reclaim in previously missed MGLRU code.
+> - Refactored using reclaim_state to update sc->nr_reclaimed into a
+>   helper and added an XL comment explaining why we ignore
+>   reclaim_state->reclaimed in memcg reclaim (Johannes Weiner).
+>
+> Yosry Ahmed (3):
+>   mm: vmscan: move set_task_reclaim_state() after cgroup_reclaim()
+>   mm: vmscan: refactor updating reclaimed pages in reclaim_state
+>   mm: vmscan: ignore non-LRU-based reclaim in memcg reclaim
+>
+>  fs/inode.c           |  3 +-
+>  fs/xfs/xfs_buf.c     |  3 +-
+>  include/linux/swap.h |  5 ++-
+>  mm/slab.c            |  3 +-
+>  mm/slob.c            |  6 +--
+>  mm/slub.c            |  5 +--
+>  mm/vmscan.c          | 88 +++++++++++++++++++++++++++++++++++---------
+>  7 files changed, 81 insertions(+), 32 deletions(-)
+>
+> --
+> 2.40.0.rc0.216.gc4246ad0f0-goog
+>
