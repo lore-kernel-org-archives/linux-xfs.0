@@ -2,151 +2,141 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B703AC6FD20
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Mar 2023 10:28:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2068C6FD20
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Mar 2023 13:34:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231706AbjCXK2k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Mar 2023 06:28:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43980 "EHLO
+        id S231686AbjCXNes (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Mar 2023 09:34:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36882 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231608AbjCXK2i (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Mar 2023 06:28:38 -0400
-Received: from mail1.bemta32.messagelabs.com (mail1.bemta32.messagelabs.com [195.245.230.2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1D2620544;
-        Fri, 24 Mar 2023 03:28:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
-        s=170520fj; t=1679653710; i=@fujitsu.com;
-        bh=Q/bH+Td5mtaZDBbP5aHrv4xc85YaJ+KduTCswEaO3j8=;
-        h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type;
-        b=ELxEXRQvlz1/CLKFc/PsKCOEBPXW2CCA5z4zH+Qeyrd9+z71FvVSCdVzW0Ucl8qTh
-         p15LvMTAizncXem2GG1QCZetltnX4f44SilPcHQnRb+3HYzzG1niRcXuD+HPamMhwF
-         BvF4tElsaSlaZC24DAH0N7hWuMLZaA+kRAy0lt18RJSn3Z0wAciaWbdbyqIMi2/BCP
-         /SM0MlFwPQJaQ+06oaVfX7CUJKfktgMh1XUcwSMsoUEBiirgAE2wRcNeVB8CYucGWu
-         6r+ULLas4Lp4JI7rPpmszOo1elJvIqP41KsqB9nFT2IVKAkxIcP/9TSc1CJZgDm7hO
-         hv03LK4E9/Kzw==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrLIsWRWlGSWpSXmKPExsViZ8OxWde3Wjb
-  FYP87VYs569ewWUyfeoHR4vITPovZ05uZLPbsPclisevPDnaLlT/+sFr8/jGHzYHDY/MKLY/F
-  e14yeWxa1cnmcWLGbxaPF5tnMnqcWXCE3ePzJrkA9ijWzLyk/IoE1oy/V58xF/QKVEzf+Iaxg
-  XEFbxcjF4eQwEZGifdNB9ggnMVMEifm3mOHcI4xSvybtp+pi5GTg01AR+LCgr+sILaIQLTE/D
-  l/mUFsZoEKicZF/8BsYQFTiSlLZoPVswioSmw6Np0NxOYVcJb48WUuO4gtIaAgMeXhe2aIuKD
-  EyZlPWCDmSEgcfPGCGaJGSeLi1zusEDbQ/OmHmCBsNYmr5zYxT2Dkn4WkfRaS9gWMTKsYzYpT
-  i8pSi3QNjfSSijLTM0pyEzNz9BKrdBP1Ukt1y1OLS3QN9RLLi/VSi4v1iitzk3NS9PJSSzYxA
-  mMhpZj5xQ7GH31/9Q4xSnIwKYnySoRKpwjxJeWnVGYkFmfEF5XmpBYfYpTh4FCS4GWqkE0REi
-  xKTU+tSMvMAcYlTFqCg0dJhLe6ECjNW1yQmFucmQ6ROsWoKCXOe7YSKCEAksgozYNrg6WCS4y
-  yUsK8jAwMDEI8BalFuZklqPKvGMU5GJWEeW+UA03hycwrgZv+CmgxE9Bi5xoZkMUliQgpqQam
-  Gua2nH1hCucLNrx7tUcs+nzMLc8P8ZFbHr5KmDyPd+W20H/20h1rvJ1WbD77nc8zwGRnjyhbI
-  Kez3Uy9sIoZZ+6HShWeWbD42J6H/zhzZ/5xZlmjVMG6xSbk18msLTfu3LBNmxszy5NZvT5bYK
-  305LPawcpaOkXV7yap+bz6eOuEbt65l1F6ly/tvH7lo5lPPIvhF0fhysOiE5s6799JKNpQaWu
-  d9q7sS8pWq9lyYfoZ62Y6Tvz/YP/zR4+uzvl9Z9I/gU1NaUFKARON2+WLD6j9mHfT+l7VPC8r
-  ya6bgosvTr055dQ+tnRNP3Hmcxd3n567zsfjTNqrL8Wci3OSIyyZjIybN1g842FcHpW+S4mlO
-  CPRUIu5qDgRAPRRKAeAAwAA
-X-Env-Sender: ruansy.fnst@fujitsu.com
-X-Msg-Ref: server-20.tower-591.messagelabs.com!1679653709!709252!1
-X-Originating-IP: [62.60.8.179]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.104.1; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 5527 invoked from network); 24 Mar 2023 10:28:29 -0000
-Received: from unknown (HELO n03ukasimr04.n03.fujitsu.local) (62.60.8.179)
-  by server-20.tower-591.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 24 Mar 2023 10:28:29 -0000
-Received: from n03ukasimr04.n03.fujitsu.local (localhost [127.0.0.1])
-        by n03ukasimr04.n03.fujitsu.local (Postfix) with ESMTP id 2F5B0150;
-        Fri, 24 Mar 2023 10:28:29 +0000 (GMT)
-Received: from R01UKEXCASM121.r01.fujitsu.local (R01UKEXCASM121 [10.183.43.173])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        with ESMTP id S231211AbjCXNer (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Mar 2023 09:34:47 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7391219C60
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Mar 2023 06:34:22 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by n03ukasimr04.n03.fujitsu.local (Postfix) with ESMTPS id 2296C73;
-        Fri, 24 Mar 2023 10:28:29 +0000 (GMT)
-Received: from d6710f1449dd.g08.fujitsu.local (10.167.234.230) by
- R01UKEXCASM121.r01.fujitsu.local (10.183.43.173) with Microsoft SMTP Server
- (TLS) id 15.0.1497.42; Fri, 24 Mar 2023 10:28:25 +0000
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-To:     <linux-fsdevel@vger.kernel.org>, <nvdimm@lists.linux.dev>,
-        <linux-xfs@vger.kernel.org>
-CC:     <dan.j.williams@intel.com>, <willy@infradead.org>, <jack@suse.cz>,
-        <akpm@linux-foundation.org>, <djwong@kernel.org>
-Subject: [PATCH] fsdax: force clear dirty mark if CoW
-Date:   Fri, 24 Mar 2023 10:28:00 +0000
-Message-ID: <1679653680-2-1-git-send-email-ruansy.fnst@fujitsu.com>
-X-Mailer: git-send-email 1.8.3.1
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1709D62AE7
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Mar 2023 13:34:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5D2CC433D2
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Mar 2023 13:34:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1679664861;
+        bh=BzOy70AFEkEHEKvs9rBqrN7uCHvJIlJ3WBEJGn5fBVA=;
+        h=Date:From:To:Subject:From;
+        b=gFivFMGff3hbNiZcZXIjPskIBJLiZ0OfQLtREVwDipnRTzQPynbokxjOuDkiXNOoT
+         /YpsxNapS6NaES2eVpXg3zs2cZI24gazAwtI9GNPBNsLUTB78wQFwJes87eXmRnkc4
+         ZgSjJo2KzcJO4gZ239qK+6MpIm30KbBCiAIZNWTOxREcsChCTEMAjnsAdtHRGDqZYk
+         Ftd9UCa3GcRYNyFiOMA8TLMqFp0nHLQJY9glfAHeAWSS8W4i08wAYOt/+XR11eopvN
+         Tu6/FOo+FBOUq1zRGhi94IUTOQ31w7mF4Hp8VfSkr/0tYYgoRyt8+lvwqSZpfYnnXZ
+         bTiI+Um5cp5jQ==
+Date:   Fri, 24 Mar 2023 14:34:17 +0100
+From:   Carlos Maiolino <cem@kernel.org>
+To:     linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfsprogs-6.2.0 released
+Message-ID: <20230324133417.vg5co4ta7mbfbizo@andromeda>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.167.234.230]
-X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
- R01UKEXCASM121.r01.fujitsu.local (10.183.43.173)
-X-Virus-Scanned: ClamAV using ClamSMTP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-XFS allows CoW on non-shared extents to combat fragmentation[1].  The
-old non-shared extent could be mwrited before, its dax entry is marked
-dirty.  To be able to delete this entry, clear its dirty mark before
-invalidate_inode_pages2_range().
+Hello.
 
-[1] https://lore.kernel.org/linux-xfs/20230321151339.GA11376@frogsfrogsfrogs/
+The xfsprogs repository, located at:
 
-Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
----
- fs/dax.c | 37 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 5d2e9b10030e..2ababb89918d 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -781,6 +781,33 @@ static int __dax_invalidate_entry(struct address_space *mapping,
- 	return ret;
- }
- 
-+static int __dax_clear_dirty_range(struct address_space *mapping,
-+		pgoff_t start, pgoff_t end)
-+{
-+	XA_STATE(xas, &mapping->i_pages, start);
-+	unsigned int scanned = 0;
-+	void *entry;
-+
-+	xas_lock_irq(&xas);
-+	xas_for_each(&xas, entry, end) {
-+		entry = get_unlocked_entry(&xas, 0);
-+		xas_clear_mark(&xas, PAGECACHE_TAG_DIRTY);
-+		xas_clear_mark(&xas, PAGECACHE_TAG_TOWRITE);
-+		put_unlocked_entry(&xas, entry, WAKE_NEXT);
-+
-+		if (++scanned % XA_CHECK_SCHED)
-+			continue;
-+
-+		xas_pause(&xas);
-+		xas_unlock_irq(&xas);
-+		cond_resched();
-+		xas_lock_irq(&xas);
-+	}
-+	xas_unlock_irq(&xas);
-+
-+	return 0;
-+}
-+
- /*
-  * Delete DAX entry at @index from @mapping.  Wait for it
-  * to be unlocked before deleting it.
-@@ -1440,6 +1467,16 @@ static loff_t dax_iomap_iter(const struct iomap_iter *iomi,
- 	 * written by write(2) is visible in mmap.
- 	 */
- 	if (iomap->flags & IOMAP_F_NEW || cow) {
-+		/*
-+		 * Filesystem allows CoW on non-shared extents. The src extents
-+		 * may have been mmapped with dirty mark before. To be able to
-+		 * invalidate its dax entries, we need to clear the dirty mark
-+		 * in advance.
-+		 */
-+		if (cow)
-+			__dax_clear_dirty_range(iomi->inode->i_mapping,
-+						pos >> PAGE_SHIFT,
-+						(end - 1) >> PAGE_SHIFT);
- 		invalidate_inode_pages2_range(iomi->inode->i_mapping,
- 					      pos >> PAGE_SHIFT,
- 					      (end - 1) >> PAGE_SHIFT);
+Has just been updated.
+
+Patches often get missed, so if your outstanding patches are properly reviewed on
+the list and not included in this update, please let me know.
+
+The for-next branch has also been updated to reflect the state of master
+
+The new head of the master branch is commit:
+
+a68dabd45f3591456ecf7e35f6a6077db79f6bc6
+
+27 new commits:
+
+Andrey Albershteyn (1):
+      [a0d79cb37] xfs_db: make flist_find_ftyp() to check for field existance on disk
+
+Arjun Shankar (1):
+      [d6642ab8c] Remove several implicit function declarations
+
+Catherine Hoang (4):
+      [d9151538d] xfs_io: add fsuuid command
+      [e7cd89b2d] xfs_admin: get UUID of mounted filesystem
+      [77e8ce78c] xfs_admin: correctly parse IO_OPTS parameters
+      [e9f142486] xfs_admin: get/set label of mounted filesystem
+
+Darrick J. Wong (15):
+      [5a77e0e7c] xfs_spaceman: fix broken -g behavior in freesp command
+      [085fce0ba] xfs_scrub: fix broken realtime free blocks unit conversions
+      [647078745] xfs_io: set fs_path when opening files on foreign filesystems
+      [b1faed5f7] xfs_io: fix bmap command not detecting realtime files with xattrs
+      [c3fce4f9b] mkfs: check dirent names when reading protofile
+      [fb22e1b1b] mkfs: use suboption processing for -p
+      [e0aeb0581] mkfs: substitute slashes with spaces in protofiles
+      [b7b81f336] xfs_repair: fix incorrect dabtree hashval comparison
+      [4f82f9218] xfs_db: fix complaints about unsigned char casting
+      [9061d756b] xfs: add debug knob to slow down writeback for fun
+      [fb084f350] xfs: add debug knob to slow down write for fun
+      [d1dca9f6b] xfs: hoist refcount record merge predicates
+      [b445624f0] xfs: estimate post-merge refcounts correctly
+      [88765eda1] xfs: invalidate xfs_bufs when allocating cow extents
+      [a68dabd45] xfs: fix off-by-one error in xfs_btree_space_to_height
+
+Dave Chinner (4):
+      [0f1291c3b] progs: autoconf fails during debian package builds
+      [d8eab7600] progs: just use libtoolize
+      [1dcdf5051] xfs: use iomap_valid method to detect stale cached iomaps
+      [d712be6a9] xfs: drop write error injection is unfixable, remove it
+
+Guo Xuenan (1):
+      [f5ef81288] xfs: get rid of assert from xfs_btree_islastblock
+
+Jason A. Donenfeld (1):
+      [9a046f967] treewide: use get_random_u32_below() instead of deprecated function
+
+Code Diffstat:
+
+ Makefile               |  16 +-----
+ db/crc.c               |   2 +-
+ db/flist.c             |  12 +++-
+ db/flist.h             |   3 +-
+ db/namei.c             |   4 +-
+ db/xfs_admin.sh        |  66 ++++++++++++++++++----
+ io/Makefile            |   6 +-
+ io/bmap.c              |   2 +-
+ io/fsuuid.c            |  49 +++++++++++++++++
+ io/init.c              |   1 +
+ io/inject.c            |   2 +
+ io/io.h                |   1 +
+ io/open.c              |   3 +-
+ libxfs/libxfs_priv.h   |   2 +-
+ libxfs/xfs_alloc.c     |   2 +-
+ libxfs/xfs_bmap.c      |   8 ++-
+ libxfs/xfs_btree.c     |   7 ++-
+ libxfs/xfs_btree.h     |   1 -
+ libxfs/xfs_errortag.h  |  18 +++---
+ libxfs/xfs_ialloc.c    |   2 +-
+ libxfs/xfs_refcount.c  | 146 +++++++++++++++++++++++++++++++++++++++++++------
+ m4/package_libcdev.m4  |   7 ++-
+ man/man8/mkfs.xfs.8.in |  32 +++++++++--
+ man/man8/xfs_io.8      |   3 +
+ mkfs/proto.c           |  37 ++++++++++++-
+ mkfs/proto.h           |   3 +-
+ mkfs/xfs_mkfs.c        |  72 +++++++++++++++++++++---
+ repair/da_util.c       |   2 +-
+ scrub/fscounters.c     |   2 +-
+ spaceman/freesp.c      |   1 -
+ 30 files changed, 422 insertions(+), 90 deletions(-)
+ create mode 100644 io/fsuuid.c
+
 -- 
-2.39.2
-
+Carlos Maiolino
