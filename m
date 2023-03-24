@@ -2,73 +2,87 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33721C76196
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Mar 2023 15:48:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D424DC76195
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Mar 2023 16:07:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229472AbjCXPsa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Mar 2023 11:48:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36044 "EHLO
+        id S229900AbjCXQHA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Mar 2023 12:07:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232322AbjCXPsa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Mar 2023 11:48:30 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DC5A3C0B
-        for <linux-xfs@vger.kernel.org>; Fri, 24 Mar 2023 08:48:29 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id BA1E0B82548
-        for <linux-xfs@vger.kernel.org>; Fri, 24 Mar 2023 15:48:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EE3FC433D2;
-        Fri, 24 Mar 2023 15:48:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679672906;
-        bh=nU2ia5wj8s1bLvU2YWT6qgbNswJWKEdcWRuxYew8e6Y=;
-        h=Date:From:To:Cc:Subject:From;
-        b=NVhvVCc2NIrZSg8mOJNB1BJhgMWLLEsSmDPQaDkqbSLN1sbEzWNvUv2qNzhNmjmVo
-         4aztFzv/n9UwM/w4+Bzga0NmfqN03JUH2StM/vvxwEw4QvaUY0z3uFaLBmqA0grFeW
-         1MkFBQN8TrLQHpSkWjS6nje6tDB1k+7v7dLryh8WW2zUBUN81kxffw72KmpURJCMz1
-         8TAshk3YtzopRF8mk0oRld2eFST+QNtRG/RIJAoMPwVMQ4hLhQygmqy8nqiZFcnkzS
-         c5QMkxO9ZK03qXWwnpKlEC7FGiXlfJoYC4ff8gGtfc0tnPcEnif8uEzpDF27Zew8ts
-         duVOdSLdGHf8Q==
-Date:   Fri, 24 Mar 2023 08:48:25 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     david@fromorbit.com, linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to e2e63b071b2d
-Message-ID: <167967277369.30655.2150948828807964193.stg-ugh@magnolia>
+        with ESMTP id S229441AbjCXQG6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Mar 2023 12:06:58 -0400
+X-Greylist: delayed 105689 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 24 Mar 2023 09:06:58 PDT
+Received: from mail-4319.protonmail.ch (mail-4319.protonmail.ch [185.70.43.19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39EB520D2B
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Mar 2023 09:06:58 -0700 (PDT)
+Date:   Fri, 24 Mar 2023 16:06:27 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
+        s=protonmail3; t=1679674015; x=1679933215;
+        bh=WgcIBXzVZrlWohQPGoH8Bkj+s6xg2lNG/JACMJJ6TxM=;
+        h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+         Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
+         Message-ID:BIMI-Selector;
+        b=Qii42gkKomVW0DWALeeSKza45vfZJQRtRvQPA1KD5VFVoK+WXFAaJfs1AztRtgYaj
+         4egKrf4ohqUJN/O/02Rb/zIjHhbTwEYFgw+/dEWIiEbYWua+tB3ciGdJrw7PGKICph
+         0o7OVfyIAGuzrLjmHVO6Fk3bqBUcaQ8A393jbLW1XzWSgLaCDk2Np+ssY7uASki1K5
+         HDVXoXl2hC1G8+wDJLAMOxrO2fGOTf5vpzclQ0OYkdjgxaCgBkkWTXmhnPxH0RVmC3
+         3Vaan4mkrctrpjtEoMtMEpN8RIzWYa9h1CwrSiaImWP+HueuqX/SYXC0mxoekBohcT
+         7zBJZmTdEgJBQ==
+To:     Dave Chinner <david@fromorbit.com>
+From:   Johnatan Hallman <johnatan-ftm@protonmail.com>
+Cc:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: FS (dm-0): device supports 4096 byte sectors (not 512)
+Message-ID: <qpHHCfY6lZ6RRX1NVidA7VXOpJXelA2cNoO7y7RbPZMyDkiFp5B3GmFFm9RpIOqS8C4kJTxdUpK2CekGTDysq44dJltxFPYzCvyGqmCykVY=@protonmail.com>
+In-Reply-To: <ZBzeRR+OjZYku7vu@destitution>
+References: <EgkSUvPep_zPazvY0jpnimG82K4wOeYfiPz0Ly_34-TMN9DZKWNNQDxGFJPyq622ZaKee6RU3aFT34Yy-i00rjdT7hWFzS6HSGRe74z1F5o=@protonmail.com> <ZBzeRR+OjZYku7vu@destitution>
+Feedback-ID: 44492887:user:proton
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+Hello,
 
-The for-next branch of the xfs-linux repository at:
+Thanks a lot, that was it. I never thought of it. The usb docking station w=
+as changed now I tried with another one works fine :)
 
-git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-has just been updated.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+------- Original Message -------
+On Friday, March 24th, 2023 at 12:18 AM, Dave Chinner <david@fromorbit.com>=
+ wrote:
 
-The new head of the for-next branch is commit:
 
-e2e63b071b2d xfs: clear incore AGFL_RESET state if it's not needed
-
-2 new commits:
-
-Darrick J. Wong (2):
-[fcde88af6a78] xfs: pass the correct cursor to xfs_iomap_prealloc_size
-[e2e63b071b2d] xfs: clear incore AGFL_RESET state if it's not needed
-
-Code Diffstat:
-
-fs/xfs/libxfs/xfs_alloc.c | 2 ++
-fs/xfs/xfs_iomap.c        | 5 ++++-
-2 files changed, 6 insertions(+), 1 deletion(-)
+> On Thu, Mar 23, 2023 at 10:45:18AM +0000, Johnatan Hallman wrote:
+>=20
+> > Hello List,
+> >=20
+> > I get this error when I try to mount an XFS partition.
+> > Fortunately there is no critical data on it as it is just a backup but =
+I would still like to mount it if it's possible.
+> >=20
+> > I have tried with various Linux distros with kernels ranging from 5.6 t=
+o 6.1 it's the same result.
+> >=20
+> > xfs_info /dev/mapper/test
+> > meta-data=3D/dev/mapper/test isize=3D256 agcount=3D32, agsize=3D3052355=
+9 blks
+>=20
+>=20
+> Where did this filesystem come from? It's a v4 filesystem, so
+> unless you specifically made it that way it must be a pretty old
+> filesystem.
+>=20
+> What is the drive hardware and how is it connected to the machine?
+> e.g. perhaps it is an an external drive connected through a USB-SATA
+> bridge and the bridge hardware might be advertising the drive as a
+> 4kB sector drive incorrectly?
+>=20
+> Cheers,
+>=20
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
