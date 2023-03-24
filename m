@@ -2,58 +2,78 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A410FC6FD1C
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Mar 2023 19:42:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D5ACC6FD1C
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Mar 2023 20:25:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229734AbjCXTms (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Mar 2023 15:42:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48416 "EHLO
+        id S230133AbjCXUZn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Mar 2023 16:25:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40066 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229504AbjCXTms (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Mar 2023 15:42:48 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2694F10C1;
-        Fri, 24 Mar 2023 12:42:47 -0700 (PDT)
+        with ESMTP id S229921AbjCXUZm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Mar 2023 16:25:42 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7A4A128
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Mar 2023 13:25:41 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 73A28CE2755;
-        Fri, 24 Mar 2023 19:42:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E167C4339C;
-        Fri, 24 Mar 2023 19:42:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1679686963;
-        bh=cYdRTxR8dBazRdwhag620V6/LFVedTccg5+7XaXE0kY=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=ib/FgiIS5aIqzpEeYu3XpS3DTvGgv+D6xhqtJZadm/yN17y/6mRo7JEWo7osftdEo
-         by/OZtPRrnfTEfw8rTVR0sA70oEyd12C8yHEZY84tQgmSMREklqyTerS4rHv+m6sia
-         GLQXwjJ9lEylE+9CNvyNJ/7c9Cel2PhVIvUjjJ50=
-Date:   Fri, 24 Mar 2023 12:42:42 -0700
-From:   Andrew Morton <akpm@linux-foundation.org>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     <linux-fsdevel@vger.kernel.org>, <nvdimm@lists.linux.dev>,
-        <linux-xfs@vger.kernel.org>, <dan.j.williams@intel.com>,
-        <willy@infradead.org>, <jack@suse.cz>, <djwong@kernel.org>
-Subject: Re: [PATCH] fsdax: force clear dirty mark if CoW
-Message-Id: <20230324124242.c881cf384ab8a37716850413@linux-foundation.org>
-In-Reply-To: <1679653680-2-1-git-send-email-ruansy.fnst@fujitsu.com>
-References: <1679653680-2-1-git-send-email-ruansy.fnst@fujitsu.com>
-X-Mailer: Sylpheed 3.7.0 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 619B462CAA
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Mar 2023 20:25:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8A1EC433EF;
+        Fri, 24 Mar 2023 20:25:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1679689540;
+        bh=m3OJlhE9fZl4dpTOjSwWoB0zdrbFIW63wdCMOx8CdNA=;
+        h=Date:From:To:Cc:Subject:From;
+        b=bRBYbH3s0LMTFT8D0uTjSQap2U2IpPmrqhzu2AeFaQy0snL+kbkKTPV6opHsbeuhu
+         1KIKdH7fpxii2v4mlsQvEQ2Ew+6w+HYSdw6hDdAE4/wG7ZvP81Lb3dQ/9wMKTwAoMx
+         rSjVZlscW2f9SEpOWsHjPaEFQPnr8VrTeVKpQMhoeYOujx+zePri229RMoaaEjNm90
+         j0UM8OUE+/V3m8zBlUkUuwsuv2gPI1ekmzxDwdoWsVxKJSpPrn6uS7CjLsyXFte7QB
+         fOMJpK2DWus6vFFqh80P7DmQTSxMfSIS8Crmc4KnK+CIFoS2NsQg09xKreapH0Hknz
+         08mYFrSHSW79g==
+Date:   Fri, 24 Mar 2023 13:25:40 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org
+Cc:     david@fromorbit.com, linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 4dfb02d5cae8
+Message-ID: <167968939075.265996.16878726595607777381.stg-ugh@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, 24 Mar 2023 10:28:00 +0000 Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
+Hi folks,
 
-> XFS allows CoW on non-shared extents to combat fragmentation[1].  The
-> old non-shared extent could be mwrited before, its dax entry is marked
-> dirty.  To be able to delete this entry, clear its dirty mark before
-> invalidate_inode_pages2_range().
+The for-next branch of the xfs-linux repository at:
 
-What are the user-visible runtime effects of this flaw?
+git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-Are we able to identify a Fixes: target for this?  Perhaps
-f80e1668888f3 ("fsdax: invalidate pages when CoW")?
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  Same fixes as this morning, only now with a fix to the
+new tracepoints patch because I exported the patch from djwong-dev, and
+git-am decided to rearrange the changes when I import it into xfs-fixes.
+Wrangling patches out of git and back in through a mailing list is
+stuuuupid.
+
+The new head of the for-next branch is commit:
+
+4dfb02d5cae8 xfs: fix mismerged tracepoints
+
+3 new commits:
+
+Darrick J. Wong (3):
+[fcde88af6a78] xfs: pass the correct cursor to xfs_iomap_prealloc_size
+[e2e63b071b2d] xfs: clear incore AGFL_RESET state if it's not needed
+[4dfb02d5cae8] xfs: fix mismerged tracepoints
+
+Code Diffstat:
+
+fs/xfs/libxfs/xfs_alloc.c | 10 ++++++----
+fs/xfs/xfs_iomap.c        |  5 ++++-
+2 files changed, 10 insertions(+), 5 deletions(-)
