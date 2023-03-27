@@ -2,84 +2,122 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6173BC76195
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Mar 2023 20:25:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80649C76195
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Mar 2023 22:57:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231694AbjC0UZR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Mar 2023 16:25:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54746 "EHLO
+        id S229983AbjC0W5z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Mar 2023 18:57:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47588 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230005AbjC0UZP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2023 16:25:15 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8856C40D8;
-        Mon, 27 Mar 2023 13:24:53 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 13255B818FF;
-        Mon, 27 Mar 2023 20:24:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79299C4339C;
-        Mon, 27 Mar 2023 20:24:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1679948690;
-        bh=N1WaErzy1aVrss+F2Tlq1e+e984QICgfVMB42UQuv/A=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=b7ZC1e0rUfVUTI8qESO2ggXs1Z771nCiXAtpckba3SE1FkHYbuPf3FYmJybIDLZ/n
-         v++d9p2fLpS+QRbGM4XsvtNS/OprMVctCp3VYvWZSWZfasLLonROFN/LQ0oobNDVlV
-         lL6P7oViw+Is2VoYMQPfthpQVys5NHrvTq7gOQxI=
-Date:   Mon, 27 Mar 2023 13:24:49 -0700
-From:   Andrew Morton <akpm@linux-foundation.org>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     <linux-fsdevel@vger.kernel.org>, <nvdimm@lists.linux.dev>,
-        <linux-xfs@vger.kernel.org>, <dan.j.williams@intel.com>,
-        <willy@infradead.org>, <jack@suse.cz>, <djwong@kernel.org>
-Subject: Re: [PATCH] fsdax: force clear dirty mark if CoW
-Message-Id: <20230327132449.b7389c3c00602b8e0e0d8d3f@linux-foundation.org>
-In-Reply-To: <05b9f49f-16ce-be40-4d42-049f8b3825c5@fujitsu.com>
-References: <1679653680-2-1-git-send-email-ruansy.fnst@fujitsu.com>
-        <20230324124242.c881cf384ab8a37716850413@linux-foundation.org>
-        <05b9f49f-16ce-be40-4d42-049f8b3825c5@fujitsu.com>
-X-Mailer: Sylpheed 3.7.0 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S229815AbjC0W5y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2023 18:57:54 -0400
+Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEA912D65
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Mar 2023 15:57:38 -0700 (PDT)
+Received: by mail-pl1-x62a.google.com with SMTP id o11so9958654ple.1
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Mar 2023 15:57:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1679957858;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=82lYB0lL4CS5tmQd94rDNpT+aJMD6MYBqshPk8Qqj/0=;
+        b=jpcqIXsNMu8I6iiqe8Iz+8wGJU/f0+9F87Jnrmlte5fQ6NhbUbhxPudAr+ZJ/iA/ux
+         2qtNcVsjHrd2x+re6naJja5LwnoxLL1U0E7Fhmipi7oswBmnUduEC+2cBhCCr+uzw+FV
+         kfSTGXPY1+fcSz9oS7knRfKKN+S0QAxvsRsku8/iy1a9BGaUGrdTQyx0RqTkJYavNa0l
+         HtyTGCDr5tV8W6dPC7rsH9k5VlSKdThV9HLGiGT+oJzztmy8gv0u1XY6wWBMwFoID3Ur
+         po6gwsrvXv5i1I2lbOiN5k+w66FYT9JQeEJMg8QJJ9AYZ4POkAD4m1KiDX8dvgJDKiEd
+         oITA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1679957858;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=82lYB0lL4CS5tmQd94rDNpT+aJMD6MYBqshPk8Qqj/0=;
+        b=Yin6dDvkM9x07bc4pbXuAnz47CeW9Ld1Diby7LjKyMDENdW2JeRYpsZO/6my4HLL6i
+         hR2ufOgU0eVqebvNQ+DDysAOsKvecjvkN1QbE15O/HN+0nVgqkow/kLBz/1Ak+z/V0oF
+         /2+SOtMBWm8Wq40t1fmRJpfxtWrITv4yyIWr9Zycr9UxtvfQLVtbqFq25PK4bmAuJh3G
+         FdB87DPQLBCNBF1IJeBdR38a48LBnAzcZvoB2oLqZ3QRTT5eNQi5qcUZgDNK7gVA0dNS
+         6e9jVwxHfsp5KTfhnHMTqzMynJgBTzz4YAwJaZPgnKCbvPZMSbe73ueZklalqCI7ZTYq
+         svKg==
+X-Gm-Message-State: AAQBX9fibBNbk42kdnt0ecAbYPIwSqZFsz3aiYP3gDHxJispUrJWfAxI
+        JDJmrEXNXgl1XE+lAyVktyAPsQ==
+X-Google-Smtp-Source: AKy350awFcQ+e4+7yj7VCKplHwm7TW5pVIJRYciytY6OpPH6Dmej17dcFVDXOdqKwWtU+KtE2cU/6A==
+X-Received: by 2002:a17:902:db0e:b0:1a1:bff4:49e9 with SMTP id m14-20020a170902db0e00b001a1bff449e9mr17033852plx.23.1679957858452;
+        Mon, 27 Mar 2023 15:57:38 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-91-157.pa.nsw.optusnet.com.au. [49.181.91.157])
+        by smtp.gmail.com with ESMTPSA id b17-20020a631b51000000b004e28be19d1csm18571013pgm.32.2023.03.27.15.57.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Mar 2023 15:57:38 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1pgvmQ-00DwrY-Vf; Tue, 28 Mar 2023 09:57:34 +1100
+Date:   Tue, 28 Mar 2023 09:57:34 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        linux-xfs@vger.kernel.org, linux-afs@lists.infradead.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [PATCH v2 1/3] xfs: Remove xfs_filemap_map_pages() wrapper
+Message-ID: <20230327225734.GA3223426@dread.disaster.area>
+References: <20230327174515.1811532-1-willy@infradead.org>
+ <20230327174515.1811532-2-willy@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230327174515.1811532-2-willy@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, 27 Mar 2023 11:19:01 +0800 Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
+On Mon, Mar 27, 2023 at 06:45:13PM +0100, Matthew Wilcox (Oracle) wrote:
+> XFS doesn't actually need to be holding the XFS_MMAPLOCK_SHARED to do
+> this.  filemap_map_pages() cannot bring new folios into the page cache
+> and the folio lock is taken during filemap_map_pages() which provides
+> sufficient protection against a truncation or hole punch.
+> 
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> ---
+>  fs/xfs/xfs_file.c | 17 +----------------
+>  1 file changed, 1 insertion(+), 16 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 863289aaa441..aede746541f8 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1389,25 +1389,10 @@ xfs_filemap_pfn_mkwrite(
+>  	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
+>  }
+>  
+> -static vm_fault_t
+> -xfs_filemap_map_pages(
+> -	struct vm_fault		*vmf,
+> -	pgoff_t			start_pgoff,
+> -	pgoff_t			end_pgoff)
+> -{
+> -	struct inode		*inode = file_inode(vmf->vma->vm_file);
+> -	vm_fault_t ret;
+> -
+> -	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> -	ret = filemap_map_pages(vmf, start_pgoff, end_pgoff);
+> -	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> -	return ret;
+> -}
+> -
+>  static const struct vm_operations_struct xfs_file_vm_ops = {
+>  	.fault		= xfs_filemap_fault,
+>  	.huge_fault	= xfs_filemap_huge_fault,
+> -	.map_pages	= xfs_filemap_map_pages,
+> +	.map_pages	= filemap_map_pages,
+>  	.page_mkwrite	= xfs_filemap_page_mkwrite,
+>  	.pfn_mkwrite	= xfs_filemap_pfn_mkwrite,
+>  };
+> -- 
+> 2.39.2
 
-> 
-> 
-> 在 2023/3/25 3:42, Andrew Morton 写道:
-> > On Fri, 24 Mar 2023 10:28:00 +0000 Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
-> > 
-> >> XFS allows CoW on non-shared extents to combat fragmentation[1].  The
-> >> old non-shared extent could be mwrited before, its dax entry is marked
-> >> dirty.  To be able to delete this entry, clear its dirty mark before
-> >> invalidate_inode_pages2_range().
-> > 
-> > What are the user-visible runtime effects of this flaw?
-> 
-> This bug won't leak or mess up the data of filesystem.  In dmesg it will 
-> show like this:
-> 
-> [   28.512349] ------------[ cut here ]------------
-> [   28.512622] WARNING: CPU: 2 PID: 5255 at fs/dax.c:390 
-> dax_insert_entry+0x342/0x390
-> 
-> ...
->
->  >
->  > Are we able to identify a Fixes: target for this?  Perhaps
->  > f80e1668888f3 ("fsdax: invalidate pages when CoW")?
->  >
-> 
-> Yes, it is to fix this commit.
+Looks fine.
 
-OK, thanks.  I added the extra changelog info, added the Fixes and a
-cc:stable.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Some review from other fsdax developers would be helpful, please.
-
+-- 
+Dave Chinner
+david@fromorbit.com
