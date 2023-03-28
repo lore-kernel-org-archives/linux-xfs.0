@@ -2,163 +2,118 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98FFEC77B61
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Mar 2023 07:36:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41F26C76195
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Mar 2023 09:43:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230320AbjC1HgY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Mar 2023 03:36:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44428 "EHLO
+        id S231432AbjC1Jmx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Mar 2023 05:42:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232384AbjC1HgE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Mar 2023 03:36:04 -0400
-Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D813140F7;
-        Tue, 28 Mar 2023 00:35:24 -0700 (PDT)
-Received: by mail-wr1-x431.google.com with SMTP id i9so11110283wrp.3;
-        Tue, 28 Mar 2023 00:35:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1679988920;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=MKJxxj+cvUAFiVFn2VAKaQpn1Fx+oJPp1pod/bKLcS8=;
-        b=EHTnwhxsKMl5uhFL8hInR6fI9YmziRblHUBHqu51WZFAIwHsbVF55k7mNnzki0RXpo
-         Vbj5pc8toiKmkibfhOFip68AG2qrnNFJlykW1lGQEq/Wc9w4eJ/b36MCeteL6C7n9ymL
-         JE7HOFycFDKLk0ykwau7TqhMBQOvyGqIJqcytUDoDVMol4DTEPHkH3a7KjHCXsNgbGOU
-         berPTxa4LZJ6cZjtg9iVlBv+l6W7R10Sl3GNYJX529TtqLLxyQcL6nkm+C0DgJquQCII
-         8B06DvDOgoLT99QVxyxNFYvgFBfRr5S13lFA/TT/uZYD1ldTmI4/PBXs10k83ZZTAZmq
-         cR1g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679988920;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=MKJxxj+cvUAFiVFn2VAKaQpn1Fx+oJPp1pod/bKLcS8=;
-        b=c4CyeFEu3iUYcxrTqQG12jPqVUTyn16QlFkkwIhBh6Jb/SwhvkjaNN2/biY1cyOtZw
-         b5YfgxNfZ/M4L3bAaHMjP6Ns8G5lsqNNTwPk54djxvAnhd/gQa24yNxg8c8Z+Tosq4dk
-         qQ8HV6sji+aM2dYWoQK5znjTf4VFeh/RtolEsE/3AZp6HOa1z+xCSyIuDA1sLbZU8uz5
-         GhY6vt0MVyhiP8ECUjf1jJiGhfX5D7VMFO/SgOVEj8a7zZFrLy56yvs95SosJnF1nogk
-         QW5ZxCz0kDHG8Rx0hwjzR/KngSGoaIegut2YwJs9dP2hfsjUZQbecPChnbrUFqNDRpXG
-         O6yg==
-X-Gm-Message-State: AAQBX9eEs7Q52CiBBhIwIgMVIizN1Y6+KZ1shXFFZrcl9RH8S7fYrYFQ
-        mA1ITUZfajCi23dyDQmYkUc=
-X-Google-Smtp-Source: AKy350a4OUaB8U3RXGO0IJFLwwi94/rajBKgQRkubQCeEkS6MIJLn4Av7IArzAqs7pGwYlmdYLglgQ==
-X-Received: by 2002:a5d:4b04:0:b0:2d7:67bc:344a with SMTP id v4-20020a5d4b04000000b002d767bc344amr12730689wrq.37.1679988920020;
-        Tue, 28 Mar 2023 00:35:20 -0700 (PDT)
-Received: from amir-ThinkPad-T480.lan ([5.29.249.86])
-        by smtp.gmail.com with ESMTPSA id u11-20020a05600c00cb00b003ef64affec7sm9717940wmm.22.2023.03.28.00.35.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Mar 2023 00:35:19 -0700 (PDT)
-From:   Amir Goldstein <amir73il@gmail.com>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Sasha Levin <sashal@kernel.org>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Leah Rumancik <leah.rumancik@gmail.com>,
-        linux-xfs@vger.kernel.org, stable@vger.kernel.org,
-        Brian Foster <bfoster@redhat.com>,
-        Chandan Babu R <chandanrlinux@gmail.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 5.10 2/2] xfs: don't reuse busy extents on extent trim
-Date:   Tue, 28 Mar 2023 10:35:12 +0300
-Message-Id: <20230328073512.460533-3-amir73il@gmail.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20230328073512.460533-1-amir73il@gmail.com>
-References: <20230328073512.460533-1-amir73il@gmail.com>
+        with ESMTP id S232638AbjC1Jma (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Mar 2023 05:42:30 -0400
+Received: from mail1.bemta34.messagelabs.com (mail1.bemta34.messagelabs.com [195.245.231.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA93F618A;
+        Tue, 28 Mar 2023 02:42:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
+        s=170520fj; t=1679996547; i=@fujitsu.com;
+        bh=5ysgX3w4r/9z7wfbPe30efN793AZmmL/VAdTe4COUNg=;
+        h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type;
+        b=u5LXODGK/FG2+ThkcCErIQ3XT6s7340iM4GN/KR0FYHUojfV8FFAHtjtrG5VomqMT
+         wpb2RGvBRPqETpHk74WqXr7fUYWYY9mv6FbS+MqyawH0rhZJPw6LdaOEGeKZpPq/q2
+         iwiAyHHSeMojTHfdkOkmXGkDuFv4awCP3XzWI4Q3A50Q7ep1cJecW9+WAaBBtUjBM6
+         Xkhl4uwitQUwNqimwseHj+mjpwErO2vprAm5P3YS7jYv1szSfIr8Jj0K2r0PEb0QnP
+         h5uLSL/eJHlvF5/w9FW/t3SPQQHAEwCjDaD9m36t2yFH/EiXdkmkcKxQzK8YdPEqY+
+         T/CwPWuLf/F+Q==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpileJIrShJLcpLzFFi42Kxs+FI1K3ZppR
+  isHC3gsWc9WvYLKZPvcBocfkJn8Xs6c1MFnv2nmSxuLfmP6vFrj872C1W/vjDavH7xxw2B06P
+  zSu0PBbvecnksWlVJ5vHpk+T2D1OzPjN4vFi80xGjzMLjrB7fN4kF8ARxZqZl5RfkcCa0XlsA
+  0vBee6K3nv/mBsYN3N2MXJxCAlsYZS4NmERI4SznEli4/leJgjnGKPEyeXTgRxODjYBHYkLC/
+  6ygtgiAoUSe5a+YwGxmQUqJBoX/WPuYuTgEBbwkjh6sBwkzCKgKjH58kN2EJtXwFli//PtzCC
+  2hICCxJSH75kh4oISJ2c+gRojIXHwxQuoGiWJi1/vsELYQOOnH2KCsNUkrp7bxDyBkX8WkvZZ
+  SNoXMDKtYjQrTi0qSy3SNTTTSyrKTM8oyU3MzNFLrNJN1Est1S1PLS7RNdJLLC/WSy0u1iuuz
+  E3OSdHLSy3ZxAiMjpRidfcdjEf6/uodYpTkYFIS5e3nVEwR4kvKT6nMSCzOiC8qzUktPsQow8
+  GhJMGrskUpRUiwKDU9tSItMwcYqTBpCQ4eJRHea6uB0rzFBYm5xZnpEKlTjLocaxsO7GUWYsn
+  Lz0uVEudN3wpUJABSlFGaBzcCljQuMcpKCfMyMjAwCPEUpBblZpagyr9iFOdgVBLmDdwMNIUn
+  M68EbtMroCOYgI74VqAAckRJIkJKqoFpz6QVKTV+2brSj5Q6/kxzz2TOnirz9Zv4iqYz6d2hs
+  09c+Wv842H/KUXDLd/Ltl8tP63DzSORKHHTyW9/5tNDl6uiDTiCW55Pt+Xrfio19d6tcMf3v6
+  5UPbNS5hb4VmK4/v53/tzcCAvWzLk3lTW/7Io71Sz1q59P2U3Q0zZVMZ+ts18lwHDu6ar6W3b
+  Py/U+h8sdc7Kynl74d6kp+7Sjz7tY4h4t29uf+kHQK9jiwIP9Wyuy15mL1h0ueXjq4KnC/soX
+  /eVbNU77bBNyjvqw5+aXbXrTmjz0ay0T1yTrBdnVBF85Xzh9wrPYiMUmUwp60zlUb/Zqi90uv
+  zahJtDubF24d9aX2jkHY7R4diixFGckGmoxFxUnAgBGx1palQMAAA==
+X-Env-Sender: ruansy.fnst@fujitsu.com
+X-Msg-Ref: server-3.tower-571.messagelabs.com!1679996540!574172!1
+X-Originating-IP: [62.60.8.97]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.104.1; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 902 invoked from network); 28 Mar 2023 09:42:20 -0000
+Received: from unknown (HELO n03ukasimr01.n03.fujitsu.local) (62.60.8.97)
+  by server-3.tower-571.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 28 Mar 2023 09:42:20 -0000
+Received: from n03ukasimr01.n03.fujitsu.local (localhost [127.0.0.1])
+        by n03ukasimr01.n03.fujitsu.local (Postfix) with ESMTP id 29CE31001A5;
+        Tue, 28 Mar 2023 10:42:20 +0100 (BST)
+Received: from R01UKEXCASM121.r01.fujitsu.local (R01UKEXCASM121 [10.183.43.173])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by n03ukasimr01.n03.fujitsu.local (Postfix) with ESMTPS id 1D68F10019D;
+        Tue, 28 Mar 2023 10:42:20 +0100 (BST)
+Received: from 692d629b0116.g08.fujitsu.local (10.167.234.230) by
+ R01UKEXCASM121.r01.fujitsu.local (10.183.43.173) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.42; Tue, 28 Mar 2023 10:42:16 +0100
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+To:     <linux-fsdevel@vger.kernel.org>, <nvdimm@lists.linux.dev>,
+        <linux-xfs@vger.kernel.org>, <linux-mm@kvack.org>
+CC:     <dan.j.williams@intel.com>, <willy@infradead.org>, <jack@suse.cz>,
+        <akpm@linux-foundation.org>, <djwong@kernel.org>
+Subject: [PATCH v11 0/2] mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
+Date:   Tue, 28 Mar 2023 09:41:44 +0000
+Message-ID: <1679996506-2-1-git-send-email-ruansy.fnst@fujitsu.com>
+X-Mailer: git-send-email 1.8.3.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.167.234.230]
+X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
+ R01UKEXCASM121.r01.fujitsu.local (10.183.43.173)
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Brian Foster <bfoster@redhat.com>
+This patchset is to add gracefully unbind support for pmem.
+Patch1 corrects the calculation of length and end of a given range.
+Patch2 introduces a new flag call MF_MEM_REMOVE, to let dax holder know
+it is a remove event.  With the help of notify_failure mechanism, we are
+able to shutdown the filesystem on the pmem gracefully.
 
-commit 06058bc40534530e617e5623775c53bb24f032cb upstream.
+Changes since v10:
+ Patch1:
+  1. correct the count calculation in xfs_failure_pgcnt().
+ Patch2:
+  2. drop the patch which introduces super_drop_pagecache().
+  3. in mf_dax_kill_procs(), don't SetPageHWPoison() and search for all
+      tasks while mf_flags has MF_MEM_PRE_REMOVE.
+  4. only do mf_dax_kill_procs() on dax mapping.
+  5. do invalidate_inode_pages2_range() for each file found during rmap,
+      to make sure the dax entry are disassociated before pmem is gone.
+      Otherwise, umount filesystem after unbind will cause crash because
+      the dax entries have to be disassociated but now the pmem is not
+      exist.
 
-Freed extents are marked busy from the point the freeing transaction
-commits until the associated CIL context is checkpointed to the log.
-This prevents reuse and overwrite of recently freed blocks before
-the changes are committed to disk, which can lead to corruption
-after a crash. The exception to this rule is that metadata
-allocation is allowed to reuse busy extents because metadata changes
-are also logged.
+  For detail analysis of this change, please refer this link[1].
 
-As of commit 97d3ac75e5e0 ("xfs: exact busy extent tracking"), XFS
-has allowed modification or complete invalidation of outstanding
-busy extents for metadata allocations. This implementation assumes
-that use of the associated extent is imminent, which is not always
-the case. For example, the trimmed extent might not satisfy the
-minimum length of the allocation request, or the allocation
-algorithm might be involved in a search for the optimal result based
-on locality.
+[1] https://lore.kernel.org/linux-xfs/b1d9fc03-1a71-a75f-f87b-5819991e4eb2@fujitsu.com/
 
-generic/019 reproduces a corruption caused by this scenario. First,
-a metadata block (usually a bmbt or symlink block) is freed from an
-inode. A subsequent bmbt split on an unrelated inode attempts a near
-mode allocation request that invalidates the busy block during the
-search, but does not ultimately allocate it. Due to the busy state
-invalidation, the block is no longer considered busy to subsequent
-allocation. A direct I/O write request immediately allocates the
-block and writes to it. Finally, the filesystem crashes while in a
-state where the initial metadata block free had not committed to the
-on-disk log. After recovery, the original metadata block is in its
-original location as expected, but has been corrupted by the
-aforementioned dio.
+Shiyang Ruan (2):
+  xfs: fix the calculation of length and end
+  mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
 
-This demonstrates that it is fundamentally unsafe to modify busy
-extent state for extents that are not guaranteed to be allocated.
-This applies to pretty much all of the code paths that currently
-trim busy extents for one reason or another. Therefore to address
-this problem, drop the reuse mechanism from the busy extent trim
-path. This code already knows how to return partial non-busy ranges
-of the targeted free extent and higher level code tracks the busy
-state of the allocation attempt. If a block allocation fails where
-one or more candidate extents is busy, we force the log and retry
-the allocation.
+ drivers/dax/super.c         |  3 +-
+ fs/xfs/xfs_notify_failure.c | 66 +++++++++++++++++++++++++++++++------
+ include/linux/mm.h          |  1 +
+ mm/memory-failure.c         | 17 +++++++---
+ 4 files changed, 72 insertions(+), 15 deletions(-)
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-Acked-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_extent_busy.c | 14 --------------
- 1 file changed, 14 deletions(-)
-
-diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-index 5c2695a42de1..a4075685d9eb 100644
---- a/fs/xfs/xfs_extent_busy.c
-+++ b/fs/xfs/xfs_extent_busy.c
-@@ -344,7 +344,6 @@ xfs_extent_busy_trim(
- 	ASSERT(*len > 0);
- 
- 	spin_lock(&args->pag->pagb_lock);
--restart:
- 	fbno = *bno;
- 	flen = *len;
- 	rbp = args->pag->pagb_tree.rb_node;
-@@ -363,19 +362,6 @@ xfs_extent_busy_trim(
- 			continue;
- 		}
- 
--		/*
--		 * If this is a metadata allocation, try to reuse the busy
--		 * extent instead of trimming the allocation.
--		 */
--		if (!(args->datatype & XFS_ALLOC_USERDATA) &&
--		    !(busyp->flags & XFS_EXTENT_BUSY_DISCARDED)) {
--			if (!xfs_extent_busy_update_extent(args->mp, args->pag,
--							  busyp, fbno, flen,
--							  false))
--				goto restart;
--			continue;
--		}
--
- 		if (bbno <= fbno) {
- 			/* start overlap */
- 
 -- 
-2.34.1
+2.39.2
 
