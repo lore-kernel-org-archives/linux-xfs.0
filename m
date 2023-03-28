@@ -2,113 +2,184 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAACEC76195
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Mar 2023 01:38:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A6FCC6FD1D
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Mar 2023 01:43:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229718AbjC1Bii (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Mar 2023 21:38:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40706 "EHLO
+        id S229646AbjC1Bnv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Mar 2023 21:43:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229610AbjC1Bii (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2023 21:38:38 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FADA1FEF
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Mar 2023 18:38:37 -0700 (PDT)
+        with ESMTP id S229608AbjC1Bnt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Mar 2023 21:43:49 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B09C92100;
+        Mon, 27 Mar 2023 18:43:31 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9DCF16155B
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Mar 2023 01:38:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE375C433D2;
-        Tue, 28 Mar 2023 01:38:35 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 5FE6CB80DB2;
+        Tue, 28 Mar 2023 01:43:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0562BC433EF;
+        Tue, 28 Mar 2023 01:43:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1679967516;
-        bh=O1F9eYXqGVxHd2WJ++HyERgwAGWsTM4PN9ai7J6Sna0=;
+        s=k20201202; t=1679967809;
+        bh=WJQVDtVRtClI1EOWzffUHCX7Dj+qAn+CBW+YgstA7z0=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=HI64zs/RRVgUScC37Vn5i2xw0Y268oakV2seGfmqgyzZXeRfYAXVWj4X+l/4fMyB3
-         CGOtRY5u9QUrBtkGMGYs39hCEJ3Vb4dP2uPNWAse7dG0sTq0wMkR35AMO3KB+au7Kk
-         cLqpvspFYmqEXecQx11RQkTuHt5eTYyBg610qDlkC9nt71S5y9J0pFZrVJIn9+USKw
-         EYrMXgkydvgUnz73c38VDjV/k/k1j39fcPkre8SU9pKY1w/rX8PJflZd4EL4XhnY5Q
-         oiQr+sF4Q5cQy7o8xl73MSoEimmE4eyEbd6Uba9/iW+tBd2h3OxGVebflzfUqnoqcx
-         XUGqFNYNH+tYQ==
-Date:   Mon, 27 Mar 2023 18:38:35 -0700
+        b=g4PviIVvWQq9OkjQeUhlFOmCvwZV06TsFhecByaE1hd6nY3D3F8MLtDVokDVxEs2R
+         Ziu97OTkeTNqTBISjf8PRXlCfXYhGjCcMbVoX9/LjrBAWNJl7VrCZocq/kUZcNgKuQ
+         avuVy+Yi6FBqrQzxhA2c6Crr83n2FSnyTMEWlbS3hnmn/9ifX/AxSuVlMSDc18md33
+         zEqVhFF1jYM6FJFqsrIK22vPJv7KzyJ0DVVMNO5W2yXdlu5UmQ2D/hf82vofTprJ6h
+         28z0EpPfusljFaDuMvQtcNDUchnQwnbCHkhQeTJ/emWF6KTSD5NzSKvC1P8feoRH+N
+         XCuyEpxow0Wag==
+Date:   Mon, 27 Mar 2023 18:43:28 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Catherine Hoang <catherine.hoang@oracle.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v1 0/4] setting uuid of online filesystems
-Message-ID: <20230328013835.GF16180@frogsfrogsfrogs>
-References: <20230314042109.82161-1-catherine.hoang@oracle.com>
- <20230314062847.GQ360264@dread.disaster.area>
- <953CAB5C-E645-4BB2-88E2-E992C5CC565D@oracle.com>
- <ZBZUcGLcTSgKVXa5@destitution>
+To:     "yebin (H)" <yebin10@huawei.com>
+Cc:     Ye Bin <yebin@huaweicloud.com>, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: fix BUG_ON in xfs_getbmap()
+Message-ID: <20230328014328.GG16180@frogsfrogsfrogs>
+References: <20230327140218.4154709-1-yebin@huaweicloud.com>
+ <20230327151524.GC16180@frogsfrogsfrogs>
+ <64224406.5090106@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZBZUcGLcTSgKVXa5@destitution>
+In-Reply-To: <64224406.5090106@huawei.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Mar 19, 2023 at 11:16:48AM +1100, Dave Chinner wrote:
-> On Thu, Mar 16, 2023 at 08:41:14PM +0000, Catherine Hoang wrote:
-> > > On Mar 13, 2023, at 11:28 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > > 
-> > > On Mon, Mar 13, 2023 at 09:21:05PM -0700, Catherine Hoang wrote:
-> > >> Hi all,
-> > >> 
-> > >> This series of patches implements a new ioctl to set the uuid of mounted
-> > >> filesystems. Eventually this will be used by the 'xfs_io fsuuid' command
-> > >> to allow userspace to update the uuid.
-> > >> 
-> > >> Comments and feedback appreciated!
-> > > 
-> > > What's the use case for this?
+On Tue, Mar 28, 2023 at 09:33:58AM +0800, yebin (H) wrote:
+> 
+> 
+> On 2023/3/27 23:15, Darrick J. Wong wrote:
+> > [add Christoph to cc since he added/last touched this assert, I think]
 > > 
-> > We want to be able to change the uuid on newly mounted clone vm images
-> > so that each deployed system has a different uuid. We need to do this the
-> > first time the system boots, but after the root fs is mounted so that fsuuid
-> > can run in parallel with other service startup to minimize deployment times.
-> 
-> Why can't you do it offline immediately after the offline clone of
-> the golden image? I mean, cloning images and setting up their
-
-That /is/ how they do it currently.  The goal here was to reduce the
-number of scripts that then must be worked into every distro's bespoke
-initrd generation system (update-initramfs, dracut, etc.).  Doing this
-from systemd bypasses that, and it means it can get done in the
-background during first boot, instead of rewriting superblocks in the
-singlethreaded initramfs hot path during deployments.
-
-They need the fsuuid to change after the VM starts up, but it doesn't
-have to get done until just before we start handing out NFS leases.
-Granted that was before we hit the wall of "lots of subsystems encode
-the fs uuid into things and hand them out"...
-
-> contents is something the external orchestration software does
-> and will always have to do, so i don't really understand why UUID
-> needs to be modified at first mount vs at clone time. Can you
-> describe why it actually needs to be done after first mount?
-> 
-> > >>  xfs: add XFS_IOC_SETFSUUID ioctl
-> > >>  xfs: export meta uuid via xfs_fsop_geom
+> > On Mon, Mar 27, 2023 at 10:02:18PM +0800, Ye Bin wrote:
+> > > From: Ye Bin <yebin10@huawei.com>
 > > > 
-> > > For what purpose does userspace ever need to know the sb_meta_uuid?
-> > 
-> > Userspace would need to know the meta uuid if we want to restore
-> > the original uuid after it has been changed.
-> 
-> I don't understand why you'd want to restore the original UUID given
-> the use case you've describe. Can you explain the situation where
-> you want to return a cloned image to the original golden image UUID?
+> > > There's issue as follows:
+> > > XFS: Assertion failed: (bmv->bmv_iflags & BMV_IF_DELALLOC) != 0, file: fs/xfs/xfs_bmap_util.c, line: 329
+> > Why not get rid of the assertion?  It's not like it changes the course
+> > of the code flow -- userspace still gets told there's a delalloc extent.
+> Thank you for your reply.
+> I think it's incorrect to return the delalloc extent to the user in this
+> case. Because
+> users expect to obtain none delalloc  extent information. If there is a
+> delalloc  extent
+> found at this time, there is a problem with the functionality. I even think
+> that here
+> we should return an error to the userspace instead of return an incorrect
+> result to
+> the userspace .
 
-I can't think of any, and was assuming that Catherine did that to
-maintain parity with the offline fsuuid setting command...
+<shrug> Seeing as the data fork mappings can change the instant the
+ILOCK drops, I'm not /that/ worried about users seeing a delalloc
+mapping even if the user requested a flush.  The results are already
+obsolete when they get to userspace, unless the application software has
+found another means to lock out access to the file.
+
+And even then, BMAP doesn't consult the page cache, so it still doesn't
+provide a full picture of where all the nonzero data can be found.
 
 --D
 
+> > Or, if the assert does serve some purpose, then do we need to take
+> > the mmaplock for cow fork reporting too?
+> Let me analyze whether it is necessary to take the mmaplock for cow fork
+> reporting.
+> > --D
+> > 
+> > > ------------[ cut here ]------------
+> > > kernel BUG at fs/xfs/xfs_message.c:102!
+> > > invalid opcode: 0000 [#1] PREEMPT SMP KASAN
+> > > CPU: 1 PID: 14612 Comm: xfs_io Not tainted 6.3.0-rc2-next-20230315-00006-g2729d23ddb3b-dirty #422
+> > > RIP: 0010:assfail+0x96/0xa0
+> > > RSP: 0018:ffffc9000fa178c0 EFLAGS: 00010246
+> > > RAX: 0000000000000000 RBX: 0000000000000001 RCX: ffff888179a18000
+> > > RDX: 0000000000000000 RSI: ffff888179a18000 RDI: 0000000000000002
+> > > RBP: 0000000000000000 R08: ffffffff8321aab6 R09: 0000000000000000
+> > > R10: 0000000000000001 R11: ffffed1105f85139 R12: ffffffff8aacc4c0
+> > > R13: 0000000000000149 R14: ffff888269f58000 R15: 000000000000000c
+> > > FS:  00007f42f27a4740(0000) GS:ffff88882fc00000(0000) knlGS:0000000000000000
+> > > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > > CR2: 0000000000b92388 CR3: 000000024f006000 CR4: 00000000000006e0
+> > > DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> > > DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+> > > Call Trace:
+> > >   <TASK>
+> > >   xfs_getbmap+0x1a5b/0x1e40
+> > >   xfs_ioc_getbmap+0x1fd/0x5b0
+> > >   xfs_file_ioctl+0x2cb/0x1d50
+> > >   __x64_sys_ioctl+0x197/0x210
+> > >   do_syscall_64+0x39/0xb0
+> > >   entry_SYSCALL_64_after_hwframe+0x63/0xcd
+> > > 
+> > > Above issue may happen as follows:
+> > >           ThreadA                       ThreadB
+> > > do_shared_fault
+> > >   __do_fault
+> > >    xfs_filemap_fault
+> > >     __xfs_filemap_fault
+> > >      filemap_fault
+> > >                               xfs_ioc_getbmap -> Without BMV_IF_DELALLOC flag
+> > > 			      xfs_getbmap
+> > > 			       xfs_ilock(ip, XFS_IOLOCK_SHARED);
+> > > 			       filemap_write_and_wait
+> > >   do_page_mkwrite
+> > >    xfs_filemap_page_mkwrite
+> > >     __xfs_filemap_fault
+> > >      xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+> > >      iomap_page_mkwrite
+> > >       ...
+> > >       xfs_buffered_write_iomap_begin
+> > >        xfs_bmapi_reserve_delalloc -> Allocate delay extent
+> > >                                xfs_ilock_data_map_shared(ip)
+> > > 	                      xfs_getbmap_report_one
+> > > 			       ASSERT((bmv->bmv_iflags & BMV_IF_DELALLOC) != 0)
+> > > 	                        -> trigger BUG_ON
+> > > 
+> > > As xfs_filemap_page_mkwrite() only hold XFS_MMAPLOCK_SHARED lock, there's
+> > > small window mkwrite can produce delay extent after file write in xfs_getbmap().
+> > > To solve above issue, hold XFS_MMAPLOCK_EXCL lock when do xfs_getbmap(),
+> > > to prevent write operations by do_page_mkwrite().
+> > > During doing __xfs_filemap_fault() we can't hold IOLOCK lock, as it's may lead
+> > > to ABBA dealock with xfs_file_write_iter().It's very easy to reproduce when
+> > > do fsstress, lockdep will detect deadlock.
+> > > 
+> > > Signed-off-by: Ye Bin <yebin10@huawei.com>
+> > > ---
+> > >   fs/xfs/xfs_bmap_util.c | 6 ++++--
+> > >   1 file changed, 4 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> > > index a09dd2606479..f23771a0cc8d 100644
+> > > --- a/fs/xfs/xfs_bmap_util.c
+> > > +++ b/fs/xfs/xfs_bmap_util.c
+> > > @@ -463,11 +463,13 @@ xfs_getbmap(
+> > >   			max_len = XFS_ISIZE(ip);
+> > >   		break;
+> > >   	case XFS_DATA_FORK:
+> > > +		lock = XFS_MMAPLOCK_EXCL;
+> > > +		xfs_ilock(ip, lock);
+> > >   		if (!(iflags & BMV_IF_DELALLOC) &&
+> > >   		    (ip->i_delayed_blks || XFS_ISIZE(ip) > ip->i_disk_size)) {
+> > >   			error = filemap_write_and_wait(VFS_I(ip)->i_mapping);
+> > >   			if (error)
+> > > -				goto out_unlock_iolock;
+> > > +				goto out_unlock_ilock;
+> > >   			/*
+> > >   			 * Even after flushing the inode, there can still be
+> > > @@ -486,7 +488,7 @@ xfs_getbmap(
+> > >   		else
+> > >   			max_len = XFS_ISIZE(ip);
+> > > -		lock = xfs_ilock_data_map_shared(ip);
+> > > +		lock |= xfs_ilock_data_map_shared(ip);
+> > >   		break;
+> > >   	}
+> > > -- 
+> > > 2.31.1
+> > > 
+> > .
+> > 
 > 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
