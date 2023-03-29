@@ -2,56 +2,159 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FFB8C74A5B
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Mar 2023 07:37:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3630C761A6
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Mar 2023 10:38:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230055AbjC2Hhp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Mar 2023 03:37:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50706 "EHLO
+        id S229759AbjC2KiJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Mar 2023 06:38:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230077AbjC2HhZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Mar 2023 03:37:25 -0400
-Received: from mail.craftsplex.pl (mail.craftsplex.pl [162.19.155.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 676273A8E
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Mar 2023 00:36:10 -0700 (PDT)
-Received: by mail.craftsplex.pl (Postfix, from userid 1002)
-        id 5F1BD226A8; Wed, 29 Mar 2023 07:30:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=craftsplex.pl;
-        s=mail; t=1680075004;
-        bh=PcMncQpBfIZCnTOfZJY5G1G+gaLn4c9QPfFvoXrE4rA=;
-        h=Date:From:To:Subject:From;
-        b=JmAjE9oOSHhPIhYKVgF+Vb3/G1TUbIji2DWij75OtvNI/rzUUifWLThsCZ8b0iFOw
-         gqJYhOePiGEeAjV0YYFjlXuQrsuc9OGPSH+5dAwSpWFwAKcv4n2RTSpukeA+KkCSoE
-         XJzFgT4eVj0DslvA96kzaZVy6NOlG6h1JHQ9A8Bz5Sz0Px+ZDC3Jbz9Hu97zJMGq6C
-         d/Zr+tckhOdvn1fd+8QTiTQMVdgXf+J3DC6zpHhR12iENdVsEVIzZufI555bCqwtZ8
-         Ces0lohSX8Ckf6B9rq7UObJ5OZFph2IlK45hZwa6OiYUorlNM6Q/IegSIp4sfEaWci
-         K9IiyDuLNW6ig==
-Received: by mail.craftsplex.pl for <linux-xfs@vger.kernel.org>; Wed, 29 Mar 2023 07:29:54 GMT
-Message-ID: <20230329072937-0.1.58.kqtr.0.glpmmh8x44@craftsplex.pl>
-Date:   Wed, 29 Mar 2023 07:29:54 GMT
-From:   "Kamil Tralewski" <kamil.tralewski@craftsplex.pl>
-To:     <linux-xfs@vger.kernel.org>
-Subject: =?UTF-8?Q?S=C5=82owa_kluczowe_do_wypozycjonowania?=
-X-Mailer: mail.craftsplex.pl
+        with ESMTP id S229660AbjC2Khn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Mar 2023 06:37:43 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02B22B3;
+        Wed, 29 Mar 2023 03:37:41 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id AF186211E2;
+        Wed, 29 Mar 2023 10:37:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1680086260; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=fVZw6l+s3xo8LoDMVkg77+pEHxDFng3uIhUWOeoLLJs=;
+        b=UVm06+mJ3D6Lv4RfQPYcINzGVTcXR3gTIlOVOuryMUe7xdByneR9RzutVnqHFei69RTciz
+        MJOJOQlwTsBlnuq89tSuc9sRTLfXuGhKP0xdt0VM0tPMvXU6KKAIfaEVQw+EkU/nhTgCHn
+        QBlwNL8/lodbxODP7J6m9mysQ3TsB+E=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1680086260;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=fVZw6l+s3xo8LoDMVkg77+pEHxDFng3uIhUWOeoLLJs=;
+        b=FftWU/3sVrghvmxF+LbwPxVI9u2yqtfTy1g62yjqEIpyLxiQhFKRFUtKnj9OpYmT9zrb/c
+        vkJbxA7aDa/wkNDw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 72D82139D3;
+        Wed, 29 Mar 2023 10:37:40 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id RX+FGvQUJGRELgAAMHmgww
+        (envelope-from <ddiss@suse.de>); Wed, 29 Mar 2023 10:37:40 +0000
+Date:   Wed, 29 Mar 2023 12:39:17 +0200
+From:   David Disseldorp <ddiss@suse.de>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     zlang@redhat.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me
+Subject: Re: [PATCH 1/3] generic/{251,260}: compute maximum fitrim offset
+Message-ID: <20230329123917.7f436940@echidna.fritz.box>
+In-Reply-To: <168005149047.4147931.2729971759269213680.stgit@frogsfrogsfrogs>
+References: <168005148468.4147931.1986862498548445502.stgit@frogsfrogsfrogs>
+        <168005149047.4147931.2729971759269213680.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Dzie=C5=84 dobry,
+On Tue, 28 Mar 2023 17:58:10 -0700, Darrick J. Wong wrote:
 
-zapozna=C5=82em si=C4=99 z Pa=C5=84stwa ofert=C4=85 i z przyjemno=C5=9Bci=
-=C4=85 przyznaj=C4=99, =C5=BCe przyci=C4=85ga uwag=C4=99 i zach=C4=99ca d=
-o dalszych rozm=C3=B3w.=20
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> FITRIM is a bizarre ioctl.  Callers are allowed to pass in "start" and
+> "length" parameters, which are clearly some kind of range argument.  No
+> means is provided to discover the minimum or maximum range.  Although
+> regular userspace programs default to (start=0, length=-1ULL), this test
+> tries to exercise different parameters.
+> 
+> However, the test assumes that the "size" column returned by the df
+> command is the maximum value supported by the FITRIM command, and is
+> surprised if the number of bytes trimmed by (start=0, length=-1ULL) is
+> larger than this size quantity.
+> 
+> This is completely wrong on XFS with realtime volumes, because the
+> statfs output (which is what df reports) will reflect the realtime
+> volume if the directory argument is a realtime file or a directory
+> flagged with rtinherit.  This is trivially reproducible by configuring a
+> rt volume that is much larger than the data volume, setting rtinherit on
+> the root dir at mkfs time, and running either of these tests.
+> 
+> Refactor the open-coded df logic so that we can determine the value
+> programmatically for XFS.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  common/rc         |   15 +++++++++++++++
+>  common/xfs        |   11 +++++++++++
+>  tests/generic/251 |    2 +-
+>  tests/generic/260 |    2 +-
+>  4 files changed, 28 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/common/rc b/common/rc
+> index 90749343f3..228982fa4d 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -3927,6 +3927,21 @@ _require_batched_discard()
+>  	fi
+>  }
+>  
+> +# Given a mountpoint and the device associated with that mountpoint, return the
+> +# maximum start offset that the FITRIM command will accept, in units of 1024
+> +# byte blocks.
+> +_discard_max_offset_kb()
+> +{
+> +	case "$FSTYP" in
+> +	xfs)
+> +		_xfs_discard_max_offset_kb "$1"
+> +		;;
+> +	*)
+> +		$DF_PROG -k | grep "$1" | grep "$2" | awk '{print $3}'
+> +		;;
 
-Pomy=C5=9Bla=C5=82em, =C5=BCe mo=C5=BCe m=C3=B3g=C5=82bym mie=C4=87 sw=C3=
-=B3j wk=C5=82ad w Pa=C5=84stwa rozw=C3=B3j i pom=C3=B3c dotrze=C4=87 z t=C4=
-=85 ofert=C4=85 do wi=C4=99kszego grona odbiorc=C3=B3w. Pozycjonuj=C4=99 =
-strony www, dzi=C4=99ki czemu generuj=C4=85 =C5=9Bwietny ruch w sieci.
+Might as well fix it to properly match full paths, e.g.
+  $DF_PROG -k|awk '$1 == "'$dev'" && $7 == "'$mnt'" { print $3 }'
 
-Mo=C5=BCemy porozmawia=C4=87 w najbli=C5=BCszym czasie?
+With this:
+   Reviewed-by: David Disseldorp <ddiss@suse.de>
 
-Pozdrawiam
-Kamil Tralewski
+One other minor suggestion below...
+
+> +	esac
+> +}
+> +
+>  _require_dumpe2fs()
+>  {
+>  	if [ -z "$DUMPE2FS_PROG" ]; then
+> diff --git a/common/xfs b/common/xfs
+> index e8e4832cea..a6c82fc6c7 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -1783,3 +1783,14 @@ _require_xfs_scratch_atomicswap()
+>  		_notrun "atomicswap dependencies not supported by scratch filesystem type: $FSTYP"
+>  	_scratch_unmount
+>  }
+> +
+> +# Return the maximum start offset that the FITRIM command will accept, in units
+> +# of 1024 byte blocks.
+> +_xfs_discard_max_offset_kb()
+> +{
+> +	local path="$1"
+> +	local blksz="$($XFS_IO_PROG -c 'statfs' "$path" | grep "geom.bsize" | cut -d ' ' -f 3)"
+> +	local dblks="$($XFS_IO_PROG -c 'statfs' "$path" | grep "geom.datablocks" | cut -d ' ' -f 3)"
+> +
+> +	echo "$((dblks * blksz / 1024))"
+
+This could be simplified a little:
+ $XFS_IO_PROG -c 'statfs' "$path" \
+   | awk '{g[$1] = $3} END {print (g["geom.bsize"] * g["geom.datablocks"] / 1024)}'
+
+> +}
