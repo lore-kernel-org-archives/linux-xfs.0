@@ -2,140 +2,80 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9394C761AF
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Mar 2023 08:53:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A45DC6FD1D
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Mar 2023 09:58:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229552AbjC3IxF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Mar 2023 04:53:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48848 "EHLO
+        id S229608AbjC3J6v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Mar 2023 05:58:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229505AbjC3Iwv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Mar 2023 04:52:51 -0400
-Received: from mail-qt1-x82e.google.com (mail-qt1-x82e.google.com [IPv6:2607:f8b0:4864:20::82e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86F397ABC
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Mar 2023 01:52:50 -0700 (PDT)
-Received: by mail-qt1-x82e.google.com with SMTP id d75a77b69052e-3e390e23f83so462611cf.1
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Mar 2023 01:52:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680166369;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/pUGbSJeXIbqbiydf5b6Zg3qCqAFB/oHTtk54OkF+CA=;
-        b=UL5A7+vSaNkedjf0RM940TocfhoumuI7tBaS0YWz+AHdmXrZAsaX8wgg+j5w7RF298
-         Ekgfde63pCUQs435mfNAHjovy4bNbY4sepG9CY+NHWzSERKuHVeenfS0xlvcOAc3APQ7
-         vbdswldNEjf9OgMR1peH6SZRFXCyErykMe0XvFX5aBgj1YS2y9b3ZrM8ZBkPRXLIvapG
-         gT+rAgFbSqezQkJTs8u5i/mu+uOUu17Ry9YM25/tirUXp0lFmsR4PwhRjtPvvznbAmC5
-         H0OTEqHc5CS0RO2tYLKZWyoL9owm0IDNggklzhiqErGjZMAmBziQW5MRyNb4ipAFwD7W
-         JzjA==
+        with ESMTP id S230039AbjC3J6u (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Mar 2023 05:58:50 -0400
+Received: from mail-il1-f198.google.com (mail-il1-f198.google.com [209.85.166.198])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5FE47DBA
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Mar 2023 02:58:44 -0700 (PDT)
+Received: by mail-il1-f198.google.com with SMTP id l8-20020a056e02066800b003247f2ba648so11706588ilt.5
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Mar 2023 02:58:44 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680166369;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=/pUGbSJeXIbqbiydf5b6Zg3qCqAFB/oHTtk54OkF+CA=;
-        b=QHzl1BLlnKurqrDZ9HSoujwhvvlTEUYxH+THVKc6YrLZe4gc1c0f7ICeIP6eYFgUpO
-         U15XDD+icIh2H7OYByiFb8YsU7Z4iCRQb5fWxC8RZPW4x+Mz9BbdVF7KmoIDbDhW5x79
-         I+JfzDxyTPe+jZNwNOrdHLkF83hLowbd90bwW6PdZUb0eXX2tpxYqdnh4WI2hRgAc07y
-         3/7tg0lYi56R6Twdk81MRm/hlIDarE/+H6W73rpqgCObuvlA+padw5CAvZIHsbLJpBT6
-         sbwSEKgkD36f/NKXBTVY85+tGGKS1GpEs6NueoMs/j5brziebsp7s1p5V/KzoD0snccF
-         VVEA==
-X-Gm-Message-State: AAQBX9c5bqy/dPy+N99wnzBLdWfl6jBdTExoXyn1KSKm3e+ixRd6oaDa
-        PffmRGyer9icgMvYPw58b2araX1Njv9DEFh9AAfr5A==
-X-Google-Smtp-Source: AKy350ZKnJPUXGH+1G0Afn3Z7bkEXPAEpBUNjaFNIywn5HYu6iVE5EFId6tutzAEuEg2L9ihnJWELlyjXRdqhcEtQqg=
-X-Received: by 2002:ac8:5dd0:0:b0:3bf:c406:3a5f with SMTP id
- e16-20020ac85dd0000000b003bfc4063a5fmr75067qtx.7.1680166369621; Thu, 30 Mar
- 2023 01:52:49 -0700 (PDT)
+        d=1e100.net; s=20210112; t=1680170324; x=1682762324;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=xGovrt1tYy7j+8AtskWTAwdmn8Xhh+IrCSWGXn5YPcQ=;
+        b=bxccyG7oTHdLgmCNUV9/B1LAhC2Z3N6UDuREeyxBj3AaGbO1PKLtc+aTI83h/Bihuv
+         BnjzqQJpKrxOnBFA9p1+DF72WQeVuF5gLVYcVcy2xVgP0V+eF5bGwrfFNR5+vbs8Mtx1
+         BI8NMujs04HzczDuuXZ5yezCOMY50z32xRvs4wAC1qEot9lfI4AhTzhpcM36ON5b9JDj
+         WN7BCEq4f2T0CzZPj1zXSI7YdzDKd8uB07prYt64cJvM4yiWHe25biJ01POLRq5ddJ85
+         wl/4FsrjtDc1FxiNGlQZo4SAQbcf2lheQSdAaiSJSnGqCDbsIvKTTfmktKfiwMDdJXYW
+         ZTIg==
+X-Gm-Message-State: AO0yUKXPNhMutAtTuhOid4N6HMOk2GFzV7k2AJ5LSQC2mVzS/8UjBl9H
+        cJe+pblCAJn93SKWS8MgqFAfqKAuDVd/KUgoHheozfmJXd1H
+X-Google-Smtp-Source: AK7set/3qpUPZ/vKm9iQhB0jKlR95UM8plR+f7zsB8xlWGCd8sD3uW/SDnWAJSOd8mlrJQkL8A5+d85Za+lAuW2zjfwF2/QLoA5y
 MIME-Version: 1.0
-References: <0000000000003da76805f8021fb5@google.com> <20230330012750.GF3223426@dread.disaster.area>
-In-Reply-To: <20230330012750.GF3223426@dread.disaster.area>
-From:   Aleksandr Nogikh <nogikh@google.com>
-Date:   Thu, 30 Mar 2023 10:52:37 +0200
-Message-ID: <CANp29Y6XNE_wxx1Osa+RrfqOUP9PZhScGnMUDgQ-qqHzYe9KFg@mail.gmail.com>
-Subject: Re: [syzbot] [xfs?] WARNING in xfs_bmap_extents_to_btree
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     syzbot <syzbot+0c383e46e9b4827b01b1@syzkaller.appspotmail.com>,
-        djwong@kernel.org, linux-fsdevel@vger.kernel.org,
+X-Received: by 2002:a5d:9e12:0:b0:745:70d7:4962 with SMTP id
+ h18-20020a5d9e12000000b0074570d74962mr9108124ioh.0.1680170323973; Thu, 30 Mar
+ 2023 02:58:43 -0700 (PDT)
+Date:   Thu, 30 Mar 2023 02:58:43 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000529f1805f81b23c2@google.com>
+Subject: [syzbot] Monthly xfs report
+From:   syzbot <syzbot+listea0b12829deaef4101fd@syzkaller.appspotmail.com>
+To:     djwong@kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
         syzkaller-bugs@googlegroups.com
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 30, 2023 at 3:27=E2=80=AFAM 'Dave Chinner' via syzkaller-bugs
-<syzkaller-bugs@googlegroups.com> wrote:
->
-> On Tue, Mar 28, 2023 at 09:08:01PM -0700, syzbot wrote:
-> > Hello,
-> >
-> > syzbot found the following issue on:
-> >
-> > HEAD commit:    1e760fa3596e Merge tag 'gfs2-v6.3-rc3-fix' of git://git=
-.ke..
-> > git tree:       upstream
-> > console output: https://syzkaller.appspot.com/x/log.txt?x=3D16f83651c80=
-000
-> > kernel config:  https://syzkaller.appspot.com/x/.config?x=3Dacdb62bf488=
-a8fe5
-> > dashboard link: https://syzkaller.appspot.com/bug?extid=3D0c383e46e9b48=
-27b01b1
-> > compiler:       Debian clang version 15.0.7, GNU ld (GNU Binutils for D=
-ebian) 2.35.2
-> >
-> > Unfortunately, I don't have any reproducer for this issue yet.
-> >
-> > Downloadable assets:
-> > disk image: https://storage.googleapis.com/syzbot-assets/17229b6e6fe0/d=
-isk-1e760fa3.raw.xz
-> > vmlinux: https://storage.googleapis.com/syzbot-assets/69b5d310fba0/vmli=
-nux-1e760fa3.xz
-> > kernel image: https://storage.googleapis.com/syzbot-assets/0c65624aace9=
-/bzImage-1e760fa3.xz
-> >
-> > IMPORTANT: if you fix the issue, please add the following tag to the co=
-mmit:
-> > Reported-by: syzbot+0c383e46e9b4827b01b1@syzkaller.appspotmail.com
-> >
-> > ------------[ cut here ]------------
-> > WARNING: CPU: 1 PID: 24101 at fs/xfs/libxfs/xfs_bmap.c:660 xfs_bmap_ext=
-ents_to_btree+0xe1b/0x1190
->
-> Allocation got an unexpected ENOSPC when it was supposed to have a
-> valid reservation for the space. Likely because of an inconsistency
-> that had been induced into the filesystem where superblock space
-> accounting doesn't exactly match the AG space accounting and/or the
-> tracked free space.
->
-> Given this is a maliciously corrupted filesystem image, this sort of
-> warning is expected and there's probably nothing we can do to avoid
-> it short of a full filesystem verification pass during mount.
-> That's not a viable solution, so I think we should just ignore
-> syzbot when it generates this sort of warning....
+Hello xfs maintainers/developers,
 
-If it's not a warning about a kernel bug, then WARN_ON should probably
-be replaced by some more suitable reporting mechanism. Kernel coding
-style document explicitly says:
+This is a 30-day syzbot report for the xfs subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/xfs
 
-"WARN*() must not be used for a condition that is expected to trigger
-easily, for example, by user space actions. pr_warn_once() is a
-possible alternative, if you need to notify the user of a problem."
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Doc=
-umentation/process/coding-style.rst?id=3D1e760fa3596e8c7f08412712c168288b79=
-670d78#n1223
+During the period, 5 new issues were detected and 0 were fixed.
+In total, 23 issues are still open and 15 have been fixed so far.
 
---
-Aleksandr
+Some of the still happening issues:
 
->
-> i.e. we actually want this warning to be issued if it happens in
-> normal production situations, but given that it's relatively trivial
-> to create an inconsistent filesystem image that can trigger this we
-> should just ignore it when it is generated by such means.
->
-> -Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
->
+Crashes Repro Title
+327     Yes   INFO: task hung in xlog_grant_head_check
+              https://syzkaller.appspot.com/bug?extid=568245b88fbaedcb1959
+85      Yes   KASAN: stack-out-of-bounds Read in xfs_buf_lock
+              https://syzkaller.appspot.com/bug?extid=0bc698a422b5e4ac988c
+81      Yes   WARNING in xfs_qm_dqget_cache_insert
+              https://syzkaller.appspot.com/bug?extid=6ae213503fb12e87934f
+47      Yes   WARNING in xfs_bmapi_convert_delalloc
+              https://syzkaller.appspot.com/bug?extid=53b443b5c64221ee8bad
+44      Yes   INFO: task hung in xfs_buf_item_unpin
+              https://syzkaller.appspot.com/bug?extid=3f083e9e08b726fcfba2
+13      Yes   general protection fault in __xfs_free_extent
+              https://syzkaller.appspot.com/bug?extid=bfbc1eecdfb9b10e5792
+5       Yes   KASAN: use-after-free Read in xfs_btree_lookup_get_block
+              https://syzkaller.appspot.com/bug?extid=7e9494b8b399902e994e
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
