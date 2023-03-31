@@ -2,58 +2,59 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06196C6FD18
-	for <linux-xfs@archiver.kernel.org>; Fri, 31 Mar 2023 07:26:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65F76C76196
+	for <linux-xfs@archiver.kernel.org>; Fri, 31 Mar 2023 07:30:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230294AbjCaH0A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 31 Mar 2023 03:26:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55358 "EHLO
+        id S230343AbjCaHaw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 31 Mar 2023 03:30:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229992AbjCaHZ5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Mar 2023 03:25:57 -0400
-Received: from mail-wm1-x332.google.com (mail-wm1-x332.google.com [IPv6:2a00:1450:4864:20::332])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A378E1BD6
-        for <linux-xfs@vger.kernel.org>; Fri, 31 Mar 2023 00:25:52 -0700 (PDT)
-Received: by mail-wm1-x332.google.com with SMTP id 5b1f17b1804b1-3ee6c339cceso153285e9.0
-        for <linux-xfs@vger.kernel.org>; Fri, 31 Mar 2023 00:25:52 -0700 (PDT)
+        with ESMTP id S230322AbjCaHav (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Mar 2023 03:30:51 -0400
+Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D35F1165F
+        for <linux-xfs@vger.kernel.org>; Fri, 31 Mar 2023 00:30:49 -0700 (PDT)
+Received: by mail-ed1-x52f.google.com with SMTP id w9so86158479edc.3
+        for <linux-xfs@vger.kernel.org>; Fri, 31 Mar 2023 00:30:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680247551;
+        d=google.com; s=20210112; t=1680247847;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=pw4kStS7rzbbLRqrWs4BjnS/rfPwq6lyL0n3r//piM4=;
-        b=BD2fSO1ioVmfH8kTUKFk4RCIgml6T+ntV2pSMl6FqHKLjBbsMywpSB7JFDCoHurnLI
-         V9o1X7oCj9Jv5ac882+AMXAfxTwK6hLy+/NK3ZJi40FJTY+CbC1IQQLS+YMLkwbtbzOw
-         H3sh2XMfB1LLIlPQbZUAdPb93N3AvQGMds9a+yyZpaDSCaJRwSpUPqMLTuR1u3z+/Ur5
-         68nP8o+u0Th7+o5O4AlPzpPsLH/f/sblbW/IGfzEWBSXq4hUwKdloV4cMx/+7YLbpiPM
-         pAqmx55DTfBdGh74Xl6PY3KG+bjnX/S2cqxeLC1pOy22SVlDFDHPpiwk8k6bVUcElsQ3
-         dWwQ==
+        bh=H3XUuqj7bKq4sqEKBJ9kOUJxwFH8O9yCA3hlxqudGM0=;
+        b=ZJ2LTdKfP/dAFMQDQkpdCGFmdqEJnIPuRIEmPgNneqWjwxu56d8a9f1xM1kEqG53C8
+         hKtc3aFtSKmXBq7xMndGMx9yInLTGifW7IFhF+y/nsdiPAkwH79Li1rdyvUunm6K+kIF
+         fuVosgq7RsPqtx+KDgnV80nxZckDEMDTGGRehphSIv5SOMiHFn2+nN88e7YhKNn6UXdK
+         xPl8SyLKrQhrDzWqFEQGW9Ur+LD8P6Jp6MeBDz1jTUBit3TtXxKXj4TJ979fGqTnuVqU
+         JwW2zuI12L5XMn6L0d0gI36rkXhJta0wkNZJYbuuOfOSlx6z0tfhlogJEK6abpUX34lg
+         QtUg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680247551;
+        d=1e100.net; s=20210112; t=1680247847;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=pw4kStS7rzbbLRqrWs4BjnS/rfPwq6lyL0n3r//piM4=;
-        b=6gWOev7EQPKsVtH9nAFrayzHeTUW5HjoJaq1tiebORcEaUgkxxYZMZS1wRKTlTW5g/
-         A6PGP+nua5kxCdDdtFz4Y6NYE0SmLRhxonWXZISMvOlASDSnUKTJZUYaqePkUWKSMviE
-         10B9nY8XQQAgq4OZRjwNYHor/nJY0zzRPzZetr8M6Gr0ZzpzImNBE06AtI89W9HQW/zb
-         CsEb//Ss0IY5Ncv5TCK92HVDmKgNBqVkhyHwFJkDTGMx9QhZcAQp63prV5n1q50Cnw8M
-         ugl9Jwm6iepS499Ruf4bpAUiT3OPL9s5aEk/0OmRUiUga/mqDYlsybQHIiKAnQgmNH5P
-         0lHA==
-X-Gm-Message-State: AAQBX9cTVo1EmE3yL/RPhu6FmxTH2QpmM5c4mclufg4rMEuYPiXNnHay
-        ET6m7178B+bju1xLFK9iRgNyeqFCy6XJm+48v+93kg==
-X-Google-Smtp-Source: AKy350abOVAkC/dx0dxQVe8vtvq9YDRYyGvhn/EWZ6txiXHe82kTuCLaKsXWJ3VDTDrFx6WCn8woIMYCmAHVCwAovDk=
-X-Received: by 2002:a05:600c:1e26:b0:3df:f3ce:be44 with SMTP id
- ay38-20020a05600c1e2600b003dff3cebe44mr81129wmb.3.1680247551038; Fri, 31 Mar
- 2023 00:25:51 -0700 (PDT)
+        bh=H3XUuqj7bKq4sqEKBJ9kOUJxwFH8O9yCA3hlxqudGM0=;
+        b=nsh/ph80RuBPywI3f47dSGE1ro4Orc9/oQaRH4sLQtV9AbdVtI7dXWGFABITEi/CN2
+         FtB/NVPzQ+WUSBCcP5NWBIssmBcinI6IWeXoIWO5QD5454Z198zgP1oPdEDZeLqSTzyG
+         IX/QA0c/YbIdxd1uhA4AyL3fPjeYOElNvkLbF+n5xZgh9es6vnurkE+BvTbzw4iK7aXe
+         nIvh5LQ9SxCUf4iRt+x8s5SvkR5IL0FoxFIBfrDIkOFGWWazwwINVulybcc9c121fUAN
+         CoqpLUbY7RdVlMD9LlVyN9zwru+p9kAH5ENICJdX4yBn6jileYQtnPxxxNZynJjii8TA
+         v/OQ==
+X-Gm-Message-State: AAQBX9dQg2rd/6FAmvn3WJ9XRDVAg8bvIF3mH1909/Gqd2KREbL47jhI
+        BKBleBqkbqOHiqXzO7LC5c7g9WQSbgROFblzrDlf1g==
+X-Google-Smtp-Source: AKy350b5AcmwLZ9juLlS9K/F62ATFOsAhPvyQLkDd1WrL6qYD19g5H8RANCYexuuLD3iuFmBRlqQISUwO5ZWA2jECMo=
+X-Received: by 2002:a17:906:2a15:b0:933:7658:8b44 with SMTP id
+ j21-20020a1709062a1500b0093376588b44mr11617095eje.15.1680247847390; Fri, 31
+ Mar 2023 00:30:47 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230331070818.2792558-1-yosryahmed@google.com> <20230331070818.2792558-4-yosryahmed@google.com>
-In-Reply-To: <20230331070818.2792558-4-yosryahmed@google.com>
-From:   Yu Zhao <yuzhao@google.com>
-Date:   Fri, 31 Mar 2023 01:25:14 -0600
-Message-ID: <CAOUHufY2NieQ8x7-Kv8PSzMVEOjJtBhi6QwKeu-Ojxnia4-TpQ@mail.gmail.com>
+References: <20230331070818.2792558-1-yosryahmed@google.com>
+ <20230331070818.2792558-4-yosryahmed@google.com> <CAOUHufY2NieQ8x7-Kv8PSzMVEOjJtBhi6QwKeu-Ojxnia4-TpQ@mail.gmail.com>
+In-Reply-To: <CAOUHufY2NieQ8x7-Kv8PSzMVEOjJtBhi6QwKeu-Ojxnia4-TpQ@mail.gmail.com>
+From:   Yosry Ahmed <yosryahmed@google.com>
+Date:   Fri, 31 Mar 2023 00:30:11 -0700
+Message-ID: <CAJD7tkbOupKO1CpKbtPdVUFUfCK=UqHcpctZYU3xJ_Ho+OS6kA@mail.gmail.com>
 Subject: Re: [PATCH v3 3/3] mm: vmscan: ignore non-LRU-based reclaim in memcg reclaim
-To:     Yosry Ahmed <yosryahmed@google.com>
+To:     Yu Zhao <yuzhao@google.com>
 Cc:     Andrew Morton <akpm@linux-foundation.org>,
         Alexander Viro <viro@zeniv.linux.org.uk>,
         "Darrick J. Wong" <djwong@kernel.org>,
@@ -79,63 +80,72 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Mar 31, 2023 at 1:08=E2=80=AFAM Yosry Ahmed <yosryahmed@google.com>=
- wrote:
+On Fri, Mar 31, 2023 at 12:25=E2=80=AFAM Yu Zhao <yuzhao@google.com> wrote:
+>
+> On Fri, Mar 31, 2023 at 1:08=E2=80=AFAM Yosry Ahmed <yosryahmed@google.co=
+m> wrote:
+>
+> ...
+>
+> > diff --git a/mm/vmscan.c b/mm/vmscan.c
+> > index a3e38851b34ac..bf9d8e175e92a 100644
+> > --- a/mm/vmscan.c
+> > +++ b/mm/vmscan.c
+> > @@ -533,7 +533,35 @@ EXPORT_SYMBOL(mm_account_reclaimed_pages);
+> >  static void flush_reclaim_state(struct scan_control *sc,
+> >                                 struct reclaim_state *rs)
+> >  {
+> > -       if (rs) {
+> > +       /*
+> > +        * Currently, reclaim_state->reclaimed includes three types of =
+pages
+> > +        * freed outside of vmscan:
+> > +        * (1) Slab pages.
+> > +        * (2) Clean file pages from pruned inodes.
+> > +        * (3) XFS freed buffer pages.
+> > +        *
+> > +        * For all of these cases, we have no way of finding out whethe=
+r these
+> > +        * pages were related to the memcg under reclaim. For example, =
+a freed
+> > +        * slab page could have had only a single object charged to the=
+ memcg
+> > +        * under reclaim. Also, populated inodes are not on shrinker LR=
+Us
+> > +        * anymore except on highmem systems.
+> > +        *
+> > +        * Instead of over-reporting the reclaimed pages in a memcg rec=
+laim,
+> > +        * only count such pages in system-wide reclaim. This prevents
+> > +        * unnecessary retries during memcg charging and false positive=
+ from
+> > +        * proactive reclaim (memory.reclaim).
+>
+> What happens when writing to the root memory.reclaim?
+>
+> > +        *
+> > +        * For uncommon cases were the freed pages were actually signif=
+icantly
+> > +        * charged to the memcg under reclaim, and we end up under-repo=
+rting, it
+> > +        * should be fine. The freed pages will be uncharged anyway, ev=
+en if
+> > +        * they are not reported properly, and we will be able to make =
+forward
+> > +        * progress in charging (which is usually in a retry loop).
+> > +        *
+> > +        * We can go one step further, and report the uncharged objcg p=
+ages in
+> > +        * memcg reclaim, to make reporting more accurate and reduce
+> > +        * under-reporting, but it's probably not worth the complexity =
+for now.
+> > +        */
+> > +       if (rs && !cgroup_reclaim(sc)) {
+>
+> To answer the question above, global_reclaim() would be preferred.
 
-...
+Great point, global_reclaim() is fairly recent. I didn't see it
+before. Thanks for pointing it out. I will change it for v4 -- will
+wait for more feedback before respinning.
 
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index a3e38851b34ac..bf9d8e175e92a 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -533,7 +533,35 @@ EXPORT_SYMBOL(mm_account_reclaimed_pages);
->  static void flush_reclaim_state(struct scan_control *sc,
->                                 struct reclaim_state *rs)
->  {
-> -       if (rs) {
-> +       /*
-> +        * Currently, reclaim_state->reclaimed includes three types of pa=
-ges
-> +        * freed outside of vmscan:
-> +        * (1) Slab pages.
-> +        * (2) Clean file pages from pruned inodes.
-> +        * (3) XFS freed buffer pages.
-> +        *
-> +        * For all of these cases, we have no way of finding out whether =
-these
-> +        * pages were related to the memcg under reclaim. For example, a =
-freed
-> +        * slab page could have had only a single object charged to the m=
-emcg
-> +        * under reclaim. Also, populated inodes are not on shrinker LRUs
-> +        * anymore except on highmem systems.
-> +        *
-> +        * Instead of over-reporting the reclaimed pages in a memcg recla=
-im,
-> +        * only count such pages in system-wide reclaim. This prevents
-> +        * unnecessary retries during memcg charging and false positive f=
-rom
-> +        * proactive reclaim (memory.reclaim).
-
-What happens when writing to the root memory.reclaim?
-
-> +        *
-> +        * For uncommon cases were the freed pages were actually signific=
-antly
-> +        * charged to the memcg under reclaim, and we end up under-report=
-ing, it
-> +        * should be fine. The freed pages will be uncharged anyway, even=
- if
-> +        * they are not reported properly, and we will be able to make fo=
-rward
-> +        * progress in charging (which is usually in a retry loop).
-> +        *
-> +        * We can go one step further, and report the uncharged objcg pag=
-es in
-> +        * memcg reclaim, to make reporting more accurate and reduce
-> +        * under-reporting, but it's probably not worth the complexity fo=
-r now.
-> +        */
-> +       if (rs && !cgroup_reclaim(sc)) {
-
-To answer the question above, global_reclaim() would be preferred.
+Thanks Yu!
