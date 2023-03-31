@@ -2,150 +2,208 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65F76C76196
-	for <linux-xfs@archiver.kernel.org>; Fri, 31 Mar 2023 07:30:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DFC8C76196
+	for <linux-xfs@archiver.kernel.org>; Fri, 31 Mar 2023 20:46:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230343AbjCaHaw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 31 Mar 2023 03:30:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59400 "EHLO
+        id S231609AbjCaUqf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 31 Mar 2023 16:46:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230322AbjCaHav (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Mar 2023 03:30:51 -0400
-Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D35F1165F
-        for <linux-xfs@vger.kernel.org>; Fri, 31 Mar 2023 00:30:49 -0700 (PDT)
-Received: by mail-ed1-x52f.google.com with SMTP id w9so86158479edc.3
-        for <linux-xfs@vger.kernel.org>; Fri, 31 Mar 2023 00:30:49 -0700 (PDT)
+        with ESMTP id S232718AbjCaUqd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Mar 2023 16:46:33 -0400
+Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 710E921AAD
+        for <linux-xfs@vger.kernel.org>; Fri, 31 Mar 2023 13:46:31 -0700 (PDT)
+Received: by mail-pg1-x52f.google.com with SMTP id q206so14173880pgq.9
+        for <linux-xfs@vger.kernel.org>; Fri, 31 Mar 2023 13:46:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680247847;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=H3XUuqj7bKq4sqEKBJ9kOUJxwFH8O9yCA3hlxqudGM0=;
-        b=ZJ2LTdKfP/dAFMQDQkpdCGFmdqEJnIPuRIEmPgNneqWjwxu56d8a9f1xM1kEqG53C8
-         hKtc3aFtSKmXBq7xMndGMx9yInLTGifW7IFhF+y/nsdiPAkwH79Li1rdyvUunm6K+kIF
-         fuVosgq7RsPqtx+KDgnV80nxZckDEMDTGGRehphSIv5SOMiHFn2+nN88e7YhKNn6UXdK
-         xPl8SyLKrQhrDzWqFEQGW9Ur+LD8P6Jp6MeBDz1jTUBit3TtXxKXj4TJ979fGqTnuVqU
-         JwW2zuI12L5XMn6L0d0gI36rkXhJta0wkNZJYbuuOfOSlx6z0tfhlogJEK6abpUX34lg
-         QtUg==
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1680295591;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=yvQa5duEFmv21oECF91MpJhqxo4SC69A1svuPHKziuc=;
+        b=KhVXzwIWCeYgb1lZI5Yha5mNmFpNFAJqlC0Egm6HvFwWgb8Ki2n4SSpvugRY3D7BkR
+         s1fg44MShT6ti7TmbJ79LYprwI882/Fr4a77KAADJnzA4VJR6b1Jgmklh5BBwWFDF1SU
+         ZUQ1Nvc4tRsdwUhgNV+GfDF4ysFpvn3hWx25MLLdCX5KuKYS+MCfxG1vlpHbrl2l24Yb
+         AknVvu0jfrSD133BhKNQ5ZXlH1faApCoWGgr/6thHtXalF72GX86hiBrI1MKX9eorMiP
+         3Oz03NZcqXK+VkTJRCzIYyVJX5+OPHiOzkIm1AhN5j9kldHmGj52qDyl6vTjy+8tAxMI
+         7d7w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680247847;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=H3XUuqj7bKq4sqEKBJ9kOUJxwFH8O9yCA3hlxqudGM0=;
-        b=nsh/ph80RuBPywI3f47dSGE1ro4Orc9/oQaRH4sLQtV9AbdVtI7dXWGFABITEi/CN2
-         FtB/NVPzQ+WUSBCcP5NWBIssmBcinI6IWeXoIWO5QD5454Z198zgP1oPdEDZeLqSTzyG
-         IX/QA0c/YbIdxd1uhA4AyL3fPjeYOElNvkLbF+n5xZgh9es6vnurkE+BvTbzw4iK7aXe
-         nIvh5LQ9SxCUf4iRt+x8s5SvkR5IL0FoxFIBfrDIkOFGWWazwwINVulybcc9c121fUAN
-         CoqpLUbY7RdVlMD9LlVyN9zwru+p9kAH5ENICJdX4yBn6jileYQtnPxxxNZynJjii8TA
-         v/OQ==
-X-Gm-Message-State: AAQBX9dQg2rd/6FAmvn3WJ9XRDVAg8bvIF3mH1909/Gqd2KREbL47jhI
-        BKBleBqkbqOHiqXzO7LC5c7g9WQSbgROFblzrDlf1g==
-X-Google-Smtp-Source: AKy350b5AcmwLZ9juLlS9K/F62ATFOsAhPvyQLkDd1WrL6qYD19g5H8RANCYexuuLD3iuFmBRlqQISUwO5ZWA2jECMo=
-X-Received: by 2002:a17:906:2a15:b0:933:7658:8b44 with SMTP id
- j21-20020a1709062a1500b0093376588b44mr11617095eje.15.1680247847390; Fri, 31
- Mar 2023 00:30:47 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230331070818.2792558-1-yosryahmed@google.com>
- <20230331070818.2792558-4-yosryahmed@google.com> <CAOUHufY2NieQ8x7-Kv8PSzMVEOjJtBhi6QwKeu-Ojxnia4-TpQ@mail.gmail.com>
-In-Reply-To: <CAOUHufY2NieQ8x7-Kv8PSzMVEOjJtBhi6QwKeu-Ojxnia4-TpQ@mail.gmail.com>
-From:   Yosry Ahmed <yosryahmed@google.com>
-Date:   Fri, 31 Mar 2023 00:30:11 -0700
-Message-ID: <CAJD7tkbOupKO1CpKbtPdVUFUfCK=UqHcpctZYU3xJ_Ho+OS6kA@mail.gmail.com>
-Subject: Re: [PATCH v3 3/3] mm: vmscan: ignore non-LRU-based reclaim in memcg reclaim
-To:     Yu Zhao <yuzhao@google.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Lameter <cl@linux.com>,
-        David Rientjes <rientjes@google.com>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Roman Gushchin <roman.gushchin@linux.dev>,
-        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Miaohe Lin <linmiaohe@huawei.com>,
-        David Hildenbrand <david@redhat.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
-        Shakeel Butt <shakeelb@google.com>,
-        Michal Hocko <mhocko@kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
+        d=1e100.net; s=20210112; t=1680295591;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=yvQa5duEFmv21oECF91MpJhqxo4SC69A1svuPHKziuc=;
+        b=wJS0yIWhL2IqQtXtXNQU4448bvAXJlEqEJrKUjnbJXCZOuplPn3rmZWJJNTs7WGGrD
+         bwSv5XSv7cUq14yQbgtgXJ96YJQGEJYMDOMZG1rPxhwNpCIhCXAkqtSlyUQGkQN/GcLv
+         iCMHi56FjMAheIR402O/kNmFMXSzF5DxliQ0oBd602vNsCKbFLN6E4Y2jNihcruRH12/
+         P81NDkBrkjWVM1Bp7j2poo26qyKCVH1+1ZWoO2EQxf9amFuQLHCDDm2m89Gip+77WI/J
+         oVxewvNTX0Sy8QDEaVIz/DLgDMTPmCTmKBVAjwYBzRv6jWO82Fe+z5q2eldo0JywzXGT
+         KrvQ==
+X-Gm-Message-State: AAQBX9f4FK1z46h04cKMEBsK8L2zPqHRtkm7IUke/AHOt73TOwdfTmZK
+        S/QDmN/bsLbsHqlfdVojPg5slWub0OJ0WDZwKhI=
+X-Google-Smtp-Source: AKy350aw0znO4Oeu3iK9sCJXE4hgEGZz5IvcwXA9QAxhyhMtSSd2RJp67WN+A+KF6JXYg+3wrjWBvQ==
+X-Received: by 2002:a62:4ec9:0:b0:575:b783:b6b3 with SMTP id c192-20020a624ec9000000b00575b783b6b3mr25452388pfb.28.1680295590838;
+        Fri, 31 Mar 2023 13:46:30 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-91-157.pa.nsw.optusnet.com.au. [49.181.91.157])
+        by smtp.gmail.com with ESMTPSA id a3-20020a62bd03000000b005abc0d426c4sm2225403pff.54.2023.03.31.13.46.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 31 Mar 2023 13:46:30 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1piLdj-00FUjp-5i; Sat, 01 Apr 2023 07:46:27 +1100
+Date:   Sat, 1 Apr 2023 07:46:27 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Aleksandr Nogikh <nogikh@google.com>,
+        syzbot <syzbot+0c383e46e9b4827b01b1@syzkaller.appspotmail.com>,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Subject: Re: [syzbot] [xfs?] WARNING in xfs_bmap_extents_to_btree
+Message-ID: <20230331204627.GH3223426@dread.disaster.area>
+References: <0000000000003da76805f8021fb5@google.com>
+ <20230330012750.GF3223426@dread.disaster.area>
+ <CANp29Y6XNE_wxx1Osa+RrfqOUP9PZhScGnMUDgQ-qqHzYe9KFg@mail.gmail.com>
+ <20230330224302.GG3223426@dread.disaster.area>
+ <20230331012537.GC4126677@frogsfrogsfrogs>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20230331012537.GC4126677@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Mar 31, 2023 at 12:25=E2=80=AFAM Yu Zhao <yuzhao@google.com> wrote:
->
-> On Fri, Mar 31, 2023 at 1:08=E2=80=AFAM Yosry Ahmed <yosryahmed@google.co=
-m> wrote:
->
-> ...
->
-> > diff --git a/mm/vmscan.c b/mm/vmscan.c
-> > index a3e38851b34ac..bf9d8e175e92a 100644
-> > --- a/mm/vmscan.c
-> > +++ b/mm/vmscan.c
-> > @@ -533,7 +533,35 @@ EXPORT_SYMBOL(mm_account_reclaimed_pages);
-> >  static void flush_reclaim_state(struct scan_control *sc,
-> >                                 struct reclaim_state *rs)
-> >  {
-> > -       if (rs) {
-> > +       /*
-> > +        * Currently, reclaim_state->reclaimed includes three types of =
-pages
-> > +        * freed outside of vmscan:
-> > +        * (1) Slab pages.
-> > +        * (2) Clean file pages from pruned inodes.
-> > +        * (3) XFS freed buffer pages.
-> > +        *
-> > +        * For all of these cases, we have no way of finding out whethe=
-r these
-> > +        * pages were related to the memcg under reclaim. For example, =
-a freed
-> > +        * slab page could have had only a single object charged to the=
- memcg
-> > +        * under reclaim. Also, populated inodes are not on shrinker LR=
-Us
-> > +        * anymore except on highmem systems.
-> > +        *
-> > +        * Instead of over-reporting the reclaimed pages in a memcg rec=
-laim,
-> > +        * only count such pages in system-wide reclaim. This prevents
-> > +        * unnecessary retries during memcg charging and false positive=
- from
-> > +        * proactive reclaim (memory.reclaim).
->
-> What happens when writing to the root memory.reclaim?
->
-> > +        *
-> > +        * For uncommon cases were the freed pages were actually signif=
-icantly
-> > +        * charged to the memcg under reclaim, and we end up under-repo=
-rting, it
-> > +        * should be fine. The freed pages will be uncharged anyway, ev=
-en if
-> > +        * they are not reported properly, and we will be able to make =
-forward
-> > +        * progress in charging (which is usually in a retry loop).
-> > +        *
-> > +        * We can go one step further, and report the uncharged objcg p=
-ages in
-> > +        * memcg reclaim, to make reporting more accurate and reduce
-> > +        * under-reporting, but it's probably not worth the complexity =
-for now.
-> > +        */
-> > +       if (rs && !cgroup_reclaim(sc)) {
->
-> To answer the question above, global_reclaim() would be preferred.
+On Thu, Mar 30, 2023 at 06:25:37PM -0700, Darrick J. Wong wrote:
+> On Fri, Mar 31, 2023 at 09:43:02AM +1100, Dave Chinner wrote:
+> > On Thu, Mar 30, 2023 at 10:52:37AM +0200, Aleksandr Nogikh wrote:
+> > > On Thu, Mar 30, 2023 at 3:27 AM 'Dave Chinner' via syzkaller-bugs
+> > > <syzkaller-bugs@googlegroups.com> wrote:
+> > > >
+> > > > On Tue, Mar 28, 2023 at 09:08:01PM -0700, syzbot wrote:
+> > > > > Hello,
+> > > > >
+> > > > > syzbot found the following issue on:
+> > > > >
+> > > > > HEAD commit:    1e760fa3596e Merge tag 'gfs2-v6.3-rc3-fix' of git://git.ke..
+> > > > > git tree:       upstream
+> > > > > console output: https://syzkaller.appspot.com/x/log.txt?x=16f83651c80000
+> > > > > kernel config:  https://syzkaller.appspot.com/x/.config?x=acdb62bf488a8fe5
+> > > > > dashboard link: https://syzkaller.appspot.com/bug?extid=0c383e46e9b4827b01b1
+> > > > > compiler:       Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2
+> > > > >
+> > > > > Unfortunately, I don't have any reproducer for this issue yet.
+> > > > >
+> > > > > Downloadable assets:
+> > > > > disk image: https://storage.googleapis.com/syzbot-assets/17229b6e6fe0/disk-1e760fa3.raw.xz
+> > > > > vmlinux: https://storage.googleapis.com/syzbot-assets/69b5d310fba0/vmlinux-1e760fa3.xz
+> > > > > kernel image: https://storage.googleapis.com/syzbot-assets/0c65624aace9/bzImage-1e760fa3.xz
+> > > > >
+> > > > > IMPORTANT: if you fix the issue, please add the following tag to the commit:
+> > > > > Reported-by: syzbot+0c383e46e9b4827b01b1@syzkaller.appspotmail.com
+> > > > >
+> > > > > ------------[ cut here ]------------
+> > > > > WARNING: CPU: 1 PID: 24101 at fs/xfs/libxfs/xfs_bmap.c:660 xfs_bmap_extents_to_btree+0xe1b/0x1190
+> > > >
+> > > > Allocation got an unexpected ENOSPC when it was supposed to have a
+> > > > valid reservation for the space. Likely because of an inconsistency
+> > > > that had been induced into the filesystem where superblock space
+> > > > accounting doesn't exactly match the AG space accounting and/or the
+> > > > tracked free space.
+> > > >
+> > > > Given this is a maliciously corrupted filesystem image, this sort of
+> > > > warning is expected and there's probably nothing we can do to avoid
+> > > > it short of a full filesystem verification pass during mount.
+> > > > That's not a viable solution, so I think we should just ignore
+> > > > syzbot when it generates this sort of warning....
+> > > 
+> > > If it's not a warning about a kernel bug, then WARN_ON should probably
+> > > be replaced by some more suitable reporting mechanism. Kernel coding
+> > > style document explicitly says:
+> > > 
+> > > "WARN*() must not be used for a condition that is expected to trigger
+> > > easily, for example, by user space actions.
+> > 
+> > That's exactly the case here. It should *never* happen in normal
+> > production workloads, and it if does then we have the *potential*
+> > for silent data loss occurring. That's *exactly* the sort of thing
+> > we should be warning admins about in no uncertain terms.  Also, we
+> > use WARN_ON_ONCE(), so it's not going to spam the logs.
+> > 
+> > syzbot is a malicious program - it is injecting broken stuff into
+> > the kernel as root to try to trigger situations like this. That
+> > doesn't make a warning it triggers bad or incorrect - syzbot is
+> > pertubing tightly coupled structures in a way that makes the
+> > information shared across those structures inconsistent and
+> > eventually the code is going to trip over that inconsistency.
+> > 
+> > IOWs, once someone has used root permissions to mount a maliciously
+> > crafted filesystem image, *all bets are off*. The machine is running
+> > a potentially compromised kernel at this point. Hence it is almost
+> > guaranteed that at some point the kernel is going to discover things
+> > are *badly wrong* and start dumping "this should never happen!"
+> > warnings into the logs. That's what the warnings are supposed to do,
+> > and the fact that syzbot can trigger them doesn't make the warnings
+> > wrong.
+> > 
+> > > pr_warn_once() is a
+> > > possible alternative, if you need to notify the user of a problem."
+> > > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/coding-style.rst?id=1e760fa3596e8c7f08412712c168288b79670d78#n1223
+> > 
+> > It is worth remembering that those are guidelines, not enforcable
+> > rules and any experienced kernel developer will tell you the same
+> > thing.  We know the guidelines, we know when to apply them, we know
+> > there are cases that the guidelines simply can't, don't or won't
+> > cover.
+> 
+> ...and perhaps the WARNs that can result from corrupted metadata should
+> be changed to XFS_IS_CORRUPT() ?
 
-Great point, global_reclaim() is fairly recent. I didn't see it
-before. Thanks for pointing it out. I will change it for v4 -- will
-wait for more feedback before respinning.
+Well, I think in the case it isn't -corrupt- metadata, more the case
+that there is an inconsistency between different structures that are
+internally consistent.
 
-Thanks Yu!
+e.g. remove a free space extent from the freespace tree without
+removing the space from the global free space counters.  Now
+delalloc reservation is allowed by the global counters, but when we
+got to allocate the extent - or the bmap btree block to index it -
+we fail the allocation because the free space btrees are empty.
+
+The allocation structures are not internally inconsistent or
+corrupt, so it's done the right thing by returning ENOSPC. The
+global counters are not obviously inconsistent or corrupt, either.
+So it can be triggered by just the right sort of corruption at
+exactly the right time (i.e at 100% ENOSPC), but the chances of this
+convoluted set of circumstances happening in production systems is
+pretty much infintesimal.
+
+> We still get a kernel log about something going wrong, only now the
+> report doesn't trigger everyone's WARN triggers, and we tell the user to
+> go run xfs_repair.
+
+I think that is exactly the wrong thing to do.
+
+We have a history of this WARN firing as a result of software bugs
+in XFS - typically a transaction space reservation or allocation
+parameter setup issue - in which case a WARN_ON_ONCE is more
+appropriate here than declaring the filesystem corrupt.
+
+That's the bottom line - this specific WARN has been placed because
+it is an indicator of a bug in the code, not because it is something
+that occurs because of filesystem corruption. The WARN is an
+indicator that the bug needs to be reported, not simply put back on
+the user to clean up the mess and continue on blissfully unaware
+that they tripped over a kernel bug rather than some nebulous,
+unexplainable corruption.
+
+syzbot being able to trip over it by corrupting the fs in just the
+right way doesn't mean we should change it - syzbot is a malicious
+attacker, not a production workload, and I really don't think we
+should be changing warnings that we actually want users to report
+just to shut up syzbot.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
