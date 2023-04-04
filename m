@@ -2,81 +2,157 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10B7EC76196
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Apr 2023 22:28:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFC17C77B62
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 00:14:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233612AbjDCW2M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 3 Apr 2023 18:28:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45682 "EHLO
+        id S231601AbjDDAOA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 3 Apr 2023 20:14:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41214 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231794AbjDCW2L (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Apr 2023 18:28:11 -0400
-Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 836402D4C
-        for <linux-xfs@vger.kernel.org>; Mon,  3 Apr 2023 15:28:10 -0700 (PDT)
-Received: by mail-pj1-x1029.google.com with SMTP id e15-20020a17090ac20f00b0023d1b009f52so34144380pjt.2
-        for <linux-xfs@vger.kernel.org>; Mon, 03 Apr 2023 15:28:10 -0700 (PDT)
+        with ESMTP id S229576AbjDDAN7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Apr 2023 20:13:59 -0400
+Received: from mail-yw1-x114a.google.com (mail-yw1-x114a.google.com [IPv6:2607:f8b0:4864:20::114a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DCF11716
+        for <linux-xfs@vger.kernel.org>; Mon,  3 Apr 2023 17:13:57 -0700 (PDT)
+Received: by mail-yw1-x114a.google.com with SMTP id 00721157ae682-54196bfcd5fso301646397b3.4
+        for <linux-xfs@vger.kernel.org>; Mon, 03 Apr 2023 17:13:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1680560890;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=5dzap7r4jEPxcS1DyxxYKTpwsNWfywPsKJXvqVFzSlA=;
-        b=FZ3vwXDNxQKu7SX+zG9IyIBc6YwP0FvH5ZQAxiJAYpN0YjWwJKpUkDqKymsVbfDPDc
-         xkf+RB+PtvQ+ZDOx0roiiGX023VwrNk4EFC8Ca/zFhNJoNHGwyH53LGH2n3SoQKWhv53
-         +XLsxH7/iEDBu7kEAyIlXaJHUWvPSiJxdJ9WU/n6BE2lqGII4Lgai8DpdGKGmpQBcn5H
-         t7n2PEPCSiwI9cqaUo/xu/6Xnqsey8NjX/ASHcHpbCqe8grQWGk4i79+j82sjKZGQ5Np
-         9xx8gKLnWmQFfu7m7EfeXwMK00KBSK9iuASMhxgMas0cjfVPFzVFWXEKAitbNswF93Vy
-         KemQ==
+        d=google.com; s=20210112; t=1680567236;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=pu8NQW7PT3CX2ydDP6OKHn9xreaGc+GffyitQGTf/Sw=;
+        b=NgFr+mt861ia/9ME3yYfnG6illl0smj1XxKWxv7RX7bCn30eK75+r3/mN045hxmTht
+         XxXZE+TkL0kCi/mO3+BUA3w6mg7VHDQOKN2NVafTJLvv3QixFUE3R5iFK5w8ka0UMBGX
+         cO3RgMHlOCZrZXeoyQngycjIG2W4nzC2svYLg3vadywoa9p2dHEu3QJDakNcoqZZYF0P
+         gTi2ChtgNFu+gpwhTSXKUpPNbjfBCbDD3Ma4xYqGJ61C+BwiJAQfvfUnBTGy6XRnN+ue
+         2PE4ea3ZPsx5EJKDnp8qLdqYsi4/l4Nu9R12YsH4N7a6gS981iO1lmOd8TnhBeuT7CX0
+         zS8A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680560890;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=5dzap7r4jEPxcS1DyxxYKTpwsNWfywPsKJXvqVFzSlA=;
-        b=AKIOTd7pZ5FKZYcDDgPUaLFVE5eRWxLCjo9pD0oOPZNfXLfKVvKghgMThOKAklKTxT
-         YQ0wxvLjZw/9T5YaXNlth5VCwh7mVKSR/bKjELElGdzAPcNjRjYiRoYaPGPGnE7Sr8HJ
-         9IUZmZsqk42lmVYe0FaxxIRlEiuyyFhjph1Wx6l3jjty77bwYHQRISoTs+6Kyl56crA9
-         ioVBImDyJTdaVafdWfjXkq29h8xberUloeGusMi90wNf3WgIM6WLFP9mqofBNLpgkJRy
-         FrBUbdMd0WVqvwbtMrfUX06EzZWP66MAdcVQLQI55XzRCoJ4WccoBq7jQwqkUFAWY92C
-         Ds+A==
-X-Gm-Message-State: AAQBX9cakRlxBSHgaSMUBXdo5LjDMszRjqdsJAkbvmdgbcnoQGdJJDu7
-        LfTtWkfadvbHKjQGDbHYha1bHffRAd0TIeGHjG0=
-X-Google-Smtp-Source: AKy350aT+Bq2Bhz0AEi00Ztv0JaPfPTbmzO+9WHFY+ju8eoUsNQUWsNI7T2IS8sTu41DMOQ21QcP6w==
-X-Received: by 2002:a17:90a:df86:b0:23f:8b1b:d7fc with SMTP id p6-20020a17090adf8600b0023f8b1bd7fcmr21152716pjv.15.1680560889915;
-        Mon, 03 Apr 2023 15:28:09 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-91-157.pa.nsw.optusnet.com.au. [49.181.91.157])
-        by smtp.gmail.com with ESMTPSA id gx3-20020a17090b124300b002311c4596f6sm10080590pjb.54.2023.04.03.15.28.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 03 Apr 2023 15:28:09 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1pjSej-00GhhE-UI; Tue, 04 Apr 2023 08:28:05 +1000
-Date:   Tue, 4 Apr 2023 08:28:05 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Roy Sigurd Karlsbakk <roy@karlsbakk.net>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: Shrink support?
-Message-ID: <20230403222805.GJ3223426@dread.disaster.area>
-References: <e19e642a3b5faeccf51db4e04bc845d6@karlsbakk.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e19e642a3b5faeccf51db4e04bc845d6@karlsbakk.net>
+        d=1e100.net; s=20210112; t=1680567236;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=pu8NQW7PT3CX2ydDP6OKHn9xreaGc+GffyitQGTf/Sw=;
+        b=RLIaED5QH5FndlVcaCnlZjyulwgqfBU0IyeB7SQ2ms9j70J9O0RUgxKgz7C5g94RWk
+         JYmvuXBNydRnfRTI1+dO9s278E0KW5JyekB6IY3E3NmJ92IJJPlfRIMZglWGTtq7D7Bg
+         TKM6WsD8LFHXEwUMfYmZdPatNXuAsjdhvCuwPJ+BeGpGGRlWb6A9FSkTsVAs9mFO8qKZ
+         DZ3sqwm0OkzccXySey3UL7LoxEDHc7sMhKGf5QxUM8UmDcZ5KXwx8EQ08Mh3XVjyxzQ/
+         IdpkoSSKCaXbhhxR3p1US46UVBU+Xlci2iKLH8mbYNMivVv2v18a5DEAAwI8UOHmQh1U
+         AxxQ==
+X-Gm-Message-State: AAQBX9eifNDKSGyAboPuU7nvM6ZaolO24mGQy4FHX/e5XVB6uhINjfyr
+        8OYJABIE3rlOgUX+PPItfbLg/0t/8GS7/5nX
+X-Google-Smtp-Source: AKy350bEZyh+kGC7zJpP2Eo/NB8JCiirULe8DAdhizlHAyh9HLDpxbXiafQS5oeVJeCFuCzpF+wkw4a2/+eTtkR9
+X-Received: from yosry.c.googlers.com ([fda3:e722:ac3:cc00:7f:e700:c0a8:2327])
+ (user=yosryahmed job=sendgmr) by 2002:a81:ac65:0:b0:545:bade:c590 with SMTP
+ id z37-20020a81ac65000000b00545badec590mr463245ywj.1.1680567236548; Mon, 03
+ Apr 2023 17:13:56 -0700 (PDT)
+Date:   Tue,  4 Apr 2023 00:13:50 +0000
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.40.0.348.gf938b09366-goog
+Message-ID: <20230404001353.468224-1-yosryahmed@google.com>
+Subject: [PATCH v4 0/3] Ignore non-LRU-based reclaim in memcg reclaim
+From:   Yosry Ahmed <yosryahmed@google.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Lameter <cl@linux.com>,
+        David Rientjes <rientjes@google.com>,
+        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
+        Vlastimil Babka <vbabka@suse.cz>,
+        Roman Gushchin <roman.gushchin@linux.dev>,
+        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
+        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        Miaohe Lin <linmiaohe@huawei.com>,
+        David Hildenbrand <david@redhat.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
+        Shakeel Butt <shakeelb@google.com>,
+        Michal Hocko <mhocko@kernel.org>, Yu Zhao <yuzhao@google.com>,
+        Dave Chinner <david@fromorbit.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        Yosry Ahmed <yosryahmed@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Apr 01, 2023 at 12:35:01AM +0200, Roy Sigurd Karlsbakk wrote:
-> Hi all
-> 
-> Was it something I was dreaming or was there shrink support coming to XFS?
+Upon running some proactive reclaim tests using memory.reclaim, we
+noticed some tests flaking where writing to memory.reclaim would be
+successful even though we did not reclaim the requested amount fully.
+Looking further into it, I discovered that *sometimes* we over-report
+the number of reclaimed pages in memcg reclaim.
 
-It's a slow work in progress. Don't hold your breathe waiting for
-it; there's still lots of intricate infrastructure stuff that needs
-to be done before we get anywhere near being able to shrink the
-on-disk filesystem...
+Reclaimed pages through other means than LRU-based reclaim are tracked
+through reclaim_state in struct scan_control, which is stashed in
+current task_struct. These pages are added to the number of reclaimed
+pages through LRUs. For memcg reclaim, these pages generally cannot be
+linked to the memcg under reclaim and can cause an overestimated count
+of reclaimed pages. This short series tries to address that.
 
--Dave.
+Patches 1-2 are just refactoring, they add helpers that wrap some
+operations on current->reclaim_state, and rename
+reclaim_state->reclaimed_slab to reclaim_state->reclaimed.
+
+Patch 3 ignores pages reclaimed outside of LRU reclaim in memcg reclaim.
+The pages are uncharged anyway, so even if we end up under-reporting
+reclaimed pages we will still succeed in making progress during
+charging.
+
+Do not let the diff stat deceive you, the core of this series is patch 3,
+which has one line of code change. All the rest is refactoring and one
+huge comment.
+
+v3 -> v4:
+- Used global_reclaim() instead of !cgroup_reclaim() in patch 3 to
+  include non-LRU reclaimed pages when writing to memory.reclaim for
+  root (Yu Zhao).
+- Moved the definition of mm_account_reclaimed_pages() to a static
+  inline in the header file (Dave Chinner).
+
+v2 -> v3:
+- Fixed a compilation problem in patch 2 reported by the bot.
+- Rebased on top of v6.3-rc2.
+
+v1 -> v2:
+- Renamed report_freed_pages() to mm_account_reclaimed_pages(), as
+  suggested by Dave Chinner. There were discussions about leaving
+  updating current->reclaim_state open-coded as it's not worth hiding
+  the current dereferencing to remove one line, but I'd rather have the
+  logic contained with mm/vmscan.c so that the next person that changes
+  this logic doesn't have to change 7 different files.
+- Renamed add_non_vmscan_reclaimed() to flush_reclaim_state() (Johannes
+  Weiner).
+- Added more context about how this problem was found in the cover
+  letter (Johannes Weiner).
+- Added a patch to move set_task_reclaim_state() below the definition of
+  cgroup_reclaim(), and added additional helpers in the same position.
+  This way all the helpers for reclaim_state live together, and there is
+  no need to declare cgroup_reclaim() early or move its definition
+  around to call it from flush_reclaim_state(). This should also fix the
+  build error reported by the bot in !CONFIG_MEMCG.
+
+RFC -> v1:
+- Exported report_freed_pages() in case XFS is built as a module (Matthew
+  Wilcox).
+- Renamed reclaimed_slab to reclaim in previously missed MGLRU code.
+- Refactored using reclaim_state to update sc->nr_reclaimed into a
+  helper and added an XL comment explaining why we ignore
+  reclaim_state->reclaimed in memcg reclaim (Johannes Weiner).
+
+Yosry Ahmed (3):
+  mm: vmscan: move set_task_reclaim_state() after global_reclaim()
+  mm: vmscan: refactor updating reclaimed pages in reclaim_state
+  mm: vmscan: ignore non-LRU-based reclaim in memcg reclaim
+
+ fs/inode.c           |  3 +-
+ fs/xfs/xfs_buf.c     |  3 +-
+ include/linux/swap.h | 17 ++++++++++-
+ mm/slab.c            |  3 +-
+ mm/slob.c            |  6 ++--
+ mm/slub.c            |  5 ++-
+ mm/vmscan.c          | 73 +++++++++++++++++++++++++++++++++-----------
+ 7 files changed, 78 insertions(+), 32 deletions(-)
+
 -- 
-Dave Chinner
-david@fromorbit.com
+2.40.0.348.gf938b09366-goog
+
