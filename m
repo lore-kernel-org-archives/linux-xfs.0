@@ -2,150 +2,145 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BA0BC77B60
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 17:54:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2201C77B60
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 18:01:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232888AbjDDRyt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Apr 2023 13:54:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41992 "EHLO
+        id S235144AbjDDSBy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Apr 2023 14:01:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235501AbjDDRys (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 13:54:48 -0400
-Received: from mail-ed1-x52b.google.com (mail-ed1-x52b.google.com [IPv6:2a00:1450:4864:20::52b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 156191985
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2023 10:54:47 -0700 (PDT)
-Received: by mail-ed1-x52b.google.com with SMTP id cn12so133969788edb.4
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Apr 2023 10:54:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1680630885; x=1683222885;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=pIyxAIGPNJ6SbPtpNjOu1Qfkl2Hkkt9S/yAzUM2lzjA=;
-        b=BjZ6g30k3tXTaR1ElHCovjsyMj800Sze1s9Tcw9Ev95pHFqoS5rnzNDrvDsvN1ZgiE
-         euIsSij/nTurebPJBIbuKAAHcsZjuqUhM83a+gWenoxNLMjLzXjxi/EYOJWyACsM2zsG
-         FbTHBhaXYE5dC6nXu1pg3zDYK80M+wng698hU=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680630885; x=1683222885;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=pIyxAIGPNJ6SbPtpNjOu1Qfkl2Hkkt9S/yAzUM2lzjA=;
-        b=PPEYOHqmRj8Aj6RpV/0eEvYV6v14WdKyBiJFNczbd2/khB9j7RUbgfpo7bX6QAa4df
-         BeMOLFYb9ioVKz5fLU3OH0ACTjGX4htomMt+3bFhlCHH6Om3ku6hXGHa9Yitr6xazQM+
-         4lKw/nuTvt60/OSEARKhtYs7jfR2Av27kJcA75GcVEnUjQkb4CwJuFMzITH5U9SDUYFk
-         19NeET9BkpKxlRtxxluqHJFilwXr+rHMMkNeG7myFBuigjkJIqmNVFJtyHFlV59m9XQB
-         nXWn9js27wBmSNwiMHq2RQVHRA63ycGJoAMRaXaGvQyLbpBgV6gyy8l6hqtPqg4+R9TY
-         VvSw==
-X-Gm-Message-State: AAQBX9fVJAQcuY2WvNcFHJSyOYSp9ZweCuXRDah3ieooQLl248sy6Sc9
-        slGgj/ELuabVPNzs5odxbOrI1vxoSQuW/UUwNPTWaw==
-X-Google-Smtp-Source: AKy350ZPeRDfxpz7bXaBflQKTuV+NH7RDmJxwYFbDsZ3TRbUD566ndeIoiPaR/LtAyudlJmqwshpWQ==
-X-Received: by 2002:a17:906:3b4e:b0:932:fc34:88f with SMTP id h14-20020a1709063b4e00b00932fc34088fmr430999ejf.11.1680630885128;
-        Tue, 04 Apr 2023 10:54:45 -0700 (PDT)
-Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com. [209.85.208.53])
-        by smtp.gmail.com with ESMTPSA id 19-20020a170906025300b00925ce7c7705sm6237050ejl.162.2023.04.04.10.54.44
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 04 Apr 2023 10:54:44 -0700 (PDT)
-Received: by mail-ed1-f53.google.com with SMTP id fi11so10445484edb.10
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Apr 2023 10:54:44 -0700 (PDT)
-X-Received: by 2002:a17:906:3393:b0:933:7658:8b44 with SMTP id
- v19-20020a170906339300b0093376588b44mr166820eja.15.1680630883841; Tue, 04 Apr
- 2023 10:54:43 -0700 (PDT)
+        with ESMTP id S231548AbjDDSBw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 14:01:52 -0400
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96ED1C9;
+        Tue,  4 Apr 2023 11:01:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1680631311; x=1712167311;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=pKl3HEZ6pw4XTW76clROp444ezAtoai1AXFHPcYLmqk=;
+  b=m+l5z+6HLVpOMNBDspYFeRMFXd50jBGQT9s1WzUJYlxkj6I2rb0ZPjOy
+   OtHXwoWoAuZPxXjsgtZ1JXii7+EXAKYOHVSIqCCtoXMHD2sv1Uywphqri
+   xgiQ16B8uUmXSakzZeXzX+K9Q8oE7/lX8pDo8ca/x7BmcFxbJ2V/VNBXP
+   yyV/RHTPX7QKDV6JVVgrfaL3i7Y6WxFjU0f1GIAHmzCXK7toFeiYDqF91
+   8nqNaaPG9j5NFKbAZ6igGI7P5hP+/mpCgOlcqmUqNubD6UrKAbWq2jb0d
+   2Sd+DbBbaA6I39OoWKB5dhLUrDPxvhuE61jCcjarqB1CGZX9+Q3ERKiAz
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10670"; a="370081688"
+X-IronPort-AV: E=Sophos;i="5.98,318,1673942400"; 
+   d="scan'208";a="370081688"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Apr 2023 11:01:43 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10670"; a="932533140"
+X-IronPort-AV: E=Sophos;i="5.98,318,1673942400"; 
+   d="scan'208";a="932533140"
+Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
+  by fmsmga006.fm.intel.com with ESMTP; 04 Apr 2023 11:01:39 -0700
+Received: from kbuild by b613635ddfff with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1pjkyQ-000Py2-22;
+        Tue, 04 Apr 2023 18:01:38 +0000
+Date:   Wed, 5 Apr 2023 02:01:25 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Andrey Albershteyn <aalbersh@redhat.com>, djwong@kernel.org,
+        dchinner@redhat.com, ebiggers@kernel.org, hch@infradead.org,
+        linux-xfs@vger.kernel.org, fsverity@lists.linux.dev
+Cc:     oe-kbuild-all@lists.linux.dev, rpeterso@redhat.com,
+        agruenba@redhat.com, xiang@kernel.org, chao@kernel.org,
+        damien.lemoal@opensource.wdc.com, jth@kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, Andrey Albershteyn <aalbersh@redhat.com>
+Subject: Re: [PATCH v2 20/23] xfs: add fs-verity support
+Message-ID: <202304050102.zJkNrHah-lkp@intel.com>
+References: <20230404145319.2057051-21-aalbersh@redhat.com>
 MIME-Version: 1.0
-References: <168062802052.174368.10967543545284986225.stgit@frogsfrogsfrogs> <168062802637.174368.12108206682992075671.stgit@frogsfrogsfrogs>
-In-Reply-To: <168062802637.174368.12108206682992075671.stgit@frogsfrogsfrogs>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Tue, 4 Apr 2023 10:54:27 -0700
-X-Gmail-Original-Message-ID: <CAHk-=whe9kmyMojhse3cZ-zpHPfvGf_bA=PzNfuV0t+F5S1JxA@mail.gmail.com>
-Message-ID: <CAHk-=whe9kmyMojhse3cZ-zpHPfvGf_bA=PzNfuV0t+F5S1JxA@mail.gmail.com>
-Subject: Re: [PATCH 1/3] xfs: stabilize the tolower function used for ascii-ci
- dir hash computation
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230404145319.2057051-21-aalbersh@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 4, 2023 at 10:07=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
- wrote:
->
-> +       if (c >=3D 0xc0 && c <=3D 0xd6)     /* latin A-O with accents */
-> +               return true;
-> +       if (c >=3D 0xd8 && c <=3D 0xde)     /* latin O-Y with accents */
-> +               return true;
+Hi Andrey,
 
-Please don't do this.
+kernel test robot noticed the following build errors:
 
-We're not in the dark ages any more. We don't do crazy locale-specific
-crud. There is no such thing as "latin1" any more in any valid model.
+[auto build test ERROR on xfs-linux/for-next]
+[also build test ERROR on kdave/for-next tytso-ext4/dev jaegeuk-f2fs/dev-test jaegeuk-f2fs/dev linus/master v6.3-rc5]
+[cannot apply to next-20230404]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-For example, it is true that 0xC4 is '=C3=84' in Latin1, and that the
-lower-case version is '=C3=A4', and you can do the lower-casing exactly the
-same way as you do for US-ASCII: you just set bit 5 (or "add 32" or
-"subtract 0xE0" - the latter is what you seem to do, crazy as it is).
+url:    https://github.com/intel-lab-lkp/linux/commits/Andrey-Albershteyn/xfs-Add-new-name-to-attri-d/20230404-230224
+base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
+patch link:    https://lore.kernel.org/r/20230404145319.2057051-21-aalbersh%40redhat.com
+patch subject: [PATCH v2 20/23] xfs: add fs-verity support
+config: sh-allmodconfig (https://download.01.org/0day-ci/archive/20230405/202304050102.zJkNrHah-lkp@intel.com/config)
+compiler: sh4-linux-gcc (GCC) 12.1.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/1324353702eaba7da1643d589631adcaedf9a046
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Andrey-Albershteyn/xfs-Add-new-name-to-attri-d/20230404-230224
+        git checkout 1324353702eaba7da1643d589631adcaedf9a046
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=sh olddefconfig
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=sh SHELL=/bin/bash fs/xfs/
 
-So the above was fine back in the 80s, and questionably correct in the
-90s, but it is COMPLETE GARBAGE to do this in the year 2023.
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+| Link: https://lore.kernel.org/oe-kbuild-all/202304050102.zJkNrHah-lkp@intel.com/
 
-Because '=C3=84' today is *not* 0xC4. It is "0xC3 0x84" (in the sanest
-simplest form), and your crazy "tolower" will turn that into "0xE3
-0x84", and that not only is no longer '=C3=A4', it's not even valid UTF-8
-any  more.
+All errors (new ones prefixed by >>):
 
-I realize that filesystem people really don't get this, but
-case-insensitivity is pure and utter CRAP. Really. You *cannot* do
-case sensitivity well. It's impossible. It's either locale-dependent,
-or you have to have translation models for Unicode characters that are
-horrifically slow and even then you *will* get it wrong, because you
-will start asking questions about normalization forms, and the end
-result is an UNMITIGATED DISASTER.
+   In file included from <command-line>:
+   In function 'xfs_check_ondisk_structs',
+       inlined from 'init_xfs_fs' at fs/xfs/xfs_super.c:2307:2:
+>> include/linux/compiler_types.h:397:45: error: call to '__compiletime_assert_1674' declared with attribute error: XFS: value of strlen(XFS_VERITY_DESCRIPTOR_NAME) is wrong, expected XFS_VERITY_DESCRIPTOR_NAME_LEN
+     397 |         _compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
+         |                                             ^
+   include/linux/compiler_types.h:378:25: note: in definition of macro '__compiletime_assert'
+     378 |                         prefix ## suffix();                             \
+         |                         ^~~~~~
+   include/linux/compiler_types.h:397:9: note: in expansion of macro '_compiletime_assert'
+     397 |         _compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
+         |         ^~~~~~~~~~~~~~~~~~~
+   include/linux/build_bug.h:39:37: note: in expansion of macro 'compiletime_assert'
+      39 | #define BUILD_BUG_ON_MSG(cond, msg) compiletime_assert(!(cond), msg)
+         |                                     ^~~~~~~~~~~~~~~~~~
+   fs/xfs/xfs_ondisk.h:19:9: note: in expansion of macro 'BUILD_BUG_ON_MSG'
+      19 |         BUILD_BUG_ON_MSG((value) != (expected), \
+         |         ^~~~~~~~~~~~~~~~
+   fs/xfs/xfs_ondisk.h:194:9: note: in expansion of macro 'XFS_CHECK_VALUE'
+     194 |         XFS_CHECK_VALUE(strlen(XFS_VERITY_DESCRIPTOR_NAME),
+         |         ^~~~~~~~~~~~~~~
 
-I wish filesystem people just finally understood this.  FAT was not a
-good filesystem.  HFS+ is garbage. And any network filesystem that
-does this needs to pass locale information around and do it per-mount,
-not on disk.
 
-Because you *will* get it wrong. It's that simple. The only sane model
-these days is Unicode, and the only sane encoding for Unicode is
-UTF-8, but even given those objectively true facts, you have
+vim +/__compiletime_assert_1674 +397 include/linux/compiler_types.h
 
- (a) people who are going to use some internal locale, because THEY
-HAVE TO. Maybe they have various legacy things, and they use Shift-JIS
-or Latin1, and they really treat filenames that way.
+eb5c2d4b45e3d2 Will Deacon 2020-07-21  383  
+eb5c2d4b45e3d2 Will Deacon 2020-07-21  384  #define _compiletime_assert(condition, msg, prefix, suffix) \
+eb5c2d4b45e3d2 Will Deacon 2020-07-21  385  	__compiletime_assert(condition, msg, prefix, suffix)
+eb5c2d4b45e3d2 Will Deacon 2020-07-21  386  
+eb5c2d4b45e3d2 Will Deacon 2020-07-21  387  /**
+eb5c2d4b45e3d2 Will Deacon 2020-07-21  388   * compiletime_assert - break build and emit msg if condition is false
+eb5c2d4b45e3d2 Will Deacon 2020-07-21  389   * @condition: a compile-time constant condition to check
+eb5c2d4b45e3d2 Will Deacon 2020-07-21  390   * @msg:       a message to emit if condition is false
+eb5c2d4b45e3d2 Will Deacon 2020-07-21  391   *
+eb5c2d4b45e3d2 Will Deacon 2020-07-21  392   * In tradition of POSIX assert, this macro will break the build if the
+eb5c2d4b45e3d2 Will Deacon 2020-07-21  393   * supplied condition is *false*, emitting the supplied error message if the
+eb5c2d4b45e3d2 Will Deacon 2020-07-21  394   * compiler has support to do so.
+eb5c2d4b45e3d2 Will Deacon 2020-07-21  395   */
+eb5c2d4b45e3d2 Will Deacon 2020-07-21  396  #define compiletime_assert(condition, msg) \
+eb5c2d4b45e3d2 Will Deacon 2020-07-21 @397  	_compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
+eb5c2d4b45e3d2 Will Deacon 2020-07-21  398  
 
- (b) you will have people who disagree about normal forms. NFC is the
-only sane case, but you *will* have people who use other forms. OS X
-got this completely wrong, and it causes real issues.
-
- (c) you'll find that "lower-case" isn't even well-defined for various
-characters (the typical example is German '=C3=9F', but there are lots of
-them)
-
- (d) and then you'll hit the truly crazy cases with "what about
-compatibility equivalence". You'll find that even in English with NBSP
-vs regular SPACE, but it gets crazy.
-
-End result: the only well-defined area is US-ASCII. Nothing else is
-even *remotely* clear. Don't touch it. You *will* screw up.
-
-Now, if you *only* use this for hashing, maybe you will feel like "you
-will screw up" is not such a big deal.
-
-But people will wonder why the file 'Bj=C3=B6rn' does not compare equal to
-the file 'BJ=C3=96RN' when in a sane locale, but then *does* compare equal
-if they happen to use a legacy Latin1 one.
-
-So no. Latin1 isn't that special, and if you special-case them, you
-*will* screw up other locales.
-
-The *only* situation where 'tolower()' and 'toupper()' are valid is
-for US-ASCII.
-
-And when you compare to glibc, you only compare to "some random locale
-that happens to be active rigth n ow". Something that the kernel
-itself cannot and MUST NOT do.
-
-                Linus
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
