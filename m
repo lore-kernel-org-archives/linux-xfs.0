@@ -2,108 +2,167 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A5F3C6FD1D
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 18:19:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD193C77B60
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 18:35:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236015AbjDDSTz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Apr 2023 14:19:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36860 "EHLO
+        id S229969AbjDDSfD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Apr 2023 14:35:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235706AbjDDSTy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 14:19:54 -0400
-Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8814E421A
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2023 11:19:52 -0700 (PDT)
-Received: by mail-ed1-x536.google.com with SMTP id w9so134246585edc.3
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Apr 2023 11:19:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1680632391; x=1683224391;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=vbrTPfR3qZqGGJQPxQAw32Dz9FCDOSxWxRJMs6hkEEs=;
-        b=daQFFW2adhDFVdIaP2jK/9tfRTbPIOJLhrEOZLlw6kXOvaizjZITeC2Mh+GRIwC4rr
-         dsmKEEolvNyQR1YEW9DXhuyVD/IQZ39J95o/IDqPvJC36ZYbXsrD8Is+qc6S7t3wFau2
-         s717dQCCdWyuszsZSVBvYkqw5N+A3fqWsvacU=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680632391; x=1683224391;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=vbrTPfR3qZqGGJQPxQAw32Dz9FCDOSxWxRJMs6hkEEs=;
-        b=STulqErrdS6gyhqUQaTJyIzvK4MiBWtOrzNaBxo7oDZ8gW/DdXsnF47wJXb38Laaqc
-         gEvJfZ8YnyhCy21t7pdyTpbyo7a+l18F3IsGOm34FItGeqCszIToX2EIscYTQBlWRSLk
-         lWIq9OYdBb3QHORpXsZ8KuyLS7izKQmRR/Vl64TX+Td/T5O+dkOGZO4Pva+mZdG9oVJb
-         DUVQ4LHP0lrbXLINSi93O8rtUilxYYHW9OH/uB5IS3I/p2TtrwTqg0RyISTKsDSWMV6A
-         oVV7VBG2oEkVkZcUvp6PBt5scoBY3OiLStxzImMeUgG30CBDgKLTooNJI4KNYcPb/Spm
-         7rbA==
-X-Gm-Message-State: AAQBX9dtlijUPGzzNeUjuWuxHghwRxAwarf3fmU6ByhSnop/iq48s0JU
-        xJvR09jXzo0VoySyReHe3F5bGU4XF8qNUDUWXbl04g==
-X-Google-Smtp-Source: AKy350ajosy8RufKoRtvaiGYuhqw7/xnYpTMWYMLCRgUVk4wW/NiXb0cfrxc6FmSizWWSxBXAgcoag==
-X-Received: by 2002:a17:906:868c:b0:947:4828:4399 with SMTP id g12-20020a170906868c00b0094748284399mr472565ejx.12.1680632390797;
-        Tue, 04 Apr 2023 11:19:50 -0700 (PDT)
-Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com. [209.85.208.47])
-        by smtp.gmail.com with ESMTPSA id tc27-20020a1709078d1b00b009231714b3d4sm6278448ejc.151.2023.04.04.11.19.50
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 04 Apr 2023 11:19:50 -0700 (PDT)
-Received: by mail-ed1-f47.google.com with SMTP id w9so134246259edc.3
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Apr 2023 11:19:50 -0700 (PDT)
-X-Received: by 2002:a50:9b12:0:b0:502:227a:d0da with SMTP id
- o18-20020a509b12000000b00502227ad0damr226368edi.2.1680632389465; Tue, 04 Apr
- 2023 11:19:49 -0700 (PDT)
+        with ESMTP id S236383AbjDDSe2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 14:34:28 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43F685BB6
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2023 11:32:16 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C271B63557
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2023 18:32:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A11FC433D2;
+        Tue,  4 Apr 2023 18:32:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1680633135;
+        bh=SVzNfO0iU41+v0b29KhgDJgnREYVUY8Ye77ODgy2I88=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=bsPhcGqesFofj0ZoMbEy6km225UWcEZT8lb4ZTdjO88K0DYLbNTAJ/W1obiLsGlW7
+         uGVtEypzxzBL/mYfpIUubXINS9l2Z0r3pAvIQGa32IXkBE/6kMcpwTGii0iKt737JK
+         d+v9h4jCMJX0FR/2nhcM+GGV6a+NY3nd+nB6Tds4r1eJdqalp3pJy9nyogZCsJT1jL
+         jU9F7IDeaXVTolFM4T2wxipO3GhH/NuOCqBaRgLzwuFTC2lSKrOMC08r5VtrM2fSvP
+         G352hnc4Fcvq3CwmELxDuKqWdYy3l3h4vGS0rNb3QJxnU/ka2VS+tWGhMahJvY0C/W
+         kT0LFONQvbzuQ==
+Date:   Tue, 4 Apr 2023 11:32:14 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH 1/3] xfs: stabilize the tolower function used for
+ ascii-ci dir hash computation
+Message-ID: <20230404183214.GG109974@frogsfrogsfrogs>
+References: <168062802052.174368.10967543545284986225.stgit@frogsfrogsfrogs>
+ <168062802637.174368.12108206682992075671.stgit@frogsfrogsfrogs>
+ <CAHk-=whe9kmyMojhse3cZ-zpHPfvGf_bA=PzNfuV0t+F5S1JxA@mail.gmail.com>
 MIME-Version: 1.0
-References: <168062802052.174368.10967543545284986225.stgit@frogsfrogsfrogs> <20230404171715.GE109974@frogsfrogsfrogs>
-In-Reply-To: <20230404171715.GE109974@frogsfrogsfrogs>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Tue, 4 Apr 2023 11:19:32 -0700
-X-Gmail-Original-Message-ID: <CAHk-=wi2c0ezx_OR50h3R6+9+ECu3yDkrEuL34EobZ1b8pWnzQ@mail.gmail.com>
-Message-ID: <CAHk-=wi2c0ezx_OR50h3R6+9+ECu3yDkrEuL34EobZ1b8pWnzQ@mail.gmail.com>
-Subject: Re: [PATCHSET 0/3] xfs: fix ascii-ci problems with userspace
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     david@fromorbit.com, xfs <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAHk-=whe9kmyMojhse3cZ-zpHPfvGf_bA=PzNfuV0t+F5S1JxA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 4, 2023 at 10:17=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
- wrote:
->
-> My finger slipped and I accidentally added you to the To: list on this
-> new series.  This series needs to go through review on linux-xfs; when
-> this is ready to go I (or Dave) will send you a pull request.
->
-> Sorry about the noise.
+On Tue, Apr 04, 2023 at 10:54:27AM -0700, Linus Torvalds wrote:
+> On Tue, Apr 4, 2023 at 10:07 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > +       if (c >= 0xc0 && c <= 0xd6)     /* latin A-O with accents */
+> > +               return true;
+> > +       if (c >= 0xd8 && c <= 0xde)     /* latin O-Y with accents */
+> > +               return true;
+> 
+> Please don't do this.
+> 
+> We're not in the dark ages any more. We don't do crazy locale-specific
+> crud. There is no such thing as "latin1" any more in any valid model.
+> 
+> For example, it is true that 0xC4 is 'Ä' in Latin1, and that the
+> lower-case version is 'ä', and you can do the lower-casing exactly the
+> same way as you do for US-ASCII: you just set bit 5 (or "add 32" or
+> "subtract 0xE0" - the latter is what you seem to do, crazy as it is).
+> 
+> So the above was fine back in the 80s, and questionably correct in the
+> 90s, but it is COMPLETE GARBAGE to do this in the year 2023.
 
-No, it's good. See my rant emails.
+Yeah, I get that.  Fifteen years ago, Barry Naujok and Christoph merged
+this weird ascii-ci feature for XFS that purportedly does ... something.
+It clearly only works properly if you force userspace to use latin1,
+which is totally nuts in 2023 given that the distros default to UTF8
+and likely don't test anything else.  It probably wasn't even a good
+idea in *2008*, but it went in anyway.  Nobody tested this feature,
+metadump breaks with this feature enabled, but as maintainer I get to
+maintain these poorly designed half baked projects.
 
-Case insensitivity is a subject near and dear to my heart.
+I wouldn't ever enable this feature on any computer I use, and I think
+the unicode case-insensitive stuff that's been put in to ext4 and f2fs
+lately are not a tarpit that I ever want to visit in XFS.  Directory
+names should be sequences of bytes that don't include nulls or slashes,
+end of story.
 
-And when I say "near and dear to my heart", I obviously mean "I
-despise it, and I have spent _decades_ ranting against it and trying
-to explain why it's a problem".
+Frankly, I'd rather just drop the entire ascii-ci feature from XFS.  I
+doubt anyone's really using it given that xfs_repair will corrupt the
+filesystem.  This patch encodes the isupper/tolower code from the
+kernel's lib/ctype.c into libxfs so that repair will stop corrupting
+these filesystems, nothing more.
 
-I've ranted against it before, but it's been probably a decade since I
-needed to. I was hoping this was long behind us.
+We're not introducing any new functionality, just making stupid code
+less broken.  I wasn't around let alone maintainer when this feature was
+committed, and I wouldn't let it in now.  I am, however, the stuckee who
+has to clean up all this shit in the least impactful way I can devise.
 
-I'm surprised people still think it's even acceptable.
+Can we instead simply drop ascii-ci support from Linux 6.3i and abruptly
+break all those filesystems?  Even though we're past -rc5 now?  That
+would make all of this baloney go away, at a cost of breaking userspace.
 
-FAT isn't known for being a great filesystem. HFS+ was garbage, but
-even Apple eventually got the message and tried to make APFS better.
-I'm not sure Apple succeeded (maybe the case insensitivity is still
-the default on OS X, but apparently at least iOS got the message).
+> Because 'Ä' today is *not* 0xC4. It is "0xC3 0x84" (in the sanest
+> simplest form), and your crazy "tolower" will turn that into "0xE3
+> 0x84", and that not only is no longer 'ä', it's not even valid UTF-8
+> any  more.
+> 
+> I realize that filesystem people really don't get this, but
+> case-insensitivity is pure and utter CRAP. Really. You *cannot* do
+> case sensitivity well. It's impossible. It's either locale-dependent,
+> or you have to have translation models for Unicode characters that are
+> horrifically slow and even then you *will* get it wrong, because you
+> will start asking questions about normalization forms, and the end
+> result is an UNMITIGATED DISASTER.
 
-Every single case-insensitive filesystem in the world HAS BEEN CRAP.
-Please. Learn from literally decades of reality, and stop doing it.
+Agreed!
 
-And if you have to do it for some legacy reason, at least understand
-the problems with it. Understand that you DO NOT KNOW what the user
-space locale is.
+> I wish filesystem people just finally understood this.  FAT was not a
+> good filesystem.  HFS+ is garbage. And any network filesystem that
+> does this needs to pass locale information around and do it per-mount,
+> not on disk.
+> 
+> Because you *will* get it wrong. It's that simple. The only sane model
+> these days is Unicode, and the only sane encoding for Unicode is
+> UTF-8, but even given those objectively true facts, you have
+> 
+>  (a) people who are going to use some internal locale, because THEY
+> HAVE TO. Maybe they have various legacy things, and they use Shift-JIS
+> or Latin1, and they really treat filenames that way.
+> 
+>  (b) you will have people who disagree about normal forms. NFC is the
+> only sane case, but you *will* have people who use other forms. OS X
+> got this completely wrong, and it causes real issues.
+> 
+>  (c) you'll find that "lower-case" isn't even well-defined for various
+> characters (the typical example is German 'ß', but there are lots of
+> them)
+> 
+>  (d) and then you'll hit the truly crazy cases with "what about
+> compatibility equivalence". You'll find that even in English with NBSP
+> vs regular SPACE, but it gets crazy.
+> 
+> End result: the only well-defined area is US-ASCII. Nothing else is
+> even *remotely* clear. Don't touch it. You *will* screw up.
+> 
+> Now, if you *only* use this for hashing, maybe you will feel like "you
+> will screw up" is not such a big deal.
+> 
+> But people will wonder why the file 'Björn' does not compare equal to
+> the file 'BJÖRN' when in a sane locale, but then *does* compare equal
+> if they happen to use a legacy Latin1 one.
+> 
+> So no. Latin1 isn't that special, and if you special-case them, you
+> *will* screw up other locales.
+> 
+> The *only* situation where 'tolower()' and 'toupper()' are valid is
+> for US-ASCII.
+> 
+> And when you compare to glibc, you only compare to "some random locale
+> that happens to be active rigth n ow". Something that the kernel
+> itself cannot and MUST NOT do.
 
-Limiting yourself to US-ASCII is at least technically valid. Because
-EBCDIC isn't worth worrying about.  But when the high bit is set, you
-had better not touch it, or you need to limit it spectacularly.
+What then is the point of having tolower in the kernel at all?
 
-                   Linus
+--D
+
+>                 Linus
