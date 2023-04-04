@@ -2,392 +2,92 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEEC5C6FD1D
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 21:10:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3E37C6FD1D
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 21:22:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236350AbjDDVKK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Apr 2023 17:10:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50162 "EHLO
+        id S236176AbjDDVWC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Apr 2023 17:22:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33446 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236529AbjDDVKD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 17:10:03 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68A6410CC
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2023 14:10:01 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E07BA638C3
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2023 21:10:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48602C433EF;
-        Tue,  4 Apr 2023 21:10:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680642600;
-        bh=CyBjQTOaTQIwssqC0ZZWsIBKpxzyEnwVlLUEyKuQhfQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=IFQltXBdd+DeqvhDTL1l5p+i0vciUE6dyWBDyPbVu1M8eK4k0G+nXUM/ANOh1BCri
-         BPfwDkfKUZzsXjldcfQfS17taJwobUOF0To0eg7DHdTAtTAoq8r8D/Eu0WBseiReQL
-         ojIoTw1ovJrOrbxMu2OCxPO8DPxn9UK2d6X2FKo0lyQubq8ANLPuw79MPOJ/+GOf4C
-         JoTsLVmaB8hoQdud5lEyDrXoVAxMSgURinnHVQRR3pIkaMaY4mJjRa7lLUUxZEOtMS
-         EaUWlpiME9cOHm8sgUaw4hmiZfFcql7M0ZOlzqTMYQNfM9hQ3/s7LnBVP/kiiO+G61
-         YrCDBcFmu5PXQ==
-Date:   Tue, 4 Apr 2023 14:09:59 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     torvalds@linux-foundation.org
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: [PATCH] xfstests: add a couple more tests for ascii-ci problems
-Message-ID: <20230404210959.GB303486@frogsfrogsfrogs>
-References: <168062802052.174368.10967543545284986225.stgit@frogsfrogsfrogs>
+        with ESMTP id S236314AbjDDVWB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 17:22:01 -0400
+Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16F6319BC
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2023 14:21:56 -0700 (PDT)
+Received: by mail-ed1-x52f.google.com with SMTP id y4so136159780edo.2
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Apr 2023 14:21:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google; t=1680643314; x=1683235314;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=+DEHm3j6FHNzOV7UQgEK4HrPb8zLKCoPFgoX5U/zaBA=;
+        b=GNnql8BuayVyHZmimQ8JK5hf6RvPvV+S71JrfdbQlZZbR0OvgAn183pynR3qIUHZeq
+         vpk08rlQbbJz37M1IJyQcysntdHwGDfWmr3rJaFX/3zNRmXvAT4c6jNEmoMBFhtc4+3y
+         +qhA2ZLMzSsXndnmTFquPkPNhWFb/KSoxPOjc=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680643314; x=1683235314;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=+DEHm3j6FHNzOV7UQgEK4HrPb8zLKCoPFgoX5U/zaBA=;
+        b=fHN2D6ZW5dgRiLWMolkPJyogAJSO8zcPQ7O0J+QvALgQsH1tHTPC/A6zf3SK8FneMt
+         g7Hre0x3U9LdxG4qmsdPUfC5l+wCzQvstb4ggkWLiasaWKZTq2yS3vGdbyOb1J/0jbnG
+         ubR5vLiih7R/A5QfUwUw9cLeOFZhLvmGr1XddfmsPLUsdgG3lEKbQnLNaj6X3VOmst9L
+         H5Jnv9hTXFRFfIuJCUCJaNyOZgJWJX8ZBBYi0MMa1adxL3EfaAMPWZBXl36fZH5Ck7lU
+         2gDdCuXP6pLKDF+ZfWi4reDhw29MOXlS8NhfjZaoiGoYa3iUBqcCgo8Jzb8LFzMhb05D
+         w6nQ==
+X-Gm-Message-State: AAQBX9cd3gb7j6+5aLrGgGcdgaET07Iwq/6WNUtvcAJsU2TbHr5tvQMD
+        0Iq8lH6tRlXx3PQTwHWvFj+Kr46bOT8/Km7O3bLiXA==
+X-Google-Smtp-Source: AKy350bU0nEv1q/HNPz62TL9V2h6yVbhUj6ozRcvnVXWMJGb/U7fD+Emme5XqeLCgf5Lx5o5dZBcIA==
+X-Received: by 2002:a17:906:5906:b0:906:3373:cfe9 with SMTP id h6-20020a170906590600b009063373cfe9mr1029233ejq.10.1680643314174;
+        Tue, 04 Apr 2023 14:21:54 -0700 (PDT)
+Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com. [209.85.208.45])
+        by smtp.gmail.com with ESMTPSA id le3-20020a170907170300b0093b8c0952e4sm6417824ejc.219.2023.04.04.14.21.53
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 04 Apr 2023 14:21:54 -0700 (PDT)
+Received: by mail-ed1-f45.google.com with SMTP id y4so136159578edo.2
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Apr 2023 14:21:53 -0700 (PDT)
+X-Received: by 2002:a17:907:2075:b0:947:72cd:9325 with SMTP id
+ qp21-20020a170907207500b0094772cd9325mr493845ejb.15.1680643313001; Tue, 04
+ Apr 2023 14:21:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <168062802052.174368.10967543545284986225.stgit@frogsfrogsfrogs>
+References: <168062802052.174368.10967543545284986225.stgit@frogsfrogsfrogs>
+ <168062803200.174368.4290650174353254767.stgit@frogsfrogsfrogs>
+ <CAHk-=wi-W-zJkW-URTQoLcLnRuwzmWj4MRqV6SHXmjKDV2zXFg@mail.gmail.com> <20230404205136.GA110000@frogsfrogsfrogs>
+In-Reply-To: <20230404205136.GA110000@frogsfrogsfrogs>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Tue, 4 Apr 2023 14:21:35 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wiKYQuwJpUBNEsc73jaf4-3b3xL5-MD=YXgEBn+31KDKg@mail.gmail.com>
+Message-ID: <CAHk-=wiKYQuwJpUBNEsc73jaf4-3b3xL5-MD=YXgEBn+31KDKg@mail.gmail.com>
+Subject: Re: [PATCH 2/3] xfs: test the ascii case-insensitive hash
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com,
+        Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Apr 4, 2023 at 1:51=E2=80=AFPM Darrick J. Wong <djwong@kernel.org> =
+wrote:
+>
+> Wrong.  I'm well aware that userspace tolower and kernel tolower are
+> *NOT* the same thing.  I'm trying to **STOP USING** tolower in XFS.
 
-Add some tests to make sure that userspace and the kernel actually
-agree on how to do ascii case-insensitive directory lookups, and that
-metadump can actually obfuscate such filesystems.
+Ok, so you're not actually talking about "userspace tolower()".
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- tests/xfs/859     |   63 ++++++++++++++++++++++++++++++++++
- tests/xfs/859.out |   24 +++++++++++++
- tests/xfs/860     |   99 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/860.out |    9 +++++
- tests/xfs/861     |   90 ++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/861.out |    2 +
- 6 files changed, 287 insertions(+)
- create mode 100755 tests/xfs/859
- create mode 100644 tests/xfs/859.out
- create mode 100755 tests/xfs/860
- create mode 100644 tests/xfs/860.out
- create mode 100755 tests/xfs/861
- create mode 100644 tests/xfs/861.out
+You are actually talking about just the same function in xfstools and
+the kernel, and neither is really "tolower()", but is a
+"xfs_hashprep()".
 
-diff --git a/tests/xfs/859 b/tests/xfs/859
-new file mode 100755
-index 0000000000..da6c70632c
---- /dev/null
-+++ b/tests/xfs/859
-@@ -0,0 +1,63 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2023 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test 859
-+#
-+# Make sure that the kernel and userspace agree on which byte sequences are
-+# ASCII uppercase letters, and how to convert them.
-+#
-+. ./common/preamble
-+_begin_fstest auto ci dir
-+
-+# Override the default cleanup function.
-+# _cleanup()
-+# {
-+# 	cd /
-+# 	rm -r -f $tmp.*
-+# }
-+
-+# Import common functions.
-+. ./common/filter
-+
-+_fixed_by_kernel_commit XXXXXXXXXXXX "xfs: stabilize the tolower function used for ascii-ci dir hash computation"
-+_fixed_by_kernel_commit XXXXXXXXXXXX "xfs: use the directory name hash function for dir scrubbing"
-+
-+_supported_fs xfs
-+_require_scratch
-+
-+_scratch_mkfs -n version=ci > $seqres.full
-+_scratch_mount
-+
-+# Create a two-block directory to force leaf format
-+mkdir "$SCRATCH_MNT/lol"
-+touch "$SCRATCH_MNT/lol/autoexec.bat"
-+i=0
-+dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
-+nr_dirents=$((dblksz * 2 / 256))
-+
-+for ((i = 0; i < nr_dirents; i++)); do
-+	name="$(printf "y%0254d" $i)"
-+	ln "$SCRATCH_MNT/lol/autoexec.bat" "$SCRATCH_MNT/lol/$name"
-+done
-+
-+dirsz=$(stat -c '%s' $SCRATCH_MNT/lol)
-+test $dirsz -gt $dblksz || echo "dir size $dirsz, expected at least $dblksz?"
-+stat $SCRATCH_MNT/lol >> $seqres.full
-+
-+# Create names with extended ascii characters in them to exploit the fact
-+# that the Linux kernel will transform extended ASCII uppercase characters
-+# but libc won't.  Need to force LANG=C here so that awk doesn't spit out utf8
-+# sequences.
-+old_lang="$LANG"
-+LANG=C
-+awk 'END { for (i = 192; i < 247; i++) printf("%c\n", i); }' < /dev/null | while read name; do
-+	ln "$SCRATCH_MNT/lol/autoexec.bat" "$SCRATCH_MNT/lol/$name" 2>&1 | _filter_scratch
-+done
-+
-+LANG=$old_lang
-+
-+# Now just let repair run
-+
-+status=0
-+exit
-diff --git a/tests/xfs/859.out b/tests/xfs/859.out
-new file mode 100644
-index 0000000000..a4939ba670
---- /dev/null
-+++ b/tests/xfs/859.out
-@@ -0,0 +1,24 @@
-+QA output created by 859
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\340': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\341': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\342': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\343': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\344': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\345': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\346': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\347': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\350': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\351': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\352': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\353': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\354': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\355': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\356': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\357': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\360': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\361': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\362': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\363': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\364': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\365': File exists
-+ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\366': File exists
-diff --git a/tests/xfs/860 b/tests/xfs/860
-new file mode 100755
-index 0000000000..524d0cfa95
---- /dev/null
-+++ b/tests/xfs/860
-@@ -0,0 +1,99 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2023 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test 860
-+#
-+# Make sure that metadump obfuscation works for filesystems with ascii-ci
-+# enabled.
-+#
-+. ./common/preamble
-+_begin_fstest auto dir ci
-+
-+_cleanup()
-+{
-+      cd /
-+      rm -r -f $tmp.* $testdir
-+}
-+
-+_fixed_by_git_commit xfsprogs XXXXXXXXXXX "xfs_db: fix metadump name obfuscation for ascii-ci filesystems"
-+
-+_supported_fs xfs
-+_require_test
-+_require_scratch
-+
-+_scratch_mkfs -n version=ci > $seqres.full
-+_scratch_mount
-+
-+# Create a two-block directory to force leaf format
-+mkdir "$SCRATCH_MNT/lol"
-+touch "$SCRATCH_MNT/lol/autoexec.bat"
-+i=0
-+dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
-+nr_dirents=$((dblksz * 2 / 256))
-+
-+for ((i = 0; i < nr_dirents; i++)); do
-+	name="$(printf "y%0254d" $i)"
-+	ln "$SCRATCH_MNT/lol/autoexec.bat" "$SCRATCH_MNT/lol/$name"
-+done
-+
-+dirsz=$(stat -c '%s' $SCRATCH_MNT/lol)
-+test $dirsz -gt $dblksz || echo "dir size $dirsz, expected at least $dblksz?"
-+stat $SCRATCH_MNT/lol >> $seqres.full
-+
-+# Create a two-block attr to force leaf format
-+i=0
-+for ((i = 0; i < nr_dirents; i++)); do
-+	name="$(printf "user.%0250d" $i)"
-+	$SETFATTR_PROG -n "$name" -v 1 "$SCRATCH_MNT/lol/autoexec.bat"
-+done
-+stat $SCRATCH_MNT/lol/autoexec.bat >> $seqres.full
-+
-+_scratch_unmount
-+
-+testdir=$TEST_DIR/$seq.metadumps
-+mkdir -p $testdir
-+metadump_file=$testdir/scratch.md
-+metadump_file_a=${metadump_file}.a
-+metadump_file_o=${metadump_file}.o
-+metadump_file_ao=${metadump_file}.ao
-+
-+echo metadump
-+_scratch_xfs_metadump $metadump_file >> $seqres.full
-+
-+echo metadump a
-+_scratch_xfs_metadump $metadump_file_a -a >> $seqres.full
-+
-+echo metadump o
-+_scratch_xfs_metadump $metadump_file_o -o >> $seqres.full
-+
-+echo metadump ao
-+_scratch_xfs_metadump $metadump_file_ao -a -o >> $seqres.full
-+
-+echo mdrestore
-+_scratch_xfs_mdrestore $metadump_file
-+_scratch_mount
-+_check_scratch_fs
-+_scratch_unmount
-+
-+echo mdrestore a
-+_scratch_xfs_mdrestore $metadump_file_a
-+_scratch_mount
-+_check_scratch_fs
-+_scratch_unmount
-+
-+echo mdrestore o
-+_scratch_xfs_mdrestore $metadump_file_o
-+_scratch_mount
-+_check_scratch_fs
-+_scratch_unmount
-+
-+echo mdrestore ao
-+_scratch_xfs_mdrestore $metadump_file_ao
-+_scratch_mount
-+_check_scratch_fs
-+_scratch_unmount
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/860.out b/tests/xfs/860.out
-new file mode 100644
-index 0000000000..136fc5f7d6
---- /dev/null
-+++ b/tests/xfs/860.out
-@@ -0,0 +1,9 @@
-+QA output created by 860
-+metadump
-+metadump a
-+metadump o
-+metadump ao
-+mdrestore
-+mdrestore a
-+mdrestore o
-+mdrestore ao
-diff --git a/tests/xfs/861 b/tests/xfs/861
-new file mode 100755
-index 0000000000..7b0a37a3f1
---- /dev/null
-+++ b/tests/xfs/861
-@@ -0,0 +1,90 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2023 Oracle.  All Rights Reserved.
-+#
-+# FS QA Test 861
-+#
-+# Make sure that the kernel and utilities can handle large numbers of dirhash
-+# collisions in both the directory and extended attribute structures.
-+#
-+# This started as a regression test for the new 'hashcoll' function in xfs_db,
-+# but became a regression test for an xfs_repair bug affecting hashval checks
-+# applied to the second and higher node levels of a dabtree.
-+#
-+. ./common/preamble
-+_begin_fstest auto dir
-+
-+_fixed_by_git_commit xfsprogs b7b81f336ac "xfs_repair: fix incorrect dabtree hashval comparison"
-+
-+_supported_fs xfs
-+_require_xfs_db_command "hashcoll"
-+_require_xfs_db_command "path"
-+_require_scratch
-+
-+_scratch_mkfs > $seqres.full
-+_scratch_mount
-+
-+crash_dir=$SCRATCH_MNT/lol/
-+crash_attrs=$SCRATCH_MNT/hah
-+
-+mkdir -p "$crash_dir"
-+touch "$crash_attrs"
-+
-+# Create enough dirents to fill two dabtree node blocks with names that all
-+# hash to the same value.  Each dirent gets its own record in the dabtree,
-+# so we must create enough dirents to get a dabtree of at least height 2.
-+dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
-+
-+da_records_per_block=$((dblksz / 8))	# 32-bit hash and 32-bit before
-+nr_dirents=$((da_records_per_block * 2))
-+
-+longname="$(mktemp --dry-run "$(perl -e 'print "X" x 255;')" | tr ' ' 'X')"
-+echo "creating $nr_dirents dirents from '$longname'" >> $seqres.full
-+_scratch_xfs_db -r -c "hashcoll -n $nr_dirents -p $crash_dir $longname"
-+
-+# Create enough xattrs to fill two dabtree nodes.  Each attribute leaf block
-+# gets its own record in the dabtree, so we have to create enough attr blocks
-+# (each full of attrs) to get a dabtree of at least height 2.
-+blksz=$(_get_block_size "$SCRATCH_MNT")
-+
-+attr_records_per_block=$((blksz / 255))
-+da_records_per_block=$((blksz / 8))	# 32-bit hash and 32-bit before
-+nr_attrs=$((da_records_per_block * attr_records_per_block * 2))
-+
-+longname="$(mktemp --dry-run "$(perl -e 'print "X" x 249;')" | tr ' ' 'X')"
-+echo "creating $nr_attrs attrs from '$longname'" >> $seqres.full
-+_scratch_xfs_db -r -c "hashcoll -a -n $nr_attrs -p $crash_attrs $longname"
-+
-+_scratch_unmount
-+
-+# Make sure that there's one hash value dominating the dabtree block.
-+# We don't require 100% because directories create dabtree records for dot
-+# and dotdot.
-+filter_hashvals() {
-+	uniq -c | awk -v seqres_full="$seqres.full" \
-+		'{print $0 >> seqres_full; tot += $1; if ($1 > biggest) biggest = $1;} END {if (biggest >= (tot - 2)) exit(0); exit(1);}'
-+	test "${PIPESTATUS[1]}" -eq 0 || \
-+		echo "Scattered dabtree hashes?  See seqres.full"
-+}
-+
-+# Did we actually get a two-level dabtree for the directory?  Does it contain a
-+# long run of hashes?
-+echo "dir check" >> $seqres.full
-+da_node_block_offset=$(( (2 ** 35) / blksz ))
-+dir_db_args=(-c 'path /lol/' -c "dblock $da_node_block_offset" -c 'addr nbtree[0].before')
-+dir_count="$(_scratch_xfs_db "${dir_db_args[@]}" -c 'print lhdr.count' | awk '{print $3}')"
-+_scratch_xfs_db "${dir_db_args[@]}" -c "print lents[0-$((dir_count - 1))].hashval" | sed -e 's/lents\[[0-9]*\]/lents[NN]/g' | filter_hashvals
-+
-+# Did we actually get a two-level dabtree for the attrs?  Does it contain a
-+# long run of hashes?
-+echo "attr check" >> $seqres.full
-+attr_db_args=(-c 'path /hah' -c "ablock 0" -c 'addr btree[0].before')
-+attr_count="$(_scratch_xfs_db "${attr_db_args[@]}" -c 'print hdr.count' | awk '{print $3}')"
-+_scratch_xfs_db "${attr_db_args[@]}" -c "print btree[0-$((attr_count - 1))].hashval" | sed -e 's/btree\[[0-9]*\]/btree[NN]/g' | filter_hashvals
-+
-+# Remount to get some coverage of xfs_scrub before seeing if xfs_repair
-+# will trip over the large dabtrees.
-+echo Silence is golden
-+_scratch_mount
-+status=0
-+exit
-diff --git a/tests/xfs/861.out b/tests/xfs/861.out
-new file mode 100644
-index 0000000000..d11b76c82e
---- /dev/null
-+++ b/tests/xfs/861.out
-@@ -0,0 +1,2 @@
-+QA output created by 861
-+Silence is golden
+Fair enough. That works. I still think it should be made to be
+US-ASCII only, in order to not have any strange oddities.
+
+Do you really have to support that "pseudo-latin1" thing? If it's
+literally just a "xfs_hashprep()" function, and you arbitrarily pick
+one random function, why make it be a known-broken one?
+
+            Linus
