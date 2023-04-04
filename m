@@ -2,147 +2,107 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE5D3C761A6
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 16:03:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81A6CC761A6
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 16:10:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235453AbjDDQDM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Apr 2023 12:03:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39494 "EHLO
+        id S235887AbjDDQKv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Apr 2023 12:10:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235258AbjDDQDL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 12:03:11 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F0BD1A8;
-        Tue,  4 Apr 2023 09:03:09 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        with ESMTP id S235915AbjDDQKt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 12:10:49 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6ACC40FF;
+        Tue,  4 Apr 2023 09:10:48 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 4A50D20258;
-        Tue,  4 Apr 2023 16:03:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1680624188; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=BuCGsnYMiMa4eeDwQP7y5gx95Bxfi3LY8COha+SD3xw=;
-        b=0H4UafI3sTZDD0fneaXzmmqJL8Hd/BQ3DOq2WpWAQ7CqD+OpS2cyaSZreiZ1ahbk5DbTEt
-        vWcqZhp3TOo09KDe/1DGZvWihR0PGeEiHt7KLd4vRKwnoy6ArjbZFhzIIB2bFQXlnaKiXq
-        1efxl2DGlkD7AbYBdwBcQTAK+W9wfBI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1680624188;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=BuCGsnYMiMa4eeDwQP7y5gx95Bxfi3LY8COha+SD3xw=;
-        b=NaRIieVzI5/NC18H0JkKim/Ia/h2tLZHNBp0WFaN6z3RAek6dfYtHu8XUa6xmfgPXwsTU7
-        CK144MupDkdFcdBA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1963B1391A;
-        Tue,  4 Apr 2023 16:03:08 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id arpDBTxKLGQfGQAAMHmgww
-        (envelope-from <vbabka@suse.cz>); Tue, 04 Apr 2023 16:03:08 +0000
-Message-ID: <951d364a-05c0-b290-8abe-7cbfcaeb2df7@suse.cz>
-Date:   Tue, 4 Apr 2023 18:03:07 +0200
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 54679636AC;
+        Tue,  4 Apr 2023 16:10:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F4C9C433EF;
+        Tue,  4 Apr 2023 16:10:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1680624647;
+        bh=cBqdfxJ4/qr/q04Tci5Hs37l8eHYTOelhRrgiW3Uwf4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=qgHRWLTCkqbhQJVQYOFgw7vgvG+evZpMFPQE3BK+NKfG3cv7mkTYvSjSZwUJVW74F
+         K14dkJfauCFJHDDCUXlIxSRzdyH2edPaV9HANIzKMvT9IAgdDnDE1HqEUc02iReeaJ
+         orYrmNkHGPGryJLpjJ7qvF6bBuxz5aNV69iyq9YN3D+pp0G3uDdF4psOaXxuZC9vXM
+         nRMQHt/XeB26wxV2sQX9DGIph62bdZ4eJDYVwpAfkJPWXzs3LngddHSAWGo1p81PYw
+         rCo6ejeqCtXdG61LFdDonKljtov+H9DP8RMw0QnrckE5J96shsm1Ah2uROts9KXiXW
+         TqnbqfF1/V+UA==
+Date:   Tue, 4 Apr 2023 09:10:47 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Andrey Albershteyn <aalbersh@redhat.com>
+Cc:     dchinner@redhat.com, ebiggers@kernel.org, hch@infradead.org,
+        linux-xfs@vger.kernel.org, fsverity@lists.linux.dev,
+        rpeterso@redhat.com, agruenba@redhat.com, xiang@kernel.org,
+        chao@kernel.org, damien.lemoal@opensource.wdc.com, jth@kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com
+Subject: Re: [PATCH v2 19/23] xfs: disable direct read path for fs-verity
+ sealed files
+Message-ID: <20230404161047.GA109974@frogsfrogsfrogs>
+References: <20230404145319.2057051-1-aalbersh@redhat.com>
+ <20230404145319.2057051-20-aalbersh@redhat.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Subject: Re: [LSF/MM/BPF TOPIC] SLOB+SLAB allocators removal and future SLUB
- improvements
-Content-Language: en-US
-To:     Binder Makin <merimus@google.com>
-Cc:     lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, linux-block@vger.kernel.org,
-        bpf@vger.kernel.org, linux-xfs@vger.kernel.org,
-        David Rientjes <rientjes@google.com>,
-        Christoph Lameter <cl@linux.com>,
-        Pekka Enberg <penberg@kernel.org>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-        Roman Gushchin <roman.gushchin@linux.dev>
-References: <4b9fc9c6-b48c-198f-5f80-811a44737e5f@suse.cz>
- <CAANmLtwGS75WJ9AXfmqZv73pNdHJn6zfrrCCWjKK_6jPk9pWRg@mail.gmail.com>
-From:   Vlastimil Babka <vbabka@suse.cz>
-In-Reply-To: <CAANmLtwGS75WJ9AXfmqZv73pNdHJn6zfrrCCWjKK_6jPk9pWRg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230404145319.2057051-20-aalbersh@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 3/22/23 13:30, Binder Makin wrote:
-> Was looking at SLAB removal and started by running A/B tests of SLAB
-> vs SLUB.  Please note these are only preliminary results.
-
-Thanks, that's very useful.
-
-> These were run using 6.1.13 configured for SLAB/SLUB.
-> Machines were standard datacenter servers.
+On Tue, Apr 04, 2023 at 04:53:15PM +0200, Andrey Albershteyn wrote:
+> The direct path is not supported on verity files. Attempts to use direct
+> I/O path on such files should fall back to buffered I/O path.
 > 
-> Hackbench shows completion time, so smaller is better.
-> On all others larger is better.
-> https://docs.google.com/spreadsheets/d/e/2PACX-1vQ47Mekl8BOp3ekCefwL6wL8SQiv6Qvp5avkU2ssQSh41gntjivE-aKM4PkwzkC4N_s_MxUdcsokhhz/pubhtml
+> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> ---
+>  fs/xfs/xfs_file.c | 14 +++++++++++---
+>  1 file changed, 11 insertions(+), 3 deletions(-)
 > 
-> Some notes:
-> SUnreclaim and SReclaimable shows unreclaimable and reclaimable memory.
-> Substantially higher with SLUB, but I believe that is to be expected.
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 947b5c436172..9e072e82f6c1 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -244,7 +244,8 @@ xfs_file_dax_read(
+>  	struct kiocb		*iocb,
+>  	struct iov_iter		*to)
+>  {
+> -	struct xfs_inode	*ip = XFS_I(iocb->ki_filp->f_mapping->host);
+> +	struct inode		*inode = iocb->ki_filp->f_mapping->host;
+> +	struct xfs_inode	*ip = XFS_I(inode);
+>  	ssize_t			ret = 0;
+>  
+>  	trace_xfs_file_dax_read(iocb, to);
+> @@ -297,10 +298,17 @@ xfs_file_read_iter(
+>  
+>  	if (IS_DAX(inode))
+>  		ret = xfs_file_dax_read(iocb, to);
+> -	else if (iocb->ki_flags & IOCB_DIRECT)
+> +	else if (iocb->ki_flags & IOCB_DIRECT && !fsverity_active(inode))
+>  		ret = xfs_file_dio_read(iocb, to);
+> -	else
+> +	else {
+> +		/*
+> +		 * In case fs-verity is enabled, we also fallback to the
+> +		 * buffered read from the direct read path. Therefore,
+> +		 * IOCB_DIRECT is set and need to be cleared
+> +		 */
+> +		iocb->ki_flags &= ~IOCB_DIRECT;
+>  		ret = xfs_file_buffered_read(iocb, to);
+
+XFS doesn't usually allow directio fallback to the pagecache.  Why would
+fsverity be any different?
+
+--D
+
+> +	}
+>  
+>  	if (ret > 0)
+>  		XFS_STATS_ADD(mp, xs_read_bytes, ret);
+> -- 
+> 2.38.4
 > 
-> Various results showing a 5-10% degradation with SLUB.  That feels
-> concerning to me, but I'm not sure what others' tolerance would be.
-> 
-> redis results on AMD show some pretty bad degredations.  10-20% range
-> netpipe on Intel also has issues.. 10-17%
-
-I guess one question is which ones are genuine SLAB/SLUB differences and not
-e.g. some artifact of different cache layout or something. For example it
-seems suspicious if results are widely different between architectures.
-
-E.g. will-it-scale writeseek3_scalability regresses on arm64 and amd, but
-improves on intel? Or is something wrong with the data, all columns for that
-whole benchmark suite are identical.
-
-hackbench ("smaller is better") seems drastically better on arm64 (30%
-median time reduction?) and amd (80% reduction?!?), but 10% slower intel?
-
-redis seems a bit improved on arm64, slightly worse on intel but much worse
-on amd.
-
-specjbb similar story, also I thought it was a java focused benchmark,
-should it really be exercising kernel slab allocators in such notable way?
-
-I guess netpipe is the least surprising as networking was always mentioned
-in SLAB vs SLUB discussions.
-
-> On Tue, Mar 14, 2023 at 4:05 AM Vlastimil Babka <vbabka@suse.cz> wrote:
->>
->> As you're probably aware, my plan is to get rid of SLOB and SLAB, leaving
->> only SLUB going forward. The removal of SLOB seems to be going well, there
->> were no objections to the deprecation and I've posted v1 of the removal
->> itself [1] so it could be in -next soon.
->>
->> The immediate benefit of that is that we can allow kfree() (and kfree_rcu())
->> to free objects from kmem_cache_alloc() - something that IIRC at least xfs
->> people wanted in the past, and SLOB was incompatible with that.
->>
->> For SLAB removal I haven't yet heard any objections (but also didn't
->> deprecate it yet) but if there are any users due to particular workloads
->> doing better with SLAB than SLUB, we can discuss why those would regress and
->> what can be done about that in SLUB.
->>
->> Once we have just one slab allocator in the kernel, we can take a closer
->> look at what the users are missing from it that forces them to create own
->> allocators (e.g. BPF), and could be considered to be added as a generic
->> implementation to SLUB.
->>
->> Thanks,
->> Vlastimil
->>
->> [1] https://lore.kernel.org/all/20230310103210.22372-1-vbabka@suse.cz/
->>
-
