@@ -2,136 +2,120 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F9B8C6FD1D
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 20:51:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D685C6FD1D
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 21:00:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236337AbjDDUvn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Apr 2023 16:51:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60996 "EHLO
+        id S234251AbjDDVAg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Apr 2023 17:00:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37320 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236279AbjDDUvm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 16:51:42 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42C1E468E
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2023 13:51:38 -0700 (PDT)
+        with ESMTP id S233755AbjDDVAg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 17:00:36 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E25B65275
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2023 14:00:11 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AE60261FA9
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2023 20:51:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BE8DC433D2;
-        Tue,  4 Apr 2023 20:51:37 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2F4C363406
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2023 21:00:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 837EAC433D2;
+        Tue,  4 Apr 2023 21:00:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680641497;
-        bh=notXKIFM1VY27kgjVmlAiChZnhriUyXV1JSIeuP/uzw=;
+        s=k20201202; t=1680642009;
+        bh=sqSPVGsfI8pnHobRehxPHT7ms48GALZu9emmoJfFAz0=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=cs4lZWFFLPa/+V9bXGAQU7ACsNlDESeH8NvJHT4nZygVQOQK8e1g97zb/vkcCC79/
-         NxPXd2LHTvZNR8S0kORldIsghYZ18NlaC6SEuP3ii4yZD3lji2Jww1nS8gdjvc6Emc
-         H5zxISsqaCkgbPOgAoduVwtVV1jAo30eiBjim3219+FTE+omMumYARXxCvnEJKr+M8
-         17qp0e4+ojyQ2xyeH0KWfsBCCzlPWUA8Hk41Kk7u6r+sQxhj+HIMRmkJIGOIey1i8P
-         7uFj4wkK6fSUcCsBANw1nsw71E811oOcSVLX+nsvtuFS1poSpi5lNCmgD3OWbybJzP
-         TgcFzsuULg2qg==
-Date:   Tue, 4 Apr 2023 13:51:36 -0700
+        b=YWja+BJCsJG2aljSiytseYR8YjpjiX/S6gQXMfaS2FJyNlEDFg0OF2rPwsfD0Fz1W
+         J9wz5xPe1P3P6efr5hsnkhGYyvfcfcMUBBq3P4ZpAYLYyrEREdu9FpcgZabF7A94/M
+         YszgtBUWIa2+iEogRmlUfkV5XLv+6JeRxIDQhdOyoGeQTOusnYQpJUN2r0prwbnGag
+         fNjYakesQ1RdmfRf0A14MTaMHlXvs8VvUV1mmr5a+NWMYp+QFJ8DnFl8jW2Bak/jls
+         No0UVo84WKFlHQqu4dfmM7WFkxowqN5iZwSGgAaWHpOX3LuVmMprtqKVTf3NdC7DGW
+         t+6dVqv1n4ZaA==
+Date:   Tue, 4 Apr 2023 14:00:09 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com,
-        Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/3] xfs: test the ascii case-insensitive hash
-Message-ID: <20230404205136.GA110000@frogsfrogsfrogs>
+Cc:     david@fromorbit.com, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCHSET 0/3] xfs: fix ascii-ci problems with userspace
+Message-ID: <20230404210009.GA303486@frogsfrogsfrogs>
 References: <168062802052.174368.10967543545284986225.stgit@frogsfrogsfrogs>
- <168062803200.174368.4290650174353254767.stgit@frogsfrogsfrogs>
- <CAHk-=wi-W-zJkW-URTQoLcLnRuwzmWj4MRqV6SHXmjKDV2zXFg@mail.gmail.com>
+ <20230404171715.GE109974@frogsfrogsfrogs>
+ <CAHk-=wi2c0ezx_OR50h3R6+9+ECu3yDkrEuL34EobZ1b8pWnzQ@mail.gmail.com>
+ <CAHk-=wiBm6VNykd5qH9y_SmL+Z8BJDXNwiny8Z0Yss86Wb6STw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAHk-=wi-W-zJkW-URTQoLcLnRuwzmWj4MRqV6SHXmjKDV2zXFg@mail.gmail.com>
+In-Reply-To: <CAHk-=wiBm6VNykd5qH9y_SmL+Z8BJDXNwiny8Z0Yss86Wb6STw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-[now adding hch because his name is on the original patches from 2008]
-
-On Tue, Apr 04, 2023 at 11:06:27AM -0700, Linus Torvalds wrote:
-> On Tue, Apr 4, 2023 at 10:07 AM Darrick J. Wong <djwong@kernel.org> wrote:
+On Tue, Apr 04, 2023 at 01:21:25PM -0700, Linus Torvalds wrote:
+> On Tue, Apr 4, 2023 at 11:19 AM Linus Torvalds
+> <torvalds@linux-foundation.org> wrote:
 > >
-> \> Now that we've made kernel and userspace use the same tolower code for
-> > computing directory index hashes, add that to the selftest code.
+> > Limiting yourself to US-ASCII is at least technically valid. Because
+> > EBCDIC isn't worth worrying about.  But when the high bit is set, you
+> > had better not touch it, or you need to limit it spectacularly.
 > 
-> Please just delete this test. It's really really fundamentally wrong.
+> Side note: if limiting it to US-ASCII is fine (and it had better be,
+> because as mentioned, anything else will result in unresolvable
+> problems), you might look at using this as the pre-hash function:
 > 
-> The fact that you even *think* that you use the same tolower() as user
-> space does shows just that you don't even understand how user space
-> works.
-
-Wrong.  I'm well aware that userspace tolower and kernel tolower are
-*NOT* the same thing.  I'm trying to **STOP USING** tolower in XFS.
-
-I'm **replacing** tolower with a new function that substitutes specific
-bytes with other bytes, and I'm redefining the ondisk format to say that
-names remain arbitrary sequences of bytes that do not include nulls or
-slashes but that hash indexing and lookups will apply the above byte
-transformation.  The rules for that transformation may or may not
-coincide with what anyone thinks is "upper case in ASCII", but that's
-irrelevant.  The rules will be the same in all places, and they will not
-break any existing filesystems.
-
-Maybe I should've named it xfs_ItB8n_ci_o43jM28() to make it clearer
-that I don't care what ascii is, nor does it matter here.  Perhaps I
-should have written "Now that we've made kernel and userspace perform
-the same mathematical transformation on dirent name byte arrays before
-hashing, add that to the selftest code as well."
-
-Christoph and Barry Naujok should have defined specifically the exact
-transformation and the permitted ranges of name inputs when they wrote
-the feature.  I wasn't around when this feature was invented...
-
-> Really. The only thing this series shows is that you do not understand
-> the complexities.
-
-...and I don't think they understood the complexities when the code was
-written.
-
-> Lookie here: compile and run this program:
-> 
->     #include <stdio.h>
->     #include <ctype.h>
->     #include <locale.h>
-> 
->     int main(int argc, char **argv)
+>     unsigned char prehash(unsigned char c)
 >     {
->         printf("tolower(0xc4)=%#x\n", tolower(0xc4));
->         setlocale(LC_ALL, "C");
->         printf("tolower(0xc4)=%#x\n", tolower(0xc4));
->         setlocale(LC_ALL, "sv_SE.iso88591");
->         printf("tolower(0xc4)=%#x\n", tolower(0xc4));
+>         unsigned char mask = (~(c >> 1) & c & 64) >> 1;
+>         return c & ~mask;
 >     }
 > 
-> and on my machine, I get this:
+> which does modify a few other characters too, but nothing that matters
+> for hashing.
 > 
->     tolower(0xc4)=0xc4
->     tolower(0xc4)=0xc4
->     tolower(0xc4)=0xe4
+> The advantage of the above is that you can trivially vectorize it. You
+> can do it with just regular integer math (64 bits = 8 bytes in
+> parallel), no need to use *actual* vector hardware.
 > 
-> and the important thing to note is that "on my machine". The first
-> line could be *different* on some other machine (and the last line
-> could be too: there's no guarantee that the sv_SE locale even exists).
+> The actual comparison needs to do the careful thing (because '~' and
+> '^' may hash to the same value, but obviously aren't the same), but
+> even there you can do a cheap "are these 8 characters _possibly_ the
+> same) with a very simple single 64-bit comparison, and only go to the
+> careful path if things match, ie
 > 
-> So this whole "kernel and userspace use the same tolower code"
-> sentence is simply completely and utterly wrong. It's not even "wrong"
-> in the sense fo "that's not true". It's "wrong" in the sense "that
-> shows that you didn't understand the problem at all".
+>     /* Cannot possibly be equal even case-insentivitely? */
+>     if ((word1 ^ word2) & ~0x2020202020202020ul)
+>         continue;
+>     /* Ok, same in all but the 5th bits, go be careful */
+>     ....
 > 
-> Put another way: saying "5+8=10" is wrong. But saying "5+8=tiger" is
-> nonsensical.
-> 
-> Your patches are nonsensical.
+> and the reason I mention this is because I have been idly thinking
+> about supporting case-insensitivity at the VFS layer for multiple
+> decades, but have always decided that it's *so* nasty that I really
+> was hoping it just is never an issue in practice.
 
-I disagree.  I'm saying that 5 💩 8 = tiger because that's what the 💩
-operator does.  💩 is not +, even if 4 💩 8 = 12.
+If it were up to me I'd invent a userspace shim fs that would perform
+whatever normalizations are desired, and pass that (and ideally a lookup
+hash) to the underlying kernel/fs.  Users can configure whatever
+filtering they want and set LC_ALL as they please, and we kernel
+developers never have to know, and the users never have to see what
+actually gets written to disk.  If users want normalized ci lookups, the
+shim can do that.
 
-You claim to understand the complexities; how would /you/ fix this?
-I'll send along the test cases that reproduce the problems.
+ext4 tried to do better than XFS by actually defining the mathematical
+transformation that would be applied to incoming names and refusing
+things that would devolve into brokenness, but then it turns out that it
+was utf8_data.c.  Urgh.
+
+I get it, shi* fses are not popular and are not fast, but if the Samba
+benchmarks are still valid, multiple kernel<->fuserspace transitions are
+still faster that their workaround.
+
+> Particularly since the low-level filesystems then inevitably decide
+> that they need to do things wrong and need a locale, and at that point
+> all hope is lost.
+> 
+> I was hoping xfs would be one of the sane filesystems.
+
+Hah, nope, I'm all out of sanity here. :(
 
 --D
 
