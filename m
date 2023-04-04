@@ -2,311 +2,150 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51F18C77B60
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 17:45:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BA0BC77B60
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 17:54:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231348AbjDDRpW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Apr 2023 13:45:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35256 "EHLO
+        id S232888AbjDDRyt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Apr 2023 13:54:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230080AbjDDRpU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 13:45:20 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDA6DE5;
-        Tue,  4 Apr 2023 10:45:18 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 62078637F2;
-        Tue,  4 Apr 2023 17:45:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD9E2C433EF;
-        Tue,  4 Apr 2023 17:45:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680630317;
-        bh=TpBGYWXmu0ZMaGTU1v7jdnC7b4ToMkNPMoF8eSBNQ+A=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=EFaRQ0VoJehYzrWSubRhHz8RyOqnULvx0LcTCLgZ3VXGdPm32meTPyfFVBklmCLrV
-         LqoCMuzO6LOBGvkR78AFo0ShxW/nN3Lt/IVNiUwxtLdcGy97KufX23q5HwZHxOJ5ts
-         Fg+oZcDbDwBH6zFjCnU5Meu1trIxN5V0mGG3SfnaZA20982Kqy4HU+4KaBs2nnGuyL
-         cY0MBChG0HRjQWcUowOQIWOQ5hi/hjwQmDriAEI/aVMx1z0oJdOIv1nG05/cUZ+ZGb
-         +EkoV4CnqJmMxgkFSQs8krRDrUH/ONSOGCH4v98VJvHNVx7flel3vv3WJ9KQOoPvTT
-         zMHDYcCVAaf4Q==
-Date:   Tue, 4 Apr 2023 10:45:17 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        dan.j.williams@intel.com, willy@infradead.org, jack@suse.cz,
-        akpm@linux-foundation.org
-Subject: Re: [PATCH v11 2/2] mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
-Message-ID: <20230404174517.GF109974@frogsfrogsfrogs>
-References: <1679996506-2-1-git-send-email-ruansy.fnst@fujitsu.com>
- <1679996506-2-3-git-send-email-ruansy.fnst@fujitsu.com>
+        with ESMTP id S235501AbjDDRys (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 13:54:48 -0400
+Received: from mail-ed1-x52b.google.com (mail-ed1-x52b.google.com [IPv6:2a00:1450:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 156191985
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2023 10:54:47 -0700 (PDT)
+Received: by mail-ed1-x52b.google.com with SMTP id cn12so133969788edb.4
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Apr 2023 10:54:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google; t=1680630885; x=1683222885;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=pIyxAIGPNJ6SbPtpNjOu1Qfkl2Hkkt9S/yAzUM2lzjA=;
+        b=BjZ6g30k3tXTaR1ElHCovjsyMj800Sze1s9Tcw9Ev95pHFqoS5rnzNDrvDsvN1ZgiE
+         euIsSij/nTurebPJBIbuKAAHcsZjuqUhM83a+gWenoxNLMjLzXjxi/EYOJWyACsM2zsG
+         FbTHBhaXYE5dC6nXu1pg3zDYK80M+wng698hU=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680630885; x=1683222885;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=pIyxAIGPNJ6SbPtpNjOu1Qfkl2Hkkt9S/yAzUM2lzjA=;
+        b=PPEYOHqmRj8Aj6RpV/0eEvYV6v14WdKyBiJFNczbd2/khB9j7RUbgfpo7bX6QAa4df
+         BeMOLFYb9ioVKz5fLU3OH0ACTjGX4htomMt+3bFhlCHH6Om3ku6hXGHa9Yitr6xazQM+
+         4lKw/nuTvt60/OSEARKhtYs7jfR2Av27kJcA75GcVEnUjQkb4CwJuFMzITH5U9SDUYFk
+         19NeET9BkpKxlRtxxluqHJFilwXr+rHMMkNeG7myFBuigjkJIqmNVFJtyHFlV59m9XQB
+         nXWn9js27wBmSNwiMHq2RQVHRA63ycGJoAMRaXaGvQyLbpBgV6gyy8l6hqtPqg4+R9TY
+         VvSw==
+X-Gm-Message-State: AAQBX9fVJAQcuY2WvNcFHJSyOYSp9ZweCuXRDah3ieooQLl248sy6Sc9
+        slGgj/ELuabVPNzs5odxbOrI1vxoSQuW/UUwNPTWaw==
+X-Google-Smtp-Source: AKy350ZPeRDfxpz7bXaBflQKTuV+NH7RDmJxwYFbDsZ3TRbUD566ndeIoiPaR/LtAyudlJmqwshpWQ==
+X-Received: by 2002:a17:906:3b4e:b0:932:fc34:88f with SMTP id h14-20020a1709063b4e00b00932fc34088fmr430999ejf.11.1680630885128;
+        Tue, 04 Apr 2023 10:54:45 -0700 (PDT)
+Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com. [209.85.208.53])
+        by smtp.gmail.com with ESMTPSA id 19-20020a170906025300b00925ce7c7705sm6237050ejl.162.2023.04.04.10.54.44
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 04 Apr 2023 10:54:44 -0700 (PDT)
+Received: by mail-ed1-f53.google.com with SMTP id fi11so10445484edb.10
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Apr 2023 10:54:44 -0700 (PDT)
+X-Received: by 2002:a17:906:3393:b0:933:7658:8b44 with SMTP id
+ v19-20020a170906339300b0093376588b44mr166820eja.15.1680630883841; Tue, 04 Apr
+ 2023 10:54:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1679996506-2-3-git-send-email-ruansy.fnst@fujitsu.com>
+References: <168062802052.174368.10967543545284986225.stgit@frogsfrogsfrogs> <168062802637.174368.12108206682992075671.stgit@frogsfrogsfrogs>
+In-Reply-To: <168062802637.174368.12108206682992075671.stgit@frogsfrogsfrogs>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Tue, 4 Apr 2023 10:54:27 -0700
+X-Gmail-Original-Message-ID: <CAHk-=whe9kmyMojhse3cZ-zpHPfvGf_bA=PzNfuV0t+F5S1JxA@mail.gmail.com>
+Message-ID: <CAHk-=whe9kmyMojhse3cZ-zpHPfvGf_bA=PzNfuV0t+F5S1JxA@mail.gmail.com>
+Subject: Re: [PATCH 1/3] xfs: stabilize the tolower function used for ascii-ci
+ dir hash computation
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Mar 28, 2023 at 09:41:46AM +0000, Shiyang Ruan wrote:
-> This patch is inspired by Dan's "mm, dax, pmem: Introduce
-> dev_pagemap_failure()"[1].  With the help of dax_holder and
-> ->notify_failure() mechanism, the pmem driver is able to ask filesystem
-> (or mapped device) on it to unmap all files in use and notify processes
-> who are using those files.
-> 
-> Call trace:
-> trigger unbind
->  -> unbind_store()
->   -> ... (skip)
->    -> devres_release_all()
->     -> kill_dax()
->      -> dax_holder_notify_failure(dax_dev, 0, U64_MAX, MF_MEM_PRE_REMOVE)
->       -> xfs_dax_notify_failure()
->       `-> freeze_super()
->       `-> do xfs rmap
->       ` -> mf_dax_kill_procs()
->       `  -> collect_procs_fsdax()    // all associated
->       `  -> unmap_and_kill()
->       ` -> invalidate_inode_pages2() // drop file's cache
->       `-> thaw_super()
-> 
-> Introduce MF_MEM_PRE_REMOVE to let filesystem know this is a remove
-> event.  Freeze the filesystem to prevent new dax mapping being created.
-> And do not shutdown filesystem directly if something not supported, or
-> if failure range includes metadata area.  Make sure all files and
-> processes are handled correctly.  Also drop the cache of associated
-> files before pmem is removed.
-> 
-> [1]: https://lore.kernel.org/linux-mm/161604050314.1463742.14151665140035795571.stgit@dwillia2-desk3.amr.corp.intel.com/
-> 
-> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> ---
->  drivers/dax/super.c         |  3 +-
->  fs/xfs/xfs_notify_failure.c | 56 +++++++++++++++++++++++++++++++++----
->  include/linux/mm.h          |  1 +
->  mm/memory-failure.c         | 17 ++++++++---
->  4 files changed, 67 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-> index c4c4728a36e4..2e1a35e82fce 100644
-> --- a/drivers/dax/super.c
-> +++ b/drivers/dax/super.c
-> @@ -323,7 +323,8 @@ void kill_dax(struct dax_device *dax_dev)
->  		return;
->  
->  	if (dax_dev->holder_data != NULL)
-> -		dax_holder_notify_failure(dax_dev, 0, U64_MAX, 0);
-> +		dax_holder_notify_failure(dax_dev, 0, U64_MAX,
-> +				MF_MEM_PRE_REMOVE);
->  
->  	clear_bit(DAXDEV_ALIVE, &dax_dev->flags);
->  	synchronize_srcu(&dax_srcu);
-> diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
-> index 1e2eddb8f90f..1b4eff43f9b5 100644
-> --- a/fs/xfs/xfs_notify_failure.c
-> +++ b/fs/xfs/xfs_notify_failure.c
-> @@ -22,6 +22,7 @@
->  
->  #include <linux/mm.h>
->  #include <linux/dax.h>
-> +#include <linux/fs.h>
->  
->  struct xfs_failure_info {
->  	xfs_agblock_t		startblock;
-> @@ -73,10 +74,16 @@ xfs_dax_failure_fn(
->  	struct xfs_mount		*mp = cur->bc_mp;
->  	struct xfs_inode		*ip;
->  	struct xfs_failure_info		*notify = data;
-> +	struct address_space		*mapping;
-> +	pgoff_t				pgoff;
-> +	unsigned long			pgcnt;
->  	int				error = 0;
->  
->  	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
->  	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
-> +		/* The device is about to be removed.  Not a really failure. */
-> +		if (notify->mf_flags & MF_MEM_PRE_REMOVE)
-> +			return 0;
->  		notify->want_shutdown = true;
->  		return 0;
->  	}
-> @@ -92,10 +99,18 @@ xfs_dax_failure_fn(
->  		return 0;
->  	}
->  
-> -	error = mf_dax_kill_procs(VFS_I(ip)->i_mapping,
-> -				  xfs_failure_pgoff(mp, rec, notify),
-> -				  xfs_failure_pgcnt(mp, rec, notify),
-> -				  notify->mf_flags);
-> +	mapping = VFS_I(ip)->i_mapping;
-> +	pgoff = xfs_failure_pgoff(mp, rec, notify);
-> +	pgcnt = xfs_failure_pgcnt(mp, rec, notify);
-> +
-> +	/* Continue the rmap query if the inode isn't a dax file. */
-> +	if (dax_mapping(mapping))
-> +		error = mf_dax_kill_procs(mapping, pgoff, pgcnt,
-> +				notify->mf_flags);
-> +
-> +	/* Invalidate the cache anyway. */
-> +	invalidate_inode_pages2_range(mapping, pgoff, pgoff + pgcnt - 1);
-> +
->  	xfs_irele(ip);
->  	return error;
->  }
-> @@ -164,11 +179,25 @@ xfs_dax_notify_ddev_failure(
->  	}
->  
->  	xfs_trans_cancel(tp);
-> +
-> +	/* Unfreeze filesystem anyway if it is freezed before. */
-> +	if (mf_flags & MF_MEM_PRE_REMOVE) {
-> +		error = thaw_super(mp->m_super);
-> +		if (error)
-> +			return error;
+On Tue, Apr 4, 2023 at 10:07=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
+ wrote:
+>
+> +       if (c >=3D 0xc0 && c <=3D 0xd6)     /* latin A-O with accents */
+> +               return true;
+> +       if (c >=3D 0xd8 && c <=3D 0xde)     /* latin O-Y with accents */
+> +               return true;
 
-If someone *else* wanders in and thaws the fs, you'll get EINVAL here.
+Please don't do this.
 
-I guess that's useful for knowing if someone's screwed up the freeze
-state on us, but ... really, don't you want to make sure you've gotten
-the freeze and nobody else can take it away?
+We're not in the dark ages any more. We don't do crazy locale-specific
+crud. There is no such thing as "latin1" any more in any valid model.
 
-I think you want the kernel-initiated freeze proposed by Luis here:
-https://lore.kernel.org/linux-fsdevel/20230114003409.1168311-4-mcgrof@kernel.org/
+For example, it is true that 0xC4 is '=C3=84' in Latin1, and that the
+lower-case version is '=C3=A4', and you can do the lower-casing exactly the
+same way as you do for US-ASCII: you just set bit 5 (or "add 32" or
+"subtract 0xE0" - the latter is what you seem to do, crazy as it is).
 
-Also: Is Fujitsu still pursuing pmem products?  Even though Optane is
-dead?  I'm no longer sure of what the roadmap is for all this fsdax code
-and whatnot.
+So the above was fine back in the 80s, and questionably correct in the
+90s, but it is COMPLETE GARBAGE to do this in the year 2023.
 
---D
+Because '=C3=84' today is *not* 0xC4. It is "0xC3 0x84" (in the sanest
+simplest form), and your crazy "tolower" will turn that into "0xE3
+0x84", and that not only is no longer '=C3=A4', it's not even valid UTF-8
+any  more.
 
-> +	}
-> +
-> +	/*
-> +	 * Determine how to shutdown the filesystem according to the
-> +	 * error code and flags.
-> +	 */
->  	if (error || notify.want_shutdown) {
->  		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
->  		if (!error)
->  			error = -EFSCORRUPTED;
-> -	}
-> +	} else if (mf_flags & MF_MEM_PRE_REMOVE)
-> +		xfs_force_shutdown(mp, SHUTDOWN_FORCE_UMOUNT);
-> +
->  	return error;
->  }
->  
-> @@ -182,6 +211,7 @@ xfs_dax_notify_failure(
->  	struct xfs_mount	*mp = dax_holder(dax_dev);
->  	u64			ddev_start;
->  	u64			ddev_end;
-> +	int			error;
->  
->  	if (!(mp->m_super->s_flags & SB_BORN)) {
->  		xfs_warn(mp, "filesystem is not ready for notify_failure()!");
-> @@ -196,6 +226,8 @@ xfs_dax_notify_failure(
->  
->  	if (mp->m_logdev_targp && mp->m_logdev_targp->bt_daxdev == dax_dev &&
->  	    mp->m_logdev_targp != mp->m_ddev_targp) {
-> +		if (mf_flags & MF_MEM_PRE_REMOVE)
-> +			return 0;
->  		xfs_err(mp, "ondisk log corrupt, shutting down fs!");
->  		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
->  		return -EFSCORRUPTED;
-> @@ -209,6 +241,12 @@ xfs_dax_notify_failure(
->  	ddev_start = mp->m_ddev_targp->bt_dax_part_off;
->  	ddev_end = ddev_start + bdev_nr_bytes(mp->m_ddev_targp->bt_bdev) - 1;
->  
-> +	/* Notify failure on the whole device. */
-> +	if (offset == 0 && len == U64_MAX) {
-> +		offset = ddev_start;
-> +		len = bdev_nr_bytes(mp->m_ddev_targp->bt_bdev);
-> +	}
-> +
->  	/* Ignore the range out of filesystem area */
->  	if (offset + len - 1 < ddev_start)
->  		return -ENXIO;
-> @@ -225,6 +263,14 @@ xfs_dax_notify_failure(
->  	if (offset + len - 1 > ddev_end)
->  		len = ddev_end - offset + 1;
->  
-> +	if (mf_flags & MF_MEM_PRE_REMOVE) {
-> +		xfs_info(mp, "device is about to be removed!");
-> +		/* Freeze the filesystem to prevent new mappings created. */
-> +		error = freeze_super(mp->m_super);
-> +		if (error)
-> +			return error;
-> +	}
-> +
->  	return xfs_dax_notify_ddev_failure(mp, BTOBB(offset), BTOBB(len),
->  			mf_flags);
->  }
-> diff --git a/include/linux/mm.h b/include/linux/mm.h
-> index 1f79667824eb..ac3f22c20e1d 100644
-> --- a/include/linux/mm.h
-> +++ b/include/linux/mm.h
-> @@ -3436,6 +3436,7 @@ enum mf_flags {
->  	MF_UNPOISON = 1 << 4,
->  	MF_SW_SIMULATED = 1 << 5,
->  	MF_NO_RETRY = 1 << 6,
-> +	MF_MEM_PRE_REMOVE = 1 << 7,
->  };
->  int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
->  		      unsigned long count, int mf_flags);
-> diff --git a/mm/memory-failure.c b/mm/memory-failure.c
-> index fae9baf3be16..6e6acec45568 100644
-> --- a/mm/memory-failure.c
-> +++ b/mm/memory-failure.c
-> @@ -623,7 +623,7 @@ static void collect_procs_file(struct page *page, struct list_head *to_kill,
->   */
->  static void collect_procs_fsdax(struct page *page,
->  		struct address_space *mapping, pgoff_t pgoff,
-> -		struct list_head *to_kill)
-> +		struct list_head *to_kill, bool pre_remove)
->  {
->  	struct vm_area_struct *vma;
->  	struct task_struct *tsk;
-> @@ -631,8 +631,15 @@ static void collect_procs_fsdax(struct page *page,
->  	i_mmap_lock_read(mapping);
->  	read_lock(&tasklist_lock);
->  	for_each_process(tsk) {
-> -		struct task_struct *t = task_early_kill(tsk, true);
-> +		struct task_struct *t = tsk;
->  
-> +		/*
-> +		 * Search for all tasks while MF_MEM_PRE_REMOVE, because the
-> +		 * current may not be the one accessing the fsdax page.
-> +		 * Otherwise, search for the current task.
-> +		 */
-> +		if (!pre_remove)
-> +			t = task_early_kill(tsk, true);
->  		if (!t)
->  			continue;
->  		vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff, pgoff) {
-> @@ -1732,6 +1739,7 @@ int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
->  	dax_entry_t cookie;
->  	struct page *page;
->  	size_t end = index + count;
-> +	bool pre_remove = mf_flags & MF_MEM_PRE_REMOVE;
->  
->  	mf_flags |= MF_ACTION_REQUIRED | MF_MUST_KILL;
->  
-> @@ -1743,9 +1751,10 @@ int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
->  		if (!page)
->  			goto unlock;
->  
-> -		SetPageHWPoison(page);
-> +		if (!pre_remove)
-> +			SetPageHWPoison(page);
->  
-> -		collect_procs_fsdax(page, mapping, index, &to_kill);
-> +		collect_procs_fsdax(page, mapping, index, &to_kill, pre_remove);
->  		unmap_and_kill(&to_kill, page_to_pfn(page), mapping,
->  				index, mf_flags);
->  unlock:
-> -- 
-> 2.39.2
-> 
+I realize that filesystem people really don't get this, but
+case-insensitivity is pure and utter CRAP. Really. You *cannot* do
+case sensitivity well. It's impossible. It's either locale-dependent,
+or you have to have translation models for Unicode characters that are
+horrifically slow and even then you *will* get it wrong, because you
+will start asking questions about normalization forms, and the end
+result is an UNMITIGATED DISASTER.
+
+I wish filesystem people just finally understood this.  FAT was not a
+good filesystem.  HFS+ is garbage. And any network filesystem that
+does this needs to pass locale information around and do it per-mount,
+not on disk.
+
+Because you *will* get it wrong. It's that simple. The only sane model
+these days is Unicode, and the only sane encoding for Unicode is
+UTF-8, but even given those objectively true facts, you have
+
+ (a) people who are going to use some internal locale, because THEY
+HAVE TO. Maybe they have various legacy things, and they use Shift-JIS
+or Latin1, and they really treat filenames that way.
+
+ (b) you will have people who disagree about normal forms. NFC is the
+only sane case, but you *will* have people who use other forms. OS X
+got this completely wrong, and it causes real issues.
+
+ (c) you'll find that "lower-case" isn't even well-defined for various
+characters (the typical example is German '=C3=9F', but there are lots of
+them)
+
+ (d) and then you'll hit the truly crazy cases with "what about
+compatibility equivalence". You'll find that even in English with NBSP
+vs regular SPACE, but it gets crazy.
+
+End result: the only well-defined area is US-ASCII. Nothing else is
+even *remotely* clear. Don't touch it. You *will* screw up.
+
+Now, if you *only* use this for hashing, maybe you will feel like "you
+will screw up" is not such a big deal.
+
+But people will wonder why the file 'Bj=C3=B6rn' does not compare equal to
+the file 'BJ=C3=96RN' when in a sane locale, but then *does* compare equal
+if they happen to use a legacy Latin1 one.
+
+So no. Latin1 isn't that special, and if you special-case them, you
+*will* screw up other locales.
+
+The *only* situation where 'tolower()' and 'toupper()' are valid is
+for US-ASCII.
+
+And when you compare to glibc, you only compare to "some random locale
+that happens to be active rigth n ow". Something that the kernel
+itself cannot and MUST NOT do.
+
+                Linus
