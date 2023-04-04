@@ -2,149 +2,83 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74977C76188
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 22:01:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6563C77B6E
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 22:17:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236263AbjDDWBh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Apr 2023 18:01:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38954 "EHLO
+        id S236481AbjDDWQ7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Apr 2023 18:16:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47810 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233001AbjDDWBg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 18:01:36 -0400
-Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5373EA1
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2023 15:01:35 -0700 (PDT)
-Received: by mail-ej1-x636.google.com with SMTP id a640c23a62f3a-93df929479cso2039866b.3
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Apr 2023 15:01:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680645694;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=kv2TSgddRLSEtUorKz+cZ0auOFXQwhCuKUblOc6sZ88=;
-        b=TOTaDgb1ZEQy4TpifDssiU2hMo1Cm+YqC5+7Z6FE95Mi/bEuyXC1u/M4aU3edREnRj
-         abGD92HeZ6xgeu7FjAYw6diUoPPyfBG1cfvNqWJVOrQvHCSc4aaLOHqlslc+kFKI4RFx
-         KkHaaTCIGjHuAQOfyDZVwlMnIoE8lcpPoq9l8MqbaE8cFZVMbQ5G5WhWQ91Y4e4m3QTR
-         g53IZwVWiElO21KaoaDIz3BRLFRVp/qOtK8ZbX/Pda6PygBlxrT0LK7JnQg0iB79/lEI
-         vyKrAH5GxEeI5sbsE4u+nfFz7mscCPPQJQ9sMQtaD9tMMP1mJa8nZUZS50ftg878I7kc
-         6hOQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680645694;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=kv2TSgddRLSEtUorKz+cZ0auOFXQwhCuKUblOc6sZ88=;
-        b=mBxav1OwPVFdVeRsHqhNNJyKPMWNRaILjNnXdL7Bw//21ODkksZLQZO+MABGltmZuf
-         kp+g23ZMb6zga/ldsVxVDkLiaCnyKC3PiimR5xlp9F2lp1oUOky8m/3iax9BLZOCoWt/
-         5AdKsnZDcyPWCT8tbYiHFasbyLzbsrwbQEO56QzQUZHv1bFPnENJx5SoGuVkpqi9UJ44
-         ReJm7dzPujVNqseFj8eIzLmpWFUZVDWoLOGdgciWUhzTTIMv+9XPSnW4JGdivfljnFNP
-         pu0R2uHDjY2WYpPYzBPoW+XF/4plbg2c9R3fx2y+Pl+Is3WtW3gy0AlXa0kOHPDWrRiP
-         N3Hw==
-X-Gm-Message-State: AAQBX9eiL02oRC4Y0Fy+KuJFikLl7gxPDP65BOhiLr5sCvJgzv49zFd0
-        ScU6WxFu20yurSu5sSTugN8e9D8mSgYELsNVnAZ1Gw==
-X-Google-Smtp-Source: AKy350ZHcX0TAVCqcpBXk84eCLSYS6TADo3x8F71eFEmC/F00AdU8mbkH42S6DeFTXDJYBsmoM0gtHE9yfbMO1NG5jU=
-X-Received: by 2002:a50:cc8e:0:b0:4fb:9735:f915 with SMTP id
- q14-20020a50cc8e000000b004fb9735f915mr32964edi.8.1680645693595; Tue, 04 Apr
- 2023 15:01:33 -0700 (PDT)
+        with ESMTP id S229973AbjDDWQ5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 18:16:57 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEA9E40D9;
+        Tue,  4 Apr 2023 15:16:56 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 495E163962;
+        Tue,  4 Apr 2023 22:16:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3400BC433EF;
+        Tue,  4 Apr 2023 22:16:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1680646615;
+        bh=iq/IdV4ogpOzaM8KgGTnYC5Td3WCpb/PqmrSUjFcqq0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=hKIBSlBctkP5bivjN4Y21mckkcqW66+dkJqVt3sV5xlPSN1yzxtbcIDAa/udoQiUM
+         sYGbOLNwfOA0gXRR+Wndw2VsarlhINwbmR9rKVH1FeHvdejvWrBskWjfnQnco9YqvD
+         rpI3rk+9EzaMTkMEFIRuzDVL9UMVtvyfJBQ1f5Ze4NeqUuke7n1BCeowZBAWgMngKo
+         42ZuMczWbvBA3Owwg/N+nslkw274BP30Pj/y3YKUBj/353slDtMf8ZPciuUUqEM6Ip
+         0wa3X6hCp3Y9aaK3d1yKPuqKpW2wz0WLI7SD2d8mkTPKHHanh741qLv7i4NdaAMa8g
+         +Pz1NY60vkAcQ==
+Date:   Tue, 4 Apr 2023 15:16:53 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Zorro Lang <zlang@kernel.org>
+Cc:     fstests@vger.kernel.org, brauner@kernel.org,
+        linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        djwong@kernel.org, amir73il@gmail.com,
+        linux-unionfs@vger.kernel.org, anand.jain@oracle.com,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        fdmanana@suse.com, ocfs2-devel@oss.oracle.com, jack@suse.com,
+        linux-fsdevel@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+Subject: Re: [PATCH 3/5] fstests/MAINTAINERS: add supported mailing list
+Message-ID: <20230404221653.GC1893@sol.localdomain>
+References: <20230404171411.699655-1-zlang@kernel.org>
+ <20230404171411.699655-4-zlang@kernel.org>
 MIME-Version: 1.0
-References: <20230404001353.468224-1-yosryahmed@google.com>
- <20230404143824.a8c57452f04929da225a17d0@linux-foundation.org>
- <CAJD7tkbZgA7QhkuxEbp=Sam6NCA0i3cZJYF4Z1nrLK1=Rem+Gg@mail.gmail.com> <20230404145830.b34afedb427921de2f0e2426@linux-foundation.org>
-In-Reply-To: <20230404145830.b34afedb427921de2f0e2426@linux-foundation.org>
-From:   Yosry Ahmed <yosryahmed@google.com>
-Date:   Tue, 4 Apr 2023 15:00:57 -0700
-Message-ID: <CAJD7tkZCmkttJo+6XGROo+pmfQ+ppQp6=qukwvAGSeSBEGF+nQ@mail.gmail.com>
-Subject: Re: [PATCH v4 0/3] Ignore non-LRU-based reclaim in memcg reclaim
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Lameter <cl@linux.com>,
-        David Rientjes <rientjes@google.com>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Roman Gushchin <roman.gushchin@linux.dev>,
-        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Miaohe Lin <linmiaohe@huawei.com>,
-        David Hildenbrand <david@redhat.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
-        Shakeel Butt <shakeelb@google.com>,
-        Michal Hocko <mhocko@kernel.org>, Yu Zhao <yuzhao@google.com>,
-        Dave Chinner <david@fromorbit.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230404171411.699655-4-zlang@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 4, 2023 at 2:58=E2=80=AFPM Andrew Morton <akpm@linux-foundation=
-.org> wrote:
->
-> On Tue, 4 Apr 2023 14:49:13 -0700 Yosry Ahmed <yosryahmed@google.com> wro=
-te:
->
-> > On Tue, Apr 4, 2023 at 2:38=E2=80=AFPM Andrew Morton <akpm@linux-founda=
-tion.org> wrote:
-> > >
-> > > On Tue,  4 Apr 2023 00:13:50 +0000 Yosry Ahmed <yosryahmed@google.com=
-> wrote:
-> > >
-> > > > Upon running some proactive reclaim tests using memory.reclaim, we
-> > > > noticed some tests flaking where writing to memory.reclaim would be
-> > > > successful even though we did not reclaim the requested amount full=
-y.
-> > > > Looking further into it, I discovered that *sometimes* we over-repo=
-rt
-> > > > the number of reclaimed pages in memcg reclaim.
-> > > >
-> > > > Reclaimed pages through other means than LRU-based reclaim are trac=
-ked
-> > > > through reclaim_state in struct scan_control, which is stashed in
-> > > > current task_struct. These pages are added to the number of reclaim=
-ed
-> > > > pages through LRUs. For memcg reclaim, these pages generally cannot=
- be
-> > > > linked to the memcg under reclaim and can cause an overestimated co=
-unt
-> > > > of reclaimed pages. This short series tries to address that.
-> > > >
-> > > > Patches 1-2 are just refactoring, they add helpers that wrap some
-> > > > operations on current->reclaim_state, and rename
-> > > > reclaim_state->reclaimed_slab to reclaim_state->reclaimed.
-> > > >
-> > > > Patch 3 ignores pages reclaimed outside of LRU reclaim in memcg rec=
-laim.
-> > > > The pages are uncharged anyway, so even if we end up under-reportin=
-g
-> > > > reclaimed pages we will still succeed in making progress during
-> > > > charging.
-> > > >
-> > > > Do not let the diff stat deceive you, the core of this series is pa=
-tch 3,
-> > > > which has one line of code change. All the rest is refactoring and =
-one
-> > > > huge comment.
-> > > >
-> > >
-> > > Wouldn't it be better to do this as a single one-line patch for
-> > > backportability?  Then all the refactoring etcetera can be added on
-> > > later.
-> >
-> > Without refactoring the code that adds reclaim_state->reclaimed to
-> > scan_control->nr_reclaimed into a helper (flush_reclaim_state()), the
-> > change would need to be done in two places instead of one, and I
-> > wouldn't know where to put the huge comment.
->
-> Well, all depends on how desirable it it that we backport.  If "not
-> desirable" then leave things as-is.  If at least "possibly desirable"
-> then a simple patch with the two changes and no elaborate comment will
-> suit.
->
+Hi Zorro,
 
-I would rather leave the current series as-is with an elaborate
-comment. I can send a separate single patch as a backport to stable if
-this is something that we usually do (though I am not sure how to
-format such patch).
+On Wed, Apr 05, 2023 at 01:14:09AM +0800, Zorro Lang wrote:
+> +FSVERITY
+> +L:	fsverity@lists.linux.dev
+> +S:	Supported
+> +F:	common/verity
+> +
+> +FSCRYPT
+> +L:      linux-fscrypt@vger.kernel.org
+> +S:	Supported
+> +F:	common/encrypt
+
+Most of the encrypt and verity tests are in tests/generic/ and are in the
+'encrypt' or 'verity' test groups.
+
+These file patterns only pick up the common files, not the actual tests.
+
+Have you considered adding a way to specify maintainers for a test group?
+Something like:
+
+    G:      encrypt
+
+and
+
+    G:      verity
+
+- Eric
