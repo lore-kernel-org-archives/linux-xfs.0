@@ -2,61 +2,154 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB4D2C6FD1D
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 23:37:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A04B1C6FD1D
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 23:40:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231351AbjDDXhS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Apr 2023 19:37:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53550 "EHLO
+        id S231657AbjDDXki (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Apr 2023 19:40:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230489AbjDDXhR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 19:37:17 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A81831736;
-        Tue,  4 Apr 2023 16:37:16 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3F20963ABF;
-        Tue,  4 Apr 2023 23:37:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24D67C433EF;
-        Tue,  4 Apr 2023 23:37:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680651435;
-        bh=28csmTGeSXq8H7xfZ7A9tZkyNtsYsSc6KAk1TE12n9Q=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=MzRMCxrEdCfSJr+egFiRRoe3pwGPEZcD99zxZrYbt5ciHtwXGms9CUOlfLkUIsf3n
-         Dq43lH7ZE8DC7AIwuA0rGofhxf6xABvBNbtWaHUv+oOCfnPeR0ROwg+1Ai+ZlgQb5I
-         +8wPKWKn9HJIM/PdRtaqDctfJPytasl9aS/ekuyXlrcTDKEKwpxvBRAlPUIIKaD2D3
-         NPRMXTl4LyGxzqCx4Dp97UM9fJe1HBjc+21snGc7Qxw54p9XORNR8EB+byaaoavD+E
-         VVQpmcJF+uIuCzlRajzE5SxibJTalb1plXMeva9WeuOTsFJBk66cqpXDXkODEpG4zU
-         zFmJFk59vKE8w==
-Date:   Tue, 4 Apr 2023 16:37:13 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
+        with ESMTP id S229748AbjDDXkh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 19:40:37 -0400
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 351E23C1D
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2023 16:40:36 -0700 (PDT)
+Received: by mail-pl1-x62b.google.com with SMTP id kc4so32817876plb.10
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Apr 2023 16:40:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1680651635;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=M/r2yyBxa2UjizT7DIESb3jdVn4T1vcr3JZCxz3Un80=;
+        b=l2RsFYI9/RVRWt/aDmW615qjr94XgOxAaXQ+UAkJU4YMTNxdL1SWonsdJUToBlbJ33
+         DPIu1jzsGIMef5CH+m4C2GOQV87eocIVgfGQ2KXn6+YS9XADLuJnuOSAx6h9+j9fnpY5
+         JTHYmubv4qSZWAR14+cgEjLy3uLmmEqMpfJ+lATcV1zLzTamDk02U3M8jBH7uG496lcD
+         puuraASOSvX9+ur5puWLnEC9/61i1l5u5Gr181q9JcQG0znhvmDJq5XOdzeaXNEnNW05
+         1UU5+ld2OPAAE5dtXF9Jdb1D6TH+pXeDq+mDu/DmDkU3DEmpC9mQq6W3PJ67HVENlW/F
+         mRiw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680651635;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=M/r2yyBxa2UjizT7DIESb3jdVn4T1vcr3JZCxz3Un80=;
+        b=qrGXa2K3jVaJ2RPgk+h1PcGU9RJglM28o9zOxH7SVPEy2WIOHlgrW//CgxtiymapHI
+         4lyisUUuAagleYFTIyi3GV6hPQdaSSrUtb58GTQ+3REOhmleacD1rMaSmTbxK665mZZG
+         ymV5XHdjDCzy53RHPckMOApVHsGKpIl2qgY8f3Mv3qoCLNlnlvpuSkUHlQplYHTVHKOf
+         ecpDGVIl4RUKdOtVkDdfPDpxspJtjWSxru0rw6xQnF4w7u7Ly8f66VVSvrVxeiQalmtN
+         orRp4CKyqKJgvnszp2+FjBZ7Mulw48NjvX3CsiOwwgaDQnexyP79JRmqAKC0sa9gh+vF
+         /Qgw==
+X-Gm-Message-State: AAQBX9dSJVJZpBXKFPvAriPzXCH6vaCCozZ4yqflMgOtkn3XENSHjFPh
+        lunDcxe+CLvbQenQly+74OFAVw==
+X-Google-Smtp-Source: AKy350aGtUyDc7dXm54tao9SO1Z52DtK7YHUJoaBCaBA1TXOYmz5/48+4yE+r2PZyPM8LNhcT3l0sw==
+X-Received: by 2002:a17:902:fb8c:b0:1a1:c945:4b23 with SMTP id lg12-20020a170902fb8c00b001a1c9454b23mr3916070plb.65.1680651635730;
+        Tue, 04 Apr 2023 16:40:35 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-91-157.pa.nsw.optusnet.com.au. [49.181.91.157])
+        by smtp.gmail.com with ESMTPSA id q18-20020a170902b11200b001a216d44440sm8856651plr.200.2023.04.04.16.40.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 04 Apr 2023 16:40:29 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1pjqGB-00H7Og-Tt; Wed, 05 Apr 2023 09:40:19 +1000
+Date:   Wed, 5 Apr 2023 09:40:19 +1000
+From:   Dave Chinner <david@fromorbit.com>
 To:     Andrey Albershteyn <aalbersh@redhat.com>
-Cc:     djwong@kernel.org, dchinner@redhat.com, hch@infradead.org,
-        linux-xfs@vger.kernel.org, fsverity@lists.linux.dev,
-        rpeterso@redhat.com, agruenba@redhat.com, xiang@kernel.org,
-        chao@kernel.org, damien.lemoal@opensource.wdc.com, jth@kernel.org,
+Cc:     djwong@kernel.org, dchinner@redhat.com, ebiggers@kernel.org,
+        hch@infradead.org, linux-xfs@vger.kernel.org,
+        fsverity@lists.linux.dev, rpeterso@redhat.com, agruenba@redhat.com,
+        xiang@kernel.org, chao@kernel.org,
+        damien.lemoal@opensource.wdc.com, jth@kernel.org,
         linux-erofs@lists.ozlabs.org, linux-btrfs@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
         cluster-devel@redhat.com
-Subject: Re: [PATCH v2 00/23] fs-verity support for XFS
-Message-ID: <20230404233713.GF1893@sol.localdomain>
+Subject: Re: [PATCH v2 06/23] fsverity: add drop_page() callout
+Message-ID: <20230404234019.GM3223426@dread.disaster.area>
 References: <20230404145319.2057051-1-aalbersh@redhat.com>
+ <20230404145319.2057051-7-aalbersh@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230404145319.2057051-1-aalbersh@redhat.com>
+In-Reply-To: <20230404145319.2057051-7-aalbersh@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 04, 2023 at 04:52:56PM +0200, Andrey Albershteyn wrote:
-> The patchset is tested with xfstests -g auto on xfs_1k, xfs_4k,
-> xfs_1k_quota, and xfs_4k_quota. Haven't found any major failures.
+On Tue, Apr 04, 2023 at 04:53:02PM +0200, Andrey Albershteyn wrote:
+> Allow filesystem to make additional processing on verified pages
+> instead of just dropping a reference. This will be used by XFS for
+> internal buffer cache manipulation in further patches. The btrfs,
+> ext4, and f2fs just drop the reference.
+> 
+> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> ---
+>  fs/btrfs/verity.c         | 12 ++++++++++++
+>  fs/ext4/verity.c          |  6 ++++++
+>  fs/f2fs/verity.c          |  6 ++++++
+>  fs/verity/read_metadata.c |  4 ++--
+>  fs/verity/verify.c        |  6 +++---
+>  include/linux/fsverity.h  | 10 ++++++++++
+>  6 files changed, 39 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/btrfs/verity.c b/fs/btrfs/verity.c
+> index c5ff16f9e9fa..4c2c09204bb4 100644
+> --- a/fs/btrfs/verity.c
+> +++ b/fs/btrfs/verity.c
+> @@ -804,10 +804,22 @@ static int btrfs_write_merkle_tree_block(struct inode *inode, const void *buf,
+>  			       pos, buf, size);
+>  }
+>  
+> +/*
+> + * fsverity op that releases the reference obtained by ->read_merkle_tree_page()
+> + *
+> + * @page:  reference to the page which can be released
+> + *
+> + */
+> +static void btrfs_drop_page(struct page *page)
+> +{
+> +	put_page(page);
+> +}
+> +
+>  const struct fsverity_operations btrfs_verityops = {
+>  	.begin_enable_verity     = btrfs_begin_enable_verity,
+>  	.end_enable_verity       = btrfs_end_enable_verity,
+>  	.get_verity_descriptor   = btrfs_get_verity_descriptor,
+>  	.read_merkle_tree_page   = btrfs_read_merkle_tree_page,
+>  	.write_merkle_tree_block = btrfs_write_merkle_tree_block,
+> +	.drop_page		 = &btrfs_drop_page,
+>  };
 
-Just to double check, did you verify that the tests in the "verity" group are
-running, and were not skipped?
+Ok, that's a generic put_page() call.
 
-- Eric
+....
+> diff --git a/fs/verity/verify.c b/fs/verity/verify.c
+> index f50e3b5b52c9..c2fc4c86af34 100644
+> --- a/fs/verity/verify.c
+> +++ b/fs/verity/verify.c
+> @@ -210,7 +210,7 @@ verify_data_block(struct inode *inode, struct fsverity_info *vi,
+>  		if (is_hash_block_verified(vi, hpage, hblock_idx)) {
+>  			memcpy_from_page(_want_hash, hpage, hoffset, hsize);
+>  			want_hash = _want_hash;
+> -			put_page(hpage);
+> +			inode->i_sb->s_vop->drop_page(hpage);
+>  			goto descend;
+
+			fsverity_drop_page(hpage);
+
+static inline void
+fsverity_drop_page(struct inode *inode, struct page *page)
+{
+	if (inode->i_sb->s_vop->drop_page)
+		inode->i_sb->s_vop->drop_page(page);
+	else
+		put_page(page);
+}
+
+And then you don't need to add the functions to each of the
+filesystems nor make an indirect call just to run put_page().
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
