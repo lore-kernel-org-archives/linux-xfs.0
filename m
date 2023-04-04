@@ -2,140 +2,168 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A3A1C6FD1D
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 23:30:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7990C761A6
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 23:32:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236064AbjDDXai (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Apr 2023 19:30:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51226 "EHLO
+        id S236497AbjDDXc2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Apr 2023 19:32:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229973AbjDDXai (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 19:30:38 -0400
-Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 236FA171A
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2023 16:30:37 -0700 (PDT)
-Received: by mail-pj1-x1035.google.com with SMTP id lr16-20020a17090b4b9000b0023f187954acso35565286pjb.2
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Apr 2023 16:30:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1680651036;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=vUXX2qCMFyorNG/8GNmEJb965QnYIz3xjvMWdzo8/fE=;
-        b=tOtEuPnFTEBMtqRjG/Z8Q2RNRFzft4i/NO7xq5jxwsTP9QHHk7vGkYcbsggsWHIipa
-         xZ86QY7tiSB4wbXepT3wj38sa/JJn+FHqYd0x/wPiBcOrs0u0uP+tLPtmVnECWees0Lq
-         GQRF8prFcD7L9pUcMPVWm3pvY8m/h06LiA0VCxYXLW1JUpCD+gGbNx2Fe64+IaZY3NVZ
-         b0WZjOrxkUZs5rWrdAeuZOLcS8jUyy71kUmT2HevZg7vK96jl4fRvRI3BW2M6DWN8QgW
-         SWAMz5qH421V6z5noV+vZy7V9YyMJcD0epJgBJiMJcDotw52VU0y2Bh+r6+zSWVvJwzv
-         t3Vw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680651036;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=vUXX2qCMFyorNG/8GNmEJb965QnYIz3xjvMWdzo8/fE=;
-        b=oR97cezDO9qw7rr2mK+F+jpIqLPFAOqgwT8Jt1mqIzKwmGpOqJKq1cCDmB/aJ96LMV
-         B2yt9rDpqVJ2g6xqof9DFR9yU3UHT5mQvEYUt7srv0BgffHK+zGHbH+7/cUfhcm3SWa3
-         8gI36l6ybXxmM0OULqaHiNFmpIVMOySkM7u2Cc/aZEQvsRo5zxNy/ETe2YDxxuDnoh0p
-         ZKOczPoX1CaOWFMztKh1gYGgVvh4q7Cl9my4zVANWEWiN+pPwWcUyfiNzIWcvvGb5IzS
-         cd8scrsrS9hw2rzbSvfnsV9l0EdXlv2xoYgJ+YWOIo5hrcx3jV96thU5YdRZyhtcI0NH
-         2sjg==
-X-Gm-Message-State: AAQBX9eDZL4vpgZuEQyQWFkTPcnkm6duUPmjpzuxFpvDae1XwjBwRJoG
-        BVX9DBSXEjgMIFg59h4hHwTTeYoSdvNOXtpHtkM=
-X-Google-Smtp-Source: AKy350ZAzRgIFBF/fgVbH5EDZsNO2dVYe3nNEpkGcnpZpx5TjJiRqYh0o3SsD4XGQPPo6A8DX8o5Mw==
-X-Received: by 2002:a17:903:228e:b0:1a1:a727:a802 with SMTP id b14-20020a170903228e00b001a1a727a802mr643902plh.19.1680651036571;
-        Tue, 04 Apr 2023 16:30:36 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-91-157.pa.nsw.optusnet.com.au. [49.181.91.157])
-        by smtp.gmail.com with ESMTPSA id jf2-20020a170903268200b001a27e5ee634sm8865453plb.33.2023.04.04.16.30.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Apr 2023 16:30:35 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1pjq6i-00H7IJ-S7; Wed, 05 Apr 2023 09:30:32 +1000
-Date:   Wed, 5 Apr 2023 09:30:32 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: stabilize the tolower function used for
- ascii-ci dir hash computation
-Message-ID: <20230404233032.GL3223426@dread.disaster.area>
-References: <168062802052.174368.10967543545284986225.stgit@frogsfrogsfrogs>
- <168062802637.174368.12108206682992075671.stgit@frogsfrogsfrogs>
- <CAHk-=whe9kmyMojhse3cZ-zpHPfvGf_bA=PzNfuV0t+F5S1JxA@mail.gmail.com>
- <20230404183214.GG109974@frogsfrogsfrogs>
+        with ESMTP id S236366AbjDDXc2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 19:32:28 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54301171A;
+        Tue,  4 Apr 2023 16:32:27 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E0AFA63317;
+        Tue,  4 Apr 2023 23:32:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF8AEC433EF;
+        Tue,  4 Apr 2023 23:32:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1680651146;
+        bh=mzC9yxS3pU0gQe8btlzdUEVy3UG1HFMbmPEVa9F5ySY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=IQ5deiEXGx1gFAZISmhBLeCx8NzxQoUgL9nmQTkP3esfYaFFQQ3b7ESc/W//rQnfl
+         3sC6jG70uboYZiTYrN8C1P21fsc+gnsV48CY7KPCfaJ/OQnp8UfTYsmdcdkTEW4buW
+         hVn+2CEI8t2/lO/2BdLWwWucOOyJ253E2xRfYlRB0Mh95jIzG88ZgJaCkbFY/S4ke/
+         DQzAT3I9w8UZewW6kTUEN8IG68kmycB6WIeZaSCrRu4RRTDEL/ofiUNKTs5kJkkHKg
+         x1+XwPQ6O+zGp2wSQJhkj/co7Ojg7M32UskAXMdTeQ7xaEOcp4FpffpkAMVswDrSRa
+         iX8vXvvL6hmJg==
+Date:   Tue, 4 Apr 2023 16:32:24 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Andrey Albershteyn <aalbersh@redhat.com>
+Cc:     djwong@kernel.org, dchinner@redhat.com, hch@infradead.org,
+        linux-xfs@vger.kernel.org, fsverity@lists.linux.dev,
+        rpeterso@redhat.com, agruenba@redhat.com, xiang@kernel.org,
+        chao@kernel.org, damien.lemoal@opensource.wdc.com, jth@kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com
+Subject: Re: [PATCH v2 21/23] xfs: handle merkle tree block size != fs
+ blocksize != PAGE_SIZE
+Message-ID: <20230404233224.GE1893@sol.localdomain>
+References: <20230404145319.2057051-1-aalbersh@redhat.com>
+ <20230404145319.2057051-22-aalbersh@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230404183214.GG109974@frogsfrogsfrogs>
+In-Reply-To: <20230404145319.2057051-22-aalbersh@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 04, 2023 at 11:32:14AM -0700, Darrick J. Wong wrote:
-> On Tue, Apr 04, 2023 at 10:54:27AM -0700, Linus Torvalds wrote:
-> > On Tue, Apr 4, 2023 at 10:07 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> > >
-> > > +       if (c >= 0xc0 && c <= 0xd6)     /* latin A-O with accents */
-> > > +               return true;
-> > > +       if (c >= 0xd8 && c <= 0xde)     /* latin O-Y with accents */
-> > > +               return true;
-> > 
-> > Please don't do this.
-> > 
-> > We're not in the dark ages any more. We don't do crazy locale-specific
-> > crud. There is no such thing as "latin1" any more in any valid model.
-> > 
-> > For example, it is true that 0xC4 is 'Ä' in Latin1, and that the
-> > lower-case version is 'ä', and you can do the lower-casing exactly the
-> > same way as you do for US-ASCII: you just set bit 5 (or "add 32" or
-> > "subtract 0xE0" - the latter is what you seem to do, crazy as it is).
-> > 
-> > So the above was fine back in the 80s, and questionably correct in the
-> > 90s, but it is COMPLETE GARBAGE to do this in the year 2023.
+Hi Andrey,
+
+On Tue, Apr 04, 2023 at 04:53:17PM +0200, Andrey Albershteyn wrote:
+> In case of different Merkle tree block size fs-verity expects
+> ->read_merkle_tree_page() to return Merkle tree page filled with
+> Merkle tree blocks. The XFS stores each merkle tree block under
+> extended attribute. Those attributes are addressed by block offset
+> into Merkle tree.
 > 
-> Yeah, I get that.  Fifteen years ago, Barry Naujok and Christoph merged
-> this weird ascii-ci feature for XFS that purportedly does ... something.
-> It clearly only works properly if you force userspace to use latin1,
-> which is totally nuts in 2023 given that the distros default to UTF8
-> and likely don't test anything else.  It probably wasn't even a good
-> idea in *2008*, but it went in anyway.  Nobody tested this feature,
-> metadump breaks with this feature enabled, but as maintainer I get to
-> maintain these poorly designed half baked projects.
+> This patch make ->read_merkle_tree_page() to fetch multiple merkle
+> tree blocks based on size ratio. Also the reference to each xfs_buf
+> is passed with page->private to ->drop_page().
+> 
+> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> ---
+>  fs/xfs/xfs_verity.c | 74 +++++++++++++++++++++++++++++++++++----------
+>  fs/xfs/xfs_verity.h |  8 +++++
+>  2 files changed, 66 insertions(+), 16 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_verity.c b/fs/xfs/xfs_verity.c
+> index a9874ff4efcd..ef0aff216f06 100644
+> --- a/fs/xfs/xfs_verity.c
+> +++ b/fs/xfs/xfs_verity.c
+> @@ -134,6 +134,10 @@ xfs_read_merkle_tree_page(
+>  	struct page		*page = NULL;
+>  	__be64			name = cpu_to_be64(index << PAGE_SHIFT);
+>  	uint32_t		bs = 1 << log_blocksize;
+> +	int			blocks_per_page =
+> +		(1 << (PAGE_SHIFT - log_blocksize));
+> +	int			n = 0;
+> +	int			offset = 0;
+>  	struct xfs_da_args	args = {
+>  		.dp		= ip,
+>  		.attr_filter	= XFS_ATTR_VERITY,
+> @@ -143,26 +147,59 @@ xfs_read_merkle_tree_page(
+>  		.valuelen	= bs,
+>  	};
+>  	int			error = 0;
+> +	bool			is_checked = true;
+> +	struct xfs_verity_buf_list	*buf_list;
+>  
+>  	page = alloc_page(GFP_KERNEL);
+>  	if (!page)
+>  		return ERR_PTR(-ENOMEM);
+>  
+> -	error = xfs_attr_get(&args);
+> -	if (error) {
+> -		kmem_free(args.value);
+> -		xfs_buf_rele(args.bp);
+> +	buf_list = kzalloc(sizeof(struct xfs_verity_buf_list), GFP_KERNEL);
+> +	if (!buf_list) {
+>  		put_page(page);
+> -		return ERR_PTR(-EFAULT);
+> +		return ERR_PTR(-ENOMEM);
+>  	}
+>  
+> -	if (args.bp->b_flags & XBF_VERITY_CHECKED)
+> +	/*
+> +	 * Fill the page with Merkle tree blocks. The blcoks_per_page is higher
+> +	 * than 1 when fs block size != PAGE_SIZE or Merkle tree block size !=
+> +	 * PAGE SIZE
+> +	 */
+> +	for (n = 0; n < blocks_per_page; n++) {
+> +		offset = bs * n;
+> +		name = cpu_to_be64(((index << PAGE_SHIFT) + offset));
+> +		args.name = (const uint8_t *)&name;
+> +
+> +		error = xfs_attr_get(&args);
+> +		if (error) {
+> +			kmem_free(args.value);
+> +			/*
+> +			 * No more Merkle tree blocks (e.g. this was the last
+> +			 * block of the tree)
+> +			 */
+> +			if (error == -ENOATTR)
+> +				break;
+> +			xfs_buf_rele(args.bp);
+> +			put_page(page);
+> +			kmem_free(buf_list);
+> +			return ERR_PTR(-EFAULT);
+> +		}
+> +
+> +		buf_list->bufs[buf_list->buf_count++] = args.bp;
+> +
+> +		/* One of the buffers was dropped */
+> +		if (!(args.bp->b_flags & XBF_VERITY_CHECKED))
+> +			is_checked = false;
+> +
+> +		memcpy(page_address(page) + offset, args.value, args.valuelen);
+> +		kmem_free(args.value);
+> +		args.value = NULL;
+> +	}
 
-It was written specifically for a NFS/CIFS fileserver appliance
-product and Samba needed filesystem-side CI to be able to perform
-even vaguely well on industry-standard fileserver benchmarketing
-workloads that were all the rage at the time.
+I was really hoping for a solution where the cached data can be used directly,
+instead allocating a temporary page and copying the cached data into it every
+time the cache is accessed.  The problem with what you have now is that every
+time a single 32-byte hash is accessed, a full page (potentially 64KB!) will be
+allocated and filled.  That's not very efficient.  The need to allocate the
+temporary page can also cause ENOMEM (which will get reported as EIO).
 
-Because of the inherent problems with CI and UTF-8 encoding, etc, it
-was decided that Samba would be configured to export latin1
-encodings as that covered >90% of the target markets for the
-product. Hence the "ascii-ci" casefolding code could be encoded into
-the XFS directory operations and remove all the overhead of
-casefolding from Samba.
+Did you consider alternatives that would work more efficiently?  I think it
+would be worth designing something that works properly with how XFS is planned
+to cache the Merkle tree, instead of designing a workaround.
+->read_merkle_tree_page was not really designed for what you are doing here.
 
-In various "important" directory benchmarketing workloads, ascii-ci
-resulted in speedups of 100-1000x. These were competitive results
-comapred to the netapp/bluearc/etc appliances of the time in the
-same cost bracket.  Essentially, it was a special case solution to
-meet a specific product requirement and was never intended to be
-used outside that specific controlled environment.
+How about replacing ->read_merkle_tree_page with a function that takes in a
+Merkle tree block index (not a page index!) and hands back a (page, offset) pair
+that identifies where the Merkle tree block's data is located?  Or (folio,
+offset), I suppose.
 
-Realistically, this is the one major downside of "upstream first"
-development principle.  i.e. when the vendor product that required
-a specific feature is long gone, upstream still has to support that
-functionality even though there may be no users of it remaining
-and/or no good reason for it continuing to exist.
+With that, would it be possible to directly return the XFS cache?
 
-I'd suggest that after this is fixed we deprecate ascii-ci and make
-it go away at the same time v4 filesystems go away. It was, after
-all, a feature written for v4 filesystems....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+- Eric
