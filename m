@@ -2,59 +2,59 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41138C77B6C
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 14:56:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB568C77B70
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 14:56:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232285AbjDDO4J (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Apr 2023 10:56:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58324 "EHLO
+        id S233081AbjDDO4K (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Apr 2023 10:56:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233027AbjDDO4B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 10:56:01 -0400
+        with ESMTP id S233148AbjDDO4E (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 10:56:04 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34D454ECB
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2023 07:54:55 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1AE44C05
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2023 07:55:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1680620094;
+        s=mimecast20190719; t=1680620101;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=395KBh5jpp5sBhV7lwrvunRnw3iYM/DZo2HMst97yLA=;
-        b=E30sym+wVe+0o6p+EKjVgvkAw22hUAOYxZDHstD5IJ+M+SqvvuYwo7Y8+B/3ll8uN3UNIV
-        mwLRgSxC5T7U+EH6wV/q21HhXUSSQp1lYXrD8tCJRWbyxFNjQWhOKILy9S6v8moQMODMdm
-        pBCYJCy7zY4M2ElGo3JJN2JKzvONuV4=
-Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com
- [209.85.160.198]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=I6je06aEmhF92s7sMY7DVi3uR44iZ0FPA/bMk0qTbjY=;
+        b=FrKZnfqqRTW645fATVeGqe1U9/lb+xUN+GAHkIQ4nFQsH4nvReeGC3kgAnKn6AewxF3ONx
+        ZjDS85UbKAhOlccQqwHFPKWLBLG75v8v4hiVL+S0fTmyRAJEz0FEkc5wx+6rusoPxe1UGC
+        dOBObfkQhGhnXo7/CFhbfEBc9zmWie4=
+Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
+ [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-201-zjbPsDY7OJqhTxxAY9nyxQ-1; Tue, 04 Apr 2023 10:54:52 -0400
-X-MC-Unique: zjbPsDY7OJqhTxxAY9nyxQ-1
-Received: by mail-qt1-f198.google.com with SMTP id y10-20020a05622a164a00b003e38e0a3cc3so22187118qtj.14
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Apr 2023 07:54:52 -0700 (PDT)
+ us-mta-403-AGua7vkrM-KQnuNy59LAfA-1; Tue, 04 Apr 2023 10:55:00 -0400
+X-MC-Unique: AGua7vkrM-KQnuNy59LAfA-1
+Received: by mail-qk1-f197.google.com with SMTP id s21-20020a05620a0bd500b0074234f33f24so14661121qki.3
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Apr 2023 07:54:59 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680620092;
+        d=1e100.net; s=20210112; t=1680620099;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=395KBh5jpp5sBhV7lwrvunRnw3iYM/DZo2HMst97yLA=;
-        b=chAToSHPCNUPVgKa7lnJO8BWxpKrrNv0tGPRARxe1M1draDnNKet9G6/HUMeGs1dzI
-         YlnI39LBRnsrTE9H+dJeycj9PvZVAEDNYNy883V2sWHZaWyONCvIQerVNQa2PO71RIG7
-         U96C5dSoVD8cq51VewOOfUNrq0XJw797hec9Ou2J6FBxIpXjMkRrfigWN8n2gPa/JndB
-         hS5acCo1kLVzNkzzWRAA9RJthhKvLBiD8pE6jppwTIQx72OPRLww0CqgXwAWln3xLFdo
-         pMX8e9B12S4x41c40Q71md/0dwW2LYa4Z4yByxv9Xjr4oZVcOqXwyCSn7eG6ebWkM8BE
-         IHrw==
-X-Gm-Message-State: AAQBX9eGUIMAybtgM5FNn54HcKw3y7sZvkkZjGdYsHgswfAym69/lnzy
-        mJF0e/NIhUrZZ6kzm7cL5wkP0x4LWwI+FM6TFCQyIhgZR3vDOXwmWNxiv/zQuCp8WSXHEqghKRB
-        edDeeMhTQX8bn8kURtRQ=
-X-Received: by 2002:a05:622a:1495:b0:3e3:86d4:5df0 with SMTP id t21-20020a05622a149500b003e386d45df0mr3709060qtx.55.1680620092092;
-        Tue, 04 Apr 2023 07:54:52 -0700 (PDT)
-X-Google-Smtp-Source: AKy350aPi48zuTVxqlQ2ykuKHu8ozrnZJsbxnbJpjnRK3ke426WVAPqcsUdJYViMl9WXPC5V56cQ2g==
-X-Received: by 2002:a05:622a:1495:b0:3e3:86d4:5df0 with SMTP id t21-20020a05622a149500b003e386d45df0mr3709024qtx.55.1680620091642;
-        Tue, 04 Apr 2023 07:54:51 -0700 (PDT)
+        bh=I6je06aEmhF92s7sMY7DVi3uR44iZ0FPA/bMk0qTbjY=;
+        b=QrdN/ajomgaolO+9DS0EalHdb4BsHT66BkrOS/2tajCzpC1wrH2cmBbu+71iESajzS
+         Ll4mEnPmB4Kmn+OJio3CCNEEEzUZiruBw3meGj3ALZZ8qtWc2G1VRmwBb1dMWhUX7aW5
+         6ehec6rMveuyMTSXZFRhdnN29rsKvv8xHbRZTa2YZprDegIuzf01H99Nk8tk/zrHhZm+
+         O8/3qbnSTahcmCpYse4JwWtbK2T/M2aBOnaVIKhyVRA5M1ViCE1gsAwAxOHXEgkGrasm
+         yGn7asYnrkmjdt4k3vL+UoEWYEb9Yoz0yKShhJkc/B/nA0QvUXkSW2gijpX27fBsoO/t
+         hN/Q==
+X-Gm-Message-State: AAQBX9ejWt00H8DMTTW4QO/Mas3WnY6CstyV+rMk6hntmH1vkn6fUbrF
+        s/59pofTuzuO37qYpX9Ws2Uc+LfjBE1nbaFkB/a+rsPs2DvNu4hUFHp1b0HfndhamIo2HJJpiQr
+        A3Iit3BbfZ0V+4hfL7kuA4SAWhpztOA==
+X-Received: by 2002:a05:622a:189e:b0:3bc:dd21:4a0 with SMTP id v30-20020a05622a189e00b003bcdd2104a0mr3575648qtc.30.1680620099206;
+        Tue, 04 Apr 2023 07:54:59 -0700 (PDT)
+X-Google-Smtp-Source: AKy350ba/Mx2sYrhvQuuxEbUABini+6j6yzJy9T6p4OPPcKlZcS6dLVBbS/lM0x+VENbSuVT7xiskA==
+X-Received: by 2002:a05:622a:189e:b0:3bc:dd21:4a0 with SMTP id v30-20020a05622a189e00b003bcdd2104a0mr3575618qtc.30.1680620098846;
+        Tue, 04 Apr 2023 07:54:58 -0700 (PDT)
 Received: from aalbersh.remote.csb ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id j4-20020ac86644000000b003e6387431dcsm3296539qtp.7.2023.04.04.07.54.47
+        by smtp.gmail.com with ESMTPSA id j4-20020ac86644000000b003e6387431dcsm3296539qtp.7.2023.04.04.07.54.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Apr 2023 07:54:51 -0700 (PDT)
+        Tue, 04 Apr 2023 07:54:58 -0700 (PDT)
 From:   Andrey Albershteyn <aalbersh@redhat.com>
 To:     djwong@kernel.org, dchinner@redhat.com, ebiggers@kernel.org,
         hch@infradead.org, linux-xfs@vger.kernel.org,
@@ -63,11 +63,10 @@ Cc:     rpeterso@redhat.com, agruenba@redhat.com, xiang@kernel.org,
         chao@kernel.org, damien.lemoal@opensource.wdc.com, jth@kernel.org,
         linux-erofs@lists.ozlabs.org, linux-btrfs@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        cluster-devel@redhat.com,
-        Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v2 03/23] xfs: define parent pointer xattr format
-Date:   Tue,  4 Apr 2023 16:52:59 +0200
-Message-Id: <20230404145319.2057051-4-aalbersh@redhat.com>
+        cluster-devel@redhat.com, Andrey Albershteyn <aalbersh@redhat.com>
+Subject: [PATCH v2 05/23] fsverity: make fsverity_verify_folio() accept folio's offset and size
+Date:   Tue,  4 Apr 2023 16:53:01 +0200
+Message-Id: <20230404145319.2057051-6-aalbersh@redhat.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230404145319.2057051-1-aalbersh@redhat.com>
 References: <20230404145319.2057051-1-aalbersh@redhat.com>
@@ -77,74 +76,31 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Allison Henderson <allison.henderson@oracle.com>
+Not the whole folio always need to be verified by fs-verity (e.g.
+with 1k blocks). Use passed folio's offset and size.
 
-We need to define the parent pointer attribute format before we start
-adding support for it into all the code that needs to use it. The EA
-format we will use encodes the following information:
-
-        name={parent inode #, parent inode generation, dirent offset}
-        value={dirent filename}
-
-The inode/gen gives all the information we need to reliably identify the
-parent without requiring child->parent lock ordering, and allows
-userspace to do pathname component level reconstruction without the
-kernel ever needing to verify the parent itself as part of ioctl calls.
-
-By using the dirent offset in the EA name, we have a method of knowing
-the exact parent pointer EA we need to modify/remove in rename/unlink
-without an unbound EA name search.
-
-By keeping the dirent name in the value, we have enough information to
-be able to validate and reconstruct damaged directory trees. While the
-diroffset of a filename alone is not unique enough to identify the
-child, the {diroffset,filename,child_inode} tuple is sufficient. That
-is, if the diroffset gets reused and points to a different filename, we
-can detect that from the contents of EA. If a link of the same name is
-created, then we can check whether it points at the same inode as the
-parent EA we current have.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
 ---
- fs/xfs/libxfs/xfs_da_format.h | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+ include/linux/fsverity.h | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index 3dc03968bba6..b02b67f1999e 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -805,4 +805,29 @@ static inline unsigned int xfs_dir2_dirblock_bytes(struct xfs_sb *sbp)
- xfs_failaddr_t xfs_da3_blkinfo_verify(struct xfs_buf *bp,
- 				      struct xfs_da3_blkinfo *hdr3);
+diff --git a/include/linux/fsverity.h b/include/linux/fsverity.h
+index 119a3266791f..6d7a4b3ea626 100644
+--- a/include/linux/fsverity.h
++++ b/include/linux/fsverity.h
+@@ -249,9 +249,10 @@ static inline void fsverity_enqueue_verify_work(struct work_struct *work)
  
-+/*
-+ * Parent pointer attribute format definition
-+ *
-+ * EA name encodes the parent inode number, generation and the offset of
-+ * the dirent that points to the child inode. The EA value contains the
-+ * same name as the dirent in the parent directory.
-+ */
-+struct xfs_parent_name_rec {
-+	__be64  p_ino;
-+	__be32  p_gen;
-+	__be32  p_diroffset;
-+};
-+
-+/*
-+ * incore version of the above, also contains name pointers so callers
-+ * can pass/obtain all the parent pointer information in a single structure
-+ */
-+struct xfs_parent_name_irec {
-+	xfs_ino_t		p_ino;
-+	uint32_t		p_gen;
-+	xfs_dir2_dataptr_t	p_diroffset;
-+	const char		*p_name;
-+	uint8_t			p_namelen;
-+};
-+
- #endif /* __XFS_DA_FORMAT_H__ */
+ #endif	/* !CONFIG_FS_VERITY */
+ 
+-static inline bool fsverity_verify_folio(struct folio *folio)
++static inline bool fsverity_verify_folio(struct folio *folio, size_t len,
++					 size_t offset)
+ {
+-	return fsverity_verify_blocks(folio, folio_size(folio), 0);
++	return fsverity_verify_blocks(folio, len, offset);
+ }
+ 
+ static inline bool fsverity_verify_page(struct page *page)
 -- 
 2.38.4
 
