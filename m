@@ -2,124 +2,93 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25E43C77B60
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 04:34:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DC50C6FD1D
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 08:48:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231786AbjDDEeZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Apr 2023 00:34:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33554 "EHLO
+        id S234117AbjDDIsH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Apr 2023 04:48:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56098 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231906AbjDDEeX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 00:34:23 -0400
-Received: from mail1.bemta34.messagelabs.com (mail1.bemta34.messagelabs.com [195.245.231.3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F9831BF5
-        for <linux-xfs@vger.kernel.org>; Mon,  3 Apr 2023 21:34:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
-        s=170520fj; t=1680582858; i=@fujitsu.com;
-        bh=Mqs9Av7h/o+dArURI0csKOUbQHg/tcabDiHBubWe4cM=;
-        h=Message-ID:Date:MIME-Version:Subject:From:To:CC:References:
-         In-Reply-To:Content-Type:Content-Transfer-Encoding;
-        b=W8pmvVaq3cJ8LnklnICet2iHkK5dpGbcU8iEvTYoFeMRELNjIYhQojR57aCCR3dyG
-         ZHvRe6poU5+0eIq4IvBdPkVznEfI2ucFPhI+M6dzOkHgfr4D3x27Wz9ydGZXtPm/B5
-         hAcUtJ23b/Ulw9Hn+hYVkfDDLUli88diSti1c1t54tqA9S8V0lEcnl+XlAi1vFdAQs
-         EjIf0xFxTKBPjc/LD41LclCmLr6281/Xi8lMU2UNNmi55psAlvg5MJBqr20u59Vd74
-         Md99zhF+WeBl5+xzRXeqZ4Jbv8395mvj8IIkVDiiburOBdekVegcjyVZzNKJGbOmzz
-         6RWp9liuCGNew==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrPKsWRWlGSWpSXmKPExsViZ8ORqLtvhXa
-  KwcmvhhZz1q9hs5g+9QKjxeUnfBazpzczWezZe5LF4t6a/6wWu/7sYLdY+eMPq8XvH3PYHDg9
-  Nq/Q8li85yWTx6ZVnWwemz5NYvc4MeM3i8eLzTMZPc4sOMLu8XmTXABHFGtmXlJ+RQJrxt3ms
-  6wFp3kqTjzuZG5g/MrZxcjFISSwhVHixrWdjF2MnEDOciaJvv4EiMRWRom7x7cxgSR4Bewklp
-  y9z9rFyMHBIqAisWGpHERYUOLkzCcsILaoQLLEsU1tbCC2sICfRP+Sk+wgNpuAjsSFBX9ZQWw
-  RgUKJPUvfgdUzC1RINC76xwwyUkjAWeJatz1ImFPAReLtlxZmiBILicVvDrJD2PISzVtng8Ul
-  BJQkLn69wwphA42ZfogJwlaTuHpuE/MERqFZSK6bhWTULCSjFjAyr2I0LU4tKkst0jXXSyrKT
-  M8oyU3MzNFLrNJN1Est1S1PLS7RNdJLLC/WSy0u1iuuzE3OSdHLSy3ZxAiMu5Ri5Zk7GJf1/d
-  U7xCjJwaQkyuuoqJ0ixJeUn1KZkVicEV9UmpNafIhRhoNDSYL32BKgnGBRanpqRVpmDjAFwKQ
-  lOHiURHh9FgOleYsLEnOLM9MhUqcYdTnWNhzYyyzEkpeflyolzmuxHKhIAKQoozQPbgQsHV1i
-  lJUS5mVkYGAQ4ilILcrNLEGVf8UozsGoJMxrMA9oCk9mXgncpldARzABHdEapQFyREkiQkqqg
-  Sl3ssTRewEbOydZBtueWllg5TDL+QLXrhAZzkK3x55Cc/465WfE6Z8pvlqUnnp50hPzxhZbjy
-  gFqUWBws8tBObNyDV5xulffMtH56/8TPs3xY+DDefNmdOdoXav52/7ilurZQObuX6/Ly/4Ozv
-  sD+OcPrM1l8+UvP2mZ2URG7plRqCd15RojdsTRZW5CtgEJrbYuNXPORN36/2uxiUL1h6dvsvF
-  fSb358aQ0Ii0n8X/fvzfpX7qXXxdsfiras6mmBmLHnCWnZHPdzv0Zt2q7afFz1/x/ruZPTcuf
-  1Ht8+yuznqGO01nhZX0fskkqcefzj7SUZQoe/mW/IGGpuNnLRdKyyn07ry43CqmfpNoihJLcU
-  aioRZzUXEiAO0Lqe3CAwAA
-X-Env-Sender: ruansy.fnst@fujitsu.com
-X-Msg-Ref: server-20.tower-571.messagelabs.com!1680582846!427180!1
-X-Originating-IP: [62.60.8.97]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.104.1; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 22136 invoked from network); 4 Apr 2023 04:34:06 -0000
-Received: from unknown (HELO n03ukasimr01.n03.fujitsu.local) (62.60.8.97)
-  by server-20.tower-571.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 4 Apr 2023 04:34:06 -0000
-Received: from n03ukasimr01.n03.fujitsu.local (localhost [127.0.0.1])
-        by n03ukasimr01.n03.fujitsu.local (Postfix) with ESMTP id 75E7F1001BA;
-        Tue,  4 Apr 2023 05:34:06 +0100 (BST)
-Received: from R01UKEXCASM121.r01.fujitsu.local (R01UKEXCASM121 [10.183.43.173])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by n03ukasimr01.n03.fujitsu.local (Postfix) with ESMTPS id 695CE1001A8;
-        Tue,  4 Apr 2023 05:34:06 +0100 (BST)
-Received: from [192.168.50.5] (10.167.234.230) by
- R01UKEXCASM121.r01.fujitsu.local (10.183.43.173) with Microsoft SMTP Server
- (TLS) id 15.0.1497.42; Tue, 4 Apr 2023 05:34:02 +0100
-Message-ID: <f7ae5c4f-b2c6-6b64-4b2a-a04bd1ad1aa6@fujitsu.com>
-Date:   Tue, 4 Apr 2023 12:33:56 +0800
+        with ESMTP id S234115AbjDDIsG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 04:48:06 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C89E810D3
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2023 01:47:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1680598035;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=St04fATWGfIT10g6i4L0siP3WzQxgjh0uTI5uZltYvQ=;
+        b=cU7zg75eMs763VHrY2sozQOKDBK8tDlpeUZ2X3nNmjv56Q4d9dv/ip83iUNDAVJgBzsVKY
+        9x3THEtFPGyc733s92DrSgIC3BwPeB4ioCtlci1JK3DGIqD0PRGsQIMT02vXQ67/IkawSh
+        AXE7k9yWKUe51qztDlKVGMaj2kKYpbc=
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com
+ [209.85.215.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-414-aYaioYCgMrS6Cf1Z3XBajA-1; Tue, 04 Apr 2023 04:47:14 -0400
+X-MC-Unique: aYaioYCgMrS6Cf1Z3XBajA-1
+Received: by mail-pg1-f197.google.com with SMTP id q196-20020a632acd000000b005140cc9e00aso1022475pgq.22
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Apr 2023 01:47:14 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680598033;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=St04fATWGfIT10g6i4L0siP3WzQxgjh0uTI5uZltYvQ=;
+        b=nbpwFfzG+q1xMKTN1LnrtSj65C8RxNl57zXTTHKIUiVXKSOwSLDPRbW/Crw7kgVgek
+         hhpkHmKohgdiByCQFhYUntBwvpDH9qDNg7K4HBrotYzGyKEgXI/QzA1J87S9EjmqZGo9
+         xT/WCCEgK+vsAwsSjp6ZscDjNK5gGi22/x/gkxyMlHLI8trWIMsDkD1GdLMLfaGkuPVW
+         SV5PnKEExJ9QfrJ5JDlaMyQlkXiG4oMB3fBUUiOy7R82p2Ga1RaSxkHSaAArSjpjGDg/
+         PxaIXY9FXGfhscSaTfQJQEonl3DuWlf2Z5XVbIUl92wR5HAT0mLO+mpE529Gx+RRRXaC
+         N53Q==
+X-Gm-Message-State: AAQBX9cDUnAbwfTmsyZqQhok9uf/pajPU19HNIRllWS/W0/vLV0QaOEO
+        Voudw2oUu84Mt/z2k1yY6QXYCuoPnqUlXHRxIWkts4dWJ0Oa82dx/7bFXmH0cTkJL/Z9t78YCMZ
+        QtOEyzmG9E9AHxUd+3ghZ
+X-Received: by 2002:a17:90b:3b48:b0:23d:29c7:916f with SMTP id ot8-20020a17090b3b4800b0023d29c7916fmr1944930pjb.32.1680598033474;
+        Tue, 04 Apr 2023 01:47:13 -0700 (PDT)
+X-Google-Smtp-Source: AKy350bJxkPLNVMHl66unDdw9/W27jgaZhktSUj9RGv0cbVeSHmAFsbM+C5lpa1lJz5XglkZhaNqRg==
+X-Received: by 2002:a17:90b:3b48:b0:23d:29c7:916f with SMTP id ot8-20020a17090b3b4800b0023d29c7916fmr1944909pjb.32.1680598033010;
+        Tue, 04 Apr 2023 01:47:13 -0700 (PDT)
+Received: from zeus.flets-east.jp ([240b:10:83a2:bd00:6e35:f2f5:2e21:ae3a])
+        by smtp.gmail.com with ESMTPSA id e5-20020a17090ada0500b00234e6d2de3dsm7352937pjv.11.2023.04.04.01.47.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 04 Apr 2023 01:47:12 -0700 (PDT)
+From:   Ryosuke Yasuoka <ryasuoka@redhat.com>
+To:     djwong@kernel.org
+Cc:     Ryosuke Yasuoka <ryasuoka@redhat.com>, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] xfs: Use for_each_perag() to iterate all available AGs
+Date:   Tue,  4 Apr 2023 17:47:01 +0900
+Message-Id: <20230404084701.2791683-1-ryasuoka@redhat.com>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Subject: Re: [PATCH v11 0/2] mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-To:     <linux-fsdevel@vger.kernel.org>, <nvdimm@lists.linux.dev>,
-        <linux-xfs@vger.kernel.org>, <linux-mm@kvack.org>
-CC:     <dan.j.williams@intel.com>, <willy@infradead.org>, <jack@suse.cz>,
-        <akpm@linux-foundation.org>, <djwong@kernel.org>
-References: <1679996506-2-1-git-send-email-ruansy.fnst@fujitsu.com>
-In-Reply-To: <1679996506-2-1-git-send-email-ruansy.fnst@fujitsu.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.167.234.230]
-X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
- R01UKEXCASM121.r01.fujitsu.local (10.183.43.173)
-X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Ping
+for_each_perag_wrap() doesn't expect 0 as 2nd arg.
+To iterate all the available AGs, just use for_each_perag() instead.
 
-在 2023/3/28 17:41, Shiyang Ruan 写道:
-> This patchset is to add gracefully unbind support for pmem.
-> Patch1 corrects the calculation of length and end of a given range.
-> Patch2 introduces a new flag call MF_MEM_REMOVE, to let dax holder know
-> it is a remove event.  With the help of notify_failure mechanism, we are
-> able to shutdown the filesystem on the pmem gracefully.
-> 
-> Changes since v10:
->   Patch1:
->    1. correct the count calculation in xfs_failure_pgcnt().
->   Patch2:
->    2. drop the patch which introduces super_drop_pagecache().
->    3. in mf_dax_kill_procs(), don't SetPageHWPoison() and search for all
->        tasks while mf_flags has MF_MEM_PRE_REMOVE.
->    4. only do mf_dax_kill_procs() on dax mapping.
->    5. do invalidate_inode_pages2_range() for each file found during rmap,
->        to make sure the dax entry are disassociated before pmem is gone.
->        Otherwise, umount filesystem after unbind will cause crash because
->        the dax entries have to be disassociated but now the pmem is not
->        exist.
-> 
->    For detail analysis of this change, please refer this link[1].
-> 
-> [1] https://lore.kernel.org/linux-xfs/b1d9fc03-1a71-a75f-f87b-5819991e4eb2@fujitsu.com/
-> 
-> Shiyang Ruan (2):
->    xfs: fix the calculation of length and end
->    mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
-> 
->   drivers/dax/super.c         |  3 +-
->   fs/xfs/xfs_notify_failure.c | 66 +++++++++++++++++++++++++++++++------
->   include/linux/mm.h          |  1 +
->   mm/memory-failure.c         | 17 +++++++---
->   4 files changed, 72 insertions(+), 15 deletions(-)
-> 
+Signed-off-by: Ryosuke Yasuoka <ryasuoka@redhat.com>
+---
+ fs/xfs/xfs_filestream.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
+index 22c13933c8f8..48f43c340c58 100644
+--- a/fs/xfs/xfs_filestream.c
++++ b/fs/xfs/xfs_filestream.c
+@@ -151,7 +151,7 @@ xfs_filestream_pick_ag(
+ 		 * grab.
+ 		 */
+ 		if (!max_pag) {
+-			for_each_perag_wrap(args->mp, 0, start_agno, args->pag)
++			for_each_perag(args->mp, start_agno, args->pag)
+ 				break;
+ 			atomic_inc(&args->pag->pagf_fstrms);
+ 			*longest = 0;
+-- 
+2.39.2
+
