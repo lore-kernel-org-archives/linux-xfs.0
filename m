@@ -2,71 +2,163 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B7F4C761A6
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 14:27:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A3DCC77B6C
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Apr 2023 14:55:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234678AbjDDO1H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Apr 2023 10:27:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58966 "EHLO
+        id S232586AbjDDOz5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Apr 2023 10:55:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234997AbjDDO1G (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 10:27:06 -0400
-X-Greylist: delayed 457 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 04 Apr 2023 07:26:46 PDT
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 231BC19BF;
-        Tue,  4 Apr 2023 07:26:45 -0700 (PDT)
-Received: from [10.2.0.2] (unknown [37.19.199.145])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id C1978325436;
-        Tue,  4 Apr 2023 09:19:07 -0500 (CDT)
-Message-ID: <e51e9fb1-ad5c-5cf8-fa04-4e3a10023739@sandeen.net>
-Date:   Tue, 4 Apr 2023 09:19:06 -0500
+        with ESMTP id S232329AbjDDOz4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Apr 2023 10:55:56 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 930D344A3
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2023 07:54:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1680620089;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=EljYz9VZ7nVcMno61oSjo4fgwJueEqLgTdTvZAW6Ojc=;
+        b=JnwgKaSwwyWuucjtkK6Wfn+G2iAvl0im/3ibO4J2+S6oRcvHrC514oEcRbM81xg5/7+NcK
+        kK4m0i/RvMHfKFEjSICFP/e+Ex7x2QIIsq3xgvyYtao7SAjJT37Zvaaetekvec2a/rSONC
+        t9WUMGPJtmLSND9r+Ls5caNcJEk6rzo=
+Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
+ [209.85.222.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-668-DlUk3UrHNYSCF8YlGvy0pg-1; Tue, 04 Apr 2023 10:54:48 -0400
+X-MC-Unique: DlUk3UrHNYSCF8YlGvy0pg-1
+Received: by mail-qk1-f198.google.com with SMTP id c186-20020a379ac3000000b007484744a472so14538930qke.22
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Apr 2023 07:54:48 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680620088;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=EljYz9VZ7nVcMno61oSjo4fgwJueEqLgTdTvZAW6Ojc=;
+        b=xwd+/EhSmguOnnN4UXF0Q0TD5ZXFM086GxiNXJshhqgSSDJvli4l3v70Lzxpl0FsYh
+         1TiBej/aLkE16tWmh2F8YRAuSvWpafstSbJeDcg1XfPxEKr0sC+talUn29UPe2V6qhGC
+         P1OlMK+rihtQLl7QoWR5d/S2p21lAYqZPwEG0gAxojFV3ipI0K8MVhGtfg7vH6k1mWAh
+         UVuGYUj/uCg9uuWXGxe0YQfoYifPqk8HMSmg0RkV/XrUeQwcXMOX6ruLMC00C97E1Nye
+         ozHVgkA/evNFeW1XbgN+elccn1zcfUoY5C2+822ODMb+GJcbB81B5ID/JaOgvfXQ8km3
+         qHyQ==
+X-Gm-Message-State: AAQBX9d30I9uPgcXk1fe4tvPIg2hTYPQkKuAki1k9+7UMOU5XwtjtkGi
+        o2aBusHmDWrVQhLNR87ahY+3wRNmaV8lRojS+DpskbOybEl3koqC1ubSgc4GZv1FwFXYMNBKc2Y
+        F3xN0rUCk6AMwd20MWgw=
+X-Received: by 2002:ad4:5be5:0:b0:5df:4d41:954d with SMTP id k5-20020ad45be5000000b005df4d41954dmr4197902qvc.3.1680620087797;
+        Tue, 04 Apr 2023 07:54:47 -0700 (PDT)
+X-Google-Smtp-Source: AKy350awxiwQj29WkT4ggcZAS6daFPDjxiKszMVMUv7HrI39sj994HHwSVJ4OpAB2k+VsVfNFDI7fw==
+X-Received: by 2002:ad4:5be5:0:b0:5df:4d41:954d with SMTP id k5-20020ad45be5000000b005df4d41954dmr4197864qvc.3.1680620087448;
+        Tue, 04 Apr 2023 07:54:47 -0700 (PDT)
+Received: from aalbersh.remote.csb ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id j4-20020ac86644000000b003e6387431dcsm3296539qtp.7.2023.04.04.07.54.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 04 Apr 2023 07:54:47 -0700 (PDT)
+From:   Andrey Albershteyn <aalbersh@redhat.com>
+To:     djwong@kernel.org, dchinner@redhat.com, ebiggers@kernel.org,
+        hch@infradead.org, linux-xfs@vger.kernel.org,
+        fsverity@lists.linux.dev
+Cc:     rpeterso@redhat.com, agruenba@redhat.com, xiang@kernel.org,
+        chao@kernel.org, damien.lemoal@opensource.wdc.com, jth@kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com,
+        Allison Henderson <allison.henderson@oracle.com>,
+        Mark Tinguely <tinguely@sgi.com>
+Subject: [PATCH v2 02/23] xfs: add parent pointer support to attribute code
+Date:   Tue,  4 Apr 2023 16:52:58 +0200
+Message-Id: <20230404145319.2057051-3-aalbersh@redhat.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20230404145319.2057051-1-aalbersh@redhat.com>
+References: <20230404145319.2057051-1-aalbersh@redhat.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.9.1
-Content-Language: en-US
-To:     Ryosuke Yasuoka <ryasuoka@redhat.com>, djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20230404084701.2791683-1-ryasuoka@redhat.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH] xfs: Use for_each_perag() to iterate all available AGs
-In-Reply-To: <20230404084701.2791683-1-ryasuoka@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 4/4/23 3:47 AM, Ryosuke Yasuoka wrote:
-> for_each_perag_wrap() doesn't expect 0 as 2nd arg.
-> To iterate all the available AGs, just use for_each_perag() instead.
+From: Allison Henderson <allison.henderson@oracle.com>
 
-Can you explain what goes wrong if it is zero? Is there a test for this?
+Add the new parent attribute type. XFS_ATTR_PARENT is used only for parent pointer
+entries; it uses reserved blocks like XFS_ATTR_ROOT.
 
-If it's a general problem, what if the other 2 callers pass in the variable
-start_agno with a value of 0?
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/libxfs/xfs_attr.c       | 4 +++-
+ fs/xfs/libxfs/xfs_da_format.h  | 5 ++++-
+ fs/xfs/libxfs/xfs_log_format.h | 1 +
+ fs/xfs/scrub/attr.c            | 2 +-
+ 4 files changed, 9 insertions(+), 3 deletions(-)
 
-(I may well be missing something obvious as those macros are a bit dense)
-
-Thanks,
--Eric
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index b1dbed7655e8..101823772bf9 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -976,11 +976,13 @@ xfs_attr_set(
+ 	struct xfs_inode	*dp = args->dp;
+ 	struct xfs_mount	*mp = dp->i_mount;
+ 	struct xfs_trans_res	tres;
+-	bool			rsvd = (args->attr_filter & XFS_ATTR_ROOT);
++	bool			rsvd;
+ 	int			error, local;
+ 	int			rmt_blks = 0;
+ 	unsigned int		total;
  
-> Signed-off-by: Ryosuke Yasuoka <ryasuoka@redhat.com>
-> ---
->  fs/xfs/xfs_filestream.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-> index 22c13933c8f8..48f43c340c58 100644
-> --- a/fs/xfs/xfs_filestream.c
-> +++ b/fs/xfs/xfs_filestream.c
-> @@ -151,7 +151,7 @@ xfs_filestream_pick_ag(
->  		 * grab.
->  		 */
->  		if (!max_pag) {
-> -			for_each_perag_wrap(args->mp, 0, start_agno, args->pag)
-> +			for_each_perag(args->mp, start_agno, args->pag)
->  				break;
->  			atomic_inc(&args->pag->pagf_fstrms);
->  			*longest = 0;
++	rsvd = (args->attr_filter & (XFS_ATTR_ROOT | XFS_ATTR_PARENT)) != 0;
++
+ 	if (xfs_is_shutdown(dp->i_mount))
+ 		return -EIO;
+ 
+diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+index 25e2841084e1..3dc03968bba6 100644
+--- a/fs/xfs/libxfs/xfs_da_format.h
++++ b/fs/xfs/libxfs/xfs_da_format.h
+@@ -688,12 +688,15 @@ struct xfs_attr3_leafblock {
+ #define	XFS_ATTR_LOCAL_BIT	0	/* attr is stored locally */
+ #define	XFS_ATTR_ROOT_BIT	1	/* limit access to trusted attrs */
+ #define	XFS_ATTR_SECURE_BIT	2	/* limit access to secure attrs */
++#define	XFS_ATTR_PARENT_BIT	3	/* parent pointer attrs */
+ #define	XFS_ATTR_INCOMPLETE_BIT	7	/* attr in middle of create/delete */
+ #define XFS_ATTR_LOCAL		(1u << XFS_ATTR_LOCAL_BIT)
+ #define XFS_ATTR_ROOT		(1u << XFS_ATTR_ROOT_BIT)
+ #define XFS_ATTR_SECURE		(1u << XFS_ATTR_SECURE_BIT)
++#define XFS_ATTR_PARENT		(1u << XFS_ATTR_PARENT_BIT)
+ #define XFS_ATTR_INCOMPLETE	(1u << XFS_ATTR_INCOMPLETE_BIT)
+-#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE)
++#define XFS_ATTR_NSP_ONDISK_MASK \
++			(XFS_ATTR_ROOT | XFS_ATTR_SECURE | XFS_ATTR_PARENT)
+ 
+ /*
+  * Alignment for namelist and valuelist entries (since they are mixed
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index ae9c99762a24..727b5a858028 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -967,6 +967,7 @@ struct xfs_icreate_log {
+  */
+ #define XFS_ATTRI_FILTER_MASK		(XFS_ATTR_ROOT | \
+ 					 XFS_ATTR_SECURE | \
++					 XFS_ATTR_PARENT | \
+ 					 XFS_ATTR_INCOMPLETE)
+ 
+ /*
+diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+index 31529b9bf389..9d2e33743ecd 100644
+--- a/fs/xfs/scrub/attr.c
++++ b/fs/xfs/scrub/attr.c
+@@ -441,7 +441,7 @@ xchk_xattr_rec(
+ 	/* Retrieve the entry and check it. */
+ 	hash = be32_to_cpu(ent->hashval);
+ 	badflags = ~(XFS_ATTR_LOCAL | XFS_ATTR_ROOT | XFS_ATTR_SECURE |
+-			XFS_ATTR_INCOMPLETE);
++			XFS_ATTR_INCOMPLETE | XFS_ATTR_PARENT);
+ 	if ((ent->flags & badflags) != 0)
+ 		xchk_da_set_corrupt(ds, level);
+ 	if (ent->flags & XFS_ATTR_LOCAL) {
+-- 
+2.38.4
+
