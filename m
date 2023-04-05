@@ -2,60 +2,132 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83480C76188
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Apr 2023 06:15:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F092C77B6E
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Apr 2023 07:48:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231474AbjDEGPn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Apr 2023 02:15:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34426 "EHLO
+        id S237150AbjDEHsG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Apr 2023 03:48:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58572 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231191AbjDEGPm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 02:15:42 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43602273D
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Apr 2023 23:15:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=fOGdjRVjBOME11LGd0/WfGtk/hsczO+U60Wri4qblhs=; b=rmOHiMeV3E1zjIA9+Yow28HOhb
-        0CP2nYv8dgO6NkTjuZZ/+7xYkCa/GUpR772t8td5j4GAx2dvyum+IX9itbcmhovUYP5yxtkv4n5Zd
-        bgK8bd1lbDpOfSqEhZOc3qwDuf6EX2VME7aD4c6o5LA+yTd+HkSf2cmboTwSP6OaNEoVq+rMWY8Ec
-        EddzLWLYJDkA1i40g3687SLDaXVA0vj63oiJjC0wsb/xOmXdoXG4O5huERGOZbWo0Q8PTk5+/NgaK
-        p/Im3BQIYHf5IOJxbSXKW7/zv+mRJb56j9JiFhrU0sBhxGeNSZcTj/qKxPvXIquDxDRRPTrdiYDHj
-        riQzYDrQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1pjwQl-003UFr-1t;
-        Wed, 05 Apr 2023 06:15:39 +0000
-Date:   Tue, 4 Apr 2023 23:15:39 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/3] xfs: test the ascii case-insensitive hash
-Message-ID: <ZC0SC1XEC6a1/ck6@infradead.org>
-References: <168062802052.174368.10967543545284986225.stgit@frogsfrogsfrogs>
- <168062803200.174368.4290650174353254767.stgit@frogsfrogsfrogs>
- <CAHk-=wi-W-zJkW-URTQoLcLnRuwzmWj4MRqV6SHXmjKDV2zXFg@mail.gmail.com>
- <20230404205136.GA110000@frogsfrogsfrogs>
- <CAHk-=wiKYQuwJpUBNEsc73jaf4-3b3xL5-MD=YXgEBn+31KDKg@mail.gmail.com>
+        with ESMTP id S230163AbjDEHsE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 03:48:04 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCBD010F1;
+        Wed,  5 Apr 2023 00:48:03 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7713E6359D;
+        Wed,  5 Apr 2023 07:48:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF390C433D2;
+        Wed,  5 Apr 2023 07:47:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1680680882;
+        bh=iG+5hwZ+00F79HrZr+lwoC/xHcVnBc+M7O/KLljWetw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=m1DKSbXsJkksJc50fMfe9E5d0vBrvfPBTXO+qnnm/ZTsLLxsc3tXPBZId8QVlQtiU
+         tWKlNvtJ2Q9dVvvTQaFHWMtwuARGM7dZZzXwR1ttFnc3yyiYR3q57p8NorQfAf9uMS
+         WsYimi1fhn1ocdkp7W7ZJLsA6QYxBXFg7FavFla8XWJ5S5YKn159fdD1V4pR8gIHND
+         qxBCxbTyh5rPT8Q+Juc3t5cHT4YE/gnWHSbjyB0IaJjhxN+JqgPh5ilGsz5wD3K0w/
+         xDKn7EIvgns7JH0LBxr6f6iI2aFLM9jWYK+if8Z7xiHJJyBx7qo9ajvgpuWUUL/rKD
+         j5n5m82ILoILw==
+Date:   Wed, 5 Apr 2023 09:47:55 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     Zorro Lang <zlang@kernel.org>
+Cc:     fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
+        ocfs2-devel@oss.oracle.com, linux-unionfs@vger.kernel.org,
+        jack@suse.com, linux-xfs@vger.kernel.org, fdmanana@suse.com,
+        ebiggers@google.com, amir73il@gmail.com, djwong@kernel.org,
+        anand.jain@oracle.com
+Subject: Re: [PATCH 4/5] fstests/MAINTAINERS: add some specific reviewers
+Message-ID: <20230405-idolisieren-sperren-3c7042b9ed1f@brauner>
+References: <20230404171411.699655-1-zlang@kernel.org>
+ <20230404171411.699655-5-zlang@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <CAHk-=wiKYQuwJpUBNEsc73jaf4-3b3xL5-MD=YXgEBn+31KDKg@mail.gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20230404171411.699655-5-zlang@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 04, 2023 at 02:21:35PM -0700, Linus Torvalds wrote:
-> Fair enough. That works. I still think it should be made to be
-> US-ASCII only, in order to not have any strange oddities.
+On Wed, Apr 05, 2023 at 01:14:10AM +0800, Zorro Lang wrote:
+> Some people contribute to someone specific fs testing mostly, record
+> some of them as Reviewer.
 > 
-> Do you really have to support that "pseudo-latin1" thing? If it's
-> literally just a "xfs_hashprep()" function, and you arbitrarily pick
-> one random function, why make it be a known-broken one?
+> Signed-off-by: Zorro Lang <zlang@kernel.org>
+> ---
+> 
+> If someone doesn't want to be in cc list of related fstests patch, please
+> reply this email, I'll remove that reviewer line.
+> 
+> Or if someone else (who contribute to fstests very much) would like to a
+> specific reviewer, nominate yourself to get a review.
+> 
+> Thanks,
+> Zorro
+> 
+>  MAINTAINERS | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 620368cb..0ad12a38 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -108,6 +108,7 @@ Maintainers List
+>  	  or reviewer or co-maintainer can be in cc list.
+>  
+>  BTRFS
+> +R:	Filipe Manana <fdmanana@suse.com>
+>  L:	linux-btrfs@vger.kernel.org
+>  S:	Supported
+>  F:	tests/btrfs/
+> @@ -137,16 +138,19 @@ F:	tests/f2fs/
+>  F:	common/f2fs
+>  
+>  FSVERITY
+> +R:	Eric Biggers <ebiggers@google.com>
+>  L:	fsverity@lists.linux.dev
+>  S:	Supported
+>  F:	common/verity
+>  
+>  FSCRYPT
+> +R:	Eric Biggers <ebiggers@google.com>
+>  L:      linux-fscrypt@vger.kernel.org
+>  S:	Supported
+>  F:	common/encrypt
+>  
+>  FS-IDMAPPED
 
-Because that's the one that has been used for 15 years as no one would
-do this for new code?
+I'd just make this VFS since src/vfs/ covers generic vfs functionality.
 
+But up to you,
+
+Acked-by: Christian Brauner <brauner@kernel.org>
+
+> +R:	Christian Brauner <brauner@kernel.org>
+>  L:	linux-fsdevel@vger.kernel.org
+>  S:	Supported
+>  F:	src/vfs/
+> @@ -163,6 +167,7 @@ S:	Supported
+>  F:	tests/ocfs2/
+>  
+>  OVERLAYFS
+> +R:	Amir Goldstein <amir73il@gmail.com>
+>  L:	linux-unionfs@vger.kernel.org
+>  S:	Supported
+>  F:	tests/overlay
+> @@ -174,6 +179,7 @@ S:	Supported
+>  F:	tests/udf/
+>  
+>  XFS
+> +R:	Darrick J. Wong <djwong@kernel.org>
+>  L:	linux-xfs@vger.kernel.org
+>  S:	Supported
+>  F:	common/dump
+> -- 
+> 2.39.2
+> 
