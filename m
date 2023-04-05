@@ -2,117 +2,142 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 767A3C7619A
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Apr 2023 14:17:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E988C7619A
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Apr 2023 15:03:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238076AbjDEORx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Apr 2023 10:17:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40502 "EHLO
+        id S238654AbjDEPC7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Apr 2023 11:02:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47172 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238290AbjDEORu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 10:17:50 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74CD2C1
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2023 07:16:22 -0700 (PDT)
+        with ESMTP id S238651AbjDEPC4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 11:02:56 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0C5E6A5F
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2023 08:01:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1680704178;
+        s=mimecast20190719; t=1680706915;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=net1/YQpLyeedtAUAtKmhMoSFz+7An5MzKe0V2cpLas=;
-        b=OUcbgABGX6uIRr9ssY8905TAc7UTKGEKA5iRwcwlb8g6JMC53vywQTpOZTZNTJdq67E9eD
-        UkvV2mPFyoV2r9FBiDLJNp0dgiLTkex5G/I6GOjLCNtDzuuNZejdq8gHcJQbi6aFetVziK
-        wD+MsButmJnP66zhsZEHn0Mvr8kVPd4=
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
- [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=ijdR/MHnRs9yin6C5jhmGmV2EeFx7fyGP+HaH521iTo=;
+        b=WUTYMNAHwT9P6DLyzlLvQwky1xOg890lbUA/Z4uFCTdqjsYP4w6zRJeDUFZbqKMflg9hvo
+        0b8Rkh+JQSY1HMj/vYgtFSTPhf7FAP7BTGcIlny9e4oeZTc3MRwG9sTYYDZJ2CIU3RM7yD
+        VRGpMfOWgGQ0uUkkVaOTQFx2nvxusPQ=
+Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com
+ [209.85.219.71]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-624-FvKvfUCwNxydD94crBxn1g-1; Wed, 05 Apr 2023 10:02:19 -0400
-X-MC-Unique: FvKvfUCwNxydD94crBxn1g-1
-Received: by mail-pj1-f72.google.com with SMTP id j3-20020a17090a94c300b0024018f0656cso11464000pjw.2
-        for <linux-xfs@vger.kernel.org>; Wed, 05 Apr 2023 07:02:17 -0700 (PDT)
+ us-mta-292-bMfvCR5sMwm2hxiVaComuw-1; Wed, 05 Apr 2023 11:01:53 -0400
+X-MC-Unique: bMfvCR5sMwm2hxiVaComuw-1
+Received: by mail-qv1-f71.google.com with SMTP id px9-20020a056214050900b005d510cdfc41so16459721qvb.7
+        for <linux-xfs@vger.kernel.org>; Wed, 05 Apr 2023 08:01:51 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680703331;
+        d=1e100.net; s=20210112; t=1680706911;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=net1/YQpLyeedtAUAtKmhMoSFz+7An5MzKe0V2cpLas=;
-        b=gIBqvAhb+7UoGNEnTqaGVQsAmQexxFe78ve4Zd4GQfKIAuJt4wu9vtrKJXR2TZ1aV6
-         P1FgPf0VT222ZEJRctb/j0GTzONDHTs87TndLENqR3mMBt/Sjf9ckAbeOwu2pWYWDj2j
-         sdRIS5BYBznbyfDHsCc4GxYWCv0DeR6+JZTQv6k4tj/ADUV6Cn65brH+p4S0BvYT9KXN
-         UQRtxkWOUHCjOgqstNAov8kmCo4mN2WDvNmAc6ZWcegYtIl4m8ovEOLUrOhCpXYShVgb
-         QX8Y9YgsODFsIaXcC4qBv7fAouw9smV6wuR9oWhAjLSFsxNi6aZkMO1kKoFH2vR89l3P
-         ezdw==
-X-Gm-Message-State: AAQBX9dOScj37ZlxwDaD+4Tk9hjyLbSytZYERUEg9EKGDz8zaBiC71VY
-        fNlOcvbu/be7UlzElMafTNYWcrObcIVJO6eFkUJut+UIlTJJ+PeaRVvkY2LL+s+n+sBOljzak8I
-        yXgwcSISo5jLh1mpZikHo
-X-Received: by 2002:a17:903:283:b0:1a1:cd69:d301 with SMTP id j3-20020a170903028300b001a1cd69d301mr6292224plr.68.1680703330928;
-        Wed, 05 Apr 2023 07:02:10 -0700 (PDT)
-X-Google-Smtp-Source: AKy350Z3hrO2tDczikPPadND/siCWP3StMDF6ZwRfuQDU1LtW+SuQXatmasFWBRAsAV4qHbVdUEpFA==
-X-Received: by 2002:a17:903:283:b0:1a1:cd69:d301 with SMTP id j3-20020a170903028300b001a1cd69d301mr6292202plr.68.1680703330583;
-        Wed, 05 Apr 2023 07:02:10 -0700 (PDT)
-Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id b24-20020a630c18000000b005023496e339sm9037285pgl.63.2023.04.05.07.02.05
+        bh=ijdR/MHnRs9yin6C5jhmGmV2EeFx7fyGP+HaH521iTo=;
+        b=C4Jjl9iq/wwBwLFS4LFqUndaDWTmbKgtgQLGWPGMXKNDQ/xd2CtArd/BudXA3sn8w6
+         63z+/2mwVekuK35yk6AfzpHpX5v2i4yzemYsHO6AscIlM5XPX66H/pURD40iiT0gDaU3
+         gnYWxWiyOWabhnNlU8ji8QylRym6LjBW8lY9lkNPdCh11VxqVMgvhXrCYb13QwNim2aj
+         99AFOR6CvDdhpmnkkR/gJfBABzuw8MNgqaNuQsNy7VZWihflWhQa+43IeV0D5kqfSSHu
+         TIZDx0mmDNDFQk+DHU3Da1rOPdm2THMJoWcP5L1SXVN7WNT2BWP4XmUoCuR56zFe3ydJ
+         wQVw==
+X-Gm-Message-State: AAQBX9fo1wwy1+adFcl7O1cz/Sb3CRTlwTD7ruBHUOwD4qLDHOuRuY8n
+        klpdaEl3MD5+bXEriVKruQNhez6sNEnyOFXAwjfi0HLOX/DWOmZC1Wg2ce/Fz1W2yau5Al0m2Xv
+        /GjtlZ+tsJKgUoeEjZCg=
+X-Received: by 2002:a05:6214:2504:b0:5a3:cbc6:8145 with SMTP id gf4-20020a056214250400b005a3cbc68145mr11557267qvb.19.1680706910929;
+        Wed, 05 Apr 2023 08:01:50 -0700 (PDT)
+X-Google-Smtp-Source: AKy350YVeAhEKCJSk+gIHwjGx6PP08vlMKC4voUohfc6ezEBe0HN6HJNbkVZpy9LxJ1aS1g8D9uc0g==
+X-Received: by 2002:a05:6214:2504:b0:5a3:cbc6:8145 with SMTP id gf4-20020a056214250400b005a3cbc68145mr11557235qvb.19.1680706910656;
+        Wed, 05 Apr 2023 08:01:50 -0700 (PDT)
+Received: from aalbersh.remote.csb ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id o8-20020a0cc388000000b005dd8b93457dsm4236165qvi.21.2023.04.05.08.01.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Apr 2023 07:02:10 -0700 (PDT)
-Date:   Wed, 5 Apr 2023 22:02:02 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
-        brauner@kernel.org, linux-cifs@vger.kernel.org,
-        linux-nfs@vger.kernel.org, djwong@kernel.org, amir73il@gmail.com,
-        linux-unionfs@vger.kernel.org, anand.jain@oracle.com,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        fdmanana@suse.com, jack@suse.com, linux-fsdevel@vger.kernel.org,
-        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-btrfs@vger.kernel.org
-Subject: Re: [PATCH 3/5] fstests/MAINTAINERS: add supported mailing list
-Message-ID: <20230405140202.bdp3lzgross2cjbt@zlang-mailbox>
-References: <20230404171411.699655-1-zlang@kernel.org>
- <20230404171411.699655-4-zlang@kernel.org>
- <20230404221653.GC1893@sol.localdomain>
+        Wed, 05 Apr 2023 08:01:49 -0700 (PDT)
+Date:   Wed, 5 Apr 2023 17:01:42 +0200
+From:   Andrey Albershteyn <aalbersh@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     dchinner@redhat.com, ebiggers@kernel.org, hch@infradead.org,
+        linux-xfs@vger.kernel.org, fsverity@lists.linux.dev,
+        rpeterso@redhat.com, agruenba@redhat.com, xiang@kernel.org,
+        chao@kernel.org, damien.lemoal@opensource.wdc.com, jth@kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com
+Subject: Re: [PATCH v2 19/23] xfs: disable direct read path for fs-verity
+ sealed files
+Message-ID: <20230405150142.3jmxzo5i27bbc4c4@aalbersh.remote.csb>
+References: <20230404145319.2057051-1-aalbersh@redhat.com>
+ <20230404145319.2057051-20-aalbersh@redhat.com>
+ <20230404161047.GA109974@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230404221653.GC1893@sol.localdomain>
+In-Reply-To: <20230404161047.GA109974@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 04, 2023 at 03:16:53PM -0700, Eric Biggers wrote:
-> Hi Zorro,
+On Tue, Apr 04, 2023 at 09:10:47AM -0700, Darrick J. Wong wrote:
+> On Tue, Apr 04, 2023 at 04:53:15PM +0200, Andrey Albershteyn wrote:
+> > The direct path is not supported on verity files. Attempts to use direct
+> > I/O path on such files should fall back to buffered I/O path.
+> > 
+> > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> > ---
+> >  fs/xfs/xfs_file.c | 14 +++++++++++---
+> >  1 file changed, 11 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > index 947b5c436172..9e072e82f6c1 100644
+> > --- a/fs/xfs/xfs_file.c
+> > +++ b/fs/xfs/xfs_file.c
+> > @@ -244,7 +244,8 @@ xfs_file_dax_read(
+> >  	struct kiocb		*iocb,
+> >  	struct iov_iter		*to)
+> >  {
+> > -	struct xfs_inode	*ip = XFS_I(iocb->ki_filp->f_mapping->host);
+> > +	struct inode		*inode = iocb->ki_filp->f_mapping->host;
+> > +	struct xfs_inode	*ip = XFS_I(inode);
+> >  	ssize_t			ret = 0;
+> >  
+> >  	trace_xfs_file_dax_read(iocb, to);
+> > @@ -297,10 +298,17 @@ xfs_file_read_iter(
+> >  
+> >  	if (IS_DAX(inode))
+> >  		ret = xfs_file_dax_read(iocb, to);
+> > -	else if (iocb->ki_flags & IOCB_DIRECT)
+> > +	else if (iocb->ki_flags & IOCB_DIRECT && !fsverity_active(inode))
+> >  		ret = xfs_file_dio_read(iocb, to);
+> > -	else
+> > +	else {
+> > +		/*
+> > +		 * In case fs-verity is enabled, we also fallback to the
+> > +		 * buffered read from the direct read path. Therefore,
+> > +		 * IOCB_DIRECT is set and need to be cleared
+> > +		 */
+> > +		iocb->ki_flags &= ~IOCB_DIRECT;
+> >  		ret = xfs_file_buffered_read(iocb, to);
 > 
-> On Wed, Apr 05, 2023 at 01:14:09AM +0800, Zorro Lang wrote:
-> > +FSVERITY
-> > +L:	fsverity@lists.linux.dev
-> > +S:	Supported
-> > +F:	common/verity
-> > +
-> > +FSCRYPT
-> > +L:      linux-fscrypt@vger.kernel.org
-> > +S:	Supported
-> > +F:	common/encrypt
-> 
-> Most of the encrypt and verity tests are in tests/generic/ and are in the
-> 'encrypt' or 'verity' test groups.
-> 
-> These file patterns only pick up the common files, not the actual tests.
-> 
-> Have you considered adding a way to specify maintainers for a test group?
-> Something like:
-> 
->     G:      encrypt
-> 
-> and
-> 
->     G:      verity
+> XFS doesn't usually allow directio fallback to the pagecache. Why
+> would fsverity be any different?
 
-Good idea! Let's check if this patchset is acceptable by most of you,
-then I'll think about how to add this feature later.
-
-Thanks,
-Zorro
+Didn't know that, this is what happens on ext4 so I did the same.
+Then it probably make sense to just error on DIRECT on verity
+sealed file.
 
 > 
-> - Eric
+> --D
 > 
+> > +	}
+> >  
+> >  	if (ret > 0)
+> >  		XFS_STATS_ADD(mp, xs_read_bytes, ret);
+> > -- 
+> > 2.38.4
+> > 
+> 
+
+-- 
+- Andrey
 
