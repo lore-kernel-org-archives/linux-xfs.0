@@ -2,69 +2,149 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AB05C7619A
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Apr 2023 10:48:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0452FC76188
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Apr 2023 11:02:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236989AbjDEKsG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Apr 2023 06:48:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56080 "EHLO
+        id S237633AbjDELCN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Apr 2023 07:02:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41660 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237261AbjDEKsD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 06:48:03 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85ADB4EDB
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2023 03:48:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=8bqp5bQA0dXBWU7S2ruHqXN/7TiazLagtAgqhuA/ox4=; b=4mcJaooEDghZXUCHZ1xqFlBVZv
-        yG+zSG1rByXzMoePIX0vKFpwjCx+QJJnXy7+LUSrZ+YU+M93Y/BW7fVa+aSYgifxU/xsh3GcP8khl
-        NmeKW2RXjiDVWgM1hHoJ+Z7qol1QYFOTTALmkIm6x+8IZ9b3nMyz4BDcW5Zlp92oJG8C7fpIyIJXM
-        NHOPx8KiJBJMYPB9PlV+rOxmzIIy0sFyC9YZZj/SB/zcKo0X2dHWVGuruvulnos8NSovCZ03fn2Q4
-        HYuG34ybqB3ubre2OQaDSVd2YcqwTf+s4MQvdenb61sBbYEk+No9UCO5KfbVL89ASH+GK3AfCND4z
-        8VcDsEig==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1pk0gK-0048Eu-1e;
-        Wed, 05 Apr 2023 10:48:00 +0000
-Date:   Wed, 5 Apr 2023 03:48:00 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     torvalds@linux-foundation.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com
-Subject: Re: [PATCH 1/3] xfs: stabilize the tolower function used for
- ascii-ci dir hash computation
-Message-ID: <ZC1R4IRx7ZiBeeLJ@infradead.org>
-References: <168062802052.174368.10967543545284986225.stgit@frogsfrogsfrogs>
- <168062802637.174368.12108206682992075671.stgit@frogsfrogsfrogs>
+        with ESMTP id S237510AbjDELCM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 07:02:12 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 067E52691
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2023 04:01:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1680692484;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=BoHgQZFE6GmfSeys+DR2W7oxw4hgWtoFTpySQ2VkKFk=;
+        b=ia9dXxyGsDRuDMarLkZZZc2zcfIpTyTPcnTDFBoxStOoDr8EAEt6+o2dPnIWDspl3/hmtD
+        wh39BYntE2/TISnUk/1197DR2ztLJP2La4wzDS8D/UbMsLKn+i/8G4NFgi1i0eWlny7J1A
+        EQivuramo1yAWbz7ZYxrUsh+gPgGtsA=
+Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
+ [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-588-7tXwQhqgPw2NaOXk5UG2aQ-1; Wed, 05 Apr 2023 07:01:23 -0400
+X-MC-Unique: 7tXwQhqgPw2NaOXk5UG2aQ-1
+Received: by mail-qk1-f197.google.com with SMTP id s190-20020ae9dec7000000b00746b7fae197so4723438qkf.12
+        for <linux-xfs@vger.kernel.org>; Wed, 05 Apr 2023 04:01:23 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680692482;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=BoHgQZFE6GmfSeys+DR2W7oxw4hgWtoFTpySQ2VkKFk=;
+        b=mC1RUknc3fSNycY3igI55uqVk11atjmgoohjep42sN+9OJimG9qJXb8413LJrAExuJ
+         5flMzorh3JaSdbVvFoY42ToJqRTTb7lWRLe9fdg4Y66WZPyIWtUCV/BmvRHM0MaWwszQ
+         R7YcapxkbldQG/51MURZjKdKYrsw5/SaqpuIk4extJjIMLeUE7OpVDaz4qfOjDDYZOdS
+         2XlF+j50zxrsyMi1EGr6WsJiZ+hXsIdzqoY/qw1mDT1E9QnVuX0HIuwyA7qquYgCY/eY
+         LU3fbqLx+vhUGNVS7TjGNKmHnk3JFo+97o5bcoi/2Y4MQPEaJdo/rNRGrhOKq201u5+w
+         6TaA==
+X-Gm-Message-State: AAQBX9dxOEBP98Oorx28j9VGC4sxlurCsjmYaOQP6WroqO84nIWMsNBU
+        IqB9QTuCD2HIWG7yiiDR9ycJwB+vXhtQq0V3pu0sMSK28b/T/USBHbPWpUB6XY2ZZ8+wEqhH+Rt
+        FOvXn2zrlsGfVzHT634FJr5S0bfqDKQ==
+X-Received: by 2002:a05:6214:4001:b0:5ca:f6dd:f3b6 with SMTP id kd1-20020a056214400100b005caf6ddf3b6mr8310662qvb.16.1680692482366;
+        Wed, 05 Apr 2023 04:01:22 -0700 (PDT)
+X-Google-Smtp-Source: AKy350ZN5rxyt4g78lpjs6te5NjsBmYN83L29u8HXb3VRNmLRZGiyzEv7hgqJmGPE20fJY6cuY/SPQ==
+X-Received: by 2002:a05:6214:4001:b0:5ca:f6dd:f3b6 with SMTP id kd1-20020a056214400100b005caf6ddf3b6mr8310617qvb.16.1680692482068;
+        Wed, 05 Apr 2023 04:01:22 -0700 (PDT)
+Received: from aalbersh.remote.csb ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id om30-20020a0562143d9e00b005dd8b934576sm4136208qvb.14.2023.04.05.04.01.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 05 Apr 2023 04:01:21 -0700 (PDT)
+Date:   Wed, 5 Apr 2023 13:01:16 +0200
+From:   Andrey Albershteyn <aalbersh@redhat.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     djwong@kernel.org, dchinner@redhat.com, ebiggers@kernel.org,
+        linux-xfs@vger.kernel.org, fsverity@lists.linux.dev,
+        rpeterso@redhat.com, agruenba@redhat.com, xiang@kernel.org,
+        chao@kernel.org, damien.lemoal@opensource.wdc.com, jth@kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com
+Subject: Re: [PATCH v2 09/23] iomap: allow filesystem to implement read path
+ verification
+Message-ID: <20230405110116.ia5wv3qxbnpdciui@aalbersh.remote.csb>
+References: <20230404145319.2057051-1-aalbersh@redhat.com>
+ <20230404145319.2057051-10-aalbersh@redhat.com>
+ <ZCxEHkWayQyGqnxL@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <168062802637.174368.12108206682992075671.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <ZCxEHkWayQyGqnxL@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 04, 2023 at 10:07:06AM -0700, Darrick J. Wong wrote:
-> Which means that the kernel and userspace do not agree on the hash value
-> for a directory filename that contains those higher values.  The hash
-> values are written into the leaf index block of directories that are
-> larger than two blocks in size, which means that xfs_repair will flag
-> these directories as having corrupted hash indexes and rewrite the index
-> with hash values that the kernel now will not recognize.
+Hi Christoph,
+
+On Tue, Apr 04, 2023 at 08:37:02AM -0700, Christoph Hellwig wrote:
+> >  	if (iomap_block_needs_zeroing(iter, pos)) {
+> >  		folio_zero_range(folio, poff, plen);
+> > +		if (iomap->flags & IOMAP_F_READ_VERITY) {
 > 
-> Because the ascii-ci feature is not frequently enabled and the kernel
-> touches filesystems far more frequently than xfs_repair does, fix this
-> by encoding the kernel's toupper predicate and tolower functions into
-> libxfs.  This makes userspace's behavior consistent with the kernel.
+> Wju do we need the new flag vs just testing that folio_ops and
+> folio_ops->verify_folio is non-NULL?
 
-I agree with making the userspace behavior consistent with the actual
-kernel behavior.  Sadly the documented behavior differs from both
-of them, so I think we need to also document the actual tables used
-in the mkfs.xfs manpage, as it isn't actually just ASCII.
+Yes, it can be just test, haven't noticed that it's used only here,
+initially I used it in several places.
 
-Does the kernel twolower behavior map to an actual documented charset?
-In that case we can just point to it, which would be way either than
-documenting all the details.
+> 
+> > -		ctx->bio = bio_alloc(iomap->bdev, bio_max_segs(nr_vecs),
+> > -				     REQ_OP_READ, gfp);
+> > +		ctx->bio = bio_alloc_bioset(iomap->bdev, bio_max_segs(nr_vecs),
+> > +				REQ_OP_READ, GFP_NOFS, &iomap_read_ioend_bioset);
+> 
+> All other callers don't really need the larger bioset, so I'd avoid
+> the unconditional allocation here, but more on that later.
+
+Ok, make sense.
+
+> 
+> > +		ioend = container_of(ctx->bio, struct iomap_read_ioend,
+> > +				read_inline_bio);
+> > +		ioend->io_inode = iter->inode;
+> > +		if (ctx->ops && ctx->ops->prepare_ioend)
+> > +			ctx->ops->prepare_ioend(ioend);
+> > +
+> 
+> So what we're doing in writeback and direct I/O, is to:
+> 
+>  a) have a submit_bio hook
+>  b) allow the file system to then hook the bi_end_io caller
+>  c) (only in direct O/O for now) allow the file system to provide
+>     a bio_set to allocate from
+
+I see.
+
+> 
+> I wonder if that also makes sense and keep all the deferral in the
+> file system.  We'll need that for the btrfs iomap conversion anyway,
+> and it seems more flexible.  The ioend processing would then move into
+> XFS.
+> 
+
+Not sure what you mean here.
+
+> > @@ -156,6 +160,11 @@ struct iomap_folio_ops {
+> >  	 * locked by the iomap code.
+> >  	 */
+> >  	bool (*iomap_valid)(struct inode *inode, const struct iomap *iomap);
+> > +
+> > +	/*
+> > +	 * Verify folio when successfully read
+> > +	 */
+> > +	bool (*verify_folio)(struct folio *folio, loff_t pos, unsigned int len);
+> 
+> Why isn't this in iomap_readpage_ops?
+> 
+
+Yes, it can be. But it appears to me to be more relevant to
+_folio_ops, any particular reason to move it there? Don't mind
+moving it to iomap_readpage_ops.
+
+-- 
+- Andrey
 
