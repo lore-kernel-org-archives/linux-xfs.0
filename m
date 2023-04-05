@@ -2,185 +2,149 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D038DC761AF
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Apr 2023 19:55:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF8AAC7619A
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Apr 2023 22:11:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232406AbjDETzC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Apr 2023 15:55:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57462 "EHLO
+        id S229687AbjDEWL3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Apr 2023 18:11:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47152 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233676AbjDETy7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 15:54:59 -0400
-Received: from mail-io1-xd34.google.com (mail-io1-xd34.google.com [IPv6:2607:f8b0:4864:20::d34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1087E121
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2023 12:54:58 -0700 (PDT)
-Received: by mail-io1-xd34.google.com with SMTP id bh15so7164184iob.9
-        for <linux-xfs@vger.kernel.org>; Wed, 05 Apr 2023 12:54:58 -0700 (PDT)
+        with ESMTP id S231311AbjDEWLV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 18:11:21 -0400
+Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2ED2B83E6
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2023 15:10:44 -0700 (PDT)
+Received: by mail-pj1-x1029.google.com with SMTP id p3-20020a17090a74c300b0023f69bc7a68so38710436pjl.4
+        for <linux-xfs@vger.kernel.org>; Wed, 05 Apr 2023 15:10:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680724497;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ZcYjART6vOTXgshTS0uLbmOyompGa7/lXpaivlpY/VA=;
-        b=Q5pH8VZulJ+C6K7kJgwa8mvOZ9ZrOOAVLsmxUjEBWvSwXZS2eYxnn+3CNEFDsgl/FB
-         PjfOUoveEnD9PSu/Eywba4OUlZTADegV9S/hQ9fnBWU5k74/LBMblU+lOZZKTg++slTD
-         03UU0BISn96pJcY7cmEh/5YQiID+BNXZbn/LtyNdhSCUTcnPySOohUPn1SFbS9xrnAho
-         y8FwD0YOjPOgKVlGfYrC+svNxrZfTOuh21opeEKDfTzKowlJOJ6wZADntkTgf6er0ndr
-         WzczKJPJqJUu2H5QfN0VjxK2pU1vYQG2Hc0FVxsHg0Zw13iPCjmyqdvSgOMHi62oz+x6
-         iUzQ==
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1680732643;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=B//xqY4ihi9FjKHnI/3HItAd5zkVskGSEhbTE9KO+uM=;
+        b=STgTGHnum63TLfzSA43g0jKvWgwzTlnLbiRBsWUDeVndg2q0Tgh+Q3SOrbj2o7vE8S
+         OqWTQe02GPPEl+JqPtH+BqPfmvs//jeLjVwIl0XhMyQ3tek4wkSILn+nMJgz4Ucj0eU6
+         j0kbTbgibsNwkwrKvah9VMelOuBXgvxgwHI0pALQfzh2rVeht1RKj8+pbzrOR/bp501l
+         L/VGUA0YqBD4tzXgV0KmZb3YviN4H/dsXP/5STmaPKBN43t4NUaSN54t71hCcI0H1oaq
+         zP9YTNcdWyFHeWlBYJ4HXGKqXy09Gf/KRy8kJqqXI11hkg8FYce95UQ1oCAGXdz0Kzst
+         BsJA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680724497;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ZcYjART6vOTXgshTS0uLbmOyompGa7/lXpaivlpY/VA=;
-        b=zLQze1Xzuqg5U3qvg2oRsV9q7ZeOLrizyyIZ5vHeBUoJm9fpMAGHySBq7fDRiV2QxD
-         z/0CLljxRJtptr1SS/+BzhDrGuDZGjeOsfHrpTk7gQsRz5U2nKLC/6YanGglFDZgdiyf
-         G/M99YpMCf/++dlypmYSIUGsCMov7LDzvzQRsQ82vGCnm0FOoY5Y87Y+DZIKwVk9Snji
-         Hw2ZcC3lv+aHFIHtIw2qBB1MG75wlIxJEOruhDPgCwxuXt/+fEdndRpecjak8JP+nFr3
-         Yxgny8ojGYLjNAK/Q/tbAGyDbUBO0Q0zJ+hmwRFtsDY/2lABqrdqG01U5jDzciTJBKMZ
-         TmhA==
-X-Gm-Message-State: AAQBX9fwkLw3XotRylUbhSg95xqN+VRiPMIoBTH7gXrKY8OwHxhD+Fu2
-        XOSY2dvzEKKETdjEvdDT7v9IZ+JYcLI4cmvddAFjVw==
-X-Google-Smtp-Source: AKy350aQGUhRBR9nlxvbezaz/UrkSAWRI9gjznAzUIFBqGpVkijBgUKrfga8wmafgeF9lt6YkUUxmVhABC3COYaTN2I=
-X-Received: by 2002:a5e:df47:0:b0:74c:7ea1:4f05 with SMTP id
- g7-20020a5edf47000000b0074c7ea14f05mr5543603ioq.2.1680724497235; Wed, 05 Apr
- 2023 12:54:57 -0700 (PDT)
+        d=1e100.net; s=20210112; t=1680732643;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=B//xqY4ihi9FjKHnI/3HItAd5zkVskGSEhbTE9KO+uM=;
+        b=OFJNN+krenkBpdz4bGEvy80jMv5ylE1QMfO1Vp5QHatrcALVh7Gh/EhmLzhpyQbCtX
+         Jr/QNwCh/a7YncxtxuWobAXOpVtE4q7AfF2jUbg2SfcQYyF0vMYJkovv6f6Ke7dGi2aS
+         7D5aMiyw+YhCUKsS3W1COawcEG4uawGFfUUdHcvmNH6e2W1d+et3NqoYGUjeHVHEwgLE
+         VuhSpLuivSQoBIWP8PqNUTrSEhfTTqTFL2qsNzHDZZa9EwCyKP0fG2IRFyF/SWTBuIV7
+         he7HB2jCYgLKqdlZizAn5qNpcZGEkTNyXcgl3bYYctWefxvcVfus6q6kv2bNGEbx3Dzp
+         /4Yg==
+X-Gm-Message-State: AAQBX9fPrZwCMwd22iV0fPrPjEB+/ARXNhn4BC8EmHyxb+EETDJ3HgVC
+        HzWXgmTTDtW1RPLeZ8PnEnnFrA==
+X-Google-Smtp-Source: AKy350bUfWmomBUgOSKakyDoihBlbriDnLkKr+maH+SmOymveI4bbkcZZJHlbNIaaMvcTwEjmj518w==
+X-Received: by 2002:a05:6a20:b213:b0:e1:2d3d:6b11 with SMTP id eh19-20020a056a20b21300b000e12d3d6b11mr798344pzb.11.1680732643261;
+        Wed, 05 Apr 2023 15:10:43 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-91-157.pa.nsw.optusnet.com.au. [49.181.91.157])
+        by smtp.gmail.com with ESMTPSA id f9-20020a631009000000b004ff6b744248sm9594682pgl.48.2023.04.05.15.10.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 05 Apr 2023 15:10:42 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1pkBKx-00HUPP-6E; Thu, 06 Apr 2023 08:10:39 +1000
+Date:   Thu, 6 Apr 2023 08:10:39 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Andrey Albershteyn <aalbersh@redhat.com>, dchinner@redhat.com,
+        ebiggers@kernel.org, hch@infradead.org, linux-xfs@vger.kernel.org,
+        fsverity@lists.linux.dev, rpeterso@redhat.com, agruenba@redhat.com,
+        xiang@kernel.org, chao@kernel.org,
+        damien.lemoal@opensource.wdc.com, jth@kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com
+Subject: Re: [PATCH v2 19/23] xfs: disable direct read path for fs-verity
+ sealed files
+Message-ID: <20230405221039.GP3223426@dread.disaster.area>
+References: <20230404145319.2057051-1-aalbersh@redhat.com>
+ <20230404145319.2057051-20-aalbersh@redhat.com>
+ <20230404161047.GA109974@frogsfrogsfrogs>
+ <20230405150142.3jmxzo5i27bbc4c4@aalbersh.remote.csb>
+ <20230405150927.GD303486@frogsfrogsfrogs>
 MIME-Version: 1.0
-References: <4b9fc9c6-b48c-198f-5f80-811a44737e5f@suse.cz> <CAANmLtwGS75WJ9AXfmqZv73pNdHJn6zfrrCCWjKK_6jPk9pWRg@mail.gmail.com>
- <951d364a-05c0-b290-8abe-7cbfcaeb2df7@suse.cz>
-In-Reply-To: <951d364a-05c0-b290-8abe-7cbfcaeb2df7@suse.cz>
-From:   Binder Makin <merimus@google.com>
-Date:   Wed, 5 Apr 2023 15:54:45 -0400
-Message-ID: <CAANmLtzQmVN_EWLv1UxXwZu5X=TwpcMQMYArKNUxAJL3PnfO2Q@mail.gmail.com>
-Subject: Re: [LSF/MM/BPF TOPIC] SLOB+SLAB allocators removal and future SLUB improvements
-To:     Vlastimil Babka <vbabka@suse.cz>
-Cc:     lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, linux-block@vger.kernel.org,
-        bpf@vger.kernel.org, linux-xfs@vger.kernel.org,
-        David Rientjes <rientjes@google.com>,
-        Christoph Lameter <cl@linux.com>,
-        Pekka Enberg <penberg@kernel.org>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-        Roman Gushchin <roman.gushchin@linux.dev>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230405150927.GD303486@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-I'm still running tests to explore some of these questions.
-The machines I am using are roughly as follows.
+On Wed, Apr 05, 2023 at 08:09:27AM -0700, Darrick J. Wong wrote:
+> On Wed, Apr 05, 2023 at 05:01:42PM +0200, Andrey Albershteyn wrote:
+> > On Tue, Apr 04, 2023 at 09:10:47AM -0700, Darrick J. Wong wrote:
+> > > On Tue, Apr 04, 2023 at 04:53:15PM +0200, Andrey Albershteyn wrote:
+> > > > The direct path is not supported on verity files. Attempts to use direct
+> > > > I/O path on such files should fall back to buffered I/O path.
+> > > > 
+> > > > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> > > > ---
+> > > >  fs/xfs/xfs_file.c | 14 +++++++++++---
+> > > >  1 file changed, 11 insertions(+), 3 deletions(-)
+> > > > 
+> > > > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > > > index 947b5c436172..9e072e82f6c1 100644
+> > > > --- a/fs/xfs/xfs_file.c
+> > > > +++ b/fs/xfs/xfs_file.c
+> > > > @@ -244,7 +244,8 @@ xfs_file_dax_read(
+> > > >  	struct kiocb		*iocb,
+> > > >  	struct iov_iter		*to)
+> > > >  {
+> > > > -	struct xfs_inode	*ip = XFS_I(iocb->ki_filp->f_mapping->host);
+> > > > +	struct inode		*inode = iocb->ki_filp->f_mapping->host;
+> > > > +	struct xfs_inode	*ip = XFS_I(inode);
+> > > >  	ssize_t			ret = 0;
+> > > >  
+> > > >  	trace_xfs_file_dax_read(iocb, to);
+> > > > @@ -297,10 +298,17 @@ xfs_file_read_iter(
+> > > >  
+> > > >  	if (IS_DAX(inode))
+> > > >  		ret = xfs_file_dax_read(iocb, to);
+> > > > -	else if (iocb->ki_flags & IOCB_DIRECT)
+> > > > +	else if (iocb->ki_flags & IOCB_DIRECT && !fsverity_active(inode))
+> > > >  		ret = xfs_file_dio_read(iocb, to);
+> > > > -	else
+> > > > +	else {
+> > > > +		/*
+> > > > +		 * In case fs-verity is enabled, we also fallback to the
+> > > > +		 * buffered read from the direct read path. Therefore,
+> > > > +		 * IOCB_DIRECT is set and need to be cleared
+> > > > +		 */
+> > > > +		iocb->ki_flags &= ~IOCB_DIRECT;
+> > > >  		ret = xfs_file_buffered_read(iocb, to);
+> > > 
+> > > XFS doesn't usually allow directio fallback to the pagecache. Why
+> > > would fsverity be any different?
+> > 
+> > Didn't know that, this is what happens on ext4 so I did the same.
+> > Then it probably make sense to just error on DIRECT on verity
+> > sealed file.
+> 
+> Thinking about this a little more -- I suppose we shouldn't just go
+> breaking directio reads from a verity file if we can help it.  Is there
+> a way to ask fsverity to perform its validation against some arbitrary
+> memory buffer that happens to be fs-block aligned?
 
-Intel dual socket 56 total cores
-192-384GB ram
-LEVEL1_ICACHE_SIZE                 32768
-LEVEL1_DCACHE_SIZE                 32768
-LEVEL2_CACHE_SIZE                  1048576
-LEVEL3_CACHE_SIZE                  40370176
+The memory buffer doesn't even need to be fs-block aligned - it just
+needs to be a pointer to memory the kernel can read...
 
-Amd dual socket 128 total cores
-1TB ram
-LEVEL1_ICACHE_SIZE                 32768
-LEVEL1_DCACHE_SIZE                 32768
-LEVEL2_CACHE_SIZE                  524288
-LEVEL3_CACHE_SIZE                  268435456
+We also need fsverity to be able to handle being passed mapped
+kernel memory rather than pages/folios for the merkle tree
+interfaces. That way we can just pass it the mapped buffer memory
+straight from the xfs-buf and we don't have to do the whacky "copy
+from xattr xfs_bufs into pages so fsverity can take temporary
+reference counts on what it thinks are page cache pages" as it walks
+the merkle tree.
 
-Arm single socket 64 total cores
-256GB rma
-LEVEL1_ICACHE_SIZE                 65536
-LEVEL1_DCACHE_SIZE                 65536
-LEVEL2_CACHE_SIZE                  1048576
-LEVEL3_CACHE_SIZE                  33554432
-
-On Tue, Apr 4, 2023 at 12:03=E2=80=AFPM Vlastimil Babka <vbabka@suse.cz> wr=
-ote:
->
-> On 3/22/23 13:30, Binder Makin wrote:
-> > Was looking at SLAB removal and started by running A/B tests of SLAB
-> > vs SLUB.  Please note these are only preliminary results.
->
-> Thanks, that's very useful.
->
-> > These were run using 6.1.13 configured for SLAB/SLUB.
-> > Machines were standard datacenter servers.
-> >
-> > Hackbench shows completion time, so smaller is better.
-> > On all others larger is better.
-> > https://docs.google.com/spreadsheets/d/e/2PACX-1vQ47Mekl8BOp3ekCefwL6wL=
-8SQiv6Qvp5avkU2ssQSh41gntjivE-aKM4PkwzkC4N_s_MxUdcsokhhz/pubhtml
-> >
-> > Some notes:
-> > SUnreclaim and SReclaimable shows unreclaimable and reclaimable memory.
-> > Substantially higher with SLUB, but I believe that is to be expected.
-> >
-> > Various results showing a 5-10% degradation with SLUB.  That feels
-> > concerning to me, but I'm not sure what others' tolerance would be.
-> >
-> > redis results on AMD show some pretty bad degredations.  10-20% range
-> > netpipe on Intel also has issues.. 10-17%
->
-> I guess one question is which ones are genuine SLAB/SLUB differences and =
-not
-> e.g. some artifact of different cache layout or something. For example it
-> seems suspicious if results are widely different between architectures.
->
-> E.g. will-it-scale writeseek3_scalability regresses on arm64 and amd, but
-> improves on intel? Or is something wrong with the data, all columns for t=
-hat
-> whole benchmark suite are identical.
->
-> hackbench ("smaller is better") seems drastically better on arm64 (30%
-> median time reduction?) and amd (80% reduction?!?), but 10% slower intel?
->
-> redis seems a bit improved on arm64, slightly worse on intel but much wor=
-se
-> on amd.
->
-> specjbb similar story, also I thought it was a java focused benchmark,
-> should it really be exercising kernel slab allocators in such notable way=
-?
->
-> I guess netpipe is the least surprising as networking was always mentione=
-d
-> in SLAB vs SLUB discussions.
->
-> > On Tue, Mar 14, 2023 at 4:05=E2=80=AFAM Vlastimil Babka <vbabka@suse.cz=
-> wrote:
-> >>
-> >> As you're probably aware, my plan is to get rid of SLOB and SLAB, leav=
-ing
-> >> only SLUB going forward. The removal of SLOB seems to be going well, t=
-here
-> >> were no objections to the deprecation and I've posted v1 of the remova=
-l
-> >> itself [1] so it could be in -next soon.
-> >>
-> >> The immediate benefit of that is that we can allow kfree() (and kfree_=
-rcu())
-> >> to free objects from kmem_cache_alloc() - something that IIRC at least=
- xfs
-> >> people wanted in the past, and SLOB was incompatible with that.
-> >>
-> >> For SLAB removal I haven't yet heard any objections (but also didn't
-> >> deprecate it yet) but if there are any users due to particular workloa=
-ds
-> >> doing better with SLAB than SLUB, we can discuss why those would regre=
-ss and
-> >> what can be done about that in SLUB.
-> >>
-> >> Once we have just one slab allocator in the kernel, we can take a clos=
-er
-> >> look at what the users are missing from it that forces them to create =
-own
-> >> allocators (e.g. BPF), and could be considered to be added as a generi=
-c
-> >> implementation to SLUB.
-> >>
-> >> Thanks,
-> >> Vlastimil
-> >>
-> >> [1] https://lore.kernel.org/all/20230310103210.22372-1-vbabka@suse.cz/
-> >>
->
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
