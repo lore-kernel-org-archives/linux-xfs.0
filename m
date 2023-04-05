@@ -2,36 +2,57 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 871F2C76188
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Apr 2023 18:48:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45F5EC76188
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Apr 2023 18:54:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231280AbjDESsq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Apr 2023 14:48:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44460 "EHLO
+        id S234037AbjDESyc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Apr 2023 14:54:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230059AbjDESsp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 14:48:45 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8317F5589;
-        Wed,  5 Apr 2023 11:48:44 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 20DD663E7A;
-        Wed,  5 Apr 2023 18:48:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9E15C433D2;
-        Wed,  5 Apr 2023 18:48:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1680720523;
-        bh=85pV6+BglfXFKvptSlWlbOdngDBPoHAexzT1F8MZ1Eg=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=iPO5fkws81xBu9pR7DaAYQI4BPxx98OJkIPiL6CBk6R1G2Yj+M8OBx/s/22f1I7z0
-         S6Q36YH2bTWlS6uTqW558FNdIB/nocqcwr8J3KxpkVxQxwX4MtYY7H9MIJ0vXlRoW1
-         4WFXG8M2wulSta8dxKzFQSR6Cj1eiSRDv1uHfua4=
-Date:   Wed, 5 Apr 2023 11:48:41 -0700
-From:   Andrew Morton <akpm@linux-foundation.org>
-To:     Yosry Ahmed <yosryahmed@google.com>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        with ESMTP id S229533AbjDESyb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 14:54:31 -0400
+Received: from mail-pg1-x54a.google.com (mail-pg1-x54a.google.com [IPv6:2607:f8b0:4864:20::54a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 793393A9E
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2023 11:54:30 -0700 (PDT)
+Received: by mail-pg1-x54a.google.com with SMTP id p1-20020a631e41000000b0050bdffd4995so10949851pgm.16
+        for <linux-xfs@vger.kernel.org>; Wed, 05 Apr 2023 11:54:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112; t=1680720870;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=74VbkkX1JNgTJppCDrpyUBhSlzGYrPPYVv0NXjoYgyc=;
+        b=DvoZtrowqtchOBo3Knj2bdyh+0reXXG6EgqqogY/mAyo+TSHhWSb9U2cJKuwxd7h2w
+         o2RX0e8+Zwu1WADDOlnnpGNdNztCU7WB8Qje6IiAB/MfTzkr62n9cE3NrDiwNbW0sDjH
+         VkmeCcgNPVtOFmHHi+9HgWbW0Z24Zu6e6XFf+Qci0FBgIegloiaEWYx/NseVj73FQU7q
+         Q51X91yYhlKkYuSLDOnFpKRH7l1zCwbwiEAGW0rXRqhGF9SRBlbwebErhD2Q+IgzmaDJ
+         ZIZh4OMxhCZbxyMwD9Ftdx6AM+OvFYs2mi3lYMsNUVLkpHDU34ZfxGINsWiKNbF9ytdL
+         jp6w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680720870;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=74VbkkX1JNgTJppCDrpyUBhSlzGYrPPYVv0NXjoYgyc=;
+        b=w8gKQnp2QYSvPs1E4jkg6BTi9fdBcacb+S4clNBOVE85747iUWi58XVqr1EpIJtFhb
+         riDfP//bSP8DxCfI9NuPYEgTr07jh/WSjxTrHcSvfW/nFR2ummURu3mrKnr60FUmhGtk
+         gHN66zS4Ijj/EntYGrLez5boyX50+mk57HOISLjL41NrIBDnq7Ul3+5mvQP3B0Q+UleY
+         oB4yRvGskU6L3XSjXYMSS320nBxEIYkoypSvWn0yliqwM1XZ4d3oEoZestv/o7pUu+zu
+         3PoayLxa96UVOfMion+Uitwq+2XckNlZsBmJiF+Gk+I7h0vDFli/nHq5Mxs/SZkvozzk
+         2lig==
+X-Gm-Message-State: AAQBX9d3K+OGkag7wnTgXS77+J7KHAHhimFvslH1NE9/gRZ0l+oMb4oa
+        LBXuKH/69YRZZiv3xKzZ/c3uxOhwSIUNgoMX
+X-Google-Smtp-Source: AKy350YH2iSQX6gNnTj2zSUoqJgUjpVMBh1a0kuQQW4A3Qs4h6unL0l7+ARu30/SrGo0X9cSZkV5qMEnH3NanZCo
+X-Received: from yosry.c.googlers.com ([fda3:e722:ac3:cc00:7f:e700:c0a8:2327])
+ (user=yosryahmed job=sendgmr) by 2002:a17:90a:6c65:b0:23f:a26e:daa3 with SMTP
+ id x92-20020a17090a6c6500b0023fa26edaa3mr2624714pjj.9.1680720869909; Wed, 05
+ Apr 2023 11:54:29 -0700 (PDT)
+Date:   Wed,  5 Apr 2023 18:54:25 +0000
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.40.0.348.gf938b09366-goog
+Message-ID: <20230405185427.1246289-1-yosryahmed@google.com>
+Subject: [PATCH v5 0/2] Ignore non-LRU-based reclaim in memcg reclaim
+From:   Yosry Ahmed <yosryahmed@google.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
         "Darrick J. Wong" <djwong@kernel.org>,
         Christoph Lameter <cl@linux.com>,
         David Rientjes <rientjes@google.com>,
@@ -46,55 +67,62 @@ Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
         Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
         Shakeel Butt <shakeelb@google.com>,
         Michal Hocko <mhocko@kernel.org>, Yu Zhao <yuzhao@google.com>,
-        Dave Chinner <david@fromorbit.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH v4 0/3] Ignore non-LRU-based reclaim in memcg reclaim
-Message-Id: <20230405114841.248dffb65526383823c71d60@linux-foundation.org>
-In-Reply-To: <CAJD7tkYFZGJqZ278stOWDyW3HgMP8iyAZu8hSG+bV-p9YoVxig@mail.gmail.com>
-References: <20230404001353.468224-1-yosryahmed@google.com>
-        <20230404143824.a8c57452f04929da225a17d0@linux-foundation.org>
-        <CAJD7tkbZgA7QhkuxEbp=Sam6NCA0i3cZJYF4Z1nrLK1=Rem+Gg@mail.gmail.com>
-        <20230404145830.b34afedb427921de2f0e2426@linux-foundation.org>
-        <CAJD7tkZCmkttJo+6XGROo+pmfQ+ppQp6=qukwvAGSeSBEGF+nQ@mail.gmail.com>
-        <20230404152816.cec6d41bfb9de4680ae8c787@linux-foundation.org>
-        <20230404153124.b0fa5074cf9fc3b9925e8000@linux-foundation.org>
-        <CAJD7tkYFZGJqZ278stOWDyW3HgMP8iyAZu8hSG+bV-p9YoVxig@mail.gmail.com>
-X-Mailer: Sylpheed 3.7.0 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+        Dave Chinner <david@fromorbit.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        Yosry Ahmed <yosryahmed@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 4 Apr 2023 16:46:30 -0700 Yosry Ahmed <yosryahmed@google.com> wrote:
+Upon running some proactive reclaim tests using memory.reclaim, we
+noticed some tests flaking where writing to memory.reclaim would be
+successful even though we did not reclaim the requested amount fully.
+Looking further into it, I discovered that *sometimes* we over-report
+the number of reclaimed pages in memcg reclaim.
 
-> > But the key question remains: how desirable is a backport?
-> >
-> > Looking at the changelogs I'm not seeing a clear statement of the
-> > impact upon real-world users' real-world workloads.  (This is a hint).
-> > So I am unable to judge.
-> >
-> > Please share your thoughts on this.
-> 
-> I think it's nice to have but not really important. It occasionally
-> causes writes to memory.reclaim to report false positives and *might*
-> cause unnecessary retrying when charging memory, but probably too rare
-> to be a practical problem.
-> 
-> Personally, I intend to backport to our kernel at Google because it's
-> a simple enough fix and we have occasionally seen test flakiness
-> without it.
-> 
-> I have a reworked version of the series that only has 2 patches:
-> - simple-two-liner-patch (actually 5 lines)
-> - one patch including all refactoring squashed (introducing
-> flush_reclaim_state() with the huge comment, introducing
-> mm_account_reclaimed_pages(), and moving set_task_reclaim_state()
-> around).
-> 
-> Let me know if you want me to send it as v5, or leave the current v4
-> if you think backporting is not generally important.
+Reclaimed pages through other means than LRU-based reclaim are tracked
+through reclaim_state in struct scan_control, which is stashed in
+current task_struct. These pages are added to the number of reclaimed
+pages through LRUs. For memcg reclaim, these pages generally cannot be
+linked to the memcg under reclaim and can cause an overestimated count
+of reclaimed pages. This short series tries to address that.
 
-Let's have a look at that v5 and see what people think?
+Patch 1 ignores pages reclaimed outside of LRU reclaim in memcg reclaim.
+The pages are uncharged anyway, so even if we end up under-reporting
+reclaimed pages we will still succeed in making progress during
+charging.
+
+Patch 2 is just refactoring, it adds helpers that wrap some
+operations on current->reclaim_state, and rename
+reclaim_state->reclaimed_slab to reclaim_state->reclaimed. It also adds
+a huge comment explaining why we ignore pages reclaimed outside of LRU
+reclaim in memcg reclaim.
+
+The patches are divided as such so that patch 1 can be easily backported
+without all the refactoring noise.
+
+v4 -> v5:
+- Separate the functional fix into its own patch, and squash all the
+  refactoring into a single second patch for ease of backporting (Andrew
+  Morton).
+
+v4: https://lore.kernel.org/lkml/20230404001353.468224-1-yosryahmed@google.com/
+
+Yosry Ahmed (2):
+  mm: vmscan: ignore non-LRU-based reclaim in memcg reclaim
+  mm: vmscan: refactor reclaim_state helpers
+
+ fs/inode.c           |  3 +-
+ fs/xfs/xfs_buf.c     |  3 +-
+ include/linux/swap.h | 17 ++++++++++-
+ mm/slab.c            |  3 +-
+ mm/slob.c            |  6 ++--
+ mm/slub.c            |  5 ++-
+ mm/vmscan.c          | 73 +++++++++++++++++++++++++++++++++-----------
+ 7 files changed, 78 insertions(+), 32 deletions(-)
+
+-- 
+2.40.0.348.gf938b09366-goog
+
