@@ -2,56 +2,56 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 722EDC7619A
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Apr 2023 18:54:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A690C761AF
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Apr 2023 18:54:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234405AbjDESyj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Apr 2023 14:54:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49256 "EHLO
+        id S234360AbjDESyl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Apr 2023 14:54:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49316 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232566AbjDESye (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 14:54:34 -0400
-Received: from mail-yw1-x1149.google.com (mail-yw1-x1149.google.com [IPv6:2607:f8b0:4864:20::1149])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67AFA558E
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2023 11:54:32 -0700 (PDT)
-Received: by mail-yw1-x1149.google.com with SMTP id 00721157ae682-54c01480e3cso11979947b3.1
-        for <linux-xfs@vger.kernel.org>; Wed, 05 Apr 2023 11:54:32 -0700 (PDT)
+        with ESMTP id S234377AbjDESyf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 14:54:35 -0400
+Received: from mail-pg1-x549.google.com (mail-pg1-x549.google.com [IPv6:2607:f8b0:4864:20::549])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2C9E61A9
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2023 11:54:33 -0700 (PDT)
+Received: by mail-pg1-x549.google.com with SMTP id j62-20020a638b41000000b005142ec64642so833003pge.19
+        for <linux-xfs@vger.kernel.org>; Wed, 05 Apr 2023 11:54:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680720871;
+        d=google.com; s=20210112; t=1680720873;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=oB2sMXwt0v6x8lwXtmYlxh/hoioeozIJIVJcuuQJKWA=;
-        b=Ros0vevjUiwI3/TjUKg+KCeA5SHnfksHcC4OK3M0Fn4fXpXuUrynI6b8MaR9/c3jSk
-         kYtK4Ske7kxweFphiQTIVIVAbS/Fuv7jZA8Wq1GWNo0oxzQ5Nh5pojz9jDp+do2ph3Jj
-         IztRjzkxwy2vWa3oGo525fcM6H4ZEmqQU6p4rYHtfJsYsBqy2LUHEZvuMUuNIKTo/uqK
-         Xwb0LLWXZaQYVo8lUIEKsrrCdSMMCxNVxpuQ+1xdxcKxOZL6ys2NO41rWyag1l5oLhzt
-         LVX/O/QEV66s0ajoxgyOizIIfKMnIekWa445aOdc74s+Q8ItuYHAsLFXOFgFRUjGTZ12
-         4y1g==
+        bh=4yIEsCxGxp+Goi3FcKFGmOxdWE8VaKQI4GXE/OXZVyU=;
+        b=TF78184WybJytfdYm4GCjpWzSx4mUisBexI8bJfnyd6K4JeOX369L2ClHVn4Ys8I7V
+         JV+y1m7UAB4SCcuHTJGFIgQF6+zPgKdblexEZW4hF8aKIUP946k53euPlWdSC0diJGII
+         +4BQZqOlikwwOc1ffTqbrRHhEVpr3wXhWZ0WF/Lu4nUjgmKclpwmru3gluXbSweQuK7W
+         C3JM5wV7WTynZX48f/Lp4lcdapj5Vg97KMACQe2OSnlckxh/DO5uCHLUHH1nrwiXFUnK
+         JKlKgk5qWcBAj572MmVExUzKlzT1AeS/W+Ao4ZB3tIG21TaLoaVVgW0UNpmmTPc769jm
+         okiw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680720871;
+        d=1e100.net; s=20210112; t=1680720873;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=oB2sMXwt0v6x8lwXtmYlxh/hoioeozIJIVJcuuQJKWA=;
-        b=0Mi2atUTSR6IQSQ3/7sx9gkRmNnkX+gx12kbyCkrWp/BP25tqyORn91lBGPyk/vnLX
-         rcvc+nwo9ui+es4BF7JEI79UpD1Lw9vEP05oZ8F9wrgPy2pMcUxSFN0VhWPhc00z9+sD
-         s2B6+pQG2hBqGVskvDhPW3rKbTNrzvqKfRbsNmzft7rKNz9oyxtyDD5q1YZiWwJQxKFJ
-         HvlUx0ruvgBgKQ1Fngym9oRQQKM1wS6AFp394DSKO4pIUYa+oqoNBPH/y0PMAJKVcYlW
-         O03OKC6JnWuS0629liE9H0dAaqRp0kHkXtpEyLbJr3wUbKl8FGOBOS9YCwiv+8wCqKcL
-         Ix+g==
-X-Gm-Message-State: AAQBX9d6FpzCteV/A6ejtp+7DmBkw7HeVX8ZgIbpjdHEt86+Xlee9XJI
-        NXmnJLAihAyhICjZmt9DDHffH5N8/WZVBtXi
-X-Google-Smtp-Source: AKy350ZCAIete9IDtcJDwB8xbNQZBALRdtx0fEvZ0QLo3PyT+UesbYmBb8Uc0roxQG5ktSucSqhPRJ3viu7kH1ie
+        bh=4yIEsCxGxp+Goi3FcKFGmOxdWE8VaKQI4GXE/OXZVyU=;
+        b=DG4zDpOEPcFm6Qfs4VzGUMaVS4df32C9wU2A2fqp5IS4Rwl1X6UseTWOONLpiBtsJX
+         q/w5icH4qdZ9VTFNoeOpmK/A8WJ8VY0/4fsRXdn1FbehM55BtoZJJczv70ek/0DDZJYO
+         F7pXBkOx76E+yWY2tr+8ioQFXF/eQzNU9aA/rfaGnQbqyvm+A8gtV6dllRVv+9ReWTS4
+         afITolBNtb6/vQ741UgiWziJwRUxImj/Ri1YNZuZdzGMZohF1F3LiiVRR6UdBqyb0Fwd
+         e7rgPGpBqk3dvKr2wvnaZ8voh3ESIlZ2wkqkiAtRgB6+XYM73MGGBB3gG38JacR9xlDD
+         p6Ig==
+X-Gm-Message-State: AAQBX9djo0VVMDYIcfFVpR9Kyy/6rZFAYBgxuQdaC+IE2HeP1xq8NrS1
+        vOqR4gBC1f+c/5pbNVF5zqt3jbs/TjjWjDEJ
+X-Google-Smtp-Source: AKy350acXJNtGWroYsn6aFMZG+1teLm2kBpgOPT0A7iZ6zD9rHb+p4s9om4KF91yo2bhBQ0j07DSjkYPZ7RoOPdC
 X-Received: from yosry.c.googlers.com ([fda3:e722:ac3:cc00:7f:e700:c0a8:2327])
- (user=yosryahmed job=sendgmr) by 2002:a25:d986:0:b0:b8b:eea7:525c with SMTP
- id q128-20020a25d986000000b00b8beea7525cmr163875ybg.9.1680720871655; Wed, 05
- Apr 2023 11:54:31 -0700 (PDT)
-Date:   Wed,  5 Apr 2023 18:54:26 +0000
+ (user=yosryahmed job=sendgmr) by 2002:a05:6a00:2da6:b0:625:ccea:1627 with
+ SMTP id fb38-20020a056a002da600b00625ccea1627mr3896876pfb.5.1680720873145;
+ Wed, 05 Apr 2023 11:54:33 -0700 (PDT)
+Date:   Wed,  5 Apr 2023 18:54:27 +0000
 In-Reply-To: <20230405185427.1246289-1-yosryahmed@google.com>
 Mime-Version: 1.0
 References: <20230405185427.1246289-1-yosryahmed@google.com>
 X-Mailer: git-send-email 2.40.0.348.gf938b09366-goog
-Message-ID: <20230405185427.1246289-2-yosryahmed@google.com>
-Subject: [PATCH v5 1/2] mm: vmscan: ignore non-LRU-based reclaim in memcg reclaim
+Message-ID: <20230405185427.1246289-3-yosryahmed@google.com>
+Subject: [PATCH v5 2/2] mm: vmscan: refactor reclaim_state helpers
 From:   Yosry Ahmed <yosryahmed@google.com>
 To:     Andrew Morton <akpm@linux-foundation.org>,
         Alexander Viro <viro@zeniv.linux.org.uk>,
@@ -72,81 +72,272 @@ To:     Andrew Morton <akpm@linux-foundation.org>,
         Dave Chinner <david@fromorbit.com>
 Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        Yosry Ahmed <yosryahmed@google.com>, stable@vger.kernel.org
+        Yosry Ahmed <yosryahmed@google.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-We keep track of different types of reclaimed pages through
-reclaim_state->reclaimed_slab, and we add them to the reported number
-of reclaimed pages.  For non-memcg reclaim, this makes sense. For memcg
-reclaim, we have no clue if those pages are charged to the memcg under
-reclaim.
+During reclaim, we keep track of pages reclaimed from other means than
+LRU-based reclaim through scan_control->reclaim_state->reclaimed_slab,
+which we stash a pointer to in current task_struct.
 
-Slab pages are shared by different memcgs, so a freed slab page may have
-only been partially charged to the memcg under reclaim.  The same goes for
-clean file pages from pruned inodes (on highmem systems) or xfs buffer
-pages, there is no simple way to currently link them to the memcg under
-reclaim.
+However, we keep track of more than just reclaimed slab pages through
+this. We also use it for clean file pages dropped through pruned inodes,
+and xfs buffer pages freed. Rename reclaimed_slab to reclaimed, and add
+a helper function that wraps updating it through current, so that future
+changes to this logic are contained within mm/vmscan.c.
 
-Stop reporting those freed pages as reclaimed pages during memcg reclaim.
-This should make the return value of writing to memory.reclaim, and may
-help reduce unnecessary reclaim retries during memcg charging.  Writing to
-memory.reclaim on the root memcg is considered as cgroup_reclaim(), but
-for this case we want to include any freed pages, so use the
-global_reclaim() check instead of !cgroup_reclaim().
+Additionally, add a flush_reclaim_state() helper to wrap using
+reclaim_state->reclaimed to updated sc->nr_reclaimed, and use that
+helper to add an elaborate comment about why we only do the update for
+global reclaim.
 
-Generally, this should make the return value of
-try_to_free_mem_cgroup_pages() more accurate. In some limited cases (e.g.
-freed a slab page that was mostly charged to the memcg under reclaim),
-the return value of try_to_free_mem_cgroup_pages() can be underestimated,
-but this should be fine. The freed pages will be uncharged anyway, and we
-can charge the memcg the next time around as we usually do memcg reclaim
-in a retry loop.
-
-The next patch performs some cleanups around reclaim_state and adds an
-elaborate comment explaining this to the code. This patch is kept
-minimal for easy backporting.
+Finally, move set_task_reclaim_state() next to flush_reclaim_state() so
+that all reclaim_state helpers are in close proximity for easier
+readability.
 
 Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-Cc: stable@vger.kernel.org
 ---
+ fs/inode.c           |  3 +-
+ fs/xfs/xfs_buf.c     |  3 +-
+ include/linux/swap.h | 17 +++++++++-
+ mm/slab.c            |  3 +-
+ mm/slob.c            |  6 ++--
+ mm/slub.c            |  5 ++-
+ mm/vmscan.c          | 75 ++++++++++++++++++++++++++++++++------------
+ 7 files changed, 78 insertions(+), 34 deletions(-)
 
-global_reclaim(sc) does not exist in kernels before 6.3. It can be
-replaced with:
-!cgroup_reclaim(sc) || mem_cgroup_is_root(sc->target_mem_cgroup)
-
----
- mm/vmscan.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
-
+diff --git a/fs/inode.c b/fs/inode.c
+index 4558dc2f13557..e60fcc41faf17 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -864,8 +864,7 @@ static enum lru_status inode_lru_isolate(struct list_head *item,
+ 				__count_vm_events(KSWAPD_INODESTEAL, reap);
+ 			else
+ 				__count_vm_events(PGINODESTEAL, reap);
+-			if (current->reclaim_state)
+-				current->reclaim_state->reclaimed_slab += reap;
++			mm_account_reclaimed_pages(reap);
+ 		}
+ 		iput(inode);
+ 		spin_lock(lru_lock);
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 54c774af6e1c6..15d1e5a7c2d34 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -286,8 +286,7 @@ xfs_buf_free_pages(
+ 		if (bp->b_pages[i])
+ 			__free_page(bp->b_pages[i]);
+ 	}
+-	if (current->reclaim_state)
+-		current->reclaim_state->reclaimed_slab += bp->b_page_count;
++	mm_account_reclaimed_pages(bp->b_page_count);
+ 
+ 	if (bp->b_pages != bp->b_page_array)
+ 		kmem_free(bp->b_pages);
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index 209a425739a9f..e131ac155fb95 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -153,13 +153,28 @@ union swap_header {
+  * memory reclaim
+  */
+ struct reclaim_state {
+-	unsigned long reclaimed_slab;
++	/* pages reclaimed outside of LRU-based reclaim */
++	unsigned long reclaimed;
+ #ifdef CONFIG_LRU_GEN
+ 	/* per-thread mm walk data */
+ 	struct lru_gen_mm_walk *mm_walk;
+ #endif
+ };
+ 
++/*
++ * mm_account_reclaimed_pages(): account reclaimed pages outside of LRU-based
++ * reclaim
++ * @pages: number of pages reclaimed
++ *
++ * If the current process is undergoing a reclaim operation, increment the
++ * number of reclaimed pages by @pages.
++ */
++static inline void mm_account_reclaimed_pages(unsigned long pages)
++{
++	if (current->reclaim_state)
++		current->reclaim_state->reclaimed += pages;
++}
++
+ #ifdef __KERNEL__
+ 
+ struct address_space;
+diff --git a/mm/slab.c b/mm/slab.c
+index dabc2a671fc6f..64bf1de817b24 100644
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -1392,8 +1392,7 @@ static void kmem_freepages(struct kmem_cache *cachep, struct slab *slab)
+ 	smp_wmb();
+ 	__folio_clear_slab(folio);
+ 
+-	if (current->reclaim_state)
+-		current->reclaim_state->reclaimed_slab += 1 << order;
++	mm_account_reclaimed_pages(1 << order);
+ 	unaccount_slab(slab, order, cachep);
+ 	__free_pages(&folio->page, order);
+ }
+diff --git a/mm/slob.c b/mm/slob.c
+index fe567fcfa3a39..79cc8680c973c 100644
+--- a/mm/slob.c
++++ b/mm/slob.c
+@@ -61,7 +61,7 @@
+ #include <linux/slab.h>
+ 
+ #include <linux/mm.h>
+-#include <linux/swap.h> /* struct reclaim_state */
++#include <linux/swap.h> /* mm_account_reclaimed_pages() */
+ #include <linux/cache.h>
+ #include <linux/init.h>
+ #include <linux/export.h>
+@@ -211,9 +211,7 @@ static void slob_free_pages(void *b, int order)
+ {
+ 	struct page *sp = virt_to_page(b);
+ 
+-	if (current->reclaim_state)
+-		current->reclaim_state->reclaimed_slab += 1 << order;
+-
++	mm_account_reclaimed_pages(1 << order);
+ 	mod_node_page_state(page_pgdat(sp), NR_SLAB_UNRECLAIMABLE_B,
+ 			    -(PAGE_SIZE << order));
+ 	__free_pages(sp, order);
+diff --git a/mm/slub.c b/mm/slub.c
+index 39327e98fce34..7aa30eef82350 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -11,7 +11,7 @@
+  */
+ 
+ #include <linux/mm.h>
+-#include <linux/swap.h> /* struct reclaim_state */
++#include <linux/swap.h> /* mm_account_reclaimed_pages() */
+ #include <linux/module.h>
+ #include <linux/bit_spinlock.h>
+ #include <linux/interrupt.h>
+@@ -2063,8 +2063,7 @@ static void __free_slab(struct kmem_cache *s, struct slab *slab)
+ 	/* Make the mapping reset visible before clearing the flag */
+ 	smp_wmb();
+ 	__folio_clear_slab(folio);
+-	if (current->reclaim_state)
+-		current->reclaim_state->reclaimed_slab += pages;
++	mm_account_reclaimed_pages(pages);
+ 	unaccount_slab(slab, order, s);
+ 	__free_pages(&folio->page, order);
+ }
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 9c1c5e8b24b8f..c82bd89f90364 100644
+index c82bd89f90364..049e39202e6ce 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
-@@ -5346,8 +5346,10 @@ static int shrink_one(struct lruvec *lruvec, struct scan_control *sc)
+@@ -188,18 +188,6 @@ struct scan_control {
+  */
+ int vm_swappiness = 60;
+ 
+-static void set_task_reclaim_state(struct task_struct *task,
+-				   struct reclaim_state *rs)
+-{
+-	/* Check for an overwrite */
+-	WARN_ON_ONCE(rs && task->reclaim_state);
+-
+-	/* Check for the nulling of an already-nulled member */
+-	WARN_ON_ONCE(!rs && !task->reclaim_state);
+-
+-	task->reclaim_state = rs;
+-}
+-
+ LIST_HEAD(shrinker_list);
+ DECLARE_RWSEM(shrinker_rwsem);
+ 
+@@ -511,6 +499,59 @@ static bool writeback_throttling_sane(struct scan_control *sc)
+ }
+ #endif
+ 
++static void set_task_reclaim_state(struct task_struct *task,
++				   struct reclaim_state *rs)
++{
++	/* Check for an overwrite */
++	WARN_ON_ONCE(rs && task->reclaim_state);
++
++	/* Check for the nulling of an already-nulled member */
++	WARN_ON_ONCE(!rs && !task->reclaim_state);
++
++	task->reclaim_state = rs;
++}
++
++/*
++ * flush_reclaim_state(): add pages reclaimed outside of LRU-based reclaim to
++ * scan_control->nr_reclaimed.
++ */
++static void flush_reclaim_state(struct scan_control *sc,
++				struct reclaim_state *rs)
++{
++	/*
++	 * Currently, reclaim_state->reclaimed includes three types of pages
++	 * freed outside of vmscan:
++	 * (1) Slab pages.
++	 * (2) Clean file pages from pruned inodes.
++	 * (3) XFS freed buffer pages.
++	 *
++	 * For all of these cases, we have no way of finding out whether these
++	 * pages were related to the memcg under reclaim. For example, a freed
++	 * slab page could have had only a single object charged to the memcg
++	 * under reclaim. Also, populated inodes are not on shrinker LRUs
++	 * anymore except on highmem systems.
++	 *
++	 * Instead of over-reporting the reclaimed pages in a memcg reclaim,
++	 * only count such pages in global reclaim. This prevents unnecessary
++	 * retries during memcg charging and false positive from proactive
++	 * reclaim (memory.reclaim).
++	 *
++	 * For uncommon cases were the freed pages were actually significantly
++	 * charged to the memcg under reclaim, and we end up under-reporting, it
++	 * should be fine. The freed pages will be uncharged anyway, even if
++	 * they are not reported properly, and we will be able to make forward
++	 * progress in charging (which is usually in a retry loop).
++	 *
++	 * We can go one step further, and report the uncharged objcg pages in
++	 * memcg reclaim, to make reporting more accurate and reduce
++	 * under-reporting, but it's probably not worth the complexity for now.
++	 */
++	if (rs && global_reclaim(sc)) {
++		sc->nr_reclaimed += rs->reclaimed;
++		rs->reclaimed = 0;
++	}
++}
++
+ static long xchg_nr_deferred(struct shrinker *shrinker,
+ 			     struct shrink_control *sc)
+ {
+@@ -5346,10 +5387,7 @@ static int shrink_one(struct lruvec *lruvec, struct scan_control *sc)
  		vmpressure(sc->gfp_mask, memcg, false, sc->nr_scanned - scanned,
  			   sc->nr_reclaimed - reclaimed);
  
--	sc->nr_reclaimed += current->reclaim_state->reclaimed_slab;
--	current->reclaim_state->reclaimed_slab = 0;
-+	if (global_reclaim(sc)) {
-+		sc->nr_reclaimed += current->reclaim_state->reclaimed_slab;
-+		current->reclaim_state->reclaimed_slab = 0;
-+	}
+-	if (global_reclaim(sc)) {
+-		sc->nr_reclaimed += current->reclaim_state->reclaimed_slab;
+-		current->reclaim_state->reclaimed_slab = 0;
+-	}
++	flush_reclaim_state(sc, current->reclaim_state);
  
  	return success ? MEMCG_LRU_YOUNG : 0;
  }
-@@ -6472,7 +6474,7 @@ static void shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+@@ -6474,10 +6512,7 @@ static void shrink_node(pg_data_t *pgdat, struct scan_control *sc)
  
  	shrink_node_memcgs(pgdat, sc);
  
--	if (reclaim_state) {
-+	if (reclaim_state && global_reclaim(sc)) {
- 		sc->nr_reclaimed += reclaim_state->reclaimed_slab;
- 		reclaim_state->reclaimed_slab = 0;
- 	}
+-	if (reclaim_state && global_reclaim(sc)) {
+-		sc->nr_reclaimed += reclaim_state->reclaimed_slab;
+-		reclaim_state->reclaimed_slab = 0;
+-	}
++	flush_reclaim_state(sc, reclaim_state);
+ 
+ 	/* Record the subtree's reclaim efficiency */
+ 	if (!sc->proactive)
 -- 
 2.40.0.348.gf938b09366-goog
 
