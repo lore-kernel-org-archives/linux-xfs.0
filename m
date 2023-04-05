@@ -2,126 +2,185 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4DE8C76188
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Apr 2023 18:56:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D038DC761AF
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Apr 2023 19:55:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232566AbjDES4d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Apr 2023 14:56:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51334 "EHLO
+        id S232406AbjDETzC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Apr 2023 15:55:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57462 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229748AbjDES4c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 14:56:32 -0400
-Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F0D83A9E
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2023 11:56:31 -0700 (PDT)
-Received: by mail-ed1-x533.google.com with SMTP id y4so143592031edo.2
-        for <linux-xfs@vger.kernel.org>; Wed, 05 Apr 2023 11:56:31 -0700 (PDT)
+        with ESMTP id S233676AbjDETy7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 15:54:59 -0400
+Received: from mail-io1-xd34.google.com (mail-io1-xd34.google.com [IPv6:2607:f8b0:4864:20::d34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1087E121
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2023 12:54:58 -0700 (PDT)
+Received: by mail-io1-xd34.google.com with SMTP id bh15so7164184iob.9
+        for <linux-xfs@vger.kernel.org>; Wed, 05 Apr 2023 12:54:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680720990;
+        d=google.com; s=20210112; t=1680724497;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=KUHx9jRHzGk0Yj8qja9+zPdMg8UV3tc3NMpsClxL/uU=;
-        b=PcOksGvousVNSQ3cXdcS8HWqwXWWJcKA52C1lMjGVEUryaoo1tPpsv5kRcDXnrszeS
-         JdYnxSepPg5yJ/fPSprlLRsupbI62wkDmZPCcKllTgOwxHqMqudEkwjw8ZhEs+8EK2a1
-         NUk4+UWeR0EaIswYspERC1kivvjsa0dWn2wnvu2WB9gk8GukcN9hVPDOmbhPQBLeN2uB
-         1jkZr4RwvxyVz3l3W89ZzOJwJB0ceoUCOYSHY8WiICNTCCA85y6wjPi+rNU0oBwOYs2l
-         N/U/n1chu5ml11hqxoxCZ1NlwaqbYeH6RnTye7Bn3qrwMNnUgKCvlLNecFKJWushISY0
-         CU7Q==
+        bh=ZcYjART6vOTXgshTS0uLbmOyompGa7/lXpaivlpY/VA=;
+        b=Q5pH8VZulJ+C6K7kJgwa8mvOZ9ZrOOAVLsmxUjEBWvSwXZS2eYxnn+3CNEFDsgl/FB
+         PjfOUoveEnD9PSu/Eywba4OUlZTADegV9S/hQ9fnBWU5k74/LBMblU+lOZZKTg++slTD
+         03UU0BISn96pJcY7cmEh/5YQiID+BNXZbn/LtyNdhSCUTcnPySOohUPn1SFbS9xrnAho
+         y8FwD0YOjPOgKVlGfYrC+svNxrZfTOuh21opeEKDfTzKowlJOJ6wZADntkTgf6er0ndr
+         WzczKJPJqJUu2H5QfN0VjxK2pU1vYQG2Hc0FVxsHg0Zw13iPCjmyqdvSgOMHi62oz+x6
+         iUzQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680720990;
+        d=1e100.net; s=20210112; t=1680724497;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=KUHx9jRHzGk0Yj8qja9+zPdMg8UV3tc3NMpsClxL/uU=;
-        b=WU5k/G9+RRLof+5fXwdXGuet79qLSLrTo/2yX6Sf/Jc4foz6FIM+DqPeduaHE49lmv
-         UdjL98D1F6J5ep7JRFIPctv66Ih6PmDuHaXF7pWzLGLfvlSkUrXM6kfR7uFDHzcsJbhA
-         EJvPYCZ7cfJT8J2ECBiXvT/TvdXG6Xn+ZNUbtkvR1AyCbdadcBZ94FJmcvJ+lphQyW6h
-         9m4sPPJFH4Ks8a1lSjMOB0HnJRVDxzTrAiLitEZQlORMruiNYon0VvK2rqBX57J2hKat
-         S0eH6pd3uBZmjNXCNpxWK6WANzraa+R5KeA+jgO2znJd3cynxrwT3bN2uFiEbP5llrM5
-         d6xA==
-X-Gm-Message-State: AAQBX9cajgbATffMykzi5yefU8dj5PuGn6/HtV/dCSsjoCXRSH4o2XHt
-        tMMPkVU/XcPndWSxjUGZUypz9qFohJ5kOUhtziyRug==
-X-Google-Smtp-Source: AKy350bHaZuNUXPKWqtZZFlNYtm/KTUiWTEcxIzQpbSGE4xeqztd4ciQVHBO4lwV5nrlqSYhHlA8ehPxdZppf/JJggY=
-X-Received: by 2002:a17:906:95cf:b0:933:f6e8:26d9 with SMTP id
- n15-20020a17090695cf00b00933f6e826d9mr2247603ejy.15.1680720989801; Wed, 05
- Apr 2023 11:56:29 -0700 (PDT)
+        bh=ZcYjART6vOTXgshTS0uLbmOyompGa7/lXpaivlpY/VA=;
+        b=zLQze1Xzuqg5U3qvg2oRsV9q7ZeOLrizyyIZ5vHeBUoJm9fpMAGHySBq7fDRiV2QxD
+         z/0CLljxRJtptr1SS/+BzhDrGuDZGjeOsfHrpTk7gQsRz5U2nKLC/6YanGglFDZgdiyf
+         G/M99YpMCf/++dlypmYSIUGsCMov7LDzvzQRsQ82vGCnm0FOoY5Y87Y+DZIKwVk9Snji
+         Hw2ZcC3lv+aHFIHtIw2qBB1MG75wlIxJEOruhDPgCwxuXt/+fEdndRpecjak8JP+nFr3
+         Yxgny8ojGYLjNAK/Q/tbAGyDbUBO0Q0zJ+hmwRFtsDY/2lABqrdqG01U5jDzciTJBKMZ
+         TmhA==
+X-Gm-Message-State: AAQBX9fwkLw3XotRylUbhSg95xqN+VRiPMIoBTH7gXrKY8OwHxhD+Fu2
+        XOSY2dvzEKKETdjEvdDT7v9IZ+JYcLI4cmvddAFjVw==
+X-Google-Smtp-Source: AKy350aQGUhRBR9nlxvbezaz/UrkSAWRI9gjznAzUIFBqGpVkijBgUKrfga8wmafgeF9lt6YkUUxmVhABC3COYaTN2I=
+X-Received: by 2002:a5e:df47:0:b0:74c:7ea1:4f05 with SMTP id
+ g7-20020a5edf47000000b0074c7ea14f05mr5543603ioq.2.1680724497235; Wed, 05 Apr
+ 2023 12:54:57 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230404001353.468224-1-yosryahmed@google.com>
- <20230404143824.a8c57452f04929da225a17d0@linux-foundation.org>
- <CAJD7tkbZgA7QhkuxEbp=Sam6NCA0i3cZJYF4Z1nrLK1=Rem+Gg@mail.gmail.com>
- <20230404145830.b34afedb427921de2f0e2426@linux-foundation.org>
- <CAJD7tkZCmkttJo+6XGROo+pmfQ+ppQp6=qukwvAGSeSBEGF+nQ@mail.gmail.com>
- <20230404152816.cec6d41bfb9de4680ae8c787@linux-foundation.org>
- <20230404153124.b0fa5074cf9fc3b9925e8000@linux-foundation.org>
- <CAJD7tkYFZGJqZ278stOWDyW3HgMP8iyAZu8hSG+bV-p9YoVxig@mail.gmail.com> <20230405114841.248dffb65526383823c71d60@linux-foundation.org>
-In-Reply-To: <20230405114841.248dffb65526383823c71d60@linux-foundation.org>
-From:   Yosry Ahmed <yosryahmed@google.com>
-Date:   Wed, 5 Apr 2023 11:55:53 -0700
-Message-ID: <CAJD7tkZm2-Xx1axfhMH9wD4cJK5ySwg=kn9oXWeSBAR4npNp2Q@mail.gmail.com>
-Subject: Re: [PATCH v4 0/3] Ignore non-LRU-based reclaim in memcg reclaim
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Lameter <cl@linux.com>,
+References: <4b9fc9c6-b48c-198f-5f80-811a44737e5f@suse.cz> <CAANmLtwGS75WJ9AXfmqZv73pNdHJn6zfrrCCWjKK_6jPk9pWRg@mail.gmail.com>
+ <951d364a-05c0-b290-8abe-7cbfcaeb2df7@suse.cz>
+In-Reply-To: <951d364a-05c0-b290-8abe-7cbfcaeb2df7@suse.cz>
+From:   Binder Makin <merimus@google.com>
+Date:   Wed, 5 Apr 2023 15:54:45 -0400
+Message-ID: <CAANmLtzQmVN_EWLv1UxXwZu5X=TwpcMQMYArKNUxAJL3PnfO2Q@mail.gmail.com>
+Subject: Re: [LSF/MM/BPF TOPIC] SLOB+SLAB allocators removal and future SLUB improvements
+To:     Vlastimil Babka <vbabka@suse.cz>
+Cc:     lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org, linux-block@vger.kernel.org,
+        bpf@vger.kernel.org, linux-xfs@vger.kernel.org,
         David Rientjes <rientjes@google.com>,
+        Christoph Lameter <cl@linux.com>,
+        Pekka Enberg <penberg@kernel.org>,
         Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Roman Gushchin <roman.gushchin@linux.dev>,
         Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Miaohe Lin <linmiaohe@huawei.com>,
-        David Hildenbrand <david@redhat.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
-        Shakeel Butt <shakeelb@google.com>,
-        Michal Hocko <mhocko@kernel.org>, Yu Zhao <yuzhao@google.com>,
-        Dave Chinner <david@fromorbit.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org
+        Roman Gushchin <roman.gushchin@linux.dev>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 5, 2023 at 11:48=E2=80=AFAM Andrew Morton <akpm@linux-foundatio=
-n.org> wrote:
->
-> On Tue, 4 Apr 2023 16:46:30 -0700 Yosry Ahmed <yosryahmed@google.com> wro=
-te:
->
-> > > But the key question remains: how desirable is a backport?
-> > >
-> > > Looking at the changelogs I'm not seeing a clear statement of the
-> > > impact upon real-world users' real-world workloads.  (This is a hint)=
-.
-> > > So I am unable to judge.
-> > >
-> > > Please share your thoughts on this.
-> >
-> > I think it's nice to have but not really important. It occasionally
-> > causes writes to memory.reclaim to report false positives and *might*
-> > cause unnecessary retrying when charging memory, but probably too rare
-> > to be a practical problem.
-> >
-> > Personally, I intend to backport to our kernel at Google because it's
-> > a simple enough fix and we have occasionally seen test flakiness
-> > without it.
-> >
-> > I have a reworked version of the series that only has 2 patches:
-> > - simple-two-liner-patch (actually 5 lines)
-> > - one patch including all refactoring squashed (introducing
-> > flush_reclaim_state() with the huge comment, introducing
-> > mm_account_reclaimed_pages(), and moving set_task_reclaim_state()
-> > around).
-> >
-> > Let me know if you want me to send it as v5, or leave the current v4
-> > if you think backporting is not generally important.
->
-> Let's have a look at that v5 and see what people think?
+I'm still running tests to explore some of these questions.
+The machines I am using are roughly as follows.
 
-Sent v5 [1]. Thanks Andrew!
+Intel dual socket 56 total cores
+192-384GB ram
+LEVEL1_ICACHE_SIZE                 32768
+LEVEL1_DCACHE_SIZE                 32768
+LEVEL2_CACHE_SIZE                  1048576
+LEVEL3_CACHE_SIZE                  40370176
 
-[1]https://lore.kernel.org/lkml/20230405185427.1246289-1-yosryahmed@google.=
-com/
+Amd dual socket 128 total cores
+1TB ram
+LEVEL1_ICACHE_SIZE                 32768
+LEVEL1_DCACHE_SIZE                 32768
+LEVEL2_CACHE_SIZE                  524288
+LEVEL3_CACHE_SIZE                  268435456
+
+Arm single socket 64 total cores
+256GB rma
+LEVEL1_ICACHE_SIZE                 65536
+LEVEL1_DCACHE_SIZE                 65536
+LEVEL2_CACHE_SIZE                  1048576
+LEVEL3_CACHE_SIZE                  33554432
+
+On Tue, Apr 4, 2023 at 12:03=E2=80=AFPM Vlastimil Babka <vbabka@suse.cz> wr=
+ote:
+>
+> On 3/22/23 13:30, Binder Makin wrote:
+> > Was looking at SLAB removal and started by running A/B tests of SLAB
+> > vs SLUB.  Please note these are only preliminary results.
+>
+> Thanks, that's very useful.
+>
+> > These were run using 6.1.13 configured for SLAB/SLUB.
+> > Machines were standard datacenter servers.
+> >
+> > Hackbench shows completion time, so smaller is better.
+> > On all others larger is better.
+> > https://docs.google.com/spreadsheets/d/e/2PACX-1vQ47Mekl8BOp3ekCefwL6wL=
+8SQiv6Qvp5avkU2ssQSh41gntjivE-aKM4PkwzkC4N_s_MxUdcsokhhz/pubhtml
+> >
+> > Some notes:
+> > SUnreclaim and SReclaimable shows unreclaimable and reclaimable memory.
+> > Substantially higher with SLUB, but I believe that is to be expected.
+> >
+> > Various results showing a 5-10% degradation with SLUB.  That feels
+> > concerning to me, but I'm not sure what others' tolerance would be.
+> >
+> > redis results on AMD show some pretty bad degredations.  10-20% range
+> > netpipe on Intel also has issues.. 10-17%
+>
+> I guess one question is which ones are genuine SLAB/SLUB differences and =
+not
+> e.g. some artifact of different cache layout or something. For example it
+> seems suspicious if results are widely different between architectures.
+>
+> E.g. will-it-scale writeseek3_scalability regresses on arm64 and amd, but
+> improves on intel? Or is something wrong with the data, all columns for t=
+hat
+> whole benchmark suite are identical.
+>
+> hackbench ("smaller is better") seems drastically better on arm64 (30%
+> median time reduction?) and amd (80% reduction?!?), but 10% slower intel?
+>
+> redis seems a bit improved on arm64, slightly worse on intel but much wor=
+se
+> on amd.
+>
+> specjbb similar story, also I thought it was a java focused benchmark,
+> should it really be exercising kernel slab allocators in such notable way=
+?
+>
+> I guess netpipe is the least surprising as networking was always mentione=
+d
+> in SLAB vs SLUB discussions.
+>
+> > On Tue, Mar 14, 2023 at 4:05=E2=80=AFAM Vlastimil Babka <vbabka@suse.cz=
+> wrote:
+> >>
+> >> As you're probably aware, my plan is to get rid of SLOB and SLAB, leav=
+ing
+> >> only SLUB going forward. The removal of SLOB seems to be going well, t=
+here
+> >> were no objections to the deprecation and I've posted v1 of the remova=
+l
+> >> itself [1] so it could be in -next soon.
+> >>
+> >> The immediate benefit of that is that we can allow kfree() (and kfree_=
+rcu())
+> >> to free objects from kmem_cache_alloc() - something that IIRC at least=
+ xfs
+> >> people wanted in the past, and SLOB was incompatible with that.
+> >>
+> >> For SLAB removal I haven't yet heard any objections (but also didn't
+> >> deprecate it yet) but if there are any users due to particular workloa=
+ds
+> >> doing better with SLAB than SLUB, we can discuss why those would regre=
+ss and
+> >> what can be done about that in SLUB.
+> >>
+> >> Once we have just one slab allocator in the kernel, we can take a clos=
+er
+> >> look at what the users are missing from it that forces them to create =
+own
+> >> allocators (e.g. BPF), and could be considered to be added as a generi=
+c
+> >> implementation to SLUB.
+> >>
+> >> Thanks,
+> >> Vlastimil
+> >>
+> >> [1] https://lore.kernel.org/all/20230310103210.22372-1-vbabka@suse.cz/
+> >>
+>
