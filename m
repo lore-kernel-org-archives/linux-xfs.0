@@ -2,37 +2,54 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28901C77B70
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Apr 2023 07:49:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4058CC77B74
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Apr 2023 09:52:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236843AbjDEHts (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Apr 2023 03:49:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33180 "EHLO
+        id S237113AbjDEJwi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Apr 2023 05:52:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59248 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237087AbjDEHtp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 03:49:45 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B8E446AE;
-        Wed,  5 Apr 2023 00:49:40 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S230103AbjDEJwe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 05:52:34 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89E6E91;
+        Wed,  5 Apr 2023 02:52:21 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3663A63960;
-        Wed,  5 Apr 2023 07:49:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 895D0C433D2;
-        Wed,  5 Apr 2023 07:49:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680680979;
-        bh=Weq5xIt7NaRy390+BxKr0DPL+Sx0J9wKSXtMC/5JUh0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=l5Flc0M5e8GB39z9f8BFJ5ebxS8y3KvMmKQItlraREhf8AkpnxMWHlz+JXp8p7uI1
-         Kljlt0scTB58bQpEmq4GK+eEA+W3BOPA5cN1xWCrA68FuXwrY3GmcIErMd7I6tygyc
-         V9JzsMXQMyO0n9SdIkQE39mGNJMhI4Juz/LKaq5zFFseVa5v/r1CJgL8buDMvRme/M
-         V60YaWT3OGRM2C3c4p9BXErpUiMxTPWmcEsEkzEZBNsBmiLmJeuYqKxc6IXyHEJcg/
-         oPvvLtbmc/+Gs5xXnYjOU/toIg6/1FGapaFmAgQB8BCmWBhC4ZrbJ8UgmFtFOJlHgF
-         qh4BFYcRworMg==
-Date:   Wed, 5 Apr 2023 09:49:27 +0200
-From:   Christian Brauner <brauner@kernel.org>
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 1A3AB20685;
+        Wed,  5 Apr 2023 09:52:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1680688340; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=5kxEOZs1Ac76OBwtijAiq1LEHzxrTF/ESnoZeBX1s5U=;
+        b=IRxH5dLldXbzWoseDDJFLON27UWQisexrdux6pTmZwMEJUh7+KDDgOL2FFGwMdw4qXX+88
+        SZXtRstArd4pzrgcJ8oig7KPreFloNY/MGYHpRLp72bp2qfZlFYU7wFiZqAGyQ0vGW2203
+        wLigaRb7GuLAIa/y7Wt2ZqyTi00uXvE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1680688340;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=5kxEOZs1Ac76OBwtijAiq1LEHzxrTF/ESnoZeBX1s5U=;
+        b=9GU3V54N4nWUFuOORZ946DHhtbHXxKXuPtMcQGot4qVFgX8PM9hEOJcrOnifZQlqrRHef3
+        ++8hpDdRa+nWC8Dg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E15F713A31;
+        Wed,  5 Apr 2023 09:52:19 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id rfgAN9NELWQFbwAAMHmgww
+        (envelope-from <jack@suse.cz>); Wed, 05 Apr 2023 09:52:19 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 1E028A0729; Wed,  5 Apr 2023 11:52:19 +0200 (CEST)
+Date:   Wed, 5 Apr 2023 11:52:19 +0200
+From:   Jan Kara <jack@suse.cz>
 To:     Zorro Lang <zlang@kernel.org>
 Cc:     fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
         ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org,
@@ -40,21 +57,21 @@ Cc:     fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
         ocfs2-devel@oss.oracle.com, linux-unionfs@vger.kernel.org,
         jack@suse.com, linux-xfs@vger.kernel.org, fdmanana@suse.com,
-        ebiggers@google.com, amir73il@gmail.com, djwong@kernel.org,
-        anand.jain@oracle.com
+        ebiggers@google.com, brauner@kernel.org, amir73il@gmail.com,
+        djwong@kernel.org, anand.jain@oracle.com
 Subject: Re: [PATCH 3/5] fstests/MAINTAINERS: add supported mailing list
-Message-ID: <20230405-bazillus-nanotechnologie-a8cf619d8454@brauner>
+Message-ID: <20230405095219.fx2lw4dt25gn34ib@quack3>
 References: <20230404171411.699655-1-zlang@kernel.org>
  <20230404171411.699655-4-zlang@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20230404171411.699655-4-zlang@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 05, 2023 at 01:14:09AM +0800, Zorro Lang wrote:
+On Wed 05-04-23 01:14:09, Zorro Lang wrote:
 > The fstests supports different kind of fs testing, better to cc
 > specific fs mailing list for specific fs testing, to get better
 > reviewing points. So record these mailing lists and files related
@@ -62,6 +79,13 @@ On Wed, Apr 05, 2023 at 01:14:09AM +0800, Zorro Lang wrote:
 > 
 > Signed-off-by: Zorro Lang <zlang@kernel.org>
 > ---
+
+Looks good to me. Feel free to add:
+
+Acked-by: Jan Kara <jack@suse.cz>
+
+								Honza
+
 > 
 > If someone mailing list doesn't want to be in cc list of related fstests
 > patch, please reply this email, I'll remove that line.
@@ -125,8 +149,46 @@ On Wed, Apr 05, 2023 at 01:14:09AM +0800, Zorro Lang wrote:
 > +L:	linux-fsdevel@vger.kernel.org
 > +S:	Supported
 > +F:	src/vfs/
-
-Same suggestion as earlier, make that section VFS as it covers generic
-functionality,
-
-Acked-by: Christian Brauner <brauner@kernel.org>
+> +
+> +NFS
+> +L:	linux-nfs@vger.kernel.org
+> +S:	Supported
+> +F:	tests/nfs/
+> +F:	common/nfs
+> +
+> +OCFS2
+> +L:	ocfs2-devel@oss.oracle.com
+> +S:	Supported
+> +F:	tests/ocfs2/
+> +
+> +OVERLAYFS
+> +L:	linux-unionfs@vger.kernel.org
+> +S:	Supported
+> +F:	tests/overlay
+> +F:	common/overlay
+> +
+> +UDF
+> +R:	Jan Kara <jack@suse.com>
+> +S:	Supported
+> +F:	tests/udf/
+> +
+> +XFS
+> +L:	linux-xfs@vger.kernel.org
+> +S:	Supported
+> +F:	common/dump
+> +F:	common/fuzzy
+> +F:	common/inject
+> +F:	common/populate
+> +F:	common/repair
+> +F:	common/xfs
+> +F:	tests/xfs/
+> +
+>  ALL
+>  M:	Zorro Lang <zlang@kernel.org>
+>  L:	fstests@vger.kernel.org
+> -- 
+> 2.39.2
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
