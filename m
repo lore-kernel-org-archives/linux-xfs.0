@@ -2,193 +2,96 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4058CC77B74
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Apr 2023 09:52:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51BD6C7619A
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Apr 2023 10:37:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237113AbjDEJwi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Apr 2023 05:52:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59248 "EHLO
+        id S237657AbjDEKhn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Apr 2023 06:37:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230103AbjDEJwe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 05:52:34 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89E6E91;
-        Wed,  5 Apr 2023 02:52:21 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 1A3AB20685;
-        Wed,  5 Apr 2023 09:52:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1680688340; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+        with ESMTP id S237640AbjDEKhk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 06:37:40 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2BC65258
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2023 03:36:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1680691009;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=5kxEOZs1Ac76OBwtijAiq1LEHzxrTF/ESnoZeBX1s5U=;
-        b=IRxH5dLldXbzWoseDDJFLON27UWQisexrdux6pTmZwMEJUh7+KDDgOL2FFGwMdw4qXX+88
-        SZXtRstArd4pzrgcJ8oig7KPreFloNY/MGYHpRLp72bp2qfZlFYU7wFiZqAGyQ0vGW2203
-        wLigaRb7GuLAIa/y7Wt2ZqyTi00uXvE=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1680688340;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=5kxEOZs1Ac76OBwtijAiq1LEHzxrTF/ESnoZeBX1s5U=;
-        b=9GU3V54N4nWUFuOORZ946DHhtbHXxKXuPtMcQGot4qVFgX8PM9hEOJcrOnifZQlqrRHef3
-        ++8hpDdRa+nWC8Dg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E15F713A31;
-        Wed,  5 Apr 2023 09:52:19 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id rfgAN9NELWQFbwAAMHmgww
-        (envelope-from <jack@suse.cz>); Wed, 05 Apr 2023 09:52:19 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 1E028A0729; Wed,  5 Apr 2023 11:52:19 +0200 (CEST)
-Date:   Wed, 5 Apr 2023 11:52:19 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Zorro Lang <zlang@kernel.org>
-Cc:     fstests@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        ceph-devel@vger.kernel.org, linux-cifs@vger.kernel.org,
+        bh=8hFqrvNZsn86teCYjqs2wVJUMFZmHeavzTexdU+dVHw=;
+        b=NAiLEzl10qFt6snaAQP2hfdhzRimdNsv7/DkZBn8NFMYda9ZexlvVrZGs+9B0if20NZrKh
+        E0yElc4xN57N/sbHyTaGfEFctOyq8UsNrQwKzUmcQ7eUBRF+s+aIEBDaCADydrCsQnBwJv
+        o3lOFa56cwTQ1qunAmDJTtWIYr7HpzE=
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
+ [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-581-AjXiN7SOOvCEEun8DXDzvw-1; Wed, 05 Apr 2023 06:36:48 -0400
+X-MC-Unique: AjXiN7SOOvCEEun8DXDzvw-1
+Received: by mail-qk1-f200.google.com with SMTP id b142-20020ae9eb94000000b007486a8b9ae9so13355610qkg.11
+        for <linux-xfs@vger.kernel.org>; Wed, 05 Apr 2023 03:36:48 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680691008;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=8hFqrvNZsn86teCYjqs2wVJUMFZmHeavzTexdU+dVHw=;
+        b=PT05i6aUFSZdT7AlJTGk47qkXdZ8v6JH8MxhM1pO+Nsb52uF5W3k93dl3Q9s4LN8m9
+         ANGOBaczxWzt2g1SEvbPisnG+xmQon6c+W/Z1gsOmmGNANwvPiZNqRJObSXJK+UexanC
+         8luPLQ5IaVc9GKqONryIng6+Jsj8ojHM76T2IqOOsBb4ODAAYZXnVfw4Izn5x07FuP11
+         uvLo8L2wAoOSQthJ/R8v0Rew7SKX2u4Ae4M6oNYc5d0dDikbYGUldSCC73yBCBEhKY0W
+         pI9xNpwjAbsX3y4EH5dUto/LBYvznW5w81DAJJOl2QFR2UpO/7lYWcZN7QfDBFcIKfK3
+         wOiw==
+X-Gm-Message-State: AAQBX9eIdTmEIpYoBH1aRADBt1y6Fzqxx56zJwg399drL0fkvteBdkOw
+        KpK0PM//z3EIm6bnNumyOk1gJ926swrVzt7+ad6mYkbxFaZjuU9D88qIi2hDuGqv15CBVeTAhZG
+        jHk3cUAbMl99er4os42Q=
+X-Received: by 2002:a05:622a:181c:b0:3da:aa9b:105a with SMTP id t28-20020a05622a181c00b003daaa9b105amr4016620qtc.17.1680691008079;
+        Wed, 05 Apr 2023 03:36:48 -0700 (PDT)
+X-Google-Smtp-Source: AKy350Yray4mqL/DA63FufP2W8G+Q2vCv/dEYqnAM/OkHjKwnv430c/AiUDk3FXiS3P6h8ilen17Eg==
+X-Received: by 2002:a05:622a:181c:b0:3da:aa9b:105a with SMTP id t28-20020a05622a181c00b003daaa9b105amr4016592qtc.17.1680691007736;
+        Wed, 05 Apr 2023 03:36:47 -0700 (PDT)
+Received: from aalbersh.remote.csb ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id i2-20020ac84882000000b003d5aae2182dsm3911845qtq.29.2023.04.05.03.36.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 05 Apr 2023 03:36:47 -0700 (PDT)
+Date:   Wed, 5 Apr 2023 12:36:42 +0200
+From:   Andrey Albershteyn <aalbersh@redhat.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     djwong@kernel.org, dchinner@redhat.com, ebiggers@kernel.org,
+        linux-xfs@vger.kernel.org, fsverity@lists.linux.dev,
+        rpeterso@redhat.com, agruenba@redhat.com, xiang@kernel.org,
+        chao@kernel.org, damien.lemoal@opensource.wdc.com, jth@kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-btrfs@vger.kernel.org,
         linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-fsdevel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        ocfs2-devel@oss.oracle.com, linux-unionfs@vger.kernel.org,
-        jack@suse.com, linux-xfs@vger.kernel.org, fdmanana@suse.com,
-        ebiggers@google.com, brauner@kernel.org, amir73il@gmail.com,
-        djwong@kernel.org, anand.jain@oracle.com
-Subject: Re: [PATCH 3/5] fstests/MAINTAINERS: add supported mailing list
-Message-ID: <20230405095219.fx2lw4dt25gn34ib@quack3>
-References: <20230404171411.699655-1-zlang@kernel.org>
- <20230404171411.699655-4-zlang@kernel.org>
+        cluster-devel@redhat.com
+Subject: Re: [PATCH v2 05/23] fsverity: make fsverity_verify_folio() accept
+ folio's offset and size
+Message-ID: <20230405103642.ykmgjgb7yi7htphf@aalbersh.remote.csb>
+References: <20230404145319.2057051-1-aalbersh@redhat.com>
+ <20230404145319.2057051-6-aalbersh@redhat.com>
+ <ZCxCnC2lM9N9qtCc@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230404171411.699655-4-zlang@kernel.org>
+In-Reply-To: <ZCxCnC2lM9N9qtCc@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed 05-04-23 01:14:09, Zorro Lang wrote:
-> The fstests supports different kind of fs testing, better to cc
-> specific fs mailing list for specific fs testing, to get better
-> reviewing points. So record these mailing lists and files related
-> with them in MAINTAINERS file.
-> 
-> Signed-off-by: Zorro Lang <zlang@kernel.org>
-> ---
+Hi Christoph,
 
-Looks good to me. Feel free to add:
+On Tue, Apr 04, 2023 at 08:30:36AM -0700, Christoph Hellwig wrote:
+> On Tue, Apr 04, 2023 at 04:53:01PM +0200, Andrey Albershteyn wrote:
+> > Not the whole folio always need to be verified by fs-verity (e.g.
+> > with 1k blocks). Use passed folio's offset and size.
+> 
+> Why can't those callers just call fsverity_verify_blocks directly?
+> 
 
-Acked-by: Jan Kara <jack@suse.cz>
+They can. Calling _verify_folio with explicit offset; size appeared
+more clear to me. But I'm ok with dropping this patch to have full
+folio verify function.
 
-								Honza
-
-> 
-> If someone mailing list doesn't want to be in cc list of related fstests
-> patch, please reply this email, I'll remove that line.
-> 
-> Or if I missed someone mailing list, please feel free to tell me.
-> 
-> Thanks,
-> Zorro
-> 
->  MAINTAINERS | 77 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 77 insertions(+)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 09b1a5a3..620368cb 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -107,6 +107,83 @@ Maintainers List
->  	  should send patch to fstests@ at least. Other relevant mailing list
->  	  or reviewer or co-maintainer can be in cc list.
->  
-> +BTRFS
-> +L:	linux-btrfs@vger.kernel.org
-> +S:	Supported
-> +F:	tests/btrfs/
-> +F:	common/btrfs
-> +
-> +CEPH
-> +L:	ceph-devel@vger.kernel.org
-> +S:	Supported
-> +F:	tests/ceph/
-> +F:	common/ceph
-> +
-> +CIFS
-> +L:	linux-cifs@vger.kernel.org
-> +S:	Supported
-> +F:	tests/cifs
-> +
-> +EXT4
-> +L:	linux-ext4@vger.kernel.org
-> +S:	Supported
-> +F:	tests/ext4/
-> +F:	common/ext4
-> +
-> +F2FS
-> +L:	linux-f2fs-devel@lists.sourceforge.net
-> +S:	Supported
-> +F:	tests/f2fs/
-> +F:	common/f2fs
-> +
-> +FSVERITY
-> +L:	fsverity@lists.linux.dev
-> +S:	Supported
-> +F:	common/verity
-> +
-> +FSCRYPT
-> +L:      linux-fscrypt@vger.kernel.org
-> +S:	Supported
-> +F:	common/encrypt
-> +
-> +FS-IDMAPPED
-> +L:	linux-fsdevel@vger.kernel.org
-> +S:	Supported
-> +F:	src/vfs/
-> +
-> +NFS
-> +L:	linux-nfs@vger.kernel.org
-> +S:	Supported
-> +F:	tests/nfs/
-> +F:	common/nfs
-> +
-> +OCFS2
-> +L:	ocfs2-devel@oss.oracle.com
-> +S:	Supported
-> +F:	tests/ocfs2/
-> +
-> +OVERLAYFS
-> +L:	linux-unionfs@vger.kernel.org
-> +S:	Supported
-> +F:	tests/overlay
-> +F:	common/overlay
-> +
-> +UDF
-> +R:	Jan Kara <jack@suse.com>
-> +S:	Supported
-> +F:	tests/udf/
-> +
-> +XFS
-> +L:	linux-xfs@vger.kernel.org
-> +S:	Supported
-> +F:	common/dump
-> +F:	common/fuzzy
-> +F:	common/inject
-> +F:	common/populate
-> +F:	common/repair
-> +F:	common/xfs
-> +F:	tests/xfs/
-> +
->  ALL
->  M:	Zorro Lang <zlang@kernel.org>
->  L:	fstests@vger.kernel.org
-> -- 
-> 2.39.2
-> 
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+- Andrey
+
