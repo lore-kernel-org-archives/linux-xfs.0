@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB410C76196
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:18:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B694C76196
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:18:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240423AbjDFTSZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Apr 2023 15:18:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47052 "EHLO
+        id S240532AbjDFTSi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Apr 2023 15:18:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47134 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240508AbjDFTSY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:18:24 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAAA4E78
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:18:21 -0700 (PDT)
+        with ESMTP id S240531AbjDFTSh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:18:37 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B3B8E78
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:18:37 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3DC2B60C99
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:18:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1106C433D2;
-        Thu,  6 Apr 2023 19:18:20 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CD617644B7
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:18:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35F34C433D2;
+        Thu,  6 Apr 2023 19:18:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680808700;
-        bh=6Jdy6JzcmHxBlr7NiZgYb1agLDZKmVPF2L33e7uSwCk=;
+        s=k20201202; t=1680808716;
+        bh=NJ61IxOToZgaBFW3osjwF/Pn/UK5y2wHTMAd5X3Gmuo=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=ScmwAfxuDZDV7zMPKJGTsrzVZxsOhuD/Uh2dvuG1nVlwq0i4yO08SnMcUJXtSfyZx
-         wETx5rkkZVfOvm6grIIYnEj8O9cCtbY9UbAhkfRFNo2I3SZM3BpchxxcXaYbgD02+s
-         zcI6AzMvocEvtlecDPm+kt3TgDCk6dYYyBNlXdwgykxWjpY/sVoscLeGXKBxYcfwzR
-         FWKqc6oI25fNTcLyM03cgld6V498veg8OFIpa+Pj3Z8QEEdraEZAmHL00mn0FCTU+A
-         yvh2RDz9KSoOZ0HtDqPE4NofuK3cnrN+NSy85hSv+6mwVP4P6C628lzzdn5HGNDxW4
-         ce98mNVxxBreQ==
-Date:   Thu, 06 Apr 2023 12:18:20 -0700
-Subject: [PATCH 07/12] xfs: validate recovered name buffers when recovering
- xattr items
+        b=A/WsqRTSdQ2TdHF+f6ss1/fH41u7+oMds7m8mYpzo3IbKytihQKlVg/SRy5dkaOXm
+         IM6EF9LOUoRX1m+v/sZvNpwdXObarlqF05oTl6C9MQgDcbFR3gPBrROkM2NinZ/b3L
+         zA5o+2iHjRezFcQE1CPlkUNQVVZnoQ65cbpMJgdpYXBcIx+jUtlqBvdsMQa7fMifoR
+         wpmmrXK1WHrEBBF8frn3mZSHgd8prgbbPOE0kuMZr7D8MFZd0zbmDbCdtsp+ebstba
+         qVHUTdbgSVEayfMtLQCptDfhhH33ER310jon2by7BiNa6d2pnkQ2n0iQv04xZ+RnBX
+         SvFGJWBH7DZwg==
+Date:   Thu, 06 Apr 2023 12:18:35 -0700
+Subject: [PATCH 08/12] xfs: always set args->value in xfs_attri_item_recover
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <168080823904.613065.4855082202510916891.stgit@frogsfrogsfrogs>
+Message-ID: <168080823918.613065.14566514432845489888.stgit@frogsfrogsfrogs>
 In-Reply-To: <168080823794.613065.2971656278555515103.stgit@frogsfrogsfrogs>
 References: <168080823794.613065.2971656278555515103.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -50,120 +49,36 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Strengthen the xattri log item recovery code by checking that we
-actually have the required name and newname buffers for whatever
-operation we're replaying.
+Always set args->value to the recovered value buffer.  This reduces the
+amount of code in the switch statement, and hence the amount of thinking
+that I have to do.  We validated the recovered buffers, supposedly.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_attr_item.c |   58 +++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 47 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_attr_item.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index 23fee7c0938f..082d7790fc2c 100644
+index 082d7790fc2c..07a6cec3dfb9 100644
 --- a/fs/xfs/xfs_attr_item.c
 +++ b/fs/xfs/xfs_attr_item.c
-@@ -714,22 +714,20 @@ xlog_recover_attri_commit_pass2(
- 	const void			*attr_value = NULL;
- 	const void			*attr_name;
- 	size_t				len;
--	unsigned int			op;
--
--	attri_formatp = item->ri_buf[0].i_addr;
--	attr_name = item->ri_buf[1].i_addr;
-+	unsigned int			op, i = 0;
- 
- 	/* Validate xfs_attri_log_format before the large memory allocation */
- 	len = sizeof(struct xfs_attri_log_format);
--	if (item->ri_buf[0].i_len != len) {
-+	if (item->ri_buf[i].i_len != len) {
- 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
- 				item->ri_buf[0].i_addr, item->ri_buf[0].i_len);
- 		return -EFSCORRUPTED;
- 	}
- 
-+	attri_formatp = item->ri_buf[i].i_addr;
- 	if (!xfs_attri_validate(mp, attri_formatp)) {
- 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
--				item->ri_buf[0].i_addr, item->ri_buf[0].i_len);
-+				attri_formatp, len);
- 		return -EFSCORRUPTED;
- 	}
- 
-@@ -758,31 +756,69 @@ xlog_recover_attri_commit_pass2(
- 				     attri_formatp, len);
- 		return -EFSCORRUPTED;
- 	}
-+	i++;
- 
- 	/* Validate the attr name */
--	if (item->ri_buf[1].i_len !=
-+	if (item->ri_buf[i].i_len !=
- 			xlog_calc_iovec_len(attri_formatp->alfi_name_len)) {
- 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
--				item->ri_buf[0].i_addr, item->ri_buf[0].i_len);
-+				attri_formatp, len);
- 		return -EFSCORRUPTED;
- 	}
- 
-+	attr_name = item->ri_buf[i].i_addr;
- 	if (!xfs_attr_namecheck(attr_name, attri_formatp->alfi_name_len)) {
- 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
--				item->ri_buf[1].i_addr, item->ri_buf[1].i_len);
-+				attri_formatp, len);
- 		return -EFSCORRUPTED;
- 	}
-+	i++;
- 
- 	/* Validate the attr value, if present */
- 	if (attri_formatp->alfi_value_len != 0) {
--		if (item->ri_buf[2].i_len != xlog_calc_iovec_len(attri_formatp->alfi_value_len)) {
-+		if (item->ri_buf[i].i_len != xlog_calc_iovec_len(attri_formatp->alfi_value_len)) {
- 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
- 					item->ri_buf[0].i_addr,
- 					item->ri_buf[0].i_len);
- 			return -EFSCORRUPTED;
- 		}
- 
--		attr_value = item->ri_buf[2].i_addr;
-+		attr_value = item->ri_buf[i].i_addr;
-+		i++;
-+	}
-+
-+	/*
-+	 * Make sure we got the correct number of buffers for the operation
-+	 * that we just loaded.
-+	 */
-+	if (i != item->ri_total) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
-+				attri_formatp, len);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	switch (op) {
-+	case XFS_ATTRI_OP_FLAGS_REMOVE:
-+		/* Regular remove operations operate only on names. */
-+		if (attr_value != NULL || attri_formatp->alfi_value_len != 0) {
-+			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
-+					     attri_formatp, len);
-+			return -EFSCORRUPTED;
-+		}
-+		fallthrough;
-+	case XFS_ATTRI_OP_FLAGS_SET:
-+	case XFS_ATTRI_OP_FLAGS_REPLACE:
-+		/*
-+		 * Regular xattr set/remove/replace operations require a name
-+		 * and do not take a newname.  Values are optional for set and
-+		 * replace.
-+		 */
-+		if (attr_name == NULL || attri_formatp->alfi_name_len == 0) {
-+			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
-+					     attri_formatp, len);
-+			return -EFSCORRUPTED;
-+		}
-+		break;
- 	}
- 
- 	/*
+@@ -594,6 +594,8 @@ xfs_attri_item_recover(
+ 	args->name = nv->name.i_addr;
+ 	args->namelen = nv->name.i_len;
+ 	args->hashval = xfs_da_hashname(args->name, args->namelen);
++	args->value = nv->value.i_addr;
++	args->valuelen = nv->value.i_len;
+ 	args->attr_filter = attrp->alfi_attr_filter & XFS_ATTRI_FILTER_MASK;
+ 	args->op_flags = XFS_DA_OP_RECOVERY | XFS_DA_OP_OKNOENT |
+ 			 XFS_DA_OP_LOGGED;
+@@ -603,8 +605,6 @@ xfs_attri_item_recover(
+ 	switch (xfs_attr_intent_op(attr)) {
+ 	case XFS_ATTRI_OP_FLAGS_SET:
+ 	case XFS_ATTRI_OP_FLAGS_REPLACE:
+-		args->value = nv->value.i_addr;
+-		args->valuelen = nv->value.i_len;
+ 		args->total = xfs_attr_calc_size(args, &local);
+ 		if (xfs_inode_hasattr(args->dp))
+ 			attr->xattri_dela_state = xfs_attr_init_replace_state(args);
 
