@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 790ACC7618D
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:38:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00C4BC76196
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:38:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237377AbjDFTiX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Apr 2023 15:38:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39086 "EHLO
+        id S237197AbjDFTil (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Apr 2023 15:38:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237372AbjDFTiI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:38:08 -0400
+        with ESMTP id S237730AbjDFTi1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:38:27 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D86E5186
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:38:05 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3F9D4EFA
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:38:21 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7835A60FB3
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:38:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6E8CC433EF;
-        Thu,  6 Apr 2023 19:38:04 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1A96960DED
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:38:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74BE9C433D2;
+        Thu,  6 Apr 2023 19:38:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680809884;
-        bh=EGhYFd5UWcgR0vkBKdctpQM4ZNC1H6js8T6ty6Qjb8w=;
+        s=k20201202; t=1680809900;
+        bh=cmgpEJY8NoT/Fidw9rs/gGWVXfcGH3osyewOAD++eXs=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=syZuLFJIfzKiQ8fh+8LyqpVx2bP1JXYzj+J9UmXNzAYyCRrm//cS7AzlZNd1Tm5ob
-         jMkjxEYYBSIBYU3GpZg6oBxyroFb/A9n2kYTf4zrUBzGctIWmcdljJSRUddp9jBRN+
-         Xxn6KgsdjvLR/8boQ5Fe6yN5hQoEmzNNR6uoLAP+v3G1OXnp7CGOsnAr08PUAc0jxk
-         73Tlk8lEzPKwvNPDPeswRVSp+Q30vDZp7kQ/Nu+Nnm9NL3c+0oy5+hcpFZ0c0sYdOo
-         7+x7VQDWL8s6znZNxrmOTOHv8cGZwdCn3mygOBvssWRXJvD27E4dcTg0LanVJR1OBh
-         ns8Zci3erWhnQ==
-Date:   Thu, 06 Apr 2023 12:38:04 -0700
-Subject: [PATCH 25/32] xfs_db: obfuscate dirent and parent pointer names
- consistently
+        b=GqEqkYM6NgF9bfnYk/oEtfNPHpm35tlTdn3qrnz1D77dYSM3l02KosuYpeBcaiS3K
+         5qBhCb9XghEuzoMQd95cU+h6Dg/N9LWRm6NFIwP6gU8OLK+PF8nl0KLRzYR/cTdJg5
+         cNxx10TUXpeboCBTO4EvyHXzpXnX9efJyi+zPb14sjRjioHqSJCoUkqJPcUv8qkylZ
+         2GSNm6qAXLqRXnSQET94fPHkCrWyK1ytq38KVWyLWOMXWs4J67PFFoSYllUuKMYAKj
+         YXYJkyH+J71+oVLmgFFQ5FXSA98IyhD0OrroNmVqfo7mFOpJtrdSzLRrlA9DsXuBkY
+         W9HQujLSHDj4A==
+Date:   Thu, 06 Apr 2023 12:38:20 -0700
+Subject: [PATCH 26/32] xfs_db: hoist name obfuscation code out of metadump.c
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <168080827886.616793.2247932828058405961.stgit@frogsfrogsfrogs>
+Message-ID: <168080827899.616793.13744631474033216206.stgit@frogsfrogsfrogs>
 In-Reply-To: <168080827546.616793.7264157843231723676.stgit@frogsfrogsfrogs>
 References: <168080827546.616793.7264157843231723676.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -50,428 +49,776 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When someone wants to perform an obfuscated metadump of a filesystem
-where parent pointers are enabled, we have to use the *exact* same
-obfuscated name for both the directory entry and the parent pointer.
-
-Create a name remapping table so that when we obfuscate a dirent name or
-a parent pointer name, we can apply the same obfuscation when we find
-the corresponding parent pointer or dirent.
+We want to create a debugger command that will create obfuscated names
+for directory and xattr names, so hoist the name obfuscation code into a
+separate file.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/metadump.c            |  313 ++++++++++++++++++++++++++++++++++++++++++++--
- libxfs/libxfs_api_defs.h |    2 
- 2 files changed, 304 insertions(+), 11 deletions(-)
+ db/Makefile    |    2 
+ db/metadump.c  |  343 -------------------------------------------------------
+ db/obfuscate.c |  348 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ db/obfuscate.h |   16 +++
+ 4 files changed, 366 insertions(+), 343 deletions(-)
+ create mode 100644 db/obfuscate.c
+ create mode 100644 db/obfuscate.h
 
 
+diff --git a/db/Makefile b/db/Makefile
+index b2e011745..2f95f6707 100644
+--- a/db/Makefile
++++ b/db/Makefile
+@@ -13,7 +13,7 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
+ 	flist.h fprint.h frag.h freesp.h hash.h help.h init.h inode.h input.h \
+ 	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
+ 	sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h \
+-	fuzz.h
++	fuzz.h obfuscate.h
+ CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c namei.c \
+ 	timelimit.c
+ LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
 diff --git a/db/metadump.c b/db/metadump.c
-index 27d1df432..b413ef5b3 100644
+index b413ef5b3..e1b707898 100644
 --- a/db/metadump.c
 +++ b/db/metadump.c
-@@ -20,6 +20,14 @@
+@@ -19,6 +19,7 @@
+ #include "faddr.h"
  #include "field.h"
  #include "dir2.h"
++#include "obfuscate.h"
  
-+#undef REMAP_DEBUG
-+
-+#ifdef REMAP_DEBUG
-+# define remap_debug		printf
-+#else
-+# define remap_debug(...)	((void)0)
-+#endif
-+
- #define DEFAULT_MAX_EXT_SIZE	XFS_MAX_BMBT_EXTLEN
+ #undef REMAP_DEBUG
  
- /* copy all metadata structures to/from a file */
-@@ -736,6 +744,111 @@ nametable_add(xfs_dahash_t hash, int namelen, unsigned char *name)
+@@ -849,19 +850,6 @@ remaptable_add(
  	return ent;
  }
  
+-#define is_invalid_char(c)	((c) == '/' || (c) == '\0')
+-#define rol32(x,y)		(((x) << (y)) | ((x) >> (32 - (y))))
+-
+-static inline unsigned char
+-random_filename_char(void)
+-{
+-	static unsigned char filename_alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+-						"abcdefghijklmnopqrstuvwxyz"
+-						"0123456789-_";
+-
+-	return filename_alphabet[random() % (sizeof filename_alphabet - 1)];
+-}
+-
+ #define	ORPHANAGE	"lost+found"
+ #define	ORPHANAGE_LEN	(sizeof (ORPHANAGE) - 1)
+ 
+@@ -921,335 +909,6 @@ in_lost_found(
+ 	return slen == namelen && !memcmp(name, s, namelen);
+ }
+ 
+-/*
+- * Given a name and its hash value, massage the name in such a way
+- * that the result is another name of equal length which shares the
+- * same hash value.
+- */
+-static void
+-obfuscate_name(
+-	xfs_dahash_t	hash,
+-	size_t		name_len,
+-	unsigned char	*name)
+-{
+-	unsigned char	*newp = name;
+-	int		i;
+-	xfs_dahash_t	new_hash = 0;
+-	unsigned char	*first;
+-	unsigned char	high_bit;
+-	int		shift;
+-
+-	/*
+-	 * Our obfuscation algorithm requires at least 5-character
+-	 * names, so don't bother if the name is too short.  We
+-	 * work backward from a hash value to determine the last
+-	 * five bytes in a name required to produce a new name
+-	 * with the same hash.
+-	 */
+-	if (name_len < 5)
+-		return;
+-
+-	/*
+-	 * The beginning of the obfuscated name can be pretty much
+-	 * anything, so fill it in with random characters.
+-	 * Accumulate its new hash value as we go.
+-	 */
+-	for (i = 0; i < name_len - 5; i++) {
+-		*newp = random_filename_char();
+-		new_hash = *newp ^ rol32(new_hash, 7);
+-		newp++;
+-	}
+-
+-	/*
+-	 * Compute which five bytes need to be used at the end of
+-	 * the name so the hash of the obfuscated name is the same
+-	 * as the hash of the original.  If any result in an invalid
+-	 * character, flip a bit and arrange for a corresponding bit
+-	 * in a neighboring byte to be flipped as well.  For the
+-	 * last byte, the "neighbor" to change is the first byte
+-	 * we're computing here.
+-	 */
+-	new_hash = rol32(new_hash, 3) ^ hash;
+-
+-	first = newp;
+-	high_bit = 0;
+-	for (shift = 28; shift >= 0; shift -= 7) {
+-		*newp = (new_hash >> shift & 0x7f) ^ high_bit;
+-		if (is_invalid_char(*newp)) {
+-			*newp ^= 1;
+-			high_bit = 0x80;
+-		} else
+-			high_bit = 0;
+-		ASSERT(!is_invalid_char(*newp));
+-		newp++;
+-	}
+-
+-	/*
+-	 * If we flipped a bit on the last byte, we need to fix up
+-	 * the matching bit in the first byte.  The result will
+-	 * be a valid character, because we know that first byte
+-	 * has 0's in its upper four bits (it was produced by a
+-	 * 28-bit right-shift of a 32-bit unsigned value).
+-	 */
+-	if (high_bit) {
+-		*first ^= 0x10;
+-		ASSERT(!is_invalid_char(*first));
+-	}
+-	ASSERT(libxfs_da_hashname(name, name_len) == hash);
+-}
+-
+-/*
+- * Flip a bit in each of two bytes at the end of the given name.
+- * This is used in generating a series of alternate names to be used
+- * in the event a duplicate is found.
+- *
+- * The bits flipped are selected such that they both affect the same
+- * bit in the name's computed hash value, so flipping them both will
+- * preserve the hash.
+- *
+- * The following diagram aims to show the portion of a computed
+- * hash that a given byte of a name affects.
+- *
+- *	   31    28      24    21	     14		  8 7       3     0
+- *	   +-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-+
+- * hash:   | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
+- *	   +-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-+
+- *	  last-4 ->|	       |<-- last-2 --->|	   |<--- last ---->|
+- *		 |<-- last-3 --->|	     |<-- last-1 --->|     |<- last-4
+- *			 |<-- last-7 --->|	     |<-- last-5 --->|
+- *	   |<-- last-8 --->|	       |<-- last-6 --->|
+- *			. . . and so on
+- *
+- * The last byte of the name directly affects the low-order byte of
+- * the hash.  The next-to-last affects bits 7-14, the next one back
+- * affects bits 14-21, and so on.  The effect wraps around when it
+- * goes beyond the top of the hash (as happens for byte last-4).
+- *
+- * Bits that are flipped together "overlap" on the hash value.  As
+- * an example of overlap, the last two bytes both affect bit 7 in
+- * the hash.  That pair of bytes (and their overlapping bits) can be
+- * used for this "flip bit" operation (it's the first pair tried,
+- * actually).
+- *
+- * A table defines overlapping pairs--the bytes involved and bits
+- * within them--that can be used this way.  The byte offset is
+- * relative to a starting point within the name, which will be set
+- * to affect the bytes at the end of the name.  The function is
+- * called with a "bitseq" value which indicates which bit flip is
+- * desired, and this translates directly into selecting which entry
+- * in the bit_to_flip[] table to apply.
+- *
+- * The function returns 1 if the operation was successful.  It
+- * returns 0 if the result produced a character that's not valid in
+- * a name (either '/' or a '\0').  Finally, it returns -1 if the bit
+- * sequence number is beyond what is supported for a name of this
+- * length.
+- *
+- * Discussion
+- * ----------
+- * (Also see the discussion above find_alternate(), below.)
+- *
+- * In order to make this function work for any length name, the
+- * table is ordered by increasing byte offset, so that the earliest
+- * entries can apply to the shortest strings.  This way all names
+- * are done consistently.
+- *
+- * When bit flips occur, they can convert printable characters
+- * into non-printable ones.  In an effort to reduce the impact of
+- * this, the first bit flips are chosen to affect bytes the end of
+- * the name (and furthermore, toward the low bits of a byte).  Those
+- * bytes are often non-printable anyway because of the way they are
+- * initially selected by obfuscate_name()).  This is accomplished,
+- * using later table entries first.
+- *
+- * Each row in the table doubles the number of alternates that
+- * can be generated.  A two-byte name is limited to using only
+- * the first row, so it's possible to generate two alternates
+- * (the original name, plus the alternate produced by flipping
+- * the one pair of bits).  In a 5-byte name, the effect of the
+- * first byte overlaps the last by 4 its, and there are 8 bits
+- * to flip, allowing for 256 possible alternates.
+- *
+- * Short names (less than 5 bytes) are never even obfuscated, so for
+- * such names the relatively small number of alternates should never
+- * really be a problem.
+- *
+- * Long names (more than 6 bytes, say) are not likely to exhaust
+- * the number of available alternates.  In fact, the table could
+- * probably have stopped at 8 entries, on the assumption that 256
+- * alternates should be enough for most any situation.  The entries
+- * beyond those are present mostly for demonstration of how it could
+- * be populated with more entries, should it ever be necessary to do
+- * so.
+- */
+-static int
+-flip_bit(
+-	size_t		name_len,
+-	unsigned char	*name,
+-	uint32_t	bitseq)
+-{
+-	int	index;
+-	size_t	offset;
+-	unsigned char *p0, *p1;
+-	unsigned char m0, m1;
+-	struct {
+-	    int		byte;	/* Offset from start within name */
+-	    unsigned char bit;	/* Bit within that byte */
+-	} bit_to_flip[][2] = {	/* Sorted by second entry's byte */
+-	    { { 0, 0 }, { 1, 7 } },	/* Each row defines a pair */
+-	    { { 1, 0 }, { 2, 7 } },	/* of bytes and a bit within */
+-	    { { 2, 0 }, { 3, 7 } },	/* each byte.  Each bit in */
+-	    { { 0, 4 }, { 4, 0 } },	/* a pair affects the same */
+-	    { { 0, 5 }, { 4, 1 } },	/* bit in the hash, so flipping */
+-	    { { 0, 6 }, { 4, 2 } },	/* both will change the name */
+-	    { { 0, 7 }, { 4, 3 } },	/* while preserving the hash. */
+-	    { { 3, 0 }, { 4, 7 } },
+-	    { { 0, 0 }, { 5, 3 } },	/* The first entry's byte offset */
+-	    { { 0, 1 }, { 5, 4 } },	/* must be less than the second. */
+-	    { { 0, 2 }, { 5, 5 } },
+-	    { { 0, 3 }, { 5, 6 } },	/* The table can be extended to */
+-	    { { 0, 4 }, { 5, 7 } },	/* an arbitrary number of entries */
+-	    { { 4, 0 }, { 5, 7 } },	/* but there's not much point. */
+-		/* . . . */
+-	};
+-
+-	/* Find the first entry *not* usable for name of this length */
+-
+-	for (index = 0; index < ARRAY_SIZE(bit_to_flip); index++)
+-		if (bit_to_flip[index][1].byte >= name_len)
+-			break;
+-
+-	/*
+-	 * Back up to the last usable entry.  If that number is
+-	 * smaller than the bit sequence number, inform the caller
+-	 * that nothing this large (or larger) will work.
+-	 */
+-	if (bitseq > --index)
+-		return -1;
+-
+-	/*
+-	 * We will be switching bits at the end of name, with a
+-	 * preference for affecting the last bytes first.  Compute
+-	 * where in the name we'll start applying the changes.
+-	 */
+-	offset = name_len - (bit_to_flip[index][1].byte + 1);
+-	index -= bitseq;	/* Use later table entries first */
+-
+-	p0 = name + offset + bit_to_flip[index][0].byte;
+-	p1 = name + offset + bit_to_flip[index][1].byte;
+-	m0 = 1 << bit_to_flip[index][0].bit;
+-	m1 = 1 << bit_to_flip[index][1].bit;
+-
+-	/* Only change the bytes if it produces valid characters */
+-
+-	if (is_invalid_char(*p0 ^ m0) || is_invalid_char(*p1 ^ m1))
+-		return 0;
+-
+-	*p0 ^= m0;
+-	*p1 ^= m1;
+-
+-	return 1;
+-}
+-
+-/*
+- * This function generates a well-defined sequence of "alternate"
+- * names for a given name.  An alternate is a name having the same
+- * length and same hash value as the original name.  This is needed
+- * because the algorithm produces only one obfuscated name to use
+- * for a given original name, and it's possible that result matches
+- * a name already seen.  This function checks for this, and if it
+- * occurs, finds another suitable obfuscated name to use.
+- *
+- * Each bit in the binary representation of the sequence number is
+- * used to select one possible "bit flip" operation to perform on
+- * the name.  So for example:
+- *    seq = 0:	selects no bits to flip
+- *    seq = 1:	selects the 0th bit to flip
+- *    seq = 2:	selects the 1st bit to flip
+- *    seq = 3:	selects the 0th and 1st bit to flip
+- *    ... and so on.
+- *
+- * The flip_bit() function takes care of the details of the bit
+- * flipping within the name.  Note that the "1st bit" in this
+- * context is a bit sequence number; i.e. it doesn't necessarily
+- * mean bit 0x02 will be changed.
+- *
+- * If a valid name (one that contains no '/' or '\0' characters) is
+- * produced by this process for the given sequence number, this
+- * function returns 1.  If the result is not valid, it returns 0.
+- * Returns -1 if the sequence number is beyond the the maximum for
+- * names of the given length.
+- *
+- *
+- * Discussion
+- * ----------
+- * The number of alternates available for a given name is dependent
+- * on its length.  A "bit flip" involves inverting two bits in
+- * a name--the two bits being selected such that their values
+- * affect the name's hash value in the same way.  Alternates are
+- * thus generated by inverting the value of pairs of such
+- * "overlapping" bits in the original name.  Each byte after the
+- * first in a name adds at least one bit of overlap to work with.
+- * (See comments above flip_bit() for more discussion on this.)
+- *
+- * So the number of alternates is dependent on the number of such
+- * overlapping bits in a name.  If there are N bit overlaps, there
+- * 2^N alternates for that hash value.
+- *
+- * Here are the number of overlapping bits available for generating
+- * alternates for names of specific lengths:
+- *	1	0	(must have 2 bytes to have any overlap)
+- *	2	1	One bit overlaps--so 2 possible alternates
+- *	3	2	Two bits overlap--so 4 possible alternates
+- *	4	4	Three bits overlap, so 2^3 alternates
+- *	5	8	8 bits overlap (due to wrapping), 256 alternates
+- *	6	18	2^18 alternates
+- *	7	28	2^28 alternates
+- *	   ...
+- * It's clear that the number of alternates grows very quickly with
+- * the length of the name.  But note that the set of alternates
+- * includes invalid names.  And for certain (contrived) names, the
+- * number of valid names is a fairly small fraction of the total
+- * number of alternates.
+- *
+- * The main driver for this infrastructure for coming up with
+- * alternate names is really related to names 5 (or possibly 6)
+- * bytes in length.  5-byte obfuscated names contain no randomly-
+- * generated bytes in them, and the chance of an obfuscated name
+- * matching an already-seen name is too high to just ignore.  This
+- * methodical selection of alternates ensures we don't produce
+- * duplicate names unless we have exhausted our options.
+- */
+-static int
+-find_alternate(
+-	size_t		name_len,
+-	unsigned char	*name,
+-	uint32_t	seq)
+-{
+-	uint32_t	bitseq = 0;
+-	uint32_t	bits = seq;
+-
+-	if (!seq)
+-		return 1;	/* alternate 0 is the original name */
+-	if (name_len < 2)	/* Must have 2 bytes to flip */
+-		return -1;
+-
+-	for (bitseq = 0; bits; bitseq++) {
+-		uint32_t	mask = 1 << bitseq;
+-		int		fb;
+-
+-		if (!(bits & mask))
+-			continue;
+-
+-		fb = flip_bit(name_len, name, bitseq);
+-		if (fb < 1)
+-			return fb ? -1 : 0;
+-		bits ^= mask;
+-	}
+-
+-	return 1;
+-}
+-
+ /*
+  * Look up the given name in the name table.  If it is already
+  * present, iterate through a well-defined sequence of alternate
+diff --git a/db/obfuscate.c b/db/obfuscate.c
+new file mode 100644
+index 000000000..ae38cb9d0
+--- /dev/null
++++ b/db/obfuscate.c
+@@ -0,0 +1,348 @@
++// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * Obfuscated name remapping table for parent pointer-enabled filesystems.
-+ * When this feature is enabled, we have to maintain consistency between the
-+ * names that appears in the dirent and the corresponding parent pointer.
++ * Copyright (c) 2007, 2011 SGI
++ * All Rights Reserved.
 + */
++#include "libxfs.h"
++#include "obfuscate.h"
 +
-+struct remap_ent {
-+	struct remap_ent	*next;
-+	xfs_ino_t		dir_ino;
-+	xfs_dahash_t		namehash;
-+	uint8_t			namelen;
-+
-+	uint8_t			names[];
-+};
-+
-+static inline uint8_t *remap_ent_before(struct remap_ent *ent)
++static inline unsigned char
++random_filename_char(void)
 +{
-+	return &ent->names[0];
++	static unsigned char filename_alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
++						"abcdefghijklmnopqrstuvwxyz"
++						"0123456789-_";
++
++	return filename_alphabet[random() % (sizeof filename_alphabet - 1)];
 +}
 +
-+static inline uint8_t *remap_ent_after(struct remap_ent *ent)
++#define rol32(x,y)		(((x) << (y)) | ((x) >> (32 - (y))))
++
++/*
++ * Given a name and its hash value, massage the name in such a way
++ * that the result is another name of equal length which shares the
++ * same hash value.
++ */
++void
++obfuscate_name(
++	xfs_dahash_t	hash,
++	size_t		name_len,
++	unsigned char	*name)
 +{
-+	return &ent->names[ent->namelen];
-+}
-+
-+#define REMAP_TABLE_SIZE		4096
-+
-+static struct remap_ent		*remaptable[REMAP_TABLE_SIZE];
-+
-+static void
-+remaptable_clear(void)
-+{
-+	int			i;
-+	struct remap_ent	*ent, *next;
-+
-+	for (i = 0; i < REMAP_TABLE_SIZE; i++) {
-+		ent = remaptable[i];
-+
-+		while (ent) {
-+			next = ent->next;
-+			free(ent);
-+			ent = next;
-+		}
-+	}
-+}
-+
-+/* Try to find a remapping table entry. */
-+static struct remap_ent *
-+remaptable_find(
-+	xfs_ino_t		dir_ino,
-+	xfs_dahash_t		namehash,
-+	const unsigned char	*name,
-+	unsigned int		namelen)
-+{
-+	struct remap_ent	*ent = remaptable[namehash % REMAP_TABLE_SIZE];
-+
-+	remap_debug("REMAP FIND: 0x%lx hash 0x%x '%.*s'\n",
-+			dir_ino, namehash, namelen, name);
-+
-+	while (ent) {
-+		remap_debug("REMAP ENT: 0x%lx hash 0x%x '%.*s'\n",
-+				ent->dir_ino, ent->namehash, ent->namelen,
-+				remap_ent_before(ent));
-+
-+		if (ent->dir_ino == dir_ino &&
-+		    ent->namehash == namehash &&
-+		    ent->namelen == namelen &&
-+		    !memcmp(remap_ent_before(ent), name, namelen))
-+			return ent;
-+		ent = ent->next;
-+	}
-+
-+	return NULL;
-+}
-+
-+/* Remember the remapping for a particular dirent that we obfuscated. */
-+static struct remap_ent *
-+remaptable_add(
-+	xfs_ino_t		dir_ino,
-+	xfs_dahash_t		namehash,
-+	const unsigned char	*old_name,
-+	unsigned int		namelen,
-+	const unsigned char	*new_name)
-+{
-+	struct remap_ent	*ent;
-+
-+	ent = malloc(sizeof(struct remap_ent) + (namelen * 2));
-+	if (!ent)
-+		return NULL;
-+
-+	ent->dir_ino = dir_ino;
-+	ent->namehash = namehash;
-+	ent->namelen = namelen;
-+	memcpy(remap_ent_before(ent), old_name, namelen);
-+	memcpy(remap_ent_after(ent), new_name, namelen);
-+	ent->next = remaptable[namehash % REMAP_TABLE_SIZE];
-+
-+	remaptable[namehash % REMAP_TABLE_SIZE] = ent;
-+
-+	remap_debug("REMAP ADD: 0x%lx hash 0x%x '%.*s' -> '%.*s'\n",
-+			dir_ino, namehash, namelen, old_name, namelen,
-+			new_name);
-+	return ent;
-+}
-+
- #define is_invalid_char(c)	((c) == '/' || (c) == '\0')
- #define rol32(x,y)		(((x) << (y)) | ((x) >> (32 - (y))))
- 
-@@ -1184,6 +1297,7 @@ generate_obfuscated_name(
- 	int			namelen,
- 	unsigned char		*name)
- {
-+	unsigned char		*old_name = NULL;
- 	xfs_dahash_t		hash;
- 
- 	/*
-@@ -1205,8 +1319,32 @@ generate_obfuscated_name(
- 		name++;
- 
- 	/* Obfuscate the name (if possible) */
--
- 	hash = libxfs_da_hashname(name, namelen);
++	unsigned char	*newp = name;
++	int		i;
++	xfs_dahash_t	new_hash = 0;
++	unsigned char	*first;
++	unsigned char	high_bit;
++	int		shift;
 +
 +	/*
-+	 * If we're obfuscating a dirent name on a pptrs filesystem, see if we
-+	 * already processed the parent pointer and use the same name.
++	 * Our obfuscation algorithm requires at least 5-character
++	 * names, so don't bother if the name is too short.  We
++	 * work backward from a hash value to determine the last
++	 * five bytes in a name required to produce a new name
++	 * with the same hash.
 +	 */
-+	if (xfs_has_parent(mp) && ino) {
-+		struct remap_ent	*remap;
-+
-+		remap = remaptable_find(cur_ino, hash, name, namelen);
-+		if (remap) {
-+			remap_debug("found obfuscated dir 0x%lx '%.*s' -> 0x%lx -> '%.*s' \n",
-+					cur_ino, namelen,
-+					remap_ent_before(remap), ino, namelen,
-+					remap_ent_after(remap));
-+			memcpy(name, remap_ent_after(remap), namelen);
-+			return;
-+		}
-+
-+		/*
-+		 * If we haven't procesed this dirent name before, save the
-+		 * old name for a remap table entry.  Obfuscate the name.
-+		 */
-+		old_name = alloca(namelen);
-+		memcpy(old_name, name, namelen);
-+	}
- 	obfuscate_name(hash, namelen, name);
- 
- 	/*
-@@ -1230,6 +1368,23 @@ generate_obfuscated_name(
- 				"in dir inode %llu\n",
- 			(unsigned long long) ino,
- 			(unsigned long long) cur_ino);
-+
-+	/*
-+	 * We've obfuscated a name in the directory entry.  Remember this
-+	 * remapping for when we come across the parent pointer later.
-+	 */
-+	if (!old_name)
++	if (name_len < 5)
 +		return;
 +
-+	remap_debug("obfuscating dir 0x%lx '%.*s' -> 0x%lx -> '%.*s' \n",
-+			cur_ino, namelen, old_name, ino, namelen,
-+			name);
-+
-+	if (!remaptable_add(cur_ino, hash, old_name, namelen, name))
-+		print_warning("unable to record remapped dirent name for inode %llu "
-+				"in dir inode %llu\n",
-+			(unsigned long long) ino,
-+			(unsigned long long) cur_ino);
- }
- 
- static void
-@@ -1361,6 +1516,123 @@ process_sf_symlink(
- 		memset(&buf[len], 0, XFS_DFORK_DSIZE(dip, mp) - len);
- }
- 
-+static inline bool
-+want_obfuscate_pptr(
-+	unsigned int	nsp_flags,
-+	const void	*name,
-+	unsigned int	namelen,
-+	const void	*value,
-+	unsigned int	valuelen)
-+{
-+	if (!obfuscate)
-+		return false;
-+
-+	/* Ignore if parent pointers aren't enabled. */
-+	if (!xfs_has_parent(mp))
-+		return false;
-+
-+	/* Ignore anything not claiming to be a parent pointer. */
-+	if (!(nsp_flags & XFS_ATTR_PARENT))
-+		return false;
-+
-+	/* Obfuscate this parent pointer if it passes basic checks. */
-+	if (libxfs_parent_namecheck(mp, name, namelen, nsp_flags) &&
-+	    libxfs_parent_valuecheck(mp, value, valuelen))
-+		return true;
-+
-+	/* Ignore otherwise. */
-+	return false;
-+}
-+
-+static void
-+obfuscate_parent_pointer(
-+	const struct xfs_parent_name_rec *rec,
-+	unsigned char			*value,
-+	unsigned int			valuelen)
-+{
-+	struct xfs_parent_name_irec	irec;
-+	struct remap_ent		*remap;
-+	char				*old_name = irec.p_name;
-+	xfs_dahash_t			hash;
-+	xfs_ino_t			child_ino = cur_ino;
-+
-+	libxfs_parent_irec_from_disk(&irec, rec, value, valuelen);
-+
 +	/*
-+	 * We don't obfuscate "lost+found" or any orphan files
-+	 * therein.  If When the name table is used for extended
-+	 * attributes, the inode number provided is 0, in which
-+	 * case we don't need to make this check.
++	 * The beginning of the obfuscated name can be pretty much
++	 * anything, so fill it in with random characters.
++	 * Accumulate its new hash value as we go.
 +	 */
-+	cur_ino = irec.p_ino;
-+	if (in_lost_found(child_ino, valuelen, value)) {
-+		cur_ino = child_ino;
-+		return;
-+	}
-+	cur_ino = child_ino;
-+
-+	/*
-+	 * If the name starts with a slash, just skip over it.  It isn't
-+	 * included in the hash and we don't record it in the name table.
-+	 */
-+	if (*value == '/') {
-+		old_name++;
-+		value++;
-+		valuelen--;
-+	}
-+
-+	hash = libxfs_da_hashname(value, valuelen);
-+
-+	/*
-+	 * If we already processed the dirent, use the same name for the parent
-+	 * pointer.
-+	 */
-+	remap = remaptable_find(irec.p_ino, hash, value, valuelen);
-+	if (remap) {
-+		remap_debug("found obfuscated pptr 0x%lx '%.*s' -> 0x%lx -> '%.*s' \n",
-+				irec.p_ino, valuelen, remap_ent_before(remap),
-+				cur_ino, valuelen, remap_ent_after(remap));
-+		memcpy(value, remap_ent_after(remap), valuelen);
-+		return;
++	for (i = 0; i < name_len - 5; i++) {
++		*newp = random_filename_char();
++		new_hash = *newp ^ rol32(new_hash, 7);
++		newp++;
 +	}
 +
 +	/*
-+	 * Obfuscate the parent pointer name and remember this for later
-+	 * in case we encounter the dirent and need to reuse the name there.
++	 * Compute which five bytes need to be used at the end of
++	 * the name so the hash of the obfuscated name is the same
++	 * as the hash of the original.  If any result in an invalid
++	 * character, flip a bit and arrange for a corresponding bit
++	 * in a neighboring byte to be flipped as well.  For the
++	 * last byte, the "neighbor" to change is the first byte
++	 * we're computing here.
 +	 */
-+	obfuscate_name(hash, valuelen, value);
++	new_hash = rol32(new_hash, 3) ^ hash;
 +
-+	remap_debug("obfuscated pptr 0x%lx '%.*s' -> 0x%lx -> '%.*s'\n",
-+			irec.p_ino, valuelen, old_name, cur_ino, valuelen,
-+			value);
-+	if (!remaptable_add(irec.p_ino, hash, old_name, valuelen, value))
-+		print_warning("unable to record remapped pptr name for inode %llu "
-+				"in dir inode %llu\n",
-+			(unsigned long long) cur_ino,
-+			(unsigned long long) irec.p_ino);
-+}
-+
-+static inline bool
-+want_obfuscate_attr(
-+	unsigned int	nsp_flags,
-+	const void	*name,
-+	unsigned int	namelen,
-+	const void	*value,
-+	unsigned int	valuelen)
-+{
-+	if (!obfuscate)
-+		return false;
++	first = newp;
++	high_bit = 0;
++	for (shift = 28; shift >= 0; shift -= 7) {
++		*newp = (new_hash >> shift & 0x7f) ^ high_bit;
++		if (is_invalid_char(*newp)) {
++			*newp ^= 1;
++			high_bit = 0x80;
++		} else
++			high_bit = 0;
++		ASSERT(!is_invalid_char(*newp));
++		newp++;
++	}
 +
 +	/*
-+	 * If we didn't already obfuscate the parent pointer, it's probably
-+	 * corrupt.  Leave it intact for analysis.
++	 * If we flipped a bit on the last byte, we need to fix up
++	 * the matching bit in the first byte.  The result will
++	 * be a valid character, because we know that first byte
++	 * has 0's in its upper four bits (it was produced by a
++	 * 28-bit right-shift of a 32-bit unsigned value).
 +	 */
-+	if (nsp_flags & XFS_ATTR_PARENT)
-+		return false;
-+
-+	return true;
++	if (high_bit) {
++		*first ^= 0x10;
++		ASSERT(!is_invalid_char(*first));
++	}
++	ASSERT(libxfs_da_hashname(name, name_len) == hash);
 +}
 +
- static void
- process_sf_attr(
- 	struct xfs_dinode		*dip)
-@@ -1390,7 +1662,7 @@ process_sf_attr(
- 	asfep = &asfp->list[0];
- 	for (i = 0; (i < asfp->hdr.count) &&
- 			((char *)asfep - (char *)asfp < ino_attr_size); i++) {
--
-+		void	*name, *value;
- 		int	namelen = asfep->namelen;
- 
- 		if (namelen == 0) {
-@@ -1406,11 +1678,16 @@ process_sf_attr(
- 			break;
- 		}
- 
--		if (obfuscate) {
--			generate_obfuscated_name(0, asfep->namelen,
--						 &asfep->nameval[0]);
--			memset(&asfep->nameval[asfep->namelen], 'v',
--			       asfep->valuelen);
-+		name = &asfep->nameval[0];
-+		value = &asfep->nameval[asfep->namelen];
++/*
++ * Flip a bit in each of two bytes at the end of the given name.
++ * This is used in generating a series of alternate names to be used
++ * in the event a duplicate is found.
++ *
++ * The bits flipped are selected such that they both affect the same
++ * bit in the name's computed hash value, so flipping them both will
++ * preserve the hash.
++ *
++ * The following diagram aims to show the portion of a computed
++ * hash that a given byte of a name affects.
++ *
++ *	   31    28      24    21	     14		  8 7       3     0
++ *	   +-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-+
++ * hash:   | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
++ *	   +-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-+
++ *	  last-4 ->|	       |<-- last-2 --->|	   |<--- last ---->|
++ *		 |<-- last-3 --->|	     |<-- last-1 --->|     |<- last-4
++ *			 |<-- last-7 --->|	     |<-- last-5 --->|
++ *	   |<-- last-8 --->|	       |<-- last-6 --->|
++ *			. . . and so on
++ *
++ * The last byte of the name directly affects the low-order byte of
++ * the hash.  The next-to-last affects bits 7-14, the next one back
++ * affects bits 14-21, and so on.  The effect wraps around when it
++ * goes beyond the top of the hash (as happens for byte last-4).
++ *
++ * Bits that are flipped together "overlap" on the hash value.  As
++ * an example of overlap, the last two bytes both affect bit 7 in
++ * the hash.  That pair of bytes (and their overlapping bits) can be
++ * used for this "flip bit" operation (it's the first pair tried,
++ * actually).
++ *
++ * A table defines overlapping pairs--the bytes involved and bits
++ * within them--that can be used this way.  The byte offset is
++ * relative to a starting point within the name, which will be set
++ * to affect the bytes at the end of the name.  The function is
++ * called with a "bitseq" value which indicates which bit flip is
++ * desired, and this translates directly into selecting which entry
++ * in the bit_to_flip[] table to apply.
++ *
++ * The function returns 1 if the operation was successful.  It
++ * returns 0 if the result produced a character that's not valid in
++ * a name (either '/' or a '\0').  Finally, it returns -1 if the bit
++ * sequence number is beyond what is supported for a name of this
++ * length.
++ *
++ * Discussion
++ * ----------
++ * (Also see the discussion above find_alternate(), below.)
++ *
++ * In order to make this function work for any length name, the
++ * table is ordered by increasing byte offset, so that the earliest
++ * entries can apply to the shortest strings.  This way all names
++ * are done consistently.
++ *
++ * When bit flips occur, they can convert printable characters
++ * into non-printable ones.  In an effort to reduce the impact of
++ * this, the first bit flips are chosen to affect bytes the end of
++ * the name (and furthermore, toward the low bits of a byte).  Those
++ * bytes are often non-printable anyway because of the way they are
++ * initially selected by obfuscate_name()).  This is accomplished,
++ * using later table entries first.
++ *
++ * Each row in the table doubles the number of alternates that
++ * can be generated.  A two-byte name is limited to using only
++ * the first row, so it's possible to generate two alternates
++ * (the original name, plus the alternate produced by flipping
++ * the one pair of bits).  In a 5-byte name, the effect of the
++ * first byte overlaps the last by 4 its, and there are 8 bits
++ * to flip, allowing for 256 possible alternates.
++ *
++ * Short names (less than 5 bytes) are never even obfuscated, so for
++ * such names the relatively small number of alternates should never
++ * really be a problem.
++ *
++ * Long names (more than 6 bytes, say) are not likely to exhaust
++ * the number of available alternates.  In fact, the table could
++ * probably have stopped at 8 entries, on the assumption that 256
++ * alternates should be enough for most any situation.  The entries
++ * beyond those are present mostly for demonstration of how it could
++ * be populated with more entries, should it ever be necessary to do
++ * so.
++ */
++static int
++flip_bit(
++	size_t		name_len,
++	unsigned char	*name,
++	uint32_t	bitseq)
++{
++	int	index;
++	size_t	offset;
++	unsigned char *p0, *p1;
++	unsigned char m0, m1;
++	struct {
++	    int		byte;	/* Offset from start within name */
++	    unsigned char bit;	/* Bit within that byte */
++	} bit_to_flip[][2] = {	/* Sorted by second entry's byte */
++	    { { 0, 0 }, { 1, 7 } },	/* Each row defines a pair */
++	    { { 1, 0 }, { 2, 7 } },	/* of bytes and a bit within */
++	    { { 2, 0 }, { 3, 7 } },	/* each byte.  Each bit in */
++	    { { 0, 4 }, { 4, 0 } },	/* a pair affects the same */
++	    { { 0, 5 }, { 4, 1 } },	/* bit in the hash, so flipping */
++	    { { 0, 6 }, { 4, 2 } },	/* both will change the name */
++	    { { 0, 7 }, { 4, 3 } },	/* while preserving the hash. */
++	    { { 3, 0 }, { 4, 7 } },
++	    { { 0, 0 }, { 5, 3 } },	/* The first entry's byte offset */
++	    { { 0, 1 }, { 5, 4 } },	/* must be less than the second. */
++	    { { 0, 2 }, { 5, 5 } },
++	    { { 0, 3 }, { 5, 6 } },	/* The table can be extended to */
++	    { { 0, 4 }, { 5, 7 } },	/* an arbitrary number of entries */
++	    { { 4, 0 }, { 5, 7 } },	/* but there's not much point. */
++		/* . . . */
++	};
 +
-+		if (want_obfuscate_pptr(asfep->flags, name, namelen, value,
-+					asfep->valuelen)) {
-+			obfuscate_parent_pointer(name, value, asfep->valuelen);
-+		} else if (want_obfuscate_attr(asfep->flags, name, namelen,
-+					value, asfep->valuelen)) {
-+			generate_obfuscated_name(0, asfep->namelen, name);
-+			memset(value, 'v', asfep->valuelen);
- 		}
- 
- 		asfep = (struct xfs_attr_sf_entry *)((char *)asfep +
-@@ -1777,6 +2054,9 @@ process_attr_block(
- 			break;
- 		}
- 		if (entry->flags & XFS_ATTR_LOCAL) {
-+			void *name, *value;
-+			unsigned int valuelen;
++	/* Find the first entry *not* usable for name of this length */
 +
- 			local = xfs_attr3_leaf_name_local(leaf, i);
- 			if (local->namelen == 0) {
- 				if (show_warnings)
-@@ -1785,11 +2065,21 @@ process_attr_block(
- 						(long long)cur_ino);
- 				break;
- 			}
--			if (obfuscate) {
++	for (index = 0; index < ARRAY_SIZE(bit_to_flip); index++)
++		if (bit_to_flip[index][1].byte >= name_len)
++			break;
 +
-+			name = &local->nameval[0];
-+			value = &local->nameval[local->namelen];
-+			valuelen = be16_to_cpu(local->valuelen);
++	/*
++	 * Back up to the last usable entry.  If that number is
++	 * smaller than the bit sequence number, inform the caller
++	 * that nothing this large (or larger) will work.
++	 */
++	if (bitseq > --index)
++		return -1;
 +
-+			if (want_obfuscate_pptr(entry->flags, name,
-+						local->namelen, value,
-+						valuelen)) {
-+				obfuscate_parent_pointer(name, value, valuelen);
-+			} else if (want_obfuscate_attr(entry->flags, name,
-+						local->namelen, value,
-+						valuelen)) {
- 				generate_obfuscated_name(0, local->namelen,
--					&local->nameval[0]);
--				memset(&local->nameval[local->namelen], 'v',
--					be16_to_cpu(local->valuelen));
-+						name);
-+				memset(value, 'v', valuelen);
- 			}
- 			/* zero from end of nameval[] to next name start */
- 			nlen = local->namelen;
-@@ -3166,6 +3456,7 @@ metadump_f(
- 		pop_cur();
- out:
- 	free(metablock);
-+	remaptable_clear();
- 
- 	return 0;
- }
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 092934935..11bde3073 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -143,6 +143,8 @@
- #define xfs_parent_finish		libxfs_parent_finish
- #define xfs_parent_irec_from_disk	libxfs_parent_irec_from_disk
- #define xfs_parent_start		libxfs_parent_start
-+#define xfs_parent_namecheck		libxfs_parent_namecheck
-+#define xfs_parent_valuecheck		libxfs_parent_valuecheck
- #define xfs_perag_get			libxfs_perag_get
- #define xfs_perag_put			libxfs_perag_put
- #define xfs_prealloc_blocks		libxfs_prealloc_blocks
++	/*
++	 * We will be switching bits at the end of name, with a
++	 * preference for affecting the last bytes first.  Compute
++	 * where in the name we'll start applying the changes.
++	 */
++	offset = name_len - (bit_to_flip[index][1].byte + 1);
++	index -= bitseq;	/* Use later table entries first */
++
++	p0 = name + offset + bit_to_flip[index][0].byte;
++	p1 = name + offset + bit_to_flip[index][1].byte;
++	m0 = 1 << bit_to_flip[index][0].bit;
++	m1 = 1 << bit_to_flip[index][1].bit;
++
++	/* Only change the bytes if it produces valid characters */
++
++	if (is_invalid_char(*p0 ^ m0) || is_invalid_char(*p1 ^ m1))
++		return 0;
++
++	*p0 ^= m0;
++	*p1 ^= m1;
++
++	return 1;
++}
++
++/*
++ * This function generates a well-defined sequence of "alternate"
++ * names for a given name.  An alternate is a name having the same
++ * length and same hash value as the original name.  This is needed
++ * because the algorithm produces only one obfuscated name to use
++ * for a given original name, and it's possible that result matches
++ * a name already seen.  This function checks for this, and if it
++ * occurs, finds another suitable obfuscated name to use.
++ *
++ * Each bit in the binary representation of the sequence number is
++ * used to select one possible "bit flip" operation to perform on
++ * the name.  So for example:
++ *    seq = 0:	selects no bits to flip
++ *    seq = 1:	selects the 0th bit to flip
++ *    seq = 2:	selects the 1st bit to flip
++ *    seq = 3:	selects the 0th and 1st bit to flip
++ *    ... and so on.
++ *
++ * The flip_bit() function takes care of the details of the bit
++ * flipping within the name.  Note that the "1st bit" in this
++ * context is a bit sequence number; i.e. it doesn't necessarily
++ * mean bit 0x02 will be changed.
++ *
++ * If a valid name (one that contains no '/' or '\0' characters) is
++ * produced by this process for the given sequence number, this
++ * function returns 1.  If the result is not valid, it returns 0.
++ * Returns -1 if the sequence number is beyond the the maximum for
++ * names of the given length.
++ *
++ *
++ * Discussion
++ * ----------
++ * The number of alternates available for a given name is dependent
++ * on its length.  A "bit flip" involves inverting two bits in
++ * a name--the two bits being selected such that their values
++ * affect the name's hash value in the same way.  Alternates are
++ * thus generated by inverting the value of pairs of such
++ * "overlapping" bits in the original name.  Each byte after the
++ * first in a name adds at least one bit of overlap to work with.
++ * (See comments above flip_bit() for more discussion on this.)
++ *
++ * So the number of alternates is dependent on the number of such
++ * overlapping bits in a name.  If there are N bit overlaps, there
++ * 2^N alternates for that hash value.
++ *
++ * Here are the number of overlapping bits available for generating
++ * alternates for names of specific lengths:
++ *	1	0	(must have 2 bytes to have any overlap)
++ *	2	1	One bit overlaps--so 2 possible alternates
++ *	3	2	Two bits overlap--so 4 possible alternates
++ *	4	4	Three bits overlap, so 2^3 alternates
++ *	5	8	8 bits overlap (due to wrapping), 256 alternates
++ *	6	18	2^18 alternates
++ *	7	28	2^28 alternates
++ *	   ...
++ * It's clear that the number of alternates grows very quickly with
++ * the length of the name.  But note that the set of alternates
++ * includes invalid names.  And for certain (contrived) names, the
++ * number of valid names is a fairly small fraction of the total
++ * number of alternates.
++ *
++ * The main driver for this infrastructure for coming up with
++ * alternate names is really related to names 5 (or possibly 6)
++ * bytes in length.  5-byte obfuscated names contain no randomly-
++ * generated bytes in them, and the chance of an obfuscated name
++ * matching an already-seen name is too high to just ignore.  This
++ * methodical selection of alternates ensures we don't produce
++ * duplicate names unless we have exhausted our options.
++ */
++int
++find_alternate(
++	size_t		name_len,
++	unsigned char	*name,
++	uint32_t	seq)
++{
++	uint32_t	bitseq = 0;
++	uint32_t	bits = seq;
++
++	if (!seq)
++		return 1;	/* alternate 0 is the original name */
++	if (name_len < 2)	/* Must have 2 bytes to flip */
++		return -1;
++
++	for (bitseq = 0; bits; bitseq++) {
++		uint32_t	mask = 1 << bitseq;
++		int		fb;
++
++		if (!(bits & mask))
++			continue;
++
++		fb = flip_bit(name_len, name, bitseq);
++		if (fb < 1)
++			return fb ? -1 : 0;
++		bits ^= mask;
++	}
++
++	return 1;
++}
+diff --git a/db/obfuscate.h b/db/obfuscate.h
+new file mode 100644
+index 000000000..bba3c286b
+--- /dev/null
++++ b/db/obfuscate.h
+@@ -0,0 +1,16 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2007, 2011 SGI
++ * All Rights Reserved.
++ */
++#ifndef __DB_OBFUSCATE_H__
++#define __DB_OBFUSCATE_H__
++
++/* Routines to obfuscate directory filenames and xattr names. */
++
++#define is_invalid_char(c)	((c) == '/' || (c) == '\0')
++
++void obfuscate_name(xfs_dahash_t hash, size_t name_len, unsigned char *name);
++int find_alternate(size_t name_len, unsigned char *name, uint32_t seq);
++
++#endif /* __DB_OBFUSCATE_H__ */
 
