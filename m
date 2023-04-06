@@ -2,42 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6DDCC76196
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:21:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2084C7618D
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:21:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240249AbjDFTVO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Apr 2023 15:21:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50588 "EHLO
+        id S240093AbjDFTVa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Apr 2023 15:21:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230075AbjDFTVO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:21:14 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F390E2D43
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:21:12 -0700 (PDT)
+        with ESMTP id S230075AbjDFTV3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:21:29 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86B76E78
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:21:28 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8A21D64AD2
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:21:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E891AC433EF;
-        Thu,  6 Apr 2023 19:21:11 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 25FB464ADB
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:21:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 813B9C433EF;
+        Thu,  6 Apr 2023 19:21:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680808872;
-        bh=gcX3RC8Za7G6QyZgA0D2mUx8laToK2KZUv++SZJi7KA=;
+        s=k20201202; t=1680808887;
+        bh=+iYFamSX4o/hKWws41CblvXbVsQB3v5zkKJp5lK7ezc=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=mUD+tAxg4FigqRxaL94r8SeKOuDF2rot4U7Zl0ON18gfTHIYwYA58kpyrQo1Ks+TT
-         CHujX17qWO2lCyjMQu+X79dx0IEdm0RFOILWOuJ7jptIxDBsKe0Ie9ilyKndExI7gM
-         FEbMA5MBLByLP8EjKXxEpvTqxA3nvXSpP8fWb+869L1o0XZehPP8XJUiQ0p27oKUQb
-         oeaNimpM5K+cbLUsmjoonq4afmjzUvmIhWJ5i9Rvowvx9i4iXQU0XZQsUOC26nEA2n
-         jl8RUwc2tvO4j2C6MRPfiJUCoR7dJI/RjhNuZn/fQ3naPtYMOUzgHOnbbyXbxtfnQ/
-         YliE0F4YGEpQQ==
-Date:   Thu, 06 Apr 2023 12:21:11 -0700
-Subject: [PATCH 03/23] xfs: Increase XFS_QM_TRANS_MAXDQS to 5
+        b=BkcAGinWD1O3/k87/G0digsOIRFeAoMZOgsuvjQ+uKfZ6fvBPznLmmnl72OLMS82W
+         bHrha+uHhTiVVtjH7JY/UqnvEmqE4EyTVbi9yGLmQCsuOjU0QJGoPIa/affmrp9PLh
+         5T8mNlhTu7EIPUYuzirnYJUsL4jp3JEcqZviHb0vF3CQ9Xnx1F2cPCRvW9IqhBYtci
+         7T/P5oP49vUVf7AeNJkrvBsSdPXbZFnisiZoKb0nJdL8Mw5yciLR8ei2q8lHOrdE9Q
+         BBujLdjEmko72yA4U27GjM/1sFXaFVyla+x20nEW1cVhLBUVnV40utq1oXf2gJcx6g
+         n2C8ViEWjqc0A==
+Date:   Thu, 06 Apr 2023 12:21:27 -0700
+Subject: [PATCH 04/23] xfs: add parent pointer support to attribute code
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     Allison Henderson <allison.henderson@oracle.com>,
+Cc:     Mark Tinguely <tinguely@sgi.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Allison Henderson <allison.henderson@oracle.com>,
         allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <168080824701.615225.18371497910693119164.stgit@frogsfrogsfrogs>
+Message-ID: <168080824715.615225.10331343733961492446.stgit@frogsfrogsfrogs>
 In-Reply-To: <168080824634.615225.17234363585853846885.stgit@frogsfrogsfrogs>
 References: <168080824634.615225.17234363585853846885.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -50,133 +52,94 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Allison Henderson <allison.henderson@oracle.com>
 
-With parent pointers enabled, a rename operation can update up to 5
-inodes: src_dp, target_dp, src_ip, target_ip and wip.  This causes
-their dquots to a be attached to the transaction chain, so we need
-to increase XFS_QM_TRANS_MAXDQS.  This patch also add a helper
-function xfs_dqlockn to lock an arbitrary number of dquots.
+Add the new parent attribute type. XFS_ATTR_PARENT is used only for parent pointer
+entries; it uses reserved blocks like XFS_ATTR_ROOT.
 
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_dquot.c       |   38 ++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_dquot.h       |    1 +
- fs/xfs/xfs_qm.h          |    2 +-
- fs/xfs/xfs_trans_dquot.c |   15 ++++++++++-----
- 4 files changed, 50 insertions(+), 6 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c       |    3 ++-
+ fs/xfs/libxfs/xfs_da_format.h  |    5 ++++-
+ fs/xfs/libxfs/xfs_log_format.h |    1 +
+ fs/xfs/scrub/attr.c            |    2 +-
+ fs/xfs/xfs_trace.h             |    3 ++-
+ 5 files changed, 10 insertions(+), 4 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 8fb90da89787..9f311729c4c8 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -1333,6 +1333,44 @@ xfs_dqlock2(
- 	}
- }
- 
-+static int
-+xfs_dqtrx_cmp(
-+	const void		*a,
-+	const void		*b)
-+{
-+	const struct xfs_dqtrx	*qa = a;
-+	const struct xfs_dqtrx	*qb = b;
-+
-+	if (qa->qt_dquot->q_id > qb->qt_dquot->q_id)
-+		return 1;
-+	if (qa->qt_dquot->q_id < qb->qt_dquot->q_id)
-+		return -1;
-+	return 0;
-+}
-+
-+void
-+xfs_dqlockn(
-+	struct xfs_dqtrx	*q)
-+{
-+	unsigned int		i;
-+
-+	/* Sort in order of dquot id, do not allow duplicates */
-+	for (i = 0; i < XFS_QM_TRANS_MAXDQS && q[i].qt_dquot != NULL; i++) {
-+		unsigned int	j;
-+
-+		for (j = 0; j < i; j++)
-+			ASSERT(q[i].qt_dquot != q[j].qt_dquot);
-+	}
-+	if (i == 0)
-+		return;
-+
-+	sort(q, i, sizeof(struct xfs_dqtrx), xfs_dqtrx_cmp, NULL);
-+
-+	mutex_lock(&q[0].qt_dquot->q_qlock);
-+	for (i = 1; i < XFS_QM_TRANS_MAXDQS && q[i].qt_dquot != NULL; i++)
-+		mutex_lock_nested(&q[i].qt_dquot->q_qlock, XFS_QLOCK_NESTED);
-+}
-+
- int __init
- xfs_qm_init(void)
- {
-diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-index 80c8f851a2f3..dc7d0226242b 100644
---- a/fs/xfs/xfs_dquot.h
-+++ b/fs/xfs/xfs_dquot.h
-@@ -223,6 +223,7 @@ int		xfs_qm_dqget_uncached(struct xfs_mount *mp,
- void		xfs_qm_dqput(struct xfs_dquot *dqp);
- 
- void		xfs_dqlock2(struct xfs_dquot *, struct xfs_dquot *);
-+void		xfs_dqlockn(struct xfs_dqtrx *q);
- 
- void		xfs_dquot_set_prealloc_limits(struct xfs_dquot *);
- 
-diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
-index 9683f0457d19..c6ec88779356 100644
---- a/fs/xfs/xfs_qm.h
-+++ b/fs/xfs/xfs_qm.h
-@@ -120,7 +120,7 @@ enum {
- 	XFS_QM_TRANS_PRJ,
- 	XFS_QM_TRANS_DQTYPES
- };
--#define XFS_QM_TRANS_MAXDQS		2
-+#define XFS_QM_TRANS_MAXDQS		5
- struct xfs_dquot_acct {
- 	struct xfs_dqtrx	dqs[XFS_QM_TRANS_DQTYPES][XFS_QM_TRANS_MAXDQS];
- };
-diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index aa00cf67ad72..8a48175ea3a7 100644
---- a/fs/xfs/xfs_trans_dquot.c
-+++ b/fs/xfs/xfs_trans_dquot.c
-@@ -268,24 +268,29 @@ xfs_trans_mod_dquot(
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index d03966796e97..55188551c674 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -992,7 +992,8 @@ xfs_attr_set(
+ 	struct xfs_inode	*dp = args->dp;
+ 	struct xfs_mount	*mp = dp->i_mount;
+ 	struct xfs_trans_res	tres;
+-	bool			rsvd = (args->attr_filter & XFS_ATTR_ROOT);
++	bool			rsvd = (args->attr_filter & (XFS_ATTR_ROOT |
++							     XFS_ATTR_PARENT));
+ 	bool			is_remove = args->op_flags & XFS_DA_OP_REMOVE;
+ 	int			error, local;
+ 	int			rmt_blks = 0;
+diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+index 25e2841084e1..3dc03968bba6 100644
+--- a/fs/xfs/libxfs/xfs_da_format.h
++++ b/fs/xfs/libxfs/xfs_da_format.h
+@@ -688,12 +688,15 @@ struct xfs_attr3_leafblock {
+ #define	XFS_ATTR_LOCAL_BIT	0	/* attr is stored locally */
+ #define	XFS_ATTR_ROOT_BIT	1	/* limit access to trusted attrs */
+ #define	XFS_ATTR_SECURE_BIT	2	/* limit access to secure attrs */
++#define	XFS_ATTR_PARENT_BIT	3	/* parent pointer attrs */
+ #define	XFS_ATTR_INCOMPLETE_BIT	7	/* attr in middle of create/delete */
+ #define XFS_ATTR_LOCAL		(1u << XFS_ATTR_LOCAL_BIT)
+ #define XFS_ATTR_ROOT		(1u << XFS_ATTR_ROOT_BIT)
+ #define XFS_ATTR_SECURE		(1u << XFS_ATTR_SECURE_BIT)
++#define XFS_ATTR_PARENT		(1u << XFS_ATTR_PARENT_BIT)
+ #define XFS_ATTR_INCOMPLETE	(1u << XFS_ATTR_INCOMPLETE_BIT)
+-#define XFS_ATTR_NSP_ONDISK_MASK	(XFS_ATTR_ROOT | XFS_ATTR_SECURE)
++#define XFS_ATTR_NSP_ONDISK_MASK \
++			(XFS_ATTR_ROOT | XFS_ATTR_SECURE | XFS_ATTR_PARENT)
  
  /*
-  * Given an array of dqtrx structures, lock all the dquots associated and join
-- * them to the transaction, provided they have been modified.  We know that the
-- * highest number of dquots of one type - usr, grp and prj - involved in a
-- * transaction is 3 so we don't need to make this very generic.
-+ * them to the transaction, provided they have been modified.
+  * Alignment for namelist and valuelist entries (since they are mixed
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index d666bfa5d08c..5728805a3b8c 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -969,6 +969,7 @@ struct xfs_icreate_log {
   */
- STATIC void
- xfs_trans_dqlockedjoin(
- 	struct xfs_trans	*tp,
- 	struct xfs_dqtrx	*q)
- {
-+	unsigned int		i;
- 	ASSERT(q[0].qt_dquot != NULL);
- 	if (q[1].qt_dquot == NULL) {
- 		xfs_dqlock(q[0].qt_dquot);
- 		xfs_trans_dqjoin(tp, q[0].qt_dquot);
--	} else {
--		ASSERT(XFS_QM_TRANS_MAXDQS == 2);
-+	} else if (q[2].qt_dquot == NULL) {
- 		xfs_dqlock2(q[0].qt_dquot, q[1].qt_dquot);
- 		xfs_trans_dqjoin(tp, q[0].qt_dquot);
- 		xfs_trans_dqjoin(tp, q[1].qt_dquot);
-+	} else {
-+		xfs_dqlockn(q);
-+		for (i = 0; i < XFS_QM_TRANS_MAXDQS; i++) {
-+			if (q[i].qt_dquot == NULL)
-+				break;
-+			xfs_trans_dqjoin(tp, q[i].qt_dquot);
-+		}
- 	}
- }
+ #define XFS_ATTRI_FILTER_MASK		(XFS_ATTR_ROOT | \
+ 					 XFS_ATTR_SECURE | \
++					 XFS_ATTR_PARENT | \
+ 					 XFS_ATTR_INCOMPLETE)
  
+ /*
+diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+index 31529b9bf389..9d2e33743ecd 100644
+--- a/fs/xfs/scrub/attr.c
++++ b/fs/xfs/scrub/attr.c
+@@ -441,7 +441,7 @@ xchk_xattr_rec(
+ 	/* Retrieve the entry and check it. */
+ 	hash = be32_to_cpu(ent->hashval);
+ 	badflags = ~(XFS_ATTR_LOCAL | XFS_ATTR_ROOT | XFS_ATTR_SECURE |
+-			XFS_ATTR_INCOMPLETE);
++			XFS_ATTR_INCOMPLETE | XFS_ATTR_PARENT);
+ 	if ((ent->flags & badflags) != 0)
+ 		xchk_da_set_corrupt(ds, level);
+ 	if (ent->flags & XFS_ATTR_LOCAL) {
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 9c0006c55fec..64df29414440 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -79,7 +79,8 @@ struct xfs_perag;
+ #define XFS_ATTR_FILTER_FLAGS \
+ 	{ XFS_ATTR_ROOT,	"ROOT" }, \
+ 	{ XFS_ATTR_SECURE,	"SECURE" }, \
+-	{ XFS_ATTR_INCOMPLETE,	"INCOMPLETE" }
++	{ XFS_ATTR_INCOMPLETE,	"INCOMPLETE" }, \
++	{ XFS_ATTR_PARENT,	"PARENT" }
+ 
+ DECLARE_EVENT_CLASS(xfs_attr_list_class,
+ 	TP_PROTO(struct xfs_attr_list_context *ctx),
 
