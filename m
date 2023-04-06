@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A2CEC76196
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:24:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D101C7618D
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:24:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240448AbjDFTYM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Apr 2023 15:24:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53008 "EHLO
+        id S240055AbjDFTY0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Apr 2023 15:24:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240547AbjDFTYG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:24:06 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 670C45FC8
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:24:04 -0700 (PDT)
+        with ESMTP id S239972AbjDFTYV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:24:21 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFA3F7AAC
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:24:20 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DFEA364ADB
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:24:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 488B4C433D2;
-        Thu,  6 Apr 2023 19:24:03 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 71E8664ADB
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:24:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB5B2C433D2;
+        Thu,  6 Apr 2023 19:24:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680809043;
-        bh=y7WfQFKU6euGxcs7roL6+8xY5Sx2LfFrUGrxl3mNBOo=;
+        s=k20201202; t=1680809058;
+        bh=E0jOYX6QhgNGtTceqyBv/qsuEgPthND48gQh0DK18SQ=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=LpO3DkfopyugBNxr0yKhM9mGlt4R4C6ulKs3ysJLxnWlL8ESAsResHQ5fgxW19GmR
-         9kKKVmmVMyga+SwuTRRGBjPZc3reGJevFQ3Dx5Ps3gHygyQQMNwo05HcRsHvuOBPs8
-         zK/1dRJi1/h2i+rtREycECbqIEdO1We+6cvZJRlxKgFgB3nWFodSXQc1c8sGq8obQr
-         Fm1TPfKub6yP3GHys4S7jR0P9lmcZ6khpvBJkknyON7QbBBv21RmJJu5eUBfWZqcU5
-         qCscnDUZoruTrnC73UqDpnFlDK9YAHzjgfRklPUO5ql6tgOI2XNsz1bz9rFiF6iayc
-         3zs/h/8hSW22Q==
-Date:   Thu, 06 Apr 2023 12:24:02 -0700
-Subject: [PATCH 14/23] xfs: Add parent pointers to xfs_cross_rename
+        b=nyd5Wi6KRfMnnoiEF4cwiTTd+kJoyP+HEBVlZKGZHvwIFmQdSIstbA5v5a68r4lQS
+         tAWMx/SQyT+JMtJfPW0bJ1m+sxH0HAioyNagLi4CWCJ7aDVQO1SiyJ6VGrUv81Z3YE
+         LTdp5Q1tVt2WBsm5LZkGHvqk5DxFPi4DrTTp2Jw6JPYrnsbTUjNNGemfWtsC/eEO58
+         g3wuplxbgkVxVdECcBLO8mvBx7tL1WRoOotqj3aX7axWiLbX6bFaPuCPqE8rA6QW/k
+         H3zkWTHoGSXtHDLotki45cUfo8LdL2NGiGEsi3aqQsWwrTbF8g1ZdgrZn7MYz9U4up
+         GTPlQjC1ijjcA==
+Date:   Thu, 06 Apr 2023 12:24:18 -0700
+Subject: [PATCH 15/23] xfs: Add helper function xfs_attr_list_context_init
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     Allison Henderson <allison.henderson@oracle.com>,
         allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <168080824857.615225.16689885720224277405.stgit@frogsfrogsfrogs>
+Message-ID: <168080824872.615225.6022110804645880057.stgit@frogsfrogsfrogs>
 In-Reply-To: <168080824634.615225.17234363585853846885.stgit@frogsfrogsfrogs>
 References: <168080824634.615225.17234363585853846885.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -50,91 +50,122 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Allison Henderson <allison.henderson@oracle.com>
 
-Cross renames are handled separately from standard renames, and
-need different handling to update the parent attributes correctly.
+This patch adds a helper function xfs_attr_list_context_init used by
+xfs_attr_list. This function initializes the xfs_attr_list_context
+structure passed to xfs_attr_list_int. We will need this later to call
+xfs_attr_list_int_ilocked when the node is already locked.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_inode.c |   44 ++++++++++++++++++++++++++++++--------------
- 1 file changed, 30 insertions(+), 14 deletions(-)
+ fs/xfs/xfs_file.c  |    1 +
+ fs/xfs/xfs_ioctl.c |   54 +++++++++++++++++++++++++++++++++++++---------------
+ fs/xfs/xfs_ioctl.h |    2 ++
+ 3 files changed, 41 insertions(+), 16 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 5ad934358791..6d364a48e3cc 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2743,19 +2743,22 @@ xfs_finish_rename(
-  */
- STATIC int
- xfs_cross_rename(
--	struct xfs_trans	*tp,
--	struct xfs_inode	*dp1,
--	struct xfs_name		*name1,
--	struct xfs_inode	*ip1,
--	struct xfs_inode	*dp2,
--	struct xfs_name		*name2,
--	struct xfs_inode	*ip2,
--	int			spaceres)
-+	struct xfs_trans		*tp,
-+	struct xfs_inode		*dp1,
-+	struct xfs_name			*name1,
-+	struct xfs_inode		*ip1,
-+	struct xfs_parent_defer		*ip1_pptr,
-+	struct xfs_inode		*dp2,
-+	struct xfs_name			*name2,
-+	struct xfs_inode		*ip2,
-+	struct xfs_parent_defer		*ip2_pptr,
-+	int				spaceres)
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 705250f9f90a..2ffa4488e246 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -17,6 +17,7 @@
+ #include "xfs_bmap_util.h"
+ #include "xfs_dir2.h"
+ #include "xfs_dir2_priv.h"
++#include "xfs_attr.h"
+ #include "xfs_ioctl.h"
+ #include "xfs_trace.h"
+ #include "xfs_log.h"
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 55bb01173cde..59987b95201c 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -369,6 +369,40 @@ xfs_attr_flags(
+ 	return 0;
+ }
+ 
++/*
++ * Initializes an xfs_attr_list_context suitable for
++ * use by xfs_attr_list
++ */
++int
++xfs_ioc_attr_list_context_init(
++	struct xfs_inode		*dp,
++	char				*buffer,
++	int				bufsize,
++	int				flags,
++	struct xfs_attr_list_context	*context)
++{
++	struct xfs_attrlist		*alist;
++
++	/*
++	 * Initialize the output buffer.
++	 */
++	context->dp = dp;
++	context->resynch = 1;
++	context->attr_filter = xfs_attr_filter(flags);
++	context->buffer = buffer;
++	context->bufsize = round_down(bufsize, sizeof(uint32_t));
++	context->firstu = context->bufsize;
++	context->put_listent = xfs_ioc_attr_put_listent;
++
++	alist = context->buffer;
++	alist->al_count = 0;
++	alist->al_more = 0;
++	alist->al_offset[0] = context->bufsize;
++
++	return 0;
++}
++
++
+ int
+ xfs_ioc_attr_list(
+ 	struct xfs_inode		*dp,
+@@ -378,7 +412,6 @@ xfs_ioc_attr_list(
+ 	struct xfs_attrlist_cursor __user *ucursor)
  {
--	int		error = 0;
--	int		ip1_flags = 0;
--	int		ip2_flags = 0;
--	int		dp2_flags = 0;
-+	struct xfs_mount		*mp = dp1->i_mount;
-+	int				error = 0;
-+	int				ip1_flags = 0;
-+	int				ip2_flags = 0;
-+	int				dp2_flags = 0;
+ 	struct xfs_attr_list_context	context = { };
+-	struct xfs_attrlist		*alist;
+ 	void				*buffer;
+ 	int				error;
  
- 	/* Swap inode number for dirent in first parent */
- 	error = xfs_dir_replace(tp, dp1, name1, ip2->i_ino, spaceres);
-@@ -2824,6 +2827,18 @@ xfs_cross_rename(
- 		}
- 	}
+@@ -410,21 +443,10 @@ xfs_ioc_attr_list(
+ 	if (!buffer)
+ 		return -ENOMEM;
  
-+	if (xfs_has_parent(mp)) {
-+		error = xfs_parent_replace(tp, ip1_pptr, dp1, name1, dp2,
-+				name2, ip1);
-+		if (error)
-+			goto out_trans_abort;
-+
-+		error = xfs_parent_replace(tp, ip2_pptr, dp2, name2, dp1,
-+				name1, ip2);
-+		if (error)
-+			goto out_trans_abort;
-+	}
-+
- 	if (ip1_flags) {
- 		xfs_trans_ichgtime(tp, ip1, ip1_flags);
- 		xfs_trans_log_inode(tp, ip1, XFS_ILOG_CORE);
-@@ -2838,6 +2853,7 @@ xfs_cross_rename(
- 	}
- 	xfs_trans_ichgtime(tp, dp1, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, dp1, XFS_ILOG_CORE);
-+
- 	return xfs_finish_rename(tp);
+-	/*
+-	 * Initialize the output buffer.
+-	 */
+-	context.dp = dp;
+-	context.resynch = 1;
+-	context.attr_filter = xfs_attr_filter(flags);
+-	context.buffer = buffer;
+-	context.bufsize = round_down(bufsize, sizeof(uint32_t));
+-	context.firstu = context.bufsize;
+-	context.put_listent = xfs_ioc_attr_put_listent;
+-
+-	alist = context.buffer;
+-	alist->al_count = 0;
+-	alist->al_more = 0;
+-	alist->al_offset[0] = context.bufsize;
++	error = xfs_ioc_attr_list_context_init(dp, buffer, bufsize, flags,
++			&context);
++	if (error)
++		return error;
  
- out_trans_abort:
-@@ -3052,8 +3068,8 @@ xfs_rename(
- 	/* RENAME_EXCHANGE is unique from here on. */
- 	if (flags & RENAME_EXCHANGE) {
- 		error = xfs_cross_rename(tp, src_dp, src_name, src_ip,
--					target_dp, target_name, target_ip,
--					spaceres);
-+				src_ip_pptr, target_dp, target_name, target_ip,
-+				tgt_ip_pptr, spaceres);
- 		goto out_unlock;
- 	}
+ 	error = xfs_attr_list(&context);
+ 	if (error)
+diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
+index 38be600b5e1e..955a67261dc5 100644
+--- a/fs/xfs/xfs_ioctl.h
++++ b/fs/xfs/xfs_ioctl.h
+@@ -35,6 +35,8 @@ int xfs_ioc_attrmulti_one(struct file *parfilp, struct inode *inode,
+ int xfs_ioc_attr_list(struct xfs_inode *dp, void __user *ubuf,
+ 		      size_t bufsize, int flags,
+ 		      struct xfs_attrlist_cursor __user *ucursor);
++int xfs_ioc_attr_list_context_init(struct xfs_inode *dp, char *buffer,
++		int bufsize, int flags, struct xfs_attr_list_context *context);
  
+ extern struct dentry *
+ xfs_handle_to_dentry(
 
