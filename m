@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDF49C7618D
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:37:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F147C76196
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:37:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229610AbjDFThU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Apr 2023 15:37:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38414 "EHLO
+        id S229794AbjDFThg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Apr 2023 15:37:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229458AbjDFThT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:37:19 -0400
+        with ESMTP id S229458AbjDFThf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:37:35 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16096E72
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:37:19 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD873E72
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:37:34 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A5B3964B89
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:37:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13E66C433D2;
-        Thu,  6 Apr 2023 19:37:18 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 56CA260F24
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:37:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF002C433D2;
+        Thu,  6 Apr 2023 19:37:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680809838;
-        bh=nXrpHAVtfqRX4uEOQPMAtAeiYBKtaUd1LJTt5lxpaAs=;
+        s=k20201202; t=1680809853;
+        bh=4zog0V7X2LVKO95wOW+NtSxXVED0FGXZthcFixbxSP8=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=kl9mY5WDRPSE7zXsk509+A3JPFkQIHgosM7wha2CxkcDQfmZurLMURVzt/ROvrOQ7
-         /NY43aiUsYxDnQMgsefi5YjaVfEZ9XF917+mtVzAOSclNm3N+UKY6SOyWHjHpiuWaJ
-         Edoi5upA6kZJV1A6RSBkyuBagrSOwJFWIELOnGsHWqz/DG3cOh+i5lrrkmm9JFJWsF
-         NtRTalIwk+yYw2TmUlzD17fRV2zcA0pjXo2UzUaF4qorv/GKcZRRwoQPtQiGHGWmFT
-         eEgVbefSFjUdtRUI64iZE4kKlgmVhKw5rXFy7ZGMNLTwZ4zyvTglelpj8FZAh23lTw
-         v4C13MgFvGAWQ==
-Date:   Thu, 06 Apr 2023 12:37:17 -0700
-Subject: [PATCH 22/32] xfs_scrub: use parent pointers when possible to report
- file operations
+        b=AoMhyMxDiND0QuaDwal2ofjjXPvu3dy2MjQEeXHB2Qzz98K6iCMf2mRSV/aJbfshI
+         h/QRWQEUFlu/+yKUXPNzYVZzF+I5MJL5lro3idWw7xkC6Orb78vrnLc255spHiCS6O
+         VHv7A3BcgMsbstjWIBnAtXOsAhziQUWnF2HAjYmUITP6ZPoukwBN/KQ0ZY7kKbBhpT
+         Z9ButoJKvsz5gjNmtV7BwSWMrkLrka/CZ23Ycyf7PM31MvgEFT2L/U+45LsfiPadwG
+         zJdqMomoJgn3/fP6hP+QRXtjX7e9B4I5Yir3SafhW4ypuiRleHl0s5mjwngpfMPb0G
+         PZtiAr30YXa/w==
+Date:   Thu, 06 Apr 2023 12:37:33 -0700
+Subject: [PATCH 23/32] xfs_db: report parent bit on xattrs
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <168080827847.616793.16002329266364259157.stgit@frogsfrogsfrogs>
+Cc:     Allison Henderson <allison.henderson@oracle.com>,
+        allison.henderson@oracle.com, linux-xfs@vger.kernel.org
+Message-ID: <168080827859.616793.17238285720530002492.stgit@frogsfrogsfrogs>
 In-Reply-To: <168080827546.616793.7264157843231723676.stgit@frogsfrogsfrogs>
 References: <168080827546.616793.7264157843231723676.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -48,85 +48,44 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+From: Allison Henderson <allison.henderson@oracle.com>
 
-If parent pointers are available, use them to supply file paths when
-doing things to files, instead of merely printing the inode number.
+Display the parent bit on xattr keys
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 ---
- scrub/common.c |   41 +++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 39 insertions(+), 2 deletions(-)
+ db/attr.c      |    3 +++
+ db/attrshort.c |    3 +++
+ 2 files changed, 6 insertions(+)
 
 
-diff --git a/scrub/common.c b/scrub/common.c
-index 49a87f412..172a32ba6 100644
---- a/scrub/common.c
-+++ b/scrub/common.c
-@@ -9,6 +9,7 @@
- #include <syslog.h>
- #include "platform_defs.h"
- #include "libfrog/paths.h"
-+#include "libfrog/getparents.h"
- #include "xfs_scrub.h"
- #include "common.h"
- #include "progress.h"
-@@ -403,19 +404,55 @@ scrub_render_ino_descr(
- 	...)
- {
- 	va_list			args;
-+	size_t			pathlen = 0;
- 	uint32_t		agno;
- 	uint32_t		agino;
- 	int			ret;
- 
-+	if (ctx->mnt.fsgeom.flags & XFS_FSOP_GEOM_FLAGS_PARENT) {
-+		struct xfs_handle handle;
-+
-+		memcpy(&handle.ha_fsid, ctx->fshandle, sizeof(handle.ha_fsid));
-+		handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
-+				sizeof(handle.ha_fid.fid_len);
-+		handle.ha_fid.fid_pad = 0;
-+		handle.ha_fid.fid_ino = ino;
-+		handle.ha_fid.fid_gen = gen;
-+
-+		ret = handle_to_path(&handle, sizeof(struct xfs_handle), buf,
-+				buflen);
-+		if (ret)
-+			goto report_inum;
-+
-+		/*
-+		 * Leave at least 16 bytes for the description of what went
-+		 * wrong.  If we can't do that, we'll use the inode number.
-+		 */
-+		pathlen = strlen(buf);
-+		if (pathlen >= buflen - 16)
-+			goto report_inum;
-+
-+		if (format) {
-+			buf[pathlen] = ' ';
-+			buf[pathlen + 1] = 0;
-+			pathlen++;
-+		}
-+
-+		goto report_format;
-+	}
-+
-+report_inum:
- 	agno = cvt_ino_to_agno(&ctx->mnt, ino);
- 	agino = cvt_ino_to_agino(&ctx->mnt, ino);
- 	ret = snprintf(buf, buflen, _("inode %"PRIu64" (%"PRIu32"/%"PRIu32")%s"),
- 			ino, agno, agino, format ? " " : "");
- 	if (ret < 0 || ret >= buflen || format == NULL)
- 		return ret;
-+	pathlen = ret;
- 
-+report_format:
- 	va_start(args, format);
--	ret += vsnprintf(buf + ret, buflen - ret, format, args);
-+	pathlen += vsnprintf(buf + pathlen, buflen - pathlen, format, args);
- 	va_end(args);
--	return ret;
-+	return pathlen;
- }
+diff --git a/db/attr.c b/db/attr.c
+index ba722e146..f29e4a544 100644
+--- a/db/attr.c
++++ b/db/attr.c
+@@ -82,6 +82,9 @@ const field_t	attr_leaf_entry_flds[] = {
+ 	{ "local", FLDT_UINT1,
+ 	  OI(LEOFF(flags) + bitsz(uint8_t) - XFS_ATTR_LOCAL_BIT - 1), C1, 0,
+ 	  TYP_NONE },
++	{ "parent", FLDT_UINT1,
++	  OI(LEOFF(flags) + bitsz(uint8_t) - XFS_ATTR_PARENT_BIT - 1), C1, 0,
++	  TYP_NONE },
+ 	{ "pad2", FLDT_UINT8X, OI(LEOFF(pad2)), C1, FLD_SKIPALL, TYP_NONE },
+ 	{ NULL }
+ };
+diff --git a/db/attrshort.c b/db/attrshort.c
+index e234fbd83..872d771d5 100644
+--- a/db/attrshort.c
++++ b/db/attrshort.c
+@@ -44,6 +44,9 @@ const field_t	attr_sf_entry_flds[] = {
+ 	{ "secure", FLDT_UINT1,
+ 	  OI(EOFF(flags) + bitsz(uint8_t) - XFS_ATTR_SECURE_BIT - 1), C1, 0,
+ 	  TYP_NONE },
++	{ "parent", FLDT_UINT1,
++	  OI(EOFF(flags) + bitsz(uint8_t) - XFS_ATTR_PARENT_BIT - 1), C1, 0,
++	  TYP_NONE },
+ 	{ "name", FLDT_CHARNS, OI(EOFF(nameval)), attr_sf_entry_name_count,
+ 	  FLD_COUNT, TYP_NONE },
+ 	{ "value", FLDT_CHARNS, attr_sf_entry_value_offset,
 
