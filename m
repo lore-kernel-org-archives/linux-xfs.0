@@ -2,42 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CFF2C7618D
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:36:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F35AC76196
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:37:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229463AbjDFTgt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Apr 2023 15:36:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38040 "EHLO
+        id S229806AbjDFThF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Apr 2023 15:37:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229458AbjDFTgs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:36:48 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC0D25243
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:36:47 -0700 (PDT)
+        with ESMTP id S229610AbjDFThE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:37:04 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91E52E72
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:37:03 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6900764B89
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:36:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3D1AC433EF;
-        Thu,  6 Apr 2023 19:36:46 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 08E3164B89
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:37:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63F07C433EF;
+        Thu,  6 Apr 2023 19:37:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680809806;
-        bh=DmpGJmPjRk85qRX40UBFrBfPdbFqbWlSVzmlGdBs3dU=;
+        s=k20201202; t=1680809822;
+        bh=sgNtJhpUzv8T32i+1w34lBRcFN1SPYu+zo1MIIWGZcI=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=iHXCl7pl8JhPFAQ1FKXTYNAzgtJLGNqA1UEFbo2U2ylxKo9XYjUwqkBD6UoCzifx9
-         CEwYKDccCOD9Itujsp17tkca2c1cdXy6DeVsf8YzAVa7ctT83K/0XBOGilmR2VPYz4
-         nPuqfSMDC0Yn+r0ziy4E57Z1EhnnyQfwTslvSeAn+QT/P69Mv0C4P+PUu/nt/XbTV7
-         yXLu8On1YIiXA16C53wvJ5e15aTTCTu8Xm0a2EAd3gyYObyV8FNaziTOgXfgZfkeH/
-         UfySaeoZIafC/xHSQ0U3Osmu1kdETfceGb7nmJO9O8WRVtcseXeuz9QS/p0UPyZVqp
-         S80UGZ4cxOVMQ==
-Date:   Thu, 06 Apr 2023 12:36:46 -0700
-Subject: [PATCH 20/32] xfs_io: Add i, n and f flags to parent command
+        b=n/B41I23RSp8XaLkrOrl5eae3iZ/wR6xcoBi9+YMHru1IkGu8ckyTM1mqOZMxOmes
+         HSpurV8ZHqL+/grjARBLlzCwvcJoHcu3xuGjw3t0fiPUdMC2YXBajOkV4021eaVD6F
+         bizVTyf1K/D8KJY8+v2qXas2dcxevByeSorDiVYYc2x60cd1zipnDVaJCUtx/j2ldz
+         glfyJTeSqvLheav/urgz8fvsAbnvJGs9+phQL+BqpLC80rKB5LR9euI+U1A2OFL/Ox
+         ini70zslhF/c7feLWyi7c69hW1UOYn6dZ1G5vEiBcb5GUU0pgaR8pKHa6sFhOgRjHx
+         rvhc/fZS0wEcA==
+Date:   Thu, 06 Apr 2023 12:37:02 -0700
+Subject: [PATCH 21/32] xfs_logprint: decode parent pointers in ATTRI items
+ fully
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     Allison Henderson <allison.henderson@oracle.com>,
         allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <168080827820.616793.9913618161221224360.stgit@frogsfrogsfrogs>
+Message-ID: <168080827833.616793.9679802078608173155.stgit@frogsfrogsfrogs>
 In-Reply-To: <168080827546.616793.7264157843231723676.stgit@frogsfrogsfrogs>
 References: <168080827546.616793.7264157843231723676.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -50,246 +51,205 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-This patch adds the flags i, n, and f to the parent command. These flags add
-filtering options that are used by the new parent pointer tests in xfstests, and
-help to improve the test run time.  The flags are:
-
--i: Only show parent pointer records containing the given inode
--n: Only show parent pointer records containing the given filename
--f: Print records in short format: ino/gen/namelen/name
+This patch modifies the ATTRI print routines to look for the parent
+pointer flag, and decode logged parent pointers fully when dumping log
+contents.  Between the existing ATTRI: printouts and the new ones
+introduced here, we can figure out what was stored in each log iovec,
+as well as the higher level parent pointer that was logged.
 
 Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-[djwong: adapt to new getparents ioctl]
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+[djwong: adjust to new ondisk format]
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- io/parent.c       |   89 +++++++++++++++++++++++++++++++++++++++++++++++------
- man/man8/xfs_io.8 |   11 ++++++-
- 2 files changed, 89 insertions(+), 11 deletions(-)
+ libxfs/libxfs_api_defs.h |    4 ++
+ logprint/log_redo.c      |   81 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 85 insertions(+)
 
 
-diff --git a/io/parent.c b/io/parent.c
-index 65fd892bf..6bb7571e1 100644
---- a/io/parent.c
-+++ b/io/parent.c
-@@ -15,11 +15,18 @@
- static cmdinfo_t parent_cmd;
- static char *mntpt;
- 
-+struct pptr_args {
-+	uint64_t	filter_ino;
-+	char		*filter_name;
-+	bool		shortformat;
-+};
-+
- static int
- pptr_print(
- 	const struct parent_rec	*rec,
- 	void			*arg)
- {
-+	struct pptr_args	*args = arg;
- 	const char		*name = (char *)rec->p_name;
- 	unsigned int		namelen;
- 
-@@ -28,7 +35,22 @@ pptr_print(
- 		return 0;
- 	}
- 
-+	if (args->filter_ino && rec->p_ino != args->filter_ino)
-+		return 0;
-+	if (args->filter_name && strcmp(args->filter_name, name))
-+		return 0;
-+
- 	namelen = strlen(name);
-+
-+	if (args->shortformat) {
-+		printf("%llu/%u/%u/%s\n",
-+				(unsigned long long)rec->p_ino,
-+				(unsigned int)rec->p_gen,
-+				namelen,
-+				rec->p_name);
-+		return 0;
-+	}
-+
- 	printf(_("p_ino     = %llu\n"), (unsigned long long)rec->p_ino);
- 	printf(_("p_gen     = %u\n"), (unsigned int)rec->p_gen);
- 	printf(_("p_namelen = %u\n"), namelen);
-@@ -39,32 +61,55 @@ pptr_print(
- 
- static int
- print_parents(
--	struct xfs_handle	*handle)
-+	struct xfs_handle	*handle,
-+	struct pptr_args	*args)
- {
- 	int			ret;
- 
- 	if (handle)
- 		ret = handle_walk_parents(handle, sizeof(*handle), pptr_print,
--				NULL);
-+				args);
- 	else
--		ret = fd_walk_parents(file->fd, pptr_print, NULL);
-+		ret = fd_walk_parents(file->fd, pptr_print, args);
- 	if (ret)
- 		fprintf(stderr, "%s: %s\n", file->name, strerror(ret));
- 
- 	return 0;
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index f8efcce77..092934935 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -139,6 +139,10 @@
+ #define xfs_log_get_max_trans_res	libxfs_log_get_max_trans_res
+ #define xfs_log_sb			libxfs_log_sb
+ #define xfs_mode_to_ftype		libxfs_mode_to_ftype
++#define xfs_parent_add			libxfs_parent_add
++#define xfs_parent_finish		libxfs_parent_finish
++#define xfs_parent_irec_from_disk	libxfs_parent_irec_from_disk
++#define xfs_parent_start		libxfs_parent_start
+ #define xfs_perag_get			libxfs_perag_get
+ #define xfs_perag_put			libxfs_perag_put
+ #define xfs_prealloc_blocks		libxfs_prealloc_blocks
+diff --git a/logprint/log_redo.c b/logprint/log_redo.c
+index 8b6aa9279..a8a367bb0 100644
+--- a/logprint/log_redo.c
++++ b/logprint/log_redo.c
+@@ -674,6 +674,59 @@ xfs_attri_copy_log_format(
+ 	return 1;
  }
  
-+static int
-+filter_path_components(
-+	const char		*name,
-+	uint64_t		ino,
-+	void			*arg)
++static void
++dump_pptr(
++	const char			*tag,
++	const void			*name_ptr,
++	unsigned int			name_len,
++	const void			*value_ptr,
++	unsigned int			value_len)
 +{
-+	struct pptr_args	*args = arg;
++	struct xfs_parent_name_irec	irec;
 +
-+	if (args->filter_ino && ino == args->filter_ino)
-+		return ECANCELED;
-+	if (args->filter_name && !strcmp(args->filter_name, name))
-+		return ECANCELED;
-+	return 0;
++	if (name_len < sizeof(struct xfs_parent_name_rec)) {
++		printf("PPTR: %s CORRUPT\n", tag);
++		return;
++	}
++
++	libxfs_parent_irec_from_disk(&irec, name_ptr, value_ptr, value_len);
++
++	printf("PPTR: %s attr_namelen %u attr_valuelen %u\n", tag, name_len, value_len);
++	printf("PPTR: %s parent_ino %llu parent_gen %u namehash 0x%x namelen %u name '%.*s'\n",
++			tag,
++			(unsigned long long)irec.p_ino,
++			irec.p_gen,
++			irec.p_namehash,
++			irec.p_namelen,
++			irec.p_namelen,
++			irec.p_name);
 +}
 +
- static int
- path_print(
- 	const char		*mntpt,
- 	const struct path_list	*path,
- 	void			*arg)
- {
-+	struct pptr_args	*args = arg;
- 	char			buf[PATH_MAX];
- 	size_t			len = PATH_MAX;
- 	int			mntpt_len = strlen(mntpt);
- 	int			ret;
- 
-+	if (args->filter_ino || args->filter_name) {
-+		ret = path_walk_components(path, filter_path_components, args);
-+		if (ret != ECANCELED)
-+			return 0;
++static void
++dump_pptr_update(
++	const void	*name_ptr,
++	unsigned int	name_len,
++	const void	*new_name_ptr,
++	unsigned int	new_name_len,
++	const void	*value_ptr,
++	unsigned int	value_len,
++	const void	*new_value_ptr,
++	unsigned int	new_value_len)
++{
++	if (new_name_ptr && name_ptr) {
++		dump_pptr("OLDNAME", name_ptr, name_len, value_ptr, value_len);
++		dump_pptr("NEWNAME", new_name_ptr, new_name_len, new_value_ptr,
++				new_value_len);
++		return;
 +	}
 +
- 	/* Trim trailing slashes from the mountpoint */
- 	while (mntpt_len > 0 && mntpt[mntpt_len - 1] == '/')
- 		mntpt_len--;
-@@ -83,15 +128,16 @@ path_print(
- 
- static int
- print_paths(
--	struct xfs_handle	*handle)
-+	struct xfs_handle	*handle,
-+	struct pptr_args	*args)
- {
- 	int			ret;
- 
- 	if (handle)
- 		ret = handle_walk_parent_paths(handle, sizeof(*handle),
--				path_print, NULL);
-+				path_print, args);
- 	else
--		ret = fd_walk_parent_paths(file->fd, path_print, NULL);
-+		ret = fd_walk_parent_paths(file->fd, path_print, args);
- 	if (ret)
- 		fprintf(stderr, "%s: %s\n", file->name, strerror(ret));
- 	return 0;
-@@ -103,6 +149,7 @@ parent_f(
- 	char			**argv)
- {
- 	struct xfs_handle	handle;
-+	struct pptr_args	args = { 0 };
- 	void			*hanp = NULL;
- 	size_t			hlen;
- 	struct fs_path		*fs;
-@@ -127,11 +174,27 @@ parent_f(
- 	}
- 	mntpt = fs->fs_dir;
- 
--	while ((c = getopt(argc, argv, "p")) != EOF) {
-+	while ((c = getopt(argc, argv, "pfi:n:")) != EOF) {
- 		switch (c) {
- 		case 'p':
- 			listpath_flag = 1;
- 			break;
-+		case 'i':
-+	                args.filter_ino = strtoull(optarg, &p, 0);
-+	                if (*p != '\0' || args.filter_ino == 0) {
-+	                        fprintf(stderr,
-+	                                _("Bad inode number '%s'.\n"),
-+	                                optarg);
-+	                        return 0;
-+			}
++	if (name_ptr)
++		dump_pptr("NAME", name_ptr, name_len, value_ptr, value_len);
++	if (new_name_ptr)
++		dump_pptr("NEWNAME", new_name_ptr, new_name_len, new_value_ptr,
++				new_value_len);
++}
 +
-+			break;
-+		case 'n':
-+			args.filter_name = optarg;
-+			break;
-+		case 'f':
-+			args.shortformat = true;
-+			break;
- 		default:
- 			return command_usage(&parent_cmd);
- 		}
-@@ -175,9 +238,9 @@ parent_f(
+ static inline unsigned int
+ xfs_attr_log_item_op(const struct xfs_attri_log_format *attrp)
+ {
+@@ -688,6 +741,10 @@ xlog_print_trans_attri(
+ {
+ 	struct xfs_attri_log_format	*src_f = NULL;
+ 	xlog_op_header_t		*head = NULL;
++	void				*name_ptr = NULL;
++	void				*new_name_ptr = NULL;
++	void				*value_ptr = NULL;
++	void				*new_value_ptr = NULL;
+ 	uint				dst_len;
+ 	unsigned int			name_len = 0;
+ 	unsigned int			new_name_len = 0;
+@@ -741,6 +798,7 @@ xlog_print_trans_attri(
+ 		(*i)++;
+ 		head = (xlog_op_header_t *)*ptr;
+ 		xlog_print_op_header(head, *i, ptr);
++		name_ptr = *ptr;
+ 		error = xlog_print_trans_attri_name(ptr,
+ 				be32_to_cpu(head->oh_len), "name");
+ 		if (error)
+@@ -752,6 +810,7 @@ xlog_print_trans_attri(
+ 		(*i)++;
+ 		head = (xlog_op_header_t *)*ptr;
+ 		xlog_print_op_header(head, *i, ptr);
++		new_name_ptr = *ptr;
+ 		error = xlog_print_trans_attri_name(ptr,
+ 				be32_to_cpu(head->oh_len), "newname");
+ 		if (error)
+@@ -763,6 +822,7 @@ xlog_print_trans_attri(
+ 		(*i)++;
+ 		head = (xlog_op_header_t *)*ptr;
+ 		xlog_print_op_header(head, *i, ptr);
++		value_ptr = *ptr;
+ 		error = xlog_print_trans_attri_value(ptr,
+ 				be32_to_cpu(head->oh_len), value_len, "value");
+ 		if (error)
+@@ -774,12 +834,19 @@ xlog_print_trans_attri(
+ 		(*i)++;
+ 		head = (xlog_op_header_t *)*ptr;
+ 		xlog_print_op_header(head, *i, ptr);
++		new_value_ptr = *ptr;
+ 		error = xlog_print_trans_attri_value(ptr,
+ 				be32_to_cpu(head->oh_len), new_value_len,
+ 				"newvalue");
+ 		if (error)
+ 			goto error;
+ 	}
++
++	if (src_f->alfi_attr_filter & XFS_ATTR_PARENT)
++		dump_pptr_update(name_ptr, name_len,
++				 new_name_ptr, new_name_len,
++				 value_ptr, value_len,
++				 new_value_ptr, new_value_len);
+ error:
+ 	free(src_f);
+ 
+@@ -822,6 +889,10 @@ xlog_recover_print_attri(
+ 	struct xlog_recover_item	*item)
+ {
+ 	struct xfs_attri_log_format	*f, *src_f = NULL;
++	void				*name_ptr = NULL;
++	void				*new_name_ptr = NULL;
++	void				*value_ptr = NULL;
++	void				*new_value_ptr = NULL;
+ 	uint				src_len, dst_len;
+ 	unsigned int			name_len = 0;
+ 	unsigned int			new_name_len = 0;
+@@ -872,6 +943,7 @@ xlog_recover_print_attri(
+ 		printf(_("ATTRI:  name len:%u\n"), name_len);
+ 		print_or_dump((char *)item->ri_buf[region].i_addr,
+ 			       name_len);
++		name_ptr = item->ri_buf[region].i_addr;
  	}
  
- 	if (listpath_flag)
--		exitcode = print_paths(ino ? &handle : NULL);
-+		exitcode = print_paths(ino ? &handle : NULL, &args);
- 	else
--		exitcode = print_parents(ino ? &handle : NULL);
-+		exitcode = print_parents(ino ? &handle : NULL, &args);
+ 	if (new_name_len > 0) {
+@@ -879,6 +951,7 @@ xlog_recover_print_attri(
+ 		printf(_("ATTRI:  newname len:%u\n"), new_name_len);
+ 		print_or_dump((char *)item->ri_buf[region].i_addr,
+ 			       new_name_len);
++		new_name_ptr = item->ri_buf[region].i_addr;
+ 	}
  
- 	if (hanp)
- 		free_handle(hanp, hlen);
-@@ -195,6 +258,12 @@ printf(_(
- " -p -- list the current file's paths up to the root\n"
- "\n"
- "If ino and gen are supplied, use them instead.\n"
-+"\n"
-+" -i -- Only show parent pointer records containing the given inode\n"
-+"\n"
-+" -n -- Only show parent pointer records containing the given filename\n"
-+"\n"
-+" -f -- Print records in short format: ino/gen/namelen/filename\n"
- "\n"));
- }
+ 	if (value_len > 0) {
+@@ -887,6 +960,7 @@ xlog_recover_print_attri(
+ 		region++;
+ 		printf(_("ATTRI:  value len:%u\n"), value_len);
+ 		print_or_dump((char *)item->ri_buf[region].i_addr, len);
++		value_ptr = item->ri_buf[region].i_addr;
+ 	}
  
-@@ -205,7 +274,7 @@ parent_init(void)
- 	parent_cmd.cfunc = parent_f;
- 	parent_cmd.argmin = 0;
- 	parent_cmd.argmax = -1;
--	parent_cmd.args = _("[-p] [ino gen]");
-+	parent_cmd.args = _("[-p] [ino gen] [-i ino] [-n name] [-f]");
- 	parent_cmd.flags = CMD_NOMAP_OK;
- 	parent_cmd.oneline = _("print parent inodes");
- 	parent_cmd.help = parent_help;
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 57ebe3a52..7c88784a1 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -961,7 +961,7 @@ and
- options behave as described above, in
- .B chproj.
- .TP
--.BR parent " [ " \-p " ] [" " ino gen " "]"
-+.BR parent " [ " \-fp " ] [-i " ino "] [-n " name "] [" " ino gen " "]"
- By default this command prints out the parent inode numbers,
- inode generation numbers and basenames of all the hardlinks which
- point to the inode of the current file.
-@@ -978,6 +978,15 @@ the open file.
- .RS 1.0i
- .PD 0
- .TP 0.4i
-+.B \-f
-+Print records in short format: ino/gen/namelen/name
-+.TP 0.4i
-+.B \-i
-+Only show parent pointer records containing this inode number.
-+.TP 0.4i
-+.B \-n
-+Only show parent pointer records containing this directory entry name.
-+.TP 0.4i
- .B \-p
- the output is similar to the default output except pathnames up to
- the mount-point are printed out instead of the component name.
+ 	if (new_value_len > 0) {
+@@ -895,8 +969,15 @@ xlog_recover_print_attri(
+ 		region++;
+ 		printf(_("ATTRI:  newvalue len:%u\n"), new_value_len);
+ 		print_or_dump((char *)item->ri_buf[region].i_addr, len);
++		new_value_ptr = item->ri_buf[region].i_addr;
+ 	}
+ 
++	if (src_f->alfi_attr_filter & XFS_ATTR_PARENT)
++		dump_pptr_update(name_ptr, name_len,
++				 new_name_ptr, new_name_len,
++				 value_ptr, value_len,
++				 new_value_ptr, new_value_len);
++
+ out:
+ 	free(f);
+ 
 
