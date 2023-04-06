@@ -2,45 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ADC8C76196
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:16:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5EC6C7618D
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:16:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240194AbjDFTQd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Apr 2023 15:16:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44728 "EHLO
+        id S240312AbjDFTQt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Apr 2023 15:16:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229714AbjDFTQd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:16:33 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B65BF2;
-        Thu,  6 Apr 2023 12:16:32 -0700 (PDT)
+        with ESMTP id S240209AbjDFTQs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:16:48 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1153C1
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:16:47 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EB2D8644AC;
-        Thu,  6 Apr 2023 19:16:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5569AC433D2;
-        Thu,  6 Apr 2023 19:16:31 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7D6946450F
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:16:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0844C433EF;
+        Thu,  6 Apr 2023 19:16:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680808591;
-        bh=Pw7hg/VCzok4Z0lC/uX8EjP0vsrjRxUryABK015JjMM=;
+        s=k20201202; t=1680808606;
+        bh=C13XxAvacKswiHH0rv2EdrFxa5Ft5pU55XWzxnEm4+I=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=j10S8ZruxeMF/54fAtMzOifGisSKvFdA+ttjBTpGaianhLdwnLXP46sUrHIYBJUbJ
-         03IB6v6Bda2bu33muHynSPFmE/o6VyQ9W1XpodCVeFCRSKAANcPyulT8UFuOFaCSRP
-         +HhlKrNgYu6YZ9xC1CtKUKuUkNUTgkHi+SCxoSVT18DoMmKFfN1LlgjGh/I61UNOIu
-         azuiqH/IUsk2JTEk3UZ5FTrmSI+I4iTe9On60FbAxtyOo0xWWE2zAw5OyxciUR/YCL
-         88qyWwIZ9OgVq/6kqA1qBM/PmbEUq1mdXU0J3znNb8A5jeAUBqLP48DawIQ9PSpCHX
-         hzGjGfuBx424Q==
-Date:   Thu, 06 Apr 2023 12:16:30 -0700
-Subject: [PATCHSET v11 00/11] fstests: adjust tests for xfs parent pointers
+        b=qtVktw+qM2i//IIvnDVIEVn9aVwTlQTxBIVObTkzz30w4XwxW/c80kUjqJUegdsAt
+         MulUjcKFVgJgcpYM+CC1pSMB3B6s9n3JqNfdehxz10PBFwNXlLP+StGlysAuIwaCRG
+         666yJHXI/WookEXoLhoGJP/feaWaGAc78La8B9pEotlad61xy6C+le6C7RA6lJ23YF
+         bllTWHtig8se+YDplnLl1YhJqIfAxfldKuzviMNolJuR2/Z+qVuGSowNm77arP33H5
+         ez7eG8ItOGo/O6H1rJLq5U0q62UzV+sIIA4mISzOtJXpqG4wynyRuvBfqF39M/JKDj
+         JSVWUTGEXQChw==
+Date:   Thu, 06 Apr 2023 12:16:46 -0700
+Subject: [PATCH 01/12] xfs: check opcode and iovec count match in
+ xlog_recover_attri_commit_pass2
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     zlang@redhat.com, djwong@kernel.org
-Cc:     Allison Henderson <allison.henderson@oracle.com>,
-        Catherine Hoang <catherine.hoang@oracle.com>,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Message-ID: <168080829003.618488.1769223982280364994.stgit@frogsfrogsfrogs>
-In-Reply-To: <20230406181038.GA360889@frogsfrogsfrogs>
-References: <20230406181038.GA360889@frogsfrogsfrogs>
+To:     djwong@kernel.org
+Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
+Message-ID: <168080823820.613065.9263824985180579900.stgit@frogsfrogsfrogs>
+In-Reply-To: <168080823794.613065.2971656278555515103.stgit@frogsfrogsfrogs>
+References: <168080823794.613065.2971656278555515103.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,64 +48,60 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-These are the test adjustments that are required for parent pointers.
-There's also a few new tests to ensure that the GETPARENTS ioctl (and
-hence the ondisk parent pointers) work the way they're supposed to.
+Check that the number of recovered log iovecs is what is expected for
+the xattri opcode is expecting.
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=pptrs
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=pptrs
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=pptrs
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- common/parent                        |  209 +++++++
- common/populate                      |   38 +
- common/rc                            |    7 
- common/xfs                           |   12 
- doc/group-names.txt                  |    1 
- src/popdir.pl                        |   11 
- tests/generic/050                    |   10 
- tests/generic/050.cfg                |    1 
- tests/generic/050.out.xfsquotaparent |   23 +
- tests/xfs/018                        |    7 
- tests/xfs/021                        |   15 -
- tests/xfs/021.cfg                    |    1 
- tests/xfs/021.out.default            |    0 
- tests/xfs/021.out.parent             |   62 ++
- tests/xfs/122.out                    |    3 
- tests/xfs/191                        |    7 
- tests/xfs/206                        |    3 
- tests/xfs/288                        |    7 
- tests/xfs/306                        |    9 
- tests/xfs/851                        |  116 ++++
- tests/xfs/851.out                    |   69 ++
- tests/xfs/852                        |   69 ++
- tests/xfs/852.out                    | 1002 ++++++++++++++++++++++++++++++++++
- tests/xfs/853                        |   85 +++
- tests/xfs/853.out                    |   14 
- 25 files changed, 1770 insertions(+), 11 deletions(-)
- create mode 100644 common/parent
- create mode 100644 tests/generic/050.out.xfsquotaparent
- create mode 100644 tests/xfs/021.cfg
- rename tests/xfs/{021.out => 021.out.default} (100%)
- create mode 100644 tests/xfs/021.out.parent
- create mode 100755 tests/xfs/851
- create mode 100644 tests/xfs/851.out
- create mode 100755 tests/xfs/852
- create mode 100644 tests/xfs/852.out
- create mode 100755 tests/xfs/853
- create mode 100644 tests/xfs/853.out
+ fs/xfs/xfs_attr_item.c |   27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+
+diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+index 2788a6f2edcd..61ed139af8b1 100644
+--- a/fs/xfs/xfs_attr_item.c
++++ b/fs/xfs/xfs_attr_item.c
+@@ -710,6 +710,7 @@ xlog_recover_attri_commit_pass2(
+ 	const void			*attr_value = NULL;
+ 	const void			*attr_name;
+ 	size_t				len;
++	unsigned int			op;
+ 
+ 	attri_formatp = item->ri_buf[0].i_addr;
+ 	attr_name = item->ri_buf[1].i_addr;
+@@ -728,6 +729,32 @@ xlog_recover_attri_commit_pass2(
+ 		return -EFSCORRUPTED;
+ 	}
+ 
++	/* Check the number of log iovecs makes sense for the op code. */
++	op = attri_formatp->alfi_op_flags & XFS_ATTRI_OP_FLAGS_TYPE_MASK;
++	switch (op) {
++	case XFS_ATTRI_OP_FLAGS_SET:
++	case XFS_ATTRI_OP_FLAGS_REPLACE:
++		/* Log item, attr name, attr value */
++		if (item->ri_total != 3) {
++			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
++					     attri_formatp, len);
++			return -EFSCORRUPTED;
++		}
++		break;
++	case XFS_ATTRI_OP_FLAGS_REMOVE:
++		/* Log item, attr name */
++		if (item->ri_total != 2) {
++			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
++					     attri_formatp, len);
++			return -EFSCORRUPTED;
++		}
++		break;
++	default:
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
++				     attri_formatp, len);
++		return -EFSCORRUPTED;
++	}
++
+ 	/* Validate the attr name */
+ 	if (item->ri_buf[1].i_len !=
+ 			xlog_calc_iovec_len(attri_formatp->alfi_name_len)) {
 
