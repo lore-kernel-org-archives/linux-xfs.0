@@ -2,140 +2,309 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05B33C7618D
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 16:04:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5FDCC761A6
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 17:32:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239816AbjDFQEU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Apr 2023 12:04:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40996 "EHLO
+        id S239471AbjDFRcE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Apr 2023 13:32:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49388 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229502AbjDFQET (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 12:04:19 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6F2886B0
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 09:03:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1680797021;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=nhE+sw2nPXqC1UJ8AXPzZyQsVdsNsrouSAWZ5kkzANM=;
-        b=O0k1WQYJuPSNVsZ2HbSwcWOIXQbeaYc8+gqz7zSL7XHD3fiYcyOHN62QgCxRyr4aNZlys9
-        +7tT4qbvJh59SSowsGVGU5H8LJwDYFW5XhHiEaME4TzLrkkY1sAXnibDCGW8RuM4Oi3gm3
-        bZLuSnPbov2qdUyS/JvtZAA4qfs0iCc=
-Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
- [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-345-ZEUecTugNZichBpL9g4Oug-1; Thu, 06 Apr 2023 12:03:39 -0400
-X-MC-Unique: ZEUecTugNZichBpL9g4Oug-1
-Received: by mail-ej1-f70.google.com with SMTP id de5-20020a1709069bc500b009339c9c32ffso443045ejc.5
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Apr 2023 09:03:39 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680797018;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=nhE+sw2nPXqC1UJ8AXPzZyQsVdsNsrouSAWZ5kkzANM=;
-        b=qDSCrbzPSEaf541ZdukEc8laKlJrLyw47SAKhV75XT9x8TVHTSU9FoYHfDSLpNNABe
-         /EtY57FiRiHyU4egpPtQojNOJC+VBXeZDfEfZS7CbprG0vQArHBQP7mIvlHa404b+l6j
-         qURj8oo4v4WIkgpbUJ5L5vJ0aqNuuNJxamfLdgl99OkUwrJnmvVoWyzI4sY2WtWCFbXU
-         bsFwosUOXk+MZIDFzeczufnvWcQNuQEi9AIAv8pqBzrFjwCENnvU4pYs4kropVGXY5vE
-         yleK9dSMAoK808kphl0+UVyt3hI1LTkFNe7AEsuysIiVgblyufibiJcRt+oka50AGzaB
-         Wmyw==
-X-Gm-Message-State: AAQBX9f7AAO82hDyr1chwf7cGWo4rCymS4cq+k0wSRYJ80wLT1wXsw9H
-        buRVUkWa78coWG0wm6FplicLH/41JLXIBvZFOxm5ND0+1th84Tap20CHB3WcSrEizVTe3zkMrCB
-        h72mwmPXoRRSLetkyX9PpZmFVjL1ruk2NH9vJbEPtvZMuQPY=
-X-Received: by 2002:a17:907:7f0b:b0:8b1:7569:b526 with SMTP id qf11-20020a1709077f0b00b008b17569b526mr3699967ejc.11.1680797017899;
-        Thu, 06 Apr 2023 09:03:37 -0700 (PDT)
-X-Google-Smtp-Source: AKy350bj25JTqlPH4xO7mSRLb2uiNpfWZQ6CHwGpry0pz+NotDKptf776qNa/IjvZu9utWI9ekaWvAw2s40+5EjYFv8=
-X-Received: by 2002:a17:907:7f0b:b0:8b1:7569:b526 with SMTP id
- qf11-20020a1709077f0b00b008b17569b526mr3699956ejc.11.1680797017538; Thu, 06
- Apr 2023 09:03:37 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230404084701.2791683-1-ryasuoka@redhat.com> <e51e9fb1-ad5c-5cf8-fa04-4e3a10023739@sandeen.net>
-In-Reply-To: <e51e9fb1-ad5c-5cf8-fa04-4e3a10023739@sandeen.net>
-From:   Ryosuke Yasuoka <ryasuoka@redhat.com>
-Date:   Fri, 7 Apr 2023 01:03:26 +0900
-Message-ID: <CAHpthZrcegPXhti5tDdb=_nwafWnU-FXmtc6aRU7juowMpOnUQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: Use for_each_perag() to iterate all available AGs
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     djwong@kernel.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
+        with ESMTP id S238748AbjDFRcD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 13:32:03 -0400
+Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7BA57DB1;
+        Thu,  6 Apr 2023 10:31:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1680802317; x=1712338317;
+  h=message-id:subject:from:to:cc:date:in-reply-to:
+   references:content-transfer-encoding:mime-version;
+  bh=T6fnB87Tnl00OWMznGSXjLswX9ii6nq9ScLgD4rSTI0=;
+  b=F9AOmuRd5Oa4ljrba4wS8M6WNu97ACObMKyNEDiTJffqyYL3ovdsV6oN
+   ckb1OA5nWxB3bIAXcwWkXRDPaOllHZ3jsV81kAOBAps4edwEi2LDsTV6M
+   Pc3MT8dqlFCSTlG3CDtecBz2pqHQisAvaBTJQ9dGN7UeH3zmSd2c+dDgK
+   eNSvB83KM5iBQQ60Impf+d36v91tP6qngEAJGC7Z3CxNSCUVqQ+mcmsb5
+   VEPpT8A05PANdomqqbfeW61UqhvBpF+vkEahvqo5HnE+XEQVgZDr1uSR1
+   aw64hO2q6MvKb+IF/isXMCq2v8c4LYBWCeNeZHmWXjBGLt94XdPOfKL0e
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10672"; a="429086488"
+X-IronPort-AV: E=Sophos;i="5.98,323,1673942400"; 
+   d="scan'208";a="429086488"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Apr 2023 10:31:56 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10672"; a="861477678"
+X-IronPort-AV: E=Sophos;i="5.98,323,1673942400"; 
+   d="scan'208";a="861477678"
+Received: from ticela-az-114.amr.corp.intel.com (HELO [10.251.3.106]) ([10.251.3.106])
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Apr 2023 10:31:54 -0700
+Message-ID: <7ce03e4323b95c1e8fd3faed32c9b285162fe5a8.camel@linux.intel.com>
+Subject: Re: [PATCH v5 2/2] mm: vmscan: refactor reclaim_state helpers
+From:   Tim Chen <tim.c.chen@linux.intel.com>
+To:     Yosry Ahmed <yosryahmed@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Lameter <cl@linux.com>,
+        David Rientjes <rientjes@google.com>,
+        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
+        Vlastimil Babka <vbabka@suse.cz>,
+        Roman Gushchin <roman.gushchin@linux.dev>,
+        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
+        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        Miaohe Lin <linmiaohe@huawei.com>,
+        David Hildenbrand <david@redhat.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
+        Shakeel Butt <shakeelb@google.com>,
+        Michal Hocko <mhocko@kernel.org>, Yu Zhao <yuzhao@google.com>,
+        Dave Chinner <david@fromorbit.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org
+Date:   Thu, 06 Apr 2023 10:31:53 -0700
+In-Reply-To: <20230405185427.1246289-3-yosryahmed@google.com>
+References: <20230405185427.1246289-1-yosryahmed@google.com>
+         <20230405185427.1246289-3-yosryahmed@google.com>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4 (3.44.4-2.fc36) 
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Eric,
+On Wed, 2023-04-05 at 18:54 +0000, Yosry Ahmed wrote:
+> During reclaim, we keep track of pages reclaimed from other means than
+> LRU-based reclaim through scan_control->reclaim_state->reclaimed_slab,
+> which we stash a pointer to in current task_struct.
+>=20
+> However, we keep track of more than just reclaimed slab pages through
+> this. We also use it for clean file pages dropped through pruned inodes,
+> and xfs buffer pages freed. Rename reclaimed_slab to reclaimed, and add
+> a helper function that wraps updating it through current, so that future
+> changes to this logic are contained within mm/vmscan.c.
+>=20
+> Additionally, add a flush_reclaim_state() helper to wrap using
+> reclaim_state->reclaimed to updated sc->nr_reclaimed, and use that
+> helper to add an elaborate comment about why we only do the update for
+> global reclaim.
+>=20
+> Finally, move set_task_reclaim_state() next to flush_reclaim_state() so
+> that all reclaim_state helpers are in close proximity for easier
+> readability.
+>=20
+> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+> ---
+>  fs/inode.c           |  3 +-
+>  fs/xfs/xfs_buf.c     |  3 +-
+>  include/linux/swap.h | 17 +++++++++-
+>  mm/slab.c            |  3 +-
+>  mm/slob.c            |  6 ++--
+>  mm/slub.c            |  5 ++-
+>  mm/vmscan.c          | 75 ++++++++++++++++++++++++++++++++------------
+>  7 files changed, 78 insertions(+), 34 deletions(-)
+>=20
+> diff --git a/fs/inode.c b/fs/inode.c
+> index 4558dc2f13557..e60fcc41faf17 100644
+> --- a/fs/inode.c
+> +++ b/fs/inode.c
+> @@ -864,8 +864,7 @@ static enum lru_status inode_lru_isolate(struct list_=
+head *item,
+>  				__count_vm_events(KSWAPD_INODESTEAL, reap);
+>  			else
+>  				__count_vm_events(PGINODESTEAL, reap);
+> -			if (current->reclaim_state)
+> -				current->reclaim_state->reclaimed_slab +=3D reap;
+> +			mm_account_reclaimed_pages(reap);
+>  		}
+>  		iput(inode);
+>  		spin_lock(lru_lock);
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 54c774af6e1c6..15d1e5a7c2d34 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -286,8 +286,7 @@ xfs_buf_free_pages(
+>  		if (bp->b_pages[i])
+>  			__free_page(bp->b_pages[i]);
+>  	}
+> -	if (current->reclaim_state)
+> -		current->reclaim_state->reclaimed_slab +=3D bp->b_page_count;
+> +	mm_account_reclaimed_pages(bp->b_page_count);
+> =20
+>  	if (bp->b_pages !=3D bp->b_page_array)
+>  		kmem_free(bp->b_pages);
+> diff --git a/include/linux/swap.h b/include/linux/swap.h
+> index 209a425739a9f..e131ac155fb95 100644
+> --- a/include/linux/swap.h
+> +++ b/include/linux/swap.h
+> @@ -153,13 +153,28 @@ union swap_header {
+>   * memory reclaim
+>   */
+>  struct reclaim_state {
+> -	unsigned long reclaimed_slab;
+> +	/* pages reclaimed outside of LRU-based reclaim */
+> +	unsigned long reclaimed;
+>  #ifdef CONFIG_LRU_GEN
+>  	/* per-thread mm walk data */
+>  	struct lru_gen_mm_walk *mm_walk;
+>  #endif
+>  };
+> =20
+> +/*
+> + * mm_account_reclaimed_pages(): account reclaimed pages outside of LRU-=
+based
+> + * reclaim
+> + * @pages: number of pages reclaimed
+> + *
+> + * If the current process is undergoing a reclaim operation, increment t=
+he
+> + * number of reclaimed pages by @pages.
+> + */
+> +static inline void mm_account_reclaimed_pages(unsigned long pages)
+> +{
+> +	if (current->reclaim_state)
+> +		current->reclaim_state->reclaimed +=3D pages;
+> +}
+> +
+>  #ifdef __KERNEL__
+> =20
+>  struct address_space;
+> diff --git a/mm/slab.c b/mm/slab.c
+> index dabc2a671fc6f..64bf1de817b24 100644
+> --- a/mm/slab.c
+> +++ b/mm/slab.c
+> @@ -1392,8 +1392,7 @@ static void kmem_freepages(struct kmem_cache *cache=
+p, struct slab *slab)
+>  	smp_wmb();
+>  	__folio_clear_slab(folio);
+> =20
+> -	if (current->reclaim_state)
+> -		current->reclaim_state->reclaimed_slab +=3D 1 << order;
+> +	mm_account_reclaimed_pages(1 << order);
+>  	unaccount_slab(slab, order, cachep);
+>  	__free_pages(&folio->page, order);
+>  }
+> diff --git a/mm/slob.c b/mm/slob.c
+> index fe567fcfa3a39..79cc8680c973c 100644
+> --- a/mm/slob.c
+> +++ b/mm/slob.c
+> @@ -61,7 +61,7 @@
+>  #include <linux/slab.h>
+> =20
+>  #include <linux/mm.h>
+> -#include <linux/swap.h> /* struct reclaim_state */
+> +#include <linux/swap.h> /* mm_account_reclaimed_pages() */
+>  #include <linux/cache.h>
+>  #include <linux/init.h>
+>  #include <linux/export.h>
+> @@ -211,9 +211,7 @@ static void slob_free_pages(void *b, int order)
+>  {
+>  	struct page *sp =3D virt_to_page(b);
+> =20
+> -	if (current->reclaim_state)
+> -		current->reclaim_state->reclaimed_slab +=3D 1 << order;
+> -
+> +	mm_account_reclaimed_pages(1 << order);
+>  	mod_node_page_state(page_pgdat(sp), NR_SLAB_UNRECLAIMABLE_B,
+>  			    -(PAGE_SIZE << order));
+>  	__free_pages(sp, order);
+> diff --git a/mm/slub.c b/mm/slub.c
+> index 39327e98fce34..7aa30eef82350 100644
+> --- a/mm/slub.c
+> +++ b/mm/slub.c
+> @@ -11,7 +11,7 @@
+>   */
+> =20
+>  #include <linux/mm.h>
+> -#include <linux/swap.h> /* struct reclaim_state */
+> +#include <linux/swap.h> /* mm_account_reclaimed_pages() */
+>  #include <linux/module.h>
+>  #include <linux/bit_spinlock.h>
+>  #include <linux/interrupt.h>
+> @@ -2063,8 +2063,7 @@ static void __free_slab(struct kmem_cache *s, struc=
+t slab *slab)
+>  	/* Make the mapping reset visible before clearing the flag */
+>  	smp_wmb();
+>  	__folio_clear_slab(folio);
+> -	if (current->reclaim_state)
+> -		current->reclaim_state->reclaimed_slab +=3D pages;
+> +	mm_account_reclaimed_pages(pages);
+>  	unaccount_slab(slab, order, s);
+>  	__free_pages(&folio->page, order);
+>  }
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index c82bd89f90364..049e39202e6ce 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -188,18 +188,6 @@ struct scan_control {
+>   */
+>  int vm_swappiness =3D 60;
+> =20
+> -static void set_task_reclaim_state(struct task_struct *task,
+> -				   struct reclaim_state *rs)
+> -{
+> -	/* Check for an overwrite */
+> -	WARN_ON_ONCE(rs && task->reclaim_state);
+> -
+> -	/* Check for the nulling of an already-nulled member */
+> -	WARN_ON_ONCE(!rs && !task->reclaim_state);
+> -
+> -	task->reclaim_state =3D rs;
+> -}
+> -
+>  LIST_HEAD(shrinker_list);
+>  DECLARE_RWSEM(shrinker_rwsem);
+> =20
+> @@ -511,6 +499,59 @@ static bool writeback_throttling_sane(struct scan_co=
+ntrol *sc)
+>  }
+>  #endif
+> =20
+> +static void set_task_reclaim_state(struct task_struct *task,
+> +				   struct reclaim_state *rs)
+> +{
+> +	/* Check for an overwrite */
+> +	WARN_ON_ONCE(rs && task->reclaim_state);
+> +
+> +	/* Check for the nulling of an already-nulled member */
+> +	WARN_ON_ONCE(!rs && !task->reclaim_state);
+> +
+> +	task->reclaim_state =3D rs;
+> +}
+> +
+> +/*
+> + * flush_reclaim_state(): add pages reclaimed outside of LRU-based recla=
+im to
+> + * scan_control->nr_reclaimed.
+> + */
+> +static void flush_reclaim_state(struct scan_control *sc,
+> +				struct reclaim_state *rs)
+> +{
+> +	/*
+> +	 * Currently, reclaim_state->reclaimed includes three types of pages
+> +	 * freed outside of vmscan:
+> +	 * (1) Slab pages.
+> +	 * (2) Clean file pages from pruned inodes.
+> +	 * (3) XFS freed buffer pages.
+> +	 *
+> +	 * For all of these cases, we have no way of finding out whether these
+> +	 * pages were related to the memcg under reclaim. For example, a freed
+> +	 * slab page could have had only a single object charged to the memcg
 
-I failed to reply to you since I got some mistakes.
-Let me re-send my reply just in case.
+Minor nits:
+s/could have had/could have
 
-Thank you for reviewing my requests.
+> +	 * under reclaim. Also, populated inodes are not on shrinker LRUs
+> +	 * anymore except on highmem systems.
+> +	 *
+> +	 * Instead of over-reporting the reclaimed pages in a memcg reclaim,
+> +	 * only count such pages in global reclaim. This prevents unnecessary
 
-> Can you explain what goes wrong if it is zero? Is there a test for this?
->
-> If it's a general problem, what if the other 2 callers pass in the variable
-> start_agno with a value of 0?
+May be clearer to say:
+This prevents under-reclaimaing the target memcg, and unnecessary
 
-Sorry I couldn't prepare any tests to confirm what happens if it is zero
-because it is a kind of general problem.
+> +	 * retries during memcg charging and false positive from proactive
+> +	 * reclaim (memory.reclaim).
+> +	 *
 
-IIUC, passing zero to for_each_perag_wrap() is not problematic.
-
-As the comment describes, this macro iterates all AG from start_agno through
-wrap_agno, then wrap to restart_agno, and then iterates again toward to
-start_agno - 1. It looks like some issue occurs when start_agno is zero.
-However, for_each_perag_wrap() actually won't wrap if start_agno is zero.
-
-static inline struct xfs_perag *
-xfs_perag_next_wrap(
-struct xfs_perag *pag,
-xfs_agnumber_t *agno,
-xfs_agnumber_t stop_agno,
-xfs_agnumber_t restart_agno,
-xfs_agnumber_t wrap_agno)
-{
-struct xfs_mount *mp = pag->pag_mount;
-
-*agno = pag->pag_agno + 1;
-xfs_perag_rele(pag);
-while (*agno != stop_agno) {
-if (*agno >= wrap_agno) {
-if (restart_agno >= stop_agno) <<<--- HERE
-break;
-*agno = restart_agno;
-}
-
-pag = xfs_perag_grab(mp, *agno);
-if (pag)
-return pag;
-(*agno)++;
-}
-return NULL;
-}
-
-/*
-* Iterate all AGs from start_agno through wrap_agno, then restart_agno through
-* (start_agno - 1).
-*/
-#define for_each_perag_wrap_range(mp, start_agno, restart_agno,
-wrap_agno, agno, pag) \
-for ((agno) = (start_agno), (pag) = xfs_perag_grab((mp), (agno)); \
-(pag) != NULL; \
-(pag) = xfs_perag_next_wrap((pag), &(agno), (start_agno), \
-(restart_agno), (wrap_agno)))
-...
-#define for_each_perag_wrap_at(mp, start_agno, wrap_agno, agno, pag) \
-for_each_perag_wrap_range((mp), (start_agno), 0, (wrap_agno), (agno), (pag))
-...
-#define for_each_perag_wrap(mp, start_agno, agno, pag) \
-for_each_perag_wrap_at((mp), (start_agno), (mp)->m_sb.sb_agcount, \
-(agno), (pag))
-
-OTOH, since we have already a for_each_perag() macro, which just iterates all AG
-from 0 and doesn't wrap, I think it is simpler to use for_earch_perag().
-
-Regards,
-Ryosuke
-
+Tim
