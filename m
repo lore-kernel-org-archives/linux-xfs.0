@@ -2,42 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F766C76196
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:36:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79B98C7618D
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:36:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237183AbjDFTgT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Apr 2023 15:36:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37608 "EHLO
+        id S233368AbjDFTgf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Apr 2023 15:36:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237207AbjDFTgT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:36:19 -0400
+        with ESMTP id S229610AbjDFTge (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:36:34 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B35AC93D2
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:36:16 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50EDC4EFA
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:36:32 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 412DC64BB0
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:36:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AD94C433D2;
-        Thu,  6 Apr 2023 19:36:15 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D23A462C5A
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:36:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BBF4C433D2;
+        Thu,  6 Apr 2023 19:36:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680809775;
-        bh=4A4Y8gBqNJxcft58Sb3Y73QX3vjUdGveWvWkS5JYTBk=;
+        s=k20201202; t=1680809791;
+        bh=kYO6QMnZGlYxP6mbdbdfhw/y5a1BP7Y9BAKmsxopJ+8=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=r8kGLqTStefxbfdAv1vBGLJwi8Jo4PVHyA/iDXOwQuRf257eoRl21+9nuFszCmN7J
-         uliu5tIm1veA91FuKqMOiCjL3oj7KOZ46NCc5yz82YTi6le822h3Kef0TOvPNBFetn
-         VGRD2Suw+FEySG/EN+4h8Rf3Pwukt73mc47e7GmQSsmD5GL0rLprHDK4ZYV23uSi04
-         +1UjBDtzpGWnCgcdxPCNlMGFOSMWgmHOB9GiFzkbVBsGEkilnrLCZudntJ+ak5C3rQ
-         P1YjI/OlWapZsTMzAxmFCWp51zK2VYYzOAaAy+eV69UTdS3fBB9NA3nZbh8xb2q5lS
-         L43br6OAlIxFQ==
-Date:   Thu, 06 Apr 2023 12:36:15 -0700
-Subject: [PATCH 18/32] libfrog: add parent pointer support code
+        b=mRakSiR1VS2DKOacAoHbTBAl1vYupUJf5LwQr7pH90J6TncCAYv0n+CEEKtZqoHWd
+         a7za6RB2IDVicw2F5wFYHniNmjd6vZIRmRaN+JQN0yfieicWkm0MyoU6pCZb96CaRf
+         2AZ4ahVahoP5foUdKxC8V+CvVsdm4y/avtHAw8BGK6s3HYVQnbELWyumFfyQyUiN4I
+         0HDPk+fMJPRwyUq112pq1l3MAOWRqY2lIEfPnb6LgS5tHjgQSvCOqIviloK65A6yhg
+         bY1UZT6blZfrBCP2X/AXmJQrToJZURuGIn5GZsmwK04tXhQHb5z06/mfGLAvp8Wdcc
+         dPrncbgcL5jog==
+Date:   Thu, 06 Apr 2023 12:36:30 -0700
+Subject: [PATCH 19/32] xfs_io: adapt parent command to new parent pointer
+ ioctls
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     Allison Collins <allison.henderson@oracle.com>,
+Cc:     Allison Henderson <allison.henderson@oracle.com>,
         allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <168080827794.616793.16808165014334622001.stgit@frogsfrogsfrogs>
+Message-ID: <168080827807.616793.4373205164397932253.stgit@frogsfrogsfrogs>
 In-Reply-To: <168080827546.616793.7264157843231723676.stgit@frogsfrogsfrogs>
 References: <168080827546.616793.7264157843231723676.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -50,683 +51,615 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add some support code to libfrog so that client programs can walk file
-descriptors and handles upwards through the directory tree; and obtain a
-reasonable file path from a file descriptor/handle.  This code will be
-used in xfsprogs utilities.
+For ages, xfs_io has had a totally useless 'parent' command that enabled
+callers to walk the parents or print the directory tree path of an open
+file.  This code used the ioctl interface presented by SGI's version of
+parent pointers that was never merged.  Rework the code in here to use
+the new ioctl interfaces that we've settled upon.  Get rid of the old
+parent pointer checking code since xfs_repair/xfs_scrub will take care
+of that.
 
+(This originally was in the "xfsprogs: implement the upper half of
+parent pointers" megapatch.)
+
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Allison Collins <allison.henderson@oracle.com>
 ---
- include/handle.h     |    1 
- libfrog/Makefile     |    2 
- libfrog/getparents.c |  338 ++++++++++++++++++++++++++++++++++++++++++++++++++
- libfrog/getparents.h |   36 +++++
- libfrog/paths.c      |  167 +++++++++++++++++++++++++
- libfrog/paths.h      |   25 ++++
- libhandle/handle.c   |    7 +
- 7 files changed, 573 insertions(+), 3 deletions(-)
- create mode 100644 libfrog/getparents.c
- create mode 100644 libfrog/getparents.h
+ io/parent.c       |  470 ++++++++++++++---------------------------------------
+ man/man8/xfs_io.8 |   21 +-
+ 2 files changed, 133 insertions(+), 358 deletions(-)
 
 
-diff --git a/include/handle.h b/include/handle.h
-index 34246f385..ba0650051 100644
---- a/include/handle.h
-+++ b/include/handle.h
-@@ -17,6 +17,7 @@ struct parent;
- extern int  path_to_handle (char *__path, void **__hanp, size_t *__hlen);
- extern int  path_to_fshandle (char *__path, void **__fshanp, size_t *__fshlen);
- extern int  fd_to_handle (int fd, void **hanp, size_t *hlen);
-+extern int  handle_to_fsfd(void *, char **);
- extern int  handle_to_fshandle (void *__hanp, size_t __hlen, void **__fshanp,
- 				size_t *__fshlen);
- extern void free_handle (void *__hanp, size_t __hlen);
-diff --git a/libfrog/Makefile b/libfrog/Makefile
-index 011070823..b327c1fdf 100644
---- a/libfrog/Makefile
-+++ b/libfrog/Makefile
-@@ -19,6 +19,7 @@ bulkstat.c \
- convert.c \
- crc32.c \
- fsgeom.c \
-+getparents.c \
- list_sort.c \
- linux.c \
- logging.c \
-@@ -40,6 +41,7 @@ crc32cselftest.h \
- crc32defs.h \
- crc32table.h \
- fsgeom.h \
-+getparents.h \
- logging.h \
- paths.h \
- projects.h \
-diff --git a/libfrog/getparents.c b/libfrog/getparents.c
-new file mode 100644
-index 000000000..3b4fc011a
---- /dev/null
-+++ b/libfrog/getparents.c
-@@ -0,0 +1,338 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2017-2023 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#include "platform_defs.h"
-+#include "xfs.h"
-+#include "xfs_arch.h"
-+#include "list.h"
-+#include "libfrog/paths.h"
-+#include "handle.h"
+diff --git a/io/parent.c b/io/parent.c
+index 8f63607ff..65fd892bf 100644
+--- a/io/parent.c
++++ b/io/parent.c
+@@ -7,365 +7,112 @@
+ #include "command.h"
+ #include "input.h"
+ #include "libfrog/paths.h"
+-#include "parent.h"
 +#include "libfrog/getparents.h"
-+
-+/* Allocate a buffer large enough for some parent pointer records. */
-+static inline struct xfs_getparents *
-+alloc_pptr_buf(
-+	size_t			bufsize)
-+{
-+	struct xfs_getparents	*pi;
-+
-+	pi = calloc(bufsize, 1);
-+	if (!pi)
-+		return NULL;
-+	pi->gp_bufsize = bufsize;
-+	return pi;
-+}
-+
-+/*
-+ * Walk all parents of the given file handle.  Returns 0 on success or positive
-+ * errno.
-+ */
+ #include "handle.h"
+-#include "jdm.h"
+ #include "init.h"
+ #include "io.h"
+ 
+-#define PARENTBUF_SZ		16384
+-#define BSTATBUF_SZ		16384
+-
+ static cmdinfo_t parent_cmd;
+-static int verbose_flag;
+-static int err_status;
+-static __u64 inodes_checked;
+ static char *mntpt;
+ 
+-/*
+- * check out a parent entry to see if the values seem valid
+- */
+-static void
+-check_parent_entry(struct xfs_bstat *bstatp, parent_t *parent)
 +static int
-+call_getparents(
-+	int			fd,
-+	struct xfs_handle	*handle,
-+	walk_parent_fn		fn,
++pptr_print(
++	const struct parent_rec	*rec,
 +	void			*arg)
-+{
-+	struct xfs_getparents	*pi;
-+	struct xfs_getparents_rec	*p;
-+	unsigned int		i;
-+	ssize_t			ret = -1;
-+
-+	pi = alloc_pptr_buf(XFS_XATTR_LIST_MAX);
-+	if (!pi)
-+		return errno;
-+
-+	if (handle) {
-+		memcpy(&pi->gp_handle, handle, sizeof(struct xfs_handle));
-+		pi->gp_flags = XFS_GETPARENTS_IFLAG_HANDLE;
-+	}
-+
-+	ret = ioctl(fd, XFS_IOC_GETPARENTS, pi);
-+	while (!ret) {
-+		if (pi->gp_flags & XFS_GETPARENTS_OFLAG_ROOT) {
-+			struct parent_rec	rec = {
-+				.p_flags	= PARENT_IS_ROOT,
-+			};
-+
-+			ret = fn(&rec, arg);
-+			goto out_pi;
-+		}
-+
-+		for (i = 0; i < pi->gp_count; i++) {
-+			struct parent_rec	rec = { 0 };
-+
-+			p = xfs_getparents_rec(pi, i);
-+			rec.p_ino = p->gpr_ino;
-+			rec.p_gen = p->gpr_gen;
-+			strncpy((char *)rec.p_name, (char *)p->gpr_name,
-+					MAXNAMELEN - 1);
-+
-+			ret = fn(&rec, arg);
-+			if (ret)
-+				goto out_pi;
-+		}
-+
-+		if (pi->gp_flags & XFS_GETPARENTS_OFLAG_DONE)
-+			break;
-+
-+		ret = ioctl(fd, XFS_IOC_GETPARENTS, pi);
-+	}
-+	if (ret)
-+		ret = errno;
-+
-+out_pi:
-+	free(pi);
-+	return ret;
-+}
-+
-+/* Walk all parent pointers of this handle.  Returns 0 or positive errno. */
-+int
-+handle_walk_parents(
-+	void			*hanp,
-+	size_t			hlen,
-+	walk_parent_fn		fn,
-+	void			*arg)
-+{
-+	char			*mntpt;
-+	int			fd;
-+
-+	if (hlen != sizeof(struct xfs_handle))
-+		return EINVAL;
-+
-+	fd = handle_to_fsfd(hanp, &mntpt);
-+	if (fd < 0)
-+		return errno;
-+
-+	return call_getparents(fd, hanp, fn, arg);
-+}
-+
-+/* Walk all parent pointers of this fd.  Returns 0 or positive errno. */
-+int
-+fd_walk_parents(
-+	int			fd,
-+	walk_parent_fn		fn,
-+	void			*arg)
-+{
-+	return call_getparents(fd, NULL, fn, arg);
-+}
-+
-+struct walk_ppaths_info {
-+	walk_path_fn			fn;
-+	void				*arg;
-+	char				*mntpt;
-+	struct path_list		*path;
-+	int				fd;
-+};
-+
-+struct walk_ppath_level_info {
-+	struct xfs_handle		newhandle;
-+	struct path_component		*pc;
-+	struct walk_ppaths_info		*wpi;
-+};
-+
-+static int handle_walk_ppath(struct walk_ppaths_info *wpi,
-+		struct xfs_handle *handle);
-+
-+static int
-+handle_walk_ppath_rec(
-+	const struct parent_rec		*rec,
-+	void				*arg)
-+{
-+	struct walk_ppath_level_info	*wpli = arg;
-+	struct walk_ppaths_info		*wpi = wpli->wpi;
-+	int				ret = 0;
-+
-+	if (rec->p_flags & PARENT_IS_ROOT)
-+		return wpi->fn(wpi->mntpt, wpi->path, wpi->arg);
-+
-+	ret = path_component_change(wpli->pc, rec->p_name,
-+				strlen((char *)rec->p_name), rec->p_ino);
-+	if (ret)
-+		return ret;
-+
-+	wpli->newhandle.ha_fid.fid_ino = rec->p_ino;
-+	wpli->newhandle.ha_fid.fid_gen = rec->p_gen;
-+
-+	path_list_add_parent_component(wpi->path, wpli->pc);
-+	ret = handle_walk_ppath(wpi, &wpli->newhandle);
-+	path_list_del_component(wpi->path, wpli->pc);
-+
-+	return ret;
-+}
-+
-+/*
-+ * Recursively walk all parents of the given file handle; if we hit the
-+ * fs root then we call the associated function with the constructed path.
-+ * Returns 0 for success or positive errno.
-+ */
-+static int
-+handle_walk_ppath(
-+	struct walk_ppaths_info		*wpi,
-+	struct xfs_handle		*handle)
-+{
-+	struct walk_ppath_level_info	*wpli;
-+	int				ret;
-+
-+	wpli = malloc(sizeof(struct walk_ppath_level_info));
-+	if (!wpli)
-+		return errno;
-+	wpli->pc = path_component_init("", 0);
-+	if (!wpli->pc) {
-+		ret = errno;
-+		free(wpli);
-+		return ret;
-+	}
-+	wpli->wpi = wpi;
-+	memcpy(&wpli->newhandle, handle, sizeof(struct xfs_handle));
-+
-+	ret = call_getparents(wpi->fd, handle, handle_walk_ppath_rec, wpli);
-+
-+	path_component_free(wpli->pc);
-+	free(wpli);
-+	return ret;
-+}
-+
-+/*
-+ * Call the given function on all known paths from the vfs root to the inode
-+ * described in the handle.  Returns 0 for success or positive errno.
-+ */
-+int
-+handle_walk_parent_paths(
-+	void			*hanp,
-+	size_t			hlen,
-+	walk_path_fn		fn,
-+	void			*arg)
-+{
-+	struct walk_ppaths_info	wpi;
-+	ssize_t			ret;
-+
-+	if (hlen != sizeof(struct xfs_handle))
-+		return EINVAL;
-+
-+	wpi.fd = handle_to_fsfd(hanp, &wpi.mntpt);
-+	if (wpi.fd < 0)
-+		return errno;
-+	wpi.path = path_list_init();
-+	if (!wpi.path)
-+		return errno;
-+	wpi.fn = fn;
-+	wpi.arg = arg;
-+
-+	ret = handle_walk_ppath(&wpi, hanp);
-+	path_list_free(wpi.path);
-+
-+	return ret;
-+}
-+
-+/*
-+ * Call the given function on all known paths from the vfs root to the inode
-+ * referred to by the file description.  Returns 0 or positive errno.
-+ */
-+int
-+fd_walk_parent_paths(
-+	int			fd,
-+	walk_path_fn		fn,
-+	void			*arg)
-+{
-+	struct walk_ppaths_info	wpi;
-+	void			*hanp;
-+	size_t			hlen;
-+	int			fsfd;
+ {
+-	int sts;
+-	char fullpath[PATH_MAX];
+-	struct stat statbuf;
+-	char *str;
+-
+-	sprintf(fullpath, _("%s%s"), mntpt, parent->p_name);
+-
+-	sts = lstat(fullpath, &statbuf);
+-	if (sts != 0) {
+-		fprintf(stderr,
+-			_("inode-path for inode: %llu is incorrect - path \"%s\" non-existent\n"),
+-			(unsigned long long) bstatp->bs_ino, fullpath);
+-		if (verbose_flag) {
+-			fprintf(stderr,
+-				_("path \"%s\" does not stat for inode: %llu; err = %s\n"),
+-				fullpath,
+-			       (unsigned long long) bstatp->bs_ino,
+-				strerror(errno));
+-		}
+-		err_status++;
+-		return;
+-	} else {
+-		if (verbose_flag > 1) {
+-			printf(_("path \"%s\" found\n"), fullpath);
+-		}
+-	}
+-
+-	if (statbuf.st_ino != bstatp->bs_ino) {
+-		fprintf(stderr,
+-			_("inode-path for inode: %llu is incorrect - wrong inode#\n"),
+-		       (unsigned long long) bstatp->bs_ino);
+-		if (verbose_flag) {
+-			fprintf(stderr,
+-				_("ino mismatch for path \"%s\" %llu vs %llu\n"),
+-				fullpath,
+-				(unsigned long long)statbuf.st_ino,
+-				(unsigned long long)bstatp->bs_ino);
+-		}
+-		err_status++;
+-		return;
+-	} else if (verbose_flag > 1) {
+-		printf(_("inode number match: %llu\n"),
+-			(unsigned long long)statbuf.st_ino);
+-	}
++	const char		*name = (char *)rec->p_name;
++	unsigned int		namelen;
+ 
+-	/* get parent path */
+-	str = strrchr(fullpath, '/');
+-	*str = '\0';
+-	sts = stat(fullpath, &statbuf);
+-	if (sts != 0) {
+-		fprintf(stderr,
+-			_("parent path \"%s\" does not stat: %s\n"),
+-			fullpath,
+-			strerror(errno));
+-		err_status++;
+-		return;
+-	} else {
+-		if (parent->p_ino != statbuf.st_ino) {
+-			fprintf(stderr,
+-				_("inode-path for inode: %llu is incorrect - wrong parent inode#\n"),
+-			       (unsigned long long) bstatp->bs_ino);
+-			if (verbose_flag) {
+-				fprintf(stderr,
+-					_("ino mismatch for path \"%s\" %llu vs %llu\n"),
+-					fullpath,
+-					(unsigned long long)parent->p_ino,
+-					(unsigned long long)statbuf.st_ino);
+-			}
+-			err_status++;
+-			return;
+-		} else {
+-			if (verbose_flag > 1) {
+-			       printf(_("parent ino match for %llu\n"),
+-				       (unsigned long long) parent->p_ino);
+-			}
+-		}
++	if (rec->p_flags & PARENT_IS_ROOT) {
++		printf(_("Root directory.\n"));
++		return 0;
+ 	}
+-}
+-
+-static void
+-check_parents(parent_t *parentbuf, size_t *parentbuf_size,
+-	     jdm_fshandle_t *fshandlep, struct xfs_bstat *statp)
+-{
+-	int error, i;
+-	__u32 count;
+-	parent_t *entryp;
+-
+-	do {
+-		error = jdm_parentpaths(fshandlep, statp, parentbuf, *parentbuf_size, &count);
+-
+-		if (error == ERANGE) {
+-			*parentbuf_size *= 2;
+-			parentbuf = (parent_t *)realloc(parentbuf, *parentbuf_size);
+-		} else if (error) {
+-			fprintf(stderr, _("parentpaths failed for ino %llu: %s\n"),
+-			       (unsigned long long) statp->bs_ino,
+-				strerror(errno));
+-			err_status++;
+-			break;
+-		}
+-	} while (error == ERANGE);
+-
+ 
+-	if (count == 0) {
+-		/* no links for inode - something wrong here */
+-	       fprintf(stderr, _("inode-path for inode: %llu is missing\n"),
+-			       (unsigned long long) statp->bs_ino);
+-		err_status++;
+-	}
++	namelen = strlen(name);
++	printf(_("p_ino     = %llu\n"), (unsigned long long)rec->p_ino);
++	printf(_("p_gen     = %u\n"), (unsigned int)rec->p_gen);
++	printf(_("p_namelen = %u\n"), namelen);
++	printf(_("p_name    = \"%s\"\n\n"), rec->p_name);
+ 
+-	entryp = parentbuf;
+-	for (i = 0; i < count; i++) {
+-		check_parent_entry(statp, entryp);
+-		entryp = (parent_t*) (((char*)entryp) + entryp->p_reclen);
+-	}
++	return 0;
+ }
+ 
+ static int
+-do_bulkstat(parent_t *parentbuf, size_t *parentbuf_size,
+-	    struct xfs_bstat *bstatbuf, int fsfd, jdm_fshandle_t *fshandlep)
++print_parents(
++	struct xfs_handle	*handle)
+ {
+-	__s32 buflenout;
+-	__u64 lastino = 0;
+-	struct xfs_bstat *p;
+-	struct xfs_bstat *endp;
+-	struct xfs_fsop_bulkreq bulkreq;
+-	struct stat mntstat;
+-
+-	if (stat(mntpt, &mntstat)) {
+-		fprintf(stderr, _("can't stat mount point \"%s\": %s\n"),
+-			mntpt, strerror(errno));
+-		return 1;
+-	}
+-
+-	bulkreq.lastip  = &lastino;
+-	bulkreq.icount  = BSTATBUF_SZ;
+-	bulkreq.ubuffer = (void *)bstatbuf;
+-	bulkreq.ocount  = &buflenout;
+-
+-	while (xfsctl(mntpt, fsfd, XFS_IOC_FSBULKSTAT, &bulkreq) == 0) {
+-		if (*(bulkreq.ocount) == 0) {
+-			return 0;
+-		}
+-		for (p = bstatbuf, endp = bstatbuf + *bulkreq.ocount; p < endp; p++) {
+-
+-			/* inode being modified, get synced data with iget */
+-			if ( (!p->bs_nlink || !p->bs_mode) && p->bs_ino != 0 ) {
+-
+-				if (xfsctl(mntpt, fsfd, XFS_IOC_FSBULKSTAT_SINGLE, &bulkreq) < 0) {
+-				    fprintf(stderr,
+-					  _("failed to get bulkstat information for inode %llu\n"),
+-					 (unsigned long long) p->bs_ino);
+-				    continue;
+-				}
+-				if (!p->bs_nlink || !p->bs_mode || !p->bs_ino) {
+-				    fprintf(stderr,
+-					  _("failed to get valid bulkstat information for inode %llu\n"),
+-					 (unsigned long long) p->bs_ino);
+-				    continue;
+-				}
+-			}
+-
+-			/* skip root */
+-			if (p->bs_ino == mntstat.st_ino) {
+-				continue;
+-			}
+-
+-			if (verbose_flag > 1) {
+-			       printf(_("checking inode %llu\n"),
+-				       (unsigned long long) p->bs_ino);
+-			}
+-
+-			/* print dotted progress */
+-			if ((inodes_checked % 100) == 0 && verbose_flag == 1) {
+-				printf("."); fflush(stdout);
+-			}
+-			inodes_checked++;
+-
+-			check_parents(parentbuf, parentbuf_size, fshandlep, p);
+-		}
 +	int			ret;
-+
-+	ret = fd_to_handle(fd, &hanp, &hlen);
+ 
+-	}/*while*/
++	if (handle)
++		ret = handle_walk_parents(handle, sizeof(*handle), pptr_print,
++				NULL);
++	else
++		ret = fd_walk_parents(file->fd, pptr_print, NULL);
 +	if (ret)
-+		return errno;
-+
-+	fsfd = handle_to_fsfd(hanp, &wpi.mntpt);
-+	if (fsfd < 0)
-+		return errno;
-+	wpi.fd = fd;
-+	wpi.path = path_list_init();
-+	if (!wpi.path)
-+		return errno;
-+	wpi.fn = fn;
-+	wpi.arg = arg;
-+
-+	ret = handle_walk_ppath(&wpi, hanp);
-+	path_list_free(wpi.path);
-+
-+	return ret;
-+}
-+
-+struct path_walk_info {
-+	char			*buf;
-+	size_t			len;
-+};
-+
-+/* Helper that stringifies the first full path that we find. */
-+static int
-+handle_to_path_walk(
++		fprintf(stderr, "%s: %s\n", file->name, strerror(ret));
+ 
+-	fprintf(stderr, _("syssgi bulkstat failed: %s\n"), strerror(errno));
+-	return 1;
++	return 0;
+ }
+ 
+ static int
+-parent_check(void)
++path_print(
 +	const char		*mntpt,
 +	const struct path_list	*path,
 +	void			*arg)
-+{
-+	struct path_walk_info	*pwi = arg;
+ {
+-	int fsfd;
+-	jdm_fshandle_t *fshandlep;
+-	parent_t *parentbuf;
+-	size_t parentbuf_size = PARENTBUF_SZ;
+-	struct xfs_bstat *bstatbuf;
+-
+-	err_status = 0;
+-	inodes_checked = 0;
+-
+-	sync();
+-
+-        fsfd = file->fd;
+-
+-	fshandlep = jdm_getfshandle(mntpt);
+-	if (fshandlep == NULL) {
+-		fprintf(stderr, _("unable to open \"%s\" for jdm: %s\n"),
+-		      mntpt,
+-		      strerror(errno));
+-		return 1;
+-	}
++	char			buf[PATH_MAX];
++	size_t			len = PATH_MAX;
 +	int			mntpt_len = strlen(mntpt);
 +	int			ret;
-+
+ 
+-	/* allocate buffers */
+-        bstatbuf = (struct xfs_bstat *)calloc(BSTATBUF_SZ, sizeof(struct xfs_bstat));
+-	parentbuf = (parent_t *)malloc(parentbuf_size);
+-	if (!bstatbuf || !parentbuf) {
+-		fprintf(stderr, _("unable to allocate buffers: %s\n"),
+-			strerror(errno));
+-		err_status = 1;
+-		goto out;
+-	}
+-
+-	if (do_bulkstat(parentbuf, &parentbuf_size, bstatbuf, fsfd, fshandlep) != 0)
+-		err_status++;
 +	/* Trim trailing slashes from the mountpoint */
 +	while (mntpt_len > 0 && mntpt[mntpt_len - 1] == '/')
 +		mntpt_len--;
-+
-+	ret = snprintf(pwi->buf, pwi->len, "%.*s", mntpt_len, mntpt);
+ 
+-	if (err_status > 0)
+-		fprintf(stderr, _("num errors: %d\n"), err_status);
+-	else
+-		printf(_("succeeded checking %llu inodes\n"),
+-			(unsigned long long) inodes_checked);
++	ret = snprintf(buf, len, "%.*s", mntpt_len, mntpt);
 +	if (ret != mntpt_len)
 +		return ENAMETOOLONG;
-+
-+	ret = path_list_to_string(path, pwi->buf + ret, pwi->len - ret);
+ 
+-out:
+-	free(bstatbuf);
+-	free(parentbuf);
+-	free(fshandlep);
+-	return err_status;
+-}
++	ret = path_list_to_string(path, buf + ret, len - ret);
 +	if (ret < 0)
 +		return ENAMETOOLONG;
-+
-+	return ECANCELED;
-+}
-+
-+/*
-+ * Return any eligible path to this file handle.  Returns 0 for success or
-+ * positive errno.
-+ */
-+int
-+handle_to_path(
-+	void			*hanp,
-+	size_t			hlen,
-+	char			*path,
-+	size_t			pathlen)
-+{
-+	struct path_walk_info	pwi;
-+	int			ret;
-+
-+	pwi.buf = path;
-+	pwi.len = pathlen;
-+	ret = handle_walk_parent_paths(hanp, hlen, handle_to_path_walk, &pwi);
-+	if (ret == ECANCELED)
-+		return 0;
-+	return ret;
-+}
-+
-+/*
-+ * Return any eligible path to this file description.  Returns 0 for success
-+ * or positive errno.
-+ */
-+int
-+fd_to_path(
-+	int			fd,
-+	char			*path,
-+	size_t			pathlen)
-+{
-+	struct path_walk_info	pwi;
-+	int			ret;
-+
-+	pwi.buf = path;
-+	pwi.len = pathlen;
-+	ret = fd_walk_parent_paths(fd, handle_to_path_walk, &pwi);
-+	if (ret == ECANCELED)
-+		return 0;
-+	return ret;
-+}
-diff --git a/libfrog/getparents.h b/libfrog/getparents.h
-new file mode 100644
-index 000000000..c95efed24
---- /dev/null
-+++ b/libfrog/getparents.h
-@@ -0,0 +1,36 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2023 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#ifndef	__LIBFROG_GETPARENTS_H_
-+#define	__LIBFROG_GETPARENTS_H_
-+
-+struct path_list;
-+
-+struct parent_rec {
-+	uint64_t	p_ino;
-+	uint32_t	p_gen;
-+	uint32_t	p_flags;
-+	unsigned char	p_name[MAXNAMELEN];
-+};
-+
-+/* This is the root directory. */
-+#define PARENT_IS_ROOT	(1U << 0)
-+
-+typedef int (*walk_parent_fn)(const struct parent_rec *rec, void *arg);
-+typedef int (*walk_path_fn)(const char *mntpt, const struct path_list *path,
-+		void *arg);
-+
-+int fd_walk_parents(int fd, walk_parent_fn fn, void *arg);
-+int handle_walk_parents(void *hanp, size_t hanlen, walk_parent_fn fn,
-+		void *arg);
-+
-+int fd_walk_parent_paths(int fd, walk_path_fn fn, void *arg);
-+int handle_walk_parent_paths(void *hanp, size_t hanlen, walk_path_fn fn,
-+		void *arg);
-+
-+int fd_to_path(int fd, char *path, size_t pathlen);
-+int handle_to_path(void *hanp, size_t hlen, char *path, size_t pathlen);
-+
-+#endif /* __LIBFROG_GETPARENTS_H_ */
-diff --git a/libfrog/paths.c b/libfrog/paths.c
-index abb29a237..4b9c8c644 100644
---- a/libfrog/paths.c
-+++ b/libfrog/paths.c
-@@ -15,6 +15,7 @@
- #include "paths.h"
- #include "input.h"
- #include "projects.h"
-+#include "list.h"
- #include <limits.h>
  
- extern char *progname;
-@@ -563,3 +564,169 @@ fs_table_insert_project_path(
- 
- 	return error;
+-static void
+-print_parent_entry(parent_t *parent, int fullpath)
+-{
+-       printf(_("p_ino    = %llu\n"),  (unsigned long long) parent->p_ino);
+-	printf(_("p_gen    = %u\n"),	parent->p_gen);
+-	printf(_("p_reclen = %u\n"),	parent->p_reclen);
+-	if (fullpath)
+-		printf(_("p_name   = \"%s%s\"\n"), mntpt, parent->p_name);
+-	else
+-		printf(_("p_name   = \"%s\"\n"), parent->p_name);
++	printf("%s\n", buf);
++	return 0;
  }
-+
-+/* Structured path components. */
-+
-+struct path_list {
-+	struct list_head	p_head;
-+};
-+
-+struct path_component {
-+	struct list_head	pc_list;
-+	uint64_t		pc_ino;
-+	char			*pc_fname;
-+};
-+
-+/* Initialize a path component with a given name. */
-+struct path_component *
-+path_component_init(
-+	const char		*name,
-+	uint64_t		ino)
-+{
-+	struct path_component	*pc;
-+
-+	pc = malloc(sizeof(struct path_component));
-+	if (!pc)
-+		return NULL;
-+	INIT_LIST_HEAD(&pc->pc_list);
-+	pc->pc_fname = strdup(name);
-+	if (!pc->pc_fname) {
-+		free(pc);
-+		return NULL;
-+	}
-+	pc->pc_ino = ino;
-+	return pc;
-+}
-+
-+/* Free a path component. */
-+void
-+path_component_free(
-+	struct path_component	*pc)
-+{
-+	free(pc->pc_fname);
-+	free(pc);
-+}
-+
-+/* Change a path component's filename or returns positive errno. */
-+int
-+path_component_change(
-+	struct path_component	*pc,
-+	const void		*name,
-+	size_t			namelen,
-+	uint64_t		ino)
-+{
-+	void			*p;
-+
-+	p = realloc(pc->pc_fname, namelen + 1);
-+	if (!p)
-+		return errno;
-+	pc->pc_fname = p;
-+	memcpy(pc->pc_fname, name, namelen);
-+	pc->pc_fname[namelen] = 0;
-+	pc->pc_ino = ino;
-+	return 0;
-+}
-+
-+/* Initialize a pathname or returns positive errno. */
-+struct path_list *
-+path_list_init(void)
-+{
-+	struct path_list	*path;
-+
-+	path = malloc(sizeof(struct path_list));
-+	if (!path)
-+		return NULL;
-+	INIT_LIST_HEAD(&path->p_head);
-+	return path;
-+}
-+
-+/* Empty out a pathname. */
-+void
-+path_list_free(
-+	struct path_list	*path)
-+{
-+	struct path_component	*pos;
-+	struct path_component	*n;
-+
-+	list_for_each_entry_safe(pos, n, &path->p_head, pc_list) {
-+		path_list_del_component(path, pos);
-+		path_component_free(pos);
-+	}
-+	free(path);
-+}
-+
-+/* Add a parent component to a pathname. */
-+void
-+path_list_add_parent_component(
-+	struct path_list	*path,
-+	struct path_component	*pc)
-+{
-+	list_add(&pc->pc_list, &path->p_head);
-+}
-+
-+/* Add a component to a pathname. */
-+void
-+path_list_add_component(
-+	struct path_list	*path,
-+	struct path_component	*pc)
-+{
-+	list_add_tail(&pc->pc_list, &path->p_head);
-+}
-+
-+/* Remove a component from a pathname. */
-+void
-+path_list_del_component(
-+	struct path_list	*path,
-+	struct path_component	*pc)
-+{
-+	list_del_init(&pc->pc_list);
-+}
-+
-+/*
-+ * Convert a pathname into a string or returns -1 if the buffer isn't long
-+ * enough.
-+ */
-+ssize_t
-+path_list_to_string(
-+	const struct path_list	*path,
-+	char			*buf,
-+	size_t			buflen)
-+{
-+	struct path_component	*pos;
-+	char			*buf_end = buf + buflen;
-+	ssize_t			bytes = 0;
+ 
+ static int
+-parent_list(int fullpath)
++print_paths(
++	struct xfs_handle	*handle)
+ {
+-	void *handlep = NULL;
+-	size_t handlen;
+-	int error, i;
+-	int retval = 1;
+-	__u32 count;
+-	parent_t *entryp;
+-	parent_t *parentbuf = NULL;
+-	char *path = file->name;
+-	int pb_size = PARENTBUF_SZ;
 +	int			ret;
-+
-+	list_for_each_entry(pos, &path->p_head, pc_list) {
-+		if (buf >= buf_end)
-+			return -1;
-+
-+		ret = snprintf(buf, buflen, "/%s", pos->pc_fname);
-+		if (ret < 0 || ret >= buflen)
-+			return -1;
-+
-+		bytes += ret;
-+		buf += ret;
-+		buflen -= ret;
-+	}
-+	return bytes;
-+}
-+
-+/* Walk each component of a path. */
-+int
-+path_walk_components(
-+	const struct path_list	*path,
-+	path_walk_fn_t		fn,
-+	void			*arg)
-+{
-+	struct path_component	*pos;
-+	int			ret;
-+
-+	list_for_each_entry(pos, &path->p_head, pc_list) {
-+		ret = fn(pos->pc_fname, pos->pc_ino, arg);
-+		if (ret)
-+			return ret;
-+	}
-+
+ 
+-	/* XXXX for linux libhandle version - to set libhandle fsfd cache */
+-	{
+-		void *fshandle;
+-		size_t fshlen;
+-
+-		if (path_to_fshandle(mntpt, &fshandle, &fshlen) != 0) {
+-			fprintf(stderr, _("%s: failed path_to_fshandle \"%s\": %s\n"),
+-				progname, path, strerror(errno));
+-			goto error;
+-		}
+-		free_handle(fshandle, fshlen);
+-	}
+-
+-	if (path_to_handle(path, &handlep, &handlen) != 0) {
+-		fprintf(stderr, _("%s: path_to_handle failed for \"%s\"\n"), progname, path);
+-		goto error;
+-	}
+-
+-	do {
+-		parentbuf = (parent_t *)realloc(parentbuf, pb_size);
+-		if (!parentbuf) {
+-			fprintf(stderr, _("%s: unable to allocate parent buffer: %s\n"),
+-				progname, strerror(errno));
+-			goto error;
+-		}
+-
+-		if (fullpath) {
+-			error = parentpaths_by_handle(handlep,
+-						       handlen,
+-						       parentbuf,
+-						       pb_size,
+-						       &count);
+-		} else {
+-			error = parents_by_handle(handlep,
+-						   handlen,
+-						   parentbuf,
+-						   pb_size,
+-						   &count);
+-		}
+-		if (error == ERANGE) {
+-			pb_size *= 2;
+-		} else if (error) {
+-			fprintf(stderr, _("%s: %s call failed for \"%s\": %s\n"),
+-				progname, fullpath ? "parentpaths" : "parents",
+-				path, strerror(errno));
+-			goto error;
+-		}
+-	} while (error == ERANGE);
+-
+-	if (count == 0) {
+-		/* no links for inode - something wrong here */
+-		fprintf(stderr, _("%s: inode-path is missing\n"), progname);
+-		goto error;
+-	}
+-
+-	entryp = parentbuf;
+-	for (i = 0; i < count; i++) {
+-		print_parent_entry(entryp, fullpath);
+-		entryp = (parent_t*) (((char*)entryp) + entryp->p_reclen);
+-	}
+-
+-	retval = 0;
+-error:
+-	free(handlep);
+-	free(parentbuf);
+-	return retval;
++	if (handle)
++		ret = handle_walk_parent_paths(handle, sizeof(*handle),
++				path_print, NULL);
++	else
++		ret = fd_walk_parent_paths(file->fd, path_print, NULL);
++	if (ret)
++		fprintf(stderr, "%s: %s\n", file->name, strerror(ret));
 +	return 0;
-+}
-diff --git a/libfrog/paths.h b/libfrog/paths.h
-index f20a2c3ef..6be74c42b 100644
---- a/libfrog/paths.h
-+++ b/libfrog/paths.h
-@@ -58,4 +58,29 @@ typedef struct fs_cursor {
- extern void fs_cursor_initialise(char *__dir, uint __flags, fs_cursor_t *__cp);
- extern fs_path_t *fs_cursor_next_entry(fs_cursor_t *__cp);
+ }
  
-+/* Path information. */
-+
-+struct path_list;
-+struct path_component;
-+
-+struct path_component *path_component_init(const char *name, uint64_t ino);
-+void path_component_free(struct path_component *pc);
-+int path_component_change(struct path_component *pc, const void *name,
-+		size_t namelen, uint64_t ino);
-+
-+struct path_list *path_list_init(void);
-+void path_list_free(struct path_list *path);
-+void path_list_add_parent_component(struct path_list *path,
-+		struct path_component *pc);
-+void path_list_add_component(struct path_list *path, struct path_component *pc);
-+void path_list_del_component(struct path_list *path, struct path_component *pc);
-+
-+ssize_t path_list_to_string(const struct path_list *path, char *buf,
-+		size_t buflen);
-+
-+typedef int (*path_walk_fn_t)(const char *name, uint64_t ino, void *arg);
-+
-+int path_walk_components(const struct path_list *path, path_walk_fn_t fn,
-+		void *arg);
-+
- #endif	/* __LIBFROG_PATH_H__ */
-diff --git a/libhandle/handle.c b/libhandle/handle.c
-index 333c21909..1e8fe9ac5 100644
---- a/libhandle/handle.c
-+++ b/libhandle/handle.c
-@@ -29,7 +29,6 @@ typedef union {
- } comarg_t;
+ static int
+-parent_f(int argc, char **argv)
++parent_f(
++	int			argc,
++	char			**argv)
+ {
+-	int c;
+-	int listpath_flag = 0;
+-	int check_flag = 0;
+-	fs_path_t *fs;
+-	static int tab_init;
++	struct xfs_handle	handle;
++	void			*hanp = NULL;
++	size_t			hlen;
++	struct fs_path		*fs;
++	char			*p;
++	uint64_t		ino = 0;
++	uint32_t		gen = 0;
++	int			c;
++	int			listpath_flag = 0;
++	int			ret;
++	static int		tab_init;
  
- static int obj_to_handle(char *, int, unsigned int, comarg_t, void**, size_t*);
--static int handle_to_fsfd(void *, char **);
- static char *path_to_fspath(char *path);
+ 	if (!tab_init) {
+ 		tab_init = 1;
+@@ -380,46 +127,74 @@ parent_f(int argc, char **argv)
+ 	}
+ 	mntpt = fs->fs_dir;
  
+-	verbose_flag = 0;
+-
+-	while ((c = getopt(argc, argv, "cpv")) != EOF) {
++	while ((c = getopt(argc, argv, "p")) != EOF) {
+ 		switch (c) {
+-		case 'c':
+-			check_flag = 1;
+-			break;
+ 		case 'p':
+ 			listpath_flag = 1;
+ 			break;
+-		case 'v':
+-			verbose_flag++;
+-			break;
+ 		default:
+ 			return command_usage(&parent_cmd);
+ 		}
+ 	}
  
-@@ -203,8 +202,10 @@ handle_to_fshandle(
+-	if (!check_flag && !listpath_flag) /* default case */
+-		exitcode = parent_list(listpath_flag);
+-	else {
+-		if (listpath_flag)
+-			exitcode = parent_list(listpath_flag);
+-		if (check_flag)
+-			exitcode = parent_check();
++	/*
++	 * Always initialize the fshandle table because we need it for
++	 * the ppaths functions to work.
++	 */
++	ret = path_to_fshandle((char *)mntpt, &hanp, &hlen);
++	if (ret) {
++		perror(mntpt);
++		return 0;
+ 	}
+ 
++	if (optind + 2 == argc) {
++		ino = strtoull(argv[optind], &p, 0);
++		if (*p != '\0' || ino == 0) {
++			fprintf(stderr,
++				_("Bad inode number '%s'.\n"),
++				argv[optind]);
++			return 0;
++		}
++		gen = strtoul(argv[optind + 1], &p, 0);
++		if (*p != '\0') {
++			fprintf(stderr,
++				_("Bad generation number '%s'.\n"),
++				argv[optind + 1]);
++			return 0;
++		}
++
++		memcpy(&handle, hanp, sizeof(handle));
++		handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
++				sizeof(handle.ha_fid.fid_len);
++		handle.ha_fid.fid_pad = 0;
++		handle.ha_fid.fid_ino = ino;
++		handle.ha_fid.fid_gen = gen;
++
++	} else if (optind != argc) {
++		return command_usage(&parent_cmd);
++	}
++
++	if (listpath_flag)
++		exitcode = print_paths(ino ? &handle : NULL);
++	else
++		exitcode = print_parents(ino ? &handle : NULL);
++
++	if (hanp)
++		free_handle(hanp, hlen);
++
  	return 0;
  }
  
--static int
--handle_to_fsfd(void *hanp, char **path)
-+int
-+handle_to_fsfd(
-+	void		*hanp,
-+	char		**path)
+ static void
+ parent_help(void)
  {
- 	struct fdhash	*fdhp;
+-	printf(_(
++printf(_(
+ "\n"
+ " list the current file's parents and their filenames\n"
+ "\n"
+-" -c -- check the current file's file system for parent consistency\n"
+-" -p -- list the current file's parents and their full paths\n"
+-" -v -- verbose mode\n"
++" -p -- list the current file's paths up to the root\n"
++"\n"
++"If ino and gen are supplied, use them instead.\n"
+ "\n"));
+ }
  
+@@ -430,11 +205,10 @@ parent_init(void)
+ 	parent_cmd.cfunc = parent_f;
+ 	parent_cmd.argmin = 0;
+ 	parent_cmd.argmax = -1;
+-	parent_cmd.args = _("[-cpv]");
++	parent_cmd.args = _("[-p] [ino gen]");
+ 	parent_cmd.flags = CMD_NOMAP_OK;
+-	parent_cmd.oneline = _("print or check parent inodes");
++	parent_cmd.oneline = _("print parent inodes");
+ 	parent_cmd.help = parent_help;
+ 
+-	if (expert)
+-		add_command(&parent_cmd);
++	add_command(&parent_cmd);
+ }
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index ef7087b3d..57ebe3a52 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -961,25 +961,26 @@ and
+ options behave as described above, in
+ .B chproj.
+ .TP
+-.BR parent " [ " \-cpv " ]"
++.BR parent " [ " \-p " ] [" " ino gen " "]"
+ By default this command prints out the parent inode numbers,
+ inode generation numbers and basenames of all the hardlinks which
+ point to the inode of the current file.
++
++If the optional
++.B ino
++and
++.B gen
++parameters are provided, they will be used to create a file handle on the same
++filesystem as the open file.
++The parents of the file represented by the handle will be reported instead of
++the open file.
++
+ .RS 1.0i
+ .PD 0
+ .TP 0.4i
+ .B \-p
+ the output is similar to the default output except pathnames up to
+ the mount-point are printed out instead of the component name.
+-.TP
+-.B \-c
+-the file's filesystem will check all the parent attributes for consistency.
+-.TP
+-.B \-v
+-verbose output will be printed.
+-.RE
+-.IP
+-.B [NOTE: Not currently operational on Linux.]
+ .RE
+ .PD
+ .TP
 
