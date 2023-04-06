@@ -2,282 +2,87 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 729ACC76196
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 17:52:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CB39C77B6C
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 18:10:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240106AbjDFRwx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Apr 2023 13:52:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45274 "EHLO
+        id S238918AbjDFSKl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Apr 2023 14:10:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58196 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239283AbjDFRwu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 13:52:50 -0400
-Received: from mail-ej1-x62f.google.com (mail-ej1-x62f.google.com [IPv6:2a00:1450:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 960607ED4
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 10:52:43 -0700 (PDT)
-Received: by mail-ej1-x62f.google.com with SMTP id sg7so3319348ejc.9
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Apr 2023 10:52:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680803562; x=1683395562;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=mso+OWc0NQ4kyA8lIzevjY2mQtAeqGXpiGyLYztjC/Y=;
-        b=s5QCc1DIbED97dHwuf8rxyDbmRf2F4IYzf5opI/14uRp1aXTwC4lD0imTvSCQufV6B
-         X0LmlL3+zP8Z4+S2CPA1qLby3O9EvzYfOd0VlUOegtwFw6pN04N3xs0l0SfgmXCp+Yv3
-         obuyFP4UksfJ/LCY10Bv8YdngrpN6Ziv6pIeqVKvlelCn/SZJrC4lvU00uCyAVAg9c7/
-         vXr6CTPZM0eiUEplNIqwYWehXL/xeBf2y+OIS1s95p4Dq+QA6RKjZ2S4xG5hPXqhPPzr
-         xUsFMkVvjX9m/peKtPgc07nKE12zWeXLBHDpjWUnNBSegsQnBUBs9Og/n3QELi1H/cmZ
-         HSNg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680803562; x=1683395562;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=mso+OWc0NQ4kyA8lIzevjY2mQtAeqGXpiGyLYztjC/Y=;
-        b=flLcCsRXxyAm5ZRF0nGy9/F17x9XaceoV+8zOVvw6u/VqlQNb+uCdHve+s1yjWl0L9
-         S3GVlc8zD5xlGgrdXv5Q0pQPrCAsjk1ukCQOQ/zYk+6D7SLpI/fIX1xY21SoP/av1Z5Q
-         7ba1YtRscuwPzx2dRxn0eJYgDvtc31F6ezVh58fwjE9F9cDxts17uCM1e4k91w/rD3cI
-         VLMJKZKOWMgdFDT9r0QNfteJAhIDLI1TYP6hvM77hUwI+6mVTeC8J6IIuKb7HnI89eZB
-         N/dqNjxJu5VN4P+OhI9gGV3gMie+EESeVDV81w2PXF+vCjoIyU+9cfvz8qD09eCGgh+A
-         9UYA==
-X-Gm-Message-State: AAQBX9f0JUSeDVBAJrlLSq6kbBm28Y6R0iV6u2rXoJ9JxDNye6gQh36Q
-        zTfyf7At0S7jjcfr/zuZ3Ey4CCVcWg7YC4U37mO90A==
-X-Google-Smtp-Source: AKy350a/zH2HmIWU3g5/OCjvmyr0CzZS6J95jcesZjoDC13AW/qyRPcnARZrC8SELVEDgBE6kxWR4pkbhrYcIo9w1Ew=
-X-Received: by 2002:a17:906:3393:b0:933:7658:8b44 with SMTP id
- v19-20020a170906339300b0093376588b44mr3571466eja.15.1680803561756; Thu, 06
- Apr 2023 10:52:41 -0700 (PDT)
+        with ESMTP id S229764AbjDFSKk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 14:10:40 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0A6935B1;
+        Thu,  6 Apr 2023 11:10:39 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 41294617E2;
+        Thu,  6 Apr 2023 18:10:39 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 991CAC433D2;
+        Thu,  6 Apr 2023 18:10:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1680804638;
+        bh=+D8dg/H/FzQ34FvNB2HlhtQ/RAIg+IxXuFgT2mmW5eA=;
+        h=Date:From:To:Cc:Subject:From;
+        b=DAVYyiNO8u69Lbr+vLLJPL+WpZ8RZYacH93FtQHSyfvzTKAg5nbti1Nk+6K018/gs
+         MKplRIAnbYrn56Qh5pRHbXG/dZH9GVyMUxkR5Ns2mZRm8IsRUxVoFQ5Nuam3qtxkPO
+         PMMgZKULUJUmPhJga2gqXiYOswUTyOOJIFGKxEpGC+wq5pku6L2D3Q/GfLja1uVt8e
+         Ta8tocSPwDyplx5i9B0g6S3STuJZHESoMwybDuqKVl7h36M2MDz4CioUaKWIGx2VJZ
+         M6/fzpKxla0cNlOo5BsQBZkV2MSZYxFvwop09x60+fRK4OGBnYU/ic2DEJ2ltTLXSG
+         ThhvsZpA3x4xw==
+Date:   Thu, 6 Apr 2023 11:10:38 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Allison Henderson <allison.henderson@oracle.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
+Subject: [PATCHSET DELUGE v11] xfs: Parent Pointers
+Message-ID: <20230406181038.GA360889@frogsfrogsfrogs>
 MIME-Version: 1.0
-References: <20230405185427.1246289-1-yosryahmed@google.com>
- <20230405185427.1246289-2-yosryahmed@google.com> <a8cb406a-70cd-aa47-fdda-50cd0eb8c941@redhat.com>
- <CAJD7tkbNsLo8Cd0nOm22oxD14GMppPoLNOHx2f8BJZA1wkpWnQ@mail.gmail.com> <14d50ddd-507e-46e7-1a32-72466dec2a40@redhat.com>
-In-Reply-To: <14d50ddd-507e-46e7-1a32-72466dec2a40@redhat.com>
-From:   Yosry Ahmed <yosryahmed@google.com>
-Date:   Thu, 6 Apr 2023 10:52:05 -0700
-Message-ID: <CAJD7tkY42_Vw8e+h4uHAfXZex3JS4dGzYJcHiz9mjpWBAQQS3g@mail.gmail.com>
-Subject: Re: [PATCH v5 1/2] mm: vmscan: ignore non-LRU-based reclaim in memcg reclaim
-To:     David Hildenbrand <david@redhat.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Lameter <cl@linux.com>,
-        David Rientjes <rientjes@google.com>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Roman Gushchin <roman.gushchin@linux.dev>,
-        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Miaohe Lin <linmiaohe@huawei.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
-        Shakeel Butt <shakeelb@google.com>,
-        Michal Hocko <mhocko@kernel.org>, Yu Zhao <yuzhao@google.com>,
-        Dave Chinner <david@fromorbit.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 6, 2023 at 10:50=E2=80=AFAM David Hildenbrand <david@redhat.com=
-> wrote:
->
-> On 06.04.23 16:07, Yosry Ahmed wrote:
-> > Thanks for taking a look, David!
-> >
-> > On Thu, Apr 6, 2023 at 3:31=E2=80=AFAM David Hildenbrand <david@redhat.=
-com> wrote:
-> >>
-> >> On 05.04.23 20:54, Yosry Ahmed wrote:
-> >>> We keep track of different types of reclaimed pages through
-> >>> reclaim_state->reclaimed_slab, and we add them to the reported number
-> >>> of reclaimed pages.  For non-memcg reclaim, this makes sense. For mem=
-cg
-> >>> reclaim, we have no clue if those pages are charged to the memcg unde=
-r
-> >>> reclaim.
-> >>>
-> >>> Slab pages are shared by different memcgs, so a freed slab page may h=
-ave
-> >>> only been partially charged to the memcg under reclaim.  The same goe=
-s for
-> >>> clean file pages from pruned inodes (on highmem systems) or xfs buffe=
-r
-> >>> pages, there is no simple way to currently link them to the memcg und=
-er
-> >>> reclaim.
-> >>>
-> >>> Stop reporting those freed pages as reclaimed pages during memcg recl=
-aim.
-> >>> This should make the return value of writing to memory.reclaim, and m=
-ay
-> >>> help reduce unnecessary reclaim retries during memcg charging.  Writi=
-ng to
-> >>> memory.reclaim on the root memcg is considered as cgroup_reclaim(), b=
-ut
-> >>> for this case we want to include any freed pages, so use the
-> >>> global_reclaim() check instead of !cgroup_reclaim().
-> >>>
-> >>> Generally, this should make the return value of
-> >>> try_to_free_mem_cgroup_pages() more accurate. In some limited cases (=
-e.g.
-> >>> freed a slab page that was mostly charged to the memcg under reclaim)=
-,
-> >>> the return value of try_to_free_mem_cgroup_pages() can be underestima=
-ted,
-> >>> but this should be fine. The freed pages will be uncharged anyway, an=
-d we
-> >>
-> >> Can't we end up in extreme situations where
-> >> try_to_free_mem_cgroup_pages() returns close to 0 although a huge amou=
-nt
-> >> of memory for that cgroup was freed up.
-> >>
-> >> Can you extend on why "this should be fine" ?
-> >>
-> >> I suspect that overestimation might be worse than underestimation. (se=
-e
-> >> my comment proposal below)
-> >
-> > In such extreme scenarios even though try_to_free_mem_cgroup_pages()
-> > would return an underestimated value, the freed memory for the cgroup
-> > will be uncharged. try_charge() (and most callers of
-> > try_to_free_mem_cgroup_pages()) do so in a retry loop, so even if
-> > try_to_free_mem_cgroup_pages() returns an underestimated value
-> > charging will succeed the next time around.
-> >
-> > The only case where this might be a problem is if it happens in the
-> > final retry, but I guess we need to be *really* unlucky for this
-> > extreme scenario to happen. One could argue that if we reach such a
-> > situation the cgroup will probably OOM soon anyway.
-> >
-> >>
-> >>> can charge the memcg the next time around as we usually do memcg recl=
-aim
-> >>> in a retry loop.
-> >>>
-> >>> The next patch performs some cleanups around reclaim_state and adds a=
-n
-> >>> elaborate comment explaining this to the code. This patch is kept
-> >>> minimal for easy backporting.
-> >>>
-> >>> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-> >>> Cc: stable@vger.kernel.org
-> >>
-> >> Fixes: ?
-> >>
-> >> Otherwise it's hard to judge how far to backport this.
-> >
-> > It's hard to judge. The issue has been there for a while, but
-> > memory.reclaim just made it more user visible. I think we can
-> > attribute it to per-object slab accounting, because before that any
-> > freed slab pages in cgroup reclaim would be entirely charged to that
-> > cgroup.
-> >
-> > Although in all fairness, other types of freed pages that use
-> > reclaim_state->reclaimed_slab cannot be attributed to the cgroup under
-> > reclaim have been there before that. I guess slab is the most
-> > significant among them tho, so for the purposes of backporting I
-> > guess:
-> >
-> > Fixes: f2fe7b09a52b ("mm: memcg/slab: charge individual slab objects
-> > instead of pages")
-> >
-> >>
-> >>> ---
-> >>>
-> >>> global_reclaim(sc) does not exist in kernels before 6.3. It can be
-> >>> replaced with:
-> >>> !cgroup_reclaim(sc) || mem_cgroup_is_root(sc->target_mem_cgroup)
-> >>>
-> >>> ---
-> >>>    mm/vmscan.c | 8 +++++---
-> >>>    1 file changed, 5 insertions(+), 3 deletions(-)
-> >>>
-> >>> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> >>> index 9c1c5e8b24b8f..c82bd89f90364 100644
-> >>> --- a/mm/vmscan.c
-> >>> +++ b/mm/vmscan.c
-> >>> @@ -5346,8 +5346,10 @@ static int shrink_one(struct lruvec *lruvec, s=
-truct scan_control *sc)
-> >>>                vmpressure(sc->gfp_mask, memcg, false, sc->nr_scanned =
-- scanned,
-> >>>                           sc->nr_reclaimed - reclaimed);
-> >>>
-> >>> -     sc->nr_reclaimed +=3D current->reclaim_state->reclaimed_slab;
-> >>> -     current->reclaim_state->reclaimed_slab =3D 0;
-> >>
-> >> Worth adding a comment like
-> >>
-> >> /*
-> >>    * Slab pages cannot universally be linked to a single memcg. So onl=
-y
-> >>    * account them as reclaimed during global reclaim. Note that we mig=
-ht
-> >>    * underestimate the amount of memory reclaimed (but won't overestim=
-ate
-> >>    * it).
-> >>    */
-> >>
-> >> but ...
-> >>
-> >>> +     if (global_reclaim(sc)) {
-> >>> +             sc->nr_reclaimed +=3D current->reclaim_state->reclaimed=
-_slab;
-> >>> +             current->reclaim_state->reclaimed_slab =3D 0;
-> >>> +     }
-> >>>
-> >>>        return success ? MEMCG_LRU_YOUNG : 0;
-> >>>    }
-> >>> @@ -6472,7 +6474,7 @@ static void shrink_node(pg_data_t *pgdat, struc=
-t scan_control *sc)
-> >>>
-> >>>        shrink_node_memcgs(pgdat, sc);
-> >>>
-> >>
-> >> ... do we want to factor the add+clear into a simple helper such that =
-we
-> >> can have above comment there?
-> >>
-> >> static void cond_account_reclaimed_slab(reclaim_state, sc)
-> >> {
-> >>          /*
-> >>           * Slab pages cannot universally be linked to a single memcg.=
- So
-> >>           * only account them as reclaimed during global reclaim. Note
-> >>           * that we might underestimate the amount of memory reclaimed
-> >>           * (but won't overestimate it).
-> >>           */
-> >>          if (global_reclaim(sc)) {
-> >>                  sc->nr_reclaimed +=3D reclaim_state->reclaimed_slab;
-> >>                  reclaim_state->reclaimed_slab =3D 0;
-> >>          }
-> >> }
-> >>
-> >> Yes, effective a couple LOC more, but still straight-forward for a
-> >> stable backport
-> >
-> > The next patch in the series performs some refactoring and cleanups,
-> > among which we add a helper called flush_reclaim_state() that does
-> > exactly that and contains a sizable comment. I left this outside of
-> > this patch in v5 to make the effective change as small as possible for
-> > backporting. Looks like it can be confusing tho without the comment.
-> >
-> > How about I pull this part to this patch as well for v6?
->
-> As long as it's a helper similar to what I proposed, I think that makes
-> a lot of sense (and doesn't particularly bloat this patch).
+Hi everyone,
 
-Sounds good to me, I will do that and respin.
+This submission contains all of the changes to the parent pointers
+patchset that I've been working since last month's deluge.  The kernel
+and xfsprogs patchsets are based on Allison's v10 tag from some time
+ago.  To recap Allison's cover letter:
 
-Thanks David!
+"The goal of this patch set is to add a parent pointer attribute to each
+inode.  The attribute name containing the parent inode, generation, and
+directory offset, while the  attribute value contains the file name.
+This feature will enable future optimizations for online scrub, shrink,
+nfs handles, verity, or any other feature that could make use of quickly
+deriving an inodes path from the mount point."
 
->
-> --
-> Thanks,
->
-> David / dhildenb
->
->
+v11 rebases everything against 6.3-rc5, and weaves all the changes that
+I had made against v10 into Allison's original series.  The new xattr
+NVLOOKUP mode that I introduced for v10 is critical for handling parent
+pointer attr name collisions with grace, so that has been retained from
+v10.  With that in place, I've replaced the diroffset in the ondisk
+parent pointer with the dirent hash of the name.
+
+Parent pointers now look like this:
+
+	(parent_ino, parent_gen, namehash) -> (name[])
+
+I experimented with replacing the dahash with crc32c for this patchset
+but left it out, having concluded that checksum operation has higher
+overhead (thanks, crypto api!), would require someone to figure out crc
+spoofing sufficiently well to keep metadump name obfuscation working,
+and doesn't seem to improve collision resistance sufficiently to be
+worth the added engineering cost.
+
+As of this submission, I think this feature is ready to go once we've
+merged the online repair code and rebased the online repair code to
+actually commit the repaired directories.
+
+If you want to pull the whole thing, use these links:
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=pptrs
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=pptrs-drop-unnecessary
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/log/?h=pptrs
+
+--D
