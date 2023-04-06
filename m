@@ -2,44 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E516C76196
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:39:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4663C7618D
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:40:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237442AbjDFTj6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Apr 2023 15:39:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41678 "EHLO
+        id S236708AbjDFTkM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Apr 2023 15:40:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237562AbjDFTjz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:39:55 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 135AB9F
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:39:55 -0700 (PDT)
+        with ESMTP id S229518AbjDFTkM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:40:12 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F109FF
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:40:10 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 942B260CEB
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:39:54 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08B44C433EF;
-        Thu,  6 Apr 2023 19:39:53 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2C54D60FAA
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:40:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BDB1C433D2;
+        Thu,  6 Apr 2023 19:40:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680809994;
-        bh=CgT6sZz/FZU1+AtZT8C8ViunruwKg5aARNjY4H+fzpo=;
+        s=k20201202; t=1680810009;
+        bh=D88/XnpWGqY1223EaJNgOl1zITYV10wYxyRqGF5MF98=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=H202gcDTBJTCAuEyHCgyei3Py8fEJ44nAMVad/KyY7ERVyADPMX6Ebk/gzAznKrdv
-         g56w2N77DzlvqVaLcIC2cEs7lAV3bH4bs8IsOrlui/dcek+GZyso4/EY9iQQfsMN4S
-         CqvWoon+/BGpBZE2iD6bSVGcNMnIIs/hF9K1NvvBx73J7aSO4wc4gvpaIO9P6SkzT3
-         V+cqVKylEuJT/POydCee3YiC6Er4Wapaj5S96rCAt1DeNslvu6lkeny7NBd1+cZs9q
-         ntymBu9pTof3M8FWxykP3UXWfvWf99hcAHUIc3bXsmDxvRfWEpcLOT7C9r6vDjtWi9
-         6WRH52qqhsmcQ==
-Date:   Thu, 06 Apr 2023 12:39:53 -0700
-Subject: [PATCH 32/32] mkfs: enable formatting with parent pointers
+        b=lJ92K1s1O9PcYjzsFjqueW3ymdY+Tx23aAbOwg6MHxWeO0EWS3677ioAnlKvOuNPJ
+         O+jJMauVII/ym1abnYZvzmIy1DPxg0pfFGn6pUiqUEG3pOOMKLzuk5iYdI7OAFLnEu
+         Leg38VyH2EppdFzKk/g+gU4lZQnLTw4pRcIxRZ1vLWtNLSWMI9NDlKfK6351s5Y+4f
+         j4j/tZPQAhwsBB36xwuOrg2DGYx/rKsPLe7HGiPpaEjMZEufiyHXRoar1DYkJTIvcV
+         R4P4W+tiLy/aMvUrNNe49EXEuuYAGpTH2T2G5gybBfnbkwQ7BY6pbrkoTHk02/m+pa
+         qqZ3OSF4LXdig==
+Date:   Thu, 06 Apr 2023 12:40:09 -0700
+Subject: [PATCH 1/7] xfs_repair: build a parent pointer index
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     Allison Henderson <allison.henderson@oracle.com>,
-        allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <168080827979.616793.4825719167031475284.stgit@frogsfrogsfrogs>
-In-Reply-To: <168080827546.616793.7264157843231723676.stgit@frogsfrogsfrogs>
-References: <168080827546.616793.7264157843231723676.stgit@frogsfrogsfrogs>
+Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
+Message-ID: <168080828272.617551.16472851997326940676.stgit@frogsfrogsfrogs>
+In-Reply-To: <168080828258.617551.4008600376507330925.stgit@frogsfrogsfrogs>
+References: <168080828258.617551.4008600376507330925.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -48,104 +47,383 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Allison Henderson <allison.henderson@oracle.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Enable parent pointer support in mkfs via the '-n parent' parameter.
+When we're walking directories during phase 6, build an index of parent
+pointers that we expect to find.
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- mkfs/xfs_mkfs.c |   29 ++++++++++++++++++++++++++---
- 1 file changed, 26 insertions(+), 3 deletions(-)
+ repair/Makefile |    2 +
+ repair/phase6.c |   39 ++++++++++-
+ repair/pptr.c   |  198 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ repair/pptr.h   |   15 ++++
+ 4 files changed, 252 insertions(+), 2 deletions(-)
+ create mode 100644 repair/pptr.c
+ create mode 100644 repair/pptr.h
 
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index f2e683117..c86f2bedf 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -110,6 +110,7 @@ enum {
- 	N_SIZE = 0,
- 	N_VERSION,
- 	N_FTYPE,
-+	N_PARENT,
- 	N_MAX_OPTS,
- };
+diff --git a/repair/Makefile b/repair/Makefile
+index 2c40e59a3..18731613b 100644
+--- a/repair/Makefile
++++ b/repair/Makefile
+@@ -23,6 +23,7 @@ HFILES = \
+ 	err_protos.h \
+ 	globals.h \
+ 	incore.h \
++	pptr.h \
+ 	prefetch.h \
+ 	progress.h \
+ 	protos.h \
+@@ -59,6 +60,7 @@ CFILES = \
+ 	phase5.c \
+ 	phase6.c \
+ 	phase7.c \
++	pptr.c \
+ 	prefetch.c \
+ 	progress.c \
+ 	quotacheck.c \
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 24ee6c27a..4df3b2402 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -18,6 +18,7 @@
+ #include "dinode.h"
+ #include "progress.h"
+ #include "versions.h"
++#include "repair/pptr.h"
  
-@@ -621,6 +622,7 @@ static struct opt_params nopts = {
- 		[N_SIZE] = "size",
- 		[N_VERSION] = "version",
- 		[N_FTYPE] = "ftype",
-+		[N_PARENT] = "parent",
- 		[N_MAX_OPTS] = NULL,
- 	},
- 	.subopt_params = {
-@@ -644,6 +646,14 @@ static struct opt_params nopts = {
- 		  .maxval = 1,
- 		  .defaultval = 1,
- 		},
-+		{ .index = N_PARENT,
-+		  .conflicts = { { NULL, LAST_CONFLICT } },
-+		  .minval = 0,
-+		  .maxval = 1,
-+		  .defaultval = 1,
-+		},
-+
-+
- 	},
- };
- 
-@@ -1000,7 +1010,7 @@ usage( void )
- /* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx,version=n\n\
- 			    sunit=value|su=num,sectsize=num,lazy-count=0|1]\n\
- /* label */		[-L label (maximum 12 characters)]\n\
--/* naming */		[-n size=num,version=2|ci,ftype=0|1]\n\
-+/* naming */		[-n size=num,version=2|ci,ftype=0|1,parent=0|1]]\n\
- /* no-op info only */	[-N]\n\
- /* prototype file */	[-p fname]\n\
- /* quiet */		[-q]\n\
-@@ -1774,6 +1784,9 @@ naming_opts_parser(
- 	case N_FTYPE:
- 		cli->sb_feat.dirftype = getnum(value, opts, subopt);
- 		break;
-+	case N_PARENT:
-+		cli->sb_feat.parent_pointers = getnum(value, &nopts, N_PARENT);
-+		break;
- 	default:
- 		return -EINVAL;
- 	}
-@@ -2286,6 +2299,14 @@ _("inode btree counters not supported without finobt support\n"));
- 		cli->sb_feat.inobtcnt = false;
- 	}
- 
-+	if ((cli->sb_feat.parent_pointers) &&
-+	    cli->sb_feat.dir_version == 4) {
-+		fprintf(stderr,
-+_("parent pointers not supported on v4 filesystems\n"));
-+		usage();
-+		cli->sb_feat.parent_pointers = false;
-+	}
-+
- 	if (cli->xi->rtname) {
- 		if (cli->sb_feat.reflink && cli_opt_set(&mopts, M_REFLINK)) {
- 			fprintf(stderr,
-@@ -3285,8 +3306,6 @@ sb_set_features(
- 		sbp->sb_features2 |= XFS_SB_VERSION2_LAZYSBCOUNTBIT;
- 	if (fp->projid32bit)
- 		sbp->sb_features2 |= XFS_SB_VERSION2_PROJID32BIT;
--	if (fp->parent_pointers)
--		sbp->sb_features2 |= XFS_SB_VERSION2_PARENTBIT;
- 	if (fp->crcs_enabled)
- 		sbp->sb_features2 |= XFS_SB_VERSION2_CRCBIT;
- 	if (fp->attr_version == 2)
-@@ -3327,6 +3346,10 @@ sb_set_features(
- 		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_INOBTCNT;
- 	if (fp->bigtime)
- 		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_BIGTIME;
-+	if (fp->parent_pointers) {
-+		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_PARENT;
-+		sbp->sb_versionnum |= XFS_SB_VERSION_ATTRBIT;
-+	}
+ static struct cred		zerocr;
+ static struct fsxattr 		zerofsx;
+@@ -974,6 +975,7 @@ mk_orphanage(xfs_mount_t *mp)
+ 		do_error(
+ 		_("can't make %s, createname error %d\n"),
+ 			ORPHANAGE, error);
++	add_parent_ptr(ip->i_ino, ORPHANAGE, pip);
  
  	/*
- 	 * Sparse inode chunk support has two main inode alignment requirements.
+ 	 * bump up the link count in the root directory to account
+@@ -1160,6 +1162,10 @@ mv_orphanage(
+ 			do_error(
+ 	_("orphanage name create failed (%d)\n"), err);
+ 	}
++
++	if (xfs_has_parent(mp))
++		add_parent_ptr(ino_p->i_ino, xname.name, orphanage_ip);
++
+ 	libxfs_irele(ino_p);
+ 	libxfs_irele(orphanage_ip);
+ }
+@@ -2459,6 +2465,7 @@ shortform_dir2_entry_check(
+ 	struct xfs_dir2_sf_entry *next_sfep;
+ 	struct xfs_ifork	*ifp;
+ 	struct ino_tree_node	*irec;
++	xfs_dir2_dataptr_t	diroffset;
+ 	int			max_size;
+ 	int			ino_offset;
+ 	int			i;
+@@ -2637,8 +2644,9 @@ shortform_dir2_entry_check(
+ 		/*
+ 		 * check for duplicate names in directory.
+ 		 */
+-		if (!dir_hash_add(mp, hashtab, (xfs_dir2_dataptr_t)
+-				(sfep - xfs_dir2_sf_firstentry(sfp)),
++		diroffset = xfs_dir2_byte_to_dataptr(
++				xfs_dir2_sf_get_offset(sfep));
++		if (!dir_hash_add(mp, hashtab, diroffset,
+ 				lino, sfep->namelen, sfep->name,
+ 				libxfs_dir2_sf_get_ftype(mp, sfep))) {
+ 			do_warn(
+@@ -2672,6 +2680,7 @@ _("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name"),
+ 				next_sfep = shortform_dir2_junk(mp, sfp, sfep,
+ 						lino, &max_size, &i,
+ 						&bytes_deleted, ino_dirty);
++				dir_hash_junkit(hashtab, diroffset);
+ 				continue;
+ 			} else if (parent == ino)  {
+ 				add_inode_reached(irec, ino_offset);
+@@ -2696,6 +2705,7 @@ _("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name"),
+ 				next_sfep = shortform_dir2_junk(mp, sfp, sfep,
+ 						lino, &max_size, &i,
+ 						&bytes_deleted, ino_dirty);
++				dir_hash_junkit(hashtab, diroffset);
+ 				continue;
+ 			}
+ 		}
+@@ -2787,6 +2797,26 @@ _("entry \"%s\" (ino %" PRIu64 ") in dir %" PRIu64 " is a duplicate name"),
+ 	}
+ }
+ 
++static void
++dir_hash_add_parent_ptrs(
++	struct xfs_inode	*dp,
++	struct dir_hash_tab	*hashtab)
++{
++	struct dir_hash_ent	*p;
++
++	if (!xfs_has_parent(dp->i_mount))
++		return;
++
++	for (p = hashtab->first; p; p = p->nextbyorder) {
++		if (p->name.name[0] == '/' || (p->name.name[0] == '.' &&
++				(p->name.len == 1 || (p->name.len == 2 &&
++						p->name.name[1] == '.'))))
++			continue;
++
++		add_parent_ptr(p->inum, p->name.name, dp);
++	}
++}
++
+ /*
+  * processes all reachable inodes in directories
+  */
+@@ -2913,6 +2943,7 @@ _("error %d fixing shortform directory %llu\n"),
+ 		default:
+ 			break;
+ 	}
++	dir_hash_add_parent_ptrs(ip, hashtab);
+ 	dir_hash_done(hashtab);
+ 
+ 	/*
+@@ -3204,6 +3235,8 @@ phase6(xfs_mount_t *mp)
+ 	ino_tree_node_t		*irec;
+ 	int			i;
+ 
++	parent_ptr_init(mp);
++
+ 	memset(&zerocr, 0, sizeof(struct cred));
+ 	memset(&zerofsx, 0, sizeof(struct fsxattr));
+ 	orphanage_ino = 0;
+@@ -3304,4 +3337,6 @@ _("        - resetting contents of realtime bitmap and summary inodes\n"));
+ 			irec = next_ino_rec(irec);
+ 		}
+ 	}
++
++	parent_ptr_free(mp);
+ }
+diff --git a/repair/pptr.c b/repair/pptr.c
+new file mode 100644
+index 000000000..f1b3332fc
+--- /dev/null
++++ b/repair/pptr.c
+@@ -0,0 +1,198 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (C) 2023 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#include "libxfs.h"
++#include "libxfs/xfile.h"
++#include "libxfs/xfblob.h"
++#include "repair/err_protos.h"
++#include "repair/slab.h"
++#include "repair/pptr.h"
++
++#undef PPTR_DEBUG
++
++#ifdef PPTR_DEBUG
++# define dbg_printf(f, a...)  do {printf(f, ## a); fflush(stdout); } while (0)
++#else
++# define dbg_printf(f, a...)
++#endif
++
++/*
++ * Parent Pointer Validation
++ * =========================
++ *
++ * Phase 6 validates the connectivity of the directory tree after validating
++ * that all the space metadata are correct, and confirming all the inodes that
++ * we intend to keep.  The first part of phase 6 walks the directories of the
++ * filesystem to ensure that every file that isn't the root directory has a
++ * parent.  Unconnected files are attached to the orphanage.  Filesystems with
++ * the directory parent pointer feature enabled must also ensure that for every
++ * directory entry that points to a child file, that child has a matching
++ * parent pointer.
++ *
++ * There are many ways that we could check the parent pointers, but the means
++ * that we have chosen is to build a per-AG master index of all parent pointers
++ * of all inodes stored in that AG, and use that as the basis for comparison.
++ * This consumes a lot of memory, but performing both a forward scan to check
++ * dirent -> parent pointer and a backwards scan of parent pointer -> dirent
++ * takes longer than the simple method presented here.  Userspace adds the
++ * additional twist that inodes are not cached (and there are no ILOCKs), which
++ * makes that approach even less attractive.
++ *
++ * During the directory walk at the start of phase 6, we transform each child
++ * directory entry found into its parent pointer equivalent.  In other words,
++ * the forward information:
++ *
++ *     (dir_ino, name, child_ino)
++ *
++ * becomes this backwards information:
++ *
++ *     (child_agino*, dir_ino*, dir_gen, name*)
++ *
++ * Key fields are starred.
++ *
++ * This tuple is recorded in the per-AG master parent pointer index.  Note
++ * that names are stored separately in an xfblob data structure so that the
++ * rest of the information can be sorted and processed as fixed-size records;
++ * the incore parent pointer record contains a pointer to the xfblob data.
++ */
++
++struct ag_pptr {
++	/* parent directory handle */
++	xfs_ino_t		parent_ino;
++	unsigned int		parent_gen;
++
++	/* dirent name length */
++	unsigned int		namelen;
++
++	/* cookie for the actual dirent name */
++	xfblob_cookie		name_cookie;
++
++	/* agino of the child file */
++	xfs_agino_t		child_agino;
++
++	/* hash of the dirent name */
++	xfs_dahash_t		namehash;
++};
++
++struct ag_pptrs {
++	/* Lock to protect pptr_recs during the dirent scan. */
++	pthread_mutex_t		lock;
++
++	/* Parent pointer records for files in this AG. */
++	struct xfs_slab		*pptr_recs;
++};
++
++/* Global names storage file. */
++static struct xfblob	*names;
++static pthread_mutex_t	names_mutex = PTHREAD_MUTEX_INITIALIZER;
++static struct ag_pptrs	*fs_pptrs;
++
++void
++parent_ptr_free(
++	struct xfs_mount	*mp)
++{
++	xfs_agnumber_t		agno;
++
++	if (!xfs_has_parent(mp))
++		return;
++
++	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
++		free_slab(&fs_pptrs[agno].pptr_recs);
++		pthread_mutex_destroy(&fs_pptrs[agno].lock);
++	}
++	free(fs_pptrs);
++	fs_pptrs = NULL;
++
++	xfblob_destroy(names);
++}
++
++void
++parent_ptr_init(
++	struct xfs_mount	*mp)
++{
++	xfs_agnumber_t		agno;
++	int			error;
++
++	if (!xfs_has_parent(mp))
++		return;
++
++	error = -xfblob_create(mp, "parent pointer names", &names);
++	if (error)
++		do_error(_("init parent pointer names failed: %s\n"),
++				strerror(error));
++
++	fs_pptrs = calloc(mp->m_sb.sb_agcount, sizeof(struct ag_pptrs));
++	if (!fs_pptrs)
++		do_error(
++ _("init parent pointer per-AG record array failed: %s\n"),
++				strerror(errno));
++
++	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
++		error = pthread_mutex_init(&fs_pptrs[agno].lock, NULL);
++		if (error)
++			do_error(
++ _("init agno %u parent pointer lock failed: %s\n"),
++					agno, strerror(error));
++
++		error = -init_slab(&fs_pptrs[agno].pptr_recs,
++				sizeof(struct ag_pptr));
++		if (error)
++			do_error(
++ _("init agno %u parent pointer recs failed: %s\n"),
++					agno, strerror(error));
++	}
++}
++
++/* Remember that @dp has a dirent (@fname, @ino). */
++void
++add_parent_ptr(
++	xfs_ino_t		ino,
++	const unsigned char	*fname,
++	struct xfs_inode	*dp)
++{
++	struct xfs_mount	*mp = dp->i_mount;
++	struct xfs_name		dname = {
++		.name		= fname,
++		.len		= strlen(fname),
++	};
++	struct ag_pptr		ag_pptr = {
++		.child_agino	= XFS_INO_TO_AGINO(mp, ino),
++		.parent_ino	= dp->i_ino,
++		.parent_gen	= VFS_I(dp)->i_generation,
++		.namelen	= dname.len,
++	};
++	struct ag_pptrs		*ag_pptrs;
++	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, ino);
++	int			error;
++
++	if (!xfs_has_parent(mp))
++		return;
++
++	ag_pptr.namehash = libxfs_dir2_hashname(mp, &dname);
++
++	pthread_mutex_lock(&names_mutex);
++	error = -xfblob_store(names, &ag_pptr.name_cookie, fname,
++			ag_pptr.namelen);
++	pthread_mutex_unlock(&names_mutex);
++	if (error)
++		do_error(_("storing name '%s' failed: %s\n"),
++				fname, strerror(error));
++
++	ag_pptrs = &fs_pptrs[agno];
++	pthread_mutex_lock(&ag_pptrs->lock);
++	error = -slab_add(ag_pptrs->pptr_recs, &ag_pptr);
++	pthread_mutex_unlock(&ag_pptrs->lock);
++	if (error)
++		do_error(_("storing name '%s' key failed: %s\n"),
++				fname, strerror(error));
++
++	dbg_printf(
++ _("%s: dp %llu fname '%s' ino %llu namecookie 0x%llx\n"),
++			__func__,
++			(unsigned long long)dp->i_ino,
++			fname,
++			(unsigned long long)ino,
++			(unsigned long long)ag_pptr.name_cookie);
++}
+diff --git a/repair/pptr.h b/repair/pptr.h
+new file mode 100644
+index 000000000..0ca2e1c6f
+--- /dev/null
++++ b/repair/pptr.h
+@@ -0,0 +1,15 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/*
++ * Copyright (C) 2023 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#ifndef __REPAIR_PPTR_H__
++#define __REPAIR_PPTR_H__
++
++void parent_ptr_free(struct xfs_mount *mp);
++void parent_ptr_init(struct xfs_mount *mp);
++
++void add_parent_ptr(xfs_ino_t ino, const unsigned char *fname,
++		struct xfs_inode *dp);
++
++#endif /* __REPAIR_PPTR_H__ */
 
