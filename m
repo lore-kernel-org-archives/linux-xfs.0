@@ -2,167 +2,309 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B2FEC761A6
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 00:09:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E16FC7619A
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 00:09:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229737AbjDFAJw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Apr 2023 20:09:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57438 "EHLO
+        id S233119AbjDFAJ6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Apr 2023 20:09:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233303AbjDFAJv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 20:09:51 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92D3E76A7
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2023 17:09:40 -0700 (PDT)
+        with ESMTP id S233303AbjDFAJ5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 20:09:57 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24D885B9A
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2023 17:09:46 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 128F862AA2
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 00:09:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 775ECC433D2;
-        Thu,  6 Apr 2023 00:09:39 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A99B862B09
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 00:09:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12715C433D2;
+        Thu,  6 Apr 2023 00:09:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680739779;
-        bh=2+uOlWYqFchxzhSVBwuydEHmDQpfTM/qFys3ZcXBhjc=;
+        s=k20201202; t=1680739785;
+        bh=g7bhxTpb5aqO8Wr3lDru63WKZhsxvmaSPgpi2U90O0E=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=GscP6RtmW0im/GjjfXnUAuDzL/EVT/b6pF4DaBmBdQVJZO2tRVcHC7WDupidLbO8A
-         1eOmHWbgI0FEM93/Ua8s+2SjY5cfJtImoKrJpuVipZ35uD3veT+5YwJmdn0I2mj5Bj
-         vSJIwMblIeHF5YFTXCo8sbiQDwua62wtT8Z5rmQ0Qcv31KelnduKeFnv8bFHSeqFob
-         qX8rzAYP225QsLQUzzi8uI9dWuOCvy0ZuuLZKoqKhppeIpnUxXAkUYpBgdsbCbFzmU
-         68W42ERGHZrj/RuNG/VqXdCB1Nvr808Ncy8gbmtxevTOs9pKlplVcucOzdc7wlo3ip
-         wAdsA8LhNariQ==
-Subject: [PATCH 1/6] xfs: stabilize the dirent name transformation function
- used for ascii-ci dir hash computation
+        b=icBB48hTSCDMGuZZ5TvRqOaL6u2ZjktX7SYAOJta0+9clyAFuF7eu+vUKAbdpcAIb
+         m26JWB84xsXQaQamZ9tEC1Oa/W60V7uH+QyC6LQBP6KwmXpn2E2DNQKu7fOEcDtf84
+         LXT487v3kpH3u+WSqto+llPXpJg8X/VA8oZixeIHg9BAxS5PvszRqm3PIHOo5IwqHW
+         yhMIo76hV3poGJmUclxNGwiF42SuISmYwAY9wyJZ2g/7SRzTiYUnfDa+EH68qiunPV
+         9puOBr19aJnfQw2DpDByF8lrRmOD0nJnKRjZCtNqoLA3QjGsp35tG14bN0QWO7ssxW
+         tYWOd2RlmfpDQ==
+Subject: [PATCH 2/6] xfs: test the ascii case-insensitive hash
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Date:   Wed, 05 Apr 2023 17:09:39 -0700
-Message-ID: <168073977906.1656666.2780744038650675596.stgit@frogsfrogsfrogs>
+Date:   Wed, 05 Apr 2023 17:09:44 -0700
+Message-ID: <168073978463.1656666.2387244982310136152.stgit@frogsfrogsfrogs>
 In-Reply-To: <168073977341.1656666.5994535770114245232.stgit@frogsfrogsfrogs>
 References: <168073977341.1656666.5994535770114245232.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Back in the old days, the "ascii-ci" feature was created to implement
-case-insensitive directory entry lookups for latin1-encoded names and
-remove the large overhead of Samba's case-insensitive lookup code.  UTF8
-names were not allowed, but nobody explicitly wrote in the documentation
-that this was only expected to work if the system used latin1 names.
-The kernel tolower function was selected to prepare names for hashed
-lookups.
-
-There's a major discrepancy in the function that computes directory entry
-hashes for filesystems that have ASCII case-insensitive lookups enabled.
-The root of this is that the kernel and glibc's tolower implementations
-have differing behavior for extended ASCII accented characters.  I wrote
-a program to spit out characters for which the tolower() return value is
-different from the input:
-
-glibc tolower:
-65:A 66:B 67:C 68:D 69:E 70:F 71:G 72:H 73:I 74:J 75:K 76:L 77:M 78:N
-79:O 80:P 81:Q 82:R 83:S 84:T 85:U 86:V 87:W 88:X 89:Y 90:Z
-
-kernel tolower:
-65:A 66:B 67:C 68:D 69:E 70:F 71:G 72:H 73:I 74:J 75:K 76:L 77:M 78:N
-79:O 80:P 81:Q 82:R 83:S 84:T 85:U 86:V 87:W 88:X 89:Y 90:Z 192:À 193:Á
-194:Â 195:Ã 196:Ä 197:Å 198:Æ 199:Ç 200:È 201:É 202:Ê 203:Ë 204:Ì 205:Í
-206:Î 207:Ï 208:Ð 209:Ñ 210:Ò 211:Ó 212:Ô 213:Õ 214:Ö 215:× 216:Ø 217:Ù
-218:Ú 219:Û 220:Ü 221:Ý 222:Þ
-
-Which means that the kernel and userspace do not agree on the hash value
-for a directory filename that contains those higher values.  The hash
-values are written into the leaf index block of directories that are
-larger than two blocks in size, which means that xfs_repair will flag
-these directories as having corrupted hash indexes and rewrite the index
-with hash values that the kernel now will not recognize.
-
-Because the ascii-ci feature is not frequently enabled and the kernel
-touches filesystems far more frequently than xfs_repair does, fix this
-by encoding the kernel's toupper predicate and tolower functions into
-libxfs.  Give the new functions less provocative names to make it really
-obvious that this is a pre-hash name preparation function, and nothing
-else.  This change makes userspace's behavior consistent with the
-kernel.
-
-Found by auditing obfuscate_name in xfs_metadump as part of working on
-parent pointers, wondering how it could possibly work correctly with ci
-filesystems, writing a test tool to create a directory with
-hash-colliding names, and watching xfs_repair flag it.
+Now that we've made kernel and userspace use the same tolower code for
+computing directory index hashes, add that to the selftest code.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_dir2.c |    4 ++--
- libxfs/xfs_dir2.h |   31 +++++++++++++++++++++++++++++++
- 2 files changed, 33 insertions(+), 2 deletions(-)
+ libfrog/dahashselftest.h |  208 ++++++++++++++++++++++++----------------------
+ libxfs/libxfs_api_defs.h |    2 
+ 2 files changed, 110 insertions(+), 100 deletions(-)
 
 
-diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
-index d6a19296..ae21ee34 100644
---- a/libxfs/xfs_dir2.c
-+++ b/libxfs/xfs_dir2.c
-@@ -63,7 +63,7 @@ xfs_ascii_ci_hashname(
- 	int			i;
+diff --git a/libfrog/dahashselftest.h b/libfrog/dahashselftest.h
+index 7dda5303..ea9d925b 100644
+--- a/libfrog/dahashselftest.h
++++ b/libfrog/dahashselftest.h
+@@ -13,108 +13,109 @@ static struct dahash_test {
+ 	uint16_t	start;	/* random 12 bit offset in buf */
+ 	uint16_t	length;	/* random 8 bit length of test */
+ 	xfs_dahash_t	dahash;	/* expected dahash result */
++	xfs_dahash_t	ascii_ci_dahash; /* expected ascii-ci dahash result */
+ } dahash_tests[] =
+ {
+-	{0x0567, 0x0097, 0x96951389},
+-	{0x0869, 0x0055, 0x6455ab4f},
+-	{0x0c51, 0x00be, 0x8663afde},
+-	{0x044a, 0x00fc, 0x98fbe432},
+-	{0x0f29, 0x0079, 0x42371997},
+-	{0x08ba, 0x0052, 0x942be4f7},
+-	{0x01f2, 0x0013, 0x5262687e},
+-	{0x09e3, 0x00e2, 0x8ffb0908},
+-	{0x007c, 0x0051, 0xb3158491},
+-	{0x0854, 0x001f, 0x83bb20d9},
+-	{0x031b, 0x0008, 0x98970bdf},
+-	{0x0de7, 0x0027, 0xbfbf6f6c},
+-	{0x0f76, 0x0005, 0x906a7105},
+-	{0x092e, 0x00d0, 0x86631850},
+-	{0x0233, 0x0082, 0xdbdd914e},
+-	{0x04c9, 0x0075, 0x5a400a9e},
+-	{0x0b66, 0x0099, 0xae128b45},
+-	{0x000d, 0x00ed, 0xe61c216a},
+-	{0x0a31, 0x003d, 0xf69663b9},
+-	{0x00a3, 0x0052, 0x643c39ae},
+-	{0x0125, 0x00d5, 0x7c310b0d},
+-	{0x0105, 0x004a, 0x06a77e74},
+-	{0x0858, 0x008e, 0x265bc739},
+-	{0x045e, 0x0095, 0x13d6b192},
+-	{0x0dab, 0x003c, 0xc4498704},
+-	{0x00cd, 0x00b5, 0x802a4e2d},
+-	{0x069b, 0x008c, 0x5df60f71},
+-	{0x0454, 0x006c, 0x5f03d8bb},
+-	{0x040e, 0x0032, 0x0ce513b5},
+-	{0x0874, 0x00e2, 0x6a811fb3},
+-	{0x0521, 0x00b4, 0x93296833},
+-	{0x0ddc, 0x00cf, 0xf9305338},
+-	{0x0a70, 0x0023, 0x239549ea},
+-	{0x083e, 0x0027, 0x2d88ba97},
+-	{0x0241, 0x00a7, 0xfe0b32e1},
+-	{0x0dfc, 0x0096, 0x1a11e815},
+-	{0x023e, 0x001e, 0xebc9a1f3},
+-	{0x067e, 0x0066, 0xb1067f81},
+-	{0x09ea, 0x000e, 0x46fd7247},
+-	{0x036b, 0x008c, 0x1a39acdf},
+-	{0x078f, 0x0030, 0x964042ab},
+-	{0x085c, 0x008f, 0x1829edab},
+-	{0x02ec, 0x009f, 0x6aefa72d},
+-	{0x043b, 0x00ce, 0x65642ff5},
+-	{0x0a32, 0x00b8, 0xbd82759e},
+-	{0x0d3c, 0x0087, 0xf4d66d54},
+-	{0x09ec, 0x008a, 0x06bfa1ff},
+-	{0x0902, 0x0015, 0x755025d2},
+-	{0x08fe, 0x000e, 0xf690ce2d},
+-	{0x00fb, 0x00dc, 0xe55f1528},
+-	{0x0eaa, 0x003a, 0x0fe0a8d7},
+-	{0x05fb, 0x0006, 0x86281cfb},
+-	{0x0dd1, 0x00a7, 0x60ab51b4},
+-	{0x0005, 0x001b, 0xf51d969b},
+-	{0x077c, 0x00dd, 0xc2fed268},
+-	{0x0575, 0x00f5, 0x432c0b1a},
+-	{0x05be, 0x0088, 0x78baa04b},
+-	{0x0c89, 0x0068, 0xeda9e428},
+-	{0x0f5c, 0x0068, 0xec143c76},
+-	{0x06a8, 0x0009, 0xd72651ce},
+-	{0x060f, 0x008e, 0x765426cd},
+-	{0x07b1, 0x0047, 0x2cfcfa0c},
+-	{0x04f1, 0x0041, 0x55b172f9},
+-	{0x0e05, 0x00ac, 0x61efde93},
+-	{0x0bf7, 0x0097, 0x05b83eee},
+-	{0x04e9, 0x00f3, 0x9928223a},
+-	{0x023a, 0x0005, 0xdfada9bc},
+-	{0x0acb, 0x000e, 0x2217cecd},
+-	{0x0148, 0x0060, 0xbc3f7405},
+-	{0x0764, 0x0059, 0xcbc201b1},
+-	{0x021f, 0x0059, 0x5d6b2256},
+-	{0x0f1e, 0x006c, 0xdefeeb45},
+-	{0x071c, 0x00b9, 0xb9b59309},
+-	{0x0564, 0x0063, 0xae064271},
+-	{0x0b14, 0x0044, 0xdb867d9b},
+-	{0x0e5a, 0x0055, 0xff06b685},
+-	{0x015e, 0x00ba, 0x1115ccbc},
+-	{0x0379, 0x00e6, 0x5f4e58dd},
+-	{0x013b, 0x0067, 0x4897427e},
+-	{0x0e64, 0x0071, 0x7af2b7a4},
+-	{0x0a11, 0x0050, 0x92105726},
+-	{0x0109, 0x0055, 0xd0d000f9},
+-	{0x00aa, 0x0022, 0x815d229d},
+-	{0x09ac, 0x004f, 0x02f9d985},
+-	{0x0e1b, 0x00ce, 0x5cf92ab4},
+-	{0x08af, 0x00d8, 0x17ca72d1},
+-	{0x0e33, 0x000a, 0xda2dba6b},
+-	{0x0ee3, 0x006a, 0xb00048e5},
+-	{0x0648, 0x001a, 0x2364b8cb},
+-	{0x0315, 0x0085, 0x0596fd0d},
+-	{0x0fbb, 0x003e, 0x298230ca},
+-	{0x0422, 0x006a, 0x78ada4ab},
+-	{0x04ba, 0x0073, 0xced1fbc2},
+-	{0x007d, 0x0061, 0x4b7ff236},
+-	{0x070b, 0x00d0, 0x261cf0ae},
+-	{0x0c1a, 0x0035, 0x8be92ee2},
+-	{0x0af8, 0x0063, 0x824dcf03},
+-	{0x08f8, 0x006d, 0xd289710c},
+-	{0x021b, 0x00ee, 0x6ac1c41d},
+-	{0x05b5, 0x00da, 0x8e52f0e2},
++	{0x0567, 0x0097, 0x96951389, 0xc153aa0d},
++	{0x0869, 0x0055, 0x6455ab4f, 0xd07f69bf},
++	{0x0c51, 0x00be, 0x8663afde, 0xf9add90c},
++	{0x044a, 0x00fc, 0x98fbe432, 0xbf2abb76},
++	{0x0f29, 0x0079, 0x42371997, 0x282588b3},
++	{0x08ba, 0x0052, 0x942be4f7, 0x2e023547},
++	{0x01f2, 0x0013, 0x5262687e, 0x5266287e},
++	{0x09e3, 0x00e2, 0x8ffb0908, 0x1da892f3},
++	{0x007c, 0x0051, 0xb3158491, 0xb67f9e63},
++	{0x0854, 0x001f, 0x83bb20d9, 0x22bb21db},
++	{0x031b, 0x0008, 0x98970bdf, 0x9cd70adf},
++	{0x0de7, 0x0027, 0xbfbf6f6c, 0xae3f296c},
++	{0x0f76, 0x0005, 0x906a7105, 0x906a7105},
++	{0x092e, 0x00d0, 0x86631850, 0xa3f6ac04},
++	{0x0233, 0x0082, 0xdbdd914e, 0x5d8c7aac},
++	{0x04c9, 0x0075, 0x5a400a9e, 0x12f60711},
++	{0x0b66, 0x0099, 0xae128b45, 0x7551310d},
++	{0x000d, 0x00ed, 0xe61c216a, 0xc22d3c4c},
++	{0x0a31, 0x003d, 0xf69663b9, 0x51960bf8},
++	{0x00a3, 0x0052, 0x643c39ae, 0xa93c73a8},
++	{0x0125, 0x00d5, 0x7c310b0d, 0xf221cbb3},
++	{0x0105, 0x004a, 0x06a77e74, 0xa4ef4561},
++	{0x0858, 0x008e, 0x265bc739, 0xd6c36d9b},
++	{0x045e, 0x0095, 0x13d6b192, 0x5f5c1d62},
++	{0x0dab, 0x003c, 0xc4498704, 0x10414654},
++	{0x00cd, 0x00b5, 0x802a4e2d, 0xfbd17c9d},
++	{0x069b, 0x008c, 0x5df60f71, 0x91ddca5f},
++	{0x0454, 0x006c, 0x5f03d8bb, 0x5c59fce0},
++	{0x040e, 0x0032, 0x0ce513b5, 0xa8cd99b1},
++	{0x0874, 0x00e2, 0x6a811fb3, 0xca028316},
++	{0x0521, 0x00b4, 0x93296833, 0x2c4d4880},
++	{0x0ddc, 0x00cf, 0xf9305338, 0x2c94210d},
++	{0x0a70, 0x0023, 0x239549ea, 0x22b561aa},
++	{0x083e, 0x0027, 0x2d88ba97, 0x5cd8bb9d},
++	{0x0241, 0x00a7, 0xfe0b32e1, 0x17b506b8},
++	{0x0dfc, 0x0096, 0x1a11e815, 0xee4141bd},
++	{0x023e, 0x001e, 0xebc9a1f3, 0x5689a1f3},
++	{0x067e, 0x0066, 0xb1067f81, 0xd9952571},
++	{0x09ea, 0x000e, 0x46fd7247, 0x42b57245},
++	{0x036b, 0x008c, 0x1a39acdf, 0x58bf1586},
++	{0x078f, 0x0030, 0x964042ab, 0xb04218b9},
++	{0x085c, 0x008f, 0x1829edab, 0x9ceca89c},
++	{0x02ec, 0x009f, 0x6aefa72d, 0x634cc2a7},
++	{0x043b, 0x00ce, 0x65642ff5, 0x6c8a584e},
++	{0x0a32, 0x00b8, 0xbd82759e, 0x0f96a34f},
++	{0x0d3c, 0x0087, 0xf4d66d54, 0xb71ba5f4},
++	{0x09ec, 0x008a, 0x06bfa1ff, 0x576ca80f},
++	{0x0902, 0x0015, 0x755025d2, 0x517225c2},
++	{0x08fe, 0x000e, 0xf690ce2d, 0xf690cf3d},
++	{0x00fb, 0x00dc, 0xe55f1528, 0x707d7d92},
++	{0x0eaa, 0x003a, 0x0fe0a8d7, 0x87638cc5},
++	{0x05fb, 0x0006, 0x86281cfb, 0x86281cf9},
++	{0x0dd1, 0x00a7, 0x60ab51b4, 0xe28ef00c},
++	{0x0005, 0x001b, 0xf51d969b, 0xe71dd6d3},
++	{0x077c, 0x00dd, 0xc2fed268, 0xdc30c555},
++	{0x0575, 0x00f5, 0x432c0b1a, 0x81dd7d16},
++	{0x05be, 0x0088, 0x78baa04b, 0xd69b433e},
++	{0x0c89, 0x0068, 0xeda9e428, 0xe9b4fa0a},
++	{0x0f5c, 0x0068, 0xec143c76, 0x9947067a},
++	{0x06a8, 0x0009, 0xd72651ce, 0xd72651ee},
++	{0x060f, 0x008e, 0x765426cd, 0x2099626f},
++	{0x07b1, 0x0047, 0x2cfcfa0c, 0x1a4baa07},
++	{0x04f1, 0x0041, 0x55b172f9, 0x15331a79},
++	{0x0e05, 0x00ac, 0x61efde93, 0x320568cc},
++	{0x0bf7, 0x0097, 0x05b83eee, 0xc72fb7a3},
++	{0x04e9, 0x00f3, 0x9928223a, 0xe8c77de2},
++	{0x023a, 0x0005, 0xdfada9bc, 0xdfadb9be},
++	{0x0acb, 0x000e, 0x2217cecd, 0x0017d6cd},
++	{0x0148, 0x0060, 0xbc3f7405, 0xf5fd6615},
++	{0x0764, 0x0059, 0xcbc201b1, 0xbb089bf4},
++	{0x021f, 0x0059, 0x5d6b2256, 0xa16a0a59},
++	{0x0f1e, 0x006c, 0xdefeeb45, 0xfc34f9d6},
++	{0x071c, 0x00b9, 0xb9b59309, 0xb645eae2},
++	{0x0564, 0x0063, 0xae064271, 0x954dc6d1},
++	{0x0b14, 0x0044, 0xdb867d9b, 0xdf432309},
++	{0x0e5a, 0x0055, 0xff06b685, 0xa65ff257},
++	{0x015e, 0x00ba, 0x1115ccbc, 0x11c365f4},
++	{0x0379, 0x00e6, 0x5f4e58dd, 0x2d176d31},
++	{0x013b, 0x0067, 0x4897427e, 0xc40532fe},
++	{0x0e64, 0x0071, 0x7af2b7a4, 0x1fb7bf43},
++	{0x0a11, 0x0050, 0x92105726, 0xb1185e51},
++	{0x0109, 0x0055, 0xd0d000f9, 0x60a60bfd},
++	{0x00aa, 0x0022, 0x815d229d, 0x215d379c},
++	{0x09ac, 0x004f, 0x02f9d985, 0x10b90b20},
++	{0x0e1b, 0x00ce, 0x5cf92ab4, 0x6a477573},
++	{0x08af, 0x00d8, 0x17ca72d1, 0x385af156},
++	{0x0e33, 0x000a, 0xda2dba6b, 0xda2dbb69},
++	{0x0ee3, 0x006a, 0xb00048e5, 0xa9a2decc},
++	{0x0648, 0x001a, 0x2364b8cb, 0x3364b1cb},
++	{0x0315, 0x0085, 0x0596fd0d, 0xa651740f},
++	{0x0fbb, 0x003e, 0x298230ca, 0x7fc617c7},
++	{0x0422, 0x006a, 0x78ada4ab, 0xc576ae2a},
++	{0x04ba, 0x0073, 0xced1fbc2, 0xaac8455b},
++	{0x007d, 0x0061, 0x4b7ff236, 0x347d5739},
++	{0x070b, 0x00d0, 0x261cf0ae, 0xc7fb1c10},
++	{0x0c1a, 0x0035, 0x8be92ee2, 0x8be9b4e1},
++	{0x0af8, 0x0063, 0x824dcf03, 0x53010388},
++	{0x08f8, 0x006d, 0xd289710c, 0x30418edd},
++	{0x021b, 0x00ee, 0x6ac1c41d, 0x2557e9a3},
++	{0x05b5, 0x00da, 0x8e52f0e2, 0x98531012},
+ };
  
- 	for (i = 0, hash = 0; i < name->len; i++)
--		hash = tolower(name->name[i]) ^ rol32(hash, 7);
-+		hash = xfs_ascii_ci_xfrm(name->name[i]) ^ rol32(hash, 7);
+ /* Don't print anything to stdout. */
+@@ -127,6 +128,7 @@ dahash_test(
+ 	int		i;
+ 	int		errors = 0;
+ 	int		bytes = 0;
++	struct xfs_name	xname = { };
+ 	struct timeval	start, stop;
+ 	uint64_t	usec;
  
- 	return hash;
- }
-@@ -84,7 +84,7 @@ xfs_ascii_ci_compname(
- 	for (i = 0; i < len; i++) {
- 		if (args->name[i] == name[i])
- 			continue;
--		if (tolower(args->name[i]) != tolower(name[i]))
-+		if (xfs_ascii_ci_xfrm(args->name[i]) != xfs_ascii_ci_xfrm(name[i]))
- 			return XFS_CMP_DIFFERENT;
- 		result = XFS_CMP_CASE;
+@@ -150,6 +152,12 @@ dahash_test(
+ 				dahash_tests[i].length);
+ 		if (hash != dahash_tests[i].dahash)
+ 			errors++;
++
++		xname.name = randbytes_test_buf + dahash_tests[i].start;
++		xname.len = dahash_tests[i].length;
++		hash = libxfs_ascii_ci_hashname(&xname);
++		if (hash != dahash_tests[i].ascii_ci_dahash)
++			errors++;
  	}
-diff --git a/libxfs/xfs_dir2.h b/libxfs/xfs_dir2.h
-index dd39f17d..19af22a1 100644
---- a/libxfs/xfs_dir2.h
-+++ b/libxfs/xfs_dir2.h
-@@ -248,4 +248,35 @@ unsigned int xfs_dir3_data_end_offset(struct xfs_da_geometry *geo,
- 		struct xfs_dir2_data_hdr *hdr);
- bool xfs_dir2_namecheck(const void *name, size_t length);
+ 	gettimeofday(&stop, NULL);
  
-+/*
-+ * The "ascii-ci" feature was created to speed up case-insensitive lookups for
-+ * a Samba product.  Because of the inherent problems with CI and UTF-8
-+ * encoding, etc, it was decided that Samba would be configured to export
-+ * latin1/iso 8859-1 encodings as that covered >90% of the target markets for
-+ * the product.  Hence the "ascii-ci" casefolding code could be encoded into
-+ * the XFS directory operations and remove all the overhead of casefolding from
-+ * Samba.
-+ *
-+ * To provide consistent hashing behavior between the userspace and kernel,
-+ * these functions prepare names for hashing by transforming specific bytes
-+ * to other bytes.  Robustness with other encodings is not guaranteed.
-+ */
-+static inline bool xfs_ascii_ci_need_xfrm(unsigned char c)
-+{
-+	if (c >= 0x41 && c <= 0x5a)	/* A-Z */
-+		return true;
-+	if (c >= 0xc0 && c <= 0xd6)	/* latin A-O with accents */
-+		return true;
-+	if (c >= 0xd8 && c <= 0xde)	/* latin O-Y with accents */
-+		return true;
-+	return false;
-+}
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index f8efcce7..ef3624ae 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -33,6 +33,8 @@
+ #define xfs_alloc_read_agf		libxfs_alloc_read_agf
+ #define xfs_alloc_vextent		libxfs_alloc_vextent
+ 
++#define xfs_ascii_ci_hashname		libxfs_ascii_ci_hashname
 +
-+static inline unsigned char xfs_ascii_ci_xfrm(unsigned char c)
-+{
-+	if (xfs_ascii_ci_need_xfrm(c))
-+		c -= 'A' - 'a';
-+	return c;
-+}
-+
- #endif	/* __XFS_DIR2_H__ */
+ #define xfs_attr_get			libxfs_attr_get
+ #define xfs_attr_leaf_newentsize	libxfs_attr_leaf_newentsize
+ #define xfs_attr_namecheck		libxfs_attr_namecheck
 
