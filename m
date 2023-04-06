@@ -2,142 +2,167 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAAEAC7619A
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 00:04:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44C18C7619A
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 00:04:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232605AbjDFAEM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Apr 2023 20:04:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51160 "EHLO
+        id S229737AbjDFAEc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Apr 2023 20:04:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230114AbjDFAEL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 20:04:11 -0400
+        with ESMTP id S231828AbjDFAEb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 20:04:31 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 450A1729F
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2023 17:03:24 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A56EC61AE
+        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2023 17:03:47 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3B0B0629AB
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 00:03:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AA53C433EF;
-        Thu,  6 Apr 2023 00:03:16 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 55FA662AF5
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 00:03:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BACEBC4339B;
+        Thu,  6 Apr 2023 00:02:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680739396;
-        bh=Q/gkr4umQm2jlY1SqWexD8cie622zkzwaKb4CK8HshE=;
+        s=k20201202; t=1680739379;
+        bh=VznPBMb2PjIKMnxjCUcQkUlrzFoTT9wKpoHwu3lcdGw=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=t1N0WsphqDrzepJlp182DY9sLFVFGvUIlNeDY8Y7cQDMb7fTavIL3vC70N51c+PDj
-         nS7caD57hCP04DT0duNDNrumIJsioaktJUUGCXw/nMhWWo6mzL+OKLtQE+Vckl6fvl
-         43v9bx3JLW53Jhm/SeLA+lnpvIWXhwqnx/4S4URYprSK6rO7T9rJkVY8gMfXEm/tfS
-         DSaJQ7v+2VVqx0gEyCUuiifwVWV3mslJwvY+k8bXE/JE7PG9KasruoS7IyKWm21KH4
-         +0XNwQyDL5F6qLtSLf2sqAB7S814Vu5ARsZQWDjEOU04ymgSJH7WvMOPcLzn5Qv722
-         v7oOdmZpbqY+w==
-Subject: [PATCH 4/4] xfs: deprecate the ascii-ci feature
+        b=O8ebDZoEbYs+CZQcZ5v1tFcwRmFsxtvS7D1xkKdPMNEH3DWjVhL5mab3uPj/Q9faz
+         CbSHTi/qD+ezuJSO9UQKfSf5xbD0WnhKkfUlYsSdzAb0Kog8qaarcmBGdAi5pIuWrr
+         TyrEhaeVSfRVzbnkZHRNmUCdNOU0NfTgfEQaV/CqYNt/tz4g/iytllkdGKdjJdunmP
+         /r8oyY0Q1u9TT/FEFaFFImKZv+9cabL68lgL0eSXIZuEd7xnKgkwLxCRwcdA9D8EpC
+         fGpdm49tsq8P477H5tGvw1Jj8nQHfouNJMLGGfo73hHRaxYleMbCwMnqhP3wi8tqxQ
+         7HewF8MJlLXbA==
+Subject: [PATCH 1/4] xfs: stabilize the dirent name transformation function
+ used for ascii-ci dir hash computation
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Date:   Wed, 05 Apr 2023 17:03:16 -0700
-Message-ID: <168073939615.1648023.11626629628611950172.stgit@frogsfrogsfrogs>
+Date:   Wed, 05 Apr 2023 17:02:59 -0700
+Message-ID: <168073937927.1648023.2161829383787403331.stgit@frogsfrogsfrogs>
 In-Reply-To: <168073937339.1648023.5029899643925660515.stgit@frogsfrogsfrogs>
 References: <168073937339.1648023.5029899643925660515.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-This feature is a mess -- the hash function has been broken for the
-entire 15 years of its existence if you create names with extended ascii
-bytes; metadump name obfuscation has silently failed for just as long;
-and the feature clashes horribly with the UTF8 encodings that most
-systems use today.  There is exactly one fstest for this feature.
+Back in the old days, the "ascii-ci" feature was created to implement
+case-insensitive directory entry lookups for latin1-encoded names and
+remove the large overhead of Samba's case-insensitive lookup code.  UTF8
+names were not allowed, but nobody explicitly wrote in the documentation
+that this was only expected to work if the system used latin1 names.
+The kernel tolower function was selected to prepare names for hashed
+lookups.
 
-In other words, this feature is crap.  Let's deprecate it now so we can
-remove it from the codebase in 2030.
+There's a major discrepancy in the function that computes directory entry
+hashes for filesystems that have ASCII case-insensitive lookups enabled.
+The root of this is that the kernel and glibc's tolower implementations
+have differing behavior for extended ASCII accented characters.  I wrote
+a program to spit out characters for which the tolower() return value is
+different from the input:
+
+glibc tolower:
+65:A 66:B 67:C 68:D 69:E 70:F 71:G 72:H 73:I 74:J 75:K 76:L 77:M 78:N
+79:O 80:P 81:Q 82:R 83:S 84:T 85:U 86:V 87:W 88:X 89:Y 90:Z
+
+kernel tolower:
+65:A 66:B 67:C 68:D 69:E 70:F 71:G 72:H 73:I 74:J 75:K 76:L 77:M 78:N
+79:O 80:P 81:Q 82:R 83:S 84:T 85:U 86:V 87:W 88:X 89:Y 90:Z 192:À 193:Á
+194:Â 195:Ã 196:Ä 197:Å 198:Æ 199:Ç 200:È 201:É 202:Ê 203:Ë 204:Ì 205:Í
+206:Î 207:Ï 208:Ð 209:Ñ 210:Ò 211:Ó 212:Ô 213:Õ 214:Ö 215:× 216:Ø 217:Ù
+218:Ú 219:Û 220:Ü 221:Ý 222:Þ
+
+Which means that the kernel and userspace do not agree on the hash value
+for a directory filename that contains those higher values.  The hash
+values are written into the leaf index block of directories that are
+larger than two blocks in size, which means that xfs_repair will flag
+these directories as having corrupted hash indexes and rewrite the index
+with hash values that the kernel now will not recognize.
+
+Because the ascii-ci feature is not frequently enabled and the kernel
+touches filesystems far more frequently than xfs_repair does, fix this
+by encoding the kernel's toupper predicate and tolower functions into
+libxfs.  Give the new functions less provocative names to make it really
+obvious that this is a pre-hash name preparation function, and nothing
+else.  This change makes userspace's behavior consistent with the
+kernel.
+
+Found by auditing obfuscate_name in xfs_metadump as part of working on
+parent pointers, wondering how it could possibly work correctly with ci
+filesystems, writing a test tool to create a directory with
+hash-colliding names, and watching xfs_repair flag it.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- Documentation/admin-guide/xfs.rst |    1 +
- fs/xfs/Kconfig                    |   27 +++++++++++++++++++++++++++
- fs/xfs/xfs_super.c                |   13 +++++++++++++
- 3 files changed, 41 insertions(+)
+ fs/xfs/libxfs/xfs_dir2.c |    4 ++--
+ fs/xfs/libxfs/xfs_dir2.h |   31 +++++++++++++++++++++++++++++++
+ 2 files changed, 33 insertions(+), 2 deletions(-)
 
 
-diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
-index e2561416391c..e85a9404d5c0 100644
---- a/Documentation/admin-guide/xfs.rst
-+++ b/Documentation/admin-guide/xfs.rst
-@@ -240,6 +240,7 @@ Deprecated Mount Options
-   Name				Removal Schedule
- ===========================     ================
- Mounting with V4 filesystem     September 2030
-+Mounting ascii-ci filesystem    September 2030
- ikeep/noikeep			September 2025
- attr2/noattr2			September 2025
- ===========================     ================
-diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-index 9fac5ea8d0e4..09c5ff136f22 100644
---- a/fs/xfs/Kconfig
-+++ b/fs/xfs/Kconfig
-@@ -47,6 +47,33 @@ config XFS_SUPPORT_V4
- 	  To continue supporting the old V4 format (crc=0), say Y.
- 	  To close off an attack surface, say N.
+diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+index 92bac3373f1f..0c5b92d17f5f 100644
+--- a/fs/xfs/libxfs/xfs_dir2.c
++++ b/fs/xfs/libxfs/xfs_dir2.c
+@@ -64,7 +64,7 @@ xfs_ascii_ci_hashname(
+ 	int			i;
  
-+config XFS_SUPPORT_ASCII_CI
-+	bool "Support deprecated case-insensitive ascii (ascii-ci=1) format"
-+	depends on XFS_FS
-+	default y
-+	help
-+	  The ASCII case insensitivity filesystem feature only works correctly
-+	  on systems that have been coerced into using ISO 8859-1, and it does
-+	  not work on extended attributes.  The kernel has no visibility into
-+	  the locale settings in userspace, so it corrupts UTF-8 names.
-+	  Enabling this feature makes XFS vulnerable to mixed case sensitivity
-+	  attacks.  Because of this, the feature is deprecated.  All users
-+	  should upgrade by backing up their files, reformatting, and restoring
-+	  from the backup.
-+
-+	  Administrators and users can detect such a filesystem by running
-+	  xfs_info against a filesystem mountpoint and checking for a string
-+	  beginning with "ascii-ci=".  If the string "ascii-ci=1" is found, the
-+	  filesystem is a case-insensitive filesystem.  If no such string is
-+	  found, please upgrade xfsprogs to the latest version and try again.
-+
-+	  This option will become default N in September 2025.  Support for the
-+	  feature will be removed entirely in September 2030.  Distributors
-+	  can say N here to withdraw support earlier.
-+
-+	  To continue supporting case-insensitivity (ascii-ci=1), say Y.
-+	  To close off an attack surface, say N.
-+
- config XFS_QUOTA
- 	bool "XFS Quota support"
- 	depends on XFS_FS
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 4f814f9e12ab..4d2e87462ac4 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1548,6 +1548,19 @@ xfs_fs_fill_super(
- #endif
+ 	for (i = 0, hash = 0; i < name->len; i++)
+-		hash = tolower(name->name[i]) ^ rol32(hash, 7);
++		hash = xfs_ascii_ci_xfrm(name->name[i]) ^ rol32(hash, 7);
+ 
+ 	return hash;
+ }
+@@ -85,7 +85,7 @@ xfs_ascii_ci_compname(
+ 	for (i = 0; i < len; i++) {
+ 		if (args->name[i] == name[i])
+ 			continue;
+-		if (tolower(args->name[i]) != tolower(name[i]))
++		if (xfs_ascii_ci_xfrm(args->name[i]) != xfs_ascii_ci_xfrm(name[i]))
+ 			return XFS_CMP_DIFFERENT;
+ 		result = XFS_CMP_CASE;
  	}
+diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+index dd39f17dd9a9..19af22a16c41 100644
+--- a/fs/xfs/libxfs/xfs_dir2.h
++++ b/fs/xfs/libxfs/xfs_dir2.h
+@@ -248,4 +248,35 @@ unsigned int xfs_dir3_data_end_offset(struct xfs_da_geometry *geo,
+ 		struct xfs_dir2_data_hdr *hdr);
+ bool xfs_dir2_namecheck(const void *name, size_t length);
  
-+	/* ASCII case insensitivity is undergoing deprecation. */
-+	if (xfs_has_asciici(mp)) {
-+#ifdef CONFIG_XFS_SUPPORT_ASCII_CI
-+		xfs_warn_once(mp,
-+	"Deprecated ASCII case-insensitivity feature (ascii-ci=1) will not be supported after September 2030.");
-+#else
-+		xfs_warn(mp,
-+	"Deprecated ASCII case-insensitivity feature (ascii-ci=1) not supported by kernel.");
-+		error = -EINVAL;
-+		goto out_free_sb;
-+#endif
-+	}
++/*
++ * The "ascii-ci" feature was created to speed up case-insensitive lookups for
++ * a Samba product.  Because of the inherent problems with CI and UTF-8
++ * encoding, etc, it was decided that Samba would be configured to export
++ * latin1/iso 8859-1 encodings as that covered >90% of the target markets for
++ * the product.  Hence the "ascii-ci" casefolding code could be encoded into
++ * the XFS directory operations and remove all the overhead of casefolding from
++ * Samba.
++ *
++ * To provide consistent hashing behavior between the userspace and kernel,
++ * these functions prepare names for hashing by transforming specific bytes
++ * to other bytes.  Robustness with other encodings is not guaranteed.
++ */
++static inline bool xfs_ascii_ci_need_xfrm(unsigned char c)
++{
++	if (c >= 0x41 && c <= 0x5a)	/* A-Z */
++		return true;
++	if (c >= 0xc0 && c <= 0xd6)	/* latin A-O with accents */
++		return true;
++	if (c >= 0xd8 && c <= 0xde)	/* latin O-Y with accents */
++		return true;
++	return false;
++}
 +
- 	/* Filesystem claims it needs repair, so refuse the mount. */
- 	if (xfs_has_needsrepair(mp)) {
- 		xfs_warn(mp, "Filesystem needs repair.  Please run xfs_repair.");
++static inline unsigned char xfs_ascii_ci_xfrm(unsigned char c)
++{
++	if (xfs_ascii_ci_need_xfrm(c))
++		c -= 'A' - 'a';
++	return c;
++}
++
+ #endif	/* __XFS_DIR2_H__ */
 
