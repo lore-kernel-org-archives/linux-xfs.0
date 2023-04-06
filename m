@@ -2,80 +2,78 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED05BC76196
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:42:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 004BAC77B6E
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:42:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237369AbjDFTmU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Apr 2023 15:42:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43786 "EHLO
+        id S238258AbjDFTmy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Apr 2023 15:42:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44292 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237553AbjDFTmQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:42:16 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FF8B9ED1;
-        Thu,  6 Apr 2023 12:42:15 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DFD9D64876;
-        Thu,  6 Apr 2023 19:42:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4206BC433EF;
-        Thu,  6 Apr 2023 19:42:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680810134;
-        bh=M/6Dya24VqVWqWcNd/upkKp9opJZ4q0M0/xVZ8L7TwQ=;
-        h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=rCBm3aklA/pbjYpZoKYAxQ6pFAk0Cn/4d9wiRTtG0SH4Khqlya1eTXKn31dtA9K33
-         1h2ihBX9NvF4nwyxBY+JfCXhith/wPKDj2tsSKm2PrSDDxbTO8JsGRR4+AdKdLCCIR
-         SauQHTtwdp5YhzLkf1wu0JrSKvLv/9uOAakV2jbuB0RVvJlXzu1bMvFzh7DFk/7wEk
-         xEL5mxcvKBJHJv/csVF3FmQ5orfs/nUi1LrIl/ZIZTwZJn0kIfNZawwlFWkwZF6oRG
-         9fc8fHL+wRlFCSNGWXOKj19gP74k0BrE/ZEVqKP2I8M/wYCiQFrDwVnj9HfN60Dgkj
-         tdnVehHX/Czrg==
-Date:   Thu, 06 Apr 2023 12:42:13 -0700
-Subject: [PATCH 02/11] xfs/122: update for parent pointers
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     zlang@redhat.com, djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Message-ID: <168080829033.618488.14902602123668221961.stgit@frogsfrogsfrogs>
-In-Reply-To: <168080829003.618488.1769223982280364994.stgit@frogsfrogsfrogs>
-References: <168080829003.618488.1769223982280364994.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+        with ESMTP id S237708AbjDFTmi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:42:38 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90984A253;
+        Thu,  6 Apr 2023 12:42:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=tmB9ef+i/tR2RuBXG/MztGedwZCTfoIM0/9hlfY16FE=; b=WS2ep4RielBa//Iw2N2zKAwJpB
+        qCW3YjQTQSwAfLWsSVsoutV7+iFjBH0DhQtPhkG887UABmFOFnrdWoBFNHbNrBDGCbea+U+ZLElHR
+        jpnGTSqsWJWh0+w3U9mnzIHezeB6zdA0kAhtzl4zo5p3DWPnrqay+5ChonJviuxlPMDAQG8hMWorV
+        2CC5n6nWzUM6tnRcyPe/cG3Kv4Sm0Ab2RHPfymfryGeBemgO975S3yOvUByubbHw2gtLGkrDa7AmR
+        Wsm44B7yKULXBY79o00EeBYucQQJa/sJzME5G+YJ/eYZV9hsFkGFwuEa6k6mHoenQ1IYFk4Rdb8AG
+        xKOLOPiw==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1pkVUg-0006hi-MQ; Thu, 06 Apr 2023 19:42:02 +0000
+Date:   Thu, 6 Apr 2023 20:42:02 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Tim Chen <tim.c.chen@linux.intel.com>
+Cc:     Yosry Ahmed <yosryahmed@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Lameter <cl@linux.com>,
+        David Rientjes <rientjes@google.com>,
+        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
+        Vlastimil Babka <vbabka@suse.cz>,
+        Roman Gushchin <roman.gushchin@linux.dev>,
+        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
+        Miaohe Lin <linmiaohe@huawei.com>,
+        David Hildenbrand <david@redhat.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
+        Shakeel Butt <shakeelb@google.com>,
+        Michal Hocko <mhocko@kernel.org>, Yu Zhao <yuzhao@google.com>,
+        Dave Chinner <david@fromorbit.com>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [PATCH v5 2/2] mm: vmscan: refactor reclaim_state helpers
+Message-ID: <ZC8giqopXVj/KFIL@casper.infradead.org>
+References: <20230405185427.1246289-1-yosryahmed@google.com>
+ <20230405185427.1246289-3-yosryahmed@google.com>
+ <7ce03e4323b95c1e8fd3faed32c9b285162fe5a8.camel@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7ce03e4323b95c1e8fd3faed32c9b285162fe5a8.camel@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Apr 06, 2023 at 10:31:53AM -0700, Tim Chen wrote:
+> On Wed, 2023-04-05 at 18:54 +0000, Yosry Ahmed wrote:
+> > +	 * For all of these cases, we have no way of finding out whether these
+> > +	 * pages were related to the memcg under reclaim. For example, a freed
+> > +	 * slab page could have had only a single object charged to the memcg
+> 
+> Minor nits:
+> s/could have had/could have
 
-Update test for parent pointers.
+No ... "could have had" is correct.  I'm a native English speaker, so I
+have no idea what the rule here is, but I can ask my linguist wife later
+if you want to know ;-)
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- tests/xfs/122.out |    3 +++
- 1 file changed, 3 insertions(+)
-
-
-diff --git a/tests/xfs/122.out b/tests/xfs/122.out
-index 89f7b735b0..55138218dd 100644
---- a/tests/xfs/122.out
-+++ b/tests/xfs/122.out
-@@ -98,6 +98,8 @@ sizeof(struct xfs_fsop_ag_resblks) = 64
- sizeof(struct xfs_fsop_geom) = 256
- sizeof(struct xfs_fsop_geom_v1) = 112
- sizeof(struct xfs_fsop_geom_v4) = 112
-+sizeof(struct xfs_getparents) = 96
-+sizeof(struct xfs_getparents_rec) = 24
- sizeof(struct xfs_icreate_log) = 28
- sizeof(struct xfs_inode_log_format) = 56
- sizeof(struct xfs_inode_log_format_32) = 52
-@@ -107,6 +109,7 @@ sizeof(struct xfs_legacy_timestamp) = 8
- sizeof(struct xfs_log_dinode) = 176
- sizeof(struct xfs_log_legacy_timestamp) = 8
- sizeof(struct xfs_map_extent) = 32
-+sizeof(struct xfs_parent_name_rec) = 16
- sizeof(struct xfs_phys_extent) = 16
- sizeof(struct xfs_refcount_key) = 4
- sizeof(struct xfs_refcount_rec) = 12
+Maybe it's something like this:
+https://www.englishgrammar.org/have-had-and-had-had/
 
