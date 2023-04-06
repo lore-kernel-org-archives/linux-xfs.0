@@ -2,46 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21D34C7618D
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:14:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3812C76196
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:14:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240549AbjDFTOc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Apr 2023 15:14:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43184 "EHLO
+        id S240523AbjDFTOq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Apr 2023 15:14:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240529AbjDFTO2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:14:28 -0400
+        with ESMTP id S240548AbjDFTOp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:14:45 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC7634480
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:14:27 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47A6B10F1
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:14:43 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 48FD46487C
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:14:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4418C4339B;
-        Thu,  6 Apr 2023 19:14:26 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D6C796365E
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:14:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 482A1C433D2;
+        Thu,  6 Apr 2023 19:14:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680808466;
-        bh=Ml8FNInBaHRYD7y18JVq9l7SZECLP7NouubbXYHyMdc=;
+        s=k20201202; t=1680808482;
+        bh=vFsVpuoT1FI4/gpKyF0/KZh0SioGLAsAIgARE6zR2/4=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=YonTvRAsQwoYIDH+w/DndfEC/1LGAXXa/kBjizmhamZKuepkpeoO+tLsObd9br+uB
-         Zx3zboMt5qU/70lI+x8ivMcoEAfSPcTFgDbz4aUYubpmKNZu1aRflJEqH130RmXtP2
-         gyX1/K65FgGedtJ5lEynZWIjQ1RQRExWpNIgvLiGiar6jjYJ+90+Y/8+wNyAcS5/7E
-         ECZjEMbIdyGPhYumhiSOt7K+nOeDHuJaQpNsktUDjl9V8Od4STKDdIWbB8zvGMJ8XB
-         YFxiWId38Q1tFCCYquiDz0oSSYecgrtCIdbbWpbMBnmJPS37P+ZDanXoTjA2fXjbSD
-         9PwzHjSlJVAOg==
-Date:   Thu, 06 Apr 2023 12:14:26 -0700
-Subject: [PATCHSET v11 00/23] xfs: Parent Pointers
+        b=qIVpiqDVtzrwSqwa9lDDm54gTLfA/ksjWzCXAQ5y5bxmVBMNWpLYH0du9+WXkEBzd
+         20YYZvn020Kr9XCfme+42hI/5q7G18a8USWvz9s6aboKmWxDVc4ECxV7OAm0eVpL6s
+         ggaVIYlnEu7p10Rwp+91m7fTogbH9yErhNJH3f/cgCez9JFk5mFcML0KiBFfYU018q
+         MI3GDRhFsUILM3DnJ9ftdC37i2L241yfjLLcUFzFYXCQ1Wt7K2BesiRwPunF/8VvX8
+         kSwGe96Z/cOhDEzWqFp0uZPBFSc/s3n979crnm4O3xh4/rAuM75EnJGcgn6YyVsJlF
+         5UDxH9cqze5kw==
+Date:   Thu, 06 Apr 2023 12:14:41 -0700
+Subject: [PATCHSET v11 0/3] xfs: online repair of directories
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Catherine Hoang <catherine.hoang@oracle.com>,
-        Mark Tinguely <tinguely@sgi.com>,
-        Allison Henderson <allison.henderson@oracle.com>,
-        allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <168080824634.615225.17234363585853846885.stgit@frogsfrogsfrogs>
+Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
+Message-ID: <168080825278.615785.11418750801629760336.stgit@frogsfrogsfrogs>
 In-Reply-To: <20230406181038.GA360889@frogsfrogsfrogs>
 References: <20230406181038.GA360889@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -54,77 +49,28 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Hi all,
 
-This is the latest parent pointer attributes for xfs.
-The goal of this patch set is to add a parent pointer attribute to each inode.
-The attribute name containing the parent inode, generation, and directory
-offset, while the  attribute value contains the file name.  This feature will
-enable future optimizations for online scrub, shrink, nfs handles, verity, or
-any other feature that could make use of quickly deriving an inodes path from
-the mount point.
+With this patchset, we implement online reconstruction of directories by
+scanning the entire filesystem looking for parent pointer data.  This
+mostly works, except for the part where we need to resync the diroffset
+field of the parent pointers to match the new directory structure.
 
-Updates since v10 [djwong]:
+Fixing that is left as an open research question, with a few possible
+solutions:
 
-Merge in the ondisk format changes to get rid of the diroffset conflicts
-with the parent pointer repair code, rebase the entire series with the
-attr vlookup changes first, and merge all the other random fixes.
+1. As part of committing the new directory, queue a bunch of parent
+pointer updates to make those changes.
 
-Updates since v9:
+2. Leave them inconsistent and let the parent pointer repair fix it.
 
-Reordered patches 2 and 3 to be 6 and 7
+3. Change the ondisk format of parent pointers (and xattrs) so that we
+can encode the full dirent name in the xattr name.
 
-xfs: Add xfs_verify_pptr
-   moved parent pointer validators to xfs_parent
+4. Change the ondisk format of parent pointers to encode a sha256 hash
+of the dirent name in the xattr name.  This will work as long as nobody
+breaks sha256.
 
-xfs: Add parent pointer ioctl
-   Extra validation checks for fs id
-   added missing release for the inode
-   use GFP_KERNEL flags for malloc/realloc
-   reworked ioctl to use pptr listenty and flex array
-
-NEW
-   xfs: don't remove the attr fork when parent pointers are enabled
-
-NEW
-   directory lookups should return diroffsets too
-
-NEW
-   xfs: move/add parent pointer validators to xfs_parent
-
-Updates since v8:
-
-xfs: parent pointer attribute creation
-   Fix xfs_parent_init to release log assist on alloc fail
-   Add slab cache for xfs_parent_defer
-   Fix xfs_create to release after unlock
-   Add xfs_parent_start and xfs_parent_finish wrappers
-   removed unused xfs_parent_name_irec and xfs_init_parent_name_irec
-
-xfs: add parent attributes to link
-   Start/finish wrapper updates
-   Fix xfs_link to disallow reservationless quotas
-   
-xfs: add parent attributes to symlink
-   Fix xfs_symlink to release after unlock
-   Start/finish wrapper updates
-   
-xfs: remove parent pointers in unlink
-   Start/finish wrapper updates
-   Add missing parent free
-
-xfs: Add parent pointers to rename
-   Start/finish wrapper updates
-   Fix rename to only grab logged xattr once
-   Fix xfs_rename to disallow reservationless quotas
-   Fix double unlock on dqattach fail
-   Move parent frees to out_release_wip
-   
-xfs: Add parent pointers to xfs_cross_rename
-   Hoist parent pointers into rename
-
-Questions comments and feedback appreciated!
-
-Thanks all!
-Allison
+Thoughts?  Note that the atomic swapext and block reaping code is NOT
+ported for this PoC, so we do not commit any repairs.
 
 If you're going to start using this mess, you probably ought to just
 pull from my git trees, which are linked below.
@@ -132,59 +78,24 @@ pull from my git trees, which are linked below.
 This is an extraordinary way to destroy everything.  Enjoy!
 Comments and questions are, as always, welcome.
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=pptrs
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=pptrs-online-dir-repair
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=pptrs
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=pptrs
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=pptrs-online-dir-repair
 ---
- fs/xfs/Makefile                 |    2 
- fs/xfs/libxfs/xfs_attr.c        |   21 ++
- fs/xfs/libxfs/xfs_attr.h        |   14 +-
- fs/xfs/libxfs/xfs_attr_leaf.c   |    6 -
- fs/xfs/libxfs/xfs_attr_sf.h     |    1 
- fs/xfs/libxfs/xfs_da_format.h   |   34 ++++
- fs/xfs/libxfs/xfs_defer.c       |   28 +++
- fs/xfs/libxfs/xfs_defer.h       |    8 +
- fs/xfs/libxfs/xfs_format.h      |    4 
- fs/xfs/libxfs/xfs_fs.h          |    2 
- fs/xfs/libxfs/xfs_fs_staging.h  |   84 ++++++++++
- fs/xfs/libxfs/xfs_log_format.h  |    1 
- fs/xfs/libxfs/xfs_log_rlimit.c  |   53 ++++++
- fs/xfs/libxfs/xfs_parent.c      |  317 ++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_parent.h      |  104 ++++++++++++
- fs/xfs/libxfs/xfs_sb.c          |    4 
- fs/xfs/libxfs/xfs_trans_resv.c  |  326 +++++++++++++++++++++++++++++++------
- fs/xfs/libxfs/xfs_trans_space.h |    8 -
- fs/xfs/scrub/attr.c             |   12 +
- fs/xfs/xfs_attr_item.c          |   24 ++-
- fs/xfs/xfs_attr_list.c          |   25 ++-
- fs/xfs/xfs_dquot.c              |   38 ++++
- fs/xfs/xfs_dquot.h              |    1 
- fs/xfs/xfs_file.c               |    1 
- fs/xfs/xfs_inode.c              |  343 ++++++++++++++++++++++++++++++++-------
- fs/xfs/xfs_inode.h              |    9 +
- fs/xfs/xfs_ioctl.c              |  189 ++++++++++++++++++++-
- fs/xfs/xfs_ioctl.h              |    2 
- fs/xfs/xfs_iops.c               |    2 
- fs/xfs/xfs_linux.h              |    1 
- fs/xfs/xfs_ondisk.h             |    4 
- fs/xfs/xfs_parent_utils.c       |  157 ++++++++++++++++++
- fs/xfs/xfs_parent_utils.h       |   20 ++
- fs/xfs/xfs_qm.h                 |    2 
- fs/xfs/xfs_super.c              |   14 ++
- fs/xfs/xfs_symlink.c            |   49 +++++-
- fs/xfs/xfs_trace.c              |    1 
- fs/xfs/xfs_trace.h              |   76 +++++++++
- fs/xfs/xfs_trans_dquot.c        |   15 +-
- fs/xfs/xfs_xattr.c              |    8 +
- fs/xfs/xfs_xattr.h              |    2 
- 41 files changed, 1829 insertions(+), 183 deletions(-)
- create mode 100644 fs/xfs/libxfs/xfs_fs_staging.h
- create mode 100644 fs/xfs/libxfs/xfs_parent.c
- create mode 100644 fs/xfs/libxfs/xfs_parent.h
- create mode 100644 fs/xfs/xfs_parent_utils.c
- create mode 100644 fs/xfs/xfs_parent_utils.h
+ fs/xfs/Makefile           |    1 
+ fs/xfs/libxfs/xfs_dir2.c  |    2 
+ fs/xfs/libxfs/xfs_dir2.h  |    2 
+ fs/xfs/scrub/common.c     |   15 +
+ fs/xfs/scrub/common.h     |   28 +
+ fs/xfs/scrub/dir.c        |    9 
+ fs/xfs/scrub/dir_repair.c | 1125 +++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/repair.h     |   16 +
+ fs/xfs/scrub/scrub.c      |    2 
+ fs/xfs/scrub/tempfile.c   |   42 ++
+ fs/xfs/scrub/tempfile.h   |    2 
+ fs/xfs/scrub/trace.c      |    1 
+ fs/xfs/scrub/trace.h      |   65 +++
+ 13 files changed, 1307 insertions(+), 3 deletions(-)
+ create mode 100644 fs/xfs/scrub/dir_repair.c
 
