@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC707C7618D
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:38:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E643C7618D
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 19:38:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229647AbjDFTir (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Apr 2023 15:38:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40128 "EHLO
+        id S237261AbjDFTiz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Apr 2023 15:38:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41150 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230179AbjDFTii (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:38:38 -0400
+        with ESMTP id S230179AbjDFTiy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 15:38:54 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28862E72
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:38:37 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9EEBC94
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 12:38:52 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A62CA60FB3
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:38:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A3AAC433EF;
-        Thu,  6 Apr 2023 19:38:36 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3DBB360DED
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 19:38:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9EBF1C4339B;
+        Thu,  6 Apr 2023 19:38:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680809916;
-        bh=btdN5h0anmxIVlufi8sRx4i64jwV+cw5uqfoiRD1bgI=;
+        s=k20201202; t=1680809931;
+        bh=Vp9r3b3okPwN/zXVxvuEOGE0BDFNYKzsFMknEdN/8JY=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=e2kwf3HAAmyurcFT9ywkvBlADVteqvf7k5gaihC8xU2OOA9HbC6h5TTyvZr8Vo9s5
-         GFWT9ADF8WHfkOLWQH285JXWSJ0ccYO8YdjC4tp6B2J96mMtrNYxCj3kYjIaNSEugT
-         cOtgvYDn0svhdPOyOq9ij4L2Kfskyfgh8X0BjciFXwX45bohlAEfi8T/7UHNt3LUkV
-         frXygkyHk0PiUJAdTtdjbd98gXvejcVywBQyxeUabW00U7eCn3L61UyvUyaWW9hiiu
-         xafM3d9MNpWOO+ekr5Y+vjzF78SPgtzlNq67HcvI+xuVAdAy+Qly5gM0jvODzoYcVS
-         1Hu+sBX7aLbJg==
-Date:   Thu, 06 Apr 2023 12:38:35 -0700
-Subject: [PATCH 27/32] xfs_db: create dirents and xattrs with colliding names
+        b=s3HiuF9DMRMmIrJ86VYU5iqHkO8N2fixssbo2BGg72pVMGphXgLkRkcBe2c7P4e0J
+         3zaO2NR3jAyCy7Bp6SiVsQpe3HzNepaTVaHGft5TiETiSmKqF56lvo5EN81rlQb9oP
+         aJ8sRbR8q09Zan9YVxt9y9mn7g3eKxsIqbuWUUbJHvI+p83VAJl80r7ivbvv9kFTTs
+         2TF1XN6IJD+3/E3HOiwpRHjECYIZKt9KpnDv/6yo+Z1+luS0jXEsuwr9UnDysI8Tjj
+         Gq+wC8SrmCKjJRq+2+LOeu8jl+qmg32Bdy6pSZ7jXM21w12r8uNUDcWh5nHwzD1NpO
+         ZSX3j46QbQE+w==
+Date:   Thu, 06 Apr 2023 12:38:51 -0700
+Subject: [PATCH 28/32] xfs_db: add a parents command to list the parents of a
+ file
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     allison.henderson@oracle.com, linux-xfs@vger.kernel.org
-Message-ID: <168080827912.616793.12711743622509100323.stgit@frogsfrogsfrogs>
+Message-ID: <168080827925.616793.8896509199935689523.stgit@frogsfrogsfrogs>
 In-Reply-To: <168080827546.616793.7264157843231723676.stgit@frogsfrogsfrogs>
 References: <168080827546.616793.7264157843231723676.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,456 +50,384 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a new debugger command that will create dirent and xattr names
-that induce dahash collisions.
+Create a command to dump the parents of a file.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- db/hash.c         |  374 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- man/man8/xfs_db.8 |   31 ++++
- 2 files changed, 405 insertions(+)
+ db/namei.c        |  335 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ man/man8/xfs_db.8 |    9 +
+ 2 files changed, 344 insertions(+)
 
 
-diff --git a/db/hash.c b/db/hash.c
-index 68c53e7f9..9fa5f054e 100644
---- a/db/hash.c
-+++ b/db/hash.c
-@@ -5,12 +5,15 @@
-  */
- 
- #include "libxfs.h"
-+#include "init.h"
- #include "addr.h"
- #include "command.h"
- #include "type.h"
- #include "io.h"
- #include "output.h"
- #include "hash.h"
-+#include "obfuscate.h"
-+#include <sys/xattr.h>
- 
- static int hash_f(int argc, char **argv);
- static void hash_help(void);
-@@ -46,8 +49,379 @@ hash_f(
- 	return 0;
- }
+diff --git a/db/namei.c b/db/namei.c
+index 063721ca9..98a019d8f 100644
+--- a/db/namei.c
++++ b/db/namei.c
+@@ -596,6 +596,338 @@ static struct cmdinfo ls_cmd = {
+ 	.help		= ls_help,
+ };
  
 +static void
-+hashcoll_help(void)
++pptr_emit(
++	struct xfs_mount	*mp,
++	const struct xfs_parent_name_irec *irec)
 +{
-+	printf(_(
-+"\n"
-+" Generate obfuscated variants of the provided name.  Each variant will have\n"
-+" the same dahash value.  Names are written to stdout with a NULL separating\n"
-+" each name.\n"
-+"\n"
-+" -a -- create extended attributes.\n"
-+" -i -- read standard input for the name, up to %d bytes.\n"
-+" -n -- create this many names.\n"
-+" -p -- create directory entries or extended attributes in this file.\n"
-+" -s -- seed the rng with this value.\n"
-+"\n"),
-+			MAXNAMELEN - 1);
-+}
++	struct xfs_name		xname = {
++		.name		= irec->p_name,
++		.len		= irec->p_namelen,
++	};
++	xfs_dahash_t		hash;
++	bool			good;
 +
-+struct name_dup {
-+	struct name_dup	*next;
-+	uint32_t	crc;
-+	uint8_t		namelen;
-+	uint8_t		name[];
-+};
++	hash = libxfs_dir2_hashname(mp, &xname);
++	good = hash == irec->p_namehash &&
++	       libxfs_dir2_namecheck(irec->p_name, irec->p_namelen);
 +
-+static inline size_t
-+name_dup_sizeof(
-+	unsigned int	namelen)
-+{
-+	return sizeof(struct name_dup) + namelen;
-+}
-+
-+#define MAX_DUP_TABLE_BUCKETS	(1048575)
-+
-+struct dup_table {
-+	unsigned int	nr_buckets;
-+	struct name_dup	*buckets[];
-+};
-+
-+static inline size_t
-+dup_table_sizeof(
-+	unsigned int	nr_buckets)
-+{
-+	return sizeof(struct dup_table) +
-+				(nr_buckets * sizeof(struct name_dup *));
++	dbprintf("%18llu:0x%08x 0x%08x:0x%08x %3d %.*s %s\n",
++			irec->p_ino, irec->p_gen, irec->p_namehash, hash,
++			xname.len, xname.len, xname.name,
++			good ? _("(good)") : _("(corrupt)"));
 +}
 +
 +static int
-+dup_table_alloc(
-+	unsigned long		nr_names,
-+	struct dup_table	**tabp)
++list_sf_pptrs(
++	struct xfs_inode		*ip)
 +{
-+	struct dup_table	*t;
++	struct xfs_parent_name_irec	irec;
++	struct xfs_attr_shortform	*sf;
++	struct xfs_attr_sf_entry	*sfe;
++	unsigned int			i;
 +
-+	*tabp = NULL;
++	sf = (struct xfs_attr_shortform *)ip->i_af.if_u1.if_data;
++	for (i = 0, sfe = &sf->list[0]; i < sf->hdr.count; i++) {
++		void			*name = sfe->nameval;
++		void			*value = &sfe->nameval[sfe->namelen];
 +
-+	if (nr_names == 1)
-+		return 0;
++		if ((sfe->flags & XFS_ATTR_PARENT) &&
++		    libxfs_parent_namecheck(mp, name, sfe->namelen, sfe->flags) &&
++		    libxfs_parent_valuecheck(mp, value, sfe->valuelen)) {
++			libxfs_parent_irec_from_disk(&irec, name, value,
++					sfe->valuelen);
++			pptr_emit(mp, &irec);
++		}
 +
-+	nr_names = min(MAX_DUP_TABLE_BUCKETS, nr_names);
-+	t = calloc(1, dup_table_sizeof(nr_names));
-+	if (!t)
-+		return ENOMEM;
++		sfe = xfs_attr_sf_nextentry(sfe);
++	}
 +
-+	t->nr_buckets = nr_names;
-+	*tabp = t;
 +	return 0;
 +}
 +
 +static void
-+dup_table_free(
-+	struct dup_table	*tab)
++list_leaf_pptr_entries(
++	struct xfs_inode		*ip,
++	struct xfs_buf			*bp)
 +{
-+	struct name_dup		*ent, *next;
-+	unsigned int		i;
++	struct xfs_parent_name_irec	irec;
++	struct xfs_attr3_icleaf_hdr	ichdr;
++	struct xfs_mount		*mp = ip->i_mount;
++	struct xfs_attr_leafblock	*leaf = bp->b_addr;
++	struct xfs_attr_leaf_entry	*entry;
++	unsigned int			i;
 +
-+	if (!tab)
-+		return;
++	libxfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &ichdr, leaf);
++	entry = xfs_attr3_leaf_entryp(leaf);
 +
-+	for (i = 0; i < tab->nr_buckets; i++) {
-+		ent = tab->buckets[i];
++	for (i = 0; i < ichdr.count; entry++, i++) {
++		struct xfs_attr_leaf_name_local	*name_loc;
++		void			*value;
++		void			*name;
++		unsigned int		namelen, valuelen;
 +
-+		while (ent) {
-+			next = ent->next;
-+			free(ent);
-+			ent = next;
++		if (!(entry->flags & XFS_ATTR_LOCAL) ||
++		    !(entry->flags & XFS_ATTR_PARENT))
++			continue;
++
++		name_loc = xfs_attr3_leaf_name_local(leaf, i);
++		name = name_loc->nameval;
++		namelen = name_loc->namelen;
++		value = &name_loc->nameval[name_loc->namelen];
++		valuelen = be16_to_cpu(name_loc->valuelen);
++
++		if (libxfs_parent_namecheck(mp, name, namelen, entry->flags) &&
++		    libxfs_parent_valuecheck(mp, value, valuelen)) {
++			libxfs_parent_irec_from_disk(&irec, name, value,
++					valuelen);
++			pptr_emit(mp, &irec);
 +		}
 +	}
-+	free(tab);
-+}
-+
-+static struct name_dup *
-+dup_table_find(
-+	struct dup_table	*tab,
-+	unsigned char		*name,
-+	size_t			namelen)
-+{
-+	struct name_dup		*ent;
-+	uint32_t		crc = crc32c(~0, name, namelen);
-+
-+	ent = tab->buckets[crc % tab->nr_buckets];
-+	while (ent) {
-+		if (ent->crc == crc &&
-+		    ent->namelen == namelen &&
-+		    !memcmp(ent->name, name, namelen))
-+			return ent;
-+
-+		ent = ent->next;
-+	}
-+
-+	return NULL;
 +}
 +
 +static int
-+dup_table_store(
-+	struct dup_table	*tab,
-+	unsigned char		*name,
-+	size_t			namelen)
++list_leaf_pptrs(
++	struct xfs_inode		*ip)
 +{
-+	struct name_dup		*dup;
-+	uint32_t		seq = 1;
++	struct xfs_buf			*leaf_bp;
++	int				error;
 +
-+	ASSERT(namelen < MAXNAMELEN);
++	error = -libxfs_attr3_leaf_read(NULL, ip, 0, &leaf_bp);
++	if (error)
++		return error;
 +
-+	while ((dup = dup_table_find(tab, name, namelen)) != NULL) {
-+		int		ret;
-+
-+		do {
-+			ret = find_alternate(namelen, name, seq++);
-+		} while (ret == 0);
-+		if (ret < 0)
-+			return EEXIST;
-+	}
-+
-+	dup = malloc(name_dup_sizeof(namelen));
-+	if (!dup)
-+		return ENOMEM;
-+
-+	dup->crc = crc32c(~0, name, namelen);
-+	dup->namelen = namelen;
-+	memcpy(dup->name, name, namelen);
-+	dup->next = tab->buckets[dup->crc % tab->nr_buckets];
-+
-+	tab->buckets[dup->crc % tab->nr_buckets] = dup;
++	list_leaf_pptr_entries(ip, leaf_bp);
++	libxfs_trans_brelse(NULL, leaf_bp);
 +	return 0;
 +}
 +
 +static int
-+collide_dirents(
-+	unsigned long		nr,
-+	const unsigned char	*name,
-+	size_t			namelen,
-+	int			fd)
++find_leftmost_attr_leaf(
++	struct xfs_inode		*ip,
++	struct xfs_buf			**leaf_bpp)
 +{
-+	struct xfs_name		dname = {
-+		.name		= name,
-+		.len		= namelen,
-+	};
-+	unsigned char		direntname[MAXNAMELEN + 1];
-+	struct dup_table	*tab = NULL;
-+	xfs_dahash_t		old_hash;
-+	unsigned long		i;
-+	int			error = 0;
++	struct xfs_da3_icnode_hdr	nodehdr;
++	struct xfs_mount		*mp = ip->i_mount;
++	struct xfs_da_intnode		*node;
++	struct xfs_da_node_entry	*btree;
++	struct xfs_buf			*bp;
++	xfs_dablk_t			blkno = 0;
++	unsigned int			expected_level = 0;
++	int				error;
 +
-+	old_hash = libxfs_dir2_hashname(mp, &dname);
++	for (;;) {
++		uint16_t		magic;
 +
-+	if (fd >= 0) {
-+		int		newfd;
-+
-+		/*
-+		 * User passed in a fd, so we'll use the directory to detect
-+		 * duplicate names.  First create the name that we are passed
-+		 * in; the new names will be hardlinks to the first file.
-+		 */
-+		newfd = openat(fd, name, O_CREAT, 0600);
-+		if (newfd < 0)
-+			return errno;
-+		close(newfd);
-+	} else if (nr > 1) {
-+		/*
-+		 * Track every name we create so that we don't emit duplicates.
-+		 */
-+		error = dup_table_alloc(nr, &tab);
++		error = -libxfs_da3_node_read(NULL, ip, blkno, &bp,
++				XFS_ATTR_FORK);
 +		if (error)
 +			return error;
++
++		node = bp->b_addr;
++		magic = be16_to_cpu(node->hdr.info.magic);
++		if (magic == XFS_ATTR_LEAF_MAGIC ||
++		    magic == XFS_ATTR3_LEAF_MAGIC)
++			break;
++
++		error = EFSCORRUPTED;
++		if (magic != XFS_DA_NODE_MAGIC &&
++		    magic != XFS_DA3_NODE_MAGIC)
++			goto out_buf;
++
++		libxfs_da3_node_hdr_from_disk(mp, &nodehdr, node);
++
++		if (nodehdr.count == 0 || nodehdr.level >= XFS_DA_NODE_MAXDEPTH)
++			goto out_buf;
++
++		/* Check the level from the root node. */
++		if (blkno == 0)
++			expected_level = nodehdr.level - 1;
++		else if (expected_level != nodehdr.level)
++			goto out_buf;
++		else
++			expected_level--;
++
++		/* Find the next level towards the leaves of the dabtree. */
++		btree = nodehdr.btree;
++		blkno = be32_to_cpu(btree->before);
++		libxfs_trans_brelse(NULL, bp);
 +	}
 +
-+	for (i = 0; i < nr; i++) {
-+		strncpy(direntname, name, MAXNAMELEN);
-+		obfuscate_name(old_hash, namelen, direntname);
++	error = EFSCORRUPTED;
++	if (expected_level != 0)
++		goto out_buf;
 +
-+		if (fd >= 0) {
-+			error = linkat(fd, name, fd, direntname, 0);
-+			if (error && errno != EEXIST)
-+				return errno;
++	*leaf_bpp = bp;
++	return 0;
 +
-+			/* don't print names to stdout */
-+			continue;
-+		} else if (tab) {
-+			error = dup_table_store(tab, direntname, namelen);
-+			if (error)
-+				break;
-+		}
-+
-+		printf("%s%c", direntname, 0);
-+	}
-+
-+	dup_table_free(tab);
++out_buf:
++	libxfs_trans_brelse(NULL, bp);
 +	return error;
 +}
 +
 +static int
-+collide_xattrs(
-+	unsigned long		nr,
-+	const unsigned char	*name,
-+	size_t			namelen,
-+	int			fd)
++list_node_pptrs(
++	struct xfs_inode		*ip)
 +{
-+	unsigned char		xattrname[MAXNAMELEN + 5];
-+	struct dup_table	*tab = NULL;
-+	xfs_dahash_t		old_hash;
-+	unsigned long		i;
++	struct xfs_attr3_icleaf_hdr	leafhdr;
++	struct xfs_mount		*mp = ip->i_mount;
++	struct xfs_attr_leafblock	*leaf;
++	struct xfs_buf			*leaf_bp;
++	int				error;
++
++	error = find_leftmost_attr_leaf(ip, &leaf_bp);
++	if (error)
++		return error;
++
++	for (;;) {
++		list_leaf_pptr_entries(ip, leaf_bp);
++
++		/* Find the right sibling of this leaf block. */
++		leaf = leaf_bp->b_addr;
++		libxfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
++		if (leafhdr.forw == 0)
++			goto out_leaf;
++
++		libxfs_trans_brelse(NULL, leaf_bp);
++
++		error = -libxfs_attr3_leaf_read(NULL, ip, leafhdr.forw,
++				&leaf_bp);
++		if (error)
++			return error;
++	}
++
++out_leaf:
++	libxfs_trans_brelse(NULL, leaf_bp);
++	return error;
++}
++
++static int
++list_pptrs(
++	struct xfs_inode	*ip)
++{
 +	int			error;
 +
-+	old_hash = libxfs_da_hashname(name, namelen);
++	if (!libxfs_inode_hasattr(ip))
++		return 0;
 +
-+	if (fd >= 0) {
-+		/*
-+		 * User passed in a fd, so we'll use the xattr structure to
-+		 * detect duplicate names.  First create the attribute that we
-+		 * are passed in.
-+		 */
-+		snprintf(xattrname, MAXNAMELEN + 5, "user.%s", name);
-+		error = fsetxattr(fd, xattrname, "1", 1, 0);
-+		if (error)
-+			return errno;
-+	} else if (nr > 1) {
-+		/*
-+		 * Track every name we create so that we don't emit duplicates.
-+		 */
-+		error = dup_table_alloc(nr, &tab);
-+		if (error)
-+			return error;
-+	}
++	if (ip->i_af.if_format == XFS_DINODE_FMT_LOCAL)
++		return list_sf_pptrs(ip);
 +
-+	for (i = 0; i < nr; i++) {
-+		snprintf(xattrname, MAXNAMELEN + 5, "user.%s", name);
-+		obfuscate_name(old_hash, namelen, xattrname + 5);
++	/* attr functions require that the attr fork is loaded */
++	error = -libxfs_iread_extents(NULL, ip, XFS_ATTR_FORK);
++	if (error)
++		return error;
 +
-+		if (fd >= 0) {
-+			error = fsetxattr(fd, xattrname, "1", 1, 0);
-+			if (error)
-+				return errno;
++	if (libxfs_attr_is_leaf(ip))
++		return list_leaf_pptrs(ip);
 +
-+			/* don't print names to stdout */
-+			continue;
-+		} else if (tab) {
-+			error = dup_table_store(tab, xattrname, namelen + 5);
-+			if (error)
-+				break;
-+		}
++	return list_node_pptrs(ip);
++}
 +
-+		printf("%s%c", xattrname, 0);
-+	}
++/* If the io cursor points to a file, list its parents. */
++static int
++parent_cur(
++	char			*tag)
++{
++	struct xfs_inode	*ip;
++	int			error = 0;
 +
-+	dup_table_free(tab);
++	if (!xfs_has_parent(mp))
++		return 0;
++
++	if (iocur_top->typ != &typtab[TYP_INODE])
++		return ENOTDIR;
++
++	error = -libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip);
++	if (error)
++		return error;
++
++	/* List the parents of a file. */
++	if (tag)
++		dbprintf(_("%s:\n"), tag);
++
++	error = list_pptrs(ip);
++	if (error)
++		goto rele;
++
++rele:
++	libxfs_irele(ip);
 +	return error;
 +}
 +
-+static int
-+hashcoll_f(
-+	int		argc,
-+	char		**argv)
++static void
++parent_help(void)
 +{
-+	const char	*path = NULL;
-+	bool		read_stdin = false;
-+	bool		create_xattr = false;
-+	unsigned long	nr = 1, seed = 0;
-+	int		fd = -1;
-+	int		c;
-+	int		error;
++	dbprintf(_(
++"\n"
++" List the parents of the currently selected file.\n"
++"\n"
++" Parent pointers will be listed in the format:\n"
++" inode_number:inode_gen	ondisk_namehash:namehash	name_length	name\n"
++	));
++}
 +
-+	while ((c = getopt(argc, argv, "ain:p:s:")) != EOF) {
++static int
++parent_f(
++	int			argc,
++	char			**argv)
++{
++	int			c;
++	int			error = 0;
++
++	while ((c = getopt(argc, argv, "")) != -1) {
 +		switch (c) {
-+		case 'a':
-+			create_xattr = true;
-+			break;
-+		case 'i':
-+			read_stdin = true;
-+			break;
-+		case 'n':
-+			nr = strtoul(optarg, NULL, 10);
-+			break;
-+		case 'p':
-+			path = optarg;
-+			break;
-+		case 's':
-+			seed = strtoul(optarg, NULL, 10);
-+			break;
 +		default:
-+			exitcode = 1;
-+			hashcoll_help();
++			ls_help();
 +			return 0;
 +		}
 +	}
 +
-+	if (path) {
-+		int	oflags = O_RDWR;
-+
-+		if (!create_xattr)
-+			oflags = O_RDONLY | O_DIRECTORY;
-+
-+		fd = open(path, oflags);
-+		if (fd < 0) {
-+			perror(path);
-+			exitcode = 1;
-+			return 0;
-+		}
-+	}
-+
-+	if (seed)
-+		srandom(seed);
-+
-+	if (read_stdin) {
-+		char	buf[MAXNAMELEN];
-+		size_t	len;
-+
-+		len = fread(buf, 1, MAXNAMELEN - 1, stdin);
-+
-+		if (create_xattr)
-+			error = collide_xattrs(nr, buf, len, fd);
-+		else
-+			error = collide_dirents(nr, buf, len, fd);
++	if (optind == argc) {
++		error = parent_cur(NULL);
 +		if (error) {
-+			printf(_("hashcoll: %s\n"), strerror(error));
++			dbprintf("%s\n", strerror(error));
 +			exitcode = 1;
 +		}
-+		goto done;
++
++		return 0;
 +	}
 +
 +	for (c = optind; c < argc; c++) {
-+		size_t	len = strlen(argv[c]);
++		push_cur();
 +
-+		if (create_xattr)
-+			error = collide_xattrs(nr, argv[c], len, fd);
-+		else
-+			error = collide_dirents(nr, argv[c], len, fd);
-+		if (error) {
-+			printf(_("hashcoll: %s\n"), strerror(error));
-+			exitcode = 1;
-+		}
++		error = path_walk(argv[c]);
++		if (error)
++			goto err_cur;
++
++		error = parent_cur(argv[c]);
++		if (error)
++			goto err_cur;
++
++		pop_cur();
 +	}
 +
-+done:
-+	if (fd >= 0)
-+		close(fd);
++	return 0;
++err_cur:
++	pop_cur();
++	if (error) {
++		dbprintf("%s: %s\n", argv[c], strerror(error));
++		exitcode = 1;
++	}
 +	return 0;
 +}
 +
-+static cmdinfo_t	hashcoll_cmd = {
-+	.name		= "hashcoll",
-+	.cfunc		= hashcoll_f,
++static struct cmdinfo parent_cmd = {
++	.name		= "parent",
++	.altname	= "pptr",
++	.cfunc		= parent_f,
 +	.argmin		= 0,
 +	.argmax		= -1,
-+	.args		= N_("[-a] [-s seed] [-n nr] [-p path] -i|names..."),
-+	.oneline	= N_("create names that produce dahash collisions"),
-+	.help		= hashcoll_help,
++	.canpush	= 0,
++	.args		= "[paths...]",
++	.help		= parent_help,
 +};
-+
  void
- hash_init(void)
+ namei_init(void)
  {
- 	add_command(&hash_cmd);
-+	add_command(&hashcoll_cmd);
- }
+@@ -604,4 +936,7 @@ namei_init(void)
+ 
+ 	ls_cmd.oneline = _("list directory contents");
+ 	add_command(&ls_cmd);
 +
++	parent_cmd.oneline = _("list parent pointers");
++	add_command(&parent_cmd);
+ }
 diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index 1a2bb7e98..fde1c5c6c 100644
+index fde1c5c6c..02351d1ec 100644
 --- a/man/man8/xfs_db.8
 +++ b/man/man8/xfs_db.8
-@@ -768,6 +768,37 @@ Prints the hash value of
- .I string
- using the hash function of the XFS directory and attribute implementation.
+@@ -884,6 +884,15 @@ See the
+ .B print
+ command.
  .TP
-+.BI "hashcoll [-a] [-s seed] [-n " nr "] [-p " path "] -i | " names...
-+Create directory entries or extended attributes names that all have the same
-+hash value.
-+The metadump name obfuscation algorithm is used here.
-+Names are written to standard output, with a NULL between each name for use
-+with xargs -0.
-+.RS 1.0i
-+.PD 0
-+.TP 0.4i
-+.TP 0.4i
-+.B \-a
-+Create extended attribute names.
-+.TP 0.4i
-+.B \-i
-+Read the first name to create from standard input.
-+Up to 255 bytes are read.
-+If this option is not specified, first names are taken from the command line.
-+.TP 0.4i
-+.BI \-n " nr"
-+Create this many duplicated names.
-+The default is to create one name.
-+.TP 0.4i
-+.BI \-p " path"
-+Create directory entries or extended attributes in this file instead of
-+writing the names to standard output.
-+.TP 0.4i
-+.BI \-s " seed"
-+Seed the random number generator with this value.
-+.PD
-+.RE
++.BI "parent [" paths "]..."
++List the parents of a file.
++If a path resolves to a file, the parents of that file will be listed.
++If no paths are supplied and the IO cursor points at an inode, the parents of
++that file will be listed.
++
++The output format is:
++inode number, inode generation, ondisk namehash, namehash, name length, name.
 +.TP
- .BI "help [" command ]
- Print help for one or all commands.
- .TP
+ .BI "path " dir_path
+ Walk the directory tree to an inode using the supplied path.
+ Absolute and relative paths are supported.
 
