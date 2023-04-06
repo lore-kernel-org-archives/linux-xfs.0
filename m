@@ -2,267 +2,220 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 718BEC77B72
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 02:36:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAAF9C76196
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Apr 2023 10:32:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234678AbjDFCgh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Apr 2023 22:36:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57748 "EHLO
+        id S237159AbjDFKb7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Apr 2023 06:31:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57872 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235033AbjDFCgM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Apr 2023 22:36:12 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C6C55BA0
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Apr 2023 19:36:11 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EC81B6421B
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 02:36:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 60EA5C433A0
-        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 02:36:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680748570;
-        bh=EsPxDLSF05mJPJVirKeh6IIJ50949Ya/cWg8wLXnzKA=;
-        h=From:To:Subject:Date:From;
-        b=P1ia1PPNS9v2bnc2CChCDrfL97Y1LeC7FvondZOekPJW5w1XUaes0+ol6c+tRbbER
-         9UC7TefLXwc7pf8BfCaSvC6o9+mUJMAptwtSj4GPxoTLMAqIGTrMPhwnP0ViyMYyap
-         VVHVA3q+hYXuATT5fYdhI4sp4ISFWdoIwS+2PPYEYMPzbbKJ66IghFrMXYODoD6yK+
-         nGh1d3iDDHPitq2H/ujA6qxh8ShHGvjpXp3sZj6bEZ9EzokZsCyzPKCQwGB0Z8xC8b
-         /WmuxZv8xGvraQpTeeWanW9Pt8uiMize3S4U0cNES7Y2lmJU3VFzjEigl2MCf/c/VY
-         ZCKJCO6Xhv24w==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 5233AC43145; Thu,  6 Apr 2023 02:36:10 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 217303] New: [Syzkaller & bisect] There is task hung in
- xlog_grant_head_check in v6.3-rc5
-Date:   Thu, 06 Apr 2023 02:36:09 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: new
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: pengfei.xu@intel.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_id short_desc product version rep_platform
- op_sys bug_status bug_severity priority component assigned_to reporter
- cf_regression
-Message-ID: <bug-217303-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S237201AbjDFKb4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Apr 2023 06:31:56 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DFF783E4
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Apr 2023 03:31:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1680777061;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=DSkVqfN4fVdY5K7jYUBTl5KelyFFapb4DkfrIbimWkQ=;
+        b=cyfPao4TlFJAFRjpI0/wUZXG/XTxj9VrPUTicUeIvz08RjyQzBrwm8JtPjmA5MFshOdyIY
+        TBLasHxiqS2p+hBA/MZdkghmlmK9qXDvWI9maZx8d+f2YUqM70XHy/LOsmgiCYePKQh4E7
+        nFH0CR6I2vnlhhe1Vl9omEX7bozXkF0=
+Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
+ [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-422-YUnnK5MRP7KvMIa87wg0LQ-1; Thu, 06 Apr 2023 06:31:00 -0400
+X-MC-Unique: YUnnK5MRP7KvMIa87wg0LQ-1
+Received: by mail-wm1-f71.google.com with SMTP id m7-20020a05600c4f4700b003ee7e120bdfso18112809wmq.6
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Apr 2023 03:31:00 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680777059; x=1683369059;
+        h=content-transfer-encoding:in-reply-to:subject:organization:from
+         :content-language:references:cc:to:user-agent:mime-version:date
+         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=DSkVqfN4fVdY5K7jYUBTl5KelyFFapb4DkfrIbimWkQ=;
+        b=tYj1RN1NfIBUU8Y2Gv+pN+FZmtAU8kwDl/7skSOKvDhitXVfcVEkNywNNLe851HeIe
+         KIZbzq8neoJ9jLZs1RtpLBrOPM1aKp1Ghb/UyoANI4CnPOuZtRiXWdicDk1RLP1Dfztq
+         sj9sP0klfnlN93AXSIRRMjf17sbYCpDI6/PuR6douUGvX3gP3ClfuAS5m2EHg6cdxN5p
+         pD0n8gKTW1EKNuHOPLQwg0d76riO2hCR1+3h2COOkDw1RpYvqwOeMsx+hao3A6hew817
+         17hLzvXUI/p3E/LagLQdJ9/fGWAfWBOYE0/SfRif1Y4bQS/TGaP5/gGXhRAKC2Tj9D3c
+         SCHg==
+X-Gm-Message-State: AAQBX9eLM1Li8NZ12EsV8iNxjO0m2i2YaJmbn2mJ+0p6Uzuaa48/TRw1
+        hWONc66ibPxBFjST7Z/6xiQpwXQP+epKn6EHNEANOxXYG2rFw58OEWH16+g8LnFZAPNAOrIh1aV
+        z3Gz1SHbgEz9PnVNn/CzO
+X-Received: by 2002:adf:ce8b:0:b0:2db:43ed:1baa with SMTP id r11-20020adfce8b000000b002db43ed1baamr6300036wrn.24.1680777059260;
+        Thu, 06 Apr 2023 03:30:59 -0700 (PDT)
+X-Google-Smtp-Source: AKy350bKzMGZCBY5+zcpx2zh++U0Vc78+mn9MAu7M75vPKKNUIUrRAHnNEOxAL/yv6as0YHwbBEW9w==
+X-Received: by 2002:adf:ce8b:0:b0:2db:43ed:1baa with SMTP id r11-20020adfce8b000000b002db43ed1baamr6299994wrn.24.1680777058780;
+        Thu, 06 Apr 2023 03:30:58 -0700 (PDT)
+Received: from ?IPV6:2a09:80c0:192:0:5dac:bf3d:c41:c3e7? ([2a09:80c0:192:0:5dac:bf3d:c41:c3e7])
+        by smtp.gmail.com with ESMTPSA id r10-20020adfe68a000000b002c7b229b1basm1423645wrm.15.2023.04.06.03.30.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 06 Apr 2023 03:30:58 -0700 (PDT)
+Message-ID: <a8cb406a-70cd-aa47-fdda-50cd0eb8c941@redhat.com>
+Date:   Thu, 6 Apr 2023 12:30:56 +0200
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.1
+To:     Yosry Ahmed <yosryahmed@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Lameter <cl@linux.com>,
+        David Rientjes <rientjes@google.com>,
+        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
+        Vlastimil Babka <vbabka@suse.cz>,
+        Roman Gushchin <roman.gushchin@linux.dev>,
+        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
+        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        Miaohe Lin <linmiaohe@huawei.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
+        Shakeel Butt <shakeelb@google.com>,
+        Michal Hocko <mhocko@kernel.org>, Yu Zhao <yuzhao@google.com>,
+        Dave Chinner <david@fromorbit.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        stable@vger.kernel.org
+References: <20230405185427.1246289-1-yosryahmed@google.com>
+ <20230405185427.1246289-2-yosryahmed@google.com>
+Content-Language: en-US
+From:   David Hildenbrand <david@redhat.com>
+Organization: Red Hat
+Subject: Re: [PATCH v5 1/2] mm: vmscan: ignore non-LRU-based reclaim in memcg
+ reclaim
+In-Reply-To: <20230405185427.1246289-2-yosryahmed@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217303
+On 05.04.23 20:54, Yosry Ahmed wrote:
+> We keep track of different types of reclaimed pages through
+> reclaim_state->reclaimed_slab, and we add them to the reported number
+> of reclaimed pages.  For non-memcg reclaim, this makes sense. For memcg
+> reclaim, we have no clue if those pages are charged to the memcg under
+> reclaim.
+> 
+> Slab pages are shared by different memcgs, so a freed slab page may have
+> only been partially charged to the memcg under reclaim.  The same goes for
+> clean file pages from pruned inodes (on highmem systems) or xfs buffer
+> pages, there is no simple way to currently link them to the memcg under
+> reclaim.
+> 
+> Stop reporting those freed pages as reclaimed pages during memcg reclaim.
+> This should make the return value of writing to memory.reclaim, and may
+> help reduce unnecessary reclaim retries during memcg charging.  Writing to
+> memory.reclaim on the root memcg is considered as cgroup_reclaim(), but
+> for this case we want to include any freed pages, so use the
+> global_reclaim() check instead of !cgroup_reclaim().
+> 
+> Generally, this should make the return value of
+> try_to_free_mem_cgroup_pages() more accurate. In some limited cases (e.g.
+> freed a slab page that was mostly charged to the memcg under reclaim),
+> the return value of try_to_free_mem_cgroup_pages() can be underestimated,
+> but this should be fine. The freed pages will be uncharged anyway, and we
 
-            Bug ID: 217303
-           Summary: [Syzkaller & bisect] There is task hung in
-                    xlog_grant_head_check in v6.3-rc5
-           Product: File System
-           Version: 2.5
-          Hardware: All
-                OS: Linux
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: XFS
-          Assignee: filesystem_xfs@kernel-bugs.kernel.org
-          Reporter: pengfei.xu@intel.com
-        Regression: No
+Can't we end up in extreme situations where 
+try_to_free_mem_cgroup_pages() returns close to 0 although a huge amount 
+of memory for that cgroup was freed up.
 
-There is task hung in xlog_grant_head_check in v6.3-rc5 kernel.
+Can you extend on why "this should be fine" ?
 
-Platform: x86 platforms
+I suspect that overestimation might be worse than underestimation. (see 
+my comment proposal below)
 
-All detailed info:
-https://github.com/xupengfe/syzkaller_logs/tree/main/230405_094839_xlog_gra=
-nt_head_check
-Syzkaller reproduced code:
-https://github.com/xupengfe/syzkaller_logs/blob/main/230405_094839_xlog_gra=
-nt_head_check/repro.c
-Syzkaller analysis repro.report:
-https://github.com/xupengfe/syzkaller_logs/blob/main/230405_094839_xlog_gra=
-nt_head_check/repro.report
-Syzkaller analysis repro.stats:
-https://github.com/xupengfe/syzkaller_logs/blob/main/230405_094839_xlog_gra=
-nt_head_check/repro.stats
-Reproduced prog repro.prog:
-https://github.com/xupengfe/syzkaller_logs/blob/main/230405_094839_xlog_gra=
-nt_head_check/repro.prog
-Kconfig:
-https://github.com/xupengfe/syzkaller_logs/blob/main/230405_094839_xlog_gra=
-nt_head_check/kconfig_origin
-Bisect info:
-https://github.com/xupengfe/syzkaller_logs/blob/main/230405_094839_xlog_gra=
-nt_head_check/bisect_info.log
+> can charge the memcg the next time around as we usually do memcg reclaim
+> in a retry loop.
+> 
+> The next patch performs some cleanups around reclaim_state and adds an
+> elaborate comment explaining this to the code. This patch is kept
+> minimal for easy backporting.
+> 
+> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+> Cc: stable@vger.kernel.org
 
-It could be reproduced in maximum 2100s.
-Bisected and found bad commit was:
-"
-fe08cc5044486096bfb5ce9d3db4e915e53281ea
-xfs: open code sb verifier feature checks
-"
-It's just the suspected commit, because reverted above commit on top of
-v6.3-rc5
-kernel then made kernel failed, could not double confirm for the issue.
+Fixes: ?
 
-"
-[   24.818100] memfd_create() without MFD_EXEC nor MFD_NOEXEC_SEAL, pid=3D3=
-39
-'systemd'
-[   28.230533] loop0: detected capacity change from 0 to 65536
-[   28.232522] XFS (loop0): Deprecated V4 format (crc=3D0) will not be supp=
-orted
-after September 2030.
-[   28.233447] XFS (loop0): Mounting V10 Filesystem
-d28317a9-9e04-4f2a-be27-e55b4c413ff6
-[   28.234235] XFS (loop0): Log size 66 blocks too small, minimum size is 1=
-968
-blocks
-[   28.234856] XFS (loop0): Log size out of supported range.
-[   28.235289] XFS (loop0): Continuing onwards, but if log hangs are
-experienced then please report this message in the bug report.
-[   28.239290] XFS (loop0): Starting recovery (logdev: internal)
-[   28.240979] XFS (loop0): Ending recovery (logdev: internal)
-[  300.150944] INFO: task repro:541 blocked for more than 147 seconds.
-[  300.151523]       Not tainted 6.3.0-rc5-7e364e56293b+ #1
-[  300.152102] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables =
-this
-message.
-[  300.152716] task:repro           state:D stack:0     pid:541   ppid:540=
-=20=20=20
-flags:0x00004004
-[  300.153373] Call Trace:
-[  300.153580]  <TASK>
-[  300.153765]  __schedule+0x40a/0xc30
-[  300.154078]  schedule+0x5b/0xe0
-[  300.154349]  xlog_grant_head_wait+0x53/0x3a0
-[  300.154715]  xlog_grant_head_check+0x1a5/0x1c0
-[  300.155113]  xfs_log_reserve+0x145/0x380
-[  300.155442]  xfs_trans_reserve+0x226/0x270
-[  300.155780]  xfs_trans_alloc+0x147/0x470
-[  300.156112]  xfs_qm_qino_alloc+0xcf/0x510
-[  300.156441]  ? write_comp_data+0x2f/0x90
-[  300.156770]  xfs_qm_init_quotainos+0x30a/0x400
-[  300.157139]  xfs_qm_init_quotainfo+0x9d/0x4b0
-[  300.157499]  ? write_comp_data+0x2f/0x90
-[  300.157827]  xfs_qm_mount_quotas+0x40/0x3c0
-[  300.158167]  xfs_mountfs+0xc37/0xce0
-[  300.158467]  xfs_fs_fill_super+0x7aa/0xdc0
-[  300.158817]  get_tree_bdev+0x24b/0x350
-[  300.159126]  ? __pfx_xfs_fs_fill_super+0x10/0x10
-[  300.159503]  xfs_fs_get_tree+0x25/0x30
-[  300.159815]  vfs_get_tree+0x3b/0x140
-[  300.160118]  path_mount+0x769/0x10f0
-[  300.160415]  ? write_comp_data+0x2f/0x90
-[  300.160743]  do_mount+0xaf/0xd0
-[  300.161009]  __x64_sys_mount+0x14b/0x160
-[  300.161331]  do_syscall_64+0x3b/0x90
-[  300.161632]  entry_SYSCALL_64_after_hwframe+0x72/0xdc
-[  300.162041] RIP: 0033:0x7fece24223ae
-[  300.162333] RSP: 002b:00007fff584561e8 EFLAGS: 00000206 ORIG_RAX:
-00000000000000a5
-[  300.162937] RAX: ffffffffffffffda RBX: 0000000000000000 RCX:
-00007fece24223ae
-[  300.163494] RDX: 000000002000ad00 RSI: 000000002000ad40 RDI:
-00007fff58456320
-[  300.164051] RBP: 00007fff584563b0 R08: 00007fff58456220 R09:
-0000000000000000
-[  300.164612] R10: 0000000000000003 R11: 0000000000000206 R12:
-0000000000401240
-[  300.165168] R13: 00007fff584564f0 R14: 0000000000000000 R15:
-0000000000000000
-[  300.165732]  </TASK>
-[  300.165919]=20
-[  300.165919] Showing all locks held in the system:
-[  300.166402] 1 lock held by rcu_tasks_kthre/11:
-[  300.166773]  #0: ffffffff83d63450 (rcu_tasks.tasks_gp_mutex){+.+.}-{3:3},
-at: rcu_tasks_one_gp+0x31/0x420
-[  300.167530] 1 lock held by rcu_tasks_rude_/12:
-[  300.167886]  #0: ffffffff83d631d0
-(rcu_tasks_rude.tasks_gp_mutex){+.+.}-{3:3}, at: rcu_tasks_one_gp+0x31/0x420
-[  300.168683] 1 lock held by rcu_tasks_trace/13:
-[  300.169039]  #0: ffffffff83d62f10
-(rcu_tasks_trace.tasks_gp_mutex){+.+.}-{3:3}, at: rcu_tasks_one_gp+0x31/0x4=
-20
-[  300.169839] 1 lock held by khungtaskd/29:
-[  300.170160]  #0: ffffffff83d63e60 (rcu_read_lock){....}-{1:2}, at:
-debug_show_all_locks+0x1b/0x1e0
-[  300.170891] 2 locks held by repro/541:
-[  300.171194]  #0: ffff88800de780e0 (&type->s_umount_key#47/1){+.+.}-{3:3},
-at: alloc_super+0x12b/0x480
-[  300.171926]  #1: ffff88800de78638 (sb_internal#2){.+.+}-{0:0}, at:
-xfs_qm_qino_alloc+0xcf/0x510
-[  300.172634]=20
-[  300.172769] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-"
+Otherwise it's hard to judge how far to backport this.
 
-I hope the info is helpful.
+> ---
+> 
+> global_reclaim(sc) does not exist in kernels before 6.3. It can be
+> replaced with:
+> !cgroup_reclaim(sc) || mem_cgroup_is_root(sc->target_mem_cgroup)
+> 
+> ---
+>   mm/vmscan.c | 8 +++++---
+>   1 file changed, 5 insertions(+), 3 deletions(-)
+> 
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 9c1c5e8b24b8f..c82bd89f90364 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -5346,8 +5346,10 @@ static int shrink_one(struct lruvec *lruvec, struct scan_control *sc)
+>   		vmpressure(sc->gfp_mask, memcg, false, sc->nr_scanned - scanned,
+>   			   sc->nr_reclaimed - reclaimed);
+>   
+> -	sc->nr_reclaimed += current->reclaim_state->reclaimed_slab;
+> -	current->reclaim_state->reclaimed_slab = 0;
 
-Thanks!
+Worth adding a comment like
 
----
+/*
+  * Slab pages cannot universally be linked to a single memcg. So only
+  * account them as reclaimed during global reclaim. Note that we might
+  * underestimate the amount of memory reclaimed (but won't overestimate
+  * it).
+  */
 
-If you don't need the following environment to reproduce the problem or if =
-you
-already have one, please ignore the following information.
+but ...
 
-How to reproduce:
-git clone https://gitlab.com/xupengfe/repro_vm_env.git
-cd repro_vm_env
-tar -xvf repro_vm_env.tar.gz
-cd repro_vm_env; ./start3.sh  // it needs qemu-system-x86_64 and I used v7.=
-1.0
-   // start3.sh will load bzImage_2241ab53cbb5cdb08a6b2d4688feb13971058f65
-v6.2-rc5 kernel
-   // You could change the bzImage_xxx as you want
-You could use below command to log in, there is no password for root.
-ssh -p 10023 root@localhost
+> +	if (global_reclaim(sc)) {
+> +		sc->nr_reclaimed += current->reclaim_state->reclaimed_slab;
+> +		current->reclaim_state->reclaimed_slab = 0;
+> +	}
+>   
+>   	return success ? MEMCG_LRU_YOUNG : 0;
+>   }
+> @@ -6472,7 +6474,7 @@ static void shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+>   
+>   	shrink_node_memcgs(pgdat, sc);
+>   
 
-After login vm(virtual machine) successfully, you could transfer reproduced
-binary to the vm by below way, and reproduce the problem in vm:
-gcc -pthread -o repro repro.c
-scp -P 10023 repro root@localhost:/root/
+... do we want to factor the add+clear into a simple helper such that we 
+can have above comment there?
 
-Get the bzImage for target kernel:
-Please use target kconfig and copy it to kernel_src/.config
-make olddefconfig
-make -jx bzImage           //x should equal or less than cpu num your pc has
+static void cond_account_reclaimed_slab(reclaim_state, sc)
+{	
+	/*
+  	 * Slab pages cannot universally be linked to a single memcg. So
+	 * only account them as reclaimed during global reclaim. Note
+	 * that we might underestimate the amount of memory reclaimed
+	 * (but won't overestimate it).
+	 */
+	if (global_reclaim(sc)) {
+		sc->nr_reclaimed += reclaim_state->reclaimed_slab;
+		reclaim_state->reclaimed_slab = 0;
+	}
+}
 
-Fill the bzImage file into above start3.sh to load the target kernel in vm.
+Yes, effective a couple LOC more, but still straight-forward for a 
+stable backport
 
+> -	if (reclaim_state) {
+> +	if (reclaim_state && global_reclaim(sc)) {
+>   		sc->nr_reclaimed += reclaim_state->reclaimed_slab;
+>   		reclaim_state->reclaimed_slab = 0;
+>   	}
 
-Tips:
-If you already have qemu-system-x86_64, please ignore below info.
-If you want to install qemu v7.1.0 version:
-git clone https://github.com/qemu/qemu.git
-cd qemu
-git checkout -f v7.1.0
-mkdir build
-cd build
-yum install -y ninja-build.x86_64
-../configure --target-list=3Dx86_64-softmmu --enable-kvm --enable-vnc
---enable-gtk --enable-sdl
-make
-make install
+-- 
+Thanks,
 
-Thanks!
+David / dhildenb
 
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
