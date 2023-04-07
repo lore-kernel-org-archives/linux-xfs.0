@@ -2,109 +2,111 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C71BFC6FD1D
-	for <linux-xfs@archiver.kernel.org>; Fri,  7 Apr 2023 13:25:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7818DC77B61
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Apr 2023 17:05:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230217AbjDGNZE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 7 Apr 2023 09:25:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33288 "EHLO
+        id S229924AbjDGRE7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 7 Apr 2023 13:04:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41222 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232602AbjDGNZD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Apr 2023 09:25:03 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4E5976AB
-        for <linux-xfs@vger.kernel.org>; Fri,  7 Apr 2023 06:24:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1680873856;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=XKDIBL9ZgU2suXqR2LBWE+OsH1u5fAyap/1Lc5R3SHE=;
-        b=e2RvxqHU1xxpr0Il5yKiEDwwGxzThIG73ynsWA/IIyhwUTQReVkRJdM9s09ZQxo2QHzT8b
-        W+PxKk4vAGJ+map3G6c2098CCSD+Kmv2fgO1AnP86EYfmvqyU8rZ4YFfkBITS/bSN6Tkyx
-        rETZ1/9CKB4GHyaFDWexdHMWFGs9/0o=
-Received: from mail-io1-f69.google.com (mail-io1-f69.google.com
- [209.85.166.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-151-Ig5QOFWUOpSo76eaX0qDxg-1; Fri, 07 Apr 2023 09:24:14 -0400
-X-MC-Unique: Ig5QOFWUOpSo76eaX0qDxg-1
-Received: by mail-io1-f69.google.com with SMTP id a21-20020a5d9595000000b0074c9dc19e16so25667052ioo.15
-        for <linux-xfs@vger.kernel.org>; Fri, 07 Apr 2023 06:24:14 -0700 (PDT)
+        with ESMTP id S229882AbjDGRE6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Apr 2023 13:04:58 -0400
+Received: from mail-il1-f200.google.com (mail-il1-f200.google.com [209.85.166.200])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B50FCBBB5
+        for <linux-xfs@vger.kernel.org>; Fri,  7 Apr 2023 10:04:50 -0700 (PDT)
+Received: by mail-il1-f200.google.com with SMTP id d5-20020a923605000000b003232594207dso28121215ila.8
+        for <linux-xfs@vger.kernel.org>; Fri, 07 Apr 2023 10:04:50 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680873854;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=XKDIBL9ZgU2suXqR2LBWE+OsH1u5fAyap/1Lc5R3SHE=;
-        b=f5ToZHt3MOf98FgV+xSTHgoPnYdpTP5DpYPDkve3VV6V34/jkOaYmRmTF8gtFrgNgt
-         wOAlZ+mGD42k75HTNLULEIfc/YHsUzrAHe2FAL8I5w+UhJ24Q7ffOuBFtQfdT+hUjWEZ
-         9YA10gkO9FZCc31CuVdwtF4RFEivIMaYounjimykONN1cz9LISUhQ/zo6i9GBKYciyah
-         Zq7UX+hLqEcHv9BDVhA9RDqNrhw+A0qUvfx10HX+23T4AGHKUsJ+euzGOIGBiPj226Jd
-         +wqgc1FKeLVV8ASBDxsYxbE7u9vTO0JDqUAdZG4GXAxmkuzrJgy0SIYiRytrYFwOVAU3
-         QKrw==
-X-Gm-Message-State: AAQBX9dsWxmF6Z6nEFP1yR9yMzU8ypJQOYDmh9qfEMeoRIf54HrQeNfk
-        wRrtsu4K95CALHTP2bXNS8yqaLK0CoUQ7xRTxTeGVHBnaXgAmzSxWTTI+ICAVTQJaL2FNgPb8gC
-        8KBr3tXiAW+BOZyIEV1WT
-X-Received: by 2002:a92:c534:0:b0:325:ce6b:fc88 with SMTP id m20-20020a92c534000000b00325ce6bfc88mr1409784ili.9.1680873854111;
-        Fri, 07 Apr 2023 06:24:14 -0700 (PDT)
-X-Google-Smtp-Source: AKy350ZLWJKCpwKaLLMHOXrV2Gzhy8aZbm78mr/jMzHhp+4OtWwQssdaZrujcsR4M7gWRgi7x/JSSw==
-X-Received: by 2002:a92:c534:0:b0:325:ce6b:fc88 with SMTP id m20-20020a92c534000000b00325ce6bfc88mr1409775ili.9.1680873853862;
-        Fri, 07 Apr 2023 06:24:13 -0700 (PDT)
-Received: from [10.0.0.146] (sandeen.net. [63.231.237.45])
-        by smtp.gmail.com with ESMTPSA id x6-20020a923006000000b0031798b87a14sm988373ile.19.2023.04.07.06.24.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 07 Apr 2023 06:24:13 -0700 (PDT)
-Message-ID: <3eaa1264-2ab4-fd1d-8871-47c2414cbc29@redhat.com>
-Date:   Fri, 7 Apr 2023 08:24:12 -0500
+        d=1e100.net; s=20210112; t=1680887089; x=1683479089;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=9TnUl47z21Nij35fj9d1jh5EYMecekHF/0+bl/JRlgg=;
+        b=Xh/fOydEyZecvJZIK6ikGwAANGTVRIw7Kgtyx9t+4R3rmVd5ivT0V0Vk1hkpilwfea
+         Liv5mhs8GB0oLpOI5KlI0+f5IJKbtSG1ZObN9cOtRePDE62b8hKeIuoKYXg9LTfFkuad
+         x7kvmsBRClbk6/j2P//OwTk/kgIk3/cHVgWjkicLcetw/YywYauuboIGu3fjLKRV3+Wm
+         jwodRjg+Hz0wcDFHOM/51uUf95VkOBE8OgWGr3q/2emnORSuVKihD0AjYnMJ6OSPIbhB
+         8eTnOi9yhiKetImlO8n/dDDplM4KfhDhEA0+XgFxzTshAyDZkp7E1YaxDGZPkwHFDzSU
+         vhOw==
+X-Gm-Message-State: AAQBX9dCe0pAhf3aEazaNWwdfsZovTQiQLR3dgshDLvj9TC+Je8/b4qY
+        w1SSZze2iHXrTlIpzYG5g5xnfzHReS6TRoSvI+Epxozdhrit
+X-Google-Smtp-Source: AKy350biinDzzhkhVthNzHEgvyUE51wzgBH//6QJSL+3xEpJXEcKQzJ99r6k94HByXhCpL3u0tpGJC9mbMQJUFPotUKTtGn8XkeH
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.9.1
-Subject: Re: [PATCH] xfs: Use for_each_perag() to iterate all available AGs
-To:     Ryosuke Yasuoka <ryasuoka@redhat.com>,
-        Eric Sandeen <sandeen@sandeen.net>
-Cc:     djwong@kernel.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20230404084701.2791683-1-ryasuoka@redhat.com>
- <e51e9fb1-ad5c-5cf8-fa04-4e3a10023739@sandeen.net>
- <CAHpthZrcegPXhti5tDdb=_nwafWnU-FXmtc6aRU7juowMpOnUQ@mail.gmail.com>
-Content-Language: en-US
-From:   Eric Sandeen <sandeen@redhat.com>
-In-Reply-To: <CAHpthZrcegPXhti5tDdb=_nwafWnU-FXmtc6aRU7juowMpOnUQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-Received: by 2002:a05:6e02:1a61:b0:326:3f06:a0d7 with SMTP id
+ w1-20020a056e021a6100b003263f06a0d7mr1616499ilv.0.1680887089848; Fri, 07 Apr
+ 2023 10:04:49 -0700 (PDT)
+Date:   Fri, 07 Apr 2023 10:04:49 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000e5f10505f8c205bc@google.com>
+Subject: [syzbot] [xfs?] WARNING in __queue_delayed_work
+From:   syzbot <syzbot+5ed016962f5137a09c7c@syzkaller.appspotmail.com>
+To:     djwong@kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 4/6/23 11:03 AM, Ryosuke Yasuoka wrote:
-> Eric,
-> 
-> I failed to reply to you since I got some mistakes.
-> Let me re-send my reply just in case.
-> 
-> Thank you for reviewing my requests.
-> 
->> Can you explain what goes wrong if it is zero? Is there a test for this?
->>
->> If it's a general problem, what if the other 2 callers pass in the variable
->> start_agno with a value of 0?
-> Sorry I couldn't prepare any tests to confirm what happens if it is zero
-> because it is a kind of general problem.
-> 
-> IIUC, passing zero to for_each_perag_wrap() is not problematic.
+Hello,
 
-...
+syzbot found the following issue on:
 
-> OTOH, since we have already a for_each_perag() macro, which just iterates all AG
-> from 0 and doesn't wrap, I think it is simpler to use for_earch_perag().
-> 
-> Regards,
-> Ryosuke
+HEAD commit:    7e364e56293b Linux 6.3-rc5
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=13241195c80000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=e3b9dc6616d797bb
+dashboard link: https://syzkaller.appspot.com/bug?extid=5ed016962f5137a09c7c
+compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
+userspace arch: i386
 
-Ok - I couldn't tell from the original email if this was a bugfix or a 
-cleanup, and wanted to be sure.
+Unfortunately, I don't have any reproducer for this issue yet.
 
-Thanks!
--Eric
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+5ed016962f5137a09c7c@syzkaller.appspotmail.com
 
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 102 at kernel/workqueue.c:1445 __queue_work+0xd44/0x1120 kernel/workqueue.c:1444
+Modules linked in:
+CPU: 1 PID: 102 Comm: kswapd0 Not tainted 6.3.0-rc5-syzkaller #0
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.14.0-2 04/01/2014
+RIP: 0010:__queue_work+0xd44/0x1120 kernel/workqueue.c:1444
+Code: e0 07 83 c0 03 38 d0 7c 09 84 d2 74 05 e8 74 0c 81 00 8b 5b 2c 31 ff 83 e3 20 89 de e8 c5 fb 2f 00 85 db 75 42 e8 6c ff 2f 00 <0f> 0b e9 3c f9 ff ff e8 60 ff 2f 00 0f 0b e9 ce f8 ff ff e8 54 ff
+RSP: 0000:ffffc90000ce7638 EFLAGS: 00010093
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
+RDX: ffff888015f73a80 RSI: ffffffff8152d854 RDI: 0000000000000005
+RBP: 0000000000000002 R08: 0000000000000005 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000000 R12: ffffe8ffffb03348
+R13: ffff888078462000 R14: ffffe8ffffb03390 R15: ffff888078462000
+FS:  0000000000000000(0000) GS:ffff88802ca80000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000cfa5bb CR3: 0000000025fde000 CR4: 0000000000150ee0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ __queue_delayed_work+0x1c8/0x270 kernel/workqueue.c:1672
+ mod_delayed_work_on+0xe1/0x220 kernel/workqueue.c:1746
+ xfs_inodegc_shrinker_scan fs/xfs/xfs_icache.c:2212 [inline]
+ xfs_inodegc_shrinker_scan+0x250/0x4f0 fs/xfs/xfs_icache.c:2191
+ do_shrink_slab+0x428/0xaa0 mm/vmscan.c:853
+ shrink_slab+0x175/0x660 mm/vmscan.c:1013
+ shrink_one+0x502/0x810 mm/vmscan.c:5343
+ shrink_many mm/vmscan.c:5394 [inline]
+ lru_gen_shrink_node mm/vmscan.c:5511 [inline]
+ shrink_node+0x2064/0x35f0 mm/vmscan.c:6459
+ kswapd_shrink_node mm/vmscan.c:7262 [inline]
+ balance_pgdat+0xa02/0x1ac0 mm/vmscan.c:7452
+ kswapd+0x677/0xd60 mm/vmscan.c:7712
+ kthread+0x2e8/0x3a0 kernel/kthread.c:376
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:308
+ </TASK>
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
