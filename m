@@ -2,111 +2,107 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7818DC77B61
-	for <linux-xfs@archiver.kernel.org>; Fri,  7 Apr 2023 17:05:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00A01C6FD1D
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Apr 2023 19:56:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229924AbjDGRE7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 7 Apr 2023 13:04:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41222 "EHLO
+        id S231293AbjDGT4s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 7 Apr 2023 15:56:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54146 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229882AbjDGRE6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Apr 2023 13:04:58 -0400
-Received: from mail-il1-f200.google.com (mail-il1-f200.google.com [209.85.166.200])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B50FCBBB5
-        for <linux-xfs@vger.kernel.org>; Fri,  7 Apr 2023 10:04:50 -0700 (PDT)
-Received: by mail-il1-f200.google.com with SMTP id d5-20020a923605000000b003232594207dso28121215ila.8
-        for <linux-xfs@vger.kernel.org>; Fri, 07 Apr 2023 10:04:50 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680887089; x=1683479089;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=9TnUl47z21Nij35fj9d1jh5EYMecekHF/0+bl/JRlgg=;
-        b=Xh/fOydEyZecvJZIK6ikGwAANGTVRIw7Kgtyx9t+4R3rmVd5ivT0V0Vk1hkpilwfea
-         Liv5mhs8GB0oLpOI5KlI0+f5IJKbtSG1ZObN9cOtRePDE62b8hKeIuoKYXg9LTfFkuad
-         x7kvmsBRClbk6/j2P//OwTk/kgIk3/cHVgWjkicLcetw/YywYauuboIGu3fjLKRV3+Wm
-         jwodRjg+Hz0wcDFHOM/51uUf95VkOBE8OgWGr3q/2emnORSuVKihD0AjYnMJ6OSPIbhB
-         8eTnOi9yhiKetImlO8n/dDDplM4KfhDhEA0+XgFxzTshAyDZkp7E1YaxDGZPkwHFDzSU
-         vhOw==
-X-Gm-Message-State: AAQBX9dCe0pAhf3aEazaNWwdfsZovTQiQLR3dgshDLvj9TC+Je8/b4qY
-        w1SSZze2iHXrTlIpzYG5g5xnfzHReS6TRoSvI+Epxozdhrit
-X-Google-Smtp-Source: AKy350biinDzzhkhVthNzHEgvyUE51wzgBH//6QJSL+3xEpJXEcKQzJ99r6k94HByXhCpL3u0tpGJC9mbMQJUFPotUKTtGn8XkeH
+        with ESMTP id S231271AbjDGT4r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Apr 2023 15:56:47 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCA2EAD38;
+        Fri,  7 Apr 2023 12:56:38 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 584E565316;
+        Fri,  7 Apr 2023 19:56:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67E35C433D2;
+        Fri,  7 Apr 2023 19:56:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1680897397;
+        bh=/3ooAeWJ2heTTSe1+fowce2OJCbJkwMvCSSAiGy5dOI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=clCdqAdSzIuv2Nh0psGWcWmbbwrVRtKcUMCziwd5jIFOLppq8+hvEMy6JY4RJLPMp
+         x59uWAeV4ig4ih4U7jNLyVsnpfqrD7RpPe3yfp1MP72D2FoXdLnTk3xUAdXqNiTo76
+         7873hQHGayV2JBek9f5U/Qb89gRu184TbrlBQn0ysEteLtxdwRM5mb1J34RmFP0nuB
+         8OYIQ3NfXnHpi+fJ2/tbB2xh0PRWi+ynfmrw1NaYWHy7dBecQ4XC5MBSI2cP1pxqcR
+         lMdFOAY4ytF24DuMMy3hoLnO4nDVkkibtBGuHd2D5IXcvpFkh35CRNw0rf+xT87I1L
+         SBA+hcx/gQt+g==
+Date:   Fri, 7 Apr 2023 19:56:36 +0000
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Andrey Albershteyn <aalbersh@redhat.com>, dchinner@redhat.com,
+        hch@infradead.org, linux-xfs@vger.kernel.org,
+        fsverity@lists.linux.dev, rpeterso@redhat.com, agruenba@redhat.com,
+        xiang@kernel.org, chao@kernel.org,
+        damien.lemoal@opensource.wdc.com, jth@kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com
+Subject: Re: [PATCH v2 21/23] xfs: handle merkle tree block size != fs
+ blocksize != PAGE_SIZE
+Message-ID: <ZDB1dPVjon4Qthok@gmail.com>
+References: <20230404145319.2057051-1-aalbersh@redhat.com>
+ <20230404145319.2057051-22-aalbersh@redhat.com>
+ <20230404163602.GC109974@frogsfrogsfrogs>
+ <20230405160221.he76fb5b45dud6du@aalbersh.remote.csb>
+ <20230405163847.GG303486@frogsfrogsfrogs>
+ <ZC264FSkDQidOQ4N@gmail.com>
+ <20230405222646.GR3223426@dread.disaster.area>
+ <ZC38DkQVPZBuZCZN@gmail.com>
+ <20230405233753.GU3223426@dread.disaster.area>
+ <20230406004434.GA879@sol.localdomain>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6e02:1a61:b0:326:3f06:a0d7 with SMTP id
- w1-20020a056e021a6100b003263f06a0d7mr1616499ilv.0.1680887089848; Fri, 07 Apr
- 2023 10:04:49 -0700 (PDT)
-Date:   Fri, 07 Apr 2023 10:04:49 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000e5f10505f8c205bc@google.com>
-Subject: [syzbot] [xfs?] WARNING in __queue_delayed_work
-From:   syzbot <syzbot+5ed016962f5137a09c7c@syzkaller.appspotmail.com>
-To:     djwong@kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230406004434.GA879@sol.localdomain>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
+On Wed, Apr 05, 2023 at 05:44:36PM -0700, Eric Biggers wrote:
+> > Not vmalloc'ed, but vmapped. we allocate the pages individually, but
+> > then call vm_map_page() to present the higher level code with a
+> > single contiguous memory range if it is a multi-page buffer.
+> > 
+> > We do have the backing info held in the buffer, and that's what we
+> > use for IO. If fsverity needs a page based scatter/gather list
+> > for hardware offload, it could ask the filesystem to provide it
+> > for that given buffer...
+> > 
+> > > BTW, converting fs/verity/ from ahash to shash is an option; I've really never
+> > > been a fan of the scatterlist-based crypto APIs!  The disadvantage of doing
+> > > this, though, would be that it would remove support for all the hardware crypto
+> > > drivers.
+> > >
+> > > That *might* actually be okay, as that approach to crypto acceleration
+> > > has mostly fallen out of favor, in favor of CPU-based acceleration.  But I do
+> > > worry about e.g. someone coming out of the woodwork and saying they need to use
+> > > fsverity on a low-powered ARM board that has a crypto accelerator like CAAM, and
+> > > they MUST use their crypto accelerator to get acceptable performance.
+> > 
+> > True, but we are very unlikely to be using XFS on such small
+> > systems and I don't think we really care about XFS performance on
+> > android sized systems, either.
+> > 
+> 
+> FYI, I've sent an RFC patch that converts fs/verity/ from ahash to shash:
+> https://lore.kernel.org/r/20230406003714.94580-1-ebiggers@kernel.org
+> 
+> It would be great if we could do that.  But I need to get a better sense for
+> whether anyone will complain...
 
-syzbot found the following issue on:
+FWIW, dm-verity went in the other direction.  It started with shash, and then in
+2017 it was switched to ahash by https://git.kernel.org/linus/d1ac3ff008fb9a48
+("dm verity: switch to using asynchronous hash crypto API").
 
-HEAD commit:    7e364e56293b Linux 6.3-rc5
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=13241195c80000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=e3b9dc6616d797bb
-dashboard link: https://syzkaller.appspot.com/bug?extid=5ed016962f5137a09c7c
-compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
-userspace arch: i386
+I think that was part of my motivation for using ahash in fsverity from the
+beginning.
 
-Unfortunately, I don't have any reproducer for this issue yet.
+Still, it does seem that ahash is more trouble than it's worth these days...
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+5ed016962f5137a09c7c@syzkaller.appspotmail.com
-
-------------[ cut here ]------------
-WARNING: CPU: 1 PID: 102 at kernel/workqueue.c:1445 __queue_work+0xd44/0x1120 kernel/workqueue.c:1444
-Modules linked in:
-CPU: 1 PID: 102 Comm: kswapd0 Not tainted 6.3.0-rc5-syzkaller #0
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.14.0-2 04/01/2014
-RIP: 0010:__queue_work+0xd44/0x1120 kernel/workqueue.c:1444
-Code: e0 07 83 c0 03 38 d0 7c 09 84 d2 74 05 e8 74 0c 81 00 8b 5b 2c 31 ff 83 e3 20 89 de e8 c5 fb 2f 00 85 db 75 42 e8 6c ff 2f 00 <0f> 0b e9 3c f9 ff ff e8 60 ff 2f 00 0f 0b e9 ce f8 ff ff e8 54 ff
-RSP: 0000:ffffc90000ce7638 EFLAGS: 00010093
-RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
-RDX: ffff888015f73a80 RSI: ffffffff8152d854 RDI: 0000000000000005
-RBP: 0000000000000002 R08: 0000000000000005 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000000 R12: ffffe8ffffb03348
-R13: ffff888078462000 R14: ffffe8ffffb03390 R15: ffff888078462000
-FS:  0000000000000000(0000) GS:ffff88802ca80000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000000000cfa5bb CR3: 0000000025fde000 CR4: 0000000000150ee0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- <TASK>
- __queue_delayed_work+0x1c8/0x270 kernel/workqueue.c:1672
- mod_delayed_work_on+0xe1/0x220 kernel/workqueue.c:1746
- xfs_inodegc_shrinker_scan fs/xfs/xfs_icache.c:2212 [inline]
- xfs_inodegc_shrinker_scan+0x250/0x4f0 fs/xfs/xfs_icache.c:2191
- do_shrink_slab+0x428/0xaa0 mm/vmscan.c:853
- shrink_slab+0x175/0x660 mm/vmscan.c:1013
- shrink_one+0x502/0x810 mm/vmscan.c:5343
- shrink_many mm/vmscan.c:5394 [inline]
- lru_gen_shrink_node mm/vmscan.c:5511 [inline]
- shrink_node+0x2064/0x35f0 mm/vmscan.c:6459
- kswapd_shrink_node mm/vmscan.c:7262 [inline]
- balance_pgdat+0xa02/0x1ac0 mm/vmscan.c:7452
- kswapd+0x677/0xd60 mm/vmscan.c:7712
- kthread+0x2e8/0x3a0 kernel/kthread.c:376
- ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:308
- </TASK>
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+- Eric
