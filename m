@@ -2,149 +2,203 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6894C77B61
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 02:06:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFB0EC76196
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 03:20:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229626AbjDKCGa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Apr 2023 22:06:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54672 "EHLO
+        id S229717AbjDKDUo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Apr 2023 23:20:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229485AbjDKCG3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2023 22:06:29 -0400
-Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D62819AF
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Apr 2023 19:06:28 -0700 (PDT)
-Received: by mail-pl1-x641.google.com with SMTP id y6so5314469plp.2
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Apr 2023 19:06:28 -0700 (PDT)
+        with ESMTP id S229624AbjDKDUl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2023 23:20:41 -0400
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 831CE185
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Apr 2023 20:20:39 -0700 (PDT)
+Received: by mail-pj1-x1033.google.com with SMTP id 60-20020a17090a09c200b0023fcc8ce113so9494341pjo.4
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Apr 2023 20:20:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1681178788;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1681183239;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=1K45G3Xk38MRsn/IvI6UctDMVxWaPIpgJaoca1sEXqs=;
-        b=diEKm0+TweYI/jv0x/zdN0qvjzeIpeP5Z6zIUcPDQDNA3sDlAKuLjsJ0WuhW6GPcZi
-         XGPpfrY3CUOTkXYYeYqFr4ZPgmKktP4PGBQ6fHLqox+fieKJ5qKdGEK3yZgm8df3PXgR
-         lCfze60RScipMedJVUhNfcePT9BWvVQRCKJyWo6FFPw/BPtYnJ3CbzQJPJdk0bfTB4VW
-         OOoD1TtLVcK/dlZ7JPq/bCXnDj6EDWameXBBqUXdzpYP1LABkvMPcu+yv8eVtaSqDaVy
-         cKkaqh0Sezc91w/wCuQK9X05x5sr2+Z5Mm89FZuxCi1QkJCEQ4pL/jxvYB1AZo0efaNY
-         M06w==
+        bh=uiv1toZKCXS/GvUNDQHTWjeyUeJtu4Vb7S6TnxlCUek=;
+        b=4S37Uu/dQ/M/Ngi/65x7NG+hbwc0t7Hm2WtiXGqvij6d2NVzjtfzkCDBWJ+uWMQj1x
+         vAc3C6Eh/HWy01HL4AubEUQyguIjmbuwpc4xQ5gNGsOkiudrOyFPr1pvbUxlh+sZ7PPA
+         tAIT4ri4MuikuB9dbCAlsrtFSezh13eFqI8hFZrIxeCM5jUAJnJp8Lti4+j4HLlJ1dzs
+         LiteN41uywxHjRLT70zFyQhhyqDYVmHe0d2L+JgVfLgBGOau832/+QBjNlXJM7MAeMJL
+         KTzkHO7c4si9h4xzDXRO0rQhlJHtFe5r0A0bWJC3h3PV0AMsi7ubfLrjDMOvocud+h5q
+         G0jA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1681178788;
+        d=1e100.net; s=20210112; t=1681183239;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=1K45G3Xk38MRsn/IvI6UctDMVxWaPIpgJaoca1sEXqs=;
-        b=mFGBGvsC+CDvArzbc9gmQ56IrWJQTJ/xLGRU02gaF5iI1vx2UN7CdonXsgjkyKCyOs
-         kN+O29vS2V2Jg5MomZWYMLCz8prdOb5I0eKpWq1+lboSbONLTnsGluwSuZHCErcD4n05
-         wvm1SXljVr3kj5gmyCeyR/FJdi2iXOsmLvqbNYE9oUZfLK6Y3L7/42SzmAvH9HRy4oHR
-         AK4tAPn9pa3ePjw/Mx693zD/O8J6KJSkNU/3pFuzVpwP2EFBqmHgg26bkACbVHAXeY8h
-         K6CconKVBY/4IoOVwntPPYdE7T1MaflCGnYQEcLfMsNs3yIkE8NHnpNJZ8SmbtobA03D
-         W5kw==
-X-Gm-Message-State: AAQBX9fVMUg5rYEjmaDjTviaQ2HqkDdWg01AJCo8U4X2WvtzJ0TzynRE
-        NsH3zscv5z0uDPf3xhofs/2nRA==
-X-Google-Smtp-Source: AKy350Yu9N94FYcnhpqPoNZlTMHxVJLQmckNh47/t1TEvNXk8sUOXnT7wDH5pVuvarZF9W1Jnt3i7w==
-X-Received: by 2002:a17:902:dacd:b0:1a1:cef2:acd1 with SMTP id q13-20020a170902dacd00b001a1cef2acd1mr13061025plx.17.1681178788067;
-        Mon, 10 Apr 2023 19:06:28 -0700 (PDT)
+        bh=uiv1toZKCXS/GvUNDQHTWjeyUeJtu4Vb7S6TnxlCUek=;
+        b=xIFiTKl5kV7/shXOn/A/o3Lo5HP9SgNHkXqCtR+JYcpQrPwtRWGZ5/B3IqV9NrIEcE
+         WBTCCvnkFdOAnIMmvScPCFYKajXM2ahvju4euyxj4oiq66XV3lFZIsUYrimTZNxHIUKz
+         ONc5sC+0r6XdUgVQJHxOhiLDhJ3Fm8mGILrXEmr9pT8VuAJYlLjGlWHhLnM6pQHJIMNa
+         J8rvtVYP48yWa8INpEhJuRHt+4qhg0xXvw8sUHAu6XzKTqiGin8WKy0rMUQyEHWPEtTK
+         OtuOi49CpQr6mY3rSt2Qukkn4WdnDGyJzJcTKvKgsDNuYhDOY5rw8Xh+UJf7/4PNK8tl
+         yLMg==
+X-Gm-Message-State: AAQBX9fPYO3rieIknLaL1Pm3TQg263CDMERDut0CYj9ya/Oa68gUHzUH
+        jQRO0MJ94//zz+tU/6RT3DD8AI+o8x9Wvs9YVCLosOv/
+X-Google-Smtp-Source: AKy350ZC+3knXa/TuObu22n/fO3tFf3R6Cc+atPHxRv2NvE5LrSIDMxMxD3FYisURjxnDwgfETmKOw==
+X-Received: by 2002:a17:90b:1c09:b0:246:dc4b:d52b with SMTP id oc9-20020a17090b1c0900b00246dc4bd52bmr1686279pjb.44.1681183238965;
+        Mon, 10 Apr 2023 20:20:38 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-41-174.pa.nsw.optusnet.com.au. [49.180.41.174])
-        by smtp.gmail.com with ESMTPSA id t20-20020a170902b21400b001a194df5a58sm8412150plr.167.2023.04.10.19.06.27
+        by smtp.gmail.com with ESMTPSA id d16-20020a17090abf9000b002353082958csm9972466pjs.10.2023.04.10.20.20.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 10 Apr 2023 19:06:27 -0700 (PDT)
+        Mon, 10 Apr 2023 20:20:38 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1pm3Oq-001vQ1-Hw; Tue, 11 Apr 2023 12:06:24 +1000
-Date:   Tue, 11 Apr 2023 12:06:24 +1000
+        id 1pm4Yd-001wZB-6u; Tue, 11 Apr 2023 13:20:35 +1000
+Date:   Tue, 11 Apr 2023 13:20:35 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Wengang Wang <wen.gang.wang@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix AGFL allocation dead lock
-Message-ID: <20230411020624.GY3223426@dread.disaster.area>
-References: <20230330204610.23546-1-wen.gang.wang@oracle.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs: _{attr,data}_map_shared should take ILOCK_EXCL
+ until iread_extents is completely done
+Message-ID: <20230411032035.GZ3223426@dread.disaster.area>
+References: <20230411010638.GF360889@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230330204610.23546-1-wen.gang.wang@oracle.com>
+In-Reply-To: <20230411010638.GF360889@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 30, 2023 at 01:46:10PM -0700, Wengang Wang wrote:
-> There is deadlock with calltrace on process 10133:
+On Mon, Apr 10, 2023 at 06:06:38PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> PID 10133 not sceduled for 4403385ms (was on CPU[10])
-> 	#0	context_switch() kernel/sched/core.c:3881
-> 	#1	__schedule() kernel/sched/core.c:5111
-> 	#2	schedule() kernel/sched/core.c:5186
-> 	#3	xfs_extent_busy_flush() fs/xfs/xfs_extent_busy.c:598
-> 	#4	xfs_alloc_ag_vextent_size() fs/xfs/libxfs/xfs_alloc.c:1641
-> 	#5	xfs_alloc_ag_vextent() fs/xfs/libxfs/xfs_alloc.c:828
-> 	#6	xfs_alloc_fix_freelist() fs/xfs/libxfs/xfs_alloc.c:2362
-> 	#7	xfs_free_extent_fix_freelist() fs/xfs/libxfs/xfs_alloc.c:3029
-> 	#8	__xfs_free_extent() fs/xfs/libxfs/xfs_alloc.c:3067
-> 	#9	xfs_trans_free_extent() fs/xfs/xfs_extfree_item.c:370
-> 	#10	xfs_efi_recover() fs/xfs/xfs_extfree_item.c:626
-> 	#11	xlog_recover_process_efi() fs/xfs/xfs_log_recover.c:4605
-> 	#12	xlog_recover_process_intents() fs/xfs/xfs_log_recover.c:4893
-> 	#13	xlog_recover_finish() fs/xfs/xfs_log_recover.c:5824
-> 	#14	xfs_log_mount_finish() fs/xfs/xfs_log.c:764
-> 	#15	xfs_mountfs() fs/xfs/xfs_mount.c:978
-> 	#16	xfs_fs_fill_super() fs/xfs/xfs_super.c:1908
-> 	#17	mount_bdev() fs/super.c:1417
-> 	#18	xfs_fs_mount() fs/xfs/xfs_super.c:1985
-> 	#19	legacy_get_tree() fs/fs_context.c:647
-> 	#20	vfs_get_tree() fs/super.c:1547
-> 	#21	do_new_mount() fs/namespace.c:2843
-> 	#22	do_mount() fs/namespace.c:3163
-> 	#23	ksys_mount() fs/namespace.c:3372
-> 	#24	__do_sys_mount() fs/namespace.c:3386
-> 	#25	__se_sys_mount() fs/namespace.c:3383
-> 	#26	__x64_sys_mount() fs/namespace.c:3383
-> 	#27	do_syscall_64() arch/x86/entry/common.c:296
-> 	#28	entry_SYSCALL_64() arch/x86/entry/entry_64.S:180
+> While fuzzing the data fork extent count on a btree-format directory
+> with xfs/375, I observed the following (excerpted) splat:
 > 
-> It's waiting xfs_perag.pagb_gen to increase (busy extent clearing happen).
-> From the vmcore, it's waiting on AG 1. And the ONLY busy extent for AG 1 is
-> with the transaction (in xfs_trans.t_busy) for process 10133. That busy extent
-> is created in a previous EFI with the same transaction. Process 10133 is
-> waiting, it has no change to commit that that transaction. So busy extent
-> clearing can't happen and pagb_gen remain unchanged. So dead lock formed.
+> XFS: Assertion failed: xfs_isilocked(ip, XFS_ILOCK_EXCL), file: fs/xfs/libxfs/xfs_bmap.c, line: 1208
+> ------------[ cut here ]------------
+> WARNING: CPU: 0 PID: 43192 at fs/xfs/xfs_message.c:104 assfail+0x46/0x4a [xfs]
+> Call Trace:
+>  <TASK>
+>  xfs_iread_extents+0x1af/0x210 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+>  xchk_dir_walk+0xb8/0x190 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+>  xchk_parent_count_parent_dentries+0x41/0x80 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+>  xchk_parent_validate+0x199/0x2e0 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+>  xchk_parent+0xdf/0x130 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+>  xfs_scrub_metadata+0x2b8/0x730 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+>  xfs_scrubv_metadata+0x38b/0x4d0 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+>  xfs_ioc_scrubv_metadata+0x111/0x160 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+>  xfs_file_ioctl+0x367/0xf50 [xfs 09f66509ece4938760fac7de64732a0cbd3e39cd]
+>  __x64_sys_ioctl+0x82/0xa0
+>  do_syscall_64+0x2b/0x80
+>  entry_SYSCALL_64_after_hwframe+0x46/0xb0
+> 
+> The cause of this is a race condition in xfs_ilock_data_map_shared,
+> which performs an unlocked access to the data fork to guess which lock
+> mode it needs:
+> 
+> Thread 0                          Thread 1
+> 
+> xfs_need_iread_extents
+> <observe no iext tree>
+> xfs_ilock(..., ILOCK_EXCL)
+> xfs_iread_extents
+> <observe no iext tree>
+> <check ILOCK_EXCL>
+> <load bmbt extents into iext>
+> <notice iext size doesn't
+>  match nextents>
+>                                   xfs_need_iread_extents
+>                                   <observe iext tree>
+>                                   xfs_ilock(..., ILOCK_SHARED)
+> <tear down iext tree>
+> xfs_iunlock(..., ILOCK_EXCL)
+>                                   xfs_iread_extents
+>                                   <observe no iext tree>
+>                                   <check ILOCK_EXCL>
+>                                   *BOOM*
+> 
+> Fix this race by adding a flag to the xfs_ifork structure to indicate
+> that we have not yet read in the extent records and changing the
+> predicate to look at the flag state, not if_height.  The memory barrier
+> ensures that the flag will not be set until the very end of the
+> function.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c       |    2 ++
+>  fs/xfs/libxfs/xfs_inode_fork.c |    2 ++
+>  fs/xfs/libxfs/xfs_inode_fork.h |    3 ++-
+>  3 files changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 34de6e6898c4..5f96e7ce7b4a 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -1171,6 +1171,8 @@ xfs_iread_extents(
+>  		goto out;
+>  	}
+>  	ASSERT(ir.loaded == xfs_iext_count(ifp));
+> +	smp_mb();
+> +	ifp->if_needextents = 0;
 
-We've talked about this "busy extent in transaction" issue before:
+Hmmm - if this is to ensure that everything above is completed
+before the clearing of this flag is visible everywhere else, then we
+should be able to use load_acquire/store_release semantics? i.e. the
+above is
 
-https://lore.kernel.org/linux-xfs/20210428065152.77280-1-chandanrlinux@gmail.com/
+	smp_store_release(ifp->if_needextents, 0);
 
-and we were closing in on a practical solution before it went silent.
+and we use
 
-I'm not sure if there's a different fix we can apply here - maybe
-free one extent per transaction instead of all the extents in an EFI
-in one transaction and relog the EFD at the end of each extent free
-transaction roll?
+	smp_load_acquire(ifp->if_needextents)
 
-> commit 06058bc40534530e617e5623775c53bb24f032cb disallowed using busy extents
-> for any path that calls xfs_extent_busy_trim(). That looks over-killing.
-> For AGFL block allocation, it just use the first extent that satisfies, it won't
-> try another extent for choose a "better" one. So it's safe to reuse busy extent
-> for AGFL.
+when we need to read the value to ensure that all the changes made
+before the relevant stores are also visible?
 
-AGFL block allocation is not "for immediate use". The blocks get
-placed on the AGFL for -later- use, and not necessarily even within
-the current transaction. Hence a freelist block is still considered
-free space, not as used space. The difference is that we assume AGFL
-blocks can always be used immediately and they aren't constrained by
-being busy or have pending discards.
+>  	return 0;
+>  out:
+>  	xfs_iext_destroy(ifp);
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index 6b21760184d9..eadae924dc42 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -174,6 +174,8 @@ xfs_iformat_btree(
+>  	int			level;
+>  
+>  	ifp = xfs_ifork_ptr(ip, whichfork);
+> +	ifp->if_needextents = 1;
 
-Also, we have to keep in mind that we can allocate data blocks from
-the AGFL in low space situations. Hence it is not safe to place busy
-or discard-pending blocks on the AGFL, as this can result in them
-being allocated for user data and overwritten before the checkpoint
-that marked them busy has been committed to the journal....
+Hmmm - what's the guarantee that the reader will see ifp->if_format
+set correctly if they if_needextents = 1?
 
-As such, I don't think it is be safe to ignore busy extent state
-just because we are filling the AGFL from the current free space
-tree.
+Wouldn't it be better to set this at the same time we set the
+ifp->if_format value? We clear it unconditionally above in
+xfs_iread_extents(), so why not set it unconditionally there, too,
+before we start. i.e.
+
+	/*
+	 * Set the format before we set needsextents with release
+	 * semantics. This ensures that we can use acquire semantics
+	 * on needextents in xfs_need_iread_extents() and be
+	 * guaranteed to see a valid format value after that load.
+	 */
+	ifp->if_format = dip->di_format;
+	smp_store_release(ifp->if_needextents, 1);
+
+That then means xfs_need_iread_extents() is guaranteed to see a
+valid ifp->if_format if ifp->if_needextents is set if we do:
+
+/* returns true if the fork has extents but they are not read in yet. */
+static inline bool xfs_need_iread_extents(struct xfs_ifork *ifp)
+{
+
+	/* see xfs_iread_extents() for needextents semantics */
+	return smp_load_acquire(ifp->if_needextents) &&
+			ifp->if_format == XFS_DINODE_FMT_BTREE;
+}
 
 Cheers,
 
 Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
