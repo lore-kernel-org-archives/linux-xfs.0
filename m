@@ -2,35 +2,35 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C487FC77B6F
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 14:27:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99C57C76196
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 14:27:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230404AbjDKO1r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Apr 2023 10:27:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35552 "EHLO
+        id S229679AbjDKO16 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Apr 2023 10:27:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230229AbjDKO1f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 10:27:35 -0400
+        with ESMTP id S230114AbjDKO1m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 10:27:42 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE5D855BC;
-        Tue, 11 Apr 2023 07:27:12 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 156AB4698;
+        Tue, 11 Apr 2023 07:27:16 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 508B862036;
-        Tue, 11 Apr 2023 14:27:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8F35C433D2;
-        Tue, 11 Apr 2023 14:27:09 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A1352627A9;
+        Tue, 11 Apr 2023 14:27:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31189C4331F;
+        Tue, 11 Apr 2023 14:27:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681223230;
-        bh=zWD5OEjyLd2QTqKFMvAPrX2Tq24Vay8bPpirE1DcBnA=;
-        h=From:To:Cc:Subject:Date:From;
-        b=RSsigzCxO4uwigld6Th+McqIO8PLB6/6CvXf3HZDlQHmyJAYUtiyrAqYB3bmyVBZm
-         Yr09wsZCpSY2l2twPoiWBpEIXcKkTZblQu2bd8CQ6HSMMzE+x0EJByQizYdcM+w56r
-         Ka8h5x4IoZI41P4hUj57Heggj1NsnMYFy3GKY99TpawCxWCSvlVS2RZdWKBwVMOaqd
-         r4IGVCLSdlwKb+E0uS2Zg+TFQnUegcj7NcWYaxr/MgOtWM7a+yrw3RcdtkpErmRGAc
-         rPatFN6hxbtlB3YvnKAeRabYnusnqeTO6WbAZER+0RhwL0G/5SeGLMx0aIULT/2ZAB
-         5vvQtfrMG4O6Q==
+        s=k20201202; t=1681223233;
+        bh=0tABut1wgcVqOORC6SjkhEn9chzMnRxYPBvizenz41c=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=DS4Rz6ur+uD+K6rkXA92so5T/79mNn9H+8znTY8wB7jXea7DFFL2hylu15eAboI8U
+         +NwNnnDUpM0JkKdjFtiVhLxydSgQP9/MkwjC5IgmD9qA1WElWwCnf2kJSjDoBf4N0C
+         7mmobbjHwcugmS66AbgRFw3DcEJaAIV8DegHfzh44DwPA7X8xHn+m4kcyLDRjNWNBo
+         Xwz/V7r+7W+/Fya6R9kn7D0lRo99+0Aogd2YXcSnfxhX/o8IaoXGZF9gZLHuPvstsq
+         catZYcZ9OryZNJyGG7evnrJybTfo32CYs/9Go5Qo4yIavZZHXp9+WXuiMCGiCC8KnS
+         X8Uw8Yf4lfLsw==
 From:   Jeff Layton <jlayton@kernel.org>
 To:     Alexander Viro <viro@zeniv.linux.org.uk>,
         Christian Brauner <brauner@kernel.org>,
@@ -39,83 +39,132 @@ To:     Alexander Viro <viro@zeniv.linux.org.uk>,
         Andrew Morton <akpm@linux-foundation.org>
 Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: [RFC PATCH 0/3] fs: opportunistic high-res file timestamps
-Date:   Tue, 11 Apr 2023 10:27:05 -0400
-Message-Id: <20230411142708.62475-1-jlayton@kernel.org>
+Subject: [RFC PATCH 2/3] shmem: mark for high-res timestamps on next update after getattr
+Date:   Tue, 11 Apr 2023 10:27:07 -0400
+Message-Id: <20230411142708.62475-3-jlayton@kernel.org>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230411142708.62475-1-jlayton@kernel.org>
+References: <20230411142708.62475-1-jlayton@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-A few weeks ago, during one of the discussions around i_version, Dave
-Chinner wrote this:
+When the mtime or ctime is being queried via getattr, ensure that we
+mark the inode for a high-res timestamp update on the next pass. Also,
+switch to current_cmtime for other c/mtime updates.
 
-"You've missed the part where I suggested lifting the "nfsd sampled
-i_version" state into an inode state flag rather than hiding it in
-the i_version field. At that point, we could optimise away the
-secondary ctime updates just like you are proposing we do with the
-i_version updates.  Further, we could also use that state it to
-decide whether we need to use high resolution timestamps when
-recording ctime updates - if the nfsd has not sampled the
-ctime/i_version, we don't need high res timestamps to be recorded
-for ctime...."
+Signed-off-by: Jeff Layton <jlayton@kernel.org>
+---
+ mm/shmem.c | 23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
 
-While I don't think we can practically optimize away ctime updates
-like we do with i_version, I do like the idea of using this scheme to
-indicate when we need to use a high-res timestamp.
-
-This patchset is a first stab at a scheme to do this. It declares a new
-i_state flag for this purpose and adds two new vfs-layer functions to
-implement conditional high-res timestamp fetching. It then converts both
-tmpfs and xfs to use it.
-
-This seems to behave fine under xfstests, but I haven't yet done
-any performance testing with it. I wouldn't expect it to create huge
-regressions though since we're only grabbing high res timestamps after
-each query.
-
-I like this scheme because we can potentially convert any filesystem to
-use it. No special storage requirements like with i_version field.  I
-think it'd potentially improve NFS cache coherency with a whole swath of
-exportable filesystems, and helps out NFSv3 too.
-
-This is really just a proof-of-concept. There are a number of things we
-could change:
-
-1/ We could use the top bit in the tv_sec field as the flag. That'd give
-   us different flags for ctime and mtime. We also wouldn't need to use
-   a spinlock.
-
-2/ We could probably optimize away the high-res timestamp fetch in more
-   cases. Basically, always do a coarse-grained ts fetch and only fetch
-   the high-res ts when the QUERIED flag is set and the existing time
-   hasn't changed.
-
-If this approach looks reasonable, I'll plan to start working on
-converting more filesystems.
-
-One thing I'm not clear on is how widely available high res timestamps
-are. Is this something we need to gate on particular CONFIG_* options?
-
-Thoughts?
-
-Jeff Layton (3):
-  fs: add infrastructure for opportunistic high-res ctime/mtime updates
-  shmem: mark for high-res timestamps on next update after getattr
-  xfs: mark the inode for high-res timestamp update in getattr
-
- fs/inode.c                      | 40 +++++++++++++++++++++++++++++++--
- fs/stat.c                       | 10 +++++++++
- fs/xfs/libxfs/xfs_trans_inode.c |  2 +-
- fs/xfs/xfs_acl.c                |  2 +-
- fs/xfs/xfs_inode.c              |  2 +-
- fs/xfs/xfs_iops.c               | 15 ++++++++++---
- include/linux/fs.h              |  5 ++++-
- mm/shmem.c                      | 23 ++++++++++---------
- 8 files changed, 80 insertions(+), 19 deletions(-)
-
+diff --git a/mm/shmem.c b/mm/shmem.c
+index 448f393d8ab2..75dd09492c36 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -1039,7 +1039,7 @@ static void shmem_undo_range(struct inode *inode, loff_t lstart, loff_t lend,
+ void shmem_truncate_range(struct inode *inode, loff_t lstart, loff_t lend)
+ {
+ 	shmem_undo_range(inode, lstart, lend, false);
+-	inode->i_ctime = inode->i_mtime = current_time(inode);
++	inode->i_ctime = inode->i_mtime = current_cmtime(inode);
+ 	inode_inc_iversion(inode);
+ }
+ EXPORT_SYMBOL_GPL(shmem_truncate_range);
+@@ -1065,7 +1065,10 @@ static int shmem_getattr(struct mnt_idmap *idmap,
+ 	stat->attributes_mask |= (STATX_ATTR_APPEND |
+ 			STATX_ATTR_IMMUTABLE |
+ 			STATX_ATTR_NODUMP);
++
+ 	generic_fillattr(idmap, inode, stat);
++	if (request_mask & (STATX_CTIME|STATX_MTIME))
++		fill_cmtime_and_mark(inode, stat);
+ 
+ 	if (shmem_is_huge(inode, 0, false, NULL, 0))
+ 		stat->blksize = HPAGE_PMD_SIZE;
+@@ -1136,7 +1139,7 @@ static int shmem_setattr(struct mnt_idmap *idmap,
+ 	if (attr->ia_valid & ATTR_MODE)
+ 		error = posix_acl_chmod(idmap, dentry, inode->i_mode);
+ 	if (!error && update_ctime) {
+-		inode->i_ctime = current_time(inode);
++		inode->i_ctime = current_cmtime(inode);
+ 		if (update_mtime)
+ 			inode->i_mtime = inode->i_ctime;
+ 		inode_inc_iversion(inode);
+@@ -2361,7 +2364,7 @@ static struct inode *shmem_get_inode(struct mnt_idmap *idmap, struct super_block
+ 		inode->i_ino = ino;
+ 		inode_init_owner(idmap, inode, dir, mode);
+ 		inode->i_blocks = 0;
+-		inode->i_atime = inode->i_mtime = inode->i_ctime = current_time(inode);
++		inode->i_atime = inode->i_mtime = inode->i_ctime = current_cmtime(inode);
+ 		inode->i_generation = get_random_u32();
+ 		info = SHMEM_I(inode);
+ 		memset(info, 0, (char *)inode - (char *)info);
+@@ -2940,7 +2943,7 @@ shmem_mknod(struct mnt_idmap *idmap, struct inode *dir,
+ 
+ 		error = 0;
+ 		dir->i_size += BOGO_DIRENT_SIZE;
+-		dir->i_ctime = dir->i_mtime = current_time(dir);
++		dir->i_ctime = dir->i_mtime = current_cmtime(dir);
+ 		inode_inc_iversion(dir);
+ 		d_instantiate(dentry, inode);
+ 		dget(dentry); /* Extra count - pin the dentry in core */
+@@ -3016,7 +3019,7 @@ static int shmem_link(struct dentry *old_dentry, struct inode *dir, struct dentr
+ 	}
+ 
+ 	dir->i_size += BOGO_DIRENT_SIZE;
+-	inode->i_ctime = dir->i_ctime = dir->i_mtime = current_time(inode);
++	inode->i_ctime = dir->i_ctime = dir->i_mtime = current_cmtime(inode);
+ 	inode_inc_iversion(dir);
+ 	inc_nlink(inode);
+ 	ihold(inode);	/* New dentry reference */
+@@ -3034,7 +3037,7 @@ static int shmem_unlink(struct inode *dir, struct dentry *dentry)
+ 		shmem_free_inode(inode->i_sb);
+ 
+ 	dir->i_size -= BOGO_DIRENT_SIZE;
+-	inode->i_ctime = dir->i_ctime = dir->i_mtime = current_time(inode);
++	inode->i_ctime = dir->i_ctime = dir->i_mtime = current_cmtime(inode);
+ 	inode_inc_iversion(dir);
+ 	drop_nlink(inode);
+ 	dput(dentry);	/* Undo the count from "create" - this does all the work */
+@@ -3124,7 +3127,7 @@ static int shmem_rename2(struct mnt_idmap *idmap,
+ 	new_dir->i_size += BOGO_DIRENT_SIZE;
+ 	old_dir->i_ctime = old_dir->i_mtime =
+ 	new_dir->i_ctime = new_dir->i_mtime =
+-	inode->i_ctime = current_time(old_dir);
++	inode->i_ctime = current_cmtime(old_dir);
+ 	inode_inc_iversion(old_dir);
+ 	inode_inc_iversion(new_dir);
+ 	return 0;
+@@ -3178,7 +3181,7 @@ static int shmem_symlink(struct mnt_idmap *idmap, struct inode *dir,
+ 		folio_put(folio);
+ 	}
+ 	dir->i_size += BOGO_DIRENT_SIZE;
+-	dir->i_ctime = dir->i_mtime = current_time(dir);
++	dir->i_ctime = dir->i_mtime = current_cmtime(dir);
+ 	inode_inc_iversion(dir);
+ 	d_instantiate(dentry, inode);
+ 	dget(dentry);
+@@ -3250,7 +3253,7 @@ static int shmem_fileattr_set(struct mnt_idmap *idmap,
+ 		(fa->flags & SHMEM_FL_USER_MODIFIABLE);
+ 
+ 	shmem_set_inode_flags(inode, info->fsflags);
+-	inode->i_ctime = current_time(inode);
++	inode->i_ctime = current_cmtime(inode);
+ 	inode_inc_iversion(inode);
+ 	return 0;
+ }
+@@ -3320,7 +3323,7 @@ static int shmem_xattr_handler_set(const struct xattr_handler *handler,
+ 	name = xattr_full_name(handler, name);
+ 	err = simple_xattr_set(&info->xattrs, name, value, size, flags, NULL);
+ 	if (!err) {
+-		inode->i_ctime = current_time(inode);
++		inode->i_ctime = current_cmtime(inode);
+ 		inode_inc_iversion(inode);
+ 	}
+ 	return err;
 -- 
 2.39.2
 
