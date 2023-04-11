@@ -2,35 +2,35 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23B78C77B6F
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 14:28:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCFB9C76196
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 14:28:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230286AbjDKO17 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Apr 2023 10:27:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35748 "EHLO
+        id S230464AbjDKO2R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Apr 2023 10:28:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39234 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229757AbjDKO1q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 10:27:46 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 604D35BB6;
-        Tue, 11 Apr 2023 07:27:20 -0700 (PDT)
+        with ESMTP id S230475AbjDKO1y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 10:27:54 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 893DA4680;
+        Tue, 11 Apr 2023 07:27:35 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B67C962799;
-        Tue, 11 Apr 2023 14:27:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C100C433D2;
-        Tue, 11 Apr 2023 14:27:13 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8123F627A7;
+        Tue, 11 Apr 2023 14:27:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 036DCC433EF;
+        Tue, 11 Apr 2023 14:27:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681223234;
-        bh=6y1YeGPH/VDzbluu556WvHbrgod71MAnILEUbvu4oy4=;
+        s=k20201202; t=1681223231;
+        bh=Awb6q4i/Q5m9mXXhrXc+BP9AQEQgndLooZSbj9YNpPE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IymI7Pv0rtcsh15nq7onOJEP+gWsO4qna8uXbEuQwaEVOvwsKzPwh2hcFyUaF4Lrx
-         XdYZai9OWXt7UKRbAg3BTWw/42rJ4yWtC+dwFzLLGNkVahk09bUFcduCvRM1PtXiLw
-         m002LBg/IFOgaiQgOCspNScOrKbSzHygYmekp4HClAirdjNF3Mjta7Br3SMRvZ1Rs8
-         HM61/lARWL0KAgsdQWzwTlXzaSZNHX9lmToIXAubJkrWLNqd+vMAe3mM1m2rG32YBI
-         zDM8U6NpOEBIgE7Bl5vD5FaLjbFdKLB2ciLTdgD7mHHnnRJDt6pdJ3S+AA+P2K6IHv
-         ChJgZLWcjeELQ==
+        b=Elt7PpUmN0Sf29ltkewWu6mezvigmPVjaCJ1Pxmswax9INQvsH/Q5/v+Fzlomn9BX
+         fQrHnCzxZwcyaI2LVGbjh/nxPiZeknvdVI/SmuK1yQ728RCdLvTYkpM6Mx/7Ameo/d
+         h+T86Q6B0zczecQdQfyI4AW1D84JOnFnz9aCFFbfGEIgss//ZEsoHPleDKhe7iD5Xx
+         NkTZ+Ka8BHvEoru3NnidwGOZ1/pU4TriVilasgaTGtD5o28X9CMavUhDFVq585K5zB
+         JApn8vXWxHQI7DA+5OZAq+60Ecvb/nizrYnNmclf3kc9mOk6lN3KIcmHJc3mW07KZu
+         rqxN1TMpY4xDg==
 From:   Jeff Layton <jlayton@kernel.org>
 To:     Alexander Viro <viro@zeniv.linux.org.uk>,
         Christian Brauner <brauner@kernel.org>,
@@ -38,10 +38,11 @@ To:     Alexander Viro <viro@zeniv.linux.org.uk>,
         Hugh Dickins <hughd@google.com>,
         Andrew Morton <akpm@linux-foundation.org>
 Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: [RFC PATCH 3/3] xfs: mark the inode for high-res timestamp update in getattr
-Date:   Tue, 11 Apr 2023 10:27:08 -0400
-Message-Id: <20230411142708.62475-4-jlayton@kernel.org>
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        Dave Chinner <david@fromorbit.com>
+Subject: [RFC PATCH 1/3] fs: add infrastructure for opportunistic high-res ctime/mtime updates
+Date:   Tue, 11 Apr 2023 10:27:06 -0400
+Message-Id: <20230411142708.62475-2-jlayton@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230411142708.62475-1-jlayton@kernel.org>
 References: <20230411142708.62475-1-jlayton@kernel.org>
@@ -51,101 +52,156 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-When the mtime or ctime is being queried via getattr, ensure that we
-mark the inode for a high-res timestamp update on the next pass. Also,
-switch to current_cmtime for other c/mtime updates.
+The VFS always uses coarse-grained timestamp updates for filling out the
+ctime and mtime after a change. This has the benefit of allowing
+filesystems to optimize away metadata updates.
 
-With this change, we're better off having the NFS server just ignore
-the i_version field and have it use the ctime instead, so clear the
-STATX_CHANGE_COOKIE flag in the result mask in ->getattr.
+Unfortunately, this has always been an issue when we're exporting via
+NFSv3, which relies on timestamps to validate caches. Even with NFSv4, a
+lot of exported filesystems don't properly support a change attribute
+and are subject to the same problem of timestamp granularity. Other
+applications have similar issues (e.g backup applications).
 
+Switching to always using high resolution timestamps would improve the
+situation for NFS, but that becomes rather expensive, as we'd have to
+log a lot more metadata updates.
+
+This patch grabs a new i_state bit to use as a flag that filesystems can
+set in their getattr routine to indicate that the mtime or ctime was
+queried since it was last updated.
+
+It then adds a new current_cmtime function that acts like the
+current_time helper, but will conditionally grab high-res timestamps
+when the i_state flag is set in the inode.
+
+This allows NFS and other applications to reap the benefits of high-res
+ctime and mtime timestamps, but at a substantially lower cost than
+fetching them every time.
+
+Cc: Dave Chinner <david@fromorbit.com>
 Signed-off-by: Jeff Layton <jlayton@kernel.org>
 ---
- fs/xfs/libxfs/xfs_trans_inode.c |  2 +-
- fs/xfs/xfs_acl.c                |  2 +-
- fs/xfs/xfs_inode.c              |  2 +-
- fs/xfs/xfs_iops.c               | 15 ++++++++++++---
- 4 files changed, 15 insertions(+), 6 deletions(-)
+ fs/inode.c         | 40 ++++++++++++++++++++++++++++++++++++++--
+ fs/stat.c          | 10 ++++++++++
+ include/linux/fs.h |  5 ++++-
+ 3 files changed, 52 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-index 8b5547073379..9ad7c229c617 100644
---- a/fs/xfs/libxfs/xfs_trans_inode.c
-+++ b/fs/xfs/libxfs/xfs_trans_inode.c
-@@ -63,7 +63,7 @@ xfs_trans_ichgtime(
- 	ASSERT(tp);
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+diff --git a/fs/inode.c b/fs/inode.c
+index 4558dc2f1355..3630f67fd042 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -2062,6 +2062,42 @@ static int __file_update_time(struct file *file, struct timespec64 *now,
+ 	return ret;
+ }
  
--	tv = current_time(inode);
-+	tv = current_cmtime(inode);
- 
- 	if (flags & XFS_ICHGTIME_MOD)
- 		inode->i_mtime = tv;
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index 791db7d9c849..461adc58cf8c 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -233,7 +233,7 @@ xfs_acl_set_mode(
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
- 	inode->i_mode = mode;
--	inode->i_ctime = current_time(inode);
-+	inode->i_ctime = current_cmtime(inode);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 
- 	if (xfs_has_wsync(mp))
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 5808abab786c..80f9d731e261 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -843,7 +843,7 @@ xfs_init_new_inode(
- 	ip->i_df.if_nextents = 0;
- 	ASSERT(ip->i_nblocks == 0);
- 
--	tv = current_time(inode);
-+	tv = current_cmtime(inode);
- 	inode->i_mtime = tv;
- 	inode->i_atime = tv;
- 	inode->i_ctime = tv;
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 24718adb3c16..a0b07f90e16c 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -565,6 +565,15 @@ xfs_vn_getattr(
- 	if (xfs_is_shutdown(mp))
- 		return -EIO;
- 
-+	/*
-+	 * XFS uses the i_version infrastructure to track any change to
-+	 * the inode, including atime updates. This means that the i_version
-+	 * returned by getattr doesn't conform to what the callers expect.
-+	 * Clear it here so that nfsd will fake up a change cookie from the
-+	 * ctime instead.
-+	 */
-+	stat->result_mask &= ~STATX_CHANGE_COOKIE;
++/**
++ * current_cmtime - Return FS time (possibly high-res)
++ * @inode: inode.
++ *
++ * Return the current time truncated to the time granularity supported by
++ * the fs, as suitable for a ctime or mtime change. If something recently
++ * fetched the ctime or mtime out of the inode via getattr, then get a
++ * high-resolution timestamp.
++ *
++ * Note that inode and inode->sb cannot be NULL.
++ * Otherwise, the function warns and returns coarse time without truncation.
++ */
++struct timespec64 current_cmtime(struct inode *inode)
++{
++	struct timespec64 now;
 +
- 	stat->size = XFS_ISIZE(ip);
- 	stat->dev = inode->i_sb->s_dev;
- 	stat->mode = inode->i_mode;
-@@ -573,8 +582,8 @@ xfs_vn_getattr(
- 	stat->gid = vfsgid_into_kgid(vfsgid);
- 	stat->ino = ip->i_ino;
- 	stat->atime = inode->i_atime;
--	stat->mtime = inode->i_mtime;
--	stat->ctime = inode->i_ctime;
-+	if (request_mask & (STATX_CTIME|STATX_MTIME))
-+		fill_cmtime_and_mark(inode, stat);
- 	stat->blocks = XFS_FSB_TO_BB(mp, ip->i_nblocks + ip->i_delayed_blks);
++	if (unlikely(!inode->i_sb)) {
++		WARN(1, "%s() called with uninitialized super_block in the inode", __func__);
++		ktime_get_coarse_real_ts64(&now);
++		return now;
++	}
++
++	/* Do a lockless check for the flag before taking the spinlock */
++	if (READ_ONCE(inode->i_state) & I_CMTIME_QUERIED) {
++		ktime_get_real_ts64(&now);
++		spin_lock(&inode->i_lock);
++		inode->i_state &= ~I_CMTIME_QUERIED;
++		spin_unlock(&inode->i_lock);
++	} else {
++		ktime_get_coarse_real_ts64(&now);
++	}
++
++	return timestamp_truncate(now, inode);
++}
++EXPORT_SYMBOL(current_cmtime);
++
+ /**
+  * file_update_time - update mtime and ctime time
+  * @file: file accessed
+@@ -2080,7 +2116,7 @@ int file_update_time(struct file *file)
+ {
+ 	int ret;
+ 	struct inode *inode = file_inode(file);
+-	struct timespec64 now = current_time(inode);
++	struct timespec64 now = current_cmtime(inode);
  
- 	if (xfs_has_v3inodes(mp)) {
-@@ -917,7 +926,7 @@ xfs_setattr_size(
- 	if (newsize != oldsize &&
- 	    !(iattr->ia_valid & (ATTR_CTIME | ATTR_MTIME))) {
- 		iattr->ia_ctime = iattr->ia_mtime =
--			current_time(inode);
-+			current_cmtime(inode);
- 		iattr->ia_valid |= ATTR_CTIME | ATTR_MTIME;
- 	}
+ 	ret = inode_needs_update_time(inode, &now);
+ 	if (ret <= 0)
+@@ -2109,7 +2145,7 @@ static int file_modified_flags(struct file *file, int flags)
+ {
+ 	int ret;
+ 	struct inode *inode = file_inode(file);
+-	struct timespec64 now = current_time(inode);
++	struct timespec64 now = current_cmtime(inode);
  
+ 	/*
+ 	 * Clear the security bits if the process is not being run by root.
+diff --git a/fs/stat.c b/fs/stat.c
+index 7c238da22ef0..d8b80a2e36b7 100644
+--- a/fs/stat.c
++++ b/fs/stat.c
+@@ -64,6 +64,16 @@ void generic_fillattr(struct mnt_idmap *idmap, struct inode *inode,
+ }
+ EXPORT_SYMBOL(generic_fillattr);
+ 
++void fill_cmtime_and_mark(struct inode *inode, struct kstat *stat)
++{
++	spin_lock(&inode->i_lock);
++	inode->i_state |= I_CMTIME_QUERIED;
++	stat->ctime = inode->i_ctime;
++	stat->mtime = inode->i_mtime;
++	spin_unlock(&inode->i_lock);
++}
++EXPORT_SYMBOL(fill_cmtime_and_mark);
++
+ /**
+  * generic_fill_statx_attr - Fill in the statx attributes from the inode flags
+  * @inode:	Inode to use as the source
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index c85916e9f7db..7dece4390979 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1457,7 +1457,8 @@ static inline bool fsuidgid_has_mapping(struct super_block *sb,
+ 	       kgid_has_mapping(fs_userns, kgid);
+ }
+ 
+-extern struct timespec64 current_time(struct inode *inode);
++struct timespec64 current_time(struct inode *inode);
++struct timespec64 current_cmtime(struct inode *inode);
+ 
+ /*
+  * Snapshotting support.
+@@ -2116,6 +2117,7 @@ static inline void kiocb_clone(struct kiocb *kiocb, struct kiocb *kiocb_src,
+ #define I_DONTCACHE		(1 << 16)
+ #define I_SYNC_QUEUED		(1 << 17)
+ #define I_PINNING_FSCACHE_WB	(1 << 18)
++#define I_CMTIME_QUERIED	(1 << 19)
+ 
+ #define I_DIRTY_INODE (I_DIRTY_SYNC | I_DIRTY_DATASYNC)
+ #define I_DIRTY (I_DIRTY_INODE | I_DIRTY_PAGES)
+@@ -2839,6 +2841,7 @@ extern int page_symlink(struct inode *inode, const char *symname, int len);
+ extern const struct inode_operations page_symlink_inode_operations;
+ extern void kfree_link(void *);
+ void generic_fillattr(struct mnt_idmap *, struct inode *, struct kstat *);
++void fill_cmtime_and_mark(struct inode *inode, struct kstat *stat);
+ void generic_fill_statx_attr(struct inode *inode, struct kstat *stat);
+ extern int vfs_getattr_nosec(const struct path *, struct kstat *, u32, unsigned int);
+ extern int vfs_getattr(const struct path *, struct kstat *, u32, unsigned int);
 -- 
 2.39.2
 
