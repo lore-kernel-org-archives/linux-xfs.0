@@ -2,154 +2,100 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CFEBC7619A
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 23:13:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 034C9C7619A
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 23:23:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229620AbjDKXNw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Apr 2023 19:13:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56800 "EHLO
+        id S229589AbjDKXXt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Apr 2023 19:23:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33748 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229522AbjDKXNu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 19:13:50 -0400
-Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D2321726
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 16:13:49 -0700 (PDT)
-Received: by mail-pj1-x102e.google.com with SMTP id pc4-20020a17090b3b8400b0024676052044so9707380pjb.1
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 16:13:49 -0700 (PDT)
+        with ESMTP id S229521AbjDKXXs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 19:23:48 -0400
+Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9E652D73
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 16:23:47 -0700 (PDT)
+Received: by mail-pg1-x532.google.com with SMTP id 41be03b00d2f7-51870e745bfso601590a12.2
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 16:23:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1681254829;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=cm7n7h0+YQqhaMN60giOfNLEV6DHkhKIhtK3vaJrO+s=;
-        b=UBHxzOgxwXGsNLNd5A9P7VT4b7Po+zYBdXSmczVUbcnEawjNUyc6Q0yDVbqcVgbHAg
-         QTmK+YIBP35K5pUYpip9sBXhtyUf3gX81/VeiKVT9jXLZfpHY4YVEyyU98F+6x0du6WZ
-         0zcsJKBeXD/aW3FwNY4xrZy9lJPBMYsetXsgXCawQz79UCg/xkbw2C6P4uSHEP5b0LeH
-         Yp4N8YFsCKela8bX7OHmf/BCOT0KrvQlxQBmDffLwLAoPcYTSBOAI1r/FXscGJF4uU+I
-         h84W2aDFzxwDHnMk2PUzMcRvbOJzzT7/wuUQYX4/fg8IeZhrkFXJLIAckBOjX9w41HXp
-         ooow==
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1681255427;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=74BW2jmA2l2bcdZ/oPhoGMqmDB9/XRTZqnGuuyumK8M=;
+        b=ab9/9FtSVT06XBFp3gKHNXfyQjLhL+nIxHj7O2ZmxTRvOuYR3IKX2AN9AU/GGCK709
+         K8i5HNGgBLWCWeL4JD+OWSv3vsOeTrmcTeIDa9xMqwClhJmuIeHh5nRtY2Ffn+F/C4+2
+         GvqPsBhXjiaXUPKpDjT/AdEJHOEG1V5DO0SoHAEVM4eS3D6PQsj2JZtBu+N6dq43vPmC
+         cqiCTm95ytki+MiCqgY6hmAFdTEB+xsMzWzQ2S28nulQCyuTTS4cqLcNz5uJaQM+wD6I
+         thBWIn3S5d3RBfTl3gu2hZclbBsjyzd8Kre+W6gzkhqUw87YUvzFnEzXS4554Rxstkfo
+         dVzw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1681254829;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=cm7n7h0+YQqhaMN60giOfNLEV6DHkhKIhtK3vaJrO+s=;
-        b=J4oAMuPSXdney6LzvulJwQJWmo1dzbJTyu4UMK1T8m6n9Bk0W7uYI/2IABfBfaZCCX
-         WmmyaaSVBr63wvEmGS4Fkxwrh3/J94xfnQf+bikKQYb7nIu0tgsgQqyFSkW0Z3E+tQdV
-         oGobo+PJS7Jv/azPB7URIxGLjPtFDkawww6Q6m+BMH6CL+3zAmYHcN/7Oa5ybNGrWtfw
-         8+hSPupNchjEEbG3ujUSPj4duos9/pGKrEf4D5Qkbf1ZxNvfG1TL7EzVGkTX/aAkDQPs
-         F5HlkucyZJdZLq50pM7OBzMnnvxY4ftEQr4+vNFkt6DzRE+9cosjnQfBIcK7j3sS1c/4
-         eMHA==
-X-Gm-Message-State: AAQBX9f18joTj2sobaKfWf1n7k+AQMYT+Tm0cV6ud0IQLbJgZ5n3ciF/
-        ELhSupadCjJJmjV1eT/zJz8ZXA==
-X-Google-Smtp-Source: AKy350bcqK4pAcsiH06EOT8P/jZME+o+zads0C6tIbm53vEQbRbnDvgTAjpPgh+ebvn7V4wp2JvjLw==
-X-Received: by 2002:a17:90a:6b09:b0:23d:16d6:2f05 with SMTP id v9-20020a17090a6b0900b0023d16d62f05mr17621391pjj.22.1681254828818;
-        Tue, 11 Apr 2023 16:13:48 -0700 (PDT)
+        d=1e100.net; s=20210112; t=1681255427;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=74BW2jmA2l2bcdZ/oPhoGMqmDB9/XRTZqnGuuyumK8M=;
+        b=R4MSuCL9DCpKurjsy2w8522eBvRa01+QA7STs2c6yWYDeaPUL2XU4sg4ioCSk3onoD
+         pJlYKbqndjdcoYBNnmxIIHSUGLDTiCOLiNBOfad693pfLz6m3DFleB28F6T7px2OdH68
+         HQI20xqA8nHO7N1PIug3iiVBLmM5gmcBr/MEYNt/8r4Gpo0UPnRSAg/sZKYBMX1ypoWw
+         fL80Z2SS/zUWC1AXBl6e9aN2bokfmtWmOt2u5tWUQfg20OWNs7NG6vM4nG8l4E6EK0AK
+         Z5rV2G+MPK0LGxxZ+7Co+QwAI7TBUbNbyRaPk7KE/3ksRqjV+RBJRCBBTSPwp5VlaoW+
+         8yNQ==
+X-Gm-Message-State: AAQBX9dA+P+gMDBP4FqPBQK6MDeCKW7W26kQWRBNjSlbU6NO+gYDdBq4
+        imouN2hQwAMlxrt5jO1ZK9yGQOdya1fE/fUwshrXcUGp
+X-Google-Smtp-Source: AKy350YjFsXFswthkVFZOeuNsfKMKgEa4a6JMzh/1f4Ki7pJO+h2FUqRWbvssZB4h8utYMG8nj9PnA==
+X-Received: by 2002:a62:1a4f:0:b0:62d:b4ad:522c with SMTP id a76-20020a621a4f000000b0062db4ad522cmr15616839pfa.24.1681255427196;
+        Tue, 11 Apr 2023 16:23:47 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-41-174.pa.nsw.optusnet.com.au. [49.180.41.174])
-        by smtp.gmail.com with ESMTPSA id jh6-20020a170903328600b001a64011899asm330544plb.25.2023.04.11.16.13.47
+        by smtp.gmail.com with ESMTPSA id k10-20020aa7820a000000b0062db3444281sm10364326pfi.125.2023.04.11.16.23.46
+        for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Apr 2023 16:13:48 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1pmNBJ-002H1W-AF; Wed, 12 Apr 2023 09:13:45 +1000
-Date:   Wed, 12 Apr 2023 09:13:45 +1000
+        Tue, 11 Apr 2023 16:23:46 -0700 (PDT)
+Received: from [192.168.253.23] (helo=devoid.disaster.area)
+        by dread.disaster.area with esmtp (Exim 4.92.3)
+        (envelope-from <dave@fromorbit.com>)
+        id 1pmNKy-002H7j-As
+        for linux-xfs@vger.kernel.org; Wed, 12 Apr 2023 09:23:44 +1000
+Received: from dave by devoid.disaster.area with local (Exim 4.96)
+        (envelope-from <dave@devoid.disaster.area>)
+        id 1pmNKy-000ykp-11
+        for linux-xfs@vger.kernel.org;
+        Wed, 12 Apr 2023 09:23:44 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-nfs@vger.kernel.org
-Subject: Re: [RFC PATCH 0/3][RESEND] fs: opportunistic high-res file
- timestamps
-Message-ID: <20230411231345.GB3223426@dread.disaster.area>
-References: <20230411143702.64495-1-jlayton@kernel.org>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 1/2] xfs: remove WARN when dquot cache insertion fails
+Date:   Wed, 12 Apr 2023 09:23:41 +1000
+Message-Id: <20230411232342.233433-2-david@fromorbit.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230411232342.233433-1-david@fromorbit.com>
+References: <20230411232342.233433-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230411143702.64495-1-jlayton@kernel.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 11, 2023 at 10:36:59AM -0400, Jeff Layton wrote:
-> (Apologies for the resend, but I didn't send this with a wide enough
-> distribution list originally).
-> 
-> A few weeks ago, during one of the discussions around i_version, Dave
-> Chinner wrote this:
-> 
-> "You've missed the part where I suggested lifting the "nfsd sampled
-> i_version" state into an inode state flag rather than hiding it in
-> the i_version field. At that point, we could optimise away the
-> secondary ctime updates just like you are proposing we do with the
-> i_version updates.  Further, we could also use that state it to
-> decide whether we need to use high resolution timestamps when
-> recording ctime updates - if the nfsd has not sampled the
-> ctime/i_version, we don't need high res timestamps to be recorded
-> for ctime...."
-> 
-> While I don't think we can practically optimize away ctime updates
-> like we do with i_version, I do like the idea of using this scheme to
-> indicate when we need to use a high-res timestamp.
-> 
-> This patchset is a first stab at a scheme to do this. It declares a new
-> i_state flag for this purpose and adds two new vfs-layer functions to
-> implement conditional high-res timestamp fetching. It then converts both
-> tmpfs and xfs to use it.
-> 
-> This seems to behave fine under xfstests, but I haven't yet done
-> any performance testing with it. I wouldn't expect it to create huge
-> regressions though since we're only grabbing high res timestamps after
-> each query.
-> 
-> I like this scheme because we can potentially convert any filesystem to
-> use it. No special storage requirements like with i_version field.  I
-> think it'd potentially improve NFS cache coherency with a whole swath of
-> exportable filesystems, and helps out NFSv3 too.
-> 
-> This is really just a proof-of-concept. There are a number of things we
-> could change:
-> 
-> 1/ We could use the top bit in the tv_sec field as the flag. That'd give
->    us different flags for ctime and mtime. We also wouldn't need to use
->    a spinlock.
-> 
-> 2/ We could probably optimize away the high-res timestamp fetch in more
->    cases. Basically, always do a coarse-grained ts fetch and only fetch
->    the high-res ts when the QUERIED flag is set and the existing time
->    hasn't changed.
-> 
-> If this approach looks reasonable, I'll plan to start working on
-> converting more filesystems.
+From: Dave Chinner <dchinner@redhat.com>
 
-Seems reasonable to me. In terms of testing, I suspect the main
-impact is going to be the additionaly overhead of taking a spinlock
-in normal stat calls. In which case, testing common tools like giti
-would be useful.  e.g. `git status` runs about 170k stat calls on a
-typical kernel tree. If anything is going to be noticed by users
-that actually care, it'll be workloads like this...
+It just creates unnecessary bot noise these days.
 
-If we manage to elide the spinlock altogether, then I don't think
-we're going to be able to measure any sort perf difference on modern
-hardware short of high end NFS benchmarks that drive servers to
-their CPU usage limits....
+Reported-by: syzbot+6ae213503fb12e87934f@syzkaller.appspotmail.com
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_dquot.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-> One thing I'm not clear on is how widely available high res timestamps
-> are. Is this something we need to gate on particular CONFIG_* options?
-
-Don't think so - the kernel should always provide the highest
-resoultion it can through the get_time interfaces - the _coarse
-variants simple return what was read from the high res timer at the
-last scheduler tick, hence avoiding the hardware timer overhead when
-high res timer resolution is not needed.....
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 8fb90da89787..7f071757f278 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -798,7 +798,6 @@ xfs_qm_dqget_cache_insert(
+ 	error = radix_tree_insert(tree, id, dqp);
+ 	if (unlikely(error)) {
+ 		/* Duplicate found!  Caller must try again. */
+-		WARN_ON(error != -EEXIST);
+ 		mutex_unlock(&qi->qi_tree_lock);
+ 		trace_xfs_dqget_dup(dqp);
+ 		return error;
 -- 
-Dave Chinner
-david@fromorbit.com
+2.39.2
+
