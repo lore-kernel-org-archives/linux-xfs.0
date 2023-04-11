@@ -2,49 +2,56 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8B55C76196
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 05:00:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E28EEC7619A
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 05:02:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229711AbjDKFA0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Apr 2023 01:00:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60296 "EHLO
+        id S229725AbjDKFCG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Apr 2023 01:02:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229624AbjDKFA0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 01:00:26 -0400
+        with ESMTP id S229692AbjDKFCF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 01:02:05 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A334AE6F
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Apr 2023 22:00:21 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9F8E199F;
+        Mon, 10 Apr 2023 22:02:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=gr6629PRIKfsXvZqCuotUV5Nm1
-        pROrltDwKipeXjPCG2rxnXKvjXlD26QV/eJYyhvbhN1giICTmhvihK9/JoFxHQx3iFxl+Zgh2jdi5
-        3rmu9pf+Ykp7YLQsC6B5IYQbq3bEdIxftGsExg098AUSQf3xkcYtTRbHJC5yPlvoqRWV/iojjB5xZ
-        UTAh9S3icVbN8IyGsa7L7vlAaVLkFAe6PVxrCI1TLybjX0ovuM+majJnOP32Zn06tVYIaZxfeMLvy
-        ZWudagLa0dRInf5E0XX/BaoJkIjdjSzoc0C1M/YK0qK7mDFe/rLNTLsJelIertbEnc64F8lJ2HHGv
-        4MH0u11A==;
+        bh=KBhNfUOcD8iQz+TMuW2IJQH6CYVeRvhGPDElxngGpyE=; b=SuYCXB7pkcbxWbG1OHBZx7juNA
+        pku0+MY68aN+S95h6lBSIC3+WUupYPcZ/eHTEqYAFMoLUQnYO8MeMYSbBdMCyQylUcDHHLHcmIXd7
+        e5NqbRZSQB0gMOfbiVnUErygHRgsOtoOGaC/2EcI+J1zpIrNhA2wJV2TkXNBC4tU7LeHeSTqUrrZO
+        VIlNf2JBzbM+1SJ8Gb7TZBAgltRuPGZead5QKLPM2er7apLZLYmpxUY511LIx0AYMvAIJ3J+L1juU
+        k1OlPAFQtvgOTFojCSEo3+oOplG9rBmr5OVIw9zq4j1KxjAJOgfkDHNzOUYwe4/ft+nr670+zJOBn
+        JIilyNgg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1pm67B-00GQUC-1i;
-        Tue, 11 Apr 2023 05:00:21 +0000
-Date:   Mon, 10 Apr 2023 22:00:21 -0700
+        id 1pm68l-00GQYB-0D;
+        Tue, 11 Apr 2023 05:01:59 +0000
+Date:   Mon, 10 Apr 2023 22:01:59 -0700
 From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     cem@kernel.org, linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH 2/2] misc: test the dir/attr hash before formatting or
- repairing fs
-Message-ID: <ZDTpZWtXlgf6zcCt@infradead.org>
-References: <168073967113.1654766.1707855494706927672.stgit@frogsfrogsfrogs>
- <168073968242.1654766.4264241405014258594.stgit@frogsfrogsfrogs>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     fsverity@lists.linux.dev, linux-crypto@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-btrfs@vger.kernel.org
+Subject: Re: [RFC PATCH] fsverity: use shash API instead of ahash API
+Message-ID: <ZDTpx15RX/64lbjY@infradead.org>
+References: <20230406003714.94580-1-ebiggers@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <168073968242.1654766.4264241405014258594.stgit@frogsfrogsfrogs>
+In-Reply-To: <20230406003714.94580-1-ebiggers@kernel.org>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Looks good:
+On Wed, Apr 05, 2023 at 05:37:14PM -0700, Eric Biggers wrote:
+> Therefore, let's convert fs/verity/ from ahash to shash.  This
+> simplifies the code, and it should also slightly improve performance for
+> everyone who wasn't actually using one of these ahash-only crypto
+> accelerators, i.e. almost everyone (or maybe even everyone)!
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+This looks like a very nice cleanup to me.  So unless someone really
+uses async crypto offload heavily for fsverity and can come up with
+a convincing argument for that, I'm all for the change.
