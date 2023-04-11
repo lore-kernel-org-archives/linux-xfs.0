@@ -2,201 +2,149 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DC07C76196
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 01:35:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6894C77B61
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 02:06:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229571AbjDKBfT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Apr 2023 21:35:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43626 "EHLO
+        id S229626AbjDKCGa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Apr 2023 22:06:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54672 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229741AbjDKBfS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2023 21:35:18 -0400
-Received: from mail-pj1-x1042.google.com (mail-pj1-x1042.google.com [IPv6:2607:f8b0:4864:20::1042])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 903681723
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Apr 2023 18:35:16 -0700 (PDT)
-Received: by mail-pj1-x1042.google.com with SMTP id ie17-20020a17090b401100b00246d4b282eeso1532748pjb.2
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Apr 2023 18:35:16 -0700 (PDT)
+        with ESMTP id S229485AbjDKCG3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2023 22:06:29 -0400
+Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D62819AF
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Apr 2023 19:06:28 -0700 (PDT)
+Received: by mail-pl1-x641.google.com with SMTP id y6so5314469plp.2
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Apr 2023 19:06:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1681176916;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1681178788;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=S518XHoIGyP+f1W0+oLc45AmArtwLicSVB0jPKCMEaE=;
-        b=XP6OuqjHAxklvaB1XLZhIKDQny0K8+ZkV2w+KqCh+ECxPbZPLbKX+xYe5m06qHXJ81
-         8ZfWlcmtMxNzgIGZLLlcWwpyiJGxEDgCf9n02GAbBS0eOeB5JVDYsJh/ZnMoLu3du9n+
-         FGQ/THIb2mCXZ9++QkLllYhUPmaH/lhO897p/B0QKhGiII8oLe7hT8Hl5Z5A9fOkQgeF
-         Cy+mfRNjp8MgLEj5kirtE5JOWTFcN+YfKt3Og2p3Fczv5s1kHm9i8cE9Vc15xGbMgUSY
-         iRpuflu/gqrI/GmmX2B0MCTaYNNLcVGA8bz7n68iJW+xQCrKv4dR4N067BAVlUhBat8X
-         XONw==
+        bh=1K45G3Xk38MRsn/IvI6UctDMVxWaPIpgJaoca1sEXqs=;
+        b=diEKm0+TweYI/jv0x/zdN0qvjzeIpeP5Z6zIUcPDQDNA3sDlAKuLjsJ0WuhW6GPcZi
+         XGPpfrY3CUOTkXYYeYqFr4ZPgmKktP4PGBQ6fHLqox+fieKJ5qKdGEK3yZgm8df3PXgR
+         lCfze60RScipMedJVUhNfcePT9BWvVQRCKJyWo6FFPw/BPtYnJ3CbzQJPJdk0bfTB4VW
+         OOoD1TtLVcK/dlZ7JPq/bCXnDj6EDWameXBBqUXdzpYP1LABkvMPcu+yv8eVtaSqDaVy
+         cKkaqh0Sezc91w/wCuQK9X05x5sr2+Z5Mm89FZuxCi1QkJCEQ4pL/jxvYB1AZo0efaNY
+         M06w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1681176916;
+        d=1e100.net; s=20210112; t=1681178788;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=S518XHoIGyP+f1W0+oLc45AmArtwLicSVB0jPKCMEaE=;
-        b=fAxfEmOzJZbtWrw+9gBFTsd/bopF8+dosPXtvrxhGBr1ZweTQZDUrFn3gbkAyHUdeO
-         tkvzEVmuE6Nnp3GiK6rNOKTQd59UTiJvFJ+XifLnJWplwH8bzz1DmmIiQKvQ+5zeM8Y8
-         tJity9gOg0mM5JB783TlZLy40Rh+K4v7fVLKyu3tqigEov80F+8wgM6oUFkGCbzMpaQE
-         sKbVgS4M0qQEhrEmnZlAoFDpaFDwZXvfUy6/dQYltfn2zJyhKMreWzRckFa1wdbDmUFR
-         EfntmLEV0JnVeNR/Lw1H3HvjN19PEU+fwv2H2z1ZjZRGTRA+shFF2YJCWn9s5Mt24Sfw
-         O/8A==
-X-Gm-Message-State: AAQBX9fqk8Liv7Ogk3AR3jvQ42+5Zq2tPCvz3SNzx+Po2p63IahrUq3F
-        Ue4wTIb0FWl5MX7IeUi/sfqwSw==
-X-Google-Smtp-Source: AKy350a5yTDJ/77c3MBtQrXVH4tcuNMWZG9l8/8jGYSJQlNEGhs9lC+lFEf2Z96Aqe7w9jXg5LWn+Q==
-X-Received: by 2002:a05:6a20:b930:b0:c7:717f:4863 with SMTP id fe48-20020a056a20b93000b000c7717f4863mr13355983pzb.21.1681176916062;
-        Mon, 10 Apr 2023 18:35:16 -0700 (PDT)
+        bh=1K45G3Xk38MRsn/IvI6UctDMVxWaPIpgJaoca1sEXqs=;
+        b=mFGBGvsC+CDvArzbc9gmQ56IrWJQTJ/xLGRU02gaF5iI1vx2UN7CdonXsgjkyKCyOs
+         kN+O29vS2V2Jg5MomZWYMLCz8prdOb5I0eKpWq1+lboSbONLTnsGluwSuZHCErcD4n05
+         wvm1SXljVr3kj5gmyCeyR/FJdi2iXOsmLvqbNYE9oUZfLK6Y3L7/42SzmAvH9HRy4oHR
+         AK4tAPn9pa3ePjw/Mx693zD/O8J6KJSkNU/3pFuzVpwP2EFBqmHgg26bkACbVHAXeY8h
+         K6CconKVBY/4IoOVwntPPYdE7T1MaflCGnYQEcLfMsNs3yIkE8NHnpNJZ8SmbtobA03D
+         W5kw==
+X-Gm-Message-State: AAQBX9fVMUg5rYEjmaDjTviaQ2HqkDdWg01AJCo8U4X2WvtzJ0TzynRE
+        NsH3zscv5z0uDPf3xhofs/2nRA==
+X-Google-Smtp-Source: AKy350Yu9N94FYcnhpqPoNZlTMHxVJLQmckNh47/t1TEvNXk8sUOXnT7wDH5pVuvarZF9W1Jnt3i7w==
+X-Received: by 2002:a17:902:dacd:b0:1a1:cef2:acd1 with SMTP id q13-20020a170902dacd00b001a1cef2acd1mr13061025plx.17.1681178788067;
+        Mon, 10 Apr 2023 19:06:28 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-41-174.pa.nsw.optusnet.com.au. [49.180.41.174])
-        by smtp.gmail.com with ESMTPSA id w26-20020aa7859a000000b0063418ea5032sm4490115pfn.1.2023.04.10.18.35.15
+        by smtp.gmail.com with ESMTPSA id t20-20020a170902b21400b001a194df5a58sm8412150plr.167.2023.04.10.19.06.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 10 Apr 2023 18:35:15 -0700 (PDT)
+        Mon, 10 Apr 2023 19:06:27 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1pm2ue-001uua-Od; Tue, 11 Apr 2023 11:35:12 +1000
-Date:   Tue, 11 Apr 2023 11:35:12 +1000
+        id 1pm3Oq-001vQ1-Hw; Tue, 11 Apr 2023 12:06:24 +1000
+Date:   Tue, 11 Apr 2023 12:06:24 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     syzbot <syzbot+listea0b12829deaef4101fd@syzkaller.appspotmail.com>
-Cc:     djwong@kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        syzkaller-bugs@googlegroups.com
-Subject: Re: [syzbot] Monthly xfs report
-Message-ID: <20230411013512.GX3223426@dread.disaster.area>
-References: <000000000000529f1805f81b23c2@google.com>
+To:     Wengang Wang <wen.gang.wang@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix AGFL allocation dead lock
+Message-ID: <20230411020624.GY3223426@dread.disaster.area>
+References: <20230330204610.23546-1-wen.gang.wang@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <000000000000529f1805f81b23c2@google.com>
+In-Reply-To: <20230330204610.23546-1-wen.gang.wang@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Mar 30, 2023 at 02:58:43AM -0700, syzbot wrote:
-> Hello xfs maintainers/developers,
+On Thu, Mar 30, 2023 at 01:46:10PM -0700, Wengang Wang wrote:
+> There is deadlock with calltrace on process 10133:
 > 
-> This is a 30-day syzbot report for the xfs subsystem.
-> All related reports/information can be found at:
-> https://syzkaller.appspot.com/upstream/s/xfs
+> PID 10133 not sceduled for 4403385ms (was on CPU[10])
+> 	#0	context_switch() kernel/sched/core.c:3881
+> 	#1	__schedule() kernel/sched/core.c:5111
+> 	#2	schedule() kernel/sched/core.c:5186
+> 	#3	xfs_extent_busy_flush() fs/xfs/xfs_extent_busy.c:598
+> 	#4	xfs_alloc_ag_vextent_size() fs/xfs/libxfs/xfs_alloc.c:1641
+> 	#5	xfs_alloc_ag_vextent() fs/xfs/libxfs/xfs_alloc.c:828
+> 	#6	xfs_alloc_fix_freelist() fs/xfs/libxfs/xfs_alloc.c:2362
+> 	#7	xfs_free_extent_fix_freelist() fs/xfs/libxfs/xfs_alloc.c:3029
+> 	#8	__xfs_free_extent() fs/xfs/libxfs/xfs_alloc.c:3067
+> 	#9	xfs_trans_free_extent() fs/xfs/xfs_extfree_item.c:370
+> 	#10	xfs_efi_recover() fs/xfs/xfs_extfree_item.c:626
+> 	#11	xlog_recover_process_efi() fs/xfs/xfs_log_recover.c:4605
+> 	#12	xlog_recover_process_intents() fs/xfs/xfs_log_recover.c:4893
+> 	#13	xlog_recover_finish() fs/xfs/xfs_log_recover.c:5824
+> 	#14	xfs_log_mount_finish() fs/xfs/xfs_log.c:764
+> 	#15	xfs_mountfs() fs/xfs/xfs_mount.c:978
+> 	#16	xfs_fs_fill_super() fs/xfs/xfs_super.c:1908
+> 	#17	mount_bdev() fs/super.c:1417
+> 	#18	xfs_fs_mount() fs/xfs/xfs_super.c:1985
+> 	#19	legacy_get_tree() fs/fs_context.c:647
+> 	#20	vfs_get_tree() fs/super.c:1547
+> 	#21	do_new_mount() fs/namespace.c:2843
+> 	#22	do_mount() fs/namespace.c:3163
+> 	#23	ksys_mount() fs/namespace.c:3372
+> 	#24	__do_sys_mount() fs/namespace.c:3386
+> 	#25	__se_sys_mount() fs/namespace.c:3383
+> 	#26	__x64_sys_mount() fs/namespace.c:3383
+> 	#27	do_syscall_64() arch/x86/entry/common.c:296
+> 	#28	entry_SYSCALL_64() arch/x86/entry/entry_64.S:180
 > 
-> During the period, 5 new issues were detected and 0 were fixed.
-> In total, 23 issues are still open and 15 have been fixed so far.
-> 
-> Some of the still happening issues:
-> 
-> Crashes Repro Title
-> 327     Yes   INFO: task hung in xlog_grant_head_check
->               https://syzkaller.appspot.com/bug?extid=568245b88fbaedcb1959
+> It's waiting xfs_perag.pagb_gen to increase (busy extent clearing happen).
+> From the vmcore, it's waiting on AG 1. And the ONLY busy extent for AG 1 is
+> with the transaction (in xfs_trans.t_busy) for process 10133. That busy extent
+> is created in a previous EFI with the same transaction. Process 10133 is
+> waiting, it has no change to commit that that transaction. So busy extent
+> clearing can't happen and pagb_gen remain unchanged. So dead lock formed.
 
-[  501.289306][ T5098] XFS (loop0): Mounting V4 Filesystem 5e6273b8-2167-42bb-911b-418aa14a1261
-[  501.299015][ T5098] XFS (loop0): Log size 128 blocks too small, minimum size is 2880 blocks
-[  501.307608][ T5098] XFS (loop0): Log size out of supported range.
-[  501.313866][ T5098] XFS (loop0): Continuing onwards, but if log hangs are experienced then please report this message in the bug report.
+We've talked about this "busy extent in transaction" issue before:
 
-Syzbot doing something stupid - syzbot needs to stop testing the
-deprecated and soon to be unsupported v4 filesystem format.
+https://lore.kernel.org/linux-xfs/20210428065152.77280-1-chandanrlinux@gmail.com/
 
-Invalid.
+and we were closing in on a practical solution before it went silent.
 
-> 85      Yes   KASAN: stack-out-of-bounds Read in xfs_buf_lock
->               https://syzkaller.appspot.com/bug?extid=0bc698a422b5e4ac988c
+I'm not sure if there's a different fix we can apply here - maybe
+free one extent per transaction instead of all the extents in an EFI
+in one transaction and relog the EFD at the end of each extent free
+transaction roll?
 
-Bisection result is garbage.
+> commit 06058bc40534530e617e5623775c53bb24f032cb disallowed using busy extents
+> for any path that calls xfs_extent_busy_trim(). That looks over-killing.
+> For AGFL block allocation, it just use the first extent that satisfies, it won't
+> try another extent for choose a "better" one. So it's safe to reuse busy extent
+> for AGFL.
 
-Looks like a race between dquot shrinker grabbing a dquot buffer to
-write back a dquot and the dquot buffer being reclaimed before it is
-submitted from the delwri list. Something is dropping a buffer
-reference on the floor...
+AGFL block allocation is not "for immediate use". The blocks get
+placed on the AGFL for -later- use, and not necessarily even within
+the current transaction. Hence a freelist block is still considered
+free space, not as used space. The difference is that we assume AGFL
+blocks can always be used immediately and they aren't constrained by
+being busy or have pending discards.
 
-More investigation needed.
+Also, we have to keep in mind that we can allocate data blocks from
+the AGFL in low space situations. Hence it is not safe to place busy
+or discard-pending blocks on the AGFL, as this can result in them
+being allocated for user data and overwritten before the checkpoint
+that marked them busy has been committed to the journal....
 
-> 81      Yes   WARNING in xfs_qm_dqget_cache_insert
->               https://syzkaller.appspot.com/bug?extid=6ae213503fb12e87934f
+As such, I don't think it is be safe to ignore busy extent state
+just because we are filling the AGFL from the current free space
+tree.
 
-That'll be an ENOMEM warning on radix tree insert.
+Cheers,
 
-No big deal, the code cleans up and retries the lookup/insert
-process cleanly. Could just remove the warning.
+Dave.
 
-Low priority, low severity.
-
-> 47      Yes   WARNING in xfs_bmapi_convert_delalloc
->               https://syzkaller.appspot.com/bug?extid=53b443b5c64221ee8bad
-
-Unexpected ENOSPC because syzbot has created a inconsistency between
-superblock counters and the free space btrees.  Warning is expected
-as it indicates user data loss is going to occur, doesn't happen in
-typical production operation, generally requires malicious
-corruption of the filesystem to trigger.
-
-Not a bug, won't fix.
-
-> 44      Yes   INFO: task hung in xfs_buf_item_unpin
->               https://syzkaller.appspot.com/bug?extid=3f083e9e08b726fcfba2
-
-Yup, that's a deadlock on the superblock buffer.
-
-xfs_sync_sb_buf() is called from an ioctl of some kind, gets stuck
-in the log force waiting for iclogs to complete. xfs_sync_sb_buf()
-holds the buffer across the transaction commit, so the sb buffer is
-locked while waiting for the log force.
-
-At just the wrong time, the filesystem gets shut down:
-
-  [  484.946965][ T5959] syz-executor360: attempt to access beyond end of device
-  [  484.946965][ T5959] loop0: rw=432129, sector=65536, nr_sectors = 64 limit=65536
-  [  484.950756][   T52] XFS (loop0): log I/O error -5
-  [  484.952017][   T52] XFS (loop0): Filesystem has been shut down due to log error (0x2).
-  [  484.953902][   T52] XFS (loop0): Please unmount the filesystem and rectify the problem(s).
-  [  714.735393][   T28] INFO: task kworker/1:1H:52 blocked for more than 143 seconds.
-
-And the iclog IO completion tries to unpin and abort all the log
-items in the current checkpoint. One of those is the superblock
-buffer, and because this is an abort:
-
-[  714.754433][   T28]  xfs_buf_lock+0x264/0xa68
-[  714.755623][   T28]  xfs_buf_item_unpin+0x2c4/0xc18
-[  714.756875][   T28]  xfs_trans_committed_bulk+0x2d8/0x73c
-[  714.758236][   T28]  xlog_cil_committed+0x210/0xef8
-
-The unpin code tries to lock the buffer to pass it through to IO
-completion to mark it as failed.
-
-Real deadlock, I think it might be able to occur on any synchronous
-transaction commit that holds a buffer locked across it. No
-immediate fix comes to mind right now. Can only occur on a journal
-IO triggered shutdown, so not somethign that happens typically in
-production systems.
-
-Low priority, medium severity.
-
-
-> 13      Yes   general protection fault in __xfs_free_extent
->               https://syzkaller.appspot.com/bug?extid=bfbc1eecdfb9b10e5792
-
-Growfs issue. Looks like a NULL pag, which means the fsbno passed
-to __xfs_free_extent() is invalid. Without looking further, this
-looks like it's a corrupt AGF length or superblock size and this has
-resulted in the calculated fsbno starting beyond the end of the last
-AG that we are about to grow. That means the agno is beyond EOFS,
-xfs_perag_get(agno) ends up NULL, and __xfs_free_extent() goes
-splat.  Likely requires corruption to trigger.
-
-Low priority, low severity.
-
-> 5       Yes   KASAN: use-after-free Read in xfs_btree_lookup_get_block
->               https://syzkaller.appspot.com/bug?extid=7e9494b8b399902e994e
-
-Recovery of reflink COW extents, we have a corrupted journal
-
-   [   52.495566][ T5067] XFS (loop0): Mounting V5 Filesystem bfdc47fc-10d8-4eed-a562-11a831b3f791
-   [   52.599681][ T5067] XFS (loop0): Torn write (CRC failure) detected at log block 0x180. Truncating head block from 0x200.
-   [   52.636680][ T5067] XFS (loop0): Starting recovery (logdev: internal)
-
-And then it looks to have a UAF on the refcountbt cursor that is
-first initialised in xfs_refcount_recover_cow_leftovers(). Likely
-tripping over a corrupted refcount btree of some kind. Probably one
-for Darrick to look into.
-
-Low priority, low severity.
-
--Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
