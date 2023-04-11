@@ -2,146 +2,111 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45AFBC7619A
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 23:32:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9C39C76196
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 23:32:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229533AbjDKXcD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Apr 2023 19:32:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34738 "EHLO
+        id S229648AbjDKXcp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Apr 2023 19:32:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35152 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229482AbjDKXcC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 19:32:02 -0400
+        with ESMTP id S229482AbjDKXco (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 19:32:44 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 724BA30EB
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 16:32:01 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80B4130FD
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 16:32:43 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0807F60FB3
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 23:32:01 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E62DC433EF;
-        Tue, 11 Apr 2023 23:32:00 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0E3D860C8C
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 23:32:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69BC9C433EF;
+        Tue, 11 Apr 2023 23:32:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681255920;
-        bh=i3xAhqncvbuKRwTcKvDjRLpgWLlxgWuiyUaUB0xYFBM=;
-        h=Date:From:To:Subject:From;
-        b=RwPB2afayAvR2WRcdD3BuDa2mZ8VwvNdiuQkR6MyBCeI7FKlLtRlk34PCo6rQl4Lc
-         qIWPoNKsBOS6A8Nm4wJ4Gif6rHSI6on2g8Vgd7zXL9umEThk5PRHAF1YkVY1Nnt8bD
-         bSwMPhKBrqHHfPaVZqkKGt3nWkqsUl1rVPXLyRaqTGmNiBuyq23ZP5vQXrDOsdtjDJ
-         TiffXQF3nwwAaLR/7THJFv+nVpiMQHKag9n3fDgnbeglwAdh80l0jPVJ6eOGnkGUif
-         ELAruYHy3TRhZrhR/lqizRNIshxL0t9Zl0IvjVkVMolDgS+wpMFxwSsfOXfZPOTCrg
-         MQErBQdivz8fA==
-Date:   Tue, 11 Apr 2023 16:31:59 -0700
+        s=k20201202; t=1681255962;
+        bh=oHwt7TbA7M0IWAea6dtn2TjX4e9G5vRLcrx+/vul/AE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=tAQgTHHRzgWev3o+wKs9rVvZfoHte/9cfwvInai+PdMbOZg1fc7X7Bm5Dk4CA533y
+         bqEZBv3+tK9izn9z71iFPSTWCwfMSiV+z6/Bo5f6+iJtQ3h72VdSHYwKib8hEl4Fhc
+         8cHSdkixqod7RS2LejukclxL3MdM/w3Aa+f1+8mfXpF628+qvmR+vspWtLlfSjrwh3
+         lmJfqPBH69n3Pyrqmwt61f1q8pKO+kvGqUAlX5i9f5UsepDHYBk2NHCGhjZ8gEJNMf
+         Yl5FFfqr4QsAc+wOBrpoDA2lsXbi/P3bIAwOeEs4kUU0lWvQevZkPoVGjXfjXKQEwO
+         7xtMEPLPTK3vA==
+Date:   Tue, 11 Apr 2023 16:32:41 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: verify buffer contents when we skip log replay
-Message-ID: <20230411233159.GH360895@frogsfrogsfrogs>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: don't consider future format versions valid
+Message-ID: <20230411233241.GM360889@frogsfrogsfrogs>
+References: <20230411232342.233433-1-david@fromorbit.com>
+ <20230411232342.233433-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20230411232342.233433-3-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Apr 12, 2023 at 09:23:42AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> In commit fe08cc504448 we reworked the valid superblock version
+> checks. If it is a V5 filesystem, it is always valid, then we
+> checked if the version was less than V4 (reject) and then checked
+> feature fields in the V4 flags to determine if it was valid.
+> 
+> What we missed was that if the version is not V4 at this point,
+> we shoudl reject the fs. i.e. the check current treats V6+
+> filesystems as if it was a v4 filesystem. Fix this.
+> 
+> cc: stable@vger.kernel.org
+> Fixes: fe08cc504448 ("xfs: open code sb verifier feature checks")
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-syzbot detected a crash during log recovery:
+Ugh, old code...
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-XFS (loop0): Mounting V5 Filesystem bfdc47fc-10d8-4eed-a562-11a831b3f791
-XFS (loop0): Torn write (CRC failure) detected at log block 0x180. Truncating head block from 0x200.
-XFS (loop0): Starting recovery (logdev: internal)
-==================================================================
-BUG: KASAN: slab-out-of-bounds in xfs_btree_lookup_get_block+0x15c/0x6d0 fs/xfs/libxfs/xfs_btree.c:1813
-Read of size 8 at addr ffff88807e89f258 by task syz-executor132/5074
+--D
 
-CPU: 0 PID: 5074 Comm: syz-executor132 Not tainted 6.2.0-rc1-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/26/2022
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:88 [inline]
- dump_stack_lvl+0x1b1/0x290 lib/dump_stack.c:106
- print_address_description+0x74/0x340 mm/kasan/report.c:306
- print_report+0x107/0x1f0 mm/kasan/report.c:417
- kasan_report+0xcd/0x100 mm/kasan/report.c:517
- xfs_btree_lookup_get_block+0x15c/0x6d0 fs/xfs/libxfs/xfs_btree.c:1813
- xfs_btree_lookup+0x346/0x12c0 fs/xfs/libxfs/xfs_btree.c:1913
- xfs_btree_simple_query_range+0xde/0x6a0 fs/xfs/libxfs/xfs_btree.c:4713
- xfs_btree_query_range+0x2db/0x380 fs/xfs/libxfs/xfs_btree.c:4953
- xfs_refcount_recover_cow_leftovers+0x2d1/0xa60 fs/xfs/libxfs/xfs_refcount.c:1946
- xfs_reflink_recover_cow+0xab/0x1b0 fs/xfs/xfs_reflink.c:930
- xlog_recover_finish+0x824/0x920 fs/xfs/xfs_log_recover.c:3493
- xfs_log_mount_finish+0x1ec/0x3d0 fs/xfs/xfs_log.c:829
- xfs_mountfs+0x146a/0x1ef0 fs/xfs/xfs_mount.c:933
- xfs_fs_fill_super+0xf95/0x11f0 fs/xfs/xfs_super.c:1666
- get_tree_bdev+0x400/0x620 fs/super.c:1282
- vfs_get_tree+0x88/0x270 fs/super.c:1489
- do_new_mount+0x289/0xad0 fs/namespace.c:3145
- do_mount fs/namespace.c:3488 [inline]
- __do_sys_mount fs/namespace.c:3697 [inline]
- __se_sys_mount+0x2d3/0x3c0 fs/namespace.c:3674
- do_syscall_x64 arch/x86/entry/common.c:50 [inline]
- do_syscall_64+0x3d/0xb0 arch/x86/entry/common.c:80
- entry_SYSCALL_64_after_hwframe+0x63/0xcd
-RIP: 0033:0x7f89fa3f4aca
-Code: 83 c4 08 5b 5d c3 66 2e 0f 1f 84 00 00 00 00 00 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 c0 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007fffd5fb5ef8 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
-RAX: ffffffffffffffda RBX: 00646975756f6e2c RCX: 00007f89fa3f4aca
-RDX: 0000000020000100 RSI: 0000000020009640 RDI: 00007fffd5fb5f10
-RBP: 00007fffd5fb5f10 R08: 00007fffd5fb5f50 R09: 000000000000970d
-R10: 0000000000200800 R11: 0000000000000206 R12: 0000000000000004
-R13: 0000555556c6b2c0 R14: 0000000000200800 R15: 00007fffd5fb5f50
- </TASK>
-
-The fuzzed image contains an AGF with an obviously garbage
-agf_refcount_level value of 32, and a dirty log with a buffer log item
-for that AGF.  The ondisk AGF has a higher LSN than the recovered log
-item.  xlog_recover_buf_commit_pass2 reads the buffer, compares the
-LSNs, and decides to skip replay because the ondisk buffer appears to be
-newer.
-
-Unfortunately, the ondisk buffer is corrupt, but recovery just read the
-buffer with no buffer ops specified:
-
-	error = xfs_buf_read(mp->m_ddev_targp, buf_f->blf_blkno,
-			buf_f->blf_len, buf_flags, &bp, NULL);
-
-Skipping the buffer leaves its contents in memory unverified.  This sets
-us up for a kernel crash because xfs_refcount_recover_cow_leftovers
-reads the buffer (which is still around in XBF_DONE state, so no read
-verification) and creates a refcountbt cursor of height 32.  This is
-impossible so we run off the end of the cursor object and crash.
-
-Fix this by invoking the verifier on all skipped buffers and aborting
-log recovery if the ondisk buffer is corrupt.  It might be smarter to
-force replay the log item atop the buffer and then see if it'll pass the
-write verifier (like ext4 does) but for now let's go with the
-conservative option where we stop immediately.
-
-Link: https://syzkaller.appspot.com/bug?extid=7e9494b8b399902e994e
-Fixes: 67dc288c2106 ("xfs: ensure verifiers are attached to recovered buffers")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_buf_item_recover.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-index 5368a0d34452..ebe7f2c3cf63 100644
---- a/fs/xfs/xfs_buf_item_recover.c
-+++ b/fs/xfs/xfs_buf_item_recover.c
-@@ -971,6 +971,16 @@ xlog_recover_buf_commit_pass2(
- 	if (lsn && lsn != -1 && XFS_LSN_CMP(lsn, current_lsn) >= 0) {
- 		trace_xfs_log_recover_buf_skip(log, buf_f);
- 		xlog_recover_validate_buf_type(mp, bp, buf_f, NULLCOMMITLSN);
-+
-+		/*
-+		 * We're skipping replay of this buffer log item due to the log
-+		 * item LSN being behind the ondisk buffer.  Verify the buffer
-+		 * contents since we aren't going to run the write verifier.
-+		 */
-+		if (bp->b_ops) {
-+			bp->b_ops->verify_read(bp);
-+			error = bp->b_error;
-+		}
- 		goto out_release;
- 	}
- 
+> ---
+>  fs/xfs/libxfs/xfs_sb.c | 11 ++++++-----
+>  1 file changed, 6 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index 99cc03a298e2..ba0f17bc1dc0 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -72,7 +72,8 @@ xfs_sb_validate_v5_features(
+>  }
+>  
+>  /*
+> - * We support all XFS versions newer than a v4 superblock with V2 directories.
+> + * We current support XFS v5 formats with known features and v4 superblocks with
+> + * at least V2 directories.
+>   */
+>  bool
+>  xfs_sb_good_version(
+> @@ -86,16 +87,16 @@ xfs_sb_good_version(
+>  	if (xfs_sb_is_v5(sbp))
+>  		return xfs_sb_validate_v5_features(sbp);
+>  
+> +	/* versions prior to v4 are not supported */
+> +	if (XFS_SB_VERSION_NUM(sbp) != XFS_SB_VERSION_4)
+> +		return false;
+> +
+>  	/* We must not have any unknown v4 feature bits set */
+>  	if ((sbp->sb_versionnum & ~XFS_SB_VERSION_OKBITS) ||
+>  	    ((sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT) &&
+>  	     (sbp->sb_features2 & ~XFS_SB_VERSION2_OKBITS)))
+>  		return false;
+>  
+> -	/* versions prior to v4 are not supported */
+> -	if (XFS_SB_VERSION_NUM(sbp) < XFS_SB_VERSION_4)
+> -		return false;
+> -
+>  	/* V4 filesystems need v2 directories and unwritten extents */
+>  	if (!(sbp->sb_versionnum & XFS_SB_VERSION_DIRV2BIT))
+>  		return false;
+> -- 
+> 2.39.2
+> 
