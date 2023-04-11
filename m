@@ -2,202 +2,155 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC631C76196
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 18:14:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD9EFC77B6F
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 18:16:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229939AbjDKSOH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Apr 2023 14:14:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33362 "EHLO
+        id S229451AbjDKSQk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Apr 2023 14:16:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36412 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229765AbjDKSOG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 14:14:06 -0400
+        with ESMTP id S229846AbjDKSQX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 14:16:23 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74FFBE4E;
-        Tue, 11 Apr 2023 11:14:05 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 812416EAD
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 11:15:55 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 10AF662083;
-        Tue, 11 Apr 2023 18:14:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CF1BC433D2;
-        Tue, 11 Apr 2023 18:14:04 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1ECC860EA5
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 18:15:55 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73DE1C433D2;
+        Tue, 11 Apr 2023 18:15:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681236844;
-        bh=PDfyAvPPKWv5okF2Jx64vv3q6inzoHRvbT88+0YaFBA=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=gUDcZyGrHrd+btkw3qwterCEevnoYiWB02Wl0KdrXrtKW5H2y9s40Pe8TQY8OCpqt
-         Kqol2S/RhNuCeBgXBbCQHwWv14yzhUXdCBIONz+Hclcygtbt//kSkkUq2VugIn3dzm
-         8QQD+ACWrBKmPXOXzRCMcfHujYRfpFq3D3mF6av7AW5XH0GOctG2Qj0OKQIkJSFtNc
-         6bmqLhFeFwUf6o5TVlIHHo0nMhAVGg/ApuYo/pXMYcaYRIOPE2ZZHs9fMScfMeuynU
-         xofiRlzsUFS9Gw46QRMkupAKLRgNZLDu9ojmF2zNNPj3eCeoc9ufSQVV18Okhtgdew
-         mrs68yI1vSrhQ==
-Subject: [PATCH 3/3] misc: add duration for recovery loop tests
+        s=k20201202; t=1681236954;
+        bh=JwYT7tNqOO2k+5wfNv8vu1liaPLDNr95YVqUqM2ZQdw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=HVyJTn3UZ3lqaP77EGBjqV5Oisp3sdqEFFtvuQDyn3q7ToN3CQuAC4rAG37ZD3LCd
+         wW+PQZtqSRP1ch/kATK10wLM8f4asN7JIbCD7NJbuXh8lEmSs8R1NNauJEjD/1lwsv
+         UUXDnNDHMi399j96sTr9bX62pfZFaOUjsakhudVW51h4H2gDdYV/9lYAKd4OzB8Knw
+         tKxE4g1NFsaYqU4PxkaPF43FeTjbFjcumQG9kWR1bYmT0OKpzLsU2+ms+9kwaRPLO9
+         J7marUrMD/lc9anAeXpz+8+FNISqnM2LXiWIq9/EMiz4SYSguF4OGT3JkizgG3HKk7
+         JYXn5XWVZs8Kg==
+Date:   Tue, 11 Apr 2023 11:15:54 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org, zlang@redhat.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 11 Apr 2023 11:14:03 -0700
-Message-ID: <168123684394.4086541.1780469729949319721.stgit@frogsfrogsfrogs>
-In-Reply-To: <168123682679.4086541.13812285218510940665.stgit@frogsfrogsfrogs>
-References: <168123682679.4086541.13812285218510940665.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+To:     Chandan Babu R <chandan.babu@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, amir73il@gmail.com,
+        leah.rumancik@gmail.com
+Subject: Re: [PATCH 5.4 CANDIDATE 00/17] xfs stable candidate patches for
+ 5.4.y (from v5.11 & v5.12)
+Message-ID: <20230411181554.GJ360889@frogsfrogsfrogs>
+References: <20230411033514.58024-1-chandan.babu@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230411033514.58024-1-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Apr 11, 2023 at 09:04:57AM +0530, Chandan Babu R wrote:
+> Hi Darrick,
+> 
+> This 5.4.y backport series contains fixes from v5.11 & v5.12 release.
+> 
+> This patchset has been tested by executing fstests (via kdevops) using
+> the following XFS configurations,
+> 
+> 1. No CRC (with 512 and 4k block size).
+> 2. Reflink/Rmapbt (1k and 4k block size).
+> 3. Reflink without Rmapbt.
+> 4. External log device.
+> 
+> The following is the list of commits along with corresponding
+> dependent commits.
+> 
+> 1. xfs: fix up non-directory creation in SGID directories
+>    1. xfs: show the proper user quota options
+>    2. xfs: merge the projid fields in struct xfs_icdinode
+>    3. xfs: ensure that the inode uid/gid match values match the icdinode ones
+>    4. xfs: remove the icdinode di_uid/di_gid members
+>    5. xfs: remove the kuid/kgid conversion wrappers
+>    6. xfs: add a new xfs_sb_version_has_v3inode helper
+>    7. xfs: only check the superblock version for dinode size calculation
+>    8. xfs: simplify di_flags2 inheritance in xfs_ialloc
+>    9. xfs: simplify a check in xfs_ioctl_setattr_check_cowextsize
+>    10. xfs: remove the di_version field from struct icdinode
+> 2. xfs: set inode size after creating symlink
+> 3. xfs: shut down the filesystem if we screw up quota reservation
+>    1. xfs: report corruption only as a regular error
+> 4. xfs: consider shutdown in bmapbt cursor delete assert
+> 5. xfs: don't reuse busy extents on extent trim
+> 6. xfs: force log and push AIL to clear pinned inodes when aborting mount
+> 
+> Brian Foster (2):
+>   xfs: consider shutdown in bmapbt cursor delete assert
+>   xfs: don't reuse busy extents on extent trim
+> 
+> Christoph Hellwig (10):
+>   xfs: merge the projid fields in struct xfs_icdinode
+>   xfs: ensure that the inode uid/gid match values match the icdinode
+>     ones
+>   xfs: remove the icdinode di_uid/di_gid members
+>   xfs: remove the kuid/kgid conversion wrappers
+>   xfs: add a new xfs_sb_version_has_v3inode helper
+>   xfs: only check the superblock version for dinode size calculation
+>   xfs: simplify di_flags2 inheritance in xfs_ialloc
+>   xfs: simplify a check in xfs_ioctl_setattr_check_cowextsize
+>   xfs: remove the di_version field from struct icdinode
+>   xfs: fix up non-directory creation in SGID directories
+> 
+> Darrick J. Wong (3):
+>   xfs: report corruption only as a regular error
+>   xfs: shut down the filesystem if we screw up quota reservation
+>   xfs: force log and push AIL to clear pinned inodes when aborting mount
+> 
+> Jeffrey Mitchell (1):
+>   xfs: set inode size after creating symlink
+> 
+> Kaixu Xia (1):
+>   xfs: show the proper user quota options
 
-Make it so that we can run recovery loop tests for an exact number of
-seconds.
+Looks good to me,
+Acked-by: Darrick J. Wong <djwong@kernel.org>
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- common/rc         |   34 ++++++++++++++++++++++++++++++++++
- tests/generic/019 |    1 +
- tests/generic/388 |    2 +-
- tests/generic/475 |    2 +-
- tests/generic/482 |    5 +++++
- tests/generic/648 |    8 ++++----
- 6 files changed, 46 insertions(+), 6 deletions(-)
+--D
 
-
-diff --git a/common/rc b/common/rc
-index e89b0a3794..090f3d4938 100644
---- a/common/rc
-+++ b/common/rc
-@@ -5078,6 +5078,40 @@ _save_coredump()
- 	$COREDUMP_COMPRESSOR -f "$out_file"
- }
- 
-+# Decide if a soak test should continue looping.  The sole parameter is the
-+# number of soak loops that the test wants to run by default.  The actual
-+# loop iteration number is stored in SOAK_LOOPIDX until the loop completes.
-+#
-+# If the test runner set a SOAK_DURATION value, this predicate will keep
-+# looping until it has run for at least that long.
-+_soak_loop_running() {
-+	local max_soak_loops="$1"
-+
-+	test -z "$SOAK_LOOPIDX" && SOAK_LOOPIDX=1
-+
-+	if [ -n "$SOAK_DURATION" ]; then
-+		if [ -z "$SOAK_DEADLINE" ]; then
-+			SOAK_DEADLINE="$(( $(date +%s) + SOAK_DURATION))"
-+		fi
-+
-+		local now="$(date +%s)"
-+		if [ "$now" -gt "$SOAK_DEADLINE" ]; then
-+			unset SOAK_DEADLINE
-+			unset SOAK_LOOPIDX
-+			return 1
-+		fi
-+		SOAK_LOOPIDX=$((SOAK_LOOPIDX + 1))
-+		return 0
-+	fi
-+
-+	if [ "$SOAK_LOOPIDX" -gt "$max_soak_loops" ]; then
-+		unset SOAK_LOOPIDX
-+		return 1
-+	fi
-+	SOAK_LOOPIDX=$((SOAK_LOOPIDX + 1))
-+	return 0
-+}
-+
- init_rc
- 
- ################################################################################
-diff --git a/tests/generic/019 b/tests/generic/019
-index b68dd90c0d..b81c1d17ba 100755
---- a/tests/generic/019
-+++ b/tests/generic/019
-@@ -30,6 +30,7 @@ _cleanup()
- }
- 
- RUN_TIME=$((20+10*$TIME_FACTOR))
-+test -n "$SOAK_DURATION" && RUN_TIME="$SOAK_DURATION"
- NUM_JOBS=$((4*LOAD_FACTOR))
- BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
- FILE_SIZE=$((BLK_DEV_SIZE * 512))
-diff --git a/tests/generic/388 b/tests/generic/388
-index 9cd737e8eb..4a5be6698c 100755
---- a/tests/generic/388
-+++ b/tests/generic/388
-@@ -42,7 +42,7 @@ _scratch_mkfs >> $seqres.full 2>&1
- _require_metadata_journaling $SCRATCH_DEV
- _scratch_mount
- 
--for i in $(seq 1 $((50 * TIME_FACTOR)) ); do
-+while _soak_loop_running $((50 * TIME_FACTOR)); do
- 	($FSSTRESS_PROG $FSSTRESS_AVOID -d $SCRATCH_MNT -n 999999 -p 4 >> $seqres.full &) \
- 		> /dev/null 2>&1
- 
-diff --git a/tests/generic/475 b/tests/generic/475
-index c426402ede..0cbf5131c2 100755
---- a/tests/generic/475
-+++ b/tests/generic/475
-@@ -41,7 +41,7 @@ _require_metadata_journaling $SCRATCH_DEV
- _dmerror_init
- _dmerror_mount
- 
--for i in $(seq 1 $((50 * TIME_FACTOR)) ); do
-+while _soak_loop_running $((50 * TIME_FACTOR)); do
- 	($FSSTRESS_PROG $FSSTRESS_AVOID -d $SCRATCH_MNT -n 999999 -p $((LOAD_FACTOR * 4)) >> $seqres.full &) \
- 		> /dev/null 2>&1
- 
-diff --git a/tests/generic/482 b/tests/generic/482
-index 28c83a232e..b980826b14 100755
---- a/tests/generic/482
-+++ b/tests/generic/482
-@@ -62,8 +62,13 @@ nr_cpus=$("$here/src/feature" -o)
- if [ $nr_cpus -gt 8 ]; then
- 	nr_cpus=8
- fi
-+
- fsstress_args=$(_scale_fsstress_args -w -d $SCRATCH_MNT -n 512 -p $nr_cpus \
- 		$FSSTRESS_AVOID)
-+
-+# XXX dm-logwrites pins kernel memory for every write!
-+# test -n "$SOAK_DURATION" && fsstress_args="$fsstress_args --duration=$SOAK_DURATION"
-+
- devsize=$((1024*1024*200 / 512))	# 200m phys/virt size
- csize=$((1024*64 / 512))		# 64k cluster size
- lowspace=$((1024*1024 / 512))		# 1m low space threshold
-diff --git a/tests/generic/648 b/tests/generic/648
-index d7bf5697e1..3b3544ff49 100755
---- a/tests/generic/648
-+++ b/tests/generic/648
-@@ -74,14 +74,14 @@ snap_loop_fs() {
- 
- fsstress=($FSSTRESS_PROG $FSSTRESS_AVOID -d "$loopmnt" -n 999999 -p "$((LOAD_FACTOR * 4))")
- 
--for i in $(seq 1 $((25 * TIME_FACTOR)) ); do
-+while _soak_loop_running $((25 * TIME_FACTOR)); do
- 	touch $scratch_aliveflag
- 	snap_loop_fs >> $seqres.full 2>&1 &
- 
- 	if ! _mount $loopimg $loopmnt -o loop; then
- 		rm -f $scratch_aliveflag
- 		_metadump_dev $loopimg $seqres.loop.$i.md
--		_fail "iteration $i loopimg mount failed"
-+		_fail "iteration $SOAK_LOOPIDX loopimg mount failed"
- 		break
- 	fi
- 
-@@ -126,12 +126,12 @@ for i in $(seq 1 $((25 * TIME_FACTOR)) ); do
- 	done
- 	if [ $is_unmounted -ne 0 ];then
- 		cat $tmp.unmount.err
--		_fail "iteration $i scratch unmount failed"
-+		_fail "iteration $SOAK_LOOPIDX scratch unmount failed"
- 	fi
- 	_dmerror_load_working_table
- 	if ! _dmerror_mount; then
- 		_metadump_dev $DMERROR_DEV $seqres.scratch.$i.md
--		_fail "iteration $i scratch mount failed"
-+		_fail "iteration $SOAK_LOOPIDX scratch mount failed"
- 	fi
- done
- 
-
+> 
+>  fs/xfs/libxfs/xfs_attr_leaf.c  |  5 +-
+>  fs/xfs/libxfs/xfs_bmap.c       | 10 ++--
+>  fs/xfs/libxfs/xfs_btree.c      | 30 +++++-------
+>  fs/xfs/libxfs/xfs_format.h     | 33 ++++++++++---
+>  fs/xfs/libxfs/xfs_ialloc.c     |  6 +--
+>  fs/xfs/libxfs/xfs_inode_buf.c  | 54 +++++++-------------
+>  fs/xfs/libxfs/xfs_inode_buf.h  |  8 +--
+>  fs/xfs/libxfs/xfs_inode_fork.c |  2 +-
+>  fs/xfs/libxfs/xfs_inode_fork.h |  9 +---
+>  fs/xfs/libxfs/xfs_log_format.h | 10 ++--
+>  fs/xfs/libxfs/xfs_trans_resv.c |  2 +-
+>  fs/xfs/xfs_acl.c               | 12 +++--
+>  fs/xfs/xfs_bmap_util.c         | 16 +++---
+>  fs/xfs/xfs_buf_item.c          |  2 +-
+>  fs/xfs/xfs_dquot.c             |  6 +--
+>  fs/xfs/xfs_error.c             |  2 +-
+>  fs/xfs/xfs_extent_busy.c       | 14 ------
+>  fs/xfs/xfs_icache.c            |  8 ++-
+>  fs/xfs/xfs_inode.c             | 61 ++++++++---------------
+>  fs/xfs/xfs_inode.h             | 21 +-------
+>  fs/xfs/xfs_inode_item.c        | 20 ++++----
+>  fs/xfs/xfs_ioctl.c             | 22 ++++-----
+>  fs/xfs/xfs_iops.c              | 11 +----
+>  fs/xfs/xfs_itable.c            |  8 +--
+>  fs/xfs/xfs_linux.h             | 32 +++---------
+>  fs/xfs/xfs_log_recover.c       |  6 +--
+>  fs/xfs/xfs_mount.c             | 90 +++++++++++++++++-----------------
+>  fs/xfs/xfs_qm.c                | 43 +++++++++-------
+>  fs/xfs/xfs_qm_bhv.c            |  2 +-
+>  fs/xfs/xfs_quota.h             |  4 +-
+>  fs/xfs/xfs_super.c             | 10 ++--
+>  fs/xfs/xfs_symlink.c           |  7 ++-
+>  fs/xfs/xfs_trans_dquot.c       | 16 ++++--
+>  33 files changed, 248 insertions(+), 334 deletions(-)
+> 
+> -- 
+> 2.39.1
+> 
