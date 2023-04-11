@@ -2,157 +2,89 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F893C76196
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 15:17:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CA28C77B6F
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 15:35:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231162AbjDKPR1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Apr 2023 11:17:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51962 "EHLO
+        id S229507AbjDKPfu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Apr 2023 11:35:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231329AbjDKPRN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 11:17:13 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C94BB65AC;
-        Tue, 11 Apr 2023 08:16:42 -0700 (PDT)
+        with ESMTP id S229491AbjDKPft (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 11:35:49 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AED6B19A8
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 08:35:47 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D4C1E6284B;
-        Tue, 11 Apr 2023 15:15:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65855C433D2;
-        Tue, 11 Apr 2023 15:15:21 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 424E5611F8
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 15:35:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F48CC433EF;
+        Tue, 11 Apr 2023 15:35:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681226124;
-        bh=kRbdgrXjLG5GyyTrGV82AnFP0qt1dfRAJUPj3Z2Dpg0=;
+        s=k20201202; t=1681227346;
+        bh=V0zqP/af8TyhYKCo4q2UYbiQPuOwvMWzo0Di/sIw3/0=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=O0hExX+iuTqWf56efMiKBf61MZJGoDdlaLysDm8q4AO9oaXzSZsBEtS58Z9PjvN5V
-         +YBrx26G5BwtJSPnbjXm38d5X6N3cpU0dse51LLkdvBHPJTDx9e9+t1qVDaHtc1/vM
-         DvnejoQm+RVzZwERNT/nODPoYtR/vKKoXwwZWOkaQ6CpZgrNmaJsnA24N5aDjGEvzp
-         mqFGNDXOEGb9QqEBqOCQu4HGJVS9fv34lsz07HD6I8OrDiEOxG6mQ+1ul6PKBygvqP
-         v1wg5F1KQ4zyu2TBXi58pceLgCqsxGwgHA/y5ad7qrFCHnbOA4gv/DzgavKraTIjC6
-         iObWhxjBsDn6g==
-Date:   Tue, 11 Apr 2023 17:15:17 +0200
-From:   Christian Brauner <brauner@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Jeff Layton <jlayton@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-nfs@vger.kernel.org
-Subject: Re: [RFC PATCH 3/3][RESEND] xfs: mark the inode for high-res
- timestamp update in getattr
-Message-ID: <20230411-schokolade-hegemonie-83b1f0ecfd6c@brauner>
-References: <20230411143702.64495-1-jlayton@kernel.org>
- <20230411143702.64495-4-jlayton@kernel.org>
- <20230411145446.GG360895@frogsfrogsfrogs>
+        b=VjhE6Y6Plnw8GgGcBtm3sIisM0opSraHtxHivwebiJI4dvjaODBoCXd/xTBV52pKo
+         P3FrLjhfnAiB94WAItasoriG5vNH5m3iKv+AESUZZIkFaWOghGIt6v0XDKbIC0sEEp
+         bqfG+GzfwBEdoRzl0hsYkVMqvxMUUKz9AckE+Nu0JTNGW38lnNWAnw8Yjx964UGeWF
+         2wJ1zwRylsBsJC5c6woWXVJYG/w6g2amxemCY9pLdpxMuOsx49DJ/1uYdrm8b1AIcD
+         /3NQILNi631EmC4p5aYKbXgKSC6Y4l1AkygB8FcV8x2Y9IBMM0MYpvNL+mZx5QvQKW
+         8XkV3FOHAGKzw==
+Date:   Tue, 11 Apr 2023 08:35:46 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     cem@kernel.org, linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH 4/6] xfs_db: fix metadump name obfuscation for ascii-ci
+ filesystems
+Message-ID: <20230411153546.GH360889@frogsfrogsfrogs>
+References: <168073977341.1656666.5994535770114245232.stgit@frogsfrogsfrogs>
+ <168073979582.1656666.4211101901014947969.stgit@frogsfrogsfrogs>
+ <ZDTpBtMlSsxRJjRh@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230411145446.GG360895@frogsfrogsfrogs>
+In-Reply-To: <ZDTpBtMlSsxRJjRh@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 11, 2023 at 07:54:46AM -0700, Darrick J. Wong wrote:
-> On Tue, Apr 11, 2023 at 10:37:02AM -0400, Jeff Layton wrote:
-> > When the mtime or ctime is being queried via getattr, ensure that we
-> > mark the inode for a high-res timestamp update on the next pass. Also,
-> > switch to current_cmtime for other c/mtime updates.
+On Mon, Apr 10, 2023 at 09:58:46PM -0700, Christoph Hellwig wrote:
+> On Wed, Apr 05, 2023 at 05:09:55PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > With this change, we're better off having the NFS server just ignore
-> > the i_version field and have it use the ctime instead, so clear the
-> > STATX_CHANGE_COOKIE flag in the result mask in ->getattr.
-> > 
-> > Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> > ---
-> >  fs/xfs/libxfs/xfs_trans_inode.c |  2 +-
-> >  fs/xfs/xfs_acl.c                |  2 +-
-> >  fs/xfs/xfs_inode.c              |  2 +-
-> >  fs/xfs/xfs_iops.c               | 15 ++++++++++++---
-> >  4 files changed, 15 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-> > index 8b5547073379..9ad7c229c617 100644
-> > --- a/fs/xfs/libxfs/xfs_trans_inode.c
-> > +++ b/fs/xfs/libxfs/xfs_trans_inode.c
-> > @@ -63,7 +63,7 @@ xfs_trans_ichgtime(
-> >  	ASSERT(tp);
-> >  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> >  
-> > -	tv = current_time(inode);
-> > +	tv = current_cmtime(inode);
-> >  
-> >  	if (flags & XFS_ICHGTIME_MOD)
-> >  		inode->i_mtime = tv;
-> > diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-> > index 791db7d9c849..461adc58cf8c 100644
-> > --- a/fs/xfs/xfs_acl.c
-> > +++ b/fs/xfs/xfs_acl.c
-> > @@ -233,7 +233,7 @@ xfs_acl_set_mode(
-> >  	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> >  	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
-> >  	inode->i_mode = mode;
-> > -	inode->i_ctime = current_time(inode);
-> > +	inode->i_ctime = current_cmtime(inode);
+> > Now that we've stabilized the dirent hash function for ascii-ci
+> > filesystems, adapt the metadump name obfuscation code to detect when
+> > it's obfuscating a directory entry name on an ascii-ci filesystem and
+> > spit out names that actually have the same hash.
 > 
-> Hmm, now we're adding a spinlock to all these updates.
-> Does lockdep have anything exciting to say about this?
-> 
-> (I don't think it will, just wondering aloud...)
-> 
-> >  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> >  
-> >  	if (xfs_has_wsync(mp))
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index 5808abab786c..80f9d731e261 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> > @@ -843,7 +843,7 @@ xfs_init_new_inode(
-> >  	ip->i_df.if_nextents = 0;
-> >  	ASSERT(ip->i_nblocks == 0);
-> >  
-> > -	tv = current_time(inode);
-> > +	tv = current_cmtime(inode);
-> >  	inode->i_mtime = tv;
-> >  	inode->i_atime = tv;
-> >  	inode->i_ctime = tv;
-> > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> > index 24718adb3c16..a0b07f90e16c 100644
-> > --- a/fs/xfs/xfs_iops.c
-> > +++ b/fs/xfs/xfs_iops.c
-> > @@ -565,6 +565,15 @@ xfs_vn_getattr(
-> >  	if (xfs_is_shutdown(mp))
-> >  		return -EIO;
-> >  
-> > +	/*
-> > +	 * XFS uses the i_version infrastructure to track any change to
-> > +	 * the inode, including atime updates. This means that the i_version
-> > +	 * returned by getattr doesn't conform to what the callers expect.
-> > +	 * Clear it here so that nfsd will fake up a change cookie from the
-> > +	 * ctime instead.
-> > +	 */
-> > +	stat->result_mask &= ~STATX_CHANGE_COOKIE;
-> > +
-> >  	stat->size = XFS_ISIZE(ip);
-> >  	stat->dev = inode->i_sb->s_dev;
-> >  	stat->mode = inode->i_mode;
-> > @@ -573,8 +582,8 @@ xfs_vn_getattr(
-> >  	stat->gid = vfsgid_into_kgid(vfsgid);
-> >  	stat->ino = ip->i_ino;
-> >  	stat->atime = inode->i_atime;
-> > -	stat->mtime = inode->i_mtime;
-> > -	stat->ctime = inode->i_ctime;
-> > +	if (request_mask & (STATX_CTIME|STATX_MTIME))
-> > +		fill_cmtime_and_mark(inode, stat);
-> 
-> Should we be setting STATX_[CM]TIME in the result_mask, just in case the
-> caller asked for ctime and not mtime?
+> Between the alloc use, the goto jumping back and the failure to
+> obsfucate some names this really seems horribly ugly.  I could
+> come up with ideas to fix some of that, but they'd be fairly invasive.
 
-I think the expectation is that everything in STATX_BASIC_MASK is always
-returned to allow equivalence between stat() and statx(). So requesting
-STATX_CTIME separately from STATX_MTIME isn't implemented widely, maybe
-even not at atll?, yet.
+Given that it's rol7 and xoring, I'd love it if someone came up with a
+gentler obfuscate_name() that at least tried to generate obfuscated
+names that weren't full of control characters and other junk that make
+ls output horrible.
+
+Buuuut doing that requires a deep understanding of how the math works.
+I think I've almost grokked it, but applied math has never been my
+specialty.  Mark Adler's crc spoof looked promising if we ever follow
+through on Dave's suggestion to change the dahash to crc32c, but that's
+a whole different discussion.
+
+> Is there any reason we need to support obsfucatation for ascii-ci,
+> or could we just say we require "-o" to metadump ascii-ci file systems
+> and not deal with this at all given that it never actually worked?
+
+That would be simpler for metadump, yes.
+
+I'm going to introduce a followup series that adds a new xfs_db command
+to generate obfuscated filenames/attrs to exercise the dabtree hash
+collision resolution code.  I should probably do that now, since I
+already sent xfs/861 that uses it.
+
+It wouldn't be the end of the world if hashcoll didn't work on asciici
+filesystems, but that /would/ be a testing gap.
+
+--D
