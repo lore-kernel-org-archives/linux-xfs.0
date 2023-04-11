@@ -2,182 +2,449 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9686C7619A
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 03:35:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29305C76196
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 03:35:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229822AbjDKDfk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Apr 2023 23:35:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37106 "EHLO
+        id S229700AbjDKDfu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Apr 2023 23:35:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37176 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229523AbjDKDfi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2023 23:35:38 -0400
+        with ESMTP id S229523AbjDKDft (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2023 23:35:49 -0400
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE8CA172C
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Apr 2023 20:35:37 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 834DA1726
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Apr 2023 20:35:47 -0700 (PDT)
 Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33AJjrCR026583;
-        Tue, 11 Apr 2023 03:35:34 GMT
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33AJ8vGr027510;
+        Tue, 11 Apr 2023 03:35:43 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version; s=corp-2022-7-12;
- bh=A7AYU9m4g33wNtkYBX9ICDexG4DM0VCQBvf0HyXfPrI=;
- b=HaBKEsnlRReuPCKLRxVpMpPIO/dr4Wel/hibNPuVUD6a5epHLyBgV7nCaHy8v4JJ1qW4
- mEBDcdgckqBJx8ppLRnEc9BNWo/+MqU50giaKXHFYagJ/NnyuMrOFAbQJjdeu3SdcchW
- pW9cF1Ow/U1pa4k7lNMkUw7VrgmhyQk4Pv04GtyQBigo378kg5eSwMMo7ErGSFK9W3pX
- KDupfCZqcUfLVfv2KPcc4dxXAr/C8+QWWbf2ODGhp0HOPeghq0MHrpSbkrjkciXuwwpq
- wHj46K06brE7zXo0ufPwha47q8VJ4ATMtHZhByy4wGQ+agNDhX/kCj+wZoRlXflKaFuZ 3w== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3pu0e7c8wv-1
+ bh=9OIDBskNQPK7JbYUJYPNeFMumfUiclUA1Ef1Vsa+8lE=;
+ b=jOCNGN1bWzJMha/EKyMlFnJhM/bLeoC/CupgnEjRNyLa59HCsapx7gQzcNC2GIbw4mMf
+ YkXbM/lSkFlIq4yFDY0CRJoPM+d+1rHFCHymQ4Yd9RTnWmRXTPDgp/ThXitYyhLJReeV
+ 1BO17csT0MWyxjbWK4tg9iSTnP6J1G5I8np6U0fBLmt+/0mfAvsfXkmMLyESXwMCEaR4
+ JnTZsU6SWBkMjyGjgi99Ptit8GTlJR5ajZ/boMEyoY2ZT8al02fYD8cJnpRBOm7y2Ppf
+ d0QWMpFljDWl1TGoUtmIWkVuBgE34/hrvoVrZKXhYgAcyXa87xIx6gam/+eFNGNJZGnd 4w== 
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3pu0e7c8ww-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 11 Apr 2023 03:35:34 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 33B0iYSX002335;
-        Tue, 11 Apr 2023 03:35:33 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2168.outbound.protection.outlook.com [104.47.59.168])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3puwe69977-1
+        Tue, 11 Apr 2023 03:35:43 +0000
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 33B2vr8E034156;
+        Tue, 11 Apr 2023 03:35:43 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2169.outbound.protection.outlook.com [104.47.56.169])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3puwc39dsx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 11 Apr 2023 03:35:33 +0000
+        Tue, 11 Apr 2023 03:35:42 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=mU3N4zPKbMsl33CkbMFBvf+sjjgTP7vAi1T8SXMtbXgkRMBmEDpVUfhE86ntQ8kOdKBqr1BIdPAHdyTHuIb5SoRsN2otBdz8tabpU8mYK7tfTPeXHRglRzSKFn+rDf2/PmeH/osUf0l6umy6hlamCOkLKdVShPmEGQDyv28S1xJWp4Xtn0idlh76bg5GfGQGwCBn13meEDRTAKXBGeqQvQ5N2t24lYL5NcHrxsSVLcm+xQYwbiW5JbuZc3OhVPeIBi5L6fsGhNDoNDA91bVFoq0hlVMB4wePfqjrmJ4NtI/uNUC0EkEqbrDoSqBbkl2cygU7icW4PpfQvltqA6JU7A==
+ b=lenGXxa6j/3kyUnnLuUTNxMEWsDKpnmsn/6aI3vUBZ7XXRmV93b19vWy4dHxzLUcX3mzzqFojtKhgE9RNS5am/a8ScJxbieAQ3ectTTK0S9iEHtc1T4xrTGN4BRZbYCM5DU86FdGujjONMVJ9LMazFjU72x981e0H9rmPyyfuAg5oe9T1D+KydTbE08PSy132aCeJl4YZAlFp6Cjq9vdBojptJrOMQzjvtluBuZVrwVtQxUpdGVb6qfZ0IwWooqZc6YvKb1GM7Iw9qmWr9r0cXnjI5eU/aV2jxTfmkyFNWXTB36KcB4VDOZmnEb4QbVuH3EfouHYD93CUNuGwTOTmw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=A7AYU9m4g33wNtkYBX9ICDexG4DM0VCQBvf0HyXfPrI=;
- b=UWndrthUQjeljKfZd/xnUHFxMoKUM6WTkMtiwaaR7Hs8O4ZLchgdgkehZ3dnzBMy0POxLFII5EFMzKQLIXD2xD8htxR5cR7i13rnsl4mQ+w6425XnhFY4s9/hSoxU6m/IDpW0SUDObC1VgdF+070bKqOy7Uu4kkh0jcMzEX92d0w4eIvkQBwisslvb1AOqtEqIOsLcQLSXUhW146tnSQfBygDsxl4GkA9/vyl6eWdHpyYx24zJIRWaJ8KnHuZ/CyilnNqx7ccDv6RkncZaDv1HhbJ0KozZTLgY5qERcvgudBaiPY2iNnzg7Bpp+VCMcL1r57yY74eZ9DfiyxFywPPg==
+ bh=9OIDBskNQPK7JbYUJYPNeFMumfUiclUA1Ef1Vsa+8lE=;
+ b=JPwi4K0GKMR3aNJPRBShvotmzlRH/fev98tgtFNV7FymoVk+JoV8EBadphiGmftSUGFpbi9R9fYJZv2JwNVT2Hj51myIeZ/0jR+Px/jjpMk7teTdKzX5zYu/UV377Zk/qFnRfZ3xe7GilPWDwLZ1zaitl7c2zaarN8envZiR1tUCEMK1PypEthY7m22304h8rCDBl+aC4iOZMm1LZjjsrngbQORnyYg1z3MSf5zK0CKkQTmbyPZBG0eMVXzWjOLHXnygiOYZEDwJRTqZKRVTV0E4hN8sx370C62k9A2UkBA5+d39edlQ+Zh6VJ3qLYXGjLIjkXIk9b5AXbARl3++3w==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=A7AYU9m4g33wNtkYBX9ICDexG4DM0VCQBvf0HyXfPrI=;
- b=XYUed/ijZKwY86s91X2s0U9TQJnt7+bWZ1AAdgOvqwjbtOQQ33+BIFTdHps4UJjmueiiQjHTRt3YP9BekZJKt4m12oSETRjPPpnV1nWKr7DfWYLq8X8Fhq9a6w0ecEvw+RHUX0WRJN4bZ7U/+LIDRga0vEUTaMkQfUewJecGw50=
+ bh=9OIDBskNQPK7JbYUJYPNeFMumfUiclUA1Ef1Vsa+8lE=;
+ b=mgudH96BcKXI61lwNOpOxamZ0Dro74Lq2wf+jrfskJiC6xJ24pQBy/Zxaaz4GqnvfdsUWOC56YKGRg7x4SvxA0U9aHeiXMJkSbNfkZy7NWds1ygGVxKN2bX1s4sinvArjwaghCr7dkMXUnxB7lcSWkPnmprrpbxFYR2V7ZWdkgE=
 Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:22b::9)
  by CO1PR10MB4563.namprd10.prod.outlook.com (2603:10b6:303:92::6) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6277.34; Tue, 11 Apr
- 2023 03:35:32 +0000
+ 2023 03:35:39 +0000
 Received: from SA1PR10MB5867.namprd10.prod.outlook.com
  ([fe80::b3d4:e7f4:7f85:90b7]) by SA1PR10MB5867.namprd10.prod.outlook.com
  ([fe80::b3d4:e7f4:7f85:90b7%3]) with mapi id 15.20.6277.038; Tue, 11 Apr 2023
- 03:35:31 +0000
+ 03:35:39 +0000
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     djwong@kernel.org
 Cc:     chandan.babu@oracle.com, linux-xfs@vger.kernel.org,
         amir73il@gmail.com, leah.rumancik@gmail.com
-Subject: [PATCH 5.4 CANDIDATE 01/17] xfs: show the proper user quota options
-Date:   Tue, 11 Apr 2023 09:04:58 +0530
-Message-Id: <20230411033514.58024-2-chandan.babu@oracle.com>
+Subject: [PATCH 5.4 CANDIDATE 02/17] xfs: merge the projid fields in struct xfs_icdinode
+Date:   Tue, 11 Apr 2023 09:04:59 +0530
+Message-Id: <20230411033514.58024-3-chandan.babu@oracle.com>
 X-Mailer: git-send-email 2.39.1
 In-Reply-To: <20230411033514.58024-1-chandan.babu@oracle.com>
 References: <20230411033514.58024-1-chandan.babu@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: SG2P153CA0038.APCP153.PROD.OUTLOOK.COM (2603:1096:4:c6::7)
- To SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:22b::9)
+X-ClientProxiedBy: SG2PR03CA0104.apcprd03.prod.outlook.com
+ (2603:1096:4:7c::32) To SA1PR10MB5867.namprd10.prod.outlook.com
+ (2603:10b6:806:22b::9)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|CO1PR10MB4563:EE_
-X-MS-Office365-Filtering-Correlation-Id: c91daf91-a2ab-4655-b0ff-08db3a3dcd60
+X-MS-Office365-Filtering-Correlation-Id: e574b64a-c102-4980-139b-08db3a3dd1ef
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: rrM7jqXAxQt418YE/4ParkufdIRKOMUhdprkn3YrCurv3+uu9mHpbP2OAqv8zGtsl6GL/kbXZYoqxZpNLJ78baNmZ+HISOYkWCIH6mWm63RS1Sd6q3cKUTdtbjh1knDAPVSNMSzjTZt9ldbLxV0KAfcbJJg6oOY4fC9Hrung3BqQHN7K5nPDVAxpJ8qDg3JD+9/Srtz1J/i4oIFjrIl03gmRu/sPPDM0SV5jd3nICX0GADG1HiCJl4l2M2rBG6obeiS+DjdbVpKTidbERE0s8RaMi77XRLD51vtzp85sUM0qwEBH4QXCtDnrfxv/PU2AuG9Gu+6OwnKlgjxwlf9ml5lV/F7FQLcm8tlfkMfRfL8tbfeOjpjSGcd0Cusk6J3sjnEvKlU9dmsIvjrA0XjS+0fJmIhkllsz5GAMHRB6V8jwcT1HWm43N2QXzFj2TdrQsQvs8wCNJ+O2+nvvh4ZiVxi235JIuXWxOugpRHIXyqTbFUTKXHOhwXU2LWZ783zZJ5XkbzBZEeYmCjj89PFhLmBnxih7riDs/nBQ4mBtDJJaZGdbdHEe8h6GSXCRn4qT
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(39860400002)(376002)(396003)(136003)(346002)(366004)(451199021)(6486002)(4326008)(66556008)(66476007)(478600001)(66946007)(8676002)(6916009)(41300700001)(83380400001)(316002)(36756003)(86362001)(2616005)(6506007)(1076003)(26005)(6512007)(6666004)(15650500001)(8936002)(2906002)(5660300002)(186003)(38100700002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: ec9MfaIGG1+D75MyfoMOcaQr8CFmEvJnXPA0c6VwyzUxkI37AtouuitbmfvuA+hr0PPCzyVquln6AlKUTQ9Cstwfal+0TvUo8VYfAuLrCQ90+afULdDWDa6Sdu+cHIOx82kMnkkjhceBddIqJ348HSSn5Kk15p3vQ2pFToejDLEUDW4oi4EdgmDtMZXXvAsF0bH4nYRGrqEhC6rhtw4kV8bwlyL+3kUPhIIAder2cVLSbWfH1/ioVVTbTfT2ci25kdpxH95im+RHoP2+YYiuJgzcj/a83SOX3nweW1rTmow7BO/IhF/0aN3ux69H4t+YTT7XkGIN3eeGTVkAt9OGm3fanFSxuKyMvykIVE94d6w+Zo/Q8C+Mknk1W+HBrchMLXiSmDaZ4x58Gu4pvkLfR6GJ4LZU8fFNACaXIU0ly4QTCqCU/RR9F+w9lee6rTQOpiZ+0oAbl35uAlV/HC16LEnE8bfrSVXoolUgvuUALL7KNPa+uyhJgpowBKjiHSTqpLPABox1BMpDGrLe+TMybzji8VwfdMvUgy3Grv9sHKhH9D4jWr36irOASN3CBMKq
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(39860400002)(376002)(396003)(136003)(346002)(366004)(451199021)(6486002)(4326008)(66556008)(66476007)(478600001)(66946007)(8676002)(6916009)(41300700001)(83380400001)(316002)(36756003)(86362001)(2616005)(6506007)(1076003)(26005)(6512007)(6666004)(8936002)(2906002)(5660300002)(186003)(38100700002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?NhiIcUlToV44NA+nj7/xnAVpNymsM1LMC9PrB6r0+ShjfNNAddVsQV5MUA1t?=
- =?us-ascii?Q?Oy9aMhBeVEqVh+iHa2m9QlCSYwPdIFXumOqClk2yN/y98/++mPREAS62gCd0?=
- =?us-ascii?Q?43DGqyPbcvcfjTswhiEDhYrr3Z/ZEd2okObUn4MJrlSEpZijB0Gzn0nws6W4?=
- =?us-ascii?Q?44w5TeZ0Sy3yVwzFsXa+DDTNnDEU1kp4/ALyg7n6cm3Fw81gHZf9iMdHDrXY?=
- =?us-ascii?Q?1o1LDmEtNCjThuvL5H53AvyiKMG9HLXlEGaZg69CWcWo+GLo2xY5URqwPnQk?=
- =?us-ascii?Q?2TtPguB7XfxvN2Pv9VE7APm0GeXEiGfHRTOnDoOuqiCR34oBwQkKKKU26RLs?=
- =?us-ascii?Q?9MjVloZe817t6+1jeFBY4jPJ1t1diB0hCpYQ1RYTqiopSIx+VC3CJSCDcus9?=
- =?us-ascii?Q?XngfO6WkaWMHN+oigc7af5Nl36kZbQ54iKWd4tjOjIqDrq52cfJ4tMmYDRMG?=
- =?us-ascii?Q?k1GMCO/9rx0XjmFBkT219lXGiI1s2ikA86/nKIihyx7xXDxUj1l7Xu3Wjby2?=
- =?us-ascii?Q?LlPryb3NlGwGXxotcoxxhcsyTKdpcQAmE9fj5zZJP1M2ju6ySQfFqizzXY+w?=
- =?us-ascii?Q?sDK80L9ooR9QeO9QSli96QmvvUWpC8Owk5omagEnSRsn+6Gdbdc3PVzgksNf?=
- =?us-ascii?Q?GLrtvHiYZxGomIjNAVJaEFeWCAzswu0+ot5s8994KkBD4PSPOvM3CRclWdDy?=
- =?us-ascii?Q?vmW7zySrOalfIdSeW76wU+y1ZjxjpGP2hzQWFoA6/3QVywprOKUDkKZFwUzu?=
- =?us-ascii?Q?T9cb9Zpa72HdqTdKvaN2FdFd4Hs21bFL04KEg3b6WGDBIa1vhyWflZ2i20cy?=
- =?us-ascii?Q?qgSIPZpMfnR2VP5qqwSqQkaRuqoAofEj3ePjRtaUEcn11mxphiplEaU7po74?=
- =?us-ascii?Q?7BxX0SgtnLxgH8AC3tQvo6ZCao4xxsOE17oKpwdDyhkVesldK94NCkfMgm8K?=
- =?us-ascii?Q?hiGvRZtqsuvrQs5KNh2x6KTTjzKRaI90M0BP9FYKwCJa723NjLGVX1Ad9hqF?=
- =?us-ascii?Q?O1gUVvBJfWYXdqo4oelYLtyvH8Urwv2cGYRHo2s5uNlgvhDT04faYc7ngWV6?=
- =?us-ascii?Q?R8ljj3wndj1IVTTui/veoBvZdUg0mPgvqnkvnhuDj3k1QSQweEhZxn/8xckZ?=
- =?us-ascii?Q?vBqWU0ZFvjfurEWn71/4D7tZm/uoi600zDdJyYTVxLwCdBuR7ltbMVui/Uvg?=
- =?us-ascii?Q?AdClBPYRhQlpML96TDSVxbO7f5Tj6BalFIMXqZuLuDKpOM6WOVEOBRlBrsrS?=
- =?us-ascii?Q?yN9Az3Xiq3Pc3CULXUB3NA0MuijoV3t/t1+r4XgHCUGNta+Iqu4CxCC0QkZI?=
- =?us-ascii?Q?c9qvgyNCaFcx0nwUd2uTm2vISMJwFgGnPPUTL4zYECzukzUgTrHtbqbBNF5C?=
- =?us-ascii?Q?B4Uuv8JvZm0sHI4jX+CeHD2nLhXq3P5YD/hcu0oL+xRX6OxB8AdGCCXeHDNc?=
- =?us-ascii?Q?ALgUjLHloQXlScDSqUCEab9AcS9y6O4VjRv7Z39eVYvwJZKt7Fe25yChDyR6?=
- =?us-ascii?Q?XzcyPRzmWdYf9yWsor5hoXvNWi0prC1pV0YPQCCRIRgo50p1DjrvntQFjm2r?=
- =?us-ascii?Q?IpWZaXzLeO8Bh1PF+Ex2CH5rVDmrBsb3QL95Zfs2?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?F+TLJWaRD4WtiMPiEo6OWjbU/kyEiTzc0OZCG63IUSUWaZG6kHS2xv7SrNAv?=
+ =?us-ascii?Q?tf6j5xQgwM2Q0AY2nEH/9dSOqWdPbanflgWxAGOvXUBvRcQsSlh5MNkKA9Yl?=
+ =?us-ascii?Q?V5AaSKTiNCil8uC44HGWIDSe1yFrvrtKMlPqJFxaw/bmTaFN7i8IB4QPABq2?=
+ =?us-ascii?Q?fqufIlZDw3S66GILo5y1fFs0Kl9vkN5dB/yOkL8nax8S8YdnzU8gMiKsa0Db?=
+ =?us-ascii?Q?GMl76lHUhnMlPe7IVkQWWHODnn3sBgr2T4ylHhObVUr5khbsDrMrOywh4vac?=
+ =?us-ascii?Q?DxsJM66+MsKYn3ipzb1JOmXqWh3xS63Es47m3iUYh/RbMeEgKLPsGVh8t6L/?=
+ =?us-ascii?Q?1RXowxOPmu0mA3ahjUXokc6eGzpx/fVu6cDOOQQwJfs9cGfr297OdwylAHQe?=
+ =?us-ascii?Q?hFbXciZsrpTUM3hSYmvu3LbOqmKCv+KvRzFfoirTxoWIRoHMKdVWbiYPt/jp?=
+ =?us-ascii?Q?DVYTtgYIH1e7hW7ZcCsgqFxn/BOoPuZy/uLPfoYnNYXmongWQhV0exvEoqcp?=
+ =?us-ascii?Q?rl8dDZf9a3UUoED2EzUimrBltwqU6DD13t7j15wc3YKwjyxaxhpUpzWQvedo?=
+ =?us-ascii?Q?GSziKTlXDaTF+PsNgO2IZoOLJph3vBpe/6kG+37kY2r+YUQt/DOtla1IJxX7?=
+ =?us-ascii?Q?QAftOjpO0+1IVOxCRUl0hkxaNqSlHZVKsn5THwcKglkHDv6s2cUSNlCuOIP3?=
+ =?us-ascii?Q?15ESw8JlYUKl7aI9tzZHnkDzapC9ljUF49FDGEAPaciN9JXbVSXXkHz4TsbX?=
+ =?us-ascii?Q?3dS15gFU5OVc0WSVylo0awUVt0upq8jmq2dcGLb5UZOv198XSOKW+2DUTg/l?=
+ =?us-ascii?Q?bXNBnioV8AUgDIA8T+A0LXBOKMXSrfKexXQVlxKap6vo99uFdYJCSswv5dBE?=
+ =?us-ascii?Q?xb9vfEDeigD2eH4r44Pnb7SkXud7tAlEIkPlGEh1E3IuJMoSwz4Z1tE+TQsi?=
+ =?us-ascii?Q?e09JaqaHMF1rYu8Ce3NZFneKddE35rYvID8fA6qL6zTpvegwrP+2K2JIhj4n?=
+ =?us-ascii?Q?TFSoGm2bvR/7vch0HLBR8dd5N8dvxAxcXhhnjvydZIA1y3OprLVXkbcUD8MK?=
+ =?us-ascii?Q?x2vn4phvO7skcavKyhZFPbl/92StW8BumLh67JgAwev+qeOCAhtg8HM4sTol?=
+ =?us-ascii?Q?0I1aqNGbQ9zYy5sm1CysZqPStwySvJJlPGo2nvs9O0bnNHpdaFDrBph53L1R?=
+ =?us-ascii?Q?HpA87s41uOyZNmBYAU2lt964mS8eBROwmi6yDgxvYDcL1uuK+JRJfgM86Hov?=
+ =?us-ascii?Q?uI/oA0XE+tzi5BAFnN4gri6K3Zm8ExWVvx9Ln5eU4ruy1wmFvxhP4kj9LvDC?=
+ =?us-ascii?Q?FCehg/ZEPTCg289NaAWwv5he94rq6fV/LcZmmtnUs4ge6BdxrsWFOkjGy7TW?=
+ =?us-ascii?Q?gZCi4bi7BcaDzTlZAQonV1qf4JhT3W8HJcyHLAAkO9PZmtUMtqjZSF6YPFqd?=
+ =?us-ascii?Q?ZOM5qaZpmbvHJ3yQqf70iZb1St3FASmrd7SGTNDyL/sjz0PBBDF16zOu1uOq?=
+ =?us-ascii?Q?AWkBuLstWWyCd7wdsqm/ZwxfFm5d8c4cC8fICYIAs4l9MZNzFhet7qV8gXAO?=
+ =?us-ascii?Q?F/3cd/plVNjnbTPhScKfJpA52Vog7ycMHwiV5wWZ?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: DJ2iZKkCOHjRkmkTjyqnYER4w+oRLAbgLa0YQj29B0tB1JJxB/HLdJ2kZfLFzX91c4gAgFH2JDsWSYDHI6HuCl6PYnayQjrcm7N5lyVpqFDl1G0pB01YBmMWrthRoqzQYinEgcQxwoHZTIPAO/ZAcU9UmxqFFICI+qIzaZUNfpUm3ZsTgNbo+bli92zwkB+EP3C7mm5cujxH50KsIaB8MND/KvGfSgWlWte4L14xr6FZT+SPDu2COOKRHGWNJO3uq32dIUzY1duYGG8LD24xQje26/vvOIDGtaO8yGtNXYE/6bfShIbDDM6W+eFnGrJVkd3uQ/MYEFfje/o674h9L/cZpu8sSs+R2Lk9dFV5Ob1URIGRn850q8PXha1I67MU0ydnUgRftVUkuIw5Yvs5WNWDBZeFA+Fi7pKVm/CsYtITlksog/x6xz/fC+QCosbIL8wM+w9TX2vZjwTpcfdlGCh0+m9C3EGsXN7Zv2eslpcbgEKIGXdxLAVv+dDF6KyFPPTImdEykJuDAo/SesOFx4caHp7nMSfmXrA1w5UWwxUrnt86u6kxu8+pG4i0U8rudAbCt37mAy3JUAI3TR6LaINER4zJCCdx0C2vOo87ksjk+psR2sZtEnVQtjMEFS2Q08G8/uFIOZsOJRVnfTxrzBOX9uDthe9U/c6xknQ+BqWrq29ppau/deDL/KYFstujWkXMtnOHkg/KX3UNU4jHtHP/LYqk0tq02B7W9/gTFXnrQTQ47YB1iHRxGjZPqidScC9bpsNzuoZ0FM29hCos0kuFnEG0TvFe3gIh00cSFMFzkwKPDU8VoG2EWbTo4SaQ
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: mm6lvE2Z8zUYFtyK46L3M75CjfqyZMmiYbl2/3Id/vxQsAOaFkmSpZPmo6+3Yj7k1z5yJyix4d7/XOaTNPB353flQ7fSBMYu9vG6mFONzn2PtYO1Ge7QZAbC5/sbh+i5P2juiqbCNfH9sJAbn0OGaT4G3XBp0mRFTeQKHe8TiL+qtDt78GpjdPa1SLsn3bmlPyy2B6URMz/d3ShTxr9RO1jqArx8DuA7WYHrQbN9+nUY94aG0j73/R6E620vCKJ/zcaGNC9sZ0aic8drPq0HTiHJ0w+qWGXbAJGDFLYcgMIaisN4M3iKvB0lBcu4B0f07Q/B5an3ogPfDTVPl2+dioz/HNWjATZHFfhlp8Za27SDkj490hUmcPckGTplSbdo91jwUT4l+VEveu7KIArNWAXE66DfjyZ76ibmkK6y6zb7jFb72WZ1bM5nmSnLoym7xvDT8YX7YqWwis6FlXrhhlJPYwqOozaPqo7l171zzlZBBIRHBB85GNJ6FIu+i6YNphx79pFBsgndRpbwmDgIH+ruvIeEhYI4yDu18hj58EIQq5wTaY+pqZKgt4Y2F6sn9wfHeLFw+UMDL1ac1dBpfZwi2ctPZ7DO97oVZZj4ee0QUtRqlnnrv5YbM8lXhMkT/ZEM1OZRDtenHcuaaZpl3vMq0sEok3/t2oVp/5Pk7tPQNKV2At1LDb5dGMbtehLbySxc1OiulL7eTjBOLPmroZg6n74x3Eo+PTKhXBaO+8jiiL2WG4JVDZC+bJv8pIMOV/4XXhqTSO2q9G7c7rFjgXfRsjVmvPKuYqjoGwVUtwEOBjHQcJ/b9IiNOj3gcnea
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c91daf91-a2ab-4655-b0ff-08db3a3dcd60
+X-MS-Exchange-CrossTenant-Network-Message-Id: e574b64a-c102-4980-139b-08db3a3dd1ef
 X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Apr 2023 03:35:31.8821
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Apr 2023 03:35:39.5297
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ao4lmE+XgzffNh0/xlVWnFJMIijfBlSjqqE3M7BpzG8UUqqcaZRppNKcCRcAZzTBg4L38SFnQmfdhKxGUzzlVw==
+X-MS-Exchange-CrossTenant-UserPrincipalName: VbXmsa+6VAGsiaPeMf/5hWiyQ4jxU60HaN5593IhGWrv9cnrSHu3MMWXQPHtrTzGgpqxw+nS3c9TjBsn2TqTnQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO1PR10MB4563
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-04-10_18,2023-04-06_03,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0
- adultscore=0 spamscore=0 suspectscore=0 bulkscore=0 mlxlogscore=999
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2303200000 definitions=main-2304110032
-X-Proofpoint-ORIG-GUID: 7UDDd03mYQ-hx16pBLJvIZ_LekR1QbjD
-X-Proofpoint-GUID: 7UDDd03mYQ-hx16pBLJvIZ_LekR1QbjD
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 adultscore=0
+ suspectscore=0 phishscore=0 mlxlogscore=999 mlxscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303200000
+ definitions=main-2304110032
+X-Proofpoint-ORIG-GUID: kqDEyJd1eHFZtOjeMZbqVltPuIX53LMs
+X-Proofpoint-GUID: kqDEyJd1eHFZtOjeMZbqVltPuIX53LMs
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Kaixu Xia <kaixuxia@tencent.com>
+From: Christoph Hellwig <hch@lst.de>
 
-commit 237d7887ae723af7d978e8b9a385fdff416f357b upstream.
+commit de7a866fd41b227b0aa6e9cbeb0dae221c12f542 upstream.
 
-The quota option 'usrquota' should be shown if both the XFS_UQUOTA_ACCT
-and XFS_UQUOTA_ENFD flags are set. The option 'uqnoenforce' should be
-shown when only the XFS_UQUOTA_ACCT flag is set. The current code logic
-seems wrong, Fix it and show proper options.
+There is no point in splitting the fields like this in an purely
+in-memory structure.
 
-Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 ---
- fs/xfs/xfs_super.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_inode_buf.c | 11 +++++------
+ fs/xfs/libxfs/xfs_inode_buf.h |  3 +--
+ fs/xfs/xfs_dquot.c            |  2 +-
+ fs/xfs/xfs_icache.c           |  4 ++--
+ fs/xfs/xfs_inode.c            |  6 +++---
+ fs/xfs/xfs_inode.h            | 21 +--------------------
+ fs/xfs/xfs_inode_item.c       |  4 ++--
+ fs/xfs/xfs_ioctl.c            |  8 ++++----
+ fs/xfs/xfs_iops.c             |  2 +-
+ fs/xfs/xfs_itable.c           |  2 +-
+ fs/xfs/xfs_qm.c               |  8 ++++----
+ fs/xfs/xfs_qm_bhv.c           |  2 +-
+ 12 files changed, 26 insertions(+), 47 deletions(-)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 9e73d2b29911..e802cbc9daad 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -490,10 +490,12 @@ xfs_showargs(
- 		seq_printf(m, ",swidth=%d",
- 				(int)XFS_FSB_TO_BB(mp, mp->m_swidth));
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 28ab3c5255e1..e1faf48eb002 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -213,13 +213,12 @@ xfs_inode_from_disk(
+ 	to->di_version = from->di_version;
+ 	if (to->di_version == 1) {
+ 		set_nlink(inode, be16_to_cpu(from->di_onlink));
+-		to->di_projid_lo = 0;
+-		to->di_projid_hi = 0;
++		to->di_projid = 0;
+ 		to->di_version = 2;
+ 	} else {
+ 		set_nlink(inode, be32_to_cpu(from->di_nlink));
+-		to->di_projid_lo = be16_to_cpu(from->di_projid_lo);
+-		to->di_projid_hi = be16_to_cpu(from->di_projid_hi);
++		to->di_projid = (prid_t)be16_to_cpu(from->di_projid_hi) << 16 |
++					be16_to_cpu(from->di_projid_lo);
+ 	}
  
--	if (mp->m_qflags & (XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD))
--		seq_puts(m, ",usrquota");
--	else if (mp->m_qflags & XFS_UQUOTA_ACCT)
--		seq_puts(m, ",uqnoenforce");
-+	if (mp->m_qflags & XFS_UQUOTA_ACCT) {
-+		if (mp->m_qflags & XFS_UQUOTA_ENFD)
-+			seq_puts(m, ",usrquota");
-+		else
-+			seq_puts(m, ",uqnoenforce");
-+	}
+ 	to->di_format = from->di_format;
+@@ -279,8 +278,8 @@ xfs_inode_to_disk(
+ 	to->di_format = from->di_format;
+ 	to->di_uid = cpu_to_be32(from->di_uid);
+ 	to->di_gid = cpu_to_be32(from->di_gid);
+-	to->di_projid_lo = cpu_to_be16(from->di_projid_lo);
+-	to->di_projid_hi = cpu_to_be16(from->di_projid_hi);
++	to->di_projid_lo = cpu_to_be16(from->di_projid & 0xffff);
++	to->di_projid_hi = cpu_to_be16(from->di_projid >> 16);
  
- 	if (mp->m_qflags & XFS_PQUOTA_ACCT) {
- 		if (mp->m_qflags & XFS_PQUOTA_ENFD)
+ 	memset(to->di_pad, 0, sizeof(to->di_pad));
+ 	to->di_atime.t_sec = cpu_to_be32(inode->i_atime.tv_sec);
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
+index ab0f84165317..af3ff02b4a8d 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.h
++++ b/fs/xfs/libxfs/xfs_inode_buf.h
+@@ -21,8 +21,7 @@ struct xfs_icdinode {
+ 	uint16_t	di_flushiter;	/* incremented on flush */
+ 	uint32_t	di_uid;		/* owner's user id */
+ 	uint32_t	di_gid;		/* owner's group id */
+-	uint16_t	di_projid_lo;	/* lower part of owner's project id */
+-	uint16_t	di_projid_hi;	/* higher part of owner's project id */
++	uint32_t	di_projid;	/* owner's project id */
+ 	xfs_fsize_t	di_size;	/* number of bytes in file */
+ 	xfs_rfsblock_t	di_nblocks;	/* # of direct & btree blocks used */
+ 	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 6231b155e7f3..f59c3265dae7 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -863,7 +863,7 @@ xfs_qm_id_for_quotatype(
+ 	case XFS_DQ_GROUP:
+ 		return ip->i_d.di_gid;
+ 	case XFS_DQ_PROJ:
+-		return xfs_get_projid(ip);
++		return ip->i_d.di_projid;
+ 	}
+ 	ASSERT(0);
+ 	return 0;
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index a1135b86e79f..8e6dc04c14d4 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1430,7 +1430,7 @@ xfs_inode_match_id(
+ 		return 0;
+ 
+ 	if ((eofb->eof_flags & XFS_EOF_FLAGS_PRID) &&
+-	    xfs_get_projid(ip) != eofb->eof_prid)
++	    ip->i_d.di_projid != eofb->eof_prid)
+ 		return 0;
+ 
+ 	return 1;
+@@ -1454,7 +1454,7 @@ xfs_inode_match_id_union(
+ 		return 1;
+ 
+ 	if ((eofb->eof_flags & XFS_EOF_FLAGS_PRID) &&
+-	    xfs_get_projid(ip) == eofb->eof_prid)
++	    ip->i_d.di_projid == eofb->eof_prid)
+ 		return 1;
+ 
+ 	return 0;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 02f77a359972..891f03a3fd91 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -809,7 +809,7 @@ xfs_ialloc(
+ 	ip->i_d.di_uid = xfs_kuid_to_uid(current_fsuid());
+ 	ip->i_d.di_gid = xfs_kgid_to_gid(current_fsgid());
+ 	inode->i_rdev = rdev;
+-	xfs_set_projid(ip, prid);
++	ip->i_d.di_projid = prid;
+ 
+ 	if (pip && XFS_INHERIT_GID(pip)) {
+ 		ip->i_d.di_gid = pip->i_d.di_gid;
+@@ -1418,7 +1418,7 @@ xfs_link(
+ 	 * the tree quota mechanism could be circumvented.
+ 	 */
+ 	if (unlikely((tdp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) &&
+-		     (xfs_get_projid(tdp) != xfs_get_projid(sip)))) {
++		     tdp->i_d.di_projid != sip->i_d.di_projid)) {
+ 		error = -EXDEV;
+ 		goto error_return;
+ 	}
+@@ -3299,7 +3299,7 @@ xfs_rename(
+ 	 * tree quota mechanism would be circumvented.
+ 	 */
+ 	if (unlikely((target_dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) &&
+-		     (xfs_get_projid(target_dp) != xfs_get_projid(src_ip)))) {
++		     target_dp->i_d.di_projid != src_ip->i_d.di_projid)) {
+ 		error = -EXDEV;
+ 		goto out_trans_cancel;
+ 	}
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index e493d491b7cc..62b963d3b23d 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -177,30 +177,11 @@ xfs_iflags_test_and_set(xfs_inode_t *ip, unsigned short flags)
+ 	return ret;
+ }
+ 
+-/*
+- * Project quota id helpers (previously projid was 16bit only
+- * and using two 16bit values to hold new 32bit projid was chosen
+- * to retain compatibility with "old" filesystems).
+- */
+-static inline prid_t
+-xfs_get_projid(struct xfs_inode *ip)
+-{
+-	return (prid_t)ip->i_d.di_projid_hi << 16 | ip->i_d.di_projid_lo;
+-}
+-
+-static inline void
+-xfs_set_projid(struct xfs_inode *ip,
+-		prid_t projid)
+-{
+-	ip->i_d.di_projid_hi = (uint16_t) (projid >> 16);
+-	ip->i_d.di_projid_lo = (uint16_t) (projid & 0xffff);
+-}
+-
+ static inline prid_t
+ xfs_get_initial_prid(struct xfs_inode *dp)
+ {
+ 	if (dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
+-		return xfs_get_projid(dp);
++		return dp->i_d.di_projid;
+ 
+ 	return XFS_PROJID_DEFAULT;
+ }
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 83b8f5655636..a3df39033c00 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -310,8 +310,8 @@ xfs_inode_to_log_dinode(
+ 	to->di_format = from->di_format;
+ 	to->di_uid = from->di_uid;
+ 	to->di_gid = from->di_gid;
+-	to->di_projid_lo = from->di_projid_lo;
+-	to->di_projid_hi = from->di_projid_hi;
++	to->di_projid_lo = from->di_projid & 0xffff;
++	to->di_projid_hi = from->di_projid >> 16;
+ 
+ 	memset(to->di_pad, 0, sizeof(to->di_pad));
+ 	memset(to->di_pad3, 0, sizeof(to->di_pad3));
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 7b7a009425e2..fd40a0644b75 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1144,7 +1144,7 @@ xfs_fill_fsxattr(
+ 	fa->fsx_extsize = ip->i_d.di_extsize << ip->i_mount->m_sb.sb_blocklog;
+ 	fa->fsx_cowextsize = ip->i_d.di_cowextsize <<
+ 			ip->i_mount->m_sb.sb_blocklog;
+-	fa->fsx_projid = xfs_get_projid(ip);
++	fa->fsx_projid = ip->i_d.di_projid;
+ 
+ 	if (attr) {
+ 		if (ip->i_afp) {
+@@ -1597,7 +1597,7 @@ xfs_ioctl_setattr(
+ 	}
+ 
+ 	if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_PQUOTA_ON(mp) &&
+-	    xfs_get_projid(ip) != fa->fsx_projid) {
++	    ip->i_d.di_projid != fa->fsx_projid) {
+ 		code = xfs_qm_vop_chown_reserve(tp, ip, udqp, NULL, pdqp,
+ 				capable(CAP_FOWNER) ?  XFS_QMOPT_FORCE_RES : 0);
+ 		if (code)	/* out of quota */
+@@ -1634,13 +1634,13 @@ xfs_ioctl_setattr(
+ 		VFS_I(ip)->i_mode &= ~(S_ISUID|S_ISGID);
+ 
+ 	/* Change the ownerships and register project quota modifications */
+-	if (xfs_get_projid(ip) != fa->fsx_projid) {
++	if (ip->i_d.di_projid != fa->fsx_projid) {
+ 		if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_PQUOTA_ON(mp)) {
+ 			olddquot = xfs_qm_vop_chown(tp, ip,
+ 						&ip->i_pdquot, pdqp);
+ 		}
+ 		ASSERT(ip->i_d.di_version > 1);
+-		xfs_set_projid(ip, fa->fsx_projid);
++		ip->i_d.di_projid = fa->fsx_projid;
+ 	}
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 80dd05f8f1af..05adfea93ad9 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -668,7 +668,7 @@ xfs_setattr_nonsize(
+ 		ASSERT(gdqp == NULL);
+ 		error = xfs_qm_vop_dqalloc(ip, xfs_kuid_to_uid(uid),
+ 					   xfs_kgid_to_gid(gid),
+-					   xfs_get_projid(ip),
++					   ip->i_d.di_projid,
+ 					   qflags, &udqp, &gdqp, NULL);
+ 		if (error)
+ 			return error;
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 884950adbd16..f1f4c4dde0a8 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -84,7 +84,7 @@ xfs_bulkstat_one_int(
+ 	/* xfs_iget returns the following without needing
+ 	 * further change.
+ 	 */
+-	buf->bs_projectid = xfs_get_projid(ip);
++	buf->bs_projectid = ip->i_d.di_projid;
+ 	buf->bs_ino = ino;
+ 	buf->bs_uid = dic->di_uid;
+ 	buf->bs_gid = dic->di_gid;
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 6b23ebd3f54f..8867589bfc3c 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -347,7 +347,7 @@ xfs_qm_dqattach_locked(
+ 	}
+ 
+ 	if (XFS_IS_PQUOTA_ON(mp) && !ip->i_pdquot) {
+-		error = xfs_qm_dqattach_one(ip, xfs_get_projid(ip), XFS_DQ_PROJ,
++		error = xfs_qm_dqattach_one(ip, ip->i_d.di_projid, XFS_DQ_PROJ,
+ 				doalloc, &ip->i_pdquot);
+ 		if (error)
+ 			goto done;
+@@ -1715,7 +1715,7 @@ xfs_qm_vop_dqalloc(
+ 		}
+ 	}
+ 	if ((flags & XFS_QMOPT_PQUOTA) && XFS_IS_PQUOTA_ON(mp)) {
+-		if (xfs_get_projid(ip) != prid) {
++		if (ip->i_d.di_projid != prid) {
+ 			xfs_iunlock(ip, lockflags);
+ 			error = xfs_qm_dqget(mp, (xfs_dqid_t)prid, XFS_DQ_PROJ,
+ 					true, &pq);
+@@ -1849,7 +1849,7 @@ xfs_qm_vop_chown_reserve(
+ 	}
+ 
+ 	if (XFS_IS_PQUOTA_ON(ip->i_mount) && pdqp &&
+-	    xfs_get_projid(ip) != be32_to_cpu(pdqp->q_core.d_id)) {
++	    ip->i_d.di_projid != be32_to_cpu(pdqp->q_core.d_id)) {
+ 		prjflags = XFS_QMOPT_ENOSPC;
+ 		pdq_delblks = pdqp;
+ 		if (delblks) {
+@@ -1950,7 +1950,7 @@ xfs_qm_vop_create_dqattach(
+ 	}
+ 	if (pdqp && XFS_IS_PQUOTA_ON(mp)) {
+ 		ASSERT(ip->i_pdquot == NULL);
+-		ASSERT(xfs_get_projid(ip) == be32_to_cpu(pdqp->q_core.d_id));
++		ASSERT(ip->i_d.di_projid == be32_to_cpu(pdqp->q_core.d_id));
+ 
+ 		ip->i_pdquot = xfs_qm_dqhold(pdqp);
+ 		xfs_trans_mod_dquot(tp, pdqp, XFS_TRANS_DQ_ICOUNT, 1);
+diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
+index b784a3751fe2..fc2fa418919f 100644
+--- a/fs/xfs/xfs_qm_bhv.c
++++ b/fs/xfs/xfs_qm_bhv.c
+@@ -60,7 +60,7 @@ xfs_qm_statvfs(
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_dquot	*dqp;
+ 
+-	if (!xfs_qm_dqget(mp, xfs_get_projid(ip), XFS_DQ_PROJ, false, &dqp)) {
++	if (!xfs_qm_dqget(mp, ip->i_d.di_projid, XFS_DQ_PROJ, false, &dqp)) {
+ 		xfs_fill_statvfs_from_dquot(statp, dqp);
+ 		xfs_qm_dqput(dqp);
+ 	}
 -- 
 2.39.1
 
