@@ -2,401 +2,322 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9E1CC76196
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 03:36:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34606C7619A
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Apr 2023 03:36:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229717AbjDKDgM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Apr 2023 23:36:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37350 "EHLO
+        id S229888AbjDKDgU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Apr 2023 23:36:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37446 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229891AbjDKDgK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2023 23:36:10 -0400
+        with ESMTP id S229747AbjDKDgS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Apr 2023 23:36:18 -0400
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00529172B
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Apr 2023 20:36:08 -0700 (PDT)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33AJPedU012830;
-        Tue, 11 Apr 2023 03:36:06 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61E7A172C
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Apr 2023 20:36:17 -0700 (PDT)
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33AJcCrh030581;
+        Tue, 11 Apr 2023 03:36:14 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version; s=corp-2022-7-12;
- bh=uy8cwkSapqeLG7O0T8KVNU8QMp0397fpnfZmGUMw9Vw=;
- b=20xILHks3avIr5hjNEoC1Tppn25okSiaswmTudWs65IWngqie8otPFw21qfgcLG7e5eN
- dC7EAC368aaHpiKsOooBow/CG4JFciR0XRSGOhZp9V+UDyzHmSEPplV+h1TZfI6mrL2v
- Q5a5JyRJjIcr7vPGkfYhypOeo6cvpFQriSTmRJ0d4rZAtygoeHElAUR4sI9BKdvi9fT7
- SdG6puRO92emK9Ps7ZqQZtwNFVZsgKy0DxtiUtoV1b+H9+2HBBvlULI2Qc2NW9PgSx6N
- MopFd+IZHIPGA4V2tFkDxNozs65ZSvf+YLuV9/yguAJQr3lnoMNCfa0xwrP/lCLBPipZ LQ== 
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3pu0ttma5j-1
+ bh=PKYW+PPQiWfNpO60834+JpIHyqyImqmCoRMRZVwuTq8=;
+ b=J+axr97Sow83gDgpUOvN8zZkdbiWnOBpnViHmhrZSGouLAwux2a84jnx1lmRm0kMigOs
+ 8XUOl4Npwi6FJYYagCXROfYD80/AvDoTN8io8cOwJUTEydqYzepldesogHC3aNnr/sfp
+ XIr6UDBxGQu3Bf0npdBoKCUQ5cIrQDMpta96bQLLGogB6N5+CbALxtllUx3o3J0WmbGi
+ fy8nEYEA4L72mrLlGwShb7o3cSKfgEaAQLaJISZs6D/0IoKA6Tx94G1UQI1iAJ0lvp5G
+ yZUBD8VPQIT3HXwc6UF6U/KiR/Mc2fvvXZDJwIJfoxFN3fJmXAlI0c5ocLGO1y1N2FxI Pw== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3pu0bvvam5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 11 Apr 2023 03:36:05 +0000
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 33B3ATDP032604;
-        Tue, 11 Apr 2023 03:36:05 GMT
-Received: from nam04-bn8-obe.outbound.protection.outlook.com (mail-bn8nam04lp2046.outbound.protection.outlook.com [104.47.74.46])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3puw909a93-1
+        Tue, 11 Apr 2023 03:36:13 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 33B3Hrox001866;
+        Tue, 11 Apr 2023 03:36:12 GMT
+Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2177.outbound.protection.outlook.com [104.47.55.177])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3puwe699y2-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 11 Apr 2023 03:36:05 +0000
+        Tue, 11 Apr 2023 03:36:12 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=PxPLV3ktDZjaPzUH20KNV9dCGe/ybxRJbiAEpRB4yuzExP4DxJG7nqd3F3RYGKBMbN3yaHSbEaZYpP5IeGPvn2l5Uj7dYFiRxcBHhlGLcErFN6LkU20J2HZ2Y92D2Ob/ZpiwvWiOSR3j++/cevpi81/7nabHr0bTdVVpJQhM4JIp9Pp6hSm4hZJFyTQrNEBzxp7jaAPJl8HFWMyfUqmFuGChtsIGxBM/ks3VpDDTx8pwTNmlv/wFIHNTNL4BqJWw3GvBDfW4zSoDY9GdLld8G1/iqLpLBY+oNB02YTpXviUftQsM6eGt8fJoMLoEvPu2uFCnB1xR7iDrTt5CchtJWA==
+ b=SWctoUnV5U6fgg9l29baUuhQWWk9UvRiqyd5r7lBuiShlPVyBBtOIHr9F0t6SHERGs/B5GfWn5p8E3+vbBvVA5ELElU5eSWPW9UJWobeRTcxYbKOumoyPnTeT8omjWDbmNA2mVFfjOTKLQmYG6gTIe44sbMFu6rsgUH2IweGTSj8WDhJ3fmURGnldGbLvF4ZxwzuXH9ogYH1LMoK2hYj3COy+hkhm0tK/UqGx7hCS91tu/nGEOOZHKXAqxOTCTtfxEuCiq5JwLM3LGStJ2SIJItUxT7PLmo3lVl4LlzELURdacZH9vYiddbqoVT601Nz9QS/jCbJEQAMwYLJnHEquA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=uy8cwkSapqeLG7O0T8KVNU8QMp0397fpnfZmGUMw9Vw=;
- b=H4P30DYKbit24e72C+DbyGU2By/nh50cJsUCi93GkX+kzjhew7zx76iDFupwTnj/NS1bQPKNJdgQD5QrB2eVYN8dLVK/9c37K56qnDEb7uWmqyQ7A4+VCvVi8/Ei0VCsjYNf+Ez5xIx6Nk1mpqjaJxLCntJ/HZtfYyO2rUcDfa/I09D8RHkiBOA92cdH3mRjp+8GYIfRm0O0lUsyiN6DDuyGegMdUb7LVbhnNJ8Z8i2Fh1LQNKMBhMrRbvleI9oly+A0H+mppz86QDQCs8aXbpJ0ozS52u/dy302XELTQhjhOapmCEnujkZysy4ID5wKopLAa2Ee1cQaV8sbk90oJA==
+ bh=PKYW+PPQiWfNpO60834+JpIHyqyImqmCoRMRZVwuTq8=;
+ b=IiuAs/lBYwObCS+w/p8qB7R2X4t8wGK4PHFsd+31r/2PnBk16kf2LS3LGBaaJfABwBM0Fg7WsRdNasmiCqLpEQMVrHFXeKnNoYPeTvUjcPMsGadH3bKCexRzi86qE7kkJx24Lc+352NjEOhQkZR+njzwmiOKPMzFUInaIp/7BF1RUqByBqnb6iSWOzNSheJWqY35yKTS8i33JgxJKbYcxiVs9c22vOSNI0Gs5pok4xWvNSsfY8wpUqlXeYxL58jCF7eT8sm+ubKCKyxQnV69jdh2Y3a4MfyA/kV389sgtcx8O/I7OEt6c4EhrL3e1g/prQoVcH7Xu5M7rE10B9tNOw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=uy8cwkSapqeLG7O0T8KVNU8QMp0397fpnfZmGUMw9Vw=;
- b=KHzp2Ee/iNgxe4rK24Hm+HorGWt57jUHXkX4f74M3PvsXpG1tnfb8iysnWsUiCko9YsritAQ33tHc7bLTtApNCW+CvPrGdlVUnv9foxNIabbNM23dxLh44aD4AnRim71mK6lFelD5U4nE8a+ICBv2rcuqbar9f6CnP5m6wSvVhM=
+ bh=PKYW+PPQiWfNpO60834+JpIHyqyImqmCoRMRZVwuTq8=;
+ b=DHHnh106jAc49B5FyhBXyaw4XY93fCa7jisXRshXITmJTSTaDmWclRiVgJ1WO9a/aKbjgxNXTSU/g+V5rRdbAsxKOQLF0bIWTYmzTDC86agxA4nhLKQ0BV2QGO3eFxT8AO/TMo8WVY96NeAWGzIJ+y87IFgYw0QJAyTXx8ANXzw=
 Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:22b::9)
  by BY5PR10MB4338.namprd10.prod.outlook.com (2603:10b6:a03:207::11) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6277.38; Tue, 11 Apr
- 2023 03:36:02 +0000
+ 2023 03:36:10 +0000
 Received: from SA1PR10MB5867.namprd10.prod.outlook.com
  ([fe80::b3d4:e7f4:7f85:90b7]) by SA1PR10MB5867.namprd10.prod.outlook.com
  ([fe80::b3d4:e7f4:7f85:90b7%3]) with mapi id 15.20.6277.038; Tue, 11 Apr 2023
- 03:36:02 +0000
+ 03:36:10 +0000
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     djwong@kernel.org
 Cc:     chandan.babu@oracle.com, linux-xfs@vger.kernel.org,
         amir73il@gmail.com, leah.rumancik@gmail.com
-Subject: [PATCH 5.4 CANDIDATE 05/17] xfs: remove the kuid/kgid conversion wrappers
-Date:   Tue, 11 Apr 2023 09:05:02 +0530
-Message-Id: <20230411033514.58024-6-chandan.babu@oracle.com>
+Subject: [PATCH 5.4 CANDIDATE 06/17] xfs: add a new xfs_sb_version_has_v3inode helper
+Date:   Tue, 11 Apr 2023 09:05:03 +0530
+Message-Id: <20230411033514.58024-7-chandan.babu@oracle.com>
 X-Mailer: git-send-email 2.39.1
 In-Reply-To: <20230411033514.58024-1-chandan.babu@oracle.com>
 References: <20230411033514.58024-1-chandan.babu@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: SI2PR02CA0052.apcprd02.prod.outlook.com
- (2603:1096:4:196::18) To SA1PR10MB5867.namprd10.prod.outlook.com
+X-ClientProxiedBy: SI2PR01CA0002.apcprd01.prod.exchangelabs.com
+ (2603:1096:4:191::21) To SA1PR10MB5867.namprd10.prod.outlook.com
  (2603:10b6:806:22b::9)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|BY5PR10MB4338:EE_
-X-MS-Office365-Filtering-Correlation-Id: 388685c9-86c6-463d-f879-08db3a3ddf60
+X-MS-Office365-Filtering-Correlation-Id: 54133c81-1f7d-48d9-c445-08db3a3de47b
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: TwgkVYGBrYzJLZ+5K74ojExp2Jn/K+n6Knu5s1fbSzSu7NVil/kCmwVs72zLzi2WGwrcSfRCYsjNPLiOZhwSPaXNlJt+upJewDrLaYyQ9zs3ftX6HVxHeZp7upw1qYWg77m/95NhvwaW1OtqvwYTM++7ZdeGQCzuUjFxkWF/vnMLYZdMI4yaDGODlkbs3q9k4PMfutQvOg5THmy22IexT+XCB3HpyfiJY/Q+7XMzxu2Kf+N9RyiD3/RVEX+OftW0SU+a+T6FeyS7LcwfGE4hPHPWp/xcsFx6ax+ivDWM5Xn7vkSDZ1xGD+m4QApAHoDmu4Tig3BhPtT3YoVogl+izTWRF3GwUneZexmBEHL9bJ2LCH2osPVU56ENqocDbIqmtRtIo642ItsI0r0ppwIJdaP76vf47ro1o++dkvjRg79q1haYp+lsoXfw6a/feJ5zPEn7i0y57ALbLnch2qsq+gfl6Bux8ILm1wO1eSXJBNRZmmVS8/Jn8mGuE8v7riUDvLX+RHBt5dvc2WrIkoN8Hy/2/7UlLsN/UfxtB0lfiAizvU2DIKdf2khh0JDLuE7w
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(346002)(396003)(376002)(366004)(39860400002)(136003)(451199021)(478600001)(1076003)(6512007)(316002)(26005)(6506007)(186003)(6486002)(2906002)(5660300002)(4326008)(66946007)(41300700001)(8676002)(6916009)(66476007)(8936002)(66556008)(38100700002)(86362001)(83380400001)(36756003)(2616005);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: GuxYxlG/27ZLvyjIOcOKm9RXiouWGrADrZOWiAQK0VVN22dkNoUqvQm8cUpNTwpTzkhcbdahnTbJ3+G6vvGoyTZsmERuji/Qq1EBnC6ZhqoNzjI9kPR3qi1ZvOxfSpzElnWE564+dhwDmmGqdPKrV/c8btqtqq2/tj7auVFw1OJYgVD8rb0bpNG1luHwpzHAxUFSlXmxDmGcxYz26jWgXL/kff4fA9YBmaPi7tnWdbpZZiIT4T+BTiDfCrhEitVc3NkmybLLN2mmUQTyJ73ZYP1dGUwVUxvBDrZULw7OpCLoW5uw9kcedEnzqDeE8FFV7/0bKeZIQJYCSEW2pMjhER8k8/CQyH+Pmm+kY77Q1bg7QDWIoFFuzyS3Cdz5k5S8BqK6Qrlhp4zMfqqoHZWaT1psbq0hDqnkJ+S0Y/5JzoN+7JgeTaIEa1N7FIeHAnsUh2sTCYHQLog+v0zEFFq3UTXWKKiZ+UMB0LLshhvTTOr1JsrGgEEO00v/6V6St3aIE9u6yMEUc37cHFPZdc0yl1dtj545RaZjTZlGpdzfHajtgLQTpuzrQSE17a1N8H0/
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(346002)(396003)(376002)(366004)(39860400002)(136003)(451199021)(478600001)(1076003)(6512007)(316002)(26005)(6506007)(186003)(6666004)(6486002)(2906002)(5660300002)(4326008)(66946007)(41300700001)(8676002)(6916009)(66476007)(8936002)(66556008)(38100700002)(86362001)(83380400001)(36756003)(2616005)(66899021);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Xicvr7+L8va9HiwvFQ5hwTJSSLSb9pmTp+S1y2UQEhWh153T1uWYiocvaMgh?=
- =?us-ascii?Q?7my4EeJ7kpqqx0eFyaEjfTsLkzQ5M7B26iT5G5TXUYk2HvR7rMfjOD6Adsfx?=
- =?us-ascii?Q?x9PHusE8dYclsc5qsVl/gLAJui2gIilRK8jE8WNB6cT/bnpjWn43+vKHCYRY?=
- =?us-ascii?Q?y41bUyMOv8bWnm40RmnjJAN8daHQZG/33VHVWL0uBBYyrKbHtLsz+ts+LR0r?=
- =?us-ascii?Q?jsthu8mXiULYxz4cWSh4CCm+EezTgwyWOtnPk+nksL4TJmnK4CPg7oNgExBh?=
- =?us-ascii?Q?Qt8ZgEA+WvNCPqEXUoPzXNXwdICGx7v+Rcj2cSRVYqAO/Ppb++Nxir3dcJ+U?=
- =?us-ascii?Q?djOByKNN3q6GYAN7bAHlzVQPh7Kk+rngn65iUOhF5l50IduXk807CSPaXeFk?=
- =?us-ascii?Q?pZmFM/pnny5UtTyrvFo78uvYBbSAlhKde09BYqXTB30KCNulGapTE3bCNHka?=
- =?us-ascii?Q?dSyO1o87CtdUd6aWmX5hCPYThbRIC2J5Sw2mZY7JUSScMBT4kmmD2iJBNwo3?=
- =?us-ascii?Q?c+pCCjBb1gG99Tko00NLKPJBj4JQsi3N5aL0LlJ9F9nlk9PEzPMa4lEzU8/C?=
- =?us-ascii?Q?m1w2Ll6FATZl3MXCCfnCBv/Z22vPc9ieg7sFmScqhQAspo9W1IZscbr3SOKv?=
- =?us-ascii?Q?Y3cYC/NKHu1Mf0ryVx/NF3S419+tXGWh6fsComJj8r5nQaVOnnp5fYRFCzrj?=
- =?us-ascii?Q?uWFkn1yMk2huR7y1qj1vNYtNgWUz/QfzuMIlrsaEZI9wPnOrg85J/Zkh3NcN?=
- =?us-ascii?Q?J5RmYQG1zjdlPWdW+lZWyDQsuYEPhxfTtc3NiaI6YYTQyHZCaT2p8euN9twM?=
- =?us-ascii?Q?al50HsDZgLet9FKu/qdFiDE59DMBjYq466aHET+PQombo/6jXtLTcz7xA37c?=
- =?us-ascii?Q?kEoKJIigjiQkoPAtlPQBI3K+OXKFHkF0yn7clcXxCwU2/eIltrE7+jExNoWb?=
- =?us-ascii?Q?sASYoteJs/WlvTsBvK9j6dj9Na8lX/EUBM6wjEGvuwHjt1Wj4Ad/rTUjz6AQ?=
- =?us-ascii?Q?kqKf6JjywonPd8J2d4aWMA5bfoUEzphEVBli5Sz0BeL9Wx6VHhXafz9rLZg9?=
- =?us-ascii?Q?KErqI2GGIOwYFaZr6L+xR4Se7eA2oXDSd06wIRD3kcTem9EX1bQawivjB1EV?=
- =?us-ascii?Q?5TTspazf2aUxPwlrUknU6/JIS/ZqcoaNt22S8OvaVs4Gb53/EVD78vDQ1B/J?=
- =?us-ascii?Q?cyqaArDw6q71yB333pFKeD8gyxYFuT7bABvGyIrF2jgRGHKLBIVioNvDenhX?=
- =?us-ascii?Q?zqxiuGsqnwmA0HzX1JTDr9aLRCbC38aeHcncH/Sdids3rxcbOOZ8PpZObHcD?=
- =?us-ascii?Q?3DptVr/0/VTEgqhIQOy3NQwCoEF6KGSvPmkTZhjne5i2cp9HpmGZaMjPSZJ+?=
- =?us-ascii?Q?h/vitsPaYfiElKCC9F6fHCGKDXvHD8l9F68AnVYHj0PRb6WJ6xqlICEnh1Am?=
- =?us-ascii?Q?IN7DpgcJ/rgsZSgCfsSbHX4OIeinlw8W7RxkCgAg5tDS4KFcUXDXy2/1DVKd?=
- =?us-ascii?Q?ckRqFv8F6964abz4YtbzjLRi1vkGb9xnw/wjgj90afMjhq9W8DPfogEY5Jbr?=
- =?us-ascii?Q?8qt1vstdoGW50ezkb7mTwvfvW1sh01/NfbiB6Eiu?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?5w1az+PWMyngWA+4Xy/EanKbxXy0Tg0ZQ3DMd/9Wn4Hs0lgQUBuTGu8fjzV8?=
+ =?us-ascii?Q?HFCzN4N3ogx1IUUcsn07ItI/Xj/5CB5cabGr2j2ba+ir95Q5jLvnOuBbd9mB?=
+ =?us-ascii?Q?IWZj10WAABnRUc3dtxvSpivOOUP+t68+OQe6DZ73R7sa6CCd2fRxMb0NG+6v?=
+ =?us-ascii?Q?OHXEdp++SOdkVdrMviXwkOu0y4AXvdZZjCuxDRI0viisomEK5puct5g2Tad7?=
+ =?us-ascii?Q?VGfOHi/OM9TnjHa3TQcAlWNKF+DJ5lx6Md2xMmLBGxcW5kmVM9b5IoJ7YarZ?=
+ =?us-ascii?Q?TAZ3qw8+bwVIFQhRKScpEwb3XSreHiMcSlLxrle8YYBDPoXwgca0oldPeEEP?=
+ =?us-ascii?Q?6LoD4iTXZVEKUmTdoniwZWErIr83JbjNtc1MbDajNPW4LDgYXGo3A4WfVaxT?=
+ =?us-ascii?Q?NDKOESYxtyY+940NxJn71SnBSz/Baujch8XoUSpB1+Iy+czc+X8aQWX/+C/J?=
+ =?us-ascii?Q?eM31hTA8xdJgWh1mGA6LmJdtbtX9V4apMLgVORLUX7ewmaT+VvsS69R1nE5J?=
+ =?us-ascii?Q?wNBp/YLdy+P2Ih7zQfIa71H+CR2RyMiYi9y2wgIBqVhs/FNA+0nEIp3cVNym?=
+ =?us-ascii?Q?5/JHAGwCPemoongf+1Ax+2Q30Q5V0XZya05lsbdlanfehOzML74VwuLWDwBS?=
+ =?us-ascii?Q?7W0SvglJ4zwc/DZ9yYlpHIYcMD9BdRYM0mVGwJxvf4wU2kXHL1E1ExRit8PJ?=
+ =?us-ascii?Q?7Cetc0qMcGFMX7iwT7LNKR/rBtUYNa456NSSp4yzjMFlFXnXM3Wk87X8Ie4q?=
+ =?us-ascii?Q?7goS3NYxLDiG0d1tYvuYPevSOPnuuBiR8nP1tbPZYh6UInuz2iqd9SllDzPg?=
+ =?us-ascii?Q?9Vg0hGSEuB0UF+0tDZbxHVrwbYf2/gm7/rXji0c0FyDC0ut3HvYhcRoWKZV9?=
+ =?us-ascii?Q?VnbwnGdrBx5aKd8yJ9YlapzjqLVWuznSOn8oxqnSN8wg6mGWWHcYuMdZ8NH7?=
+ =?us-ascii?Q?jphv+eux2pBRjn8dJEBnsKO6915XOWhTLuc28liga2kmIcuPDwOBxI26kvyt?=
+ =?us-ascii?Q?NcWwnfilf/fXARfwwwcCOWGqgw3ktDftneP3ETZZiZ8rh+RBlpgNLLPh9sIX?=
+ =?us-ascii?Q?soHuMmtBR4URwiMXGHhL48CGbVP+IlIMa27q7FO9679JiKpelhHfHVatJ4mb?=
+ =?us-ascii?Q?OcIsdTascG4JyCprT1o/xXzr3p9U52KyEtRH5oIPC8CEeIljB6mQa+S9nb3j?=
+ =?us-ascii?Q?X7TDxga9rGvzZFnHYiU+U40ZQnmVs5ZxAnqjBwujJGIhXBih3XV0Zi7daWNH?=
+ =?us-ascii?Q?RDQsz5BE4mHHi7mUlOVJVbzrACdGNvqmCMU9LfVF/SJcfMNCXbZ5rzOGbKqN?=
+ =?us-ascii?Q?uCwSScC6xaOicmo8OHreR15VscyC6sRjAwqvphNMR/QXpRrBL/eF9pzRiv9s?=
+ =?us-ascii?Q?ysuvkeE0NqzF8hFoRDDHNhrOhvEFZbfd99Fu33nrUBXWQAh3FKBGNK6Lwvnq?=
+ =?us-ascii?Q?1cqunoUVPfWNVe3fI1CgG2dwET+zXeKJmzu4wFj5/QvD7+NJxCsFLC+tp5wA?=
+ =?us-ascii?Q?BJ0F02iqd3Gwkt3axIvFuRfEu44T81uW0FSh5z7qiJgWHl+fapLqxjP+V6ux?=
+ =?us-ascii?Q?dDpumGCRc++zQpuVPIl/kbuAaXXsDBBPm/0i226R?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: rTPznEn97n2qBJsY5UmeDEbQUnipI8q/rkIY+/E4CI8qGPxKZyaP0GInB5Q5GbZBRguRgQc3iJFcLFOFrqK+Sw+eragSGNWBh3IelBi1xYRGjpznC7nQaCEze1TpegMbJDY6WQT/0zpMusYtz1XV+Er0oJO2rnNmndc37SzA1k7Rh9bY5m+QuR+aQVc/N1jz/maDDXuQ/kuKnl2tNZ1PyoKfGFDyw0D33zCfE/8wpzHdxT1Y8s2YGTUa4PBEUx6RDgO6raMt6GP6CYrjGTAWCKVFQxgnqnSUxOTKnT6HEyPrxLQ4J3NDWrYwDil8xDaDH2HU17YkrrftmSg55amgvAj1HnWW6YPBAZpfhEdMkfqYzIoSNWL/ZQ8B1mnnUWDwuZt41yF9zyLS+xblwC2NEKIRplRHcl7MhPD9+ATXWkunmal23vx93Xf0Sgr+4AhpjYU0dT0bAf/PRW3w5bes9zFEtCed21WVxiwXhDf69SL4ORcEhR+0JAZFMG0BedZoaUlDbnIArsmehllVCgUt1gQl3FLRQQcXuRguvJg+Ta0Eflsf317cHFdHaJqytj9ZZSOm3V+dIBpxY5Y8DhlOAuV7kB14xFzbndhehpj6XKPKjVKb+n8UkjAIYgR6oGuOOqN0XNH22XdAA9EoD0zLOozxAZahRSREWp6KWPhXWjrtrl5x7KRvwwJCsqEb6Ga4L7JUPvSUmONWmi3HGVnh8/X1DnQ8jiffmQc6vScdVF1Ve3VPh5gALrsUyfBb5IxlZ0GPbHMF66CMxmdp+pDFmzNTZVQvf3ucpigroDfXj7UIepFdjKuymSWM49N8wo5e
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: mOpDQPu1e8FTHMVYVFsu1TPKS845zkIyNS6vkh73P4GJczVKUFyeJlNBp3Wypsz4t/8fFQors9aI4Jy3zMmaRU3nNoBrAOct4wpPB+JnDe6xZnAbzJxr5oOShpA+DEM1ug3UWkXYBSHGxvJ6gDX1QwHyfK6jaT11oSBFgE6huDgjQCAZyon81fExZGTaXkEN8k+6n6EQdyQsvlXQFBaq/XchvnusaKUroxyj4yZh6N6gCpz8QAq26bR6u03sUGzjmPOlubPq7vcwZHOOlDFCEdCl5W9KK1p2hDHaRxD5to8gSsval3tkAieGydG/7ZSbYD55foS6UH/fHqPbJ+JRYbqjQCJQXOU6qlvzJ7imut+dV0kYjFQ9QpkvpDL0YGG5bP555WMR/Kyvzyr854CS/uLePndxYaHw0jXRbEIjw6Kpd+MMztzB49RsuJQNKvfqdgsEBXTb60lsvQ1ybCkchh4D7mbEL0N7M3fYh80yAcWiNOPdjCbQ6XyJYZYMrgDkbZ4ire49cRjoLdNbjqYNlOm502+knoOwl152XPFrCxZRQZk7AoiTY1UX4wuqwh5IlJM40dKWGs6lIjPTopGenhPxObNPQjJCTrQ3D/J0iKPUJJo9AWhe8TzLY+6kR2QBE/Zoy8Nf6X//v23O5bX8FEF7UJepFiiclRj8KuKtqFB8BaxEeIS6q5w5su1qWrPmo3ZKx7EhtXyq+PQcLkKFKJ5Ddh0iihoPzFlsdV1wELagDeNPtEBToUtDCqjDnGL6YVPIkqfOXTpd8scFjwlzRaWaN0cq4FeEJGkDqzhNGz/9yX5HEKJWDlo88pkxBvIi
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 388685c9-86c6-463d-f879-08db3a3ddf60
+X-MS-Exchange-CrossTenant-Network-Message-Id: 54133c81-1f7d-48d9-c445-08db3a3de47b
 X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Apr 2023 03:36:02.0903
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Apr 2023 03:36:10.6499
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: uqdNToEYHK52WUyj+Cm4orUmIJdCeFsBTQ2qBzEwEWdr9fwVBIdx98jzmNyv5YogYq9CTVXUgr6ZxWyPgsS62w==
+X-MS-Exchange-CrossTenant-UserPrincipalName: rpK9/p83dIjmCdCh9SJ+EMttibkk+Ik0BMpoiizSzgf3S6cnjG3H7KQVcMpiYPUy9sCyD4EzO4K6HSxkto+Ztw==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4338
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-04-10_18,2023-04-06_03,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
- suspectscore=0 mlxscore=0 bulkscore=0 malwarescore=0 phishscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0
+ adultscore=0 spamscore=0 suspectscore=0 bulkscore=0 mlxlogscore=999
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2303200000 definitions=main-2304110032
-X-Proofpoint-ORIG-GUID: ejO9qldn37Oy2RdJlAw3j86l7Kyy-GEI
-X-Proofpoint-GUID: ejO9qldn37Oy2RdJlAw3j86l7Kyy-GEI
+X-Proofpoint-GUID: -8kr4XIC1TZZzB3YclygcLR29zeRK-US
+X-Proofpoint-ORIG-GUID: -8kr4XIC1TZZzB3YclygcLR29zeRK-US
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Christoph Hellwig <hch@lst.de>
 
-commit ba8adad5d036733d240fa8a8f4d055f3d4490562 upstream.
+commit b81b79f4eda2ea98ae5695c0b6eb384c8d90b74d upstream.
 
-Remove the XFS wrappers for converting from and to the kuid/kgid types.
-Mostly this means switching to VFS i_{u,g}id_{read,write} helpers, but
-in a few spots the calls to the conversion functions is open coded.
-To match the use of sb->s_user_ns in the helpers and other file systems,
-sb->s_user_ns is also used in the quota code.  The ACL code already does
-the conversion in a grotty layering violation in the VFS xattr code,
-so it keeps using init_user_ns for the identity mapping.
+Add a new wrapper to check if a file system supports the v3 inode format
+with a larger dinode core.  Previously we used xfs_sb_version_hascrc for
+that, which is technically correct but a little confusing to read.
+
+Also move xfs_dinode_good_version next to xfs_sb_version_has_v3inode
+so that we have one place that documents the superblock version to
+inode version relationship.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 ---
- fs/xfs/libxfs/xfs_inode_buf.c |  8 ++++----
- fs/xfs/xfs_acl.c              | 12 ++++++++----
- fs/xfs/xfs_dquot.c            |  4 ++--
- fs/xfs/xfs_inode_item.c       |  4 ++--
- fs/xfs/xfs_itable.c           |  4 ++--
- fs/xfs/xfs_linux.h            | 26 --------------------------
- fs/xfs/xfs_qm.c               | 23 +++++++++--------------
- 7 files changed, 27 insertions(+), 54 deletions(-)
+ fs/xfs/libxfs/xfs_format.h     | 17 +++++++++++++++++
+ fs/xfs/libxfs/xfs_ialloc.c     |  4 ++--
+ fs/xfs/libxfs/xfs_inode_buf.c  | 17 +++--------------
+ fs/xfs/libxfs/xfs_inode_buf.h  |  2 --
+ fs/xfs/libxfs/xfs_trans_resv.c |  2 +-
+ fs/xfs/xfs_buf_item.c          |  2 +-
+ fs/xfs/xfs_log_recover.c       |  2 +-
+ 7 files changed, 25 insertions(+), 21 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 1f24473121f0..c20c4dd6e1d3 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -497,6 +497,23 @@ static inline bool xfs_sb_version_hascrc(struct xfs_sb *sbp)
+ 	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
+ }
+ 
++/*
++ * v5 file systems support V3 inodes only, earlier file systems support
++ * v2 and v1 inodes.
++ */
++static inline bool xfs_sb_version_has_v3inode(struct xfs_sb *sbp)
++{
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
++}
++
++static inline bool xfs_dinode_good_version(struct xfs_sb *sbp,
++		uint8_t version)
++{
++	if (xfs_sb_version_has_v3inode(sbp))
++		return version == 3;
++	return version == 1 || version == 2;
++}
++
+ static inline bool xfs_sb_version_has_pquotino(struct xfs_sb *sbp)
+ {
+ 	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index c3e0c2f61be4..ddf92b14223a 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -303,7 +303,7 @@ xfs_ialloc_inode_init(
+ 	 * That means for v3 inode we log the entire buffer rather than just the
+ 	 * inode cores.
+ 	 */
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++	if (xfs_sb_version_has_v3inode(&mp->m_sb)) {
+ 		version = 3;
+ 		ino = XFS_AGINO_TO_INO(mp, agno, XFS_AGB_TO_AGINO(mp, agbno));
+ 
+@@ -2818,7 +2818,7 @@ xfs_ialloc_setup_geometry(
+ 	 * cannot change the behavior.
+ 	 */
+ 	igeo->inode_cluster_size_raw = XFS_INODE_BIG_CLUSTER_SIZE;
+-	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++	if (xfs_sb_version_has_v3inode(&mp->m_sb)) {
+ 		int	new_size = igeo->inode_cluster_size_raw;
+ 
+ 		new_size *= mp->m_sb.sb_inodesize / XFS_DINODE_MIN_SIZE;
 diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 94cd6ec666a2..947c2aac66bd 100644
+index 947c2aac66bd..c4fdb0c012aa 100644
 --- a/fs/xfs/libxfs/xfs_inode_buf.c
 +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -222,8 +222,8 @@ xfs_inode_from_disk(
+@@ -44,17 +44,6 @@ xfs_inobp_check(
+ }
+ #endif
+ 
+-bool
+-xfs_dinode_good_version(
+-	struct xfs_mount *mp,
+-	__u8		version)
+-{
+-	if (xfs_sb_version_hascrc(&mp->m_sb))
+-		return version == 3;
+-
+-	return version == 1 || version == 2;
+-}
+-
+ /*
+  * If we are doing readahead on an inode buffer, we might be in log recovery
+  * reading an inode allocation buffer that hasn't yet been replayed, and hence
+@@ -93,7 +82,7 @@ xfs_inode_buf_verify(
+ 		dip = xfs_buf_offset(bp, (i << mp->m_sb.sb_inodelog));
+ 		unlinked_ino = be32_to_cpu(dip->di_next_unlinked);
+ 		di_ok = xfs_verify_magic16(bp, dip->di_magic) &&
+-			xfs_dinode_good_version(mp, dip->di_version) &&
++			xfs_dinode_good_version(&mp->m_sb, dip->di_version) &&
+ 			xfs_verify_agino_or_null(mp, agno, unlinked_ino);
+ 		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
+ 						XFS_ERRTAG_ITOBP_INOTOBP))) {
+@@ -454,7 +443,7 @@ xfs_dinode_verify(
+ 
+ 	/* Verify v3 integrity information first */
+ 	if (dip->di_version >= 3) {
+-		if (!xfs_sb_version_hascrc(&mp->m_sb))
++		if (!xfs_sb_version_has_v3inode(&mp->m_sb))
+ 			return __this_address;
+ 		if (!xfs_verify_cksum((char *)dip, mp->m_sb.sb_inodesize,
+ 				      XFS_DINODE_CRC_OFF))
+@@ -629,7 +618,7 @@ xfs_iread(
+ 
+ 	/* shortcut IO on inode allocation if possible */
+ 	if ((iget_flags & XFS_IGET_CREATE) &&
+-	    xfs_sb_version_hascrc(&mp->m_sb) &&
++	    xfs_sb_version_has_v3inode(&mp->m_sb) &&
+ 	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
+ 		/* initialise the on-disk inode core */
+ 		memset(&ip->i_d, 0, sizeof(ip->i_d));
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
+index 0cb11fcc74b6..f1b73ecb1d82 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.h
++++ b/fs/xfs/libxfs/xfs_inode_buf.h
+@@ -59,8 +59,6 @@ void	xfs_inode_from_disk(struct xfs_inode *ip, struct xfs_dinode *from);
+ void	xfs_log_dinode_to_disk(struct xfs_log_dinode *from,
+ 			       struct xfs_dinode *to);
+ 
+-bool	xfs_dinode_good_version(struct xfs_mount *mp, __u8 version);
+-
+ #if defined(DEBUG)
+ void	xfs_inobp_check(struct xfs_mount *, struct xfs_buf *);
+ #else
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index 824073a839ac..8ece346def97 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -187,7 +187,7 @@ xfs_calc_inode_chunk_res(
+ 			       XFS_FSB_TO_B(mp, 1));
+ 	if (alloc) {
+ 		/* icreate tx uses ordered buffers */
+-		if (xfs_sb_version_hascrc(&mp->m_sb))
++		if (xfs_sb_version_has_v3inode(&mp->m_sb))
+ 			return res;
+ 		size = XFS_FSB_TO_B(mp, 1);
  	}
- 
- 	to->di_format = from->di_format;
--	inode->i_uid = xfs_uid_to_kuid(be32_to_cpu(from->di_uid));
--	inode->i_gid = xfs_gid_to_kgid(be32_to_cpu(from->di_gid));
-+	i_uid_write(inode, be32_to_cpu(from->di_uid));
-+	i_gid_write(inode, be32_to_cpu(from->di_gid));
- 	to->di_flushiter = be16_to_cpu(from->di_flushiter);
- 
- 	/*
-@@ -276,8 +276,8 @@ xfs_inode_to_disk(
- 
- 	to->di_version = from->di_version;
- 	to->di_format = from->di_format;
--	to->di_uid = cpu_to_be32(xfs_kuid_to_uid(inode->i_uid));
--	to->di_gid = cpu_to_be32(xfs_kgid_to_gid(inode->i_gid));
-+	to->di_uid = cpu_to_be32(i_uid_read(inode));
-+	to->di_gid = cpu_to_be32(i_gid_read(inode));
- 	to->di_projid_lo = cpu_to_be16(from->di_projid & 0xffff);
- 	to->di_projid_hi = cpu_to_be16(from->di_projid >> 16);
- 
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index 3f2292c7835c..6788b0ca85eb 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -66,10 +66,12 @@ xfs_acl_from_disk(
- 
- 		switch (acl_e->e_tag) {
- 		case ACL_USER:
--			acl_e->e_uid = xfs_uid_to_kuid(be32_to_cpu(ace->ae_id));
-+			acl_e->e_uid = make_kuid(&init_user_ns,
-+						 be32_to_cpu(ace->ae_id));
- 			break;
- 		case ACL_GROUP:
--			acl_e->e_gid = xfs_gid_to_kgid(be32_to_cpu(ace->ae_id));
-+			acl_e->e_gid = make_kgid(&init_user_ns,
-+						 be32_to_cpu(ace->ae_id));
- 			break;
- 		case ACL_USER_OBJ:
- 		case ACL_GROUP_OBJ:
-@@ -102,10 +104,12 @@ xfs_acl_to_disk(struct xfs_acl *aclp, const struct posix_acl *acl)
- 		ace->ae_tag = cpu_to_be32(acl_e->e_tag);
- 		switch (acl_e->e_tag) {
- 		case ACL_USER:
--			ace->ae_id = cpu_to_be32(xfs_kuid_to_uid(acl_e->e_uid));
-+			ace->ae_id = cpu_to_be32(
-+					from_kuid(&init_user_ns, acl_e->e_uid));
- 			break;
- 		case ACL_GROUP:
--			ace->ae_id = cpu_to_be32(xfs_kgid_to_gid(acl_e->e_gid));
-+			ace->ae_id = cpu_to_be32(
-+					from_kgid(&init_user_ns, acl_e->e_gid));
- 			break;
- 		default:
- 			ace->ae_id = cpu_to_be32(ACL_UNDEFINED_ID);
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 14f4d2ed87db..672286f1762f 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -859,9 +859,9 @@ xfs_qm_id_for_quotatype(
- {
- 	switch (type) {
- 	case XFS_DQ_USER:
--		return xfs_kuid_to_uid(VFS_I(ip)->i_uid);
-+		return i_uid_read(VFS_I(ip));
- 	case XFS_DQ_GROUP:
--		return xfs_kgid_to_gid(VFS_I(ip)->i_gid);
-+		return i_gid_read(VFS_I(ip));
- 	case XFS_DQ_PROJ:
- 		return ip->i_d.di_projid;
- 	}
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 91f9f7a539ae..9d673bb1f995 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -308,8 +308,8 @@ xfs_inode_to_log_dinode(
- 
- 	to->di_version = from->di_version;
- 	to->di_format = from->di_format;
--	to->di_uid = xfs_kuid_to_uid(inode->i_uid);
--	to->di_gid = xfs_kgid_to_gid(inode->i_gid);
-+	to->di_uid = i_uid_read(inode);
-+	to->di_gid = i_gid_read(inode);
- 	to->di_projid_lo = from->di_projid & 0xffff;
- 	to->di_projid_hi = from->di_projid >> 16;
- 
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index a0ab1c382325..1c683a01e465 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -86,8 +86,8 @@ xfs_bulkstat_one_int(
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index b1452117e442..f98260ed6d51 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -328,7 +328,7 @@ xfs_buf_item_format(
+ 	 * occurs during recovery.
  	 */
- 	buf->bs_projectid = ip->i_d.di_projid;
- 	buf->bs_ino = ino;
--	buf->bs_uid = xfs_kuid_to_uid(inode->i_uid);
--	buf->bs_gid = xfs_kgid_to_gid(inode->i_gid);
-+	buf->bs_uid = i_uid_read(inode);
-+	buf->bs_gid = i_gid_read(inode);
- 	buf->bs_size = dic->di_size;
- 
- 	buf->bs_nlink = inode->i_nlink;
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index ca15105681ca..f4f52ac5628c 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -163,32 +163,6 @@ struct xstats {
- 
- extern struct xstats xfsstats;
- 
--/* Kernel uid/gid conversion. These are used to convert to/from the on disk
-- * uid_t/gid_t types to the kuid_t/kgid_t types that the kernel uses internally.
-- * The conversion here is type only, the value will remain the same since we
-- * are converting to the init_user_ns. The uid is later mapped to a particular
-- * user namespace value when crossing the kernel/user boundary.
-- */
--static inline uint32_t xfs_kuid_to_uid(kuid_t uid)
--{
--	return from_kuid(&init_user_ns, uid);
--}
--
--static inline kuid_t xfs_uid_to_kuid(uint32_t uid)
--{
--	return make_kuid(&init_user_ns, uid);
--}
--
--static inline uint32_t xfs_kgid_to_gid(kgid_t gid)
--{
--	return from_kgid(&init_user_ns, gid);
--}
--
--static inline kgid_t xfs_gid_to_kgid(uint32_t gid)
--{
--	return make_kgid(&init_user_ns, gid);
--}
--
- static inline dev_t xfs_to_linux_dev_t(xfs_dev_t dev)
- {
- 	return MKDEV(sysv_major(dev) & 0x1ff, sysv_minor(dev));
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index c036c55739d8..6b108a4de08f 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -331,8 +331,7 @@ xfs_qm_dqattach_locked(
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 
- 	if (XFS_IS_UQUOTA_ON(mp) && !ip->i_udquot) {
--		error = xfs_qm_dqattach_one(ip,
--				xfs_kuid_to_uid(VFS_I(ip)->i_uid),
-+		error = xfs_qm_dqattach_one(ip, i_uid_read(VFS_I(ip)),
- 				XFS_DQ_USER, doalloc, &ip->i_udquot);
- 		if (error)
- 			goto done;
-@@ -340,8 +339,7 @@ xfs_qm_dqattach_locked(
- 	}
- 
- 	if (XFS_IS_GQUOTA_ON(mp) && !ip->i_gdquot) {
--		error = xfs_qm_dqattach_one(ip,
--				xfs_kgid_to_gid(VFS_I(ip)->i_gid),
-+		error = xfs_qm_dqattach_one(ip, i_gid_read(VFS_I(ip)),
- 				XFS_DQ_GROUP, doalloc, &ip->i_gdquot);
- 		if (error)
- 			goto done;
-@@ -1642,6 +1640,7 @@ xfs_qm_vop_dqalloc(
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct inode		*inode = VFS_I(ip);
-+	struct user_namespace	*user_ns = inode->i_sb->s_user_ns;
- 	struct xfs_dquot	*uq = NULL;
- 	struct xfs_dquot	*gq = NULL;
- 	struct xfs_dquot	*pq = NULL;
-@@ -1681,7 +1680,7 @@ xfs_qm_vop_dqalloc(
- 			 * holding ilock.
- 			 */
- 			xfs_iunlock(ip, lockflags);
--			error = xfs_qm_dqget(mp, xfs_kuid_to_uid(uid),
-+			error = xfs_qm_dqget(mp, from_kuid(user_ns, uid),
- 					XFS_DQ_USER, true, &uq);
- 			if (error) {
- 				ASSERT(error != -ENOENT);
-@@ -1705,7 +1704,7 @@ xfs_qm_vop_dqalloc(
- 	if ((flags & XFS_QMOPT_GQUOTA) && XFS_IS_GQUOTA_ON(mp)) {
- 		if (!gid_eq(inode->i_gid, gid)) {
- 			xfs_iunlock(ip, lockflags);
--			error = xfs_qm_dqget(mp, xfs_kgid_to_gid(gid),
-+			error = xfs_qm_dqget(mp, from_kgid(user_ns, gid),
- 					XFS_DQ_GROUP, true, &gq);
- 			if (error) {
- 				ASSERT(error != -ENOENT);
-@@ -1832,8 +1831,7 @@ xfs_qm_vop_chown_reserve(
- 			XFS_QMOPT_RES_RTBLKS : XFS_QMOPT_RES_REGBLKS;
- 
- 	if (XFS_IS_UQUOTA_ON(mp) && udqp &&
--	    xfs_kuid_to_uid(VFS_I(ip)->i_uid) !=
--			be32_to_cpu(udqp->q_core.d_id)) {
-+	    i_uid_read(VFS_I(ip)) != be32_to_cpu(udqp->q_core.d_id)) {
- 		udq_delblks = udqp;
+ 	if (bip->bli_flags & XFS_BLI_INODE_BUF) {
+-		if (xfs_sb_version_hascrc(&lip->li_mountp->m_sb) ||
++		if (xfs_sb_version_has_v3inode(&lip->li_mountp->m_sb) ||
+ 		    !((bip->bli_flags & XFS_BLI_INODE_ALLOC_BUF) &&
+ 		      xfs_log_item_in_current_chkpt(lip)))
+ 			bip->__bli_format.blf_flags |= XFS_BLF_INODE_BUF;
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 6c60cdd10d33..598a8c00a082 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3018,7 +3018,7 @@ xlog_recover_inode_pass2(
+ 	 * superblock flag to determine whether we need to look at di_flushiter
+ 	 * to skip replay when the on disk inode is newer than the log one
+ 	 */
+-	if (!xfs_sb_version_hascrc(&mp->m_sb) &&
++	if (!xfs_sb_version_has_v3inode(&mp->m_sb) &&
+ 	    ldip->di_flushiter < be16_to_cpu(dip->di_flushiter)) {
  		/*
- 		 * If there are delayed allocation blocks, then we have to
-@@ -1846,8 +1844,7 @@ xfs_qm_vop_chown_reserve(
- 		}
- 	}
- 	if (XFS_IS_GQUOTA_ON(ip->i_mount) && gdqp &&
--	    xfs_kgid_to_gid(VFS_I(ip)->i_gid) !=
--			be32_to_cpu(gdqp->q_core.d_id)) {
-+	    i_gid_read(VFS_I(ip)) != be32_to_cpu(gdqp->q_core.d_id)) {
- 		gdq_delblks = gdqp;
- 		if (delblks) {
- 			ASSERT(ip->i_gdquot);
-@@ -1944,16 +1941,14 @@ xfs_qm_vop_create_dqattach(
- 
- 	if (udqp && XFS_IS_UQUOTA_ON(mp)) {
- 		ASSERT(ip->i_udquot == NULL);
--		ASSERT(xfs_kuid_to_uid(VFS_I(ip)->i_uid) ==
--			be32_to_cpu(udqp->q_core.d_id));
-+		ASSERT(i_uid_read(VFS_I(ip)) == be32_to_cpu(udqp->q_core.d_id));
- 
- 		ip->i_udquot = xfs_qm_dqhold(udqp);
- 		xfs_trans_mod_dquot(tp, udqp, XFS_TRANS_DQ_ICOUNT, 1);
- 	}
- 	if (gdqp && XFS_IS_GQUOTA_ON(mp)) {
- 		ASSERT(ip->i_gdquot == NULL);
--		ASSERT(xfs_kgid_to_gid(VFS_I(ip)->i_gid) ==
--			be32_to_cpu(gdqp->q_core.d_id));
-+		ASSERT(i_gid_read(VFS_I(ip)) == be32_to_cpu(gdqp->q_core.d_id));
- 
- 		ip->i_gdquot = xfs_qm_dqhold(gdqp);
- 		xfs_trans_mod_dquot(tp, gdqp, XFS_TRANS_DQ_ICOUNT, 1);
+ 		 * Deal with the wrap case, DI_MAX_FLUSH is less
 -- 
 2.39.1
 
