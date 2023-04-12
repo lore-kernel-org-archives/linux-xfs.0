@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5424C7619A
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 03:46:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A32AC77B6E
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 03:46:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229575AbjDLDqJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Apr 2023 23:46:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38024 "EHLO
+        id S229588AbjDLDqZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Apr 2023 23:46:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38050 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229451AbjDLDqI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 23:46:08 -0400
+        with ESMTP id S229451AbjDLDqY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 23:46:24 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0F1530E0
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 20:46:07 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D26830E0
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 20:46:23 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4BEA362D90
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Apr 2023 03:46:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8AF5C433EF;
-        Wed, 12 Apr 2023 03:46:06 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id ED83262D90
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Apr 2023 03:46:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5006FC433D2;
+        Wed, 12 Apr 2023 03:46:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681271166;
-        bh=5jjg4cKduQSG67kiQ5yGAwss9+Nb+f522mP4Qh3s/UQ=;
+        s=k20201202; t=1681271182;
+        bh=pxK0DeFHR5lAfAIy65l7dDNU/8USpiP5ERz1sRzEL6c=;
         h=Date:Subject:From:To:Cc:From;
-        b=escV3sTcX/AadC/afDEl48vgGMSqzdkU0C9Bw5L1fk6nVjCmxgdASVWzPe5KwHiNh
-         1t2+NfEWxALLXtDgVkOVY+7/xWRZ2clRqO0Lo/SrsqJLxNKjTx8ls1nlTlLc63r/O8
-         /YGd7HME1d0REXn7w7F63/utggbF1sgOhMuxl3RrhE+TiojXQknIbk5dLihqntEOmf
-         +iEc95s0toLu7qJ5rwnRVBUcE2KxW9hvXbOZIW93jmDcNZBKu6bSpm7XXaZhO2AoSm
-         25Wd4rka/fGAawpVPw/GyvWT6YxDK7Ev0E5kdl9XiYk2ZoxAFg6py9zaFchelME1OS
-         6PCtrXf9Gm51Q==
-Date:   Tue, 11 Apr 2023 20:46:06 -0700
-Subject: [GIT PULL 5/22] xfs: drain deferred work items when scrubbing
+        b=B+pvLjG/5TQxxyLOb7/eeTjoNMeCCehd3/poSFt6WvmkJzbTOn9/ir9ioQWN1bmSW
+         PWrF4lGD91tppp1zZ3v0WgOOwlcSvyVmsJYoOpBD8cpXym5Zxbeb+g6WtHkO8LYHKy
+         1bZ7zoqDeqBPxXFGnc8JMROx/SF/m6jMvmLmazHbnTMEVZgi2Y1iqX9kYk78y07h7N
+         l2KOCx22i7jVuvecbuzx84dGwhBqVXUFRro4pz6gJFSiwxPCOMXjyWPDa7FQ8EgH/+
+         lr5e2IhB7+ohylc0rd/148V2P/P/5RkbzREnjTXLwFtKyyCQNEZVNeHcFrCe+WLoo3
+         t7+mgN6yrFYmA==
+Date:   Tue, 11 Apr 2023 20:46:21 -0700
+Subject: [GIT PULL 6/22] xfs: standardize btree record checking code
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     dchinner@fromorbit.com, djwong@kernel.org
 Cc:     dchinner@redhat.com, linux-xfs@vger.kernel.org
-Message-ID: <168127094157.417736.10965865343075972034.stg-ugh@frogsfrogsfrogs>
+Message-ID: <168127094258.417736.16899254677069613479.stg-ugh@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -54,79 +54,63 @@ encounter any problems.
 
 --D
 
-The following changes since commit ecc73f8a58c7844b04186726f8699ba97cec2ef9:
-
-xfs: update copyright years for scrub/ files (2023-04-11 18:59:57 -0700)
-
-are available in the Git repository at:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/scrub-drain-intents-6.4_2023-04-11
-
-for you to fetch changes up to 88accf17226733088923635b580779a3c86b6f23:
+The following changes since commit 88accf17226733088923635b580779a3c86b6f23:
 
 xfs: scrub should use ECHRNG to signal that the drain is needed (2023-04-11 19:00:00 -0700)
 
+are available in the Git repository at:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/btree-complain-bad-records-6.4_2023-04-11
+
+for you to fetch changes up to 6a3bd8fcf9afb47c703cb268f30f60aa2e7af86a:
+
+xfs: complain about bad file mapping records in the ondisk bmbt (2023-04-11 19:00:05 -0700)
+
 ----------------------------------------------------------------
-xfs: drain deferred work items when scrubbing [v24.5]
+xfs: standardize btree record checking code [v24.5]
 
-The design doc for XFS online fsck contains a long discussion of the
-eventual consistency models in use for XFS metadata.  In that chapter,
-we note that it is possible for scrub to collide with a chain of
-deferred space metadata updates, and proposes a lightweight solution:
-The use of a pending-intents counter so that scrub can wait for the
-system to drain all chains.
+While I was cleaning things up for 6.1, I noticed that the btree
+_query_range and _query_all functions don't perform the same checking
+that the _get_rec functions perform.  In fact, they don't perform /any/
+sanity checking, which means that callers aren't warned about impossible
+records.
 
-This patchset implements that scrub drain.  The first patch implements
-the basic mechanism, and the subsequent patches reduce the runtime
-overhead by converting the implementation to use sloppy counters and
-introducing jump labels to avoid walking into scrub hooks when it isn't
-running.  This last paradigm repeats elsewhere in this megaseries.
-
-v23.1: make intent items take an active ref to the perag structure and
-document why we bump and drop the intent counts when we do
+Therefore, hoist the record validation and complaint logging code into
+separate functions, and call them from any place where we convert an
+ondisk record into an incore record.  For online scrub, we can replace
+checking code with a call to the record checking functions in libxfs,
+thereby reducing the size of the codebase.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (5):
-xfs: add a tracepoint to report incorrect extent refcounts
-xfs: allow queued AG intents to drain before scrubbing
-xfs: clean up scrub context if scrub setup returns -EDEADLOCK
-xfs: minimize overhead of drain wakeups by using jump labels
-xfs: scrub should use ECHRNG to signal that the drain is needed
+Darrick J. Wong (8):
+xfs: standardize ondisk to incore conversion for free space btrees
+xfs: standardize ondisk to incore conversion for inode btrees
+xfs: standardize ondisk to incore conversion for refcount btrees
+xfs: return a failure address from xfs_rmap_irec_offset_unpack
+xfs: standardize ondisk to incore conversion for rmap btrees
+xfs: standardize ondisk to incore conversion for bmap btrees
+xfs: complain about bad records in query_range helpers
+xfs: complain about bad file mapping records in the ondisk bmbt
 
-fs/xfs/Kconfig             |   5 ++
-fs/xfs/Makefile            |   2 +
-fs/xfs/libxfs/xfs_ag.c     |   4 ++
-fs/xfs/libxfs/xfs_ag.h     |   8 +++
-fs/xfs/libxfs/xfs_defer.c  |   6 +-
-fs/xfs/scrub/agheader.c    |   9 +++
-fs/xfs/scrub/alloc.c       |   3 +
-fs/xfs/scrub/bmap.c        |   3 +
-fs/xfs/scrub/btree.c       |   1 +
-fs/xfs/scrub/common.c      | 137 ++++++++++++++++++++++++++++++++++---
-fs/xfs/scrub/common.h      |  15 ++++
-fs/xfs/scrub/dabtree.c     |   1 +
-fs/xfs/scrub/fscounters.c  |   7 ++
-fs/xfs/scrub/health.c      |   2 +
-fs/xfs/scrub/ialloc.c      |   2 +
-fs/xfs/scrub/inode.c       |   3 +
-fs/xfs/scrub/quota.c       |   3 +
-fs/xfs/scrub/refcount.c    |   9 ++-
-fs/xfs/scrub/repair.c      |   3 +
-fs/xfs/scrub/rmap.c        |   3 +
-fs/xfs/scrub/scrub.c       |  63 ++++++++++++-----
-fs/xfs/scrub/scrub.h       |  12 +++-
-fs/xfs/scrub/trace.h       |  69 +++++++++++++++++++
-fs/xfs/xfs_bmap_item.c     |  12 +++-
-fs/xfs/xfs_drain.c         | 166 +++++++++++++++++++++++++++++++++++++++++++++
-fs/xfs/xfs_drain.h         |  87 ++++++++++++++++++++++++
-fs/xfs/xfs_extfree_item.c  |   4 +-
-fs/xfs/xfs_linux.h         |   1 +
-fs/xfs/xfs_refcount_item.c |   4 +-
-fs/xfs/xfs_rmap_item.c     |   4 +-
-fs/xfs/xfs_trace.h         |  71 +++++++++++++++++++
-31 files changed, 680 insertions(+), 39 deletions(-)
-create mode 100644 fs/xfs/xfs_drain.c
-create mode 100644 fs/xfs/xfs_drain.h
+fs/xfs/libxfs/xfs_alloc.c        | 82 ++++++++++++++++++++++++----------
+fs/xfs/libxfs/xfs_alloc.h        |  6 +++
+fs/xfs/libxfs/xfs_bmap.c         | 31 ++++++++++++-
+fs/xfs/libxfs/xfs_bmap.h         |  2 +
+fs/xfs/libxfs/xfs_ialloc.c       | 77 +++++++++++++++++++++-----------
+fs/xfs/libxfs/xfs_ialloc.h       |  2 +
+fs/xfs/libxfs/xfs_ialloc_btree.c |  2 +-
+fs/xfs/libxfs/xfs_ialloc_btree.h |  2 +-
+fs/xfs/libxfs/xfs_inode_fork.c   |  3 +-
+fs/xfs/libxfs/xfs_refcount.c     | 73 +++++++++++++++++++-----------
+fs/xfs/libxfs/xfs_refcount.h     |  2 +
+fs/xfs/libxfs/xfs_rmap.c         | 95 +++++++++++++++++++++++++---------------
+fs/xfs/libxfs/xfs_rmap.h         | 12 +++--
+fs/xfs/scrub/alloc.c             | 24 +++++-----
+fs/xfs/scrub/bmap.c              |  6 +++
+fs/xfs/scrub/ialloc.c            | 24 ++--------
+fs/xfs/scrub/refcount.c          | 14 ++----
+fs/xfs/scrub/rmap.c              | 44 ++-----------------
+18 files changed, 303 insertions(+), 198 deletions(-)
 
