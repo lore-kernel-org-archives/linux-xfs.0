@@ -2,159 +2,96 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68FE5C77B6E
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 15:58:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6EE6C77B6C
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 21:38:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231270AbjDLP6I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Apr 2023 11:58:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56022 "EHLO
+        id S229953AbjDLViV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Apr 2023 17:38:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231379AbjDLP6H (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2023 11:58:07 -0400
-X-Greylist: delayed 7892 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 12 Apr 2023 08:58:04 PDT
-Received: from mail.flyingcircus.io (mail.flyingcircus.io [IPv6:2a02:238:f030:102::1064])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A41DA172C
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Apr 2023 08:58:04 -0700 (PDT)
-Content-Type: text/plain;
-        charset=utf-8
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flyingcircus.io;
-        s=mail; t=1681315081;
-        bh=7dWMk+p6mNi5KllLoYfV87TEwXLRd/4hJdzUzk2/xLA=;
-        h=Subject:From:In-Reply-To:Date:Cc:References:To;
-        b=kaLw2HE+oP3ZqylwbPrhcxb+Yk4z1VoqBcFKZAqkeO+IzGqu8/OX/JrB7ZQl7JBQ4
-         esaEinBQpc7VPb9crgfo5wIZhNlD+MdO7/80OXylm5EN+zDtdhgspk/0PDOrFlQ9K2
-         CWIPXlcWxIh8oVwtnwJQQhEM7KXeaXzyl9u6EMJI=
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.500.231\))
-Subject: Re: Backport of "xfs: open code ioend needs workqueue helper" to
- 5.10?
-From:   Christian Theune <ct@flyingcircus.io>
-In-Reply-To: <CAOQ4uxg6cTF2YnW6anxMxOH_88+JZW+sC9rG468Pjy=XrNEgrQ@mail.gmail.com>
-Date:   Wed, 12 Apr 2023 17:57:41 +0200
-Cc:     linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Brian Foster <bfoster@redhat.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <6AB6497D-18E5-41C4-B688-4DED6703534F@flyingcircus.io>
-References: <57B035ED-1926-4524-8063-EB0A8DB54AF7@flyingcircus.io>
- <CAOQ4uxg6cTF2YnW6anxMxOH_88+JZW+sC9rG468Pjy=XrNEgrQ@mail.gmail.com>
-To:     Amir Goldstein <amir73il@gmail.com>
+        with ESMTP id S230141AbjDLViU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2023 17:38:20 -0400
+Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FB977D9B
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Apr 2023 14:37:56 -0700 (PDT)
+Received: by mail-pg1-x530.google.com with SMTP id 41be03b00d2f7-5144a9c11c7so1113084a12.2
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Apr 2023 14:37:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1681335476;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=rZ4yx8V/TVK3IhiKBnDOzsIRtPUQCbMM+VbEDZ9KY/s=;
+        b=YJKYnEjTQkyJ/A1YbI3GVB9JzNJy2vXp3xudRsi8Trt2vBFHO8tZiU/cSBoxZipYjb
+         7OiJv58I7zYmo9fNHh2lfUICHaom6TkRcAvGOZXn/JJStdueJKudKKBWA0LDKI43tsEK
+         sClan19VfDUMG+pMiKtYiwb/4/UvXJNr2bd/eGrVQkUr8PLBzvv/W+WKJMtwyhaLCj+v
+         RmcMjj/I1eibqxt/h6+GsSX3BlrMovu85W24913xqQYwpeP6PUODEtoffDUdkHQ8GV/H
+         BqJVytNM4ieNJNBgcmQfaxQ2yfPjMT6DaJb4IeiK8o1eCcjWFrFdkg3oFZEmabVcR+Bn
+         C0fw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1681335476;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=rZ4yx8V/TVK3IhiKBnDOzsIRtPUQCbMM+VbEDZ9KY/s=;
+        b=der4llW9i/ppyfd5I5KQ/hpKQQiaxNJAHul3/EranUJAzBfBMzMPrLevvoOROtwRdd
+         0xUEqY0LqAOULwsjr5DRGyPPtOf2c3I1xTxqgLprExAe4McG25HsrfpHyUsg0NHNzCmc
+         dXiLGGdq10j6wywVNZfyMci4xLEvgsaS6lROxeuwhadvuCxPRufIKsT1tFLr3KAXxPtu
+         QLLtEJv7kxxJuZNQ3LbGjpzR0t9hJ6GLZ7tqHLH1gWUpuXXhbWW3MWWC0h7f6ZYSbGDi
+         9c343+4tPO5SxfJRnn6JHYwTSf2j5AS6sQJlMvXAduc1jtQUW/UIhkrhAIsS/Z54QNm+
+         eA3Q==
+X-Gm-Message-State: AAQBX9fypGvikVnR2P8MxCwscibVAtC37BM2npyMVc4MjsLp0aJts5uj
+        HjkTPyao1ZeYFEkgAegxTdXIlMMbZLrXi2UEq7PZVw==
+X-Google-Smtp-Source: AKy350aTizf556QVz56011ZszH1/gIef/gpFh9vh9HUyRv5pXMxWrpzosrUVnpGi2BmXIVXWkYJrlQ==
+X-Received: by 2002:a05:6a00:1903:b0:635:6603:2534 with SMTP id y3-20020a056a00190300b0063566032534mr372714pfi.14.1681335476006;
+        Wed, 12 Apr 2023 14:37:56 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-41-174.pa.nsw.optusnet.com.au. [49.180.41.174])
+        by smtp.gmail.com with ESMTPSA id v7-20020a62a507000000b0058dbd7a5e0esm12112164pfm.89.2023.04.12.14.37.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 Apr 2023 14:37:55 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1pmiA4-002e6G-7g; Thu, 13 Apr 2023 07:37:52 +1000
+Date:   Thu, 13 Apr 2023 07:37:52 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: don't consider future format versions valid
+Message-ID: <20230412213752.GK3223426@dread.disaster.area>
+References: <20230411232342.233433-1-david@fromorbit.com>
+ <20230411232342.233433-3-david@fromorbit.com>
+ <ZDagdV4uGpRyogxj@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZDagdV4uGpRyogxj@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+On Wed, Apr 12, 2023 at 05:13:41AM -0700, Christoph Hellwig wrote:
+> > @@ -86,16 +87,16 @@ xfs_sb_good_version(
+> >  	if (xfs_sb_is_v5(sbp))
+> >  		return xfs_sb_validate_v5_features(sbp);
+> >  
+> > +	/* versions prior to v4 are not supported */
+> > +	if (XFS_SB_VERSION_NUM(sbp) != XFS_SB_VERSION_4)
+> > +		return false;
+> 
+> The comment is a bit confusing now.  But maybe the v4 checks should
+> move into a xfs_sb_validate_v4_features helper anyway, which
+> would lead to a quite nice flow here:
+> 
+> 	if (xfs_sb_is_v5(sbp))
+> 	 	return xfs_sb_validate_v5_features(sbp);
+> 	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4)
+> 	 	return xfs_sb_validate_v4_features(sbp);
+> 	return false;
 
-ugh. Sorry, looks like I jumped the gun. Mea culpa.
-
-We experienced a hang like this:
-
-Apr 05 11:51:27 kernel: "echo 0 > =
-/proc/sys/kernel/hung_task_timeout_secs" disables this message.
-Apr 05 11:51:27 kernel: task:xfs-conv/vdc1   state:D stack:    0 pid:  =
-606 ppid:     2 flags:0x00004080
-Apr 05 11:51:27 kernel: Workqueue: xfs-conv/vdc1 xfs_end_io [xfs]
-Apr 05 11:51:27 kernel: Call Trace:
-Apr 05 11:51:27 kernel:  __schedule+0x274/0x870
-Apr 05 11:51:27 kernel:  schedule+0x46/0xb0
-Apr 05 11:51:27 kernel:  xlog_grant_head_wait+0xc5/0x1d0 [xfs]
-Apr 05 11:51:27 kernel:  xlog_grant_head_check+0xde/0x100 [xfs]
-Apr 05 11:51:27 kernel:  xfs_log_reserve+0xbe/0x1b0 [xfs]
-Apr 05 11:51:27 kernel:  xfs_trans_reserve+0x143/0x180 [xfs]
-Apr 05 11:51:27 kernel:  xfs_trans_alloc+0xee/0x1a0 [xfs]
-Apr 05 11:51:27 kernel:  xfs_iomap_write_unwritten+0x120/0x2e0 [xfs]
-Apr 05 11:51:27 kernel:  ? record_times+0x15/0x90
-Apr 05 11:51:27 kernel:  xfs_end_ioend+0xd8/0x140 [xfs]
-Apr 05 11:51:27 kernel:  xfs_end_io+0xb8/0xf0 [xfs]
-Apr 05 11:51:27 kernel:  process_one_work+0x1b6/0x350
-Apr 05 11:51:27 kernel:  rescuer_thread+0x1d1/0x3a0
-Apr 05 11:51:27 kernel:  ? worker_thread+0x3e0/0x3e0
-Apr 05 11:51:27 kernel:  kthread+0x11b/0x140
-Apr 05 11:51:27 kernel:  ? kthread_associate_blkcg+0xb0/0xb0
-Apr 05 11:51:27 kernel:  ret_from_fork+0x22/0x30
-
-Which seems to be similar to this:
-https://bugs.launchpad.net/bugs/1996269
-
-I followed their patchset here:
-https://review.opendev.org/c/starlingx/kernel/+/864257
-
-And I was under the impression that I picked the right one to ask for =
-backporting, but it seems that was incorrect. I went through the list =
-again and I think the following patches are the ones missing from 5.10:
-
-8182ec00803085354761bbadf0287cad7eac0e2f - =
-https://review.opendev.org/c/starlingx/kernel/+/864257/5/kernel-std/centos=
-/patches/0035-xfs-drop-submit-side-trans-alloc-for-append-ioends.patch
-edbf1eb9032b84631031d9b43570e262f3461c24 - =
-https://review.opendev.org/c/starlingx/kernel/+/864257/5/kernel-std/centos=
-/patches/0036-xfs-open-code-ioend-needs-workqueue-helper.patch
-170e31793806ce5e5a9647b6340954536244518e - =
-https://review.opendev.org/c/starlingx/kernel/+/864257/5/kernel-std/centos=
-/patches/0037-xfs-drop-unused-ioend-private-merge-and-setfilesize-.patch
-2fd609b6c90a88630a50fb317473b210759b3873 - =
-https://review.opendev.org/c/starlingx/kernel/+/864257/5/kernel-std/centos=
-/patches/0038-xfs-drop-unnecessary-setfilesize-helper.patch
-
-The first one in the series was applied in 5.10.129 afaict and landed in =
-mainstream in 5.12 already.
+Sure. Care to send a patch that does that cleanup?
 
 Cheers,
-Christian
 
-> On 12. Apr 2023, at 16:12, Amir Goldstein <amir73il@gmail.com> wrote:
->=20
-> On Wed, Apr 12, 2023 at 5:06=E2=80=AFPM Christian Theune =
-<ct@flyingcircus.io> wrote:
->>=20
->> Hi,
->>=20
->> afaict this was fixed in 5.13 but hasn=E2=80=99t been backported. =
-I=E2=80=99ve seen one of our VMs running 5.10.169 crash with this.
->>=20
->> Anybody willing to backport this? It=E2=80=99s only triggered a =
-single time so far and we are rolling out 5.15 anyways, but maybe this =
-was an oversight =E2=80=A6 ?
->=20
-> What do you mean by "crash with this"?
->=20
-> There is no logic change in the commit mentioned below.
->=20
-> Thanks,
-> Amir.
->=20
->>=20
->> commit 7adb8f14e134d5f885d47c4ccd620836235f0b7f
->> Author: Brian Foster <bfoster@redhat.com>
->> Date:   Fri Apr 9 10:27:55 2021 -0700
->>=20
->>    xfs: open code ioend needs workqueue helper
->>=20
->>    Open code xfs_ioend_needs_workqueue() into the only remaining
->>    caller.
->>=20
->>    Signed-off-by: Brian Foster <bfoster@redhat.com>
->>    Reviewed-by: Christoph Hellwig <hch@lst.de>
->>    Reviewed-by: Darrick J. Wong <djwong@kernel.org>
->>    Signed-off-by: Darrick J. Wong <djwong@kernel.org>
->>=20
->>=20
->> Kind regards,
->> Christian
->>=20
->> --
->> Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
->> Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
->> Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
->> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian =
-Theune, Christian Zagrodnick
->>=20
-
-Liebe Gr=C3=BC=C3=9Fe,
-Christian Theune
-
---=20
-Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
-Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
-Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
-HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
-Christian Zagrodnick
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
