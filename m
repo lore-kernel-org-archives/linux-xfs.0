@@ -2,86 +2,146 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74923C7619A
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 02:33:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADBAFC77B70
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 02:49:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229561AbjDLCdY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Apr 2023 22:33:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41592 "EHLO
+        id S229469AbjDLCtL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Apr 2023 22:49:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229469AbjDLCdX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 22:33:23 -0400
+        with ESMTP id S229450AbjDLCtK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 22:49:10 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88C41172B;
-        Tue, 11 Apr 2023 19:33:22 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F7C644B9;
+        Tue, 11 Apr 2023 19:49:09 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 257C561C99;
-        Wed, 12 Apr 2023 02:33:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F370C433D2;
-        Wed, 12 Apr 2023 02:33:21 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E669B60F09;
+        Wed, 12 Apr 2023 02:49:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DB1CC433D2;
+        Wed, 12 Apr 2023 02:49:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681266801;
-        bh=uWYRkl4H5QxQQyKZRkipfJYb8JT+WBT0+Wf0sQwa8R4=;
+        s=k20201202; t=1681267748;
+        bh=6l6tJnxICA2ULe0XUVOrqNYppyqjamZONneAk26XYdw=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ICEWpWIHfCvZctrTa23zt5ow0V8NDHh2F1i00eVdXSsHwgqMLrkRT/XlEYlKmjHDc
-         19nDnI8fLxzFqlz2xC7lWzBe/z+FLZQp9I6XnZMJNnBuVmGr4gIcbNqsErYoKb0m7p
-         sxQgr5EWBTLQtP3m6ZbcVg4DVMLneqkbV0LUwwpej+ysbJ8GM6GOmxaIXmht+TVLM5
-         8AoJUx4LJxeAkTKLmK+QxNTrCOzWSGGlTQai0S4osbYt1lIObyZ+GefEjAWZe5ts/v
-         1DVrYg2TcXMS5rnXRentQX9hoIWFgOeiZNMnlongYGP1HyqIKramwdoHwdF+582obz
-         FYYaJGFJaqEvg==
-Date:   Tue, 11 Apr 2023 19:33:19 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Andrey Albershteyn <aalbersh@redhat.com>, djwong@kernel.org,
-        dchinner@redhat.com, linux-xfs@vger.kernel.org,
-        fsverity@lists.linux.dev, rpeterso@redhat.com, agruenba@redhat.com,
-        xiang@kernel.org, chao@kernel.org,
-        damien.lemoal@opensource.wdc.com, jth@kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        cluster-devel@redhat.com
-Subject: Re: [PATCH v2 00/23] fs-verity support for XFS
-Message-ID: <20230412023319.GA5105@sol.localdomain>
-References: <20230404145319.2057051-1-aalbersh@redhat.com>
- <ZDTt8jSdG72/UnXi@infradead.org>
+        b=pAfru8hHTUV2Ervx+gdTXaaK+iMaAHmnfaWx9ZoI9cG6dwvsPMSVbdWL3sU7/w8Hi
+         Ckfk+/HIAlWQhEeUrjWcgnux1uGgnSKFx33Kb40Ebg1O42e0HPaNxixGWpD8Qnbain
+         0nt4UXLwa9LGe33mWx3Sf2wBWpaIgK6F1ZqzigXM3LPSvW+kQVVhjXHBGw/irgm+CA
+         Hjg+KnRGDL9Yb5QgONaqFBkReXcaKB6HeHHBcp9VWcWxiRf77r5S1CPbRJN6ayOQUh
+         U2KhaQqxpJ2DfhtwUk8TKzIn2J0qKZ1eryk+2Ry0bIlA4+ImpbDBlhrEm4yBvIffXw
+         6mSVTUr0v31ZA==
+Date:   Tue, 11 Apr 2023 19:49:07 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Ye Bin <yebin@huaweicloud.com>
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        yebin10@huawei.com
+Subject: Re: [PATCH v3] xfs: fix BUG_ON in xfs_getbmap()
+Message-ID: <20230412024907.GP360889@frogsfrogsfrogs>
+References: <20230329025258.1074860-1-yebin@huaweicloud.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZDTt8jSdG72/UnXi@infradead.org>
+In-Reply-To: <20230329025258.1074860-1-yebin@huaweicloud.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 10, 2023 at 10:19:46PM -0700, Christoph Hellwig wrote:
-> Dave is going to hate me for this, but..
+On Wed, Mar 29, 2023 at 10:52:58AM +0800, Ye Bin wrote:
+> From: Ye Bin <yebin10@huawei.com>
 > 
-> I've been looking over some of the interfaces here, and I'm starting
-> to very seriously questioning the design decisions of storing the
-> fsverity hashes in xattrs.
+> There's issue as follows:
+> XFS: Assertion failed: (bmv->bmv_iflags & BMV_IF_DELALLOC) != 0, file: fs/xfs/xfs_bmap_util.c, line: 329
+> ------------[ cut here ]------------
+> kernel BUG at fs/xfs/xfs_message.c:102!
+> invalid opcode: 0000 [#1] PREEMPT SMP KASAN
+> CPU: 1 PID: 14612 Comm: xfs_io Not tainted 6.3.0-rc2-next-20230315-00006-g2729d23ddb3b-dirty #422
+> RIP: 0010:assfail+0x96/0xa0
+> RSP: 0018:ffffc9000fa178c0 EFLAGS: 00010246
+> RAX: 0000000000000000 RBX: 0000000000000001 RCX: ffff888179a18000
+> RDX: 0000000000000000 RSI: ffff888179a18000 RDI: 0000000000000002
+> RBP: 0000000000000000 R08: ffffffff8321aab6 R09: 0000000000000000
+> R10: 0000000000000001 R11: ffffed1105f85139 R12: ffffffff8aacc4c0
+> R13: 0000000000000149 R14: ffff888269f58000 R15: 000000000000000c
+> FS:  00007f42f27a4740(0000) GS:ffff88882fc00000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 0000000000b92388 CR3: 000000024f006000 CR4: 00000000000006e0
+> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+> Call Trace:
+>  <TASK>
+>  xfs_getbmap+0x1a5b/0x1e40
+>  xfs_ioc_getbmap+0x1fd/0x5b0
+>  xfs_file_ioctl+0x2cb/0x1d50
+>  __x64_sys_ioctl+0x197/0x210
+>  do_syscall_64+0x39/0xb0
+>  entry_SYSCALL_64_after_hwframe+0x63/0xcd
 > 
-> Yes, storing them beyond i_size in the file is a bit of a hack, but
-> it allows to reuse a lot of the existing infrastructure, and much
-> of fsverity is based around it.  So storing them in an xattrs causes
-> a lot of churn in the interface.  And the XFS side with special
-> casing xattr indices also seems not exactly nice.
+> Above issue may happen as follows:
+>          ThreadA                       ThreadB
+> do_shared_fault
+>  __do_fault
+>   xfs_filemap_fault
+>    __xfs_filemap_fault
+>     filemap_fault
+>                              xfs_ioc_getbmap -> Without BMV_IF_DELALLOC flag
+> 			      xfs_getbmap
+> 			       xfs_ilock(ip, XFS_IOLOCK_SHARED);
+> 			       filemap_write_and_wait
+>  do_page_mkwrite
+>   xfs_filemap_page_mkwrite
+>    __xfs_filemap_fault
+>     xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
+>     iomap_page_mkwrite
+>      ...
+>      xfs_buffered_write_iomap_begin
+>       xfs_bmapi_reserve_delalloc -> Allocate delay extent
+>                               xfs_ilock_data_map_shared(ip)
+> 	                      xfs_getbmap_report_one
+> 			       ASSERT((bmv->bmv_iflags & BMV_IF_DELALLOC) != 0)
+> 	                        -> trigger BUG_ON
+> 
+> As xfs_filemap_page_mkwrite() only hold XFS_MMAPLOCK_SHARED lock, there's
+> small window mkwrite can produce delay extent after file write in xfs_getbmap().
+> To solve above issue, just skip delalloc extents.
+> 
+> Signed-off-by: Ye Bin <yebin10@huawei.com>
+> ---
+>  fs/xfs/xfs_bmap_util.c | 14 ++++++--------
+>  1 file changed, 6 insertions(+), 8 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index a09dd2606479..f032d3a4b727 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -314,15 +314,13 @@ xfs_getbmap_report_one(
+>  	if (isnullstartblock(got->br_startblock) ||
+>  	    got->br_startblock == DELAYSTARTBLOCK) {
+>  		/*
+> -		 * Delalloc extents that start beyond EOF can occur due to
+> -		 * speculative EOF allocation when the delalloc extent is larger
+> -		 * than the largest freespace extent at conversion time.  These
+> -		 * extents cannot be converted by data writeback, so can exist
+> -		 * here even if we are not supposed to be finding delalloc
+> -		 * extents.
+> +		 * Take the flush completion as being a point-in-time snapshot
+> +		 * where there are no delalloc extents, and if any new ones
+> +		 * have been created racily, just skip them as being 'after'
+> +		 * the flush and so don't get reported.
+>  		 */
+> -		if (got->br_startoff < XFS_B_TO_FSB(ip->i_mount, XFS_ISIZE(ip)))
+> -			ASSERT((bmv->bmv_iflags & BMV_IF_DELALLOC) != 0);
+> +		if (!(bmv->bmv_iflags & BMV_IF_DELALLOC))
+> +			return 0;
 
-It seems it's really just the Merkle tree caching interface that is causing
-problems, as it's currently too closely tied to the page cache?  That is just an
-implementation detail that could be reworked along the lines of what is being
-discussed.
+I think I'm ok with this...
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-But anyway, it is up to the XFS folks.  Keep in mind there is also the option of
-doing what btrfs is doing, where it stores the Merkle tree separately from the
-file data stream, but caches it past i_size in the page cache at runtime.
+--D
 
-I guess there is also the issue of encryption, which hasn't come up yet since
-we're talking about fsverity support only.  The Merkle tree (including the
-fsverity_descriptor) is supposed to be encrypted, just like the file contents
-are.  Having it be stored after the file contents accomplishes that easily...
-Of course, it doesn't have to be that way; a separate key could be derived, or
-the Merkle tree blocks could be encrypted with the file contents key using
-indices past i_size, without them physically being stored in the data stream.
-
-- Eric
+>  
+>  		p->bmv_oflags |= BMV_OF_DELALLOC;
+>  		p->bmv_block = -2;
+> -- 
+> 2.31.1
+> 
