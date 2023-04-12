@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 355A4C7619A
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 03:45:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28760C7619A
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 03:45:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229483AbjDLDpi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Apr 2023 23:45:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37962 "EHLO
+        id S229490AbjDLDpy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Apr 2023 23:45:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229451AbjDLDph (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 23:45:37 -0400
+        with ESMTP id S229451AbjDLDpx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 23:45:53 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7206330E0
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 20:45:36 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03CFA40CA
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 20:45:52 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0CA2262B68
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Apr 2023 03:45:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68154C433D2;
-        Wed, 12 Apr 2023 03:45:35 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9430D62B68
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Apr 2023 03:45:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0C14C433D2;
+        Wed, 12 Apr 2023 03:45:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681271135;
-        bh=p018O0KDIHVz9AJeo+cUyOMtd6FJdvqNJEhGw02Q2N4=;
+        s=k20201202; t=1681271151;
+        bh=+icNcZKOhk8CPbPYm7ED0zOfkpvhR/bdV8kPsGCvIM4=;
         h=Date:Subject:From:To:Cc:From;
-        b=eZ3MQUt3BNZ1hm8kOohYWIg1VBVzMUv+6i5S96HooKrxQxSGqP0vmYHA8TgZ1RZhB
-         uEUGLfW6TOnvhjRGxSny6UYzh8VwOLExYVrDCdpAJvnsxksRhSVXsJTDTKNXaBqqRF
-         98g6CDQm6S9ad3G8McE8BWgsofKQ/WwxXlk3RvmkAX7+KvDGenLkzZ7upKqVNv9GV0
-         dQrm/iqjvLBVYmkW3cjVAn4ydYi2Gd+/H69uSJPVsw3UKvih+Lld6jR5TXIs0IM0tX
-         P5Q+UiIdRj02EoBqe+Ffsr5ZGnZfjf1BxJOH+q3OjsSOtIGeTArdOhO2uxueIVVene
-         eJr2tnbqB6WcQ==
-Date:   Tue, 11 Apr 2023 20:45:34 -0700
-Subject: [GIT PULL 3/22] xfs: pass perag references around when possible
+        b=XgdKH9enEeP+AcJxFIVNe/17mSX2EAw1xG4bHtK4bybdCvU+YzIPMaKqPJ2L9QcWF
+         fUN/lHQClXxxTEVtKhFihf99krjJD0yocepYVgnr/Ci9LLSSAmZETpL1m1an8w/iHa
+         1+pBYZVg/ZwuJaRLgeuzV1BeEkK2DCjkPd7dYQarwrMwmmkiRIOJne1KiwAQln413B
+         4gIfzXRj0bjwQCsRdslhrBxPZfw1woFsyAU0eZb7dyAF0+6V3O5TrTe0RSGNafKBcL
+         r+xLzaZQ+RQi2QYg4lvLFM9iAu1VHf5j4isSGAU4q1IuErCTjEh1ehvBkm0r13IcT3
+         T9e34vDx2E62Q==
+Date:   Tue, 11 Apr 2023 20:45:50 -0700
+Subject: [GIT PULL 4/22] xfs_scrub: fix licensing and copyright notices
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     dchinner@fromorbit.com, djwong@kernel.org
 Cc:     dchinner@redhat.com, linux-xfs@vger.kernel.org
-Message-ID: <168127093954.417736.329214140924049645.stg-ugh@frogsfrogsfrogs>
+Message-ID: <168127094049.417736.4769433461213675106.stg-ugh@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -54,40 +54,66 @@ encounter any problems.
 
 --D
 
-The following changes since commit 00e7b3bac1dc8961bd5aa9d39e79131c6bd81181:
-
-xfs: give xfs_refcount_intent its own perag reference (2023-04-11 18:59:55 -0700)
-
-are available in the Git repository at:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/pass-perag-refs-6.4_2023-04-11
-
-for you to fetch changes up to 9b2e5a234c89f097ec36f922763dfa1465dc06f8:
+The following changes since commit 9b2e5a234c89f097ec36f922763dfa1465dc06f8:
 
 xfs: create traced helper to get extra perag references (2023-04-11 18:59:55 -0700)
 
+are available in the Git repository at:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/scrub-fix-legalese-6.4_2023-04-11
+
+for you to fetch changes up to ecc73f8a58c7844b04186726f8699ba97cec2ef9:
+
+xfs: update copyright years for scrub/ files (2023-04-11 18:59:57 -0700)
+
 ----------------------------------------------------------------
-xfs: pass perag references around when possible [v24.5]
+xfs_scrub: fix licensing and copyright notices [v24.5]
 
-Avoid the cost of perag radix tree lookups by passing around active perag
-references when possible.
-
-v24.2: rework some of the naming and whatnot so there's less opencoding
+Fix various attribution problems in the xfs_scrub source code, such as
+the author's contact information, out of date SPDX tags, and a rough
+estimate of when the feature was under heavy development.  The most
+egregious parts are the files that are missing license information
+completely.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (1):
-xfs: create traced helper to get extra perag references
+Darrick J. Wong (2):
+xfs: fix author and spdx headers on scrub/ files
+xfs: update copyright years for scrub/ files
 
-fs/xfs/libxfs/xfs_ag.c             | 13 +++++++++++++
-fs/xfs/libxfs/xfs_ag.h             |  1 +
-fs/xfs/libxfs/xfs_alloc_btree.c    |  4 +---
-fs/xfs/libxfs/xfs_ialloc_btree.c   |  4 +---
-fs/xfs/libxfs/xfs_refcount_btree.c |  5 +----
-fs/xfs/libxfs/xfs_rmap_btree.c     |  5 +----
-fs/xfs/xfs_iunlink_item.c          |  4 +---
-fs/xfs/xfs_iwalk.c                 |  5 ++---
-fs/xfs/xfs_trace.h                 |  1 +
-9 files changed, 22 insertions(+), 20 deletions(-)
+fs/xfs/scrub/agheader.c        | 6 +++---
+fs/xfs/scrub/agheader_repair.c | 6 +++---
+fs/xfs/scrub/alloc.c           | 6 +++---
+fs/xfs/scrub/attr.c            | 6 +++---
+fs/xfs/scrub/attr.h            | 4 ++--
+fs/xfs/scrub/bitmap.c          | 6 +++---
+fs/xfs/scrub/bitmap.h          | 6 +++---
+fs/xfs/scrub/bmap.c            | 6 +++---
+fs/xfs/scrub/btree.c           | 6 +++---
+fs/xfs/scrub/btree.h           | 6 +++---
+fs/xfs/scrub/common.c          | 6 +++---
+fs/xfs/scrub/common.h          | 6 +++---
+fs/xfs/scrub/dabtree.c         | 6 +++---
+fs/xfs/scrub/dabtree.h         | 6 +++---
+fs/xfs/scrub/dir.c             | 6 +++---
+fs/xfs/scrub/fscounters.c      | 4 ++--
+fs/xfs/scrub/health.c          | 6 +++---
+fs/xfs/scrub/health.h          | 6 +++---
+fs/xfs/scrub/ialloc.c          | 6 +++---
+fs/xfs/scrub/inode.c           | 6 +++---
+fs/xfs/scrub/parent.c          | 6 +++---
+fs/xfs/scrub/quota.c           | 6 +++---
+fs/xfs/scrub/refcount.c        | 6 +++---
+fs/xfs/scrub/repair.c          | 6 +++---
+fs/xfs/scrub/repair.h          | 6 +++---
+fs/xfs/scrub/rmap.c            | 6 +++---
+fs/xfs/scrub/rtbitmap.c        | 6 +++---
+fs/xfs/scrub/scrub.c           | 6 +++---
+fs/xfs/scrub/scrub.h           | 6 +++---
+fs/xfs/scrub/symlink.c         | 6 +++---
+fs/xfs/scrub/trace.c           | 6 +++---
+fs/xfs/scrub/trace.h           | 6 +++---
+fs/xfs/scrub/xfs_scrub.h       | 6 +++---
+33 files changed, 97 insertions(+), 97 deletions(-)
 
