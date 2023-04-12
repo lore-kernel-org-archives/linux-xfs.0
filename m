@@ -2,215 +2,115 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DAE55C77B73
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 05:21:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FB53C77B6E
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 06:31:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229588AbjDLFVu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Apr 2023 01:21:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40472 "EHLO
+        id S229661AbjDLGbW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Apr 2023 02:31:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229504AbjDLFVt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2023 01:21:49 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8582469D
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 22:21:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1681276863;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=JqxqUicjNetRTQQMEz2T27cplxcUTPiDbzMlGWnvaLw=;
-        b=HK9ORqu8nPON/xVk2RiyaQY1Y2E8FeMnMLmgb3RDBaMgc4Kqtci83S0EhFHpl5jJovyDqL
-        lnEeDx2MOA58SZ8T9X0uIVBVxieQyPjDWJHu24d98X2eZSOQK66h5BmN2ughJBxUISkmcS
-        3m8GQEmSsbbKDHb37NLDB05myzVx1RA=
-Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
- [209.85.218.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-636-SBxFYEUBNmaxDxuO5i18zg-1; Wed, 12 Apr 2023 01:21:01 -0400
-X-MC-Unique: SBxFYEUBNmaxDxuO5i18zg-1
-Received: by mail-ej1-f69.google.com with SMTP id b24-20020a1709065e5800b0094a72cc9e85so3177920eju.11
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 22:21:01 -0700 (PDT)
+        with ESMTP id S229585AbjDLGbV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2023 02:31:21 -0400
+Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58B094ECD
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 23:31:20 -0700 (PDT)
+Received: by mail-pl1-x641.google.com with SMTP id p8so10408763plk.9
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 23:31:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1681281080;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=7bwVEK6QvXrqqWbnogjq3HuhLsxVh/sXn6CJvJQrrqA=;
+        b=xch4eGMab0EiAUslBlSD5FnlbrgTQlYHleYwsgE+pnPSstr7/bx8g1THbsRPqGYAVr
+         S7N6P6Fr9zAFsPwCoJ6jW1UP9wHtPQ7EyyAEnYelcL8PElkQ/YYOONQjyXfYzDJhxCV1
+         AcfzES83rqz2E7BLa3j4LgzLthc24UW1rIQkox/AaP15Ys9Bvrp7obK3kkF/6zeCw9xE
+         Sx/dAahPpYv0jbevF61a2ONpBAY3rQtDofFGi7dscLTZXV8Kcv2PjTs405CEaLjYopa7
+         ADalL8Pg87pVoxJTEXqLzgxxQgwr459Ahh8sjEfZvjpNmC2qrU+DnrqGI/0zx3GoSqFQ
+         HXRg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1681276860; x=1683868860;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=JqxqUicjNetRTQQMEz2T27cplxcUTPiDbzMlGWnvaLw=;
-        b=Vy+a1dRiy30P4HPa3umrtv3/oXLKS13N1fwuJC4hQOVlvTcYnVxnlTKP9j9SlZZ1tX
-         bCPJfpgP7ChuWHseAvwhGZpYAmNox5rFbyD6c0ptCYApcabaXLvMBG1s9xwdOtU1hf/L
-         HcJIwGab9IFrcHwIOGzcDRZBUMFAHZ9QoK3Wu6XNS/g9HhSJ9YPvAw7LTOCj4DJNIAF1
-         U+UZpzk+YC4BJtLNDNtJzAD6+dE+iqdiCmA7eh980+WRNkk4Y6BbTX5eaM9X64HZF5qn
-         VL6ZspRCaZch1/zF2KoSR2nESCao8zxDcYWwFum/Kxvl1gZlRf5UALTnFCEJ0IFrw21I
-         8uTw==
-X-Gm-Message-State: AAQBX9d5xWKyaVHxvLkcK4Oi5rachq0oVqjSjCE7eKPl/uwoEIIV4Fq/
-        y/5V6ir5+lgOgXSTbY8cqLuTJoTJVyqfoSGKsfOoxREGlUBhomi59KTYZ5MCt9JX1B4udxfDAll
-        iyFXQpDMZMTU23nBa3A+2LKTqNkC5CUV6XiF6
-X-Received: by 2002:a17:906:7f97:b0:94a:5691:b12b with SMTP id f23-20020a1709067f9700b0094a5691b12bmr5715091ejr.11.1681276860318;
-        Tue, 11 Apr 2023 22:21:00 -0700 (PDT)
-X-Google-Smtp-Source: AKy350ZICmgEqGJkx48se3yBQ6rYH4gDzJv11aUZUml5J+lPHZHU3waRoOPqBX/Zk6KRdfT5kBlK8PC0jqrvMTBKvzM=
-X-Received: by 2002:a17:906:7f97:b0:94a:5691:b12b with SMTP id
- f23-20020a1709067f9700b0094a5691b12bmr5715080ejr.11.1681276859949; Tue, 11
- Apr 2023 22:20:59 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230410160727.3748239-1-ryasuoka@redhat.com> <20230410163029.GC360889@frogsfrogsfrogs>
- <20230410175946.GD360889@frogsfrogsfrogs>
-In-Reply-To: <20230410175946.GD360889@frogsfrogsfrogs>
-From:   Ryosuke Yasuoka <ryasuoka@redhat.com>
-Date:   Wed, 12 Apr 2023 14:20:48 +0900
-Message-ID: <CAHpthZp+h-4nEGhNhBvSXxv6LGFUX=H646U6tHEF5_kwM3ij6Q@mail.gmail.com>
-Subject: Re: [PATCH v2] xfs: Use for_each_perag_from() to iterate all
- available AGs
+        d=1e100.net; s=20210112; t=1681281080;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=7bwVEK6QvXrqqWbnogjq3HuhLsxVh/sXn6CJvJQrrqA=;
+        b=kKg9WT45xy+mCEdiCtvIsI5xFceLvU8Jq3/wO0hKHIAmvGbPje7Ep+6ziWIzUb+a3H
+         mL+g60XAhdR0O0IDAjMjtRlcd8Lf7ltDzdVvObLMaZCH96DCjJNJNUPxbE6v8GVIt01j
+         CBw5SJUpVYWbW8ftF1+x27McWna1RyHcbxsmE2ga5MZd9lDCZfdMTrfMEytsrM0sv4cf
+         Sj1VZIkqHQIsz8u/m07/oTwXGuGIDEJ02H2t5qvbYKcLple66pajT9ZAAsX5r8cGEt9m
+         h9oc7V5wHCOXa2jCNXyhUQYrXs8MzdzYjFlocymTfN+GPRLgX248svbS8/kwdQ0EZcQH
+         prpA==
+X-Gm-Message-State: AAQBX9dGoW4mjB4VrKkaWUp0GCutK/i1GwhwUiKvcDtsaEONxFzK3tfq
+        mLWk+eE0Bx1QkxUKe8JClKBYCjusBB0x30zr6v5RcwEJ
+X-Google-Smtp-Source: AKy350YqBTpg60iT4yv2Q6ZMCDrEe4NOSArL/LXYmDNSQCOXW+vvwUfsAP3MQ3U0eZYpRoLfwpl33Q==
+X-Received: by 2002:a17:903:2888:b0:1a6:3ffb:8997 with SMTP id ku8-20020a170903288800b001a63ffb8997mr7046126plb.42.1681281079695;
+        Tue, 11 Apr 2023 23:31:19 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-41-174.pa.nsw.optusnet.com.au. [49.180.41.174])
+        by smtp.gmail.com with ESMTPSA id y8-20020a1709029b8800b001a239325f1csm10716071plp.100.2023.04.11.23.31.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 11 Apr 2023 23:31:19 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1pmU0h-002OdT-Ij; Wed, 12 Apr 2023 16:31:15 +1000
+Date:   Wed, 12 Apr 2023 16:31:15 +1000
+From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, david@fromorbit.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Cc:     dchinner@fromorbit.com, linux-xfs@vger.kernel.org
+Subject: Re: [GIT PULL 14/22] xfs: fix bugs in parent pointer checking
+Message-ID: <20230412063115.GJ3223426@dread.disaster.area>
+References: <168127095051.417736.2174858080826643116.stg-ugh@frogsfrogsfrogs>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <168127095051.417736.2174858080826643116.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Darrick
-
-Thank you for reviewing.
-
-On Tue, Apr 11, 2023 at 1:30=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
- wrote:
->
-> On Tue, Apr 11, 2023 at 01:07:27AM +0900, Ryosuke Yasuoka wrote:
-> > xfs_filestream_pick_ag() iterates all the available AGs when no
-> > unassociated AGs are available by using for_each_perag_wrap().
-> > To iterate all the available AGs, just use for_each_perag_from() instea=
-d.
-> >
-> >
-> > This patch cleans up a code where xfs_filestream_pick_ag() iterates
-> > all the available AGs when no unassociated AGs are available.
-> > Current implementation is using a for_each_perag_wrap() macro which
-> > iterates all AGs from start_agno through wrap_agno, wraps to
-> > restart_agno, and then iterates again toward to (start_agno - 1).
-> > In this case, xfs_filestream_pick_ag() start to iterate from 0 and
-> > does't need to wrap. Although passing 0 as start_agno to
-> > for_each_perag_wrap()
-> > is not problematic, we have already a for_each_perag() macro family
-> > which just iterates all AGs from 0 and doesn't wrap. Hense, I propose
-> > to use for_each_perag() family simply.
-> >
-> >
-> > Changes since v1 [1]:
-> > Use for_each_perag_from() instead of for_each_perag() to clarify
-> > where we are iterating from.
-> >
-> > [1]:
-> > https://lore.kernel.org/linux-xfs/CAHpthZrvhqh8O1HO7U_jVnaq9R9Ur=3DYq2e=
-WzjWfNx3ryDbnGPA@mail.gmail.com/T/#m5704d0409bec1ce5273be0d3860e8ad60e9886f=
-d
-> >
-> > Signed-off-by: Ryosuke Yasuoka <ryasuoka@redhat.com>
-> > ---
-> >  fs/xfs/xfs_filestream.c | 3 ++-
-> >  1 file changed, 2 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-> > index 22c13933c8f8..29acd9f7d422 100644
-> > --- a/fs/xfs/xfs_filestream.c
-> > +++ b/fs/xfs/xfs_filestream.c
-> > @@ -151,7 +151,8 @@ xfs_filestream_pick_ag(
-> >                * grab.
-> >                */
-> >               if (!max_pag) {
-> > -                     for_each_perag_wrap(args->mp, 0, start_agno, args=
-->pag)
-> > +                     start_agno =3D 0;
-> > +                     for_each_perag_from(args->mp, start_agno, args->p=
-ag)
->
-> IDGI.  for_each_perag initializes the loop variable and calls
-> for_each_perag_from, so this is open-coding an existing macro.
->
-> If people are confused by the reuse of the function call parameter
-> variable for the second loop, then either declare a new variable and let
-> the compiler notice that we never use start_agno ever again and reuse
-> a cpu register:
->
->         if (!max_pag) {
->                 xfs_agnumber_t  agno;
->
->                 for_each_perag(args->mp, agno, args->pag)
->                         break;
->                 ...
->         }
->
-> Or reuse it explicitly and leave a comment:
->
->         if (!max_pag) {
->                 /*
->                  * Use any AG that we can grab.  start_agno is no longer
->                  * pertinent here so we can reuse the variable.
->                  */
->                 for_each_perag(args->mp, start_agno, args->pag)
->                         break;
->                 ...
->         }
->
-> As a third alternative, I suppose you could encapsulate all of that into
-> a dorky helper since I bet this isn't the first or the last time we're
-> going to need something like this:
->
-> static inline struct xfs_perag *
-> xfs_perag_get_first_avail(
->         struct xfs_mount        *mp)
-> {
->         struct xfs_perag        *pag;
->         xfs_agnumber_t          agno;
->
->         for_each_perag(mp, agno, pag)
->                 return pag;
->
->         ASSERT(0);
->         return NULL;
-> }
->
->         if (!max_pag) {
->                 args->pag =3D xfs_perag_get_first_avail(mp);
->                 ...
->         }
-
-OK. I update my patch with your third alternative. I'll add
-xfs_perag_get_first_avail() in xfs_filestream.h.
-
-It is a great idea because it can detect with ASSERT(0) if
-for_each_perag() gets no pag structure.
-
-The following syzbot bug [2] is an indeed pattern of this.
-
-[2]: https://syzkaller.appspot.com/bug?id=3Df7682cf37b02ddf3c87d88b80f74024=
-cf330017b
-
-On Tue, Apr 11, 2023 at 2:59=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
- wrote:
->
-> Oh, also -- I ran the whole codebase through smatch this morning.
-> Could you please set @err to zero in its declaration above?  If the
-> first for_each_perag_wrap never manages to get any perag structures
-> (currently impossible with the codebase) then err will be undefined and
-> probably nonzero.
->
->   CHECK  fs/xfs/xfs_filestream.c
-> fs/xfs/xfs_filestream.c:120
-> xfs_filestream_pick_ag() error: uninitialized symbol 'err'.
->
+On Tue, Apr 11, 2023 at 08:48:26PM -0700, Darrick J. Wong wrote:
+> Hi Dave,
+> 
+> Please pull this branch with changes for xfs.
+> 
+> As usual, I did a test-merge with the main upstream branch as of a few
+> minutes ago, and didn't see any conflicts.  Please let me know if you
+> encounter any problems.
+> 
 > --D
+> 
+> The following changes since commit 0916056eba4fd816f8042a3960597c316ea10256:
+> 
+> xfs: fix parent pointer scrub racing with subdirectory reparenting (2023-04-11 19:00:20 -0700)
+> 
+> are available in the Git repository at:
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/scrub-parent-fixes-6.4_2023-04-11
+> 
+> for you to fetch changes up to 0916056eba4fd816f8042a3960597c316ea10256:
+> 
+> xfs: fix parent pointer scrub racing with subdirectory reparenting (2023-04-11 19:00:20 -0700)
+> 
+> ----------------------------------------------------------------
+> xfs: fix bugs in parent pointer checking [v24.5]
+> 
+> Jan Kara pointed out that the VFS doesn't take i_rwsem of a child
+> subdirectory that is being moved from one parent to another.  Upon
+> deeper analysis, I realized that this was the source of a very hard to
+> trigger false corruption report in the parent pointer checking code.
+> 
+> Now that we've refactored how directory walks work in scrub, we can also
+> get rid of all the unnecessary and broken locking to make parent pointer
+> scrubbing work properly.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> 
+> ----------------------------------------------------------------
 
-OK. I will also update it like this. Is my understanding correct?
+Empty pull request?
 
-@@ -67,7 +67,7 @@ xfs_filestream_pick_ag(
-xfs_extlen_t free =3D 0, minfree, maxfree =3D 0;
-xfs_agnumber_t agno;
-bool first_pass =3D true;
-- int err;
-+ int err =3D 0;
+Looks like the next pull-req is empty, too, and the commits that are
+supposed to be in these are in pull-req after that?
 
-Best regards,
-Ryosuke
-
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
