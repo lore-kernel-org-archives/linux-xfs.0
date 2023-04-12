@@ -2,131 +2,100 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F243C7619A
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 21:54:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C6F2C7619A
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 22:04:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229800AbjDLVyV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Apr 2023 17:54:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48206 "EHLO
+        id S230147AbjDLWEu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Apr 2023 18:04:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229732AbjDLVyU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2023 17:54:20 -0400
-Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BAFF49C2
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Apr 2023 14:54:19 -0700 (PDT)
-Received: by mail-pj1-x1043.google.com with SMTP id j8so11518203pjy.4
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Apr 2023 14:54:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1681336459;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=o22buf+xWsiAjf8q6ZesO0xScrJcUXPqlMC3QN5HAOw=;
-        b=Yy3j4sLbegTgjTgcaNkTrZN/7M/ZDOBxoDHaSLn5Pvs9AGyWlutR7JOp3C/z4US/gp
-         JNPTAtUNdJOlsJMwAZAYLjjXgeUJyPzUdHpGtSOGmX5lYsrPKucYHAo/cYimJILvx4gB
-         OKFw08M/dWu59tVxZ7w1Dzgj3U+EnZFrEXJ64FYZtEh1KqO/19LCCZEvZWCjoKE9pdAr
-         vs2zzEf263lIvs3SmG2hUA02lOqYO8qc3/+kQc9ScXsTt2CnOeRnQUKRL1IcGhl/LPN8
-         a8PKswraiwJP8W5Xv2F1/P+DwTWy25rTTwzQ3gnPCBPPhpnguImNFaCwzMSw5648XLbi
-         eIiA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681336459;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=o22buf+xWsiAjf8q6ZesO0xScrJcUXPqlMC3QN5HAOw=;
-        b=NoWeclYR1irr5Vds4qcYEXoKkdFfnVn/Z8G4P+stdsu48Pd+vEkCYo3ZE7NKXQ3196
-         Ea7qRsNAMhcIwH3mTbJRpMRWMyOJxLZYqO8LQlO60WtQUZzYUyaVjtjW83iO6v/fuNuq
-         trvc7TMnq//C7PcAl1ryW7uRI2OPeH2OVoH3lapDJMaEaghyQ48aRpjzLEQqBcYajbf5
-         kw554p1lZLvbi65psxvn1J7+EkT5jradVvMceDzVx9qyT0KXeBxwmTM9DE7vbkdPXlSV
-         zX07rxef6fPYJXMloDLlv7LBOSFK6j5Y8upokUR6Dla0+OiVWCQrXVsHRlJ6XjrFRtIZ
-         ihwg==
-X-Gm-Message-State: AAQBX9fx2kgPTQGHJgwInf83Z9OiB7XP4fusAtipSByfEY0sLnZx2AV0
-        JusmDLPo5U7tABAX+XeF+nhf3A==
-X-Google-Smtp-Source: AKy350aC1dzQ8x6PzYL+9Tqb4+YvtNMti2RvQcBthymKE8OIbVbW6YHQBEHsX8JXr4+ccGakpel1Hg==
-X-Received: by 2002:a17:902:c713:b0:1a4:fcc9:ec61 with SMTP id p19-20020a170902c71300b001a4fcc9ec61mr332187plp.5.1681336458813;
-        Wed, 12 Apr 2023 14:54:18 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-41-174.pa.nsw.optusnet.com.au. [49.180.41.174])
-        by smtp.gmail.com with ESMTPSA id i4-20020a1709026ac400b001a1b66af22fsm71183plt.62.2023.04.12.14.54.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Apr 2023 14:54:18 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1pmiPv-002eH2-Dy; Thu, 13 Apr 2023 07:54:15 +1000
-Date:   Thu, 13 Apr 2023 07:54:15 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     syzbot <syzbot+listea0b12829deaef4101fd@syzkaller.appspotmail.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Subject: Re: [syzbot] Monthly xfs report
-Message-ID: <20230412215415.GM3223426@dread.disaster.area>
-References: <000000000000529f1805f81b23c2@google.com>
- <20230411013512.GX3223426@dread.disaster.area>
- <20230411043517.GC360895@frogsfrogsfrogs>
+        with ESMTP id S229628AbjDLWEq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2023 18:04:46 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDB8383F7
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Apr 2023 15:04:35 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5172263992
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Apr 2023 22:04:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC9ECC433D2;
+        Wed, 12 Apr 2023 22:04:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1681337074;
+        bh=0lx67Z08J3aeaVS3BgiU46n/bEcuUlSMbrnWB+SVmTI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=khPIQoPnjXIucnPJaG80Qsqj5M/geVJ6WgbsLPorMevX0QgFkjfDvbzMaENwENLfF
+         rLIBDMSXgB7pY95vRd0uef4ewoneJab/SbYnriqiqAcC8BXcd4fsrZqRzu2ztQBbGq
+         Y9jcMikgH0vpgt6Rp76nTrjQUEalzAkp/wEOyEETBNJOW4wov947LZED2cbktyrTAi
+         +FIGR+F6nJFN6xtP6V4iuE6Hn9a06792ysB27/ON/ELukpM/Arr7xdgtokzwEdrShW
+         oWiv+Pcmqtd1ANuOyL8BmptvYrFSAJ5JQ0h6lCLwvHM8eK4wsg6dPth0up252g57L0
+         cr4OibGqJFImA==
+Date:   Wed, 12 Apr 2023 15:04:34 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     cem@kernel.org, linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH 4/6] xfs_db: fix metadump name obfuscation for ascii-ci
+ filesystems
+Message-ID: <20230412220434.GK360895@frogsfrogsfrogs>
+References: <168073977341.1656666.5994535770114245232.stgit@frogsfrogsfrogs>
+ <168073979582.1656666.4211101901014947969.stgit@frogsfrogsfrogs>
+ <ZDTpBtMlSsxRJjRh@infradead.org>
+ <20230411153546.GH360889@frogsfrogsfrogs>
+ <ZDaflBeCxSMx/kJd@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230411043517.GC360895@frogsfrogsfrogs>
+In-Reply-To: <ZDaflBeCxSMx/kJd@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Apr 10, 2023 at 09:35:17PM -0700, Darrick J. Wong wrote:
-> On Tue, Apr 11, 2023 at 11:35:12AM +1000, Dave Chinner wrote:
-> > On Thu, Mar 30, 2023 at 02:58:43AM -0700, syzbot wrote:
+On Wed, Apr 12, 2023 at 05:09:56AM -0700, Christoph Hellwig wrote:
+> On Tue, Apr 11, 2023 at 08:35:46AM -0700, Darrick J. Wong wrote:
+> > > obsfucate some names this really seems horribly ugly.  I could
+> > > come up with ideas to fix some of that, but they'd be fairly invasive.
 > > 
-> > > 13      Yes   general protection fault in __xfs_free_extent
-> > >               https://syzkaller.appspot.com/bug?extid=bfbc1eecdfb9b10e5792
+> > Given that it's rol7 and xoring, I'd love it if someone came up with a
+> > gentler obfuscate_name() that at least tried to generate obfuscated
+> > names that weren't full of control characters and other junk that make
+> > ls output horrible.
 > > 
-> > Growfs issue. Looks like a NULL pag, which means the fsbno passed
-> > to __xfs_free_extent() is invalid. Without looking further, this
-> > looks like it's a corrupt AGF length or superblock size and this has
-> > resulted in the calculated fsbno starting beyond the end of the last
-> > AG that we are about to grow. That means the agno is beyond EOFS,
-> > xfs_perag_get(agno) ends up NULL, and __xfs_free_extent() goes
-> > splat.  Likely requires corruption to trigger.
-> > 
-> > Low priority, low severity.
+> > Buuuut doing that requires a deep understanding of how the math works.
+> > I think I've almost grokked it, but applied math has never been my
+> > specialty.  Mark Adler's crc spoof looked promising if we ever follow
+> > through on Dave's suggestion to change the dahash to crc32c, but that's
+> > a whole different discussion.
 > 
-> I've been wondering for quite a while if the code that creates those
-> defer items ought to be shutting down the fs if they can't get a perag
-> to stuff in the intent.  xfs_perag_intent_get seems like a reasonable
-> place to shut down the fs with a corruption warning if someone feeds in
-> a totally garbage fsblock range.
-
-You know, I think this might be the same as thex  case below where
-a bogus AGF field is getting past the verifiers in recovery...
-
+> Agreed on all counts.
 > 
-> > > 5       Yes   KASAN: use-after-free Read in xfs_btree_lookup_get_block
-> > >               https://syzkaller.appspot.com/bug?extid=7e9494b8b399902e994e
+> > > Is there any reason we need to support obsfucatation for ascii-ci,
+> > > or could we just say we require "-o" to metadump ascii-ci file systems
+> > > and not deal with this at all given that it never actually worked?
 > > 
-> > Recovery of reflink COW extents, we have a corrupted journal
+> > That would be simpler for metadump, yes.
 > > 
-> >    [   52.495566][ T5067] XFS (loop0): Mounting V5 Filesystem bfdc47fc-10d8-4eed-a562-11a831b3f791
-> >    [   52.599681][ T5067] XFS (loop0): Torn write (CRC failure) detected at log block 0x180. Truncating head block from 0x200.
-> >    [   52.636680][ T5067] XFS (loop0): Starting recovery (logdev: internal)
+> > I'm going to introduce a followup series that adds a new xfs_db command
+> > to generate obfuscated filenames/attrs to exercise the dabtree hash
+> > collision resolution code.  I should probably do that now, since I
+> > already sent xfs/861 that uses it.
 > > 
-> > And then it looks to have a UAF on the refcountbt cursor that is
-> > first initialised in xfs_refcount_recover_cow_leftovers(). Likely
-> > tripping over a corrupted refcount btree of some kind. Probably one
-> > for Darrick to look into.
+> > It wouldn't be the end of the world if hashcoll didn't work on asciici
+> > filesystems, but that /would/ be a testing gap.
 > 
-> Somehow the bogus refcount level field in the AGF is getting past the
-> verifiers.  I'll look into this later.
+> Do we really care about that testing gap for a feature you just
+> deprecated and which has been pretty broken all this time?
 
-... because like this one, it seems to require corruption getting
-deep into the modification operation without being detected.
+I don't, and am perfectly happy to send an alternate patch that errors
+out if you try to obfuscate an asciici filesystem.  Or maybe doesn't
+even error out, since names less than 5 letters aren't obfuscated, so
+it's not like we're hiding things effectively anyway.
 
-As for shutdown when a perag cannot be obtained by defer items, I'm
-hoping that the perag get operations slowly disappear from those as
-we slowly move the perag references higher up the heirarchy. The
-perag should not go away in the middle of a defer chain, so I don't
-think we should ever get a NULL from a lookup except in the case of
-buggy code....
+That said, Carlos is the maintainer, so let's let him decide. :D
 
-Cheers,
+1) Gross loopy code; or
+2) Less test coverage of broken code; or
+3) Control gross loopy code with a flag so that debugger commands can
+   still do gross things, but metadump won't.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--D
