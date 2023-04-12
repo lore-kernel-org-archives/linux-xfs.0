@@ -2,155 +2,187 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 141A5C7619A
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 03:18:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF5B2C7619A
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 03:45:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229690AbjDLDSd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Apr 2023 23:18:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60606 "EHLO
+        id S229609AbjDLDpI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Apr 2023 23:45:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229649AbjDLDSc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 23:18:32 -0400
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A965410F8
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 20:18:30 -0700 (PDT)
-Received: by mail-pj1-x1034.google.com with SMTP id w11so10633042pjh.5
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 20:18:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20210112.gappssmtp.com; s=20210112; t=1681269510;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=QTzf86zAv2fU3C/eN/0tX6Qjb72nN2ZOHZq+wIvYYEk=;
-        b=RIm6qfQDAE0Gvz8EmVP4usexgRsGP9V/jIqls91dsJNT85XwtaGY8OPFulpCxkIEk4
-         vd1CrUN1XT/s9k9NS9Z+V99y7RX29V7R9a9VZzITy3cVmE9hTRU9XNV6+yDeQf7n5qyf
-         dtXOF3uA5knLC4fM3FOa6eJk7WllE1rz75WFFSthumGqgwhenqTIWQU5MyJZ+hPDyGBX
-         tpVfTf5Z1vv4udhay0UI5TDrPQWqmcRsjacWZEYmoM2I+oaHVz2L2aKEktSnw0dEGkGx
-         Vq2BZOUc2q6kExZKSQAUI3o0C9emWKB2Vh6KZqJnPdWxcyqxEdK80KlWeVm6DNwN7OYe
-         dvYw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1681269510;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=QTzf86zAv2fU3C/eN/0tX6Qjb72nN2ZOHZq+wIvYYEk=;
-        b=CA6ZCsK6OL/6m/F2HsUT2KIC9nkPUHe6ir4aTXa6pa5/mKKOFz3gWu+cGbIeSRDMZT
-         C2tKnxDkIEcZvGTcSqFD21Qk8vtZELn9Xm92Ec9ewaY2HsFneozywp1fVTfiDWoBToFv
-         a3E+aPx0z4bCCleSrWJq5qvlSZpAeYHT0OL5tzUCuAi1djk+udzDT2BVMBigTCGnys6X
-         s9Jdnhv31gsW9B3CZGn/Wg6OOlrsc3n5HK2xjE8ptqSWgjaAch9mYrR29EW6d569d0eG
-         FSTxGIM7Y8IZTlyffumaZOH5atcpKHOqBF5dgm6T7w6/RnpkiKecyylLTNix1UgTAMWf
-         B3bQ==
-X-Gm-Message-State: AAQBX9fPEbFjCG3w6mgyEk9SOyHe+JQABpOHz5jLx6Fbm930oHotnqj5
-        /HfIccb1VfOZo+/t6LoihtSeIA==
-X-Google-Smtp-Source: AKy350bEvRaL0tcbYZNXJN9S8MKTlfNUtm72wryf0f0tx94/6m3Gotj2MFJG8+gujGf5Bd9bxftN0Q==
-X-Received: by 2002:a17:90a:45:b0:23f:a4da:1203 with SMTP id 5-20020a17090a004500b0023fa4da1203mr6850168pjb.19.1681269510087;
-        Tue, 11 Apr 2023 20:18:30 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-41-174.pa.nsw.optusnet.com.au. [49.180.41.174])
-        by smtp.gmail.com with ESMTPSA id z8-20020a1709028f8800b0019f9fd5c24asm7362321plo.207.2023.04.11.20.18.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Apr 2023 20:18:29 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1pmR06-002L8o-E9; Wed, 12 Apr 2023 13:18:26 +1000
-Date:   Wed, 12 Apr 2023 13:18:26 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Andrey Albershteyn <aalbersh@redhat.com>, djwong@kernel.org,
-        dchinner@redhat.com, linux-xfs@vger.kernel.org,
-        fsverity@lists.linux.dev, rpeterso@redhat.com, agruenba@redhat.com,
-        xiang@kernel.org, chao@kernel.org,
-        damien.lemoal@opensource.wdc.com, jth@kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        cluster-devel@redhat.com
-Subject: Re: [PATCH v2 00/23] fs-verity support for XFS
-Message-ID: <20230412031826.GI3223426@dread.disaster.area>
-References: <20230404145319.2057051-1-aalbersh@redhat.com>
- <ZDTt8jSdG72/UnXi@infradead.org>
- <20230412023319.GA5105@sol.localdomain>
+        with ESMTP id S229490AbjDLDpH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 23:45:07 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F18E40D7;
+        Tue, 11 Apr 2023 20:45:05 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C20B36101C;
+        Wed, 12 Apr 2023 03:45:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 236ABC433EF;
+        Wed, 12 Apr 2023 03:45:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1681271104;
+        bh=3jTdlLsyChWM8y6Aveuf5s29ciELZbaW/aXxDAg/ROc=;
+        h=Date:Subject:From:To:Cc:From;
+        b=HrcwzEZDay384BSyK/lW278fMMupHDNOmg0Extxl44wG23LftWvmn8RKmJH9kIz60
+         C2uFQVTKAsjB8I6r9Xm4q5jxnxVvxsqXpSGSNESo39Db6IKy+1Alsn7VgqPyFvHvw/
+         hH6ZZXpEoWnu0+LiB6iw+fpzX6GAImWErdYcnN5wO0m/pSFkSvPndQZQvja07dBSpF
+         7JdMkWfw//BiY9N5IUUtS+TEyZPlrMEMbG8OvI8npKOmQDf9Qct8mBPYpHQejgC2AM
+         niSSrOpB5WbNGLCDQGqu/XmmAX5zvcu/h5MD8LZy06BK+yflRS1VOLde1/IpD70xAj
+         0CUmkKF1FheFw==
+Date:   Tue, 11 Apr 2023 20:45:03 -0700
+Subject: [GIT PULL 1/22] xfs: design documentation for online fsck
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     dchinner@fromorbit.com, djwong@kernel.org
+Cc:     allison.henderson@oracle.com, catherine.hoang@oracle.com,
+        chandan.babu@oracle.com, david@fromorbit.com, dchinner@redhat.com,
+        hch@infradead.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, willy@infradead.org
+Message-ID: <168127093760.417736.12181322234550374115.stg-ugh@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230412023319.GA5105@sol.localdomain>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 11, 2023 at 07:33:19PM -0700, Eric Biggers wrote:
-> On Mon, Apr 10, 2023 at 10:19:46PM -0700, Christoph Hellwig wrote:
-> > Dave is going to hate me for this, but..
-> > 
-> > I've been looking over some of the interfaces here, and I'm starting
-> > to very seriously questioning the design decisions of storing the
-> > fsverity hashes in xattrs.
-> > 
-> > Yes, storing them beyond i_size in the file is a bit of a hack, but
-> > it allows to reuse a lot of the existing infrastructure, and much
-> > of fsverity is based around it.  So storing them in an xattrs causes
-> > a lot of churn in the interface.  And the XFS side with special
-> > casing xattr indices also seems not exactly nice.
-> 
-> It seems it's really just the Merkle tree caching interface that is causing
-> problems, as it's currently too closely tied to the page cache?  That is just an
-> implementation detail that could be reworked along the lines of what is being
-> discussed.
-> 
-> But anyway, it is up to the XFS folks.  Keep in mind there is also the option of
-> doing what btrfs is doing, where it stores the Merkle tree separately from the
-> file data stream, but caches it past i_size in the page cache at runtime.
+Hi Dave,
 
-Right. It's not entirely simple to store metadata on disk beyond EOF
-in XFS because of all the assumptions throughout the IO path and
-allocator interfaces that it can allocate space beyond EOF at will
-and something else will clean it up later if it is not needed. This
-impacts on truncate, delayed allocation, writeback, IO completion,
-EOF block removal on file close, background garbage collection,
-ENOSPC/EDQUOT driven space freeing, etc.  Some of these things cross
-over into iomap infrastructure, too.
+Please pull this branch with changes for xfs.
 
-AFAIC, it's far more intricate, complex and risky to try to store
-merkle tree data beyond EOF than it is to put it in an xattr
-namespace because IO path EOF handling bugs result in user data
-corruption. This happens over and over again, no matter how careful
-we are about these aspects of user data handling.
+As usual, I did a test-merge with the main upstream branch as of a few
+minutes ago, and didn't see any conflicts.  Please let me know if you
+encounter any problems.
 
-OTOH, putting the merkle tree data in a different namespace avoids
-these issues completely. Yes, we now have to solve an API mismatch,
-but we aren't risking the addition of IO path data corruption bugs
-to every non-fsverity filesystem in production...
+--D
 
-Hence I think copying the btrfs approach (i.e. only caching the
-merkle tree data in the page cache beyond EOF) would be as far as I
-think we'd want to go. Realistically, there would be little
-practical difference between btrfs storing the merkle tree blocks in
-a separate internal btree and XFS storing them in an internal
-private xattr btree namespace.
+The following changes since commit 09a9639e56c01c7a00d6c0ca63f4c7c41abe075d:
 
-I would, however, prefer not to have to do this at all if we could
-simply map the blocks directly out of the xattr buffers as we
-already do internally for all the XFS code...
+Linux 6.3-rc6 (2023-04-09 11:15:57 -0700)
 
-> I guess there is also the issue of encryption, which hasn't come up yet since
-> we're talking about fsverity support only.  The Merkle tree (including the
-> fsverity_descriptor) is supposed to be encrypted, just like the file contents
-> are.  Having it be stored after the file contents accomplishes that easily...
-> Of course, it doesn't have to be that way; a separate key could be derived, or
-> the Merkle tree blocks could be encrypted with the file contents key using
-> indices past i_size, without them physically being stored in the data stream.
+are available in the Git repository at:
 
-I'm expecting that fscrypt for XFS will include encryption of the
-xattr names and values (just like we will need to do for directory
-names) except for the xattrs that hold the encryption keys
-themselves. That means the merkle tree blocks should get encrypted
-without any extra work needing to be done anywhere.  This will
-simply require the fscrypt keys to be held in a private internal
-xattr namespace that isn't encrypted, but that's realtively trivial
-to do...
+git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/online-fsck-design-6.4_2023-04-11
 
-Cheers,
+for you to fetch changes up to 03786f0afb2ed5705a0478e14fea50a7f1a44f7e:
 
-Dave.
+xfs: document future directions of online fsck (2023-04-11 18:59:52 -0700)
 
--- 
-Dave Chinner
-david@fromorbit.com
+----------------------------------------------------------------
+xfs: design documentation for online fsck [v24.5]
+
+After six years of development and a nearly two year hiatus from
+patchbombing, I think it is time to resume the process of merging the
+online fsck feature into XFS.  The full patchset comprises 105 separate
+patchsets that capture 470 patches across the kernel, xfsprogs, and
+fstests projects.
+
+I would like to merge this feature into upstream in time for the 2023
+LTS kernel.  As of 5.15 (aka last year's LTS), we have merged all
+generally useful infrastructure improvements into the regular
+filesystem.  The only changes to the core filesystem that remain are the
+ones that are only useful to online fsck itself.  In other words, the
+vast majority of the new code in the patchsets comprising the online
+fsck feature are is mostly self contained and can be turned off via
+Kconfig.
+
+Many of you readers might be wondering -- why have I chosen to make one
+large submission with 100+ patchsets comprising ~500 patches?  Why
+didn't I merge small pieces of functionality bit by bit and revise
+common code as necessary?  Well, the simple answer is that in the past
+six years, the fundamental algorithms have been revised repeatedly as
+I've built out the functionality.  In other words, the codebase as it is
+now has the benefit that I now know every piece that's necessary to get
+the job done in a reasonable manner and within the constraints laid out
+by community reviews.  I believe this has reduced code churn in mainline
+and freed up my time so that I can iterate faster.
+
+As a concession to the mail servers, I'm breaking up the submission into
+smaller pieces; I'm only pushing the design document and the revisions
+to the existing scrub code, which is the first 20%% of the patches.
+Also, I'm arbitrarily restarting the version numbering by reversioning
+all patchsets from version 22 to epoch 23, version 1.
+
+The big question to everyone reading this is: How might I convince you
+that there is more merit in merging the whole feature and dealing with
+the consequences than continuing to maintain it out of tree?
+
+---------
+
+To prepare the XFS community and potential patch reviewers for the
+upstream submission of the online fsck feature, I decided to write a
+document capturing the broader picture behind the online repair
+development effort.  The document begins by defining the problems that
+online fsck aims to solve and outlining specific use cases for the
+functionality.
+
+Using that as a base, the rest of the design document presents the high
+level algorithms that fulfill the goals set out at the start and the
+interactions between the large pieces of the system.  Case studies round
+out the design documentation by adding the details of exactly how
+specific parts of the online fsck code integrate the algorithms with the
+filesystem.
+
+The goal of this effort is to help the XFS community understand how the
+gigantic online repair patchset works.  The questions I submit to the
+community reviewers are:
+
+1. As you read the design doc (and later the code), do you feel that you
+understand what's going on well enough to try to fix a bug if you
+found one?
+
+2. What sorts of interactions between systems (or between scrub and the
+rest of the kernel) am I missing?
+
+3. Do you feel confident enough in the implementation as it is now that
+the benefits of merging the feature (as EXPERIMENTAL) outweigh any
+potential disruptions to XFS at large?
+
+4. Are there problematic interactions between subsystems that ought to
+be cleared up before merging?
+
+5. Can I just merge all of this?
+
+I intend to commit this document to the kernel's documentation directory
+when we start merging the patchset, albeit without the links to
+git.kernel.org.  A much more readable version of this is posted at:
+https://djwong.org/docs/xfs-online-fsck-design/
+
+v2: add missing sections about: all the in-kernel data structures and
+new apis that the scrub and repair functions use; how xattrs and
+directories are checked; how space btree records are checked; and
+add more details to the parts where all these bits tie together.
+Proofread for verb tense inconsistencies and eliminate vague 'we'
+usage.  Move all the discussion of what we can do with pageable
+kernel memory into a single source file and section.  Document where
+log incompat feature locks fit into the locking model.
+
+v3: resync with 6.0, fix a few typos, begin discussion of the merging
+plan for this megapatchset.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+
+----------------------------------------------------------------
+Darrick J. Wong (14):
+xfs: document the motivation for online fsck design
+xfs: document the general theory underlying online fsck design
+xfs: document the testing plan for online fsck
+xfs: document the user interface for online fsck
+xfs: document the filesystem metadata checking strategy
+xfs: document how online fsck deals with eventual consistency
+xfs: document pageable kernel memory
+xfs: document btree bulk loading
+xfs: document online file metadata repair code
+xfs: document full filesystem scans for online fsck
+xfs: document metadata file repair
+xfs: document directory tree repairs
+xfs: document the userspace fsck driver program
+xfs: document future directions of online fsck
+
+Documentation/filesystems/index.rst                |    1 +
+.../filesystems/xfs-online-fsck-design.rst         | 5315 ++++++++++++++++++++
+.../filesystems/xfs-self-describing-metadata.rst   |    1 +
+3 files changed, 5317 insertions(+)
+create mode 100644 Documentation/filesystems/xfs-online-fsck-design.rst
+
