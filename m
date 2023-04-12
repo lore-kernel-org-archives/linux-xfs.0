@@ -2,215 +2,245 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBCF0C77B6E
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 07:53:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EA74C7619A
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 09:10:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229486AbjDLHxy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Apr 2023 03:53:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42450 "EHLO
+        id S229458AbjDLJKu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Apr 2023 05:10:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229481AbjDLHxy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2023 03:53:54 -0400
-X-Greylist: delayed 1935 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 12 Apr 2023 00:53:51 PDT
-Received: from tmailer.gwdg.de (tmailer.gwdg.de [134.76.10.23])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9D1CA0
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Apr 2023 00:53:51 -0700 (PDT)
-Received: from excmbx-12.um.gwdg.de ([134.76.9.221] helo=email.gwdg.de)
-        by mailer.gwdg.de with esmtp (GWDG Mailer)
-        (envelope-from <Ansgar.Esztermann@mpinat.mpg.de>)
-        id 1pmUnN-000D4t-Cu
-        for linux-xfs@vger.kernel.org; Wed, 12 Apr 2023 09:21:34 +0200
-Received: from aeszter.mpibpc.intern (10.250.9.199) by EXCMBX-12.um.gwdg.de
- (134.76.9.221) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P521) id 15.1.2507.23; Wed, 12
- Apr 2023 09:21:34 +0200
-Date:   Wed, 12 Apr 2023 09:21:32 +0200
-From:   Ansgar Esztermann-Kirchner <aeszter@mpinat.mpg.de>
-To:     <linux-xfs@vger.kernel.org>
-Subject: Replacing the external log device
-Message-ID: <ZDZb/PtvFlyIMKDG@aeszter.mpibpc.intern>
-Mail-Followup-To: linux-xfs@vger.kernel.org
+        with ESMTP id S229699AbjDLJKt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2023 05:10:49 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FFDDDD
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Apr 2023 02:10:47 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33C6UlCZ011552;
+        Wed, 12 Apr 2023 09:10:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
+ to : cc : subject : date : in-reply-to : message-id : content-type :
+ mime-version; s=corp-2023-03-30;
+ bh=zU2HMkIt8577mZsnoBhvuyn1TrHQUyrfo94aFzUTUVc=;
+ b=ZUsnvEG2YiAgPYoUaftBYjJexiZqluJGsnho0U9nD4PRTRL60sIeY5TCbd6lyNZKnlBh
+ 61Z0jp1sx5GeSYxkrvPzxdGnyzMSOicYbFthIb/xzlmH2pFRgpCFn0Bo0kIWybDvKukk
+ XWrKLkpIkI/6GipBNNYijK0gtDnmmJhq9rN+AW78ktDfjPI1kN38CvmiTXnPR0PNKge5
+ iYyAN9WLqDjX1jg7Fwh7X+q9/TPpOUzYueTZ4+F+ZB4PdKaCYxajLwLpLfToQB31dRZ/
+ gWSQhIhe3TUGREr0BlLhUnbRmvTY0JgYI85eeHGpjAe8/955IWXS4ftGrHtM86pQMcJ2 sg== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3pu0eq7jb1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 12 Apr 2023 09:10:46 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 33C8QK9M025064;
+        Wed, 12 Apr 2023 09:10:45 GMT
+Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2106.outbound.protection.outlook.com [104.47.70.106])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3puwdqcuce-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 12 Apr 2023 09:10:45 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=UxWEGKwRnQQaugGOYabWkmRv2ATJ1/hxZPy6m8RkLEm4D4D+pvFXJA5pp3OBRTdwUu5V30VVNrKsqs4V2V4JI1O6XkyMd+Avb5IfpfYlzqtGjocdwGnk5dQ5XcOljw0nlkLzghZa0aiMCs4D7Jbm18BjReakyqnKMXWXt5CavJfcaklIvTROB80HLfLSOvrKXQ7xX5KgFpLC6xPrFSJjX7jyxqrILu+UeEznMQxNqptUoNaycHuZePfxPrmjXiDbwNVtk1FozTBMBgMbyAOXiBEMVSwZRmhiJPCZo4rS41w3S6QXoVi2pdccC+Bd/+XJf2f/yQVhO/wh8/s9r/SacA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=zU2HMkIt8577mZsnoBhvuyn1TrHQUyrfo94aFzUTUVc=;
+ b=Uk0qvefEzznG25NMsUkNeVrzjU6fJ2cTh2BrzPfZK7wAt7FTvzGEC25CCH2s9s8m/xcMXojnl9KremxK/1SHweKcURnlvo2OYNEADvJQt/6rZyT71UvQ5ZhYiu/u+LaVtnac0lmeHr4GF9swR2horltGDSeS+1v+BIVFc6lqAMIoPa2BdOKqCDjub3XPi1DHGXS3Iw+YgJzPUqYxS3AGffMJPOLjmukYBDlOcRdEtUo5hd6weqvJhov1mlj+/w5AtOzZnX/WNmFy3kksOWzg31h9xh6xa1nS1EVEKEpN0t6s2S4n9OYHlT5WUd8rVQovw9uG4fbtjZYVWySW+LguxA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=zU2HMkIt8577mZsnoBhvuyn1TrHQUyrfo94aFzUTUVc=;
+ b=JgRVFsh8hoHlveNM2Wn5WUiMxDF/XNc4fAqFBFiwALukEnb0JEjADy7YGFj4cDZSLB8P10KfRAqmxCFgurQshi7snHkTDRGPVBy4aVPsziLh/HCVeHQiWDLGKBgaW+QRFYCmnhG/O5l3k9cqlgXpJ0cRAMLCEITt0Xz+mTP3rqE=
+Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:22b::9)
+ by DS0PR10MB7066.namprd10.prod.outlook.com (2603:10b6:8:140::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6298.30; Wed, 12 Apr
+ 2023 09:10:43 +0000
+Received: from SA1PR10MB5867.namprd10.prod.outlook.com
+ ([fe80::b3d4:e7f4:7f85:90b7]) by SA1PR10MB5867.namprd10.prod.outlook.com
+ ([fe80::b3d4:e7f4:7f85:90b7%3]) with mapi id 15.20.6298.030; Wed, 12 Apr 2023
+ 09:10:43 +0000
+References: <20230330204610.23546-1-wen.gang.wang@oracle.com>
+ <20230411020624.GY3223426@dread.disaster.area>
+User-agent: mu4e 1.8.10; emacs 27.1
+From:   Chandan Babu R <chandan.babu@oracle.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Wengang Wang <wen.gang.wang@oracle.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix AGFL allocation dead lock
+Date:   Wed, 12 Apr 2023 13:53:59 +0530
+In-reply-to: <20230411020624.GY3223426@dread.disaster.area>
+Message-ID: <87mt3djwj9.fsf@debian-BULLSEYE-live-builder-AMD64>
+Content-Type: text/plain
+X-ClientProxiedBy: SI1PR02CA0042.apcprd02.prod.outlook.com
+ (2603:1096:4:1f6::17) To SA1PR10MB5867.namprd10.prod.outlook.com
+ (2603:10b6:806:22b::9)
 MIME-Version: 1.0
-Content-Type: multipart/signed; protocol="application/x-pkcs7-signature";
-        micalg=sha-256; boundary="dq0mgOiqafgsOM6e"
-Content-Disposition: inline
-X-Originating-IP: [10.250.9.199]
-X-ClientProxiedBy: EXCMBX-12.um.gwdg.de (134.76.9.221) To EXCMBX-12.um.gwdg.de
- (134.76.9.221)
-X-Virus-Scanned: (clean) by clamav
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|DS0PR10MB7066:EE_
+X-MS-Office365-Filtering-Correlation-Id: 759933e6-69ad-444c-06a2-08db3b35cb79
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: zKlGADC/9e2G4y96iV5rJPq5kOPxSBd0oc8Pshguqyha65ZDaJDjqmRvErKflIyrrzRLJWgESY9LQNanfXDrfpfkYAXNkpzt0uW71ZOuZjm318A2BatQtN6cUBl5J1vH5/d9iIgubfWPTs1NGl+enitj5L21k6IJjv8d2mmKIO0stjKDCYyZ38A3JhutgbpMjzp8Dftqvfgsxf2k0YQr7JVrsDzdyVedTCRI/ql9N19ZLpRGkyW3qL0loTqEWpTOmZ6C2TQsV1b6MJ3YOH6qe26e6RDX+H4C+QHZp43rzKIJSWjud7zEjSu0ld722+v0rm82J7pHcDw15K8PFzdCEJHdfHjZv9Xm3hJCxosICnM8HDPj7p4P3CmP24Co0ypoof+a/ZW8mTy7sl7HotV5YRbx6yQsgvmtQheaOUmrK/+7hEjz70h+B/+aVUBojlVKqVQs3w387eMl0nAyhyUdgJcsUKEOmifCQjA+jRH+ha924fdhSQzBsPApAjxKG+ytpvFU33Ls+YLtKlZfM6trZ8AvAw1iU7n9shtwGpv6lEA=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(7916004)(396003)(346002)(376002)(136003)(366004)(39860400002)(451199021)(2906002)(8676002)(478600001)(8936002)(5660300002)(41300700001)(316002)(66946007)(66476007)(66556008)(83380400001)(4326008)(6916009)(186003)(38100700002)(86362001)(966005)(6666004)(6486002)(6506007)(26005)(6512007)(53546011)(9686003)(33716001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?/AO6VQYweWQSFtAvrfXHnhyeSCa4LA7SEn4B8oFxcBe/5CqdJOPow/XIQsP2?=
+ =?us-ascii?Q?iyrxnwMeysLSTeS8Ic/egzEBn4oA6MSUwjxv4NlAK0s0DNXK+fRA99I4zFQw?=
+ =?us-ascii?Q?wrE0KK3bM7NfT4kcjPoEFqNZ+bOOYGY4Je1Tfav2Ums8GLgaZ/mdDVmqikdZ?=
+ =?us-ascii?Q?lAGjfo5PpVBq5umhSsiJkV/FnTasUqg9K8r/hhcXv1n2PSrDPrDYqwGpfTNC?=
+ =?us-ascii?Q?UDM7j5ee8O7OL1xpLn+s/et/RUOW0XVRGCs9/waKxWlK/FAKGqtE0tBr77UE?=
+ =?us-ascii?Q?DpQF9u0zoyVYYkkvU2Cf2of0uaoPzl+XzQ9AJoCdjlbOefoF0myczn02Ank5?=
+ =?us-ascii?Q?j4zz30NH21dxA7dAuW4Dm6P3DvbwV3M55oP2wiCNEK/TPgndhRQNYxQc4MOi?=
+ =?us-ascii?Q?dW6WTMYwoIt2lGYJX6QcITpdQ2LO4s2SCLgPNBJexBXj8sWoJHLqsO2VpGGX?=
+ =?us-ascii?Q?sry4qDZZseboJ83yyO3MAv1EhIjeDf4t2enk4wHTHK1uL3BJuR/Bb4dN6KyW?=
+ =?us-ascii?Q?CdBQqUlRbiPsMrh/51/ib0anY0VP11FasuIwnf5u7JIrReDDebaEO4/mCu0j?=
+ =?us-ascii?Q?eJ5pZHzIGMxBlm9sIUqhYqKbT0GErIOZwNvgjwIDpJLSqMJwkxnLvtXo7pEp?=
+ =?us-ascii?Q?EEyWFBfXemlEqQm8T/KsHbqU+TLX1wg26dEgAm0heZnOs6CC8N/eYiWGzuF/?=
+ =?us-ascii?Q?EsSZRM+kTzXzpWY6dfgFkJ3KTGS2GLs/FwhzXdKjgmfqeeskPwLXnZ8oH+VD?=
+ =?us-ascii?Q?oriv9DiccKuymMYjpk9e30RykS0WUgXnPVzqIi8ybBvYfb4X0oARWz02+tSW?=
+ =?us-ascii?Q?cCgDUsesi84U8UHItw6SXAUnYCckDZNcGh+22Op2ZbwSqR4JqKntqyjN/6Ml?=
+ =?us-ascii?Q?b0D2ZGZqdB25wNCv+qgMTvtYCnzcG6i4vIj07ZtsIpRPYbgrpBm0pkwSRiQS?=
+ =?us-ascii?Q?4EtSvVqSG4fleO2ANBadjzNaUYusm2Mc2swsYNVXrx7dMAzZGK0ns1Unl5ge?=
+ =?us-ascii?Q?OzV5cA6WIoT85ZL1I74UPmuxm4IxKl7SIt5RNsnjgWXhTSysrLNUitLMxZVO?=
+ =?us-ascii?Q?75DRMVqMWD9PaLZ4SOdc9kzO0bwsUYlv6OXbkOZIOyTE0NhwQ9qZmcL4p/d2?=
+ =?us-ascii?Q?etqR42viqxp+4BJDMS9YzRFAP2gc8hUGp7/D75/tHOj9V1xoX/v4Hz4hz7UC?=
+ =?us-ascii?Q?1u58Q8Mg/tpqwpG7fv8VGf31JwzTX8hKncPwzVqXMEOhuf3QB82F+92fHy9P?=
+ =?us-ascii?Q?6JZ5hJ4AxJ9YxikXshRaM1LsLf1dbiHwgVEtL/4K1RMKj1P2wQtspj4frVz8?=
+ =?us-ascii?Q?lU7j1nHbIFQTdiSk206zI/B/i/hJtGmXx7QiBrZHM5/2MY0ZaGJY/JdRt69h?=
+ =?us-ascii?Q?+wKd/QN2Vime6B18D2loHkvvd05GXrfGljCNLmcilVyQPiYEqHLiKa05i1JX?=
+ =?us-ascii?Q?Br4j0pHdABTSehsRc9qPEzBketUIAMftqUMXrTy3Il2/2kt0VGrrd88qugGI?=
+ =?us-ascii?Q?Y7gMc79yK2B/ancIfZOQR8f9Lljuo23nWjnoiTmq7iMRDSHWs+gDXJVmkCUV?=
+ =?us-ascii?Q?LiVoquPSyeoXSgYbCB6V2rj5WNVia9oW5jnxaLGADqYm6eSBPNgAYNs21hTk?=
+ =?us-ascii?Q?Xg=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 9JyBNH7Uo3uCvrs019VTD1d108ehj8PNSKDK/Dn6xFJ6zGgcK2l75Yyb75ZMBvl1Bw9r1azogaemBRU40QriI9mAfhyUbAIziEMudyNx8DkRsVB+YQz5Ysf/f5N4JsX+/Cmw1sH8eGwjsoWWbJBT/CNk9xSB8MFwwE4NMBSA92qtbriOhQSj+DFfBgCgTDIiRseH/Mmw+lKUKTmq21V5joCN5i9G1f62BHEisvoe6dfhj2dTVAmCNAafxNnZpLesF8nOR0lJr8yGRCqfBxwbj4C+A9SnYzJQ1KX9RRV8I9r0U19OOVWk+HY9J6KJRwY9IyS5DBCTmanK9ruEkTaqTcL63PtexTkAKXV4MORTzjwIMVoFco2w0x50K9aTpkqbNEdCygmVKNebUxK6nE3fiaqKU29p8rlWjlbFqSiFjIp5Dn1O/LOMsJ98/58mxO8zmYvZ1hsYwRuGJxMwKUKFcSwkCuKrGE42938VUq9HIbxCFyIq7N8IJWA8AQA1jXbquM/lv66WMajt6oAZ/Rm7Srw/TiHvuBqC4NlFh0rdSfWa7ekPSZP3nOmvTcb5EmaWQmKIS3OAvqzY4LGAkSIDUaiyO2+HXsyFBXL2jK/QUHnkST2ZQCxTbpit4gQ099FHXRTdylFd31QR8huB6HTdNS00wAvsc5JJD84TiSj5gbvZaAKTMmIfuKrPpSLRsBCD8zzikG3zZjMU3jpIVovD01PVsb1fm1F8UfueW7d393Fh97vbND76p9EP1dsBaq0/N4Vlh2G5eQ88oQLgl0ST5z2GyQbcwSdZhRPY3IND0dQ=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 759933e6-69ad-444c-06a2-08db3b35cb79
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Apr 2023 09:10:43.8134
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: rXCDk/dI+h8wQ2ikiK25FWk62N/KqBDcB0WAV1xN3KLBESpiLKu7O6k9ICVDWoTta+BA1KsH9CYSr4ODL0rqIw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR10MB7066
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-04-12_02,2023-04-11_02,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0
+ mlxlogscore=999 spamscore=0 suspectscore=0 bulkscore=0 adultscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2303200000 definitions=main-2304120083
+X-Proofpoint-GUID: fUmHiLjRW-gGzWrWJVcrukML51fcctNj
+X-Proofpoint-ORIG-GUID: fUmHiLjRW-gGzWrWJVcrukML51fcctNj
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---dq0mgOiqafgsOM6e
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Tue, Apr 11, 2023 at 12:06:24 PM +1000, Dave Chinner wrote:
+> On Thu, Mar 30, 2023 at 01:46:10PM -0700, Wengang Wang wrote:
+>> There is deadlock with calltrace on process 10133:
+>> 
+>> PID 10133 not sceduled for 4403385ms (was on CPU[10])
+>> 	#0	context_switch() kernel/sched/core.c:3881
+>> 	#1	__schedule() kernel/sched/core.c:5111
+>> 	#2	schedule() kernel/sched/core.c:5186
+>> 	#3	xfs_extent_busy_flush() fs/xfs/xfs_extent_busy.c:598
+>> 	#4	xfs_alloc_ag_vextent_size() fs/xfs/libxfs/xfs_alloc.c:1641
+>> 	#5	xfs_alloc_ag_vextent() fs/xfs/libxfs/xfs_alloc.c:828
+>> 	#6	xfs_alloc_fix_freelist() fs/xfs/libxfs/xfs_alloc.c:2362
+>> 	#7	xfs_free_extent_fix_freelist() fs/xfs/libxfs/xfs_alloc.c:3029
+>> 	#8	__xfs_free_extent() fs/xfs/libxfs/xfs_alloc.c:3067
+>> 	#9	xfs_trans_free_extent() fs/xfs/xfs_extfree_item.c:370
+>> 	#10	xfs_efi_recover() fs/xfs/xfs_extfree_item.c:626
+>> 	#11	xlog_recover_process_efi() fs/xfs/xfs_log_recover.c:4605
+>> 	#12	xlog_recover_process_intents() fs/xfs/xfs_log_recover.c:4893
+>> 	#13	xlog_recover_finish() fs/xfs/xfs_log_recover.c:5824
+>> 	#14	xfs_log_mount_finish() fs/xfs/xfs_log.c:764
+>> 	#15	xfs_mountfs() fs/xfs/xfs_mount.c:978
+>> 	#16	xfs_fs_fill_super() fs/xfs/xfs_super.c:1908
+>> 	#17	mount_bdev() fs/super.c:1417
+>> 	#18	xfs_fs_mount() fs/xfs/xfs_super.c:1985
+>> 	#19	legacy_get_tree() fs/fs_context.c:647
+>> 	#20	vfs_get_tree() fs/super.c:1547
+>> 	#21	do_new_mount() fs/namespace.c:2843
+>> 	#22	do_mount() fs/namespace.c:3163
+>> 	#23	ksys_mount() fs/namespace.c:3372
+>> 	#24	__do_sys_mount() fs/namespace.c:3386
+>> 	#25	__se_sys_mount() fs/namespace.c:3383
+>> 	#26	__x64_sys_mount() fs/namespace.c:3383
+>> 	#27	do_syscall_64() arch/x86/entry/common.c:296
+>> 	#28	entry_SYSCALL_64() arch/x86/entry/entry_64.S:180
+>> 
+>> It's waiting xfs_perag.pagb_gen to increase (busy extent clearing happen).
+>> From the vmcore, it's waiting on AG 1. And the ONLY busy extent for AG 1 is
+>> with the transaction (in xfs_trans.t_busy) for process 10133. That busy extent
+>> is created in a previous EFI with the same transaction. Process 10133 is
+>> waiting, it has no change to commit that that transaction. So busy extent
+>> clearing can't happen and pagb_gen remain unchanged. So dead lock formed.
+>
+> We've talked about this "busy extent in transaction" issue before:
+>
+> https://lore.kernel.org/linux-xfs/20210428065152.77280-1-chandanrlinux@gmail.com/
+>
+> and we were closing in on a practical solution before it went silent.
+>
+> I'm not sure if there's a different fix we can apply here - maybe
+> free one extent per transaction instead of all the extents in an EFI
+> in one transaction and relog the EFD at the end of each extent free
+> transaction roll?
+>
 
-Hello List,
+Consider the case of executing a truncate operation which involves freeing two
+file extents on a filesystem which has refcount feature enabled.
 
-what should I expect when I replace the device that contains my xfs
-log? Is there a specific procedure to follow? Also, did the expected
-behaviour change at some point (in kernel history)?
+xfs_refcount_decrease_extent() will be invoked twice and hence
+XFS_DEFER_OPS_TYPE_REFCOUNT will have two "struct xfs_refcount_intent"
+associated with it.
 
-Some background:
-When I joined my current employer in 2006, I performed some benchmarks
-to see which FS would provide the best performace for our workload:
-multiple NFS clients appending to large (multi GB) files. XFS was the
-clear winner, so since then, we have several dozen workstations with
-XFS on mdraid (with LVM inbetween). For performance reasons, we keep=20
-the log on a partion of the SSD that also holds the OS.
-In all those years, the only data loss I can remember was caused by a
-flaky controller that threw out disks from a RAID6 faster than they=20
-could be rebuilt.
+Processing each of the "struct xfs_refcount_intent" can cause two refcount
+btree blocks to be freed:
+- A high level transacation will invoke xfs_refcountbt_free_block() twice.
+- The first invocation adds an extent entry to the transaction's busy extent
+  list. The second invocation can find the previously freed busy extent and
+  hence wait indefinitely for the busy extent to be flushed.
 
-When a user leaves us but their data should still be kept online, we
-move the HDDs to a disk array connected to a special fileserver. The
-workstation can then get a fresh install and be used for someone else.
-On the fileserver, for every set of disks addedm we create a new LV=20
-in a VG dedicated to XFS logs and use that to mount the FS.
-That, too, has never posed any problems (except for a duplicate UUID at
-some point, but that was easily fixed with xfs_db).
+Also, processing a single "struct xfs_refcount_intent" can require the leaf
+block and its immediate parent block to be freed. The leaf block is added to
+the transaction's busy list. Freeing the parent block can result in the task
+waiting for the busy extent (present in the high level transaction) to be
+flushed.
 
-However, I've been bitten by a nasty problem twice in recent weeks: in
-the first instance, I wanted to replace a bunch of disks in a machine
-(something like 4x10TB to 4x16TB). Usually, we do that by setting up a
-new machine, rsyncing all the data, and then swap the machines. In
-this instance, I refrained from swapping the machines (due to lack of
-hardware), and merely swapped the disks. Initially, the kernel refused
-to mount the new disks (this was expected: the UUID of the log was
-incorrect, as I only swapped the HDDs, not the log device). I called
-xfs_repair to fix that. xfs_repair completed successfully, and the=20
-only modification reported was reformatting the log. However, the
-kernel still refused to mount the file system ("structure needs
-cleaning"), and a second run of xfs_repair reported hundreds of
-problems. It managed to repair them all, but afterwards, the file
-system was empty.  I started over, this time calling xfs_repair -L,
-but the results were the same.
-The hardware, kernel version, and Linux distribution were exactly the
-same on both machines.=20
-At the time, I thought maybe there was a strange bug in that (quite
-old) kernel (4.12.14 from opensuse 15.1), so I resorted to waiting for
-new hardware and setting up a fresh machine.
+Hence, IMHO this approach is most likely not a feasible solution.
 
-Yesterday, I did a Linux upgrade for a different user. After a clean
-shutdown, I wiped the SSD (including the XFS log) and re-imaged it
-with an up-to-date opensuse install. Afterwards, everything went as
-described above.=20
+>> commit 06058bc40534530e617e5623775c53bb24f032cb disallowed using busy extents
+>> for any path that calls xfs_extent_busy_trim(). That looks over-killing.
+>> For AGFL block allocation, it just use the first extent that satisfies, it won't
+>> try another extent for choose a "better" one. So it's safe to reuse busy extent
+>> for AGFL.
+>
+> AGFL block allocation is not "for immediate use". The blocks get
+> placed on the AGFL for -later- use, and not necessarily even within
+> the current transaction. Hence a freelist block is still considered
+> free space, not as used space. The difference is that we assume AGFL
+> blocks can always be used immediately and they aren't constrained by
+> being busy or have pending discards.
+>
+> Also, we have to keep in mind that we can allocate data blocks from
+> the AGFL in low space situations. Hence it is not safe to place busy
+> or discard-pending blocks on the AGFL, as this can result in them
+> being allocated for user data and overwritten before the checkpoint
+> that marked them busy has been committed to the journal....
+>
+> As such, I don't think it is be safe to ignore busy extent state
+> just because we are filling the AGFL from the current free space
+> tree.
+>
+> Cheers,
+>
+> Dave.
 
-I find this extremely puzzling (especially since we've been moving
-disks like this to our file server more than a dozen times, all without
-any problems, and I fail to see what is different there).
-
-I'd be happy for an explanation of what can happen to damage the FS in
-this scenario -- just out of curiosity -- but of course, any steps I
-can take to keep the FS intact during this procedure are also very
-welcome.
-
-Thank you,
-
-A.
---=20
-Ansgar Esztermann
-Sysadmin Dep. Theoretical and Computational Biophysics
-https://www.mpinat.mpg.de/person/11315/3883774
-
---dq0mgOiqafgsOM6e
-Content-Type: application/x-pkcs7-signature
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Transfer-Encoding: base64
-
-MIITTQYJKoZIhvcNAQcCoIITPjCCEzoCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0B
-BwGggg+kMIIHzjCCBbagAwIBAgIRAK57XEudnCkGBNyOR+tM4E0wDQYJKoZIhvcNAQEMBQAw
-RjELMAkGA1UEBhMCTkwxGTAXBgNVBAoTEEdFQU5UIFZlcmVuaWdpbmcxHDAaBgNVBAMTE0dF
-QU5UIFBlcnNvbmFsIENBIDQwHhcNMjExMjE1MDAwMDAwWhcNMjQxMjE0MjM1OTU5WjCCASkx
-DjAMBgNVBBETBTgwNTM5MUgwRgYDVQQLDD9NYXgtUGxhbmNrLUluc3RpdHV0IGbDvHIgTXVs
-dGlkaXN6aXBsaW7DpHJlIE5hdHVyd2lzc2Vuc2NoYWZ0ZW4xRzBFBgNVBAoTPk1heC1QbGFu
-Y2stR2VzZWxsc2NoYWZ0IHp1ciBGb2VyZGVydW5nIGRlciBXaXNzZW5zY2hhZnRlbiBlLlYu
-MRswGQYDVQQJDBJIb2ZnYXJ0ZW5zdHJhw59lIDgxDzANBgNVBAgTBkJheWVybjELMAkGA1UE
-BhMCREUxIzAhBgNVBAMTGkFuc2dhciBFc3p0ZXJtYW5uLUtpcmNobmVyMSQwIgYJKoZIhvcN
-AQkBFhVhZXN6dGVyQG1waW5hdC5tcGcuZGUwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIK
-AoICAQC+4PRgbnBGLkFOUTXwzSri/tenyO83YUB/w+EZqaQy6b9zhws9Vu+7E2cruJEwVywo
-U6/02ZGFbdUqnGBJdAPutxM0Zsf3TPfSvjp5MRyu+jFrI+JEz7bYh5puLPi9nZqrwgKxfFNB
-eu2z69slaNIr4gXz0jue3ObqkURZA98VTYNkEhnvoEwQ/d8NHPApaXPV5BsysbAiAaBKUgzu
-HdKM0Ar51AVFRz/eR+dj5rGIbxDHjgkey1tyfAQ8XUJghikS4D64L5FbgY+CIfXK71prvWLu
-7oU8vf3LqYkdPe+Dxal/vZBMzHVQsWgcPWZ1DI3iu3j1pG6efd/Oz4Q/PzH8+y6Gx6LPlmGK
-abwLbKC67ckF38dVNFY+mkrbDtapeN52E3U3QbTGF02P53YUB7xks/PuLhmFbDm7uzlMadUk
-B0Pg7hN5yg2nTQtprA/PAWE9CnjduMllrQuPRT2UZyDlMGxl+J+LHU2tRsbQI7kxx/UsnkM1
-oRYvNEw8UjhxoeniNpZHfRi66KXvQ1ipS5mJxRsjZKUszpWH1Vq04wmHziOkBF1xlfN2xXqg
-huWBYIFigJXODMeJFn098jMgq6xkGyi3YWIwQx4bSFzlbGnV3/yDlXnyLsha33fmAjAiTNle
-QKqnb9TZk5CbPbEk39Yi++g/3uSyX+tAD+sUcPhIEwIDAQABo4IB0DCCAcwwHwYDVR0jBBgw
-FoAUaQChxyFY+ODFGyCwCt2nUb8T2eQwHQYDVR0OBBYEFJKxmPXcHI/LhG55dDxl/0UAbTXN
-MA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8EAjAAMB0GA1UdJQQWMBQGCCsGAQUFBwMEBggr
-BgEFBQcDAjA/BgNVHSAEODA2MDQGCysGAQQBsjEBAgJPMCUwIwYIKwYBBQUHAgEWF2h0dHBz
-Oi8vc2VjdGlnby5jb20vQ1BTMEIGA1UdHwQ7MDkwN6A1oDOGMWh0dHA6Ly9HRUFOVC5jcmwu
-c2VjdGlnby5jb20vR0VBTlRQZXJzb25hbENBNC5jcmwweAYIKwYBBQUHAQEEbDBqMD0GCCsG
-AQUFBzAChjFodHRwOi8vR0VBTlQuY3J0LnNlY3RpZ28uY29tL0dFQU5UUGVyc29uYWxDQTQu
-Y3J0MCkGCCsGAQUFBzABhh1odHRwOi8vR0VBTlQub2NzcC5zZWN0aWdvLmNvbTBOBgNVHREE
-RzBFgRVhZXN6dGVyQG1waW5hdC5tcGcuZGWBFWFlc3p0ZXJAbXBpYnBjLm1wZy5kZYEVYWVz
-enRlckBtcGluYXQubXBnLmRlMA0GCSqGSIb3DQEBDAUAA4ICAQAyB4qOpUH0wHxx8TurDrOS
-A6rgIJk5DJlycJAVvU7FITJjojCEjyyqrTHTnJ6I6A+phzggHm+knT5+QhMSMA6J4zzXEIqN
-IH/4KpM1J/4s9KQf/mnVEP7idefg29Ff2wbTfv8moxRS0mf/PII4iqsJrtsTCqrMGPbfvWFm
-5MIVeCtt+ZpDFOTaBdFqdH9ZAfQEwQr2Vzg9j7juaJr4J6D5TbrO+EYQxUEqrX0rmgYr4fSC
-TrJ/WSYXIGM4Ib4GLhl8fKIQ3nw16ZIzdRmgobaSsjSGgXCzo1J5dzQ+EXDlp7oLIyRMH4VC
-glYMWyRxckjdyG7hvkdXaF1/UJ87hqI3RCR1SOr6QFS8P5q/mX/ZiC2JG1dkcY/qNb9UohGr
-UFCsylsXXdsEmKCl+dUBMqKuuQHR+opVpMmlSJkO5XpSmNEAwTQKV3JKj/ea9GbnzyvQeM5g
-Mk0YoOcbymlZZzJKNZdpVmUA47tv7R6MKjKzoX97/UMPT65U5qNRBXp2YwykyxI+WP5KKs/1
-oFJwJ71aFllHuJrEmbzw4T6mKpKNrdECnJaeg0ueb4/w6ZXmKcd95NZZjcrd4G8xEbxc8kZH
-JVh2A57DlVIKqEdlhIgV0r9o1itsJ6Jf8Ie2Vao1l7j5GZeC8eCXyZr/IRHM8Qi/NRL7Nq5G
-aztYjqZLkgOQxDCCB84wggW2oAMCAQICEQCue1xLnZwpBgTcjkfrTOBNMA0GCSqGSIb3DQEB
-DAUAMEYxCzAJBgNVBAYTAk5MMRkwFwYDVQQKExBHRUFOVCBWZXJlbmlnaW5nMRwwGgYDVQQD
-ExNHRUFOVCBQZXJzb25hbCBDQSA0MB4XDTIxMTIxNTAwMDAwMFoXDTI0MTIxNDIzNTk1OVow
-ggEpMQ4wDAYDVQQREwU4MDUzOTFIMEYGA1UECww/TWF4LVBsYW5jay1JbnN0aXR1dCBmw7xy
-IE11bHRpZGlzemlwbGluw6RyZSBOYXR1cndpc3NlbnNjaGFmdGVuMUcwRQYDVQQKEz5NYXgt
-UGxhbmNrLUdlc2VsbHNjaGFmdCB6dXIgRm9lcmRlcnVuZyBkZXIgV2lzc2Vuc2NoYWZ0ZW4g
-ZS5WLjEbMBkGA1UECQwSSG9mZ2FydGVuc3RyYcOfZSA4MQ8wDQYDVQQIEwZCYXllcm4xCzAJ
-BgNVBAYTAkRFMSMwIQYDVQQDExpBbnNnYXIgRXN6dGVybWFubi1LaXJjaG5lcjEkMCIGCSqG
-SIb3DQEJARYVYWVzenRlckBtcGluYXQubXBnLmRlMIICIjANBgkqhkiG9w0BAQEFAAOCAg8A
-MIICCgKCAgEAvuD0YG5wRi5BTlE18M0q4v7Xp8jvN2FAf8PhGamkMum/c4cLPVbvuxNnK7iR
-MFcsKFOv9NmRhW3VKpxgSXQD7rcTNGbH90z30r46eTEcrvoxayPiRM+22Ieabiz4vZ2aq8IC
-sXxTQXrts+vbJWjSK+IF89I7ntzm6pFEWQPfFU2DZBIZ76BMEP3fDRzwKWlz1eQbMrGwIgGg
-SlIM7h3SjNAK+dQFRUc/3kfnY+axiG8Qx44JHstbcnwEPF1CYIYpEuA+uC+RW4GPgiH1yu9a
-a71i7u6FPL39y6mJHT3vg8Wpf72QTMx1ULFoHD1mdQyN4rt49aRunn3fzs+EPz8x/Psuhsei
-z5Zhimm8C2yguu3JBd/HVTRWPppK2w7WqXjedhN1N0G0xhdNj+d2FAe8ZLPz7i4ZhWw5u7s5
-TGnVJAdD4O4TecoNp00LaawPzwFhPQp43bjJZa0Lj0U9lGcg5TBsZfifix1NrUbG0CO5Mcf1
-LJ5DNaEWLzRMPFI4caHp4jaWR30Yuuil70NYqUuZicUbI2SlLM6Vh9VatOMJh84jpARdcZXz
-dsV6oIblgWCBYoCVzgzHiRZ9PfIzIKusZBsot2FiMEMeG0hc5Wxp1d/8g5V58i7IWt935gIw
-IkzZXkCqp2/U2ZOQmz2xJN/WIvvoP97ksl/rQA/rFHD4SBMCAwEAAaOCAdAwggHMMB8GA1Ud
-IwQYMBaAFGkAocchWPjgxRsgsArdp1G/E9nkMB0GA1UdDgQWBBSSsZj13ByPy4RueXQ8Zf9F
-AG01zTAOBgNVHQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAdBgNVHSUEFjAUBggrBgEFBQcD
-BAYIKwYBBQUHAwIwPwYDVR0gBDgwNjA0BgsrBgEEAbIxAQICTzAlMCMGCCsGAQUFBwIBFhdo
-dHRwczovL3NlY3RpZ28uY29tL0NQUzBCBgNVHR8EOzA5MDegNaAzhjFodHRwOi8vR0VBTlQu
-Y3JsLnNlY3RpZ28uY29tL0dFQU5UUGVyc29uYWxDQTQuY3JsMHgGCCsGAQUFBwEBBGwwajA9
-BggrBgEFBQcwAoYxaHR0cDovL0dFQU5ULmNydC5zZWN0aWdvLmNvbS9HRUFOVFBlcnNvbmFs
-Q0E0LmNydDApBggrBgEFBQcwAYYdaHR0cDovL0dFQU5ULm9jc3Auc2VjdGlnby5jb20wTgYD
-VR0RBEcwRYEVYWVzenRlckBtcGluYXQubXBnLmRlgRVhZXN6dGVyQG1waWJwYy5tcGcuZGWB
-FWFlc3p0ZXJAbXBpbmF0Lm1wZy5kZTANBgkqhkiG9w0BAQwFAAOCAgEAMgeKjqVB9MB8cfE7
-qw6zkgOq4CCZOQyZcnCQFb1OxSEyY6IwhI8sqq0x05yeiOgPqYc4IB5vpJ0+fkITEjAOieM8
-1xCKjSB/+CqTNSf+LPSkH/5p1RD+4nXn4NvRX9sG037/JqMUUtJn/zyCOIqrCa7bEwqqzBj2
-371hZuTCFXgrbfmaQxTk2gXRanR/WQH0BMEK9lc4PY+47mia+Ceg+U26zvhGEMVBKq19K5oG
-K+H0gk6yf1kmFyBjOCG+Bi4ZfHyiEN58NemSM3UZoKG2krI0hoFws6NSeXc0PhFw5ae6CyMk
-TB+FQoJWDFskcXJI3chu4b5HV2hdf1CfO4aiN0QkdUjq+kBUvD+av5l/2YgtiRtXZHGP6jW/
-VKIRq1BQrMpbF13bBJigpfnVATKirrkB0fqKVaTJpUiZDuV6UpjRAME0CldySo/3mvRm588r
-0HjOYDJNGKDnG8ppWWcySjWXaVZlAOO7b+0ejCoys6F/e/1DD0+uVOajUQV6dmMMpMsSPlj+
-SirP9aBScCe9WhZZR7iaxJm88OE+piqSja3RApyWnoNLnm+P8OmV5inHfeTWWY3K3eBvMRG8
-XPJGRyVYdgOew5VSCqhHZYSIFdK/aNYrbCeiX/CHtlWqNZe4+RmXgvHgl8ma/yERzPEIvzUS
-+zauRms7WI6mS5IDkMQxggNtMIIDaQIBATBbMEYxCzAJBgNVBAYTAk5MMRkwFwYDVQQKExBH
-RUFOVCBWZXJlbmlnaW5nMRwwGgYDVQQDExNHRUFOVCBQZXJzb25hbCBDQSA0AhEArntcS52c
-KQYE3I5H60zgTTANBglghkgBZQMEAgEFAKCB5DAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcB
-MBwGCSqGSIb3DQEJBTEPFw0yMzA0MTIwNzIxMzJaMC8GCSqGSIb3DQEJBDEiBCC23dOCtlZN
-Ev3oXlK5HS2hN4OCfcZ7WS004Z9arRsVHjB5BgkqhkiG9w0BCQ8xbDBqMAsGCWCGSAFlAwQB
-KjALBglghkgBZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMA4GCCqGSIb3DQMCAgIA
-gDANBggqhkiG9w0DAgIBQDAHBgUrDgMCBzANBggqhkiG9w0DAgIBKDANBgkqhkiG9w0BAQEF
-AASCAgAN7LHHAiwjqFRDeGdvDG+YChtCzu4/Cub2MDeo32CtaAT83J2wiSXx7BDSfkwVTPzX
-00pCOB+9gI3S++fOJeGQU5ksA7Fggo2/Nlu6DPlymOsW/wtmVhsJjXV7ZrQT2rxWujM822Ee
-qgLibPB57zKzeNI8dP5whSeSccIcF3O8Fm+UqoCkiZ8An7iW6zJwtsRiJvJj0MxzO+5Tiw8O
-NrEFXOuf6YGP+kVxW5FPr+cwg2IjH5i/qF9SfSbViGezjZNYzE9DzPTQcZvGQ3R1Gw0eO3xF
-05aApScLiPRiS+pfJbzJNvRAp/96IC62GcFWHMia8oe/IpSL6DlCzwxUTdKIcXVDOwrG2WH8
-6AMzxQUHc6yRqm97ViDDO1TOUJDIWvi8CFlYzxDA+DQ+q4vh9SrHYOuDTuPjC3E3MxjoNpDp
-Zn1ImknZLfGn1npWyLeo1bZfRZuL7JfY9B8DpCc+8KAT7ta5wxvEd+RU5qgtCRNsV1RjoZMh
-v2N7zivdaFzlxXtSN6DmDcjPibMSsg4O3R6hxHnO9ViK4Di+N+ehmC1ilr/HnaFr6GXeX5jP
-pr+2tmFkFuYQcDqjANTx6lqHnuu5it+f19eskULFnY0irdh2WLrkdMxSakEjiDq2A0d27Z46
-Iq6g10Xlc5vbvhcZk2q3Hw/SrhO4feNGQD9P1wgWGg==
-
---dq0mgOiqafgsOM6e--
+-- 
+chandan
