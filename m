@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28760C7619A
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 03:45:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5424C7619A
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 03:46:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229490AbjDLDpy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Apr 2023 23:45:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37992 "EHLO
+        id S229575AbjDLDqJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Apr 2023 23:46:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38024 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229451AbjDLDpx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 23:45:53 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03CFA40CA
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 20:45:52 -0700 (PDT)
+        with ESMTP id S229451AbjDLDqI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 23:46:08 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0F1530E0
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 20:46:07 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9430D62B68
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Apr 2023 03:45:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0C14C433D2;
-        Wed, 12 Apr 2023 03:45:50 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4BEA362D90
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Apr 2023 03:46:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8AF5C433EF;
+        Wed, 12 Apr 2023 03:46:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681271151;
-        bh=+icNcZKOhk8CPbPYm7ED0zOfkpvhR/bdV8kPsGCvIM4=;
+        s=k20201202; t=1681271166;
+        bh=5jjg4cKduQSG67kiQ5yGAwss9+Nb+f522mP4Qh3s/UQ=;
         h=Date:Subject:From:To:Cc:From;
-        b=XgdKH9enEeP+AcJxFIVNe/17mSX2EAw1xG4bHtK4bybdCvU+YzIPMaKqPJ2L9QcWF
-         fUN/lHQClXxxTEVtKhFihf99krjJD0yocepYVgnr/Ci9LLSSAmZETpL1m1an8w/iHa
-         1+pBYZVg/ZwuJaRLgeuzV1BeEkK2DCjkPd7dYQarwrMwmmkiRIOJne1KiwAQln413B
-         4gIfzXRj0bjwQCsRdslhrBxPZfw1woFsyAU0eZb7dyAF0+6V3O5TrTe0RSGNafKBcL
-         r+xLzaZQ+RQi2QYg4lvLFM9iAu1VHf5j4isSGAU4q1IuErCTjEh1ehvBkm0r13IcT3
-         T9e34vDx2E62Q==
-Date:   Tue, 11 Apr 2023 20:45:50 -0700
-Subject: [GIT PULL 4/22] xfs_scrub: fix licensing and copyright notices
+        b=escV3sTcX/AadC/afDEl48vgGMSqzdkU0C9Bw5L1fk6nVjCmxgdASVWzPe5KwHiNh
+         1t2+NfEWxALLXtDgVkOVY+7/xWRZ2clRqO0Lo/SrsqJLxNKjTx8ls1nlTlLc63r/O8
+         /YGd7HME1d0REXn7w7F63/utggbF1sgOhMuxl3RrhE+TiojXQknIbk5dLihqntEOmf
+         +iEc95s0toLu7qJ5rwnRVBUcE2KxW9hvXbOZIW93jmDcNZBKu6bSpm7XXaZhO2AoSm
+         25Wd4rka/fGAawpVPw/GyvWT6YxDK7Ev0E5kdl9XiYk2ZoxAFg6py9zaFchelME1OS
+         6PCtrXf9Gm51Q==
+Date:   Tue, 11 Apr 2023 20:46:06 -0700
+Subject: [GIT PULL 5/22] xfs: drain deferred work items when scrubbing
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     dchinner@fromorbit.com, djwong@kernel.org
 Cc:     dchinner@redhat.com, linux-xfs@vger.kernel.org
-Message-ID: <168127094049.417736.4769433461213675106.stg-ugh@frogsfrogsfrogs>
+Message-ID: <168127094157.417736.10965865343075972034.stg-ugh@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -54,66 +54,79 @@ encounter any problems.
 
 --D
 
-The following changes since commit 9b2e5a234c89f097ec36f922763dfa1465dc06f8:
-
-xfs: create traced helper to get extra perag references (2023-04-11 18:59:55 -0700)
-
-are available in the Git repository at:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/scrub-fix-legalese-6.4_2023-04-11
-
-for you to fetch changes up to ecc73f8a58c7844b04186726f8699ba97cec2ef9:
+The following changes since commit ecc73f8a58c7844b04186726f8699ba97cec2ef9:
 
 xfs: update copyright years for scrub/ files (2023-04-11 18:59:57 -0700)
 
-----------------------------------------------------------------
-xfs_scrub: fix licensing and copyright notices [v24.5]
+are available in the Git repository at:
 
-Fix various attribution problems in the xfs_scrub source code, such as
-the author's contact information, out of date SPDX tags, and a rough
-estimate of when the feature was under heavy development.  The most
-egregious parts are the files that are missing license information
-completely.
+git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/scrub-drain-intents-6.4_2023-04-11
+
+for you to fetch changes up to 88accf17226733088923635b580779a3c86b6f23:
+
+xfs: scrub should use ECHRNG to signal that the drain is needed (2023-04-11 19:00:00 -0700)
+
+----------------------------------------------------------------
+xfs: drain deferred work items when scrubbing [v24.5]
+
+The design doc for XFS online fsck contains a long discussion of the
+eventual consistency models in use for XFS metadata.  In that chapter,
+we note that it is possible for scrub to collide with a chain of
+deferred space metadata updates, and proposes a lightweight solution:
+The use of a pending-intents counter so that scrub can wait for the
+system to drain all chains.
+
+This patchset implements that scrub drain.  The first patch implements
+the basic mechanism, and the subsequent patches reduce the runtime
+overhead by converting the implementation to use sloppy counters and
+introducing jump labels to avoid walking into scrub hooks when it isn't
+running.  This last paradigm repeats elsewhere in this megaseries.
+
+v23.1: make intent items take an active ref to the perag structure and
+document why we bump and drop the intent counts when we do
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (2):
-xfs: fix author and spdx headers on scrub/ files
-xfs: update copyright years for scrub/ files
+Darrick J. Wong (5):
+xfs: add a tracepoint to report incorrect extent refcounts
+xfs: allow queued AG intents to drain before scrubbing
+xfs: clean up scrub context if scrub setup returns -EDEADLOCK
+xfs: minimize overhead of drain wakeups by using jump labels
+xfs: scrub should use ECHRNG to signal that the drain is needed
 
-fs/xfs/scrub/agheader.c        | 6 +++---
-fs/xfs/scrub/agheader_repair.c | 6 +++---
-fs/xfs/scrub/alloc.c           | 6 +++---
-fs/xfs/scrub/attr.c            | 6 +++---
-fs/xfs/scrub/attr.h            | 4 ++--
-fs/xfs/scrub/bitmap.c          | 6 +++---
-fs/xfs/scrub/bitmap.h          | 6 +++---
-fs/xfs/scrub/bmap.c            | 6 +++---
-fs/xfs/scrub/btree.c           | 6 +++---
-fs/xfs/scrub/btree.h           | 6 +++---
-fs/xfs/scrub/common.c          | 6 +++---
-fs/xfs/scrub/common.h          | 6 +++---
-fs/xfs/scrub/dabtree.c         | 6 +++---
-fs/xfs/scrub/dabtree.h         | 6 +++---
-fs/xfs/scrub/dir.c             | 6 +++---
-fs/xfs/scrub/fscounters.c      | 4 ++--
-fs/xfs/scrub/health.c          | 6 +++---
-fs/xfs/scrub/health.h          | 6 +++---
-fs/xfs/scrub/ialloc.c          | 6 +++---
-fs/xfs/scrub/inode.c           | 6 +++---
-fs/xfs/scrub/parent.c          | 6 +++---
-fs/xfs/scrub/quota.c           | 6 +++---
-fs/xfs/scrub/refcount.c        | 6 +++---
-fs/xfs/scrub/repair.c          | 6 +++---
-fs/xfs/scrub/repair.h          | 6 +++---
-fs/xfs/scrub/rmap.c            | 6 +++---
-fs/xfs/scrub/rtbitmap.c        | 6 +++---
-fs/xfs/scrub/scrub.c           | 6 +++---
-fs/xfs/scrub/scrub.h           | 6 +++---
-fs/xfs/scrub/symlink.c         | 6 +++---
-fs/xfs/scrub/trace.c           | 6 +++---
-fs/xfs/scrub/trace.h           | 6 +++---
-fs/xfs/scrub/xfs_scrub.h       | 6 +++---
-33 files changed, 97 insertions(+), 97 deletions(-)
+fs/xfs/Kconfig             |   5 ++
+fs/xfs/Makefile            |   2 +
+fs/xfs/libxfs/xfs_ag.c     |   4 ++
+fs/xfs/libxfs/xfs_ag.h     |   8 +++
+fs/xfs/libxfs/xfs_defer.c  |   6 +-
+fs/xfs/scrub/agheader.c    |   9 +++
+fs/xfs/scrub/alloc.c       |   3 +
+fs/xfs/scrub/bmap.c        |   3 +
+fs/xfs/scrub/btree.c       |   1 +
+fs/xfs/scrub/common.c      | 137 ++++++++++++++++++++++++++++++++++---
+fs/xfs/scrub/common.h      |  15 ++++
+fs/xfs/scrub/dabtree.c     |   1 +
+fs/xfs/scrub/fscounters.c  |   7 ++
+fs/xfs/scrub/health.c      |   2 +
+fs/xfs/scrub/ialloc.c      |   2 +
+fs/xfs/scrub/inode.c       |   3 +
+fs/xfs/scrub/quota.c       |   3 +
+fs/xfs/scrub/refcount.c    |   9 ++-
+fs/xfs/scrub/repair.c      |   3 +
+fs/xfs/scrub/rmap.c        |   3 +
+fs/xfs/scrub/scrub.c       |  63 ++++++++++++-----
+fs/xfs/scrub/scrub.h       |  12 +++-
+fs/xfs/scrub/trace.h       |  69 +++++++++++++++++++
+fs/xfs/xfs_bmap_item.c     |  12 +++-
+fs/xfs/xfs_drain.c         | 166 +++++++++++++++++++++++++++++++++++++++++++++
+fs/xfs/xfs_drain.h         |  87 ++++++++++++++++++++++++
+fs/xfs/xfs_extfree_item.c  |   4 +-
+fs/xfs/xfs_linux.h         |   1 +
+fs/xfs/xfs_refcount_item.c |   4 +-
+fs/xfs/xfs_rmap_item.c     |   4 +-
+fs/xfs/xfs_trace.h         |  71 +++++++++++++++++++
+31 files changed, 680 insertions(+), 39 deletions(-)
+create mode 100644 fs/xfs/xfs_drain.c
+create mode 100644 fs/xfs/xfs_drain.h
 
