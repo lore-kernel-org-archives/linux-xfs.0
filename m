@@ -2,182 +2,215 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B74AC77B6E
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 05:08:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAE55C77B73
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 05:21:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229564AbjDLFIk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Apr 2023 01:08:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37374 "EHLO
+        id S229588AbjDLFVu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Apr 2023 01:21:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40472 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229450AbjDLFIj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2023 01:08:39 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADA551996;
-        Tue, 11 Apr 2023 22:08:38 -0700 (PDT)
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33BLLAIj005408;
-        Wed, 12 Apr 2023 05:08:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references :
- content-transfer-encoding : content-type : mime-version;
- s=corp-2023-03-30; bh=fbFr1MyfoNJSjdL3IGaTyK6sfGFaNcRINRGwv+DEHcg=;
- b=cqm3itXnR4sXYiZJCFLgUrLSf5I4a7qNxafh49oV15DueoJ4GKbIHeK3WWsHFuby7yH2
- z6fNe2cdzRcIFoJRyvSEtHz335KSCJBGk7AjONh5u/8WFSEP6fOCBaMw6PalwwHBN+Wp
- utIFFh3mz63TcxWYPPZFiFBAb1pC+bCfNVKheBpfYqr+NRBIaB87B7l1g/6hgYmG0lOW
- QUyVMmKHFbMVyNa1ueBYtXm+um+/Wy+wK6ehgvBDREIEx56uCozZwojACIId7n3L9/E0
- uvtN1aA9XJ490jckiDemMXbOY53GyXo/zVeff5gCk1fhmH1XWr16EDCIVv6TQ3VVLQFC eA== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3pu0e7f267-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 12 Apr 2023 05:08:34 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 33C2ZeaG025027;
-        Wed, 12 Apr 2023 05:08:33 GMT
-Received: from nam04-mw2-obe.outbound.protection.outlook.com (mail-mw2nam04lp2170.outbound.protection.outlook.com [104.47.73.170])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3puwe8aa4d-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 12 Apr 2023 05:08:33 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=oOlTgf2Sm+Byx6E9bWLjiVJqsIVNHLlguN+mX8PTMIL9QLvQ8m0f1B/yfZ6y4QWxACN3svTfzO9iN5EOwoCFyHlFMB0Xs+lu6E/HerEjOQ4wk5i929s2E55I+ADYNDVxaF8suSToqpZkQcOgFsNItEJYdu55zCCzU00J50La5n/6dn+czncRLtY/8GRLe8xpamnR4eevGoSYPkJU2SKCGOiQZf/ucWgWI2H/IoW2smrCGPM8GL/hswoitiSv28ZWIX7YOpKDa1we3Ee6b+K3TVgJdMzmg6Lt0dtAulb1pP7WfiPD5YdZEklIDtCeIzKOZaKfhj4W+L3/Wf2K8sl+tw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=fbFr1MyfoNJSjdL3IGaTyK6sfGFaNcRINRGwv+DEHcg=;
- b=Zf8SIGQ7+TATmtuJsEBpQ81Ghssvz1PoF0kzQegqz6pB/Hw7jMS2iGq1VioDY04HfKPrrU0OD5yjYgtTE3rMAiPihtZrErZjWmhplYMAmd70XRaBbf4bLX/anPdt6e5o0cf79Kx5dYWGMugLmfHBGdWhWI/8XhhhtzaFOR2SrpOO5kbGKbc0WJYZVZHnbtJvwbDWH6GljPY5Qtf3ZYrfM6MgoTNohittr0mtJEZfoRkbQr/hLQJYj9kEhtW8LwF4ZBfx4USpSVnx4ANNozsKOAwesqlRiHnaV1FXnqMNNrdTq4kHKOIE8kOSjbP7cLFcTLHMjrneIZG3KyoHB+Jw0g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=fbFr1MyfoNJSjdL3IGaTyK6sfGFaNcRINRGwv+DEHcg=;
- b=BgUN5PQQfS0pwvMGswiphvyhkMkVuCR2GGILPMX94Su31xfh6EIoE5oOJIm5GEsyyLlEVfi0eoVUXNT1vxAT4VJlKzCIxIh2W9PN+xPEvAxRSgjVDepBuvkmxhLRZ8xqpffIB/SVzT6reRRzt5V5aauCOE3zsBioPpceSZa+yXw=
-Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:22b::9)
- by IA0PR10MB7579.namprd10.prod.outlook.com (2603:10b6:208:493::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6277.38; Wed, 12 Apr
- 2023 05:08:30 +0000
-Received: from SA1PR10MB5867.namprd10.prod.outlook.com
- ([fe80::b3d4:e7f4:7f85:90b7]) by SA1PR10MB5867.namprd10.prod.outlook.com
- ([fe80::b3d4:e7f4:7f85:90b7%3]) with mapi id 15.20.6298.030; Wed, 12 Apr 2023
- 05:08:30 +0000
-From:   Chandan Babu R <chandan.babu@oracle.com>
-To:     gregkh@linuxfoundation.org
-Cc:     sashal@kernel.org, mcgrof@kernel.org, linux-xfs@vger.kernel.org,
-        stable@vger.kernel.org, djwong@kernel.org, chandan.babu@oracle.com,
-        amir73il@gmail.com, leah.rumancik@gmail.com
-Subject: [PATCH 5.4 V2] xfs: simplify a check in xfs_ioctl_setattr_check_cowextsize
-Date:   Wed, 12 Apr 2023 10:38:23 +0530
-Message-Id: <20230412050823.721047-1-chandan.babu@oracle.com>
-X-Mailer: git-send-email 2.39.1
-In-Reply-To: <20230412042624.600511-10-chandan.babu@oracle.com>
-References: <20230412042624.600511-10-chandan.babu@oracle.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: TYCP286CA0052.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:2b5::13) To SA1PR10MB5867.namprd10.prod.outlook.com
- (2603:10b6:806:22b::9)
+        with ESMTP id S229504AbjDLFVt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Apr 2023 01:21:49 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8582469D
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 22:21:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1681276863;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=JqxqUicjNetRTQQMEz2T27cplxcUTPiDbzMlGWnvaLw=;
+        b=HK9ORqu8nPON/xVk2RiyaQY1Y2E8FeMnMLmgb3RDBaMgc4Kqtci83S0EhFHpl5jJovyDqL
+        lnEeDx2MOA58SZ8T9X0uIVBVxieQyPjDWJHu24d98X2eZSOQK66h5BmN2ughJBxUISkmcS
+        3m8GQEmSsbbKDHb37NLDB05myzVx1RA=
+Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
+ [209.85.218.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-636-SBxFYEUBNmaxDxuO5i18zg-1; Wed, 12 Apr 2023 01:21:01 -0400
+X-MC-Unique: SBxFYEUBNmaxDxuO5i18zg-1
+Received: by mail-ej1-f69.google.com with SMTP id b24-20020a1709065e5800b0094a72cc9e85so3177920eju.11
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 22:21:01 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1681276860; x=1683868860;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=JqxqUicjNetRTQQMEz2T27cplxcUTPiDbzMlGWnvaLw=;
+        b=Vy+a1dRiy30P4HPa3umrtv3/oXLKS13N1fwuJC4hQOVlvTcYnVxnlTKP9j9SlZZ1tX
+         bCPJfpgP7ChuWHseAvwhGZpYAmNox5rFbyD6c0ptCYApcabaXLvMBG1s9xwdOtU1hf/L
+         HcJIwGab9IFrcHwIOGzcDRZBUMFAHZ9QoK3Wu6XNS/g9HhSJ9YPvAw7LTOCj4DJNIAF1
+         U+UZpzk+YC4BJtLNDNtJzAD6+dE+iqdiCmA7eh980+WRNkk4Y6BbTX5eaM9X64HZF5qn
+         VL6ZspRCaZch1/zF2KoSR2nESCao8zxDcYWwFum/Kxvl1gZlRf5UALTnFCEJ0IFrw21I
+         8uTw==
+X-Gm-Message-State: AAQBX9d5xWKyaVHxvLkcK4Oi5rachq0oVqjSjCE7eKPl/uwoEIIV4Fq/
+        y/5V6ir5+lgOgXSTbY8cqLuTJoTJVyqfoSGKsfOoxREGlUBhomi59KTYZ5MCt9JX1B4udxfDAll
+        iyFXQpDMZMTU23nBa3A+2LKTqNkC5CUV6XiF6
+X-Received: by 2002:a17:906:7f97:b0:94a:5691:b12b with SMTP id f23-20020a1709067f9700b0094a5691b12bmr5715091ejr.11.1681276860318;
+        Tue, 11 Apr 2023 22:21:00 -0700 (PDT)
+X-Google-Smtp-Source: AKy350ZICmgEqGJkx48se3yBQ6rYH4gDzJv11aUZUml5J+lPHZHU3waRoOPqBX/Zk6KRdfT5kBlK8PC0jqrvMTBKvzM=
+X-Received: by 2002:a17:906:7f97:b0:94a:5691:b12b with SMTP id
+ f23-20020a1709067f9700b0094a5691b12bmr5715080ejr.11.1681276859949; Tue, 11
+ Apr 2023 22:20:59 -0700 (PDT)
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|IA0PR10MB7579:EE_
-X-MS-Office365-Filtering-Correlation-Id: e8de757e-f69a-414e-3644-08db3b13f520
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Iro3oN0Wr1E71kai4Gt5G+x3DDoSxIRBLEWS+e+iLCY/PQ89Ysk7elKXM1lwlg3/QSr5/e0JWmB9KMUdRWGfOsTPYWOEZUpuZohhJYfh3kpGDgqN5EC1v4syqQSUzQO4xg4O8LUUzBXlFaF6KR1rqOexmnvN94Q3CFb2CKYaI3NN4zkmcgsK64EwK8O4uxP4ZOgXk/qrF7L1YxqElaILVrL/PdlhwmIveyOjWGj5dsmJXgo/rm5E6dbcHj3HM3A/Uf/bEjxCjVx5aXS8ClR/FvL24NYMLH7ZdTF9UIuKdWKuwbv/2/eHHB4Qv5xFQqd2F7H3e9/6l+W23XY//+hCOoWsgTSF+X6+5ddyR3r5Kk4UzWGq0fGnbMj/l2SC5qX3+6YrhfPJMXboEVlimu6RuOCU598meNNMtCBdrp37D/05HZ5vC2bRreVvfZ0Ysecejuppwx/c/Hrtf1QMkpwf6aqRgTVwDMqRxQKSpdH2Sw2cdFpH8iY7ZlhOGQUvFOAfZNX0YuqKyhNB7Ara59UqH7kd3TCWXlPjNrmTxMLcR6xTLv27zT+t75wkYXSGChZ6
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(346002)(376002)(136003)(396003)(39860400002)(366004)(451199021)(36756003)(86362001)(6486002)(41300700001)(316002)(66476007)(8676002)(4326008)(66946007)(6916009)(478600001)(66556008)(5660300002)(2906002)(8936002)(186003)(38100700002)(6666004)(6506007)(1076003)(6512007)(26005)(2616005)(83380400001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?rGHLglUJoQxT2Xuja354ZGNyjdZz7MLdeFZRaBxKYFuOWM8BrpfRY6KjbVMh?=
- =?us-ascii?Q?zgXgprbl6XpaVqLRfsKoYncsKdkjjzsMGbsxFdPl3em2T/YLAy2KX7bYmNYD?=
- =?us-ascii?Q?2NwwtrLqb5QpcD0GY4KjHr7ph1atV5WSfRxxK412ei1LiPWZxqXsEkLycgBk?=
- =?us-ascii?Q?xWoPlbY4td8Ib6QIBmvqf9eP6LLwG65DfC41HWHvQMFZl19+ZUcflHAw7CHa?=
- =?us-ascii?Q?zxzLSowzn+PIOfPdTqAGS9HuHtET/vVZtIhZ83ASDZjbaowTCJKt0JO1qY0y?=
- =?us-ascii?Q?qfAGY5apkyMtENMlFTzTnvA2beLeY8LlzSj2t02RPWaRmlOygnGqK2sYme+/?=
- =?us-ascii?Q?vX/NMm01rBoGvMyv08m6/97QJaoQe0cp6vv+Ci11k6lEgaD0pz3ibrZ2ykDE?=
- =?us-ascii?Q?l7yhOn6g+UTE6SHXfQCLcpFKBPsDUkA42JbDt8bzFxf1mwJZq269zaWHZ5GY?=
- =?us-ascii?Q?NhO1wIFZqeRkN7TS4OGQrqWCMHBWg297012W7ehJrBcAoxDoD4mx29VZp/ja?=
- =?us-ascii?Q?arBEG5ZnTrSOB0AKFC6A1UgMROQ386L/rtNjDHz5FqrTZoUbxGSovSlHGGDo?=
- =?us-ascii?Q?SXuf4Iigl9QBe7IjdNmWL/3xgkQNGe+2HlPt0px5G1u6p1keZy0tTP+SVdHi?=
- =?us-ascii?Q?F+q55rrxkXtLiOtCByH+RKrnhbSNDGkdqdYNC7lLtOX9o8q4/qJZRGBp+eeH?=
- =?us-ascii?Q?WHBmgiBCWsfkFADpu62TkrrLw928JLhYPaW/vgDxKFJAuKiqRQAt49+jzRO/?=
- =?us-ascii?Q?qJ/EmU+EAzvoh1zj+oVQXGevL6Gk/wmXt3u9rvXdbQuL0l72Jrcgef9qNhMX?=
- =?us-ascii?Q?oqjG3zszdNOBBa8oGyivgvlQFkKurbs9mqvqf7mFlufFhxHEoIT/BI9UJG3o?=
- =?us-ascii?Q?doZ6AYGS56H5CwuVqmdXPfKmIBsVjSWSmmOo0fFNF3jGeGs28kih1vD+nrvh?=
- =?us-ascii?Q?/tpMjoOkzp7GY7OqFyezDl2XkrhPtM2KyYShQPtvEsXf8uGEhLeqFDvBvN1g?=
- =?us-ascii?Q?EGLflVUUqTggislfdx2Sit6Qrxkx0TEQ+gqT7kpG4HGmTYpzOS3/cXJmvfQj?=
- =?us-ascii?Q?S/wTy7stfh8NEzjkAQOMjYKsV81YdODLYo8S+66pFiF6q5yxwupISPaK1WDe?=
- =?us-ascii?Q?0vnycMS6TxMevosoSFRTunDUQThd3o+nJkFXUXRXoQokKL8kT0SD5YN1rOnZ?=
- =?us-ascii?Q?LMt/SuMtpPUEvNOmohNWeEMqgRCO3AF44I1qDlzlyXpx+5uEQf2ojzEFpipi?=
- =?us-ascii?Q?/ir+sWTsqW9cvWHmivoLrkyqJ2CJt0OEHBEiueS6Z23BRN+e3ATAe7WGlcRF?=
- =?us-ascii?Q?NDf+yzEtjySFaQiv7Pl7Z5mFMst0gNrY3OM8PfqE7yFHfvZQMwrW8/augJDH?=
- =?us-ascii?Q?Dc/VgNfrqfwmlevwdWV4+R5Nf+FbWWOrY/RaMmI2wdouxWzzC3PGJgGQt2mm?=
- =?us-ascii?Q?LO3SQcpLIqFGdUEHfbNpI4tejKKio4ZTSwXaRjDBG07i9yF7ETmoaQdsRBQP?=
- =?us-ascii?Q?HULNAJbeQdXEsXYlK84FLIVATO9r/REGv4SqjoCnMnn8VJ3EcGn/Sqw6zlT0?=
- =?us-ascii?Q?NiZXL1VnY+VuteA9PI2Y0nh+7UuS88Z/b+9howdcFiDNa78Fw4syKv+eXbJ6?=
- =?us-ascii?Q?7A=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 4ezqQY9KJ9p8Kzrvm4oOXJhBzKz+XC8xlLM26fxfBAdMg1qPTKmnzK85AGkg4x4vS83iYd0Pz6zDv/smJUHe1OMU6Obn9puC/+ffAluPaGTf9skZOiYy/l68DL/0X5fHWG0t/VKpIM2qtFJzfoP7oHaw3v+nQILLKPARVuCXZzAYs+3Y7UjAlOCMTVNgE7FNE3pH7Thq/XFiRoEn7e0sEqutWu3CcnhwG2Ptinml4IQVbrVCZ8Mu9ft9ob+G2G4wgik01Q8YrOjW87r49wEvQ2h011q8s+UXKhEdcZcTSB8NzIX8BJolzXz+UrEfvqDTik42a6b3JMjPbEN0UMFuDaW1mPzBSq2cwdUVw+TFmGBx3BryImF5ZO1c+nKALqmWof9vzExJmelyCOWUcgsu2rnA0PsMOLk39MYaWsU+3X2lW9fynSCmJ6KQOePnOC0lSATC7lz6gfAIDzxv/gtCxjBn/Mbdb9CHuez5T0HhJDR2bCdcqvlqSFK+JqGgzUML1d4g8GUWHoecK1r7rYRP4jj5b7YT8D7LCr79dNm6O1ULXjkckIeOOoQm66OOrox+H3dsYST9pNI2hhSjC/ZsvAxmWHD5kSvfcsKkYq75yz+fmvO9jkhJ9jCaLjDtVGx03DDe48+zA0K7S5njdLfPErpyth/QBGkNUG6uev3CF0FqBJTUKopxagmMmMt7Zf0lKNExCqnuVOvJ+cuwU5kwQj81zhMGuNjd5t05mWrZSKexNud3hPxR2Zn6o5oTfD6GqeZaQt3Caiv4aFDp68+f8xPv19vCRvItFZy5pYjpkazij+bDDnqiRiOS/ZlKVBU+7WpngF7rIOq0oD0WNVJBjPSOHao7Kagi2V5KlGDNI2oVKpDzhMRgm6jdjEhmLbMi
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e8de757e-f69a-414e-3644-08db3b13f520
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Apr 2023 05:08:30.8130
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 2HC/2uYCz781igmWosxfT4vS6uXHqA24GCpkXP8UJkconwIINTz8YU0i88P2D/nEGk24Pk/KFIt3TMkNYmknsQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR10MB7579
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-04-11_16,2023-04-11_02,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0
- adultscore=0 spamscore=0 suspectscore=0 bulkscore=0 mlxlogscore=999
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2303200000 definitions=main-2304120045
-X-Proofpoint-ORIG-GUID: RwQH5vc6bzDtEn20cr4uVoSIsp_mtM6Z
-X-Proofpoint-GUID: RwQH5vc6bzDtEn20cr4uVoSIsp_mtM6Z
+References: <20230410160727.3748239-1-ryasuoka@redhat.com> <20230410163029.GC360889@frogsfrogsfrogs>
+ <20230410175946.GD360889@frogsfrogsfrogs>
+In-Reply-To: <20230410175946.GD360889@frogsfrogsfrogs>
+From:   Ryosuke Yasuoka <ryasuoka@redhat.com>
+Date:   Wed, 12 Apr 2023 14:20:48 +0900
+Message-ID: <CAHpthZp+h-4nEGhNhBvSXxv6LGFUX=H646U6tHEF5_kwM3ij6Q@mail.gmail.com>
+Subject: Re: [PATCH v2] xfs: Use for_each_perag_from() to iterate all
+ available AGs
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, david@fromorbit.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
+Darrick
 
-commit 5e28aafe708ba3e388f92a7148093319d3521c2f upstream.
+Thank you for reviewing.
 
-Only v5 file systems can have the reflink feature, and those will
-always use the large dinode format.  Remove the extra check for the
-inode version.
+On Tue, Apr 11, 2023 at 1:30=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
+ wrote:
+>
+> On Tue, Apr 11, 2023 at 01:07:27AM +0900, Ryosuke Yasuoka wrote:
+> > xfs_filestream_pick_ag() iterates all the available AGs when no
+> > unassociated AGs are available by using for_each_perag_wrap().
+> > To iterate all the available AGs, just use for_each_perag_from() instea=
+d.
+> >
+> >
+> > This patch cleans up a code where xfs_filestream_pick_ag() iterates
+> > all the available AGs when no unassociated AGs are available.
+> > Current implementation is using a for_each_perag_wrap() macro which
+> > iterates all AGs from start_agno through wrap_agno, wraps to
+> > restart_agno, and then iterates again toward to (start_agno - 1).
+> > In this case, xfs_filestream_pick_ag() start to iterate from 0 and
+> > does't need to wrap. Although passing 0 as start_agno to
+> > for_each_perag_wrap()
+> > is not problematic, we have already a for_each_perag() macro family
+> > which just iterates all AGs from 0 and doesn't wrap. Hense, I propose
+> > to use for_each_perag() family simply.
+> >
+> >
+> > Changes since v1 [1]:
+> > Use for_each_perag_from() instead of for_each_perag() to clarify
+> > where we are iterating from.
+> >
+> > [1]:
+> > https://lore.kernel.org/linux-xfs/CAHpthZrvhqh8O1HO7U_jVnaq9R9Ur=3DYq2e=
+WzjWfNx3ryDbnGPA@mail.gmail.com/T/#m5704d0409bec1ce5273be0d3860e8ad60e9886f=
+d
+> >
+> > Signed-off-by: Ryosuke Yasuoka <ryasuoka@redhat.com>
+> > ---
+> >  fs/xfs/xfs_filestream.c | 3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
+> > index 22c13933c8f8..29acd9f7d422 100644
+> > --- a/fs/xfs/xfs_filestream.c
+> > +++ b/fs/xfs/xfs_filestream.c
+> > @@ -151,7 +151,8 @@ xfs_filestream_pick_ag(
+> >                * grab.
+> >                */
+> >               if (!max_pag) {
+> > -                     for_each_perag_wrap(args->mp, 0, start_agno, args=
+->pag)
+> > +                     start_agno =3D 0;
+> > +                     for_each_perag_from(args->mp, start_agno, args->p=
+ag)
+>
+> IDGI.  for_each_perag initializes the loop variable and calls
+> for_each_perag_from, so this is open-coding an existing macro.
+>
+> If people are confused by the reuse of the function call parameter
+> variable for the second loop, then either declare a new variable and let
+> the compiler notice that we never use start_agno ever again and reuse
+> a cpu register:
+>
+>         if (!max_pag) {
+>                 xfs_agnumber_t  agno;
+>
+>                 for_each_perag(args->mp, agno, args->pag)
+>                         break;
+>                 ...
+>         }
+>
+> Or reuse it explicitly and leave a comment:
+>
+>         if (!max_pag) {
+>                 /*
+>                  * Use any AG that we can grab.  start_agno is no longer
+>                  * pertinent here so we can reuse the variable.
+>                  */
+>                 for_each_perag(args->mp, start_agno, args->pag)
+>                         break;
+>                 ...
+>         }
+>
+> As a third alternative, I suppose you could encapsulate all of that into
+> a dorky helper since I bet this isn't the first or the last time we're
+> going to need something like this:
+>
+> static inline struct xfs_perag *
+> xfs_perag_get_first_avail(
+>         struct xfs_mount        *mp)
+> {
+>         struct xfs_perag        *pag;
+>         xfs_agnumber_t          agno;
+>
+>         for_each_perag(mp, agno, pag)
+>                 return pag;
+>
+>         ASSERT(0);
+>         return NULL;
+> }
+>
+>         if (!max_pag) {
+>                 args->pag =3D xfs_perag_get_first_avail(mp);
+>                 ...
+>         }
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
-Acked-by: Darrick J. Wong <djwong@kernel.org>
----
-Changelog:
-V1 -> V2:
-  Fix spelling mistake.
+OK. I update my patch with your third alternative. I'll add
+xfs_perag_get_first_avail() in xfs_filestream.h.
 
- fs/xfs/xfs_ioctl.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+It is a great idea because it can detect with ASSERT(0) if
+for_each_perag() gets no pag structure.
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 6d3abb84451c..597190134aba 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1510,8 +1510,7 @@ xfs_ioctl_setattr_check_cowextsize(
- 	if (!(fa->fsx_xflags & FS_XFLAG_COWEXTSIZE))
- 		return 0;
- 
--	if (!xfs_sb_version_hasreflink(&ip->i_mount->m_sb) ||
--	    ip->i_d.di_version != 3)
-+	if (!xfs_sb_version_hasreflink(&ip->i_mount->m_sb))
- 		return -EINVAL;
- 
- 	if (fa->fsx_cowextsize == 0)
--- 
-2.39.1
+The following syzbot bug [2] is an indeed pattern of this.
+
+[2]: https://syzkaller.appspot.com/bug?id=3Df7682cf37b02ddf3c87d88b80f74024=
+cf330017b
+
+On Tue, Apr 11, 2023 at 2:59=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
+ wrote:
+>
+> Oh, also -- I ran the whole codebase through smatch this morning.
+> Could you please set @err to zero in its declaration above?  If the
+> first for_each_perag_wrap never manages to get any perag structures
+> (currently impossible with the codebase) then err will be undefined and
+> probably nonzero.
+>
+>   CHECK  fs/xfs/xfs_filestream.c
+> fs/xfs/xfs_filestream.c:120
+> xfs_filestream_pick_ag() error: uninitialized symbol 'err'.
+>
+> --D
+
+OK. I will also update it like this. Is my understanding correct?
+
+@@ -67,7 +67,7 @@ xfs_filestream_pick_ag(
+xfs_extlen_t free =3D 0, minfree, maxfree =3D 0;
+xfs_agnumber_t agno;
+bool first_pass =3D true;
+- int err;
++ int err =3D 0;
+
+Best regards,
+Ryosuke
 
