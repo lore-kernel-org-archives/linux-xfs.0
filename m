@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3B8AC77B6E
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 03:49:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65B41C7619A
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Apr 2023 03:49:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229456AbjDLDt0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Apr 2023 23:49:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38966 "EHLO
+        id S229507AbjDLDtc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Apr 2023 23:49:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229696AbjDLDtX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 23:49:23 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F7024C2C
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 20:49:15 -0700 (PDT)
+        with ESMTP id S229458AbjDLDtb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Apr 2023 23:49:31 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6FC440C1
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Apr 2023 20:49:30 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9A65D62D90
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Apr 2023 03:49:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02E37C433EF;
-        Wed, 12 Apr 2023 03:49:13 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 38C6D62D91
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Apr 2023 03:49:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E52FC433EF;
+        Wed, 12 Apr 2023 03:49:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681271354;
-        bh=Uv+TZMzDGXZPHuHxIbJ1NvfvAk0l5MaI6q+K9knhyus=;
+        s=k20201202; t=1681271369;
+        bh=ogJWvQIKL0uYE3EJ8MYU4KLD/z1maE7uiyQ2o92oOuU=;
         h=Date:Subject:From:To:Cc:From;
-        b=hM2COnbJEYs/G4rNoqBfbI3k8bLb/wD8SFztSIb5RHiNTk4YRPXpRhwh8N2ldKSac
-         XskmbMksm3QDHdarRO9t1Ai5ZGguMFtsWdz0lbVmIywnYmLZw7U+XWaY5Qaq1af6ZD
-         IhMMb2jpAV3zhn1CmSLCPaBlJCa6BJ6xcxNvjAxqBjl+ux9HDvAKBxTk3+iEU0GYpc
-         AyRiYa3boJPs4ufqpnq6U39YQBKU408383k9cXGHi21MLsji6sOF5DBgdbwLC3m0Ck
-         /jWj+EPbZk/KDvVhfxqvhXwmObMDhRGCoDPMqjMeF4XA4XI2eEsvaEiE2R78UWs12F
-         tq+3NhvTJvp0g==
-Date:   Tue, 11 Apr 2023 20:49:13 -0700
-Subject: [GIT PULL 17/22] xfs: detect mergeable and overlapping btree records
+        b=jkpI+UB5etu2dV5pKJZXke8NiL4xDw3CThHDsm98trdmL5YhwOoDUmndDyLZlGyWu
+         WSsbEDwPwxJV8PuN8ZqAE9ORz6kxBtQKu5/CiiX6iAPSFsahfXRrxwTLs49HdHaqGc
+         Dcr33NdMD8Z67k1WoarPraxFONIZbE2HTAkIibjtGXdoR2gBYt3zlzXf5ONO5sjdi0
+         EB49gFEx5D12JYAy9u/FFOKIkoVhR2NVHgJV4VuTZhfGMeUyJiESc94BLgXN6Cf5p7
+         GQpuxl35zcBZZux+lVTyt7QPQROVoV4kc6LZK2WqhsR5d8B84PxFtQ5n4yqgtovZhd
+         eK13saFN6gi1w==
+Date:   Tue, 11 Apr 2023 20:49:29 -0700
+Subject: [GIT PULL 18/22] xfs: clean up memory management in xattr scrub
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     dchinner@fromorbit.com, djwong@kernel.org
 Cc:     dchinner@redhat.com, linux-xfs@vger.kernel.org
-Message-ID: <168127095343.417736.18039725981807061339.stg-ugh@frogsfrogsfrogs>
+Message-ID: <168127095443.417736.15033228784686723319.stg-ugh@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -54,63 +54,53 @@ encounter any problems.
 
 --D
 
-The following changes since commit 1e59fdb7d6157ff685a250e0873a015a2b16a4f2:
-
-xfs: don't call xchk_bmap_check_rmaps for btree-format file forks (2023-04-11 19:00:26 -0700)
-
-are available in the Git repository at:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/scrub-detect-mergeable-records-6.4_2023-04-11
-
-for you to fetch changes up to 1c1646afc96783702f92356846d6e47e0bbd6b11:
+The following changes since commit 1c1646afc96783702f92356846d6e47e0bbd6b11:
 
 xfs: check for reverse mapping records that could be merged (2023-04-11 19:00:28 -0700)
 
+are available in the Git repository at:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/scrub-fix-xattr-memory-mgmt-6.4_2023-04-11
+
+for you to fetch changes up to 44af6c7e59b12d740809cf25a60c9f90f03e6d20:
+
+xfs: don't load local xattr values during scrub (2023-04-11 19:00:35 -0700)
+
 ----------------------------------------------------------------
-xfs: detect mergeable and overlapping btree records [v24.5]
+xfs: clean up memory management in xattr scrub [v24.5]
 
-While I was doing differential fuzz analysis between xfs_scrub and
-xfs_repair, I noticed that xfs_repair was only partially effective at
-detecting btree records that can be merged, and xfs_scrub totally didn't
-notice at all.
+Currently, the extended attribute scrubber uses a single VLA to store
+all the context information needed in various parts of the scrubber
+code.  This includes xattr leaf block space usage bitmaps, and the value
+buffer used to check the correctness of remote xattr value block
+headers.  We try to minimize the insanity through the use of helper
+functions, but this is a memory management nightmare.  Clean this up by
+making the bitmap and value pointers explicit members of struct
+xchk_xattr_buf.
 
-For every interval btree type except for the bmbt, there should never
-exist two adjacent records with adjacent keyspaces because the
-blockcount field is always large enough to span the entire keyspace of
-the domain.  This is because the free space, rmap, and refcount btrees
-have a blockcount field large enough to store the maximum AG length, and
-there can never be an allocation larger than an AG.
-
-The bmbt is a different story due to its ondisk encoding where the
-blockcount is only 21 bits wide.  Because AGs can span up to 2^31 blocks
-and the RT volume can span up to 2^52 blocks, a preallocation of 2^22
-blocks will be expressed as two records of 2^21 length.  We don't
-opportunistically combine records when doing bmbt operations, which is
-why the fsck tools have never complained about this scenario.
-
-Offline repair is partially effective at detecting mergeable records
-because I taught it to do that for the rmap and refcount btrees.  This
-series enhances the free space, rmap, and refcount scrubbers to detect
-mergeable records.  For the bmbt, it will flag the file as being
-eligible for an optimization to shrink the size of the data structure.
-
-The last patch in this set also enhances the rmap scrubber to detect
-records that overlap incorrectly.  This check is done automatically for
-non-overlapping btree types, but we have to do it separately for the
-rmapbt because there are constraints on which allocation types are
-allowed to overlap.
+Second, strengthen the xattr checking by teaching it to look for overlapping
+data structures in the shortform attr data.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (4):
-xfs: flag free space btree records that could be merged
-xfs: flag refcount btree records that could be merged
-xfs: check overlapping rmap btree records
-xfs: check for reverse mapping records that could be merged
+Darrick J. Wong (12):
+xfs: xattr scrub should ensure one namespace bit per name
+xfs: don't shadow @leaf in xchk_xattr_block
+xfs: remove unnecessary dstmap in xattr scrubber
+xfs: split freemap from xchk_xattr_buf.buf
+xfs: split usedmap from xchk_xattr_buf.buf
+xfs: split valuebuf from xchk_xattr_buf.buf
+xfs: remove flags argument from xchk_setup_xattr_buf
+xfs: move xattr scrub buffer allocation to top level function
+xfs: check used space of shortform xattr structures
+xfs: clean up xattr scrub initialization
+xfs: only allocate free space bitmap for xattr scrub if needed
+xfs: don't load local xattr values during scrub
 
-fs/xfs/scrub/alloc.c    |  29 ++++++++++-
-fs/xfs/scrub/refcount.c |  44 +++++++++++++++++
-fs/xfs/scrub/rmap.c     | 126 +++++++++++++++++++++++++++++++++++++++++++++++-
-3 files changed, 196 insertions(+), 3 deletions(-)
+fs/xfs/scrub/attr.c  | 306 ++++++++++++++++++++++++++++++++++++---------------
+fs/xfs/scrub/attr.h  |  60 ++--------
+fs/xfs/scrub/scrub.c |   3 +
+fs/xfs/scrub/scrub.h |  10 ++
+4 files changed, 239 insertions(+), 140 deletions(-)
 
