@@ -2,144 +2,265 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EFFFC77B6C
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Apr 2023 07:45:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D5B5C77B61
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Apr 2023 08:03:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230011AbjDMHo7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Apr 2023 03:44:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55456 "EHLO
+        id S230223AbjDMIDY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Apr 2023 04:03:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46010 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229998AbjDMHo6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Apr 2023 03:44:58 -0400
-Received: from mail-vs1-xe2e.google.com (mail-vs1-xe2e.google.com [IPv6:2607:f8b0:4864:20::e2e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 497E68689
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Apr 2023 00:44:56 -0700 (PDT)
-Received: by mail-vs1-xe2e.google.com with SMTP id f10so973451vsv.13
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Apr 2023 00:44:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1681371895; x=1683963895;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=jyq/avfF6JvJLnE4KOlQksc+L7pMbFAjARQZVx1BuPU=;
-        b=dRp54MqmpP3cdo/Xb82N+tokTlmmJxyfKj5HMt2F8JbKTJrJIeN/okgZtWyQVMuekj
-         XC07BnkzsrUs60qAKTFXbi919urdPc2VXWxFDWL5XZ9XvmlkZKheordQp+BMH2voxjR5
-         IX1t991kOPEUbmihj6FruwWPmHRFMqt3vihB/Nu8P7A6CzmoyxmQj465KKyd0sL5nh9S
-         sw+hhWE/AQUs/4BaEtsECBPQQmnvpwAlDBvNX9u9glsM879PmBxbJ6FSQaBm1BRl/VIr
-         nI3XsEc+g3cJHiq3u6pVrBoTDl50aIPnxTnRAx5FsfkNyop1vninzTGfrJOW+2d83FTp
-         1jrw==
+        with ESMTP id S229749AbjDMIDY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Apr 2023 04:03:24 -0400
+Received: from mail-il1-f205.google.com (mail-il1-f205.google.com [209.85.166.205])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0094098
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Apr 2023 01:03:21 -0700 (PDT)
+Received: by mail-il1-f205.google.com with SMTP id e9e14a558f8ab-328d61719beso2715605ab.2
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Apr 2023 01:03:21 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681371895; x=1683963895;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=jyq/avfF6JvJLnE4KOlQksc+L7pMbFAjARQZVx1BuPU=;
-        b=Q1xHUWQCUM1FRD3zwObLwFulcDBLir094cgYl++fCE8VNTP9GiGSv0Q70g5+zRYubf
-         RM2kkcOE20M4OW2nqhoetOgzJluUwZv8vSpLexiAURRMi6nDQf4Fz2jCqMuKcZBy/oFP
-         DmoUxwZVOvKMcB/NjlFSfDNQ8t0JDxi0zBOO9sOFOnY6ove/wXc+iV2aufEf014+OanN
-         3hi7AIZ3PQ3UGLqL7asV+8ldjSPaVYyiK5IEZgARRl4kSZyD94ZlGtTHfBfB9GDQP3da
-         hM6jKMSjQK/Rh6yWNswrJxCt11NVO179oEmM99qjWMHg8ForpIK5zeC2iX16moPkUGOX
-         VU4Q==
-X-Gm-Message-State: AAQBX9frpyFuMOtywk0wc0dcawvb1HOaaePIqISQYMGmpa30A+nQcqo7
-        WXb06DASduoXZr8+17XVw209ULC3a/Y8+eWltso=
-X-Google-Smtp-Source: AKy350ZGjegCPLnKgDo/VhKpwevt0RJZLddtLYGjqFOdrnA0jjzvZaIwrlVXSA/pmsQ1RvpEvXAle+wVnTDipdZhLz0=
-X-Received: by 2002:a67:c00d:0:b0:426:7730:1b89 with SMTP id
- v13-20020a67c00d000000b0042677301b89mr757408vsi.0.1681371894977; Thu, 13 Apr
- 2023 00:44:54 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1681373001; x=1683965001;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Oz4mjXpmd6bVlAuJwX4qtDfoS0M+5mzeYmp+fqBB2yU=;
+        b=FQrRleMVbZgopI9dG81mlj+a8vMOZo0v6fRFf7UQ9V8wQTzNbpBKIAf8jA4nDK8RMi
+         7UCH6Rzxh+pwNf0JJvvbYxZvA9DKCpUTsWKHOmxaoMU/zrlCLqiqg20LhwyzntmimJXX
+         dZ0apv2FJ7HAnK+aVYZiuwyLXIvc3UqzC0CMSZ2Nwz/d9jVBb+i+jCD8LgRClD78030B
+         drvMMtO/dsPWwOVZ+36SLagLk5HZWYRIyJMrVoBUIUWgqYaayLOnJfbx7qXf/mphz4ty
+         /irA16sU25Isn8Nw6fzYDGYmfSJyRl3kiDiUnRSi5w9BNTIOpLMdHGEAnqEosGjusURd
+         0cxQ==
+X-Gm-Message-State: AAQBX9e8elLHzRjzGsFmXZmoeEDyMhAUpC3TsdaNnNB8fqixFxAx8Ztd
+        9x6pTlkRa5xel+ZyvRV0lcIKAI3NGNgkLBObSb+uoWf7mJ3a
+X-Google-Smtp-Source: AKy350YUbJEJXImeZ2lEdV+8FNAI09xbtCA/OPyIC20PmG1Eb2xx0V27CtoxQKHs5zs8AaZ8zN8M74b/SdgOhcXjddcpLc+VU07R
 MIME-Version: 1.0
-References: <57B035ED-1926-4524-8063-EB0A8DB54AF7@flyingcircus.io>
- <CAOQ4uxg6cTF2YnW6anxMxOH_88+JZW+sC9rG468Pjy=XrNEgrQ@mail.gmail.com> <6AB6497D-18E5-41C4-B688-4DED6703534F@flyingcircus.io>
-In-Reply-To: <6AB6497D-18E5-41C4-B688-4DED6703534F@flyingcircus.io>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Thu, 13 Apr 2023 10:44:43 +0300
-Message-ID: <CAOQ4uxjj2UqA0h4Y31NbmpHksMhVrXfXjLG4Tnz3zq_UR-3gSA@mail.gmail.com>
-Subject: Re: Backport of "xfs: open code ioend needs workqueue helper" to 5.10?
-To:     Christian Theune <ct@flyingcircus.io>
-Cc:     linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Brian Foster <bfoster@redhat.com>,
-        Chandan Babu R <chandan.babu@oracle.com>
+X-Received: by 2002:a92:d03:0:b0:329:5114:eb1f with SMTP id
+ 3-20020a920d03000000b003295114eb1fmr494385iln.3.1681373001314; Thu, 13 Apr
+ 2023 01:03:21 -0700 (PDT)
+Date:   Thu, 13 Apr 2023 01:03:21 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <0000000000007a779505f9332827@google.com>
+Subject: [syzbot] [xfs?] KASAN: slab-use-after-free Read in iomap_finish_ioend
+From:   syzbot <syzbot+9c656068e71c1b06dc1f@syzkaller.appspotmail.com>
+To:     djwong@kernel.org, hch@infradead.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 12, 2023 at 6:58=E2=80=AFPM Christian Theune <ct@flyingcircus.i=
-o> wrote:
->
-> Hi,
->
-> ugh. Sorry, looks like I jumped the gun. Mea culpa.
->
-> We experienced a hang like this:
->
-> Apr 05 11:51:27 kernel: "echo 0 > /proc/sys/kernel/hung_task_timeout_secs=
-" disables this message.
-> Apr 05 11:51:27 kernel: task:xfs-conv/vdc1   state:D stack:    0 pid:  60=
-6 ppid:     2 flags:0x00004080
-> Apr 05 11:51:27 kernel: Workqueue: xfs-conv/vdc1 xfs_end_io [xfs]
-> Apr 05 11:51:27 kernel: Call Trace:
-> Apr 05 11:51:27 kernel:  __schedule+0x274/0x870
-> Apr 05 11:51:27 kernel:  schedule+0x46/0xb0
-> Apr 05 11:51:27 kernel:  xlog_grant_head_wait+0xc5/0x1d0 [xfs]
-> Apr 05 11:51:27 kernel:  xlog_grant_head_check+0xde/0x100 [xfs]
-> Apr 05 11:51:27 kernel:  xfs_log_reserve+0xbe/0x1b0 [xfs]
-> Apr 05 11:51:27 kernel:  xfs_trans_reserve+0x143/0x180 [xfs]
-> Apr 05 11:51:27 kernel:  xfs_trans_alloc+0xee/0x1a0 [xfs]
-> Apr 05 11:51:27 kernel:  xfs_iomap_write_unwritten+0x120/0x2e0 [xfs]
-> Apr 05 11:51:27 kernel:  ? record_times+0x15/0x90
-> Apr 05 11:51:27 kernel:  xfs_end_ioend+0xd8/0x140 [xfs]
-> Apr 05 11:51:27 kernel:  xfs_end_io+0xb8/0xf0 [xfs]
-> Apr 05 11:51:27 kernel:  process_one_work+0x1b6/0x350
-> Apr 05 11:51:27 kernel:  rescuer_thread+0x1d1/0x3a0
-> Apr 05 11:51:27 kernel:  ? worker_thread+0x3e0/0x3e0
-> Apr 05 11:51:27 kernel:  kthread+0x11b/0x140
-> Apr 05 11:51:27 kernel:  ? kthread_associate_blkcg+0xb0/0xb0
-> Apr 05 11:51:27 kernel:  ret_from_fork+0x22/0x30
->
-> Which seems to be similar to this:
-> https://bugs.launchpad.net/bugs/1996269
->
-> I followed their patchset here:
-> https://review.opendev.org/c/starlingx/kernel/+/864257
->
-> And I was under the impression that I picked the right one to ask for bac=
-kporting, but it seems that was incorrect. I went through the list again an=
-d I think the following patches are the ones missing from 5.10:
->
-> 8182ec00803085354761bbadf0287cad7eac0e2f - https://review.opendev.org/c/s=
-tarlingx/kernel/+/864257/5/kernel-std/centos/patches/0035-xfs-drop-submit-s=
-ide-trans-alloc-for-append-ioends.patch
-> edbf1eb9032b84631031d9b43570e262f3461c24 - https://review.opendev.org/c/s=
-tarlingx/kernel/+/864257/5/kernel-std/centos/patches/0036-xfs-open-code-ioe=
-nd-needs-workqueue-helper.patch
-> 170e31793806ce5e5a9647b6340954536244518e - https://review.opendev.org/c/s=
-tarlingx/kernel/+/864257/5/kernel-std/centos/patches/0037-xfs-drop-unused-i=
-oend-private-merge-and-setfilesize-.patch
-> 2fd609b6c90a88630a50fb317473b210759b3873 - https://review.opendev.org/c/s=
-tarlingx/kernel/+/864257/5/kernel-std/centos/patches/0038-xfs-drop-unnecess=
-ary-setfilesize-helper.patch
->
+Hello,
 
-The only commit that fixes the bug is:
-7cd3099f4925 xfs: drop submit side trans alloc for append ioends
+syzbot found the following issue on:
 
-The rest are just code cleanups.
+HEAD commit:    a79d5c76f705 Merge tag 'scsi-fixes' of git://git.kernel.or..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=10e54345c80000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=5666fa6aca264e42
+dashboard link: https://syzkaller.appspot.com/bug?extid=9c656068e71c1b06dc1f
+compiler:       Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2
 
-That fix was missed in my original backports from v5.13 because of a tool e=
-rror,
-so thank you for pointing it out.
+Unfortunately, I don't have any reproducer for this issue yet.
 
-I have added it to my test branch and will follow up with posting to
-stable later on.
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/adf61ecd5810/disk-a79d5c76.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/8192876ea15a/vmlinux-a79d5c76.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/80c6e54ddbe7/bzImage-a79d5c76.xz
 
-Chandan,
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+9c656068e71c1b06dc1f@syzkaller.appspotmail.com
 
-Please make sure you include this fix when you get to considering
-fixes from v5.13 to 5.4.y.
+==================================================================
+BUG: KASAN: slab-use-after-free in iomap_finish_ioend+0x8a4/0x960 fs/iomap/buffered-io.c:1353
+Read of size 8 at addr ffff88807925b090 by task kworker/1:0/22
 
-I will wait with posting this fix to 5.10.y until I get the v5.13
-backports wish list from you.
+CPU: 1 PID: 22 Comm: kworker/1:0 Not tainted 6.3.0-rc5-syzkaller-00202-ga79d5c76f705 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/30/2023
+Workqueue: xfs-conv/loop2 xfs_end_io
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:88 [inline]
+ dump_stack_lvl+0x1e7/0x2d0 lib/dump_stack.c:106
+ print_address_description mm/kasan/report.c:319 [inline]
+ print_report+0x163/0x540 mm/kasan/report.c:430
+ kasan_report+0x176/0x1b0 mm/kasan/report.c:536
+ iomap_finish_ioend+0x8a4/0x960 fs/iomap/buffered-io.c:1353
+ iomap_finish_ioends+0x1af/0x3a0 fs/iomap/buffered-io.c:1377
+ xfs_end_ioend+0x36e/0x4d0 fs/xfs/xfs_aops.c:136
+ xfs_end_io+0x2e5/0x370 fs/xfs/xfs_aops.c:173
+ process_one_work+0x8a0/0x10e0 kernel/workqueue.c:2390
+ worker_thread+0xa63/0x1210 kernel/workqueue.c:2537
+ kthread+0x270/0x300 kernel/kthread.c:376
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:308
+ </TASK>
 
-Thanks,
-Amir.
+Allocated by task 12928:
+ kasan_save_stack mm/kasan/common.c:45 [inline]
+ kasan_set_track+0x4f/0x70 mm/kasan/common.c:52
+ __kasan_slab_alloc+0x66/0x70 mm/kasan/common.c:328
+ kasan_slab_alloc include/linux/kasan.h:186 [inline]
+ slab_post_alloc_hook+0x68/0x3a0 mm/slab.h:769
+ slab_alloc_node mm/slub.c:3452 [inline]
+ slab_alloc mm/slub.c:3460 [inline]
+ __kmem_cache_alloc_lru mm/slub.c:3467 [inline]
+ kmem_cache_alloc_lru+0x11f/0x2e0 mm/slub.c:3483
+ alloc_inode_sb include/linux/fs.h:2686 [inline]
+ xfs_inode_alloc+0x88/0x6c0 fs/xfs/xfs_icache.c:81
+ xfs_iget_cache_miss fs/xfs/xfs_icache.c:585 [inline]
+ xfs_iget+0xad2/0x2fd0 fs/xfs/xfs_icache.c:751
+ xfs_init_new_inode+0x1ca/0x10a0 fs/xfs/xfs_inode.c:815
+ xfs_create+0x8ce/0x1240 fs/xfs/xfs_inode.c:1023
+ xfs_generic_create+0x491/0xd70 fs/xfs/xfs_iops.c:199
+ lookup_open fs/namei.c:3416 [inline]
+ open_last_lookups fs/namei.c:3484 [inline]
+ path_openat+0x13df/0x3170 fs/namei.c:3712
+ do_filp_open+0x234/0x490 fs/namei.c:3742
+ do_sys_openat2+0x13f/0x500 fs/open.c:1348
+ do_sys_open fs/open.c:1364 [inline]
+ __do_sys_openat fs/open.c:1380 [inline]
+ __se_sys_openat fs/open.c:1375 [inline]
+ __x64_sys_openat+0x247/0x290 fs/open.c:1375
+ do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+ do_syscall_64+0x41/0xc0 arch/x86/entry/common.c:80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+Freed by task 15:
+ kasan_save_stack mm/kasan/common.c:45 [inline]
+ kasan_set_track+0x4f/0x70 mm/kasan/common.c:52
+ kasan_save_free_info+0x2b/0x40 mm/kasan/generic.c:521
+ ____kasan_slab_free+0xd6/0x120 mm/kasan/common.c:236
+ kasan_slab_free include/linux/kasan.h:162 [inline]
+ slab_free_hook mm/slub.c:1781 [inline]
+ slab_free_freelist_hook mm/slub.c:1807 [inline]
+ slab_free mm/slub.c:3787 [inline]
+ kmem_cache_free+0x297/0x520 mm/slub.c:3809
+ rcu_do_batch kernel/rcu/tree.c:2112 [inline]
+ rcu_core+0xa4d/0x16f0 kernel/rcu/tree.c:2372
+ __do_softirq+0x2ab/0x908 kernel/softirq.c:571
+
+Last potentially related work creation:
+ kasan_save_stack+0x3f/0x60 mm/kasan/common.c:45
+ __kasan_record_aux_stack+0xb0/0xc0 mm/kasan/generic.c:491
+ __call_rcu_common kernel/rcu/tree.c:2622 [inline]
+ call_rcu+0x167/0xa70 kernel/rcu/tree.c:2736
+ __xfs_inode_free fs/xfs/xfs_icache.c:161 [inline]
+ xfs_reclaim_inode fs/xfs/xfs_icache.c:953 [inline]
+ xfs_icwalk_process_inode fs/xfs/xfs_icache.c:1635 [inline]
+ xfs_icwalk_ag+0x1366/0x1a60 fs/xfs/xfs_icache.c:1717
+ xfs_icwalk fs/xfs/xfs_icache.c:1766 [inline]
+ xfs_reclaim_inodes+0x1f7/0x310 fs/xfs/xfs_icache.c:986
+ xfs_unmount_flush_inodes+0xaf/0xc0 fs/xfs/xfs_mount.c:594
+ xfs_unmountfs+0xc4/0x280 fs/xfs/xfs_mount.c:1071
+ xfs_fs_put_super+0x74/0x2d0 fs/xfs/xfs_super.c:1126
+ generic_shutdown_super+0x134/0x340 fs/super.c:500
+ kill_block_super+0x7e/0xe0 fs/super.c:1407
+ deactivate_locked_super+0xa4/0x110 fs/super.c:331
+ cleanup_mnt+0x426/0x4c0 fs/namespace.c:1177
+ task_work_run+0x24a/0x300 kernel/task_work.c:179
+ resume_user_mode_work include/linux/resume_user_mode.h:49 [inline]
+ exit_to_user_mode_loop+0xd9/0x100 kernel/entry/common.c:171
+ exit_to_user_mode_prepare+0xb1/0x140 kernel/entry/common.c:204
+ __syscall_exit_to_user_mode_work kernel/entry/common.c:286 [inline]
+ syscall_exit_to_user_mode+0x64/0x280 kernel/entry/common.c:297
+ do_syscall_64+0x4d/0xc0 arch/x86/entry/common.c:86
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+Second to last potentially related work creation:
+ kasan_save_stack+0x3f/0x60 mm/kasan/common.c:45
+ __kasan_record_aux_stack+0xb0/0xc0 mm/kasan/generic.c:491
+ insert_work+0x54/0x3d0 kernel/workqueue.c:1361
+ __queue_work+0xb37/0xf10 kernel/workqueue.c:1524
+ queue_work_on+0x14f/0x250 kernel/workqueue.c:1552
+ queue_work include/linux/workqueue.h:504 [inline]
+ xfs_end_bio+0xf6/0x1e0 fs/xfs/xfs_aops.c:188
+ req_bio_endio block/blk-mq.c:795 [inline]
+ blk_update_request+0x4d7/0xfe0 block/blk-mq.c:927
+ blk_mq_end_request+0x3e/0x70 block/blk-mq.c:1054
+ blk_complete_reqs block/blk-mq.c:1132 [inline]
+ blk_done_softirq+0xfc/0x150 block/blk-mq.c:1137
+ __do_softirq+0x2ab/0x908 kernel/softirq.c:571
+
+The buggy address belongs to the object at ffff88807925ae80
+ which belongs to the cache xfs_inode of size 1808
+The buggy address is located 528 bytes inside of
+ freed 1808-byte region [ffff88807925ae80, ffff88807925b590)
+
+The buggy address belongs to the physical page:
+page:ffffea0001e49600 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x79258
+head:ffffea0001e49600 order:3 entire_mapcount:0 nr_pages_mapped:0 pincount:0
+memcg:ffff888034708001
+flags: 0xfff00000010200(slab|head|node=0|zone=1|lastcpupid=0x7ff)
+raw: 00fff00000010200 ffff888145f6e780 ffffea0000ecce00 dead000000000002
+raw: 0000000000000000 0000000080100010 00000001ffffffff ffff888034708001
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 3, migratetype Reclaimable, gfp_mask 0x1d2050(__GFP_IO|__GFP_NOWARN|__GFP_NORETRY|__GFP_COMP|__GFP_NOMEMALLOC|__GFP_HARDWALL|__GFP_RECLAIMABLE), pid 30191, tgid 30185 (syz-executor.2), ts 2829909820429, free_ts 2816156356992
+ prep_new_page mm/page_alloc.c:2553 [inline]
+ get_page_from_freelist+0x3246/0x33c0 mm/page_alloc.c:4326
+ __alloc_pages+0x255/0x670 mm/page_alloc.c:5592
+ alloc_slab_page+0x6a/0x160 mm/slub.c:1851
+ allocate_slab mm/slub.c:1998 [inline]
+ new_slab+0x84/0x2f0 mm/slub.c:2051
+ ___slab_alloc+0xa85/0x10a0 mm/slub.c:3193
+ __slab_alloc mm/slub.c:3292 [inline]
+ __slab_alloc_node mm/slub.c:3345 [inline]
+ slab_alloc_node mm/slub.c:3442 [inline]
+ slab_alloc mm/slub.c:3460 [inline]
+ __kmem_cache_alloc_lru mm/slub.c:3467 [inline]
+ kmem_cache_alloc_lru+0x1b9/0x2e0 mm/slub.c:3483
+ alloc_inode_sb include/linux/fs.h:2686 [inline]
+ xfs_inode_alloc+0x88/0x6c0 fs/xfs/xfs_icache.c:81
+ xfs_iget_cache_miss fs/xfs/xfs_icache.c:585 [inline]
+ xfs_iget+0xad2/0x2fd0 fs/xfs/xfs_icache.c:751
+ xfs_init_new_inode+0x1ca/0x10a0 fs/xfs/xfs_inode.c:815
+ xfs_symlink+0xb7b/0x1e80 fs/xfs/xfs_symlink.c:234
+ xfs_vn_symlink+0x1f5/0x740 fs/xfs/xfs_iops.c:419
+ vfs_symlink+0x12f/0x2a0 fs/namei.c:4398
+ do_symlinkat+0x201/0x610 fs/namei.c:4424
+ __do_sys_symlink fs/namei.c:4445 [inline]
+ __se_sys_symlink fs/namei.c:4443 [inline]
+ __x64_sys_symlink+0x7e/0x90 fs/namei.c:4443
+ do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+ do_syscall_64+0x41/0xc0 arch/x86/entry/common.c:80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+page last free stack trace:
+ reset_page_owner include/linux/page_owner.h:24 [inline]
+ free_pages_prepare mm/page_alloc.c:1454 [inline]
+ free_pcp_prepare mm/page_alloc.c:1504 [inline]
+ free_unref_page_prepare+0xe2f/0xe70 mm/page_alloc.c:3388
+ free_unref_page+0x37/0x3f0 mm/page_alloc.c:3483
+ qlist_free_all+0x22/0x60 mm/kasan/quarantine.c:187
+ kasan_quarantine_reduce+0x14b/0x160 mm/kasan/quarantine.c:294
+ __kasan_slab_alloc+0x23/0x70 mm/kasan/common.c:305
+ kasan_slab_alloc include/linux/kasan.h:186 [inline]
+ slab_post_alloc_hook+0x68/0x3a0 mm/slab.h:769
+ slab_alloc_node mm/slub.c:3452 [inline]
+ slab_alloc mm/slub.c:3460 [inline]
+ __kmem_cache_alloc_lru mm/slub.c:3467 [inline]
+ kmem_cache_alloc+0x11f/0x2e0 mm/slub.c:3476
+ getname_flags+0xbc/0x4e0 fs/namei.c:140
+ do_sys_openat2+0xd6/0x500 fs/open.c:1342
+ do_sys_open fs/open.c:1364 [inline]
+ __do_sys_open fs/open.c:1372 [inline]
+ __se_sys_open fs/open.c:1368 [inline]
+ __x64_sys_open+0x225/0x270 fs/open.c:1368
+ do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+ do_syscall_64+0x41/0xc0 arch/x86/entry/common.c:80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+Memory state around the buggy address:
+ ffff88807925af80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff88807925b000: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+>ffff88807925b080: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                         ^
+ ffff88807925b100: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+ ffff88807925b180: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+==================================================================
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
