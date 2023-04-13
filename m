@@ -2,231 +2,148 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCE80C77B6C
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Apr 2023 10:46:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B2CDC77B6C
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Apr 2023 10:50:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229913AbjDMKqW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Apr 2023 06:46:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55954 "EHLO
+        id S231280AbjDMKuj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Apr 2023 06:50:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60046 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229792AbjDMKqV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Apr 2023 06:46:21 -0400
-Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39365186
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Apr 2023 03:46:20 -0700 (PDT)
-Received: by mail-ej1-x629.google.com with SMTP id ga37so36642320ejc.0
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Apr 2023 03:46:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1681382778; x=1683974778;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=1kRbU6nc4ZqgrBcPQoPoqFqYgjL9hmlR/TueIIn2YYA=;
-        b=iBBpmFcz38y6AeHKjTWPduIZWh2DEuihaDb0wcg8c1Swf5CchMT/WMzFn4cJ8Njwec
-         2gDac2A57jS+VMzUkiCYDfG4WR+Wcg5thruLzZXtaRBfLmvMb8tK3ihbjQeC2MhcVfVA
-         50yFhgUuVejuA/BqJ4vqXv1mG6v6e7DsHn5yGwQ6iwaLHJDKAC/iPHsg7lAnlBhC/ltl
-         S51m91lIglufOEq1XKWfWm8LIK1OKhPGniM7gPPg0kWsCy75x0a6QeQzmPtLSqSFMlJY
-         uCC1h3nCIcuvsqWVL1pHf5GgNgkH2R6E9NUheV9BH5u91MmuY3N3L5IDdcChQOp4Kh2g
-         buCw==
+        with ESMTP id S230207AbjDMKu3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Apr 2023 06:50:29 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59A3640C5
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Apr 2023 03:49:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1681382922;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=QCjKz28znp3whWGJmpFa21Qw61yr8yAyaMLtFqKLF8c=;
+        b=ffyLoCDbMD+rxa2J1mynduA6IjbBJkwlxdSn0WxF4LKwPEuBjCM+HDe8/+tX9GWRkEmaWz
+        rli7manrdaAYAbsdYlZMpg24xD8Vjgsy8N2L2fSsjH3N+TeVlJ/bHAi/v24CNrufMP6eP4
+        TNbuTxINnApHpVPXKi5zOVvn9JqCebM=
+Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
+ [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-173-lupBdlrfPFCUq2RbItJqVw-1; Thu, 13 Apr 2023 06:48:41 -0400
+X-MC-Unique: lupBdlrfPFCUq2RbItJqVw-1
+Received: by mail-qt1-f197.google.com with SMTP id l20-20020a05622a051400b003e6d92a606bso6056789qtx.14
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Apr 2023 03:48:41 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681382778; x=1683974778;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=1kRbU6nc4ZqgrBcPQoPoqFqYgjL9hmlR/TueIIn2YYA=;
-        b=UJlnQMcuGYinPEGp5znSOI6Ir667FWE4biG7TTL/XWlDK6wr6E/ZpOpHx5it/sxRna
-         x2LVvEc/PdUVcEbqWnCFsNmPcj2FDz7iUiCdw6m5RZrnvgc13xdKq79HU+/ZKDupmupI
-         /LoHr3OpuZcb/sNpFtUB3uxBz8c9eqnDgQd9NY+R8iYqXzWvXHkTsPG72pqocfq7NIS/
-         cnxrJUIM8+huW0kn+b9UR7gzI6+0qo87kEZBuh6MwKAYOLaK2/LXMP37X8HG7RJqVSxd
-         GmwXrE/A65FYaKmksDRx/rZRds/+1AUKn8jZr+l3gMJHiDF5mDiq2Vr/D0XiI6qkh0Ga
-         EJaw==
-X-Gm-Message-State: AAQBX9dnHuAACNngYil5xQ75aEw1BXm+q6cn4vcHFB8OB+sLiL3GEPAy
-        SmvijK6zQpQ0zhROzYdB86BWMUYj+1CeGUAfJtWWhA==
-X-Google-Smtp-Source: AKy350aASI2gRddtiUsu6uEbTsoIdtPM75Lk+ucwTweLG2axKrPCTsxtIZLNtTpdA3utnAcOD3Prf8rOfFSZkJPnxXQ=
-X-Received: by 2002:a17:906:2c1a:b0:94e:8e6f:4f1c with SMTP id
- e26-20020a1709062c1a00b0094e8e6f4f1cmr1032618ejh.15.1681382778488; Thu, 13
- Apr 2023 03:46:18 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1681382920; x=1683974920;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=QCjKz28znp3whWGJmpFa21Qw61yr8yAyaMLtFqKLF8c=;
+        b=N1U1AM1R45gvjg0D0qdFB3BYsub1eK76b4hsrONLCggmh9368k6Tb2awejuCkZ1ZuX
+         yaixeydjNSYLV5vPvn0rhkumTN10BILeMELKypUGIdavTO4UwhMRmDD5U7586ou8osqg
+         gFoAPmZhAqrsPqcLwAZ2O9uZOlSqczmiPwpmJXAVN00ZPYQyul3ZsPSi6+4DVIpXV5Hl
+         Fv3+g7ApFXHplXjXbK6etSrnO5GrhXBDNuvkV7tCW02+ihADZczbgA+PQ3OyOr6eKlck
+         deONgZ3XCuHevNUDAMjAlc9BVWM65NVP6YZIAlHta/+EGzCvMeMviUsalHytrH6LSODr
+         Rm/w==
+X-Gm-Message-State: AAQBX9fncjLBqM1k+fWAQXrshw9Ef4h+1G1pet/0T4oXLJh8ZUipIHDH
+        iP1OQZiMr7BL3yDFy5QN8uPKOnILQOJNdSpMg8L1DvOmFEjjdhaC5j6alaLfkfIpMVFpiDNcw8s
+        IhQ64+fwA0u05jVFtUUlUeS+jywI=
+X-Received: by 2002:a05:6214:2428:b0:5eb:fc42:ea4f with SMTP id gy8-20020a056214242800b005ebfc42ea4fmr2522413qvb.33.1681382920477;
+        Thu, 13 Apr 2023 03:48:40 -0700 (PDT)
+X-Google-Smtp-Source: AKy350Z/0X2cgxMgcgiwkOwSefEVjVqYxP5Mr9WGWqlrWNaizFo94pzi0GeTQTZhRfI3BFATUkdwsw==
+X-Received: by 2002:a05:6214:2428:b0:5eb:fc42:ea4f with SMTP id gy8-20020a056214242800b005ebfc42ea4fmr2522400qvb.33.1681382920125;
+        Thu, 13 Apr 2023 03:48:40 -0700 (PDT)
+Received: from aalbersh.remote.csb ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id j20-20020a05620a289400b0074a0051fcd4sm372299qkp.88.2023.04.13.03.48.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 13 Apr 2023 03:48:39 -0700 (PDT)
+Date:   Thu, 13 Apr 2023 12:48:36 +0200
+From:   Andrey Albershteyn <aalbersh@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     zlang@redhat.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me
+Subject: Re: [PATCHSET 0/3] fstests: direct specification of looping test
+ duration
+Message-ID: <20230413104836.zw2uoe4mhocs3afz@aalbersh.remote.csb>
+References: <168123682679.4086541.13812285218510940665.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
-References: <20230413104034.1086717-1-yosryahmed@google.com> <20230413104034.1086717-2-yosryahmed@google.com>
-In-Reply-To: <20230413104034.1086717-2-yosryahmed@google.com>
-From:   Yosry Ahmed <yosryahmed@google.com>
-Date:   Thu, 13 Apr 2023 03:45:42 -0700
-Message-ID: <CAJD7tkbnsSbZ2+Rf5NQKgBtH_JdN4AKMCuh8jasbQ-hcOOz-KA@mail.gmail.com>
-Subject: Re: [PATCH v6 1/3] mm: vmscan: ignore non-LRU-based reclaim in memcg reclaim
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Lameter <cl@linux.com>,
-        David Rientjes <rientjes@google.com>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Roman Gushchin <roman.gushchin@linux.dev>,
-        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Miaohe Lin <linmiaohe@huawei.com>,
-        David Hildenbrand <david@redhat.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
-        Shakeel Butt <shakeelb@google.com>,
-        Michal Hocko <mhocko@kernel.org>, Yu Zhao <yuzhao@google.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Tim Chen <tim.c.chen@linux.intel.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <168123682679.4086541.13812285218510940665.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 13, 2023 at 3:40=E2=80=AFAM Yosry Ahmed <yosryahmed@google.com>=
- wrote:
->
-> We keep track of different types of reclaimed pages through
-> reclaim_state->reclaimed_slab, and we add them to the reported number
-> of reclaimed pages.  For non-memcg reclaim, this makes sense. For memcg
-> reclaim, we have no clue if those pages are charged to the memcg under
-> reclaim.
->
-> Slab pages are shared by different memcgs, so a freed slab page may have
-> only been partially charged to the memcg under reclaim.  The same goes fo=
-r
-> clean file pages from pruned inodes (on highmem systems) or xfs buffer
-> pages, there is no simple way to currently link them to the memcg under
-> reclaim.
->
-> Stop reporting those freed pages as reclaimed pages during memcg reclaim.
-> This should make the return value of writing to memory.reclaim, and may
-> help reduce unnecessary reclaim retries during memcg charging.  Writing t=
-o
-> memory.reclaim on the root memcg is considered as cgroup_reclaim(), but
-> for this case we want to include any freed pages, so use the
-> global_reclaim() check instead of !cgroup_reclaim().
->
-> Generally, this should make the return value of
-> try_to_free_mem_cgroup_pages() more accurate. In some limited cases (e.g.
-> freed a slab page that was mostly charged to the memcg under reclaim),
-> the return value of try_to_free_mem_cgroup_pages() can be underestimated,
-> but this should be fine. The freed pages will be uncharged anyway, and we
-> can charge the memcg the next time around as we usually do memcg reclaim
-> in a retry loop.
->
-> Fixes: f2fe7b09a52b ("mm: memcg/slab: charge individual slab objects
-> instead of pages")
-
-
-Andrew, I removed the CC: stable as you were sceptical about the need
-for a backport, but left the Fixes tag so that it's easy to identify
-where to backport it if you and/or stable maintainers decide
-otherwise.
-
->
->
-> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+On Tue, Apr 11, 2023 at 11:13:46AM -0700, Darrick J. Wong wrote:
+> Hi all,
+> 
+> One of the things that I do as a maintainer is to designate a handful of
+> VMs to run fstests for unusually long periods of time.  This practice I
+> call long term soak testing.  There are actually three separate fleets
+> for this -- one runs alongside the nightly builds, one runs alongside
+> weekly rebases, and the last one runs stable releases.
+> 
+> My interactions with all three fleets is pretty much the same -- load
+> current builds of software, and try to run the exerciser tests for a
+> duration of time -- 12 hours, 6.5 days, 30 days, etc.  TIME_FACTOR does
+> not work well for this usage model, because it is difficult to guess
+> the correct time factor given that the VMs are hetergeneous and the IO
+> completion rate is not perfectly predictable.
+> 
+> Worse yet, if you want to run (say) all the recoveryloop tests on one VM
+> (because recoveryloop is prone to crashing), it's impossible to set a
+> TIME_FACTOR so that each loop test gets equal runtime.  That can be
+> hacked around with config sections, but that doesn't solve the first
+> problem.
+> 
+> This series introduces a new configuration variable, SOAK_DURATION, that
+> allows test runners to control directly various long soak and looping
+> recovery tests.  This is intended to be an alternative to TIME_FACTOR,
+> since that variable usually adjusts operation counts, which are
+> proportional to runtime but otherwise not a direct measure of time.
+> 
+> With this override in place, I can configure the long soak fleet to run
+> for exactly as long as I want them to, and they actually hit the time
+> budget targets.  The recoveryloop fleet now divides looping-test time
+> equally among the four that are in that group so that they all get ~3
+> hours of coverage every night.
+> 
+> There are more tests that could use this than I actually modified here,
+> but I've done enough to show this off as a proof of concept.
+> 
+> If you're going to start using this mess, you probably ought to just
+> pull from my git trees, which are linked below.
+> 
+> This is an extraordinary way to destroy everything.  Enjoy!
+> Comments and questions are, as always, welcome.
+> 
+> --D
+> 
+> fstests git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=soak-duration
 > ---
->  mm/vmscan.c | 49 ++++++++++++++++++++++++++++++++++++++++++-------
->  1 file changed, 42 insertions(+), 7 deletions(-)
->
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 9c1c5e8b24b8..be657832be48 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -511,6 +511,46 @@ static bool writeback_throttling_sane(struct scan_co=
-ntrol *sc)
->  }
->  #endif
->
-> +/*
-> + * flush_reclaim_state(): add pages reclaimed outside of LRU-based recla=
-im to
-> + * scan_control->nr_reclaimed.
-> + */
-> +static void flush_reclaim_state(struct scan_control *sc)
-> +{
-> +       /*
-> +        * Currently, reclaim_state->reclaimed includes three types of pa=
-ges
-> +        * freed outside of vmscan:
-> +        * (1) Slab pages.
-> +        * (2) Clean file pages from pruned inodes (on highmem systems).
-> +        * (3) XFS freed buffer pages.
-> +        *
-> +        * For all of these cases, we cannot universally link the pages t=
-o a
-> +        * single memcg. For example, a memcg-aware shrinker can free one=
- object
-> +        * charged to the target memcg, causing an entire page to be free=
-d.
-> +        * If we count the entire page as reclaimed from the memcg, we en=
-d up
-> +        * overestimating the reclaimed amount (potentially under-reclaim=
-ing).
-> +        *
-> +        * Only count such pages for global reclaim to prevent under-recl=
-aiming
-> +        * from the target memcg; preventing unnecessary retries during m=
-emcg
-> +        * charging and false positives from proactive reclaim.
-> +        *
-> +        * For uncommon cases where the freed pages were actually mostly
-> +        * charged to the target memcg, we end up underestimating the rec=
-laimed
-> +        * amount. This should be fine. The freed pages will be uncharged
-> +        * anyway, even if they are not counted here properly, and we wil=
-l be
-> +        * able to make forward progress in charging (which is usually in=
- a
-> +        * retry loop).
-> +        *
-> +        * We can go one step further, and report the uncharged objcg pag=
-es in
-> +        * memcg reclaim, to make reporting more accurate and reduce
-> +        * underestimation, but it's probably not worth the complexity fo=
-r now.
-> +        */
-> +       if (current->reclaim_state && global_reclaim(sc)) {
-> +               sc->nr_reclaimed +=3D current->reclaim_state->reclaimed;
-> +               current->reclaim_state->reclaimed =3D 0;
-> +       }
-> +}
-> +
->  static long xchg_nr_deferred(struct shrinker *shrinker,
->                              struct shrink_control *sc)
->  {
-> @@ -5346,8 +5386,7 @@ static int shrink_one(struct lruvec *lruvec, struct=
- scan_control *sc)
->                 vmpressure(sc->gfp_mask, memcg, false, sc->nr_scanned - s=
-canned,
->                            sc->nr_reclaimed - reclaimed);
->
-> -       sc->nr_reclaimed +=3D current->reclaim_state->reclaimed_slab;
-> -       current->reclaim_state->reclaimed_slab =3D 0;
-> +       flush_reclaim_state(sc);
->
->         return success ? MEMCG_LRU_YOUNG : 0;
->  }
-> @@ -6450,7 +6489,6 @@ static void shrink_node_memcgs(pg_data_t *pgdat, st=
-ruct scan_control *sc)
->
->  static void shrink_node(pg_data_t *pgdat, struct scan_control *sc)
->  {
-> -       struct reclaim_state *reclaim_state =3D current->reclaim_state;
->         unsigned long nr_reclaimed, nr_scanned;
->         struct lruvec *target_lruvec;
->         bool reclaimable =3D false;
-> @@ -6472,10 +6510,7 @@ static void shrink_node(pg_data_t *pgdat, struct s=
-can_control *sc)
->
->         shrink_node_memcgs(pgdat, sc);
->
-> -       if (reclaim_state) {
-> -               sc->nr_reclaimed +=3D reclaim_state->reclaimed_slab;
-> -               reclaim_state->reclaimed_slab =3D 0;
-> -       }
-> +       flush_reclaim_state(sc);
->
->         /* Record the subtree's reclaim efficiency */
->         if (!sc->proactive)
-> --
-> 2.40.0.577.gac1e443424-goog
->
+>  check                 |   14 +++++++++
+>  common/config         |    7 ++++
+>  common/fuzzy          |    7 ++++
+>  common/rc             |   34 +++++++++++++++++++++
+>  common/report         |    1 +
+>  ltp/fsstress.c        |   78 +++++++++++++++++++++++++++++++++++++++++++++++--
+>  ltp/fsx.c             |   50 +++++++++++++++++++++++++++++++
+>  src/soak_duration.awk |   23 ++++++++++++++
+>  tests/generic/019     |    1 +
+>  tests/generic/388     |    2 +
+>  tests/generic/475     |    2 +
+>  tests/generic/476     |    7 +++-
+>  tests/generic/482     |    5 +++
+>  tests/generic/521     |    1 +
+>  tests/generic/522     |    1 +
+>  tests/generic/642     |    1 +
+>  tests/generic/648     |    8 +++--
+>  17 files changed, 229 insertions(+), 13 deletions(-)
+>  create mode 100644 src/soak_duration.awk
+> 
+
+The set looks good to me (the second commit has different var name,
+but fine by me)
+Reviewed-by: Andrey Albershteyn <aalbersh@redhat.com>
+
+-- 
+- Andrey
+
