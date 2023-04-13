@@ -2,148 +2,160 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B2CDC77B6C
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Apr 2023 10:50:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4E96C77B61
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Apr 2023 10:51:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231280AbjDMKuj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Apr 2023 06:50:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60046 "EHLO
+        id S231217AbjDMKve (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Apr 2023 06:51:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230207AbjDMKu3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Apr 2023 06:50:29 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59A3640C5
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Apr 2023 03:49:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1681382922;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=QCjKz28znp3whWGJmpFa21Qw61yr8yAyaMLtFqKLF8c=;
-        b=ffyLoCDbMD+rxa2J1mynduA6IjbBJkwlxdSn0WxF4LKwPEuBjCM+HDe8/+tX9GWRkEmaWz
-        rli7manrdaAYAbsdYlZMpg24xD8Vjgsy8N2L2fSsjH3N+TeVlJ/bHAi/v24CNrufMP6eP4
-        TNbuTxINnApHpVPXKi5zOVvn9JqCebM=
-Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
- [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-173-lupBdlrfPFCUq2RbItJqVw-1; Thu, 13 Apr 2023 06:48:41 -0400
-X-MC-Unique: lupBdlrfPFCUq2RbItJqVw-1
-Received: by mail-qt1-f197.google.com with SMTP id l20-20020a05622a051400b003e6d92a606bso6056789qtx.14
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Apr 2023 03:48:41 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681382920; x=1683974920;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=QCjKz28znp3whWGJmpFa21Qw61yr8yAyaMLtFqKLF8c=;
-        b=N1U1AM1R45gvjg0D0qdFB3BYsub1eK76b4hsrONLCggmh9368k6Tb2awejuCkZ1ZuX
-         yaixeydjNSYLV5vPvn0rhkumTN10BILeMELKypUGIdavTO4UwhMRmDD5U7586ou8osqg
-         gFoAPmZhAqrsPqcLwAZ2O9uZOlSqczmiPwpmJXAVN00ZPYQyul3ZsPSi6+4DVIpXV5Hl
-         Fv3+g7ApFXHplXjXbK6etSrnO5GrhXBDNuvkV7tCW02+ihADZczbgA+PQ3OyOr6eKlck
-         deONgZ3XCuHevNUDAMjAlc9BVWM65NVP6YZIAlHta/+EGzCvMeMviUsalHytrH6LSODr
-         Rm/w==
-X-Gm-Message-State: AAQBX9fncjLBqM1k+fWAQXrshw9Ef4h+1G1pet/0T4oXLJh8ZUipIHDH
-        iP1OQZiMr7BL3yDFy5QN8uPKOnILQOJNdSpMg8L1DvOmFEjjdhaC5j6alaLfkfIpMVFpiDNcw8s
-        IhQ64+fwA0u05jVFtUUlUeS+jywI=
-X-Received: by 2002:a05:6214:2428:b0:5eb:fc42:ea4f with SMTP id gy8-20020a056214242800b005ebfc42ea4fmr2522413qvb.33.1681382920477;
-        Thu, 13 Apr 2023 03:48:40 -0700 (PDT)
-X-Google-Smtp-Source: AKy350Z/0X2cgxMgcgiwkOwSefEVjVqYxP5Mr9WGWqlrWNaizFo94pzi0GeTQTZhRfI3BFATUkdwsw==
-X-Received: by 2002:a05:6214:2428:b0:5eb:fc42:ea4f with SMTP id gy8-20020a056214242800b005ebfc42ea4fmr2522400qvb.33.1681382920125;
-        Thu, 13 Apr 2023 03:48:40 -0700 (PDT)
-Received: from aalbersh.remote.csb ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id j20-20020a05620a289400b0074a0051fcd4sm372299qkp.88.2023.04.13.03.48.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 13 Apr 2023 03:48:39 -0700 (PDT)
-Date:   Thu, 13 Apr 2023 12:48:36 +0200
-From:   Andrey Albershteyn <aalbersh@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     zlang@redhat.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCHSET 0/3] fstests: direct specification of looping test
- duration
-Message-ID: <20230413104836.zw2uoe4mhocs3afz@aalbersh.remote.csb>
-References: <168123682679.4086541.13812285218510940665.stgit@frogsfrogsfrogs>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <168123682679.4086541.13812285218510940665.stgit@frogsfrogsfrogs>
+        with ESMTP id S231154AbjDMKv1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Apr 2023 06:51:27 -0400
+Received: from mail.flyingcircus.io (mail.flyingcircus.io [IPv6:2a02:238:f030:102::1064])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A34D901C
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Apr 2023 03:51:05 -0700 (PDT)
+Content-Type: text/plain;
+        charset=utf-8
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flyingcircus.io;
+        s=mail; t=1681383063;
+        bh=H5qqC9xMs1bJfDoARg1H2WPdtLdGbCFT/4ngyQ1x4dQ=;
+        h=Subject:From:In-Reply-To:Date:Cc:References:To;
+        b=bfPCmIas4TXtjvjoB4aLFyXreC4myDk8YbKxPPjlNZZhSe8ggTmpPKznPqn4Pn6GP
+         6/60oCVliqwNGwgODM+/1+SQa6RKAO9yCEJIzDqacU18tLYx2gW4x/aAIgKFO606ay
+         rV707NcTqm5ZeP7frKDGCEB3xv14poAFSpWKbGL0=
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.500.231\))
+Subject: Re: Backport of "xfs: open code ioend needs workqueue helper" to
+ 5.10?
+From:   Christian Theune <ct@flyingcircus.io>
+In-Reply-To: <87o7nsjck6.fsf@debian-BULLSEYE-live-builder-AMD64>
+Date:   Thu, 13 Apr 2023 12:50:42 +0200
+Cc:     Amir Goldstein <amir73il@gmail.com>, linux-xfs@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>,
+        Brian Foster <bfoster@redhat.com>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <A9DB186F-5E8C-4731-A5B3-6E30BD47D34E@flyingcircus.io>
+References: <57B035ED-1926-4524-8063-EB0A8DB54AF7@flyingcircus.io>
+ <CAOQ4uxg6cTF2YnW6anxMxOH_88+JZW+sC9rG468Pjy=XrNEgrQ@mail.gmail.com>
+ <6AB6497D-18E5-41C4-B688-4DED6703534F@flyingcircus.io>
+ <CAOQ4uxjj2UqA0h4Y31NbmpHksMhVrXfXjLG4Tnz3zq_UR-3gSA@mail.gmail.com>
+ <87o7nsjck6.fsf@debian-BULLSEYE-live-builder-AMD64>
+To:     Chandan Babu R <chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 11, 2023 at 11:13:46AM -0700, Darrick J. Wong wrote:
-> Hi all,
-> 
-> One of the things that I do as a maintainer is to designate a handful of
-> VMs to run fstests for unusually long periods of time.  This practice I
-> call long term soak testing.  There are actually three separate fleets
-> for this -- one runs alongside the nightly builds, one runs alongside
-> weekly rebases, and the last one runs stable releases.
-> 
-> My interactions with all three fleets is pretty much the same -- load
-> current builds of software, and try to run the exerciser tests for a
-> duration of time -- 12 hours, 6.5 days, 30 days, etc.  TIME_FACTOR does
-> not work well for this usage model, because it is difficult to guess
-> the correct time factor given that the VMs are hetergeneous and the IO
-> completion rate is not perfectly predictable.
-> 
-> Worse yet, if you want to run (say) all the recoveryloop tests on one VM
-> (because recoveryloop is prone to crashing), it's impossible to set a
-> TIME_FACTOR so that each loop test gets equal runtime.  That can be
-> hacked around with config sections, but that doesn't solve the first
-> problem.
-> 
-> This series introduces a new configuration variable, SOAK_DURATION, that
-> allows test runners to control directly various long soak and looping
-> recovery tests.  This is intended to be an alternative to TIME_FACTOR,
-> since that variable usually adjusts operation counts, which are
-> proportional to runtime but otherwise not a direct measure of time.
-> 
-> With this override in place, I can configure the long soak fleet to run
-> for exactly as long as I want them to, and they actually hit the time
-> budget targets.  The recoveryloop fleet now divides looping-test time
-> equally among the four that are in that group so that they all get ~3
-> hours of coverage every night.
-> 
-> There are more tests that could use this than I actually modified here,
-> but I've done enough to show this off as a proof of concept.
-> 
-> If you're going to start using this mess, you probably ought to just
-> pull from my git trees, which are linked below.
-> 
-> This is an extraordinary way to destroy everything.  Enjoy!
-> Comments and questions are, as always, welcome.
-> 
-> --D
-> 
-> fstests git tree:
-> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=soak-duration
-> ---
->  check                 |   14 +++++++++
->  common/config         |    7 ++++
->  common/fuzzy          |    7 ++++
->  common/rc             |   34 +++++++++++++++++++++
->  common/report         |    1 +
->  ltp/fsstress.c        |   78 +++++++++++++++++++++++++++++++++++++++++++++++--
->  ltp/fsx.c             |   50 +++++++++++++++++++++++++++++++
->  src/soak_duration.awk |   23 ++++++++++++++
->  tests/generic/019     |    1 +
->  tests/generic/388     |    2 +
->  tests/generic/475     |    2 +
->  tests/generic/476     |    7 +++-
->  tests/generic/482     |    5 +++
->  tests/generic/521     |    1 +
->  tests/generic/522     |    1 +
->  tests/generic/642     |    1 +
->  tests/generic/648     |    8 +++--
->  17 files changed, 229 insertions(+), 13 deletions(-)
->  create mode 100644 src/soak_duration.awk
-> 
+Hi Amir and Chandan,
 
-The set looks good to me (the second commit has different var name,
-but fine by me)
-Reviewed-by: Andrey Albershteyn <aalbersh@redhat.com>
+much appreciated! I=E2=80=99m building up a history of being a truffle =
+pig WRT forgotten fixes. :)
 
--- 
-- Andrey
+Christian
+
+> On 13. Apr 2023, at 12:31, Chandan Babu R <chandan.babu@oracle.com> =
+wrote:
+>=20
+> On Thu, Apr 13, 2023 at 10:44:43 AM +0300, Amir Goldstein wrote:
+>> On Wed, Apr 12, 2023 at 6:58=E2=80=AFPM Christian Theune =
+<ct@flyingcircus.io> wrote:
+>>>=20
+>>> Hi,
+>>>=20
+>>> ugh. Sorry, looks like I jumped the gun. Mea culpa.
+>>>=20
+>>> We experienced a hang like this:
+>>>=20
+>>> Apr 05 11:51:27 kernel: "echo 0 > =
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>>> Apr 05 11:51:27 kernel: task:xfs-conv/vdc1   state:D stack:    0 =
+pid:  606 ppid:     2 flags:0x00004080
+>>> Apr 05 11:51:27 kernel: Workqueue: xfs-conv/vdc1 xfs_end_io [xfs]
+>>> Apr 05 11:51:27 kernel: Call Trace:
+>>> Apr 05 11:51:27 kernel:  __schedule+0x274/0x870
+>>> Apr 05 11:51:27 kernel:  schedule+0x46/0xb0
+>>> Apr 05 11:51:27 kernel:  xlog_grant_head_wait+0xc5/0x1d0 [xfs]
+>>> Apr 05 11:51:27 kernel:  xlog_grant_head_check+0xde/0x100 [xfs]
+>>> Apr 05 11:51:27 kernel:  xfs_log_reserve+0xbe/0x1b0 [xfs]
+>>> Apr 05 11:51:27 kernel:  xfs_trans_reserve+0x143/0x180 [xfs]
+>>> Apr 05 11:51:27 kernel:  xfs_trans_alloc+0xee/0x1a0 [xfs]
+>>> Apr 05 11:51:27 kernel:  xfs_iomap_write_unwritten+0x120/0x2e0 [xfs]
+>>> Apr 05 11:51:27 kernel:  ? record_times+0x15/0x90
+>>> Apr 05 11:51:27 kernel:  xfs_end_ioend+0xd8/0x140 [xfs]
+>>> Apr 05 11:51:27 kernel:  xfs_end_io+0xb8/0xf0 [xfs]
+>>> Apr 05 11:51:27 kernel:  process_one_work+0x1b6/0x350
+>>> Apr 05 11:51:27 kernel:  rescuer_thread+0x1d1/0x3a0
+>>> Apr 05 11:51:27 kernel:  ? worker_thread+0x3e0/0x3e0
+>>> Apr 05 11:51:27 kernel:  kthread+0x11b/0x140
+>>> Apr 05 11:51:27 kernel:  ? kthread_associate_blkcg+0xb0/0xb0
+>>> Apr 05 11:51:27 kernel:  ret_from_fork+0x22/0x30
+>>>=20
+>>> Which seems to be similar to this:
+>>> https://bugs.launchpad.net/bugs/1996269
+>>>=20
+>>> I followed their patchset here:
+>>> https://review.opendev.org/c/starlingx/kernel/+/864257
+>>>=20
+>>> And I was under the impression that I picked the right one to ask
+>>> for backporting, but it seems that was incorrect. I went through the
+>>> list again and I think the following patches are the ones missing
+>>> from 5.10:
+>>>=20
+>>> 8182ec00803085354761bbadf0287cad7eac0e2f -
+>>> =
+https://review.opendev.org/c/starlingx/kernel/+/864257/5/kernel-std/centos=
+/patches/0035-xfs-drop-submit-side-trans-alloc-for-append-ioends.patch
+>>> edbf1eb9032b84631031d9b43570e262f3461c24 -
+>>> =
+https://review.opendev.org/c/starlingx/kernel/+/864257/5/kernel-std/centos=
+/patches/0036-xfs-open-code-ioend-needs-workqueue-helper.patch
+>>> 170e31793806ce5e5a9647b6340954536244518e -
+>>> =
+https://review.opendev.org/c/starlingx/kernel/+/864257/5/kernel-std/centos=
+/patches/0037-xfs-drop-unused-ioend-private-merge-and-setfilesize-.patch
+>>> 2fd609b6c90a88630a50fb317473b210759b3873 -
+>>> =
+https://review.opendev.org/c/starlingx/kernel/+/864257/5/kernel-std/centos=
+/patches/0038-xfs-drop-unnecessary-setfilesize-helper.patch
+>>>=20
+>>=20
+>> The only commit that fixes the bug is:
+>> 7cd3099f4925 xfs: drop submit side trans alloc for append ioends
+>>=20
+>> The rest are just code cleanups.
+>>=20
+>> That fix was missed in my original backports from v5.13 because of a =
+tool error,
+>> so thank you for pointing it out.
+>>=20
+>> I have added it to my test branch and will follow up with posting to
+>> stable later on.
+>>=20
+>> Chandan,
+>>=20
+>> Please make sure you include this fix when you get to considering
+>> fixes from v5.13 to 5.4.y.
+>>=20
+>=20
+> Sure, I will do that. However ...
+>=20
+>> I will wait with posting this fix to 5.10.y until I get the v5.13
+>> backports wish list from you.
+>>=20
+>=20
+> Since I am working on another XFS work item there will be some delay =
+before I
+> share the list of patches to be backported from v5.13 to 5.4.y.
+>=20
+> --=20
+> chandan
+
+
+Liebe Gr=C3=BC=C3=9Fe,
+Christian Theune
+
+--=20
+Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
+Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
+Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
+HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
+Christian Zagrodnick
 
