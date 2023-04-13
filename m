@@ -2,133 +2,154 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F475C77B61
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Apr 2023 21:38:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6641DC77B6E
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Apr 2023 21:39:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230084AbjDMVin (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Apr 2023 17:38:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54398 "EHLO
+        id S229893AbjDMVjF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Apr 2023 17:39:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230020AbjDMVim (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Apr 2023 17:38:42 -0400
-Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C8E88A6A
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Apr 2023 14:38:41 -0700 (PDT)
-Received: by mail-ej1-x62b.google.com with SMTP id q23so31376307ejz.3
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Apr 2023 14:38:41 -0700 (PDT)
+        with ESMTP id S230145AbjDMVjE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Apr 2023 17:39:04 -0400
+Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58A08A5ED
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Apr 2023 14:39:01 -0700 (PDT)
+Received: by mail-pj1-x1029.google.com with SMTP id hg12so2043789pjb.2
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Apr 2023 14:39:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1681421919; x=1684013919;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=3jBN+8LrzwMXhGPqL5814QrhuMx8BEUkHOa7oPWnQaE=;
-        b=QZdxNYxEivIMZ3ZooTXElyWIFOLp5+PPY8jbvBPSm/tV3OxRewz8DNABvmmlIACTNm
-         b+0rTKE+ycHM8LIvKqhIP79/9GdyN122NZ+udkSdzW2hS0GjAlQib1q9Y771OOVt7LeK
-         xwNJQN+UV8Zu+sP9jV64XmUrMaARtI+K3V/jp7Nmm38HeihqNqbdk+mNixdEvLdovloV
-         RW6DxYQUpu5JBFIFndkdxyKS3/Op1Jm8A9wvFMY64VFbvRvbF/n6Vpc/6BZWtnYu1mhq
-         +PBGUkwsTfguY8eO8CwLcUGujLnaX6vegAUFhkNUfASZKhSEFVT0aFdpLgpF6tq8+LV1
-         0sbw==
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1681421940; x=1684013940;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=7tuyQgaNHNLCxLHGw+XulX/gOlkkzgXcDHuYAr5NA/A=;
+        b=skWsCA//dy0qAwO/OdkAzKb0t0/RIMtUcXhcN1v4j3bHKzf5QJ06AcSrRHD2Yw7C1m
+         jH9UH5ApAJ0xBcqsq3vQDjHkuIr18hNkgdEdeBmZEmo/KEmf2xD1zULs3KII0lhLzNm9
+         9WuyTu+DRcDpblTix1An8Jsq1Sdg+xXlyh23oPyjtH6esfV0ML+TDqCrqievLelzUkrm
+         KFH7aoOD8WKiqNGCIKLKrqGIdlGMMINnw9L8TSnBwLtie1Hzpp/pKdlFjLyDWtUEIC1e
+         1MzMdGoAdmhklFLyBImyjNqHGRUNU0m+ql5eRuiz5l/S3gpeQQGh2CjdeQIaKbrpkPKb
+         bwjA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681421919; x=1684013919;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=3jBN+8LrzwMXhGPqL5814QrhuMx8BEUkHOa7oPWnQaE=;
-        b=OVWoQLahLHEfX6yHW8ElrTX3oFhwxJ4EQBhsunrX66w92VBv0rWeEz4bOkxE/ZPLz5
-         7lweiJkNueQuSJClgIjFNMp0EPSEJ58xXiu0BSpzt7ukwVPWg6XFc3dn9guiD7Yc/gKK
-         t81m0OIC4y2/j30mBet9ohfg8LthyB85ZHxu1jroRrkYNY8iLiX58FfhtbXPrRI7+FHX
-         EihWbu21rlKlkDIBx9gpgksM0/EHoC7mqWK6jrdikxThzOlXk8pqziWMZcdGORiOdXUQ
-         EobLsZdkQPzRZlp3SVphM5xaObYCETlwXmBvnqgeTALn2QYn7bX4jbmqUbs5X9I9B5VW
-         p9tQ==
-X-Gm-Message-State: AAQBX9dsxE0v0NcsvNjqFVp/ewC3bW0eCmUoNFSHcwGU9iwNoQGBO0hM
-        NirBfLb6TsiJFYBFeUO1z69V94mt0UI9q4B+lMutAA==
-X-Google-Smtp-Source: AKy350Y6kBYhazbwFlQvQ41HouUtIxfhmf9gOW69a2TRd0rfUKWOv9wHpoOyOmLBMxDdGgLaxywU4ZpyPneky9jufVw=
-X-Received: by 2002:a17:906:f0cc:b0:94e:d53e:cc7c with SMTP id
- dk12-20020a170906f0cc00b0094ed53ecc7cmr453680ejb.15.1681421919536; Thu, 13
- Apr 2023 14:38:39 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1681421940; x=1684013940;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=7tuyQgaNHNLCxLHGw+XulX/gOlkkzgXcDHuYAr5NA/A=;
+        b=JK51A0/Y6D4M1be0lvvct6eXa9J1QOTnq/RYqEOa0YU6AFJdeeeVqZIh/6PJXkJt4G
+         S+4hxRUwIJLw5Gjaveef6vWHy8pZuKTolY18zhOIw1mTFnLucXEwFVCaOn2zu5xjY92U
+         wRW79w6aZmm8na1VYXY67AO59typKD5iagEQw5U34te6N7dRrSjTUn/u5iK6TwX5PHgH
+         MGQUjUhCicLgAuqOMsOH+N5hM2zFCBXHU3Ir2QqeZ0cVlqK5pt7lSUMrTF9dKONOTLj9
+         k5V1jSOsLFTHgP+B79bQdOYc47gdT59SXC6CBTywidPn5C0SHDxJTpmb3uowUnNmupQo
+         r1Mw==
+X-Gm-Message-State: AAQBX9ebAz3VAkObJB/Me4N0cRDwteOeJC/uhnNAbYCeCwZcl/6gVymq
+        zZFcgTqVBJzEZxTSmtBTSBVEm4IxEBydOh865NIkrA==
+X-Google-Smtp-Source: AKy350Z1ILrvQhzdsjFIB1XoH/qk0c0f0mrf5qDNLP43jQHLqF18jMLWWxArxInDyoPmvnD6MrJAkQ==
+X-Received: by 2002:a17:90a:fa3:b0:237:3dfb:9095 with SMTP id 32-20020a17090a0fa300b002373dfb9095mr3198415pjz.6.1681421940640;
+        Thu, 13 Apr 2023 14:39:00 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-41-174.pa.nsw.optusnet.com.au. [49.180.41.174])
+        by smtp.gmail.com with ESMTPSA id ep13-20020a17090ae64d00b00246a7401d23sm1739456pjb.41.2023.04.13.14.39.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 13 Apr 2023 14:39:00 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1pn4ef-0032dc-Dg; Fri, 14 Apr 2023 07:38:57 +1000
+Date:   Fri, 14 Apr 2023 07:38:57 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Chandan Babu R <chandan.babu@oracle.com>
+Cc:     Wengang Wang <wen.gang.wang@oracle.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix AGFL allocation dead lock
+Message-ID: <20230413213857.GP3223426@dread.disaster.area>
+References: <20230330204610.23546-1-wen.gang.wang@oracle.com>
+ <20230411020624.GY3223426@dread.disaster.area>
+ <87mt3djwj9.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20230412235915.GN3223426@dread.disaster.area>
+ <87sfd4jcyn.fsf@debian-BULLSEYE-live-builder-AMD64>
 MIME-Version: 1.0
-References: <20230413104034.1086717-1-yosryahmed@google.com>
- <20230413104034.1086717-4-yosryahmed@google.com> <b7fe839d-d914-80f7-6b96-f5f3a9d0c9b0@redhat.com>
- <CAJD7tkae0uDuRG77nQEtzkV1abGstjF-1jfsCguR3jLNW=Cg5w@mail.gmail.com> <20230413210051.GO3223426@dread.disaster.area>
-In-Reply-To: <20230413210051.GO3223426@dread.disaster.area>
-From:   Yosry Ahmed <yosryahmed@google.com>
-Date:   Thu, 13 Apr 2023 14:38:03 -0700
-Message-ID: <CAJD7tkbzQb+gem-49xo8=1EfeOttiHZpD4X-iiWvHuO9rrHuog@mail.gmail.com>
-Subject: Re: [PATCH v6 3/3] mm: vmscan: refactor updating current->reclaim_state
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     David Hildenbrand <david@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Lameter <cl@linux.com>,
-        David Rientjes <rientjes@google.com>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Roman Gushchin <roman.gushchin@linux.dev>,
-        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Miaohe Lin <linmiaohe@huawei.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
-        Shakeel Butt <shakeelb@google.com>,
-        Michal Hocko <mhocko@kernel.org>, Yu Zhao <yuzhao@google.com>,
-        Tim Chen <tim.c.chen@linux.intel.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87sfd4jcyn.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 13, 2023 at 2:01=E2=80=AFPM Dave Chinner <david@fromorbit.com> =
-wrote:
->
-> On Thu, Apr 13, 2023 at 04:29:43AM -0700, Yosry Ahmed wrote:
-> > On Thu, Apr 13, 2023 at 4:21=E2=80=AFAM David Hildenbrand <david@redhat=
-.com> wrote:
-> > >
-> > > On 13.04.23 12:40, Yosry Ahmed wrote:
-> > > > During reclaim, we keep track of pages reclaimed from other means t=
-han
-> > > > LRU-based reclaim through scan_control->reclaim_state->reclaimed_sl=
-ab,
-> > > > which we stash a pointer to in current task_struct.
-> > > >
-> > > > However, we keep track of more than just reclaimed slab pages throu=
-gh
-> > > > this. We also use it for clean file pages dropped through pruned in=
-odes,
-> > > > and xfs buffer pages freed. Rename reclaimed_slab to reclaimed, and=
- add
-> > >
-> > > Would "reclaimed_non_lru" be more expressive? Then,
-> > >
-> > > mm_account_reclaimed_pages() -> mm_account_non_lru_reclaimed_pages()
-> > >
-> > >
-> > > Apart from that LGTM.
+On Thu, Apr 13, 2023 at 03:46:38PM +0530, Chandan Babu R wrote:
+> On Thu, Apr 13, 2023 at 09:59:15 AM +1000, Dave Chinner wrote:
+> > On Wed, Apr 12, 2023 at 01:53:59PM +0530, Chandan Babu R wrote:
+> >> Processing each of the "struct xfs_refcount_intent" can cause two refcount
+> >> btree blocks to be freed:
+> >> - A high level transacation will invoke xfs_refcountbt_free_block() twice.
+> >> - The first invocation adds an extent entry to the transaction's busy extent
+> >>   list. The second invocation can find the previously freed busy extent and
+> >>   hence wait indefinitely for the busy extent to be flushed.
+> >> 
+> >> Also, processing a single "struct xfs_refcount_intent" can require the leaf
+> >> block and its immediate parent block to be freed.  The leaf block is added to
+> >> the transaction's busy list. Freeing the parent block can result in the task
+> >> waiting for the busy extent (present in the high level transaction) to be
+> >> flushed.
 > >
-> > Thanks!
+> > Yes, it probably can, but this is a different problem - this is an
+> > internal btree update issue, not a "free multiple user extents in a
+> > single transaction that may only have a reservation large enough
+> > for a single user extent modification".
 > >
-> > I suck at naming things. If you think "reclaimed_non_lru" is better,
-> > then we can do that. FWIW mm_account_reclaimed_pages() was taken from
-> > a suggestion from Dave Chinner. My initial version had a terrible
-> > name: report_freed_pages(), so I am happy with whatever you see fit.
+> > So, lets think about why the allocator might try to reuse a busy
+> > extent on the next extent internal btree free operation in the
+> > transaction.  The only way that I can see that happening is if the
+> > AGFL needs refilling, and the only way the allocator should get
+> > stuck in this way is if there are no other free extents in the AG.
+> 
+> If the first extent that was freed by the transaction (and hence also marked
+> busy) happens to be the first among several other non-busy free extents found
+> during AGFL allocation, the task will get blocked waiting for the busy extent
+> flush to complete. However, this can be solved if xfs_alloc_ag_vextent_size()
+> is modified to traverse the rest of the free space btree to find other
+> non-busy extents. Busy extents can be flushed only as a last resort when
+> non-busy extents cannot be found.
+
+Yes, exactly my point: Don't block on busy extents if there are
+other free space candidates available to can be allocated without
+blocking.
+
+> 
 > >
-> > Should I re-spin for this or can we change it in place?
->
-> I don't care for the noise all the bikeshed painting has generated
-> for a simple change like this.  If it's a fix for a bug, and the
-> naming is good enough, just merge it already, ok?
+> > It then follows that if there are no other free extents in the AG,
+> > then we don't need to refill the AGFL, because freeing an extent in
+> > an empty AG will never cause the free space btrees to grow. In which
+> > case, we should not ever need to allocate from an extent that was
+> > previously freed in this specific transaction.
+> >
+> > We should also have XFS_ALLOC_FLAG_FREEING set, and this allows the
+> > AGFL refill to abort without error if there are no free blocks
+> > available because it's not necessary in this case.  If we can't find
+> > a non-busy extent after flushing on an AGFL fill for a
+> > XFS_ALLOC_FLAG_FREEING operation, we should just abort the freelist
+> > refill and allow the extent free operation to continue.
+> 
+> I tried in vain to figure out a correct way to perform non-blocking busy
+> extent flush. If it involves using a timeout mechanism, then I don't know as
+> to what constitues a good timeout value. Please let me know if you have any
+> suggestions to this end.
 
-Sorry for all the noise. I think this version is in good enough shape.
+Why would a non-blocking busy extent flush sleep? By definition,
+"non blocking" means "does not context switch away from the current
+task".
 
-Andrew, could you please replace v4 with this v6 without patch 2 as
-multiple people pointed out that it is unneeded? Sorry for the hassle.
+IOWs, a non-blocking busy extent flush is effectively just log force
+operation. We may need to sample the generation number to determine
+if progress has been made next time we get back to the "all extents
+are busy so flush the busy extents" logic again, but otherwise I
+think all we need do here is elide the "wait for generation number
+to change" logic.
 
->
-> -Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+Then, if we've retried the allocation after a log force, and we
+still haven't made progress and we are doing an AGFL allocation in
+XFS_ALLOC_FLAG_FREEING context, then we can simply abort the
+allocation attempt at this point. i.e. if we don't have extents we
+can allocate immediately, don't bother waiting for busy extents to
+be resolved...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
