@@ -2,87 +2,90 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 485EAC77B72
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 Apr 2023 15:36:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C578C77B71
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 Apr 2023 21:47:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230034AbjDNPgQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 14 Apr 2023 11:36:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55602 "EHLO
+        id S229794AbjDNVrI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 14 Apr 2023 17:47:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42302 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229494AbjDNPgP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Apr 2023 11:36:15 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 787E855A1;
-        Fri, 14 Apr 2023 08:36:14 -0700 (PDT)
+        with ESMTP id S229804AbjDNVrH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Apr 2023 17:47:07 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6DBB1701;
+        Fri, 14 Apr 2023 14:47:06 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 14B876160E;
-        Fri, 14 Apr 2023 15:36:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E141C4339B;
-        Fri, 14 Apr 2023 15:36:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681486573;
-        bh=fQbshHMyenXjbLKMFET/GjpZqotL8SVaYFHwivrmZGc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=EPOFVu/DuwyuZANHqHcIFm3updxEbeHUXzp/iRet476VBB6uNbMtHE1khP4Sh1gSE
-         Q6Y694QdGbv5cpKGotEUfJRvJFmAmSEOCyaATRoC+Yokm5MNHTdT1IGLIy/xBIH5zi
-         Stm+pAFlxwJkRhantTSMdg4sGEej5MG3L7DrM1oAQsogxP1WRzj6x/rfKNWXFN86I/
-         JlS0RrvRFAaR3ouKEs+sy9hsqIIaceSojg+zNfCUkEJDRaAO3UdU6vlJzG7Qch+KvH
-         wkp97f4xUGTIbmDQdTdWmg0VGlJsaciHwLK93XPh4PBN6K/LDYrQlWfmFnmq4/fqu+
-         4Q2Wnj0bxfFeA==
-Date:   Fri, 14 Apr 2023 08:36:12 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Miklos Szeredi <miklos@szeredi.hu>,
-        Bernd Schubert <bschubert@ddn.com>, axboe@kernel.dk,
-        io-uring@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        dsingh@ddn.com
-Subject: Re: [PATCH 1/2] fs: add FMODE_DIO_PARALLEL_WRITE flag
-Message-ID: <20230414153612.GB360881@frogsfrogsfrogs>
-References: <20230307172015.54911-2-axboe@kernel.dk>
- <20230412134057.381941-1-bschubert@ddn.com>
- <CAJfpegt_ZCVodOhQCzF9OqKnCr65mKax0Gu4OTN8M51zP+8TcA@mail.gmail.com>
- <ZDjggMCGautPUDpW@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZDjggMCGautPUDpW@infradead.org>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 880EA64A38;
+        Fri, 14 Apr 2023 21:47:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 163FBC433D2;
+        Fri, 14 Apr 2023 21:47:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+        s=korg; t=1681508825;
+        bh=EMmmaBZFjds9BFbgkw7ViAkFOrUh05zvgcFyP1mSUVg=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=hplhZsPGZPwVDi3zxgaoq+7FXFRFNqAlRv/O70IgiUPQTCv7Fa8QHsb0qqSXJpiZh
+         uuORn6WrqwZKO7YhkvUAEYpt5f6WtpipwsAVzxA5a4VxEESvtd1PFYQng2fIfFRP+1
+         QLsx+GvdCwjsyWw85umJkzFKdYBAQeHlBhPwELa0=
+Date:   Fri, 14 Apr 2023 14:47:04 -0700
+From:   Andrew Morton <akpm@linux-foundation.org>
+To:     Yosry Ahmed <yosryahmed@google.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        David Hildenbrand <david@redhat.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Lameter <cl@linux.com>,
+        David Rientjes <rientjes@google.com>,
+        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
+        Vlastimil Babka <vbabka@suse.cz>,
+        Roman Gushchin <roman.gushchin@linux.dev>,
+        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
+        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        Miaohe Lin <linmiaohe@huawei.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
+        Shakeel Butt <shakeelb@google.com>,
+        Michal Hocko <mhocko@kernel.org>, Yu Zhao <yuzhao@google.com>,
+        Tim Chen <tim.c.chen@linux.intel.com>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [PATCH v6 3/3] mm: vmscan: refactor updating
+ current->reclaim_state
+Message-Id: <20230414144704.2e411d40887c8e9e25ab2864@linux-foundation.org>
+In-Reply-To: <CAJD7tkbzQb+gem-49xo8=1EfeOttiHZpD4X-iiWvHuO9rrHuog@mail.gmail.com>
+References: <20230413104034.1086717-1-yosryahmed@google.com>
+        <20230413104034.1086717-4-yosryahmed@google.com>
+        <b7fe839d-d914-80f7-6b96-f5f3a9d0c9b0@redhat.com>
+        <CAJD7tkae0uDuRG77nQEtzkV1abGstjF-1jfsCguR3jLNW=Cg5w@mail.gmail.com>
+        <20230413210051.GO3223426@dread.disaster.area>
+        <CAJD7tkbzQb+gem-49xo8=1EfeOttiHZpD4X-iiWvHuO9rrHuog@mail.gmail.com>
+X-Mailer: Sylpheed 3.7.0 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 13, 2023 at 10:11:28PM -0700, Christoph Hellwig wrote:
-> On Thu, Apr 13, 2023 at 09:40:29AM +0200, Miklos Szeredi wrote:
-> > fuse_direct_write_iter():
-> > 
-> > bool exclusive_lock =
-> >     !(ff->open_flags & FOPEN_PARALLEL_DIRECT_WRITES) ||
-> >     iocb->ki_flags & IOCB_APPEND ||
-> >     fuse_direct_write_extending_i_size(iocb, from);
-> > 
-> > If the write is size extending, then it will take the lock exclusive.
-> > OTOH, I guess that it would be unusual for lots of  size extending
-> > writes to be done in parallel.
-> > 
-> > What would be the effect of giving the  FMODE_DIO_PARALLEL_WRITE hint
-> > and then still serializing the writes?
+On Thu, 13 Apr 2023 14:38:03 -0700 Yosry Ahmed <yosryahmed@google.com> wrote:
+
+> > > I suck at naming things. If you think "reclaimed_non_lru" is better,
+> > > then we can do that. FWIW mm_account_reclaimed_pages() was taken from
+> > > a suggestion from Dave Chinner. My initial version had a terrible
+> > > name: report_freed_pages(), so I am happy with whatever you see fit.
+> > >
+> > > Should I re-spin for this or can we change it in place?
+> >
+> > I don't care for the noise all the bikeshed painting has generated
+> > for a simple change like this.  If it's a fix for a bug, and the
+> > naming is good enough, just merge it already, ok?
 > 
-> I have no idea how this flags work, but XFS also takes i_rwsem
-> exclusively for appends, when the positions and size aren't aligned to
-> the block size, and a few other cases.
+> Sorry for all the noise. I think this version is in good enough shape.
+> 
+> Andrew, could you please replace v4 with this v6 without patch 2 as
+> multiple people pointed out that it is unneeded? Sorry for the hassle.
 
-IIUC uring wants to avoid the situation where someone sends 300 writes
-to the same file, all of which end up in background workers, and all of
-which then contend on exclusive i_rwsem.  Hence it has some hashing
-scheme that executes io requests serially if they hash to the same value
-(which iirc is the inode number?) to prevent resource waste.
+I like patch 2!
 
-This flag turns off that hashing behavior on the assumption that each of
-those 300 writes won't serialize on the other 299 writes, hence it's ok
-to start up 300 workers.
-
-(apologies for precoffee garbled response)
-
---D
+mm.git presently has the v6 series.  All of it ;)
