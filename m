@@ -2,470 +2,347 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 000C4C77B71
-	for <linux-xfs@archiver.kernel.org>; Sat, 15 Apr 2023 00:29:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D956C77B79
+	for <linux-xfs@archiver.kernel.org>; Sat, 15 Apr 2023 06:31:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230088AbjDOA3x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 14 Apr 2023 20:29:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50296 "EHLO
+        id S229705AbjDOGbZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 15 Apr 2023 02:31:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60516 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229457AbjDOA3w (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Apr 2023 20:29:52 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3F013A96;
-        Fri, 14 Apr 2023 17:29:50 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 346CB64AC4;
-        Sat, 15 Apr 2023 00:29:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9167AC433EF;
-        Sat, 15 Apr 2023 00:29:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681518589;
-        bh=i2mDAOgoud192KgeVMKOpJrpWb+T+2SuHuKnBAO4vpo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mIxHdW6b8qucT4IO3LEzFy1UhnYwduJlnin2Z+NdYzuN+ew4lz3tUBkRD3uvGx98b
-         cOgt8QunnuSjj5C3Nh0Czak9DYA4Fcs9xZFwEStrnxP7nYdClZKYyQeg0IvdWE9vLu
-         Xe3AdV9C0osjtHUeP3RhvAB8XG1mVx8YMSUncWp0My+/eObzelfWrsdqaoyNv15B05
-         KB9l5++Bd2hsys4z4NVt37dhzN7Fm0unqowqvH2XoZYx3BI6hfLOfqt2cVlKp7Z2wp
-         izQ2d+GDEaecmjMXusxnNcP0Rqy7slNLDVm/3fpRuJye/1rScZYvuib3kv1HplPDkL
-         SG1Rgn7IREXGw==
-Date:   Fri, 14 Apr 2023 17:29:49 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     zlang@redhat.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Subject: [PATCH v2 2/3] misc: add duration for long soak tests
-Message-ID: <20230415002949.GZ360889@frogsfrogsfrogs>
-References: <168123682679.4086541.13812285218510940665.stgit@frogsfrogsfrogs>
- <168123683823.4086541.4438928240640523731.stgit@frogsfrogsfrogs>
+        with ESMTP id S229542AbjDOGbY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 15 Apr 2023 02:31:24 -0400
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A65EE422F;
+        Fri, 14 Apr 2023 23:31:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1681540282; x=1713076282;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=vNjobJbkMOaL4V9aYbIr6Qr1gsthsCZ8xnDOUbhuCzI=;
+  b=dEsmiUk3aIzdGbq8sNsh120jqTf3HJGQnn6HxSb0rhPF0ITo++eKadkY
+   I0t63sdPFgLxxKsl4u144KVTJ0pnSjZ318m0wBfZUcnPUGX8hzhtnid99
+   usK0XxiSRbKE8WReTRB090JussiPk/dVQnSDHseETLHMhZegXAt+k/L4J
+   v/IJCvRCTf1BemIrd3MkVgx++pagEBqiq+1iGL+uMbjwLLagYlfGH5wTs
+   rzDa+ODt3q0BuSSP2mGwsH3DMTn9YipymRokHYDR8EWbRLEVHeEN940ux
+   pfcuDcYgImB37vFgAkcCKYPf7v+pU+1PCWKB7LNbMnNz1u1VL/JtCZ9Ob
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10680"; a="346464337"
+X-IronPort-AV: E=Sophos;i="5.99,199,1677571200"; 
+   d="scan'208";a="346464337"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2023 23:31:22 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10680"; a="722720540"
+X-IronPort-AV: E=Sophos;i="5.99,199,1677571200"; 
+   d="scan'208";a="722720540"
+Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
+  by orsmga001.jf.intel.com with ESMTP; 14 Apr 2023 23:31:17 -0700
+Received: from kbuild by b613635ddfff with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1pnZRM-000ab7-2f;
+        Sat, 15 Apr 2023 06:31:16 +0000
+Date:   Sat, 15 Apr 2023 14:30:28 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Andrew Morton <akpm@linux-foundation.org>
+Cc:     Mark Brown <broonie@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-tegra@vger.kernel.org,
+        linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, amd-gfx@lists.freedesktop.org,
+        Linux Memory Management List <linux-mm@kvack.org>
+Subject: [linux-next:master] BUILD SUCCESS WITH WARNING
+ d3f2cd24819158bb70701c3549e586f9df9cee67
+Message-ID: <643a4484.lQNwSPXmxToKotfK%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <168123683823.4086541.4438928240640523731.stgit@frogsfrogsfrogs>
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
+branch HEAD: d3f2cd24819158bb70701c3549e586f9df9cee67  Add linux-next specific files for 20230414
 
-Make it so that test runners can schedule long soak stress test programs
-for an exact number of seconds by setting the SOAK_DURATION config
-variable.
+Warning reports:
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Andrey Albershteyn <aalbersh@redhat.com>
----
-v2: fix commit message
----
- check                 |   14 +++++++++
- common/config         |    7 ++++
- common/fuzzy          |    7 ++++
- common/report         |    1 +
- ltp/fsstress.c        |   78 +++++++++++++++++++++++++++++++++++++++++++++++--
- ltp/fsx.c             |   50 +++++++++++++++++++++++++++++++
- src/soak_duration.awk |   23 ++++++++++++++
- tests/generic/476     |    5 +++
- tests/generic/521     |    1 +
- tests/generic/522     |    1 +
- tests/generic/642     |    1 +
- 11 files changed, 182 insertions(+), 6 deletions(-)
- create mode 100644 src/soak_duration.awk
+https://lore.kernel.org/oe-kbuild-all/202303161521.jbGbaFjJ-lkp@intel.com
 
-diff --git a/check b/check
-index e32b70d301..1d78cf27f4 100755
---- a/check
-+++ b/check
-@@ -366,6 +366,20 @@ if ! . ./common/rc; then
- 	exit 1
- fi
- 
-+# If the test config specified a soak test duration, see if there are any
-+# unit suffixes that need converting to an integer seconds count.
-+if [ -n "$SOAK_DURATION" ]; then
-+	SOAK_DURATION="$(echo "$SOAK_DURATION" | \
-+		sed -e 's/^\([.0-9]*\)\([a-z]\)*/\1 \2/g' | \
-+		$AWK_PROG -f $here/src/soak_duration.awk)"
-+	if [ $? -ne 0 ]; then
-+		echo "$SOAK_DURATION"
-+		status=1
-+		exit 1
-+	fi
-+	export SOAK_DURATION
-+fi
-+
- if [ -n "$subdir_xfile" ]; then
- 	for d in $SRC_GROUPS $FSTYP; do
- 		[ -f $SRC_DIR/$d/$subdir_xfile ] || continue
-diff --git a/common/config b/common/config
-index 6c8cb3a5ba..fdd0aadbeb 100644
---- a/common/config
-+++ b/common/config
-@@ -57,6 +57,13 @@ export SOAK_PROC=3             # -p option to fsstress
- export SOAK_STRESS=10000       # -n option to fsstress
- export SOAK_PASSES=-1          # count of repetitions of fsstress (while soaking)
- export EMAIL=root@localhost    # where auto-qa will send its status messages
-+
-+# For certain tests that run in tight loops, setting this variable allows the
-+# test runner to specify exactly how long the test should continue looping.
-+# This is independent of TIME_FACTOR.  Floating point numbers are allowed, and
-+# the unit suffixes m(inutes), h(ours), d(ays), and w(eeks) are supported.
-+export SOAK_DURATION=${SOAK_DURATION:=}
-+
- export HOST_OPTIONS=${HOST_OPTIONS:=local.config}
- export CHECK_OPTIONS=${CHECK_OPTIONS:="-g auto"}
- export BENCH_PASSES=${BENCH_PASSES:=5}
-diff --git a/common/fuzzy b/common/fuzzy
-index 744d9ed65d..9c04bb5318 100644
---- a/common/fuzzy
-+++ b/common/fuzzy
-@@ -1360,7 +1360,12 @@ _scratch_xfs_stress_scrub() {
- 	fi
- 
- 	local start="$(date +%s)"
--	local end="$((start + (30 * TIME_FACTOR) ))"
-+	local end
-+	if [ -n "$SOAK_DURATION" ]; then
-+		end="$((start + SOAK_DURATION))"
-+	else
-+		end="$((start + (30 * TIME_FACTOR) ))"
-+	fi
- 	local scrub_startat="$((start + scrub_delay))"
- 	test "$scrub_startat" -gt "$((end - 10))" &&
- 		scrub_startat="$((end - 10))"
-diff --git a/common/report b/common/report
-index be930e0b06..9bfa09ecce 100644
---- a/common/report
-+++ b/common/report
-@@ -67,6 +67,7 @@ __generate_report_vars() {
- 	REPORT_VARS["CPUS"]="$(getconf _NPROCESSORS_ONLN 2>/dev/null)"
- 	REPORT_VARS["MEM_KB"]="$(grep MemTotal: /proc/meminfo | awk '{print $2}')"
- 	REPORT_VARS["SWAP_KB"]="$(grep SwapTotal: /proc/meminfo | awk '{print $2}')"
-+	test -n "$SOAK_DURATION" && REPORT_VARS["SOAK_DURATION"]="$SOAK_DURATION"
- 
- 	test -e /sys/devices/system/node/possible && \
- 		REPORT_VARS["NUMA_NODES"]="$(cat /sys/devices/system/node/possible 2>/dev/null)"
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index e60f2da929..0dc6545448 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -386,6 +386,8 @@ char		*execute_cmd = NULL;
- int		execute_freq = 1;
- struct print_string	flag_str = {0};
- 
-+struct timespec deadline = { 0 };
-+
- void	add_to_flist(int, int, int, int);
- void	append_pathname(pathname_t *, char *);
- int	attr_list_path(pathname_t *, char *, const int);
-@@ -459,6 +461,34 @@ void sg_handler(int signum)
- 	}
- }
- 
-+bool
-+keep_looping(int i, int loops)
-+{
-+	int ret;
-+
-+	if (deadline.tv_nsec) {
-+		struct timespec now;
-+
-+		ret = clock_gettime(CLOCK_MONOTONIC, &now);
-+		if (ret) {
-+			perror("CLOCK_MONOTONIC");
-+			return false;
-+		}
-+
-+		return now.tv_sec <= deadline.tv_sec;
-+	}
-+
-+	if (!loops)
-+		return true;
-+
-+	return i < loops;
-+}
-+
-+static struct option longopts[] = {
-+	{"duration", optional_argument, 0, 256},
-+	{ }
-+};
-+
- int main(int argc, char **argv)
- {
- 	char		buf[10];
-@@ -478,13 +508,14 @@ int main(int argc, char **argv)
- 	struct sigaction action;
- 	int		loops = 1;
- 	const char	*allopts = "cd:e:f:i:l:m:M:n:o:p:rRs:S:vVwx:X:zH";
-+	long long	duration;
- 
- 	errrange = errtag = 0;
- 	umask(0);
- 	nops = sizeof(ops) / sizeof(ops[0]);
- 	ops_end = &ops[nops];
- 	myprog = argv[0];
--	while ((c = getopt(argc, argv, allopts)) != -1) {
-+	while ((c = getopt_long(argc, argv, allopts, longopts, NULL)) != -1) {
- 		switch (c) {
- 		case 'c':
- 			cleanup = 1;
-@@ -579,6 +610,26 @@ int main(int argc, char **argv)
- 		case 'X':
- 			execute_freq = strtoul(optarg, NULL, 0);
- 			break;
-+		case 256:  /* --duration */
-+			if (!optarg) {
-+				fprintf(stderr, "Specify time with --duration=\n");
-+				exit(87);
-+			}
-+			duration = strtoll(optarg, NULL, 0);
-+			if (duration < 1) {
-+				fprintf(stderr, "%lld: invalid duration\n", duration);
-+				exit(88);
-+			}
-+
-+			i = clock_gettime(CLOCK_MONOTONIC, &deadline);
-+			if (i) {
-+				perror("CLOCK_MONOTONIC");
-+				exit(89);
-+			}
-+
-+			deadline.tv_sec += duration;
-+			deadline.tv_nsec = 1;
-+			break;
- 		case '?':
- 			fprintf(stderr, "%s - invalid parameters\n",
- 				myprog);
-@@ -721,7 +772,7 @@ int main(int argc, char **argv)
- 				}
- 			}
- #endif
--			for (i = 0; !loops || (i < loops); i++)
-+			for (i = 0; keep_looping(i, loops); i++)
- 				doproc();
- #ifdef AIO
- 			if(io_destroy(io_ctx) != 0) {
-@@ -1121,6 +1172,26 @@ dirid_to_fent(int dirid)
- 	return NULL;
- }
- 
-+bool
-+keep_running(opnum_t opno, opnum_t operations)
-+{
-+	int ret;
-+
-+	if (deadline.tv_nsec) {
-+		struct timespec now;
-+
-+		ret = clock_gettime(CLOCK_MONOTONIC, &now);
-+		if (ret) {
-+			perror("CLOCK_MONOTONIC");
-+			return false;
-+		}
-+
-+		return now.tv_sec <= deadline.tv_sec;
-+	}
-+
-+	return opno < operations;
-+}
-+
- void
- doproc(void)
- {
-@@ -1149,7 +1220,7 @@ doproc(void)
- 	srandom(seed);
- 	if (namerand)
- 		namerand = random();
--	for (opno = 0; opno < operations; opno++) {
-+	for (opno = 0; keep_running(opno, operations); opno++) {
- 		if (execute_cmd && opno && opno % dividend == 0) {
- 			if (verbose)
- 				printf("%lld: execute command %s\n", opno,
-@@ -1935,6 +2006,7 @@ usage(void)
- 	printf("   -V               specifies verifiable logging mode (omitting inode numbers)\n");
- 	printf("   -X ncmd          number of calls to the -x command (default 1)\n");
- 	printf("   -H               prints usage and exits\n");
-+	printf("   --duration=s     run for this many seconds\n");
- }
- 
- void
-diff --git a/ltp/fsx.c b/ltp/fsx.c
-index ee4b8fe45d..761d5e467f 100644
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -193,6 +193,8 @@ int fsx_rw(int rw, int fd, char *buf, unsigned len, unsigned offset);
- #define fsxread(a,b,c,d)	fsx_rw(READ, a,b,c,d)
- #define fsxwrite(a,b,c,d)	fsx_rw(WRITE, a,b,c,d)
- 
-+struct timespec deadline;
-+
- const char *replayops = NULL;
- const char *recordops = NULL;
- FILE *	fsxlogf = NULL;
-@@ -2457,6 +2459,7 @@ usage(void)
-         -Z: O_DIRECT (use -R, -W, -r and -w too)\n\
- 	--replay-ops opsfile: replay ops from recorded .fsxops file\n\
- 	--record-ops[=opsfile]: dump ops file also on success. optionally specify ops file name\n\
-+	--duration=seconds: run for this many seconds\n\
- 	fname: this filename is REQUIRED (no default)\n");
- 	exit(90);
- }
-@@ -2739,9 +2742,33 @@ __test_fallocate(int mode, const char *mode_str)
- #endif
- }
- 
-+bool
-+keep_running(void)
-+{
-+	int ret;
-+
-+	if (deadline.tv_nsec) {
-+		struct timespec now;
-+
-+		ret = clock_gettime(CLOCK_MONOTONIC, &now);
-+		if (ret) {
-+			perror("CLOCK_MONOTONIC");
-+			return false;
-+		}
-+
-+		return now.tv_sec <= deadline.tv_sec;
-+	}
-+
-+	if (numops == -1)
-+		return true;
-+
-+	return numops-- != 0;
-+}
-+
- static struct option longopts[] = {
- 	{"replay-ops", required_argument, 0, 256},
- 	{"record-ops", optional_argument, 0, 255},
-+	{"duration", optional_argument, 0, 254},
- 	{ }
- };
- 
-@@ -2753,6 +2780,7 @@ main(int argc, char **argv)
- 	char logfile[PATH_MAX];
- 	struct stat statbuf;
- 	int o_flags = O_RDWR|O_CREAT|O_TRUNC;
-+	long long duration;
- 
- 	logfile[0] = 0;
- 	dname[0] = 0;
-@@ -2950,6 +2978,26 @@ main(int argc, char **argv)
- 			o_direct = O_DIRECT;
- 			o_flags |= O_DIRECT;
- 			break;
-+		case 254:  /* --duration */
-+			if (!optarg) {
-+				fprintf(stderr, "Specify time with --duration=\n");
-+				exit(87);
-+			}
-+			duration = strtoll(optarg, NULL, 0);
-+			if (duration < 1) {
-+				fprintf(stderr, "%lld: invalid duration\n", duration);
-+				exit(88);
-+			}
-+
-+			i = clock_gettime(CLOCK_MONOTONIC, &deadline);
-+			if (i) {
-+				perror("CLOCK_MONOTONIC");
-+				exit(89);
-+			}
-+
-+			deadline.tv_sec += duration;
-+			deadline.tv_nsec = 1;
-+			break;
- 		case 255:  /* --record-ops */
- 			if (optarg)
- 				snprintf(opsfile, sizeof(opsfile), "%s", optarg);
-@@ -3145,7 +3193,7 @@ main(int argc, char **argv)
- 	if (xchg_range_calls)
- 		xchg_range_calls = test_xchg_range();
- 
--	while (numops == -1 || numops--)
-+	while (keep_running())
- 		if (!test())
- 			break;
- 
-diff --git a/src/soak_duration.awk b/src/soak_duration.awk
-new file mode 100644
-index 0000000000..6c38d09b39
---- /dev/null
-+++ b/src/soak_duration.awk
-@@ -0,0 +1,23 @@
-+#!/usr/bin/awk
-+#
-+# Convert time interval specifications with suffixes to an integer number of
-+# seconds.
-+{
-+	nr = $1;
-+	if ($2 == "" || $2 ~ /s/)	# seconds
-+		;
-+	else if ($2 ~ /m/)		# minutes
-+		nr *= 60;
-+	else if ($2 ~ /h/)		# hours
-+		nr *= 3600;
-+	else if ($2 ~ /d/)		# days
-+		nr *= 86400;
-+	else if ($2 ~ /w/)		# weeks
-+		nr *= 604800;
-+	else {
-+		printf("%s: unknown suffix\n", $2);
-+		exit 1;
-+	}
-+
-+	printf("%d\n", nr);
-+}
-diff --git a/tests/generic/476 b/tests/generic/476
-index edb0be7b50..a162cda6b1 100755
---- a/tests/generic/476
-+++ b/tests/generic/476
-@@ -33,7 +33,10 @@ _scratch_mount >> $seqres.full 2>&1
- 
- nr_cpus=$((LOAD_FACTOR * 4))
- nr_ops=$((25000 * nr_cpus * TIME_FACTOR))
--$FSSTRESS_PROG $FSSTRESS_AVOID -w -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus >> $seqres.full
-+fsstress_args=(-w -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus)
-+test -n "$SOAK_DURATION" && fsstress_args+=(--duration="$SOAK_DURATION")
-+
-+$FSSTRESS_PROG $FSSTRESS_AVOID "${fsstress_args[@]}" >> $seqres.full
- 
- # success, all done
- status=0
-diff --git a/tests/generic/521 b/tests/generic/521
-index cde9d44775..22dd31a8ec 100755
---- a/tests/generic/521
-+++ b/tests/generic/521
-@@ -35,6 +35,7 @@ fsx_args+=(-r $min_dio_sz)
- fsx_args+=(-t $min_dio_sz)
- fsx_args+=(-w $min_dio_sz)
- fsx_args+=(-Z)
-+test -n "$SOAK_DURATION" && fsx_args+=(--duration="$SOAK_DURATION")
- 
- run_fsx "${fsx_args[@]}" | sed -e '/^fsx.*/d'
- 
-diff --git a/tests/generic/522 b/tests/generic/522
-index ae84fe04bb..f0cbcb245c 100755
---- a/tests/generic/522
-+++ b/tests/generic/522
-@@ -29,6 +29,7 @@ fsx_args+=(-N $nr_ops)
- fsx_args+=(-p $((nr_ops / 100)))
- fsx_args+=(-o $op_sz)
- fsx_args+=(-l $file_sz)
-+test -n "$SOAK_DURATION" && fsx_args+=(--duration="$SOAK_DURATION")
- 
- run_fsx "${fsx_args[@]}" | sed -e '/^fsx.*/d'
- 
-diff --git a/tests/generic/642 b/tests/generic/642
-index c0e274d843..eba90903a3 100755
---- a/tests/generic/642
-+++ b/tests/generic/642
-@@ -49,6 +49,7 @@ for verb in attr_remove removefattr; do
- done
- args+=('-f' "setfattr=20")
- args+=('-f' "attr_set=60")	# sets larger xattrs
-+test -n "$DURATION" && args+=(--duration="$DURATION")
- 
- $FSSTRESS_PROG "${args[@]}" $FSSTRESS_AVOID -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus >> $seqres.full
- 
+Warning: (recently discovered and may have been fixed)
+
+drivers/gpu/drm/amd/amdgpu/../display/dc/link/link_validation.c:351:13: warning: variable 'bw_needed' set but not used [-Wunused-but-set-variable]
+drivers/gpu/drm/amd/amdgpu/../display/dc/link/link_validation.c:352:25: warning: variable 'link' set but not used [-Wunused-but-set-variable]
+drivers/net/wireless/legacy/ray_cs.c:628:17: warning: 'strncpy' specified bound 32 equals destination size [-Wstringop-truncation]
+drivers/phy/mediatek/phy-mtk-hdmi-mt8195.c:298:6: warning: variable 'ret' is uninitialized when used here [-Wuninitialized]
+
+Unverified Warning (likely false positive, please contact us if interested):
+
+drivers/acpi/property.c:985 acpi_data_prop_read_single() error: potentially dereferencing uninitialized 'obj'.
+drivers/gpu/host1x/context.c:82 host1x_memory_context_list_init() warn: missing error code 'err'
+drivers/gpu/host1x/dev.c:417 host1x_iommu_attach() warn: passing zero to 'ERR_PTR'
+fs/xfs/scrub/refcount.c: xfs_mount.h is included more than once.
+fs/xfs/scrub/refcount.c: xfs_trans_resv.h is included more than once.
+
+Warning ids grouped by kconfigs:
+
+gcc_recent_errors
+|-- alpha-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|   `-- drivers-net-wireless-legacy-ray_cs.c:warning:strncpy-specified-bound-equals-destination-size
+|-- alpha-randconfig-r013-20230409
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|-- arc-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|-- arc-randconfig-c023-20230412
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|-- arc-randconfig-r022-20230409
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|-- arm-allmodconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|-- arm-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|-- arm-randconfig-m041-20230413
+|   |-- drivers-gpu-host1x-context.c-host1x_memory_context_list_init()-warn:missing-error-code-err
+|   `-- drivers-gpu-host1x-dev.c-host1x_iommu_attach()-warn:passing-zero-to-ERR_PTR
+|-- arm64-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|-- i386-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|-- i386-randconfig-m021
+|   `-- drivers-acpi-property.c-acpi_data_prop_read_single()-error:potentially-dereferencing-uninitialized-obj-.
+|-- ia64-allmodconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|   `-- drivers-net-wireless-legacy-ray_cs.c:warning:strncpy-specified-bound-equals-destination-size
+|-- loongarch-allmodconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|-- loongarch-defconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|-- microblaze-randconfig-r012-20230415
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|-- mips-allmodconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|-- mips-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|-- parisc-randconfig-r003-20230410
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|-- powerpc-allmodconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|-- powerpc-randconfig-r034-20230413
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|-- riscv-allmodconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|-- riscv-randconfig-r042-20230410
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|-- s390-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|-- sparc-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|   `-- drivers-net-wireless-legacy-ray_cs.c:warning:strncpy-specified-bound-equals-destination-size
+|-- sparc64-randconfig-r014-20230415
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+|-- x86_64-allnoconfig
+|   |-- fs-xfs-scrub-refcount.c:xfs_mount.h-is-included-more-than-once.
+|   `-- fs-xfs-scrub-refcount.c:xfs_trans_resv.h-is-included-more-than-once.
+|-- x86_64-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
+`-- x86_64-randconfig-m001
+    `-- drivers-acpi-property.c-acpi_data_prop_read_single()-error:potentially-dereferencing-uninitialized-obj-.
+clang_recent_errors
+|-- arm-randconfig-r046-20230409
+|   `-- drivers-phy-mediatek-phy-mtk-hdmi-mt8195.c:warning:variable-ret-is-uninitialized-when-used-here
+|-- arm64-randconfig-r032-20230410
+|   `-- drivers-phy-mediatek-phy-mtk-hdmi-mt8195.c:warning:variable-ret-is-uninitialized-when-used-here
+`-- powerpc-randconfig-r035-20230410
+    `-- drivers-phy-mediatek-phy-mtk-hdmi-mt8195.c:warning:variable-ret-is-uninitialized-when-used-here
+
+elapsed time: 734m
+
+configs tested: 156
+configs skipped: 13
+
+tested configs:
+alpha                            allyesconfig   gcc  
+alpha        buildonly-randconfig-r006-20230415   gcc  
+alpha                               defconfig   gcc  
+alpha                randconfig-r013-20230409   gcc  
+alpha                randconfig-r034-20230409   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                  randconfig-r022-20230409   gcc  
+arc                  randconfig-r032-20230413   gcc  
+arc                  randconfig-r043-20230409   gcc  
+arc                  randconfig-r043-20230410   gcc  
+arm                              allmodconfig   gcc  
+arm                              allyesconfig   gcc  
+arm          buildonly-randconfig-r004-20230415   gcc  
+arm          buildonly-randconfig-r005-20230415   gcc  
+arm                                 defconfig   gcc  
+arm                       imx_v4_v5_defconfig   clang
+arm                        keystone_defconfig   gcc  
+arm                   milbeaut_m10v_defconfig   clang
+arm                  randconfig-r002-20230409   gcc  
+arm                  randconfig-r006-20230410   gcc  
+arm                  randconfig-r014-20230409   clang
+arm                  randconfig-r024-20230409   clang
+arm                  randconfig-r033-20230410   gcc  
+arm                  randconfig-r046-20230409   clang
+arm                  randconfig-r046-20230410   clang
+arm                           spitz_defconfig   clang
+arm64                            allyesconfig   gcc  
+arm64                               defconfig   gcc  
+arm64                randconfig-r014-20230410   gcc  
+arm64                randconfig-r032-20230410   clang
+arm64                randconfig-r035-20230413   gcc  
+arm64                randconfig-r036-20230413   gcc  
+csky                                defconfig   gcc  
+hexagon              randconfig-r015-20230409   clang
+hexagon              randconfig-r015-20230413   clang
+hexagon              randconfig-r024-20230410   clang
+hexagon              randconfig-r031-20230409   clang
+hexagon              randconfig-r041-20230409   clang
+hexagon              randconfig-r041-20230410   clang
+hexagon              randconfig-r045-20230409   clang
+hexagon              randconfig-r045-20230410   clang
+i386                             allyesconfig   gcc  
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                 randconfig-a001-20230410   clang
+i386                 randconfig-a002-20230410   clang
+i386                 randconfig-a003-20230410   clang
+i386                 randconfig-a004-20230410   clang
+i386                 randconfig-a005-20230410   clang
+i386                 randconfig-a006-20230410   clang
+i386                 randconfig-a011-20230410   gcc  
+i386                 randconfig-a012-20230410   gcc  
+i386                 randconfig-a013-20230410   gcc  
+i386                 randconfig-a014-20230410   gcc  
+i386                 randconfig-a015-20230410   gcc  
+i386                 randconfig-a016-20230410   gcc  
+ia64                             allmodconfig   gcc  
+ia64                                defconfig   gcc  
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch            randconfig-r006-20230409   gcc  
+loongarch            randconfig-r021-20230409   gcc  
+m68k                             allmodconfig   gcc  
+m68k                                defconfig   gcc  
+m68k                 randconfig-r005-20230409   gcc  
+m68k                 randconfig-r012-20230409   gcc  
+m68k                 randconfig-r015-20230410   gcc  
+microblaze   buildonly-randconfig-r001-20230415   gcc  
+microblaze           randconfig-r003-20230409   gcc  
+microblaze           randconfig-r011-20230415   gcc  
+microblaze           randconfig-r012-20230415   gcc  
+microblaze           randconfig-r016-20230413   gcc  
+microblaze           randconfig-r021-20230410   gcc  
+microblaze           randconfig-r033-20230413   gcc  
+microblaze           randconfig-r035-20230409   gcc  
+microblaze           randconfig-r036-20230410   gcc  
+mips                             allmodconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                            gpr_defconfig   gcc  
+mips                 randconfig-r031-20230410   gcc  
+nios2        buildonly-randconfig-r003-20230415   gcc  
+nios2                               defconfig   gcc  
+nios2                randconfig-r011-20230409   gcc  
+nios2                randconfig-r016-20230409   gcc  
+nios2                randconfig-r026-20230409   gcc  
+openrisc             randconfig-r012-20230410   gcc  
+openrisc             randconfig-r022-20230410   gcc  
+openrisc             randconfig-r026-20230410   gcc  
+parisc                              defconfig   gcc  
+parisc               randconfig-r003-20230410   gcc  
+parisc               randconfig-r005-20230410   gcc  
+parisc               randconfig-r011-20230413   gcc  
+parisc               randconfig-r023-20230409   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc                     ep8248e_defconfig   gcc  
+powerpc                 mpc8540_ads_defconfig   gcc  
+powerpc              randconfig-r034-20230413   gcc  
+powerpc              randconfig-r035-20230410   clang
+powerpc                    socrates_defconfig   clang
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                randconfig-r001-20230409   clang
+riscv                randconfig-r036-20230409   clang
+riscv                randconfig-r042-20230409   gcc  
+riscv                randconfig-r042-20230410   gcc  
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+s390                 randconfig-r004-20230410   clang
+s390                 randconfig-r044-20230409   gcc  
+s390                 randconfig-r044-20230410   gcc  
+sh                               allmodconfig   gcc  
+sh                   randconfig-r001-20230410   gcc  
+sh                   randconfig-r002-20230410   gcc  
+sh                   randconfig-r013-20230410   gcc  
+sh                           se7722_defconfig   gcc  
+sparc                               defconfig   gcc  
+sparc                randconfig-r004-20230409   gcc  
+sparc                randconfig-r011-20230410   gcc  
+sparc                randconfig-r013-20230415   gcc  
+sparc                randconfig-r032-20230409   gcc  
+sparc                randconfig-r033-20230409   gcc  
+sparc                       sparc64_defconfig   gcc  
+sparc64                          alldefconfig   gcc  
+sparc64              randconfig-r014-20230413   gcc  
+sparc64              randconfig-r014-20230415   gcc  
+sparc64              randconfig-r016-20230410   gcc  
+sparc64              randconfig-r016-20230415   gcc  
+sparc64              randconfig-r025-20230410   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64                        randconfig-a001   clang
+x86_64                        randconfig-a002   gcc  
+x86_64                        randconfig-a003   clang
+x86_64                        randconfig-a004   gcc  
+x86_64                        randconfig-a005   clang
+x86_64                        randconfig-a006   gcc  
+x86_64               randconfig-a011-20230410   gcc  
+x86_64               randconfig-a012-20230410   gcc  
+x86_64               randconfig-a013-20230410   gcc  
+x86_64               randconfig-a014-20230410   gcc  
+x86_64               randconfig-a015-20230410   gcc  
+x86_64               randconfig-a016-20230410   gcc  
+x86_64                        randconfig-k001   clang
+x86_64                               rhel-8.3   gcc  
+xtensa               randconfig-r034-20230410   gcc  
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
