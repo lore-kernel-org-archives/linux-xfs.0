@@ -2,91 +2,68 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CDC1C77B71
-	for <linux-xfs@archiver.kernel.org>; Sun, 16 Apr 2023 02:30:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1569EC77B72
+	for <linux-xfs@archiver.kernel.org>; Sun, 16 Apr 2023 05:54:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229600AbjDPCad (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 15 Apr 2023 22:30:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42846 "EHLO
+        id S229923AbjDPFyz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 16 Apr 2023 01:54:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40390 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229462AbjDPCad (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 15 Apr 2023 22:30:33 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 154252D5F
-        for <linux-xfs@vger.kernel.org>; Sat, 15 Apr 2023 19:30:32 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 968106127D
-        for <linux-xfs@vger.kernel.org>; Sun, 16 Apr 2023 02:30:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2B2BC433D2;
-        Sun, 16 Apr 2023 02:30:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681612230;
-        bh=0ewkS+GY1GKvWS98YU9y50Wi6gBmlnwaEZXnPy8N/RA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=K0irpvmm0iDttgkEytytXha8WGv4mXecWtIY+cKWNuryW0aP3yWJXMpoauvwbktJd
-         Zm9aHOh2ANZJswAkVCb+okRUgGlJASoG6R5goKl88M1O/aWHf58slSJBy7E1TmiJKj
-         fyTJTOVTfdUFwgOAuJ20gVdi02vykW/fGlcgTpEjx559mhavSbi7QHY1eu35NHY9n/
-         DiXJYisAtu4MMDa/O2ts0PXcfb3rBXfMtsM9qoB/sTdcR5YwAozCxRr1agqv3k4TN9
-         ea5hBUpPrK6Bjlf43TljB/Q6SFVicepPMkjfZ38er5nnmA5xDRTQM5frEpo9dJlq0Z
-         +Hpjh4hyeV+wQ==
-Date:   Sat, 15 Apr 2023 19:30:30 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix duplicate includes
-Message-ID: <20230416023030.GA360889@frogsfrogsfrogs>
-References: <20230415224532.604844-1-david@fromorbit.com>
+        with ESMTP id S229593AbjDPFyy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 16 Apr 2023 01:54:54 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E26D2D52;
+        Sat, 15 Apr 2023 22:54:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=TBtcpsXHeVpbPsSte8uqDCd7VMaCKEQiVcvyKRXX7Mg=; b=j5v+Vx78d62tZwWrCr9W+wLTGy
+        ixFBl82hsUDRTvJYcHKmSVUrCIZXu4pJnyZpGCAs+aGltHNkeQjmqsI28wEXJIgjcDRkNPZsiCzLN
+        LnXDLXTDebBnKZiioBEQFGH91J6VmcwjrxW/MxOeWHjZmnXT0zZbtgjJNVBUmEspvJl2lW1hCVTUp
+        bPigqFbqljbFRaIob6Vlv5z2V64V4Qi2SulnmMxlKZhAJouRSidC6BLVTJRbuHKtWwcsecBwkaqhx
+        97UuwsuzGG8b2w4rPlA/F9IQDZttleOaGKh+YoGncGeVIarSxQNrFnATN3gNEws+Ry2vmCf7IvXKC
+        zSz3s3Zg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1pnvLd-00DBwW-26;
+        Sun, 16 Apr 2023 05:54:49 +0000
+Date:   Sat, 15 Apr 2023 22:54:49 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Bernd Schubert <bschubert@ddn.com>, axboe@kernel.dk,
+        io-uring@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        dsingh@ddn.com
+Subject: Re: [PATCH 1/2] fs: add FMODE_DIO_PARALLEL_WRITE flag
+Message-ID: <ZDuNqQgpHUw+gi9G@infradead.org>
+References: <20230307172015.54911-2-axboe@kernel.dk>
+ <20230412134057.381941-1-bschubert@ddn.com>
+ <CAJfpegt_ZCVodOhQCzF9OqKnCr65mKax0Gu4OTN8M51zP+8TcA@mail.gmail.com>
+ <ZDjggMCGautPUDpW@infradead.org>
+ <20230414153612.GB360881@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230415224532.604844-1-david@fromorbit.com>
+In-Reply-To: <20230414153612.GB360881@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Apr 16, 2023 at 08:45:32AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Fri, Apr 14, 2023 at 08:36:12AM -0700, Darrick J. Wong wrote:
+> IIUC uring wants to avoid the situation where someone sends 300 writes
+> to the same file, all of which end up in background workers, and all of
+> which then contend on exclusive i_rwsem.  Hence it has some hashing
+> scheme that executes io requests serially if they hash to the same value
+> (which iirc is the inode number?) to prevent resource waste.
 > 
-> Header files were already included, just not in the normal order.
-> Remove the duplicates, preserving normal order. Also move xfs_ag.h
-> include to before the scrub internal includes which are normally
-> last in the include list.
+> This flag turns off that hashing behavior on the assumption that each of
+> those 300 writes won't serialize on the other 299 writes, hence it's ok
+> to start up 300 workers.
 > 
-> Fixes: d5c88131dbf0 ("xfs: allow queued AG intents to drain before scrubbing")
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> (apologies for precoffee garbled response)
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-> ---
->  fs/xfs/scrub/refcount.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-> index ed5eb367ce49..304ea1e1bfb0 100644
-> --- a/fs/xfs/scrub/refcount.c
-> +++ b/fs/xfs/scrub/refcount.c
-> @@ -9,6 +9,7 @@
->  #include "xfs_format.h"
->  #include "xfs_trans_resv.h"
->  #include "xfs_mount.h"
-> +#include "xfs_ag.h"
->  #include "xfs_btree.h"
->  #include "xfs_rmap.h"
->  #include "xfs_refcount.h"
-> @@ -16,9 +17,6 @@
->  #include "scrub/common.h"
->  #include "scrub/btree.h"
->  #include "scrub/trace.h"
-> -#include "xfs_trans_resv.h"
-> -#include "xfs_mount.h"
-> -#include "xfs_ag.h"
->  
->  /*
->   * Set us up to scrub reference count btrees.
-> -- 
-> 2.39.2
-> 
+It might be useful if someone (Jens?) could clearly document the
+assumptions for this flag.
