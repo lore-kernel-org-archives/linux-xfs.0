@@ -2,62 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E93AC77B76
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Apr 2023 21:46:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0378FC77B75
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Apr 2023 00:08:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229854AbjDQVqG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 Apr 2023 17:46:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44672 "EHLO
+        id S230179AbjDRAIQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 Apr 2023 20:08:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229745AbjDQVqF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Apr 2023 17:46:05 -0400
-Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4218B10C0
-        for <linux-xfs@vger.kernel.org>; Mon, 17 Apr 2023 14:46:03 -0700 (PDT)
-Received: by mail-pj1-x1043.google.com with SMTP id hg14-20020a17090b300e00b002471efa7a8fso14540551pjb.0
-        for <linux-xfs@vger.kernel.org>; Mon, 17 Apr 2023 14:46:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1681767963; x=1684359963;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=7FA8JojH6mUYVmoVOmw8jBgrQtRr/3uFKTWP6+VyILM=;
-        b=hZSUsGdGy65n3HVucZAbz6xYzWNp4+kUsfz57WFm3em79Zt/mO/Mb7UuU/H9zXtkdg
-         393tDSq165zIK/nePbEzWNcia4z5O74aNrMgKBXsF4XIQmlG8HT+ij+AZpQiRhYQRyoc
-         EvbNaaK32/vwyu0xZSGXbdIvv4V2SHzdh1AV5Gmh6zru2h77VKQxuc9vRomjaO3kxNh/
-         MCflsfHYxGaqBpQPQeD6c5n7CzKbBEt396qjaHKrAPdlzr0g8FgJ0L6deHiR7u5cqz1E
-         wIe6f6iYdTQvpQvf5cIOjULWFvTzFIFD/ip+ImU70a04O0ru+vn6SjRMO5rvbLQdhCtf
-         UQYQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681767963; x=1684359963;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=7FA8JojH6mUYVmoVOmw8jBgrQtRr/3uFKTWP6+VyILM=;
-        b=k4mjAQv1OOr44TuXOmVfJWYk89BJTK1lkI9AD8kbKmaASy7fmBLrXUSt1Nc4K/Yhbg
-         tEamahZvuMWP07f9EZZjiAgNqzOvIeWFWc78oSCJu9NFo9WAQ9HkG12Q+D6lMDQl4yt+
-         QkjuoS8m56jlkW8uQe+DzieKtsCZnNLOzlHsZJ/tY8EeL1rtb2uMh2lhEHmh70u7/PYl
-         cZwEJUzdvgQV5U01/URkCOwcgwVx8Tan7vns5sls2QNunWa2cGBqjBwUD1wRj96ksj3S
-         Dbyas7WUkC7pFtV2T2yrWKvBP0VK4Xw0Gs+n0UV4vKPLATMdSa/gxmYDXGQdEuNAOEiZ
-         Ny/g==
-X-Gm-Message-State: AAQBX9ekEBOkDIdTxsjxCY+Ufy7KabCDGk6AHLpvzMEi3JSTLgTj+dNW
-        TFgCSoJ0GYsM5L6/IROGz2bcTw==
-X-Google-Smtp-Source: AKy350bLuhoWP60ZEZoStXgudRuZfiaJctd4+H3u7EotT3DD61bgp/3jKrLlSHjEIRvWJ9awv5dCbA==
-X-Received: by 2002:a17:903:42cc:b0:1a6:9363:1632 with SMTP id jy12-20020a17090342cc00b001a693631632mr308413plb.25.1681767962764;
-        Mon, 17 Apr 2023 14:46:02 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-41-174.pa.nsw.optusnet.com.au. [49.180.41.174])
-        by smtp.gmail.com with ESMTPSA id v10-20020a1709028d8a00b001a6ce2bcb3esm3096282plo.161.2023.04.17.14.46.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Apr 2023 14:46:02 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1poWff-004cZl-Ld; Tue, 18 Apr 2023 07:45:59 +1000
-Date:   Tue, 18 Apr 2023 07:45:59 +1000
-From:   Dave Chinner <david@fromorbit.com>
+        with ESMTP id S229669AbjDRAIP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Apr 2023 20:08:15 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 241ED2D50;
+        Mon, 17 Apr 2023 17:08:15 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B52C0624BA;
+        Tue, 18 Apr 2023 00:08:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C4C6C433EF;
+        Tue, 18 Apr 2023 00:08:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1681776494;
+        bh=Yb0irSBXw7t2Gz7uoAYA8W4twG36M0KbteVS8Ot9JOs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=KlF3IPnltglebQejcAINn7CSFumTAN+uisU/H+Bbs0gW17oebxb0pU1sU9gNzm596
+         coAoF+pB2346rN0wcSHNsTT1iLUjv5a+p3WBH6rN5RiHaoTb76YWD6bOxsGF8VeG9j
+         6x4JweJ4m2tIEKO6jqzszRPAv2c62s7A2eWte5nLoppkfmQejBtezaBG2K2nr4JbgR
+         j0lZc0HMN77xyKsElGgYT1/rJwzMk6n8WANIt4jyZfQ6JlbvL+yMsitZZHBbHpi5Tl
+         oFOThGjyczHD41tg0Nocp1cus+paF+r1mIDiAuRHk2ryi5owPuC/IbP5+ZVY9gWX/Y
+         7Mdh1GYRuGHMQ==
+Date:   Mon, 17 Apr 2023 17:08:13 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     ye.xingchen@zte.com.cn
-Cc:     djwong@kernel.org, dchinner@redhat.com, linux-xfs@vger.kernel.org,
+Cc:     dchinner@redhat.com, linux-xfs@vger.kernel.org,
         linux-kernel@vger.kernel.org
 Subject: Re: [PATCH] xfs: scrub: remove duplicate include headers
-Message-ID: <20230417214559.GR3223426@dread.disaster.area>
+Message-ID: <20230418000813.GB360889@frogsfrogsfrogs>
 References: <202304171613075788124@zte.com.cn>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -73,12 +53,45 @@ On Mon, Apr 17, 2023 at 04:13:07PM +0800, ye.xingchen@zte.com.cn wrote:
 > xfs_trans_resv.h and xfs_mount.h are included more than once.
 > 
 > Signed-off-by: Ye Xingchen <ye.xingchen@zte.com.cn>
+> ---
+>  fs/xfs/scrub/health.c   | 2 --
+>  fs/xfs/scrub/refcount.c | 2 --
+>  2 files changed, 4 deletions(-)
+> 
+> diff --git a/fs/xfs/scrub/health.c b/fs/xfs/scrub/health.c
+> index d2b2a1cb6533..66e99b0f6049 100644
+> --- a/fs/xfs/scrub/health.c
+> +++ b/fs/xfs/scrub/health.c
+> @@ -7,8 +7,6 @@
+>  #include "xfs_fs.h"
+>  #include "xfs_shared.h"
+>  #include "xfs_format.h"
+> -#include "xfs_trans_resv.h"
+> -#include "xfs_mount.h"
+>  #include "xfs_btree.h"
+>  #include "xfs_trans_resv.h"
+>  #include "xfs_mount.h"
 
-Yes they are, but it's already been fixed:
+The convention (AFAICT) for include order is xfs_trans_resv -> xfs_mount
+-> xfs_btree.h...
 
-https://lore.kernel.org/linux-xfs/20230415224532.604844-1-david@fromorbit.com/
+> diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
+> index ed5eb367ce49..04d216261f36 100644
+> --- a/fs/xfs/scrub/refcount.c
+> +++ b/fs/xfs/scrub/refcount.c
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Please check the list before sending duplicate diffs.
+
+--D
+
+> @@ -7,8 +7,6 @@
+>  #include "xfs_fs.h"
+>  #include "xfs_shared.h"
+>  #include "xfs_format.h"
+> -#include "xfs_trans_resv.h"
+> -#include "xfs_mount.h"
+>  #include "xfs_btree.h"
+>  #include "xfs_rmap.h"
+>  #include "xfs_refcount.h"
+> -- 
+> 2.25.1
