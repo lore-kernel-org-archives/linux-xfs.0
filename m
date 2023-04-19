@@ -2,404 +2,131 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1B38C6FD18
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Apr 2023 15:40:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8F2AC6FD18
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Apr 2023 16:03:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229716AbjDSPkv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Apr 2023 11:40:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33534 "EHLO
+        id S231496AbjDSQDz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Apr 2023 12:03:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232897AbjDSPku (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Apr 2023 11:40:50 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B3396A67
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Apr 2023 08:40:47 -0700 (PDT)
+        with ESMTP id S231779AbjDSQDy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Apr 2023 12:03:54 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31BFA11A
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Apr 2023 09:03:50 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CE7B36405E
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Apr 2023 15:40:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CDD3C433EF;
-        Wed, 19 Apr 2023 15:40:46 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B3B676214C
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Apr 2023 16:03:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19ABBC433D2;
+        Wed, 19 Apr 2023 16:03:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1681918846;
-        bh=rfQeV+pPK+s9YTFaHvJx1+laDTNV/Mv0GC6NTzWeDZw=;
+        s=k20201202; t=1681920229;
+        bh=pKUjB0+NUZKQEt+144stfGaX0c4mWvNi3af0yRRckJY=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=X8PENtrCCc9b2001NhYIWktTl+pdEAsfoFX0bw9oCfEPmfKBouh3tmTGQkRay8JAc
-         g8n92V8IrPepd7AnDylPifAgmZcGrme2C10X7fnjLoOryCghfrNLIlhn7zUEXdZzx/
-         gk25rNvEc0Z3PlsivNII1HAlSyLoMnkDYCbYR8EKPaL3DIdjQ7GQUpOoiNbdyUaoLF
-         S27YqWxuBejolY+P6qRu+BPki+VxCi/MTnSWTCp1DQ/ApTqVxpDKa7hZ6Njixb0bfh
-         H+gkvbUDgZtmQEjNNNU8TIvFc3PxTYCo15+Bqr7tXDVreQTNyvHMCDmydvLGhRQ93P
-         /zYD5ZO8w5bYw==
-Date:   Wed, 19 Apr 2023 08:40:45 -0700
+        b=lc1reMZHcYwUMIs09RICN3X3ImMdZUjXIv4iEiz1zRSRkjKw/9a+xo8JMPYisedaV
+         Dcp1l9mfdHeJOLctBhjJoBenT5QrVxCyfSjHIEb6+FnTypB+M70As5uF6AjL+UJMwN
+         uhJkLnEYakiycfzwu3Mg1VAdDtlinw5kOYz4u+zxyBYbwya9QQvgH//DllP6JFmNnB
+         dIfSb5sQnZMhbDCVgXhrh+KLVl/X5mBMpxs1gpyuiUXRx9Uq+DpON4XY37doYcGfBa
+         OZ2IB/k9f7tpq6f60Turj7BZPlSO17g/vnT5DCWjf2J3K1DtEvT4MH8AIEOgXViTpA
+         yu1pqnwPABH3w==
+Date:   Wed, 19 Apr 2023 09:03:48 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     Hironori Shiina <shiina.hironori@gmail.com>,
-        linux-xfs@vger.kernel.org, Donald Douwsma <ddouwsma@redhat.com>,
-        Hironori Shiina <shiina.hironori@fujitsu.com>
-Subject: Re: [RFC PATCH V3] xfsrestore: fix rootdir due to xfsdump bulkstat
- misuse
-Message-ID: <20230419154045.GG360889@frogsfrogsfrogs>
-References: <20201116080723.1486270-1-hsiangkao@redhat.com>
- <20220928191052.410437-1-shiina.hironori@fujitsu.com>
- <YzXhMJmbEsEueRKy@magnolia>
- <b706af2d-c897-438e-a735-e0bd66c6b33a@sandeen.net>
+To:     Paul Khuong <pvk@pvk.ca>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: Abusing XFS_IOC_SWAPEXT until FIEXCHANGE_RANGE is merged
+Message-ID: <20230419160348.GN360895@frogsfrogsfrogs>
+References: <CAKiQGhnizx7P6ggAfDJ=mF=DajnWQA4uVqzHH0t2LYuyGwGHOQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b706af2d-c897-438e-a735-e0bd66c6b33a@sandeen.net>
+In-Reply-To: <CAKiQGhnizx7P6ggAfDJ=mF=DajnWQA4uVqzHH0t2LYuyGwGHOQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 19, 2023 at 09:16:28AM -0500, Eric Sandeen wrote:
-> 
-> 
-> On 9/29/22 1:17 PM, Darrick J. Wong wrote:
-> > On Wed, Sep 28, 2022 at 03:10:52PM -0400, Hironori Shiina wrote:
-> >> From: Gao Xiang <hsiangkao@redhat.com>
-> >>
-> >> If rootino is wrong and misspecified to a subdir inode #,
-> >> the following assertion could be triggered:
-> >>   assert(ino != persp->p_rootino || hardh == persp->p_rooth);
-> >>
-> >> This patch adds a '-x' option (another awkward thing is that
-> >> the codebase doesn't support long options) to address
-> >> problamatic images by searching for the real dir, the reason
-> >> that I don't enable it by default is that I'm not very confident
-> >> with the xfsrestore codebase and xfsdump bulkstat issue will
-> >> also be fixed immediately as well, so this function might be
-> >> optional and only useful for pre-exist corrupted dumps.
-> > 
-> > As far as fixing xfsdump -- wasn't XFS_BULK_IREQ_SPECIAL_ROOT supposed
-> > to solve that problem by enabling dump to discover it it's really been
-> > passed the fs root directory?
-> 
-> Yes, but as I understand it this patch is to allow the user to recover
-> from an already corrupted dump, at restore time, right?
+[cc linux-xfs]
 
-Right, though I still haven't seen any patches to dump to employ
-XFS_BULK_IREQ_SPECIAL_ROOT to avoid spitting out bad dumps in the first
-place.  I think the heuristic that we applied is probably good enough,
-but we might as well query the kernel when possible.
-
-> This still feels like deep magic in xfsdump that most people struggle
-> to understand, but it seems clear to me that the changes here are truly
-> isolated to the new "-x" option - IOWs if "-x" is not specified, there is
-> no behavior change at all.
+On Wed, Apr 19, 2023 at 08:57:30AM -0400, Paul Khuong wrote:
+> Hi Darrick,
 > 
-> Since this is intended to attempt recovery from an already-corrupted
-> dump image as a last resort, and given that there are already some xfstests
-> in place to validate the behavior, I feel reasonably comfortable with
-> merging this.
+> I think FIEXCHANGE_RANGE will be a perfect fit for a lot of my needs.
+> In the meantime, would it be (crash-)safe to use XFS_IOC_SWAPEXT as a
+> less flexible replacement?
 
-Documentation nit: Can restore detect that it's been given a corrupt
-dump, and if so, should it warn the user to rerun with -x?
+TLDR: SWAPEXT might work for atomic file content swaps, but I haven't
+done the work to ensure that it always does, and I don't think anyone
+else has.  FIEXCHANGE (without NONATOMIC) will; that's where all my QA
+effort has been focused.
+
+SWAPEXT doesn't guarantee atomicity of the extents swapped.  It might
+survive an unexpected crash if you have do not have reverse mapping
+enabled on the filesystem /and/ mount with -o wsync.
+
+But keep in mind that all the SWAPEXT fstests (until recently) only
+checked that fsr works ok, and fsr calls the kernel with two files that
+have identical contents.  Also, as you note below, SWAPEXT refuses to
+run if the fdtmp has more extents than fdtarget, which makes it doubly
+unsuitable for atomic file commits since ... reversing the order of the
+fds and retrying is kinda gross.
+
+FIEXCHANGE adds the necessary logging support and removes all those
+restrictions so that it /can/ be used for atomic file data commits, in
+more or less the sequence you lay out below.  I'll evaluate your steps
+as if you were asking about FIEXCHANGE. ;)
+
+> I tested the following sequence in XFS
+> (https://gist.github.com/pkhuong/d41f42b1536592cb0dace837c17cb402),
+> and, while the happy path seems to work, I'm not fully convinced it
+> won't corrupt my data on system crash.
+> 
+> 0. Assume mutual exclusion is handled somewhere else, so we don't have
+> to worry about concurrent writes/swaps
+
+Yes, the kernel locks and flushes both files once you issue the
+FIEXCHANGE call.
+
+> 1. open data file
+> 2. open O_TMPFILE (* should I instead use a named temporary file?)
+
+Either's fine, FIEXCHANGE operate on file descriptors, not paths.
+
+> 3. FICLONE data file in tmpfile
+> 4. overwrite some bytes in tmpfile, without changing its size
+> 5. fsync the tmpfile
+
+FIEXCHANGE flushes both files for you after taking the kernel locks.
+
+> 6. SWAPEXT data file "into" tmpfile
+> 7. If that failed, try to SWAPEXT the tmpfile into the data file
+
+No need for #7, FIEXCHANGE isn't like FIDEDUPERANGE where there's an
+implied direction.
+
+> The last two steps are already strange, because they clearly diverge
+> from what xfs_fsr does. AFAICT, there's a kernel-side check that
+> "fdtmp" isn't more fragmented than "fdtarget", so I usually have to
+> try to set my tmpfile as "fdtarget" and the actual data file as
+> "fdtmp." The behaviour when nothing crashes is still correct: a swap
+> is commutative.
+> 
+> I'm worried about seeing a mix of the initial data file and the
+> tmpfile's contents after a system crash. In other words, does
+> XFS_IOC_SWAPEXT currently implement something like
+> FILE_XCHG_RANGE_NONATOMIC (and if so, would XFS be willing to pin down
+> and document the order in which extents are swapped? ;), or is the
+> swap actually crash-atomic?
+
+It's not guaranteed to be crash atomic at all, and I don't want to
+expand the support scope of an ioctl that will soon be part of the
+legacy API.
+
+Everyone else please focus on getting FIEXCHANGE reviewed so we can
+merge that to upstream.
 
 --D
 
-> Reviwed-by: Eric Sandeen <sandeen@redhat.com>
+> TIA,
 > 
-> -Eric
-> 
-> > --D
-> > 
-> >> In details, my understanding of the original logic is
-> >>  1) xfsrestore will create a rootdir node_t (p_rooth);
-> >>  2) it will build the tree hierarchy from inomap and adopt
-> >>     the parent if needed (so inodes whose parent ino hasn't
-> >>     detected will be in the orphan dir, p_orphh);
-> >>  3) during this period, if ino == rootino and
-> >>     hardh != persp->p_rooth (IOWs, another node_t with
-> >>     the same ino # is created), that'd be definitely wrong.
-> >>
-> >> So the proposal fix is that
-> >>  - considering the xfsdump root ino # is a subdir inode, it'll
-> >>    trigger ino == rootino && hardh != persp->p_rooth condition;
-> >>  - so we log this node_t as persp->p_rooth rather than the
-> >>    initial rootdir node_t created in 1);
-> >>  - we also know that this node is actually a subdir, and after
-> >>    the whole inomap is scanned (IOWs, the tree is built),
-> >>    the real root dir will have the orphan dir parent p_orphh;
-> >>  - therefore, we walk up by the parent until some node_t has
-> >>    the p_orphh, so that's it.
-> >>
-> >> Cc: Donald Douwsma <ddouwsma@redhat.com>
-> >> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
-> >> Signed-off-by: Hironori Shiina <shiina.hironori@fujitsu.com>
-> >> ---
-> >>
-> >> changes since RFC v2:
-> >>  - re-adopt the orphanage dir to the fixed root for creating a
-> >>    correct path of the orphanage dir.
-> >>
-> >>  - add description of the new '-x' option to the man page.
-> >>
-> >> changes since RFC v1:
-> >>  - fix non-dir fake rootino cases since tree_begindir()
-> >>    won't be triggered for these non-dir, and we could do
-> >>    that in tree_addent() instead (fault injection verified);
-> >>
-> >>  - fix fake rootino case with gen = 0 as well, for more
-> >>    details, see the inlined comment in link_hardh()
-> >>    (fault injection verified as well).
-> >>
-> >>  common/main.c         |  1 +
-> >>  man/man8/xfsrestore.8 | 14 +++++++++
-> >>  restore/content.c     |  7 +++++
-> >>  restore/getopt.h      |  4 +--
-> >>  restore/tree.c        | 72 ++++++++++++++++++++++++++++++++++++++++---
-> >>  restore/tree.h        |  2 ++
-> >>  6 files changed, 94 insertions(+), 6 deletions(-)
-> >>
-> >> diff --git a/common/main.c b/common/main.c
-> >> index 1db07d4..6141ffb 100644
-> >> --- a/common/main.c
-> >> +++ b/common/main.c
-> >> @@ -988,6 +988,7 @@ usage(void)
-> >>  	ULO(_("(contents only)"),			GETOPT_TOC);
-> >>  	ULO(_("<verbosity {silent, verbose, trace}>"),	GETOPT_VERBOSITY);
-> >>  	ULO(_("(use small tree window)"),		GETOPT_SMALLWINDOW);
-> >> +	ULO(_("(try to fix rootdir due to xfsdump issue)"),GETOPT_FIXROOTDIR);
-> >>  	ULO(_("(don't restore extended file attributes)"), GETOPT_NOEXTATTR);
-> >>  	ULO(_("(restore root dir owner/permissions)"),	GETOPT_ROOTPERM);
-> >>  	ULO(_("(restore DMAPI event settings)"),	GETOPT_SETDM);
-> >> diff --git a/man/man8/xfsrestore.8 b/man/man8/xfsrestore.8
-> >> index 60e4309..df7dde0 100644
-> >> --- a/man/man8/xfsrestore.8
-> >> +++ b/man/man8/xfsrestore.8
-> >> @@ -240,6 +240,20 @@ but does not create or modify any files or directories.
-> >>  It may be desirable to set the verbosity level to \f3silent\f1
-> >>  when using this option.
-> >>  .TP 5
-> >> +.B \-x
-> >> +This option may be useful to fix an issue which the files are restored
-> >> +to orphanage directory because of xfsdump (v3.1.7 - v3.1.9) problem.
-> >> +A normal dump cannot be restored with this option. This option works
-> >> +only for a corrupted dump.
-> >> +If a dump is created by problematic xfsdump (v3.1.7 - v3.1.9), you
-> >> +should see the contents of the dump with \f3\-t\f1 option before
-> >> +restoring. Then, if a file is placed to the orphanage directory, you need to
-> >> +use this \f3\-x\f1 option to restore the dump. Otherwise, you can restore
-> >> +the dump without this option.
-> >> +
-> >> +In the cumulative mode, this option is required only for a base (level 0)
-> >> +dump. You no longer need this option for level 1+ dumps.
-> >> +.TP 5
-> >>  \f3\-v\f1 \f2verbosity\f1
-> >>  .\" set inter-paragraph distance to 0
-> >>  .PD 0
-> >> diff --git a/restore/content.c b/restore/content.c
-> >> index b19bb90..fdf26dd 100644
-> >> --- a/restore/content.c
-> >> +++ b/restore/content.c
-> >> @@ -861,6 +861,7 @@ static int quotafilecheck(char *type, char *dstdir, char *quotafile);
-> >>  
-> >>  bool_t content_media_change_needed;
-> >>  bool_t restore_rootdir_permissions;
-> >> +bool_t need_fixrootdir;
-> >>  char *media_change_alert_program = NULL;
-> >>  size_t perssz;
-> >>  
-> >> @@ -958,6 +959,7 @@ content_init(int argc, char *argv[], size64_t vmsz)
-> >>  	stsz = 0;
-> >>  	interpr = BOOL_FALSE;
-> >>  	restore_rootdir_permissions = BOOL_FALSE;
-> >> +	need_fixrootdir = BOOL_FALSE;
-> >>  	optind = 1;
-> >>  	opterr = 0;
-> >>  	while ((c = getopt(argc, argv, GETOPT_CMDSTRING)) != EOF) {
-> >> @@ -1186,6 +1188,9 @@ content_init(int argc, char *argv[], size64_t vmsz)
-> >>  		case GETOPT_FMT2COMPAT:
-> >>  			tranp->t_truncategenpr = BOOL_TRUE;
-> >>  			break;
-> >> +		case GETOPT_FIXROOTDIR:
-> >> +			need_fixrootdir = BOOL_TRUE;
-> >> +			break;
-> >>  		}
-> >>  	}
-> >>  
-> >> @@ -3129,6 +3134,8 @@ applydirdump(drive_t *drivep,
-> >>  			return rv;
-> >>  		}
-> >>  
-> >> +		if (need_fixrootdir)
-> >> +			tree_fixroot();
-> >>  		persp->s.dirdonepr = BOOL_TRUE;
-> >>  	}
-> >>  
-> >> diff --git a/restore/getopt.h b/restore/getopt.h
-> >> index b5bc004..b0c0c7d 100644
-> >> --- a/restore/getopt.h
-> >> +++ b/restore/getopt.h
-> >> @@ -26,7 +26,7 @@
-> >>   * purpose is to contain that command string.
-> >>   */
-> >>  
-> >> -#define GETOPT_CMDSTRING	"a:b:c:def:himn:op:qrs:tv:wABCDEFG:H:I:JKL:M:NO:PQRS:TUVWX:Y:"
-> >> +#define GETOPT_CMDSTRING	"a:b:c:def:himn:op:qrs:tv:wxABCDEFG:H:I:JKL:M:NO:PQRS:TUVWX:Y:"
-> >>  
-> >>  #define GETOPT_WORKSPACE	'a'	/* workspace dir (content.c) */
-> >>  #define GETOPT_BLOCKSIZE        'b'     /* blocksize for rmt */
-> >> @@ -51,7 +51,7 @@
-> >>  /*				'u' */
-> >>  #define	GETOPT_VERBOSITY	'v'	/* verbosity level (0 to 4) */
-> >>  #define	GETOPT_SMALLWINDOW	'w'	/* use a small window for dir entries */
-> >> -/*				'x' */
-> >> +#define GETOPT_FIXROOTDIR	'x'	/* try to fix rootdir due to bulkstat misuse */
-> >>  /*				'y' */
-> >>  /*				'z' */
-> >>  #define	GETOPT_NOEXTATTR	'A'	/* do not restore ext. file attr. */
-> >> diff --git a/restore/tree.c b/restore/tree.c
-> >> index 5429b74..bfa07fe 100644
-> >> --- a/restore/tree.c
-> >> +++ b/restore/tree.c
-> >> @@ -15,7 +15,6 @@
-> >>   * along with this program; if not, write the Free Software Foundation,
-> >>   * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> >>   */
-> >> -
-> >>  #include <stdio.h>
-> >>  #include <unistd.h>
-> >>  #include <stdlib.h>
-> >> @@ -262,6 +261,7 @@ extern void usage(void);
-> >>  extern size_t pgsz;
-> >>  extern size_t pgmask;
-> >>  extern bool_t restore_rootdir_permissions;
-> >> +extern bool_t need_fixrootdir;
-> >>  
-> >>  /* forward declarations of locally defined static functions ******************/
-> >>  
-> >> @@ -328,10 +328,47 @@ static tran_t *tranp = 0;
-> >>  static char *persname = PERS_NAME;
-> >>  static char *orphname = ORPH_NAME;
-> >>  static xfs_ino_t orphino = ORPH_INO;
-> >> +static nh_t orig_rooth = NH_NULL;
-> >>  
-> >>  
-> >>  /* definition of locally defined global functions ****************************/
-> >>  
-> >> +void
-> >> +tree_fixroot(void)
-> >> +{
-> >> +	nh_t		rooth = persp->p_rooth;
-> >> +	xfs_ino_t 	rootino;
-> >> +
-> >> +	while (1) {
-> >> +		nh_t	parh;
-> >> +		node_t *rootp = Node_map(rooth);
-> >> +
-> >> +		rootino = rootp->n_ino;
-> >> +		parh = rootp->n_parh;
-> >> +		Node_unmap(rooth, &rootp);
-> >> +
-> >> +		if (parh == rooth ||
-> >> +		/*
-> >> +		 * since all new node (including non-parent)
-> >> +		 * would be adopted into orphh
-> >> +		 */
-> >> +		    parh == persp->p_orphh ||
-> >> +		    parh == NH_NULL)
-> >> +			break;
-> >> +		rooth = parh;
-> >> +	}
-> >> +
-> >> +	if (rooth != persp->p_rooth) {
-> >> +		persp->p_rooth = rooth;
-> >> +		persp->p_rootino = rootino;
-> >> +		disown(rooth);
-> >> +		adopt(persp->p_rooth, persp->p_orphh, NH_NULL);
-> >> +
-> >> +		mlog(MLOG_NORMAL, _("fix root # to %llu (bind mount?)\n"),
-> >> +		     rootino);
-> >> +	}
-> >> +}
-> >> +
-> >>  /* ARGSUSED */
-> >>  bool_t
-> >>  tree_init(char *hkdir,
-> >> @@ -746,7 +783,8 @@ tree_begindir(filehdr_t *fhdrp, dah_t *dahp)
-> >>  	/* lookup head of hardlink list
-> >>  	 */
-> >>  	hardh = link_hardh(ino, gen);
-> >> -	assert(ino != persp->p_rootino || hardh == persp->p_rooth);
-> >> +	if (need_fixrootdir == BOOL_FALSE)
-> >> +		assert(ino != persp->p_rootino || hardh == persp->p_rooth);
-> >>  
-> >>  	/* already present
-> >>  	 */
-> >> @@ -815,7 +853,6 @@ tree_begindir(filehdr_t *fhdrp, dah_t *dahp)
-> >>  		adopt(persp->p_orphh, hardh, NRH_NULL);
-> >>  		*dahp = dah;
-> >>  	}
-> >> -
-> >>  	return hardh;
-> >>  }
-> >>  
-> >> @@ -960,6 +997,7 @@ tree_addent(nh_t parh, xfs_ino_t ino, gen_t gen, char *name, size_t namelen)
-> >>  				}
-> >>  			} else {
-> >>  				assert(hardp->n_nrh != NRH_NULL);
-> >> +
-> >>  				namebuflen
-> >>  				=
-> >>  				namreg_get(hardp->n_nrh,
-> >> @@ -1110,6 +1148,13 @@ tree_addent(nh_t parh, xfs_ino_t ino, gen_t gen, char *name, size_t namelen)
-> >>  		      ino,
-> >>  		      gen);
-> >>  	}
-> >> +	/* found the fake rootino from subdir, need fix p_rooth. */
-> >> +	if (need_fixrootdir == BOOL_TRUE &&
-> >> +	    persp->p_rootino == ino && hardh != persp->p_rooth) {
-> >> +		mlog(MLOG_NORMAL,
-> >> +		     _("found fake rootino #%llu, will fix.\n"), ino);
-> >> +		persp->p_rooth = hardh;
-> >> +	}
-> >>  	return RV_OK;
-> >>  }
-> >>  
-> >> @@ -3808,7 +3853,26 @@ selsubtree_recurse_down(nh_t nh, bool_t sensepr)
-> >>  static nh_t
-> >>  link_hardh(xfs_ino_t ino, gen_t gen)
-> >>  {
-> >> -	return hash_find(ino, gen);
-> >> +	nh_t tmp = hash_find(ino, gen);
-> >> +
-> >> +	/*
-> >> +	 * XXX (another workaround): the simply way is that don't reuse node_t
-> >> +	 * with gen = 0 created in tree_init(). Otherwise, it could cause
-> >> +	 * xfsrestore: tree.c:1003: tree_addent: Assertion
-> >> +	 * `hardp->n_nrh != NRH_NULL' failed.
-> >> +	 * and that node_t is a dir node but the fake rootino could be a non-dir
-> >> +	 * plus reusing it could cause potential loop in tree hierarchy.
-> >> +	 */
-> >> +	if (need_fixrootdir == BOOL_TRUE &&
-> >> +	    ino == persp->p_rootino && gen == 0 &&
-> >> +	    orig_rooth == NH_NULL) {
-> >> +		mlog(MLOG_NORMAL,
-> >> +_("link out fake rootino %llu with gen=0 created in tree_init()\n"), ino);
-> >> +		link_out(tmp);
-> >> +		orig_rooth = tmp;
-> >> +		return NH_NULL;
-> >> +	}
-> >> +	return tmp;
-> >>  }
-> >>  
-> >>  /* returns following node in hard link list
-> >> diff --git a/restore/tree.h b/restore/tree.h
-> >> index bf66e3d..f5bd4ff 100644
-> >> --- a/restore/tree.h
-> >> +++ b/restore/tree.h
-> >> @@ -18,6 +18,8 @@
-> >>  #ifndef TREE_H
-> >>  #define TREE_H
-> >>  
-> >> +void tree_fixroot(void);
-> >> +
-> >>  /* tree_init - creates a new tree abstraction.
-> >>   */
-> >>  extern bool_t tree_init(char *hkdir,
-> >> -- 
-> >> 2.37.3
-> >>
-> > 
+> Paul Khuong
