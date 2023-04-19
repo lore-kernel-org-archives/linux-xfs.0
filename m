@@ -2,97 +2,100 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E977C77B75
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Apr 2023 01:28:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEA87C77B76
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Apr 2023 01:29:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231348AbjDSB2b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Apr 2023 21:28:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34674 "EHLO
+        id S231593AbjDSB3y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Apr 2023 21:29:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34792 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231496AbjDSB2a (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Apr 2023 21:28:30 -0400
-Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D5877ED7
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Apr 2023 18:28:29 -0700 (PDT)
-Received: by mail-pg1-x533.google.com with SMTP id 41be03b00d2f7-51b914ffe71so245425a12.1
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Apr 2023 18:28:29 -0700 (PDT)
+        with ESMTP id S231580AbjDSB3x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Apr 2023 21:29:53 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D9BA83D9
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Apr 2023 18:29:52 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-63b621b1dabso1331238b3a.0
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Apr 2023 18:29:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1681867708; x=1684459708;
+        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1681867792; x=1684459792;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=fORvDtycGEYAP00Go8Gr75NbmrQRJi6legeNyHFvVc4=;
-        b=LrmAEIyGSJiRmmpboUhhQgqPcY35ao1RN/OmUVmJ2+dtZKoCNZbb8NLxueipM+G5cL
-         7Z8Nwal6Jz63ieQNUvv003Q/cAVuE98OeSDB3Ay0Doy0h7oKAWn5SO9oU40wJCf0tbCQ
-         BQ42zZnn0Cg/VQDTeWslhL7Wd8s61avskpFcinz3IKJk+gNlExkijnMyMDYHJlhUHd5M
-         8IVAzrRyL0O2Bazz7z+f5qoE6nxJXJFFSe3jLE/4Y/nctAfi6fljhWgSEFtC2xGzhK5C
-         mIW0MC0YJkbwEU94y4kb1t2bC6NCGfVeKEG9Yso2dAk27EpJOXvZk/aks8gm/9xAtK5z
-         hsig==
+        bh=CTWQHeFJ3ejIWTMeS4au4uWFQrR7IGwBMPklLJD51kM=;
+        b=iY7gk4ydmQXDkfNyu+MZGQblceMwQfO/z23bL/cPtba2iVUF4SzsDTs/xKVDOiBpUT
+         I0ltsqqaDT7SgbUVaANpQf+201Hzyy2FIuVXbK2SlZbDSIvw6bWL3pD7zFySlNYZvzb/
+         sx3OatojqqQpZPP6EWjo16Ds6J7w/ZPNXVLhKpNPLwXMeCuw+ckAC7WMmUuO+6431lOt
+         ebBE3LEupU+uIdn9IM6MqN7eumxHmVVW6V2sr+z7+4MSFnzphBV83lVJIO+jTPSUfdsl
+         uMCzKP39dKDyV1zjX1MjQnT2BhA7LwvYhQtq0pBrHmvB6HOjJKR6guyu11o5zochPLch
+         B+fg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681867708; x=1684459708;
+        d=1e100.net; s=20221208; t=1681867792; x=1684459792;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=fORvDtycGEYAP00Go8Gr75NbmrQRJi6legeNyHFvVc4=;
-        b=hDskf8G2KhCx6UIyZe5OOH9cgcjvmBzaWdiptmeeA4woIg5NCjPJAzt6KiEYEHMLgj
-         2BKGLr1Go3qFAnf5eezucoaaOGrMUXJauu8a9pCaO7hW1Ly9DByfnhCk9srZKShRV95R
-         4lGv0EnHSV38gsKG9nxiP15NzBwHSDNk5IEJgiNpUCxrq/WVswGZFaqgNXHFBPxXwdNd
-         Pls5QU4loTvEj1gXeK+kRuFVW/8TFRa7c5eE/d0qIQtZ6hHcteSOeiReWImisBXJF+HX
-         DtCZ1MFwg0zD4JiiHqsF909uBeT+STqbF2Z0iiWcQgnBEjgIYFLvBJjd764T3b44c0eq
-         s6NA==
-X-Gm-Message-State: AAQBX9dRe0Sq+egU5r2t2ajr1l5taOJB9cikPKHG1dfA8j+PmFr9iVOJ
-        3frNc0FBJDI3piDhkf1MxoCa3w==
-X-Google-Smtp-Source: AKy350ZW2i/ZFxByFt235VEJD3loFwfTTKFlgazg6SB7eTiGwpib5QWAwouBg+e5G+DCGghYaT9aug==
-X-Received: by 2002:a17:902:dad1:b0:1a1:956d:2281 with SMTP id q17-20020a170902dad100b001a1956d2281mr19890233plx.3.1681867708384;
-        Tue, 18 Apr 2023 18:28:28 -0700 (PDT)
+        bh=CTWQHeFJ3ejIWTMeS4au4uWFQrR7IGwBMPklLJD51kM=;
+        b=ecu6YpKDDgjkga4CKfb/cwpw7n8HzxQ9jbmwAwUaeXSwfKhFUaiBzObl2l3CRxaiUN
+         VdHoHHX1DgOpYmiHqWac7AcR+iR+pn18pkRst/ki80nDRuL575P10XVQ/buCyUbuvnfw
+         ATVmZtWUA18ODtjSbTAwY4CSxY/i++MGyug1qy343AcCrZlRiZGETZGreQvP7DSjh77U
+         RA8UDFRwT8J7N8SDXx61TMy/7MdzPFy6jjWC99syt1odsaC2KMZcHpn3Y7NFihRPyhe5
+         CGsJ3Cxvf16k5MF7g1KOnjWSXF0Ne/PAez1Y04GvvCMOEesn3mUaXBdOnO1bpE44Mz/y
+         O+ew==
+X-Gm-Message-State: AAQBX9fNVZO5fFXbBhfHlhxDHs+Vc/ITmkSTQIIUGdpaxd5cdNnTPQ5K
+        ABmwHgVEoGhog5KiKro87TxLuw==
+X-Google-Smtp-Source: AKy350YgGFc6D4OlqyGc33XUajSpTxBulscq4UQTfX2cwKFjfV1dXXkb1fTZFkeeErOvr00LW2LV5w==
+X-Received: by 2002:a05:6a21:339a:b0:cb:af96:9436 with SMTP id yy26-20020a056a21339a00b000cbaf969436mr18922152pzb.0.1681867791653;
+        Tue, 18 Apr 2023 18:29:51 -0700 (PDT)
 Received: from [192.168.1.136] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id x24-20020a1709027c1800b001a50ede5086sm10206660pll.51.2023.04.18.18.28.27
+        by smtp.gmail.com with ESMTPSA id q12-20020a631f4c000000b0051b8172fa68sm6508791pgm.38.2023.04.18.18.29.50
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 18 Apr 2023 18:28:28 -0700 (PDT)
-Message-ID: <b09e799e-9d9f-ae22-1f09-babd6521b11d@kernel.dk>
-Date:   Tue, 18 Apr 2023 19:28:26 -0600
+        Tue, 18 Apr 2023 18:29:51 -0700 (PDT)
+Message-ID: <74244cb8-abf5-b559-5e9f-24d39c801855@kernel.dk>
+Date:   Tue, 18 Apr 2023 19:29:50 -0600
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
  Thunderbird/102.9.0
 Subject: Re: [PATCH 1/2] fs: add FMODE_DIO_PARALLEL_WRITE flag
 Content-Language: en-US
-To:     Dave Chinner <david@fromorbit.com>,
-        Bernd Schubert <bschubert@ddn.com>
+To:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <djwong@kernel.org>
 Cc:     Miklos Szeredi <miklos@szeredi.hu>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        "io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        Dharmendra Singh <dsingh@ddn.com>
+        Bernd Schubert <bschubert@ddn.com>, io-uring@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, dsingh@ddn.com
 References: <20230307172015.54911-2-axboe@kernel.dk>
  <20230412134057.381941-1-bschubert@ddn.com>
  <CAJfpegt_ZCVodOhQCzF9OqKnCr65mKax0Gu4OTN8M51zP+8TcA@mail.gmail.com>
  <ZDjggMCGautPUDpW@infradead.org> <20230414153612.GB360881@frogsfrogsfrogs>
- <cfeade24-81fc-ab73-1fd9-89f12a402486@kernel.dk>
- <CAJfpegvv-SPJRjWrR_+JY-H=xmYq0pnTfAtj-N8kG7AnQvWd=w@mail.gmail.com>
- <e4855cfa-3683-f12c-e865-6e5c4d0e5602@ddn.com>
- <20230418221300.GT3223426@dread.disaster.area>
+ <ZDuNqQgpHUw+gi9G@infradead.org>
 From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <20230418221300.GT3223426@dread.disaster.area>
+In-Reply-To: <ZDuNqQgpHUw+gi9G@infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 4/18/23 4:13?PM, Dave Chinner wrote:
->>> Without first attempting to answer those questions, I'd be reluctant
->>> to add  FMODE_DIO_PARALLEL_WRITE to fuse.
+On 4/15/23 11:54?PM, Christoph Hellwig wrote:
+> On Fri, Apr 14, 2023 at 08:36:12AM -0700, Darrick J. Wong wrote:
+>> IIUC uring wants to avoid the situation where someone sends 300 writes
+>> to the same file, all of which end up in background workers, and all of
+>> which then contend on exclusive i_rwsem.  Hence it has some hashing
+>> scheme that executes io requests serially if they hash to the same value
+>> (which iirc is the inode number?) to prevent resource waste.
+>>
+>> This flag turns off that hashing behavior on the assumption that each of
+>> those 300 writes won't serialize on the other 299 writes, hence it's ok
+>> to start up 300 workers.
+>>
+>> (apologies for precoffee garbled response)
 > 
-> I'd tag it with this anyway - for the majority of apps that are
-> doing concurrent DIO within EOF, shared locking is big win. If
-> there's a corner case that apps trigger that is slow, deal with them
-> when they are reported....
+> It might be useful if someone (Jens?) could clearly document the
+> assumptions for this flag.
 
-Agree, the common/fast case will be fine, which is really the most
-important part.
+I guess it can be summed up as the common case should not be using
+exclusive (per file/inode) locking. If file extensions need exclusive
+locking that's less of a concern, as I don't think it's unreasonable to
+expect that to require stricter locking.
 
 -- 
 Jens Axboe
