@@ -2,215 +2,107 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7547C77B73
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Apr 2023 16:18:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1F4FC77B73
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Apr 2023 22:34:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233433AbjDSQS0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Apr 2023 12:18:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34334 "EHLO
+        id S232716AbjDSWeg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Apr 2023 18:34:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34076 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232218AbjDSQSV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Apr 2023 12:18:21 -0400
-Received: from mail-wm1-x330.google.com (mail-wm1-x330.google.com [IPv6:2a00:1450:4864:20::330])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DD29273B;
-        Wed, 19 Apr 2023 09:18:20 -0700 (PDT)
-Received: by mail-wm1-x330.google.com with SMTP id q5so17396774wmo.4;
-        Wed, 19 Apr 2023 09:18:20 -0700 (PDT)
+        with ESMTP id S233208AbjDSWea (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Apr 2023 18:34:30 -0400
+Received: from mail-yw1-x1131.google.com (mail-yw1-x1131.google.com [IPv6:2607:f8b0:4864:20::1131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C68437DA5
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Apr 2023 15:33:53 -0700 (PDT)
+Received: by mail-yw1-x1131.google.com with SMTP id 00721157ae682-555d2810415so3979087b3.0
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Apr 2023 15:33:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1681921098; x=1684513098;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=bPbBUkq+UJhlsKaVe40uitnmx81R5jNbDC+Tu3XDd+8=;
-        b=SyE1RoBpA+TNKMitt+cmt1NwwWaVw/Kg6PM8f6c5g5wbPsvpXtKf9769Col+yIbb4M
-         6cIa36q3ay5iwF37q90mSZs4l/vJZD53uQovwj/sw/fXSMm9yxD/L5SH8cUlrKYEmo3Z
-         RKLP5edwP4DCMlC76lZMiB4QGxObd7TaYr1tUMOqreCWO61D5VFJgRVYI4e532KnrzHZ
-         kTu3m+FXYx+SXPLTfe9xnk2toNb/Hqz3lbPGQIlphmgjGkr4T+1vRSsWl/aWuqqB05qa
-         JYP8Wq+GoLy+YeVPzNa39IFYRori3gXiZaHTNSbHuYblly/kKh+RRXBPXysy2c9NezAb
-         pq5A==
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1681943571; x=1684535571;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=/ZrPULhZIKJV34C2bhX8PcgMIHgEG0C+dg13xBQhh0w=;
+        b=RabHNL6ucg+lrMOckK/Oltz0iwTzIrfM/rRefbYg4xK+nunYtDPeTThL+qEcZMVUzX
+         F29FUiKRy0FX8zVKkA7jvuxoNQguwUdHhTj3HthyuhsAxPyAs8gcPlh1XJ+/Ugh8LshW
+         LjuagDciyaotozTcgqUEaTAxuGqFr4dU6COGjXtR1HRS9JESHLXOknBTXGSddrwgEfkw
+         7nFKeObF/8FxRPfas2o3OKEMQYD0UFIZrYvxmnuzPLNi8cqflrqOkfff7LMN6sKjEZ/X
+         uecSKVGVefGpO6eXQxn8LEVxw6sajs6YdJZTmnCNVUiq7KK1bEnwfnecnNbhWH0Y4DkU
+         ZnmQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681921098; x=1684513098;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=bPbBUkq+UJhlsKaVe40uitnmx81R5jNbDC+Tu3XDd+8=;
-        b=CPXRmi1FMSRa07KkLiE2RbkRGZQ8lnrcQbkii4XNj8FZjrvMYLRO9sYhrZqwn38cYj
-         fTOKHBc8Dpy1bhn86oBi70pTlMEKclaAdB+7LDPJ4kgAl5z7fVHWeEwQDrglG8uz0fI1
-         EZiD5w+i3/D6QNQMXgf7IOKxjvvWVYwoM3KXb65voO+WFlFiOrTj8No8Yn8SDognQ5io
-         DTEEcKIJxw6IenB5ksiGgmnF5JXANhnfmn9ttKOCF/fgR8Vs0amkxJ2pU4+drx1hDW1F
-         7hJfVj//XRtY7B2rFul2XoFkzJ4lhTfVBX0yHL0NGVmNenDbLXUt/mPFZAHoDfW+0D9b
-         OMDQ==
-X-Gm-Message-State: AAQBX9fXTBr29KWvf5LiFQs4poLop2gEM2ZrvR22/Vwf8n7NikJ71Z3y
-        GHiJm4JO9gPPJF53hmoQHQHxATXkGug=
-X-Google-Smtp-Source: AKy350Z0kCRMHAFCDDUqpoWE90GT+15XzBY0+g3DzHOl91xXRRrQS1sQrXGGe0sI16jUiFlSxdhqaw==
-X-Received: by 2002:a05:600c:b49:b0:3f1:79ad:f3a8 with SMTP id k9-20020a05600c0b4900b003f179adf3a8mr4937433wmr.16.1681921098408;
-        Wed, 19 Apr 2023 09:18:18 -0700 (PDT)
-Received: from amir-ThinkPad-T480.lan ([5.29.249.86])
-        by smtp.gmail.com with ESMTPSA id iw18-20020a05600c54d200b003f174cafcdasm2684106wmb.7.2023.04.19.09.18.16
+        d=1e100.net; s=20221208; t=1681943571; x=1684535571;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=/ZrPULhZIKJV34C2bhX8PcgMIHgEG0C+dg13xBQhh0w=;
+        b=bEyFNfMMeF70HQ2FVPBX7Yq4n3PUDv5jUCcYvPhJ/wHomawgwnv9NJmBCJJLDoKLQg
+         Gw5A8oKNja0imVaZqw8LeoH99xBCO9JIQEWS3BpqD9GTmKV7pAIzgYOaVFk4o/LME61s
+         KlkwZfP9UEIjdR5CvVspYnxvELLkHBEtu73aMJ22xXaOvu26r+KLCLc01RYEtydR9YQS
+         xh9e/ZSptoKCt+OCrrhLPEhUO0iVsRQCpDiiRsBwpsVCjvrMv7Ngl+uuF32YbUe43ms9
+         rFNUQLWH7lKoqY0LAhCFH8Cyt8AEyXmObmovUc9sqVPg3MbZUcgK0LM1liclHYJEe7da
+         tuVg==
+X-Gm-Message-State: AAQBX9eYTXJhV61ksBlZT5Z8p0+19xxgNXTdHwHVJWHwffDfbZ3MG1i0
+        eUDPXGTbM7VonqZ+ASFZlNAn9zLh0OCzSP76rts=
+X-Google-Smtp-Source: AKy350Yn+z+rdiDG8ySW4WCMw+0zQ/ws73YT2f1f1XxWKOrSMbU2byidZa3yVOwPBeUzkNz7+7uMJA==
+X-Received: by 2002:a17:902:654a:b0:1a8:1c9a:f68 with SMTP id d10-20020a170902654a00b001a81c9a0f68mr3322962pln.36.1681942790785;
+        Wed, 19 Apr 2023 15:19:50 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-41-174.pa.nsw.optusnet.com.au. [49.180.41.174])
+        by smtp.gmail.com with ESMTPSA id ji2-20020a170903324200b001a4ee6ec809sm11964287plb.46.2023.04.19.15.19.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Apr 2023 09:18:18 -0700 (PDT)
-From:   Amir Goldstein <amir73il@gmail.com>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Sasha Levin <sashal@kernel.org>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Leah Rumancik <leah.rumancik@gmail.com>,
-        linux-xfs@vger.kernel.org, stable@vger.kernel.org,
-        Brian Foster <bfoster@redhat.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Christian Theune <ct@flyingcircus.io>
-Subject: [PATCH 5.10] xfs: drop submit side trans alloc for append ioends
-Date:   Wed, 19 Apr 2023 19:18:13 +0300
-Message-Id: <20230419161813.2044576-1-amir73il@gmail.com>
-X-Mailer: git-send-email 2.34.1
+        Wed, 19 Apr 2023 15:19:50 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1ppG9T-005QFi-2w; Thu, 20 Apr 2023 08:19:47 +1000
+Date:   Thu, 20 Apr 2023 08:19:47 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Bagas Sanjaya <bagasdotme@gmail.com>,
+        Linux XFS Development <linux-xfs@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>
+Subject: Re: [PATCH] Documentation: xfs: Extend table marker on deprecated
+ mount options table
+Message-ID: <20230419221947.GU3223426@dread.disaster.area>
+References: <20230419094921.27279-1-bagasdotme@gmail.com>
+ <20230419151536.GM360895@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230419151536.GM360895@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Brian Foster <bfoster@redhat.com>
+On Wed, Apr 19, 2023 at 08:15:36AM -0700, Darrick J. Wong wrote:
+> On Wed, Apr 19, 2023 at 04:49:21PM +0700, Bagas Sanjaya wrote:
+> > Sphinx reports htmldocs warning on deprecated mount options table:
+> > 
+> > /home/bagas/repo/linux-kernel/Documentation/admin-guide/xfs.rst:243: WARNING: Malformed table.
+> > Text in column margin in table line 5.
+> > 
+> > ===========================     ================
+> >   Name                          Removal Schedule
+> > ===========================     ================
+> > Mounting with V4 filesystem     September 2030
+> > Mounting ascii-ci filesystem    September 2030
+> > ikeep/noikeep                   September 2025
+> > attr2/noattr2                   September 2025
+> > ===========================     ================
+> > 
+> > Extend the table markers to take account of the second name entry
+> > ("Mounting ascii-ci filesystem"), which is now the widest and
+> > to fix the above warning.
+> > 
+> > Fixes: 7ba83850ca2691 ("xfs: deprecate the ascii-ci feature")
+> > Signed-off-by: Bagas Sanjaya <bagasdotme@gmail.com>
+> 
+> Looks good.  Dave, could you take this through the xfs tree whenever you
+> push the duplicate #include fixes, please?
+> 
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-commit 7cd3099f4925d7c15887d1940ebd65acd66100f5 upstream.
+Applied.
 
-Per-inode ioend completion batching has a log reservation deadlock
-vector between preallocated append transactions and transactions
-that are acquired at completion time for other purposes (i.e.,
-unwritten extent conversion or COW fork remaps). For example, if the
-ioend completion workqueue task executes on a batch of ioends that
-are sorted such that an append ioend sits at the tail, it's possible
-for the outstanding append transaction reservation to block
-allocation of transactions required to process preceding ioends in
-the list.
-
-Append ioend completion is historically the common path for on-disk
-inode size updates. While file extending writes may have completed
-sometime earlier, the on-disk inode size is only updated after
-successful writeback completion. These transactions are preallocated
-serially from writeback context to mitigate concurrency and
-associated log reservation pressure across completions processed by
-multi-threaded workqueue tasks.
-
-However, now that delalloc blocks unconditionally map to unwritten
-extents at physical block allocation time, size updates via append
-ioends are relatively rare. This means that inode size updates most
-commonly occur as part of the preexisting completion time
-transaction to convert unwritten extents. As a result, there is no
-longer a strong need to preallocate size update transactions.
-
-Remove the preallocation of inode size update transactions to avoid
-the ioend completion processing log reservation deadlock. Instead,
-continue to send all potential size extending ioends to workqueue
-context for completion and allocate the transaction from that
-context. This ensures that no outstanding log reservation is owned
-by the ioend completion worker task when it begins to process
-ioends.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reported-by: Christian Theune <ct@flyingcircus.io>
-Link: https://lore.kernel.org/linux-xfs/CAOQ4uxjj2UqA0h4Y31NbmpHksMhVrXfXjLG4Tnz3zq_UR-3gSA@mail.gmail.com/
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-Acked-by: Darrick J. Wong <djwong@kernel.org>
----
-
-Greg,
-
-One more fix from v5.13 that I missed from my backports.
-
-Thanks,
-Amir.
-
- fs/xfs/xfs_aops.c | 45 +++------------------------------------------
- 1 file changed, 3 insertions(+), 42 deletions(-)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 953de843d9c3..e341d6531e68 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -39,33 +39,6 @@ static inline bool xfs_ioend_is_append(struct iomap_ioend *ioend)
- 		XFS_I(ioend->io_inode)->i_d.di_size;
- }
- 
--STATIC int
--xfs_setfilesize_trans_alloc(
--	struct iomap_ioend	*ioend)
--{
--	struct xfs_mount	*mp = XFS_I(ioend->io_inode)->i_mount;
--	struct xfs_trans	*tp;
--	int			error;
--
--	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
--	if (error)
--		return error;
--
--	ioend->io_private = tp;
--
--	/*
--	 * We may pass freeze protection with a transaction.  So tell lockdep
--	 * we released it.
--	 */
--	__sb_writers_release(ioend->io_inode->i_sb, SB_FREEZE_FS);
--	/*
--	 * We hand off the transaction to the completion thread now, so
--	 * clear the flag here.
--	 */
--	xfs_trans_clear_context(tp);
--	return 0;
--}
--
- /*
-  * Update on-disk file size now that data has been written to disk.
-  */
-@@ -191,12 +164,10 @@ xfs_end_ioend(
- 		error = xfs_reflink_end_cow(ip, offset, size);
- 	else if (ioend->io_type == IOMAP_UNWRITTEN)
- 		error = xfs_iomap_write_unwritten(ip, offset, size, false);
--	else
--		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_private);
- 
-+	if (!error && xfs_ioend_is_append(ioend))
-+		error = xfs_setfilesize(ip, ioend->io_offset, ioend->io_size);
- done:
--	if (ioend->io_private)
--		error = xfs_setfilesize_ioend(ioend, error);
- 	iomap_finish_ioends(ioend, error);
- 	memalloc_nofs_restore(nofs_flag);
- }
-@@ -246,7 +217,7 @@ xfs_end_io(
- 
- static inline bool xfs_ioend_needs_workqueue(struct iomap_ioend *ioend)
- {
--	return ioend->io_private ||
-+	return xfs_ioend_is_append(ioend) ||
- 		ioend->io_type == IOMAP_UNWRITTEN ||
- 		(ioend->io_flags & IOMAP_F_SHARED);
- }
-@@ -259,8 +230,6 @@ xfs_end_bio(
- 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
- 	unsigned long		flags;
- 
--	ASSERT(xfs_ioend_needs_workqueue(ioend));
--
- 	spin_lock_irqsave(&ip->i_ioend_lock, flags);
- 	if (list_empty(&ip->i_ioend_list))
- 		WARN_ON_ONCE(!queue_work(ip->i_mount->m_unwritten_workqueue,
-@@ -510,14 +479,6 @@ xfs_prepare_ioend(
- 				ioend->io_offset, ioend->io_size);
- 	}
- 
--	/* Reserve log space if we might write beyond the on-disk inode size. */
--	if (!status &&
--	    ((ioend->io_flags & IOMAP_F_SHARED) ||
--	     ioend->io_type != IOMAP_UNWRITTEN) &&
--	    xfs_ioend_is_append(ioend) &&
--	    !ioend->io_private)
--		status = xfs_setfilesize_trans_alloc(ioend);
--
- 	memalloc_nofs_restore(nofs_flag);
- 
- 	if (xfs_ioend_needs_workqueue(ioend))
+-Dave.
 -- 
-2.34.1
-
+Dave Chinner
+david@fromorbit.com
