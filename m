@@ -2,495 +2,433 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15B75C77B72
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Apr 2023 08:34:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39286C77B72
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Apr 2023 12:10:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234432AbjDTIev (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Apr 2023 04:34:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34584 "EHLO
+        id S231390AbjDTMKB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Apr 2023 08:10:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234333AbjDTIeu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Apr 2023 04:34:50 -0400
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE31544B9;
-        Thu, 20 Apr 2023 01:34:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1681979676; x=1713515676;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=ZGv0L529q98voH1fbcNCSpvZnqgMKbsbJDSUtIJrtxQ=;
-  b=ijMhiywOYlyEwrFublBat2ZFYorxGaHs57U316NiuCgtXwM8+VUQihCx
-   KrheoUiDjGKvslCgLV91ZMjtsKkMJgbP4nh3GxirVV2FhlsjU4fvXHZwh
-   4R2bRPvzkVSB3ljnB0UC/5NvmBYQ+WwDyNblfM3zYJm7UPaqSg7COZ9YB
-   FZLSiYA254JkGQKqo4Ru57zQQsvwBJIEOu+yqv+RgFWF3sf/dO6CFzHGV
-   tlZdlO3lZWzbu0OWHNtn53Z4Dq/AHiwzHDPahgh+oj95CSVmES3SO1oKC
-   rfyqJ980OOtysN50dwqAWKlTMkbbm8iZ730c/v2J/MHRnEWZMzzUAfc0B
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10685"; a="344429251"
-X-IronPort-AV: E=Sophos;i="5.99,212,1677571200"; 
-   d="scan'208";a="344429251"
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Apr 2023 01:34:36 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10685"; a="694394406"
-X-IronPort-AV: E=Sophos;i="5.99,212,1677571200"; 
-   d="scan'208";a="694394406"
-Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
-  by fmsmga007.fm.intel.com with ESMTP; 20 Apr 2023 01:34:33 -0700
-Received: from kbuild by b613635ddfff with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1ppPkO-000fdC-1J;
-        Thu, 20 Apr 2023 08:34:32 +0000
-Date:   Thu, 20 Apr 2023 16:33:37 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     Mark Brown <broonie@kernel.org>, op-tee@lists.trustedfirmware.org,
-        linux-xfs@vger.kernel.org, linux-mediatek@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, amd-gfx@lists.freedesktop.org,
-        Linux Memory Management List <linux-mm@kvack.org>
-Subject: [linux-next:master] BUILD REGRESSION
- 3cdbc01c40e34c57697f8934f2727a88551696be
-Message-ID: <6440f8e1.DHft6gojVbeQoyZh%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        with ESMTP id S231827AbjDTMKA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Apr 2023 08:10:00 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04F1A1706;
+        Thu, 20 Apr 2023 05:09:57 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id A3E211FDB3;
+        Thu, 20 Apr 2023 12:09:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1681992596; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=f72B8I55cxBSju8enemRgzLwufKecTGstcG01ewUZBA=;
+        b=LdNDpq/9La8YXVSymbUU6OsOszZ7bLgXfvNLrill4vJyztmH5v/PWLrsTVTxHDdAyoERhO
+        KH+NKGb3NWu8Fz3jm/P2i5damv1B1oXp3LrbpxFN+eaRZDW+oTlNJnvAMcmI4Gfa8VMsDH
+        OWrFgHduIVXzByWJ6SXiSPFSWwwUlws=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1681992596;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=f72B8I55cxBSju8enemRgzLwufKecTGstcG01ewUZBA=;
+        b=OfB7roEn1iEbRLC0sj9p/YgaOkec8sV15wCzLzFaR1/kCmEHiS/29ww+vNraiGW/iraf7w
+        0y6mptz5ZwHMWQBA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 850BC1333C;
+        Thu, 20 Apr 2023 12:09:56 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id WP11IJQrQWQLbgAAMHmgww
+        (envelope-from <jack@suse.cz>); Thu, 20 Apr 2023 12:09:56 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 121A6A0729; Thu, 20 Apr 2023 14:09:56 +0200 (CEST)
+Date:   Thu, 20 Apr 2023 14:09:56 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Cc:     linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        dan.j.williams@intel.com, willy@infradead.org, jack@suse.cz,
+        akpm@linux-foundation.org, djwong@kernel.org,
+        Luis Chamberlain <mcgrof@kernel.org>
+Subject: Re: [RFC PATCH v11.1 2/2] mm, pmem, xfs: Introduce MF_MEM_REMOVE for
+ unbind
+Message-ID: <20230420120956.cdxcwojckiw36kfg@quack3>
+References: <1679996506-2-3-git-send-email-ruansy.fnst@fujitsu.com>
+ <1681296735-2-1-git-send-email-ruansy.fnst@fujitsu.com>
+ <0a53ee26-5771-0808-ccdc-d1739c9dacac@fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <0a53ee26-5771-0808-ccdc-d1739c9dacac@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
-branch HEAD: 3cdbc01c40e34c57697f8934f2727a88551696be  Add linux-next specific files for 20230419
+On Thu 20-04-23 10:07:39, Shiyang Ruan wrote:
+> 在 2023/4/12 18:52, Shiyang Ruan 写道:
+> > This is a RFC HOTFIX.
+> > 
+> > This hotfix adds a exclusive forzen state to make sure any others won't
+> > thaw the fs during xfs_dax_notify_failure():
+> > 
+> >    #define SB_FREEZE_EXCLUSIVE	(SB_FREEZE_COMPLETE + 2)
+> > Using +2 here is because Darrick's patch[0] is using +1.  So, should we
+> > make these definitions global?
+> > 
+> > Another thing I can't make up my mind is: when another freezer has freeze
+> > the fs, should we wait unitl it finish, or print a warning in dmesg and
+> > return -EBUSY?
+> > 
+> > Since there are at least 2 places needs exclusive forzen state, I think
+> > we can refactor helper functions of freeze/thaw for them.  e.g.
+> >    int freeze_super_exclusive(struct super_block *sb, int frozen);
+> >    int thaw_super_exclusive(struct super_block *sb, int frozen);
+> > 
+> > [0] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?h=repair-fscounters&id=c3a0d1de4d54ffb565dbc7092dfe1fb851940669
 
-Error/Warning reports:
+I'm OK with the idea of new freeze state that does not allow userspace to
+thaw the filesystem. But I don't really like the guts of filesystem
+freezing being replicated inside XFS. It is bad enough that they are
+replicated in [0], replicating them *once more* in another XFS file shows
+we are definitely doing something wrong. And Luis will need yet another
+incantation of the exlusive freeze for suspend-to-disk. So please guys get
+together and reorganize the generic freezing code so that it supports
+exclusive freeze (for in-kernel users) and works for your usecases instead
+of replicating it inside XFS...
 
-https://lore.kernel.org/oe-kbuild-all/202304102354.Q4VOXGTE-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202304200812.6UqNDVZy-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202304201027.2upm4i0C-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202304201216.YgbKeHUJ-lkp@intel.com
+								Honza
 
-Error/Warning: (recently discovered and may have been fixed)
-
-drivers/gpu/drm/amd/amdgpu/../display/dc/dc_dmub_srv.c:184:19: warning: variable 'dmub' set but not used [-Wunused-but-set-variable]
-drivers/gpu/drm/amd/amdgpu/../display/dc/dce/dmub_abm.c:138:15: warning: variable 'feature_support' set but not used [-Wunused-but-set-variable]
-drivers/gpu/drm/amd/amdgpu/../display/dc/dce/dmub_abm_lcd.c:124:14: warning: no previous prototype for function 'dmub_abm_get_current_backlight' [-Wmissing-prototypes]
-drivers/gpu/drm/amd/amdgpu/../display/dc/dce/dmub_abm_lcd.c:135:14: warning: no previous prototype for function 'dmub_abm_get_target_backlight' [-Wmissing-prototypes]
-drivers/gpu/drm/amd/amdgpu/../display/dc/dce/dmub_abm_lcd.c:146:6: warning: no previous prototype for function 'dmub_abm_set_level' [-Wmissing-prototypes]
-drivers/gpu/drm/amd/amdgpu/../display/dc/dce/dmub_abm_lcd.c:167:6: warning: no previous prototype for function 'dmub_abm_set_ambient_level' [-Wmissing-prototypes]
-drivers/gpu/drm/amd/amdgpu/../display/dc/dce/dmub_abm_lcd.c:189:6: warning: no previous prototype for function 'dmub_abm_init_config' [-Wmissing-prototypes]
-drivers/gpu/drm/amd/amdgpu/../display/dc/dce/dmub_abm_lcd.c:221:6: warning: no previous prototype for function 'dmub_abm_set_pause' [-Wmissing-prototypes]
-drivers/gpu/drm/amd/amdgpu/../display/dc/dce/dmub_abm_lcd.c:241:6: warning: no previous prototype for function 'dmub_abm_set_pipe' [-Wmissing-prototypes]
-drivers/gpu/drm/amd/amdgpu/../display/dc/dce/dmub_abm_lcd.c:263:6: warning: no previous prototype for function 'dmub_abm_set_backlight_level' [-Wmissing-prototypes]
-drivers/gpu/drm/amd/amdgpu/../display/dc/dce/dmub_abm_lcd.c:83:6: warning: no previous prototype for function 'dmub_abm_init' [-Wmissing-prototypes]
-drivers/gpu/drm/amd/amdgpu/../display/dc/link/link_validation.c:351:13: warning: variable 'bw_needed' set but not used [-Wunused-but-set-variable]
-drivers/gpu/drm/amd/amdgpu/../display/dc/link/link_validation.c:352:25: warning: variable 'link' set but not used [-Wunused-but-set-variable]
-drivers/gpu/drm/amd/amdgpu/amdgpu_gfx.c:451:16: warning: variable 'j' set but not used [-Wunused-but-set-variable]
-drivers/gpu/drm/amd/amdgpu/gfx_v9_4_3.c:1049:6: warning: no previous prototype for 'gfx_v9_4_3_disable_gpa_mode' [-Wmissing-prototypes]
-drivers/gpu/drm/amd/amdgpu/gfx_v9_4_3.c:1049:6: warning: no previous prototype for function 'gfx_v9_4_3_disable_gpa_mode' [-Wmissing-prototypes]
-drivers/gpu/drm/amd/amdgpu/gfx_v9_4_3.c:1072:6: warning: no previous prototype for 'gfx_v9_4_3_disable_gpa_mode' [-Wmissing-prototypes]
-drivers/gpu/drm/amd/amdgpu/gfx_v9_4_3.c:48:38: warning: unused variable 'golden_settings_gc_9_4_3' [-Wunused-const-variable]
-drivers/gpu/drm/i915/gt/uc/guc_capture_fwif.h:62: warning: wrong kernel-doc identifier on line:
-drivers/gpu/drm/i915/i915_pmu.h:41: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
-drivers/gpu/drm/i915/i915_request.h:176: warning: This comment starts with '/**', but isn't a kernel-doc comment. Refer Documentation/doc-guide/kernel-doc.rst
-drivers/gpu/drm/i915/i915_vma.h:145: warning: expecting prototype for i915_vma_offset(). Prototype was for i915_vma_size() instead
-drivers/phy/mediatek/phy-mtk-hdmi-mt8195.c:298:6: warning: variable 'ret' is uninitialized when used here [-Wuninitialized]
-ld.lld: error: .btf.vmlinux.bin.o: unknown file type
-phy-mtk-hdmi-mt8195.c:(.text+0x2e2): undefined reference to `__floatundidf'
-phy-mtk-hdmi-mt8195.c:(.text+0x2f4): undefined reference to `__ltdf2'
-phy-mtk-hdmi-mt8195.c:(.text+0x344): undefined reference to `__gedf2'
-riscv64-linux-ld: phy-mtk-hdmi-mt8195.c:(.text+0x312): undefined reference to `__gedf2'
-riscv64-linux-ld: phy-mtk-hdmi-mt8195.c:(.text+0x32c): undefined reference to `__ltdf2'
-
-Unverified Error/Warning (likely false positive, please contact us if interested):
-
-drivers/acpi/property.c:985 acpi_data_prop_read_single() error: potentially dereferencing uninitialized 'obj'.
-drivers/firmware/smccc/smccc.c:20:21: sparse: sparse: symbol 'smccc_soc_id_version' was not declared. Should it be static?
-drivers/firmware/smccc/smccc.c:21:21: sparse: sparse: symbol 'smccc_soc_id_revision' was not declared. Should it be static?
-drivers/phy/mediatek/phy-mtk-hdmi-mt8195.c:240 mtk_hdmi_pll_calc() warn: impossible condition '(tmds_clk < 1.483500e+02 * 1000000) => (0.000000e+00-1.844674e+19 < -1.786711e-113)'
-drivers/phy/mediatek/phy-mtk-hdmi-mt8195.c:242 mtk_hdmi_pll_calc() warn: always true condition '(tmds_clk >= 1.483500e+02 * 1000000) => (0-u64max >= -1.786711e-113)'
-drivers/phy/mediatek/phy-mtk-hdmi-mt8195.c:242 mtk_hdmi_pll_calc() warn: impossible condition '(tmds_clk < 2.967000e+02 * 1000000) => (0.000000e+00-1.844674e+19 < -4.419080e+60)'
-drivers/phy/mediatek/phy-mtk-hdmi-mt8195.c:244 mtk_hdmi_pll_calc() warn: always true condition '(tmds_clk >= 2.967000e+02 * 1000000) => (0-u64max >= -4.419080e+60)'
-drivers/phy/mediatek/phy-mtk-hdmi-mt8195.c:298 mtk_hdmi_pll_calc() error: uninitialized symbol 'ret'.
-drivers/phy/mediatek/phy-mtk-hdmi-mt8195.c:331 mtk_hdmi_pll_drv_setting() warn: always true condition '(pixel_clk >= 7.417500e+01 * 1000000) => (0-u32max >= -7.223985e-287)'
-drivers/phy/mediatek/phy-mtk-hdmi-mt8195.c:336 mtk_hdmi_pll_drv_setting() warn: impossible condition '(pixel_clk < 7.417500e+01 * 1000000) => (0.000000e+00-4.294967e+09 < -7.223985e-287)'
-drivers/tee/optee/smc_abi.c:1021 irq_handler() error: uninitialized symbol 'value_valid'.
-drivers/tee/optee/smc_abi.c:1028 irq_handler() error: uninitialized symbol 'value_pending'.
-fs/xfs/scrub/refcount.c: xfs_mount.h is included more than once.
-fs/xfs/scrub/refcount.c: xfs_trans_resv.h is included more than once.
-
-Error/Warning ids grouped by kconfigs:
-
-gcc_recent_errors
-|-- alpha-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|-- alpha-randconfig-r001-20230420
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- alpha-randconfig-r023-20230420
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|-- arc-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|-- arc-buildonly-randconfig-r004-20230419
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- arc-randconfig-r043-20230420
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|-- arm-allmodconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|-- arm-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|-- arm64-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|-- arm64-randconfig-m041-20230419
-|   |-- drivers-tee-optee-smc_abi.c-irq_handler()-error:uninitialized-symbol-value_pending-.
-|   `-- drivers-tee-optee-smc_abi.c-irq_handler()-error:uninitialized-symbol-value_valid-.
-|-- arm64-randconfig-r003-20230417
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- arm64-randconfig-s031-20230416
-|   |-- drivers-firmware-smccc-smccc.c:sparse:sparse:symbol-smccc_soc_id_revision-was-not-declared.-Should-it-be-static
-|   `-- drivers-firmware-smccc-smccc.c:sparse:sparse:symbol-smccc_soc_id_version-was-not-declared.-Should-it-be-static
-|-- csky-randconfig-m041-20230419
-|   |-- drivers-phy-mediatek-phy-mtk-hdmi-mt8195.c-mtk_hdmi_pll_calc()-error:uninitialized-symbol-ret-.
-|   |-- drivers-phy-mediatek-phy-mtk-hdmi-mt8195.c-mtk_hdmi_pll_calc()-warn:always-true-condition-(tmds_clk-.483500e-)-(-u64max-.786711e-)
-|   |-- drivers-phy-mediatek-phy-mtk-hdmi-mt8195.c-mtk_hdmi_pll_calc()-warn:always-true-condition-(tmds_clk-.967000e-)-(-u64max-.419080e-)
-|   |-- drivers-phy-mediatek-phy-mtk-hdmi-mt8195.c-mtk_hdmi_pll_calc()-warn:impossible-condition-(tmds_clk-.483500e-)-(.000000e-.844674e-.786711e-)
-|   |-- drivers-phy-mediatek-phy-mtk-hdmi-mt8195.c-mtk_hdmi_pll_calc()-warn:impossible-condition-(tmds_clk-.967000e-)-(.000000e-.844674e-.419080e-)
-|   |-- drivers-phy-mediatek-phy-mtk-hdmi-mt8195.c-mtk_hdmi_pll_drv_setting()-warn:always-true-condition-(pixel_clk-.417500e-)-(-u32max-.223985e-)
-|   `-- drivers-phy-mediatek-phy-mtk-hdmi-mt8195.c-mtk_hdmi_pll_drv_setting()-warn:impossible-condition-(pixel_clk-.417500e-)-(.000000e-.294967e-.223985e-)
-|-- csky-randconfig-r024-20230417
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- i386-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|-- i386-randconfig-m021-20230417
-|   `-- drivers-acpi-property.c-acpi_data_prop_read_single()-error:potentially-dereferencing-uninitialized-obj-.
-|-- ia64-allmodconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|-- ia64-randconfig-r034-20230416
-|   |-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-gfx_v9_4_3.c:warning:no-previous-prototype-for-gfx_v9_4_3_disable_gpa_mode
-|-- ia64-randconfig-s043-20230416
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|   |-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-gfx_v9_4_3.c:warning:no-previous-prototype-for-gfx_v9_4_3_disable_gpa_mode
-|-- loongarch-allmodconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|-- loongarch-defconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|-- microblaze-randconfig-m041-20230416
-|   |-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-gfx_v9_4_3.c:warning:no-previous-prototype-for-gfx_v9_4_3_disable_gpa_mode
-|-- microblaze-randconfig-r004-20230420
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- mips-allmodconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|-- mips-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|-- mips-randconfig-c003-20230420
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|   |-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-gfx_v9_4_3.c:warning:no-previous-prototype-for-gfx_v9_4_3_disable_gpa_mode
-|-- mips-randconfig-s041-20230416
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-dce-dmub_abm_lcd.c:sparse:sparse:cast-truncates-bits-from-constant-value-(ffff-becomes-ff)
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- openrisc-randconfig-c003-20230416
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- parisc-buildonly-randconfig-r003-20230419
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- powerpc-allmodconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|-- riscv-allmodconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|-- riscv-randconfig-r016-20230416
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|-- riscv-randconfig-s052-20230416
-|   |-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|   |-- drivers-gpu-drm-amd-amdgpu-gfx_v9_4_3.c:warning:no-previous-prototype-for-gfx_v9_4_3_disable_gpa_mode
-|   |-- phy-mtk-hdmi-mt8195.c:(.text):undefined-reference-to-__floatundidf
-|   |-- phy-mtk-hdmi-mt8195.c:(.text):undefined-reference-to-__gedf2
-|   |-- phy-mtk-hdmi-mt8195.c:(.text):undefined-reference-to-__ltdf2
-|   |-- riscv64-linux-ld:phy-mtk-hdmi-mt8195.c:(.text):undefined-reference-to-__gedf2
-|   `-- riscv64-linux-ld:phy-mtk-hdmi-mt8195.c:(.text):undefined-reference-to-__ltdf2
-|-- s390-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|-- sparc-allmodconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|   |-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-gfx_v9_4_3.c:warning:no-previous-prototype-for-gfx_v9_4_3_disable_gpa_mode
-|-- sparc64-randconfig-s053-20230416
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-|   |-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-gfx_v9_4_3.c:warning:no-previous-prototype-for-gfx_v9_4_3_disable_gpa_mode
-|-- x86_64-allnoconfig
-|   |-- fs-xfs-scrub-refcount.c:xfs_mount.h-is-included-more-than-once.
-|   `-- fs-xfs-scrub-refcount.c:xfs_trans_resv.h-is-included-more-than-once.
-|-- x86_64-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-bw_needed-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-link-link_validation.c:warning:variable-link-set-but-not-used
-`-- x86_64-randconfig-m001-20230417
-    `-- drivers-acpi-property.c-acpi_data_prop_read_single()-error:potentially-dereferencing-uninitialized-obj-.
-clang_recent_errors
-|-- arm64-buildonly-randconfig-r005-20230416
-|   `-- drivers-phy-mediatek-phy-mtk-hdmi-mt8195.c:warning:variable-ret-is-uninitialized-when-used-here
-|-- arm64-randconfig-r015-20230417
-|   `-- drivers-phy-mediatek-phy-mtk-hdmi-mt8195.c:warning:variable-ret-is-uninitialized-when-used-here
-|-- arm64-randconfig-r036-20230416
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-dc_dmub_srv.c:warning:variable-dmub-set-but-not-used
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-dce-dmub_abm.c:warning:variable-feature_support-set-but-not-used
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-dce-dmub_abm_lcd.c:warning:no-previous-prototype-for-function-dmub_abm_get_current_backlight
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-dce-dmub_abm_lcd.c:warning:no-previous-prototype-for-function-dmub_abm_get_target_backlight
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-dce-dmub_abm_lcd.c:warning:no-previous-prototype-for-function-dmub_abm_init
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-dce-dmub_abm_lcd.c:warning:no-previous-prototype-for-function-dmub_abm_init_config
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-dce-dmub_abm_lcd.c:warning:no-previous-prototype-for-function-dmub_abm_set_ambient_level
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-dce-dmub_abm_lcd.c:warning:no-previous-prototype-for-function-dmub_abm_set_backlight_level
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-dce-dmub_abm_lcd.c:warning:no-previous-prototype-for-function-dmub_abm_set_level
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-dce-dmub_abm_lcd.c:warning:no-previous-prototype-for-function-dmub_abm_set_pause
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-dc-dce-dmub_abm_lcd.c:warning:no-previous-prototype-for-function-dmub_abm_set_pipe
-|   |-- drivers-gpu-drm-amd-amdgpu-gfx_v9_4_3.c:warning:no-previous-prototype-for-function-gfx_v9_4_3_disable_gpa_mode
-|   `-- drivers-gpu-drm-amd-amdgpu-gfx_v9_4_3.c:warning:unused-variable-golden_settings_gc_9_4_3
-|-- hexagon-randconfig-r023-20230417
-|   `-- ld.lld:error:.btf.vmlinux.bin.o:unknown-file-type
-|-- hexagon-randconfig-r045-20230420
-|   `-- drivers-phy-mediatek-phy-mtk-hdmi-mt8195.c:warning:variable-ret-is-uninitialized-when-used-here
-|-- mips-randconfig-r021-20230420
-|   `-- drivers-phy-mediatek-phy-mtk-hdmi-mt8195.c:warning:variable-ret-is-uninitialized-when-used-here
-|-- riscv-buildonly-randconfig-r006-20230419
-|   `-- drivers-phy-mediatek-phy-mtk-hdmi-mt8195.c:warning:variable-ret-is-uninitialized-when-used-here
-|-- riscv-randconfig-r032-20230416
-|   `-- drivers-phy-mediatek-phy-mtk-hdmi-mt8195.c:warning:variable-ret-is-uninitialized-when-used-here
-`-- x86_64-randconfig-a011-20230417
-    |-- drivers-gpu-drm-i915-gt-uc-guc_capture_fwif.h:warning:wrong-kernel-doc-identifier-on-line:
-    |-- drivers-gpu-drm-i915-i915_pmu.h:warning:This-comment-starts-with-but-isn-t-a-kernel-doc-comment.-Refer-Documentation-doc-guide-kernel-doc.rst
-    |-- drivers-gpu-drm-i915-i915_request.h:warning:This-comment-starts-with-but-isn-t-a-kernel-doc-comment.-Refer-Documentation-doc-guide-kernel-doc.rst
-    `-- drivers-gpu-drm-i915-i915_vma.h:warning:expecting-prototype-for-i915_vma_offset().-Prototype-was-for-i915_vma_size()-instead
-
-elapsed time: 734m
-
-configs tested: 190
-configs skipped: 20
-
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha        buildonly-randconfig-r005-20230417   gcc  
-alpha                               defconfig   gcc  
-alpha                randconfig-r001-20230416   gcc  
-alpha                randconfig-r001-20230420   gcc  
-alpha                randconfig-r003-20230416   gcc  
-alpha                randconfig-r013-20230416   gcc  
-alpha                randconfig-r023-20230420   gcc  
-arc                              allyesconfig   gcc  
-arc          buildonly-randconfig-r002-20230418   gcc  
-arc          buildonly-randconfig-r004-20230417   gcc  
-arc          buildonly-randconfig-r004-20230419   gcc  
-arc          buildonly-randconfig-r006-20230416   gcc  
-arc                                 defconfig   gcc  
-arc                  randconfig-r043-20230416   gcc  
-arc                  randconfig-r043-20230417   gcc  
-arc                  randconfig-r043-20230419   gcc  
-arc                  randconfig-r043-20230420   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                         at91_dt_defconfig   gcc  
-arm                                 defconfig   gcc  
-arm                          ep93xx_defconfig   clang
-arm                            hisi_defconfig   gcc  
-arm                        keystone_defconfig   gcc  
-arm                           omap1_defconfig   clang
-arm                  randconfig-r006-20230416   gcc  
-arm                  randconfig-r046-20230416   clang
-arm                  randconfig-r046-20230417   gcc  
-arm                  randconfig-r046-20230419   gcc  
-arm                  randconfig-r046-20230420   clang
-arm                           tegra_defconfig   gcc  
-arm64                            allyesconfig   gcc  
-arm64        buildonly-randconfig-r004-20230418   clang
-arm64        buildonly-randconfig-r005-20230416   clang
-arm64        buildonly-randconfig-r005-20230419   gcc  
-arm64                               defconfig   gcc  
-arm64                randconfig-r003-20230417   gcc  
-arm64                randconfig-r015-20230417   clang
-arm64                randconfig-r036-20230416   clang
-csky         buildonly-randconfig-r004-20230416   gcc  
-csky         buildonly-randconfig-r006-20230418   gcc  
-csky                                defconfig   gcc  
-csky                 randconfig-r024-20230417   gcc  
-csky                 randconfig-r025-20230416   gcc  
-csky                 randconfig-r026-20230420   gcc  
-hexagon              randconfig-r005-20230417   clang
-hexagon              randconfig-r012-20230417   clang
-hexagon              randconfig-r016-20230417   clang
-hexagon              randconfig-r023-20230417   clang
-hexagon              randconfig-r031-20230418   clang
-hexagon              randconfig-r035-20230416   clang
-hexagon              randconfig-r041-20230416   clang
-hexagon              randconfig-r041-20230417   clang
-hexagon              randconfig-r041-20230419   clang
-hexagon              randconfig-r041-20230420   clang
-hexagon              randconfig-r045-20230416   clang
-hexagon              randconfig-r045-20230417   clang
-hexagon              randconfig-r045-20230419   clang
-hexagon              randconfig-r045-20230420   clang
-i386                             allyesconfig   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                 randconfig-a001-20230417   gcc  
-i386                 randconfig-a002-20230417   gcc  
-i386                 randconfig-a003-20230417   gcc  
-i386                 randconfig-a004-20230417   gcc  
-i386                 randconfig-a005-20230417   gcc  
-i386                 randconfig-a006-20230417   gcc  
-i386                 randconfig-a011-20230417   clang
-i386                 randconfig-a012-20230417   clang
-i386                 randconfig-a013-20230417   clang
-i386                 randconfig-a014-20230417   clang
-i386                 randconfig-a015-20230417   clang
-i386                 randconfig-a016-20230417   clang
-i386                 randconfig-r006-20230417   gcc  
-ia64                             allmodconfig   gcc  
-ia64                                defconfig   gcc  
-ia64                 randconfig-r022-20230416   gcc  
-ia64                 randconfig-r022-20230417   gcc  
-ia64                 randconfig-r026-20230416   gcc  
-ia64                 randconfig-r034-20230416   gcc  
-ia64                 randconfig-r036-20230418   gcc  
-ia64                            zx1_defconfig   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-m68k                             allmodconfig   gcc  
-m68k                          atari_defconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                        m5272c3_defconfig   gcc  
-microblaze   buildonly-randconfig-r003-20230418   gcc  
-microblaze           randconfig-r004-20230420   gcc  
-microblaze           randconfig-r021-20230417   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                         cobalt_defconfig   gcc  
-mips                  decstation_64_defconfig   gcc  
-mips                malta_qemu_32r6_defconfig   clang
-mips                        omega2p_defconfig   clang
-mips                 randconfig-r012-20230416   clang
-mips                 randconfig-r014-20230417   gcc  
-mips                 randconfig-r021-20230420   clang
-mips                 randconfig-r034-20230418   gcc  
-nios2        buildonly-randconfig-r006-20230417   gcc  
-nios2                               defconfig   gcc  
-nios2                randconfig-r002-20230417   gcc  
-nios2                randconfig-r025-20230417   gcc  
-openrisc     buildonly-randconfig-r001-20230418   gcc  
-openrisc     buildonly-randconfig-r002-20230416   gcc  
-openrisc             randconfig-r011-20230417   gcc  
-parisc       buildonly-randconfig-r002-20230417   gcc  
-parisc       buildonly-randconfig-r003-20230419   gcc  
-parisc                              defconfig   gcc  
-parisc               randconfig-r021-20230416   gcc  
-parisc               randconfig-r023-20230416   gcc  
-parisc               randconfig-r024-20230416   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                      cm5200_defconfig   gcc  
-powerpc                    gamecube_defconfig   clang
-powerpc                    klondike_defconfig   gcc  
-powerpc                      makalu_defconfig   gcc  
-powerpc                mpc7448_hpc2_defconfig   gcc  
-powerpc                     rainier_defconfig   gcc  
-powerpc                     redwood_defconfig   gcc  
-powerpc                     skiroot_defconfig   clang
-powerpc                     taishan_defconfig   gcc  
-powerpc                         wii_defconfig   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv        buildonly-randconfig-r003-20230416   gcc  
-riscv        buildonly-randconfig-r003-20230417   clang
-riscv        buildonly-randconfig-r006-20230419   clang
-riscv                               defconfig   gcc  
-riscv                randconfig-r005-20230416   clang
-riscv                randconfig-r016-20230416   gcc  
-riscv                randconfig-r032-20230416   clang
-riscv                randconfig-r032-20230418   clang
-riscv                randconfig-r042-20230416   gcc  
-riscv                randconfig-r042-20230417   clang
-riscv                randconfig-r042-20230419   clang
-riscv                randconfig-r042-20230420   gcc  
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                 randconfig-r002-20230420   clang
-s390                 randconfig-r003-20230420   clang
-s390                 randconfig-r044-20230416   gcc  
-s390                 randconfig-r044-20230417   clang
-s390                 randconfig-r044-20230419   clang
-s390                 randconfig-r044-20230420   gcc  
-sh                               allmodconfig   gcc  
-sh           buildonly-randconfig-r001-20230416   gcc  
-sh                         ecovec24_defconfig   gcc  
-sh                          r7785rp_defconfig   gcc  
-sh                   randconfig-r004-20230417   gcc  
-sh                   randconfig-r011-20230416   gcc  
-sh                          rsk7264_defconfig   gcc  
-sparc                               defconfig   gcc  
-sparc                       sparc32_defconfig   gcc  
-sparc64      buildonly-randconfig-r002-20230419   gcc  
-sparc64              randconfig-r026-20230417   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64               randconfig-a001-20230417   gcc  
-x86_64               randconfig-a002-20230417   gcc  
-x86_64               randconfig-a003-20230417   gcc  
-x86_64               randconfig-a004-20230417   gcc  
-x86_64               randconfig-a005-20230417   gcc  
-x86_64               randconfig-a006-20230417   gcc  
-x86_64               randconfig-a011-20230417   clang
-x86_64               randconfig-a012-20230417   clang
-x86_64               randconfig-a013-20230417   clang
-x86_64               randconfig-a014-20230417   clang
-x86_64               randconfig-a015-20230417   clang
-x86_64               randconfig-a016-20230417   clang
-x86_64                           rhel-8.3-bpf   gcc  
-x86_64                         rhel-8.3-kunit   gcc  
-x86_64                           rhel-8.3-kvm   gcc  
-x86_64                           rhel-8.3-syz   gcc  
-x86_64                               rhel-8.3   gcc  
-xtensa               randconfig-r015-20230416   gcc  
-xtensa                    smp_lx200_defconfig   gcc  
-
+> > --- Original commit message ---
+> > This patch is inspired by Dan's "mm, dax, pmem: Introduce
+> > dev_pagemap_failure()"[1].  With the help of dax_holder and
+> > ->notify_failure() mechanism, the pmem driver is able to ask filesystem
+> > (or mapped device) on it to unmap all files in use and notify processes
+> > who are using those files.
+> > 
+> > Call trace:
+> > trigger unbind
+> >   -> unbind_store()
+> >    -> ... (skip)
+> >     -> devres_release_all()
+> >      -> kill_dax()
+> >       -> dax_holder_notify_failure(dax_dev, 0, U64_MAX, MF_MEM_PRE_REMOVE)
+> >        -> xfs_dax_notify_failure()
+> >        `-> freeze_super()
+> >        `-> do xfs rmap
+> >        ` -> mf_dax_kill_procs()
+> >        `  -> collect_procs_fsdax()    // all associated
+> >        `  -> unmap_and_kill()
+> >        ` -> invalidate_inode_pages2() // drop file's cache
+> >        `-> thaw_super()
+> > 
+> > Introduce MF_MEM_PRE_REMOVE to let filesystem know this is a remove
+> > event.  Also introduce a exclusive freeze/thaw to lock the filesystem to
+> > prevent new dax mapping from being created.  And do not shutdown
+> > filesystem directly if something not supported, or if failure range
+> > includes metadata area.  Make sure all files and processes are handled
+> > correctly.  Also drop the cache of associated files before pmem is
+> > removed.
+> > 
+> > [1]: https://lore.kernel.org/linux-mm/161604050314.1463742.14151665140035795571.stgit@dwillia2-desk3.amr.corp.intel.com/
+> > 
+> > Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+> > ---
+> >   drivers/dax/super.c         |   3 +-
+> >   fs/xfs/xfs_notify_failure.c | 151 ++++++++++++++++++++++++++++++++++--
+> >   include/linux/mm.h          |   1 +
+> >   mm/memory-failure.c         |  17 +++-
+> >   4 files changed, 162 insertions(+), 10 deletions(-)
+> > 
+> > diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+> > index c4c4728a36e4..2e1a35e82fce 100644
+> > --- a/drivers/dax/super.c
+> > +++ b/drivers/dax/super.c
+> > @@ -323,7 +323,8 @@ void kill_dax(struct dax_device *dax_dev)
+> >   		return;
+> >   	if (dax_dev->holder_data != NULL)
+> > -		dax_holder_notify_failure(dax_dev, 0, U64_MAX, 0);
+> > +		dax_holder_notify_failure(dax_dev, 0, U64_MAX,
+> > +				MF_MEM_PRE_REMOVE);
+> >   	clear_bit(DAXDEV_ALIVE, &dax_dev->flags);
+> >   	synchronize_srcu(&dax_srcu);
+> > diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
+> > index 1e2eddb8f90f..796dd954d33a 100644
+> > --- a/fs/xfs/xfs_notify_failure.c
+> > +++ b/fs/xfs/xfs_notify_failure.c
+> > @@ -22,6 +22,7 @@
+> >   #include <linux/mm.h>
+> >   #include <linux/dax.h>
+> > +#include <linux/fs.h>
+> >   struct xfs_failure_info {
+> >   	xfs_agblock_t		startblock;
+> > @@ -73,10 +74,16 @@ xfs_dax_failure_fn(
+> >   	struct xfs_mount		*mp = cur->bc_mp;
+> >   	struct xfs_inode		*ip;
+> >   	struct xfs_failure_info		*notify = data;
+> > +	struct address_space		*mapping;
+> > +	pgoff_t				pgoff;
+> > +	unsigned long			pgcnt;
+> >   	int				error = 0;
+> >   	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
+> >   	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
+> > +		/* The device is about to be removed.  Not a really failure. */
+> > +		if (notify->mf_flags & MF_MEM_PRE_REMOVE)
+> > +			return 0;
+> >   		notify->want_shutdown = true;
+> >   		return 0;
+> >   	}
+> > @@ -92,14 +99,120 @@ xfs_dax_failure_fn(
+> >   		return 0;
+> >   	}
+> > -	error = mf_dax_kill_procs(VFS_I(ip)->i_mapping,
+> > -				  xfs_failure_pgoff(mp, rec, notify),
+> > -				  xfs_failure_pgcnt(mp, rec, notify),
+> > -				  notify->mf_flags);
+> > +	mapping = VFS_I(ip)->i_mapping;
+> > +	pgoff = xfs_failure_pgoff(mp, rec, notify);
+> > +	pgcnt = xfs_failure_pgcnt(mp, rec, notify);
+> > +
+> > +	/* Continue the rmap query if the inode isn't a dax file. */
+> > +	if (dax_mapping(mapping))
+> > +		error = mf_dax_kill_procs(mapping, pgoff, pgcnt,
+> > +				notify->mf_flags);
+> > +
+> > +	/* Invalidate the cache anyway. */
+> > +	invalidate_inode_pages2_range(mapping, pgoff, pgoff + pgcnt - 1);
+> > +
+> >   	xfs_irele(ip);
+> >   	return error;
+> >   }
+> > +#define SB_FREEZE_EXCLUSIVE	(SB_FREEZE_COMPLETE + 2)
+> > +
+> > +static int
+> > +xfs_dax_notify_failure_freeze(
+> > +	struct xfs_mount	*mp)
+> > +{
+> > +	struct super_block	*sb = mp->m_super;
+> > +	int			error = 0;
+> > +	int			level;
+> > +
+> > +	/* Wait until we're ready to freeze. */
+> > +	down_write(&sb->s_umount);
+> > +	while (sb->s_writers.frozen != SB_UNFROZEN) {
+> > +		up_write(&sb->s_umount);
+> > +
+> > +		// just wait, or print warning in dmesg then return -EBUSY?
+> > +
+> > +		delay(HZ / 10);
+> > +		down_write(&sb->s_umount);
+> > +	}
+> > +
+> > +	if (sb_rdonly(sb)) {
+> > +		sb->s_writers.frozen = SB_FREEZE_EXCLUSIVE;
+> > +		goto out;
+> > +	}
+> > +
+> > +	sb->s_writers.frozen = SB_FREEZE_WRITE;
+> > +	/* Release s_umount to preserve sb_start_write -> s_umount ordering */
+> > +	up_write(&sb->s_umount);
+> > +	percpu_down_write(sb->s_writers.rw_sem + SB_FREEZE_WRITE - 1);
+> > +	down_write(&sb->s_umount);
+> > +
+> > +	/* Now we go and block page faults... */
+> > +	sb->s_writers.frozen = SB_FREEZE_PAGEFAULT;
+> > +	percpu_down_write(sb->s_writers.rw_sem + SB_FREEZE_PAGEFAULT - 1);
+> > +
+> > +	/* All writers are done so after syncing there won't be dirty data */
+> > +	error = sync_filesystem(sb);
+> > +	if (error) {
+> > +		sb->s_writers.frozen = SB_UNFROZEN;
+> > +		for (level = SB_FREEZE_PAGEFAULT - 1; level >= 0; level--)
+> > +			percpu_up_write(sb->s_writers.rw_sem + level);
+> > +		wake_up(&sb->s_writers.wait_unfrozen);
+> > +		goto out;
+> > +	}
+> > +
+> > +	/* Now wait for internal filesystem counter */
+> > +	sb->s_writers.frozen = SB_FREEZE_FS;
+> > +	percpu_down_write(sb->s_writers.rw_sem + SB_FREEZE_FS - 1);
+> > +
+> > +	/*
+> > +	 * To prevent anyone else from unfreezing us, set the VFS freeze level
+> > +	 * to one higher than SB_FREEZE_COMPLETE.
+> > +	 */
+> > +	sb->s_writers.frozen = SB_FREEZE_EXCLUSIVE;
+> > +	for (level = SB_FREEZE_LEVELS - 1; level >= 0; level--)
+> > +		percpu_rwsem_release(sb->s_writers.rw_sem + level, 0,
+> > +				_THIS_IP_);
+> > +
+> > +out:
+> > +	up_write(&sb->s_umount);
+> > +	return error;
+> > +}
+> > +
+> > +static void
+> > +xfs_dax_notify_failure_thaw(
+> > +	struct xfs_mount	*mp)
+> > +{
+> > +	struct super_block	*sb = mp->m_super;
+> > +	int			level;
+> > +
+> > +	down_write(&sb->s_umount);
+> > +	if (sb->s_writers.frozen != SB_FREEZE_EXCLUSIVE) {
+> > +		/* somebody snuck in and unfroze us? */
+> > +		ASSERT(0);
+> > +		up_write(&sb->s_umount);
+> > +		return;
+> > +	}
+> > +
+> > +	if (sb_rdonly(sb)) {
+> > +		sb->s_writers.frozen = SB_UNFROZEN;
+> > +		goto out;
+> > +	}
+> > +
+> > +	for (level = 0; level < SB_FREEZE_LEVELS; ++level)
+> > +		percpu_rwsem_acquire(sb->s_writers.rw_sem + level, 0,
+> > +				_THIS_IP_);
+> > +
+> > +	sb->s_writers.frozen = SB_UNFROZEN;
+> > +	for (level = SB_FREEZE_LEVELS - 1; level >= 0; level--)
+> > +		percpu_up_write(sb->s_writers.rw_sem + level);
+> > +
+> > +out:
+> > +	wake_up(&sb->s_writers.wait_unfrozen);
+> > +	up_write(&sb->s_umount);
+> > +}
+> > +
+> >   static int
+> >   xfs_dax_notify_ddev_failure(
+> >   	struct xfs_mount	*mp,
+> > @@ -164,11 +277,22 @@ xfs_dax_notify_ddev_failure(
+> >   	}
+> >   	xfs_trans_cancel(tp);
+> > +
+> > +	/* Thaw the fs if it is freezed before. */
+> > +	if (mf_flags & MF_MEM_PRE_REMOVE)
+> > +		xfs_dax_notify_failure_thaw(mp);
+> > +
+> > +	/*
+> > +	 * Determine how to shutdown the filesystem according to the
+> > +	 * error code and flags.
+> > +	 */
+> >   	if (error || notify.want_shutdown) {
+> >   		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
+> >   		if (!error)
+> >   			error = -EFSCORRUPTED;
+> > -	}
+> > +	} else if (mf_flags & MF_MEM_PRE_REMOVE)
+> > +		xfs_force_shutdown(mp, SHUTDOWN_FORCE_UMOUNT);
+> > +
+> >   	return error;
+> >   }
+> > @@ -182,6 +306,7 @@ xfs_dax_notify_failure(
+> >   	struct xfs_mount	*mp = dax_holder(dax_dev);
+> >   	u64			ddev_start;
+> >   	u64			ddev_end;
+> > +	int			error;
+> >   	if (!(mp->m_super->s_flags & SB_BORN)) {
+> >   		xfs_warn(mp, "filesystem is not ready for notify_failure()!");
+> > @@ -196,6 +321,8 @@ xfs_dax_notify_failure(
+> >   	if (mp->m_logdev_targp && mp->m_logdev_targp->bt_daxdev == dax_dev &&
+> >   	    mp->m_logdev_targp != mp->m_ddev_targp) {
+> > +		if (mf_flags & MF_MEM_PRE_REMOVE)
+> > +			return 0;
+> >   		xfs_err(mp, "ondisk log corrupt, shutting down fs!");
+> >   		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
+> >   		return -EFSCORRUPTED;
+> > @@ -209,6 +336,12 @@ xfs_dax_notify_failure(
+> >   	ddev_start = mp->m_ddev_targp->bt_dax_part_off;
+> >   	ddev_end = ddev_start + bdev_nr_bytes(mp->m_ddev_targp->bt_bdev) - 1;
+> > +	/* Notify failure on the whole device. */
+> > +	if (offset == 0 && len == U64_MAX) {
+> > +		offset = ddev_start;
+> > +		len = bdev_nr_bytes(mp->m_ddev_targp->bt_bdev);
+> > +	}
+> > +
+> >   	/* Ignore the range out of filesystem area */
+> >   	if (offset + len - 1 < ddev_start)
+> >   		return -ENXIO;
+> > @@ -225,6 +358,14 @@ xfs_dax_notify_failure(
+> >   	if (offset + len - 1 > ddev_end)
+> >   		len = ddev_end - offset + 1;
+> > +	if (mf_flags & MF_MEM_PRE_REMOVE) {
+> > +		xfs_info(mp, "device is about to be removed!");
+> > +		/* Freeze fs to prevent new mappings from being created. */
+> > +		error = xfs_dax_notify_failure_freeze(mp);
+> > +		if (error)
+> > +			return error;
+> > +	}
+> > +
+> >   	return xfs_dax_notify_ddev_failure(mp, BTOBB(offset), BTOBB(len),
+> >   			mf_flags);
+> >   }
+> > diff --git a/include/linux/mm.h b/include/linux/mm.h
+> > index 1f79667824eb..ac3f22c20e1d 100644
+> > --- a/include/linux/mm.h
+> > +++ b/include/linux/mm.h
+> > @@ -3436,6 +3436,7 @@ enum mf_flags {
+> >   	MF_UNPOISON = 1 << 4,
+> >   	MF_SW_SIMULATED = 1 << 5,
+> >   	MF_NO_RETRY = 1 << 6,
+> > +	MF_MEM_PRE_REMOVE = 1 << 7,
+> >   };
+> >   int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
+> >   		      unsigned long count, int mf_flags);
+> > diff --git a/mm/memory-failure.c b/mm/memory-failure.c
+> > index fae9baf3be16..6e6acec45568 100644
+> > --- a/mm/memory-failure.c
+> > +++ b/mm/memory-failure.c
+> > @@ -623,7 +623,7 @@ static void collect_procs_file(struct page *page, struct list_head *to_kill,
+> >    */
+> >   static void collect_procs_fsdax(struct page *page,
+> >   		struct address_space *mapping, pgoff_t pgoff,
+> > -		struct list_head *to_kill)
+> > +		struct list_head *to_kill, bool pre_remove)
+> >   {
+> >   	struct vm_area_struct *vma;
+> >   	struct task_struct *tsk;
+> > @@ -631,8 +631,15 @@ static void collect_procs_fsdax(struct page *page,
+> >   	i_mmap_lock_read(mapping);
+> >   	read_lock(&tasklist_lock);
+> >   	for_each_process(tsk) {
+> > -		struct task_struct *t = task_early_kill(tsk, true);
+> > +		struct task_struct *t = tsk;
+> > +		/*
+> > +		 * Search for all tasks while MF_MEM_PRE_REMOVE, because the
+> > +		 * current may not be the one accessing the fsdax page.
+> > +		 * Otherwise, search for the current task.
+> > +		 */
+> > +		if (!pre_remove)
+> > +			t = task_early_kill(tsk, true);
+> >   		if (!t)
+> >   			continue;
+> >   		vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff, pgoff) {
+> > @@ -1732,6 +1739,7 @@ int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
+> >   	dax_entry_t cookie;
+> >   	struct page *page;
+> >   	size_t end = index + count;
+> > +	bool pre_remove = mf_flags & MF_MEM_PRE_REMOVE;
+> >   	mf_flags |= MF_ACTION_REQUIRED | MF_MUST_KILL;
+> > @@ -1743,9 +1751,10 @@ int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
+> >   		if (!page)
+> >   			goto unlock;
+> > -		SetPageHWPoison(page);
+> > +		if (!pre_remove)
+> > +			SetPageHWPoison(page);
+> > -		collect_procs_fsdax(page, mapping, index, &to_kill);
+> > +		collect_procs_fsdax(page, mapping, index, &to_kill, pre_remove);
+> >   		unmap_and_kill(&to_kill, page_to_pfn(page), mapping,
+> >   				index, mf_flags);
+> >   unlock:
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
