@@ -2,30 +2,30 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB678C77B7E
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Apr 2023 19:58:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44850C77B76
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Apr 2023 19:58:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232922AbjDUT6Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Apr 2023 15:58:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59082 "EHLO
+        id S233527AbjDUT6Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Apr 2023 15:58:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231396AbjDUT6X (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Apr 2023 15:58:23 -0400
+        with ESMTP id S233259AbjDUT6Y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Apr 2023 15:58:24 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DD33273C;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 339C72D49;
         Fri, 21 Apr 2023 12:58:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Reply-To:Content-Type:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=u68XQLIrnZKRacEesRmgMeebDfY2xepEp8VfzdXWDIU=; b=v2Yysw6qnZCKZGHYViYMSlL9PX
-        OuzBIdMXAZi9a0Aylm9+m6X0SUR9QfSRQWt6BR+i2NRETsZ6Q+SXuK9lQy5WU4zsg8hL/d+3/HxHP
-        7u16cxddAAH0Levxw7QkEhPJYgLzQoxh9mTY0sW8D3nWNOMD2kKhBNI1vNdffgVDXr/2T8c82Y5qU
-        E9eADBnb7SD7yl0vil3K123jE0aHFhVSxq7uYbW8KiUJfJMdOCsVvAmqdVYeer9l8ep8otFOWRNnY
-        KtLnYHU/vkUk7ZqjMNP+nGPPo4GBK2IqyC7H5LPrFjy8QpCc92ciVZUd47CkvDBUuKvVuqlD5AieX
-        QRQ0Q9rQ==;
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
+        Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=YNaeywPG0hf9vLC0oGzgXUzMq14M1rf2z1Pu3jCjc18=; b=ngzYAuBKDLAoLCg9a3fSYyxaF7
+        Psmp6RNidLp/Hoz9Sz3Yaw4hJW6ICtW0d4gYHRtDbEVmUURusmziBCiUS8bTLXRjIGpepiBVYvy4V
+        AwpjQ3WoHeBlc3DLTnq8Mlk6ISbisM8Dq/dyJwP58qth31M8tqk7cOBV5m4mcx0Eb3/Yq37hx40Q1
+        sTKkHJsz0qslYzsxgNwgcjkPJnjnr4qcRujKf1sQeDcoSvwEN+/9SSuTrxHTTWDLBYGm0TSLjdm/O
+        l/CPxIM1wE772UFBPe1DRj82PuNz0beeob2viWswsRu9DrjB2lpvHI+yRXpn9Gc4ldGRFkXpKwslh
+        E2nlol0A==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1ppwtU-00BlaV-1S;
+        id 1ppwtU-00BlaZ-1j;
         Fri, 21 Apr 2023 19:58:08 +0000
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     axboe@kernel.dk, agk@redhat.com, snitzer@kernel.org,
@@ -38,10 +38,12 @@ Cc:     patches@lists.linux.dev, linux-block@vger.kernel.org,
         drbd-dev@lists.linbit.com, linux-kernel@vger.kernel.org,
         willy@infradead.org, hare@suse.de, p.raghav@samsung.com,
         da.gomez@samsung.com, kbusch@kernel.org, mcgrof@kernel.org
-Subject: [PATCH 0/5] block: simplify with PAGE_SECTORS_SHIFT
-Date:   Fri, 21 Apr 2023 12:58:02 -0700
-Message-Id: <20230421195807.2804512-1-mcgrof@kernel.org>
+Subject: [PATCH 2/5] drbd: use PAGE_SECTORS_SHIFT and PAGE_SECTORS
+Date:   Fri, 21 Apr 2023 12:58:04 -0700
+Message-Id: <20230421195807.2804512-3-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.38.1
+In-Reply-To: <20230421195807.2804512-1-mcgrof@kernel.org>
+References: <20230421195807.2804512-1-mcgrof@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: Luis Chamberlain <mcgrof@infradead.org>
@@ -49,27 +51,36 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-A bit of block drivers have their own incantations with
-PAGE_SHIFT - SECTOR_SHIFT. Just simplfy and use PAGE_SECTORS_SHIFT
-all over.
+Replace common constants with generic versions.
+This produces no functional changes.
 
-Based on linux-next next-20230421.
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+---
+ drivers/block/drbd/drbd_bitmap.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Luis Chamberlain (5):
-  dm integrity: simplify by using PAGE_SECTORS_SHIFT
-  drbd: use PAGE_SECTORS_SHIFT and PAGE_SECTORS
-  iomap: simplify iomap_init() with PAGE_SECTORS
-  dm bufio: simplify by using PAGE_SECTORS_SHIFT
-  zram: use generic PAGE_SECTORS and PAGE_SECTORS_SHIFT
-
- drivers/block/drbd/drbd_bitmap.c |  4 ++--
- drivers/block/zram/zram_drv.c    | 12 ++++++------
- drivers/block/zram/zram_drv.h    |  2 --
- drivers/md/dm-bufio.c            |  4 ++--
- drivers/md/dm-integrity.c        | 10 +++++-----
- fs/iomap/buffered-io.c           |  2 +-
- 6 files changed, 16 insertions(+), 18 deletions(-)
-
+diff --git a/drivers/block/drbd/drbd_bitmap.c b/drivers/block/drbd/drbd_bitmap.c
+index 6ac8c54b44c7..b556e6634f13 100644
+--- a/drivers/block/drbd/drbd_bitmap.c
++++ b/drivers/block/drbd/drbd_bitmap.c
+@@ -1000,7 +1000,7 @@ static void bm_page_io_async(struct drbd_bm_aio_ctx *ctx, int page_nr) __must_ho
+ 	unsigned int len;
+ 
+ 	first_bm_sect = device->ldev->md.md_offset + device->ldev->md.bm_offset;
+-	on_disk_sector = first_bm_sect + (((sector_t)page_nr) << (PAGE_SHIFT-SECTOR_SHIFT));
++	on_disk_sector = first_bm_sect + (((sector_t)page_nr) << PAGE_SECTORS_SHIFT);
+ 
+ 	/* this might happen with very small
+ 	 * flexible external meta data device,
+@@ -1008,7 +1008,7 @@ static void bm_page_io_async(struct drbd_bm_aio_ctx *ctx, int page_nr) __must_ho
+ 	last_bm_sect = drbd_md_last_bitmap_sector(device->ldev);
+ 	if (first_bm_sect <= on_disk_sector && last_bm_sect >= on_disk_sector) {
+ 		sector_t len_sect = last_bm_sect - on_disk_sector + 1;
+-		if (len_sect < PAGE_SIZE/SECTOR_SIZE)
++		if (len_sect < PAGE_SECTORS)
+ 			len = (unsigned int)len_sect*SECTOR_SIZE;
+ 		else
+ 			len = PAGE_SIZE;
 -- 
 2.39.2
 
