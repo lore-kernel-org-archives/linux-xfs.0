@@ -2,253 +2,115 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DEE9C7618E
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Apr 2023 10:48:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48977C77B75
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Apr 2023 11:01:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231450AbjDUKsB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Apr 2023 06:48:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39228 "EHLO
+        id S230074AbjDULB1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Apr 2023 07:01:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230331AbjDUKsB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Apr 2023 06:48:01 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C0D283D1;
-        Fri, 21 Apr 2023 03:47:59 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1726460B6F;
-        Fri, 21 Apr 2023 10:47:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66A37C433EF;
-        Fri, 21 Apr 2023 10:47:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682074078;
-        bh=YMiCd2tn+Kwhq5vt740oxHkL6CrclEtNSKXXgkMDZzc=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Hjutz1fvbTbSug9eVUquviL4tAoNlkEh+D8UwRz2EmqxPmD/qIE/1sOTRzmn5mwqx
-         mKM95MWbE5ujOBQHDUryrtj3aqFhc0Q0SATadEGGrZRLjIxBV8nq0lrqpmhmgCTUKh
-         lndHzOw7gLoe3S5beyCwDRSRjL1vX/WylSDNOcfAjn6RKpLfuCoNsC6AMTVf+ZImBs
-         M3cix5G9qaqYVwm89y3tY5ZNdrS3+cNddU1PF9z56nFky4dcJSc1cQmV7aUBD+FE+2
-         Vp7JlPZBRoPkjedQHc7virsAH4OI+StJ+5EdISxvirGszqGIL3Gz4r8XpZo0rZk+Jg
-         biHjSlsBXy5yw==
-Message-ID: <fb17a0931ae29b89d661b7b2295726689c350ae3.camel@kernel.org>
-Subject: Re: [RFC PATCH 1/3] fs: add infrastructure for opportunistic
- high-res ctime/mtime updates
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Jan Kara <jack@suse.cz>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        Dave Chinner <david@fromorbit.com>
-Date:   Fri, 21 Apr 2023 06:47:55 -0400
-In-Reply-To: <20230421101331.dlxom6b5e7yds5tn@quack3>
-References: <20230411142708.62475-1-jlayton@kernel.org>
-         <20230411142708.62475-2-jlayton@kernel.org>
-         <20230421101331.dlxom6b5e7yds5tn@quack3>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.0 (3.48.0-1.fc38) 
+        with ESMTP id S229624AbjDULB0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Apr 2023 07:01:26 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF7719016
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Apr 2023 04:00:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1682074839;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+        bh=/8L50GWpN6fABWIe9m8wcqKsoNVJGE9elISSDzejuGk=;
+        b=bFPdhbC++5LkvyjQx1A/nmqg4v5FvAZA7ZID19hVx6vtaLpjcjRr40SNauTxvpEKwzs+uN
+        /9sFHahR2Losu1CihBsKBxRbluEgQvOjBNfmffipKALZ4SeJkR2FQe9WaOJ1xJSwnqa5ti
+        2H2YjApY9eiLK2EJmDsiy0jIfpfBwqs=
+Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com
+ [209.85.219.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-575-l6sQO2D8PoqMQtcn0Mpg_Q-1; Fri, 21 Apr 2023 07:00:37 -0400
+X-MC-Unique: l6sQO2D8PoqMQtcn0Mpg_Q-1
+Received: by mail-qv1-f72.google.com with SMTP id 6a1803df08f44-5ef640838f6so10305656d6.1
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Apr 2023 04:00:37 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1682074836; x=1684666836;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=/8L50GWpN6fABWIe9m8wcqKsoNVJGE9elISSDzejuGk=;
+        b=fTpsVGPhCXLBy0rYNnTPrR6lx5UrMQtyGldbLZUxUNQsTmigM1qR3pEtLG+CTruJHD
+         IAsOVaVFoK87JiIEVnW+8Yu9rebDsG2vgLEpEV3JTYo2btzncW+W5AoVSQWunNRdc54F
+         VMGQQhH4e4KR6PZ8Tf/rgny5yjM+CwgU3rNcISeQzYcnpPu6ccH8uNhhBHIOp5HgrSD9
+         UxmR6khuvjDkZGJXfdF+O8Zh3J4QllENgQHo+0mBOgNltBF+zXNVCMrwVmfImvuIu9If
+         LDp2DYBH0w9Vg6w0rI9ITup+JWfi95ASR9I+Oi5KdbshPyPvDJx7iuuyXOMMbBdiCfNz
+         GU2Q==
+X-Gm-Message-State: AAQBX9ccpjEEP8/rI/Y+hw1vsdH53sQxUKzdqXteL2Tj6Qh/lMEmUwaD
+        sxhS3AfcfzW205vOv3dtCwP7fWKYR0tF53/CCi14QNEraejKf+Qi07KHwQXWP3K5efCjfEESf+s
+        GrZhHB5PhdhdrBzhKTgtx/gZ7cpRifCAdrzoVZfIkjpIFt8wvSRtw4CejIgKuvYOfuHYmscJvR9
+        SMSUE=
+X-Received: by 2002:ad4:5fcb:0:b0:5e7:56cc:c04a with SMTP id jq11-20020ad45fcb000000b005e756ccc04amr7033517qvb.47.1682074836627;
+        Fri, 21 Apr 2023 04:00:36 -0700 (PDT)
+X-Google-Smtp-Source: AKy350YeTcSVxc3fRI3TWNJBAp8psTOBYfkWiuPkSnoqT5PEh2oC3LIbfp7SNkOKxWBD4/jQ6EUZhw==
+X-Received: by 2002:ad4:5fcb:0:b0:5e7:56cc:c04a with SMTP id jq11-20020ad45fcb000000b005e756ccc04amr7033484qvb.47.1682074836356;
+        Fri, 21 Apr 2023 04:00:36 -0700 (PDT)
+Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
+        by smtp.gmail.com with ESMTPSA id 17-20020a370411000000b0074e19c4daeasm1255688qke.5.2023.04.21.04.00.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 21 Apr 2023 04:00:35 -0700 (PDT)
+Date:   Fri, 21 Apr 2023 07:02:39 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Dave Chinner <dchinner@redhat.com>
+Subject: [BUG] XFS (delalloc) writeback livelock writing to -ENOSPC on dm-thin
+Message-ID: <ZEJtT7vJ9RA4pno4@bfoster>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, 2023-04-21 at 12:13 +0200, Jan Kara wrote:
-> On Tue 11-04-23 10:27:06, Jeff Layton wrote:
-> > The VFS always uses coarse-grained timestamp updates for filling out th=
-e
-> > ctime and mtime after a change. This has the benefit of allowing
-> > filesystems to optimize away metadata updates.
-> >=20
-> > Unfortunately, this has always been an issue when we're exporting via
-> > NFSv3, which relies on timestamps to validate caches. Even with NFSv4, =
-a
-> > lot of exported filesystems don't properly support a change attribute
-> > and are subject to the same problem of timestamp granularity. Other
-> > applications have similar issues (e.g backup applications).
-> >=20
-> > Switching to always using high resolution timestamps would improve the
-> > situation for NFS, but that becomes rather expensive, as we'd have to
-> > log a lot more metadata updates.
-> >=20
-> > This patch grabs a new i_state bit to use as a flag that filesystems ca=
-n
-> > set in their getattr routine to indicate that the mtime or ctime was
-> > queried since it was last updated.
-> >=20
-> > It then adds a new current_cmtime function that acts like the
-> > current_time helper, but will conditionally grab high-res timestamps
-> > when the i_state flag is set in the inode.
-> >=20
-> > This allows NFS and other applications to reap the benefits of high-res
-> > ctime and mtime timestamps, but at a substantially lower cost than
-> > fetching them every time.
-> >=20
-> > Cc: Dave Chinner <david@fromorbit.com>
-> > Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> > ---
-> >  fs/inode.c         | 40 ++++++++++++++++++++++++++++++++++++++--
-> >  fs/stat.c          | 10 ++++++++++
-> >  include/linux/fs.h |  5 ++++-
-> >  3 files changed, 52 insertions(+), 3 deletions(-)
-> >=20
-> > diff --git a/fs/inode.c b/fs/inode.c
-> > index 4558dc2f1355..3630f67fd042 100644
-> > --- a/fs/inode.c
-> > +++ b/fs/inode.c
-> > @@ -2062,6 +2062,42 @@ static int __file_update_time(struct file *file,=
- struct timespec64 *now,
-> >  	return ret;
-> >  }
-> > =20
-> > +/**
-> > + * current_cmtime - Return FS time (possibly high-res)
-> > + * @inode: inode.
-> > + *
-> > + * Return the current time truncated to the time granularity supported=
- by
-> > + * the fs, as suitable for a ctime or mtime change. If something recen=
-tly
-> > + * fetched the ctime or mtime out of the inode via getattr, then get a
-> > + * high-resolution timestamp.
-> > + *
-> > + * Note that inode and inode->sb cannot be NULL.
-> > + * Otherwise, the function warns and returns coarse time without trunc=
-ation.
-> > + */
-> > +struct timespec64 current_cmtime(struct inode *inode)
-> > +{
-> > +	struct timespec64 now;
-> > +
-> > +	if (unlikely(!inode->i_sb)) {
->=20
-> I don't think we can have inodes without a superblock. Did you ever hit
-> this?
->=20
+Hi all,
 
-No, I copied this from current_time. I've already removed this in my
-working branch. We can probably remove it from current_time too.
+The test case is a simple sequential write to XFS backed by a thin
+volume. The test vm is running latest 6.3.0-rc7, has 8xcpu and 8GB RAM,
+and the thin volume is backed by sufficient space in the thin pool.
+I.e.:
 
-> > +		WARN(1, "%s() called with uninitialized super_block in the inode", _=
-_func__);
-> > +		ktime_get_coarse_real_ts64(&now);
-> > +		return now;
-> > +	}
-> > +
-> > +	/* Do a lockless check for the flag before taking the spinlock */
-> > +	if (READ_ONCE(inode->i_state) & I_CMTIME_QUERIED) {
-> > +		ktime_get_real_ts64(&now);
-> > +		spin_lock(&inode->i_lock);
-> > +		inode->i_state &=3D ~I_CMTIME_QUERIED;
->=20
-> Isn't this a bit fragile? If someone does:
->=20
-> 	inode->i_mtime =3D current_cmtime(inode);
-> 	inode->i_ctime =3D current_cmtime(inode);
->=20
-> the ctime update will be coarse although it should be fine-grained.
->=20
+lvcreate --type thin-pool -n tpool -L30G test
+lvcreate -V 20G -n tvol test/tpool
+mkfs.xfs /dev/test/tvol
+mount /dev/test/tvol /mnt
+dd if=/dev/zero of=/mnt/file bs=1M
 
-It is a bit. We'll need for users to do something like:
+The dd command writes until ~1GB or so free space is left in the fs and
+then seems to hit a livelock. From a quick look at tracepoints, XFS
+seems to be spinning in the xfs_convert_blocks() writeback path. df
+shows space consumption no longer changing, the flush worker is spinning
+at 100% and dd is blocked in balance_dirty_pages(). If I kill dd, the
+writeback worker continues spinning and an fsync of the file blocks
+indefinitely.
 
-    inode->i_mtime =3D inode->i_ctime =3D current_ctime(inode);
+If I reset the vm, remount and run the following:
 
-Fortunately, most do this already.
+dd if=/dev/zero of=/mnt/file bs=1M conv=notrunc oflag=append
 
-> > +		spin_unlock(&inode->i_lock);
-> > +	} else {
-> > +		ktime_get_coarse_real_ts64(&now);
-> > +	}
-> > +
-> > +	return timestamp_truncate(now, inode);
->=20
-> I'm a bit confused here. Isn't the point of this series also to give NFS
-> finer grained granularity time stamps than what the filesystem is possibl=
-y
-> able to store on disk?
->=20
+... it then runs to -ENOSPC, as expected.
 
-No. We actually don't want to hand out timestamps more granular than the
-underlying filesystem can support, as we'd end up having to invalidate
-caches for all of those inodes once the server rebooted and the
-unrecordable bits get zeroed out.
+I haven't seen this occur when running on a non-thin lvm volume, not
+sure why. What is also interesting is that if I rm the file and repeat
+on the thin volume (so the the thin volume is pretty much fully mapped
+at this point), the problem still occurs.
 
-The main idea here is to just ensure that we use fine-grained timestamps
-when someone has queried the mtime or ctime since the last time it was
-updated.
+This doesn't reproduce on v6.2. Given the number of XFS changes and the
+behavior above, it sort of smells more like an XFS issue than dm, but
+I've no real evidence of that. Regardless, I ran a bisect over related
+XFS commits and it implicated either of the two following commits:
 
-> Hmm, checking XFS it sets 1 ns granularity (as well as tmpfs) so for thes=
-e
-> using the coarser timers indeed gives a performance benefit. And probably
-> you've decided not implement the "better NFS support with coarse grained
-> timestamps" yet.
->=20
+  85843327094f ("xfs: factor xfs_bmap_btalloc()")
+  74c36a8689d3 ("xfs: use xfs_alloc_vextent_this_ag() where appropriate")
 
-Yep. The coarse grained timestamps are a _good_ thing for most
-filesystems as they allow you to skip a lot of metadata updates. My hope
-is that this will end up being like the i_version changes such that the
-extra fine-grained updates should be relatively rare and should
-(hopefully!) not cause noticeable performance blips. We'll see!
+More specifically, 85843327094f is the first commit that conclusively
+exhibits the problem. 74c36a8689d3 is inconclusive because I run into an
+almost instant shutdown when running the test. If I take one more step
+back to commit 4811c933ea1a ("xfs: combine __xfs_alloc_vextent_this_ag
+and xfs_alloc_ag_vextent"), the problem doesn't occur.
 
-> > +}
-> > +EXPORT_SYMBOL(current_cmtime);
-> > +
-> >  /**
-> >   * file_update_time - update mtime and ctime time
-> >   * @file: file accessed
-> > @@ -2080,7 +2116,7 @@ int file_update_time(struct file *file)
-> >  {
-> >  	int ret;
-> >  	struct inode *inode =3D file_inode(file);
-> > -	struct timespec64 now =3D current_time(inode);
-> > +	struct timespec64 now =3D current_cmtime(inode);
-> > =20
-> >  	ret =3D inode_needs_update_time(inode, &now);
-> >  	if (ret <=3D 0)
-> > @@ -2109,7 +2145,7 @@ static int file_modified_flags(struct file *file,=
- int flags)
-> >  {
-> >  	int ret;
-> >  	struct inode *inode =3D file_inode(file);
-> > -	struct timespec64 now =3D current_time(inode);
-> > +	struct timespec64 now =3D current_cmtime(inode);
-> > =20
-> >  	/*
-> >  	 * Clear the security bits if the process is not being run by root.
-> > diff --git a/fs/stat.c b/fs/stat.c
-> > index 7c238da22ef0..d8b80a2e36b7 100644
-> > --- a/fs/stat.c
-> > +++ b/fs/stat.c
-> > @@ -64,6 +64,16 @@ void generic_fillattr(struct mnt_idmap *idmap, struc=
-t inode *inode,
-> >  }
-> >  EXPORT_SYMBOL(generic_fillattr);
-> > =20
-> > +void fill_cmtime_and_mark(struct inode *inode, struct kstat *stat)
-> > +{
-> > +	spin_lock(&inode->i_lock);
-> > +	inode->i_state |=3D I_CMTIME_QUERIED;
-> > +	stat->ctime =3D inode->i_ctime;
-> > +	stat->mtime =3D inode->i_mtime;
-> > +	spin_unlock(&inode->i_lock);
-> > +}
-> > +EXPORT_SYMBOL(fill_cmtime_and_mark);
->=20
-> The name could be better here :). Maybe stat_fill_cmtime_and_mark()?
->=20
-> 							=09
+Brian
 
-I have a quite different set that I've been working on that I'll
-(hopefully!) post soon. That one uses the least significant bit of the
-tv_nsec field as the QUERIED flag instead of the spinlock.
-
-Still cleaning up the set and need to test it some more though, so it's
-not quite ready to post. Stay tuned!
-
-Thanks for the review!=20
---=20
-Jeff Layton <jlayton@kernel.org>
