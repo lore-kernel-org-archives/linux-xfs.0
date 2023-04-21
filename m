@@ -2,56 +2,55 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8011EC77B75
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Apr 2023 03:49:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A9F5C77B75
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Apr 2023 03:50:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233818AbjDUDtF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Apr 2023 23:49:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46214 "EHLO
+        id S229904AbjDUDuc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Apr 2023 23:50:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47368 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233817AbjDUDsk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Apr 2023 23:48:40 -0400
-X-Greylist: delayed 972 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 20 Apr 2023 20:48:20 PDT
+        with ESMTP id S229660AbjDUDub (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Apr 2023 23:50:31 -0400
 Received: from frasgout13.his.huawei.com (frasgout13.his.huawei.com [14.137.139.46])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37CDA44A1
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Apr 2023 20:48:19 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.18.147.227])
-        by frasgout13.his.huawei.com (SkyGuard) with ESMTP id 4Q2fwS55w2z9xFGZ
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Apr 2023 11:22:32 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18CD9E57
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Apr 2023 20:50:28 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.18.147.229])
+        by frasgout13.his.huawei.com (SkyGuard) with ESMTP id 4Q2gKf44nVz9v7Zd
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Apr 2023 11:40:54 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.170])
-        by APP2 (Coremail) with SMTP id BqC_BwC35oCgA0JkJLD+BQ--.17472S3;
-        Fri, 21 Apr 2023 03:31:52 +0000 (GMT)
+        by APP1 (Coremail) with SMTP id 76C_BwA3z2LxB0JkdrILBg--.23149S2;
+        Fri, 21 Apr 2023 03:50:14 +0000 (GMT)
 From:   Guo Xuenan <guoxuenan@huawei.com>
-To:     djwong@kernel.org, dchinner@redhat.com, linux-xfs@vger.kernel.org
-Cc:     sandeen@redhat.com, guoxuenan@huawei.com,
-        guoxuenan@huaweicloud.com, houtao1@huawei.com, fangwei1@huawei.com,
-        jack.qiu@huawei.com, yi.zhang@huawei.com
+To:     dchinner@redhat.com, djwong@kernel.org
+Cc:     fangwei1@huawei.com, guoxuenan@huawei.com,
+        guoxuenan@huaweicloud.com, houtao1@huawei.com, jack.qiu@huawei.com,
+        linux-xfs@vger.kernel.org, sandeen@redhat.com, yi.zhang@huawei.com
 Subject: [PATCH 1/3] xfs: fix leak memory when xfs_attr_inactive fails
-Date:   Fri, 21 Apr 2023 11:31:40 +0800
-Message-Id: <20230421033142.1656296-2-guoxuenan@huawei.com>
+Date:   Fri, 21 Apr 2023 11:50:07 +0800
+Message-Id: <20230421035007.1663979-1-guoxuenan@huawei.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230421033142.1656296-1-guoxuenan@huawei.com>
 References: <20230421033142.1656296-1-guoxuenan@huawei.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: BqC_BwC35oCgA0JkJLD+BQ--.17472S3
+X-CM-TRANSID: 76C_BwA3z2LxB0JkdrILBg--.23149S2
 X-Coremail-Antispam: 1UD129KBjvJXoW3JFyxJFyUKrW7Xw1xuFW5trb_yoWxCFWDpr
         9rGr1DKr4ktryjkr48Aw1jgw18tF4xCa1UJr1xZr1xA3WUCw1xtryktr48JryUJr40v3sF
-        gr4DJw4IqwsxJaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUH0b4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUGw
-        A2048vs2IY020Ec7CjxVAFwI0_JFI_Gr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
-        w2x7M28EF7xvwVC0I7IYx2IY67AKxVWUJVWUCwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
-        W8JVWxJwA2z4x0Y4vEx4A2jsIE14v26r1j6r4UM28EF7xvwVC2z280aVCY1x0267AKxVW8
-        JVW8Jr1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx
-        0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWU
-        JVW8JwACjcxG0xvY0x0EwIxGrwACjsIEF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6x
-        kF7I0E8cxan2IY04v7MxkF7I0En4kS14v26r126r1DMxAIw28IcxkI7VAKI48JMxAIw28I
-        cVAKzI0EY4vE52x082I5MxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr
-        0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0E
-        wIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JV
-        WxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAI
-        cVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU85DG5UUUUU==
+        gr4DJw4IqwsxJaUanT9S1TB71UUUUUDqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUPIb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Jr0_Gr1l84ACjcxK6I8E87Iv67AKxVWUJVW8JwA2z4x0Y4vEx4A2jsIEc7CjxV
+        AFwI0_Gr0_Gr1UM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+        x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+        0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7Iv64x0x7Aq67IIx4CEVc8vx2IErcIFxwAC
+        I402YVCY1x02628vn2kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrw
+        CF04k20xvEw4C26cxK6c8Ij28IcwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
+        14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
+        kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAF
+        wI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE14v26r
+        1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07jx
+        vtZUUUUU=
 Sender: guoxuenan@huaweicloud.com
 X-CM-SenderInfo: xjxr53hhqd0q5kxd4v5lfo033gof0z/
 X-CFilter-Loop: Reflected
