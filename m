@@ -2,30 +2,30 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38460C77B76
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Apr 2023 19:58:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2631DC7EE20
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Apr 2023 19:58:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233679AbjDUT6b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Apr 2023 15:58:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59100 "EHLO
+        id S233697AbjDUT6d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Apr 2023 15:58:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233430AbjDUT6Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Apr 2023 15:58:24 -0400
+        with ESMTP id S233648AbjDUT62 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Apr 2023 15:58:28 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80A432D52;
-        Fri, 21 Apr 2023 12:58:17 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D2BA271E;
+        Fri, 21 Apr 2023 12:58:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=E+NZJmg2wGtl9UTyedalDySM8eWxNnKVjwcpkkZSi1c=; b=M3lCN4A3ri6P3e3ql42mx4susg
-        ysa14KlGQHDbxNKzxNvsD94HuAELu2p+zrjKlfbdBVsg5FEEQlOH97ONbcWpYtpat3BgqnGrCJ4eZ
-        7+JQDAfqvEamJvGO7RL0gSWM3Ly2D8INxLWliXrW9XPqtUhtBLOeZtABHPaHsMO6qxBZa79RVQWNR
-        zNd/7tjUHFnBVj6gorqgr2cHySz2Quouq7qe9bY5mLcEOQdPtCOhWKHBAQK/WIhsI0c9ybOjJrP/c
-        Rc2dRw8rPaDAZsO66xngjm08/KUreyeoN8QeYOiqGG8RnmDzeoTnC67Bs2LXR6rXWcYvCGGgJrPlz
-        pqV0K7oQ==;
+        bh=RlYZtMcWmG/W2kDdFWLbtYt9Jiujn88dB6HTCMaouxI=; b=qTRjtG4XiiUGR6XLhcw+SFktov
+        LoDASQYMHVLj3TTg5Lw0jryhjP4LqtTs5LsbGN8HjKQwWO9XJb2N6gJoJdU2Kbxy3omeTFZdCuvu9
+        gYsf5oHp7r0+jNOMXyus067c8U1t8hqR7BaZ7XU9tE5o5lpKgnd7lXd/DLUlJ0pBQsJr0jx9OR/47
+        1fBRNIc53lCZDX5v1jMR7xMlrxsp2KBuUX3ZJS59UrN9p8IgGGDnMRpYh9885bwZV49u+cfeaApWm
+        7EbwnxAkoRXz2ALy5RYREPDptZqMo4YNQcuh2gLrKyg50PFZ75wR7Mef75Ihe/+CAH3kPwfVf6eN9
+        vxETgCxw==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1ppwtU-00Blad-21;
+        id 1ppwtU-00BlaX-1a;
         Fri, 21 Apr 2023 19:58:08 +0000
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     axboe@kernel.dk, agk@redhat.com, snitzer@kernel.org,
@@ -38,9 +38,9 @@ Cc:     patches@lists.linux.dev, linux-block@vger.kernel.org,
         drbd-dev@lists.linbit.com, linux-kernel@vger.kernel.org,
         willy@infradead.org, hare@suse.de, p.raghav@samsung.com,
         da.gomez@samsung.com, kbusch@kernel.org, mcgrof@kernel.org
-Subject: [PATCH 4/5] dm bufio: simplify by using PAGE_SECTORS_SHIFT
-Date:   Fri, 21 Apr 2023 12:58:06 -0700
-Message-Id: <20230421195807.2804512-5-mcgrof@kernel.org>
+Subject: [PATCH 1/5] dm integrity: simplify by using PAGE_SECTORS_SHIFT
+Date:   Fri, 21 Apr 2023 12:58:03 -0700
+Message-Id: <20230421195807.2804512-2-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230421195807.2804512-1-mcgrof@kernel.org>
 References: <20230421195807.2804512-1-mcgrof@kernel.org>
@@ -58,31 +58,58 @@ This produces no functional changes.
 
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- drivers/md/dm-bufio.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/md/dm-integrity.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-index eea977662e81..08c4730e1819 100644
---- a/drivers/md/dm-bufio.c
-+++ b/drivers/md/dm-bufio.c
-@@ -1152,7 +1152,7 @@ static void *alloc_buffer_data(struct dm_bufio_client *c, gfp_t gfp_mask,
- 	    gfp_mask & __GFP_NORETRY) {
- 		*data_mode = DATA_MODE_GET_FREE_PAGES;
- 		return (void *)__get_free_pages(gfp_mask,
--						c->sectors_per_block_bits - (PAGE_SHIFT - SECTOR_SHIFT));
-+						c->sectors_per_block_bits - (PAGE_SECTORS_SHIFT));
+diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
+index 31838b13ea54..a179265970dd 100644
+--- a/drivers/md/dm-integrity.c
++++ b/drivers/md/dm-integrity.c
+@@ -752,7 +752,7 @@ static void page_list_location(struct dm_integrity_c *ic, unsigned int section,
+ 
+ 	sector = section * ic->journal_section_sectors + offset;
+ 
+-	*pl_index = sector >> (PAGE_SHIFT - SECTOR_SHIFT);
++	*pl_index = sector >> (PAGE_SECTORS_SHIFT);
+ 	*pl_offset = (sector << SECTOR_SHIFT) & (PAGE_SIZE - 1);
+ }
+ 
+@@ -1077,7 +1077,7 @@ static void rw_journal_sectors(struct dm_integrity_c *ic, blk_opf_t opf,
+ 		return;
  	}
  
- 	*data_mode = DATA_MODE_VMALLOC;
-@@ -1190,7 +1190,7 @@ static void free_buffer_data(struct dm_bufio_client *c,
+-	pl_index = sector >> (PAGE_SHIFT - SECTOR_SHIFT);
++	pl_index = sector >> (PAGE_SECTORS_SHIFT);
+ 	pl_offset = (sector << SECTOR_SHIFT) & (PAGE_SIZE - 1);
  
- 	case DATA_MODE_GET_FREE_PAGES:
- 		free_pages((unsigned long)data,
--			   c->sectors_per_block_bits - (PAGE_SHIFT - SECTOR_SHIFT));
-+			   c->sectors_per_block_bits - (PAGE_SECTORS_SHIFT));
- 		break;
+ 	io_req.bi_opf = opf;
+@@ -1201,7 +1201,7 @@ static void copy_from_journal(struct dm_integrity_c *ic, unsigned int section, u
  
- 	case DATA_MODE_VMALLOC:
+ 	sector = section * ic->journal_section_sectors + JOURNAL_BLOCK_SECTORS + offset;
+ 
+-	pl_index = sector >> (PAGE_SHIFT - SECTOR_SHIFT);
++	pl_index = sector >> (PAGE_SECTORS_SHIFT);
+ 	pl_offset = (sector << SECTOR_SHIFT) & (PAGE_SIZE - 1);
+ 
+ 	io_req.bi_opf = REQ_OP_WRITE;
+@@ -3765,7 +3765,7 @@ static int create_journal(struct dm_integrity_c *ic, char **error)
+ 	ic->commit_ids[3] = cpu_to_le64(0x4444444444444444ULL);
+ 
+ 	journal_pages = roundup((__u64)ic->journal_sections * ic->journal_section_sectors,
+-				PAGE_SIZE >> SECTOR_SHIFT) >> (PAGE_SHIFT - SECTOR_SHIFT);
++				PAGE_SIZE >> SECTOR_SHIFT) >> (PAGE_SECTORS_SHIFT);
+ 	journal_desc_size = journal_pages * sizeof(struct page_list);
+ 	if (journal_pages >= totalram_pages() - totalhigh_pages() || journal_desc_size > ULONG_MAX) {
+ 		*error = "Journal doesn't fit into memory";
+@@ -4542,7 +4542,7 @@ static int dm_integrity_ctr(struct dm_target *ti, unsigned int argc, char **argv
+ 			spin_lock_init(&bbs->bio_queue_lock);
+ 
+ 			sector = i * (BITMAP_BLOCK_SIZE >> SECTOR_SHIFT);
+-			pl_index = sector >> (PAGE_SHIFT - SECTOR_SHIFT);
++			pl_index = sector >> (PAGE_SECTORS_SHIFT);
+ 			pl_offset = (sector << SECTOR_SHIFT) & (PAGE_SIZE - 1);
+ 
+ 			bbs->bitmap = lowmem_page_address(ic->journal[pl_index].page) + pl_offset;
 -- 
 2.39.2
 
