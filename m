@@ -2,217 +2,110 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CE45C7618E
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Apr 2023 10:13:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF993C77B7E
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Apr 2023 10:24:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229640AbjDUKNk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Apr 2023 06:13:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48102 "EHLO
+        id S231450AbjDUKYI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Apr 2023 06:24:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230096AbjDUKNg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Apr 2023 06:13:36 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62438AF04;
-        Fri, 21 Apr 2023 03:13:33 -0700 (PDT)
+        with ESMTP id S231261AbjDUKYF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Apr 2023 06:24:05 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0EC99016;
+        Fri, 21 Apr 2023 03:23:55 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 15F091FDDC;
-        Fri, 21 Apr 2023 10:13:32 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 7651721A27;
+        Fri, 21 Apr 2023 10:23:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1682072012; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1682072634; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=r6wWKx5dDKFmTIcIYNBq1MQUPmJkbAp8f/jd3WbQHMU=;
-        b=Z24b84qaXsafYxTU01etW0C6yQx+jEUWbuL2ZTAaKXxwRestqLVw4E0xENQSwVPoR09DNQ
-        FaNYM9anVh/Y9fXugiohOGxxhkbQ1viU53UJayzTRsmmfqNFHUjxumkbW9Zo+J1GjStVUg
-        2GWyv3jHPVOsKnj7NTSlArB4EvZiDsE=
+        bh=cO98WjpLnKzbhvXvYHzR4JeJNriOWh1/Af9bFncN/i8=;
+        b=AuJkSwrP90R+MVtx2igqjsiRdCKDM59nlAKKpuS/eUqSRAjSC0Imi0d+EgLbxksW9FnXog
+        Ay1ukngqOGv0ypHAmjWOcFv1Cmf4w4cNrekqGErZkW5ONv2p4Ntpjrp0iSYomHfN2iLifg
+        Kp2rKnAa4AKW9GFRNQHSlC6pT0bz/8Q=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1682072012;
+        s=susede2_ed25519; t=1682072634;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=r6wWKx5dDKFmTIcIYNBq1MQUPmJkbAp8f/jd3WbQHMU=;
-        b=wluaBxVfb+rzQ3wrkA8IStKDPvQj84jb9cZ3zM0az/l+GWLEuYDNm0m9jBpORjgAGMABU4
-        fsTWTgo6EqaZzFCw==
+        bh=cO98WjpLnKzbhvXvYHzR4JeJNriOWh1/Af9bFncN/i8=;
+        b=otDAQ5ed1MEY4ABWsMgBA+Rq+33mWUeXLSe4ioruzGgwkVg7AN/+yHTaOlBgY133KaGU8r
+        9zDTMd6ZvfeJhRBA==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id F37A51390E;
-        Fri, 21 Apr 2023 10:13:31 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 61E201390E;
+        Fri, 21 Apr 2023 10:23:54 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id 83RPO8thQmS1ZwAAMHmgww
-        (envelope-from <jack@suse.cz>); Fri, 21 Apr 2023 10:13:31 +0000
+        id yeTcFzpkQmTtbQAAMHmgww
+        (envelope-from <jack@suse.cz>); Fri, 21 Apr 2023 10:23:54 +0000
 Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 7EE2EA0729; Fri, 21 Apr 2023 12:13:31 +0200 (CEST)
-Date:   Fri, 21 Apr 2023 12:13:31 +0200
+        id E0F91A0729; Fri, 21 Apr 2023 12:23:53 +0200 (CEST)
+Date:   Fri, 21 Apr 2023 12:23:53 +0200
 From:   Jan Kara <jack@suse.cz>
 To:     Jeff Layton <jlayton@kernel.org>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
+Cc:     Christian Brauner <brauner@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
         "Darrick J. Wong" <djwong@kernel.org>,
         Hugh Dickins <hughd@google.com>,
         Andrew Morton <akpm@linux-foundation.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Chuck Lever <chuck.lever@oracle.com>,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH 1/3] fs: add infrastructure for opportunistic
+        linux-nfs@vger.kernel.org
+Subject: Re: [RFC PATCH 1/3][RESEND] fs: add infrastructure for opportunistic
  high-res ctime/mtime updates
-Message-ID: <20230421101331.dlxom6b5e7yds5tn@quack3>
-References: <20230411142708.62475-1-jlayton@kernel.org>
- <20230411142708.62475-2-jlayton@kernel.org>
+Message-ID: <20230421102353.blzqjrglgyiupf3g@quack3>
+References: <20230411143702.64495-1-jlayton@kernel.org>
+ <20230411143702.64495-2-jlayton@kernel.org>
+ <20230411-unwesen-prunk-cb7de3cc6cc8@brauner>
+ <c63c4c811cfa6c6396674e497920ec984cb476d1.camel@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230411142708.62475-2-jlayton@kernel.org>
+In-Reply-To: <c63c4c811cfa6c6396674e497920ec984cb476d1.camel@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue 11-04-23 10:27:06, Jeff Layton wrote:
-> The VFS always uses coarse-grained timestamp updates for filling out the
-> ctime and mtime after a change. This has the benefit of allowing
-> filesystems to optimize away metadata updates.
+On Tue 11-04-23 12:04:36, Jeff Layton wrote:
+> On Tue, 2023-04-11 at 17:07 +0200, Christian Brauner wrote:
+> > On Tue, Apr 11, 2023 at 10:37:00AM -0400, Jeff Layton wrote:
+> > There's some performance concerns here. Calling
+> > stat() is super common and it would potentially make the next iop more
+> > expensive. Recursively changing ownership in the container use-case come
+> > to mind which are already expensive.
 > 
-> Unfortunately, this has always been an issue when we're exporting via
-> NFSv3, which relies on timestamps to validate caches. Even with NFSv4, a
-> lot of exported filesystems don't properly support a change attribute
-> and are subject to the same problem of timestamp granularity. Other
-> applications have similar issues (e.g backup applications).
+> stat() is common, but not generally as common as write calls are. I
+> expect that we'll get somewhat similar results tochanged i_version over
+> to use a similar QUERIED flag.
 > 
-> Switching to always using high resolution timestamps would improve the
-> situation for NFS, but that becomes rather expensive, as we'd have to
-> log a lot more metadata updates.
+> The i_version field was originally very expensive and required metadata
+> updates on every write. After making that change, we got the same
+> performance back in most tests that we got without the i_version field
+> being enabled at all. Basically, this just means we'll end up logging an
+> extra journal transaction on some writes that follow a stat() call,
+> which turns out to be line noise for most workloads.
 > 
-> This patch grabs a new i_state bit to use as a flag that filesystems can
-> set in their getattr routine to indicate that the mtime or ctime was
-> queried since it was last updated.
-> 
-> It then adds a new current_cmtime function that acts like the
-> current_time helper, but will conditionally grab high-res timestamps
-> when the i_state flag is set in the inode.
-> 
-> This allows NFS and other applications to reap the benefits of high-res
-> ctime and mtime timestamps, but at a substantially lower cost than
-> fetching them every time.
-> 
-> Cc: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> ---
->  fs/inode.c         | 40 ++++++++++++++++++++++++++++++++++++++--
->  fs/stat.c          | 10 ++++++++++
->  include/linux/fs.h |  5 ++++-
->  3 files changed, 52 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/inode.c b/fs/inode.c
-> index 4558dc2f1355..3630f67fd042 100644
-> --- a/fs/inode.c
-> +++ b/fs/inode.c
-> @@ -2062,6 +2062,42 @@ static int __file_update_time(struct file *file, struct timespec64 *now,
->  	return ret;
->  }
->  
-> +/**
-> + * current_cmtime - Return FS time (possibly high-res)
-> + * @inode: inode.
-> + *
-> + * Return the current time truncated to the time granularity supported by
-> + * the fs, as suitable for a ctime or mtime change. If something recently
-> + * fetched the ctime or mtime out of the inode via getattr, then get a
-> + * high-resolution timestamp.
-> + *
-> + * Note that inode and inode->sb cannot be NULL.
-> + * Otherwise, the function warns and returns coarse time without truncation.
-> + */
-> +struct timespec64 current_cmtime(struct inode *inode)
-> +{
-> +	struct timespec64 now;
-> +
-> +	if (unlikely(!inode->i_sb)) {
+> I do agree that performance is a concern here though. We'll need to
+> benchmark this somehow.
 
-I don't think we can have inodes without a superblock. Did you ever hit
-this?
+So for stat-intensive read-only workloads the additional inode_lock locking
+during stat may be noticeable. I suppose a stress test stating the same
+file in a loop from all CPUs the machine has will certainly notice :) But
+that's just an unrealistic worst case.
 
-> +		WARN(1, "%s() called with uninitialized super_block in the inode", __func__);
-> +		ktime_get_coarse_real_ts64(&now);
-> +		return now;
-> +	}
-> +
-> +	/* Do a lockless check for the flag before taking the spinlock */
-> +	if (READ_ONCE(inode->i_state) & I_CMTIME_QUERIED) {
-> +		ktime_get_real_ts64(&now);
-> +		spin_lock(&inode->i_lock);
-> +		inode->i_state &= ~I_CMTIME_QUERIED;
-
-Isn't this a bit fragile? If someone does:
-
-	inode->i_mtime = current_cmtime(inode);
-	inode->i_ctime = current_cmtime(inode);
-
-the ctime update will be coarse although it should be fine-grained.
-
-> +		spin_unlock(&inode->i_lock);
-> +	} else {
-> +		ktime_get_coarse_real_ts64(&now);
-> +	}
-> +
-> +	return timestamp_truncate(now, inode);
-
-I'm a bit confused here. Isn't the point of this series also to give NFS
-finer grained granularity time stamps than what the filesystem is possibly
-able to store on disk?
-
-Hmm, checking XFS it sets 1 ns granularity (as well as tmpfs) so for these
-using the coarser timers indeed gives a performance benefit. And probably
-you've decided not implement the "better NFS support with coarse grained
-timestamps" yet.
-
-> +}
-> +EXPORT_SYMBOL(current_cmtime);
-> +
->  /**
->   * file_update_time - update mtime and ctime time
->   * @file: file accessed
-> @@ -2080,7 +2116,7 @@ int file_update_time(struct file *file)
->  {
->  	int ret;
->  	struct inode *inode = file_inode(file);
-> -	struct timespec64 now = current_time(inode);
-> +	struct timespec64 now = current_cmtime(inode);
->  
->  	ret = inode_needs_update_time(inode, &now);
->  	if (ret <= 0)
-> @@ -2109,7 +2145,7 @@ static int file_modified_flags(struct file *file, int flags)
->  {
->  	int ret;
->  	struct inode *inode = file_inode(file);
-> -	struct timespec64 now = current_time(inode);
-> +	struct timespec64 now = current_cmtime(inode);
->  
->  	/*
->  	 * Clear the security bits if the process is not being run by root.
-> diff --git a/fs/stat.c b/fs/stat.c
-> index 7c238da22ef0..d8b80a2e36b7 100644
-> --- a/fs/stat.c
-> +++ b/fs/stat.c
-> @@ -64,6 +64,16 @@ void generic_fillattr(struct mnt_idmap *idmap, struct inode *inode,
->  }
->  EXPORT_SYMBOL(generic_fillattr);
->  
-> +void fill_cmtime_and_mark(struct inode *inode, struct kstat *stat)
-> +{
-> +	spin_lock(&inode->i_lock);
-> +	inode->i_state |= I_CMTIME_QUERIED;
-> +	stat->ctime = inode->i_ctime;
-> +	stat->mtime = inode->i_mtime;
-> +	spin_unlock(&inode->i_lock);
-> +}
-> +EXPORT_SYMBOL(fill_cmtime_and_mark);
-
-The name could be better here :). Maybe stat_fill_cmtime_and_mark()?
+We could check whether the QUERIED flag is already set and if yes, skip the
+locking. That should fix the read-only workload case. We just have to think
+whether there would not be some unpleasant races created.
 
 								Honza
 -- 
