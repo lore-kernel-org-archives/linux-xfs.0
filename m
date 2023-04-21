@@ -2,120 +2,106 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7326AC77B76
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Apr 2023 22:24:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4673AC77B78
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Apr 2023 22:25:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230110AbjDUWYq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Apr 2023 18:24:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58324 "EHLO
+        id S233836AbjDUWZC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Apr 2023 18:25:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229543AbjDUWYp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Apr 2023 18:24:45 -0400
-Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DF131BD7
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Apr 2023 15:24:44 -0700 (PDT)
-Received: by mail-pf1-x436.google.com with SMTP id d2e1a72fcca58-63b7096e2e4so2396412b3a.2
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Apr 2023 15:24:44 -0700 (PDT)
+        with ESMTP id S233833AbjDUWZC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Apr 2023 18:25:02 -0400
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4D2E1BE7
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Apr 2023 15:25:00 -0700 (PDT)
+Received: by mail-pl1-x62c.google.com with SMTP id d9443c01a7336-1a7111e0696so5461775ad.1
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Apr 2023 15:25:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1682115883; x=1684707883;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=QhdeCI3QilMyjL2fD8tZZlS9uWoF9L7TKC84LZ8ACnY=;
-        b=BR/eu9wxo1ityjmlgUFBlzz+zeOXanQtAGamjwG2k7k81TK/4iygMhNxQaqaccdZ1U
-         KbP1j+QhOnOVkWpDu1+tJpspj1tR4ZR3iAvRVOOLMRcd9y5MUPXQ0w/aDnqmXCbVC+sk
-         f7cd/M3D1ZS5BScXVnydA9wGddOx8yvxw4ddpulUzRCmfQiZF7Y7xwwbH7ygRge6JcMU
-         a2b4KfgqoirA0omV5q2HdWf8ljSEDoBIWdkAJJZ7BfPI8aM9YA57ZehAteQoTP6pPp91
-         LSC+BJWCjZkQprI+qKs14cbrCLS5k+s8V9JxB8b2GD5txfq6wutKKMi8V4hSt+8El5Dd
-         /yZg==
+        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1682115900; x=1684707900;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=wtOk22wHsRTIJLakW5pQsLDvU50er+NeXN7SxTWy9qk=;
+        b=oerIEMuVGMo3tf7ainFnGShOU4ymhQn2JIZkQ5ZB4LQezPNmDezHZ74CsaeAZJQpD6
+         fBOri4QsdRMaGb2stkX1WSwEZwfrNh9aQZWqyNJoXurA5LawSG0y1G2Xv1oUcyhDfcMp
+         9sbYCkZuE9eli+qnK9IsSiSsdVJHCJSw/W3sMGWPje4NFX463I+v+t7Es1rrOVfCvCrD
+         U9gO5mnakr3a3I+Qu1a4NVVPqGjSfvWoKTJthz4c4dgYea4zYEHowFeYEbZOiF95SR+K
+         Jq4c5WzqI8i0UVXC3OJDP1Rl9oKvaB8DuqRz1pK4f1u8wkRZdFtR2Oi36akQy0CVWjt4
+         77tA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682115883; x=1684707883;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=QhdeCI3QilMyjL2fD8tZZlS9uWoF9L7TKC84LZ8ACnY=;
-        b=b6dqtDLgTwkZGq7d7p0e2dfYWkqkc4PzNPKb1p2QySwmTQGJQFWujkZaE45hBWf480
-         IUrxRat3GDduj4orgVM7UHweRyH2Q2EvQ0vINDOqEgQ4V4Qg8nawNW8rYWTo/RSr3q4d
-         qnCxKE+tkWBMoH6YQQo2s+kpZj4BbyrJbEKxVjO/CVvuIKl3k+AUR6EvJ68MqcCUzE1+
-         fPI3Y2+38+64wcH66fu8Ji/X9PUBmNWH+CsfM0f54SZFJcTBhGMTBhFC+tJ8w166etXK
-         YYcm+9E2r/dQRTEaPGArfkU7eS5W3AtYyM3NZkgS9s+ThbL27Bts7OjF7slGeY7m8p5p
-         OKWg==
-X-Gm-Message-State: AAQBX9dgtK4tMfPMmxW705AnxCQtVn89eD9sBzK8MTWZmHeePK0esXQj
-        rwXnHwTqyXIpmhkW1T30Wx0bC54MnzgfTYSpTcA=
-X-Google-Smtp-Source: AKy350YwMcdMsSxWLr53G061RGysVDZ1XykYjG4E43t47404696C/s86jwDyFNOKq3HvdE/NwQXGmg==
-X-Received: by 2002:a05:6a21:6d98:b0:ec:60b9:c724 with SMTP id wl24-20020a056a216d9800b000ec60b9c724mr8654927pzb.33.1682115883579;
-        Fri, 21 Apr 2023 15:24:43 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-41-174.pa.nsw.optusnet.com.au. [49.180.41.174])
-        by smtp.gmail.com with ESMTPSA id c17-20020a056a000ad100b005ae02dc5b94sm3417270pfl.219.2023.04.21.15.24.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Apr 2023 15:24:43 -0700 (PDT)
-Received: from [192.168.253.23] (helo=devoid.disaster.area)
-        by dread.disaster.area with esmtp (Exim 4.92.3)
-        (envelope-from <dave@fromorbit.com>)
-        id 1ppzBI-006DZk-Ie; Sat, 22 Apr 2023 08:24:40 +1000
-Received: from dave by devoid.disaster.area with local (Exim 4.96)
-        (envelope-from <dave@devoid.disaster.area>)
-        id 1ppzBI-00BQFD-1j;
-        Sat, 22 Apr 2023 08:24:40 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     bfoster@redhat.com
-Subject: [PATCH] xfs: fix livelock in delayed allocation at ENOSPC
-Date:   Sat, 22 Apr 2023 08:24:40 +1000
-Message-Id: <20230421222440.2722482-1-david@fromorbit.com>
-X-Mailer: git-send-email 2.39.2
+        d=1e100.net; s=20221208; t=1682115900; x=1684707900;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=wtOk22wHsRTIJLakW5pQsLDvU50er+NeXN7SxTWy9qk=;
+        b=i9lJst1QdQUpMaMARs/pbwiwIrVpCbM5lI4p2E/YiEpUdTX+ebQeX+o8E+ZZCd7Jvf
+         TT8uh0uaz7ZTyFkYeQOqTA5iHwRk6kxLtshw4x7C4IleYjD6UUJbkWE3IVgTJ1dHNT4S
+         8nW4z2vKNUFijEf49AerWr8Wdi7TVFUr3oxYrSix8vrGhPEFFGRINcLgtEITIw8BI5mY
+         gatEdyooKi3WJ4LodjScevMn9+6jDx+dRQFRUH60YTzrROkmm3uI9xXYm9pkBxxIRBSz
+         pvwINJZeQXrjpB4AQkPgzvsHXVvoTPXkBY1PPwpkvuAc4HeF3WW/ZkysHNIkfOLRM+yC
+         KkQw==
+X-Gm-Message-State: AAQBX9cCOu5+g478TS/5QMUKe5Gl8HYTf4eVWdCEZvSFV9LB2dcGDNn/
+        3XIi7Q2yu+HQYp+y1JEKrGk94w==
+X-Google-Smtp-Source: AKy350ab5zsgqMFX9gmLPlFbJI6JNwFXd5UcuHSryHmhAdUudcIDmmGg6bERrDL3LQkvBwimuDuVEg==
+X-Received: by 2002:a17:902:c94f:b0:1a2:1a52:14b3 with SMTP id i15-20020a170902c94f00b001a21a5214b3mr7699856pla.4.1682115900155;
+        Fri, 21 Apr 2023 15:25:00 -0700 (PDT)
+Received: from [192.168.1.136] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id jn15-20020a170903050f00b001a945e7147asm1657335plb.231.2023.04.21.15.24.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 21 Apr 2023 15:24:59 -0700 (PDT)
+Message-ID: <47688c1d-9cf1-3e08-1f1d-a051b25d010e@kernel.dk>
+Date:   Fri, 21 Apr 2023 16:24:57 -0600
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.0
+Subject: Re: [PATCH 3/5] iomap: simplify iomap_init() with PAGE_SECTORS
+Content-Language: en-US
+To:     Luis Chamberlain <mcgrof@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>
+Cc:     agk@redhat.com, snitzer@kernel.org, philipp.reisner@linbit.com,
+        lars.ellenberg@linbit.com, christoph.boehmwalder@linbit.com,
+        hch@infradead.org, djwong@kernel.org, minchan@kernel.org,
+        senozhatsky@chromium.org, patches@lists.linux.dev,
+        linux-block@vger.kernel.org, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        dm-devel@redhat.com, drbd-dev@lists.linbit.com,
+        linux-kernel@vger.kernel.org, hare@suse.de, p.raghav@samsung.com,
+        da.gomez@samsung.com, kbusch@kernel.org
+References: <20230421195807.2804512-1-mcgrof@kernel.org>
+ <20230421195807.2804512-4-mcgrof@kernel.org>
+ <ZELuiBNNHTk4EdxH@casper.infradead.org>
+ <ZEMH9h/cd9Cp1t+X@bombadil.infradead.org>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <ZEMH9h/cd9Cp1t+X@bombadil.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On 4/21/23 4:02 PM, Luis Chamberlain wrote:
+> On Fri, Apr 21, 2023 at 09:14:00PM +0100, Matthew Wilcox wrote:
+>> On Fri, Apr 21, 2023 at 12:58:05PM -0700, Luis Chamberlain wrote:
+>>> Just use the PAGE_SECTORS generic define. This produces no functional
+>>> changes. While at it use left shift to simplify this even further.
+>>
+>> How is FOO << 2 simpler than FOO * 4?
+>>
+>>> -	return bioset_init(&iomap_ioend_bioset, 4 * (PAGE_SIZE / SECTOR_SIZE),
+>>> +	return bioset_init(&iomap_ioend_bioset, PAGE_SECTORS << 2,
+> 
+> We could just do:
+> 
+> 
+> -	return bioset_init(&iomap_ioend_bioset, 4 * (PAGE_SIZE / SECTOR_SIZE),
+> +	return bioset_init(&iomap_ioend_bioset, 4 * PAGE_SECTORS,
+> 
+> The shift just seemed optimal if we're just going to change it.
 
-On a filesystem with a non-zero stripe unit and a large sequential
-write, delayed allocation will set a minimum allocation length of
-the stripe unit. If allocation fails because there are no extents
-long enough for an aligned minlen allocation, it is supposed to
-fall back to unaligned allocation which allows single block extents
-to be allocated.
+It's going to generate the same code, but the multiplication is arguably
+easier to read (or harder to misread).
 
-When the allocator code was rewritting in the 6.3 cycle, this
-fallback was broken - the old code used args->fsbno as the both the
-allocation target and the allocation result, the new code passes the
-target as a separate parameter. The conversion didn't handle the
-aligned->unaligned fallback path correctly - it reset args->fsbno to
-the target fsbno on failure which broke allocation failure detection
-in the high level code and so it never fell back to unaligned
-allocations.
-
-This resulted in a loop in writeback trying to allocate an aligned
-block, getting a false positive success, trying to insert the result
-in the BMBT. This did nothing because the extent already was in the
-BMBT (merge results in an unchanged extent) and so it returned the
-prior extent to the conversion code as the current iomap.
-
-Because the iomap returned didn't cover the offset we tried to map,
-xfs_convert_blocks() then retries the allocation, which fails in the
-same way and now we have a livelock.
-
-Reported-by: Brian Foster <bfoster@redhat.com>
-Fixes: 85843327094f ("xfs: factor xfs_bmap_btalloc()")
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_bmap.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 1a4e446194dd..b512de0540d5 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3540,7 +3540,6 @@ xfs_bmap_btalloc_at_eof(
- 	 * original non-aligned state so the caller can proceed on allocation
- 	 * failure as if this function was never called.
- 	 */
--	args->fsbno = ap->blkno;
- 	args->alignment = 1;
- 	return 0;
- }
 -- 
-2.39.2
+Jens Axboe
+
 
