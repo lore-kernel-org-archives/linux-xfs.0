@@ -2,401 +2,316 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DDC2C7618E
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Apr 2023 13:04:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2AD2C7618E
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Apr 2023 15:32:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232196AbjDUNEz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Apr 2023 09:04:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36902 "EHLO
+        id S232830AbjDUPcV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Apr 2023 11:32:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232431AbjDUNEu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Apr 2023 09:04:50 -0400
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4ACFF2721
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Apr 2023 06:04:46 -0700 (PDT)
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1ppqRN-0005vV-Pc; Fri, 21 Apr 2023 15:04:41 +0200
-Message-ID: <c155c008-8ed8-8b81-ce8b-12191b9bd500@leemhuis.info>
-Date:   Fri, 21 Apr 2023 15:04:39 +0200
+        with ESMTP id S232692AbjDUPcU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Apr 2023 11:32:20 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38E5B2682
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Apr 2023 08:32:17 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7FD6260ED0
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Apr 2023 15:32:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D89E5C433D2;
+        Fri, 21 Apr 2023 15:32:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1682091136;
+        bh=irVb/SHt04/wVlG+A4swJLQK41tx8X6PwhbzC13siro=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=QuLXpoQVrE/jedZATL9litJ4yJrbk0waptPxjtNZ6R5DxzFOGX4yiGssrx0xPVecS
+         iaeK/11Kw9rDy3uliKOcyi+fOio+rqcc4C5i9NT7GfUha+juiFGykyQXqg9OFpU76J
+         EUKr8CvIUbpLzD9YH4GXXEuKaJSPpXywef81gtgzaaQmPso+pYUDhs8HvhOrHfco8U
+         T0OypXeqP/82saiSHUXJN7jbEwgVt12i2YIqcYaDNg5Vjv6r8cJRMw4nceawhAmDig
+         tSqbdVSxZlAILjR5WkvMDje/GQmq7WcGlX+b+8RL0x8QVFjbv8lHfTYRl7w+A4E9rw
+         ItmqEXeDZpgvQ==
+Date:   Fri, 21 Apr 2023 08:32:16 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Guo Xuenan <guoxuenan@huawei.com>, dchinner@redhat.com,
+        linux-xfs@vger.kernel.org, sandeen@redhat.com,
+        guoxuenan@huaweicloud.com, houtao1@huawei.com, fangwei1@huawei.com,
+        jack.qiu@huawei.com, yi.zhang@huawei.com
+Subject: Re: [PATCH 1/3] xfs: fix leak memory when xfs_attr_inactive fails
+Message-ID: <20230421153216.GI360889@frogsfrogsfrogs>
+References: <20230421033142.1656296-1-guoxuenan@huawei.com>
+ <20230421033142.1656296-2-guoxuenan@huawei.com>
+ <20230421074932.GD3223426@dread.disaster.area>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: xfs: system fails to boot up due to Internal error
- xfs_trans_cancel
-To:     "Darrick J. Wong" <djwong@kernel.org>,
-        Linux regressions mailing list <regressions@lists.linux.dev>
-Cc:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-        shrikanth hegde <sshegde@linux.vnet.ibm.com>,
-        dchinner@redhat.com, linux-xfs@vger.kernel.org,
-        Srikar Dronamraju <srikar@linux.vnet.ibm.com>,
-        ojaswin@linux.ibm.com
-References: <87zg88atiw.fsf@doe.com>
- <33c9674c-8493-1b23-0efb-5c511892b68a@leemhuis.info>
- <20230418045615.GC360889@frogsfrogsfrogs>
-Content-Language: en-US, de-DE
-From:   "Linux regression tracking (Thorsten Leemhuis)" 
-        <regressions@leemhuis.info>
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
-In-Reply-To: <20230418045615.GC360889@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1682082286;9e703364;
-X-HE-SMSGID: 1ppqRN-0005vV-Pc
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230421074932.GD3223426@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 18.04.23 06:56, Darrick J. Wong wrote:
-> On Mon, Apr 17, 2023 at 01:16:53PM +0200, Linux regression tracking (Thorsten Leemhuis) wrote:
->> Hi, Thorsten here, the Linux kernel's regression tracker. Top-posting
->> for once, to make this easily accessible to everyone.
->>
->> Has any progress been made to fix below regression? It doesn't look like
->> it from here, hence I wondered if it fall through the cracks. Or is
->> there some good reason why this is safe to ignore?
+On Fri, Apr 21, 2023 at 05:49:32PM +1000, Dave Chinner wrote:
+> On Fri, Apr 21, 2023 at 11:31:40AM +0800, Guo Xuenan wrote:
+> > I observed the following evidence of a leak while xfs_inactive failed.
+> > Especially in Debug mode, when xfs_attr_inactive failed, current exception
+> > path handling rudely clear inode attr fork, and if the inode is recycled
+> > then assertion will accur, if not, which may also lead to memory leak.
+> > 
+> > Since xfs_attr_inactive is supposed to clean up the attribute fork when
+> > the inode is being freed. While it removes the in-memory attribute fork
+> > even in the event of truncate attribute fork extents failure, then some
+> > attr data may left in memory and never be released. By avoiding this kind
+> > of clean up and readding the inode to the gclist, this type of problems can
+> > be solved to some extent.
+> > 
+> > The following script reliably replays the bug described above.
+> > ```
+> > #!/bin/bash
+> > DISK=vdb
+> > MP=/mnt/$DISK
+> > DEV=/dev/$DISK
+> > nfiles=10
+> > xattr_val="this is xattr value."
+> > ## prepare and mount
+> > while true
+> > do
+> > 	pidof fsstress | xargs kill -9
+> > 	umount $MP
+> > 	df | grep $MP || break
+> > 	sleep 2
+> > done
+> > 
+> > mkdir -p ${MP} && mkfs.xfs -f $DEV && mount $DEV $MP
+> > echo 0 > /sys/fs/xfs/$DISK/errortag/bmapifmt
+> > 
+> > ## create files, setxattr, remove files
+> > cd $MP; touch $(seq 1 $nfiles); cd $OLDPWD
+> > for n in `seq 1 $nfiles`; do
+> > 	for j in `seq 1 20`; do
+> > 		setfattr -n user.${j} -v "$xattr_val" $MP/$n
+> > 	done
+> > done
 > 
-> Still working on thinking up a reasonable strategy to reload the incore
-> iunlink list if we trip over this.  Online repair now knows how to do
-> this[1], but I haven't had time to figure out if this will work
-> generally. 
-
-Okay, thx for the update.
-
-> It's gotten very hard to keep my head above water with all
-> the fussy bots, syzbot zeroday public disclosures, and all the other
-> stuff I already had to do.
+> OK, so 20 xattrs of about 40 bytes on disk each in each file. That's
+> enough to put them in extent format.
 > 
-> [1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/tree/fs/xfs/scrub/agheader_repair.c?h=repair-iunlink&id=1b1cedf6888c309e6c31f76d5c831c5b5748f153#n1019
-
-Well, FWIW, you don't have to care about regzbot at all, if you fix
-regressions in a timely manner and use Link: tags to point to the
-reports -- both of which was expected even before regzbot came into
-being (but yes, it made Link: tags more important).
-
-But well, if we ever get into a discussion like this again, you don't
-want to mentioned things like...
-
-> Also been busy helping Dave get online fsck fixes lifted to for-next,
-> QA'd, and rebasing djwong-dev atop all that.
-
-...this the next time, as it sounds like feature work is taking
-precedence over fixing regressions -- and that's something I (and Linus)
-don't like to hear. But whatever, I'll for now assume there are good
-reasons for that in this case.
-
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
---
-Everything you wanna know about Linux kernel regression tracking:
-https://linux-regtracking.leemhuis.info/about/#tldr
-If I did something stupid, please tell me, as explained on that page.
-
-
-
->> On 20.03.23 06:20, Ritesh Harjani (IBM) wrote:
->>> "Darrick J. Wong" <djwong@kernel.org> writes:
->>>
->>>> On Sat, Mar 18, 2023 at 10:20:28PM +0530, Ritesh Harjani wrote:
->>>>> "Darrick J. Wong" <djwong@kernel.org> writes:
->>>>>
->>>>>> On Wed, Mar 15, 2023 at 10:20:37PM -0700, Darrick J. Wong wrote:
->>>>>>> On Thu, Mar 16, 2023 at 10:16:02AM +0530, Ritesh Harjani wrote:
->>>>>>>> "Darrick J. Wong" <djwong@kernel.org> writes:
->>>>>>>>
->>>>>>>> Hi Darrick,
->>>>>>>>
->>>>>>>> Thanks for your analysis and quick help on this.
->>>>>>>>
->>>>>>>>>>
->>>>>>>>>> Hi Darrick,
->>>>>>>>>>
->>>>>>>>>> Please find the information collected from the system. We added some
->>>>>>>>>> debug logs and looks like it is exactly what is happening which you
->>>>>>>>>> pointed out.
->>>>>>>>>>
->>>>>>>>>> We added a debug kernel patch to get more info from the system which
->>>>>>>>>> you had requested [1]
->>>>>>>>>>
->>>>>>>>>> 1. We first breaked into emergency shell where root fs is first getting
->>>>>>>>>> mounted on /sysroot as "ro" filesystem. Here are the logs.
->>>>>>>>>>
->>>>>>>>>> [  OK  ] Started File System Check on /dev/mapper/rhel_ltcden3--lp1-root.
->>>>>>>>>>          Mounting /sysroot...
->>>>>>>>>> [    7.203990] SGI XFS with ACLs, security attributes, quota, no debug enabled
->>>>>>>>>> [    7.205835] XFS (dm-0): Mounting V5 Filesystem 7b801289-75a7-4d39-8cd3-24526e9e9da7
->>>>>>>>>> [   ***] A start job is running for /sysroot (15s / 1min 35s)[   17.439377] XFS (dm-0): Starting recovery (logdev: internal)
->>>>>>>>>> [  *** ] A start job is running for /sysroot (16s / 1min 35s)[   17.771158] xfs_log_mount_finish: Recovery needed is set
->>>>>>>>>> [   17.771172] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:0
->>>>>>>>>> [   17.771179] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:1
->>>>>>>>>> [   17.771184] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:2
->>>>>>>>>> [   17.771190] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:3
->>>>>>>>>> [   17.771196] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:4
->>>>>>>>>> [   17.771201] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:5
->>>>>>>>>> [   17.801033] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:6
->>>>>>>>>> [   17.801041] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:7
->>>>>>>>>> [   17.801046] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:8
->>>>>>>>>> [   17.801052] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:9
->>>>>>>>>> [   17.801057] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:10
->>>>>>>>>> [   17.801063] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:11
->>>>>>>>>> [   17.801068] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:12
->>>>>>>>>> [   17.801272] xlog_recover_iunlink_bucket: bucket: 13, agino: 3064909, ino: 3064909, iget ret: 0, previno:18446744073709551615, prev_agino:4294967295
->>>>>>>>>>
->>>>>>>>>> <previno, prev_agino> is just <-1 %ull and -1 %u> in above. That's why
->>>>>>>>>> the huge value.
->>>>>>>>>
->>>>>>>>> Ok, so log recovery finds 3064909 and clears it...
->>>>>>>>>
->>>>>>>>>> [   17.801281] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:13
->>>>>>>>>> [   17.801287] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:14
->>>>>>>>>
->>>>>>>>> <snip the rest of these...>
->>>>>>>>>
->>>>>>>>>> [   17.844910] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:3, bucket:62
->>>>>>>>>> [   17.844916] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:3, bucket:63
->>>>>>>>>> [   17.886079] XFS (dm-0): Ending recovery (logdev: internal)
->>>>>>>>>> [  OK  ] Mounted /sysroot.
->>>>>>>>>> [  OK  ] Reached target Initrd Root File System.
->>>>>>>>>>
->>>>>>>>>>
->>>>>>>>>> 2. Then these are the logs from xfs_repair -n /dev/dm-0
->>>>>>>>>> Here you will notice the same agi 3064909 in bucket 13 (from phase-2) which got also
->>>>>>>>>> printed in above xlog_recover_iunlink_ag() function.
->>>>>>>>>>
->>>>>>>>>> switch_root:/# xfs_repair -n /dev/dm-0
->>>>>>>>>> Phase 1 - find and verify superblock...
->>>>>>>>>> Phase 2 - using internal log
->>>>>>>>>>         - zero log...
->>>>>>>>>>         - scan filesystem freespace and inode maps...
->>>>>>>>>> agi unlinked bucket 13 is 3064909 in ag 0 (inode=3064909)
->>>>>>>>>
->>>>>>>>> ...yet here we find that 3064909 is still on the unlinked list?
->>>>>>>>>
->>>>>>>>> Just to confirm -- you ran xfs_repair -n after the successful recovery
->>>>>>>>> above, right?
->>>>>>>>>
->>>>>>>> Yes, that's right.
->>>>>>>>
->>>>>>>>>>         - found root inode chunk
->>>>>>>>>> Phase 3 - for each AG...
->>>>>>>>>>         - scan (but don't clear) agi unlinked lists...
->>>>>>>>>>         - process known inodes and perform inode discovery...
->>>>>>>>>>         - agno = 0
->>>>>>>>>>         - agno = 1
->>>>>>>>>>         - agno = 2
->>>>>>>>>>         - agno = 3
->>>>>>>>>>         - process newly discovered inodes...
->>>>>>>>>> Phase 4 - check for duplicate blocks...
->>>>>>>>>>         - setting up duplicate extent list...
->>>>>>>>>>         - check for inodes claiming duplicate blocks...
->>>>>>>>>>         - agno = 0
->>>>>>>>>>         - agno = 2
->>>>>>>>>>         - agno = 1
->>>>>>>>>>         - agno = 3
->>>>>>>>>> No modify flag set, skipping phase 5
->>>>>>>>>> Phase 6 - check inode connectivity...
->>>>>>>>>>         - traversing filesystem ...
->>>>>>>>>>         - traversal finished ...
->>>>>>>>>>         - moving disconnected inodes to lost+found ...
->>>>>>>>>> Phase 7 - verify link counts...
->>>>>>>>>> would have reset inode 3064909 nlinks from 4294967291 to 2
->>>>>>>>>
->>>>>>>>> Oh now that's interesting.  Inode on unlinked list with grossly nonzero
->>>>>>>>> (but probably underflowed) link count.  That might explain why iunlink
->>>>>>>>> recovery ignores the inode.  Is inode 3064909 reachable via the
->>>>>>>>> directory tree?
->>>>>>>>>
->>>>>>>>> Would you mind sending me a metadump to play with?  metadump -ago would
->>>>>>>>> be best, if filenames/xattrnames aren't sensitive customer data.
->>>>>>>>
->>>>>>>> Sorry about the delay.
->>>>>>>> I am checking for any permissions part internally.
->>>>>>>> Meanwhile - I can help out if you would like me to try anything.
->>>>>>>
->>>>>>> Ok.  I'll try creating a filesystem with a weirdly high refcount
->>>>>>> unlinked inode and I guess you can try it to see if you get the same
->>>>>>> symptoms.  I've finished with my parent pointers work for the time
->>>>>>> being, so I might have some time tomorrow (after I kick the tires on
->>>>>>> SETFSUUID) to simulate this and see if I can adapt the AGI repair code
->>>>>>> to deal with this.
->>>>>>
->>>>>> If you uncompress and mdrestore the attached file to a blockdev, mount
->>>>>> it, and run some creat() exerciser, do you get the same symptoms?  I've
->>>>>> figured out how to make online fsck deal with it. :)
->>>>>>
->>>>>> A possible solution for runtime would be to make it so that
->>>>>> xfs_iunlink_lookup could iget the inode if it's not in cache at all.
->>>>>>
->>>>>
->>>>> Hello Darrick,
->>>>>
->>>>> I did xfs_mdrestore the metadump you provided on a loop mounted
->>>>> blockdev. I ran fsstress on the root dir of the mounted filesystem,
->>>>> but I was unable to hit the issue.
->>>>>
->>>>> I tried the same with the original FS metadump as well and I am unable
->>>>> to hit the issue while running fsstress on the filesystem.
->>>>>
->>>>> I am thinking of identifying which file unlink operation was in progress
->>>>> when we see the issue during mounting. Maybe that will help in
->>>>> recreating the issue.
->>>>
->>>> Yeah, creating a bunch of O_TMPFILE files will exercise the unlinked
->>>> lists, possibly enough to trip over the affected agi bucket.  See
->>>> t_open_tmpfiles.c in the fstests repo.
->>>
->>>
->>> Hello Darrick,
->>>
->>> Yes, I am tripping over the issue very easily when I run t_open_tmpfiles
->>> testcase for the metadump you shared. (Not hitting with the original dump
->>> though. Will try to fetch more information on whay is that).
->>>
->>> Here is the call stack with your metadump when we try to run
->>> t_open_tmpfiles test case.
->>> Its the same warning message which we were hitting too in the original
->>> case too.
->>>
->>> xfs_iunlink_lookup()
->>> <...>
->>>     /*
->>> 	 * Inode not in memory or in RCU freeing limbo should not happen.
->>> 	 * Warn about this and let the caller handle the failure.
->>> 	 */
->>> 	if (WARN_ON_ONCE(!ip || !ip->i_ino)) {
->>> 		rcu_read_unlock();
->>> 		return NULL;
->>> 	}
->>> <...>
->>>
->>> [43873.070585] xfs filesystem being mounted at /mnt1/scratch supports timestamps until 2038 (0x7fffffff)
->>> root@ubuntu:~# [43905.483065] ------------[ cut here ]------------
->>> [43905.485250] WARNING: CPU: 0 PID: 2379 at fs/xfs/xfs_inode.c:1839 xfs_iunlink_lookup+0x14c/0x1e0
->>> [43905.488325] Modules linked in:
->>> [43905.489594] CPU: 0 PID: 2379 Comm: t_open_tmpfiles Not tainted 6.3.0-rc2-xfstests-00051-gc1940a43e595 #57
->>> [43905.492828] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.15.0-0-g2dd4b9b3f840-prebuilt.qemu.org 04/01/2014
->>> [43905.496604] RIP: 0010:xfs_iunlink_lookup+0x14c/0x1e0
->>> [43905.498341] Code: 0f 85 6e ff ff ff 48 c7 c2 a8 95 be 82 be 22 03 00 00 48 c7 c7 30 23 b7 82 c6 05 c8 71 84 01 01 e8 e9 d3 91 ff e9 6
->>> [43905.504324] RSP: 0018:ffffc9000405fb98 EFLAGS: 00010246
->>> [43905.506224] RAX: 0000000000000000 RBX: 0000000000001b43 RCX: 0000000000000000
->>> [43905.508624] RDX: ffff8891f1edf488 RSI: ffff8891f1edf4c8 RDI: 0000000000001b43
->>> [43905.511087] RBP: 0000000000001b43 R08: 0000000000000000 R09: ffff88931446ba80
->>> [43905.514465] R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
->>> [43905.517947] R13: ffff889313f67840 R14: ffff8892c0155b00 R15: ffff8889dc9b2900
->>> [43905.521519] FS:  00007ffff7fb2740(0000) GS:ffff889dc7600000(0000) knlGS:0000000000000000
->>> [43905.525570] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->>> [43905.528402] CR2: 0000555555556060 CR3: 00000011b4790006 CR4: 0000000000170ef0
->>> [43905.532008] Call Trace:
->>> [43905.533399]  <TASK>
->>> [43905.534473]  xfs_iunlink_insert_inode+0x7a/0x100
->>> [43905.536663]  xfs_iunlink+0xa4/0x190
->>> [43905.537962]  xfs_create_tmpfile+0x277/0x2e0
->>> [43905.539654]  xfs_generic_create+0x100/0x350
->>> [43905.541303]  xfs_vn_tmpfile+0x1f/0x40
->>> [43905.542920]  vfs_tmpfile+0x10e/0x1b0
->>> [43905.544307]  path_openat+0x157/0x200
->>> [43905.545813]  do_filp_open+0xad/0x150
->>> [43905.547213]  ? alloc_fd+0x12d/0x220
->>> [43905.548646]  ? alloc_fd+0x12d/0x220
->>> [43905.550014]  ? lock_release+0x7f/0x130
->>> [43905.551435]  ? do_raw_spin_unlock+0x4f/0xa0
->>> [43905.553045]  ? _raw_spin_unlock+0x2d/0x50
->>> [43905.554554]  ? alloc_fd+0x12d/0x220
->>> [43905.556264]  do_sys_openat2+0x9b/0x160
->>> [43905.557680]  __x64_sys_openat+0x58/0xa0
->>> [43905.559065]  do_syscall_64+0x3f/0x90
->>> [43905.560589]  entry_SYSCALL_64_after_hwframe+0x72/0xdc
->>> [43905.562377] RIP: 0033:0x7ffff7d0ca45
->>> [43905.563970] Code: 75 53 89 f0 25 00 00 41 00 3d 00 00 41 00 74 45 80 3d a6 1b 0f 00 00 74 69 89 da 48 89 ee bf 9c ff ff ff b8 01 01 5
->>> [43905.570038] RSP: 002b:00007fffffffe2c0 EFLAGS: 00000202 ORIG_RAX: 0000000000000101
->>> [43905.572747] RAX: ffffffffffffffda RBX: 0000000000410002 RCX: 00007ffff7d0ca45
->>> [43905.575246] RDX: 0000000000410002 RSI: 0000555555556057 RDI: 00000000ffffff9c
->>> [43905.577782] RBP: 0000555555556057 R08: 000000000000ab7f R09: 00007ffff7fc1080
->>> [43905.580315] R10: 00000000000001a4 R11: 0000000000000202 R12: 0000000000000000
->>> [43905.582850] R13: 00007fffffffe4a0 R14: 0000555555557d68 R15: 00007ffff7ffd020
->>> [43905.585438]  </TASK>
->>> [43905.586528] irq event stamp: 14045
->>> [43905.587828] hardirqs last  enabled at (14055): [<ffffffff8121bc02>] __up_console_sem+0x52/0x60
->>> [43905.590861] hardirqs last disabled at (14066): [<ffffffff8121bbe7>] __up_console_sem+0x37/0x60
->>> [43905.593856] softirqs last  enabled at (13920): [<ffffffff82231b5a>] __do_softirq+0x2ea/0x3e1
->>> [43905.596813] softirqs last disabled at (13909): [<ffffffff8119573f>] irq_exit_rcu+0xdf/0x140
->>> [43905.599766] ---[ end trace 0000000000000000 ]---
->>> [43905.601450] XFS (loop7): Internal error xfs_trans_cancel at line 1097 of file fs/xfs/xfs_trans.c.  Caller xfs_create_tmpfile+0x1c6/00
->>> [43905.606100] CPU: 0 PID: 2379 Comm: t_open_tmpfiles Tainted: G        W          6.3.0-rc2-xfstests-00051-gc1940a43e595 #57
->>> [43905.609797] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.15.0-0-g2dd4b9b3f840-prebuilt.qemu.org 04/01/2014
->>> [43905.614562] Call Trace:
->>> [43905.616112]  <TASK>
->>> [43905.617245]  dump_stack_lvl+0x66/0x80
->>> [43905.619054]  xfs_trans_cancel+0x138/0x1f0
->>> [43905.620898]  xfs_create_tmpfile+0x1c6/0x2e0
->>> [43905.623140]  xfs_generic_create+0x100/0x350
->>> [43905.625483]  xfs_vn_tmpfile+0x1f/0x40
->>> [43905.627372]  vfs_tmpfile+0x10e/0x1b0
->>> [43905.629413]  path_openat+0x157/0x200
->>> [43905.631204]  do_filp_open+0xad/0x150
->>> [43905.633050]  ? alloc_fd+0x12d/0x220
->>> [43905.634844]  ? alloc_fd+0x12d/0x220
->>> [43905.636602]  ? lock_release+0x7f/0x130
->>> [43905.638479]  ? do_raw_spin_unlock+0x4f/0xa0
->>> [43905.640726]  ? _raw_spin_unlock+0x2d/0x50
->>> [43905.642916]  ? alloc_fd+0x12d/0x220
->>> [43905.644375]  do_sys_openat2+0x9b/0x160
->>> [43905.645763]  __x64_sys_openat+0x58/0xa0
->>> [43905.647145]  do_syscall_64+0x3f/0x90
->>> [43905.648685]  entry_SYSCALL_64_after_hwframe+0x72/0xdc
->>> [43905.650430] RIP: 0033:0x7ffff7d0ca45
->>> [43905.651731] Code: 75 53 89 f0 25 00 00 41 00 3d 00 00 41 00 74 45 80 3d a6 1b 0f 00 00 74 69 89 da 48 89 ee bf 9c ff ff ff b8 01 01 5
->>> [43905.657637] RSP: 002b:00007fffffffe2c0 EFLAGS: 00000202 ORIG_RAX: 0000000000000101
->>> [43905.660141] RAX: ffffffffffffffda RBX: 0000000000410002 RCX: 00007ffff7d0ca45
->>> [43905.662525] RDX: 0000000000410002 RSI: 0000555555556057 RDI: 00000000ffffff9c
->>> [43905.665086] RBP: 0000555555556057 R08: 000000000000ab7f R09: 00007ffff7fc1080
->>> [43905.667455] R10: 00000000000001a4 R11: 0000000000000202 R12: 0000000000000000
->>> [43905.669830] R13: 00007fffffffe4a0 R14: 0000555555557d68 R15: 00007ffff7ffd020
->>> [43905.672193]  </TASK>
->>> [43905.689666] XFS (loop7): Corruption of in-memory data (0x8) detected at xfs_trans_cancel+0x151/0x1f0 (fs/xfs/xfs_trans.c:1098).  Shu.
->>> [43905.694215] XFS (loop7): Please unmount the filesystem and rectify the problem(s)
->>>
->>>
->>> -ritesh
->>>
->>>
->>>>
->>>> --D
->>>>
->>>>> Although the xfs_repair -n does show a similar log of unlinked inode
->>>>> with the metadump you provided.
->>>>>
->>>>> root@ubuntu:~# xfs_repair -n -o force_geometry /dev/loop7
->>>>> Phase 1 - find and verify superblock...
->>>>> Phase 2 - using internal log
->>>>>         - zero log...
->>>>>         - scan filesystem freespace and inode maps...
->>>>> agi unlinked bucket 3 is 6979 in ag 0 (inode=6979)
->>>>> agi unlinked bucket 4 is 6980 in ag 0 (inode=6980)
->>>>>         - found root inode chunk
->>>>> Phase 3 - for each AG...
->>>>>         - scan (but don't clear) agi unlinked lists...
->>>>>         - process known inodes and perform inode discovery...
->>>>>         - agno = 0
->>>>>         - process newly discovered inodes...
->>>>> Phase 4 - check for duplicate blocks...
->>>>>         - setting up duplicate extent list...
->>>>>         - check for inodes claiming duplicate blocks...
->>>>>         - agno = 0
->>>>> No modify flag set, skipping phase 5
->>>>> Phase 6 - check inode connectivity...
->>>>>         - traversing filesystem ...
->>>>>         - traversal finished ...
->>>>>         - moving disconnected inodes to lost+found ...
->>>>> disconnected inode 6979, would move to lost+found
->>>>> disconnected inode 6980, would move to lost+found
->>>>> Phase 7 - verify link counts...
->>>>> would have reset inode 6979 nlinks from 5555 to 1
->>>>> would have reset inode 6980 nlinks from 0 to 1
->>>>> No modify flag set, skipping filesystem flush and exiting.
->>>>>
->>>>> Thanks again for the help. Once I have more info I will update the
->>>>> thread!
->>>>>
->>>>> -ritesh
+> > ## inject fault & trigger fails
+> > fsstress -d $MP -z -f bulkstat=200 -S c -l 1000 -p 8 &
+> > /usr/bin/rm $MP/*
 > 
+> Queue everything up for inodegc
 > 
+> > echo 3 > /sys/fs/xfs/$DISK/errortag/bmapifmt
+> 
+> And inject random xfs_bmapi_read() errors into inodegc processing.
+> 
+> > ```
+> > 
+> > Assertion in the kernel log as follows:
+> > 
+> > XFS (vdb): Mounting V5 Filesystem bd1b6c38-599a-43b3-8194-a584bebec4ca
+> > XFS (vdb): Ending clean mount
+> > xfs filesystem being mounted at /mnt/vdb supports timestamps until 2038 (0x7fffffff)
+> > XFS (vdb): Injecting error (false) at file fs/xfs/libxfs/xfs_bmap.c, line 3887, on filesystem "vdb"
+> > XFS: Assertion failed: ip->i_nblocks == 0, file: fs/xfs/xfs_inode.c, line: 2277
+> 
+> Ok, so the error injection has caused xfs_bmapi_read() when
+> truncating the attr fork to return -EFSCORRUPTED, which
+> xfs_inactive() has completely dropped on the ground and then failed
+> to free the inode before marking if valid for reclaim.
+> 
+> The the inode freeing code has asserted that the inode is not clean
+> and we're freeing an inode that still references filesystem blocks.
+> The ASSERT() is certainly valid and should have triggered, but I
+> don't think that it needs fixing. I'll get to that later.
+> 
+> > diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+> > index 5db87b34fb6e..a7379beb355a 100644
+> > --- a/fs/xfs/xfs_attr_inactive.c
+> > +++ b/fs/xfs/xfs_attr_inactive.c
+> > @@ -336,21 +336,25 @@ xfs_attr_inactive(
+> >  	ASSERT(! XFS_NOT_DQATTACHED(mp, dp));
+> >  
+> >  	xfs_ilock(dp, lock_mode);
+> > -	if (!xfs_inode_has_attr_fork(dp))
+> > -		goto out_destroy_fork;
+> > +	if (!xfs_inode_has_attr_fork(dp)) {
+> > +		xfs_ifork_zap_attr(dp);
+> > +		goto out_unlock;
+> > +	}
+> >  	xfs_iunlock(dp, lock_mode);
+> 
+> Why do we even need the lock here for this check? The inode cannot
+> be found by a VFS lookup, and we are in XFS_INACTIVATING state which
+> means internal inode looks will skip it too.  So nothing other than
+> the inodegc code can be referencing the inode attr fork here. So
+> what's the lock for?
+> 
+> I'd just replace this with:
+> 
+> 	if (!xfs_inode_has_attr_fork(dp))
+> 		return 0;
+> 
+> >  	lock_mode = 0;
+> >  
+> >  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_attrinval, 0, 0, 0, &trans);
+> >  	if (error)
+> > -		goto out_destroy_fork;
+> > +		goto out_unlock;
+> 
+> We have nothing locked here.
+> 
+> 	if (error)
+> 		return error;
+> 
+> >  	lock_mode = XFS_ILOCK_EXCL;
+> >  	xfs_ilock(dp, lock_mode);
+> >  
+> > -	if (!xfs_inode_has_attr_fork(dp))
+> > +	if (!xfs_inode_has_attr_fork(dp)) {
+> > +		xfs_ifork_zap_attr(dp);
+> >  		goto out_cancel;
+> > +	}
+> >  
+> >  	/*
+> >  	 * No need to make quota reservations here. We expect to release some
+> > @@ -383,9 +387,7 @@ xfs_attr_inactive(
+> >  
+> >  out_cancel:
+> >  	xfs_trans_cancel(trans);
+> > -out_destroy_fork:
+> > -	/* kill the in-core attr fork before we drop the inode lock */
+> > -	xfs_ifork_zap_attr(dp);
+> > +out_unlock:
+> >  	if (lock_mode)
+> >  		xfs_iunlock(dp, lock_mode);
+> >  	return error;
+> 
+> Hmmmm. No, I don't think this is right - the existing code is doing
+> the right thing.
+> 
+> We just got an -EFSCORRUPTED from xfs_itruncate_extents(), and we
+> are in the process of freeing the inode. The inode is unlinked,
+> unrefered and corrupt, so we need to leak the blocks we cannot
+> access in the attr fork to be able to successfully free the inode
+> and continue on without shutting down the filesystem.
+> 
+> In this situation, we need to zap the in-memory attr fork so that
+> the memory associated with the extents we just decided to leak is
+> freed correctly and not leaked. Essentially, any error in this path
+> should be zapping the attr fork on error here.
+> 
+> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > index 351849fc18ff..4afa7fec4a2f 100644
+> > --- a/fs/xfs/xfs_icache.c
+> > +++ b/fs/xfs/xfs_icache.c
+> > @@ -48,6 +48,7 @@ static int xfs_icwalk(struct xfs_mount *mp,
+> >  		enum xfs_icwalk_goal goal, struct xfs_icwalk *icw);
+> >  static int xfs_icwalk_ag(struct xfs_perag *pag,
+> >  		enum xfs_icwalk_goal goal, struct xfs_icwalk *icw);
+> > +static void xfs_inodegc_queue(struct xfs_inode	*ip);
+> >  
+> >  /*
+> >   * Private inode cache walk flags for struct xfs_icwalk.  Must not
+> > @@ -1843,7 +1844,10 @@ xfs_inodegc_inactivate(
+> >  {
+> >  	trace_xfs_inode_inactivating(ip);
+> >  	xfs_inactive(ip);
+> > -	xfs_inodegc_set_reclaimable(ip);
+> > +	if (VFS_I(ip)->i_mode != 0)
+> > +		xfs_inodegc_queue(ip);
+> > +	else
+> > +		xfs_inodegc_set_reclaimable(ip);
+> >  }
+> 
+> I don't think this works the way you think it does.
+> 
+> Firstly, xfs_inodegc_queue() may try to flush the work
+> queue (i.e. wait for pending work to be completed) so queuing
+> inodegc work from an inodegc workqueue worker could deadlock the
+> inodegc workqueue.
+> 
+> Secondly, inodes with i_mode != 0  that aren't being unlinked are
+> also pushed through this path to remove blocks beyond EOF, etc. This
+> change means those inodes get permanently stuck on the inodegc queue
+> as they always get readded to the queue and never marked as
+> reclaimable.  See xfs_inode_mark_reclaimable() and
+> xfs_inode_needs_inactive().
+> 
+> Thirdly, pushing an inode that failed inactivation due to corruption
+> through xfs_inactive again will just result in the same corruption
+> error occurring again. Hence they'll also get stuck forever in the
+> inodegc loop.
+> 
+> Ah.
+> 
+> Yeah.
+> 
+> Except for your test case.
+> 
+> Error injection is random/transient, and you gave it a 33% chance of
+> injecting an error. Hence it will continue looping through
+> inactivation until it doesn't trigger the xfs_bmapi_read() error
+> injection. Because you also changed it not to trash the attr fork on
+> truncation error, the extent list remains present until every extent
+> gets freed successfully.  Hence ip->i_nblocks gets reduced to zero
+> before we try to free the inode and the specific failure your error
+> injection test tripped over goes away.
+> 
+> Now I understand - this fixes a transient corruption error
+> caused by error injection, but in doing so will break production
+> systems that encounter persistent corruption in inode inactivation.
+> 
+> ---
+> 
+> Yes, I agree the way xfs_inactive() and inodegc handles errors and
+> cleanup needs improvement, but we've known this for a while now. But
+> this doesn't change the fact that we currently need to be able to
+> leak resources we can't access so we can continue to operate. It's
+> fine for ASSERTs to fire on debug kernels in these situations - as
+> developers we need to understand when these situations occur - but
+> that doesn't mean the behaviour they are warning about needs to be
+> fixed. It's just telling us that we are leaking stuff, it just
+> doesn't know why.
+
+...and should probably be logging the fact that the bad inode was
+dropped on the floor and the sysadmin should go run a fsck tool of some
+kind to fix the problems.
+
+> We have be waiting on having fine grained health infomration for
+> inodes to be able to handle situations like this more gracefully.
+> That code is being merged in 6.4, and it means that we know the
+
+It is?
+
+I didn't send you a pull request for
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=indirect-health-reporting
+
+for 6.4.  At some point I want to talk to you about the rest of online
+fsck, but I'm taking a breather for the last week or two until LSFMM.
+
+--D
+
+> inode is corrupt. Hence we can tailor the debug assert to only fire
+> if the inode has not encountered corruption, do smarter things in
+> inodegc/reclaim when dealing with inodes that are corrupt, etc.
+> 
+> However, that doesn't mean the inactivation behaviour that triggered
+> the assert is wrong.  That assert ioften picks up code bugs, but a
+> corruption error in freeing an inode is one of the situations where
+> the "leak resources we can't access to free" behaviour is
+> intentional. That's what we want production machines to do, whilst
+> on debug machines we want to understand why that situation happened
+> and determine if there's something better we can do with it.
+> 
+> Hence I'd suggest looking at the inode health code in the current
+> linux-xfs/for-next tree and checking that the error injection you
+> are using marks the inode as unhealthy and work from there...
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
