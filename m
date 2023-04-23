@@ -2,106 +2,165 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94AF6C77B76
-	for <linux-xfs@archiver.kernel.org>; Sat, 22 Apr 2023 15:20:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB531C7618E
+	for <linux-xfs@archiver.kernel.org>; Sun, 23 Apr 2023 01:45:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229687AbjDVPUX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 22 Apr 2023 11:20:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37240 "EHLO
+        id S229740AbjDWBpN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 22 Apr 2023 21:45:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39348 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229596AbjDVPUW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 22 Apr 2023 11:20:22 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E089109;
-        Sat, 22 Apr 2023 08:20:21 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 293E060B5C;
-        Sat, 22 Apr 2023 15:20:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35A64C433D2;
-        Sat, 22 Apr 2023 15:20:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1682176820;
-        bh=FOlJkgGZ6G9M2l1cmZWwgB09X0NECDhBxKDOoN1YeKY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mwEVLSSWgkyOfrArixzsjSos+5edUsLutV3BoVzpawMwJD9LrVthRPDNkBc2bymWE
-         JBbdLI7Eho1kg70dvQSRQFe1tMDXihSZ22vkGIIrK/BFO7WUkyBkG38882kGgXUa0N
-         Y9Tz5UZMif2yDZYrq0oq5uFQjqYyGoUS/c559yKI=
-Date:   Sat, 22 Apr 2023 17:20:17 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Sasha Levin <sashal@kernel.org>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Leah Rumancik <leah.rumancik@gmail.com>,
-        linux-xfs@vger.kernel.org, stable@vger.kernel.org,
-        Brian Foster <bfoster@redhat.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Christian Theune <ct@flyingcircus.io>
-Subject: Re: [PATCH 5.10] xfs: drop submit side trans alloc for append ioends
-Message-ID: <2023042211-harmonica-ecology-a31b@gregkh>
-References: <20230419161813.2044576-1-amir73il@gmail.com>
+        with ESMTP id S229587AbjDWBpM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 22 Apr 2023 21:45:12 -0400
+Received: from frasgout13.his.huawei.com (frasgout13.his.huawei.com [14.137.139.46])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FD0D170A
+        for <linux-xfs@vger.kernel.org>; Sat, 22 Apr 2023 18:45:10 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.18.147.229])
+        by frasgout13.his.huawei.com (SkyGuard) with ESMTP id 4Q3rS51cG5z9v7QZ
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Apr 2023 09:35:33 +0800 (CST)
+Received: from [10.174.177.238] (unknown [10.174.177.238])
+        by APP2 (Coremail) with SMTP id BqC_BwA3a4WSjURk3rMWBg--.29803S2;
+        Sun, 23 Apr 2023 01:44:55 +0000 (GMT)
+Message-ID: <c8594f76-75c5-086c-989b-d8ec7e13c679@huaweicloud.com>
+Date:   Sun, 23 Apr 2023 09:44:48 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230419161813.2044576-1-amir73il@gmail.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.0
+Subject: Re: [PATCH v2 2/2] xfs: clean up some unnecessary xfs_stack_trace
+Content-Language: en-US
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     dchinner@redhat.com, linux-xfs@vger.kernel.org, sandeen@redhat.com,
+        guoxuenan@huaweicloud.com, houtao1@huawei.com, fangwei1@huawei.com,
+        jack.qiu@huawei.com, yi.zhang@huawei.com
+References: <20230421113716.1890274-1-guoxuenan@huawei.com>
+ <20230421113716.1890274-3-guoxuenan@huawei.com>
+ <20230422035720.GN360889@frogsfrogsfrogs>
+From:   Guo Xuenan <guoxuenan@huaweicloud.com>
+In-Reply-To: <20230422035720.GN360889@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID: BqC_BwA3a4WSjURk3rMWBg--.29803S2
+X-Coremail-Antispam: 1UD129KBjvJXoWxAr18Gw4DWrWfWw1rAr4Dtwb_yoW5ArWkpF
+        n7A3Z0kr4vyryYkry7Jr1Iq3Z8tryvkr10krn5AF1Sqw1DtrnFyFy0yw10g3srCr4vvw4S
+        qF1kZw17Ww4rXa7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUkl14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+        1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r1j
+        6r4UM28EF7xvwVC2z280aVAFwI0_Jr0_Gr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r1j6r
+        4UM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+        jxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
+        1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7Mxk0xIA0c2IEe2xFo4CEbIxv
+        r21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxV
+        WUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI
+        7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r
+        1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4U
+        MIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUU
+        U==
+X-CM-SenderInfo: xjxr53hhqd0q5kxd4v5lfo033gof0z/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 19, 2023 at 07:18:13PM +0300, Amir Goldstein wrote:
-> From: Brian Foster <bfoster@redhat.com>
-> 
-> commit 7cd3099f4925d7c15887d1940ebd65acd66100f5 upstream.
-> 
-> Per-inode ioend completion batching has a log reservation deadlock
-> vector between preallocated append transactions and transactions
-> that are acquired at completion time for other purposes (i.e.,
-> unwritten extent conversion or COW fork remaps). For example, if the
-> ioend completion workqueue task executes on a batch of ioends that
-> are sorted such that an append ioend sits at the tail, it's possible
-> for the outstanding append transaction reservation to block
-> allocation of transactions required to process preceding ioends in
-> the list.
-> 
-> Append ioend completion is historically the common path for on-disk
-> inode size updates. While file extending writes may have completed
-> sometime earlier, the on-disk inode size is only updated after
-> successful writeback completion. These transactions are preallocated
-> serially from writeback context to mitigate concurrency and
-> associated log reservation pressure across completions processed by
-> multi-threaded workqueue tasks.
-> 
-> However, now that delalloc blocks unconditionally map to unwritten
-> extents at physical block allocation time, size updates via append
-> ioends are relatively rare. This means that inode size updates most
-> commonly occur as part of the preexisting completion time
-> transaction to convert unwritten extents. As a result, there is no
-> longer a strong need to preallocate size update transactions.
-> 
-> Remove the preallocation of inode size update transactions to avoid
-> the ioend completion processing log reservation deadlock. Instead,
-> continue to send all potential size extending ioends to workqueue
-> context for completion and allocate the transaction from that
-> context. This ensures that no outstanding log reservation is owned
-> by the ioend completion worker task when it begins to process
-> ioends.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+Hi Darrick,
+On 2023/4/22 11:57, Darrick J. Wong wrote:
+> On Fri, Apr 21, 2023 at 07:37:16PM +0800, Guo Xuenan wrote:
+>> With xfs print level parsing correctly, these duplicate dump
+>> information can be removed.
+>>
+>> Signed-off-by: Guo Xuenan <guoxuenan@huawei.com>
+>> ---
+>>   fs/xfs/libxfs/xfs_ialloc.c | 1 -
+>>   fs/xfs/xfs_error.c         | 9 ---------
+>>   fs/xfs/xfs_fsops.c         | 2 --
+>>   fs/xfs/xfs_log.c           | 2 --
+>>   4 files changed, 14 deletions(-)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+>> index a16d5de16933..df4e4eb19f14 100644
+>> --- a/fs/xfs/libxfs/xfs_ialloc.c
+>> +++ b/fs/xfs/libxfs/xfs_ialloc.c
+>> @@ -2329,7 +2329,6 @@ xfs_imap(
+>>   				__func__, ino,
+>>   				XFS_AGINO_TO_INO(mp, pag->pag_agno, agino));
+>>   		}
+>> -		xfs_stack_trace();
+> Hmm, this one was unconditional, wasn't it?  That looks like an omission
+> to me, so I'm calling it out in case anyone had hard opinions about it.
+> Otherwise,
+It is unnecessary, since there are xfs_alert to report failure here.
+if really need to get stack information, set error_level is enough, because
+both of conditional branch have xfs_alert. To avoid repetition, in my 
+opinion,
+it's better to be removed.
+
+Thanks
+Xuenan
 > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> Reported-by: Christian Theune <ct@flyingcircus.io>
-> Link: https://lore.kernel.org/linux-xfs/CAOQ4uxjj2UqA0h4Y31NbmpHksMhVrXfXjLG4Tnz3zq_UR-3gSA@mail.gmail.com/
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> Acked-by: Darrick J. Wong <djwong@kernel.org>
-> ---
-> 
-> Greg,
-> 
-> One more fix from v5.13 that I missed from my backports.
+>
+> --D
+>
+>>   #endif /* DEBUG */
+>>   		return error;
+>>   	}
+>> diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+>> index b2cbbba3e15a..7c8e1f3b69a6 100644
+>> --- a/fs/xfs/xfs_error.c
+>> +++ b/fs/xfs/xfs_error.c
+>> @@ -421,9 +421,6 @@ xfs_buf_corruption_error(
+>>   		  fa, bp->b_ops->name, xfs_buf_daddr(bp));
+>>   
+>>   	xfs_alert(mp, "Unmount and run xfs_repair");
+>> -
+>> -	if (xfs_error_level >= XFS_ERRLEVEL_HIGH)
+>> -		xfs_stack_trace();
+>>   }
+>>   
+>>   /*
+>> @@ -459,9 +456,6 @@ xfs_buf_verifier_error(
+>>   				sz);
+>>   		xfs_hex_dump(buf, sz);
+>>   	}
+>> -
+>> -	if (xfs_error_level >= XFS_ERRLEVEL_HIGH)
+>> -		xfs_stack_trace();
+>>   }
+>>   
+>>   /*
+>> @@ -509,7 +503,4 @@ xfs_inode_verifier_error(
+>>   				sz);
+>>   		xfs_hex_dump(buf, sz);
+>>   	}
+>> -
+>> -	if (xfs_error_level >= XFS_ERRLEVEL_HIGH)
+>> -		xfs_stack_trace();
+>>   }
+>> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+>> index 13851c0d640b..e08b1ce109d9 100644
+>> --- a/fs/xfs/xfs_fsops.c
+>> +++ b/fs/xfs/xfs_fsops.c
+>> @@ -546,8 +546,6 @@ xfs_do_force_shutdown(
+>>   			why, flags, __return_address, fname, lnnum);
+>>   	xfs_alert(mp,
+>>   		"Please unmount the filesystem and rectify the problem(s)");
+>> -	if (xfs_error_level >= XFS_ERRLEVEL_HIGH)
+>> -		xfs_stack_trace();
+>>   }
+>>   
+>>   /*
+>> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+>> index fc61cc024023..e4e4da33281d 100644
+>> --- a/fs/xfs/xfs_log.c
+>> +++ b/fs/xfs/xfs_log.c
+>> @@ -3808,8 +3808,6 @@ xlog_force_shutdown(
+>>   				shutdown_flags);
+>>   		xfs_alert(log->l_mp,
+>>   "Please unmount the filesystem and rectify the problem(s).");
+>> -		if (xfs_error_level >= XFS_ERRLEVEL_HIGH)
+>> -			xfs_stack_trace();
+>>   	}
+>>   
+>>   	/*
+>> -- 
+>> 2.31.1
+>>
 
-Now queued up, thanks.
-
-greg k-h
