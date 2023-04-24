@@ -2,32 +2,32 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76942C7EE23
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Apr 2023 05:52:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C8A6C77B76
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Apr 2023 05:52:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231381AbjDXFwA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Apr 2023 01:52:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49664 "EHLO
+        id S231265AbjDXFwS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Apr 2023 01:52:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231184AbjDXFvf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Apr 2023 01:51:35 -0400
+        with ESMTP id S231273AbjDXFvq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Apr 2023 01:51:46 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 967D64226;
-        Sun, 23 Apr 2023 22:50:23 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56FD044BD;
+        Sun, 23 Apr 2023 22:50:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=Y0+yvpTOTD7M6v1Yq6rfSkRSonNSi3NR5WwAu/cW1ss=; b=ZQNPwJKfnD/XoJEl/XtSriZEb/
-        qPTxNVzmqOnJMzTZ5iTdaf9XqBSw+BBu2uTCUsDMrzAjWPNC6D9SVDVDH6rgShfNoncH7mFyV3luD
-        sxCPuCpJEwm0G0klK3ha3UCo2LmEucN7OYhH/wziwE8/fW14ToiwebLf+FpusKtDu6RpIeIvF8maX
-        xPF4tsipjrrtTTnYVAfuLNG5qQXZUfgRHhaC4tq5yxrW3TuZiBF7KM9G8skbrq2iBZzLJMvdl05I+
-        6PwoN1Mz5APQFRqOdoUiJWha+6Ca0DLyuFLok7PIf+C183kOeH+iqnbjhsdqjiAuEjiaZ4+/sXmAv
-        QEucEtcw==;
+        bh=sTswUsG7V37q4lilbMJoCzI78FMLYPHsnKSU4tW14rI=; b=UoeSfGuoni8M8v/l7vB42i2THY
+        zMcmd34OOElv7F+mrbgD/ShZRx4itRpkQwFSxTkpmii613jhNw9WyxCQjGj7MQShQbt7WqJjepuL4
+        LBmWnG81igFVQQjFpE39ugSY4dTF5078Y+qk64oapXEUft128WQk3P7Es40nmDd7R0F2d0XieesAO
+        j5XAkEb++llO3yox0Qy5icXKSxnxY5rP++XJ6RqFTM31wvcDtrVuuPtN/xpgA7bZCD3wVcAXdYXYo
+        jxEebVm9CoZwe3Xf0PTdYWQayQAZxQ3W9FEGkn51muLlMnnlGjCx9TQHWQLhKUkUJmMWkZDYDkloT
+        v7jNugbA==;
 Received: from [2001:4bb8:189:a74f:e8a5:5f73:6d2:23b8] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1pqp5R-00FP6k-2n;
-        Mon, 24 Apr 2023 05:50:06 +0000
+        id 1pqp5X-00FP9P-1d;
+        Mon, 24 Apr 2023 05:50:12 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Miklos Szeredi <miklos@szeredi.hu>,
@@ -40,9 +40,9 @@ Cc:     Miklos Szeredi <miklos@szeredi.hu>,
         linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
         linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
         linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 12/17] fuse: use direct_write_fallback
-Date:   Mon, 24 Apr 2023 07:49:21 +0200
-Message-Id: <20230424054926.26927-13-hch@lst.de>
+Subject: [PATCH 14/17] block: open code __generic_file_write_iter for blkdev writes
+Date:   Mon, 24 Apr 2023 07:49:23 +0200
+Message-Id: <20230424054926.26927-15-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230424054926.26927-1-hch@lst.de>
 References: <20230424054926.26927-1-hch@lst.de>
@@ -53,101 +53,91 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Refator the fuse direct write code so that the fuse_perform_write
-callig convention is simplified to match generic_perform_write and
-it's updating ki_pos directly, and the generic direct_write_fallback
-helper is used to consolidate buffered I/O fallback code.
+Open code __generic_file_write_iter to remove the indirect call into
+->direct_IO and to prepare using the iomap based write code.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/fuse/file.c | 44 +++++++++++---------------------------------
- 1 file changed, 11 insertions(+), 33 deletions(-)
+ block/fops.c | 46 ++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 44 insertions(+), 2 deletions(-)
 
-diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-index de37a3a06a7169..55b64dac175d68 100644
---- a/fs/fuse/file.c
-+++ b/fs/fuse/file.c
-@@ -1280,13 +1280,13 @@ static inline unsigned int fuse_wr_pages(loff_t pos, size_t len,
- 		     max_pages);
+diff --git a/block/fops.c b/block/fops.c
+index b670aa7c5bb745..fd510b6142bd57 100644
+--- a/block/fops.c
++++ b/block/fops.c
+@@ -508,6 +508,29 @@ static int blkdev_close(struct inode *inode, struct file *filp)
+ 	return 0;
  }
  
--static ssize_t fuse_perform_write(struct kiocb *iocb,
--				  struct address_space *mapping,
--				  struct iov_iter *ii, loff_t pos)
-+static ssize_t fuse_perform_write(struct kiocb *iocb, struct iov_iter *ii)
++static ssize_t
++blkdev_direct_write(struct kiocb *iocb, struct iov_iter *from)
++{
++	size_t count = iov_iter_count(from);
++	ssize_t written;
++
++	written = kiocb_invalidate_pages(iocb, count);
++	if (written) {
++		if (written == -EBUSY)
++			return 0;
++		return written;
++	}
++
++	written = blkdev_direct_IO(iocb, from);
++	if (written > 0) {
++		kiocb_invalidate_post_write(iocb, count);
++		iocb->ki_pos += written;
++	}
++	if (written != -EIOCBQUEUED)
++		iov_iter_revert(from, count - written - iov_iter_count(from));
++	return written;
++}
++
+ /*
+  * Write data to the block device.  Only intended for the block device itself
+  * and the raw driver which basically is a fake block device.
+@@ -517,7 +540,8 @@ static int blkdev_close(struct inode *inode, struct file *filp)
+  */
+ static ssize_t blkdev_write_iter(struct kiocb *iocb, struct iov_iter *from)
  {
-+	struct address_space *mapping = iocb->ki_filp->f_mapping;
- 	struct inode *inode = mapping->host;
- 	struct fuse_conn *fc = get_fuse_conn(inode);
- 	struct fuse_inode *fi = get_fuse_inode(inode);
-+	loff_t pos = iocb->ki_pos;
- 	int err = 0;
- 	ssize_t res = 0;
+-	struct block_device *bdev = iocb->ki_filp->private_data;
++	struct file *file = iocb->ki_filp;
++	struct block_device *bdev = file->private_data;
+ 	struct inode *bd_inode = bdev->bd_inode;
+ 	loff_t size = bdev_nr_bytes(bdev);
+ 	size_t shorted = 0;
+@@ -538,13 +562,31 @@ static ssize_t blkdev_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 	if ((iocb->ki_flags & (IOCB_NOWAIT | IOCB_DIRECT)) == IOCB_NOWAIT)
+ 		return -EOPNOTSUPP;
  
-@@ -1329,7 +1329,10 @@ static ssize_t fuse_perform_write(struct kiocb *iocb,
- 	fuse_write_update_attr(inode, pos, res);
- 	clear_bit(FUSE_I_SIZE_UNSTABLE, &fi->state);
- 
--	return res > 0 ? res : err;
-+	if (!res)
-+		return err;
-+	iocb->ki_pos += res;
-+	return res;
- }
- 
- static ssize_t fuse_cache_write_iter(struct kiocb *iocb, struct iov_iter *from)
-@@ -1337,11 +1340,9 @@ static ssize_t fuse_cache_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 	struct file *file = iocb->ki_filp;
- 	struct address_space *mapping = file->f_mapping;
- 	ssize_t written = 0;
--	ssize_t written_buffered = 0;
- 	struct inode *inode = mapping->host;
- 	ssize_t err;
- 	struct fuse_conn *fc = get_fuse_conn(inode);
--	loff_t endbyte = 0;
- 
- 	if (fc->writeback_cache) {
- 		/* Update size (EOF optimization) and mode (SUID clearing) */
-@@ -1378,35 +1379,12 @@ static ssize_t fuse_cache_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 		goto out;
- 
- 	if (iocb->ki_flags & IOCB_DIRECT) {
--		loff_t pos = iocb->ki_pos;
- 		written = generic_file_direct_write(iocb, from);
--		if (written < 0 || !iov_iter_count(from))
--			goto out;
--
--		pos += written;
--
--		written_buffered = fuse_perform_write(iocb, mapping, from, pos);
--		if (written_buffered < 0) {
--			err = written_buffered;
--			goto out;
--		}
--		endbyte = pos + written_buffered - 1;
--
--		err = filemap_write_and_wait_range(file->f_mapping, pos,
--						   endbyte);
--		if (err)
--			goto out;
--
--		invalidate_mapping_pages(file->f_mapping,
--					 pos >> PAGE_SHIFT,
--					 endbyte >> PAGE_SHIFT);
--
--		written += written_buffered;
--		iocb->ki_pos = pos + written_buffered;
-+		if (written >= 0 && iov_iter_count(from))
-+			written = direct_write_fallback(iocb, from, written,
-+					fuse_perform_write(iocb, from));
- 	} else {
--		written = fuse_perform_write(iocb, mapping, from, iocb->ki_pos);
--		if (written >= 0)
--			iocb->ki_pos += written;
-+		written = fuse_perform_write(iocb, from);
++	ret = file_remove_privs(file);
++	if (ret)
++		return ret;
++
++	ret = file_update_time(file);
++	if (ret)
++		return ret;
++
+ 	size -= iocb->ki_pos;
+ 	if (iov_iter_count(from) > size) {
+ 		shorted = iov_iter_count(from) - size;
+ 		iov_iter_truncate(from, size);
  	}
- out:
- 	current->backing_dev_info = NULL;
+ 
+-	ret = __generic_file_write_iter(iocb, from);
++	current->backing_dev_info = bdev->bd_disk->bdi;
++	if (iocb->ki_flags & IOCB_DIRECT) {
++		ret = blkdev_direct_write(iocb, from);
++		if (ret >= 0 && iov_iter_count(from))
++			ret = direct_write_fallback(iocb, from, ret,
++					generic_perform_write(iocb, from));
++	} else {
++		ret = generic_perform_write(iocb, from);
++	}
++	current->backing_dev_info = NULL;
++
+ 	if (ret > 0)
+ 		ret = generic_write_sync(iocb, ret);
+ 	iov_iter_reexpand(from, iov_iter_count(from) + shorted);
 -- 
 2.39.2
 
