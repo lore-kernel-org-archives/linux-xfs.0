@@ -2,57 +2,145 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF90EC77B73
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Apr 2023 06:22:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06286C7618E
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Apr 2023 07:19:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230486AbjDXGWZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Apr 2023 02:22:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43364 "EHLO
+        id S231320AbjDXHTt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Apr 2023 03:19:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42356 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229516AbjDXGWY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Apr 2023 02:22:24 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D65010C8;
-        Sun, 23 Apr 2023 23:22:23 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 50A3B68B05; Mon, 24 Apr 2023 08:22:20 +0200 (CEST)
-Date:   Mon, 24 Apr 2023 08:22:20 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 11/17] iomap: assign current->backing_dev_info in
- iomap_file_buffered_write
-Message-ID: <20230424062220.GA10368@lst.de>
-References: <20230424054926.26927-1-hch@lst.de> <20230424054926.26927-12-hch@lst.de> <20230424061825.GO360889@frogsfrogsfrogs>
+        with ESMTP id S231292AbjDXHTs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Apr 2023 03:19:48 -0400
+Received: from mail-il1-f208.google.com (mail-il1-f208.google.com [209.85.166.208])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20ABB271F
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2023 00:19:46 -0700 (PDT)
+Received: by mail-il1-f208.google.com with SMTP id e9e14a558f8ab-32b5ec09cffso28097355ab.2
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2023 00:19:46 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1682320785; x=1684912785;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=H4YdRQWkMgSvT2egQkHZSW9JYhDomQLIj+TlteNPVbs=;
+        b=CnTpjyB9Zbx+wmrilOlgfwWQVY11paCdct4Al7f/CWVV6MwypFAq0rD/QfeO1LE0Db
+         qZjfPC97aACJI2TH5utEc+zlZrGwe7r7jNWAbq3HvC6lSRbNNzybp7zTNaX01nRfWWjz
+         Ify+/V20GTDoD/LHTrAtuqPPe2P4owaWHichAWakjh4O50O8mx23/+s2qJYGcz3CXnf8
+         Lq+38f/jQC4VH8v03GyjmVW/PrIKd8OMyLZCp5jtA+0PPXsBfgOa7GYsnHcttAWHLSL0
+         XZOKU2lWZkDUi92jSW59jHNkXvjx/B/gYWR3BmN4k6NaqIsPapYUxQhNRys5axDh/gCs
+         Qaew==
+X-Gm-Message-State: AAQBX9d8gPeATNgf+qiEVit5xcRhzKCOI5wlq2xsmr9W+AcxOH/RHUr3
+        s2APvdgBUJFO/GsckGYKyBDFBznORCbfwWe7xs+o2r6/n+KG
+X-Google-Smtp-Source: AKy350YyOTqG5wtxPzeC5FKGP+YLYkDWHRY7TbIFtXDP9wCg2W2w9ONhcdK0y1gPZC83LS4gcG8bptO71qdO2Ef/KEtxouC/WTcl
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230424061825.GO360889@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+X-Received: by 2002:a92:d248:0:b0:32b:a8bd:50f7 with SMTP id
+ v8-20020a92d248000000b0032ba8bd50f7mr4357513ilg.2.1682320785435; Mon, 24 Apr
+ 2023 00:19:45 -0700 (PDT)
+Date:   Mon, 24 Apr 2023 00:19:45 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000d0737c05fa0fd499@google.com>
+Subject: [syzbot] [fs?] [mm?] KCSAN: data-race in __filemap_remove_folio /
+ folio_mapping (2)
+From:   syzbot <syzbot+606f94dfeaaa45124c90@syzkaller.appspotmail.com>
+To:     djwong@kernel.org, hch@infradead.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Apr 23, 2023 at 11:18:25PM -0700, Darrick J. Wong wrote:
-> > @@ -876,8 +877,11 @@ iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *i,
-> >  	if (iocb->ki_flags & IOCB_NOWAIT)
-> >  		iter.flags |= IOMAP_NOWAIT;
-> >  
-> > +	current->backing_dev_info = inode_to_bdi(iter.inode);
-> 
-> Dumb question from me late on a Sunday night, but does the iomap_unshare
-> code need to set this too?  Since it works by dirtying pagecache folios
-> without actually changing the contents?
+Hello,
 
-A very good question that I have no answer for.  The
-current->backing_dev_info mechanism confuses the heck out of me and
-appears basically undocumented.
+syzbot found the following issue on:
+
+HEAD commit:    622322f53c6d Merge tag 'mips-fixes_6.3_2' of git://git.ker..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=12342880280000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=fa4baf7c6b35b5d5
+dashboard link: https://syzkaller.appspot.com/bug?extid=606f94dfeaaa45124c90
+compiler:       Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2
+
+Unfortunately, I don't have any reproducer for this issue yet.
+
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/8b5f31d96315/disk-622322f5.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/adca7dc8daae/vmlinux-622322f5.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/ed78ddc31ccb/bzImage-622322f5.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+606f94dfeaaa45124c90@syzkaller.appspotmail.com
+
+==================================================================
+BUG: KCSAN: data-race in __filemap_remove_folio / folio_mapping
+
+write to 0xffffea0004958618 of 8 bytes by task 17586 on cpu 1:
+ page_cache_delete mm/filemap.c:145 [inline]
+ __filemap_remove_folio+0x210/0x330 mm/filemap.c:225
+ invalidate_complete_folio2 mm/truncate.c:586 [inline]
+ invalidate_inode_pages2_range+0x506/0x790 mm/truncate.c:673
+ iomap_dio_complete+0x383/0x470 fs/iomap/direct-io.c:115
+ iomap_dio_rw+0x62/0x90 fs/iomap/direct-io.c:687
+ ext4_dio_write_iter fs/ext4/file.c:597 [inline]
+ ext4_file_write_iter+0x9e6/0x10e0 fs/ext4/file.c:708
+ do_iter_write+0x418/0x700 fs/read_write.c:861
+ vfs_iter_write+0x50/0x70 fs/read_write.c:902
+ iter_file_splice_write+0x456/0x7d0 fs/splice.c:778
+ do_splice_from fs/splice.c:856 [inline]
+ direct_splice_actor+0x84/0xa0 fs/splice.c:1022
+ splice_direct_to_actor+0x2ee/0x5f0 fs/splice.c:977
+ do_splice_direct+0x104/0x180 fs/splice.c:1065
+ do_sendfile+0x3b8/0x950 fs/read_write.c:1255
+ __do_sys_sendfile64 fs/read_write.c:1323 [inline]
+ __se_sys_sendfile64 fs/read_write.c:1309 [inline]
+ __x64_sys_sendfile64+0x110/0x150 fs/read_write.c:1309
+ do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+ do_syscall_64+0x41/0xc0 arch/x86/entry/common.c:80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+read to 0xffffea0004958618 of 8 bytes by task 17568 on cpu 0:
+ folio_mapping+0x92/0x110 mm/util.c:774
+ folio_evictable mm/internal.h:156 [inline]
+ lru_add_fn+0x92/0x450 mm/swap.c:181
+ folio_batch_move_lru+0x21e/0x2f0 mm/swap.c:217
+ folio_batch_add_and_move mm/swap.c:234 [inline]
+ folio_add_lru+0xc9/0x130 mm/swap.c:517
+ filemap_add_folio+0xfc/0x150 mm/filemap.c:954
+ page_cache_ra_unbounded+0x15e/0x2e0 mm/readahead.c:251
+ do_page_cache_ra mm/readahead.c:300 [inline]
+ page_cache_ra_order mm/readahead.c:560 [inline]
+ ondemand_readahead+0x550/0x6c0 mm/readahead.c:682
+ page_cache_sync_ra+0x284/0x2a0 mm/readahead.c:709
+ page_cache_sync_readahead include/linux/pagemap.h:1214 [inline]
+ filemap_get_pages+0x257/0xea0 mm/filemap.c:2598
+ filemap_read+0x223/0x680 mm/filemap.c:2693
+ generic_file_read_iter+0x76/0x320 mm/filemap.c:2840
+ ext4_file_read_iter+0x1cc/0x290
+ call_read_iter include/linux/fs.h:1845 [inline]
+ generic_file_splice_read+0xe3/0x290 fs/splice.c:402
+ do_splice_to fs/splice.c:885 [inline]
+ splice_direct_to_actor+0x25a/0x5f0 fs/splice.c:956
+ do_splice_direct+0x104/0x180 fs/splice.c:1065
+ do_sendfile+0x3b8/0x950 fs/read_write.c:1255
+ __do_sys_sendfile64 fs/read_write.c:1323 [inline]
+ __se_sys_sendfile64 fs/read_write.c:1309 [inline]
+ __x64_sys_sendfile64+0x110/0x150 fs/read_write.c:1309
+ do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+ do_syscall_64+0x41/0xc0 arch/x86/entry/common.c:80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+value changed: 0xffff88810a98f7b0 -> 0x0000000000000000
+
+Reported by Kernel Concurrency Sanitizer on:
+CPU: 0 PID: 17568 Comm: syz-executor.2 Not tainted 6.3.0-rc7-syzkaller-00191-g622322f53c6d #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 04/14/2023
+==================================================================
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
