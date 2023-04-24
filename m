@@ -2,32 +2,32 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91ECEC7EE30
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Apr 2023 05:49:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AEB9C7618E
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Apr 2023 05:50:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229516AbjDXFt4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Apr 2023 01:49:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46996 "EHLO
+        id S230490AbjDXFuD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Apr 2023 01:50:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230432AbjDXFtn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Apr 2023 01:49:43 -0400
+        with ESMTP id S231177AbjDXFtz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Apr 2023 01:49:55 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B6231726;
-        Sun, 23 Apr 2023 22:49:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3AB81726;
+        Sun, 23 Apr 2023 22:49:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=V5nklQoA9f4p457fAmSLCbWYVHcQ95Tr9Yi93vZ1hXQ=; b=BVLdIyeC9XyB883rbVnHnnshYb
-        v9MBAr9Kui06l3iqsHsxD6wr7hDLJughW5sYL6bLE4MMi2NT4MojE/Kqi+QP5twRZ+EZc4+pHQm3S
-        kcN/fEcPtZ2XKOf2kEcveCPw4THCw9R3Vp3FTaYaHC5Q6XyN/KDa1LZrslZMBHL8ouAUMCh+sbtnt
-        jGhkPdK1bf1+RRVNAAo7uctMzy3iud0d3e4hNElvjoV0xaEA7vu/iU7cwGxhgjr4qByRCVU5CGTNI
-        M7ydlMTMwaIbWoe21seFAlCC/o0TZc5ZPNp4ELlK9gRxqfYBpHM10qTh06+1CPkGzgFFFvJGUiBet
-        OQvgwjkg==;
+        bh=LInMwgmm7juakhqMJmUm/pISuBKmyhtj1h64RTxGVFE=; b=ksnjCNaaIYILtAb94qr1FTT2Wz
+        kZRuCMhWL9racZ9eP9X8K5p9+krm6xIvaHOewtdjyif7/XMRozz4R7mpRrFqpSzaYOYZZp+hz9j64
+        ccya7w488Ktn5XvstbBsAUFLV2jC6akCFOTNSUsoO0g72ip2tieVyNrcMOs/bqwhYxlcGZnjpO8P8
+        p+tTKt17x8IxnhUcRLwo01cYYILh46k+ybO9S5xEZSDgd33UCHppPSdPVnIHFLtlAPgyTTg0J5cIP
+        VsGdLLnL5NPrn4LLLxCrWgG5kPHsLi0NxWZb5LKRKHJgnMP5ZYVjS6xFc2Hlea4qeMAV15N77hydj
+        ZnQ3LaDg==;
 Received: from [2001:4bb8:189:a74f:e8a5:5f73:6d2:23b8] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1pqp4y-00FOuS-1q;
-        Mon, 24 Apr 2023 05:49:37 +0000
+        id 1pqp5C-00FOwD-39;
+        Mon, 24 Apr 2023 05:49:51 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Miklos Szeredi <miklos@szeredi.hu>,
@@ -40,9 +40,9 @@ Cc:     Miklos Szeredi <miklos@szeredi.hu>,
         linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
         linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
         linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 02/17] fs: remove the special !CONFIG_BLOCK def_blk_fops
-Date:   Mon, 24 Apr 2023 07:49:11 +0200
-Message-Id: <20230424054926.26927-3-hch@lst.de>
+Subject: [PATCH 07/17] filemap: add a kiocb_invalidate_pages helper
+Date:   Mon, 24 Apr 2023 07:49:16 +0200
+Message-Id: <20230424054926.26927-8-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230424054926.26927-1-hch@lst.de>
 References: <20230424054926.26927-1-hch@lst.de>
@@ -53,79 +53,99 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-def_blk_fops always returns -ENODEV, which dosn't match the return value
-of a non-existing block device with CONFIG_BLOCK, which is -ENXIO.
-Just remove the extra implementation and fall back to the default
-no_open_fops that always returns -ENXIO.
+Factor out a helper that calls filemap_write_and_wait_range and
+invalidate_inode_pages2_rangefor a the range covered by a write kiocb or
+returns -EAGAIN if the kiocb is marked as nowait and there would be pages
+to write or invalidate.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/Makefile   | 10 ++--------
- fs/inode.c    |  3 ++-
- fs/no-block.c | 19 -------------------
- 3 files changed, 4 insertions(+), 28 deletions(-)
- delete mode 100644 fs/no-block.c
+ include/linux/pagemap.h |  1 +
+ mm/filemap.c            | 48 ++++++++++++++++++++++++-----------------
+ 2 files changed, 29 insertions(+), 20 deletions(-)
 
-diff --git a/fs/Makefile b/fs/Makefile
-index 05f89b5c962f88..da21e7d0a1cf37 100644
---- a/fs/Makefile
-+++ b/fs/Makefile
-@@ -18,14 +18,8 @@ obj-y :=	open.o read_write.o file_table.o super.o \
- 		fs_types.o fs_context.o fs_parser.o fsopen.o init.o \
- 		kernel_read_file.o mnt_idmapping.o remap_range.o
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index 51f7aea51169c4..f6c5ef9d3d7646 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -30,6 +30,7 @@ static inline void invalidate_remote_inode(struct inode *inode)
+ int invalidate_inode_pages2(struct address_space *mapping);
+ int invalidate_inode_pages2_range(struct address_space *mapping,
+ 		pgoff_t start, pgoff_t end);
++int kiocb_invalidate_pages(struct kiocb *iocb, size_t count);
  
--ifeq ($(CONFIG_BLOCK),y)
--obj-y +=	buffer.o mpage.o
--else
--obj-y +=	no-block.o
--endif
+ int write_inode_now(struct inode *, int sync);
+ int filemap_fdatawrite(struct address_space *);
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 28ea9804191d6b..afb3b0169a9173 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -2780,6 +2780,33 @@ int kiocb_write_and_wait(struct kiocb *iocb, size_t count)
+ 	return filemap_write_and_wait_range(mapping, pos, end);
+ }
+ 
++int kiocb_invalidate_pages(struct kiocb *iocb, size_t count)
++{
++	struct address_space *mapping = iocb->ki_filp->f_mapping;
++	loff_t pos = iocb->ki_pos;
++	loff_t end = pos + count - 1;
++	int ret;
++
++	if (iocb->ki_flags & IOCB_NOWAIT) {
++		/* we could block if there are any pages in the range */
++		if (filemap_range_has_page(mapping, pos, end))
++			return -EAGAIN;
++	} else {
++		ret = filemap_write_and_wait_range(mapping, pos, end);
++		if (ret)
++			return ret;
++	}
++
++	/*
++	 * After a write we want buffered reads to be sure to go to disk to get
++	 * the new data.  We invalidate clean cached page from the region we're
++	 * about to write.  We do this *before* the write so that we can return
++	 * without clobbering -EIOCBQUEUED from ->direct_IO().
++	 */
++	return invalidate_inode_pages2_range(mapping, pos >> PAGE_SHIFT,
++					     end >> PAGE_SHIFT);
++}
++
+ /**
+  * generic_file_read_iter - generic filesystem read routine
+  * @iocb:	kernel I/O control block
+@@ -3823,30 +3850,11 @@ generic_file_direct_write(struct kiocb *iocb, struct iov_iter *from)
+ 	write_len = iov_iter_count(from);
+ 	end = (pos + write_len - 1) >> PAGE_SHIFT;
+ 
+-	if (iocb->ki_flags & IOCB_NOWAIT) {
+-		/* If there are pages to writeback, return */
+-		if (filemap_range_has_page(file->f_mapping, pos,
+-					   pos + write_len - 1))
+-			return -EAGAIN;
+-	} else {
+-		written = filemap_write_and_wait_range(mapping, pos,
+-							pos + write_len - 1);
+-		if (written)
+-			goto out;
+-	}
 -
--obj-$(CONFIG_PROC_FS) += proc_namespace.o
--
-+obj-$(CONFIG_BLOCK)		+= buffer.o mpage.o
-+obj-$(CONFIG_PROC_FS)		+= proc_namespace.o
- obj-$(CONFIG_LEGACY_DIRECT_IO)	+= direct-io.o
- obj-y				+= notify/
- obj-$(CONFIG_EPOLL)		+= eventpoll.o
-diff --git a/fs/inode.c b/fs/inode.c
-index 4558dc2f135573..d43f07f146eb73 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -2265,7 +2265,8 @@ void init_special_inode(struct inode *inode, umode_t mode, dev_t rdev)
- 		inode->i_fop = &def_chr_fops;
- 		inode->i_rdev = rdev;
- 	} else if (S_ISBLK(mode)) {
--		inode->i_fop = &def_blk_fops;
-+		if (IS_ENABLED(CONFIG_BLOCK))
-+			inode->i_fop = &def_blk_fops;
- 		inode->i_rdev = rdev;
- 	} else if (S_ISFIFO(mode))
- 		inode->i_fop = &pipefifo_fops;
-diff --git a/fs/no-block.c b/fs/no-block.c
-deleted file mode 100644
-index 481c0f0ab4bd2c..00000000000000
---- a/fs/no-block.c
-+++ /dev/null
-@@ -1,19 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0-or-later
--/* no-block.c: implementation of routines required for non-BLOCK configuration
-- *
-- * Copyright (C) 2006 Red Hat, Inc. All Rights Reserved.
-- * Written by David Howells (dhowells@redhat.com)
-- */
--
--#include <linux/kernel.h>
--#include <linux/fs.h>
--
--static int no_blkdev_open(struct inode * inode, struct file * filp)
--{
--	return -ENODEV;
--}
--
--const struct file_operations def_blk_fops = {
--	.open		= no_blkdev_open,
--	.llseek		= noop_llseek,
--};
+-	/*
+-	 * After a write we want buffered reads to be sure to go to disk to get
+-	 * the new data.  We invalidate clean cached page from the region we're
+-	 * about to write.  We do this *before* the write so that we can return
+-	 * without clobbering -EIOCBQUEUED from ->direct_IO().
+-	 */
+-	written = invalidate_inode_pages2_range(mapping,
+-					pos >> PAGE_SHIFT, end);
+ 	/*
+ 	 * If a page can not be invalidated, return 0 to fall back
+ 	 * to buffered write.
+ 	 */
++	written = kiocb_invalidate_pages(iocb, write_len);
+ 	if (written) {
+ 		if (written == -EBUSY)
+ 			return 0;
 -- 
 2.39.2
 
