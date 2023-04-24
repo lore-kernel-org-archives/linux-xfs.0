@@ -2,32 +2,32 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA93FC77B76
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Apr 2023 05:51:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 137C1C77B76
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Apr 2023 05:52:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229477AbjDXFvw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Apr 2023 01:51:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48226 "EHLO
+        id S231374AbjDXFv7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Apr 2023 01:51:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230138AbjDXFvc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Apr 2023 01:51:32 -0400
+        with ESMTP id S231293AbjDXFvh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Apr 2023 01:51:37 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A36CC422E;
-        Sun, 23 Apr 2023 22:50:18 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE29E44AE;
+        Sun, 23 Apr 2023 22:50:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=wb6cWzDzgbU80SKdNhmkiB4WmHIQIndA+4skiI8V8fU=; b=mv0e7BU3F7SMyd8eLBhwb+Y0F7
-        znPgpjqXZ4HeAV1eIpqytPq1qlE2Z6ERAC05IsZSk0Xp26INJjUI7B0wTCifLQvtz95fuUly47A60
-        DWBGBgzkE0tv+pfytsoMZFOSHTsPvNLSWyjGi17l7Yb0x8t1sAlp/JB/Zj5Jyyvy+kUjDkJLePVzX
-        O53Ty6SpZMoCvI5Ssudo/hWbvHKIdGyYrwRfQhwnxxHPP+bP9bKhPGJlFO0HKjlrXEq6I1qQJAGLY
-        nLg834BQ/F7+Z8S4FjwMYtC8lma6QFFFF2rDDnUUh4ekMBmQJzlfQAYNUFafdB3JEbmYIuoTSWGtp
-        WXUoQW8A==;
+        bh=FmYSiKdP5y3EH7nBXTpf8bIFKknqbI4piiyOLlTcqUc=; b=4lxlR6BuJRIME1qgT/FLWEjLGd
+        zZ93UA0UiVTZRciYnVz7BcBGh4qOlXvmDz+gYSX0gVpNssgkTRzVJ1F6XLACSvE58gCznare4IwV8
+        ONhbJNRO+Rb7AwP4E4aB6azTfv6WnFdtXg9Bd7cQuw7++D8vMUNKfCzGFlYk6+3rORK1s3nJno0oL
+        32gJ5Q9kRf7XT69Y0ns9Rw6WyLZWY36yGHyPSBD2vfFBjEti+pSoqjjyDRWgXT9qasHTXvq32XIhk
+        aJhmCTOwekv9gG2uQmpUAPoElchnnj2w2DJgfRMI4gQ/+nTFeSLo60MajiM9lIGCzDORORrebRpsQ
+        vbf3q+Zg==;
 Received: from [2001:4bb8:189:a74f:e8a5:5f73:6d2:23b8] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1pqp5O-00FP43-21;
-        Mon, 24 Apr 2023 05:50:03 +0000
+        id 1pqp5U-00FP8b-21;
+        Mon, 24 Apr 2023 05:50:09 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Miklos Szeredi <miklos@szeredi.hu>,
@@ -40,9 +40,9 @@ Cc:     Miklos Szeredi <miklos@szeredi.hu>,
         linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
         linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
         linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 11/17] iomap: assign current->backing_dev_info in iomap_file_buffered_write
-Date:   Mon, 24 Apr 2023 07:49:20 +0200
-Message-Id: <20230424054926.26927-12-hch@lst.de>
+Subject: [PATCH 13/17] block: don't plug in blkdev_write_iter
+Date:   Mon, 24 Apr 2023 07:49:22 +0200
+Message-Id: <20230424054926.26927-14-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230424054926.26927-1-hch@lst.de>
 References: <20230424054926.26927-1-hch@lst.de>
@@ -53,95 +53,42 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Move the assignment to current->backing_dev_info from the callers into
-iomap_file_buffered_write.  Note that zonefs was missing this assignment
-before.
+Remove the no needed plug in blkdev_write_iter.  For direct I/O that
+issues more than a single I/O, the plug is already done in
+__blkdev_direct_IO, and for synchronous buffered writes, the plug
+is done in writeback_inodes_wb / wb_writeback, while for the other
+cases a plug doesn't make sense.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/gfs2/file.c         | 3 ---
- fs/iomap/buffered-io.c | 4 ++++
- fs/xfs/xfs_file.c      | 5 -----
- 3 files changed, 4 insertions(+), 8 deletions(-)
+ block/fops.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/fs/gfs2/file.c b/fs/gfs2/file.c
-index 8c4fad359ff538..4d88c6080b3e30 100644
---- a/fs/gfs2/file.c
-+++ b/fs/gfs2/file.c
-@@ -25,7 +25,6 @@
- #include <linux/dlm.h>
- #include <linux/dlm_plock.h>
- #include <linux/delay.h>
--#include <linux/backing-dev.h>
- #include <linux/fileattr.h>
+diff --git a/block/fops.c b/block/fops.c
+index c194939b851cfb..b670aa7c5bb745 100644
+--- a/block/fops.c
++++ b/block/fops.c
+@@ -520,7 +520,6 @@ static ssize_t blkdev_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 	struct block_device *bdev = iocb->ki_filp->private_data;
+ 	struct inode *bd_inode = bdev->bd_inode;
+ 	loff_t size = bdev_nr_bytes(bdev);
+-	struct blk_plug plug;
+ 	size_t shorted = 0;
+ 	ssize_t ret;
  
- #include "gfs2.h"
-@@ -1041,11 +1040,9 @@ static ssize_t gfs2_file_buffered_write(struct kiocb *iocb,
- 			goto out_unlock;
+@@ -545,12 +544,10 @@ static ssize_t blkdev_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 		iov_iter_truncate(from, size);
  	}
  
--	current->backing_dev_info = inode_to_bdi(inode);
- 	pagefault_disable();
- 	ret = iomap_file_buffered_write(iocb, from, &gfs2_iomap_ops);
- 	pagefault_enable();
--	current->backing_dev_info = NULL;
- 	if (ret > 0) {
- 		iocb->ki_pos += ret;
- 		written += ret;
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 2986be63d2bea6..3d5042efda202a 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -3,6 +3,7 @@
-  * Copyright (C) 2010 Red Hat, Inc.
-  * Copyright (C) 2016-2019 Christoph Hellwig.
-  */
-+#include <linux/backing-dev.h>
- #include <linux/module.h>
- #include <linux/compiler.h>
- #include <linux/fs.h>
-@@ -876,8 +877,11 @@ iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *i,
- 	if (iocb->ki_flags & IOCB_NOWAIT)
- 		iter.flags |= IOMAP_NOWAIT;
+-	blk_start_plug(&plug);
+ 	ret = __generic_file_write_iter(iocb, from);
+ 	if (ret > 0)
+ 		ret = generic_write_sync(iocb, ret);
+ 	iov_iter_reexpand(from, iov_iter_count(from) + shorted);
+-	blk_finish_plug(&plug);
+ 	return ret;
+ }
  
-+	current->backing_dev_info = inode_to_bdi(iter.inode);
- 	while ((ret = iomap_iter(&iter, ops)) > 0)
- 		iter.processed = iomap_write_iter(&iter, i);
-+	current->backing_dev_info = NULL;
-+
- 	if (iter.pos == iocb->ki_pos)
- 		return ret;
- 	return iter.pos - iocb->ki_pos;
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 705250f9f90a1b..f5442e689baf15 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -27,7 +27,6 @@
- 
- #include <linux/dax.h>
- #include <linux/falloc.h>
--#include <linux/backing-dev.h>
- #include <linux/mman.h>
- #include <linux/fadvise.h>
- #include <linux/mount.h>
-@@ -717,9 +716,6 @@ xfs_file_buffered_write(
- 	if (ret)
- 		goto out;
- 
--	/* We can write back this queue in page reclaim */
--	current->backing_dev_info = inode_to_bdi(inode);
--
- 	trace_xfs_file_buffered_write(iocb, from);
- 	ret = iomap_file_buffered_write(iocb, from,
- 			&xfs_buffered_write_iomap_ops);
-@@ -753,7 +749,6 @@ xfs_file_buffered_write(
- 		goto write_retry;
- 	}
- 
--	current->backing_dev_info = NULL;
- out:
- 	if (iolock)
- 		xfs_iunlock(ip, iolock);
 -- 
 2.39.2
 
