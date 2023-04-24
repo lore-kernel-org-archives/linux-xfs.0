@@ -2,509 +2,205 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8524C77B78
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Apr 2023 18:28:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82AE8C77B7F
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Apr 2023 18:56:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231579AbjDXS2D (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Apr 2023 14:28:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33306 "EHLO
+        id S232140AbjDXS4H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Apr 2023 14:56:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52222 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231360AbjDXS2C (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Apr 2023 14:28:02 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD35D618B;
-        Mon, 24 Apr 2023 11:28:00 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6310F620BD;
-        Mon, 24 Apr 2023 18:28:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDAD9C433EF;
-        Mon, 24 Apr 2023 18:27:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682360879;
-        bh=kwXjWLPl/cDvcLsnOF3FqB7QICac+EpFqwUhz7eQYss=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=nYT6soWnUUmiPOGVqgDXnbgMF0809ajYbtMez7lJLQ6FKsroaX3BIHLGWvjsFwQsK
-         li45dibc1GN5iprwhnH6NfavxSwhmEN3BfLkk866/LOJxtjxwtLsCGDpeVJJzPsR0H
-         klITVHMzJrmvfQZBO/fn/KXwznfadCrX/Ddn894h+0Ygj74Crtm1AuuA88XUrFdt3n
-         9BFUnGRHPEeQjTLNFwqHnyd6mw/OKyGgZWpx82dSfij5onx/d5x/Zv1B/ufeAS1VqG
-         cJCmNpEtbvsEIZys0tM5Z6iwNS5CPX+EFK50wjO/4LtNhL3KqESgRTImLv6rVe1+I6
-         oDiKEhH/A7jFQ==
-Date:   Mon, 24 Apr 2023 11:27:59 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH v2 2/3] misc: add duration for long soak tests
-Message-ID: <20230424182759.GH360885@frogsfrogsfrogs>
-References: <168123682679.4086541.13812285218510940665.stgit@frogsfrogsfrogs>
- <168123683823.4086541.4438928240640523731.stgit@frogsfrogsfrogs>
- <20230415002949.GZ360889@frogsfrogsfrogs>
- <20230422133316.eyxebbqe5rle2ipj@zlang-mailbox>
+        with ESMTP id S232387AbjDXS4D (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Apr 2023 14:56:03 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2C4F83E4
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2023 11:55:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1682362511;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=cC2m6cj4by0ic+ocHcPEbRFoxwEEiKQQoS0Ge1Avf1U=;
+        b=JMK2mwKmD1wcRlKtYqYl0AzWNCF8UMQLJEacoyPNSuZpjBUwEh5SFvj8HTp5yfvJo2j+Uh
+        mGAs6WZ8OTEw0e2g2QDsO4q/0+a2jIeH4PRQHRSZ0ypP7t+fjGU33hQ8Xa7U6GfzQHAYpt
+        nuMz++cKZxB5wGac/vbNBZWSjCJfOOU=
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
+ [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-440-Yi2VxqykNcadjL39wyqKpw-1; Mon, 24 Apr 2023 14:55:09 -0400
+X-MC-Unique: Yi2VxqykNcadjL39wyqKpw-1
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-246819e2cdaso4715449a91.2
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2023 11:55:09 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1682362508; x=1684954508;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=cC2m6cj4by0ic+ocHcPEbRFoxwEEiKQQoS0Ge1Avf1U=;
+        b=Jh2PJRo3/qR8ExejjrZsZv6yyGwbhUbwC1JsZGmF3ujAJHGivGLdwnQtf8kgUYFhB/
+         tlAA5N82RCvEEePSe/BRyU7auBSazU2SLhLu0i7UJqNHkoEY4bSTDOifd0TiOR6y9n+R
+         kfhJn1XFseSljDKql97peLpt5ufCxjY30RCZ0TPv3JKrmZKtPPPr+2Ho6o+X9vRKCXFy
+         61vJwzHbZ9cF+dssqKqZIcG66R6N/b42XthmXRtA45/kwxRmNTvInx2k/k+D/1LhqUc0
+         pYQfl+b98JwiKfFrk+WqlmrP/5JZluh+k1CMgfXbuUycRg469pshIcrE3c97Ntw4tIwb
+         J7KQ==
+X-Gm-Message-State: AAQBX9ct70M2WEvwxvn73URw93zTm0zkI5e9tBTFO/N6KW6HIcfy3sZp
+        9DYs2icXrxBRzK7hw7Lqwpx2FpU+fi7Ek9BHYKyJVk9jthI6hbPRJ4UVoqKovOOn4RBWfEnVEXY
+        vZ1/wOvwVeuSQ88gKPeb8jbOAoUCb+wkr4RqG
+X-Received: by 2002:a17:90b:3a8d:b0:23e:f855:79ed with SMTP id om13-20020a17090b3a8d00b0023ef85579edmr14646842pjb.28.1682362508690;
+        Mon, 24 Apr 2023 11:55:08 -0700 (PDT)
+X-Google-Smtp-Source: AKy350bw6UUmfa7x2kgzI/S3M36kQcMIx/LORGs9afdrTUJulizrDq8UK+lWvA5A9k5nXONeKEERR5M4Fbn0vBOkkLM=
+X-Received: by 2002:a17:90b:3a8d:b0:23e:f855:79ed with SMTP id
+ om13-20020a17090b3a8d00b0023ef85579edmr14646811pjb.28.1682362508271; Mon, 24
+ Apr 2023 11:55:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230422133316.eyxebbqe5rle2ipj@zlang-mailbox>
+References: <20230424054926.26927-1-hch@lst.de> <20230424054926.26927-6-hch@lst.de>
+In-Reply-To: <20230424054926.26927-6-hch@lst.de>
+From:   Andreas Gruenbacher <agruenba@redhat.com>
+Date:   Mon, 24 Apr 2023 20:54:56 +0200
+Message-ID: <CAHc6FU7tuLJk1JEHdmK7VmEuvuG2sMg1=D9qYJAuhn2ES4NFAA@mail.gmail.com>
+Subject: Re: [Cluster-devel] [PATCH 05/17] filemap: update ki_pos in generic_perform_write
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        linux-nfs@vger.kernel.org, cluster-devel@redhat.com,
+        linux-xfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        linux-kernel@vger.kernel.org, Matthew Wilcox <willy@infradead.org>,
+        linux-f2fs-devel@lists.sourceforge.net,
+        David Howells <dhowells@redhat.com>, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-ext4@vger.kernel.org, ceph-devel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Apr 22, 2023 at 09:33:16PM +0800, Zorro Lang wrote:
-> On Fri, Apr 14, 2023 at 05:29:49PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Make it so that test runners can schedule long soak stress test programs
-> > for an exact number of seconds by setting the SOAK_DURATION config
-> > variable.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > Reviewed-by: Andrey Albershteyn <aalbersh@redhat.com>
-> > ---
-> > v2: fix commit message
-> > ---
-> >  check                 |   14 +++++++++
-> >  common/config         |    7 ++++
-> >  common/fuzzy          |    7 ++++
-> >  common/report         |    1 +
-> >  ltp/fsstress.c        |   78 +++++++++++++++++++++++++++++++++++++++++++++++--
-> >  ltp/fsx.c             |   50 +++++++++++++++++++++++++++++++
-> >  src/soak_duration.awk |   23 ++++++++++++++
-> >  tests/generic/476     |    5 +++
-> >  tests/generic/521     |    1 +
-> >  tests/generic/522     |    1 +
-> >  tests/generic/642     |    1 +
-> >  11 files changed, 182 insertions(+), 6 deletions(-)
-> >  create mode 100644 src/soak_duration.awk
-> > 
-> > diff --git a/check b/check
-> > index e32b70d301..1d78cf27f4 100755
-> > --- a/check
-> > +++ b/check
-> > @@ -366,6 +366,20 @@ if ! . ./common/rc; then
-> >  	exit 1
-> >  fi
-> >  
-> > +# If the test config specified a soak test duration, see if there are any
-> > +# unit suffixes that need converting to an integer seconds count.
-> > +if [ -n "$SOAK_DURATION" ]; then
-> > +	SOAK_DURATION="$(echo "$SOAK_DURATION" | \
-> > +		sed -e 's/^\([.0-9]*\)\([a-z]\)*/\1 \2/g' | \
-> > +		$AWK_PROG -f $here/src/soak_duration.awk)"
-> > +	if [ $? -ne 0 ]; then
-> > +		echo "$SOAK_DURATION"
-> 
-> echo SOAK_DURATION=$SOAK_DURATION ?
+On Mon, Apr 24, 2023 at 8:22=E2=80=AFAM Christoph Hellwig <hch@lst.de> wrot=
+e:
+> All callers of generic_perform_write need to updated ki_pos, move it into
+> common code.
 
-Hmm.  On nonzero return, the awk script already specified the reason
-that the input was rejected, so I think this line can go away.
+We've actually got a similar situation with
+iomap_file_buffered_write() and its callers. Would it make sense to
+fix that up as well?
 
-> > +		status=1
-> > +		exit 1
-> > +	fi
-> > +	export SOAK_DURATION
-> 
-> Is this necessary? As you've exported SOAK_DURATION in common/config:
-> 
-> export SOAK_DURATION=${SOAK_DURATION:=}
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/ceph/file.c | 2 --
+>  fs/ext4/file.c | 9 +++------
+>  fs/f2fs/file.c | 1 -
+>  fs/nfs/file.c  | 1 -
+>  mm/filemap.c   | 8 ++++----
+>  5 files changed, 7 insertions(+), 14 deletions(-)
+>
+> diff --git a/fs/ceph/file.c b/fs/ceph/file.c
+> index f4d8bf7dec88a8..feeb9882ef635a 100644
+> --- a/fs/ceph/file.c
+> +++ b/fs/ceph/file.c
+> @@ -1894,8 +1894,6 @@ static ssize_t ceph_write_iter(struct kiocb *iocb, =
+struct iov_iter *from)
+>                  * can not run at the same time
+>                  */
+>                 written =3D generic_perform_write(iocb, from);
+> -               if (likely(written >=3D 0))
+> -                       iocb->ki_pos =3D pos + written;
+>                 ceph_end_io_write(inode);
+>         }
+>
+> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+> index 0b8b4499e5ca18..1026acaf1235a0 100644
+> --- a/fs/ext4/file.c
+> +++ b/fs/ext4/file.c
+> @@ -291,12 +291,9 @@ static ssize_t ext4_buffered_write_iter(struct kiocb=
+ *iocb,
+>
+>  out:
+>         inode_unlock(inode);
+> -       if (likely(ret > 0)) {
+> -               iocb->ki_pos +=3D ret;
+> -               ret =3D generic_write_sync(iocb, ret);
+> -       }
+> -
+> -       return ret;
+> +       if (unlikely(ret <=3D 0))
+> +               return ret;
+> +       return generic_write_sync(iocb, ret);
+>  }
+>
+>  static ssize_t ext4_handle_inode_extension(struct inode *inode, loff_t o=
+ffset,
+> diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
+> index f4ab23efcf85f8..5a9ae054b6da7d 100644
+> --- a/fs/f2fs/file.c
+> +++ b/fs/f2fs/file.c
+> @@ -4511,7 +4511,6 @@ static ssize_t f2fs_buffered_write_iter(struct kioc=
+b *iocb,
+>         current->backing_dev_info =3D NULL;
+>
+>         if (ret > 0) {
+> -               iocb->ki_pos +=3D ret;
+>                 f2fs_update_iostat(F2FS_I_SB(inode), inode,
+>                                                 APP_BUFFERED_IO, ret);
+>         }
+> diff --git a/fs/nfs/file.c b/fs/nfs/file.c
+> index 893625eacab9fa..abdae2b29369be 100644
+> --- a/fs/nfs/file.c
+> +++ b/fs/nfs/file.c
+> @@ -666,7 +666,6 @@ ssize_t nfs_file_write(struct kiocb *iocb, struct iov=
+_iter *from)
+>                 goto out;
+>
+>         written =3D result;
+> -       iocb->ki_pos +=3D written;
+>         nfs_add_stats(inode, NFSIOS_NORMALWRITTENBYTES, written);
+>
+>         if (mntflags & NFS_MOUNT_WRITE_EAGER) {
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index 2723104cc06a12..0110bde3708b3f 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -3960,7 +3960,10 @@ ssize_t generic_perform_write(struct kiocb *iocb, =
+struct iov_iter *i)
+>                 balance_dirty_pages_ratelimited(mapping);
+>         } while (iov_iter_count(i));
+>
+> -       return written ? written : status;
+> +       if (!written)
+> +               return status;
+> +       iocb->ki_pos +=3D written;
 
-You're correct, it does not need to be re-exported.
+Could be turned into:
+iocb->ki_pos =3D pos;
 
-> > +fi
-> > +
-> >  if [ -n "$subdir_xfile" ]; then
-> >  	for d in $SRC_GROUPS $FSTYP; do
-> >  		[ -f $SRC_DIR/$d/$subdir_xfile ] || continue
-> > diff --git a/common/config b/common/config
-> > index 6c8cb3a5ba..fdd0aadbeb 100644
-> > --- a/common/config
-> > +++ b/common/config
-> > @@ -57,6 +57,13 @@ export SOAK_PROC=3             # -p option to fsstress
-> >  export SOAK_STRESS=10000       # -n option to fsstress
-> >  export SOAK_PASSES=-1          # count of repetitions of fsstress (while soaking)
-> >  export EMAIL=root@localhost    # where auto-qa will send its status messages
-> > +
-> > +# For certain tests that run in tight loops, setting this variable allows the
-> > +# test runner to specify exactly how long the test should continue looping.
-> > +# This is independent of TIME_FACTOR.  Floating point numbers are allowed, and
-> > +# the unit suffixes m(inutes), h(ours), d(ays), and w(eeks) are supported.
-> > +export SOAK_DURATION=${SOAK_DURATION:=}
-> 
-> Better to describe more about the SOAK_DURATION (and TIME/LOAD_FACTOR) in
-> documentation (README?). To clarify the relationship of SOAK_DURATION with
-> other related parameters, and how the SOAK_DURATION works/be used.
+> +       return written;
+>  }
+>  EXPORT_SYMBOL(generic_perform_write);
+>
+> @@ -4039,7 +4042,6 @@ ssize_t __generic_file_write_iter(struct kiocb *ioc=
+b, struct iov_iter *from)
+>                 endbyte =3D pos + status - 1;
+>                 err =3D filemap_write_and_wait_range(mapping, pos, endbyt=
+e);
+>                 if (err =3D=3D 0) {
+> -                       iocb->ki_pos =3D endbyte + 1;
+>                         written +=3D status;
+>                         invalidate_mapping_pages(mapping,
+>                                                  pos >> PAGE_SHIFT,
+> @@ -4052,8 +4054,6 @@ ssize_t __generic_file_write_iter(struct kiocb *ioc=
+b, struct iov_iter *from)
+>                 }
+>         } else {
+>                 written =3D generic_perform_write(iocb, from);
+> -               if (likely(written > 0))
+> -                       iocb->ki_pos +=3D written;
+>         }
+>  out:
+>         current->backing_dev_info =3D NULL;
+> --
+> 2.39.2
+>
 
-TIME_FACTOR is not documented in the README.  I'll add another patch to
-do that...
+Thanks,
+Andreas
 
-> > +
-> >  export HOST_OPTIONS=${HOST_OPTIONS:=local.config}
-> >  export CHECK_OPTIONS=${CHECK_OPTIONS:="-g auto"}
-> >  export BENCH_PASSES=${BENCH_PASSES:=5}
-> > diff --git a/common/fuzzy b/common/fuzzy
-> > index 744d9ed65d..9c04bb5318 100644
-> > --- a/common/fuzzy
-> > +++ b/common/fuzzy
-> > @@ -1360,7 +1360,12 @@ _scratch_xfs_stress_scrub() {
-> >  	fi
-> >  
-> >  	local start="$(date +%s)"
-> > -	local end="$((start + (30 * TIME_FACTOR) ))"
-> > +	local end
-> > +	if [ -n "$SOAK_DURATION" ]; then
-> > +		end="$((start + SOAK_DURATION))"
-> > +	else
-> > +		end="$((start + (30 * TIME_FACTOR) ))"
-> > +	fi
-> >  	local scrub_startat="$((start + scrub_delay))"
-> >  	test "$scrub_startat" -gt "$((end - 10))" &&
-> >  		scrub_startat="$((end - 10))"
-> > diff --git a/common/report b/common/report
-> > index be930e0b06..9bfa09ecce 100644
-> > --- a/common/report
-> > +++ b/common/report
-> > @@ -67,6 +67,7 @@ __generate_report_vars() {
-> >  	REPORT_VARS["CPUS"]="$(getconf _NPROCESSORS_ONLN 2>/dev/null)"
-> >  	REPORT_VARS["MEM_KB"]="$(grep MemTotal: /proc/meminfo | awk '{print $2}')"
-> >  	REPORT_VARS["SWAP_KB"]="$(grep SwapTotal: /proc/meminfo | awk '{print $2}')"
-> > +	test -n "$SOAK_DURATION" && REPORT_VARS["SOAK_DURATION"]="$SOAK_DURATION"
-> >  
-> >  	test -e /sys/devices/system/node/possible && \
-> >  		REPORT_VARS["NUMA_NODES"]="$(cat /sys/devices/system/node/possible 2>/dev/null)"
-> > diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-> > index e60f2da929..0dc6545448 100644
-> > --- a/ltp/fsstress.c
-> > +++ b/ltp/fsstress.c
-> > @@ -386,6 +386,8 @@ char		*execute_cmd = NULL;
-> >  int		execute_freq = 1;
-> >  struct print_string	flag_str = {0};
-> >  
-> > +struct timespec deadline = { 0 };
-> > +
-> >  void	add_to_flist(int, int, int, int);
-> >  void	append_pathname(pathname_t *, char *);
-> >  int	attr_list_path(pathname_t *, char *, const int);
-> > @@ -459,6 +461,34 @@ void sg_handler(int signum)
-> >  	}
-> >  }
-> >  
-> > +bool
-> > +keep_looping(int i, int loops)
-> > +{
-> > +	int ret;
-> > +
-> > +	if (deadline.tv_nsec) {
-> > +		struct timespec now;
-> > +
-> > +		ret = clock_gettime(CLOCK_MONOTONIC, &now);
-> > +		if (ret) {
-> > +			perror("CLOCK_MONOTONIC");
-> > +			return false;
-> > +		}
-> > +
-> > +		return now.tv_sec <= deadline.tv_sec;
-> > +	}
-> > +
-> > +	if (!loops)
-> > +		return true;
-> > +
-> > +	return i < loops;
-> > +}
-> > +
-> > +static struct option longopts[] = {
-> > +	{"duration", optional_argument, 0, 256},
-> 
-> OK, we'd better to check those test cases use fsstress "-n" later, think about
-> if some of them should be replaced by "--duration".
-
-<nod> I'll update the fsstress/fsx --help screens to state that
---duration overrides -n/-N.
-
---D
-
-> Thanks,
-> Zorro
-> 
-> > +	{ }
-> > +};
-> > +
-> >  int main(int argc, char **argv)
-> >  {
-> >  	char		buf[10];
-> > @@ -478,13 +508,14 @@ int main(int argc, char **argv)
-> >  	struct sigaction action;
-> >  	int		loops = 1;
-> >  	const char	*allopts = "cd:e:f:i:l:m:M:n:o:p:rRs:S:vVwx:X:zH";
-> > +	long long	duration;
-> >  
-> >  	errrange = errtag = 0;
-> >  	umask(0);
-> >  	nops = sizeof(ops) / sizeof(ops[0]);
-> >  	ops_end = &ops[nops];
-> >  	myprog = argv[0];
-> > -	while ((c = getopt(argc, argv, allopts)) != -1) {
-> > +	while ((c = getopt_long(argc, argv, allopts, longopts, NULL)) != -1) {
-> >  		switch (c) {
-> >  		case 'c':
-> >  			cleanup = 1;
-> > @@ -579,6 +610,26 @@ int main(int argc, char **argv)
-> >  		case 'X':
-> >  			execute_freq = strtoul(optarg, NULL, 0);
-> >  			break;
-> > +		case 256:  /* --duration */
-> > +			if (!optarg) {
-> > +				fprintf(stderr, "Specify time with --duration=\n");
-> > +				exit(87);
-> > +			}
-> > +			duration = strtoll(optarg, NULL, 0);
-> > +			if (duration < 1) {
-> > +				fprintf(stderr, "%lld: invalid duration\n", duration);
-> > +				exit(88);
-> > +			}
-> > +
-> > +			i = clock_gettime(CLOCK_MONOTONIC, &deadline);
-> > +			if (i) {
-> > +				perror("CLOCK_MONOTONIC");
-> > +				exit(89);
-> > +			}
-> > +
-> > +			deadline.tv_sec += duration;
-> > +			deadline.tv_nsec = 1;
-> > +			break;
-> >  		case '?':
-> >  			fprintf(stderr, "%s - invalid parameters\n",
-> >  				myprog);
-> > @@ -721,7 +772,7 @@ int main(int argc, char **argv)
-> >  				}
-> >  			}
-> >  #endif
-> > -			for (i = 0; !loops || (i < loops); i++)
-> > +			for (i = 0; keep_looping(i, loops); i++)
-> >  				doproc();
-> >  #ifdef AIO
-> >  			if(io_destroy(io_ctx) != 0) {
-> > @@ -1121,6 +1172,26 @@ dirid_to_fent(int dirid)
-> >  	return NULL;
-> >  }
-> >  
-> > +bool
-> > +keep_running(opnum_t opno, opnum_t operations)
-> > +{
-> > +	int ret;
-> > +
-> > +	if (deadline.tv_nsec) {
-> > +		struct timespec now;
-> > +
-> > +		ret = clock_gettime(CLOCK_MONOTONIC, &now);
-> > +		if (ret) {
-> > +			perror("CLOCK_MONOTONIC");
-> > +			return false;
-> > +		}
-> > +
-> > +		return now.tv_sec <= deadline.tv_sec;
-> > +	}
-> > +
-> > +	return opno < operations;
-> > +}
-> > +
-> >  void
-> >  doproc(void)
-> >  {
-> > @@ -1149,7 +1220,7 @@ doproc(void)
-> >  	srandom(seed);
-> >  	if (namerand)
-> >  		namerand = random();
-> > -	for (opno = 0; opno < operations; opno++) {
-> > +	for (opno = 0; keep_running(opno, operations); opno++) {
-> >  		if (execute_cmd && opno && opno % dividend == 0) {
-> >  			if (verbose)
-> >  				printf("%lld: execute command %s\n", opno,
-> > @@ -1935,6 +2006,7 @@ usage(void)
-> >  	printf("   -V               specifies verifiable logging mode (omitting inode numbers)\n");
-> >  	printf("   -X ncmd          number of calls to the -x command (default 1)\n");
-> >  	printf("   -H               prints usage and exits\n");
-> > +	printf("   --duration=s     run for this many seconds\n");
-> >  }
-> >  
-> >  void
-> > diff --git a/ltp/fsx.c b/ltp/fsx.c
-> > index ee4b8fe45d..761d5e467f 100644
-> > --- a/ltp/fsx.c
-> > +++ b/ltp/fsx.c
-> > @@ -193,6 +193,8 @@ int fsx_rw(int rw, int fd, char *buf, unsigned len, unsigned offset);
-> >  #define fsxread(a,b,c,d)	fsx_rw(READ, a,b,c,d)
-> >  #define fsxwrite(a,b,c,d)	fsx_rw(WRITE, a,b,c,d)
-> >  
-> > +struct timespec deadline;
-> > +
-> >  const char *replayops = NULL;
-> >  const char *recordops = NULL;
-> >  FILE *	fsxlogf = NULL;
-> > @@ -2457,6 +2459,7 @@ usage(void)
-> >          -Z: O_DIRECT (use -R, -W, -r and -w too)\n\
-> >  	--replay-ops opsfile: replay ops from recorded .fsxops file\n\
-> >  	--record-ops[=opsfile]: dump ops file also on success. optionally specify ops file name\n\
-> > +	--duration=seconds: run for this many seconds\n\
-> >  	fname: this filename is REQUIRED (no default)\n");
-> >  	exit(90);
-> >  }
-> > @@ -2739,9 +2742,33 @@ __test_fallocate(int mode, const char *mode_str)
-> >  #endif
-> >  }
-> >  
-> > +bool
-> > +keep_running(void)
-> > +{
-> > +	int ret;
-> > +
-> > +	if (deadline.tv_nsec) {
-> > +		struct timespec now;
-> > +
-> > +		ret = clock_gettime(CLOCK_MONOTONIC, &now);
-> > +		if (ret) {
-> > +			perror("CLOCK_MONOTONIC");
-> > +			return false;
-> > +		}
-> > +
-> > +		return now.tv_sec <= deadline.tv_sec;
-> > +	}
-> > +
-> > +	if (numops == -1)
-> > +		return true;
-> > +
-> > +	return numops-- != 0;
-> > +}
-> > +
-> >  static struct option longopts[] = {
-> >  	{"replay-ops", required_argument, 0, 256},
-> >  	{"record-ops", optional_argument, 0, 255},
-> > +	{"duration", optional_argument, 0, 254},
-> >  	{ }
-> >  };
-> >  
-> > @@ -2753,6 +2780,7 @@ main(int argc, char **argv)
-> >  	char logfile[PATH_MAX];
-> >  	struct stat statbuf;
-> >  	int o_flags = O_RDWR|O_CREAT|O_TRUNC;
-> > +	long long duration;
-> >  
-> >  	logfile[0] = 0;
-> >  	dname[0] = 0;
-> > @@ -2950,6 +2978,26 @@ main(int argc, char **argv)
-> >  			o_direct = O_DIRECT;
-> >  			o_flags |= O_DIRECT;
-> >  			break;
-> > +		case 254:  /* --duration */
-> > +			if (!optarg) {
-> > +				fprintf(stderr, "Specify time with --duration=\n");
-> > +				exit(87);
-> > +			}
-> > +			duration = strtoll(optarg, NULL, 0);
-> > +			if (duration < 1) {
-> > +				fprintf(stderr, "%lld: invalid duration\n", duration);
-> > +				exit(88);
-> > +			}
-> > +
-> > +			i = clock_gettime(CLOCK_MONOTONIC, &deadline);
-> > +			if (i) {
-> > +				perror("CLOCK_MONOTONIC");
-> > +				exit(89);
-> > +			}
-> > +
-> > +			deadline.tv_sec += duration;
-> > +			deadline.tv_nsec = 1;
-> > +			break;
-> >  		case 255:  /* --record-ops */
-> >  			if (optarg)
-> >  				snprintf(opsfile, sizeof(opsfile), "%s", optarg);
-> > @@ -3145,7 +3193,7 @@ main(int argc, char **argv)
-> >  	if (xchg_range_calls)
-> >  		xchg_range_calls = test_xchg_range();
-> >  
-> > -	while (numops == -1 || numops--)
-> > +	while (keep_running())
-> >  		if (!test())
-> >  			break;
-> >  
-> > diff --git a/src/soak_duration.awk b/src/soak_duration.awk
-> > new file mode 100644
-> > index 0000000000..6c38d09b39
-> > --- /dev/null
-> > +++ b/src/soak_duration.awk
-> > @@ -0,0 +1,23 @@
-> > +#!/usr/bin/awk
-> > +#
-> > +# Convert time interval specifications with suffixes to an integer number of
-> > +# seconds.
-> > +{
-> > +	nr = $1;
-> > +	if ($2 == "" || $2 ~ /s/)	# seconds
-> > +		;
-> > +	else if ($2 ~ /m/)		# minutes
-> > +		nr *= 60;
-> > +	else if ($2 ~ /h/)		# hours
-> > +		nr *= 3600;
-> > +	else if ($2 ~ /d/)		# days
-> > +		nr *= 86400;
-> > +	else if ($2 ~ /w/)		# weeks
-> > +		nr *= 604800;
-> > +	else {
-> > +		printf("%s: unknown suffix\n", $2);
-> > +		exit 1;
-> > +	}
-> > +
-> > +	printf("%d\n", nr);
-> > +}
-> > diff --git a/tests/generic/476 b/tests/generic/476
-> > index edb0be7b50..a162cda6b1 100755
-> > --- a/tests/generic/476
-> > +++ b/tests/generic/476
-> > @@ -33,7 +33,10 @@ _scratch_mount >> $seqres.full 2>&1
-> >  
-> >  nr_cpus=$((LOAD_FACTOR * 4))
-> >  nr_ops=$((25000 * nr_cpus * TIME_FACTOR))
-> > -$FSSTRESS_PROG $FSSTRESS_AVOID -w -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus >> $seqres.full
-> > +fsstress_args=(-w -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus)
-> > +test -n "$SOAK_DURATION" && fsstress_args+=(--duration="$SOAK_DURATION")
-> > +
-> > +$FSSTRESS_PROG $FSSTRESS_AVOID "${fsstress_args[@]}" >> $seqres.full
-> >  
-> >  # success, all done
-> >  status=0
-> > diff --git a/tests/generic/521 b/tests/generic/521
-> > index cde9d44775..22dd31a8ec 100755
-> > --- a/tests/generic/521
-> > +++ b/tests/generic/521
-> > @@ -35,6 +35,7 @@ fsx_args+=(-r $min_dio_sz)
-> >  fsx_args+=(-t $min_dio_sz)
-> >  fsx_args+=(-w $min_dio_sz)
-> >  fsx_args+=(-Z)
-> > +test -n "$SOAK_DURATION" && fsx_args+=(--duration="$SOAK_DURATION")
-> >  
-> >  run_fsx "${fsx_args[@]}" | sed -e '/^fsx.*/d'
-> >  
-> > diff --git a/tests/generic/522 b/tests/generic/522
-> > index ae84fe04bb..f0cbcb245c 100755
-> > --- a/tests/generic/522
-> > +++ b/tests/generic/522
-> > @@ -29,6 +29,7 @@ fsx_args+=(-N $nr_ops)
-> >  fsx_args+=(-p $((nr_ops / 100)))
-> >  fsx_args+=(-o $op_sz)
-> >  fsx_args+=(-l $file_sz)
-> > +test -n "$SOAK_DURATION" && fsx_args+=(--duration="$SOAK_DURATION")
-> >  
-> >  run_fsx "${fsx_args[@]}" | sed -e '/^fsx.*/d'
-> >  
-> > diff --git a/tests/generic/642 b/tests/generic/642
-> > index c0e274d843..eba90903a3 100755
-> > --- a/tests/generic/642
-> > +++ b/tests/generic/642
-> > @@ -49,6 +49,7 @@ for verb in attr_remove removefattr; do
-> >  done
-> >  args+=('-f' "setfattr=20")
-> >  args+=('-f' "attr_set=60")	# sets larger xattrs
-> > +test -n "$DURATION" && args+=(--duration="$DURATION")
-> >  
-> >  $FSSTRESS_PROG "${args[@]}" $FSSTRESS_AVOID -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus >> $seqres.full
-> >  
-> > 
-> 
