@@ -2,32 +2,32 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60CF4C7EE2D
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Apr 2023 05:49:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E820C7618E
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Apr 2023 05:49:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231176AbjDXFtz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Apr 2023 01:49:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46998 "EHLO
+        id S230521AbjDXFt5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Apr 2023 01:49:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47028 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230430AbjDXFtn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Apr 2023 01:49:43 -0400
+        with ESMTP id S230482AbjDXFtq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Apr 2023 01:49:46 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92D5119B3;
-        Sun, 23 Apr 2023 22:49:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58FE919B3;
+        Sun, 23 Apr 2023 22:49:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=rxuwauPRwLemTJXwY3VrKMRJhs+GgwhnyBD4s7nm7AY=; b=3MpQEmnJ4id5J1jZ4YFohK5H8q
-        bs7ciFKUIE9sA5F//wk8TThxaPzhLwI6FsUH1vKzNkmpHyq88uhXgF7wTEHMLlqIzGShUjm1tpoQ/
-        V9Tji0dQSyZQM/K5ekDNoH5faw93KpoQQtAuWkTbvGbcl7apn0KwIYdsbsU9S2n8QH5hFEZJO4yZ5
-        yp8GdzGRgc1AHk7t7DD60UmLFSqOCfsXJza1GpGtauNVHkVJvJiQUeDviaHbb72Zouz31uRXC/4XE
-        B+bfmZC/bCU0vqPNw8dnGTB4G0skWpel5LUkS6Ua52Z/N1nKMNRb49n9vt5etsldL20AA2wC69Vmq
-        TVA2auLw==;
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=bS05QMoD6j6YpGz1rHCHZCzEMuRJxwEBMPELLNqMvVM=; b=QAuUTMs9c0fPPuxtegrv+eZFd7
+        m1Lb/Zn2oEdFxGNTL6MyQ1wn8x4GTSTmoDmXSEpvoQtz2+8sgXF6o1xdmIGxAfsSLMFUF2Rdb/QCw
+        QELH8/3nG4bNASqOdAHA35mLeydY1xzz4dUPnNEsh0dTA/um5YWXh/LZcV75W2WYGokrA0cEhf1qA
+        KKw6r1pxS24iVwx30XkH6ewxhXLH1nN6hYHJDiHEFB82PfR4sJADmcttvzNs0seHtisbFo0Bbqa9V
+        n3yxCEfgi9duwfR5Ke4/YsTw+fVVP3Ub8FBS1iXniGGQbGngJEVnnvGoIEv6ORCKaN3u1LbDCqCFv
+        PHlgzFNw==;
 Received: from [2001:4bb8:189:a74f:e8a5:5f73:6d2:23b8] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1pqp4s-00FOtV-2G;
-        Mon, 24 Apr 2023 05:49:31 +0000
+        id 1pqp54-00FOuy-17;
+        Mon, 24 Apr 2023 05:49:42 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Miklos Szeredi <miklos@szeredi.hu>,
@@ -40,10 +40,12 @@ Cc:     Miklos Szeredi <miklos@szeredi.hu>,
         linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
         linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
         linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: RFC: allow building a kernel without buffer_heads
-Date:   Mon, 24 Apr 2023 07:49:09 +0200
-Message-Id: <20230424054926.26927-1-hch@lst.de>
+Subject: [PATCH 04/17] fs: remove emergency_thaw_bdev
+Date:   Mon, 24 Apr 2023 07:49:13 +0200
+Message-Id: <20230424054926.26927-5-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230424054926.26927-1-hch@lst.de>
+References: <20230424054926.26927-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
@@ -51,31 +53,69 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+Fold emergency_thaw_bdev into it's only caller, to prepare for buffer.c
+to be built only when buffer_head support is enabled.
 
-after all the talk about removing buffer_heads, here is a series that
-shows how to build a kernel without buffer_heads.  And how unrealistic
-it is to remove the entirely.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/buffer.c   | 6 ------
+ fs/internal.h | 6 ------
+ fs/super.c    | 4 +++-
+ 3 files changed, 3 insertions(+), 13 deletions(-)
 
-Most of the series refactors some common code to make implementing direct
-I/O easier without use of the ->direct_IO method and the helpers based
-around it.  It then switches buffered writes (but not writeback) for
-block devices to use iomap unconditionally, but still using buffer_heads.
+diff --git a/fs/buffer.c b/fs/buffer.c
+index eb14fbaa7d35f7..58e0007892b1c7 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -563,12 +563,6 @@ static int osync_buffers_list(spinlock_t *lock, struct list_head *list)
+ 	return err;
+ }
+ 
+-void emergency_thaw_bdev(struct super_block *sb)
+-{
+-	while (sb->s_bdev && !thaw_bdev(sb->s_bdev))
+-		printk(KERN_WARNING "Emergency Thaw on %pg\n", sb->s_bdev);
+-}
+-
+ /**
+  * sync_mapping_buffers - write out & wait upon a mapping's "associated" buffers
+  * @mapping: the mapping which wants those buffers written
+diff --git a/fs/internal.h b/fs/internal.h
+index dc4eb91a577a80..cad87784eb5e0f 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -23,16 +23,10 @@ struct mnt_idmap;
+  */
+ #ifdef CONFIG_BLOCK
+ extern void __init bdev_cache_init(void);
+-
+-void emergency_thaw_bdev(struct super_block *sb);
+ #else
+ static inline void bdev_cache_init(void)
+ {
+ }
+-static inline int emergency_thaw_bdev(struct super_block *sb)
+-{
+-	return 0;
+-}
+ #endif /* CONFIG_BLOCK */
+ 
+ /*
+diff --git a/fs/super.c b/fs/super.c
+index 04bc62ab7dfea9..d8f0a28d1850b1 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -1026,7 +1026,9 @@ static void do_thaw_all_callback(struct super_block *sb)
+ {
+ 	down_write(&sb->s_umount);
+ 	if (sb->s_root && sb->s_flags & SB_BORN) {
+-		emergency_thaw_bdev(sb);
++		if (IS_ENABLED(CONFIG_BLOCK))
++			while (sb->s_bdev && !thaw_bdev(sb->s_bdev))
++				pr_warn("Emergency Thaw on %pg\n", sb->s_bdev);
+ 		thaw_super_locked(sb);
+ 	} else {
+ 		up_write(&sb->s_umount);
+-- 
+2.39.2
 
-The final patch then adds a CONFIG_BUFFER_HEAD selected by all file
-systems that need it (which is most block based file systems), makes the
-buffer_head support in iomap optional, and adds an alternative
-implementation of the block device address_operations using iomap.
-
-With this you can build a kernel with block device support, but without
-buffer_heads.  This kernel supports xfs and btrfs as full blown block
-based filesystems, and a bunch of read-only ones like cramfs, erofs and
-squashfs.  Note that the md software raid drivers is also disabled as it
-has some (rather questionable) buffer_head usage in the unconditionally
-built bitmap code.
-
-The series is based on Linux 6.3 and will need some rebasing before it
-can be fed to the maintainers incrementally.  All but the last patch
-definitively seem useful for me.  The last one I think is just to avoid
-introducing new buffer_head dependencies, even if I suspect the real
-life usefulness of a !CONFIG_BUFFER_HEAD kernel might be rather limited.
