@@ -2,351 +2,344 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C653FC77B61
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Apr 2023 22:51:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4006CC7618E
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Apr 2023 22:52:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232418AbjDXWvI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Apr 2023 18:51:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56784 "EHLO
+        id S232258AbjDXWw4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Apr 2023 18:52:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231438AbjDXWvH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Apr 2023 18:51:07 -0400
+        with ESMTP id S231438AbjDXWwy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Apr 2023 18:52:54 -0400
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C4177694
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2023 15:51:06 -0700 (PDT)
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33OKhvXx013537
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2023 22:51:05 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12A11658F
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2023 15:52:53 -0700 (PDT)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 33OKi8b2029938;
+        Mon, 24 Apr 2023 22:52:52 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-transfer-encoding;
- s=corp-2023-03-30; bh=O5Hn3MxjDnBnK+lHjho/BLrzYpIzYb0NuJ+dv2FXZ2I=;
- b=v3NNeUoAXIFtVWiF7kfynKv34x3bItvbKxiF1ASi8Wnb3FAzoc5UdJYV1TPfz5s8a6Gv
- aNIh9Y5A5hBMciInS/Kt6abYvkI+Rmb525C+ejhj9CbKSDgeC6ELNaUOSWpXfQgjb4ai
- 4SMUecVaxrJRPRGrc7sdRY5W4HMdf0DRxziMIf85YqvYlFH1ultoT5D97kx95MxLnhtn
- ewQci4snjbajoIQB+jycwqvAthKidCft6kwOXqimQJ1E+p4tyIiXHDTCiOSdpjLKZZo5
- Kipp87no5CdaSP/jjxo9JlMxH0te/TH8T/QOmYGfAHOBNjBD5xeGHQCrGLQ2f9qotj8u wA== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3q47mcv39b-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2023 22:51:05 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 33OKOYm2032837
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2023 22:51:04 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3q4615wkyh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2023 22:51:04 +0000
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 33OMp3u2023985
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2023 22:51:03 GMT
-Received: from wwg-mac.us.oracle.com (dhcp-10-159-158-90.vpn.oracle.com [10.159.158.90])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3q4615wky2-1;
-        Mon, 24 Apr 2023 22:51:03 +0000
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=corp-2023-03-30;
+ bh=Fm+5+FFiNGunYIHtR5h7fbAp1W6WJu+lkth7ZljL3dI=;
+ b=sT8FO3zRUggAbb76+Du+WNZJ2d0jqnQXKJxqZnXgRBGmWFDz2vZrjIjG22PIY5gw/k41
+ VEOC9feJ5VyPLRZetNrU3E65ykesfy/z+LMxeiTpzfmfuUMsXGwNav3RjOOWFXiQB1mA
+ 0V4BfDeCHFOHaydopZj6bziUdAlEV0Vo3UlqCvbFulSLrqlvbKzciOx+woviYCbdXfI8
+ N/KqkUPgF7ehKD0dkLSilFs07VMVSc4/zPmyS7SN5+M6Wc8chCAS6Goi8A+jPyHaa3K7
+ c+cGU7HUllURhgZttGZeAKUDzcaujAwTSce0XpcAtNOm3fSoFTrOsQlSeb8ztyZBjksv Dg== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3q460d439f-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 24 Apr 2023 22:52:51 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 33OKbcN6024885;
+        Mon, 24 Apr 2023 22:52:51 GMT
+Received: from nam02-sn1-obe.outbound.protection.outlook.com (mail-sn1nam02lp2043.outbound.protection.outlook.com [104.47.57.43])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3q461bx0v2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 24 Apr 2023 22:52:50 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=lRZVZoapkNo4u0z6M5pRVrAfDK97dEoNEPvWj3idFJMiKEow45SzThGq8sq8xrGkPUUapZI+KfFok4bPk1yja+w3C7dThVgghp5NmeXK8Ha2mB3YhzFNVkwDwCfMkdRUD0Kl5CIhwqADT8f42RxAjLE10eIsV8/5dJHoTpcsOPU8k0i4Qo+l8rFV6EaqfSi/y++36HPKTic10d0lbwjFD37owg2IYPVwnbiCLY3hH7X7FeslX7ZiO4m3OlHZ4itEaE37IgfHXbXUUiqBCOuzcT6cG+Yj9mvNW50K1Oyroc/GBvRniMU6fP5SyuU2Bkm1Tjpkwn9AgMQ7sgGrIYKwPg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Fm+5+FFiNGunYIHtR5h7fbAp1W6WJu+lkth7ZljL3dI=;
+ b=R8NPiSC7bWvsCoRHkU/0oB7osmDCnOkTfUOT9qoXC39eUSS/bG5JIyGXWg+07oRrOT6KlyXN9y30ya9LnEgqpvT3nlrohzzdvvIVnQEr14llpGlojZhgkc/Pic+N8F4gmfZtbqYoQZNc/7tAhGM9swtnH4zjJrXgLtYeQuZXB7ev68h9s0zalHpedWmfKufTGGQyQvj+6174cEz1VLPSvX01k2cH1ERd+SYczVyPnz/JfszSGnRw7+0Qw7lTFvx+kWv1/W8FyYahep8uc5SgPDc3gILGcUn7m6R8FSbYpgn0keDK209cChU2wMPFSNfYjwUIKVwj5FJUqpJxplq1XQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Fm+5+FFiNGunYIHtR5h7fbAp1W6WJu+lkth7ZljL3dI=;
+ b=GVo/IcfknLTWbLit66aOrYrpCY40yXHKUU6Laz89UN2AApQuYQET/WmIk/l9vG0oiRXwKXXnnAovR2pUKq8MYt4+iblNpryBLvhcn6yG+aXQassHIHvINCPqcByE404e/MWbTCSDQLZmNeaIGN/i2ldEyUN3OXMXzhGY4zcEmas=
+Received: from SN6PR10MB2701.namprd10.prod.outlook.com (2603:10b6:805:45::20)
+ by SA2PR10MB4714.namprd10.prod.outlook.com (2603:10b6:806:111::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6319.33; Mon, 24 Apr
+ 2023 22:52:49 +0000
+Received: from SN6PR10MB2701.namprd10.prod.outlook.com
+ ([fe80::58cd:8b89:f285:ca2b]) by SN6PR10MB2701.namprd10.prod.outlook.com
+ ([fe80::58cd:8b89:f285:ca2b%6]) with mapi id 15.20.6319.033; Mon, 24 Apr 2023
+ 22:52:49 +0000
 From:   Wengang Wang <wen.gang.wang@oracle.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     wen.gang.wang@oracle.com
-Subject: [PATCH] xfs: avoid freeing multiple extents from same AG in pending transactions
-Date:   Mon, 24 Apr 2023 15:51:02 -0700
-Message-Id: <20230424225102.23402-1-wen.gang.wang@oracle.com>
-X-Mailer: git-send-email 2.21.0 (Apple Git-122.2)
+To:     Dave Chinner <david@fromorbit.com>
+CC:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 1/2] xfs: IO time one extent per EFI
+Thread-Topic: [PATCH 1/2] xfs: IO time one extent per EFI
+Thread-Index: AQHZbySmyU5pA5JJVkmM3pjz5JBv5q8zVrCAgAEmyYCAAGIVAIAAEXkAgACZwACAAJObAIAAlpYAgAP2bQCAAHVAAA==
+Date:   Mon, 24 Apr 2023 22:52:49 +0000
+Message-ID: <3B023A0D-DF2E-48B8-9BC9-46498CBCF8AB@oracle.com>
+References: <20230414225836.8952-1-wen.gang.wang@oracle.com>
+ <20230414225836.8952-2-wen.gang.wang@oracle.com>
+ <20230419235559.GW3223426@dread.disaster.area>
+ <71E9310C-06A6-41B9-AFE6-C8EE37CF5058@oracle.com>
+ <20230420232206.GZ3223426@dread.disaster.area>
+ <451AEBDF-7BBC-4C6E-BB0F-AFE18C51607C@oracle.com>
+ <20230421093456.GE3223426@dread.disaster.area>
+ <924EF54F-6D4E-46C8-93B9-8844EA4E8672@oracle.com>
+ <272E101F-8E95-470C-BF4E-7D409E44B331@oracle.com>
+ <134EE4A4-8F16-4E58-8764-EA49B0EE3107@oracle.com>
+In-Reply-To: <134EE4A4-8F16-4E58-8764-EA49B0EE3107@oracle.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3731.500.231)
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SN6PR10MB2701:EE_|SA2PR10MB4714:EE_
+x-ms-office365-filtering-correlation-id: 1596a72f-3803-4fe3-333b-08db4516a0b6
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 2ViOLod2ccleJ0v13Jtdh8mzqgDFf51sP2ycRBq8uOvvMbe20N/qJqnYV1h0nYV9uO7xvc9wP0I7nnE6eR9N0rqn5VEIGXiidyNFDyGXcsUFE1d9nUI2lDduUyVyBglS++c2N1u9ePNSmehyra/tFhO5eImp6luHtamaQuqXUdkHa+aQP3R23FK6ps3paLTl71anAhWHpnUXcZ4nSUk3lMusB2wZshBn2dhekPpszgGGFhsWTOosuFGeNscnmW39hliLxeQf79BYPqgrgsV68uT5732XCuKo6lOUrbN5LWtitFjeTlpvxPMA6DFYqBn4HxtfAJMbkBHYX+Hp8NyRp2vSAllCfx3tgntpZK4uuCvQZpmF7cpjXICUpvnrP58DTDiK1DQFjzyDOQzYM/bMgg32JmBEV2/O0UsfakM2nxq30spzWASzFvIxMjw6x9GxKvxgtf/vr+CBWvcJKNCvizMeVcdHRIAU0WpLy+FQLyEk3nvHtpNLKYx6omkMa33REfBss5JS9QvBWIH4BQhjjW5/JteZFAa6HiiSPK42ayaase9vg4JyP5iz06EVi78MK++7LEEnGkUY9JdACVWh+GwZOgi0URQySDFgkGEnY10z3CuKK1ZhrsWpc3WhECHhLInmRSZhyfxTES79nBxHkA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2701.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(39860400002)(396003)(366004)(136003)(376002)(346002)(451199021)(53546011)(6506007)(6512007)(38070700005)(2616005)(36756003)(83380400001)(186003)(122000001)(38100700002)(66946007)(478600001)(76116006)(86362001)(6916009)(66556008)(66476007)(66446008)(8676002)(8936002)(64756008)(5660300002)(71200400001)(6486002)(41300700001)(2906002)(4326008)(33656002)(316002)(45980500001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?UCtuczltaVdFdVJGR05XZFA3RGkzTHlicG9UNnZVVW0yUytoZUFDdDJHd3Jw?=
+ =?utf-8?B?aW9jT2dBR3QzYXFJMmVXcG4yZWlhaUZTTVlTV3JuWVAxdVVSOVdjR0x0TVVs?=
+ =?utf-8?B?bHhMSTVqZlJtQXNiZjV2aFlXck9NdUlXK1l3REhmd081aHMxWHpCWnVPTWto?=
+ =?utf-8?B?bFZkL0hZemZwUTBYVWM0Z3pxLzdMQnhsa21DaUlqbFBMVlRtcUZVNTZ1S1Vv?=
+ =?utf-8?B?dmFwaXIvc1dVRndHVklxVHlHcFhYZi8vUEJTMzdjZTRKOEVtUWdhZUMvazNP?=
+ =?utf-8?B?VEVKLzAvS01qVnJlNksvdFZ2ZVBhTjNycGhWYUwrTWFaeUxEQytQRkloZmJL?=
+ =?utf-8?B?NTZzSnNyTk9JbVkraTVOWjJBMzRhOWZ2bTA4bGtEaGRRZUt5L0F0TW1rZUQz?=
+ =?utf-8?B?Wmd4cXpzYkRRVzkvTjVma0NzcGluc3c4aVZFblBHU0RnaW4yTVBNQzFObzk3?=
+ =?utf-8?B?TkxQeHNNdkFEOXJvOU5BdHViNnRlSHV3cXVNYzVONkxmeUFKaGJOSFNYR2Fo?=
+ =?utf-8?B?aXRHc09aRVRrZ3pKcmR2c0pOVGJ1L3Q1d2tTL1gvUTF6T0hZZ3EzeW1YZElK?=
+ =?utf-8?B?WWNYK1Z3cWdHYWZUODhNazhMSTBNRWtNNE5ualVKL3RzRkFLUVdRSk1kQVd0?=
+ =?utf-8?B?amR4amhDeHpQejlWNUZqZUF4aGNqVFBCVWNaRTVoYXpQTG0rZERoMFh4bkpk?=
+ =?utf-8?B?RFZOUzhUMWZ1TWFmNHRGMmd5U2JtcUlUN0FldXRoWkk1UnJTSjZ5THVjVG5U?=
+ =?utf-8?B?dS9YNXpzR0RNdm95WHhvOStXNEU2eUQ5d1lHVzdEYkJ4b21aa09qZjM3ZzMw?=
+ =?utf-8?B?WTh4NCtXWVFncXNlMTc1TzN2NFZHRmVENU8xK0JUSm10TElKa2d5RUxubzVk?=
+ =?utf-8?B?ZWlnQzRPRlVnOXFkSnQzaGk3RVdLbll5bmNSWXZ4bEFaRTAwQUdLeEp5N1hv?=
+ =?utf-8?B?RFRPdnNHbEtlTjkzbTRKQ00xNTVxQ1JMdjUzejBjN1hoREl2cUVlTXVxNHdT?=
+ =?utf-8?B?NHlvSTVSZ0J3K0QrN0MyeXJWbFpGMlFqYng1VkxGL2hBNi8raHF1aEtxQzlY?=
+ =?utf-8?B?YU1yOEhYNklQNGo4ZlFGQ0FscTJyN0ErZ1ZEQ3NXOUdINXdwZ0RoanlYeGI1?=
+ =?utf-8?B?eVlvNGMwQUdwVGhxMFdHSDZYKy9JaE9SQ3RHcDQ2SkxFNlR5VTNHZG5NcmRI?=
+ =?utf-8?B?bWZCdUlHQ2RnRnAwakc4Mzd0V1FSN1VodjlPemQwVC9JdDlFdEcyR2NjeENW?=
+ =?utf-8?B?SVBCZEk3M1lRV3R2ek9OTjlyOXNybVJFV2graDF6aXUxRDA1YWdwV1oySTdO?=
+ =?utf-8?B?OHQxb0MwMzZ1MlBpOXJLSFcwcE9QU0RtTjJmRkd4T01ZZ0RVK3hodnlVbmF3?=
+ =?utf-8?B?K1d2ckpGTlZZNmdKeE5OcWNjbzBEVmxrZTNaMDhoczZzT0tybnNwbnVEUGZk?=
+ =?utf-8?B?ckFEektlejEyTGd5cVFVMXgxTXgwelZKS00zU3VnSVg5MUhISmRmVGhTdCtQ?=
+ =?utf-8?B?SUIrRDU3WHJDVXEybU8zWkc0bWtaQzFSOTZVdXRYVjN4R1grZHlUUjZoSm91?=
+ =?utf-8?B?WVlPaE5RY3R1ZCtUbXh6TUEyU1h4UmVUcE94RW1Nb29BeEFmYmZINUdHRWhn?=
+ =?utf-8?B?RXdFQVBtRitKNUN4elhxZWFtWm85bkk2VzY0UnZma1ZIQ2VTVHdvdkdpMWtm?=
+ =?utf-8?B?UTByclF4RVNBaHo5MkF5L3U2eWF1cW9mNWJYdWFlU1p2ZmlEeks0MlIxVzNE?=
+ =?utf-8?B?UkN3NitOQm52THBMZlRLVnpwU1kwbk9DdzNqbDNHOEl6QWxRZ2d0YnorZlg5?=
+ =?utf-8?B?M0xHSEJ5RytHN0dGcHk5Wno3Qk90THNvMFlhTVhJNmJyWWV3WVpmQVh2ZjhF?=
+ =?utf-8?B?a3RVK2Q0K2ZUR3VCZUV6SVFqN2FjRXRQTzd6MHkzajJJMjYwK0FIVHRBbUQy?=
+ =?utf-8?B?MUJIalBqbGU1R00wTE9QYjZUcElpS0VFSU52OTdoLzNVYTUzblBvdEh6N3JD?=
+ =?utf-8?B?YUZaRWRkN1ZONkZnSHBucCs3T2tyRXlnR21mQVJzQlRDUXhyaFBpZW9rRUpp?=
+ =?utf-8?B?NCs1dE9EY25aOFVZNlNLRzlSaTZRMUJqWEcvTWpDRDN1Wmw4ZnBuZGFwV1A5?=
+ =?utf-8?B?d3ptNi9hamxKbithRW1KazlqRWlwNU1YenR1T0dWcW9LbWwxSHpyZmt3amFQ?=
+ =?utf-8?Q?7oxhOE1rpqfNL30ntXv/2eW3QdkGoGnAFmqPdS+xmWlm?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <09F1C3EE6F1E6F4DAE4A40BCCC52ABAD@namprd10.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: pjgwMLmIAPaXdbulGcqZjwcnjN7SctfcMSF7d4JN/AXDBJetbQKmbIJ2/PTdUyDZQRpOVWn5Txwnd5nr/guUXkX4piuo0v0yo5bz+piKfcukVCE64pkx5JSEyDTtmzwf4AYWAOy+wIJQtFTFLjWaZwQl16f8GDGq4SxKhJZBfHEixmNtQai6xtVohRbnu8xi32rMKskLMwcLxlc1kT3ZpV+aFxNqJaDIoAvgub3HNALI8Ed7/ifacRUNFXRn/Emzjzs0W1SgflBEzw4YaILdozvZ6cLuEz7n7m+0MOSgWm1RSi43ta72IbtoDEgyqwW0FB1LjzLzfjGZQgQCy1RxLiKw5Ga0PKs9Hv6VQ3BhC9+BrEU7T3K1VRU5mTSlE7+43O4ZGHKoKv67OfeNr1M04vPQVCqGiJyR0XCTCYvmFDc4rCrRRMyea3MRTxQWsX4ZL+XLa5XacGz+kBFyUVL7dAeEJgl4/BJKf+HVcK9KFfVJtMvU+PSZyZUvsFOZi2SRNVea+bKa9e+XyCBU5HegFis2shBLjfQR7HqeUsO/udidYhkzSwtlMUdfvSV0qVrWHFgFLSlgxL3LElzRjW5tWmUM8Maqnz/c/L/V8iOqLyiBAl48p1VP6H72OCjRWoWPgRtYqc/bOaEmzv9LeQ+7C/Lu0pRKOCQMRkncxeQK09F4GUoK14DuljVBO4U7jQLIuUqHeQobQIKpQ2WJbw7/cIlXLDPqIwajmjCpqRIwERj7/hEAsEYfztC3hLoEo9tOL+9+flwsTCzq2FLHAsZAaOcx5hGJ7d8u0zs+gcnRNp4=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2701.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1596a72f-3803-4fe3-333b-08db4516a0b6
+X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Apr 2023 22:52:49.0746
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: LGp2e6vb70VrhvHg849D9gmtpNVLradOs7faWFWq9zMdmrp4NC10kkzIhc9DyvRfKEsTrBcMZ6JzJg3myUPrEp/zHdWeW7GWudgUAIXxrnc=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR10MB4714
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-04-24_11,2023-04-21_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 phishscore=0
- mlxlogscore=999 adultscore=0 suspectscore=0 malwarescore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303200000
- definitions=main-2304240207
-X-Proofpoint-GUID: IJgCJ4g2En6BAfqi8nkni7LPPh-4S_0A
-X-Proofpoint-ORIG-GUID: IJgCJ4g2En6BAfqi8nkni7LPPh-4S_0A
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=0
+ malwarescore=0 mlxscore=0 spamscore=0 adultscore=0 phishscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2303200000 definitions=main-2304240207
+X-Proofpoint-GUID: YyZoasH6i63lQPsYPJhBAbFC4M-ezY8k
+X-Proofpoint-ORIG-GUID: YyZoasH6i63lQPsYPJhBAbFC4M-ezY8k
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-To avoid possible deadlock when allocating AGFL blocks, change the behaviour.
-The orignal hehaviour for freeing extents in an EFI is that the extents in
-the EFI were processed one by one in the same transaction. When the second
-and subsequent extents are being processed, we have produced busy extents for
-previous extents. If the second and subsequent extents are from the same AG
-as the busy extents are, we have the risk of deadlock when allocating AGFL
-blocks. A typical calltrace for the deadlock is like this:
-
-	#0	context_switch() kernel/sched/core.c:3881
-	#1	__schedule() kernel/sched/core.c:5111
-	#2	schedule() kernel/sched/core.c:5186
-	#3	xfs_extent_busy_flush() fs/xfs/xfs_extent_busy.c:598
-	#4	xfs_alloc_ag_vextent_size() fs/xfs/libxfs/xfs_alloc.c:1641
-	#5	xfs_alloc_ag_vextent() fs/xfs/libxfs/xfs_alloc.c:828
-	#6	xfs_alloc_fix_freelist() fs/xfs/libxfs/xfs_alloc.c:2362
-	#7	xfs_free_extent_fix_freelist() fs/xfs/libxfs/xfs_alloc.c:3029
-	#8	__xfs_free_extent() fs/xfs/libxfs/xfs_alloc.c:3067
-	#9	xfs_trans_free_extent() fs/xfs/xfs_extfree_item.c:370
-	#10	xfs_efi_recover() fs/xfs/xfs_extfree_item.c:626
-	#11	xlog_recover_process_efi() fs/xfs/xfs_log_recover.c:4605
-	#12	xlog_recover_process_intents() fs/xfs/xfs_log_recover.c:4893
-	#13	xlog_recover_finish() fs/xfs/xfs_log_recover.c:5824
-	#14	xfs_log_mount_finish() fs/xfs/xfs_log.c:764
-	#15	xfs_mountfs() fs/xfs/xfs_mount.c:978
-	#16	xfs_fs_fill_super() fs/xfs/xfs_super.c:1908
-	#17	mount_bdev() fs/super.c:1417
-	#18	xfs_fs_mount() fs/xfs/xfs_super.c:1985
-	#19	legacy_get_tree() fs/fs_context.c:647
-	#20	vfs_get_tree() fs/super.c:1547
-	#21	do_new_mount() fs/namespace.c:2843
-	#22	do_mount() fs/namespace.c:3163
-	#23	ksys_mount() fs/namespace.c:3372
-	#24	__do_sys_mount() fs/namespace.c:3386
-	#25	__se_sys_mount() fs/namespace.c:3383
-	#26	__x64_sys_mount() fs/namespace.c:3383
-	#27	do_syscall_64() arch/x86/entry/common.c:296
-	#28	entry_SYSCALL_64() arch/x86/entry/entry_64.S:180
-
-The deadlock could happen at both IO time and log recover time.
-
-To avoid above deadlock, this patch changes the extent free procedure.
-1) it always let the first extent from the EFI go (no change).
-2) increase the (new) AG counter when it let a extent go.
-3) for the 2nd+ extents, if the owning AGs ready have pending extents
-   don't let the extent go with current transaction. Instead, move the
-   extent in question and subsequent extents to a new EFI and try the new
-   EFI again with new transaction (by rolling current transaction).
-4) for the EFD to orginal EFI, fill it with all the extents from the original
-   EFI.
-5) though the new EFI is placed after original EFD, it's safe as they are in
-   same in-memory transaction.
-6) The new AG counter for pending extent freeings is decremented after the
-   log items in in-memory transaction is committed to CIL.
-
-Signed-off-by: Wengang Wang <wen.gang.wang@oracle.com>
----
- fs/xfs/libxfs/xfs_ag.c    |   1 +
- fs/xfs/libxfs/xfs_ag.h    |   5 ++
- fs/xfs/xfs_extfree_item.c | 111 +++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_log_cil.c      |  24 ++++++++-
- 4 files changed, 138 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-index 86696a1c6891..61ef61e05668 100644
---- a/fs/xfs/libxfs/xfs_ag.c
-+++ b/fs/xfs/libxfs/xfs_ag.c
-@@ -378,6 +378,7 @@ xfs_initialize_perag(
- 		pag->pagb_tree = RB_ROOT;
- #endif /* __KERNEL__ */
- 
-+		atomic_set(&pag->pag_nr_pending_extents, 0);
- 		error = xfs_buf_hash_init(pag);
- 		if (error)
- 			goto out_remove_pag;
-diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-index 5e18536dfdce..5950bc36a32c 100644
---- a/fs/xfs/libxfs/xfs_ag.h
-+++ b/fs/xfs/libxfs/xfs_ag.h
-@@ -82,6 +82,11 @@ struct xfs_perag {
- 	uint16_t	pag_sick;
- 	spinlock_t	pag_state_lock;
- 
-+	/*
-+	 * Number of concurrent extent freeings (not committed to CIL yet)
-+	 * on this AG.
-+	 */
-+	atomic_t	pag_nr_pending_extents;
- 	spinlock_t	pagb_lock;	/* lock for pagb_tree */
- 	struct rb_root	pagb_tree;	/* ordered tree of busy extents */
- 	unsigned int	pagb_gen;	/* generation count for pagb_tree */
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index 011b50469301..1dbf36d9c1c9 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -336,6 +336,75 @@ xfs_trans_get_efd(
- 	return efdp;
- }
- 
-+/*
-+ * Fill the EFD with all extents from the EFI and set the counter.
-+ * Note: the EFD should comtain at least one extents already.
-+ */
-+static void xfs_fill_efd_with_efi(struct xfs_efd_log_item *efdp)
-+{
-+	struct xfs_efi_log_item	*efip = efdp->efd_efip;
-+	uint			i;
-+
-+	i = efdp->efd_next_extent;
-+	ASSERT(i > 0);
-+	for (; i < efip->efi_format.efi_nextents; i++) {
-+		efdp->efd_format.efd_extents[i] =
-+			efip->efi_format.efi_extents[i];
-+	}
-+	efdp->efd_next_extent = i;
-+}
-+
-+/*
-+ * Check if xefi is the first in the efip.
-+ * Returns true if so, ad false otherwise
-+ */
-+static bool xfs_is_first_extent_in_efi(struct xfs_efi_log_item *efip,
-+				  struct xfs_extent_free_item *xefi)
-+{
-+	return efip->efi_format.efi_extents[0].ext_start ==
-+					xefi->xefi_startblock;
-+}
-+
-+/*
-+ * Check if the xefi needs to be in a new transaction.
-+ * efip is the containing EFI of xefi.
-+ * Return true if so, false otherwise.
-+ */
-+static bool xfs_extent_free_need_new_trans(struct xfs_mount *mp,
-+				    struct xfs_efi_log_item *efip,
-+				    struct xfs_extent_free_item *xefi)
-+{
-+	bool			ret = true;
-+	int			nr_pre;
-+	xfs_agnumber_t		agno;
-+	struct xfs_perag	*pag;
-+
-+	agno = XFS_FSB_TO_AGNO(mp, xefi->xefi_startblock);
-+	pag = xfs_perag_get(mp, agno);
-+	/* The first extent in EFI is always OK to go */
-+	if (xfs_is_first_extent_in_efi(efip, xefi)) {
-+		atomic_inc(&pag->pag_nr_pending_extents);
-+		ret = false;
-+		goto out_put;
-+	}
-+
-+	/*
-+	 * Now the extent is the 2nd or subsequent in the efip. We need
-+	 * new transaction if the AG already has busy extents pending.
-+	 */
-+	nr_pre = atomic_inc_return(&pag->pag_nr_pending_extents) - 1;
-+	/* No prevoius pending extent freeing to this AG */
-+	if (nr_pre == 0) {
-+		ret = false;
-+		goto out_put;
-+	}
-+
-+	atomic_dec(&pag->pag_nr_pending_extents);
-+out_put:
-+	xfs_perag_put(pag);
-+	return ret;
-+}
-+
- /*
-  * Free an extent and log it to the EFD. Note that the transaction is marked
-  * dirty regardless of whether the extent free succeeds or fails to support the
-@@ -356,6 +425,28 @@ xfs_trans_free_extent(
- 	xfs_agblock_t			agbno = XFS_FSB_TO_AGBNO(mp,
- 							xefi->xefi_startblock);
- 	int				error;
-+	struct xfs_efi_log_item		*efip = efdp->efd_efip;
-+
-+	if (xfs_extent_free_need_new_trans(mp, efip, xefi)) {
-+		/*
-+		 * This should be the 2nd+ extent, we don't have to mark the
-+		 * transaction and efd dirty, those are already done with the
-+		 * first extent.
-+		 */
-+		ASSERT(tp->t_flags & XFS_TRANS_DIRTY);
-+		ASSERT(tp->t_flags & XFS_TRANS_HAS_INTENT_DONE);
-+		ASSERT(test_bit(XFS_LI_DIRTY, &efdp->efd_item.li_flags));
-+
-+		xfs_fill_efd_with_efi(efdp);
-+
-+		/*
-+		 * A preious extent in same AG is processed with the current
-+		 * transaction. To avoid possible AGFL allocation deadlock,
-+		 * we roll the transaction and then restart with this extent
-+		 * with new transaction.
-+		 */
-+		return -EAGAIN;
-+	}
- 
- 	oinfo.oi_owner = xefi->xefi_owner;
- 	if (xefi->xefi_flags & XFS_EFI_ATTR_FORK)
-@@ -369,6 +460,13 @@ xfs_trans_free_extent(
- 	error = __xfs_free_extent(tp, xefi->xefi_startblock,
- 			xefi->xefi_blockcount, &oinfo, XFS_AG_RESV_NONE,
- 			xefi->xefi_flags & XFS_EFI_SKIP_DISCARD);
-+	if (error) {
-+		struct xfs_perag	*pag;
-+
-+		pag = xfs_perag_get(mp, agno);
-+		atomic_dec(&pag->pag_nr_pending_extents);
-+		xfs_perag_put(pag);
-+	}
- 	/*
- 	 * Mark the transaction dirty, even on error. This ensures the
- 	 * transaction is aborted, which:
-@@ -476,7 +574,8 @@ xfs_extent_free_finish_item(
- 	xefi = container_of(item, struct xfs_extent_free_item, xefi_list);
- 
- 	error = xfs_trans_free_extent(tp, EFD_ITEM(done), xefi);
--	kmem_cache_free(xfs_extfree_item_cache, xefi);
-+	if (error != -EAGAIN)
-+		kmem_cache_free(xfs_extfree_item_cache, xefi);
- 	return error;
- }
- 
-@@ -632,7 +731,15 @@ xfs_efi_item_recover(
- 		fake.xefi_startblock = extp->ext_start;
- 		fake.xefi_blockcount = extp->ext_len;
- 
--		error = xfs_trans_free_extent(tp, efdp, &fake);
-+		if (error == 0)
-+			error = xfs_trans_free_extent(tp, efdp, &fake);
-+
-+		if (error == -EAGAIN) {
-+			ASSERT(i > 0);
-+			xfs_free_extent_later(tp, fake.xefi_startblock,
-+			fake.xefi_blockcount, &XFS_RMAP_OINFO_ANY_OWNER);
-+			continue;
-+		}
- 		if (error == -EFSCORRUPTED)
- 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
- 					extp, sizeof(*extp));
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index eccbfb99e894..97eda4487db0 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -16,6 +16,7 @@
- #include "xfs_log.h"
- #include "xfs_log_priv.h"
- #include "xfs_trace.h"
-+#include "xfs_ag.h"
- 
- struct workqueue_struct *xfs_discard_wq;
- 
-@@ -643,8 +644,29 @@ xlog_cil_insert_items(
- 		cilpcp->space_used += len;
- 	}
- 	/* attach the transaction to the CIL if it has any busy extents */
--	if (!list_empty(&tp->t_busy))
-+	if (!list_empty(&tp->t_busy)) {
-+		struct xfs_perag	*last_pag = NULL;
-+		xfs_agnumber_t		last_agno = -1;
-+		struct xfs_extent_busy	*ebp;
-+
-+		/*
-+		 * Pending extent freeings are committed to CIL, now it's
-+		 * to let other extent freeing on same AG go.
-+		 */
-+		list_for_each_entry(ebp, &tp->t_busy, list) {
-+			if (ebp->agno != last_agno) {
-+				last_agno = ebp->agno;
-+				if (last_pag)
-+					xfs_perag_put(last_pag);
-+				last_pag = xfs_perag_get(tp->t_mountp, last_agno);
-+			}
-+			atomic_dec(&last_pag->pag_nr_pending_extents);
-+		}
-+		if (last_pag)
-+			xfs_perag_put(last_pag);
-+
- 		list_splice_init(&tp->t_busy, &cilpcp->busy_extents);
-+	}
- 
- 	/*
- 	 * Now update the order of everything modified in the transaction
--- 
-2.21.0 (Apple Git-122.2)
-
+DQoNCj4gT24gQXByIDI0LCAyMDIzLCBhdCA4OjUzIEFNLCBXZW5nYW5nIFdhbmcgPHdlbi5nYW5n
+LndhbmdAb3JhY2xlLmNvbT4gd3JvdGU6DQo+IA0KPiANCj4gDQo+PiBPbiBBcHIgMjEsIDIwMjMs
+IGF0IDg6MjIgUE0sIFdlbmdhbmcgV2FuZyA8d2VuLmdhbmcud2FuZ0BvcmFjbGUuY29tPiB3cm90
+ZToNCj4+IA0KPj4gDQo+PiANCj4+PiBPbiBBcHIgMjEsIDIwMjMsIGF0IDExOjIzIEFNLCBXZW5n
+YW5nIFdhbmcgPHdlbi5nYW5nLndhbmdAb3JhY2xlLmNvbT4gd3JvdGU6DQo+Pj4gDQo+Pj4gDQo+
+Pj4gDQo+Pj4+IE9uIEFwciAyMSwgMjAyMywgYXQgMjozNCBBTSwgRGF2ZSBDaGlubmVyIDxkYXZp
+ZEBmcm9tb3JiaXQuY29tPiB3cm90ZToNCj4+Pj4gDQo+Pj4+IE9uIEZyaSwgQXByIDIxLCAyMDIz
+IGF0IDEyOjI0OjQ5QU0gKzAwMDAsIFdlbmdhbmcgV2FuZyB3cm90ZToNCj4+Pj4+PiBPbiBBcHIg
+MjAsIDIwMjMsIGF0IDQ6MjIgUE0sIERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT4g
+d3JvdGU6DQo+Pj4+Pj4gV2UgZG9uJ3QgZG8gdGhhdCBhbnltb3JlIGZvciBwYXJ0aWFsbHkgcHJv
+Y2Vzc2VkIG11bHRpLWV4dGVudA0KPj4+Pj4+IGludGVudHMgYW55bW9yZS4gSW5zdGVhZCwgd2Ug
+dXNlIGRlZmVycmVkIG9wcyB0byBjaGFpbiB1cGRhdGVzLiBpLmUuDQo+Pj4+Pj4gd2UgbG9nIGEg
+Y29tcGxldGUgaW50ZW50IGRvbmUgaXRlbXMgYWxvbmdzaWRlIGEgbmV3IGludGVudA0KPj4+Pj4+
+IGNvbnRhaW5pbmcgdGhlIHJlbWFpbmluZyB3b3JrIHRvIGJlIGRvbmUgaW4gdGhlIHNhbWUgdHJh
+bnNhY3Rpb24uDQo+Pj4+Pj4gVGhpcyBjYW5jZWxzIHRoZSBvcmlnaW5hbCBpbnRlbnQgYW5kIGF0
+b21pY2FsbHkgcmVwbGFjZXMgaXQgd2l0aCBhDQo+Pj4+Pj4gbmV3IGludGVudCBjb250YWluaW5n
+IHRoZSByZW1haW5pbmcgd29yayB0byBiZSBkb25lLg0KPj4+Pj4+IA0KPj4+Pj4+IFNvIHdoZW4g
+SSBzYXkgInVwZGF0ZSB0aGUgRUZEIiBJJ20gdXNpbmcgaGlzdG9yaWMgdGVybWlub2xvZ3kgZm9y
+DQo+Pj4+Pj4gcHJvY2Vzc2luZyBhbmQgcmVjb3ZlcmluZyBtdWx0aS1leHRlbnQgaW50ZW50cy4g
+SW4gbW9kZXJuIHRlcm1zLA0KPj4+Pj4+IHdoYXQgSSBtZWFuIGlzICJ1cGRhdGUgdGhlIGRlZmVy
+cmVkIHdvcmsgaW50ZW50IGNoYWluIHRvIHJlZmxlY3QgdGhlDQo+Pj4+Pj4gd29yayByZW1haW5p
+bmcgdG8gYmUgZG9uZSIuDQo+Pj4+PiANCj4+Pj4+IE9LLiBzbyBsZXTigJlzIHNlZSB0aGUgZGlm
+ZmVyZW5jZSBiZXR3ZWVuIHlvdXIgaW1wbGVtZW50YXRpb24gZnJvbSBtaW5lLg0KPj4+Pj4gU2F5
+LCB0aGVyZSBhcmUgdGhyZWUgZXh0ZW50cyB0byBmcmVlLg0KPj4+Pj4gDQo+Pj4+PiBNeSBwYXRj
+aCB3b3VsZCByZXN1bHQgaW46DQo+Pj4+PiANCj4+Pj4+IEVGSSAxICB3aXRoIGV4dGVudDENCj4+
+Pj4+IGZyZWUgZXh0ZW50MQ0KPj4+Pj4gRUZEIDEgd2l0aCBleHRlbnQxDQo+Pj4+PiB0cmFuc2Fj
+dGlvbiByb2xsDQo+Pj4+PiBFRkkgMiB3aXRoIGV4dGVudDINCj4+Pj4+IGZyZWUgZXh0ZW50Mg0K
+Pj4+Pj4gRUZEIDIgd2l0aCBleHRlbnQyDQo+Pj4+PiB0cmFuc2FjdGlvbiByb2xsDQo+Pj4+PiBF
+RkkgMyB3aXRoIGV4dGVudDMNCj4+Pj4+IGZyZWUgZXh0ZW50Mw0KPj4+Pj4gRUZEMyB3aXRoIGV4
+dGVudDMNCj4+Pj4+IHRyYW5zYWN0aW9uIGNvbW1pdA0KPj4+PiANCj4+Pj4gTm8sIGl0IHdvdWxk
+bid0LiBUaGlzIGlzbid0IGhvdyB0aGUgZGVmZXJyZWQgd29yayBwcm9jZXNzZXMgd29yaw0KPj4+
+PiBpdGVtcyBvbiB0aGUgdHJhbnNhY3Rpb24uIEEgd29yayBpdGVtIHdpdGggbXVsdGlwbGUgZXh0
+ZW50cyBvbiBpdA0KPj4+PiB3b3VsZCByZXN1bHQgaW4gdGhpczoNCj4+Pj4gDQo+Pj4+IHhmc19k
+ZWZlcl9maW5pc2godHApICAjIHRwIGNvbnRhaW5zIHRocmVlIHhlZmkgd29yayBpdGVtcyANCj4+
+Pj4geGZzX2RlZmVyX2ZpbmlzaF9ub3JvbGwNCj4+Pj4geGZzX2RlZmVyX2NyZWF0ZV9pbnRlbnRz
+KCkNCj4+Pj4gICBsaXN0X2Zvcl9lYWNoX2RlZmVyX3BlbmRpbmcNCj4+Pj4gICAgIHhmc19kZWZl
+cl9jcmVhdGVfaW50ZW50KGRmcCkNCj4+Pj4gb3BzLT5jcmVhdGVfaW50ZW50KHRwLCAmZGZwLT5k
+ZnBfd29yaywgZGZwLT5kZnBfY291bnQsIHNvcnQpOw0KPj4+PiB4ZnNfZXh0ZW50X2ZyZWVfY3Jl
+YXRlX2ludGVudCgpDQo+Pj4+ICAgPGNyZWF0ZSBFRkk+DQo+Pj4+ICAgbGlzdF9mb3JfZWFjaF94
+ZWZpDQo+Pj4+ICAgICB4ZnNfZXh0ZW50X2ZyZWVfbG9nX2l0ZW0oeGVmaSkNCj4+Pj4gPGFkZHMg
+ZXh0ZW50IHRvIGN1cnJlbnQgRUZJPg0KPj4+PiANCj4+Pj4geGZzX2RlZmVyX3RyYW5zX3JvbGwo
+KQ0KPj4+PiA8c2F2ZT4NCj4+Pj4geGZzX3RyYW5zX3JvbGwoKQ0KPj4+PiAgIHhmc190cmFuc19k
+dXAoKQ0KPj4+PiAgIHhmc190cmFuc19jb21taXQoKQ0KPj4+PiA8cmVzdG9yZT4NCj4+Pj4gDQo+
+Pj4+IEF0IHRoaXMgcG9pbnQgd2UgaGF2ZSB0aGlzIGNvbW1pdHRlZCB0byB0aGUgQ0lMDQo+Pj4+
+IA0KPj4+PiBFRkkgMSB3aXRoIGV4dGVudDENCj4+Pj4gRUZJIDIgd2l0aCBleHRlbnQyDQo+Pj4+
+IEVGSSAzIHdpdGggZXh0ZW50Mw0KPj4+PiANCj4+Pj4gQW5kIHhmc19kZWZlcl9maW5pc2hfbm9y
+b2xsKCkgY29udGludWVzIHdpdGgNCj4+Pj4gDQo+Pj4+IDxncmFicyBmaXJzdCB3b3JrIGl0ZW0+
+DQo+Pj4+IHhmc19kZWZlcl9maW5pc2hfb25lKGRmcCkNCj4+Pj4gLT5jcmVhdGVfZG9uZShFRkkg
+MSkNCj4+Pj4gICB4ZnNfZXh0ZW50X2ZyZWVfY3JlYXRlX2RvbmUNCj4+Pj4gPGNyZWF0ZSBFRkQ+
+DQo+Pj4+IGxpc3RfZm9yX2VhY2hfeGVmaQ0KPj4+PiAgIG9wcy0+ZmluaXNoX2l0ZW0odHAsIGRm
+cC0+ZGZwX2RvbmUsIGxpLCAmc3RhdGUpOw0KPj4+PiAgICAgeGZzX2V4dGVudF9mcmVlX2Zpbmlz
+aF9pdGVtKCkNCj4+Pj4geGZzX3RyYW5zX2ZyZWVfZXh0ZW50DQo+Pj4+IF9feGZzX2ZyZWVfZXh0
+ZW50DQo+Pj4+ICAgPGFkZHMgZXh0ZW50IHRvIEVGRD4NCj4+Pj4gDQo+Pj4+IEFuZCBvbmNlIHRo
+ZSBwcm9jZXNzaW5nIG9mIHRoZSBzaW5nbGUgd29yayBpdGVtIGlzIGRvbmUgd2UgbG9vcA0KPj4+
+PiBiYWNrIHRvIHRoZSBzdGFydCBvZiB0aGUgeGZzX2RlZmVyX2ZpbmlzaF9ub3JvbGwoKSBsb29w
+LiBXZSBkb24ndA0KPj4+PiBoYXZlIGFueSBuZXcgaW50ZW50cywgc28geGZzX2RlZmVyX2NyZWF0
+ZV9pbnRlbnRzKCkgcmV0dXJucyBmYWxzZSwNCj4+Pj4gYnV0IHdlIGNvbXBsZXRlZCBhIGRmcCB3
+b3JrIGl0ZW0sIHNvIHdlIHJ1bjoNCj4+Pj4gDQo+Pj4+IHhmc19kZWZlcl90cmFuc19yb2xsKCkN
+Cj4+Pj4gPHNhdmU+DQo+Pj4+IHhmc190cmFuc19yb2xsKCkNCj4+Pj4gICB4ZnNfdHJhbnNfZHVw
+KCkNCj4+Pj4gICB4ZnNfdHJhbnNfY29tbWl0KCkNCj4+Pj4gPHJlc3RvcmU+DQo+Pj4+IA0KPj4+
+PiBBdCB0aGlzIHBvaW50IHdlIGhhdmUgdGhpcyBjb21taXR0ZWQgdG8gdGhlIENJTA0KPj4+PiAN
+Cj4+Pj4gRUZJIDEgd2l0aCBleHRlbnQxDQo+Pj4+IEVGSSAyIHdpdGggZXh0ZW50Mg0KPj4+PiBF
+RkkgMyB3aXRoIGV4dGVudDMNCj4+Pj4gPEFHRiwgQUdGTCwgZnJlZSBzcGFjZSBidHJlZSBibG9j
+ayBtb2RzPg0KPj4+PiBFRkQgMSB3aXRoIGV4dGVudDENCj4+Pj4gDQo+Pj4+IFRoZW4gd2UgcnVu
+IHhmc19kZWZlcl9maW5pc2hfb25lKCkgb24gRUZJIDIsIGNvbW1pdCwgdGhlbiBydW4NCj4+Pj4g
+eGZzX2RlZmVyX2ZpbmlzaF9vbmUoKSBvbiBFRkkgMy4gQXQgdGhpcyBwb2ludCwgd2UgaGF2ZSBp
+biB0aGUgbG9nOg0KPj4+PiANCj4+Pj4gRUZJIDEgd2l0aCBleHRlbnQxDQo+Pj4+IEVGSSAyIHdp
+dGggZXh0ZW50Mg0KPj4+PiBFRkkgMyB3aXRoIGV4dGVudDMNCj4+Pj4gPEFHRiwgQUdGTCwgZnJl
+ZSBzcGFjZSBidHJlZSBibG9jayBtb2RzPg0KPj4+PiBFRkQgMSB3aXRoIGV4dGVudDENCj4+Pj4g
+PEFHRiwgQUdGTCwgZnJlZSBzcGFjZSBidHJlZSBibG9jayBtb2RzPg0KPj4+PiBFRkQgMiB3aXRo
+IGV4dGVudDINCj4+Pj4gDQo+Pj4+IEJ1dCB3ZSBoYXZlIG5vdCBjb21taXR0ZWQgdGhlIGZpbmFs
+IGV4dGVudCBmcmVlIG9yIEVGRCAzIC0gdGhhdCdzIGluDQo+Pj4+IHRoZSBsYXN0IHRyYW5zYWN0
+aW9uIGNvbnRleHQgd2UgcGFzcyBiYWNrIHRvIHRoZSBfeGZzX3RyYW5zX2NvbW1pdCgpDQo+Pj4+
+IGNvbnRleHQgZm9yIGl0IHRvIGZpbmFsaXNlIGFuZCBjbG9zZSBvZmYgdGhlIHJvbGxpbmcgdHJh
+bnNhY3Rpb24NCj4+Pj4gY2hhaW4uIEF0IHRoaXMgcG9pbnQsIHdlIGZpbmFsbHkgaGF2ZSB0aGlz
+IGluIHRoZSBDSUw6DQo+Pj4+IA0KPj4+PiBFRkkgMSB3aXRoIGV4dGVudDENCj4+Pj4gRUZJIDIg
+d2l0aCBleHRlbnQyDQo+Pj4+IEVGSSAzIHdpdGggZXh0ZW50Mw0KPj4+PiA8QUdGLCBBR0ZMLCBm
+cmVlIHNwYWNlIGJ0cmVlIGJsb2NrIG1vZHM+DQo+Pj4+IEVGRCAxIHdpdGggZXh0ZW50MQ0KPj4+
+PiA8QUdGLCBBR0ZMLCBmcmVlIHNwYWNlIGJ0cmVlIGJsb2NrIG1vZHM+DQo+Pj4+IEVGRCAyIHdp
+dGggZXh0ZW50Mg0KPj4+PiA8QUdGLCBBR0ZMLCBmcmVlIHNwYWNlIGJ0cmVlIGJsb2NrIG1vZHM+
+DQo+Pj4+IEVGRCAzIHdpdGggZXh0ZW50Mw0KPj4+IA0KPj4+IA0KPj4+IFllcywgY29ycmVjdC4g
+dGhhbmtzIGZvciBzbyBtdWNoIGRldGFpbHMhIEkgbWlzLXJlYWQgeGZzX2RlZmVyX2NyZWF0ZV9p
+bnRlbnRzKCkNCj4+PiB0aGlua2luZyBpdCBvbmx5IGNyZWF0ZSBpbnRlbnQgZm9yIHRoZSBmaXJz
+dCBpbiB0cC0+dF9kZm9wcy4NCj4+PiANCj4+Pj4gDQo+Pj4+PiBUaGUgRUZJL0VGRCBsb2cgaXRl
+bSBwYWlycyBzaG91bGQgbm90IGJlIHdyaXR0ZW4gdG8gbG9nIGFzIHRoZXkgYXBwZWFyIGluIHNh
+bWUgY2hlY2twb2ludC4NCj4+Pj4gDQo+Pj4+IEkgKmFsd2F5cyogaWdub3JlIENJTCBpbnRlbnQg
+d2hpdGVvdXRzIHdoZW4gdGhpbmtpbmcgYWJvdXQNCj4+Pj4gdHJhbnNhY3Rpb24gY2hhaW5zIGFu
+ZCBpbnRlbnRzLiBUaGF0IGlzIHB1cmVseSBhIGpvdXJuYWwgZWZmaWNpZW5jeQ0KPj4+PiBvcHRp
+bWlzYXRpb24sIG5vdCBzb21ldGhpbmcgdGhhdCBpcyBuZWNlc3NhcnkgZm9yIGNvcnJlY3Qgb3Bl
+cmF0aW9uLg0KPj4+IA0KPj4+IE9LLg0KPj4+IA0KPj4+PiANCj4+Pj4+IFlvdXIgaWRlYSB5aWVs
+ZHMgdGhpczoNCj4+Pj4+IA0KPj4+Pj4gRUZJIDEgd2l0aCBleHRlbnQxIGV4dGVudDIgZXh0ZW50
+Mw0KPj4+Pj4gZnJlZSBleHRlbnQxDQo+Pj4+PiBFRkkgMiB3aXRoIGV4dGVudDIgZXh0ZW50Mw0K
+Pj4+Pj4gRUZEIDEgd2l0aCBleHRlbnQxIGV4dGVudDIgZXh0ZW50Mw0KPj4+Pj4gdHJhbnNhY3Rp
+b24gY29tbWl0DQo+Pj4+PiBjcmVhdGUgdHJhbnNhY3Rpb24NCj4+Pj4+IGZyZWUgZXh0ZW50Mg0K
+Pj4+Pj4gRUZJIDMgd2l0aCBleHRlbnQzDQo+Pj4+PiBFRkQgMiB3aXRoIGV4dGVudCBleHRlbnQy
+IGV4dGVudDMNCj4+Pj4+IHRyYW5zYWN0aW9uIGNvbW1pdA0KPj4+Pj4gY3JlYXRlIHRyYW5zYWN0
+aW9uDQo+Pj4+PiBmcmVlIGV4dGVudDMNCj4+Pj4+IEVGRCAzIHdpdGggZXh0ZW50Mw0KPj4+Pj4g
+dHJhbnNhY3Rpb24gY29tbWl0Lg0KPj4+PiANCj4+Pj4gVGhlIEVGSS9FRkQgY29udGVudHMgYXJl
+IGNvcnJlY3QsIGJ1dCB0aGUgcmVzdCBvZiBpdCBpcyBub3QgLSBJIGFtDQo+Pj4+IG5vdCBzdWdn
+ZXN0aW5nIG9wZW4gY29kaW5nIHRyYW5zYWN0aW9uIHJvbGxpbmcgbGlrZSB0aGF0LiBFdmVyeXRo
+aW5nDQo+Pj4+IEkgYW0gc3VnZ2VzdGluZyB3b3JrcyB0aHJvdWdoIHRoZSBzYW1lIGRlZmVyIG9w
+cyBtZWNoYW5pc20gYXMgeW91DQo+Pj4+IGFyZSBkZXNjcmliaW5nLiBTbyBpZiB3ZSBzdGFydCB3
+aXRoIHRoZSBpbml0aWFsIGpvdXJuYWwgY29udGVudHMNCj4+Pj4gbG9va3MgbGlrZSB0aGlzOg0K
+Pj4+PiANCj4+Pj4gRUZJIDEgd2l0aCBleHRlbnQxIGV4dGVudDIgZXh0ZW50My4NCj4+Pj4gDQo+
+Pj4+IFRoZW4gd2UgcnVuIHhmc19kZWZlcl9maW5pc2hfb25lKCkgb24gdGhhdCB3b3JrLCANCj4+
+Pj4gDQo+Pj4+IHhmc19kZWZlcl9maW5pc2hfb25lKGRmcCkNCj4+Pj4gLT5jcmVhdGVfZG9uZShF
+RkkgMSkNCj4+Pj4gICB4ZnNfZXh0ZW50X2ZyZWVfY3JlYXRlX2RvbmUNCj4+Pj4gPGNyZWF0ZSBF
+RkQ+DQo+Pj4+IGxpc3RfZm9yX2VhY2hfeGVmaQ0KPj4+PiAgIG9wcy0+ZmluaXNoX2l0ZW0odHAs
+IGRmcC0+ZGZwX2RvbmUsIGxpLCAmc3RhdGUpOw0KPj4+PiAgICAgeGZzX2V4dGVudF9mcmVlX2Zp
+bmlzaF9pdGVtKCkNCj4+Pj4geGZzX3RyYW5zX2ZyZWVfZXh0ZW50DQo+Pj4+IF9feGZzX2ZyZWVf
+ZXh0ZW50DQo+Pj4+ICAgPGFkZHMgZXh0ZW50IHRvIEVGRD4NCj4+Pj4gDQo+Pj4+IEJ1dCBub3cg
+d2UgaGF2ZSAzIHhlZmlzIG9uIHRoZSB3b3JrIHRvIHByb2Nlc3MuIFNvIG9uIHN1Y2Nlc3Mgb2YN
+Cj4+Pj4gdGhlIGZpcnN0IGNhbGwgdG8geGZzX3RyYW5zX2ZyZWVfZXh0ZW50KCksIHdlIHdhbnQg
+aXQgdG8gcmV0dXJuDQo+Pj4+IC1FQUdBSU4gdG8gdHJpZ2dlciB0aGUgZXhpc3RpbmcgcmVsb2dn
+aW5nIGNvZGUgdG8gY3JlYXRlIHRoZSBuZXcNCj4+Pj4gRUZJLiBIb3cgdGhpcyB3b3JrcyBpcyBk
+ZXNjcmliZSBpbiB0aGUgc2VjdGlvbiAiUmVxdWVzdGluZyBhDQo+Pj4+IEZyZXNoIFRyYW5zYWN0
+aW9uIHdoaWxlIEZpbmlzaGluZyBEZWZlcnJlZCBXb3JrIiBpbg0KPj4+PiBmcy94ZnMvbGlieGZz
+L3hmc19kZWZlci5jLCBubyBwb2ludCBtZSBkdXBsaWNhdGluZyB0aGF0IGhlcmUuDQo+Pj4+IA0K
+Pj4+PiBUaGUgcmVzdWx0IGlzIHRoYXQgdGhlIGRlZmVycmVkIHdvcmsgaW5mcmFzdHJ1Y3R1cmUg
+ZG9lcyB0aGUgd29yaw0KPj4+PiBvZiB1cGRhaW5nIHRoZSBkb25lIGludGVudCBhbmQgY3JlYXRp
+bmcgdGhlIG5ldyBpbnRlbnRzIGZvciB0aGUgd29yaw0KPj4+PiByZW1haW5pbmcuIEhlbmNlIGFm
+dGVyIHRoZSBuZXh0IHRyYW5zYWN0aW9uIHJvbGwsIHdlIGhhdmUgaW4gdGhlIENJTA0KPj4+PiAN
+Cj4+Pj4gRUZJIDEgd2l0aCBleHRlbnQxIGV4dGVudDIgZXh0ZW50My4NCj4+Pj4gPEFHRiwgQUdG
+TCwgZnJlZSBzcGFjZSBidHJlZSBibG9jayBtb2RzPg0KPj4+PiBFRkQgMSB3aXRoIGV4dGVudDEg
+ZXh0ZW50MiBleHRlbnQzLg0KPj4+PiBFRkkgMiB3aXRoIGV4dGVudDIgZXh0ZW50My4NCj4+Pj4g
+DQo+Pj4gDQo+Pj4gVGFraW5nIHRyYW5zYWN0aW9uIHJvbGxzIGludG8gYWNjb3VudCAoYWxzbyBh
+ZGRpbmcgdXAgdG8gRUZEMyksIGFib3ZlIHdvdWxkIGJlOg0KPj4+IA0KPj4+IEVGSSAxIHdpdGgg
+ZXh0ZW50MSBleHRlbnQyIGV4dGVudDMuDQo+Pj4gdHJhbnNhY3Rpb24gcm9sbA0KPj4+IDxBR0Ys
+IEFHRkwsIGZyZWUgc3BhY2UgYnRyZWUgYmxvY2sgbW9kcz4gIGZvciBleHRlbnQgMQ0KPj4+IEVG
+RCAxIHdpdGggZXh0ZW50MSBleHRlbnQyIGV4dGVudDMuDQo+Pj4gRUZJIDIgd2l0aCBleHRlbnQy
+IGV4dGVudDMuDQo+Pj4gdHJhbnNhY3Rpb24gcm9sbA0KPj4+IGZyZWUgZXh0ZW50IDINCj4+PiBF
+RkQgMiB3aXRoIGV4dGVudDIgZXh0ZW50Mw0KPj4+IEVGSSAzIHdpdGggZXh0ZW50Mw0KPj4+IHRy
+YW5zYWN0aW9uIHJvbGwNCj4+PiBmcmVlIGV4dGVudCAzDQo+Pj4gRUZEIDMgd2l0aCBleHRlbnQz
+DQo+Pj4gDQo+Pj4gQmVjYXVzZSBFRkQgTiBpcyBhbHdheXMgYmUgd2l0aCBFRkkgTisxIGluIHRo
+ZSBTQU1FIHRyYW5zYWN0aW9uLCBzbyBFRkkgTisxIGRvZXNu4oCZdCBoYXZlIHRvIGJlIHBsYWNl
+ZCBiZWZvcmUgRUZEIE4uDQo+Pj4gSSBnb3QgaXQuDQo+Pj4gDQo+Pj4+IEFuZCBzbyB0aGUgbG9v
+cCBnb2VzIHVudGlsIHRoZXJlIGlzIG5vIG1vcmUgd29yayByZW1haW5pbmcuDQo+Pj4+IA0KPj4+
+Pj4gWW91ciBpbXBsZW1lbnRhdGlvbiBhbHNvIGluY2x1ZGVzIHRocmVlIEVGSS9FRkQgcGFpcnMs
+IHRoYXTigJlzIHRoZSBzYW1lIGFzIG1pbmUuDQo+Pj4+PiBTbyBhY3R1YWxseSBpdOKAmXMgc3Rp
+bGwgb25lIGV4dGVudCBwZXIgRUZJIHBlciB0cmFuc2FjdGlvbi4gVGhvdWdoIHlvdSBhcmUgbm90
+IGNoYW5naW5nDQo+Pj4+PiBYRlNfRUZJX01BWF9GQVNUX0VYVEVOVFMuDQo+Pj4+IA0KPj4+PiBU
+aGUgZGlmZmVyZW5jZSBpcyB0aGF0IHdoYXQgSSdtIHN1Z2dlc3RpbmcgaXMgdGhhdCB0aGUgZXh0
+ZW50IGZyZWUNCj4+Pj4gY29kZSBjYW4gZGVjaWRlIHdoZW4gaXQgbmVlZHMgYSB0cmFuc2FjdGlv
+biB0byBiZSByb2xsZWQuIEl0IGlzbid0DQo+Pj4+IGZvcmNlZCB0byBhbHdheXMgcnVuIGEgc2lu
+Z2xlIGZyZWUgcGVyIHRyYW5zYWN0aW9uLCBpdCBjYW4gZGVjaWRlDQo+Pj4+IHRoYXQgaXQgY2Fu
+IGZyZWUgbXVsdGlwbGUgZXh0ZW50cyBwZXIgdHJhbnNhY3Rpb24gaWYgdGhlcmUgaXMgbm8NCj4+
+Pj4gcmlzayBvZiBkZWFkbG9ja3MgKGUuZy4gZXh0ZW50cyBhcmUgaW4gZGlmZmVyZW50IEFHcyku
+ICBGb3JjaW5nDQo+Pj4+IGV2ZXJ5dGhpbmcgdG8gYmUgbGltaXRlZCB0byBhIHRyYW5zYWN0aW9u
+IHBlciBleHRlbnQgZnJlZSBldmVuIHdoZW4NCj4+Pj4gdGhlcmUgaXMgbm8gcmlzayBvZiBkZWFk
+bG9ja3MgZnJlZWluZyBtdWx0aXBsZSBleHRlbnRzIGluIGEgc2luZ2xlDQo+Pj4+IHRyYW5zYWN0
+aW9uIGlzIHVubmVjZXNzYXJ5Lg0KPj4+PiANCj4+Pj4gSW5kZWVkLCBpZiB0aGUgc2Vjb25kIGV4
+dGVudCBpcyBpbiBhIGRpZmZlcmVudCBBRywgd2UgZG9uJ3Qgcmlzaw0KPj4+PiBidXN5IGV4dGVu
+dHMgY2F1c2luZyB1cyBpc3N1ZXMsIHNvIHdlIGNvdWxkIGRvOg0KPj4+PiANCj4+Pj4gRUZJIDEg
+d2l0aCBleHRlbnQxIGV4dGVudDIgZXh0ZW50My4NCj4+Pj4gPEFHRiAxLCBBR0ZMIDEsIGZyZWUg
+c3BhY2UgYnRyZWUgYmxvY2sgbW9kcz4NCj4+Pj4gPEFHRiAyLCBBR0ZMIDIsIGZyZWUgc3BhY2Ug
+YnRyZWUgYmxvY2sgbW9kcz4NCj4+Pj4gRUZEIDEgd2l0aCBleHRlbnQxIGV4dGVudDIgZXh0ZW50
+My4NCj4+Pj4gRUZJIDIgd2l0aCBleHRlbnQzLg0KPj4+PiAuLi4uLg0KPj4+PiANCj4+PiANCj4+
+PiBNeSB0aHVtYiBpcyB1cC4NCj4+IA0KPj4gV2VsbCwgSSBhbSB3b25kZXJpbmcgaWYgdGhlcmUg
+aXMgQUJCQSBkZWFkbG9jayBpbnN0ZWFkIG9mIHNlbGYgZGVhZGxvY2sgdGhlbi4NCj4+IFNheSBw
+cm9jZXNzIDEgcHJvZHVjZWQgYnVzeSBleHRlbnQgMSBvbiBBRyAwIGFuZCBub3cgYmxvY2tpbmcg
+YXQgQUdGTA0KPj4gYWxsb2NhdGlvbiBvbiBBRyAxLiBBbmQgYXQgdGhlIHNhbWUgdGltZSwgcHJv
+Y2VzcyAyIHByb2R1Y2VkIGJ1c3kgZXh0ZW50IDIgb24gQUcgMQ0KPj4gYW5kIG5vdyBibG9ja2lu
+ZyBhdCBBR0ZMIGFsbG9jYXRpb24gb24gQUcgMC4gQW55dGhpbmcgcHJldmVudHMgdGhhdCBmcm9t
+IGhhcHBlbmluZz8NCj4+IA0KPj4gU2hhbGwgd2UgaW50cm9kdWNlIGEgcGVyIEZTIGxpc3QsIHNh
+eSBuYW1lZCDigJxwZW5kaW5nX2J1c3lfQUdzIiwgd2hlcmUgdGhlIEFHIG51bWJlcg0KPj4gYXJl
+IHN0b3JlZCB0aGVyZS4gRm9yIHRob3NlIEFHcw0KPj4gdGhleSBoYXZlIHBlbmRpbmcgYnVzeSBl
+eHRlbnRzIGluIGluLW1lbW9yeSB0cmFuc2FjdGlvbnMgKG5vdCBjb21taXR0ZWQgdG8gQ0lMKS4N
+Cj4+IFdlIGFkZCB0aGUgQUcgbnVtYmVyIHRvIHBlbmRpbmdfYnVzeV9BR3MgYXQgdGhlIHN0YXJ0
+IG9mIHhmc190cmFuc19mcmVlX2V4dGVudCgpDQo+PiBpZiBpdOKAmXMgbm90IHRoZXJlLCBhbmQg
+Y29udGludWUgdG8gZnJlZSB0aGUgZXh0ZW50LiBPdGhlcndpc2UgaWYgdGhlIEFHIG51bWJlciBp
+cyBhbHJlYWR5DQo+PiB0aGVyZSBpbiBwZW5kaW5nX2J1c3lfQUdzLCB3ZSByZXR1cm4gLUVBR0FJ
+Ti4gVGhlIEFHIG51bWJlciBpcyByZW1vdmVkIHdoZW4NCj4+IHRoZSBidXN5IGV4dGVudHMgYXJl
+IGNvbW1pdHRlZCB0byB0aGUgeGZzX2NpbF9jdHguDQo+PiBXZWxsLCB3b25kZXJpbmcgaWYgdGhl
+IHBlbmRpbmcgYnVzeSBleHRlbnRzIHdvdWxkIHJlbWFpbiBpbiBwZW5kaW5nIHN0YXRlIGxvbmcg
+YmVmb3JlDQo+PiBjb21taXR0ZWQgdG8gQ0lMIGFuZCB0aGF0IGJlY29tZSBhIGJvdHRsZSBuZWNr
+IGZvciBmcmVlaW5nIGV4dGVudHMuICANCj4gDQo+IFRoaW5raW5nIG1vcmUsIHdlIGNvdWxkIGFk
+ZCBwZXIgQUcgY291bnRlciBpbmRpY2F0aW5nIGN1cnJlbnQgcGVuZGluZyBidXN5IGV4dGVudHMg
+b24gdGhlIEFHLg0KPiBGb3IgdGhlIDJuZCsgZXh0ZW50IGluIHRoZSBFRkksIHJldHVybiAtRUFH
+QUlOIG9uIHNlZWluZyB0aGUgY291bnRlciBzZXQgKD4wKS4gQXMgdGhlIGZpcnN0IGV4dGVudA0K
+PiBpcyBhbHdheXMgT0sgdG8gZ28sIHRoZXJlIHNob3VsZG7igJl0IGJlIGEgYm90dGxlIG5lY2su
+DQoNCkkganVzdCBzZW50IHRoZSBmaXJzdCBhdHRlbXB0ICh0aGlzIHdheSksIHBscyByZXZpZXcu
+DQoNCnRoYW5rcywNCndlbmdhbmcNCg0K
