@@ -2,203 +2,123 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A8E2C6FD18
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Apr 2023 15:15:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3A91C6FD18
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Apr 2023 15:18:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234150AbjDYPPf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Apr 2023 11:15:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43750 "EHLO
+        id S234191AbjDYPSE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Apr 2023 11:18:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45410 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234495AbjDYPPc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Apr 2023 11:15:32 -0400
+        with ESMTP id S234186AbjDYPSD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Apr 2023 11:18:03 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17D924EC5
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Apr 2023 08:15:31 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30E48127;
+        Tue, 25 Apr 2023 08:18:02 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A4AF961805
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Apr 2023 15:15:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07AF4C433EF;
-        Tue, 25 Apr 2023 15:15:30 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BC6AB6136C;
+        Tue, 25 Apr 2023 15:18:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C680C433EF;
+        Tue, 25 Apr 2023 15:18:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682435730;
-        bh=KkAcJTTUhUNb7417FDBFhfxQ6WcXbD7zvaW+Vx1Q40M=;
+        s=k20201202; t=1682435881;
+        bh=OZVtwFWo7+1hR1E/XFg8v7jLksChEj4wIb247kHrI2I=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=r8+990b6Ch4y1D1WXhGnFzCgLZw8IazZCS+JMLbIrWx83DHbLPrJllX+XAoFeQ4B5
-         KA05akfOkvSO6rwJy5nTQCVVEde6enzZOnpC2petspMsLrmlcHSpIA+GxxXWqJsnpZ
-         iv88X8WShybgIxdUcW+o12cewoyVRAXnxKpwusOScgTcX2dFt4q1FnfZ7KY9m794gZ
-         KaNd2lan7qk/ctpS4o+XP3Yg2vFA0Gwbvlon9+FZx1HotlF56PyCMQ21gpuTovC9sd
-         dpu3mGYPWXa3m+1IXA+kD76plO4kk5GQSvt2/Ixy0C7NrQoSP7bzVqCHsn+KpKfAQb
-         h1XkNDY8OPwpA==
-Date:   Tue, 25 Apr 2023 08:15:29 -0700
+        b=JwuiYzoE9l78rA8VNEL7AMkMtYghXYh1MhzRtXMnCSRA9FgM/K0NzCyfCHGaNdnVt
+         aIeHzHmeqbLKat4hJ1Oq7PBAve2s18Wh05BcH+6o+l3mw/nfuKNmuoUu4rx6nq7g+I
+         Z4YGADE1utvo86K7C8mGq3AvAeE0iCJ9R1GozHBCQej9h/5kUxhnzH27StZlEJBXyg
+         5fq/WsC893YV8eOQcHWIFwJmnaio0ljNHnr2lGifbygRZQE0lQDHbdRUnBQdkJGtWm
+         sLdv/HCbVAk0eywgGBVhF0anUGlHajCypKtFawvQrMWdKWhSWY4jjHwGsCYJ5avSc0
+         Gc1cfGvS7qmlw==
+Date:   Tue, 25 Apr 2023 08:18:00 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Long Li <leo.lilong@huawei.com>
-Cc:     david@fromorbit.com, linux-xfs@vger.kernel.org, houtao1@huawei.com,
-        yi.zhang@huawei.com, guoxuenan@huawei.com
-Subject: Re: [PATCH] xfs: fix ag count overflow during growfs
-Message-ID: <20230425151529.GR360889@frogsfrogsfrogs>
-References: <20230425025345.GA2098270@ceph-admin>
+To:     Jan Kara <jack@suse.cz>
+Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        dan.j.williams@intel.com, willy@infradead.org,
+        akpm@linux-foundation.org
+Subject: Re: [RFC PATCH v11.1 2/2] mm, pmem, xfs: Introduce MF_MEM_REMOVE for
+ unbind
+Message-ID: <20230425151800.GS360889@frogsfrogsfrogs>
+References: <1679996506-2-3-git-send-email-ruansy.fnst@fujitsu.com>
+ <1681296735-2-1-git-send-email-ruansy.fnst@fujitsu.com>
+ <0a53ee26-5771-0808-ccdc-d1739c9dacac@fujitsu.com>
+ <20230420120956.cdxcwojckiw36kfg@quack3>
+ <d557c0cb-e244-6238-2df4-01ce75ededdf@fujitsu.com>
+ <20230425132315.u5ocvbneeqzzbifl@quack3>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230425025345.GA2098270@ceph-admin>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20230425132315.u5ocvbneeqzzbifl@quack3>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 25, 2023 at 10:53:45AM +0800, Long Li wrote:
-> I found a corruption during growfs:
+On Tue, Apr 25, 2023 at 03:23:15PM +0200, Jan Kara wrote:
+> On Tue 25-04-23 20:47:35, Shiyang Ruan wrote:
+> > 
+> > 
+> > 在 2023/4/20 20:09, Jan Kara 写道:
+> > > On Thu 20-04-23 10:07:39, Shiyang Ruan wrote:
+> > > > 在 2023/4/12 18:52, Shiyang Ruan 写道:
+> > > > > This is a RFC HOTFIX.
+> > > > > 
+> > > > > This hotfix adds a exclusive forzen state to make sure any others won't
+> > > > > thaw the fs during xfs_dax_notify_failure():
+> > > > > 
+> > > > >     #define SB_FREEZE_EXCLUSIVE	(SB_FREEZE_COMPLETE + 2)
+> > > > > Using +2 here is because Darrick's patch[0] is using +1.  So, should we
+> > > > > make these definitions global?
+> > > > > 
+> > > > > Another thing I can't make up my mind is: when another freezer has freeze
+> > > > > the fs, should we wait unitl it finish, or print a warning in dmesg and
+> > > > > return -EBUSY?
+> > > > > 
+> > > > > Since there are at least 2 places needs exclusive forzen state, I think
+> > > > > we can refactor helper functions of freeze/thaw for them.  e.g.
+> > > > >     int freeze_super_exclusive(struct super_block *sb, int frozen);
+> > > > >     int thaw_super_exclusive(struct super_block *sb, int frozen);
+> > > > > 
+> > > > > [0] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?h=repair-fscounters&id=c3a0d1de4d54ffb565dbc7092dfe1fb851940669
+> > > 
+> > > I'm OK with the idea of new freeze state that does not allow userspace to
+> > > thaw the filesystem. But I don't really like the guts of filesystem
+> > > freezing being replicated inside XFS. It is bad enough that they are
+> > > replicated in [0], replicating them *once more* in another XFS file shows
+> > > we are definitely doing something wrong. And Luis will need yet another
+> > > incantation of the exlusive freeze for suspend-to-disk. So please guys get
+> > > together and reorganize the generic freezing code so that it supports
+> > > exclusive freeze (for in-kernel users) and works for your usecases instead
+> > > of replicating it inside XFS...
+> > 
+> > I agree that too much replicating code is not good.  It's necessary to
+> > create a generic exclusive freeze/thaw for all users.  But for me, I don't
+> > have the confidence to do it well, because it requires good design and code
+> > changes will involve other filesystems.  It's diffcult.
+> > 
+> > However, I hope to be able to make progress on this unbind feature. Thus, I
+> > tend to refactor a common helper function for xfs first, and update the code
+> > later when the generic freeze is done.
 > 
->  XFS (loop0): Internal error agbno >= mp->m_sb.sb_agblocks at line 3661 of
->    file fs/xfs/libxfs/xfs_alloc.c.  Caller __xfs_free_extent+0x28e/0x3c0
->  CPU: 0 PID: 573 Comm: xfs_growfs Not tainted 6.3.0-rc7-next-20230420-00001-gda8c95746257
->  Call Trace:
->   <TASK>
->   dump_stack_lvl+0x50/0x70
->   xfs_corruption_error+0x134/0x150
->   __xfs_free_extent+0x2c1/0x3c0
->   xfs_ag_extend_space+0x291/0x3e0
->   xfs_growfs_data+0xd72/0xe90
->   xfs_file_ioctl+0x5f9/0x14a0
->   __x64_sys_ioctl+0x13e/0x1c0
->   do_syscall_64+0x39/0x80
->   entry_SYSCALL_64_after_hwframe+0x63/0xcd
->  XFS (loop0): Corruption detected. Unmount and run xfs_repair
->  XFS (loop0): Internal error xfs_trans_cancel at line 1097 of file
->    fs/xfs/xfs_trans.c.  Caller xfs_growfs_data+0x691/0xe90
->  CPU: 0 PID: 573 Comm: xfs_growfs Not tainted 6.3.0-rc7-next-20230420-00001-gda8c95746257
->  Call Trace:
->   <TASK>
->   dump_stack_lvl+0x50/0x70
->   xfs_error_report+0x93/0xc0
->   xfs_trans_cancel+0x2c0/0x350
->   xfs_growfs_data+0x691/0xe90
->   xfs_file_ioctl+0x5f9/0x14a0
->   __x64_sys_ioctl+0x13e/0x1c0
->   do_syscall_64+0x39/0x80
->   entry_SYSCALL_64_after_hwframe+0x63/0xcd
->  RIP: 0033:0x7f2d86706577
-> 
-> The bug can be reproduced with the following sequence:
-> 
->  # truncate -s  1073741824 xfs_test.img
->  # mkfs.xfs -f -b size=1024 -d agcount=4 xfs_test.img
->  # truncate -s 2305843009213693952  xfs_test.img
->  # mount -o loop xfs_test.img /mnt/test
->  # xfs_growfs -D  1125899907891200  /mnt/test
-> 
-> The root cause is that during growfs, user space passed in a large value
-> of newblcoks to xfs_growfs_data_private(), due to current sb_agblocks is
-> too small, new AG count will exceed UINT_MAX. Because of AG number type
-> is unsigned int and it would overflow, that caused nagcount much smaller
-> than the actual value. During AG extent space, delta blocks in
-> xfs_resizefs_init_new_ags() will much larger than the actual value due to
-> incorrect nagcount, even exceed UINT_MAX. This will cause corruption and
-> be detected in __xfs_free_extent. Fix it by add checks for AG number that
-> should not greater than or equal to NULLAGNUMBER before growfs and mount
-> filesystem.
-> 
-> Signed-off-by: Long Li <leo.lilong@huawei.com>
-> ---
->  fs/xfs/xfs_fsops.c   | 2 +-
->  fs/xfs/xfs_mount.c   | 6 +++++-
->  fs/xfs/xfs_mount.h   | 2 +-
->  fs/xfs/xfs_rtalloc.c | 2 +-
->  fs/xfs/xfs_super.c   | 4 ++--
->  5 files changed, 10 insertions(+), 6 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index 13851c0d640b..0f0b12eaf53a 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -100,7 +100,7 @@ xfs_growfs_data_private(
->  	struct xfs_perag	*last_pag;
->  
->  	nb = in->newblocks;
-> -	error = xfs_sb_validate_fsb_count(&mp->m_sb, nb);
-> +	error = xfs_sb_validate_fsb_count(&mp->m_sb, nb, true);
->  	if (error)
->  		return error;
->  
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index fb87ffb48f7f..284c11c1c6e8 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -128,7 +128,8 @@ xfs_uuid_unmount(
->  int
->  xfs_sb_validate_fsb_count(
->  	xfs_sb_t	*sbp,
-> -	uint64_t	nblocks)
-> +	uint64_t	nblocks,
-> +	bool		dblock)
->  {
->  	ASSERT(PAGE_SHIFT >= sbp->sb_blocklog);
->  	ASSERT(sbp->sb_blocklog >= BBSHIFT);
-> @@ -136,6 +137,9 @@ xfs_sb_validate_fsb_count(
->  	/* Limited by ULONG_MAX of page cache index */
->  	if (nblocks >> (PAGE_SHIFT - sbp->sb_blocklog) > ULONG_MAX)
->  		return -EFBIG;
-> +	/* Limited by NULLAGNUMBER of ag number */
-> +	if (dblock && (nblocks >> sbp->sb_agblklog) >= NULLAGNUMBER)
-> +		return -EFBIG;
+> I think Darrick was thinking about working on a proper generic interface.
+> So please coordinate with him.
 
-I think this should be a separate predicate to check for overflowing
-agcount in xfs_validate_sb_common and xfs_growfs_data_private.
+I'll post a vfs generic kernelfreeze series later today.
 
-I also wonder if @agcount in xfs_validate_sb_common needs to be u64 (and
-not u32) to handle overflows?
-
-Someone should try fuzzing a filesystem with a small agblklog and a
-large dblocks to see if one can trip an integer overflow in the
-superblock verifier.
+One thing I haven't figured out yet is what's supposed to happen when
+PREREMOVE is called on a frozen filesystem.  We don't want userspace to
+be able to thaw the fs while PREREMOVE is running, so I /guess/ that
+means we need some method for the kernel to take over a userspace
+freeze and then put it back when we're done?
 
 --D
 
->  	return 0;
->  }
->  
-> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> index f3269c0626f0..a69e9b21ef61 100644
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -531,7 +531,7 @@ xfs_mod_frextents(struct xfs_mount *mp, int64_t delta)
->  extern int	xfs_readsb(xfs_mount_t *, int);
->  extern void	xfs_freesb(xfs_mount_t *);
->  extern bool	xfs_fs_writable(struct xfs_mount *mp, int level);
-> -extern int	xfs_sb_validate_fsb_count(struct xfs_sb *, uint64_t);
-> +extern int	xfs_sb_validate_fsb_count(struct xfs_sb *, uint64_t, bool);
->  
->  extern int	xfs_dev_is_read_only(struct xfs_mount *, char *);
->  
-> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> index 16534e9873f6..c207026d92ac 100644
-> --- a/fs/xfs/xfs_rtalloc.c
-> +++ b/fs/xfs/xfs_rtalloc.c
-> @@ -958,7 +958,7 @@ xfs_growfs_rt(
->  		return -EOPNOTSUPP;
->  
->  	nrblocks = in->newblocks;
-> -	error = xfs_sb_validate_fsb_count(sbp, nrblocks);
-> +	error = xfs_sb_validate_fsb_count(sbp, nrblocks, false);
->  	if (error)
->  		return error;
->  	/*
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 4d2e87462ac4..72dfd02c588e 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1592,8 +1592,8 @@ xfs_fs_fill_super(
->  	}
->  
->  	/* Ensure this filesystem fits in the page cache limits */
-> -	if (xfs_sb_validate_fsb_count(&mp->m_sb, mp->m_sb.sb_dblocks) ||
-> -	    xfs_sb_validate_fsb_count(&mp->m_sb, mp->m_sb.sb_rblocks)) {
-> +	if (xfs_sb_validate_fsb_count(&mp->m_sb, mp->m_sb.sb_dblocks, true) ||
-> +	    xfs_sb_validate_fsb_count(&mp->m_sb, mp->m_sb.sb_rblocks, false)) {
->  		xfs_warn(mp,
->  		"file system too large to be mounted on this system.");
->  		error = -EFBIG;
-> -- 
-> 2.31.1
+> 								Honza
 > 
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
