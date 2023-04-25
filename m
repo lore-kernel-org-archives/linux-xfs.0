@@ -2,181 +2,176 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F61DC7618E
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Apr 2023 02:54:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB23CC77B61
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Apr 2023 04:51:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232369AbjDYCyn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Apr 2023 22:54:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37518 "EHLO
+        id S231335AbjDYEvz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Apr 2023 00:51:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229629AbjDYCym (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Apr 2023 22:54:42 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3872A26A8
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2023 19:54:41 -0700 (PDT)
-Received: from kwepemi500009.china.huawei.com (unknown [172.30.72.56])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Q563H3YcVzKykf;
-        Tue, 25 Apr 2023 10:51:55 +0800 (CST)
-Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
- (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Tue, 25 Apr
- 2023 10:54:38 +0800
-Date:   Tue, 25 Apr 2023 10:53:45 +0800
-From:   Long Li <leo.lilong@huawei.com>
-To:     <djwong@kernel.org>
-CC:     <david@fromorbit.com>, <linux-xfs@vger.kernel.org>,
-        <houtao1@huawei.com>, <yi.zhang@huawei.com>, <guoxuenan@huawei.com>
-Subject: [PATCH] xfs: fix ag count overflow during growfs
-Message-ID: <20230425025345.GA2098270@ceph-admin>
+        with ESMTP id S229637AbjDYEvy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Apr 2023 00:51:54 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7485A7EC0
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2023 21:51:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1682398267;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=zn5U4cki3qL13ZRoSm6iMw9J7l1g3UeZmkZdZOszEX0=;
+        b=GE8U2SskE98RrPMnst9Sp/LNOG4FM1HHrZV4r7GCgcnJqSWb8mbL5AlIOrKQLK6yDtgcpk
+        7itr5zay3hLeBeNm6nlXC+SMwYGp0zpDoSZun2AZskNzBMxCvnhav5NCpdF4AIb2CPCqq4
+        3szQef8xz302bbXcRAPTWXZZdb9SuW8=
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
+ [209.85.215.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-231-02zo0onqO1GpIjpYjKaoPg-1; Tue, 25 Apr 2023 00:51:05 -0400
+X-MC-Unique: 02zo0onqO1GpIjpYjKaoPg-1
+Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-51442ffc984so3007639a12.0
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Apr 2023 21:51:04 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1682398263; x=1684990263;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=zn5U4cki3qL13ZRoSm6iMw9J7l1g3UeZmkZdZOszEX0=;
+        b=hHX44/HRkn1VcXOJF5QB3qIvn62l/0xjjQDMswf/HhQNUcWshHp9/RQ8DQkkYpaB5F
+         OnOzCG9yBMG5zHbM+aEAusrwzSG5Tw1+wODX8TgHZfkDwt0KCnPnuJa9mtvsXd0Oe/mr
+         /Nc/aoxJcAF7SwCFgkqWNWPKV38CiIk5mUuLGdITstNnj9ZxFgQtzcuM8NhSO6dT3XRw
+         8aaNwX6vmkka9DPz/bMIo2sHw/GN6bv21WFuZjptSHMSzxEh2lMCcdL44+eZ1hyx/Zky
+         QPeqzLWEB7dWJE1GshLfJFQfsna8Q28nd7lwmLtCE+MY0Xs9A1VcGq+NsfnTG15LRC0F
+         fPsA==
+X-Gm-Message-State: AAQBX9clgnfj9q62/Gx6iSP+rqpZZROI7+EgYAcg1InVwBFEWJ7aGkFl
+        fLiXmPOxMcfYRgEEDe7+12uLidIwdShdOmuPSM//adtNoOgMV/fFJrSg2LT3v0AeP1tMp6WGG2X
+        eniISaZOUDa3GVYKWaVQe52d+tvEvzc2FNw==
+X-Received: by 2002:a17:90b:388f:b0:23d:1143:c664 with SMTP id mu15-20020a17090b388f00b0023d1143c664mr15762559pjb.31.1682398263632;
+        Mon, 24 Apr 2023 21:51:03 -0700 (PDT)
+X-Google-Smtp-Source: AKy350Y55j3LnBzFBfrpgSxkZiLcxvgR86N73VrSUO5Cyj2lIq4B71VHKDXAktFhCDdigMRp4HwWQw==
+X-Received: by 2002:a17:90b:388f:b0:23d:1143:c664 with SMTP id mu15-20020a17090b388f00b0023d1143c664mr15762542pjb.31.1682398263088;
+        Mon, 24 Apr 2023 21:51:03 -0700 (PDT)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id g3-20020a1709026b4300b00199193e5ea1sm7323810plt.61.2023.04.24.21.51.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 24 Apr 2023 21:51:02 -0700 (PDT)
+Date:   Tue, 25 Apr 2023 12:50:58 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 1/3] generic/476: reclassify this test as a long running
+ soak stress test
+Message-ID: <20230425045058.s5kcgecjis24ktxd@zlang-mailbox>
+References: <168123682679.4086541.13812285218510940665.stgit@frogsfrogsfrogs>
+ <168123683265.4086541.1415706130542808348.stgit@frogsfrogsfrogs>
+ <20230422082456.6nsk5ve756j37jas@zlang-mailbox>
+ <20230424181725.GG360885@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-X-Originating-IP: [10.175.127.227]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- kwepemi500009.china.huawei.com (7.221.188.199)
-X-CFilter-Loop: Reflected
+In-Reply-To: <20230424181725.GG360885@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-I found a corruption during growfs:
+On Mon, Apr 24, 2023 at 11:17:25AM -0700, Darrick J. Wong wrote:
+> On Sat, Apr 22, 2023 at 04:24:56PM +0800, Zorro Lang wrote:
+> > On Tue, Apr 11, 2023 at 11:13:52AM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > This test is a long(ish) running stress test, so add it to those groups.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > >  tests/generic/476 |    2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > 
+> > > diff --git a/tests/generic/476 b/tests/generic/476
+> > > index 212373d17c..edb0be7b50 100755
+> > > --- a/tests/generic/476
+> > > +++ b/tests/generic/476
+> > > @@ -8,7 +8,7 @@
+> > >  # bugs in the write path.
+> > >  #
+> > >  . ./common/preamble
+> > > -_begin_fstest auto rw
+> > > +_begin_fstest auto rw soak long_rw stress
+> > 
+> > Sorry for late reviewing. I thought a bit more about this change. I think
+> > the "soak", "long_rw" and "stress" tags are a bit overlap. If the "stress"
+> > group means "fsstress", then I think the fsstress test can be in soak
+> > group too, and currently the test cases in "soak" group are same with the
+> > "long_rw" group [1].
+> 
+> Hm.  Given the current definitions of each group:
+> 
+> long_rw                 long-soak read write IO path exercisers
+> rw                      read/write IO tests
+> soak                    long running soak tests of any kind
+> stress                  fsstress filesystem exerciser
+> 
+> I think these all can apply to generic/476 -- it's definitely a
+> read-write IO test; it's definitely one that does RW for a long time;
+> and it uses fsstress.
+> 
+> > So I think we can give the "soak" tag to more test cases with random I/Os
+> > (fsstress or fsx or others). And rename "long_rw" to "long_soak" for those
+> > soak group cases which need long soaking time. Then we have two group tags
+> > for random loading/stress test cases, the testers can (decide to) run these
+> > random load test cases seperately with more time or loop count.
+> 
+> I have a counterproposal -- what do you think about redefining 'soak' to
+> mean "all tests where SOAK_DURATION can be used to control the test
+> runtime directly"?  This shouldn't break anyone's scripts, since the
+> only members of 'soak' are the ones that get modified by this patchset.
 
- XFS (loop0): Internal error agbno >= mp->m_sb.sb_agblocks at line 3661 of
-   file fs/xfs/libxfs/xfs_alloc.c.  Caller __xfs_free_extent+0x28e/0x3c0
- CPU: 0 PID: 573 Comm: xfs_growfs Not tainted 6.3.0-rc7-next-20230420-00001-gda8c95746257
- Call Trace:
-  <TASK>
-  dump_stack_lvl+0x50/0x70
-  xfs_corruption_error+0x134/0x150
-  __xfs_free_extent+0x2c1/0x3c0
-  xfs_ag_extend_space+0x291/0x3e0
-  xfs_growfs_data+0xd72/0xe90
-  xfs_file_ioctl+0x5f9/0x14a0
-  __x64_sys_ioctl+0x13e/0x1c0
-  do_syscall_64+0x39/0x80
-  entry_SYSCALL_64_after_hwframe+0x63/0xcd
- XFS (loop0): Corruption detected. Unmount and run xfs_repair
- XFS (loop0): Internal error xfs_trans_cancel at line 1097 of file
-   fs/xfs/xfs_trans.c.  Caller xfs_growfs_data+0x691/0xe90
- CPU: 0 PID: 573 Comm: xfs_growfs Not tainted 6.3.0-rc7-next-20230420-00001-gda8c95746257
- Call Trace:
-  <TASK>
-  dump_stack_lvl+0x50/0x70
-  xfs_error_report+0x93/0xc0
-  xfs_trans_cancel+0x2c0/0x350
-  xfs_growfs_data+0x691/0xe90
-  xfs_file_ioctl+0x5f9/0x14a0
-  __x64_sys_ioctl+0x13e/0x1c0
-  do_syscall_64+0x39/0x80
-  entry_SYSCALL_64_after_hwframe+0x63/0xcd
- RIP: 0033:0x7f2d86706577
+Sure, we can check if more cases can use the SOAK_DURATION later, then we add
+them to soak group.
 
-The bug can be reproduced with the following sequence:
+Thanks,
+Zorro
 
- # truncate -s  1073741824 xfs_test.img
- # mkfs.xfs -f -b size=1024 -d agcount=4 xfs_test.img
- # truncate -s 2305843009213693952  xfs_test.img
- # mount -o loop xfs_test.img /mnt/test
- # xfs_growfs -D  1125899907891200  /mnt/test
-
-The root cause is that during growfs, user space passed in a large value
-of newblcoks to xfs_growfs_data_private(), due to current sb_agblocks is
-too small, new AG count will exceed UINT_MAX. Because of AG number type
-is unsigned int and it would overflow, that caused nagcount much smaller
-than the actual value. During AG extent space, delta blocks in
-xfs_resizefs_init_new_ags() will much larger than the actual value due to
-incorrect nagcount, even exceed UINT_MAX. This will cause corruption and
-be detected in __xfs_free_extent. Fix it by add checks for AG number that
-should not greater than or equal to NULLAGNUMBER before growfs and mount
-filesystem.
-
-Signed-off-by: Long Li <leo.lilong@huawei.com>
----
- fs/xfs/xfs_fsops.c   | 2 +-
- fs/xfs/xfs_mount.c   | 6 +++++-
- fs/xfs/xfs_mount.h   | 2 +-
- fs/xfs/xfs_rtalloc.c | 2 +-
- fs/xfs/xfs_super.c   | 4 ++--
- 5 files changed, 10 insertions(+), 6 deletions(-)
-
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 13851c0d640b..0f0b12eaf53a 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -100,7 +100,7 @@ xfs_growfs_data_private(
- 	struct xfs_perag	*last_pag;
- 
- 	nb = in->newblocks;
--	error = xfs_sb_validate_fsb_count(&mp->m_sb, nb);
-+	error = xfs_sb_validate_fsb_count(&mp->m_sb, nb, true);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index fb87ffb48f7f..284c11c1c6e8 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -128,7 +128,8 @@ xfs_uuid_unmount(
- int
- xfs_sb_validate_fsb_count(
- 	xfs_sb_t	*sbp,
--	uint64_t	nblocks)
-+	uint64_t	nblocks,
-+	bool		dblock)
- {
- 	ASSERT(PAGE_SHIFT >= sbp->sb_blocklog);
- 	ASSERT(sbp->sb_blocklog >= BBSHIFT);
-@@ -136,6 +137,9 @@ xfs_sb_validate_fsb_count(
- 	/* Limited by ULONG_MAX of page cache index */
- 	if (nblocks >> (PAGE_SHIFT - sbp->sb_blocklog) > ULONG_MAX)
- 		return -EFBIG;
-+	/* Limited by NULLAGNUMBER of ag number */
-+	if (dblock && (nblocks >> sbp->sb_agblklog) >= NULLAGNUMBER)
-+		return -EFBIG;
- 	return 0;
- }
- 
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index f3269c0626f0..a69e9b21ef61 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -531,7 +531,7 @@ xfs_mod_frextents(struct xfs_mount *mp, int64_t delta)
- extern int	xfs_readsb(xfs_mount_t *, int);
- extern void	xfs_freesb(xfs_mount_t *);
- extern bool	xfs_fs_writable(struct xfs_mount *mp, int level);
--extern int	xfs_sb_validate_fsb_count(struct xfs_sb *, uint64_t);
-+extern int	xfs_sb_validate_fsb_count(struct xfs_sb *, uint64_t, bool);
- 
- extern int	xfs_dev_is_read_only(struct xfs_mount *, char *);
- 
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 16534e9873f6..c207026d92ac 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -958,7 +958,7 @@ xfs_growfs_rt(
- 		return -EOPNOTSUPP;
- 
- 	nrblocks = in->newblocks;
--	error = xfs_sb_validate_fsb_count(sbp, nrblocks);
-+	error = xfs_sb_validate_fsb_count(sbp, nrblocks, false);
- 	if (error)
- 		return error;
- 	/*
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 4d2e87462ac4..72dfd02c588e 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1592,8 +1592,8 @@ xfs_fs_fill_super(
- 	}
- 
- 	/* Ensure this filesystem fits in the page cache limits */
--	if (xfs_sb_validate_fsb_count(&mp->m_sb, mp->m_sb.sb_dblocks) ||
--	    xfs_sb_validate_fsb_count(&mp->m_sb, mp->m_sb.sb_rblocks)) {
-+	if (xfs_sb_validate_fsb_count(&mp->m_sb, mp->m_sb.sb_dblocks, true) ||
-+	    xfs_sb_validate_fsb_count(&mp->m_sb, mp->m_sb.sb_rblocks, false)) {
- 		xfs_warn(mp,
- 		"file system too large to be mounted on this system.");
- 		error = -EFBIG;
--- 
-2.31.1
+> 
+> --D
+> 
+> > Anyway, above things can be done in another patchset, I just speak out to
+> > get more talking:) For this patch:
+> > 
+> > Reviewed-by: Zorro Lang <zlang@redhat.com>
+> > 
+> > 
+> > 
+> > Thanks,
+> > Zorro
+> > 
+> > [1]
+> > # ./check -n -g soak
+> > SECTION       -- simpledev
+> > FSTYP         -- xfs (non-debug)
+> > PLATFORM      -- Linux/x86_64
+> > MKFS_OPTIONS  -- -f -m rmapbt=1 /dev/sda3
+> > MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/sda3 /mnt/scratch
+> > 
+> > generic/521
+> > generic/522
+> > generic/642
+> > 
+> > # ./check -n -g long_rw
+> > SECTION       -- simpledev
+> > FSTYP         -- xfs (non-debug)
+> > PLATFORM      -- Linux/x86_64
+> > MKFS_OPTIONS  -- -f -m rmapbt=1 /dev/sda3
+> > MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/sda3 /mnt/scratch
+> > 
+> > generic/521
+> > generic/522
+> > generic/642
+> > 
+> > 
+> > >  
+> > >  # Override the default cleanup function.
+> > >  _cleanup()
+> > > 
+> > 
+> 
 
