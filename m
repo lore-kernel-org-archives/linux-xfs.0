@@ -2,198 +2,188 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4A71C77B7F
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Apr 2023 00:14:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8C78C77B7C
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Apr 2023 02:28:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238372AbjDZAOq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Apr 2023 20:14:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41760 "EHLO
+        id S239160AbjDZC2D (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Apr 2023 22:28:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232211AbjDZAOq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Apr 2023 20:14:46 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDA189EFB;
-        Tue, 25 Apr 2023 17:14:41 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S239124AbjDZC16 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Apr 2023 22:27:58 -0400
+Received: from mail1.bemta34.messagelabs.com (mail1.bemta34.messagelabs.com [195.245.231.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D0298A54;
+        Tue, 25 Apr 2023 19:27:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
+        s=170520fj; t=1682476074; i=@fujitsu.com;
+        bh=SRX4u1hksNOjXaqCfLCkjPKJjm0vVvSWrZQKjRlWJBE=;
+        h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+         In-Reply-To:Content-Type:Content-Transfer-Encoding;
+        b=y9XAIRO3UnvWls8edPx/JKSDG30bnlFMQTApijHQlM9c/PZEbb9kWZnAE6HHaax4H
+         ytq7SGDlvynfydVZ8mHP3IV7VGIf4kQS0vIQOQXIlbq9FRAhK+nbQ/YJX5aEkS292a
+         pOZEzLS48jBxUQVsC5wVe2D/0Wvds5Q3jV4VqItcuI5yDokvmfbcfRfhmEuyYzhrjr
+         UgPoZ+l4YH/CtnmGj4d2fa7lUq2rGHOpyGUgOY0uw+Yb7uNDtUkG2XcMxj0zLAeJKK
+         Zz99n24GFF3/pH41uWhLmixoqvH88FxdjFIWguBmkHYI6CrhlPLp0Jt/rASKtJvnju
+         3Y3Kl3V0KYLDg==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrOKsWRWlGSWpSXmKPExsViZ8ORqKvR45F
+  icPYXs8Wc9WvYLKZPvcBocfkJn8Xs6c1MFnv2nmSxuLfmP6vFrj872C1uTHjKaLHyxx9Wi98/
+  5rA5cHlsXqHlsXjPSyaPTas62Tw2fZrE7nFixm8WjxebZzJ6nFlwhN3j8ya5AI4o1sy8pPyKB
+  NaMQ89XMBVclau4dFamgbFPsouRi0NIYAujxLprz9ghnBVMEguubWCEcLYzSly7v4Wti5GTg1
+  fATqLh8ysWEJtFQFWi58UnZoi4oMTJmU/A4qICKRIzNi4GiwsLhEos/DOHCcQWEciUOP/kDRP
+  IUGaBw4wSSzpvskFseMwkMXnaL7AqNgEdiQsL/rJ2MXJwcAqYSSx6zQcSZhawkFj85iA7hC0v
+  0bx1NtgCCQEliYtf77BC2JUSrR9+sUDYahJXz21insAoNAvJfbOQjJqFZNQCRuZVjKbFqUVlq
+  UW6ZnpJRZnpGSW5iZk5eolVuol6qaW65anFJbpGeonlxXqpxcV6xZW5yTkpenmpJZsYgXGYUq
+  youYPxw86/eocYJTmYlER5ucLcUoT4kvJTKjMSizPii0pzUosPMcpwcChJ8Jp1eqQICRalpqd
+  WpGXmAFMCTFqCg0dJhDeyAyjNW1yQmFucmQ6ROsWoy7Gt/+peZiGWvPy8VClxXt1uoCIBkKKM
+  0jy4EbD0dIlRVkqYl5GBgUGIpyC1KDezBFX+FaM4B6OSMO/KdqApPJl5JXCbXgEdwQR0RDkD2
+  BEliQgpqQamnIxTtxTzYnfPuZh08/Adcd4LV3TtMr5lvWlLnbdB7m2eotQr68kS2VyuBj8/Wf
+  65sKWlxd1Eq2limlU4r0v7/MZl8/N6O8T0tX8rv/BPOqbpcHE5ywzmByZHNi2acqvOUuVKtcw
+  Ej2X8ebJHXeRjJzNZdHcH/bBcftG19KVZ/4ovXE92Bu+Y3/ZrAt8vv3uu1x89KdtT93S36Xmj
+  edb8fCUc6x3i7jb7/WE70HSr3z/0+b2OlQsihZ+8XHpawVNwatnvjFlrL156wDfXeptp/8cKo
+  wiJqVsfzs9elH0vySh0acHk1IrI56eZ5vzy0UnIlvr178uq6zvSSxVtXnvZqF/d0fjGZpP1fM
+  a5mrXuSizFGYmGWsxFxYkAIn4hIsoDAAA=
+X-Env-Sender: ruansy.fnst@fujitsu.com
+X-Msg-Ref: server-3.tower-571.messagelabs.com!1682476071!252115!1
+X-Originating-IP: [62.60.8.97]
+X-SYMC-ESS-Client-Auth: outbound-route-from=pass
+X-StarScan-Received: 
+X-StarScan-Version: 9.105.2; banners=-,-,-
+X-VirusChecked: Checked
+Received: (qmail 8290 invoked from network); 26 Apr 2023 02:27:52 -0000
+Received: from unknown (HELO n03ukasimr01.n03.fujitsu.local) (62.60.8.97)
+  by server-3.tower-571.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 26 Apr 2023 02:27:52 -0000
+Received: from n03ukasimr01.n03.fujitsu.local (localhost [127.0.0.1])
+        by n03ukasimr01.n03.fujitsu.local (Postfix) with ESMTP id AFBBB100191;
+        Wed, 26 Apr 2023 03:27:51 +0100 (BST)
+Received: from R01UKEXCASM223.r01.fujitsu.local (R01UKEXCASM223 [10.182.185.121])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 879D560C2B;
-        Wed, 26 Apr 2023 00:14:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E646DC433D2;
-        Wed, 26 Apr 2023 00:14:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682468081;
-        bh=k5LDX4RN/ia+edWJnG7eb6flYPG7sT+wlDQ/TZqpHsY=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=ducWBJl5fvf/2SVfoclmun5qeEMpdmeDwxpPatnNcdlHV1f7t7TyKssBuB1UzalgR
-         bB2rudvzkPEAyzjEb0tvwoahY6Qjt6XbgeWJZTYbbwOQ8Vs5tBjo7s/omQoPM1X28I
-         N1CSiXqMs12fE3GR9GumKk9zTyFj0U4EJu4NIVDnAJUypsT8zns3xf5OskBsvXY1xj
-         sWAks+H7rbkQweMNmQRnlIKa6y9+dhw4pnyNqWNJmD/zb/p4JHYcG1qiq8FHPttBW3
-         3szgr3tOlQWgtyrDmhWvhtF/KyRpdnjNUZCAHkOSUz1wbc0aPqv1lUOk2vYWfdZ/d5
-         sLmlzUDoZxEpQ==
-Subject: [PATCH 4/4] misc: add duration for recovery loop tests
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     zlang@redhat.com, djwong@kernel.org
-Cc:     Andrey Albershteyn <aalbersh@redhat.com>,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 25 Apr 2023 17:14:40 -0700
-Message-ID: <168246808052.732186.2436158006887650516.stgit@frogsfrogsfrogs>
-In-Reply-To: <168246805791.732186.9294980643404649.stgit@frogsfrogsfrogs>
-References: <168246805791.732186.9294980643404649.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+        by n03ukasimr01.n03.fujitsu.local (Postfix) with ESMTPS id A214F10018D;
+        Wed, 26 Apr 2023 03:27:51 +0100 (BST)
+Received: from [192.168.50.5] (10.167.234.230) by
+ R01UKEXCASM223.r01.fujitsu.local (10.182.185.121) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.42; Wed, 26 Apr 2023 03:27:47 +0100
+Message-ID: <baabaf6d-151b-9667-c766-bf3e89b085cb@fujitsu.com>
+Date:   Wed, 26 Apr 2023 10:27:43 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [RFC PATCH v11.1 2/2] mm, pmem, xfs: Introduce MF_MEM_REMOVE for
+ unbind
+To:     "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
+        Luis Chamberlain <mcgrof@kernel.org>
+CC:     <linux-fsdevel@vger.kernel.org>, <nvdimm@lists.linux.dev>,
+        <linux-xfs@vger.kernel.org>, <linux-mm@kvack.org>,
+        <dan.j.williams@intel.com>, <willy@infradead.org>,
+        <akpm@linux-foundation.org>
+References: <1679996506-2-3-git-send-email-ruansy.fnst@fujitsu.com>
+ <1681296735-2-1-git-send-email-ruansy.fnst@fujitsu.com>
+ <0a53ee26-5771-0808-ccdc-d1739c9dacac@fujitsu.com>
+ <20230420120956.cdxcwojckiw36kfg@quack3>
+ <d557c0cb-e244-6238-2df4-01ce75ededdf@fujitsu.com>
+ <20230425132315.u5ocvbneeqzzbifl@quack3>
+ <20230425151800.GS360889@frogsfrogsfrogs>
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+In-Reply-To: <20230425151800.GS360889@frogsfrogsfrogs>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.167.234.230]
+X-ClientProxiedBy: G08CNEXCHPEKD07.g08.fujitsu.local (10.167.33.80) To
+ R01UKEXCASM223.r01.fujitsu.local (10.182.185.121)
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
-
-Make it so that we can run recovery loop tests for an exact number of
-seconds.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Andrey Albershteyn <aalbersh@redhat.com>
----
- common/rc         |   34 ++++++++++++++++++++++++++++++++++
- tests/generic/019 |    1 +
- tests/generic/388 |    2 +-
- tests/generic/475 |    2 +-
- tests/generic/482 |    1 +
- tests/generic/648 |    8 ++++----
- 6 files changed, 42 insertions(+), 6 deletions(-)
 
 
-diff --git a/common/rc b/common/rc
-index e89b0a3794..090f3d4938 100644
---- a/common/rc
-+++ b/common/rc
-@@ -5078,6 +5078,40 @@ _save_coredump()
- 	$COREDUMP_COMPRESSOR -f "$out_file"
- }
- 
-+# Decide if a soak test should continue looping.  The sole parameter is the
-+# number of soak loops that the test wants to run by default.  The actual
-+# loop iteration number is stored in SOAK_LOOPIDX until the loop completes.
-+#
-+# If the test runner set a SOAK_DURATION value, this predicate will keep
-+# looping until it has run for at least that long.
-+_soak_loop_running() {
-+	local max_soak_loops="$1"
-+
-+	test -z "$SOAK_LOOPIDX" && SOAK_LOOPIDX=1
-+
-+	if [ -n "$SOAK_DURATION" ]; then
-+		if [ -z "$SOAK_DEADLINE" ]; then
-+			SOAK_DEADLINE="$(( $(date +%s) + SOAK_DURATION))"
-+		fi
-+
-+		local now="$(date +%s)"
-+		if [ "$now" -gt "$SOAK_DEADLINE" ]; then
-+			unset SOAK_DEADLINE
-+			unset SOAK_LOOPIDX
-+			return 1
-+		fi
-+		SOAK_LOOPIDX=$((SOAK_LOOPIDX + 1))
-+		return 0
-+	fi
-+
-+	if [ "$SOAK_LOOPIDX" -gt "$max_soak_loops" ]; then
-+		unset SOAK_LOOPIDX
-+		return 1
-+	fi
-+	SOAK_LOOPIDX=$((SOAK_LOOPIDX + 1))
-+	return 0
-+}
-+
- init_rc
- 
- ################################################################################
-diff --git a/tests/generic/019 b/tests/generic/019
-index b68dd90c0d..b81c1d17ba 100755
---- a/tests/generic/019
-+++ b/tests/generic/019
-@@ -30,6 +30,7 @@ _cleanup()
- }
- 
- RUN_TIME=$((20+10*$TIME_FACTOR))
-+test -n "$SOAK_DURATION" && RUN_TIME="$SOAK_DURATION"
- NUM_JOBS=$((4*LOAD_FACTOR))
- BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
- FILE_SIZE=$((BLK_DEV_SIZE * 512))
-diff --git a/tests/generic/388 b/tests/generic/388
-index 9cd737e8eb..4a5be6698c 100755
---- a/tests/generic/388
-+++ b/tests/generic/388
-@@ -42,7 +42,7 @@ _scratch_mkfs >> $seqres.full 2>&1
- _require_metadata_journaling $SCRATCH_DEV
- _scratch_mount
- 
--for i in $(seq 1 $((50 * TIME_FACTOR)) ); do
-+while _soak_loop_running $((50 * TIME_FACTOR)); do
- 	($FSSTRESS_PROG $FSSTRESS_AVOID -d $SCRATCH_MNT -n 999999 -p 4 >> $seqres.full &) \
- 		> /dev/null 2>&1
- 
-diff --git a/tests/generic/475 b/tests/generic/475
-index c426402ede..0cbf5131c2 100755
---- a/tests/generic/475
-+++ b/tests/generic/475
-@@ -41,7 +41,7 @@ _require_metadata_journaling $SCRATCH_DEV
- _dmerror_init
- _dmerror_mount
- 
--for i in $(seq 1 $((50 * TIME_FACTOR)) ); do
-+while _soak_loop_running $((50 * TIME_FACTOR)); do
- 	($FSSTRESS_PROG $FSSTRESS_AVOID -d $SCRATCH_MNT -n 999999 -p $((LOAD_FACTOR * 4)) >> $seqres.full &) \
- 		> /dev/null 2>&1
- 
-diff --git a/tests/generic/482 b/tests/generic/482
-index 28c83a232e..6d8396d982 100755
---- a/tests/generic/482
-+++ b/tests/generic/482
-@@ -64,6 +64,7 @@ if [ $nr_cpus -gt 8 ]; then
- fi
- fsstress_args=$(_scale_fsstress_args -w -d $SCRATCH_MNT -n 512 -p $nr_cpus \
- 		$FSSTRESS_AVOID)
-+
- devsize=$((1024*1024*200 / 512))	# 200m phys/virt size
- csize=$((1024*64 / 512))		# 64k cluster size
- lowspace=$((1024*1024 / 512))		# 1m low space threshold
-diff --git a/tests/generic/648 b/tests/generic/648
-index d7bf5697e1..3b3544ff49 100755
---- a/tests/generic/648
-+++ b/tests/generic/648
-@@ -74,14 +74,14 @@ snap_loop_fs() {
- 
- fsstress=($FSSTRESS_PROG $FSSTRESS_AVOID -d "$loopmnt" -n 999999 -p "$((LOAD_FACTOR * 4))")
- 
--for i in $(seq 1 $((25 * TIME_FACTOR)) ); do
-+while _soak_loop_running $((25 * TIME_FACTOR)); do
- 	touch $scratch_aliveflag
- 	snap_loop_fs >> $seqres.full 2>&1 &
- 
- 	if ! _mount $loopimg $loopmnt -o loop; then
- 		rm -f $scratch_aliveflag
- 		_metadump_dev $loopimg $seqres.loop.$i.md
--		_fail "iteration $i loopimg mount failed"
-+		_fail "iteration $SOAK_LOOPIDX loopimg mount failed"
- 		break
- 	fi
- 
-@@ -126,12 +126,12 @@ for i in $(seq 1 $((25 * TIME_FACTOR)) ); do
- 	done
- 	if [ $is_unmounted -ne 0 ];then
- 		cat $tmp.unmount.err
--		_fail "iteration $i scratch unmount failed"
-+		_fail "iteration $SOAK_LOOPIDX scratch unmount failed"
- 	fi
- 	_dmerror_load_working_table
- 	if ! _dmerror_mount; then
- 		_metadump_dev $DMERROR_DEV $seqres.scratch.$i.md
--		_fail "iteration $i scratch mount failed"
-+		_fail "iteration $SOAK_LOOPIDX scratch mount failed"
- 	fi
- done
- 
+在 2023/4/25 23:18, Darrick J. Wong 写道:
+> On Tue, Apr 25, 2023 at 03:23:15PM +0200, Jan Kara wrote:
+>> On Tue 25-04-23 20:47:35, Shiyang Ruan wrote:
+>>>
+>>>
+>>> 在 2023/4/20 20:09, Jan Kara 写道:
+>>>> On Thu 20-04-23 10:07:39, Shiyang Ruan wrote:
+>>>>> 在 2023/4/12 18:52, Shiyang Ruan 写道:
+>>>>>> This is a RFC HOTFIX.
+>>>>>>
+>>>>>> This hotfix adds a exclusive forzen state to make sure any others won't
+>>>>>> thaw the fs during xfs_dax_notify_failure():
+>>>>>>
+>>>>>>      #define SB_FREEZE_EXCLUSIVE	(SB_FREEZE_COMPLETE + 2)
+>>>>>> Using +2 here is because Darrick's patch[0] is using +1.  So, should we
+>>>>>> make these definitions global?
+>>>>>>
+>>>>>> Another thing I can't make up my mind is: when another freezer has freeze
+>>>>>> the fs, should we wait unitl it finish, or print a warning in dmesg and
+>>>>>> return -EBUSY?
+>>>>>>
+>>>>>> Since there are at least 2 places needs exclusive forzen state, I think
+>>>>>> we can refactor helper functions of freeze/thaw for them.  e.g.
+>>>>>>      int freeze_super_exclusive(struct super_block *sb, int frozen);
+>>>>>>      int thaw_super_exclusive(struct super_block *sb, int frozen);
+>>>>>>
+>>>>>> [0] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?h=repair-fscounters&id=c3a0d1de4d54ffb565dbc7092dfe1fb851940669
+>>>>
+>>>> I'm OK with the idea of new freeze state that does not allow userspace to
+>>>> thaw the filesystem. But I don't really like the guts of filesystem
+>>>> freezing being replicated inside XFS. It is bad enough that they are
+>>>> replicated in [0], replicating them *once more* in another XFS file shows
+>>>> we are definitely doing something wrong. And Luis will need yet another
+>>>> incantation of the exlusive freeze for suspend-to-disk. So please guys get
+>>>> together and reorganize the generic freezing code so that it supports
+>>>> exclusive freeze (for in-kernel users) and works for your usecases instead
+>>>> of replicating it inside XFS...
+>>>
+>>> I agree that too much replicating code is not good.  It's necessary to
+>>> create a generic exclusive freeze/thaw for all users.  But for me, I don't
+>>> have the confidence to do it well, because it requires good design and code
+>>> changes will involve other filesystems.  It's diffcult.
+>>>
+>>> However, I hope to be able to make progress on this unbind feature. Thus, I
+>>> tend to refactor a common helper function for xfs first, and update the code
+>>> later when the generic freeze is done.
+>>
+>> I think Darrick was thinking about working on a proper generic interface.
+>> So please coordinate with him.
+> 
+> I'll post a vfs generic kernelfreeze series later today.
+> 
+> One thing I haven't figured out yet is what's supposed to happen when
+> PREREMOVE is called on a frozen filesystem.
 
+call PREREMOVE when:
+1. freezed by kernel:    we wait unitl kernel thaws -> not sure
+2. freezed by userspace: we take over the control of freeze state:
+      a. userspace can't thaw before PREREMOVE is done
+      b. kernel keeps freeze state after PREREMOVE is done and before 
+userspace thaws
+
+Since the unbind interface doesn't return any other errcode except 
+-ENODEV, the only thing I can think of to do is wait for the other one 
+done?  If another one doesn't thaw after a long time waitting, we print 
+a "waitting too long" warning in dmesg.  But I'm not sure if this is good.
+
+> We don't want userspace to
+> be able to thaw the fs while PREREMOVE is running, so I /guess/ that
+> means we need some method for the kernel to take over a userspace
+> freeze and then put it back when we're done?
+
+As is designed by Luis, we can add sb->s_writers.frozen_by_user flag to 
+distinguish whether current freeze state is initiated by kernel or 
+userspace.  In his patch, userspace can take over kernel's freeze.  We 
+just need to switch the order.
+
+
+--
+Thanks,
+Ruan.
+
+> 
+> --D
+> 
+>> 								Honza
+>>
+>> -- 
+>> Jan Kara <jack@suse.com>
+>> SUSE Labs, CR
