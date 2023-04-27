@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D3BEC77B73
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Apr 2023 22:49:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E1B9C77B61
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Apr 2023 22:49:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344338AbjD0Wtk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Apr 2023 18:49:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53180 "EHLO
+        id S1344327AbjD0Wtq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Apr 2023 18:49:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53204 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344312AbjD0Wtk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2023 18:49:40 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1191F2123
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 15:49:39 -0700 (PDT)
+        with ESMTP id S1343716AbjD0Wtp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2023 18:49:45 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E4B02123
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 15:49:44 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 931C364038
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 22:49:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED82BC433D2;
-        Thu, 27 Apr 2023 22:49:37 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2DAAA64038
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 22:49:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86F86C433D2;
+        Thu, 27 Apr 2023 22:49:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682635778;
-        bh=t3uOzQdr+TjhqYl/hnzK5Ft1vriDZ0ElxK9351Ax9qo=;
+        s=k20201202; t=1682635783;
+        bh=C+404QwoGCrmWIxxo6DINbpm6sBY5bXsU3IvKpS6dVg=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=tgpiJBzEeThQx6K662n/aDq1zsKS2BRsuClYrDbrSo7WyVw7x7ye1Sw5TrQfK6Tzs
-         iOsYT53w1Q/GTyyZbsZU5dpquiN+lEoZN42WBdDbFT3W4zA/mnxiFeIwd5/yckOt6O
-         orlLguqggZAgaRLqAyo6KN/v80xf+EEORzZwyWRjn4l/ytCb0PXqmmW1rw3ctLqn0x
-         jJFwVQsJ7d/iMxF8igic+XP4ebmjGnONdYuGyrNbbAPYmn4bkmVkrNeL+8sw/ntVZp
-         pTMTX9nWPAc9yeYGQ9BtoBRRp7JF4/tCmhCvej8IdmNZgAGCnX73a4g47rvl7yk2Kt
-         FtHteHz43ef9g==
-Subject: [PATCH 3/4] xfs: disable reaping in fscounters scrub
+        b=Y/ptOypDkPAXpEIP2G9Z4RBrL5672BYAiG6E1fJmw7Na7aRfQqh8YI0UyTea+sJBD
+         hQg/uVQiuKcz7phMS7c03I97KeQ6Q7rIoVmT/4oWGbujx9pdFNyV74a8Xeg3/ZLEl+
+         h6wwRaM8Tl6kNU0pJ7fT2k6OSYh7ObSPXCc3kFaVmQz28VFecveUjDl/kwckanAW9E
+         BoSujyvPanweuOusidKPWNghFsZmU8g8KYu10VEHeF2Mij7OINwJfTC4FkX3qNxy7S
+         iFle33ng7i8bw74AYg6Ars06YSIIuCvJiQt1fDjVKc3bf6rRJcLVwwrobrcjgEmS3q
+         cx+uEJs5rRPqg==
+Subject: [PATCH 4/4] xfs: fix xfs_inodegc_stop racing with mod_delayed_work
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     david@fromorbit.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 27 Apr 2023 15:49:37 -0700
-Message-ID: <168263577739.1719564.16150152466509865245.stgit@frogsfrogsfrogs>
+Date:   Thu, 27 Apr 2023 15:49:43 -0700
+Message-ID: <168263578315.1719564.9753279529602110442.stgit@frogsfrogsfrogs>
 In-Reply-To: <168263576040.1719564.2454266085026973056.stgit@frogsfrogsfrogs>
 References: <168263576040.1719564.2454266085026973056.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,144 +49,174 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The fscounters scrub code doesn't work properly because it cannot
-quiesce updates to the percpu counters in the filesystem, hence it
-returns false corruption reports.  This has been fixed properly in
-one of the online repair patchsets that are under review by replacing
-the xchk_disable_reaping calls with an exclusive filesystem freeze.
-Disabling background gc isn't sufficient to fix the problem.
+syzbot reported this warning from the faux inodegc shrinker that tries
+to kick off inodegc work:
 
-In other words, scrub doesn't need to call xfs_inodegc_stop, which is
-just as well since it wasn't correct to allow scrub to call
-xfs_inodegc_start when something else could be calling xfs_inodegc_stop
-(e.g. trying to freeze the filesystem).
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 102 at kernel/workqueue.c:1445 __queue_work+0xd44/0x1120 kernel/workqueue.c:1444
+RIP: 0010:__queue_work+0xd44/0x1120 kernel/workqueue.c:1444
+Call Trace:
+ __queue_delayed_work+0x1c8/0x270 kernel/workqueue.c:1672
+ mod_delayed_work_on+0xe1/0x220 kernel/workqueue.c:1746
+ xfs_inodegc_shrinker_scan fs/xfs/xfs_icache.c:2212 [inline]
+ xfs_inodegc_shrinker_scan+0x250/0x4f0 fs/xfs/xfs_icache.c:2191
+ do_shrink_slab+0x428/0xaa0 mm/vmscan.c:853
+ shrink_slab+0x175/0x660 mm/vmscan.c:1013
+ shrink_one+0x502/0x810 mm/vmscan.c:5343
+ shrink_many mm/vmscan.c:5394 [inline]
+ lru_gen_shrink_node mm/vmscan.c:5511 [inline]
+ shrink_node+0x2064/0x35f0 mm/vmscan.c:6459
+ kswapd_shrink_node mm/vmscan.c:7262 [inline]
+ balance_pgdat+0xa02/0x1ac0 mm/vmscan.c:7452
+ kswapd+0x677/0xd60 mm/vmscan.c:7712
+ kthread+0x2e8/0x3a0 kernel/kthread.c:376
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:308
 
-Neuter the scrubber for now, and remove the xchk_*_reaping functions.
+This warning corresponds to this code in __queue_work:
 
+	/*
+	 * For a draining wq, only works from the same workqueue are
+	 * allowed. The __WQ_DESTROYING helps to spot the issue that
+	 * queues a new work item to a wq after destroy_workqueue(wq).
+	 */
+	if (unlikely(wq->flags & (__WQ_DESTROYING | __WQ_DRAINING) &&
+		     WARN_ON_ONCE(!is_chained_work(wq))))
+		return;
+
+For this to trip, we must have a thread draining the inodedgc workqueue
+and a second thread trying to queue inodegc work to that workqueue.
+This can happen if freezing or a ro remount race with reclaim poking our
+faux inodegc shrinker and another thread dropping an unlinked O_RDONLY
+file:
+
+Thread 0	Thread 1	Thread 2
+
+xfs_inodegc_stop
+
+				xfs_inodegc_shrinker_scan
+				xfs_is_inodegc_enabled
+				<yes, will continue>
+
+xfs_clear_inodegc_enabled
+xfs_inodegc_queue_all
+<list empty, do not queue inodegc worker>
+
+		xfs_inodegc_queue
+		<add to list>
+		xfs_is_inodegc_enabled
+		<no, returns>
+
+drain_workqueue
+<set WQ_DRAINING>
+
+				llist_empty
+				<no, will queue list>
+				mod_delayed_work_on(..., 0)
+				__queue_work
+				<sees WQ_DRAINING, kaboom>
+
+In other words, everything between the access to inodegc_enabled state
+and the decision to poke the inodegc workqueue requires some kind of
+coordination to avoid the WQ_DRAINING state.  We could perhaps introduce
+a lock here, but we could also try to eliminate WQ_DRAINING from the
+picture.
+
+We could replace the drain_workqueue call with a loop that flushes the
+workqueue and queues workers as long as there is at least one inode
+present in the per-cpu inodegc llists.  We've disabled inodegc at this
+point, so we know that the number of queued inodes will eventually hit
+zero as long as xfs_inodegc_start cannot reactivate the workers.
+
+There are four callers of xfs_inodegc_start.  Three of them come from the
+VFS with s_umount held: filesystem thawing, failed filesystem freezing,
+and the rw remount transition.  The fourth caller is mounting rw (no
+remount or freezing possible).
+
+There are three callers ofs xfs_inodegc_stop.  One is unmounting (no
+remount or thaw possible).  Two of them come from the VFS with s_umount
+held: fs freezing and ro remount transition.
+
+Hence, it is correct to replace the drain_workqueue call with a loop
+that drains the inodegc llists.
+
+Fixes: 6191cf3ad59f ("xfs: flush inodegc workqueue tasks before cancel")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/common.c     |   26 --------------------------
- fs/xfs/scrub/common.h     |    2 --
- fs/xfs/scrub/fscounters.c |   10 +++-------
- fs/xfs/scrub/scrub.c      |    2 --
- fs/xfs/scrub/scrub.h      |    1 -
- fs/xfs/scrub/trace.h      |    1 -
- 6 files changed, 3 insertions(+), 39 deletions(-)
+ fs/xfs/xfs_icache.c |   30 +++++++++++++++++++++++++-----
+ 1 file changed, 25 insertions(+), 5 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 9aa79665c608..7a20256be969 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -1164,32 +1164,6 @@ xchk_metadata_inode_forks(
- 	return 0;
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 4b63c065ef19..14cb660d7f55 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -435,18 +435,23 @@ xfs_iget_check_free_state(
  }
  
--/* Pause background reaping of resources. */
--void
--xchk_stop_reaping(
--	struct xfs_scrub	*sc)
--{
--	sc->flags |= XCHK_REAPING_DISABLED;
--	xfs_blockgc_stop(sc->mp);
--	xfs_inodegc_stop(sc->mp);
--}
--
--/* Restart background reaping of resources. */
--void
--xchk_start_reaping(
--	struct xfs_scrub	*sc)
--{
--	/*
--	 * Readonly filesystems do not perform inactivation or speculative
--	 * preallocation, so there's no need to restart the workers.
--	 */
--	if (!xfs_is_readonly(sc->mp)) {
--		xfs_inodegc_start(sc->mp);
--		xfs_blockgc_start(sc->mp);
--	}
--	sc->flags &= ~XCHK_REAPING_DISABLED;
--}
--
- /*
-  * Enable filesystem hooks (i.e. runtime code patching) before starting a scrub
-  * operation.  Callers must not hold any locks that intersect with the CPU
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 18b5f2b62f13..791235cd9b00 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -156,8 +156,6 @@ static inline bool xchk_skip_xref(struct xfs_scrub_metadata *sm)
- }
+ /* Make all pending inactivation work start immediately. */
+-static void
++static bool
+ xfs_inodegc_queue_all(
+ 	struct xfs_mount	*mp)
+ {
+ 	struct xfs_inodegc	*gc;
+ 	int			cpu;
++	bool			ret = false;
  
- int xchk_metadata_inode_forks(struct xfs_scrub *sc);
--void xchk_stop_reaping(struct xfs_scrub *sc);
--void xchk_start_reaping(struct xfs_scrub *sc);
- 
- /*
-  * Setting up a hook to wait for intents to drain is costly -- we have to take
-diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
-index faa315be7978..0d90d00de770 100644
---- a/fs/xfs/scrub/fscounters.c
-+++ b/fs/xfs/scrub/fscounters.c
-@@ -150,13 +150,6 @@ xchk_setup_fscounters(
- 	if (error)
- 		return error;
- 
--	/*
--	 * Pause background reclaim while we're scrubbing to reduce the
--	 * likelihood of background perturbations to the counters throwing off
--	 * our calculations.
--	 */
--	xchk_stop_reaping(sc);
--
- 	return xchk_trans_alloc(sc, 0);
- }
- 
-@@ -453,6 +446,9 @@ xchk_fscounters(
- 	if (frextents > mp->m_sb.sb_rextents)
- 		xchk_set_corrupt(sc);
- 
-+	/* XXX: We can't quiesce percpu counter updates, so exit early. */
-+	return 0;
-+
- 	/*
- 	 * If ifree exceeds icount by more than the minimum variance then
- 	 * something's probably wrong with the counters.
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 02819bedc5b1..3d98f604765e 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -186,8 +186,6 @@ xchk_teardown(
+ 	for_each_online_cpu(cpu) {
+ 		gc = per_cpu_ptr(mp->m_inodegc, cpu);
+-		if (!llist_empty(&gc->list))
++		if (!llist_empty(&gc->list)) {
+ 			mod_delayed_work_on(cpu, mp->m_inodegc_wq, &gc->work, 0);
++			ret = true;
++		}
  	}
- 	if (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
- 		mnt_drop_write_file(sc->file);
--	if (sc->flags & XCHK_REAPING_DISABLED)
--		xchk_start_reaping(sc);
- 	if (sc->buf) {
- 		if (sc->buf_cleanup)
- 			sc->buf_cleanup(sc->buf);
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index e71903474cd7..b38e93830dde 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -106,7 +106,6 @@ struct xfs_scrub {
++
++	return ret;
+ }
  
- /* XCHK state flags grow up from zero, XREP state flags grown down from 2^31 */
- #define XCHK_TRY_HARDER		(1 << 0)  /* can't get resources, try again */
--#define XCHK_REAPING_DISABLED	(1 << 1)  /* background block reaping paused */
- #define XCHK_FSGATES_DRAIN	(1 << 2)  /* defer ops draining enabled */
- #define XCHK_NEED_DRAIN		(1 << 3)  /* scrub needs to drain defer ops */
- #define XREP_ALREADY_FIXED	(1 << 31) /* checking our repair work */
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 68efd6fda61c..b3894daeb86a 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -98,7 +98,6 @@ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_FSCOUNTERS);
+ /*
+@@ -1911,24 +1916,39 @@ xfs_inodegc_flush(
  
- #define XFS_SCRUB_STATE_STRINGS \
- 	{ XCHK_TRY_HARDER,			"try_harder" }, \
--	{ XCHK_REAPING_DISABLED,		"reaping_disabled" }, \
- 	{ XCHK_FSGATES_DRAIN,			"fsgates_drain" }, \
- 	{ XCHK_NEED_DRAIN,			"need_drain" }, \
- 	{ XREP_ALREADY_FIXED,			"already_fixed" }
+ /*
+  * Flush all the pending work and then disable the inode inactivation background
+- * workers and wait for them to stop.
++ * workers and wait for them to stop.  Do not call xfs_inodegc_start until this
++ * finishes.
+  */
+ void
+ xfs_inodegc_stop(
+ 	struct xfs_mount	*mp)
+ {
++	bool			rerun;
++
+ 	if (!xfs_clear_inodegc_enabled(mp))
+ 		return;
+ 
++	/*
++	 * Drain all pending inodegc work, including inodes that could be
++	 * queued by racing xfs_inodegc_queue or xfs_inodegc_shrinker_scan
++	 * threads that sample the inodegc state just prior to us clearing it.
++	 * The inodegc flag state prevents new threads from queuing more
++	 * inodes, so we queue pending work items and flush the workqueue until
++	 * all inodegc lists are empty.
++	 */
+ 	xfs_inodegc_queue_all(mp);
+-	drain_workqueue(mp->m_inodegc_wq);
++	do {
++		flush_workqueue(mp->m_inodegc_wq);
++		rerun = xfs_inodegc_queue_all(mp);
++	} while (rerun);
+ 
+ 	trace_xfs_inodegc_stop(mp, __return_address);
+ }
+ 
+ /*
+  * Enable the inode inactivation background workers and schedule deferred inode
+- * inactivation work if there is any.
++ * inactivation work if there is any.  Do not call this while xfs_inodegc_stop
++ * is running.
+  */
+ void
+ xfs_inodegc_start(
 
