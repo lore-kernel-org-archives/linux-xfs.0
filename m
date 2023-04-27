@@ -2,88 +2,76 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A7FAC77B73
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Apr 2023 22:45:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BF8EC77B73
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Apr 2023 22:48:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344227AbjD0Wpo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Apr 2023 18:45:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51656 "EHLO
+        id S1344248AbjD0WsW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Apr 2023 18:48:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52886 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229724AbjD0Wpn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2023 18:45:43 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 733C32106
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 15:45:42 -0700 (PDT)
+        with ESMTP id S229724AbjD0WsV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2023 18:48:21 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B7E22685
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 15:48:19 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 08436630FC
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 22:45:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62703C433EF;
-        Thu, 27 Apr 2023 22:45:41 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3AFED64033
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 22:48:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 939D5C433EF;
+        Thu, 27 Apr 2023 22:48:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682635541;
-        bh=6YhAhdf8h3lp+bZn0lcNfDuHx4HATO8vHMsX7SgfVWA=;
-        h=Date:From:To:Cc:Subject:From;
-        b=mb2DCJ8i16y7ZKldPMoWQSqTf7OE8G1y/M2fuxhFT9NrLYYO6QQftln4lILVhzQlu
-         BRM/0QkhjmM5AjG7oTCQlWnhILxPUDtKzK1K9HZt6NgKD4d0elMSHEn/mFcUA8V0ZN
-         YkxsroS35WD31w5c88aTaUs55ymSmiPD9LRJGv/gZCCCleJzAO/ji3D40X/gFNgQuW
-         qfDhEWHfXxh66WGJNh14gHDsBNBiAQ95zI+Jsmz+5vBMY0WuJE4kgQcamiK3chxUbM
-         hDg8zmdWc2drg5iZQIGosb+z05CSIVQt3bSb9WZKQWxNGjEM+4QZlgcLaPz8zZtOuZ
-         b3giqiTro7bFg==
-Date:   Thu, 27 Apr 2023 15:45:40 -0700
+        s=k20201202; t=1682635698;
+        bh=PZYyEQ8m+t7g4aoKIHxXgCOdm0hjbqvRad1FRQj/Qn0=;
+        h=Subject:From:To:Cc:Date:From;
+        b=buCL5//AZuNvknnA3MN9qNewQmJDLohz8x8gAWNgZGNeL7nlpolqDYnD4JHl/Rvob
+         ZZAWJ/kRtDOD6D6u2RyA8GGD5P7x3zh3tCBDPuv6tqDA3YDm8mS4lfc0tGIR/8gGxh
+         UuOPl5hvYfYUlGu8Phk6NYl4UP8sx+wG+PbRvyzvCS2WxyurP/1EHJo7wshJAaxFnE
+         ZZZV+liQVrgZRdTKiUeYd+cuqkgg/7vJs8ZP9dH3s7b1DoyTbm5dpZRnOhnlOR7Snc
+         IMJWhQl81XAZJ5uXbJC4dMUWv6JpxAowJMUSlAi23gj/wbdSh47H7gDxLfoco8I93T
+         e5jEeycQp45sA==
+Subject: [PATCHSET 0/4] xfs: bug fixes for 6.4-rc1
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Carlos Maiolino <cem@kernel.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] mkfs: warning about misaligned AGs and RAID stripes is not
- an error
-Message-ID: <20230427224540.GE59213@frogsfrogsfrogs>
+To:     dchinner@fromorbit.com, djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Date:   Thu, 27 Apr 2023 15:48:18 -0700
+Message-ID: <168263569804.1717447.12960771904502687107.stgit@frogsfrogsfrogs>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi all,
 
-I've noticed a fair number of fstests failures when we create a scratch
-device on a RAID device and the test specifies an explicit AG count or
-AG size:
+Here are some assorted bug fixes for 6.4:
 
---- /tmp/fstests/tests/xfs/042.out	2022-09-01 15:09:11.484679979 -0700
-+++ /var/tmp/fstests/xfs/042.out.bad	2023-04-25 19:59:04.040000000 -0700
-@@ -1,5 +1,8 @@
- QA output created by 042
--Make a 96 megabyte filesystem on SCRATCH_DEV and mount... done
-+Make a 96 megabyte filesystem on SCRATCH_DEV and mount... Warning: AG size is a multiple of stripe width.  This can cause performance
-+problems by aligning all AGs on the same disk.  To avoid this, run mkfs with
-+an AG size that is one stripe unit smaller or larger, for example 8160.
-+done
+ * A regression fix for the allocator refactoring that we did in 6.3.
+ * Fix a bug that occurs when formatting an internal log with a stripe
+   alignment such that there's free space before the start of the log
+   but not after.
+ * Make scrub actually take the MMAPLOCK (to lock out page faults) when
+   scrubbing the COW fork
+ * If we call FUNSHARE on a hole in the data fork, don't create a
+   delalloc reservation in the cow fork for that hole.
 
-Emitting this warning on stderr is silly -- nothing has failed, and we
-aren't going to abort the format either.  Send the warning to stdout.
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=kernel-fixes-6.4
 ---
- mkfs/xfs_mkfs.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_ag.c   |   10 +++++-----
+ fs/xfs/libxfs/xfs_bmap.c |    5 +++--
+ fs/xfs/scrub/bmap.c      |    4 ++--
+ fs/xfs/xfs_iomap.c       |    5 +++--
+ 4 files changed, 13 insertions(+), 11 deletions(-)
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 6dc0f335..2f2995e1 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -3167,11 +3167,12 @@ _("agsize rounded to %lld, sunit = %d\n"),
- 
- 		if (cli_opt_set(&dopts, D_AGCOUNT) ||
- 		    cli_opt_set(&dopts, D_AGSIZE)) {
--			fprintf(stderr, _(
-+			printf(_(
- "Warning: AG size is a multiple of stripe width.  This can cause performance\n\
- problems by aligning all AGs on the same disk.  To avoid this, run mkfs with\n\
- an AG size that is one stripe unit smaller or larger, for example %llu.\n"),
- 				(unsigned long long)cfg->agsize - dsunit);
-+			fflush(stdout);
- 			goto validate;
- 		}
- 
