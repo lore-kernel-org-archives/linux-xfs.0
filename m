@@ -2,140 +2,107 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FFD3C77B7C
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Apr 2023 09:57:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE766C77B73
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Apr 2023 15:07:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243149AbjD0J5y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Apr 2023 05:57:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42066 "EHLO
+        id S243412AbjD0PHG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Apr 2023 11:07:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243439AbjD0J5v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2023 05:57:51 -0400
+        with ESMTP id S243404AbjD0PHG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2023 11:07:06 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D86644A9;
-        Thu, 27 Apr 2023 02:57:48 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBF4E1992
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 08:07:04 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 37DF763C17;
-        Thu, 27 Apr 2023 09:57:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5FD41C433EF;
-        Thu, 27 Apr 2023 09:57:46 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 772C06177E
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 15:07:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CEAA9C433EF;
+        Thu, 27 Apr 2023 15:07:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682589467;
-        bh=USht+Uhb9xZz9unMUb+D4xBAM+5FX4XpLOVJcmQLh1U=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=byAFePc0ODsjd5aiGO9OPca7OVWAZDPXzpeqUTYbMwvg/LgHb+Nd89oeLryh1Vjs7
-         mNs4G0c5xvx9hPHhbPbqqb2wXnfj0hssVe3TfUDySJVnk2oJxTiOy1qYOe+28ZFoqc
-         soDJQVIvZDzswir043Ask61bZCvd8O0/7HPCwsjVW+HkiRya/gKcqEv4o7uWYbYNfD
-         UFEJ/AOiPH0ZipnF2tb1U57ShzE0LtqnRotiitK+rYq9zfecX+cG91iThdn1CtqbFB
-         XyDR5aNQJoGNXTu40yuMplZ/vbGv5gH/JngiDbHisrJKKedk7MZ8io8BRU6s3H7C65
-         Nu/DjCcXdQYug==
-Message-ID: <0f504cb85005676fdae06d00b276518b6b983986.camel@kernel.org>
-Subject: Re: [PATCH v2 1/3] fs: add infrastructure for multigrain inode
- i_m/ctime
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Christian Brauner <brauner@kernel.org>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Chuck Lever <chuck.lever@oracle.com>, Jan Kara <jack@suse.cz>,
-        Amir Goldstein <amir73il@gmail.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-nfs@vger.kernel.org
-Date:   Thu, 27 Apr 2023 05:57:44 -0400
-In-Reply-To: <20230427-rebel-vergibt-99cf6a7838a2@brauner>
-References: <20230424151104.175456-1-jlayton@kernel.org>
-         <20230424151104.175456-2-jlayton@kernel.org>
-         <20230426-bahnanlagen-ausmusterung-4877cbf40d4c@brauner>
-         <03e91ee4c56829995c08f4f8fb1052d3c6cc40c4.camel@kernel.org>
-         <20230427-rebel-vergibt-99cf6a7838a2@brauner>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.1 (3.48.1-1.fc38) 
+        s=k20201202; t=1682608023;
+        bh=aAif6VsaTleQkj9Y6xmlPA+keujvH3/W4QnlESFDyF4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=gzBjrtcURVvcnVNeIRqa6CxZug4Zuirzs0eeIskOjoGvEZHA69eycu2A/V+Uzo+1E
+         0zTUtSQccusWfXh+z+L1kwD+GpLwoqr6EvdZbXZ4UUKcEo30ASe4cX8mZN4byuchyo
+         +CNs50XLCFwfVIDV30flLRUaarZl4rAwujeTJhBu/i4fOzJk7pgt/dH/SMt6HSOwov
+         RJqu35c7EV5kMRX/FIsagIaI2ahcB9k1kAXcqI+ekvgwfz1n2IBK2avkvBg139ZOB2
+         M9NYVU/6BiWg8xWfiqd7Nmq2ZxAWZNEoNoCwTqzs93UOkNIXboVh85RPNvexTAN2M+
+         ElBGqdoHTYZqQ==
+Date:   Thu, 27 Apr 2023 08:07:03 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
+Subject: Re: [PATCH] xfs: fix livelock in delayed allocation at ENOSPC
+Message-ID: <20230427150703.GD59245@frogsfrogsfrogs>
+References: <20230421222440.2722482-1-david@fromorbit.com>
+ <20230425152052.GT360889@frogsfrogsfrogs>
+ <20230426230135.GJ3223426@dread.disaster.area>
+ <20230426233831.GB59245@frogsfrogsfrogs>
+ <20230427001124.GL3223426@dread.disaster.area>
+ <20230427005333.GC59245@frogsfrogsfrogs>
+ <20230427052600.GM3223426@dread.disaster.area>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230427052600.GM3223426@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, 2023-04-27 at 11:51 +0200, Christian Brauner wrote:
-> On Wed, Apr 26, 2023 at 05:48:38AM -0400, Jeff Layton wrote:
-> > On Wed, 2023-04-26 at 09:07 +0200, Christian Brauner wrote:
-> > > On Mon, Apr 24, 2023 at 11:11:02AM -0400, Jeff Layton wrote:
-> > > > The VFS always uses coarse-grained timestamp updates for filling ou=
-t the
-> > > > ctime and mtime after a change. This has the benefit of allowing
-> > > > filesystems to optimize away a lot metaupdates, to around once per
-> > > > jiffy, even when a file is under heavy writes.
-> > > >=20
-> > > > Unfortunately, this has always been an issue when we're exporting v=
-ia
-> > > > NFSv3, which relies on timestamps to validate caches. Even with NFS=
-v4, a
-> > > > lot of exported filesystems don't properly support a change attribu=
-te
-> > > > and are subject to the same problems with timestamp granularity. Ot=
-her
-> > > > applications have similar issues (e.g backup applications).
-> > > >=20
-> > > > Switching to always using fine-grained timestamps would improve the
-> > > > situation for NFS, but that becomes rather expensive, as the underl=
-ying
-> > > > filesystem will have to log a lot more metadata updates.
-> > > >=20
-> > > > What we need is a way to only use fine-grained timestamps when they=
- are
-> > > > being actively queried:
-> > > >=20
-> > > > Whenever the mtime changes, the ctime must also change since we're
-> > > > changing the metadata. When a superblock has a s_time_gran >1, we c=
-an
-> > > > use the lowest-order bit of the inode->i_ctime as a flag to indicat=
-e
-> > > > that the value has been queried. Then on the next write, we'll fetc=
-h a
-> > > > fine-grained timestamp instead of the usual coarse-grained one.
-> > > >=20
-> > > > We could enable this for any filesystem that has a s_time_gran >1, =
-but
-> > > > for now, this patch adds a new SB_MULTIGRAIN_TS flag to allow files=
-ystems
-> > > > to opt-in to this behavior.
-> > >=20
-> > > Hm, the patch raises the flag in s_flags. Please at least move this t=
-o
-> > > s_iflags as SB_I_MULTIGRAIN and treat this as an internal flag. There=
-'s
-> > > no need to give the impression that this will become a mount option.
-> > >=20
-> > > Also, this looks like it's a filesystem property not a superblock
-> > > property as the granularity isn't changeable. So shouldn't this be an
-> > > FS_* flag instead?
-> >=20
-> > It could be a per-sb thing if there was some filesystem that wanted to
-> > do that, but I'm hoping that most will not want to do that.
->=20
-> Yeah, I'd really hope this isn't an sb thing.
->=20
-> >=20
-> > My initial patches for this actually did use a FS_* flag, but I figured
->=20
-> Oh, I might've just missed that.
->=20
+On Thu, Apr 27, 2023 at 03:26:00PM +1000, Dave Chinner wrote:
+> On Wed, Apr 26, 2023 at 05:53:33PM -0700, Darrick J. Wong wrote:
+> > On Thu, Apr 27, 2023 at 10:11:24AM +1000, Dave Chinner wrote:
+> > > On Wed, Apr 26, 2023 at 04:38:31PM -0700, Darrick J. Wong wrote:
+> > > > I also added a su=128k,sw=4 config to the fstests fleet and am now
+> > > > trying to fix all the fstests bugs that produce incorrect test failures.
+> > > 
+> > > The other thing I noticed is a couple of the FIEMAP tests fail
+> > > because they find data blocks where they expect holes such as:
+> > > 
+> > > generic/225 21s ... - output mismatch (see /home/dave/src/xfstests-dev/results//xfs_align/generic/225.out.bad)
+> > >     --- tests/generic/225.out   2022-12-21 15:53:25.479044361 +1100
+> > >     +++ /home/dave/src/xfstests-dev/results//xfs_align/generic/225.out.bad      2023-04-26 04:24:31.426016818 +1000
+> > >     @@ -1,3 +1,79 @@
+> > >      QA output created by 225
+> > >      fiemap run without preallocation, with sync
+> > >     +ERROR: FIEMAP claimed there was data at a block which should be a hole, and FIBMAP confirmend that it is in fact a hole, so FIEMAP is wrong: 35
+> > >     +ERROR: found an allocated extent where a hole should be: 35
+> > >     +map is 'DHDDHHDDHDDHHHHDDDDDHHHHHHHDHDDDHHDHDHHHHHDDHDDHHDDHDHHDDDHHHHDDDDHDHHDDHHHDDDDHHDHDDDHHDHDDDHDHHHHHDHDHDHDHHDDHDHHHHDHHDDDDDDDH'
+> > >     +logical: [      27..      27] phys:       67..      67 flags: 0x000 tot: 1
+> > >     +logical: [      29..      31] phys:       69..      71 flags: 0x000 tot: 3
+> > >     ...
+> > >     (Run 'diff -u /home/dave/src/xfstests-dev/tests/generic/225.out /home/dave/src/xfstests-dev/results//xfs_align/generic/225.out.bad'  to see the entire diff)
+> > > 
+> > > I haven't looked into this yet, but nothing is reporting data
+> > > corruptions so I suspect it's just the stripe aligned allocation
+> > > leaving unwritten extents in places the test is expecting holes to
+> > > exist...
+> > 
+> > That's the FIEMAP tester program not expecting that areas of the file
+> > that it didn't write to can have unwritten extents mapped.  I'm testing
+> > patches to fix all that tonight too.  If I can ever get these %#@%)#%!!!
+> > orchestration scripts to work correctly.
+> 
+> OK.
+> 
+> FWIW, I've just found another bug in the stripe aligned allocation
+> at EOF that is triggered by the filestreams code hitting ENOSPC
+> conditions. xfs/170 seems to hit it fairly reliably - it's marking
+> args->pag as NULL and not resetting the caller pag correctly and the
+> high level filestreams failure code is expecting args->pag to be set
+> because it owns the reference...
+> 
+> I hope to have a fix for that one on the list this afternoon....
 
-Sorry, I didn't actually post that set. But I did go with a FS_* flag
-before I made it a SB_* flag.
+Oh, yeah, I hit that one too.  I'll send out my fixes after the ext4
+concall and we can sync up on that.
 
-> > that was one more pointer to chase when you wanted to check the flag.
->=20
-> Hm, unless you have reasons to think that it would be noticable in terms
-> of perf I'd rather do the correct thing and have it be an FS_* flag.
+--D
 
-Sure. I'll make the switch before the next posting.
-
-Thanks for the review!
---=20
-Jeff Layton <jlayton@kernel.org>
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
