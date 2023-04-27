@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B3FDC77B73
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Apr 2023 22:49:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC09EC77B73
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Apr 2023 22:49:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344331AbjD0WtD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Apr 2023 18:49:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53074 "EHLO
+        id S229724AbjD0WtJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Apr 2023 18:49:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229724AbjD0WtC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2023 18:49:02 -0400
+        with ESMTP id S1344332AbjD0WtI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2023 18:49:08 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A2862123
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 15:49:01 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1141A2129
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 15:49:07 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0173864036
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 22:49:01 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59363C433EF;
-        Thu, 27 Apr 2023 22:49:00 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A141D6403A
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 22:49:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0904FC433D2;
+        Thu, 27 Apr 2023 22:49:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682635740;
-        bh=QWklUvOmwZtEt8VVrajvC6UgIS2YvRVMdEY5cczVsnM=;
+        s=k20201202; t=1682635746;
+        bh=bE1NJGf1f2PqmJG76T4fKD7T6rspJe728NI/h8hT4Rw=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=dhvv2VKTlrlhRswo0/24Q8xJVtD1WjO8Y+JXIZRLNEZacR2k/NGiXNq+GaDXDl2B4
-         IHsK0a01/4ay6SuWzDR9KG8foANWCTPQY7pQ7cpYWEXlW/Y1U9GXaLmweO4qQqYCg5
-         a7XFUcAn2qw9i8aba5fWOAhzfe2YkKNvSgXDPI06sq3SjedyeRHV/LG5IC2QVN+ztg
-         WAvSuLBd1iY0DU2+5z9/DkX/IiL+NOe0a+8zCHvbWjEEdgnTuBrbK2XDKICs1OTPbs
-         rqorVbejp1HYKdtOq10/hU4ix1AuwqLk1b1XcoLeoqv8/i1dnOgUeksrg6e8LxOs8K
-         khm4N7+Ria4qw==
-Subject: [PATCH 1/4] xfs: don't unconditionally null args->pag in
- xfs_bmap_btalloc_at_eof
+        b=GjLR49eEGzazt3BtHeBzU4p4TQg1WWXUigUj3QL4hq0ipmZbyOK03Y7+FQpMPb0za
+         fyDiAXSU3vQ02SItOK0lPWq9FP+ExpUJl7+79jIaRgLci2nJSMKJMuK2XSNskVB8UW
+         92fpxPJ2yGmDGwBDci3J8AMFF3NshN1k6iO+HYu79tULbP9Oai3P0cBFzR0hyZI/RG
+         gJPJ+LSQIQ1lytMT0yfLopFbDMRQ6Q+2xHudpmPWTqjmh0QZYLxQMeHcZ1E3NmMn48
+         I5Zr0IkVQt0wuzQo5pAK/Pqp0vTux/9IOsIY9YYKUiAiaVGjCnu+6EcnLX11lHbD5i
+         XK/LRSZGm5fVA==
+Subject: [PATCH 2/4] xfs: set bnobt/cntbt numrecs correctly when formatting
+ new AGs
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     david@fromorbit.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 27 Apr 2023 15:48:59 -0700
-Message-ID: <168263573987.1717721.305790819127740342.stgit@frogsfrogsfrogs>
+Date:   Thu, 27 Apr 2023 15:49:05 -0700
+Message-ID: <168263574554.1717721.6730628291355995988.stgit@frogsfrogsfrogs>
 In-Reply-To: <168263573426.1717721.15565213947185049577.stgit@frogsfrogsfrogs>
 References: <168263573426.1717721.15565213947185049577.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -50,75 +50,106 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-xfs/170 on a filesystem with su=128k,sw=4 produces this splat:
+Through generic/300, I discovered that mkfs.xfs creates corrupt
+filesystems when given these parameters:
 
-BUG: kernel NULL pointer dereference, address: 0000000000000010
-#PF: supervisor write access in kernel mode
-#PF: error_code(0x0002) - not-present page
-PGD 0 P4D 0
-Oops: 0002 [#1] PREEMPT SMP
-CPU: 1 PID: 4022907 Comm: dd Tainted: G        W          6.3.0-xfsx #2 6ebeeffbe9577d32
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20171121_152543-x86-ol7-bu
-RIP: 0010:xfs_perag_rele+0x10/0x70 [xfs]
-RSP: 0018:ffffc90001e43858 EFLAGS: 00010217
-RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000100
-RDX: ffffffffa054e717 RSI: 0000000000000005 RDI: 0000000000000000
-RBP: ffff888194eea000 R08: 0000000000000000 R09: 0000000000000037
-R10: ffff888100ac1cb0 R11: 0000000000000018 R12: 0000000000000000
-R13: ffffc90001e43a38 R14: ffff888194eea000 R15: ffff888194eea000
-FS:  00007f93d1a0e740(0000) GS:ffff88843fc80000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000000000000010 CR3: 000000018a34f000 CR4: 00000000003506e0
-Call Trace:
- <TASK>
- xfs_bmap_btalloc+0x1a7/0x5d0 [xfs f85291d6841cbb3dc740083f1f331c0327394518]
- xfs_bmapi_allocate+0xee/0x470 [xfs f85291d6841cbb3dc740083f1f331c0327394518]
- xfs_bmapi_write+0x539/0x9e0 [xfs f85291d6841cbb3dc740083f1f331c0327394518]
- xfs_iomap_write_direct+0x1bb/0x2b0 [xfs f85291d6841cbb3dc740083f1f331c0327394518]
- xfs_direct_write_iomap_begin+0x51c/0x710 [xfs f85291d6841cbb3dc740083f1f331c0327394518]
- iomap_iter+0x132/0x2f0
- __iomap_dio_rw+0x2f8/0x840
- iomap_dio_rw+0xe/0x30
- xfs_file_dio_write_aligned+0xad/0x180 [xfs f85291d6841cbb3dc740083f1f331c0327394518]
- xfs_file_write_iter+0xfb/0x190 [xfs f85291d6841cbb3dc740083f1f331c0327394518]
- vfs_write+0x2eb/0x410
- ksys_write+0x65/0xe0
- do_syscall_64+0x2b/0x80
+# mkfs.xfs -d size=512M /dev/sda -f -d su=128k,sw=4 --unsupported
+Filesystems formatted with --unsupported are not supported!!
+meta-data=/dev/sda               isize=512    agcount=8, agsize=16352 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=1
+         =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
+data     =                       bsize=4096   blocks=130816, imaxpct=25
+         =                       sunit=32     swidth=128 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=8192, version=2
+         =                       sectsz=512   sunit=32 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+         =                       rgcount=0    rgsize=0 blks
+Discarding blocks...Done.
+# xfs_repair -n /dev/sda
+Phase 1 - find and verify superblock...
+        - reporting progress in intervals of 15 minutes
+Phase 2 - using internal log
+        - zero log...
+        - 16:30:50: zeroing log - 16320 of 16320 blocks done
+        - scan filesystem freespace and inode maps...
+agf_freeblks 25, counted 0 in ag 4
+sb_fdblocks 8823, counted 8798
 
-This crash occurs under the "out_low_space" label.  We grabbed a perag
-reference, passed it via args->pag into xfs_bmap_btalloc_at_eof, and
-afterwards args->pag is NULL.  Fix the second function not to clobber
-args->pag if the caller had passed one in.
+The root cause of this problem is the numrecs handling in
+xfs_freesp_init_recs, which is used to initialize a new AG.  Prior to
+calling the function, we set up the new bnobt block with numrecs == 1
+and rely on _freesp_init_recs to format that new record.  If the last
+record created has a blockcount of zero, then it sets numrecs = 0.
 
-Fixes: 85843327094f ("xfs: factor xfs_bmap_btalloc()")
+That last bit isn't correct if the AG contains the log, the start of the
+log is not immediately after the initial blocks due to stripe alignment,
+and the end of the log is perfectly aligned with the end of the AG.  For
+this case, we actually formatted a single bnobt record to handle the
+free space before the start of the (stripe aligned) log, and incremented
+arec to try to format a second record.  That second record turned out to
+be unnecessary, so what we really want is to leave numrecs at 1.
+
+The numrecs handling itself is overly complicated because a different
+function sets numrecs == 1.  Change the bnobt creation code to start
+with numrecs set to zero and only increment it after successfully
+formatting a free space extent into the btree block.
+
+Fixes: f327a00745ff ("xfs: account for log space when formatting new AGs")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_bmap.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_ag.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index b512de0540d5..cd8870a16fd1 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3494,8 +3494,10 @@ xfs_bmap_btalloc_at_eof(
- 		if (!caller_pag)
- 			args->pag = xfs_perag_get(mp, XFS_FSB_TO_AGNO(mp, ap->blkno));
- 		error = xfs_alloc_vextent_exact_bno(args, ap->blkno);
--		if (!caller_pag)
-+		if (!caller_pag) {
- 			xfs_perag_put(args->pag);
-+			args->pag = NULL;
-+		}
- 		if (error)
- 			return error;
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index 1b078bbbf225..4481ce8ead9d 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -499,6 +499,7 @@ xfs_freesp_init_recs(
+ 			 */
+ 			arec->ar_blockcount = cpu_to_be32(start -
+ 						mp->m_ag_prealloc_blocks);
++			be16_add_cpu(&block->bb_numrecs, 1);
+ 			nrec = arec + 1;
  
-@@ -3505,7 +3507,6 @@ xfs_bmap_btalloc_at_eof(
- 		 * Exact allocation failed. Reset to try an aligned allocation
- 		 * according to the original allocation specification.
- 		 */
--		args->pag = NULL;
- 		args->alignment = stripe_align;
- 		args->minlen = nextminlen;
- 		args->minalignslop = 0;
+ 			/*
+@@ -509,7 +510,6 @@ xfs_freesp_init_recs(
+ 					be32_to_cpu(arec->ar_startblock) +
+ 					be32_to_cpu(arec->ar_blockcount));
+ 			arec = nrec;
+-			be16_add_cpu(&block->bb_numrecs, 1);
+ 		}
+ 		/*
+ 		 * Change record start to after the internal log
+@@ -525,8 +525,8 @@ xfs_freesp_init_recs(
+ 	 */
+ 	arec->ar_blockcount = cpu_to_be32(id->agsize -
+ 					  be32_to_cpu(arec->ar_startblock));
+-	if (!arec->ar_blockcount)
+-		block->bb_numrecs = 0;
++	if (arec->ar_blockcount)
++		be16_add_cpu(&block->bb_numrecs, 1);
+ }
+ 
+ /*
+@@ -538,7 +538,7 @@ xfs_bnoroot_init(
+ 	struct xfs_buf		*bp,
+ 	struct aghdr_init_data	*id)
+ {
+-	xfs_btree_init_block(mp, bp, XFS_BTNUM_BNO, 0, 1, id->agno);
++	xfs_btree_init_block(mp, bp, XFS_BTNUM_BNO, 0, 0, id->agno);
+ 	xfs_freesp_init_recs(mp, bp, id);
+ }
+ 
+@@ -548,7 +548,7 @@ xfs_cntroot_init(
+ 	struct xfs_buf		*bp,
+ 	struct aghdr_init_data	*id)
+ {
+-	xfs_btree_init_block(mp, bp, XFS_BTNUM_CNT, 0, 1, id->agno);
++	xfs_btree_init_block(mp, bp, XFS_BTNUM_CNT, 0, 0, id->agno);
+ 	xfs_freesp_init_recs(mp, bp, id);
+ }
+ 
 
