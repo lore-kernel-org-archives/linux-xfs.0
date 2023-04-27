@@ -2,107 +2,120 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE766C77B73
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Apr 2023 15:07:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1E73C77B73
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Apr 2023 15:48:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243412AbjD0PHG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Apr 2023 11:07:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41170 "EHLO
+        id S243673AbjD0PsR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Apr 2023 11:48:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36022 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243404AbjD0PHG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2023 11:07:06 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBF4E1992
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 08:07:04 -0700 (PDT)
+        with ESMTP id S243950AbjD0PsQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2023 11:48:16 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C247698
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 08:48:15 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 772C06177E
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 15:07:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CEAA9C433EF;
-        Thu, 27 Apr 2023 15:07:03 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5E14061726
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 15:48:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA9B6C433D2;
+        Thu, 27 Apr 2023 15:48:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682608023;
-        bh=aAif6VsaTleQkj9Y6xmlPA+keujvH3/W4QnlESFDyF4=;
+        s=k20201202; t=1682610494;
+        bh=EmeKpevrzrO+ITxPGRBC1Up4PmxBE0MAuC3VImF4IYM=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=gzBjrtcURVvcnVNeIRqa6CxZug4Zuirzs0eeIskOjoGvEZHA69eycu2A/V+Uzo+1E
-         0zTUtSQccusWfXh+z+L1kwD+GpLwoqr6EvdZbXZ4UUKcEo30ASe4cX8mZN4byuchyo
-         +CNs50XLCFwfVIDV30flLRUaarZl4rAwujeTJhBu/i4fOzJk7pgt/dH/SMt6HSOwov
-         RJqu35c7EV5kMRX/FIsagIaI2ahcB9k1kAXcqI+ekvgwfz1n2IBK2avkvBg139ZOB2
-         M9NYVU/6BiWg8xWfiqd7Nmq2ZxAWZNEoNoCwTqzs93UOkNIXboVh85RPNvexTAN2M+
-         ElBGqdoHTYZqQ==
-Date:   Thu, 27 Apr 2023 08:07:03 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
-Subject: Re: [PATCH] xfs: fix livelock in delayed allocation at ENOSPC
-Message-ID: <20230427150703.GD59245@frogsfrogsfrogs>
-References: <20230421222440.2722482-1-david@fromorbit.com>
- <20230425152052.GT360889@frogsfrogsfrogs>
- <20230426230135.GJ3223426@dread.disaster.area>
- <20230426233831.GB59245@frogsfrogsfrogs>
- <20230427001124.GL3223426@dread.disaster.area>
- <20230427005333.GC59245@frogsfrogsfrogs>
- <20230427052600.GM3223426@dread.disaster.area>
+        b=suiy5ojELo9BfFWLtaDC4Cbbe0UZ2TcBknP22J2XxulBZg5VIEKsVGntPWKfVZVBx
+         /2zj5qc5k1Z15v8PTbo6nWOUzaakZokfjVRqQUpWvG3wUDuNeMJNKW1rUKwTZ2QFQN
+         PGxNDC+7avWXkyupv0hFzPuYR4NWUXa8D1t6BiEEacaWz+wobz7eAKuymNT8DF6L+k
+         5UGRMEuwvtx4ZKXoPqCeOoWLydpnhM8/N3bgZld06XEBERH+ISkRdFQJnpX0PkusGt
+         s5yHRDDQAEVIr35zutu/xp+BC94DeLDB7B1Fhy31r1bj/EqZOBBURM1lDmYJwU5Q0g
+         XxTC4tdijIQFw==
+Date:   Thu, 27 Apr 2023 17:48:10 +0200
+From:   Carlos Maiolino <cem@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [ANNOUNCE] xfsdump: for-next updated to c3a72aa
+Message-ID: <20230427154810.2lqqlpnxsgh6gv6q@andromeda>
+References: <20230424104756.naou6t6uig4wt6wj@andromeda>
+ <iLkUAgB70UCuDQDDlb8K9vvMYLTjrlCBUoZavlAXibYVpIAUAmdCxQ5DTVNcxqVIs9veP-RT4gVpyuULhohb-Q==@protonmail.internalid>
+ <20230424174531.GP360889@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230427052600.GM3223426@dread.disaster.area>
+In-Reply-To: <20230424174531.GP360889@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 27, 2023 at 03:26:00PM +1000, Dave Chinner wrote:
-> On Wed, Apr 26, 2023 at 05:53:33PM -0700, Darrick J. Wong wrote:
-> > On Thu, Apr 27, 2023 at 10:11:24AM +1000, Dave Chinner wrote:
-> > > On Wed, Apr 26, 2023 at 04:38:31PM -0700, Darrick J. Wong wrote:
-> > > > I also added a su=128k,sw=4 config to the fstests fleet and am now
-> > > > trying to fix all the fstests bugs that produce incorrect test failures.
-> > > 
-> > > The other thing I noticed is a couple of the FIEMAP tests fail
-> > > because they find data blocks where they expect holes such as:
-> > > 
-> > > generic/225 21s ... - output mismatch (see /home/dave/src/xfstests-dev/results//xfs_align/generic/225.out.bad)
-> > >     --- tests/generic/225.out   2022-12-21 15:53:25.479044361 +1100
-> > >     +++ /home/dave/src/xfstests-dev/results//xfs_align/generic/225.out.bad      2023-04-26 04:24:31.426016818 +1000
-> > >     @@ -1,3 +1,79 @@
-> > >      QA output created by 225
-> > >      fiemap run without preallocation, with sync
-> > >     +ERROR: FIEMAP claimed there was data at a block which should be a hole, and FIBMAP confirmend that it is in fact a hole, so FIEMAP is wrong: 35
-> > >     +ERROR: found an allocated extent where a hole should be: 35
-> > >     +map is 'DHDDHHDDHDDHHHHDDDDDHHHHHHHDHDDDHHDHDHHHHHDDHDDHHDDHDHHDDDHHHHDDDDHDHHDDHHHDDDDHHDHDDDHHDHDDDHDHHHHHDHDHDHDHHDDHDHHHHDHHDDDDDDDH'
-> > >     +logical: [      27..      27] phys:       67..      67 flags: 0x000 tot: 1
-> > >     +logical: [      29..      31] phys:       69..      71 flags: 0x000 tot: 3
-> > >     ...
-> > >     (Run 'diff -u /home/dave/src/xfstests-dev/tests/generic/225.out /home/dave/src/xfstests-dev/results//xfs_align/generic/225.out.bad'  to see the entire diff)
-> > > 
-> > > I haven't looked into this yet, but nothing is reporting data
-> > > corruptions so I suspect it's just the stripe aligned allocation
-> > > leaving unwritten extents in places the test is expecting holes to
-> > > exist...
-> > 
-> > That's the FIEMAP tester program not expecting that areas of the file
-> > that it didn't write to can have unwritten extents mapped.  I'm testing
-> > patches to fix all that tonight too.  If I can ever get these %#@%)#%!!!
-> > orchestration scripts to work correctly.
+On Mon, Apr 24, 2023 at 10:45:31AM -0700, Darrick J. Wong wrote:
+> On Mon, Apr 24, 2023 at 12:47:56PM +0200, Carlos Maiolino wrote:
+> > Hello.
+> >
+> > The xfsdump for-next branch, located at:
+> >
+> > https://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git/?h=for-next
+> >
+> > Has just been updated.
+> >
+> > Patches often get missed, so if your outstanding patches are properly reviewed on
+> > the list and not included in this update, please let me know.
 > 
-> OK.
+> Why does for-next diverge from master?
 > 
-> FWIW, I've just found another bug in the stripe aligned allocation
-> at EOF that is triggered by the filestreams code hitting ENOSPC
-> conditions. xfs/170 seems to hit it fairly reliably - it's marking
-> args->pag as NULL and not resetting the caller pag correctly and the
-> high level filestreams failure code is expecting args->pag to be set
-> because it owns the reference...
+> $ git log --oneline master | head -n15
+> acb8083 xfsdump: Release 3.1.12
+> aaaa57f xfsrestore: untangle inventory unpacking logic
+> 7b843fd xfsdump: fix on-media inventory stream packing
+> 6503407 xfsrestore: fix on-media inventory stream unpacking
+> 06dd184 xfsrestore: fix on-media inventory media unpacking
+> 8b6bbcf xfsdump: Release 3.1.11
 > 
-> I hope to have a fix for that one on the list this afternoon....
+> $ git log --oneline for-next | head -n15
+> c3a72aa xfsrestore: fix rootdir due to xfsdump bulkstat misuse
+> aaaa57f xfsrestore: untangle inventory unpacking logic
+> 7b843fd xfsdump: fix on-media inventory stream packing
+> 6503407 xfsrestore: fix on-media inventory stream unpacking
+> 06dd184 xfsrestore: fix on-media inventory media unpacking
+> 8b6bbcf xfsdump: Release 3.1.11
+> 
+> aaaa57f -> c3a72aa (for-next)
+>    \-----> acb8083 (master)
 
-Oh, yeah, I hit that one too.  I'll send out my fixes after the ext4
-concall and we can sync up on that.
+D'oh :(
 
---D
+When I release 3.1.12, likely I didn't update for-next as I started to do on
+xfsprogs.
 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+I'm going to fix it tomorrow. Will require a rebase on the for-next though :(
+Thanks a lot for spotting it, at least the issue won't be pushed to master.
+
+
+> 
+> --D
+> 
+> >
+> > The new head of the for-next branch is commit:
+> >
+> > c3a72aabb22bb3a79ed0f09762e6d81c0cbdadd6
+> >
+> > 1 new commits:
+> >
+> > Gao Xiang (1):
+> >       [c3a72aa] xfsrestore: fix rootdir due to xfsdump bulkstat misuse
+> >
+> > Code Diffstat:
+> >
+> >  common/main.c         |  1 +
+> >  man/man8/xfsrestore.8 | 14 ++++++++++
+> >  restore/content.c     |  7 +++++
+> >  restore/getopt.h      |  4 +--
+> >  restore/tree.c        | 72 ++++++++++++++++++++++++++++++++++++++++++++++++---
+> >  restore/tree.h        |  2 ++
+> >  6 files changed, 94 insertions(+), 6 deletions(-)
+> >
+> > --
+> > Carlos Maiolino
+
+-- 
+Carlos Maiolino
