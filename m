@@ -2,90 +2,75 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDCDFC77B73
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Apr 2023 19:01:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93BE6C77B61
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Apr 2023 19:02:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243881AbjD0TBS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Apr 2023 15:01:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33918 "EHLO
+        id S244429AbjD0TCz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Apr 2023 15:02:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244173AbjD0TBS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2023 15:01:18 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F324421E
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 12:01:17 -0700 (PDT)
+        with ESMTP id S244173AbjD0TCz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2023 15:02:55 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11FBE40FB
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 12:02:35 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0ABB563EB3
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 19:01:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53E49C433EF;
-        Thu, 27 Apr 2023 19:01:16 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9A64960C02
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 19:02:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0628CC433D2;
+        Thu, 27 Apr 2023 19:02:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682622076;
-        bh=nguMZqmcGxuGen1DaLq8o6SwTmuTrP4Qa7P/5Nd0SOI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=aWn88rm7Jnv2FbutABriwCto9TeCU5JCb/9RHhUQqA75Jp/KsWNR/CMT0GfVm86PF
-         LR9eowRZVsGKOx6Fw4aVXXXs5NbBJTeGIceZICg0Hxj40hRcu2WYkV4sMMszQb0jjU
-         RSRwo5VncvQWteAgI0LTxQLfJbNrQkOtuWOlXo+JzjClTsxF9VgME6It0qUgMbooUL
-         GiGo8tQ8TUzmZwjLwqBpXmlJGK2Xn4BxfKGVYcCZl2rd+wYknu4rCUY40vlO/jnQ8Z
-         zf1wzO+VE6jpkG+gNh3bosyrQQrPfNYmHOkDR0NkLv4svgFQ93HZtO9Al+hSo7C8g5
-         tPGwjyH+7s2iQ==
-Date:   Thu, 27 Apr 2023 12:01:15 -0700
+        s=k20201202; t=1682622154;
+        bh=saEUbW23xZkewQWAu6FonfbqkHgytbYtDkZ2pd+Qm9g=;
+        h=Date:From:To:Cc:Subject:From;
+        b=eKjVbLHSpIEUux0Xt9ha5aB108CjsGENaZhxZ1TL421VkXiOIrzIlGv6sGP6cEwr4
+         5WF1YmXUKsGZjsIBvdAJihbpC9BLhYqKoBS828k458aaaj0X3hVVRdp+3XzdhgwkVD
+         ppvkc9u735LE+RSpp+1mqPYCWe+oFAv1Na/yHFzRHUIgVF0p9vBS72XTHlyIzG78Q7
+         PYfiMkMKE/K1tp6HU3M1nhGZW1Rmsvr3C9fkv9F1rxUxZ7KlVVsJQ24o2C2bVD+BPx
+         g99HcAHt8bLmaJkQWggKssLfzclaN1NKzOUuOgYQkD8vDRGrRMwUiYeoPgAQym3s32
+         XsVZQH6ZDSChg==
+Date:   Thu, 27 Apr 2023 12:02:33 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Eric Sandeen <sandeen@sandeen.net>,
-        xfs <linux-xfs@vger.kernel.org>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] xfs: drop EXPERIMENTAL tag for large extent counts
-Message-ID: <20230427190115.GB59213@frogsfrogsfrogs>
-References: <20230420151000.GH360889@frogsfrogsfrogs>
- <20230420232426.GA3223426@dread.disaster.area>
+To:     Carlos Maiolino <cem@kernel.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs_db: fix broken logic in error path
+Message-ID: <20230427190233.GC59213@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230420232426.GA3223426@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Apr 21, 2023 at 09:24:26AM +1000, Dave Chinner wrote:
-> On Thu, Apr 20, 2023 at 08:10:00AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > This feature has been baking in upstream for ~10mo with no bug reports.
-> > It seems to work fine here, let's get rid of the scary warnings?
-> 
-> Are you proposing this for the 6.4 cycle (next weeks merge window)
-> or for the cycle after this?  I don't see an issue with removing the
-> experimental tag, but I do think it's a bit late for this cycle....
+From: Darrick J. Wong <djwong@kernel.org>
 
-Doh, I totally forgot to reply to this.  I /was/ actually targetting
-6.4, but I don't have any particular problem if this slips to 6.5.
+smatch complains proceeding into the if body if leaf is a null pointer:
 
---D
+check.c:3614 process_leaf_node_dir_v2_int() warn: variable dereferenced before check 'leaf' (see line 3518)
 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  fs/xfs/xfs_super.c |    4 ----
-> >  1 file changed, 4 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index 4d2e87462ac4..dc13ff4ea25e 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -1683,10 +1683,6 @@ xfs_fs_fill_super(
-> >  		goto out_filestream_unmount;
-> >  	}
-> >  
-> > -	if (xfs_has_large_extent_counts(mp))
-> > -		xfs_warn(mp,
-> > -	"EXPERIMENTAL Large extent counts feature in use. Use at your own risk!");
-> > -
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+However, the logic here is misleading and broken -- what we're trying to
+do is switch between the v4 and v5 variants of the directory check.
+We're using @leaf3 being a null pointer (or not) to determine v4 vs. v5,
+so the "!" part of the comparison is correct, but the variable used
+(leaf) is not.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ db/check.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/db/check.c b/db/check.c
+index 964756d0..fdf1f6a1 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -3452,7 +3452,7 @@ process_leaf_node_dir_v2_int(
+ 				 id->ino, dabno, stale,
+ 				 be16_to_cpu(leaf3->hdr.stale));
+ 		error++;
+-	} else if (!leaf && stale != be16_to_cpu(leaf->hdr.stale)) {
++	} else if (!leaf3 && stale != be16_to_cpu(leaf->hdr.stale)) {
+ 		if (!sflag || v)
+ 			dbprintf(_("dir %lld block %d stale mismatch "
+ 				 "%d/%d\n"),
