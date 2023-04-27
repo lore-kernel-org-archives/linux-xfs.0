@@ -2,130 +2,211 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F1BEC77B73
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Apr 2023 08:29:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B40AAC77B73
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Apr 2023 09:06:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242959AbjD0I3u (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Apr 2023 04:29:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43862 "EHLO
+        id S243045AbjD0JG1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Apr 2023 05:06:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229665AbjD0I3s (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2023 04:29:48 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3592919B9;
-        Thu, 27 Apr 2023 01:29:47 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id BA7D821A40;
-        Thu, 27 Apr 2023 08:29:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1682584183; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=I5HZTSFrzWtBYnuBYintcvIIAgF3iktWG4WhcixoNBs=;
-        b=2VZJLOteCXB5x7qGpePCN15IyixuXEfP/YCclnOkg2okWD9z85poLundXOr+hfQ75Bx8z6
-        e2RBBk+rjEmWJL3iKpcO3OVWaPOMZIzK23QTlULfge4tUgwS0Wxgi8SVUr7Z+VgxyVYGHt
-        xyKI6uyMt5Tck82tWJbKuExwaEvmJj0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1682584183;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=I5HZTSFrzWtBYnuBYintcvIIAgF3iktWG4WhcixoNBs=;
-        b=7rg0I0z9R1Q5zouAGGyLG9AkNA9quvvz57/VLVxpo722dfm6Og7kn47VZCK2qUvOAa/8xK
-        xqxRVzSPb5K5v5AQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 8A0AC138F9;
-        Thu, 27 Apr 2023 08:29:43 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id fKAIIXcySmQJVAAAMHmgww
-        (envelope-from <vbabka@suse.cz>); Thu, 27 Apr 2023 08:29:43 +0000
-Message-ID: <19acbdbb-fc2f-e198-3d31-850ef53f544e@suse.cz>
-Date:   Thu, 27 Apr 2023 10:29:43 +0200
+        with ESMTP id S242961AbjD0JG0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2023 05:06:26 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB459AC
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 02:06:24 -0700 (PDT)
+Received: from kwepemi500009.china.huawei.com (unknown [172.30.72.53])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Q6VDW03bGzsR4S;
+        Thu, 27 Apr 2023 17:04:42 +0800 (CST)
+Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
+ (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Thu, 27 Apr
+ 2023 17:06:21 +0800
+Date:   Thu, 27 Apr 2023 17:05:25 +0800
+From:   Long Li <leo.lilong@huawei.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+CC:     <david@fromorbit.com>, <linux-xfs@vger.kernel.org>,
+        <houtao1@huawei.com>, <yi.zhang@huawei.com>, <guoxuenan@huawei.com>
+Subject: Re: [PATCH] xfs: fix ag count overflow during growfs
+Message-ID: <20230427090525.GA3463536@ceph-admin>
+References: <20230425025345.GA2098270@ceph-admin>
+ <20230425151529.GR360889@frogsfrogsfrogs>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [LSF/MM/BPF TOPIC] SLOB+SLAB allocators removal and future SLUB
- improvements
-To:     Binder Makin <merimus@google.com>
-Cc:     lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, linux-block@vger.kernel.org,
-        bpf@vger.kernel.org, linux-xfs@vger.kernel.org,
-        David Rientjes <rientjes@google.com>,
-        Christoph Lameter <cl@linux.com>,
-        Pekka Enberg <penberg@kernel.org>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-        Roman Gushchin <roman.gushchin@linux.dev>
-References: <4b9fc9c6-b48c-198f-5f80-811a44737e5f@suse.cz>
- <CAANmLtwGS75WJ9AXfmqZv73pNdHJn6zfrrCCWjKK_6jPk9pWRg@mail.gmail.com>
- <951d364a-05c0-b290-8abe-7cbfcaeb2df7@suse.cz>
- <CAANmLtzQmVN_EWLv1UxXwZu5X=TwpcMQMYArKNUxAJL3PnfO2Q@mail.gmail.com>
-Content-Language: en-US
-From:   Vlastimil Babka <vbabka@suse.cz>
-In-Reply-To: <CAANmLtzQmVN_EWLv1UxXwZu5X=TwpcMQMYArKNUxAJL3PnfO2Q@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
+In-Reply-To: <20230425151529.GR360889@frogsfrogsfrogs>
+X-Originating-IP: [10.175.127.227]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ kwepemi500009.china.huawei.com (7.221.188.199)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 4/5/23 21:54, Binder Makin wrote:
-> I'm still running tests to explore some of these questions.
-> The machines I am using are roughly as follows.
+On Tue, Apr 25, 2023 at 08:15:29AM -0700, Darrick J. Wong wrote:
+> On Tue, Apr 25, 2023 at 10:53:45AM +0800, Long Li wrote:
+> > I found a corruption during growfs:
+> > 
+> >  XFS (loop0): Internal error agbno >= mp->m_sb.sb_agblocks at line 3661 of
+> >    file fs/xfs/libxfs/xfs_alloc.c.  Caller __xfs_free_extent+0x28e/0x3c0
+> >  CPU: 0 PID: 573 Comm: xfs_growfs Not tainted 6.3.0-rc7-next-20230420-00001-gda8c95746257
+> >  Call Trace:
+> >   <TASK>
+> >   dump_stack_lvl+0x50/0x70
+> >   xfs_corruption_error+0x134/0x150
+> >   __xfs_free_extent+0x2c1/0x3c0
+> >   xfs_ag_extend_space+0x291/0x3e0
+> >   xfs_growfs_data+0xd72/0xe90
+> >   xfs_file_ioctl+0x5f9/0x14a0
+> >   __x64_sys_ioctl+0x13e/0x1c0
+> >   do_syscall_64+0x39/0x80
+> >   entry_SYSCALL_64_after_hwframe+0x63/0xcd
+> >  XFS (loop0): Corruption detected. Unmount and run xfs_repair
+> >  XFS (loop0): Internal error xfs_trans_cancel at line 1097 of file
+> >    fs/xfs/xfs_trans.c.  Caller xfs_growfs_data+0x691/0xe90
+> >  CPU: 0 PID: 573 Comm: xfs_growfs Not tainted 6.3.0-rc7-next-20230420-00001-gda8c95746257
+> >  Call Trace:
+> >   <TASK>
+> >   dump_stack_lvl+0x50/0x70
+> >   xfs_error_report+0x93/0xc0
+> >   xfs_trans_cancel+0x2c0/0x350
+> >   xfs_growfs_data+0x691/0xe90
+> >   xfs_file_ioctl+0x5f9/0x14a0
+> >   __x64_sys_ioctl+0x13e/0x1c0
+> >   do_syscall_64+0x39/0x80
+> >   entry_SYSCALL_64_after_hwframe+0x63/0xcd
+> >  RIP: 0033:0x7f2d86706577
+> > 
+> > The bug can be reproduced with the following sequence:
+> > 
+> >  # truncate -s  1073741824 xfs_test.img
+> >  # mkfs.xfs -f -b size=1024 -d agcount=4 xfs_test.img
+> >  # truncate -s 2305843009213693952  xfs_test.img
+> >  # mount -o loop xfs_test.img /mnt/test
+> >  # xfs_growfs -D  1125899907891200  /mnt/test
+> > 
+> > The root cause is that during growfs, user space passed in a large value
+> > of newblcoks to xfs_growfs_data_private(), due to current sb_agblocks is
+> > too small, new AG count will exceed UINT_MAX. Because of AG number type
+> > is unsigned int and it would overflow, that caused nagcount much smaller
+> > than the actual value. During AG extent space, delta blocks in
+> > xfs_resizefs_init_new_ags() will much larger than the actual value due to
+> > incorrect nagcount, even exceed UINT_MAX. This will cause corruption and
+> > be detected in __xfs_free_extent. Fix it by add checks for AG number that
+> > should not greater than or equal to NULLAGNUMBER before growfs and mount
+> > filesystem.
+> > 
+> > Signed-off-by: Long Li <leo.lilong@huawei.com>
+> > ---
+> >  fs/xfs/xfs_fsops.c   | 2 +-
+> >  fs/xfs/xfs_mount.c   | 6 +++++-
+> >  fs/xfs/xfs_mount.h   | 2 +-
+> >  fs/xfs/xfs_rtalloc.c | 2 +-
+> >  fs/xfs/xfs_super.c   | 4 ++--
+> >  5 files changed, 10 insertions(+), 6 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> > index 13851c0d640b..0f0b12eaf53a 100644
+> > --- a/fs/xfs/xfs_fsops.c
+> > +++ b/fs/xfs/xfs_fsops.c
+> > @@ -100,7 +100,7 @@ xfs_growfs_data_private(
+> >  	struct xfs_perag	*last_pag;
+> >  
+> >  	nb = in->newblocks;
+> > -	error = xfs_sb_validate_fsb_count(&mp->m_sb, nb);
+> > +	error = xfs_sb_validate_fsb_count(&mp->m_sb, nb, true);
+> >  	if (error)
+> >  		return error;
+> >  
+> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> > index fb87ffb48f7f..284c11c1c6e8 100644
+> > --- a/fs/xfs/xfs_mount.c
+> > +++ b/fs/xfs/xfs_mount.c
+> > @@ -128,7 +128,8 @@ xfs_uuid_unmount(
+> >  int
+> >  xfs_sb_validate_fsb_count(
+> >  	xfs_sb_t	*sbp,
+> > -	uint64_t	nblocks)
+> > +	uint64_t	nblocks,
+> > +	bool		dblock)
+> >  {
+> >  	ASSERT(PAGE_SHIFT >= sbp->sb_blocklog);
+> >  	ASSERT(sbp->sb_blocklog >= BBSHIFT);
+> > @@ -136,6 +137,9 @@ xfs_sb_validate_fsb_count(
+> >  	/* Limited by ULONG_MAX of page cache index */
+> >  	if (nblocks >> (PAGE_SHIFT - sbp->sb_blocklog) > ULONG_MAX)
+> >  		return -EFBIG;
+> > +	/* Limited by NULLAGNUMBER of ag number */
+> > +	if (dblock && (nblocks >> sbp->sb_agblklog) >= NULLAGNUMBER)
+> > +		return -EFBIG;
 > 
-> Intel dual socket 56 total cores
-> 192-384GB ram
-> LEVEL1_ICACHE_SIZE                 32768
-> LEVEL1_DCACHE_SIZE                 32768
-> LEVEL2_CACHE_SIZE                  1048576
-> LEVEL3_CACHE_SIZE                  40370176
+> I think this should be a separate predicate to check for overflowing
+> agcount in xfs_validate_sb_common and xfs_growfs_data_private.
 > 
-> Amd dual socket 128 total cores
-> 1TB ram
-> LEVEL1_ICACHE_SIZE                 32768
-> LEVEL1_DCACHE_SIZE                 32768
-> LEVEL2_CACHE_SIZE                  524288
-> LEVEL3_CACHE_SIZE                  268435456
+Ok, the next version will be changed.
+
+> I also wonder if @agcount in xfs_validate_sb_common needs to be u64 (and
+> not u32) to handle overflows?
+
+It looks like there is no need for @agcount overflow checking in xfs_validate_sb_common:
+If agcount overflow occurs, the flollowing judgment will be true and SB sanity check failed.
+
+	sbp->sb_dblocks > XFS_MAX_DBLOCKS(sbp)
+
+So the check for overflowing of agcount should only need in xfs_growfs_data_private(). 
+
+Thanks,
+Long Li
+
+> Someone should try fuzzing a filesystem with a small agblklog and a
+> large dblocks to see if one can trip an integer overflow in the
+> superblock verifier.
 > 
-> Arm single socket 64 total cores
-> 256GB rma
-> LEVEL1_ICACHE_SIZE                 65536
-> LEVEL1_DCACHE_SIZE                 65536
-> LEVEL2_CACHE_SIZE                  1048576
-> LEVEL3_CACHE_SIZE                  33554432
-
-So with "some artifact of different cache layout" I didn't mean the
-different cache sizes of the processors, but possible differences how
-objects end up placed in memory by SLAB vs SLUB causing them to collide in
-the cache of cause false sharing less or more. This kind of interference can
-make interpreting (micro)benchmark results hard.
-
-Anyway, how I'd hope to approach this topic would be that SLAB removal is
-proposed, and anyone who opposes that because they can't switch from SLAB to
-SLUB would describe why they can't. I'd hope the "why" to be based on
-testing with actual workloads, not just benchmarks. Benchmarks are then of
-course useful if they can indeed distill the reason why the actual workload
-regresses, as then anyone can reproduce that locally and develop/test fixes
-etc. My hope is that if some kind of regression is found (e.g. due to lack
-of percpu array in SLUB), it can be dealt with by improving SLUB.
-
-Historically I recall that we (SUSE) objected somwhat to SLAB removal as our
-distro kernels were using it, but we have switched since. Then networking
-had concerns (possibly related to the lack percpu array) but seems bulk
-allocations helped and they use SLUB these days [1]. And IIRC Google was
-also sticking to SLAB, which led to some attempts to augment SLUB for those
-workloads years ago, but those were never finished. So I'd be curious if we
-should restart those effors or can just remove SLAB now.
-
-[1] https://lore.kernel.org/all/93665604-5420-be5d-2104-17850288b955@redhat.com/
-
-
+> --D
+> 
+> >  	return 0;
+> >  }
+> >  
+> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> > index f3269c0626f0..a69e9b21ef61 100644
+> > --- a/fs/xfs/xfs_mount.h
+> > +++ b/fs/xfs/xfs_mount.h
+> > @@ -531,7 +531,7 @@ xfs_mod_frextents(struct xfs_mount *mp, int64_t delta)
+> >  extern int	xfs_readsb(xfs_mount_t *, int);
+> >  extern void	xfs_freesb(xfs_mount_t *);
+> >  extern bool	xfs_fs_writable(struct xfs_mount *mp, int level);
+> > -extern int	xfs_sb_validate_fsb_count(struct xfs_sb *, uint64_t);
+> > +extern int	xfs_sb_validate_fsb_count(struct xfs_sb *, uint64_t, bool);
+> >  
+> >  extern int	xfs_dev_is_read_only(struct xfs_mount *, char *);
+> >  
+> > diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+> > index 16534e9873f6..c207026d92ac 100644
+> > --- a/fs/xfs/xfs_rtalloc.c
+> > +++ b/fs/xfs/xfs_rtalloc.c
+> > @@ -958,7 +958,7 @@ xfs_growfs_rt(
+> >  		return -EOPNOTSUPP;
+> >  
+> >  	nrblocks = in->newblocks;
+> > -	error = xfs_sb_validate_fsb_count(sbp, nrblocks);
+> > +	error = xfs_sb_validate_fsb_count(sbp, nrblocks, false);
+> >  	if (error)
+> >  		return error;
+> >  	/*
+> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > index 4d2e87462ac4..72dfd02c588e 100644
+> > --- a/fs/xfs/xfs_super.c
+> > +++ b/fs/xfs/xfs_super.c
+> > @@ -1592,8 +1592,8 @@ xfs_fs_fill_super(
+> >  	}
+> >  
+> >  	/* Ensure this filesystem fits in the page cache limits */
+> > -	if (xfs_sb_validate_fsb_count(&mp->m_sb, mp->m_sb.sb_dblocks) ||
+> > -	    xfs_sb_validate_fsb_count(&mp->m_sb, mp->m_sb.sb_rblocks)) {
+> > +	if (xfs_sb_validate_fsb_count(&mp->m_sb, mp->m_sb.sb_dblocks, true) ||
+> > +	    xfs_sb_validate_fsb_count(&mp->m_sb, mp->m_sb.sb_rblocks, false)) {
+> >  		xfs_warn(mp,
+> >  		"file system too large to be mounted on this system.");
+> >  		error = -EFBIG;
+> > -- 
+> > 2.31.1
+> > 
