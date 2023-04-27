@@ -2,211 +2,220 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B40AAC77B73
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Apr 2023 09:06:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EFC8C77B61
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Apr 2023 09:45:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243045AbjD0JG1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Apr 2023 05:06:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36614 "EHLO
+        id S243290AbjD0JpT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Apr 2023 05:45:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59798 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242961AbjD0JG0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2023 05:06:26 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB459AC
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 02:06:24 -0700 (PDT)
-Received: from kwepemi500009.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Q6VDW03bGzsR4S;
-        Thu, 27 Apr 2023 17:04:42 +0800 (CST)
-Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
- (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Thu, 27 Apr
- 2023 17:06:21 +0800
-Date:   Thu, 27 Apr 2023 17:05:25 +0800
-From:   Long Li <leo.lilong@huawei.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-CC:     <david@fromorbit.com>, <linux-xfs@vger.kernel.org>,
-        <houtao1@huawei.com>, <yi.zhang@huawei.com>, <guoxuenan@huawei.com>
-Subject: Re: [PATCH] xfs: fix ag count overflow during growfs
-Message-ID: <20230427090525.GA3463536@ceph-admin>
-References: <20230425025345.GA2098270@ceph-admin>
- <20230425151529.GR360889@frogsfrogsfrogs>
+        with ESMTP id S243338AbjD0JpH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2023 05:45:07 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAC5F49E9;
+        Thu, 27 Apr 2023 02:45:03 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6814163C1D;
+        Thu, 27 Apr 2023 09:45:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81EF4C433A0;
+        Thu, 27 Apr 2023 09:44:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1682588702;
+        bh=XbeJa7myqc5lpH0j9C1TtH8QoaXv86GZaE6uBALe91o=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ky7i7k6QFq2LS1IXK40oMleXhg4LnfDdvsevFLmS7UpY27YL+99KpsBqi3jH1AuQw
+         SdyZySmFtCCkARYqvAH5TtKyqh9ocd7BVhrKrfBcEBC+EF2GZczdoBmXhbQ4mJxOOY
+         Gk4G1uyL3E2lHxht1iVcvlwOjvktkMe0bq5RPFB2BSMRpjPO6A86fCSWtBvOt2Eg/Q
+         M7sw6lOP4cTZVlYIVeHal2TjI6E4L2tupt5Bxt++UEJUnYp0T3GV+g4eJiorOz6bxW
+         no+xq90Xu8i81zvfS8Lwwp7ufo4ppDWR3SyhF3PRLCYImqxpjtPH+DeTpmpKSRU9Wc
+         JW6K7RmLldkhg==
+Date:   Thu, 27 Apr 2023 11:44:56 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Chuck Lever <chuck.lever@oracle.com>, Jan Kara <jack@suse.cz>,
+        Amir Goldstein <amir73il@gmail.com>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-nfs@vger.kernel.org
+Subject: Re: [PATCH v2 1/3] fs: add infrastructure for multigrain inode
+ i_m/ctime
+Message-ID: <20230427-reinschauen-zwerge-a7f546c7d51a@brauner>
+References: <20230424151104.175456-1-jlayton@kernel.org>
+ <20230424151104.175456-2-jlayton@kernel.org>
+ <20230426-meerblick-tortur-c6606f6126fa@brauner>
+ <07ce85763471a5964c9311792aa7e2f2d1696798.camel@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230425151529.GR360889@frogsfrogsfrogs>
-X-Originating-IP: [10.175.127.227]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- kwepemi500009.china.huawei.com (7.221.188.199)
-X-CFilter-Loop: Reflected
+In-Reply-To: <07ce85763471a5964c9311792aa7e2f2d1696798.camel@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 25, 2023 at 08:15:29AM -0700, Darrick J. Wong wrote:
-> On Tue, Apr 25, 2023 at 10:53:45AM +0800, Long Li wrote:
-> > I found a corruption during growfs:
+On Wed, Apr 26, 2023 at 05:46:25AM -0400, Jeff Layton wrote:
+> On Wed, 2023-04-26 at 08:53 +0200, Christian Brauner wrote:
+> > On Mon, Apr 24, 2023 at 11:11:02AM -0400, Jeff Layton wrote:
+> > > The VFS always uses coarse-grained timestamp updates for filling out the
+> > > ctime and mtime after a change. This has the benefit of allowing
+> > > filesystems to optimize away a lot metaupdates, to around once per
+> > > jiffy, even when a file is under heavy writes.
+> > > 
+> > > Unfortunately, this has always been an issue when we're exporting via
+> > > NFSv3, which relies on timestamps to validate caches. Even with NFSv4, a
+> > > lot of exported filesystems don't properly support a change attribute
+> > > and are subject to the same problems with timestamp granularity. Other
+> > > applications have similar issues (e.g backup applications).
+> > > 
+> > > Switching to always using fine-grained timestamps would improve the
+> > > situation for NFS, but that becomes rather expensive, as the underlying
+> > > filesystem will have to log a lot more metadata updates.
+> > > 
+> > > What we need is a way to only use fine-grained timestamps when they are
+> > > being actively queried:
+> > > 
+> > > Whenever the mtime changes, the ctime must also change since we're
+> > > changing the metadata. When a superblock has a s_time_gran >1, we can
+> > > use the lowest-order bit of the inode->i_ctime as a flag to indicate
+> > > that the value has been queried. Then on the next write, we'll fetch a
+> > > fine-grained timestamp instead of the usual coarse-grained one.
+> > > 
+> > > We could enable this for any filesystem that has a s_time_gran >1, but
+> > > for now, this patch adds a new SB_MULTIGRAIN_TS flag to allow filesystems
+> > > to opt-in to this behavior.
+> > > 
+> > > It then adds a new current_ctime function that acts like the
+> > > current_time helper, but will conditionally grab fine-grained timestamps
+> > > when the flag is set in the current ctime. Also, there is a new
+> > > generic_fill_multigrain_cmtime for grabbing the c/mtime out of the inode
+> > > and atomically marking the ctime as queried.
+> > > 
+> > > Later patches will convert filesystems over to this new scheme.
+> > > 
+> > > Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> > > ---
+> > >  fs/inode.c         | 57 +++++++++++++++++++++++++++++++++++++++---
+> > >  fs/stat.c          | 24 ++++++++++++++++++
+> > >  include/linux/fs.h | 62 ++++++++++++++++++++++++++++++++--------------
+> > >  3 files changed, 121 insertions(+), 22 deletions(-)
+> > > 
+> > > diff --git a/fs/inode.c b/fs/inode.c
+> > > index 4558dc2f1355..4bd11bdb46d4 100644
+> > > --- a/fs/inode.c
+> > > +++ b/fs/inode.c
+> > > @@ -2030,6 +2030,7 @@ EXPORT_SYMBOL(file_remove_privs);
+> > >  static int inode_needs_update_time(struct inode *inode, struct timespec64 *now)
+> > >  {
+> > >  	int sync_it = 0;
+> > > +	struct timespec64 ctime = inode->i_ctime;
+> > >  
+> > >  	/* First try to exhaust all avenues to not sync */
+> > >  	if (IS_NOCMTIME(inode))
+> > > @@ -2038,7 +2039,9 @@ static int inode_needs_update_time(struct inode *inode, struct timespec64 *now)
+> > >  	if (!timespec64_equal(&inode->i_mtime, now))
+> > >  		sync_it = S_MTIME;
+> > >  
+> > > -	if (!timespec64_equal(&inode->i_ctime, now))
+> > > +	if (is_multigrain_ts(inode))
+> > > +		ctime.tv_nsec &= ~I_CTIME_QUERIED;
+> > > +	if (!timespec64_equal(&ctime, now))
+> > >  		sync_it |= S_CTIME;
+> > >  
+> > >  	if (IS_I_VERSION(inode) && inode_iversion_need_inc(inode))
+> > > @@ -2062,6 +2065,50 @@ static int __file_update_time(struct file *file, struct timespec64 *now,
+> > >  	return ret;
+> > >  }
+> > >  
+> > > +/**
+> > > + * current_ctime - Return FS time (possibly high-res)
+> > > + * @inode: inode.
+> > > + *
+> > > + * Return the current time truncated to the time granularity supported by
+> > > + * the fs, as suitable for a ctime/mtime change.
+> > > + *
+> > > + * For a multigrain timestamp, if the timestamp is flagged as having been
+> > > + * QUERIED, then get a fine-grained timestamp.
+> > > + */
+> > > +struct timespec64 current_ctime(struct inode *inode)
+> > > +{
+> > > +	struct timespec64 now;
+> > > +	long nsec = 0;
+> > > +	bool multigrain = is_multigrain_ts(inode);
+> > > +
+> > > +	if (multigrain) {
+> > > +		atomic_long_t *pnsec = (atomic_long_t *)&inode->i_ctime.tv_nsec;
+> > > +
+> > > +		nsec = atomic_long_fetch_and(~I_CTIME_QUERIED, pnsec);
+> > > +	}
+> > > +
+> > > +	if (nsec & I_CTIME_QUERIED) {
+> > > +		ktime_get_real_ts64(&now);
+> > > +	} else {
+> > > +		ktime_get_coarse_real_ts64(&now);
+> > > +
+> > > +		if (multigrain) {
+> > > +			/*
+> > > +			 * If we've recently fetched a fine-grained timestamp
+> > > +			 * then the coarse-grained one may be earlier than the
+> > > +			 * existing one. Just keep the existing ctime if so.
+> > > +			 */
+> > > +			struct timespec64 ctime = inode->i_ctime;
+> > > +
+> > > +			if (timespec64_compare(&ctime, &now) > 0)
+> > > +				now = ctime;
+> > > +		}
+> > > +	}
+> > > +
+> > > +	return timestamp_truncate(now, inode);
+> > > +}
+> > > +EXPORT_SYMBOL(current_ctime);
+> > > +
+> > >  /**
+> > >   * file_update_time - update mtime and ctime time
+> > >   * @file: file accessed
+> > > @@ -2080,7 +2127,7 @@ int file_update_time(struct file *file)
+> > >  {
+> > >  	int ret;
+> > >  	struct inode *inode = file_inode(file);
+> > > -	struct timespec64 now = current_time(inode);
+> > > +	struct timespec64 now = current_ctime(inode);
+> > >  
+> > >  	ret = inode_needs_update_time(inode, &now);
+> > >  	if (ret <= 0)
+> > > @@ -2109,7 +2156,7 @@ static int file_modified_flags(struct file *file, int flags)
+> > >  {
+> > >  	int ret;
+> > >  	struct inode *inode = file_inode(file);
+> > > -	struct timespec64 now = current_time(inode);
+> > > +	struct timespec64 now = current_ctime(inode);
+> > >  
+> > >  	/*
+> > >  	 * Clear the security bits if the process is not being run by root.
+> > > @@ -2419,9 +2466,11 @@ struct timespec64 timestamp_truncate(struct timespec64 t, struct inode *inode)
+> > >  	if (unlikely(t.tv_sec == sb->s_time_max || t.tv_sec == sb->s_time_min))
+> > >  		t.tv_nsec = 0;
+> > >  
+> > > -	/* Avoid division in the common cases 1 ns and 1 s. */
+> > > +	/* Avoid division in the common cases 1 ns, 2 ns and 1 s. */
+> > >  	if (gran == 1)
+> > >  		; /* nothing */
+> > > +	else if (gran == 2)
+> > > +		t.tv_nsec &= ~1L;
 > > 
-> >  XFS (loop0): Internal error agbno >= mp->m_sb.sb_agblocks at line 3661 of
-> >    file fs/xfs/libxfs/xfs_alloc.c.  Caller __xfs_free_extent+0x28e/0x3c0
-> >  CPU: 0 PID: 573 Comm: xfs_growfs Not tainted 6.3.0-rc7-next-20230420-00001-gda8c95746257
-> >  Call Trace:
-> >   <TASK>
-> >   dump_stack_lvl+0x50/0x70
-> >   xfs_corruption_error+0x134/0x150
-> >   __xfs_free_extent+0x2c1/0x3c0
-> >   xfs_ag_extend_space+0x291/0x3e0
-> >   xfs_growfs_data+0xd72/0xe90
-> >   xfs_file_ioctl+0x5f9/0x14a0
-> >   __x64_sys_ioctl+0x13e/0x1c0
-> >   do_syscall_64+0x39/0x80
-> >   entry_SYSCALL_64_after_hwframe+0x63/0xcd
-> >  XFS (loop0): Corruption detected. Unmount and run xfs_repair
-> >  XFS (loop0): Internal error xfs_trans_cancel at line 1097 of file
-> >    fs/xfs/xfs_trans.c.  Caller xfs_growfs_data+0x691/0xe90
-> >  CPU: 0 PID: 573 Comm: xfs_growfs Not tainted 6.3.0-rc7-next-20230420-00001-gda8c95746257
-> >  Call Trace:
-> >   <TASK>
-> >   dump_stack_lvl+0x50/0x70
-> >   xfs_error_report+0x93/0xc0
-> >   xfs_trans_cancel+0x2c0/0x350
-> >   xfs_growfs_data+0x691/0xe90
-> >   xfs_file_ioctl+0x5f9/0x14a0
-> >   __x64_sys_ioctl+0x13e/0x1c0
-> >   do_syscall_64+0x39/0x80
-> >   entry_SYSCALL_64_after_hwframe+0x63/0xcd
-> >  RIP: 0033:0x7f2d86706577
-> > 
-> > The bug can be reproduced with the following sequence:
-> > 
-> >  # truncate -s  1073741824 xfs_test.img
-> >  # mkfs.xfs -f -b size=1024 -d agcount=4 xfs_test.img
-> >  # truncate -s 2305843009213693952  xfs_test.img
-> >  # mount -o loop xfs_test.img /mnt/test
-> >  # xfs_growfs -D  1125899907891200  /mnt/test
-> > 
-> > The root cause is that during growfs, user space passed in a large value
-> > of newblcoks to xfs_growfs_data_private(), due to current sb_agblocks is
-> > too small, new AG count will exceed UINT_MAX. Because of AG number type
-> > is unsigned int and it would overflow, that caused nagcount much smaller
-> > than the actual value. During AG extent space, delta blocks in
-> > xfs_resizefs_init_new_ags() will much larger than the actual value due to
-> > incorrect nagcount, even exceed UINT_MAX. This will cause corruption and
-> > be detected in __xfs_free_extent. Fix it by add checks for AG number that
-> > should not greater than or equal to NULLAGNUMBER before growfs and mount
-> > filesystem.
-> > 
-> > Signed-off-by: Long Li <leo.lilong@huawei.com>
-> > ---
-> >  fs/xfs/xfs_fsops.c   | 2 +-
-> >  fs/xfs/xfs_mount.c   | 6 +++++-
-> >  fs/xfs/xfs_mount.h   | 2 +-
-> >  fs/xfs/xfs_rtalloc.c | 2 +-
-> >  fs/xfs/xfs_super.c   | 4 ++--
-> >  5 files changed, 10 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> > index 13851c0d640b..0f0b12eaf53a 100644
-> > --- a/fs/xfs/xfs_fsops.c
-> > +++ b/fs/xfs/xfs_fsops.c
-> > @@ -100,7 +100,7 @@ xfs_growfs_data_private(
-> >  	struct xfs_perag	*last_pag;
-> >  
-> >  	nb = in->newblocks;
-> > -	error = xfs_sb_validate_fsb_count(&mp->m_sb, nb);
-> > +	error = xfs_sb_validate_fsb_count(&mp->m_sb, nb, true);
-> >  	if (error)
-> >  		return error;
-> >  
-> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > index fb87ffb48f7f..284c11c1c6e8 100644
-> > --- a/fs/xfs/xfs_mount.c
-> > +++ b/fs/xfs/xfs_mount.c
-> > @@ -128,7 +128,8 @@ xfs_uuid_unmount(
-> >  int
-> >  xfs_sb_validate_fsb_count(
-> >  	xfs_sb_t	*sbp,
-> > -	uint64_t	nblocks)
-> > +	uint64_t	nblocks,
-> > +	bool		dblock)
-> >  {
-> >  	ASSERT(PAGE_SHIFT >= sbp->sb_blocklog);
-> >  	ASSERT(sbp->sb_blocklog >= BBSHIFT);
-> > @@ -136,6 +137,9 @@ xfs_sb_validate_fsb_count(
-> >  	/* Limited by ULONG_MAX of page cache index */
-> >  	if (nblocks >> (PAGE_SHIFT - sbp->sb_blocklog) > ULONG_MAX)
-> >  		return -EFBIG;
-> > +	/* Limited by NULLAGNUMBER of ag number */
-> > +	if (dblock && (nblocks >> sbp->sb_agblklog) >= NULLAGNUMBER)
-> > +		return -EFBIG;
+> > Is that trying to mask off I_CTIME_QUERIED?
+> > If so, can we please use that constant as raw constants tend to be
+> > confusing in the long run.
 > 
-> I think this should be a separate predicate to check for overflowing
-> agcount in xfs_validate_sb_common and xfs_growfs_data_private.
-> 
-Ok, the next version will be changed.
+> Sort of. In principle you could set s_time_gran to 2 without setting
+> SB_MULTIGRAIN_TS. In that case, would it be correct to use the flag
+> there?
 
-> I also wonder if @agcount in xfs_validate_sb_common needs to be u64 (and
-> not u32) to handle overflows?
-
-It looks like there is no need for @agcount overflow checking in xfs_validate_sb_common:
-If agcount overflow occurs, the flollowing judgment will be true and SB sanity check failed.
-
-	sbp->sb_dblocks > XFS_MAX_DBLOCKS(sbp)
-
-So the check for overflowing of agcount should only need in xfs_growfs_data_private(). 
-
-Thanks,
-Long Li
-
-> Someone should try fuzzing a filesystem with a small agblklog and a
-> large dblocks to see if one can trip an integer overflow in the
-> superblock verifier.
-> 
-> --D
-> 
-> >  	return 0;
-> >  }
-> >  
-> > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> > index f3269c0626f0..a69e9b21ef61 100644
-> > --- a/fs/xfs/xfs_mount.h
-> > +++ b/fs/xfs/xfs_mount.h
-> > @@ -531,7 +531,7 @@ xfs_mod_frextents(struct xfs_mount *mp, int64_t delta)
-> >  extern int	xfs_readsb(xfs_mount_t *, int);
-> >  extern void	xfs_freesb(xfs_mount_t *);
-> >  extern bool	xfs_fs_writable(struct xfs_mount *mp, int level);
-> > -extern int	xfs_sb_validate_fsb_count(struct xfs_sb *, uint64_t);
-> > +extern int	xfs_sb_validate_fsb_count(struct xfs_sb *, uint64_t, bool);
-> >  
-> >  extern int	xfs_dev_is_read_only(struct xfs_mount *, char *);
-> >  
-> > diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> > index 16534e9873f6..c207026d92ac 100644
-> > --- a/fs/xfs/xfs_rtalloc.c
-> > +++ b/fs/xfs/xfs_rtalloc.c
-> > @@ -958,7 +958,7 @@ xfs_growfs_rt(
-> >  		return -EOPNOTSUPP;
-> >  
-> >  	nrblocks = in->newblocks;
-> > -	error = xfs_sb_validate_fsb_count(sbp, nrblocks);
-> > +	error = xfs_sb_validate_fsb_count(sbp, nrblocks, false);
-> >  	if (error)
-> >  		return error;
-> >  	/*
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index 4d2e87462ac4..72dfd02c588e 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -1592,8 +1592,8 @@ xfs_fs_fill_super(
-> >  	}
-> >  
-> >  	/* Ensure this filesystem fits in the page cache limits */
-> > -	if (xfs_sb_validate_fsb_count(&mp->m_sb, mp->m_sb.sb_dblocks) ||
-> > -	    xfs_sb_validate_fsb_count(&mp->m_sb, mp->m_sb.sb_rblocks)) {
-> > +	if (xfs_sb_validate_fsb_count(&mp->m_sb, mp->m_sb.sb_dblocks, true) ||
-> > +	    xfs_sb_validate_fsb_count(&mp->m_sb, mp->m_sb.sb_rblocks, false)) {
-> >  		xfs_warn(mp,
-> >  		"file system too large to be mounted on this system.");
-> >  		error = -EFBIG;
-> > -- 
-> > 2.31.1
-> > 
+Fair, then maybe just leave a comment in there. My main worry is going
+back to this later and then staring at this trying to remember what's
+happening...
