@@ -2,165 +2,86 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C281C77B60
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Apr 2023 04:30:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD9BEC77B60
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Apr 2023 06:57:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345286AbjD1EaM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 28 Apr 2023 00:30:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39468 "EHLO
+        id S230200AbjD1G5n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 28 Apr 2023 02:57:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55516 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345179AbjD1EaL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Apr 2023 00:30:11 -0400
+        with ESMTP id S230025AbjD1G5m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Apr 2023 02:57:42 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D109630F7
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 21:30:09 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA7BA198
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 23:57:41 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 632F160E94
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Apr 2023 04:30:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF421C433EF;
-        Fri, 28 Apr 2023 04:30:08 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5B4C464141
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Apr 2023 06:57:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1D99C433EF;
+        Fri, 28 Apr 2023 06:57:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682656208;
-        bh=/DghPxgc47hCMtL0NQGOIZbh9oxlkWYX91gG/1NLXFs=;
+        s=k20201202; t=1682665060;
+        bh=8OASmgtA4mU03PH6Vw+K9w/MNhOKHqIZABamwqughlM=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=J/4pGkinLKKzgj2T1gX2U6wS+840EHdmT3CwNuvSDxr4inCSp6eJ9Eg2XtMLg0xfl
-         uBwJEE1cfD4rJA0Kl4G4MljqkMRQ5CvGPFUEfjNc9rUzNtMDrxwZQNP8gEPuuJ/eF2
-         gDC+BsNKDH3D3ciHuixauzmZ13kFECWS2qSSzbrnP5qa9A3eRzxB2F6/htvGxDoJzm
-         eWxCIKl9ZMFv70WeFoH4UTvb+y9xRVmNnD8juqUgVpAbyyhinFq0ZjPzjiNVXOWrGr
-         cWQw41PyPnMy3LlQhKC7vhcSvErmssEiFuPcpVtWNpYFf3szrjTA27rgNb/6NARcvB
-         9He/GgzD/tOog==
-Date:   Thu, 27 Apr 2023 21:30:08 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/4] xfs: don't unconditionally null args->pag in
- xfs_bmap_btalloc_at_eof
-Message-ID: <20230428043008.GK59213@frogsfrogsfrogs>
-References: <168263573426.1717721.15565213947185049577.stgit@frogsfrogsfrogs>
- <168263573987.1717721.305790819127740342.stgit@frogsfrogsfrogs>
- <20230428014928.GN3223426@dread.disaster.area>
+        b=tv1h5KdEC5BXLt+s/L1Vk/ua+4KfPMNHPLMDpkYSYJHMIhuxOboUZvgncuLv3iz2+
+         5d8JbOxxDrp5mudfUOCM6PaDzAaB9c6ukHKBJoQfh9ge/fJzR8XlEF3b5kyyL0qkAe
+         zFEUPEZR/b9AGpXUBblouVrmHlmrmr0Z0JC1kfzR2dW213iVCwrvnHp9pEPgAKMzny
+         IW0f0h1q7tAVI9trIs47e8PQWBKx3QLVw/fdASSt2rAI8Nt5girnLXY3mMS+azJCbD
+         Ckehq1xxGm3srY5Atd3mcwabJOfnCshCc0ojeiVS+6gieQxMMz/CfoKmpy9dcpcPQm
+         9GP1M8PsfYwTA==
+Date:   Fri, 28 Apr 2023 08:57:36 +0200
+From:   Carlos Maiolino <cem@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs_db: fix broken logic in error path
+Message-ID: <20230428065736.2kdhl7t6zoapedui@andromeda>
+References: <dVNtpBd6-O_AvMmCUgAc-vlNbr0x-1IgIQEPpoWYEipz8Jor5TfX6Z4vsKsLU3R38WCua0jJqVmmgSL_Rp62lA==@protonmail.internalid>
+ <20230427190233.GC59213@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230428014928.GN3223426@dread.disaster.area>
+In-Reply-To: <20230427190233.GC59213@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Apr 28, 2023 at 11:49:28AM +1000, Dave Chinner wrote:
-> On Thu, Apr 27, 2023 at 03:48:59PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > xfs/170 on a filesystem with su=128k,sw=4 produces this splat:
-> > 
-> > BUG: kernel NULL pointer dereference, address: 0000000000000010
-> > #PF: supervisor write access in kernel mode
-> > #PF: error_code(0x0002) - not-present page
-> > PGD 0 P4D 0
-> > Oops: 0002 [#1] PREEMPT SMP
-> > CPU: 1 PID: 4022907 Comm: dd Tainted: G        W          6.3.0-xfsx #2 6ebeeffbe9577d32
-> > Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20171121_152543-x86-ol7-bu
-> > RIP: 0010:xfs_perag_rele+0x10/0x70 [xfs]
-> > RSP: 0018:ffffc90001e43858 EFLAGS: 00010217
-> > RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000100
-> > RDX: ffffffffa054e717 RSI: 0000000000000005 RDI: 0000000000000000
-> > RBP: ffff888194eea000 R08: 0000000000000000 R09: 0000000000000037
-> > R10: ffff888100ac1cb0 R11: 0000000000000018 R12: 0000000000000000
-> > R13: ffffc90001e43a38 R14: ffff888194eea000 R15: ffff888194eea000
-> > FS:  00007f93d1a0e740(0000) GS:ffff88843fc80000(0000) knlGS:0000000000000000
-> > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > CR2: 0000000000000010 CR3: 000000018a34f000 CR4: 00000000003506e0
-> > Call Trace:
-> >  <TASK>
-> >  xfs_bmap_btalloc+0x1a7/0x5d0 [xfs f85291d6841cbb3dc740083f1f331c0327394518]
-> >  xfs_bmapi_allocate+0xee/0x470 [xfs f85291d6841cbb3dc740083f1f331c0327394518]
-> >  xfs_bmapi_write+0x539/0x9e0 [xfs f85291d6841cbb3dc740083f1f331c0327394518]
-> >  xfs_iomap_write_direct+0x1bb/0x2b0 [xfs f85291d6841cbb3dc740083f1f331c0327394518]
-> >  xfs_direct_write_iomap_begin+0x51c/0x710 [xfs f85291d6841cbb3dc740083f1f331c0327394518]
-> >  iomap_iter+0x132/0x2f0
-> >  __iomap_dio_rw+0x2f8/0x840
-> >  iomap_dio_rw+0xe/0x30
-> >  xfs_file_dio_write_aligned+0xad/0x180 [xfs f85291d6841cbb3dc740083f1f331c0327394518]
-> >  xfs_file_write_iter+0xfb/0x190 [xfs f85291d6841cbb3dc740083f1f331c0327394518]
-> >  vfs_write+0x2eb/0x410
-> >  ksys_write+0x65/0xe0
-> >  do_syscall_64+0x2b/0x80
-> > 
-> > This crash occurs under the "out_low_space" label.  We grabbed a perag
-> > reference, passed it via args->pag into xfs_bmap_btalloc_at_eof, and
-> > afterwards args->pag is NULL.  Fix the second function not to clobber
-> > args->pag if the caller had passed one in.
-> > 
-> > Fixes: 85843327094f ("xfs: factor xfs_bmap_btalloc()")
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  fs/xfs/libxfs/xfs_bmap.c |    5 +++--
-> >  1 file changed, 3 insertions(+), 2 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index b512de0540d5..cd8870a16fd1 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -3494,8 +3494,10 @@ xfs_bmap_btalloc_at_eof(
-> >  		if (!caller_pag)
-> >  			args->pag = xfs_perag_get(mp, XFS_FSB_TO_AGNO(mp, ap->blkno));
-> >  		error = xfs_alloc_vextent_exact_bno(args, ap->blkno);
-> > -		if (!caller_pag)
-> > +		if (!caller_pag) {
-> >  			xfs_perag_put(args->pag);
-> > +			args->pag = NULL;
-> > +		}
-> >  		if (error)
-> >  			return error;
-> >  
-> > @@ -3505,7 +3507,6 @@ xfs_bmap_btalloc_at_eof(
-> >  		 * Exact allocation failed. Reset to try an aligned allocation
-> >  		 * according to the original allocation specification.
-> >  		 */
-> > -		args->pag = NULL;
-> >  		args->alignment = stripe_align;
-> >  		args->minlen = nextminlen;
-> >  		args->minalignslop = 0;
+On Thu, Apr 27, 2023 at 12:02:33PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Yup, that'll fix the problem.
+> smatch complains proceeding into the if body if leaf is a null pointer:
 > 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> check.c:3614 process_leaf_node_dir_v2_int() warn: variable dereferenced before check 'leaf' (see line 3518)
 > 
-> FWIW, I'm working on some patches to take this further by always
-> providing a caller perag to this function.  That gets rid of all the
-> conditional code here and it gets rid of the only case where we call
-> xfs_alloc_vextent_near_bno() without args->pag set so the
-> conditional caller_pag code goes from there, too. This makes
-> xfs_alloc_vextent_{near,exact}_bno() identical except for one line
-> so they can be collapsed. And now that we always specify args->pag
-> for these functions, we can ignore the agno part of the target block
-> meaning we can select the perag to allocate from at a much higher
-> level via setting up args->pag when we initially scan the AGs to
-> set up args->minlen/maxlen based on the the nearest AG with 
-> contiguous free space large enough for the whole allocation. This
-> avoids attempting allocations that are guaranteed to fail before
-> we fall back to iterating from the target block agno and eventually
-> finding the same AG we originally found that had enough contiguous
-> free space in it for a maxlen allocation....
+> However, the logic here is misleading and broken -- what we're trying to
+> do is switch between the v4 and v5 variants of the directory check.
+> We're using @leaf3 being a null pointer (or not) to determine v4 vs. v5,
+> so the "!" part of the comparison is correct, but the variable used
+> (leaf) is not.
 > 
-> I think I can take it further an make both filestreams and the
-> normal allocator use the same "this ag" algorithm for EOF and
-> aligned allocation and then have them both fall back to the same
-> unaligned allocation attempts, which will then allow a bunch of code
-> to be collapsed in the xfs_bmap_btalloc() path...
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-<nod> I was thinking along those lines too when I was writing this
-patch, but for now I'll just patch everything back together. :)
+Looks correct.
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-That /would/ make the interfaces to those functions a lot more
-consistent.
+> ---
+>  db/check.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/db/check.c b/db/check.c
+> index 964756d0..fdf1f6a1 100644
+> --- a/db/check.c
+> +++ b/db/check.c
+> @@ -3452,7 +3452,7 @@ process_leaf_node_dir_v2_int(
+>  				 id->ino, dabno, stale,
+>  				 be16_to_cpu(leaf3->hdr.stale));
+>  		error++;
+> -	} else if (!leaf && stale != be16_to_cpu(leaf->hdr.stale)) {
+> +	} else if (!leaf3 && stale != be16_to_cpu(leaf->hdr.stale)) {
+>  		if (!sflag || v)
+>  			dbprintf(_("dir %lld block %d stale mismatch "
+>  				 "%d/%d\n"),
 
---D
-
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+-- 
+Carlos Maiolino
