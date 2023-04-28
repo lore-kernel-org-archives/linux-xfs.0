@@ -2,115 +2,103 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F11AC77B61
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Apr 2023 07:21:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 454A8C77B61
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Apr 2023 08:09:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345474AbjD1HVT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 28 Apr 2023 03:21:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38810 "EHLO
+        id S1345670AbjD1IJ1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 28 Apr 2023 04:09:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345405AbjD1HVS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Apr 2023 03:21:18 -0400
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF114448C
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Apr 2023 00:21:12 -0700 (PDT)
-Received: from kwepemi500009.china.huawei.com (unknown [172.30.72.56])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4Q73p34v0Fz18KNK;
-        Fri, 28 Apr 2023 15:17:15 +0800 (CST)
-Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
- (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Fri, 28 Apr
- 2023 15:21:10 +0800
-Date:   Fri, 28 Apr 2023 15:20:12 +0800
-From:   Long Li <leo.lilong@huawei.com>
-To:     <djwong@kernel.org>
-CC:     <david@fromorbit.com>, <linux-xfs@vger.kernel.org>,
-        <houtao1@huawei.com>, <yi.zhang@huawei.com>, <guoxuenan@huawei.com>
-Subject: [PATCH v2] xfs: fix ag count overflow during growfs
-Message-ID: <20230428072012.GA1748602@ceph-admin>
+        with ESMTP id S1345552AbjD1IJV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Apr 2023 04:09:21 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C859D40F8
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Apr 2023 01:09:14 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2DEC463DD0
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Apr 2023 08:09:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8162BC433EF;
+        Fri, 28 Apr 2023 08:09:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1682669353;
+        bh=WiTkK1cog8mhBEqSVte3qQLZYliKhcpFDem+Ey/2q8M=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Q6orC1xG6YS32Gj05WWwFkptA+OfFzTaGg7fXye1ycxQBjxO48ELb8y5+fpX1mtOp
+         Nw97ezVJyrwkZyIHoUFY1kzpo7xpOh1ZVrrO9xP2zNfbOnQbdKVqExDVbo9fR/bxQJ
+         yFFsXypaqL2Mi38Zn4rsdvcgi/gBxZMN1mrz7a8oelc+RNNEH8ilNXBwGTYTkoo52a
+         AbJOpGBeidqK/kN+DxVl5SsDNzqpfULAkCJC7LFaQbWzN3I8FqW1xbhYgLh1le3R/f
+         glUG9dCABU+dBms99VJZkYewP/YrpAsKLmf4BzAI4HkXoaP9jZBQcT/weOxNxeLoXy
+         FdH3khdHCaMsA==
+Date:   Fri, 28 Apr 2023 10:09:08 +0200
+From:   Carlos Maiolino <cem@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] mkfs: warning about misaligned AGs and RAID stripes is
+ not an error
+Message-ID: <20230428080908.x5vfnshss7hxjq7y@andromeda>
+References: <CUQF8CitQG_-gWntD7C-tEAqv-GBVpBOalGxb-XROZN5CAL2JSIyhbtWoiKJSLbP2zPh516xKhV2L7bG9ncArQ==@protonmail.internalid>
+ <20230427224540.GE59213@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-X-Originating-IP: [10.175.127.227]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- kwepemi500009.china.huawei.com (7.221.188.199)
-X-CFilter-Loop: Reflected
+In-Reply-To: <20230427224540.GE59213@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-I found a corruption during growfs:
+On Thu, Apr 27, 2023 at 03:45:40PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> I've noticed a fair number of fstests failures when we create a scratch
+> device on a RAID device and the test specifies an explicit AG count or
+> AG size:
+> 
+> --- /tmp/fstests/tests/xfs/042.out	2022-09-01 15:09:11.484679979 -0700
+> +++ /var/tmp/fstests/xfs/042.out.bad	2023-04-25 19:59:04.040000000 -0700
+> @@ -1,5 +1,8 @@
+>  QA output created by 042
+> -Make a 96 megabyte filesystem on SCRATCH_DEV and mount... done
+> +Make a 96 megabyte filesystem on SCRATCH_DEV and mount... Warning: AG size is a multiple of stripe width.  This can cause performance
+> +problems by aligning all AGs on the same disk.  To avoid this, run mkfs with
+> +an AG size that is one stripe unit smaller or larger, for example 8160.
+> +done
+> 
+> Emitting this warning on stderr is silly -- nothing has failed, and we
+> aren't going to abort the format either.  Send the warning to stdout.
 
- XFS (loop0): Internal error agbno >= mp->m_sb.sb_agblocks at line 3661 of
-   file fs/xfs/libxfs/xfs_alloc.c.  Caller __xfs_free_extent+0x28e/0x3c0
- CPU: 0 PID: 573 Comm: xfs_growfs Not tainted 6.3.0-rc7-next-20230420-00001-gda8c95746257
- Call Trace:
-  <TASK>
-  dump_stack_lvl+0x50/0x70
-  xfs_corruption_error+0x134/0x150
-  __xfs_free_extent+0x2c1/0x3c0
-  xfs_ag_extend_space+0x291/0x3e0
-  xfs_growfs_data+0xd72/0xe90
-  xfs_file_ioctl+0x5f9/0x14a0
-  __x64_sys_ioctl+0x13e/0x1c0
-  do_syscall_64+0x39/0x80
-  entry_SYSCALL_64_after_hwframe+0x63/0xcd
- XFS (loop0): Corruption detected. Unmount and run xfs_repair
- XFS (loop0): Internal error xfs_trans_cancel at line 1097 of file
-   fs/xfs/xfs_trans.c.  Caller xfs_growfs_data+0x691/0xe90
- CPU: 0 PID: 573 Comm: xfs_growfs Not tainted 6.3.0-rc7-next-20230420-00001-gda8c95746257
- Call Trace:
-  <TASK>
-  dump_stack_lvl+0x50/0x70
-  xfs_error_report+0x93/0xc0
-  xfs_trans_cancel+0x2c0/0x350
-  xfs_growfs_data+0x691/0xe90
-  xfs_file_ioctl+0x5f9/0x14a0
-  __x64_sys_ioctl+0x13e/0x1c0
-  do_syscall_64+0x39/0x80
-  entry_SYSCALL_64_after_hwframe+0x63/0xcd
- RIP: 0033:0x7f2d86706577
+I agree with it, looks better printing it out to stdout other than stderr, so,
+with one caveat below:
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-The bug can be reproduced with the following sequence:
+I think this might impact user tools monitoring stderr, but for mkfs I don't
+think it's a big deal, just wanted to raise this concern.
 
- # truncate -s  1073741824 xfs_test.img
- # mkfs.xfs -f -b size=1024 -d agcount=4 xfs_test.img
- # truncate -s 2305843009213693952  xfs_test.img
- # mount -o loop xfs_test.img /mnt/test
- # xfs_growfs -D  1125899907891200  /mnt/test
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  mkfs/xfs_mkfs.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 6dc0f335..2f2995e1 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -3167,11 +3167,12 @@ _("agsize rounded to %lld, sunit = %d\n"),
+> 
+>  		if (cli_opt_set(&dopts, D_AGCOUNT) ||
+>  		    cli_opt_set(&dopts, D_AGSIZE)) {
+> -			fprintf(stderr, _(
+> +			printf(_(
+>  "Warning: AG size is a multiple of stripe width.  This can cause performance\n\
+>  problems by aligning all AGs on the same disk.  To avoid this, run mkfs with\n\
+>  an AG size that is one stripe unit smaller or larger, for example %llu.\n"),
+>  				(unsigned long long)cfg->agsize - dsunit);
+> +			fflush(stdout);
+>  			goto validate;
+>  		}
+> 
 
-The root cause is that during growfs, user space passed in a large value
-of newblcoks to xfs_growfs_data_private(), due to current sb_agblocks is
-too small, new AG count will exceed UINT_MAX. Because of AG number type
-is unsigned int and it would overflow, that caused nagcount much smaller
-than the actual value. During AG extent space, delta blocks in
-xfs_resizefs_init_new_ags() will much larger than the actual value due to
-incorrect nagcount, even exceed UINT_MAX. This will cause corruption and
-be detected in __xfs_free_extent. Fix it by add checks for nagcount
-overflow in xfs_growfs_data_private.
-
-Signed-off-by: Long Li <leo.lilong@huawei.com>
----
-v2:
-- Check for overflowing of agcount only in xfs_growfs_data_private
-
- fs/xfs/xfs_fsops.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 13851c0d640b..084c69a91937 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -116,6 +116,9 @@ xfs_growfs_data_private(
- 	nb_div = nb;
- 	nb_mod = do_div(nb_div, mp->m_sb.sb_agblocks);
- 	nagcount = nb_div + (nb_mod != 0);
-+	/* check for overflow */
-+	if (nagcount < nb_div)
-+		return -EINVAL;
- 	if (nb_mod && nb_mod < XFS_MIN_AG_BLOCKS) {
- 		nagcount--;
- 		nb = (xfs_rfsblock_t)nagcount * mp->m_sb.sb_agblocks;
 -- 
-2.31.1
-
+Carlos Maiolino
