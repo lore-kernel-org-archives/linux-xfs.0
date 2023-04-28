@@ -2,106 +2,83 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBA73C77B73
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Apr 2023 02:20:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E4CAC77B73
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Apr 2023 02:20:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344643AbjD1CUr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Apr 2023 22:20:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36564 "EHLO
+        id S1344599AbjD1CU6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Apr 2023 22:20:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36582 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344621AbjD1CUr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2023 22:20:47 -0400
-Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F05B269D
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 19:20:46 -0700 (PDT)
-Received: by mail-pf1-x42c.google.com with SMTP id d2e1a72fcca58-63b5c48ea09so7481875b3a.1
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 19:20:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1682648445; x=1685240445;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=1MFNQpQIdQ8nHgw9CzNiFNAgVeo1etEj3o4SIL3t0Ms=;
-        b=ZPb0Dkgp+GVfUzVFsF/ESNw2mCEx+vlct4WqYhx3z9XQAoPzSttMIVWiPyXpv6dYho
-         4j4R5uCjrK3NmuRsRRw0xFEO3ME1H4FBX4EsaXvPhCvm3Ea1YQK0lNBLPeWtd4Lqy6RC
-         GzvHUlVOWs2bGc58Ci3wI7Gwg/UHPsmlM8bRGIgelRENqXaIE1p1B5it7Ypug9uuLP9R
-         Xej6UwNCvMHZ/qJaaxUm90NnEI9+D+n16KbSVHiOLSBUmeRGcFGWoFoR4na/htLK13Ls
-         IAcG7tKY+b1SIYysoJ9/gqira0Utr9URFH552BgXWorhfnIdSnY4E+0fH+bl2GG9biDL
-         pcgw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682648445; x=1685240445;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=1MFNQpQIdQ8nHgw9CzNiFNAgVeo1etEj3o4SIL3t0Ms=;
-        b=GgA7jE/M3avP2iyDxtZmARJTP6KMxHrCutIQuCLalyxgirWFqGyMJaAL66qRUXlcMh
-         4YyuqA4dsH86I5uBTR1G3+wHxRTPn3dEz1EEVNBOfzELk7vKvszlOpej0UYRE2Jc8Pw1
-         EQ/xOmyMvvSN4a/jUfjuJreZhnvpOVlxQ+a1lavyXQ20Ac/8Qe2aN1ZT49caJ5yEr4r8
-         J+L4pXD45KPUb4J3Y3Nl2BVjtsvzA8q29A9HSif/LS745AcxFv44vSlpAqNYDPoV12Of
-         9M8PMrmLJDAVWPIOeuWNL16V2rMjaQBV7yh1zQWn7O6Vr+iEDSm4G+aYBM/INDyMOMSS
-         Ba9w==
-X-Gm-Message-State: AC+VfDwDss5RuDQiX4kgdHRBjl1kEfr457XXU4y2LbVJTmG75VjjZeb7
-        LMzfS/G4oFWWltKro4jnJfj2BA==
-X-Google-Smtp-Source: ACHHUZ6mi3bDatAwBbLOlgnZgiOW5YYHf22puUhshMs0+4HATYDXejFNYUX7NX7RP6mfr0a4N0UQ7w==
-X-Received: by 2002:a05:6a20:5495:b0:ec:7cc:2da6 with SMTP id i21-20020a056a20549500b000ec07cc2da6mr4212698pzk.56.1682648445562;
-        Thu, 27 Apr 2023 19:20:45 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-88-204.pa.nsw.optusnet.com.au. [49.181.88.204])
-        by smtp.gmail.com with ESMTPSA id l6-20020a656806000000b0051b71e8f633sm11966417pgt.92.2023.04.27.19.20.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Apr 2023 19:20:45 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1psDiz-008i1h-UG; Fri, 28 Apr 2023 12:20:41 +1000
-Date:   Fri, 28 Apr 2023 12:20:41 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
+        with ESMTP id S1344764AbjD1CU5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2023 22:20:57 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1300C269D
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 19:20:57 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 52C5B611F6
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Apr 2023 02:20:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AAC79C433D2;
+        Fri, 28 Apr 2023 02:20:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1682648455;
+        bh=EqKqqH+uT5OlzsT/n7oYwz5IozN1zTRyNhMoeyX41R4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=F/qmk1jMiv4DbdsvjArbK6Zt9I9gDiaykN7Rr/I3MOgc5FCROwagFLgIup0auNHPY
+         1esEeKBs7Z+m9dTOloDKbmyFq34oOhdwsz/vIZHkeU3953fYodPe72lI/Tcib5ppq2
+         JKZ+6avs3HQWiwW4Sxa6wVphaKBYh+kTkkVRbXjMcqLOeuOvSqVvkdL6cgtP67SjSD
+         nEI8s6xUXg46Fwx2VOP8rJ7r+KelyD7nmnGPT6PE2t1StPRWrVzsGOWdTLKLILoOvS
+         gSnPslpN9z97RH0diW7whXyddYynpTbjyv155GgrO2L4eCnkxhhtcmAIBFiMeaTKmh
+         pdw0Eg94lHRjw==
+Date:   Thu, 27 Apr 2023 19:20:55 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs: disable reaping in fscounters scrub
-Message-ID: <20230428022041.GT3223426@dread.disaster.area>
-References: <168263576040.1719564.2454266085026973056.stgit@frogsfrogsfrogs>
- <168263577739.1719564.16150152466509865245.stgit@frogsfrogsfrogs>
+Subject: Re: [PATCH 4/4] xfs: don't allocate into the data fork for an
+ unshare request
+Message-ID: <20230428022055.GG59213@frogsfrogsfrogs>
+References: <168263573426.1717721.15565213947185049577.stgit@frogsfrogsfrogs>
+ <168263575686.1717721.6010345741023088566.stgit@frogsfrogsfrogs>
+ <20230428021346.GQ3223426@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <168263577739.1719564.16150152466509865245.stgit@frogsfrogsfrogs>
+In-Reply-To: <20230428021346.GQ3223426@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 27, 2023 at 03:49:37PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Apr 28, 2023 at 12:13:46PM +1000, Dave Chinner wrote:
+> On Thu, Apr 27, 2023 at 03:49:16PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > For an unshare request, we only have to take action if the data fork has
+> > a shared mapping.  We don't care if someone else set up a cow operation.
+> > If we find nothing in the data fork, return a hole to avoid allocating
+> > space.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  fs/xfs/xfs_iomap.c |    5 +++--
+> >  1 file changed, 3 insertions(+), 2 deletions(-)
 > 
-> The fscounters scrub code doesn't work properly because it cannot
-> quiesce updates to the percpu counters in the filesystem, hence it
-> returns false corruption reports.  This has been fixed properly in
-> one of the online repair patchsets that are under review by replacing
-> the xchk_disable_reaping calls with an exclusive filesystem freeze.
-> Disabling background gc isn't sufficient to fix the problem.
-> 
-> In other words, scrub doesn't need to call xfs_inodegc_stop, which is
-> just as well since it wasn't correct to allow scrub to call
-> xfs_inodegc_start when something else could be calling xfs_inodegc_stop
-> (e.g. trying to freeze the filesystem).
-> 
-> Neuter the scrubber for now, and remove the xchk_*_reaping functions.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Looks ok, but I'm unsure of what bad behaviour this might be fixing.
+> Did you just notice this, or does it fix some kind of test failure?
 
-Looks ok, minor nit below.
+I noticed it while I was running the freespace defrag code in djwong-dev
+with tracepoints turned on.  THere was a math bug that I was trying to
+sort out that resulted in FUNSHARE being called on a hole, and I was
+surprised that it would create a delalloc reservation and then convert
+it to an unwritten extent instead of going straight to an unwritten
+extent.
 
-> @@ -453,6 +446,9 @@ xchk_fscounters(
->  	if (frextents > mp->m_sb.sb_rextents)
->  		xchk_set_corrupt(sc);
->  
-> +	/* XXX: We can't quiesce percpu counter updates, so exit early. */
-> +	return 0;
+AFAICT it has no user visible effect other than not wasting cycles on
+pointless work.
 
-Can you just add to this that we can re-enable this functionality
-when we have the exclusive freeze functionality in the kernel?
+--D
 
-With that,
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
