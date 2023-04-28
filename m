@@ -2,86 +2,115 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD9BEC77B60
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Apr 2023 06:57:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F11AC77B61
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Apr 2023 07:21:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230200AbjD1G5n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 28 Apr 2023 02:57:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55516 "EHLO
+        id S1345474AbjD1HVT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 28 Apr 2023 03:21:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38810 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230025AbjD1G5m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Apr 2023 02:57:42 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA7BA198
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 23:57:41 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5B4C464141
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Apr 2023 06:57:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1D99C433EF;
-        Fri, 28 Apr 2023 06:57:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1682665060;
-        bh=8OASmgtA4mU03PH6Vw+K9w/MNhOKHqIZABamwqughlM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=tv1h5KdEC5BXLt+s/L1Vk/ua+4KfPMNHPLMDpkYSYJHMIhuxOboUZvgncuLv3iz2+
-         5d8JbOxxDrp5mudfUOCM6PaDzAaB9c6ukHKBJoQfh9ge/fJzR8XlEF3b5kyyL0qkAe
-         zFEUPEZR/b9AGpXUBblouVrmHlmrmr0Z0JC1kfzR2dW213iVCwrvnHp9pEPgAKMzny
-         IW0f0h1q7tAVI9trIs47e8PQWBKx3QLVw/fdASSt2rAI8Nt5girnLXY3mMS+azJCbD
-         Ckehq1xxGm3srY5Atd3mcwabJOfnCshCc0ojeiVS+6gieQxMMz/CfoKmpy9dcpcPQm
-         9GP1M8PsfYwTA==
-Date:   Fri, 28 Apr 2023 08:57:36 +0200
-From:   Carlos Maiolino <cem@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs_db: fix broken logic in error path
-Message-ID: <20230428065736.2kdhl7t6zoapedui@andromeda>
-References: <dVNtpBd6-O_AvMmCUgAc-vlNbr0x-1IgIQEPpoWYEipz8Jor5TfX6Z4vsKsLU3R38WCua0jJqVmmgSL_Rp62lA==@protonmail.internalid>
- <20230427190233.GC59213@frogsfrogsfrogs>
+        with ESMTP id S1345405AbjD1HVS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Apr 2023 03:21:18 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF114448C
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Apr 2023 00:21:12 -0700 (PDT)
+Received: from kwepemi500009.china.huawei.com (unknown [172.30.72.56])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4Q73p34v0Fz18KNK;
+        Fri, 28 Apr 2023 15:17:15 +0800 (CST)
+Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
+ (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Fri, 28 Apr
+ 2023 15:21:10 +0800
+Date:   Fri, 28 Apr 2023 15:20:12 +0800
+From:   Long Li <leo.lilong@huawei.com>
+To:     <djwong@kernel.org>
+CC:     <david@fromorbit.com>, <linux-xfs@vger.kernel.org>,
+        <houtao1@huawei.com>, <yi.zhang@huawei.com>, <guoxuenan@huawei.com>
+Subject: [PATCH v2] xfs: fix ag count overflow during growfs
+Message-ID: <20230428072012.GA1748602@ceph-admin>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Content-Disposition: inline
-In-Reply-To: <20230427190233.GC59213@frogsfrogsfrogs>
+X-Originating-IP: [10.175.127.227]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ kwepemi500009.china.huawei.com (7.221.188.199)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 27, 2023 at 12:02:33PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> smatch complains proceeding into the if body if leaf is a null pointer:
-> 
-> check.c:3614 process_leaf_node_dir_v2_int() warn: variable dereferenced before check 'leaf' (see line 3518)
-> 
-> However, the logic here is misleading and broken -- what we're trying to
-> do is switch between the v4 and v5 variants of the directory check.
-> We're using @leaf3 being a null pointer (or not) to determine v4 vs. v5,
-> so the "!" part of the comparison is correct, but the variable used
-> (leaf) is not.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+I found a corruption during growfs:
 
-Looks correct.
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+ XFS (loop0): Internal error agbno >= mp->m_sb.sb_agblocks at line 3661 of
+   file fs/xfs/libxfs/xfs_alloc.c.  Caller __xfs_free_extent+0x28e/0x3c0
+ CPU: 0 PID: 573 Comm: xfs_growfs Not tainted 6.3.0-rc7-next-20230420-00001-gda8c95746257
+ Call Trace:
+  <TASK>
+  dump_stack_lvl+0x50/0x70
+  xfs_corruption_error+0x134/0x150
+  __xfs_free_extent+0x2c1/0x3c0
+  xfs_ag_extend_space+0x291/0x3e0
+  xfs_growfs_data+0xd72/0xe90
+  xfs_file_ioctl+0x5f9/0x14a0
+  __x64_sys_ioctl+0x13e/0x1c0
+  do_syscall_64+0x39/0x80
+  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+ XFS (loop0): Corruption detected. Unmount and run xfs_repair
+ XFS (loop0): Internal error xfs_trans_cancel at line 1097 of file
+   fs/xfs/xfs_trans.c.  Caller xfs_growfs_data+0x691/0xe90
+ CPU: 0 PID: 573 Comm: xfs_growfs Not tainted 6.3.0-rc7-next-20230420-00001-gda8c95746257
+ Call Trace:
+  <TASK>
+  dump_stack_lvl+0x50/0x70
+  xfs_error_report+0x93/0xc0
+  xfs_trans_cancel+0x2c0/0x350
+  xfs_growfs_data+0x691/0xe90
+  xfs_file_ioctl+0x5f9/0x14a0
+  __x64_sys_ioctl+0x13e/0x1c0
+  do_syscall_64+0x39/0x80
+  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+ RIP: 0033:0x7f2d86706577
 
-> ---
->  db/check.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/db/check.c b/db/check.c
-> index 964756d0..fdf1f6a1 100644
-> --- a/db/check.c
-> +++ b/db/check.c
-> @@ -3452,7 +3452,7 @@ process_leaf_node_dir_v2_int(
->  				 id->ino, dabno, stale,
->  				 be16_to_cpu(leaf3->hdr.stale));
->  		error++;
-> -	} else if (!leaf && stale != be16_to_cpu(leaf->hdr.stale)) {
-> +	} else if (!leaf3 && stale != be16_to_cpu(leaf->hdr.stale)) {
->  		if (!sflag || v)
->  			dbprintf(_("dir %lld block %d stale mismatch "
->  				 "%d/%d\n"),
+The bug can be reproduced with the following sequence:
 
+ # truncate -s  1073741824 xfs_test.img
+ # mkfs.xfs -f -b size=1024 -d agcount=4 xfs_test.img
+ # truncate -s 2305843009213693952  xfs_test.img
+ # mount -o loop xfs_test.img /mnt/test
+ # xfs_growfs -D  1125899907891200  /mnt/test
+
+The root cause is that during growfs, user space passed in a large value
+of newblcoks to xfs_growfs_data_private(), due to current sb_agblocks is
+too small, new AG count will exceed UINT_MAX. Because of AG number type
+is unsigned int and it would overflow, that caused nagcount much smaller
+than the actual value. During AG extent space, delta blocks in
+xfs_resizefs_init_new_ags() will much larger than the actual value due to
+incorrect nagcount, even exceed UINT_MAX. This will cause corruption and
+be detected in __xfs_free_extent. Fix it by add checks for nagcount
+overflow in xfs_growfs_data_private.
+
+Signed-off-by: Long Li <leo.lilong@huawei.com>
+---
+v2:
+- Check for overflowing of agcount only in xfs_growfs_data_private
+
+ fs/xfs/xfs_fsops.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 13851c0d640b..084c69a91937 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -116,6 +116,9 @@ xfs_growfs_data_private(
+ 	nb_div = nb;
+ 	nb_mod = do_div(nb_div, mp->m_sb.sb_agblocks);
+ 	nagcount = nb_div + (nb_mod != 0);
++	/* check for overflow */
++	if (nagcount < nb_div)
++		return -EINVAL;
+ 	if (nb_mod && nb_mod < XFS_MIN_AG_BLOCKS) {
+ 		nagcount--;
+ 		nb = (xfs_rfsblock_t)nagcount * mp->m_sb.sb_agblocks;
 -- 
-Carlos Maiolino
+2.31.1
+
