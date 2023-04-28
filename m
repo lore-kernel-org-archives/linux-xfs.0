@@ -2,99 +2,103 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8119C77B61
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Apr 2023 02:18:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBA73C77B73
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Apr 2023 02:20:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344642AbjD1CSN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Apr 2023 22:18:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36356 "EHLO
+        id S1344643AbjD1CUr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Apr 2023 22:20:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344621AbjD1CSM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2023 22:18:12 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C2EC2684
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 19:18:07 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id 98e67ed59e1d1-246fd87a124so7981440a91.0
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 19:18:07 -0700 (PDT)
+        with ESMTP id S1344621AbjD1CUr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Apr 2023 22:20:47 -0400
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F05B269D
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 19:20:46 -0700 (PDT)
+Received: by mail-pf1-x42c.google.com with SMTP id d2e1a72fcca58-63b5c48ea09so7481875b3a.1
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Apr 2023 19:20:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1682648287; x=1685240287;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1682648445; x=1685240445;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=EqGZa4YSysHwYslyuKVQ0Huqk2vIcjs5agLP+jWZmvM=;
-        b=yHefcwK99o1CnC2JLw5p7MggHqsugCpH6M/KWmMvr60ZD0ODY8KX9Y0Ui4BQRyhIyp
-         3us0qIRRkkTIl4Os0/UV8c/y3XuUXhIukbRbDcUa9w3F68YXM/uwL8ZQKP1VuTO1jLpb
-         vuUPwmZqGk8akxpqOWmhEsyZsz4DrrsjgAf8nFEXBKufkOtczllRsNwY5ap8/qw4+wCP
-         K4M7F8XpQYKRqg+Ux7HDWkkYDIRxjIIs6AHE65NBaGOkyR6i6tJTj6gVdXU3dtS1HQoB
-         8wafse+2bAWzbNvEC/j1xhwehyBXqMqpU13sXxNAR8iI7X+wQ/T/xP+Ip5dptF9pctsS
-         XCWg==
+        bh=1MFNQpQIdQ8nHgw9CzNiFNAgVeo1etEj3o4SIL3t0Ms=;
+        b=ZPb0Dkgp+GVfUzVFsF/ESNw2mCEx+vlct4WqYhx3z9XQAoPzSttMIVWiPyXpv6dYho
+         4j4R5uCjrK3NmuRsRRw0xFEO3ME1H4FBX4EsaXvPhCvm3Ea1YQK0lNBLPeWtd4Lqy6RC
+         GzvHUlVOWs2bGc58Ci3wI7Gwg/UHPsmlM8bRGIgelRENqXaIE1p1B5it7Ypug9uuLP9R
+         Xej6UwNCvMHZ/qJaaxUm90NnEI9+D+n16KbSVHiOLSBUmeRGcFGWoFoR4na/htLK13Ls
+         IAcG7tKY+b1SIYysoJ9/gqira0Utr9URFH552BgXWorhfnIdSnY4E+0fH+bl2GG9biDL
+         pcgw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682648287; x=1685240287;
+        d=1e100.net; s=20221208; t=1682648445; x=1685240445;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=EqGZa4YSysHwYslyuKVQ0Huqk2vIcjs5agLP+jWZmvM=;
-        b=W1B9esQIEaYHBYi5fCyVbFi3lqoQGxpQJ8gVCsQPK42AwsA4odQoFPJD2jQrOd0U7N
-         oPBvVWltEF/Us2b9dOpLsCc+caHU3RwDPw0zuP8SoRejS+TSRiMd2aM17Tjqw6lCoC2p
-         RbOe2988sbOuWnCmVCWnAt+m/j5cR+D2Qaol3BPmyNzjAF/AkZfgWk+JohG0T/PuddQo
-         PcwSJIYHcba2s5P3N1orQj9or1NrMhAvPs9ff7yr/r8kmlMo1+SIZBO2FhP5tcxW4NOh
-         j5KRiyWrlPA7kSY8BFojqNwUaXMCkWVgdc5EN7rRLmoBhCKzUEO6NwQSxa8QkY3otMP7
-         7YBA==
-X-Gm-Message-State: AC+VfDxCFz7SStI/vLrRrwFI/kvr7TolHJOQ/ElYbljcxh87B1EUQhcw
-        8hVuYPgLro1t7GsR4GJRVKgVEUSquv8HfG0rSRM=
-X-Google-Smtp-Source: ACHHUZ7Ds1ps4ra9qPqk7/8TO0EhK5UyHJ7vy0qpyGoSVT3wzpTeMkMgnGXz9CD3yiY8ALOE7Uf9hw==
-X-Received: by 2002:a17:90b:4b09:b0:246:f8d7:3083 with SMTP id lx9-20020a17090b4b0900b00246f8d73083mr4098075pjb.16.1682648287122;
-        Thu, 27 Apr 2023 19:18:07 -0700 (PDT)
+        bh=1MFNQpQIdQ8nHgw9CzNiFNAgVeo1etEj3o4SIL3t0Ms=;
+        b=GgA7jE/M3avP2iyDxtZmARJTP6KMxHrCutIQuCLalyxgirWFqGyMJaAL66qRUXlcMh
+         4YyuqA4dsH86I5uBTR1G3+wHxRTPn3dEz1EEVNBOfzELk7vKvszlOpej0UYRE2Jc8Pw1
+         EQ/xOmyMvvSN4a/jUfjuJreZhnvpOVlxQ+a1lavyXQ20Ac/8Qe2aN1ZT49caJ5yEr4r8
+         J+L4pXD45KPUb4J3Y3Nl2BVjtsvzA8q29A9HSif/LS745AcxFv44vSlpAqNYDPoV12Of
+         9M8PMrmLJDAVWPIOeuWNL16V2rMjaQBV7yh1zQWn7O6Vr+iEDSm4G+aYBM/INDyMOMSS
+         Ba9w==
+X-Gm-Message-State: AC+VfDwDss5RuDQiX4kgdHRBjl1kEfr457XXU4y2LbVJTmG75VjjZeb7
+        LMzfS/G4oFWWltKro4jnJfj2BA==
+X-Google-Smtp-Source: ACHHUZ6mi3bDatAwBbLOlgnZgiOW5YYHf22puUhshMs0+4HATYDXejFNYUX7NX7RP6mfr0a4N0UQ7w==
+X-Received: by 2002:a05:6a20:5495:b0:ec:7cc:2da6 with SMTP id i21-20020a056a20549500b000ec07cc2da6mr4212698pzk.56.1682648445562;
+        Thu, 27 Apr 2023 19:20:45 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-88-204.pa.nsw.optusnet.com.au. [49.181.88.204])
-        by smtp.gmail.com with ESMTPSA id iz19-20020a170902ef9300b001a98ac97d0asm5376331plb.114.2023.04.27.19.18.06
+        by smtp.gmail.com with ESMTPSA id l6-20020a656806000000b0051b71e8f633sm11966417pgt.92.2023.04.27.19.20.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Apr 2023 19:18:06 -0700 (PDT)
+        Thu, 27 Apr 2023 19:20:45 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1psDgR-008i0O-MP; Fri, 28 Apr 2023 12:18:03 +1000
-Date:   Fri, 28 Apr 2023 12:18:03 +1000
+        id 1psDiz-008i1h-UG; Fri, 28 Apr 2023 12:20:41 +1000
+Date:   Fri, 28 Apr 2023 12:20:41 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/4] xfs: check that per-cpu inodegc workers actually run
- on that cpu
-Message-ID: <20230428021803.GS3223426@dread.disaster.area>
+Subject: Re: [PATCH 3/4] xfs: disable reaping in fscounters scrub
+Message-ID: <20230428022041.GT3223426@dread.disaster.area>
 References: <168263576040.1719564.2454266085026973056.stgit@frogsfrogsfrogs>
- <168263577171.1719564.17269081541985295999.stgit@frogsfrogsfrogs>
+ <168263577739.1719564.16150152466509865245.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <168263577171.1719564.17269081541985295999.stgit@frogsfrogsfrogs>
+In-Reply-To: <168263577739.1719564.16150152466509865245.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 27, 2023 at 03:49:31PM -0700, Darrick J. Wong wrote:
+On Thu, Apr 27, 2023 at 03:49:37PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Now that we've allegedly worked out the problem of the per-cpu inodegc
-> workers being scheduled on the wrong cpu, let's put in a debugging knob
-> to let us know if a worker ever gets mis-scheduled again.
+> The fscounters scrub code doesn't work properly because it cannot
+> quiesce updates to the percpu counters in the filesystem, hence it
+> returns false corruption reports.  This has been fixed properly in
+> one of the online repair patchsets that are under review by replacing
+> the xchk_disable_reaping calls with an exclusive filesystem freeze.
+> Disabling background gc isn't sufficient to fix the problem.
+> 
+> In other words, scrub doesn't need to call xfs_inodegc_stop, which is
+> just as well since it wasn't correct to allow scrub to call
+> xfs_inodegc_start when something else could be calling xfs_inodegc_stop
+> (e.g. trying to freeze the filesystem).
+> 
+> Neuter the scrubber for now, and remove the xchk_*_reaping functions.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/xfs_icache.c |    2 ++
->  fs/xfs/xfs_mount.h  |    3 +++
->  fs/xfs/xfs_super.c  |    3 +++
->  3 files changed, 8 insertions(+)
-> 
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 58712113d5d6..4b63c065ef19 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -1856,6 +1856,8 @@ xfs_inodegc_worker(
->  	struct xfs_inode	*ip, *n;
->  	unsigned int		nofs_flag;
->  
-> +	ASSERT(gc->cpu == smp_processor_id());
 
-I kinda wish there was a reverse "per cpu item to cpu" reverse
-resolution function, but this is only debugging code so it'll do.
+Looks ok, minor nit below.
+
+> @@ -453,6 +446,9 @@ xchk_fscounters(
+>  	if (frextents > mp->m_sb.sb_rextents)
+>  		xchk_set_corrupt(sc);
+>  
+> +	/* XXX: We can't quiesce percpu counter updates, so exit early. */
+> +	return 0;
+
+Can you just add to this that we can re-enable this functionality
+when we have the exclusive freeze functionality in the kernel?
+
+With that,
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
