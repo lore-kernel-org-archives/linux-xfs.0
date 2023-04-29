@@ -2,373 +2,155 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D14B8C77B60
-	for <linux-xfs@archiver.kernel.org>; Fri, 28 Apr 2023 23:17:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0000C77B7C
+	for <linux-xfs@archiver.kernel.org>; Sat, 29 Apr 2023 00:12:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346285AbjD1XRE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 28 Apr 2023 19:17:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58632 "EHLO
+        id S1346880AbjD2AMJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 28 Apr 2023 20:12:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230110AbjD1XRD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Apr 2023 19:17:03 -0400
-Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FB5F49D5
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Apr 2023 16:17:01 -0700 (PDT)
-Received: by mail-pg1-x529.google.com with SMTP id 41be03b00d2f7-52091c58109so356383a12.2
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Apr 2023 16:17:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1682723820; x=1685315820;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=lY7UKzZ/brLv6IXdA/N8HnGqq4e/VoboJMhx+LWfOF4=;
-        b=AYSa4Y7xtUju7k7HQ2lDFrbnHnMGs2R3HIdLSuf942WKAeKOZfCfr7jwKKucSY0bca
-         YXUssJ8faott4pmpiwMIpdwfttJo0mA5yO+H6g+JsLdeO7GOfmxCxXn7mMqYs/cK5bly
-         cTDmDQvW56m4s+aubOd3QJzWU+GoV/pARQF065G+tVLvZyv6FWR/iC3Vd+cURo2y5De1
-         AOesldcYcASSGl1tBTh//EWXiK6ibQrmLIetAwsIXpsNUW5ocnjKia9V57nrrT7gIfUU
-         0dhtW/fTgUagVizlNi4k9+IY6JBJkPFY4hTO/UFZxDV5ktKjK7i2h3vN7AbCpHTvocbG
-         4Etg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682723820; x=1685315820;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=lY7UKzZ/brLv6IXdA/N8HnGqq4e/VoboJMhx+LWfOF4=;
-        b=VAluqDsZ3e6tqdSnuk7okiYuJ1lpZr/hXzbWp99340/5q+a9gCrAKKUtUEAIzXjTHT
-         SUh2VxauQBm8LJL7bK4Et37aYq2K+W2qROFKjdXIMquH4R/OVv86MAQ70VcKkwDoDx+2
-         rfe/mxi/P5BFi0aBHrOoMmPELaHJnQI7YAiCNkFQrsd9ZbGIZuzQgC11wegQFrIXthRX
-         mhUOobP6b6dJ6B5fzSwaZZx+wyDHNUyc4w2PGtUkCAUhAvXFbw0EfcBTprWEoDLmM1Ag
-         E2OVQoX26JCliOEOT7rPXxadInWQwLeCqyJh0RzbWmpdkyzNgIqtIcC8fJTxA66paDeb
-         i9Uw==
-X-Gm-Message-State: AC+VfDxbuqvnhJyNVLFWoFohfyySce07Y1+Lp88gGfvMk1Wulg6EyHgt
-        82OFm7ldVfuAyD09BDFGoJ6aagyqLSIfDxz81io=
-X-Google-Smtp-Source: ACHHUZ7abEbW5WRGKbzoqof/SJB0A4TdFZX1o3EfowDnKRgvNMCfBR9yQyB1odzn98p2kzy802Q2MQ==
-X-Received: by 2002:a05:6a21:3a48:b0:f0:ac6b:379f with SMTP id zu8-20020a056a213a4800b000f0ac6b379fmr7125039pzb.15.1682723820417;
-        Fri, 28 Apr 2023 16:17:00 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-88-204.pa.nsw.optusnet.com.au. [49.181.88.204])
-        by smtp.gmail.com with ESMTPSA id k27-20020aa79d1b000000b0063b6451cd01sm15635346pfp.121.2023.04.28.16.16.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Apr 2023 16:16:59 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1psXKh-0093Td-Vx; Sat, 29 Apr 2023 09:16:56 +1000
-Date:   Sat, 29 Apr 2023 09:16:55 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     torvalds@linux-foundation.org
-Cc:     djwong@kernel.org, linux-xfs@vger.kernel.org
-Subject: [GIT PULL] xfs: new code for 6.4
-Message-ID: <20230428231655.GW3223426@dread.disaster.area>
+        with ESMTP id S229579AbjD2AMH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Apr 2023 20:12:07 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E782422C;
+        Fri, 28 Apr 2023 17:12:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=SFptb4bxgIj4illZMUP0+LEQ5YHjcoe6ZdfH4QgLaE8=; b=DcPVwA/0w7w3ihDlMcami/XEWr
+        na4uR2ZaEMVCEbed/HJorphO6NziasFTaQ/zYpNdLymwt359fTb4MF19qW/HlRtwr3sGpvxYpY3vn
+        FNwF1Ud9N8hZiOmwnL8ihw9/GZF/Co33LwX7BxutpUaUuWy0QKSQNgpxztYInRxUVY4TwkdaivSsm
+        TObjCzU3FiAg0zpoZslTlxk6Bulg0bgzssnJYmH3uGhGo83sh5uG/oGFSYkWww1qp7KHrBMglzvOu
+        k9jRJfica0AfFGfpyfWeLMxApO8wY0Rp63A9R8CMDIuPAT0l/bpU0AL36zhkgs8xPCwcjTboLwdlp
+        AfI1a4iw==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1psYBx-00BykC-2P;
+        Sat, 29 Apr 2023 00:11:57 +0000
+Date:   Fri, 28 Apr 2023 17:11:57 -0700
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>,
+        Pankaj Raghav <p.raghav@samsung.com>,
+        Daniel Gomez <da.gomez@samsung.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Miklos Szeredi <miklos@szeredi.hu>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        David Howells <dhowells@redhat.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 17/17] fs: add CONFIG_BUFFER_HEAD
+Message-ID: <ZExgzbBCbdC1y9Wk@bombadil.infradead.org>
+References: <20230424054926.26927-1-hch@lst.de>
+ <20230424054926.26927-18-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20230424054926.26927-18-hch@lst.de>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+On Mon, Apr 24, 2023 at 07:49:26AM +0200, Christoph Hellwig wrote:
+> +const struct address_space_operations def_blk_aops = {
+> +	.dirty_folio	= filemap_dirty_folio,
+> +	.release_folio		= iomap_release_folio,
+> +	.invalidate_folio	= iomap_invalidate_folio,
+> +	.read_folio		= blkdev_read_folio,
+> +	.readahead		= blkdev_readahead,
+> +	.writepages		= blkdev_writepages,
+> +	.is_partially_uptodate  = iomap_is_partially_uptodate,
+> +	.error_remove_page	= generic_error_remove_page,
+> +	.migrate_folio		= filemap_migrate_folio,
+> +};
+> +#endif /* CONFIG_BUFFER_HEAD */
 
-Can you please pull the changes for XFS from the tag below? I
-apologise for not sending this rather large update much earlier in
-the merge window; we had a late regression report which uncovered a
-serious omission from our regular test matrix. Determining the
-seriousness of the problems that followup testing then uncovered
-delayed the pull request. The most likely problem that anyone would
-see was the original regression that was reported, and that is fixed
-in this pull request.
+We've tested this with bs > ps (LBS) devices and it would seem it crashes,
+as Pankaj notes perhaps due to lack of higher order folio support yet
+on this path, for the block cache. The same crash happens with NVMe
+(using out-of-tree nvme_core.debug_large_lbas boot parameter to enable NVMe
+LBS) or brd with LBS. To enable NVMe LBS or brd with LBS you need
+out of tree patches though of course, so I've stashed these into
+a branch, large-block-20230426 [0] so to help folks who may want
+to experiment further.
 
-That said, we know that there are still unfixed regressions that
-this addition testing has uncovered, but they are all in relatively
-niche configurations so shouldn't impact the majority of people
-running 6.3 kernels. I will follow up with another pull request to
-address these issues either late in the remaining merge window
-period or soon after -rc1 is released.
+[0] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux-next.git/log/?h=large-block-20230426
 
-This tree consists mainly of online scrub functionality and the
-design documentation for the upcoming online repair functionality
-built on top of the scrub code. I explicitly choose to use fine
-grained merges for that series to retain all the context/cover
-letter information for each part of the series that Darrick had
-included in the tags for his pull requests. While it means there are
-lots of merge commits, it also means the context and some of the
-reasoning behind the series of changes is kept in the git tree with
-the rest of the code history.
+[   11.245248] BUG: kernel NULL pointer dereference, address: 0000000000000000
+[   11.254581] #PF: supervisor read access in kernel mode
+[   11.257387] #PF: error_code(0x0000) - not-present page
+[   11.260921] PGD 0 P4D 0
+[   11.262600] Oops: 0000 [#1] PREEMPT SMP PTI
+[   11.264993] CPU: 7 PID: 198 Comm: (udev-worker) Not tainted 6.3.0-large-block-20230426 #2
+[   11.269385] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.0-debian-1.16.0-5 04/01/2014
+[   11.275054] RIP: 0010:iomap_page_create.isra.0+0xc/0xd0
+[   11.277924] Code: 41 5e 41 5f c3 cc cc cc cc 0f 1f 44 00 00 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 0f 1f 44 00 00 41 54 55 48 89 f5 53 <48> 8b 06 48 c1 e8 0d 89 c6 83 e6 01 0f 84 a1 00 00 00 4c 8b 65 28
+[   11.287293] RSP: 0018:ffffb0f0805ef9d8 EFLAGS: 00010293
+[   11.289964] RAX: ffff9de3c1fa8388 RBX: ffffb0f0805efa78 RCX: 000000037ffe0000
+[   11.293212] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 000000000000000d
+[   11.296485] RBP: 0000000000000000 R08: 0000000000021000 R09: ffffffff9c733b20
+[   11.299724] R10: 0000000000000001 R11: 000000000000c000 R12: 0000000000000000
+[   11.302974] R13: ffffffff9be96260 R14: ffffb0f0805efa58 R15: 0000000000000000
+[   11.306206] FS:  00007f03ea8368c0(0000) GS:ffff9de43bdc0000(0000) knlGS:0000000000000000
+[   11.309949] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   11.312464] CR2: 0000000000000000 CR3: 0000000117ec6006 CR4: 0000000000770ee0
+[   11.315442] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   11.318310] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   11.321010] PKRU: 55555554
+[   11.322212] Call Trace:
+[   11.323224]  <TASK>
+[   11.324146]  iomap_readpage_iter+0x96/0x300
+[   11.325694]  iomap_readahead+0x174/0x2d0
+[   11.327129]  read_pages+0x69/0x1f0
+[   11.328389]  ? folio_add_lru+0x7e/0xe0
+[   11.329751]  page_cache_ra_unbounded+0x187/0x1d0
+[   11.331301]  force_page_cache_ra+0x94/0xb0
+[   11.332681]  filemap_get_pages+0x10e/0x650
+[   11.334073]  ? _raw_spin_lock+0x13/0x40
+[   11.335287]  filemap_read+0xbf/0x340
+[   11.336430]  ? aa_file_perm+0x117/0x4b0
+[   11.337646]  ? generic_fillattr+0x45/0xf0
+[   11.338887]  ? _copy_to_user+0x22/0x30
+[   11.340026]  ? cp_new_stat+0x150/0x180
+[   11.341166]  blkdev_read_iter+0x5e/0x140
+[   11.342357]  vfs_read+0x1f0/0x2c0
+[   11.343354]  ksys_read+0x63/0xe0
+[   11.344331]  do_syscall_64+0x37/0x90
+[   11.345411]  entry_SYSCALL_64_after_hwframe+0x72/0xdc
+[   11.346760] RIP: 0033:0x7f03eaf3903d
 
-The tree at the tag below merges cleanly with your tree as of a few
-minutes ago (head commit f20730efbd30), but results in a slightly
-different diffstat to the pull request below. i.e.
+(gdb) l *(iomap_readpage_iter+0x96)
+0xffffffff814021b6 is in iomap_readpage_iter (fs/iomap/buffered-io.c:280).
+275             if (iomap->type == IOMAP_INLINE)
+276                     return iomap_read_inline_data(iter, folio);
+277
+278             /* zero post-eof blocks as the page may be mapped */
+279             iop = iomap_page_create(iter->inode, folio, iter->flags);
+280             iomap_adjust_read_range(iter->inode, folio, &pos, length, &poff, &plen);
+281             if (plen == 0)
+282                     goto done;
+283
+284             if (iomap_block_needs_zeroing(iter, pos)) {
+(gdb) l *(iomap_page_create+0xc)
+0xffffffff81400cdc is in iomap_page_create (./arch/x86/include/asm/bitops.h:207).
+202     }
+203
+204     static __always_inline bool constant_test_bit(long nr, const volatile unsigned long *addr)
+205     {
+206             return ((1UL << (nr & (BITS_PER_LONG-1))) &
+207                     (addr[nr >> _BITOPS_LONG_SHIFT])) != 0;
+208     }
+209
+210     static __always_inline bool constant_test_bit_acquire(long nr, const volatile unsigned long *addr)
+211     {
 
-pull-req:
- 85 files changed, 10520 insertions(+), 1890 deletions(-)
+To reproduce one would want a system with only say XFS as the root
+image. I've enabled this on kdevops through "pure-iomap" option:
 
-merge into your tree:
- 85 files changed, 10550 insertions(+), 1920 deletions(-)
+https://github.com/linux-kdevops/kdevops/blob/master/docs/lbs.md
 
-I have confirmed that the resultant merge into your tree ends up
-with identical code in fs/xfs after ignoring the few changes to the
-XFS code that are already in your tree (mm_account_reclaimed_pages,
-FMODE_DIO_PARALLEL_WRITE, sysctl table cleanup, .filemap update and
-posix acl changes), so it doesn't look like the difference in the
-diffstat is anything to worry about. If you see anything different,
-please let me know!
-
--Dave.
-
-
-The following changes since commit 09a9639e56c01c7a00d6c0ca63f4c7c41abe075d:
-
-  Linux 6.3-rc6 (2023-04-09 11:15:57 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.4-merge-1
-
-for you to fetch changes up to 9419092fb2630c30e4ffeb9ef61007ef0c61827a:
-
-  xfs: fix livelock in delayed allocation at ENOSPC (2023-04-27 09:02:11 +1000)
-
-----------------------------------------------------------------
-xfs: New code for 6.4
-
-o Added detailed design documentation for the upcoming online repair feature
-o major update to online scrub to complete the reverse mapping cross-referencing
-  infrastructure enabling us to fully validate allocated metadata against owner
-  records. This is the last piece of scrub infrastructure needed before we can
-  start merging online repair functionality.
-o Fixes for the ascii-ci hashing issues
-o deprecation of the ascii-ci functionality
-o on-disk format verification bug fixes
-o various random bug fixes for syzbot and other bug reports
-
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-
-----------------------------------------------------------------
-Bagas Sanjaya (1):
-      xfs: Extend table marker on deprecated mount options table
-
-Darrick J. Wong (101):
-      xfs: document the motivation for online fsck design
-      xfs: document the general theory underlying online fsck design
-      xfs: document the testing plan for online fsck
-      xfs: document the user interface for online fsck
-      xfs: document the filesystem metadata checking strategy
-      xfs: document how online fsck deals with eventual consistency
-      xfs: document pageable kernel memory
-      xfs: document btree bulk loading
-      xfs: document online file metadata repair code
-      xfs: document full filesystem scans for online fsck
-      xfs: document metadata file repair
-      xfs: document directory tree repairs
-      xfs: document the userspace fsck driver program
-      xfs: document future directions of online fsck
-      xfs: give xfs_bmap_intent its own perag reference
-      xfs: pass per-ag references to xfs_free_extent
-      xfs: give xfs_extfree_intent its own perag reference
-      xfs: give xfs_rmap_intent its own perag reference
-      xfs: give xfs_refcount_intent its own perag reference
-      xfs: create traced helper to get extra perag references
-      xfs: fix author and spdx headers on scrub/ files
-      xfs: update copyright years for scrub/ files
-      xfs: add a tracepoint to report incorrect extent refcounts
-      xfs: allow queued AG intents to drain before scrubbing
-      xfs: clean up scrub context if scrub setup returns -EDEADLOCK
-      xfs: minimize overhead of drain wakeups by using jump labels
-      xfs: scrub should use ECHRNG to signal that the drain is needed
-      xfs: standardize ondisk to incore conversion for free space btrees
-      xfs: standardize ondisk to incore conversion for inode btrees
-      xfs: standardize ondisk to incore conversion for refcount btrees
-      xfs: return a failure address from xfs_rmap_irec_offset_unpack
-      xfs: standardize ondisk to incore conversion for rmap btrees
-      xfs: standardize ondisk to incore conversion for bmap btrees
-      xfs: complain about bad records in query_range helpers
-      xfs: hoist rmap record flag checks from scrub
-      xfs: complain about bad file mapping records in the ondisk bmbt
-      xfs: hoist rmap record flag checks from scrub
-      xfs: hoist inode record alignment checks from scrub
-      xfs: fix rm_offset flag handling in rmap keys
-      xfs: detect unwritten bit set in rmapbt node block keys
-      xfs: check btree keys reflect the child block
-      xfs: refactor converting btree irec to btree key
-      xfs: always scrub record/key order of interior records
-      xfs: refactor ->diff_two_keys callsites
-      xfs: replace xfs_btree_has_record with a general keyspace scanner
-      xfs: implement masked btree key comparisons for _has_records scans
-      xfs: check the reference counts of gaps in the refcount btree
-      xfs: ensure that all metadata and data blocks are not cow staging extents
-      xfs: remove pointless shadow variable from xfs_difree_inobt
-      xfs: clean up broken eearly-exit code in the inode btree scrubber
-      xfs: directly cross-reference the inode btrees with each other
-      xfs: teach scrub to check for sole ownership of metadata objects
-      xfs: convert xfs_ialloc_has_inodes_at_extent to return keyfill scan results
-      xfs: use the directory name hash function for dir scrubbing
-      xfs: ensure that single-owner file blocks are not owned by others
-      xfs: streamline the directory iteration code for scrub
-      xfs: xfs_iget in the directory scrubber needs to use UNTRUSTED
-      xfs: always check the existence of a dirent's child inode
-      xfs: remove xchk_parent_count_parent_dentries
-      xfs: simplify xchk_parent_validate
-      xfs: manage inode DONTCACHE status at irele time
-      xfs: fix parent pointer scrub racing with subdirectory reparenting
-      xfs: fix an inode lookup race in xchk_get_inode
-      xfs: rename xchk_get_inode -> xchk_iget_for_scrubbing
-      xfs: retain the AGI when we can't iget an inode to scrub the core
-      xfs: don't take the MMAPLOCK when scrubbing file metadata
-      xfs: change bmap scrubber to store the previous mapping
-      xfs: accumulate iextent records when checking bmap
-      xfs: split xchk_bmap_xref_rmap into two functions
-      xfs: alert the user about data/attr fork mappings that could be merged
-      xfs: split the xchk_bmap_check_rmaps into a predicate
-      xfs: flag free space btree records that could be merged
-      xfs: don't call xchk_bmap_check_rmaps for btree-format file forks
-      xfs: flag refcount btree records that could be merged
-      xfs: check overlapping rmap btree records
-      xfs: check for reverse mapping records that could be merged
-      xfs: xattr scrub should ensure one namespace bit per name
-      xfs: don't shadow @leaf in xchk_xattr_block
-      xfs: remove unnecessary dstmap in xattr scrubber
-      xfs: split freemap from xchk_xattr_buf.buf
-      xfs: split usedmap from xchk_xattr_buf.buf
-      xfs: split valuebuf from xchk_xattr_buf.buf
-      xfs: remove flags argument from xchk_setup_xattr_buf
-      xfs: move xattr scrub buffer allocation to top level function
-      xfs: check used space of shortform xattr structures
-      xfs: clean up xattr scrub initialization
-      xfs: only allocate free space bitmap for xattr scrub if needed
-      xfs: remove the for_each_xbitmap_ helpers
-      xfs: don't load local xattr values during scrub
-      xfs: drop the _safe behavior from the xbitmap foreach macro
-      xfs: convert xbitmap to interval tree
-      xfs: introduce bitmap type for AG blocks
-      xfs: cross-reference rmap records with ag btrees
-      xfs: cross-reference rmap records with free space btrees
-      xfs: cross-reference rmap records with inode btrees
-      xfs: cross-reference rmap records with refcount btrees
-      xfs: stabilize the dirent name transformation function used for ascii-ci dir hash computation
-      xfs: test the ascii case-insensitive hash
-      xfs: deprecate the ascii-ci feature
-      xfs: _{attr,data}_map_shared should take ILOCK_EXCL until iread_extents is completely done
-      xfs: verify buffer contents when we skip log replay
-
-Dave Chinner (25):
-      xfs: don't consider future format versions valid
-      xfs: remove WARN when dquot cache insertion fails
-      Merge tag 'online-fsck-design-6.4_2023-04-11' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      Merge tag 'intents-perag-refs-6.4_2023-04-11' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      Merge tag 'pass-perag-refs-6.4_2023-04-11' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      Merge tag 'scrub-fix-legalese-6.4_2023-04-11' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      Merge tag 'scrub-drain-intents-6.4_2023-04-11' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      Merge tag 'btree-complain-bad-records-6.4_2023-04-11' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      Merge tag 'btree-hoist-scrub-checks-6.4_2023-04-11' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      Merge tag 'rmap-btree-fix-key-handling-6.4_2023-04-11' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      Merge tag 'scrub-btree-key-enhancements-6.4_2023-04-11' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      Merge tag 'scrub-detect-refcount-gaps-6.4_2023-04-11' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      Merge tag 'scrub-detect-inobt-gaps-6.4_2023-04-11' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      Merge tag 'scrub-detect-rmapbt-gaps-6.4_2023-04-11' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      Merge tag 'scrub-dir-iget-fixes-6.4_2023-04-12' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      Merge tag 'scrub-parent-fixes-6.4_2023-04-12' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      Merge tag 'scrub-iget-fixes-6.4_2023-04-12' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      Merge tag 'scrub-merge-bmap-records-6.4_2023-04-12' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      Merge tag 'scrub-detect-mergeable-records-6.4_2023-04-11' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      Merge tag 'scrub-fix-xattr-memory-mgmt-6.4_2023-04-11' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      Merge tag 'repair-bitmap-rework-6.4_2023-04-11' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      Merge tag 'scrub-strengthen-rmap-checking-6.4_2023-04-11' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      Merge tag 'fix-asciici-bugs-6.4_2023-04-11' of git://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into guilt/xfs-for-next
-      xfs: fix duplicate includes
-      xfs: fix livelock in delayed allocation at ENOSPC
-
-Ye Bin (1):
-      xfs: fix BUG_ON in xfs_getbmap()
-
- Documentation/admin-guide/xfs.rst                          |    7 +-
- Documentation/filesystems/index.rst                        |    1 +
- Documentation/filesystems/xfs-online-fsck-design.rst       | 5315 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- Documentation/filesystems/xfs-self-describing-metadata.rst |    1 +
- fs/xfs/Kconfig                                             |   32 +
- fs/xfs/Makefile                                            |    5 +-
- fs/xfs/libxfs/xfs_ag.c                                     |   23 +-
- fs/xfs/libxfs/xfs_ag.h                                     |    9 +
- fs/xfs/libxfs/xfs_alloc.c                                  |  115 +-
- fs/xfs/libxfs/xfs_alloc.h                                  |   22 +-
- fs/xfs/libxfs/xfs_alloc_btree.c                            |   32 +-
- fs/xfs/libxfs/xfs_bmap.c                                   |   39 +-
- fs/xfs/libxfs/xfs_bmap.h                                   |    8 +-
- fs/xfs/libxfs/xfs_bmap_btree.c                             |   19 +-
- fs/xfs/libxfs/xfs_btree.c                                  |  204 +++-
- fs/xfs/libxfs/xfs_btree.h                                  |  141 ++-
- fs/xfs/libxfs/xfs_defer.c                                  |    6 +-
- fs/xfs/libxfs/xfs_dir2.c                                   |    5 +-
- fs/xfs/libxfs/xfs_dir2.h                                   |   31 +
- fs/xfs/libxfs/xfs_ialloc.c                                 |  165 +--
- fs/xfs/libxfs/xfs_ialloc.h                                 |    7 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c                           |   35 +-
- fs/xfs/libxfs/xfs_ialloc_btree.h                           |    2 +-
- fs/xfs/libxfs/xfs_inode_fork.c                             |   19 +-
- fs/xfs/libxfs/xfs_inode_fork.h                             |    6 +-
- fs/xfs/libxfs/xfs_refcount.c                               |  117 ++-
- fs/xfs/libxfs/xfs_refcount.h                               |   10 +-
- fs/xfs/libxfs/xfs_refcount_btree.c                         |   31 +-
- fs/xfs/libxfs/xfs_rmap.c                                   |  358 +++++--
- fs/xfs/libxfs/xfs_rmap.h                                   |   38 +-
- fs/xfs/libxfs/xfs_rmap_btree.c                             |  102 +-
- fs/xfs/libxfs/xfs_sb.c                                     |   11 +-
- fs/xfs/libxfs/xfs_types.h                                  |   12 +
- fs/xfs/scrub/agheader.c                                    |   30 +-
- fs/xfs/scrub/agheader_repair.c                             |  105 +-
- fs/xfs/scrub/alloc.c                                       |   69 +-
- fs/xfs/scrub/attr.c                                        |  312 ++++--
- fs/xfs/scrub/attr.h                                        |   64 +-
- fs/xfs/scrub/bitmap.c                                      |  428 +++++---
- fs/xfs/scrub/bitmap.h                                      |  111 +-
- fs/xfs/scrub/bmap.c                                        |  420 +++++---
- fs/xfs/scrub/btree.c                                       |  102 +-
- fs/xfs/scrub/btree.h                                       |   16 +-
- fs/xfs/scrub/common.c                                      |  465 ++++++--
- fs/xfs/scrub/common.h                                      |   32 +-
- fs/xfs/scrub/dabtree.c                                     |    7 +-
- fs/xfs/scrub/dabtree.h                                     |    6 +-
- fs/xfs/scrub/dir.c                                         |  246 ++---
- fs/xfs/scrub/fscounters.c                                  |   11 +-
- fs/xfs/scrub/health.c                                      |    8 +-
- fs/xfs/scrub/health.h                                      |    6 +-
- fs/xfs/scrub/ialloc.c                                      |  304 ++++--
- fs/xfs/scrub/inode.c                                       |  189 +++-
- fs/xfs/scrub/parent.c                                      |  300 ++----
- fs/xfs/scrub/quota.c                                       |    9 +-
- fs/xfs/scrub/readdir.c                                     |  375 +++++++
- fs/xfs/scrub/readdir.h                                     |   19 +
- fs/xfs/scrub/refcount.c                                    |  197 +++-
- fs/xfs/scrub/repair.c                                      |  112 +-
- fs/xfs/scrub/repair.h                                      |    7 +-
- fs/xfs/scrub/rmap.c                                        |  570 ++++++++--
- fs/xfs/scrub/rtbitmap.c                                    |    6 +-
- fs/xfs/scrub/scrub.c                                       |   74 +-
- fs/xfs/scrub/scrub.h                                       |   32 +-
- fs/xfs/scrub/symlink.c                                     |    6 +-
- fs/xfs/scrub/trace.c                                       |    6 +-
- fs/xfs/scrub/trace.h                                       |   75 +-
- fs/xfs/scrub/xfs_scrub.h                                   |    6 +-
- fs/xfs/xfs_bmap_item.c                                     |   37 +-
- fs/xfs/xfs_bmap_util.c                                     |   14 +-
- fs/xfs/xfs_buf_item_recover.c                              |   10 +
- fs/xfs/xfs_dahash_test.c                                   |  211 ++--
- fs/xfs/xfs_dquot.c                                         |    1 -
- fs/xfs/xfs_drain.c                                         |  166 +++
- fs/xfs/xfs_drain.h                                         |   87 ++
- fs/xfs/xfs_extfree_item.c                                  |   54 +-
- fs/xfs/xfs_icache.c                                        |    3 +-
- fs/xfs/xfs_icache.h                                        |   11 +-
- fs/xfs/xfs_iunlink_item.c                                  |    4 +-
- fs/xfs/xfs_iwalk.c                                         |    5 +-
- fs/xfs/xfs_linux.h                                         |    1 +
- fs/xfs/xfs_refcount_item.c                                 |   36 +-
- fs/xfs/xfs_rmap_item.c                                     |   32 +-
- fs/xfs/xfs_super.c                                         |   13 +
- fs/xfs/xfs_trace.h                                         |   72 ++
- 85 files changed, 10520 insertions(+), 1890 deletions(-)
- create mode 100644 Documentation/filesystems/xfs-online-fsck-design.rst
- create mode 100644 fs/xfs/scrub/readdir.c
- create mode 100644 fs/xfs/scrub/readdir.h
- create mode 100644 fs/xfs/xfs_drain.c
- create mode 100644 fs/xfs/xfs_drain.h
-
-
--- 
-Dave Chinner
-david@fromorbit.com
+  Luis
