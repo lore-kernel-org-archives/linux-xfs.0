@@ -2,236 +2,105 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C442C77B73
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 May 2023 10:13:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02F83C77B7F
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 May 2023 15:46:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232322AbjEAKNR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 1 May 2023 06:13:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50502 "EHLO
+        id S232864AbjEAPq3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 1 May 2023 11:46:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34740 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229921AbjEAKNQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 May 2023 06:13:16 -0400
-Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18B29E47
-        for <linux-xfs@vger.kernel.org>; Mon,  1 May 2023 03:13:14 -0700 (PDT)
-Received: by mail-ed1-x532.google.com with SMTP id 4fb4d7f45d1cf-50bc25f0c7dso2611702a12.3
-        for <linux-xfs@vger.kernel.org>; Mon, 01 May 2023 03:13:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1682935992; x=1685527992;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Q8lhfypd62FTx15FUrLgQ9Jnn3JuzKJA2np2M0uDQxQ=;
-        b=VaFrUpClBFo29v9l4Djcb79DHfwoOettCa5PtHL9yYH6qyblJ0B4m6QuPFSuGIlXhk
-         HoVhrhtsiER0i35ICq11i5bRuzT3jaBt4ehpszIDZZ4/K1SE7gnW+uBKOb7vi+pd4F7b
-         aznnjkVukqkQq/9/WjqDyLA2Z8JGMGvjyrf+BamTY416e2TJHbFFp/14+7WVy3X+3TEi
-         213PXFoPSPk5v1KYzmd6hDzLSS1CS6fWP1GiXcWIdUTdGyBWR7QHWEMnR7FcDwBOlJ+O
-         5YRRduFfYbGGpDl1AGuaCCaAKwWhMdGOiqtCu/aGfDKIZyQgThXUq91xQZqs79+cTLRe
-         t30Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682935992; x=1685527992;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Q8lhfypd62FTx15FUrLgQ9Jnn3JuzKJA2np2M0uDQxQ=;
-        b=CJC1L3V8w+ojmTT9VGgd39Ugg5eRCESZIj3IJUP8oZKc+zGoJXJ9OnGn3Xz3N2iIPu
-         5jJSJ1vGOxR9LBbaslzbynMQrxBEc9llCudrdHlTCPAfvS+oaSGTW5Z85nFzMSzdsxl6
-         uz5rBzWaW2mvWYfqPSD3ybJPJ6mGKRsVteHhje1q/V93SbQU1X3NZdzJkh5xYKB3pDAn
-         SOm8DcfpH1wcXcHylg5WM6YekUh/UFb0pFaiG7CWBmLkmP8RY27BuFCe0E8humSneCQm
-         432sc3zbsHNiMj4sI7vjsEXluoT8F72Q+9iOm+XxMMOhcvGPwgGkbgeemWbP3nM/YM7h
-         uiaA==
-X-Gm-Message-State: AC+VfDyk5+lz616jDoUPR9OkLP6NiJo2IQJBr/L0urNlIbuvO5tNlyPa
-        i3+RmPZz9kg+67xyvZC/984wZtrMmMjrc1KLmXQ1CA==
-X-Google-Smtp-Source: ACHHUZ5FHHpuX/K+BNP8YqIzaDjBHp8LYmuwyxZrxNRQg7Tb0947e3YdeSix/a/OfzGmnQs+mspTQb/7MGE010+WRJ8=
-X-Received: by 2002:a17:906:dc8c:b0:933:4d37:82b2 with SMTP id
- cs12-20020a170906dc8c00b009334d3782b2mr15295040ejc.57.1682935992353; Mon, 01
- May 2023 03:13:12 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230413104034.1086717-1-yosryahmed@google.com> <20230413104034.1086717-2-yosryahmed@google.com>
-In-Reply-To: <20230413104034.1086717-2-yosryahmed@google.com>
-From:   Yosry Ahmed <yosryahmed@google.com>
-Date:   Mon, 1 May 2023 03:12:36 -0700
-Message-ID: <CAJD7tkaJRNhMQ_dJWs82OsOEyr86LNSitOHV0i12zydDMgoVxw@mail.gmail.com>
-Subject: Re: [PATCH v6 1/3] mm: vmscan: ignore non-LRU-based reclaim in memcg reclaim
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
+        with ESMTP id S232060AbjEAPq1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 May 2023 11:46:27 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94A53BC;
+        Mon,  1 May 2023 08:46:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=1MUFWRQzN2U7B9NovRPIUdnOItgaF2BM1nA/v8zJpK0=; b=ZaYHCOGzMIq2mcPn5wQKmGHwqc
+        dEaQSi8ys2wSEWQrqILZhJ2E3A5yM+ZBDgUmG4S1N/wj6Iqje0McnUMuERPO4Cm38WIS/MBxM3rwh
+        I8qJ2kkdbPvv/cgRTjGc/qugwfraL2/bDWcH697S80ypbfipuIuTB4vHRmbpbSJ/0h1rlcZ0n6Oga
+        f78qWjBf+nRjYL+b87AUjZ88xZZSzlYC+e+nEJYVSzyI3caXusPZt8MNxLpC34ZSXYjRTYEVBiqIH
+        yHgXirJrykwoZHkRDNMuK1Q2zhGhTljIDoMOrmEL+wFzEVnpwKbugMpon2NXMzkmZMpdG/f7BkzP2
+        DsjSuXIw==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1ptVj9-007SZI-Oz; Mon, 01 May 2023 15:46:11 +0000
+Date:   Mon, 1 May 2023 16:46:11 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Luis Chamberlain <mcgrof@kernel.org>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Pankaj Raghav <p.raghav@samsung.com>,
+        Daniel Gomez <da.gomez@samsung.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Miklos Szeredi <miklos@szeredi.hu>,
         "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Lameter <cl@linux.com>,
-        David Rientjes <rientjes@google.com>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Roman Gushchin <roman.gushchin@linux.dev>,
-        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Miaohe Lin <linmiaohe@huawei.com>,
-        David Hildenbrand <david@redhat.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
-        Shakeel Butt <shakeelb@google.com>,
-        Michal Hocko <mhocko@kernel.org>, Yu Zhao <yuzhao@google.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Tim Chen <tim.c.chen@linux.intel.com>
-Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        Andrew Morton <akpm@linux-foundation.org>,
+        David Howells <dhowells@redhat.com>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 17/17] fs: add CONFIG_BUFFER_HEAD
+Message-ID: <ZE/ew1VpU/a1gqQP@casper.infradead.org>
+References: <20230424054926.26927-1-hch@lst.de>
+ <20230424054926.26927-18-hch@lst.de>
+ <ZExgzbBCbdC1y9Wk@bombadil.infradead.org>
+ <ZExw0eW52lYj2R1m@casper.infradead.org>
+ <ZE8ue9Mx6n2T0yn6@bombadil.infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZE8ue9Mx6n2T0yn6@bombadil.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 13, 2023 at 3:40=E2=80=AFAM Yosry Ahmed <yosryahmed@google.com>=
- wrote:
->
-> We keep track of different types of reclaimed pages through
-> reclaim_state->reclaimed_slab, and we add them to the reported number
-> of reclaimed pages.  For non-memcg reclaim, this makes sense. For memcg
-> reclaim, we have no clue if those pages are charged to the memcg under
-> reclaim.
->
-> Slab pages are shared by different memcgs, so a freed slab page may have
-> only been partially charged to the memcg under reclaim.  The same goes fo=
-r
-> clean file pages from pruned inodes (on highmem systems) or xfs buffer
-> pages, there is no simple way to currently link them to the memcg under
-> reclaim.
->
-> Stop reporting those freed pages as reclaimed pages during memcg reclaim.
-> This should make the return value of writing to memory.reclaim, and may
-> help reduce unnecessary reclaim retries during memcg charging.  Writing t=
-o
-> memory.reclaim on the root memcg is considered as cgroup_reclaim(), but
-> for this case we want to include any freed pages, so use the
-> global_reclaim() check instead of !cgroup_reclaim().
->
-> Generally, this should make the return value of
-> try_to_free_mem_cgroup_pages() more accurate. In some limited cases (e.g.
-> freed a slab page that was mostly charged to the memcg under reclaim),
-> the return value of try_to_free_mem_cgroup_pages() can be underestimated,
-> but this should be fine. The freed pages will be uncharged anyway, and we
-> can charge the memcg the next time around as we usually do memcg reclaim
-> in a retry loop.
->
-> Fixes: f2fe7b09a52b ("mm: memcg/slab: charge individual slab objects
-> instead of pages")
->
-> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-> ---
->  mm/vmscan.c | 49 ++++++++++++++++++++++++++++++++++++++++++-------
->  1 file changed, 42 insertions(+), 7 deletions(-)
->
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 9c1c5e8b24b8..be657832be48 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -511,6 +511,46 @@ static bool writeback_throttling_sane(struct scan_co=
-ntrol *sc)
->  }
->  #endif
->
-> +/*
-> + * flush_reclaim_state(): add pages reclaimed outside of LRU-based recla=
-im to
-> + * scan_control->nr_reclaimed.
-> + */
-> +static void flush_reclaim_state(struct scan_control *sc)
-> +{
-> +       /*
-> +        * Currently, reclaim_state->reclaimed includes three types of pa=
-ges
-> +        * freed outside of vmscan:
-> +        * (1) Slab pages.
-> +        * (2) Clean file pages from pruned inodes (on highmem systems).
-> +        * (3) XFS freed buffer pages.
-> +        *
-> +        * For all of these cases, we cannot universally link the pages t=
-o a
-> +        * single memcg. For example, a memcg-aware shrinker can free one=
- object
-> +        * charged to the target memcg, causing an entire page to be free=
-d.
-> +        * If we count the entire page as reclaimed from the memcg, we en=
-d up
-> +        * overestimating the reclaimed amount (potentially under-reclaim=
-ing).
-> +        *
-> +        * Only count such pages for global reclaim to prevent under-recl=
-aiming
-> +        * from the target memcg; preventing unnecessary retries during m=
-emcg
-> +        * charging and false positives from proactive reclaim.
-> +        *
-> +        * For uncommon cases where the freed pages were actually mostly
-> +        * charged to the target memcg, we end up underestimating the rec=
-laimed
-> +        * amount. This should be fine. The freed pages will be uncharged
-> +        * anyway, even if they are not counted here properly, and we wil=
-l be
-> +        * able to make forward progress in charging (which is usually in=
- a
-> +        * retry loop).
-> +        *
-> +        * We can go one step further, and report the uncharged objcg pag=
-es in
-> +        * memcg reclaim, to make reporting more accurate and reduce
-> +        * underestimation, but it's probably not worth the complexity fo=
-r now.
-> +        */
-> +       if (current->reclaim_state && global_reclaim(sc)) {
-> +               sc->nr_reclaimed +=3D current->reclaim_state->reclaimed;
-> +               current->reclaim_state->reclaimed =3D 0;
+On Sun, Apr 30, 2023 at 08:14:03PM -0700, Luis Chamberlain wrote:
+> On Sat, Apr 29, 2023 at 02:20:17AM +0100, Matthew Wilcox wrote:
+> > > [   11.322212] Call Trace:
+> > > [   11.323224]  <TASK>
+> > > [   11.324146]  iomap_readpage_iter+0x96/0x300
+> > > [   11.325694]  iomap_readahead+0x174/0x2d0
+> > > [   11.327129]  read_pages+0x69/0x1f0
+> > > [   11.329751]  page_cache_ra_unbounded+0x187/0x1d0
+> > 
+> > ... that shouldn't be possible.  read_pages() allocates pages, puts them
+> > in the page cache and tells the filesystem to fill them in.
+> > 
+> > In your patches, did you call mapping_set_large_folios() anywhere?
+> 
+> No but the only place to add that would be in the block cache. Adding
+> that alone to the block cache doesn't fix the issue. The below patch
+> however does get us by.
 
-Ugh.. this breaks the build. This should have been
-current->reclaim_state->reclaimed_slab. It doesn't get renamed from
-"reclaimed_slab" to "reclaim" until the next patch. When I moved
-flush_reclaim_state() from patch 2 to patch 1 I forgot to augment it.
-My bad.
+That's "working around the error", not fixing it ... probably the same
+root cause as your other errors; at least I'm not diving into them until
+the obvious one is fixed.
 
-The break is fixed by the very next patch, and the patches have
-already landed in Linus's tree, so there isn't much that can be done
-at this point. Sorry about that. Just wondering, why wouldn't this
-breakage be caught by any of the build bots?
+> >From my readings it does't seem like readahead_folio() should always
+> return non-NULL, and also I couldn't easily verify the math is right.
 
-> +       }
-> +}
-> +
->  static long xchg_nr_deferred(struct shrinker *shrinker,
->                              struct shrink_control *sc)
->  {
-> @@ -5346,8 +5386,7 @@ static int shrink_one(struct lruvec *lruvec, struct=
- scan_control *sc)
->                 vmpressure(sc->gfp_mask, memcg, false, sc->nr_scanned - s=
-canned,
->                            sc->nr_reclaimed - reclaimed);
->
-> -       sc->nr_reclaimed +=3D current->reclaim_state->reclaimed_slab;
-> -       current->reclaim_state->reclaimed_slab =3D 0;
-> +       flush_reclaim_state(sc);
->
->         return success ? MEMCG_LRU_YOUNG : 0;
->  }
-> @@ -6450,7 +6489,6 @@ static void shrink_node_memcgs(pg_data_t *pgdat, st=
-ruct scan_control *sc)
->
->  static void shrink_node(pg_data_t *pgdat, struct scan_control *sc)
->  {
-> -       struct reclaim_state *reclaim_state =3D current->reclaim_state;
->         unsigned long nr_reclaimed, nr_scanned;
->         struct lruvec *target_lruvec;
->         bool reclaimable =3D false;
-> @@ -6472,10 +6510,7 @@ static void shrink_node(pg_data_t *pgdat, struct s=
-can_control *sc)
->
->         shrink_node_memcgs(pgdat, sc);
->
-> -       if (reclaim_state) {
-> -               sc->nr_reclaimed +=3D reclaim_state->reclaimed_slab;
-> -               reclaim_state->reclaimed_slab =3D 0;
-> -       }
-> +       flush_reclaim_state(sc);
->
->         /* Record the subtree's reclaim efficiency */
->         if (!sc->proactive)
-> --
-> 2.40.0.577.gac1e443424-goog
->
+readahead_folio() always returns non-NULL.  That's guaranteed by how
+page_cache_ra_unbounded() and page_cache_ra_order() work.  It allocates
+folios, until it can't (already-present folio, ENOMEM, EOF, max batch
+size) and then calls the filesystem to make those folios uptodate,
+telling it how many folios it put in the page cache, where they start.
+
+Hm.  The fact that it's coming from page_cache_ra_unbounded() makes
+me wonder if you updated this line:
+
+                folio = filemap_alloc_folio(gfp_mask, 0);
+
+without updating this line:
+
+                ractl->_nr_pages++;
+
+This is actually number of pages, not number of folios, so needs to be
+		ractl->_nr_pages += 1 << order;
+
+various other parts of page_cache_ra_unbounded() need to be examined
+carefully for assumptions of order-0; it's never been used for that
+before.  all the large folio work has concentrated on
+page_cache_ra_order()
