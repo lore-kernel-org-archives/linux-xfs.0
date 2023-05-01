@@ -2,74 +2,236 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 461EEC77B7F
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 May 2023 04:31:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C442C77B73
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 May 2023 10:13:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229556AbjEAEbZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 1 May 2023 00:31:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34740 "EHLO
+        id S232322AbjEAKNR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 1 May 2023 06:13:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232171AbjEAEbV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 May 2023 00:31:21 -0400
-Received: from mail-il1-f199.google.com (mail-il1-f199.google.com [209.85.166.199])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74A7CE5B
-        for <linux-xfs@vger.kernel.org>; Sun, 30 Apr 2023 21:31:16 -0700 (PDT)
-Received: by mail-il1-f199.google.com with SMTP id e9e14a558f8ab-32f23e2018fso148233255ab.0
-        for <linux-xfs@vger.kernel.org>; Sun, 30 Apr 2023 21:31:16 -0700 (PDT)
+        with ESMTP id S229921AbjEAKNQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 May 2023 06:13:16 -0400
+Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18B29E47
+        for <linux-xfs@vger.kernel.org>; Mon,  1 May 2023 03:13:14 -0700 (PDT)
+Received: by mail-ed1-x532.google.com with SMTP id 4fb4d7f45d1cf-50bc25f0c7dso2611702a12.3
+        for <linux-xfs@vger.kernel.org>; Mon, 01 May 2023 03:13:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1682935992; x=1685527992;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Q8lhfypd62FTx15FUrLgQ9Jnn3JuzKJA2np2M0uDQxQ=;
+        b=VaFrUpClBFo29v9l4Djcb79DHfwoOettCa5PtHL9yYH6qyblJ0B4m6QuPFSuGIlXhk
+         HoVhrhtsiER0i35ICq11i5bRuzT3jaBt4ehpszIDZZ4/K1SE7gnW+uBKOb7vi+pd4F7b
+         aznnjkVukqkQq/9/WjqDyLA2Z8JGMGvjyrf+BamTY416e2TJHbFFp/14+7WVy3X+3TEi
+         213PXFoPSPk5v1KYzmd6hDzLSS1CS6fWP1GiXcWIdUTdGyBWR7QHWEMnR7FcDwBOlJ+O
+         5YRRduFfYbGGpDl1AGuaCCaAKwWhMdGOiqtCu/aGfDKIZyQgThXUq91xQZqs79+cTLRe
+         t30Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682915475; x=1685507475;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=MMopvbnl/gI/YDHKMUQoJhnm8zsxWuaap4+5arlbB+g=;
-        b=j5bbotgiu8oBP3IbZhAkjUFk5oAqo12YL0yc7KU7l5dQzFXQB9Qwkn41oRjGrb3IdB
-         Pe9rJAz14VU0m3dYyfSuCvr1kqm7F7jlL/k2IgPUAU6mDwd784UZXBYtKaJLDVLipzKj
-         3DCDU/rUFCE9lY8nXfLMtO6GemheI2an0IxWLsLurvxmz/7yLp10V04AQUUsz/5APC2t
-         ytVhb72tueOmIVj9uvL46a6udchjoChMw3cLv/uM6dBJZb3pEkRLw2SuqSRLOvnG3bD0
-         r6Qh/9knFxi1kX9ClKjniD3x9BjpG1rUYHhV1qU31L6scOq8SenSuX5nRnsimCrR6/zm
-         +vBQ==
-X-Gm-Message-State: AC+VfDzGfqxBkZAq2DQgaiCD2fe/RnDodVxEL8UkfMOFL4q6UlBcuamR
-        iNEr3wcGi9PA5we6prgKZd/R5GKHxe2WC10Dvup6vnmMt5gY
-X-Google-Smtp-Source: ACHHUZ7Q4rjTeGpf85L1LGOh7wLdCEauIqOMBHRiBNJYJKx9Tuq8Qab9mCWymwv/5AvWALVhHrPjoTTQ0jQIJr2WAoX/JN3/Rsxj
+        d=1e100.net; s=20221208; t=1682935992; x=1685527992;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Q8lhfypd62FTx15FUrLgQ9Jnn3JuzKJA2np2M0uDQxQ=;
+        b=CJC1L3V8w+ojmTT9VGgd39Ugg5eRCESZIj3IJUP8oZKc+zGoJXJ9OnGn3Xz3N2iIPu
+         5jJSJ1vGOxR9LBbaslzbynMQrxBEc9llCudrdHlTCPAfvS+oaSGTW5Z85nFzMSzdsxl6
+         uz5rBzWaW2mvWYfqPSD3ybJPJ6mGKRsVteHhje1q/V93SbQU1X3NZdzJkh5xYKB3pDAn
+         SOm8DcfpH1wcXcHylg5WM6YekUh/UFb0pFaiG7CWBmLkmP8RY27BuFCe0E8humSneCQm
+         432sc3zbsHNiMj4sI7vjsEXluoT8F72Q+9iOm+XxMMOhcvGPwgGkbgeemWbP3nM/YM7h
+         uiaA==
+X-Gm-Message-State: AC+VfDyk5+lz616jDoUPR9OkLP6NiJo2IQJBr/L0urNlIbuvO5tNlyPa
+        i3+RmPZz9kg+67xyvZC/984wZtrMmMjrc1KLmXQ1CA==
+X-Google-Smtp-Source: ACHHUZ5FHHpuX/K+BNP8YqIzaDjBHp8LYmuwyxZrxNRQg7Tb0947e3YdeSix/a/OfzGmnQs+mspTQb/7MGE010+WRJ8=
+X-Received: by 2002:a17:906:dc8c:b0:933:4d37:82b2 with SMTP id
+ cs12-20020a170906dc8c00b009334d3782b2mr15295040ejc.57.1682935992353; Mon, 01
+ May 2023 03:13:12 -0700 (PDT)
 MIME-Version: 1.0
-X-Received: by 2002:a02:95e4:0:b0:40f:b984:ca85 with SMTP id
- b91-20020a0295e4000000b0040fb984ca85mr5812640jai.1.1682915475766; Sun, 30 Apr
- 2023 21:31:15 -0700 (PDT)
-Date:   Sun, 30 Apr 2023 21:31:15 -0700
-In-Reply-To: <000000000000de34bd05f3c6fe19@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <0000000000001ec6ce05fa9a4bf7@google.com>
-Subject: Re: [syzbot] [xfs?] BUG: unable to handle kernel paging request in clear_user_rep_good
-From:   syzbot <syzbot+401145a9a237779feb26@syzkaller.appspotmail.com>
-To:     almaz.alexandrovich@paragon-software.com, clm@fb.com,
-        djwong@kernel.org, dsterba@suse.com, hch@infradead.org,
-        josef@toxicpanda.com, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        ntfs3@lists.linux.dev, syzkaller-bugs@googlegroups.com,
-        torvalds@linux-foundation.org, willy@infradead.org
+References: <20230413104034.1086717-1-yosryahmed@google.com> <20230413104034.1086717-2-yosryahmed@google.com>
+In-Reply-To: <20230413104034.1086717-2-yosryahmed@google.com>
+From:   Yosry Ahmed <yosryahmed@google.com>
+Date:   Mon, 1 May 2023 03:12:36 -0700
+Message-ID: <CAJD7tkaJRNhMQ_dJWs82OsOEyr86LNSitOHV0i12zydDMgoVxw@mail.gmail.com>
+Subject: Re: [PATCH v6 1/3] mm: vmscan: ignore non-LRU-based reclaim in memcg reclaim
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Christoph Lameter <cl@linux.com>,
+        David Rientjes <rientjes@google.com>,
+        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
+        Vlastimil Babka <vbabka@suse.cz>,
+        Roman Gushchin <roman.gushchin@linux.dev>,
+        Hyeonggon Yoo <42.hyeyoo@gmail.com>,
+        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        Miaohe Lin <linmiaohe@huawei.com>,
+        David Hildenbrand <david@redhat.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Peter Xu <peterx@redhat.com>, NeilBrown <neilb@suse.de>,
+        Shakeel Butt <shakeelb@google.com>,
+        Michal Hocko <mhocko@kernel.org>, Yu Zhao <yuzhao@google.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Tim Chen <tim.c.chen@linux.intel.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-syzbot suspects this issue was fixed by commit:
+On Thu, Apr 13, 2023 at 3:40=E2=80=AFAM Yosry Ahmed <yosryahmed@google.com>=
+ wrote:
+>
+> We keep track of different types of reclaimed pages through
+> reclaim_state->reclaimed_slab, and we add them to the reported number
+> of reclaimed pages.  For non-memcg reclaim, this makes sense. For memcg
+> reclaim, we have no clue if those pages are charged to the memcg under
+> reclaim.
+>
+> Slab pages are shared by different memcgs, so a freed slab page may have
+> only been partially charged to the memcg under reclaim.  The same goes fo=
+r
+> clean file pages from pruned inodes (on highmem systems) or xfs buffer
+> pages, there is no simple way to currently link them to the memcg under
+> reclaim.
+>
+> Stop reporting those freed pages as reclaimed pages during memcg reclaim.
+> This should make the return value of writing to memory.reclaim, and may
+> help reduce unnecessary reclaim retries during memcg charging.  Writing t=
+o
+> memory.reclaim on the root memcg is considered as cgroup_reclaim(), but
+> for this case we want to include any freed pages, so use the
+> global_reclaim() check instead of !cgroup_reclaim().
+>
+> Generally, this should make the return value of
+> try_to_free_mem_cgroup_pages() more accurate. In some limited cases (e.g.
+> freed a slab page that was mostly charged to the memcg under reclaim),
+> the return value of try_to_free_mem_cgroup_pages() can be underestimated,
+> but this should be fine. The freed pages will be uncharged anyway, and we
+> can charge the memcg the next time around as we usually do memcg reclaim
+> in a retry loop.
+>
+> Fixes: f2fe7b09a52b ("mm: memcg/slab: charge individual slab objects
+> instead of pages")
+>
+> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+> ---
+>  mm/vmscan.c | 49 ++++++++++++++++++++++++++++++++++++++++++-------
+>  1 file changed, 42 insertions(+), 7 deletions(-)
+>
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 9c1c5e8b24b8..be657832be48 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -511,6 +511,46 @@ static bool writeback_throttling_sane(struct scan_co=
+ntrol *sc)
+>  }
+>  #endif
+>
+> +/*
+> + * flush_reclaim_state(): add pages reclaimed outside of LRU-based recla=
+im to
+> + * scan_control->nr_reclaimed.
+> + */
+> +static void flush_reclaim_state(struct scan_control *sc)
+> +{
+> +       /*
+> +        * Currently, reclaim_state->reclaimed includes three types of pa=
+ges
+> +        * freed outside of vmscan:
+> +        * (1) Slab pages.
+> +        * (2) Clean file pages from pruned inodes (on highmem systems).
+> +        * (3) XFS freed buffer pages.
+> +        *
+> +        * For all of these cases, we cannot universally link the pages t=
+o a
+> +        * single memcg. For example, a memcg-aware shrinker can free one=
+ object
+> +        * charged to the target memcg, causing an entire page to be free=
+d.
+> +        * If we count the entire page as reclaimed from the memcg, we en=
+d up
+> +        * overestimating the reclaimed amount (potentially under-reclaim=
+ing).
+> +        *
+> +        * Only count such pages for global reclaim to prevent under-recl=
+aiming
+> +        * from the target memcg; preventing unnecessary retries during m=
+emcg
+> +        * charging and false positives from proactive reclaim.
+> +        *
+> +        * For uncommon cases where the freed pages were actually mostly
+> +        * charged to the target memcg, we end up underestimating the rec=
+laimed
+> +        * amount. This should be fine. The freed pages will be uncharged
+> +        * anyway, even if they are not counted here properly, and we wil=
+l be
+> +        * able to make forward progress in charging (which is usually in=
+ a
+> +        * retry loop).
+> +        *
+> +        * We can go one step further, and report the uncharged objcg pag=
+es in
+> +        * memcg reclaim, to make reporting more accurate and reduce
+> +        * underestimation, but it's probably not worth the complexity fo=
+r now.
+> +        */
+> +       if (current->reclaim_state && global_reclaim(sc)) {
+> +               sc->nr_reclaimed +=3D current->reclaim_state->reclaimed;
+> +               current->reclaim_state->reclaimed =3D 0;
 
-commit d2c95f9d6802cc518d71d9795f4d9da54fb4e24d
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Sat Apr 15 20:22:31 2023 +0000
+Ugh.. this breaks the build. This should have been
+current->reclaim_state->reclaimed_slab. It doesn't get renamed from
+"reclaimed_slab" to "reclaim" until the next patch. When I moved
+flush_reclaim_state() from patch 2 to patch 1 I forgot to augment it.
+My bad.
 
-    x86: don't use REP_GOOD or ERMS for user memory clearing
+The break is fixed by the very next patch, and the patches have
+already landed in Linus's tree, so there isn't much that can be done
+at this point. Sorry about that. Just wondering, why wouldn't this
+breakage be caught by any of the build bots?
 
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=13636ffc280000
-start commit:   ab072681eabe Merge tag 'irq_urgent_for_v6.2_rc6' of git://..
-git tree:       upstream
-kernel config:  https://syzkaller.appspot.com/x/.config?x=23330449ad10b66f
-dashboard link: https://syzkaller.appspot.com/bug?extid=401145a9a237779feb26
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=13b3ba9e480000
-
-If the result looks correct, please mark the issue as fixed by replying with:
-
-#syz fix: x86: don't use REP_GOOD or ERMS for user memory clearing
-
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+> +       }
+> +}
+> +
+>  static long xchg_nr_deferred(struct shrinker *shrinker,
+>                              struct shrink_control *sc)
+>  {
+> @@ -5346,8 +5386,7 @@ static int shrink_one(struct lruvec *lruvec, struct=
+ scan_control *sc)
+>                 vmpressure(sc->gfp_mask, memcg, false, sc->nr_scanned - s=
+canned,
+>                            sc->nr_reclaimed - reclaimed);
+>
+> -       sc->nr_reclaimed +=3D current->reclaim_state->reclaimed_slab;
+> -       current->reclaim_state->reclaimed_slab =3D 0;
+> +       flush_reclaim_state(sc);
+>
+>         return success ? MEMCG_LRU_YOUNG : 0;
+>  }
+> @@ -6450,7 +6489,6 @@ static void shrink_node_memcgs(pg_data_t *pgdat, st=
+ruct scan_control *sc)
+>
+>  static void shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+>  {
+> -       struct reclaim_state *reclaim_state =3D current->reclaim_state;
+>         unsigned long nr_reclaimed, nr_scanned;
+>         struct lruvec *target_lruvec;
+>         bool reclaimable =3D false;
+> @@ -6472,10 +6510,7 @@ static void shrink_node(pg_data_t *pgdat, struct s=
+can_control *sc)
+>
+>         shrink_node_memcgs(pgdat, sc);
+>
+> -       if (reclaim_state) {
+> -               sc->nr_reclaimed +=3D reclaim_state->reclaimed_slab;
+> -               reclaim_state->reclaimed_slab =3D 0;
+> -       }
+> +       flush_reclaim_state(sc);
+>
+>         /* Record the subtree's reclaim efficiency */
+>         if (!sc->proactive)
+> --
+> 2.40.0.577.gac1e443424-goog
+>
