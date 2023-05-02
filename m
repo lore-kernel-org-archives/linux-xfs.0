@@ -2,55 +2,50 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 468CFC77B78
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 May 2023 21:20:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98A73C77B78
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 May 2023 21:24:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229825AbjEBVU2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 May 2023 17:20:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58304 "EHLO
+        id S229811AbjEBVYl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 May 2023 17:24:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229732AbjEBVUZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 May 2023 17:20:25 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84EA919AD;
-        Tue,  2 May 2023 14:20:05 -0700 (PDT)
+        with ESMTP id S229732AbjEBVYl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 May 2023 17:24:41 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06AC010EF;
+        Tue,  2 May 2023 14:24:39 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 22A67628E6;
-        Tue,  2 May 2023 21:20:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 796D7C4339E;
-        Tue,  2 May 2023 21:20:04 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 90F3162513;
+        Tue,  2 May 2023 21:24:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E836EC433D2;
+        Tue,  2 May 2023 21:24:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683062404;
-        bh=nYrSuAVDXobtQ6UzRCxkqpXGpPB36aup43VSqSifIk4=;
+        s=k20201202; t=1683062678;
+        bh=/XysUHFdoV91eZcs9Vja5KLW58C6PvqZRzPlhlJ9wIg=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=m8Z5dTApOop0Z2qI3LzvrI/h+3jNt7z7XUH6/k6Ui8p37jpCy9tfPvDvH2jIW0tKl
-         x8asWjh8v+Rwg2jqduz2WeYcfPgbFWALJnXjifa7bwCzDuwvJb5ZdKhshh+fmtCi7n
-         FnvnxtT8Rhqf9j46u0Vo+jxn2UrcHKUKhn0rVWIwoT3eNlBAdnd1Yd25DhKSl7RPOc
-         rNGgTCOZ0U9XNVUQvcrkXfN9VV99IPFYctO9AkZCDQA7pEOhIHIiwUDenkj4OicyoU
-         0nBtFTfXUERGL9RYTnIKh8pvdQZ61yQ+/WcrkUIzZoe5IRhsNmZ5CvAXJ9slVFkLNS
-         HKe7YEW8KQvkQ==
-Date:   Tue, 2 May 2023 14:20:03 -0700
+        b=dF/4sxgHSaamZbDcMGtiQUfq6Sbo7i+Dx7nbj+1HW1Eg3skCv6Q0Gt4RGaLEyEkKF
+         Tbg4kjKRK6EqDdEiLKDBB40cdsXLNHlRNGBZdaz4HilR5EhC7aLSWu0XM4KwyS4ynH
+         8tQAe++a2+lkkoB0QG+RNltkVHf9rqVftZWRauuKh5UmoMelvJoe4g89O2ldRiIWqE
+         8bNnXZyEnCPiwIvB9AQSNMS7KZtVVYeyFiTumJWhAll6YL3afoKLDLBrRFkdIz9Frp
+         w1avtLjPUdYexdnhP94Jca2MsILPdbjm5yWCTupGpveCxZS2t1al5XhVlo2rfv3ZmD
+         i0wQE4BxWdGLg==
+Date:   Tue, 2 May 2023 14:24:37 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     syzbot <syzbot+c103d3808a0de5faaf80@syzkaller.appspotmail.com>
 Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
 Subject: Re: [syzbot] [xfs?] KASAN: slab-out-of-bounds Read in xfs_getbmap
-Message-ID: <20230502212003.GA15394@frogsfrogsfrogs>
+Message-ID: <20230502212437.GB15394@frogsfrogsfrogs>
 References: <000000000000c5beb705faa6577d@google.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="IpIRcjFBdFCY5T8X"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <000000000000c5beb705faa6577d@google.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
-
-
---IpIRcjFBdFCY5T8X
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 
 On Mon, May 01, 2023 at 11:53:47AM -0700, syzbot wrote:
 > Hello,
@@ -225,72 +220,20 @@ On Mon, May 01, 2023 at 11:53:47AM -0700, syzbot wrote:
 > #syz fix: exact-commit-title
 > 
 > If you want syzbot to run the reproducer, reply with:
-#syz test: upstream
+> #syz test: git://repo/address.git branch-or-commit-hash
 
-(does that work?)
+#syz test: https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git inodegc-fixes-6.4_2023-05-01
 
 --D
 
---IpIRcjFBdFCY5T8X
-Content-Type: text/x-diff; charset=us-ascii
-Content-Disposition: attachment;
-	filename="123-xfs-bmap-fix-negative-array-access.patch"
-
-From: Darrick J. Wong <djwong@kernel.org>
-Subject: [PATCH] xfs: fix negative array access in xfs_getbmap
-
-In commit 8ee81ed581ff, Ye Bin complained about an ASSERT in the bmapx
-code that trips if we encounter a delalloc extent after flushing the
-pagecache to disk.  The ioctl code does not hold MMAPLOCK so it's
-entirely possible that a racing write page fault can create a delalloc
-extent after the file has been flushed.  The proposed solution was to
-replace the assertion with an early return that avoids filling out the
-bmap recordset with a delalloc entry if the caller didn't ask for it.
-
-At the time, I recall thinking that the forward logic sounded ok, but
-felt hesitant because I suspected that changing this code would cause
-something /else/ to burst loose due to some other subtlety.
-
-syzbot of course found that subtlety.  If all the extent mappings found
-after the flush are delalloc mappings, we'll reach the end of the data
-fork without ever incrementing bmv->bmv_entries.  This is new, since
-before we'd have emitted the delalloc mappings even though the caller
-didn't ask for them.  Once we reach the end, we'll try to set
-BMV_OF_LAST on the -1st entry (because bmv_entries is zero) and go
-corrupt something else in memory.  Yay.
-
-I really dislike all these stupid patches that fiddle around with debug
-code and break things that otherwise worked well enough.  Nobody was
-complaining that calling XFS_IOC_BMAPX without BMV_IF_DELALLOC would
-return BMV_OF_DELALLOC records, and now we've gone from "weird behavior
-that nobody cared about" to "bad behavior that must be addressed
-immediately".
-
-Maybe I'll just ignore anything from Huawei from now on for my own sake.
-
-Reported-by: syzbot+c103d3808a0de5faaf80@syzkaller.appspotmail.com
-Link: https://lore.kernel.org/linux-xfs/20230412024907.GP360889@frogsfrogsfrogs/
-Fixes: 8ee81ed581ff ("xfs: fix BUG_ON in xfs_getbmap()")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_bmap_util.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index f032d3a4b727..fbb675563208 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -558,7 +558,9 @@ xfs_getbmap(
- 		if (!xfs_iext_next_extent(ifp, &icur, &got)) {
- 			xfs_fileoff_t	end = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
- 
--			out[bmv->bmv_entries - 1].bmv_oflags |= BMV_OF_LAST;
-+			if (bmv->bmv_entries > 0)
-+				out[bmv->bmv_entries - 1].bmv_oflags |=
-+								BMV_OF_LAST;
- 
- 			if (whichfork != XFS_ATTR_FORK && bno < end &&
- 			    !xfs_getbmap_full(bmv)) {
-
---IpIRcjFBdFCY5T8X--
+> If you attach or paste a git patch, syzbot will apply it before testing.
+> 
+> If you want to change bug's subsystems, reply with:
+> #syz set subsystems: new-subsystem
+> (See the list of subsystem names on the web dashboard)
+> 
+> If the bug is a duplicate of another bug, reply with:
+> #syz dup: exact-subject-of-another-report
+> 
+> If you want to undo deduplication, reply with:
+> #syz undup
