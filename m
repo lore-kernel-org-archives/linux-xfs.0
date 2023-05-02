@@ -2,41 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33A41C77B73
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 May 2023 20:08:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB01FC77B78
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 May 2023 20:08:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229785AbjEBUIO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 May 2023 16:08:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41286 "EHLO
+        id S229791AbjEBUIQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 May 2023 16:08:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229798AbjEBUII (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 May 2023 16:08:08 -0400
+        with ESMTP id S229797AbjEBUIO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 May 2023 16:08:14 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8BB819B3;
-        Tue,  2 May 2023 13:08:07 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 498861997;
+        Tue,  2 May 2023 13:08:13 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 46B2362876;
-        Tue,  2 May 2023 20:08:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CC80C4339E;
-        Tue,  2 May 2023 20:08:06 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D9A616231D;
+        Tue,  2 May 2023 20:08:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 405B2C433EF;
+        Tue,  2 May 2023 20:08:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683058086;
-        bh=ZsiJeVmPP8vxUs8m/EnFknyHoLZQsB2DfCVLh2B1XHc=;
-        h=Subject:From:To:Cc:Date:From;
-        b=iz8iiLmfoGxmDTVaSpvzOBX5ykc5Xyqxyu2jMKJr5kCF8olbc7+T3Nvx88kHcW2EF
-         K/tNdNICwNW6KoQzf2wEV+C+6oeXkmmXSt+9RVXkdF8b6GTCx53CyWTVsg/Tf2/otH
-         AFHuOGeVge42yE/LZzK6SwylRtPpatepNXLAmTt2Xc5bFt2inuz+s+eiLk12elfgFP
-         XqrXcrWJfZQvdCqn14/Mqpo+KJu9QmYEi0ixHSJ+RP8uOfkm1kVVYEKYjdrN5iSv7y
-         5pDndBptw8Gb96Zv+h68MPvnbs1ALRKCXYsw2HXtyqY1FaSdpC2pdGiQycp9Ux7dvW
-         boQ/2FMCn4I8Q==
-Subject: [PATCHSET 0/7] fstests: random fixes for v2023.05.01
+        s=k20201202; t=1683058092;
+        bh=eyu26KMZnGh1HL4k2AjRl/yPU+tUlilpDF+9z5uJZIY=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=Hd+EXCKe8xjtjJ7fVQt83qVwAR3YyC9Lagbc8Q2e9X5sTjDEGbRvlL2VztKar99ZP
+         wx1XfX6hDO3Mil37grw5O3ejhKAVyEDyS6QToPJCzWOhr81bdhG5uLLoVuHhN7vXX/
+         FPl9z1XYhkD2i5+5OOWuE0/0ZauhZ6sfbVGKPNxGv3ynuqpU5ArMSA3Oiqe6mPMKed
+         VMOYEfKN10yjxkuT4rMBjE6wjTRNFnzskFwT0EwrnQDqDZNE10rATzyLpW55/yhuAg
+         L3xjq0U5SmsBRSUDVNnkA00X54IOvc3Fip5qwCGwlPOCfpTg8eW5cT1jsIwfCR2Vvf
+         OySeAKD4pXKNQ==
+Subject: [PATCH 1/7] fsx: fix indenting of columns in bad buffers report
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     zlang@redhat.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 02 May 2023 13:08:05 -0700
-Message-ID: <168305808594.331137.16455277063177572891.stgit@frogsfrogsfrogs>
+Date:   Tue, 02 May 2023 13:08:11 -0700
+Message-ID: <168305809174.331137.660744527774559430.stgit@frogsfrogsfrogs>
+In-Reply-To: <168305808594.331137.16455277063177572891.stgit@frogsfrogsfrogs>
+References: <168305808594.331137.16455277063177572891.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -45,37 +47,61 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Here's the usual odd fixes for fstests.
+When file corruption is detected, make the columns of the report line
+up correctly even in the diff output.  Although the .out.bad file
+contains this (with spaces to demonstrate unequivocally what happens
+when tabs are formatted as 8-column indent):
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
+OFFSET  GOOD    BAD     RANGE
+0x2c000 0x0000  0xd6c1  0x00000
 
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
+diffing the good and bad golden output yields poorly formatted output:
 
---D
++OFFSET GOOD    BAD     RANGE
++0x2c000        0x0000  0xd6c1  0x00000
 
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
+Replace the tabs with columns indented with printf width specifiers so
+that the test output gets this:
 
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
+OFFSET      GOOD    BAD     RANGE
+0x2c000     0x0000  0xd6c1  0x0
 
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+...which always lines up the columns regardless of the user's tab
+display settings or diff inserting plus signs.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- ltp/fsx.c           |    9 +++++----
- src/fiemap-tester.c |   25 +++++++++++--------------
- tests/generic/094   |    5 -----
- tests/generic/225   |    5 -----
- tests/generic/724   |    2 +-
- tests/xfs/243       |   12 ++++++------
- tests/xfs/245       |    6 +++---
- tests/xfs/262       |    2 +-
- tests/xfs/272       |    4 ++--
- tests/xfs/274       |    8 ++++----
- tests/xfs/791       |    2 +-
- 11 files changed, 34 insertions(+), 46 deletions(-)
+ ltp/fsx.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+
+diff --git a/ltp/fsx.c b/ltp/fsx.c
+index c76b06ca76..ffa64cfa00 100644
+--- a/ltp/fsx.c
++++ b/ltp/fsx.c
+@@ -669,17 +669,18 @@ check_buffers(char *buf, unsigned offset, unsigned size)
+ 	if (memcmp(good_buf + offset, buf, size) != 0) {
+ 		prt("READ BAD DATA: offset = 0x%x, size = 0x%x, fname = %s\n",
+ 		    offset, size, fname);
+-		prt("OFFSET\tGOOD\tBAD\tRANGE\n");
++		prt("%-10s  %-6s  %-6s  %s\n", "OFFSET", "GOOD", "BAD", "RANGE");
+ 		while (size > 0) {
+ 			c = good_buf[offset];
+ 			t = buf[i];
+ 			if (c != t) {
+ 			        if (n < 16) {
+ 					bad = short_at(&buf[i]);
+-				        prt("0x%05x\t0x%04x\t0x%04x", offset,
+-				            short_at(&good_buf[offset]), bad);
++				        prt("0x%-8x  0x%04x  0x%04x  0x%x\n",
++					    offset,
++					    short_at(&good_buf[offset]), bad,
++					    n);
+ 					op = buf[offset & 1 ? i+1 : i];
+-				        prt("\t0x%05x\n", n);
+ 					if (op)
+ 						prt("operation# (mod 256) for "
+ 						  "the bad data may be %u\n",
 
