@@ -2,109 +2,122 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C7F5C77B75
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 May 2023 08:48:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68845C7EE22
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 May 2023 10:31:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229524AbjECIsn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 May 2023 04:48:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38376 "EHLO
+        id S230052AbjECKbj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 May 2023 06:31:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44648 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229674AbjECIsm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 May 2023 04:48:42 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE16E44A3
-        for <linux-xfs@vger.kernel.org>; Wed,  3 May 2023 01:48:37 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        with ESMTP id S230053AbjECKbf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 May 2023 06:31:35 -0400
+Received: from mail.skyhub.de (mail.skyhub.de [5.9.137.197])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EF934EC9;
+        Wed,  3 May 2023 03:31:30 -0700 (PDT)
+Received: from zn.tnic (p5de8e8ea.dip0.t-ipconnect.de [93.232.232.234])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 79E4F627CC
-        for <linux-xfs@vger.kernel.org>; Wed,  3 May 2023 08:48:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CDA8C433EF;
-        Wed,  3 May 2023 08:48:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683103716;
-        bh=i3uVo4Q6j/TeKtllJkA5AyUyR9RFnOTVJknzYzT2qnU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=S0FN+cfEEFuJie1u8eC6rVcZx39v9b+UGoOMGHvKGN4Yk3sZRh4Q0h3gnhQYNq22q
-         kibpAjAyThkZv8Z837t6ewrxjlqw8UyvCAjCYadRcRPvZrCIyRhY+oEAIgtbxRV9uA
-         AbdLgI79ZgDs4CgnrLiK5Z1a/gVhqUvT7sALox83tAvigFpBypKKV4Xn950gTS2Muk
-         sxURa5jSqaCCI3Stb1+iSRYBnGT0tYIQigY8T8Ae6l12JY7eeRw12wQUQB6S8nXFYE
-         Jy/TEFo2cObV3OJGwRzu0lAbgxHpaXw+YHe/Lc/Uz79M3NuLzNEbsdH4JHHygKtR9S
-         LfwdrlkvM3jgQ==
-Date:   Wed, 3 May 2023 10:48:32 +0200
-From:   Carlos Maiolino <cem@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs_repair: estimate per-AG btree slack better
-Message-ID: <20230503084832.bjoxa2rbtydapgj7@andromeda>
-References: <Hmm9qc69j-CLafwLwR_VDVUXW-MimDNdKcP5ObJjM17LI9tD3CdNoGjfMsJyj--ppTa-5tg4DwbNhhnKZyZ1Eg==@protonmail.internalid>
- <20230427224521.GD59213@frogsfrogsfrogs>
- <20230502104944.6rvddejxufsbzj7h@andromeda>
- <2g_v1BllDEJ95otHQqrnAFoE0bIG2Tdn6wClo-zv3TeyJWg1OlQBMai24BJJodsVirrxnlcs3ZikrlOhhtytcQ==@protonmail.internalid>
- <20230502153816.GA15420@frogsfrogsfrogs>
+        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 3CF251EC0691;
+        Wed,  3 May 2023 12:31:29 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=dkim;
+        t=1683109889;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:in-reply-to:in-reply-to:  references:references;
+        bh=Y99VkdVeSo9ELb0eveqnrxLTnOl5aHHav/scgPvIOtM=;
+        b=ouXeturJBz5ifBkVBBhldgieqd8FYUQCI77ZvbbfE9SLgn89VNIIgLYv0fO/Yk86K3AgNy
+        Pxq6jm6FAYD5LkAXSgiatQwdsjHQtG5vWjtHqTSXYwVT3EsaesKguGSma2544s5DCf0Ch9
+        3rjcgLcDMCJ4RjZtdRS316g+z8+zLh0=
+Date:   Wed, 3 May 2023 12:31:28 +0200
+From:   Borislav Petkov <bp@alien8.de>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     syzbot <syzbot+401145a9a237779feb26@syzkaller.appspotmail.com>,
+        Borislav Petkov <bp@suse.de>, stable <stable@vger.kernel.org>,
+        almaz.alexandrovich@paragon-software.com, clm@fb.com,
+        djwong@kernel.org, dsterba@suse.com, hch@infradead.org,
+        josef@toxicpanda.com, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        ntfs3@lists.linux.dev, syzkaller-bugs@googlegroups.com,
+        willy@infradead.org
+Subject: Re: [syzbot] [xfs?] BUG: unable to handle kernel paging request in
+ clear_user_rep_good
+Message-ID: <20230503103128.GAZFI4AEyPcP4bCemf@fat_crate.local>
+References: <000000000000de34bd05f3c6fe19@google.com>
+ <0000000000001ec6ce05fa9a4bf7@google.com>
+ <CAHk-=whWUZyiFvHpkC35DXo713GKFjqCWwY1uCs3tbMJ6QXeWg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230502153816.GA15420@frogsfrogsfrogs>
+In-Reply-To: <CAHk-=whWUZyiFvHpkC35DXo713GKFjqCWwY1uCs3tbMJ6QXeWg@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 02, 2023 at 08:38:16AM -0700, Darrick J. Wong wrote:
-> On Tue, May 02, 2023 at 12:49:44PM +0200, Carlos Maiolino wrote:
-> > Hi.
-> >
-> > On Thu, Apr 27, 2023 at 03:45:21PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > >
-> > > The slack calculation for per-AG btrees is a bit inaccurate because it
-> > > only disables slack space in the new btrees when the amount of free
-> > > space in the AG (not counting the btrees) is less than 3/32ths of the
-> > > AG.  In other words, it assumes that the btrees will fit in less than 9
-> > > percent of the space.
-> > .
-> > .
-> > .
-> > >
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> >
-> > This looks fine, with a small caveat below...
-> >
-> > .
-> > .
-> > .
-> >
-> > > +
-> > > +static xfs_extlen_t
-> > > +estimate_allocbt_blocks(
-> > > +	struct xfs_perag	*pag,
-> > > +	unsigned int		nr_extents)
-> > > +{
-> > > +	return libxfs_allocbt_calc_size(pag->pag_mount, nr_extents) * 2;
-> > > +}
-> >
-> > Forgive my ignorance here, but what's the reason of the magic number? It seems
-> > to me by multiplying by 2 here, you are considering a split of every single
-> > leaf for the calculated btree size, but I'm not sure if that's the intention,
-> > could you please confirm or correct me? :)
-> 
-> Ah, I should document that better...
-> 
-> 	/* Account for space consumed by both free space btrees */
-> 	return libxfs_allocbt_calc_size(...) * 2;
+On Mon, May 01, 2023 at 11:49:55AM -0700, Linus Torvalds wrote:
+> The bug goes back to commit 0db7058e8e23 ("x86/clear_user: Make it
+> faster") from about a year ago, which made it into v6.1.
 
-Thanks, can I update your patch with the above comment, or do you want to send
-it again?
+Gah, sorry about that. :-\
 
+> It only affects old hardware that doesn't have the ERMS capability
+> flag, which *probably* means that it's mostly only triggerable in
+> virtualization (since pretty much any CPU from the last decade has
+> ERMS, afaik).
 > 
-> --D
+> Borislav - opinions? This needs fixing for v6.1..v6.3, and the options are:
 > 
-> > Other than that, the patch looks good
-> >
-> > Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-> >
-> > --
-> > Carlos Maiolino
+>  (1) just fix up the exception entry. I think this is literally this
+> one-liner, but somebody should double-check me. I did *not* actually
+> test this:
+> 
+>     --- a/arch/x86/lib/clear_page_64.S
+>     +++ b/arch/x86/lib/clear_page_64.S
+>     @@ -142,8 +142,8 @@ SYM_FUNC_START(clear_user_rep_good)
+>             and $7, %edx
+>             jz .Lrep_good_exit
+> 
+>     -.Lrep_good_bytes:
+>             mov %edx, %ecx
+>     +.Lrep_good_bytes:
+>             rep stosb
+> 
+>      .Lrep_good_exit:
+> 
+>    because the only use of '.Lrep_good_bytes' is that exception table entry.
+> 
+>  (2) backport just that one commit for clear_user
+> 
+>      In this case we should probably do commit e046fe5a36a9 ("x86: set
+> FSRS automatically on AMD CPUs that have FSRM") too, since that commit
+> changes the decision to use 'rep stosb' to check FSRS.
+> 
+>  (3) backport the entire series of commits:
+> 
+>         git log --oneline v6.3..034ff37d3407
+> 
+> Or we could even revert that commit 0db7058e8e23, but it seems silly
+> to revert when we have so many ways to fix it, including a one-line
+> code movement.
+> 
+> Borislav / stable people? Opinions?
+
+So right now I feel like (3) would be the right thing to do. Because
+then stable and upstream will be on the same "level" wrt user-accessing
+primitives. And it's not like your series depend on anything from
+mainline (that I know of) so backporting them should be relatively easy.
+
+But (1) is definitely a lot easier for stable people modulo the fact
+that it won't be an upstream commit but a special stable-only fix.
+
+So yeah, in that order.
+
+I guess I'd let stable people decide here what they wanna do.
+
+Thx.
 
 -- 
-Carlos Maiolino
+Regards/Gruss,
+    Boris.
+
+https://people.kernel.org/tglx/notes-about-netiquette
