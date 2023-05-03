@@ -2,67 +2,96 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D67CC77B78
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 May 2023 00:14:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4325BC77B75
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 May 2023 03:02:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229511AbjECAOW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 May 2023 20:14:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45046 "EHLO
+        id S229528AbjECDCR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 May 2023 23:02:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51588 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229464AbjECAOV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 May 2023 20:14:21 -0400
-Received: from mail-il1-f198.google.com (mail-il1-f198.google.com [209.85.166.198])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC2302680
-        for <linux-xfs@vger.kernel.org>; Tue,  2 May 2023 17:14:20 -0700 (PDT)
-Received: by mail-il1-f198.google.com with SMTP id e9e14a558f8ab-32f240747cdso5750525ab.1
-        for <linux-xfs@vger.kernel.org>; Tue, 02 May 2023 17:14:20 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683072860; x=1685664860;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=aEdJNQ3lVemRBJ6NDcWKHIv1GrI4GPEwiZ9AMbObejI=;
-        b=SsGip3lDuLe53K5WPw7ycZX7HbGs9dgIiUkEwz8QOPA65gQNpbwu9psheoMQzvzeh8
-         0O6l2wAvoGpzXatdtBsjd9BEDFa06QJxRJNHmfNRXfH/yHoQK3lQtbNcRvNpYYuRYR3e
-         qihUmTv1RmqFglFVdMzxsQ9+b0sJRNMAlo6F10Sq3y9jGAHU4h3UGHz116zcTUhPAm39
-         gu9mEqiqG6w+D1DNcejHz7uR+iIqBJFb5FjePdLiENmhZgHA7jppTmPQ/hqyZu035hJ+
-         zjQuxGiR1P4JEuqA52ZAG+qKE65otBJRGvZPv1vbY0cSH0gI83QIImPDjA2yNGaQ/Q/3
-         4F+g==
-X-Gm-Message-State: AC+VfDye3rxyjCxpWatcpyT4HHzKKQHDbLKzFo08spOlEfND/njFnrZ8
-        k63w8IlhLFyFUIqbw9uGH8pSfl0xIDPTQIYQCL77FHdY3BU/
-X-Google-Smtp-Source: ACHHUZ5e2IPTjcLMfP6jQLHxh4OYc6OTUlfjWdAA5ZTwkTyRYf//kTp+GPJd+erhDob5I1HICqBbh/IITvBBI5MUjeGLg8TdIa1F
+        with ESMTP id S229455AbjECDCQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 May 2023 23:02:16 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE1291FCA;
+        Tue,  2 May 2023 20:02:14 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 690A7629E8;
+        Wed,  3 May 2023 03:02:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1E7DC433D2;
+        Wed,  3 May 2023 03:02:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1683082933;
+        bh=Rf3elCEyDb+Cv+Z4BoVXFWk2JMNZeMlmtkFHzB1KUVg=;
+        h=Subject:From:To:Cc:Date:From;
+        b=rP+Xk1vWuob3O0rxXkP/YXRuEsPj0om0C+7IE5ahR+5+ieUxIsJoEmY3HBsy4PMTA
+         n6xZzIokIeY97ElMjVot//s5iCDhmNjIMX6+zI+10AOsuyKpbTTFINc5VZ1mK39Sqd
+         k9pQ/hl0x18/jjAa0CIEF8Ep+zafOl8S/V8nyEZ2eeuabfGLG++K3BcFsl3txUnW7n
+         wzwFnehIE6wy/YDWWSwyVhh0qlwcAoLO6DF2Rl9nxEfpSFT0ogg+5JPcU4Bg7yTadG
+         McE2iFDwxA8wZjQhXweVl7kLlQUL3hLjCcdJOE3tBTORiGr/jeBP0H6PFvgVrLcee9
+         GivmQh3gbwISA==
+Subject: [PATCHSET RFC v24.6 0/4] xfs: online repair for fs summary counters
+ with exclusive fsfreeze
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, mcgrof@kernel.org,
+        ruansy.fnst@fujitsu.com, linux-fsdevel@vger.kernel.org
+Date:   Tue, 02 May 2023 20:02:13 -0700
+Message-ID: <168308293319.734377.10454919162350827812.stgit@frogsfrogsfrogs>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-X-Received: by 2002:a02:966f:0:b0:40f:9d2e:24ae with SMTP id
- c102-20020a02966f000000b0040f9d2e24aemr275427jai.0.1683072860029; Tue, 02 May
- 2023 17:14:20 -0700 (PDT)
-Date:   Tue, 02 May 2023 17:14:20 -0700
-In-Reply-To: <20230502220039.GC15394@frogsfrogsfrogs>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000f40bf505fabeeff7@google.com>
-Subject: Re: [syzbot] [xfs?] KASAN: slab-out-of-bounds Read in xfs_getbmap
-From:   syzbot <syzbot+c103d3808a0de5faaf80@syzkaller.appspotmail.com>
-To:     djwong@kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
+Hi all,
 
-syzbot has tested the proposed patch and the reproducer did not trigger any issue:
+A longstanding deficiency in the online fs summary counter scrubbing
+code is that it hasn't any means to quiesce the incore percpu counters
+while it's running.  There is no way to coordinate with other threads
+are reserving or freeing free space simultaneously, which leads to false
+error reports.  Right now, if the discrepancy is large, we just sort of
+shrug and bail out with an incomplete flag, but this is lame.
 
-Reported-and-tested-by: syzbot+c103d3808a0de5faaf80@syzkaller.appspotmail.com
+For repair activity, we actually /do/ need to stabilize the counters to
+get an accurate reading and install it in the percpu counter.  To
+improve the former and enable the latter, allow the fscounters online
+fsck code to perform an exclusive mini-freeze on the filesystem.  The
+exclusivity prevents userspace from thawing while we're running, and the
+mini-freeze means that we don't wait for the log to quiesce, which will
+make both speedier.
 
-Tested on:
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-commit:         55901cd7 xfs: fix xfs_inodegc_stop racing with mod_del..
-git tree:       https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git inodegc-fixes-6.4_2023-05-02
-console output: https://syzkaller.appspot.com/x/log.txt?x=11a2556fc80000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=64660a60375eadd7
-dashboard link: https://syzkaller.appspot.com/bug?extid=c103d3808a0de5faaf80
-compiler:       Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-Note: no patches were applied.
-Note: testing is done by a robot and is best-effort only.
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-fscounters
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=repair-fscounters
+---
+ fs/super.c                       |   74 ++++++++++++++-
+ fs/xfs/Makefile                  |    1 
+ fs/xfs/scrub/fscounters.c        |  185 ++++++++++++++++++++++++++++----------
+ fs/xfs/scrub/fscounters.h        |   20 ++++
+ fs/xfs/scrub/fscounters_repair.c |   72 +++++++++++++++
+ fs/xfs/scrub/repair.h            |    2 
+ fs/xfs/scrub/scrub.c             |    8 +-
+ fs/xfs/scrub/scrub.h             |    1 
+ fs/xfs/scrub/trace.c             |    1 
+ fs/xfs/scrub/trace.h             |   22 ++++-
+ fs/xfs/xfs_super.c               |   20 ++++
+ fs/xfs/xfs_super.h               |    2 
+ include/linux/fs.h               |    3 +
+ 13 files changed, 348 insertions(+), 63 deletions(-)
+ create mode 100644 fs/xfs/scrub/fscounters.h
+ create mode 100644 fs/xfs/scrub/fscounters_repair.c
+
