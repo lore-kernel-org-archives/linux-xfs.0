@@ -2,65 +2,65 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DC39C7EE29
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5759C7EE21
 	for <linux-xfs@archiver.kernel.org>; Wed,  3 May 2023 18:40:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229816AbjECSkh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 May 2023 14:40:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43062 "EHLO
+        id S230201AbjECSki (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 May 2023 14:40:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229804AbjECSk1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 May 2023 14:40:27 -0400
+        with ESMTP id S229558AbjECSkR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 May 2023 14:40:17 -0400
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EC477690;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 412417687;
         Wed,  3 May 2023 11:40:12 -0700 (PDT)
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 343HomQY017456;
-        Wed, 3 May 2023 18:39:43 GMT
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 343HowRA000715;
+        Wed, 3 May 2023 18:39:40 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version;
- s=corp-2023-03-30; bh=Oi2uyE8N2356UVchRvEhKFqT4hAg+6Q96AYvmiDM6Cs=;
- b=L65ooSaCQkAjCikP4s2ejqM9+SKS/MBniX7yKWPp7M4j21hkzqSPONVfbFV0lMSVNPGz
- pRItQbyYJG5LiakyaME0zUAPHiyaxhk5T0uA5jW+lex6zI0zJJtkrpS7YsGAfB9tV4WC
- OOSpi9cY+Sph/WyrD24FssYfPO8A03lbdgAJK41BCgHRZcKSNF0WrO8oiMxe6r6oJnh+
- f7odJEL0aXrKG5EDk4QfWBFupgT1ORQJ0EYCUfP/aTawmF4VA/xSiI9UZYbKIL99/Nil
- G4cp2Q83BRSAPNEk6pm2XOzwd4ew3XXNngUdDzUwAndXPvg/VlRe9mnSzCbg6RXa3zWo yw== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3q8u4aqyg5-1
+ s=corp-2023-03-30; bh=s6U4SHv03DQbibGnwYMMTvVbf59+f2S7TduJtgmTuyY=;
+ b=gQKbVFMRu1AZ9Pe+pMxETxT3Rk9/0aCNVSAsElrs4QGEVmSIIJQFCCFkHXWxezcgZIUB
+ goGqFT6mUtGeNng8hs/mCeWjmgp1NExzXkw+gUgkYLm9ZGl3mzJSQv+D65w5Jw+X1M0a
+ 4reYeYS7tOaaXZ65lHSL7mCVxCWM6c20FUYPzNWzmaAJQNRHn/AGzVafvCXNE+Csplxc
+ nJzeDQMGsSJ4PAkyIxXCtSh6rDaaT8xnLIeeZIxQpHF72Af7TkvuC1/jWqfrNNr1+a6r
+ +aPcLLDloZ7Yu28TNwXVpuxVyOvxr/qtFerx40suHs8iAAVCj7g359p4GegEPTjUFKc6 cA== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3q8usv0180-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 03 May 2023 18:39:42 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 343HEbSG027489;
-        Wed, 3 May 2023 18:39:41 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2169.outbound.protection.outlook.com [104.47.59.169])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3q8spdsj4e-1
+        Wed, 03 May 2023 18:39:39 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 343Hsbt7020802;
+        Wed, 3 May 2023 18:39:39 GMT
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2171.outbound.protection.outlook.com [104.47.59.171])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3q8sp7g9r0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 03 May 2023 18:39:41 +0000
+        Wed, 03 May 2023 18:39:38 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=a1nDuP+iSPcd0EB/wPOwHZBI1SBNo5F+JeIma/JEXRi4Yx7lEM8+nlOmGLXwkKieiWsk6mRt3gd4+L5Kg8ZFihM0LQKH5cJMS4MALZ/ZvGuNZy6iwMG+RIA65LSrNuHO+MmPUjCifDYSbDVyBhGIotiZDWjBjDYcDPvaXO6rK5srfM2g92SoAWaFn+/m5OWELSt8H2Y7cq6jCEONPl/RAVrf8stVkmmwlV1mu7GPkcQxExuE1LJdElb3/F09FJenxsxbMtBUFshqXqTaNRLJEvDXwMa3xfV6m2n4yXfM4dc99o/zzNuqyOhFDRLreR9jSVd11DnOSdcrt/cZa5gkQw==
+ b=Az7d/87b6B2taDNLZOM90GTQTjR1xLlMLg4rnopRC+Z1tYPAQGpdNN4ytCi7sVOxYVSDLxpIPkVWPxdDM4W4m/5YWoAZjBOOVTlve1KygqX0mU3p4EIDrvC5AXFShvOKdUjEU3rE7qfJNntg6khSCQrTdur78h/kneD2FayFd0K/s6X9Bzui4dn8P7sO71SO6CrsNjH1IbnjTKWFiCLtJDImaJo+Uur3JNnVEvviUwmhVan0XRk45LrIK52czGzb6rpEfkPu4h4Z5V/03MWu8oA2B8nZjm75voe8jw6rV3uL/eC8F1O0c72Yt/A6KnQCVaY5umcmVKzE91Wyt1vLTg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Oi2uyE8N2356UVchRvEhKFqT4hAg+6Q96AYvmiDM6Cs=;
- b=NKtC3AZWcesgAMRH5PVDiQNUA7CuffzeKORLVyOq9V3yirgDMAMDBc8uiPQdi8+au9w3xVZAWt07gaXNpmoZp0CGvffFdkZ2PJYeSWaiYpmilhOv1L9opa6wU8thCQnFAYK64cawh0n8HRqvXjFzuiXn7qm3YAa+914xcKi84VJwVGpehr4c2g9c8d1+zyjN0IUSJK2JQGyu2vrGluxavy/diKj6n+Twc+cMcGutDrdJtHiTeCxl4n81FagkZH4GhudAIxwcCWFJGQLYCtNChlMu+lBSoOB1kl0Fh3QJy0a3RCcnL7LVnpHBC5sbD4cHV1Pzcp4zwo1yHd3Cgk3Ypg==
+ bh=s6U4SHv03DQbibGnwYMMTvVbf59+f2S7TduJtgmTuyY=;
+ b=AgYDlc8im8Msb+qKOpoeaqO32vfDutsBgNi1lPnMRxn0AJKX3H5E3CEbkB+SbhCUrukK7OvRR7FfApYvn+c4xVpe8luyFV16avNvDFiy71+mjJ5AkMJI04uQDZayxqGDokv2xwgoe/JNROxH2P9T8UYXD1KMoNhEtDwV+gLebw/nv9LUT2XiN2NshOxT/KHcAU/N7XEagvMK+l154r5qz56TCa/IkvB9uZbItkzinkDBiekWXJUQ0k1O6Nlp8+jiiiPLWKYu+fBXBIDCe+c18A068EpykdzdqIQeqijzeWY2cluW+MCPC2BeyzHkhnBVZIDBJNM2H7Z61DCzRdl8Hg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Oi2uyE8N2356UVchRvEhKFqT4hAg+6Q96AYvmiDM6Cs=;
- b=U7ESK5agJ4Ri7EX/lFPJc+SrLORKylmD2/LJN8jV/nDM2WF56+qpheGq9gwFI0Gkx29s1XkskcB3sjSSpbFbTFmyq/942w/G/2bIdqVFgDivx0Tq2jI9p1SvUsjrFQvcQ2ci/1fAVzL0l6qUHeHdh7amu8u5ov9NJh8BNo2rxtc=
+ bh=s6U4SHv03DQbibGnwYMMTvVbf59+f2S7TduJtgmTuyY=;
+ b=Cflh1UoFefnWiXme7EMLAtKg5+Q6qCrwTdv1FTv0CXcmolAogUBgUKuwQxZcfautv3Qw8YIWXtHN3F0qlHawT8vPvecjAtsjFAmZEmhEOqShMcvlM/AWrcOvHarie3+dxSmAD+KUw/wXQjShWW/TTVnkQuwtzL8v+0hMnypKbA8=
 Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
  by IA1PR10MB6171.namprd10.prod.outlook.com (2603:10b6:208:3a5::21) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6363.22; Wed, 3 May
- 2023 18:39:38 +0000
+ 2023 18:39:36 +0000
 Received: from DM6PR10MB4313.namprd10.prod.outlook.com
  ([fe80::8456:ba59:80ec:d804]) by DM6PR10MB4313.namprd10.prod.outlook.com
  ([fe80::8456:ba59:80ec:d804%7]) with mapi id 15.20.6340.031; Wed, 3 May 2023
- 18:39:38 +0000
+ 18:39:36 +0000
 From:   John Garry <john.g.garry@oracle.com>
 To:     axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
         martin.petersen@oracle.com, djwong@kernel.org,
@@ -72,307 +72,164 @@ Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-security-module@vger.kernel.org, paul@paul-moore.com,
         jmorris@namei.org, serge@hallyn.com,
         John Garry <john.g.garry@oracle.com>
-Subject: [PATCH RFC 08/16] block: Add support for atomic_write_unit
-Date:   Wed,  3 May 2023 18:38:13 +0000
-Message-Id: <20230503183821.1473305-9-john.g.garry@oracle.com>
+Subject: [PATCH RFC 06/16] block: Limit atomic writes according to bio and queue limits
+Date:   Wed,  3 May 2023 18:38:11 +0000
+Message-Id: <20230503183821.1473305-7-john.g.garry@oracle.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20230503183821.1473305-1-john.g.garry@oracle.com>
 References: <20230503183821.1473305-1-john.g.garry@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: DM6PR06CA0010.namprd06.prod.outlook.com
- (2603:10b6:5:120::23) To DM6PR10MB4313.namprd10.prod.outlook.com
+X-ClientProxiedBy: DM6PR03CA0073.namprd03.prod.outlook.com
+ (2603:10b6:5:333::6) To DM6PR10MB4313.namprd10.prod.outlook.com
  (2603:10b6:5:212::20)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|IA1PR10MB6171:EE_
-X-MS-Office365-Filtering-Correlation-Id: 15667a67-8130-479f-4e08-08db4c05c031
+X-MS-Office365-Filtering-Correlation-Id: 30c698cc-1647-4b87-82a9-08db4c05bed0
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: ZuLT0rkvn0wfJ7HkdahXR8eDl0zmFGByqOS/NrtC+uQDulHj3+Cm2wXSmVf7qWp0qffcnhnwU2uloW77p59IFJ/XRO0Yeq6+UOA0I0iI8vvg015XWGttWwXPXYvaV/WEipAMrBl2B1zmEw/QYb/+GsyjRyphDdJ1qElIuY8VEOWfWij33kDSwK5m/6jcZZstP4BSxCoBScfl1lNO9YAWsXpd/eB1xEoICWMtDU1bieTzSwqZxz2EGAbGl58oxF4h8mqEbWJrJsS/fQg9Iy4/VvPNjI7SZDp7hshp/H3ykEtPFWbeTorORPlFeBnHi+BSGc02sNS9OIdfLisKTE0tuW1032FaWJYF+wRI8+hQCuA81HKUbH8ZlvX1B1cgVfVOSdsoATfo1ubUT31VcBeDC3UtdX8KFDz8qAg2HygUgoIU7yrZMF655N0lBMy8oEXA5Ht+HxiMZEKxnAtHrJDrNHJy5BQqN+EQKnpqfHdGAnfnRP1Af3SMytd4vcdlFe9eQEbJoybl3n5KstQcqr4wCVQhVxXe9FYNAd1MBJhD/aLruJg/WwZtNmHjyAMJarT8bxJ3016+5Gcr67tW3sjmzrS7qR02zcKz9ZyMuWAhyKo=
+X-Microsoft-Antispam-Message-Info: Mzccw/Hf4KsaJ7Ln7emlcioAs0UNCUms3UyMJkg+aSxBWpzWd5WmatkRkaDk+UHxdTQWaxF9fPc3ycuZlHZTUlyB/pRbub1iuupazAAFF9r6ByfP228v5wJHE3BNs9fPi6tCRfwZQD615pXi0Rlu/CebVYgQGruYjqkUcQYtZK8yAnGd5evbrBstW0XS3c59ruYxjgkd4DD4tWadWB5QfSE3e7Et3QiOLcHeCtxuHt+GDKMi1P1Rd9ihhddSULFr04KtJ7QKu45KjcbMwovFYvf8fEs6aSrRTt+12UAwlpyUallzaFOyBUP+EADuEAgIsUCW1yI0Yvh9iER4R7F/8j9xdlpQMImvYHcbgzYUBvm2aMEkp4xFdaqYur7O72OfZ1ZrsxRb8evi+daQRboQ8mveDP0VmJm+cEQvNs+JoO/WKZagshWw0AUDbCJYyzmqBYKp28wjWVU4BA5UWuqqM+pQcRzR5QiBz86yzz/uRuG83rNye9ovrnDQ5b7Ny3ugmKYMgP8RCe0Dxo56ZqR2TtvTBIAq8nY/Cb8a6AORNapYP4Vm3L4IUtqB/1yadbz42sKARGnDCYB3XfQGQSc8zl/2niaYw/XIaFte0U8/0AU=
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(346002)(136003)(376002)(396003)(39860400002)(366004)(451199021)(2616005)(186003)(4326008)(103116003)(921005)(36756003)(38100700002)(83380400001)(66556008)(7416002)(66476007)(86362001)(41300700001)(8676002)(2906002)(107886003)(5660300002)(6666004)(478600001)(8936002)(6486002)(6506007)(316002)(26005)(6512007)(1076003)(66946007);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?hYAjRDI5PHPWHCY2VuwVIov6CshdLEKxFlw3RmwGHIs3VY7lsaLJmMr/PsQt?=
- =?us-ascii?Q?ROuJbF+HKsacCNlqN8hTlb+1A1VxBeN3lHaEj8hEAyecAVSJcfbhiRIka6Y3?=
- =?us-ascii?Q?oFWqBND1ALx4hPX3fu2UaAe2JBV82UqgOSxFkoMe7ZtqEWcnqps0DwsuQuxb?=
- =?us-ascii?Q?ec8lPwRiKeziuZ+PY0scGMeEcYy4VKE33ywUCp1pHFIXjxA5mTweJzb/AI02?=
- =?us-ascii?Q?5A/WNW2x5Z6KZkmwMW+wRBeWMewUen++Kl+yjV5pDegMgPZyBC55Cop/BlHZ?=
- =?us-ascii?Q?zzAavkUr7EGciNRi4t141T+eeRXZzOpfxHOmLDBM/RXAUQjjRDeL4PTdnp3s?=
- =?us-ascii?Q?YSU0EbUfLtKD6n2d4KnZH2eqIXGUv4KFnJwvjR63KvZYNdVEYGKSAlVwwsNw?=
- =?us-ascii?Q?T/QHxjJAmQSmUoSIGNZKQpNUSxq2+MWC2tnQPTGolovUINo7sS9MGcqnlJj0?=
- =?us-ascii?Q?khrI12uzNQdj4DIZMHloFwkZcwrJroC6B7AJK2u2Kw2Y0GGAAxJ+HdY6U979?=
- =?us-ascii?Q?v/kwFMYMHcDhabROCsU/brmFaU00Fvp8jfmKZY8adCrv+DgQ5MG1B8SmsAdT?=
- =?us-ascii?Q?uu2dvryYjgB4cRqVKwmyxSiae4kDD4n9wdAP5gFQrJX+juUNlN4AnlWK3EH/?=
- =?us-ascii?Q?ctcFgxD4kihyKKdNuag90UUg7xT3/ozZCmvN+W1Hh2ys/erB4SJsS9XM8yCc?=
- =?us-ascii?Q?pKdFGXh+ICLXQNK9uumKFMIT+ybGQHDp+qkhLssUAqjbQl3nSfbza7CSAo6Z?=
- =?us-ascii?Q?S2Ngmy5LusdW3GjR1I4AQoGd4W5Z3c1Cq6KmR+QAiIgNTi2Lb7pT/96+byIe?=
- =?us-ascii?Q?/NEMnBW/DyozJ3cG2wKRrkzeI5D9qxJqq+E+oNZTw2Z2OIX6sJjHiYbqNKy/?=
- =?us-ascii?Q?hpu5T9eUzKkTGue8qG/4PG1Dq0iIDgJAViDJeaHRlLQQyyUH5nx3jKa5ppfa?=
- =?us-ascii?Q?KTbdkbHF7pctITeHMgcyjcxyxi9ySimWkZspsgWutWYMYIRVP+CKw9hP/MtS?=
- =?us-ascii?Q?DArauy2aIiz/Nuxs/+TR74IhPiCzC/UBimMW94pSiwrNsO+x6wC2qLcesNwo?=
- =?us-ascii?Q?oeXxfRCsxAP9CtU+45VklW2hIuEHwb+tt9XcO8forjMAlpsYomafEWDl4L3b?=
- =?us-ascii?Q?/R0pP1JoYgfv0R+OBfSF5t7vo65iRg4WU4n5gDRQ01ruSvpQ/Ly7noS5JuLl?=
- =?us-ascii?Q?6CQgzMXvG+radellLWgGejdCxvkUZFHHByBcnIqdyizxAJEUd/cdPVFGBt0v?=
- =?us-ascii?Q?Velv60QlBC2dn49yKHJKPxjkiCaZtxULpXZ5XJHyaoq1lZrQCQN0++9F/SwB?=
- =?us-ascii?Q?6+MTEP2e1jX8Nd4AC9VJQj0Nv5MfXaw19yW0iVtFkFBiPUu3ZfwHRoiawiRP?=
- =?us-ascii?Q?2MU88mugk3iVwPTRlMbTzfsnSlek1EJaewSouTuHbJ7dX7/Wuu7hdujb4q0E?=
- =?us-ascii?Q?KI5sBmcgeDBFXS9GXIlZP+I+xi1es/TrkrJi8LsCmZ74sbNgaUHyJwPkKylA?=
- =?us-ascii?Q?4XksPu8xZeWhpBRwxgLhR/z2xmZGENhihdeKvuVMJR4QETmHxjkvSkD2WShR?=
- =?us-ascii?Q?TZXW5cnLzu6cEDQ42aewf0hHoIFzsc3NF63j83m3?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?JBJm/hXM6t61z+qlOEvAwkt1lNIK1s5F8MNEhR5YSt8nGyXQMmhbF9Hbmryr?=
+ =?us-ascii?Q?cOAZJnqRvfqAnuuyQW1qdMQcNj1gol9fhiJpk+SYcoBY58h+oNg3o2S7HqT+?=
+ =?us-ascii?Q?1t2/ajmPR8mKWp8ui2erIZF1duhji3g+RfF2N9Xz3uagEtS4MXYE/4+wYNVU?=
+ =?us-ascii?Q?pS5l0aQ5ZL833CM8hKFA/KJP0MFfhaG8QyGKNLpFfNGNjDJitEMvg9e7PZfA?=
+ =?us-ascii?Q?TBbbddtpJyXInpGkW3o3ARzscPUvq5S+DtVbtRDzGGgPdrVft5+06yMJIjRP?=
+ =?us-ascii?Q?WE7Wteqx9DpVLRGLTs2MwsMMDXialtKk4qQTIRsTgBLWzf7dacCdhc7qyJUD?=
+ =?us-ascii?Q?mJSjj4QNKALCCa0txfLaNFpFjsUiDuptgB/Hgmb5m8othVbAT9S8dzpoLRub?=
+ =?us-ascii?Q?xJRyU+vSGDPpE7jntwypVMugKcCm747RVU0ro5pnAWozL/nFM+pFnJgdKTCY?=
+ =?us-ascii?Q?3Tua7iNc9F8Nv83qHsfNMywwEqnkmT7G5NzZ8UlVRf0D/+7dy1DUvQTFRDI+?=
+ =?us-ascii?Q?Jz0dUuWk/qlIEJqCZS5k6v0uYlrvt89wP2tZV/K7MoOc1UnOaETu1dhr5Cj5?=
+ =?us-ascii?Q?8UZSmGQb7BBykIxSaPV8qd52mqQg6tiDyly+JWCfWAycuDDBciW+b6ScsoCN?=
+ =?us-ascii?Q?M9/rhJ8M8vlwBiK/BwfHGXVupaPeRmm2Wj6Oif2vkzLycyiFfSLBTrFRFqtm?=
+ =?us-ascii?Q?0AqpvA7xv+N680CYnkU+LbvxryRWZ9N+o1gP3RF45pzrB1kVLVfefztMmGB1?=
+ =?us-ascii?Q?jGAgbMeFW0bMFeSVZg/XP2BhQatXc2o3GzaYdu39TAgIvB6MmWKH5brR17OK?=
+ =?us-ascii?Q?KjQdcbGEWkdfgRvaILMoWVFl4wuaiDVoU57dP57CTQvtraLPd89DoingjEzq?=
+ =?us-ascii?Q?/07KBj5qTFKPWNtZpglnJtwfq4AOJlQ0nfCsgSRpWNo0yeO85ynuwRdxvD5N?=
+ =?us-ascii?Q?WcLESsKMkxJpHGytAULwkFzZRriROT/SM5e1JpjRtdtmFjKMOlG5LVLohr/z?=
+ =?us-ascii?Q?MsgtvXZd3xj7zanR7YA/lOf6qdxQGCWF6615VR9uH0S9d00a9SDR7Ht84KIA?=
+ =?us-ascii?Q?c0SP0LRHANcog7L8ztPATBYKA5nFuN1IdzS+bGNU1fpvraN7vaDX3LtoPWcJ?=
+ =?us-ascii?Q?SLTa2krSePXaL93NUuy7PRYKsug6Pf620KVjoJeRJBgwXxRsBeKXVgCxrphC?=
+ =?us-ascii?Q?Uc1DEYWvAVCm+bc51HKhztIOSiQ33qGInH2WSoetHcYKrJ4Jo8KmH+fNq9yI?=
+ =?us-ascii?Q?VYkEElB1gqOT1IODELRmC+sn7RTVNr44o7ZcHlkHY/0o9syOBgwC+ocSkZW9?=
+ =?us-ascii?Q?j2dYRjE7SjoH5mxkggyiV1ee+dlOJ/GBmnhmbPHK/LKANul1SJOR9E+rkOiY?=
+ =?us-ascii?Q?Js23Rd5U1CbFDhKxB9h1gFSeamGIGsJxlYM+wuesGFuW2ju+1sOfkIKRl4HU?=
+ =?us-ascii?Q?belQEB9ay2zipj2b/Oizd1uItmiQxaCtW8yu3o6RXY238MdVqhxCJ7H79haC?=
+ =?us-ascii?Q?xi0Q65QHBnjumtndNMZvkgJnECuwpE9hqk3QcbyU8p1+inTkI0FBrPFW9LuV?=
+ =?us-ascii?Q?DUwHs/gUMZeC1atwsZCLfFes5xLC/WhFVdjKiAzkPHWBJIHAEEvq0ZOT/Kuk?=
+ =?us-ascii?Q?Xg=3D=3D?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?4dzgu9pK8PTBUmx6yuLlFSbyrkx9MQyAdjH+cwYtqPLbIcGDmSYNH4QXkIS5?=
- =?us-ascii?Q?sliZr7LqOvX4mA9sRNl31eHfkwSFU82jsaChwClugXcQkUnbgYqVYMr/pZHB?=
- =?us-ascii?Q?juUmyRs3373p5jMOYuDq5+QKhe1y7yg5dlfs+je8GgfhJvZY78GhpeNaoaLS?=
- =?us-ascii?Q?AuSpg9vFbRGr7Db2o8wWV3xX8yqs0bah4M3HR/UPAvgzk9RqXJhGsOrlF0Aj?=
- =?us-ascii?Q?TxjxGm+vyzHF+wARsY6ZepJPsWVf9c7Bto6y9FB0Ujs74inMxw3/f8bPjsTd?=
- =?us-ascii?Q?YgFTfANYtvyCV1H5Ad15SFs8JSOPWQg/j3w6u6rY1HkLqwSYag0FL2rbqDsJ?=
- =?us-ascii?Q?Eob6IXXyCDsA+ZtieCzW8hR0i8kjlXsFMMJWTD02rXoW0mjamrMcmqg2pnUp?=
- =?us-ascii?Q?wcesOFboyJRMjIWLAGGdTt+UJKnr6ZIyJiw0YfZQpEHhPoY/o7C4yhF8pYL0?=
- =?us-ascii?Q?FxDhrYxW2efiwahiJyTwmrDdVnwQht0coQgBc1uAnBGId1mRFjHsdDles9G6?=
- =?us-ascii?Q?IHlSWx0Eadj3MzKmD22eo+ZApAxM/lyVuw2j1DYEnzpOR670fBPAb8AKkPdC?=
- =?us-ascii?Q?jHAtP2eztDNMmfm0XjDhjGTKchATb7MjABS6gSE+r1ZXTUu5uJMuklJKNBMO?=
- =?us-ascii?Q?zqxaAiTNLCbzz3EIwK8EuelEYgiSDz/Bkp6LM/1uW0Ka4H4BD8+QPdk6mYBZ?=
- =?us-ascii?Q?Se+E1bzBvs9g4KFaIyQXobRB9GO0NYQBi1DJN6d9UURpNm41tSQ49RGkdVQX?=
- =?us-ascii?Q?QS3bQvNRvX87MiefbBtehBQi0BNGmTcfVqfJnl4RizVMvCBwL6m2OUEiKNUG?=
- =?us-ascii?Q?CyaY1fh7lLCrJ8s2xiUHvLZqN/qQhTS0J+nRyVMxXoSf80Mqcmd3zBAoSCcY?=
- =?us-ascii?Q?GydiCX88Tw39Dtsq69CKY/RmRUwsmcx8omrZVFWdhnaJbNMXFU0VMKIzTVRe?=
- =?us-ascii?Q?4/hqYNiPc43PjL3S6RhsU0e6KTpOZoE6jJPDsy5eCP9V9+wo98ZeOGfRxRVY?=
- =?us-ascii?Q?nPYPTkn2Kv/e0uGunq6gFpEX3XFIKx3EHLppNK3YZ0ITqvBTIblGOWzMUNYp?=
- =?us-ascii?Q?nBsJcDf82Y+fwZgU+4YwpHMbDy4pJwvbivGrgNXW4rGPSB3hcqUnvwX0L7W1?=
- =?us-ascii?Q?5Vuxgqq3gCeJ?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?cYcXWVdXfCZ8eEMYdrWGHTSmZF20E01NWk7bG0boNpzo5vpi+MOAzBYzCkVX?=
+ =?us-ascii?Q?3k28kX8sKggNVynOPSI9PvW0yh6ErNK90eNs39/6zJkwkt7gcbqswE8HLqHG?=
+ =?us-ascii?Q?Nn5X9xN9JteXxSw2JY2WCzBLD6HnOyKv9NkOL+6C2HDSM7RHC3cbDzczAdFA?=
+ =?us-ascii?Q?QqAs9VxsQzSJwt6CeyNYOohpoXuWh65D/sIGKRhAzPD0J1rpwILQDgpWqVE+?=
+ =?us-ascii?Q?5phC8ergzkjD/A8EDLHouo/j+xmGWHGNSJQH8wVzKIBXRZmf4KqojUTcla1j?=
+ =?us-ascii?Q?aX89jeGsxJNl6TG2Kj01k/U6SwcQCQDjMEC1MHJf0Okt6oqSWWEuXQbmaP8o?=
+ =?us-ascii?Q?ulyvtWQpmXo8fyYz6EqyKjGPTetjfgzCvgpYpSIvcVKVmxjvHZooalaxDp0s?=
+ =?us-ascii?Q?BIpCrRILk9FmhljYQO2umqqetBE9Q1dW/WDvO+/WMl4iV+CS4JQ5TpxW/PsP?=
+ =?us-ascii?Q?AM+GT6jQIZV9OY00zNKHiWryMSjxpg7xmHGL62YokpAd/DR7EYjbDVdIkhxZ?=
+ =?us-ascii?Q?GCO7SscpaORv0XAlVcv3rErg1qS7a0evRKEAOSXskKsxlRTvJm+ymBiQF3Ef?=
+ =?us-ascii?Q?m89BHKwT24f45U0SEjSYgZgleAuVvzlJSOjLbCjdkbFkdX0biKAh50MGxQ0L?=
+ =?us-ascii?Q?kTFeRZEu6CF5i8uBT8mz+mSMAOTl2IWW86dvHEcPA+L7eCaJKsm/vSYOoevq?=
+ =?us-ascii?Q?/tWNajpLz20EBdP8VRXASe9POU7fBXWRmZQWycXzM8DbdzeSMiIYjxn9uXX1?=
+ =?us-ascii?Q?EK3v7hIH5YRYYIi/B+UOCKhDzs6MBUA85fPPrZe+DhVqJTykN4K0J4QTOcjY?=
+ =?us-ascii?Q?VlK/5D5itcGA2VKHnPd22vw82grE/GRm+nHkCKaX/LxnlatVP8VJQu6PJxzq?=
+ =?us-ascii?Q?ryO2tFfhiTD81d1GTaocDElOtRcL+oKqh2zy9wbEd7qwLWNGIB8BtGPMr3WC?=
+ =?us-ascii?Q?XF+q2M64oDkGRJ0WwWmvREiSPFWXAVBhqI6KTlKk2GzJi3dueoJePLDkPxyS?=
+ =?us-ascii?Q?ApL/ePNJ7um7Ax0Dc+uW5/npdrbCWOXCiP7M3Mi5haPBpJN4mcrEqhhgajA7?=
+ =?us-ascii?Q?p2ctFcZKUfkfDigZ2ftVeRjQuWFv1a6B6BpPs75J9PFM3z4CusHIFl3SmNBW?=
+ =?us-ascii?Q?LHrAeOWcWYXb?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 15667a67-8130-479f-4e08-08db4c05c031
+X-MS-Exchange-CrossTenant-Network-Message-Id: 30c698cc-1647-4b87-82a9-08db4c05bed0
 X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 May 2023 18:39:38.7540
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 May 2023 18:39:36.4561
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: rW7S/kWOds7RDf5vTdI0u4NPgYcBWBUVxfL7U/zqwEoRaVpcFMR2gY8l1krijeFgnOFrBJWSpY4lUT7bz2BygA==
+X-MS-Exchange-CrossTenant-UserPrincipalName: +S1mi8fcufsc/9TyEn/8RrmSrD1LDoSvKA09spg3OnpBxDUIA6Nz0D36TYZaGOIx47O6PZslPRPgA3/UpJZGfQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR10MB6171
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-05-03_13,2023-05-03_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0 adultscore=0
- suspectscore=0 mlxlogscore=999 phishscore=0 mlxscore=0 spamscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxscore=0 spamscore=0
+ mlxlogscore=999 phishscore=0 malwarescore=0 adultscore=0 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2303200000
  definitions=main-2305030160
-X-Proofpoint-GUID: XOl-RfO40zUrnz7DfqKJ48yfTMzWQoJq
-X-Proofpoint-ORIG-GUID: XOl-RfO40zUrnz7DfqKJ48yfTMzWQoJq
+X-Proofpoint-ORIG-GUID: aFpDXZhtBuvKp7b7t86_EsgeTppz6-yG
+X-Proofpoint-GUID: aFpDXZhtBuvKp7b7t86_EsgeTppz6-yG
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Add bio.atomic_write_unit, which is the min size which we can split a bio.
-Any bio needs to be split in a multiple of this size and also aligned to
-this size.
+We rely the block layer always being able to send a bio of size
+atomic_write_unit_max without being required to split it due to request
+queue or other bio limits. We already know at any bio should have an
+alignment of atomic_write_unit_max or lower.
 
-In __bio_iov_iter_get_pages(), use atomic_write_unit to trim a bio to
-be a multiple of atomic_write_unit.
-
-In bio_split_rw(), we need to consider splitting as follows:
-- For a regular split which does not cross an atomic write boundary, same
-  as in __bio_iov_iter_get_pages(), trim to be a multiple of
-  atomic_write_unit
-- We also need to check for when a bio straddles an atomic write boundary.
-  In this case, split to be start/end-aligned with the boundary.
-
-We need to ignore lim->max_sectors since to may be less than
-bio->write_atomic_unit, which we cannot tolerate.
+A bio may contain min(BIO_MAX_VECS, limits->max_segments) vectors,
+and each vector of at least PAGE_SIZE, except for if start address may
+not be PAGE aligned; for this case, subtract 1 to give the max guaranteed
+count of pages which we may store in a bio, and limit both
+atomic_write_unit_min and atomic_write_unit_max to this value.
 
 Signed-off-by: John Garry <john.g.garry@oracle.com>
 ---
- block/bio.c               |  7 +++-
- block/blk-merge.c         | 84 ++++++++++++++++++++++++++++++++++-----
- include/linux/blk_types.h |  2 +
- 3 files changed, 81 insertions(+), 12 deletions(-)
+ block/blk-settings.c | 23 ++++++++++++++++++++---
+ 1 file changed, 20 insertions(+), 3 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index fd11614bba4d..fc2f29e1c14c 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -247,6 +247,7 @@ void bio_init(struct bio *bio, struct block_device *bdev, struct bio_vec *table,
- 	      unsigned short max_vecs, blk_opf_t opf)
- {
- 	bio->bi_next = NULL;
-+	bio->atomic_write_unit = 0;
- 	bio->bi_bdev = bdev;
- 	bio->bi_opf = opf;
- 	bio->bi_flags = 0;
-@@ -815,6 +816,7 @@ static int __bio_clone(struct bio *bio, struct bio *bio_src, gfp_t gfp)
- 	bio->bi_ioprio = bio_src->bi_ioprio;
- 	bio->bi_iter = bio_src->bi_iter;
- 
-+	bio->atomic_write_unit = bio_src->atomic_write_unit;
- 	if (bio->bi_bdev) {
- 		if (bio->bi_bdev == bio_src->bi_bdev &&
- 		    bio_flagged(bio_src, BIO_REMAPPED))
-@@ -1273,7 +1275,10 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
- 
- 	nr_pages = DIV_ROUND_UP(offset + size, PAGE_SIZE);
- 
--	trim = size & (bdev_logical_block_size(bio->bi_bdev) - 1);
-+	if (bio->atomic_write_unit)
-+		trim = size & (bio->atomic_write_unit - 1);
-+	else
-+		trim = size & (bdev_logical_block_size(bio->bi_bdev) - 1);
- 	iov_iter_revert(iter, trim);
- 
- 	size -= trim;
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 6460abdb2426..95ab6b644955 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -171,7 +171,17 @@ static inline unsigned get_max_io_size(struct bio *bio,
- {
- 	unsigned pbs = lim->physical_block_size >> SECTOR_SHIFT;
- 	unsigned lbs = lim->logical_block_size >> SECTOR_SHIFT;
--	unsigned max_sectors = lim->max_sectors, start, end;
-+	unsigned max_sectors, start, end;
-+
-+	/*
-+	 * We ignore lim->max_sectors for atomic writes simply because
-+	 * it may less than bio->write_atomic_unit, which we cannot
-+	 * tolerate.
-+	 */
-+	if (bio->bi_opf & REQ_ATOMIC)
-+		max_sectors = lim->atomic_write_max_bytes >> SECTOR_SHIFT;
-+	else
-+		max_sectors = lim->max_sectors;
- 
- 	if (lim->chunk_sectors) {
- 		max_sectors = min(max_sectors,
-@@ -256,6 +266,22 @@ static bool bvec_split_segs(const struct queue_limits *lim,
- 	return len > 0 || bv->bv_len > max_len;
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index e21731715a12..f64a2f736cb8 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -212,6 +212,18 @@ void blk_queue_atomic_write_boundary(struct request_queue *q,
  }
+ EXPORT_SYMBOL(blk_queue_atomic_write_boundary);
  
-+static bool bio_straddles_boundary(struct bio *bio, unsigned int bytes,
-+				   unsigned int boundary)
++static unsigned int blk_queue_max_guaranteed_bio_size(struct queue_limits *limits)
 +{
-+	loff_t start = bio->bi_iter.bi_sector << SECTOR_SHIFT;
-+	loff_t end = start + bytes;
-+	loff_t start_mod = start % boundary;
-+	loff_t end_mod = end % boundary;
++	unsigned int max_segments = limits->max_segments;
++	unsigned int atomic_write_max_segments =
++				min(BIO_MAX_VECS, max_segments);
++	/* subtract 1 to assume PAGE-misaligned IOV start address */
++	unsigned int size = (atomic_write_max_segments - 1) *
++				(PAGE_SIZE / SECTOR_SIZE);
 +
-+	if (end - start > boundary)
-+		return true;
-+	if ((start_mod > end_mod) && (start_mod && end_mod))
-+		return true;
-+
-+	return false;
++	return rounddown_pow_of_two(size);
 +}
 +
  /**
-  * bio_split_rw - split a bio in two bios
-  * @bio:  [in] bio to be split
-@@ -276,10 +302,15 @@ static bool bvec_split_segs(const struct queue_limits *lim,
-  * responsible for ensuring that @bs is only destroyed after processing of the
-  * split bio has finished.
-  */
-+
-+
- struct bio *bio_split_rw(struct bio *bio, const struct queue_limits *lim,
- 		unsigned *segs, struct bio_set *bs, unsigned max_bytes)
+  * blk_queue_atomic_write_unit_min - smallest unit that can be written
+  *				     atomically to the device.
+@@ -221,7 +233,10 @@ EXPORT_SYMBOL(blk_queue_atomic_write_boundary);
+ void blk_queue_atomic_write_unit_min(struct request_queue *q,
+ 				     unsigned int sectors)
  {
-+	unsigned int atomic_write_boundary = lim->atomic_write_boundary;
-+	bool atomic_write = bio->bi_opf & REQ_ATOMIC;
- 	struct bio_vec bv, bvprv, *bvprvp = NULL;
-+	bool straddles_boundary = false;
- 	struct bvec_iter iter;
- 	unsigned nsegs = 0, bytes = 0;
- 
-@@ -291,14 +322,31 @@ struct bio *bio_split_rw(struct bio *bio, const struct queue_limits *lim,
- 		if (bvprvp && bvec_gap_to_prev(lim, bvprvp, bv.bv_offset))
- 			goto split;
- 
-+		if (atomic_write && atomic_write_boundary) {
-+			straddles_boundary = bio_straddles_boundary(bio,
-+					bytes + bv.bv_len, atomic_write_boundary);
-+		}
- 		if (nsegs < lim->max_segments &&
- 		    bytes + bv.bv_len <= max_bytes &&
--		    bv.bv_offset + bv.bv_len <= PAGE_SIZE) {
-+		    bv.bv_offset + bv.bv_len <= PAGE_SIZE &&
-+		    !straddles_boundary) {
- 			nsegs++;
- 			bytes += bv.bv_len;
- 		} else {
--			if (bvec_split_segs(lim, &bv, &nsegs, &bytes,
--					lim->max_segments, max_bytes))
-+			bool split_the_segs =
-+				bvec_split_segs(lim, &bv, &nsegs, &bytes,
-+						lim->max_segments, max_bytes);
+-	q->limits.atomic_write_unit_min = sectors;
++	struct queue_limits *limits= &q->limits;
++	unsigned int guaranteed = blk_queue_max_guaranteed_bio_size(limits);
 +
-+			/*
-+			 * We may not actually straddle the boundary as we may
-+			 * have added less bytes than anticipated
-+			 */
-+			if (straddles_boundary) {
-+				straddles_boundary = bio_straddles_boundary(bio,
-+						bytes, atomic_write_boundary);
-+			}
-+
-+			if (split_the_segs || straddles_boundary)
- 				goto split;
- 		}
++	limits->atomic_write_unit_min = min(guaranteed, sectors);
+ }
+ EXPORT_SYMBOL(blk_queue_atomic_write_unit_min);
  
-@@ -321,12 +369,25 @@ struct bio *bio_split_rw(struct bio *bio, const struct queue_limits *lim,
- 
- 	*segs = nsegs;
- 
--	/*
--	 * Individual bvecs might not be logical block aligned. Round down the
--	 * split size so that each bio is properly block size aligned, even if
--	 * we do not use the full hardware limits.
--	 */
--	bytes = ALIGN_DOWN(bytes, lim->logical_block_size);
-+	if (straddles_boundary) {
-+		loff_t new_end = (bio->bi_iter.bi_sector << SECTOR_SHIFT) + bytes;
-+		unsigned int trim = new_end & (atomic_write_boundary - 1);
-+		bytes -= trim;
-+		new_end = (bio->bi_iter.bi_sector << SECTOR_SHIFT) + bytes;
-+		BUG_ON(new_end % atomic_write_boundary);
-+	} else if (bio->atomic_write_unit) {
-+		unsigned int atomic_write_unit = bio->atomic_write_unit;
-+		unsigned int trim = bytes % atomic_write_unit;
-+
-+		bytes -= trim;
-+	} else {
-+		/*
-+		 * Individual bvecs might not be logical block aligned. Round down the
-+		 * split size so that each bio is properly block size aligned, even if
-+		 * we do not use the full hardware limits.
-+		 */
-+		bytes = ALIGN_DOWN(bytes, lim->logical_block_size);
-+	}
- 
- 	/*
- 	 * Bio splitting may cause subtle trouble such as hang when doing sync
-@@ -355,7 +416,8 @@ struct bio *__bio_split_to_limits(struct bio *bio,
- 				  const struct queue_limits *lim,
- 				  unsigned int *nr_segs)
+@@ -234,8 +249,10 @@ EXPORT_SYMBOL(blk_queue_atomic_write_unit_min);
+ void blk_queue_atomic_write_unit_max(struct request_queue *q,
+ 				     unsigned int sectors)
  {
--	struct bio_set *bs = &bio->bi_bdev->bd_disk->bio_split;
-+	struct block_device *bi_bdev = bio->bi_bdev;
-+	struct bio_set *bs = &bi_bdev->bd_disk->bio_split;
- 	struct bio *split;
- 
- 	switch (bio_op(bio)) {
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 347b52e00322..daa44eac9f14 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -303,6 +303,8 @@ struct bio {
- 
- 	struct bio_set		*bi_pool;
- 
-+	unsigned int atomic_write_unit;
+-	struct queue_limits *limits = &q->limits;
+-	limits->atomic_write_unit_max = sectors;
++	struct queue_limits *limits= &q->limits;
++	unsigned int guaranteed = blk_queue_max_guaranteed_bio_size(limits);
 +
- 	/*
- 	 * We can inline a number of vecs at the end of the bio, to avoid
- 	 * double allocations for a small number of bio_vecs. This member
++	limits->atomic_write_unit_max = min(guaranteed, sectors);
+ }
+ EXPORT_SYMBOL(blk_queue_atomic_write_unit_max);
+ 
 -- 
 2.31.1
 
