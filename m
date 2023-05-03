@@ -2,291 +2,158 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88735C77B75
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 May 2023 03:02:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36399C7EE22
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 May 2023 06:04:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229609AbjECDCt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 May 2023 23:02:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51662 "EHLO
+        id S229544AbjECGE5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 May 2023 02:04:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59640 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229455AbjECDCj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 May 2023 23:02:39 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A08D1FE3;
-        Tue,  2 May 2023 20:02:37 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 044D1629E8;
-        Wed,  3 May 2023 03:02:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EB9EC433D2;
-        Wed,  3 May 2023 03:02:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683082956;
-        bh=FDSD3npohSAOStE6XTBYxPJuVdYmgwtcSanKqtLFSWo=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=SLFUKUMofWDRWAbOavtdQehPzwf4OLHN1CHd96LrQPXQOEnJjVAc+M02poXEQ21lc
-         sLfH8W+qMUS4TfC/S8Jyd8bfU+qCWzVshE0EGiKI2ibw0+Tl2dr6ctWAuQ2dFZJkbG
-         GzLqtHZoBd8WBYLeZ5XEPbpMl1sM0OVD61DG/udwLRcVTmgUQZaB8jpkZ36rkI2HIF
-         mDIZJyMsjNwmJwK3jC1YAAstOnEp5MY2evpgMYlh4R/hfGyyXD4tvdmiZbpPMxXWBc
-         QZDtYn83d88MOUnxrCpuVSHQWF2v0v9fa3v5bmcEanj5NMUC8muLsAon8fCrR/wXVC
-         V1w9FQpOfTcTQ==
-Subject: [PATCH 4/4] xfs: repair summary counters
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, mcgrof@kernel.org,
-        ruansy.fnst@fujitsu.com, linux-fsdevel@vger.kernel.org
-Date:   Tue, 02 May 2023 20:02:36 -0700
-Message-ID: <168308295599.734377.17056485056121118166.stgit@frogsfrogsfrogs>
-In-Reply-To: <168308293319.734377.10454919162350827812.stgit@frogsfrogsfrogs>
-References: <168308293319.734377.10454919162350827812.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+        with ESMTP id S229461AbjECGE4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 May 2023 02:04:56 -0400
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 272612D4E
+        for <linux-xfs@vger.kernel.org>; Tue,  2 May 2023 23:04:55 -0700 (PDT)
+Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1aafa41116fso22040885ad.1
+        for <linux-xfs@vger.kernel.org>; Tue, 02 May 2023 23:04:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1683093894; x=1685685894;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=MDRQRdyZS/T+X4lsFUSgluI/WlYxzE7pQwx3ic8Xr44=;
+        b=Jw8drwQZaAeoy/SUvR7g1veEr8dlHJF0AquJjUmxq0Si5IxwdiCtCxs43pzwsVMfnY
+         mSSq2kSUWgflIpPWxkzKUSJVlc3GC01Gk4vtQUq9X/pkzhDbAaLSVGpir2PYgMvA0jS9
+         6Al50raFsk5Dmxl6pGTiHkH7Uo3GbSfjEtp8472SXZfjMmgtQgAxltx4yHe2hiZX/8My
+         k/tX9AFQ9dhGJoyP6R04swAT7R2OeU0KlRmKOqS4Ho9DmN5Pg5BKLMHn/f8en4q4db+q
+         WoFL6EK10SdISmIfATHk2Vxf6sJiDiBTAW3WVteeRmHX8PA6X/IeoCKfj37QKDMQGNvO
+         fQNw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1683093894; x=1685685894;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=MDRQRdyZS/T+X4lsFUSgluI/WlYxzE7pQwx3ic8Xr44=;
+        b=eZp1tzELK3iPygOEx0K/HSQV5ig5TGeAy3kLJdAhIBhPuKtAV8hzGva22HJMDNpMhu
+         fWl9Tz4O0nJ4KvWmtGLh1wUOPz3zv9/20q6nRCEKN2YV8h8bhxriZcb3liL6V05CPRN2
+         OSCWplg61BbyP86+N5C8XP5xc4SwuPbADNHZEFljiaBLhBFaALcSqhE6MrkCxJRVfHjb
+         /k6TP3tyQUBqMYBg6NUSThqCEqGTAAA2+3/2icvx8wsbtU9sr3rr6y7tWhS5Od7AsMQo
+         CkCGrMtmk00kqwnq7lXPezeA2XdH1lypa7B84WgkP9fE8DgkD4nRPduxlvBREix0Ct2S
+         HCOA==
+X-Gm-Message-State: AC+VfDxzsKN+yPZY4RZj66wK/B9f7YFCRxW/LdFbZksEButpbSL0Lxg5
+        /FMGMDkypkTgZRceYH+m0+lxwg==
+X-Google-Smtp-Source: ACHHUZ5/3UAdX7u+gtieAw2vbSrkfqv2xakKrS9XytzsyomFuwRTWECbxaFwcB6WJkO0oCTABgrwWg==
+X-Received: by 2002:a17:903:18c:b0:1a6:87e3:db50 with SMTP id z12-20020a170903018c00b001a687e3db50mr1233951plg.1.1683093894576;
+        Tue, 02 May 2023 23:04:54 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-88-204.pa.nsw.optusnet.com.au. [49.181.88.204])
+        by smtp.gmail.com with ESMTPSA id c9-20020a170902b68900b001ab016ea3f9sm3717752pls.21.2023.05.02.23.04.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 02 May 2023 23:04:53 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1pu5be-00AkKn-Ob; Wed, 03 May 2023 16:04:50 +1000
+Date:   Wed, 3 May 2023 16:04:50 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-block@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        axboe@kernel.dk
+Subject: [6.4-current oops] null ptr deref in blk_mq_sched_bio_merge() from
+ blkdev readahead
+Message-ID: <20230503060450.GC3223426@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi folks,
 
-Use the same summary counter calculation infrastructure to generate new
-values for the in-core summary counters.   The difference between the
-scrubber and the repairer is that the repairer will freeze the fs during
-setup, which means that the values should match exactly.
+fstests running shared/032 on XFS with a default mkfs and mount
+config causes a panic in the block layer when userspace is operating
+directly on the block device like this:
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/Makefile                  |    1 +
- fs/xfs/scrub/fscounters.c        |   15 +++++++-
- fs/xfs/scrub/fscounters_repair.c |   72 ++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/repair.h            |    2 +
- fs/xfs/scrub/scrub.c             |    2 +
- fs/xfs/scrub/trace.c             |    1 +
- fs/xfs/scrub/trace.h             |   21 +++++++++--
- 7 files changed, 107 insertions(+), 7 deletions(-)
- create mode 100644 fs/xfs/scrub/fscounters_repair.c
+SECTION       -- xfs
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 test3 6.3.0-dgc+ #1792 SMP PREEMPT_DYNAMIC Wed May  3 15:20:20 AEST 2023
+MKFS_OPTIONS  -- -f -m rmapbt=1 /dev/pmem1
+MOUNT_OPTIONS -- -o dax=never -o context=system_u:object_r:root_t:s0 /dev/pmem1 /mnt/scratch
 
+....
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index b97b7ea74109..ea90abdd9941 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -188,6 +188,7 @@ xfs-y				+= $(addprefix scrub/, \
- 				   alloc_repair.o \
- 				   bmap_repair.o \
- 				   cow_repair.o \
-+				   fscounters_repair.o \
- 				   ialloc_repair.o \
- 				   inode_repair.o \
- 				   newbt.o \
-diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
-index 93498eb38216..913ef40ad7ee 100644
---- a/fs/xfs/scrub/fscounters.c
-+++ b/fs/xfs/scrub/fscounters.c
-@@ -199,8 +199,13 @@ xchk_setup_fscounters(
- 	 * Pause all writer activity in the filesystem while we're scrubbing to
- 	 * reduce the likelihood of background perturbations to the counters
- 	 * throwing off our calculations.
-+	 *
-+	 * If we're repairing, we need to prevent any other thread from
-+	 * changing the global fs summary counters while we're repairing them.
-+	 * This requires the fs to be frozen, which will disable background
-+	 * reclaim and purge all inactive inodes.
- 	 */
--	if (sc->flags & XCHK_TRY_HARDER) {
-+	if ((sc->flags & XCHK_TRY_HARDER) || xchk_could_repair(sc)) {
- 		error = xchk_fscounters_freeze(sc);
- 		if (error)
- 			return error;
-@@ -218,7 +223,9 @@ xchk_setup_fscounters(
-  * set the INCOMPLETE flag even when a negative errno is returned.  This care
-  * must be taken with certain errno values (i.e. EFSBADCRC, EFSCORRUPTED,
-  * ECANCELED) that are absorbed into a scrub state flag update by
-- * xchk_*_process_error.
-+ * xchk_*_process_error.  Scrub and repair share the same incore data
-+ * structures, so the INCOMPLETE flag is critical to prevent a repair based on
-+ * insufficient information.
-  */
- 
- /* Count free space btree blocks manually for pre-lazysbcount filesystems. */
-@@ -446,6 +453,10 @@ xchk_fscount_within_range(
- 	if (curr_value == expected)
- 		return true;
- 
-+	/* We require exact matches when repair is running. */
-+	if (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
-+		return false;
-+
- 	min_value = min(old_value, curr_value);
- 	max_value = max(old_value, curr_value);
- 
-diff --git a/fs/xfs/scrub/fscounters_repair.c b/fs/xfs/scrub/fscounters_repair.c
-new file mode 100644
-index 000000000000..abd281dcb344
---- /dev/null
-+++ b/fs/xfs/scrub/fscounters_repair.c
-@@ -0,0 +1,72 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2018-2023 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "xfs_alloc.h"
-+#include "xfs_ialloc.h"
-+#include "xfs_rmap.h"
-+#include "xfs_health.h"
-+#include "scrub/xfs_scrub.h"
-+#include "scrub/scrub.h"
-+#include "scrub/common.h"
-+#include "scrub/trace.h"
-+#include "scrub/repair.h"
-+#include "scrub/fscounters.h"
-+
-+/*
-+ * FS Summary Counters
-+ * ===================
-+ *
-+ * We correct errors in the filesystem summary counters by setting them to the
-+ * values computed during the obligatory scrub phase.  However, we must be
-+ * careful not to allow any other thread to change the counters while we're
-+ * computing and setting new values.  To achieve this, we freeze the
-+ * filesystem for the whole operation if the REPAIR flag is set.  The checking
-+ * function is stricter when we've frozen the fs.
-+ */
-+
-+/*
-+ * Reset the superblock counters.  Caller is responsible for freezing the
-+ * filesystem during the calculation and reset phases.
-+ */
-+int
-+xrep_fscounters(
-+	struct xfs_scrub	*sc)
-+{
-+	struct xfs_mount	*mp = sc->mp;
-+	struct xchk_fscounters	*fsc = sc->buf;
-+
-+	/*
-+	 * Reinitialize the in-core counters from what we computed.  We froze
-+	 * the filesystem, so there shouldn't be anyone else trying to modify
-+	 * these counters.
-+	 */
-+	if (!fsc->frozen) {
-+		ASSERT(fsc->frozen);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	trace_xrep_reset_counters(mp, fsc);
-+
-+	percpu_counter_set(&mp->m_icount, fsc->icount);
-+	percpu_counter_set(&mp->m_ifree, fsc->ifree);
-+	percpu_counter_set(&mp->m_fdblocks, fsc->fdblocks);
-+	percpu_counter_set(&mp->m_frextents, fsc->frextents);
-+	mp->m_sb.sb_frextents = fsc->frextents;
-+
-+	return 0;
-+}
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index e70b3afde39d..2e72b2557f65 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -109,6 +109,7 @@ int xrep_bmap_data(struct xfs_scrub *sc);
- int xrep_bmap_attr(struct xfs_scrub *sc);
- int xrep_bmap_cow(struct xfs_scrub *sc);
- int xrep_nlinks(struct xfs_scrub *sc);
-+int xrep_fscounters(struct xfs_scrub *sc);
- 
- #ifdef CONFIG_XFS_RT
- int xrep_rtbitmap(struct xfs_scrub *sc);
-@@ -194,6 +195,7 @@ static inline int xrep_setup_rtbitmap(struct xfs_scrub *sc, unsigned int *x)
- #define xrep_quota			xrep_notsupported
- #define xrep_quotacheck			xrep_notsupported
- #define xrep_nlinks			xrep_notsupported
-+#define xrep_fscounters			xrep_notsupported
- 
- #endif /* CONFIG_XFS_ONLINE_REPAIR */
- 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index e487b424b12b..cf8e78c16670 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -367,7 +367,7 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
- 		.type	= ST_FS,
- 		.setup	= xchk_setup_fscounters,
- 		.scrub	= xchk_fscounters,
--		.repair	= xrep_notsupported,
-+		.repair	= xrep_fscounters,
- 	},
- 	[XFS_SCRUB_TYPE_QUOTACHECK] = {	/* quota counters */
- 		.type	= ST_FS,
-diff --git a/fs/xfs/scrub/trace.c b/fs/xfs/scrub/trace.c
-index a2511bdc5dba..1fe5c5a9a1ba 100644
---- a/fs/xfs/scrub/trace.c
-+++ b/fs/xfs/scrub/trace.c
-@@ -20,6 +20,7 @@
- #include "scrub/xfarray.h"
- #include "scrub/iscan.h"
- #include "scrub/nlinks.h"
-+#include "scrub/fscounters.h"
- 
- /* Figure out which block the btree cursor was pointing to. */
- static inline xfs_fsblock_t
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 6a50e6c89195..4aefa0533a12 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -23,6 +23,7 @@ struct xfarray;
- struct xfarray_sortinfo;
- struct xchk_iscan;
- struct xchk_nlink;
-+struct xchk_fscounters;
- 
- /*
-  * ftrace's __print_symbolic requires that all enum values be wrapped in the
-@@ -1671,16 +1672,28 @@ TRACE_EVENT(xrep_calc_ag_resblks_btsize,
- 		  __entry->refcbt_sz)
- )
- TRACE_EVENT(xrep_reset_counters,
--	TP_PROTO(struct xfs_mount *mp),
--	TP_ARGS(mp),
-+	TP_PROTO(struct xfs_mount *mp, struct xchk_fscounters *fsc),
-+	TP_ARGS(mp, fsc),
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
-+		__field(uint64_t, icount)
-+		__field(uint64_t, ifree)
-+		__field(uint64_t, fdblocks)
-+		__field(uint64_t, frextents)
- 	),
- 	TP_fast_assign(
- 		__entry->dev = mp->m_super->s_dev;
-+		__entry->icount = fsc->icount;
-+		__entry->ifree = fsc->ifree;
-+		__entry->fdblocks = fsc->fdblocks;
-+		__entry->frextents = fsc->frextents;
- 	),
--	TP_printk("dev %d:%d",
--		  MAJOR(__entry->dev), MINOR(__entry->dev))
-+	TP_printk("dev %d:%d icount %llu ifree %llu fdblocks %llu frextents %llu",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->icount,
-+		  __entry->ifree,
-+		  __entry->fdblocks,
-+		  __entry->frextents)
- )
- 
- DECLARE_EVENT_CLASS(xrep_newbt_extent_class,
+[   56.070695] run fstests shared/032 at 2023-05-03 15:21:55
+[   56.768890] BTRFS: device fsid 355df15c-7bc5-49b0-9b5d-dc25ce855a9d devid 1 transid 6 /dev/pmem1 scanned by mkfs.btrfs (5836)
+[   57.285879]  pmem1: p1
+[   57.301845] BUG: kernel NULL pointer dereference, address: 00000000000000a8
+[   57.304562] #PF: supervisor read access in kernel mode
+[   57.306499] #PF: error_code(0x0000) - not-present page
+[   57.308414] PGD 0 P4D 0 
+[   57.309401] Oops: 0000 [#1] PREEMPT SMP
+[   57.310876] CPU: 3 PID: 4478 Comm: (udev-worker) Not tainted 6.3.0-dgc+ #1792
+[   57.313517] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
+[   57.317089] RIP: 0010:blk_mq_sched_bio_merge+0x7b/0x100
+[   57.319059] Code: c0 49 8b 5c 24 38 48 03 1c c5 c0 69 71 82 b8 02 00 00 00 f7 c2 00 00 40 00 75 07 31 c0 84 d2 0f 94 c0 48 8b 94 c3 90 00 00 00 <f6> 82 a8 0d
+[   57.325898] RSP: 0018:ffffc900042ab880 EFLAGS: 00010246
+[   57.327835] RAX: 0000000000000001 RBX: ffff888237d80000 RCX: 0000000000000000
+[   57.330492] RDX: 0000000000000000 RSI: ffff88810135e000 RDI: ffff8885c1928000
+[   57.333118] RBP: ffffc900042ab8b0 R08: 0000000000001000 R09: 0000000000000001
+[   57.335791] R10: ffff8885c1928000 R11: 0000000000000008 R12: ffff8885c1928000
+[   57.338298] R13: ffff88810135e000 R14: 0000000000000001 R15: ffff88810135e000
+[   57.340092] FS:  00007f4adf5438c0(0000) GS:ffff888237d80000(0000) knlGS:0000000000000000
+[   57.342132] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   57.343536] CR2: 00000000000000a8 CR3: 0000000102e4a005 CR4: 0000000000060ee0
+[   57.345150] Call Trace:
+[   57.345732]  <TASK>
+[   57.346265]  ? mempool_alloc_slab+0x15/0x20
+[   57.347242]  blk_mq_attempt_bio_merge+0x4e/0x50
+[   57.348288]  blk_mq_submit_bio+0x232/0x580
+[   57.349230]  __submit_bio+0x1e/0x110
+[   57.350066]  submit_bio_noacct_nocheck+0x24a/0x330
+[   57.351161]  submit_bio_noacct+0x196/0x490
+[   57.352104]  submit_bio+0x43/0x60
+[   57.352879]  mpage_readahead+0xf4/0x130
+[   57.353762]  ? blkdev_write_begin+0x30/0x30
+[   57.354741]  blkdev_readahead+0x15/0x20
+[   57.355719]  read_pages+0x5c/0x230
+[   57.356625]  page_cache_ra_unbounded+0x148/0x190
+[   57.357764]  force_page_cache_ra+0x9a/0xc0
+[   57.358845]  page_cache_sync_ra+0x2e/0x50
+[   57.359839]  filemap_get_pages+0x10f/0x670
+[   57.360870]  ? walk_component+0xc7/0x170
+[   57.361859]  filemap_read+0xed/0x380
+[   57.362819]  ? __ia32_compat_sys_lookup_dcookie+0x410/0xe80
+[   57.364086]  ? __might_fault+0x22/0x30
+[   57.364953]  blkdev_read_iter+0xe3/0x1e0
+[   57.365871]  vfs_read+0x213/0x2e0
+[   57.366646]  ksys_read+0x71/0xf0
+[   57.367396]  __x64_sys_read+0x19/0x20
+[   57.368244]  do_syscall_64+0x34/0x80
+[   57.369064]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+[   57.370225] RIP: 0033:0x7f4adf7c503d
+[   57.371054] Code: 31 c0 e9 c6 fe ff ff 50 48 8d 3d a6 55 0a 00 e8 39 fe 01 00 66 0f 1f 84 00 00 00 00 00 80 3d a1 25 0e 00 00 74 17 31 c0 0f 05 <48> 3d 00 fc
+[   57.375229] RSP: 002b:00007ffd91350748 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
+[   57.376933] RAX: ffffffffffffffda RBX: 000055c11070df70 RCX: 00007f4adf7c503d
+[   57.378565] RDX: 0000000000000040 RSI: 000055c1105c48f8 RDI: 000000000000000f
+[   57.380177] RBP: 00000001fffe0000 R08: 000055c1106f41c0 R09: 00007f4adf8a02e0
+[   57.381790] R10: 0000000000000000 R11: 0000000000000246 R12: 000055c1105c48d0
+[   57.383406] R13: 0000000000000040 R14: 000055c11070dfc8 R15: 000055c1105c48e8
+[   57.385026]  </TASK>
 
+shared/032 is entirely a mkfs test - it is checking that mkfs for
+the filesystem under test recognises other filesystem signatures on
+the block device and does not overwrite them by accident. This test
+does not involve kernel filesystem code at all.
+
+Somewhere in amongst the running of various mkfs operations during
+the test, a udev-worker is triggered and is doing something with
+the block device (probing it?) and that results in the above oops
+occurring.
+
+This is only happening on the machine I have configured with (fake)
+PMEM devices - virtio, sd and nvme devices do not appear to
+be triggering this. That kinda implies a timing issue - pmem
+completes IO synchronously, all the the others use async
+completion...
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
