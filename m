@@ -2,158 +2,115 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36399C7EE22
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 May 2023 06:04:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41C8DC7EE29
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 May 2023 08:10:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229544AbjECGE5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 May 2023 02:04:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59640 "EHLO
+        id S229900AbjECIKY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 May 2023 04:10:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229461AbjECGE4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 May 2023 02:04:56 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 272612D4E
-        for <linux-xfs@vger.kernel.org>; Tue,  2 May 2023 23:04:55 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1aafa41116fso22040885ad.1
-        for <linux-xfs@vger.kernel.org>; Tue, 02 May 2023 23:04:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1683093894; x=1685685894;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=MDRQRdyZS/T+X4lsFUSgluI/WlYxzE7pQwx3ic8Xr44=;
-        b=Jw8drwQZaAeoy/SUvR7g1veEr8dlHJF0AquJjUmxq0Si5IxwdiCtCxs43pzwsVMfnY
-         mSSq2kSUWgflIpPWxkzKUSJVlc3GC01Gk4vtQUq9X/pkzhDbAaLSVGpir2PYgMvA0jS9
-         6Al50raFsk5Dmxl6pGTiHkH7Uo3GbSfjEtp8472SXZfjMmgtQgAxltx4yHe2hiZX/8My
-         k/tX9AFQ9dhGJoyP6R04swAT7R2OeU0KlRmKOqS4Ho9DmN5Pg5BKLMHn/f8en4q4db+q
-         WoFL6EK10SdISmIfATHk2Vxf6sJiDiBTAW3WVteeRmHX8PA6X/IeoCKfj37QKDMQGNvO
-         fQNw==
+        with ESMTP id S229899AbjECIKK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 May 2023 04:10:10 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FC9D4ED5
+        for <linux-xfs@vger.kernel.org>; Wed,  3 May 2023 01:09:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1683101261;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=gAItFTPlViLA5pqMw1tfLrN9/2fArVuO7Mw/NYUVWFo=;
+        b=AM58T2GW1NkzejK+xOAnv+cAQIh6MBOmu+vfc2eNg0Rq1oOtWsHV2KjQp/SOYrF/lEJAAa
+        yXphOm01JoLUM+6j6AdL8yYHttbhr+wl1ZFlhNr3l0zfLD4StA6Nv9QIfw7ShjWMAjIMMU
+        dJYTrwqH9xFQ0M2U8yS6b6g8jP1ZHaw=
+Received: from mail-vs1-f70.google.com (mail-vs1-f70.google.com
+ [209.85.217.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-360-IbzpCVdgOn2GbhBnUoRQxA-1; Wed, 03 May 2023 04:07:40 -0400
+X-MC-Unique: IbzpCVdgOn2GbhBnUoRQxA-1
+Received: by mail-vs1-f70.google.com with SMTP id ada2fe7eead31-42f8d8ff18eso50302137.1
+        for <linux-xfs@vger.kernel.org>; Wed, 03 May 2023 01:07:40 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683093894; x=1685685894;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=MDRQRdyZS/T+X4lsFUSgluI/WlYxzE7pQwx3ic8Xr44=;
-        b=eZp1tzELK3iPygOEx0K/HSQV5ig5TGeAy3kLJdAhIBhPuKtAV8hzGva22HJMDNpMhu
-         fWl9Tz4O0nJ4KvWmtGLh1wUOPz3zv9/20q6nRCEKN2YV8h8bhxriZcb3liL6V05CPRN2
-         OSCWplg61BbyP86+N5C8XP5xc4SwuPbADNHZEFljiaBLhBFaALcSqhE6MrkCxJRVfHjb
-         /k6TP3tyQUBqMYBg6NUSThqCEqGTAAA2+3/2icvx8wsbtU9sr3rr6y7tWhS5Od7AsMQo
-         CkCGrMtmk00kqwnq7lXPezeA2XdH1lypa7B84WgkP9fE8DgkD4nRPduxlvBREix0Ct2S
-         HCOA==
-X-Gm-Message-State: AC+VfDxzsKN+yPZY4RZj66wK/B9f7YFCRxW/LdFbZksEButpbSL0Lxg5
-        /FMGMDkypkTgZRceYH+m0+lxwg==
-X-Google-Smtp-Source: ACHHUZ5/3UAdX7u+gtieAw2vbSrkfqv2xakKrS9XytzsyomFuwRTWECbxaFwcB6WJkO0oCTABgrwWg==
-X-Received: by 2002:a17:903:18c:b0:1a6:87e3:db50 with SMTP id z12-20020a170903018c00b001a687e3db50mr1233951plg.1.1683093894576;
-        Tue, 02 May 2023 23:04:54 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-88-204.pa.nsw.optusnet.com.au. [49.181.88.204])
-        by smtp.gmail.com with ESMTPSA id c9-20020a170902b68900b001ab016ea3f9sm3717752pls.21.2023.05.02.23.04.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 May 2023 23:04:53 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1pu5be-00AkKn-Ob; Wed, 03 May 2023 16:04:50 +1000
-Date:   Wed, 3 May 2023 16:04:50 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-block@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        axboe@kernel.dk
-Subject: [6.4-current oops] null ptr deref in blk_mq_sched_bio_merge() from
- blkdev readahead
-Message-ID: <20230503060450.GC3223426@dread.disaster.area>
+        d=1e100.net; s=20221208; t=1683101259; x=1685693259;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=gAItFTPlViLA5pqMw1tfLrN9/2fArVuO7Mw/NYUVWFo=;
+        b=kS3b0mohr6r22lecP4Q/qIaXXH0uARNa56j5HIItXe/KCSNRXm/sLrCs/LkxfinScy
+         K+DUw5kz9fly0WFDBwXV7KMLp7nvNieArgoK0q0K293Tg78E4255zcA0fjJBeomREVob
+         i6iaYfZi0xocTUBB3MPsNCj8gFahF9olFOfLyQxgCLgc7euGuSM/MEFxcKQzfgrrwwi/
+         XKzBsOkTCTH144o/aNaLavPhOqpZMx+Jzq5xAKGch+80flqJCCTTiuFAPGpLyWcIl27K
+         95VdyJSSCJU0W/i2FbUekElQkhZr1jm3Jilowt6fF56jsgIL0uWqZN/be8M8L2Vbl0Kt
+         WnTA==
+X-Gm-Message-State: AC+VfDwAkKSlgedjLNQFWEVwwq8JPY1YBYdQW1+yQDtEnxOnFgFRSCdR
+        08GLbOHuL0tILuK1+73gYFaw/mDN4m0SCIRVqdE7jPtfwT0N3/lESkWTnmg7K/elfLv3cNkTPAz
+        HfcYOy65alZOErFdwgN62+vBT1fSPLXpdS659MQYm30B+Emsgiw==
+X-Received: by 2002:a05:6102:4423:b0:425:cf4e:f58 with SMTP id df35-20020a056102442300b00425cf4e0f58mr5826612vsb.2.1683101259595;
+        Wed, 03 May 2023 01:07:39 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ4gxwahabBGCrNHNF6s+lz4ioJ9i0off0x3X7IY8Rl43m4GKL65v9RDPFIN5Ni52UaiJ5vDPD2ER12791dZuv8=
+X-Received: by 2002:a05:6102:4423:b0:425:cf4e:f58 with SMTP id
+ df35-20020a056102442300b00425cf4e0f58mr5826607vsb.2.1683101259381; Wed, 03
+ May 2023 01:07:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+References: <20230503060450.GC3223426@dread.disaster.area>
+In-Reply-To: <20230503060450.GC3223426@dread.disaster.area>
+From:   Ming Lei <ming.lei@redhat.com>
+Date:   Wed, 3 May 2023 16:07:28 +0800
+Message-ID: <CAFj5m9+xC7ojwz-gA5T+PEiN9NEyUi+bp4D3XuEPD7hoPrZe-g@mail.gmail.com>
+Subject: Re: [6.4-current oops] null ptr deref in blk_mq_sched_bio_merge()
+ from blkdev readahead
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-block@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, axboe@kernel.dk
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Wed, May 3, 2023 at 2:06=E2=80=AFPM Dave Chinner <david@fromorbit.com> w=
+rote:
+>
+> Hi folks,
+>
+> fstests running shared/032 on XFS with a default mkfs and mount
+> config causes a panic in the block layer when userspace is operating
+> directly on the block device like this:
+>
+> SECTION       -- xfs
+> FSTYP         -- xfs (debug)
+> PLATFORM      -- Linux/x86_64 test3 6.3.0-dgc+ #1792 SMP PREEMPT_DYNAMIC =
+Wed May  3 15:20:20 AEST 2023
+> MKFS_OPTIONS  -- -f -m rmapbt=3D1 /dev/pmem1
+> MOUNT_OPTIONS -- -o dax=3Dnever -o context=3Dsystem_u:object_r:root_t:s0 =
+/dev/pmem1 /mnt/scratch
+>
+> ....
+>
+> [   56.070695] run fstests shared/032 at 2023-05-03 15:21:55
+> [   56.768890] BTRFS: device fsid 355df15c-7bc5-49b0-9b5d-dc25ce855a9d de=
+vid 1 transid 6 /dev/pmem1 scanned by mkfs.btrfs (5836)
+> [   57.285879]  pmem1: p1
+> [   57.301845] BUG: kernel NULL pointer dereference, address: 00000000000=
+000a8
+> [   57.304562] #PF: supervisor read access in kernel mode
+> [   57.306499] #PF: error_code(0x0000) - not-present page
+> [   57.308414] PGD 0 P4D 0
+> [   57.309401] Oops: 0000 [#1] PREEMPT SMP
+> [   57.310876] CPU: 3 PID: 4478 Comm: (udev-worker) Not tainted 6.3.0-dgc=
++ #1792
+> [   57.313517] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIO=
+S 1.16.2-debian-1.16.2-1 04/01/2014
+> [   57.317089] RIP: 0010:blk_mq_sched_bio_merge+0x7b/0x100
 
-fstests running shared/032 on XFS with a default mkfs and mount
-config causes a panic in the block layer when userspace is operating
-directly on the block device like this:
+Hi Dave,
 
-SECTION       -- xfs
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 test3 6.3.0-dgc+ #1792 SMP PREEMPT_DYNAMIC Wed May  3 15:20:20 AEST 2023
-MKFS_OPTIONS  -- -f -m rmapbt=1 /dev/pmem1
-MOUNT_OPTIONS -- -o dax=never -o context=system_u:object_r:root_t:s0 /dev/pmem1 /mnt/scratch
+It is fixed by:
 
-....
+https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git/commi=
+t/?h=3Dfor-6.4/block&id=3D38c8e3dfb2a1be863b7f5aad7755d5e9727da8a5
 
-[   56.070695] run fstests shared/032 at 2023-05-03 15:21:55
-[   56.768890] BTRFS: device fsid 355df15c-7bc5-49b0-9b5d-dc25ce855a9d devid 1 transid 6 /dev/pmem1 scanned by mkfs.btrfs (5836)
-[   57.285879]  pmem1: p1
-[   57.301845] BUG: kernel NULL pointer dereference, address: 00000000000000a8
-[   57.304562] #PF: supervisor read access in kernel mode
-[   57.306499] #PF: error_code(0x0000) - not-present page
-[   57.308414] PGD 0 P4D 0 
-[   57.309401] Oops: 0000 [#1] PREEMPT SMP
-[   57.310876] CPU: 3 PID: 4478 Comm: (udev-worker) Not tainted 6.3.0-dgc+ #1792
-[   57.313517] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
-[   57.317089] RIP: 0010:blk_mq_sched_bio_merge+0x7b/0x100
-[   57.319059] Code: c0 49 8b 5c 24 38 48 03 1c c5 c0 69 71 82 b8 02 00 00 00 f7 c2 00 00 40 00 75 07 31 c0 84 d2 0f 94 c0 48 8b 94 c3 90 00 00 00 <f6> 82 a8 0d
-[   57.325898] RSP: 0018:ffffc900042ab880 EFLAGS: 00010246
-[   57.327835] RAX: 0000000000000001 RBX: ffff888237d80000 RCX: 0000000000000000
-[   57.330492] RDX: 0000000000000000 RSI: ffff88810135e000 RDI: ffff8885c1928000
-[   57.333118] RBP: ffffc900042ab8b0 R08: 0000000000001000 R09: 0000000000000001
-[   57.335791] R10: ffff8885c1928000 R11: 0000000000000008 R12: ffff8885c1928000
-[   57.338298] R13: ffff88810135e000 R14: 0000000000000001 R15: ffff88810135e000
-[   57.340092] FS:  00007f4adf5438c0(0000) GS:ffff888237d80000(0000) knlGS:0000000000000000
-[   57.342132] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[   57.343536] CR2: 00000000000000a8 CR3: 0000000102e4a005 CR4: 0000000000060ee0
-[   57.345150] Call Trace:
-[   57.345732]  <TASK>
-[   57.346265]  ? mempool_alloc_slab+0x15/0x20
-[   57.347242]  blk_mq_attempt_bio_merge+0x4e/0x50
-[   57.348288]  blk_mq_submit_bio+0x232/0x580
-[   57.349230]  __submit_bio+0x1e/0x110
-[   57.350066]  submit_bio_noacct_nocheck+0x24a/0x330
-[   57.351161]  submit_bio_noacct+0x196/0x490
-[   57.352104]  submit_bio+0x43/0x60
-[   57.352879]  mpage_readahead+0xf4/0x130
-[   57.353762]  ? blkdev_write_begin+0x30/0x30
-[   57.354741]  blkdev_readahead+0x15/0x20
-[   57.355719]  read_pages+0x5c/0x230
-[   57.356625]  page_cache_ra_unbounded+0x148/0x190
-[   57.357764]  force_page_cache_ra+0x9a/0xc0
-[   57.358845]  page_cache_sync_ra+0x2e/0x50
-[   57.359839]  filemap_get_pages+0x10f/0x670
-[   57.360870]  ? walk_component+0xc7/0x170
-[   57.361859]  filemap_read+0xed/0x380
-[   57.362819]  ? __ia32_compat_sys_lookup_dcookie+0x410/0xe80
-[   57.364086]  ? __might_fault+0x22/0x30
-[   57.364953]  blkdev_read_iter+0xe3/0x1e0
-[   57.365871]  vfs_read+0x213/0x2e0
-[   57.366646]  ksys_read+0x71/0xf0
-[   57.367396]  __x64_sys_read+0x19/0x20
-[   57.368244]  do_syscall_64+0x34/0x80
-[   57.369064]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
-[   57.370225] RIP: 0033:0x7f4adf7c503d
-[   57.371054] Code: 31 c0 e9 c6 fe ff ff 50 48 8d 3d a6 55 0a 00 e8 39 fe 01 00 66 0f 1f 84 00 00 00 00 00 80 3d a1 25 0e 00 00 74 17 31 c0 0f 05 <48> 3d 00 fc
-[   57.375229] RSP: 002b:00007ffd91350748 EFLAGS: 00000246 ORIG_RAX: 0000000000000000
-[   57.376933] RAX: ffffffffffffffda RBX: 000055c11070df70 RCX: 00007f4adf7c503d
-[   57.378565] RDX: 0000000000000040 RSI: 000055c1105c48f8 RDI: 000000000000000f
-[   57.380177] RBP: 00000001fffe0000 R08: 000055c1106f41c0 R09: 00007f4adf8a02e0
-[   57.381790] R10: 0000000000000000 R11: 0000000000000246 R12: 000055c1105c48d0
-[   57.383406] R13: 0000000000000040 R14: 000055c11070dfc8 R15: 000055c1105c48e8
-[   57.385026]  </TASK>
+Thanks,
+Ming
 
-shared/032 is entirely a mkfs test - it is checking that mkfs for
-the filesystem under test recognises other filesystem signatures on
-the block device and does not overwrite them by accident. This test
-does not involve kernel filesystem code at all.
-
-Somewhere in amongst the running of various mkfs operations during
-the test, a udev-worker is triggered and is doing something with
-the block device (probing it?) and that results in the above oops
-occurring.
-
-This is only happening on the machine I have configured with (fake)
-PMEM devices - virtio, sd and nvme devices do not appear to
-be triggering this. That kinda implies a timing issue - pmem
-completes IO synchronously, all the the others use async
-completion...
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
