@@ -2,122 +2,153 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68845C7EE22
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 May 2023 10:31:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E74AC77B75
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 May 2023 14:20:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230052AbjECKbj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 May 2023 06:31:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44648 "EHLO
+        id S230224AbjECOUo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 May 2023 10:20:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42618 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230053AbjECKbf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 May 2023 06:31:35 -0400
-Received: from mail.skyhub.de (mail.skyhub.de [5.9.137.197])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EF934EC9;
-        Wed,  3 May 2023 03:31:30 -0700 (PDT)
-Received: from zn.tnic (p5de8e8ea.dip0.t-ipconnect.de [93.232.232.234])
+        with ESMTP id S229995AbjECOUm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 May 2023 10:20:42 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90A0D59F7;
+        Wed,  3 May 2023 07:20:41 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 3CF251EC0691;
-        Wed,  3 May 2023 12:31:29 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=dkim;
-        t=1683109889;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:in-reply-to:in-reply-to:  references:references;
-        bh=Y99VkdVeSo9ELb0eveqnrxLTnOl5aHHav/scgPvIOtM=;
-        b=ouXeturJBz5ifBkVBBhldgieqd8FYUQCI77ZvbbfE9SLgn89VNIIgLYv0fO/Yk86K3AgNy
-        Pxq6jm6FAYD5LkAXSgiatQwdsjHQtG5vWjtHqTSXYwVT3EsaesKguGSma2544s5DCf0Ch9
-        3rjcgLcDMCJ4RjZtdRS316g+z8+zLh0=
-Date:   Wed, 3 May 2023 12:31:28 +0200
-From:   Borislav Petkov <bp@alien8.de>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     syzbot <syzbot+401145a9a237779feb26@syzkaller.appspotmail.com>,
-        Borislav Petkov <bp@suse.de>, stable <stable@vger.kernel.org>,
-        almaz.alexandrovich@paragon-software.com, clm@fb.com,
-        djwong@kernel.org, dsterba@suse.com, hch@infradead.org,
-        josef@toxicpanda.com, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2B4FA62DDC;
+        Wed,  3 May 2023 14:20:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75D86C433D2;
+        Wed,  3 May 2023 14:20:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1683123640;
+        bh=B/byiGRb2kElHzhLs8i3vMpx6Eq2eV1GQaupQ5p6W14=;
+        h=From:To:Cc:Subject:Date:From;
+        b=Hf1xqOynP8r+xdYeg5iDsOp1QXAPWNX+EeWOtmAT0vfdre7GtfqfDnvWfMT4VbgTi
+         W4k2ThDGKEe03SK+/E281k29evFeM8QWXvxynMvFg4W/6FHrB2qh8/yTd3cu6w9cZ5
+         iodu4EhjBC75RZXcxSk1a5179MjmEzeJHrMcII/Hk16buPuReZjkQ1sQRwGTD5oX1P
+         mOawJte++byKiiGdeBj3mChUv555myDwv6MXgoatDm5O/zabgVu2jTJvDrijdS4VBB
+         ofZX6rr7heInptz16aMXa0ad2VkgaW4h6f5kkV70L1QPjCPmuGDju5mFCp2uaq99Uq
+         9hwrCzOKpwCzw==
+From:   Jeff Layton <jlayton@kernel.org>
+To:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Chuck Lever <chuck.lever@oracle.com>
+Cc:     Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>,
+        David Howells <dhowells@redhat.com>,
+        Neil Brown <neilb@suse.de>,
+        Matthew Wilcox <willy@infradead.org>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Theodore T'so <tytso@mit.edu>, Chris Mason <clm@fb.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        ntfs3@lists.linux.dev, syzkaller-bugs@googlegroups.com,
-        willy@infradead.org
-Subject: Re: [syzbot] [xfs?] BUG: unable to handle kernel paging request in
- clear_user_rep_good
-Message-ID: <20230503103128.GAZFI4AEyPcP4bCemf@fat_crate.local>
-References: <000000000000de34bd05f3c6fe19@google.com>
- <0000000000001ec6ce05fa9a4bf7@google.com>
- <CAHk-=whWUZyiFvHpkC35DXo713GKFjqCWwY1uCs3tbMJ6QXeWg@mail.gmail.com>
+        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-mm@kvack.org, linux-nfs@vger.kernel.org
+Subject: [PATCH v3 0/6] fs: implement multigrain timestamps
+Date:   Wed,  3 May 2023 10:20:31 -0400
+Message-Id: <20230503142037.153531-1-jlayton@kernel.org>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <CAHk-=whWUZyiFvHpkC35DXo713GKFjqCWwY1uCs3tbMJ6QXeWg@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 01, 2023 at 11:49:55AM -0700, Linus Torvalds wrote:
-> The bug goes back to commit 0db7058e8e23 ("x86/clear_user: Make it
-> faster") from about a year ago, which made it into v6.1.
+Major changes in v3:
+- move flag to use bit 31 instead of 0 since the upper bits in the
+  tv_nsec field aren't used for timestamps. This means we don't need to
+  set s_time_gran to a value higher than 1.
 
-Gah, sorry about that. :-\
+- use an fstype flag instead of a superblock flag
 
-> It only affects old hardware that doesn't have the ERMS capability
-> flag, which *probably* means that it's mostly only triggerable in
-> virtualization (since pretty much any CPU from the last decade has
-> ERMS, afaik).
-> 
-> Borislav - opinions? This needs fixing for v6.1..v6.3, and the options are:
-> 
->  (1) just fix up the exception entry. I think this is literally this
-> one-liner, but somebody should double-check me. I did *not* actually
-> test this:
-> 
->     --- a/arch/x86/lib/clear_page_64.S
->     +++ b/arch/x86/lib/clear_page_64.S
->     @@ -142,8 +142,8 @@ SYM_FUNC_START(clear_user_rep_good)
->             and $7, %edx
->             jz .Lrep_good_exit
-> 
->     -.Lrep_good_bytes:
->             mov %edx, %ecx
->     +.Lrep_good_bytes:
->             rep stosb
-> 
->      .Lrep_good_exit:
-> 
->    because the only use of '.Lrep_good_bytes' is that exception table entry.
-> 
->  (2) backport just that one commit for clear_user
-> 
->      In this case we should probably do commit e046fe5a36a9 ("x86: set
-> FSRS automatically on AMD CPUs that have FSRM") too, since that commit
-> changes the decision to use 'rep stosb' to check FSRS.
-> 
->  (3) backport the entire series of commits:
-> 
->         git log --oneline v6.3..034ff37d3407
-> 
-> Or we could even revert that commit 0db7058e8e23, but it seems silly
-> to revert when we have so many ways to fix it, including a one-line
-> code movement.
-> 
-> Borislav / stable people? Opinions?
+...plus a lot of smaller cleanups and documentation.
 
-So right now I feel like (3) would be the right thing to do. Because
-then stable and upstream will be on the same "level" wrt user-accessing
-primitives. And it's not like your series depend on anything from
-mainline (that I know of) so backporting them should be relatively easy.
+The basic idea with multigrain timestamps is to keep track of when an
+inode's mtime or ctime has been queried and to force a fine-grained
+timestamp the next time the mtime or ctime is updated.
 
-But (1) is definitely a lot easier for stable people modulo the fact
-that it won't be an upstream commit but a special stable-only fix.
+This is a follow-up of the patches I posted last week [1]. The main
+change in this set is that it no longer uses the lowest-order bit in the
+tv_nsec field, and instead uses one of the higher-order bits (#31,
+specifically) since they are otherwise unused. This change makes things
+much simpler, and we no longer need to twiddle s_time_gran for it.
 
-So yeah, in that order.
+Note that with these changes, the statx06 LTP test will intermittently
+fail on most filesystems, usually with errors like this:
 
-I guess I'd let stable people decide here what they wanna do.
+    statx06.c:138: TFAIL: Birth time > after_time
+    statx06.c:138: TFAIL: Modified time > after_time
 
-Thx.
+The test does this:
+
+        SAFE_CLOCK_GETTIME(CLOCK_REALTIME_COARSE, &before_time);
+        clock_wait_tick();
+        tc->operation();
+        clock_wait_tick();
+        SAFE_CLOCK_GETTIME(CLOCK_REALTIME_COARSE, &after_time);
+
+Converting the second SAFE_CLOCK_GETTIME to use CLOCK_REALTIME instead
+gets things working again.
+
+For now, I've only converted/tested a few filesystems, focusing on the
+most popular ones exported via NFS.  If this approach looks acceptable
+though, I'll plan to convert more filesystems to it.
+
+Another thing we could consider is enabling this unilaterally
+kernel-wide. I decided not to do that for now, but it's something we
+could consider for lately.
+
+[1]: https://lore.kernel.org/linux-fsdevel/20230424151104.175456-1-jlayton@kernel.org/
+
+Jeff Layton (6):
+  fs: add infrastructure for multigrain inode i_m/ctime
+  overlayfs: allow it handle multigrain timestamps
+  shmem: convert to multigrain timestamps
+  xfs: convert to multigrain timestamps
+  ext4: convert to multigrain timestamps
+  btrfs: convert to multigrain timestamps
+
+ fs/btrfs/delayed-inode.c        |  2 +-
+ fs/btrfs/file.c                 | 10 +++---
+ fs/btrfs/inode.c                | 25 +++++++-------
+ fs/btrfs/ioctl.c                |  6 ++--
+ fs/btrfs/reflink.c              |  2 +-
+ fs/btrfs/super.c                |  5 +--
+ fs/btrfs/transaction.c          |  2 +-
+ fs/btrfs/tree-log.c             |  2 +-
+ fs/btrfs/volumes.c              |  2 +-
+ fs/btrfs/xattr.c                |  4 +--
+ fs/ext4/acl.c                   |  2 +-
+ fs/ext4/extents.c               | 10 +++---
+ fs/ext4/ialloc.c                |  2 +-
+ fs/ext4/inline.c                |  4 +--
+ fs/ext4/inode.c                 | 24 ++++++++++---
+ fs/ext4/ioctl.c                 |  8 ++---
+ fs/ext4/namei.c                 | 20 +++++------
+ fs/ext4/super.c                 |  4 +--
+ fs/ext4/xattr.c                 |  2 +-
+ fs/inode.c                      | 52 ++++++++++++++++++++++++++--
+ fs/overlayfs/file.c             |  7 ++--
+ fs/overlayfs/util.c             |  2 +-
+ fs/stat.c                       | 32 +++++++++++++++++
+ fs/xfs/libxfs/xfs_inode_buf.c   |  2 +-
+ fs/xfs/libxfs/xfs_trans_inode.c |  2 +-
+ fs/xfs/xfs_acl.c                |  2 +-
+ fs/xfs/xfs_bmap_util.c          |  2 +-
+ fs/xfs/xfs_inode.c              |  2 +-
+ fs/xfs/xfs_inode_item.c         |  2 +-
+ fs/xfs/xfs_iops.c               | 15 ++++++--
+ fs/xfs/xfs_super.c              |  2 +-
+ include/linux/fs.h              | 61 ++++++++++++++++++++++++++++++++-
+ mm/shmem.c                      | 25 +++++++-------
+ 33 files changed, 255 insertions(+), 89 deletions(-)
 
 -- 
-Regards/Gruss,
-    Boris.
+2.40.1
 
-https://people.kernel.org/tglx/notes-about-netiquette
