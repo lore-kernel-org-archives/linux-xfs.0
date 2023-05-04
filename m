@@ -2,307 +2,234 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02B09C7EE24
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 May 2023 05:00:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB003C7EE25
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 May 2023 08:25:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229722AbjEDFAV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 May 2023 01:00:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45622 "EHLO
+        id S229891AbjEDIZz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 May 2023 04:25:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35602 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229731AbjEDFAS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 May 2023 01:00:18 -0400
-Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B40E1BD1
-        for <linux-xfs@vger.kernel.org>; Wed,  3 May 2023 22:00:12 -0700 (PDT)
-Received: by mail-pf1-x435.google.com with SMTP id d2e1a72fcca58-64115eef620so9763812b3a.1
-        for <linux-xfs@vger.kernel.org>; Wed, 03 May 2023 22:00:12 -0700 (PDT)
+        with ESMTP id S229870AbjEDIZQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 May 2023 04:25:16 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 538845BA3;
+        Thu,  4 May 2023 01:18:48 -0700 (PDT)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34444b2E003741;
+        Thu, 4 May 2023 08:18:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2023-03-30;
+ bh=vydLlT7Hfr+alOCXtsY20z/jVfrK7mkDW4rKO5QE2xM=;
+ b=VXx/bfgIX1XtF2bAHUnIOPNQnWbLnkQTyC0iGam2eWIAqkzC/5zJ9Zm2HdT28Gdzyefh
+ BzbY/J9JLjP1rU/QfUltaRj7vT9oCUBcacDpcERqZd0yJjOVeCdP0OTqjeijouRrj2yO
+ 4lup2YaOLFqzIKTQrUhRk13uApfQVAYlaDjEPaNQn4XphZjuEwKFz090u87Whabz35Xy
+ 6IFOsjGKEytsUUrnYpcsxvG8IaIXCr+ar0xmVPHQ0a1Bthc1RAwd21UzxYCsqK/Jw2oi
+ fmnArIM4kKKKK45K9kAdMvRsVk7BMkx2+YVHDXdGhJUJ8m0PmIqRMhWM0qWLEk5xND6h 7A== 
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3q8su1s7y2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 04 May 2023 08:18:23 +0000
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3447waQt024948;
+        Thu, 4 May 2023 08:18:22 GMT
+Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2100.outbound.protection.outlook.com [104.47.70.100])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3q8sp8d8hy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 04 May 2023 08:18:22 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=kTaRr+bWpYNYXNGvGxnU52n6cgFwW9i7U8HUcvRysg6kZK0WzoTPhRUfzqUmHQh9cLLNrj/kyxQvL6sElUD0Bm5dH1jVxVj7+Bv3k+UFUfhh3cMGOr7i/6WhUUrtyYyqFi1E1T5csQjZ9VY+3LGLx+/g/YGNpfW5Zio3Cg3TmlsLEjHcVYIPw5EI+kwzFl/dOGz3A1f2mf0RHSKGWLwjepKz+fSMy3qWe4d5A1Z9weh+n/n8eQiNSUb3wzkaib2BZ/R17DA0n4BPpgBIivw5JXjXk7VYxnqP70g60eacMRnpBnwR+fwaAhZYOZQPyhfv2xYqBi1S7MJNPE+WKzShDQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=vydLlT7Hfr+alOCXtsY20z/jVfrK7mkDW4rKO5QE2xM=;
+ b=PxAQjbTQQPDsl+xNyvB/a3C2suW4ALxbPUNL7td5lLV/y+VvaZj2eDHfkUU9kKT5Qtut2LbCdq3qd1B7PN9TziabUJ5j31BZ0LYJDrsmMxj0+7/IRe6L0aHi/AZTL0AF9n+HxawfJwJ8E5eMP12c2LhHsgsdIIn8LYKCScrtCzUbynxKgzx0UsZRqyIMQHMkO2IYNB69mtThg5XbJjp/KbVf/CyQuU0jqHRx5A5YUXLRfGM2+KkK1q34DHVtqJbBIqRfskRkuKGa4XCbaGguOC6uFyxMaQf0yeV2/9spIaxJXiGmf7wm3wbLtildheWa/Hdn83FXWyx0DOowp9IEnQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1683176412; x=1685768412;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=IUPJQJMsUAtFNWaWs/k01M+OCvj5uqpKKu6bkw90D5Q=;
-        b=ZrMZeHcIP6CgQ0Hg7pIJtgBe4Qnlq5C3+hql2iyKdydhASidvcCM0/yLxygOzXJMk8
-         EfSLHPhn+VcJxCuzH9VGoABjc6VQRclKAf5izVz/ddKoQn/VvqtgU5SqElGwvJz87zn6
-         J30uQKAR+7Wj31k9pTJlVTeISieIG0fHR3bw+CQDZ6+y4MDMXNpF5T9/sJuuqL+aVSeP
-         gh4jKQvgmL0ugkto4lz4K50XEeGBjM/em+OrFhe0ryVuX8aroW4y40WzJK5TUKchTmKQ
-         ZXnUMiSOHMaGw6+9CRzA3A1wXVv2H2yYlevtHnZlvhs5grUG4C//I+vu2VWCFan6caMm
-         mmVQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683176412; x=1685768412;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=IUPJQJMsUAtFNWaWs/k01M+OCvj5uqpKKu6bkw90D5Q=;
-        b=em+ZmOhVTBt90qYtCSdZ+TY0yWm8Sdu6Oa+kAWPx7C7bo8etd9m9wn+y1g5JhavGj5
-         e5HHyDoiIF/8zq7qYTfamdQ/MnkYAhkjf8czhmByRUbnR8BBh+8DTDBS+t2gz5ftAxVy
-         mJSS7EoH75jeDxH5N/fHx/pMFUcm3iBJOomPTRD+N1kvaU2JY6E37ZVVMMpQ/ioqP6bK
-         qdjD/eaUUQN9WiwNp8tt82FpAmN4AaxX0k9j8882v/RMAb6U5XPn6gw4rjBzcL3Omsq7
-         +dpXtgNoUjrR0qv9TLMvSJxqZjzhqLM9ItLVL3r3/1SltRz+vm5pIsx/9WhMqFtWKBG9
-         AlIg==
-X-Gm-Message-State: AC+VfDy9YiVl+8DsVMH/FdxJOUYbaGNMdAl7Qf1LnjFZusekswvGMPcK
-        LaOgICz8kD01eg3De0ZZjYyLLg==
-X-Google-Smtp-Source: ACHHUZ74fa1Wz2edBfvfZ5Jj9KFI+rRTRpMssYNqBpRgKz9pQfc3B8JSfetyXSVsmrqcJxZLv3W5Fw==
-X-Received: by 2002:a17:902:e54c:b0:1a9:6604:2b1b with SMTP id n12-20020a170902e54c00b001a966042b1bmr2712859plf.20.1683176411757;
-        Wed, 03 May 2023 22:00:11 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-88-204.pa.nsw.optusnet.com.au. [49.181.88.204])
-        by smtp.gmail.com with ESMTPSA id r21-20020a170902ea5500b001a988a71617sm15709816plg.192.2023.05.03.22.00.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 May 2023 22:00:11 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1puR4Y-00B7pz-OY; Thu, 04 May 2023 15:00:06 +1000
-Date:   Thu, 4 May 2023 15:00:06 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     John Garry <john.g.garry@oracle.com>
-Cc:     axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=vydLlT7Hfr+alOCXtsY20z/jVfrK7mkDW4rKO5QE2xM=;
+ b=LwULChW348JB1oH6n1wYpvDSB98h5DgD7P8ztKO8XyZ8OOyArafjJLw/ORDirp19WsKyJCQgS/jRbXn9W7r9czu+HXPxnmMQRZbqC+aiEeU4mHiOe+8pCfTQrV7i4mZgdX/NGsK5bw5D/ZhKzFymuAVrizjlB2g3YLheU0YfJDc=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by PH0PR10MB4534.namprd10.prod.outlook.com (2603:10b6:510:30::23) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6363.22; Thu, 4 May
+ 2023 08:17:55 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::8456:ba59:80ec:d804]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::8456:ba59:80ec:d804%7]) with mapi id 15.20.6363.026; Thu, 4 May 2023
+ 08:17:54 +0000
+Message-ID: <1f4b5f00-ea97-b8d2-e01a-a33b2dde5548@oracle.com>
+Date:   Thu, 4 May 2023 09:17:49 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH RFC 14/16] scsi: sd: Add WRITE_ATOMIC_16 support
+To:     Bart Van Assche <bvanassche@acm.org>, axboe@kernel.dk,
+        kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
         martin.petersen@oracle.com, djwong@kernel.org,
         viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-        jejb@linux.ibm.com, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
+        jejb@linux.ibm.com
+Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-security-module@vger.kernel.org, paul@paul-moore.com,
         jmorris@namei.org, serge@hallyn.com
-Subject: Re: [PATCH RFC 11/16] fs: iomap: Atomic write support
-Message-ID: <20230504050006.GH3223426@dread.disaster.area>
 References: <20230503183821.1473305-1-john.g.garry@oracle.com>
- <20230503183821.1473305-12-john.g.garry@oracle.com>
+ <20230503183821.1473305-15-john.g.garry@oracle.com>
+ <81ce524d-6186-e016-f597-153d214036bf@acm.org>
+Content-Language: en-US
+From:   John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <81ce524d-6186-e016-f597-153d214036bf@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: LO2P265CA0322.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:a4::22) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230503183821.1473305-12-john.g.garry@oracle.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|PH0PR10MB4534:EE_
+X-MS-Office365-Filtering-Correlation-Id: 7e8e8d94-0d1d-4cd9-b7bc-08db4c780fc5
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: rqr2cBenvD8WhNo8gbhgAW1EveUZ7/RH3OQI/bxGDA+jE0p+Oil8nVzUxlIOjHcrFbMujbJD/8/S7MM35j0YmnfK0LWX/Vg63vQZX4sInMYGgdmS5sclNnhe9Y998XVaUgMgdRIAcGk7YPJETRy2KR0XQA1z/CCRfCQ31Eh2kDVAJOtk3/dPEsAXgl9Ye28IvBgsYODYOcGcJKFa/fFEGI9A6KUntKD0yjr2KHWRMJLWc/pG2MxQrihby5c2TGb8wqK9msaCL094ftAWdKPG6ujZ0AQ5oCawHeqVBZptJoITJUIEJ6huSQVNheAGaed8gNA8AWK7RVPXyOhCRuw9NiASH62UrElwQlKPtTLXUgAtmivRl0ruTdE6aP6c8ek7+yF2AjROgk9Z7xltz0xrCdsg9PU0grN+qG6SJSOxBzFCnYQqUYA2eCsbW0LqzQii8y91E4C5QAniaF2JDcSUKPSXPT9MONogydg60IzW6S5uOhpd5CM53AOBzephcZkNlnGRw8g663SkGBygquW81XwRIPUZyNj6SJ/YOPJJQ5wLRHSjk8nTArQaGotdDBUNAAfhqxkeS8XWjespL36qhG3fSP02k37zqbmvdEAc/pSp5+M/rgSIYOX3B+iDBI2HnTWj+I2P5PIsX881XQxdHrQOKtaRxbnHkDWvdLFnitg=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(136003)(39860400002)(346002)(376002)(366004)(396003)(451199021)(6506007)(26005)(6512007)(53546011)(7416002)(186003)(31686004)(2906002)(5660300002)(2616005)(83380400001)(8936002)(8676002)(31696002)(6486002)(36916002)(921005)(6666004)(36756003)(38100700002)(478600001)(66556008)(316002)(66476007)(66946007)(41300700001)(86362001)(4326008)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?R2lyODlEQkkySlp1YXpUcDFPZjJYVnZxZ2hrMVZubjZabmltMlQrN3RDZUlD?=
+ =?utf-8?B?KzVJRU8rdzJDekNySUxRZURGWC9CbUVZd1BvbVlTTWp1M0twYklXYXhJT0wz?=
+ =?utf-8?B?VUZtRXBrSEd4QWlsTm5ZdWdVbVpMVmhubHNyR2pIZWFHTE5zNzhjQklPd0dr?=
+ =?utf-8?B?YmFWY09SWEVIK0FwaFJkQ3RxLythQmpobHZzWnBMaVNLa01mY2VkSjRlSmlF?=
+ =?utf-8?B?anpSd1FCTlhlYWUybWpDTkJFczFFY2Q5dHpBekRhMDExNXhyRlhObXVaTjJL?=
+ =?utf-8?B?S2ltRFh3RDhqckFhcmowdU9MVnNPWFdMd2YwZVRhalFab3o2ejFudUtMQnhH?=
+ =?utf-8?B?UUx4SmR3NjJ6eUIyYUpVTE4xaDBscUNycmp4NUhkOWtqQ3JyU2VhM29rMkpC?=
+ =?utf-8?B?YUFBZ2Y3WUdGajNvYk9temVVTWlNWGQycTI4RlNaRnk1TitRSWNaWDA2WWxo?=
+ =?utf-8?B?MGtuSWRtVGZOY0s5RzMrMFFYYW9BS0dyeW9rMTVzWVZjYXd6UkZTLy9FNEVv?=
+ =?utf-8?B?NFBVSGFaYXlHY01aaVJ3Mmd6c1lSVXVPTW9OMGtyU0pzZHZ1cHV0YmNqV1Fp?=
+ =?utf-8?B?RFVrWXdzcFZ5ajB1YldTZkRJTWpiTGtvSXFyaEVEZ2NsWjduTE82cEc4L1pD?=
+ =?utf-8?B?T3VaZ0pZM0ZrT25SOUJrc3VLaDE5c3FkbHJPVFVudUJuRllub0FuRTJRMkVL?=
+ =?utf-8?B?WUZLR3ZFSFBOWlhwUEgyYzkraGtYR3c0YTB5SzhIa0dhM1N1OFp4Um41K0x0?=
+ =?utf-8?B?WkFQK0p5L012bzg2UVBnQ2YwWTRDNmd4SGFwUDlDVGZ1MDJ2RzJsTFBhOUlR?=
+ =?utf-8?B?eHM5Zk5IdHUweGdabzhyVi80eUFIWGlEcE9uTWJITkI4dXpJMnA3TW5PN2Yy?=
+ =?utf-8?B?NHNTVnV6NW9ObFpJNkNoeldLS3RlSzZQWGRmMUFNNG01enR2NGdYS2ViVnoz?=
+ =?utf-8?B?blFNN3BiLzJVS2hyUVlVMEtZUmxJZEs0ZGl1a0ZkT3kxYUZEQWlvc29TSVVL?=
+ =?utf-8?B?RVpYMUpxdmpaWTZ4dGFLMmxVWnB5ZHJwTmN0cGdrcU9MSzVQaFBWcVFoUEsy?=
+ =?utf-8?B?Y09nRU5iVklvNlA1ckpxWkQ1SFp3WGdUZWNZNkE3K2QwcU9qRXlDSXhFbXpK?=
+ =?utf-8?B?TEdYQURPNzh6OGwySFc2UnRZb2Z0c2tDaW1iQlEwYmQvaEZQWGtpMmZQaWE5?=
+ =?utf-8?B?aTVTNGxRMlZsMlhpM3dVU0RQOE52YkxLUkpVVjFaUVcyZXZsdmxySE9LaDVh?=
+ =?utf-8?B?WmF0cHZzQXZodE16WEVqcEtXanNXNXAvWTNpeDFZN1RmUGYxWGZEYVBERG56?=
+ =?utf-8?B?QmR5S2JpejBLdWQydXlreUhYTUxrNUZTOWMvZjNQL0xUWWE1VW13UjVjajAv?=
+ =?utf-8?B?YzJVckYvdSs3K0VndE14VGE2WlRsTVI2Q25UdG5kdjFPNWs0WitMOVo1Nm5N?=
+ =?utf-8?B?cTV1dzI2aWtIelJ2WElESFZ0NmQwZ2lqcUZXRXpRWjN0NmpqMGZsZlJ1Q3Ay?=
+ =?utf-8?B?dlcrWVE4MnRMdjdBbzRERkJWUTMvbklaaGxLWElCVDE0eGJvSVU3QVZqRjVZ?=
+ =?utf-8?B?U24xK1hrY05kL2FFNElSWUtTeTY5bldBeWhxZmJLb1RsY0tjc3ZxTTVYSTlM?=
+ =?utf-8?B?SDF6cGMzNWp4WGIyamRaanF1ZGJJd1JHRjJUUFg5L1ZGaVJuenlpckdWTERG?=
+ =?utf-8?B?UHlmcWVIZVUwOWszVEQvUE1JV3NFYlMwRW5Ub3RtWU85WnhwWnJ0WXFweEVI?=
+ =?utf-8?B?dVo3ejU2QzBYWjhXb1RGOXVlUUIzVFV0Z3U0bTZENGJ5NWtpOG1LM00xdnhZ?=
+ =?utf-8?B?cVQ4NXVZVVA2UXlwdzIrTDg0cEE3d1FJQlhNck10M2lOYm5aWTRmMXBub1JW?=
+ =?utf-8?B?SFV3SEpoeEVid3NaQ0p6V29TYWZIbzR0NTZEMTZSckZlM0s3bkhDbDNiQktB?=
+ =?utf-8?B?U21xU2dnT21DOXFQTFFuZVRFYkk4U016ZzNnUEtWYWJINldzWmRzYzcxMEhQ?=
+ =?utf-8?B?c2tNdDZJcTFMRmtKbXJ2aEN0dVI3SHNlbEFzanlTZkFYMjM4b1JOaXBjcmsx?=
+ =?utf-8?B?VTVCRlB6anRQOVRadm9CUUpBaGJBUmRYanlrZHJiWXhXQzZ6R1VnbHBkQ0No?=
+ =?utf-8?B?Uyt6T0xPTFpIa1pYSkZjd04vZFBKdjUxZkt1Nk9id0Q3cjdldDQ0NUtBa3ZD?=
+ =?utf-8?B?d1E9PQ==?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?utf-8?B?SW1FT2ptTE01dC8xV3p6WmxiYk1xaWxiT1JsbldreW9wMGowYmNVOGg1b3p0?=
+ =?utf-8?B?a2RocUVOL3VWdWlkQW9sV0w5ZTdHekJ1R0NPZCs4WXQ3TTVOajROUlFER3ZP?=
+ =?utf-8?B?NkxDZzNXWGdPMElaekx3UlBtU3U0dDc0bmR0RU5JK1JhZGtvd01ZYjRxYURU?=
+ =?utf-8?B?VnhwYURiTGRzSlMrS0psQWFxQjNRVEkrcSs2bjVLNWJmYUMrZThpTnZocGsv?=
+ =?utf-8?B?RVRPcVlGUzh0SG5CUmVNY3RUTmdDdlVQeHcvbG1XdFpDVmM4Y0o4a09idXQ2?=
+ =?utf-8?B?VFNZSytSR2o5Z2haMlNwU2JUMG1QZThUai9ycWh1MHg0NStrcHRBdEpDQTJQ?=
+ =?utf-8?B?aGkvc29PV3drVCs0U2xmcm9OZzk5bGlySm54aVVpZFJEVnVsajFUOUNaL3No?=
+ =?utf-8?B?aW1kdnBPODNqZmdRTmZiclZPd01nUjAvOEtGVnJaYWJEcVVRRjNIeWtKeGlh?=
+ =?utf-8?B?Mm5OZ1NwSU1ZVU1xSGRqL2JnblN4TDFseTZhRE1pQ24xdWpEMDhWY2NvV1p5?=
+ =?utf-8?B?OFRheW1aTlpxQ3NEdXEyVHVadFFoQUl6MDhKRGh1YlRuTWM4b0k4SEVuaDRk?=
+ =?utf-8?B?aGNPQnI2cE53bXVBOHJuSGZBd3VlYlBPeGQrUkJhZzlzSEFSSGRDR2dJRVdB?=
+ =?utf-8?B?TXdqSWxZeGpSYjU5dERaYmFVMHY3N0xiVU5IUUxPcHQwM2JmSVhpNW1xMjZB?=
+ =?utf-8?B?QVEwSTd5aDVXZ1pUek84WXJJTXNDQUdkeHZNOGpuOE00TFBrNk5LT3ZHYVV3?=
+ =?utf-8?B?OWRpSGRrVlhEL1ZGV0Jsd1lyaHJzYlprcHVWb3lhL3VOcTZhZFZCWXAwRmpT?=
+ =?utf-8?B?dm1wbXhUN21iK2lFSkw4NUpJOG1zeUllbWozcUtXSzdMZzVtTmxBVCtSSDFS?=
+ =?utf-8?B?M01maGVBL0FLVDdjeFhXS2RWVnRZWmhkUU1IUkljOC91L2laOElVbVNVUEZC?=
+ =?utf-8?B?UFN5bG5iNGx5RVg0cUZja1JxNmtoNlE3YU5Od2hqS1pVNzQrcnBWVDhrQmt6?=
+ =?utf-8?B?cXliaTEwLzVobGhCdzVZNWpjeVRKZ2hrS0w5VSt6TU9KUWUwWnhiUnN3S0d2?=
+ =?utf-8?B?bEltZmoxditLQ1VjZmVHVVVxWWdyUW5WVUNQVG0wNFJqZzJiOXlKT1gwcGoz?=
+ =?utf-8?B?ZkMyMmZXSjFJYnZJUXVlcTlWOEtXOUFIeE1xYmFldGJueXg1YTV1Y1c2VnZn?=
+ =?utf-8?B?UkVYWVBRVUdnV1VYQzlKa1JUdGNORkRHTTdUTGoyRStDVXpmajFKSlU2RGM2?=
+ =?utf-8?B?MTBZcm1OWGluOWdqeEV4bUpjM3c0cE9jU2VRZ3JlRzNOV0R3MHFKMFZEanZ3?=
+ =?utf-8?B?ZXJ2d1NhTGVQNkhjcnpsaDdjODhWSk9kMzhmY296bWdsL2FSN1I3cS8rN2ps?=
+ =?utf-8?B?dWF0K3lrU0o0ZDZ1a1c2SVpJMlpvUXpLbEYxalFuN20rQ0RkUHpkd0cyd0RU?=
+ =?utf-8?B?SFN0aFJ1VEJydEdORVl4RWhWRFZxdVFpVTRyMzYwUTJwNmh5ZnYzVnhIT3JI?=
+ =?utf-8?B?RU1iTlByU3JBNG1qRGJMSGFXQTVRczFvSTZWU1hMbVk3d2FVeFJ6WTVWa0xL?=
+ =?utf-8?B?eXlVUT09?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7e8e8d94-0d1d-4cd9-b7bc-08db4c780fc5
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 May 2023 08:17:54.9393
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: mFj5JRhjEC0SZ+MYwkTVogp/NfL9CaQjF4x320AebGqYKbZwoBQ2R+ouR4SIaKYJLwC+sNAG9I6bTBQdPltf/g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4534
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-05-04_04,2023-05-03_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ mlxlogscore=999 spamscore=0 phishscore=0 adultscore=0 mlxscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2303200000 definitions=main-2305040067
+X-Proofpoint-GUID: sb46iikrmq410exb5kcFfutI7Aa9dPBq
+X-Proofpoint-ORIG-GUID: sb46iikrmq410exb5kcFfutI7Aa9dPBq
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 03, 2023 at 06:38:16PM +0000, John Garry wrote:
-> Add support to create bio's whose bi_sector and bi_size are aligned to and
-> multiple of atomic_write_unit, respectively.
+On 03/05/2023 19:48, Bart Van Assche wrote:
+> On 5/3/23 11:38, John Garry wrote:
+>> +static blk_status_t sd_setup_atomic_cmnd(struct scsi_cmnd *cmd,
+>> +                    sector_t lba, unsigned int nr_blocks,
+>> +                    unsigned char flags)
+>> +{
+>> +    cmd->cmd_len  = 16;
+>> +    cmd->cmnd[0]  = WRITE_ATOMIC_16;
+>> +    cmd->cmnd[1]  = flags;
+>> +    put_unaligned_be64(lba, &cmd->cmnd[2]);
+>> +    cmd->cmnd[10] = 0;
+>> +    cmd->cmnd[11] = 0;
+>> +    put_unaligned_be16(nr_blocks, &cmd->cmnd[12]);
+>> +    cmd->cmnd[14] = 0;
+>> +    cmd->cmnd[15] = 0;
+>> +
+>> +    return BLK_STS_OK;
+>> +}
 > 
-> When we call iomap_dio_bio_iter() -> bio_iov_iter_get_pages() ->
-> __bio_iov_iter_get_pages(), we trim the bio to a multiple of
-> atomic_write_unit.
+> A single space in front of the assignment operator please.
+
+ok
+
 > 
-> As such, we expect the iomi start and length to have same size and
-> alignment requirements per iomap_dio_bio_iter() call.
+>> +
+>>   static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+>>   {
+>>       struct request *rq = scsi_cmd_to_rq(cmd);
+>> @@ -1149,6 +1166,7 @@ static blk_status_t 
+>> sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+>>       unsigned int nr_blocks = sectors_to_logical(sdp, 
+>> blk_rq_sectors(rq));
+>>       unsigned int mask = logical_to_sectors(sdp, 1) - 1;
+>>       bool write = rq_data_dir(rq) == WRITE;
+>> +    bool atomic_write = !!(rq->cmd_flags & REQ_ATOMIC) && write;
 > 
-> In iomap_dio_bio_iter(), ensure that for a non-dsync iocb that the mapping
-> is not dirty nor unmapped.
-> 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
->  fs/iomap/direct-io.c | 72 ++++++++++++++++++++++++++++++++++++++++++--
->  1 file changed, 70 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index f771001574d0..37c3c926dfd8 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -36,6 +36,8 @@ struct iomap_dio {
->  	size_t			done_before;
->  	bool			wait_for_completion;
->  
-> +	unsigned int atomic_write_unit;
-> +
->  	union {
->  		/* used during submission and for synchronous completion: */
->  		struct {
-> @@ -229,9 +231,21 @@ static inline blk_opf_t iomap_dio_bio_opflags(struct iomap_dio *dio,
->  	return opflags;
->  }
->  
-> +
-> +/*
-> + * Note: For atomic writes, each bio which we create when we iter should have
-> + *	 bi_sector aligned to atomic_write_unit and also its bi_size should be
-> + *	 a multiple of atomic_write_unit.
-> + *	 The call to bio_iov_iter_get_pages() -> __bio_iov_iter_get_pages()
-> + *	 should trim the length to a multiple of atomic_write_unit for us.
-> + *	 This allows us to split each bio later in the block layer to fit
-> + *	 request_queue limit.
-> + */
->  static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
->  		struct iomap_dio *dio)
->  {
-> +	bool atomic_write = (dio->iocb->ki_flags & IOCB_ATOMIC) &&
-> +			    (dio->flags & IOMAP_DIO_WRITE);
->  	const struct iomap *iomap = &iter->iomap;
->  	struct inode *inode = iter->inode;
->  	unsigned int fs_block_size = i_blocksize(inode), pad;
-> @@ -249,6 +263,14 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
->  	    !bdev_iter_is_aligned(iomap->bdev, dio->submit.iter))
->  		return -EINVAL;
->  
-> +
-> +	if (atomic_write && !iocb_is_dsync(dio->iocb)) {
-> +		if (iomap->flags & IOMAP_F_DIRTY)
-> +			return -EIO;
-> +		if (iomap->type != IOMAP_MAPPED)
-> +			return -EIO;
-> +	}
+> Isn't the !! superfluous in the above expression? I have not yet seen 
+> any other kernel code where a flag test is used in a boolean expression 
+> and where !! occurs in front of the flag test.
 
-IDGI. If the iomap had space allocated for this dio iteration,
-then IOMAP_F_DIRTY will be set and it is likely (guaranteed for XFS)
-that the iomap type will be IOMAP_UNWRITTEN. Indeed, if we are doing
-a write into preallocated space (i.e. from fallocate()) then this
-will cause -EIO on all RWF_ATOMIC IO to that file unless RWF_DSYNC
-is also used.
+So you think that && means that (rq->cmd_flags & REQ_ATOMIC) will be 
+auto a bool. Fine, I can change that.
 
-"For a power fail, for each individual application block, all or
-none of the data to be written."
+Thanks,
+John
 
-Ok, does this means RWF_ATOMIC still needs fdatasync() to guarantee
-that the data makes it to stable storage? And the result is
-undefined until fdatasync() is run, but the device will guarantee
-that either all or none of the data will be on stable storage
-prior to the next device cache flush completing?
-
-i.e. does REQ_ATOMIC imply REQ_FUA, or does it require a separate
-device cache flush to commit the atomic IO to stable storage?
-
-What about ordering - do the devices guarantee strict ordering of
-REQ_ATOMIC writes? i.e. if atomic write N is seen on disk, then all
-the previous atomic writes up to N will also be seen on disk? If
-not, how does the application and filesystem guarantee persistence
-of completed atomic writes?
-
-i.e. If we still need a post-IO device cache flush to guarantee
-persistence and/or ordering of RWF_ATOMIC IOs, then the above code
-makes no sense - we'll still need fdatasync() to provide persistence
-checkpoints and that means we ensure metadata is also up to date
-at those checkpoints.
-
-I need someone to put down in writing exactly what the data
-integrity, ordering and persistence semantics of REQ_ATOMIC are
-before I can really comment any further. From my perspective as a
-filesystem developer, this is the single most important set of
-behaviours that need to be documented, as this determines how
-everything else interacts with atomic writes....
-
->  	if (iomap->type == IOMAP_UNWRITTEN) {
->  		dio->flags |= IOMAP_DIO_UNWRITTEN;
->  		need_zeroout = true;
-> @@ -318,6 +340,10 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
->  					  GFP_KERNEL);
->  		bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
->  		bio->bi_ioprio = dio->iocb->ki_ioprio;
-> +		if (atomic_write) {
-> +			bio->bi_opf |= REQ_ATOMIC;
-> +			bio->atomic_write_unit = dio->atomic_write_unit;
-> +		}
->  		bio->bi_private = dio;
->  		bio->bi_end_io = iomap_dio_bio_end_io;
->  
-> @@ -492,6 +518,8 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  		is_sync_kiocb(iocb) || (dio_flags & IOMAP_DIO_FORCE_WAIT);
->  	struct blk_plug plug;
->  	struct iomap_dio *dio;
-> +	bool is_read = iov_iter_rw(iter) == READ;
-> +	bool atomic_write = (iocb->ki_flags & IOCB_ATOMIC) && !is_read;
->  
->  	if (!iomi.len)
->  		return NULL;
-> @@ -500,6 +528,20 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  	if (!dio)
->  		return ERR_PTR(-ENOMEM);
->  
-> +	if (atomic_write) {
-> +		/*
-> +		 * Note: This lookup is not proper for a multi-device scenario,
-> +		 *	 however for current iomap users, the bdev per iter
-> +		 *	 will be fixed, so "works" for now.
-> +		 */
-> +		struct super_block *i_sb = inode->i_sb;
-> +		struct block_device *bdev = i_sb->s_bdev;
-> +
-> +		dio->atomic_write_unit =
-> +			bdev_find_max_atomic_write_alignment(bdev,
-> +					iomi.pos, iomi.len);
-> +	}
-
-This will break atomic IO to XFS realtime devices. The device we are
-doing IO to is iomap->bdev, we should never be using sb->s_bdev in
-the iomap code.  Of course, at this point in __iomap_dio_rw() we
-don't have an iomap so this "alignment constraint" can't be done
-correctly at this point in the IO path.
-
-However, even ignoring the bdev source, I think this is completely
-wrong. Passing a *file* offset to the underlying block device so the
-block device can return a device alignment constraint for IO is not
-valid. We don't know how that file offset/length is going to be
-mapped to the underlying block device until we ask the filesystem
-for an iomap covering the file range, so we can't possibly know what
-the device IO alignment of the user request will be until we have an
-iomap for it.
-
-At which point, the "which block device should we ask for alignment
-constraints" question is moot, because we now have an iomap and can
-use iomap->bdev....
-
-> @@ -592,6 +634,32 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  
->  	blk_start_plug(&plug);
->  	while ((ret = iomap_iter(&iomi, ops)) > 0) {
-> +		if (atomic_write) {
-> +			const struct iomap *_iomap = &iomi.iomap;
-> +			loff_t iomi_length = iomap_length(&iomi);
-> +
-> +			/*
-> +			 * Ensure length and start address is a multiple of
-> +			 * atomic_write_unit - this is critical. If the length
-> +			 * is not a multiple of atomic_write_unit, then we
-> +			 * cannot create a set of bio's in iomap_dio_bio_iter()
-> +			 * who are each a length which is a multiple of
-> +			 * atomic_write_unit.
-> +			 *
-> +			 * Note: It may be more appropiate to have this check
-> +			 *	 in iomap_dio_bio_iter()
-> +			 */
-> +			if ((iomap_sector(_iomap, iomi.pos) << SECTOR_SHIFT) %
-> +			    dio->atomic_write_unit) {
-> +				ret = -EIO;
-> +				break;
-> +			}
-> +
-> +			if (iomi_length % dio->atomic_write_unit) {
-> +				ret = -EIO;
-> +				break;
-> +			}
-
-This looks wrong - the length of the mapped extent could be shorter
-than the max atomic write size returned by
-bdev_find_max_atomic_write_alignment() but the iomap could still be aligned
-to the minimum atomic write unit supported. At this point, we reject
-the IO with -EIO, even though it could have been done as an atomic
-write, just a shorter one than the user requested.
-
-That said, I don't think we can call a user IO that is being
-sliced and diced into multiple individual IOs "atomic". "Atomic"
-implies all-or-none behaviour - slicing up a large DIO into smaller
-individual bios means the bios can be submitted and completed out of
-order. If we then we get a power failure, the application's "atomic"
-IO can appear on disk as only being partially complete - it violates
-the "all or none" semantics of "atomic IO".
-
-Hence I think that we should be rejecting RWF_ATOMIC IOs that are
-larger than the maximum atomic write unit or cannot be dispatched in
-a single IO e.g. filesystem has allocated multiple minimum aligned
-extents and so a max len atomic write IO over that range must be
-broken up into multiple smaller IOs.
-
-We should be doing max atomic write size rejection high up in the IO
-path (e.g. filesystem ->write_iter() method) before we get anywhere
-near the DIO path, and we should be rejecting atomic write IOs in
-the DIO path during the ->iomap_begin() mapping callback if we can't
-map the entire atomic IO to a single aligned filesystem extent.
-
-i.e. the alignment checks and constraints need to be applied by the
-filesystem mapping code, not the layer that packs the pages into the
-bio as directed by the filesystem mapping....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
