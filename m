@@ -2,91 +2,126 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAC11C77B7C
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 May 2023 17:53:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE11DC77B7D
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 May 2023 18:23:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233308AbjEERxa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 5 May 2023 13:53:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50778 "EHLO
+        id S233190AbjEESXK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 5 May 2023 14:23:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233254AbjEERxH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 May 2023 13:53:07 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 517491A614;
-        Fri,  5 May 2023 10:52:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=2SmGIpoDx0Ds5vs7kDwnN/QWoJfhRzBJ9mJDaeg/+bk=; b=haNSkBRxXecHMPmvns4lB4M/Xa
-        QMRkLTeIgQzH13hTk8Ha3ZumDptcETH0RMgQghByd4StNvkWMEKih3fTZv2Wfe1sYvs78oI35w4aa
-        IHYCpBJ9j5QOP5WRS+ZMtRG5iQVbsl1b5UhPR+1GLPbNa05t7108KsoTpHi9Er32/f5qP7vjA6U9y
-        X8Q1roWrIHXtLx5xePRDArLOwVH2cpt9bD1A2BM9Ow6jm3tPFa3f/5p2e2cGoOO4BNqzORWy3KCz5
-        EIojBxbljkNE/5d9MYWuwvT1SsMuG/KhpnUjVhQZW9LyOyw0iPpp3RksxJAAFa0pZCL0jRw+JrJc8
-        SDiFy5oA==;
-Received: from 66-46-223-221.dedicated.allstream.net ([66.46.223.221] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1puzb3-00BSyZ-0j;
-        Fri, 05 May 2023 17:51:57 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Al Viro <viro@zeniv.linux.org.uk>,
+        with ESMTP id S230473AbjEESXJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 May 2023 14:23:09 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DA441385C;
+        Fri,  5 May 2023 11:23:07 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BAD3163CDA;
+        Fri,  5 May 2023 18:23:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D59FC433D2;
+        Fri,  5 May 2023 18:23:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1683310986;
+        bh=zYPM9Ay3UBVL21eu7OLqQN/1/8EOyA31OIHTIskRWQo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=itIrZG+RMEQT+Q7rRKLUdxgCROUjx/hNLZUyEBubL3PqZZunRPxHE2mB016/qoouS
+         2Xi1O0npvW9tn8J76nHb3DE/cZ/NbrocSFI4LMlIkuILaKSmFUl0Ezkae8d1nxj3fY
+         +YGL/AnYoEPy2Hgz98AYp24irjf7rOfb/8QOlJ7COmb4NCRl0j+lm2RtaNT8YzoHXc
+         u2WL1AJb3mFD+zNLJp9P0JpiOvGi2/RdBNp5GCRPIj9/xJ1fm9GBs6UgsSygj60mQ2
+         96a/xELRvrdWIh48cvQzzIcQl1Eq5TFOiTwFToaNpys6O27ArkKRkhm+E/AiKXdw7R
+         U9o9Gl323loJg==
+Date:   Fri, 5 May 2023 11:23:05 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>,
         Christian Brauner <brauner@kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>, linux-block@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: [PATCH 9/9] xfs: wire up the ->mark_dead holder operation for log and RT devices
-Date:   Fri,  5 May 2023 13:51:32 -0400
-Message-Id: <20230505175132.2236632-10-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230505175132.2236632-1-hch@lst.de>
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 8/9] xfs: wire up sops->shutdown
+Message-ID: <20230505182305.GE15394@frogsfrogsfrogs>
 References: <20230505175132.2236632-1-hch@lst.de>
+ <20230505175132.2236632-9-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230505175132.2236632-9-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Implement a set of holder_ops that shut down the file system when the
-block device used as log or RT device is removed undeneath the file
-system.
+On Fri, May 05, 2023 at 01:51:31PM -0400, Christoph Hellwig wrote:
+> Wire up the shutdown method to shut down the file system when the
+> underlying block device is marked dead.  Add a new message to
+> clearly distinguish this shutdown reason from other shutdowns.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_fsops.c | 3 +++
+>  fs/xfs/xfs_mount.h | 1 +
+>  fs/xfs/xfs_super.c | 8 ++++++++
+>  3 files changed, 12 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 13851c0d640bc8..9ebb8333a30800 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -534,6 +534,9 @@ xfs_do_force_shutdown(
+>  	} else if (flags & SHUTDOWN_CORRUPT_ONDISK) {
+>  		tag = XFS_PTAG_SHUTDOWN_CORRUPT;
+>  		why = "Corruption of on-disk metadata";
+> +	} else if (flags & SHUTDOWN_DEVICE_REMOVED) {
+> +		tag = XFS_PTAG_SHUTDOWN_IOERROR;
+> +		why = "Block device removal";
+>  	} else {
+>  		tag = XFS_PTAG_SHUTDOWN_IOERROR;
+>  		why = "Metadata I/O Error";
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index f3269c0626f057..a3aa954477d0dc 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -454,6 +454,7 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, uint32_t flags, char *fname,
+>  #define SHUTDOWN_FORCE_UMOUNT	(1u << 2) /* shutdown from a forced unmount */
+>  #define SHUTDOWN_CORRUPT_INCORE	(1u << 3) /* corrupt in-memory structures */
+>  #define SHUTDOWN_CORRUPT_ONDISK	(1u << 4)  /* corrupt metadata on device */
+> +#define SHUTDOWN_DEVICE_REMOVED	(1u << 5) /* device removed underneath us */
+>  
+>  #define XFS_SHUTDOWN_STRINGS \
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_super.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+Could you add SHUTDOWN_DEVICE_REMOVED to XFS_SHUTDOWN_STRINGS so the
+tracepoint data will decode that flag?
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 3abe5ae96cc59b..9c2401d9548d83 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -377,6 +377,17 @@ xfs_setup_dax_always(
- 	return 0;
- }
- 
-+static void
-+xfs_hop_mark_dead(
-+	struct block_device	*bdev)
-+{
-+	xfs_force_shutdown(bdev->bd_holder, SHUTDOWN_DEVICE_REMOVED);
-+}
-+
-+static const struct blk_holder_ops xfs_holder_ops = {
-+	.mark_dead		= xfs_hop_mark_dead,
-+};
-+
- STATIC int
- xfs_blkdev_get(
- 	xfs_mount_t		*mp,
-@@ -386,7 +397,7 @@ xfs_blkdev_get(
- 	int			error = 0;
- 
- 	*bdevp = blkdev_get_by_path(name, FMODE_READ|FMODE_WRITE|FMODE_EXCL,
--				    mp, NULL);
-+				    mp, &xfs_holder_ops);
- 	if (IS_ERR(*bdevp)) {
- 		error = PTR_ERR(*bdevp);
- 		xfs_warn(mp, "Invalid device [%s], error=%d", name, error);
--- 
-2.39.2
+(Everything else in here looks fine to me)
 
+--D
+
+>  	{ SHUTDOWN_META_IO_ERROR,	"metadata_io" }, \
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index bc17ad350aea5a..3abe5ae96cc59b 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1156,6 +1156,13 @@ xfs_fs_free_cached_objects(
+>  	return xfs_reclaim_inodes_nr(XFS_M(sb), sc->nr_to_scan);
+>  }
+>  
+> +static void
+> +xfs_fs_shutdown(
+> +	struct super_block	*sb)
+> +{
+> +	xfs_force_shutdown(XFS_M(sb), SHUTDOWN_DEVICE_REMOVED);
+> +}
+> +
+>  static const struct super_operations xfs_super_operations = {
+>  	.alloc_inode		= xfs_fs_alloc_inode,
+>  	.destroy_inode		= xfs_fs_destroy_inode,
+> @@ -1169,6 +1176,7 @@ static const struct super_operations xfs_super_operations = {
+>  	.show_options		= xfs_fs_show_options,
+>  	.nr_cached_objects	= xfs_fs_nr_cached_objects,
+>  	.free_cached_objects	= xfs_fs_free_cached_objects,
+> +	.shutdown		= xfs_fs_shutdown,
+>  };
+>  
+>  static int
+> -- 
+> 2.39.2
+> 
