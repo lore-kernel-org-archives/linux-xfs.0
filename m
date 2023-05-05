@@ -2,117 +2,279 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A6F0C77B7C
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 May 2023 23:32:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADCCBC7EE23
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 May 2023 00:10:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229449AbjEDXcQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 May 2023 19:32:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55568 "EHLO
+        id S229955AbjEEAKr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 May 2023 20:10:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35846 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229767AbjEDXcP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 May 2023 19:32:15 -0400
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F94312497
-        for <linux-xfs@vger.kernel.org>; Thu,  4 May 2023 16:32:14 -0700 (PDT)
-Received: by mail-pl1-x62f.google.com with SMTP id d9443c01a7336-1aae5c2423dso10662045ad.3
-        for <linux-xfs@vger.kernel.org>; Thu, 04 May 2023 16:32:14 -0700 (PDT)
+        with ESMTP id S229697AbjEEAKq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 May 2023 20:10:46 -0400
+Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA91E12E8C
+        for <linux-xfs@vger.kernel.org>; Thu,  4 May 2023 17:10:44 -0700 (PDT)
+Received: by mail-pl1-x630.google.com with SMTP id d9443c01a7336-1aad5245571so7815105ad.1
+        for <linux-xfs@vger.kernel.org>; Thu, 04 May 2023 17:10:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1683243133; x=1685835133;
-        h=content-disposition:mime-version:message-id:subject:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=E0ry31fx43wJCDWBVTDNSpnYwvvmIy+2sOkGExGQieU=;
-        b=PWL4x/3i2HabexEqIPm0i1wNc2rgjVZoMPAkAx9LgMzI2fUMTNaADqmnGKaOMwBnmF
-         +Ga63KvNxIOQI1RmH74PVTx8gjOiTClVK4UX7C8Loo1vB1MJfBMTicYov5dJJ+f42M2j
-         ej5FrIwQmkAUKmQyMBPkz6g+632QSqopNSkf/4/6MERuhXvl64cdu4MGaMNRGgdQUXrx
-         527Qcy3hgvhqZmoZVvXHL85F0CTkHPN6DGpJWNGLPBcNVq8YIaKmZD4z37LKCGgy/V95
-         0RLJVoxTj2D9Zf7/yNrLEE2MMMJxj1IKgB7qPR5TjTVcFEQDArW0dAd9TYgSTrcIDoEo
-         CPFA==
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1683245444; x=1685837444;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=D8O5/MWGnrN/HKZ6iCIcOlLCZpNsEHpNrNhu83CyTnE=;
+        b=Ji0/fNIKPzOGoEPnZErf7BsAxIz54Y4D47kCHJLPzmtZqvf8AfVu6fE0O/57tqhlG/
+         BpsA3MHBhVH04xTSyCanoshSHk1Vd4eNpQPqZ/dPBlYV80MsDo1PwwLuHQMWvtxYzbSK
+         TlBXBBXG0XjNR1NRTD7KzZbuYQZKvHufoe8GFNm9kDK/OfDYSYEu1V3okXJUjLyfPQn+
+         r7jmPxFU8Pm/PKD+2KI/i00U4MK9EE1TFifAJOvJBUHAarimzoFLLS4tiDYL2OzvfWfk
+         SsW75ymP/FxB9G2PZ/zKz0oltBaflFNieleClDbHQZLFVQwcH2hYizVOZdP35Ispkxkr
+         JqsA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683243133; x=1685835133;
-        h=content-disposition:mime-version:message-id:subject:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=E0ry31fx43wJCDWBVTDNSpnYwvvmIy+2sOkGExGQieU=;
-        b=IJyclCidmLGbZ/LjSKRpK6OrvTV4MZrzj5lKbNk/doeZ2DBMJaOsHpongjP+OWImuK
-         1aK1g95oxcmNbZ+OO4uzRIZwvQHTlIp2ygButQJYQmOuUutqdMJ+KoeKY9RKULK/rMiY
-         Cq4qFg1Ih2SS5LOHzbMXBiVaxTLzvTCJ2VezqBar7UfhXOGsJNK5iu5fon2WlzZC8SlC
-         JKHsaxeRC/8C5Jd33tSn9+st99wcsSAaXF6EYpy7ANkVNP5CXvuBT0tEFDKtv/O/mzRU
-         YBoqAjnV3Zs/bwcHcSiuJHnJx9nNbIFG05Zn2oUve8YnwGvfi0efls9vphnlW/u1TvJs
-         eN8Q==
-X-Gm-Message-State: AC+VfDxzveK4zcs5YqTi8PyKeb3iMrit3MnePp5sgtVucNPw9g5S/yZi
-        /6Mg/1mCU3lD2/WGaRjpMeCLyYxLrGpenHC4PYc=
-X-Google-Smtp-Source: ACHHUZ5vSjAg+GEHW0/yqaihUFeFbzoNVFe4OPZvLIN0CBDnhPHGlhesvj5Mqtc/L4b9yT81/gUkPg==
-X-Received: by 2002:a17:902:e5c9:b0:1aa:fe23:a7f8 with SMTP id u9-20020a170902e5c900b001aafe23a7f8mr5775642plf.59.1683243133585;
-        Thu, 04 May 2023 16:32:13 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1683245444; x=1685837444;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=D8O5/MWGnrN/HKZ6iCIcOlLCZpNsEHpNrNhu83CyTnE=;
+        b=f8+FyFneJWTrf+z2ahvoFPYUZZ0NeN1+ZAFTtwIoXSXBt2vvv/0SuRbFbBY8dZMcNX
+         3GVtKOLxBRsMF3k666PmL36OWYhD6ioUhbWypq/LeYLV2EscOcG3IcTu1XltO8rR+UTF
+         bfqzN/TSnIQ+Je1t56rN1tL8IlrmH6CZQU7Rs3dz5KvN2H3GDXYlezXAmERAGFo73hGE
+         hCwAsJu00jfLMKRgJIROwFKWgi78qBfN0Rcz+VLUhH1ctaTm7/EG1pXrYvdSo+oLRxze
+         1gmQJzeH0WmoRgeUGhvcf8DzXqeQBVGlYVJAtRcGo4M2hd24anfvWTxsjaYBHV6Et80d
+         rQGA==
+X-Gm-Message-State: AC+VfDyEr1wmdgYG6qDf5IxD162PDTG/yygM4BAWRxcFIe54JJw+FLB7
+        FgEv8bABk7rqS2Rnj4r3sW9Kgw==
+X-Google-Smtp-Source: ACHHUZ7z+JA9nzv+3mJ3KYYHotTw7V86SXzf1wg9+Gu98bWmRaKAr2pIwEoeGjWXhWiIrAH+cIxkxg==
+X-Received: by 2002:a17:902:f691:b0:1ac:2cc6:296d with SMTP id l17-20020a170902f69100b001ac2cc6296dmr4284993plg.34.1683245444236;
+        Thu, 04 May 2023 17:10:44 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-88-204.pa.nsw.optusnet.com.au. [49.181.88.204])
-        by smtp.gmail.com with ESMTPSA id w1-20020a170902d70100b001a072aedec7sm110298ply.75.2023.05.04.16.32.12
-        for <linux-xfs@vger.kernel.org>
+        by smtp.gmail.com with ESMTPSA id b7-20020a170902d50700b001a19f3a661esm147731plg.138.2023.05.04.17.10.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 May 2023 16:32:12 -0700 (PDT)
+        Thu, 04 May 2023 17:10:43 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1puiQj-00BQox-M3
-        for linux-xfs@vger.kernel.org; Fri, 05 May 2023 09:32:09 +1000
-Date:   Fri, 5 May 2023 09:32:09 +1000
+        id 1puj20-00BROo-FR; Fri, 05 May 2023 10:10:40 +1000
+Date:   Fri, 5 May 2023 10:10:40 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [ANNOUCE] xfs: for-next updated to 2254a7396a0c
-Message-ID: <20230504233209.GK3223426@dread.disaster.area>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Chuck Lever <chuck.lever@oracle.com>, Jan Kara <jack@suse.cz>,
+        Amir Goldstein <amir73il@gmail.com>,
+        David Howells <dhowells@redhat.com>,
+        Neil Brown <neilb@suse.de>,
+        Matthew Wilcox <willy@infradead.org>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Theodore T'so <tytso@mit.edu>, Chris Mason <clm@fb.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-mm@kvack.org, linux-nfs@vger.kernel.org
+Subject: Re: [PATCH v3 1/6] fs: add infrastructure for multigrain inode
+ i_m/ctime
+Message-ID: <20230505001040.GL3223426@dread.disaster.area>
+References: <20230503142037.153531-1-jlayton@kernel.org>
+ <20230503142037.153531-2-jlayton@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20230503142037.153531-2-jlayton@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Wed, May 03, 2023 at 10:20:32AM -0400, Jeff Layton wrote:
+> The VFS always uses coarse-grained timestamp updates for filling out the
+> ctime and mtime after a change. This has the benefit of allowing
+> filesystems to optimize away a lot metadata updates, down to around 1
+> per jiffy, even when a file is under heavy writes.
+> 
+> Unfortunately, this has always been an issue when we're exporting via
+> NFSv3, which relies on timestamps to validate caches. Even with NFSv4, a
+> lot of exported filesystems don't properly support a change attribute
+> and are subject to the same problems with timestamp granularity. Other
+> applications have similar issues (e.g backup applications).
+> 
+> Switching to always using fine-grained timestamps would improve the
+> situation, but that becomes rather expensive, as the underlying
+> filesystem will have to log a lot more metadata updates.
+> 
+> What we need is a way to only use fine-grained timestamps when they are
+> being actively queried.
+> 
+> The kernel always stores normalized ctime values, so only the first 30
+> bits of the tv_nsec field are ever used. Whenever the mtime changes, the
+> ctime must also change.
+> 
+> Use the 31st bit of the tv_nsec field to indicate that something has
+> queried the inode for the i_mtime or i_ctime. When this flag is set, on
+> the next timestamp update, the kernel can fetch a fine-grained timestamp
+> instead of the usual coarse-grained one.
+> 
+> This patch adds the infrastructure this scheme. Filesytems can opt
+> into it by setting the FS_MULTIGRAIN_TS flag in the fstype.
+> 
+> Later patches will convert individual filesystems over to use it.
+> 
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> ---
+>  fs/inode.c         | 52 ++++++++++++++++++++++++++++++++++++---
+>  fs/stat.c          | 32 ++++++++++++++++++++++++
+>  include/linux/fs.h | 61 +++++++++++++++++++++++++++++++++++++++++++++-
+>  3 files changed, 141 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/inode.c b/fs/inode.c
+> index 4558dc2f1355..7f6189961d6a 100644
+> --- a/fs/inode.c
+> +++ b/fs/inode.c
+> @@ -2030,6 +2030,7 @@ EXPORT_SYMBOL(file_remove_privs);
+>  static int inode_needs_update_time(struct inode *inode, struct timespec64 *now)
+>  {
+>  	int sync_it = 0;
+> +	struct timespec64 ctime;
+>  
+>  	/* First try to exhaust all avenues to not sync */
+>  	if (IS_NOCMTIME(inode))
+> @@ -2038,7 +2039,8 @@ static int inode_needs_update_time(struct inode *inode, struct timespec64 *now)
+>  	if (!timespec64_equal(&inode->i_mtime, now))
+>  		sync_it = S_MTIME;
+>  
+> -	if (!timespec64_equal(&inode->i_ctime, now))
+> +	ctime = ctime_peek(inode);
+> +	if (!timespec64_equal(&ctime, now))
+>  		sync_it |= S_CTIME;
+>  
+>  	if (IS_I_VERSION(inode) && inode_iversion_need_inc(inode))
+> @@ -2062,6 +2064,50 @@ static int __file_update_time(struct file *file, struct timespec64 *now,
+>  	return ret;
+>  }
+>  
+> +/**
+> + * current_ctime - Return FS time (possibly fine-grained)
+> + * @inode: inode.
+> + *
+> + * Return the current time truncated to the time granularity supported by
+> + * the fs, as suitable for a ctime/mtime change.
+> + *
+> + * For a multigrain timestamp, if the ctime is flagged as having been
+> + * QUERIED, get a fine-grained timestamp.
+> + */
+> +struct timespec64 current_ctime(struct inode *inode)
+> +{
+> +	bool multigrain = is_multigrain_ts(inode);
+> +	struct timespec64 now;
+> +	long nsec = 0;
+> +
+> +	if (multigrain) {
+> +		atomic_long_t *pnsec = (atomic_long_t *)&inode->i_ctime.tv_nsec;
+> +
+> +		nsec = atomic_long_fetch_andnot(I_CTIME_QUERIED, pnsec);
+> +	}
+> +
+> +	if (nsec & I_CTIME_QUERIED) {
+> +		ktime_get_real_ts64(&now);
+> +	} else {
+> +		ktime_get_coarse_real_ts64(&now);
+> +
+> +		if (multigrain) {
+> +			/*
+> +			 * If we've recently fetched a fine-grained timestamp
+> +			 * then the coarse-grained one may be earlier than the
+> +			 * existing one. Just keep the existing ctime if so.
+> +			 */
+> +			struct timespec64 ctime = ctime_peek(inode);
+> +
+> +			if (timespec64_compare(&ctime, &now) > 0)
+> +				now = ctime;
+> +		}
+> +	}
+> +
+> +	return timestamp_truncate(now, inode);
+> +}
+> +EXPORT_SYMBOL(current_ctime);
 
-I just pushed out a new for-next branch to the xfs kernel tree
-with Darrick's set of fixes for issues found since the merge window
-opened. These address the inodegc UAF problems and some of the
-issues found by testing stripe aligned filesystems. There is nothing
-big here, and if nothign goes wrong after a few days in linux-next
-I'll ask Linus to pull them next week.
+I can't help but think this is easier to read/follow when structured
+to separate multigrain vs coarse logic completely like so:
+
+struct timespec64 current_ctime(struct inode *inode)
+{
+	struct timespec64 now, ctime;
+	long nsec;
+
+	if (!is_multigrain_ts(inode)) {
+		ktime_get_coarse_real_ts64(&now);
+		goto out_truncate;
+	}
+
+	nsec = atomic_long_fetch_andnot(I_CTIME_QUERIED,
+			(atomic_long_t *)&inode->i_ctime.tv_nsec);
+
+	if (nsec & I_CTIME_QUERIED) {
+		ktime_get_real_ts64(&now);
+		goto out_truncate;
+	}
+
+	/*
+	 * If we've recently fetched a fine-grained timestamp then
+	 * the coarse-grained one may be earlier than the existing
+	 * one. Just keep the existing ctime if so.
+	 */
+	ktime_get_coarse_real_ts64(&now);
+	ctime = ctime_peek(inode);
+	if (timespec64_compare(&ctime, &now) > 0)
+		now = ctime;
+
+out_truncate:
+	return timestamp_truncate(now, inode);
+}
+
+> diff --git a/fs/stat.c b/fs/stat.c
+> index 7c238da22ef0..11a7e277f53e 100644
+> --- a/fs/stat.c
+> +++ b/fs/stat.c
+> @@ -26,6 +26,38 @@
+>  #include "internal.h"
+>  #include "mount.h"
+>  
+> +/**
+> + * generic_fill_multigrain_cmtime - Fill in the mtime and ctime and flag ctime as QUERIED
+> + * @request_mask: STATX_* values requested
+> + * @inode: inode from which to grab the c/mtime
+> + * @stat: where to store the resulting values
+> + *
+> + * Given @inode, grab the ctime and mtime out if it and store the result
+> + * in @stat. When fetching the value, flag it as queried so the next write
+> + * will use a fine-grained timestamp.
+> + */
+> +void generic_fill_multigrain_cmtime(u32 request_mask,struct inode *inode,
+> +					struct kstat *stat)
+> +{
+> +	atomic_long_t *pnsec = (atomic_long_t *)&inode->i_ctime.tv_nsec;
+> +
+> +	/* If neither time was requested, then just don't report it */
+> +	if (!(request_mask & (STATX_CTIME|STATX_MTIME))) {
+> +		stat->result_mask &= ~(STATX_CTIME|STATX_MTIME);
+> +		return;
+> +	}
+> +
+> +	stat->mtime = inode->i_mtime;
+> +	stat->ctime.tv_sec = inode->i_ctime.tv_sec;
+> +	/*
+> +	 * Atomically set the QUERIED flag and fetch the new value with
+> +	 * the flag masked off.
+> +	 */
+> +	stat->ctime.tv_nsec = atomic_long_fetch_or(I_CTIME_QUERIED, pnsec) &
+> +					~I_CTIME_QUERIED;
+> +}
+> +EXPORT_SYMBOL(generic_fill_multigrain_cmtime);
+
+Hmmm - why not just have a generic_fill_cmtime() function that hides
+multigrain behaviour from all the statx callers?
 
 Cheers,
 
 Dave.
-
-----------------------------------------------------------------
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
-
-  Head Commit: 2254a7396a0ca6309854948ee1c0a33fa4268cec
-
-  xfs: fix xfs_inodegc_stop racing with mod_delayed_work (2023-05-02 09:16:14 +1000)
-
-----------------------------------------------------------------
-Darrick J. Wong (9):
-      xfs: don't unconditionally null args->pag in xfs_bmap_btalloc_at_eof
-      xfs: set bnobt/cntbt numrecs correctly when formatting new AGs
-      xfs: flush dirty data and drain directios before scrubbing cow fork
-      xfs: don't allocate into the data fork for an unshare request
-      xfs: fix negative array access in xfs_getbmap
-      xfs: explicitly specify cpu when forcing inodegc delayed work to run immediately
-      xfs: check that per-cpu inodegc workers actually run on that cpu
-      xfs: disable reaping in fscounters scrub
-      xfs: fix xfs_inodegc_stop racing with mod_delayed_work
-
- fs/xfs/libxfs/xfs_ag.c    | 19 +++++++++----------
- fs/xfs/libxfs/xfs_bmap.c  |  5 +++--
- fs/xfs/scrub/bmap.c       |  4 ++--
- fs/xfs/scrub/common.c     | 26 --------------------------
- fs/xfs/scrub/common.h     |  2 --
- fs/xfs/scrub/fscounters.c | 13 ++++++-------
- fs/xfs/scrub/scrub.c      |  2 --
- fs/xfs/scrub/scrub.h      |  1 -
- fs/xfs/scrub/trace.h      |  1 -
- fs/xfs/xfs_bmap_util.c    |  4 +++-
- fs/xfs/xfs_icache.c       | 40 +++++++++++++++++++++++++++++++++-------
- fs/xfs/xfs_iomap.c        |  5 +++--
- fs/xfs/xfs_mount.h        |  3 +++
- fs/xfs/xfs_super.c        |  3 +++
- 14 files changed, 65 insertions(+), 63 deletions(-)
-
 -- 
 Dave Chinner
 david@fromorbit.com
