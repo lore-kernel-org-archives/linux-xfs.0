@@ -2,128 +2,134 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38899C77B7D
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 May 2023 18:37:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23A28C77B7C
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 May 2023 18:39:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232543AbjEEShw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 5 May 2023 14:37:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46934 "EHLO
+        id S233283AbjEESjl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 5 May 2023 14:39:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47826 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231730AbjEEShv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 May 2023 14:37:51 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEFB81436C;
-        Fri,  5 May 2023 11:37:50 -0700 (PDT)
+        with ESMTP id S233254AbjEESjj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 May 2023 14:39:39 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E3BA1E996;
+        Fri,  5 May 2023 11:39:36 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3F74E63E75;
-        Fri,  5 May 2023 18:37:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9727CC433D2;
-        Fri,  5 May 2023 18:37:49 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 02AC8612A1;
+        Fri,  5 May 2023 18:39:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60143C433D2;
+        Fri,  5 May 2023 18:39:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683311869;
-        bh=bhM78iv9h2kHBexih6lljlTJ/h5ct0IfRAMYM/JXOqs=;
+        s=k20201202; t=1683311975;
+        bh=K/Y08sTCTSnRoZgjb16tDaF0uh6/O7C3F9BZfsmlEug=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Oc7Vbp/mjqXM1ov0eOQZB571U6bQOA1MF8be+ovf2l0ogUW/F8Hc5zK6Hm7KyTu6N
-         ybgZuWZ83BFT0gK/Uvilr81mJK//MX/CuxONkwBtraqQ95qj98LDPU6J1urB7AY/xr
-         t3PQfN/nRMxXRNGhFhQOSdjSB7cxlzlVkRowN1k5VCByEEa0/vx0jmE1My9r018CKT
-         0r/5bwm/e/0VohFUeN3zqIXZO2pfBB9fFoY9D4GbfYiD4Ay6owHgJPck95bUs5k7DX
-         0Hi7wm+3HyI+gSgxfTlDldj6FYCs8Ad/X9eLMAF7v2l+j+ahK8+45/25bJ2ngGHsWO
-         X8fieSPq7krvg==
-Date:   Fri, 5 May 2023 11:37:49 -0700
+        b=vAI25Pqes2oc/YXzsbgTjpK1lOHAOBZzubxbrrbKnPrxL1srLXYw+IXxxMGi7koMM
+         fT5owlpm4xzf2xtwgMzeHwoFdpd/dZICCv2B2jml8B8BMjVWxogHtAUdpZXL2OeqOH
+         0VCfBBz102w5H5Act9Zr6zOhurMGPlKnAVW7xrI8DuGm/nEZVA7SSxBmGP3baSFHRQ
+         r5qnAGZGjZD4Pc/7nwE7l9s8HLOjKL1nN0SQuKvJFsvo9WgySG1LQtdIEWkuFuPpKj
+         6onOPa1+e9YQHzpLg+/8Fq6bYWZ9A5d18EcZWy71jbPLYIFgwZmY2NaG4A8An5nKWv
+         /eP8TF/+lhQqw==
+Date:   Fri, 5 May 2023 11:39:34 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>,
         Christian Brauner <brauner@kernel.org>,
         linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/9] block: add a mark_dead holder operation
-Message-ID: <20230505183749.GG15394@frogsfrogsfrogs>
+Subject: Re: [PATCH 7/9] fs: add a method to shut down the file system
+Message-ID: <20230505183934.GH15394@frogsfrogsfrogs>
 References: <20230505175132.2236632-1-hch@lst.de>
- <20230505175132.2236632-7-hch@lst.de>
+ <20230505175132.2236632-8-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230505175132.2236632-7-hch@lst.de>
+In-Reply-To: <20230505175132.2236632-8-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 05, 2023 at 01:51:29PM -0400, Christoph Hellwig wrote:
-> Add a mark_dead method to blk_holder_ops that is called from blk_mark_disk_dead
-> to notify the holder that the block device it is using has been marked dead.
+On Fri, May 05, 2023 at 01:51:30PM -0400, Christoph Hellwig wrote:
+> Add a new ->shutdown super operation that can be used to tell the file
+> system to shut down, and call it from newly created holder ops when the
+> block device under a file system shuts down.
+> 
+> This only covers the main block device for "simple" file systems using
+> get_tree_bdev / mount_bdev.  File systems their own get_tree method
+> or opening additional devices will need to set up their own
+> blk_holder_ops.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  block/genhd.c          | 24 ++++++++++++++++++++++++
->  include/linux/blkdev.h |  1 +
->  2 files changed, 25 insertions(+)
-> 
-> diff --git a/block/genhd.c b/block/genhd.c
-> index d1c673b967c254..af97a4ef1e926c 100644
-> --- a/block/genhd.c
-> +++ b/block/genhd.c
-> @@ -575,6 +575,28 @@ int __must_check device_add_disk(struct device *parent, struct gendisk *disk,
->  }
->  EXPORT_SYMBOL(device_add_disk);
->  
-> +static void blk_report_disk_dead(struct gendisk *disk)
-> +{
-> +	struct block_device *bdev;
-> +	unsigned long idx;
-> +
-> +	rcu_read_lock();
-> +	xa_for_each(&disk->part_tbl, idx, bdev) {
-> +		if (!kobject_get_unless_zero(&bdev->bd_device.kobj))
-> +			continue;
-> +		rcu_read_unlock();
-> +
-> +		mutex_lock(&bdev->bd_holder_lock);
-> +		if (bdev->bd_holder_ops && bdev->bd_holder_ops->mark_dead)
-> +			bdev->bd_holder_ops->mark_dead(bdev);
-> +		mutex_unlock(&bdev->bd_holder_lock);
-> +
-> +		put_device(&bdev->bd_device);
-> +		rcu_read_lock();
-> +	}
-> +	rcu_read_unlock();
-> +}
-> +
->  /**
->   * blk_mark_disk_dead - mark a disk as dead
->   * @disk: disk to mark as dead
-> @@ -602,6 +624,8 @@ void blk_mark_disk_dead(struct gendisk *disk)
->  	 * Prevent new I/O from crossing bio_queue_enter().
->  	 */
->  	blk_queue_start_drain(disk->queue);
-> +
-> +	blk_report_disk_dead(disk);
->  }
->  EXPORT_SYMBOL_GPL(blk_mark_disk_dead);
->  
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index 3f41f8c9b103cf..9706bec2be16a5 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -1469,6 +1469,7 @@ void blkdev_show(struct seq_file *seqf, off_t offset);
->  #endif
->  
->  struct blk_holder_ops {
-> +	void (*mark_dead)(struct block_device *bdev);
 
-Now that we have blockdev callbacks, can we add a pair for freeze_bdev
-and thaw_bdev so that LVM snapshotting an xfs log device can actually
-quiesce the filesystem?
-
-This patch itself looks ok,
+Looks good,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
+> ---
+>  fs/super.c         | 21 +++++++++++++++++++--
+>  include/linux/fs.h |  1 +
+>  2 files changed, 20 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/super.c b/fs/super.c
+> index 012ce140080375..f127589700ab25 100644
+> --- a/fs/super.c
+> +++ b/fs/super.c
+> @@ -1206,6 +1206,22 @@ int get_tree_keyed(struct fs_context *fc,
+>  EXPORT_SYMBOL(get_tree_keyed);
+>  
+>  #ifdef CONFIG_BLOCK
+> +static void fs_mark_dead(struct block_device *bdev)
+> +{
+> +	struct super_block *sb;
+> +
+> +	sb = get_super(bdev);
+> +	if (!sb)
+> +		return;
+> +
+> +	if (sb->s_op->shutdown)
+> +		sb->s_op->shutdown(sb);
+> +	drop_super(sb);
+> +}
+> +
+> +static const struct blk_holder_ops fs_holder_ops = {
+> +	.mark_dead		= fs_mark_dead,
+> +};
+>  
+>  static int set_bdev_super(struct super_block *s, void *data)
+>  {
+> @@ -1248,7 +1264,8 @@ int get_tree_bdev(struct fs_context *fc,
+>  	if (!fc->source)
+>  		return invalf(fc, "No source specified");
+>  
+> -	bdev = blkdev_get_by_path(fc->source, mode, fc->fs_type, NULL);
+> +	bdev = blkdev_get_by_path(fc->source, mode, fc->fs_type,
+> +				  &fs_holder_ops);
+>  	if (IS_ERR(bdev)) {
+>  		errorf(fc, "%s: Can't open blockdev", fc->source);
+>  		return PTR_ERR(bdev);
+> @@ -1333,7 +1350,7 @@ struct dentry *mount_bdev(struct file_system_type *fs_type,
+>  	if (!(flags & SB_RDONLY))
+>  		mode |= FMODE_WRITE;
+>  
+> -	bdev = blkdev_get_by_path(dev_name, mode, fs_type, NULL);
+> +	bdev = blkdev_get_by_path(dev_name, mode, fs_type, &fs_holder_ops);
+>  	if (IS_ERR(bdev))
+>  		return ERR_CAST(bdev);
+>  
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index 21a98168085641..cf3042641b9b30 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -1932,6 +1932,7 @@ struct super_operations {
+  				  struct shrink_control *);
+>  	long (*free_cached_objects)(struct super_block *,
+>  				    struct shrink_control *);
+> +	void (*shutdown)(struct super_block *sb);
 >  };
 >  
->  struct block_device *blkdev_get_by_dev(dev_t dev, fmode_t mode, void *holder,
+>  /*
 > -- 
 > 2.39.2
 > 
