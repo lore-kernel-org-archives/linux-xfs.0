@@ -2,39 +2,39 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81FBAC7EE24
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 May 2023 21:19:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91005C7EE2E
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 May 2023 22:01:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232095AbjEEVTm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 5 May 2023 17:19:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50812 "EHLO
+        id S233065AbjEEWBn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 5 May 2023 18:01:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58070 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232416AbjEEVTi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 May 2023 17:19:38 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EE5A59DE;
-        Fri,  5 May 2023 14:19:30 -0700 (PDT)
+        with ESMTP id S231817AbjEEWBR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 May 2023 18:01:17 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DEAF5FF0;
+        Fri,  5 May 2023 15:00:58 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E4CA4640A5;
-        Fri,  5 May 2023 21:19:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36370C433EF;
-        Fri,  5 May 2023 21:19:29 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 106FA64135;
+        Fri,  5 May 2023 22:00:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DB7DC4339B;
+        Fri,  5 May 2023 22:00:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683321569;
-        bh=ngEtc1i1H7a0tm+Un5FqmjeMh1stzyITNIVhJLyViJc=;
+        s=k20201202; t=1683324057;
+        bh=arsyBM1Ju2+rsxuFa33xD23Tpqvq4c7+KQq0jw1C4Is=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=XJv/jPu75dACDCDRWfbZ5lcShxOGUhnnlGCMS+ydDiFOFoE6SW6kr4nCe4UNPIEpn
-         jekeiibG5vr2knMyrjtIwo5fAF6XL1ogsEd8UUqdyo7YoeRkn6f7kx2fw/klYeer/O
-         VYqQTEhWE26aBW/eztKIAB8j2VQMtfZY98VCtz3uyDH94a6fzq8hW5cRtCrdydH5gq
-         w2c/GgXRG9EtOANMlyU+42KKuLrsVlpdV5T2dFT/kWiDIxZHF0ePlqPSdn5oYkulZL
-         lkWFxNaXJcxDRgZcRbX6vYbVwWYJDTRDoK9vMyIY2v/nj1z1KDv+9LBFTU66iu2Uef
-         iEV404M+X8sKA==
-Date:   Fri, 5 May 2023 14:19:28 -0700
+        b=jDSc7DDEeTor4PNGoWVENJxZP8gRPxTfDzAcH+xNKkfEjDe1Jo0A0NLpuM2gHUUxm
+         /5qPXe5eGWMn3Ami0WD4hVl02MppJvrosBR/7teyFNxvtRoLJygGtDPeHh3mRIzY4r
+         lwt/uf6iWpMiYjTB1aAjNQavB9ln6LIgi6/HhDgeqK96N5i0R1vhbTL+haxCp360It
+         BfZ51hvmr6uwLLIaNvZSv5K48YlmOhH30qnZ49tYvY1drPm8Iqhl1LnM/Oqmhu/Gii
+         H0rsPsWZTt+SRUq8+jZCYGQwO6LGjDnUt9QGkHdEG4ns1XyDgHqI1BAH172pLOo6dg
+         0bwr0u+LNNEHw==
+Date:   Fri, 5 May 2023 15:00:56 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
+To:     John Garry <john.g.garry@oracle.com>
+Cc:     Dave Chinner <david@fromorbit.com>, axboe@kernel.dk,
         kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
         martin.petersen@oracle.com, viro@zeniv.linux.org.uk,
         brauner@kernel.org, dchinner@redhat.com, jejb@linux.ibm.com,
@@ -42,293 +42,363 @@ Cc:     John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
         linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-security-module@vger.kernel.org, paul@paul-moore.com,
-        jmorris@namei.org, serge@hallyn.com
-Subject: Re: [PATCH RFC 11/16] fs: iomap: Atomic write support
-Message-ID: <20230505211928.GB15376@frogsfrogsfrogs>
+        jmorris@namei.org, serge@hallyn.com,
+        Himanshu Madhani <himanshu.madhani@oracle.com>
+Subject: Re: [PATCH RFC 01/16] block: Add atomic write operations to
+ request_queue limits
+Message-ID: <20230505220056.GJ15394@frogsfrogsfrogs>
 References: <20230503183821.1473305-1-john.g.garry@oracle.com>
- <20230503183821.1473305-12-john.g.garry@oracle.com>
- <20230504050006.GH3223426@dread.disaster.area>
+ <20230503183821.1473305-2-john.g.garry@oracle.com>
+ <20230503213925.GD3223426@dread.disaster.area>
+ <fc91aa12-1707-9825-a77e-9d5a41d97808@oracle.com>
+ <20230504222623.GI3223426@dread.disaster.area>
+ <90522281-863f-58bf-9b26-675374c72cc7@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230504050006.GH3223426@dread.disaster.area>
+In-Reply-To: <90522281-863f-58bf-9b26-675374c72cc7@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 04, 2023 at 03:00:06PM +1000, Dave Chinner wrote:
-> On Wed, May 03, 2023 at 06:38:16PM +0000, John Garry wrote:
-> > Add support to create bio's whose bi_sector and bi_size are aligned to and
-> > multiple of atomic_write_unit, respectively.
+On Fri, May 05, 2023 at 08:54:12AM +0100, John Garry wrote:
+> On 04/05/2023 23:26, Dave Chinner wrote:
+> 
+> Hi Dave,
+> 
+> > > atomic_write_unit_max is largest application block size which we can
+> > > support, while atomic_write_max_bytes is the max size of an atomic operation
+> > > which the HW supports.
+> > Why are these different? If the hardware supports 128kB atomic
+> > writes, why limit applications to something smaller?
+> 
+> Two reasons:
+> a. If you see patch 6/16, we need to apply a limit on atomic_write_unit_max
+> from what is guaranteed we can fit in a bio without it being required to be
+> split when submitted.
+> 
+> Consider iomap generates an atomic write bio for a single userspace block
+> and submits to the block layer - if the block layer needs to split due to
+> block driver request_queue limits, like max_segments, then we're in trouble.
+> So we need to limit atomic_write_unit_max such that this will not occur.
+> That same limit should not apply to atomic_write_max_bytes.
+> 
+> b. For NVMe, atomic_write_unit_max and atomic_write_max_bytes which the host
+> reports will be the same (ignoring a.).
+> 
+> However for SCSI they may be different. SCSI has its own concept of boundary
+> and it is relevant here. This is confusing as it is very different from NVMe
+> boundary. NVMe is a media boundary really. For SCSI, a boundary is a
+> sub-segment which the device may split an atomic write operation. For a SCSI
+> device which only supports this boundary mode of operation, we limit
+> atomic_write_unit_max to the max boundary segment size (such that we don't
+> get splitting of an atomic write by the device) and then limit
+> atomic_write_max_bytes to what is known in the spec as "maximum atomic
+> transfer length with boundary". So in this device mode of operation,
+> atomic_write_max_bytes and atomic_write_unit_max should be different.
+
+Hmm, maybe some concrete examples would be useful here?  I find the
+queue limits stuff pretty confusing too.
+
+Could a SCSI device could advertise 512b LBAs, 4096b physical blocks, a
+64k atomic_write_unit_max, and a 1MB maximum transfer length
+(atomic_write_max_bytes)?  And does that mean that application software
+can send one 64k-aligned write and expect it either to be persisted
+completely or not at all?
+
+And, does that mean that the application can send up to 16 of these
+64k-aligned blocks as a single 1MB IO and expect that each of those 16
+blocks will either be persisted entirely or not at all?  There doesn't
+seem to be any means for the device to report /which/ of the 16 were
+persisted, which is disappointing.  But maybe the application encodes
+LSNs and can tell after the fact that something went wrong, and recover?
+
+If the same device reports a 2048b atomic_write_unit_min, does that mean
+that I can send between 2 and 64k of data as a single atomic write and
+that's ok?  I assume that this weird situation (512b LBA, 4k physical,
+2k atomic unit min) requires some fancy RMW but that the device is
+prepared to cr^Wpersist that correctly?
+
+What if the device also advertises a 128k atomic_write_boundary?
+That means that a 2k atomic block write will fail if it starts at 127k,
+but if it starts at 126k then thats ok.  Right?
+
+As for avoiding splits in the block layer, I guess that also means that
+someone needs to reduce atomic_write_unit_max and atomic_write_boundary
+if (say) some sysadmin decides to create a raid0 of these devices with a
+32k stripe size?
+
+It sounds like NVME is simpler in that it would report 64k for both the
+max unit and the max transfer length?  And for the 1M write I mentioned
+above, the application must send 16 individual writes?
+
+(Did I get all that correctly?)
+
 > > 
-> > When we call iomap_dio_bio_iter() -> bio_iov_iter_get_pages() ->
-> > __bio_iov_iter_get_pages(), we trim the bio to a multiple of
-> > atomic_write_unit.
+> > >  From your review on the iomap patch, I assume that now you realise that we
+> > > are proposing a write which may include multiple application data blocks
+> > > (each limited in size to atomic_write_unit_max), and the limit in total size
+> > > of that write is atomic_write_max_bytes.
+> > I still don't get it - you haven't explained why/what an application
+> > atomic block write might be, nor why the block device should be
+> > determining the size of application data blocks, etc.  If the block
+> > device can do 128kB atomic writes, why wouldn't the device allow the
+> > application to do 128kB atomic writes if they've aligned the atomic
+> > write correctly?
+> 
+> An application block needs to be:
+> - sized at a power-of-two
+> - sized between atomic_write_unit_min and atomic_write_unit_max, inclusive
+> - naturally aligned
+> 
+> Please consider that the application does not explicitly tell the kernel the
+> size of its data blocks, it's implied from the size of the write and file
+> offset. So, assuming that userspace follows the rules properly when issuing
+> a write, the kernel may deduce the application block size and ensure only
+> that each individual user data block is not split.
+> 
+> If userspace wants a guarantee of no splitting of all in its write, then it
+> may issue a write for a single userspace data block, e.g. userspace block
+> size is 16KB, then write at a file offset aligned to 16KB and a total write
+> size of 16KB will be guaranteed to be written atomically by the device.
+
+I'm ... not sure what the userspace block size is?
+
+With my app developer hat on, the simplest mental model of this is that
+if I want to persist a blob of data that is larger than one device LBA,
+then atomic_write_unit_min <= blob size <= atomic_write_unit_max must be
+true, and the LBA range for the write cannot cross a atomic_write_boundary.
+
+Does that sound right?
+
+Going back to my sample device above, the XFS buffer cache could write
+individual 4k filesystem metadata blocks using REQ_ATOMIC because 4k is
+between the atomic write unit min/max, 4k metadata blocks will never
+cross a 128k boundary, and we'd never have to worry about torn writes
+in metadata ever again?
+
+Furthermore, if I want to persist a bunch of blobs in a contiguous LBA
+range and atomic_write_max_bytes > atomic_write_unit_max, then I can do
+that with a single direct write?  I'm assuming that the blobs in the
+middle of the range must all be exactly atomic_write_unit_max bytes in
+size?  And I had better be prepared to (I guess) re-read the entire
+range after the system goes down to find out if any of them did or did
+not persist?
+
+(This part sounds like a PITA.)
+
 > > 
-> > As such, we expect the iomi start and length to have same size and
-> > alignment requirements per iomap_dio_bio_iter() call.
+> > What happens we we get hardware that can do atomic writes at any
+> > alignment, of any size up to atomic_write_max_bytes? Because this
+> > interface defines atomic writes as "must be a multiple of 2 of
+> > atomic_write_unit_min" then hardware that can do atomic writes of
+> > any size can not be effectively utilised by this interface....
 > > 
-> > In iomap_dio_bio_iter(), ensure that for a non-dsync iocb that the mapping
-> > is not dirty nor unmapped.
+> > > user applications should only pay attention to what we return from statx,
+> > > that being atomic_write_unit_min and atomic_write_unit_max.
+> > > 
+> > > atomic_write_max_bytes and atomic_write_boundary is only relevant to the
+> > > block layer.
+> > If applications can issue an multi-atomic_write_unit_max-block
+> > writes as a single, non-atomic, multi-bio RWF_ATOMIC pwritev2() IO
+> > and such IO is constrainted to atomic_write_max_bytes, then
+> > atomic_write_max_bytes is most definitely relevant to user
+> > applications.
+> 
+> But we still do not guarantee that multi-atomic_write_unit_max-block writes
+> as a single, non-atomic, multi-bio RWF_ATOMIC pwritev2() IO and such IO is
+> constrained to atomic_write_max_bytes will be written atomically by the
+> device.
+> 
+> Three things may happen in the kernel:
+> - we may need to split due to atomic boundary
+> - we may need to split due to the write spanning discontig extents
+> - atomic_write_max_bytes may be much larger than what we could fit in a bio,
+> so may need multiple bios
+> 
+> And maybe more which does not come to mind.
+> 
+> So I am not sure what value there is in reporting atomic_write_max_bytes to
+> the user. The description would need to be something like "we guarantee that
+> if the total write length is greater than atomic_write_max_bytes, then all
+> data will never be submitted to the device atomically. Otherwise it might
+> be".
+> 
 > > 
-> > Signed-off-by: John Garry <john.g.garry@oracle.com>
-> > ---
-> >  fs/iomap/direct-io.c | 72 ++++++++++++++++++++++++++++++++++++++++++--
-> >  1 file changed, 70 insertions(+), 2 deletions(-)
 > > 
-> > diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> > index f771001574d0..37c3c926dfd8 100644
-> > --- a/fs/iomap/direct-io.c
-> > +++ b/fs/iomap/direct-io.c
-> > @@ -36,6 +36,8 @@ struct iomap_dio {
-> >  	size_t			done_before;
-> >  	bool			wait_for_completion;
-> >  
-> > +	unsigned int atomic_write_unit;
-> > +
-> >  	union {
-> >  		/* used during submission and for synchronous completion: */
-> >  		struct {
-> > @@ -229,9 +231,21 @@ static inline blk_opf_t iomap_dio_bio_opflags(struct iomap_dio *dio,
-> >  	return opflags;
-> >  }
-> >  
-> > +
-> > +/*
-> > + * Note: For atomic writes, each bio which we create when we iter should have
-> > + *	 bi_sector aligned to atomic_write_unit and also its bi_size should be
-> > + *	 a multiple of atomic_write_unit.
-> > + *	 The call to bio_iov_iter_get_pages() -> __bio_iov_iter_get_pages()
-> > + *	 should trim the length to a multiple of atomic_write_unit for us.
-> > + *	 This allows us to split each bio later in the block layer to fit
-> > + *	 request_queue limit.
-> > + */
-> >  static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
-> >  		struct iomap_dio *dio)
-> >  {
-> > +	bool atomic_write = (dio->iocb->ki_flags & IOCB_ATOMIC) &&
-> > +			    (dio->flags & IOMAP_DIO_WRITE);
-> >  	const struct iomap *iomap = &iter->iomap;
-> >  	struct inode *inode = iter->inode;
-> >  	unsigned int fs_block_size = i_blocksize(inode), pad;
-> > @@ -249,6 +263,14 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
-> >  	    !bdev_iter_is_aligned(iomap->bdev, dio->submit.iter))
-> >  		return -EINVAL;
-> >  
-> > +
-> > +	if (atomic_write && !iocb_is_dsync(dio->iocb)) {
-> > +		if (iomap->flags & IOMAP_F_DIRTY)
-> > +			return -EIO;
-> > +		if (iomap->type != IOMAP_MAPPED)
-> > +			return -EIO;
-> > +	}
+> > > > > +What:		/sys/block/<disk>/atomic_write_boundary
+> > > > > +Date:		May 2023
+> > > > > +Contact:	Himanshu Madhani<himanshu.madhani@oracle.com>
+> > > > > +Description:
+> > > > > +		[RO] A device may need to internally split I/Os which
+> > > > > +		straddle a given logical block address boundary. In that
+> > > > > +		case a single atomic write operation will be processed as
+> > > > > +		one of more sub-operations which each complete atomically.
+> > > > > +		This parameter specifies the size in bytes of the atomic
+> > > > > +		boundary if one is reported by the device. This value must
+> > > > > +		be a power-of-two.
+> > > > How are users/filesystems supposed to use this?
+> > > As above, this is not relevant to the user.
+> > Applications will greatly care if their atomic IO gets split into
+> > multiple IOs whose persistence order is undefined.
 > 
-> IDGI. If the iomap had space allocated for this dio iteration,
-> then IOMAP_F_DIRTY will be set and it is likely (guaranteed for XFS)
-> that the iomap type will be IOMAP_UNWRITTEN. Indeed, if we are doing
-> a write into preallocated space (i.e. from fallocate()) then this
-> will cause -EIO on all RWF_ATOMIC IO to that file unless RWF_DSYNC
-> is also used.
+> Sure, so maybe then we need to define and support persistence ordering
+> rules. But still, any atomic_write_boundary is already taken into account
+> when we report atomic_write_unit_min and atomic_write_unit_max to the user.
 > 
-> "For a power fail, for each individual application block, all or
-> none of the data to be written."
+> > I think it also
+> > matters for filesystems when it comes to allocation, because we are
+> > going to have to be very careful not to have extents straddle ranges
+> > that will cause an atomic write to be split.
 > 
-> Ok, does this means RWF_ATOMIC still needs fdatasync() to guarantee
-> that the data makes it to stable storage? And the result is
-> undefined until fdatasync() is run, but the device will guarantee
-> that either all or none of the data will be on stable storage
-> prior to the next device cache flush completing?
+> Note that block drivers need to ensure that they report the following:
+> - atomic_write_unit_max is a power-of-2
+> - atomic_write_boundary is a power-of-2 (and naturally it would need to be
+> greater or equal to atomic_write_unit_max)
+> [sidenote: I actually think that atomic_write_boundary needs to be just a
+> multiple of atomic_write_unit_max, but let's stick with these rules for the
+> moment]
 > 
-> i.e. does REQ_ATOMIC imply REQ_FUA, or does it require a separate
-> device cache flush to commit the atomic IO to stable storage?
+> As such, if we split a write due to a boundary, we would still always be
+> able to split such that we don't need to split an individual userspace data
+> block.
 
-From the SCSI and NVME device information that I've been presented, it
-sounds like an explicit cache flush or FUA is required to persist the
-data.
+...but only if userspace data blocks (whatever those are) don't
+themselves split atomic_write_boundary.
 
-> What about ordering - do the devices guarantee strict ordering of
-> REQ_ATOMIC writes? i.e. if atomic write N is seen on disk, then all
-> the previous atomic writes up to N will also be seen on disk? If
-> not, how does the application and filesystem guarantee persistence
-> of completed atomic writes?
-
-I /think/ the applications have to ensure ordering themselves.  If Y
-cannot appear before X is persisted, then the application must wait for
-the ack for X, flush the cache, and only then send Y.
-
-> i.e. If we still need a post-IO device cache flush to guarantee
-> persistence and/or ordering of RWF_ATOMIC IOs, then the above code
-> makes no sense - we'll still need fdatasync() to provide persistence
-> checkpoints and that means we ensure metadata is also up to date
-> at those checkpoints.
-
-I'll let the block layer developers weigh in on this, but I /think/ this
-means that we require RWF_DSYNC for atomic block writes to written
-mappings, and RWF_SYNC if iomap_begin gives us an unwritten/hole/dirty
-mapping.
-
-> I need someone to put down in writing exactly what the data
-> integrity, ordering and persistence semantics of REQ_ATOMIC are
-> before I can really comment any further. From my perspective as a
-> filesystem developer, this is the single most important set of
-> behaviours that need to be documented, as this determines how
-> everything else interacts with atomic writes....
+> > 
+> > e.g. how does this work with striped devices? e.g. we have a stripe
+> > unit of 16kB, but the devices support atomic_write_unit_max = 32kB.
+> > Instantly, we have a configuration where atomic writes need to be
+> > split at 16kB boundaries, and so the maximum atomic write size that
+> > can be supported is actually 16kB - the stripe unit of RAID device.
 > 
-> >  	if (iomap->type == IOMAP_UNWRITTEN) {
-> >  		dio->flags |= IOMAP_DIO_UNWRITTEN;
-> >  		need_zeroout = true;
-> > @@ -318,6 +340,10 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
-> >  					  GFP_KERNEL);
-> >  		bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
-> >  		bio->bi_ioprio = dio->iocb->ki_ioprio;
-> > +		if (atomic_write) {
-> > +			bio->bi_opf |= REQ_ATOMIC;
-> > +			bio->atomic_write_unit = dio->atomic_write_unit;
-> > +		}
-> >  		bio->bi_private = dio;
-> >  		bio->bi_end_io = iomap_dio_bio_end_io;
-> >  
-> > @@ -492,6 +518,8 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
-> >  		is_sync_kiocb(iocb) || (dio_flags & IOMAP_DIO_FORCE_WAIT);
-> >  	struct blk_plug plug;
-> >  	struct iomap_dio *dio;
-> > +	bool is_read = iov_iter_rw(iter) == READ;
-> > +	bool atomic_write = (iocb->ki_flags & IOCB_ATOMIC) && !is_read;
-> >  
-> >  	if (!iomi.len)
-> >  		return NULL;
-> > @@ -500,6 +528,20 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
-> >  	if (!dio)
-> >  		return ERR_PTR(-ENOMEM);
-> >  
-> > +	if (atomic_write) {
-> > +		/*
-> > +		 * Note: This lookup is not proper for a multi-device scenario,
-> > +		 *	 however for current iomap users, the bdev per iter
-> > +		 *	 will be fixed, so "works" for now.
-> > +		 */
-> > +		struct super_block *i_sb = inode->i_sb;
-> > +		struct block_device *bdev = i_sb->s_bdev;
-> > +
-> > +		dio->atomic_write_unit =
-> > +			bdev_find_max_atomic_write_alignment(bdev,
-> > +					iomi.pos, iomi.len);
-> > +	}
+> OK, so in that case, I think that we would need to limit the reported
+> atomic_write_unit_max value to the stripe value in a RAID config.
 > 
-> This will break atomic IO to XFS realtime devices. The device we are
-> doing IO to is iomap->bdev, we should never be using sb->s_bdev in
-> the iomap code.  Of course, at this point in __iomap_dio_rw() we
-> don't have an iomap so this "alignment constraint" can't be done
-> correctly at this point in the IO path.
-
-(Agreed.)
-
-> However, even ignoring the bdev source, I think this is completely
-> wrong. Passing a *file* offset to the underlying block device so the
-> block device can return a device alignment constraint for IO is not
-> valid. We don't know how that file offset/length is going to be
-> mapped to the underlying block device until we ask the filesystem
-> for an iomap covering the file range, so we can't possibly know what
-> the device IO alignment of the user request will be until we have an
-> iomap for it.
-
-(Agreed.)
-
-> At which point, the "which block device should we ask for alignment
-> constraints" question is moot, because we now have an iomap and can
-> use iomap->bdev....
+> > 
+> > This means the filesystem must, at minimum, align all allocations
+> > for atomic IO to 16kB stripe unit alignment, and must not allow
+> > atomic IOs that are not stripe unit aligned or sized to proceed
+> > because they can't be processed as an atomic IO....
 > 
-> > @@ -592,6 +634,32 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
-> >  
-> >  	blk_start_plug(&plug);
-> >  	while ((ret = iomap_iter(&iomi, ops)) > 0) {
-> > +		if (atomic_write) {
-> > +			const struct iomap *_iomap = &iomi.iomap;
-> > +			loff_t iomi_length = iomap_length(&iomi);
-> > +
-> > +			/*
-> > +			 * Ensure length and start address is a multiple of
-> > +			 * atomic_write_unit - this is critical. If the length
-> > +			 * is not a multiple of atomic_write_unit, then we
-> > +			 * cannot create a set of bio's in iomap_dio_bio_iter()
-> > +			 * who are each a length which is a multiple of
-> > +			 * atomic_write_unit.
-> > +			 *
-> > +			 * Note: It may be more appropiate to have this check
-> > +			 *	 in iomap_dio_bio_iter()
-> > +			 */
-> > +			if ((iomap_sector(_iomap, iomi.pos) << SECTOR_SHIFT) %
-
-The file offset (and by extension the position) are not important for
-deciding if we can issue an atomic write.  Only the mapped LBA space on
-the underlying device is important.
-
-IOWs, if we have a disk that can write a 64k aligned block atomically,
-iomap only has to check that iomap->addr is aligned to a 64k boundary.
-If that space happens to be mapped to file offset 57k, then it is indeed
-possible to perform a 64k atomic write to the file starting at offset
-57k and ending at offset 121k, right?
-
-Now, obviously, nobody will ever do that, but my point is that no
-changes to iomap_dio_rw are necessary -- only the alignment of the
-mapping returned by ->iomap_begin requires checking.
-
-> > +			    dio->atomic_write_unit) {
-> > +				ret = -EIO;
-> > +				break;
-> > +			}
-> > +
-> > +			if (iomi_length % dio->atomic_write_unit) {
-> > +				ret = -EIO;
-> > +				break;
-> > +			}
+> As above. Martin may be able to comment more on this.
 > 
-> This looks wrong - the length of the mapped extent could be shorter
-> than the max atomic write size returned by
-> bdev_find_max_atomic_write_alignment() but the iomap could still be aligned
-> to the minimum atomic write unit supported. At this point, we reject
-> the IO with -EIO, even though it could have been done as an atomic
-> write, just a shorter one than the user requested.
+> > 
+> > 
+> > > > >    /**
+> > > > > @@ -183,6 +186,59 @@ void blk_queue_max_discard_sectors(struct request_queue *q,
+> > > > >    }
+> > > > >    EXPORT_SYMBOL(blk_queue_max_discard_sectors);
+> > > > > +/**
+> > > > > + * blk_queue_atomic_write_max_bytes - set max bytes supported by
+> > > > > + * the device for atomic write operations.
+> > > > > + * @q:  the request queue for the device
+> > > > > + * @size: maximum bytes supported
+> > > > > + */
+> > > > > +void blk_queue_atomic_write_max_bytes(struct request_queue *q,
+> > > > > +				      unsigned int size)
+> > > > > +{
+> > > > > +	q->limits.atomic_write_max_bytes = size;
+> > > > > +}
+> > > > > +EXPORT_SYMBOL(blk_queue_atomic_write_max_bytes);
+> > > > > +
+> > > > > +/**
+> > > > > + * blk_queue_atomic_write_boundary - Device's logical block address space
+> > > > > + * which an atomic write should not cross.
+> > > > I have no idea what "logical block address space which an atomic
+> > > > write should not cross" means, especially as the unit is in bytes
+> > > > and not in sectors (which are the units LBAs are expressed in).
+> > > It means that an atomic operation which straddles the atomic boundary is not
+> > > guaranteed to be atomic by the device, so we should (must) not cross it to
+> > > maintain atomic behaviour for an application block. That's one reason that
+> > > we have all these size and alignment rules.
+> > Yes, That much is obvious. What I have no idea diea about is what
+> > this means in practice. When is this ever going to be non-zero, and
+> > what should be we doing at the filesystem allocation level when it
+> > is non-zero to ensure that allocations for atomic writes never cross
+> > such a boundary. i.e. how do we prevent applications from ever
+> > needing this functionality to be triggered? i.e. so the filesystem
+> > can guarantee a single RWF_ATOMIC user IO is actually dispatched
+> > as a single REQ_ATOMIC IO....
 > 
-> That said, I don't think we can call a user IO that is being
-> sliced and diced into multiple individual IOs "atomic". "Atomic"
-> implies all-or-none behaviour - slicing up a large DIO into smaller
-> individual bios means the bios can be submitted and completed out of
-> order. If we then we get a power failure, the application's "atomic"
-> IO can appear on disk as only being partially complete - it violates
-> the "all or none" semantics of "atomic IO".
-
-This "you can write multiple atomic units but you can't know which ones
-completed" behavior is the part I dislike the most about the entire
-feature.
-
-> Hence I think that we should be rejecting RWF_ATOMIC IOs that are
-> larger than the maximum atomic write unit or cannot be dispatched in
-> a single IO e.g. filesystem has allocated multiple minimum aligned
-> extents and so a max len atomic write IO over that range must be
-> broken up into multiple smaller IOs.
+> We only guarantee that a single user data block will not be split. So to
+> avoid any splitting at all, all you can do is write a single user data
+> block. That's the best which we can offer.
 > 
-> We should be doing max atomic write size rejection high up in the IO
-> path (e.g. filesystem ->write_iter() method) before we get anywhere
-> near the DIO path, and we should be rejecting atomic write IOs in
-> the DIO path during the ->iomap_begin() mapping callback if we can't
-> map the entire atomic IO to a single aligned filesystem extent.
+> As mentioned earlier, atomic boundary is only relevant to NVMe. If the
+> device does not support an atomic boundary which is not compliant with the
+> rules, then we cannot support atomic writes for that device.
+
+I guess here that any device advertising a atomic_write_boundary > 0
+internally splits its LBA address space into chunks of that size and can
+only persist full chunks.  The descriptions of how flash storage work
+would seem to fit that description to me.  <shrug>
+
+> > 
+> > > ...
+> > > 
+> > > > > +static inline unsigned int queue_atomic_write_unit_max(const struct request_queue *q)
+> > > > > +{
+> > > > > +	return q->limits.atomic_write_unit_max << SECTOR_SHIFT;
+> > > > > +}
+> > > > > +
+> > > > > +static inline unsigned int queue_atomic_write_unit_min(const struct request_queue *q)
+> > > > > +{
+> > > > > +	return q->limits.atomic_write_unit_min << SECTOR_SHIFT;
+> > > > > +}
+> > > > Ah, what? This undocumented interface reports "unit limits" in
+> > > > bytes, but it's not using the physical device sector size to convert
+> > > > between sector units and bytes. This really needs some more
+> > > > documentation and work to make it present all units consistently and
+> > > > not result in confusion when devices have 4kB sector sizes and not
+> > > > 512 byte sectors...
+> > > ok, we'll look to fix this up to give a coherent and clear interface.
+> > > 
+> > > > Also, I think all the byte ranges should support full 64 bit values,
+> > > > otherwise there will be silent overflows in converting 32 bit sector
+> > > > counts to byte ranges. And, eventually, something will want to do
+> > > > larger than 4GB atomic IOs
+> > > > 
+> > > ok, we can do that but would also then make statx field 64b. I'm fine with
+> > > that if it is wise to do so - I don't don't want to wastefully use up an
+> > > extra 2 x 32b in struct statx.
+> > Why do we need specific varibles for DIO atomic write alignment
+> > limits?
 > 
-> i.e. the alignment checks and constraints need to be applied by the
-> filesystem mapping code, not the layer that packs the pages into the
-> bio as directed by the filesystem mapping....
-
-Hmm.  I think I see what you're saying here -- iomap should communicate
-to ->iomap_begin that we want to perform an atomic write, and there had
-better be either (a) a properly aligned mapping all ready to go; or (b)
-the fs must perform an aligned allocation and map that in, or return no
-mapping so the write fails.
-
---D
-
-> Cheers,
+> I guess that we don't
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> > We already have direct IO alignment and size constraints in statx(),
+> > so why wouldn't we just reuse those variables when the user requests
+> > atomic limits for DIO?
+> > 
+> > i.e. if STATX_DIOALIGN is set, we return normal DIO alignment
+> > constraints. If STATX_DIOALIGN_ATOMIC is set, we return the atomic
+> > DIO alignment requirements in those variables.....
+> > 
+> > Yes, we probably need the dio max size to be added to statx for
+> > this. Historically speaking, I wanted statx to support this in the
+> > first place because that's what we were already giving userspace
+> > with XFS_IOC_DIOINFO and we already knew that atomic IO when it came
+> > along would require a bound maximum IO size much smaller than normal
+> > DIO limits.  i.e.:
+> > 
+> > struct dioattr {
+> >          __u32           d_mem;          /* data buffer memory alignment */
+> >          __u32           d_miniosz;      /* min xfer size                */
+> >          __u32           d_maxiosz;      /* max xfer size                */
+> > };
+> > 
+> > where d_miniosz defined the alignment and size constraints for DIOs.
+> > 
+> > If we simply document that STATX_DIOALIGN_ATOMIC returns minimum
+> > (unit) atomic IO size and alignment in statx->dio_offset_align (as
+> > per STATX_DIOALIGN) and the maximum atomic IO size in
+> > statx->dio_max_iosize, then we don't burn up anywhere near as much
+> > space in the statx structure....
+> 
+> ok, so you are saying to unionize them, right? That would seem reasonable to
+> me.
+> Thanks,
+> John
+> 
