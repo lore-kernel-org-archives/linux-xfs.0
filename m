@@ -2,125 +2,118 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16170C77B75
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 May 2023 14:02:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 153C7C7EE2A
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 May 2023 17:52:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232553AbjEEOCi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 5 May 2023 10:02:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42452 "EHLO
+        id S233222AbjEERwy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 5 May 2023 13:52:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232052AbjEEOCh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 May 2023 10:02:37 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B493C11B4A
-        for <linux-xfs@vger.kernel.org>; Fri,  5 May 2023 07:02:36 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 462E463E03
-        for <linux-xfs@vger.kernel.org>; Fri,  5 May 2023 14:02:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA15BC433D2;
-        Fri,  5 May 2023 14:02:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683295355;
-        bh=ceByraTWcz6thfGXj1vAhB7evvvHDvcEzsWqNtzXKh0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RXocKcDvBkXsELgFEu/sqMTF86eBqsnOZQ2Igs6Jz62nSeYZyHZz6L/sToq6TGzMC
-         Q3HlwbJBsrEqfczW/FIUB1Lm4kz+Ar+sfFGagJ7ix+otrcH4AdgJ6joesk7MvGvyFq
-         5VKKaW+53sAzGGncvi4AjeDBY9bLDj+baqtn9qEpSVdq1k80eU7ot4EcHfY2LQWKND
-         V/bYWnh+2gkS/ork6A/5Ibgf8s6Zyb7yq6DsFzR2TE7TegQkRVVa0F3eJt2OuTwFQT
-         tKKfvmRqapn0S/na+XDXnW7hNqjMVfF+zM2J6/+2abOtZdlHuhCdTxjvy5F/fLWn7R
-         eJKp4BE7bhWHA==
-Date:   Fri, 5 May 2023 16:02:31 +0200
-From:   Carlos Maiolino <cem@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs_repair: estimate per-AG btree slack better
-Message-ID: <20230505140231.v37vpbsvbbs6ootv@andromeda>
-References: <Hmm9qc69j-CLafwLwR_VDVUXW-MimDNdKcP5ObJjM17LI9tD3CdNoGjfMsJyj--ppTa-5tg4DwbNhhnKZyZ1Eg==@protonmail.internalid>
- <20230427224521.GD59213@frogsfrogsfrogs>
- <20230502104944.6rvddejxufsbzj7h@andromeda>
- <2g_v1BllDEJ95otHQqrnAFoE0bIG2Tdn6wClo-zv3TeyJWg1OlQBMai24BJJodsVirrxnlcs3ZikrlOhhtytcQ==@protonmail.internalid>
- <20230502153816.GA15420@frogsfrogsfrogs>
- <20230503084832.bjoxa2rbtydapgj7@andromeda>
- <4mb3kI_n1PqQfNqE1ugk1NKVRFGi9JvDotbJ81JZW-bw58cSjd-xIGjEOvMq07dBRkXrui0-Y_Wl4nCmGisbYw==@protonmail.internalid>
- <20230503150703.GH15420@frogsfrogsfrogs>
+        with ESMTP id S233209AbjEERwu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 May 2023 13:52:50 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 949BA203E0;
+        Fri,  5 May 2023 10:52:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=Mo1wG2ZHhDRN2Kxva783ZntuoaR3kzM5rBfQE5yUx54=; b=xLtgYqsmC3jS+RKpzPYzBT6rPm
+        G0nkxiInGyV7RrQ4Ex3T3JJAG+byGYwQvp52v5jf1BMFR6eLW9I8ngzSNOdAgjGgPVm8cEVeZ4o7n
+        lMXyu+QfQ8IFei2OvAJnIXjFWwVr22HWIOpGWVxJA6fe72EQRNF7iyO9nbkmKoLx9gGSi+aJLFSQU
+        djA6Cn+EteRI+RzEoQxQyYZEKKwb22YqxsaMjmVwEQksGxdz29lKKHfF9pzvzbWgkQ9nkILyfcm/w
+        C2/UW7eq6fDOjH7rwaPTZhjz3+bCAyoarIDj/Luif6FBZBbg2BgNE5SyOkr/9djxDpfsF+C2CVmKo
+        Th+hYNqQ==;
+Received: from 66-46-223-221.dedicated.allstream.net ([66.46.223.221] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
+        id 1puzau-00BSx5-0k;
+        Fri, 05 May 2023 17:51:48 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Al Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: [PATCH 1/9] block: consolidate the shutdown logic in blk_mark_disk_dead and del_gendisk
+Date:   Fri,  5 May 2023 13:51:24 -0400
+Message-Id: <20230505175132.2236632-2-hch@lst.de>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230505175132.2236632-1-hch@lst.de>
+References: <20230505175132.2236632-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230503150703.GH15420@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 03, 2023 at 08:07:03AM -0700, Darrick J. Wong wrote:
-> On Wed, May 03, 2023 at 10:48:32AM +0200, Carlos Maiolino wrote:
-> > On Tue, May 02, 2023 at 08:38:16AM -0700, Darrick J. Wong wrote:
-> > > On Tue, May 02, 2023 at 12:49:44PM +0200, Carlos Maiolino wrote:
-> > > > Hi.
-> > > >
-> > > > On Thu, Apr 27, 2023 at 03:45:21PM -0700, Darrick J. Wong wrote:
-> > > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > >
-> > > > > The slack calculation for per-AG btrees is a bit inaccurate because it
-> > > > > only disables slack space in the new btrees when the amount of free
-> > > > > space in the AG (not counting the btrees) is less than 3/32ths of the
-> > > > > AG.  In other words, it assumes that the btrees will fit in less than 9
-> > > > > percent of the space.
-> > > > .
-> > > > .
-> > > > .
-> > > > >
-> > > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > >
-> > > > This looks fine, with a small caveat below...
-> > > >
-> > > > .
-> > > > .
-> > > > .
-> > > >
-> > > > > +
-> > > > > +static xfs_extlen_t
-> > > > > +estimate_allocbt_blocks(
-> > > > > +	struct xfs_perag	*pag,
-> > > > > +	unsigned int		nr_extents)
-> > > > > +{
-> > > > > +	return libxfs_allocbt_calc_size(pag->pag_mount, nr_extents) * 2;
-> > > > > +}
-> > > >
-> > > > Forgive my ignorance here, but what's the reason of the magic number? It seems
-> > > > to me by multiplying by 2 here, you are considering a split of every single
-> > > > leaf for the calculated btree size, but I'm not sure if that's the intention,
-> > > > could you please confirm or correct me? :)
-> > >
-> > > Ah, I should document that better...
-> > >
-> > > 	/* Account for space consumed by both free space btrees */
-> > > 	return libxfs_allocbt_calc_size(...) * 2;
-> >
-> > Thanks, can I update your patch with the above comment, or do you want to send
-> > it again?
-> 
-> You can add it, if that'll save time.  I don't have any other changes
-> pending for that patch.
+blk_mark_disk_dead does very similar work a a section of del_gendisk:
 
-Ok, won't take much of my time and will prevent you to need to send it again.
+ - set the GD_DEAD flag
+ - set the capacity to zero
+ - start a queue drain
 
-> 
-> --D
-> 
-> > >
-> > > --D
-> > >
-> > > > Other than that, the patch looks good
-> > > >
-> > > > Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > > >
-> > > > --
-> > > > Carlos Maiolino
-> >
-> > --
-> > Carlos Maiolino
+but del_gendisk also sets QUEUE_FLAG_DYING on the queue if it is owned by
+the disk, sets the capacity to zero before starting the drain, and both
+with sending a uevent and kernel message for this fake capacity change.
 
+Move the exact logic from the more heavily used del_gendisk into
+blk_mark_disk_dead and then call blk_mark_disk_dead from del_gendisk.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/genhd.c | 26 ++++++++++++--------------
+ 1 file changed, 12 insertions(+), 14 deletions(-)
+
+diff --git a/block/genhd.c b/block/genhd.c
+index 90c402771bb570..461999e9489937 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -583,13 +583,22 @@ EXPORT_SYMBOL(device_add_disk);
+  */
+ void blk_mark_disk_dead(struct gendisk *disk)
+ {
++	/*
++	 * Fail any new I/O.
++	 */
+ 	set_bit(GD_DEAD, &disk->state);
+-	blk_queue_start_drain(disk->queue);
++	if (test_bit(GD_OWNS_QUEUE, &disk->state))
++		blk_queue_flag_set(QUEUE_FLAG_DYING, disk->queue);
+ 
+ 	/*
+ 	 * Stop buffered writers from dirtying pages that can't be written out.
+ 	 */
+-	set_capacity_and_notify(disk, 0);
++	set_capacity(disk, 0);
++
++	/*
++	 * Prevent new I/O from crossing bio_queue_enter().
++	 */
++	blk_queue_start_drain(disk->queue);
+ }
+ EXPORT_SYMBOL_GPL(blk_mark_disk_dead);
+ 
+@@ -632,18 +641,7 @@ void del_gendisk(struct gendisk *disk)
+ 	fsync_bdev(disk->part0);
+ 	__invalidate_device(disk->part0, true);
+ 
+-	/*
+-	 * Fail any new I/O.
+-	 */
+-	set_bit(GD_DEAD, &disk->state);
+-	if (test_bit(GD_OWNS_QUEUE, &disk->state))
+-		blk_queue_flag_set(QUEUE_FLAG_DYING, q);
+-	set_capacity(disk, 0);
+-
+-	/*
+-	 * Prevent new I/O from crossing bio_queue_enter().
+-	 */
+-	blk_queue_start_drain(q);
++	blk_mark_disk_dead(disk);
+ 
+ 	if (!(disk->flags & GENHD_FL_HIDDEN)) {
+ 		sysfs_remove_link(&disk_to_dev(disk)->kobj, "bdi");
 -- 
-Carlos Maiolino
+2.39.2
+
