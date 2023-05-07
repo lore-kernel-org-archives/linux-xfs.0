@@ -2,148 +2,197 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84A04C7EE2E
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 May 2023 13:01:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D5FFC77B7F
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 May 2023 13:01:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234305AbjEHNBr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 May 2023 09:01:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56032 "EHLO
+        id S234851AbjEHNBs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 May 2023 09:01:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56038 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234304AbjEHNBf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 May 2023 09:01:35 -0400
+        with ESMTP id S234311AbjEHNBg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 May 2023 09:01:36 -0400
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7D13398B0;
-        Mon,  8 May 2023 06:01:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 601943ACE0;
+        Mon,  8 May 2023 06:01:34 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 346221FE5E;
-        Mon,  8 May 2023 13:01:31 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id CCE3B1FEB7;
+        Mon,  8 May 2023 13:01:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1683550891; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1683550892; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=+1gz08zY/NsCFjekr1lRb3nLu/+PsgT/Yf2cgH0LZIE=;
-        b=q3VzAzckfIqHsQfhFTFFho0aB7OzCDTihGv9THu6G4A+EAkq8XblxZqivLCnvD3gZzfGpi
-        5Pjv3GkHTShin5/oSM5vcxrQ28Rj1nMNjS2AIlEaySx2jvX5dpPCWgseHmxlYTUIuHcJG2
-        h9fmdsTNqodLG4xMznK7T7GXLlLQx2Q=
+        bh=iGNeKfffk0EB6+xPJYEEBSpmuOZtEOgbN0SWpx0Kmdg=;
+        b=FZG3chLUK3XUyjst/5VV4lS1yOZuItqiA94XFbdsGrXKgRvQFrJjLbWDuD3rxWEfq1ymlP
+        k1LXV+1W3XwbgrE+56iI3mjEG85HMZ74q4DvwFMpfWwXbqF9vTTSm7MQf+sUrHfsO7v7dW
+        TbR93RYZ90CgnjlDmXQvBIYw36xOX9U=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1683550891;
+        s=susede2_ed25519; t=1683550892;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=+1gz08zY/NsCFjekr1lRb3nLu/+PsgT/Yf2cgH0LZIE=;
-        b=JPragvHSEt6Re4ujlr8op4PVGdblZOKdIE1/3g0YKLRsvM5MopGx2ht7Cy6I8cp0WlD0LA
-        v+dKqbYx2TYLc9Bg==
+        bh=iGNeKfffk0EB6+xPJYEEBSpmuOZtEOgbN0SWpx0Kmdg=;
+        b=s+S+J0gqWiG265CSw3aKFKebIObIbNTpctTzxxWWwn6Ul9fq7KB3WGTZYm7v0oEzQoHQBw
+        JU5M31Se3ouD51BA==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id F224013A3E;
-        Mon,  8 May 2023 13:01:30 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 9D80713499;
+        Mon,  8 May 2023 13:01:32 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id 6yoSO6ryWGSpXQAAMHmgww
-        (envelope-from <jack@suse.cz>); Mon, 08 May 2023 13:01:30 +0000
+        id xJJdJqzyWGS+XQAAMHmgww
+        (envelope-from <jack@suse.cz>); Mon, 08 May 2023 13:01:32 +0000
 Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 0049EA0754; Sun,  7 May 2023 21:08:11 +0200 (CEST)
-Date:   Sun, 7 May 2023 21:08:11 +0200
+        id 80B73A075B; Sun,  7 May 2023 21:09:51 +0200 (CEST)
+Date:   Sun, 7 May 2023 21:09:51 +0200
 From:   Jan Kara <jack@suse.cz>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>,
         Christian Brauner <brauner@kernel.org>,
         "Darrick J. Wong" <djwong@kernel.org>, linux-block@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/9] block: consolidate the shutdown logic in
- blk_mark_disk_dead and del_gendisk
-Message-ID: <20230507190811.qbll5r3jsx35curi@quack3>
+Subject: Re: [PATCH 4/9] block: turn bdev_lock into a mutex
+Message-ID: <20230507190951.2yvzcekffhowlfbp@quack3>
 References: <20230505175132.2236632-1-hch@lst.de>
- <20230505175132.2236632-2-hch@lst.de>
+ <20230505175132.2236632-5-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230505175132.2236632-2-hch@lst.de>
+In-Reply-To: <20230505175132.2236632-5-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri 05-05-23 13:51:24, Christoph Hellwig wrote:
-> blk_mark_disk_dead does very similar work a a section of del_gendisk:
-> 
->  - set the GD_DEAD flag
->  - set the capacity to zero
->  - start a queue drain
-> 
-> but del_gendisk also sets QUEUE_FLAG_DYING on the queue if it is owned by
-> the disk, sets the capacity to zero before starting the drain, and both
-> with sending a uevent and kernel message for this fake capacity change.
-> 
-> Move the exact logic from the more heavily used del_gendisk into
-> blk_mark_disk_dead and then call blk_mark_disk_dead from del_gendisk.
+On Fri 05-05-23 13:51:27, Christoph Hellwig wrote:
+> There is no reason for this lock to spin, and being able to sleep under
+> it will come in handy soon.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I'm somewhat wondering about the lost notification from
-blk_mark_disk_dead(). E.g. DM uses blk_mark_disk_dead() so if some udev
-script depends on the event when DM device gets destroyed, we would break
-it?
+Makes sense. Feel free to add:
+
+Reviewed-by: Jan Kara <jack@suse.cz>
 
 								Honza
 
 > ---
->  block/genhd.c | 26 ++++++++++++--------------
->  1 file changed, 12 insertions(+), 14 deletions(-)
+>  block/bdev.c | 27 +++++++++++++--------------
+>  1 file changed, 13 insertions(+), 14 deletions(-)
 > 
-> diff --git a/block/genhd.c b/block/genhd.c
-> index 90c402771bb570..461999e9489937 100644
-> --- a/block/genhd.c
-> +++ b/block/genhd.c
-> @@ -583,13 +583,22 @@ EXPORT_SYMBOL(device_add_disk);
+> diff --git a/block/bdev.c b/block/bdev.c
+> index f2c7181b0bba7d..bad75f6cf8edcd 100644
+> --- a/block/bdev.c
+> +++ b/block/bdev.c
+> @@ -308,7 +308,7 @@ EXPORT_SYMBOL(thaw_bdev);
+>   * pseudo-fs
 >   */
->  void blk_mark_disk_dead(struct gendisk *disk)
+>  
+> -static  __cacheline_aligned_in_smp DEFINE_SPINLOCK(bdev_lock);
+> +static  __cacheline_aligned_in_smp DEFINE_MUTEX(bdev_lock);
+>  static struct kmem_cache * bdev_cachep __read_mostly;
+>  
+>  static struct inode *bdev_alloc_inode(struct super_block *sb)
+> @@ -457,15 +457,14 @@ long nr_blockdev_pages(void)
+>   *
+>   * Test whether @bdev can be claimed by @holder.
+>   *
+> - * CONTEXT:
+> - * spin_lock(&bdev_lock).
+> - *
+>   * RETURNS:
+>   * %true if @bdev can be claimed, %false otherwise.
+>   */
+>  static bool bd_may_claim(struct block_device *bdev, struct block_device *whole,
+>  			 void *holder)
 >  {
-> +	/*
-> +	 * Fail any new I/O.
-> +	 */
->  	set_bit(GD_DEAD, &disk->state);
-> -	blk_queue_start_drain(disk->queue);
-> +	if (test_bit(GD_OWNS_QUEUE, &disk->state))
-> +		blk_queue_flag_set(QUEUE_FLAG_DYING, disk->queue);
+> +	lockdep_assert_held(&bdev_lock);
+> +
+>  	if (bdev->bd_holder == holder)
+>  		return true;	 /* already a holder */
+>  	else if (bdev->bd_holder != NULL)
+> @@ -500,10 +499,10 @@ int bd_prepare_to_claim(struct block_device *bdev, void *holder)
+>  	if (WARN_ON_ONCE(!holder))
+>  		return -EINVAL;
+>  retry:
+> -	spin_lock(&bdev_lock);
+> +	mutex_lock(&bdev_lock);
+>  	/* if someone else claimed, fail */
+>  	if (!bd_may_claim(bdev, whole, holder)) {
+> -		spin_unlock(&bdev_lock);
+> +		mutex_unlock(&bdev_lock);
+>  		return -EBUSY;
+>  	}
+>  
+> @@ -513,7 +512,7 @@ int bd_prepare_to_claim(struct block_device *bdev, void *holder)
+>  		DEFINE_WAIT(wait);
+>  
+>  		prepare_to_wait(wq, &wait, TASK_UNINTERRUPTIBLE);
+> -		spin_unlock(&bdev_lock);
+> +		mutex_unlock(&bdev_lock);
+>  		schedule();
+>  		finish_wait(wq, &wait);
+>  		goto retry;
+> @@ -521,7 +520,7 @@ int bd_prepare_to_claim(struct block_device *bdev, void *holder)
+>  
+>  	/* yay, all mine */
+>  	whole->bd_claiming = holder;
+> -	spin_unlock(&bdev_lock);
+> +	mutex_unlock(&bdev_lock);
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL_GPL(bd_prepare_to_claim); /* only for the loop driver */
+> @@ -547,7 +546,7 @@ static void bd_finish_claiming(struct block_device *bdev, void *holder)
+>  {
+>  	struct block_device *whole = bdev_whole(bdev);
+>  
+> -	spin_lock(&bdev_lock);
+> +	mutex_lock(&bdev_lock);
+>  	BUG_ON(!bd_may_claim(bdev, whole, holder));
+>  	/*
+>  	 * Note that for a whole device bd_holders will be incremented twice,
+> @@ -558,7 +557,7 @@ static void bd_finish_claiming(struct block_device *bdev, void *holder)
+>  	bdev->bd_holders++;
+>  	bdev->bd_holder = holder;
+>  	bd_clear_claiming(whole, holder);
+> -	spin_unlock(&bdev_lock);
+> +	mutex_unlock(&bdev_lock);
+>  }
+>  
+>  /**
+> @@ -572,9 +571,9 @@ static void bd_finish_claiming(struct block_device *bdev, void *holder)
+>   */
+>  void bd_abort_claiming(struct block_device *bdev, void *holder)
+>  {
+> -	spin_lock(&bdev_lock);
+> +	mutex_lock(&bdev_lock);
+>  	bd_clear_claiming(bdev_whole(bdev), holder);
+> -	spin_unlock(&bdev_lock);
+> +	mutex_unlock(&bdev_lock);
+>  }
+>  EXPORT_SYMBOL(bd_abort_claiming);
+>  
+> @@ -587,7 +586,7 @@ static void bd_end_claim(struct block_device *bdev)
+>  	 * Release a claim on the device.  The holder fields are protected with
+>  	 * bdev_lock.  open_mutex is used to synchronize disk_holder unlinking.
+>  	 */
+> -	spin_lock(&bdev_lock);
+> +	mutex_lock(&bdev_lock);
+>  	WARN_ON_ONCE(--bdev->bd_holders < 0);
+>  	WARN_ON_ONCE(--whole->bd_holders < 0);
+>  	if (!bdev->bd_holders) {
+> @@ -597,7 +596,7 @@ static void bd_end_claim(struct block_device *bdev)
+>  	}
+>  	if (!whole->bd_holders)
+>  		whole->bd_holder = NULL;
+> -	spin_unlock(&bdev_lock);
+> +	mutex_unlock(&bdev_lock);
 >  
 >  	/*
->  	 * Stop buffered writers from dirtying pages that can't be written out.
->  	 */
-> -	set_capacity_and_notify(disk, 0);
-> +	set_capacity(disk, 0);
-> +
-> +	/*
-> +	 * Prevent new I/O from crossing bio_queue_enter().
-> +	 */
-> +	blk_queue_start_drain(disk->queue);
->  }
->  EXPORT_SYMBOL_GPL(blk_mark_disk_dead);
->  
-> @@ -632,18 +641,7 @@ void del_gendisk(struct gendisk *disk)
->  	fsync_bdev(disk->part0);
->  	__invalidate_device(disk->part0, true);
->  
-> -	/*
-> -	 * Fail any new I/O.
-> -	 */
-> -	set_bit(GD_DEAD, &disk->state);
-> -	if (test_bit(GD_OWNS_QUEUE, &disk->state))
-> -		blk_queue_flag_set(QUEUE_FLAG_DYING, q);
-> -	set_capacity(disk, 0);
-> -
-> -	/*
-> -	 * Prevent new I/O from crossing bio_queue_enter().
-> -	 */
-> -	blk_queue_start_drain(q);
-> +	blk_mark_disk_dead(disk);
->  
->  	if (!(disk->flags & GENHD_FL_HIDDEN)) {
->  		sysfs_remove_link(&disk_to_dev(disk)->kobj, "bdi");
+>  	 * If this was the last claim, remove holder link and unblock evpoll if
 > -- 
 > 2.39.2
 > 
