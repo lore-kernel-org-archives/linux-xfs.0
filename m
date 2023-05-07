@@ -2,114 +2,129 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47ACDC77B7F
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 May 2023 12:14:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 927B1C7EE22
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 May 2023 13:01:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233926AbjEHMOw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 May 2023 08:14:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47100 "EHLO
+        id S234296AbjEHNBg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 May 2023 09:01:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56018 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233824AbjEHMOr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 May 2023 08:14:47 -0400
-Received: from albert.telenet-ops.be (albert.telenet-ops.be [IPv6:2a02:1800:110:4::f00:1a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D8093846C
-        for <linux-xfs@vger.kernel.org>; Mon,  8 May 2023 05:14:45 -0700 (PDT)
-Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed30:6a18:41e7:fcfe:24c0])
-        by albert.telenet-ops.be with bizsmtp
-        id uCEY2900F2WBekD06CEYzh; Mon, 08 May 2023 14:14:43 +0200
-Received: from geert (helo=localhost)
-        by ramsan.of.borg with local-esmtp (Exim 4.95)
-        (envelope-from <geert@linux-m68k.org>)
-        id 1pvzlA-001VjV-5u;
-        Mon, 08 May 2023 14:14:32 +0200
-Date:   Mon, 8 May 2023 14:14:32 +0200 (CEST)
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-To:     linux-kernel@vger.kernel.org
-cc:     Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-        Tudor Ambarus <tudor.ambarus@linaro.org>,
-        Pratyush Yadav <pratyush@kernel.org>,
-        Richard Weinberger <richard@nod.at>,
-        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Chun-Kuang Hu <chunkuang.hu@kernel.org>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-um@lists.infradead.org, linux-media@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-xfs@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org,
-        sparclinux@vger.kernel.org
-Subject: Re: Build regressions/improvements in v6.4-rc1
-In-Reply-To: <20230508115727.2597864-1-geert@linux-m68k.org>
-Message-ID: <749c2fc2-93dc-585-3826-dea581602d6e@linux-m68k.org>
-References: <CAHk-=wiUxm-NZ1si8dXWVTTJ9n3c+1SRTC0V+Lk7hOE4bDVwJQ@mail.gmail.com> <20230508115727.2597864-1-geert@linux-m68k.org>
+        with ESMTP id S234297AbjEHNBf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 May 2023 09:01:35 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7187394AA;
+        Mon,  8 May 2023 06:01:32 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 3B5CF21FBA;
+        Mon,  8 May 2023 13:01:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1683550891; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Pj7CvqzR8CXSddpYxdqP0Iqe3iGGk2qRYVYbSelEOBI=;
+        b=Td6pEa7uWupCHlSHMr02WSOjEha94ei/ucC6nL8pYzn0RcJamr57e3hucpKhpb6IAhexWM
+        RZFxCUn+qTJmzgk2z2EgLLMXZMOEhONq10wGtRRHXhEa5BrbFTNEpLp/1KmHWWNkSyIR2O
+        uadiwYFSDWFD1tbZyD4upsNqKiq2gHc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1683550891;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Pj7CvqzR8CXSddpYxdqP0Iqe3iGGk2qRYVYbSelEOBI=;
+        b=2cEiSAIna6+NxO7+nSsMxpJnBNqeORxyI0AnsPXM/PbvBqwQTQ88oHTtFNIWvkF/5KT5kE
+        +IFhTZiRFjtuIgDA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 03E9313A5E;
+        Mon,  8 May 2023 13:01:31 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id lm4VAKvyWGSlXQAAMHmgww
+        (envelope-from <jack@suse.cz>); Mon, 08 May 2023 13:01:30 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 0551AA0762; Sun,  7 May 2023 21:19:46 +0200 (CEST)
+Date:   Sun, 7 May 2023 21:19:46 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 6/9] block: add a mark_dead holder operation
+Message-ID: <20230507191946.lwndaj75bxpldeab@quack3>
+References: <20230505175132.2236632-1-hch@lst.de>
+ <20230505175132.2236632-7-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230505175132.2236632-7-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, 8 May 2023, Geert Uytterhoeven wrote:
-> Below is the list of build error/warning regressions/improvements in
-> v6.4-rc1[1] compared to v6.3[2].
->
-> Summarized:
->  - build errors: +9/-16
->  - build warnings: +1/-1439
->
-> Happy fixing! ;-)
->
-> Thanks to the linux-next team for providing the build service.
->
-> [1] http://kisskb.ellerman.id.au/kisskb/branch/linus/head/ac9a78681b921877518763ba0e89202254349d1b/ (all 152 configs)
-> [2] http://kisskb.ellerman.id.au/kisskb/branch/linus/head/457391b0380335d5e9a5babdec90ac53928b23b4/ (all 152 configs)
->
->
-> *** ERRORS ***
->
-> 9 error regressions:
->  + /kisskb/src/drivers/media/platform/nxp/imx8-isi/imx8-isi-core.c: error: 'mxc_isi_pm_resume' defined but not used [-Werror=unused-function]:  => 328:12
->  + /kisskb/src/drivers/media/platform/nxp/imx8-isi/imx8-isi-core.c: error: 'mxc_isi_pm_suspend' defined but not used [-Werror=unused-function]:  => 314:12
+On Fri 05-05-23 13:51:29, Christoph Hellwig wrote:
+> Add a mark_dead method to blk_holder_ops that is called from blk_mark_disk_dead
+> to notify the holder that the block device it is using has been marked dead.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-sparc64-gcc{5,11}/sparc-allmodconfig
-(fix was available before the merge window)
+One question below:
 
->  + /kisskb/src/drivers/media/platform/nxp/imx8-isi/imx8-isi-hw.c: error: "CONFIG_ARCH_DMA_ADDR_T_64BIT" is not defined [-Werror=undef]:  => 66:5, 33:5, 51:5
->  + /kisskb/src/drivers/media/platform/nxp/imx8-isi/imx8-isi-hw.c: error: "CONFIG_ARCH_DMA_ADDR_T_64BIT" is not defined, evaluates to 0 [-Werror=undef]:  => 51:5, 66:5, 33:5
+> ---
+>  block/genhd.c          | 24 ++++++++++++++++++++++++
+>  include/linux/blkdev.h |  1 +
+>  2 files changed, 25 insertions(+)
+> 
+> diff --git a/block/genhd.c b/block/genhd.c
+> index d1c673b967c254..af97a4ef1e926c 100644
+> --- a/block/genhd.c
+> +++ b/block/genhd.c
+> @@ -575,6 +575,28 @@ int __must_check device_add_disk(struct device *parent, struct gendisk *disk,
+>  }
+>  EXPORT_SYMBOL(device_add_disk);
+>  
+> +static void blk_report_disk_dead(struct gendisk *disk)
+> +{
+> +	struct block_device *bdev;
+> +	unsigned long idx;
+> +
+> +	rcu_read_lock();
+> +	xa_for_each(&disk->part_tbl, idx, bdev) {
+> +		if (!kobject_get_unless_zero(&bdev->bd_device.kobj))
+> +			continue;
+> +		rcu_read_unlock();
+> +
+> +		mutex_lock(&bdev->bd_holder_lock);
+> +		if (bdev->bd_holder_ops && bdev->bd_holder_ops->mark_dead)
+> +			bdev->bd_holder_ops->mark_dead(bdev);
+> +		mutex_unlock(&bdev->bd_holder_lock);
+> +
+> +		put_device(&bdev->bd_device);
+> +		rcu_read_lock();
+> +	}
+> +	rcu_read_unlock();
+> +}
+> +
+>  /**
+>   * blk_mark_disk_dead - mark a disk as dead
+>   * @disk: disk to mark as dead
+> @@ -602,6 +624,8 @@ void blk_mark_disk_dead(struct gendisk *disk)
+>  	 * Prevent new I/O from crossing bio_queue_enter().
+>  	 */
+>  	blk_queue_start_drain(disk->queue);
+> +
+> +	blk_report_disk_dead(disk);
 
-mips-gcc{8,11}/mips-allmodconfig
-xtensa-gcc11/xtensa-allmodconfig
-powerpc-gcc5/ppc32_allmodconfig
-(fix was available before the merge window)
+Hum, but this gets called from del_gendisk() after blk_drop_partitions()
+happens. So how is this going to be able to iterate anything?
 
->  + /kisskb/src/drivers/mtd/spi-nor/spansion.c: error: 'op' is used uninitialized [-Werror=uninitialized]:  => 495:27, 364:27
+								Honza
 
-um-x86_64-gcc12/um-allyesconfig
-
->  + /kisskb/src/fs/xfs/scrub/scrub.h: error: initializer element is not constant:  => 112:28
-
-powerpc-gcc5/ppc64_book3e_allmodconfig
-powerpc-gcc5/powerpc-allmodconfig
-powerpc-gcc5/ppc32_allmodconfig
-powerpc-gcc5/powerpc-allyesconfig
-powerpc-gcc5/ppc64le_allmodconfig
-arm64-gcc5/arm64-allmodconfig
-(fix sent)
-
->  + error: modpost: "__floatunsidf" [drivers/phy/mediatek/phy-mtk-hdmi-drv.ko] undefined!:  => N/A
->  + error: modpost: "__gedf2" [drivers/phy/mediatek/phy-mtk-hdmi-drv.ko] undefined!:  => N/A
->  + error: modpost: "__ltdf2" [drivers/phy/mediatek/phy-mtk-hdmi-drv.ko] undefined!:  => N/A
-
-sparc64-gcc5/sparc64-allmodconfig
-
-Gr{oetje,eeting}s,
-
- 						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
- 							    -- Linus Torvalds
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
