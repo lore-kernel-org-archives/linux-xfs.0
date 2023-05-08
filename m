@@ -2,130 +2,85 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BC22C77B73
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 May 2023 07:48:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FAD8C77B73
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 May 2023 09:24:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232657AbjEHHsf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 May 2023 03:48:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55994 "EHLO
+        id S233265AbjEHJYP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 May 2023 05:24:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232521AbjEHHse (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 May 2023 03:48:34 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FD68171F
-        for <linux-xfs@vger.kernel.org>; Mon,  8 May 2023 00:48:32 -0700 (PDT)
-Received: from kwepemi500022.china.huawei.com (unknown [172.30.72.56])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4QFCzN079QzsRGW;
-        Mon,  8 May 2023 15:46:39 +0800 (CST)
-Received: from [10.174.177.210] (10.174.177.210) by
- kwepemi500022.china.huawei.com (7.221.188.64) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.23; Mon, 8 May 2023 15:48:29 +0800
-Message-ID: <6427e6e1-26e5-18b9-f1f5-bbb0765be340@huawei.com>
-Date:   Mon, 8 May 2023 15:48:29 +0800
+        with ESMTP id S232050AbjEHJYN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 May 2023 05:24:13 -0400
+Received: from out28-82.mail.aliyun.com (out28-82.mail.aliyun.com [115.124.28.82])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6390C226AE
+        for <linux-xfs@vger.kernel.org>; Mon,  8 May 2023 02:24:11 -0700 (PDT)
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.2331686|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0420147-0.000836042-0.957149;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047192;MF=wangyugui@e16-tech.com;NM=1;PH=DS;RN=1;RT=1;SR=0;TI=SMTPD_---.SbWHb.N_1683537845;
+Received: from 192.168.2.112(mailfrom:wangyugui@e16-tech.com fp:SMTPD_---.SbWHb.N_1683537845)
+          by smtp.aliyun-inc.com;
+          Mon, 08 May 2023 17:24:05 +0800
+Date:   Mon, 08 May 2023 17:24:07 +0800
+From:   Wang Yugui <wangyugui@e16-tech.com>
+To:     linux-xfs@vger.kernel.org
+Subject: performance regression between 6.1.x and 5.15.x
+Message-Id: <20230508172406.1CF3.409509F4@e16-tech.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.1
-Subject: Re: [PATCH] xfs: fix xfs_buf use-after-free in xfs_buf_item_unpin
-To:     Dave Chinner <david@fromorbit.com>,
-        yangerkun <yangerkun@huaweicloud.com>
-CC:     <djwong@kernel.org>, <bfoster@redhat.com>,
-        <linux-xfs@vger.kernel.org>
-References: <20230420033550.339934-1-yangerkun@huaweicloud.com>
- <20230508033406.GQ3223426@dread.disaster.area>
-From:   yangerkun <yangerkun@huawei.com>
-In-Reply-To: <20230508033406.GQ3223426@dread.disaster.area>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.177.210]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- kwepemi500022.china.huawei.com (7.221.188.64)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Becky! ver. 2.81.04 [en]
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+Hi,
+
+I noticed a performance regression of xfs 6.1.27/6.1.23,
+with the compare to xfs 5.15.110.
+
+It is yet not clear whether  it is a problem of xfs or lvm2.
+
+any guide to troubleshoot it?
+
+test case:
+  disk: NVMe PCIe3 SSD *4 
+  LVM: raid0 default strip size 64K.
+  fio -name write-bandwidth -rw=write -bs=1024Ki -size=32Gi -runtime=30
+   -iodepth 1 -ioengine sync -zero_buffers=1 -direct=0 -end_fsync=1 -numjobs=4
+   -directory=/mnt/test
 
 
-在 2023/5/8 11:34, Dave Chinner 写道:
-> Hi yangerkun,
-> 
-> Sorry to take so long to get to this, I've been busy with other
-> stuff and I needed to do some thinking on it first.
-> 
-> On Thu, Apr 20, 2023 at 11:35:50AM +0800, yangerkun wrote:
->> From: yangerkun <yangerkun@huawei.com>
->>
->> commit 84d8949e7707 ("xfs: hold buffer across unpin and potential
->> shutdown processing") describle a use-after-free bug show as follow.
->> Call xfs_buf_hold before dec b_pin_count can forbid the problem.
->>
->>     +-----------------------------+--------------------------------+
->>       xlog_ioend_work             | xfsaild
->>       ...                         |  xfs_buf_delwri_submit_buffers
->>        xfs_buf_item_unpin         |
->>         dec &bip->bli_refcount    |
->>         dec &bp->b_pin_count      |
->>                                   |  // check unpin and go on
->>                                   |  __xfs_buf_submit
->>                                   |  xfs_buf_ioend_fail // shutdown
->>                                   |  xfs_buf_ioend
->>                                   |  xfs_buf_relse
->>                                   |  xfs_buf_free(bp)
->>         xfs_buf_lock(bp) // UAF   |
->>
->> However with the patch, we still get a UAF with shutdown:
->>
->>     +-----------------------------+--------------------------------+
->>       xlog_ioend_work             |  xlog_cil_push_work // now shutdown
->>       ...                         |   xlog_cil_committed
->>        xfs_buf_item_unpin         |    ...
->>        // bli_refcount = 2        |
->>        dec bli_refcount // 1      |    xfs_buf_item_unpin
->>                                   |    dec bli_refcount // 0,will free
->>                                   |    xfs_buf_ioend_fail // free bp
->>        dec b_pin_count // UAF     |
-> 
-> Ok, so the race condition here is that we have two callers racing to
-> run xlog_cil_committed(). We have xlog_ioend_work() doing the
-> shutdown callbacks for checkpoint contexts that have been aborted
-> after submission, and xlog_cil_push_work aborting a checkpoint
-> context before it has been submitted.
-> 
->> xlog_cil_push_work will call xlog_cil_committed once we meet some error
->> like shutdown, and then call xfs_buf_item_unpin with 'remove' equals 1.
->> xlog_ioend_work can happened same time which trigger xfs_buf_item_unpin
->> too, and then bli_refcount will down to zero which trigger
->> xfs_buf_ioend_fail that free the xfs_buf, so the UAF can trigger.
->>
->> Fix it by call xfs_buf_hold before dec bli_refcount, and release the
->> hold once we actually do not need it.
-> 
-> Ok, that works.
-> 
-> However, adding an unconditional buffer reference to each unpin call
-> so that we can safely reference the buffer after we're released the
-> BLI indicates that the BLI buffer reference is not guaranteeing
-> buffer existence once the bli reference for the current pin the bli
-> holds.
-> 
-> Which means that we need a buffer reference per pin count that is
-> added. We can then hold that buffer reference in the unpin
-> processing until we don't need it anymore, and we cover all the
-> known cases (and any unknown cases) without needing special case
-> code?
-> 
-> Say, something like the (untested) patch I've attached below?
+6.1.27/6.1.23
+fio bw=2623MiB/s (2750MB/s)
+perf report:
+Samples: 330K of event 'cycles', Event count (approx.): 120739812790
+Overhead  Command  Shared Object        Symbol
+  31.07%  fio      [kernel.kallsyms]    [k] copy_user_enhanced_fast_string
+   5.11%  fio      [kernel.kallsyms]    [k] iomap_set_range_uptodate.part.24
+   3.36%  fio      [kernel.kallsyms]    [k] asm_exc_nmi
+   3.29%  fio      [kernel.kallsyms]    [k] native_queued_spin_lock_slowpath
+   2.27%  fio      [kernel.kallsyms]    [k] iomap_write_begin
+   2.18%  fio      [kernel.kallsyms]    [k] get_page_from_freelist
+   2.11%  fio      [kernel.kallsyms]    [k] xas_load
+   2.10%  fio      [kernel.kallsyms]    [k] xas_descend
 
-Hi Dave,
+5.15.110
+fio bw=6796MiB/s (7126MB/s)
+perf report:
+Samples: 267K of event 'cycles', Event count (approx.): 186688803871
+Overhead  Command  Shared Object       Symbol
+  38.09%  fio      [kernel.kallsyms]   [k] copy_user_enhanced_fast_string
+   6.76%  fio      [kernel.kallsyms]   [k] iomap_set_range_uptodate
+   4.40%  fio      [kernel.kallsyms]   [k] xas_load
+   3.94%  fio      [kernel.kallsyms]   [k] get_page_from_freelist
+   3.04%  fio      [kernel.kallsyms]   [k] asm_exc_nmi
+   1.97%  fio      [kernel.kallsyms]   [k] native_queued_spin_lock_slowpath
+   1.88%  fio      [kernel.kallsyms]   [k] __pagevec_lru_add
+   1.53%  fio      [kernel.kallsyms]   [k] iomap_write_begin
+   1.53%  fio      [kernel.kallsyms]   [k] __add_to_page_cache_locked
+   1.41%  fio      [kernel.kallsyms]   [k] xas_start
 
-This solution looks great to me! I will run the testcase trigger the uaf 
-with your patch!
 
-Thanks,
-yangerkun.
+Best Regards
+Wang Yugui (wangyugui@e16-tech.com)
+2023/05/08
 
-> 
-> Cheers,
-> 
-> Dave.
+
