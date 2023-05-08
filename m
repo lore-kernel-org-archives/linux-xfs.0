@@ -2,85 +2,89 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FAD8C77B73
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 May 2023 09:24:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C405DC77B73
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 May 2023 12:06:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233265AbjEHJYP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 May 2023 05:24:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57394 "EHLO
+        id S232894AbjEHMGl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 May 2023 08:06:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232050AbjEHJYN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 May 2023 05:24:13 -0400
-Received: from out28-82.mail.aliyun.com (out28-82.mail.aliyun.com [115.124.28.82])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6390C226AE
-        for <linux-xfs@vger.kernel.org>; Mon,  8 May 2023 02:24:11 -0700 (PDT)
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.2331686|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0420147-0.000836042-0.957149;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047192;MF=wangyugui@e16-tech.com;NM=1;PH=DS;RN=1;RT=1;SR=0;TI=SMTPD_---.SbWHb.N_1683537845;
-Received: from 192.168.2.112(mailfrom:wangyugui@e16-tech.com fp:SMTPD_---.SbWHb.N_1683537845)
-          by smtp.aliyun-inc.com;
-          Mon, 08 May 2023 17:24:05 +0800
-Date:   Mon, 08 May 2023 17:24:07 +0800
-From:   Wang Yugui <wangyugui@e16-tech.com>
-To:     linux-xfs@vger.kernel.org
-Subject: performance regression between 6.1.x and 5.15.x
-Message-Id: <20230508172406.1CF3.409509F4@e16-tech.com>
+        with ESMTP id S232429AbjEHMGk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 May 2023 08:06:40 -0400
+Received: from xavier.telenet-ops.be (xavier.telenet-ops.be [IPv6:2a02:1800:120:4::f00:14])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BB9D1727
+        for <linux-xfs@vger.kernel.org>; Mon,  8 May 2023 05:06:37 -0700 (PDT)
+Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed30:6a18:41e7:fcfe:24c0])
+        by xavier.telenet-ops.be with bizsmtp
+        id uC6b2900D2WBekD01C6byZ; Mon, 08 May 2023 14:06:35 +0200
+Received: from rox.of.borg ([192.168.97.57])
+        by ramsan.of.borg with esmtp (Exim 4.95)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1pvzdM-001Vg5-I6;
+        Mon, 08 May 2023 14:06:35 +0200
+Received: from geert by rox.of.borg with local (Exim 4.95)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1pvzdT-00Au3m-8z;
+        Mon, 08 May 2023 14:06:35 +0200
+From:   Geert Uytterhoeven <geert+renesas@glider.be>
+To:     "Darrick J . Wong" <djwong@kernel.org>,
+        Dave Chinner <dchinner@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Geert Uytterhoeven <geert+renesas@glider.be>
+Subject: [PATCH] xfs: Fix undefined behavior of shift into sign bit
+Date:   Mon,  8 May 2023 14:06:34 +0200
+Message-Id: <20230508120634.2598765-1-geert+renesas@glider.be>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Mailer: Becky! ver. 2.81.04 [en]
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+With gcc-5:
 
-I noticed a performance regression of xfs 6.1.27/6.1.23,
-with the compare to xfs 5.15.110.
+    In file included from ./include/trace/define_trace.h:102:0,
+		     from ./fs/xfs/scrub/trace.h:988,
+		     from fs/xfs/scrub/trace.c:40:
+    ./fs/xfs/./scrub/trace.h: In function ‘trace_raw_output_xchk_fsgate_class’:
+    ./fs/xfs/scrub/scrub.h:111:28: error: initializer element is not constant
+     #define XREP_ALREADY_FIXED (1 << 31) /* checking our repair work */
+				^
 
-It is yet not clear whether  it is a problem of xfs or lvm2.
+Shifting the (signed) value 1 into the sign bit is undefined behavior.
 
-any guide to troubleshoot it?
+Fix this for all definitions in the file by shifting "1U" instead of
+"1".
 
-test case:
-  disk: NVMe PCIe3 SSD *4 
-  LVM: raid0 default strip size 64K.
-  fio -name write-bandwidth -rw=write -bs=1024Ki -size=32Gi -runtime=30
-   -iodepth 1 -ioengine sync -zero_buffers=1 -direct=0 -end_fsync=1 -numjobs=4
-   -directory=/mnt/test
+This was exposed by the first user added in commit 466c525d6d35e691
+("xfs: minimize overhead of drain wakeups by using jump labels").
 
+Fixes: 160b5a784525e8a4 ("xfs: hoist the already_fixed variable to the scrub context")
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+---
+ fs/xfs/scrub/scrub.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-6.1.27/6.1.23
-fio bw=2623MiB/s (2750MB/s)
-perf report:
-Samples: 330K of event 'cycles', Event count (approx.): 120739812790
-Overhead  Command  Shared Object        Symbol
-  31.07%  fio      [kernel.kallsyms]    [k] copy_user_enhanced_fast_string
-   5.11%  fio      [kernel.kallsyms]    [k] iomap_set_range_uptodate.part.24
-   3.36%  fio      [kernel.kallsyms]    [k] asm_exc_nmi
-   3.29%  fio      [kernel.kallsyms]    [k] native_queued_spin_lock_slowpath
-   2.27%  fio      [kernel.kallsyms]    [k] iomap_write_begin
-   2.18%  fio      [kernel.kallsyms]    [k] get_page_from_freelist
-   2.11%  fio      [kernel.kallsyms]    [k] xas_load
-   2.10%  fio      [kernel.kallsyms]    [k] xas_descend
-
-5.15.110
-fio bw=6796MiB/s (7126MB/s)
-perf report:
-Samples: 267K of event 'cycles', Event count (approx.): 186688803871
-Overhead  Command  Shared Object       Symbol
-  38.09%  fio      [kernel.kallsyms]   [k] copy_user_enhanced_fast_string
-   6.76%  fio      [kernel.kallsyms]   [k] iomap_set_range_uptodate
-   4.40%  fio      [kernel.kallsyms]   [k] xas_load
-   3.94%  fio      [kernel.kallsyms]   [k] get_page_from_freelist
-   3.04%  fio      [kernel.kallsyms]   [k] asm_exc_nmi
-   1.97%  fio      [kernel.kallsyms]   [k] native_queued_spin_lock_slowpath
-   1.88%  fio      [kernel.kallsyms]   [k] __pagevec_lru_add
-   1.53%  fio      [kernel.kallsyms]   [k] iomap_write_begin
-   1.53%  fio      [kernel.kallsyms]   [k] __add_to_page_cache_locked
-   1.41%  fio      [kernel.kallsyms]   [k] xas_start
-
-
-Best Regards
-Wang Yugui (wangyugui@e16-tech.com)
-2023/05/08
-
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index b38e93830ddea2b0..e113f2f5c254b085 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -105,10 +105,10 @@ struct xfs_scrub {
+ };
+ 
+ /* XCHK state flags grow up from zero, XREP state flags grown down from 2^31 */
+-#define XCHK_TRY_HARDER		(1 << 0)  /* can't get resources, try again */
+-#define XCHK_FSGATES_DRAIN	(1 << 2)  /* defer ops draining enabled */
+-#define XCHK_NEED_DRAIN		(1 << 3)  /* scrub needs to drain defer ops */
+-#define XREP_ALREADY_FIXED	(1 << 31) /* checking our repair work */
++#define XCHK_TRY_HARDER		(1U << 0)  /* can't get resources, try again */
++#define XCHK_FSGATES_DRAIN	(1U << 2)  /* defer ops draining enabled */
++#define XCHK_NEED_DRAIN		(1U << 3)  /* scrub needs to drain defer ops */
++#define XREP_ALREADY_FIXED	(1U << 31) /* checking our repair work */
+ 
+ /*
+  * The XCHK_FSGATES* flags reflect functionality in the main filesystem that
+-- 
+2.34.1
 
