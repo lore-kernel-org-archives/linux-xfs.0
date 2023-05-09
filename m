@@ -2,126 +2,61 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23B20C7EE22
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 May 2023 07:11:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52DF0C7EE22
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 May 2023 07:38:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234915AbjEIHLA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 May 2023 03:11:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40936 "EHLO
+        id S233992AbjEIHiE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 May 2023 03:38:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234729AbjEIHK7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 May 2023 03:10:59 -0400
-Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB9357AA4
-        for <linux-xfs@vger.kernel.org>; Tue,  9 May 2023 00:10:56 -0700 (PDT)
-Received: by mail-pj1-x1031.google.com with SMTP id 98e67ed59e1d1-24dea6d5ce8so5252593a91.2
-        for <linux-xfs@vger.kernel.org>; Tue, 09 May 2023 00:10:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1683616256; x=1686208256;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=pD3vC44u/JrX7UZU0G86FxBlR+SBjPWE0ROlIx+IJIE=;
-        b=FLHiOAoe0smn7K67HbKp6fRUgNgCB30KutCREjN24an2Kp06DnitpwwBBCQHFRpEgW
-         fSl/XBWjgAjYlm46nnvSn1FGoTk1Fe5oJOmBb0NNdfGwPcWbU/w8IPxBJshYO4X78KKb
-         vdGhRDApbyvBRJGD3/ssL/39jjFwC6ge0Wzi6CJKgBsIBYDVCHEpUXrqHQrB5MJ0iJoE
-         1ztodMxlTcFZ3/I3OJujfKI40F/D4XfWbxQLsb78nYpYU4AheiYq+6QpT0AvpBJvEe6A
-         zSL/XRZRUlrfedKUW6YH9CH/45wIVj43pq2fH4TQIq1ATCdHxldkH4Q04O4Gchw9wa0y
-         6xzg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683616256; x=1686208256;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=pD3vC44u/JrX7UZU0G86FxBlR+SBjPWE0ROlIx+IJIE=;
-        b=KMIph+vabrmB06S1gKUhZWN9FqfjgNKqu5/yhB4+0MdDK36/otUufpi0KFRtCLkp0G
-         ifDqZnNmJbjF1ywP2s0hr8F6Zqkwb+fHN4QPeAAuWnf+DGN147wXILCNiP5mC+9LpnNE
-         VrlF8zDnWvss1FXvVKZIQK3eWf5YeOT5dDa3q1rHLdh9o4lwRANcbi1XiiZLJo0Xh79e
-         bGDk9D9+ecnzTSXRw4jmzQGTdRDltQP8aa8Upp5GycKKJtLU3D12W5talzu+tf5KsHtc
-         LLfXRHOtscq3xmJlgOur8SomFHjXtLD8RhLBgwKA/J3R9RYykpZ26z3ceOFiP4j1eGbl
-         oPYA==
-X-Gm-Message-State: AC+VfDz1t6tNbCCli/ZViGY8yhMgZXPDp28lQbIzAHaruAH9KikQ+Vwv
-        uqoZEcXon2pmrjQUMpTzqGZFog==
-X-Google-Smtp-Source: ACHHUZ5LPq6vbiUiGn8QucrxfCUTAIA2DuQwFde7Y5Ilh0P5usC+N7y1yI4KbGRdKXEjFLumzQfXTg==
-X-Received: by 2002:a17:90b:1296:b0:24e:596:624f with SMTP id fw22-20020a17090b129600b0024e0596624fmr13309175pjb.22.1683616256482;
-        Tue, 09 May 2023 00:10:56 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-88-204.pa.nsw.optusnet.com.au. [49.181.88.204])
-        by smtp.gmail.com with ESMTPSA id v24-20020a17090ac91800b0024df90a4c58sm11023412pjt.36.2023.05.09.00.10.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 May 2023 00:10:55 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1pwHUr-00D8HE-7l; Tue, 09 May 2023 17:10:53 +1000
-Date:   Tue, 9 May 2023 17:10:53 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     kernel test robot <oliver.sang@intel.com>
-Cc:     Dave Chinner <dchinner@redhat.com>, oe-lkp@lists.linux.dev,
-        lkp@intel.com, linux-kernel@vger.kernel.org,
-        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        ying.huang@intel.com, feng.tang@intel.com, fengwei.yin@intel.com
-Subject: Re: [linus:master] [xfs]  2edf06a50f:  fsmark.files_per_sec -5.7%
- regression
-Message-ID: <20230509071053.GE2651828@dread.disaster.area>
-References: <202305090905.aff4e0e6-oliver.sang@intel.com>
- <20230509065433.GT3223426@dread.disaster.area>
+        with ESMTP id S229615AbjEIHiD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 May 2023 03:38:03 -0400
+Received: from mail.feshiecree.pl (mail.feshiecree.pl [89.40.114.103])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DC7C55A5
+        for <linux-xfs@vger.kernel.org>; Tue,  9 May 2023 00:38:00 -0700 (PDT)
+Received: by mail.feshiecree.pl (Postfix, from userid 1001)
+        id 69F2887F7C; Tue,  9 May 2023 08:36:40 +0100 (BST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=feshiecree.pl;
+        s=mail; t=1683617829;
+        bh=hFxZwVw4rIL+JwfEOGI47p+fdoVOAeqVswP6NWoHSHQ=;
+        h=Date:From:To:Subject:From;
+        b=UUv3pad8z/zXQAYgultG0dJTbMvUnYGzwggJJ7O8jZcG5v1so40f9t3s+fBD5DrYM
+         Cx14xgWT9zI0RBew6XM89xM8O/ZldU6cGpaAbD1Op9uFvlKWw5vvZ+q45SxdGuBdBM
+         royZp3m+YpXU6rNgJAfzp/OOsvrqDwsvidwIJ2NAn53mkN6D0/2IQFvv06A9/yCskc
+         +D7/1sUbn84G5yMG+4JMKq+K4VkU4xRXuC4vdfp4MkxShS2DQRvFyActt/UHi/O55b
+         xzYiz8mX5G0l5g6J4/3t+jzooUm8SSWbtn3zC7ElIhcly3q5wemTxZRovPMvx9mjYV
+         AA84jusTcwWyQ==
+Received: by mail.feshiecree.pl for <linux-xfs@vger.kernel.org>; Tue,  9 May 2023 07:35:45 GMT
+Message-ID: <20230509074504-0.1.2g.f9xv.0.23j8bram60@feshiecree.pl>
+Date:   Tue,  9 May 2023 07:35:45 GMT
+From:   "Krystian Wieczorek" <krystian.wieczorek@feshiecree.pl>
+To:     <linux-xfs@vger.kernel.org>
+Subject: W sprawie samochodu
+X-Mailer: mail.feshiecree.pl
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230509065433.GT3223426@dread.disaster.area>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 09, 2023 at 04:54:33PM +1000, Dave Chinner wrote:
-> On Tue, May 09, 2023 at 10:13:19AM +0800, kernel test robot wrote:
-> > 
-> > 
-> > Hello,
-> > 
-> > kernel test robot noticed a -5.7% regression of fsmark.files_per_sec on:
-> > 
-> > 
-> > commit: 2edf06a50f5bbe664283f3c55c480fc013221d70 ("xfs: factor xfs_alloc_vextent_this_ag() for  _iterate_ags()")
-> > https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git master
-> 
-> This is just a refactoring patch and doesn't change any logic.
-> Hence I'm sceptical that it actually resulted in a performance
-> regression. Indeed, the profile indicates a significant change of
-> behaviour in the allocator and I can't see how the commit above
-> would cause anything like that.
-> 
-> Was this a result of a bisect? If so, what were the original kernel
-> versions where the regression was detected?
+Dzie=C5=84 dobry,
 
-Oh, CONFIG_XFS_DEBUG=y, which means:
+chcieliby=C5=9Bmy zapewni=C4=87 Pa=C5=84stwu kompleksowe rozwi=C4=85zania=
+, je=C5=9Bli chodzi o system monitoringu GPS.
 
-static int
-xfs_alloc_ag_vextent_lastblock(
-        struct xfs_alloc_arg    *args,
-        struct xfs_alloc_cur    *acur,
-        xfs_agblock_t           *bno,
-        xfs_extlen_t            *len,
-        bool                    *allocated)
-{
-        int                     error;
-        int                     i;
+Precyzyjne monitorowanie pojazd=C3=B3w na mapach cyfrowych, =C5=9Bledzeni=
+e ich parametr=C3=B3w eksploatacyjnych w czasie rzeczywistym oraz kontrol=
+a paliwa to kluczowe funkcjonalno=C5=9Bci naszego systemu.=20
 
-#ifdef DEBUG
-        /* Randomly don't execute the first algorithm. */
-        if (get_random_u32_below(2))
-                return 0;
-#endif
+Organizowanie pracy pracownik=C3=B3w jest dzi=C4=99ki temu prostsze i bar=
+dziej efektywne, a oszcz=C4=99dno=C5=9Bci i optymalizacja w zakresie pono=
+szonych koszt=C3=B3w, maj=C4=85 dla ka=C5=BCdego przedsi=C4=99biorcy ogro=
+mne znaczenie.
 
-We randomly chose a near block allocation strategy to use to improve
-code coverage, not the optimal one for IO performance. Hence the CPU
-usage and allocation patterns that impact IO performance are simply
-not predictable or reproducable from run to run. So, yeah, trying to
-bisect a minor difference in performance as a result of this
-randomness will not be reliable....
+Dopasujemy nasz=C4=85 ofert=C4=99 do Pa=C5=84stwa oczekiwa=C5=84 i potrze=
+b organizacji. Czy mogliby=C5=9Bmy porozmawia=C4=87 o naszej propozycji?
 
-Cheers,
 
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+Pozdrawiam
+Krystian Wieczorek
