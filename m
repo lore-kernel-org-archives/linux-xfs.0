@@ -2,109 +2,143 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ACA6C7EE22
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 May 2023 00:20:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7798C77B7F
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 May 2023 01:07:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234195AbjEIAUC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 May 2023 20:20:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39112 "EHLO
+        id S233361AbjEIBH1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 May 2023 21:07:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234167AbjEIAUA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 May 2023 20:20:00 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 986BE44BD
-        for <linux-xfs@vger.kernel.org>; Mon,  8 May 2023 17:19:59 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2FF7C63036
-        for <linux-xfs@vger.kernel.org>; Tue,  9 May 2023 00:19:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E0F0C433EF
-        for <linux-xfs@vger.kernel.org>; Tue,  9 May 2023 00:19:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683591598;
-        bh=MjkItiypktEo25V6DO99EB7GxcQEs1EfAiVhHUuOnbQ=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=RSSudBY16vz4RroQGxUhku5OYcaCkTjMO58/KDOi1njcr8zgMeihbJkxIfe65FdwA
-         WTKRFk6yLOIpAzrnwSc0mgGoLoqHAmwLcw5j+/ZcE4ExvVWFtdQZHfyiT5v2LqPQAL
-         CJjAqVGQZKTLiM7Geg+UAZwtw9PLqV72x8dfHDiQPcnMah4gDRlxD0mfA6PQtR1ygY
-         tSHHJaV+yO9jZA69YjZYgxwTxbKWNwxGoRQkoKHqh2LcT4jRNC4u7QTtaySrD+bmEI
-         Jwb9ej+fJqbGeMH8Q1vK9wkTdfbBAJF3cszo7dZOpRxsmLDp07qqoh+s+uHedZ8+xd
-         8LPuzMoSTBDxA==
-Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-50bc4ba28cbso9527100a12.0
-        for <linux-xfs@vger.kernel.org>; Mon, 08 May 2023 17:19:58 -0700 (PDT)
-X-Gm-Message-State: AC+VfDxSP1OMbpgeq3W1C3kOCywY8HQxy506paxKjwqdtgo1f8tKBBUC
-        ZwF7Y/5RTc34c/lKR/DxNYnYn4uBFb8ySlfaZj2g
-X-Google-Smtp-Source: ACHHUZ6XguvB359TJD5EVeTjXaiA2ucEsERS2+WbXhgo3pznKhng9msxWTb8gnB50Rzaq/efZNnWYP+FsScnG1YYBIM=
-X-Received: by 2002:a17:907:9808:b0:94f:4801:6d08 with SMTP id
- ji8-20020a170907980800b0094f48016d08mr10822326ejc.71.1683591597081; Mon, 08
- May 2023 17:19:57 -0700 (PDT)
+        with ESMTP id S233108AbjEIBH0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 May 2023 21:07:26 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46EDA184
+        for <linux-xfs@vger.kernel.org>; Mon,  8 May 2023 18:07:02 -0700 (PDT)
+Received: from kwepemi500022.china.huawei.com (unknown [172.30.72.55])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4QFg2M27CHzpVwF;
+        Tue,  9 May 2023 09:05:47 +0800 (CST)
+Received: from [10.174.177.210] (10.174.177.210) by
+ kwepemi500022.china.huawei.com (7.221.188.64) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23; Tue, 9 May 2023 09:06:58 +0800
+Message-ID: <224d7e52-f317-45b8-1f19-6362f3d47372@huawei.com>
+Date:   Tue, 9 May 2023 09:06:58 +0800
 MIME-Version: 1.0
-References: <20230503183821.1473305-1-john.g.garry@oracle.com> <20230503183821.1473305-2-john.g.garry@oracle.com>
-In-Reply-To: <20230503183821.1473305-2-john.g.garry@oracle.com>
-From:   Mike Snitzer <snitzer@kernel.org>
-Date:   Mon, 8 May 2023 20:19:46 -0400
-X-Gmail-Original-Message-ID: <CAH6w=ay1NNxh=9mQv5PCcDi3OY0mgvRXO_0VrmKBLAd1dcUQqQ@mail.gmail.com>
-Message-ID: <CAH6w=ay1NNxh=9mQv5PCcDi3OY0mgvRXO_0VrmKBLAd1dcUQqQ@mail.gmail.com>
-Subject: Re: [PATCH RFC 01/16] block: Add atomic write operations to
- request_queue limits
-To:     John Garry <john.g.garry@oracle.com>
-Cc:     axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-        martin.petersen@oracle.com, djwong@kernel.org,
-        viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-        jejb@linux.ibm.com, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        linux-security-module@vger.kernel.org, paul@paul-moore.com,
-        jmorris@namei.org, serge@hallyn.com,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        dm-devel@redhat.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.1
+Subject: Re: [PATCH] xfs: fix xfs_buf use-after-free in xfs_buf_item_unpin
+To:     Dave Chinner <david@fromorbit.com>,
+        yangerkun <yangerkun@huaweicloud.com>
+CC:     <djwong@kernel.org>, <bfoster@redhat.com>,
+        <linux-xfs@vger.kernel.org>
+References: <20230420033550.339934-1-yangerkun@huaweicloud.com>
+ <20230508033406.GQ3223426@dread.disaster.area>
+ <6427e6e1-26e5-18b9-f1f5-bbb0765be340@huawei.com>
+From:   yangerkun <yangerkun@huawei.com>
+In-Reply-To: <6427e6e1-26e5-18b9-f1f5-bbb0765be340@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.177.210]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ kwepemi500022.china.huawei.com (7.221.188.64)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 3, 2023 at 2:40=E2=80=AFPM John Garry <john.g.garry@oracle.com>=
- wrote:
->
-> From: Himanshu Madhani <himanshu.madhani@oracle.com>
->
-> Add the following limits:
-> - atomic_write_boundary
-> - atomic_write_max_bytes
-> - atomic_write_unit_max
-> - atomic_write_unit_min
->
-> Signed-off-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
->  Documentation/ABI/stable/sysfs-block | 42 +++++++++++++++++++++
->  block/blk-settings.c                 | 56 ++++++++++++++++++++++++++++
->  block/blk-sysfs.c                    | 33 ++++++++++++++++
->  include/linux/blkdev.h               | 23 ++++++++++++
->  4 files changed, 154 insertions(+)
->
 
-...
 
-> diff --git a/block/blk-settings.c b/block/blk-settings.c
-> index 896b4654ab00..e21731715a12 100644
-> --- a/block/blk-settings.c
-> +++ b/block/blk-settings.c
-> @@ -59,6 +59,9 @@ void blk_set_default_limits(struct queue_limits *lim)
->         lim->zoned =3D BLK_ZONED_NONE;
->         lim->zone_write_granularity =3D 0;
->         lim->dma_alignment =3D 511;
-> +       lim->atomic_write_unit_min =3D lim->atomic_write_unit_max =3D 1;
-> +       lim->atomic_write_max_bytes =3D 512;
-> +       lim->atomic_write_boundary =3D 0;
->  }
+在 2023/5/8 15:48, yangerkun 写道:
+> 
+> 
+> 在 2023/5/8 11:34, Dave Chinner 写道:
+>> Hi yangerkun,
+>>
+>> Sorry to take so long to get to this, I've been busy with other
+>> stuff and I needed to do some thinking on it first.
+>>
+>> On Thu, Apr 20, 2023 at 11:35:50AM +0800, yangerkun wrote:
+>>> From: yangerkun <yangerkun@huawei.com>
+>>>
+>>> commit 84d8949e7707 ("xfs: hold buffer across unpin and potential
+>>> shutdown processing") describle a use-after-free bug show as follow.
+>>> Call xfs_buf_hold before dec b_pin_count can forbid the problem.
+>>>
+>>>     +-----------------------------+--------------------------------+
+>>>       xlog_ioend_work             | xfsaild
+>>>       ...                         |  xfs_buf_delwri_submit_buffers
+>>>        xfs_buf_item_unpin         |
+>>>         dec &bip->bli_refcount    |
+>>>         dec &bp->b_pin_count      |
+>>>                                   |  // check unpin and go on
+>>>                                   |  __xfs_buf_submit
+>>>                                   |  xfs_buf_ioend_fail // shutdown
+>>>                                   |  xfs_buf_ioend
+>>>                                   |  xfs_buf_relse
+>>>                                   |  xfs_buf_free(bp)
+>>>         xfs_buf_lock(bp) // UAF   |
+>>>
+>>> However with the patch, we still get a UAF with shutdown:
+>>>
+>>>     +-----------------------------+--------------------------------+
+>>>       xlog_ioend_work             |  xlog_cil_push_work // now shutdown
+>>>       ...                         |   xlog_cil_committed
+>>>        xfs_buf_item_unpin         |    ...
+>>>        // bli_refcount = 2        |
+>>>        dec bli_refcount // 1      |    xfs_buf_item_unpin
+>>>                                   |    dec bli_refcount // 0,will free
+>>>                                   |    xfs_buf_ioend_fail // free bp
+>>>        dec b_pin_count // UAF     |
+>>
+>> Ok, so the race condition here is that we have two callers racing to
+>> run xlog_cil_committed(). We have xlog_ioend_work() doing the
+>> shutdown callbacks for checkpoint contexts that have been aborted
+>> after submission, and xlog_cil_push_work aborting a checkpoint
+>> context before it has been submitted.
+>>
+>>> xlog_cil_push_work will call xlog_cil_committed once we meet some error
+>>> like shutdown, and then call xfs_buf_item_unpin with 'remove' equals 1.
+>>> xlog_ioend_work can happened same time which trigger xfs_buf_item_unpin
+>>> too, and then bli_refcount will down to zero which trigger
+>>> xfs_buf_ioend_fail that free the xfs_buf, so the UAF can trigger.
+>>>
+>>> Fix it by call xfs_buf_hold before dec bli_refcount, and release the
+>>> hold once we actually do not need it.
+>>
+>> Ok, that works.
+>>
+>> However, adding an unconditional buffer reference to each unpin call
+>> so that we can safely reference the buffer after we're released the
+>> BLI indicates that the BLI buffer reference is not guaranteeing
+>> buffer existence once the bli reference for the current pin the bli
+>> holds.
+>>
+>> Which means that we need a buffer reference per pin count that is
+>> added. We can then hold that buffer reference in the unpin
+>> processing until we don't need it anymore, and we cover all the
+>> known cases (and any unknown cases) without needing special case
+>> code?
+>>
+>> Say, something like the (untested) patch I've attached below?
+> 
+> Hi Dave,
+> 
+> This solution looks great to me! I will run the testcase trigger the uaf 
+> with your patch!
 
-Not seeing required changes to blk_set_stacking_limits() nor blk_stack_limi=
-ts().
+Hi Dave,
 
-Sorry to remind you of DM and MD limits stacking requirements. ;)
+This patch works well. Thanks again for your fix!
 
-Mike
+Thanks,
+yangerkun.
+
+> 
+> Thanks,
+> yangerkun.
+> 
+>>
+>> Cheers,
+>>
+>> Dave.
+> 
