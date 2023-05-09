@@ -2,184 +2,113 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79BC5C77B75
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 May 2023 22:14:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54C9CC7EE22
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 May 2023 22:20:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230199AbjEIWOR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 May 2023 18:14:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52518 "EHLO
+        id S235634AbjEIWUH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 May 2023 18:20:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229998AbjEIWOQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 May 2023 18:14:16 -0400
-Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E9223A87
-        for <linux-xfs@vger.kernel.org>; Tue,  9 May 2023 15:14:15 -0700 (PDT)
-Received: by mail-pf1-x42d.google.com with SMTP id d2e1a72fcca58-64115e652eeso45971738b3a.0
-        for <linux-xfs@vger.kernel.org>; Tue, 09 May 2023 15:14:15 -0700 (PDT)
+        with ESMTP id S230264AbjEIWUF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 May 2023 18:20:05 -0400
+Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 863B893
+        for <linux-xfs@vger.kernel.org>; Tue,  9 May 2023 15:20:02 -0700 (PDT)
+Received: by mail-pl1-x62f.google.com with SMTP id d9443c01a7336-1ab0c697c84so49496475ad.3
+        for <linux-xfs@vger.kernel.org>; Tue, 09 May 2023 15:20:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1683670455; x=1686262455;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1683670802; x=1686262802;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=GWxbKeHypG+qauPzJTN1zoPkQnY6wHVBSUfbBcuj26Q=;
-        b=iBQfnyP5E0ZsljR4hwVG6wirIZPqRCVEYcMy0d2FeYpd9oGEJvw2Q/IU5d3JhLo+sC
-         g3jOdR+VEDl6GdpjIO9k17TqbjttyY4SEe4nm4vqWcHDXOJ+EHsOEJAK/J0Dn4vvWeKt
-         pj4jqjXeFmHN5o3YUc7CKQQsfjQWZnQi+ac2WBcGD0oFIENz9ASfzV3E+gvArfBevt08
-         KrFbBoqOJ5gX/JR0RklczCg7nUOfRdNoc4yGIp2wc1a/TtBy+Wgwy8IIZ/d94+aOcSGf
-         ioGqd+8xBOw+z0BgxB/+AOrBorWhD6WE2lnW4AKe+/du7WGp0p3JlVWUs8s9wSeqTsJJ
-         z9iw==
+        bh=lpFfG6C/woeEh3xAVWVSW4QDIRY2LcuRr67NeZrYhZk=;
+        b=x4wnhtf2e/5Ls0/pD9obIHjGGbGyC2TZ1yPp9j0M0gpWdvOKZY1vS0QUNfd3huTH3X
+         D1WBE2UUfwRm6IRjV7rztd+1U8bjj+OJ6HetiHxsseo0wxuA7Mmu9FI4AuEL7mHRw0T7
+         dYG/Ha1X6UyzBTojilPQeX5BBtQ/lwjbh952fhmGyoUxngQ/oumQjwc/7o4xGP/MmBf3
+         6Vr7dzf4w5c34jwu0r1wN0a7NQ23j/p4A1KmmPehy4jqOvVU/3HATmsL8oo6QBnkazn6
+         yRJtVSs+2vsQYPQs7TNtruZyFSrbUHe0bj8dK2YJlondW5w3OfJytTXrkk9VzdaUKLiq
+         ltVw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683670455; x=1686262455;
+        d=1e100.net; s=20221208; t=1683670802; x=1686262802;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=GWxbKeHypG+qauPzJTN1zoPkQnY6wHVBSUfbBcuj26Q=;
-        b=S9fcLRLjlSpVYOQKYBTQXmR0JgMHBxsF0NOZ22FQ/3VO3FlgJ7hJl/Cf5ba3+Iz6sG
-         fkecYSK7zXSe3lwGS7GKMCJJB9J5I3TYFsTSfW4qFi0LsXnc5fRNnxeIhXFvoG4WnrSu
-         PZxHfsBXTir+tHRTwrju1xR4hQpESO+FHa9jW8Jbg5XaxIShjRPDK20QgSq7iaTSRBA4
-         lnV28ecPb8n7fTSkE5oGrJdY0+kZoVXe9qFK0IiPTtm+6lcThGDg1egPoSWK4dlncA6n
-         5hvP212S2ZH5ZSuZqPn+1Ni3dtaFUEShjTNAV+DiUj4NoWmRgFXq1ul/guCAUdUa16Dr
-         RidA==
-X-Gm-Message-State: AC+VfDzzRQb/E3GL+ksKOJA0dyU5nVNhnLbfV11o/9kwwpTY4L/W5CSz
-        Q7Qlwbdrvzq0N3oOBcaRMpNOf3cBxX/tjOQZxbU=
-X-Google-Smtp-Source: ACHHUZ6ahaV1GPDvwft/0VpD0L54bQllwFjycbxMxPk7T5EQCkQLeb/4eSugHhDQxGFQ/o0M1JwQcw==
-X-Received: by 2002:a17:902:e80b:b0:1a9:57b4:9d5a with SMTP id u11-20020a170902e80b00b001a957b49d5amr21604459plg.31.1683670454946;
-        Tue, 09 May 2023 15:14:14 -0700 (PDT)
+        bh=lpFfG6C/woeEh3xAVWVSW4QDIRY2LcuRr67NeZrYhZk=;
+        b=Q58wTY4TB9rEgFb/EeCpYKQ+DxTtSv3mQHh/xBFWSscXnWH+wt/LQmJWfzFzdRhImv
+         yG2UyjLzVbx0eqnQoJQOntNRLEoy7Shjpx+aPSpLsvjVVmjD/IPu4kdsJvCpFmgRDZ32
+         N+4lHNCxuLkAuBqqI97DmnTnh3zMAVycOX1y6grhLJHVS0xpJU4aYnW7MXyk3CatG91q
+         yTMv+Ty5X5AuJOD3cKKrDqfJ9JcXgsnte89itKVqWATyqbbw8Bj1Bg+LQCIhHqfGSkcM
+         qbJM+cP92a9mDSgX4Na7R3vu3lQUchX0V7aQUEyVduDhXnUEHArvc3XkhMcZo5wN277+
+         Jfbg==
+X-Gm-Message-State: AC+VfDwFSs06ro6sUXat1TLhJIA6WjuZoqB3CCGgHU40TUdarDyLbkk4
+        N/crtbrsYLKPP5+8fHSt5YRhNA==
+X-Google-Smtp-Source: ACHHUZ45kM8YGiof/dP3yzhXFIIdPd9DEDG9hSY5vXQotAlNRS3qz0nIW+ex68IDbiRDaO4ei/A3bg==
+X-Received: by 2002:a17:902:d504:b0:1a9:98ae:5970 with SMTP id b4-20020a170902d50400b001a998ae5970mr20929374plg.23.1683670802017;
+        Tue, 09 May 2023 15:20:02 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-88-204.pa.nsw.optusnet.com.au. [49.181.88.204])
-        by smtp.gmail.com with ESMTPSA id g15-20020a170902868f00b001a943c41c37sm2150809plo.7.2023.05.09.15.14.14
+        by smtp.gmail.com with ESMTPSA id r9-20020a17090a690900b0024e06a71ef5sm12045144pjj.56.2023.05.09.15.20.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 May 2023 15:14:14 -0700 (PDT)
+        Tue, 09 May 2023 15:20:01 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1pwVb1-00DNgJ-J8; Wed, 10 May 2023 08:14:11 +1000
-Date:   Wed, 10 May 2023 08:14:11 +1000
+        id 1pwVgc-00DNjc-Ew; Wed, 10 May 2023 08:19:58 +1000
+Date:   Wed, 10 May 2023 08:19:58 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Wang Yugui <wangyugui@e16-tech.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: performance regression between 6.1.x and 5.15.x
-Message-ID: <20230509221411.GU3223426@dread.disaster.area>
-References: <20230509072552.7E8B.409509F4@e16-tech.com>
- <20230509013625.GS3223426@dread.disaster.area>
- <20230509203751.E6D2.409509F4@e16-tech.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5/9] block: introduce holder ops
+Message-ID: <20230509221958.GV3223426@dread.disaster.area>
+References: <20230505175132.2236632-1-hch@lst.de>
+ <20230505175132.2236632-6-hch@lst.de>
+ <20230505185119.GI15394@frogsfrogsfrogs>
+ <20230509133501.GD841@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230509203751.E6D2.409509F4@e16-tech.com>
+In-Reply-To: <20230509133501.GD841@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 09, 2023 at 08:37:52PM +0800, Wang Yugui wrote:
-> > On Tue, May 09, 2023 at 07:25:53AM +0800, Wang Yugui wrote:
-> > > > On Mon, May 08, 2023 at 10:46:12PM +0800, Wang Yugui wrote:
-> > > > > > Hi,
-> > > > > > 
-> > > > > > I noticed a performance regression of xfs 6.1.27/6.1.23,
-> > > > > > with the compare to xfs 5.15.110.
-> > > > > > 
-> > > > > > It is yet not clear whether  it is a problem of xfs or lvm2.
-> > > > > > 
-> > > > > > any guide to troubleshoot it?
-> > > > > > 
-> > > > > > test case:
-> > > > > >   disk: NVMe PCIe3 SSD *4 
-> > > > > >   LVM: raid0 default strip size 64K.
-> > > > > >   fio -name write-bandwidth -rw=write -bs=1024Ki -size=32Gi -runtime=30
-> > > > > >    -iodepth 1 -ioengine sync -zero_buffers=1 -direct=0 -end_fsync=1 -numjobs=4
-> > > > > >    -directory=/mnt/test
-.....
-> > > > Because you are testing buffered IO, you need to run perf across all
-> > > > CPUs and tasks, not just the fio process so that it captures the
-> > > > profile of memory reclaim and writeback that is being performed by
-> > > > the kernel.
-> > > 
-> > > 'perf report' of all CPU.
-> > > Samples: 211K of event 'cycles', Event count (approx.): 56590727219
-> > > Overhead  Command          Shared Object            Symbol
-> > >   16.29%  fio              [kernel.kallsyms]        [k] rep_movs_alternative
-> > >    3.38%  kworker/u98:1+f  [kernel.kallsyms]        [k] native_queued_spin_lock_slowpath
-> > >    3.11%  fio              [kernel.kallsyms]        [k] native_queued_spin_lock_slowpath
-> > >    3.05%  swapper          [kernel.kallsyms]        [k] intel_idle
-> > >    2.63%  fio              [kernel.kallsyms]        [k] get_page_from_freelist
-> > >    2.33%  fio              [kernel.kallsyms]        [k] asm_exc_nmi
-> > >    2.26%  kworker/u98:1+f  [kernel.kallsyms]        [k] __folio_start_writeback
-> > >    1.40%  fio              [kernel.kallsyms]        [k] __filemap_add_folio
-> > >    1.37%  fio              [kernel.kallsyms]        [k] lru_add_fn
-> > >    1.35%  fio              [kernel.kallsyms]        [k] xas_load
-> > >    1.33%  fio              [kernel.kallsyms]        [k] iomap_write_begin
-> > >    1.31%  fio              [kernel.kallsyms]        [k] xas_descend
-> > >    1.19%  kworker/u98:1+f  [kernel.kallsyms]        [k] folio_clear_dirty_for_io
-> > >    1.07%  fio              [kernel.kallsyms]        [k] folio_add_lru
-> > >    1.01%  fio              [kernel.kallsyms]        [k] __folio_mark_dirty
-> > >    1.00%  kworker/u98:1+f  [kernel.kallsyms]        [k] _raw_spin_lock_irqsave
-> > > 
-> > > and 'top' show that 'kworker/u98:1' have over 80% CPU usage.
+On Tue, May 09, 2023 at 03:35:01PM +0200, Christoph Hellwig wrote:
+> On Fri, May 05, 2023 at 11:51:19AM -0700, Darrick J. Wong wrote:
+> > Fun question: What happens when the swap disk falls off the bus?
+> 
+> Your system is toast.
+> 
+> > > -	if (IS_ERR(blkdev_get_by_dev(bdev->bd_dev, mode | FMODE_EXCL, &bdev)))
+> > > +	if (IS_ERR(blkdev_get_by_dev(bdev->bd_dev, mode | FMODE_EXCL, &bdev,
+> > > +			NULL)))
+> > >  		return -EBUSY;
+> > >  	ret = set_blocksize(bdev, n);
+> > >  	blkdev_put(bdev, mode | FMODE_EXCL);
 > > 
-> > Can you provide an expanded callgraph profile for both the good and
-> > bad kernels showing the CPU used in the fio write() path and the
-> > kworker-based writeback path?
+> > Somewhat related question: Should we allow userspace to initiate a fs
+> > shutdown through the block device?  Let's say you're preparing to yank
+> > /dev/sda and want to kill anything attached to it or its partitions?
+> > Without having to walk through however many mount namespaces there are
+> > to find the mountpoints?
 > 
-> I'm sorry that some detail guide for info gather of this test please.
+> That's kinda what we're doing here.  Or do you mean even more advanced
+> notice by having another callout before stopping I/O so that we could
+> write out all log buffers?  It's probably doable, but I'm not convinced
+> that this use case is worth maintaining and testing the kernel code for
+> it.
 
-'perf record -g' and 'perf report -g' should enable callgraph
-profiling and reporting. See the perf-record man page for
-'--callgraph' to make sure you have the right kernel config for this
-to work efficiently.
+The userspace shutdown code already does this by default - it
+actually calls freeze_bdev() to cause the filesystem to be made
+consistent on the block device before it executes the shutdown.
+So, in effect, we already have the "shutdown before turning off
+block device" paths in the filesystems and extremely well tested.
 
-You can do quick snapshots in time via 'perf top -U -g' and then
-after a few seconds type 'E' then immediately type 'P' and the fully
-expanded callgraph profile will get written to a perf.hist.N file in
-the current working directory...
-
-> > > I tested 6.4.0-rc1. the performance become a little worse.
-> > 
-> > Thanks, that's as I expected.
-> > 
-> > WHich means that the interesting kernel versions to check now are a
-> > 6.0.x kernel, and then if it has the same perf as 5.15.x, then the
-> > commit before the multi-gen LRU was introduced vs the commit after
-> > the multi-gen LRU was introduced to see if that is the functionality
-> > that introduced the regression....
-> 
-> more performance test result:
-> 
-> linux 6.0.18
-> 	fio WRITE: bw=2565MiB/s (2689MB/s)
-> linux 5.17.0
-> 	fio WRITE: bw=2602MiB/s (2729MB/s) 
-> linux 5.16.20
-> 	fio WRITE: bw=7666MiB/s (8039MB/s),
-> 
-> so it is a problem between 5.16.20 and 5.17.0?
-
-Ok, that is further back in time than I expected. In terms of XFS,
-there are only two commits between 5.16..5.17 that might impact
-performance:
-
-ebb7fb1557b1 ("xfs, iomap: limit individual ioend chain lengths in writeback")
-
-and
-
-6795801366da ("xfs: Support large folios")
-
-To test whether ebb7fb1557b1 is the cause, go to
-fs/iomap/buffered-io.c and change:
-
--#define IOEND_BATCH_SIZE        4096
-+#define IOEND_BATCH_SIZE        1048576
-
-This will increase the IO submission chain lengths to at least 4GB
-from the 16MB bound that was placed on 5.17 and newer kernels.
-
-To test whether 6795801366da is the cause, go to fs/xfs/xfs_icache.c
-and comment out both calls to mapping_set_large_folios(). This will
-ensure the page cache only instantiates single page folios the same
-as 5.16 would have.
-
-If neither of them change behaviour, then I think you're going to
-need to do a bisect between 5.16..5.17 to find the commit that
-introduced the regression. I know kernel bisects are slow and
-painful, but it's exactly what I'd be doing right now if my
-performance test machine wasn't broken....
+Indeed, if the device is being removed, why not call freeze_bdev()
+before doing anything else? It guarantees that applications will be
+quiesced and the filesystem will stabilise and not try to change
+anything until the shutdown occurs when the device is pulled...
 
 Cheers,
 
