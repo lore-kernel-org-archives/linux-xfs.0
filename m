@@ -2,114 +2,228 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0C95C77B7C
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 May 2023 04:56:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B513C7EE22
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 May 2023 05:46:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230180AbjEJE4P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 10 May 2023 00:56:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52282 "EHLO
+        id S230072AbjEJFq6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 10 May 2023 01:46:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229461AbjEJE4O (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2023 00:56:14 -0400
-Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F937F3
-        for <linux-xfs@vger.kernel.org>; Tue,  9 May 2023 21:56:13 -0700 (PDT)
-Received: by mail-pf1-x435.google.com with SMTP id d2e1a72fcca58-64115e652eeso47596929b3a.0
-        for <linux-xfs@vger.kernel.org>; Tue, 09 May 2023 21:56:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1683694572; x=1686286572;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=x2IMQ08ZimBHQnx7T8SfrGv5qorsF0wjFs6EWZZhJlg=;
-        b=sI1KgiZL3JOnQuAMYEyoZyqz6CF3bhGqqnYnLt0yQoXT/jWCk9R1TpGpCebF0uF6pP
-         HJGZ0mvzbdaNYK6d56c0GhTw+UqWwiQ3ijmTOczRB1bCT9oVt+JT8VRuvKAKDyeuCHtx
-         skNatbMw0uh4jcb6XWNrPPCu3BhFn3wTXeTItzp6pXt62F2bcEqdlQEVf/mZ5IP26QG0
-         XUAgHzT5P+m3KHAoFRPL7Vb9cBHMR9TCDQAouZb9JUwXC0BZAKYL2+ZB3vMPqugRYEBj
-         ySTucnB3paC8hlQGnrHHmix8qNgyGpl0JmySzun9g88DKPflg2Vy8yyjfT+AB7N7OLWz
-         NSbQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683694572; x=1686286572;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=x2IMQ08ZimBHQnx7T8SfrGv5qorsF0wjFs6EWZZhJlg=;
-        b=hw8leqXZbeTnBYBB7NZCdiEdn4PCiwJHt7yh1+osrnKn9JZk3h2VxN1xQX22IiodX7
-         lYDSb+QuuphPEEhhVzpZu9QWtnw9OS4u/xzyPmUC+ov4yRcnTfbiSksw+ACUW5LA+0um
-         0xRQ83Crg2BVE5Nhi41WUQ3vB5xPj9tQLkazHSc/lBzvqpOlW9cGnB//VpkpYMU1XCnk
-         Wp17vipy5IN7xhcqJRZb5yLo2bANozMz7iRPtWxztkA+b/1raFr/WDphwMQR1fjRW06Q
-         Mucu9iRyPRDDk0Mas/gQFnU7iI0Ttq6O/IPvnzbjd6KIhoe8zkya7rdhETQURGhYCJrY
-         RYFg==
-X-Gm-Message-State: AC+VfDwdyYmLc46uTvb9bq7kihOmZiiuua9tUvXz8cz5vimUYa93wMSP
-        TfTg2FMz92hDIGe8taDcIDN356EAK8FNadZNr9Y=
-X-Google-Smtp-Source: ACHHUZ4ZxF6we2Oo5TmIs/uUw1V4MwodGFZqjp7h+x843/DRwyMSDRfs+B1sx3rTaqqYa6cX6fOmag==
-X-Received: by 2002:a17:903:187:b0:1ab:11d5:4f07 with SMTP id z7-20020a170903018700b001ab11d54f07mr26669731plg.18.1683694572548;
-        Tue, 09 May 2023 21:56:12 -0700 (PDT)
-Received: from dread.disaster.area (pa49-181-88-204.pa.nsw.optusnet.com.au. [49.181.88.204])
-        by smtp.gmail.com with ESMTPSA id b2-20020a170902d50200b001ac7794a7eesm2582569plg.288.2023.05.09.21.56.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 May 2023 21:56:12 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1pwbs1-00DUXn-Kz; Wed, 10 May 2023 14:56:09 +1000
-Date:   Wed, 10 May 2023 14:56:09 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: fix broken logic when detecting mergeable bmap
- records
-Message-ID: <20230510045609.GW3223426@dread.disaster.area>
-References: <20230508153107.GB858799@frogsfrogsfrogs>
+        with ESMTP id S229487AbjEJFq5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2023 01:46:57 -0400
+Received: from out28-56.mail.aliyun.com (out28-56.mail.aliyun.com [115.124.28.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52F31172B
+        for <linux-xfs@vger.kernel.org>; Tue,  9 May 2023 22:46:55 -0700 (PDT)
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.0443644|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_regular_dialog|0.345932-0.000879024-0.653189;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047206;MF=wangyugui@e16-tech.com;NM=1;PH=DS;RN=2;RT=2;SR=0;TI=SMTPD_---.SdEPOEX_1683697609;
+Received: from 192.168.2.112(mailfrom:wangyugui@e16-tech.com fp:SMTPD_---.SdEPOEX_1683697609)
+          by smtp.aliyun-inc.com;
+          Wed, 10 May 2023 13:46:49 +0800
+Date:   Wed, 10 May 2023 13:46:49 +0800
+From:   Wang Yugui <wangyugui@e16-tech.com>
+To:     Dave Chinner <david@fromorbit.com>
+Subject: Re: performance regression between 6.1.x and 5.15.x
+Cc:     linux-xfs@vger.kernel.org
+In-Reply-To: <20230509221411.GU3223426@dread.disaster.area>
+References: <20230509203751.E6D2.409509F4@e16-tech.com> <20230509221411.GU3223426@dread.disaster.area>
+Message-Id: <20230510134648.ACDD.409509F4@e16-tech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230508153107.GB858799@frogsfrogsfrogs>
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Becky! ver. 2.81.04 [en]
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 08, 2023 at 08:31:07AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Commit 6bc6c99a944c was a well-intentioned effort to initiate
-> consolidation of adjacent bmbt mapping records by setting the PREEN
-> flag.  Consolidation can only happen if the length of the combined
-> record doesn't overflow the 21-bit blockcount field of the bmbt
-> recordset.  Unfortunately, the length test is inverted, leading to it
-> triggering on data forks like these:
-> 
->  EXT: FILE-OFFSET           BLOCK-RANGE        AG AG-OFFSET               TOTAL
->    0: [0..16777207]:        76110848..92888055  0 (76110848..92888055) 16777208
->    1: [16777208..20639743]: 92888056..96750591  0 (92888056..96750591)  3862536
-> 
-> Note that record 0 has a length of 16777208 512b blocks.  This
-> corresponds to 2097151 4k fsblocks, which is the maximum.  Hence the two
-> records cannot be merged.
-> 
-> However, the logic is still wrong even if we change the in-loop
-> comparison, because the scope of our examination isn't broad enough
-> inside the loop to detect mappings like this:
-> 
->    0: [0..9]:               76110838..76110847  0 (76110838..76110847)       10
->    1: [10..16777217]:       76110848..92888055  0 (76110848..92888055) 16777208
->    2: [16777218..20639753]: 92888056..96750591  0 (92888056..96750591)  3862536
-> 
-> These three records could be merged into two, but one cannot determine
-> this purely from looking at records 0-1 or 1-2 in isolation.
-> 
-> Hoist the mergability detection outside the loop, and base its decision
-> making on whether or not a merged mapping could be expressed in fewer
-> bmbt records.  While we're at it, fix the incorrect return type of the
-> iter function.
-> 
-> Fixes: 6bc6c99a944c ("xfs: alert the user about data/attr fork mappings that could be merged")
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/scrub/bmap.c |   25 +++++++++++++------------
->  1 file changed, 13 insertions(+), 12 deletions(-)
+Hi,
 
-Looks OK, will throw into the test tree.
+> 'perf record -g' and 'perf report -g' should enable callgraph
+> profiling and reporting. See the perf-record man page for
+> '--callgraph' to make sure you have the right kernel config for this
+> to work efficiently.
+> 
+> You can do quick snapshots in time via 'perf top -U -g' and then
+> after a few seconds type 'E' then immediately type 'P' and the fully
+> expanded callgraph profile will get written to a perf.hist.N file in
+> the current working directory...
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+'perf report -g ' of BAD kernel 6.1.y
+
+Samples: 439K of event 'cycles', Event count (approx.): 148701386235
+  Children      Self  Command          Shared Object            Symbol
++   61.82%     0.01%  fio              [kernel.kallsyms]        [k] entry_SYSCALL_64_after_hwfra
++   61.81%     0.01%  fio              [kernel.kallsyms]        [k] do_syscall_64
++   61.71%     0.00%  fio              libpthread-2.17.so       [.] 0x00007f4e7a40e6fd
++   61.66%     0.00%  fio              [kernel.kallsyms]        [k] ksys_write
++   61.64%     0.02%  fio              [kernel.kallsyms]        [k] vfs_write
++   61.60%     0.02%  fio              [kernel.kallsyms]        [k] xfs_file_buffered_write
++   61.20%     0.56%  fio              [kernel.kallsyms]        [k] iomap_file_buffered_write
++   25.25%     1.44%  fio              [kernel.kallsyms]        [k] iomap_write_begin
++   23.19%     0.75%  fio              [kernel.kallsyms]        [k] __filemap_get_folio
++   21.57%     0.00%  kworker/u98:4+f  [kernel.kallsyms]        [k] ret_from_fork
++   21.57%     0.00%  kworker/u98:4+f  [kernel.kallsyms]        [k] kthread
++   21.57%     0.00%  kworker/u98:4+f  [kernel.kallsyms]        [k] worker_thread
++   21.57%     0.00%  kworker/u98:4+f  [kernel.kallsyms]        [k] process_one_work
++   21.57%     0.00%  kworker/u98:4+f  [kernel.kallsyms]        [k] wb_workfn
++   21.57%     0.00%  kworker/u98:4+f  [kernel.kallsyms]        [k] wb_writeback
++   21.57%     0.00%  kworker/u98:4+f  [kernel.kallsyms]        [k] __writeback_inodes_wb
++   21.57%     0.00%  kworker/u98:4+f  [kernel.kallsyms]        [k] writeback_sb_inodes
++   21.57%     0.00%  kworker/u98:4+f  [kernel.kallsyms]        [k] __writeback_single_inode
++   21.57%     0.00%  kworker/u98:4+f  [kernel.kallsyms]        [k] do_writepages
++   21.57%     0.00%  kworker/u98:4+f  [kernel.kallsyms]        [k] xfs_vm_writepages
++   21.55%     0.00%  kworker/u98:4+f  [kernel.kallsyms]        [k] iomap_writepages
++   21.55%     0.85%  kworker/u98:4+f  [kernel.kallsyms]        [k] write_cache_pages
++   20.23%     0.22%  fio              [kernel.kallsyms]        [k] copy_page_from_iter_atomic
++   19.99%     0.04%  fio              [kernel.kallsyms]        [k] copyin
++   19.94%    19.77%  fio              [kernel.kallsyms]        [k] copy_user_enhanced_fast_stri
++   16.47%     0.00%  fio              [unknown]                [k] 0x00000000024803f0
++   16.47%     0.00%  fio              [unknown]                [k] 0x0000000002480440
++   16.47%     0.00%  fio              [unknown]                [k] 0x00000000024804b0
++   16.47%     0.00%  fio              [unknown]                [k] 0x0000000002480520
++   16.47%     0.00%  fio              [unknown]                [k] 0x0000000002480590
++   16.47%     0.00%  fio              [unknown]                [k] 0x0000000002480670
++   16.47%     0.00%  fio              [unknown]                [k] 0x00000000024806e0
++   16.47%     0.00%  fio              [unknown]                [k] 0x0000000002480750
++   16.47%     0.00%  fio              [unknown]                [k] 0x00000000024807c0
++   16.47%     0.00%  fio              [unknown]                [k] 0x0000000002480830
++   16.47%     0.00%  fio              [unknown]                [k] 0x00000000024808a0
++   16.47%     0.00%  fio              [unknown]                [k] 0x0000000002480910
++   16.47%     0.00%  fio              [unknown]                [k] 0x00007f4e21070430
++   15.73%     0.00%  fio              [unknown]                [k] 0x0000000002480290
++   15.73%     0.00%  fio              [unknown]                [k] 0x000000000247f790
++   15.73%     0.00%  fio              [unknown]                [k] 0x000000000247fdf0
++   15.73%     0.00%  fio              [unknown]                [k] 0x000000000247fe60
++   15.73%     0.00%  fio              [unknown]                [k] 0x000000000247fed0
++   15.73%     0.00%  fio              [unknown]                [k] 0x000000000247ff40
++   15.73%     0.00%  fio              [unknown]                [k] 0x000000000247ffb0
++   15.73%     0.00%  fio              [unknown]                [k] 0x0000000002480020
++   15.73%     0.00%  fio              [unknown]                [k] 0x0000000002480090
++   15.73%     0.00%  fio              [unknown]                [k] 0x0000000002480180
++   15.73%     0.00%  fio              [unknown]                [k] 0x00000000024801b0
++   15.73%     0.00%  fio              [unknown]                [k] 0x0000000002480220
++   15.73%     0.00%  fio              [unknown]                [k] 0x00007f4e2102ba18
++   15.07%     0.74%  kworker/u98:4+f  [kernel.kallsyms]        [k] iomap_writepage_map
++   15.01%     0.00%  fio              [unknown]                [k] 0x0000000002480a70
+
+
+'perf report -g ' of GOOD kernel 5.15.y
+
+Samples: 335K of event 'cycles', Event count (approx.): 229260446285
+  Children      Self  Command          Shared Object                    Symbol
++   66.35%     0.01%  fio              [kernel.kallsyms]                [k] entry_SYSCALL_64_aft
++   66.34%     0.01%  fio              [kernel.kallsyms]                [k] do_syscall_64
++   65.49%     0.00%  fio              libpthread-2.17.so               [.] 0x00007ff968de56fd
++   65.45%     0.00%  fio              [kernel.kallsyms]                [k] ksys_write
++   65.44%     0.02%  fio              [kernel.kallsyms]                [k] vfs_write
++   65.41%     0.00%  fio              [kernel.kallsyms]                [k] new_sync_write
++   65.40%     0.03%  fio              [kernel.kallsyms]                [k] xfs_file_buffered_wr
++   65.13%     0.53%  fio              [kernel.kallsyms]                [k] iomap_file_buffered_
++   27.17%     0.36%  fio              [kernel.kallsyms]                [k] copy_page_from_iter_
++   26.76%     0.05%  fio              [kernel.kallsyms]                [k] copyin
++   26.73%    26.52%  fio              [kernel.kallsyms]                [k] copy_user_enhanced_f
++   23.12%     1.05%  fio              [kernel.kallsyms]                [k] iomap_write_begin
++   21.59%     0.34%  fio              [kernel.kallsyms]                [k] grab_cache_page_writ
++   21.13%     0.65%  fio              [kernel.kallsyms]                [k] pagecache_get_page
++   18.73%     0.00%  kworker/u97:11+  [kernel.kallsyms]                [k] ret_from_fork
++   18.73%     0.00%  kworker/u97:11+  [kernel.kallsyms]                [k] kthread
++   18.73%     0.00%  kworker/u97:11+  [kernel.kallsyms]                [k] worker_thread
++   18.73%     0.00%  kworker/u97:11+  [kernel.kallsyms]                [k] process_one_work
++   18.73%     0.00%  kworker/u97:11+  [kernel.kallsyms]                [k] wb_workfn
++   18.73%     0.00%  kworker/u97:11+  [kernel.kallsyms]                [k] wb_writeback
++   18.73%     0.00%  kworker/u97:11+  [kernel.kallsyms]                [k] __writeback_inodes_w
++   18.73%     0.00%  kworker/u97:11+  [kernel.kallsyms]                [k] writeback_sb_inodes
++   18.73%     0.00%  kworker/u97:11+  [kernel.kallsyms]                [k] __writeback_single_i
++   18.73%     0.00%  kworker/u97:11+  [kernel.kallsyms]                [k] do_writepages
++   18.73%     0.00%  kworker/u97:11+  [kernel.kallsyms]                [k] xfs_vm_writepages
++   18.66%     0.00%  kworker/u97:11+  [kernel.kallsyms]                [k] iomap_writepages
++   18.66%     0.48%  kworker/u97:11+  [kernel.kallsyms]                [k] write_cache_pages
++   16.75%     0.00%  fio              [unknown]                        [k] 0x0000000001e613f0
++   16.75%     0.00%  fio              [unknown]                        [k] 0x0000000001e61440
++   16.75%     0.00%  fio              [unknown]                        [k] 0x0000000001e614b0
++   16.75%     0.00%  fio              [unknown]                        [k] 0x0000000001e61520
++   16.75%     0.00%  fio              [unknown]                        [k] 0x0000000001e61590
++   16.75%     0.00%  fio              [unknown]                        [k] 0x0000000001e61670
++   16.75%     0.00%  fio              [unknown]                        [k] 0x0000000001e616e0
++   16.75%     0.00%  fio              [unknown]                        [k] 0x0000000001e61750
++   16.75%     0.00%  fio              [unknown]                        [k] 0x0000000001e617c0
++   16.75%     0.00%  fio              [unknown]                        [k] 0x0000000001e61830
++   16.75%     0.00%  fio              [unknown]                        [k] 0x0000000001e618a0
++   16.75%     0.00%  fio              [unknown]                        [k] 0x0000000001e61910
++   16.75%     0.00%  fio              [unknown]                        [k] 0x00007ff9151e0430
++   16.70%     0.00%  fio              [unknown]                        [k] 0x0000000001e60790
++   16.70%     0.00%  fio              [unknown]                        [k] 0x0000000001e60df0
++   16.70%     0.00%  fio              [unknown]                        [k] 0x0000000001e60e60
++   16.70%     0.00%  fio              [unknown]                        [k] 0x0000000001e60ed0
++   16.70%     0.00%  fio              [unknown]                        [k] 0x0000000001e60f40
++   16.70%     0.00%  fio              [unknown]                        [k] 0x0000000001e60fb0
++   16.70%     0.00%  fio              [unknown]                        [k] 0x0000000001e61020
++   16.70%     0.00%  fio              [unknown]                        [k] 0x0000000001e61090
++   16.70%     0.00%  fio              [unknown]                        [k] 0x0000000001e61180
++   16.70%     0.00%  fio              [unknown]                        [k] 0x0000000001e611b0
++   16.70%     0.00%  fio              [unknown]                        [k] 0x0000000001e61220
++   16.70%     0.00%  fio              [unknown]                        [k] 0x0000000001e61290
++   16.70%     0.00%  fio              [unknown]                        [k] 0x00007ff91519ba18
+
+
+> Ok, that is further back in time than I expected. In terms of XFS,
+> there are only two commits between 5.16..5.17 that might impact
+> performance:
+> 
+> ebb7fb1557b1 ("xfs, iomap: limit individual ioend chain lengths in writeback")
+> 
+> and
+> 
+> 6795801366da ("xfs: Support large folios")
+> 
+> To test whether ebb7fb1557b1 is the cause, go to
+> fs/iomap/buffered-io.c and change:
+> 
+> -#define IOEND_BATCH_SIZE        4096
+> +#define IOEND_BATCH_SIZE        1048576
+> This will increase the IO submission chain lengths to at least 4GB
+> from the 16MB bound that was placed on 5.17 and newer kernels.
+> 
+> To test whether 6795801366da is the cause, go to fs/xfs/xfs_icache.c
+> and comment out both calls to mapping_set_large_folios(). This will
+> ensure the page cache only instantiates single page folios the same
+> as 5.16 would have.
+
+6.1.x with 'mapping_set_large_folios remove' and 'IOEND_BATCH_SIZE=1048576'
+	fio WRITE: bw=6451MiB/s (6764MB/s)
+
+still  performance regression when compare to linux 5.16.20
+	fio WRITE: bw=7666MiB/s (8039MB/s),
+
+but the performance regression is not too big, then difficult to bisect.
+We noticed samle level  performance regression  on btrfs too.
+so maby some problem of some code that is  used by both btrfs and xfs
+such as iomap and mm/folio.
+
+6.1.x  with 'mapping_set_large_folios remove' only'
+	fio   WRITE: bw=2676MiB/s (2806MB/s)
+
+6.1.x with 'IOEND_BATCH_SIZE=1048576' only'
+	fio WRITE: bw=5092MiB/s (5339MB/s),
+	fio  WRITE: bw=6076MiB/s (6371MB/s)
+
+maybe we need more fix or ' ebb7fb1557b1 ("xfs, iomap: limit individual ioend chain lengths in writeback")'.
+
+Best Regards
+Wang Yugui (wangyugui@e16-tech.com)
+2023/05/10
+
+
+> 
+> If neither of them change behaviour, then I think you're going to
+> need to do a bisect between 5.16..5.17 to find the commit that
+> introduced the regression. I know kernel bisects are slow and
+> painful, but it's exactly what I'd be doing right now if my
+> performance test machine wasn't broken....
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+
+
