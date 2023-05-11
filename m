@@ -2,102 +2,112 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 647D3C77B7C
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 May 2023 16:50:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16CA0C77B7F
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 May 2023 17:47:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238132AbjEKQue (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 11 May 2023 12:50:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33462 "EHLO
+        id S237590AbjEKRri (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 11 May 2023 13:47:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41180 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238051AbjEKQuc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 May 2023 12:50:32 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FB40A6
-        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2023 09:50:31 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 188AC64FD0
-        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2023 16:50:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74FFDC433D2;
-        Thu, 11 May 2023 16:50:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683823830;
-        bh=2naPD0erLNUmJ640UORUBdMHYzTFvlEuGWq16u8Fimw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=U5iHwjTR6GckOqmufiveRdL39duggwtXVikwJXkznzEtlJ7+kUNFDG3R/PE4mjaFA
-         KP4cHZMolwwP1LWXXYY7MOIVT6xtwm4FEYGbzhsdhGi/a05wY99SlbJMRosvLB5Qk3
-         pJaxc6FSZNKz4PJrPpAOp7AddJQOJADMD9djCFt45WsPJnDcd1vjkmiR4u7TpxMmBm
-         XU2MCVQI4riZuWdeHBh5Em11nfceCuQ8mDVdPjEB2SBPziEsSTbcxfpBpuYd+ZZisR
-         nCr4pBYeLefsofS/v/j0aeIKSFAelUZ3dG+v7dfWpQ4K4/3qJKS+KR2YVElRfDFRZH
-         /TeVcuQ7WwEFw==
-Date:   Thu, 11 May 2023 09:50:29 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [GIT PULL] xfs: bug fixes for 6.4-rc2
-Message-ID: <20230511165029.GE858799@frogsfrogsfrogs>
-References: <20230511015846.GH2651828@dread.disaster.area>
- <20230511020107.GI2651828@dread.disaster.area>
- <CAHk-=wjJ1veddRdTUs5BfofupuPxMoVHBUbAOmHw6p4pXPq5FQ@mail.gmail.com>
+        with ESMTP id S238737AbjEKRrh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 May 2023 13:47:37 -0400
+Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F2BA10CB
+        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2023 10:47:36 -0700 (PDT)
+Received: by mail-ej1-x636.google.com with SMTP id a640c23a62f3a-965fc25f009so1335818266b.3
+        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2023 10:47:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google; t=1683827254; x=1686419254;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Y8VdR6WrftpkhTyZnWassmoziOk7oZDdGi581GRz1T8=;
+        b=Pg5jRG0aDsuAA/EngwXMfYQrHLPQ0dxRd8YhtX2f6Drh1jCKUDTFiN6vX7s50sIHrK
+         69NuVf1hz/leeFg6bEYwt6WB8fMq5nUnhKWyYSBTaB6txcwZWUs5pVSPpdIBmJ6SrCrB
+         BVwwrK82I4KxoFA7iiM/SYT/xsGhwVQXWtZR4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1683827254; x=1686419254;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Y8VdR6WrftpkhTyZnWassmoziOk7oZDdGi581GRz1T8=;
+        b=UNC5ZID8XNXWfi8bi/rtuG4hbUd1opXnCSFTURpJYBZk3nyTx4mah0vErYheNABLjS
+         J1kMB4i//GV1brKAOp3mdu2tkXPGXVSonF7c0eQywi26sZE1K8fNIUZ6xqxfaKQCbBS0
+         BejCLTWh8D1+6CxmviMDHMFjpEFMuNOATXoQvfiAP7UWy5jiEfwz5bPSdgWD8q4Fio6H
+         Zq+0r5itSTgRNYZXvnbGzhH1m+pyf3I4mHC+0t/tUthk5x1zdcWq10myoIfI3yjsnTOs
+         WkeezD3DzZD8QO5Pmu9+dm9YQqVZGfKaqDhpGWQvg6abqijU4sXxmXK/jMBlvqTax0kT
+         BA1w==
+X-Gm-Message-State: AC+VfDxliuG5OfoIL3i8/GknmZpmBRfFr0q5wBYK6ost9xS4baBkZKcc
+        RczK/tk/TAf7Z7MSXEfX3X/uA7P6Ew3oUhwt04E4VF2F
+X-Google-Smtp-Source: ACHHUZ6pb/r4g68/hTtmOediRkM3r3igTiPz2uRP65muD5ChHZqFhvz1/NpfQrTVu3UT7nZIByS+Tg==
+X-Received: by 2002:a17:907:7da9:b0:966:538f:843b with SMTP id oz41-20020a1709077da900b00966538f843bmr15671218ejc.77.1683827254475;
+        Thu, 11 May 2023 10:47:34 -0700 (PDT)
+Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com. [209.85.208.44])
+        by smtp.gmail.com with ESMTPSA id k21-20020a170906055500b009584c5bcbc7sm4218707eja.49.2023.05.11.10.47.33
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 11 May 2023 10:47:33 -0700 (PDT)
+Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-50bc5197d33so16451210a12.1
+        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2023 10:47:33 -0700 (PDT)
+X-Received: by 2002:a17:907:3e9c:b0:966:471c:2565 with SMTP id
+ hs28-20020a1709073e9c00b00966471c2565mr17182564ejc.48.1683827253155; Thu, 11
+ May 2023 10:47:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAHk-=wjJ1veddRdTUs5BfofupuPxMoVHBUbAOmHw6p4pXPq5FQ@mail.gmail.com>
+References: <20230511015846.GH2651828@dread.disaster.area> <20230511020107.GI2651828@dread.disaster.area>
+ <CAHk-=wjJ1veddRdTUs5BfofupuPxMoVHBUbAOmHw6p4pXPq5FQ@mail.gmail.com> <20230511165029.GE858799@frogsfrogsfrogs>
+In-Reply-To: <20230511165029.GE858799@frogsfrogsfrogs>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Thu, 11 May 2023 12:47:16 -0500
+X-Gmail-Original-Message-ID: <CAHk-=wh6ze_y5_Q89VOuruDnenSVmN4fL1J-rh-vovmrDkxaQw@mail.gmail.com>
+Message-ID: <CAHk-=wh6ze_y5_Q89VOuruDnenSVmN4fL1J-rh-vovmrDkxaQw@mail.gmail.com>
+Subject: Re: [GIT PULL] xfs: bug fixes for 6.4-rc2
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 10, 2023 at 09:49:25PM -0500, Linus Torvalds wrote:
-> On Wed, May 10, 2023 at 9:01 PM Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > [ and now with the correct cc's. DOH! ]
-> 
-> [ Bah. And now with the correct cc's on the reply too. ]
-> 
-> We do not consider build warnings even remotely "harmless".
-> 
-> That sounds like you will fail all build farms that happen to have
-> this compiler version.
-
-...and which version is that?  The build robot report just says ia64
-without specifying any details about what compiler was running, etc:
-
-https://lore.kernel.org/linux-xfs/20230510165934.5Zgh4%25lkp@intel.com/T/#u
-
-I'll see if I can fix it, but there's not enough information to
-reproduce the exact circumstances of the warning.  I've been building
-this branch with gcc 11.3 on x86_64, aarch64, ppc64le, s390x, and
-riscv64, and none of them complained.  I normally build the fs/xfs code
-with most of the W=12e options enabled, though I confess to turning off
-the warnings that trigger on random bits of source code outside xfs.
-
-I don't have access to any ia64 environment, let alone whatever build
-farm Intel has.
-
-> Which in turn just means that I'd have to revert the commit.
-
-The PR message didn't specify what warning was being ignored.  Assuming
-it's the one the build robot found, would you actually revert a commit
-over a build warning about unreachable code *only* on ia64?
-
-> The fact that you seem to think that build warnings don't matter and
-> are harmless AND you imply that you can just leave some compiler
-> warning to the next release just makes me go "No, I don't want to pull
-> this".
+On Thu, May 11, 2023 at 11:50=E2=80=AFAM Darrick J. Wong <djwong@kernel.org=
+> wrote:
 >
-> So I pulled this. It built fine for me. But then I went "Dave says he
-> isn't even bothering to fix some build warning he seems to know about,
-> and isn't even planning on fixing it until 6.5, so no, I think I'll
-> unpull again".
+> ...and which version is that?  The build robot report just says ia64
+> without specifying any details about what compiler was running, etc:
 
-The real fixes for the code that I turned off are sufficiently involved
-that we had to have a session about it at LSFMM.  There's no way to
-merge it now; the window is closed.
+Actually, you should find it if you follow the links to the config.
 
---D
+We have the compiler version saved in the config file partly exactly
+for reasons like that.
 
-> When you decide that compiler warnings matter, please re-send.
-> 
->                     Linus
+HOWEVER.
+
+If it's *this* report:
+
+> https://lore.kernel.org/linux-xfs/20230510165934.5Zgh4%25lkp@intel.com/T/=
+#u
+
+then don't even worry about it.
+
+That's not even a compiler warning - that "ignoring unreachable code"
+is from smatch.
+
+So if *that* single line of
+
+   fs/xfs/scrub/fscounters.c:459 xchk_fscounters() warn: ignoring
+unreachable code.
+
+was all this was about, then there are no worries with that pull request.
+
+Those extra warnings (some of them compiler warnings enabled with W=3D2
+for extra warnings, some from smatch) are not a cause for worry. They
+are janitorial.
+
+I thought you had an actual failed build report due to some warning.
+Those we *do* need to fix, exactly because they will affect other
+peoples ability to do basic sanity testing.
+
+So if you can confirm that it was just that one smatch warning line
+and nothing else, then I'll happily do that pull.
+
+            Linus
