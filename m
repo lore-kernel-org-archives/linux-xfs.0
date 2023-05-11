@@ -2,63 +2,64 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49F6CC7EE22
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 May 2023 02:49:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 187A2C77B7C
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 May 2023 03:13:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229487AbjEKCtr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 10 May 2023 22:49:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55784 "EHLO
+        id S229791AbjEKDNR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 10 May 2023 23:13:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229447AbjEKCtq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2023 22:49:46 -0400
-Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 910FE40DF
-        for <linux-xfs@vger.kernel.org>; Wed, 10 May 2023 19:49:45 -0700 (PDT)
-Received: by mail-ed1-x530.google.com with SMTP id 4fb4d7f45d1cf-50bd37ca954so74967890a12.0
-        for <linux-xfs@vger.kernel.org>; Wed, 10 May 2023 19:49:45 -0700 (PDT)
+        with ESMTP id S229768AbjEKDNQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 May 2023 23:13:16 -0400
+Received: from mail-ed1-x52a.google.com (mail-ed1-x52a.google.com [IPv6:2a00:1450:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04EF3E5F
+        for <linux-xfs@vger.kernel.org>; Wed, 10 May 2023 20:13:15 -0700 (PDT)
+Received: by mail-ed1-x52a.google.com with SMTP id 4fb4d7f45d1cf-50db7f0a1b4so4508891a12.3
+        for <linux-xfs@vger.kernel.org>; Wed, 10 May 2023 20:13:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1683773384; x=1686365384;
+        d=linux-foundation.org; s=google; t=1683774793; x=1686366793;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=LrpmepZ1du4fgmw9IWA4rEcAyH7ZJYwPG2z7RiwU7qI=;
-        b=O+2AV1uZVlRRj2G+vTbig4fsOjksA0/VAVH2V/0wlQhzxtBVe8VKn+HI+ZVkRRXZqs
-         d3oreLS+pR/nF4YFnVIaqzfLtVQ9s52Yf+v6HaUzCmKKZZkjq7+wy/jHkXt1GnQIkzqx
-         hsA9jbmmoBKbbIy5G+PBKyQEIwqHHr9Rkc76o=
+        bh=EDnTsrzakt3ajSHudc1yKbwW/H67XWoB0uN90nyyCvs=;
+        b=ME19NADmGNfc8wQwCFtevoC6UC5Mktf7aqYI5IQ8m0kDgvOeoWilrilAcy5jJ33RRh
+         mluwPj826qDIWrtbc1iw9QU6BwwbLYBhfbPVIM1nr9mWQ3/FEZ2SO0DMnRoadH3CeuYL
+         kW5sbWX0/RvCs7YIdeqXXpCA+1rlxpfSJ+w/Q=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683773384; x=1686365384;
+        d=1e100.net; s=20221208; t=1683774793; x=1686366793;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=LrpmepZ1du4fgmw9IWA4rEcAyH7ZJYwPG2z7RiwU7qI=;
-        b=FONfhhyyckSz13rWDnhGdjchOScMA5NmC722f4g/F/egZIJHkCRLfqWWPVYFLdu3GF
-         iPIC+aZBz91745Vi2UbpEpOwcNClkhHOSahKim8/htUttMZlEmM+Bm6DjgqOUsUjbj7X
-         /ypH3t6mtl9OVWR1qVxZL8LXUno6Z22+OXAnuJZpXSAlyUKWZr/MzU5pdgRPKacTYk8w
-         p5oUm1ApDYD9/SB/PYarQQyvWQ8foaUSrqs2x6LdzirCgDAHD0z5F1RjYRZLOq+/7KNj
-         bopnJYK6S9XKZ0aXNzvmaaUkfrc170gJ2h0jq9bmdTYmYbDteqv4YVx7uC4Uc19434TJ
-         X41g==
-X-Gm-Message-State: AC+VfDwNw/PhVHLATB3MJDa2LON/81dyC9mZwNo5Dg38IMmpCyBUSEoA
-        JF7/Iu7cdl97IwRmrsomdQSSsn6z3tXCPDKMYYAy4Q==
-X-Google-Smtp-Source: ACHHUZ7Ia2ueT2zbmQYAxBfB0iCIkW0KKyXIMbNnaxuMG5KCo43R+DztwPhS1HlcP6hScY/fR2mxcg==
-X-Received: by 2002:a05:6402:5244:b0:4ea:a9b0:a518 with SMTP id t4-20020a056402524400b004eaa9b0a518mr19065163edd.17.1683773383902;
-        Wed, 10 May 2023 19:49:43 -0700 (PDT)
-Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com. [209.85.208.54])
-        by smtp.gmail.com with ESMTPSA id f20-20020a056402005400b0050dbc8980c3sm2281705edu.5.2023.05.10.19.49.42
+        bh=EDnTsrzakt3ajSHudc1yKbwW/H67XWoB0uN90nyyCvs=;
+        b=gd1YhoBXBstodWMzQFuZTzR2kLO2eTjKkYbIEsEP9h+6djvzCeeTTrRKgpMNyIiBK5
+         Yo9VAyTStUrb94rEz/TyA5dPKx799YkVgXVw7YlWdIGvyrw/41IbjWS6oyTyWt0szH+w
+         j+Fhc5XKwQxpeHQhsHQ779dSYpNj2V7F6IWw/mcaMgQrSopKII58FKlNBoOKJspbJfE5
+         0JY31N/L3aF7+q7JbeuD5dZzveBnPuxac4sJGhAsYuZqNxKwlqmjsXK3hNWn8PS3moqI
+         1EQCqCohbdHKQCBohfLmus1brudBCzCImN+bAWfOjlmC/0Fz+tXd8lUH/oAKvfDtJ5Lu
+         OHww==
+X-Gm-Message-State: AC+VfDzBIvl3BvZIgjzVA0j/pPyy+NnuhNdCtLZf784u9XrO/UhWQM3z
+        HTP36u70X4LntrNhWNmogbvuCanICnd3MkW8izBZ+A==
+X-Google-Smtp-Source: ACHHUZ6n5b4u2PFzBCe6HfYIDC3pPfiAButXz6capCIyRaRJj6CkzFoT45VGQ3HgOCLgYvW+JVnOLw==
+X-Received: by 2002:a05:6402:641:b0:50c:161b:9152 with SMTP id u1-20020a056402064100b0050c161b9152mr15767904edx.13.1683774793238;
+        Wed, 10 May 2023 20:13:13 -0700 (PDT)
+Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com. [209.85.218.52])
+        by smtp.gmail.com with ESMTPSA id l23-20020aa7c3d7000000b004f9e6495f94sm2479698edr.50.2023.05.10.20.13.12
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 10 May 2023 19:49:43 -0700 (PDT)
-Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-50bd37ca954so74967765a12.0
-        for <linux-xfs@vger.kernel.org>; Wed, 10 May 2023 19:49:42 -0700 (PDT)
-X-Received: by 2002:a17:907:3f22:b0:96a:2b4:eb69 with SMTP id
- hq34-20020a1709073f2200b0096a02b4eb69mr6277573ejc.31.1683773382537; Wed, 10
- May 2023 19:49:42 -0700 (PDT)
+        Wed, 10 May 2023 20:13:12 -0700 (PDT)
+Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-9661a1ff1e9so871429766b.1
+        for <linux-xfs@vger.kernel.org>; Wed, 10 May 2023 20:13:12 -0700 (PDT)
+X-Received: by 2002:a17:907:783:b0:959:a9a1:5885 with SMTP id
+ xd3-20020a170907078300b00959a9a15885mr15848627ejb.31.1683774791923; Wed, 10
+ May 2023 20:13:11 -0700 (PDT)
 MIME-Version: 1.0
 References: <20230511015846.GH2651828@dread.disaster.area> <20230511020107.GI2651828@dread.disaster.area>
-In-Reply-To: <20230511020107.GI2651828@dread.disaster.area>
+ <CAHk-=wjJ1veddRdTUs5BfofupuPxMoVHBUbAOmHw6p4pXPq5FQ@mail.gmail.com>
+In-Reply-To: <CAHk-=wjJ1veddRdTUs5BfofupuPxMoVHBUbAOmHw6p4pXPq5FQ@mail.gmail.com>
 From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Wed, 10 May 2023 21:49:25 -0500
-X-Gmail-Original-Message-ID: <CAHk-=wjJ1veddRdTUs5BfofupuPxMoVHBUbAOmHw6p4pXPq5FQ@mail.gmail.com>
-Message-ID: <CAHk-=wjJ1veddRdTUs5BfofupuPxMoVHBUbAOmHw6p4pXPq5FQ@mail.gmail.com>
+Date:   Wed, 10 May 2023 22:12:55 -0500
+X-Gmail-Original-Message-ID: <CAHk-=whtWTqXXD29n4z0qni-xM_4OPE-6u3vw_qjkiz05BHVZg@mail.gmail.com>
+Message-ID: <CAHk-=whtWTqXXD29n4z0qni-xM_4OPE-6u3vw_qjkiz05BHVZg@mail.gmail.com>
 Subject: Re: [GIT PULL] xfs: bug fixes for 6.4-rc2
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     djwong@kernel.org, linux-xfs@vger.kernel.org
@@ -68,30 +69,42 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 10, 2023 at 9:01=E2=80=AFPM Dave Chinner <david@fromorbit.com> =
-wrote:
+On Wed, May 10, 2023 at 9:49=E2=80=AFPM Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
 >
-> [ and now with the correct cc's. DOH! ]
+> That sounds like you will fail all build farms that happen to have
+> this compiler version.
 
-[ Bah. And now with the correct cc's on the reply too. ]
+Side note: it might have helped if you indicated it was some very
+particular old compiler. It's hard to tell. What made me decide to
+unpull was really the fact that you seemed so cavalier about it.
 
-We do not consider build warnings even remotely "harmless".
+The whole "no warnings" thing has been quite important. CONFIG_WERROR
+can sometimes be annoying - particularly when a new compiler
+introduces a new warning - but it got introduced because I got
+*really* tired of people just ignoring warning, and as we had one or
+two build warnings, new ones didn't stand out either.
 
-That sounds like you will fail all build farms that happen to have
-this compiler version.
+So no, it's *not* ok to say "warnings are harmless". Because they
+really really aren't. Unheeded warnings just beget more warnings, and
+you end up being warning-blind.
 
-Which in turn just means that I'd have to revert the commit.
+And CONFIG_WERROR is important, because without that, maintainers
+won't react to new warnings, because they'll do their random config
+testing on farms, and not *look* at the result, they just look at
+success/failure reports. I understand why it is like that, but it does
+mean that yes, warnings need to actually cause failures.
 
-The fact that you seem to think that build warnings don't matter and
-are harmless AND you imply that you can just leave some compiler
-warning to the next release just makes me go "No, I don't want to pull
-this".
+So then a new warning in one subsystem will fail the build of all the
+other subsystems too.
 
-So I pulled this. It built fine for me. But then I went "Dave says he
-isn't even bothering to fix some build warning he seems to know about,
-and isn't even planning on fixing it until 6.5, so no, I think I'll
-unpull again".
+And who knows - maybe the warning came from some odd experimental (or
+really old) compiler version that warned about other things too. It
+happens. If so, it's fine - to paraphrase (and mangle): "you can make
+some compilers happy all of the time, and all compilers happy some of
+the time, but you can't make all compilers happy all of the time".
 
-When you decide that compiler warnings matter, please re-send.
+But if you already found the warning before it even hit the main tree,
+I suspect it will hit more than a few oddball situations.
 
-                    Linus
+            Linus
