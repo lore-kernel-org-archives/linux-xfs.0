@@ -2,150 +2,178 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF72CC7EE22
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 May 2023 13:38:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE5CEC77B7F
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 May 2023 15:17:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238238AbjEKNiI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 11 May 2023 09:38:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59030 "EHLO
+        id S238301AbjEKPRo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 11 May 2023 11:17:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237852AbjEKNhp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 May 2023 09:37:45 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BC5BD043
-        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2023 06:35:33 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C29D564D6F
-        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2023 13:35:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 750DFC433D2;
-        Thu, 11 May 2023 13:35:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683812132;
-        bh=Jv/D2Plf7URJPUiohRGIP2SSez1KBZAC8+FnvFZMzDA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=S3OZb0Y87On0PbnOXqBoof7thmeuYAJ29jI/eCdrXIg7DOkt0brICuIMs2OWYaiRu
-         XiRYaqKYXFzh/nvZYUUoOvXMt7JidZlZDpAFvdSD/VUrHyqrrteJ6eAuKdGSOyB06Y
-         +ypxn8t3AGsPiKIgNwPqSkLJpLDzKDDircvU8NWPPD1uHhYLPRCEuSo+ifw4DBAXxx
-         wWn3hzQHipzI6qshakvOpGUNtn6sopvVAPBSW6kd552HesD2WODUfDsIEsVtX9jw0L
-         irIJZLoEcQ6iwOyhZlrDzWNkT9Uz9InuxYBGvJtFuDPpZAF8Obalu4PfsAdVZtBCos
-         0kFbQynNoErHg==
-Date:   Thu, 11 May 2023 15:35:28 +0200
-From:   Carlos Maiolino <cem@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] libxfs: fix confusing xfs_extent_item variable names
-Message-ID: <20230511133528.wtunsuolh4hms36b@andromeda>
-References: <0kaspVe46GjWH34UplQpBKZYm9TFMd-VCgmBlNr5UbWao_BKBsNdO8xn06_SqVveitqg5wLOXPd-St5SXH5Aag==@protonmail.internalid>
- <20230510195617.GD858799@frogsfrogsfrogs>
+        with ESMTP id S237687AbjEKPRn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 May 2023 11:17:43 -0400
+Received: from wout2-smtp.messagingengine.com (wout2-smtp.messagingengine.com [64.147.123.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CB4F1992;
+        Thu, 11 May 2023 08:17:42 -0700 (PDT)
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+        by mailout.west.internal (Postfix) with ESMTP id 7D09E32005B5;
+        Thu, 11 May 2023 11:17:41 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute4.internal (MEProxy); Thu, 11 May 2023 11:17:41 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=tycho.pizza; h=
+        cc:cc:content-transfer-encoding:content-type:date:date:from:from
+        :in-reply-to:message-id:mime-version:reply-to:sender:subject
+        :subject:to:to; s=fm2; t=1683818261; x=1683904661; bh=1KBcMNjElx
+        S0tYStsAjRh8dTuKNGBSAOW5dI2XnF5tc=; b=WyeQRbpyqLnZfx0b7Yl02o2r7Y
+        T9AF/sk7bE8v69NdozGiXYbZkHr3ptoWyuzepRCk8YO7w3r10MOOlriuvI273gkj
+        FWBb4Y5yqVbR6lt9dh0N9wSuYZlJ/3SxAduNYY/z2Ti0Q1yGJwDkEhz1peMqfoiG
+        pZEtD2cTgtnvJtAMlumhjbsG5tkW9xkwRKEGRGoOmgUww6HldSJhACxxDKHcOpXn
+        WgADEfEArJUlzonxNnjYbq3fLed37dVzkZUZW4gZHUSwFz/n99TBKicMKmLZvfjh
+        4QTqE4hKMTTepNEQ7QxN1MS6HnK9KDbefor8Li0c9Um6qlJ3g/oiHOpG5XpA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-transfer-encoding
+        :content-type:date:date:feedback-id:feedback-id:from:from
+        :in-reply-to:message-id:mime-version:reply-to:sender:subject
+        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
+        :x-sasl-enc; s=fm3; t=1683818261; x=1683904661; bh=1KBcMNjElxS0t
+        YStsAjRh8dTuKNGBSAOW5dI2XnF5tc=; b=MdJWHlcvuV8sLmlJt/+1T3hRvpWWG
+        BG/Z4bW005ADHXXMTooMnm7EnlP1pXh7Vh+DU316qY6ec7YJBsvt9/dmE4s6HWO8
+        KMVtDjiL4zDvIBTrTq0O1FUbuC4eIEOAfn1iYGwGSDx2MItONGBZfzxGOEK1hDtA
+        DP1wqujlJC/VMkDZKOHNijEgJttNFZemPl89RoJ4YJda8yZ1v6/smRlRXbFMtuTT
+        MrzbYFSGOKPwYbv8MlZiwE6vH8NgxKlU1jhFi186ntUWL/QpdykJIMk1WcokTSe3
+        Qz15yX3eoy7pK0D2otBFhbzrOV7wCq6JLJQ6blntF2PoMb+ZNDAedXuaQ==
+X-ME-Sender: <xms:FAddZLbdr5KQJuyI3a-Zwa1D7vHLPXkDr9Uzh6AcCMxCx2lK6pIftQ>
+    <xme:FAddZKYG0fWRN4iX5HyVng7pZlRg17GhWrYVSraF-lyaftO7Wmmnz2jPqC2VZsuSY
+    S80iq3vZ1rYhvV53jc>
+X-ME-Received: <xmr:FAddZN9QYYKMm7cXFz5KqH_fj0hOnCfxSq0DzjKiamcHEQBCKOoaqrgTYS5qsZ-yAdBusv_B>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrfeegkedgkeejucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhephffvvefufffkofgggfestdekredtredttdenucfhrhhomhepvfihtghhohcu
+    tehnuggvrhhsvghnuceothihtghhohesthihtghhohdrphhiiiiirgeqnecuggftrfgrth
+    htvghrnhepheeffeehleeftdfgjeegheelieefvdfghfeuudeuheehuefhhffhtefhiedv
+    geegnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepth
+    ihtghhohesthihtghhohdrphhiiiiirg
+X-ME-Proxy: <xmx:FAddZBo1jyavf6q36FIaMaINn5nXJPHGF8Phvv_2Uj2TwUnqJlQUtg>
+    <xmx:FAddZGq86tAnuk3TfQEiieQV8eLPM_7x-aSRofS3shVnrbnLnXsdOA>
+    <xmx:FAddZHQR2PdVmJwuxqbb01ciikG-YDcLehfVsiMPzDQvlZTw0dQVhg>
+    <xmx:FQddZPkZIFfkMSpeuz0zzwLpGAjxEEh1yhiDwVEN_hUIDLixXMVcHg>
+Feedback-ID: i21f147d5:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 11 May 2023 11:17:39 -0400 (EDT)
+From:   Tycho Andersen <tycho@tycho.pizza>
+To:     "Darrick J . Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Tycho Andersen <tycho@tycho.pizza>,
+        Tycho Andersen <tandersen@netflix.com>,
+        "Eric W. Biederman" <ebiederm@xmission.com>
+Subject: [PATCH] xfs: don't do inodgc work if task is exiting
+Date:   Thu, 11 May 2023 09:17:02 -0600
+Message-Id: <20230511151702.14704-1-tycho@tycho.pizza>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230510195617.GD858799@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 10, 2023 at 12:56:17PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Change the name of all pointers to xfs_extent_item structures to "xefi"
-> to make the name consistent and because the current selections ("new"
-> and "free") mean other things in C.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+From: Tycho Andersen <tandersen@netflix.com>
 
-Sounds good, thanks!
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Similar to 5a8bee63b10f ("fuse: in fuse_flush only wait if someone wants
+the return code"), we have a task that is stuck that can't be killed, so a
+pid ns can't exit, wreaking all kinds of havoc:
 
-> ---
->  libxfs/defer_item.c |   41 +++++++++++++++++++++++------------------
->  1 file changed, 23 insertions(+), 18 deletions(-)
-> 
-> diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
-> index b95b54e5..2e9912f8 100644
-> --- a/libxfs/defer_item.c
-> +++ b/libxfs/defer_item.c
-> @@ -80,18 +80,20 @@ xfs_extent_free_finish_item(
->  	struct xfs_btree_cur		**state)
->  {
->  	struct xfs_owner_info		oinfo = { };
-> -	struct xfs_extent_free_item	*free;
-> +	struct xfs_extent_free_item	*xefi;
->  	int				error;
-> 
-> -	free = container_of(item, struct xfs_extent_free_item, xefi_list);
-> -	oinfo.oi_owner = free->xefi_owner;
-> -	if (free->xefi_flags & XFS_EFI_ATTR_FORK)
-> +	xefi = container_of(item, struct xfs_extent_free_item, xefi_list);
-> +
-> +	oinfo.oi_owner = xefi->xefi_owner;
-> +	if (xefi->xefi_flags & XFS_EFI_ATTR_FORK)
->  		oinfo.oi_flags |= XFS_OWNER_INFO_ATTR_FORK;
-> -	if (free->xefi_flags & XFS_EFI_BMBT_BLOCK)
-> +	if (xefi->xefi_flags & XFS_EFI_BMBT_BLOCK)
->  		oinfo.oi_flags |= XFS_OWNER_INFO_BMBT_BLOCK;
-> -	error = xfs_free_extent(tp, free->xefi_startblock,
-> -		free->xefi_blockcount, &oinfo, XFS_AG_RESV_NONE);
-> -	kmem_cache_free(xfs_extfree_item_cache, free);
-> +	error = xfs_free_extent(tp, xefi->xefi_startblock,
-> +			xefi->xefi_blockcount, &oinfo, XFS_AG_RESV_NONE);
-> +
-> +	kmem_cache_free(xfs_extfree_item_cache, xefi);
->  	return error;
->  }
-> 
-> @@ -107,10 +109,11 @@ STATIC void
->  xfs_extent_free_cancel_item(
->  	struct list_head		*item)
->  {
-> -	struct xfs_extent_free_item	*free;
-> +	struct xfs_extent_free_item	*xefi;
-> 
-> -	free = container_of(item, struct xfs_extent_free_item, xefi_list);
-> -	kmem_cache_free(xfs_extfree_item_cache, free);
-> +	xefi = container_of(item, struct xfs_extent_free_item, xefi_list);
-> +
-> +	kmem_cache_free(xfs_extfree_item_cache, xefi);
->  }
-> 
->  const struct xfs_defer_op_type xfs_extent_free_defer_type = {
-> @@ -134,25 +137,27 @@ xfs_agfl_free_finish_item(
->  {
->  	struct xfs_owner_info		oinfo = { };
->  	struct xfs_mount		*mp = tp->t_mountp;
-> -	struct xfs_extent_free_item	*free;
-> +	struct xfs_extent_free_item	*xefi;
->  	struct xfs_buf			*agbp;
->  	struct xfs_perag		*pag;
->  	int				error;
->  	xfs_agnumber_t			agno;
->  	xfs_agblock_t			agbno;
-> 
-> -	free = container_of(item, struct xfs_extent_free_item, xefi_list);
-> -	ASSERT(free->xefi_blockcount == 1);
-> -	agno = XFS_FSB_TO_AGNO(mp, free->xefi_startblock);
-> -	agbno = XFS_FSB_TO_AGBNO(mp, free->xefi_startblock);
-> -	oinfo.oi_owner = free->xefi_owner;
-> +	xefi = container_of(item, struct xfs_extent_free_item, xefi_list);
-> +
-> +	ASSERT(xefi->xefi_blockcount == 1);
-> +	agno = XFS_FSB_TO_AGNO(mp, xefi->xefi_startblock);
-> +	agbno = XFS_FSB_TO_AGBNO(mp, xefi->xefi_startblock);
-> +	oinfo.oi_owner = xefi->xefi_owner;
-> 
->  	pag = libxfs_perag_get(mp, agno);
->  	error = xfs_alloc_read_agf(pag, tp, 0, &agbp);
->  	if (!error)
->  		error = xfs_free_agfl_block(tp, agno, agbno, agbp, &oinfo);
->  	libxfs_perag_put(pag);
-> -	kmem_cache_free(xfs_extfree_item_cache, free);
-> +
-> +	kmem_cache_free(xfs_extfree_item_cache, xefi);
->  	return error;
->  }
-> 
+INFO: task C2 CompilerThre:3546103 blocked for more than 1912 seconds.
+      Tainted: G           OE     5.15.35netflix-g54efd87a8576 #1
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:C2 CompilerThre state:D stack:    0 pid:3546103 ppid:3546047 flags:0x00004222
+Call Trace:
+ <TASK>
+ __schedule+0x2c5/0x8d0
+ schedule+0x3a/0xa0
+ schedule_timeout+0x115/0x280
+ ? __schedule+0x2cd/0x8d0
+ wait_for_completion+0x9f/0x100
+ __flush_work+0x161/0x1f0
+ ? worker_detach_from_pool+0xb0/0xb0
+ destroy_inode+0x3b/0x70
+ __dentry_kill+0xcc/0x160
+ dput+0x141/0x2e0
+ ovl_destroy_inode+0x15/0x50 [overlay]
+ destroy_inode+0x3b/0x70
+ __dentry_kill+0xcc/0x160
+ dput+0x141/0x2e0
+ __fput+0xe1/0x250
+ task_work_run+0x73/0xb0
+ do_exit+0x37e/0xb80
+ do_group_exit+0x3a/0xa0
+ get_signal+0x140/0x870
+ ? perf_event_groups_first+0x80/0x80
+ arch_do_signal_or_restart+0xae/0x7c0
+ ? __x64_sys_futex+0x5e/0x1d0
+ ? __x64_sys_futex+0x5e/0x1d0
+ exit_to_user_mode_prepare+0x10f/0x1c0
+ syscall_exit_to_user_mode+0x26/0x40
+ do_syscall_64+0x46/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x7f3295cf3cf5
+RSP: 002b:00007f327c834d00 EFLAGS: 00000246 ORIG_RAX: 00000000000000ca
+RAX: fffffffffffffe00 RBX: 00007f32900bde50 RCX: 00007f3295cf3cf5
+RDX: 0000000000000000 RSI: 0000000000000080 RDI: 00007f32900bde78
+RBP: 00007f327c834dd0 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 00007f32900bde74
+R13: 00007f32900bde78 R14: 00007f32900bde28 R15: 0000000000000000
+ </TASK>
 
+The bad call path is:
+
+xfs_fs_destroy_inode() ->
+  xfs_inode_mark_reclaimable ->
+    xfs_inodegc_queue() ->
+      xfs_inodegc_want_queue_work()
+      xfs_inodegc_want_flush_work() ->
+        flush_work() ->
+          __flush_work() ->
+            wait_for_completion()
+
+We can avoid this task getting stuck by just not queuing the gc work from
+do_exit().
+
+The fact that there's a lockup at all probably indicative of another xfs
+bug somewhere else that I am still looking for, but we should at least not
+generate unkillable tasks as a result.
+
+Signed-off-by: Tycho Andersen <tandersen@netflix.com>
+CC: "Eric W. Biederman" <ebiederm@xmission.com>
+---
+ fs/xfs/xfs_icache.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 351849fc18ff..90e94d84f8ad 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -2011,6 +2011,9 @@ xfs_inodegc_want_queue_work(
+  *
+  * Note: If the current thread is running a transaction, we don't ever want to
+  * wait for other transactions because that could introduce a deadlock.
++ * If the task is currently exiting there is nobody to wait for
++ * the flush and it can deadlock, so we should not try to flush in this case
++ * either.
+  */
+ static inline bool
+ xfs_inodegc_want_flush_work(
+@@ -2021,6 +2024,9 @@ xfs_inodegc_want_flush_work(
+ 	if (current->journal_info)
+ 		return false;
+ 
++	if (current->flags & PF_EXITING)
++		return false;
++
+ 	if (shrinker_hits > 0)
+ 		return true;
+ 
+
+base-commit: 78b421b6a7c6dbb6a213877c742af52330f5026d
 -- 
-Carlos Maiolino
+2.34.1
+
