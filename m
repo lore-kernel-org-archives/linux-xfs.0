@@ -2,67 +2,80 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D0C1C77B7C
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 May 2023 22:04:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFB30C7EE22
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 May 2023 23:22:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239412AbjEKWES (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 11 May 2023 18:04:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55268 "EHLO
+        id S239165AbjEKXWJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 11 May 2023 19:22:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35710 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239496AbjEKWEQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 May 2023 18:04:16 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 133F6559F
-        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2023 15:04:16 -0700 (PDT)
+        with ESMTP id S232390AbjEKXWJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 May 2023 19:22:09 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCA925BA9;
+        Thu, 11 May 2023 16:22:07 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9E92B65171
-        for <linux-xfs@vger.kernel.org>; Thu, 11 May 2023 22:04:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 016B3C433D2;
-        Thu, 11 May 2023 22:04:15 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 775BD6524D;
+        Thu, 11 May 2023 23:22:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1B0FC433EF;
+        Thu, 11 May 2023 23:22:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1683842655;
-        bh=h74Y8Kuop4nYh80iFyJ/2kS6iGEOxawapY0oXJ+qU1A=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=f4eDKbnc107AeylTX1tVC1iQSUBSeV9eI11Hd4+Im2jeraq0eJOFXbAPsI5F0KNeg
-         O2RIlFwHN0w6sBP6qB4AQgsdmbf8QzzwrUY8lROMBf9Dl1ZXOtBQV3DT+O6eMiFkfe
-         TkiYTxuZNPQhmCM4IjZkinEc9u0zZz3jcSeG3CmIHrYGL4OQTb5PcKi3+j+puhVatJ
-         RAMYk3qS57UwxOKERa3pppJoxisv6IHgsBVhp4zt3V/sU5sgvDnhpaGEhC1fnYJ68T
-         t8egwlyVQ46gr+nAKLvtepnm/Z1wwrhc0daDO575GKfSBV4T41+6+th4xZjfg9kyOq
-         n+9a3cKbFG8mg==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id E4A41E26D4C;
-        Thu, 11 May 2023 22:04:14 +0000 (UTC)
-Subject: Re: [GIT PULL] xfs: bug fixes for 6.4-rc2
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20230511020107.GI2651828@dread.disaster.area>
-References: <20230511015846.GH2651828@dread.disaster.area> <20230511020107.GI2651828@dread.disaster.area>
-X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20230511020107.GI2651828@dread.disaster.area>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.4-rc1-fixes
-X-PR-Tracked-Commit-Id: 2254a7396a0ca6309854948ee1c0a33fa4268cec
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 849a4f09730ba3c02da01924c7a6e7a000a4d27c
-Message-Id: <168384265493.22863.2683852857659893778.pr-tracker-bot@kernel.org>
-Date:   Thu, 11 May 2023 22:04:14 +0000
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>, djwong@kernel.org,
-        linux-xfs@vger.kernel.org
+        s=k20201202; t=1683847326;
+        bh=eZGu5MJPJ9fXCT6mKVeohpImVi3IXtivEBhSPsiKHOU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=g/p0s/80BuG8QS2NbcgoYi5bEDDMQbmnm/6jBTKkXUW30ndqoiy26r6sptZIfP5rM
+         YpehZ9P9+CPEe5e9iR3XDrKFCrUgPzzVzpOCHo5cZyGbCYYAS9ctngU711QfUHdMJo
+         /8MUgZ7sW7EXte1mhmAGcyefc3buoWgPnQNU9NZVcKvLLPdgL5khJkIvof0ON7I8Eq
+         J8vAIcuuHY4f4hL5Z0F8adnk5cAZ9DKXsARBm1lcHcmlvUAJFSPqVs+7XSTWGkFpNM
+         03bHzQhgCcFuknqKjJ3otUE1N+o9mVg9/rGE+SptXHC4fFXIXlu9gBBjxTCDPzhV2+
+         iIgj9GrCQ6joA==
+Date:   Thu, 11 May 2023 16:22:06 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     renlei1@chinatelecom.cn
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] xfs: xfs_nfs_get_inode support zero generation
+Message-ID: <20230511232206.GG858799@frogsfrogsfrogs>
+References: <1683800241-14488-1-git-send-email-renlei1@chinatelecom.cn>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1683800241-14488-1-git-send-email-renlei1@chinatelecom.cn>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The pull request you sent on Thu, 11 May 2023 12:01:07 +1000:
+On Thu, May 11, 2023 at 06:17:21PM +0800, renlei1@chinatelecom.cn wrote:
+> From: Ren Lei <renlei1@chinatelecom.cn>
+> 
+> If generation is zero, bypass the verification of generation number
+> to avoid stale file error. (Be consistent with other fs, such as
+> ext4, fat, jfs, etc.)
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.4-rc1-fixes
+What code is affected by the gen==0 handles being rejected?  Is there a
+user program or test case where this is required?
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/849a4f09730ba3c02da01924c7a6e7a000a4d27c
+--D
 
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+> Signed-off-by: Ren Lei<renlei1@chinatelecom.cn>
+> ---
+>  fs/xfs/xfs_export.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
+> index 1064c2342876..cbee32c5ad37 100644
+> --- a/fs/xfs/xfs_export.c
+> +++ b/fs/xfs/xfs_export.c
+> @@ -146,7 +146,7 @@ xfs_nfs_get_inode(
+>  		return ERR_PTR(error);
+>  	}
+>  
+> -	if (VFS_I(ip)->i_generation != generation) {
+> +	if (generation && VFS_I(ip)->i_generation != generation) {
+>  		xfs_irele(ip);
+>  		return ERR_PTR(-ESTALE);
+>  	}
+> -- 
+> 2.27.0
+> 
