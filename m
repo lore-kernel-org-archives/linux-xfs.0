@@ -2,239 +2,175 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A7C6C77B75
-	for <linux-xfs@archiver.kernel.org>; Fri, 12 May 2023 22:54:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D79BC77B75
+	for <linux-xfs@archiver.kernel.org>; Fri, 12 May 2023 23:05:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240152AbjELWyV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 12 May 2023 18:54:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55888 "EHLO
+        id S238195AbjELXFL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 12 May 2023 19:05:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59792 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240105AbjELWyV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 May 2023 18:54:21 -0400
-Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F41B55AC
-        for <linux-xfs@vger.kernel.org>; Fri, 12 May 2023 15:54:18 -0700 (PDT)
-Received: by mail-pf1-x42d.google.com with SMTP id d2e1a72fcca58-64ab2a37812so8059232b3a.1
-        for <linux-xfs@vger.kernel.org>; Fri, 12 May 2023 15:54:18 -0700 (PDT)
+        with ESMTP id S239797AbjELXFK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 May 2023 19:05:10 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D3D42103
+        for <linux-xfs@vger.kernel.org>; Fri, 12 May 2023 16:05:08 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-64395e2a715so10638256b3a.3
+        for <linux-xfs@vger.kernel.org>; Fri, 12 May 2023 16:05:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1683932058; x=1686524058;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=xw4RNP6p9BVSOpDZtwoCjXs6A4xbd0WgFJaBNB3t0SU=;
-        b=4H8vTWWjgP8YgYqL3CI3Cx/tH7ktwTvsFj+5vOj+pjBVPrkPf0bYMqP4/kMiaoSp4g
-         EH2Q36FLDUpaem9VTjfDS0elq9JxQaZp1eJbW3WjHBeP05+FZIG2GZw2tKpfhcMPQbVz
-         9qMAm6hhKsSaIR3+tKrjBrVYctAdzqNqVI5eAqX9NZdNHrZesf//hTObCHrNvamj+Jvb
-         ppQiEt/VJ3jxojcfVx9ZSj4ertqnikTXkW059vLK1JBADRxxdh8PbWyPLHVid0OHfDPW
-         tZ3wvzpme0S+JLfeOezH4PC8dS/EV4jnr31njQCjdSHcHzTB+Ai6LozEd+zOau31D32P
-         n68Q==
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1683932708; x=1686524708;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=zDjWjICi5dfHeJD8jjNAckygSSqWC7cZ1U4u8cLgo+8=;
+        b=b+EkQMOovJD4q+RcqhdM5THPiaQnOoMQQmQUdAE1/5C5yoRdmjd826KH8hDHBymbl8
+         oTKPyKWnnE2Q8lhIrIzJX7M8P5+4hMyo47M4rsXMASW0xbYt3MRYU7ITvyOoZaMPvSde
+         ON6uo1KLHh8/1tghvnn80GZjlNEOciBO+yztiz9QJlBGlQvJFcBw4ELc2HMNisiz3BHg
+         8u6RZAmSUxGwfHYI4QVnEnYu5gpI67i2mCxOmlOytbCuMyYtoi7zgy7Tv+TrSdmoAxH7
+         +Co8ydCoFrcpStr9Rm/F1zLjpM6u3RUhH3KADEfDbDhRoeX4vCJ/VAQSDQ1gxLm63Qv+
+         TIUQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683932058; x=1686524058;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xw4RNP6p9BVSOpDZtwoCjXs6A4xbd0WgFJaBNB3t0SU=;
-        b=COSkWnmndzstQy2aaLCpWpORP3AWe/LzYfiR/GhzUNpz4jxLoUDnZXwH8ZqH9br/s+
-         Vv5gJuuUcGWunnt6DhV746cShSNezNjhn56EVYdi/9gAu2llkrpRWgcnkcUNy1EmFOVw
-         +B8DOmnYJ8eib8BnsKr2MXtUblgnEMb0y1P6Mg4TAP+E3i7rF8rDY4y21SjUJPBi70nn
-         vVWDxgDeu/Y1VwrAH9YgHMYwAxEm2uwZVnYxca1Y6OR0SzskEFREh43bqYF1mFHxqG88
-         TFutGnDnbcOn+5FmRqEqw+1DcE6wP0tTz3ORiA9D6ASkUBYmAfUlFUkEmYSaeq1ciULw
-         Hbqw==
-X-Gm-Message-State: AC+VfDxVQh03oIXtI1kvAslhnuNL4Y6dZC3jSMLhgCXNfLqBAr457Gp6
-        y1zmWgP9GuuxX/unBdImoJWh/KqlrlgoIr8rfXw=
-X-Google-Smtp-Source: ACHHUZ7IQF8tj7PMuEYgsCQZlAe0r/sNb1zkwWw9hK0qHO6sRng86j+Z7QU4KwoL8PxpvzCjcuRBsA==
-X-Received: by 2002:a05:6a00:3028:b0:643:a841:887a with SMTP id ay40-20020a056a00302800b00643a841887amr30197988pfb.4.1683932057868;
-        Fri, 12 May 2023 15:54:17 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1683932708; x=1686524708;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=zDjWjICi5dfHeJD8jjNAckygSSqWC7cZ1U4u8cLgo+8=;
+        b=aG8oiue9Qk1edlSDRNpGbZmh8EUc23AX5kJwfl9mA5oaMBqGY7RvBn4KiUvo7m331K
+         03pk36DMDNTtNBfz73mLkFHSYWf1loF00sYx3xsZANif2QvJAZ2ztCIvQl/C4z5N+S09
+         HhKW7NUz1OW83RPWBMD0ii5Vb93byBeSBIYm4VHa/jmlYkGVJxu7zkrH59uedfoXZypR
+         gIH2IdRCx5+ZT+2moXq5uV5aY9z4SgxbhdbypMteSkaqa1pRgUmqvLXSoX1O9cg0vf7/
+         S89AZvUhYDTcPVhYg4hSMVD/0ZpBcp0uIxLWyksupJT+XZZgKrV7gl0h9hKQIPZeLJrJ
+         IFvg==
+X-Gm-Message-State: AC+VfDxBMqM6zMTXShO4rlb1AlGHAgxMN3C+a3RA/s8zlbj1t+Ivns9w
+        og6DnkmZt2BSvVsa7julJ4XL/ejkekocxrDHvp4=
+X-Google-Smtp-Source: ACHHUZ6PYFc8acpfxUTxuuQj7QEQwrfqqFf+HV9VDYlbLP/6n+FJTlDvLm4ftm/f8U07EhaVuDWFWQ==
+X-Received: by 2002:a05:6a21:789c:b0:100:607:b986 with SMTP id bf28-20020a056a21789c00b001000607b986mr26046294pzc.56.1683932707867;
+        Fri, 12 May 2023 16:05:07 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-88-204.pa.nsw.optusnet.com.au. [49.181.88.204])
-        by smtp.gmail.com with ESMTPSA id f14-20020aa78b0e000000b0063d666566d1sm7559518pfd.72.2023.05.12.15.54.17
+        by smtp.gmail.com with ESMTPSA id t23-20020a62ea17000000b0062cf75a9e6bsm7540715pfh.131.2023.05.12.16.05.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 12 May 2023 15:54:17 -0700 (PDT)
+        Fri, 12 May 2023 16:05:07 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1pxbeQ-00EZh4-IM; Sat, 13 May 2023 08:54:14 +1000
-Date:   Sat, 13 May 2023 08:54:14 +1000
+        id 1pxbou-00Ea0E-Ko; Sat, 13 May 2023 09:05:04 +1000
+Date:   Sat, 13 May 2023 09:05:04 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Tycho Andersen <tycho@tycho.pizza>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Tycho Andersen <tandersen@netflix.com>,
-        "Eric W. Biederman" <ebiederm@xmission.com>
-Subject: Re: [PATCH] xfs: don't do inodgc work if task is exiting
-Message-ID: <20230512225414.GE3223426@dread.disaster.area>
-References: <20230511151702.14704-1-tycho@tycho.pizza>
- <20230512000724.GH858799@frogsfrogsfrogs>
- <ZF5X/8RQSzGMn3aZ@tycho.pizza>
+To:     Oliver Sang <oliver.sang@intel.com>
+Cc:     Dave Chinner <dchinner@redhat.com>, oe-lkp@lists.linux.dev,
+        lkp@intel.com, linux-kernel@vger.kernel.org,
+        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        ying.huang@intel.com, feng.tang@intel.com, fengwei.yin@intel.com
+Subject: Re: [linus:master] [xfs]  2edf06a50f:  fsmark.files_per_sec -5.7%
+ regression
+Message-ID: <20230512230504.GF3223426@dread.disaster.area>
+References: <202305090905.aff4e0e6-oliver.sang@intel.com>
+ <20230509065433.GT3223426@dread.disaster.area>
+ <20230509071053.GE2651828@dread.disaster.area>
+ <ZF3uXe+cjAsfCLic@xsang-OptiPlex-9020>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <ZF5X/8RQSzGMn3aZ@tycho.pizza>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ZF3uXe+cjAsfCLic@xsang-OptiPlex-9020>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 12, 2023 at 09:15:11AM -0600, Tycho Andersen wrote:
-> INFO: task java:3546393 blocked for more than 1912 seconds.
->       Tainted: G           OE     5.15.35netflix-g54efd87a8576 #1
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> task:skyframe-evalua state:D stack:    0 pid:3546393 ppid:3532734 flags:0x00000220
-> Call Trace:
->  <TASK>
->  __schedule+0x2c5/0x8d0
->  schedule+0x3a/0xa0
->  schedule_timeout+0x115/0x280
->  ? xfs_buf_read_map+0x52/0x2e0 [xfs]
->  ? xfs_da_read_buf+0xcf/0x120 [xfs]
->  __down+0x90/0xe0
->  ? down+0x43/0x60
->  down+0x43/0x60
->  xfs_buf_lock+0x29/0xa0 [xfs]
->  xfs_buf_find.isra.34+0x1fd/0x610 [xfs]
->  xfs_buf_get_map+0x4c/0x400 [xfs]
->  xfs_buf_read_map+0x52/0x2e0 [xfs]
->  ? xfs_read_agi+0x8c/0x120 [xfs]
->  xfs_trans_read_buf_map+0x223/0x2d0 [xfs]
->  ? xfs_read_agi+0x8c/0x120 [xfs]
->  xfs_read_agi+0x8c/0x120 [xfs]
->  xfs_ialloc_read_agi+0x2a/0x90 [xfs]
->  xfs_dialloc+0x1ab/0x680 [xfs]
->  ? xfs_trans_reserve_quota_icreate+0x32/0x40 [xfs]
->  ? xfs_trans_alloc_icreate+0x75/0xf0 [xfs]
->  xfs_create+0x39e/0x5b0 [xfs]
->  xfs_generic_create+0x129/0x380 [xfs]
->  ? generic_permission+0x27/0x200
->  vfs_create+0x12b/0x1c0
->  ovl_create_real+0xd7/0x220 [overlay]
->  ovl_create_or_link+0x166/0x670 [overlay]
+On Fri, May 12, 2023 at 03:44:29PM +0800, Oliver Sang wrote:
+> hi, Dave Chinner,
+> 
+> On Tue, May 09, 2023 at 05:10:53PM +1000, Dave Chinner wrote:
+> > On Tue, May 09, 2023 at 04:54:33PM +1000, Dave Chinner wrote:
+> > > On Tue, May 09, 2023 at 10:13:19AM +0800, kernel test robot wrote:
+> > > > 
+> > > > 
+> > > > Hello,
+> > > > 
+> > > > kernel test robot noticed a -5.7% regression of fsmark.files_per_sec on:
+> > > > 
+> > > > 
+> > > > commit: 2edf06a50f5bbe664283f3c55c480fc013221d70 ("xfs: factor xfs_alloc_vextent_this_ag() for  _iterate_ags()")
+> > > > https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git master
+> > > 
+> > > This is just a refactoring patch and doesn't change any logic.
+> > > Hence I'm sceptical that it actually resulted in a performance
+> > > regression. Indeed, the profile indicates a significant change of
+> > > behaviour in the allocator and I can't see how the commit above
+> > > would cause anything like that.
+> > > 
+> > > Was this a result of a bisect? If so, what were the original kernel
+> > > versions where the regression was detected?
+> > 
+> > Oh, CONFIG_XFS_DEBUG=y, which means:
+> > 
+> > static int
+> > xfs_alloc_ag_vextent_lastblock(
+> >         struct xfs_alloc_arg    *args,
+> >         struct xfs_alloc_cur    *acur,
+> >         xfs_agblock_t           *bno,
+> >         xfs_extlen_t            *len,
+> >         bool                    *allocated)
+> > {
+> >         int                     error;
+> >         int                     i;
+> > 
+> > #ifdef DEBUG
+> >         /* Randomly don't execute the first algorithm. */
+> >         if (get_random_u32_below(2))
+> >                 return 0;
+> > #endif
+> > 
+> > We randomly chose a near block allocation strategy to use to improve
+> > code coverage, not the optimal one for IO performance. Hence the CPU
+> > usage and allocation patterns that impact IO performance are simply
+> > not predictable or reproducable from run to run. So, yeah, trying to
+> > bisect a minor difference in performance as a result of this
+> > randomness will not be reliable....
+> 
+> Thanks a lot for guidance!
+> 
+> we plan to disable XFS_DEBUG (as well as XFS_WARN) in our performance tests.
+> want to consult with you if this is the correct thing to do?
 
-Lots of stuff blocked on the AGI lock doing inode allocation. Kinda
-what I expected to see...
+You can use XFS_WARN=y with performance tests - that elides all the
+debug specific code that changes behaviour but leaves all the
+ASSERT-based correctness checks in the code.
 
-> INFO: task kworker/66:1:3548191 blocked for more than 1912 seconds.
->       Tainted: G           OE     5.15.35netflix-g54efd87a8576 #1
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> task:kworker/66:1    state:D stack:    0 pid:3548191 ppid:     2 flags:0x00004000
-> Workqueue: xfs-inodegc/nvme1n1 xfs_inodegc_worker [xfs]
-> Call Trace:
->  <TASK>
->  __schedule+0x2c5/0x8d0
->  schedule+0x3a/0xa0
->  schedule_timeout+0x115/0x280
->  __down+0x90/0xe0
->  ? down+0x43/0x60
->  down+0x43/0x60
->  xfs_buf_lock+0x29/0xa0 [xfs]
->  xfs_buf_find.isra.34+0x1fd/0x610 [xfs]
->  xfs_buf_get_map+0x4c/0x400 [xfs]
->  xfs_buf_read_map+0x52/0x2e0 [xfs]
->  ? xfs_read_agi+0x8c/0x120 [xfs]
->  xfs_trans_read_buf_map+0x223/0x2d0 [xfs]
->  ? xfs_read_agi+0x8c/0x120 [xfs]
->  xfs_read_agi+0x8c/0x120 [xfs]
->  xfs_iunlink_remove+0x5a/0x220 [xfs]
->  xfs_ifree+0x7a/0x4c0 [xfs]
->  ? xfs_trans_alloc+0xec/0x1e0 [xfs]
->  xfs_inactive_ifree+0xa1/0x1a0 [xfs]
->  xfs_inactive+0xf1/0x170 [xfs]
->  xfs_inodegc_worker+0x76/0x100 [xfs]
->  process_one_work+0x200/0x3d0
->  worker_thread+0x2d/0x3e0
->  ? process_one_work+0x3d0/0x3d0
->  kthread+0x11a/0x140
->  ? set_kthread_struct+0x40/0x40
->  ret_from_fork+0x22/0x30
->  </TASK>
+> and I guess we should still keep them in functional tests, am I right?
 
-Yup, there's the stuck inodegc worker - also trying to get the AGI
-lock doing inode unlink. I'm not surprised at all by this - working
-out why this worker is stuck here is the goal because that is what
-is causing all your flush problems.
+Yes.
 
-It also gives me a better idea of what the likely issue is, too.
+> BTW, regarding this case, we tested again with disabling XFS_DEBUG (as well as
+> XFS_WARN), kconfig is attached, only diff with last time is:
+> -CONFIG_XFS_DEBUG=y
+> -CONFIG_XFS_ASSERT_FATAL=y
+> +# CONFIG_XFS_WARN is not set
+> +# CONFIG_XFS_DEBUG is not set
+> 
+> but we still observed similar regression:
+> 
+> ecd788a92460eef4 2edf06a50f5bbe664283f3c55c4
+> ---------------- ---------------------------
+>          %stddev     %change         %stddev
+>              \          |                \
+>    8176057 ± 15%      +4.7%    8558110        fsmark.app_overhead
+>      14484            -6.3%      13568        fsmark.files_per_sec
 
-> INFO: task bazelenv:3548683 blocked for more than 1912 seconds.
->       Tainted: G           OE     5.15.35netflix-g54efd87a8576 #1
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> task:bazelenv        state:D stack:    0 pid:3548683 ppid:3435211 flags:0x00000220
-> Call Trace:
->  <TASK>
->  __schedule+0x2c5/0x8d0
->  schedule+0x3a/0xa0
->  schedule_timeout+0x115/0x280
->  __down+0x90/0xe0
->  ? down+0x43/0x60
->  down+0x43/0x60
->  xfs_buf_lock+0x29/0xa0 [xfs]
->  xfs_buf_find.isra.34+0x1fd/0x610 [xfs]
->  xfs_buf_get_map+0x4c/0x400 [xfs]
->  xfs_buf_read_map+0x52/0x2e0 [xfs]
->  ? xfs_read_agf+0x84/0x100 [xfs]
->  xfs_trans_read_buf_map+0x223/0x2d0 [xfs]
->  ? xfs_read_agf+0x84/0x100 [xfs]
->  xfs_read_agf+0x84/0x100 [xfs]
->  xfs_alloc_read_agf+0x3a/0x1b0 [xfs]
->  xfs_alloc_fix_freelist+0x434/0x500 [xfs]
->  ? __kmalloc+0x3c0/0x400
->  ? xfs_dquot_to_disk+0xfe/0x110 [xfs]
->  ? xfs_qm_dquot_logitem_format+0x89/0x150 [xfs]
->  xfs_free_extent_fix_freelist+0x61/0xa0 [xfs]
->  __xfs_free_extent+0x6a/0x1c0 [xfs]
->  xfs_trans_free_extent+0x3b/0xd0 [xfs]
->  xfs_extent_free_finish_item+0x23/0x40 [xfs]
->  xfs_defer_finish_noroll+0x24b/0x5a0 [xfs]
->  xfs_defer_finish+0x13/0x80 [xfs]
->  xfs_itruncate_extents_flags+0x13b/0x220 [xfs]
->  xfs_setattr_size+0x35c/0x3d0 [xfs]
->  ? aa_compute_fperms+0x16f/0x190
->  xfs_vn_setattr+0xf7/0x110 [xfs]
+So the application spent 5% more CPU time in userspace, and the rate
+the kernel processed IO went down by 6%. Seems to me like
+everything is running slower, not just the kernel code....
 
-And that confirms the suspicions I have - another process blocked on
-an AGF lock. That might be IO it's blocking on here, but combined
-with the inode unlink being stuck in inodegc, I have a suspicion
-that this is an AGF - AGI - inode buffer lock ordering issue.
+>     100.50 ±  5%      +0.3%     100.83        turbostat.Avg_MHz
+>       5.54 ± 11%      +0.3        5.82        turbostat.Busy%
+>       1863 ± 19%      -6.9%       1733        turbostat.Bzy_MHz
 
-There's been a heap of work done in this space since 5.15, and I'd
-suggest that almost none of it is trivially backportable as it's
-deeply intertwined with relatively complex algorithm changes.
+Evidence that the CPU is running at a 7% lower clock rate when the
+results are 6% slower is a bit suspicious to me. Shouldn't the CPU
+clock rate be fixed to the same value for A-B performance regression
+testing?
 
-I also recently found evidence of another AGI -> inode buffer -> AGF
--> inode buffer deadlock issue debugging another hang from a machine
-making heavy use of O_TMPFILEs via OVL.  Without a kernel code to
-examine in intricate detail, I can't say if this is what you are
-seeing.
+Cheers,
 
-I also don't have a fix for that yet because, well, it's complex and
-I can really only accomodate one complex high priority bug at a time
-in my head and it hasn't been my highiest priority. As it is, I
-don't think the fix for it will be trivially backportable to 5.15,
-either....
-
-> INFO: task journalctl:3549038 blocked for more than 1912 seconds.
->       Tainted: G           OE     5.15.35netflix-g54efd87a8576 #1
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> task:journalctl      state:D stack:    0 pid:3549038 ppid:469330 flags:0x00000224
-> Call Trace:
->  <TASK>
->  __schedule+0x2c5/0x8d0
->  schedule+0x3a/0xa0
->  schedule_timeout+0x115/0x280
->  ? __traceiter_sched_wakeup+0x29/0x40
->  ? ttwu_do_wakeup+0x106/0x170
->  wait_for_completion+0x9f/0x100
->  __flush_work+0x161/0x1f0
->  ? worker_detach_from_pool+0xb0/0xb0
->  xfs_inodegc_flush.part.25+0x4f/0xa0 [xfs]
->  xfs_fs_statfs+0x35/0x1e0 [xfs]
->  statfs_by_dentry+0x67/0x90
->  vfs_statfs+0x16/0xd0
->  ovl_statfs+0x40/0x70 [overlay]
-
-Fixed by commit 5e672cd69f0a ("xfs: introduce xfs_inodegc_push()")
-which also means that the commits Darrick suggested you try aren't
-relevant. The mod_delayed_work() issues they address weren't
-introduced until commit 7cf2b0f9611b ("xfs: bound maximum wait time
-for inodegc work") which has a direct dependency on 5e672cd69f0a
-being present....
-
--Dave.
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
