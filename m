@@ -2,47 +2,67 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9067EC77B75
-	for <linux-xfs@archiver.kernel.org>; Mon, 15 May 2023 16:58:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEC41C77B7D
+	for <linux-xfs@archiver.kernel.org>; Mon, 15 May 2023 22:20:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243251AbjEOQ6I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 15 May 2023 12:58:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38122 "EHLO
+        id S245237AbjEOWUl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 15 May 2023 18:20:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34712 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243295AbjEOQ6E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2023 12:58:04 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BEAE7AA9;
-        Mon, 15 May 2023 09:57:56 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E381F62A33;
-        Mon, 15 May 2023 16:57:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EBBAC433EF;
-        Mon, 15 May 2023 16:57:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684169875;
-        bh=Jmopy33ZoS1la9R1avtjotbLsHWcwBpRSQv67QLaEP0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=GUNA2ZCd3vS2KC5EHQUxiJ7DKlU1qI411RsEupq19AMctcTLmJce2hIaRXHVwxbDQ
-         UlAgtPA1xY2E2g27GQgQImrb4cHCa7lomnNbBuS9ZF9cCypkZje1ROc3PIQJdgjGH/
-         s7/F2YBz/sSicUWNwbXVcEz0J1EoTH/+9ev4F4XMM8MCIyeqiwjCW6cVd8UAZfxkiD
-         VebvJWVgXDAMsP/igFigPZJ74qdmDoGNDCDkvMimM9YSjt5cNODrsixTURbcH6jDnE
-         9XbGLfmlFEmBH7Qx7x96RsIwLNsdQc7a3Yji2gPt3s6k4UsWMMWaDADQxZIlVXpLJ1
-         zJStYGHX4X+vA==
-Date:   Mon, 15 May 2023 09:57:54 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
+        with ESMTP id S229515AbjEOWUk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2023 18:20:40 -0400
+Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1F9E1BDF
+        for <linux-xfs@vger.kernel.org>; Mon, 15 May 2023 15:20:39 -0700 (PDT)
+Received: by mail-pf1-x430.google.com with SMTP id d2e1a72fcca58-6439d505274so8400524b3a.0
+        for <linux-xfs@vger.kernel.org>; Mon, 15 May 2023 15:20:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1684189239; x=1686781239;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=1SFqV3UQyv74Jf8n7deoWwncMcJ7izs37jK3uaW+m7g=;
+        b=AYpFp2TA+3hBrRCJ8vr9SkoGUWpS+Cos7jEYPT/Mg6bozCKU+1YHCuAOe1sXt6nWOQ
+         UnOAMu2aWyeSLOI03J0A4lmAAqhC5TyuoZC3nYQyQoEqDTp3AJKPoxxMh7+zz3bKbAY2
+         u23C9B1lFAMtw2pPzB+Tb44bc/1HCUa+sfE36yDgBd93qI5gI1j86Z8PCzYITLsmbX3X
+         YswRPw2R2Z/Sn7QOaQ5J7Y7+cMnJqwmMQwOoF9NmX3OHuxF5h4Jkfe8gUkTFsN8HE199
+         loxDZCejR0gLl1nFIdK6EI2GRz+y4bn0hlGOUjeSH94W9Ro0ZSgTc3ChOc6ASijh79fN
+         5pDg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1684189239; x=1686781239;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=1SFqV3UQyv74Jf8n7deoWwncMcJ7izs37jK3uaW+m7g=;
+        b=W7EQiDOC9Niof0hEqSMpnSsfHp2QiyUT2RZgXGRLoVJ2F+NTynxtF4tVeNRQMFFQF6
+         x33xgqrM6lEjB42y0hwmQnXO/OGUbVTMLUrEOQBo+5ie13vPoXZMP4Rr9dwhM9HB9H+g
+         dM3sdd/sd+ctiO6Y3GxcUyXJ8M5/ML9kkZ/ix69wnVuOYh8WJ5rO777qZPsg/CORlkMq
+         Pt9GsuIzXcuiae5SbytCSq37jfG5E2oU1TBTVcwc9om5GI8uYchFKSLWAEfAD1nRI5yf
+         7KsR/g5PcagzqosKSFJ6Eb7wDmMmuzICxst44qMzqdpZid2zwdjCI25y/knnIQsPLknL
+         ZEQg==
+X-Gm-Message-State: AC+VfDxh/wYksQV7rE0X1Mzig2hTHKs+pXL/KXHP6j4/xyeYmUD1K+tR
+        70UQ84XiL+LliUPPuup3BPKZaQ==
+X-Google-Smtp-Source: ACHHUZ5ANtDJYeE/4uaBwJIjUuX8jUXc/gv0P5ZHNLfz12/rbYnzKuufF/tj9utEsjYyBZymW+K0TQ==
+X-Received: by 2002:a05:6a20:1443:b0:101:a459:bb0d with SMTP id a3-20020a056a20144300b00101a459bb0dmr29982314pzi.2.1684189239156;
+        Mon, 15 May 2023 15:20:39 -0700 (PDT)
+Received: from dread.disaster.area (pa49-181-88-204.pa.nsw.optusnet.com.au. [49.181.88.204])
+        by smtp.gmail.com with ESMTPSA id p38-20020a631e66000000b0052c766b2f52sm12149144pgm.4.2023.05.15.15.20.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 15 May 2023 15:20:38 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1pygYU-00FkH7-Qy; Tue, 16 May 2023 08:20:34 +1000
+Date:   Tue, 16 May 2023 08:20:34 +1000
+From:   Dave Chinner <david@fromorbit.com>
 To:     Feng Tang <feng.tang@intel.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Oliver Sang <oliver.sang@intel.com>,
+Cc:     Oliver Sang <oliver.sang@intel.com>,
         Dave Chinner <dchinner@redhat.com>, oe-lkp@lists.linux.dev,
         lkp@intel.com, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, ying.huang@intel.com,
-        fengwei.yin@intel.com
+        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        ying.huang@intel.com, fengwei.yin@intel.com
 Subject: Re: [linus:master] [xfs]  2edf06a50f:  fsmark.files_per_sec -5.7%
  regression
-Message-ID: <20230515165754.GL858799@frogsfrogsfrogs>
+Message-ID: <20230515222034.GG3223426@dread.disaster.area>
 References: <202305090905.aff4e0e6-oliver.sang@intel.com>
  <20230509065433.GT3223426@dread.disaster.area>
  <20230509071053.GE2651828@dread.disaster.area>
@@ -119,6 +139,15 @@ On Sun, May 14, 2023 at 10:36:48PM +0800, Feng Tang wrote:
 > 
 > Please help to review if the debug patch miss anything as I don't
 > know the internals of xfs, thanks.
+
+Well spotted. :)
+
+The relevant commit dropped the trylock flag, so the perf regression
+and change of allocator behaviour is due to it blocking on a busy AG
+instead of skipping to the next uncontended on and so all
+allocations came from extents in the last block of the free space
+btree in that AG.
+
 > 
 > ---
 > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
@@ -129,15 +158,6 @@ On Sun, May 14, 2023 at 10:36:48PM +0800, Feng Tang wrote:
 >   */
 >  static int
 >  __xfs_alloc_vextent_this_ag(
-
-Patches against upstream head only, please.  This does not apply to
-6.4-rc2 without modification, and we cannot go backwards in time.  Do
-you mean to pass XFS_ALLOC_FLAG_TRYLOCK from
-xfs_alloc_vextent_iterate_ags into xfs_alloc_fix_freelist by way of
-adding an alloc_flags argument to xfs_alloc_vextent_prepare_ag?
-
---D
-
 > -	struct xfs_alloc_arg	*args)
 > +	struct xfs_alloc_arg	*args, int flag)
 >  {
@@ -167,21 +187,25 @@ adding an alloc_flags argument to xfs_alloc_vextent_prepare_ag?
 >  		if (error) {
 >  			args->agbno = NULLAGBLOCK;
 >  			break;
-> 
-> 
+
+I don't think this is the right way to fix this. The code is -very-
+different at the end of the series that this is in the middle of,
+and I need to check what callers now use the trylock behaviour to
+determine how the trylock flag shold be passed around...
+
 > Also for the turbostat.Bzy_MHz diff, IIUC, 0Day always uses
 > 'performance' cpufreq governor. And as the test case is running
 > 32 thread in a platform with 96 CPUs, there are many CPUs in idle
 > state in average, and I suspect the Bzy_MHz may be calculated 
 > considering those cpufreq and cpuidle factors.
-> 
-> Thanks,
-> Feng
-> 
-> > 
-> > Cheers,
-> > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
+
+If "busy MHz" includes the speed of idle CPUs, then it's not really
+a measure of the speed of "busy" CPUs. If what you say is true, then
+it is, at best, badly names - it would just be the "average Mhz",
+right?
+
+-Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
