@@ -2,338 +2,172 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 127EEC77B7A
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 May 2023 19:27:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E0E8C77B75
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 May 2023 22:09:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229665AbjEPT1e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 May 2023 15:27:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51862 "EHLO
+        id S229501AbjEPWJl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 May 2023 18:09:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229572AbjEPT12 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 May 2023 15:27:28 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BE655243
-        for <linux-xfs@vger.kernel.org>; Tue, 16 May 2023 12:26:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1684265203;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=FbZvmBy7Xu5p36p9xf/yVfMX/2icPS0uwZwtjXy0DwM=;
-        b=FcQKLzghgfHm1tUvVOUxUfAgjScB3G6X2R9P+lfJDkGM9z0AgmHHUgfZ38nVm/DAwXWmG8
-        yXD9385PKB7k8jSwVRevvcPWN5uRzXg0sLFmbFOW+NUVyczrL9FN+lpCOGY2MECuis2uDi
-        J0VUMgYlCh95Dex7BuAk37tQjTjwTbo=
-Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com
- [209.85.160.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-85-DFrnDNUoPgubArDqPtSyog-1; Tue, 16 May 2023 15:26:42 -0400
-X-MC-Unique: DFrnDNUoPgubArDqPtSyog-1
-Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-3f52c305e59so61111cf.0
-        for <linux-xfs@vger.kernel.org>; Tue, 16 May 2023 12:26:42 -0700 (PDT)
+        with ESMTP id S230127AbjEPWJk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 May 2023 18:09:40 -0400
+Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D64449E4
+        for <linux-xfs@vger.kernel.org>; Tue, 16 May 2023 15:09:38 -0700 (PDT)
+Received: by mail-pl1-x634.google.com with SMTP id d9443c01a7336-1ae4e264e03so1900985ad.2
+        for <linux-xfs@vger.kernel.org>; Tue, 16 May 2023 15:09:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1684274978; x=1686866978;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=lsjtlt+tmKh7JPFwk0D4DTI1gHb3Nr3Nm7erGiy/3VY=;
+        b=QQkN9qlvw5XUU3Z7lXPY6TfcJa12k3O8pI3vuQ1PvDMMq6EYgY2q5pUWvoSLIsDrKS
+         2VqMSwhwRmr7XITa7vVNbt0EiIbWwcvCYMFkCeAoEM0GhiAEeRvgk85wzsaXwDx3NFfl
+         2sWAIm2MTz9nhbcADs/qhichpxH4Sto4dQeW5KKCmwzZK/943wYWCwJwGuMfzQrcnkh7
+         L3D7vKzmHTNPnWc3lAUs2aPb1m5GOvj8K/5airLBacSItHqmPTzzHc/Ogwl9m1usP/Da
+         0drZxVnMZ6n/Q8jqVeSocXqXO3ogc/PpZElfBgQ+63BcJXxqrIRhzoKrN/Q685uovSUP
+         mrrw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684265202; x=1686857202;
+        d=1e100.net; s=20221208; t=1684274978; x=1686866978;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=FbZvmBy7Xu5p36p9xf/yVfMX/2icPS0uwZwtjXy0DwM=;
-        b=i9rdw0dzOgp+NO6PtqRYdanRNuLRra4p8pT+J0AGDGsxxesQbMPKg+EpWtfXZlUnbb
-         gyqWLzYGIE2WRufDOJmQYpMVZIexCeBgqdqNs4sdDXQX1HWcfuQjNMLHSAcbgpHzXENT
-         Ct75x8mgRLTAuB7lHYJGM+Dx88fG09Fs5Rw4B6tOjA9YESBZzk9mI3+j+DL6DsmX9K9O
-         Rr+JDK7dokPaqaxVBshGGqx3n/ubxT+A3aAoSjaiP+4acJLGhSpclGoPmu+jwfqY+lc5
-         CMhy1qeonzDAk0leQ+KN2o7UuZkpmJefVNQBtucHVr2v2GWOuWzkJKikmFJ7HNQRY23n
-         s7vQ==
-X-Gm-Message-State: AC+VfDwqyCg8jg/1ICenbzGG/NTjD+ue3sNJK6KkbbQcHid76jsFuhO2
-        JlzJnrDvoUbQ3kHyd400H2lsp6cxO59dheHaMg9EprkA0VHR3tBOUQ7nITqLX9ChNfMiZ95oAVA
-        tTyN13F2ZjIBXk4mFibVy
-X-Received: by 2002:a05:622a:d:b0:3f5:2341:5435 with SMTP id x13-20020a05622a000d00b003f523415435mr14953121qtw.61.1684265201940;
-        Tue, 16 May 2023 12:26:41 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ50tDJ4umb6aa6I7f1zQnmpgRgHfd3Y/pzOpaSjxdRqsTMqQE+Erj0pWnSBslYYbIQMEnDlzw==
-X-Received: by 2002:a05:622a:d:b0:3f5:2341:5435 with SMTP id x13-20020a05622a000d00b003f523415435mr14953089qtw.61.1684265201583;
-        Tue, 16 May 2023 12:26:41 -0700 (PDT)
-Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
-        by smtp.gmail.com with ESMTPSA id cx12-20020a05620a51cc00b007593bf6e345sm72133qkb.113.2023.05.16.12.26.40
+        bh=lsjtlt+tmKh7JPFwk0D4DTI1gHb3Nr3Nm7erGiy/3VY=;
+        b=H9uf+Xud6kEYU2avgftLQCRVq2uIvaBVr8KGgu90aomd21WCp1Azg5zBY7aFLyR2p+
+         JJORlG5geuPavv/UucFgZrtdKDhzAboxOJWGTUAooQNFpxZZ3XTjVnWX6rgJ1NrlxN8T
+         QHj4WVryLuLvd6r4pD8QyYpmsoKLXLLkhJr1XZDkFCcVNyzLY8vxvojNfRmscOf/75qp
+         8pN3HHOiY+ulngN2ytda3EoWAi9ysiZw1GaQdr8CFELUrEOAZD0ojxEpsRUugksFjED+
+         r4hypKEXOz2wXpAW9GANzllCNSyXrLvUaHUiyROGquFXkApKZSnjRZvxjntOprrhgBon
+         1y6Q==
+X-Gm-Message-State: AC+VfDxKFetgWS91dj/JVlIiTFSsyaa1x4GseZTewDHfpti6ZX04UbzI
+        Q0DxzhWnbtR/Q1QOkbWYTZN3EQ==
+X-Google-Smtp-Source: ACHHUZ6QobyS1uRdWqesr4Y+L/Q3mYDZdA+v1ZMRPT7Lb9Cw8XktRdpxC4hRSazCpVDB2gV439S8Sw==
+X-Received: by 2002:a17:902:f54c:b0:19c:dbce:dce8 with SMTP id h12-20020a170902f54c00b0019cdbcedce8mr52725819plf.15.1684274978068;
+        Tue, 16 May 2023 15:09:38 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
+        by smtp.gmail.com with ESMTPSA id x3-20020a170902ec8300b001adfe981c77sm7305856plg.285.2023.05.16.15.09.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 16 May 2023 12:26:40 -0700 (PDT)
-Date:   Tue, 16 May 2023 15:29:08 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Ritesh Harjani <ritesh.list@gmail.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Matthew Wilcox <willy@infradead.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-        Disha Goel <disgoel@linux.ibm.com>,
-        Aravinda Herle <araherle@in.ibm.com>
-Subject: Re: [RFCv5 5/5] iomap: Add per-block dirty state tracking to improve
- performance
-Message-ID: <ZGPZhMr0ZiPDxVkw@bfoster>
-References: <ZGJMg2G4XVeFnMcY@bfoster>
- <878rdol4as.fsf@doe.com>
+        Tue, 16 May 2023 15:09:37 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1pz2rP-000Ja0-04;
+        Wed, 17 May 2023 08:09:35 +1000
+Date:   Wed, 17 May 2023 08:09:35 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: DIO hangs in 6.4.0-rc2
+Message-ID: <ZGP/H1UQgMYemYP1@dread.disaster.area>
+References: <ZGN20Hp1ho/u4uPY@casper.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <878rdol4as.fsf@doe.com>
+In-Reply-To: <ZGN20Hp1ho/u4uPY@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 16, 2023 at 08:19:31PM +0530, Ritesh Harjani wrote:
-> Brian Foster <bfoster@redhat.com> writes:
+On Tue, May 16, 2023 at 01:28:00PM +0100, Matthew Wilcox wrote:
+> Plain 6.4.0-rc2 with a relatively minor change to the futex code that
+> I cannot believe was in any way responsible for this.
 > 
-> > On Mon, May 08, 2023 at 12:58:00AM +0530, Ritesh Harjani (IBM) wrote:
-> >> When filesystem blocksize is less than folio size (either with
-> >> mapping_large_folio_support() or with blocksize < pagesize) and when the
-> >> folio is uptodate in pagecache, then even a byte write can cause
-> >> an entire folio to be written to disk during writeback. This happens
-> >> because we currently don't have a mechanism to track per-block dirty
-> >> state within struct iomap_page. We currently only track uptodate state.
-> >>
-> >> This patch implements support for tracking per-block dirty state in
-> >> iomap_page->state bitmap. This should help improve the filesystem write
-> >> performance and help reduce write amplification.
-> >>
-> >> Performance testing of below fio workload reveals ~16x performance
-> >> improvement using nvme with XFS (4k blocksize) on Power (64K pagesize)
-> >> FIO reported write bw scores improved from around ~28 MBps to ~452 MBps.
-> >>
-> >> 1. <test_randwrite.fio>
-> >> [global]
-> >> 	ioengine=psync
-> >> 	rw=randwrite
-> >> 	overwrite=1
-> >> 	pre_read=1
-> >> 	direct=0
-> >> 	bs=4k
-> >> 	size=1G
-> >> 	dir=./
-> >> 	numjobs=8
-> >> 	fdatasync=1
-> >> 	runtime=60
-> >> 	iodepth=64
-> >> 	group_reporting=1
-> >>
-> >> [fio-run]
-> >>
-> >> 2. Also our internal performance team reported that this patch improves
-> >>    their database workload performance by around ~83% (with XFS on Power)
-> >>
-> >> Reported-by: Aravinda Herle <araherle@in.ibm.com>
-> >> Reported-by: Brian Foster <bfoster@redhat.com>
-> >> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-> >> ---
-> >>  fs/gfs2/aops.c         |   2 +-
-> >>  fs/iomap/buffered-io.c | 115 ++++++++++++++++++++++++++++++++++++++---
-> >>  fs/xfs/xfs_aops.c      |   2 +-
-> >>  fs/zonefs/file.c       |   2 +-
-> >>  include/linux/iomap.h  |   1 +
-> >>  5 files changed, 112 insertions(+), 10 deletions(-)
-> >>
-> > ...
-> >> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> >> index 25f20f269214..c7f41b26280a 100644
-> >> --- a/fs/iomap/buffered-io.c
-> >> +++ b/fs/iomap/buffered-io.c
-> > ...
-> >> @@ -119,12 +169,20 @@ static struct iomap_page *iop_alloc(struct inode *inode, struct folio *folio,
-> >>  	else
-> >>  		gfp = GFP_NOFS | __GFP_NOFAIL;
-> >>
-> >> -	iop = kzalloc(struct_size(iop, state, BITS_TO_LONGS(nr_blocks)),
-> >> +	/*
-> >> +	 * iop->state tracks two sets of state flags when the
-> >> +	 * filesystem block size is smaller than the folio size.
-> >> +	 * The first state tracks per-block uptodate and the
-> >> +	 * second tracks per-block dirty state.
-> >> +	 */
-> >> +	iop = kzalloc(struct_size(iop, state, BITS_TO_LONGS(2 * nr_blocks)),
-> >>  		      gfp);
-> >>  	if (iop) {
-> >>  		spin_lock_init(&iop->state_lock);
-> >>  		if (folio_test_uptodate(folio))
-> >>  			iop_set_range(iop, 0, nr_blocks);
-> >> +		if (is_dirty)
-> >> +			iop_set_range(iop, nr_blocks, nr_blocks);
-> >
-> > I find the is_dirty logic here a bit confusing. AFAICT, this is
-> > primarily to handle the case where a folio is completely overwritten, so
-> > no iop is allocated at write time, and so then writeback needs to
-> > allocate the iop as fully dirty to reflect that. I.e., all iop_alloc()
-> > callers other than iomap_writepage_map() either pass the result of
-> > folio_test_dirty() or explicitly dirty the entire range of the folio
-> > anyways.  iomap_dirty_folio() essentially does the latter because it
-> > needs to dirty the entire folio regardless of whether the iop already
-> > exists or not, right?
+> kworkers blocked all over the place.  Some on XFS_ILOCK_EXCL.  Some on
+> xfs_buf_lock.  One in xfs_btree_split() calling wait_for_completion.
 > 
-> Yes.
-> 
-> >
-> > If so and if I'm following all of that correctly, could this complexity
-> > be isolated to iomap_writepage_map() by simply checking for the !iop
-> > case first, then call iop_alloc() immediately followed by
-> > set_range_dirty() of the entire folio? Then presumably iop_alloc() could
-> > always just dirty based on folio state with the writeback path exception
-> > case handled explicitly. Hm?
-> >
-> 
-> Hi Brian,
-> 
-> It was discussed here [1] to pass is_dirty flag at the time of iop
-> allocation. We can do what you are essentially suggesting, but it's just
-> extra work i.e. we will again do some calculations of blocks_per_folio,
-> start, end and more importantly take and release iop->state_lock
-> spinlock. Whereas with above approach we could get away with this at the
-> time of iop allocation itself.
-> 
+> This was an overnight test run that is now dead, so I can't get any
+> more info from the locked up kernel.  I have the vmlinux if some
+> decoding of offsets is useful.
 
-Hi Ritesh,
+This is likely the same AGF try-lock bug that was discovered in this
+thread:
 
-Isn't that extra work already occurring in iomap_dirty_folio()? I was
-just thinking that maybe moving it to where it's apparently needed (i.e.
-writeback) might eliminate the need for the param.
+https://lore.kernel.org/linux-xfs/202305090905.aff4e0e6-oliver.sang@intel.com/
 
-I suppose iomap_dirty_folio() would need to call filemap_dirty_folio()
-first to make sure iop_alloc() sees the dirty state, but maybe that
-would also allow skipping the iop alloc if the folio was already dirty
-(i.e. if the folio was previously dirtied by a full buffered overwite
-for example)?
+The fact that the try-lock was ignored means that out of order AGF
+locking can be attempted, and the try-lock prevents deadlocks from
+occurring.
 
-I've appended a quick diff below (compile tested only) just to explain
-what I mean. When doing that it also occurred to me that if we really
-care about the separate call, we could keep the is_dirty param but do
-the __iop_alloc() wrapper thing where iop_alloc() always passes
-folio_test_dirty().
+Can you try the patch below - I was going to send it for review
+anyway this morning so it can't hurt to see if it also fixes this
+issue.
 
-BTW, I think you left off your [1] discussion reference..
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
-> Besides, isn't it easier this way? which as you also stated we will
-> dirty all the blocks based on is_dirty flag, which is folio_test_dirty()
-> except at the writeback time.
-> 
+xfs: restore allocation trylock iteration
 
-My thinking was just that I kind of had to read through all of the
-iop_alloc() callsites to grok the purpose of the parameter, which made
-it seem unnecessarily confusing. But ultimately it made sense, so I
-don't insist on changing it or anything if this approach is intentional
-and/or preferred by others. That's just my .02 and I'll defer to your
-preference. :)
+From: Dave Chinner <dchinner@redhat.com>
 
-> 
-> >>  		folio_attach_private(folio, iop);
-> >>  	}
-> >>  	return iop;
-> > ...
-> >> @@ -561,6 +621,18 @@ void iomap_invalidate_folio(struct folio *folio, size_t offset, size_t len)
-...
-> >
-> > WRT to the !iop case.. I _think_ this is handled correctly here because
-> > that means we'd handle the folio as completely dirty at writeback time.
-> > Is that the case? If so, it might be nice to document that assumption
-> > somewhere (here or perhaps in the writeback path).
-> >
-> 
-> !iop case is simply when we don't have a large folio and blocksize ==
->  pagesize. In that case we don't allocate any iop and simply returns
->  from iop_alloc().
-> So then we just skip the loop which is only meant when we have blocks
-> within a folio.
-> 
+It was accidentally dropped when refactoring the allocation code,
+resulting in the AG iteration always doing blocking AG iteration.
+This results in a small performance regression for a specific fsmark
+test that runs more user data writer threads than there are AGs.
 
-Isn't it also the case that iop might be NULL at this point if the fs
-has sub-folio blocks, but the folio was dirtied by a full overwrite of
-the folio? Or did I misunderstand patch 4?
+Reported-by: kernel test robot <oliver.sang@intel.com>
+Fixes: 2edf06a50f5b ("xfs: factor xfs_alloc_vextent_this_ag() for _iterate_ags()")
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-Brian
-
---- 8< ---
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 92e1e1061225..89b3053e3f2d 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -155,7 +155,7 @@ static void iop_clear_range_dirty(struct folio *folio, size_t off, size_t len)
- }
- 
- static struct iomap_page *iop_alloc(struct inode *inode, struct folio *folio,
--				    unsigned int flags, bool is_dirty)
-+				    unsigned int flags)
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index fdfa08cbf4db..61eb65be17f3 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -3187,7 +3187,8 @@ xfs_alloc_vextent_check_args(
+  */
+ static int
+ xfs_alloc_vextent_prepare_ag(
+-	struct xfs_alloc_arg	*args)
++	struct xfs_alloc_arg	*args,
++	uint32_t		flags)
  {
- 	struct iomap_page *iop = to_iomap_page(folio);
- 	unsigned int nr_blocks = i_blocks_per_folio(inode, folio);
-@@ -181,7 +181,7 @@ static struct iomap_page *iop_alloc(struct inode *inode, struct folio *folio,
- 		spin_lock_init(&iop->state_lock);
- 		if (folio_test_uptodate(folio))
- 			iop_set_range(iop, 0, nr_blocks);
--		if (is_dirty)
-+		if (folio_test_dirty(folio))
- 			iop_set_range(iop, nr_blocks, nr_blocks);
- 		folio_attach_private(folio, iop);
+ 	bool			need_pag = !args->pag;
+ 	int			error;
+@@ -3196,7 +3197,7 @@ xfs_alloc_vextent_prepare_ag(
+ 		args->pag = xfs_perag_get(args->mp, args->agno);
+ 
+ 	args->agbp = NULL;
+-	error = xfs_alloc_fix_freelist(args, 0);
++	error = xfs_alloc_fix_freelist(args, flags);
+ 	if (error) {
+ 		trace_xfs_alloc_vextent_nofix(args);
+ 		if (need_pag)
+@@ -3336,7 +3337,7 @@ xfs_alloc_vextent_this_ag(
+ 		return error;
  	}
-@@ -326,8 +326,7 @@ static int iomap_read_inline_data(const struct iomap_iter *iter,
- 	if (WARN_ON_ONCE(size > iomap->length))
- 		return -EIO;
- 	if (offset > 0)
--		iop = iop_alloc(iter->inode, folio, iter->flags,
--				folio_test_dirty(folio));
-+		iop = iop_alloc(iter->inode, folio, iter->flags);
- 	else
- 		iop = to_iomap_page(folio);
  
-@@ -365,8 +364,7 @@ static loff_t iomap_readpage_iter(const struct iomap_iter *iter,
- 		return iomap_read_inline_data(iter, folio);
+-	error = xfs_alloc_vextent_prepare_ag(args);
++	error = xfs_alloc_vextent_prepare_ag(args, 0);
+ 	if (!error && args->agbp)
+ 		error = xfs_alloc_ag_vextent_size(args);
  
- 	/* zero post-eof blocks as the page may be mapped */
--	iop = iop_alloc(iter->inode, folio, iter->flags,
--			folio_test_dirty(folio));
-+	iop = iop_alloc(iter->inode, folio, iter->flags);
- 	iomap_adjust_read_range(iter->inode, folio, &pos, length, &poff, &plen);
- 	if (plen == 0)
- 		goto done;
-@@ -616,13 +614,10 @@ EXPORT_SYMBOL_GPL(iomap_invalidate_folio);
+@@ -3380,7 +3381,7 @@ xfs_alloc_vextent_iterate_ags(
+ 	for_each_perag_wrap_range(mp, start_agno, restart_agno,
+ 			mp->m_sb.sb_agcount, agno, args->pag) {
+ 		args->agno = agno;
+-		error = xfs_alloc_vextent_prepare_ag(args);
++		error = xfs_alloc_vextent_prepare_ag(args, flags);
+ 		if (error)
+ 			break;
+ 		if (!args->agbp) {
+@@ -3546,7 +3547,7 @@ xfs_alloc_vextent_exact_bno(
+ 		return error;
+ 	}
  
- bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio)
- {
--	struct iomap_page *iop;
--	struct inode *inode = mapping->host;
--	size_t len = i_blocks_per_folio(inode, folio) << inode->i_blkbits;
--
--	iop = iop_alloc(inode, folio, 0, false);
--	iop_set_range_dirty(inode, folio, 0, len);
--	return filemap_dirty_folio(mapping, folio);
-+	bool dirtied = filemap_dirty_folio(mapping, folio);
-+	if (dirtied)
-+		iop_alloc(mapping->host, folio, 0);
-+	return dirtied;
- }
- EXPORT_SYMBOL_GPL(iomap_dirty_folio);
+-	error = xfs_alloc_vextent_prepare_ag(args);
++	error = xfs_alloc_vextent_prepare_ag(args, 0);
+ 	if (!error && args->agbp)
+ 		error = xfs_alloc_ag_vextent_exact(args);
  
-@@ -673,8 +668,7 @@ static int __iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
- 	    pos + len >= folio_pos(folio) + folio_size(folio))
- 		return 0;
+@@ -3587,7 +3588,7 @@ xfs_alloc_vextent_near_bno(
+ 	if (needs_perag)
+ 		args->pag = xfs_perag_grab(mp, args->agno);
  
--	iop = iop_alloc(iter->inode, folio, iter->flags,
--			folio_test_dirty(folio));
-+	iop = iop_alloc(iter->inode, folio, iter->flags);
+-	error = xfs_alloc_vextent_prepare_ag(args);
++	error = xfs_alloc_vextent_prepare_ag(args, 0);
+ 	if (!error && args->agbp)
+ 		error = xfs_alloc_ag_vextent_near(args);
  
- 	if ((iter->flags & IOMAP_NOWAIT) && !iop && nr_blocks > 1)
- 		return -EAGAIN;
-@@ -1759,7 +1753,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 		struct writeback_control *wbc, struct inode *inode,
- 		struct folio *folio, u64 end_pos)
- {
--	struct iomap_page *iop = iop_alloc(inode, folio, 0, true);
-+	struct iomap_page *iop = to_iomap_page(folio);
- 	struct iomap_ioend *ioend, *next;
- 	unsigned len = i_blocksize(inode);
- 	unsigned nblocks = i_blocks_per_folio(inode, folio);
-@@ -1767,6 +1761,11 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 	int error = 0, count = 0, i;
- 	LIST_HEAD(submit_list);
- 
-+	if (!iop) {
-+		iop = iop_alloc(inode, folio, 0);
-+		iop_set_range_dirty(inode, folio, 0, folio_size(folio));
-+	}
-+
- 	WARN_ON_ONCE(iop && atomic_read(&iop->write_bytes_pending) != 0);
- 
- 	/*
-
