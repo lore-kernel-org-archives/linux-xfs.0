@@ -2,210 +2,103 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEC41C77B7D
-	for <linux-xfs@archiver.kernel.org>; Mon, 15 May 2023 22:20:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 651F1C7EE23
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 May 2023 00:12:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245237AbjEOWUl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 15 May 2023 18:20:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34712 "EHLO
+        id S243968AbjEPAMm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 15 May 2023 20:12:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49072 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229515AbjEOWUk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2023 18:20:40 -0400
+        with ESMTP id S242711AbjEPAMl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 May 2023 20:12:41 -0400
 Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1F9E1BDF
-        for <linux-xfs@vger.kernel.org>; Mon, 15 May 2023 15:20:39 -0700 (PDT)
-Received: by mail-pf1-x430.google.com with SMTP id d2e1a72fcca58-6439d505274so8400524b3a.0
-        for <linux-xfs@vger.kernel.org>; Mon, 15 May 2023 15:20:39 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69D8C5B88
+        for <linux-xfs@vger.kernel.org>; Mon, 15 May 2023 17:12:40 -0700 (PDT)
+Received: by mail-pf1-x430.google.com with SMTP id d2e1a72fcca58-64388cf3263so9543313b3a.3
+        for <linux-xfs@vger.kernel.org>; Mon, 15 May 2023 17:12:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1684189239; x=1686781239;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=1SFqV3UQyv74Jf8n7deoWwncMcJ7izs37jK3uaW+m7g=;
-        b=AYpFp2TA+3hBrRCJ8vr9SkoGUWpS+Cos7jEYPT/Mg6bozCKU+1YHCuAOe1sXt6nWOQ
-         UnOAMu2aWyeSLOI03J0A4lmAAqhC5TyuoZC3nYQyQoEqDTp3AJKPoxxMh7+zz3bKbAY2
-         u23C9B1lFAMtw2pPzB+Tb44bc/1HCUa+sfE36yDgBd93qI5gI1j86Z8PCzYITLsmbX3X
-         YswRPw2R2Z/Sn7QOaQ5J7Y7+cMnJqwmMQwOoF9NmX3OHuxF5h4Jkfe8gUkTFsN8HE199
-         loxDZCejR0gLl1nFIdK6EI2GRz+y4bn0hlGOUjeSH94W9Ro0ZSgTc3ChOc6ASijh79fN
-         5pDg==
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1684195960; x=1686787960;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=FhZD+S4Cl7e+VqOfVQosoh3FjffnZ5bTRB87Tzv8qdU=;
+        b=zn+7XHf0UfKbo+MZSwEWLY2d5Ln07rhjDzklMt41Dqt6OFD2UZhAebLLFMrFG9JOBD
+         XTYKe272lsz3LGz4eO8dnfEOobiK7kN+4/HR+KteXaqLb0CFVUSN+HKqmzkIojpOxTmh
+         t3XN9IF28kEr9H02qN/g9Vq9Iji9x7elsY8hYj4tsP/kFROa95VmIycVSDXojfQZwccB
+         K31Nywb3kpyHRjxFucGfdKGdT40tn9F0+7T+xlo4aVzYUOMo6l1jYwKPC2DGhbvFbFaY
+         QdDMRMRtAGy4DyJTMCWK7oXeBT2I+9eb42AgVK/rqjT//CYrrBvFwWwUi2mrC/7DCCSy
+         4B5A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684189239; x=1686781239;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=1SFqV3UQyv74Jf8n7deoWwncMcJ7izs37jK3uaW+m7g=;
-        b=W7EQiDOC9Niof0hEqSMpnSsfHp2QiyUT2RZgXGRLoVJ2F+NTynxtF4tVeNRQMFFQF6
-         x33xgqrM6lEjB42y0hwmQnXO/OGUbVTMLUrEOQBo+5ie13vPoXZMP4Rr9dwhM9HB9H+g
-         dM3sdd/sd+ctiO6Y3GxcUyXJ8M5/ML9kkZ/ix69wnVuOYh8WJ5rO777qZPsg/CORlkMq
-         Pt9GsuIzXcuiae5SbytCSq37jfG5E2oU1TBTVcwc9om5GI8uYchFKSLWAEfAD1nRI5yf
-         7KsR/g5PcagzqosKSFJ6Eb7wDmMmuzICxst44qMzqdpZid2zwdjCI25y/knnIQsPLknL
-         ZEQg==
-X-Gm-Message-State: AC+VfDxh/wYksQV7rE0X1Mzig2hTHKs+pXL/KXHP6j4/xyeYmUD1K+tR
-        70UQ84XiL+LliUPPuup3BPKZaQ==
-X-Google-Smtp-Source: ACHHUZ5ANtDJYeE/4uaBwJIjUuX8jUXc/gv0P5ZHNLfz12/rbYnzKuufF/tj9utEsjYyBZymW+K0TQ==
-X-Received: by 2002:a05:6a20:1443:b0:101:a459:bb0d with SMTP id a3-20020a056a20144300b00101a459bb0dmr29982314pzi.2.1684189239156;
-        Mon, 15 May 2023 15:20:39 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1684195960; x=1686787960;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=FhZD+S4Cl7e+VqOfVQosoh3FjffnZ5bTRB87Tzv8qdU=;
+        b=lte9FJYKJQAPxt/uLrsWmXyhS0tYCx81jdWV2uEYeEiKGRT4E47OgezH2JEzeJ65Kz
+         IRP/53nF5Gbh2abaA/NdvToWHMvgSZgrKjB7HeIV28cOxLPsJ9LaH4LyeiSX760Nl+Z7
+         qivXLG9lS1vMW6/j7Ch25VJDnDO02xkEIsapIGcPP1u3y8K2tnntCs1X6psPu38BhITE
+         PYlJk0ep6Y+XQn3Nv0MiX9e6cji7Vczj9WVJ4nMU/ltEVnXEYDIFY/EM28W1bKc46tzy
+         VZTGX/lhbNqL9y5/lEmY1NdKh/owAm92172xYi2Qs78XfFIb8/tJxF6WmLCdnnDa92h+
+         foDw==
+X-Gm-Message-State: AC+VfDxUqxITzZDVVl8YVJt9uJMs+Z/HVES5oerYGBLOtmR8u9OYdvX2
+        FA5vIw5A1fdHFfzna/bB/lKlZQ==
+X-Google-Smtp-Source: ACHHUZ4jVwGfnJLycZMDeAaSoLv7/12mwkfW24mdvkw5GcuFYob9C0AWNVqa/wAvIB55HuNgURYT+g==
+X-Received: by 2002:a05:6a20:938d:b0:105:b4e:ed71 with SMTP id x13-20020a056a20938d00b001050b4eed71mr12275557pzh.32.1684195959875;
+        Mon, 15 May 2023 17:12:39 -0700 (PDT)
 Received: from dread.disaster.area (pa49-181-88-204.pa.nsw.optusnet.com.au. [49.181.88.204])
-        by smtp.gmail.com with ESMTPSA id p38-20020a631e66000000b0052c766b2f52sm12149144pgm.4.2023.05.15.15.20.38
+        by smtp.gmail.com with ESMTPSA id w10-20020a65534a000000b005307501cfe4sm8062102pgr.44.2023.05.15.17.12.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 15 May 2023 15:20:38 -0700 (PDT)
+        Mon, 15 May 2023 17:12:39 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1pygYU-00FkH7-Qy; Tue, 16 May 2023 08:20:34 +1000
-Date:   Tue, 16 May 2023 08:20:34 +1000
+        id 1pyiIu-00FmDJ-B8; Tue, 16 May 2023 10:12:36 +1000
+Date:   Tue, 16 May 2023 10:12:36 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Feng Tang <feng.tang@intel.com>
-Cc:     Oliver Sang <oliver.sang@intel.com>,
-        Dave Chinner <dchinner@redhat.com>, oe-lkp@lists.linux.dev,
-        lkp@intel.com, linux-kernel@vger.kernel.org,
-        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        ying.huang@intel.com, fengwei.yin@intel.com
-Subject: Re: [linus:master] [xfs]  2edf06a50f:  fsmark.files_per_sec -5.7%
- regression
-Message-ID: <20230515222034.GG3223426@dread.disaster.area>
-References: <202305090905.aff4e0e6-oliver.sang@intel.com>
- <20230509065433.GT3223426@dread.disaster.area>
- <20230509071053.GE2651828@dread.disaster.area>
- <ZF3uXe+cjAsfCLic@xsang-OptiPlex-9020>
- <20230512230504.GF3223426@dread.disaster.area>
- <ZGDyAOewWqjY5xvJ@feng-clx>
+To:     Tycho Andersen <tycho@tycho.pizza>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Tycho Andersen <tandersen@netflix.com>,
+        "Eric W. Biederman" <ebiederm@xmission.com>
+Subject: Re: [PATCH] xfs: don't do inodgc work if task is exiting
+Message-ID: <20230516001236.GJ2651828@dread.disaster.area>
+References: <20230511151702.14704-1-tycho@tycho.pizza>
+ <20230512000724.GH858799@frogsfrogsfrogs>
+ <ZF5X/8RQSzGMn3aZ@tycho.pizza>
+ <20230512225414.GE3223426@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ZGDyAOewWqjY5xvJ@feng-clx>
+In-Reply-To: <20230512225414.GE3223426@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, May 14, 2023 at 10:36:48PM +0800, Feng Tang wrote:
-> Hi Dave,
+On Sat, May 13, 2023 at 08:54:14AM +1000, Dave Chinner wrote:
+> On Fri, May 12, 2023 at 09:15:11AM -0600, Tycho Andersen wrote:
+> I also recently found evidence of another AGI -> inode buffer -> AGF
+> -> inode buffer deadlock issue debugging another hang from a machine
+> making heavy use of O_TMPFILEs via OVL.  Without a kernel code to
+> examine in intricate detail, I can't say if this is what you are
+> seeing.
 > 
-> On Sat, May 13, 2023 at 09:05:04AM +1000, Dave Chinner wrote:
-> > On Fri, May 12, 2023 at 03:44:29PM +0800, Oliver Sang wrote:
-> [...]
-> > > Thanks a lot for guidance!
-> > > 
-> > > we plan to disable XFS_DEBUG (as well as XFS_WARN) in our performance tests.
-> > > want to consult with you if this is the correct thing to do?
-> > 
-> > You can use XFS_WARN=y with performance tests - that elides all the
-> > debug specific code that changes behaviour but leaves all the
-> > ASSERT-based correctness checks in the code.
-> > 
-> > > and I guess we should still keep them in functional tests, am I right?
-> > 
-> > Yes.
-> > 
-> > > BTW, regarding this case, we tested again with disabling XFS_DEBUG (as well as
-> > > XFS_WARN), kconfig is attached, only diff with last time is:
-> > > -CONFIG_XFS_DEBUG=y
-> > > -CONFIG_XFS_ASSERT_FATAL=y
-> > > +# CONFIG_XFS_WARN is not set
-> > > +# CONFIG_XFS_DEBUG is not set
-> > > 
-> > > but we still observed similar regression:
-> > > 
-> > > ecd788a92460eef4 2edf06a50f5bbe664283f3c55c4
-> > > ---------------- ---------------------------
-> > >          %stddev     %change         %stddev
-> > >              \          |                \
-> > >    8176057 ± 15%      +4.7%    8558110        fsmark.app_overhead
-> > >      14484            -6.3%      13568        fsmark.files_per_sec
-> > 
-> > So the application spent 5% more CPU time in userspace, and the rate
-> > the kernel processed IO went down by 6%. Seems to me like
-> > everything is running slower, not just the kernel code....
-> > 
-> > >     100.50 ±  5%      +0.3%     100.83        turbostat.Avg_MHz
-> > >       5.54 ± 11%      +0.3        5.82        turbostat.Busy%
-> > >       1863 ± 19%      -6.9%       1733        turbostat.Bzy_MHz
-> > 
-> > Evidence that the CPU is running at a 7% lower clock rate when the
-> > results are 6% slower is a bit suspicious to me. Shouldn't the CPU
-> > clock rate be fixed to the same value for A-B performance regression
-> > testing?
-> 
-> For commit 2edf06a50f5, it seems to change the semantics a little
-> about handling of 'flags' for xfs_alloc_fix_freelist(). With the debug
-> below, the performance is restored.
-> 
-> 
-> ecd788a92460eef4 2edf06a50f5bbe664283f3c55c4 68721405630744da1c07c9c1c3c 
-> ---------------- --------------------------- --------------------------- 
-> 
->      14349            -5.7%      13527            +0.6%      14437        fsmark.files_per_sec
->     486.29            +5.8%     514.28            -0.5%     483.70        fsmark.time.elapsed_time
-> 
-> Please help to review if the debug patch miss anything as I don't
-> know the internals of xfs, thanks.
+> I also don't have a fix for that yet because, well, it's complex and
+> I can really only accomodate one complex high priority bug at a time
+> in my head and it hasn't been my highiest priority. As it is, I
+> don't think the fix for it will be trivially backportable to 5.15,
+> either....
 
-Well spotted. :)
+Just FYI: Having paged this back into my brain looking at this
+issue, it occurred to me yesterday that there is a relatively simple
+fix for this issue: using ->iop_precommit() to move adding the inode
+to the inode cluster buffer from xfs_trans_log_inode() to inside
+xfs_trans_commit(). This ensures the inode cluster buffers don't get
+locked until xfs_trans_commit() is called, as we already do with the
+xfs_iunlink_item processing for unlinked list operations.
 
-The relevant commit dropped the trylock flag, so the perf regression
-and change of allocator behaviour is due to it blocking on a busy AG
-instead of skipping to the next uncontended on and so all
-allocations came from extents in the last block of the free space
-btree in that AG.
-
-> 
-> ---
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 98defd19e09e..8c85cc68c5f4 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -3246,12 +3246,12 @@ xfs_alloc_vextent_set_fsbno(
->   */
->  static int
->  __xfs_alloc_vextent_this_ag(
-> -	struct xfs_alloc_arg	*args)
-> +	struct xfs_alloc_arg	*args, int flag)
->  {
->  	struct xfs_mount	*mp = args->mp;
->  	int			error;
->  
-> -	error = xfs_alloc_fix_freelist(args, 0);
-> +	error = xfs_alloc_fix_freelist(args, flag);
->  	if (error) {
->  		trace_xfs_alloc_vextent_nofix(args);
->  		return error;
-> @@ -3289,7 +3289,7 @@ xfs_alloc_vextent_this_ag(
->  	}
->  
->  	args->pag = xfs_perag_get(mp, args->agno);
-> -	error = __xfs_alloc_vextent_this_ag(args);
-> +	error = __xfs_alloc_vextent_this_ag(args, 0);
->  
->  	xfs_alloc_vextent_set_fsbno(args, minimum_agno);
->  	xfs_perag_put(args->pag);
-> @@ -3329,7 +3329,7 @@ xfs_alloc_vextent_iterate_ags(
->  	args->agno = start_agno;
->  	for (;;) {
->  		args->pag = xfs_perag_get(mp, args->agno);
-> -		error = __xfs_alloc_vextent_this_ag(args);
-> +		error = __xfs_alloc_vextent_this_ag(args, flags);
->  		if (error) {
->  			args->agbno = NULLAGBLOCK;
->  			break;
-
-I don't think this is the right way to fix this. The code is -very-
-different at the end of the series that this is in the middle of,
-and I need to check what callers now use the trylock behaviour to
-determine how the trylock flag shold be passed around...
-
-> Also for the turbostat.Bzy_MHz diff, IIUC, 0Day always uses
-> 'performance' cpufreq governor. And as the test case is running
-> 32 thread in a platform with 96 CPUs, there are many CPUs in idle
-> state in average, and I suspect the Bzy_MHz may be calculated 
-> considering those cpufreq and cpuidle factors.
-
-If "busy MHz" includes the speed of idle CPUs, then it's not really
-a measure of the speed of "busy" CPUs. If what you say is true, then
-it is, at best, badly names - it would just be the "average Mhz",
-right?
+I've just written the patch to do this, but it also isn't a 5.15
+backport candidate because the infrastructure and xfs_iunlink_item
+processing wasn't introduced until 5.19....
 
 -Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
