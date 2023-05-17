@@ -2,272 +2,142 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19031C77B75
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 May 2023 01:40:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3C54C7EE24
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 May 2023 01:44:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231255AbjEQBkM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 May 2023 21:40:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49346 "EHLO
+        id S229521AbjEQBoH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 May 2023 21:44:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51732 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231496AbjEQBkL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 May 2023 21:40:11 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D40D53C06
-        for <linux-xfs@vger.kernel.org>; Tue, 16 May 2023 18:40:09 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1ae54b623c2so109965ad.3
-        for <linux-xfs@vger.kernel.org>; Tue, 16 May 2023 18:40:09 -0700 (PDT)
+        with ESMTP id S231607AbjEQBoG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 May 2023 21:44:06 -0400
+Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15C931BC3
+        for <linux-xfs@vger.kernel.org>; Tue, 16 May 2023 18:44:05 -0700 (PDT)
+Received: by mail-pf1-x42d.google.com with SMTP id d2e1a72fcca58-6438d95f447so109967b3a.3
+        for <linux-xfs@vger.kernel.org>; Tue, 16 May 2023 18:44:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1684287609; x=1686879609;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1684287844; x=1686879844;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=/8FkmVQ9cEWnp9lT53MNPZ+cBCoXwjQ6fW4gqa/AU2s=;
-        b=gSSldkmq2uoK205KhBtfsFxxGUKW6moAkRqsAdZnGiaXZkiQ+T5uLAJMoC0iDOq749
-         gWauLIBDb70FD6EzS0cNbMd4Nm50Qk8GVb5S/ewPS9LN0qsOgq7iq6TI5xdLWi4MRFbT
-         ILCZfJqNC7c1h0e9ZbbJ7B7fXeNp20C+ubb2a0X4bJguVh6/XZ9S4+jBMF4yrReM7pTk
-         rFszkcJ9gxhVUhG//P+UT5nRsy+m/JufWtkjf1qTzA/YomosTa8D8MuMYSdBIdcRKINj
-         ZeaMb6fgA/oL7aEZZBj7zK6QKEMfxqM2yMaS5fxxzP0fGiGTf//rEBiaN9qPh915Vtbr
-         dkbA==
+        bh=k1af6FCYZfX+7lmXHwTRqYGZsIIGWwSUbxjgXmCazEw=;
+        b=XtgLTZ4jo4iSymgPO8h0u4HytTfGAeYwhj/uch9NipD1pOLha9k0eCkSs1HT7WQ6xC
+         fsm4nOuEUBMqagKYkdqfAt1K15eP8Ht+F2tVgCVhtnU+UzIl6hH/ylh6FGsdgFDinM8t
+         lHw972/BAGPyE1gYCk24CDw1rcXTNBJSp1dtbWg/A0qePdJMiUEpq3Pw0TQQ+qYA4stL
+         z+Gz+bIX9PfeE6yyT4hMq8sVuLf0oUVAxXg22/J+5FOKaUicv5dpj1VxAZQtuO4ALGKA
+         boJzjH9syFqW7qQyAseY4b9yY9z11KeTCptoKtio9Sf8RENSARKrC/3l7haPTv706uha
+         5uuQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684287609; x=1686879609;
+        d=1e100.net; s=20221208; t=1684287844; x=1686879844;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=/8FkmVQ9cEWnp9lT53MNPZ+cBCoXwjQ6fW4gqa/AU2s=;
-        b=MWCXgLRQJCu9MCqi2Y8xc1rgyvqI9Zw+hqbvQdBNaiXfGrcRs1vxQoz7g7kmhMY3Nf
-         HnoLKEDK6+0d8uLCSfteu0/bouCGrbXYJj7FIEVOJ5GDL+9IkYMSTAtuNV43KwmYglis
-         mG0e3z7oox0ERWrob88JysXNYExEA/vuavE0XTjdTO+Q/Hj4Hb/33RFM+vQLgAo4R2BH
-         DZnxhqid1067tuCgCPLCAf/hRhOgbSRj0r370OkYnDpzHOne7LyQZtKKI3i6CsKblKUq
-         jb5jIuij0Af/YyNNapCaBXkOcGwSZ+CHnB5huFXn6utHv5rhJMNsPoHjrWLqR+TK4APq
-         KmEQ==
-X-Gm-Message-State: AC+VfDx5yIr7MkBrU1AlZYtzqYo+swckLmvMeKD0EkcPu3LmnR+46m86
-        Ra73+sA74MFAPJuMqdLYXDRumw==
-X-Google-Smtp-Source: ACHHUZ6914SnYd+sRMT4b032nixyq4G41cKkjV7qc0BS8x2Ac7npVpVeyMJyh5f5+N8Keku5iaqX4A==
-X-Received: by 2002:a17:903:2445:b0:1ad:c627:87de with SMTP id l5-20020a170903244500b001adc62787demr27372971pls.32.1684287609274;
-        Tue, 16 May 2023 18:40:09 -0700 (PDT)
+        bh=k1af6FCYZfX+7lmXHwTRqYGZsIIGWwSUbxjgXmCazEw=;
+        b=MQ4l147cz3Lo8JYOQ8spOnpdefN+tLKOa1K4xNt8UdVhXRL45aPX10vhAXg+nC6/in
+         hwCK1xVBay2156gHhgJWXXUNpVYj1MIN3xsChiGu8TKwKsUp9Oa692gHM6vb9PlXTUxg
+         o6dJO+8qE2cfTQChsaeJgrOR9dnLkVH/J6p/3OjUHnNjEP3GqORQpYIyALovr7soaZq7
+         YoomitD5GVf6w/Xuq863ndbGmVLO18W9vnD0DsIY3ZiuJyfQdR7Y0hGINI2wDcfEQyun
+         ieL4/yLUoVMB9aF9DADIp75ElbeRZ2PeiUqzoRDduiYkwryzifYeZ0yizZL4TRFx5m5i
+         IjQg==
+X-Gm-Message-State: AC+VfDw9UQcye7NERddcANPG7EdAUe6xybPo2PCevY693vOmVaPMMHsd
+        GwrSUyZkqf+BbpZ//XsAvj/0wlPum8tjYV0UrAo=
+X-Google-Smtp-Source: ACHHUZ4auGB5+O+yhboxROUlidwUrB6zw2OYLzMJiK2Hmb6nAjVEqVRN+/sGKEqxFHp8B5rc+UgOvw==
+X-Received: by 2002:a05:6a00:1823:b0:63b:7fc0:a4af with SMTP id y35-20020a056a00182300b0063b7fc0a4afmr48370631pfa.26.1684287844575;
+        Tue, 16 May 2023 18:44:04 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
-        by smtp.gmail.com with ESMTPSA id o18-20020a17090aeb9200b0024decfb1ec2sm244151pjy.30.2023.05.16.18.40.08
+        by smtp.gmail.com with ESMTPSA id v10-20020aa7808a000000b0063d3fbf4783sm14005209pff.80.2023.05.16.18.44.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 16 May 2023 18:40:08 -0700 (PDT)
+        Tue, 16 May 2023 18:44:04 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1pz697-000NDe-2i;
-        Wed, 17 May 2023 11:40:05 +1000
-Date:   Wed, 17 May 2023 11:40:05 +1000
+        id 1pz6Cw-000NGX-0G;
+        Wed, 17 May 2023 11:44:02 +1000
+Date:   Wed, 17 May 2023 11:44:02 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Wengang Wang <wen.gang.wang@oracle.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: avoid freeing multiple extents from same AG in
- pending transactions
-Message-ID: <ZGQwdes/DQPXRJgj@dread.disaster.area>
-References: <20230424225102.23402-1-wen.gang.wang@oracle.com>
- <20230512182455.GJ858799@frogsfrogsfrogs>
- <592C0DE1-F4F5-4C9A-8799-E9E81524CDC0@oracle.com>
- <20230512211326.GK858799@frogsfrogsfrogs>
- <050A91C4-54EC-4EB8-A701-7C9F640B7ADB@oracle.com>
- <11835435-29A1-4F34-9CE5-C9ED84567E98@oracle.com>
- <20230517005913.GM858799@frogsfrogsfrogs>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/4] xfs: defered work could create precommits
+Message-ID: <ZGQxYn/nwtcvw0+M@dread.disaster.area>
+References: <20230517000449.3997582-1-david@fromorbit.com>
+ <20230517000449.3997582-4-david@fromorbit.com>
+ <20230517012059.GO858799@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230517005913.GM858799@frogsfrogsfrogs>
+In-Reply-To: <20230517012059.GO858799@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 16, 2023 at 05:59:13PM -0700, Darrick J. Wong wrote:
-> Since 6.3 we got rid of the _THIS_AG indirection stuff and that becomes:
+On Tue, May 16, 2023 at 06:20:59PM -0700, Darrick J. Wong wrote:
+> On Wed, May 17, 2023 at 10:04:48AM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > To fix a AGI-AGF-inode cluster buffer deadlock, we need to move
+> > inode cluster buffer oeprations to the ->iop_precommit() method.
 > 
-> xfs_alloc_fix_freelist ->
-> xfs_alloc_ag_vextent_size ->
-> (run all the way to the end of the bnobt) ->
-> xfs_extent_busy_flush ->
-> <stall on the busy extent that's in @tp->busy_list>
+>                        operations
 > 
-> xfs_extent_busy_flush does this, potentially while we're holding the
-> freed extent in @tp->t_busy_list:
+> > However, this means that deferred operations can require precommits
+> > to be run on the final transaction that the deferred ops pass back
+> > to xfs_trans_commit() context. This will be exposed by attribute
+> > handling, in that the last changes to the inode in the attr set
+> > state machine "disappear" because the precommit operation is not run.
 > 
-> 	error = xfs_log_force(mp, XFS_LOG_SYNC);
-> 	if (error)
-> 		return;
-> 
-> 	do {
-> 		prepare_to_wait(&pag->pagb_wait, &wait, TASK_KILLABLE);
-> 		if  (busy_gen != READ_ONCE(pag->pagb_gen))
-> 			break;
-> 		schedule();
-> 	} while (1);
-> 
-> 	finish_wait(&pag->pagb_wait, &wait);
-> 
-> The log force kicks the CIL to process whatever other committed items
-> might be lurking in the log.  *Hopefully* someone else freed an extent
-> in the same AG, so the log force has now caused that *other* extent to
-> get processed so it has now cleared the busy list.  Clearing something
-> from the busy list increments the busy generation (aka pagb_gen).
+> Wait, what?
 
-*nod*
+That was exactly the reaction I had when attribute tests failed
+unexpectedly. Then a quick bit of traceprintk debugging (which I
+probably forgot to remove!) pointed me at shortform attr updates
+where no precommit was running...
 
-> Unfortunately, there aren't any other extents, so the busy_gen does not
-> change, and the loop runs forever.
-> 
-> At this point, Dave writes:
-> 
-> [15:57] <dchinner> so if we enter that function with busy extents on the
-> transaction, and we are doing an extent free operation, we should return
-> after the sync log force and not do the generation number wait
-> 
-> [15:58] <dchinner> if we fail to allocate again after the sync log force
-> and the generation number hasn't changed, then return -EAGAIN because no
-> progress has been made.
-> 
-> [15:59] <dchinner> Then the transaction is rolled, the transaction busy
-> list is cleared, and if the next allocation attempt fails becaues
-> everything is busy, we go to sleep waiting for the generation to change
-> 
-> [16:00] <dchinner> but because the transaction does not hold any busy
-> extents, it cannot deadlock here because it does not pin any extents
-> that are in the busy tree....
-> 
-> [16:05] <dchinner> All the generation number is doing here is telling us
-> whether there was busy extent resolution between the time we last
-> skipped a viable extent because it was busy and when the flush
-> completes.
-> 
-> [16:06] <dchinner> it doesn't mean the next allocation will succeed,
-> just that progress has been made so trying the allocation attempt will
-> at least get a different result to the previous scan.
-> 
-> I think the callsites go from this:
-> 
-> 	if (busy) {
-> 		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
-> 		trace_xfs_alloc_size_busy(args);
-> 		xfs_extent_busy_flush(args->mp, args->pag, busy_gen);
-> 		goto restart;
-> 	}
+> OH, this is because the LARP state machine can log the inode in the
+> final transaction in its chain.  __xfs_trans_commit calls the noroll
+> variant of xfs_defer_finish, which means that when we get to...
 
-I was thinking this code changes to:
+Yes.
 
-	flags |= XFS_ALLOC_FLAG_TRY_FLUSH;
-	....
-	<attempt allocation>
-	....
-	if (busy) {
-		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
-		trace_xfs_alloc_size_busy(args);
-		error = xfs_extent_busy_flush(args->tp, args->pag,
-				busy_gen, flags);
-		if (!error) {
-			flags &= ~XFS_ALLOC_FLAG_TRY_FLUSH;
-			goto restart;
-		}
-		/* jump to cleanup exit point */
-		goto out_error;
-	}
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_trans.c | 5 +++++
+> >  1 file changed, 5 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> > index 8afc0c080861..664084509af5 100644
+> > --- a/fs/xfs/xfs_trans.c
+> > +++ b/fs/xfs/xfs_trans.c
+> > @@ -970,6 +970,11 @@ __xfs_trans_commit(
+> >  		error = xfs_defer_finish_noroll(&tp);
+> >  		if (error)
+> >  			goto out_unreserve;
+> 
+> ...here, tp might actually be a dirty transaction.  Prior to
+> xlog_cil_committing the dirty transaction, we need to run the precommit
+> hooks or else we don't actually (re)attach the inode cluster buffer to
+> the transaction, and everything goes batty from there.  Right?
 
-Note the different first parameter - we pass args->tp, not args->mp
-so that the flush has access to the transaction context...
+Yes.
 
-> to something like this:
-> 
-> 	bool	try_log_flush = true;
-> 	...
-> restart:
-> 	...
-> 
-> 	if (busy) {
-> 		bool	progress;
-> 
-> 		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
-> 		trace_xfs_alloc_size_busy(args);
-> 
-> 		/*
-> 		 * If the current transaction has an extent on the busy
-> 		 * list, we're allocating space as part of freeing
-> 		 * space, and all the free space is busy, we can't hang
-> 		 * here forever.  Force the log to try to unbusy free
-> 		 * space that could have been freed by other
-> 		 * transactions, and retry the allocation.  If the
-> 		 * allocation fails a second time because all the free
-> 		 * space is busy and nobody made any progress with
-> 		 * clearing busy extents, return EAGAIN so the caller
-> 		 * can roll this transaction.
-> 		 */
-> 		if ((flags & XFS_ALLOC_FLAG_FREEING) &&
-> 		    !list_empty(&tp->t_busy_list)) {
-> 			int log_flushed;
-> 
-> 			if (try_log_flush) {
-> 				_xfs_log_force(mp, XFS_LOG_SYNC, &log_flushed);
-> 				try_log_flush = false;
-> 				goto restart;
-> 			}
-> 
-> 			if (busy_gen == READ_ONCE(pag->pagb_gen))
-> 				return -EAGAIN;
-> 
-> 			/* XXX should we set try_log_flush = true? */
-> 			goto restart;
-> 		}
-> 
-> 		xfs_extent_busy_flush(args->mp, args->pag, busy_gen);
-> 		goto restart;
-> 	}
-> 
-> IOWs, I think Dave wants us to keep the changes in the allocator instead
-> of spreading it around.
+> This isn't specific to LARP; any defer item that logs an item with a
+> precommit hook is subject to this.  Right?
 
-Sort of - I want the busy extent flush code to be isolated inside
-xfs_extent_busy_flush(), not spread around the allocator. :)
+Yes.
 
-xfs_extent_busy_flush(
-	struct xfs_trans	*tp,
-	struct xfs_perag	*pag,
-	unsigned int		busy_gen,
-	unsigned int		flags)
-{
-	error = xfs_log_force(tp->t_mountp, XFS_LOG_SYNC);
-	if (error)
-		return error;
+But right now, the only precommit hook is the unlinked inode
+processing, which doesn't run from defer-ops context...
 
-	/*
-	 * If we are holding busy extents, the caller may not want
-	 * to block straight away. If we are being told just to try
-	 * a flush or progress has been made since we last skipped a busy
-	 * extent, return immediately to allow the caller to try
-	 * again. If we are freeing extents, we might actually be
-	 * holding the onyly free extents in the transaction busy
-	 * list and the log force won't resolve that situation. In
-	 * this case, return -EAGAIN in that case to tell the caller
-	 * it needs to commit the busy extents it holds before
-	 * retrying the extent free operation.
-	 */
-	if (!list_empty(&tp->t_busy_list)) {
-		if (flags & XFS_ALLOC_FLAG_TRY_FLUSH)
-			return 0;
-		if (busy_gen != READ_ONCE(pag->pagb_gen))
-			return 0;
-		if (flags & XFS_ALLOC_FLAG_FREEING)
-			return -EAGAIN;
-	}
+> > +
+> > +		/* Run precomits from final tx in defer chain */
+> 
+>                        precommits
+> 
+> If the answers to the last 2 questions are 'yes' and the spelling errors
+> get fixed, I think I'm ok enough with this one to throw it at
+> fstestscloud.
+> 
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-	/* wait for progressing resolving busy extents */
-	do {
-		prepare_to_wait(&pag->pagb_wait, &wait, TASK_KILLABLE);
-		if  (busy_gen != READ_ONCE(pag->pagb_gen))
-			break;
-		schedule();
-	} while (1);
-
-	finish_wait(&pag->pagb_wait, &wait);
-	return 0;
-}
-
-It seems cleaner to me to put this all in xfs_extent_busy_flush()
-rather than having open-coded handling of extent free constraints in
-each potential flush location. We already have retry semantics
-around the flush, let's just extend them slightly....
+Thanks!
 
 -Dave.
 
