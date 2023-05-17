@@ -2,128 +2,146 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03CFCC7EE22
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 May 2023 22:24:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BD86C77B75
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 May 2023 22:49:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229449AbjEQWY1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 May 2023 18:24:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60474 "EHLO
+        id S229456AbjEQWtc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 17 May 2023 18:49:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229511AbjEQWY0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 May 2023 18:24:26 -0400
-Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FF7A4EF8
-        for <linux-xfs@vger.kernel.org>; Wed, 17 May 2023 15:24:24 -0700 (PDT)
-Received: by mail-pl1-x636.google.com with SMTP id d9443c01a7336-1ae50da739dso9752135ad.1
-        for <linux-xfs@vger.kernel.org>; Wed, 17 May 2023 15:24:24 -0700 (PDT)
+        with ESMTP id S229452AbjEQWtb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 May 2023 18:49:31 -0400
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DCC340CD
+        for <linux-xfs@vger.kernel.org>; Wed, 17 May 2023 15:49:30 -0700 (PDT)
+Received: by mail-pl1-x62c.google.com with SMTP id d9443c01a7336-1ae50da739dso9866885ad.1
+        for <linux-xfs@vger.kernel.org>; Wed, 17 May 2023 15:49:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1684362264; x=1686954264;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=OCwYqiF3ydXVpqLPxGKDXakuzIdWMuk8H1T2ZHJZwpE=;
-        b=bki4X1lL+8sTU2ZJZSW6BEfq/zAwYBu9ZzeUI+pFeFm049gFyVCiPj7C/s0OuCAwxf
-         8YtI47vfsFK96ncnBPht5LgU7pecq2X3NP0i6W5LT/7RaLs9FJHsUmc6jiukws6IJybC
-         trFwfVtI6UxRK7LXLTZgyQyAow1w2vIG1j/OCoAxqIlYCY1q/sy+K7JBqgI8RZ3wb4qV
-         1omY0WkV/zS7WA6+zZ82J9iyL5WEpOoW7dWOAnGVBCLtgLYLzB3SGGdn7rqegh1U48iS
-         RE2Hmxtg8CvPtcc/F+Toi3t4tM4f3DrPs+QC66ycvzVGjGRSEjNW14q2soS7aTVZ3w4S
-         F+YA==
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1684363769; x=1686955769;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=7s4MX2qO4o8qqXeR7rMYJUDec4HV8ZnPWMmw9j08tU8=;
+        b=AQh6xlMtYm3uJvB9pmMcT8s95YuwIWxJmyNGyvL52tzCz7LscgjVaTaU9WEgeUh0o7
+         Xs8UauIeU1zWNUahdBBTSFVPIZwwspEGxtfbRgLEk3DCp+JSJjMGRLc2gTXDuJRmdcUv
+         Cy0F7lt8KNhXwWts3bI5tRsTJ3okwg37FPPJrM2KQJFz814WhGwQM8pqTfzG0Gv67wNb
+         fRZ4O/FmrxzhbbQ6NxUE0aY8LUAqdfVrXHaJC79QxBM4wmQfgDcT/e3+C0iWH72swlQ7
+         7Nnqj8i4QMV4aqVtUeJ1DtGJP0A2d3EmqL1FIprLtBorvUgI9AhCxpKK/ehqxBbzCmKi
+         A05w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684362264; x=1686954264;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=OCwYqiF3ydXVpqLPxGKDXakuzIdWMuk8H1T2ZHJZwpE=;
-        b=Znbh2CgOsoGMn8/MNrZGeHtrigFCIHAml6aP03mjrczPRKKiwNqVEieFWFsQ6ifs9m
-         Vr5TlFEOW2dkHLemvDSovkQjaqKOgQf9HPpbhagjYcYhxfu88vgNU+gUvLLdgbFZYYTe
-         zbdSHnNQQ6ohFfO5oDNXN2OMED+OYhrfytbIRzNMD82OG5zl2K5sgxTVM/G2bxclbw9K
-         JC2G5mi7UXLd1iI2hf8I8b158YZVvzxsJODcQQ2GWI/6xiKFjkxBH9TuGPFkd4hAnglb
-         Lxn11gs2wEmgo0lEr/UGCX/MfCByoXIm2bXFv/Dh9w+7UXkQRsyRnXoaezTdRN9OiFZj
-         J3rA==
-X-Gm-Message-State: AC+VfDyofKit4DEpWcQtNcCLVoxS5ES6CDMBA4CwluPyKqjBWw5jpFie
-        IlTo5nwZHbiwp1DRKp9aCwfLNNG9voiNOFl/HvA=
-X-Google-Smtp-Source: ACHHUZ4FGW4glsuysXg4Ev1C842DuHJZLsnhU2f06MKCtFk0pNtcglXXB8N6r5S2ndpczWRib7Pwzw==
-X-Received: by 2002:a17:902:f683:b0:1ab:29bc:bd87 with SMTP id l3-20020a170902f68300b001ab29bcbd87mr318033plg.35.1684362263949;
-        Wed, 17 May 2023 15:24:23 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1684363769; x=1686955769;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=7s4MX2qO4o8qqXeR7rMYJUDec4HV8ZnPWMmw9j08tU8=;
+        b=FYiHwsLTwxpEoD05FLdrDXupfDDfSwUf2NMzS6JF/BVHReggiLqmR0GlEFC/atAjEn
+         lqO6DugnL/AcUFG2sz4PawqdXP1e0ASlRc8qNk0FfKEumseXAfsBYZQ2UMjlAImgPiHS
+         j0AghaNFTQ0nd6NYYqhD/drJNtSG6lx+Vd+6OdIw9VTBTVr6tgbwWD0S+lSnuFWBetce
+         DbI4OIZfTAvgjVsruSpLsx9X5HQyYzUQbRLi5cuEMqRf01GYnwTNWBKVyK60qVFLh2SF
+         54LRPk+3DxvRfuOP+Fksog4eJscflw72ZqxyOpKfIBrjfH5AQeNTss0oIbsG81Kda1mb
+         saEg==
+X-Gm-Message-State: AC+VfDwrOZJnq/eDozEQdCSs9t0ADVoNQeEanMYcUwg5lmPuFLudWt45
+        yd5HOV1mOSSx/ggqiM/wtTGWnA==
+X-Google-Smtp-Source: ACHHUZ6gSK3zBapEcOG4ceMKogWJ6bcJO2hVrOziCRMycmNqo0NnLv6iEmWS5GgyGzXgtHApk5CWXA==
+X-Received: by 2002:a17:902:d48c:b0:1a6:ebc1:c54c with SMTP id c12-20020a170902d48c00b001a6ebc1c54cmr587476plg.1.1684363769636;
+        Wed, 17 May 2023 15:49:29 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
-        by smtp.gmail.com with ESMTPSA id f22-20020a170902ab9600b001ac2a73dbf2sm192757plr.291.2023.05.17.15.24.23
+        by smtp.gmail.com with ESMTPSA id h13-20020a170902f54d00b001ae626afed4sm363998plf.220.2023.05.17.15.49.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 May 2023 15:24:23 -0700 (PDT)
+        Wed, 17 May 2023 15:49:28 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1pzPZE-000iQV-1D;
-        Thu, 18 May 2023 08:24:20 +1000
-Date:   Thu, 18 May 2023 08:24:20 +1000
+        id 1pzPxW-000isX-0d;
+        Thu, 18 May 2023 08:49:26 +1000
+Date:   Thu, 18 May 2023 08:49:26 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/4] xfs: buffer pins need to hold a buffer reference
-Message-ID: <ZGVUFJ8uXSUreTPf@dread.disaster.area>
-References: <20230517000449.3997582-1-david@fromorbit.com>
- <20230517000449.3997582-2-david@fromorbit.com>
- <ZGTPj0ov+95jjpuH@infradead.org>
+To:     Wengang Wang <wen.gang.wang@oracle.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: avoid freeing multiple extents from same AG in
+ pending transactions
+Message-ID: <ZGVZ9o1LIkZ5NPAo@dread.disaster.area>
+References: <20230424225102.23402-1-wen.gang.wang@oracle.com>
+ <20230512182455.GJ858799@frogsfrogsfrogs>
+ <592C0DE1-F4F5-4C9A-8799-E9E81524CDC0@oracle.com>
+ <20230512211326.GK858799@frogsfrogsfrogs>
+ <050A91C4-54EC-4EB8-A701-7C9F640B7ADB@oracle.com>
+ <11835435-29A1-4F34-9CE5-C9ED84567E98@oracle.com>
+ <20230517005913.GM858799@frogsfrogsfrogs>
+ <ZGQwdes/DQPXRJgj@dread.disaster.area>
+ <94FD314F-7819-4187-AC42-F984AF42C662@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <ZGTPj0ov+95jjpuH@infradead.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <94FD314F-7819-4187-AC42-F984AF42C662@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 17, 2023 at 05:58:55AM -0700, Christoph Hellwig wrote:
-> On Wed, May 17, 2023 at 10:04:46AM +1000, Dave Chinner wrote:
-> > To fix this, we need to ensure that buffer existence extends beyond
-> > the BLI reference count checks and until the unpin processing is
-> > complete. This implies that a buffer pin operation must also take a
-> > buffer reference to ensure that the buffer cannot be freed until the
-> > buffer unpin processing is complete.
+On Wed, May 17, 2023 at 07:14:32PM +0000, Wengang Wang wrote:
+> > On May 16, 2023, at 6:40 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Tue, May 16, 2023 at 05:59:13PM -0700, Darrick J. Wong wrote:
+> > I was thinking this code changes to:
+> > 
+> > flags |= XFS_ALLOC_FLAG_TRY_FLUSH;
+> > ....
+> > <attempt allocation>
+> > ....
+> > if (busy) {
+> > xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
+> > trace_xfs_alloc_size_busy(args);
+> > error = xfs_extent_busy_flush(args->tp, args->pag,
+> > busy_gen, flags);
+> > if (!error) {
+> > flags &= ~XFS_ALLOC_FLAG_TRY_FLUSH;
 > 
-> Yeah.  I wonder why we haven't done this from the very beginning..
+> What’s the benefits to use XFS_ALLOC_FLAG_TRY_FLUSH?
+> If no change happened to pagb_gen, we would get nothing good in the retry
+> but waste cycles. Or I missed something?
 
-Likely because the whole BLI lifecycle is completely screwed up and
-nobody has had the time to understand it fully and fix it properly.
+You missed something: the synchronous log force is always done.
 
-> > +	 /*
-> > +	  * Nothing to do but drop the buffer pin reference if the BLI is
-> > +	  * still active
-> > +	  */
-> 
-> Nit: this block comment is indentented by an extra space.
-> 
-> > +	if (!freed) {
-> > +		xfs_buf_rele(bp);
-> >  		return;
-> > +	}
-> >  
-> >  	if (stale) {
-> 
-> Nit: this is the only use of the stale variable now, so we might
-> as well just drop it.
+The log force is what allows busy extents to be resolved - busy
+extents have to be committed to stable storage before they can be
+removed from the busy extent tree.
 
-Actually, after we've dropped the bli reference, it isn't safe to
-reference the bli unless we know the buffer is stale. In this case,
-we know the bli still exists because the buffer has been locked
-since it was marked stale. However, for the other cases the BLI
-could be freed from under us as it's reference count is zero and so
-the next call to xfs_buf_item_relse() will free it no matter where
-it comes from.
+If online discards are not enabled, busy extents are resolved
+directly in journal IO completion - the log force waits for this to
+occur. In this case, pag->pagb_gen will have already incremented to
+indicate progress has been made, and we should never wait in the
+loop after the log force. The only time we do that is when the
+current transaction holds busy extents itself, and hence if the
+current tx holds busy extents we should not wait beyond the log
+force....
 
-The reference counting around BLIs a total mess - this patch just
-gets rid of one landmine but there's still plenty more in this code
-that need to be untangled.
+If online discards are enabled, then they'll be scheduled by journal
+IO completion. i.e. waiting on the log force guarntees pending
+discards have been scheduled and they'll start completing soon after
+the log force returns. When they complete they'll start incrementing
+pag->pagb_gen. This is the case the pag->pagb_gen wait loop exists
+for - it waits for a discard to complete and resolve the busy extent
+in it's IO compeltion routine. At which point the allocation attempt
+can restart.
 
-> >  		ASSERT(bip->bli_flags & XFS_BLI_STALE);
-> 
-> .. which then also clearly shows this ASSERT is pointless now.
+However, the same caveat about the current tx holding
+busy extents still exists - we can't tell the difference between
+"discards scheduled but not completed" and "no busy extents to
+resolve" in the flush code. Hence regardless of the online discard
+feature state, we should not be waiting on busy extent generation
+changes if we hold busy extents in the transaction....
 
-*nod*
+IOWs, the TRY_FLUSH code reflects the fact that for most users, the
+log force resolves the busy extents, not the wait loop on
+pag->pagb_gen changing. The wait loop only really kicks in when
+online discard is active, and in that case we really do want to
+retry allocation without waiting for (potentially very slow)
+discards to complete first. We'll do that "wait for discards" the
+second time we fail to find a non-busy extent....
 
-> Otherwise looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+Cheers,
 
-Thanks.
-
--Dave.
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
