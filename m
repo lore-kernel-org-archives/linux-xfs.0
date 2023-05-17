@@ -2,101 +2,78 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E0E8C77B75
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 May 2023 22:09:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF10CC77B7A
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 May 2023 00:05:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229501AbjEPWJl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 May 2023 18:09:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46112 "EHLO
+        id S229799AbjEQAFA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 May 2023 20:05:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230127AbjEPWJk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 May 2023 18:09:40 -0400
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D64449E4
-        for <linux-xfs@vger.kernel.org>; Tue, 16 May 2023 15:09:38 -0700 (PDT)
-Received: by mail-pl1-x634.google.com with SMTP id d9443c01a7336-1ae4e264e03so1900985ad.2
-        for <linux-xfs@vger.kernel.org>; Tue, 16 May 2023 15:09:38 -0700 (PDT)
+        with ESMTP id S229638AbjEQAFA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 May 2023 20:05:00 -0400
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 695962728
+        for <linux-xfs@vger.kernel.org>; Tue, 16 May 2023 17:04:56 -0700 (PDT)
+Received: by mail-pf1-x42c.google.com with SMTP id d2e1a72fcca58-64ab2a37812so9291659b3a.1
+        for <linux-xfs@vger.kernel.org>; Tue, 16 May 2023 17:04:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1684274978; x=1686866978;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=lsjtlt+tmKh7JPFwk0D4DTI1gHb3Nr3Nm7erGiy/3VY=;
-        b=QQkN9qlvw5XUU3Z7lXPY6TfcJa12k3O8pI3vuQ1PvDMMq6EYgY2q5pUWvoSLIsDrKS
-         2VqMSwhwRmr7XITa7vVNbt0EiIbWwcvCYMFkCeAoEM0GhiAEeRvgk85wzsaXwDx3NFfl
-         2sWAIm2MTz9nhbcADs/qhichpxH4Sto4dQeW5KKCmwzZK/943wYWCwJwGuMfzQrcnkh7
-         L3D7vKzmHTNPnWc3lAUs2aPb1m5GOvj8K/5airLBacSItHqmPTzzHc/Ogwl9m1usP/Da
-         0drZxVnMZ6n/Q8jqVeSocXqXO3ogc/PpZElfBgQ+63BcJXxqrIRhzoKrN/Q685uovSUP
-         mrrw==
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1684281896; x=1686873896;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=OiarNXqyDgLGSnRLOjyy6hOBRyGSov5m5WRXGui+eQc=;
+        b=OG68P7K7bHf3WsCfxVcJ+OpH5Wxvvk6h9fA3iDsHC1ix7SM8JeULZYY/K06OVVaMhK
+         sJ47TGQk9HtdVxgUP5sDh9l7yCHanu1toQe7KZLvlQUphFZfVptaHOBz43oaqDkz+6xf
+         j6DT+lOTJERuq8JQal7DXyUnb1ItZLeLwfnS4w+z8HVss0ps0Yb9U1kvWSryz24cap/Z
+         uaL/Ho8GClj2ZxqXTNTXRTllGZHq4Vvxsgwi4Lo2Y9DhIwjZ5juHlTeK/0vSDD+Q7Szo
+         Icg1kSDs9cJS2HaEfG0GX2xHjsa7dyaEhyyb97mT6t/np2fF+ZUUH0axpyaIC0k5DSSF
+         sMgA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684274978; x=1686866978;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=lsjtlt+tmKh7JPFwk0D4DTI1gHb3Nr3Nm7erGiy/3VY=;
-        b=H9uf+Xud6kEYU2avgftLQCRVq2uIvaBVr8KGgu90aomd21WCp1Azg5zBY7aFLyR2p+
-         JJORlG5geuPavv/UucFgZrtdKDhzAboxOJWGTUAooQNFpxZZ3XTjVnWX6rgJ1NrlxN8T
-         QHj4WVryLuLvd6r4pD8QyYpmsoKLXLLkhJr1XZDkFCcVNyzLY8vxvojNfRmscOf/75qp
-         8pN3HHOiY+ulngN2ytda3EoWAi9ysiZw1GaQdr8CFELUrEOAZD0ojxEpsRUugksFjED+
-         r4hypKEXOz2wXpAW9GANzllCNSyXrLvUaHUiyROGquFXkApKZSnjRZvxjntOprrhgBon
-         1y6Q==
-X-Gm-Message-State: AC+VfDxKFetgWS91dj/JVlIiTFSsyaa1x4GseZTewDHfpti6ZX04UbzI
-        Q0DxzhWnbtR/Q1QOkbWYTZN3EQ==
-X-Google-Smtp-Source: ACHHUZ6QobyS1uRdWqesr4Y+L/Q3mYDZdA+v1ZMRPT7Lb9Cw8XktRdpxC4hRSazCpVDB2gV439S8Sw==
-X-Received: by 2002:a17:902:f54c:b0:19c:dbce:dce8 with SMTP id h12-20020a170902f54c00b0019cdbcedce8mr52725819plf.15.1684274978068;
-        Tue, 16 May 2023 15:09:38 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1684281896; x=1686873896;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=OiarNXqyDgLGSnRLOjyy6hOBRyGSov5m5WRXGui+eQc=;
+        b=l9JPbmb9W0TsAt2590WhKjZKpp4/2FOeW8+CK/IlRrNuqBVTy0CsQ7dnjiR9Z/0ZBl
+         4gZflOan2aYabjWLbvmDSRPK/fr6UIAivXzLlaAtHS14Oak1mGuGdCSaaB84mG3SKn4M
+         DNSTCVuWy+9S+yepJDT3b5affdOAvTHKCapSBDvwRea62FEatoA990d5/5fbe+X+PmCc
+         JzMyRRHoKaAVj6juVhqR5Hw4i+fLF/an0LOs6ZIVdcP+2Gzi6B6mTQrg5DQzmYpzDQoe
+         sko1xf9hQFWRDnc572aiJqb5MuH3nDbXbZc8nikX9n6N+NlAlIobv4xk77RziCNWfIpu
+         +/Cg==
+X-Gm-Message-State: AC+VfDwGQTrLWd/tCPINhNdTuwpiIysBotHgm8hrVGT0zSL3ZjIP41Dk
+        sB2bHvNOh57qhroKVqVVWTL3PlcC637FqsbdWE4=
+X-Google-Smtp-Source: ACHHUZ6nSozRzNxlPwgSZGhVCuglf9m61nBwK8P5Y6RkDTsjX2gJE/2sEyhZXYPoCW2NkvqC8BEw1g==
+X-Received: by 2002:a17:902:c106:b0:1a9:a032:3844 with SMTP id 6-20020a170902c10600b001a9a0323844mr479568pli.16.1684281895912;
+        Tue, 16 May 2023 17:04:55 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
-        by smtp.gmail.com with ESMTPSA id x3-20020a170902ec8300b001adfe981c77sm7305856plg.285.2023.05.16.15.09.37
+        by smtp.gmail.com with ESMTPSA id iw5-20020a170903044500b001ae44e2f425sm1292928plb.223.2023.05.16.17.04.55
+        for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 16 May 2023 15:09:37 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1pz2rP-000Ja0-04;
-        Wed, 17 May 2023 08:09:35 +1000
-Date:   Wed, 17 May 2023 08:09:35 +1000
+        Tue, 16 May 2023 17:04:55 -0700 (PDT)
+Received: from [192.168.253.23] (helo=devoid.disaster.area)
+        by dread.disaster.area with esmtp (Exim 4.96)
+        (envelope-from <dave@fromorbit.com>)
+        id 1pz4ez-000Lbs-00
+        for linux-xfs@vger.kernel.org;
+        Wed, 17 May 2023 10:04:52 +1000
+Received: from dave by devoid.disaster.area with local (Exim 4.96)
+        (envelope-from <dave@devoid.disaster.area>)
+        id 1pz4ey-00Gu89-1e
+        for linux-xfs@vger.kernel.org;
+        Wed, 17 May 2023 10:04:52 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: DIO hangs in 6.4.0-rc2
-Message-ID: <ZGP/H1UQgMYemYP1@dread.disaster.area>
-References: <ZGN20Hp1ho/u4uPY@casper.infradead.org>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 2/4] xfs: restore allocation trylock iteration
+Date:   Wed, 17 May 2023 10:04:47 +1000
+Message-Id: <20230517000449.3997582-3-david@fromorbit.com>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230517000449.3997582-1-david@fromorbit.com>
+References: <20230517000449.3997582-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZGN20Hp1ho/u4uPY@casper.infradead.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
-
-On Tue, May 16, 2023 at 01:28:00PM +0100, Matthew Wilcox wrote:
-> Plain 6.4.0-rc2 with a relatively minor change to the futex code that
-> I cannot believe was in any way responsible for this.
-> 
-> kworkers blocked all over the place.  Some on XFS_ILOCK_EXCL.  Some on
-> xfs_buf_lock.  One in xfs_btree_split() calling wait_for_completion.
-> 
-> This was an overnight test run that is now dead, so I can't get any
-> more info from the locked up kernel.  I have the vmlinux if some
-> decoding of offsets is useful.
-
-This is likely the same AGF try-lock bug that was discovered in this
-thread:
-
-https://lore.kernel.org/linux-xfs/202305090905.aff4e0e6-oliver.sang@intel.com/
-
-The fact that the try-lock was ignored means that out of order AGF
-locking can be attempted, and the try-lock prevents deadlocks from
-occurring.
-
-Can you try the patch below - I was going to send it for review
-anyway this morning so it can't hurt to see if it also fixes this
-issue.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-xfs: restore allocation trylock iteration
 
 From: Dave Chinner <dchinner@redhat.com>
 
@@ -171,3 +148,6 @@ index fdfa08cbf4db..61eb65be17f3 100644
  	if (!error && args->agbp)
  		error = xfs_alloc_ag_vextent_near(args);
  
+-- 
+2.40.1
+
