@@ -2,215 +2,313 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28694C77B75
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 May 2023 17:13:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31BF0C7EE2A
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 May 2023 17:29:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229719AbjEQRNp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 May 2023 13:13:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56510 "EHLO
+        id S229575AbjEQR3g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 17 May 2023 13:29:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229449AbjEQRNo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 May 2023 13:13:44 -0400
-Received: from mail1.bemta34.messagelabs.com (mail1.bemta34.messagelabs.com [195.245.231.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FD683C30;
-        Wed, 17 May 2023 10:13:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
-        s=170520fj; t=1684343620; i=@fujitsu.com;
-        bh=a+C4Lijc0DDX2QslyttoIa32t1xmY+p+E/ypLSLFsew=;
-        h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-         In-Reply-To:Content-Type:Content-Transfer-Encoding;
-        b=efNFUU4wejhU40SDNCvs8h77b0phW72mg/TmKepDUZExicQsnitkwFBGd8Rmg6Axf
-         c5nWUG257zQJkYffE9MxtoXeo/64Mvf6+SxPgrDfpurFT9e21UK552GX9a8YqVXzui
-         XNwNfvvQSOktIHrPG/AqyBe4o1h28xcoJaJjNSJtYz2RAtL0/EICwmGmZ6ETJqT7rR
-         FaDePHTduuh3SvyqZrLYI8hH1UDdjvE9xQQuQ2rlCp93PMHCkFjX7UqGjBM/HFtaoG
-         e6Wz1uCNaFGxrgh+2pZ4qGnqakHvBs5S1h0KXS/VEO9m7VoTEkFu91htQzee+gBzOQ
-         00MU3oUb4ipvA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprEKsWRWlGSWpSXmKPExsViZ8ORqOvMnZp
-  i8Oi5usW2dbvZLS4/4bN4vnwxo8WevSdZLHb92cFucWPCU0YHNo9NqzrZPN7vu8rmsX7LVRaP
-  z5vkAliiWDPzkvIrElgzPq5tZCxYplhxaOkJ1gbG51JdjFwcQgJbGCXOf+9kgXBWMEkcPvcGy
-  tnKKLH12G22LkZODl4BO4mT59aA2SwCqhKHJr9hhIgLSpyc+YQFxBYVSJGYsXExM4gtLBApMe
-  94F5gtIhAg0bBiHyvIUGaBNkaJqwd/Q23YySjxYdZbJpAqNgEdiQsL/rKC2JwCZhJLb+4A28Y
-  sYCGx+M1BdghbXqJ562ywqRICChI3Jq1igbCrJC6+n8kGYatJXD23iXkCo9AsJAfOQjJqFpJR
-  CxiZVzGaFqcWlaUW6ZroJRVlpmeU5CZm5uglVukm6qWW6panFpfoGukllhfrpRYX6xVX5ibnp
-  OjlpZZsYgRGT0qxUscOxus7/+odYpTkYFIS5a3ZmJIixJeUn1KZkVicEV9UmpNafIhRhoNDSY
-  J3EntqipBgUWp6akVaZg4wkmHSEhw8SiK87GxAad7igsTc4sx0iNQpRl2Ojy+nHmQWYsnLz0u
-  VEufdwwVUJABSlFGaBzcCllQuMcpKCfMyMjAwCPEUpBblZpagyr9iFOdgVBLmfcIJNIUnM68E
-  btMroCOYgI4o3ZgMckRJIkJKqoFpgZDpiZ++PFtYXdh/hMX0XjIP1ta6F+e1PNyqXfXym8U6M
-  5Yc3B3VXfXU4rvX3KQXES6qMWHqjz6/5fzPtdLohYjpo1ncXj+2TAg66v7vRJ8Se5Zua8DTa2
-  tM1wr8fMyn271u1fa9TzR4tS/ODeAxCraNT2a9YXqrVtZS8iVrknyypQFHqNH9B1mbkjOZnaQ
-  mGD085OEgYaI66+OUBxfvLbxVfEVd6csb3xPaT5/WdE/+8KjrgbB474P9uVztlbHvmr6ZKd08
-  kSMqu/nfsnDWiFkzvkW/UvhayzXlyvIf03h4kwJjnijFnX8lmRyQc7+w839AQfALzX0Caksbl
-  XWdTpn7zdhw84hYA1djbKESS3FGoqEWc1FxIgCb4fJSpQMAAA==
-X-Env-Sender: ruansy.fnst@fujitsu.com
-X-Msg-Ref: server-18.tower-548.messagelabs.com!1684343619!26996!1
-X-Originating-IP: [62.60.8.97]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.105.3; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 4559 invoked from network); 17 May 2023 17:13:39 -0000
-Received: from unknown (HELO n03ukasimr01.n03.fujitsu.local) (62.60.8.97)
-  by server-18.tower-548.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 17 May 2023 17:13:39 -0000
-Received: from n03ukasimr01.n03.fujitsu.local (localhost [127.0.0.1])
-        by n03ukasimr01.n03.fujitsu.local (Postfix) with ESMTP id 546A9100191;
-        Wed, 17 May 2023 18:13:39 +0100 (BST)
-Received: from R01UKEXCASM223.r01.fujitsu.local (R01UKEXCASM223 [10.182.185.121])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by n03ukasimr01.n03.fujitsu.local (Postfix) with ESMTPS id 473C3100043;
-        Wed, 17 May 2023 18:13:39 +0100 (BST)
-Received: from [10.167.201.2] (10.167.201.2) by
- R01UKEXCASM223.r01.fujitsu.local (10.182.185.121) with Microsoft SMTP Server
- (TLS) id 15.0.1497.42; Wed, 17 May 2023 18:13:35 +0100
-Message-ID: <0456fe2d-889d-b2e2-57c0-2dfb1f626339@fujitsu.com>
-Date:   Thu, 18 May 2023 01:13:26 +0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH 1/4] vfs: allow filesystem freeze callers to denote who
- froze the fs
-To:     Luis Chamberlain <mcgrof@kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>
-CC:     <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-        Jan Kara <jack@suse.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>
-References: <168308293319.734377.10454919162350827812.stgit@frogsfrogsfrogs>
- <168308293892.734377.10931394426623343285.stgit@frogsfrogsfrogs>
- <ZFc1wVFeHsi7rK01@bombadil.infradead.org>
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-In-Reply-To: <ZFc1wVFeHsi7rK01@bombadil.infradead.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.167.201.2]
-X-ClientProxiedBy: G08CNEXHBPEKD10.g08.fujitsu.local (10.167.33.114) To
- R01UKEXCASM223.r01.fujitsu.local (10.182.185.121)
-X-Virus-Scanned: ClamAV using ClamSMTP
+        with ESMTP id S229464AbjEQR3e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 May 2023 13:29:34 -0400
+Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1F11199F;
+        Wed, 17 May 2023 10:29:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1684344572; x=1715880572;
+  h=date:from:to:cc:subject:message-id;
+  bh=nSqVZysCqduEgBH88r+nOXyMT/oVrrLmi6R2ewfyuck=;
+  b=Q5NGjUyDnZTjwGyvV/KOCS3VGcqTdh4FGBTN//SqyVc9sgim2TCVGzXm
+   6UGcDQfJNnH8phlfJObEMw3oYtZiCFEGmBtChtcXViqcGBVxHRZlVXGI9
+   C2lAhKrQFatiy0BLNgfboZehpyAqP20yGLDs/DPDGR7P0E3ReY23Z6ErL
+   eRZa6dnh+VidCi2HRdBiT5GshFZByRVjAhZH4t8PjBirNeLipczh1mBFi
+   Ckgmti/D4fDtqNIvkqXjoRaWyKO/Q+mMbWyRQKqO+xPQEiTtFzC1iP8Hi
+   4Wk+UdOeMhg+tfIRp79TCDMAo6Kx/bU/pJCv1D9BDlt3t5XzpWiNGmrpc
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10713"; a="350660144"
+X-IronPort-AV: E=Sophos;i="5.99,282,1677571200"; 
+   d="scan'208";a="350660144"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2023 10:29:32 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10713"; a="652314150"
+X-IronPort-AV: E=Sophos;i="5.99,282,1677571200"; 
+   d="scan'208";a="652314150"
+Received: from lkp-server01.sh.intel.com (HELO dea6d5a4f140) ([10.239.97.150])
+  by orsmga003.jf.intel.com with ESMTP; 17 May 2023 10:29:29 -0700
+Received: from kbuild by dea6d5a4f140 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1pzKxs-00096K-1m;
+        Wed, 17 May 2023 17:29:28 +0000
+Date:   Thu, 18 May 2023 01:28:42 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Andrew Morton <akpm@linux-foundation.org>
+Cc:     Linux Memory Management List <linux-mm@kvack.org>,
+        amd-gfx@lists.freedesktop.org, kasan-dev@googlegroups.com,
+        linux-bluetooth@vger.kernel.org, linux-perf-users@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: [linux-next:master] BUILD REGRESSION
+ 065efa589871e93b6610c70c1e9de274ef1f1ba2
+Message-ID: <20230517172842.Ssf2F%lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+tree/branch: INFO setup_repo_specs: /db/releases/20230517200055/lkp-src/repo/*/linux-next
+https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
+branch HEAD: 065efa589871e93b6610c70c1e9de274ef1f1ba2  Add linux-next specific files for 20230517
 
+Error/Warning reports:
 
-在 2023/5/7 13:23, Luis Chamberlain 写道:
-> On Tue, May 02, 2023 at 08:02:18PM -0700, Darrick J. Wong wrote:
->> diff --git a/fs/super.c b/fs/super.c
->> index 04bc62ab7dfe..01891f9e6d5e 100644
->> --- a/fs/super.c
->> +++ b/fs/super.c
->> @@ -1736,18 +1747,33 @@ int freeze_super(struct super_block *sb)
->>   	up_write(&sb->s_umount);
->>   	return 0;
->>   }
->> +
->> +/*
->> + * freeze_super - lock the filesystem and force it into a consistent state
->> + * @sb: the super to lock
->> + *
->> + * Syncs the super to make sure the filesystem is consistent and calls the fs's
->> + * freeze_fs.  Subsequent calls to this without first thawing the fs will return
->> + * -EBUSY.  See the comment for __freeze_super for more information.
->> + */
->> +int freeze_super(struct super_block *sb)
->> +{
->> +	return __freeze_super(sb, USERSPACE_FREEZE_COOKIE);
->> +}
->>   EXPORT_SYMBOL(freeze_super);
->>   
->> -static int thaw_super_locked(struct super_block *sb)
->> +static int thaw_super_locked(struct super_block *sb, unsigned long cookie)
->>   {
->>   	int error;
->>   
->> -	if (sb->s_writers.frozen != SB_FREEZE_COMPLETE) {
->> +	if (sb->s_writers.frozen != SB_FREEZE_COMPLETE ||
->> +	    sb->s_writers.freeze_cookie != cookie) {
->>   		up_write(&sb->s_umount);
->>   		return -EINVAL;
-> 
-> We get the same by just having drivers use freeze_super(sb, true) in the
-> patches I have, ie, we treat it a user-initiated.
-> 
-> On freeze() we have:
-> 
-> int freeze_super(struct super_block *sb, bool usercall)
-> {
-> 	int ret;
-> 	
-> 	if(!usercall && sb_is_frozen(sb))
-> 		return 0;
-> 
-> 	if (!sb_is_unfrozen(sb))
-> 	return -EBUSY;
-> 	...
-> }
-> 
-> On thaw we end up with:
-> 
-> int thaw_super(struct super_block *sb, bool usercall)
-> {
-> 	int error;
-> 
-> 	if (!usercall) {
-> 		/*
-> 		 * If userspace initiated the freeze don't let the kernel
-> 		 *  thaw it on return from a kernel initiated freeze.
-> 		 */
-> 		 if (sb_is_unfrozen(sb) || sb_is_frozen_by_user(sb))
-> 		 	return 0;
-> 	}
-> 
-> 	if (!sb_is_frozen(sb))
-> 		return -EINVAL;
-> 	...
-> }
-> 
-> As I had it, I had made the drivers and the bdev freeze use the usercall as
-> true and so there is no change.
-> 
-> In case there is a filesystem already frozen then which was initiated by
-> the filesystem, for whatever reason, the filesystem the kernel auto-freeze
-> will chug on happy with the system freeze, it bails out withour error
-> and moves on to the next filesystem to freeze.
-> 
-> Upon thaw, the kernel auto-thaw will detect that the filesystem was
-> frozen by user on sb_is_frozen_by_user() and so will just bail and not
-> thaw it.
+https://lore.kernel.org/oe-kbuild-all/202304200812.6UqNDVZy-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202304220119.94Pw6YsD-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202305132244.DwzBUcUd-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202305171622.jKTovBvy-lkp@intel.com
 
-Hi, Luis
+Error/Warning: (recently discovered and may have been fixed)
 
-Thanks for the great idea.  I also need this upgraded API for a unbind 
-mechanism on pmem device, which is finally called in 
-xfs_notify_failure.c where we want to freeze the fs to prevent any other 
-new file mappings from being created.  In my case, I think we should 
-think it as a kernel-initiated freeze, and hope it won't be thaw by 
-others, especially userspace-initiated thaw.
+drivers/base/regmap/regcache-maple.c:113:23: warning: 'lower_index' is used uninitialized [-Wuninitialized]
+drivers/base/regmap/regcache-maple.c:113:36: warning: 'lower_last' is used uninitialized [-Wuninitialized]
+drivers/bluetooth/btnxpuart.c:1332:34: warning: unused variable 'nxpuart_of_match_table' [-Wunused-const-variable]
+drivers/gpu/drm/amd/amdgpu/../display/amdgpu_dm/amdgpu_dm.c:6396:21: warning: variable 'count' set but not used [-Wunused-but-set-variable]
+drivers/gpu/drm/amd/amdgpu/../display/dc/dce/dmub_abm.c:138:15: warning: variable 'feature_support' set but not used [-Wunused-but-set-variable]
+drivers/gpu/drm/amd/amdgpu/amdgpu_gfx.c:499:13: warning: variable 'j' set but not used [-Wunused-but-set-variable]
+ld.lld: error: undefined symbol: __udivdi3
 
-In my understanding of your implementation, if there is a 
-userspace-initiated thaw, with @usercall is set true, thaw_super(sb, 
-true) will ignore any others' freeze and thaw the fs anyway.  But, 
-except in my case, I think the order of userspace-initiated freeze/thaw 
-may be messed up due to bugs in the user app, then the kernel-initiated 
-freeze state could be accidentally broken...  In my opinion, the kernel 
-code is more reliable.  Therefore, kernel-initiated freeze should be 
-exclusive at least.
+Unverified Error/Warning (likely false positive, please contact us if interested):
 
+drivers/net/wireless/realtek/rtw88/mac.c:798 __rtw_download_firmware() warn: missing unwind goto?
+fs/xfs/scrub/fscounters.c:459 xchk_fscounters() warn: ignoring unreachable code.
+kernel/events/uprobes.c:478 uprobe_write_opcode() warn: passing zero to 'PTR_ERR'
 
---
-Thanks,
-Ruan.
+Error/Warning ids grouped by kconfigs:
 
-> 
-> If the mechanism you want to introduce is to allow a filesystem to even
-> prevent kernel auto-freeze with -EBUSY it begs the question if that
-> shouldn't also prevent suspend. Because it would anyway as you have it
-> right now with your patch but it would return -EINVAL. I also ask because of
-> the possible issues with the filesystem not going to suspend but the backing
-> or other possible related devices going to suspend.
-> 
-> Since I think the goal is to prevent the kernel auto-freeze due to
-> online fsck to complete, then I think you *do* want to prevent full
-> system suspend from moving forward. In that case, why not just have
-> the filesystem check for that and return -EBUSY on its respective
-> filesystem sb->s_op->freeze_fs(sb) callback?
-> 
->    Luis
+gcc_recent_errors
+|-- alpha-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- arc-allyesconfig
+|   |-- drivers-base-regmap-regcache-maple.c:warning:lower_index-is-used-uninitialized
+|   |-- drivers-base-regmap-regcache-maple.c:warning:lower_last-is-used-uninitialized
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- arm-allmodconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- arm-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- arm64-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- csky-randconfig-m041-20230517
+|   |-- drivers-net-wireless-realtek-rtw88-mac.c-__rtw_download_firmware()-warn:missing-unwind-goto
+|   `-- fs-xfs-scrub-fscounters.c-xchk_fscounters()-warn:ignoring-unreachable-code.
+|-- csky-randconfig-r032-20230517
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- i386-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- i386-randconfig-m021
+|   `-- kernel-events-uprobes.c-uprobe_write_opcode()-warn:passing-zero-to-PTR_ERR
+|-- ia64-allmodconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- ia64-buildonly-randconfig-r005-20230517
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- ia64-randconfig-r023-20230517
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- ia64-randconfig-r031-20230517
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- loongarch-allmodconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- loongarch-defconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- mips-allmodconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- mips-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- powerpc-allmodconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- powerpc-buildonly-randconfig-r004-20230517
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- powerpc-randconfig-c023-20230517
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- powerpc-randconfig-c034-20230517
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- powerpc-randconfig-r012-20230517
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- powerpc-randconfig-s033-20230517
+|   `-- mm-kfence-core.c:sparse:sparse:cast-to-restricted-__le64
+|-- riscv-allmodconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- s390-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- sparc-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- sparc-randconfig-r005-20230517
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+|-- x86_64-allyesconfig
+|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
+|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
+`-- x86_64-randconfig-m001
+    `-- kernel-events-uprobes.c-uprobe_write_opcode()-warn:passing-zero-to-PTR_ERR
+clang_recent_errors
+|-- arm64-randconfig-r006-20230517
+|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-dce-dmub_abm.c:warning:variable-feature_support-set-but-not-used
+|-- i386-buildonly-randconfig-r001-20230515
+|   `-- ld.lld:error:undefined-symbol:__udivdi3
+`-- x86_64-randconfig-x052
+    `-- drivers-bluetooth-btnxpuart.c:warning:unused-variable-nxpuart_of_match_table
+
+elapsed time: 871m
+
+configs tested: 127
+configs skipped: 7
+
+tested configs:
+alpha                            allyesconfig   gcc  
+alpha        buildonly-randconfig-r002-20230517   gcc  
+alpha                               defconfig   gcc  
+alpha                randconfig-r013-20230517   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                  randconfig-r043-20230517   gcc  
+arm                              allmodconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                        clps711x_defconfig   gcc  
+arm                                 defconfig   gcc  
+arm                          exynos_defconfig   gcc  
+arm                            hisi_defconfig   gcc  
+arm                  randconfig-r004-20230517   gcc  
+arm                  randconfig-r046-20230517   clang
+arm                           sama7_defconfig   clang
+arm                           tegra_defconfig   gcc  
+arm                         vf610m4_defconfig   gcc  
+arm64                            allyesconfig   gcc  
+arm64                               defconfig   gcc  
+arm64                randconfig-r006-20230517   clang
+arm64                randconfig-r011-20230517   gcc  
+csky                                defconfig   gcc  
+csky                 randconfig-r024-20230517   gcc  
+csky                 randconfig-r025-20230517   gcc  
+csky                 randconfig-r032-20230517   gcc  
+hexagon      buildonly-randconfig-r006-20230517   clang
+hexagon                             defconfig   clang
+hexagon              randconfig-r041-20230517   clang
+hexagon              randconfig-r045-20230517   clang
+i386                             allyesconfig   gcc  
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                          randconfig-a001   gcc  
+i386                          randconfig-a002   clang
+i386                          randconfig-a003   gcc  
+i386                          randconfig-a004   clang
+i386                          randconfig-a005   gcc  
+i386                          randconfig-a006   clang
+i386                          randconfig-a011   clang
+i386                          randconfig-a012   gcc  
+i386                          randconfig-a013   clang
+i386                          randconfig-a014   gcc  
+i386                          randconfig-a015   clang
+i386                          randconfig-a016   gcc  
+ia64                             allmodconfig   gcc  
+ia64         buildonly-randconfig-r005-20230517   gcc  
+ia64                                defconfig   gcc  
+ia64                        generic_defconfig   gcc  
+ia64                 randconfig-r023-20230517   gcc  
+ia64                 randconfig-r031-20230517   gcc  
+ia64                 randconfig-r036-20230517   gcc  
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                           defconfig   gcc  
+m68k                             allmodconfig   gcc  
+m68k                         amcore_defconfig   gcc  
+m68k                         apollo_defconfig   gcc  
+m68k         buildonly-randconfig-r001-20230517   gcc  
+m68k                                defconfig   gcc  
+microblaze           randconfig-r034-20230517   gcc  
+mips                             allmodconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                      malta_kvm_defconfig   clang
+mips                 randconfig-r015-20230517   clang
+nios2                            allyesconfig   gcc  
+nios2        buildonly-randconfig-r003-20230517   gcc  
+nios2                               defconfig   gcc  
+parisc                              defconfig   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc      buildonly-randconfig-r004-20230517   gcc  
+powerpc              randconfig-r001-20230517   clang
+powerpc              randconfig-r012-20230517   gcc  
+powerpc              randconfig-r014-20230517   gcc  
+powerpc              randconfig-r035-20230517   clang
+powerpc                  storcenter_defconfig   gcc  
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                randconfig-r042-20230517   gcc  
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+s390                 randconfig-r016-20230517   gcc  
+s390                 randconfig-r044-20230517   gcc  
+sh                               allmodconfig   gcc  
+sh                 kfr2r09-romimage_defconfig   gcc  
+sh                   randconfig-r003-20230517   gcc  
+sh                   randconfig-r022-20230517   gcc  
+sh                           se7751_defconfig   gcc  
+sparc                               defconfig   gcc  
+sparc                randconfig-r005-20230517   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64                        randconfig-a001   clang
+x86_64                        randconfig-a002   gcc  
+x86_64                        randconfig-a003   clang
+x86_64                        randconfig-a004   gcc  
+x86_64                        randconfig-a005   clang
+x86_64                        randconfig-a006   gcc  
+x86_64                        randconfig-a011   gcc  
+x86_64                        randconfig-a012   clang
+x86_64                        randconfig-a013   gcc  
+x86_64                        randconfig-a014   clang
+x86_64                        randconfig-a015   gcc  
+x86_64                        randconfig-a016   clang
+x86_64                        randconfig-x051   gcc  
+x86_64                        randconfig-x052   clang
+x86_64                        randconfig-x053   gcc  
+x86_64                        randconfig-x054   clang
+x86_64                        randconfig-x055   gcc  
+x86_64                        randconfig-x056   clang
+x86_64                        randconfig-x061   gcc  
+x86_64                        randconfig-x062   clang
+x86_64                        randconfig-x063   gcc  
+x86_64                        randconfig-x064   clang
+x86_64                        randconfig-x065   gcc  
+x86_64                        randconfig-x066   clang
+x86_64                               rhel-8.3   gcc  
+xtensa                    smp_lx200_defconfig   gcc  
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
