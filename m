@@ -2,125 +2,128 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A083C7EE2A
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 May 2023 22:11:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03CFCC7EE22
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 May 2023 22:24:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229596AbjEQWLj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 May 2023 18:11:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56036 "EHLO
+        id S229449AbjEQWY1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 17 May 2023 18:24:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60474 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229557AbjEQWLh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 May 2023 18:11:37 -0400
-Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1ADA30E6
-        for <linux-xfs@vger.kernel.org>; Wed, 17 May 2023 15:11:36 -0700 (PDT)
-Received: by mail-pl1-x62a.google.com with SMTP id d9443c01a7336-1ae4f28454bso10594305ad.3
-        for <linux-xfs@vger.kernel.org>; Wed, 17 May 2023 15:11:36 -0700 (PDT)
+        with ESMTP id S229511AbjEQWY0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 May 2023 18:24:26 -0400
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FF7A4EF8
+        for <linux-xfs@vger.kernel.org>; Wed, 17 May 2023 15:24:24 -0700 (PDT)
+Received: by mail-pl1-x636.google.com with SMTP id d9443c01a7336-1ae50da739dso9752135ad.1
+        for <linux-xfs@vger.kernel.org>; Wed, 17 May 2023 15:24:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1684361496; x=1686953496;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1684362264; x=1686954264;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=HqDaQVw3Us3Yxixpj/wi6ttDpBT3+i46/Yur+ix1SDQ=;
-        b=cRTFDQc4i30qW8BHRDgqrci7SMSETpLevWrkMvHmGKdAUp8Io3DppNRa4LDTI1rvM1
-         raGaZR9fIJduNz5fXkwpgFDZHD780Zdlt9BKXbS4c6nTJcHzIbsiqJniJYkcDA38m/oE
-         /4EmBl3fP44crzr0HrON7+MvfINqAg/nzOozRjda7hbpEgFqmBFz3FTzv5tZj8R15fYm
-         rpp76SDa+e+MbXn5jYPn6cHoTnDCNErVaPYVh1BrQm6tz829le3a4mXCHg6njXDOgWUM
-         FzS1XgUcPJwZ2HKdMVHId9bJBO10trytXLZrLwmbsY6diWG8ulS6yuFNWy/ylVFcTTGF
-         xx7A==
+        bh=OCwYqiF3ydXVpqLPxGKDXakuzIdWMuk8H1T2ZHJZwpE=;
+        b=bki4X1lL+8sTU2ZJZSW6BEfq/zAwYBu9ZzeUI+pFeFm049gFyVCiPj7C/s0OuCAwxf
+         8YtI47vfsFK96ncnBPht5LgU7pecq2X3NP0i6W5LT/7RaLs9FJHsUmc6jiukws6IJybC
+         trFwfVtI6UxRK7LXLTZgyQyAow1w2vIG1j/OCoAxqIlYCY1q/sy+K7JBqgI8RZ3wb4qV
+         1omY0WkV/zS7WA6+zZ82J9iyL5WEpOoW7dWOAnGVBCLtgLYLzB3SGGdn7rqegh1U48iS
+         RE2Hmxtg8CvPtcc/F+Toi3t4tM4f3DrPs+QC66ycvzVGjGRSEjNW14q2soS7aTVZ3w4S
+         F+YA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684361496; x=1686953496;
+        d=1e100.net; s=20221208; t=1684362264; x=1686954264;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=HqDaQVw3Us3Yxixpj/wi6ttDpBT3+i46/Yur+ix1SDQ=;
-        b=CYPs7U4S1j/mmQtrWCl26Q2bRxHgh6VXXTnR2fsW6tGE62PKRBZEj1Zh7xCQQkMkhB
-         /Mz2JPZYsM10DNKcfcrviSAJEUTFE1WkEi22cJBxVME+xD4ymNJ3fgtcg/bTwVZj97V/
-         uwfKFPLVOtbMb7cW/bN4KR2QRHsnObgecsk49S4EY/n//froFDzzyrp3bz7/w92pAg0T
-         mciojzu8oioIYl8fR06RvAkHnZKQzAtfDDswM0PsXwf74MivCSRRV79S0Cg5LGi6QPAr
-         BQK+A/GE9t+yTEpp8KDFWcOEDWIADwmeT0GnEsG7CfK5aMF+lU4eA22SPuv9ZhPfZaMx
-         seGw==
-X-Gm-Message-State: AC+VfDyJPEKFuBMQCU/nga9gYWBNegXzNrrODAvHa44WfhV6hTnURf+k
-        oO6fLU5glFC8g5FfhrEJkcZh0q2tvJFy4KTQg4w=
-X-Google-Smtp-Source: ACHHUZ6mfy8CnmU8Nm/8s7+M6U9UV9M8Z8SAJvmutJENHaJuxHe1KAMz4LWHN8Ds8nYBYksnRzXpyQ==
-X-Received: by 2002:a17:903:192:b0:1ac:7260:80a7 with SMTP id z18-20020a170903019200b001ac726080a7mr305130plg.43.1684361496111;
-        Wed, 17 May 2023 15:11:36 -0700 (PDT)
+        bh=OCwYqiF3ydXVpqLPxGKDXakuzIdWMuk8H1T2ZHJZwpE=;
+        b=Znbh2CgOsoGMn8/MNrZGeHtrigFCIHAml6aP03mjrczPRKKiwNqVEieFWFsQ6ifs9m
+         Vr5TlFEOW2dkHLemvDSovkQjaqKOgQf9HPpbhagjYcYhxfu88vgNU+gUvLLdgbFZYYTe
+         zbdSHnNQQ6ohFfO5oDNXN2OMED+OYhrfytbIRzNMD82OG5zl2K5sgxTVM/G2bxclbw9K
+         JC2G5mi7UXLd1iI2hf8I8b158YZVvzxsJODcQQ2GWI/6xiKFjkxBH9TuGPFkd4hAnglb
+         Lxn11gs2wEmgo0lEr/UGCX/MfCByoXIm2bXFv/Dh9w+7UXkQRsyRnXoaezTdRN9OiFZj
+         J3rA==
+X-Gm-Message-State: AC+VfDyofKit4DEpWcQtNcCLVoxS5ES6CDMBA4CwluPyKqjBWw5jpFie
+        IlTo5nwZHbiwp1DRKp9aCwfLNNG9voiNOFl/HvA=
+X-Google-Smtp-Source: ACHHUZ4FGW4glsuysXg4Ev1C842DuHJZLsnhU2f06MKCtFk0pNtcglXXB8N6r5S2ndpczWRib7Pwzw==
+X-Received: by 2002:a17:902:f683:b0:1ab:29bc:bd87 with SMTP id l3-20020a170902f68300b001ab29bcbd87mr318033plg.35.1684362263949;
+        Wed, 17 May 2023 15:24:23 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
-        by smtp.gmail.com with ESMTPSA id o6-20020a170902bcc600b001ae0a4b1d3fsm8175842pls.153.2023.05.17.15.11.35
+        by smtp.gmail.com with ESMTPSA id f22-20020a170902ab9600b001ac2a73dbf2sm192757plr.291.2023.05.17.15.24.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 May 2023 15:11:35 -0700 (PDT)
+        Wed, 17 May 2023 15:24:23 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1pzPMq-000iHB-0u;
-        Thu, 18 May 2023 08:11:32 +1000
-Date:   Thu, 18 May 2023 08:11:32 +1000
+        id 1pzPZE-000iQV-1D;
+        Thu, 18 May 2023 08:24:20 +1000
+Date:   Thu, 18 May 2023 08:24:20 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Wang Yugui <wangyugui@e16-tech.com>
-Cc:     Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: performance regression between 6.1.x and 5.15.x
-Message-ID: <ZGVRFAH2QKwpcPBD@dread.disaster.area>
-References: <20230510165055.01D5.409509F4@e16-tech.com>
- <20230511013410.GY3223426@dread.disaster.area>
- <20230517210740.6464.409509F4@e16-tech.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] xfs: buffer pins need to hold a buffer reference
+Message-ID: <ZGVUFJ8uXSUreTPf@dread.disaster.area>
+References: <20230517000449.3997582-1-david@fromorbit.com>
+ <20230517000449.3997582-2-david@fromorbit.com>
+ <ZGTPj0ov+95jjpuH@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230517210740.6464.409509F4@e16-tech.com>
+In-Reply-To: <ZGTPj0ov+95jjpuH@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 17, 2023 at 09:07:41PM +0800, Wang Yugui wrote:
-> > This indicates that 35% of writeback submission CPU is in
-> > __folio_start_writeback(), 13% is in folio_clear_dirty_for_io(), 8%
-> > is in filemap_get_folios_tag() and only ~8% of CPU time is in the
-> > rest of the iomap/XFS code building and submitting bios from the
-> > folios passed to it.  i.e.  it looks a lot like writeback is is
-> > contending with the incoming write(), IO completion and memory
-> > reclaim contexts for access to the page cache mapping and mm
-> > accounting structures.
-> > 
-> > Unfortunately, I don't have access to hardware that I can use to
-> > confirm this is the cause, but it doesn't look like it's directly an
-> > XFS/iomap issue at this point. The larger batch sizes reduce both
-> > memory reclaim and IO completion competition with submission, so it
-> > kinda points in this direction.
-> > 
-> > I suspect we need to start using high order folios in the write path
-> > where we have large user IOs for streaming writes, but I also wonder
-> > if there isn't some sort of batched accounting/mapping tree updates
-> > we could do for all the adjacent folios in a single bio....
+On Wed, May 17, 2023 at 05:58:55AM -0700, Christoph Hellwig wrote:
+> On Wed, May 17, 2023 at 10:04:46AM +1000, Dave Chinner wrote:
+> > To fix this, we need to ensure that buffer existence extends beyond
+> > the BLI reference count checks and until the unpin processing is
+> > complete. This implies that a buffer pin operation must also take a
+> > buffer reference to ensure that the buffer cannot be freed until the
+> > buffer unpin processing is complete.
 > 
+> Yeah.  I wonder why we haven't done this from the very beginning..
+
+Likely because the whole BLI lifecycle is completely screwed up and
+nobody has had the time to understand it fully and fix it properly.
+
+> > +	 /*
+> > +	  * Nothing to do but drop the buffer pin reference if the BLI is
+> > +	  * still active
+> > +	  */
 > 
-> Is there some comment from Matthew Wilcox?
-> since it seems a folios problem?
+> Nit: this block comment is indentented by an extra space.
+> 
+> > +	if (!freed) {
+> > +		xfs_buf_rele(bp);
+> >  		return;
+> > +	}
+> >  
+> >  	if (stale) {
+> 
+> Nit: this is the only use of the stale variable now, so we might
+> as well just drop it.
 
-None of these are new "folio problems" - we've known about these
-scalability limitations of page-based writeback caching for over 15
-years. e.g. from 2006:
+Actually, after we've dropped the bli reference, it isn't safe to
+reference the bli unless we know the buffer is stale. In this case,
+we know the bli still exists because the buffer has been locked
+since it was marked stale. However, for the other cases the BLI
+could be freed from under us as it's reference count is zero and so
+the next call to xfs_buf_item_relse() will free it no matter where
+it comes from.
 
-https://www.kernel.org/doc/ols/2006/ols2006v1-pages-177-192.pdf
+The reference counting around BLIs a total mess - this patch just
+gets rid of one landmine but there's still plenty more in this code
+that need to be untangled.
 
-The fundamental problem is the huge number of page cache objects
-that buffered IO must handle when moving multiple GB/s to/from
-storage devices. Folios offer a way to mitigate that by reducing
-the number of page cache objects via using large folios in the
-write() path, but we have not enabled that functionality yet.
+> >  		ASSERT(bip->bli_flags & XFS_BLI_STALE);
+> 
+> .. which then also clearly shows this ASSERT is pointless now.
 
-If you want to look at making the iomap path and filemap_get_folio()
-paths allocate high order folios, then that will largely mitigate
-the worst of the performance degredation.
+*nod*
 
-Another possible avenue is to batch all the folio updates in the IO
-completion path. We currently do that one folio at a time, so a
-typical IO might be doing a several dozen (or more) page cache
-updates that largely could be done as a single update per IO. Worse
-is that these individual updates are typically done under exclusive
-locking, so this means the lock holds are no only more frequent than
-they need to be, they are also longer than they need to be.
+> Otherwise looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Cheers,
+Thanks.
 
-Dave.
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
