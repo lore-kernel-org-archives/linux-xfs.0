@@ -2,313 +2,400 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31BF0C7EE2A
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 May 2023 17:29:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3EFBC77B7D
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 May 2023 18:46:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229575AbjEQR3g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 May 2023 13:29:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41280 "EHLO
+        id S229787AbjEQSqg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 17 May 2023 14:46:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39740 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229464AbjEQR3e (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 May 2023 13:29:34 -0400
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1F11199F;
-        Wed, 17 May 2023 10:29:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1684344572; x=1715880572;
-  h=date:from:to:cc:subject:message-id;
-  bh=nSqVZysCqduEgBH88r+nOXyMT/oVrrLmi6R2ewfyuck=;
-  b=Q5NGjUyDnZTjwGyvV/KOCS3VGcqTdh4FGBTN//SqyVc9sgim2TCVGzXm
-   6UGcDQfJNnH8phlfJObEMw3oYtZiCFEGmBtChtcXViqcGBVxHRZlVXGI9
-   C2lAhKrQFatiy0BLNgfboZehpyAqP20yGLDs/DPDGR7P0E3ReY23Z6ErL
-   eRZa6dnh+VidCi2HRdBiT5GshFZByRVjAhZH4t8PjBirNeLipczh1mBFi
-   Ckgmti/D4fDtqNIvkqXjoRaWyKO/Q+mMbWyRQKqO+xPQEiTtFzC1iP8Hi
-   4Wk+UdOeMhg+tfIRp79TCDMAo6Kx/bU/pJCv1D9BDlt3t5XzpWiNGmrpc
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10713"; a="350660144"
-X-IronPort-AV: E=Sophos;i="5.99,282,1677571200"; 
-   d="scan'208";a="350660144"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2023 10:29:32 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10713"; a="652314150"
-X-IronPort-AV: E=Sophos;i="5.99,282,1677571200"; 
-   d="scan'208";a="652314150"
-Received: from lkp-server01.sh.intel.com (HELO dea6d5a4f140) ([10.239.97.150])
-  by orsmga003.jf.intel.com with ESMTP; 17 May 2023 10:29:29 -0700
-Received: from kbuild by dea6d5a4f140 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1pzKxs-00096K-1m;
-        Wed, 17 May 2023 17:29:28 +0000
-Date:   Thu, 18 May 2023 01:28:42 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     Linux Memory Management List <linux-mm@kvack.org>,
-        amd-gfx@lists.freedesktop.org, kasan-dev@googlegroups.com,
-        linux-bluetooth@vger.kernel.org, linux-perf-users@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: [linux-next:master] BUILD REGRESSION
- 065efa589871e93b6610c70c1e9de274ef1f1ba2
-Message-ID: <20230517172842.Ssf2F%lkp@intel.com>
-User-Agent: s-nail v14.9.24
+        with ESMTP id S229769AbjEQSqf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 May 2023 14:46:35 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 519C559F6
+        for <linux-xfs@vger.kernel.org>; Wed, 17 May 2023 11:45:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1684349146;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=qbUhmV81VjTy3RZgoWd9BaM6OjDgG414fToPJp9IL7c=;
+        b=jJzOzxem29U4tH913HLS8udD+C+xEYU83XNfG7EavxMOlPzj/TUWLCkbcyhEOAbpelGlam
+        Uru1thFUc+FzDwVgs0VqxwRBIn99k8rZXom1naa8H14SnhvlD/6iA1LHV/Hxevf5FMvunK
+        Y+aTiC5tPkMdAnuVk1qhgjHDzCNZOmI=
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
+ [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-189-93gVUJz5MrSHyMmypnTHjA-1; Wed, 17 May 2023 14:45:45 -0400
+X-MC-Unique: 93gVUJz5MrSHyMmypnTHjA-1
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-75967811555so80115885a.1
+        for <linux-xfs@vger.kernel.org>; Wed, 17 May 2023 11:45:45 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1684349144; x=1686941144;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=qbUhmV81VjTy3RZgoWd9BaM6OjDgG414fToPJp9IL7c=;
+        b=LIpjD9syHhun5VUAJMnc/Kgu1EGUKHVAXmcYwt/+8ezj9N751K3iu34bEFPAOZB8Lf
+         txx10os77CAUFwCn2lxKu0Lzy3JeIQ+g2GDK4o4aaZ0exKIlIolO8/YyKBa5b5J4kpjK
+         yGWDIux1Vu3GYMYVinOfDSuljkrxY8n8RYIrSJIIxjmP0TXCSTxt7CeopWZXEmv+8rbq
+         nw2iOfyOO5gEIj93+t7z9btpPAchX65+8R6uFiyQnXbqXFG0z2Xu3llqJwbJC1+D2+dS
+         xuBP45SL0yMKHaTBfF9NAW+gc3nIWsVVLgSiXVDwI5O2/92k61wzjwrbI+5WhH/NhMYV
+         3P+Q==
+X-Gm-Message-State: AC+VfDw9Th1LxUPbwt0hprFeokv00KSv/LZhcPdpThv6C3tmLJwrCHls
+        w8JEamsgsP69J9GI4iO9IZT7DsMoqEFHuOQAKK3sTp6n8hlWTxdTHq9Hwx45k5M+sucomGJ2BPm
+        Jf8eFG/1HKJm03ASofYpx
+X-Received: by 2002:a05:622a:188c:b0:3dc:fa58:97fd with SMTP id v12-20020a05622a188c00b003dcfa5897fdmr1381328qtc.25.1684349144480;
+        Wed, 17 May 2023 11:45:44 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ7BjgXl3sXv3YUcTg0rpqAWOVnRR9IQQavy1XThm7hDtOesMFAkhzhmmdy/zL6B+jSoYTvHPA==
+X-Received: by 2002:a05:622a:188c:b0:3dc:fa58:97fd with SMTP id v12-20020a05622a188c00b003dcfa5897fdmr1381288qtc.25.1684349144111;
+        Wed, 17 May 2023 11:45:44 -0700 (PDT)
+Received: from bfoster (c-24-61-119-116.hsd1.ma.comcast.net. [24.61.119.116])
+        by smtp.gmail.com with ESMTPSA id g6-20020a05620a13c600b0075772c756e0sm817009qkl.101.2023.05.17.11.45.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 17 May 2023 11:45:43 -0700 (PDT)
+Date:   Wed, 17 May 2023 14:48:12 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Ritesh Harjani <ritesh.list@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Matthew Wilcox <willy@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
+        Disha Goel <disgoel@linux.ibm.com>,
+        Aravinda Herle <araherle@in.ibm.com>
+Subject: Re: [RFCv5 5/5] iomap: Add per-block dirty state tracking to improve
+ performance
+Message-ID: <ZGUhbM9uSk9loUPH@bfoster>
+References: <ZGPZhMr0ZiPDxVkw@bfoster>
+ <87bkij3ry0.fsf@doe.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87bkij3ry0.fsf@doe.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-tree/branch: INFO setup_repo_specs: /db/releases/20230517200055/lkp-src/repo/*/linux-next
-https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
-branch HEAD: 065efa589871e93b6610c70c1e9de274ef1f1ba2  Add linux-next specific files for 20230517
+On Wed, May 17, 2023 at 08:50:39PM +0530, Ritesh Harjani wrote:
+> Brian Foster <bfoster@redhat.com> writes:
+> 
+> > On Tue, May 16, 2023 at 08:19:31PM +0530, Ritesh Harjani wrote:
+> >> Brian Foster <bfoster@redhat.com> writes:
+> >>
+> >> > On Mon, May 08, 2023 at 12:58:00AM +0530, Ritesh Harjani (IBM) wrote:
+> >> >> When filesystem blocksize is less than folio size (either with
+> >> >> mapping_large_folio_support() or with blocksize < pagesize) and when the
+> >> >> folio is uptodate in pagecache, then even a byte write can cause
+> >> >> an entire folio to be written to disk during writeback. This happens
+> >> >> because we currently don't have a mechanism to track per-block dirty
+> >> >> state within struct iomap_page. We currently only track uptodate state.
+> >> >>
+> >> >> This patch implements support for tracking per-block dirty state in
+> >> >> iomap_page->state bitmap. This should help improve the filesystem write
+> >> >> performance and help reduce write amplification.
+> >> >>
+> >> >> Performance testing of below fio workload reveals ~16x performance
+> >> >> improvement using nvme with XFS (4k blocksize) on Power (64K pagesize)
+> >> >> FIO reported write bw scores improved from around ~28 MBps to ~452 MBps.
+> >> >>
+> >> >> 1. <test_randwrite.fio>
+> >> >> [global]
+> >> >> 	ioengine=psync
+> >> >> 	rw=randwrite
+> >> >> 	overwrite=1
+> >> >> 	pre_read=1
+> >> >> 	direct=0
+> >> >> 	bs=4k
+> >> >> 	size=1G
+> >> >> 	dir=./
+> >> >> 	numjobs=8
+> >> >> 	fdatasync=1
+> >> >> 	runtime=60
+> >> >> 	iodepth=64
+> >> >> 	group_reporting=1
+> >> >>
+> >> >> [fio-run]
+> >> >>
+> >> >> 2. Also our internal performance team reported that this patch improves
+> >> >>    their database workload performance by around ~83% (with XFS on Power)
+> >> >>
+> >> >> Reported-by: Aravinda Herle <araherle@in.ibm.com>
+> >> >> Reported-by: Brian Foster <bfoster@redhat.com>
+> >> >> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> >> >> ---
+> >> >>  fs/gfs2/aops.c         |   2 +-
+> >> >>  fs/iomap/buffered-io.c | 115 ++++++++++++++++++++++++++++++++++++++---
+> >> >>  fs/xfs/xfs_aops.c      |   2 +-
+> >> >>  fs/zonefs/file.c       |   2 +-
+> >> >>  include/linux/iomap.h  |   1 +
+> >> >>  5 files changed, 112 insertions(+), 10 deletions(-)
+> >> >>
+> >> > ...
+> >> >> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> >> >> index 25f20f269214..c7f41b26280a 100644
+> >> >> --- a/fs/iomap/buffered-io.c
+> >> >> +++ b/fs/iomap/buffered-io.c
+> >> > ...
+> >> >> @@ -119,12 +169,20 @@ static struct iomap_page *iop_alloc(struct inode *inode, struct folio *folio,
+> >> >>  	else
+> >> >>  		gfp = GFP_NOFS | __GFP_NOFAIL;
+> >> >>
+> >> >> -	iop = kzalloc(struct_size(iop, state, BITS_TO_LONGS(nr_blocks)),
+> >> >> +	/*
+> >> >> +	 * iop->state tracks two sets of state flags when the
+> >> >> +	 * filesystem block size is smaller than the folio size.
+> >> >> +	 * The first state tracks per-block uptodate and the
+> >> >> +	 * second tracks per-block dirty state.
+> >> >> +	 */
+> >> >> +	iop = kzalloc(struct_size(iop, state, BITS_TO_LONGS(2 * nr_blocks)),
+> >> >>  		      gfp);
+> >> >>  	if (iop) {
+> >> >>  		spin_lock_init(&iop->state_lock);
+> >> >>  		if (folio_test_uptodate(folio))
+> >> >>  			iop_set_range(iop, 0, nr_blocks);
+> >> >> +		if (is_dirty)
+> >> >> +			iop_set_range(iop, nr_blocks, nr_blocks);
+> >> >
+> >> > I find the is_dirty logic here a bit confusing. AFAICT, this is
+> >> > primarily to handle the case where a folio is completely overwritten, so
+> >> > no iop is allocated at write time, and so then writeback needs to
+> >> > allocate the iop as fully dirty to reflect that. I.e., all iop_alloc()
+> >> > callers other than iomap_writepage_map() either pass the result of
+> >> > folio_test_dirty() or explicitly dirty the entire range of the folio
+> >> > anyways.  iomap_dirty_folio() essentially does the latter because it
+> >> > needs to dirty the entire folio regardless of whether the iop already
+> >> > exists or not, right?
+> >>
+> >> Yes.
+> >>
+> >> >
+> >> > If so and if I'm following all of that correctly, could this complexity
+> >> > be isolated to iomap_writepage_map() by simply checking for the !iop
+> >> > case first, then call iop_alloc() immediately followed by
+> >> > set_range_dirty() of the entire folio? Then presumably iop_alloc() could
+> >> > always just dirty based on folio state with the writeback path exception
+> >> > case handled explicitly. Hm?
+> >> >
+> >>
+> >> Hi Brian,
+> >>
+> >> It was discussed here [1] to pass is_dirty flag at the time of iop
+> >> allocation. We can do what you are essentially suggesting, but it's just
+> >> extra work i.e. we will again do some calculations of blocks_per_folio,
+> >> start, end and more importantly take and release iop->state_lock
+> >> spinlock. Whereas with above approach we could get away with this at the
+> >> time of iop allocation itself.
+> >>
+> >
+> > Hi Ritesh,
+> >
+> > Isn't that extra work already occurring in iomap_dirty_folio()? I was
+> > just thinking that maybe moving it to where it's apparently needed (i.e.
+> > writeback) might eliminate the need for the param.
+> >
+> > I suppose iomap_dirty_folio() would need to call filemap_dirty_folio()
+> > first to make sure iop_alloc() sees the dirty state, but maybe that
+> > would also allow skipping the iop alloc if the folio was already dirty
+> > (i.e. if the folio was previously dirtied by a full buffered overwite
+> > for example)?
+> >
+> > I've appended a quick diff below (compile tested only) just to explain
+> > what I mean. When doing that it also occurred to me that if we really
+> > care about the separate call, we could keep the is_dirty param but do
+> > the __iop_alloc() wrapper thing where iop_alloc() always passes
+> > folio_test_dirty().
+> 
+> Sure. Brian. I guess when we got the comment, it was still in the intial
+> work & I was anyway passing a from_writeback flag. Thanks for the diff,
+> it does make sense to me. I will try to add that change in the next revision.
+> 
 
-Error/Warning reports:
+Ok, though I think what I did to iomap_folio_dirty() might be wrong...
+If we have a folio/iop that is already partially dirty with sub-folio
+blocks, and then that folio is mapped and write faulted, we still need
+to explicitly dirty the rest of the iop during the fault, right? If so,
+then I guess we'd still need to keep the iop_set_range_dirty() call
+there at least for that case.
 
-https://lore.kernel.org/oe-kbuild-all/202304200812.6UqNDVZy-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202304220119.94Pw6YsD-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202305132244.DwzBUcUd-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202305171622.jKTovBvy-lkp@intel.com
+Hmm.. so I suppose I could see doing that a couple different ways. One
+is just to just keep it as you already have it and just drop the dirty
+param. I.e.:
 
-Error/Warning: (recently discovered and may have been fixed)
+bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio)
+{
+        iop_alloc(mapping->host, folio, 0);
+        iop_set_range_dirty(mapping->host, folio, 0, folio_size(folio));
+        return filemap_dirty_folio(mapping, folio);
+}
 
-drivers/base/regmap/regcache-maple.c:113:23: warning: 'lower_index' is used uninitialized [-Wuninitialized]
-drivers/base/regmap/regcache-maple.c:113:36: warning: 'lower_last' is used uninitialized [-Wuninitialized]
-drivers/bluetooth/btnxpuart.c:1332:34: warning: unused variable 'nxpuart_of_match_table' [-Wunused-const-variable]
-drivers/gpu/drm/amd/amdgpu/../display/amdgpu_dm/amdgpu_dm.c:6396:21: warning: variable 'count' set but not used [-Wunused-but-set-variable]
-drivers/gpu/drm/amd/amdgpu/../display/dc/dce/dmub_abm.c:138:15: warning: variable 'feature_support' set but not used [-Wunused-but-set-variable]
-drivers/gpu/drm/amd/amdgpu/amdgpu_gfx.c:499:13: warning: variable 'j' set but not used [-Wunused-but-set-variable]
-ld.lld: error: undefined symbol: __udivdi3
+But I also wonder.. if we can skip the iop alloc on full folio buffered
+overwrites, isn't that also true of mapped writes to folios that don't
+already have an iop? I.e., I think what I was trying to do in the
+previous diff was actually something like this:
 
-Unverified Error/Warning (likely false positive, please contact us if interested):
+bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio)
+{
+        iop_set_range_dirty(mapping->host, folio, 0, folio_size(folio));
+        return filemap_dirty_folio(mapping, folio);
+}
 
-drivers/net/wireless/realtek/rtw88/mac.c:798 __rtw_download_firmware() warn: missing unwind goto?
-fs/xfs/scrub/fscounters.c:459 xchk_fscounters() warn: ignoring unreachable code.
-kernel/events/uprobes.c:478 uprobe_write_opcode() warn: passing zero to 'PTR_ERR'
+... which would only dirty the full iop if it already exists. Thoughts?
 
-Error/Warning ids grouped by kconfigs:
+Brian
 
-gcc_recent_errors
-|-- alpha-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- arc-allyesconfig
-|   |-- drivers-base-regmap-regcache-maple.c:warning:lower_index-is-used-uninitialized
-|   |-- drivers-base-regmap-regcache-maple.c:warning:lower_last-is-used-uninitialized
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- arm-allmodconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- arm-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- arm64-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- csky-randconfig-m041-20230517
-|   |-- drivers-net-wireless-realtek-rtw88-mac.c-__rtw_download_firmware()-warn:missing-unwind-goto
-|   `-- fs-xfs-scrub-fscounters.c-xchk_fscounters()-warn:ignoring-unreachable-code.
-|-- csky-randconfig-r032-20230517
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- i386-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- i386-randconfig-m021
-|   `-- kernel-events-uprobes.c-uprobe_write_opcode()-warn:passing-zero-to-PTR_ERR
-|-- ia64-allmodconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- ia64-buildonly-randconfig-r005-20230517
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- ia64-randconfig-r023-20230517
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- ia64-randconfig-r031-20230517
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- loongarch-allmodconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- loongarch-defconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- mips-allmodconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- mips-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- powerpc-allmodconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- powerpc-buildonly-randconfig-r004-20230517
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- powerpc-randconfig-c023-20230517
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- powerpc-randconfig-c034-20230517
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- powerpc-randconfig-r012-20230517
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- powerpc-randconfig-s033-20230517
-|   `-- mm-kfence-core.c:sparse:sparse:cast-to-restricted-__le64
-|-- riscv-allmodconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- s390-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- sparc-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- sparc-randconfig-r005-20230517
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-|-- x86_64-allyesconfig
-|   |-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|   `-- drivers-gpu-drm-amd-amdgpu-amdgpu_gfx.c:warning:variable-j-set-but-not-used
-`-- x86_64-randconfig-m001
-    `-- kernel-events-uprobes.c-uprobe_write_opcode()-warn:passing-zero-to-PTR_ERR
-clang_recent_errors
-|-- arm64-randconfig-r006-20230517
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-dc-dce-dmub_abm.c:warning:variable-feature_support-set-but-not-used
-|-- i386-buildonly-randconfig-r001-20230515
-|   `-- ld.lld:error:undefined-symbol:__udivdi3
-`-- x86_64-randconfig-x052
-    `-- drivers-bluetooth-btnxpuart.c:warning:unused-variable-nxpuart_of_match_table
+> >
+> > BTW, I think you left off your [1] discussion reference..
+> >
+> 
+> Sorry, my bad.
+> 
+> [1]: https://lore.kernel.org/linux-xfs/Y9f7cZxnXbL7x0p+@infradead.org/
+> 
+> >> Besides, isn't it easier this way? which as you also stated we will
+> >> dirty all the blocks based on is_dirty flag, which is folio_test_dirty()
+> >> except at the writeback time.
+> >>
+> >
+> > My thinking was just that I kind of had to read through all of the
+> > iop_alloc() callsites to grok the purpose of the parameter, which made
+> > it seem unnecessarily confusing. But ultimately it made sense, so I
+> > don't insist on changing it or anything if this approach is intentional
+> > and/or preferred by others. That's just my .02 and I'll defer to your
+> > preference. :)
+> >
+> 
+> Sure Thanks!
+> 
+> >>
+> >> >>  		folio_attach_private(folio, iop);
+> >> >>  	}
+> >> >>  	return iop;
+> >> > ...
+> >> >> @@ -561,6 +621,18 @@ void iomap_invalidate_folio(struct folio *folio, size_t offset, size_t len)
+> > ...
+> >> >
+> >> > WRT to the !iop case.. I _think_ this is handled correctly here because
+> >> > that means we'd handle the folio as completely dirty at writeback time.
+> >> > Is that the case? If so, it might be nice to document that assumption
+> >> > somewhere (here or perhaps in the writeback path).
+> >> >
+> >>
+> >> !iop case is simply when we don't have a large folio and blocksize ==
+> >>  pagesize. In that case we don't allocate any iop and simply returns
+> >>  from iop_alloc().
+> >> So then we just skip the loop which is only meant when we have blocks
+> >> within a folio.
+> >>
+> >
+> > Isn't it also the case that iop might be NULL at this point if the fs
+> > has sub-folio blocks, but the folio was dirtied by a full overwrite of
+> > the folio? Or did I misunderstand patch 4?
+> >
+> 
+> Yes. Both of the cases. We can either have bs == ps or we can have a
+> complete overwritten folio in which case we don't allocate any iop in
+> iomap_writepage_map() function.
+> 
+> Sure. I will document that when we factor out that change in a seperate function.
+> 
+> > Brian
+> >
+> > --- 8< ---
+> >
+> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> > index 92e1e1061225..89b3053e3f2d 100644
+> > --- a/fs/iomap/buffered-io.c
+> > +++ b/fs/iomap/buffered-io.c
+> > @@ -155,7 +155,7 @@ static void iop_clear_range_dirty(struct folio *folio, size_t off, size_t len)
+> >  }
+> >
+> >  static struct iomap_page *iop_alloc(struct inode *inode, struct folio *folio,
+> > -				    unsigned int flags, bool is_dirty)
+> > +				    unsigned int flags)
+> >  {
+> >  	struct iomap_page *iop = to_iomap_page(folio);
+> >  	unsigned int nr_blocks = i_blocks_per_folio(inode, folio);
+> > @@ -181,7 +181,7 @@ static struct iomap_page *iop_alloc(struct inode *inode, struct folio *folio,
+> >  		spin_lock_init(&iop->state_lock);
+> >  		if (folio_test_uptodate(folio))
+> >  			iop_set_range(iop, 0, nr_blocks);
+> > -		if (is_dirty)
+> > +		if (folio_test_dirty(folio))
+> >  			iop_set_range(iop, nr_blocks, nr_blocks);
+> >  		folio_attach_private(folio, iop);
+> >  	}
+> > @@ -326,8 +326,7 @@ static int iomap_read_inline_data(const struct iomap_iter *iter,
+> >  	if (WARN_ON_ONCE(size > iomap->length))
+> >  		return -EIO;
+> >  	if (offset > 0)
+> > -		iop = iop_alloc(iter->inode, folio, iter->flags,
+> > -				folio_test_dirty(folio));
+> > +		iop = iop_alloc(iter->inode, folio, iter->flags);
+> >  	else
+> >  		iop = to_iomap_page(folio);
+> >
+> > @@ -365,8 +364,7 @@ static loff_t iomap_readpage_iter(const struct iomap_iter *iter,
+> >  		return iomap_read_inline_data(iter, folio);
+> >
+> >  	/* zero post-eof blocks as the page may be mapped */
+> > -	iop = iop_alloc(iter->inode, folio, iter->flags,
+> > -			folio_test_dirty(folio));
+> > +	iop = iop_alloc(iter->inode, folio, iter->flags);
+> >  	iomap_adjust_read_range(iter->inode, folio, &pos, length, &poff, &plen);
+> >  	if (plen == 0)
+> >  		goto done;
+> > @@ -616,13 +614,10 @@ EXPORT_SYMBOL_GPL(iomap_invalidate_folio);
+> >
+> >  bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio)
+> >  {
+> > -	struct iomap_page *iop;
+> > -	struct inode *inode = mapping->host;
+> > -	size_t len = i_blocks_per_folio(inode, folio) << inode->i_blkbits;
+> > -
+> > -	iop = iop_alloc(inode, folio, 0, false);
+> > -	iop_set_range_dirty(inode, folio, 0, len);
+> > -	return filemap_dirty_folio(mapping, folio);
+> > +	bool dirtied = filemap_dirty_folio(mapping, folio);
+> > +	if (dirtied)
+> > +		iop_alloc(mapping->host, folio, 0);
+> > +	return dirtied;
+> >  }
+> >  EXPORT_SYMBOL_GPL(iomap_dirty_folio);
+> >
+> > @@ -673,8 +668,7 @@ static int __iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
+> >  	    pos + len >= folio_pos(folio) + folio_size(folio))
+> >  		return 0;
+> >
+> > -	iop = iop_alloc(iter->inode, folio, iter->flags,
+> > -			folio_test_dirty(folio));
+> > +	iop = iop_alloc(iter->inode, folio, iter->flags);
+> >
+> >  	if ((iter->flags & IOMAP_NOWAIT) && !iop && nr_blocks > 1)
+> >  		return -EAGAIN;
+> > @@ -1759,7 +1753,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+> >  		struct writeback_control *wbc, struct inode *inode,
+> >  		struct folio *folio, u64 end_pos)
+> >  {
+> > -	struct iomap_page *iop = iop_alloc(inode, folio, 0, true);
+> > +	struct iomap_page *iop = to_iomap_page(folio);
+> >  	struct iomap_ioend *ioend, *next;
+> >  	unsigned len = i_blocksize(inode);
+> >  	unsigned nblocks = i_blocks_per_folio(inode, folio);
+> > @@ -1767,6 +1761,11 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+> >  	int error = 0, count = 0, i;
+> >  	LIST_HEAD(submit_list);
+> >
+> > +	if (!iop) {
+> > +		iop = iop_alloc(inode, folio, 0);
+> > +		iop_set_range_dirty(inode, folio, 0, folio_size(folio));
+> > +	}
+> > +
+> >  	WARN_ON_ONCE(iop && atomic_read(&iop->write_bytes_pending) != 0);
+> >
+> >  	/*
+> 
+> Thanks for the review!
+> 
+> -ritesh
+> 
 
-elapsed time: 871m
-
-configs tested: 127
-configs skipped: 7
-
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha        buildonly-randconfig-r002-20230517   gcc  
-alpha                               defconfig   gcc  
-alpha                randconfig-r013-20230517   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                  randconfig-r043-20230517   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                        clps711x_defconfig   gcc  
-arm                                 defconfig   gcc  
-arm                          exynos_defconfig   gcc  
-arm                            hisi_defconfig   gcc  
-arm                  randconfig-r004-20230517   gcc  
-arm                  randconfig-r046-20230517   clang
-arm                           sama7_defconfig   clang
-arm                           tegra_defconfig   gcc  
-arm                         vf610m4_defconfig   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                randconfig-r006-20230517   clang
-arm64                randconfig-r011-20230517   gcc  
-csky                                defconfig   gcc  
-csky                 randconfig-r024-20230517   gcc  
-csky                 randconfig-r025-20230517   gcc  
-csky                 randconfig-r032-20230517   gcc  
-hexagon      buildonly-randconfig-r006-20230517   clang
-hexagon                             defconfig   clang
-hexagon              randconfig-r041-20230517   clang
-hexagon              randconfig-r045-20230517   clang
-i386                             allyesconfig   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                          randconfig-a001   gcc  
-i386                          randconfig-a002   clang
-i386                          randconfig-a003   gcc  
-i386                          randconfig-a004   clang
-i386                          randconfig-a005   gcc  
-i386                          randconfig-a006   clang
-i386                          randconfig-a011   clang
-i386                          randconfig-a012   gcc  
-i386                          randconfig-a013   clang
-i386                          randconfig-a014   gcc  
-i386                          randconfig-a015   clang
-i386                          randconfig-a016   gcc  
-ia64                             allmodconfig   gcc  
-ia64         buildonly-randconfig-r005-20230517   gcc  
-ia64                                defconfig   gcc  
-ia64                        generic_defconfig   gcc  
-ia64                 randconfig-r023-20230517   gcc  
-ia64                 randconfig-r031-20230517   gcc  
-ia64                 randconfig-r036-20230517   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-m68k                             allmodconfig   gcc  
-m68k                         amcore_defconfig   gcc  
-m68k                         apollo_defconfig   gcc  
-m68k         buildonly-randconfig-r001-20230517   gcc  
-m68k                                defconfig   gcc  
-microblaze           randconfig-r034-20230517   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                      malta_kvm_defconfig   clang
-mips                 randconfig-r015-20230517   clang
-nios2                            allyesconfig   gcc  
-nios2        buildonly-randconfig-r003-20230517   gcc  
-nios2                               defconfig   gcc  
-parisc                              defconfig   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc      buildonly-randconfig-r004-20230517   gcc  
-powerpc              randconfig-r001-20230517   clang
-powerpc              randconfig-r012-20230517   gcc  
-powerpc              randconfig-r014-20230517   gcc  
-powerpc              randconfig-r035-20230517   clang
-powerpc                  storcenter_defconfig   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                randconfig-r042-20230517   gcc  
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                 randconfig-r016-20230517   gcc  
-s390                 randconfig-r044-20230517   gcc  
-sh                               allmodconfig   gcc  
-sh                 kfr2r09-romimage_defconfig   gcc  
-sh                   randconfig-r003-20230517   gcc  
-sh                   randconfig-r022-20230517   gcc  
-sh                           se7751_defconfig   gcc  
-sparc                               defconfig   gcc  
-sparc                randconfig-r005-20230517   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64                        randconfig-a001   clang
-x86_64                        randconfig-a002   gcc  
-x86_64                        randconfig-a003   clang
-x86_64                        randconfig-a004   gcc  
-x86_64                        randconfig-a005   clang
-x86_64                        randconfig-a006   gcc  
-x86_64                        randconfig-a011   gcc  
-x86_64                        randconfig-a012   clang
-x86_64                        randconfig-a013   gcc  
-x86_64                        randconfig-a014   clang
-x86_64                        randconfig-a015   gcc  
-x86_64                        randconfig-a016   clang
-x86_64                        randconfig-x051   gcc  
-x86_64                        randconfig-x052   clang
-x86_64                        randconfig-x053   gcc  
-x86_64                        randconfig-x054   clang
-x86_64                        randconfig-x055   gcc  
-x86_64                        randconfig-x056   clang
-x86_64                        randconfig-x061   gcc  
-x86_64                        randconfig-x062   clang
-x86_64                        randconfig-x063   gcc  
-x86_64                        randconfig-x064   clang
-x86_64                        randconfig-x065   gcc  
-x86_64                        randconfig-x066   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                    smp_lx200_defconfig   gcc  
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
