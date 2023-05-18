@@ -2,49 +2,73 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86BDEC77B7D
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 May 2023 13:15:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91226C77B7D
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 May 2023 13:23:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231290AbjERNPX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 May 2023 09:15:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45670 "EHLO
+        id S230308AbjERNXt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 May 2023 09:23:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52704 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231674AbjERNOb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2023 09:14:31 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C4BF9C;
-        Thu, 18 May 2023 06:13:43 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id DDE7268D0E; Thu, 18 May 2023 15:13:05 +0200 (CEST)
-Date:   Thu, 18 May 2023 15:13:05 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Christian Brauner <brauner@kernel.org>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <djwong@kernel.org>, linux-block@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/9] block: introduce holder ops
-Message-ID: <20230518131305.GA32330@lst.de>
-References: <20230516-kommode-weizen-4c410968c1f6@brauner> <20230517073031.GF27026@lst.de> <20230517-einreden-dermatologisch-9c6a3327a689@brauner> <20230517080613.GA31383@lst.de> <20230517-erhoffen-degradieren-d0aa039f0e1d@brauner> <20230517120259.GA16915@lst.de> <20230517-holzfiguren-anbot-490e5a7f74fe@brauner> <20230517142609.GA28898@lst.de> <20230518-teekanne-knifflig-a4ea8c3c885a@brauner> <20230518131216.GA32076@lst.de>
+        with ESMTP id S230280AbjERNXt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2023 09:23:49 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B53CCBB;
+        Thu, 18 May 2023 06:23:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=p7WPAiiP1+l/v91wtZxt/kJMNO4614hppLHqWWBhGMg=; b=mYRVJ5Hm7wgyOY1ODfHa4Gtojp
+        LSm3WoxxhzA/S883B5Ml+6XvAJT2goAasC86GQoFuCqwyxwPaqM7PQ85bRtfihnc8muIzzp3QAAXq
+        XtOzc+o9jAc/YcaPaz9W5ojCfjkvDs24uTWdwG1EFQGi7tr8Rp71JOUAWo9DPGgHaSrm8Ep33b8f4
+        1xzywl0LgXC/VpJePKMiZxz3ioh758EhGjUxcEoTKMNC34kPFaZb0+maEXCLvvP7s7LaCgI/kvv02
+        Z7Zxk2V74/r43SxK1bxmAPqCaO7EfbdkfzLLUV8FYtNfdct8g3VvDpIiRfk/S71LvccwjUHsIUT+X
+        h7WGe8GQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1pzdbc-00D4Yg-34;
+        Thu, 18 May 2023 13:23:44 +0000
+Date:   Thu, 18 May 2023 06:23:44 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Ritesh Harjani <ritesh.list@gmail.com>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        Matthew Wilcox <willy@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
+        Disha Goel <disgoel@linux.ibm.com>,
+        Aravinda Herle <araherle@in.ibm.com>
+Subject: Re: [RFCv5 5/5] iomap: Add per-block dirty state tracking to improve
+ performance
+Message-ID: <ZGYm4BeVFz94zzy+@infradead.org>
+References: <ZGPZhMr0ZiPDxVkw@bfoster>
+ <87bkij3ry0.fsf@doe.com>
+ <ZGUhbM9uSk9loUPH@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230518131216.GA32076@lst.de>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <ZGUhbM9uSk9loUPH@bfoster>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 18, 2023 at 03:12:16PM +0200, Christoph Hellwig wrote:
-> On Thu, May 18, 2023 at 10:13:04AM +0200, Christian Brauner wrote:
-> > Fwiw, I didn't mean to have a special device handler for an O_PATH fd.
-> > I really just tried to figure out whether it would make sense to have an
-> > fd-based block device lookup function because right now we only have
-> > blkdev_get_by_path() and we'd be passing blkdev fds through the mount
-> > api. But I understand now how I'd likely do it. So now just finding time
-> > to actually implement it.
-> 
-> What's wrong with blkdev_get_by_dev(file_inode(file)->i_rdev) after
-> the sanity checks from lookup_bdev (S_ISBLK and may_open_dev)?
+On Wed, May 17, 2023 at 02:48:12PM -0400, Brian Foster wrote:
+> But I also wonder.. if we can skip the iop alloc on full folio buffered
+> overwrites, isn't that also true of mapped writes to folios that don't
+> already have an iop?
 
-s/i_rdev/i_dev/
+Yes.
+
+> I.e., I think what I was trying to do in the
+> previous diff was actually something like this:
+> 
+> bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio)
+> {
+>         iop_set_range_dirty(mapping->host, folio, 0, folio_size(folio));
+>         return filemap_dirty_folio(mapping, folio);
+> }
+> 
+> ... which would only dirty the full iop if it already exists. Thoughts?
+
+That does sound pretty good to me, and I can't think of any obvious
+pitfall.
