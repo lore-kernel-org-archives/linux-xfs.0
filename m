@@ -2,32 +2,32 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFFF8C7EE24
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 May 2023 04:24:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E80FDC7EE2F
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 May 2023 04:24:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230097AbjEREYV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 May 2023 00:24:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38554 "EHLO
+        id S230039AbjEREYX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 May 2023 00:24:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230048AbjEREX5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2023 00:23:57 -0400
+        with ESMTP id S230032AbjEREYK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2023 00:24:10 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EBE43A96;
-        Wed, 17 May 2023 21:23:53 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60C1A3AB3;
+        Wed, 17 May 2023 21:23:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=ongTMoMI8FEf4cmvaiFjmwIegxtbslCeh+xQGxIRlfY=; b=JBnK1kSEEAFPU6gQHXuNjvWwKj
-        Q5VI4+R7nhVOUqmECBivkViMWkaqHuEyrp4KQHAPrR3yztpz8FIjvSnuKuhM78MWKFBYTpujp54ag
-        VWOlYuDKVRNgCwu9Gktg+bc3jrckHMw8duMVW9/CxSR5EqKBSc+OQOuOIJ8A5T8GLW35a/Kmn3Hjy
-        lYkMNlvId95YEQYcumAgWK/BWz2jqXhsaR0WUFAqE3TCU0YXrjNsAJgiTd4v0a8toF7JfnKAfMHTf
-        Cwn2+fmBfVBHONBN8Kp1RN7IdYJZNSVYrDe8d0IfjFw9ggwF6YydJnMoJia2nmZqdx8fKIvDQ5ixE
-        no9Vk/KA==;
+        bh=ThbWYfYk7B780y22tMwJAJL1g5xJXhLXVyKXoVcV7tE=; b=xFIKhh0W04lefAgHJIB5vFst+R
+        DNhXMDabrspBqnCA+jNtFDcenKsiZSGiPiUcqP7pNh4ygI+zGAABfJl1uvmCPrZs+R1qT17tYoJJA
+        YibBBg/PzGktLkmi/4sxyZI8JfXm0HjnGmTMDXfG2Xx4qISoHTLihG9PxRzh2xsaqIGgL0sAIxo6h
+        kE2NGgNxuRpcwqR/6M3iazA8ami2UPeg6iw0H33A72QhPXG9qkt5Uc+ZkoZj2Ol4kvGPFIEZekSvF
+        anEzSU4jOGbLYBFY8b0kD7kk8/zBILm2REw3dtrBmV/8kLy0iSdROsq8CXtBITqhPJTkOLNyC6uYg
+        2cG1OuQw==;
 Received: from [2001:4bb8:188:3dd5:c90:b13:29fb:f2b9] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1pzVB8-00BqRP-2Z;
-        Thu, 18 May 2023 04:23:51 +0000
+        id 1pzVBE-00BqT4-05;
+        Thu, 18 May 2023 04:23:56 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Al Viro <viro@zeniv.linux.org.uk>,
@@ -35,9 +35,9 @@ Cc:     Al Viro <viro@zeniv.linux.org.uk>,
         "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
         linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-xfs@vger.kernel.org
-Subject: [PATCH 10/13] block: add a mark_dead holder operation
-Date:   Thu, 18 May 2023 06:23:19 +0200
-Message-Id: <20230518042323.663189-11-hch@lst.de>
+Subject: [PATCH 12/13] xfs: wire up sops->shutdown
+Date:   Thu, 18 May 2023 06:23:21 +0200
+Message-Id: <20230518042323.663189-13-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230518042323.663189-1-hch@lst.de>
 References: <20230518042323.663189-1-hch@lst.de>
@@ -48,70 +48,77 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Add a mark_dead method to blk_holder_ops that is called from blk_mark_disk_dead
-to notify the holder that the block device it is using has been marked dead.
+Wire up the shutdown method to shut down the file system when the
+underlying block device is marked dead.  Add a new message to
+clearly distinguish this shutdown reason from other shutdowns.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Christian Brauner <brauner@kernel.org>
 ---
- block/genhd.c          | 24 ++++++++++++++++++++++++
- include/linux/blkdev.h |  1 +
- 2 files changed, 25 insertions(+)
+ fs/xfs/xfs_fsops.c | 3 +++
+ fs/xfs/xfs_mount.h | 4 +++-
+ fs/xfs/xfs_super.c | 8 ++++++++
+ 3 files changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/block/genhd.c b/block/genhd.c
-index 226ddb8329f751..42aebf0e1e2628 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -565,6 +565,28 @@ int __must_check device_add_disk(struct device *parent, struct gendisk *disk,
- }
- EXPORT_SYMBOL(device_add_disk);
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 13851c0d640bc8..9ebb8333a30800 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -534,6 +534,9 @@ xfs_do_force_shutdown(
+ 	} else if (flags & SHUTDOWN_CORRUPT_ONDISK) {
+ 		tag = XFS_PTAG_SHUTDOWN_CORRUPT;
+ 		why = "Corruption of on-disk metadata";
++	} else if (flags & SHUTDOWN_DEVICE_REMOVED) {
++		tag = XFS_PTAG_SHUTDOWN_IOERROR;
++		why = "Block device removal";
+ 	} else {
+ 		tag = XFS_PTAG_SHUTDOWN_IOERROR;
+ 		why = "Metadata I/O Error";
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index aaaf5ec13492d2..429a5e12c1036e 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -457,12 +457,14 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, uint32_t flags, char *fname,
+ #define SHUTDOWN_FORCE_UMOUNT	(1u << 2) /* shutdown from a forced unmount */
+ #define SHUTDOWN_CORRUPT_INCORE	(1u << 3) /* corrupt in-memory structures */
+ #define SHUTDOWN_CORRUPT_ONDISK	(1u << 4)  /* corrupt metadata on device */
++#define SHUTDOWN_DEVICE_REMOVED	(1u << 5) /* device removed underneath us */
  
-+static void blk_report_disk_dead(struct gendisk *disk)
+ #define XFS_SHUTDOWN_STRINGS \
+ 	{ SHUTDOWN_META_IO_ERROR,	"metadata_io" }, \
+ 	{ SHUTDOWN_LOG_IO_ERROR,	"log_io" }, \
+ 	{ SHUTDOWN_FORCE_UMOUNT,	"force_umount" }, \
+-	{ SHUTDOWN_CORRUPT_INCORE,	"corruption" }
++	{ SHUTDOWN_CORRUPT_INCORE,	"corruption" }, \
++	{ SHUTDOWN_DEVICE_REMOVED,	"device_removed" }
+ 
+ /*
+  * Flags for xfs_mountfs
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 5684c538eb76dc..eb469b8f9a0497 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1159,6 +1159,13 @@ xfs_fs_free_cached_objects(
+ 	return xfs_reclaim_inodes_nr(XFS_M(sb), sc->nr_to_scan);
+ }
+ 
++static void
++xfs_fs_shutdown(
++	struct super_block	*sb)
 +{
-+	struct block_device *bdev;
-+	unsigned long idx;
-+
-+	rcu_read_lock();
-+	xa_for_each(&disk->part_tbl, idx, bdev) {
-+		if (!kobject_get_unless_zero(&bdev->bd_device.kobj))
-+			continue;
-+		rcu_read_unlock();
-+
-+		mutex_lock(&bdev->bd_holder_lock);
-+		if (bdev->bd_holder_ops && bdev->bd_holder_ops->mark_dead)
-+			bdev->bd_holder_ops->mark_dead(bdev);
-+		mutex_unlock(&bdev->bd_holder_lock);
-+
-+		put_device(&bdev->bd_device);
-+		rcu_read_lock();
-+	}
-+	rcu_read_unlock();
++	xfs_force_shutdown(XFS_M(sb), SHUTDOWN_DEVICE_REMOVED);
 +}
 +
- /**
-  * blk_mark_disk_dead - mark a disk as dead
-  * @disk: disk to mark as dead
-@@ -592,6 +614,8 @@ void blk_mark_disk_dead(struct gendisk *disk)
- 	 * Prevent new I/O from crossing bio_queue_enter().
- 	 */
- 	blk_queue_start_drain(disk->queue);
-+
-+	blk_report_disk_dead(disk);
- }
- EXPORT_SYMBOL_GPL(blk_mark_disk_dead);
- 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index c94f3b63c86422..41f894f6355f96 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1466,6 +1466,7 @@ void blkdev_show(struct seq_file *seqf, off_t offset);
- #endif
- 
- struct blk_holder_ops {
-+	void (*mark_dead)(struct block_device *bdev);
+ static const struct super_operations xfs_super_operations = {
+ 	.alloc_inode		= xfs_fs_alloc_inode,
+ 	.destroy_inode		= xfs_fs_destroy_inode,
+@@ -1172,6 +1179,7 @@ static const struct super_operations xfs_super_operations = {
+ 	.show_options		= xfs_fs_show_options,
+ 	.nr_cached_objects	= xfs_fs_nr_cached_objects,
+ 	.free_cached_objects	= xfs_fs_free_cached_objects,
++	.shutdown		= xfs_fs_shutdown,
  };
  
- struct block_device *blkdev_get_by_dev(dev_t dev, fmode_t mode, void *holder,
+ static int
 -- 
 2.39.2
 
