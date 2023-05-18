@@ -2,73 +2,99 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91226C77B7D
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 May 2023 13:23:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2B7FC77B7D
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 May 2023 13:27:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230308AbjERNXt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 May 2023 09:23:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52704 "EHLO
+        id S230468AbjERN1q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 May 2023 09:27:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230280AbjERNXt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2023 09:23:49 -0400
+        with ESMTP id S230461AbjERN1q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2023 09:27:46 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B53CCBB;
-        Thu, 18 May 2023 06:23:47 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 171D0136;
+        Thu, 18 May 2023 06:27:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=p7WPAiiP1+l/v91wtZxt/kJMNO4614hppLHqWWBhGMg=; b=mYRVJ5Hm7wgyOY1ODfHa4Gtojp
-        LSm3WoxxhzA/S883B5Ml+6XvAJT2goAasC86GQoFuCqwyxwPaqM7PQ85bRtfihnc8muIzzp3QAAXq
-        XtOzc+o9jAc/YcaPaz9W5ojCfjkvDs24uTWdwG1EFQGi7tr8Rp71JOUAWo9DPGgHaSrm8Ep33b8f4
-        1xzywl0LgXC/VpJePKMiZxz3ioh758EhGjUxcEoTKMNC34kPFaZb0+maEXCLvvP7s7LaCgI/kvv02
-        Z7Zxk2V74/r43SxK1bxmAPqCaO7EfbdkfzLLUV8FYtNfdct8g3VvDpIiRfk/S71LvccwjUHsIUT+X
-        h7WGe8GQ==;
+        bh=KcY68U6U4Q3jPvhJOR7+Fz35FiF7RqM7Rv0gOIB3t3U=; b=O5Bfu800HDVOVbBEUzqXb9zeDW
+        FlE0f6zZvhznQxzrebeJAj3wChGL/903jN+P2udAyqUXFoAju0nmK1SQZ93mKQYD/vvhYdN7jJveM
+        qfT4q8kyd7He9gkWSJpmaSSJUud2lyU4OPG7lsc+njI2Pg3BJcDwqh8b0AR9TJ+++LC/TuNf53g7k
+        6rnNeqH9i/Uzd4qt9J3LbaPU0/TEEVzUbpqffdXQQONE/EdF2BBuKYgElSbGFo2oZkvK0zEpiSODj
+        iuhwpA50LF3VvMApZMXjrniin+X6wt8TkOQzRIqbjTl17lD8X6rXbkmv4pvqwEYwnfxvPsVJ4noXU
+        tm61KLtw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1pzdbc-00D4Yg-34;
-        Thu, 18 May 2023 13:23:44 +0000
-Date:   Thu, 18 May 2023 06:23:44 -0700
+        id 1pzdfR-00D52s-2X;
+        Thu, 18 May 2023 13:27:41 +0000
+Date:   Thu, 18 May 2023 06:27:41 -0700
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Ritesh Harjani <ritesh.list@gmail.com>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
+To:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Matthew Wilcox <willy@infradead.org>,
         Dave Chinner <david@fromorbit.com>,
+        Brian Foster <bfoster@redhat.com>,
         Ojaswin Mujoo <ojaswin@linux.ibm.com>,
         Disha Goel <disgoel@linux.ibm.com>,
         Aravinda Herle <araherle@in.ibm.com>
 Subject: Re: [RFCv5 5/5] iomap: Add per-block dirty state tracking to improve
  performance
-Message-ID: <ZGYm4BeVFz94zzy+@infradead.org>
-References: <ZGPZhMr0ZiPDxVkw@bfoster>
- <87bkij3ry0.fsf@doe.com>
- <ZGUhbM9uSk9loUPH@bfoster>
+Message-ID: <ZGYnzcoGuzWKa7lh@infradead.org>
+References: <cover.1683485700.git.ritesh.list@gmail.com>
+ <86987466d8d7863bd0dca81e9d6c3eff7abd4964.1683485700.git.ritesh.list@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZGUhbM9uSk9loUPH@bfoster>
+In-Reply-To: <86987466d8d7863bd0dca81e9d6c3eff7abd4964.1683485700.git.ritesh.list@gmail.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 17, 2023 at 02:48:12PM -0400, Brian Foster wrote:
-> But I also wonder.. if we can skip the iop alloc on full folio buffered
-> overwrites, isn't that also true of mapped writes to folios that don't
-> already have an iop?
+On Mon, May 08, 2023 at 12:58:00AM +0530, Ritesh Harjani (IBM) wrote:
+> +static inline void iop_clear_range(struct iomap_page *iop,
+> +				   unsigned int start_blk, unsigned int nr_blks)
+> +{
+> +	bitmap_clear(iop->state, start_blk, nr_blks);
+> +}
 
-Yes.
+Similar to the other trivial bitmap wrappers added earlier in the
+series I don't think this one is very useful.
 
-> I.e., I think what I was trying to do in the
-> previous diff was actually something like this:
-> 
-> bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio)
-> {
->         iop_set_range_dirty(mapping->host, folio, 0, folio_size(folio));
->         return filemap_dirty_folio(mapping, folio);
-> }
-> 
-> ... which would only dirty the full iop if it already exists. Thoughts?
+> +	struct iomap_page *iop = to_iomap_page(folio);
+> +	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
+> +	unsigned int first_blk = (off >> inode->i_blkbits);
+> +	unsigned int last_blk = ((off + len - 1) >> inode->i_blkbits);
+> +	unsigned int nr_blks = last_blk - first_blk + 1;
+> +	unsigned long flags;
+> +
+> +	if (!iop)
+> +		return;
+> +	spin_lock_irqsave(&iop->state_lock, flags);
+> +	iop_set_range(iop, first_blk + blks_per_folio, nr_blks);
+> +	spin_unlock_irqrestore(&iop->state_lock, flags);
 
-That does sound pretty good to me, and I can't think of any obvious
-pitfall.
+All the variable initializations except for ios should really move
+into a branch here.  Or we just use separate helpers for the case
+where we actually have an iops and isolate all that, which would
+be my preference (but goes counter to the direction of changes
+earlier in the series to the existing functions).
+
+> +static void iop_clear_range_dirty(struct folio *folio, size_t off, size_t len)
+> +{
+> +	struct iomap_page *iop = to_iomap_page(folio);
+> +	struct inode *inode = folio->mapping->host;
+> +	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
+> +	unsigned int first_blk = (off >> inode->i_blkbits);
+> +	unsigned int last_blk = ((off + len - 1) >> inode->i_blkbits);
+> +	unsigned int nr_blks = last_blk - first_blk + 1;
+> +	unsigned long flags;
+> +
+> +	if (!iop)
+> +		return;
+> +	spin_lock_irqsave(&iop->state_lock, flags);
+> +	iop_clear_range(iop, first_blk + blks_per_folio, nr_blks);
+> +	spin_unlock_irqrestore(&iop->state_lock, flags);
+> +}
+
+Same here.
