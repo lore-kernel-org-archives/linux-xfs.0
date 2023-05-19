@@ -2,32 +2,32 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9511FC77B75
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 09:37:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AE7EC77B7A
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 09:37:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231819AbjESJhS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 May 2023 05:37:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39838 "EHLO
+        id S231876AbjESJh2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 May 2023 05:37:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42798 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231706AbjESJg7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 05:36:59 -0400
+        with ESMTP id S231722AbjESJhA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 05:37:00 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A19321995;
-        Fri, 19 May 2023 02:36:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FA131FC0;
+        Fri, 19 May 2023 02:36:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=l1nHpSO+SfI7dJoy9Bf6sKMQrfHZhTAI7csUoY2gOqg=; b=fNcIJXStbg35Q3/kxwRadlJBkR
-        BDEVYzDTYkGHq1nmqbayvo2Mb8RhUWRs2vpPYsKxu8f33DSVER7T9eunP8b8/p+Cm1VPG75aVtHEh
-        rUAEhk75WkLoyrZwgVxPM/pVzSBCQHe5cSaLK2/BGJnm0EZLku21y03qF/1nrgLfo8Y/CBxH34Xpi
-        mjIWogLEu/YGtIV81gHtLrQwwS6ZOgNx8i2yLDnmdlw9wjPJt68CN5aY4zUsNNalfAYBB5h0jwBe9
-        IU91VmeeMOfWsiiyMRY6eeqJxbWxpymNlF04FNOu5GcpFrlEbHeZbYXoC9JEhrJNWBeTP/bnm84Qw
-        taYBszPA==;
+        bh=tGCXuJSpKeMdDJfNmlfVF+NepybRn/cvj/Ka18QV4Tk=; b=xArZwU++0j0FGgKFO7gwbG5SAC
+        a1/RPaFHnsRd+UOwpiKD4Hll+FQbOU/DKkcxbAcjid8e3CwS1tnTNCYZM+x+KyqcKxXicxUupis0e
+        ZB3+K10LpIi0KqMuYdfgZL6dZTSTQbvZkH6r8F/El40AXbo89yVa1KaDyWLp3QCGRzcYOWW19+z/N
+        2m+4ElhodZEmxP0Tr1ON4pIvchIdcns7DtlQG0WP60hmdAH+rnDgdc0p0Ohgew+bUcpPErepKoeep
+        u14tVprafp/sJaOi2+meSJDf/HCFZ/FFjC0EYErlFi9kYKElkKwIgcEtgjqPYwnbsZPkkX1lMh8UH
+        EPHXXp9Q==;
 Received: from [2001:4bb8:188:3dd5:e8d0:68bb:e5be:210a] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1pzwWI-00Fjbs-0u;
-        Fri, 19 May 2023 09:35:30 +0000
+        id 1pzwWO-00FjeP-1n;
+        Fri, 19 May 2023 09:35:36 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Matthew Wilcox <willy@infradead.org>
 Cc:     Jens Axboe <axboe@kernel.dk>, Xiubo Li <xiubli@redhat.com>,
@@ -47,9 +47,9 @@ Cc:     Jens Axboe <axboe@kernel.dk>, Xiubo Li <xiubli@redhat.com>,
         linux-f2fs-devel@lists.sourceforge.net (open list:F2FS FILE SYSTEM),
         cluster-devel@redhat.com, linux-xfs@vger.kernel.org,
         linux-nfs@vger.kernel.org, linux-mm@kvack.org
-Subject: [PATCH 02/13] filemap: update ki_pos in generic_perform_write
-Date:   Fri, 19 May 2023 11:35:10 +0200
-Message-Id: <20230519093521.133226-3-hch@lst.de>
+Subject: [PATCH 04/13] filemap: add a kiocb_write_and_wait helper
+Date:   Fri, 19 May 2023 11:35:12 +0200
+Message-Id: <20230519093521.133226-5-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230519093521.133226-1-hch@lst.de>
 References: <20230519093521.133226-1-hch@lst.de>
@@ -60,108 +60,114 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-All callers of generic_perform_write need to updated ki_pos, move it into
-common code.
+Factor out a helper that does filemap_write_and_wait_range for a the
+range covered by a read kiocb, or returns -EAGAIN if the kiocb
+is marked as nowait and there would be pages to write.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/ceph/file.c | 2 --
- fs/ext4/file.c | 9 +++------
- fs/f2fs/file.c | 1 -
- fs/nfs/file.c  | 1 -
- mm/filemap.c   | 8 ++++----
- 5 files changed, 7 insertions(+), 14 deletions(-)
+ block/fops.c            | 18 +++---------------
+ include/linux/pagemap.h |  2 ++
+ mm/filemap.c            | 30 ++++++++++++++++++------------
+ 3 files changed, 23 insertions(+), 27 deletions(-)
 
-diff --git a/fs/ceph/file.c b/fs/ceph/file.c
-index f4d8bf7dec88a8..feeb9882ef635a 100644
---- a/fs/ceph/file.c
-+++ b/fs/ceph/file.c
-@@ -1894,8 +1894,6 @@ static ssize_t ceph_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 		 * can not run at the same time
- 		 */
- 		written = generic_perform_write(iocb, from);
--		if (likely(written >= 0))
--			iocb->ki_pos = pos + written;
- 		ceph_end_io_write(inode);
- 	}
+diff --git a/block/fops.c b/block/fops.c
+index d2e6be4e3d1c7d..c194939b851cfb 100644
+--- a/block/fops.c
++++ b/block/fops.c
+@@ -576,21 +576,9 @@ static ssize_t blkdev_read_iter(struct kiocb *iocb, struct iov_iter *to)
+ 		goto reexpand; /* skip atime */
  
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index d101b3b0c7dad8..50824831d31def 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -291,12 +291,9 @@ static ssize_t ext4_buffered_write_iter(struct kiocb *iocb,
- 
- out:
- 	inode_unlock(inode);
--	if (likely(ret > 0)) {
--		iocb->ki_pos += ret;
--		ret = generic_write_sync(iocb, ret);
--	}
+ 	if (iocb->ki_flags & IOCB_DIRECT) {
+-		struct address_space *mapping = iocb->ki_filp->f_mapping;
 -
--	return ret;
-+	if (unlikely(ret <= 0))
-+		return ret;
-+	return generic_write_sync(iocb, ret);
- }
+-		if (iocb->ki_flags & IOCB_NOWAIT) {
+-			if (filemap_range_needs_writeback(mapping, pos,
+-							  pos + count - 1)) {
+-				ret = -EAGAIN;
+-				goto reexpand;
+-			}
+-		} else {
+-			ret = filemap_write_and_wait_range(mapping, pos,
+-							   pos + count - 1);
+-			if (ret < 0)
+-				goto reexpand;
+-		}
+-
++		ret = kiocb_write_and_wait(iocb, count);
++		if (ret < 0)
++			goto reexpand;
+ 		file_accessed(iocb->ki_filp);
  
- static ssize_t ext4_handle_inode_extension(struct inode *inode, loff_t offset,
-diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
-index 5ac53d2627d20d..9e3855e43a7a63 100644
---- a/fs/f2fs/file.c
-+++ b/fs/f2fs/file.c
-@@ -4522,7 +4522,6 @@ static ssize_t f2fs_buffered_write_iter(struct kiocb *iocb,
- 	current->backing_dev_info = NULL;
+ 		ret = blkdev_direct_IO(iocb, to);
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index a56308a9d1a450..36fc2cea13ce20 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -30,6 +30,7 @@ static inline void invalidate_remote_inode(struct inode *inode)
+ int invalidate_inode_pages2(struct address_space *mapping);
+ int invalidate_inode_pages2_range(struct address_space *mapping,
+ 		pgoff_t start, pgoff_t end);
++
+ int write_inode_now(struct inode *, int sync);
+ int filemap_fdatawrite(struct address_space *);
+ int filemap_flush(struct address_space *);
+@@ -54,6 +55,7 @@ int filemap_check_errors(struct address_space *mapping);
+ void __filemap_set_wb_err(struct address_space *mapping, int err);
+ int filemap_fdatawrite_wbc(struct address_space *mapping,
+ 			   struct writeback_control *wbc);
++int kiocb_write_and_wait(struct kiocb *iocb, size_t count);
  
- 	if (ret > 0) {
--		iocb->ki_pos += ret;
- 		f2fs_update_iostat(F2FS_I_SB(inode), inode,
- 						APP_BUFFERED_IO, ret);
- 	}
-diff --git a/fs/nfs/file.c b/fs/nfs/file.c
-index f0edf5a36237d1..3cc87ae8473356 100644
---- a/fs/nfs/file.c
-+++ b/fs/nfs/file.c
-@@ -658,7 +658,6 @@ ssize_t nfs_file_write(struct kiocb *iocb, struct iov_iter *from)
- 		goto out;
- 
- 	written = result;
--	iocb->ki_pos += written;
- 	nfs_add_stats(inode, NFSIOS_NORMALWRITTENBYTES, written);
- 
- 	if (mntflags & NFS_MOUNT_WRITE_EAGER) {
+ static inline int filemap_write_and_wait(struct address_space *mapping)
+ {
 diff --git a/mm/filemap.c b/mm/filemap.c
-index b4c9bd368b7e58..4d0ec2fa1c7070 100644
+index bf693ad1da1ece..2d7712b13b95c9 100644
 --- a/mm/filemap.c
 +++ b/mm/filemap.c
-@@ -3957,7 +3957,10 @@ ssize_t generic_perform_write(struct kiocb *iocb, struct iov_iter *i)
- 		balance_dirty_pages_ratelimited(mapping);
- 	} while (iov_iter_count(i));
- 
--	return written ? written : status;
-+	if (!written)
-+		return status;
-+	iocb->ki_pos += written;
-+	return written;
+@@ -2762,6 +2762,21 @@ ssize_t filemap_read(struct kiocb *iocb, struct iov_iter *iter,
  }
- EXPORT_SYMBOL(generic_perform_write);
+ EXPORT_SYMBOL_GPL(filemap_read);
  
-@@ -4036,7 +4039,6 @@ ssize_t __generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 		endbyte = pos + status - 1;
- 		err = filemap_write_and_wait_range(mapping, pos, endbyte);
- 		if (err == 0) {
--			iocb->ki_pos = endbyte + 1;
- 			written += status;
- 			invalidate_mapping_pages(mapping,
- 						 pos >> PAGE_SHIFT,
-@@ -4049,8 +4051,6 @@ ssize_t __generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 		}
- 	} else {
- 		written = generic_perform_write(iocb, from);
--		if (likely(written > 0))
--			iocb->ki_pos += written;
- 	}
- out:
- 	current->backing_dev_info = NULL;
++int kiocb_write_and_wait(struct kiocb *iocb, size_t count)
++{
++	struct address_space *mapping = iocb->ki_filp->f_mapping;
++	loff_t pos = iocb->ki_pos;
++	loff_t end = pos + count - 1;
++
++	if (iocb->ki_flags & IOCB_NOWAIT) {
++		if (filemap_range_needs_writeback(mapping, pos, end))
++			return -EAGAIN;
++		return 0;
++	}
++
++	return filemap_write_and_wait_range(mapping, pos, end);
++}
++
+ /**
+  * generic_file_read_iter - generic filesystem read routine
+  * @iocb:	kernel I/O control block
+@@ -2797,18 +2812,9 @@ generic_file_read_iter(struct kiocb *iocb, struct iov_iter *iter)
+ 		struct address_space *mapping = file->f_mapping;
+ 		struct inode *inode = mapping->host;
+ 
+-		if (iocb->ki_flags & IOCB_NOWAIT) {
+-			if (filemap_range_needs_writeback(mapping, iocb->ki_pos,
+-						iocb->ki_pos + count - 1))
+-				return -EAGAIN;
+-		} else {
+-			retval = filemap_write_and_wait_range(mapping,
+-						iocb->ki_pos,
+-					        iocb->ki_pos + count - 1);
+-			if (retval < 0)
+-				return retval;
+-		}
+-
++		retval = kiocb_write_and_wait(iocb, count);
++		if (retval < 0)
++			return retval;
+ 		file_accessed(file);
+ 
+ 		retval = mapping->a_ops->direct_IO(iocb, iter);
 -- 
 2.39.2
 
