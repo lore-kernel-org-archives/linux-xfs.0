@@ -2,45 +2,36 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96C1CC77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 07:46:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01DDCC77B7F
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 08:10:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231342AbjESHqX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 May 2023 03:46:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59942 "EHLO
+        id S230006AbjESIK1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 May 2023 04:10:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231216AbjESHqM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 03:46:12 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A21DD1BC6
-        for <linux-xfs@vger.kernel.org>; Fri, 19 May 2023 00:43:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1684482155;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=pyQng7zN0KcMKuuU4UJQFoNAdqIUtbeSzOIbMt9WEc4=;
-        b=HQQrXhhOQB8FLOlUifrSQjkfpWlY3c9ECqS7BXIJhUvcpac57Usvx/V/g3MTcb4C0KGTCS
-        23VzMU9Pio8qidzI10oGqaz/l55PaF246X5ILV26NOOerSiX+OVC8B8+JavZOo1k26XYlX
-        cGTKv2leaipCT0IbuK83jJEvQp12MHU=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-368-9SkW8NWEPuqdpOcKe74MkQ-1; Fri, 19 May 2023 03:42:16 -0400
-X-MC-Unique: 9SkW8NWEPuqdpOcKe74MkQ-1
-Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id CAF9738035B0;
-        Fri, 19 May 2023 07:42:15 +0000 (UTC)
-Received: from warthog.procyon.org.uk (unknown [10.42.28.221])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id E84F4492B0A;
-        Fri, 19 May 2023 07:42:12 +0000 (UTC)
-From:   David Howells <dhowells@redhat.com>
-To:     Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     David Howells <dhowells@redhat.com>,
+        with ESMTP id S230076AbjESIKY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 04:10:24 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E6391A6;
+        Fri, 19 May 2023 01:10:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=+KcNj38ck2QF6TY7QpJyCILaVWe/y++Y4IGZh5WM6/M=; b=EILKCF4/UqHDv9mi6SKDXcFyKo
+        cdPd47QMCzDlG6o53QlCOZOe346y4W9Qkf482gpqYE3gnzht4wtpO8bPsKhN88Z1V7bA3Db8afI+a
+        AXjbJoheJOfgmY3ClNKdB5NG+SAihzQ8ygcip1mTQa3a/yMSlFdtlOaI+inmDt9/rX3/Iq+SUWh43
+        5b8SVHjGlgO1c8NDzCG7QO5EWTniG17r2GqzTzSNFMw9WRcUSC2GDnliQsbXHRSbqOefid93BsSYs
+        nNdZ7yByE7x/DcRlMKe5+ZP/35erKJjLRwgXmEqguAL2yYFof6koWpAEd8a4I+5kO2VK19jNow573
+        Gz8nMSDg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1pzvBo-00FTbc-0R;
+        Fri, 19 May 2023 08:10:16 +0000
+Date:   Fri, 19 May 2023 01:10:16 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     David Howells <dhowells@redhat.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>,
         Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
         Jeff Layton <jlayton@kernel.org>,
         David Hildenbrand <david@redhat.com>,
@@ -51,96 +42,28 @@ Cc:     David Howells <dhowells@redhat.com>,
         Linus Torvalds <torvalds@linux-foundation.org>,
         linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        Christoph Hellwig <hch@lst.de>,
-        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH v20 22/32] zonefs: Provide a splice-read stub
-Date:   Fri, 19 May 2023 08:40:37 +0100
-Message-Id: <20230519074047.1739879-23-dhowells@redhat.com>
-In-Reply-To: <20230519074047.1739879-1-dhowells@redhat.com>
+        Christoph Hellwig <hch@lst.de>, linux-erofs@lists.ozlabs.org,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v20 05/32] splice: Make splice from a DAX file use
+ direct_splice_read()
+Message-ID: <ZGcu6GVxOgYfy8x9@infradead.org>
 References: <20230519074047.1739879-1-dhowells@redhat.com>
+ <20230519074047.1739879-6-dhowells@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.10
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230519074047.1739879-6-dhowells@redhat.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Provide a splice_read stub for zonefs.  This does some checks before
-proceeding.  For buffered I/O, it locks the inode across the call to
-filemap_splice_read() and does a size check in case of truncation.
+On Fri, May 19, 2023 at 08:40:20AM +0100, David Howells wrote:
+> +#ifdef CONFIG_FS_DAX
+> +	if (IS_DAX(in->f_mapping->host))
 
-Signed-off-by: David Howells <dhowells@redhat.com>
-cc: Christoph Hellwig <hch@lst.de>
-cc: Al Viro <viro@zeniv.linux.org.uk>
-cc: Jens Axboe <axboe@kernel.dk>
-cc: Darrick J. Wong <djwong@kernel.org>
-cc: linux-xfs@vger.kernel.org
-cc: linux-fsdevel@vger.kernel.org
-cc: linux-block@vger.kernel.org
-cc: linux-mm@kvack.org
----
- fs/zonefs/file.c | 43 ++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 42 insertions(+), 1 deletion(-)
+No need for the ifdef.  IS_DAX is compile-time false if CONFIG_FS_DAX
+is not set.
 
-diff --git a/fs/zonefs/file.c b/fs/zonefs/file.c
-index 132f01d3461f..a8d7bae4910d 100644
---- a/fs/zonefs/file.c
-+++ b/fs/zonefs/file.c
-@@ -752,6 +752,47 @@ static ssize_t zonefs_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
- 	return ret;
- }
- 
-+static ssize_t zonefs_file_splice_read(struct file *in, loff_t *ppos,
-+				       struct pipe_inode_info *pipe,
-+				       size_t len, unsigned int flags)
-+{
-+	struct inode *inode = file_inode(in);
-+	struct zonefs_inode_info *zi = ZONEFS_I(inode);
-+	struct zonefs_zone *z = zonefs_inode_zone(inode);
-+	loff_t isize;
-+	ssize_t ret = 0;
-+
-+	/* Offline zones cannot be read */
-+	if (unlikely(IS_IMMUTABLE(inode) && !(inode->i_mode & 0777)))
-+		return -EPERM;
-+
-+	if (*ppos >= z->z_capacity)
-+		return 0;
-+
-+	if (in->f_flags & O_DIRECT)
-+		return direct_splice_read(in, ppos, pipe, len, flags);
-+
-+	inode_lock_shared(inode);
-+
-+	/* Limit read operations to written data */
-+	mutex_lock(&zi->i_truncate_mutex);
-+	isize = i_size_read(inode);
-+	if (*ppos >= isize)
-+		len = 0;
-+	else
-+		len = min_t(loff_t, len, isize - *ppos);
-+	mutex_unlock(&zi->i_truncate_mutex);
-+
-+	if (len > 0) {
-+		ret = filemap_splice_read(in, ppos, pipe, len, flags);
-+		if (ret == -EIO)
-+			zonefs_io_error(inode, false);
-+	}
-+
-+	inode_unlock_shared(inode);
-+	return ret;
-+}
-+
- /*
-  * Write open accounting is done only for sequential files.
-  */
-@@ -896,7 +937,7 @@ const struct file_operations zonefs_file_operations = {
- 	.llseek		= zonefs_file_llseek,
- 	.read_iter	= zonefs_file_read_iter,
- 	.write_iter	= zonefs_file_write_iter,
--	.splice_read	= generic_file_splice_read,
-+	.splice_read	= zonefs_file_splice_read,
- 	.splice_write	= iter_file_splice_write,
- 	.iopoll		= iocb_bio_iopoll,
- };
-
+A comment on why we're doing this in the code would probably be useful
+as well.
