@@ -2,102 +2,105 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67B45C7EE26
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 15:14:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08311C77B7A
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 15:18:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232272AbjESPOD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 May 2023 11:14:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47488 "EHLO
+        id S232291AbjESPSr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 May 2023 11:18:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232231AbjESPOC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 11:14:02 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DD58198;
-        Fri, 19 May 2023 08:13:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
-        Message-ID:Sender:Reply-To:Content-ID:Content-Description;
-        bh=1opaetK90ziQPrltM/q7s99LS+5Ffz+3TEwjrEuHrv4=; b=q442WZBtQBcOW7sBrNoWDtaPsc
-        NHZWvxl5JBj/nYxbbB5KkKy/mxxDzNWFPcemw/hWQn5t78rr0GaE+Lu/9EZaWnLYngq3LOvKoCGwu
-        Rsuu1xpUADM5kH0dC/r3joANDzDtnPjHt4RWga/vgnXFEbJ5UeMWQkJC0addAPUGEog9i/vDLWsxJ
-        3NOL5jZfsiDDGtqMu1bizMp9LRnvmhhZA9vGb2zo0CRL6MkZkLZ7wWFWuIZrp71D+zviky5bsJQL8
-        f55Qy+XSsUGRTuDfBOKHbG3iwNOhf9N9I9lMJjG2QS51+qYMleuyEIz6y4CL102xxlRvySSXk1Khi
-        M8f/yFYg==;
-Received: from [2601:1c2:980:9ec0::2764]
-        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1q01nj-00GZpF-2b;
-        Fri, 19 May 2023 15:13:51 +0000
-Message-ID: <731a3061-973c-a4ad-2fe5-7981c6c1279b@infradead.org>
-Date:   Fri, 19 May 2023 08:13:50 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.1
-Subject: Re: [PATCH] Documentation: add initial iomap kdoc
-Content-Language: en-US
-To:     Bagas Sanjaya <bagasdotme@gmail.com>,
-        Luis Chamberlain <mcgrof@kernel.org>, corbet@lwn.net,
-        jake@lwn.net, hch@infradead.org, djwong@kernel.org,
-        dchinner@redhat.com
-Cc:     ritesh.list@gmail.com, rgoldwyn@suse.com, jack@suse.cz,
-        linux-doc@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        p.raghav@samsung.com, da.gomez@samsung.com, rohan.puri@samsung.com
-References: <20230518144037.3149361-1-mcgrof@kernel.org>
- <ZGdBO6bmbj3sLlzp@debian.me>
-From:   Randy Dunlap <rdunlap@infradead.org>
-In-Reply-To: <ZGdBO6bmbj3sLlzp@debian.me>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S230519AbjESPSq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 11:18:46 -0400
+Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C38619B;
+        Fri, 19 May 2023 08:18:45 -0700 (PDT)
+Received: by mail-pf1-x42b.google.com with SMTP id d2e1a72fcca58-64d2467d640so2040251b3a.1;
+        Fri, 19 May 2023 08:18:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1684509525; x=1687101525;
+        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=woNEX4BlaBInqJPgAQu+oJGnsoQ5fC0AFJQ7tdrMYfo=;
+        b=f7N2cQXXLecmeIMSLFFIHnAOa4Y1phtQMlU6+0wQve37572xDiggUBMKHoxEUiLUlt
+         xZdPxEy3SvAfx5s4CgyogCs1kr/voR83VOKVQwjWWnkeVfywvf69lbvQJK9ZxtBbAkhl
+         /yi8SXIAq6KoNv+4Pt+0V5myubLCiH7u1QQWlQqAql/TOfwgydppzVUH76o0gYxBao3A
+         Ao737Qgmu1yR8kvAtDEX3bCTnMMju6LzbrEkk8y3ev3hWdlqoDTMMjYeCpwx8vbDla1P
+         fU9YKP33qswa6wuGAhimmWnUaJRQn9cQS7LpnFGRTNBzlTP2ruJeLGi3QVQ4gHiyNL7/
+         0URA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1684509525; x=1687101525;
+        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=woNEX4BlaBInqJPgAQu+oJGnsoQ5fC0AFJQ7tdrMYfo=;
+        b=QpKTM+sOQll1EQlhMgcFJ7W/SpXvM2n9fqHIiPKhleh76Qn76GZ3bo0+84PU3wA3R9
+         fxBLq+ipf+NR79Sqi626cEaV9e7v9xLRa6XEKcWoNVn2U47j0oS3qq4S/19F6opWnW4i
+         /H4tyu7njZPxmwcMwHgtayFX/w5VwanjmltSeW6CYUMnikaNYv9+6RuoRykUid2NiLZ7
+         h6iZei4xifM/rHt5DPR5BWV3qiM80MNawLe1ohWriN+1lkuLHZXGXmXF2y0QWRJF9xlW
+         QRcso2mFSFPv4I32357KZ4o0UKruTZ05s5B/HDEeBqpEWX2iu7gZQCQX0zmffFmBxTIx
+         NYLg==
+X-Gm-Message-State: AC+VfDzLPWIUGXZtOiR6VmWkjjnFy7W2tgo4ELSc2CcVGOExeS87B4Fw
+        v79t5JjdXmzanp7b3+0RW8g=
+X-Google-Smtp-Source: ACHHUZ674LSuLHP6OWl98pOdCyHkxPlpZHqFYv/unWO8pOUwzAEyD+E87KqXev7OhfgIGW9OWzxyRQ==
+X-Received: by 2002:a05:6a00:134c:b0:64d:2b06:5949 with SMTP id k12-20020a056a00134c00b0064d2b065949mr3877772pfu.8.1684509524848;
+        Fri, 19 May 2023 08:18:44 -0700 (PDT)
+Received: from rh-tp ([49.207.220.159])
+        by smtp.gmail.com with ESMTPSA id g14-20020aa7874e000000b0063f2e729127sm3218551pfo.144.2023.05.19.08.18.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 19 May 2023 08:18:44 -0700 (PDT)
+Date:   Fri, 19 May 2023 20:48:37 +0530
+Message-Id: <875y8owdrm.fsf@doe.com>
+From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Matthew Wilcox <willy@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
+        Disha Goel <disgoel@linux.ibm.com>
+Subject: Re: [RFCv5 4/5] iomap: Allocate iop in ->write_begin() early
+In-Reply-To: <ZGXD8T1Kv4NafQmO@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+Christoph Hellwig <hch@infradead.org> writes:
 
+> On Mon, May 08, 2023 at 12:57:59AM +0530, Ritesh Harjani (IBM) wrote:
+>> Earlier when the folio is uptodate, we only allocate iop at writeback
+>
+> s/Earlier/Currently/ ?
+>
+>> time (in iomap_writepage_map()). This is ok until now, but when we are
+>> going to add support for per-block dirty state bitmap in iop, this
+>> could cause some performance degradation. The reason is that if we don't
+>> allocate iop during ->write_begin(), then we will never mark the
+>> necessary dirty bits in ->write_end() call. And we will have to mark all
+>> the bits as dirty at the writeback time, that could cause the same write
+>> amplification and performance problems as it is now.
+>>
+>> However, for all the writes with (pos, len) which completely overlaps
+>> the given folio, there is no need to allocate an iop during
+>> ->write_begin(). So skip those cases.
+>
+> This reads a bit backwards, I'd suggest to mention early
+> allocation only happens for sub-page writes before going into the
+> details.
+>
 
-On 5/19/23 02:28, Bagas Sanjaya wrote:
->> +/**
->> + * DOC:  Flags reported by the file system from iomap_begin
->>   *
->> - * IOMAP_F_NEW indicates that the blocks have been newly allocated and need
->> - * zeroing for areas that no data is copied to.
->> + * * IOMAP_F_NEW: indicates that the blocks have been newly allocated and need
->> + *	zeroing for areas that no data is copied to.
->>   *
->> - * IOMAP_F_DIRTY indicates the inode has uncommitted metadata needed to access
->> - * written data and requires fdatasync to commit them to persistent storage.
->> - * This needs to take into account metadata changes that *may* be made at IO
->> - * completion, such as file size updates from direct IO.
->> + * * IOMAP_F_DIRTY: indicates the inode has uncommitted metadata needed to access
->> + *	written data and requires fdatasync to commit them to persistent storage.
->> + *	This needs to take into account metadata changes that *may* be made at IO
->> + *	completion, such as file size updates from direct IO.
->>   *
->> - * IOMAP_F_SHARED indicates that the blocks are shared, and will need to be
->> - * unshared as part a write.
->> + * * IOMAP_F_SHARED: indicates that the blocks are shared, and will need to be
->> + *	unshared as part a write.
->>   *
->> - * IOMAP_F_MERGED indicates that the iomap contains the merge of multiple block
->> - * mappings.
->> + * * IOMAP_F_MERGED: indicates that the iomap contains the merge of multiple block
->> + *	mappings.
->>   *
->> - * IOMAP_F_BUFFER_HEAD indicates that the file system requires the use of
->> - * buffer heads for this mapping.
->> + * * IOMAP_F_BUFFER_HEAD: indicates that the file system requires the use of
->> + *	buffer heads for this mapping.
->>   *
->> - * IOMAP_F_XATTR indicates that the iomap is for an extended attribute extent
->> - * rather than a file data extent.
->> + * * IOMAP_F_XATTR: indicates that the iomap is for an extended attribute extent
->> + *	rather than a file data extent.
->>   */
-> Why don't use kernel-doc comments to describe flags?
-> 
+sub-page is a bit confusing here. Because we can have a large folio too
+with blocks within that folio. So we decided to go with per-block
+terminology [1].
 
-Because kernel-doc handles functions, structs, unions, and enums.
-Not defines.
+[1]: https://lore.kernel.org/linux-xfs/ZFR%2FGuVca5nFlLYF@casper.infradead.org/
 
--- 
-~Randy
+I am guessing you would like to me to re-write the above para. Is this better?
+
+"We dont need to allocate an iop in ->write_begin() for writes where the
+position and length completely overlap with the given folio.
+Therefore, such cases are skipped."
+
+> The changes themselves looks good to me.
+
+Sure. Thanks!
+
+-ritesh
