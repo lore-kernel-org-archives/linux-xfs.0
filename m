@@ -2,108 +2,102 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B23BC77B75
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 15:07:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67B45C7EE26
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 15:14:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230356AbjESPHM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 May 2023 11:07:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43528 "EHLO
+        id S232272AbjESPOD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 May 2023 11:14:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229468AbjESPHM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 11:07:12 -0400
-Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5C13121;
-        Fri, 19 May 2023 08:07:09 -0700 (PDT)
-Received: by mail-pg1-x532.google.com with SMTP id 41be03b00d2f7-51b33c72686so2305185a12.1;
-        Fri, 19 May 2023 08:07:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1684508829; x=1687100829;
-        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=p3jaXn6ewxRaNtoINF6pbHhzTFNpw3kEuQPfPQZhLeM=;
-        b=bcrCDeMSbsVJ3ZrGNRH0ddoyqIai267IEFQGZekk5oOgHeJbgXGf3c6ZadPb9/EaDf
-         SGedNj96MqqPy9qV78u8v1xKAMT+VB9edzUzMbjQRO5jMTzl0bb55a/ljlkwGy1Sdw56
-         q4KVANnlgDbga4BZicozKXbPnesXdmZHkQzlcMGKu48thiBaNAESpDz2DaOkPFfEvx51
-         Nk0PkMXBnFaOS0lp7l+u0O9Lvgl9lJt2JcLNenApUDdJm9uZKP7WalBtQ1f/6Bv8DCw6
-         plq5gvO8xCfs6O0I4aqE+XIdXfk1yDjfp235QYk4317DSFqmTPioTmhbFc8tSqlUeARB
-         0sSQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684508829; x=1687100829;
-        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=p3jaXn6ewxRaNtoINF6pbHhzTFNpw3kEuQPfPQZhLeM=;
-        b=Ixp0kNkob5Cs3QOjnwxIZRLGWnzhm5ySMjKGulfJTB3TDqeqFDiAvj9Liv59b+6PXr
-         qY7KFrZDAvi6sutTxJ4STd32TRGmPfIMOC+aO7US7WfcQeJOUSgCKusCuZSw8Dl6rIL0
-         /va+uhsSynGV5qTk1S/VSQN4/yTND/wRKeCT6Zg4toM0b92PcWiKCg/a2+/natPpXApH
-         idieAeEfPsLQOooUjJw0U64yRRc2CSlSFTuhghLIpdZdE0x+goGIxC0KptyGnCWcqCDI
-         VA4fsRpQcFYjEflAnomaX7lDhOhHtMLEqH+9p68pCFFH0mtZuX+Z0RaBlzhFWeRUkE6r
-         NL7w==
-X-Gm-Message-State: AC+VfDyhKvIX2JqLW1s7qdtGsKxz9gzRvgxN4azGGw6b84eodmUE0bZ4
-        oGME7u11N0zkKfrDSolhJw3yPaXx9fU=
-X-Google-Smtp-Source: ACHHUZ76BpTSO8SBnq6xik7Pocx9t+ZTKFrvUL7VuBBM/Am/Y0a3ED62wW/N3YCP5hZK3F2WZJm08Q==
-X-Received: by 2002:a17:90b:1d90:b0:253:78c0:b129 with SMTP id pf16-20020a17090b1d9000b0025378c0b129mr2448427pjb.18.1684508829207;
-        Fri, 19 May 2023 08:07:09 -0700 (PDT)
-Received: from rh-tp ([49.207.220.159])
-        by smtp.gmail.com with ESMTPSA id e24-20020a17090ab39800b0024c1ac09394sm1618411pjr.19.2023.05.19.08.07.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 19 May 2023 08:07:08 -0700 (PDT)
-Date:   Fri, 19 May 2023 20:37:01 +0530
-Message-Id: <878rdkweay.fsf@doe.com>
-From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Matthew Wilcox <willy@infradead.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-        Disha Goel <disgoel@linux.ibm.com>
-Subject: Re: [RFCv5 3/5] iomap: Add iop's uptodate state handling functions
-In-Reply-To: <ZGXDQ4RGslszaIIk@infradead.org>
+        with ESMTP id S232231AbjESPOC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 11:14:02 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DD58198;
+        Fri, 19 May 2023 08:13:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
+        Message-ID:Sender:Reply-To:Content-ID:Content-Description;
+        bh=1opaetK90ziQPrltM/q7s99LS+5Ffz+3TEwjrEuHrv4=; b=q442WZBtQBcOW7sBrNoWDtaPsc
+        NHZWvxl5JBj/nYxbbB5KkKy/mxxDzNWFPcemw/hWQn5t78rr0GaE+Lu/9EZaWnLYngq3LOvKoCGwu
+        Rsuu1xpUADM5kH0dC/r3joANDzDtnPjHt4RWga/vgnXFEbJ5UeMWQkJC0addAPUGEog9i/vDLWsxJ
+        3NOL5jZfsiDDGtqMu1bizMp9LRnvmhhZA9vGb2zo0CRL6MkZkLZ7wWFWuIZrp71D+zviky5bsJQL8
+        f55Qy+XSsUGRTuDfBOKHbG3iwNOhf9N9I9lMJjG2QS51+qYMleuyEIz6y4CL102xxlRvySSXk1Khi
+        M8f/yFYg==;
+Received: from [2601:1c2:980:9ec0::2764]
+        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
+        id 1q01nj-00GZpF-2b;
+        Fri, 19 May 2023 15:13:51 +0000
+Message-ID: <731a3061-973c-a4ad-2fe5-7981c6c1279b@infradead.org>
+Date:   Fri, 19 May 2023 08:13:50 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.1
+Subject: Re: [PATCH] Documentation: add initial iomap kdoc
+Content-Language: en-US
+To:     Bagas Sanjaya <bagasdotme@gmail.com>,
+        Luis Chamberlain <mcgrof@kernel.org>, corbet@lwn.net,
+        jake@lwn.net, hch@infradead.org, djwong@kernel.org,
+        dchinner@redhat.com
+Cc:     ritesh.list@gmail.com, rgoldwyn@suse.com, jack@suse.cz,
+        linux-doc@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        p.raghav@samsung.com, da.gomez@samsung.com, rohan.puri@samsung.com
+References: <20230518144037.3149361-1-mcgrof@kernel.org>
+ <ZGdBO6bmbj3sLlzp@debian.me>
+From:   Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <ZGdBO6bmbj3sLlzp@debian.me>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Christoph Hellwig <hch@infradead.org> writes:
 
->> + * inline helpers for bitmap operations on iop->state
->> + */
->> +static inline void iop_set_range(struct iomap_page *iop, unsigned int start_blk,
->> +				 unsigned int nr_blks)
->> +{
->> +	bitmap_set(iop->state, start_blk, nr_blks);
->> +}
->> +
->> +static inline bool iop_test_block(struct iomap_page *iop, unsigned int block)
->> +{
->> +	return test_bit(block, iop->state);
->> +}
->> +
->> +static inline bool iop_bitmap_full(struct iomap_page *iop,
->> +				   unsigned int blks_per_folio)
->> +{
->> +	return bitmap_full(iop->state, blks_per_folio);
->> +}
->
-> I don't really see much poin in these helpers, any particular reason
-> for adding them?
->
 
-We ended up modifying the APIs in v5. The idea on v4 was we will keep
-iop_set_range() function which will be same for both uptodate and dirty.
-The caller can pass start_blk depending upon whether we dirty/uptodate
-needs to be marked.
-But I guess with the API changes, we don't need this low level helpers
-anymore. So If no one has any objection, I can kill this one liners.
+On 5/19/23 02:28, Bagas Sanjaya wrote:
+>> +/**
+>> + * DOC:  Flags reported by the file system from iomap_begin
+>>   *
+>> - * IOMAP_F_NEW indicates that the blocks have been newly allocated and need
+>> - * zeroing for areas that no data is copied to.
+>> + * * IOMAP_F_NEW: indicates that the blocks have been newly allocated and need
+>> + *	zeroing for areas that no data is copied to.
+>>   *
+>> - * IOMAP_F_DIRTY indicates the inode has uncommitted metadata needed to access
+>> - * written data and requires fdatasync to commit them to persistent storage.
+>> - * This needs to take into account metadata changes that *may* be made at IO
+>> - * completion, such as file size updates from direct IO.
+>> + * * IOMAP_F_DIRTY: indicates the inode has uncommitted metadata needed to access
+>> + *	written data and requires fdatasync to commit them to persistent storage.
+>> + *	This needs to take into account metadata changes that *may* be made at IO
+>> + *	completion, such as file size updates from direct IO.
+>>   *
+>> - * IOMAP_F_SHARED indicates that the blocks are shared, and will need to be
+>> - * unshared as part a write.
+>> + * * IOMAP_F_SHARED: indicates that the blocks are shared, and will need to be
+>> + *	unshared as part a write.
+>>   *
+>> - * IOMAP_F_MERGED indicates that the iomap contains the merge of multiple block
+>> - * mappings.
+>> + * * IOMAP_F_MERGED: indicates that the iomap contains the merge of multiple block
+>> + *	mappings.
+>>   *
+>> - * IOMAP_F_BUFFER_HEAD indicates that the file system requires the use of
+>> - * buffer heads for this mapping.
+>> + * * IOMAP_F_BUFFER_HEAD: indicates that the file system requires the use of
+>> + *	buffer heads for this mapping.
+>>   *
+>> - * IOMAP_F_XATTR indicates that the iomap is for an extended attribute extent
+>> - * rather than a file data extent.
+>> + * * IOMAP_F_XATTR: indicates that the iomap is for an extended attribute extent
+>> + *	rather than a file data extent.
+>>   */
+> Why don't use kernel-doc comments to describe flags?
+> 
 
->> +/*
->> + * iop related helpers for checking uptodate/dirty state of per-block
->> + * or range of blocks within a folio
->> + */
->
-> I'm also not sure this comment adds a whole lot of value.
->
-> The rest looks good modulo the WARN_ONs already mentined by Brian.
+Because kernel-doc handles functions, structs, unions, and enums.
+Not defines.
 
-Sure. Thanks for the review!
-
--ritesh
+-- 
+~Randy
