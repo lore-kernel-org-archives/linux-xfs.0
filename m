@@ -2,62 +2,177 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EBE4C77B7F
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 04:11:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 072BDC77B7A
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 05:04:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229635AbjESELp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 May 2023 00:11:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44198 "EHLO
+        id S229769AbjESFEx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 May 2023 01:04:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55494 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229694AbjESELl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 00:11:41 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 319C010CF;
-        Thu, 18 May 2023 21:11:40 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id BAD3468C4E; Fri, 19 May 2023 06:11:36 +0200 (CEST)
-Date:   Fri, 19 May 2023 06:11:36 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Theodore Ts'o <tytso@mit.edu>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: introduce bdev holder ops and a file system shutdown method v2
-Message-ID: <20230519041136.GA10931@lst.de>
-References: <20230518042323.663189-1-hch@lst.de> <ZGbYLK0lOqYqPf9O@mit.edu>
+        with ESMTP id S229452AbjESFEx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 01:04:53 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58A27107;
+        Thu, 18 May 2023 22:04:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=qoebvRH+5DyCHjL5CguUqheVeTvzmE683d7FksxC+hw=; b=EA5TnpVUmLi0YCsEB8c0Ab7YG4
+        RnjV8/iUkUeNeDxrAp6ScISMiCeWddLQAnBAlp0mDcJ7nz4mtHSZs06CaDNGPC+F5U+tyw28k6tK7
+        2lcUctBUCd/hcc3cUhHZRDmJ3AY25s0c2j/KQN05/1t9fAQOstJwHySGE0BPzXjVFrW0CFfOVI5oX
+        9oTRzG+O1PHfzd3ep6C6mrA8WOJawZMfeE23Y3ID6YnwMTSxVrACjejjv4Kenrow3bY6Nn6Sh02s+
+        LSORCBbroHJWVVCWJxd2rvX0+9IoI9/VP/2Oo21Ac4R8iFCtjPdcGiCVhky1OrrXjr8XbanrrXYqp
+        Hf1n3wfA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1pzsIF-00F6X5-0s;
+        Fri, 19 May 2023 05:04:43 +0000
+Date:   Thu, 18 May 2023 22:04:43 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Luis Chamberlain <mcgrof@kernel.org>
+Cc:     corbet@lwn.net, jake@lwn.net, hch@infradead.org, djwong@kernel.org,
+        dchinner@redhat.com, ritesh.list@gmail.com, rgoldwyn@suse.com,
+        jack@suse.cz, linux-doc@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        p.raghav@samsung.com, da.gomez@samsung.com, rohan.puri@samsung.com
+Subject: Re: [PATCH v2] Documentation: add initial iomap kdoc
+Message-ID: <ZGcDaysYl+w9kV6+@infradead.org>
+References: <20230518150105.3160445-1-mcgrof@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZGbYLK0lOqYqPf9O@mit.edu>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20230518150105.3160445-1-mcgrof@kernel.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 18, 2023 at 10:00:12PM -0400, Theodore Ts'o wrote:
-> On Thu, May 18, 2023 at 06:23:09AM +0200, Christoph Hellwig wrote:
-> > Hi all,
-> > 
-> > this series fixes the long standing problem that we never had a good way
-> > to communicate block device events to the user of the block device.
-> > 
-> > It fixes this by introducing a new set of holder ops registered at
-> > blkdev_get_by_* time for the exclusive holder, and then wire that up
-> > to a shutdown super operation to report the block device remove to the
-> > file systems.
-> 
-> Thanks for working on this!  Is there going to be an fstest which
-> simulates a device removal while we're running fsstress or some such,
-> so we can exercise full device removal path?
+On Thu, May 18, 2023 at 08:01:05AM -0700, Luis Chamberlain wrote:
+> +        Mapping of heading styles within this document:
+> +        Heading 1 uses "====" above and below
+> +        Heading 2 uses "===="
+> +        Heading 3 uses "----"
+> +        Heading 4 uses "````"
+> +        Heading 5 uses "^^^^"
+> +        Heading 6 uses "~~~~"
+> +        Heading 7 uses "...."
+> +
+> +        Sections are manually numbered because apparently that's what everyone
 
+Why are you picking different defaults then the rest of the kernel
+documentation?
 
-So the problem with xfstests is that there isn't really any generic
-way to remove a block device, and even less so to put it back.
+> +
+> +A modern block abstraction
+> +==========================
+> +
+> +**iomap** allows filesystems to query storage media for data using *byte
+> +ranges*. Since block mapping are provided for a *byte ranges* for cache data in
+> +memory, in the page cache, naturally this implies operations on block ranges
+> +will also deal with *multipage* operations in the page cache. **Folios** are
+> +used to help provide *multipage* operations in memory for the *byte ranges*
+> +being worked on.
 
-xfstests has some scsi_debug based tests, maybe I can cook something up
-for that.  My testing has been with nvme, so another option would be
-to add nvme-loop support to xfstests and use that.  I'll see what I can
-do.
+As mentioned you list time this information was circulated this is not
+true.  iomap itself has nothing to with blocks, and even less so with
+the page cache per se.  It just iterates over ranges of file data and
+applies work to it.
+
+> +iomap IO interfaces
+> +===================
+> +
+> +You call **iomap** depending on the type of filesystem operation you are working
+> +on. We detail some of these interactions below.
+
+Who is you?
+
+> +
+> +iomap for bufferred IO writes
+> +-----------------------------
+> +
+> +You call **iomap** for buffered IO with:
+> +
+> + * ``iomap_file_buffered_write()`` - for buffered writes
+> + * ``iomap_page_mkwrite()`` - when dealing callbacks for
+> +    ``struct vm_operations_struct``
+> +
+> +  * ``struct vm_operations_struct.page_mkwrite()``
+> +  * ``struct vm_operations_struct.fault()``
+> +  * ``struct vm_operations_struct.huge_fault()``
+> +  * ``struct vm_operations_struct`.pfn_mkwrite()``
+> +
+> +You *may* use buffered writes to also deal with ``fallocate()``:
+> +
+> + * ``iomap_zero_range()`` on fallocate for zeroing
+> + * ``iomap_truncate_page()`` on fallocate for truncation
+> +
+> +Typically you'd also happen to use these on paths when updating an inode's size.
+
+I'm not really sure what this is trying to explain.  It basically looks
+like filler text generated by machine learning algorithms..
+
+The same is true for a large part of this document.
+
+> +A filesystem also needs to call **iomap** when assisting the VFS manipulating a
+> +file into the page cache.
+
+A file systsem doesn't _need_ to do anything.  It may chose to do
+things, and the iomap based helpers might be useful for that.  But
+again, I'm still not getting what this document is even trying to
+explain, as "to implement the method foo, use the iomap_foo" isn't
+really helping anyone.
+
+> +Converting filesystems from buffer-head to iomap guide
+> +======================================================
+
+If you want such a guide, please keep it in a separate file from the
+iomap API documentation.  I'd also suggest that you actually try such
+a conversion first, as that might help shaping the documentation :)
+
+> +Testing Direct IO
+> +=================
+> +
+> +Other than fstests you can use LTP's dio, however this tests is limited as it
+> +does not test stale data.
+> +
+> +{{{
+> +./runltp -f dio -d /mnt1/scratch/tmp/
+> +}}}
+
+How does this belong into an iomap documentation?  If LTPs dio is really
+all that useful we should import it into xfstests, btw.  I'm not sure it
+is, though.
+
+> +We try to document known issues that folks should be aware of with **iomap** here.
+
+Who is "we"?
+
+> + * DOC: Introduction
+> + *
+> + * iomap allows filesystems to sequentially iterate over byte addressable block
+> + * ranges on an inode and apply operations to it.
+> + *
+> + * iomap grew out of the need to provide a modern block mapping abstraction for
+> + * filesystems with the different IO access methods they support and assisting
+> + * the VFS with manipulating files into the page cache. iomap helpers are
+> + * provided for each of these mechanisms. However, block mapping is just one of
+> + * the features of iomap, given iomap supports DAX IO for filesystems and also
+> + * supports such the ``lseek``/``llseek`` ``SEEK_DATA``/``SEEK_HOLE``
+> + * interfaces.
+> + *
+> + * Block mapping provides a mapping between data cached in memory and the
+> + * location on persistent storage where that data lives. `LWN has an great
+> + * review of the old buffer-heads block-mapping and why they are inefficient
+> + * <https://lwn.net/Articles/930173/>`, since the inception of Linux.  Since
+> + * **buffer-heads** work on a 512-byte block based paradigm, it creates an
+> + * overhead for modern storage media which no longer necessarily works only on
+> + * 512-blocks. iomap is flexible providing block ranges in *bytes*. iomap, with
+> + * the support of folios, provides a modern replacement for **buffer-heads**.
+> + */
+
+I really don't want random blurbs and links like this in the main
+header.  If you want to ramble in a little howto that's fine, but the
+main header is not the place for it.
+
+Also please keep improvements to the header in a separate patch from
+adding Documentation/ documents.
