@@ -2,148 +2,77 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA378C77B75
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 11:22:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 741DEC7EE26
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 12:41:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231670AbjESLWz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 May 2023 07:22:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56728 "EHLO
+        id S229571AbjESMli (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 May 2023 08:41:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55858 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231594AbjESLWs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 07:22:48 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C02710E6;
-        Fri, 19 May 2023 04:22:45 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        with ESMTP id S229675AbjESMlh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 08:41:37 -0400
+Received: from ms.lwn.net (ms.lwn.net [IPv6:2600:3c01:e000:3a1::42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2973A1A8;
+        Fri, 19 May 2023 05:41:14 -0700 (PDT)
+Received: from localhost (unknown [IPv6:2601:281:8300:73::5f6])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A981464811;
-        Fri, 19 May 2023 11:22:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3240C433A0;
-        Fri, 19 May 2023 11:22:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684495364;
-        bh=OcLM1N2ClGCrQpYWDpWQ6HQjg4/ELs+8TOzmNb/8/CI=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=LL1zcwb+2438spSK6nu0QO3uhzmYznCJ6FYaKF0rs9YJzYZuu8q7BN/huMRZ4XVqU
-         4UTECX1FDgXRdS6Hcp1cWQukl9y61Nqt8atvBSfQzPf0TQTJuYvBs18zMv+CB2Z+9F
-         BdHC51FzAjsQbRGzpE5DM3BQRphGFVqWstaNg4sVKaSKySAvAB5EsuMkelYtdruZDr
-         U+KcHge73B0ozjP5fEq7yDURVBW3gkporZYf+I4EjjYprwmtZybM8spv8qcLTjKeBt
-         zD0v+X553SpUwol+ns3i/J6jkmT/x9UPBf0hGy3IHNqQUkDr4lwEh9NqfpqcZaAV0F
-         S4TGrgB1oAKjA==
-Message-ID: <54b7d304016fd6e89a2899f7e417ba89bcb81c78.camel@kernel.org>
-Subject: Re: [PATCH v4 4/9] nfsd: ensure we use ctime_peek to grab the
- inode->i_ctime
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Christian Brauner <brauner@kernel.org>
-Cc:     Chuck Lever III <chuck.lever@oracle.com>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>,
-        Amir Goldstein <amir73il@gmail.com>,
-        David Howells <dhowells@redhat.com>,
-        Neil Brown <neilb@suse.de>,
-        Matthew Wilcox <willy@infradead.org>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Theodore T'so <tytso@mit.edu>, Chris Mason <clm@fb.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        Namjae Jeon <linkinjeon@kernel.org>,
-        Steve French <sfrench@samba.org>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Tom Talpey <tom@talpey.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        Linux-XFS <linux-xfs@vger.kernel.org>,
-        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
-        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-        linux-mm <linux-mm@kvack.org>,
-        Linux NFS Mailing List <linux-nfs@vger.kernel.org>,
-        "linux-cifs@vger.kernel.org" <linux-cifs@vger.kernel.org>
-Date:   Fri, 19 May 2023 07:22:40 -0400
-In-Reply-To: <20230519-zierde-legieren-e769c19a29cb@brauner>
-References: <20230518114742.128950-1-jlayton@kernel.org>
-         <20230518114742.128950-5-jlayton@kernel.org>
-         <2B6A4DDD-0356-4765-9CED-B22A29767254@oracle.com>
-         <b046f7e3c86d1c9dd45e932d3f25785fce921f4a.camel@kernel.org>
-         <20230519-zierde-legieren-e769c19a29cb@brauner>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.1 (3.48.1-1.fc38) 
+        by ms.lwn.net (Postfix) with ESMTPSA id DA9A57C0;
+        Fri, 19 May 2023 12:41:06 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net DA9A57C0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
+        t=1684500067; bh=Mn4aex3r3tcIexmUxRNT5U8Atc2UG4Nc4lQH6evssMM=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=gZf7ANIZaa/7Q1rgunvrPwGwZDiRrPQJh/r7c+04LjcKROD6SaQA32cv+SfHF31sn
+         1Wzq7+aPFp6z0FAhq083CUKfk3SfcVpzAE5TdWCGjz2GDzWdPU8ZAS474OAB7Kh8Sj
+         EhjRG1hILuCbGyNju46jjgjQf4amw6zocsFbL3f83Nb+NE+UpF1KvjhErswaiNfpNi
+         VGFQmHb4BUF4c9e6k6+nEab9l6PFf3YZIaSVEHVS6vdszIN+c9Od3Ff+kvqlllo3qe
+         vPdiMiNROHj/JEUpNHZJ7og7Ayy6wtlJfa8/uYMWA6ASUwxz2btxw4d0G4wH25bzVl
+         sDSS6ZHkOa7ZA==
+From:   Jonathan Corbet <corbet@lwn.net>
+To:     Dave Chinner <david@fromorbit.com>,
+        Luis Chamberlain <mcgrof@kernel.org>
+Cc:     jake@lwn.net, hch@infradead.org, djwong@kernel.org,
+        dchinner@redhat.com, ritesh.list@gmail.com, rgoldwyn@suse.com,
+        jack@suse.cz, linux-doc@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        p.raghav@samsung.com, da.gomez@samsung.com, rohan.puri@samsung.com
+Subject: Re: [PATCH v2] Documentation: add initial iomap kdoc
+In-Reply-To: <ZGbVaewzcCysclPt@dread.disaster.area>
+References: <20230518150105.3160445-1-mcgrof@kernel.org>
+ <ZGbVaewzcCysclPt@dread.disaster.area>
+Date:   Fri, 19 May 2023 06:41:06 -0600
+Message-ID: <87r0rcpk7x.fsf@meer.lwn.net>
 MIME-Version: 1.0
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, 2023-05-19 at 12:36 +0200, Christian Brauner wrote:
-> On Thu, May 18, 2023 at 11:31:45AM -0400, Jeff Layton wrote:
-> > On Thu, 2023-05-18 at 13:43 +0000, Chuck Lever III wrote:
-> > >=20
-> > > > On May 18, 2023, at 7:47 AM, Jeff Layton <jlayton@kernel.org> wrote=
-:
-> > > >=20
-> > > > If getattr fails, then nfsd can end up scraping the time values dir=
-ectly
-> > > > out of the inode for pre and post-op attrs. This may or may not be =
-the
-> > > > right thing to do, but for now make it at least use ctime_peek in t=
-his
-> > > > situation to ensure that the QUERIED flag is masked.
-> > >=20
-> > > That code comes from:
-> > >=20
-> > > commit 39ca1bf624b6b82cc895b0217889eaaf572a7913
-> > > Author:     Amir Goldstein <amir73il@gmail.com>
-> > > AuthorDate: Wed Jan 3 17:14:35 2018 +0200
-> > > Commit:     J. Bruce Fields <bfields@redhat.com>
-> > > CommitDate: Thu Feb 8 13:40:17 2018 -0500
-> > >=20
-> > >     nfsd: store stat times in fill_pre_wcc() instead of inode times
-> > >=20
-> > >     The time values in stat and inode may differ for overlayfs and st=
-at time
-> > >     values are the correct ones to use. This is also consistent with =
-the fact
-> > >     that fill_post_wcc() also stores stat time values.
-> > >=20
-> > >     This means introducing a stat call that could fail, where previou=
-sly we
-> > >     were just copying values out of the inode.  To be conservative ab=
-out
-> > >     changing behavior, we fall back to copying values out of the inod=
-e in
-> > >     the error case.  It might be better just to clear fh_pre_saved (t=
-hough
-> > >     note the BUG_ON in set_change_info).
-> > >=20
-> > >     Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > >     Signed-off-by: J. Bruce Fields <bfields@redhat.com>
-> > >=20
-> > > I was thinking it might have been added to handle odd corner
-> > > cases around re-exporting NFS mounts, but that does not seem
-> > > to be the case.
-> > >=20
-> > > The fh_getattr() can fail for legitimate reasons -- like the
-> > > file is in the middle of being deleted or renamed over -- I
-> > > would think. This code should really deal with that by not
-> > > adding pre-op attrs, since they are optional.
-> > >=20
-> >=20
-> > That sounds fine to me. I'll plan to drop this patch from the series an=
-d
-> > I'll send a separate patch to just remove those branches altogether
-> > (which should DTRT).
->=20
-> I'll wait with reviewing this until you send the next version then.
+Dave Chinner <david@fromorbit.com> writes:
 
-I don't have any other big changes queued up. So far, this would just be
-the exact same set, without this patch.
+One little point among all the more substantial stuff:
 
-FWIW, I'm mostly interested in your review of patches #1 and 2. Is
-altering prototype for generic_fillattr, and changing the logic in
-current_time the right approach here?
+>> -/*
+>> - * Types of block ranges for iomap mappings:
+>> +/**
+>> + * DOC: iomap block ranges types
+>
+> I seriously dislike this "DOC:" keyword appearing everywhere.
+> We've already got a "this is a comment for documentation" annotation
+> in the "/**" comment prefix, having to add "DOC:" is entirely
+> redudant and unnecessary noise.
 
---=20
-Jeff Layton <jlayton@kernel.org>
+DOC: actually isn't redundant, it causes the kernel-doc directive to
+pull that text into the rendered documentation.
+
+This document shows both the advantages and disadvantages of that
+mechanism, IMO.  It allows the documentation to be kept with the code,
+where optimistic people think it is more likely to be updated.  But it
+also scatters the material to the detriment of readers of the plain-text
+documentation.  The rendered version of iomap.rst is rather more
+complete and comprehensible than the RST file itself.
+
+Thanks,
+
+jon
