@@ -2,77 +2,104 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 741DEC7EE26
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 12:41:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 055D8C7EE30
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 14:17:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229571AbjESMli (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 May 2023 08:41:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55858 "EHLO
+        id S231263AbjESORV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 May 2023 10:17:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229675AbjESMlh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 08:41:37 -0400
-Received: from ms.lwn.net (ms.lwn.net [IPv6:2600:3c01:e000:3a1::42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2973A1A8;
-        Fri, 19 May 2023 05:41:14 -0700 (PDT)
-Received: from localhost (unknown [IPv6:2601:281:8300:73::5f6])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S229714AbjESORT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 10:17:19 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6189F7;
+        Fri, 19 May 2023 07:17:18 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by ms.lwn.net (Postfix) with ESMTPSA id DA9A57C0;
-        Fri, 19 May 2023 12:41:06 +0000 (UTC)
-DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net DA9A57C0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
-        t=1684500067; bh=Mn4aex3r3tcIexmUxRNT5U8Atc2UG4Nc4lQH6evssMM=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=gZf7ANIZaa/7Q1rgunvrPwGwZDiRrPQJh/r7c+04LjcKROD6SaQA32cv+SfHF31sn
-         1Wzq7+aPFp6z0FAhq083CUKfk3SfcVpzAE5TdWCGjz2GDzWdPU8ZAS474OAB7Kh8Sj
-         EhjRG1hILuCbGyNju46jjgjQf4amw6zocsFbL3f83Nb+NE+UpF1KvjhErswaiNfpNi
-         VGFQmHb4BUF4c9e6k6+nEab9l6PFf3YZIaSVEHVS6vdszIN+c9Od3Ff+kvqlllo3qe
-         vPdiMiNROHj/JEUpNHZJ7og7Ayy6wtlJfa8/uYMWA6ASUwxz2btxw4d0G4wH25bzVl
-         sDSS6ZHkOa7ZA==
-From:   Jonathan Corbet <corbet@lwn.net>
-To:     Dave Chinner <david@fromorbit.com>,
-        Luis Chamberlain <mcgrof@kernel.org>
-Cc:     jake@lwn.net, hch@infradead.org, djwong@kernel.org,
-        dchinner@redhat.com, ritesh.list@gmail.com, rgoldwyn@suse.com,
-        jack@suse.cz, linux-doc@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        p.raghav@samsung.com, da.gomez@samsung.com, rohan.puri@samsung.com
-Subject: Re: [PATCH v2] Documentation: add initial iomap kdoc
-In-Reply-To: <ZGbVaewzcCysclPt@dread.disaster.area>
-References: <20230518150105.3160445-1-mcgrof@kernel.org>
- <ZGbVaewzcCysclPt@dread.disaster.area>
-Date:   Fri, 19 May 2023 06:41:06 -0600
-Message-ID: <87r0rcpk7x.fsf@meer.lwn.net>
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 48C7922179;
+        Fri, 19 May 2023 14:17:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1684505837; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=0+VZ1HyTsuRdYwi+hWd9cIzn7uyvdspX3l+sCDgOvwM=;
+        b=lUR/RERVITvOIkTMYj6gZ+8JeXHqan3Bnna1FOBmjp847w9ZHf0T6hzhM7Eq/A1T0L/dJx
+        4wI5ealbv3H9+kP1cNsE/jTxKje5DwlQj8mmbM95l7QnmE1+pQihUz/KdlG3xypRVqbmYZ
+        7C0GNrUdzrqlPr3V5FwR/UHrQKpeLp8=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1684505837;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=0+VZ1HyTsuRdYwi+hWd9cIzn7uyvdspX3l+sCDgOvwM=;
+        b=0H/DQLixAzELypiG8mcDJ4c7dKWgixPm6jvK/14EDBieNR/7dM/kD/ybovU/M5icvpLBTz
+        2GDt3VvKWgu74TCA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D7D5313A12;
+        Fri, 19 May 2023 14:17:16 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id cB26M+yEZ2ThHQAAMHmgww
+        (envelope-from <hare@suse.de>); Fri, 19 May 2023 14:17:16 +0000
+Message-ID: <adb6e8d5-9bc5-e988-f21a-1c3e5191e66b@suse.de>
+Date:   Fri, 19 May 2023 16:17:16 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.1
+Subject: Re: [PATCH 01/17] fs: unexport buffer_check_dirty_writeback
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     Miklos Szeredi <miklos@szeredi.hu>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        David Howells <dhowells@redhat.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org, linux-kernel@vger.kernel.org
+References: <20230424054926.26927-1-hch@lst.de>
+ <20230424054926.26927-2-hch@lst.de>
+Content-Language: en-US
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20230424054926.26927-2-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Dave Chinner <david@fromorbit.com> writes:
+On 4/24/23 07:49, Christoph Hellwig wrote:
+> buffer_check_dirty_writeback is only used by the block device aops,
+> remove the export.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>   fs/buffer.c | 1 -
+>   1 file changed, 1 deletion(-)
+> 
+> diff --git a/fs/buffer.c b/fs/buffer.c
+> index 9e1e2add541e07..eb14fbaa7d35f7 100644
+> --- a/fs/buffer.c
+> +++ b/fs/buffer.c
+> @@ -111,7 +111,6 @@ void buffer_check_dirty_writeback(struct folio *folio,
+>   		bh = bh->b_this_page;
+>   	} while (bh != head);
+>   }
+> -EXPORT_SYMBOL(buffer_check_dirty_writeback);
+>   
+>   /*
+>    * Block until a buffer comes unlocked.  This doesn't stop it
 
-One little point among all the more substantial stuff:
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
->> -/*
->> - * Types of block ranges for iomap mappings:
->> +/**
->> + * DOC: iomap block ranges types
->
-> I seriously dislike this "DOC:" keyword appearing everywhere.
-> We've already got a "this is a comment for documentation" annotation
-> in the "/**" comment prefix, having to add "DOC:" is entirely
-> redudant and unnecessary noise.
+Cheers,
 
-DOC: actually isn't redundant, it causes the kernel-doc directive to
-pull that text into the rendered documentation.
-
-This document shows both the advantages and disadvantages of that
-mechanism, IMO.  It allows the documentation to be kept with the code,
-where optimistic people think it is more likely to be updated.  But it
-also scatters the material to the detriment of readers of the plain-text
-documentation.  The rendered version of iomap.rst is rather more
-complete and comprehensible than the RST file itself.
-
-Thanks,
-
-jon
+Hannes
