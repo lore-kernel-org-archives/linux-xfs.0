@@ -2,177 +2,104 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 072BDC77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 05:04:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 303DCC7EE2C
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 07:42:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229769AbjESFEx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 May 2023 01:04:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55494 "EHLO
+        id S231157AbjESHme (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 May 2023 03:42:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59196 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229452AbjESFEx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 01:04:53 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58A27107;
-        Thu, 18 May 2023 22:04:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=qoebvRH+5DyCHjL5CguUqheVeTvzmE683d7FksxC+hw=; b=EA5TnpVUmLi0YCsEB8c0Ab7YG4
-        RnjV8/iUkUeNeDxrAp6ScISMiCeWddLQAnBAlp0mDcJ7nz4mtHSZs06CaDNGPC+F5U+tyw28k6tK7
-        2lcUctBUCd/hcc3cUhHZRDmJ3AY25s0c2j/KQN05/1t9fAQOstJwHySGE0BPzXjVFrW0CFfOVI5oX
-        9oTRzG+O1PHfzd3ep6C6mrA8WOJawZMfeE23Y3ID6YnwMTSxVrACjejjv4Kenrow3bY6Nn6Sh02s+
-        LSORCBbroHJWVVCWJxd2rvX0+9IoI9/VP/2Oo21Ac4R8iFCtjPdcGiCVhky1OrrXjr8XbanrrXYqp
-        Hf1n3wfA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1pzsIF-00F6X5-0s;
-        Fri, 19 May 2023 05:04:43 +0000
-Date:   Thu, 18 May 2023 22:04:43 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Luis Chamberlain <mcgrof@kernel.org>
-Cc:     corbet@lwn.net, jake@lwn.net, hch@infradead.org, djwong@kernel.org,
-        dchinner@redhat.com, ritesh.list@gmail.com, rgoldwyn@suse.com,
-        jack@suse.cz, linux-doc@vger.kernel.org, linux-xfs@vger.kernel.org,
+        with ESMTP id S230282AbjESHmQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 03:42:16 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBEEA1A6
+        for <linux-xfs@vger.kernel.org>; Fri, 19 May 2023 00:41:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1684482085;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ChgLSgSgCciGGEj2txPdAcXunor0ElTQJtr+fuEaFtA=;
+        b=ZNZPJxdEYb0Zs5hKy7vMOBAZNqkX3Gw6GLaeWPFcRjjk7DYFRl3qunBOjigx/nWKMRyeSF
+        YE5yIFd5mbWpLbbZ/ARw09keNgeeL1/xiLrYQmIk3+eeulMZPxSGWral9UNPCTMWDn3+X2
+        02T7cXyiYc17SS/p35I4k/Gka9VXscY=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-673-2UnIjJkHPT6ZoSIApCo6vg-1; Fri, 19 May 2023 03:41:20 -0400
+X-MC-Unique: 2UnIjJkHPT6ZoSIApCo6vg-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 3C96E101A58B;
+        Fri, 19 May 2023 07:41:19 +0000 (UTC)
+Received: from warthog.procyon.org.uk (unknown [10.42.28.221])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id D833E2166B27;
+        Fri, 19 May 2023 07:41:16 +0000 (UTC)
+From:   David Howells <dhowells@redhat.com>
+To:     Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>
+Cc:     David Howells <dhowells@redhat.com>,
+        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
+        Jeff Layton <jlayton@kernel.org>,
+        David Hildenbrand <david@redhat.com>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Hillf Danton <hdanton@sina.com>,
+        Christian Brauner <brauner@kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
         linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        p.raghav@samsung.com, da.gomez@samsung.com, rohan.puri@samsung.com
-Subject: Re: [PATCH v2] Documentation: add initial iomap kdoc
-Message-ID: <ZGcDaysYl+w9kV6+@infradead.org>
-References: <20230518150105.3160445-1-mcgrof@kernel.org>
+        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        Christoph Hellwig <hch@lst.de>, linux-erofs@lists.ozlabs.org,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: [PATCH v20 05/32] splice: Make splice from a DAX file use direct_splice_read()
+Date:   Fri, 19 May 2023 08:40:20 +0100
+Message-Id: <20230519074047.1739879-6-dhowells@redhat.com>
+In-Reply-To: <20230519074047.1739879-1-dhowells@redhat.com>
+References: <20230519074047.1739879-1-dhowells@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230518150105.3160445-1-mcgrof@kernel.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.6
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 18, 2023 at 08:01:05AM -0700, Luis Chamberlain wrote:
-> +        Mapping of heading styles within this document:
-> +        Heading 1 uses "====" above and below
-> +        Heading 2 uses "===="
-> +        Heading 3 uses "----"
-> +        Heading 4 uses "````"
-> +        Heading 5 uses "^^^^"
-> +        Heading 6 uses "~~~~"
-> +        Heading 7 uses "...."
-> +
-> +        Sections are manually numbered because apparently that's what everyone
+Make a read splice from a DAX file go directly to direct_splice_read() to
+do the reading as filemap_splice_read() is unlikely to find any pagecache
+to splice.
 
-Why are you picking different defaults then the rest of the kernel
-documentation?
+I think this affects only erofs, Ext2, Ext4, fuse and XFS.
 
-> +
-> +A modern block abstraction
-> +==========================
-> +
-> +**iomap** allows filesystems to query storage media for data using *byte
-> +ranges*. Since block mapping are provided for a *byte ranges* for cache data in
-> +memory, in the page cache, naturally this implies operations on block ranges
-> +will also deal with *multipage* operations in the page cache. **Folios** are
-> +used to help provide *multipage* operations in memory for the *byte ranges*
-> +being worked on.
+Signed-off-by: David Howells <dhowells@redhat.com>
+cc: Christoph Hellwig <hch@lst.de>
+cc: Al Viro <viro@zeniv.linux.org.uk>
+cc: Jens Axboe <axboe@kernel.dk>
+cc: linux-erofs@lists.ozlabs.org
+cc: linux-ext4@vger.kernel.org
+cc: linux-fsdevel@vger.kernel.org
+cc: linux-xfs@vger.kernel.org
+cc: linux-fsdevel@vger.kernel.org
+cc: linux-block@vger.kernel.org
+cc: linux-mm@kvack.org
+---
+ fs/splice.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-As mentioned you list time this information was circulated this is not
-true.  iomap itself has nothing to with blocks, and even less so with
-the page cache per se.  It just iterates over ranges of file data and
-applies work to it.
+diff --git a/fs/splice.c b/fs/splice.c
+index 1e0b7c7038b5..7b818b5b18d4 100644
+--- a/fs/splice.c
++++ b/fs/splice.c
+@@ -421,6 +421,11 @@ ssize_t generic_file_splice_read(struct file *in, loff_t *ppos,
+ 	struct kiocb kiocb;
+ 	int ret;
+ 
++#ifdef CONFIG_FS_DAX
++	if (IS_DAX(in->f_mapping->host))
++		return direct_splice_read(in, ppos, pipe, len, flags);
++#endif
++
+ 	iov_iter_pipe(&to, ITER_DEST, pipe, len);
+ 	init_sync_kiocb(&kiocb, in);
+ 	kiocb.ki_pos = *ppos;
 
-> +iomap IO interfaces
-> +===================
-> +
-> +You call **iomap** depending on the type of filesystem operation you are working
-> +on. We detail some of these interactions below.
-
-Who is you?
-
-> +
-> +iomap for bufferred IO writes
-> +-----------------------------
-> +
-> +You call **iomap** for buffered IO with:
-> +
-> + * ``iomap_file_buffered_write()`` - for buffered writes
-> + * ``iomap_page_mkwrite()`` - when dealing callbacks for
-> +    ``struct vm_operations_struct``
-> +
-> +  * ``struct vm_operations_struct.page_mkwrite()``
-> +  * ``struct vm_operations_struct.fault()``
-> +  * ``struct vm_operations_struct.huge_fault()``
-> +  * ``struct vm_operations_struct`.pfn_mkwrite()``
-> +
-> +You *may* use buffered writes to also deal with ``fallocate()``:
-> +
-> + * ``iomap_zero_range()`` on fallocate for zeroing
-> + * ``iomap_truncate_page()`` on fallocate for truncation
-> +
-> +Typically you'd also happen to use these on paths when updating an inode's size.
-
-I'm not really sure what this is trying to explain.  It basically looks
-like filler text generated by machine learning algorithms..
-
-The same is true for a large part of this document.
-
-> +A filesystem also needs to call **iomap** when assisting the VFS manipulating a
-> +file into the page cache.
-
-A file systsem doesn't _need_ to do anything.  It may chose to do
-things, and the iomap based helpers might be useful for that.  But
-again, I'm still not getting what this document is even trying to
-explain, as "to implement the method foo, use the iomap_foo" isn't
-really helping anyone.
-
-> +Converting filesystems from buffer-head to iomap guide
-> +======================================================
-
-If you want such a guide, please keep it in a separate file from the
-iomap API documentation.  I'd also suggest that you actually try such
-a conversion first, as that might help shaping the documentation :)
-
-> +Testing Direct IO
-> +=================
-> +
-> +Other than fstests you can use LTP's dio, however this tests is limited as it
-> +does not test stale data.
-> +
-> +{{{
-> +./runltp -f dio -d /mnt1/scratch/tmp/
-> +}}}
-
-How does this belong into an iomap documentation?  If LTPs dio is really
-all that useful we should import it into xfstests, btw.  I'm not sure it
-is, though.
-
-> +We try to document known issues that folks should be aware of with **iomap** here.
-
-Who is "we"?
-
-> + * DOC: Introduction
-> + *
-> + * iomap allows filesystems to sequentially iterate over byte addressable block
-> + * ranges on an inode and apply operations to it.
-> + *
-> + * iomap grew out of the need to provide a modern block mapping abstraction for
-> + * filesystems with the different IO access methods they support and assisting
-> + * the VFS with manipulating files into the page cache. iomap helpers are
-> + * provided for each of these mechanisms. However, block mapping is just one of
-> + * the features of iomap, given iomap supports DAX IO for filesystems and also
-> + * supports such the ``lseek``/``llseek`` ``SEEK_DATA``/``SEEK_HOLE``
-> + * interfaces.
-> + *
-> + * Block mapping provides a mapping between data cached in memory and the
-> + * location on persistent storage where that data lives. `LWN has an great
-> + * review of the old buffer-heads block-mapping and why they are inefficient
-> + * <https://lwn.net/Articles/930173/>`, since the inception of Linux.  Since
-> + * **buffer-heads** work on a 512-byte block based paradigm, it creates an
-> + * overhead for modern storage media which no longer necessarily works only on
-> + * 512-blocks. iomap is flexible providing block ranges in *bytes*. iomap, with
-> + * the support of folios, provides a modern replacement for **buffer-heads**.
-> + */
-
-I really don't want random blurbs and links like this in the main
-header.  If you want to ramble in a little howto that's fine, but the
-main header is not the place for it.
-
-Also please keep improvements to the header in a separate patch from
-adding Documentation/ documents.
