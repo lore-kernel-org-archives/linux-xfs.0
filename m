@@ -2,107 +2,62 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 710D9C77B7D
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 03:16:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EBE4C77B7F
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 04:11:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229497AbjESDQL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 May 2023 23:16:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58594 "EHLO
+        id S229635AbjESELp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 May 2023 00:11:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230109AbjESDQK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 May 2023 23:16:10 -0400
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E244110
-        for <linux-xfs@vger.kernel.org>; Thu, 18 May 2023 20:16:09 -0700 (PDT)
-Received: from letrec.thunk.org (c-73-212-78-46.hsd1.md.comcast.net [73.212.78.46])
-        (authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 34J3FOqn029941
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 18 May 2023 23:15:25 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-        t=1684466129; bh=jwhdipxRwt17VHbkfp65xNv4jLc8Jh1vnKtY8iZIs10=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To;
-        b=kzCtQPMt8l1BwbiAE9yr4l8nYcawVAQ1Zz4TYBxHBJWw5P/THc92BWQfvAn9g0Ss3
-         QS17GFNOM49utdmWCO0YbsW5EbM2QQ+vU4T1CfVNhwhKT1ZyvAg/4yU5SqQr8JsC2L
-         ahId2PBad1g0pWY5MEqCvA4rbOa9bEXCv5joGiZYYsYC104CYf7zb97W2n0k2Crg33
-         K3/VbZS+Vfqc+B0CDBL4rf1sjv0iaOXMumEQ8dQHbOgzLUU8PuF+1A0CuAWSzR+UWn
-         l0aLKcioCLKN+qC5IWci+bIZar6hek3GzdmjttpkVAqI/Rg82UcOcK1YetiQ8V5eOY
-         7NIHC2wkVAqyw==
-Received: by letrec.thunk.org (Postfix, from userid 15806)
-        id 358158C02F5; Thu, 18 May 2023 23:15:24 -0400 (EDT)
-Date:   Thu, 18 May 2023 23:15:24 -0400
-From:   "Theodore Ts'o" <tytso@mit.edu>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Luis Chamberlain <mcgrof@kernel.org>, corbet@lwn.net, jake@lwn.net,
-        djwong@kernel.org, dchinner@redhat.com, ritesh.list@gmail.com,
-        rgoldwyn@suse.com, jack@suse.cz, linux-doc@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-block@vger.kernel.org, p.raghav@samsung.com,
-        da.gomez@samsung.com, rohan.puri@samsung.com
-Subject: Re: [PATCH] Documentation: add initial iomap kdoc
-Message-ID: <ZGbpzBIZHBqgmTbz@mit.edu>
-References: <20230518144037.3149361-1-mcgrof@kernel.org>
- <ZGY61jQfExQc2j71@infradead.org>
- <ZGY7G8gIvWCi0ONT@bombadil.infradead.org>
- <ZGY7aumgDgU0jIK0@infradead.org>
+        with ESMTP id S229694AbjESELl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 00:11:41 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 319C010CF;
+        Thu, 18 May 2023 21:11:40 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id BAD3468C4E; Fri, 19 May 2023 06:11:36 +0200 (CEST)
+Date:   Fri, 19 May 2023 06:11:36 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Theodore Ts'o <tytso@mit.edu>
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: introduce bdev holder ops and a file system shutdown method v2
+Message-ID: <20230519041136.GA10931@lst.de>
+References: <20230518042323.663189-1-hch@lst.de> <ZGbYLK0lOqYqPf9O@mit.edu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ZGY7aumgDgU0jIK0@infradead.org>
+In-Reply-To: <ZGbYLK0lOqYqPf9O@mit.edu>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 18, 2023 at 07:51:22AM -0700, Christoph Hellwig wrote:
-> On Thu, May 18, 2023 at 07:50:03AM -0700, Luis Chamberlain wrote:
-> > On Thu, May 18, 2023 at 07:48:54AM -0700, Christoph Hellwig wrote:
-> > > > +**iomap** allows filesystems to query storage media for data using *byte ranges*. Since block
-> > > > +mapping are provided for a *byte ranges* for cache data in memory, in the page cache, naturally
-> > > 
-> > > Without fixing your line length I can't even read this mess..
+On Thu, May 18, 2023 at 10:00:12PM -0400, Theodore Ts'o wrote:
+> On Thu, May 18, 2023 at 06:23:09AM +0200, Christoph Hellwig wrote:
+> > Hi all,
 > > 
-> > I thought we are at 100?
+> > this series fixes the long standing problem that we never had a good way
+> > to communicate block device events to the user of the block device.
+> > 
+> > It fixes this by introducing a new set of holder ops registered at
+> > blkdev_get_by_* time for the exclusive holder, and then wire that up
+> > to a shutdown super operation to report the block device remove to the
+> > file systems.
 > 
-> Ony for individual lines and when it improves readability (whatever
-> that means).  But multiple to long lines, especially full of text
-> are completely unreadable in a terminal.
+> Thanks for working on this!  Is there going to be an fstest which
+> simulates a device removal while we're running fsstress or some such,
+> so we can exercise full device removal path?
 
-For C code, if you have really deeply nested code, sometimes it's
-better to have some lines which are longer than to have gratuitous
-line break just to keep everything under 72-76 characters.
 
-But if you are writing a block of text, and you are expecting people
-to read it in a terminal window, I think it is adviseable to wrap at
-72 characters.  In fact, some will advise wrapping earlier than that,
-to better aid comprehension.  For example:
+So the problem with xfstests is that there isn't really any generic
+way to remove a block device, and even less so to put it back.
 
-   "Optimal line length or column width for body text is 40–70
-   characters.  When people read, their eyes jump across a line of
-   text, pausing momentarily to take in groups of three or four
-   words. Studies have shown that readers can make only three or four
-   of these jumps (or saccades) per line before reading becomes
-   tiring.
-
-   Too long lines with too many words also make it harder for the eyes
-   to find the correct spot when they sweep back to the left to pick
-   up the next line of text. To maintain readability, it is imperative
-   to use moderate line lengths within the range of 40–70 characters.
-
-   Do not set normally sized body text in a single column across a 8.5
-   by 11 inch page. If you do that, the result will greatly exceed 70
-   characters, reading efficiency will be significantly reduced, and
-   your readers’ attention will be easily lost.
-
-   Two column layouts are the best solution for achieving optimal body
-   text column widths on American letter size paper. If that is not
-   practical and using only one column is necessary, then be sure to
-   use large side margins in order to bring the line length as close
-   as possible to 70 characters or less."
-
-   -- https://winterpm.com/
-
-Cheers,
-
-						- Ted
+xfstests has some scsi_debug based tests, maybe I can cook something up
+for that.  My testing has been with nvme, so another option would be
+to add nvme-loop support to xfstests and use that.  I'll see what I can
+do.
