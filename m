@@ -2,173 +2,94 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71122C77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 14:22:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA34CC77B7F
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 15:02:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231883AbjESOWI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 May 2023 10:22:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47284 "EHLO
+        id S230154AbjESPCB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 May 2023 11:02:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229893AbjESOWG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 10:22:06 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84F89116;
-        Fri, 19 May 2023 07:22:04 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id D51C11FDA9;
-        Fri, 19 May 2023 14:22:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1684506122; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=WlcBct/wzp7TvW6xV2C5NZk4K9r7Xb2dIshCQXz8B/o=;
-        b=AFt2rU6BsN/C4LLgMrh7gKGcpHYIHok4I1/ZlixA6CgBGql3l73YlMa9C48tJmr9NqegsT
-        LN8AClWFtwITzTZAUWgoU01jAS1F2lDDOB4JawywQhzdu2BdTVwBO7ISqWbV6ElVvIXcHy
-        pS+mrAVAokuwV8tW3e7shtOpSuVArgU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1684506122;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=WlcBct/wzp7TvW6xV2C5NZk4K9r7Xb2dIshCQXz8B/o=;
-        b=n6vjt7WKTMi/w+YlBK3seqHcXPDKocScWzVVUDL+yCxdpf+f0GwrDIg68CO/X1/yI4orBU
-        4xpJjA0dEHwk/dCw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 23E2213A12;
-        Fri, 19 May 2023 14:22:02 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id zjpzBgqGZ2TWHwAAMHmgww
-        (envelope-from <hare@suse.de>); Fri, 19 May 2023 14:22:02 +0000
-Message-ID: <b96b397e-2f5e-7910-3bb3-7405d0e293a7@suse.de>
-Date:   Fri, 19 May 2023 16:22:01 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.1
-Subject: Re: [PATCH 16/17] block: use iomap for writes to block devices
-Content-Language: en-US
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     Miklos Szeredi <miklos@szeredi.hu>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        David Howells <dhowells@redhat.com>,
+        with ESMTP id S229714AbjESPB7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 11:01:59 -0400
+Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 668CCC7;
+        Fri, 19 May 2023 08:01:55 -0700 (PDT)
+Received: by mail-pf1-x42b.google.com with SMTP id d2e1a72fcca58-64d2a613ec4so1119624b3a.1;
+        Fri, 19 May 2023 08:01:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1684508515; x=1687100515;
+        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=JBc9YrxvbYjejsKl+F5Pqxz2DtC64tdrlhepiTOshuE=;
+        b=V1NDgn1OtjZYesBfiUNAVfX+RVW/0Rrj1F0Y1FOYXaEGm/XxFQw+rSX3Kcs+WmLRZy
+         Iv/vZu2Tcg5FwHryRCEFEDhDVBg7TbIZVTdfwrxcSsLhuqDnCK7tXlP/cO6oeSBeJ3ru
+         Qd+ywtM57WDsbifVFlWrPDBwCdJblfdsH5gZPfeVMAaK2bchGmfbHP9f5QS+nnRFd7Zx
+         drQca0BGS/p8mj0LghSBleDwUfk9YjBs9u32MvJrrVB5ueSTCPli6X+bzmQRps1xUiIY
+         1Wsg8P6uDvMaGMuabXyGtr+ITf01owBe+ajJ2Y9d1W/1qRxU1HnGgfajhoweLSMFYo24
+         kiTA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1684508515; x=1687100515;
+        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=JBc9YrxvbYjejsKl+F5Pqxz2DtC64tdrlhepiTOshuE=;
+        b=Fqs48XqS1TyKv8gx+2ntUcb4/eKlvtY9jDy+0OhY/9FAXgjIk7jjuYGdp3S1tAUj6d
+         q4B79HJaHl63LrmFTimSj7FYPOrm8C1yVIMwB+Cq2A5TDSEMHAUcxOQPtYBIr4aN00yg
+         li5fVBJMcmW4uG2WS5bxXvo2r09iDyuE0gGHSrb3Biv9PwnDq0GneSnDsX2iVrTdhhYT
+         Ys3Hgc0iz6Y7jUMxDrm44D3bZz2/oEQdb9WjCVD5d+3KOaCkW2rcrlSKOGVOFvdrM0Ky
+         YEDNeNrCYpILWT4JObNPGsPxuM1Y44k+8YUnEYfWKNOpat2YjqtV/qVM6NLG7yKsc/0j
+         p1RA==
+X-Gm-Message-State: AC+VfDyB7u4TUmDfIeWXauzLdHGQwt5dI95IMv0YWj0zPeCK/0HYVhl0
+        t/3F/sCo11AnSoCFF+1Ojjg=
+X-Google-Smtp-Source: ACHHUZ4ArbowHIV8H57ORsYngFfbK5Bp2xLZh/KvSZbs3iqQ5OKRLuIJhG+GPaAlGJaRkoIIAy9cOg==
+X-Received: by 2002:a05:6a20:429b:b0:101:73a9:1680 with SMTP id o27-20020a056a20429b00b0010173a91680mr2691699pzj.8.1684508514628;
+        Fri, 19 May 2023 08:01:54 -0700 (PDT)
+Received: from rh-tp ([49.207.220.159])
+        by smtp.gmail.com with ESMTPSA id x53-20020a056a000bf500b0063d375ca0cbsm3121165pfu.151.2023.05.19.08.01.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 19 May 2023 08:01:54 -0700 (PDT)
+Date:   Fri, 19 May 2023 20:31:39 +0530
+Message-Id: <87edncwejw.fsf@doe.com>
+From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Matthew Wilcox <willy@infradead.org>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, linux-kernel@vger.kernel.org
-References: <20230424054926.26927-1-hch@lst.de>
- <20230424054926.26927-17-hch@lst.de>
-From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230424054926.26927-17-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        Dave Chinner <david@fromorbit.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
+        Disha Goel <disgoel@linux.ibm.com>
+Subject: Re: [RFCv5 1/5] iomap: Rename iomap_page_create/release() to iop_alloc/free()
+In-Reply-To: <ZGXCCoGFXhtcbkBX@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 4/24/23 07:49, Christoph Hellwig wrote:
-> Use iomap in buffer_head compat mode to write to block devices.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->   block/Kconfig |  1 +
->   block/fops.c  | 33 +++++++++++++++++++++++++++++----
->   2 files changed, 30 insertions(+), 4 deletions(-)
-> 
-> diff --git a/block/Kconfig b/block/Kconfig
-> index 941b2dca70db73..672b08f0096ab4 100644
-> --- a/block/Kconfig
-> +++ b/block/Kconfig
-> @@ -5,6 +5,7 @@
->   menuconfig BLOCK
->          bool "Enable the block layer" if EXPERT
->          default y
-> +       select IOMAP
->          select SBITMAP
->          help
->   	 Provide block layer support for the kernel.
-> diff --git a/block/fops.c b/block/fops.c
-> index 318247832a7bcf..7910636f8df33b 100644
-> --- a/block/fops.c
-> +++ b/block/fops.c
-> @@ -15,6 +15,7 @@
->   #include <linux/falloc.h>
->   #include <linux/suspend.h>
->   #include <linux/fs.h>
-> +#include <linux/iomap.h>
->   #include <linux/module.h>
->   #include "blk.h"
->   
-> @@ -386,6 +387,27 @@ static ssize_t blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
->   	return __blkdev_direct_IO(iocb, iter, bio_max_segs(nr_pages));
->   }
->   
-> +static int blkdev_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
-> +		unsigned int flags, struct iomap *iomap, struct iomap *srcmap)
-> +{
-> +	struct block_device *bdev = I_BDEV(inode);
-> +	loff_t isize = i_size_read(inode);
-> +
-> +	iomap->bdev = bdev;
-> +	iomap->offset = ALIGN_DOWN(offset, bdev_logical_block_size(bdev));
-> +	if (WARN_ON_ONCE(iomap->offset >= isize))
-> +		return -EIO;
+Christoph Hellwig <hch@infradead.org> writes:
 
-I'm hitting this during booting:
-[    5.016324]  <TASK>
-[    5.030256]  iomap_iter+0x11a/0x350
-[    5.030264]  iomap_readahead+0x1eb/0x2c0
-[    5.030272]  read_pages+0x5d/0x220
-[    5.030279]  page_cache_ra_unbounded+0x131/0x180
-[    5.030284]  filemap_get_pages+0xff/0x5a0
-[    5.030292]  filemap_read+0xca/0x320
-[    5.030296]  ? aa_file_perm+0x126/0x500
-[    5.040216]  ? touch_atime+0xc8/0x150
-[    5.040224]  blkdev_read_iter+0xb0/0x150
-[    5.040228]  vfs_read+0x226/0x2d0
-[    5.040234]  ksys_read+0xa5/0xe0
-[    5.040238]  do_syscall_64+0x5b/0x80
+> On Mon, May 08, 2023 at 12:57:56AM +0530, Ritesh Harjani (IBM) wrote:
+>> This patch renames the iomap_page_create/release() functions to
+>> iop_alloc/free() calls. Later patches adds more functions for
+>> handling iop structure with iop_** naming conventions.
+>> Hence iop_alloc/free() makes more sense.
+>
+> I can't say I like the iop_* naming all that much, especially as we
+> it is very generic and we use an iomap_ prefix every else.
+>
 
-Maybe we should consider this patch:
+I can prefix iomap_ so it will then become iomap_iop_alloc()/iomap_iop_free().
+All other helpers will be like...
+- iomap_iop_set_range_uptodate()
+- iomap_iop_set_range_dirty()
+- ...
 
-diff --git a/block/fops.c b/block/fops.c
-index 524b8a828aad..d202fb663f25 100644
---- a/block/fops.c
-+++ b/block/fops.c
-@@ -386,10 +386,13 @@ static int blkdev_iomap_begin(struct inode *inode, 
-loff_t offset, loff_t length,
+'iomap_iop' prefix just helps distinguish all the APIs which are
+working over iomap_page (iop) structure.
 
-         iomap->bdev = bdev;
-         iomap->offset = ALIGN_DOWN(offset, bdev_logical_block_size(bdev));
--       if (WARN_ON_ONCE(iomap->offset >= isize))
--               return -EIO;
--       iomap->type = IOMAP_MAPPED;
--       iomap->addr = iomap->offset;
-+       if (WARN_ON_ONCE(iomap->offset >= isize)) {
-+               iomap->type = IOMAP_HOLE;
-+               iomap->addr = IOMAP_NULL_ADDR;
-+       } else {
-+               iomap->type = IOMAP_MAPPED;
-+               iomap->addr = iomap->offset;
-+       }
-         iomap->length = isize - iomap->offset;
-         if (IS_ENABLED(CONFIG_BUFFER_HEAD))
-                 iomap->flags |= IOMAP_F_BUFFER_HEAD;
+>> Note, this patch also move folio_detach_private() to happen later
+>> after checking for bitmap_full(). This is just another small refactor
+>> because in later patches we will move bitmap_** helpers to iop_** related
+>> helpers which will only take a folio and hence we should move
+>> folio_detach_private() to the end before calling kfree(iop).
+>
+> Please don't mix renames and code movements.
 
-
-Other that the the system seems fine.
-
-Cheers,
-
-Hannes
-
+Sure. Will take care of it in the next rev.
