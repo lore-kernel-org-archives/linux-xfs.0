@@ -2,85 +2,123 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0725C77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 15:53:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E987C77B7A
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 16:08:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232270AbjESPxn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 May 2023 11:53:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33578 "EHLO
+        id S229665AbjESQI5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 May 2023 12:08:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42318 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231124AbjESPxn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 11:53:43 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61000B2;
-        Fri, 19 May 2023 08:53:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=USlAGqydtnLM3TYHWN6L8pKx67GkcR3rUcBpLI3d92s=; b=G/ydLPvEq3QNDQSGLbVpkoPsd8
-        i3AjboE9lWpFNQxzRYZ7AssvFe7g4D6JXMP5pXRIs5YmKrt0kOB+8P0sYAcJzlG7obOQ69lYNwmH1
-        DfsYTD2AZB5jm16Q/SdZVPMQqBpUik//d8s8sFtveSWTbCJGoRk713TVux7kNCOFe2TDybWdp9dGg
-        92Nr0+busVJh8lmT6Dw+5pp8mvvW5naYEz+NyFLDTfM1llhnEMq5Xd/Z+btwQKhwmMWiJYJ5HuBE4
-        C6NPjKZCV1KcvoUT0Ut1brnAp7COVvFa37m27HJlIGzmuNnrN6CXcUrh9xipGceSnxy+i+D2eaZiG
-        TFcjlosw==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1q02QD-006eus-GU; Fri, 19 May 2023 15:53:37 +0000
-Date:   Fri, 19 May 2023 16:53:37 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Ritesh Harjani <ritesh.list@gmail.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
+        with ESMTP id S229514AbjESQI4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 12:08:56 -0400
+Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19A50FE;
+        Fri, 19 May 2023 09:08:55 -0700 (PDT)
+Received: by mail-pf1-x42b.google.com with SMTP id d2e1a72fcca58-64d24136685so763468b3a.1;
+        Fri, 19 May 2023 09:08:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1684512534; x=1687104534;
+        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=pYuk3v0XPo2OdF3QLRiX62bwkCy75DsZ3cNVRzjLINE=;
+        b=Xf4CeRaq4j8SiHTJWhjzogd6coTLnnaCOoNTi4hPPiwfyUN6Fh7dzcmKCT0x4XA/Zm
+         0vhzWPQCteyoFVeJMZPQjiIFivg8UTNut9eKFA/w6KrI31/xJxbVJQllRSyc9zE/ntKH
+         JXmtpxqSmJx7OJbCZyIiFMQuZwxpm8BFpqlLPFqU20rCJXIeJnu5QP7Z649ndbFBI3+2
+         NSbd7qmYTJjQM8HiZVHU6SJeBJZ26xujdA7SRpOr65hghZn0dtufCjCxo8nEZPMe4ExA
+         HvgsAEf/YRclJAQk5mKiTJ1fjEty4nsJg5XT1CgDBkzzVMXChs6eh5FVjOI63hlmBFq3
+         jPXw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1684512534; x=1687104534;
+        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=pYuk3v0XPo2OdF3QLRiX62bwkCy75DsZ3cNVRzjLINE=;
+        b=KwD0YK4icTI3cbPDDy6OrvPEARhZVDcU7fsU7auFjNw55UoSwRQ3/ekCyb8DwN6ouX
+         loiA3RbTAgrPHrzV748cC97KHAths7NwjYL0HQlV2aKt1jRit7Ta6DH4O415NXTige+c
+         qgz35cgGzgGibuS32kFXIbODnW3emjmXADsoGhtLgiJogL4wbNQR0QolJW7Jfl4MCtrW
+         9Ma9xbmrUTOLPXI9ZLBkm6lh5RF6MqR+lur+B/CJDc3grNMQQGEKFm0uBhAl7nQ5AZlu
+         GYfVRl+yFjvKN2shwURqgx7G+kUMH37BmU/odbOgPAHXKLOJwRS0huzmYUNPeWejqr8h
+         vQkA==
+X-Gm-Message-State: AC+VfDzMb1r7SoRboyodA5PEf5NDljyl8JwnR6xyIRgvAr2pzqet+iu5
+        L0iicAt/UBxfmsM0jsf4f5JpH6rXIIY=
+X-Google-Smtp-Source: ACHHUZ5C66YkR4r5DMPzujxtfrBiPYDJL4qtgHx8NcI/f+UmEWwdbvUDxeu/ZqrxXztYVPxKrv+lZQ==
+X-Received: by 2002:a05:6a21:6d98:b0:102:c96b:f147 with SMTP id wl24-20020a056a216d9800b00102c96bf147mr3483454pzb.17.1684512534500;
+        Fri, 19 May 2023 09:08:54 -0700 (PDT)
+Received: from rh-tp ([49.207.220.159])
+        by smtp.gmail.com with ESMTPSA id i9-20020aa78b49000000b00643aa9436c9sm2889469pfd.172.2023.05.19.09.08.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 19 May 2023 09:08:53 -0700 (PDT)
+Date:   Fri, 19 May 2023 21:38:46 +0530
+Message-Id: <87353swbg1.fsf@doe.com>
+From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Matthew Wilcox <willy@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
         Brian Foster <bfoster@redhat.com>,
         Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-        Disha Goel <disgoel@linux.ibm.com>
-Subject: Re: [RFCv5 4/5] iomap: Allocate iop in ->write_begin() early
-Message-ID: <ZGebgckh3oSvQSEt@casper.infradead.org>
-References: <ZGXD8T1Kv4NafQmO@infradead.org>
- <875y8owdrm.fsf@doe.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <875y8owdrm.fsf@doe.com>
+        Disha Goel <disgoel@linux.ibm.com>,
+        Aravinda Herle <araherle@in.ibm.com>
+Subject: Re: [RFCv5 5/5] iomap: Add per-block dirty state tracking to improve performance
+In-Reply-To: <ZGYnzcoGuzWKa7lh@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 19, 2023 at 08:48:37PM +0530, Ritesh Harjani wrote:
-> Christoph Hellwig <hch@infradead.org> writes:
-> 
-> > On Mon, May 08, 2023 at 12:57:59AM +0530, Ritesh Harjani (IBM) wrote:
-> >> Earlier when the folio is uptodate, we only allocate iop at writeback
-> >
-> > s/Earlier/Currently/ ?
-> >
-> >> time (in iomap_writepage_map()). This is ok until now, but when we are
-> >> going to add support for per-block dirty state bitmap in iop, this
-> >> could cause some performance degradation. The reason is that if we don't
-> >> allocate iop during ->write_begin(), then we will never mark the
-> >> necessary dirty bits in ->write_end() call. And we will have to mark all
-> >> the bits as dirty at the writeback time, that could cause the same write
-> >> amplification and performance problems as it is now.
-> >>
-> >> However, for all the writes with (pos, len) which completely overlaps
-> >> the given folio, there is no need to allocate an iop during
-> >> ->write_begin(). So skip those cases.
-> >
-> > This reads a bit backwards, I'd suggest to mention early
-> > allocation only happens for sub-page writes before going into the
-> > details.
-> >
-> 
-> sub-page is a bit confusing here. Because we can have a large folio too
-> with blocks within that folio. So we decided to go with per-block
-> terminology [1].
-> 
-> [1]: https://lore.kernel.org/linux-xfs/ZFR%2FGuVca5nFlLYF@casper.infradead.org/
-> 
-> I am guessing you would like to me to re-write the above para. Is this better?
-> 
-> "We dont need to allocate an iop in ->write_begin() for writes where the
-> position and length completely overlap with the given folio.
-> Therefore, such cases are skipped."
+Christoph Hellwig <hch@infradead.org> writes:
 
-... and reorder that paragraph to be first.
+> On Mon, May 08, 2023 at 12:58:00AM +0530, Ritesh Harjani (IBM) wrote:
+>> +static inline void iop_clear_range(struct iomap_page *iop,
+>> +				   unsigned int start_blk, unsigned int nr_blks)
+>> +{
+>> +	bitmap_clear(iop->state, start_blk, nr_blks);
+>> +}
+>
+> Similar to the other trivial bitmap wrappers added earlier in the
+> series I don't think this one is very useful.
+>
+>> +	struct iomap_page *iop = to_iomap_page(folio);
+>> +	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
+>> +	unsigned int first_blk = (off >> inode->i_blkbits);
+>> +	unsigned int last_blk = ((off + len - 1) >> inode->i_blkbits);
+>> +	unsigned int nr_blks = last_blk - first_blk + 1;
+>> +	unsigned long flags;
+>> +
+>> +	if (!iop)
+>> +		return;
+>> +	spin_lock_irqsave(&iop->state_lock, flags);
+>> +	iop_set_range(iop, first_blk + blks_per_folio, nr_blks);
+>> +	spin_unlock_irqrestore(&iop->state_lock, flags);
+>
+> All the variable initializations except for ios should really move
+> into a branch here.
+
+Branch won't be needed I guess, will just move the initialization after
+the return.
+
+> Or we just use separate helpers for the case
+> where we actually have an iops and isolate all that, which would
+> be my preference (but goes counter to the direction of changes
+> earlier in the series to the existing functions).
+>
+>> +static void iop_clear_range_dirty(struct folio *folio, size_t off, size_t len)
+>> +{
+>> +	struct iomap_page *iop = to_iomap_page(folio);
+>> +	struct inode *inode = folio->mapping->host;
+>> +	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
+>> +	unsigned int first_blk = (off >> inode->i_blkbits);
+>> +	unsigned int last_blk = ((off + len - 1) >> inode->i_blkbits);
+>> +	unsigned int nr_blks = last_blk - first_blk + 1;
+>> +	unsigned long flags;
+>> +
+>> +	if (!iop)
+>> +		return;
+>> +	spin_lock_irqsave(&iop->state_lock, flags);
+>> +	iop_clear_range(iop, first_blk + blks_per_folio, nr_blks);
+>> +	spin_unlock_irqrestore(&iop->state_lock, flags);
+>> +}
+>
+> Same here.
+
+Sure.
+
+-ritesh
