@@ -2,53 +2,53 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0764EC7EE26
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 15:03:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B23BC77B75
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 15:07:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232212AbjESPDi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 May 2023 11:03:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42450 "EHLO
+        id S230356AbjESPHM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 May 2023 11:07:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232179AbjESPDh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 11:03:37 -0400
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73DAE121;
-        Fri, 19 May 2023 08:03:36 -0700 (PDT)
-Received: by mail-pf1-x431.google.com with SMTP id d2e1a72fcca58-64cfb8d33a5so2431142b3a.2;
-        Fri, 19 May 2023 08:03:36 -0700 (PDT)
+        with ESMTP id S229468AbjESPHM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 11:07:12 -0400
+Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5C13121;
+        Fri, 19 May 2023 08:07:09 -0700 (PDT)
+Received: by mail-pg1-x532.google.com with SMTP id 41be03b00d2f7-51b33c72686so2305185a12.1;
+        Fri, 19 May 2023 08:07:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1684508616; x=1687100616;
+        d=gmail.com; s=20221208; t=1684508829; x=1687100829;
         h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=BBqIfZeDzATL4+pMrzdtV9gMN3jbEz9C3wUVWk3CSQ4=;
-        b=aGZAJXm2rY93TQ6c2VS2wwK+xIo7VXU8TtZxHvZ/UBs6wRX2ARMfBS/VQlxEOSGl+o
-         feR9Xx6uw4yVxMQGIsaK+6FY87YOM0orwXaF6CnoBciSpI+z188mXto6qy4MdLl6oI+r
-         cH2LqTeupFiyN2g6mpC4h/k7f9Q969zn9zIqv28Sez7YhGxi5vjQecOfRaOdrxa2WmoG
-         ZrW2JqHyXAckpRI+rY1KzUOtLH89eZsNEaPj/mkaVr9Y4nWlQaTX4ntQnKr2qk7jd4A8
-         YEiS6RBVB70BJoAh8KSDxdR3hrSl3PzaeYJJ3xoJgEXu1NiHwvrGaHv/W2mvhcLMQEl/
-         wOEA==
+        bh=p3jaXn6ewxRaNtoINF6pbHhzTFNpw3kEuQPfPQZhLeM=;
+        b=bcrCDeMSbsVJ3ZrGNRH0ddoyqIai267IEFQGZekk5oOgHeJbgXGf3c6ZadPb9/EaDf
+         SGedNj96MqqPy9qV78u8v1xKAMT+VB9edzUzMbjQRO5jMTzl0bb55a/ljlkwGy1Sdw56
+         q4KVANnlgDbga4BZicozKXbPnesXdmZHkQzlcMGKu48thiBaNAESpDz2DaOkPFfEvx51
+         Nk0PkMXBnFaOS0lp7l+u0O9Lvgl9lJt2JcLNenApUDdJm9uZKP7WalBtQ1f/6Bv8DCw6
+         plq5gvO8xCfs6O0I4aqE+XIdXfk1yDjfp235QYk4317DSFqmTPioTmhbFc8tSqlUeARB
+         0sSQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684508616; x=1687100616;
+        d=1e100.net; s=20221208; t=1684508829; x=1687100829;
         h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=BBqIfZeDzATL4+pMrzdtV9gMN3jbEz9C3wUVWk3CSQ4=;
-        b=Is++3NnPwzm63OtJmRjmgX3DTFcyedSS4fSO7//4mBp6t5Emf/+L9saYsd6kDJwS3o
-         JuYVNaWfl0o4bZq11tEZwFVhfoNxF5qkQq9pFuHWwp3rkBGlW1FS6zSbjFS9nzKOoZFG
-         aXbmqk+k6G2FwyZ/IXEey1jqJKEN7Dkfzc6rzN5lKkWnS8QsQT0NZymo2pgbWD19IIW1
-         +x5HdkmZ4VQpHdQcL1im6B4pG2FwcEoQrSAqEhZoDhaczbTDpQ/E5oLLrVt6ulfTVxvE
-         WaPeUayV74I0eVGApYBSonvn+QKYeabarZ0A7VxqFpFY+Bjqo1DwyTEVa9vdu52TwSj4
-         0UsQ==
-X-Gm-Message-State: AC+VfDzFuiVkLoCuEBRuQ/ttu7oWIT/LRw4jeDRD7X52J038mhXw6+YW
-        HM7q1kCuelPykuHsvZ0JXEU=
-X-Google-Smtp-Source: ACHHUZ7QbBvICcmApDryp8Bb8qWgpUNfDNhZrrYmg++UgV60HzWN6wJjQmqeAwPYZG1K+bfH8o5NRQ==
-X-Received: by 2002:a05:6a20:4315:b0:104:a053:12fb with SMTP id h21-20020a056a20431500b00104a05312fbmr2207874pzk.60.1684508615766;
-        Fri, 19 May 2023 08:03:35 -0700 (PDT)
+        bh=p3jaXn6ewxRaNtoINF6pbHhzTFNpw3kEuQPfPQZhLeM=;
+        b=Ixp0kNkob5Cs3QOjnwxIZRLGWnzhm5ySMjKGulfJTB3TDqeqFDiAvj9Liv59b+6PXr
+         qY7KFrZDAvi6sutTxJ4STd32TRGmPfIMOC+aO7US7WfcQeJOUSgCKusCuZSw8Dl6rIL0
+         /va+uhsSynGV5qTk1S/VSQN4/yTND/wRKeCT6Zg4toM0b92PcWiKCg/a2+/natPpXApH
+         idieAeEfPsLQOooUjJw0U64yRRc2CSlSFTuhghLIpdZdE0x+goGIxC0KptyGnCWcqCDI
+         VA4fsRpQcFYjEflAnomaX7lDhOhHtMLEqH+9p68pCFFH0mtZuX+Z0RaBlzhFWeRUkE6r
+         NL7w==
+X-Gm-Message-State: AC+VfDyhKvIX2JqLW1s7qdtGsKxz9gzRvgxN4azGGw6b84eodmUE0bZ4
+        oGME7u11N0zkKfrDSolhJw3yPaXx9fU=
+X-Google-Smtp-Source: ACHHUZ76BpTSO8SBnq6xik7Pocx9t+ZTKFrvUL7VuBBM/Am/Y0a3ED62wW/N3YCP5hZK3F2WZJm08Q==
+X-Received: by 2002:a17:90b:1d90:b0:253:78c0:b129 with SMTP id pf16-20020a17090b1d9000b0025378c0b129mr2448427pjb.18.1684508829207;
+        Fri, 19 May 2023 08:07:09 -0700 (PDT)
 Received: from rh-tp ([49.207.220.159])
-        by smtp.gmail.com with ESMTPSA id j13-20020aa7800d000000b0063b5776b073sm3104144pfi.117.2023.05.19.08.03.32
+        by smtp.gmail.com with ESMTPSA id e24-20020a17090ab39800b0024c1ac09394sm1618411pjr.19.2023.05.19.08.07.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 19 May 2023 08:03:35 -0700 (PDT)
-Date:   Fri, 19 May 2023 20:33:29 +0530
-Message-Id: <87bkigwegu.fsf@doe.com>
+        Fri, 19 May 2023 08:07:08 -0700 (PDT)
+Date:   Fri, 19 May 2023 20:37:01 +0530
+Message-Id: <878rdkweay.fsf@doe.com>
 From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
 To:     Christoph Hellwig <hch@infradead.org>
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
@@ -57,35 +57,53 @@ Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Brian Foster <bfoster@redhat.com>,
         Ojaswin Mujoo <ojaswin@linux.ibm.com>,
         Disha Goel <disgoel@linux.ibm.com>
-Subject: Re: [RFCv5 2/5] iomap: Refactor iop_set_range_uptodate() function
-In-Reply-To: <ZGXCw7OHfKQ9TNiW@infradead.org>
+Subject: Re: [RFCv5 3/5] iomap: Add iop's uptodate state handling functions
+In-Reply-To: <ZGXDQ4RGslszaIIk@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 Christoph Hellwig <hch@infradead.org> writes:
 
->> +	if (iop) {
->> +		spin_lock_irqsave(&iop->uptodate_lock, flags);
->> +		bitmap_set(iop->uptodate, first_blk, nr_blks);
->> +		if (bitmap_full(iop->uptodate,
->> +				i_blocks_per_folio(inode, folio)))
->> +			folio_mark_uptodate(folio);
->> +		spin_unlock_irqrestore(&iop->uptodate_lock, flags);
->> +	} else {
->> +		folio_mark_uptodate(folio);
->> +	}
+>> + * inline helpers for bitmap operations on iop->state
+>> + */
+>> +static inline void iop_set_range(struct iomap_page *iop, unsigned int start_blk,
+>> +				 unsigned int nr_blks)
+>> +{
+>> +	bitmap_set(iop->state, start_blk, nr_blks);
+>> +}
+>> +
+>> +static inline bool iop_test_block(struct iomap_page *iop, unsigned int block)
+>> +{
+>> +	return test_bit(block, iop->state);
+>> +}
+>> +
+>> +static inline bool iop_bitmap_full(struct iomap_page *iop,
+>> +				   unsigned int blks_per_folio)
+>> +{
+>> +	return bitmap_full(iop->state, blks_per_folio);
+>> +}
 >
-> If we did a:
+> I don't really see much poin in these helpers, any particular reason
+> for adding them?
 >
-> 	if (!iop) {
-> 		folio_mark_uptodate(folio);
-> 		return;
-> 	}
->
-> we can remove a leel of identation and keep thing a bit simpler.
-> But I can live with either style.
 
-Yup, it pleases my eyes too!! I will change it.
+We ended up modifying the APIs in v5. The idea on v4 was we will keep
+iop_set_range() function which will be same for both uptodate and dirty.
+The caller can pass start_blk depending upon whether we dirty/uptodate
+needs to be marked.
+But I guess with the API changes, we don't need this low level helpers
+anymore. So If no one has any objection, I can kill this one liners.
+
+>> +/*
+>> + * iop related helpers for checking uptodate/dirty state of per-block
+>> + * or range of blocks within a folio
+>> + */
+>
+> I'm also not sure this comment adds a whole lot of value.
+>
+> The rest looks good modulo the WARN_ONs already mentined by Brian.
+
+Sure. Thanks for the review!
 
 -ritesh
