@@ -2,62 +2,52 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA409C77B7D
-	for <linux-xfs@archiver.kernel.org>; Sat, 20 May 2023 04:13:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C98C1C77B7D
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 May 2023 05:11:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229901AbjETENx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 20 May 2023 00:13:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50784 "EHLO
+        id S231189AbjETFLK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 20 May 2023 01:11:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230166AbjETENw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 May 2023 00:13:52 -0400
+        with ESMTP id S231290AbjETFKn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 May 2023 01:10:43 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C341E46;
-        Fri, 19 May 2023 21:13:51 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85F33E52;
+        Fri, 19 May 2023 22:10:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=Xi4OUwMjj6B5meDIABpjuRK4Kr+q2y1yEM0f2xLNo2w=; b=w3ZGmsdU8hhe/7c+F8CRKXYNfw
-        HhUo290wLcW0X+8ICvnQxtdMgPwpdGPH94AWRSZbCcEYiunEnXAdq8yIO71PNcxyf2aM2I4h07E/Y
-        n1z9k6gW52OG/wtRTNmIm3iHqjvM10Y4XqmuF93RrnWf2IFKfJUWRj8NCzgAsSCmKEcyQD/AiFsbj
-        K4l07RhpT3hk2C8/G89ne1NO2mAlvTK7bWPHFGMwnLzM8MA00YNd0XVAFOJ/HRb6GHIBjboyNCZJ8
-        gMrpPzrylB7vG3yRmmKvsL507SXFpiYJy4pmPl/OWzpWgIDmEQhhi3b+j1hoqDmATrLPuWc0Tlaiw
-        lQzoY4rA==;
+        bh=IZDwpSbAMestbxTLBfVfseHT/Ao1tda2Hw4YjCVMEYs=; b=cHkX9gDilxrMdUT4jG8u5OaHR4
+        L649r4BgCX/pLuYAkhtU7SfafGHxxnrkUHEgT73x1yGjbRqyAlVK21YJ9K37RG+dA6B4QsRCgDg5u
+        AMOqipYZn/a8zn8pcotnMu0xnrY0QfgL3AWKEk2bB7uEqQdxqWYQHjtC3u8IGIjc9BW/mC34TmmPK
+        4hfhEzqh4EWdQQP0Rk18v7/YSyzKzOWnHuAu/JZ6gwW/k/cKdTLVGCvGU/aHKgYJaGyj+c4eypG3x
+        qMaW3NS65gjbl/lOfjSfziIpL+N28MVHooIGIOoavwJekn2IMwGE+x/KxENxInlUVJdZ6dLPQSnzT
+        K0XEfMPQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1q0DyQ-000dg9-0X;
-        Sat, 20 May 2023 04:13:42 +0000
-Date:   Fri, 19 May 2023 21:13:42 -0700
+        id 1q0Er9-000kTk-0P;
+        Sat, 20 May 2023 05:10:15 +0000
+Date:   Fri, 19 May 2023 22:10:15 -0700
 From:   Christoph Hellwig <hch@infradead.org>
-To:     David Howells <dhowells@redhat.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
-        Jeff Layton <jlayton@kernel.org>,
-        David Hildenbrand <david@redhat.com>,
-        Jason Gunthorpe <jgg@nvidia.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Hillf Danton <hdanton@sina.com>,
-        Christian Brauner <brauner@kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        Christoph Hellwig <hch@lst.de>,
-        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v21 24/30] xfs: Provide a splice-read stub
-Message-ID: <ZGhI9nNo9yPmCTSl@infradead.org>
-References: <20230520000049.2226926-1-dhowells@redhat.com>
- <20230520000049.2226926-25-dhowells@redhat.com>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     fsverity@lists.linux.dev, linux-crypto@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-btrfs@vger.kernel.org
+Subject: Re: [PATCH v2] fsverity: use shash API instead of ahash API
+Message-ID: <ZGhWN6zohGXQvPNv@infradead.org>
+References: <20230516052306.99600-1-ebiggers@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230520000049.2226926-25-dhowells@redhat.com>
+In-Reply-To: <20230516052306.99600-1-ebiggers@kernel.org>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Same comment about stub sounding a bit weird as for ext4 and various
-patches not in my area, but the changes themselves looks good:
+I'm not really an expert on fsverify, but the rationale of not using
+clumsy external crypto offloads from the file system makes sense, and
+the code looks much nicer now:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
