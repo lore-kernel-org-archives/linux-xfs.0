@@ -2,143 +2,111 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95A2DC7EE2E
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 May 2023 23:25:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1664C77B7F
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 May 2023 00:03:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229913AbjESXZk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 May 2023 19:25:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43024 "EHLO
+        id S230153AbjETADP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 May 2023 20:03:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229923AbjESXZk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 19:25:40 -0400
-Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85A08E5D
-        for <linux-xfs@vger.kernel.org>; Fri, 19 May 2023 16:25:38 -0700 (PDT)
-Received: by mail-pg1-x530.google.com with SMTP id 41be03b00d2f7-53487355877so1137731a12.1
-        for <linux-xfs@vger.kernel.org>; Fri, 19 May 2023 16:25:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1684538737; x=1687130737;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=bKr1UB/0XkRzk2PihpADAJXUksvmnyVm9O5+fMmopFI=;
-        b=vA8gjoc7KyrjW0i8bNRpNsG/byB9+2+EFP/q1UJwgQL6b9LmP3ic8xqFrMS68ZfB2a
-         WehbkU1mXIYkJH+yPHJRYgtBv9Lr/z88H9y/wgBwJM4zrS8/hmtYoy1o33ROdc+2XBDG
-         AGRBMGEHmOUYcxXjxYlLXmQ9Tq7m5BCITL4hAih1KWV4m4ijl4MKqR5T+OpVptWNax5K
-         7uuHvNo+6iE2rzhe1RNZI/ZUPDov3wKU5K3B0nYy44b41aa8Y+13A4u0uWysUXq393aP
-         tAONcDyw+WlJJWwnI1TumxivcIhCDJg+cR5Jhnt+PALu++aDnHXaXIEwIP80dx1smXis
-         nhZQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684538737; x=1687130737;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=bKr1UB/0XkRzk2PihpADAJXUksvmnyVm9O5+fMmopFI=;
-        b=AqSjdivreIIU1YnkKI6LIav4yWL9496WLxjo7+ey5btgliTDnRtiVokLX4H5DPuSLb
-         f0KKiSWgkBGHGhd96ojXih2hxNOdasoommIC60m2fOuVQkUhiB4FOp/xIjqAlQFyFKqf
-         oJqu7T/MwkbMdB3nmiSrjbJ9usQGQKSea2CmQYYt0vAVJNmcOow8DuFNBrzaOmEtM696
-         DXf5wj7b3+V4TBoRxLv6o7lQ/q3GuaYEt0Qn1Qa+dlJTxV5/QU5F6Owwu2OAvsQTnEr6
-         jytZKTvG+HDIvEZa34n7cBjbRhhOXfbEg8FMuwA70b+Nw6I8Z8GoaUb81EQPDpPd+kx1
-         b87A==
-X-Gm-Message-State: AC+VfDzGd51OnCFHByURdyeIMhUKdoorMFeRroBu5bNhirLygtmHxQRH
-        JC5J4rS9zT7BcDJFFX+dAedRmg==
-X-Google-Smtp-Source: ACHHUZ5A2G4STQpUdYeDUuTa75DYc03lsT9xU4W88afMcTm7115Rh7EEYQvinFgfBaG7xvb8ys1tRw==
-X-Received: by 2002:a17:902:9686:b0:1a6:a6e7:8846 with SMTP id n6-20020a170902968600b001a6a6e78846mr3673960plp.40.1684538737548;
-        Fri, 19 May 2023 16:25:37 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
-        by smtp.gmail.com with ESMTPSA id ja7-20020a170902efc700b001ae4edacce5sm171280plb.94.2023.05.19.16.25.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 19 May 2023 16:25:37 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1q09Ta-001WpT-0w;
-        Sat, 20 May 2023 09:25:34 +1000
-Date:   Sat, 20 May 2023 09:25:34 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Randy Dunlap <rdunlap@infradead.org>
-Cc:     Bagas Sanjaya <bagasdotme@gmail.com>,
-        Luis Chamberlain <mcgrof@kernel.org>, corbet@lwn.net,
-        jake@lwn.net, hch@infradead.org, djwong@kernel.org,
-        dchinner@redhat.com, ritesh.list@gmail.com, rgoldwyn@suse.com,
-        jack@suse.cz, linux-doc@vger.kernel.org, linux-xfs@vger.kernel.org,
+        with ESMTP id S229958AbjETADL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 May 2023 20:03:11 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D42C10D9
+        for <linux-xfs@vger.kernel.org>; Fri, 19 May 2023 17:01:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1684540881;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=zbFi31jMxWzghDu9RJeKpwLNk82XZBGuvfsvQFuMAZA=;
+        b=JmP4XGNyGgit4jbkTTpdcrotO90zcTeSqumnmA2shiPCuGOTIre7Szq4gHFMGWSqVNse8z
+        SSV0n+NdnJUrALjRinaAxYgLvD1BR6YiY1WFJcHOvP/y3hEbetn2NLekt8SWM0fa7nx3CP
+        yOp0JCfoabx2bk3NX6lqO2SLPfq/oas=
+Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
+ [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-498-boGls4mfOPmRYAKfMNAYJA-1; Fri, 19 May 2023 20:01:18 -0400
+X-MC-Unique: boGls4mfOPmRYAKfMNAYJA-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 6A57D3C01DB4;
+        Sat, 20 May 2023 00:01:17 +0000 (UTC)
+Received: from warthog.procyon.org.uk (unknown [10.42.28.221])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 0BE5F40CFD46;
+        Sat, 20 May 2023 00:01:14 +0000 (UTC)
+From:   David Howells <dhowells@redhat.com>
+To:     Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>
+Cc:     David Howells <dhowells@redhat.com>,
+        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
+        Jeff Layton <jlayton@kernel.org>,
+        David Hildenbrand <david@redhat.com>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Hillf Danton <hdanton@sina.com>,
+        Christian Brauner <brauner@kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
         linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        p.raghav@samsung.com, da.gomez@samsung.com, rohan.puri@samsung.com
-Subject: Re: [PATCH] Documentation: add initial iomap kdoc
-Message-ID: <ZGgFbmdCrlXtNFYS@dread.disaster.area>
-References: <20230518144037.3149361-1-mcgrof@kernel.org>
- <ZGdBO6bmbj3sLlzp@debian.me>
- <731a3061-973c-a4ad-2fe5-7981c6c1279b@infradead.org>
+        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        Christoph Hellwig <hch@lst.de>, linux-erofs@lists.ozlabs.org,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: [PATCH v21 08/30] splice: Make splice from a DAX file use copy_splice_read()
+Date:   Sat, 20 May 2023 01:00:27 +0100
+Message-Id: <20230520000049.2226926-9-dhowells@redhat.com>
+In-Reply-To: <20230520000049.2226926-1-dhowells@redhat.com>
+References: <20230520000049.2226926-1-dhowells@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <731a3061-973c-a4ad-2fe5-7981c6c1279b@infradead.org>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.1
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 19, 2023 at 08:13:50AM -0700, Randy Dunlap wrote:
-> 
-> 
-> On 5/19/23 02:28, Bagas Sanjaya wrote:
-> >> +/**
-> >> + * DOC:  Flags reported by the file system from iomap_begin
-> >>   *
-> >> - * IOMAP_F_NEW indicates that the blocks have been newly allocated and need
-> >> - * zeroing for areas that no data is copied to.
-> >> + * * IOMAP_F_NEW: indicates that the blocks have been newly allocated and need
-> >> + *	zeroing for areas that no data is copied to.
-> >>   *
-> >> - * IOMAP_F_DIRTY indicates the inode has uncommitted metadata needed to access
-> >> - * written data and requires fdatasync to commit them to persistent storage.
-> >> - * This needs to take into account metadata changes that *may* be made at IO
-> >> - * completion, such as file size updates from direct IO.
-> >> + * * IOMAP_F_DIRTY: indicates the inode has uncommitted metadata needed to access
-> >> + *	written data and requires fdatasync to commit them to persistent storage.
-> >> + *	This needs to take into account metadata changes that *may* be made at IO
-> >> + *	completion, such as file size updates from direct IO.
-> >>   *
-> >> - * IOMAP_F_SHARED indicates that the blocks are shared, and will need to be
-> >> - * unshared as part a write.
-> >> + * * IOMAP_F_SHARED: indicates that the blocks are shared, and will need to be
-> >> + *	unshared as part a write.
-> >>   *
-> >> - * IOMAP_F_MERGED indicates that the iomap contains the merge of multiple block
-> >> - * mappings.
-> >> + * * IOMAP_F_MERGED: indicates that the iomap contains the merge of multiple block
-> >> + *	mappings.
-> >>   *
-> >> - * IOMAP_F_BUFFER_HEAD indicates that the file system requires the use of
-> >> - * buffer heads for this mapping.
-> >> + * * IOMAP_F_BUFFER_HEAD: indicates that the file system requires the use of
-> >> + *	buffer heads for this mapping.
-> >>   *
-> >> - * IOMAP_F_XATTR indicates that the iomap is for an extended attribute extent
-> >> - * rather than a file data extent.
-> >> + * * IOMAP_F_XATTR: indicates that the iomap is for an extended attribute extent
-> >> + *	rather than a file data extent.
-> >>   */
-> > Why don't use kernel-doc comments to describe flags?
-> > 
-> 
-> Because kernel-doc handles functions, structs, unions, and enums.
-> Not defines.
+Make a read splice from a DAX file go directly to copy_splice_read() to do
+the reading as filemap_splice_read() is unlikely to find any pagecache to
+splice.
 
-So perhaps that should be fixed first?
+I think this affects only erofs, Ext2, Ext4, fuse and XFS.
 
-I seriously dislike the implication here that we should accept
-poorly/inconsistently written comments and code just to work around
-deficiencies in documentation tooling.
+Signed-off-by: David Howells <dhowells@redhat.com>
+cc: Christoph Hellwig <hch@lst.de>
+cc: Al Viro <viro@zeniv.linux.org.uk>
+cc: Jens Axboe <axboe@kernel.dk>
+cc: linux-erofs@lists.ozlabs.org
+cc: linux-ext4@vger.kernel.org
+cc: linux-xfs@vger.kernel.org
+cc: linux-fsdevel@vger.kernel.org
+cc: linux-block@vger.kernel.org
+cc: linux-mm@kvack.org
+---
 
-Either modify the code to work cleanly and consistently with the
-tooling (e.g. change the code to use enums rather than #defines), or
-fix the tools that don't work with macro definitions in a way that
-matches the existing code documentation standards.
+Notes:
+    ver #21)
+     - Don't need #ifdef CONFIG_FS_DAX as IS_DAX() is false if !CONFIG_FS_DAX.
+     - Needs to be in vfs_splice_read(), not generic_file_splice_read().
 
-Forcing developers, reviewers and maintainers to understand, accept
-and then maintain inconsistent crap in the code just because some
-tool they never use is deficient is pretty much my definition of an
-unacceptible engineering process.
+ fs/splice.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/splice.c b/fs/splice.c
+index 76126b1aafcb..8268248df3a9 100644
+--- a/fs/splice.c
++++ b/fs/splice.c
+@@ -908,10 +908,10 @@ long vfs_splice_read(struct file *in, loff_t *ppos,
+ 	if (unlikely(!in->f_op->splice_read))
+ 		return warn_unsupported(in, "read");
+ 	/*
+-	 * O_DIRECT doesn't deal with the pagecache, so we allocate a buffer,
+-	 * copy into it and splice that into the pipe.
++	 * O_DIRECT and DAX don't deal with the pagecache, so we allocate a
++	 * buffer, copy into it and splice that into the pipe.
+ 	 */
+-	if ((in->f_flags & O_DIRECT))
++	if ((in->f_flags & O_DIRECT) || IS_DAX(in->f_mapping->host))
+ 		return copy_splice_read(in, ppos, pipe, len, flags);
+ 	return in->f_op->splice_read(in, ppos, pipe, len, flags);
+ }
+
