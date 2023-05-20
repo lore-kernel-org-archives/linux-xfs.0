@@ -2,52 +2,82 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C98C1C77B7D
-	for <linux-xfs@archiver.kernel.org>; Sat, 20 May 2023 05:11:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7890C77B7F
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 May 2023 09:41:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231189AbjETFLK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 20 May 2023 01:11:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33168 "EHLO
+        id S231359AbjETJli (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 20 May 2023 05:41:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45598 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231290AbjETFKn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 May 2023 01:10:43 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85F33E52;
-        Fri, 19 May 2023 22:10:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=IZDwpSbAMestbxTLBfVfseHT/Ao1tda2Hw4YjCVMEYs=; b=cHkX9gDilxrMdUT4jG8u5OaHR4
-        L649r4BgCX/pLuYAkhtU7SfafGHxxnrkUHEgT73x1yGjbRqyAlVK21YJ9K37RG+dA6B4QsRCgDg5u
-        AMOqipYZn/a8zn8pcotnMu0xnrY0QfgL3AWKEk2bB7uEqQdxqWYQHjtC3u8IGIjc9BW/mC34TmmPK
-        4hfhEzqh4EWdQQP0Rk18v7/YSyzKzOWnHuAu/JZ6gwW/k/cKdTLVGCvGU/aHKgYJaGyj+c4eypG3x
-        qMaW3NS65gjbl/lOfjSfziIpL+N28MVHooIGIOoavwJekn2IMwGE+x/KxENxInlUVJdZ6dLPQSnzT
-        K0XEfMPQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1q0Er9-000kTk-0P;
-        Sat, 20 May 2023 05:10:15 +0000
-Date:   Fri, 19 May 2023 22:10:15 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     fsverity@lists.linux.dev, linux-crypto@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-btrfs@vger.kernel.org
-Subject: Re: [PATCH v2] fsverity: use shash API instead of ahash API
-Message-ID: <ZGhWN6zohGXQvPNv@infradead.org>
-References: <20230516052306.99600-1-ebiggers@kernel.org>
+        with ESMTP id S229577AbjETJlg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 May 2023 05:41:36 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F000D1BD;
+        Sat, 20 May 2023 02:41:35 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8802960B6B;
+        Sat, 20 May 2023 09:41:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90607C433EF;
+        Sat, 20 May 2023 09:41:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684575694;
+        bh=Qi34Xt1y6x93U61QykhNqil2JS5d/WED6AUV/H0U3cU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=RCKu+qWLljLQMkOKKE7+IBqPv71gQvySDl07esuV8mxzFnjBimDFbJ+MeTXiImdwi
+         LAo1oAYsycIi6Ngjivs8aWf09Cb9lAvSPT8V2b4vnr52AhA3wOa/eQDFYZZeo1f4LA
+         1dZwCOGQ7U8tRHWFm0WzUOBEiB2QJO1tfY0b2INLx6s4X3yorcUT+1egxyQYM79jmL
+         VEwcuw7Dj4wzdbpCiR3/dZ5jcuQr/CBLIo4+1Q6Z325lA4XAokTZBbKp7ZzDfVTlP3
+         rPhjhxF3vQ/ENd4VZF5WlXEzG14C074CDwifY9/pZY9VpqGP7shdUgTnByBELcVTt2
+         V26DafIYZg3Tg==
+Date:   Sat, 20 May 2023 11:41:27 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     David Howells <dhowells@redhat.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
+        Jeff Layton <jlayton@kernel.org>,
+        David Hildenbrand <david@redhat.com>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Hillf Danton <hdanton@sina.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        Christoph Hellwig <hch@lst.de>, linux-erofs@lists.ozlabs.org,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v21 08/30] splice: Make splice from a DAX file use
+ copy_splice_read()
+Message-ID: <20230520-gepocht-akzeptabel-b117346c55b6@brauner>
+References: <20230520000049.2226926-1-dhowells@redhat.com>
+ <20230520000049.2226926-9-dhowells@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230516052306.99600-1-ebiggers@kernel.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20230520000049.2226926-9-dhowells@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-I'm not really an expert on fsverify, but the rationale of not using
-clumsy external crypto offloads from the file system makes sense, and
-the code looks much nicer now:
+On Sat, May 20, 2023 at 01:00:27AM +0100, David Howells wrote:
+> Make a read splice from a DAX file go directly to copy_splice_read() to do
+> the reading as filemap_splice_read() is unlikely to find any pagecache to
+> splice.
+> 
+> I think this affects only erofs, Ext2, Ext4, fuse and XFS.
+> 
+> Signed-off-by: David Howells <dhowells@redhat.com>
+> cc: Christoph Hellwig <hch@lst.de>
+> cc: Al Viro <viro@zeniv.linux.org.uk>
+> cc: Jens Axboe <axboe@kernel.dk>
+> cc: linux-erofs@lists.ozlabs.org
+> cc: linux-ext4@vger.kernel.org
+> cc: linux-xfs@vger.kernel.org
+> cc: linux-fsdevel@vger.kernel.org
+> cc: linux-block@vger.kernel.org
+> cc: linux-mm@kvack.org
+> ---
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Fwiw, O_DIRECT and DAX could've just been folded into one patch imho.
+Reviewed-by: Christian Brauner <brauner@kernel.org>
