@@ -2,81 +2,76 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AE58C77B7C
-	for <linux-xfs@archiver.kernel.org>; Sun, 21 May 2023 11:47:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 381DEC77B73
+	for <linux-xfs@archiver.kernel.org>; Sun, 21 May 2023 14:57:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229485AbjEULrI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 21 May 2023 07:47:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43600 "EHLO
+        id S229990AbjEUO44 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 21 May 2023 10:56:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231899AbjEULqF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 May 2023 07:46:05 -0400
-Received: from out28-62.mail.aliyun.com (out28-62.mail.aliyun.com [115.124.28.62])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95A47E58;
-        Sun, 21 May 2023 04:40:56 -0700 (PDT)
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.1352782|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_regular_dialog|0.0462248-0.00033699-0.953438;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047204;MF=wangyugui@e16-tech.com;NM=1;PH=DS;RN=6;RT=6;SR=0;TI=SMTPD_---.T87AWYB_1684669252;
-Received: from 192.168.2.112(mailfrom:wangyugui@e16-tech.com fp:SMTPD_---.T87AWYB_1684669252)
+        with ESMTP id S229935AbjEUOze (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 May 2023 10:55:34 -0400
+Received: from out30-124.freemail.mail.aliyun.com (out30-124.freemail.mail.aliyun.com [115.124.30.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80D61B3;
+        Sun, 21 May 2023 07:55:32 -0700 (PDT)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R101e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046050;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=21;SR=0;TI=SMTPD_---0Vj5ET5O_1684680925;
+Received: from 30.15.209.15(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0Vj5ET5O_1684680925)
           by smtp.aliyun-inc.com;
-          Sun, 21 May 2023 19:40:53 +0800
-Date:   Sun, 21 May 2023 19:40:54 +0800
-From:   Wang Yugui <wangyugui@e16-tech.com>
-To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Subject: Re: [PATCH 0/3] Create large folios in iomap buffered write path
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>
-In-Reply-To: <20230520163603.1794256-1-willy@infradead.org>
-References: <20230520163603.1794256-1-willy@infradead.org>
-Message-Id: <20230521194053.8CD1.409509F4@e16-tech.com>
+          Sun, 21 May 2023 22:55:27 +0800
+Message-ID: <d4ed0a75-f71c-ef42-7845-c1fa78b36fa7@linux.alibaba.com>
+Date:   Sun, 21 May 2023 22:55:25 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.10.0
+Subject: Re: [PATCH v21 08/30] splice: Make splice from a DAX file use
+ copy_splice_read()
+To:     David Howells <dhowells@redhat.com>, Jens Axboe <axboe@kernel.dk>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>
+Cc:     linux-erofs@lists.ozlabs.org, linux-block@vger.kernel.org,
+        Hillf Danton <hdanton@sina.com>, Jan Kara <jack@suse.cz>,
+        linux-xfs@vger.kernel.org, David Hildenbrand <david@redhat.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Jeff Layton <jlayton@kernel.org>,
+        Christian Brauner <brauner@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Christoph Hellwig <hch@lst.de>
+References: <20230520000049.2226926-1-dhowells@redhat.com>
+ <20230520000049.2226926-9-dhowells@redhat.com>
+From:   Gao Xiang <hsiangkao@linux.alibaba.com>
+In-Reply-To: <20230520000049.2226926-9-dhowells@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Mailer: Becky! ver. 2.81.04 [en]
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
 
-> Wang Yugui has a workload which would be improved by using large folios.
-> Until now, we've only created large folios in the readahead path,
-> but this workload writes without reading.  The decision of what size
-> folio to create is based purely on the size of the write() call (unlike
-> readahead where we keep history and can choose to create larger folios
-> based on that history even if individual reads are small).
+
+On 2023/5/20 17:00, David Howells wrote:
+> Make a read splice from a DAX file go directly to copy_splice_read() to do
+> the reading as filemap_splice_read() is unlikely to find any pagecache to
+> splice.
 > 
-> The third patch looks like it's an optional extra but is actually needed
-> for the first two patches to work in the write path, otherwise it limits
-> the length that iomap_get_folio() sees to PAGE_SIZE.
+> I think this affects only erofs, Ext2, Ext4, fuse and XFS.
 > 
-> Matthew Wilcox (Oracle) (3):
->   filemap: Allow __filemap_get_folio to allocate large folios
->   iomap: Create large folios in the buffered write path
->   iomap: Copy larger chunks from userspace
+> Signed-off-by: David Howells <dhowells@redhat.com>
+> cc: Christoph Hellwig <hch@lst.de>
+> cc: Al Viro <viro@zeniv.linux.org.uk>
+> cc: Jens Axboe <axboe@kernel.dk>
+> cc: linux-erofs@lists.ozlabs.org
+> cc: linux-ext4@vger.kernel.org
+> cc: linux-xfs@vger.kernel.org
+> cc: linux-fsdevel@vger.kernel.org
+> cc: linux-block@vger.kernel.org
+> cc: linux-mm@kvack.org
 
-The [PATCH 2/3] is a little difficult to backport to 6.1.y(LTS),
-it need some patches as depency.
+Reviewed-by: Gao Xiang <hsiangkao@linux.alibaba.com>
 
-so please provide those patches based on 6.1.y(LTS)  and depency list?
-then we can do more test on 6.1.y(LTS) too.
-
-Best Regards
-Wang Yugui (wangyugui@e16-tech.com)
-2023/05/21
-
-
-
->  fs/gfs2/bmap.c          |  2 +-
->  fs/iomap/buffered-io.c  | 32 ++++++++++++++++++------------
->  include/linux/iomap.h   |  2 +-
->  include/linux/pagemap.h | 29 ++++++++++++++++++++++++---
->  mm/filemap.c            | 44 ++++++++++++++++++++++++++++-------------
->  mm/folio-compat.c       |  2 +-
->  mm/readahead.c          | 13 ------------
->  7 files changed, 78 insertions(+), 46 deletions(-)
-> 
-> -- 
-> 2.39.2
-
+Thanks,
+Gao Xiang
 
