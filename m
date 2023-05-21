@@ -2,91 +2,68 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 012A5C77B7A
-	for <linux-xfs@archiver.kernel.org>; Sun, 21 May 2023 01:39:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 259B5C77B7A
+	for <linux-xfs@archiver.kernel.org>; Sun, 21 May 2023 01:56:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229656AbjEUBjM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 20 May 2023 21:39:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46176 "EHLO
+        id S229694AbjEUB4l (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 20 May 2023 21:56:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229568AbjEUBjF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 May 2023 21:39:05 -0400
-Received: from out28-60.mail.aliyun.com (out28-60.mail.aliyun.com [115.124.28.60])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 345EF124;
-        Sat, 20 May 2023 18:39:01 -0700 (PDT)
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.1184889|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_regular_dialog|0.102211-0.00036233-0.897427;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047208;MF=wangyugui@e16-tech.com;NM=1;PH=DS;RN=6;RT=6;SR=0;TI=SMTPD_---.T7rs1wW_1684633137;
-Received: from 192.168.2.112(mailfrom:wangyugui@e16-tech.com fp:SMTPD_---.T7rs1wW_1684633137)
-          by smtp.aliyun-inc.com;
-          Sun, 21 May 2023 09:38:59 +0800
-Date:   Sun, 21 May 2023 09:38:59 +0800
-From:   Wang Yugui <wangyugui@e16-tech.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH 0/3] Create large folios in iomap buffered write path
+        with ESMTP id S229649AbjEUB4j (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 May 2023 21:56:39 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8147D124;
+        Sat, 20 May 2023 18:56:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=+ESHnpcV7R4Mbdr+nVVyt6GbZ49e+Lc+MRu1RQfty5E=; b=RRg/CU02C4IHHPvR3dT0O1tiaT
+        VidUHzBZyLpIPPZHnHMWNby4c6SS4yeU6CIxez10Y/TTxi6NslDBKOWyZw6UEC0bUX2N9K05/I4Rg
+        xgv5K984aNVTid6OQwKsqVHIxSrepZQrJBbWGHTiPrZKX/x+VCiOjMRPMg4KXp483ZfW/OcBbLjmb
+        AeFZhLj82GrifxIQ86TfczwK1QuU09lLdc+AZYfLp078SIOgpiIVYJ+souPCEyLcFrud6pp8tNKbs
+        oqFhAScCeNK+WEbZ4MhBGsZrRQOOgOV3T9npWkU5/WBUTIwhnYXFcV846ZH8G8JGSGhuQ7ON0CU6R
+        ahR9Srew==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1q0YJF-007rpb-9C; Sun, 21 May 2023 01:56:33 +0000
+Date:   Sun, 21 May 2023 02:56:33 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Wang Yugui <wangyugui@e16-tech.com>
 Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         Dave Chinner <david@fromorbit.com>,
         Christoph Hellwig <hch@infradead.org>,
         "Darrick J . Wong" <djwong@kernel.org>
-In-Reply-To: <ZGls826bw3WeVG7L@casper.infradead.org>
-References: <20230521084952.0BCC.409509F4@e16-tech.com> <ZGls826bw3WeVG7L@casper.infradead.org>
-Message-Id: <20230521093858.06CA.409509F4@e16-tech.com>
+Subject: Re: [PATCH 1/3] filemap: Allow __filemap_get_folio to allocate large
+ folios
+Message-ID: <ZGl6UZ0a+fIAPmn5@casper.infradead.org>
+References: <20230520163603.1794256-1-willy@infradead.org>
+ <20230520163603.1794256-2-willy@infradead.org>
+ <20230521090235.4860.409509F4@e16-tech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Mailer: Becky! ver. 2.81.04 [en]
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230521090235.4860.409509F4@e16-tech.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
-
-> On Sun, May 21, 2023 at 08:49:53AM +0800, Wang Yugui wrote:
-> > Hi,
-> > 
-> > > Wang Yugui has a workload which would be improved by using large folios.
-> > > Until now, we've only created large folios in the readahead path,
-> > > but this workload writes without reading.  The decision of what size
-> > > folio to create is based purely on the size of the write() call (unlike
-> > > readahead where we keep history and can choose to create larger folios
-> > > based on that history even if individual reads are small).
-> > > 
-> > > The third patch looks like it's an optional extra but is actually needed
-> > > for the first two patches to work in the write path, otherwise it limits
-> > > the length that iomap_get_folio() sees to PAGE_SIZE.
-> > 
-> > very good test result on 6.4.0-rc2. 
-> > # just drop ';' in 'if (bytes > folio_size(folio) - offset);' of [PATCH 3/3].
-> > 
-> > fio -name write-bandwidth -rw=write -bs=1024Ki -size=32Gi -runtime=30 -iodepth 1
-> > -ioengine sync -zero_buffers=1 -direct=0 -end_fsync=1 -numjobs=4
-> > -directory=/mnt/test
-> > fio WRITE: bw=7655MiB/s (8027MB/s).
-> > 
-> > Now it is the same as 5.15.y
+On Sun, May 21, 2023 at 09:02:36AM +0800, Wang Yugui wrote:
+> > +static inline unsigned fgp_order(size_t size)
+> > +{
+> > +	unsigned int shift = ilog2(size);
+> > +
+> > +	if (shift <= PAGE_SHIFT)
+> > +		return 0;
+> > +	return (shift - PAGE_SHIFT) << 26;
 > 
-> Great!  How close is that to saturating the theoretical write bandwidth
-> of your storage?
+> int overflow will happen when size > 0.5M(2**19)?
 
-SSD:  PCIe3  SSD U.2 *4 (1.6T/3.2T/3.2T/3.2T, just 800G used) through a NVMe
-adapater.
-CPU: E5-2680 v2 @ 2.80GHz *2
-memory: DDR3 * 3 channel
+I don't see it?
 
-so theoretical write bandwidth maybe over 12GB/s,
-but 8GB/s maybe the in fact bandwidth because of 
-- write depth limit
-- NVMe adapther limit
-- CPU/memory limit
+size == 1 << 20;
 
-I also noticed a huge improvement for single thread dd.
+shift = 20;
+return (20 - 12) << 26;
 
-# 6.4.0-rc2 with this patch
-#dd-9.1 conv=fsync bs=1024K count=32K if=/dev/zero of=/mnt/test/dd.txt
-34359738368 bytes (34 GB, 32 GiB) copied, 6.96108 s, 4.6 GiB/s
-
-But it is about 2.2GiB/s in xfs/5.15.y.
-
-Best Regards
-Wang Yugui (wangyugui@e16-tech.com)
-2023/05/21
-
+Looks like about 1 << 29 to me.
 
