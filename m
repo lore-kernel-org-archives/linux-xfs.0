@@ -2,68 +2,81 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0826FC77B73
-	for <linux-xfs@archiver.kernel.org>; Sun, 21 May 2023 03:40:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AE58C77B7C
+	for <linux-xfs@archiver.kernel.org>; Sun, 21 May 2023 11:47:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229769AbjEUDkq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 20 May 2023 23:40:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55232 "EHLO
+        id S229485AbjEULrI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 21 May 2023 07:47:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43600 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229706AbjEUDk2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 May 2023 23:40:28 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AB5A119;
-        Sat, 20 May 2023 20:39:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=skkPldTdNBXlx5+4kVMCe3+Fv9+/+TBY8sALbfR2BeU=; b=dtq7gM1tP5wv7UUZbkdQZkFIAy
-        dbTcJi0hkDAshG1iUXyh0jkwFHstnWqB2vy7deWUTfeZtIleG4AFpFIQ9IzgS2yto5hwOjKqm4yQt
-        5jR/fvvdd/SZKZm2OunDIBKU/cnEkEfeAKHJiftDa/ldcD1Mh7wUvPMlzKu8Wco8FdFTwFYxEiHIq
-        NNoZZiHeOXLJnzuqf1nSwyyFG8ear/BmBv5mGfjKCi9ROb6GIjdBPj34S1u88sVVj8mCW4xniJHDd
-        DRvL+qhf0Rxkufom05/KGSFegnJw+9XYpN3R8jOojMvRD+jCSznLyJ+zsqtZ5bQiT8eZObzjZW7rY
-        1mF1nUIA==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1q0Zue-007vJc-G2; Sun, 21 May 2023 03:39:16 +0000
-Date:   Sun, 21 May 2023 04:39:16 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Wang Yugui <wangyugui@e16-tech.com>
+        with ESMTP id S231899AbjEULqF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 May 2023 07:46:05 -0400
+Received: from out28-62.mail.aliyun.com (out28-62.mail.aliyun.com [115.124.28.62])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95A47E58;
+        Sun, 21 May 2023 04:40:56 -0700 (PDT)
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.1352782|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_regular_dialog|0.0462248-0.00033699-0.953438;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047204;MF=wangyugui@e16-tech.com;NM=1;PH=DS;RN=6;RT=6;SR=0;TI=SMTPD_---.T87AWYB_1684669252;
+Received: from 192.168.2.112(mailfrom:wangyugui@e16-tech.com fp:SMTPD_---.T87AWYB_1684669252)
+          by smtp.aliyun-inc.com;
+          Sun, 21 May 2023 19:40:53 +0800
+Date:   Sun, 21 May 2023 19:40:54 +0800
+From:   Wang Yugui <wangyugui@e16-tech.com>
+To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Subject: Re: [PATCH 0/3] Create large folios in iomap buffered write path
 Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         Dave Chinner <david@fromorbit.com>,
         Christoph Hellwig <hch@infradead.org>,
         "Darrick J . Wong" <djwong@kernel.org>
-Subject: Re: [PATCH 1/3] filemap: Allow __filemap_get_folio to allocate large
- folios
-Message-ID: <ZGmSZP2DeRD/XSun@casper.infradead.org>
-References: <20230521090235.4860.409509F4@e16-tech.com>
- <ZGl6UZ0a+fIAPmn5@casper.infradead.org>
- <20230521100434.716E.409509F4@e16-tech.com>
+In-Reply-To: <20230520163603.1794256-1-willy@infradead.org>
+References: <20230520163603.1794256-1-willy@infradead.org>
+Message-Id: <20230521194053.8CD1.409509F4@e16-tech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230521100434.716E.409509F4@e16-tech.com>
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Becky! ver. 2.81.04 [en]
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, May 21, 2023 at 10:04:35AM +0800, Wang Yugui wrote:
-> > I don't see it?
-> > 
-> > size == 1 << 20;
-> > 
-> > shift = 20;
-> > return (20 - 12) << 26;
-> > 
-> > Looks like about 1 << 29 to me.
-> 
-> sorry that I wrongly
-> 1) wrongly conside PAGE_SHIFT as 13 from arch/alpha/include/asm/page.h
-> it should be 12 from arch/x86/include/asm/page_types.h.
-> 
-> 2) wrongly conside
-> 	(20 - 12) << 26
-> as
-> 	1<< (20 - 12) << 26
+Hi,
 
-Ah, no problem.  Glad I didn't miss something.
+> Wang Yugui has a workload which would be improved by using large folios.
+> Until now, we've only created large folios in the readahead path,
+> but this workload writes without reading.  The decision of what size
+> folio to create is based purely on the size of the write() call (unlike
+> readahead where we keep history and can choose to create larger folios
+> based on that history even if individual reads are small).
+> 
+> The third patch looks like it's an optional extra but is actually needed
+> for the first two patches to work in the write path, otherwise it limits
+> the length that iomap_get_folio() sees to PAGE_SIZE.
+> 
+> Matthew Wilcox (Oracle) (3):
+>   filemap: Allow __filemap_get_folio to allocate large folios
+>   iomap: Create large folios in the buffered write path
+>   iomap: Copy larger chunks from userspace
+
+The [PATCH 2/3] is a little difficult to backport to 6.1.y(LTS),
+it need some patches as depency.
+
+so please provide those patches based on 6.1.y(LTS)  and depency list?
+then we can do more test on 6.1.y(LTS) too.
+
+Best Regards
+Wang Yugui (wangyugui@e16-tech.com)
+2023/05/21
+
+
+
+>  fs/gfs2/bmap.c          |  2 +-
+>  fs/iomap/buffered-io.c  | 32 ++++++++++++++++++------------
+>  include/linux/iomap.h   |  2 +-
+>  include/linux/pagemap.h | 29 ++++++++++++++++++++++++---
+>  mm/filemap.c            | 44 ++++++++++++++++++++++++++++-------------
+>  mm/folio-compat.c       |  2 +-
+>  mm/readahead.c          | 13 ------------
+>  7 files changed, 78 insertions(+), 46 deletions(-)
+> 
+> -- 
+> 2.39.2
+
+
