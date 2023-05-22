@@ -2,575 +2,279 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B817C77B73
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 May 2023 01:17:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EC3FC77B73
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 May 2023 02:05:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229731AbjEVBRe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 21 May 2023 21:17:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42374 "EHLO
+        id S229907AbjEVCFw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 21 May 2023 22:05:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229571AbjEVBRc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 May 2023 21:17:32 -0400
-Received: from mail-pg1-x536.google.com (mail-pg1-x536.google.com [IPv6:2607:f8b0:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63118CD
-        for <linux-xfs@vger.kernel.org>; Sun, 21 May 2023 18:17:30 -0700 (PDT)
-Received: by mail-pg1-x536.google.com with SMTP id 41be03b00d2f7-52867360efcso3744746a12.2
-        for <linux-xfs@vger.kernel.org>; Sun, 21 May 2023 18:17:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1684718250; x=1687310250;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=XLzhDCC1waPf6cZbm2z4t01UOoWnQlHsqq2t8aXCpHk=;
-        b=5UmUuY/cy+t1LbNkLMH4XN40WSwkfROmF4XhrqzhqrhFHyCWe8W7V9aIP9boJBiLRU
-         dQKWDKah6Jpp2c5Jnt5wt/gh4Dxct0Olw5JL6nbglAjGvfmKHXqqebifeFDIjMu8b6AP
-         iiQRvRd90K69J1/hLDhdCEnibkFmC3CCBYzyOXI8qIg2TIlcLvdoW/phnPz2RmrE2mD8
-         vcQ+IU3CWawNzzxSSs9uEFvSKBJDQkSsnNsTsz5R/bi2ic/k8E3/Z7As+sUpGVJhvjOL
-         uNnUkfqWZApG9HZLVJKogJHXdRLoun8lHhCajkvhhC++Fic2SXFTkuwbrYvcFqIpgn/+
-         yFuA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684718250; x=1687310250;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=XLzhDCC1waPf6cZbm2z4t01UOoWnQlHsqq2t8aXCpHk=;
-        b=MB9yHq6Lgcm99tILoJaikUQJdS/FdTsA2jmGkMGL3OSV/+OCOKiH3tZYkP4bpUet1Q
-         XuHl83o2OYpg3uqUSDK9vRmLLzOtFyPZACbzLBalDD1pt83SQwU+L16Z2eMuS3ilKouq
-         xs3K5rcV+/kS9qJQk0O6OomrIkNBtz4wVyWm61Ce4cQMINA2k/gU3vfaOpwdCyxJOwuv
-         9C3dZyNjKG3G5UBBBeVU4SSa4Mj+tVijpj9Vt0xJO3WcodF2A/74qBPNy3FhQG/Rozqy
-         0xXZrE2yWS4e0jr+hrvRMtUADcyj1HqM6bgegwUlItWcqpVI6CregSWfEZweYrcM6rx/
-         20nQ==
-X-Gm-Message-State: AC+VfDyADKpObvUfD9jdCaEDS6PQ7SCt+O6Nm8CMqV0jDWDIl5G2MgC3
-        3FQYfjNCDYSAHOuuuuNjPjN5T2dZdulRrx53irY=
-X-Google-Smtp-Source: ACHHUZ4hbKRKFBTSMr4NZjnsbS4oV4ObFT8tzdWZBffmpESzPX93JI931H1wpFzuqjjIxDL+5shatA==
-X-Received: by 2002:a05:6a20:9f4b:b0:ff:8d85:9f24 with SMTP id ml11-20020a056a209f4b00b000ff8d859f24mr8031697pzb.50.1684718249633;
-        Sun, 21 May 2023 18:17:29 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
-        by smtp.gmail.com with ESMTPSA id s3-20020a62e703000000b00639fc7124c2sm3087826pfh.148.2023.05.21.18.17.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 21 May 2023 18:17:29 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1q0uAv-002Lac-1K;
-        Mon, 22 May 2023 11:17:25 +1000
-Date:   Mon, 22 May 2023 11:17:25 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Wengang Wang <wen.gang.wang@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH] xfs: Don't block in xfs_extent_busy_flush
-Message-ID: <ZGrCpXoEk9achabI@dread.disaster.area>
-References: <20230519171829.4108-1-wen.gang.wang@oracle.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        with ESMTP id S229501AbjEVCFv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 May 2023 22:05:51 -0400
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30B4DC7;
+        Sun, 21 May 2023 19:05:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1684721150; x=1716257150;
+  h=date:from:to:cc:subject:message-id:mime-version;
+  bh=vfhpZY9wg6vnnSHA0cRTFw32CLMHifbpKCe6Wb7Cqss=;
+  b=G60Jlk7y3UU9GXabprLpeEwbVMDUic2VBNTPAnz8bpRwKoODRMnjrC+I
+   sGj9ci0pd8fWu9PmVNtWbPav5DNMawrvZwMr1d2Le6fMMGmWyr8XGD3Ms
+   M3vc6owl5Lchhh9JJjx2L1nbslCXEzU62oVg4wEPX95qc7W1OrEyI5zyV
+   okc5dKhPl+WWeePGqn76U6ZbOVLWYFgnIDiX6PjsrUubVKhpJphsFxRs8
+   txYPu7vqOEed5E2weMNNSDWR4/z4+l+d4URnD8wB0h0lWehgsGYfGnVJQ
+   xUQzcNOZ8Voo6CvAuUATfgaXx3g6Kzkw2XTqg5X4GQsDrLB8F/kHk0XIf
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10717"; a="352832089"
+X-IronPort-AV: E=Sophos;i="6.00,183,1681196400"; 
+   d="scan'208";a="352832089"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 May 2023 19:05:49 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10717"; a="734073720"
+X-IronPort-AV: E=Sophos;i="6.00,183,1681196400"; 
+   d="scan'208";a="734073720"
+Received: from fmsmsx601.amr.corp.intel.com ([10.18.126.81])
+  by orsmga008.jf.intel.com with ESMTP; 21 May 2023 19:05:46 -0700
+Received: from fmsmsx610.amr.corp.intel.com (10.18.126.90) by
+ fmsmsx601.amr.corp.intel.com (10.18.126.81) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23; Sun, 21 May 2023 19:05:43 -0700
+Received: from fmsedg602.ED.cps.intel.com (10.1.192.136) by
+ fmsmsx610.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23 via Frontend Transport; Sun, 21 May 2023 19:05:43 -0700
+Received: from NAM04-BN8-obe.outbound.protection.outlook.com (104.47.74.44) by
+ edgegateway.intel.com (192.55.55.71) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.23; Sun, 21 May 2023 19:05:43 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=TdgnUve+NvhIZfYkZLzMOASujvCxQcECexFC5SlADqt5Dqi2Q+89z2ngTwEu7YlRA04lYm7yRyyJ1e0nQ0aSrfw9wDs83AcwZ/aikgrxZrOJbLZn6lJI/qK1y0T0x96LC09XOmPE6FTvDbG292Ylm08m7jy+uJpbMxpxqhs1c5Fle3rhLItjVIYMA1pxBfJci+ZvQi1W7RhYM1mZQuMSjQQf7YNeVCQeOMjpcnUUWmVP8o7ZRlgBS7EHhZAUvr2H3tplcCfe5WIYBqwa7QjrS+E51NbeJHRSzyA2T8LBxqCOzeM+H5d9pd/vIhV2MxZCS1XFhr60qcRwow28PCp7ng==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=L257pdm/0cEk3hTb4pUI3lh7r2q6vYDLmS9+8Qr2d3U=;
+ b=mkrG3QDbmrthry+CiTFLsKhxbRXFEt/8gcMVLfUXsx1nE9Tp1HkgmD7vEINIaoMZzFD204jy/ZjcDKzHvu/99gaHoFg9MyRElSbljd2QleDWLrH30SWo+TumOL6PNr5rx0KYWl02id2a9fmcSVOmpCRaLGoTioUUj7vncIakEOEjlRSB/u8uKI83uVNTpILbXnLNxBaNRJrRKjJ9pqcMiq4hJh2k/zSqVQGLkySeQ01L25t3RQw1fNAe0wRWbIFX9EgPYI0lLuI5o38qszk2zQamMeBGI1S8I8NJTcq22sG2axOKVthqmzS2y5BiLWSyzuTZP3kzOdEcjXgUfIlKZQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from PH0PR11MB4839.namprd11.prod.outlook.com (2603:10b6:510:42::18)
+ by PH0PR11MB5206.namprd11.prod.outlook.com (2603:10b6:510:3f::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6411.28; Mon, 22 May
+ 2023 02:05:36 +0000
+Received: from PH0PR11MB4839.namprd11.prod.outlook.com
+ ([fe80::7ca2:120f:99dd:7812]) by PH0PR11MB4839.namprd11.prod.outlook.com
+ ([fe80::7ca2:120f:99dd:7812%4]) with mapi id 15.20.6411.028; Mon, 22 May 2023
+ 02:05:35 +0000
+Date:   Mon, 22 May 2023 10:07:28 +0800
+From:   Pengfei Xu <pengfei.xu@intel.com>
+To:     <djwong@kernel.org>
+CC:     <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <heng.su@intel.com>, <dchinner@redhat.com>, <lkp@intel.com>
+Subject: [Syzkaller & bisect] There is BUG: unable to handle kernel NULL
+ pointer dereference in xfs_extent_free_diff_items in v6.4-rc3
+Message-ID: <ZGrOYDZf+k0i4jyM@xpf.sh.intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Content-Disposition: inline
-In-Reply-To: <20230519171829.4108-1-wen.gang.wang@oracle.com>
+X-ClientProxiedBy: SG2PR02CA0100.apcprd02.prod.outlook.com
+ (2603:1096:4:92::16) To PH0PR11MB4839.namprd11.prod.outlook.com
+ (2603:10b6:510:42::18)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR11MB4839:EE_|PH0PR11MB5206:EE_
+X-MS-Office365-Filtering-Correlation-Id: f7d59014-8c90-4188-1504-08db5a6907d1
+X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: rYxnm0ID5+UAYL2Y4NRWonDhna0YmIrP81kzs5faMLgPcjAqWwrjyeVpDd0WBmAFatuhh1LqANnnXDl9bpo6MNJ9DJa6E3FQa8u4d/6/pLJyTMiI4Snh1ZkTHs3Qw7pY1wCfJDbV38uQ9EHxcLo4Ir6koh3m30N2lt+RiSjTkfaZNIOHot8F9J5yoknXwRvkFl3MniyNO1sUaanluo1HGh8sxlHtIe+EzrM1HLRyxb+zG2ROXP4LCm2l428ztipH27bTxc8G9T/s3SgJtoWiOuneeSFpxCezbn4r0XuwxA2a8reujjm4vsndKxwovVGgTGUch0hABm8229zL/GcbYygY/+FkJ3kjfXOJ3I67UhsAnEyZsoL9PTBN2myJTsB8bXM0FqpnxHIkFsou9+NC3hJydw5kTwJ2AxlX6yl90A/U2EGSMLxF0jcGm/G5+zmHfzPzWmJ8TQfMB38djTWC/XDYrT/hDw7uQMcyfky5v6vTcsAhmPbPTz3mL8o+Gvl4j/JCk3dnegNExXwTTFBxynFc4VtdIB0Z0IpsKYZQOHypZAxmxhr9IOUsdGo9s1D9luX5Om3+/7wtsg/gsW8JCjRk7rFcCJs0NengBaau0b/XVmANFL3+dbrEjic1MJUEENo5Su6JliUrRaqnSFIdfVWNPxjKqyOCmGfff4VyUj0=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR11MB4839.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(366004)(396003)(39860400002)(136003)(346002)(376002)(451199021)(8676002)(8936002)(5660300002)(44832011)(83380400001)(186003)(26005)(6512007)(6506007)(86362001)(107886003)(38100700002)(82960400001)(41300700001)(6666004)(6486002)(45080400002)(966005)(66476007)(66556008)(66946007)(316002)(6916009)(4326008)(478600001)(2906002)(21314003)(67856001);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?9C9A2eTAJiYw2n4sFSgbGBbb+UM0aRPs0BPiE8IgZdGp6qQftf5lbat2ClXt?=
+ =?us-ascii?Q?NrZkoV9SmSLJlDb4+NhzWwukECHFG9UmGjpE78wWGDmljOYuyYKcRMIO6u6f?=
+ =?us-ascii?Q?UQiO15YUiUQRUPHzEfhmEc5DEq0FBcgsNKURU2RY+lovh+cHWaxLk+wEmDzk?=
+ =?us-ascii?Q?iP59Yb6kjHq2gD0X/873SJlXU25cWH7wjcT9azfY1FRXqbS2CIgrNsZejwHC?=
+ =?us-ascii?Q?pm8F4F+WNLjbHdJHfMY/cseF6LE0roXIDIl2EeuOhhU2W6HJ3EblEVu3okZI?=
+ =?us-ascii?Q?l+V60mPbnJTp1lv3xq3WkoeIy3gltCMFYii3buF4Cvg7IH4SsChE1NSVtfYd?=
+ =?us-ascii?Q?V27QfGlSYdNi8ohCiHkooiN4FNjunypAR/yNecpvHHUg2hCU8ypHpxX5nmgJ?=
+ =?us-ascii?Q?LQMhCk20pTU45WpNJwHYcNN2TomwEb6b9gEF/miQS1Fnkw2GHO6aRvlw/PVz?=
+ =?us-ascii?Q?oyQpDUbmVB+rt9iWReJhHbEPUnYKOnoYQbqMiYj6FuR6idzcKm/ji+BFAYbv?=
+ =?us-ascii?Q?qCTS1kmZ7m0K8HmrSf6KXbbIuub3VSA86lZ/FGn3sFEgbembeg3LC4DYfJra?=
+ =?us-ascii?Q?JNqmlMQXWgPFpdjjGymjcFKvQCMUmJmeSTDoAr36MVupuK52Qu5GQz3ChGq/?=
+ =?us-ascii?Q?PYULS5/BzlT0Zid4SbGLegOSfUEcKKY8cifxOjo0QaIWaeFOAhfKZv8BmqAU?=
+ =?us-ascii?Q?WcMUE3z4IpXdSsrGRkT4zT6NAHbdlDh8OHPxc1mPssVL8iT3H1PxnE8qQgpm?=
+ =?us-ascii?Q?zIFoes78IEfbrZpgG5FbpStlsDub5vk23iLQRTxITLKasQ1BGmsJY18ictf6?=
+ =?us-ascii?Q?vuoqdEJJdRySxnT/zFr9RRxIHB4hB+UDhseJo5kFxkEzHNbcZA5yXwEhvCqo?=
+ =?us-ascii?Q?jN/agGVOTs8IX42WczxdjG8iAjr8VoJIjHbgypvR/mxMmK43yhSKahhdLI51?=
+ =?us-ascii?Q?KlFMh/UJkzkA9iqviPa6gvMu9ZOtz6/UMU14n1pg+Fhyvt+hY5S2AkB/zhok?=
+ =?us-ascii?Q?dZIIQgkC2PTyVTQy1bZi9NCbdCDGuNSD+3FgmLUU8aOJVcXEHRXEuTbkVEde?=
+ =?us-ascii?Q?FxYum7moBhC9SzURUdj3mXEdAVRtBmcKIK9GJRPaSbmvrw6L7HpZgU9HtrfT?=
+ =?us-ascii?Q?qfN7oR1XLFMPhDRBwBPK0mJMjOQQNUMGrPefTa2/ogLus/5l7osTlcoVmcBq?=
+ =?us-ascii?Q?delGkniK2XZfKpOW3bG7AU2pLNQbyM/zLSo5GemXRkE3YmsRy+gJtADA0y8P?=
+ =?us-ascii?Q?yD9STZLu/hVVwZ85yB+o9eFoMxbmKrlmEPvC/+LcZjnvkRDPOvZW/yFiXtop?=
+ =?us-ascii?Q?4/qojxvbA4yOXEW9kMnFeRGLX1SHkyZoI3syGlbeTBHDH58j91mW1Tf+gDEM?=
+ =?us-ascii?Q?cICs0JVqa8zUkUG2oKIBEitLC79ILMO3TvT1Lk3dX6KUjAZRpjD3DKuC91Lh?=
+ =?us-ascii?Q?FntcPh/yrlnUoysLiAZVW1QgYqIQGMJZa4Dq8E+1mtX1csgfaLzZ1dIi8wPI?=
+ =?us-ascii?Q?nEIazS8+R6o+CbffB+nosagRqxopbIOxg+/4Qki84M7IAvX32TkUxXW2Qt+I?=
+ =?us-ascii?Q?I+qXTNgHnz+8CobBqtnmCQEyZML5P7MiS7nICPqK?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: f7d59014-8c90-4188-1504-08db5a6907d1
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR11MB4839.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 May 2023 02:05:35.3765
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 2/Gb0rFrligeucaE9KGkK6d6FQyCxC4wcuDj0YJy1YBIO3DguSIKgWUbhFmQGYRMWix2Uy/7sGwRQ6TKHAL0Xg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR11MB5206
+X-OriginatorOrg: intel.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 19, 2023 at 10:18:29AM -0700, Wengang Wang wrote:
-> The following calltrace is seen:
-> 	#0	context_switch() kernel/sched/core.c:3881
-> 	#1	__schedule() kernel/sched/core.c:5111
-> 	#2	schedule() kernel/sched/core.c:5186
-> 	#3	xfs_extent_busy_flush() fs/xfs/xfs_extent_busy.c:598
-> 	#4	xfs_alloc_ag_vextent_size() fs/xfs/libxfs/xfs_alloc.c:1641
-> 	#5	xfs_alloc_ag_vextent() fs/xfs/libxfs/xfs_alloc.c:828
-> 	#6	xfs_alloc_fix_freelist() fs/xfs/libxfs/xfs_alloc.c:2362
-> 	#7	xfs_free_extent_fix_freelist() fs/xfs/libxfs/xfs_alloc.c:3029
-> 	#8	__xfs_free_extent() fs/xfs/libxfs/xfs_alloc.c:3067
-> 	#9	xfs_trans_free_extent() fs/xfs/xfs_extfree_item.c:370
-> 	#10	xfs_efi_recover() fs/xfs/xfs_extfree_item.c:626
-> 	#11	xlog_recover_process_efi() fs/xfs/xfs_log_recover.c:4605
-> 	#12	xlog_recover_process_intents() fs/xfs/xfs_log_recover.c:4893
-> 	#13	xlog_recover_finish() fs/xfs/xfs_log_recover.c:5824
-> 	#14	xfs_log_mount_finish() fs/xfs/xfs_log.c:764
-> 	#15	xfs_mountfs() fs/xfs/xfs_mount.c:978
-> 	#16	xfs_fs_fill_super() fs/xfs/xfs_super.c:1908
-> 	#17	mount_bdev() fs/super.c:1417
-> 	#18	xfs_fs_mount() fs/xfs/xfs_super.c:1985
-> 	#19	legacy_get_tree() fs/fs_context.c:647
-> 	#20	vfs_get_tree() fs/super.c:1547
-> 	#21	do_new_mount() fs/namespace.c:2843
-> 	#22	do_mount() fs/namespace.c:3163
-> 	#23	ksys_mount() fs/namespace.c:3372
-> 	#24	__do_sys_mount() fs/namespace.c:3386
-> 	#25	__se_sys_mount() fs/namespace.c:3383
-> 	#26	__x64_sys_mount() fs/namespace.c:3383
-> 	#27	do_syscall_64() arch/x86/entry/common.c:296
-> 	#28	entry_SYSCALL_64() arch/x86/entry/entry_64.S:180
-> 
-> During the process of the 2nd and subsequetial record in an EFI.
-> It is waiting for the busy blocks to be cleaned, but the only busy extent
-> is still hold in current xfs_trans->t_busy. That busy extent was added when
-> processing previous EFI record. And because that busy extent is not committed
-> yet, it can't be cleaned.
-> 
-> To avoid above deadlock, we don't block in xfs_extent_busy_flush() when
-> allocating AGFL blocks, instead it returns -EAGAIN. On receiving -EAGAIN
-> we are able to retry that EFI record with a new transaction after committing
-> the old transactin. With old transaction committed, the busy extent attached
-> to the old transaction get the change to be cleaned. On the retry, there is
-> no existing busy extents in the new transaction, thus no deadlock.
-> 
-> Signed-off-by: Wengang Wang <wen.gang.wang@oracle.com>
+Hi Darrick,
 
-THere are multiple changes in this patchset that aren't immediately
-obvious why they have been done. hence this needs to be split into
-one set of changes per patch.
+Greeting!
+There is BUG: unable to handle kernel NULL pointer dereference in
+xfs_extent_free_diff_items in v6.4-rc3:
 
-> ---
->  fs/xfs/libxfs/xfs_alloc.c | 30 ++++++++++++++++++++++++------
->  fs/xfs/libxfs/xfs_alloc.h |  2 ++
->  fs/xfs/scrub/repair.c     |  4 ++--
->  fs/xfs/xfs_extent_busy.c  | 34 +++++++++++++++++++++++++++++-----
->  fs/xfs/xfs_extent_busy.h  |  6 +++---
->  fs/xfs/xfs_extfree_item.c | 37 ++++++++++++++++++++++++++++++++++++-
->  fs/xfs/xfs_log_recover.c  | 23 ++++++++++-------------
->  fs/xfs/xfs_trans_ail.c    |  2 +-
->  fs/xfs/xfs_trans_priv.h   |  1 +
->  9 files changed, 108 insertions(+), 31 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 203f16c48c19..abfd2acb3053 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -1491,6 +1491,7 @@ STATIC int
->  xfs_alloc_ag_vextent_near(
->  	struct xfs_alloc_arg	*args)
->  {
-> +	int			flags = args->flags | XFS_ALLOC_FLAG_TRYFLUSH;
+Above issue could be reproduced in v6.4-rc3 and v6.4-rc2 kernel in guest.
 
-The first set of changes is encoding allocation flags into the
-struct xfs_alloc_arg. I can sort of see why you did this, but it's
-done in an inconsistent manner, and I don't see why some of the
-changes were made and not others. This conversion belongs in it's
-own patch.
+Bisected this issue between v6.4-rc2 and v5.11, found the problem commit is:
+"
+f6b384631e1e xfs: give xfs_extfree_intent its own perag reference
+"
 
->  	struct xfs_alloc_cur	acur = {};
->  	int			error;		/* error code */
->  	int			i;		/* result code, temporary */
-> @@ -1564,8 +1565,11 @@ xfs_alloc_ag_vextent_near(
->  	if (!acur.len) {
->  		if (acur.busy) {
->  			trace_xfs_alloc_near_busy(args);
-> -			xfs_extent_busy_flush(args->mp, args->pag,
-> -					      acur.busy_gen);
-> +			error = xfs_extent_busy_flush(args->tp, args->pag,
-> +					      acur.busy_gen, flags);
-> +			if (error)
-> +				goto out;
-> +			flags &= ~XFS_ALLOC_FLAG_TRYFLUSH;
->  			goto restart;
->  		}
->  		trace_xfs_alloc_size_neither(args);
-> @@ -1592,6 +1596,7 @@ STATIC int				/* error */
->  xfs_alloc_ag_vextent_size(
->  	xfs_alloc_arg_t	*args)		/* allocation argument structure */
->  {
-> +	int		flags = args->flags | XFS_ALLOC_FLAG_TRYFLUSH;
->  	struct xfs_agf	*agf = args->agbp->b_addr;
->  	struct xfs_btree_cur *bno_cur;	/* cursor for bno btree */
->  	struct xfs_btree_cur *cnt_cur;	/* cursor for cnt btree */
-> @@ -1670,8 +1675,13 @@ xfs_alloc_ag_vextent_size(
->  				xfs_btree_del_cursor(cnt_cur,
->  						     XFS_BTREE_NOERROR);
->  				trace_xfs_alloc_size_busy(args);
-> -				xfs_extent_busy_flush(args->mp,
-> -							args->pag, busy_gen);
-> +				error = xfs_extent_busy_flush(args->tp, args->pag,
-> +						busy_gen, flags);
-> +				if (error) {
-> +					cnt_cur = NULL;
-> +					goto error0;
-> +				}
-> +				flags &= ~XFS_ALLOC_FLAG_TRYFLUSH;
->  				goto restart;
->  			}
->  		}
+report0, repro.stat and so on detailed info is link: https://github.com/xupengfe/syzkaller_logs/tree/main/230521_043336_xfs_extent_free_diff_items
+Syzkaller reproduced code: https://github.com/xupengfe/syzkaller_logs/blob/main/230521_043336_xfs_extent_free_diff_items/repro.c
+Syzkaller reproduced prog: https://github.com/xupengfe/syzkaller_logs/blob/main/230521_043336_xfs_extent_free_diff_items/repro.prog
+Kconfig: https://github.com/xupengfe/syzkaller_logs/blob/main/230521_043336_xfs_extent_free_diff_items/kconfig_origin
+Bisect info: https://github.com/xupengfe/syzkaller_logs/blob/main/230521_043336_xfs_extent_free_diff_items/bisect_info.log
+Issue dmesg: https://github.com/xupengfe/syzkaller_logs/blob/main/230521_043336_xfs_extent_free_diff_items/v6.4-rc3_reproduce_dmesg.log
 
-The cursor handling for the error case could be improved here by
-moving the xfs_btree_del_cursor(cnt_cur...) call here.
+v6.4-rc3 reproduced info:
+"
+[   91.419498] loop0: detected capacity change from 0 to 65536
+[   91.420095] XFS: attr2 mount option is deprecated.
+[   91.420500] XFS: ikeep mount option is deprecated.
+[   91.422379] XFS (loop0): Deprecated V4 format (crc=0) will not be supported after September 2030.
+[   91.423468] XFS (loop0): Mounting V4 Filesystem d28317a9-9e04-4f2a-be27-e55b4c413ff6
+[   91.428169] XFS (loop0): Ending clean mount
+[   91.429120] XFS (loop0): Quotacheck needed: Please wait.
+[   91.432182] BUG: kernel NULL pointer dereference, address: 0000000000000008
+[   91.432770] #PF: supervisor read access in kernel mode
+[   91.433216] #PF: error_code(0x0000) - not-present page
+[   91.433640] PGD 0 P4D 0 
+[   91.433864] Oops: 0000 [#1] PREEMPT SMP NOPTI
+[   91.434232] CPU: 0 PID: 33 Comm: kworker/u4:2 Not tainted 6.4.0-rc3-kvm #2
+[   91.434793] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 0.0.0 02/06/2015
+[   91.435445] Workqueue: xfs_iwalk-393 xfs_pwork_work
+[   91.435855] RIP: 0010:xfs_extent_free_diff_items+0x27/0x40
+[   91.436312] Code: 90 90 90 f3 0f 1e fa 0f 1f 44 00 00 55 48 89 e5 41 54 49 89 f4 53 48 89 d3 e8 05 73 7d ff 49 8b 44 24 28 48 8b 53 28 5b 41 5c <8b> 40 08 5d 2b 42 08 c3 cc cc cc cc 66 66 2e 0f 1f 84 00 00 00 00
+[   91.437812] RSP: 0000:ffffc9000012b8c0 EFLAGS: 00010246
+[   91.438250] RAX: 0000000000000000 RBX: ffff8880015826c8 RCX: ffffffff81d71e41
+[   91.438840] RDX: 0000000000000000 RSI: ffff888001ca4800 RDI: 0000000000000002
+[   91.439430] RBP: ffffc9000012b8c0 R08: ffffc9000012b8e0 R09: 0000000000000000
+[   91.440019] R10: ffff88800613f290 R11: ffffffff83e426c0 R12: ffff888001582230
+[   91.440610] R13: ffff888001582428 R14: ffffffff81b042c0 R15: ffffc9000012b908
+[   91.441202] FS:  0000000000000000(0000) GS:ffff88807ec00000(0000) knlGS:0000000000000000
+[   91.441864] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   91.442343] CR2: 0000000000000008 CR3: 000000000ed22006 CR4: 0000000000770ef0
+[   91.442941] PKRU: 55555554
+[   91.443178] Call Trace:
+[   91.443394]  <TASK>
+[   91.443585]  list_sort+0xb8/0x3a0
+[   91.443885]  xfs_extent_free_create_intent+0xb6/0xc0
+[   91.444312]  xfs_defer_create_intents+0xc3/0x220
+[   91.444711]  ? write_comp_data+0x2f/0x90
+[   91.445056]  xfs_defer_finish_noroll+0x9e/0xbc0
+[   91.445449]  ? list_sort+0x344/0x3a0
+[   91.445768]  __xfs_trans_commit+0x4be/0x630
+[   91.446135]  xfs_trans_commit+0x20/0x30
+[   91.446473]  xfs_dquot_disk_alloc+0x45d/0x4e0
+[   91.446860]  xfs_qm_dqread+0x2f7/0x310
+[   91.447192]  xfs_qm_dqget+0xd5/0x300
+[   91.447506]  xfs_qm_quotacheck_dqadjust+0x5a/0x230
+[   91.447921]  xfs_qm_dqusage_adjust+0x249/0x300
+[   91.448313]  xfs_iwalk_ag_recs+0x1bd/0x2e0
+[   91.448671]  xfs_iwalk_run_callbacks+0xc3/0x1c0
+[   91.449071]  xfs_iwalk_ag+0x32e/0x3f0
+[   91.449398]  xfs_iwalk_ag_work+0xbe/0xf0
+[   91.449744]  xfs_pwork_work+0x2c/0xc0
+[   91.450064]  process_one_work+0x3b1/0x860
+[   91.450416]  worker_thread+0x52/0x660
+[   91.450739]  ? __pfx_worker_thread+0x10/0x10
+[   91.451113]  kthread+0x16d/0x1c0
+[   91.451406]  ? __pfx_kthread+0x10/0x10
+[   91.451740]  ret_from_fork+0x29/0x50
+[   91.452064]  </TASK>
+[   91.452261] Modules linked in:
+[   91.452530] CR2: 0000000000000008
+[   91.452819] ---[ end trace 0000000000000000 ]---
+[   91.487979] RIP: 0010:xfs_extent_free_diff_items+0x27/0x40
+[   91.488463] Code: 90 90 90 f3 0f 1e fa 0f 1f 44 00 00 55 48 89 e5 41 54 49 89 f4 53 48 89 d3 e8 05 73 7d ff 49 8b 44 24 28 48 8b 53 28 5b 41 5c <8b> 40 08 5d 2b 42 08 c3 cc cc cc cc 66 66 2e 0f 1f 84 00 00 00 00
+[   91.490021] RSP: 0000:ffffc9000012b8c0 EFLAGS: 00010246
+[   91.490472] RAX: 0000000000000000 RBX: ffff8880015826c8 RCX: ffffffff81d71e41
+[   91.491080] RDX: 0000000000000000 RSI: ffff888001ca4800 RDI: 0000000000000002
+[   91.491689] RBP: ffffc9000012b8c0 R08: ffffc9000012b8e0 R09: 0000000000000000
+[   91.492298] R10: ffff88800613f290 R11: ffffffff83e426c0 R12: ffff888001582230
+[   91.492909] R13: ffff888001582428 R14: ffffffff81b042c0 R15: ffffc9000012b908
+[   91.493516] FS:  0000000000000000(0000) GS:ffff88807ec00000(0000) knlGS:0000000000000000
+[   91.494199] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   91.494695] CR2: 0000000000000008 CR3: 000000000ed22006 CR4: 0000000000770ef0
+[   91.495306] PKRU: 55555554
+[   91.495549] note: kworker/u4:2[33] exited with irqs disabled
+"
 
-			if (i == 0) {
-				/* ... */
-				trace_xfs_alloc_size_busy(args);
-				error = xfs_extent_busy_flush(args->tp, args->pag,
-						busy_gen, flags);
-				if (error)
-					goto error0;
+I hope it's helpful.
+Thanks!
 
-				xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
-				flags &= ~XFS_ALLOC_FLAG_TRYFLUSH;
-				goto restart;
-			}
+---
 
-> @@ -1755,7 +1765,13 @@ xfs_alloc_ag_vextent_size(
->  		if (busy) {
->  			xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
->  			trace_xfs_alloc_size_busy(args);
-> -			xfs_extent_busy_flush(args->mp, args->pag, busy_gen);
-> +			error = xfs_extent_busy_flush(args->tp, args->pag,
-> +					busy_gen, flags);
-> +			if (error) {
-> +				cnt_cur = NULL;
-> +				goto error0;
-> +			}
-> +			flags &= ~XFS_ALLOC_FLAG_TRYFLUSH;
->  			goto restart;
->  		}
->  		goto out_nominleft;
+If you don't need the following environment to reproduce the problem or if you
+already have one, please ignore the following information.
 
-Same here.
+How to reproduce:
+git clone https://gitlab.com/xupengfe/repro_vm_env.git
+cd repro_vm_env
+tar -xvf repro_vm_env.tar.gz
+cd repro_vm_env; ./start3.sh  // it needs qemu-system-x86_64 and I used v7.1.0
+  // start3.sh will load bzImage_2241ab53cbb5cdb08a6b2d4688feb13971058f65 v6.2-rc5 kernel
+  // You could change the bzImage_xxx as you want
+  // Maybe you need to remove line "-drive if=pflash,format=raw,readonly=on,file=./OVMF_CODE.fd \" for different qemu version
+You could use below command to log in, there is no password for root.
+ssh -p 10023 root@localhost
 
-I'd also enhance the trace_xfs_alloc_size_error() call to
-trace the error that occurred so we can actually see when an EAGAIN
-error occurs when we are tracing...
+After login vm(virtual machine) successfully, you could transfer reproduced
+binary to the vm by below way, and reproduce the problem in vm:
+gcc -pthread -o repro repro.c
+scp -P 10023 repro root@localhost:/root/
+
+Get the bzImage for target kernel:
+Please use target kconfig and copy it to kernel_src/.config
+make olddefconfig
+make -jx bzImage           //x should equal or less than cpu num your pc has
+
+Fill the bzImage file into above start3.sh to load the target kernel in vm.
 
 
-> @@ -2629,6 +2645,7 @@ xfs_alloc_fix_freelist(
->  	targs.agno = args->agno;
->  	targs.alignment = targs.minlen = targs.prod = 1;
->  	targs.pag = pag;
-> +	targs.flags = args->flags & XFS_ALLOC_FLAG_FREEING;
->  	error = xfs_alloc_read_agfl(pag, tp, &agflbp);
->  	if (error)
->  		goto out_agbp_relse;
+Tips:
+If you already have qemu-system-x86_64, please ignore below info.
+If you want to install qemu v7.1.0 version:
+git clone https://github.com/qemu/qemu.git
+cd qemu
+git checkout -f v7.1.0
+mkdir build
+cd build
+yum install -y ninja-build.x86_64
+yum -y install libslirp-devel.x86_64
+../configure --target-list=x86_64-softmmu --enable-kvm --enable-vnc --enable-gtk --enable-sdl --enable-usb-redir --enable-slirp
+make
+make install
 
-This is a change in behaviour for AGFL filling. This should be in
-it's own patch, explaining why the change of behaviour is necessary.
-
-Also, it could just be:
-
-	targs.flags = flags & XFS_ALLOC_FLAG_FREEING;
-
-> @@ -3572,6 +3589,7 @@ xfs_free_extent_fix_freelist(
->  	args.mp = tp->t_mountp;
->  	args.agno = pag->pag_agno;
->  	args.pag = pag;
-> +	args.flags = XFS_ALLOC_FLAG_FREEING;
->  
->  	/*
->  	 * validate that the block number is legal - the enables us to detect
-> @@ -3580,7 +3598,7 @@ xfs_free_extent_fix_freelist(
->  	if (args.agno >= args.mp->m_sb.sb_agcount)
->  		return -EFSCORRUPTED;
->  
-> -	error = xfs_alloc_fix_freelist(&args, XFS_ALLOC_FLAG_FREEING);
-> +	error = xfs_alloc_fix_freelist(&args, args.flags);
->  	if (error)
->  		return error;
-
-This is where I see inconsistency in the usage of args.flags. If we
-are going to move the XFS_ALLOC_FLAG_* state into args->flags, then
-it should not be passed as a separate parameter to functions that
-take a struct xfs_alloc_arg. i.e. we either use args->flags
-everywhere for everything, or we pass a separate flags argument
-everywhere as we currently do.
-
-
-> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> index 2b246d74c189..5038fba87784 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.h
-> +++ b/fs/xfs/libxfs/xfs_alloc.h
-> @@ -24,6 +24,7 @@ unsigned int xfs_agfl_size(struct xfs_mount *mp);
->  #define	XFS_ALLOC_FLAG_NORMAP	0x00000004  /* don't modify the rmapbt */
->  #define	XFS_ALLOC_FLAG_NOSHRINK	0x00000008  /* don't shrink the freelist */
->  #define	XFS_ALLOC_FLAG_CHECK	0x00000010  /* test only, don't modify args */
-> +#define	XFS_ALLOC_FLAG_TRYFLUSH	0x00000020  /* don't block in busyextent flush*/
-
-Convert all these to (1U << x) format while you are adding a new
-flag...
-
->  
->  /*
->   * Argument structure for xfs_alloc routines.
-> @@ -57,6 +58,7 @@ typedef struct xfs_alloc_arg {
->  #ifdef DEBUG
->  	bool		alloc_minlen_only; /* allocate exact minlen extent */
->  #endif
-> +	int		flags;		/* XFS_ALLOC_FLAG_* */
-
-And flags fields should be unsigned.
-
->  } xfs_alloc_arg_t;
->  
->  /*
-> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> index 1b71174ec0d6..2ba28e4257fe 100644
-> --- a/fs/xfs/scrub/repair.c
-> +++ b/fs/xfs/scrub/repair.c
-> @@ -496,9 +496,9 @@ xrep_fix_freelist(
->  	args.agno = sc->sa.pag->pag_agno;
->  	args.alignment = 1;
->  	args.pag = sc->sa.pag;
-> +	args.flags = can_shrink ? 0 : XFS_ALLOC_FLAG_NOSHRINK;
->  
-> -	return xfs_alloc_fix_freelist(&args,
-> -			can_shrink ? 0 : XFS_ALLOC_FLAG_NOSHRINK);
-> +	return xfs_alloc_fix_freelist(&args, args.flags);
-
-Same comment as above about just passing separate flags everywhere
-or just passing args. This conversion is a separate patch...
-
-> diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-> index f3d328e4a440..ea1c1857bf5b 100644
-> --- a/fs/xfs/xfs_extent_busy.c
-> +++ b/fs/xfs/xfs_extent_busy.c
-> @@ -567,18 +567,41 @@ xfs_extent_busy_clear(
->  /*
->   * Flush out all busy extents for this AG.
->   */
-> -void
-> +int
->  xfs_extent_busy_flush(
-> -	struct xfs_mount	*mp,
-> +	struct xfs_trans	*tp,
->  	struct xfs_perag	*pag,
-> -	unsigned		busy_gen)
-> +	unsigned		busy_gen,
-> +	int			flags)
->  {
->  	DEFINE_WAIT		(wait);
->  	int			error;
->  
-> -	error = xfs_log_force(mp, XFS_LOG_SYNC);
-> +	error = xfs_log_force(tp->t_mountp, XFS_LOG_SYNC);
->  	if (error)
-> -		return;
-> +		return error;
-> +
-> +	/*
-> +	 * If we are holding busy extents, the caller may not want to block
-> +	 * straight away. If we are being told just to try a flush or progress
-> +	 * has been made since we last skipped a busy extent, return
-> +	 * immediately to allow the caller to try again. If we are freeing
-> +	 * extents, we might actually be holding the only free extents in the
-> +	 * transaction busy list and the log force won't resolve that
-> +	 * situation. In this case, return -EAGAIN in that case to tell the
-> +	 * caller it needs to commit the busy extents it holds before retrying
-> +	 * the extent free operation.
-> +	 */
-> +	if (!list_empty(&tp->t_busy)) {
-> +		if (flags & XFS_ALLOC_FLAG_TRYFLUSH)
-> +			return 0;
-> +
-> +		if (busy_gen != READ_ONCE(pag->pagb_gen))
-> +			return 0;
-> +
-> +		if (flags & XFS_ALLOC_FLAG_FREEING)
-> +			return -EAGAIN;
-> +	}
->  
->  	do {
->  		prepare_to_wait(&pag->pagb_wait, &wait, TASK_KILLABLE);
-> @@ -588,6 +611,7 @@ xfs_extent_busy_flush(
->  	} while (1);
->  
->  	finish_wait(&pag->pagb_wait, &wait);
-> +	return 0;
->  }
->  
->  void
-> diff --git a/fs/xfs/xfs_extent_busy.h b/fs/xfs/xfs_extent_busy.h
-> index 4a118131059f..edeedb92e0df 100644
-> --- a/fs/xfs/xfs_extent_busy.h
-> +++ b/fs/xfs/xfs_extent_busy.h
-> @@ -51,9 +51,9 @@ bool
->  xfs_extent_busy_trim(struct xfs_alloc_arg *args, xfs_agblock_t *bno,
->  		xfs_extlen_t *len, unsigned *busy_gen);
->  
-> -void
-> -xfs_extent_busy_flush(struct xfs_mount *mp, struct xfs_perag *pag,
-> -	unsigned busy_gen);
-> +int
-> +xfs_extent_busy_flush(struct xfs_trans *tp, struct xfs_perag *pag,
-> +	unsigned busy_gen, int flags);
->  
->  void
->  xfs_extent_busy_wait_all(struct xfs_mount *mp);
-> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-> index 011b50469301..3c5a9e9952ec 100644
-> --- a/fs/xfs/xfs_extfree_item.c
-> +++ b/fs/xfs/xfs_extfree_item.c
-> @@ -336,6 +336,25 @@ xfs_trans_get_efd(
->  	return efdp;
->  }
->  
-> +/*
-> + * Fill the EFD with all extents from the EFI and set the counter.
-> + * Note: the EFD should comtain at least one extents already.
-> + */
-> +static void xfs_fill_efd_with_efi(struct xfs_efd_log_item *efdp)
-> +{
-> +	struct xfs_efi_log_item *efip = efdp->efd_efip;
-> +	uint                    i;
-> +
-> +	if (efdp->efd_next_extent == efip->efi_format.efi_nextents)
-> +		return;
-> +
-> +	for (i = 0; i < efip->efi_format.efi_nextents; i++) {
-> +	       efdp->efd_format.efd_extents[i] =
-> +		       efip->efi_format.efi_extents[i];
-> +	}
-> +	efdp->efd_next_extent = efip->efi_format.efi_nextents;
-> +}
-> +
-
-Ok, but it doesn't dirty the transaction or the EFD, which means....
-
-> @@ -369,6 +388,10 @@ xfs_trans_free_extent(
->  	error = __xfs_free_extent(tp, xefi->xefi_startblock,
->  			xefi->xefi_blockcount, &oinfo, XFS_AG_RESV_NONE,
->  			xefi->xefi_flags & XFS_EFI_SKIP_DISCARD);
-> +	if (error == -EAGAIN) {
-> +		xfs_fill_efd_with_efi(efdp);
-> +		return error;
-> +	}
-
-.... this is incorrectly placed.
-
-The very next lines say:
-
->  	/*
->  	 * Mark the transaction dirty, even on error. This ensures the
->  	 * transaction is aborted, which:
-
-i.e. we have to make the transaction and EFD log item dirty even if
-we have an error. In this case, the error is not fatal, but we still
-have to ensure that we commit the EFD when we roll the transaction.
-Hence the transaction and EFD still need to be dirtied on -EAGAIN...
-
-> @@ -476,7 +499,8 @@ xfs_extent_free_finish_item(
->  	xefi = container_of(item, struct xfs_extent_free_item, xefi_list);
->  
->  	error = xfs_trans_free_extent(tp, EFD_ITEM(done), xefi);
-> -	kmem_cache_free(xfs_extfree_item_cache, xefi);
-> +	if (error != -EAGAIN)
-> +		kmem_cache_free(xfs_extfree_item_cache, xefi);
->  	return error;
->  }
-
-Ok, that's a bit nasty. let's do that the same way as
-xfs_refcount_update_finish_item():
-
-	error = xfs_trans_free_extent(tp, EFD_ITEM(done), xefi);
-
-	/*
-	 * Do we need to roll the transaction and retry to avoid a busy
-	 * extent deadlock?
-	 */
-	if (error == -EAGAIN)
-		return error;
-
-	kmem_cache_free(xfs_extfree_item_cache, xefi);
-	return error;
-
->  
-> @@ -633,6 +657,17 @@ xfs_efi_item_recover(
->  		fake.xefi_blockcount = extp->ext_len;
->  
->  		error = xfs_trans_free_extent(tp, efdp, &fake);
-> +		if (error == -EAGAIN) {
-> +			xfs_free_extent_later(tp, fake.xefi_startblock,
-> +				fake.xefi_blockcount, &XFS_RMAP_OINFO_ANY_OWNER);
-> +			/*
-> +			 * try to free as many extents as possible with current
-> +			 * transaction
-> +			 */
-> +			error = 0;
-> +			continue;
-> +		};
-
-This looks like it may be problematic - I'd prefer this code to be
-obviously correct before we try to do any fancy optimisations to
-minimise transaction counts. That is, once we get a -EAGAIN error,
-we should defer the rest of the extents and roll the transaction
-same as is done in xfs_cui_item_recover().
-
-That is, when we get -EAGAIN, set a boolean "requeue_only" flag
-and if that is set simply call xfs_free_extent_later() directly
-until the EFI is exhausted.
-
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 322eb2ee6c55..00bfe9683fa8 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -2540,30 +2540,27 @@ xlog_recover_process_intents(
->  	struct xfs_log_item	*lip;
->  	struct xfs_ail		*ailp;
->  	int			error = 0;
-> -#if defined(DEBUG) || defined(XFS_WARN)
-> -	xfs_lsn_t		last_lsn;
-> -#endif
-> +	xfs_lsn_t		threshold_lsn;
->  
->  	ailp = log->l_ailp;
-> +	threshold_lsn = xfs_ail_max_lsn(ailp);
->  	spin_lock(&ailp->ail_lock);
-> -#if defined(DEBUG) || defined(XFS_WARN)
-> -	last_lsn = xlog_assign_lsn(log->l_curr_cycle, log->l_curr_block);
-
-xfs_ail_max_lsn() and l_curr_cycle/l_curr_block are not the same
-thing.  max_lsn points to the lsn of the last entry in the AIL (in
-memory state), whilst curr_cycle/block points to the current
-physical location of the log head in the on-disk journal.
-
-In this case, we can't use in-memory state to determine where to
-stop the initial intent replay - recovery of other items may have
-inserted new intents beyond the end of the physical region being
-recovered, in which case using xfs_ail_max_lsn() will result in
-incorrect behaviour here.
-
-> -#endif
-> +
->  	for (lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
->  	     lip != NULL;
->  	     lip = xfs_trans_ail_cursor_next(ailp, &cur)) {
->  		const struct xfs_item_ops	*ops;
-> +		/*
-> +		 * Orignal redo EFI could be splitted into new EFIs. Those
-> +		 * new EFIs are supposed to be processed in capture_list.
-> +		 * Stop here when original redo intents are done.
-> +		 */
-> +		if (XFS_LSN_CMP(threshold_lsn, lip->li_lsn) < 0)
-> +			break;
->  
->  		if (!xlog_item_is_intent(lip))
->  			break;
->  
-> -		/*
-> -		 * We should never see a redo item with a LSN higher than
-> -		 * the last transaction we found in the log at the start
-> -		 * of recovery.
-> -		 */
-> -		ASSERT(XFS_LSN_CMP(last_lsn, lip->li_lsn) >= 0);
-> -
->  		/*
->  		 * NOTE: If your intent processing routine can create more
->  		 * deferred ops, you /must/ attach them to the capture list in
-
-As it is, I don't understand why this change is necessary and it is
-not explained anywhere. That is, new intents should go to the end of
-the AIL past the LSN of any intent that has been read from the
-region of the log we are recovering. The first intent that is
-processed will place non-intent items (e.g. a buffer or inode) in
-the CIL/AIL before any new intent item, so this check:
-
-		if (!xlog_item_is_intent(lip))
-			break;
-
-should always trigger before we would start processing newly logged
-(deferred) intents.
-
-If this change is actually necessary, it needs to be in it's own
-commit and explain what the problem is that it is fixing. IF there
-is a bug here tha tneeds fixing, it's something we need to know
-about because it will affect all previous kernels, too, not just
-ones with this patch that can relog EFIs in recovery.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks!
+BR.
