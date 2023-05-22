@@ -2,91 +2,62 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F15D3C7EE2E
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 May 2023 10:09:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 880A5C77B75
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 May 2023 10:21:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232192AbjEVKJD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 May 2023 06:09:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49992 "EHLO
+        id S232739AbjEVKVm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 May 2023 06:21:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55708 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229512AbjEVKJC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 May 2023 06:09:02 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D684B7;
-        Mon, 22 May 2023 03:09:01 -0700 (PDT)
+        with ESMTP id S232740AbjEVKVW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 May 2023 06:21:22 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FF1510D
+        for <linux-xfs@vger.kernel.org>; Mon, 22 May 2023 03:21:21 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DEEDB612D2;
-        Mon, 22 May 2023 10:09:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B48ACC433D2;
-        Mon, 22 May 2023 10:08:57 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2229360F01
+        for <linux-xfs@vger.kernel.org>; Mon, 22 May 2023 10:21:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0158EC433D2
+        for <linux-xfs@vger.kernel.org>; Mon, 22 May 2023 10:21:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684750140;
-        bh=f+TjsaX3pc2xNfuoY7ZIrIhtkHD0EV4+3vT4AgxlZoo=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Vz/OwO68P0z5L3CcTBKeen8IVLpqKCsL+EO842KBN7gCjHaFesa6sRXd394htdAOI
-         su2yqXMixtZrxma9KHqZWvVD26OZ2NfXlRfgmioOr7mq6JHgxeeZvoA4HPlH/pXvJf
-         n81Mfy3yxMrTd1nmLHBxHz1RQB2JW9G5/mjdewZYsgLEYn/0Q0Mq9ZW7kjcttSO6UF
-         1zA/dUD2Bi9qa/wHnRmHW9IMbfpTIsElnwjHROeunSLM2e2bqJyGqOSTljtq9puP4r
-         m9LJtebKI9H7nCfLs43DOVOxPvFnr5zfO3fRtm1V6Jb3vQOLwCpRbbf3SnQxMfOzBU
-         bE97FQJ+17UOg==
-Message-ID: <cde7bc1874e2d69860ecdb87d4e21c762f355aea.camel@kernel.org>
-Subject: Re: [PATCH v4 9/9] btrfs: convert to multigrain timestamps
-From:   Jeff Layton <jlayton@kernel.org>
-To:     dsterba@suse.cz
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Chuck Lever <chuck.lever@oracle.com>, Jan Kara <jack@suse.cz>,
-        Amir Goldstein <amir73il@gmail.com>,
-        David Howells <dhowells@redhat.com>,
-        Neil Brown <neilb@suse.de>,
-        Matthew Wilcox <willy@infradead.org>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Theodore T'so <tytso@mit.edu>, Chris Mason <clm@fb.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        Namjae Jeon <linkinjeon@kernel.org>,
-        Steve French <sfrench@samba.org>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Tom Talpey <tom@talpey.com>, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-mm@kvack.org, linux-nfs@vger.kernel.org,
-        linux-cifs@vger.kernel.org
-Date:   Mon, 22 May 2023 06:08:56 -0400
-In-Reply-To: <20230522095601.GH32559@twin.jikos.cz>
-References: <20230518114742.128950-1-jlayton@kernel.org>
-         <20230518114742.128950-10-jlayton@kernel.org>
-         <20230522095601.GH32559@twin.jikos.cz>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.1 (3.48.1-1.fc38) 
+        s=k20201202; t=1684750880;
+        bh=825A1lTzGX+UNCXXxf+qq/rx5BOEZXNCP5YsbcqSnAY=;
+        h=Date:From:To:Subject:From;
+        b=EoWbmL0oK63uXeNFHU2mB4CoiiCVn6LyuQd0pMU6sZVuyQTKsZHFvZfGpgAd+iB+A
+         7URpD/YD3mchcLflucSjapaCusa7UDRtmnKIRwYI89A6yqMgB6XubIa1Em2A0rOkHf
+         rG0TyIQEYYDOahkApOCZgBy/LoUTN1gsFU9VxS35G2jqm8gh2jJSpqn/KVTv3rt5VW
+         TJUR0jSqG1DpS8gohmJARdj01DYg0B15re7WIkc9uusEJRo/LBKW7bRK/38PByblX1
+         jetEI17iM9fwdWtu35kHb8Ef8P3YaIqPllVtBW5p8tcj4RQTZvGbooG3KU9MVglzh9
+         oSbBKz4thTf1Q==
+Date:   Mon, 22 May 2023 12:21:16 +0200
+From:   Carlos Maiolino <cem@kernel.org>
+To:     linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfsprogs-6.3.0 released
+Message-ID: <20230522102116.imbaxmxeucfbhfit@andromeda>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, 2023-05-22 at 11:56 +0200, David Sterba wrote:
-> On Thu, May 18, 2023 at 07:47:42AM -0400, Jeff Layton wrote:
-> > Signed-off-by: Jeff Layton <jlayton@kernel.org>
->=20
-> Acked-by: David Sterba <dsterba@suse.com>
->=20
-> Please add a brief description to the changelog too, there's a similar
-> text in the patches adding the infrastructure. Something like "Allow to
-> optimize lot of metadata updates by encoding the status in the cmtime.
-> The fine grained time is needed for NFS."
+Hello.
 
-Sure thing.
+xfsprogs version 6.3 has just been released.
+This is the latest stable version of xfsprogs.
 
-Christian, do you want to just alter the changelog with David's
-suggestion, or would you rather I resend the series?
+The official xfsprogs repository, located at:
 
-Thanks,
---=20
-Jeff Layton <jlayton@kernel.org>
+git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+Has been updated to reflect this release with both master and for-next branches
+updated to this release.
+
+The new head of both branches is commit: f499ee5cf0aa520ed7489249e2e465587ae19c59
+
+Any questions, please let me know.
+
+-- 
+Carlos Maiolino
