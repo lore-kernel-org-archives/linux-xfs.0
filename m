@@ -2,324 +2,166 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F2E2C7EE26
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 May 2023 16:02:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00F27C7EE23
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 May 2023 16:05:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229654AbjEVQCy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 May 2023 12:02:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51860 "EHLO
+        id S231610AbjEVQF3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 May 2023 12:05:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53382 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231557AbjEVQCx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 May 2023 12:02:53 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C75CC1;
-        Mon, 22 May 2023 09:02:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1684771372; x=1716307372;
-  h=date:from:to:cc:subject:message-id;
-  bh=YcKsNrZzbYoapgP2WalAuZDGoxvQoitEkp4ZslZrvY0=;
-  b=WA+wO+LQxS4qRS8zMur7HOQBkshdj3LpG4ARunFYXYn+iocEC//78ZND
-   0pcJiTMG4RmJgkhLWlg/BWuUwkEd63pVkK0CvSenuiMrvqxYHSqqoOx+Q
-   TVpLPZMwCdx2E9TjBrYIlYVhlKsqef2d+akcNtzvLNKW08YVIcU1nmbXl
-   JwQy4ZEwlKh0OgyaMnF70pIrH1t1Fx7QR/7ZZQEtBsU2EzGuaFb5L2Al1
-   9osnUETafo2RylHQpIWCiV5rU9z5uq5g0zmuUZT4xI69WIv3bcRAUQd9X
-   rAozJ0VOF8cwKCYd/915UsdVnJX/i1QFQqEMHnZGrymXqlxTaeXGdR/Wn
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10718"; a="337548591"
-X-IronPort-AV: E=Sophos;i="6.00,184,1681196400"; 
-   d="scan'208";a="337548591"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2023 09:02:51 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10718"; a="773427999"
-X-IronPort-AV: E=Sophos;i="6.00,184,1681196400"; 
-   d="scan'208";a="773427999"
-Received: from lkp-server01.sh.intel.com (HELO dea6d5a4f140) ([10.239.97.150])
-  by fmsmga004.fm.intel.com with ESMTP; 22 May 2023 09:02:48 -0700
-Received: from kbuild by dea6d5a4f140 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1q17zk-000CyJ-0L;
-        Mon, 22 May 2023 16:02:48 +0000
-Date:   Tue, 23 May 2023 00:01:55 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     Linux Memory Management List <linux-mm@kvack.org>,
-        amd-gfx@lists.freedesktop.org, kasan-dev@googlegroups.com,
-        kvmarm@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
-        linux-perf-users@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: [linux-next:master] BUILD SUCCESS WITH WARNING
- 9f258af06b6268be8e960f63c3f66e88bdbbbdb0
-Message-ID: <20230522160155.au0hJ%lkp@intel.com>
-User-Agent: s-nail v14.9.24
+        with ESMTP id S231147AbjEVQF2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 May 2023 12:05:28 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BD5DD2;
+        Mon, 22 May 2023 09:05:27 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 108B161A4E;
+        Mon, 22 May 2023 16:05:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D6BAC433D2;
+        Mon, 22 May 2023 16:05:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684771526;
+        bh=i1jokJ86/VEZ3U9KRo2xlX1lQ55y2gsf5OxsP1Oyyh4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=KujbLClFmSH/4cT4oPsQFjX+kWlO3/8ESyuQowmW0nQ0NLyHA62ivTd3dhZtfSUb9
+         /Oi749Y7aNpJ/mVJL3XuHnfCMmdHILzqu1yKElogHwBG4SiDgCQGJ3o8bf147irYz0
+         TqmjcNR0xf1gG1qH6KqIkP0PydK5KXcj8JBgSxmOZJ438yS7X1coAqHYmcA3jbhNdT
+         ZEwnNlMZFVxkjCMqUOGzpXZg/c934FL7EQPHZPDSIdXB6Z33X/eXOn6iMleWzlEDZH
+         i+tuij10o2PezqpuEMThA/pL/kjR8Ch++koQgFJgkFsZ0P4FbvQWzPQ7ryeyncRLf6
+         ONdll2qdOWHQQ==
+Date:   Mon, 22 May 2023 09:05:25 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Bagas Sanjaya <bagasdotme@gmail.com>
+Cc:     Pengfei Xu <pengfei.xu@intel.com>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, heng.su@intel.com,
+        dchinner@redhat.com, lkp@intel.com,
+        Linux Regressions <regressions@lists.linux.dev>
+Subject: Re: [Syzkaller & bisect] There is BUG: unable to handle kernel NULL
+ pointer dereference in xfs_extent_free_diff_items in v6.4-rc3
+Message-ID: <20230522160525.GB11620@frogsfrogsfrogs>
+References: <ZGrOYDZf+k0i4jyM@xpf.sh.intel.com>
+ <ZGsOH5D5vLTLWzoB@debian.me>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZGsOH5D5vLTLWzoB@debian.me>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-tree/branch: INFO setup_repo_specs: /db/releases/20230522162832/lkp-src/repo/*/linux-next
-https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
-branch HEAD: 9f258af06b6268be8e960f63c3f66e88bdbbbdb0  Add linux-next specific files for 20230522
+On Mon, May 22, 2023 at 01:39:27PM +0700, Bagas Sanjaya wrote:
+> On Mon, May 22, 2023 at 10:07:28AM +0800, Pengfei Xu wrote:
+> > Hi Darrick,
+> > 
+> > Greeting!
+> > There is BUG: unable to handle kernel NULL pointer dereference in
+> > xfs_extent_free_diff_items in v6.4-rc3:
+> > 
+> > Above issue could be reproduced in v6.4-rc3 and v6.4-rc2 kernel in guest.
+> > 
+> > Bisected this issue between v6.4-rc2 and v5.11, found the problem commit is:
+> > "
+> > f6b384631e1e xfs: give xfs_extfree_intent its own perag reference
+> > "
+> > 
+> > report0, repro.stat and so on detailed info is link: https://github.com/xupengfe/syzkaller_logs/tree/main/230521_043336_xfs_extent_free_diff_items
+> > Syzkaller reproduced code: https://github.com/xupengfe/syzkaller_logs/blob/main/230521_043336_xfs_extent_free_diff_items/repro.c
+> > Syzkaller reproduced prog: https://github.com/xupengfe/syzkaller_logs/blob/main/230521_043336_xfs_extent_free_diff_items/repro.prog
+> > Kconfig: https://github.com/xupengfe/syzkaller_logs/blob/main/230521_043336_xfs_extent_free_diff_items/kconfig_origin
+> > Bisect info: https://github.com/xupengfe/syzkaller_logs/blob/main/230521_043336_xfs_extent_free_diff_items/bisect_info.log
+> > Issue dmesg: https://github.com/xupengfe/syzkaller_logs/blob/main/230521_043336_xfs_extent_free_diff_items/v6.4-rc3_reproduce_dmesg.log
+> > 
+> > v6.4-rc3 reproduced info:
 
-Warning reports:
+Diagnosis and patches welcomed.
 
-https://lore.kernel.org/oe-kbuild-all/202305132244.DwzBUcUd-lkp@intel.com
+Or are we doing the usual syzbot bullshit where you all assume that I'm
+going to do all the fucking work for you?
 
-Warning: (recently discovered and may have been fixed)
+--D
 
-drivers/base/regmap/regcache-maple.c:113:23: warning: 'lower_index' is used uninitialized [-Wuninitialized]
-drivers/base/regmap/regcache-maple.c:113:36: warning: 'lower_last' is used uninitialized [-Wuninitialized]
-drivers/gpu/drm/amd/amdgpu/../display/amdgpu_dm/amdgpu_dm.c:6396:21: warning: variable 'count' set but not used [-Wunused-but-set-variable]
+> > [   91.419498] loop0: detected capacity change from 0 to 65536
+> > [   91.420095] XFS: attr2 mount option is deprecated.
+> > [   91.420500] XFS: ikeep mount option is deprecated.
+> > [   91.422379] XFS (loop0): Deprecated V4 format (crc=0) will not be supported after September 2030.
+> > [   91.423468] XFS (loop0): Mounting V4 Filesystem d28317a9-9e04-4f2a-be27-e55b4c413ff6
+> > [   91.428169] XFS (loop0): Ending clean mount
+> > [   91.429120] XFS (loop0): Quotacheck needed: Please wait.
+> > [   91.432182] BUG: kernel NULL pointer dereference, address: 0000000000000008
+> > [   91.432770] #PF: supervisor read access in kernel mode
+> > [   91.433216] #PF: error_code(0x0000) - not-present page
+> > [   91.433640] PGD 0 P4D 0 
+> > [   91.433864] Oops: 0000 [#1] PREEMPT SMP NOPTI
+> > [   91.434232] CPU: 0 PID: 33 Comm: kworker/u4:2 Not tainted 6.4.0-rc3-kvm #2
+> > [   91.434793] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 0.0.0 02/06/2015
+> > [   91.435445] Workqueue: xfs_iwalk-393 xfs_pwork_work
+> > [   91.435855] RIP: 0010:xfs_extent_free_diff_items+0x27/0x40
+> > [   91.436312] Code: 90 90 90 f3 0f 1e fa 0f 1f 44 00 00 55 48 89 e5 41 54 49 89 f4 53 48 89 d3 e8 05 73 7d ff 49 8b 44 24 28 48 8b 53 28 5b 41 5c <8b> 40 08 5d 2b 42 08 c3 cc cc cc cc 66 66 2e 0f 1f 84 00 00 00 00
+> > [   91.437812] RSP: 0000:ffffc9000012b8c0 EFLAGS: 00010246
+> > [   91.438250] RAX: 0000000000000000 RBX: ffff8880015826c8 RCX: ffffffff81d71e41
+> > [   91.438840] RDX: 0000000000000000 RSI: ffff888001ca4800 RDI: 0000000000000002
+> > [   91.439430] RBP: ffffc9000012b8c0 R08: ffffc9000012b8e0 R09: 0000000000000000
+> > [   91.440019] R10: ffff88800613f290 R11: ffffffff83e426c0 R12: ffff888001582230
+> > [   91.440610] R13: ffff888001582428 R14: ffffffff81b042c0 R15: ffffc9000012b908
+> > [   91.441202] FS:  0000000000000000(0000) GS:ffff88807ec00000(0000) knlGS:0000000000000000
+> > [   91.441864] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > [   91.442343] CR2: 0000000000000008 CR3: 000000000ed22006 CR4: 0000000000770ef0
+> > [   91.442941] PKRU: 55555554
+> > [   91.443178] Call Trace:
+> > [   91.443394]  <TASK>
+> > [   91.443585]  list_sort+0xb8/0x3a0
+> > [   91.443885]  xfs_extent_free_create_intent+0xb6/0xc0
+> > [   91.444312]  xfs_defer_create_intents+0xc3/0x220
+> > [   91.444711]  ? write_comp_data+0x2f/0x90
+> > [   91.445056]  xfs_defer_finish_noroll+0x9e/0xbc0
+> > [   91.445449]  ? list_sort+0x344/0x3a0
+> > [   91.445768]  __xfs_trans_commit+0x4be/0x630
+> > [   91.446135]  xfs_trans_commit+0x20/0x30
+> > [   91.446473]  xfs_dquot_disk_alloc+0x45d/0x4e0
+> > [   91.446860]  xfs_qm_dqread+0x2f7/0x310
+> > [   91.447192]  xfs_qm_dqget+0xd5/0x300
+> > [   91.447506]  xfs_qm_quotacheck_dqadjust+0x5a/0x230
+> > [   91.447921]  xfs_qm_dqusage_adjust+0x249/0x300
+> > [   91.448313]  xfs_iwalk_ag_recs+0x1bd/0x2e0
+> > [   91.448671]  xfs_iwalk_run_callbacks+0xc3/0x1c0
+> > [   91.449071]  xfs_iwalk_ag+0x32e/0x3f0
+> > [   91.449398]  xfs_iwalk_ag_work+0xbe/0xf0
+> > [   91.449744]  xfs_pwork_work+0x2c/0xc0
+> > [   91.450064]  process_one_work+0x3b1/0x860
+> > [   91.450416]  worker_thread+0x52/0x660
+> > [   91.450739]  ? __pfx_worker_thread+0x10/0x10
+> > [   91.451113]  kthread+0x16d/0x1c0
+> > [   91.451406]  ? __pfx_kthread+0x10/0x10
+> > [   91.451740]  ret_from_fork+0x29/0x50
+> > [   91.452064]  </TASK>
+> > [   91.452261] Modules linked in:
+> > [   91.452530] CR2: 0000000000000008
+> > [   91.452819] ---[ end trace 0000000000000000 ]---
+> > [   91.487979] RIP: 0010:xfs_extent_free_diff_items+0x27/0x40
+> > [   91.488463] Code: 90 90 90 f3 0f 1e fa 0f 1f 44 00 00 55 48 89 e5 41 54 49 89 f4 53 48 89 d3 e8 05 73 7d ff 49 8b 44 24 28 48 8b 53 28 5b 41 5c <8b> 40 08 5d 2b 42 08 c3 cc cc cc cc 66 66 2e 0f 1f 84 00 00 00 00
+> > [   91.490021] RSP: 0000:ffffc9000012b8c0 EFLAGS: 00010246
+> > [   91.490472] RAX: 0000000000000000 RBX: ffff8880015826c8 RCX: ffffffff81d71e41
+> > [   91.491080] RDX: 0000000000000000 RSI: ffff888001ca4800 RDI: 0000000000000002
+> > [   91.491689] RBP: ffffc9000012b8c0 R08: ffffc9000012b8e0 R09: 0000000000000000
+> > [   91.492298] R10: ffff88800613f290 R11: ffffffff83e426c0 R12: ffff888001582230
+> > [   91.492909] R13: ffff888001582428 R14: ffffffff81b042c0 R15: ffffc9000012b908
+> > [   91.493516] FS:  0000000000000000(0000) GS:ffff88807ec00000(0000) knlGS:0000000000000000
+> > [   91.494199] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > [   91.494695] CR2: 0000000000000008 CR3: 000000000ed22006 CR4: 0000000000770ef0
+> > [   91.495306] PKRU: 55555554
+> > [   91.495549] note: kworker/u4:2[33] exited with irqs disabled
+> > "
+> > 
+> 
+> Thanks for the regression report. I'm adding it to regzbot:
+> 
+> #regzbot ^introduced: f6b384631e1e34
+> #regzbot title: unable to handle kernel NULL pointer dereference in xfs_extent_free_diff_items (due to xfs_extfree_intent perag change)
+> #regzbot link: https://bugzilla.kernel.org/show_bug.cgi?id=217470
+> 
+> -- 
+> An old man doll... just what I always wanted! - Clara
 
-Unverified Warning (likely false positive, please contact us if interested):
 
-arch/arm64/kvm/mmu.c:147:3-9: preceding lock on line 140
-fs/xfs/scrub/fscounters.c:459 xchk_fscounters() warn: ignoring unreachable code.
-kernel/events/uprobes.c:478 uprobe_write_opcode() warn: passing zero to 'PTR_ERR'
-kernel/watchdog.c:40:19: sparse: sparse: symbol 'watchdog_hardlockup_user_enabled' was not declared. Should it be static?
-kernel/watchdog.c:41:19: sparse: sparse: symbol 'watchdog_softlockup_user_enabled' was not declared. Should it be static?
-
-Warning ids grouped by kconfigs:
-
-gcc_recent_errors
-|-- alpha-allyesconfig
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- arc-allyesconfig
-|   |-- drivers-base-regmap-regcache-maple.c:warning:lower_index-is-used-uninitialized
-|   |-- drivers-base-regmap-regcache-maple.c:warning:lower_last-is-used-uninitialized
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- arc-buildonly-randconfig-r001-20230522
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- arm-allmodconfig
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- arm-allyesconfig
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- arm-randconfig-r036-20230521
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- arm64-allyesconfig
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- arm64-randconfig-c041-20230521
-|   `-- arch-arm64-kvm-mmu.c:preceding-lock-on-line
-|-- arm64-randconfig-s053-20230521
-|   `-- mm-kfence-core.c:sparse:sparse:cast-to-restricted-__le64
-|-- i386-allyesconfig
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- i386-randconfig-m021
-|   `-- kernel-events-uprobes.c-uprobe_write_opcode()-warn:passing-zero-to-PTR_ERR
-|-- ia64-allmodconfig
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- ia64-randconfig-m041-20230521
-|   `-- fs-xfs-scrub-fscounters.c-xchk_fscounters()-warn:ignoring-unreachable-code.
-|-- loongarch-allmodconfig
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- loongarch-defconfig
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- loongarch-randconfig-r033-20230522
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- mips-allmodconfig
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- mips-allyesconfig
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- powerpc-allmodconfig
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- riscv-allmodconfig
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- riscv-randconfig-r042-20230521
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- s390-allyesconfig
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- s390-randconfig-s042-20230521
-|   `-- mm-kfence-core.c:sparse:sparse:cast-to-restricted-__le64
-|-- sparc-allyesconfig
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- sparc-randconfig-s052-20230521
-|   |-- kernel-watchdog.c:sparse:sparse:symbol-watchdog_hardlockup_user_enabled-was-not-declared.-Should-it-be-static
-|   `-- kernel-watchdog.c:sparse:sparse:symbol-watchdog_softlockup_user_enabled-was-not-declared.-Should-it-be-static
-|-- sparc64-randconfig-r016-20230521
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- x86_64-allyesconfig
-|   `-- drivers-gpu-drm-amd-amdgpu-..-display-amdgpu_dm-amdgpu_dm.c:warning:variable-count-set-but-not-used
-|-- x86_64-randconfig-m001
-|   `-- kernel-events-uprobes.c-uprobe_write_opcode()-warn:passing-zero-to-PTR_ERR
-|-- x86_64-randconfig-s021
-|   |-- kernel-watchdog.c:sparse:sparse:symbol-watchdog_hardlockup_user_enabled-was-not-declared.-Should-it-be-static
-|   `-- kernel-watchdog.c:sparse:sparse:symbol-watchdog_softlockup_user_enabled-was-not-declared.-Should-it-be-static
-`-- x86_64-randconfig-s022
-    |-- kernel-watchdog.c:sparse:sparse:symbol-watchdog_hardlockup_user_enabled-was-not-declared.-Should-it-be-static
-    `-- kernel-watchdog.c:sparse:sparse:symbol-watchdog_softlockup_user_enabled-was-not-declared.-Should-it-be-static
-
-elapsed time: 722m
-
-configs tested: 166
-configs skipped: 12
-
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-alpha                randconfig-r006-20230522   gcc  
-alpha                randconfig-r011-20230522   gcc  
-alpha                randconfig-r024-20230522   gcc  
-arc                              allyesconfig   gcc  
-arc          buildonly-randconfig-r001-20230522   gcc  
-arc          buildonly-randconfig-r003-20230522   gcc  
-arc                                 defconfig   gcc  
-arc                 nsimosci_hs_smp_defconfig   gcc  
-arc                  randconfig-r023-20230522   gcc  
-arc                  randconfig-r043-20230521   gcc  
-arc                  randconfig-r043-20230522   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   gcc  
-arm                          gemini_defconfig   gcc  
-arm                      integrator_defconfig   gcc  
-arm                           omap1_defconfig   clang
-arm                  randconfig-r035-20230521   gcc  
-arm                  randconfig-r036-20230521   gcc  
-arm                  randconfig-r046-20230521   clang
-arm                  randconfig-r046-20230522   gcc  
-arm                          sp7021_defconfig   clang
-arm                    vt8500_v6_v7_defconfig   clang
-arm64                            allyesconfig   gcc  
-arm64        buildonly-randconfig-r006-20230522   gcc  
-arm64                               defconfig   gcc  
-arm64                randconfig-r016-20230522   clang
-csky         buildonly-randconfig-r004-20230521   gcc  
-csky                                defconfig   gcc  
-csky                 randconfig-r012-20230521   gcc  
-hexagon              randconfig-r002-20230522   clang
-hexagon              randconfig-r006-20230521   clang
-hexagon              randconfig-r024-20230521   clang
-hexagon              randconfig-r041-20230521   clang
-hexagon              randconfig-r041-20230522   clang
-hexagon              randconfig-r045-20230521   clang
-hexagon              randconfig-r045-20230522   clang
-i386                              allnoconfig   clang
-i386                             allyesconfig   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                 randconfig-a001-20230522   gcc  
-i386                 randconfig-a002-20230522   gcc  
-i386                 randconfig-a003-20230522   gcc  
-i386                 randconfig-a004-20230522   gcc  
-i386                 randconfig-a005-20230522   gcc  
-i386                 randconfig-a006-20230522   gcc  
-i386                 randconfig-a011-20230522   clang
-i386                 randconfig-a012-20230522   clang
-i386                 randconfig-a013-20230522   clang
-i386                 randconfig-a014-20230522   clang
-i386                 randconfig-a015-20230522   clang
-i386                 randconfig-a016-20230522   clang
-i386                 randconfig-r003-20230522   gcc  
-i386                 randconfig-r026-20230522   clang
-ia64                             allmodconfig   gcc  
-ia64                                defconfig   gcc  
-ia64                 randconfig-r005-20230522   gcc  
-ia64                          tiger_defconfig   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch            randconfig-r033-20230522   gcc  
-m68k                             allmodconfig   gcc  
-m68k                          atari_defconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                 randconfig-r014-20230522   gcc  
-m68k                 randconfig-r034-20230521   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                 decstation_r4k_defconfig   gcc  
-mips                           jazz_defconfig   gcc  
-mips                        qi_lb60_defconfig   clang
-mips                 randconfig-r022-20230522   gcc  
-nios2                               defconfig   gcc  
-nios2                randconfig-r004-20230522   gcc  
-nios2                randconfig-r031-20230522   gcc  
-nios2                randconfig-r032-20230521   gcc  
-openrisc     buildonly-randconfig-r002-20230521   gcc  
-openrisc                  or1klitex_defconfig   gcc  
-openrisc             randconfig-r002-20230521   gcc  
-parisc       buildonly-randconfig-r002-20230522   gcc  
-parisc       buildonly-randconfig-r004-20230522   gcc  
-parisc       buildonly-randconfig-r006-20230521   gcc  
-parisc                              defconfig   gcc  
-parisc64                         alldefconfig   gcc  
-parisc64                            defconfig   gcc  
-powerpc                     akebono_defconfig   clang
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                   bluestone_defconfig   clang
-powerpc                      chrp32_defconfig   gcc  
-powerpc                     ksi8560_defconfig   clang
-powerpc                     mpc512x_defconfig   clang
-powerpc                      pcm030_defconfig   gcc  
-powerpc              randconfig-r033-20230521   clang
-powerpc                     skiroot_defconfig   clang
-powerpc                     tqm5200_defconfig   clang
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                randconfig-r005-20230521   clang
-riscv                randconfig-r042-20230521   gcc  
-riscv                randconfig-r042-20230522   clang
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                 randconfig-r003-20230521   clang
-s390                 randconfig-r004-20230521   clang
-s390                 randconfig-r011-20230521   gcc  
-s390                 randconfig-r013-20230521   gcc  
-s390                 randconfig-r023-20230521   gcc  
-s390                 randconfig-r034-20230522   gcc  
-s390                 randconfig-r044-20230521   gcc  
-s390                 randconfig-r044-20230522   clang
-sh                               allmodconfig   gcc  
-sh                         apsh4a3a_defconfig   gcc  
-sh           buildonly-randconfig-r003-20230521   gcc  
-sh                   randconfig-r015-20230521   gcc  
-sh                   randconfig-r021-20230521   gcc  
-sh                           se7722_defconfig   gcc  
-sparc        buildonly-randconfig-r005-20230521   gcc  
-sparc                               defconfig   gcc  
-sparc                randconfig-r015-20230522   gcc  
-sparc                randconfig-r026-20230521   gcc  
-sparc                randconfig-r035-20230522   gcc  
-sparc64              randconfig-r001-20230521   gcc  
-sparc64              randconfig-r016-20230521   gcc  
-sparc64              randconfig-r025-20230521   gcc  
-sparc64              randconfig-r031-20230521   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64               randconfig-a001-20230522   gcc  
-x86_64               randconfig-a002-20230522   gcc  
-x86_64               randconfig-a003-20230522   gcc  
-x86_64               randconfig-a004-20230522   gcc  
-x86_64               randconfig-a005-20230522   gcc  
-x86_64               randconfig-a006-20230522   gcc  
-x86_64               randconfig-a011-20230522   clang
-x86_64               randconfig-a012-20230522   clang
-x86_64               randconfig-a013-20230522   clang
-x86_64               randconfig-a014-20230522   clang
-x86_64               randconfig-a015-20230522   clang
-x86_64               randconfig-a016-20230522   clang
-x86_64               randconfig-r013-20230522   clang
-x86_64               randconfig-x051-20230522   clang
-x86_64               randconfig-x052-20230522   clang
-x86_64               randconfig-x053-20230522   clang
-x86_64               randconfig-x054-20230522   clang
-x86_64               randconfig-x055-20230522   clang
-x86_64               randconfig-x056-20230522   clang
-x86_64               randconfig-x061-20230522   clang
-x86_64               randconfig-x062-20230522   clang
-x86_64               randconfig-x063-20230522   clang
-x86_64               randconfig-x064-20230522   clang
-x86_64               randconfig-x065-20230522   clang
-x86_64               randconfig-x066-20230522   clang
-x86_64                               rhel-8.3   gcc  
-xtensa               randconfig-r022-20230521   gcc  
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
