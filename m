@@ -2,143 +2,129 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B24B4C77B73
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 May 2023 13:55:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B858CC7EE2F
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 May 2023 14:19:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234417AbjEVNzn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 May 2023 09:55:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59510 "EHLO
+        id S233740AbjEVOT4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 May 2023 10:19:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234078AbjEVNzI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 May 2023 09:55:08 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57ABC198
-        for <linux-xfs@vger.kernel.org>; Mon, 22 May 2023 06:52:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1684763527;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=OLusLo/oJVdzYA8d4lrkdkImz1Qgxj15rb4H8i/2VAY=;
-        b=XB5nivfK6t5I0wkRbmoCDFT4+6znUsNcVGMox0R8WiwqvQrZkJP+uhWNU3XhsPEFLIOieq
-        zLM72ybQjp4UwZzmCtFHNR46K4b7T43qI3IXZNNzq2PzASj4q5c3gdmFIb2azUfUNCH2Zn
-        VMCH9PBI2BUejLplIwCvuQS8FFCJtM0=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-339-o_R015-QO0ynOKyBDFSucg-1; Mon, 22 May 2023 09:52:04 -0400
-X-MC-Unique: o_R015-QO0ynOKyBDFSucg-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 324E22811BCA;
-        Mon, 22 May 2023 13:52:03 +0000 (UTC)
-Received: from warthog.procyon.org.uk (unknown [10.39.192.68])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 58841400F17;
-        Mon, 22 May 2023 13:52:00 +0000 (UTC)
-From:   David Howells <dhowells@redhat.com>
-To:     Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     David Howells <dhowells@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
-        Jeff Layton <jlayton@kernel.org>,
-        David Hildenbrand <david@redhat.com>,
-        Jason Gunthorpe <jgg@nvidia.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Hillf Danton <hdanton@sina.com>,
-        Christian Brauner <brauner@kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        Christoph Hellwig <hch@lst.de>,
-        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH v22 25/31] zonefs: Provide a splice-read wrapper
-Date:   Mon, 22 May 2023 14:50:12 +0100
-Message-Id: <20230522135018.2742245-26-dhowells@redhat.com>
-In-Reply-To: <20230522135018.2742245-1-dhowells@redhat.com>
-References: <20230522135018.2742245-1-dhowells@redhat.com>
+        with ESMTP id S233655AbjEVOTz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 May 2023 10:19:55 -0400
+Received: from mail-ed1-x52b.google.com (mail-ed1-x52b.google.com [IPv6:2a00:1450:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62CFAE9
+        for <linux-xfs@vger.kernel.org>; Mon, 22 May 2023 07:19:51 -0700 (PDT)
+Received: by mail-ed1-x52b.google.com with SMTP id 4fb4d7f45d1cf-510eb3dbaaeso8338971a12.1
+        for <linux-xfs@vger.kernel.org>; Mon, 22 May 2023 07:19:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=szeredi.hu; s=google; t=1684765190; x=1687357190;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=VSL7mwwp7mP3i/A2Ha5ZWYNP2l8nV9xWCZ9dDdVJyrE=;
+        b=bW3JxzSWL903VRTFCHvbgK/kSmmhNGzjPmv2oTgKuUeY/4UGuj+rpVpSRqU0fLX71Z
+         9x0WYxajpqEHWpasb3FMt2QPMwFvEXG1qzy09fFvoatRiySxfHmtlreAhXwdf72AH0EA
+         uaD7yDQ7ocfBWwGajHKOT7vpFDgho5apenxJE=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1684765190; x=1687357190;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=VSL7mwwp7mP3i/A2Ha5ZWYNP2l8nV9xWCZ9dDdVJyrE=;
+        b=TW8DgE+pibBrSXyi+r2k6ahzy4oqSrTgq/YW4x4xgFRiA1ESXQcUtTIgVWJGNDcxFq
+         DNFpH5utBaCyvuGLQMIevd3dfYX7ZeHXF73mAUgtad673GUbqc2MByUA4zkjZO4hKYsF
+         f/8rSyCTVZb15najy7A/icnnjEE02N8djgmMkGPiZq3ylchA3MjgAo9TUzgBG08dNfrM
+         qQHGo+oKYVRf3bpzxlXi0h9UWPPamZNA2EJBzCTCGnNsnaLBMcnskgI7vKf+mltOMeds
+         2lJ7KN2eYvc4k9qdRJVWr2MjMoHlJ0UYRVp20d7vd942wsqxzmE40koQtwWpvXxu0r5u
+         bJMQ==
+X-Gm-Message-State: AC+VfDz07hZKfvC/ajhWFQD0zLMNMYV2Mjf9YL4QRBNy4lpLQDtwim2i
+        OWh3hJ7cMRUklyQuXzLBRxpB3ofv4TAtd4ixcyJQog==
+X-Google-Smtp-Source: ACHHUZ5pTZpoagrq7BPdRNACytZjcbnwwAzdd4/4F4mMBgFIR5olByJvr8DzGqhjgDPmmSOeMIBmAwCLlQut/WuHsuo=
+X-Received: by 2002:a17:907:25c2:b0:969:edf8:f73b with SMTP id
+ ae2-20020a17090725c200b00969edf8f73bmr9314077ejc.60.1684765189889; Mon, 22
+ May 2023 07:19:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
+References: <20230519093521.133226-1-hch@lst.de> <20230519093521.133226-11-hch@lst.de>
+In-Reply-To: <20230519093521.133226-11-hch@lst.de>
+From:   Miklos Szeredi <miklos@szeredi.hu>
+Date:   Mon, 22 May 2023 16:19:38 +0200
+Message-ID: <CAJfpegtHb4pA=1NBRzQJSub7B0HZqnvqsMNQmYYM-8L7PTQfvw@mail.gmail.com>
+Subject: Re: [PATCH 10/13] fs: factor out a direct_write_fallback helper
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Matthew Wilcox <willy@infradead.org>, Jens Axboe <axboe@kernel.dk>,
+        Xiubo Li <xiubli@redhat.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        "Theodore Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>,
+        Chao Yu <chao@kernel.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        "open list:F2FS FILE SYSTEM" <linux-f2fs-devel@lists.sourceforge.net>,
+        cluster-devel@redhat.com, linux-xfs@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Provide a splice_read wrapper for zonefs.  This does some checks before
-proceeding and locks the inode across the call to filemap_splice_read() and
-a size check in case of truncation.  Splicing from direct I/O is handled by
-the caller.
+On Fri, 19 May 2023 at 11:36, Christoph Hellwig <hch@lst.de> wrote:
+>
+> Add a helper dealing with handling the syncing of a buffered write fallback
+> for direct I/O.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/libfs.c         | 36 ++++++++++++++++++++++++++++
+>  include/linux/fs.h |  2 ++
+>  mm/filemap.c       | 59 ++++++++++------------------------------------
+>  3 files changed, 50 insertions(+), 47 deletions(-)
+>
+> diff --git a/fs/libfs.c b/fs/libfs.c
+> index 89cf614a327158..9f3791fc6e0715 100644
+> --- a/fs/libfs.c
+> +++ b/fs/libfs.c
+> @@ -1613,3 +1613,39 @@ u64 inode_query_iversion(struct inode *inode)
+>         return cur >> I_VERSION_QUERIED_SHIFT;
+>  }
+>  EXPORT_SYMBOL(inode_query_iversion);
+> +
+> +ssize_t direct_write_fallback(struct kiocb *iocb, struct iov_iter *iter,
+> +               ssize_t direct_written, ssize_t buffered_written)
+> +{
+> +       struct address_space *mapping = iocb->ki_filp->f_mapping;
+> +       loff_t pos = iocb->ki_pos, end;
 
-Signed-off-by: David Howells <dhowells@redhat.com>
-cc: Christoph Hellwig <hch@lst.de>
-cc: Al Viro <viro@zeniv.linux.org.uk>
-cc: Jens Axboe <axboe@kernel.dk>
-cc: Darrick J. Wong <djwong@kernel.org>
-cc: linux-xfs@vger.kernel.org
-cc: linux-fsdevel@vger.kernel.org
-cc: linux-block@vger.kernel.org
-cc: linux-mm@kvack.org
----
- fs/zonefs/file.c | 40 +++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 39 insertions(+), 1 deletion(-)
+At this point pos will point after the end of the buffered write (as
+per earlier patches), yes?
 
-diff --git a/fs/zonefs/file.c b/fs/zonefs/file.c
-index 132f01d3461f..65d4c4fe6364 100644
---- a/fs/zonefs/file.c
-+++ b/fs/zonefs/file.c
-@@ -752,6 +752,44 @@ static ssize_t zonefs_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
- 	return ret;
- }
- 
-+static ssize_t zonefs_file_splice_read(struct file *in, loff_t *ppos,
-+				       struct pipe_inode_info *pipe,
-+				       size_t len, unsigned int flags)
-+{
-+	struct inode *inode = file_inode(in);
-+	struct zonefs_inode_info *zi = ZONEFS_I(inode);
-+	struct zonefs_zone *z = zonefs_inode_zone(inode);
-+	loff_t isize;
-+	ssize_t ret = 0;
-+
-+	/* Offline zones cannot be read */
-+	if (unlikely(IS_IMMUTABLE(inode) && !(inode->i_mode & 0777)))
-+		return -EPERM;
-+
-+	if (*ppos >= z->z_capacity)
-+		return 0;
-+
-+	inode_lock_shared(inode);
-+
-+	/* Limit read operations to written data */
-+	mutex_lock(&zi->i_truncate_mutex);
-+	isize = i_size_read(inode);
-+	if (*ppos >= isize)
-+		len = 0;
-+	else
-+		len = min_t(loff_t, len, isize - *ppos);
-+	mutex_unlock(&zi->i_truncate_mutex);
-+
-+	if (len > 0) {
-+		ret = filemap_splice_read(in, ppos, pipe, len, flags);
-+		if (ret == -EIO)
-+			zonefs_io_error(inode, false);
-+	}
-+
-+	inode_unlock_shared(inode);
-+	return ret;
-+}
-+
- /*
-  * Write open accounting is done only for sequential files.
-  */
-@@ -896,7 +934,7 @@ const struct file_operations zonefs_file_operations = {
- 	.llseek		= zonefs_file_llseek,
- 	.read_iter	= zonefs_file_read_iter,
- 	.write_iter	= zonefs_file_write_iter,
--	.splice_read	= generic_file_splice_read,
-+	.splice_read	= zonefs_file_splice_read,
- 	.splice_write	= iter_file_splice_write,
- 	.iopoll		= iocb_bio_iopoll,
- };
+> +       int err;
+> +
+> +       /*
+> +        * If the buffered write fallback returned an error, we want to return
+> +        * the number of bytes which were written by direct I/O, or the error
+> +        * code if that was zero.
+> +        *
+> +        * Note that this differs from normal direct-io semantics, which will
+> +        * return -EFOO even if some bytes were written.
+> +        */
+> +       if (unlikely(buffered_written < 0))
+> +               return buffered_written;
+> +
+> +       /*
+> +        * We need to ensure that the page cache pages are written to disk and
+> +        * invalidated to preserve the expected O_DIRECT semantics.
+> +        */
+> +       end = pos + buffered_written - 1;
 
+So this calculation is wrong.
+
+AFAICS this affects later patches as well.
+
+Thanks,
+Miklos
