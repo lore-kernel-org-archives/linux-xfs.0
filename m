@@ -2,113 +2,199 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F56DC7EE23
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 May 2023 21:32:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 301DFC7EE23
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 May 2023 21:49:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232854AbjEWVcR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 May 2023 17:32:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33520 "EHLO
+        id S238723AbjEWVtR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 May 2023 17:49:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230142AbjEWVcQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2023 17:32:16 -0400
-Received: from mail-oi1-x230.google.com (mail-oi1-x230.google.com [IPv6:2607:f8b0:4864:20::230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55F9FB5
-        for <linux-xfs@vger.kernel.org>; Tue, 23 May 2023 14:32:14 -0700 (PDT)
-Received: by mail-oi1-x230.google.com with SMTP id 5614622812f47-39425ea8e1fso191728b6e.3
-        for <linux-xfs@vger.kernel.org>; Tue, 23 May 2023 14:32:14 -0700 (PDT)
+        with ESMTP id S231217AbjEWVtQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2023 17:49:16 -0400
+Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15FDFE7D
+        for <linux-xfs@vger.kernel.org>; Tue, 23 May 2023 14:48:38 -0700 (PDT)
+Received: by mail-pl1-x634.google.com with SMTP id d9443c01a7336-1afbc02c602so18674275ad.1
+        for <linux-xfs@vger.kernel.org>; Tue, 23 May 2023 14:48:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linuxtx.org; s=google; t=1684877533; x=1687469533;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1684878513; x=1687470513;
         h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=xz/5c60tMUXOhL3uRY7jEBPxDlS57zQ1KWoXU9Gxx/s=;
-        b=QRgmWcF8mYeqggJEXZZLsZo/F7VPmVZQGU/EyJ8r8nzhE4lkjIYujimMXPh9Iiuhh/
-         Hz0l4A7XdGxbG4Aj6GgSxBWGfuDjLeSThwO1klon3n2dxtml83uP+pIMOklitN+oTW5T
-         BrYLn+0UafuFUUOQxRjnXVC3xPNHGzBibARzI=
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=DfzJTH/YS8p4/aFLXua1OpKUSEReEQjhxnkCdOPbEC8=;
+        b=BnvRAfdLPHUoB25s74WCh7Ed7BfIUFS/s1bk26w0jQbs/ANLh3OodAduU2R/njA261
+         FhzISYrI+ZVyI5RkRVBp1nm19R0O4H1ttBu2ve3cK51i7PeG86oL5fWo9ubRxuXWbguv
+         PrA07QcmSn+MHDn/CK3DSHbIY5EM/lD5u2fpMJw7AgXxrTyVjirGpxF92/H4Ki5LSqbr
+         B2fJoOigxfzraIpJ2WgIhA7Mrz6F/MfG2KuwXiXYcZAQIhwk5wv3IX5sgmovDlxzqPoe
+         lu6n96KVwkBIi98EK/D/O0gsXoCVsD21hei3mxpGEY7RIM0LPEVf3uPDvAWV9RR3HdAV
+         pJLw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684877533; x=1687469533;
+        d=1e100.net; s=20221208; t=1684878513; x=1687470513;
         h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=xz/5c60tMUXOhL3uRY7jEBPxDlS57zQ1KWoXU9Gxx/s=;
-        b=inWu7KkHnyHP6JQIaDr+zgCinrLqXeKGm6EgskWzU6lZJGoUXwoQ43MR3zeRu9y+Te
-         9giXe+5sR/OorcyaXdgaprNtVohbuXHAZLuMpqmof4kGf5bUEAD6EWrayHmS3Kyq5KrU
-         JcNCQ775FqjB+gCqs6uGMvf9l9Hii+D64aTZay5S8zE9+CgZh/3B8xe5IWhjConiQTsD
-         j7EvwpoV+1GP66KKG0a9LPSYCYwg6pkqSEfycbbcSsIuX0dNlaKt+jLTB39tdkTqlhIO
-         ArTqGhJQnreC2BRBmia3dy0BcPsF9wM0DnR3kjV7y2yWoJJv9Zh4lKzW2SLmbWswvAzZ
-         1edQ==
-X-Gm-Message-State: AC+VfDwukYl5+VnlJQlo8bJiM+TqUWZLWTWWg1drvzE4SGfeviu755BQ
-        X77E0vqacGKp0y81IKc8lbyqmguYwskup1ML1tbW1IT/
-X-Google-Smtp-Source: ACHHUZ5ZVCUTCsd2SXQBtgqIfZz/Fu/D/W7Jdl2sQNqQtNI/5NWUDGat+/5DTA5fvxJ23jB9qeg70Q==
-X-Received: by 2002:a05:6808:2884:b0:38b:e6:3d95 with SMTP id eu4-20020a056808288400b0038b00e63d95mr9103451oib.40.1684877533649;
-        Tue, 23 May 2023 14:32:13 -0700 (PDT)
-Received: from fedora64.linuxtx.org ([99.47.93.78])
-        by smtp.gmail.com with ESMTPSA id a22-20020a056830009600b006af92419e70sm835141oto.70.2023.05.23.14.32.12
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=DfzJTH/YS8p4/aFLXua1OpKUSEReEQjhxnkCdOPbEC8=;
+        b=WJCH7XWk+1kvrrnUMtlccHjoMgBnmukqtO9levX8LafkmcYc6Y5ewpHo7iu6U8yC9Q
+         I8Vc+ZGM2PeRxRubqrM1JGis4hTRJADpkVWllAi9uf267edw69qcn9WfQ3xuGGhApFs8
+         F0wbaL2tNchdMNNYaQmVXKTvGTl8jkIP6LY0tjquoMHYH0a/1WEkyFV8VW6zZRnIft7O
+         Epkm1qmnTh5CIBIzr+vr9nydb7KLgaef9FT6wEUGdQWoGqBHvx8txgPu6L8S1Hc4HhpR
+         K2K506ejEqK1cE0r31FoMYt5iL67rxym1Aa17L+DvLTKBXseNAfvSlSi/MeurnYXpUjG
+         jbyQ==
+X-Gm-Message-State: AC+VfDx7UxGwRZBIwy4Y4bM6kdRtN+QdolFQos2ZLeV62enBqwIP1HOW
+        RkjMwOVJyfDE2PV81GjjVe3jBQ==
+X-Google-Smtp-Source: ACHHUZ4asKk+nhhwjMAeaek5vqjkxfvQAw8udpAW2PCEL4vtT1VHByKWLgE7DfNeLaWy3DBRi45QLg==
+X-Received: by 2002:a17:902:b212:b0:1ae:6bb9:7dc4 with SMTP id t18-20020a170902b21200b001ae6bb97dc4mr12376153plr.1.1684878513234;
+        Tue, 23 May 2023 14:48:33 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
+        by smtp.gmail.com with ESMTPSA id ji1-20020a170903324100b001a5fccab02dsm7293760plb.177.2023.05.23.14.48.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 23 May 2023 14:32:13 -0700 (PDT)
-Sender: Justin Forbes <jmforbes@linuxtx.org>
-Date:   Tue, 23 May 2023 16:32:11 -0500
-From:   Justin Forbes <jforbes@fedoraproject.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Mike Pastore <mike@oobak.org>, linux-xfs@vger.kernel.org
-Subject: Re: Corruption of in-memory data (0x8) detected at
- xfs_defer_finish_noroll on kernel 6.3
-Message-ID: <ZG0w21hcYEl64joP@fedora64.linuxtx.org>
-References: <CAP_NaWaozOVBoJXtuXTRUWsbmGV4FQUbSPvOPHmuTO7F_FdA4g@mail.gmail.com>
- <20230502220258.GA3223426@dread.disaster.area>
- <CAP_NaWZEcv3B0nPEFguxVuQ8m93mO7te-bZDfwo-C8eN+f_KNA@mail.gmail.com>
- <20230502231318.GB3223426@dread.disaster.area>
+        Tue, 23 May 2023 14:48:32 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1q1Zn8-0035Oz-2S;
+        Wed, 24 May 2023 07:43:38 +1000
+Date:   Wed, 24 May 2023 07:43:38 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Hyeonggon Yoo <42.hyeyoo@gmail.com>
+Cc:     Uladzislau Rezki <urezki@gmail.com>, linux-mm@kvack.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        LKML <linux-kernel@vger.kernel.org>, Baoquan He <bhe@redhat.com>,
+        Lorenzo Stoakes <lstoakes@gmail.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        "Liam R . Howlett" <Liam.Howlett@oracle.com>,
+        "Paul E . McKenney" <paulmck@kernel.org>,
+        Joel Fernandes <joel@joelfernandes.org>,
+        Oleksiy Avramchenko <oleksiy.avramchenko@sony.com>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/9] Mitigate a vmap lock contention
+Message-ID: <ZG0zil5dpXUiuF5q@dread.disaster.area>
+References: <20230522110849.2921-1-urezki@gmail.com>
+ <ZGyqiaRnMJPFhxR6@debian-BULLSEYE-live-builder-AMD64>
+ <ZGzX3vRMlGHIcYCe@pc636>
+ <ZG0AE9mjHkRZIGmr@debian-BULLSEYE-live-builder-AMD64>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230502231318.GB3223426@dread.disaster.area>
+In-Reply-To: <ZG0AE9mjHkRZIGmr@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 03, 2023 at 09:13:18AM +1000, Dave Chinner wrote:
-> On Tue, May 02, 2023 at 05:13:09PM -0500, Mike Pastore wrote:
-> > On Tue, May 2, 2023, 5:03 PM Dave Chinner <david@fromorbit.com> wrote:
+On Wed, May 24, 2023 at 03:04:28AM +0900, Hyeonggon Yoo wrote:
+> On Tue, May 23, 2023 at 05:12:30PM +0200, Uladzislau Rezki wrote:
+> > > > 2. Motivation.
+> > > > 
+> > > > - The vmap code is not scalled to number of CPUs and this should be fixed;
+> > > > - XFS folk has complained several times that vmalloc might be contented on
+> > > >   their workloads:
+> > > > 
+> > > > <snip>
+> > > > commit 8dc9384b7d75012856b02ff44c37566a55fc2abf
+> > > > Author: Dave Chinner <dchinner@redhat.com>
+> > > > Date:   Tue Jan 4 17:22:18 2022 -0800
+> > > > 
+> > > >     xfs: reduce kvmalloc overhead for CIL shadow buffers
+> > > >     
+> > > >     Oh, let me count the ways that the kvmalloc API sucks dog eggs.
+> > > >     
+> > > >     The problem is when we are logging lots of large objects, we hit
+> > > >     kvmalloc really damn hard with costly order allocations, and
+> > > >     behaviour utterly sucks:
+> > > 
+> > > based on the commit I guess xfs should use vmalloc/kvmalloc is because
+> > > it allocates large buffers, how large could it be?
+> > > 
+> > They use kvmalloc(). When the page allocator is not able to serve a
+> > request they fallback to vmalloc. At least what i see, the sizes are:
 > > 
-> > >
-> > > If you can find a minimal reproducer, that would help a lot in
-> > > diagnosing the issue.
-> > >
+> > from 73728 up to 1048576, i.e. 18 pages up to 256 pages.
 > > 
-> > This is great, thank you. I'll get to work.
-> > 
-> > One note: the problem occured with and without crc=0, so we can rule that
-> > out at least.
+> > > > 3. Test
+> > > > 
+> > > > On my: AMD Ryzen Threadripper 3970X 32-Core Processor, i have below figures:
+> > > > 
+> > > >     1-page     1-page-this-patch
+> > > > 1  0.576131   vs   0.555889
+> > > > 2   2.68376   vs    1.07895
+> > > > 3   4.26502   vs    1.01739
+> > > > 4   6.04306   vs    1.28924
+> > > > 5   8.04786   vs    1.57616
+> > > > 6   9.38844   vs    1.78142
+> > > 
+> > > <snip>
+> > > 
+> > > > 29    20.06   vs    3.59869
+> > > > 30  20.4353   vs     3.6991
+> > > > 31  20.9082   vs    3.73028
+> > > > 32  21.0865   vs    3.82904
+> > > > 
+> > > > 1..32 - is a number of jobs. The results are in usec and is a vmallco()/vfree()
+> > > > pair throughput.
+> > > 
+> > > I would be more interested in real numbers than synthetic benchmarks,
+> > > Maybe XFS folks could help performing profiling similar to commit 8dc9384b7d750
+> > > with and without this patchset?
+> > > 
+> > I added Dave Chinner <david@fromorbit.com> to this thread.
 > 
-> Yes, I noticed that. My point was more that we have much more
-> confidence in crc=1 filesystems because they have much more robust
-> verification of the on-disk format and won't fail log recovery in
-> the way you noticed. The verification with crc=1 configured
-> filesystems is also known to catch issues caused by
-> memory corruption more frequently, often preventing such occurrences
-> from corrupting the on-disk filesystem.
+> Oh, I missed that, and it would be better to [+Cc linux-xfs]
 > 
-> Hence if you are seeing corruption events, you really want to be
-> using "-m crc=1" (default config) filesystems...
+> > But. The contention exists.
+> 
+> I think "theoretically can be contended" doesn't necessarily mean it's actually
+> contended in the real world.
 
-Upon trying to roll out 6.3.3 to Fedora users, it seems that we have a
-few hitting this reliabily with 6.3 kernels. It is certainly not all
-users of XFS though, as I use it extensively and haven't run across it.
-The most responsive users who can reproduce all seem to be running on
-xfs filesystems that were created a few years ago, and some even can't
-reproduce it on their newer systems.  Either way, it is a widespread
-enough problem that I can't roll out 6.3 kernels to stable releases
-until it is fixed.
+Did you not read the commit message for the XFS commit documented
+above? vmalloc lock contention most c0ertainly does exist in the
+real world and the profiles in commit 8dc9384b7d75  ("xfs: reduce
+kvmalloc overhead for CIL shadow buffers") document it clearly.
 
-https://bugzilla.redhat.com/show_bug.cgi?id=2208553
+> Also I find it difficult to imagine vmalloc being highly contended because it was
+> historically considered slow and thus discouraged when performance is important.
 
-Justin
+Read the above XFS commit.
 
+We use vmalloc in critical high performance fast paths that cannot
+tolerate high order memory allocation failure. XFS runs this
+fast path millions of times a second, and will call into
+vmalloc() several hundred thousands times a second with machine wide
+concurrency under certain types of workloads.
+
+> IOW vmalloc would not be contended when allocation size is small because we have
+> kmalloc/buddy API, and therefore I wonder which workloads are allocating very large
+> buffers and at the same time allocating very frequently, thus performance-sensitive.
+>
+> I am not against this series, but wondering which workloads would benefit ;)
+
+Yup, you need to read the XFS commit message. If you understand what
+is in that commit message, then you wouldn't be doubting that
+vmalloc contention is real and that it is used in high performance
+fast paths that are traversed millions of times a second....
+
+> > Apart of that per-cpu-KVA allocator can go away if we make it generic instead.
 > 
-> Cheers,
+> Not sure I understand your point, can you elaborate please?
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> And I would like to ask some side questions:
 > 
+> 1. Is vm_[un]map_ram() API still worth with this patchset?
+
+XFS also uses this interface for mapping multi-page buffers in the
+XFS buffer cache. These are the items that also require the high
+order costly kvmalloc allocations in the transaction commit path
+when they are modified.
+
+So, yes, we need these mapping interfaces to scale just as well as
+vmalloc itself....
+
+> 2. How does this patchset deals with 32-bit machines where
+>    vmalloc address space is limited?
+
+From the XFS side, we just don't care about 32 bit machines at all.
+XFS is aimed at server and HPC environments which have been entirely
+64 bit for a long, long time now...
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
