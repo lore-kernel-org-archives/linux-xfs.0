@@ -2,192 +2,232 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD105C7EE23
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 May 2023 16:48:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31070C77B75
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 May 2023 16:50:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235765AbjEWQsL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 May 2023 12:48:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57438 "EHLO
+        id S237620AbjEWQuv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 May 2023 12:50:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59736 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237802AbjEWQsK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2023 12:48:10 -0400
+        with ESMTP id S237645AbjEWQut (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2023 12:50:49 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D841132
-        for <linux-xfs@vger.kernel.org>; Tue, 23 May 2023 09:48:09 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F8D2CD;
+        Tue, 23 May 2023 09:50:47 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A16096343F
-        for <linux-xfs@vger.kernel.org>; Tue, 23 May 2023 16:48:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03E3AC433D2;
-        Tue, 23 May 2023 16:48:07 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 06C5D61626;
+        Tue, 23 May 2023 16:50:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 44664C4339B;
+        Tue, 23 May 2023 16:50:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684860488;
-        bh=nzq1GvP1N515+0uImlS5+R9d9tzc7Rr2yNk+AMCpSHQ=;
+        s=k20201202; t=1684860646;
+        bh=lJQMEEaxH+X5TCsKaSBgdt24AuBJP7OZ4bA8D/UqV24=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=U4M6aH6FO5u3ZM6bdSYz34+86ThIJqsrfM8lW5ONeix6lbQ6h60XsPYDjREP4tXW+
-         ox1SsgWnJbQY1Qab2OrjXn+lHN5p7S1vAA0xFMvVLONghNh2G24FK4nvDIr61Cbpvr
-         mBsRDbQLlKb4C64gtO7HWtfg6wCKDT/uYbR762LWTSswMMPlyp8IxS/zKGMe4BW/3F
-         La5vo049aWbOVNGXrf/iksUjkA/zymLXWFdfth0ABmJglaxGShlw/N/MoaRwzx+U1C
-         iDqfO8S05EDVFc5Le9sDfcFrZQS/VQSiHQ0izPelmGsrgxRWCQj5TclEfunVqQv0jx
-         4TPSNSHYV1A5w==
-Date:   Tue, 23 May 2023 09:48:07 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 05/24] set_cur: Add support to read from external log
- device
-Message-ID: <20230523164807.GL11620@frogsfrogsfrogs>
-References: <20230523090050.373545-1-chandan.babu@oracle.com>
- <20230523090050.373545-6-chandan.babu@oracle.com>
+        b=BKfsDvkPX9hnJluM6cAbjJOLhcJatkMyMTm8yIznEEn2FNx68bWLHRCub1RaC5dej
+         PwOk+cHFYFi12MwfPUwzp634oqXiVYuGmPWK7kBBq9s0ROlExPS2rt+o4/16zx2dXY
+         0+3Hyd+5/M90vVqQTM+8QeBYaLlz+prRXuMZkXjpHB7wUKRV0faZJ1idjK8NcGI+cw
+         8PKMPOr7GfnK0H0+txLVbd3zz4fw7c4Z1GppaLmUNyarWsHMtDDDpReaFfAf/7dPo2
+         1UkSdyoa+DZCAwKeWuCWDAc/L1OC6/8A4v5MQGtvHUj18FTCbkEhumgZ5JqaOD1IrG
+         BENvj0jgLsiUA==
+Date:   Tue, 23 May 2023 16:50:44 +0000
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Bagas Sanjaya <bagasdotme@gmail.com>,
+        Pengfei Xu <pengfei.xu@intel.com>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, heng.su@intel.com,
+        dchinner@redhat.com, lkp@intel.com,
+        Linux Regressions <regressions@lists.linux.dev>
+Subject: Re: [Syzkaller & bisect] There is BUG: unable to handle kernel NULL
+ pointer dereference in xfs_extent_free_diff_items in v6.4-rc3
+Message-ID: <20230523165044.GA862686@google.com>
+References: <ZGrOYDZf+k0i4jyM@xpf.sh.intel.com>
+ <ZGsOH5D5vLTLWzoB@debian.me>
+ <20230522160525.GB11620@frogsfrogsfrogs>
+ <20230523000029.GB3187780@google.com>
+ <ZGxry4yMn+DKCWcJ@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230523090050.373545-6-chandan.babu@oracle.com>
+In-Reply-To: <ZGxry4yMn+DKCWcJ@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 23, 2023 at 02:30:31PM +0530, Chandan Babu R wrote:
-> This commit changes set_cur() to be able to read from external log
-> devices. This is required by a future commit which will add the ability to
-> dump metadata from external log devices.
+Hi Dave,
+
+On Tue, May 23, 2023 at 05:31:23PM +1000, Dave Chinner wrote:
+> On Tue, May 23, 2023 at 12:00:29AM +0000, Eric Biggers wrote:
+> > On Mon, May 22, 2023 at 09:05:25AM -0700, Darrick J. Wong wrote:
+> > > On Mon, May 22, 2023 at 01:39:27PM +0700, Bagas Sanjaya wrote:
+> > > > On Mon, May 22, 2023 at 10:07:28AM +0800, Pengfei Xu wrote:
+> > > > > Hi Darrick,
+> > > > > 
+> > > > > Greeting!
+> > > > > There is BUG: unable to handle kernel NULL pointer dereference in
+> > > > > xfs_extent_free_diff_items in v6.4-rc3:
+> > > > > 
+> > > > > Above issue could be reproduced in v6.4-rc3 and v6.4-rc2 kernel in guest.
+> > > > > 
+> > > > > Bisected this issue between v6.4-rc2 and v5.11, found the problem commit is:
+> > > > > "
+> > > > > f6b384631e1e xfs: give xfs_extfree_intent its own perag reference
+> > > > > "
+> > > > > 
+> > > > > report0, repro.stat and so on detailed info is link: https://github.com/xupengfe/syzkaller_logs/tree/main/230521_043336_xfs_extent_free_diff_items
+> > > > > Syzkaller reproduced code: https://github.com/xupengfe/syzkaller_logs/blob/main/230521_043336_xfs_extent_free_diff_items/repro.c
+> > > > > Syzkaller reproduced prog: https://github.com/xupengfe/syzkaller_logs/blob/main/230521_043336_xfs_extent_free_diff_items/repro.prog
+> > > > > Kconfig: https://github.com/xupengfe/syzkaller_logs/blob/main/230521_043336_xfs_extent_free_diff_items/kconfig_origin
+> > > > > Bisect info: https://github.com/xupengfe/syzkaller_logs/blob/main/230521_043336_xfs_extent_free_diff_items/bisect_info.log
+> > > > > Issue dmesg: https://github.com/xupengfe/syzkaller_logs/blob/main/230521_043336_xfs_extent_free_diff_items/v6.4-rc3_reproduce_dmesg.log
+> > > > > 
+> > > > > v6.4-rc3 reproduced info:
+> > > 
+> > > Diagnosis and patches welcomed.
+> > > 
+> > > Or are we doing the usual syzbot bullshit where you all assume that I'm
+> > > going to do all the fucking work for you?
+> > > 
+> > 
+> > It looks like Pengfei already took the time to manually bisect this issue to a
+> > very recent commit authored by you.  Is that not helpful?
 > 
-> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
-> ---
->  db/io.c   | 22 +++++++++++++++-------
->  db/type.c |  2 ++
->  db/type.h |  2 +-
->  3 files changed, 18 insertions(+), 8 deletions(-)
+> No. The bisect is completely meaningless.
 > 
-> diff --git a/db/io.c b/db/io.c
-> index 3d2572364..e8c8f57e2 100644
-> --- a/db/io.c
-> +++ b/db/io.c
-> @@ -516,12 +516,13 @@ set_cur(
->  	int		ring_flag,
->  	bbmap_t		*bbmap)
->  {
-> -	struct xfs_buf	*bp;
-> -	xfs_ino_t	dirino;
-> -	xfs_ino_t	ino;
-> -	uint16_t	mode;
-> +	struct xfs_buftarg	*btargp;
-> +	struct xfs_buf		*bp;
-> +	xfs_ino_t		dirino;
-> +	xfs_ino_t		ino;
-> +	uint16_t		mode;
->  	const struct xfs_buf_ops *ops = type ? type->bops : NULL;
-> -	int		error;
-> +	int			error;
->  
->  	if (iocur_sp < 0) {
->  		dbprintf(_("set_cur no stack element to set\n"));
-> @@ -534,7 +535,14 @@ set_cur(
->  	pop_cur();
->  	push_cur();
->  
-> +	btargp = mp->m_ddev_targp;
-> +	if (type->typnm == TYP_ELOG) {
-
-This feels like a layering violation, see below...
-
-> +		ASSERT(mp->m_ddev_targp != mp->m_logdev_targp);
-> +		btargp = mp->m_logdev_targp;
-> +	}
-> +
->  	if (bbmap) {
-> +		ASSERT(btargp == mp->m_ddev_targp);
->  #ifdef DEBUG_BBMAP
->  		int i;
->  		printf(_("xfs_db got a bbmap for %lld\n"), (long long)blknum);
-> @@ -548,11 +556,11 @@ set_cur(
->  		if (!iocur_top->bbmap)
->  			return;
->  		memcpy(iocur_top->bbmap, bbmap, sizeof(struct bbmap));
-> -		error = -libxfs_buf_read_map(mp->m_ddev_targp, bbmap->b,
-> +		error = -libxfs_buf_read_map(btargp, bbmap->b,
->  				bbmap->nmaps, LIBXFS_READBUF_SALVAGE, &bp,
->  				ops);
->  	} else {
-> -		error = -libxfs_buf_read(mp->m_ddev_targp, blknum, len,
-> +		error = -libxfs_buf_read(btargp, blknum, len,
->  				LIBXFS_READBUF_SALVAGE, &bp, ops);
->  		iocur_top->bbmap = NULL;
->  	}
-> diff --git a/db/type.c b/db/type.c
-> index efe704456..cc406ae4c 100644
-> --- a/db/type.c
-> +++ b/db/type.c
-> @@ -100,6 +100,7 @@ static const typ_t	__typtab_crc[] = {
->  	{ TYP_INODE, "inode", handle_struct, inode_crc_hfld,
->  		&xfs_inode_buf_ops, TYP_F_CRC_FUNC, xfs_inode_set_crc },
->  	{ TYP_LOG, "log", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
-> +	{ TYP_ELOG, "elog", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
-
-It strikes me as a little odd to create a new /metadata type/ to
-reference the external log.  If we someday want to add a bunch of new
-types to xfs_db to allow us to decode/fuzz the log contents, wouldn't we
-have to add them twice -- once for decoding an internal log, and again
-to decode the external log?  And the only difference between the two
-would be the buftarg, right?  The set_cur caller needs to know the
-daddr already, so I don't think it's unreasonable for the caller to have
-to know which buftarg too.
-
-IOWs, I think set_cur ought to take the buftarg, the typ_t, and a daddr
-as explicit arguments.  But maybe others have opinions?
-
-e.g. rename set_cur to __set_cur and make it take a buftarg, and then:
-
-int
-set_log_cur(
-	const typ_t	*type,
-	xfs_daddr_t	blknum,
-	int		len,
-	int		ring_flag,
-	bbmap_t		*bbmap)
-{
-	if (!mp->m_logdev_targp->bt_bdev ||
-	    mp->m_logdev_targp->bt_bdev == mp->m_ddev_targp->bt_bdev) {
-		printf(_("external log device not loaded, use -l.\n"));
-		return ENODEV;
-	}
-
-	__set_cur(mp->m_logdev_targp, type, blknum, len, ring_flag, bbmap);
-	return 0;
-}
-
-and then metadump can do something like ....
-
-	error = set_log_cur(&typtab[TYP_LOG], 0,
-			mp->m_sb.sb_logblocks * blkbb, DB_RING_IGN, NULL);
-
---D
-
->  	{ TYP_RTBITMAP, "rtbitmap", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
->  	{ TYP_RTSUMMARY, "rtsummary", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
->  	{ TYP_SB, "sb", handle_struct, sb_hfld, &xfs_sb_buf_ops,
-> @@ -144,6 +145,7 @@ static const typ_t	__typtab_spcrc[] = {
->  	{ TYP_INODE, "inode", handle_struct, inode_crc_hfld,
->  		&xfs_inode_buf_ops, TYP_F_CRC_FUNC, xfs_inode_set_crc },
->  	{ TYP_LOG, "log", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
-> +	{ TYP_ELOG, "elog", NULL, NULL, NULL, TYP_F_NO_CRC_OFF },
->  	{ TYP_RTBITMAP, "rtbitmap", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
->  	{ TYP_RTSUMMARY, "rtsummary", handle_text, NULL, NULL, TYP_F_NO_CRC_OFF },
->  	{ TYP_SB, "sb", handle_struct, sb_hfld, &xfs_sb_buf_ops,
-> diff --git a/db/type.h b/db/type.h
-> index 411bfe90d..feb5c8219 100644
-> --- a/db/type.h
-> +++ b/db/type.h
-> @@ -14,7 +14,7 @@ typedef enum typnm
->  	TYP_AGF, TYP_AGFL, TYP_AGI, TYP_ATTR, TYP_BMAPBTA,
->  	TYP_BMAPBTD, TYP_BNOBT, TYP_CNTBT, TYP_RMAPBT, TYP_REFCBT, TYP_DATA,
->  	TYP_DIR2, TYP_DQBLK, TYP_INOBT, TYP_INODATA, TYP_INODE,
-> -	TYP_LOG, TYP_RTBITMAP, TYP_RTSUMMARY, TYP_SB, TYP_SYMLINK,
-> +	TYP_LOG, TYP_ELOG, TYP_RTBITMAP, TYP_RTSUMMARY, TYP_SB, TYP_SYMLINK,
->  	TYP_TEXT, TYP_FINOBT, TYP_NONE
->  } typnm_t;
->  
-> -- 
-> 2.39.1
+> The cause of the problem is going to be some piece of corrupted
+> metadata has got through a verifier check or log recovery and has
+> resulted in a perag lookup failing. The bisect landed on the commit
+> where the perag dependency was introduced; whatever is letting
+> unchecked corrupted metadata throught he verifiers has existed long
+> before this recent change was made.
 > 
+> I've already spent two hours analysing this report - I've got to the
+> point where I've isolated the transaction in the trace, I see the
+> allocation being run as expected, I see all the right things
+> happening, and then it goes splat after the allocation has committed
+> and it starts processing defered extent free operations. Neither the
+> code nor the trace actually tell me anything about the nature of the
+> failure that has occurred.
+> 
+> At this point, I still don't know where the corrupted metadata is
+> coming from. That's the next thing I need to look at, and then I
+> realised that this bug report *doesn't include a pointer to the
+> corrupted filesystem image that is being mounted*.
+> 
+> IOWs, the bug report is deficient and not complete, and so I'm
+> forced to spend unnecessary time trying to work out how to extract
+> the filesystem image from a weird syzkaller report that is basically
+> just a bunch of undocumented blobs in a github tree.
+> 
+> This is the same sort of shit we've been having to deal rigth from
+> teh start with syzkaller. It doesn't matter that syzbot might have
+> improved it's reporting a bit these days, we still have to deal with
+> this sort of poor reporting from all the private syzkaller bot crank
+> handles that are being turned by people who know little more than
+> how to turn a crank handle.
+> 
+> To make matters worse, this is a v4 filesystem which has known
+> unfixable issues when handling corrupted filesystems in both log
+> replay and in runtime detection of corruption. We've repeatedly told
+> people running syzkaller (including Pengfei) to stop running it on
+> v4 filesystems and only report bugs on V5 format filesystems. This
+> is to avoid wasting time triaging these problems back down to v4
+> specific format bugs that ican only be fixed by moving to the v5
+> format.
+> 
+> .....
+> 
+> And now after 4 hours, I have found several corruptions in the on
+> disk format that v5 filesystems will have caught and v4 filesystems
+> will not.
+> 
+> The AGFL indexes in the AGF have been corrupted. They are within
+> valid bounds, but first + last != count. On a V5 filesystem we catch
+> this and trigger an AGFL reset that is done of the first allocation.
+> v4 filesystems do not do this last - first = count validation at
+> all.
+> 
+> Further, the AGFL has also been corrupted - it is full of null
+> blocks. This is another problem that V5 filesystems can catch and
+> report, but v4 filesystems don't because they don't have headers in
+> the AGFL that enable verification.
+> 
+> Yes, there's definitely scope for further improvements in validation
+> here, but the unhandled corruptions that I've found still don't
+> explain how we got a null perag in the xefi created from a
+> referenced perag that is causing the crash.
+> 
+> So, yeah, the bisect is completely useless, and I've got half a day
+> into triage and I still don't have any clue what the corruption is
+> that is causing the kernel to crash....
+> 
+> ----
+> 
+> Do you see the problem now, Eric?
+> 
+> Performing root-cause analysis of syzkaller based malicious
+> filesystem corruption bugs is anything but simple. It takes hours to
+> days just to work through triage of a single bug report, and we're
+> getting a couple of these sorts of bug reported every week.
+> 
+> People who do nothing but turn the bot crank handle throw stuff like
+> this over the wall at usi are easy to find. Bots and bot crank
+> turners scale really easily. Engineers who can find and fix the
+> problems, OTOH, don't.
+> 
+> And just to rub salt into the wounds, we now have people who turn
+> crank handles on other bots to tell everyone else how important
+> they think the problem is without having performed any triage at
+> all. And then we're expected to make an untriaged bug report our
+> highest priority and immediately spend hours of time to make sense
+> of the steaming pile that has just been dumped on us.
+> 
+> Worse, we've had people who track regressions imply that if we don't
+> prioritise fixing regressions ahead of anything else we might be
+> working on, then we might not get new work merged until the
+> regressions have been fixed. In my book, that's akin to extortion,
+> and it might give you some insight to why Darrick reacted so
+> vigorously to having an untriaged syzkaller bug tracked as a high
+> visibility, must fix regression.
+> 
+> What we really need is more people who are capable to triaging bug
+> reports like this instead of having lots of people cranking on bot
+> handles and dumping untriaged bug reports on the maintainer.
+> Further, if you aren't capable of triaging the bug report, then you
+> aren't qualified to classify it as a "must fix" regression.
+> 
+> It's like people don't have any common sense or decency anymore:
+> it's not very nice to classify a bug as a "must fix" regression
+> without first having consulted the engineers responsible for that
+> code. If you don't know what the cause of the bug is, then don't
+> crank handles that cause people to have to address it immediately!
+> 
+> If nothing changes, then the ever increasing amount of bot cranking
+> is going to burn us out completely. Nobody wins when that
+> happens....
+> 
+
+Thanks for the explanation.  I personally didn't need such a long explanation,
+but it should be helpful for Pengfei and others.
+
+I was mostly just concerned that a report of a bug with a reproducer and a
+bisection to a recent commit just got a response from the maintainer with
+profanities and no helpful information.  ("It's like people don't have any
+common sense or decency anymore...")  I think that makes it hard for people like
+Pengfei to understand what they did wrong, especially when they might have
+gotten very different responses from other kernel subsystems.  So, thank you for
+providing a more detailed explanation, though honestly, something much shorter
+would have sufficed.  (Maybe you should even have a write-up on the XFS wiki or
+in Documentation/ that you point to whenever this sort of thing comes up?)
+
+BTW, given that XFS has a policy of not fixing bugs in XFS v4 filesystems, I
+suggest adding a kconfig option that disables the support for mounting XFS v4
+filesystems.  Then you could just tell the people fuzzing XFS filesystem images
+that they need to use that option.  That would save everyone a lot of time.
+(To be clear, I'm not arguing for the XFS policy on v4 filesystems being right
+or wrong; that's really not something I'd like to get into again...  I'm just
+saying that if that's indeed your policy, this is what you should do.)
+
+- Eric
