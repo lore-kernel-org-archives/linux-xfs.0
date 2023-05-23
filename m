@@ -2,199 +2,113 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 301DFC7EE23
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 May 2023 21:49:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2EB4C7EE26
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 May 2023 21:53:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238723AbjEWVtR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 May 2023 17:49:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41896 "EHLO
+        id S238740AbjEWVxK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 May 2023 17:53:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231217AbjEWVtQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2023 17:49:16 -0400
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15FDFE7D
-        for <linux-xfs@vger.kernel.org>; Tue, 23 May 2023 14:48:38 -0700 (PDT)
-Received: by mail-pl1-x634.google.com with SMTP id d9443c01a7336-1afbc02c602so18674275ad.1
-        for <linux-xfs@vger.kernel.org>; Tue, 23 May 2023 14:48:38 -0700 (PDT)
+        with ESMTP id S238629AbjEWVxH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2023 17:53:07 -0400
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3661BF
+        for <linux-xfs@vger.kernel.org>; Tue, 23 May 2023 14:53:02 -0700 (PDT)
+Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1a516fb6523so1572785ad.3
+        for <linux-xfs@vger.kernel.org>; Tue, 23 May 2023 14:53:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1684878513; x=1687470513;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1684878782; x=1687470782;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=DfzJTH/YS8p4/aFLXua1OpKUSEReEQjhxnkCdOPbEC8=;
-        b=BnvRAfdLPHUoB25s74WCh7Ed7BfIUFS/s1bk26w0jQbs/ANLh3OodAduU2R/njA261
-         FhzISYrI+ZVyI5RkRVBp1nm19R0O4H1ttBu2ve3cK51i7PeG86oL5fWo9ubRxuXWbguv
-         PrA07QcmSn+MHDn/CK3DSHbIY5EM/lD5u2fpMJw7AgXxrTyVjirGpxF92/H4Ki5LSqbr
-         B2fJoOigxfzraIpJ2WgIhA7Mrz6F/MfG2KuwXiXYcZAQIhwk5wv3IX5sgmovDlxzqPoe
-         lu6n96KVwkBIi98EK/D/O0gsXoCVsD21hei3mxpGEY7RIM0LPEVf3uPDvAWV9RR3HdAV
-         pJLw==
+        bh=Im/fXNrdtdh448/x5vPWa+KOEv9ipXtehLMOS6lDlss=;
+        b=uZAsBWtqR4l/fFgleDDi1e4cBPSXQn6MLIkXNqldkh28u96vZVG4S7tzPCzjl8kkk4
+         3sJyz5LXU3JCKwd5EXZLOTHGXqfIl4DvHwuILOtZ52f/l7yIcByUZyQBjXo9+O33Jraa
+         ETqCVuFWhNVNkGO1s7/KXoFztBAMw8K7NZnNxxJuLMx7pKWNRQ4KLBfcCiOxwkbZssU0
+         axah+nx/7Fv1Lcm+U+7PxW5IR5/Xl4jTypJgk72uOnPsQeZ1DnB6hGWZ6QbVgHYJ3N9C
+         6vvW8ymvWcbnIGvR1peDLbdyaGLWeIwCg52h/tmIB/hGoq5rqshphSWZQMsjIXBvFck2
+         v+NA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684878513; x=1687470513;
+        d=1e100.net; s=20221208; t=1684878782; x=1687470782;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=DfzJTH/YS8p4/aFLXua1OpKUSEReEQjhxnkCdOPbEC8=;
-        b=WJCH7XWk+1kvrrnUMtlccHjoMgBnmukqtO9levX8LafkmcYc6Y5ewpHo7iu6U8yC9Q
-         I8Vc+ZGM2PeRxRubqrM1JGis4hTRJADpkVWllAi9uf267edw69qcn9WfQ3xuGGhApFs8
-         F0wbaL2tNchdMNNYaQmVXKTvGTl8jkIP6LY0tjquoMHYH0a/1WEkyFV8VW6zZRnIft7O
-         Epkm1qmnTh5CIBIzr+vr9nydb7KLgaef9FT6wEUGdQWoGqBHvx8txgPu6L8S1Hc4HhpR
-         K2K506ejEqK1cE0r31FoMYt5iL67rxym1Aa17L+DvLTKBXseNAfvSlSi/MeurnYXpUjG
-         jbyQ==
-X-Gm-Message-State: AC+VfDx7UxGwRZBIwy4Y4bM6kdRtN+QdolFQos2ZLeV62enBqwIP1HOW
-        RkjMwOVJyfDE2PV81GjjVe3jBQ==
-X-Google-Smtp-Source: ACHHUZ4asKk+nhhwjMAeaek5vqjkxfvQAw8udpAW2PCEL4vtT1VHByKWLgE7DfNeLaWy3DBRi45QLg==
-X-Received: by 2002:a17:902:b212:b0:1ae:6bb9:7dc4 with SMTP id t18-20020a170902b21200b001ae6bb97dc4mr12376153plr.1.1684878513234;
-        Tue, 23 May 2023 14:48:33 -0700 (PDT)
+        bh=Im/fXNrdtdh448/x5vPWa+KOEv9ipXtehLMOS6lDlss=;
+        b=juEXFafxGx+5zchogH3bsWSsFxwBqT4urnif3HiBUDGLnr/FfYbLvjIYvC26DbAAOq
+         qBhYPaulptFtq+5HlidQH9aRm5BqxMW4A94vj057tG36uq/1EzgrFhAFGoWTUNViz8D/
+         dIlSNT11bLpnryHGy4+lZ/DjXeOFYjwZaTAQL+HHR6zKlz8KhvcYGoH6b/vzTiGwWHGa
+         AJB1sLVMcs+Htuh/JIER6UG1Ody+/3nGS46+YADji6aX1D6co/Mi3gLEB3JQmC+9ZjGm
+         sy1Vzsdj5UES4aQDRe7FPQmEWvEbRde5SWhBPfmK0HLeXvIbjqsXH6ncHc+GMyDV3vSh
+         w04g==
+X-Gm-Message-State: AC+VfDz6jaW93QWjWhuNTculIwalBsHoIXO/JAEsE3hIEblMMFm63ABG
+        OZkPuR4yWiWBh/+dk4f1VkIKcA==
+X-Google-Smtp-Source: ACHHUZ7fyzANrlD5gDYJjywUoAY1KKzWqRPDkZMuU5ssh+xI2BalbzVXVwX1qAbOA/A/CxsEdUYjEg==
+X-Received: by 2002:a17:902:c40d:b0:1af:ddef:f605 with SMTP id k13-20020a170902c40d00b001afddeff605mr486823plk.65.1684878782390;
+        Tue, 23 May 2023 14:53:02 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
-        by smtp.gmail.com with ESMTPSA id ji1-20020a170903324100b001a5fccab02dsm7293760plb.177.2023.05.23.14.48.32
+        by smtp.gmail.com with ESMTPSA id j16-20020a170902759000b001a6a6169d45sm7279540pll.168.2023.05.23.14.53.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 23 May 2023 14:48:32 -0700 (PDT)
+        Tue, 23 May 2023 14:53:01 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1q1Zn8-0035Oz-2S;
-        Wed, 24 May 2023 07:43:38 +1000
-Date:   Wed, 24 May 2023 07:43:38 +1000
+        id 1q1ZwB-0035VU-0I;
+        Wed, 24 May 2023 07:52:59 +1000
+Date:   Wed, 24 May 2023 07:52:59 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Hyeonggon Yoo <42.hyeyoo@gmail.com>
-Cc:     Uladzislau Rezki <urezki@gmail.com>, linux-mm@kvack.org,
-        Andrew Morton <akpm@linux-foundation.org>,
-        LKML <linux-kernel@vger.kernel.org>, Baoquan He <bhe@redhat.com>,
-        Lorenzo Stoakes <lstoakes@gmail.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        "Liam R . Howlett" <Liam.Howlett@oracle.com>,
-        "Paul E . McKenney" <paulmck@kernel.org>,
-        Joel Fernandes <joel@joelfernandes.org>,
-        Oleksiy Avramchenko <oleksiy.avramchenko@sony.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 0/9] Mitigate a vmap lock contention
-Message-ID: <ZG0zil5dpXUiuF5q@dread.disaster.area>
-References: <20230522110849.2921-1-urezki@gmail.com>
- <ZGyqiaRnMJPFhxR6@debian-BULLSEYE-live-builder-AMD64>
- <ZGzX3vRMlGHIcYCe@pc636>
- <ZG0AE9mjHkRZIGmr@debian-BULLSEYE-live-builder-AMD64>
+To:     Pengfei Xu <pengfei.xu@intel.com>
+Cc:     Eric Biggers <ebiggers@kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Bagas Sanjaya <bagasdotme@gmail.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        heng.su@intel.com, dchinner@redhat.com, lkp@intel.com,
+        Linux Regressions <regressions@lists.linux.dev>
+Subject: Re: [Syzkaller & bisect] There is BUG: unable to handle kernel NULL
+ pointer dereference in xfs_extent_free_diff_items in v6.4-rc3
+Message-ID: <ZG01u5KGsCBnWVGu@dread.disaster.area>
+References: <ZGrOYDZf+k0i4jyM@xpf.sh.intel.com>
+ <ZGsOH5D5vLTLWzoB@debian.me>
+ <20230522160525.GB11620@frogsfrogsfrogs>
+ <20230523000029.GB3187780@google.com>
+ <ZGxry4yMn+DKCWcJ@dread.disaster.area>
+ <ZGyD8CNObpTbEeGQ@xpf.sh.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZG0AE9mjHkRZIGmr@debian-BULLSEYE-live-builder-AMD64>
+In-Reply-To: <ZGyD8CNObpTbEeGQ@xpf.sh.intel.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 24, 2023 at 03:04:28AM +0900, Hyeonggon Yoo wrote:
-> On Tue, May 23, 2023 at 05:12:30PM +0200, Uladzislau Rezki wrote:
-> > > > 2. Motivation.
-> > > > 
-> > > > - The vmap code is not scalled to number of CPUs and this should be fixed;
-> > > > - XFS folk has complained several times that vmalloc might be contented on
-> > > >   their workloads:
-> > > > 
-> > > > <snip>
-> > > > commit 8dc9384b7d75012856b02ff44c37566a55fc2abf
-> > > > Author: Dave Chinner <dchinner@redhat.com>
-> > > > Date:   Tue Jan 4 17:22:18 2022 -0800
-> > > > 
-> > > >     xfs: reduce kvmalloc overhead for CIL shadow buffers
-> > > >     
-> > > >     Oh, let me count the ways that the kvmalloc API sucks dog eggs.
-> > > >     
-> > > >     The problem is when we are logging lots of large objects, we hit
-> > > >     kvmalloc really damn hard with costly order allocations, and
-> > > >     behaviour utterly sucks:
-> > > 
-> > > based on the commit I guess xfs should use vmalloc/kvmalloc is because
-> > > it allocates large buffers, how large could it be?
-> > > 
-> > They use kvmalloc(). When the page allocator is not able to serve a
-> > request they fallback to vmalloc. At least what i see, the sizes are:
-> > 
-> > from 73728 up to 1048576, i.e. 18 pages up to 256 pages.
-> > 
-> > > > 3. Test
-> > > > 
-> > > > On my: AMD Ryzen Threadripper 3970X 32-Core Processor, i have below figures:
-> > > > 
-> > > >     1-page     1-page-this-patch
-> > > > 1  0.576131   vs   0.555889
-> > > > 2   2.68376   vs    1.07895
-> > > > 3   4.26502   vs    1.01739
-> > > > 4   6.04306   vs    1.28924
-> > > > 5   8.04786   vs    1.57616
-> > > > 6   9.38844   vs    1.78142
-> > > 
-> > > <snip>
-> > > 
-> > > > 29    20.06   vs    3.59869
-> > > > 30  20.4353   vs     3.6991
-> > > > 31  20.9082   vs    3.73028
-> > > > 32  21.0865   vs    3.82904
-> > > > 
-> > > > 1..32 - is a number of jobs. The results are in usec and is a vmallco()/vfree()
-> > > > pair throughput.
-> > > 
-> > > I would be more interested in real numbers than synthetic benchmarks,
-> > > Maybe XFS folks could help performing profiling similar to commit 8dc9384b7d750
-> > > with and without this patchset?
-> > > 
-> > I added Dave Chinner <david@fromorbit.com> to this thread.
-> 
-> Oh, I missed that, and it would be better to [+Cc linux-xfs]
-> 
-> > But. The contention exists.
-> 
-> I think "theoretically can be contended" doesn't necessarily mean it's actually
-> contended in the real world.
+On Tue, May 23, 2023 at 05:14:24PM +0800, Pengfei Xu wrote:
+>   I did not do well in two points, which led to the problem of this useless
+>   bisect info:
+>   1. Should double check "V4 Filesystem" related issue carefully, and should
+>      give reason of problem.
+>   2. Double check the bisect bad and good dmesg info, this time actually
+>      "good(actually not good)" dmesg also contains "BUG" related
+>      dmesg, but it doesn't contain the keyword "xfs_extent_free_diff_items"
+>      dmesg info, and give the wrong bisect info.
+>      Sorry for inconvenience...
 
-Did you not read the commit message for the XFS commit documented
-above? vmalloc lock contention most c0ertainly does exist in the
-real world and the profiles in commit 8dc9384b7d75  ("xfs: reduce
-kvmalloc overhead for CIL shadow buffers") document it clearly.
+I think you misunderstand.
 
-> Also I find it difficult to imagine vmalloc being highly contended because it was
-> historically considered slow and thus discouraged when performance is important.
+The bisect you did was correct - the commit it
+identified was certainly does expose the underlying issue.
 
-Read the above XFS commit.
+The reason the bisect, while correct, is actually useless is that it
+the underlying issue that the commit tripped over is not caused by
+the change in the commit. The underlying issue has been there for a
+long while - probably a decade - and it's that old, underlying issue
+that has caused the new code to fail.
 
-We use vmalloc in critical high performance fast paths that cannot
-tolerate high order memory allocation failure. XFS runs this
-fast path millions of times a second, and will call into
-vmalloc() several hundred thousands times a second with machine wide
-concurrency under certain types of workloads.
+IOWs, the problem is not the new code (i.e. it is not a regression
+in the new code identified by the bisect), the problem is in other
+code that has been silently propagating undetected corruption for
+years. Hence the bisect is not actually useful in diagnosing the
+root cause of the problem.
 
-> IOW vmalloc would not be contended when allocation size is small because we have
-> kmalloc/buddy API, and therefore I wonder which workloads are allocating very large
-> buffers and at the same time allocating very frequently, thus performance-sensitive.
->
-> I am not against this series, but wondering which workloads would benefit ;)
+Cheers,
 
-Yup, you need to read the XFS commit message. If you understand what
-is in that commit message, then you wouldn't be doubting that
-vmalloc contention is real and that it is used in high performance
-fast paths that are traversed millions of times a second....
-
-> > Apart of that per-cpu-KVA allocator can go away if we make it generic instead.
-> 
-> Not sure I understand your point, can you elaborate please?
-> 
-> And I would like to ask some side questions:
-> 
-> 1. Is vm_[un]map_ram() API still worth with this patchset?
-
-XFS also uses this interface for mapping multi-page buffers in the
-XFS buffer cache. These are the items that also require the high
-order costly kvmalloc allocations in the transaction commit path
-when they are modified.
-
-So, yes, we need these mapping interfaces to scale just as well as
-vmalloc itself....
-
-> 2. How does this patchset deals with 32-bit machines where
->    vmalloc address space is limited?
-
-From the XFS side, we just don't care about 32 bit machines at all.
-XFS is aimed at server and HPC environments which have been entirely
-64 bit for a long, long time now...
-
--Dave.
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
