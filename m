@@ -2,100 +2,87 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C143C7EE2E
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 May 2023 03:31:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99FC2C77B7A
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 May 2023 04:47:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233505AbjEWDbM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 May 2023 23:31:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42686 "EHLO
+        id S234616AbjEWEr1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 May 2023 00:47:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232618AbjEWDbJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 May 2023 23:31:09 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AB3F90;
-        Mon, 22 May 2023 20:31:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=/hND79jypjGMxrh+L0AHfmoXlB7jfnZF846f0hmvk3s=; b=HROkOeYJgsW515w412weVmp0+i
-        YEdCM3PRHJ8yLIzdBSb+Xne+pGdopXsi8JnT0CNNfg9oYv05lkYp5Nceqaag93z1O8A122qkxCVFv
-        +izmJgPDGdRSRSfuroAjrwUvFuFU9Sr+1LDaSOnQuHT4rkaVFrGW9ZqvWG2nbNXKaUr5oZDVJK11I
-        RyvLNOj1PcX4LwBEV/FegrIgbBdhvp7j2y31h8Wy7rSvHujrlGbNAYVSA0t7gLYx6nDhZYo2aTnwG
-        2e2CzusZB4FwcCAcoisC1TopNtNPBuTbaa+4Xz1KrGZTS3PUwYf30EPvOgjalWOatycvM59In4SD4
-        sazxHniQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1q1Ijb-009k51-9e; Tue, 23 May 2023 03:30:51 +0000
-Date:   Tue, 23 May 2023 04:30:51 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Xiubo Li <xiubli@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        "open list:F2FS FILE SYSTEM" <linux-f2fs-devel@lists.sourceforge.net>,
-        cluster-devel@redhat.com, linux-xfs@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-mm@kvack.org,
-        NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 08/13] iomap: assign current->backing_dev_info in
- iomap_file_buffered_write
-Message-ID: <ZGwza3fdkBHyVG3+@casper.infradead.org>
-References: <20230519093521.133226-1-hch@lst.de>
- <20230519093521.133226-9-hch@lst.de>
- <20230523010627.GD11598@frogsfrogsfrogs>
+        with ESMTP id S234617AbjEWEqz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2023 00:46:55 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 200C5E52
+        for <linux-xfs@vger.kernel.org>; Mon, 22 May 2023 21:46:48 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9890462EE1
+        for <linux-xfs@vger.kernel.org>; Tue, 23 May 2023 04:46:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1783C433EF;
+        Tue, 23 May 2023 04:46:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684817207;
+        bh=uu4pYpjyB8JxXVQO4XGhBBwqNqbp/BVTuUG8iBD4GOc=;
+        h=Date:From:To:Cc:Subject:From;
+        b=CtkGdf4T8f2dd1D4NAWNU20OJBKIcvHxa+C0Kul+yZcJuJzvk2k2qacFw4I8uoHdB
+         17upkoYpILJEtolN3dxdytY30xCiDZyiB4kYyOpekOMMM50wyUycB8zz7s62ges6iF
+         5Bx4+sDx63zBpPsj8tierEVPl9q1YlV/13DeUzTo89gZT6/qwewAkdro/7pmMmy1vA
+         PuXqzRiIqskOdTiQdxeE09PblC8vgmywRM5ASsAHKh/4LkthxAVBX3JYmjLNezo1Cq
+         35kIsl2oZ+d3VhA8kk2Xp6RoZZwRWyfSEOaO4y7bhkKmh4OW9cfphn09Fm2gGbDcPq
+         z7yhrGvot+Gng==
+Date:   Mon, 22 May 2023 21:46:46 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs: don't deplete the reserve pool when trying to shrink
+ the fs
+Message-ID: <20230523044646.GB11594@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230523010627.GD11598@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 22, 2023 at 06:06:27PM -0700, Darrick J. Wong wrote:
-> On Fri, May 19, 2023 at 11:35:16AM +0200, Christoph Hellwig wrote:
-> > Move the assignment to current->backing_dev_info from the callers into
-> > iomap_file_buffered_write to reduce boiler plate code and reduce the
-> > scope to just around the page dirtying loop.
-> > 
-> > Note that zonefs was missing this assignment before.
-> 
-> I'm still wondering (a) what the hell current->backing_dev_info is for,
-> and (b) if we need it around the iomap_unshare operation.
-> 
-> $ git grep current..backing_dev_info
-[results show it only set, never used]
-> 
-> AFAICT nobody uses it at all?  Unless there's some bizarre user that
-> isn't extracting it from @current?
-> 
-> Oh, hey, new question (c) isn't this set incorrectly for xfs realtime
-> files?
+From: Darrick J. Wong <djwong@kernel.org>
 
-Some git archaelogy ...
+Every now and then, xfs/168 fails with this logged in dmesg:
 
-This was first introduced in commit 2f45a06517a62 (in the
-linux-fullhistory tree) in 2002 by one Andrew Morton.  At the time,
-it added this check to the page scanner:
+Reserve blocks depleted! Consider increasing reserve pool size.
+EXPERIMENTAL online shrink feature in use. Use at your own risk!
+Per-AG reservation for AG 1 failed.  Filesystem may run out of space.
+Per-AG reservation for AG 1 failed.  Filesystem may run out of space.
+Error -28 reserving per-AG metadata reserve pool.
+Corruption of in-memory data (0x8) detected at xfs_ag_shrink_space+0x23c/0x3b0 [xfs] (fs/xfs/libxfs/xfs_ag.c:1007).  Shutting down filesystem.
 
-+                               if (page->pte.direct ||
-+                                       page->mapping->backing_dev_info ==
-+                                               current->backing_dev_info) {
-+                                       wait_on_page_writeback(page);
-+                               }
+It's silly to deplete the reserved blocks pool just to shrink the
+filesystem, particularly since the fs goes down after that.
 
-AFAICT (the code went through some metamorphoses in the intervening
-twenty years), the last use of it ended up in current_may_throttle(),
-and it was removed in March 2022 by Neil Brown in commit b9b1335e6403.
-Since then, there have been no users of task->backing_dev_info, and I'm
-pretty sure it can go away.
+Fixes: fb2fc1720185 ("xfs: support shrinking unused space in the last AG")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/xfs_fsops.c |   10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 13851c0d640b..5f00527b8065 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -140,9 +140,13 @@ xfs_growfs_data_private(
+ 		return -EINVAL;
+ 	}
+ 
+-	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
+-			(delta > 0 ? XFS_GROWFS_SPACE_RES(mp) : -delta), 0,
+-			XFS_TRANS_RESERVE, &tp);
++	if (delta > 0)
++		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
++				XFS_GROWFS_SPACE_RES(mp), 0, XFS_TRANS_RESERVE,
++				&tp);
++	else
++		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata, -delta, 0,
++				0, &tp);
+ 	if (error)
+ 		return error;
+ 
