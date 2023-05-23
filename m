@@ -2,110 +2,100 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B69C5C7EE26
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 May 2023 18:11:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65392C7EE23
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 May 2023 20:44:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238163AbjEWSLi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 May 2023 14:11:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60032 "EHLO
+        id S230499AbjEWUoU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 May 2023 16:44:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229476AbjEWSLi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2023 14:11:38 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5690097
-        for <linux-xfs@vger.kernel.org>; Tue, 23 May 2023 11:11:37 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        with ESMTP id S238388AbjEWUoT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2023 16:44:19 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDCD7E41
+        for <linux-xfs@vger.kernel.org>; Tue, 23 May 2023 13:43:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1684874601;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=2AXwrxmIeNRwbgPUcfTuA7DYIUBj+3M4SsEiMK2Pk9Y=;
+        b=RrElmMMtMJWb7kAV3HFEl3q/3dPqxj05rX8GWlI43wd5mJMYKgJIuIiQMvQkImDAlxb5U1
+        xcCk9Kx6bEe05inpfGwozk9aUmuss+GNmDLtr5tJat37HZ1sB13UdQsHs6MXFeaSZa4NK9
+        hQFBWro9guvfTDtb4weNyrTVTtISXcU=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-19-l3glK4kQPEiT2-OmO-TScA-1; Tue, 23 May 2023 16:43:19 -0400
+X-MC-Unique: l3glK4kQPEiT2-OmO-TScA-1
+Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E7372611B2
-        for <linux-xfs@vger.kernel.org>; Tue, 23 May 2023 18:11:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52605C433D2;
-        Tue, 23 May 2023 18:11:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684865496;
-        bh=si4NgT/BCUtKYJl9TG2RnaZn8hTAi6WpcsSUZ7b1WPg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=l4zvtByQ0A3V4omJDrrYwiQdS9qzh56C2IZ+NjgCUV+irw799ACBSblsq3f/xwcOa
-         KhmZwW4DHH9b3O4tomplERPLsAuJ5BC5rq+cxhIuDxpiYfF/MgChsxh27ZiZqPbNRb
-         qJ62pQ6miDsr6Dzn4nNIa37uSXge2reoGjAsiEw1ozBu2KU8SoZe9bu58x3QvXQh2D
-         7wCAHxRGbPQMyNaNZQfTGFHhO7qU2JEQiBOh7akUOPcYCB0N1iPo3ljnEClatXq6NA
-         qXKLONcEaaGLvpgcvKWLO6im8CIvanD31iHC4ZQPNYSjeru8Cygs3W15PQ8Mx6hyfK
-         WC2QZYpS5KHlQ==
-Date:   Tue, 23 May 2023 11:11:34 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 20/24] mdrestore: Detect metadump version from metadump
- image
-Message-ID: <20230523181134.GE11620@frogsfrogsfrogs>
-References: <20230523090050.373545-1-chandan.babu@oracle.com>
- <20230523090050.373545-21-chandan.babu@oracle.com>
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 59C3B185A78B;
+        Tue, 23 May 2023 20:43:18 +0000 (UTC)
+Received: from warthog.procyon.org.uk (unknown [10.39.192.68])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 6DC2A492B0A;
+        Tue, 23 May 2023 20:43:15 +0000 (UTC)
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+        Kingdom.
+        Registered in England and Wales under Company Registration No. 3798903
+From:   David Howells <dhowells@redhat.com>
+In-Reply-To: <12153db1-20af-040b-ded0-31286b5bafca@kernel.org>
+References: <12153db1-20af-040b-ded0-31286b5bafca@kernel.org> <20230522135018.2742245-1-dhowells@redhat.com> <20230522135018.2742245-26-dhowells@redhat.com>
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     dhowells@redhat.com, Jens Axboe <axboe@kernel.dk>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
+        Jeff Layton <jlayton@kernel.org>,
+        David Hildenbrand <david@redhat.com>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Hillf Danton <hdanton@sina.com>,
+        Christian Brauner <brauner@kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        Christoph Hellwig <hch@lst.de>,
+        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v22 25/31] zonefs: Provide a splice-read wrapper
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230523090050.373545-21-chandan.babu@oracle.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <3071147.1684874594.1@warthog.procyon.org.uk>
+Content-Transfer-Encoding: quoted-printable
+Date:   Tue, 23 May 2023 21:43:14 +0100
+Message-ID: <3071148.1684874594@warthog.procyon.org.uk>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.10
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 23, 2023 at 02:30:46PM +0530, Chandan Babu R wrote:
+Damien Le Moal <dlemoal@kernel.org> wrote:
 
-I'll have more to say about this in patch 22.
+> > +	if (len > 0) {
+> > +		ret =3D filemap_splice_read(in, ppos, pipe, len, flags);
+> > +		if (ret =3D=3D -EIO)
+> =
 
---D
+> Is -EIO the only error that filemap_splice_read() may return ? There are=
+ other
+> IO error codes that we could get from the block layer, e.g. -ETIMEDOUT e=
+tc. So
+> "if (ret < 0)" may be better here ?
 
-> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
-> ---
->  mdrestore/xfs_mdrestore.c | 15 +++++++++------
->  1 file changed, 9 insertions(+), 6 deletions(-)
-> 
-> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-> index 5ec1a47b0..52081a6ca 100644
-> --- a/mdrestore/xfs_mdrestore.c
-> +++ b/mdrestore/xfs_mdrestore.c
-> @@ -8,7 +8,7 @@
->  #include "xfs_metadump.h"
->  
->  struct mdrestore_ops {
-> -	void (*read_header)(void *header, FILE *mdfp);
-> +	int (*read_header)(void *header, FILE *mdfp);
->  	void (*show_info)(void *header, const char *mdfile);
->  	void (*restore)(void *header, FILE *mdfp, int data_fd,
->  			bool is_target_file);
-> @@ -86,7 +86,7 @@ open_device(
->  	return fd;
->  }
->  
-> -static void
-> +static int
->  read_header_v1(
->  	void			*header,
->  	FILE			*mdfp)
-> @@ -96,7 +96,9 @@ read_header_v1(
->  	if (fread(mb, sizeof(*mb), 1, mdfp) != 1)
->  		fatal("error reading from metadump file\n");
->  	if (mb->mb_magic != cpu_to_be32(XFS_MD_MAGIC_V1))
-> -		fatal("specified file is not a metadata dump\n");
-> +		return -1;
-> +
-> +	return 0;
->  }
->  
->  static void
-> @@ -316,9 +318,10 @@ main(
->  			fatal("cannot open source dump file\n");
->  	}
->  
-> -	mdrestore.mdrops = &mdrestore_ops_v1;
-> -
-> -	mdrestore.mdrops->read_header(&mb, src_f);
-> +	if (mdrestore_ops_v1.read_header(&mb, src_f) == 0)
-> +		mdrestore.mdrops = &mdrestore_ops_v1;
-> +	else
-> +		fatal("Invalid metadump format\n");
->  
->  	if (mdrestore.show_info) {
->  		mdrestore.mdrops->show_info(&mb, argv[optind]);
-> -- 
-> 2.39.1
-> 
+It can return -ENOMEM, -EINTR and -EAGAIN at least, none of which really c=
+ount
+as I/O errors.  I based the splice function on what zonefs_file_read_iter(=
+)
+does:
+
+	} else {
+		ret =3D generic_file_read_iter(iocb, to);
+		if (ret =3D=3D -EIO)
+			zonefs_io_error(inode, false);
+	}
+
+David
+
