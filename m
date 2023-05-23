@@ -2,53 +2,53 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38613C7EE29
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 May 2023 09:01:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ECB4C7EE26
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 May 2023 09:01:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236241AbjEWJBa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 May 2023 05:01:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36092 "EHLO
+        id S236286AbjEWJBb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 May 2023 05:01:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236286AbjEWJBZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2023 05:01:25 -0400
+        with ESMTP id S236287AbjEWJB1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2023 05:01:27 -0400
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3114102
-        for <linux-xfs@vger.kernel.org>; Tue, 23 May 2023 02:01:24 -0700 (PDT)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34N6EgoW000558;
-        Tue, 23 May 2023 09:01:23 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B681FF
+        for <linux-xfs@vger.kernel.org>; Tue, 23 May 2023 02:01:26 -0700 (PDT)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34N6EfMb031379;
+        Tue, 23 May 2023 09:01:24 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=corp-2023-03-30;
- bh=SnThpmzanunCluFeNjqPbhi17uDttUC74+5qoCJDqAI=;
- b=ekjxO6/bzooqm8AXWpuAFJnHnR4Ibvw0O1idwUDJkN+2hFhH4g63WWIBS/M71LU8jjH/
- tpWbiNnd+T3wibD+pOVW0mhfBqa5QL3smCAPCFDyBiZnepAYcS4ouXa9bCYalPg0EdZB
- fojs1MGR0EJVrYMw1We9Rl+X5UVu8uBM2bOZfw9wwE0AWTGYOGiB32PZuT2fMGVxvRYV
- erX2a1B9aD49nU9mOXb0Y5mTvhs7NJOEL7ojqCs6ts1b9eeQA+YPSKBMu5aL+PUZ/m/u
- eArIuCFFH/Doodld90T0iLBqobk6zQBV8eFAEtwkNepuEiGOkwL9QzFPwjVGNUsrATCU OQ== 
+ bh=v/411W+AiNZBeY1UvLwKA3UpDZKjNd31N64sJAYu6Ng=;
+ b=tLbMzbrGaeJ8YAHG8nP5veJuDflEmJQLQ/eNf0gS9ZaJwq2oRhv4JieeSTEMjUT8kgyB
+ 55ZEvVp5HvJ1vZib6KJEX3UE/REATTQfl301dXlVqDeoWgxGrE8w0fyxv5TEUJ3nAang
+ cW64AdC2QhVLW4LPvw4J3xjnl5bxniHAyKwK+tZ0GEtdULVvQpYSWeV7Fqot2phoJMjr
+ BfMt5fW5m9TFLgTxaP2YTK99FvBVHXt2jaAgQYf07/ePOjF/Dgswk1uOY3ar+N3SK+vU
+ dx23LZyiXjKv709PSLpb35Dlzzc4LBSu1vGqUi8TfI2TNrUCcXsAzM8nrhB4eKYOCPfw 0g== 
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3qpprtmkug-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3qpp3mmn4h-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 23 May 2023 09:01:22 +0000
+        Tue, 23 May 2023 09:01:24 +0000
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 34N8KSVQ029007;
-        Tue, 23 May 2023 09:01:22 GMT
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 34N6tBgb029028;
+        Tue, 23 May 2023 09:01:23 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3qqk2aj7t6-1
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3qqk2aj7us-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 23 May 2023 09:01:22 +0000
+        Tue, 23 May 2023 09:01:23 +0000
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34N8xws5007681;
-        Tue, 23 May 2023 09:01:21 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34N8xws9007681;
+        Tue, 23 May 2023 09:01:23 GMT
 Received: from chanbabu-fstest.osdevelopmeniad.oraclevcn.com (chanbabu-fstesting.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.250.50])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3qqk2aj76a-22;
-        Tue, 23 May 2023 09:01:21 +0000
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3qqk2aj76a-24;
+        Tue, 23 May 2023 09:01:22 +0000
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     cem@kernel.org
 Cc:     Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Subject: [PATCH 21/24] mdrestore: Extract target device size verification into a function
-Date:   Tue, 23 May 2023 14:30:47 +0530
-Message-Id: <20230523090050.373545-22-chandan.babu@oracle.com>
+Subject: [PATCH 23/24] mdrestore: Add support for passing log device as an argument
+Date:   Tue, 23 May 2023 14:30:49 +0530
+Message-Id: <20230523090050.373545-24-chandan.babu@oracle.com>
 X-Mailer: git-send-email 2.39.1
 In-Reply-To: <20230523090050.373545-1-chandan.babu@oracle.com>
 References: <20230523090050.373545-1-chandan.babu@oracle.com>
@@ -61,78 +61,63 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 ml
  mlxlogscore=999 phishscore=0 bulkscore=0 suspectscore=0 adultscore=0
  spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2304280000 definitions=main-2305230074
-X-Proofpoint-GUID: 4DbyqoIK9n4aD9N0LS8Rgk3cbMIFFVx5
-X-Proofpoint-ORIG-GUID: 4DbyqoIK9n4aD9N0LS8Rgk3cbMIFFVx5
+X-Proofpoint-ORIG-GUID: eRxvOlX4l_lnLJOKQ7mFfPCqg-deQnpS
+X-Proofpoint-GUID: eRxvOlX4l_lnLJOKQ7mFfPCqg-deQnpS
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+metadump v2 format allows dumping metadata from external log devices. This
+commit allows passing the device file to which log data must be restored from
+the corresponding metadump file.
+
 Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 ---
- mdrestore/xfs_mdrestore.c | 43 +++++++++++++++++++++++----------------
- 1 file changed, 26 insertions(+), 17 deletions(-)
+ mdrestore/xfs_mdrestore.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
 diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-index 52081a6ca..615ecdc77 100644
+index 9e06d37dc..f5eff62ef 100644
 --- a/mdrestore/xfs_mdrestore.c
 +++ b/mdrestore/xfs_mdrestore.c
-@@ -86,6 +86,30 @@ open_device(
- 	return fd;
+@@ -427,7 +427,8 @@ static struct mdrestore_ops mdrestore_ops_v2 = {
+ static void
+ usage(void)
+ {
+-	fprintf(stderr, "Usage: %s [-V] [-g] [-i] source target\n", progname);
++	fprintf(stderr, "Usage: %s [-V] [-g] [-i] [-l logdev] source target\n",
++		progname);
+ 	exit(1);
  }
  
-+static void
-+verify_device_size(
-+	int		dev_fd,
-+	bool		is_file,
-+	xfs_rfsblock_t	nr_blocks,
-+	uint32_t	blocksize)
-+{
-+	if (is_file) {
-+		/* ensure regular files are correctly sized */
-+		if (ftruncate(dev_fd, nr_blocks * blocksize))
-+			fatal("cannot set filesystem image size: %s\n",
-+				strerror(errno));
-+	} else {
-+		/* ensure device is sufficiently large enough */
-+		char		lb[XFS_MAX_SECTORSIZE] = { 0 };
-+		off64_t		off;
-+
-+		off = nr_blocks * blocksize - sizeof(lb);
-+		if (pwrite(dev_fd, lb, sizeof(lb), off) < 0)
-+			fatal("failed to write last block, is target too "
-+				"small? (error: %s)\n", strerror(errno));
-+	}
-+}
-+
- static int
- read_header_v1(
- 	void			*header,
-@@ -179,23 +203,8 @@ restore_v1(
+@@ -453,7 +454,7 @@ main(
  
- 	((struct xfs_dsb*)block_buffer)->sb_inprogress = 1;
+ 	progname = basename(argv[0]);
  
--	if (is_target_file)  {
--		/* ensure regular files are correctly sized */
--
--		if (ftruncate(data_fd, sb.sb_dblocks * sb.sb_blocksize))
--			fatal("cannot set filesystem image size: %s\n",
--				strerror(errno));
--	} else  {
--		/* ensure device is sufficiently large enough */
--
--		char		lb[XFS_MAX_SECTORSIZE] = { 0 };
--		off64_t		off;
--
--		off = sb.sb_dblocks * sb.sb_blocksize - sizeof(lb);
--		if (pwrite(data_fd, lb, sizeof(lb), off) < 0)
--			fatal("failed to write last block, is target too "
--				"small? (error: %s)\n", strerror(errno));
--	}
-+	verify_device_size(data_fd, is_target_file, sb.sb_dblocks,
-+			sb.sb_blocksize);
+-	while ((c = getopt(argc, argv, "giV")) != EOF) {
++	while ((c = getopt(argc, argv, "gil:V")) != EOF) {
+ 		switch (c) {
+ 			case 'g':
+ 				mdrestore.show_progress = 1;
+@@ -461,6 +462,9 @@ main(
+ 			case 'i':
+ 				mdrestore.show_info = 1;
+ 				break;
++			case 'l':
++				logdev = optarg;
++				break;
+ 			case 'V':
+ 				printf("%s version %s\n", progname, VERSION);
+ 				exit(0);
+@@ -493,6 +497,8 @@ main(
+ 	}
  
- 	bytes_read = 0;
- 
+ 	if (mdrestore_ops_v1.read_header(&mb, src_f) == 0) {
++		if (logdev != NULL)
++			usage();
+ 		mdrestore.mdrops = &mdrestore_ops_v1;
+ 		header = &mb;
+ 	} else if (mdrestore_ops_v2.read_header(&xmh, src_f) == 0) {
 -- 
 2.39.1
 
