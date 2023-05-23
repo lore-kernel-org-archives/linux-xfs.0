@@ -2,89 +2,158 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F92CC7EE26
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 May 2023 02:11:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46231C7EE26
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 May 2023 02:48:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229670AbjEWCLp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 May 2023 22:11:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33412 "EHLO
+        id S234018AbjEWCsZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 May 2023 22:48:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56448 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229509AbjEWCLp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 May 2023 22:11:45 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E4F7CA;
-        Mon, 22 May 2023 19:11:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
-        Message-ID:Sender:Reply-To:Content-ID:Content-Description;
-        bh=2AQoI84FFH+/Fdm9nLSd2Gkl/xoxZl6Bw2n3UB+cN7c=; b=qPl2RGWqPWaKjDPdadixjegOcU
-        /ysHbUChVuHRO+PSUKHkUSyzRAvO7J+1IYRRyXQD75F6Aik0tTIINmtwGqx+mxVaIlkVhHecgC2Lt
-        pRdYA5L+iaQmZ7LvfntYGG9scjuABB0LfCYanshacsfFVxNEYs8JoSquVvr2Lu2hb7nF2bM3gUKsk
-        chldEmOzQ3Nkp4OVdeSLW9X0sRI6EMi+8H80G3GeNQ40TiXSyWZSLVpRR03mYR2p0aFya9yefadMf
-        aj4dA3biK+sllbrRtXXR90TXJDiSEpmpdmRzey29cQlK7TkEpa8p15gkIx234J609+IAXjRLq2YAe
-        YJ6R61gA==;
-Received: from [2601:1c2:980:9ec0::2764]
-        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1q1HUv-008eRS-0L;
-        Tue, 23 May 2023 02:11:37 +0000
-Message-ID: <fb5c17bd-5e6a-ac68-8c6c-1bc67ed2af63@infradead.org>
-Date:   Mon, 22 May 2023 19:11:36 -0700
+        with ESMTP id S233768AbjEWCsW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 May 2023 22:48:22 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BE86CA;
+        Mon, 22 May 2023 19:48:21 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 06CC062E36;
+        Tue, 23 May 2023 02:48:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06332C4339B;
+        Tue, 23 May 2023 02:48:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684810100;
+        bh=w3PG+wvDxKl0ccqPHuJb+taZwlEJrTezcF9g2TqXZ1g=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=C08IctqNP5/PmceTbld2x6Z+tyTSwkltOrcprZv2cE3Uo496FntDjRuVS7M+Gpm2K
+         U3cEe5vUgZ/7eUJhqG72NHK9lzGdtlP0BhZEzo4aOLxqWQOy2sSMMZWxhCG6Gfxmc7
+         RNc/9BRwtQMCgX2cvdE35U5dVrPXYWf22vm8KWmEnZP0Luge4ya7MjlSfuu9rbNnBa
+         8Ifj2kGXSoBEIod8Jpy7qPbz0/Bik3NHxxM106v7S+Yv14USfaHgu95Xz3kAOgUDNW
+         5e1OnDfiRNQrkotrhbtQj/7CWQ6wR24GZzTJgeS7gVP4kaz5vmXOJGP0a5bMhH9ALV
+         Neh/UjY9p1DXg==
+Message-ID: <12153db1-20af-040b-ded0-31286b5bafca@kernel.org>
+Date:   Tue, 23 May 2023 11:48:17 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: [PATCH v2] Documentation: add initial iomap kdoc
+ Thunderbird/102.10.0
+Subject: Re: [PATCH v22 25/31] zonefs: Provide a splice-read wrapper
 Content-Language: en-US
-To:     "Darrick J. Wong" <djwong@kernel.org>,
+To:     David Howells <dhowells@redhat.com>, Jens Axboe <axboe@kernel.dk>,
+        Al Viro <viro@zeniv.linux.org.uk>,
         Christoph Hellwig <hch@infradead.org>
-Cc:     Luis Chamberlain <mcgrof@kernel.org>, corbet@lwn.net, jake@lwn.net,
-        dchinner@redhat.com, ritesh.list@gmail.com, rgoldwyn@suse.com,
-        jack@suse.cz, linux-doc@vger.kernel.org, linux-xfs@vger.kernel.org,
+Cc:     Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
+        Jeff Layton <jlayton@kernel.org>,
+        David Hildenbrand <david@redhat.com>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Hillf Danton <hdanton@sina.com>,
+        Christian Brauner <brauner@kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
         linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        p.raghav@samsung.com, da.gomez@samsung.com, rohan.puri@samsung.com
-References: <20230518150105.3160445-1-mcgrof@kernel.org>
- <ZGcDaysYl+w9kV6+@infradead.org> <20230523012028.GE11598@frogsfrogsfrogs>
-From:   Randy Dunlap <rdunlap@infradead.org>
-In-Reply-To: <20230523012028.GE11598@frogsfrogsfrogs>
+        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        Christoph Hellwig <hch@lst.de>,
+        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+References: <20230522135018.2742245-1-dhowells@redhat.com>
+ <20230522135018.2742245-26-dhowells@redhat.com>
+From:   Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20230522135018.2742245-26-dhowells@redhat.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 5/22/23 18:20, Darrick J. Wong wrote:
-> On Thu, May 18, 2023 at 10:04:43PM -0700, Christoph Hellwig wrote:
->> On Thu, May 18, 2023 at 08:01:05AM -0700, Luis Chamberlain wrote:
->>> +        Mapping of heading styles within this document:
->>> +        Heading 1 uses "====" above and below
->>> +        Heading 2 uses "===="
->>> +        Heading 3 uses "----"
->>> +        Heading 4 uses "````"
->>> +        Heading 5 uses "^^^^"
->>> +        Heading 6 uses "~~~~"
->>> +        Heading 7 uses "...."
->>> +
->>> +        Sections are manually numbered because apparently that's what everyone
->>
->> Why are you picking different defaults then the rest of the kernel
->> documentation?
+On 5/22/23 22:50, David Howells wrote:
+> Provide a splice_read wrapper for zonefs.  This does some checks before
+> proceeding and locks the inode across the call to filemap_splice_read() and
+> a size check in case of truncation.  Splicing from direct I/O is handled by
+> the caller.
 > 
-> I bet Luis copied that from the online fsck document.
+> Signed-off-by: David Howells <dhowells@redhat.com>
+> cc: Christoph Hellwig <hch@lst.de>
+> cc: Al Viro <viro@zeniv.linux.org.uk>
+> cc: Jens Axboe <axboe@kernel.dk>
+> cc: Darrick J. Wong <djwong@kernel.org>
+> cc: linux-xfs@vger.kernel.org
+> cc: linux-fsdevel@vger.kernel.org
+> cc: linux-block@vger.kernel.org
+> cc: linux-mm@kvack.org
+
+One comment below but otherwise looks OK.
+
+Acked-by: Damien Le Moal <dlemoal@kernel.org>
+
+> ---
+>  fs/zonefs/file.c | 40 +++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 39 insertions(+), 1 deletion(-)
 > 
-> IIRC the doc generator is smart enough to handle per-file heading usage.
-> The rst parser sourcecode doesn't seem to have harcoded defaults; every
-> time it sees an unfamiliar heading style in a .rst file, it adds that as
-> the next level down in the hierarchy.
+> diff --git a/fs/zonefs/file.c b/fs/zonefs/file.c
+> index 132f01d3461f..65d4c4fe6364 100644
+> --- a/fs/zonefs/file.c
+> +++ b/fs/zonefs/file.c
+> @@ -752,6 +752,44 @@ static ssize_t zonefs_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
+>  	return ret;
+>  }
+>  
+> +static ssize_t zonefs_file_splice_read(struct file *in, loff_t *ppos,
+> +				       struct pipe_inode_info *pipe,
+> +				       size_t len, unsigned int flags)
+> +{
+> +	struct inode *inode = file_inode(in);
+> +	struct zonefs_inode_info *zi = ZONEFS_I(inode);
+> +	struct zonefs_zone *z = zonefs_inode_zone(inode);
+> +	loff_t isize;
+> +	ssize_t ret = 0;
+> +
+> +	/* Offline zones cannot be read */
+> +	if (unlikely(IS_IMMUTABLE(inode) && !(inode->i_mode & 0777)))
+> +		return -EPERM;
+> +
+> +	if (*ppos >= z->z_capacity)
+> +		return 0;
+> +
+> +	inode_lock_shared(inode);
+> +
+> +	/* Limit read operations to written data */
+> +	mutex_lock(&zi->i_truncate_mutex);
+> +	isize = i_size_read(inode);
+> +	if (*ppos >= isize)
+> +		len = 0;
+> +	else
+> +		len = min_t(loff_t, len, isize - *ppos);
+> +	mutex_unlock(&zi->i_truncate_mutex);
+> +
+> +	if (len > 0) {
+> +		ret = filemap_splice_read(in, ppos, pipe, len, flags);
+> +		if (ret == -EIO)
+
+Is -EIO the only error that filemap_splice_read() may return ? There are other
+IO error codes that we could get from the block layer, e.g. -ETIMEDOUT etc. So
+"if (ret < 0)" may be better here ?
+
+> +			zonefs_io_error(inode, false);
+> +	}
+> +
+> +	inode_unlock_shared(inode);
+> +	return ret;
+> +}
+> +
+>  /*
+>   * Write open accounting is done only for sequential files.
+>   */
+> @@ -896,7 +934,7 @@ const struct file_operations zonefs_file_operations = {
+>  	.llseek		= zonefs_file_llseek,
+>  	.read_iter	= zonefs_file_read_iter,
+>  	.write_iter	= zonefs_file_write_iter,
+> -	.splice_read	= generic_file_splice_read,
+> +	.splice_read	= zonefs_file_splice_read,
+>  	.splice_write	= iter_file_splice_write,
+>  	.iopoll		= iocb_bio_iopoll,
+>  };
 > 
-> Also, where are the "proper" headings documented for Documentation/?
-
-Documentation/doc-guide/sphinx.rst:
-
-* Please stick to this order of heading adornments:
-
-and following lines.
 
 -- 
-~Randy
+Damien Le Moal
+Western Digital Research
+
