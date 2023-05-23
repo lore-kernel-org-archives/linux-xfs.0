@@ -2,176 +2,405 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D506C77B75
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 May 2023 18:04:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AD7FC7EE23
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 May 2023 18:06:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238104AbjEWSEl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 May 2023 14:04:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57346 "EHLO
+        id S234613AbjEWSGG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 May 2023 14:06:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229445AbjEWSEk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2023 14:04:40 -0400
-Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27E551B1;
-        Tue, 23 May 2023 11:04:22 -0700 (PDT)
-Received: by mail-pl1-x631.google.com with SMTP id d9443c01a7336-1ae40dcdc18so54978995ad.2;
-        Tue, 23 May 2023 11:04:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1684865061; x=1687457061;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=7G+6JAe83A/18uddV8Wr/e+zu8FEvMqf/FTgHFCweHM=;
-        b=OjRBHmKyZVkTv8ipCSSjMC979Aa2g8Vef/qdvxWXNK7NfpzJNVJzYzTbPwBqOJYnIM
-         vwYPxKbp7kt4/uzWVCrugRgi2qAog0S5e0N/D4KORZxxCcleybetuj0ZoVe1zrvhJuHs
-         NPimC3YHLcXmNFW845z/8XZ99tVVoyiyvn0aNHlu7cELROsQq5Ejt0Mkg5qTC4q8O1P/
-         RLk34aD+U5QHietxZJhXe+22UN+3njLRq4RA6mjnCw5zYbssPk5+vRPk9RiS2LDaRzdw
-         TmjTW23dM/3zhjSzXiKomSO4Z95x93uk/fiaoRI2DOFOpAN7I0mtdv09iiB9T1/tOxaB
-         NoCA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684865061; x=1687457061;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=7G+6JAe83A/18uddV8Wr/e+zu8FEvMqf/FTgHFCweHM=;
-        b=aSDKuImqSN0rrS76/RZfux3v/jnhz1PvAhdpsDRbaWdyf3s3YEGqjiKoy3d8Y3V6Hq
-         iahjlH25dbO23HRv3U6NTOYUBMXzTI9iCcCkngDghVi08yP6BSJgVmvATuRF3VrPZ1hH
-         CtI0iLvcZfjkxFhlvg58wKBqI++IbzZtUcKv5FnXyxOgoJljU66b395kTRArodD3w4PT
-         pfU1gN5bCCIZgihi4tSSDttDb8t0cdNo67a2fxGeBSPywOe9FFMRy0+Z5JyKXZxjYi1/
-         5aDX7ViraC0RGn6EexKMx9ZiMw2aoc9MIeN7SrWf/7Y5U4YI+vSNOjueEwGA72MCzXgM
-         5oHg==
-X-Gm-Message-State: AC+VfDxr3ASA+hSAdJeHHBmq0wdNj8pDr+En5PjxL+JTCEiLaYPJVmYc
-        JEly6Aww7Mk6INU9dTfeB4w=
-X-Google-Smtp-Source: ACHHUZ7Qj/je6b3i19kqNy7D3SzNF2pLpsy4V4UegPxSa9h9jg3U20AWBdyQoww8RgK0muN41BIKXA==
-X-Received: by 2002:a17:902:ce91:b0:1af:c599:6a88 with SMTP id f17-20020a170902ce9100b001afc5996a88mr3866632plg.49.1684865060999;
-        Tue, 23 May 2023 11:04:20 -0700 (PDT)
-Received: from debian-BULLSEYE-live-builder-AMD64 ([211.108.101.96])
-        by smtp.gmail.com with ESMTPSA id bj6-20020a170902850600b001a183ade911sm7080795plb.56.2023.05.23.11.04.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 23 May 2023 11:04:20 -0700 (PDT)
-Date:   Wed, 24 May 2023 03:04:28 +0900
-From:   Hyeonggon Yoo <42.hyeyoo@gmail.com>
-To:     Uladzislau Rezki <urezki@gmail.com>
-Cc:     linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>,
-        LKML <linux-kernel@vger.kernel.org>, Baoquan He <bhe@redhat.com>,
-        Lorenzo Stoakes <lstoakes@gmail.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        "Liam R . Howlett" <Liam.Howlett@oracle.com>,
-        Dave Chinner <david@fromorbit.com>,
-        "Paul E . McKenney" <paulmck@kernel.org>,
-        Joel Fernandes <joel@joelfernandes.org>,
-        Oleksiy Avramchenko <oleksiy.avramchenko@sony.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 0/9] Mitigate a vmap lock contention
-Message-ID: <ZG0AE9mjHkRZIGmr@debian-BULLSEYE-live-builder-AMD64>
-References: <20230522110849.2921-1-urezki@gmail.com>
- <ZGyqiaRnMJPFhxR6@debian-BULLSEYE-live-builder-AMD64>
- <ZGzX3vRMlGHIcYCe@pc636>
+        with ESMTP id S238090AbjEWSGF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2023 14:06:05 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4237197
+        for <linux-xfs@vger.kernel.org>; Tue, 23 May 2023 11:06:04 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D12F361A78
+        for <linux-xfs@vger.kernel.org>; Tue, 23 May 2023 18:06:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F12FC433EF;
+        Tue, 23 May 2023 18:06:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684865163;
+        bh=3XAVqjSUK8t5cDmmKd6YQidBBmLo4Ncgj5A3LAdcEtc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Sq7EUMwT7CM4zejgiR/ql+VP+3YNRhKLWvYCbZCtSUrmxPLqbEYUMzzhETgBpIyRG
+         HeJNSWN0u5uEvTIij9RwqDw9eAyZ4lWKMBkKpI7BsKONbA9bWPeowPSVNsH0PQr4ZA
+         2DPevb+rwAYBr66jtzrsePyIOGjZuT3I6WFHHyP8UucUIz/ARfS3A/5IMcGC1B0xt5
+         tsiMux6IlBqryMzCUBf4yf5zJlrHwy4FyQNFvNN01NABhZSW0m4oNx2bQNOMk7ILIV
+         4ZImrbPymKjP8vft0Kw9Ouk5lOPqTS9lSGI7gyjY2xHw3HpuYo1b1Eh/emFXRsJcWv
+         NGltS53tD/kxQ==
+Date:   Tue, 23 May 2023 11:06:02 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Chandan Babu R <chandan.babu@oracle.com>
+Cc:     cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 22/24] mdrestore: Define mdrestore ops for v2 format
+Message-ID: <20230523180602.GA11620@frogsfrogsfrogs>
+References: <20230523090050.373545-1-chandan.babu@oracle.com>
+ <20230523090050.373545-23-chandan.babu@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZGzX3vRMlGHIcYCe@pc636>
+In-Reply-To: <20230523090050.373545-23-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 23, 2023 at 05:12:30PM +0200, Uladzislau Rezki wrote:
-> > > 2. Motivation.
-> > > 
-> > > - The vmap code is not scalled to number of CPUs and this should be fixed;
-> > > - XFS folk has complained several times that vmalloc might be contented on
-> > >   their workloads:
-> > > 
-> > > <snip>
-> > > commit 8dc9384b7d75012856b02ff44c37566a55fc2abf
-> > > Author: Dave Chinner <dchinner@redhat.com>
-> > > Date:   Tue Jan 4 17:22:18 2022 -0800
-> > > 
-> > >     xfs: reduce kvmalloc overhead for CIL shadow buffers
-> > >     
-> > >     Oh, let me count the ways that the kvmalloc API sucks dog eggs.
-> > >     
-> > >     The problem is when we are logging lots of large objects, we hit
-> > >     kvmalloc really damn hard with costly order allocations, and
-> > >     behaviour utterly sucks:
-> > 
-> > based on the commit I guess xfs should use vmalloc/kvmalloc is because
-> > it allocates large buffers, how large could it be?
-> > 
-> They use kvmalloc(). When the page allocator is not able to serve a
-> request they fallback to vmalloc. At least what i see, the sizes are:
+On Tue, May 23, 2023 at 02:30:48PM +0530, Chandan Babu R wrote:
+> This commit adds functionality to restore metadump stored in v2 format.
 > 
-> from 73728 up to 1048576, i.e. 18 pages up to 256 pages.
+> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+> ---
+>  mdrestore/xfs_mdrestore.c | 209 +++++++++++++++++++++++++++++++++++---
+>  1 file changed, 194 insertions(+), 15 deletions(-)
 > 
-> > > 3. Test
-> > > 
-> > > On my: AMD Ryzen Threadripper 3970X 32-Core Processor, i have below figures:
-> > > 
-> > >     1-page     1-page-this-patch
-> > > 1  0.576131   vs   0.555889
-> > > 2   2.68376   vs    1.07895
-> > > 3   4.26502   vs    1.01739
-> > > 4   6.04306   vs    1.28924
-> > > 5   8.04786   vs    1.57616
-> > > 6   9.38844   vs    1.78142
-> > 
-> > <snip>
-> > 
-> > > 29    20.06   vs    3.59869
-> > > 30  20.4353   vs     3.6991
-> > > 31  20.9082   vs    3.73028
-> > > 32  21.0865   vs    3.82904
-> > > 
-> > > 1..32 - is a number of jobs. The results are in usec and is a vmallco()/vfree()
-> > > pair throughput.
-> > 
-> > I would be more interested in real numbers than synthetic benchmarks,
-> > Maybe XFS folks could help performing profiling similar to commit 8dc9384b7d750
-> > with and without this patchset?
-> > 
-> I added Dave Chinner <david@fromorbit.com> to this thread.
+> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+> index 615ecdc77..9e06d37dc 100644
+> --- a/mdrestore/xfs_mdrestore.c
+> +++ b/mdrestore/xfs_mdrestore.c
+> @@ -11,7 +11,8 @@ struct mdrestore_ops {
+>  	int (*read_header)(void *header, FILE *mdfp);
+>  	void (*show_info)(void *header, const char *mdfile);
+>  	void (*restore)(void *header, FILE *mdfp, int data_fd,
+> -			bool is_target_file);
+> +			bool is_data_target_file, int log_fd,
+> +			bool is_log_target_file);
+>  };
+>  
+>  static struct mdrestore {
+> @@ -148,7 +149,9 @@ restore_v1(
+>  	void		*header,
+>  	FILE		*mdfp,
+>  	int		data_fd,
+> -	bool		is_target_file)
+> +	bool		is_data_target_file,
+> +	int		log_fd,
+> +	bool		is_log_target_file)
+>  {
+>  	struct xfs_metablock	*mbp = header;
+>  	struct xfs_metablock	*metablock;
+> @@ -203,7 +206,7 @@ restore_v1(
+>  
+>  	((struct xfs_dsb*)block_buffer)->sb_inprogress = 1;
+>  
+> -	verify_device_size(data_fd, is_target_file, sb.sb_dblocks,
+> +	verify_device_size(data_fd, is_data_target_file, sb.sb_dblocks,
+>  			sb.sb_blocksize);
+>  
+>  	bytes_read = 0;
+> @@ -264,6 +267,163 @@ static struct mdrestore_ops mdrestore_ops_v1 = {
+>  	.restore = restore_v1,
+>  };
+>  
+> +static int
+> +read_header_v2(
+> +	void				*header,
+> +	FILE				*mdfp)
+> +{
+> +	struct xfs_metadump_header	*xmh = header;
+> +
+> +	rewind(mdfp);
 
-Oh, I missed that, and it would be better to [+Cc linux-xfs]
+Does rewind() work if @mdfp is a pipe?
 
-> But. The contention exists.
+I suspect the best you can do is read the first 4 bytes in main, pick
+the read_header function from that, and have the read_header_v[12] read
+in the rest of the header from there.  I use a lot of:
 
-I think "theoretically can be contended" doesn't necessarily mean it's actually
-contended in the real world.
+xfs_metadump -ago /dev/sda - | gzip > foo.md.gz
+gzip -d < foo.md.gz | xfs_mdrestore -g - /dev/sdb
 
-Also I find it difficult to imagine vmalloc being highly contended because it was
-historically considered slow and thus discouraged when performance is important.
+to store compressed metadumps for future reference.
 
-IOW vmalloc would not be contended when allocation size is small because we have
-kmalloc/buddy API, and therefore I wonder which workloads are allocating very large
-buffers and at the same time allocating very frequently, thus performance-sensitive.
+(Well ok I use xz or zstd, but you get the point.)
 
-I am not against this series, but wondering which workloads would benefit ;)
+> +
+> +	if (fread(xmh, sizeof(*xmh), 1, mdfp) != 1)
+> +		fatal("error reading from metadump file\n");
+> +	if (xmh->xmh_magic != cpu_to_be32(XFS_MD_MAGIC_V2))
+> +		return -1;
+> +
+> +	return 0;
+> +}
+> +
+> +static void
+> +show_info_v2(
+> +	void				*header,
+> +	const char			*mdfile)
+> +{
+> +	struct xfs_metadump_header	*xmh;
+> +	uint32_t			incompat_flags;
+> +
+> +	xmh = header;
+> +	incompat_flags = be32_to_cpu(xmh->xmh_incompat_flags);
+> +
+> +	printf("%s: %sobfuscated, %s log, %s metadata blocks\n",
+> +		mdfile,
+> +		incompat_flags & XFS_MD2_INCOMPAT_OBFUSCATED ? "":"not ",
+> +		incompat_flags & XFS_MD2_INCOMPAT_DIRTYLOG ? "dirty":"clean",
+> +		incompat_flags & XFS_MD2_INCOMPAT_FULLBLOCKS ? "full":"zeroed");
+> +}
+> +
+> +static void
+> +restore_v2(
+> +	void			*header,
+> +	FILE			*mdfp,
+> +	int			data_fd,
+> +	bool			is_data_target_file,
+> +	int			log_fd,
+> +	bool			is_log_target_file)
+> +{
+> +	struct xfs_sb		sb;
+> +	struct xfs_meta_extent	xme;
+> +	char			*block_buffer;
+> +	int64_t			bytes_read;
+> +	uint64_t		offset;
+> +	int			prev_len;
+> +	int			len;
+> +
+> +	if (fread(&xme, sizeof(xme), 1, mdfp) != 1)
+> +		fatal("error reading from metadump file\n");
+> +
+> +	len = be32_to_cpu(xme.xme_len);
+> +	len <<= BBSHIFT;
 
-> Apart of that per-cpu-KVA allocator can go away if we make it generic instead.
+Do we need to validate xme_addr==0 and xme_len==1 here?
 
-Not sure I understand your point, can you elaborate please?
+> +
+> +	block_buffer = calloc(1, len);
+> +	if (block_buffer == NULL)
+> +		fatal("memory allocation failure\n");
+> +
+> +	if (fread(block_buffer, len, 1, mdfp) != 1)
+> +		fatal("error reading from metadump file\n");
+> +
+> +	libxfs_sb_from_disk(&sb, (struct xfs_dsb *)block_buffer);
+> +
+> +	if (sb.sb_magicnum != XFS_SB_MAGIC)
+> +		fatal("bad magic number for primary superblock\n");
+> +
+> +	if (sb.sb_logstart == 0 && log_fd == -1)
+> +		fatal("External Log device is required\n");
+> +
+> +	((struct xfs_dsb *)block_buffer)->sb_inprogress = 1;
+> +
+> +	verify_device_size(data_fd, is_data_target_file, sb.sb_dblocks,
+> +			sb.sb_blocksize);
+> +
+> +	if (sb.sb_logstart == 0)
+> +		verify_device_size(log_fd, is_log_target_file, sb.sb_logblocks,
+> +				sb.sb_blocksize);
+> +
+> +	bytes_read = 0;
+> +
+> +	do {
+> +		int fd;
+> +
+> +		if (mdrestore.show_progress &&
+> +			(bytes_read & ((1 << 20) - 1)) == 0)
+> +			print_progress("%lld MB read", bytes_read >> 20);
 
-And I would like to ask some side questions:
+Doesn't this miss a progress report if a metadata extent bumps
+bytes_read across a MB boundary without actually landing on it?  Say
+you've written 1020K, and the next xfs_meta_extent is 8k long.
 
-1. Is vm_[un]map_ram() API still worth with this patchset?
+	if (metadump.show_progress) {
+		static int64_t	mb_read;
+		int64_t		mb_now = bytes_read >> 20;
 
-2. How does this patchset deals with 32-bit machines where
-   vmalloc address space is limited?
+		if (mb_now != mb_read) {
+			print_progress("%lld MB read", mb_now);
+			mb_read = mb_now;
+		}
+	}
 
-Thanks!
+> +
+> +		offset = be64_to_cpu(xme.xme_addr) & XME_ADDR_DEVICE_MASK;
+> +		offset <<= BBSHIFT;
 
-> > By the way looking at the commit, teaching __p?d_alloc() about gfp
-> > context (that I'm _slowly_ working on...) could be nice for allowing
-> > non-GFP_KERNEL kvmalloc allocations, as Matthew mentioned. [1]
-> > 
-> > Thanks!
-> > 
-> > [1] https://lore.kernel.org/linux-mm/Y%2FOHC33YLedMXTlD@casper.infradead.org
-> > 
+offset = BBTOB(be64_to_cpu() ... ); ?
 
--- 
-Hyeonggon Yoo
+Also, I'd have thought that XME_ADDR_DEVICE_MASK is what you use to
+decode the device, not what you use to decode the address within a
+device.
 
-Doing kernel stuff as a hobby
-Undergraduate | Chungnam National University
-Dept. Computer Science & Engineering
+> +
+> +		if (be64_to_cpu(xme.xme_addr) & XME_ADDR_DATA_DEVICE)
+> +			fd = data_fd;
+> +		else if (be64_to_cpu(xme.xme_addr) & XME_ADDR_LOG_DEVICE)
+> +			fd = log_fd;
+> +		else
+> +			ASSERT(0);
+
+If you instead defined the constants like this:
+
+#define XME_ADDR_DEVICE_SHIFT	54
+#define XME_ADDR_DEVICE_MASK	((1ULL << XME_ADDR_DEVICE_SHIFT) - 1)
+
+#define XME_ADDR_DATA_DEVICE	(0 << XME_ADDR_DEVICE_SHIFT)
+#define XME_ADDR_LOG_DEVICE	(1 << XME_ADDR_DEVICE_SHIFT)
+#define XME_ADDR_RT_DEVICE	(2 << XME_ADDR_DEVICE_SHIFT)
+
+#define XME_ADDR_DEVICE_MASK	(3 << XME_ADDR_DEVICE_SHIFT)
+
+Then the above becomes:
+
+	offset = BBTOB(be64_to_cpu(xme.xme_addr) & XME_ADDR_DADDR_MASK);
+
+	switch (be64_to_cpu(xme.xme_addr) & XME_ADDR_DEVICE_MASK) {
+	case XME_ADDR_DATA_DEVICE:
+		fd = data_fd;
+		break;
+	...
+	}
+> +
+> +		if (pwrite(fd, block_buffer, len, offset) < 0)
+> +			fatal("error writing to %s device at offset %llu: %s\n",
+> +				fd == data_fd ? "data": "log", offset,
+> +				strerror(errno));
+> +
+> +                if (fread(&xme, sizeof(xme), 1, mdfp) != 1) {
+> +			if (feof(mdfp))
+> +				break;
+> +			fatal("error reading from metadump file\n");
+> +		}
+> +
+> +		prev_len = len;
+> +		len = be32_to_cpu(xme.xme_len);
+> +		len <<= BBSHIFT;
+> +		if (len > prev_len) {
+> +			void *p;
+> +			p = realloc(block_buffer, len);
+
+Would it be preferable to declare an 8MB buffer and only copy contents
+in that granularity?  Technically speaking, xme_len == -1U would require
+us to allocate a 2TB buffer, wouldn't it?
+
+> +			if (p == NULL) {
+> +				free(block_buffer);
+> +				fatal("memory allocation failure\n");
+> +			}
+> +			block_buffer = p;
+> +		}
+> +
+> +		if (fread(block_buffer, len, 1, mdfp) != 1)
+> +			fatal("error reading from metadump file\n");
+> +
+> +		bytes_read += len;
+> +	} while (1);
+> +
+> +	if (mdrestore.progress_since_warning)
+> +		putchar('\n');
+> +
+> +        memset(block_buffer, 0, sb.sb_sectsize);
+
+Tabs not spaces.
+
+> +	sb.sb_inprogress = 0;
+> +	libxfs_sb_to_disk((struct xfs_dsb *)block_buffer, &sb);
+> +	if (xfs_sb_version_hascrc(&sb)) {
+> +		xfs_update_cksum(block_buffer, sb.sb_sectsize,
+> +				offsetof(struct xfs_sb, sb_crc));
+> +	}
+> +
+> +	if (pwrite(data_fd, block_buffer, sb.sb_sectsize, 0) < 0)
+> +		fatal("error writing primary superblock: %s\n",
+> +			strerror(errno));
+> +
+> +	free(block_buffer);
+> +
+> +	return;
+> +}
+> +
+> +static struct mdrestore_ops mdrestore_ops_v2 = {
+> +	.read_header = read_header_v2,
+> +	.show_info = show_info_v2,
+> +	.restore = restore_v2,
+> +};
+> +
+>  static void
+>  usage(void)
+>  {
+> @@ -276,11 +436,16 @@ main(
+>  	int 		argc,
+>  	char 		**argv)
+>  {
+> -	FILE		*src_f;
+> -	int		dst_fd;
+> -	int		c;
+> -	bool		is_target_file;
+> -	struct xfs_metablock	mb;
+> +	struct xfs_metadump_header	xmh;
+> +	struct xfs_metablock		mb;
+
+Hmm...
+
+> +	FILE				*src_f;
+> +	char				*logdev = NULL;
+> +	void				*header;
+> +	int				data_dev_fd;
+> +	int				log_dev_fd;
+> +	int				c;
+> +	bool				is_data_dev_file;
+> +	bool				is_log_dev_file;
+>  
+>  	mdrestore.show_progress = 0;
+>  	mdrestore.show_info = 0;
+> @@ -327,13 +492,18 @@ main(
+>  			fatal("cannot open source dump file\n");
+>  	}
+>  
+> -	if (mdrestore_ops_v1.read_header(&mb, src_f) == 0)
+> +	if (mdrestore_ops_v1.read_header(&mb, src_f) == 0) {
+>  		mdrestore.mdrops = &mdrestore_ops_v1;
+> -	else
+> +		header = &mb;
+> +	} else if (mdrestore_ops_v2.read_header(&xmh, src_f) == 0) {
+> +		mdrestore.mdrops = &mdrestore_ops_v2;
+> +		header = &xmh;
+
+Perhaps define a union of both header formats, then pass that to
+->read_header, ->show_info, and ->restore?
+
+--D
+
+> +	} else {
+>  		fatal("Invalid metadump format\n");
+> +	}
+>  
+>  	if (mdrestore.show_info) {
+> -		mdrestore.mdrops->show_info(&mb, argv[optind]);
+> +		mdrestore.mdrops->show_info(header, argv[optind]);
+>  
+>  		if (argc - optind == 1)
+>  			exit(0);
+> @@ -341,12 +511,21 @@ main(
+>  
+>  	optind++;
+>  
+> -	/* check and open target */
+> -	dst_fd = open_device(argv[optind], &is_target_file);
+> +	/* check and open data device */
+> +	data_dev_fd = open_device(argv[optind], &is_data_dev_file);
+> +
+> +	log_dev_fd = -1;
+> +	if (logdev)
+> +		/* check and open log device */
+> +		log_dev_fd = open_device(logdev, &is_log_dev_file);
+> +
+> +	mdrestore.mdrops->restore(header, src_f, data_dev_fd, is_data_dev_file,
+> +				log_dev_fd, is_log_dev_file);
+>  
+> -	mdrestore.mdrops->restore(&mb, src_f, dst_fd, is_target_file);
+> +	close(data_dev_fd);
+> +	if (logdev)
+> +		close(log_dev_fd);
+>  
+> -	close(dst_fd);
+>  	if (src_f != stdin)
+>  		fclose(src_f);
+>  
+> -- 
+> 2.39.1
+> 
