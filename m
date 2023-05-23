@@ -2,75 +2,55 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 403D1C7EE26
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 May 2023 05:55:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26FB6C77B75
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 May 2023 05:59:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232057AbjEWFz0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 May 2023 01:55:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47402 "EHLO
+        id S232027AbjEWF7Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 May 2023 01:59:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49264 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229844AbjEWFzZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2023 01:55:25 -0400
+        with ESMTP id S232271AbjEWF7W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2023 01:59:22 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96809115;
-        Mon, 22 May 2023 22:55:24 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A129119;
+        Mon, 22 May 2023 22:59:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=f9sp9X29rgCQutb1zyE01/AbOq
-        vvWhdCJdNJmWOTdpGbrPMqnfPwdWtXyJItgUJklC82G5xiqj0mrMp5gXWlrUyIeXR+Mo++eDaMld4
-        tWsVWKUUVdFiL9GEbmNRBORxElvBLme8vx5TTV6tYdjJ1e5eSV/VbS43P+Khj8kMOh1O1PmULkLJL
-        0OOzVdMaikHhPYDVaCp6lILsdt3BDSSS47fwmWLB1b9IJk0UQN9gdlYyugYZbkMVru3EO8fQg0G+G
-        R7W4esEGccYKZIxg5UNd3i+kRa2lJcm+3kpcPRdptBLx2RRxWT1S+kucCJVOfA0C6e6Y7HByMAMiS
-        62Q8eALw==;
+        bh=/WVokBxhTBM7fgzlxwTSo8ZoWub9nLCKavh/fJGPmTg=; b=ZtMzahsDLNj/1/G4+AkEti4ClQ
+        md5fmrWPShF8RCEnihsbQFIPe2mczdzO0UQFFLrmAdpUyYJLGnyFPsXDEl7wtvrzL4nrpHAPEhBCy
+        OgriDff7LBs6/cnMSn9ONxsnjAHHFl2jYEnsgxSLxYHHctYFNu4Bc4L9hByatEDKNMzoCkgk8pqQD
+        UcO4ewymZ5E0oIX2x5NvjdFQXi05ipZVfafLJuZiB1aAxEl7T0dz5VOS1iJGjwKu024CAsbsRSSBM
+        K8pC/PMVrsVp4pMRYtDtR8DbQOEXVS+3TNxMZv2QjTQtFMBTEJIdEpIq9Xo0gTVhawIKg5YkeGl8o
+        1eq7Wfsg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1q1Kz2-0091FK-2G;
-        Tue, 23 May 2023 05:54:56 +0000
-Date:   Mon, 22 May 2023 22:54:56 -0700
+        id 1q1L3F-0091k4-2u;
+        Tue, 23 May 2023 05:59:17 +0000
+Date:   Mon, 22 May 2023 22:59:17 -0700
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Tony Nguyen <anthony.l.nguyen@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        James Smart <james.smart@broadcom.com>,
-        Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        HighPoint Linux Team <linux@highpoint-tech.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        Don Brace <don.brace@microchip.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        Guo Xuenan <guoxuenan@huawei.com>,
-        Gwan-gyeong Mun <gwan-gyeong.mun@intel.com>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Daniel Latypov <dlatypov@google.com>,
-        kernel test robot <lkp@intel.com>,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        megaraidlinux.pdl@broadcom.com, storagedev@microchip.com,
-        linux-xfs@vger.kernel.org, linux-hardening@vger.kernel.org,
-        Tales Aparecida <tales.aparecida@gmail.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] overflow: Add struct_size_t() helper
-Message-ID: <ZGxVMAa/3QOd3cRf@infradead.org>
-References: <20230522211810.never.421-kees@kernel.org>
+To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Wang Yugui <wangyugui@e16-tech.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>
+Subject: Re: [PATCH 1/3] filemap: Allow __filemap_get_folio to allocate large
+ folios
+Message-ID: <ZGxWNRNt6sCoTqf9@infradead.org>
+References: <20230520163603.1794256-1-willy@infradead.org>
+ <20230520163603.1794256-2-willy@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230522211810.never.421-kees@kernel.org>
+In-Reply-To: <20230520163603.1794256-2-willy@infradead.org>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Looks good:
+On Sat, May 20, 2023 at 05:36:01PM +0100, Matthew Wilcox (Oracle) wrote:
+> +#define FGP_ORDER(fgp)		((fgp) >> 26)	/* top 6 bits */
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Why don't we just add a new argument for the order?
+
