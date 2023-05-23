@@ -2,141 +2,184 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEF54C77B7A
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 May 2023 06:26:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93E7FC77B75
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 May 2023 06:42:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235223AbjEWG0N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 May 2023 02:26:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34412 "EHLO
+        id S231730AbjEWGm1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 May 2023 02:42:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40678 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235152AbjEWG0A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2023 02:26:00 -0400
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DDF5132
-        for <linux-xfs@vger.kernel.org>; Mon, 22 May 2023 23:25:57 -0700 (PDT)
-Received: from dggpemm500014.china.huawei.com (unknown [172.30.72.55])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4QQPN70WDTz18LSD;
-        Tue, 23 May 2023 14:21:27 +0800 (CST)
-Received: from [10.174.177.211] (10.174.177.211) by
- dggpemm500014.china.huawei.com (7.185.36.153) with Microsoft SMTP Server
+        with ESMTP id S230451AbjEWGmZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 May 2023 02:42:25 -0400
+Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94FF8109;
+        Mon, 22 May 2023 23:42:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1684824143; x=1716360143;
+  h=date:from:to:cc:subject:message-id:references:
+   in-reply-to:mime-version;
+  bh=l96wwqGXoD09WRBUohYBhQgyE3yqpNe68h7vG3Kk/ik=;
+  b=EEAAJeOsctGKTURKWnIypsRVCGXYoY6OzsPwQ0Yru6sOO7cZ9VtGa/I1
+   sXEQikUYIlyHxLFzsdEpcAhFpggYaOqInTWnNKht2iCYY52KJZmx3qrNv
+   YMDSwNzp9zm+uWm1FACBQvidy2yZtUanMOEvdCQoYXBOY97W4qWz77djZ
+   bMm5nL2Wdm/k8qW1zOU4uJtDO/nCoJbyBS/JGLacf7WhHFoTQJwRi40R2
+   Pue2NIHSQkndEbCTFfuAVoX4EUI98eBdl/i/zI+L2de27pGcHIGFfZuNe
+   sAayWEBVq3GdW6dchKB7Sk+R9IypHj32++jikLC5B+qUsYYydKEDnX6M+
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10718"; a="418857444"
+X-IronPort-AV: E=Sophos;i="6.00,185,1681196400"; 
+   d="scan'208";a="418857444"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2023 23:42:07 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10718"; a="773698587"
+X-IronPort-AV: E=Sophos;i="6.00,185,1681196400"; 
+   d="scan'208";a="773698587"
+Received: from fmsmsx602.amr.corp.intel.com ([10.18.126.82])
+  by fmsmga004.fm.intel.com with ESMTP; 22 May 2023 23:42:07 -0700
+Received: from fmsmsx610.amr.corp.intel.com (10.18.126.90) by
+ fmsmsx602.amr.corp.intel.com (10.18.126.82) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.23; Tue, 23 May 2023 14:25:54 +0800
-Message-ID: <38fc8e93-a4be-7eef-ebd6-fa3cb31b9dee@huawei.com>
-Date:   Tue, 23 May 2023 14:25:54 +0800
+ 15.1.2507.23; Mon, 22 May 2023 23:42:06 -0700
+Received: from fmsmsx610.amr.corp.intel.com (10.18.126.90) by
+ fmsmsx610.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23; Mon, 22 May 2023 23:42:06 -0700
+Received: from fmsedg602.ED.cps.intel.com (10.1.192.136) by
+ fmsmsx610.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23 via Frontend Transport; Mon, 22 May 2023 23:42:06 -0700
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (104.47.56.176)
+ by edgegateway.intel.com (192.55.55.71) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.23; Mon, 22 May 2023 23:42:06 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=f4/kUhBK3Byt1Ino+uHKoQvHm8Jg/CQTutGbvWvo7K3P4HeGB6ihHo3cKVdp8yT4BHZfGNLUrLk5sy49k1GguD4xclpHqhTP97YjPWou5DkWyhmA5nNBvMhjHqYEMkI8tsaxfA+S0xdtTDL3KNNae0uuRPPN9aBpu0uVgqu2hYtP5sVrVyvRnIpHnlQGErzxAfJo/tkY0eyPVAzNFxlBeBK2oBMOfENpWz53D/sJ9P/l9OpLYbVQBozjsEK4GtJ3ualqlGPMEGiJeOlXRSugJDJvY2rAZuyg7QQ197Tr7axjAWFDrFdy21pGpbjZIxU9gr17Wkxgvs+3UBOCa+j/dA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=QEkTPAHrvpLorXwpmncEpwz7zbFMIoLp3rgaas9aKqc=;
+ b=VEfpOf6FpUBdgNRbWSyM8G30o+8NfdDaW29sGJ8ByQXXSF4TVa6fjGxS6gEky+ywFyStNQEH7awQ+gMnzhPWjC33iZPlcYyPn/YQE5K57G2pEV/8mS9PEyw4Q1uJPs1Sgeaf7XE0wFhO4WxQ5nfPDVhsDfjIuokW77u9apNoHwtCYpKtV8qbYs9dfre3xFT5RzigWje4/Cjna2U31xYEhs8/YrfplYSWWzs4YtdhVwYXktreuca1JnFZlfPMcOKqUtZUDasrI0ANQBD4KWXVAKyxWRgkCwXwAqLxpxwc5UpwhdEM8ltlYMTjaa4m25wRVHmls/9p/sV8WxX7C6kApw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from PH0PR11MB4839.namprd11.prod.outlook.com (2603:10b6:510:42::18)
+ by IA0PR11MB7791.namprd11.prod.outlook.com (2603:10b6:208:401::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6411.28; Tue, 23 May
+ 2023 06:42:04 +0000
+Received: from PH0PR11MB4839.namprd11.prod.outlook.com
+ ([fe80::7ca2:120f:99dd:7812]) by PH0PR11MB4839.namprd11.prod.outlook.com
+ ([fe80::7ca2:120f:99dd:7812%4]) with mapi id 15.20.6411.028; Tue, 23 May 2023
+ 06:42:04 +0000
+Date:   Tue, 23 May 2023 14:44:02 +0800
+From:   Pengfei Xu <pengfei.xu@intel.com>
+To:     Bagas Sanjaya <bagasdotme@gmail.com>
+CC:     Linux regressions mailing list <regressions@lists.linux.dev>,
+        "Darrick J. Wong" <djwong@kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-fsdevel@vger.kernel.org>, <heng.su@intel.com>,
+        <dchinner@redhat.com>, <lkp@intel.com>
+Subject: Re: [Syzkaller & bisect] There is BUG: unable to handle kernel NULL
+ pointer dereference in xfs_extent_free_diff_items in v6.4-rc3
+Message-ID: <ZGxgshkmJ5+24etW@xpf.sh.intel.com>
+References: <ZGrOYDZf+k0i4jyM@xpf.sh.intel.com>
+ <ZGsOH5D5vLTLWzoB@debian.me>
+ <20230522160525.GB11620@frogsfrogsfrogs>
+ <aa3fcf2f-013b-358f-e2d3-205e40b6908a@leemhuis.info>
+ <89b7cfee-164a-470e-c375-73b109fdf214@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <89b7cfee-164a-470e-c375-73b109fdf214@gmail.com>
+X-ClientProxiedBy: SGAP274CA0016.SGPP274.PROD.OUTLOOK.COM (2603:1096:4:b6::28)
+ To PH0PR11MB4839.namprd11.prod.outlook.com (2603:10b6:510:42::18)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.0.3
-To:     Dave Chinner <david@fromorbit.com>,
-        "Darrick J. Wong" <djwong@kernel.org>
-CC:     <linux-xfs@vger.kernel.org>,
-        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>,
-        <yangerkun@huawei.com>, <yi.zhang@huawei.com>,
-        <chengzhihao1@huawei.com>
-From:   Wu Guanghao <wuguanghao3@huawei.com>
-Subject: [PATCH] xfs: fix the problem of mount failure caused by not
- refreshing mp->m_sb
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.177.211]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggpemm500014.china.huawei.com (7.185.36.153)
-X-CFilter-Loop: Reflected
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR11MB4839:EE_|IA0PR11MB7791:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4869b2db-4203-4f1a-0670-08db5b58d1d4
+X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: Qw2oaccox9n0ULZ/lMQKQ7QT7DNHcxI0vMQ18Sf9MYpaD/gmV13eDUUYiqOaD5sXcaqu8NZlfDS+ufqTDDOgYA42B2uCxu6cbLI+sz19rVs3pyb9Fa2sjwk04B5raiZsNgVAWBNcD+d3/RQgWrJBW05w9HcMmh7Wr0wVAZ8mpbt73++OuFX+QUqdMhTUpWzLFaWgvWSgxH5j3Lx15RrXBUvIT+pZsVMrbhZuqbj77dNrNGvd1WIJlPSQbjW4xqQviZPvnKv8/zqgSgPvAeo4e2X+ljExD0VVZONnmer3ROfqhMxRp7ek1TRCXu+utoX2BcDON6DgfvwEHF+P3PwFOUHWrgIq45yim06vxuhqJTYJKoXlgZHebzYpXG+vatmTJc+eUaqcR/tfdWpTCl2THWfCVLKf8v/Mw2VGAa4/19UsoYXtJke6LFCcSHFl5e70KbxTtqYXLT1y7rU9n9C2CGlWT8ker4tZgkwxRs8vG8WEb01rs1OWHA+J5pefSY579nCP7naXtou82kNo++AOCDSzsKr9PuRb2ib2OhhjIbiS1S1Pn/wKDcQULXIs4JaOr8Av/5SEg7pBlPnGmw5W5r4963vK8EX/dkmKPFw1Ztw=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR11MB4839.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(376002)(346002)(136003)(366004)(396003)(39860400002)(451199021)(53546011)(26005)(186003)(54906003)(44832011)(6512007)(6506007)(86362001)(6916009)(66476007)(66556008)(4326008)(66946007)(316002)(478600001)(107886003)(82960400001)(41300700001)(2906002)(83380400001)(38100700002)(5660300002)(8936002)(8676002)(6486002)(67856001);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?ON2DHCTsSlTsyLPgcEZw+PVsdYIot2nQIoHhAHXPNN3gMV8fHjq2J7iDgYEA?=
+ =?us-ascii?Q?hnrJ15UG7C1r0nZvekZmdysEB/joifmrxyb41OyDu/fSTUp8XkYoCpZ6ct9b?=
+ =?us-ascii?Q?yMeYbOM3PPdJj+rlKKRLa21P+7t3J2Z/PuNEMYNUQ2qbitBdzaQsjEzD0Kr4?=
+ =?us-ascii?Q?JK1TN7CGQpuMkshRJ48oWQgn+rpcpoAnUVSLCWt7LvoIDk9GKVMD4rGuX2Cg?=
+ =?us-ascii?Q?UQOECNG1gPCBiVWEOfXzSEr2UD46QRghEiJw8uXamTcYLOPQ1O4jcjG2BAZ9?=
+ =?us-ascii?Q?mwNNNsl6H60zzNzlkvzFkg9Xk1rYgpYLmCc/TjFeTbAObO/Z+ZbYXVMXkzV2?=
+ =?us-ascii?Q?Tx5H2CV0zdIZe42Vn0kzDJmEjM7sBQWCfy8bK5Udhh9i4s1OvRQy8mVc50Wt?=
+ =?us-ascii?Q?2b9UZuHMgGiIXZy7emisGwsyz8b8ce2fGmJ8y3pc6+VKyOl5KWyzlf0zk3Pq?=
+ =?us-ascii?Q?HRccp3pfEDpCqCAMtSIucZAk1Rk/MT/eqSVUZG3x8f5CdxbaKRXhZUFBHsI8?=
+ =?us-ascii?Q?8Dp6E7hLYjCtGgPsQ8KMFcFJLJuttYtDdav/kW/RvzchaNHWN9e0SDk8/ORC?=
+ =?us-ascii?Q?3c6pnBKhT/Ffcd4GsJ9e1S0VKLuaAriptFkYtAu2CdEzcEwzVgw2UsP8c7mK?=
+ =?us-ascii?Q?27EItw9cc5C3daniBMPQq6HtlfV88CyNbcrpq6mLB3JILYqvxn/qMojeg1ln?=
+ =?us-ascii?Q?9VACC9Iz/KULjhV5QjFrfeJ8V5Hf0WXtC1gXy7fjq1lI7sbA//RrXfaY99LY?=
+ =?us-ascii?Q?y3e5VnuD1bSD6u2Hm+/swcg3xkc5r8GrosEPrCQSZKLKyVa8qRba5nCimYi6?=
+ =?us-ascii?Q?Rr6VLKxaRPQgtpLgUqh5XdfoK2sZnc1npC292/7E9gChBqgpROOTFZyE9Yks?=
+ =?us-ascii?Q?gs64DK/WgTs5/iCIn13yeITurXQMOWxrApxYUfoP2d0uEatmzD+IJOsbhc/k?=
+ =?us-ascii?Q?/X0MRpEtw8BLVZQ9ojSnujAasQVZcYNm9q99lL9bXuzfjhBByBpqKTPrD9ZV?=
+ =?us-ascii?Q?p7nUvWtkSSdKv3HG3fA34sFr/tflxw379s5yN174+MEFqSM6oONolxzjZLZc?=
+ =?us-ascii?Q?QM6iWL61CnGTBQ0LvNpqN9rSOGL9WkQMdFOpBi30FlMIHICgJ8Um6qu/xKqZ?=
+ =?us-ascii?Q?J5eiuXlLRMe/xFUQnlBf24i3fIou0/BaxesNvbiuKAiRxTzdpMK0jAnOn7Vj?=
+ =?us-ascii?Q?Kpy0MtfbvTC54OAL3DG1Lc4LTZD+Kc+t6RBunpjrOf3E8U2jdRv8MqMRix/W?=
+ =?us-ascii?Q?1kENLeFYIE+b2wtx4SSF4vuP4cmTEZOuZGHH6al2gwltASFTWzLk/MDC4NK7?=
+ =?us-ascii?Q?VUVVlXhVr3rPZZlkk5xIZ4CHAk2dd8bK2R6J7bfkmb4z1OjXg/SaIl2DV1zR?=
+ =?us-ascii?Q?WP5VsMDypQVMvd4EGCd3mxAfDPByYQv6wLuoFXDZcLeAotNhac6oh09jGtPl?=
+ =?us-ascii?Q?Z2SbKXy9Jd3XkSZJ/4tLIm8o0k5kKxax31SBlDFuDpfrDbqgdFnfbf9QjJfR?=
+ =?us-ascii?Q?T/dZJ2aLo451V4ot6a3lM8ob3tjYB43t/Zw7OgO+HHHqV6cTfk6hPusiT07M?=
+ =?us-ascii?Q?ekx2ZmqfR3siAn8YNSpDQNV9yOP8exNHxlg04myL?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4869b2db-4203-4f1a-0670-08db5b58d1d4
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR11MB4839.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 May 2023 06:42:04.1031
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 6YmA873HLyRPcTvZFVmGwaxExjF7OY6mwF7cpWr4i8vypMn69AB6vSyvgIKcJ7EqdnQwbVa5eMHFs1suMTlZLw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR11MB7791
+X-OriginatorOrg: intel.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-After testing xfs_growfs + fsstress + fault injection, the following stack appeared
-when mounting the filesystem:
+Hi Bagas Sanjaya,
 
-[  149.902032] XFS (loop0): xfs_buf_map_verify: daddr 0x200001 out of range, EOFS 0x200000
-[  149.902072] WARNING: CPU: 12 PID: 3045 at fs/xfs/xfs_buf.c:535 xfs_buf_get_map+0x5ae/0x650 [xfs]
-...
-[  149.902473]  xfs_buf_read_map+0x59/0x330 [xfs]
-[  149.902621]  ? xlog_recover_items_pass2+0x55/0xd0 [xfs]
-[  149.902809]  xlog_recover_buf_commit_pass2+0xff/0x640 [xfs]
-[  149.902959]  ? xlog_recover_items_pass2+0x55/0xd0 [xfs]
-[  149.903104]  xlog_recover_items_pass2+0x55/0xd0 [xfs]
-[  149.903247]  xlog_recover_commit_trans+0x2e0/0x330 [xfs]
-[  149.903390]  xlog_recovery_process_trans+0x8e/0xf0 [xfs]
-[  149.903531]  xlog_recover_process_data+0x9c/0x130 [xfs]
-[  149.903687]  xlog_do_recovery_pass+0x3cc/0x5d0 [xfs]
-[  149.903843]  xlog_do_log_recovery+0x5c/0x80 [xfs]
-[  149.903984]  xlog_do_recover+0x33/0x1c0 [xfs]
-[  149.904125]  xlog_recover+0xdd/0x190 [xfs]
-[  149.904265]  xfs_log_mount+0x125/0x2f0 [xfs]
-[  149.904410]  xfs_mountfs+0x41a/0x910 [xfs]
-[  149.904558]  ? __pfx_xfs_fstrm_free_func+0x10/0x10 [xfs]
-[  149.904725]  xfs_fs_fill_super+0x4b7/0x940 [xfs]
-[  149.904873]  ? __pfx_xfs_fs_fill_super+0x10/0x10 [xfs]
-[  149.905016]  get_tree_bdev+0x19a/0x280
-[  149.905020]  vfs_get_tree+0x29/0xd0
-[  149.905023]  path_mount+0x69e/0x9b0
-[  149.905026]  do_mount+0x7d/0xa0
-[  149.905029]  __x64_sys_mount+0xdc/0x100
-[  149.905032]  do_syscall_64+0x3e/0x90
-[  149.905035]  entry_SYSCALL_64_after_hwframe+0x72/0xdc
+On 2023-05-23 at 13:08:32 +0700, Bagas Sanjaya wrote:
+> On 5/23/23 00:05, Linux regression tracking (Thorsten Leemhuis) wrote:
+> > Darrick, sorry for the trouble. Bagas recently out of the blue started
+> > to help with adding regressions to the tracking. That's great, but OTOH
+> > it means that it's likely time to write a few things up that are obvious
+> > to some of us and myself.
+> > 
+> > Bagas, please for the foreseeable future don't add regressions found by
+> > syzkaller to the regression tracking, unless some well known developer
+> > actually looked into the issue and indicated that it's something that
+> > needs to be fixed.
+> > 
+> > Syzbot is great. But it occasionally does odd things or goes of the
+> > rails. And in can easily find problems that didn't happen in an earlier
+> > version, but are unlikely to be encountered by users in practice (aka
+> > "in the wild"). And we normally don't consider those regressions that
+> > needs to be fixed.
+> > 
+> 
+> Oops, at the moment I didn't know how to distinguish true regressions
+> and issues found by the bot, so I thought that both are regressions.
+> 
+> Thanks for the tip!
+> 
+  The bisect used keyword "xfs_extent_free_diff_items" to bisect, and seems
+  it's not accurate this time. I will consider improving it.
 
-The trigger process is as follows:
+  Thanks!
+  BR.
 
-1. Growfs size from 0x200000 to 0x300000
-2. Using the space range of 0x200000~0x300000
-3. The above operations have only been written to the log area on disk
-4. Fault injection and shutdown filesystem
-5. Mount the filesystem and replay the log about growfs, but only modify the
- superblock buffer without modifying the mp->m_sb structure in memory
-6. Continuing the log replay, at this point we are replaying operation 2, then
- it was discovered that the blocks used more than mp->m_sb.sb_dblocks
-
-Therefore, during log replay, if there are any modifications made to the
-superblock, we should refresh the information recorded in the mp->m_sb.
-
-Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
----
- fs/xfs/xfs_buf_item_recover.c | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
-
-diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-index 43167f543afc..2ac3d2083188 100644
---- a/fs/xfs/xfs_buf_item_recover.c
-+++ b/fs/xfs/xfs_buf_item_recover.c
-@@ -22,6 +22,8 @@
- #include "xfs_inode.h"
- #include "xfs_dir2.h"
- #include "xfs_quota.h"
-+#include "xfs_sb.h"
-+#include "xfs_ag.h"
-
- /*
-  * This is the number of entries in the l_buf_cancel_table used during
-@@ -969,6 +971,29 @@ xlog_recover_buf_commit_pass2(
-                        goto out_release;
-        } else {
-                xlog_recover_do_reg_buffer(mp, item, bp, buf_f, current_lsn);
-+               /*
-+                * If the superblock buffer is modified, we also need to modify the
-+                * content of the mp.
-+                */
-+               if (bp->b_maps[0].bm_bn == XFS_SB_DADDR && bp->b_ops) {
-+                       struct xfs_dsb *sb = bp->b_addr;
-+
-+                       bp->b_ops->verify_write(bp);
-+                       error = bp->b_error;
-+                       if (error)
-+                               goto out_release;
-+
-+                       if (be32_to_cpu(sb->sb_agcount) > mp->m_sb.sb_agcount) {
-+                               error = xfs_initialize_perag(mp,
-+                                                       be32_to_cpu(sb->sb_agcount),
-+                                                       be64_to_cpu(sb->sb_dblocks),
-+                                                       &mp->m_maxagi);
-+                               if (error)
-+                                       goto out_release;
-+                       }
-+
-+                       xfs_sb_from_disk(&mp->m_sb, sb);
-+               }
-        }
-
-        /*
---
-2.27.0
+> -- 
+> An old man doll... just what I always wanted! - Clara
+> 
