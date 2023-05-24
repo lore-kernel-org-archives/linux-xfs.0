@@ -2,132 +2,155 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A697EC77B73
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 May 2023 21:57:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 998CEC7EE2C
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 May 2023 22:25:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236151AbjEXV5C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 May 2023 17:57:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39900 "EHLO
+        id S232941AbjEXWZi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 May 2023 18:25:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229757AbjEXV5B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 May 2023 17:57:01 -0400
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4BCCD3
-        for <linux-xfs@vger.kernel.org>; Wed, 24 May 2023 14:57:00 -0700 (PDT)
-Received: by mail-pj1-x1034.google.com with SMTP id 98e67ed59e1d1-25374c9be49so694566a91.3
-        for <linux-xfs@vger.kernel.org>; Wed, 24 May 2023 14:57:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1684965420; x=1687557420;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=PAhC/flunH4mhtUx9WkifybqdgbT+jLIDs5rKRqBH18=;
-        b=VcANevIbUge33+JiwrVldMPsDVseKzleSpEoGVXvCtvf59KvdrxkNaG3LuTkHdW4Jk
-         bifOJhE2t54HMCgFf22CN2SG1cVz5SG5Lko5jtDAvmJP1YtUNTibOJe5TrnwIpvIOFYR
-         dOrd/xuRTa+VnYbxbX7Rn0MbebnB6yrfeiMEBHHLsoKYVoaHG7M7CsH56LaK0Gh7rdBq
-         C2unCUg13w37PapsE/+jP/rfI9e9ejFvHv85XK6ohMG1yFOAxI5zmjatNWwb/cCXOFso
-         h/YeuYHyIZlpMyxTKJUzb+DpHWDl8D7Slzl1NiYD68IRDEkqt8JInDTOFbEVdcrm4ai5
-         6/ZQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684965420; x=1687557420;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=PAhC/flunH4mhtUx9WkifybqdgbT+jLIDs5rKRqBH18=;
-        b=P7hqjwV4581n9wdJ0AJn7PN8GWQlH3Cj0sp62Hl8AXJ5kciXa9pnKGwZGEG6q99+L1
-         0v6mZSJ9Wnfm2wHqpHm9oo6qQbL8x8ZZ5OZ1aMKtSAU+Kk2crU57M/AIkqwmTQtPE+9v
-         Rh6bk0KEOJdfI9u2X7pT7+mkTSSUB3VlS/QL7+ZTrMf3YvjgQu2p3AW8sD+ufgewukPj
-         ooiFGlNmAxyfpG38PrfxS7kCC8g9dL7lkUZrHGZIx6KN+UYOK5jS1PwLV3OAS7r2rAVP
-         j5r652ZTVNLU/ma0dVwtIyqbWsr5W9Rz+pm1lYICmKiJtlzkPXQe/kGd57jUZ7O9LMXM
-         dAGA==
-X-Gm-Message-State: AC+VfDyaa822R5QUjSOCO+eXundSM7oVeMYrE9QG4rdnqLLf7BAcLuDA
-        BR3Phb6OZR5FLJXac5goltXRBg==
-X-Google-Smtp-Source: ACHHUZ5QRESsHt/p5Vp49+LOpaxi0xAHAvojh3fT62UGmVDu+zceNYswQcWGKavnizqXEm1VGKl/5w==
-X-Received: by 2002:a17:90b:46d1:b0:247:529f:92d7 with SMTP id jx17-20020a17090b46d100b00247529f92d7mr19482622pjb.8.1684965420233;
-        Wed, 24 May 2023 14:57:00 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
-        by smtp.gmail.com with ESMTPSA id 8-20020a17090a018800b0024e41f23a2dsm1954764pjc.3.2023.05.24.14.56.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 24 May 2023 14:56:59 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1q1wTY-003UIE-1M;
-        Thu, 25 May 2023 07:56:56 +1000
-Date:   Thu, 25 May 2023 07:56:56 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Uladzislau Rezki <urezki@gmail.com>
-Cc:     Hyeonggon Yoo <42.hyeyoo@gmail.com>, linux-mm@kvack.org,
+        with ESMTP id S237549AbjEXWZe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 May 2023 18:25:34 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCFBB99;
+        Wed, 24 May 2023 15:25:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=6a4TWuzTGi7+tMMLrCXx2xS2HLm+fpIBXBWX9SQFhJc=; b=Olg5NsAiR4MXUKxEfN0JWQ26G+
+        48QUUb0p3dP2AO5RET1yB+OlmxpPgfW/OAuL8L3TmcLxGehBJ8zrOmr2kBjQvXnIDe74EGIXQUw5V
+        jrolzbG8yKU05ZkW5mpKw/LmaGIzjIW2osv7EnQcuMT1PVUpROY1wInr2AXsx/P1CtXqq68pLnhwc
+        o//oJNGyzcS02XIm8oZ0EkYqFxmeJvu+ZYfriDV2Rx6DKfxLwq6Z2WZASZL/SOiLmZyzD7t1ZY8rR
+        AcKIKrMHyGez7UPTrzHiDlh7DZpdMV2McGOt3pus8tAT+JlDrTHSf6mbJJPR2Ulm/XYS7au9Vkv2O
+        3mANUUxw==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1q1wsv-00EnXL-1n;
+        Wed, 24 May 2023 22:23:09 +0000
+Date:   Wed, 24 May 2023 15:23:09 -0700
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>,
+        Daniel Gomez <da.gomez@samsung.com>,
+        Pankaj Raghav <p.raghav@samsung.com>,
+        Ming Lei <ming.lei@redhat.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Miklos Szeredi <miklos@szeredi.hu>,
+        "Darrick J. Wong" <djwong@kernel.org>,
         Andrew Morton <akpm@linux-foundation.org>,
-        LKML <linux-kernel@vger.kernel.org>, Baoquan He <bhe@redhat.com>,
-        Lorenzo Stoakes <lstoakes@gmail.com>,
-        Christoph Hellwig <hch@infradead.org>,
+        David Howells <dhowells@redhat.com>,
         Matthew Wilcox <willy@infradead.org>,
-        "Liam R . Howlett" <Liam.Howlett@oracle.com>,
-        "Paul E . McKenney" <paulmck@kernel.org>,
-        Joel Fernandes <joel@joelfernandes.org>,
-        Oleksiy Avramchenko <oleksiy.avramchenko@sony.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 0/9] Mitigate a vmap lock contention
-Message-ID: <ZG6IKE7yNEkJhge+@dread.disaster.area>
-References: <20230522110849.2921-1-urezki@gmail.com>
- <ZGyqiaRnMJPFhxR6@debian-BULLSEYE-live-builder-AMD64>
- <ZGzX3vRMlGHIcYCe@pc636>
- <ZG0AE9mjHkRZIGmr@debian-BULLSEYE-live-builder-AMD64>
- <ZG3d1FUXiCk3QL3D@pc636>
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 14/17] block: open code __generic_file_write_iter for
+ blkdev writes
+Message-ID: <ZG6OTWckNlz+P+mo@bombadil.infradead.org>
+References: <20230424054926.26927-1-hch@lst.de>
+ <20230424054926.26927-15-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZG3d1FUXiCk3QL3D@pc636>
+In-Reply-To: <20230424054926.26927-15-hch@lst.de>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 24, 2023 at 11:50:12AM +0200, Uladzislau Rezki wrote:
-> On Wed, May 24, 2023 at 03:04:28AM +0900, Hyeonggon Yoo wrote:
-> > On Tue, May 23, 2023 at 05:12:30PM +0200, Uladzislau Rezki wrote:
-> > And I would like to ask some side questions:
-> > 
-> > 1. Is vm_[un]map_ram() API still worth with this patchset?
-> > 
-> It is up to community to decide. As i see XFS needs it also. Maybe in
-> the future it can be removed(who knows). If the vmalloc code itself can
-> deliver such performance as vm_map* APIs.
+On Mon, Apr 24, 2023 at 07:49:23AM +0200, Christoph Hellwig wrote:
+> Open code __generic_file_write_iter to remove the indirect call into
+> ->direct_IO and to prepare using the iomap based write code.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  block/fops.c | 46 ++++++++++++++++++++++++++++++++++++++++++++--
+>  1 file changed, 44 insertions(+), 2 deletions(-)
+> 
+> diff --git a/block/fops.c b/block/fops.c
+> index b670aa7c5bb745..fd510b6142bd57 100644
+> --- a/block/fops.c
+> +++ b/block/fops.c
+> @@ -508,6 +508,29 @@ static int blkdev_close(struct inode *inode, struct file *filp)
+>  	return 0;
+>  }
+>  
+> +static ssize_t
+> +blkdev_direct_write(struct kiocb *iocb, struct iov_iter *from)
+> +{
+> +	size_t count = iov_iter_count(from);
+> +	ssize_t written;
+> +
+> +	written = kiocb_invalidate_pages(iocb, count);
+> +	if (written) {
+> +		if (written == -EBUSY)
+> +			return 0;
+> +		return written;
+> +	}
+> +
+> +	written = blkdev_direct_IO(iocb, from);
+> +	if (written > 0) {
+> +		kiocb_invalidate_post_write(iocb, count);
+> +		iocb->ki_pos += written;
+> +	}
 
-vm_map* APIs cannot be replaced with vmalloc, they cover a very
-different use case.  i.e.  vmalloc allocates mapped memory,
-vm_map_ram() maps allocated memory....
+Written can be negative here after blkdev_direct_IO()
 
-> vm_map_ram() and friends interface was added because of vmalloc drawbacks.
+> +	if (written != -EIOCBQUEUED)
+> +		iov_iter_revert(from, count - written - iov_iter_count(from));
 
-No. vm_map*() were scalability improvements added in 2009 to replace
-on vmap() and vunmap() to avoid global lock contention in the vmap
-allocator that XFS had been working around for years with it's own
-internal vmap cache....
+And we'll then use it here on iov_iter_revert() and this can crash on
+with some values. For example this can crash on a 4k write attempt
+on a 32k drive when experimenting wit large block sizes.
 
-commit 95f8e302c04c0b0c6de35ab399a5551605eeb006
-Author: Nicholas Piggin <npiggin@gmail.com>
-Date:   Tue Jan 6 14:43:09 2009 +1100
+kernel BUG at lib/iov_iter.c:999!
+invalid opcode: 0000 [#1] PREEMPT SMP PTI
+CPU: 4 PID: 949 Comm: fio Not tainted 6.3.0-large-block-20230426-dirty#28
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS
+1.16.0-debian-1.16.0-5        04/01/2014
++RIP: 0010:iov_iter_revert.part.0+0x16e/0x170
+Code: f9 40 a2 63 af 74 07 03 56 08 89 d8 29 d0 89 45 08 44 89 6d 20
+<etc>
+RSP: 0018:ffffaa52006cfc60 EFLAGS: 00010246
+RAX: 0000000000000016 RBX: 0000000000000016 RCX: 0000000000000000
+RDX: 0000000000000004 RSI: 0000000000000006 RDI: ffffaa52006cfd08
+RBP: ffffaa52006cfd08 R08: 0000000000000000 R09: ffffaa52006cfb40
+R10: 0000000000000003 R11: ffffffffafcc21e8 R12: 0000000000004000
+R13: 0000000000003fea R14: ffff9de3d7565e00 R15: ffff9de3c1f68600
+FS:  00007f8bfe726c40(0000) GS:ffff9de43bd00000(0000)
+knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f8bf5eadd68 CR3: 0000000102c76001 CR4: 0000000000770ee0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+PKRU: 55555554
+Call Trace:
+ <TASK>
+blkdev_direct_write+0xf0/0x160
+blkdev_write_iter+0x11b/0x230
+io_write+0x10c/0x420
+? kmem_cache_alloc_bulk+0x2a1/0x410
+? fget+0x79/0xb0
+io_issue_sqe+0x60/0x3b0
+? io_prep_rw+0x5a/0x190
+io_submit_sqes+0x1e6/0x640
+__do_sys_io_uring_enter+0x54c/0xb90
+? handle_mm_fault+0x9a/0x340
+? preempt_count_add+0x47/0xa0
+? up_read+0x37/0x70
+? do_user_addr_fault+0x27c/0x780
+do_syscall_64+0x37/0x90
+entry_SYSCALL_64_after_hw
 
-    [XFS] use scalable vmap API
-    
-    Implement XFS's large buffer support with the new vmap APIs. See the vmap
-    rewrite (db64fe02) for some numbers. The biggest improvement that comes from
-    using the new APIs is avoiding the global KVA allocation lock on every call.
-    
-    Signed-off-by: Nick Piggin <npiggin@suse.de>
-    Reviewed-by: Christoph Hellwig <hch@infradead.org>
-    Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
+Although I fixed it with an early check on this routine
+with:
 
-vmap/vunmap() themselves were introduce in 2.5.32 (2002) and before
-that XFS was using remap_page_array() and vfree() in exactly the
-same way it uses vm_map_ram() and vm_unmap_ram() today....
+if (count < bdev_logical_block_size(bdev))
+	return -EINVAL; 
 
-XFS has a long, long history of causing virtual memory allocator
-scalability and contention problems. As you can see, this isn't our
-first rodeo...
+I think this can just be fixed by also using the alignment
+check earier here:
 
-Cheers,
+if (blkdev_dio_unaligned(bdev, pos, iter))                               
+	return -EINVAL;  
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+  Luis
