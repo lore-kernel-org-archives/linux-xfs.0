@@ -2,98 +2,96 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E23FAC77B73
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 May 2023 12:12:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C285CC7EE2E
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 May 2023 13:33:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230507AbjEXMM6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 May 2023 08:12:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42638 "EHLO
+        id S234673AbjEXNd0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 May 2023 09:33:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59572 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229919AbjEXMM5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 May 2023 08:12:57 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 043F395
-        for <linux-xfs@vger.kernel.org>; Wed, 24 May 2023 05:12:56 -0700 (PDT)
-Received: from kwepemi500009.china.huawei.com (unknown [172.30.72.54])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4QR94k5gVQzsSVN;
-        Wed, 24 May 2023 20:10:46 +0800 (CST)
-Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
- (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Wed, 24 May
- 2023 20:12:53 +0800
-Date:   Wed, 24 May 2023 20:11:21 +0800
-From:   Long Li <leo.lilong@huawei.com>
-To:     <djwong@kernel.org>
-CC:     <david@fromorbit.com>, <linux-xfs@vger.kernel.org>,
-        <houtao1@huawei.com>, <yi.zhang@huawei.com>, <guoxuenan@huawei.com>
-Subject: [PATCH] xfs: xfs_trans_cancel() path must check for log shutdown
-Message-ID: <20230524121121.GA4130562@ceph-admin>
+        with ESMTP id S230255AbjEXNdY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 May 2023 09:33:24 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47999A7;
+        Wed, 24 May 2023 06:33:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=PlI3NINuTp5y2t5Z+4wg7vfiTt8lvB4SyLbHC5tKASU=; b=eq1oO18nKmxdfx79+rZ3TTo5Q2
+        2/F3VHC9ngHsBakNRFv680ymTTyCK9hQMC/hF/6ByoTd1QX5Huc2qSnkfOtIpqNxg3U3KILlEnohH
+        tk1m/vJLtoK5KkcBjlU2kaBM3cLYnmqGoN2Zya9Htl2CZTaH4W94BgkzuYeaOzmShvPd+qb3ym5EL
+        yonGPZiSfd3yzH3hEQFRUsVsx849CuZTYjYDAClbFB7R6Y5PcboAB1JCCXjmLj8dakGubsyS8QwrS
+        jjlaR0JAq6BqcKNmdvnkHdN+wsZcZz5xjzhHDugGtoEqqn7cXDiJJ1Gi7vDVBHa/uqXa8DUbUI1v1
+        peQuoiEw==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1q1oc5-00BF3M-Tz; Wed, 24 May 2023 13:33:13 +0000
+Date:   Wed, 24 May 2023 14:33:13 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>,
+        Jens Axboe <axboe@kernel.dk>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        David Howells <dhowells@redhat.com>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        ceph-devel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 16/17] block: use iomap for writes to block devices
+Message-ID: <ZG4SGYOogQtEZrll@casper.infradead.org>
+References: <20230424054926.26927-1-hch@lst.de>
+ <20230424054926.26927-17-hch@lst.de>
+ <b96b397e-2f5e-7910-3bb3-7405d0e293a7@suse.de>
+ <ZG09wR4WOI8zDxJK@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-X-Originating-IP: [10.175.127.227]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- kwepemi500009.china.huawei.com (7.221.188.199)
-X-CFilter-Loop: Reflected
+In-Reply-To: <ZG09wR4WOI8zDxJK@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The following error occurred when do IO fault injection test:
+On Wed, May 24, 2023 at 08:27:13AM +1000, Dave Chinner wrote:
+> On Fri, May 19, 2023 at 04:22:01PM +0200, Hannes Reinecke wrote:
+> > I'm hitting this during booting:
+> > [    5.016324]  <TASK>
+> > [    5.030256]  iomap_iter+0x11a/0x350
+> > [    5.030264]  iomap_readahead+0x1eb/0x2c0
+> > [    5.030272]  read_pages+0x5d/0x220
+> > [    5.030279]  page_cache_ra_unbounded+0x131/0x180
+> > [    5.030284]  filemap_get_pages+0xff/0x5a0
+> 
+> Why is filemap_get_pages() using unbounded readahead? Surely
+> readahead should be limited to reading within EOF....
 
-XFS: Assertion failed: xlog_is_shutdown(lip->li_log), file: fs/xfs/xfs_inode_item.c, line: 748
+It isn't using unbounded readahead; that's an artifact of this
+incomplete stack trace.  Actual call stack:
 
-In commit 3c4cb76bce43 (xfs: xfs_trans_commit() path must check for log
-shutdown) fix a problem that dirty transaction was canceled before log
-shutdown, because of the log is still running, it result dirty and
-unlogged inode item that isn't in the AIL in memory that can be flushed
-to disk via writeback clustering.
+page_cache_ra_unbounded
+do_page_cache_ra
+ondemand_readahead
+page_cache_sync_ra
+page_cache_sync_readahead
+filemap_get_pages
 
-xfs_trans_cancel() has the same problem, if a shut down races with
-xfs_trans_cancel() and we have shut down the filesystem but not the log,
-we will still cancel the transaction before log shutdown. So
-xfs_trans_cancel() needs to check log state for shutdown, not mount.
+As you can see, do_page_cache_ra() does limit readahead to i_size.
+Is ractl->mapping->host the correct way to find the inode?  I always
+get confused.
 
-Signed-off-by: Long Li <leo.lilong@huawei.com>
----
- fs/xfs/xfs_trans.c | 15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
-
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 8afc0c080861..033991854d4f 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -1059,11 +1059,9 @@ xfs_trans_commit(
-  *
-  * This is a high level function (equivalent to xfs_trans_commit()) and so can
-  * be called after the transaction has effectively been aborted due to the mount
-- * being shut down. However, if the mount has not been shut down and the
-+ * being shut down. However, if the log has not been shut down and the
-  * transaction is dirty we will shut the mount down and, in doing so, that
-- * guarantees that the log is shut down, too. Hence we don't need to be as
-- * careful with shutdown state and dirty items here as we need to be in
-- * xfs_trans_commit().
-+ * guarantees that the log is shut down.
-  */
- void
- xfs_trans_cancel(
-@@ -1089,11 +1087,12 @@ xfs_trans_cancel(
- 
- 	/*
- 	 * See if the caller is relying on us to shut down the filesystem. We
--	 * only want an error report if there isn't already a shutdown in
--	 * progress, so we only need to check against the mount shutdown state
--	 * here.
-+	 * only want an error report if there isn't already a log shutdown. We
-+	 * must check against log shutdown here because we cannot abort log and
-+	 * leave them dirty, inconsistent and unpinned in memory while the log
-+	 * is active, as we needed in xfs_trans_commit().
- 	 */
--	if (dirty && !xfs_is_shutdown(mp)) {
-+	if (dirty && !xlog_is_shutdown(log)) {
- 		XFS_ERROR_REPORT("xfs_trans_cancel", XFS_ERRLEVEL_LOW, mp);
- 		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
- 	}
--- 
-2.31.1
-
+> I think Christoph's code is correct. IMO, any attempt to read beyond
+> the end of the device should throw out a warning and return an
+> error, not silently return zeros.
+> 
+> If readahead is trying to read beyond the end of the device, then it
+> really seems to me like the problem here is readahead, not the iomap
+> code detecting the OOB read request....
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
