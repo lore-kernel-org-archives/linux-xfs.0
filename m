@@ -2,334 +2,240 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36130C7EE2E
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 May 2023 14:50:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C40AC77B7A
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 May 2023 15:47:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236035AbjEXOu4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 May 2023 10:50:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39432 "EHLO
+        id S236397AbjEXPrz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 May 2023 11:47:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46046 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235840AbjEXOug (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 May 2023 10:50:36 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A6781BC;
-        Wed, 24 May 2023 07:50:30 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EDF3D63E12;
-        Wed, 24 May 2023 14:50:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47F49C433D2;
-        Wed, 24 May 2023 14:50:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684939829;
-        bh=tO2IMEGijtd57Gf9dwTbwdnlrcrYP93IAJz+fPhyfYg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Knvw+aNnLCkCrn91eEu9btjgwuW9tUet6Mr/qVPia+A/hRem1D5rmDrUnfgfneoWX
-         9OvAAnltzB0vKktDVYgUrSn0y0m6O2qzq3wNznJQEz9v2FJe2TDlPhgvQy9rjgt5Xr
-         xGY/Cwiwk+Lq8lwkotO3qFaRbfZ3MtPWGor1A4nMUjEa6zkr5cNC4H8xvOAjA08mLK
-         ddj6+YB7K+B/3YgntOYamQZrMJ/Gr8yJtruyyXGWQmdOa7MThCT0RHGZ1sA5s4sQ7I
-         R8ZdIH3OXjFCsifx9UShNhQ4siE2ISFsl1RfsQTR1onDe6iO73voe6d46Zsjsbtl/8
-         q08CdMKBPGpPw==
-Date:   Wed, 24 May 2023 07:50:28 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Matthew Wilcox <willy@infradead.org>, Jens Axboe <axboe@kernel.dk>,
-        Xiubo Li <xiubli@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org
-Subject: Re: [PATCH 01/11] backing_dev: remove current->backing_dev_info
-Message-ID: <20230524145028.GH11620@frogsfrogsfrogs>
-References: <20230524063810.1595778-1-hch@lst.de>
- <20230524063810.1595778-2-hch@lst.de>
+        with ESMTP id S233092AbjEXPrx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 May 2023 11:47:53 -0400
+Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D0FA197;
+        Wed, 24 May 2023 08:47:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1684943251; x=1716479251;
+  h=message-id:date:subject:to:cc:references:from:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=L/bOoFoKtGT8JBHUjEWHEV8g5oyvjGsAUUBoSRfqY20=;
+  b=OOBlHh7BaLgMUCKHwZh4qfIkmSN+IjxkiiGshagbKlHYmw/c5UASG8vI
+   CnMSDqWd0M+tDPH4RzobUnyugkb7JeXEQRHlABlVl5l8gaAE8LJFdfzsz
+   EVZudzLrrCPIuzxhrmwd5zA/Jisjp81DQLctuEC36DhEugh1KOq3kaeG4
+   pVXhIFaHk+JGD1OQpxE0ozqyRnKgDyOF13BF2SQEHrjkNx1J4Ku7NcYK/
+   eaomsmrqVRH5Margo/SX+T7TlXfm3cDIUtecNI2ITQ7wDxWnujrBYlfm3
+   Jfeaby2E0kl0uSMtDgSFqvS2caagahB9tsZDago52imdbcTTi/aFgDxGM
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10720"; a="417066930"
+X-IronPort-AV: E=Sophos;i="6.00,189,1681196400"; 
+   d="scan'208";a="417066930"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 May 2023 08:46:47 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10720"; a="735234913"
+X-IronPort-AV: E=Sophos;i="6.00,189,1681196400"; 
+   d="scan'208";a="735234913"
+Received: from orsmsx603.amr.corp.intel.com ([10.22.229.16])
+  by orsmga008.jf.intel.com with ESMTP; 24 May 2023 08:46:38 -0700
+Received: from orsmsx610.amr.corp.intel.com (10.22.229.23) by
+ ORSMSX603.amr.corp.intel.com (10.22.229.16) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23; Wed, 24 May 2023 08:46:37 -0700
+Received: from orsedg603.ED.cps.intel.com (10.7.248.4) by
+ orsmsx610.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23 via Frontend Transport; Wed, 24 May 2023 08:46:37 -0700
+Received: from NAM11-DM6-obe.outbound.protection.outlook.com (104.47.57.170)
+ by edgegateway.intel.com (134.134.137.100) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.23; Wed, 24 May 2023 08:46:37 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=GPZ4djoUYDcx0H8PuhbboSuHhQatJ9EWs+oBTwWvzKKW646chZP8sTL2o/G61YZs1RS3lJzu3cZnNrbDGRD1b4CyXeJ+xiGENzufLzZxPRT84qSqAiK09OlHPCa38rzP7H0fB65UK3JHmerlThHBu3U/xGmmxcqlrFvVCaTWNbJj2ap8+6HQwepNI3zZt5Pemy3bUqKXvy7L39Elh+buPyvkdKSEPB1ZkyclM7y4ypSvqS/zEiEim2GGpoLYRTh3YsyphC2icfkQIOPBvR1N7icqwB4AOXCpGPrPdOMQGM36nMeh7Uwi50ZalhfOpPnEIrm1Uxib/sjCwXS2NbIaSw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=qfBUquu6djuZnnZt++wWPKx+Y8uNw+IPX/EWzUAcyPM=;
+ b=d1SMxj+aRjT5ZK8cBnbufSbK7sbfIt2/UCpKERsT5eLdT5D4o1XU83Uui5ZdgpPJrSWpGa/YtgYoHn9/JzxTin/Vue9qhQAz9LltTx6cbpMfdtO1V7hTox/XWP3+7dy2oDxghKLOy2KgA+vz3ClhDY1+cTnr3jk+yercfdT450SOJ9U1a/FagJp60Jpw9DjnSP4QeKgmB8mlCHXWwzmU2DuLNaJHuwRaxPj6Tds6DmTbbU0kDrKKoa0LWH5Q1Nye16Fq1lhCUQvARoSFH31Axn05TxBt/N2s0p0xapPaoXVSaGjn3AnXJJcrdJnGb2F+vQaJVBvcG3AYJ51/084X0Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from SN6PR11MB3229.namprd11.prod.outlook.com (2603:10b6:805:ba::28)
+ by PH7PR11MB8122.namprd11.prod.outlook.com (2603:10b6:510:235::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6433.15; Wed, 24 May
+ 2023 15:46:36 +0000
+Received: from SN6PR11MB3229.namprd11.prod.outlook.com
+ ([fe80::bdec:3ca4:b5e1:2b84]) by SN6PR11MB3229.namprd11.prod.outlook.com
+ ([fe80::bdec:3ca4:b5e1:2b84%7]) with mapi id 15.20.6411.029; Wed, 24 May 2023
+ 15:46:36 +0000
+Message-ID: <dc30f485-8a91-74e7-0ad8-0388269cfee6@intel.com>
+Date:   Wed, 24 May 2023 08:46:30 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [Intel-wired-lan] [PATCH] overflow: Add struct_size_t() helper
+To:     Alexander Lobakin <aleksander.lobakin@intel.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Kees Cook <keescook@chromium.org>
+CC:     "Darrick J. Wong" <djwong@kernel.org>,
+        Daniel Latypov <dlatypov@google.com>,
+        <storagedev@microchip.com>, <linux-nvme@lists.infradead.org>,
+        James Smart <james.smart@broadcom.com>,
+        "Guo Xuenan" <guoxuenan@huawei.com>,
+        Eric Dumazet <edumazet@google.com>,
+        <linux-hardening@vger.kernel.org>, Christoph Hellwig <hch@lst.de>,
+        "Sagi Grimberg" <sagi@grimberg.me>, <linux-scsi@vger.kernel.org>,
+        Jesse Brandeburg <jesse.brandeburg@intel.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        <intel-wired-lan@lists.osuosl.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Gwan-gyeong Mun <gwan-gyeong.mun@intel.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Keith Busch <kbusch@kernel.org>,
+        HighPoint Linux Team <linux@highpoint-tech.com>,
+        <megaraidlinux.pdl@broadcom.com>, Jens Axboe <axboe@kernel.dk>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        <netdev@vger.kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Tales Aparecida <tales.aparecida@gmail.com>,
+        "Don Brace" <don.brace@microchip.com>,
+        "David S. Miller" <davem@davemloft.net>
+References: <20230522211810.never.421-kees@kernel.org>
+ <20230523205354.06b147c6@kernel.org>
+ <1d909989-5418-17ca-f161-67b4c05c6fb2@intel.com>
+Content-Language: en-US
+From:   Tony Nguyen <anthony.l.nguyen@intel.com>
+In-Reply-To: <1d909989-5418-17ca-f161-67b4c05c6fb2@intel.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: BY5PR17CA0009.namprd17.prod.outlook.com
+ (2603:10b6:a03:1b8::22) To SN6PR11MB3229.namprd11.prod.outlook.com
+ (2603:10b6:805:ba::28)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230524063810.1595778-2-hch@lst.de>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SN6PR11MB3229:EE_|PH7PR11MB8122:EE_
+X-MS-Office365-Filtering-Correlation-Id: 58ecc161-4c40-49be-74b2-08db5c6e0df4
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: ana+CSSfTzo8LDZ2xhGD9lmxxZDgAI7FAevcSEO5bkNrsHJ4bK4h5JVUdUzX/2Jn3fNXpKQe19OTIvwo1k5djwzPvn6NrTUE9BYYsqd0ygqIkFSLENBl/d3gNGspUYqQx1hFkJ5GPwVpLCSOyEdfXoeVEAlyiFASkOueuwAS0qY8OvkTBxXFiqoZ9phG3XW7FG2H5ig1QKFnJNLfzz1xOoemoTyUnpsi8JF21rH+/Gj7V95TZ8TzVT7xNK1hD2fMtW3auvr4PxBFT3t48svlbUGiD/qxiU/HXL356c5lGdfOGIgvU0GdcDEv6soUt0CE+FlfNCwHcXUkfsgujP3njUXSwYm2EAzahn1OIpiCwMj+pjkwFfI9AFhl/QNrOzv8klCN9mpKHdLdsMGqEoS8yOvqzHa3xZ3miNN4428WiOeL2Ozn7GnNfCSoDjJOyyWiRvZEOX4vF3CU/ltZfPuQ8PiufBcFMOzMAsPedoRpCtdJ7YvwLnj5MlXabs9+UYGQtDZy365Ys8dsrSe0Wo/zaU/yxJVf24UROsTyKmg7JV7Nf5gYEeJlXfBcF8VL6kyYvEDadX0ebzLL8pLJHJ144N93k4rUYO2i0+rkei+v6tTMEcBG5xIYoJOPxhejbca6VxeY1G6mJQjkXfQ7oWOqeA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB3229.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(346002)(376002)(366004)(136003)(396003)(39860400002)(451199021)(6666004)(41300700001)(6486002)(6506007)(186003)(2906002)(53546011)(6512007)(26005)(86362001)(31696002)(2616005)(82960400001)(38100700002)(5660300002)(7406005)(7416002)(36756003)(8676002)(8936002)(66946007)(66556008)(66476007)(4326008)(31686004)(110136005)(54906003)(478600001)(316002)(45980500001)(43740500002);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?OHBhdlhUSGhGZE02VjN6L1F4NHI3OUFjS1VVbUZtT0Q2MEU4UFBJU004Q3B6?=
+ =?utf-8?B?ak9EeG85bVAzVVVxV2xHbzlYUGNobXdndTVlWnRRaXJtaHNiY1FhbVVqd2Zw?=
+ =?utf-8?B?WE5nRVdCUVcrY0FJMXlRS29XTkdvMDgxclFlenRIbzl2a1lBUytncEYzeTJr?=
+ =?utf-8?B?RVdzczBwVWVxTnlKdGZ5SkRNbDhMTFFBL2ZMdE9sb1BPSEYwaXZvMjZBVjQ1?=
+ =?utf-8?B?NTdodVYxN21YcVh4ZytRWUtycTg3RUFMa1lWdWhLYXBTN0dHTEoxZzJDdDVi?=
+ =?utf-8?B?ODdCcGMySkVUaDB0RytLeXliZXZvUndXWW5zL1E1YUorYWRBT2RONXN1cUZ1?=
+ =?utf-8?B?cHhFZEpBMUltb21sOTZzdkFtWVFSNHFLN2pRUjNnWWtuQXA0NDR6WlZSRi81?=
+ =?utf-8?B?SStLL1BTSVRvT3BXS3ZUenFJTnlPaDhOVkYxbWZlUEN2VXVpVUhhbmdjQnkx?=
+ =?utf-8?B?clBtYXR6UFRocE9QSXZxRk9VUHJYaEZEZVVsVDc0TnVCQjFNeHhEN1BFWk0y?=
+ =?utf-8?B?Z3piYUhpTWVpTUtoVFhPNnJDYzlDSTB5T3JYZTFWY3FNNkpJaG8zV3BJZWFF?=
+ =?utf-8?B?bXBaMFhTYzcybXhEeUY4WnJkaEJDMmNFSitiS2hsV0IrNlFTRnBSeG5jOWhO?=
+ =?utf-8?B?S1RiWnRaZ2FGVVJPVVFQenFBeTNMVVB1QUVCSENLUHM0MVp3cXhoNkxQWnNB?=
+ =?utf-8?B?SUF5OGxKMC9SeUNHTzdQTmNHL3pkSjljZ1drQ2ppemxFTnZTZlVZZHJscGI1?=
+ =?utf-8?B?WDk1MkVLMzJjT0JrTE8xbks0L3FHU1pobTBHNjkzaytscWFETStzRmJUcU15?=
+ =?utf-8?B?ZDJQYVd3REhyL29rdnBHYWRKK2hqUGYwMnZSb3VQVm44UDJSYS8zTGNzdThh?=
+ =?utf-8?B?ZC9DcU5JY0hnM1lRM0k0Rm84SVdqb3dwcnhEeHphZjJLbmZZVjEvNjZ6YXdz?=
+ =?utf-8?B?UURiYnBaeE0xa3lZUzN4VGk5ZFdPeXE0QVVMNDYzM1NEOWN0ZFMwOS8vUDFt?=
+ =?utf-8?B?WWM1MWNHbU9rMUhSVllhMzZORnBqVVd0cGwvM0lqZ0h2bjJDRU1IYUl6dEFw?=
+ =?utf-8?B?WE5NdXhNa3ovRTNNVWlwVVp2U25Jd0NadjZrMk9BVGtoR3lwK0QvWHFoN0NH?=
+ =?utf-8?B?eGw2MUEyRjVWSGxDK1VwQk84SUxKUlYvWnVaU3JINUxBUTc1V3c5dTFEQTRB?=
+ =?utf-8?B?S1dqVkFoa0xRZVRIZERoeThSNWNmVzhuTytPdGlVRGpIRTUvUzdkL2lvWkRR?=
+ =?utf-8?B?alA0RkE4WC80SzBFdUZ0T2FQRGdxaEdoQ3d4NEdJdDdTbjE2NHNFa3IvMThW?=
+ =?utf-8?B?bTc3MjdNanFsdURmdjlHSkpzdVJVVzJZTzNuUk1KZzNQNnlwekt1NnJ0SEpt?=
+ =?utf-8?B?RVd2Q1JSQ24rdnY0UjJLTWM5TXpBTXdMakpZUDZhNG84WEtwMnMvdTVXc0Ro?=
+ =?utf-8?B?V05pRHI4UGs2bnJkS2J0RHZrdVNjS050V0ttYmRsOTR6blJyV1hDVmIzU2J6?=
+ =?utf-8?B?ek05VGlNdU9meU4zRXloNWFHSytKWVd0VzQ4SFhFM2hrYVExbnlBamNDR2l5?=
+ =?utf-8?B?cDVTc2ZaaWUvaXVqL3FMdkJ5cEg1WDZDRXhHblprZ0xoamY4YzJjcDBSdk1D?=
+ =?utf-8?B?MyszK3FPajFyQjFlSy92bGk2aGkraFNnNFVmQzNuRjNEbmJlQnQ0cXdocW5E?=
+ =?utf-8?B?WGdiSmdpdjVyRWJGMkEzT1ZOOEtKZ0oyVWdsZXFjclhRRStYKzg0ZGNGQ0tq?=
+ =?utf-8?B?a25BVVJUeFdiL3NTY3g2OEtMcHBCdlp0UXVWMm9NTENHMVlSYm1SbjREQUJT?=
+ =?utf-8?B?Y25RZnhXWE9tMHk4S28xMGJwMzhCL0FjR0RhcDYwOUhmamJ2NEdRajZIcEdY?=
+ =?utf-8?B?YmkrQithQ2g3TllPNEVCZzJHUy84c0dpRVV1aVVWQWxNc2FSN2FmZEZSNU5Q?=
+ =?utf-8?B?YzBvaW5WRSs5dXhPKysvV0xiMTlzS2F1U0NaVklUVnEvRUZvYzhBbElhOSti?=
+ =?utf-8?B?dDJxdUNsS095NGlWZEFnT1BadW9SNXdBYkZOOEVuUmppc0JiZ3paSFR5QTUz?=
+ =?utf-8?B?WWJZVEd5Wm9KdmtpeFNibjNlT0NQTnJ4dytSclpNWTNteHdLNmRCZDBlN3RJ?=
+ =?utf-8?B?cDVVblpSRmMrYzF4TkFRUzNPeC9WaEFnbUJHSkd1OWV2amZoaVA4b3FTOUEr?=
+ =?utf-8?B?bVE9PQ==?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 58ecc161-4c40-49be-74b2-08db5c6e0df4
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR11MB3229.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2023 15:46:35.6834
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: J/wMjDSB2ujJ5Smy4ysa73KD8Uw/sc6FEXfRX86dC2O8aIrrNDOq87SP94c/L6t39dbIOp00UbXDdCXGf3QD1m/0N5NaNB97IH6GidZKTCQ=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR11MB8122
+X-OriginatorOrg: intel.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 24, 2023 at 08:38:00AM +0200, Christoph Hellwig wrote:
-> The last user of current->backing_dev_info disappeared in commit
-> b9b1335e6403 ("remove bdi_congested() and wb_congested() and related
-> functions").  Remove the field and all assignments to it.
+On 5/24/2023 7:17 AM, Alexander Lobakin wrote:
+> From: Jakub Kicinski <kuba@kernel.org>
+> Date: Tue, 23 May 2023 20:53:54 -0700
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Yay code removal!!!! :)
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-> ---
->  fs/btrfs/file.c       | 6 +-----
->  fs/ceph/file.c        | 4 ----
->  fs/ext4/file.c        | 2 --
->  fs/f2fs/file.c        | 2 --
->  fs/fuse/file.c        | 4 ----
->  fs/gfs2/file.c        | 2 --
->  fs/nfs/file.c         | 5 +----
->  fs/ntfs/file.c        | 2 --
->  fs/ntfs3/file.c       | 3 ---
->  fs/xfs/xfs_file.c     | 4 ----
->  include/linux/sched.h | 3 ---
->  mm/filemap.c          | 3 ---
->  12 files changed, 2 insertions(+), 38 deletions(-)
+>> On Mon, 22 May 2023 14:18:13 -0700 Kees Cook wrote:
+>>> diff --git a/drivers/net/ethernet/intel/ice/ice_ddp.h b/drivers/net/ethernet/intel/ice/ice_ddp.h
+>>> index 37eadb3d27a8..41acfe26df1c 100644
+>>> --- a/drivers/net/ethernet/intel/ice/ice_ddp.h
+>>> +++ b/drivers/net/ethernet/intel/ice/ice_ddp.h
+>>> @@ -185,7 +185,7 @@ struct ice_buf_hdr {
+>>>   
+>>>   #define ICE_MAX_ENTRIES_IN_BUF(hd_sz, ent_sz)                                 \
+>>>   	((ICE_PKG_BUF_SIZE -                                                  \
+>>> -	  struct_size((struct ice_buf_hdr *)0, section_entry, 1) - (hd_sz)) / \
+>>> +	  struct_size_t(struct ice_buf_hdr,  section_entry, 1) - (hd_sz)) / \
+>>>   	 (ent_sz))
+>>>   
+>>>   /* ice package section IDs */
+>>> @@ -297,7 +297,7 @@ struct ice_label_section {
+>>>   };
+>>>   
+>>>   #define ICE_MAX_LABELS_IN_BUF                                             \
+>>> -	ICE_MAX_ENTRIES_IN_BUF(struct_size((struct ice_label_section *)0, \
+>>> +	ICE_MAX_ENTRIES_IN_BUF(struct_size_t(struct ice_label_section,  \
+>>>   					   label, 1) -                    \
+>>>   				       sizeof(struct ice_label),          \
+>>>   			       sizeof(struct ice_label))
+>>> @@ -352,7 +352,7 @@ struct ice_boost_tcam_section {
+>>>   };
+>>>   
+>>>   #define ICE_MAX_BST_TCAMS_IN_BUF                                               \
+>>> -	ICE_MAX_ENTRIES_IN_BUF(struct_size((struct ice_boost_tcam_section *)0, \
+>>> +	ICE_MAX_ENTRIES_IN_BUF(struct_size_t(struct ice_boost_tcam_section,  \
+>>>   					   tcam, 1) -                          \
+>>>   				       sizeof(struct ice_boost_tcam_entry),    \
+>>>   			       sizeof(struct ice_boost_tcam_entry))
+>>> @@ -372,8 +372,7 @@ struct ice_marker_ptype_tcam_section {
+>>>   };
+>>>   
+>>>   #define ICE_MAX_MARKER_PTYPE_TCAMS_IN_BUF                                    \
+>>> -	ICE_MAX_ENTRIES_IN_BUF(                                              \
+>>> -		struct_size((struct ice_marker_ptype_tcam_section *)0, tcam, \
+>>> +	ICE_MAX_ENTRIES_IN_BUF(struct_size_t(struct ice_marker_ptype_tcam_section,  tcam, \
+>>>   			    1) -                                             \
+>>>   			sizeof(struct ice_marker_ptype_tcam_entry),          \
+>>>   		sizeof(struct ice_marker_ptype_tcam_entry))
+>>
+>> Acked-by: Jakub Kicinski <kuba@kernel.org>
+>>
+>> but Intel ICE folks please speak up if this has a high chance of
+>> conflicts, I think I've seen some ICE DDP patches flying around :(
 > 
-> diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
-> index f649647392e0e4..ecd43ab66fa6c7 100644
-> --- a/fs/btrfs/file.c
-> +++ b/fs/btrfs/file.c
-> @@ -1145,7 +1145,6 @@ static int btrfs_write_check(struct kiocb *iocb, struct iov_iter *from,
->  	    !(BTRFS_I(inode)->flags & (BTRFS_INODE_NODATACOW | BTRFS_INODE_PREALLOC)))
->  		return -EAGAIN;
->  
-> -	current->backing_dev_info = inode_to_bdi(inode);
->  	ret = file_remove_privs(file);
->  	if (ret)
->  		return ret;
-> @@ -1165,10 +1164,8 @@ static int btrfs_write_check(struct kiocb *iocb, struct iov_iter *from,
->  		loff_t end_pos = round_up(pos + count, fs_info->sectorsize);
->  
->  		ret = btrfs_cont_expand(BTRFS_I(inode), oldsize, end_pos);
-> -		if (ret) {
-> -			current->backing_dev_info = NULL;
-> +		if (ret)
->  			return ret;
-> -		}
->  	}
->  
->  	return 0;
-> @@ -1689,7 +1686,6 @@ ssize_t btrfs_do_write_iter(struct kiocb *iocb, struct iov_iter *from,
->  	if (sync)
->  		atomic_dec(&inode->sync_writers);
->  
-> -	current->backing_dev_info = NULL;
->  	return num_written;
->  }
->  
-> diff --git a/fs/ceph/file.c b/fs/ceph/file.c
-> index f4d8bf7dec88a8..c8ef72f723badd 100644
-> --- a/fs/ceph/file.c
-> +++ b/fs/ceph/file.c
-> @@ -1791,9 +1791,6 @@ static ssize_t ceph_write_iter(struct kiocb *iocb, struct iov_iter *from)
->  	else
->  		ceph_start_io_write(inode);
->  
-> -	/* We can write back this queue in page reclaim */
-> -	current->backing_dev_info = inode_to_bdi(inode);
-> -
->  	if (iocb->ki_flags & IOCB_APPEND) {
->  		err = ceph_do_getattr(inode, CEPH_STAT_CAP_SIZE, false);
->  		if (err < 0)
-> @@ -1940,7 +1937,6 @@ static ssize_t ceph_write_iter(struct kiocb *iocb, struct iov_iter *from)
->  		ceph_end_io_write(inode);
->  out_unlocked:
->  	ceph_free_cap_flush(prealloc_cf);
-> -	current->backing_dev_info = NULL;
->  	return written ? written : err;
->  }
->  
-> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-> index d101b3b0c7dad8..bc430270c23c19 100644
-> --- a/fs/ext4/file.c
-> +++ b/fs/ext4/file.c
-> @@ -285,9 +285,7 @@ static ssize_t ext4_buffered_write_iter(struct kiocb *iocb,
->  	if (ret <= 0)
->  		goto out;
->  
-> -	current->backing_dev_info = inode_to_bdi(inode);
->  	ret = generic_perform_write(iocb, from);
-> -	current->backing_dev_info = NULL;
->  
->  out:
->  	inode_unlock(inode);
-> diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
-> index 5ac53d2627d20d..4f423d367a44b9 100644
-> --- a/fs/f2fs/file.c
-> +++ b/fs/f2fs/file.c
-> @@ -4517,9 +4517,7 @@ static ssize_t f2fs_buffered_write_iter(struct kiocb *iocb,
->  	if (iocb->ki_flags & IOCB_NOWAIT)
->  		return -EOPNOTSUPP;
->  
-> -	current->backing_dev_info = inode_to_bdi(inode);
->  	ret = generic_perform_write(iocb, from);
-> -	current->backing_dev_info = NULL;
->  
->  	if (ret > 0) {
->  		iocb->ki_pos += ret;
-> diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-> index 89d97f6188e05e..97d435874b14aa 100644
-> --- a/fs/fuse/file.c
-> +++ b/fs/fuse/file.c
-> @@ -1362,9 +1362,6 @@ static ssize_t fuse_cache_write_iter(struct kiocb *iocb, struct iov_iter *from)
->  writethrough:
->  	inode_lock(inode);
->  
-> -	/* We can write back this queue in page reclaim */
-> -	current->backing_dev_info = inode_to_bdi(inode);
-> -
->  	err = generic_write_checks(iocb, from);
->  	if (err <= 0)
->  		goto out;
-> @@ -1409,7 +1406,6 @@ static ssize_t fuse_cache_write_iter(struct kiocb *iocb, struct iov_iter *from)
->  			iocb->ki_pos += written;
->  	}
->  out:
-> -	current->backing_dev_info = NULL;
->  	inode_unlock(inode);
->  	if (written > 0)
->  		written = generic_write_sync(iocb, written);
-> diff --git a/fs/gfs2/file.c b/fs/gfs2/file.c
-> index 300844f50dcd28..904a0d6ac1a1a9 100644
-> --- a/fs/gfs2/file.c
-> +++ b/fs/gfs2/file.c
-> @@ -1041,11 +1041,9 @@ static ssize_t gfs2_file_buffered_write(struct kiocb *iocb,
->  			goto out_unlock;
->  	}
->  
-> -	current->backing_dev_info = inode_to_bdi(inode);
->  	pagefault_disable();
->  	ret = iomap_file_buffered_write(iocb, from, &gfs2_iomap_ops);
->  	pagefault_enable();
-> -	current->backing_dev_info = NULL;
->  	if (ret > 0) {
->  		iocb->ki_pos += ret;
->  		written += ret;
-> diff --git a/fs/nfs/file.c b/fs/nfs/file.c
-> index f0edf5a36237d1..665ce3fc62eaf4 100644
-> --- a/fs/nfs/file.c
-> +++ b/fs/nfs/file.c
-> @@ -648,11 +648,8 @@ ssize_t nfs_file_write(struct kiocb *iocb, struct iov_iter *from)
->  	since = filemap_sample_wb_err(file->f_mapping);
->  	nfs_start_io_write(inode);
->  	result = generic_write_checks(iocb, from);
-> -	if (result > 0) {
-> -		current->backing_dev_info = inode_to_bdi(inode);
-> +	if (result > 0)
->  		result = generic_perform_write(iocb, from);
-> -		current->backing_dev_info = NULL;
-> -	}
->  	nfs_end_io_write(inode);
->  	if (result <= 0)
->  		goto out;
-> diff --git a/fs/ntfs/file.c b/fs/ntfs/file.c
-> index c481b14e4fd989..e296f804a9c442 100644
-> --- a/fs/ntfs/file.c
-> +++ b/fs/ntfs/file.c
-> @@ -1911,11 +1911,9 @@ static ssize_t ntfs_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
->  
->  	inode_lock(vi);
->  	/* We can write back this queue in page reclaim. */
-> -	current->backing_dev_info = inode_to_bdi(vi);
->  	err = ntfs_prepare_file_for_write(iocb, from);
->  	if (iov_iter_count(from) && !err)
->  		written = ntfs_perform_write(file, from, iocb->ki_pos);
-> -	current->backing_dev_info = NULL;
->  	inode_unlock(vi);
->  	iocb->ki_pos += written;
->  	if (likely(written > 0))
-> diff --git a/fs/ntfs3/file.c b/fs/ntfs3/file.c
-> index 9a3d55c367d920..86d16a2c8339ca 100644
-> --- a/fs/ntfs3/file.c
-> +++ b/fs/ntfs3/file.c
-> @@ -820,7 +820,6 @@ static ssize_t ntfs_compress_write(struct kiocb *iocb, struct iov_iter *from)
->  	if (!pages)
->  		return -ENOMEM;
->  
-> -	current->backing_dev_info = inode_to_bdi(inode);
->  	err = file_remove_privs(file);
->  	if (err)
->  		goto out;
-> @@ -993,8 +992,6 @@ static ssize_t ntfs_compress_write(struct kiocb *iocb, struct iov_iter *from)
->  out:
->  	kfree(pages);
->  
-> -	current->backing_dev_info = NULL;
-> -
->  	if (err < 0)
->  		return err;
->  
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index aede746541f8ae..431c3fd0e2b598 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -717,9 +717,6 @@ xfs_file_buffered_write(
->  	if (ret)
->  		goto out;
->  
-> -	/* We can write back this queue in page reclaim */
-> -	current->backing_dev_info = inode_to_bdi(inode);
-> -
->  	trace_xfs_file_buffered_write(iocb, from);
->  	ret = iomap_file_buffered_write(iocb, from,
->  			&xfs_buffered_write_iomap_ops);
-> @@ -753,7 +750,6 @@ xfs_file_buffered_write(
->  		goto write_retry;
->  	}
->  
-> -	current->backing_dev_info = NULL;
->  out:
->  	if (iolock)
->  		xfs_iunlock(ip, iolock);
-> diff --git a/include/linux/sched.h b/include/linux/sched.h
-> index eed5d65b8d1f4d..54780571fe9a07 100644
-> --- a/include/linux/sched.h
-> +++ b/include/linux/sched.h
-> @@ -41,7 +41,6 @@
->  
->  /* task_struct member predeclarations (sorted alphabetically): */
->  struct audit_context;
-> -struct backing_dev_info;
->  struct bio_list;
->  struct blk_plug;
->  struct bpf_local_storage;
-> @@ -1186,8 +1185,6 @@ struct task_struct {
->  	/* VM state: */
->  	struct reclaim_state		*reclaim_state;
->  
-> -	struct backing_dev_info		*backing_dev_info;
-> -
->  	struct io_context		*io_context;
->  
->  #ifdef CONFIG_COMPACTION
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index b4c9bd368b7e58..33b54660ad2b39 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -3991,8 +3991,6 @@ ssize_t __generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
->  	ssize_t		err;
->  	ssize_t		status;
->  
-> -	/* We can write back this queue in page reclaim */
-> -	current->backing_dev_info = inode_to_bdi(inode);
->  	err = file_remove_privs(file);
->  	if (err)
->  		goto out;
-> @@ -4053,7 +4051,6 @@ ssize_t __generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
->  			iocb->ki_pos += written;
->  	}
->  out:
-> -	current->backing_dev_info = NULL;
->  	return written ? written : err;
->  }
->  EXPORT_SYMBOL(__generic_file_write_iter);
-> -- 
-> 2.39.2
-> 
+> I haven't found anything that would conflict with this, esp. since it
+> implies no functional changes.
+
+Same here. I'm not seeing any conflicts with the patches I'm aware of.
+
+Thanks,
+Tony
