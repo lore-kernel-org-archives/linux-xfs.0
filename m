@@ -2,144 +2,98 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0957DC7EE23
-	for <linux-xfs@archiver.kernel.org>; Wed, 24 May 2023 12:12:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E23FAC77B73
+	for <linux-xfs@archiver.kernel.org>; Wed, 24 May 2023 12:12:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232270AbjEXMMW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 24 May 2023 08:12:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42558 "EHLO
+        id S230507AbjEXMM6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 24 May 2023 08:12:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42638 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232503AbjEXMMT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 May 2023 08:12:19 -0400
+        with ESMTP id S229919AbjEXMM5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 May 2023 08:12:57 -0400
 Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE21795
-        for <linux-xfs@vger.kernel.org>; Wed, 24 May 2023 05:12:17 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 043F395
+        for <linux-xfs@vger.kernel.org>; Wed, 24 May 2023 05:12:56 -0700 (PDT)
 Received: from kwepemi500009.china.huawei.com (unknown [172.30.72.54])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4QR93z1HmPzsSTp;
-        Wed, 24 May 2023 20:10:07 +0800 (CST)
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4QR94k5gVQzsSVN;
+        Wed, 24 May 2023 20:10:46 +0800 (CST)
 Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
  (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Wed, 24 May
- 2023 20:12:14 +0800
-Date:   Wed, 24 May 2023 20:10:41 +0800
+ 2023 20:12:53 +0800
+Date:   Wed, 24 May 2023 20:11:21 +0800
 From:   Long Li <leo.lilong@huawei.com>
 To:     <djwong@kernel.org>
 CC:     <david@fromorbit.com>, <linux-xfs@vger.kernel.org>,
         <houtao1@huawei.com>, <yi.zhang@huawei.com>, <guoxuenan@huawei.com>
-Subject: [PATCH v3] xfs: fix ag count overflow during growfs
-Message-ID: <20230524121041.GA4128075@ceph-admin>
+Subject: [PATCH] xfs: xfs_trans_cancel() path must check for log shutdown
+Message-ID: <20230524121121.GA4130562@ceph-admin>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Disposition: inline
 X-Originating-IP: [10.175.127.227]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
  kwepemi500009.china.huawei.com (7.221.188.199)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-I found a corruption during growfs:
+The following error occurred when do IO fault injection test:
 
- XFS (loop0): Internal error agbno >= mp->m_sb.sb_agblocks at line 3661 of
-   file fs/xfs/libxfs/xfs_alloc.c.  Caller __xfs_free_extent+0x28e/0x3c0
- CPU: 0 PID: 573 Comm: xfs_growfs Not tainted 6.3.0-rc7-next-20230420-00001-gda8c95746257
- Call Trace:
-  <TASK>
-  dump_stack_lvl+0x50/0x70
-  xfs_corruption_error+0x134/0x150
-  __xfs_free_extent+0x2c1/0x3c0
-  xfs_ag_extend_space+0x291/0x3e0
-  xfs_growfs_data+0xd72/0xe90
-  xfs_file_ioctl+0x5f9/0x14a0
-  __x64_sys_ioctl+0x13e/0x1c0
-  do_syscall_64+0x39/0x80
-  entry_SYSCALL_64_after_hwframe+0x63/0xcd
- XFS (loop0): Corruption detected. Unmount and run xfs_repair
- XFS (loop0): Internal error xfs_trans_cancel at line 1097 of file
-   fs/xfs/xfs_trans.c.  Caller xfs_growfs_data+0x691/0xe90
- CPU: 0 PID: 573 Comm: xfs_growfs Not tainted 6.3.0-rc7-next-20230420-00001-gda8c95746257
- Call Trace:
-  <TASK>
-  dump_stack_lvl+0x50/0x70
-  xfs_error_report+0x93/0xc0
-  xfs_trans_cancel+0x2c0/0x350
-  xfs_growfs_data+0x691/0xe90
-  xfs_file_ioctl+0x5f9/0x14a0
-  __x64_sys_ioctl+0x13e/0x1c0
-  do_syscall_64+0x39/0x80
-  entry_SYSCALL_64_after_hwframe+0x63/0xcd
- RIP: 0033:0x7f2d86706577
+XFS: Assertion failed: xlog_is_shutdown(lip->li_log), file: fs/xfs/xfs_inode_item.c, line: 748
 
-The bug can be reproduced with the following sequence:
+In commit 3c4cb76bce43 (xfs: xfs_trans_commit() path must check for log
+shutdown) fix a problem that dirty transaction was canceled before log
+shutdown, because of the log is still running, it result dirty and
+unlogged inode item that isn't in the AIL in memory that can be flushed
+to disk via writeback clustering.
 
- # truncate -s  1073741824 xfs_test.img
- # mkfs.xfs -f -b size=1024 -d agcount=4 xfs_test.img
- # truncate -s 2305843009213693952  xfs_test.img
- # mount -o loop xfs_test.img /mnt/test
- # xfs_growfs -D  1125899907891200  /mnt/test
-
-The root cause is that during growfs, user space passed in a large value
-of newblcoks to xfs_growfs_data_private(), due to current sb_agblocks is
-too small, new AG count will exceed UINT_MAX. Because of AG number type
-is unsigned int and it would overflow, that caused nagcount much smaller
-than the actual value. During AG extent space, delta blocks in
-xfs_resizefs_init_new_ags() will much larger than the actual value due to
-incorrect nagcount, even exceed UINT_MAX. This will cause corruption and
-be detected in __xfs_free_extent. Fix it by growing the filesystem to up
-to the maximally allowed AGs when new AG count overflow.
+xfs_trans_cancel() has the same problem, if a shut down races with
+xfs_trans_cancel() and we have shut down the filesystem but not the log,
+we will still cancel the transaction before log shutdown. So
+xfs_trans_cancel() needs to check log state for shutdown, not mount.
 
 Signed-off-by: Long Li <leo.lilong@huawei.com>
 ---
-v3:
-- Ensure that the performance is consisent before and after the modification
-  when nagcount just overflows and 0 < nb_mod < XFS_MIN_AG_BLOCKS. 
-- Based on Darrick's advice, growing the filesystem to up to the maximally
-  allowed AGs when new AG count overflow.
+ fs/xfs/xfs_trans.c | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
- fs/xfs/libxfs/xfs_fs.h |  3 +++
- fs/xfs/xfs_fsops.c     | 13 +++++++++----
- 2 files changed, 12 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 1cfd5bc6520a..36ec2b1f7e68 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -248,6 +248,9 @@ typedef struct xfs_fsop_resblks {
- #define XFS_MAX_LOG_BLOCKS	(1024 * 1024ULL)
- #define XFS_MIN_LOG_BYTES	(10 * 1024 * 1024ULL)
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 8afc0c080861..033991854d4f 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -1059,11 +1059,9 @@ xfs_trans_commit(
+  *
+  * This is a high level function (equivalent to xfs_trans_commit()) and so can
+  * be called after the transaction has effectively been aborted due to the mount
+- * being shut down. However, if the mount has not been shut down and the
++ * being shut down. However, if the log has not been shut down and the
+  * transaction is dirty we will shut the mount down and, in doing so, that
+- * guarantees that the log is shut down, too. Hence we don't need to be as
+- * careful with shutdown state and dirty items here as we need to be in
+- * xfs_trans_commit().
++ * guarantees that the log is shut down.
+  */
+ void
+ xfs_trans_cancel(
+@@ -1089,11 +1087,12 @@ xfs_trans_cancel(
  
-+/* Maximum number of AGs */
-+#define XFS_AGNUMBER_MAX	((xfs_agnumber_t)(-1U))
-+
- /*
-  * Limits on sb_agblocks/sb_agblklog -- mkfs won't format AGs smaller than
-  * 16MB or larger than 1TB.
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 13851c0d640b..2b37d3e61bdf 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -115,11 +115,16 @@ xfs_growfs_data_private(
- 
- 	nb_div = nb;
- 	nb_mod = do_div(nb_div, mp->m_sb.sb_agblocks);
--	nagcount = nb_div + (nb_mod != 0);
--	if (nb_mod && nb_mod < XFS_MIN_AG_BLOCKS) {
--		nagcount--;
--		nb = (xfs_rfsblock_t)nagcount * mp->m_sb.sb_agblocks;
-+	if (nb_mod && nb_mod >= XFS_MIN_AG_BLOCKS)
-+		nb_div++;
-+	else if (nb_mod)
-+		nb = nb_div * mp->m_sb.sb_agblocks;
-+
-+	if (nb_div > XFS_AGNUMBER_MAX) {
-+		nb_div = XFS_AGNUMBER_MAX;
-+		nb = nb_div * mp->m_sb.sb_agblocks;
- 	}
-+	nagcount = nb_div;
- 	delta = nb - mp->m_sb.sb_dblocks;
  	/*
- 	 * Reject filesystems with a single AG because they are not
+ 	 * See if the caller is relying on us to shut down the filesystem. We
+-	 * only want an error report if there isn't already a shutdown in
+-	 * progress, so we only need to check against the mount shutdown state
+-	 * here.
++	 * only want an error report if there isn't already a log shutdown. We
++	 * must check against log shutdown here because we cannot abort log and
++	 * leave them dirty, inconsistent and unpinned in memory while the log
++	 * is active, as we needed in xfs_trans_commit().
+ 	 */
+-	if (dirty && !xfs_is_shutdown(mp)) {
++	if (dirty && !xlog_is_shutdown(log)) {
+ 		XFS_ERROR_REPORT("xfs_trans_cancel", XFS_ERRLEVEL_LOW, mp);
+ 		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+ 	}
 -- 
 2.31.1
 
