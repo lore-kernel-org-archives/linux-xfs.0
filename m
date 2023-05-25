@@ -2,54 +2,54 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39C7CC83003
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 May 2023 10:16:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86C25C7EE37
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 May 2023 10:16:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240892AbjEYKQg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 06:16:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51630 "EHLO
+        id S240906AbjEYKQi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 06:16:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51640 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240871AbjEYKQc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 06:16:32 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A708C1A8;
+        with ESMTP id S240874AbjEYKQd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 06:16:33 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16E951AB;
         Thu, 25 May 2023 03:16:26 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 00FF321C04;
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 73BB41FDFD;
         Thu, 25 May 2023 10:16:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
         t=1685009785; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=ioHF3wJZOEdK9Zi2g8x0HxHqMAZdyIP3moICR5/W8ZM=;
-        b=zlI5luAWs6dlefQrgCyE8/RxotUnEISB/qpqoF0e6pJkMf70IuPfZsQ+zPVXMciXD80L5y
-        KE9IraxZiqxObo476RsgM+aR8fA2F0/n+EuBJJ2hN5Lp3yn0u5EjEJOwfWQQhSdQHXxPlX
-        MuVIjOmhBhYpP2rtxhl1RAAqwTJu0t4=
+        bh=qb4QVxqWbxY1BUOm/HZ1IAfPjmpuRF1GxZ/XtPI44ow=;
+        b=dtO9RTZnM1fRgA0bjNf++oA62lCe+zVeecOqlSOBb/tz4PcV5d2oX7oWQYpalOoEH6ZpoN
+        9pwOiU+ZoJTOq2RvRat5ivePyYu3GhG3k9KnsE8N9wLaGW0qy6tRlbbtPacjvFXOxtexoz
+        IDlZaYBrVerxDU+oekFobdFaKAWYjAc=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
         s=susede2_ed25519; t=1685009785;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=ioHF3wJZOEdK9Zi2g8x0HxHqMAZdyIP3moICR5/W8ZM=;
-        b=Bq+jfOFsP+9HFcZSWTVhJXL79d71c35osZNrCmaovcKk2E0tzyKERfjBVYIXaFAFjomY01
-        Is72rB8LCDpCnPCQ==
+        bh=qb4QVxqWbxY1BUOm/HZ1IAfPjmpuRF1GxZ/XtPI44ow=;
+        b=efn70QkU372o8H6xDPqEw653+1DqpgjqZS4dC7xtD6/6Za7bbNHH+Xn3DXt+ylh+mLACOZ
+        5TIb4krY6txILKCQ==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E60E313A2C;
-        Thu, 25 May 2023 10:16:24 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 61B8313A2C;
+        Thu, 25 May 2023 10:16:25 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id +G4iOHg1b2RDdgAAMHmgww
-        (envelope-from <jack@suse.cz>); Thu, 25 May 2023 10:16:24 +0000
+        id P9zvF3k1b2RUdgAAMHmgww
+        (envelope-from <jack@suse.cz>); Thu, 25 May 2023 10:16:25 +0000
 Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 5D1CEA075F; Thu, 25 May 2023 12:16:24 +0200 (CEST)
+        id 71E21A0765; Thu, 25 May 2023 12:16:24 +0200 (CEST)
 From:   Jan Kara <jack@suse.cz>
 To:     Al Viro <viro@ZenIV.linux.org.uk>
 Cc:     <linux-fsdevel@vger.kernel.org>,
@@ -58,80 +58,64 @@ Cc:     <linux-fsdevel@vger.kernel.org>,
         "Darrick J. Wong" <djwong@kernel.org>, Ted Tso <tytso@mit.edu>,
         Jaegeuk Kim <jaegeuk@kernel.org>, <linux-ext4@vger.kernel.org>,
         linux-f2fs-devel@lists.sourceforge.net,
-        <linux-xfs@vger.kernel.org>, Jan Kara <jack@suse.cz>,
-        stable@vger.kernel.org
-Subject: [PATCH 2/6] Revert "udf: Protect rename against modification of moved directory"
-Date:   Thu, 25 May 2023 12:16:08 +0200
-Message-Id: <20230525101624.15814-2-jack@suse.cz>
+        <linux-xfs@vger.kernel.org>, Jan Kara <jack@suse.cz>
+Subject: [PATCH 6/6] fs: Restrict lock_two_nondirectories() to non-directory inodes
+Date:   Thu, 25 May 2023 12:16:12 +0200
+Message-Id: <20230525101624.15814-6-jack@suse.cz>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20230525100654.15069-1-jack@suse.cz>
 References: <20230525100654.15069-1-jack@suse.cz>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1840; i=jack@suse.cz; h=from:subject; bh=cUFu/3mUBi4bt/K+j6IZ3Ng8iPItrjlJa92MM2nlCwY=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBkbzVnIPd8xE0p+HpULv7ZaonyuahLzBKAgbz88fay PJv6AsKJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZG81ZwAKCRCcnaoHP2RA2fRdB/ wMo8PsY3/7QbU+9pwKfl8SOaMaHlJdjPgdRPs0Q59CmemAwPozLN+6Q+dDzy++ajVHXFcxUC1slW/J vNVYlOShU3+bOeu1zmdzl7mmYDeDDJjibd0gjB06IwHZRXlUG/KXqso6fC0CgL7NQhyiaqphZCP1qn VaXNgip5UnA5k75piXNMOfpFaskUp6AKbSMl1J2jumzY8VCN4UFEf/0T5Q8vhIOFm8Ebv/j6ntGavm fMDxQs0qeaZxtGOkeRc/VF1hZ0tRU8r48DUw+rgdvUqAw104da3ANAxNZVE/hGVfozW6eL3Cltet5+ hO6b8NX0cYp8i2tWVvshjSuV8AXU1m
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1702; i=jack@suse.cz; h=from:subject; bh=19vPa5MXihbI/vWBHK7A4hiBHoUR5MdlQiCbMXq3hU8=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBkbzVrykH7A7q3YHZUXsS6ieeUX672QjHsKNA8icRS hsWFj0GJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZG81awAKCRCcnaoHP2RA2YARB/ 9gmSc9fUNiS36GUafnxhkegVOmOuan17kymaFtzzDDxN0mssrXV2LmeEzAklvwvI0n34vYU6TMF47N kBXJYSEm04O/dr8b+YfAm/fBhg7ZLnlX1a4KmqVwsadXXB+YZ1dlWniYhakV2xlyKu8HwETV1ghFsD usEyvQwXBA0f9yabKbZ3tQcXBh30hqIuffinSeGCr5mZpGkB4sBiO8Qsnq65x0kJMNZnk5aVxHbIfT zrdP+6kkv7TYve3PtK+qeTwrbYiTcEMLz3mJ8azfb8TbOfGicp7mzhJhPJJyjaYUO8x71eEVNNVWHr EfU5sthG72webH7lxc9Nooo8hkuKpN
 X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This reverts commit f950fd0529130a617b3da526da9fb6a896ce87c2. The
-locking is going to be provided by vfs_rename() in the following
-patches.
+Currently lock_two_nondirectories() is skipping any passed directories.
+After vfs_rename() uses lock_two_inodes(), all the remaining four users
+of this function pass only regular files to it. So drop the somewhat
+unusual "skip directory" logic and instead warn if anybody passes
+directory to it. This also allows us to use lock_two_inodes() in
+lock_two_nondirectories() to concentrate the lock ordering logic in less
+places.
 
-CC: stable@vger.kernel.org
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/udf/namei.c | 14 ++------------
- 1 file changed, 2 insertions(+), 12 deletions(-)
+ fs/inode.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/fs/udf/namei.c b/fs/udf/namei.c
-index fd20423d3ed2..fd29a66e7241 100644
---- a/fs/udf/namei.c
-+++ b/fs/udf/namei.c
-@@ -793,11 +793,6 @@ static int udf_rename(struct mnt_idmap *idmap, struct inode *old_dir,
- 			if (!empty_dir(new_inode))
- 				goto out_oiter;
- 		}
--		/*
--		 * We need to protect against old_inode getting converted from
--		 * ICB to normal directory.
--		 */
--		inode_lock_nested(old_inode, I_MUTEX_NONDIR2);
- 		retval = udf_fiiter_find_entry(old_inode, &dotdot_name,
- 					       &diriter);
- 		if (retval == -ENOENT) {
-@@ -806,10 +801,8 @@ static int udf_rename(struct mnt_idmap *idmap, struct inode *old_dir,
- 				old_inode->i_ino);
- 			retval = -EFSCORRUPTED;
- 		}
--		if (retval) {
--			inode_unlock(old_inode);
-+		if (retval)
- 			goto out_oiter;
--		}
- 		has_diriter = true;
- 		tloc = lelb_to_cpu(diriter.fi.icb.extLocation);
- 		if (udf_get_lb_pblock(old_inode->i_sb, &tloc, 0) !=
-@@ -889,7 +882,6 @@ static int udf_rename(struct mnt_idmap *idmap, struct inode *old_dir,
- 			       udf_dir_entry_len(&diriter.fi));
- 		udf_fiiter_write_fi(&diriter, NULL);
- 		udf_fiiter_release(&diriter);
--		inode_unlock(old_inode);
+diff --git a/fs/inode.c b/fs/inode.c
+index 2015fa50d34a..accf5125a049 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -1140,7 +1140,7 @@ void lock_two_inodes(struct inode *inode1, struct inode *inode2,
+ /**
+  * lock_two_nondirectories - take two i_mutexes on non-directory objects
+  *
+- * Lock any non-NULL argument that is not a directory.
++ * Lock any non-NULL argument. Passed objects must not be directories.
+  * Zero, one or two objects may be locked by this function.
+  *
+  * @inode1: first inode to lock
+@@ -1148,13 +1148,9 @@ void lock_two_inodes(struct inode *inode1, struct inode *inode2,
+  */
+ void lock_two_nondirectories(struct inode *inode1, struct inode *inode2)
+ {
+-	if (inode1 > inode2)
+-		swap(inode1, inode2);
+-
+-	if (inode1 && !S_ISDIR(inode1->i_mode))
+-		inode_lock(inode1);
+-	if (inode2 && !S_ISDIR(inode2->i_mode) && inode2 != inode1)
+-		inode_lock_nested(inode2, I_MUTEX_NONDIR2);
++	WARN_ON_ONCE(S_ISDIR(inode1->i_mode));
++	WARN_ON_ONCE(S_ISDIR(inode2->i_mode));
++	lock_two_inodes(inode1, inode2, I_MUTEX_NORMAL, I_MUTEX_NONDIR2);
+ }
+ EXPORT_SYMBOL(lock_two_nondirectories);
  
- 		inode_dec_link_count(old_dir);
- 		if (new_inode)
-@@ -901,10 +893,8 @@ static int udf_rename(struct mnt_idmap *idmap, struct inode *old_dir,
- 	}
- 	return 0;
- out_oiter:
--	if (has_diriter) {
-+	if (has_diriter)
- 		udf_fiiter_release(&diriter);
--		inode_unlock(old_inode);
--	}
- 	udf_fiiter_release(&oiter);
- 
- 	return retval;
 -- 
 2.35.3
 
