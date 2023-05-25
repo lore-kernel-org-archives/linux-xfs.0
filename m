@@ -2,127 +2,174 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB3F7C7EE31
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 May 2023 10:16:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 465DEC77B7E
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 May 2023 10:21:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240871AbjEYKQj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 06:16:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51620 "EHLO
+        id S241021AbjEYKVg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 06:21:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240877AbjEYKQd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 06:16:33 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1554C12E;
-        Thu, 25 May 2023 03:16:26 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 11DE81FDFA;
-        Thu, 25 May 2023 10:16:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1685009785; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=AOBPab5sBc+U602a0bs2SOLbJwxohD0hSk5muDSlfQg=;
-        b=pe0+3hEzZs7uN2Ol1+io5lGnFYDTh14sFgC0p8Ydn8E6J1k8UmcEA+dOfNAfh1gnrQF31z
-        1U9OGFsBqpX4AASin+dz8m9io5sc9GoSnWXVl+wgTuVLSvdyMTrk4PMgcafpzURnp3AQO8
-        /hPmuePDSH5Q6vbvtJ6qwbFnIfCNB4Q=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1685009785;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=AOBPab5sBc+U602a0bs2SOLbJwxohD0hSk5muDSlfQg=;
-        b=v2LWRjHb+z/Fzc1yDbthCZ8Pn4nZRl48BHUTptKXVjiYJyHOzF/e05RnyYm3SQTVozdyHg
-        ULbpgWrAA6w+evDQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 01D64134B2;
-        Thu, 25 May 2023 10:16:25 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id BWpWAHk1b2RIdgAAMHmgww
-        (envelope-from <jack@suse.cz>); Thu, 25 May 2023 10:16:25 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 577BCA075D; Thu, 25 May 2023 12:16:24 +0200 (CEST)
-From:   Jan Kara <jack@suse.cz>
-To:     Al Viro <viro@ZenIV.linux.org.uk>
-Cc:     <linux-fsdevel@vger.kernel.org>,
-        Christian Brauner <brauner@kernel.org>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        "Darrick J. Wong" <djwong@kernel.org>, Ted Tso <tytso@mit.edu>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, <linux-ext4@vger.kernel.org>,
-        linux-f2fs-devel@lists.sourceforge.net,
-        <linux-xfs@vger.kernel.org>, Jan Kara <jack@suse.cz>,
-        stable@vger.kernel.org
-Subject: [PATCH 1/6] ext4: Remove ext4 locking of moved directory
-Date:   Thu, 25 May 2023 12:16:07 +0200
-Message-Id: <20230525101624.15814-1-jack@suse.cz>
-X-Mailer: git-send-email 2.35.3
-In-Reply-To: <20230525100654.15069-1-jack@suse.cz>
-References: <20230525100654.15069-1-jack@suse.cz>
+        with ESMTP id S241020AbjEYKVR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 06:21:17 -0400
+Received: from mail-lj1-x22a.google.com (mail-lj1-x22a.google.com [IPv6:2a00:1450:4864:20::22a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7021F1A2;
+        Thu, 25 May 2023 03:20:39 -0700 (PDT)
+Received: by mail-lj1-x22a.google.com with SMTP id 38308e7fff4ca-2af318fa2b8so4148181fa.0;
+        Thu, 25 May 2023 03:20:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1685010038; x=1687602038;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=sKTxoI+93bAIesA0outxo0/LkqsnMtrIeM8EPXBLaGM=;
+        b=EP4wH3TcMzGQvrjNpxSmcpliomfcgcSpXFDtVbADG7nXItV0KO7c5H3ErQUKRcsLiv
+         X8aGCGDERCQys08Mdu8fGaCufpXUP0kqQm1fJR9lKVq2yGash1b2UMUoHfup8iPmvBE4
+         Cg3+MLQbgP4GfVuxADVSHFnN/GoM/HRc9oGdX5WtoT0nd2zsn2L9uVFBatDvyXb/ObNi
+         ZtQniUVQf4dlMYjdYLnXBp97gpHTZSnLIGzhbCmBqGsIv5OldhYNbNh5D/HR1JUHWI0B
+         +CQCZ2kvE0aI6sbDdf8bFnEbmhNbBeVFpVzuCoyswkGY+hpdVcFwxdNDLROYEeA5UvYz
+         PlUA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685010038; x=1687602038;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:date:from:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=sKTxoI+93bAIesA0outxo0/LkqsnMtrIeM8EPXBLaGM=;
+        b=koKgMag0UDcIMqnfQ2vEOvO0ru6eb9eEhYPiIaLwW8M9TzEGmHfjuFi28aNJPL3FSo
+         vG896IpK4uaUk3XzmNUItOQRsudq7BRckrTeIykubtQUyNcqENafi2IZr1lqaqcVGfRg
+         VrX8YlaDuiMVQGsSFp00HMY9dbj/9nkfiuEVZn/NbDHIPcDzEvK15gXalNtcrkeAmFl3
+         z/5rmyJ4KIfc2WRRsQx+06tpRs+u5XANP07NroN8DoHduPGp+JEh4hNOeaDhLwx+KnPG
+         TcF5WEkYpt5Ug3e80UhdGSA8qzb1MLkDBUENGcD/gtWbUI5+7l1KECI58zeWs2lunXZy
+         XxeA==
+X-Gm-Message-State: AC+VfDyz7OJuMKK4gpZiRXb0jePt9fxZM9JjNN66uFF9MYHuC91rkqWO
+        kJzG1gUIaP0kYbA2bJnFdTA=
+X-Google-Smtp-Source: ACHHUZ6cvCJ7fl4YemnOhhNmxtMKSJrQrkm0PvdEtVa52SjGhqXx97JNXm3GE91koWePebmkiftUCw==
+X-Received: by 2002:a05:651c:102f:b0:2af:b260:fd4d with SMTP id w15-20020a05651c102f00b002afb260fd4dmr1165908ljm.44.1685010037360;
+        Thu, 25 May 2023 03:20:37 -0700 (PDT)
+Received: from pc636 (host-90-235-19-70.mobileonline.telia.com. [90.235.19.70])
+        by smtp.gmail.com with ESMTPSA id y28-20020a05651c021c00b002adf8d948dasm186282ljn.35.2023.05.25.03.20.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 25 May 2023 03:20:36 -0700 (PDT)
+From:   Uladzislau Rezki <urezki@gmail.com>
+X-Google-Original-From: Uladzislau Rezki <urezki@pc636>
+Date:   Thu, 25 May 2023 12:20:34 +0200
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Uladzislau Rezki <urezki@gmail.com>,
+        Hyeonggon Yoo <42.hyeyoo@gmail.com>, linux-mm@kvack.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        LKML <linux-kernel@vger.kernel.org>, Baoquan He <bhe@redhat.com>,
+        Lorenzo Stoakes <lstoakes@gmail.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        "Liam R . Howlett" <Liam.Howlett@oracle.com>,
+        "Paul E . McKenney" <paulmck@kernel.org>,
+        Joel Fernandes <joel@joelfernandes.org>,
+        Oleksiy Avramchenko <oleksiy.avramchenko@sony.com>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/9] Mitigate a vmap lock contention
+Message-ID: <ZG82ch1AdrAbpkJ6@pc636>
+References: <20230522110849.2921-1-urezki@gmail.com>
+ <ZGyqiaRnMJPFhxR6@debian-BULLSEYE-live-builder-AMD64>
+ <ZGzX3vRMlGHIcYCe@pc636>
+ <ZG0AE9mjHkRZIGmr@debian-BULLSEYE-live-builder-AMD64>
+ <ZG3d1FUXiCk3QL3D@pc636>
+ <ZG6IKE7yNEkJhge+@dread.disaster.area>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1467; i=jack@suse.cz; h=from:subject; bh=XV5CJdcSgiBkW1x4p8thTfL0TVuanLRiOHdfMG5wLnM=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBkbzVnIGpGZWT4yPVsBHE7bfA4OPMkWz6HswnwkkBL wMv1XtaJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZG81ZwAKCRCcnaoHP2RA2djMB/ 9TuRgCE19tiF4YfdSdVgRs89YRrDmmE3NTXAbSIuixbqPMs/OBoKR+IrdEhocemPpvsbhKgYyq6pde GD08bNXqBYlC0N7WtEw16cb4LN/eI/F61YOFBg4KAWdPP2MW1hrfKqRKHgRiuRHCbdmZqLVok3aTFp 1Qr+X/ew4ZRXZQKMLFXhUsaRRQ+efZvQh7lYWVuVP0wKGwST8ZqSgemvm5nH7h/75mR768e1g414NX MYIQoHxmL5RXtLav4o/2MuPeb2D45T1AzoSUYrkMR8J/mTGAc+39zgKAT2B5r8H3rnw95ZrS6ps/N1 ALUuca31HdAz6ByRtuZyPuvC/Wt2sJ
-X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZG6IKE7yNEkJhge+@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Remove locking of moved directory in ext4_rename2(). We will take care
-of it in VFS instead. This effectively reverts commit 0813299c586b
-("ext4: Fix possible corruption when moving a directory") and followup
-fixes.
+On Thu, May 25, 2023 at 07:56:56AM +1000, Dave Chinner wrote:
+> On Wed, May 24, 2023 at 11:50:12AM +0200, Uladzislau Rezki wrote:
+> > On Wed, May 24, 2023 at 03:04:28AM +0900, Hyeonggon Yoo wrote:
+> > > On Tue, May 23, 2023 at 05:12:30PM +0200, Uladzislau Rezki wrote:
+> > > And I would like to ask some side questions:
+> > > 
+> > > 1. Is vm_[un]map_ram() API still worth with this patchset?
+> > > 
+> > It is up to community to decide. As i see XFS needs it also. Maybe in
+> > the future it can be removed(who knows). If the vmalloc code itself can
+> > deliver such performance as vm_map* APIs.
+> 
+> vm_map* APIs cannot be replaced with vmalloc, they cover a very
+> different use case.  i.e.  vmalloc allocates mapped memory,
+> vm_map_ram() maps allocated memory....
+> 
+> > vm_map_ram() and friends interface was added because of vmalloc drawbacks.
+> 
+> No. vm_map*() were scalability improvements added in 2009 to replace
+> on vmap() and vunmap() to avoid global lock contention in the vmap
+> allocator that XFS had been working around for years with it's own
+> internal vmap cache....
+> 
+> commit 95f8e302c04c0b0c6de35ab399a5551605eeb006
+> Author: Nicholas Piggin <npiggin@gmail.com>
+> Date:   Tue Jan 6 14:43:09 2009 +1100
+> 
+>     [XFS] use scalable vmap API
+>     
+>     Implement XFS's large buffer support with the new vmap APIs. See the vmap
+>     rewrite (db64fe02) for some numbers. The biggest improvement that comes from
+>     using the new APIs is avoiding the global KVA allocation lock on every call.
+>     
+>     Signed-off-by: Nick Piggin <npiggin@suse.de>
+>     Reviewed-by: Christoph Hellwig <hch@infradead.org>
+>     Signed-off-by: Lachlan McIlroy <lachlan@sgi.com>
+> 
+> vmap/vunmap() themselves were introduce in 2.5.32 (2002) and before
+> that XFS was using remap_page_array() and vfree() in exactly the
+> same way it uses vm_map_ram() and vm_unmap_ram() today....
+> 
+> XFS has a long, long history of causing virtual memory allocator
+> scalability and contention problems. As you can see, this isn't our
+> first rodeo...
+> 
+Let me be more specific, sorry it looks like there is misunderstanding.
+I am talking about removing of vb_alloc()/vb_free() per-cpu stuff. If
+alloc_vmap_area() gives same performance:
 
-CC: Ted Tso <tytso@mit.edu>
-CC: stable@vger.kernel.org
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/ext4/namei.c | 17 ++---------------
- 1 file changed, 2 insertions(+), 15 deletions(-)
+diff --git a/mm/vmalloc.c b/mm/vmalloc.c
+index d50c551592fc..a1687bbdad30 100644
+--- a/mm/vmalloc.c
++++ b/mm/vmalloc.c
+@@ -2503,12 +2503,6 @@ void vm_unmap_ram(const void *mem, unsigned int count)
 
-diff --git a/fs/ext4/namei.c b/fs/ext4/namei.c
-index 45b579805c95..0caf6c730ce3 100644
---- a/fs/ext4/namei.c
-+++ b/fs/ext4/namei.c
-@@ -3834,19 +3834,10 @@ static int ext4_rename(struct mnt_idmap *idmap, struct inode *old_dir,
- 			return retval;
- 	}
- 
--	/*
--	 * We need to protect against old.inode directory getting converted
--	 * from inline directory format into a normal one.
--	 */
--	if (S_ISDIR(old.inode->i_mode))
--		inode_lock_nested(old.inode, I_MUTEX_NONDIR2);
+        kasan_poison_vmalloc(mem, size);
+
+-       if (likely(count <= VMAP_MAX_ALLOC)) {
+-               debug_check_no_locks_freed(mem, size);
+-               vb_free(addr, size);
+-               return;
+-       }
 -
- 	old.bh = ext4_find_entry(old.dir, &old.dentry->d_name, &old.de,
- 				 &old.inlined);
--	if (IS_ERR(old.bh)) {
--		retval = PTR_ERR(old.bh);
--		goto unlock_moved_dir;
--	}
-+	if (IS_ERR(old.bh))
-+		return PTR_ERR(old.bh);
- 
- 	/*
- 	 *  Check for inode number is _not_ due to possible IO errors.
-@@ -4043,10 +4034,6 @@ static int ext4_rename(struct mnt_idmap *idmap, struct inode *old_dir,
- 	brelse(old.bh);
- 	brelse(new.bh);
- 
--unlock_moved_dir:
--	if (S_ISDIR(old.inode->i_mode))
--		inode_unlock(old.inode);
--
- 	return retval;
- }
- 
--- 
-2.35.3
+        va = find_unlink_vmap_area(addr);
+        if (WARN_ON_ONCE(!va))
+                return;
+@@ -2539,12 +2533,6 @@ void *vm_map_ram(struct page **pages, unsigned int count, int node)
+        unsigned long addr;
+        void *mem;
 
+-       if (likely(count <= VMAP_MAX_ALLOC)) {
+-               mem = vb_alloc(size, GFP_KERNEL);
+-               if (IS_ERR(mem))
+-                       return NULL;
+-               addr = (unsigned long)mem;
+-       } else {
+                struct vmap_area *va;
+                va = alloc_vmap_area(size, PAGE_SIZE,
+                                VMALLOC_START, VMALLOC_END,
+@@ -2554,7 +2542,6 @@ void *vm_map_ram(struct page **pages, unsigned int count, int node)
+
+                addr = va->va_start;
+                mem = (void *)addr;
+-       }
+
+        if (vmap_pages_range(addr, addr + size, PAGE_KERNEL,
+                                pages, PAGE_SHIFT) < 0) {
+
+
++ other related parts.
+
+--
+Uladzislau Rezki
