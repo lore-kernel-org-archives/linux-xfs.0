@@ -2,165 +2,90 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24578C7EE2C
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 May 2023 07:58:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32332C7EE2C
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 May 2023 07:59:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229680AbjEYH6x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 03:58:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41642 "EHLO
+        id S229543AbjEYH7q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 03:59:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41714 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229543AbjEYH6w (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 03:58:52 -0400
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DCA3183
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 00:58:50 -0700 (PDT)
-Received: from kwepemi500009.china.huawei.com (unknown [172.30.72.54])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4QRgPp3NQWzLmRF;
-        Thu, 25 May 2023 15:57:18 +0800 (CST)
-Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
- (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Thu, 25 May
- 2023 15:58:47 +0800
-Date:   Thu, 25 May 2023 15:57:13 +0800
-From:   Long Li <leo.lilong@huawei.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-CC:     <david@fromorbit.com>, <linux-xfs@vger.kernel.org>,
-        <houtao1@huawei.com>, <yi.zhang@huawei.com>, <guoxuenan@huawei.com>
-Subject: Re: [PATCH v3] xfs: fix ag count overflow during growfs
-Message-ID: <20230525075713.GA2894753@ceph-admin>
-References: <20230524121041.GA4128075@ceph-admin>
- <20230524144800.GG11620@frogsfrogsfrogs>
+        with ESMTP id S230381AbjEYH7p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 03:59:45 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B15FE122;
+        Thu, 25 May 2023 00:59:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=1SbotI5SOBhG7bXBLx5uW2S/thCuqPvVS6nzOwu9CA8=; b=V58wO3BzmmE0SuFDyj/dG3wtLK
+        lAzsAvB3ZVtK85AeH07/CJcxdL6YrVPVNDBjp1gDEQPt3y4PFxy1zANuqX7eVYeIgd3P7ogmbXOTU
+        da9+kR0/TlSsh1y3pAg8cJlsO45ZGPvvuTYFq/fNI4L86nVhMdF9l0CdKYvln7GJza2VN0yD6cUMZ
+        9AGBExT5R92fPahMcA7LeZjMrK7dkBLryYUAAfcvK7uRiSTSxKle8hlE9ag/8t3Jjq9Yn1IOJUZuo
+        uX3hxlvo7360UC0O1DFIK/1Wbl7Y+nHItalF92A3t01qoCyYcTe7+nOpiFXaZa42gRD6g3h1sC3BR
+        Yy6h2YmA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1q25sp-00Fu4N-2E;
+        Thu, 25 May 2023 07:59:39 +0000
+Date:   Thu, 25 May 2023 00:59:39 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Uladzislau Rezki <urezki@gmail.com>,
+        Hyeonggon Yoo <42.hyeyoo@gmail.com>, linux-mm@kvack.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        LKML <linux-kernel@vger.kernel.org>, Baoquan He <bhe@redhat.com>,
+        Lorenzo Stoakes <lstoakes@gmail.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        "Liam R . Howlett" <Liam.Howlett@oracle.com>,
+        "Paul E . McKenney" <paulmck@kernel.org>,
+        Joel Fernandes <joel@joelfernandes.org>,
+        Oleksiy Avramchenko <oleksiy.avramchenko@sony.com>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/9] Mitigate a vmap lock contention
+Message-ID: <ZG8Va0hc67IC6Cuf@infradead.org>
+References: <20230522110849.2921-1-urezki@gmail.com>
+ <ZGyqiaRnMJPFhxR6@debian-BULLSEYE-live-builder-AMD64>
+ <ZGzX3vRMlGHIcYCe@pc636>
+ <ZG0AE9mjHkRZIGmr@debian-BULLSEYE-live-builder-AMD64>
+ <ZG3d1FUXiCk3QL3D@pc636>
+ <ZG6IKE7yNEkJhge+@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230524144800.GG11620@frogsfrogsfrogs>
-X-Originating-IP: [10.175.127.227]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- kwepemi500009.china.huawei.com (7.221.188.199)
-X-CFilter-Loop: Reflected
+In-Reply-To: <ZG6IKE7yNEkJhge+@dread.disaster.area>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 24, 2023 at 07:48:00AM -0700, Darrick J. Wong wrote:
-> On Wed, May 24, 2023 at 08:10:41PM +0800, Long Li wrote:
-> > I found a corruption during growfs:
-> > 
-> >  XFS (loop0): Internal error agbno >= mp->m_sb.sb_agblocks at line 3661 of
-> >    file fs/xfs/libxfs/xfs_alloc.c.  Caller __xfs_free_extent+0x28e/0x3c0
-> >  CPU: 0 PID: 573 Comm: xfs_growfs Not tainted 6.3.0-rc7-next-20230420-00001-gda8c95746257
-> >  Call Trace:
-> >   <TASK>
-> >   dump_stack_lvl+0x50/0x70
-> >   xfs_corruption_error+0x134/0x150
-> >   __xfs_free_extent+0x2c1/0x3c0
-> >   xfs_ag_extend_space+0x291/0x3e0
-> >   xfs_growfs_data+0xd72/0xe90
-> >   xfs_file_ioctl+0x5f9/0x14a0
-> >   __x64_sys_ioctl+0x13e/0x1c0
-> >   do_syscall_64+0x39/0x80
-> >   entry_SYSCALL_64_after_hwframe+0x63/0xcd
-> >  XFS (loop0): Corruption detected. Unmount and run xfs_repair
-> >  XFS (loop0): Internal error xfs_trans_cancel at line 1097 of file
-> >    fs/xfs/xfs_trans.c.  Caller xfs_growfs_data+0x691/0xe90
-> >  CPU: 0 PID: 573 Comm: xfs_growfs Not tainted 6.3.0-rc7-next-20230420-00001-gda8c95746257
-> >  Call Trace:
-> >   <TASK>
-> >   dump_stack_lvl+0x50/0x70
-> >   xfs_error_report+0x93/0xc0
-> >   xfs_trans_cancel+0x2c0/0x350
-> >   xfs_growfs_data+0x691/0xe90
-> >   xfs_file_ioctl+0x5f9/0x14a0
-> >   __x64_sys_ioctl+0x13e/0x1c0
-> >   do_syscall_64+0x39/0x80
-> >   entry_SYSCALL_64_after_hwframe+0x63/0xcd
-> >  RIP: 0033:0x7f2d86706577
-> > 
-> > The bug can be reproduced with the following sequence:
-> > 
-> >  # truncate -s  1073741824 xfs_test.img
-> >  # mkfs.xfs -f -b size=1024 -d agcount=4 xfs_test.img
-> >  # truncate -s 2305843009213693952  xfs_test.img
-> >  # mount -o loop xfs_test.img /mnt/test
-> >  # xfs_growfs -D  1125899907891200  /mnt/test
-> > 
-> > The root cause is that during growfs, user space passed in a large value
-> > of newblcoks to xfs_growfs_data_private(), due to current sb_agblocks is
-> > too small, new AG count will exceed UINT_MAX. Because of AG number type
-> > is unsigned int and it would overflow, that caused nagcount much smaller
-> > than the actual value. During AG extent space, delta blocks in
-> > xfs_resizefs_init_new_ags() will much larger than the actual value due to
-> > incorrect nagcount, even exceed UINT_MAX. This will cause corruption and
-> > be detected in __xfs_free_extent. Fix it by growing the filesystem to up
-> > to the maximally allowed AGs when new AG count overflow.
-> > 
-> > Signed-off-by: Long Li <leo.lilong@huawei.com>
-> > ---
-> > v3:
-> > - Ensure that the performance is consisent before and after the modification
-> >   when nagcount just overflows and 0 < nb_mod < XFS_MIN_AG_BLOCKS. 
-> > - Based on Darrick's advice, growing the filesystem to up to the maximally
-> >   allowed AGs when new AG count overflow.
-> > 
-> >  fs/xfs/libxfs/xfs_fs.h |  3 +++
-> >  fs/xfs/xfs_fsops.c     | 13 +++++++++----
-> >  2 files changed, 12 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > index 1cfd5bc6520a..36ec2b1f7e68 100644
-> > --- a/fs/xfs/libxfs/xfs_fs.h
-> > +++ b/fs/xfs/libxfs/xfs_fs.h
-> > @@ -248,6 +248,9 @@ typedef struct xfs_fsop_resblks {
-> >  #define XFS_MAX_LOG_BLOCKS	(1024 * 1024ULL)
-> >  #define XFS_MIN_LOG_BYTES	(10 * 1024 * 1024ULL)
-> >  
-> > +/* Maximum number of AGs */
-> > +#define XFS_AGNUMBER_MAX	((xfs_agnumber_t)(-1U))
+On Thu, May 25, 2023 at 07:56:56AM +1000, Dave Chinner wrote:
+> > It is up to community to decide. As i see XFS needs it also. Maybe in
+> > the future it can be removed(who knows). If the vmalloc code itself can
+> > deliver such performance as vm_map* APIs.
 > 
-> My apologies, I led you astray.  This should be:
+> vm_map* APIs cannot be replaced with vmalloc, they cover a very
+> different use case.  i.e.  vmalloc allocates mapped memory,
+> vm_map_ram() maps allocated memory....
 > 
-> #define XFS_MAX_AGNUMBER	((xfs_agnumber_t)(NULLAGNUMBER - 1))
+> > vm_map_ram() and friends interface was added because of vmalloc drawbacks.
 > 
-OK, it is undoubtedly better to follow the definition in xfsprogs, which will
-be modified in the next version.
+> No. vm_map*() were scalability improvements added in 2009 to replace
+> on vmap() and vunmap() to avoid global lock contention in the vmap
+> allocator that XFS had been working around for years with it's own
+> internal vmap cache....
 
-> since it already exists in multidisk.h from xfsprogs.
-> xfs_validate_sb_common probably ought to validate that
-> sb_agcount <= XFS_MAX_AGNUMBER as well.
-> 
-In my understanding the range of sb_agcount should be [1, 0xFFFFFFFF], it
-should validate that sb_agcount <= (XFS_MAX_AGNUMBER + 1) , so it's not necessary
-to check the upper limit of the sb_agcount.
+All of that is true.  At the same time XFS could very much switch to
+vmalloc for !XBF_UNMAPPED && size > PAGE_SIZE buffers IFF that provided
+an advantage.  The need for vmap and then vm_map_* initially came from
+the fact that we were using the page cache to back the xfs_buf (or
+page_buf back then).  With your work on getting rid of the pagecache
+usage we could just use vmalloc now if we wanted to and it improves
+performance.  Or at some point we could even look into just using large
+folios for that with the infrastructure for that improving a lot (but
+I suspect we're not quite there yet).
 
-> > +
-> >  /*
-> >   * Limits on sb_agblocks/sb_agblklog -- mkfs won't format AGs smaller than
-> >   * 16MB or larger than 1TB.
-> > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> > index 13851c0d640b..2b37d3e61bdf 100644
-> > --- a/fs/xfs/xfs_fsops.c
-> > +++ b/fs/xfs/xfs_fsops.c
-> > @@ -115,11 +115,16 @@ xfs_growfs_data_private(
-> >  
-> >  	nb_div = nb;
-> >  	nb_mod = do_div(nb_div, mp->m_sb.sb_agblocks);
-> > -	nagcount = nb_div + (nb_mod != 0);
-> > -	if (nb_mod && nb_mod < XFS_MIN_AG_BLOCKS) {
-> > -		nagcount--;
-> > -		nb = (xfs_rfsblock_t)nagcount * mp->m_sb.sb_agblocks;
-> > +	if (nb_mod && nb_mod >= XFS_MIN_AG_BLOCKS)
-> > +		nb_div++;
-> > +	else if (nb_mod)
-> > +		nb = nb_div * mp->m_sb.sb_agblocks;
-> > +
-> > +	if (nb_div > XFS_AGNUMBER_MAX) {
-> > +		nb_div = XFS_AGNUMBER_MAX;
-> > +		nb = nb_div * mp->m_sb.sb_agblocks;
-> >  	}
-> > +	nagcount = nb_div;
-> >  	delta = nb - mp->m_sb.sb_dblocks;
-> >  	/*
-> >  	 * Reject filesystems with a single AG because they are not
-> > -- 
-> > 2.31.1
-> > 
+But ther are other uses of vm_map_* that can't do that, and they will
+benefit from the additional scalability as well even IFF just using
+vmalloc was fine for XFS now (I don't know, I haven't actually looked
+into it).
